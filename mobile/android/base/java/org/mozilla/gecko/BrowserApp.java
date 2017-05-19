@@ -761,6 +761,7 @@ public class BrowserApp extends GeckoApp
             null);
 
         EventDispatcher.getInstance().registerUiThreadListener(this,
+            "Accessibility:Enabled",
             "Menu:Open",
             "Menu:Update",
             "Menu:Add",
@@ -1490,7 +1491,7 @@ public class BrowserApp extends GeckoApp
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
-                    GeckoAppShell.createShortcut(title, url);
+                    GeckoApplication.createShortcut(title, url);
                 }
             });
 
@@ -1520,12 +1521,6 @@ public class BrowserApp extends GeckoApp
         }
 
         return false;
-    }
-
-    @Override
-    public void setAccessibilityEnabled(boolean enabled) {
-        super.setAccessibilityEnabled(enabled);
-        mDynamicToolbar.setAccessibilityEnabled(enabled);
     }
 
     @Override
@@ -1576,6 +1571,7 @@ public class BrowserApp extends GeckoApp
             null);
 
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
+            "Accessibility:Enabled",
             "Menu:Open",
             "Menu:Update",
             "Menu:Add",
@@ -1847,6 +1843,10 @@ public class BrowserApp extends GeckoApp
                 FeedService.setup(this);
                 break;
 
+            case "Accessibility:Enabled":
+                mDynamicToolbar.setAccessibilityEnabled(message.getBoolean("enabled"));
+                break;
+
             case "Menu:Open":
                 if (mBrowserToolbar.isEditing()) {
                     mBrowserToolbar.cancelEdit();
@@ -2088,7 +2088,7 @@ public class BrowserApp extends GeckoApp
                 if (loadIconResult != null) {
                     final Bitmap icon = loadIconResult
                         .getBestBitmap(GeckoAppShell.getPreferredIconSize());
-                    createAppShortcut(name, startUrl, manifestPath, icon);
+                    GeckoApplication.createAppShortcut(name, startUrl, manifestPath, icon);
                 } else {
                     Log.e(LOGTAG, "Failed to load icon!");
                 }
@@ -2098,7 +2098,7 @@ public class BrowserApp extends GeckoApp
             case "Website:AppInstallFailed":
                 final String title = message.getString("title");
                 final String bookmarkUrl = message.getString("url");
-                createBrowserShortcut(title, bookmarkUrl);
+                GeckoApplication.createBrowserShortcut(title, bookmarkUrl);
                 break;
 
             case "Updater:Launch":
@@ -2317,7 +2317,6 @@ public class BrowserApp extends GeckoApp
         return false;
     }
 
-    @Override
     public boolean areTabsShown() {
         return (mTabsPanel != null && mTabsPanel.isShown());
     }

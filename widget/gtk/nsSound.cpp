@@ -13,6 +13,7 @@
 
 #include "nsSound.h"
 
+#include "HeadlessSound.h"
 #include "nsIURL.h"
 #include "nsIFileURL.h"
 #include "nsNetUtil.h"
@@ -27,6 +28,8 @@
 #include "nsIStringBundle.h"
 #include "nsIXULAppInfo.h"
 #include "nsContentUtils.h"
+#include "gfxPlatform.h"
+#include "mozilla/ClearOnShutdown.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -219,6 +222,29 @@ nsSound::Shutdown()
         PR_UnloadLibrary(libcanberra);
         libcanberra = nullptr;
     }
+}
+
+namespace mozilla {
+namespace sound {
+StaticRefPtr<nsISound> sInstance;
+}
+}
+/* static */ already_AddRefed<nsISound>
+nsSound::GetInstance()
+{
+    using namespace mozilla::sound;
+
+    if (!sInstance) {
+        if (gfxPlatform::IsHeadless()) {
+            sInstance = new widget::HeadlessSound();
+        } else {
+            sInstance = new nsSound();
+        }
+        ClearOnShutdown(&sInstance);
+    }
+
+    RefPtr<nsISound> service = sInstance.get();
+    return service.forget();
 }
 
 NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,

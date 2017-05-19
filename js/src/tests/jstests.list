@@ -85,98 +85,7 @@ skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-func-
 skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-lex.js
 skip-if(!xulRuntime.shell) script test262/language/global-code/script-decl-var-err.js
 
-# Fails because window has a "length" property resp. the indexed property access on WindowProxy.
-skip-if(!xulRuntime.shell) script test262/language/expressions/arrow-function/dstr-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/arrow-function/dstr-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/assignment/dstr-array-rest-nested-obj-null.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/assignment/dstr-array-rest-nested-obj-undefined-hole.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/assignment/dstr-array-rest-nested-obj-undefined-own.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/assignment/dstr-array-rest-nested-obj-undefined.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/async-generator/dstr-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/async-generator/dstr-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/async-generator/dstr-named-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/async-generator/dstr-named-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-async-gen-meth-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-async-gen-meth-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-async-gen-meth-static-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-async-gen-meth-static-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-gen-meth-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-gen-meth-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-gen-meth-static-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-gen-meth-static-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-meth-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-meth-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-meth-static-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/class/dstr-meth-static-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/function/dstr-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/function/dstr-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/generators/dstr-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/generators/dstr-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/object/dstr-async-gen-meth-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/object/dstr-async-gen-meth-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/object/dstr-gen-meth-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/object/dstr-gen-meth-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/object/dstr-meth-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/expressions/object/dstr-meth-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/async-generator/dstr-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/async-generator/dstr-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-async-gen-meth-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-async-gen-meth-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-async-gen-meth-static-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-async-gen-meth-static-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-gen-meth-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-gen-meth-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-gen-meth-static-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-gen-meth-static-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-meth-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-meth-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-meth-static-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/class/dstr-meth-static-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/const/dstr-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/for-await-of/async-func-dstr-const-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/for-await-of/async-func-dstr-let-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/for-await-of/async-func-dstr-var-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/for-await-of/async-gen-dstr-const-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/for-of/dstr-array-rest-nested-obj-null.js
-skip-if(!xulRuntime.shell) script test262/language/statements/for-of/dstr-array-rest-nested-obj-undefined-hole.js
-skip-if(!xulRuntime.shell) script test262/language/statements/for-of/dstr-array-rest-nested-obj-undefined-own.js
-skip-if(!xulRuntime.shell) script test262/language/statements/for-of/dstr-array-rest-nested-obj-undefined.js
-skip-if(!xulRuntime.shell) script test262/language/statements/for-of/dstr-const-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/for-of/dstr-let-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/for-of/dstr-var-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/for/dstr-const-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/for/dstr-let-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/for/dstr-var-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/function/dstr-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/function/dstr-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/generators/dstr-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/generators/dstr-dflt-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/let/dstr-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/try/dstr-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/language/statements/variable/dstr-ary-ptrn-rest-obj-prop-id.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/every/15.4.4.16-2-15.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/every/15.4.4.16-7-c-i-23.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/filter/15.4.4.20-2-15.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/filter/15.4.4.20-9-c-i-23.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/forEach/15.4.4.18-2-15.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/forEach/15.4.4.18-7-c-i-23.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/indexOf/15.4.4.14-1-17.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/indexOf/15.4.4.14-2-15.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-23.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-17.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/lastIndexOf/15.4.4.15-2-15.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-23.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/map/15.4.4.19-8-c-i-23.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/reduce/15.4.4.21-2-15.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/reduce/15.4.4.21-8-b-iii-1-23.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/reduce/15.4.4.21-9-c-i-23.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/reduceRight/15.4.4.22-2-15.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/reduceRight/15.4.4.22-8-b-iii-1-23.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/reduceRight/15.4.4.22-9-c-i-23.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/some/15.4.4.17-2-15.js
-skip-if(!xulRuntime.shell) script test262/built-ins/Array/prototype/some/15.4.4.17-7-c-i-23.js
+# Defines a restricted property on the WindowProxy object.
 skip-if(!xulRuntime.shell) script test262/built-ins/Object/defineProperty/15.2.3.6-4-354-13.js
 skip-if(!xulRuntime.shell) script test262/built-ins/Object/defineProperty/15.2.3.6-4-360-7.js
 skip-if(!xulRuntime.shell) script test262/built-ins/Object/defineProperty/15.2.3.6-4-531-13.js
@@ -589,6 +498,42 @@ skip include test262/built-ins/RegExp/lookBehind/jstests.list
 # RegExp named groups
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1362154
 skip include test262/built-ins/RegExp/named-groups/jstests.list
+
+# Stash rval in AsyncIteratorClose
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1364608
+skip script test262/language/statements/for-await-of/async-func-dstr-const-ary-ptrn-elision-step-err.js
+skip script test262/language/statements/for-await-of/async-func-dstr-const-ary-ptrn-rest-id-iter-step-err.js
+skip script test262/language/statements/for-await-of/async-func-dstr-let-ary-ptrn-elision-step-err.js
+skip script test262/language/statements/for-await-of/async-func-dstr-let-ary-ptrn-rest-id-iter-step-err.js
+skip script test262/language/statements/for-await-of/async-func-dstr-var-ary-ptrn-elision-step-err.js
+skip script test262/language/statements/for-await-of/async-func-dstr-var-ary-ptrn-rest-id-iter-step-err.js
+skip script test262/language/statements/for-await-of/async-gen-dstr-const-ary-ptrn-elision-iter-close.js
+skip script test262/language/statements/for-await-of/async-gen-dstr-const-ary-ptrn-elision-step-err.js
+skip script test262/language/statements/for-await-of/async-gen-dstr-const-ary-ptrn-rest-id-iter-close.js
+skip script test262/language/statements/for-await-of/async-gen-dstr-const-ary-ptrn-rest-id-iter-step-err.js
+skip script test262/language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-elision-iter-close.js
+skip script test262/language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-elision-step-err.js
+skip script test262/language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-rest-id-iter-step-err.js
+skip script test262/language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-rest-id-iter-close.js
+skip script test262/language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-elision-iter-close.js
+skip script test262/language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-elision-step-err.js
+skip script test262/language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-rest-id-iter-close.js
+skip script test262/language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-rest-id-iter-step-err.js
+
+# Missing expression statement restriction for "async function"
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1361143
+skip script test262/language/statements/for/decl-async-fun.js
+skip script test262/language/statements/for/decl-async-gen.js
+skip script test262/language/statements/for-in/decl-async-fun.js
+skip script test262/language/statements/for-in/decl-async-gen.js
+skip script test262/language/statements/for-of/decl-async-fun.js
+skip script test262/language/statements/for-of/decl-async-gen.js
+skip script test262/language/statements/labeled/decl-async-function.js
+skip script test262/language/statements/labeled/decl-async-generator.js
+skip script test262/language/statements/while/decl-async-fun.js
+skip script test262/language/statements/while/decl-async-gen.js
+skip script test262/language/statements/with/decl-async-fun.js
+skip script test262/language/statements/with/decl-async-gen.js
 
 ####################################################
 # Tests disabled due to invalid test expectations  #

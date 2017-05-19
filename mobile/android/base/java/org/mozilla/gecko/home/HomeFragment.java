@@ -8,7 +8,6 @@ package org.mozilla.gecko.home;
 import java.lang.ref.WeakReference;
 import java.util.EnumSet;
 
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
@@ -274,7 +273,7 @@ public abstract class HomeFragment extends Fragment {
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
-                    GeckoAppShell.createShortcut(displayTitle, info.url);
+                    GeckoApplication.createShortcut(displayTitle, info.url);
 
                 }
             });

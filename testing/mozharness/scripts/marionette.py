@@ -91,6 +91,13 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
          "help": "Run tests with multiple processes. (Desktop builds only)",
          }
     ], [
+        ["--headless"],
+        {"action": "store_true",
+         "dest": "headless",
+         "default": False,
+         "help": "Run tests in headless mode.",
+        }
+    ], [
        ["--allow-software-gl-layers"],
        {"action": "store_true",
         "dest": "allow_software_gl_layers",
@@ -284,6 +291,9 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
 
         if not self.config['e10s']:
             cmd.append('--disable-e10s')
+
+        if self.config['headless']:
+            cmd.append('--headless')
 
         cmd.append('--gecko-log=%s' % os.path.join(dirs["abs_blob_upload_dir"],
                                                    'gecko.log'))

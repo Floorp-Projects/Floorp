@@ -5,6 +5,10 @@ ac_add_options --disable-jemalloc
 ac_add_options --disable-install-strip
 ac_add_options --disable-gtest-in-build
 
+# Rust code gives false positives that we have not entirely suppressed yet.
+# Bug 1365915 tracks fixing these.
+ac_add_options --disable-stylo
+
 # Include the override mozconfig again (even though the above includes it)
 # since it's supposed to override everything.
 . "$topsrcdir/build/mozconfig.common.override"

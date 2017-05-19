@@ -23,7 +23,7 @@ pref("toolkit.browser.cacheRatioHeight", 3000);
 // expires.
 pref("toolkit.browser.contentViewExpire", 3000);
 
-pref("toolkit.defaultChromeURI", "chrome://browser/content/browser.xul");
+pref("toolkit.defaultChromeURI", "chrome://geckoview/content/geckoview.xul");
 pref("browser.chromeURL", "chrome://browser/content/");
 
 // If a tab has not been active for this long (seconds), then it may be

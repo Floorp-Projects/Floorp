@@ -612,10 +612,27 @@ simple_keyfile('Adjust SDK')
 
 # Servo integration
 # ==============================================================
-option('--enable-stylo', env='STYLO_ENABLED', nargs=0,
-       help='Enables experimental integration with the servo style system. '
-            'This requires either building servo within Gecko\'s cargo phase '
-            'or passing --with-servo')
+option('--enable-stylo', nargs='?', choices=('build',),
+       help='Include Stylo in the build and/or enable it at runtime')
+
+@depends('--enable-stylo')
+def stylo_config(value):
+    build_stylo = None
+    enable_stylo = None
+
+    # The default is to not build Stylo at all.
+    if value.origin == 'default':
+        pass
+    elif value == 'build':
+        build_stylo = True
+    elif bool(value):
+        build_stylo = True
+        enable_stylo = True
+
+    return namespace(
+        build = build_stylo,
+        enable = enable_stylo,
+    )
 
 # We support setting up the appropriate options for Stylo's build-time
 # bindings generation via setting LLVM_CONFIG or by providing explicit
@@ -627,6 +644,7 @@ llvm_config = check_prog('LLVM_CONFIG', ('llvm-config-4.0',
                                          'llvm-config-3.9',
                                          'llvm-config39',
                                          'llvm-config',),
+                         when=stylo_config.build,
                          what='llvm-config', allow_missing=True)
 
 option('--disable-stylo-build-bindgen',
@@ -658,12 +676,14 @@ def check_minimum_llvm_config_version(llvm_config):
         You can verify this by typing 'llvm-config --version'.
         '''.format(version, min_version)))
 
-@depends('--enable-stylo', '--enable-stylo-build-bindgen',
-         llvm_config, '--with-libclang-path', '--with-clang-path')
+@depends(stylo_config, '--enable-stylo-build-bindgen',
+         llvm_config, '--with-libclang-path', '--with-clang-path',
+         host)
 @imports(_from='textwrap', _import='dedent')
-def bindgen_config_paths(stylo_enabled, bindgen_enabled,
-                         llvm_config, libclang_path, clang_path):
-    if not stylo_enabled:
+def bindgen_config_paths(stylo_config, bindgen_enabled,
+                         llvm_config, libclang_path, clang_path,
+                         host):
+    if not stylo_config.build:
         return None
 
     if not bindgen_enabled:
@@ -675,10 +695,12 @@ def bindgen_config_paths(stylo_enabled, bindgen_enabled,
             return None
 
         check_minimum_llvm_config_version(llvm_config)
+        libclang_arg = '--bindir' if host.os == 'WINNT' else '--libdir'
+        clang_path = os.path.join(invoke_llvm_config(llvm_config, '--bindir'),
+                                  'clang')
         return namespace(
-            libclang_path=invoke_llvm_config(llvm_config, '--libdir'),
-            clang_path=os.path.join(invoke_llvm_config(llvm_config, '--bindir'),
-                                    'clang'),
+            libclang_path=normsep(invoke_llvm_config(llvm_config, libclang_arg)),
+            clang_path=normsep(clang_path),
         )
 
     if (not libclang_path and clang_path) or \
@@ -692,14 +714,14 @@ def bindgen_config_paths(stylo_enabled, bindgen_enabled,
         clang_path=clang_path[0],
     )
 
-@depends('--enable-stylo', bindgen_config_paths, '--enable-stylo-build-bindgen')
+@depends(stylo_config, bindgen_config_paths, '--enable-stylo-build-bindgen')
 @imports(_from='textwrap', _import='dedent')
-def stylo(stylo_enabled, bindgen_config_paths, bindgen_enabled):
-    if not stylo_enabled:
+def stylo(stylo_config, bindgen_config_paths, bindgen_enabled):
+    if not stylo_config.build:
         return None
     elif not bindgen_enabled:
         return namespace(
-            enabled=bool(stylo_enabled)
+            build=bool(stylo_config.build)
         )
     elif not bindgen_config_paths:
         die(dedent('''\
@@ -711,14 +733,15 @@ def stylo(stylo_enabled, bindgen_config_paths, bindgen_enabled):
         which may not be what you intended.'''))
 
     return namespace(
-        enabled=bool(stylo_enabled),
+        build=bool(stylo_config.build),
         libclang_path=bindgen_config_paths.libclang_path,
         clang_path=bindgen_config_paths.clang_path,
         bindgen_enabled=bool(bindgen_enabled),
     )
 
-set_config('MOZ_STYLO', stylo.enabled)
-set_define('MOZ_STYLO', stylo.enabled)
+set_config('MOZ_STYLO', stylo.build)
+set_define('MOZ_STYLO', stylo.build)
+set_define('MOZ_STYLO_ENABLE', stylo_config.enable)
 
 set_config('MOZ_LIBCLANG_PATH', stylo.libclang_path)
 set_config('MOZ_CLANG_PATH', stylo.clang_path)

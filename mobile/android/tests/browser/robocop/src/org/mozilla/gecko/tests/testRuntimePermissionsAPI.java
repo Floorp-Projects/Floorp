@@ -21,14 +21,17 @@ public class testRuntimePermissionsAPI extends JavascriptTest implements BundleE
     public void setUp() throws Exception {
         super.setUp();
 
-        GeckoApp.getEventDispatcher().registerUiThreadListener(this, "RuntimePermissions:Prompt");
+        ((GeckoApp) getActivity()).getAppEventDispatcher()
+                                  .registerUiThreadListener(this, "RuntimePermissions:Prompt");
     }
 
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
 
-        GeckoApp.getEventDispatcher().unregisterUiThreadListener(this, "RuntimePermissions:Prompt");
+        ((GeckoApp) getActivity()).getAppEventDispatcher()
+                                  .unregisterUiThreadListener(this,
+                                                              "RuntimePermissions:Prompt");
     }
 
     @Override

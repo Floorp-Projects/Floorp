@@ -1284,9 +1284,7 @@ nsChildView::PostHandleKeyEvent(mozilla::WidgetKeyboardEvent* aEvent)
   // not handled we give menu items a chance to act. This allows for handling of
   // custom shortcuts. Note that existing shortcuts cannot be reassigned yet and
   // will have been handled by keyDown: before we get here.
-  NSEvent* cocoaEvent =
-    [sNativeKeyEventsMap objectForKey:@(aEvent->mUniqueId)];
-  [sNativeKeyEventsMap removeObjectForKey:@(aEvent->mUniqueId)];
+  NSEvent* cocoaEvent = [sNativeKeyEventsMap objectForKey:@(aEvent->mUniqueId)];
   if (!cocoaEvent) {
     return;
   }
@@ -1294,6 +1292,7 @@ nsChildView::PostHandleKeyEvent(mozilla::WidgetKeyboardEvent* aEvent)
   if (SendEventToNativeMenuSystem(cocoaEvent)) {
     aEvent->PreventDefault();
   }
+  [sNativeKeyEventsMap removeObjectForKey:@(aEvent->mUniqueId)];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -1421,6 +1420,14 @@ nsChildView::Invalidate(const LayoutDeviceIntRect& aRect)
 bool
 nsChildView::WidgetTypeSupportsAcceleration()
 {
+  // We need to enable acceleration in popups which contain remote layer
+  // trees, since the remote content won't be rendered at all otherwise. This
+  // causes issues with transparency and drop shadows, so it should not be
+  // used by default in release builds.
+  if (HasRemoteContent()) {
+    return true;
+  }
+
   // Don't use OpenGL for transparent windows or for popup windows.
   return mView && [[mView window] isOpaque] &&
          ![[mView window] isKindOfClass:[PopupWindow class]];
@@ -1430,8 +1437,7 @@ bool
 nsChildView::ShouldUseOffMainThreadCompositing()
 {
   // Don't use OMTC for transparent windows or for popup windows.
-  if (!mView || ![[mView window] isOpaque] ||
-      [[mView window] isKindOfClass:[PopupWindow class]])
+  if (!WidgetTypeSupportsAcceleration())
     return false;
 
   return nsBaseWidget::ShouldUseOffMainThreadCompositing();

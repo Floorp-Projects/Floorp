@@ -1264,7 +1264,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
     } else {
         url = Preferences::GetCString("toolkit.defaultChromeURI");
         if (!url) {
-            url = NS_LITERAL_CSTRING("chrome://browser/content/browser.xul");
+            url = NS_LITERAL_CSTRING("chrome://geckoview/content/geckoview.xul");
         }
     }
 

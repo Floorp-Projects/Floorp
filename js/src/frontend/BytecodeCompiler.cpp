@@ -645,10 +645,11 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
 {
     MOZ_ASSERT(cx->compartment() == lazy->functionNonDelazifying()->compartment());
 
+    uint32_t sourceStartColumn = lazy->scriptSource()->startColumn();
     CompileOptions options(cx, lazy->version());
     options.setMutedErrors(lazy->mutedErrors())
            .setFileAndLine(lazy->filename(), lazy->lineno())
-           .setColumn(lazy->column())
+           .setColumn(lazy->column(), sourceStartColumn)
            .setNoScriptRval(false)
            .setSelfHostingMode(false);
 
@@ -681,7 +682,7 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
 
     Rooted<JSFunction*> fun(cx, lazy->functionNonDelazifying());
     MOZ_ASSERT(!lazy->isLegacyGenerator());
-    ParseNode* pn = parser.standaloneLazyFunction(fun, lazy->toStringStart() + lazy->column(),
+    ParseNode* pn = parser.standaloneLazyFunction(fun, lazy->toStringStart() + sourceStartColumn,
                                                   lazy->strict(), lazy->generatorKind(), lazy->asyncKind());
     if (!pn)
         return false;

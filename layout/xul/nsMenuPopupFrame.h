@@ -225,6 +225,8 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
+  bool HasRemoteContent() const;
+
   // returns true if the popup is a panel with the noautohide attribute set to
   // true. These panels do not roll up automatically.
   bool IsNoAutoHide() const;
@@ -234,7 +236,10 @@ public:
     return PopupLevel(IsNoAutoHide()); 
   }
 
-  void EnsureWidget();
+  // Ensure that a widget has already been created for this view, and create
+  // one if it hasn't. If aRecreate is true, destroys any existing widget and
+  // creates a new one, regardless of whether one has already been created.
+  void EnsureWidget(bool aRecreate = false);
 
   nsresult CreateWidgetForView(nsView* aView);
   uint8_t GetShadowStyle();

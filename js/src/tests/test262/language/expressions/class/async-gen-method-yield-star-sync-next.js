@@ -1,10 +1,11 @@
+// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-star-sync-next.case
 // - src/async-generators/default/async-class-expr-method.template
 /*---
 description: execution order for yield* with sync iterator and next() (Async generator method as a ClassExpression element)
 esid: prod-AsyncGeneratorMethod
-features: [async-iteration, Symbol.asyncIterator, async-iteration]
+features: [async-iteration, Symbol.asyncIterator]
 flags: [generated, async]
 info: |
     ClassElement :

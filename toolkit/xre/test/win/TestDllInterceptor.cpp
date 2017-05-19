@@ -255,6 +255,16 @@ bool TestLdrResolveDelayLoadedAPI(void* aFunc)
   return patchedLdrResolveDelayLoadedAPI(0, 0, 0, 0, 0, 99) == 0;
 }
 
+#ifdef _M_AMD64
+bool TestRtlInstallFunctionTableCallback(void* aFunc)
+{
+  auto patchedRtlInstallFunctionTableCallback =
+    reinterpret_cast<decltype(RtlInstallFunctionTableCallback)*>(aFunc);
+
+  return patchedRtlInstallFunctionTableCallback(0, 0, 0, 0, 0, 0) == FALSE;
+}
+#endif
+
 bool TestSetUnhandledExceptionFilter(void* aFunc)
 {
   auto patchedSetUnhandledExceptionFilter =
@@ -387,6 +397,23 @@ bool TestProcessCaretEvents(void* aFunc)
   return true;
 }
 
+static DWORD sTlsIndex = 0;
+
+bool TestTlsAlloc(void* aFunc)
+{
+  auto patchedTlsAlloc =
+    reinterpret_cast<decltype(&TlsAlloc)>(aFunc);
+  sTlsIndex = patchedTlsAlloc();
+  return sTlsIndex != TLS_OUT_OF_INDEXES;
+}
+
+bool TestTlsFree(void* aFunc)
+{
+  auto patchedTlsFree =
+    reinterpret_cast<decltype(&TlsFree)>(aFunc);
+  return sTlsIndex != 0 && patchedTlsFree(sTlsIndex);
+}
+
 int main()
 {
   payload initial = { 0x12345678, 0xfc4e9d31, 0x87654321 };
@@ -484,11 +511,14 @@ int main()
       TestHook(TestGetKeyState, "user32.dll", "GetKeyState") &&    // see Bug 1316415
       TestHook(TestLdrUnloadDll, "ntdll.dll", "LdrUnloadDll") &&
       MaybeTestHook(IsWin8OrLater(), TestLdrResolveDelayLoadedAPI, "ntdll.dll", "LdrResolveDelayLoadedAPI") &&
+      MaybeTestHook(!IsWin8OrLater(), TestRtlInstallFunctionTableCallback, "kernel32.dll", "RtlInstallFunctionTableCallback") &&
 #endif
       MaybeTestHook(ShouldTestTipTsf(), TestProcessCaretEvents, "tiptsf.dll", "ProcessCaretEvents") &&
 #ifdef _M_IX86
       TestHook(TestSendMessageTimeoutW, "user32.dll", "SendMessageTimeoutW") &&
 #endif
+      TestHook(TestTlsAlloc, "kernel32.dll", "TlsAlloc") &&
+      TestHook(TestTlsFree, "kernel32.dll", "TlsFree") &&
       TestDetour("ntdll.dll", "LdrLoadDll")) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
     return 0;

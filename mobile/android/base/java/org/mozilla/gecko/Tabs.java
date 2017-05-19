@@ -725,7 +725,7 @@ public class Tabs implements BundleEventListener {
 
         } else if ("Tab:Select".equals(event)) {
             if (message.getBoolean("foreground", false)) {
-                GeckoAppShell.launchOrBringToFront();
+                GeckoApp.launchOrBringToFront();
             }
             selectTab(tab.getId());
 
