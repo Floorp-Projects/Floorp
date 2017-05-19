@@ -192,13 +192,19 @@ public:
   // but only if we have marked the cascade as needing an update due a
   // the change in the set of effects or a change in one of the effects'
   // "in effect" state.
-  // |aStyleContext| may be nullptr in which case we will use the
-  // nsStyleContext of the primary frame of the specified (pseudo-)element.
+  //
+  // When |aBackendType| is StyleBackendType::Gecko, |aStyleContext| is used to
+  // find overridden properties. If it is nullptr, the nsStyleContext of the
+  // primary frame of the specified (pseudo-)element, if available, is used.
+  //
+  // When |aBackendType| is StyleBackendType::Servo, we fetch the rule node
+  // from the |aElement| (i.e. |aStyleContext| is ignored).
   //
   // This method does NOT detect if other styles that apply above the
   // animation level of the cascade have changed.
   static void
-  MaybeUpdateCascadeResults(dom::Element* aElement,
+  MaybeUpdateCascadeResults(StyleBackendType aBackendType,
+                            dom::Element* aElement,
                             CSSPseudoElementType aPseudoType,
                             nsStyleContext* aStyleContext);
 
@@ -257,11 +263,22 @@ private:
 
   // Get the properties in |aEffectSet| that we are able to animate on the
   // compositor but which are also specified at a higher level in the cascade
-  // than the animations level in |aStyleContext|.
-  static void
-  GetOverriddenProperties(nsStyleContext* aStyleContext,
+  // than the animations level.
+  //
+  // When |aBackendType| is StyleBackendType::Gecko, we determine which
+  // properties are specified using the provided |aStyleContext| and
+  // |aElement| and |aPseudoType| are ignored. If |aStyleContext| is nullptr,
+  // we automatically look up the style context of primary frame of the
+  // (pseudo-)element.
+  //
+  // When |aBackendType| is StyleBackendType::Servo, we use the |StrongRuleNode|
+  // stored on the (pseudo-)element indicated by |aElement| and |aPseudoType|.
+  static nsCSSPropertyIDSet
+  GetOverriddenProperties(StyleBackendType aBackendType,
                           EffectSet& aEffectSet,
-                          nsCSSPropertyIDSet& aPropertiesOverridden);
+                          dom::Element* aElement,
+                          CSSPseudoElementType aPseudoType,
+                          nsStyleContext* aStyleContext);
 
   // Update the mPropertiesWithImportantRules and
   // mPropertiesForAnimationsLevel members of the given EffectSet.
@@ -269,8 +286,13 @@ private:
   // This can be expensive so we should only call it if styles that apply
   // above the animation level of the cascade might have changed. For all
   // other cases we should call MaybeUpdateCascadeResults.
+  //
+  // As with MaybeUpdateCascadeResults, |aStyleContext| is only used
+  // when |aBackendType| is StyleBackendType::Gecko. When |aBackendType| is
+  // StyleBackendType::Servo, it is ignored.
   static void
-  UpdateCascadeResults(EffectSet& aEffectSet,
+  UpdateCascadeResults(StyleBackendType aBackendType,
+                       EffectSet& aEffectSet,
                        dom::Element* aElement,
                        CSSPseudoElementType aPseudoType,
                        nsStyleContext* aStyleContext);
