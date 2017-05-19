@@ -951,9 +951,16 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
   bool useXULCache = cache && cache->IsEnabled();
 
   if (!info && useXULCache) {
+    // Assume Gecko style backend for the XBL document without a bound
+    // document. The only case is loading platformHTMLBindings.xml which
+    // doesn't have any style sheets or style attributes.
+    StyleBackendType styleBackend
+      = aBoundDocument ? aBoundDocument->GetStyleBackendType()
+                       : StyleBackendType::Gecko;
+
     // This cache crosses the entire product, so that any XBL bindings that are
     // part of chrome will be reused across all XUL documents.
-    info = cache->GetXBLDocumentInfo(documentURI);
+    info = cache->GetXBLDocumentInfo(documentURI, styleBackend);
   }
 
   bool useStartupCache = useXULCache && IsChromeOrResourceURI(documentURI);
@@ -1015,6 +1022,12 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
     // document that has loaded some bindings.
     bindingManager->PutXBLDocumentInfo(info);
   }
+
+  MOZ_ASSERT(!aBoundDocument || !info ||
+             aBoundDocument->GetStyleBackendType() ==
+               info->GetDocument()->GetStyleBackendType(),
+             "Style backend type mismatched between the bound document and "
+             "the XBL document loaded.");
 
   info.forget(aResult);
 
