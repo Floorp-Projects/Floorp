@@ -18,6 +18,7 @@
 #include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
+#include "mozilla/ServoBindings.h" // Servo_GetProperties_Overriding_Animation
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TypeTraits.h" // For Forward<>
@@ -173,7 +174,12 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
   Maybe<NonOwningAnimationTarget> pseudoElement =
     EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
   if (pseudoElement) {
-    EffectCompositor::MaybeUpdateCascadeResults(pseudoElement->mElement,
+    StyleBackendType backend =
+      aFrame->StyleContext()->StyleSource().IsServoComputedValues()
+      ? StyleBackendType::Servo
+      : StyleBackendType::Gecko;
+    EffectCompositor::MaybeUpdateCascadeResults(backend,
+                                                pseudoElement->mElement,
                                                 pseudoElement->mPseudoType,
                                                 aFrame->StyleContext());
   }
@@ -386,7 +392,9 @@ EffectCompositor::MaybeUpdateAnimationRule(dom::Element* aElement,
 {
   // First update cascade results since that may cause some elements to
   // be marked as needing a restyle.
-  MaybeUpdateCascadeResults(aElement, aPseudoType, aStyleContext);
+  MaybeUpdateCascadeResults(StyleBackendType::Gecko,
+                            aElement, aPseudoType,
+                            aStyleContext);
 
   auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
   PseudoElementHashEntry::KeyType key = { aElement, aPseudoType };
@@ -587,7 +595,8 @@ EffectCompositor::AddStyleUpdatesTo(RestyleTracker& aTracker)
     }
 
     for (auto& pseudoElem : elementsToRestyle) {
-      MaybeUpdateCascadeResults(pseudoElem.mElement,
+      MaybeUpdateCascadeResults(StyleBackendType::Gecko,
+                                pseudoElem.mElement,
                                 pseudoElem.mPseudoType,
                                 nullptr);
 
@@ -648,7 +657,8 @@ EffectCompositor::ClearIsRunningOnCompositor(const nsIFrame *aFrame,
 }
 
 /* static */ void
-EffectCompositor::MaybeUpdateCascadeResults(Element* aElement,
+EffectCompositor::MaybeUpdateCascadeResults(StyleBackendType aBackendType,
+                                            Element* aElement,
                                             CSSPseudoElementType aPseudoType,
                                             nsStyleContext* aStyleContext)
 {
@@ -657,17 +667,8 @@ EffectCompositor::MaybeUpdateCascadeResults(Element* aElement,
     return;
   }
 
-  nsStyleContext* styleContext = aStyleContext;
-  if (!styleContext) {
-    dom::Element* elementToRestyle = GetElementToRestyle(aElement, aPseudoType);
-    if (elementToRestyle) {
-      nsIFrame* frame = elementToRestyle->GetPrimaryFrame();
-      if (frame) {
-        styleContext = frame->StyleContext();
-      }
-    }
-  }
-  UpdateCascadeResults(*effects, aElement, aPseudoType, styleContext);
+  UpdateCascadeResults(aBackendType, *effects, aElement, aPseudoType,
+                       aStyleContext);
 
   MOZ_ASSERT(!effects->CascadeNeedsUpdate(), "Failed to update cascade state");
 }
@@ -682,8 +683,8 @@ EffectCompositor::MaybeUpdateCascadeResults(dom::Element* aElement,
     return;
   }
 
-  // FIXME: Implement the rule node traversal for stylo in Bug 1334036.
-  UpdateCascadeResults(*effects, aElement, aPseudoType, nullptr);
+  UpdateCascadeResults(StyleBackendType::Servo, *effects, aElement, aPseudoType,
+                       nullptr);
 
   MOZ_ASSERT(!effects->CascadeNeedsUpdate(), "Failed to update cascade state");
 }
@@ -765,12 +766,35 @@ EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
              "EffectSet should not change while composing style");
 }
 
-/* static */ void
-EffectCompositor::GetOverriddenProperties(nsStyleContext* aStyleContext,
+/* static */ nsCSSPropertyIDSet
+EffectCompositor::GetOverriddenProperties(StyleBackendType aBackendType,
                                           EffectSet& aEffectSet,
-                                          nsCSSPropertyIDSet&
-                                            aPropertiesOverridden)
+                                          Element* aElement,
+                                          CSSPseudoElementType aPseudoType,
+                                          nsStyleContext* aStyleContext)
 {
+  MOZ_ASSERT(aBackendType != StyleBackendType::Servo || aElement,
+             "Should have an element to get style data from if we are using"
+             " the Servo backend");
+
+  nsCSSPropertyIDSet result;
+
+  Element* elementToRestyle = GetElementToRestyle(aElement, aPseudoType);
+  if (aBackendType == StyleBackendType::Gecko && !aStyleContext) {
+    if (elementToRestyle) {
+      nsIFrame* frame = elementToRestyle->GetPrimaryFrame();
+      if (frame) {
+        aStyleContext = frame->StyleContext();
+      }
+    }
+
+    if (!aStyleContext) {
+      return result;
+    }
+  } else if (aBackendType == StyleBackendType::Servo && !elementToRestyle) {
+    return result;
+  }
+
   AutoTArray<nsCSSPropertyID, LayerAnimationInfo::kRecords> propertiesToTrack;
   {
     nsCSSPropertyIDSet propertiesToTrackAsSet;
@@ -792,16 +816,31 @@ EffectCompositor::GetOverriddenProperties(nsStyleContext* aStyleContext,
   }
 
   if (propertiesToTrack.IsEmpty()) {
-    return;
+    return result;
   }
 
-  nsRuleNode::ComputePropertiesOverridingAnimation(propertiesToTrack,
-                                                   aStyleContext,
-                                                   aPropertiesOverridden);
+  switch (aBackendType) {
+    case StyleBackendType::Servo:
+      Servo_GetProperties_Overriding_Animation(elementToRestyle,
+                                               &propertiesToTrack,
+                                               &result);
+      break;
+    case StyleBackendType::Gecko:
+      nsRuleNode::ComputePropertiesOverridingAnimation(propertiesToTrack,
+                                                       aStyleContext,
+                                                       result);
+      break;
+
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported style backend");
+  }
+
+  return result;
 }
 
 /* static */ void
-EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
+EffectCompositor::UpdateCascadeResults(StyleBackendType aBackendType,
+                                       EffectSet& aEffectSet,
                                        Element* aElement,
                                        CSSPseudoElementType aPseudoType,
                                        nsStyleContext* aStyleContext)
@@ -825,14 +864,11 @@ EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
   // We only do this for properties that we can animate on the compositor
   // since we will apply other properties on the main thread where the usual
   // cascade applies.
-  nsCSSPropertyIDSet overriddenProperties;
-  if (aStyleContext) {
-    // FIXME: Bug 1334036 (OMTA) will implement a FFI to get the properties
-    // overriding animation.
-    MOZ_ASSERT(!aStyleContext->StyleSource().IsServoComputedValues(),
-               "stylo: Not support get properties overriding animation yet.");
-    GetOverriddenProperties(aStyleContext, aEffectSet, overriddenProperties);
-  }
+  nsCSSPropertyIDSet overriddenProperties =
+    GetOverriddenProperties(aBackendType,
+                            aEffectSet,
+                            aElement, aPseudoType,
+                            aStyleContext);
 
   // Returns a bitset the represents which properties from
   // LayerAnimationInfo::sRecords are present in |aPropertySet|.
