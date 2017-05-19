@@ -1219,7 +1219,8 @@ JSCompartment::updateDebuggerObservesFlag(unsigned flag)
     MOZ_ASSERT(isDebuggee());
     MOZ_ASSERT(flag == DebuggerObservesAllExecution ||
                flag == DebuggerObservesCoverage ||
-               flag == DebuggerObservesAsmJS);
+               flag == DebuggerObservesAsmJS ||
+               flag == DebuggerObservesBinarySource);
 
     GlobalObject* global = zone()->runtimeFromActiveCooperatingThread()->gc.isForegroundSweeping()
                            ? unsafeUnbarrieredMaybeGlobal()
@@ -1229,7 +1230,8 @@ JSCompartment::updateDebuggerObservesFlag(unsigned flag)
         Debugger* dbg = *p;
         if (flag == DebuggerObservesAllExecution ? dbg->observesAllExecution() :
             flag == DebuggerObservesCoverage ? dbg->observesCoverage() :
-            dbg->observesAsmJS())
+            flag == DebuggerObservesAsmJS ? dbg->observesAsmJS() :
+            dbg->observesBinarySource())
         {
             debugModeBits |= flag;
             return;

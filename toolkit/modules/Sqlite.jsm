@@ -90,17 +90,16 @@ function logScriptError(message) {
 }
 
 /**
- * Gets connection identifier from its database file path.
+ * Gets connection identifier from its database file name.
  *
- * @param path
- *        A file string path pointing to a database file.
+ * @param fileName
+ *        A database file string name.
  * @return the connection identifier.
  */
-function getIdentifierByPath(path) {
-  let basename = OS.Path.basename(path);
-  let number = connectionCounters.get(basename) || 0;
-  connectionCounters.set(basename, number + 1);
-  return basename + "#" + number;
+function getIdentifierByFileName(fileName) {
+  let number = connectionCounters.get(fileName) || 0;
+  connectionCounters.set(fileName, number + 1);
+  return fileName + "#" + number;
 }
 
 /**
@@ -215,7 +214,7 @@ function ConnectionData(connection, identifier, options = {}) {
   this._dbConn = connection;
 
   // This is a unique identifier for the connection, generated through
-  // getIdentifierByPath.  It may be used for logging or as a key in Maps.
+  // getIdentifierByFileName.  It may be used for logging or as a key in Maps.
   this._identifier = identifier;
 
   this._open = true;
@@ -932,7 +931,7 @@ function openConnection(options) {
   }
 
   let file = FileUtils.File(path);
-  let identifier = getIdentifierByPath(path);
+  let identifier = getIdentifierByFileName(OS.Path.basename(path));
 
   log.info("Opening database: " + path + " (" + identifier + ")");
 
@@ -1028,7 +1027,7 @@ function cloneStorageConnection(options) {
   }
 
   let path = source.databaseFile.path;
-  let identifier = getIdentifierByPath(path);
+  let identifier = getIdentifierByFileName(OS.Path.basename(path));
 
   log.info("Cloning database: " + path + " (" + identifier + ")");
 
@@ -1081,10 +1080,9 @@ function wrapStorageConnection(options) {
     throw new Error("Sqlite.jsm has been shutdown. Cannot wrap connection to: " + connection.database.path);
   }
 
-  let path = connection.databaseFile.path;
-  let identifier = getIdentifierByPath(path);
+  let identifier = getIdentifierByFileName(connection.databaseFile.leafName);
 
-  log.info("Wrapping database: " + path + " (" + identifier + ")");
+  log.info("Wrapping database: " + identifier);
   return new Promise(resolve => {
     try {
       let conn = connection.QueryInterface(Ci.mozIStorageAsyncConnection);

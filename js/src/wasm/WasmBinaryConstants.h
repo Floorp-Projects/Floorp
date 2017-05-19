@@ -430,6 +430,7 @@ enum class Op
 };
 
 static const char NameSectionName[]      = "name";
+static const char SourceMappingURLSectionName[] = "sourceMappingURL";
 
 enum class NameType
 {

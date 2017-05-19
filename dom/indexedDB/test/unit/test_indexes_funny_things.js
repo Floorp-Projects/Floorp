@@ -105,7 +105,7 @@ function* testSteps()
 
   request = objectStore.index("type").openKeyCursor();
   request.onerror = errorHandler;
-  request.onsuccess = function (event) {
+  request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.key, objectStoreDataTypeSort[keyIndex].value.type,
@@ -138,7 +138,7 @@ function* testSteps()
 
   request = objectStore.index("length").openKeyCursor(null, "next");
   request.onerror = errorHandler;
-  request.onsuccess = function (event) {
+  request.onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.key, objectStoreDataLengthSort[keyIndex].value.length,
