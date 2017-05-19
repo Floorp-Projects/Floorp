@@ -299,11 +299,6 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvHideTooltip() override;
 
-  virtual mozilla::ipc::IPCResult RecvGetDPI(float* aValue) override;
-
-  virtual mozilla::ipc::IPCResult RecvGetDefaultScale(double* aValue) override;
-
-  virtual mozilla::ipc::IPCResult RecvGetWidgetRounding(int32_t* aValue) override;
 
   virtual mozilla::ipc::IPCResult RecvSetNativeChildOfShareableWindow(const uintptr_t& childWindow) override;
 
