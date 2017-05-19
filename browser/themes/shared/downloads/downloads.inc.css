@@ -249,7 +249,7 @@ richlistitem[type="download"]:last-child {
   width: 16px;
   height: 16px;
   margin: 1px;
-  filter: url("chrome://global/skin/filters.svg#fill");
+  -moz-context-properties: fill;
   fill: currentColor;
 }
 
@@ -287,27 +287,27 @@ richlistitem[type="download"]:last-child {
 /*** Button icons ***/
 
 .downloadIconCancel > .button-box > .button-icon {
-  list-style-image: url("chrome://browser/skin/panel-icons.svg#cancel");
+  list-style-image: url("chrome://browser/skin/panel-icon-cancel.svg");
 }
 
 .downloadIconShow > .button-box > .button-icon {
 %ifdef XP_MACOSX
-  list-style-image: url("chrome://browser/skin/panel-icons.svg#magnifier");
+  list-style-image: url("chrome://browser/skin/panel-icon-magnifier.svg");
 %else
-  list-style-image: url("chrome://browser/skin/panel-icons.svg#folder");
+  list-style-image: url("chrome://browser/skin/panel-icon-folder.svg");
 %endif
 }
 
 .downloadIconRetry > .button-box > .button-icon {
-  list-style-image: url("chrome://browser/skin/panel-icons.svg#retry");
+  list-style-image: url("chrome://browser/skin/panel-icon-retry.svg");
 }
 
 .downloadShowBlockedInfo > .button-box > .button-icon {
-  list-style-image: url("chrome://browser/skin/panel-icons.svg#arrow-right");
+  list-style-image: url("chrome://browser/skin/panel-icon-arrow-right.svg");
 }
 
 .downloadShowBlockedInfo > .button-box > .button-icon:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/panel-icons.svg#arrow-left");
+  list-style-image: url("chrome://browser/skin/panel-icon-arrow-left.svg");
 }
 
 /*** Blocked subview ***/
@@ -325,11 +325,11 @@ richlistitem[type="download"]:last-child {
 }
 
 #downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state[showingsubview] .downloadButton > .button-box > .button-icon {
-  list-style-image: url("chrome://browser/skin/panel-icons.svg#arrow-left");
+  list-style-image: url("chrome://browser/skin/panel-icon-arrow-left.svg");
 }
 
 #downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state[showingsubview] .downloadButton > .button-box > .button-icon:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/panel-icons.svg#arrow-right");
+  list-style-image: url("chrome://browser/skin/panel-icon-arrow-right.svg");
 }
 
 #downloadsPanel-blockedSubview {
