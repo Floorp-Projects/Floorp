@@ -81,9 +81,9 @@ public:
 
   class Record {
   public:
-    Record() {
+    explicit Record(TimeStamp aStart = TimeStamp()) {
       if (gfxPrefs::LayersDrawFPS()) {
-        mStart = TimeStamp::Now();
+        mStart = aStart.IsNull() ? TimeStamp::Now() : aStart;
       }
     }
     bool Recording() const {

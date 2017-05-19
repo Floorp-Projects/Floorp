@@ -11437,6 +11437,11 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty* ins)
         // It's a bit annoying to redo these slot calculations, which duplcate
         // LSlots and a few other things like that, but I'm not sure there's a
         // way to reuse those here.
+        //
+        // If this ever gets fixed to work with proxies (by not assuming that
+        // reserved slot indices, which is what domMemberSlotIndex() returns,
+        // match fixed slot indices), we can reenable MGetDOMProperty for
+        // proxies in IonBuilder.
         if (slot < NativeObject::MAX_FIXED_SLOTS) {
             masm.loadValue(Address(ObjectReg, NativeObject::getFixedSlotOffset(slot)),
                            JSReturnOperand);
@@ -11509,6 +11514,11 @@ CodeGenerator::visitGetDOMMemberV(LGetDOMMemberV* ins)
     // require us to have MGetDOMMember inherit from MLoadFixedSlot, and then
     // we'd have to duplicate a bunch of stuff we now get for free from
     // MGetDOMProperty.
+    //
+    // If this ever gets fixed to work with proxies (by not assuming that
+    // reserved slot indices, which is what domMemberSlotIndex() returns,
+    // match fixed slot indices), we can reenable MGetDOMMember for
+    // proxies in IonBuilder.
     Register object = ToRegister(ins->object());
     size_t slot = ins->mir()->domMemberSlotIndex();
     ValueOperand result = GetValueOutput(ins);
@@ -11524,6 +11534,11 @@ CodeGenerator::visitGetDOMMemberT(LGetDOMMemberT* ins)
     // require us to have MGetDOMMember inherit from MLoadFixedSlot, and then
     // we'd have to duplicate a bunch of stuff we now get for free from
     // MGetDOMProperty.
+    //
+    // If this ever gets fixed to work with proxies (by not assuming that
+    // reserved slot indices, which is what domMemberSlotIndex() returns,
+    // match fixed slot indices), we can reenable MGetDOMMember for
+    // proxies in IonBuilder.
     Register object = ToRegister(ins->object());
     size_t slot = ins->mir()->domMemberSlotIndex();
     AnyRegister result = ToAnyRegister(ins->getDef(0));

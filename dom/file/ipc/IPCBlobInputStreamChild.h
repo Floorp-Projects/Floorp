@@ -56,6 +56,9 @@ public:
   mozilla::ipc::IPCResult
   RecvStreamReady(const OptionalIPCStream& aStream) override;
 
+  void
+  Shutdown();
+
 private:
   ~IPCBlobInputStreamChild();
 

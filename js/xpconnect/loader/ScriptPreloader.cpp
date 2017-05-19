@@ -33,7 +33,7 @@
 #define DOC_ELEM_INSERTED_TOPIC "document-element-inserted"
 #define CLEANUP_TOPIC "xpcom-shutdown"
 #define SHUTDOWN_TOPIC "quit-application-granted"
-#define CACHE_FLUSH_TOPIC "startupcache-invalidate"
+#define CACHE_INVALIDATE_TOPIC "startupcache-invalidate"
 
 namespace mozilla {
 namespace {
@@ -163,7 +163,9 @@ ScriptPreloader::InitContentChild(ContentParent& parent)
     cache.mInitializedProcesses += processType;
 
     auto fd = cache.mCacheData.cloneFileDescriptor();
-    if (fd.IsValid()) {
+    // Don't send original cache data to new processes if the cache has been
+    // invalidated.
+    if (fd.IsValid() && !cache.mCacheInvalidated) {
         Unused << parent.SendPScriptCacheConstructor(fd, wantScriptData);
     } else {
         Unused << parent.SendPScriptCacheConstructor(NS_ERROR_FILE_NOT_FOUND, wantScriptData);
@@ -227,7 +229,7 @@ ScriptPreloader::ScriptPreloader()
     }
     obs->AddObserver(this, SHUTDOWN_TOPIC, false);
     obs->AddObserver(this, CLEANUP_TOPIC, false);
-    obs->AddObserver(this, CACHE_FLUSH_TOPIC, false);
+    obs->AddObserver(this, CACHE_INVALIDATE_TOPIC, false);
 
     AutoSafeJSAPI jsapi;
     JS_AddExtraGCRootsTracer(jsapi.cx(), TraceOp, this);
@@ -265,9 +267,11 @@ ScriptPreloader::Cleanup()
 }
 
 void
-ScriptPreloader::FlushCache()
+ScriptPreloader::InvalidateCache()
 {
     MonitorAutoLock mal(mMonitor);
+
+    mCacheInvalidated = true;
 
     for (auto& script : IterHash(mScripts)) {
         // We can only purge finished scripts here. Async scripts that are
@@ -321,8 +325,8 @@ ScriptPreloader::Observe(nsISupports* subject, const char* topic, const char16_t
         ForceWriteCacheFile();
     } else if (!strcmp(topic, CLEANUP_TOPIC)) {
         Cleanup();
-    } else if (!strcmp(topic, CACHE_FLUSH_TOPIC)) {
-        FlushCache();
+    } else if (!strcmp(topic, CACHE_INVALIDATE_TOPIC)) {
+        InvalidateCache();
     }
 
     return NS_OK;
@@ -722,6 +726,21 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
             auto& data = script->Array();
             script->mXDRRange.emplace(data.Elements(), data.Length());
         }
+    }
+
+    if (!script->mSize && !script->mScript) {
+        // If the content process is sending us a script entry for a script
+        // which was in the cache at startup, it expects us to already have this
+        // script data, so it doesn't send it.
+        //
+        // However, the cache may have been invalidated at this point (usually
+        // due to the add-on manager installing or uninstalling a legacy
+        // extension during very early startup), which means we may no longer
+        // have an entry for this script. Since that means we have no data to
+        // write to the new cache, and no JSScript to generate it from, we need
+        // to discard this entry.
+        mScripts.Remove(cachePath);
+        return;
     }
 
     script->UpdateLoadTime(loadTime);
