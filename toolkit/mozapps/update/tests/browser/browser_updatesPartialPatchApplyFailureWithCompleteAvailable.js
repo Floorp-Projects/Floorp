@@ -15,7 +15,7 @@ add_task(async function testPartialPatchApplyFailureWithCompleteAvailable() {
       notificationId: "update-restart",
       button: "secondarybutton",
       cleanup() {
-        PanelUI.removeNotification(/.*/);
+        AppMenuNotifications.removeNotification(/.*/);
       }
     },
   ]);
