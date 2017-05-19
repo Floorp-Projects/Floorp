@@ -130,6 +130,9 @@ protected:
     , mIsComposing(false)
     , mIsReserved(false)
     , mIsSynthesizedByTIP(false)
+    , mEditCommandsForSingleLineEditorInitialized(false)
+    , mEditCommandsForMultiLineEditorInitialized(false)
+    , mEditCommandsForRichTextEditorInitialized(false)
   {
   }
 
@@ -158,6 +161,9 @@ public:
     , mIsComposing(false)
     , mIsReserved(false)
     , mIsSynthesizedByTIP(false)
+    , mEditCommandsForSingleLineEditorInitialized(false)
+    , mEditCommandsForMultiLineEditorInitialized(false)
+    , mEditCommandsForRichTextEditorInitialized(false)
   {
     // If this is a keyboard event on a plugin, it shouldn't fired on content.
     mFlags.mOnlySystemGroupDispatchInContent =
@@ -197,6 +203,9 @@ public:
     WidgetKeyboardEvent* result =
       new WidgetKeyboardEvent(false, mMessage, nullptr);
     result->AssignKeyEventData(*this, true);
+    result->mEditCommandsForSingleLineEditor = mEditCommandsForSingleLineEditor;
+    result->mEditCommandsForMultiLineEditor = mEditCommandsForMultiLineEditor;
+    result->mEditCommandsForRichTextEditor = mEditCommandsForRichTextEditor;
     result->mFlags = mFlags;
     return result;
   }
@@ -277,6 +286,29 @@ public:
   // Indicates whether the event is synthesized from Text Input Processor
   // or an actual event from nsAppShell.
   bool mIsSynthesizedByTIP;
+
+#ifdef DEBUG
+  /**
+   * IsEditCommandsInitialized() returns true if edit commands for aType
+   * was already initialized.  Otherwise, false.
+   */
+  bool IsEditCommandsInitialized(
+         nsIWidget::NativeKeyBindingsType aType) const
+  {
+    return const_cast<WidgetKeyboardEvent*>(this)->
+             IsEditCommandsInitializedRef(aType);
+  }
+#endif // #ifdef DEBUG
+
+  /**
+   * Execute edit commands for aType.
+   *
+   * @return        true if the caller should do nothing anymore.
+   *                false, otherwise.
+   */
+  bool ExecuteEditCommands(nsIWidget::NativeKeyBindingsType aType,
+                           nsIWidget::DoCommandCallback aCallback,
+                           void* aCallbackData);
 
   // If the key should cause keypress events, this returns true.
   // Otherwise, false.
@@ -408,6 +440,17 @@ public:
 #endif
     mInputMethodAppState = aEvent.mInputMethodAppState;
     mIsSynthesizedByTIP = aEvent.mIsSynthesizedByTIP;
+
+    // Don't copy mEditCommandsFor*Editor because it may require a lot of
+    // memory space.  For example, if the event is dispatched but grabbed by
+    // a JS variable, they are not necessary anymore.
+
+    mEditCommandsForSingleLineEditorInitialized =
+      aEvent.mEditCommandsForSingleLineEditorInitialized;
+    mEditCommandsForMultiLineEditorInitialized =
+      aEvent.mEditCommandsForMultiLineEditorInitialized;
+    mEditCommandsForRichTextEditorInitialized =
+      aEvent.mEditCommandsForRichTextEditorInitialized;
   }
 
 private:
@@ -419,6 +462,52 @@ private:
                           CodeNameIndex> CodeNameIndexHashtable;
   static KeyNameIndexHashtable* sKeyNameIndexHashtable;
   static CodeNameIndexHashtable* sCodeNameIndexHashtable;
+
+  // mEditCommandsFor*Editor store edit commands.  This should be initialized
+  // with InitEditCommandsFor().
+  // XXX Ideally, this should be array of Command rather than CommandInt.
+  //     However, ParamTraits isn't aware of enum array.
+  nsTArray<CommandInt> mEditCommandsForSingleLineEditor;
+  nsTArray<CommandInt> mEditCommandsForMultiLineEditor;
+  nsTArray<CommandInt> mEditCommandsForRichTextEditor;
+
+  nsTArray<CommandInt>& EditCommandsRef(nsIWidget::NativeKeyBindingsType aType)
+  {
+    switch (aType) {
+      case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+        return mEditCommandsForSingleLineEditor;
+      case nsIWidget::NativeKeyBindingsForMultiLineEditor:
+        return mEditCommandsForMultiLineEditor;
+      case nsIWidget::NativeKeyBindingsForRichTextEditor:
+        return mEditCommandsForRichTextEditor;
+      default:
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+          "Invalid native key binding type");
+    }
+  }
+
+  // mEditCommandsFor*EditorInitialized are set to true when
+  // InitEditCommandsFor() initializes edit commands for the type.
+  bool mEditCommandsForSingleLineEditorInitialized;
+  bool mEditCommandsForMultiLineEditorInitialized;
+  bool mEditCommandsForRichTextEditorInitialized;
+
+  bool& IsEditCommandsInitializedRef(nsIWidget::NativeKeyBindingsType aType)
+  {
+    switch (aType) {
+      case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+        return mEditCommandsForSingleLineEditorInitialized;
+      case nsIWidget::NativeKeyBindingsForMultiLineEditor:
+        return mEditCommandsForMultiLineEditorInitialized;
+      case nsIWidget::NativeKeyBindingsForRichTextEditor:
+        return mEditCommandsForRichTextEditorInitialized;
+      default:
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+          "Invalid native key binding type");
+    }
+  }
+
+  void InitEditCommandsFor(nsIWidget::NativeKeyBindingsType aType);
 };
 
 /******************************************************************************

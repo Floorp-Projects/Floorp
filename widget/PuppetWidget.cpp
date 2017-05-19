@@ -559,9 +559,10 @@ PuppetWidget::ExecuteNativeKeyBinding(
                 DoCommandCallback aCallback,
                 void* aCallbackData)
 {
+  MOZ_ASSERT(!aEvent.IsEditCommandsInitialized(aType));
+
   AutoCacheNativeKeyCommands autoCache(this);
-  if (!aEvent.mWidget && !mNativeKeyCommandsValid) {
-    MOZ_ASSERT(!aEvent.mFlags.mIsSynthesizedForTests);
+  if (!mNativeKeyCommandsValid) {
     // Abort if untrusted to avoid leaking system settings
     if (NS_WARN_IF(!aEvent.IsTrusted())) {
       return false;

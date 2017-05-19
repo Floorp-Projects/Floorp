@@ -603,6 +603,57 @@ WidgetKeyboardEvent::KeyNameIndexHashtable*
 WidgetKeyboardEvent::CodeNameIndexHashtable*
   WidgetKeyboardEvent::sCodeNameIndexHashtable = nullptr;
 
+static void
+DoCommandCallback(Command aCommand, void* aData)
+{
+  static_cast<nsTArray<CommandInt>*>(aData)->AppendElement(aCommand);
+}
+
+void
+WidgetKeyboardEvent::InitEditCommandsFor(nsIWidget::NativeKeyBindingsType aType)
+{
+  MOZ_ASSERT(mWidget);
+  MOZ_RELEASE_ASSERT(IsTrusted());
+
+  bool& initialized = IsEditCommandsInitializedRef(aType);
+  if (initialized) {
+    return;
+  }
+  nsTArray<CommandInt>& commands = EditCommandsRef(aType);
+  mWidget->ExecuteNativeKeyBinding(aType, *this, DoCommandCallback, &commands);
+  initialized = true;
+}
+
+bool
+WidgetKeyboardEvent::ExecuteEditCommands(nsIWidget::NativeKeyBindingsType aType,
+                                         nsIWidget::DoCommandCallback aCallback,
+                                         void* aCallbackData)
+{
+  // If the event was created without widget, e.g., created event in chrome
+  // script, this shouldn't execute native key bindings.
+  if (NS_WARN_IF(!mWidget)) {
+    return false;
+  }
+
+  // This event should be trusted event here and we shouldn't expose native
+  // key binding information to web contents with untrusted events.
+  if (NS_WARN_IF(!IsTrusted())) {
+    return false;
+  }
+
+  InitEditCommandsFor(aType);
+
+  const nsTArray<CommandInt>& commands = EditCommandsRef(aType);
+  if (commands.IsEmpty()) {
+    return false;
+  }
+
+  for (CommandInt command : commands) {
+    aCallback(static_cast<Command>(command), aCallbackData);
+  }
+  return true;
+}
+
 bool
 WidgetKeyboardEvent::ShouldCauseKeypressEvents() const
 {
