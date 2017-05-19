@@ -6946,10 +6946,7 @@ FlushThrottledStyles(nsIDocument *aDocument, void *aData)
   if (shell && shell->IsVisible()) {
     nsPresContext* presContext = shell->GetPresContext();
     if (presContext) {
-      if (presContext->RestyleManager()->IsGecko()) {
-        // XXX stylo: ServoRestyleManager doesn't support animations yet.
-        presContext->RestyleManager()->AsGecko()->UpdateOnlyAnimationStyles();
-      }
+      presContext->RestyleManager()->UpdateOnlyAnimationStyles();
     }
   }
 
