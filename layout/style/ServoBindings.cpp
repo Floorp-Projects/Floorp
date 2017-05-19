@@ -1744,6 +1744,15 @@ Gecko_NewCSSValueSharedList(uint32_t aLen)
   return list.forget().take();
 }
 
+nsCSSValueSharedList*
+Gecko_NewNoneTransform()
+{
+  RefPtr<nsCSSValueSharedList> list = new nsCSSValueSharedList;
+  list->mHead = new nsCSSValueList;
+  list->mHead->mValue.SetNoneValue();
+  return list.forget().take();
+}
+
 void
 Gecko_CSSValue_SetAbsoluteLength(nsCSSValueBorrowedMut aCSSValue, nscoord aLen)
 {
