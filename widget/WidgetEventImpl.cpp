@@ -628,12 +628,6 @@ WidgetKeyboardEvent::InitAllEditCommands()
   InitEditCommandsFor(nsIWidget::NativeKeyBindingsForRichTextEditor);
 }
 
-static void
-DoCommandCallback(Command aCommand, void* aData)
-{
-  static_cast<nsTArray<CommandInt>*>(aData)->AppendElement(aCommand);
-}
-
 void
 WidgetKeyboardEvent::InitEditCommandsFor(nsIWidget::NativeKeyBindingsType aType)
 {
@@ -645,13 +639,13 @@ WidgetKeyboardEvent::InitEditCommandsFor(nsIWidget::NativeKeyBindingsType aType)
     return;
   }
   nsTArray<CommandInt>& commands = EditCommandsRef(aType);
-  mWidget->ExecuteNativeKeyBinding(aType, *this, DoCommandCallback, &commands);
+  mWidget->GetEditCommands(aType, *this, commands);
   initialized = true;
 }
 
 bool
 WidgetKeyboardEvent::ExecuteEditCommands(nsIWidget::NativeKeyBindingsType aType,
-                                         nsIWidget::DoCommandCallback aCallback,
+                                         DoCommandCallback aCallback,
                                          void* aCallbackData)
 {
   // If the event was created without widget, e.g., created event in chrome

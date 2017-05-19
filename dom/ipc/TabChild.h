@@ -511,8 +511,9 @@ public:
 
   void NotifyPainted();
 
-  void RequestNativeKeyBindings(mozilla::widget::AutoCacheNativeKeyCommands* aAutoCache,
-                                const WidgetKeyboardEvent* aEvent);
+  void RequestNativeKeyBindings(nsIWidget::NativeKeyBindingsType aType,
+                                const WidgetKeyboardEvent& aEvent,
+                                nsTArray<CommandInt>& aCommands);
 
   /**
    * Signal to this TabChild that it should be made visible:

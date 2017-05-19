@@ -157,11 +157,10 @@ public:
                              const mozilla::Maybe<ZoomConstraints>& aConstraints) override;
   bool AsyncPanZoomEnabled() const override;
 
-  virtual bool
-  ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
-                          const mozilla::WidgetKeyboardEvent& aEvent,
-                          DoCommandCallback aCallback,
-                          void* aCallbackData) override;
+  virtual void GetEditCommands(
+                 NativeKeyBindingsType aType,
+                 const mozilla::WidgetKeyboardEvent& aEvent,
+                 nsTArray<mozilla::CommandInt>& aCommands) override;
 
   friend struct AutoCacheNativeKeyCommands;
 
