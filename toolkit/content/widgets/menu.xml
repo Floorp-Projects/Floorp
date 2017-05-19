@@ -180,7 +180,7 @@
 
   <binding id="menuitem" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
-      <xul:label class="menu-text" xbl:inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menu-text" xbl:inherits="value=label,accesskey,crop,highlightable" crop="right"/>
       <xul:hbox class="menu-accel-container" anonid="accel">
         <xul:label class="menu-accel" xbl:inherits="value=acceltext"/>
       </xul:hbox>
@@ -216,7 +216,8 @@
                 xbl:inherits="selected,_moz-menuactive,disabled,checked">
         <xul:image class="menu-iconic-icon" xbl:inherits="src=image,validate,src"/>
       </xul:hbox>
-      <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop,highlightable" crop="right"/>
+      <xul:label class="menu-iconic-highlightable-text" xbl:inherits="xbl:text=label,crop,accesskey,highlightable" crop="right"/>
       <children/>
       <xul:hbox class="menu-accel-container" anonid="accel">
         <xul:label class="menu-iconic-accel" xbl:inherits="value=acceltext"/>
@@ -230,7 +231,8 @@
                 xbl:inherits="selected,disabled,checked">
         <xul:image class="menu-iconic-icon" xbl:inherits="src=image,validate,src"/>
       </xul:hbox>
-      <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop,highlightable" crop="right"/>
+      <xul:label class="menu-iconic-highlightable-text" xbl:inherits="xbl:text=label,crop,accesskey,highlightable" crop="right"/>
     </content>
   </binding>
 
@@ -240,7 +242,8 @@
                 xbl:inherits="selected,disabled,checked">
         <xul:image class="menu-iconic-icon" xbl:inherits="src=image,validate,src"/>
       </xul:hbox>
-      <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,crop" crop="right"/>
+      <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,crop,highlightable" crop="right"/>
+      <xul:label class="menu-iconic-highlightable-text" xbl:inherits="xbl:text=label,crop,highlightable" crop="right"/>
     </content>
   </binding>
 
@@ -261,7 +264,8 @@
       <xul:hbox class="menu-iconic-left" align="center" pack="center">
         <xul:image class="menu-iconic-icon" xbl:inherits="src=image"/>
       </xul:hbox>
-      <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop,highlightable" crop="right"/>
+      <xul:label class="menu-iconic-highlightable-text" xbl:inherits="xbl:text=label,crop,accesskey,highlightable" crop="right"/>
       <xul:hbox class="menu-accel-container" anonid="accel">
         <xul:label class="menu-iconic-accel" xbl:inherits="value=acceltext"/>
       </xul:hbox>
@@ -271,14 +275,14 @@
       <children includes="menupopup|template"/>
     </content>
   </binding>
-  
+
   <binding id="menubutton-item" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
       <xul:label class="menubutton-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
       <children includes="menupopup"/>
     </content>
-  </binding>  
-  
+  </binding>
+
   <binding id="menuseparator" role="xul:menuseparator"
            extends="chrome://global/content/bindings/menu.xml#menuitem-base">
   </binding>
