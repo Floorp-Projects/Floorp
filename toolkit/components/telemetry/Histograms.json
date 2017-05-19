@@ -12914,7 +12914,7 @@
   },
   "DISPLAY_ITEM_USAGE_COUNT": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["mchang@mozilla.com", "gfx-telemetry@mozilla.com"],
+    "alert_emails": ["mchang@mozilla.com", "gfx-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1353521],
     "expires_in_version": "56",
     "kind": "enumerated",
