@@ -15,17 +15,11 @@ var requestedLocales = [defaultLocale, notSupported];
     
 var supportedLocales;
 
-if (!Intl.PluralRules.hasOwnProperty('supportedLocalesOf')) {
-    $ERROR("Intl.PluralRules doesn't have a supportedLocalesOf property.");
-}
+assert(Intl.PluralRules.hasOwnProperty('supportedLocalesOf'), "Intl.PluralRules doesn't have a supportedLocalesOf property.");
     
 supportedLocales = Intl.PluralRules.supportedLocalesOf(requestedLocales);
-if (supportedLocales.length !== 1) {
-    $ERROR('The length of supported locales list is not 1.');
-}
-    
-if (supportedLocales[0] !== defaultLocale) {
-    $ERROR('The default locale is not returned in the supported list.');
-}
+assert.sameValue(supportedLocales.length, 1, 'The length of supported locales list is not 1.');
+
+assert.sameValue(supportedLocales[0], defaultLocale, 'The default locale is not returned in the supported list.');
 
 reportCompare(0, 0);

@@ -84,9 +84,11 @@ ifdef MOZ_ASAN
 endif # MOZ_ASAN
 endif # Darwin
 ifdef MOZ_STYLO
+ifndef MOZ_ARTIFACT_BUILDS
 	@echo 'Packing stylo binding files...'
 	cd '$(DIST)/rust_bindings/style' && \
 		zip -r5D '$(ABS_DIST)/$(PKG_PATH)$(STYLO_BINDINGS_PACKAGE)' .
+endif # MOZ_ARTIFACT_BUILDS
 endif # MOZ_STYLO
 
 prepare-package: stage-package

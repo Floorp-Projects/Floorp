@@ -130,9 +130,11 @@ class BasePopup {
         this.viewNode.style.maxHeight = "";
       }
 
-      if (this.panel) {
-        this.panel.style.removeProperty("--arrowpanel-background");
-        this.panel.style.removeProperty("--panel-arrow-image-vertical");
+      let {panel} = this;
+      if (panel) {
+        panel.style.removeProperty("--arrowpanel-background");
+        panel.style.removeProperty("--panel-arrow-image-vertical");
+        panel.removeAttribute("remote");
       }
 
       this.browser = null;
@@ -377,6 +379,9 @@ class PanelPopup extends BasePopup {
     panel.setAttribute("tabspecific", "true");
     panel.setAttribute("type", "arrow");
     panel.setAttribute("role", "group");
+    if (extension.remote) {
+      panel.setAttribute("remote", "true");
+    }
 
     document.getElementById("mainPopupSet").appendChild(panel);
 
@@ -449,6 +454,10 @@ class ViewPopup extends BasePopup {
   async attach(viewNode) {
     this.viewNode = viewNode;
     this.viewNode.addEventListener(this.DESTROY_EVENT, this);
+
+    if (this.extension.remote) {
+      this.panel.setAttribute("remote", "true");
+    }
 
     // Wait until the browser element is fully initialized, and give it at least
     // a short grace period to finish loading its initial content, if necessary.

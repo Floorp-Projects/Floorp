@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
-import android.annotation.SuppressLint;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
@@ -39,6 +38,7 @@ import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -78,10 +78,12 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Looper;
 import android.os.ParcelFileDescriptor;
+import android.os.PowerManager;
 import android.os.SystemClock;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.v4.util.SimpleArrayMap;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -278,18 +280,6 @@ public class GeckoAppShell
         CRASH_HANDLER.uncaughtException(null, e);
     }
 
-    @WrapForJNI
-    public static void launchOrBringToFront() {
-        GeckoInterface gi = getGeckoInterface();
-        if (gi == null || !gi.isForegrounded()) {
-            Intent intent = new Intent(Intent.ACTION_MAIN);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-            intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
-
-            getApplicationContext().startActivity(intent);
-        }
-    }
-
     private static float getLocationAccuracy(Location location) {
         float radius = location.getAccuracy();
         return (location.hasAccuracy() && radius > 0) ? radius : 1001;
@@ -401,8 +391,11 @@ public class GeckoAppShell
                                                        double altitude, float accuracy,
                                                        float bearing, float speed, long time);
 
-    private static class DefaultListeners
-            implements SensorEventListener, LocationListener, NotificationListener, ScreenOrientationDelegate {
+    private static class DefaultListeners implements SensorEventListener,
+                                                     LocationListener,
+                                                     NotificationListener,
+                                                     ScreenOrientationDelegate,
+                                                     WakeLockDelegate {
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
         }
@@ -533,10 +526,46 @@ public class GeckoAppShell
             // Do nothing.
         }
 
-        @Override
+        @Override // ScreenOrientationDelegate
         public boolean setRequestedOrientationForCurrentActivity(int requestedActivityInfoOrientation) {
             // Do nothing, and report that the orientation was not set.
             return false;
+        }
+
+        private SimpleArrayMap<String, PowerManager.WakeLock> mWakeLocks;
+
+        @Override // WakeLockDelegate
+        @SuppressLint("Wakelock") // We keep the wake lock independent from the function
+                                  // scope, so we need to suppress the linter warning.
+        public void setWakeLockState(final String lock, final int state) {
+            if (mWakeLocks == null) {
+                mWakeLocks = new SimpleArrayMap<>(WakeLockDelegate.LOCKS_COUNT);
+            }
+
+            PowerManager.WakeLock wl = mWakeLocks.get(lock);
+
+            if (state == WakeLockDelegate.STATE_LOCKED_FOREGROUND && wl == null) {
+                final PowerManager pm = (PowerManager)
+                        getApplicationContext().getSystemService(Context.POWER_SERVICE);
+
+                if (WakeLockDelegate.LOCK_CPU.equals(lock)) {
+                  wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, lock);
+                } else if (WakeLockDelegate.LOCK_SCREEN.equals(lock)) {
+                  // ON_AFTER_RELEASE is set, the user activity timer will be reset when the
+                  // WakeLock is released, causing the illumination to remain on a bit longer.
+                  wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
+                                      PowerManager.ON_AFTER_RELEASE, lock);
+                } else {
+                    Log.w(LOGTAG, "Unsupported wake-lock: " + lock);
+                    return;
+                }
+
+                wl.acquire();
+                mWakeLocks.put(lock, wl);
+            } else if (state != WakeLockDelegate.STATE_LOCKED_FOREGROUND && wl != null) {
+                wl.release();
+                mWakeLocks.remove(lock);
+            }
         }
     }
 
@@ -544,6 +573,7 @@ public class GeckoAppShell
     private static SensorEventListener sSensorListener = DEFAULT_LISTENERS;
     private static LocationListener sLocationListener = DEFAULT_LISTENERS;
     private static NotificationListener sNotificationListener = DEFAULT_LISTENERS;
+    private static WakeLockDelegate sWakeLockDelegate = DEFAULT_LISTENERS;
 
     /**
      * A delegate for supporting the Screen Orientation API.
@@ -582,21 +612,24 @@ public class GeckoAppShell
         sScreenOrientationDelegate = (screenOrientationDelegate != null) ? screenOrientationDelegate : DEFAULT_LISTENERS;
     }
 
+    public static WakeLockDelegate getWakeLockDelegate() {
+        return sWakeLockDelegate;
+    }
+
+    public void setWakeLockDelegate(final WakeLockDelegate delegate) {
+        sWakeLockDelegate = (delegate != null) ? delegate : DEFAULT_LISTENERS;
+    }
+
     @WrapForJNI(calledFrom = "gecko")
     private static void enableSensor(int aSensortype) {
-        GeckoInterface gi = getGeckoInterface();
-        if (gi == null) {
-            return;
-        }
-        SensorManager sm = (SensorManager)
+        final SensorManager sm = (SensorManager)
             getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
 
         switch (aSensortype) {
         case GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR:
             if (gGameRotationVectorSensor == null) {
-                gGameRotationVectorSensor = sm.getDefaultSensor(15);
-                    // sm.getDefaultSensor(
-                    //     Sensor.TYPE_GAME_ROTATION_VECTOR); // API >= 18
+                gGameRotationVectorSensor = sm.getDefaultSensor(
+                        Sensor.TYPE_GAME_ROTATION_VECTOR);
             }
             if (gGameRotationVectorSensor != null) {
                 sm.registerListener(getSensorListener(),
@@ -700,11 +733,7 @@ public class GeckoAppShell
 
     @WrapForJNI(calledFrom = "gecko")
     private static void disableSensor(int aSensortype) {
-        GeckoInterface gi = getGeckoInterface();
-        if (gi == null)
-            return;
-
-        SensorManager sm = (SensorManager)
+        final SensorManager sm = (SensorManager)
             getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
 
         switch (aSensortype) {
@@ -765,17 +794,6 @@ public class GeckoAppShell
     @WrapForJNI(calledFrom = "gecko")
     private static void moveTaskToBack() {
         // This is a vestige, to be removed as full-screen support for GeckoView is implemented.
-    }
-
-    // Creates a homescreen shortcut for a web page.
-    // This is the entry point from nsIShellService.
-    @WrapForJNI(calledFrom = "gecko")
-    public static void createShortcut(final String aTitle, final String aURI) {
-        final GeckoInterface geckoInterface = getGeckoInterface();
-        if (geckoInterface == null) {
-            return;
-        }
-        geckoInterface.createShortcut(aTitle, aURI);
     }
 
     @JNITarget
@@ -1592,8 +1610,6 @@ public class GeckoAppShell
 
     @WrapForJNI
     private static Class<?> loadPluginClass(String className, String libName) {
-        if (getGeckoInterface() == null)
-            return null;
         try {
             final String packageName = getPluginPackage(libName);
             final int contextFlags = Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY;
@@ -1645,76 +1661,15 @@ public class GeckoAppShell
     }
 
     public interface GeckoInterface {
-        public @NonNull EventDispatcher getAppEventDispatcher();
-
         public void enableOrientationListener();
         public void disableOrientationListener();
         public void addAppStateListener(AppStateListener listener);
         public void removeAppStateListener(AppStateListener listener);
-        public void notifyWakeLockChanged(String topic, String state);
-        public boolean areTabsShown();
-        public void invalidateOptionsMenu();
-        public boolean isForegrounded();
-
-        /**
-         * Create a shortcut -- generally a home-screen icon -- linking the given title to the given URI.
-         * <p>
-         * This method is always invoked on the Gecko thread.
-         *
-         * @param title of URI to link to.
-         * @param URI to link to.
-         */
-        public void createShortcut(String title, String URI);
-
-        /**
-         * Check if the given URI is visited.
-         * <p/>
-         * If it has been visited, call {@link GeckoAppShell#notifyUriVisited(String)}.  (If it
-         * has not been visited, do nothing.)
-         * <p/>
-         * This method is always invoked on the Gecko thread.
-         *
-         * @param uri to check.
-         */
-        public void checkUriVisited(String uri);
-
-        /**
-         * Mark the given URI as visited in Gecko.
-         * <p/>
-         * Implementors may maintain some local store of visited URIs in order to be able to
-         * answer {@link #checkUriVisited(String)} requests affirmatively.
-         * <p/>
-         * This method is always invoked on the Gecko thread.
-         *
-         * @param uri to mark.
-         */
-        public void markUriVisited(final String uri);
-
-        /**
-         * Set the title of the given URI, as determined by Gecko.
-         * <p/>
-         * This method is always invoked on the Gecko thread.
-         *
-         * @param uri given.
-         * @param title to associate with the given URI.
-         */
-        public void setUriTitle(final String uri, final String title);
-
-        public void setAccessibilityEnabled(boolean enabled);
 
         public boolean openUriExternal(String targetURI, String mimeType, String packageName, String className, String action, String title);
 
         public String[] getHandlersForMimeType(String mimeType, String action);
         public String[] getHandlersForURL(String url, String action);
-
-        /**
-         * URI of the underlying chrome window to be opened, or null to use the default GeckoView
-         * XUL container <tt>chrome://geckoview/content/geckoview.xul</tt>.  See
-         * <a href="https://developer.mozilla.org/en/docs/toolkit.defaultChromeURI">https://developer.mozilla.org/en/docs/toolkit.defaultChromeURI</a>
-         *
-         * @return URI or null.
-         */
-        String getDefaultChromeURI();
     };
 
     private static GeckoInterface sGeckoInterface;
@@ -1863,33 +1818,6 @@ public class GeckoAppShell
         return GeckoBatteryManager.getCurrentInformation();
     }
 
-    @WrapForJNI(stubName = "CheckURIVisited", calledFrom = "gecko")
-    private static void checkUriVisited(String uri) {
-        final GeckoInterface geckoInterface = getGeckoInterface();
-        if (geckoInterface == null) {
-            return;
-        }
-        geckoInterface.checkUriVisited(uri);
-    }
-
-    @WrapForJNI(stubName = "MarkURIVisited", calledFrom = "gecko")
-    private static void markUriVisited(final String uri) {
-        final GeckoInterface geckoInterface = getGeckoInterface();
-        if (geckoInterface == null) {
-            return;
-        }
-        geckoInterface.markUriVisited(uri);
-    }
-
-    @WrapForJNI(stubName = "SetURITitle", calledFrom = "gecko")
-    private static void setUriTitle(final String uri, final String title) {
-        final GeckoInterface geckoInterface = getGeckoInterface();
-        if (geckoInterface == null) {
-            return;
-        }
-        geckoInterface.setUriTitle(uri, title);
-    }
-
     @WrapForJNI(calledFrom = "gecko")
     private static void hideProgressDialog() {
         // unused stub
@@ -1975,9 +1903,18 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    private static void notifyWakeLockChanged(String topic, String state) {
-        if (getGeckoInterface() != null)
-            getGeckoInterface().notifyWakeLockChanged(topic, state);
+    private static void notifyWakeLockChanged(final String topic, final String state) {
+        final int intState;
+        if ("unlocked".equals(state)) {
+            intState = WakeLockDelegate.STATE_UNLOCKED;
+        } else if ("locked-foreground".equals(state)) {
+            intState = WakeLockDelegate.STATE_LOCKED_FOREGROUND;
+        } else if ("locked-background".equals(state)) {
+            intState = WakeLockDelegate.STATE_LOCKED_BACKGROUND;
+        } else {
+            throw new IllegalArgumentException();
+        }
+        getWakeLockDelegate().setWakeLockState(topic, intState);
     }
 
     @WrapForJNI(calledFrom = "gecko")

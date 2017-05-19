@@ -11,7 +11,7 @@ import android.support.design.widget.NavigationView;
 import android.view.MenuItem;
 import android.view.View;
 
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
@@ -262,7 +262,7 @@ public abstract class ActivityStreamContextMenu
                 break;
 
             case R.id.add_homescreen:
-                GeckoAppShell.createShortcut(item.getTitle(), item.getUrl());
+                GeckoApplication.createShortcut(item.getTitle(), item.getUrl());
                 break;
 
             case R.id.open_new_tab:

@@ -12,8 +12,6 @@ author: Norbert Lindenberg
 var obj = new Intl.DateTimeFormat();
 
 var toStringValue = Object.prototype.toString.call(obj);
-if (toStringValue !== "[object Object]") {
-    $ERROR("Intl.DateTimeFormat instance produces wrong [[Class]] - toString returns " + toStringValue + ".");
-}
+assert.sameValue(toStringValue, "[object Object]", "Intl.DateTimeFormat instance produces wrong [[Class]] - toString returns " + toStringValue + ".");
 
 reportCompare(0, 0);
