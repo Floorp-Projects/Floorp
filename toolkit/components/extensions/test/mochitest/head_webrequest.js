@@ -1,12 +1,5 @@
 "use strict";
 
-// SelfSupport has a tendency to fire when running a test alone (it would
-// fire in some earlier test otherwise), without a good way to turn it off
-// we just set the url to "".
-SpecialPowers.pushPrefEnv({
-  set: [["browser.selfsupport.url", ""]],
-});
-
 let commonEvents = {
   "onBeforeRequest":     [{urls: ["<all_urls>"]}, ["blocking"]],
   "onBeforeSendHeaders": [{urls: ["<all_urls>"]}, ["blocking", "requestHeaders"]],

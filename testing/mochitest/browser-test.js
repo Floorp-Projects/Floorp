@@ -11,9 +11,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
   "resource:///modules/ContentSearch.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "SelfSupportBackend",
-  "resource:///modules/SelfSupportBackend.jsm");
-
 const SIMPLETEST_OVERRIDES =
   ["ok", "is", "isnot", "todo", "todo_is", "todo_isnot", "info", "expectAssertions", "requestCompleteLog"];
 
@@ -602,7 +599,6 @@ Tester.prototype = {
             sidebar.docShell.createAboutBlankContentViewer(null);
             sidebar.setAttribute("src", "about:blank");
 
-            SelfSupportBackend.uninit();
             SocialShare.uninit();
           }
 
