@@ -2901,9 +2901,7 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
   // parsed (including having line-height removed).  (Older drafts of
   // the spec required font sizes be converted to pixels, but that no
   // longer seems to be required.)
-  Servo_DeclarationBlock_SerializeOneValue(declarations,
-                                           eCSSProperty_font,
-                                           &aOutUsedFont);
+  Servo_SerializeFontValueForCanvas(declarations, &aOutUsedFont);
 
   return sc.forget();
 }
