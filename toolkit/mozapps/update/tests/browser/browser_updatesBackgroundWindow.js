@@ -26,7 +26,7 @@ add_task(async function testUpdatesBackgroundWindow() {
       notificationId: "update-restart",
       button: "secondarybutton",
       cleanup() {
-        PanelUI.removeNotification(/.*/);
+        AppMenuNotifications.removeNotification(/.*/);
       }
     },
   ]);

@@ -729,6 +729,10 @@ const PanelUI = {
       return;
     }
 
+    if (notification.options.beforeShowDoorhanger) {
+      notification.options.beforeShowDoorhanger(document);
+    }
+
     let anchor = this._getPanelAnchor(this.menuButton);
 
     this.notificationPanel.hidden = false;

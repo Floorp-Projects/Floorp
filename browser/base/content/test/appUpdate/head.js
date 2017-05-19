@@ -1,6 +1,11 @@
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AppMenuNotifications",
+                                  "resource://gre/modules/AppMenuNotifications.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateListener",
+                                  "resource://gre/modules/UpdateListener.jsm");
+
 const IS_MACOSX = ("nsILocalFileMac" in Ci);
 const IS_WIN = ("@mozilla.org/windows-registry-key;1" in Cc);
 
@@ -13,16 +18,18 @@ const PREF_APP_UPDATE_LASTUPDATETIME = "app.update.lastUpdateTime.background-upd
 
 let gRembemberedPrefs = [];
 
-const DATA_URI_SPEC =  "chrome://mochitests/content/browser/browser/base/content/test/appUpdate/";
+const DATA_URI_SPEC =  "chrome://mochitests/content/browser/toolkit/mozapps/update/tests/browser/";
 
 var DEBUG_AUS_TEST = true;
 var gUseTestUpdater = false;
 
 const LOG_FUNCTION = info;
 
+const MAX_UPDATE_COPY_ATTEMPTS = 10;
+
 /* import-globals-from testConstants.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "testConstants.js", this);
-/* import-globals-from ../../../../../toolkit/mozapps/update/tests/data/shared.js */
+/* import-globals-from ../data/shared.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
 
 var gURLData = URL_HOST + "/" + REL_PATH_DATA;
@@ -104,8 +111,7 @@ function runUpdateTest(updateParams, checkAttempts, steps) {
   return (async function() {
     registerCleanupFunction(() => {
       gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "");
-      gMenuButtonUpdateBadge.uninit();
-      gMenuButtonUpdateBadge.init();
+      UpdateListener.reset();
       cleanUpUpdates();
     });
 
@@ -161,7 +167,7 @@ function runUpdateProcessingTest(updates, steps) {
   return (async function() {
     registerCleanupFunction(() => {
       gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "");
-      gMenuButtonUpdateBadge.reset();
+      UpdateListener.reset();
       cleanUpUpdates();
     });
 
@@ -203,7 +209,7 @@ function processStep(step) {
   return (async function() {
 
     await BrowserTestUtils.waitForEvent(PanelUI.notificationPanel, "popupshown");
-    const shownNotification = PanelUI.activeNotification.id;
+    const shownNotification = AppMenuNotifications.activeNotification.id;
 
     is(shownNotification, notificationId, "The right notification showed up.");
     if (shownNotification != notificationId) {
@@ -335,7 +341,7 @@ function moveRealUpdater() {
  * since Windows debug builds at times leave the file in use. After success it
  * will call runTest to continue the test.
  */
-function copyTestUpdater() {
+function copyTestUpdater(attempt = 0) {
   return (async function() {
     try {
       // Copy the test updater
@@ -349,12 +355,15 @@ function copyTestUpdater() {
 
       let testUpdater = testUpdaterDir.clone();
       testUpdater.append(FILE_UPDATER_BIN);
+
       testUpdater.copyToFollowingLinks(baseAppDir, FILE_UPDATER_BIN);
     } catch (e) {
-      logTestInfo("Attempt to copy the test updater failed... " +
-                  "will try again, Exception: " + e);
-      await delay();
-      await copyTestUpdater();
+      if (attempt < MAX_UPDATE_COPY_ATTEMPTS) {
+        logTestInfo("Attempt to copy the test updater failed... " +
+                    "will try again, Exception: " + e);
+        await delay();
+        await copyTestUpdater(attempt + 1);
+      }
     }
   })();
 }
