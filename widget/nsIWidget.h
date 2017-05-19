@@ -1817,21 +1817,19 @@ public:
     virtual MOZ_MUST_USE nsresult
     AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent) = 0;
 
-    /*
-     * Execute native key bindings for aType.
+    /**
+     * Retrieve edit commands when the key combination of aEvent is used
+     * in platform native applications.
      */
-    typedef void (*DoCommandCallback)(mozilla::Command, void*);
     enum NativeKeyBindingsType
     {
       NativeKeyBindingsForSingleLineEditor,
       NativeKeyBindingsForMultiLineEditor,
       NativeKeyBindingsForRichTextEditor
     };
-    virtual bool ExecuteNativeKeyBinding(
-                        NativeKeyBindingsType aType,
-                        const mozilla::WidgetKeyboardEvent& aEvent,
-                        DoCommandCallback aCallback,
-                        void* aCallbackData) = 0;
+    virtual void GetEditCommands(NativeKeyBindingsType aType,
+                                 const mozilla::WidgetKeyboardEvent& aEvent,
+                                 nsTArray<mozilla::CommandInt>& aCommands);
 
     /*
      * Retrieves a reference to notification requests of IME.  Note that the

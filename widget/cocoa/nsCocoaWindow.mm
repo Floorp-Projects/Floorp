@@ -2345,14 +2345,16 @@ nsCocoaWindow::SetInputContext(const InputContext& aContext,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-bool
-nsCocoaWindow::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
-                                       const WidgetKeyboardEvent& aEvent,
-                                       DoCommandCallback aCallback,
-                                       void* aCallbackData)
+void
+nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType,
+                               const WidgetKeyboardEvent& aEvent,
+                               nsTArray<CommandInt>& aCommands)
 {
+  // Validate the arguments.
+  nsIWidget::GetEditCommands(aType, aEvent, aCommands);
+
   NativeKeyBindings* keyBindings = NativeKeyBindings::GetInstance(aType);
-  return keyBindings->Execute(aEvent, aCallback, aCallbackData);
+  keyBindings->GetEditCommands(aEvent, aCommands);
 }
 
 @implementation WindowDelegate

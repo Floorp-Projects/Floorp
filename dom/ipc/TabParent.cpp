@@ -1214,21 +1214,10 @@ TabParent::RecvDispatchKeyboardEvent(const mozilla::WidgetKeyboardEvent& aEvent)
   return IPC_OK();
 }
 
-static void
-DoCommandCallback(mozilla::Command aCommand, void* aData)
-{
-  static_cast<InfallibleTArray<mozilla::CommandInt>*>(aData)->
-    AppendElement(aCommand);
-}
-
 mozilla::ipc::IPCResult
 TabParent::RecvRequestNativeKeyBindings(const WidgetKeyboardEvent& aEvent,
                                         MaybeNativeKeyBinding* aBindings)
 {
-  AutoTArray<mozilla::CommandInt, 4> singleLine;
-  AutoTArray<mozilla::CommandInt, 4> multiLine;
-  AutoTArray<mozilla::CommandInt, 4> richText;
-
   *aBindings = mozilla::void_t();
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -1237,21 +1226,23 @@ TabParent::RecvRequestNativeKeyBindings(const WidgetKeyboardEvent& aEvent,
   }
 
   WidgetKeyboardEvent localEvent(aEvent);
+  localEvent.mWidget = widget;
 
   if (NS_FAILED(widget->AttachNativeKeyEvent(localEvent))) {
     return IPC_OK();
   }
 
-  widget->ExecuteNativeKeyBinding(
-            nsIWidget::NativeKeyBindingsForSingleLineEditor,
-            localEvent, DoCommandCallback, &singleLine);
-  widget->ExecuteNativeKeyBinding(
-            nsIWidget::NativeKeyBindingsForMultiLineEditor,
-            localEvent, DoCommandCallback, &multiLine);
-  widget->ExecuteNativeKeyBinding(
-            nsIWidget::NativeKeyBindingsForRichTextEditor,
-            localEvent, DoCommandCallback, &richText);
+  localEvent.InitAllEditCommands();
 
+  const nsTArray<CommandInt>& multiLine =
+    localEvent.EditCommandsConstRef(
+                 nsIWidget::NativeKeyBindingsForSingleLineEditor);
+  const nsTArray<CommandInt>& singleLine =
+    localEvent.EditCommandsConstRef(
+                 nsIWidget::NativeKeyBindingsForMultiLineEditor);
+  const nsTArray<CommandInt>& richText =
+    localEvent.EditCommandsConstRef(
+                 nsIWidget::NativeKeyBindingsForRichTextEditor);
   if (!singleLine.IsEmpty() || !multiLine.IsEmpty() || !richText.IsEmpty()) {
     *aBindings = NativeKeyBinding(singleLine, multiLine, richText);
   }

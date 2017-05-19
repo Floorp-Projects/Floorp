@@ -1878,21 +1878,37 @@ TabChild::RecvPluginEvent(const WidgetPluginEvent& aEvent)
 }
 
 void
-TabChild::RequestNativeKeyBindings(AutoCacheNativeKeyCommands* aAutoCache,
-                                   const WidgetKeyboardEvent* aEvent)
+TabChild::RequestNativeKeyBindings(nsIWidget::NativeKeyBindingsType aType,
+                                   const WidgetKeyboardEvent& aEvent,
+                                   nsTArray<CommandInt>& aCommands)
 {
-  MaybeNativeKeyBinding maybeBindings;
-  if (!SendRequestNativeKeyBindings(*aEvent, &maybeBindings)) {
+  MOZ_ASSERT(aCommands.IsEmpty());
+
+  if (NS_WARN_IF(aEvent.IsEditCommandsInitialized(aType))) {
+    aCommands = aEvent.EditCommandsConstRef(aType);
     return;
   }
 
-  if (maybeBindings.type() == MaybeNativeKeyBinding::TNativeKeyBinding) {
-    const NativeKeyBinding& bindings = maybeBindings;
-    aAutoCache->Cache(bindings.singleLineCommands(),
-                      bindings.multiLineCommands(),
-                      bindings.richTextCommands());
-  } else {
-    aAutoCache->CacheNoCommands();
+  // TODO: Should retrieve edit commands only for specific type.
+  MaybeNativeKeyBinding maybeBindings;
+  if (!SendRequestNativeKeyBindings(aEvent, &maybeBindings) ||
+      maybeBindings.type() != MaybeNativeKeyBinding::TNativeKeyBinding) {
+    return;
+  }
+
+  const NativeKeyBinding& bindings = maybeBindings;
+  switch (aType) {
+    case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+      aCommands = bindings.singleLineCommands();
+      break;
+    case nsIWidget::NativeKeyBindingsForMultiLineEditor:
+      aCommands = bindings.multiLineCommands();
+      break;
+    case nsIWidget::NativeKeyBindingsForRichTextEditor:
+      aCommands = bindings.richTextCommands();
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid native key bindings type");
   }
 }
 
