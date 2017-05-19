@@ -1922,7 +1922,7 @@ APZCTreeManager::SetLongTapEnabled(bool aLongTapEnabled)
 }
 
 RefPtr<HitTestingTreeNode>
-APZCTreeManager::FindScrollNode(const AsyncDragMetrics& aDragMetrics)
+APZCTreeManager::FindScrollThumbNode(const AsyncDragMetrics& aDragMetrics)
 {
   MutexAutoLock lock(mTreeLock);
 
