@@ -143,6 +143,8 @@ GetFocusChangeName(InputContextAction::FocusChange aFocusChange)
       return "MENU_GOT_PSEUDO_FOCUS";
     case InputContextAction::MENU_LOST_PSEUDO_FOCUS:
       return "MENU_LOST_PSEUDO_FOCUS";
+    case InputContextAction::WIDGET_CREATED:
+      return "WIDGET_CREATED";
     default:
       return "Unknown";
   }
@@ -5790,10 +5792,16 @@ TSFTextStore::SetInputContext(nsWindowBase* aWidget,
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
     ("TSFTextStore::SetInputContext(aWidget=%p, "
      "aContext=%s, aAction.mFocusChange=%s), "
-     "sEnabledTextStore=0x%p, ThinksHavingFocus()=%s",
+     "sEnabledTextStore(0x%p)={ mWidget=0x%p }, ThinksHavingFocus()=%s",
      aWidget, GetInputContextString(aContext).get(),
      GetFocusChangeName(aAction.mFocusChange), sEnabledTextStore.get(),
+     sEnabledTextStore ? sEnabledTextStore->mWidget.get() : nullptr,
      GetBoolName(ThinksHavingFocus())));
+
+  // When this is called when the widget is created, there is nothing to do.
+  if (aAction.mFocusChange == InputContextAction::WIDGET_CREATED) {
+    return;
+  }
 
   NS_ENSURE_TRUE_VOID(IsInTSFMode());
 
