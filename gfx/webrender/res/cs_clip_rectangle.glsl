@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 varying vec3 vPos;
-flat varying vec4 vClipRect;
-flat varying vec4 vClipRadius;
 flat varying float vClipMode;
+flat varying vec4 vClipCenter_Radius_TL;
+flat varying vec4 vClipCenter_Radius_TR;
+flat varying vec4 vClipCenter_Radius_BL;
+flat varying vec4 vClipCenter_Radius_BR;

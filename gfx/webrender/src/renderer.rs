@@ -41,7 +41,8 @@ use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use texture_cache::TextureCache;
-use threadpool::ThreadPool;
+use rayon::ThreadPool;
+use rayon::Configuration as ThreadPoolConfig;
 use tiling::{AlphaBatchKind, BlurCommand, Frame, PrimitiveBatch, RenderTarget};
 use tiling::{AlphaRenderTarget, CacheClipInstance, PrimitiveInstance, ColorRenderTarget, RenderTargetKind};
 use time::precise_time_ns;
@@ -52,7 +53,7 @@ use webrender_traits::{ColorF, Epoch, PipelineId, RenderNotifier, RenderDispatch
 use webrender_traits::{ExternalImageId, ExternalImageType, ImageData, ImageFormat, RenderApiSender};
 use webrender_traits::{DeviceIntRect, DevicePoint, DeviceIntPoint, DeviceIntSize, DeviceUintSize};
 use webrender_traits::{ImageDescriptor, BlobImageRenderer};
-use webrender_traits::channel;
+use webrender_traits::{channel, FontRenderMode};
 use webrender_traits::VRCompositorHandler;
 use webrender_traits::{YuvColorSpace, YuvFormat};
 use webrender_traits::{YUV_COLOR_SPACES, YUV_FORMATS};
@@ -77,7 +78,6 @@ const GPU_TAG_PRIM_GRADIENT: GpuProfileTag = GpuProfileTag { label: "Gradient", 
 const GPU_TAG_PRIM_ANGLE_GRADIENT: GpuProfileTag = GpuProfileTag { label: "AngleGradient", color: debug_colors::POWDERBLUE };
 const GPU_TAG_PRIM_RADIAL_GRADIENT: GpuProfileTag = GpuProfileTag { label: "RadialGradient", color: debug_colors::LIGHTPINK };
 const GPU_TAG_PRIM_BOX_SHADOW: GpuProfileTag = GpuProfileTag { label: "BoxShadow", color: debug_colors::CYAN };
-const GPU_TAG_PRIM_BORDER: GpuProfileTag = GpuProfileTag { label: "Border", color: debug_colors::ORANGE };
 const GPU_TAG_PRIM_BORDER_CORNER: GpuProfileTag = GpuProfileTag { label: "BorderCorner", color: debug_colors::DARKSLATEGREY };
 const GPU_TAG_PRIM_BORDER_EDGE: GpuProfileTag = GpuProfileTag { label: "BorderEdge", color: debug_colors::LAVENDER };
 const GPU_TAG_PRIM_CACHE_IMAGE: GpuProfileTag = GpuProfileTag { label: "CacheImage", color: debug_colors::SILVER };
@@ -537,7 +537,6 @@ pub struct Renderer {
     ps_text_run_subpixel: PrimitiveShader,
     ps_image: Vec<Option<PrimitiveShader>>,
     ps_yuv_image: Vec<Option<PrimitiveShader>>,
-    ps_border: PrimitiveShader,
     ps_border_corner: PrimitiveShader,
     ps_border_edge: PrimitiveShader,
     ps_gradient: PrimitiveShader,
@@ -814,13 +813,6 @@ impl Renderer {
             }
         }
 
-        let ps_border = try!{
-            PrimitiveShader::new("ps_border",
-                                 &mut device,
-                                 &[],
-                                 options.precache_shaders)
-        };
-
         let ps_border_corner = try!{
             PrimitiveShader::new("ps_border_corner",
                                  &mut device,
@@ -1038,17 +1030,23 @@ impl Renderer {
             RendererKind::OSMesa => GLContextHandleWrapper::current_osmesa_handle(),
         };
 
+        let default_font_render_mode = match (options.enable_aa, options.enable_subpixel_aa) {
+            (true, true) => FontRenderMode::Subpixel,
+            (true, false) => FontRenderMode::Alpha,
+            (false, _) => FontRenderMode::Mono,
+        };
+
         let config = FrameBuilderConfig::new(options.enable_scrollbars,
-                                             options.enable_subpixel_aa,
+                                             default_font_render_mode,
                                              options.debug);
 
-        let (device_pixel_ratio, enable_aa) = (options.device_pixel_ratio, options.enable_aa);
+        let device_pixel_ratio = options.device_pixel_ratio;
         let render_target_debug = options.render_target_debug;
         let payload_tx_for_backend = payload_tx.clone();
         let recorder = options.recorder;
+        let worker_config = ThreadPoolConfig::new().thread_name(|idx|{ format!("WebRender:Worker#{}", idx) });
         let workers = options.workers.take().unwrap_or_else(||{
-            // TODO(gw): Use a heuristic to select best # of worker threads.
-            Arc::new(Mutex::new(ThreadPool::new_with_name("WebRender:Worker".to_string(), 4)))
+            Arc::new(ThreadPool::new(worker_config).unwrap())
         });
 
         let blob_image_renderer = options.blob_image_renderer.take();
@@ -1059,7 +1057,6 @@ impl Renderer {
                                                  result_tx,
                                                  device_pixel_ratio,
                                                  texture_cache,
-                                                 enable_aa,
                                                  workers,
                                                  backend_notifier,
                                                  context_handle,
@@ -1092,7 +1089,6 @@ impl Renderer {
             ps_text_run_subpixel: ps_text_run_subpixel,
             ps_image: ps_image,
             ps_yuv_image: ps_yuv_image,
-            ps_border: ps_border,
             ps_border_corner: ps_border_corner,
             ps_border_edge: ps_border_edge,
             ps_box_shadow: ps_box_shadow,
@@ -1555,10 +1551,6 @@ impl Renderer {
                 let shader = self.ps_yuv_image[shader_index].as_mut().unwrap().get(&mut self.device, transform_kind);
                 (GPU_TAG_PRIM_YUV_IMAGE, shader)
             }
-            AlphaBatchKind::Border => {
-                let shader = self.ps_border.get(&mut self.device, transform_kind);
-                (GPU_TAG_PRIM_BORDER, shader)
-            }
             AlphaBatchKind::BorderCorner => {
                 let shader = self.ps_border_corner.get(&mut self.device, transform_kind);
                 (GPU_TAG_PRIM_BORDER_CORNER, shader)
@@ -1755,7 +1747,8 @@ impl Renderer {
         self.device.set_blend(false);
         let mut prev_blend_mode = BlendMode::None;
 
-        self.device.set_depth_func(DepthFunction::Less);
+        //Note: depth equality is needed for split planes
+        self.device.set_depth_func(DepthFunction::LessEqual);
         self.device.enable_depth();
         self.device.enable_depth_write();
 
@@ -1830,6 +1823,38 @@ impl Renderer {
         {
             let _gm = self.gpu_profile.add_marker(GPU_TAG_CACHE_CLIP);
             let vao = self.clip_vao_id;
+
+            // If we have border corner clips, the first step is to clear out the
+            // area in the clip mask. This allows drawing multiple invididual clip
+            // in regions below.
+            if !target.clip_batcher.border_clears.is_empty() {
+                let _gm2 = GpuMarker::new(self.device.rc_gl(), "clip borders [clear]");
+                self.device.set_blend(false);
+                let shader = self.cs_clip_border.get(&mut self.device).unwrap();
+                self.draw_instanced_batch(&target.clip_batcher.border_clears,
+                                          vao,
+                                          shader,
+                                          &BatchTextures::no_texture(),
+                                          &projection);
+            }
+
+            // Draw any dots or dashes for border corners.
+            if !target.clip_batcher.borders.is_empty() {
+                let _gm2 = GpuMarker::new(self.device.rc_gl(), "clip borders");
+                // We are masking in parts of the corner (dots or dashes) here.
+                // Blend mode is set to max to allow drawing multiple dots.
+                // The individual dots and dashes in a border never overlap, so using
+                // a max blend mode here is fine.
+                self.device.set_blend(true);
+                self.device.set_blend_mode_max();
+                let shader = self.cs_clip_border.get(&mut self.device).unwrap();
+                self.draw_instanced_batch(&target.clip_batcher.borders,
+                                          vao,
+                                          shader,
+                                          &BatchTextures::no_texture(),
+                                          &projection);
+            }
+
             // switch to multiplicative blending
             self.device.set_blend(true);
             self.device.set_blend_mode_multiply();
@@ -1859,16 +1884,6 @@ impl Renderer {
                                           vao,
                                           shader,
                                           &textures,
-                                          &projection);
-            }
-            // draw special border clips
-            if !target.clip_batcher.borders.is_empty() {
-                let _gm2 = GpuMarker::new(self.device.rc_gl(), "clip borders");
-                let shader = self.cs_clip_border.get(&mut self.device).unwrap();
-                self.draw_instanced_batch(&target.clip_batcher.borders,
-                                          vao,
-                                          shader,
-                                          &BatchTextures::no_texture(),
                                           &projection);
             }
         }
@@ -2193,7 +2208,7 @@ pub struct RendererOptions {
     pub enable_batcher: bool,
     pub render_target_debug: bool,
     pub max_texture_size: Option<u32>,
-    pub workers: Option<Arc<Mutex<ThreadPool>>>,
+    pub workers: Option<Arc<ThreadPool>>,
     pub blob_image_renderer: Option<Box<BlobImageRenderer>>,
     pub recorder: Option<Box<ApiRecordingReceiver>>,
 }

@@ -25,18 +25,20 @@ WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId, uint8_t aCh
     RenderBufferTextureHost* bufferTexture = texture->AsBufferTextureHost();
     MOZ_ASSERT(bufferTexture);
     bufferTexture->Lock();
+    RenderBufferTextureHost::RenderBufferData data =
+        bufferTexture->GetBufferDataForRender(aChannelIndex);
 
-    return RawDataToWrExternalImage(bufferTexture->GetDataForRender(),
-                                    bufferTexture->GetBufferSizeForRender());
+    return RawDataToWrExternalImage(data.mData, data.mBufferSize);
   } else {
     // texture handle case
     RenderTextureHostOGL* textureOGL = texture->AsTextureHostOGL();
     MOZ_ASSERT(textureOGL);
-    gfx::IntSize size = textureOGL->GetSize();
+
     textureOGL->SetGLContext(renderer->mGL);
     textureOGL->Lock();
+    gfx::IntSize size = textureOGL->GetSize(aChannelIndex);
 
-    return NativeTextureToWrExternalImage(textureOGL->GetGLHandle(),
+    return NativeTextureToWrExternalImage(textureOGL->GetGLHandle(aChannelIndex),
                                           0, 0,
                                           size.width, size.height);
   }

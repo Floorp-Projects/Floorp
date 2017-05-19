@@ -60,6 +60,8 @@ SurfaceFormatToWrImageFormat(gfx::SurfaceFormat aFormat) {
       return Some(WrImageFormat::RGB8);
     case gfx::SurfaceFormat::A8:
       return Some(WrImageFormat::A8);
+    case gfx::SurfaceFormat::R8G8:
+      return Some(WrImageFormat::RG8);
     case gfx::SurfaceFormat::UNKNOWN:
       return Some(WrImageFormat::Invalid);
     default:
@@ -100,6 +102,11 @@ struct ImageDescriptor: public WrImageDescriptor {
     is_opaque = gfx::IsOpaqueFormat(aFormat);
   }
 };
+
+// Whenever possible, use wr::WindowId instead of manipulating uint64_t.
+inline uint64_t AsUint64(const WindowId& aId) {
+  return static_cast<uint64_t>(aId.mHandle);
+}
 
 // Whenever possible, use wr::ImageKey instead of manipulating uint64_t.
 inline uint64_t AsUint64(const ImageKey& aId) {
@@ -424,30 +431,33 @@ static inline WrExternalImage NativeTextureToWrExternalImage(uint8_t aHandle,
 struct VecU8 {
   WrVecU8 inner;
   VecU8() {
-    inner.data = nullptr;
-    inner.capacity = 0;
+    SetEmpty();
   }
   VecU8(VecU8&) = delete;
   VecU8(VecU8&& src) {
     inner = src.inner;
-    src.inner.data = nullptr;
-    src.inner.capacity = 0;
+    src.SetEmpty();
   }
 
   VecU8&
   operator=(VecU8&& src) {
     inner = src.inner;
-    src.inner.data = nullptr;
-    src.inner.capacity = 0;
+    src.SetEmpty();
     return *this;
   }
 
   WrVecU8
   Extract() {
     WrVecU8 ret = inner;
-    inner.data = nullptr;
-    inner.capacity = 0;
+    SetEmpty();
     return ret;
+  }
+
+  void
+  SetEmpty() {
+    inner.data = (uint8_t*)1;
+    inner.capacity = 0;
+    inner.length = 0;
   }
 
   ~VecU8() {
@@ -537,8 +547,6 @@ inline mozilla::Range<uint8_t> MutByteSliceToRange(MutByteSlice aWrSlice) {
 struct BuiltDisplayList {
   VecU8 dl;
   WrBuiltDisplayListDescriptor dl_desc;
-  VecU8 aux;
-  WrAuxiliaryListsDescriptor aux_desc;
 };
 
 } // namespace wr

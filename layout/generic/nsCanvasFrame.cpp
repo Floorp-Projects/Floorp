@@ -319,7 +319,7 @@ nsDisplayCanvasBackgroundColor::CreateWebRenderCommands(mozilla::wr::DisplayList
 
   WrRect transformedRect = aSc.ToRelativeWrRect(rect);
   aBuilder.PushRect(transformedRect,
-                    aBuilder.BuildClipRegion(transformedRect),
+                    aBuilder.PushClipRegion(transformedRect),
                     wr::ToWrColor(ToDeviceColor(mColor)));
 }
 

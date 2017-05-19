@@ -65,6 +65,10 @@ public:
 
   bool IsWrappingNativeHandle() { return mIsWrappingNativeHandle; }
 
+  virtual void AddWRImage(wr::WebRenderAPI* aAPI,
+                          Range<const wr::ImageKey>& aImageKeys,
+                          const wr::ExternalImageId& aExtID) override;
+
 protected:
   void CreateRenderTextureHost(const SurfaceDescriptor& aDesc, TextureHost* aTexture);
 
