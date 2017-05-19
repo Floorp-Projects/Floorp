@@ -8,7 +8,6 @@
 .searchbar-textbox {
   -moz-appearance: none;
   background-clip: content-box;
-  background-color: var(--urlbar-background-color);
   border: 1px solid var(--urlbar-border-color);
   border-radius: var(--toolbarbutton-border-radius);
   box-shadow: 0 1px 4px hsla(0, 0%, 0%, .05);

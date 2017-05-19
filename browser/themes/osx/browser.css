@@ -527,7 +527,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 #main-window {
   --urlbar-border-color: hsla(240, 5%, 5%, .25);
   --urlbar-border-color-hover: hsla(240, 5%, 5%, .35);
-  --urlbar-background-color: -moz-field;
 }
 
 #urlbar[focused="true"],
