@@ -39,6 +39,13 @@ AsyncEventDispatcher::Run()
   if (mCanceled) {
     return NS_OK;
   }
+  if (mCheckStillInDoc) {
+    nsCOMPtr<nsINode> node = do_QueryInterface(mTarget);
+    MOZ_ASSERT(node);
+    if (!node->IsInComposedDoc()) {
+      return NS_OK;
+    }
+  }
   mTarget->AsyncEventRunning(this);
   RefPtr<Event> event = mEvent ? mEvent->InternalDOMEvent() : nullptr;
   if (!event) {
@@ -86,6 +93,15 @@ AsyncEventDispatcher::RunDOMEventWhenSafe()
 {
   RefPtr<AsyncEventDispatcher> ensureDeletionWhenFailing = this;
   nsContentUtils::AddScriptRunner(this);
+}
+
+void
+AsyncEventDispatcher::RequireNodeInDocument()
+{
+  nsCOMPtr<nsINode> node = do_QueryInterface(mTarget);
+  MOZ_ASSERT(node);
+
+  mCheckStillInDoc = true;
 }
 
 /******************************************************************************
