@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test IPCBlob and Workers</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script type="text/javascript">
+
+function workerScript() {
+  let bc = new BroadcastChannel('foo');
+  bc.onmessage = (event) => {
+
+    let reader = new FileReader();
+    reader.readAsText(event.data);
+    reader.onloadend = () => {
+      let status = reader.result == 'hello world';
+      bc.onmessage = null;
+      postMessage(status);
+    }
+  }
+
+  postMessage("start");
+}
+
+let workerUrl = URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
+let worker = new Worker(workerUrl);
+worker.onmessage = event => {
+  if (event.data == "start") {
+    let bc = new BroadcastChannel('foo');
+    bc.postMessage(new Blob(['hello world']));
+  } else {
+    ok(event.data, "All is done!");
+    SimpleTest.finish();
+  }
+};
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
