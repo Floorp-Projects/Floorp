@@ -130,23 +130,6 @@ public:
 };
 
 static const char*
-GetIMEEnabledName(IMEState::Enabled aIMEEnabled)
-{
-  switch (aIMEEnabled) {
-    case IMEState::DISABLED:
-      return "DISABLED";
-    case IMEState::ENABLED:
-      return "ENABLED";
-    case IMEState::PASSWORD:
-      return "PASSWORD";
-    case IMEState::PLUGIN:
-      return "PLUGIN";
-    default:
-      return "Invalid";
-  }
-}
-
-static const char*
 GetFocusChangeName(InputContextAction::FocusChange aFocusChange)
 {
   switch (aFocusChange) {
@@ -691,6 +674,253 @@ private:
   }
 };
 
+class GetIMEStateString : public nsAutoCString
+{
+public:
+  explicit GetIMEStateString(const IMEState& aIMEState)
+  {
+    AppendLiteral("{ mEnabled=");
+    switch (aIMEState.mEnabled) {
+      case IMEState::DISABLED:
+        AppendLiteral("DISABLED");
+        break;
+      case IMEState::ENABLED:
+        AppendLiteral("ENABLED");
+        break;
+      case IMEState::PASSWORD:
+        AppendLiteral("PASSWORD");
+        break;
+      case IMEState::PLUGIN:
+        AppendLiteral("PLUGIN");
+        break;
+      case IMEState::UNKNOWN:
+        AppendLiteral("UNKNOWN");
+        break;
+      default:
+        AppendPrintf("Unknown value (%d)", aIMEState.mEnabled);
+        break;
+    }
+    AppendLiteral(", mOpen=");
+    switch (aIMEState.mOpen) {
+      case IMEState::OPEN_STATE_NOT_SUPPORTED:
+        AppendLiteral("OPEN_STATE_NOT_SUPPORTED or DONT_CHANGE_OPEN_STATE");
+        break;
+      case IMEState::OPEN:
+        AppendLiteral("OPEN");
+        break;
+      case IMEState::CLOSED:
+        AppendLiteral("CLOSED");
+        break;
+      default:
+        AppendPrintf("Unknown value (%d)", aIMEState.mOpen);
+        break;
+    }
+    AppendLiteral(" }");
+  }
+};
+
+class GetInputContextString : public nsAutoCString
+{
+public:
+  explicit GetInputContextString(const InputContext& aInputContext)
+  {
+    AppendPrintf("{ mIMEState=%s, ",
+                 GetIMEStateString(aInputContext.mIMEState).get());
+    AppendLiteral("mOrigin=");
+    switch (aInputContext.mOrigin) {
+      case InputContext::ORIGIN_MAIN:
+        AppendLiteral("ORIGIN_MAIN");
+        break;
+      case InputContext::ORIGIN_CONTENT:
+        AppendLiteral("ORIGIN_CONTENT");
+        break;
+      default:
+        AppendPrintf("Unknown value (%d)", aInputContext.mOrigin);
+        break;
+    }
+    AppendPrintf(", mHTMLInputType=\"%s\", mHTMLInputInputmode=\"%s\", "
+                 "mActionHint=\"%s\", mMayBeIMEUnaware=%s }",
+                 NS_ConvertUTF16toUTF8(aInputContext.mHTMLInputType).get(),
+                 NS_ConvertUTF16toUTF8(aInputContext.mHTMLInputInputmode).get(),
+                 NS_ConvertUTF16toUTF8(aInputContext.mActionHint).get(),
+                 GetBoolName(aInputContext.mMayBeIMEUnaware));
+  }
+};
+
+class GetInputScopeString : public nsAutoCString
+{
+public:
+  explicit GetInputScopeString(const nsTArray<InputScope>& aList)
+  {
+    for (InputScope inputScope : aList) {
+      if (!IsEmpty()) {
+        AppendLiteral(", ");
+      }
+      switch (inputScope) {
+        case IS_DEFAULT:
+          AppendLiteral("IS_DEFAULT");
+          break;
+        case IS_URL:
+          AppendLiteral("IS_URL");
+          break;
+        case IS_FILE_FULLFILEPATH:
+          AppendLiteral("IS_FILE_FULLFILEPATH");
+          break;
+        case IS_FILE_FILENAME:
+          AppendLiteral("IS_FILE_FILENAME");
+          break;
+        case IS_EMAIL_USERNAME:
+          AppendLiteral("IS_EMAIL_USERNAME");
+          break;
+        case IS_EMAIL_SMTPEMAILADDRESS:
+          AppendLiteral("IS_EMAIL_SMTPEMAILADDRESS");
+          break;
+        case IS_LOGINNAME:
+          AppendLiteral("IS_LOGINNAME");
+          break;
+        case IS_PERSONALNAME_FULLNAME:
+          AppendLiteral("IS_PERSONALNAME_FULLNAME");
+          break;
+        case IS_PERSONALNAME_PREFIX:
+          AppendLiteral("IS_PERSONALNAME_PREFIX");
+          break;
+        case IS_PERSONALNAME_GIVENNAME:
+          AppendLiteral("IS_PERSONALNAME_GIVENNAME");
+          break;
+        case IS_PERSONALNAME_MIDDLENAME:
+          AppendLiteral("IS_PERSONALNAME_MIDDLENAME");
+          break;
+        case IS_PERSONALNAME_SURNAME:
+          AppendLiteral("IS_PERSONALNAME_SURNAME");
+          break;
+        case IS_PERSONALNAME_SUFFIX:
+          AppendLiteral("IS_PERSONALNAME_SUFFIX");
+          break;
+        case IS_ADDRESS_FULLPOSTALADDRESS:
+          AppendLiteral("IS_ADDRESS_FULLPOSTALADDRESS");
+          break;
+        case IS_ADDRESS_POSTALCODE:
+          AppendLiteral("IS_ADDRESS_POSTALCODE");
+          break;
+        case IS_ADDRESS_STREET:
+          AppendLiteral("IS_ADDRESS_STREET");
+          break;
+        case IS_ADDRESS_STATEORPROVINCE:
+          AppendLiteral("IS_ADDRESS_STATEORPROVINCE");
+          break;
+        case IS_ADDRESS_CITY:
+          AppendLiteral("IS_ADDRESS_CITY");
+          break;
+        case IS_ADDRESS_COUNTRYNAME:
+          AppendLiteral("IS_ADDRESS_COUNTRYNAME");
+          break;
+        case IS_ADDRESS_COUNTRYSHORTNAME:
+          AppendLiteral("IS_ADDRESS_COUNTRYSHORTNAME");
+          break;
+        case IS_CURRENCY_AMOUNTANDSYMBOL:
+          AppendLiteral("IS_CURRENCY_AMOUNTANDSYMBOL");
+          break;
+        case IS_CURRENCY_AMOUNT:
+          AppendLiteral("IS_CURRENCY_AMOUNT");
+          break;
+        case IS_DATE_FULLDATE:
+          AppendLiteral("IS_DATE_FULLDATE");
+          break;
+        case IS_DATE_MONTH:
+          AppendLiteral("IS_DATE_MONTH");
+          break;
+        case IS_DATE_DAY:
+          AppendLiteral("IS_DATE_DAY");
+          break;
+        case IS_DATE_YEAR:
+          AppendLiteral("IS_DATE_YEAR");
+          break;
+        case IS_DATE_MONTHNAME:
+          AppendLiteral("IS_DATE_MONTHNAME");
+          break;
+        case IS_DATE_DAYNAME:
+          AppendLiteral("IS_DATE_DAYNAME");
+          break;
+        case IS_DIGITS:
+          AppendLiteral("IS_DIGITS");
+          break;
+        case IS_NUMBER:
+          AppendLiteral("IS_NUMBER");
+          break;
+        case IS_ONECHAR:
+          AppendLiteral("IS_ONECHAR");
+          break;
+        case IS_PASSWORD:
+          AppendLiteral("IS_PASSWORD");
+          break;
+        case IS_TELEPHONE_FULLTELEPHONENUMBER:
+          AppendLiteral("IS_TELEPHONE_FULLTELEPHONENUMBER");
+          break;
+        case IS_TELEPHONE_COUNTRYCODE:
+          AppendLiteral("IS_TELEPHONE_COUNTRYCODE");
+          break;
+        case IS_TELEPHONE_AREACODE:
+          AppendLiteral("IS_TELEPHONE_AREACODE");
+          break;
+        case IS_TELEPHONE_LOCALNUMBER:
+          AppendLiteral("IS_TELEPHONE_LOCALNUMBER");
+          break;
+        case IS_TIME_FULLTIME:
+          AppendLiteral("IS_TIME_FULLTIME");
+          break;
+        case IS_TIME_HOUR:
+          AppendLiteral("IS_TIME_HOUR");
+          break;
+        case IS_TIME_MINORSEC:
+          AppendLiteral("IS_TIME_MINORSEC");
+          break;
+        case IS_NUMBER_FULLWIDTH:
+          AppendLiteral("IS_NUMBER_FULLWIDTH");
+          break;
+        case IS_ALPHANUMERIC_HALFWIDTH:
+          AppendLiteral("IS_ALPHANUMERIC_HALFWIDTH");
+          break;
+        case IS_ALPHANUMERIC_FULLWIDTH:
+          AppendLiteral("IS_ALPHANUMERIC_FULLWIDTH");
+          break;
+        case IS_CURRENCY_CHINESE:
+          AppendLiteral("IS_CURRENCY_CHINESE");
+          break;
+        case IS_BOPOMOFO:
+          AppendLiteral("IS_BOPOMOFO");
+          break;
+        case IS_HIRAGANA:
+          AppendLiteral("IS_HIRAGANA");
+          break;
+        case IS_KATAKANA_HALFWIDTH:
+          AppendLiteral("IS_KATAKANA_HALFWIDTH");
+          break;
+        case IS_KATAKANA_FULLWIDTH:
+          AppendLiteral("IS_KATAKANA_FULLWIDTH");
+          break;
+        case IS_HANJA:
+          AppendLiteral("IS_HANJA");
+          break;
+        case IS_PHRASELIST:
+          AppendLiteral("IS_PHRASELIST");
+          break;
+        case IS_REGULAREXPRESSION:
+          AppendLiteral("IS_REGULAREXPRESSION");
+          break;
+        case IS_SRGS:
+          AppendLiteral("IS_SRGS");
+          break;
+        case IS_XML:
+          AppendLiteral("IS_XML");
+          break;
+        default:
+          AppendPrintf("Unknown Value(%d)", inputScope);
+          break;
+      }
+    }
+  }
+};
+
 /******************************************************************/
 /* InputScopeImpl                                                 */
 /******************************************************************/
@@ -704,7 +934,7 @@ public:
     : mInputScopes(aList)
   {
     MOZ_LOG(sTextStoreLog, LogLevel::Info,
-      ("0x%p InputScopeImpl()", this));
+      ("0x%p InputScopeImpl(%s)", this, GetInputScopeString(aList).get()));
   }
 
   NS_INLINE_DECL_IUNKNOWN_REFCOUNTING(InputScopeImpl)
@@ -4702,12 +4932,10 @@ TSFTextStore::OnFocusChange(bool aGotFocus,
 {
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
     ("  TSFTextStore::OnFocusChange(aGotFocus=%s, "
-     "aFocusedWidget=0x%p, aContext={ mIMEState={ mEnabled=%s }, "
-     "mHTMLInputType=\"%s\" }), "
+     "aFocusedWidget=0x%p, aContext=%s), "
      "sThreadMgr=0x%p, sEnabledTextStore=0x%p",
      GetBoolName(aGotFocus), aFocusedWidget,
-     GetIMEEnabledName(aContext.mIMEState.mEnabled),
-     NS_ConvertUTF16toUTF8(aContext.mHTMLInputType).get(),
+     GetInputContextString(aContext).get(),
      sThreadMgr.get(), sEnabledTextStore.get()));
 
   if (NS_WARN_IF(!IsInTSFMode())) {
@@ -5561,9 +5789,9 @@ TSFTextStore::SetInputContext(nsWindowBase* aWidget,
 {
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
     ("TSFTextStore::SetInputContext(aWidget=%p, "
-     "aContext.mIMEState.mEnabled=%s, aAction.mFocusChange=%s), "
+     "aContext=%s, aAction.mFocusChange=%s), "
      "sEnabledTextStore=0x%p, ThinksHavingFocus()=%s",
-     aWidget, GetIMEEnabledName(aContext.mIMEState.mEnabled),
+     aWidget, GetInputContextString(aContext).get(),
      GetFocusChangeName(aAction.mFocusChange), sEnabledTextStore.get(),
      GetBoolName(ThinksHavingFocus())));
 
