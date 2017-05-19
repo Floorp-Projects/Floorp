@@ -153,20 +153,20 @@ FFmpegAudioDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample)
         __func__);
     }
 
-    if (mFrame->format != AV_SAMPLE_FMT_FLT &&
-        mFrame->format != AV_SAMPLE_FMT_FLTP &&
-        mFrame->format != AV_SAMPLE_FMT_S16 &&
-        mFrame->format != AV_SAMPLE_FMT_S16P &&
-        mFrame->format != AV_SAMPLE_FMT_S32 &&
-        mFrame->format != AV_SAMPLE_FMT_S32P) {
-      return DecodePromise::CreateAndReject(
-        MediaResult(
-          NS_ERROR_DOM_MEDIA_DECODE_ERR,
-          RESULT_DETAIL("FFmpeg audio decoder outputs unsupported audio format")),
-        __func__);
-    }
-
     if (decoded) {
+      if (mFrame->format != AV_SAMPLE_FMT_FLT &&
+          mFrame->format != AV_SAMPLE_FMT_FLTP &&
+          mFrame->format != AV_SAMPLE_FMT_S16 &&
+          mFrame->format != AV_SAMPLE_FMT_S16P &&
+          mFrame->format != AV_SAMPLE_FMT_S32 &&
+          mFrame->format != AV_SAMPLE_FMT_S32P) {
+        return DecodePromise::CreateAndReject(
+          MediaResult(
+            NS_ERROR_DOM_MEDIA_DECODE_ERR,
+            RESULT_DETAIL(
+              "FFmpeg audio decoder outputs unsupported audio format")),
+          __func__);
+      }
       uint32_t numChannels = mCodecContext->channels;
       AudioConfig::ChannelLayout layout(numChannels);
       if (!layout.IsValid()) {
