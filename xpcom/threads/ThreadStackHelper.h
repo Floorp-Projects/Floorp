@@ -30,13 +30,13 @@
 #  endif
 #endif
 
-// NOTE: Currently, due to a problem with LUL stackwalking initialization taking
-// a long time (bug 1365309), we don't perform pseudostack or native stack
-// walking on Linux.
-#if defined(XP_LINUX)
-#  undef MOZ_THREADSTACKHELPER_NATIVE
+// Android x86 builds consistently crash in the Background Hang Reporter. bug
+// 1368520.
+#if defined(__ANDROID__)
 #  undef MOZ_THREADSTACKHELPER_PSEUDO
+#  undef MOZ_THREADSTACKHELPER_NATIVE
 #endif
+
 
 namespace mozilla {
 
