@@ -9,6 +9,7 @@ const protocol = require("devtools/shared/protocol");
 const {webExtensionSpec} = require("devtools/shared/specs/webextension-parent");
 
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
+loader.lazyImporter(this, "ExtensionManagement", "resource://gre/modules/ExtensionManagement.jsm");
 loader.lazyImporter(this, "ExtensionParent", "resource://gre/modules/ExtensionParent.jsm");
 
 /**
@@ -68,10 +69,12 @@ const WebExtensionParentActor = protocol.ActorClassWithSpec(webExtensionSpec, {
       actor: this.actorID,
       id: this.id,
       name: this.addon.name,
+      url: this.addon.sourceURI ? this.addon.sourceURI.spec : undefined,
       iconURL: this.addon.iconURL,
       debuggable: this.addon.isDebuggable,
       temporarilyInstalled: this.addon.temporarilyInstalled,
       isWebExtension: true,
+      manifestURL: ExtensionManagement.getURLForExtension(this.id, "manifest.json"),
     };
   },
 

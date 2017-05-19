@@ -39,6 +39,34 @@ function filePathForTarget(target) {
   ];
 }
 
+function internalIDForTarget(target) {
+  if (!target.manifestURL) {
+    return [];
+  }
+  // Strip off the protocol and rest, leaving us with just the UUID.
+  let uuid = /moz-extension:\/\/([^/]*)/.exec(target.manifestURL)[1];
+  return [
+    dom.dt(
+      { className: "addon-target-info-label" },
+      Strings.GetStringFromName("internalUUID"),
+    ),
+    dom.dd(
+      { className: "addon-target-info-content internal-uuid" },
+      dom.span(
+        { title: uuid },
+        uuid
+      ),
+      dom.span(
+        { className: "addon-target-info-more" },
+        dom.a(
+          { href: target.manifestURL, target: "_blank", className: "manifest-url" },
+          Strings.GetStringFromName("manifestURL"),
+        ),
+      )
+    ),
+  ];
+}
+
 module.exports = createClass({
   displayName: "AddonTarget",
 
@@ -91,6 +119,7 @@ module.exports = createClass({
       dom.dl(
         { className: "addon-target-info" },
         ...filePathForTarget(target),
+        ...internalIDForTarget(target),
       ),
       dom.div({className: "addon-target-actions"},
         dom.button({

@@ -80,6 +80,7 @@ module.exports = createClass({
             addonActor: addon.actor,
             temporarilyInstalled: addon.temporarilyInstalled,
             url: addon.url,
+            manifestURL: addon.manifestURL,
           };
         });
 
