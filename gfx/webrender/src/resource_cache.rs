@@ -16,7 +16,7 @@ use std::fmt::Debug;
 use std::hash::BuildHasherDefault;
 use std::hash::Hash;
 use std::mem;
-use std::sync::{Arc, Barrier, Mutex};
+use std::sync::{Arc, Barrier};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use texture_cache::{TextureCache, TextureCacheItemId};
@@ -27,7 +27,7 @@ use webrender_traits::{DevicePoint, DeviceIntSize, DeviceUintRect, ImageDescript
 use webrender_traits::{GlyphOptions, GlyphInstance, TileOffset, TileSize};
 use webrender_traits::{BlobImageRenderer, BlobImageDescriptor, BlobImageError, BlobImageRequest, BlobImageData, ImageStore};
 use webrender_traits::{ExternalImageData, ExternalImageType, LayoutPoint};
-use threadpool::ThreadPool;
+use rayon::ThreadPool;
 
 const DEFAULT_TILE_SIZE: TileSize = 512;
 
@@ -174,10 +174,10 @@ impl<K,V> ResourceClassCache<K,V> where K: Clone + Hash + Eq + Debug, V: Resourc
     fn get(&self, key: &K, frame: FrameId) -> &V {
         // This assert catches cases in which we accidentally request a resource that we forgot to
         // mark as needed this frame.
-        debug_assert!(frame == *self.last_access_times
-                                    .get(key)
-                                    .expect("Didn't find the access time for a cached resource \
-                                             with that ID!"));
+        debug_assert_eq!(frame, *self.last_access_times
+                                     .get(key)
+                                     .expect("Didn't find the access time for a cached resource \
+                                              with that ID!"));
         self.resources.get(key).expect("Didn't find a cached resource with that ID!")
     }
 
@@ -251,7 +251,6 @@ pub struct ResourceCache {
 
     font_templates: HashMap<FontKey, FontTemplate, BuildHasherDefault<FnvHasher>>,
     image_templates: ImageTemplates,
-    enable_aa: bool,
     state: State,
     current_frame_id: FrameId,
 
@@ -269,9 +268,8 @@ pub struct ResourceCache {
 
 impl ResourceCache {
     pub fn new(texture_cache: TextureCache,
-               workers: Arc<Mutex<ThreadPool>>,
-               blob_image_renderer: Option<Box<BlobImageRenderer>>,
-               enable_aa: bool) -> ResourceCache {
+               workers: Arc<ThreadPool>,
+               blob_image_renderer: Option<Box<BlobImageRenderer>>) -> ResourceCache {
         let (glyph_cache_tx, glyph_cache_result_queue) = spawn_glyph_cache_thread(workers);
 
         ResourceCache {
@@ -283,7 +281,6 @@ impl ResourceCache {
             cached_glyph_dimensions: HashMap::default(),
             texture_cache: texture_cache,
             state: State::Idle,
-            enable_aa: enable_aa,
             current_frame_id: FrameId(0),
             pending_image_requests: Vec::new(),
             glyph_cache_tx: glyph_cache_tx,
@@ -434,7 +431,7 @@ impl ResourceCache {
                          rendering: ImageRendering,
                          tile: Option<TileOffset>) {
 
-        debug_assert!(self.state == State::AddResources);
+        debug_assert_eq!(self.state, State::AddResources);
         let request = ImageRequest {
             key: key,
             rendering: rendering,
@@ -442,6 +439,9 @@ impl ResourceCache {
         };
 
         let template = self.image_templates.get(key).unwrap();
+        if template.data.uses_texture_cache() {
+            self.cached_images.mark_as_needed(&request, self.current_frame_id);
+        }
         if template.data.is_blob() {
             if let Some(ref mut renderer) = self.blob_image_renderer {
                 let same_epoch = match self.cached_images.resources.get(&request) {
@@ -491,8 +491,7 @@ impl ResourceCache {
                           glyph_instances: &[GlyphInstance],
                           render_mode: FontRenderMode,
                           glyph_options: Option<GlyphOptions>) {
-        debug_assert!(self.state == State::AddResources);
-        let render_mode = self.get_glyph_render_mode(render_mode);
+        debug_assert_eq!(self.state, State::AddResources);
         // Immediately request that the glyph cache thread start
         // rasterizing glyphs from this request if they aren't
         // already cached.
@@ -517,9 +516,8 @@ impl ResourceCache {
                          render_mode: FontRenderMode,
                          glyph_options: Option<GlyphOptions>,
                          mut f: F) -> SourceTexture where F: FnMut(usize, DevicePoint, DevicePoint) {
-        debug_assert!(self.state == State::QueryResources);
+        debug_assert_eq!(self.state, State::QueryResources);
         let cache = self.cached_glyphs.as_ref().unwrap();
-        let render_mode = self.get_glyph_render_mode(render_mode);
         let mut glyph_key = RenderedGlyphKey::new(font_key,
                                                   size,
                                                   color,
@@ -581,7 +579,7 @@ impl ResourceCache {
                             image_key: ImageKey,
                             image_rendering: ImageRendering,
                             tile: Option<TileOffset>) -> CacheItem {
-        debug_assert!(self.state == State::QueryResources);
+        debug_assert_eq!(self.state, State::QueryResources);
         let key = ImageRequest {
             key: image_key,
             rendering: image_rendering,
@@ -646,7 +644,7 @@ impl ResourceCache {
     }
 
     pub fn begin_frame(&mut self, frame_id: FrameId) {
-        debug_assert!(self.state == State::Idle);
+        debug_assert_eq!(self.state, State::Idle);
         self.state = State::AddResources;
         self.current_frame_id = frame_id;
         let glyph_cache = self.cached_glyphs.take().unwrap();
@@ -657,7 +655,7 @@ impl ResourceCache {
                                            texture_cache_profile: &mut TextureCacheProfileCounters) {
         profile_scope!("block_until_all_resources_added");
 
-        debug_assert!(self.state == State::AddResources);
+        debug_assert_eq!(self.state, State::AddResources);
         self.state = State::QueryResources;
 
         // Tell the glyph cache thread that all glyphs have been requested
@@ -852,16 +850,8 @@ impl ResourceCache {
     }
 
     pub fn end_frame(&mut self) {
-        debug_assert!(self.state == State::QueryResources);
+        debug_assert_eq!(self.state, State::QueryResources);
         self.state = State::Idle;
-    }
-
-    fn get_glyph_render_mode(&self, requested_mode: FontRenderMode) -> FontRenderMode {
-        if self.enable_aa {
-            requested_mode
-        } else {
-            FontRenderMode::Mono
-        }
     }
 }
 
@@ -887,9 +877,9 @@ impl Resource for CachedImageInfo {
     }
 }
 
-fn spawn_glyph_cache_thread(workers: Arc<Mutex<ThreadPool>>) -> (Sender<GlyphCacheMsg>, Receiver<GlyphCacheResultMsg>) {
+fn spawn_glyph_cache_thread(workers: Arc<ThreadPool>) -> (Sender<GlyphCacheMsg>, Receiver<GlyphCacheResultMsg>) {
     let worker_count = {
-        workers.lock().unwrap().max_count()
+        workers.current_num_threads()
     };
     // Used for messages from resource cache -> glyph cache thread.
     let (msg_tx, msg_rx) = channel();
@@ -907,7 +897,7 @@ fn spawn_glyph_cache_thread(workers: Arc<Mutex<ThreadPool>>) -> (Sender<GlyphCac
         let barrier = Arc::new(Barrier::new(worker_count));
         for i in 0..worker_count {
             let barrier = Arc::clone(&barrier);
-            workers.lock().unwrap().execute(move || {
+            workers.spawn_async(move || {
                 register_thread_with_profiler(format!("Glyph Worker {}", i));
                 barrier.wait();
             });
@@ -944,7 +934,7 @@ fn spawn_glyph_cache_thread(workers: Arc<Mutex<ThreadPool>>) -> (Sender<GlyphCac
                     for _ in 0..worker_count {
                         let barrier = Arc::clone(&barrier);
                         let font_template = font_template.clone();
-                        workers.lock().unwrap().execute(move || {
+                        workers.spawn_async(move || {
                             FONT_CONTEXT.with(|font_context| {
                                 let mut font_context = font_context.borrow_mut();
                                 match font_template {
@@ -969,7 +959,7 @@ fn spawn_glyph_cache_thread(workers: Arc<Mutex<ThreadPool>>) -> (Sender<GlyphCac
                     let barrier = Arc::new(Barrier::new(worker_count));
                     for _ in 0..worker_count {
                         let barrier = Arc::clone(&barrier);
-                        workers.lock().unwrap().execute(move || {
+                        workers.spawn_async(move || {
                             FONT_CONTEXT.with(|font_context| {
                                 let mut font_context = font_context.borrow_mut();
                                 font_context.delete_font(&font_key);
@@ -1002,13 +992,16 @@ fn spawn_glyph_cache_thread(workers: Arc<Mutex<ThreadPool>>) -> (Sender<GlyphCac
                            !pending_glyphs.contains(&glyph_key) {
                             let glyph_tx = glyph_tx.clone();
                             pending_glyphs.insert(glyph_key.clone());
-                            workers.lock().unwrap().execute(move || {
+                            workers.spawn_async(move || {
                                 profile_scope!("glyph");
                                 FONT_CONTEXT.with(move |font_context| {
                                     let mut font_context = font_context.borrow_mut();
                                     let result = font_context.rasterize_glyph(&glyph_key.key,
                                                                               render_mode,
                                                                               glyph_options);
+                                    if let Some(ref glyph) = result {
+                                        assert_eq!(glyph.bytes.len(), 4 * (glyph.width * glyph.height) as usize);
+                                    }
                                     glyph_tx.send((glyph_key, result)).unwrap();
                                 });
                             });
@@ -1028,6 +1021,9 @@ fn spawn_glyph_cache_thread(workers: Arc<Mutex<ThreadPool>>) -> (Sender<GlyphCac
                                                    .expect("BUG: Should be glyphs pending!");
                         debug_assert!(pending_glyphs.contains(&key));
                         pending_glyphs.remove(&key);
+                        if let Some(ref v) = glyph {
+                            debug!("received {}x{} data len {}", v.width, v.height, v.bytes.len());
+                        }
                         rasterized_glyphs.push(GlyphRasterJob {
                             key: key,
                             result: glyph,

@@ -11,6 +11,7 @@
 #include "mozilla/Range.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "FrameMetrics.h"
 #include "GLTypes.h"
 #include "Units.h"
 
@@ -22,7 +23,6 @@ class CompositorWidget;
 
 namespace layers {
 class CompositorBridgeParentBase;
-class WebRenderBridgeParent;
 }
 
 namespace wr {
@@ -44,6 +44,10 @@ public:
 
   wr::WindowId GetId() const { return mId; }
 
+  void UpdateScrollPosition(const WrPipelineId& aPipelineId,
+                            const layers::FrameMetrics::ViewID& aScrollId,
+                            const WrPoint& aScrollPosition);
+
   void GenerateFrame();
   void GenerateFrame(const nsTArray<WrOpacityProperty>& aOpacityArray,
                      const nsTArray<WrTransformProperty>& aTransformArray);
@@ -53,12 +57,10 @@ public:
                           Epoch aEpoch,
                           LayerSize aViewportSize,
                           WrPipelineId pipeline_id,
+                          const WrSize& content_size,
                           WrBuiltDisplayListDescriptor dl_descriptor,
                           uint8_t *dl_data,
-                          size_t dl_size,
-                          WrAuxiliaryListsDescriptor aux_descriptor,
-                          uint8_t *aux_data,
-                          size_t aux_size);
+                          size_t dl_size);
 
   void ClearRootDisplayList(Epoch aEpoch,
                             WrPipelineId pipeline_id);
@@ -73,13 +75,15 @@ public:
                     const ImageDescriptor& aDescriptor,
                     Range<uint8_t> aBytes);
 
-  void AddExternalImageHandle(ImageKey key,
-                              const ImageDescriptor& aDescriptor,
-                              ExternalImageId aHandle);
-
   void AddExternalImageBuffer(ImageKey key,
                               const ImageDescriptor& aDescriptor,
                               ExternalImageId aHandle);
+
+  void AddExternalImage(ImageKey key,
+                        const ImageDescriptor& aDescriptor,
+                        ExternalImageId aExtID,
+                        WrExternalImageBufferType aBufferType,
+                        uint8_t aChannelIndex);
 
   void UpdateImageBuffer(wr::ImageKey aKey,
                          const ImageDescriptor& aDescriptor,
@@ -121,7 +125,6 @@ protected:
   bool mUseANGLE;
 
   friend class DisplayListBuilder;
-  friend class layers::WebRenderBridgeParent;
 };
 
 /// This is a simple C++ wrapper around WrState defined in the rust bindings.
@@ -129,7 +132,8 @@ protected:
 /// instead, so the interface may change a bit.
 class DisplayListBuilder {
 public:
-  explicit DisplayListBuilder(wr::PipelineId aId);
+  explicit DisplayListBuilder(wr::PipelineId aId,
+                              const WrSize& aContentSize);
   DisplayListBuilder(DisplayListBuilder&&) = default;
 
   ~DisplayListBuilder();
@@ -137,7 +141,8 @@ public:
   void Begin(const LayerIntSize& aSize);
 
   void End();
-  wr::BuiltDisplayList Finalize();
+  void Finalize(WrSize& aOutContentSize,
+                wr::BuiltDisplayList& aOutDisplayList);
 
   void PushStackingContext(const WrRect& aBounds, // TODO: We should work with strongly typed rects
                            const float aOpacity,
@@ -157,18 +162,18 @@ public:
 
   void PushBuiltDisplayList(wr::BuiltDisplayList dl);
 
-  void PushScrollLayer(const WrRect& aContentRect, // TODO: We should work with strongly typed rects
-                       const WrRect& aClipRect,
-                       const WrImageMask* aMask); // TODO: needs a wrapper.
+  void PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollId,
+                       const WrRect& aContentRect, // TODO: We should work with strongly typed rects
+                       const WrRect& aClipRect);
   void PopScrollLayer();
 
 
   void PushRect(const WrRect& aBounds,
-                const WrClipRegion& aClip,
+                const WrClipRegionToken aClip,
                 const WrColor& aColor);
 
   void PushLinearGradient(const WrRect& aBounds,
-                          const WrClipRegion& aClip,
+                          const WrClipRegionToken aClip,
                           const WrPoint& aStartPoint,
                           const WrPoint& aEndPoint,
                           const nsTArray<WrGradientStop>& aStops,
@@ -177,7 +182,7 @@ public:
                           const WrSize aTileSpacing);
 
   void PushRadialGradient(const WrRect& aBounds,
-                          const WrClipRegion& aClip,
+                          const WrClipRegionToken aClip,
                           const WrPoint& aCenter,
                           const WrSize& aRadius,
                           const nsTArray<WrGradientStop>& aStops,
@@ -186,36 +191,41 @@ public:
                           const WrSize aTileSpacing);
 
   void PushImage(const WrRect& aBounds,
-                 const WrClipRegion& aClip,
+                 const WrClipRegionToken aClip,
                  wr::ImageRendering aFilter,
                  wr::ImageKey aImage);
 
   void PushImage(const WrRect& aBounds,
-                 const WrClipRegion& aClip,
+                 const WrClipRegionToken aClip,
                  const WrSize& aStretchSize,
                  const WrSize& aTileSpacing,
                  wr::ImageRendering aFilter,
                  wr::ImageKey aImage);
 
   void PushYCbCrPlanarImage(const WrRect& aBounds,
-                            const WrClipRegion& aClip,
+                            const WrClipRegionToken aClip,
                             wr::ImageKey aImageChannel0,
                             wr::ImageKey aImageChannel1,
                             wr::ImageKey aImageChannel2,
                             WrYuvColorSpace aColorSpace);
 
   void PushNV12Image(const WrRect& aBounds,
-                     const WrClipRegion& aClip,
+                     const WrClipRegionToken aClip,
                      wr::ImageKey aImageChannel0,
                      wr::ImageKey aImageChannel1,
                      WrYuvColorSpace aColorSpace);
 
+  void PushYCbCrInterleavedImage(const WrRect& aBounds,
+                                 const WrClipRegionToken aClip,
+                                 wr::ImageKey aImageChannel0,
+                                 WrYuvColorSpace aColorSpace);
+
   void PushIFrame(const WrRect& aBounds,
-                  const WrClipRegion& aClip,
+                  const WrClipRegionToken aClip,
                   wr::PipelineId aPipeline);
 
   void PushBorder(const WrRect& aBounds,
-                  const WrClipRegion& aClip,
+                  const WrClipRegionToken aClip,
                   const WrBorderWidths& aWidths,
                   const WrBorderSide& aTop,
                   const WrBorderSide& aRight,
@@ -224,7 +234,7 @@ public:
                   const WrBorderRadius& aRadius);
 
   void PushBorderImage(const WrRect& aBounds,
-                       const WrClipRegion& aClip,
+                       const WrClipRegionToken aClip,
                        const WrBorderWidths& aWidths,
                        wr::ImageKey aImage,
                        const WrNinePatchDescriptor& aPatch,
@@ -233,7 +243,7 @@ public:
                        const WrRepeatMode& aRepeatVertical);
 
   void PushBorderGradient(const WrRect& aBounds,
-                          const WrClipRegion& aClip,
+                          const WrClipRegionToken aClip,
                           const WrBorderWidths& aWidths,
                           const WrPoint& aStartPoint,
                           const WrPoint& aEndPoint,
@@ -242,7 +252,7 @@ public:
                           const WrSideOffsets2Df32& aOutset);
 
   void PushBorderRadialGradient(const WrRect& aBounds,
-                                const WrClipRegion& aClip,
+                                const WrClipRegionToken aClip,
                                 const WrBorderWidths& aWidths,
                                 const WrPoint& aCenter,
                                 const WrSize& aRadius,
@@ -251,14 +261,14 @@ public:
                                 const WrSideOffsets2Df32& aOutset);
 
   void PushText(const WrRect& aBounds,
-                const WrClipRegion& aClip,
+                const WrClipRegionToken aClip,
                 const gfx::Color& aColor,
                 wr::FontKey aFontKey,
                 Range<const WrGlyphInstance> aGlyphBuffer,
                 float aGlyphSize);
 
   void PushBoxShadow(const WrRect& aRect,
-                     const WrClipRegion& aClip,
+                     const WrClipRegionToken aClip,
                      const WrRect& aBoxBounds,
                      const WrPoint& aOffset,
                      const WrColor& aColor,
@@ -267,11 +277,11 @@ public:
                      const float& aBorderRadius,
                      const WrBoxShadowClipMode& aClipMode);
 
-  WrClipRegion BuildClipRegion(const WrRect& aMain,
-                               const WrImageMask* aMask = nullptr);
-  WrClipRegion BuildClipRegion(const WrRect& aMain,
-                               const nsTArray<WrComplexClipRegion>& aComplex,
-                               const WrImageMask* aMask = nullptr);
+  WrClipRegionToken PushClipRegion(const WrRect& aMain,
+                                   const WrImageMask* aMask = nullptr);
+  WrClipRegionToken PushClipRegion(const WrRect& aMain,
+                                   const nsTArray<WrComplexClipRegion>& aComplex,
+                                   const WrImageMask* aMask = nullptr);
 
   // Try to avoid using this when possible.
   WrState* Raw() { return mWrState; }
