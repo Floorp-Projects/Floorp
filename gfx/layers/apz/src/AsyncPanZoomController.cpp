@@ -864,13 +864,13 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
       (uint32_t) ScrollInputMethod::ApzScrollbarDrag);
 
   ReentrantMonitorAutoEnter lock(mMonitor);
-  CSSCoord mousePosition = ConvertScrollbarPoint(aEvent.mLocalOrigin, thumbData) -
+  CSSCoord thumbPosition = ConvertScrollbarPoint(aEvent.mLocalOrigin, thumbData) -
                            aDragMetrics.mScrollbarDragOffset;
 
-  CSSCoord scrollMax = thumbData.mScrollTrackLength;
-  scrollMax -= thumbData.mThumbLength;
+  CSSCoord maxThumbPos = thumbData.mScrollTrackLength;
+  maxThumbPos -= thumbData.mThumbLength;
 
-  float scrollPercent = mousePosition / scrollMax;
+  float scrollPercent = thumbPosition / maxThumbPos;
 
   CSSCoord minScrollPosition =
     GetAxisStart(aDragMetrics.mDirection, mFrameMetrics.GetScrollableRect().TopLeft());
