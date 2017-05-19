@@ -20,6 +20,7 @@ public:
     nsSound(); 
 
     static void Shutdown();
+    static already_AddRefed<nsISound> GetInstance();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISOUND

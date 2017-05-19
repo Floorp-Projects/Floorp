@@ -17,7 +17,7 @@ import android.widget.ListView;
 
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SnackbarBuilder;
@@ -184,7 +184,7 @@ public class BookmarkStateChangeDelegate extends BrowserAppDelegateWithReference
                         ThreadUtils.postToBackgroundThread(new Runnable() {
                             @Override
                             public void run() {
-                                GeckoAppShell.createShortcut(title, url);
+                                GeckoApplication.createShortcut(title, url);
                             }
                         });
                     }

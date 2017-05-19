@@ -16,6 +16,9 @@ ac_add_options --enable-crashreporter
 
 ac_add_options --enable-release
 
+# Tell the build system where to find llvm-config for builds on automation.
+export LLVM_CONFIG="${TOOLTOOL_DIR:-$topsrcdir}/clang/bin/llvm-config"
+
 # Enable checking that add-ons are signed by the trusted root
 MOZ_ADDON_SIGNING=${MOZ_ADDON_SIGNING-1}
 # Disable enforcing that add-ons are signed by the trusted root

@@ -544,6 +544,8 @@ static const uintptr_t ConstraintTypeSetMagic = BaseTypeInferenceMagic + 2;
 #ifdef JS_CRASH_DIAGNOSTICS
 extern void
 ReportMagicWordFailure(uintptr_t actual, uintptr_t expected);
+extern void
+ReportMagicWordFailure(uintptr_t actual, uintptr_t expected, uintptr_t flags, uintptr_t objectSet);
 #endif
 
 /*
@@ -674,7 +676,7 @@ class ConstraintTypeSet : public TypeSet
     void checkMagic() const {
 #ifdef JS_CRASH_DIAGNOSTICS
         if (MOZ_UNLIKELY(magic_ != ConstraintTypeSetMagic))
-            ReportMagicWordFailure(magic_, ConstraintTypeSetMagic);
+            ReportMagicWordFailure(magic_, ConstraintTypeSetMagic, uintptr_t(flags), uintptr_t(objectSet));
 #endif
     }
 

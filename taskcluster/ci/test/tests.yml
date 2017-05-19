@@ -418,6 +418,44 @@ marionette:
                             - marionette/prod_config.py
                             - remove_executables.py
 
+marionette-headless:
+    description: "Marionette headless unittest run"
+    suite: marionette
+    treeherder-symbol: tc(MnH)
+    max-run-time:
+        by-test-platform:
+            default: 5400
+    instance-size:
+        by-test-platform:
+            default: default
+    docker-image: {"in-tree": "desktop1604-test"}
+    tier:
+        by-test-platform:
+            default: default
+    chunks:
+        by-test-platform:
+            default: 1
+    e10s:
+        by-test-platform:
+            default: both
+    run-on-projects:
+        by-test-platform:
+            default: ['all']
+    mozharness:
+        by-test-platform:
+            default:
+                script: marionette.py
+                no-read-buildbot-config: true
+                config:
+                    by-test-platform:
+                        default:
+                            - marionette/prod_config.py
+                            - remove_executables.py
+                extra-options:
+                    by-test-platform:
+                        default:
+                            - --headless
+
 mochitest:
     description: "Mochitest plain run"
     suite:

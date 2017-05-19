@@ -395,6 +395,14 @@ const SIGNED_TYPES = new Set([
   "webextension-theme",
 ]);
 
+const ALL_TYPES = new Set([
+  "dictionary",
+  "extension",
+  "experiment",
+  "locale",
+  "theme",
+]);
+
 // This is a random number array that can be used as "salt" when generating
 // an automatic ID based on the directory path of an add-on. It will prevent
 // someone from creating an ID for a permanent add-on that could be replaced
@@ -2408,7 +2416,15 @@ class XPIState {
     // We don't use aDBAddon.active here because it's not updated until after restart.
     let mustGetMod = (aDBAddon.visible && !aDBAddon.disabled && !this.enabled);
 
-    this.enabled = aDBAddon.visible && !aDBAddon.disabled;
+    // We need to treat XUL themes specially here, since lightweight
+    // themes require the default theme's chrome to be registered even
+    // though we report it as disabled for UI purposes.
+    if (aDBAddon.type == "theme") {
+      this.enabled = aDBAddon.internalName == XPIProvider.selectedSkin;
+    } else {
+      this.enabled = aDBAddon.visible && !aDBAddon.disabled;
+    }
+
     this.version = aDBAddon.version;
     this.type = aDBAddon.type;
     this.enableShims = this.type == "extension" && !aDBAddon.multiprocessCompatible;
@@ -2911,6 +2927,12 @@ this.XPIProvider = {
   // Have we started shutting down bootstrap add-ons?
   _closing: false,
 
+  // Check if the XPIDatabase has been loaded (without actually
+  // triggering unwanted imports or I/O)
+  get isDBLoaded() {
+    return gLazyObjectsLoaded && XPIDatabase.initialized;
+  },
+
   /**
    * Returns true if the add-on with the given ID is currently active,
    * without forcing the add-ons database to load.
@@ -3352,6 +3374,22 @@ this.XPIProvider = {
           Services.obs.removeObserver(this, "final-ui-startup");
         }
       }, "final-ui-startup");
+
+      // Once other important startup work is finished, try to load the
+      // XPI database so that the telemetry environment can be populated
+      // with detailed addon information.
+      if (!this.isDBLoaded) {
+        Services.obs.addObserver({
+          observe(subject, topic, data) {
+            Services.obs.removeObserver(this, "sessionstore-windows-restored");
+
+            // It would be nice to defer some of the work here until we
+            // have idle time but we can't yet use requestIdleCallback()
+            // from chrome.  See bug 1358476.
+            XPIDatabase.asyncLoadDB();
+          },
+        }, "sessionstore-windows-restored");
+      }
 
       AddonManagerPrivate.recordTimestamp("XPI_startup_end");
 
@@ -4640,11 +4678,65 @@ this.XPIProvider = {
    */
   getAddonsByTypes(aTypes, aCallback) {
     let typesToGet = getAllAliasesForTypes(aTypes);
+    if (typesToGet && !typesToGet.some(type => ALL_TYPES.has(type))) {
+      aCallback([]);
+      return;
+    }
 
     XPIDatabase.getVisibleAddons(typesToGet, function(aAddons) {
       aCallback(aAddons.map(a => a.wrapper));
     });
   },
+
+  /**
+   * Called to get active Addons of a particular type
+   *
+   * @param  aTypes
+   *         An array of types to fetch. Can be null to get all types.
+   * @returns {Promise<Array<Addon>>}
+   */
+  getActiveAddons(aTypes) {
+    // If we already have the database loaded, returning full info is fast.
+    if (this.isDBLoaded) {
+      return new Promise(resolve => {
+        this.getAddonsByTypes(aTypes, addons => {
+          // The thing with experiments is an ugly hack but we want
+          // Experiments.jsm to use this interface instead of getAddonsByTypes.
+          // They'll go away at some point and we can forget this ever happened.
+          resolve(addons.filter(addon => addon.isActive ||
+                                       (addon.type == "experiment" && !addon.appDisabled)));
+        });
+      });
+    }
+
+    // Construct addon-like objects with the information we already
+    // have in memory.
+    if (!XPIStates.db) {
+      return Promise.reject(new Error("XPIStates not yet initialized"));
+    }
+
+    let result = [];
+    for (let addon of XPIStates.enabledAddons()) {
+      let location = this.installLocationsByName[addon.location.name];
+      let scope, isSystem;
+      if (location) {
+        ({scope, isSystem} = location);
+      }
+      result.push({
+        id: addon.id,
+        version: addon.version,
+        type: addon.type,
+        updateDate: addon.lastModifiedTime,
+        scope,
+        isSystem,
+        isWebExtension: isWebExtension(addon),
+        multiprocessCompatible: addon.multiprocessCompatible,
+      });
+    }
+
+    return Promise.resolve(result);
+  },
+
 
   /**
    * Obtain an Addon having the specified Sync GUID.
@@ -5245,15 +5337,8 @@ this.XPIProvider = {
         activeAddon.bootstrapScope, "console",
         () => new ConsoleAPI({ consoleID: "addon/" + aId }));
 
-      // As we don't want our caller to control the JS version used for the
-      // bootstrap file, we run loadSubScript within the context of the
-      // sandbox with the latest JS version set explicitly.
       activeAddon.bootstrapScope.__SCRIPT_URI_SPEC__ = uri;
-      Components.utils.evalInSandbox(
-        "Components.classes['@mozilla.org/moz/jssubscript-loader;1'] \
-                   .getService(Components.interfaces.mozIJSSubScriptLoader) \
-                   .loadSubScript(__SCRIPT_URI_SPEC__);",
-                   activeAddon.bootstrapScope, "ECMAv5");
+      Services.scriptloader.loadSubScript(uri, activeAddon.bootstrapScope);
     } catch (e) {
       logger.warn("Error loading bootstrap.js for " + aId, e);
     }
@@ -5345,8 +5430,8 @@ this.XPIProvider = {
 
       let method = undefined;
       try {
-        method = Components.utils.evalInSandbox(`${aMethod};`,
-          activeAddon.bootstrapScope, "ECMAv5");
+        let scope = activeAddon.bootstrapScope;
+        method = scope[aMethod] || Cu.evalInSandbox(`${aMethod};`, scope);
       } catch (e) {
         // An exception will be caught if the expected method is not defined.
         // That will be logged below.
@@ -5542,8 +5627,14 @@ this.XPIProvider = {
     }
 
     // Notify any other providers that a new theme has been enabled
-    if (isTheme(aAddon.type) && !isDisabled)
+    if (isTheme(aAddon.type) && !isDisabled) {
       AddonManagerPrivate.notifyAddonChanged(aAddon.id, aAddon.type, needsRestart);
+
+      if (xpiState) {
+        xpiState.syncWithDB(aAddon);
+        XPIStates.save();
+      }
+    }
 
     return isDisabled;
   },

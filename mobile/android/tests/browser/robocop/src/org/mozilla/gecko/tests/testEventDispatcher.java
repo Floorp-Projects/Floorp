@@ -65,12 +65,12 @@ public class testEventDispatcher extends JavascriptBridgeTest implements BundleE
         getJS().syncCall("finish_test");
     }
 
-    private static EventDispatcher getDispatcher(final String scope) {
+    private EventDispatcher getDispatcher(final String scope) {
         if ("global".equals(scope)) {
             return EventDispatcher.getInstance();
         }
         if ("window".equals(scope)) {
-            return GeckoApp.getEventDispatcher();
+            return ((GeckoApp) getActivity()).getAppEventDispatcher();
         }
         fFail("scope argument should be valid string");
         return null;

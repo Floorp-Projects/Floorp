@@ -183,14 +183,8 @@ Object.getOwnPropertyNames(currencyDigits).forEach(function (currency) {
     var format = Intl.NumberFormat([], {style: "currency", currency: currency});
     var min = format.resolvedOptions().minimumFractionDigits;
     var max = format.resolvedOptions().maximumFractionDigits;
-    if (min !== digits) {
-        $ERROR("Didn't get correct minimumFractionDigits for currency " +
-            currency + "; expected " + digits + ", got " + min + ".");
-    }
-    if (max !== digits) {
-        $ERROR("Didn't get correct maximumFractionDigits for currency " +
-            currency + "; expected " + digits + ", got " + max + ".");
-    }
+    assert.sameValue(min, digits, "Didn't get correct minimumFractionDigits for currency " + currency + ".");
+    assert.sameValue(max, digits, "Didn't get correct maximumFractionDigits for currency " + currency + ".");
 });
 
 reportCompare(0, 0);

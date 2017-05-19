@@ -1,3 +1,4 @@
+// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/ary-ptrn-rest-obj-prop-id.case
 // - src/dstr-binding/default/for-await-of-async-func-var.template
@@ -17,13 +18,13 @@ info: |
     13.7.5.13 Runtime Semantics: ForIn/OfBodyEvaluation
 
     [...]
-    3. Let destructuring be IsDestructuring of lhs.
+    4. Let destructuring be IsDestructuring of lhs.
     [...]
-    5. Repeat
+    6. Repeat
        [...]
-       h. If destructuring is false, then
+       j. If destructuring is false, then
           [...]
-       i. Else
+       k. Else
           i. If lhsKind is assignment, then
              [...]
           ii. Else if lhsKind is varBinding, then
@@ -45,6 +46,7 @@ info: |
              BindingPattern with A and environment as the arguments.
        [...]
 ---*/
+let length = "outer";
 
 var iterCount = 0;
 
@@ -56,9 +58,7 @@ async function fn() {
     assert.sameValue(y, undefined);
     assert.sameValue(z, 3);
 
-    assert.throws(ReferenceError, function() {
-      length;
-    });
+    assert.sameValue(length, "outer", "the length prop is not set as a binding name");
 
     iterCount += 1;
   }
