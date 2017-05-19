@@ -569,11 +569,14 @@ BackgroundChildImpl::DeallocPGamepadTestChannelChild(PGamepadTestChannelChild* a
 void
 BackgroundChildImpl::OnChannelReceivedMessage(const Message& aMsg)
 {
+// Telemetry collection temporarily disabled in bug 1366156.
+#if 0
   if (aMsg.type() == layout::PVsync::MessageType::Msg_Notify__ID) {
     // Not really necessary to look at the message payload, it will be
     // <0.5ms away from TimeStamp::Now()
     SchedulerGroup::MarkVsyncReceived();
   }
+#endif
 }
 #endif
 
