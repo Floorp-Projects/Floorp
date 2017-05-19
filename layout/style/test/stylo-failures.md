@@ -36,9 +36,9 @@ to mochitest command.
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
 * Animation support:
-  * test_animations.html [1]
+  * test_animations.html [3]
   * test_animations_dynamic_changes.html [1]
-  * test_bug716226.html [1]
+  * test_bug716226.html [3]
   * inserting keyframes rule doesn't trigger restyle bug 1364799:
     * test_rule_insertion.html `@keyframes` [36]
   * OMTA
@@ -57,9 +57,6 @@ to mochitest command.
   * \@import bug 1352968
     * test_bug221428.html [1]
     * test_css_eof_handling.html [1]
-  * \@keyframes bug 1345697
-    * test_keyframes_rules.html [1]
-    * test_rules_out_of_sheets.html [1]
 * test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [1]
 * console support bug 1352669
   * test_bug413958.html `monitorConsole` [3]
@@ -78,8 +75,6 @@ to mochitest command.
   * test_value_storage.html `symbols(` [30]
   * ... `list-style-type` [8]
   * ... `'list-style'` [18]
-* @page support:
-  * test_bug887741_at-rules_in_declaration_lists.html `exception` [1]
 * Unimplemented \@font-face descriptors:
   * font-display bug 1355345
     * test_descriptor_storage.html `font-display` [5]
