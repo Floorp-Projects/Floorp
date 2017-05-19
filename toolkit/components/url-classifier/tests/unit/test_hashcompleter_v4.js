@@ -83,7 +83,7 @@ add_test(function test_update_v4() {
 add_test(function test_getHashRequestV4() {
   let request = gUrlUtil.makeFindFullHashRequestV4([TEST_TABLE_DATA_V4.tableName],
                                                    [btoa(NEW_CLIENT_STATE)],
-                                                   [btoa("0123"), btoa("1234567"), btoa("1111")],
+                                                   [btoa("0123"), btoa("1234567"), btoa("1111")].sort(),
                                                    1,
                                                    3);
   registerHandlerGethashV4("&$req=" + request);

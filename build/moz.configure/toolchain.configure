@@ -27,9 +27,9 @@ def yasm_version(yasm):
 # Until we move all the yasm consumers out of old-configure.
 # bug 1257904
 add_old_configure_assignment('_YASM_MAJOR_VERSION',
-                             delayed_getattr(yasm_version, 'major'))
+                             yasm_version.major)
 add_old_configure_assignment('_YASM_MINOR_VERSION',
-                             delayed_getattr(yasm_version, 'minor'))
+                             yasm_version.minor)
 
 @depends(yasm, target)
 def yasm_asflags(yasm, target):
@@ -645,7 +645,7 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     # result from check_prog as CC/CXX/HOST_CC/HOST_CXX and b) have to let
     # old-configure AC_SUBST it (because it's autoconf doing it, not us)
     compiler = check_prog('_%s' % var, what=what, progs=default_compilers,
-                          input=delayed_getattr(provided_compiler, 'compiler'),
+                          input=provided_compiler.compiler,
                           paths=toolchain_search_path)
 
     @depends(compiler, provided_compiler, compiler_wrapper, host_or_target)
@@ -791,11 +791,11 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
     # old-configure to do some of its still existing checks.
     if language == 'C':
         set_config(
-            '%s_TYPE' % var, delayed_getattr(valid_compiler, 'type'))
+            '%s_TYPE' % var, valid_compiler.type)
         add_old_configure_assignment(
-            '%s_TYPE' % var, delayed_getattr(valid_compiler, 'type'))
+            '%s_TYPE' % var, valid_compiler.type)
         add_old_configure_assignment(
-            '%s_VERSION' % var, delayed_getattr(valid_compiler, 'version'))
+            '%s_VERSION' % var, valid_compiler.version)
 
     valid_compiler = compiler_class(valid_compiler)
 

@@ -29197,7 +29197,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function isLexicalScope(path) {
-	  return isFunction(path) || t.isProgram(path);
+	  return t.isBlockStatement(path) || isFunction(path) || t.isProgram(path);
 	}
 
 	function getSymbols(source) {

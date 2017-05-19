@@ -36,7 +36,8 @@ SVGGeometryElement::GetNumberInfo()
 
 nsresult
 SVGGeometryElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                 const nsAttrValue* aValue, bool aNotify)
+                                 const nsAttrValue* aValue,
+                                 const nsAttrValue* aOldValue, bool aNotify)
 {
   if (mCachedPath &&
       aNamespaceID == kNameSpaceID_None &&
@@ -44,7 +45,7 @@ SVGGeometryElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
     mCachedPath = nullptr;
   }
   return SVGGeometryElementBase::AfterSetAttr(aNamespaceID, aName,
-                                              aValue, aNotify);
+                                              aValue, aOldValue, aNotify);
 }
 
 bool

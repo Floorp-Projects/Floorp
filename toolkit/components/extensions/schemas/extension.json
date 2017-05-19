@@ -31,7 +31,7 @@
       {
         "id": "ViewType",
         "type": "string",
-        "enum": ["tab", "notification", "popup", "sidebar"],
+        "enum": ["tab", "popup", "sidebar"],
         "description": "The type of extension view."
       }
     ],
@@ -66,12 +66,17 @@
               "type": {
                 "$ref": "ViewType",
                 "optional": true,
-                "description": "The type of view to get. If omitted, returns all views (including background pages and tabs). Valid values: 'tab', 'notification', 'popup'."
+                "description": "The type of view to get. If omitted, returns all views (including background pages and tabs). Valid values: 'tab', 'popup', 'sidebar'."
               },
               "windowId": {
                 "type": "integer",
                 "optional": true,
                 "description": "The window to restrict the search to. If omitted, returns all views."
+              },
+              "tabId": {
+                "type": "integer",
+                "optional":true,
+                "description": "Find a view according to a tab id. If this field is omitted, returns all views."
               }
             }
           }

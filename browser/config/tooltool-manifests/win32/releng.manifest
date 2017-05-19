@@ -38,5 +38,13 @@
     "unpack": true,
     "digest": "196ac6a567c85559957dfe511c3d8654d23c94d5603259e19ccafe9d71e0e4ccee63ccc9a778f2699654b786cda54266108b7d4db543d01bb0b42545b4e6ec75",
     "size": 297118
+  },
+  {
+    "version": "clang 5.0pre/r293859",
+    "size": 309009013,
+    "digest": "cd3ed31acefd185f441632158dde73538c62bab7ebf2a8ec630985ab345938ec522983721ddb1bead1de22d5ac1571d50a958ae002364d739f2a78c6e7244222",
+    "algorithm": "sha512",
+    "filename": "clang.tar.bz2",
+    "unpack": true
   }
 ]

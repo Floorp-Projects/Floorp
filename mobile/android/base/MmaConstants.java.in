@@ -1,0 +1,38 @@
+//#filter substitution
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.gecko;
+
+import org.mozilla.gecko.mma.MmaInterface;
+//#ifdef MOZ_ANDROID_MMA
+import org.mozilla.gecko.mma.MmaLeanplumImp;
+//#else
+import org.mozilla.gecko.mma.MmaStubImp;
+//#endif
+
+public class MmaConstants {
+    public static final String MOZ_LEANPLUM_SDK_KEY =
+//#ifdef MOZ_LEANPLUM_SDK_KEY
+    "@MOZ_LEANPLUM_SDK_KEY@";
+//#else
+    null;
+//#endif
+
+public static final String MOZ_LEANPLUM_SDK_CLIENTID =
+//#ifdef MOZ_LEANPLUM_SDK_CLIENTID
+    "@MOZ_LEANPLUM_SDK_CLIENTID@";
+//#else
+    null;
+//#endif
+
+    public static MmaInterface getMma() {
+//#ifdef MOZ_ANDROID_MMA
+        return new MmaLeanplumImp();
+//#else
+        return new MmaStubImp();
+//#endif
+    }
+}

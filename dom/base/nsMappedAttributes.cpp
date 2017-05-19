@@ -156,14 +156,16 @@ NS_IMPL_QUERY_INTERFACE(nsMappedAttributes,
                         nsIStyleRule)
 
 void
-nsMappedAttributes::SetAndTakeAttr(nsIAtom* aAttrName, nsAttrValue& aValue)
+nsMappedAttributes::SetAndSwapAttr(nsIAtom* aAttrName, nsAttrValue& aValue,
+                                   bool* aValueWasSet)
 {
   NS_PRECONDITION(aAttrName, "null name");
+  *aValueWasSet = false;
   uint32_t i;
   for (i = 0; i < mAttrCount && !Attrs()[i].mName.IsSmaller(aAttrName); ++i) {
     if (Attrs()[i].mName.Equals(aAttrName)) {
-      Attrs()[i].mValue.Reset();
       Attrs()[i].mValue.SwapValueWith(aValue);
+      *aValueWasSet = true;
       return;
     }
   }
