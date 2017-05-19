@@ -796,6 +796,49 @@ add_task(function* ensureCanSync_handles_deleted_conflicts() {
   });
 });
 
+add_task(function* ensureCanSync_handles_flushes() {
+  // One of the ways that bug 1359879 presents is as bug 1350088. This
+  // seems to be the symptom that results when the user had two
+  // devices, one of which was not syncing at the time the keyring was
+  // lost. Ensure we can recover for these users as well.
+  const extensionId = uuid();
+  const extensionId2 = uuid();
+  yield* withContextAndServer(function* (context, server) {
+    server.installCollection("storage-sync-crypto");
+    server.installDeleteBucket();
+    yield* withSignedInUser(loggedInUser, function* (extensionStorageSync, fxaService) {
+      server.etag = 700;
+      // Generate keys that we can check for later.
+      let collectionKeys = yield extensionStorageSync.ensureCanSync([extensionId]);
+      const extensionKey = collectionKeys.keyForCollection(extensionId);
+      server.clearPosts();
+
+      // last_modified is new, but there is no data.
+      server.etag = 800;
+
+      // Try to add a new extension to trigger a sync of the keyring.
+      let collectionKeys2 = yield extensionStorageSync.ensureCanSync([extensionId2]);
+
+      assertKeyRingKey(collectionKeys2, extensionId, extensionKey,
+                       `syncing keyring should keep our local key for ${extensionId}`);
+
+      deepEqual(server.getDeletedBuckets(), ["default"],
+                "Kinto server should have been wiped when keyring was thrown away");
+
+      let posts = server.getPosts();
+      equal(posts.length, 1,
+            "syncing keyring should have tried to post a keyring once");
+
+      const post = posts[0];
+      assertPostedNewRecord(post);
+      let postBody = yield assertPostedEncryptedKeys(fxaService, post);
+
+      deepEqual(postBody.keys.collections[extensionId], extensionKey.keyPairB64,
+                `decrypted new post should have preserved the key for ${extensionId}`);
+    });
+  });
+});
+
 add_task(function* checkSyncKeyRing_reuploads_keys() {
   // Verify that when keys are present, they are reuploaded with the
   // new kB when we call touchKeys().
