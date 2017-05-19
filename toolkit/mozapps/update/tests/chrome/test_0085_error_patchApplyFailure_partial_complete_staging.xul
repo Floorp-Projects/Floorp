@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<!--
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+-->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Update Wizard pages: error patching, download with staging, and finished (partial failed and download complete), with fast MAR download"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTestDefault();">
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script type="application/javascript"
+        src="utils.js"/>
+
+<script type="application/javascript">
+<![CDATA[
+
+// This test forces the download to complete before the "next" button on the
+// errorpatching wizard page is clicked. This is done by creating the continue
+// file when the wizard loads to start the download, then clicking the "next"
+// button in the download's onStopRequest event listener.
+
+const testDownloadListener = {
+  onStartRequest(aRequest, aContext) { },
+
+  onProgress(aRequest, aContext, aProgress, aMaxProgress) { },
+
+  onStatus(aRequest, aContext, aStatus, aStatusText) { },
+
+  onStopRequest(aRequest, aContext, aStatus) {
+    debugDump("clicking errorpatching page next button");
+    gDocElem.getButton("next").click();
+    gAUS.removeDownloadListener(this);
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRequestObserver,
+                                         Ci.nsIProgressEventSink])
+};
+
+let TESTS = [ {
+  pageid: PAGEID_ERROR_PATCHING,
+  extraCheckFunction: createContinueFile
+}, {
+  pageid: PAGEID_DOWNLOADING
+}, {
+  pageid: PAGEID_FINISHED,
+  buttonClick: "extra1",
+  extraStartFunction: removeContinueFile
+} ];
+
+gUseTestUpdater = true;
+
+function runTest() {
+  debugDump("entering");
+
+  removeContinueFile();
+
+  // Specify the url to update.sjs with a slowDownloadMar param so the ui can
+  // load before the download completes.
+  let slowDownloadURL = URL_HTTP_UPDATE_XML + "?slowDownloadMar=1";
+  let patches = getLocalPatchString("partial", null, null, null, null, null,
+                                    STATE_PENDING) +
+                getLocalPatchString("complete", slowDownloadURL, null, null,
+                                    null, "false");
+  let updates = getLocalUpdateString(patches, null, null, null,
+                                     Services.appinfo.version, null,
+                                     null, null, null, null, "false");
+
+  writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
+  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
+  writeStatusFile(STATE_FAILED_READ_ERROR);
+
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, true);
+
+  reloadUpdateManagerData();
+
+  testPostUpdateProcessing();
+
+  gAUS.addDownloadListener(testDownloadListener);
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+</window>
