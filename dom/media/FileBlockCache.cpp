@@ -23,7 +23,6 @@ LazyLogModule gFileBlockCacheLog("FileBlockCache");
 void
 FileBlockCache::SetCacheFile(PRFileDesc* aFD)
 {
-  MOZ_ASSERT(NS_IsMainThread());
   LOG("SetFD(aFD=%p) mIsOpen=%d", aFD, mIsOpen);
 
   if (!aFD) {
@@ -44,7 +43,7 @@ FileBlockCache::SetCacheFile(PRFileDesc* aFD)
     }
     mInitialized = true;
     if (mIsWriteScheduled) {
-      // A write was scheduled while waiting for FD. We need to dispatch a
+      // A write was scheduled while waiting for FD. We need to run/dispatch a
       // task to service the request.
       mThread->Dispatch(this, NS_DISPATCH_NORMAL);
     }
@@ -55,8 +54,6 @@ nsresult
 FileBlockCache::Init()
 {
   LOG("Init()");
-
-  MOZ_ASSERT(NS_IsMainThread());
 
   MonitorAutoLock mon(mDataMonitor);
   nsresult rv = NS_NewNamedThread("FileBlockCache",
@@ -69,10 +66,16 @@ FileBlockCache::Init()
   mIsOpen = true;
 
   if (XRE_IsParentProcess()) {
-    rv = NS_OpenAnonymousTemporaryFile(&mFD);
-    if (NS_SUCCEEDED(rv)) {
-      mInitialized = true;
-    }
+    RefPtr<FileBlockCache> self = this;
+    rv = mThread->Dispatch(NS_NewRunnableFunction([self] {
+      PRFileDesc* fd = nullptr;
+      nsresult rv = NS_OpenAnonymousTemporaryFile(&fd);
+      if (NS_SUCCEEDED(rv)) {
+        self->SetCacheFile(fd);
+      } else {
+        self->Close();
+      }
+    }), NS_DISPATCH_NORMAL);
   } else {
     // We must request a temporary file descriptor from the parent process.
     RefPtr<FileBlockCache> self = this;
@@ -100,45 +103,53 @@ FileBlockCache::FileBlockCache()
 FileBlockCache::~FileBlockCache()
 {
   NS_ASSERTION(!mIsOpen, "Should Close() FileBlockCache before destroying");
-  {
-    // Note, mThread will be shutdown by the time this runs, so we won't
-    // block while taking mFileMonitor.
-    MonitorAutoLock mon(mFileMonitor);
-    if (mFD) {
-      PRStatus prrc;
-      prrc = PR_Close(mFD);
-      if (prrc != PR_SUCCESS) {
-        NS_WARNING("PR_Close() failed.");
-      }
-      mFD = nullptr;
-    }
-  }
 }
 
 void FileBlockCache::Close()
 {
   LOG("Close()");
 
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+  nsCOMPtr<nsIThread> thread;
+  {
+    MonitorAutoLock mon(mDataMonitor);
+    if (!mIsOpen) {
+      return;
+    }
+    mIsOpen = false;
+    if (!mThread) {
+      return;
+    }
+    thread.swap(mThread);
+  }
 
-  MonitorAutoLock mon(mDataMonitor);
-  if (!mIsOpen) {
-    return;
+  PRFileDesc* fd;
+  {
+    MonitorAutoLock lock(mFileMonitor);
+    fd = mFD;
+    mFD = nullptr;
   }
-  mIsOpen = false;
-  if (!mThread) {
-    return;
-  }
-  // We must shut down the thread in another runnable. This is called
-  // while we're shutting down the media cache, and nsIThread::Shutdown()
-  // can cause events to run before it completes, which could end up
-  // opening more streams, while the media cache is shutting down and
-  // releasing memory etc! Also note we close mFD in the destructor so
-  // as to not disturb any IO that's currently running.
-  nsCOMPtr<nsIRunnable> event = new ShutdownThreadEvent(mThread);
-  SystemGroup::Dispatch(
-    "ShutdownThreadEvent", TaskCategory::Other, event.forget());
-  mThread = nullptr;
+
+  // Let the thread close the FD, and then trigger its own shutdown.
+  // Note that mThread is now empty, so no other task will be posted there.
+  // Also mThread and mFD are empty and therefore can be reused immediately.
+  nsresult rv = thread->Dispatch(NS_NewRunnableFunction([thread, fd] {
+    if (fd) {
+      PRStatus prrc;
+      prrc = PR_Close(fd);
+      if (prrc != PR_SUCCESS) {
+        NS_WARNING("PR_Close() failed.");
+      }
+    }
+    // We must shut down the thread in another runnable. This is called
+    // while we're shutting down the media cache, and nsIThread::Shutdown()
+    // can cause events to run before it completes, which could end up
+    // opening more streams, while the media cache is shutting down and
+    // releasing memory etc!
+    nsCOMPtr<nsIRunnable> event = new ShutdownThreadEvent(thread);
+    SystemGroup::Dispatch(
+      "ShutdownThreadEvent", TaskCategory::Other, event.forget());
+  }), NS_DISPATCH_NORMAL);
+  NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 template<typename Container, typename Value>
@@ -388,7 +399,6 @@ nsresult FileBlockCache::Read(int64_t aOffset,
 
 nsresult FileBlockCache::MoveBlock(int32_t aSourceBlockIndex, int32_t aDestBlockIndex)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   MonitorAutoLock mon(mDataMonitor);
 
   if (!mIsOpen)

@@ -662,6 +662,8 @@ toolbar[brighttext] #close-button {
   --urlbar-border-color: var(--toolbarbutton-hover-bordercolor);
 }
 
+%include ../shared/urlbar-searchbar.inc.css
+
 %ifdef MOZ_PHOTON_THEME
 
 @media (-moz-windows-default-theme) {
@@ -672,7 +674,10 @@ toolbar[brighttext] #close-button {
   }
 }
 
-%include ../shared/location-search-bar.inc.css
+#urlbar,
+.searchbar-textbox {
+  font-size: 1.15em;
+}
 
 #urlbar[focused="true"],
 .searchbar-textbox[focused="true"] {
@@ -752,9 +757,7 @@ toolbar[brighttext] #close-button {
   #urlbar,
   .searchbar-textbox {
     font-size: 1.15em;
-%ifndef MOZ_PHOTON_THEME
     min-height: 28px;
-%endif
   }
 
   :root {
@@ -827,10 +830,6 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
   color: #777;
 }
 
-#urlbar-container {
-  -moz-box-align: center;
-}
-
 .urlbar-textbox-container {
   -moz-box-align: stretch;
 }
@@ -901,16 +900,6 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 
 #urlbar-search-settings:hover:active {
   background-color: var(--arrowpanel-dimmed-further);
-}
-
-#urlbar-search-splitter {
-  /* The splitter width should equal the location and search bars' combined
-     neighboring margin and border width. */
-  min-width: 8px;
-  margin: 0 -4px;
-  position: relative;
-  border: none;
-  background: transparent;
 }
 
 .urlbar-display {

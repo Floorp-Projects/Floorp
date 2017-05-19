@@ -31,7 +31,7 @@ function* testSteps()
 
     let request = indexedDB.openForPrincipal(getPrincipal(spec), name);
     request.onerror = errorHandler;
-    request.onupgradeneeded = grabEventAndContinueHandler;;
+    request.onupgradeneeded = grabEventAndContinueHandler;
     request.onsuccess = unexpectedSuccessHandler;
 
     yield undefined;
@@ -99,7 +99,7 @@ function* testSteps()
         j = 1;
 
         trans = db.transaction(objectStoreName, "cleanup");
-        trans.onabort = unexpectedSuccessHandler;;
+        trans.onabort = unexpectedSuccessHandler;
         trans.oncomplete = grabEventAndContinueHandler;
 
         yield undefined;
@@ -124,7 +124,7 @@ function* testSteps()
     let trans = db.transaction(objectStoreName, "cleanup");
     trans.objectStore(objectStoreName).delete(1);
 
-    trans.onabort = unexpectedSuccessHandler;;
+    trans.onabort = unexpectedSuccessHandler;
     trans.oncomplete = grabEventAndContinueHandler;
 
     yield undefined;

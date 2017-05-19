@@ -4,16 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
-%filter substitution
-
-%define selectorSuffix
-%define iconVariant
-%include icons.inc.css
-
-%define selectorSuffix :-moz-lwtheme
-%define iconVariant -black
-%include icons.inc.css
-
 #identity-box {
   font-size: .9em;
   padding: 3px 5px;
@@ -61,11 +51,45 @@
 }
 %endif
 
+#identity-icon,
+#tracking-protection-icon,
+#connection-icon,
+#extension-icon {
+  width: 16px;
+  height: 16px;
+  -moz-context-properties: fill;
+  fill: GrayText;
+}
+
+#identity-icon:-moz-lwtheme,
+#tracking-protection-icon:-moz-lwtheme,
+#connection-icon:-moz-lwtheme,
+#extension-icon:-moz-lwtheme {
+  fill: rgba(0,0,0,.6);
+}
+
 /* MAIN IDENTITY ICON */
 
 #identity-icon {
-  width: 16px;
-  height: 16px;
+  list-style-image: url(chrome://browser/skin/identity-icon.svg#normal);
+}
+
+#identity-box:hover > #identity-icon:not(.no-hover),
+#identity-box[open=true] > #identity-icon {
+  list-style-image: url(chrome://browser/skin/identity-icon.svg#hover);
+}
+
+#identity-box.grantedPermissions > #identity-icon {
+  list-style-image: url(chrome://browser/skin/identity-icon.svg#notice);
+}
+
+#identity-box.grantedPermissions:hover > #identity-icon:not(.no-hover),
+#identity-box.grantedPermissions[open=true] > #identity-icon {
+  list-style-image: url(chrome://browser/skin/identity-icon.svg#notice-hover);
+}
+
+#urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon {
+  list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
 }
 
 #urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon {
@@ -73,19 +97,11 @@
 }
 
 #urlbar[actiontype="searchengine"] > #identity-box > #identity-icon {
-  -moz-image-region: inherit;
   list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg);
-  -moz-context-properties: fill;
-  fill: GrayText;
-  width: 16px;
-  height: 16px;
 }
 
 #urlbar[actiontype="extension"] > #identity-box > #identity-icon {
-  -moz-image-region: inherit;
   list-style-image: url(chrome://browser/skin/addons/addon-install-anchor.svg);
-  width: 16px;
-  height: 16px;
 }
 
 /* SHARING ICON */
@@ -133,10 +149,13 @@
 /* TRACKING PROTECTION ICON */
 
 #tracking-protection-icon {
-  width: 16px;
-  height: 16px;
+  list-style-image: url(chrome://browser/skin/tracking-protection-16.svg#enabled);
   margin-inline-start: 2px;
   margin-inline-end: 0;
+}
+
+#tracking-protection-icon[state="loaded-tracking-content"] {
+  list-style-image: url(chrome://browser/skin/tracking-protection-16.svg#disabled);
 }
 
 #tracking-protection-icon[animate] {
@@ -157,11 +176,36 @@
 
 /* CONNECTION ICON, EXTENSION ICON */
 
-#connection-icon, #extension-icon {
-  width: 16px;
-  height: 16px;
+#connection-icon,
+#extension-icon {
   margin-inline-start: 2px;
   visibility: collapse;
+}
+
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedDomain > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.mixedActiveBlocked > #connection-icon {
+  list-style-image: url(chrome://browser/skin/connection-secure.svg);
+  visibility: visible;
+}
+
+#urlbar[pageproxystate="valid"] > #identity-box.weakCipher > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContent > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContentLoadedActiveBlocked > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.certUserOverridden > #connection-icon {
+  list-style-image: url(chrome://browser/skin/connection-mixed-passive-loaded.svg);
+  visibility: visible;
+}
+
+#urlbar[pageproxystate="valid"] > #identity-box.insecureLoginForms > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.mixedActiveContent > #connection-icon {
+  list-style-image: url(chrome://browser/skin/connection-mixed-active-loaded.svg);
+  visibility: visible;
+}
+
+#identity-box.extensionPage > #extension-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/extension.svg);
+  visibility: visible;
 }
 
 /* REMOTE CONTROL ICON */

@@ -25,10 +25,11 @@ public:
 
   static already_AddRefed<HTMLOptionElement>
     Option(const GlobalObject& aGlobal,
-           const Optional<nsAString>& aText,
+           const nsAString& aText,
            const Optional<nsAString>& aValue,
-           const Optional<bool>& aDefaultSelected,
-           const Optional<bool>& aSelected, ErrorResult& aError);
+           bool aDefaultSelected,
+           bool aSelected,
+           ErrorResult& aError);
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLOptionElement, option)
 

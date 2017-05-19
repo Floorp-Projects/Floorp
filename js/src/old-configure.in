@@ -879,6 +879,10 @@ case "$target" in
     fi
     ;;
 
+*-solaris*)
+    MOZ_FIX_LINK_PATHS=
+    ;;
+
 esac
 
 dnl Only one oddball right now (QNX), but this gives us flexibility

@@ -1753,10 +1753,13 @@
             }
 
             // NB: This works with the hack in the browser constructor that
-            // turns this normal property into a field. When switching remote
-            // type copying related browser would stop the switch and the
-            // previously related browser will no longer be relevant.
-            if (!aShouldBeRemote || currentRemoteType == aOptions.remoteType) {
+            // turns this normal property into a field.
+            if (aOptions.sameProcessAsFrameLoader) {
+              // Always set sameProcessAsFrameLoader when passed in aOptions.
+              aBrowser.sameProcessAsFrameLoader = aOptions.sameProcessAsFrameLoader;
+            } else if (!aShouldBeRemote || currentRemoteType == aOptions.remoteType) {
+              // Only copy existing sameProcessAsFrameLoader when not switching
+              // remote type otherwise it would stop the switch.
               aBrowser.sameProcessAsFrameLoader = sameProcessAsFrameLoader;
             }
 
@@ -1841,20 +1844,13 @@
             if (!gMultiProcessBrowser)
               return this.updateBrowserRemoteness(aBrowser, false);
 
-            // If we're in a LargeAllocation process, we prefer switching back
-            // into a normal content process, as that way we can clean up the
-            // L-A process.
             let currentRemoteType = aBrowser.getAttribute("remoteType") || null;
-            let preferredRemoteType = currentRemoteType;
 
-            if (currentRemoteType == E10SUtils.LARGE_ALLOCATION_REMOTE_TYPE) {
-              preferredRemoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
-            }
             aOptions.remoteType =
               E10SUtils.getRemoteTypeForURI(aURL,
                                             gMultiProcessBrowser,
-                                            preferredRemoteType,
-                                            aOptions.freshProcess);
+                                            currentRemoteType,
+                                            aBrowser.currentURI);
 
             // If this URL can't load in the current browser then flip it to the
             // correct type.
@@ -3604,21 +3600,19 @@
         <![CDATA[
           // Swap the dropped tab with a new one we create and then close
           // it in the other window (making it seem to have moved between
-          // windows).
-          let params = { eventDetail: { adoptedTab: aTab } };
+          // windows). We also ensure that the tab we create to swap into has
+          // the same remote type and process as the one we're swapping in.
+          // This makes sure we don't get a short-lived process for the new tab.
+          let linkedBrowser = aTab.linkedBrowser;
+          let params = { eventDetail: { adoptedTab: aTab },
+                         preferredRemoteType: linkedBrowser.remoteType,
+                         sameProcessAsFrameLoader: linkedBrowser.frameLoader };
           if (aTab.hasAttribute("usercontextid")) {
             // new tab must have the same usercontextid as the old one
             params.userContextId = aTab.getAttribute("usercontextid");
           }
           let newTab = this.addTab("about:blank", params);
           let newBrowser = this.getBrowserForTab(newTab);
-          let newURL = aTab.linkedBrowser.currentURI.spec;
-
-          // If we're an e10s browser window, an exception will be thrown
-          // if we attempt to drag a non-remote browser in, so we need to
-          // ensure that the remoteness of the newly created browser is
-          // appropriate for the URL of the tab being dragged in.
-          this.updateBrowserRemotenessByURL(newBrowser, newURL);
 
           // Stop the about:blank load.
           newBrowser.stop();

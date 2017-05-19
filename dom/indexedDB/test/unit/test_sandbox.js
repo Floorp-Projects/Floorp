@@ -9,7 +9,7 @@ function exerciseInterface() {
   }
 
   DB.prototype = {
-    _create: function() {
+    _create() {
       var op = indexedDB.open(this.name);
       op.onupgradeneeded = e => {
         var db = e.target.result;
@@ -20,7 +20,7 @@ function exerciseInterface() {
       });
     },
 
-    _result: function(tx, op) {
+    _result(tx, op) {
       return new Promise((resolve, reject) => {
         op.onsuccess = e => resolve(e.target.result);
         op.onerror = () => reject(op.error);
@@ -28,30 +28,30 @@ function exerciseInterface() {
       });
     },
 
-    get: function(k) {
+    get(k) {
       return this._db.then(db => {
-        var tx = db.transaction(this.store, 'readonly');
+        var tx = db.transaction(this.store, "readonly");
         var store = tx.objectStore(this.store);
         return this._result(tx, store.get(k));
       });
     },
 
-    add: function(k, v) {
+    add(k, v) {
       return this._db.then(db => {
-        var tx = db.transaction(this.store, 'readwrite');
+        var tx = db.transaction(this.store, "readwrite");
         var store = tx.objectStore(this.store);
         return this._result(tx, store.add(v, k));
       });
     }
   };
 
-  var db = new DB('data', 'base');
-  return db.add('x', [ 10, {} ])
-    .then(_ => db.get('x'))
+  var db = new DB("data", "base");
+  return db.add("x", [ 10, {} ])
+    .then(_ => db.get("x"))
     .then(x => {
       equal(x.length, 2);
       equal(x[0], 10);
-      equal(typeof x[1], 'object');
+      equal(typeof x[1], "object");
       equal(Object.keys(x[1]).length, 0);
     });
 }
@@ -60,18 +60,18 @@ function run_test() {
   do_get_profile();
 
   let Cu = Components.utils;
-  let sb = new Cu.Sandbox('https://www.example.com',
-                          { wantGlobalProperties: ['indexedDB'] });
+  let sb = new Cu.Sandbox("https://www.example.com",
+                          { wantGlobalProperties: ["indexedDB"] });
 
   sb.equal = equal;
   var innerPromise = new Promise((resolve, reject) => {
     sb.test_done = resolve;
     sb.test_error = reject;
   });
-  Cu.evalInSandbox('(' + exerciseInterface.toSource() + ')()' +
-                   '.then(test_done, test_error);', sb);
+  Cu.evalInSandbox("(" + exerciseInterface.toSource() + ")()" +
+                   ".then(test_done, test_error);", sb);
 
-  Cu.importGlobalProperties(['indexedDB']);
+  Cu.importGlobalProperties(["indexedDB"]);
   do_test_pending();
   Promise.all([innerPromise, exerciseInterface()])
     .then(do_test_finished);

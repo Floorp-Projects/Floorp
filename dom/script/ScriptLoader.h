@@ -471,6 +471,9 @@ private:
   static bool
   IsBytecodeCacheEnabled();
 
+  static bool
+  IsEagerBytecodeCache();
+
   nsresult CreateModuleScript(ModuleLoadRequest* aRequest);
   nsresult ProcessFetchedModuleSource(ModuleLoadRequest* aRequest);
   void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest);

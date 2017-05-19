@@ -40,7 +40,6 @@ function* testSteps()
   let event = yield undefined;
 
   let db = event.target.result;
-  let txn = event.target.transaction;
 
   is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
 

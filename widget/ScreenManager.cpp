@@ -155,9 +155,49 @@ ScreenManager::ScreenForRect(int32_t aX, int32_t aY,
     DesktopIntRect screenRect(x, y, width, height);
     screenRect.IntersectRect(screenRect, windowRect);
     uint32_t tempArea = screenRect.width * screenRect.height;
-    if (tempArea >= area) {
+    if (tempArea > area) {
       which = screen.get();
       area = tempArea;
+    }
+  }
+
+  // If the rect intersects one or more screen,
+  // return the screen that has the largest intersection.
+  if (area > 0) {
+    RefPtr<Screen> ret = which;
+    ret.forget(aOutScreen);
+    return NS_OK;
+  }
+
+  // If the rect does not intersect a screen, find
+  // a screen that is nearest to the rect.
+  uint32_t distance = UINT32_MAX;
+  for (auto& screen : mScreenList) {
+    int32_t  x, y, width, height;
+    x = y = width = height = 0;
+    screen->GetRectDisplayPix(&x, &y, &width, &height);
+
+    uint32_t distanceX = 0;
+    if (aX > (x + width)) {
+      distanceX = aX - (x + width);
+    } else if ((aX + aWidth) < x) {
+      distanceX = x - (aX + aWidth);
+    }
+
+    uint32_t distanceY = 0;
+    if (aY > (y + height)) {
+      distanceY = aY - (y + height);
+    } else if ((aY + aHeight) < y) {
+      distanceY = y - (aY + aHeight);
+    }
+
+    uint32_t tempDistance = distanceX * distanceX + distanceY * distanceY;
+    if (tempDistance < distance) {
+      which = screen.get();
+      distance = tempDistance;
+      if (distance == 0) {
+        break;
+      }
     }
   }
 

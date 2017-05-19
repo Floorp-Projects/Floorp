@@ -514,6 +514,8 @@ class _PromiseRejectReason:
     SendError = ExprVar('PromiseRejectReason::SendError')
     ChannelClosed = ExprVar('PromiseRejectReason::ChannelClosed')
     HandlerRejected = ExprVar('PromiseRejectReason::HandlerRejected')
+    ActorDestroyed = ExprVar('PromiseRejectReason::ActorDestroyed')
+
 
 ##-----------------------------------------------------------------------------
 ## Intermediate representation (IR) nodes used during lowering
@@ -3050,6 +3052,18 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         if len(ptype.manages):
             destroysubtree.addstmt(Whitespace.NL)
+
+        # Reject pending promises for actor before calling ActorDestroy().
+        rejectPendingPromiseMethod = ExprSelect(self.protocol.callGetChannel(),
+                                                '->',
+                                                'RejectPendingPromisesForActor')
+        destroysubtree.addstmts([ Whitespace('// Reject owning pending promises.\n',
+                                             indent=1),
+                                  StmtExpr(ExprCall(rejectPendingPromiseMethod,
+                                                    args=[ ExprVar('this') ])),
+                                  Whitespace.NL
+                                 ])
+
         destroysubtree.addstmts([ Whitespace('// Finally, destroy "us".\n',
                                              indent=1),
                                   StmtExpr(ExprCall(_destroyMethod(),
@@ -4253,7 +4267,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         promisethen.addstmts(sendmsg)
         promiserej = ExprLambda([ExprVar.THIS, routingId, seqno],
                                 [Decl(_PromiseRejectReason.Type(), reason.name)])
-        promiserej.addstmts([ StmtExpr(ExprCall(ExprVar('MOZ_ASSERT'),
+
+        # If-statement for silently cancelling the promise due to ActorDestroyed.
+        returnifactordestroyed = StmtIf(ExprBinary(reason, '==',
+                                                   _PromiseRejectReason.ActorDestroyed))
+        returnifactordestroyed.addifstmts([_printWarningMessage("Reject due to ActorDestroyed"),
+                                           StmtReturn()])
+
+        promiserej.addstmts([ returnifactordestroyed,
+                              StmtExpr(ExprCall(ExprVar('MOZ_ASSERT'),
                                                 args=[ ExprBinary(reason, '==',
                                                                   _PromiseRejectReason.HandlerRejected) ])),
                               StmtExpr(ExprAssn(reason, _PromiseRejectReason.HandlerRejected)),
@@ -4515,7 +4537,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                   self.profilerLabel(md) ] + self.transition(md, actor)
 
         if md.returns:
-            sendargs.append(ExprCall(ExprSelect(retpromise, '.', 'get')));
+            sendargs.append(ExprCall(ExprSelect(retpromise, '.', 'get')))
+            sendargs.append(ExprVar('this'))
             stmts.extend(promisedecl)
             retvar = retpromise
 

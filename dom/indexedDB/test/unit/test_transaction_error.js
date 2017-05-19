@@ -89,6 +89,7 @@ function* testSteps() {
   info("Adding duplicate entry without preventDefault()");
 
   if ("SimpleTest" in this) {
+    /* global SimpleTest */
     SimpleTest.expectUncaughtException();
   } else if ("DedicatedWorkerGlobalScope" in self &&
              self instanceof DedicatedWorkerGlobalScope) {

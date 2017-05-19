@@ -22,7 +22,7 @@ function* testSteps()
 
   let objectStore = db.createObjectStore("foo", { keyPath: "key",
                                                   autoIncrement: true });
-  let index = objectStore.createIndex("foo", "index");
+  objectStore.createIndex("foo", "index");
 
   event.target.onsuccess = continueToNextStep;
   yield undefined;

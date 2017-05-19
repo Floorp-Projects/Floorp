@@ -18,7 +18,7 @@ function* testSteps()
   let db = event.target.result;
 
   let objectStore = db.createObjectStore("foo");
-  let index = objectStore.createIndex("bar", "baz");
+  objectStore.createIndex("bar", "baz");
 
   is(db.version, 1, "Correct version");
   is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
@@ -77,7 +77,7 @@ function* testSteps()
   is(db2.objectStoreNames.length, 0, "Correct objectStoreNames length");
 
   let objectStore2 = db2.createObjectStore("foo");
-  let index2 = objectStore2.createIndex("bar", "baz");
+  objectStore2.createIndex("bar", "baz");
 
   request.onsuccess = grabEventAndContinueHandler;
   request.onupgradeneeded = unexpectedSuccessHandler;

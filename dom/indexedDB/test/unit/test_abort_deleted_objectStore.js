@@ -52,7 +52,7 @@ function* testSteps()
   request.onerror = expectedErrorHandler("AbortError");
   txn.abort();
   try {
-    objectStore.get('foo');
+    objectStore.get("foo");
     ok(false, "TransactionInactiveError shall be thrown if the transaction is inactive.");
   } catch (e) {
     ok(e instanceof DOMException, "got a database exception");
@@ -62,7 +62,7 @@ function* testSteps()
   yield undefined;
 
   try {
-    objectStore.get('foo');
+    objectStore.get("foo");
     ok(false, "TransactionInactiveError shall be thrown if the transaction is inactive.");
   } catch (e) {
     ok(e instanceof DOMException, "got a database exception");
