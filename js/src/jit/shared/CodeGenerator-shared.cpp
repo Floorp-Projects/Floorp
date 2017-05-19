@@ -1611,7 +1611,11 @@ CodeGeneratorShared::visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins)
         break;
       // Aligned access: code is aligned on PageSize + there is padding
       // before the global data section.
+      case MIRType::Int8x16:
+      case MIRType::Int16x8:
       case MIRType::Int32x4:
+      case MIRType::Bool8x16:
+      case MIRType::Bool16x8:
       case MIRType::Bool32x4:
         masm.storeInt32x4(ToFloatRegister(ins->value()), addr);
         break;
