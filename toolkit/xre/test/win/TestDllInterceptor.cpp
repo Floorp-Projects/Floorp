@@ -397,6 +397,23 @@ bool TestProcessCaretEvents(void* aFunc)
   return true;
 }
 
+static DWORD sTlsIndex = 0;
+
+bool TestTlsAlloc(void* aFunc)
+{
+  auto patchedTlsAlloc =
+    reinterpret_cast<decltype(&TlsAlloc)>(aFunc);
+  sTlsIndex = patchedTlsAlloc();
+  return sTlsIndex != TLS_OUT_OF_INDEXES;
+}
+
+bool TestTlsFree(void* aFunc)
+{
+  auto patchedTlsFree =
+    reinterpret_cast<decltype(&TlsFree)>(aFunc);
+  return sTlsIndex != 0 && patchedTlsFree(sTlsIndex);
+}
+
 int main()
 {
   payload initial = { 0x12345678, 0xfc4e9d31, 0x87654321 };
@@ -500,6 +517,8 @@ int main()
 #ifdef _M_IX86
       TestHook(TestSendMessageTimeoutW, "user32.dll", "SendMessageTimeoutW") &&
 #endif
+      TestHook(TestTlsAlloc, "kernel32.dll", "TlsAlloc") &&
+      TestHook(TestTlsFree, "kernel32.dll", "TlsFree") &&
       TestDetour("ntdll.dll", "LdrLoadDll")) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
     return 0;
