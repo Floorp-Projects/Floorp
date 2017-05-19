@@ -6,7 +6,11 @@ import urllib
 
 from marionette_driver import By, errors
 
-from marionette_harness import MarionetteTestCase, run_if_e10s, skip_if_mobile
+from marionette_harness import (
+    MarionetteTestCase,
+    run_if_e10s,
+    skip_if_mobile,
+)
 
 
 def inline(doc):
@@ -95,8 +99,8 @@ class TestLegacyClick(MarionetteTestCase):
         test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
         self.marionette.find_element(By.LINK_TEXT, "333333").click()
-        self.marionette.find_element(By.ID, "username")
-        self.assertEqual(self.marionette.title, "XHTML Test Page")
+        self.marionette.find_element(By.ID, "testDiv")
+        self.assertEqual(self.marionette.title, "Marionette Test")
 
     def test_clicking_an_element_that_is_not_displayed_raises(self):
         test_html = self.marionette.absolute_url("hidden.html")
@@ -109,8 +113,8 @@ class TestLegacyClick(MarionetteTestCase):
         test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
         self.marionette.find_element(By.ID, "overflowLink").click()
-        self.marionette.find_element(By.ID, "username")
-        self.assertEqual(self.marionette.title, "XHTML Test Page")
+        self.marionette.find_element(By.ID, "testDiv")
+        self.assertEqual(self.marionette.title, "Marionette Test")
 
     def test_scroll_into_view_near_end(self):
         self.marionette.navigate(fixed_overlay)
@@ -308,7 +312,7 @@ class TestClickNavigation(MarionetteTestCase):
     def test_click_link_page_load(self):
         self.marionette.find_element(By.LINK_TEXT, "333333").click()
         self.assertNotEqual(self.marionette.get_url(), self.test_page)
-        self.assertEqual(self.marionette.title, "XHTML Test Page")
+        self.assertEqual(self.marionette.title, "Marionette Test")
 
     @skip_if_mobile("Bug 1325738 - Modal dialogs block execution of code for Fennec")
     def test_click_link_page_load_aborted_by_beforeunload(self):
@@ -334,7 +338,7 @@ class TestClickNavigation(MarionetteTestCase):
             self.close_notification()
 
     def test_click_no_link(self):
-        self.marionette.find_element(By.ID, "showbutton").click()
+        self.marionette.find_element(By.ID, "links").click()
         self.assertEqual(self.marionette.get_url(), self.test_page)
 
     def test_click_option_navigate(self):
