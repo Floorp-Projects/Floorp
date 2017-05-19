@@ -7,6 +7,9 @@
 
 /* exported libc */
 
+// This file is loaded into the same scope as subprocess_unix.jsm
+/* import-globals-from subprocess_unix.jsm */
+
 const LIBC = OS.Constants.libc;
 
 const LIBC_CHOICES = ["libc.so", "libSystem.B.dylib", "a.out"];

@@ -1,23 +1,7 @@
 "use strict";
 
-module.exports = { // eslint-disable-line no-undef
+module.exports = {
   "extends": [
-    "../.eslintrc.js"
-  ],
-
-  "globals": {
-    "is": true,
-    "isnot": true,
-    "ok": true,
-    "NarrateTestUtils": true,
-    "content": true,
-    "ContentTaskUtils": true,
-    "ContentTask": true,
-    "BrowserTestUtils": true,
-    "gBrowser": true,
-  },
-
-  "rules": {
-    "mozilla/import-headjs-globals": "warn"
-  }
+    "plugin:mozilla/browser-test"
+  ]
 };

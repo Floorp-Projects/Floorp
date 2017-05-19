@@ -37,8 +37,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
                                    "@mozilla.org/content/style-sheet-service;1",
                                    "nsIStyleSheetService");
 
-/* globals IDBKeyRange */
-
 function getConsole() {
   return new ConsoleAPI({
     maxLogLevelPref: "extensions.webextensions.log.level",
@@ -937,7 +935,7 @@ class MessageManagerProxy {
     if (this.messageManager) {
       return this.messageManager.sendAsyncMessage(...args);
     }
-    /* globals uneval */
+
     Cu.reportError(`Cannot send message: Other side disconnected: ${uneval(args)}`);
   }
 
