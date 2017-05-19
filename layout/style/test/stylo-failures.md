@@ -55,6 +55,7 @@ to mochitest command.
   * test_parser_diagnostics_unprintables.html [550]
 * Transition support:
   * test_transitions.html: pseudo elements [12]
+  * test_transitions_and_reframes.html `pseudo-element`: bug 1366422 [4]
   * Events:
     * test_animations_event_order.html [2]
 * test_computed_style.html `gradient`: -webkit-prefixed gradient values [13]

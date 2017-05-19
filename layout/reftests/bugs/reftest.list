@@ -830,7 +830,7 @@ fuzzy-if(skiaContent,2,21) == 398682-1.html 398682-1-ref.html
 == 399209-1.html 399209-1-ref.html
 == 399209-2.html 399209-2-ref.html
 == 399258-1.html 399258-1-ref.html
-fails-if(stylo) == 399384-1.html 399384-1-ref.html
+== 399384-1.html 399384-1-ref.html
 random-if(gtkWidget) == 399636-standards-css.html 399636-standards-ref.html # bug 429022
 random-if(gtkWidget) == 399636-standards-html.html 399636-standards-ref.html # bug 429022
 random-if(gtkWidget) == 399636-quirks-css.html 399636-quirks-ref.html # bug 429022
