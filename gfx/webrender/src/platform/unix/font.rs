@@ -13,9 +13,9 @@ use freetype::freetype::{FT_Library, FT_Set_Char_Size};
 use freetype::freetype::{FT_Face, FT_Long, FT_UInt, FT_F26Dot6};
 use freetype::freetype::{FT_Init_FreeType, FT_Load_Glyph, FT_Render_Glyph};
 use freetype::freetype::{FT_New_Memory_Face, FT_GlyphSlot, FT_LcdFilter};
-use freetype::freetype::{FT_Done_Face};
+use freetype::freetype::{FT_Done_Face, FT_Error};
 
-use std::{mem, ptr, slice};
+use std::{cmp, mem, ptr, slice};
 use std::collections::HashMap;
 
 struct Face {
@@ -40,6 +40,8 @@ fn float_to_fixed(before: usize, f: f64) -> i32 {
 fn float_to_fixed_ft(f: f64) -> i32 {
     float_to_fixed(6, f)
 }
+
+const SUCCESS: FT_Error = FT_Error(0);
 
 impl FontContext {
     pub fn new() -> FontContext {
@@ -99,41 +101,52 @@ impl FontContext {
                   font_key: FontKey,
                   size: Au,
                   character: u32) -> Option<FT_GlyphSlot> {
+
         debug_assert!(self.faces.contains_key(&font_key));
         let face = self.faces.get(&font_key).unwrap();
+        let char_size = float_to_fixed_ft(size.to_f64_px());
 
-        unsafe {
-            let char_size = float_to_fixed_ft(size.to_f64_px());
-            let result = FT_Set_Char_Size(face.face, char_size as FT_F26Dot6, 0, 0, 0);
-            assert!(result.succeeded());
+        assert_eq!(SUCCESS, unsafe {
+            FT_Set_Char_Size(face.face, char_size as FT_F26Dot6, 0, 0, 0)
+        });
 
-            let result =  FT_Load_Glyph(face.face, character as FT_UInt, 0);
-            if result.succeeded() {
-                let void_glyph = (*face.face).glyph;
-                let slot_ptr: FT_GlyphSlot = mem::transmute(void_glyph);
-                assert!(!slot_ptr.is_null());
-                return Some(slot_ptr);
-            }
+        let result = unsafe {
+            FT_Load_Glyph(face.face, character as FT_UInt, 0)
+        };
+
+        if result == SUCCESS {
+            let slot = unsafe { (*face.face).glyph };
+            assert!(slot != ptr::null_mut());
+            Some(slot)
+        } else {
+            error!("Unable to load glyph for {} of size {:?} from font {:?}, {:?}",
+                character, size, font_key, result);
+            None
         }
-
-        None
     }
 
-     pub fn get_glyph_dimensions(&mut self,
-                                 key: &GlyphKey) -> Option<GlyphDimensions> {
-        self.load_glyph(key.font_key, key.size, key.index).and_then(|slot| {
-            let metrics = unsafe { &(*slot).metrics };
-            if metrics.width == 0 || metrics.height == 0 {
-                None
-            } else {
-                Some(GlyphDimensions {
-                    left: (metrics.horiBearingX >> 6) as i32,
-                    top: (metrics.horiBearingY >> 6) as i32,
-                    width: (metrics.width >> 6) as u32,
-                    height: (metrics.height >> 6) as u32,
-                })
-            }
-        })
+    fn get_glyph_dimensions_impl(slot: FT_GlyphSlot) -> Option<GlyphDimensions> {
+        let metrics = unsafe { &(*slot).metrics };
+        if metrics.width == 0 || metrics.height == 0 {
+            None
+        } else {
+            let left = metrics.horiBearingX >> 6;
+            let top = metrics.horiBearingY >> 6;
+            let right = (metrics.horiBearingX + metrics.width + 0x3f) >> 6;
+            let bottom = (metrics.horiBearingY + metrics.height + 0x3f) >> 6;
+            Some(GlyphDimensions {
+                left: left as i32,
+                top: top as i32,
+                width: (right - left) as u32,
+                height: (bottom - top) as u32,
+            })
+        }
+    }
+
+    pub fn get_glyph_dimensions(&mut self,
+                                key: &GlyphKey) -> Option<GlyphDimensions> {
+        self.load_glyph(key.font_key, key.size, key.index)
+            .and_then(Self::get_glyph_dimensions_impl)
     }
 
     pub fn rasterize_glyph(&mut self,
@@ -141,114 +154,101 @@ impl FontContext {
                            render_mode: FontRenderMode,
                            _glyph_options: Option<GlyphOptions>)
                            -> Option<RasterizedGlyph> {
-        let mut glyph = None;
 
-        if let Some(slot) = self.load_glyph(key.font_key,
-                                            key.size,
-                                            key.index) {
-            let render_mode = match render_mode {
-                FontRenderMode::Mono => FT_Render_Mode::FT_RENDER_MODE_MONO,
-                FontRenderMode::Alpha => FT_Render_Mode::FT_RENDER_MODE_NORMAL,
-                FontRenderMode::Subpixel => FT_Render_Mode::FT_RENDER_MODE_LCD,
-            };
+        let slot = match self.load_glyph(key.font_key, key.size, key.index) {
+            Some(slot) => slot,
+            None => return None,
+        };
+        let render_mode = match render_mode {
+            FontRenderMode::Mono => FT_Render_Mode::FT_RENDER_MODE_MONO,
+            FontRenderMode::Alpha => FT_Render_Mode::FT_RENDER_MODE_NORMAL,
+            FontRenderMode::Subpixel => FT_Render_Mode::FT_RENDER_MODE_LCD,
+        };
 
-            let result = unsafe { FT_Render_Glyph(slot, render_mode) };
-
-            if result.succeeded() {
-                let bitmap = unsafe { &(*slot).bitmap };
-
-                let metrics = unsafe { &(*slot).metrics };
-                let mut glyph_width = (metrics.width >> 6) as i32;
-                let glyph_height = (metrics.height >> 6) as i32;
-                let mut final_buffer = Vec::with_capacity(glyph_width as usize *
-                                                          glyph_height as usize *
-                                                          4);
-
-                if bitmap.pixel_mode == FT_Pixel_Mode::FT_PIXEL_MODE_MONO as u8 {
-                    // This is not exactly efficient... but it's only used by the
-                    // reftest pass when we have AA disabled on glyphs.
-                    let offset_x = unsafe { (metrics.horiBearingX >> 6) as i32 - (*slot).bitmap_left };
-                    let offset_y = unsafe { (metrics.horiBearingY >> 6) as i32 - (*slot).bitmap_top };
-
-                    // Due to AA being disabled, the bitmap produced for mono
-                    // glyphs is often smaller than the reported glyph dimensions.
-                    // To account for this, place the rendered glyph within the
-                    // box of the glyph dimensions, filling in invalid pixels with
-                    // zero alpha.
-                    for iy in 0..glyph_height {
-                        let y = iy - offset_y;
-                        for ix in 0..glyph_width {
-                            let x = ix + offset_x;
-                            let valid_byte = x >= 0 &&
-                                y >= 0 &&
-                                x < bitmap.width as i32 &&
-                                y < bitmap.rows as i32;
-                            let byte_value = if valid_byte {
-                                let byte_index = (y * bitmap.pitch as i32) + (x >> 3);
-
-                                unsafe {
-                                    let bit_index = x & 7;
-                                    let byte_ptr = bitmap.buffer.offset(byte_index as isize);
-                                    let bit = (*byte_ptr & (0x80 >> bit_index)) != 0;
-                                    if bit {
-                                        0xff
-                                    } else {
-                                        0
-                                    }
-                                }
-                            } else {
-                                0
-                            };
-
-                            final_buffer.extend_from_slice(&[ 0xff, 0xff, 0xff, byte_value ]);
-                        }
-                    }
-                } else if bitmap.pixel_mode == FT_Pixel_Mode::FT_PIXEL_MODE_GRAY as u8 {
-                    // We can assume that the reported glyph dimensions exactly
-                    // match the rasterized bitmap for normal alpha coverage glyphs.
-
-                    let buffer = unsafe {
-                        slice::from_raw_parts(
-                            bitmap.buffer,
-                            (bitmap.width * bitmap.rows) as usize
-                        )
-                    };
-
-                    // Convert to RGBA.
-                    for &byte in buffer.iter() {
-                        final_buffer.extend_from_slice(&[ 0xff, 0xff, 0xff, byte ]);
-                    }
-                } else if bitmap.pixel_mode == FT_Pixel_Mode::FT_PIXEL_MODE_LCD as u8 {
-                    // Extra subpixel on each side of the glyph.
-                    glyph_width += 2;
-
-                    for y in 0..bitmap.rows {
-                        for x in 0..(bitmap.width / 3) {
-                            let index = (y as i32 * bitmap.pitch) + (x as i32 * 3);
-
-                            unsafe {
-                                let ptr = bitmap.buffer.offset(index as isize);
-                                let b = *ptr;
-                                let g = *(ptr.offset(1));
-                                let r = *(ptr.offset(2));
-
-                                final_buffer.extend_from_slice(&[r, g, b, 0xff]);
-                            }
-                        }
-                    }
-                } else {
-                    panic!("Unexpected render mode: {}!", bitmap.pixel_mode);
-                }
-
-                glyph = Some(RasterizedGlyph {
-                    width: glyph_width as u32,
-                    height: glyph_height as u32,
-                    bytes: final_buffer,
-                });
-            }
+        let result = unsafe { FT_Render_Glyph(slot, render_mode) };
+        if result != SUCCESS {
+            error!("Unable to rasterize {:?} with {:?}, {:?}", key, render_mode, result);
+            return None;
         }
 
-        glyph
+        let dimensions = Self::get_glyph_dimensions_impl(slot).unwrap();
+        let bitmap = unsafe { &(*slot).bitmap };
+        let pixel_mode = unsafe { mem::transmute(bitmap.pixel_mode as u32) };
+        info!("Rasterizing {:?} as {:?} with dimensions {:?}", key, render_mode, dimensions);
+        // we may be filling only a part of the buffer, so initialize the whole thing with 0
+        let mut final_buffer = Vec::with_capacity(dimensions.width as usize *
+                                                  dimensions.height as usize *
+                                                  4);
+
+        let offset_x = dimensions.left - unsafe { (*slot).bitmap_left };
+        let src_pixel_width = match pixel_mode {
+            FT_Pixel_Mode::FT_PIXEL_MODE_LCD => {
+                assert!(bitmap.width % 3 == 0);
+                bitmap.width / 3
+            },
+            _ => bitmap.width,
+        };
+        // determine the destination range of texels that `bitmap` provides data for
+        let dst_start = cmp::max(0, -offset_x);
+        let dst_end = cmp::min(dimensions.width as i32, src_pixel_width as i32 - offset_x);
+
+        for y in 0 .. dimensions.height {
+            let src_y = y as i32 - dimensions.top + unsafe { (*slot).bitmap_top };
+            if src_y < 0 || src_y >= bitmap.rows as i32 {
+                for _x in 0 .. dimensions.width {
+                    final_buffer.extend_from_slice(&[0xff, 0xff, 0xff, 0]);
+                }
+                continue
+            }
+            let base = unsafe {
+                bitmap.buffer.offset((src_y * bitmap.pitch) as isize)
+            };
+            for _x in 0 .. dst_start {
+                final_buffer.extend_from_slice(&[0xff, 0xff, 0xff, 0]);
+            }
+            match pixel_mode {
+                FT_Pixel_Mode::FT_PIXEL_MODE_MONO => {
+                    for x in dst_start .. dst_end {
+                        let src_x = x + offset_x;
+                        let mask = 0x80 >> (src_x & 0x7);
+                        let byte = unsafe {
+                            *base.offset((src_x >> 3) as isize)
+                        };
+                        let alpha = if byte & mask != 0 { 0xff } else { 0 };
+                        final_buffer.extend_from_slice(&[0xff, 0xff, 0xff, alpha]);
+                    }
+                }
+                FT_Pixel_Mode::FT_PIXEL_MODE_GRAY => {
+                    for x in dst_start .. dst_end {
+                        let alpha = unsafe {
+                            *base.offset((x + offset_x) as isize)
+                        };
+                        final_buffer.extend_from_slice(&[0xff, 0xff, 0xff, alpha]);
+                    }
+                }
+                FT_Pixel_Mode::FT_PIXEL_MODE_LCD => {
+                    for x in dst_start .. dst_end {
+                        let src_x = ((x + offset_x) * 3) as isize;
+                        assert!(src_x+2 < bitmap.pitch as isize);
+                        let t = unsafe {
+                            slice::from_raw_parts(base.offset(src_x), 3)
+                        };
+                        final_buffer.extend_from_slice(&[t[2], t[1], t[0], 0xff]);
+                    }
+                }
+                _ => panic!("Unsupported {:?}", pixel_mode)
+            }
+            for _x in dst_end .. dimensions.width as i32 {
+                final_buffer.extend_from_slice(&[0xff, 0xff, 0xff, 0]);
+            }
+            assert_eq!(final_buffer.len(), ((y+1) * dimensions.width * 4) as usize);
+        }
+
+        Some(RasterizedGlyph {
+            width: dimensions.width as u32,
+            height: dimensions.height as u32,
+            bytes: final_buffer,
+        })
     }
 }
 

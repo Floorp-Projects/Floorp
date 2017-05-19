@@ -51,6 +51,7 @@ add_task(async function() {
   isnot(CONTENT_TITLE.length, 0, "content title isn't empty");
   isnot(CONTENT_TITLE, TEST_URL, "content title is different from the URL");
   is(firstTab.label, CONTENT_TITLE, "first tab displays content title");
+  ok(document.title.startsWith(CONTENT_TITLE), "title bar displays content title");
   ok(secondTab.hasAttribute("pending"), "second tab is pending");
   is(secondTab.label, TEST_URL, "second tab displays URL as its title");
 
@@ -60,7 +61,8 @@ add_task(async function() {
   gBrowser.selectedTab = secondTab;
   await browserLoadedPromise;
   ok(!secondTab.hasAttribute("pending"), "second tab isn't pending anymore");
-  is(gBrowser.selectedTab.label, CONTENT_TITLE, "second tab displays content title");
+  is(secondTab.label, CONTENT_TITLE, "second tab displays content title");
+  ok(document.title.startsWith(CONTENT_TITLE), "title bar displays content title");
   checkLabelChangeCount(1);
 
   info("restoring the modified browser state");
@@ -68,6 +70,7 @@ add_task(async function() {
   await promiseBrowserState(SessionStore.getBrowserState());
   [firstTab, secondTab] = gBrowser.tabs;
   is(secondTab, gBrowser.selectedTab, "second tab is selected after restoring");
+  ok(document.title.startsWith(CONTENT_TITLE), "title bar displays content title");
   ok(firstTab.hasAttribute("pending"), "first tab is pending after restoring");
   is(firstTab.label, CONTENT_TITLE, "first tab displays content title in pending state");
 
@@ -75,6 +78,7 @@ add_task(async function() {
   checkLabelChangeCount = observeLabelChanges(firstTab);
   let tabContentRestored = TestUtils.topicObserved("sessionstore-debug-tab-restored");
   gBrowser.selectedTab = firstTab;
+  ok(document.title.startsWith(CONTENT_TITLE), "title bar displays content title");
   await tabContentRestored;
   ok(!firstTab.hasAttribute("pending"), "first tab isn't pending anymore");
   checkLabelChangeCount(0);

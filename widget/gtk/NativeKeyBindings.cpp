@@ -19,15 +19,14 @@
 namespace mozilla {
 namespace widget {
 
-static nsIWidget::DoCommandCallback gCurrentCallback;
-static void *gCurrentCallbackData;
-static bool gHandled;
+static nsTArray<CommandInt>* gCurrentCommands = nullptr;
+static bool gHandled = false;
 
 // Common GtkEntry and GtkTextView signals
 static void
 copy_clipboard_cb(GtkWidget *w, gpointer user_data)
 {
-  gCurrentCallback(CommandCopy, gCurrentCallbackData);
+  gCurrentCommands->AppendElement(CommandCopy);
   g_signal_stop_emission_by_name(w, "copy_clipboard");
   gHandled = true;
 }
@@ -35,7 +34,7 @@ copy_clipboard_cb(GtkWidget *w, gpointer user_data)
 static void
 cut_clipboard_cb(GtkWidget *w, gpointer user_data)
 {
-  gCurrentCallback(CommandCut, gCurrentCallbackData);
+  gCurrentCommands->AppendElement(CommandCut);
   g_signal_stop_emission_by_name(w, "cut_clipboard");
   gHandled = true;
 }
@@ -93,11 +92,11 @@ delete_from_cursor_cb(GtkWidget *w, GtkDeleteType del_type,
     // This works like word_ends, except we first move the caret to the
     // beginning/end of the current word.
     if (forward) {
-      gCurrentCallback(CommandWordNext, gCurrentCallbackData);
-      gCurrentCallback(CommandWordPrevious, gCurrentCallbackData);
+      gCurrentCommands->AppendElement(CommandWordNext);
+      gCurrentCommands->AppendElement(CommandWordPrevious);
     } else {
-      gCurrentCallback(CommandWordPrevious, gCurrentCallbackData);
-      gCurrentCallback(CommandWordNext, gCurrentCallbackData);
+      gCurrentCommands->AppendElement(CommandWordPrevious);
+      gCurrentCommands->AppendElement(CommandWordNext);
     }
   } else if (del_type == GTK_DELETE_DISPLAY_LINES ||
              del_type == GTK_DELETE_PARAGRAPHS) {
@@ -105,9 +104,9 @@ delete_from_cursor_cb(GtkWidget *w, GtkDeleteType del_type,
     // This works like display_line_ends, except we first move the caret to the
     // beginning/end of the current line.
     if (forward) {
-      gCurrentCallback(CommandBeginLine, gCurrentCallbackData);
+      gCurrentCommands->AppendElement(CommandBeginLine);
     } else {
-      gCurrentCallback(CommandEndLine, gCurrentCallbackData);
+      gCurrentCommands->AppendElement(CommandEndLine);
     }
   }
 
@@ -118,7 +117,7 @@ delete_from_cursor_cb(GtkWidget *w, GtkDeleteType del_type,
 
   unsigned int absCount = Abs(count);
   for (unsigned int i = 0; i < absCount; ++i) {
-    gCurrentCallback(command, gCurrentCallbackData);
+    gCurrentCommands->AppendElement(command);
   }
 }
 
@@ -188,14 +187,14 @@ move_cursor_cb(GtkWidget *w, GtkMovementStep step, gint count,
 
   unsigned int absCount = Abs(count);
   for (unsigned int i = 0; i < absCount; ++i) {
-    gCurrentCallback(command, gCurrentCallbackData);
+    gCurrentCommands->AppendElement(command);
   }
 }
 
 static void
 paste_clipboard_cb(GtkWidget *w, gpointer user_data)
 {
-  gCurrentCallback(CommandPaste, gCurrentCallbackData);
+  gCurrentCommands->AppendElement(CommandPaste);
   g_signal_stop_emission_by_name(w, "paste_clipboard");
   gHandled = true;
 }
@@ -204,7 +203,7 @@ paste_clipboard_cb(GtkWidget *w, gpointer user_data)
 static void
 select_all_cb(GtkWidget *w, gboolean select, gpointer user_data)
 {
-  gCurrentCallback(CommandSelectAll, gCurrentCallbackData);
+  gCurrentCommands->AppendElement(CommandSelectAll);
   g_signal_stop_emission_by_name(w, "select_all");
   gHandled = true;
 }
@@ -288,17 +287,16 @@ NativeKeyBindings::~NativeKeyBindings()
   g_object_unref(mNativeTarget);
 }
 
-bool
-NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
-                           DoCommandCallback aCallback,
-                           void* aCallbackData)
+void
+NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
+                                   nsTArray<CommandInt>& aCommands)
 {
   // If the native key event is set, it must be synthesized for tests.
   // We just ignore such events because this behavior depends on system
   // settings.
   if (!aEvent.mNativeKeyEvent) {
     // It must be synthesized event or dispatched DOM event from chrome.
-    return false;
+    return;
   }
 
   guint keyval;
@@ -310,8 +308,8 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
       static_cast<GdkEventKey*>(aEvent.mNativeKeyEvent)->keyval;
   }
 
-  if (ExecuteInternal(aEvent, aCallback, aCallbackData, keyval)) {
-    return true;
+  if (GetEditCommandsInternal(aEvent, aCommands, keyval)) {
+    return;
   }
 
   for (uint32_t i = 0; i < aEvent.mAlternativeCharCodes.Length(); ++i) {
@@ -320,8 +318,8 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
       aEvent.mAlternativeCharCodes[i].mUnshiftedCharCode;
     if (ch && ch != aEvent.mCharCode) {
       keyval = gdk_unicode_to_keyval(ch);
-      if (ExecuteInternal(aEvent, aCallback, aCallbackData, keyval)) {
-        return true;
+      if (GetEditCommandsInternal(aEvent, aCommands, keyval)) {
+        return;
       }
     }
   }
@@ -339,21 +337,17 @@ Code, which should be used after fixing GNOME bug 162726:
   gtk_bindings_activate_event(GTK_OBJECT(mNativeTarget),
     static_cast<GdkEventKey*>(aEvent.mNativeKeyEvent));
 */
-
-  return false;
 }
 
 bool
-NativeKeyBindings::ExecuteInternal(const WidgetKeyboardEvent& aEvent,
-                                   DoCommandCallback aCallback,
-                                   void* aCallbackData,
-                                   guint aKeyval)
+NativeKeyBindings::GetEditCommandsInternal(const WidgetKeyboardEvent& aEvent,
+                                           nsTArray<CommandInt>& aCommands,
+                                           guint aKeyval)
 {
   guint modifiers =
     static_cast<GdkEventKey*>(aEvent.mNativeKeyEvent)->state;
 
-  gCurrentCallback = aCallback;
-  gCurrentCallbackData = aCallbackData;
+  gCurrentCommands = &aCommands;
 
   gHandled = false;
 #if (MOZ_WIDGET_GTK == 2)
@@ -364,8 +358,9 @@ NativeKeyBindings::ExecuteInternal(const WidgetKeyboardEvent& aEvent,
                         aKeyval, GdkModifierType(modifiers));
 #endif
 
-  gCurrentCallback = nullptr;
-  gCurrentCallbackData = nullptr;
+  gCurrentCommands = nullptr;
+
+  MOZ_ASSERT(!gHandled || !aCommands.IsEmpty());
 
   return gHandled;
 }

@@ -5,7 +5,6 @@
 
 const { Cu, Ci } = require("chrome");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-const { SelfSupportBackend } = Cu.import("resource:///modules/SelfSupportBackend.jsm", {});
 const Startup = Cu.import("resource://gre/modules/sdk/system/Startup.js", {}).exports;
 
 // Adapted from the SpecialPowers.exactGC() code.  We don't have a
@@ -37,11 +36,6 @@ function gc() {
 // If the promise is resolved, or generator completes, with an sdk loader
 // object then it will be unloaded after the memory measurements.
 exports.asyncWindowLeakTest = function*(assert, asyncTestFunc) {
-
-  // SelfSupportBackend periodically tries to open windows.  This can
-  // mess up our window leak detection below, so turn it off.
-  if (SelfSupportBackend._log)
-    SelfSupportBackend.uninit();
 
   // Wait for the browser to finish loading.
   yield Startup.onceInitialized;

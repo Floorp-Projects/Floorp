@@ -56,6 +56,8 @@ enum class SurfaceFormat : int8_t {
   // This one is a single-byte, so endianness isn't an issue.
   A8,
 
+  R8G8,
+
   // These ones are their own special cases.
   YUV,
   NV12,

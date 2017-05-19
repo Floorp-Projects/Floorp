@@ -463,10 +463,8 @@ GeckoEditableSupport::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
         mIMEKeyEvents.AppendElement(
                 UniquePtr<WidgetEvent>(pressEvent.Duplicate()));
     } else if (nsIWidget::UsePuppetWidgets()) {
-        AutoCacheNativeKeyCommands autoCache(
-                static_cast<PuppetWidget*>(widget.get()));
         // Don't use native key bindings.
-        autoCache.CacheNoCommands();
+        pressEvent.PreventNativeKeyBindings();
         dispatcher->MaybeDispatchKeypressEvents(pressEvent, status);
     } else {
         dispatcher->MaybeDispatchKeypressEvents(pressEvent, status);
@@ -801,10 +799,8 @@ GeckoEditableSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
                     mDispatcher->DispatchKeyboardEvent(
                             event->mMessage, *event, status);
                 } else if (nsIWidget::UsePuppetWidgets()) {
-                    AutoCacheNativeKeyCommands autoCache(
-                            static_cast<PuppetWidget*>(widget.get()));
                     // Don't use native key bindings.
-                    autoCache.CacheNoCommands();
+                    event->PreventNativeKeyBindings();
                     mDispatcher->MaybeDispatchKeypressEvents(*event, status);
                 } else {
                     mDispatcher->MaybeDispatchKeypressEvents(*event, status);

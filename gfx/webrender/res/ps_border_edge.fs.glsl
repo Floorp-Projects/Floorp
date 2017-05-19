@@ -17,6 +17,7 @@ void main(void) {
 
     // Find the appropriate distance to apply the step over.
     vec2 fw = fwidth(local_pos);
+    float afwidth = length(fw);
 
     // Applies the math necessary to draw a style: double
     // border. In the case of a solid border, the vertex
@@ -42,8 +43,23 @@ void main(void) {
     // TODO(gw): Support AA for groove/ridge border edge with transforms.
     vec4 color = mix(vColor0, vColor1, bvec4(d0 * vEdgeDistance.y > 0.0));
 
-    // Apply dashing parameters.
-    alpha = min(alpha, step(mod(pos.y - vDashParams.x, vDashParams.y), vDashParams.z));
+    // Apply dashing / dotting parameters.
+
+    // Get the main-axis position relative to closest dot or dash.
+    float x = mod(pos.y - vClipParams.x, vClipParams.y);
+
+    // Calculate dash alpha (on/off) based on dash length
+    float dash_alpha = step(x, vClipParams.z);
+
+    // Get the dot alpha
+    vec2 dot_relative_pos = vec2(x, pos.x) - vClipParams.zw;
+    float dot_distance = length(dot_relative_pos) - vClipParams.z;
+    float dot_alpha = 1.0 - smoothstep(-0.5 * afwidth,
+                                        0.5 * afwidth,
+                                        dot_distance);
+
+    // Select between dot/dash alpha based on clip mode.
+    alpha = min(alpha, mix(dash_alpha, dot_alpha, vClipSelect));
 
     oFragColor = color * vec4(1.0, 1.0, 1.0, alpha);
 }

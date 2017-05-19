@@ -24,7 +24,6 @@
   "browser.safebrowsing.provider.google4.updateURL": "http://localhost/safebrowsing4-dummy/update",
   "browser.safebrowsing.provider.google4.gethashURL": "http://localhost/safebrowsing4-dummy/gethash",
   "browser.safebrowsing.provider.google4.reportURL": "http://localhost/safebrowsing4-dummy/malwarereport",
-  "browser.selfsupport.url": "https://localhost/selfsupport-dummy",
   "browser.safebrowsing.provider.mozilla.gethashURL": "http://localhost/safebrowsing-dummy/gethash",
   "browser.safebrowsing.provider.mozilla.updateURL": "http://localhost/safebrowsing-dummy/update",
   "browser.newtabpage.directory.source": "data:application/json,{'jetpack':1}",

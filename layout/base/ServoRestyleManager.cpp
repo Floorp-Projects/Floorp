@@ -74,21 +74,9 @@ void
 ServoRestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                                          nsRestyleHint aRestyleHint)
 {
-  StyleSet()->RebuildData();
-
-  mHaveNonAnimationRestyles = true;
-
-  // NOTE(emilio): GeckoRestlyeManager does a sync style flush, which seems
-  // not to be needed in my testing.
-  //
-  // If it is, we can just do a content flush and call ProcessPendingRestyles.
-  if (Element* root = mPresContext->Document()->GetRootElement()) {
-    PostRestyleEvent(root, aRestyleHint, aExtraHint);
-  }
-
-  // TODO(emilio, bz): Extensions can add/remove stylesheets that can affect
-  // non-inheriting anon boxes. It's not clear if we want to support that, but
-  // if we do, we need to re-selector-match them here.
+   // NOTE(emilio): GeckoRestlyeManager does a sync style flush, which seems not
+   // to be needed in my testing.
+  PostRebuildAllStyleDataEvent(aExtraHint, aRestyleHint);
 }
 
 void
@@ -100,6 +88,10 @@ ServoRestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
   if (Element* root = mPresContext->Document()->GetRootElement()) {
     PostRestyleEvent(root, aRestyleHint, aExtraHint);
   }
+
+  // TODO(emilio, bz): Extensions can add/remove stylesheets that can affect
+  // non-inheriting anon boxes. It's not clear if we want to support that, but
+  // if we do, we need to re-selector-match them here.
 }
 
 /* static */ void

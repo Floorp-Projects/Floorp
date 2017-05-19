@@ -6,7 +6,7 @@
 void main(void) {
     PrimitiveInstance pi = fetch_prim_instance();
     AlphaBatchTask dest_task = fetch_alpha_batch_task(pi.render_task_index);
-    AlphaBatchTask backdrop_task = fetch_alpha_batch_task(pi.user_data.x);
+    ReadbackTask backdrop_task = fetch_readback_task(pi.user_data.x);
     AlphaBatchTask src_task = fetch_alpha_batch_task(pi.user_data.y);
 
     vec2 dest_origin = dest_task.render_target_origin -

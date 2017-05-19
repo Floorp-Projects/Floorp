@@ -212,6 +212,13 @@ ScaledFontBase::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBu
     cairoPath->AppendPathToBuilder(builder);
     return;
   }
+  if (backendType == BackendType::RECORDING) {
+    SkPath skPath = GetSkiaPathForGlyphs(aBuffer);
+    RefPtr<Path> path = MakeAndAddRef<PathSkia>(skPath, FillRule::FILL_WINDING);
+    path->StreamToSink(aBuilder);
+    return;
+  }
+  MOZ_ASSERT(false, "Path not being copied");
 #endif
 }
 

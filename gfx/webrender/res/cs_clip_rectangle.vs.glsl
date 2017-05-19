@@ -57,9 +57,20 @@ void main(void) {
     vPos = vi.local_pos;
 
     vClipMode = clip.rect.mode.x;
-    vClipRect = vec4(local_rect.p0, local_rect.p0 + local_rect.size);
-    vClipRadius = vec4(clip.top_left.outer_inner_radius.x,
-                       clip.top_right.outer_inner_radius.x,
-                       clip.bottom_right.outer_inner_radius.x,
-                       clip.bottom_left.outer_inner_radius.x);
+
+    RectWithEndpoint clip_rect = to_rect_with_endpoint(local_rect);
+
+    vClipCenter_Radius_TL = vec4(clip_rect.p0 + clip.top_left.outer_inner_radius.xy,
+                                 clip.top_left.outer_inner_radius.xy);
+
+    vClipCenter_Radius_TR = vec4(clip_rect.p1.x - clip.top_right.outer_inner_radius.x,
+                                 clip_rect.p0.y + clip.top_right.outer_inner_radius.y,
+                                 clip.top_right.outer_inner_radius.xy);
+
+    vClipCenter_Radius_BR = vec4(clip_rect.p1 - clip.bottom_right.outer_inner_radius.xy,
+                                 clip.bottom_right.outer_inner_radius.xy);
+
+    vClipCenter_Radius_BL = vec4(clip_rect.p0.x + clip.bottom_left.outer_inner_radius.x,
+                                 clip_rect.p1.y - clip.bottom_left.outer_inner_radius.y,
+                                 clip.bottom_left.outer_inner_radius.xy);
 }

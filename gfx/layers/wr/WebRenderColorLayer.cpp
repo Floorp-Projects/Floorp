@@ -9,6 +9,7 @@
 #include "LayersLogging.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 
@@ -21,6 +22,7 @@ void
 WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
                                  const StackingContextHelper& aSc)
 {
+  ScrollingLayersHelper scroller(this, aBuilder, aSc);
   StackingContextHelper sc(aSc, aBuilder, this);
 
   LayerRect rect = Bounds();
@@ -28,7 +30,7 @@ WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
 
   LayerRect clipRect = ClipRect().valueOr(rect);
   Maybe<WrImageMask> mask = BuildWrMaskLayer(&sc);
-  WrClipRegion clip = aBuilder.BuildClipRegion(
+  WrClipRegionToken clip = aBuilder.PushClipRegion(
       sc.ToRelativeWrRect(clipRect),
       mask.ptrOr(nullptr));
 

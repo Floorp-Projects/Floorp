@@ -290,18 +290,15 @@ public:
     virtual InputContext GetInputContext() override;
     virtual TextEventDispatcherListener*
         GetNativeTextEventDispatcherListener() override;
-    bool ExecuteNativeKeyBindingRemapped(
-                        NativeKeyBindingsType aType,
-                        const mozilla::WidgetKeyboardEvent& aEvent,
-                        DoCommandCallback aCallback,
-                        void* aCallbackData,
-                        uint32_t aGeckoKeyCode,
-                        uint32_t aNativeKeyCode);
-    virtual bool ExecuteNativeKeyBinding(
-                        NativeKeyBindingsType aType,
-                        const mozilla::WidgetKeyboardEvent& aEvent,
-                        DoCommandCallback aCallback,
-                        void* aCallbackData) override;
+    void GetEditCommandsRemapped(NativeKeyBindingsType aType,
+                                 const mozilla::WidgetKeyboardEvent& aEvent,
+                                 nsTArray<mozilla::CommandInt>& aCommands,
+                                 uint32_t aGeckoKeyCode,
+                                 uint32_t aNativeKeyCode);
+    virtual void GetEditCommands(
+                     NativeKeyBindingsType aType,
+                     const mozilla::WidgetKeyboardEvent& aEvent,
+                     nsTArray<mozilla::CommandInt>& aCommands) override;
 
     // These methods are for toplevel windows only.
     void               ResizeTransparencyBitmap();

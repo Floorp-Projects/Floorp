@@ -1177,7 +1177,7 @@ CompositorBridgeChild::GetNextExternalImageId()
   MOZ_RELEASE_ASSERT(sNextID != UINT32_MAX);
 
   uint64_t imageId = mNamespace;
-  imageId = imageId << 32 | sNextID;
+  imageId = (imageId << 32) | sNextID;
   return Some(wr::ToExternalImageId(imageId));
 }
 

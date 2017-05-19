@@ -65,13 +65,12 @@ public:
   WrRect ToRelativeWrRectRounded(const LayoutDeviceRect& aRect) const;
 
   // Produce a transform that converts points from the coordinate space of this
-  // stacking context to the coordinate space of the parent stacking context.
-  gfx::Matrix4x4 TransformToParentSC() const;
+  // stacking context to the coordinate space of the root of the layer tree.
+  gfx::Matrix4x4 TransformToRoot() const;
 
 private:
   wr::DisplayListBuilder* mBuilder;
   LayerPoint mOrigin;
-  WrPoint mOffsetToParent;
   gfx::Matrix4x4 mTransform;
 };
 
