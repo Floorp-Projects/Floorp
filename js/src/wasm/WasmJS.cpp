@@ -675,7 +675,7 @@ WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp)
         props.infallibleAppend(IdValuePair(NameToId(names.kind), StringValue(kindStr)));
 
         if (JitOptions.wasmTestMode && import.kind == DefinitionKind::Function) {
-            JSString* sigStr = SigToString(cx, module->metadata().funcImports[numFuncImport++].sig());
+            JSString* sigStr = SigToString(cx, module->metadataTier().funcImports[numFuncImport++].sig());
             if (!sigStr)
                 return false;
             if (!props.append(IdValuePair(NameToId(names.signature), StringValue(sigStr))))
@@ -731,7 +731,7 @@ WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp)
         props.infallibleAppend(IdValuePair(NameToId(names.kind), StringValue(kindStr)));
 
         if (JitOptions.wasmTestMode && exp.kind() == DefinitionKind::Function) {
-            JSString* sigStr = SigToString(cx, module->metadata().funcExports[numFuncExport++].sig());
+            JSString* sigStr = SigToString(cx, module->metadataTier().funcExports[numFuncExport++].sig());
             if (!sigStr)
                 return false;
             if (!props.append(IdValuePair(NameToId(names.signature), StringValue(sigStr))))

@@ -514,8 +514,8 @@ ModuleGenerator::finishFuncExports()
 
     std::sort(sorted.begin(), sorted.end());
 
-    MOZ_ASSERT(metadata_->funcExports.empty());
-    if (!metadata_->funcExports.reserve(sorted.length()))
+    MOZ_ASSERT(metadataTier_->funcExports.empty());
+    if (!metadataTier_->funcExports.reserve(sorted.length()))
         return false;
 
     for (uint32_t funcIndex : sorted) {
@@ -524,7 +524,7 @@ ModuleGenerator::finishFuncExports()
             return false;
 
         uint32_t codeRangeIndex = funcToCodeRange_[funcIndex];
-        metadata_->funcExports.infallibleEmplaceBack(Move(sig), funcIndex, codeRangeIndex);
+        metadataTier_->funcExports.infallibleEmplaceBack(Move(sig), funcIndex, codeRangeIndex);
     }
 
     return true;
@@ -539,7 +539,7 @@ ModuleGenerator::finishCodegen()
     masm_.haltingAlign(CodeAlignment);
     uint32_t offsetInWhole = masm_.size();
 
-    uint32_t numFuncExports = metadata_->funcExports.length();
+    uint32_t numFuncExports = metadataTier_->funcExports.length();
     MOZ_ASSERT(numFuncExports == exportedFuncs_.count());
 
     // Generate stubs in a separate MacroAssembler since, otherwise, for modules
@@ -564,15 +564,15 @@ ModuleGenerator::finishCodegen()
         if (!entries.resize(numFuncExports))
             return false;
         for (uint32_t i = 0; i < numFuncExports; i++)
-            entries[i] = GenerateEntry(masm, metadata_->funcExports[i]);
+            entries[i] = GenerateEntry(masm, metadataTier_->funcExports[i]);
 
         if (!interpExits.resize(numFuncImports()))
             return false;
         if (!jitExits.resize(numFuncImports()))
             return false;
         for (uint32_t i = 0; i < numFuncImports(); i++) {
-            interpExits[i] = GenerateImportInterpExit(masm, metadata_->funcImports[i], i, &throwLabel);
-            jitExits[i] = GenerateImportJitExit(masm, metadata_->funcImports[i], &throwLabel);
+            interpExits[i] = GenerateImportInterpExit(masm, metadataTier_->funcImports[i], i, &throwLabel);
+            jitExits[i] = GenerateImportJitExit(masm, metadataTier_->funcImports[i], &throwLabel);
         }
 
         for (Trap trap : MakeEnumeratedRange(Trap::Limit))
@@ -593,19 +593,19 @@ ModuleGenerator::finishCodegen()
 
     for (uint32_t i = 0; i < numFuncExports; i++) {
         entries[i].offsetBy(offsetInWhole);
-        metadata_->funcExports[i].initEntryOffset(entries[i].begin);
+        metadataTier_->funcExports[i].initEntryOffset(entries[i].begin);
         if (!metadataTier_->codeRanges.emplaceBack(CodeRange::Entry, entries[i]))
             return false;
     }
 
     for (uint32_t i = 0; i < numFuncImports(); i++) {
         interpExits[i].offsetBy(offsetInWhole);
-        metadata_->funcImports[i].initInterpExitOffset(interpExits[i].begin);
+        metadataTier_->funcImports[i].initInterpExitOffset(interpExits[i].begin);
         if (!metadataTier_->codeRanges.emplaceBack(CodeRange::ImportInterpExit, interpExits[i]))
             return false;
 
         jitExits[i].offsetBy(offsetInWhole);
-        metadata_->funcImports[i].initJitExitOffset(jitExits[i].begin);
+        metadataTier_->funcImports[i].initJitExitOffset(jitExits[i].begin);
         if (!metadataTier_->codeRanges.emplaceBack(CodeRange::ImportJitExit, jitExits[i]))
             return false;
     }
@@ -698,7 +698,7 @@ ModuleGenerator::addFuncImport(const Sig& sig, uint32_t globalDataOffset)
     if (!copy.clone(sig))
         return false;
 
-    return metadata_->funcImports.emplaceBack(Move(copy), globalDataOffset);
+    return metadataTier_->funcImports.emplaceBack(Move(copy), globalDataOffset);
 }
 
 bool
@@ -835,7 +835,7 @@ ModuleGenerator::initImport(uint32_t funcIndex, uint32_t sigIndex)
     MOZ_ASSERT(!env_->funcImportGlobalDataOffsets[funcIndex]);
     env_->funcImportGlobalDataOffsets[funcIndex] = globalDataOffset;
 
-    MOZ_ASSERT(funcIndex == metadata_->funcImports.length());
+    MOZ_ASSERT(funcIndex == metadataTier_->funcImports.length());
     return addFuncImport(sig(sigIndex), globalDataOffset);
 }
 
@@ -845,7 +845,7 @@ ModuleGenerator::numFuncImports() const
     // Until all functions have been validated, asm.js doesn't know the total
     // number of imports.
     MOZ_ASSERT_IF(isAsmJS(), finishedFuncDefs_);
-    return metadata_->funcImports.length();
+    return metadataTier_->funcImports.length();
 }
 
 const SigWithId&
@@ -1016,7 +1016,7 @@ ModuleGenerator::finishFuncDefs()
 
     if (!isAsmJS()) {
         for (size_t funcIndex = 0; funcIndex < numFuncImports(); funcIndex++) {
-            const FuncImport& funcImport = metadata_->funcImports[funcIndex];
+            const FuncImport& funcImport = metadataTier_->funcImports[funcIndex];
             const SigWithId& sig = funcSig(funcIndex);
 
             FuncOffsets offsets = GenerateImportFunction(masm_, funcImport, sig.id);

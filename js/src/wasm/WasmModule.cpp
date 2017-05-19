@@ -563,12 +563,12 @@ FindImportForFuncImport(const ImportVector& imports, uint32_t funcImportIndex)
 bool
 Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) const
 {
-    MOZ_ASSERT(funcImports.length() == metadata().funcImports.length());
+    MOZ_ASSERT(funcImports.length() == metadataTier().funcImports.length());
 
     if (metadata().isAsmJS())
         return true;
 
-    for (size_t i = 0; i < metadata().funcImports.length(); i++) {
+    for (size_t i = 0; i < metadataTier().funcImports.length(); i++) {
         HandleFunction f = funcImports[i];
         if (!IsExportedFunction(f) || ExportedFunctionToInstance(f).isAsmJS())
             continue;
@@ -577,7 +577,7 @@ Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) 
         Instance& instance = ExportedFunctionToInstance(f);
         const FuncExport& funcExport = instance.metadata().lookupFuncExport(funcIndex);
 
-        if (funcExport.sig() != metadata().funcImports[i].sig()) {
+        if (funcExport.sig() != metadataTier().funcImports[i].sig()) {
             const Import& import = FindImportForFuncImport(imports_, i);
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_SIG,
                                       import.module.get(), import.field.get());

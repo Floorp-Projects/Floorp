@@ -448,7 +448,9 @@ MetadataTier::serializedSize() const
 {
     return SerializedPodVectorSize(memoryAccesses) +
            SerializedPodVectorSize(codeRanges) +
-           SerializedPodVectorSize(callSites);
+           SerializedPodVectorSize(callSites) +
+           SerializedVectorSize(funcImports) +
+           SerializedVectorSize(funcExports);
 }
 
 size_t
@@ -456,7 +458,9 @@ MetadataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return memoryAccesses.sizeOfExcludingThis(mallocSizeOf) +
            codeRanges.sizeOfExcludingThis(mallocSizeOf) +
-           callSites.sizeOfExcludingThis(mallocSizeOf);
+           callSites.sizeOfExcludingThis(mallocSizeOf) +
+           SizeOfVectorExcludingThis(funcImports, mallocSizeOf) +
+           SizeOfVectorExcludingThis(funcExports, mallocSizeOf);
 }
 
 uint8_t*
@@ -466,6 +470,8 @@ MetadataTier::serialize(uint8_t* cursor) const
     cursor = SerializePodVector(cursor, memoryAccesses);
     cursor = SerializePodVector(cursor, codeRanges);
     cursor = SerializePodVector(cursor, callSites);
+    cursor = SerializeVector(cursor, funcImports);
+    cursor = SerializeVector(cursor, funcExports);
     return cursor;
 }
 
@@ -474,7 +480,9 @@ MetadataTier::deserialize(const uint8_t* cursor)
 {
     (cursor = DeserializePodVector(cursor, &memoryAccesses)) &&
     (cursor = DeserializePodVector(cursor, &codeRanges)) &&
-    (cursor = DeserializePodVector(cursor, &callSites));
+    (cursor = DeserializePodVector(cursor, &callSites)) &&
+    (cursor = DeserializeVector(cursor, &funcImports)) &&
+    (cursor = DeserializeVector(cursor, &funcExports));
     debugTrapFarJumpOffsets.clear();
     debugFuncToCodeRange.clear();
     return cursor;
@@ -485,8 +493,6 @@ Metadata::serializedSize() const
 {
     return sizeof(pod()) +
            tier().serializedSize() +
-           SerializedVectorSize(funcImports) +
-           SerializedVectorSize(funcExports) +
            SerializedVectorSize(sigIds) +
            SerializedPodVectorSize(globals) +
            SerializedPodVectorSize(tables) +
@@ -500,8 +506,6 @@ size_t
 Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return tier().sizeOfExcludingThis(mallocSizeOf) +
-           SizeOfVectorExcludingThis(funcImports, mallocSizeOf) +
-           SizeOfVectorExcludingThis(funcExports, mallocSizeOf) +
            SizeOfVectorExcludingThis(sigIds, mallocSizeOf) +
            globals.sizeOfExcludingThis(mallocSizeOf) +
            tables.sizeOfExcludingThis(mallocSizeOf) +
@@ -516,8 +520,6 @@ Metadata::serialize(uint8_t* cursor) const
     MOZ_ASSERT(!debugEnabled && debugFuncArgTypes.empty() && debugFuncReturnTypes.empty());
     cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
     cursor = tier().serialize(cursor);
-    cursor = SerializeVector(cursor, funcImports);
-    cursor = SerializeVector(cursor, funcExports);
     cursor = SerializeVector(cursor, sigIds);
     cursor = SerializePodVector(cursor, globals);
     cursor = SerializePodVector(cursor, tables);
@@ -533,8 +535,6 @@ Metadata::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
     (cursor = tier().deserialize(cursor)) &&
-    (cursor = DeserializeVector(cursor, &funcImports)) &&
-    (cursor = DeserializeVector(cursor, &funcExports)) &&
     (cursor = DeserializeVector(cursor, &sigIds)) &&
     (cursor = DeserializePodVector(cursor, &globals)) &&
     (cursor = DeserializePodVector(cursor, &tables)) &&
@@ -563,6 +563,7 @@ struct ProjectFuncIndex
 const FuncExport&
 Metadata::lookupFuncExport(uint32_t funcIndex) const
 {
+    const FuncExportVector& funcExports = tier().funcExports;
     size_t match;
     if (!BinarySearch(ProjectFuncIndex(funcExports), 0, funcExports.length(), funcIndex, &match))
         MOZ_CRASH("missing function export");
