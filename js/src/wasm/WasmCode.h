@@ -158,7 +158,7 @@ class FuncExport
     MOZ_INIT_OUTSIDE_CTOR struct CacheablePod {
         uint32_t funcIndex_;
         uint32_t codeRangeIndex_;
-        uint32_t entryOffset_;
+        uint32_t entryOffset_;      // Machine code offset
     } pod;
 
   public:
@@ -207,8 +207,8 @@ class FuncImport
     Sig sig_;
     struct CacheablePod {
         uint32_t tlsDataOffset_;
-        uint32_t interpExitCodeOffset_;
-        uint32_t jitExitCodeOffset_;
+        uint32_t interpExitCodeOffset_; // Machine code offset
+        uint32_t jitExitCodeOffset_;    // Machine code offset
     } pod;
 
   public:
@@ -339,6 +339,8 @@ struct MetadataTier
     MemoryAccessVector    memoryAccesses;
     CodeRangeVector       codeRanges;
     CallSiteVector        callSites;
+    FuncImportVector      funcImports;
+    FuncExportVector      funcExports;
 
     // Debug information, not serialized.
     Uint32Vector          debugTrapFarJumpOffsets;
@@ -367,8 +369,6 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     MetadataCacheablePod& pod() { return *this; }
     const MetadataCacheablePod& pod() const { return *this; }
 
-    FuncImportVector      funcImports;
-    FuncExportVector      funcExports;
     SigWithIdVector       sigIds;
     GlobalDescVector      globals;
     TableDescVector       tables;

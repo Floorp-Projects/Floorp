@@ -127,7 +127,7 @@ bool
 Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, const uint64_t* argv,
                      MutableHandleValue rval)
 {
-    const FuncImport& fi = metadata().funcImports[funcImportIndex];
+    const FuncImport& fi = metadataTier().funcImports[funcImportIndex];
 
     InvokeArgs args(cx);
     if (!args.init(cx, argc))
@@ -335,7 +335,7 @@ Instance::Instance(JSContext* cx,
     tables_(Move(tables)),
     enterFrameTrapsEnabled_(false)
 {
-    MOZ_ASSERT(funcImports.length() == metadata().funcImports.length());
+    MOZ_ASSERT(funcImports.length() == metadataTier().funcImports.length());
     MOZ_ASSERT(tables_.length() == metadata().tables.length());
 
     tlsData()->cx = cx;
@@ -347,9 +347,9 @@ Instance::Instance(JSContext* cx,
 #endif
     tlsData()->stackLimit = *(void**)cx->stackLimitAddressForJitCode(JS::StackForUntrustedScript);
 
-    for (size_t i = 0; i < metadata().funcImports.length(); i++) {
+    for (size_t i = 0; i < metadataTier().funcImports.length(); i++) {
         HandleFunction f = funcImports[i];
-        const FuncImport& fi = metadata().funcImports[i];
+        const FuncImport& fi = metadataTier().funcImports[i];
         FuncImportTls& import = funcImportTls(fi);
         if (!isAsmJS() && IsExportedWasmFunction(f)) {
             WasmInstanceObject* calleeInstanceObj = ExportedFunctionToInstanceObject(f);
@@ -447,8 +447,8 @@ Instance::~Instance()
 {
     compartment_->wasm.unregisterInstance(*this);
 
-    for (unsigned i = 0; i < metadata().funcImports.length(); i++) {
-        FuncImportTls& import = funcImportTls(metadata().funcImports[i]);
+    for (unsigned i = 0; i < metadataTier().funcImports.length(); i++) {
+        FuncImportTls& import = funcImportTls(metadataTier().funcImports[i]);
         if (import.baselineScript)
             import.baselineScript->removeDependentWasmImport(*this, i);
     }
@@ -495,7 +495,7 @@ Instance::tracePrivate(JSTracer* trc)
     MOZ_ASSERT(!gc::IsAboutToBeFinalized(&object_));
     TraceEdge(trc, &object_, "wasm instance object");
 
-    for (const FuncImport& fi : metadata().funcImports)
+    for (const FuncImport& fi : metadataTier().funcImports)
         TraceNullableEdge(trc, &funcImportTls(fi).obj, "wasm import");
 
     for (const SharedTable& table : tables_)
@@ -804,7 +804,7 @@ Instance::onMovingGrowTable()
 void
 Instance::deoptimizeImportExit(uint32_t funcImportIndex)
 {
-    const FuncImport& fi = metadata().funcImports[funcImportIndex];
+    const FuncImport& fi = metadataTier().funcImports[funcImportIndex];
     FuncImportTls& import = funcImportTls(fi);
     import.code = codeBase() + fi.interpExitCodeOffset();
     import.baselineScript = nullptr;
