@@ -96,17 +96,5 @@ IPCBlobInputStreamParent::RecvStreamNeeded()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-IPCBlobInputStreamParent::RecvClose()
-{
-  MOZ_ASSERT(mContentManager || mPBackgroundManager);
-
-  if (!Send__delete__(this)) {
-    return IPC_FAIL(this, "Send__delete_ failed");
-  }
-
-  return IPC_OK();
-}
-
 } // namespace dom
 } // namespace mozilla

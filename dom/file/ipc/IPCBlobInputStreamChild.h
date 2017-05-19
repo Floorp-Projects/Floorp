@@ -9,16 +9,11 @@
 
 #include "mozilla/ipc/PIPCBlobInputStreamChild.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/UniquePtr.h"
 #include "nsIThread.h"
 #include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {
-
-namespace workers {
-class WorkerHolder;
-}
 
 class IPCBlobInputStream;
 
@@ -61,9 +56,6 @@ public:
   mozilla::ipc::IPCResult
   RecvStreamReady(const OptionalIPCStream& aStream) override;
 
-  void
-  Shutdown();
-
 private:
   ~IPCBlobInputStreamChild();
 
@@ -90,8 +82,6 @@ private:
   nsTArray<PendingOperation> mPendingOperations;
 
   nsCOMPtr<nsIThread> mOwningThread;
-
-  UniquePtr<workers::WorkerHolder> mWorkerHolder;
 };
 
 } // namespace dom
