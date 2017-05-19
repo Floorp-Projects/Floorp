@@ -493,7 +493,7 @@ IMEHandler::InitInputContext(nsWindow* aWindow, InputContext& aInputContext)
   if (sIsInTSFMode) {
     TSFTextStore::SetInputContext(aWindow, aInputContext,
       InputContextAction(InputContextAction::CAUSE_UNKNOWN,
-                         InputContextAction::GOT_FOCUS));
+                         InputContextAction::WIDGET_CREATED));
     // IME context isn't necessary in pure TSF mode.
     if (!sIsIMMEnabled) {
       AssociateIMEContext(aWindow, false);
