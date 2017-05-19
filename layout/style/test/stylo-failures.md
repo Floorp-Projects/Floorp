@@ -60,8 +60,6 @@ to mochitest command.
   * \@keyframes bug 1345697
     * test_keyframes_rules.html [1]
     * test_rules_out_of_sheets.html [1]
-* test_bug357614.html: case-insensitivity for old attrs in attr selector servo/servo#15006 [2]
-* test_bug387615.html: servo/servo#15006 [1]
 * test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [1]
 * console support bug 1352669
   * test_bug413958.html `monitorConsole` [3]
@@ -90,7 +88,7 @@ to mochitest command.
   * ... `font-feature-settings`: bug 1355366 [10]
 * test_font_face_parser.html `font-weight`: keyword values should be preserved in \@font-face [4]
 * @namespace support:
-  * test_namespace_rule.html: bug 1355715 [8]
+  * test_namespace_rule.html: bug 1355715 [6]
 * test_dont_use_document_colors.html: support of disabling document color bug 1355716 [21]
 * test_font_feature_values_parsing.html: \@font-feature-values support bug 1355721 [107]
 * Grid support bug 1341802
