@@ -541,9 +541,21 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
         UpdateTransitions(const_cast<dom::Element*>(aElement), pseudoType,
                           oldServoValues, servoValues);
     }
+
     if (aTasks & UpdateAnimationsTasks::EffectProperties) {
       presContext->EffectCompositor()->UpdateEffectProperties(
         servoValues, const_cast<dom::Element*>(aElement), pseudoType);
+    }
+
+    if (aTasks & UpdateAnimationsTasks::CascadeResults) {
+      // This task will be scheduled if we detected any changes to !important
+      // rules. We post a restyle here so that we can update the cascade
+      // results in the pre-traversal of the next restyle.
+      presContext->EffectCompositor()
+                 ->RequestRestyle(const_cast<Element*>(aElement),
+                                  pseudoType,
+                                  EffectCompositor::RestyleType::Standard,
+                                  EffectCompositor::CascadeLevel::Animations);
     }
   }
 }
