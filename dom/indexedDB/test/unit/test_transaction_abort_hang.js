@@ -76,7 +76,7 @@ function* testSteps()
     if (readonly) {
       transaction.objectStore(objStoreName).get(0);
     } else {
-      try { transaction.objectStore(objStoreName).add({}); } catch(e) { }
+      try { transaction.objectStore(objStoreName).add({}); } catch (e) { }
     }
   }
   ok(true, "Created all transactions");

@@ -75,7 +75,14 @@ from its prototype:
 
     **If the instance refers to WebAssembly code**, the serialized text
     representation. The format is yet to be specified in the WebAssembly
-    standard. Currently, the text is an s-expression based syntax.
+    standard. Currently, the text is an s-expression based syntax. The text
+    generation is disabled if the Debugger has the `allowWasmBinarySource`
+    property set, the `"[wasm]"` value will be returned in this case.
+
+`binary`
+:   **If the instance refers to WebAssembly code** and the Debugger has
+    the `allowWasmBinarySource` property set, a Uint8Array that contains the
+    WebAssembly bytecode.
 
 `url`
 :   **If the instance refers to JavaScript source**, the URL from which this

@@ -1199,78 +1199,73 @@ exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_R
 var _util = __w_pdfjs_require__(0);
 
 var DEFAULT_LINK_REL = 'noopener noreferrer nofollow';
-function DOMCanvasFactory() {}
-DOMCanvasFactory.prototype = {
-  create: function DOMCanvasFactory_create(width, height) {
+class DOMCanvasFactory {
+  create(width, height) {
     (0, _util.assert)(width > 0 && height > 0, 'invalid canvas size');
-    var canvas = document.createElement('canvas');
-    var context = canvas.getContext('2d');
+    let canvas = document.createElement('canvas');
+    let context = canvas.getContext('2d');
     canvas.width = width;
     canvas.height = height;
     return {
       canvas,
       context
     };
-  },
-  reset: function DOMCanvasFactory_reset(canvasAndContextPair, width, height) {
-    (0, _util.assert)(canvasAndContextPair.canvas, 'canvas is not specified');
+  }
+  reset(canvasAndContext, width, height) {
+    (0, _util.assert)(canvasAndContext.canvas, 'canvas is not specified');
     (0, _util.assert)(width > 0 && height > 0, 'invalid canvas size');
-    canvasAndContextPair.canvas.width = width;
-    canvasAndContextPair.canvas.height = height;
-  },
-  destroy: function DOMCanvasFactory_destroy(canvasAndContextPair) {
-    (0, _util.assert)(canvasAndContextPair.canvas, 'canvas is not specified');
-    canvasAndContextPair.canvas.width = 0;
-    canvasAndContextPair.canvas.height = 0;
-    canvasAndContextPair.canvas = null;
-    canvasAndContextPair.context = null;
+    canvasAndContext.canvas.width = width;
+    canvasAndContext.canvas.height = height;
   }
-};
-var DOMCMapReaderFactory = function DOMCMapReaderFactoryClosure() {
-  function DOMCMapReaderFactory(params) {
-    this.baseUrl = params.baseUrl || null;
-    this.isCompressed = params.isCompressed || false;
+  destroy(canvasAndContext) {
+    (0, _util.assert)(canvasAndContext.canvas, 'canvas is not specified');
+    canvasAndContext.canvas.width = 0;
+    canvasAndContext.canvas.height = 0;
+    canvasAndContext.canvas = null;
+    canvasAndContext.context = null;
   }
-  DOMCMapReaderFactory.prototype = {
-    fetch(params) {
-      var name = params.name;
-      if (!name) {
-        return Promise.reject(new Error('CMap name must be specified.'));
+}
+class DOMCMapReaderFactory {
+  constructor({ baseUrl = null, isCompressed = false }) {
+    this.baseUrl = baseUrl;
+    this.isCompressed = isCompressed;
+  }
+  fetch({ name }) {
+    if (!name) {
+      return Promise.reject(new Error('CMap name must be specified.'));
+    }
+    return new Promise((resolve, reject) => {
+      let url = this.baseUrl + name + (this.isCompressed ? '.bcmap' : '');
+      let request = new XMLHttpRequest();
+      request.open('GET', url, true);
+      if (this.isCompressed) {
+        request.responseType = 'arraybuffer';
       }
-      return new Promise((resolve, reject) => {
-        var url = this.baseUrl + name + (this.isCompressed ? '.bcmap' : '');
-        var request = new XMLHttpRequest();
-        request.open('GET', url, true);
-        if (this.isCompressed) {
-          request.responseType = 'arraybuffer';
+      request.onreadystatechange = () => {
+        if (request.readyState !== XMLHttpRequest.DONE) {
+          return;
         }
-        request.onreadystatechange = () => {
-          if (request.readyState !== XMLHttpRequest.DONE) {
+        if (request.status === 200 || request.status === 0) {
+          let data;
+          if (this.isCompressed && request.response) {
+            data = new Uint8Array(request.response);
+          } else if (!this.isCompressed && request.responseText) {
+            data = (0, _util.stringToBytes)(request.responseText);
+          }
+          if (data) {
+            resolve({
+              cMapData: data,
+              compressionType: this.isCompressed ? _util.CMapCompressionType.BINARY : _util.CMapCompressionType.NONE
+            });
             return;
           }
-          if (request.status === 200 || request.status === 0) {
-            var data;
-            if (this.isCompressed && request.response) {
-              data = new Uint8Array(request.response);
-            } else if (!this.isCompressed && request.responseText) {
-              data = (0, _util.stringToBytes)(request.responseText);
-            }
-            if (data) {
-              resolve({
-                cMapData: data,
-                compressionType: this.isCompressed ? _util.CMapCompressionType.BINARY : _util.CMapCompressionType.NONE
-              });
-              return;
-            }
-          }
-          reject(new Error('Unable to load ' + (this.isCompressed ? 'binary ' : '') + 'CMap at: ' + url));
-        };
-        request.send(null);
-      });
-    }
-  };
-  return DOMCMapReaderFactory;
-}();
+        }
+        reject(new Error('Unable to load ' + (this.isCompressed ? 'binary ' : '') + 'CMap at: ' + url));
+      };
+      request.send(null);
+    });
+  }
+}
 var CustomStyle = function CustomStyleClosure() {
   var prefixes = ['ms', 'Moz', 'Webkit', 'O'];
   var _cache = Object.create(null);
@@ -3328,7 +3323,12 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
       }
       var params = this.params;
       this.gfx = new _canvas.CanvasGraphics(params.canvasContext, this.commonObjs, this.objs, this.canvasFactory, params.imageLayer);
-      this.gfx.beginDrawing(params.transform, params.viewport, transparency);
+      this.gfx.beginDrawing({
+        transform: params.transform,
+        viewport: params.viewport,
+        transparency,
+        background: params.background
+      });
       this.operatorListIdx = 0;
       this.graphicsReady = true;
       if (this.graphicsReadyCallback) {
@@ -3405,8 +3405,8 @@ var _UnsupportedManager = function UnsupportedManagerClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '1.8.346';
-  exports.build = build = '15425d5b';
+  exports.version = version = '1.8.363';
+  exports.build = build = '658fb03d';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -4408,8 +4408,8 @@ if (!_util.globalScope.PDFJS) {
 }
 var PDFJS = _util.globalScope.PDFJS;
 {
-  PDFJS.version = '1.8.346';
-  PDFJS.build = '15425d5b';
+  PDFJS.version = '1.8.363';
+  PDFJS.build = '658fb03d';
 }
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
@@ -5060,11 +5060,11 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
   var NORMAL_CLIP = {};
   var EO_CLIP = {};
   CanvasGraphics.prototype = {
-    beginDrawing: function CanvasGraphics_beginDrawing(transform, viewport, transparency) {
+    beginDrawing({ transform, viewport, transparency, background = null }) {
       var width = this.ctx.canvas.width;
       var height = this.ctx.canvas.height;
       this.ctx.save();
-      this.ctx.fillStyle = 'rgb(255, 255, 255)';
+      this.ctx.fillStyle = background || 'rgb(255, 255, 255)';
       this.ctx.fillRect(0, 0, width, height);
       this.ctx.restore();
       if (transparency) {
@@ -6723,8 +6723,8 @@ exports.TilingPattern = TilingPattern;
 "use strict";
 
 
-var pdfjsVersion = '1.8.346';
-var pdfjsBuild = '15425d5b';
+var pdfjsVersion = '1.8.363';
+var pdfjsBuild = '658fb03d';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(8);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);

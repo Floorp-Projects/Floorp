@@ -2887,7 +2887,8 @@ var SessionStoreInternal = {
         // We want to make sure that this information is passed to restoreTab
         // whether or not a historyIndex is passed in. Thus, we extract it from
         // the loadArguments.
-        reloadInFreshProcess: !!recentLoadArguments.reloadInFreshProcess,
+        newFrameloader: recentLoadArguments.newFrameloader,
+        remoteType: recentLoadArguments.remoteType,
         // Make sure that SessionStore knows that this restoration is due
         // to a navigation, as opposed to us restoring a closed window or tab.
         restoreContentReason: RESTORE_TAB_CONTENT_REASON.NAVIGATE_AND_RESTORE,
@@ -3536,18 +3537,14 @@ var SessionStoreInternal = {
     NS_ASSERT(!tab.linkedBrowser.__SS_restoreState,
               "must reset tab before calling restoreTab()");
 
-    let restoreImmediately = options.restoreImmediately;
     let loadArguments = options.loadArguments;
     let browser = tab.linkedBrowser;
     let window = tab.ownerGlobal;
     let tabbrowser = window.gBrowser;
     let forceOnDemand = options.forceOnDemand;
-    let reloadInFreshProcess = options.reloadInFreshProcess;
-    let restoreContentReason = options.restoreContentReason;
 
-    let willRestoreImmediately = restoreImmediately ||
-                                 tabbrowser.selectedBrowser == browser ||
-                                 loadArguments;
+    let willRestoreImmediately = options.restoreImmediately ||
+                                 tabbrowser.selectedBrowser == browser;
 
     let isBrowserInserted = browser.isConnected;
 
@@ -3666,8 +3663,7 @@ var SessionStoreInternal = {
       // This could cause us to ignore MAX_CONCURRENT_TAB_RESTORES a bit, but
       // it ensures each window will have its selected tab loaded.
       if (willRestoreImmediately) {
-        this.restoreTabContent(tab, loadArguments, reloadInFreshProcess,
-                               restoreContentReason);
+        this.restoreTabContent(tab, options);
       } else if (!forceOnDemand) {
         TabRestoreQueue.add(tab);
         this.restoreNextTab();
@@ -3709,18 +3705,12 @@ var SessionStoreInternal = {
    *
    * @param aTab
    *        the tab to restore
-   * @param aLoadArguments
-   *        optional load arguments used for loadURI()
-   * @param aReloadInFreshProcess
-   *        true if we want to reload into a fresh process
-   * @param aReason
-   *        The reason for why this tab content is being restored.
-   *        Should be one of the values within RESTORE_TAB_CONTENT_REASON.
-   *        Defaults to RESTORE_TAB_CONTENT_REASON.SET_STATE.
+   * @param aOptions
+   *        optional arguments used when performing process switch during load
    */
-  restoreTabContent(aTab, aLoadArguments = null, aReloadInFreshProcess = false,
-                    aReason = RESTORE_TAB_CONTENT_REASON.SET_STATE) {
-    if (aTab.hasAttribute("customizemode") && !aLoadArguments) {
+  restoreTabContent(aTab, aOptions = {}) {
+    let loadArguments = aOptions.loadArguments;
+    if (aTab.hasAttribute("customizemode") && !loadArguments) {
       return;
     }
 
@@ -3731,10 +3721,10 @@ var SessionStoreInternal = {
     let activeIndex = tabData.index - 1;
     let activePageData = tabData.entries[activeIndex] || null;
     let uri = activePageData ? activePageData.url || null : null;
-    if (aLoadArguments) {
-      uri = aLoadArguments.uri;
-      if (aLoadArguments.userContextId) {
-        browser.setAttribute("usercontextid", aLoadArguments.userContextId);
+    if (loadArguments) {
+      uri = loadArguments.uri;
+      if (loadArguments.userContextId) {
+        browser.setAttribute("usercontextid", loadArguments.userContextId);
       }
     }
 
@@ -3744,16 +3734,25 @@ var SessionStoreInternal = {
     // flip the remoteness of any browser that is not being displayed.
     this.markTabAsRestoring(aTab);
 
-    // We need a new frameloader either if we are reloading into a fresh
-    // process, or we have a browser with a grouped session history (as we don't
-    // support restoring into browsers with grouped session histories directly).
+    // We need a new frameloader if we are reloading into a browser with a
+    // grouped session history (as we don't support restoring into browsers
+    // with grouped session histories directly).
     let newFrameloader =
-      aReloadInFreshProcess || !!browser.frameLoader.groupedSHistory;
-    let isRemotenessUpdate =
-      tabbrowser.updateBrowserRemotenessByURL(browser, uri, {
-        freshProcess: aReloadInFreshProcess,
-        newFrameloader,
-      });
+      aOptions.newFrameloader || !!browser.frameLoader.groupedSHistory;
+
+    let isRemotenessUpdate;
+    if (aOptions.remoteType !== undefined) {
+      // We already have a selected remote type so we update to that.
+      isRemotenessUpdate =
+        tabbrowser.updateBrowserRemoteness(browser, !!aOptions.remoteType,
+                                           { remoteType: aOptions.remoteType,
+                                             newFrameloader });
+    } else {
+      isRemotenessUpdate =
+        tabbrowser.updateBrowserRemotenessByURL(browser, uri, {
+          newFrameloader,
+        });
+    }
 
     if (isRemotenessUpdate) {
       // We updated the remoteness, so we need to send the history down again.
@@ -3766,7 +3765,7 @@ var SessionStoreInternal = {
       this._sendRestoreHistory(browser, {
         tabData,
         epoch,
-        loadArguments: aLoadArguments,
+        loadArguments,
         isRemotenessUpdate,
       });
     }
@@ -3778,8 +3777,10 @@ var SessionStoreInternal = {
     }
 
     browser.messageManager.sendAsyncMessage("SessionStore:restoreTabContent",
-      {loadArguments: aLoadArguments, isRemotenessUpdate,
-       reason: aReason, requestTime: Services.telemetry.msSystemNow()});
+      {loadArguments, isRemotenessUpdate,
+       reason: aOptions.restoreContentReason ||
+               RESTORE_TAB_CONTENT_REASON.SET_STATE,
+       requestTime: Services.telemetry.msSystemNow()});
   },
 
   /**

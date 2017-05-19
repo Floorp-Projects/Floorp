@@ -717,7 +717,9 @@ MessageChannel::Clear()
 
     gUnresolvedPromises -= mPendingPromises.size();
     for (auto& pair : mPendingPromises) {
-        pair.second.mRejectFunction(pair.second.mPromise, __func__);
+        pair.second.mRejectFunction(pair.second.mPromise,
+                                    PromiseRejectReason::ChannelClosed,
+                                    __func__);
     }
     mPendingPromises.clear();
 
@@ -942,6 +944,26 @@ MessageChannel::PopPromise(const Message& aMsg)
         return ret.mPromise.forget();
     }
     return nullptr;
+}
+
+void
+MessageChannel::RejectPendingPromisesForActor(ActorIdType aActorId)
+{
+  auto itr = mPendingPromises.begin();
+  while (itr != mPendingPromises.end()) {
+    if (itr->second.mActorId != aActorId) {
+      ++itr;
+      continue;
+    }
+    auto& promise = itr->second.mPromise;
+    itr->second.mRejectFunction(promise,
+                                PromiseRejectReason::ActorDestroyed,
+                                __func__);
+    // Take special care of advancing the iterator since we are
+    // removing it while iterating.
+    itr = mPendingPromises.erase(itr);
+    gUnresolvedPromises--;
+  }
 }
 
 class BuildIDMessage : public IPC::Message

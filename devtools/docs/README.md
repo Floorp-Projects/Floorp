@@ -1,13 +1,20 @@
 # Firefox Developer Tools
 
-Hello! This documentation is for developers who want to work on the developer tools.
+**Hello!**
 
-If you are looking for general docs about how to use the tools, checkout [this MDN page](https://developer.mozilla.org/en-US/docs/Tools) instead.
+This documentation is for developers who want to work on the developer tools. [Get started here](./getting-started/).
 
-If you are looking for a getting started guide on the developer tools, all of this information is documented on the [Hacking](https://wiki.mozilla.org/DevTools/Hacking) wiki page.
+If you are looking for end user documentation, check out [this MDN page](https://developer.mozilla.org/en-US/docs/Tools) instead.
 
-[GitBook](https://github.com/GitbookIO/gitbook) is used to generate online documentation from the markdown files here.
-Here is how you can re-generate the book:
+Happy developing!
+
+## About this documentation
+
+This guide is built with MarkDown files and [GitBook](https://github.com/GitbookIO/gitbook).
+
+The source code for this documentation is distributed with the source code for the tools, in the `docs/` folder.
+
+If you want to contribute to the documentation, [clone the repository](./getting-started/build.md#getting-the-code), make your changes locally, and then regenerate the book to see how it looks like before submitting a patch:
 
 ```bash
 # Install GitBook locally
@@ -19,6 +26,8 @@ cd /path/to/mozilla-central/devtools/docs/
 # Generate the docs and start a local server
 gitbook serve
 
-# Or just built the book
+# You can now navigate to localhost:4000 to see the output
+
+# Or build the book only (this places the output into `docs/_book`)
 gitbook build
 ```

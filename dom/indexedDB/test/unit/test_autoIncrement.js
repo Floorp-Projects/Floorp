@@ -202,13 +202,13 @@ function* testSteps()
   // Test separate transactions doesn't generate overlapping numbers
   test = " for test non-overlapping counts";
   trans = db.transaction("store1", RW);
-  trans2 = db.transaction("store1", RW);
+  let trans2 = db.transaction("store1", RW);
   trans2.objectStore("store1").put({ over: 2 }).onsuccess =
     genCheck(c1 + 1, { over: 2 }, "first" + test,
              { trans: trans2 });
   trans.objectStore("store1").put({ over: 1 }).onsuccess =
     genCheck(c1, { over: 1 }, "second" + test,
-             { trans: trans });
+             { trans });
   c1 += 2;
   yield undefined; yield undefined;
 
@@ -219,7 +219,7 @@ function* testSteps()
              { trans: trans2 });
   trans.objectStore("store2").put({ over: 1 }).onsuccess =
     genCheck(c2, { over: 1, id: c2 }, "fourth" + test,
-             { trans: trans });
+             { trans });
   c2 += 2;
   yield undefined; yield undefined;
 

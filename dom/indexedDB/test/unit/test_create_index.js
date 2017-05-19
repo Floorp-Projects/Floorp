@@ -38,7 +38,7 @@ function* testSteps()
       request = objectStore.createIndex("Hola");
       ok(false, "createIndex with no keyPath should throw");
     }
-    catch(e) {
+    catch (e) {
       ok(true, "createIndex with no keyPath should throw");
     }
 
@@ -46,7 +46,7 @@ function* testSteps()
     try {
       objectStore.createIndex("Hola", ["foo"], { multiEntry: true });
     }
-    catch(e) {
+    catch (e) {
       ex = e;
     }
     ok(ex, "createIndex with array keyPath and multiEntry should throw");
@@ -58,7 +58,7 @@ function* testSteps()
       objectStore.createIndex("foo", "bar", 10);
       ok(false, "createIndex with bad options should throw");
     }
-    catch(e) {
+    catch (e) {
       ok(true, "createIndex with bad options threw");
     }
 

@@ -389,7 +389,8 @@ module.exports = {
 
     let names =
       fs.readdirSync(dir)
-        .filter(name => name.startsWith("head") && name.endsWith(".js"))
+        .filter(name => (name.startsWith("head") ||
+                         name.startsWith("xpcshell-head")) && name.endsWith(".js"))
         .map(name => path.join(dir, name));
     return names;
   },

@@ -21,7 +21,7 @@ function* testSteps()
     return;
   }
 
-  getWasmBinary('(module (func (nop)))');
+  getWasmBinary("(module (func (nop)))");
   let binary = yield undefined;
   wasmData.value.data = getWasmModule(binary);
 

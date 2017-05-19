@@ -3864,22 +3864,22 @@ nsTextPaintStyle::GetHighlightColors(nscolor* aForeColor,
     return;
   }
 
+  InitCommonColors();
+
   if (customColors->mBackgroundColor) {
     // !mForegroundColor means "currentColor"; the current color of the text.
     nscolor foreColor = GetTextColor();
     nscolor backColor = *customColors->mBackgroundColor;
 
-    if (customColors->mAltBackgroundColor) {
-      int32_t foreLuminosityDifference =
-                NS_LUMINOSITY_DIFFERENCE(foreColor, backColor);
+    int32_t luminosityDifference =
+              NS_LUMINOSITY_DIFFERENCE(foreColor, backColor);
 
-      // The sufficient luminosity difference is based on the link color of
-      // about:preferences, so we don't invert the background color on these text.
-      // XXX: Make this more generic.
-      int32_t sufficientLuminosityDifference =
-                NS_LUMINOSITY_DIFFERENCE(NS_RGBA(23, 140, 229, 255), backColor);
+    if (mSufficientContrast > luminosityDifference &&
+        customColors->mAltBackgroundColor) {
+      int32_t altLuminosityDifference =
+                NS_LUMINOSITY_DIFFERENCE(foreColor, *customColors->mAltBackgroundColor);
 
-      if (foreLuminosityDifference < sufficientLuminosityDifference) {
+      if (luminosityDifference < altLuminosityDifference) {
         backColor = *customColors->mAltBackgroundColor;
       }
     }
@@ -3892,16 +3892,22 @@ nsTextPaintStyle::GetHighlightColors(nscolor* aForeColor,
   if (customColors->mForegroundColor) {
     nscolor foreColor = *customColors->mForegroundColor;
     // !mBackgroundColor means "transparent"; the current color of the background.
-    nscolor backColor = mFrameBackgroundColor;
 
-    if (customColors->mAltForegroundColor &&
-        EnsureSufficientContrast(&foreColor, &backColor)) {
-      foreColor = *customColors->mAltForegroundColor;
-      backColor = mFrameBackgroundColor;
+    int32_t luminosityDifference =
+              NS_LUMINOSITY_DIFFERENCE(foreColor, mFrameBackgroundColor);
+
+    if (mSufficientContrast > luminosityDifference &&
+        customColors->mAltForegroundColor) {
+      int32_t altLuminosityDifference =
+                NS_LUMINOSITY_DIFFERENCE(*customColors->mForegroundColor, mFrameBackgroundColor);
+
+      if (luminosityDifference < altLuminosityDifference) {
+        foreColor = *customColors->mAltForegroundColor;
+      }
     }
 
     *aForeColor = foreColor;
-    *aBackColor = backColor;
+    *aBackColor = NS_TRANSPARENT;
     return;
   }
 

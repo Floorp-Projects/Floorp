@@ -40,6 +40,7 @@ const PanelUI = {
       addonNotificationContainer: gPhotonStructure ? "appMenu-addon-banners" : "PanelUI-footer-addons",
 
       overflowFixedList: gPhotonStructure ? "widget-overflow-fixed-list" : "",
+      overflowPanel: gPhotonStructure ? "widget-overflow" : "",
       navbar: "nav-bar",
     };
   },
@@ -85,7 +86,8 @@ const PanelUI = {
   _initPhotonPanel() {
     if (gPhotonStructure) {
       this.overflowFixedList.hidden = false;
-      this.overflowFixedList.nextSibling.hidden = false;
+      // Also unhide the separator. We use CSS to hide/show it based on the panel's content.
+      this.overflowFixedList.previousSibling.hidden = false;
       CustomizableUI.registerMenuPanel(this.overflowFixedList, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
       this.navbar.setAttribute("photon-structure", "true");
       this.updateOverflowStatus();
@@ -608,7 +610,9 @@ const PanelUI = {
     let hasKids = this.overflowFixedList.hasChildNodes();
     if (hasKids && !this.navbar.hasAttribute("nonemptyoverflow")) {
       this.navbar.setAttribute("nonemptyoverflow", "true");
+      this.overflowPanel.setAttribute("hasfixeditems", "true");
     } else if (!hasKids && this.navbar.hasAttribute("nonemptyoverflow")) {
+      this.overflowPanel.removeAttribute("hasfixeditems");
       this.navbar.removeAttribute("nonemptyoverflow");
     }
   },

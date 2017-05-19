@@ -274,7 +274,9 @@ struct NameInBytecode
     uint32_t offset;
     uint32_t length;
 
-    NameInBytecode() = default;
+    NameInBytecode()
+      : offset(UINT32_MAX), length(0)
+    {}
     NameInBytecode(uint32_t offset, uint32_t length)
       : offset(offset), length(length)
     {}

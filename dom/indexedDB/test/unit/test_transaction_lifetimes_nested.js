@@ -21,7 +21,7 @@ function* testSteps()
   db.createObjectStore("foo");
   yield undefined;
 
-  let transaction1 = db.transaction("foo");
+  db.transaction("foo");
 
   let transaction2;
 
