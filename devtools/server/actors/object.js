@@ -2150,6 +2150,52 @@ LongStringActor.prototype.requestTypes = {
 };
 
 /**
+ * Creates an actor for the specied ArrayBuffer.
+ *
+ * @param buffer ArrayBuffer
+ *        The buffer.
+ */
+function ArrayBufferActor(buffer) {
+  this.buffer = buffer;
+  this.bufferLength = buffer.byteLength;
+}
+
+ArrayBufferActor.prototype = {
+  actorPrefix: "arrayBuffer",
+
+  destroy: function () {
+  },
+
+  grip() {
+    return {
+      "type": "arrayBuffer",
+      "length": this.bufferLength,
+      "actor": this.actorID
+    };
+  },
+
+  onSlice({start, count}) {
+    let slice = new Uint8Array(this.buffer, start, count);
+    let parts = [], offset = 0;
+    const PortionSize = 0x6000; // keep it divisible by 3 for btoa() and join()
+    while (offset + PortionSize < count) {
+      parts.push(btoa(
+        String.fromCharCode.apply(null, slice.subarray(offset, offset + PortionSize))));
+      offset += PortionSize;
+    }
+    parts.push(btoa(String.fromCharCode.apply(null, slice.subarray(offset, count))));
+    return {
+      "from": this.actorID,
+      "encoded": parts.join(""),
+    };
+  }
+};
+
+ArrayBufferActor.prototype.requestTypes = {
+  "slice": ArrayBufferActor.prototype.onSlice,
+};
+
+/**
  * Create a grip for the given debuggee value.  If the value is an
  * object, will create an actor with the given lifetime.
  */
@@ -2253,9 +2299,33 @@ function longStringGrip(str, pool) {
   return actor.grip();
 }
 
+/**
+ * Create a grip for the given ArrayBuffer.
+ *
+ * @param buffer ArrayBuffer
+ *        The ArrayBuffer we are creating a grip for.
+ * @param pool ActorPool
+ *        The actor pool where the new actor will be added.
+ */
+function arrayBufferGrip(buffer, pool) {
+  if (!pool.arrayBufferActors) {
+    pool.arrayBufferActors = new WeakMap();
+  }
+
+  if (pool.arrayBufferActors.has(buffer)) {
+    return pool.arrayBufferActors.get(buffer).grip();
+  }
+
+  let actor = new ArrayBufferActor(buffer);
+  pool.addActor(actor);
+  pool.arrayBufferActors.set(buffer, actor);
+  return actor.grip();
+}
+
 exports.ObjectActor = ObjectActor;
 exports.PropertyIteratorActor = PropertyIteratorActor;
 exports.LongStringActor = LongStringActor;
 exports.createValueGrip = createValueGrip;
 exports.stringIsLong = stringIsLong;
 exports.longStringGrip = longStringGrip;
+exports.arrayBufferGrip = arrayBufferGrip;
