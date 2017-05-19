@@ -54,7 +54,7 @@ class Lint(unittest.TestCase):
             'OLD_CONFIGURE': os.path.join(topsrcdir, 'old-configure'),
             'MOZCONFIG': os.path.join(os.path.dirname(test_path), 'data',
                                       'empty_mozconfig'),
-        }, ['--enable-project=%s' % project, '--help'])
+        }, ['configure', '--enable-project=%s' % project, '--help'])
         sandbox.run(os.path.join(topsrcdir, 'moz.configure'))
 
 

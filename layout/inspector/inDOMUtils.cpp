@@ -299,11 +299,15 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
     // Find matching rules in the table.
     for (size_t j = 0; j < rawRuleCount; j++) {
       const RawServoStyleRule* rawRule = rawRuleList.ElementAt(j);
-      ServoStyleRule* rule;
-      rawRulesToRules.Get(rawRule, &rule);
-      MOZ_ASSERT(rule, "We should always be able to map a raw rule to a rule.");
-      RefPtr<css::Rule> ruleObj(rule);
-      rules->AppendElement(ruleObj, false);
+      ServoStyleRule* rule = nullptr;
+      if (rawRulesToRules.Get(rawRule, &rule)) {
+        MOZ_ASSERT(rule, "rule should not be null");
+        RefPtr<css::Rule> ruleObj(rule);
+        rules->AppendElement(ruleObj, false);
+      } else {
+        // FIXME (bug 1359217): Need a reliable way to map raw rules to rules.
+        NS_WARNING("stylo: Could not map raw rule to a rule.");
+      }
     }
   }
 

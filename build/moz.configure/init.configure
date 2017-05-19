@@ -65,20 +65,19 @@ def check_build_environment(help, dist):
 
     return result
 
-set_config('TOPSRCDIR', delayed_getattr(check_build_environment, 'topsrcdir'))
-set_config('TOPOBJDIR', delayed_getattr(check_build_environment, 'topobjdir'))
-set_config('MOZ_BUILD_ROOT', delayed_getattr(check_build_environment,
-                                             'topobjdir'))
-set_config('DIST', delayed_getattr(check_build_environment, 'dist'))
+set_config('TOPSRCDIR', check_build_environment.topsrcdir)
+set_config('TOPOBJDIR', check_build_environment.topobjdir)
+set_config('MOZ_BUILD_ROOT', check_build_environment.topobjdir)
+set_config('DIST', check_build_environment.dist)
 
 add_old_configure_assignment(
-    '_topsrcdir', delayed_getattr(check_build_environment, 'topsrcdir'))
+    '_topsrcdir', check_build_environment.topsrcdir)
 add_old_configure_assignment(
-    '_objdir', delayed_getattr(check_build_environment, 'topobjdir'))
+    '_objdir', check_build_environment.topobjdir)
 add_old_configure_assignment(
-    'MOZ_BUILD_ROOT', delayed_getattr(check_build_environment, 'topobjdir'))
+    'MOZ_BUILD_ROOT', check_build_environment.topobjdir)
 add_old_configure_assignment(
-    'DIST', delayed_getattr(check_build_environment, 'dist'))
+    'DIST', check_build_environment.dist)
 
 option(env='MOZ_AUTOMATION', help='Enable options for automated builds')
 set_config('MOZ_AUTOMATION', depends_if('MOZ_AUTOMATION')(lambda x: True))
@@ -558,21 +557,20 @@ def target_variables(target):
         INTEL_ARCHITECTURE=target.cpu in ('x86', 'x86_64') or None,
     )
 
-set_config('OS_TARGET', delayed_getattr(target_variables, 'OS_TARGET'))
+set_config('OS_TARGET', target_variables.OS_TARGET)
 add_old_configure_assignment('OS_TARGET',
-                             delayed_getattr(target_variables, 'OS_TARGET'))
-set_config('OS_ARCH', delayed_getattr(target_variables, 'OS_ARCH'))
+                             target_variables.OS_TARGET)
+set_config('OS_ARCH', target_variables.OS_ARCH)
 add_old_configure_assignment('OS_ARCH',
-                             delayed_getattr(target_variables, 'OS_ARCH'))
-set_config('OS_TEST', delayed_getattr(target_variables, 'OS_TEST'))
+                             target_variables.OS_ARCH)
+set_config('OS_TEST', target_variables.OS_TEST)
 add_old_configure_assignment('OS_TEST',
-                             delayed_getattr(target_variables, 'OS_TEST'))
-set_config('CPU_ARCH', delayed_getattr(target, 'cpu'))
-add_old_configure_assignment('CPU_ARCH', delayed_getattr(target, 'cpu'))
-set_config('INTEL_ARCHITECTURE', delayed_getattr(target_variables,
-                                                 'INTEL_ARCHITECTURE'))
-set_config('TARGET_CPU', delayed_getattr(target, 'raw_cpu'))
-set_config('TARGET_OS', delayed_getattr(target, 'raw_os'))
+                             target_variables.OS_TEST)
+set_config('CPU_ARCH', target.cpu)
+add_old_configure_assignment('CPU_ARCH', target.cpu)
+set_config('INTEL_ARCHITECTURE', target_variables.INTEL_ARCHITECTURE)
+set_config('TARGET_CPU', target.raw_cpu)
+set_config('TARGET_OS', target.raw_os)
 
 
 @depends(host)
@@ -585,10 +583,10 @@ def host_variables(host):
         HOST_OS_ARCH=os_arch,
     )
 
-set_config('HOST_CPU_ARCH', delayed_getattr(host, 'cpu'))
-set_config('HOST_OS_ARCH', delayed_getattr(host_variables, 'HOST_OS_ARCH'))
+set_config('HOST_CPU_ARCH', host.cpu)
+set_config('HOST_OS_ARCH', host_variables.HOST_OS_ARCH)
 add_old_configure_assignment('HOST_OS_ARCH',
-                             delayed_getattr(host_variables, 'HOST_OS_ARCH'))
+                             host_variables.HOST_OS_ARCH)
 
 @depends(target)
 def target_is_windows(target):
@@ -717,19 +715,14 @@ def milestone(build_env, _):
                      is_nightly=is_nightly,
                      is_release_or_beta=is_release_or_beta)
 
-@depends(milestone)
-def is_nightly(milestone):
-    return milestone.is_nightly
-
-set_config('GRE_MILESTONE', delayed_getattr(milestone, 'version'))
-set_config('NIGHTLY_BUILD', is_nightly)
-set_define('NIGHTLY_BUILD', is_nightly)
-add_old_configure_assignment('NIGHTLY_BUILD',
-                             is_nightly)
-set_config('RELEASE_OR_BETA', delayed_getattr(milestone, 'is_release_or_beta'))
-set_define('RELEASE_OR_BETA', delayed_getattr(milestone, 'is_release_or_beta'))
+set_config('GRE_MILESTONE', milestone.version)
+set_config('NIGHTLY_BUILD', milestone.is_nightly)
+set_define('NIGHTLY_BUILD', milestone.is_nightly)
+add_old_configure_assignment('NIGHTLY_BUILD', milestone.is_nightly)
+set_config('RELEASE_OR_BETA', milestone.is_release_or_beta)
+set_define('RELEASE_OR_BETA', milestone.is_release_or_beta)
 add_old_configure_assignment('RELEASE_OR_BETA',
-                             delayed_getattr(milestone, 'is_release_or_beta'))
+                             milestone.is_release_or_beta)
 
 # The app update channel is 'default' when not supplied. The value is used in
 # the application's confvars.sh (and is made available to a project specific

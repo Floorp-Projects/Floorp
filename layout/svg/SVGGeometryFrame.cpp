@@ -58,6 +58,8 @@ NS_QUERYFRAME_TAIL_INHERITING(nsFrame)
 // Display list item:
 
 class nsDisplaySVGGeometry : public nsDisplayItem {
+  typedef mozilla::image::imgDrawingParams imgDrawingParams;
+
 public:
   nsDisplaySVGGeometry(nsDisplayListBuilder* aBuilder,
                        SVGGeometryFrame* aFrame)
@@ -122,16 +124,14 @@ nsDisplaySVGGeometry::Paint(nsDisplayListBuilder* aBuilder,
 
   gfxMatrix tm = nsSVGUtils::GetCSSPxToDevPxMatrix(mFrame) *
                    gfxMatrix::Translation(devPixelOffset);
+  imgDrawingParams imgParams(aBuilder->ShouldSyncDecodeImages()
+                             ? imgIContainer::FLAG_SYNC_DECODE
+                             : imgIContainer::FLAG_SYNC_DECODE_IF_FAST);
 
-  uint32_t flag = aBuilder->ShouldSyncDecodeImages()
-                  ? imgIContainer::FLAG_SYNC_DECODE
-                  : imgIContainer::FLAG_SYNC_DECODE_IF_FAST;
+  static_cast<SVGGeometryFrame*>(mFrame)->PaintSVG(*aCtx->ThebesContext(),
+                                                   tm, imgParams);
 
-  DrawResult result =
-    static_cast<SVGGeometryFrame*>(mFrame)->PaintSVG(*aCtx->ThebesContext(),
-                                                     tm, nullptr, flag);
-
-  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
+  nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
 void
@@ -277,48 +277,45 @@ SVGGeometryFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 //----------------------------------------------------------------------
 // nsSVGDisplayableFrame methods
 
-DrawResult
+void
 SVGGeometryFrame::PaintSVG(gfxContext& aContext,
                            const gfxMatrix& aTransform,
-                           const nsIntRect* aDirtyRect,
-                           uint32_t aFlags)
+                           imgDrawingParams& aImgParams,
+                           const nsIntRect* aDirtyRect)
 {
   if (!StyleVisibility()->IsVisible())
-    return DrawResult::SUCCESS;
+    return;
 
   // Matrix to the geometry's user space:
   gfxMatrix newMatrix =
     aContext.CurrentMatrix().PreMultiply(aTransform).NudgeToIntegers();
   if (newMatrix.IsSingular()) {
-    return DrawResult::SUCCESS;
+    return;
   }
 
   uint32_t paintOrder = StyleSVG()->mPaintOrder;
-  DrawResult result = DrawResult::SUCCESS;
 
   if (paintOrder == NS_STYLE_PAINT_ORDER_NORMAL) {
-    result = Render(&aContext, eRenderFill | eRenderStroke, newMatrix, aFlags);
-    result &= PaintMarkers(aContext, aTransform, aFlags);
+    Render(&aContext, eRenderFill | eRenderStroke, newMatrix, aImgParams);
+    PaintMarkers(aContext, aTransform, aImgParams);
   } else {
     while (paintOrder) {
       uint32_t component =
         paintOrder & ((1 << NS_STYLE_PAINT_ORDER_BITWIDTH) - 1);
       switch (component) {
         case NS_STYLE_PAINT_ORDER_FILL:
-          result &= Render(&aContext, eRenderFill, newMatrix, aFlags);
+          Render(&aContext, eRenderFill, newMatrix, aImgParams);
           break;
         case NS_STYLE_PAINT_ORDER_STROKE:
-          result &= Render(&aContext, eRenderStroke, newMatrix, aFlags);
+          Render(&aContext, eRenderStroke, newMatrix, aImgParams);
           break;
         case NS_STYLE_PAINT_ORDER_MARKERS:
-          result &= PaintMarkers(aContext, aTransform, aFlags);
+          PaintMarkers(aContext, aTransform, aImgParams);
           break;
       }
       paintOrder >>= NS_STYLE_PAINT_ORDER_BITWIDTH;
     }
   }
-
-  return result;
 }
 
 nsIFrame*
@@ -752,11 +749,11 @@ SVGGeometryFrame::MarkerProperties::GetMarkerEndFrame()
     mMarkerEnd->GetReferencedFrame(LayoutFrameType::SVGMarker, nullptr));
 }
 
-DrawResult
+void
 SVGGeometryFrame::Render(gfxContext* aContext,
                          uint32_t aRenderComponents,
                          const gfxMatrix& aNewTransform,
-                         uint32_t aFlags)
+                         imgDrawingParams& aImgParams)
 {
   MOZ_ASSERT(!aNewTransform.IsSingular());
 
@@ -789,7 +786,7 @@ SVGGeometryFrame::Render(gfxContext* aContext,
       drawTarget->Fill(path, white,
                        DrawOptions(1.0f, CompositionOp::OP_OVER, aaMode));
     }
-    return DrawResult::SUCCESS;
+    return;
   }
 
   SVGGeometryElement::SimplePath simplePath;
@@ -799,17 +796,16 @@ SVGGeometryFrame::Render(gfxContext* aContext,
   if (!simplePath.IsPath()) {
     path = element->GetOrBuildPath(*drawTarget, fillRule);
     if (!path) {
-      return DrawResult::SUCCESS;
+      return;
     }
   }
 
   SVGContextPaint* contextPaint = SVGContextPaint::GetContextPaint(mContent);
-  DrawResult result = DrawResult::SUCCESS;
 
   if (aRenderComponents & eRenderFill) {
     GeneralPattern fillPattern;
-    result = nsSVGUtils::MakeFillPatternFor(this, aContext, &fillPattern,
-                                            contextPaint, aFlags);
+    nsSVGUtils::MakeFillPatternFor(this, aContext, &fillPattern, aImgParams,
+                                   contextPaint);
 
     if (fillPattern.GetPattern()) {
       DrawOptions drawOptions(1.0f, CompositionOp::OP_OVER, aaMode);
@@ -831,7 +827,7 @@ SVGGeometryFrame::Render(gfxContext* aContext,
       if (!path) {
         path = element->GetOrBuildPath(*drawTarget, fillRule);
         if (!path) {
-          return DrawResult::SUCCESS;
+          return;
         }
         simplePath.Reset();
       }
@@ -846,9 +842,8 @@ SVGGeometryFrame::Render(gfxContext* aContext,
       path = builder->Finish();
     }
     GeneralPattern strokePattern;
-    result &=
-      nsSVGUtils::MakeStrokePatternFor(this, aContext, &strokePattern,
-                                       contextPaint, aFlags);
+    nsSVGUtils::MakeStrokePatternFor(this, aContext, &strokePattern,
+                                     aImgParams, contextPaint);
 
     if (strokePattern.GetPattern()) {
       SVGContentUtils::AutoStrokeOptions strokeOptions;
@@ -857,7 +852,7 @@ SVGGeometryFrame::Render(gfxContext* aContext,
                                         StyleContext(), contextPaint);
       // GetStrokeOptions may set the line width to zero as an optimization
       if (strokeOptions.mLineWidth <= 0) {
-        return DrawResult::SUCCESS;
+        return;
       }
       DrawOptions drawOptions(1.0f, CompositionOp::OP_OVER, aaMode);
       if (simplePath.IsRect()) {
@@ -871,17 +866,14 @@ SVGGeometryFrame::Render(gfxContext* aContext,
       }
     }
   }
-
-  return result;
 }
 
-DrawResult
+void
 SVGGeometryFrame::PaintMarkers(gfxContext& aContext,
                                const gfxMatrix& aTransform,
-                               uint32_t aFlags)
+                               imgDrawingParams& aImgParams)
 {
   SVGContextPaint* contextPaint = SVGContextPaint::GetContextPaint(mContent);
-  DrawResult result = DrawResult::SUCCESS;
   if (static_cast<SVGGeometryElement*>(mContent)->IsMarkable()) {
     MarkerProperties properties = GetMarkerProperties(this);
 
@@ -907,15 +899,13 @@ SVGGeometryFrame::PaintMarkers(gfxContext& aContext,
           nsSVGMark& mark = marks[i];
           nsSVGMarkerFrame* frame = markerFrames[mark.type];
           if (frame) {
-            result &= frame->PaintMark(aContext, aTransform, this, &mark,
-                                       strokeWidth, aFlags);
+            frame->PaintMark(aContext, aTransform, this, &mark, strokeWidth,
+                             aImgParams);
           }
         }
       }
     }
   }
-
-  return result;
 }
 
 uint16_t

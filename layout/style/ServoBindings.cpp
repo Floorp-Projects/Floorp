@@ -12,13 +12,16 @@
 #include "nsAnimationManager.h"
 #include "nsAttrValueInlines.h"
 #include "nsCSSCounterStyleRule.h"
+#include "nsCSSFontFaceRule.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSProps.h"
 #include "nsCSSParser.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRuleProcessor.h"
+#include "nsCSSRules.h"
 #include "nsContentUtils.h"
 #include "nsDOMTokenList.h"
+#include "nsDeviceContext.h"
 #include "nsIContentInlines.h"
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
@@ -1176,7 +1179,8 @@ Gecko_ImageValue_Create(ServoBundledURI aURI)
   NS_ConvertUTF8toUTF16 url(reinterpret_cast<const char*>(aURI.mURLString),
                             aURI.mURLStringLength);
 
-  RefPtr<ImageValue> value(new ImageValue(url, do_AddRef(aURI.mExtraData)));
+  RefPtr<css::ImageValue> value(
+    new css::ImageValue(url, do_AddRef(aURI.mExtraData)));
   return value.forget().take();
 }
 
@@ -1329,6 +1333,19 @@ Gecko_ClearPODTArray(void* aArray, size_t aElementSize, size_t aElementAlign)
 
   base->template ShiftData<nsTArrayInfallibleAllocator>(0, base->Length(), 0,
                                                         aElementSize, aElementAlign);
+}
+
+void Gecko_SetStyleGridTemplateArrayLengths(nsStyleGridTemplate* aValue,
+                                            uint32_t aTrackSizes)
+{
+  aValue->mMinTrackSizingFunctions.SetLength(aTrackSizes);
+  aValue->mMaxTrackSizingFunctions.SetLength(aTrackSizes);
+  aValue->mLineNameLists.SetLength(aTrackSizes + 1);
+}
+
+void Gecko_ResizeTArrayForStrings(nsTArray<nsString>* aArray, uint32_t aLength)
+{
+  aArray->SetLength(aLength);
 }
 
 void

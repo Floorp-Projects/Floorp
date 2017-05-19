@@ -10,6 +10,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript">
+  /* import-globals-from helpers.js */
   function* testSteps()
   {
     const BLOB_DATA = ["fun ", "times ", "all ", "around!"];
@@ -71,17 +72,18 @@
     info("Sending slice to a worker");
 
     function workerScript() {
+      /* eslint-env worker */
       onmessage = function(event) {
         var blob = event.data;
         var xhr = new XMLHttpRequest();
         // We just want to make sure the error case doesn't fire; it's fine for
         // us to just want a 404.
-        xhr.open('POST', 'http://mochi.test:8888/does-not-exist', true);
+        xhr.open("POST", "http://mochi.test:8888/does-not-exist", true);
         xhr.onload = function() {
           postMessage({ status: xhr.status });
         };
         xhr.onerror = function() {
-          postMessage({ status: 'error' });
+          postMessage({ status: "error" });
         }
         xhr.send(blob);
       }

@@ -243,6 +243,9 @@ Window implements WindowModal;
 
 // Mozilla-specific stuff
 partial interface Window {
+  //[NewObject, Throws] CSSStyleDeclaration getDefaultComputedStyle(Element elt, optional DOMString pseudoElt = "");
+  [NewObject, Throws] CSSStyleDeclaration? getDefaultComputedStyle(Element elt, optional DOMString pseudoElt = "");
+
   // Mozilla extensions
   /**
    * Method for scrolling this window by a number of lines.

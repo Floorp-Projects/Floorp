@@ -973,6 +973,7 @@ define CARGO_BUILD
 env $(environment_cleaner) $(rustflags_override) \
 	CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
 	RUSTC=$(RUSTC) \
+	MOZ_SRC=$(topsrcdir) \
 	MOZ_DIST=$(ABS_DIST) \
 	LIBCLANG_PATH=$(MOZ_LIBCLANG_PATH) \
 	CLANG_PATH=$(MOZ_CLANG_PATH) \

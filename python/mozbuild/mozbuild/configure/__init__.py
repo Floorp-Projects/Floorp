@@ -46,6 +46,8 @@ class SandboxDependsFunction(object):
     '''Sandbox-visible representation of @depends functions.'''
     def __init__(self, unsandboxed):
         self._or = unsandboxed.__or__
+        self._and = unsandboxed.__and__
+        self._getattr = unsandboxed.__getattr__
 
     def __call__(self, *arg, **kwargs):
         raise ConfigureError('The `%s` function may not be called'
@@ -56,6 +58,15 @@ class SandboxDependsFunction(object):
             raise ConfigureError('Can only do binary arithmetic operations '
                                  'with another @depends function.')
         return self._or(other).sandboxed
+
+    def __and__(self, other):
+        if not isinstance(other, SandboxDependsFunction):
+            raise ConfigureError('Can only do binary arithmetic operations '
+                                 'with another @depends function.')
+        return self._and(other).sandboxed
+
+    def __getattr__(self, key):
+        return self._getattr(key).sandboxed
 
     def __nonzero__(self):
         raise ConfigureError(
@@ -123,17 +134,47 @@ class DependsFunction(object):
             other = self.sandbox._depends.get(other)
         assert isinstance(other, DependsFunction)
         assert self.sandbox is other.sandbox
-        return CombinedDependsFunction(self.sandbox, self.first_true,
+        return CombinedDependsFunction(self.sandbox, self.or_impl,
                                        (self, other))
 
     @staticmethod
-    def first_true(iterable):
-        # Like the builtin any(), but returns the first element that is true,
-        # instead of True. If none are true, returns the last element.
+    def or_impl(iterable):
+        # Applies "or" to all the items of iterable.
+        # e.g. if iterable contains a, b and c, returns `a or b or c`.
         for i in iterable:
             if i:
                 return i
         return i
+
+    def __and__(self, other):
+        if isinstance(other, SandboxDependsFunction):
+            other = self.sandbox._depends.get(other)
+        assert isinstance(other, DependsFunction)
+        assert self.sandbox is other.sandbox
+        return CombinedDependsFunction(self.sandbox, self.and_impl,
+                                       (self, other))
+
+    @staticmethod
+    def and_impl(iterable):
+        # Applies "and" to all the items of iterable.
+        # e.g. if iterable contains a, b and c, returns `a and b and c`.
+        for i in iterable:
+            if not i:
+                return i
+        return i
+
+    def __getattr__(self, key):
+        if key.startswith('_'):
+            return super(DependsFunction, self).__getattr__(key)
+        # Our function may return None or an object that simply doesn't have
+        # the wanted key. In that case, just return None.
+        return TrivialDependsFunction(
+            self.sandbox, lambda x: getattr(x, key, None), [self], self.when)
+
+
+class TrivialDependsFunction(DependsFunction):
+    '''Like a DependsFunction, but the linter won't expect it to have a
+    dependency on --help ever.'''
 
 
 class CombinedDependsFunction(DependsFunction):

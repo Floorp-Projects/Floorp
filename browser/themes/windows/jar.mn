@@ -7,7 +7,6 @@ browser.jar:
 #include ../shared/jar.inc.mn
   skin/classic/browser/sanitizeDialog.css
   skin/classic/browser/aboutSessionRestore-window-icon.png
-  skin/classic/browser/aboutSyncTabs.css
 * skin/classic/browser/syncedtabs/sidebar.css     (syncedtabs/sidebar.css)
 * skin/classic/browser/browser.css
 * skin/classic/browser/compacttheme.css
@@ -125,9 +124,6 @@ browser.jar:
   skin/classic/browser/tabbrowser/tab-stroke-start.png         (tabbrowser/tab-stroke-start.png)
   skin/classic/browser/tabbrowser/tab-stroke-start@2x.png      (tabbrowser/tab-stroke-start@2x.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png         (tabbrowser/tabDragIndicator.png)
-  skin/classic/browser/sync-16.png
-  skin/classic/browser/sync-32.png
-  skin/classic/browser/sync-bg.png
   skin/classic/browser/sync-desktopIcon.svg  (../shared/sync-desktopIcon.svg)
   skin/classic/browser/sync-horizontalbar.png
   skin/classic/browser/sync-horizontalbar@2x.png

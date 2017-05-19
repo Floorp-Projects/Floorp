@@ -27,8 +27,7 @@ loader.lazyImporter(this, "VariablesView", "resource://devtools/client/shared/wi
 loader.lazyImporter(this, "VariablesViewController", "resource://devtools/client/shared/widgets/VariablesViewController.jsm");
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 
-const STRINGS_URI = "devtools/client/locales/webconsole.properties";
-var l10n = new WebConsoleUtils.L10n(STRINGS_URI);
+const l10n = require("devtools/client/webconsole/webconsole-l10n");
 
 // Constants used for defining the direction of JSTerm input history navigation.
 const HISTORY_BACK = -1;

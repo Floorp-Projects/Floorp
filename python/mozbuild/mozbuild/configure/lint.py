@@ -13,6 +13,7 @@ from . import (
     ConfigureSandbox,
     DependsFunction,
     SandboxedGlobal,
+    TrivialDependsFunction,
 )
 from .lint_util import disassemble_as_iter
 from mozbuild.util import memoize
@@ -74,7 +75,7 @@ class LintSandbox(ConfigureSandbox):
                     )
 
     def _missing_help_dependency(self, obj):
-        if isinstance(obj, CombinedDependsFunction):
+        if isinstance(obj, (CombinedDependsFunction, TrivialDependsFunction)):
             return False
         if isinstance(obj, DependsFunction):
             if (self._help_option in obj.dependencies or
@@ -93,6 +94,8 @@ class LintSandbox(ConfigureSandbox):
                     # and it's allowed for functions without a --help
                     # dependency.
                     if arg == 'os' and glob.get('os') is self.OS:
+                        continue
+                    if arg in self.BUILTINS:
                         continue
                     return True
         return False

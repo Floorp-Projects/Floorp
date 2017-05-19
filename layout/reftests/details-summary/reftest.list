@@ -62,7 +62,7 @@
 == details-percentage-height-children.html details-percentage-height-children-ref.html
 == details-absolute-children.html details-absolute-children-ref.html
 == details-three-columns.html details-three-columns-ref.html
-fails-if(stylo) == details-writing-mode.html details-writing-mode-ref.html
+== details-writing-mode.html details-writing-mode-ref.html
 == details-in-ol.html details-in-ol-ref.html
 == summary-three-columns.html summary-three-columns-ref.html
 fails-if(stylo) == details-first-line.html details-first-line-ref.html

@@ -14,9 +14,7 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
   this);
 
-var {Utils: WebConsoleUtils} = require("devtools/client/webconsole/utils");
-const WEBCONSOLE_STRINGS_URI = "devtools/client/locales/webconsole.properties";
-var WCUL10n = new WebConsoleUtils.L10n(WEBCONSOLE_STRINGS_URI);
+var WCUL10n = require("devtools/client/webconsole/webconsole-l10n");
 
 Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", true);
 registerCleanupFunction(function* () {

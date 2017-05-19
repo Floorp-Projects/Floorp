@@ -278,7 +278,9 @@ nsSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     ParseStyleAttribute(stringValue, attrValue, true);
     // Don't bother going through SetInlineStyleDeclaration; we don't
     // want to fire off mutation events or document notifications anyway
-    rv = mAttrsAndChildren.SetAndSwapAttr(nsGkAtoms::style, attrValue);
+    bool oldValueSet;
+    rv = mAttrsAndChildren.SetAndSwapAttr(nsGkAtoms::style, attrValue,
+                                          &oldValueSet);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -287,7 +289,8 @@ nsSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
 nsresult
 nsSVGElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                           const nsAttrValue* aValue, bool aNotify)
+                           const nsAttrValue* aValue,
+                           const nsAttrValue* aOldValue, bool aNotify)
 {
   // We don't currently use nsMappedAttributes within SVG. If this changes, we
   // need to be very careful because some nsAttrValues used by SVG point to
@@ -317,7 +320,8 @@ nsSVGElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return nsSVGElementBase::AfterSetAttr(aNamespaceID, aName, aValue, aNotify);
+  return nsSVGElementBase::AfterSetAttr(aNamespaceID, aName, aValue, aOldValue,
+                                        aNotify);
 }
 
 bool
@@ -1474,7 +1478,11 @@ nsSVGElement::DidChangeValue(nsIAtom* aName,
   nsIDocument* document = GetComposedDoc();
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL,
                                kNotifyDocumentObservers);
-  SetAttrAndNotify(kNameSpaceID_None, aName, nullptr, aEmptyOrOldValue,
+  // XXX Really, the fourth argument to SetAttrAndNotify should be null if
+  // aEmptyOrOldValue does not represent the actual previous value of the
+  // attribute, but currently SVG elements do not even use the old attribute
+  // value in |AfterSetAttr|, so this should be ok.
+  SetAttrAndNotify(kNameSpaceID_None, aName, nullptr, &aEmptyOrOldValue,
                    aNewValue, modType, hasListeners, kNotifyDocumentObservers,
                    kCallAfterSetAttr, document, updateBatch);
 }
@@ -1496,7 +1504,8 @@ nsSVGElement::MaybeSerializeAttrBeforeRemoval(nsIAtom* aName, bool aNotify)
   nsAutoString serializedValue;
   attrValue->ToString(serializedValue);
   nsAttrValue oldAttrValue(serializedValue);
-  mAttrsAndChildren.SetAndSwapAttr(aName, oldAttrValue);
+  bool oldValueSet;
+  mAttrsAndChildren.SetAndSwapAttr(aName, oldAttrValue, &oldValueSet);
 }
 
 /* static */

@@ -1153,6 +1153,10 @@ public:
     GetSpeechSynthesis(mozilla::ErrorResult& aError);
   bool HasActiveSpeechSynthesis();
 #endif
+  already_AddRefed<nsICSSDeclaration>
+    GetDefaultComputedStyle(mozilla::dom::Element& aElt,
+                            const nsAString& aPseudoElt,
+                            mozilla::ErrorResult& aError);
   void SizeToContentOuter(mozilla::dom::CallerType aCallerType,
                           mozilla::ErrorResult& aError);
   void SizeToContent(mozilla::dom::CallerType aCallerType,
@@ -1731,9 +1735,20 @@ public:
   nsDOMWindowList* GetWindowList();
 
 protected:
+  // Helper for getComputedStyle and getDefaultComputedStyle
   already_AddRefed<nsICSSDeclaration>
-    GetComputedStyleOuter(mozilla::dom::Element& aElt,
-                          const nsAString& aPseudoElt);
+    GetComputedStyleHelperOuter(mozilla::dom::Element& aElt,
+                                const nsAString& aPseudoElt,
+                                bool aDefaultStylesOnly);
+  already_AddRefed<nsICSSDeclaration>
+    GetComputedStyleHelper(mozilla::dom::Element& aElt,
+                           const nsAString& aPseudoElt,
+                           bool aDefaultStylesOnly,
+                           mozilla::ErrorResult& aError);
+  nsresult GetComputedStyleHelper(nsIDOMElement* aElt,
+                                  const nsAString& aPseudoElt,
+                                  bool aDefaultStylesOnly,
+                                  nsIDOMCSSStyleDeclaration** aReturn);
 
   // Outer windows only.
   void PreloadLocalStorage();

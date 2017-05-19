@@ -13,12 +13,18 @@ toolbar[brighttext] :-moz-any(@primaryToolbarButtons@) {
   fill: var(--toolbarbutton-icon-fill-inverted);
 }
 
-#back-button {
-  list-style-image: url("chrome://browser/skin/back-large.svg");
+#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+%ifdef MOZ_PHOTON_THEME
+#forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+%endif
+#nav-bar-overflow-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#panic-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  transform: scaleX(-1);
 }
 
-#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  transform: scaleX(-1);
+#back-button {
+  list-style-image: url("chrome://browser/skin/back-large.svg");
 }
 
 #forward-button {
@@ -26,10 +32,6 @@ toolbar[brighttext] :-moz-any(@primaryToolbarButtons@) {
 }
 
 %ifdef MOZ_PHOTON_THEME
-#forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  transform: scaleX(-1);
-}
-
 #reload-button {
   list-style-image: url("chrome://browser/skin/reload.svg");
 }
@@ -171,10 +173,6 @@ toolbar:not([brighttext]) #bookmarks-menu-button[cui-areatype="toolbar"][starred
   list-style-image: url("chrome://browser/skin/chevron.svg");
 }
 
-#nav-bar-overflow-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  transform: scaleX(-1);
-}
-
 #email-link-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/mail.svg");
 }
@@ -189,10 +187,6 @@ toolbar:not([brighttext]) #bookmarks-menu-button[cui-areatype="toolbar"][starred
 
 #panic-button[cui-areatype="toolbar"][open] {
   fill: rgb(213, 32, 20);
-}
-
-#panic-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  transform: scaleX(-1);
 }
 
 #webide-button[cui-areatype="toolbar"] {

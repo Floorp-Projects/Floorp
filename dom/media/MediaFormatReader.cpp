@@ -1318,10 +1318,9 @@ MediaFormatReader::AsyncReadMetadata()
 
   if (mInitDone) {
     // We are returning from dormant.
-    RefPtr<MetadataHolder> metadata = new MetadataHolder();
-    metadata->mInfo = mInfo;
-    metadata->mTags = nullptr;
-    return MetadataPromise::CreateAndResolve(metadata, __func__);
+    MetadataHolder metadata;
+    metadata.mInfo = MakeUnique<MediaInfo>(mInfo);
+    return MetadataPromise::CreateAndResolve(Move(metadata), __func__);
   }
 
   RefPtr<MetadataPromise> p = mMetadataPromise.Ensure(__func__);
@@ -1496,16 +1495,16 @@ MediaFormatReader::MaybeResolveMetadataPromise()
     mInfo.mStartTime = startTime; // mInfo.mStartTime is initialized to 0.
   }
 
-  RefPtr<MetadataHolder> metadata = new MetadataHolder();
-  metadata->mInfo = mInfo;
-  metadata->mTags = mTags->Count() ? mTags.release() : nullptr;
+  MetadataHolder metadata;
+  metadata.mInfo = MakeUnique<MediaInfo>(mInfo);
+  metadata.mTags = mTags->Count() ? Move(mTags) : nullptr;
 
   // We now have all the informations required to calculate the initial buffered
   // range.
   mHasStartTime = true;
   UpdateBuffered();
 
-  mMetadataPromise.Resolve(metadata, __func__);
+  mMetadataPromise.Resolve(Move(metadata), __func__);
 }
 
 bool

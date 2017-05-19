@@ -114,23 +114,43 @@ this.History = Object.freeze({
   /**
    * Fetch the available information for one page.
    *
-   * @param guidOrURI: (URL or nsIURI)
-   *      The full URI of the page.
-   *            or (string)
+   * @param guidOrURI: (string) or (URL, nsIURI or href)
    *      Either the full URI of the page or the GUID of the page.
+   * @param [optional] options (object)
+   *      An optional object whose properties describe options:
+   *        - `includeVisits` (boolean) set this to true if `visits` in the
+   *           PageInfo needs to contain VisitInfo in a reverse chronological order.
+   *           By default, `visits` is undefined inside the returned `PageInfo`.
    *
    * @return (Promise)
    *      A promise resolved once the operation is complete.
    * @resolves (PageInfo | null) If the page could be found, the information
-   *      on that page. Note that this `PageInfo` does NOT contain the visit
-   *      data (i.e. `visits` is `undefined`).
+   *      on that page.
+   * @note the VisitInfo objects returned while fetching visits do not
+   *       contain the property `referrer`.
+   *       TODO: Add `referrer` to VisitInfo. See Bug #1365913.
+   * @note the visits returned will not contain `TRANSITION_EMBED` visits.
    *
    * @throws (Error)
    *      If `guidOrURI` does not have the expected type or if it is a string
    *      that may be parsed neither as a valid URL nor as a valid GUID.
    */
-  fetch(guidOrURI) {
-    throw new Error("Method not implemented");
+  fetch(guidOrURI, options = {}) {
+    // First, normalize to guid or string, and throw if not possible
+    guidOrURI = PlacesUtils.normalizeToURLOrGUID(guidOrURI);
+
+    // See if options exists and make sense
+    if (!options || typeof options !== "object") {
+      throw new TypeError("options should be an object and not null");
+    }
+
+    let hasIncludeVisits = "includeVisits" in options;
+    if (hasIncludeVisits && typeof options.includeVisits !== "boolean") {
+      throw new TypeError("includeVisits should be a boolean if exists");
+    }
+
+    return PlacesUtils.promiseDBConnection()
+                      .then(db => fetch(db, guidOrURI, options));
   },
 
   /**
@@ -817,6 +837,60 @@ var notifyOnResult = async function(data, onResult) {
       await Promise.resolve();
     }
   }
+};
+
+// Inner implementation of History.fetch.
+var fetch = async function(db, guidOrURL, options) {
+  let whereClauseFragment = "";
+  let params = {};
+  if (guidOrURL instanceof URL) {
+    whereClauseFragment = "WHERE h.url_hash = hash(:url) AND h.url = :url";
+    params.url = guidOrURL.href;
+  } else {
+    whereClauseFragment = "WHERE h.guid = :guid";
+    params.guid = guidOrURL;
+  }
+
+  let visitSelectionFragment = "";
+  let joinFragment = "";
+  let visitOrderFragment = ""
+  if (options.includeVisits) {
+    visitSelectionFragment = ", v.visit_date, v.visit_type";
+    joinFragment = "JOIN moz_historyvisits v ON h.id = v.place_id";
+    visitOrderFragment = "ORDER BY v.visit_date DESC";
+  }
+
+  let query = `SELECT h.id, guid, url, title, frecency ${visitSelectionFragment}
+               FROM moz_places h ${joinFragment}
+               ${whereClauseFragment}
+               ${visitOrderFragment}`;
+  let pageInfo = null;
+  await db.executeCached(
+    query,
+    params,
+    row => {
+      if (pageInfo === null) {
+        // This means we're on the first row, so we need to get all the page info.
+        pageInfo = {
+          guid: row.getResultByName("guid"),
+          url: new URL(row.getResultByName("url")),
+          frecency: row.getResultByName("frecency"),
+          title: row.getResultByName("title") || ""
+        };
+      }
+      if (options.includeVisits) {
+        // On every row (not just the first), we need to collect visit data.
+        if (!("visits" in pageInfo)) {
+          pageInfo.visits = [];
+        }
+        let date = PlacesUtils.toDate(row.getResultByName("visit_date"));
+        let transition = row.getResultByName("visit_type");
+
+        // TODO: Bug #1365913 add referrer URL to the `VisitInfo` data as well.
+        pageInfo.visits.push({ date, transition });
+      }
+    });
+  return pageInfo;
 };
 
 // Inner implementation of History.removeVisitsByFilter.

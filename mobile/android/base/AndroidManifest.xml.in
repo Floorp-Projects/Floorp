@@ -480,5 +480,9 @@
             android:isolatedProcess="false">
         </service>
 
+#ifdef MOZ_ANDROID_MMA
+#include MmaAndroidManifest_services.xml.in
+#endif
+
     </application>
 </manifest>

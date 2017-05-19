@@ -36,9 +36,9 @@ to mochitest command.
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
 * Animation support:
-  * test_animations.html [1]
+  * test_animations.html [3]
   * test_animations_dynamic_changes.html [1]
-  * test_bug716226.html [1]
+  * test_bug716226.html [3]
   * inserting keyframes rule doesn't trigger restyle bug 1364799:
     * test_rule_insertion.html `@keyframes` [36]
   * OMTA
@@ -57,11 +57,6 @@ to mochitest command.
   * \@import bug 1352968
     * test_bug221428.html [1]
     * test_css_eof_handling.html [1]
-  * \@keyframes bug 1345697
-    * test_keyframes_rules.html [1]
-    * test_rules_out_of_sheets.html [1]
-* test_bug357614.html: case-insensitivity for old attrs in attr selector servo/servo#15006 [2]
-* test_bug387615.html: servo/servo#15006 [1]
 * test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [1]
 * console support bug 1352669
   * test_bug413958.html `monitorConsole` [3]
@@ -80,8 +75,6 @@ to mochitest command.
   * test_value_storage.html `symbols(` [30]
   * ... `list-style-type` [8]
   * ... `'list-style'` [18]
-* @page support:
-  * test_bug887741_at-rules_in_declaration_lists.html `exception` [1]
 * Unimplemented \@font-face descriptors:
   * font-display bug 1355345
     * test_descriptor_storage.html `font-display` [5]
@@ -90,7 +83,7 @@ to mochitest command.
   * ... `font-feature-settings`: bug 1355366 [10]
 * test_font_face_parser.html `font-weight`: keyword values should be preserved in \@font-face [4]
 * @namespace support:
-  * test_namespace_rule.html: bug 1355715 [8]
+  * test_namespace_rule.html: bug 1355715 [6]
 * test_dont_use_document_colors.html: support of disabling document color bug 1355716 [21]
 * test_font_feature_values_parsing.html: \@font-feature-values support bug 1355721 [107]
 * Grid support bug 1341802
@@ -98,15 +91,14 @@ to mochitest command.
   * test_grid_container_shorthands.html [65]
   * test_grid_item_shorthands.html [23]
   * test_grid_shorthand_serialization.html [28]
-  * test_compute_data_with_start_struct.html `grid-` [4]
-  * test_inherit_computation.html `grid` [8]
-  * test_inherit_storage.html `'grid` [15]
-  * ... `"grid` [4]
-  * test_initial_computation.html `grid` [16]
-  * test_initial_storage.html `grid` [38]
-  * test_property_syntax_errors.html `grid`: actually there are issues with this [548]
-  * test_value_storage.html `'grid` [637]
-  * test_exposed_prop_accessors.html `grid` [4]
+  * test_inherit_computation.html `grid` [4]
+  * test_inherit_storage.html `'grid` [13]
+  * ... `"grid` [2]
+  * test_initial_computation.html `grid` [8]
+  * test_initial_storage.html `grid` [30]
+  * test_property_syntax_errors.html `grid`: actually there are issues with this [28]
+  * test_value_storage.html `'grid` [577]
+  * test_exposed_prop_accessors.html `grid` [2]
 * Unimplemented prefixed properties:
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
@@ -163,9 +155,6 @@ to mochitest command.
     * test_selectors.html `:-moz-window-inactive` [2]
   * :dir
     * test_selectors.html `:dir` [11]
-* clamp negative value from calc() servo/servo#15296
-  * test_value_storage.html `font-size: calc(` [3]
-  * ... `font-size: var(--a)` [3]
 * Quirks mode support
   * hashless color servo/servo#15341
     * test_property_syntax_errors.html `color: 000000` [10]
@@ -179,6 +168,7 @@ to mochitest command.
 * test_css_supports.html: issues around @supports syntax servo/servo#15482 [8]
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
+* test_default_computed_style.html: getDefaultComputedStyle bug 1366157 [1]
 
 ## Assertions
 

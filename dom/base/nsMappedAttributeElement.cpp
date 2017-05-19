@@ -15,13 +15,14 @@ nsMappedAttributeElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 bool
-nsMappedAttributeElement::SetMappedAttribute(nsIAtom* aName,
-                                             nsAttrValue& aValue,
-                                             nsresult* aRetval)
+nsMappedAttributeElement::SetAndSwapMappedAttribute(nsIAtom* aName,
+                                                    nsAttrValue& aValue,
+                                                    bool* aValueWasSet,
+                                                    nsresult* aRetval)
 {
   nsHTMLStyleSheet* sheet = OwnerDoc()->GetAttributeStyleSheet();
-  *aRetval = mAttrsAndChildren.SetAndTakeMappedAttr(aName, aValue,
-                                                    this, sheet);
+  *aRetval = mAttrsAndChildren.SetAndSwapMappedAttr(aName, aValue,
+                                                    this, sheet, aValueWasSet);
   return true;
 }
 

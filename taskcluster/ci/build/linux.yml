@@ -328,6 +328,7 @@ linux64-stylo/opt:
         secrets: true
         custom-build-variant-cfg: stylo
         tooltool-downloads: public
+        need-xvfb: true
     run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
 
 linux64-stylo/debug:
@@ -353,6 +354,7 @@ linux64-stylo/debug:
         secrets: true
         custom-build-variant-cfg: stylo-debug
         tooltool-downloads: public
+        need-xvfb: true
     run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
 
 linux64-jsdcov/opt:
