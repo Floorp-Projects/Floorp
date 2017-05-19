@@ -272,7 +272,7 @@ var gSearchResultsPane = {
    */
   searchWithinNode(nodeObject, searchPhrase) {
     let matchesFound = false;
-    if (nodeObject.childElementCount == 0) {
+    if (nodeObject.childElementCount == 0 || nodeObject.tagName == "menulist") {
       let simpleTextNodes = this.textNodeDescendants(nodeObject);
 
       for (let node of simpleTextNodes) {
@@ -312,7 +312,8 @@ var gSearchResultsPane = {
         valueResult = this.stringMatchesFilters(nodeObject.getAttribute("value"), searchPhrase);
       }
 
-      if (nodeObject.tagName == "button" && (labelResult || valueResult)) {
+      if ((nodeObject.tagName == "button" || nodeObject.tagName == "menulist" || nodeObject.tagName == "menuitem") &&
+          (labelResult || valueResult)) {
         nodeObject.setAttribute("highlightable", "true");
       }
 
