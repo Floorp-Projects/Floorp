@@ -135,6 +135,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this.inputField.removeEventListener("overflow", this);
         this.inputField.removeEventListener("underflow", this);
 
+        if (this._deferredKeyEventTimeout) {
+          clearTimeout(this._deferredKeyEventTimeout);
+          this._deferredKeyEventTimeout = null;
+        }
+
         // Null out the one-offs' popup and textbox so that it cleans up its
         // internal state for both.  Most importantly, it removes the event
         // listeners that it added to both.
@@ -237,12 +242,126 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               this.popup.selectedIndex = -1;
               break;
           }
-          if (this.popup.popupOpen &&
-              !this.popup.disableKeyNavigation &&
-              this.popup.handleKeyPress(aEvent)) {
-            return true;
+          if (!this.popup.disableKeyNavigation) {
+            if (this._keyCodesToDefer.has(aEvent.keyCode) &&
+                this._shouldDeferKeyEvent(aEvent)) {
+              this._deferKeyEvent(aEvent, "onKeyPress");
+              return false;
+            }
+            if (this.popup.popupOpen && this.popup.handleKeyPress(aEvent)) {
+              return true;
+            }
           }
           return this.handleKeyPress(aEvent);
+        ]]></body>
+      </method>
+
+      <!--
+        Search results arrive asynchronously, which means that keypresses may
+        arrive before results do and therefore not have the effect the user
+        intends.  That's especially likely to happen with the down arrow and
+        enter keys due to the one-off search buttons: if the user very quickly
+        pastes something in the input, presses the down arrow key, and then hits
+        enter, they are probably expecting to visit the first result.  But if
+        there are no results, then pressing down and enter will trigger the
+        first one-off button.  To prevent that undesirable behavior, certain
+        keys are buffered and deferred until more results arrive, at which time
+        they're replayed.
+
+        @param event
+               The key event that should maybe be deferred.  You can pass null
+               or undefined if you don't have one to see whether the next key
+               event in general should be deferred.
+        @return True if the event should be deferred, false if not.
+       -->
+      <method name="_shouldDeferKeyEvent">
+        <parameter name="event"/>
+        <body><![CDATA[
+          let waitedLongEnough =
+            this._searchStartDate + this._deferredKeyEventTimeoutMs < Date.now();
+          if (waitedLongEnough && !this._deferredKeyEventTimeout) {
+            return false;
+          }
+          if (event && event.keyCode == KeyEvent.DOM_VK_TAB && !this.popupOpen) {
+            // In this case, the popup is closed and the user pressed the Tab
+            // key.  The focus should move out of the urlbar immediately.
+            return false;
+          }
+          if (!this.gotResultForCurrentQuery || !this.popupOpen) {
+            return true;
+          }
+          let maxResultsRemaining =
+            this.popup.maxResults - this.popup._matchCount;
+          let lastResultSelected =
+            this.popup.selectedIndex + 1 == this.popup._matchCount;
+          return maxResultsRemaining > 0 && lastResultSelected;
+        ]]></body>
+      </method>
+
+      <!--
+        Adds a key event to the deferred event queue.
+
+        @param event
+               The key event to defer.
+        @param methodName
+               The name of the method on `this` to call.  It's expected to take
+               a single argument, the event.
+      -->
+      <method name="_deferKeyEvent">
+        <parameter name="event"/>
+        <parameter name="methodName"/>
+        <body><![CDATA[
+          // Somehow event.defaultPrevented ends up true for deferred events.
+          // autocomplete ignores defaultPrevented events, which means it would
+          // ignore replayed deferred events if we didn't tell it to bypass
+          // defaultPrevented.  That's the purpose of this expando.  If we could
+          // figure out what's setting defaultPrevented and prevent it, then we
+          // could get rid of this.
+          event.urlbarDeferred = true;
+
+          this._deferredKeyEventQueue.push({
+            methodName,
+            event,
+            searchString: this.mController.searchString,
+          });
+
+          if (!this._deferredKeyEventTimeout) {
+            this._deferredKeyEventTimeout = setTimeout(() => {
+              this._deferredKeyEventTimeout = null;
+              this.maybeReplayDeferredKeyEvents();
+            }, this._deferredKeyEventTimeoutMs);
+          }
+        ]]></body>
+      </method>
+
+      <!-- The enter key is always deferred, so it's not included here. -->
+      <field name="_keyCodesToDefer">new Set([
+        Ci.nsIDOMKeyEvent.DOM_VK_DOWN,
+        Ci.nsIDOMKeyEvent.DOM_VK_TAB,
+      ])</field>
+      <field name="_deferredKeyEventQueue">[]</field>
+      <field name="_deferredKeyEventTimeout">null</field>
+      <field name="_deferredKeyEventTimeoutMs">200</field>
+      <field name="_searchStartDate">0</field>
+
+      <method name="maybeReplayDeferredKeyEvents">
+        <body><![CDATA[
+          if (!this._deferredKeyEventQueue.length ||
+              this._shouldDeferKeyEvent()) {
+            return;
+          }
+          if (this._deferredKeyEventTimeout) {
+            clearTimeout(this._deferredKeyEventTimeout);
+            this._deferredKeyEventTimeout = null;
+          }
+          let instance = this._deferredKeyEventQueue.shift();
+          // Safety check: handle only if the search string didn't change.
+          if (this.mController.searchString == instance.searchString) {
+            this[instance.methodName](instance.event);
+          }
+          setTimeout(() => {
+            this.maybeReplayDeferredKeyEvents();
+          });
         ]]></body>
       </method>
 
@@ -550,7 +669,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // this.textValue may be an autofilled string.  Search only with the
           // portion that the user typed, if any, by preferring the autocomplete
           // controller's searchString (including handleEnterInstance.searchString).
-          return (this.handleEnterInstance && this.handleEnterInstance.searchString) ||
+          return this.handleEnterSearchString ||
                  this.mController.searchString ||
                  this.textValue;
         ]]></getter>
@@ -1140,6 +1259,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             // a new search and we won't get a result.
             if (this.mController.handleText()) {
               this.gotResultForCurrentQuery = false;
+              this._searchStartDate = Date.now();
+              this._deferredKeyEventQueue = [];
+              if (this._deferredKeyEventTimeout) {
+                clearTimeout(this._deferredKeyEventTimeout);
+                this._deferredKeyEventTimeout = null;
+              }
             }
           }
           this.resetActionType();
@@ -1163,25 +1288,22 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // However, if the default result is automatically selected, we
           // ensure that it corresponds to the current input.
 
-          // Store the current search string so it can be used in
-          // handleCommand, which will be called as a result of
-          // mController.handleEnter().
-          // Note this is also used to detect if we should perform a delayed
-          // handleEnter, in such a case it won't have been cleared.
-          this.handleEnterInstance = {
-            searchString: this.mController.searchString,
-            event
-          };
+          // Store the current search string so it can be used in handleCommand,
+          // which will be called as a result of mController.handleEnter().
+          this.handleEnterSearchString = this.mController.searchString;
 
-          if (this.popup.selectedIndex != 0 || this.gotResultForCurrentQuery) {
+          if (!this._deferredKeyEventQueue.length &&
+              (this.popup.selectedIndex != 0 || this.gotResultForCurrentQuery)) {
             this.maybeCanonizeURL(event, this.value);
-            let rv = this.mController.handleEnter(false, event);
-            this.handleEnterInstance = null;
+            let handled = this.mController.handleEnter(false, event);
+            this.handleEnterSearchString = null;
             this.popup.overrideValue = null;
-            return rv;
+            return handled;
           }
 
-          return true;
+          // Defer the event until the first non-heuristic result comes in.
+          this._deferKeyEvent(event, "handleEnter");
+          return false;
         ]]></body>
       </method>
 
@@ -1341,6 +1463,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         if (this.ExtensionSearchHandler.hasActiveInputSession()) {
           this.ExtensionSearchHandler.handleInputCancelled();
         }
+        if (this._deferredKeyEventTimeout) {
+          clearTimeout(this._deferredKeyEventTimeout);
+          this._deferredKeyEventTimeout = null;
+        }
+        this._deferredKeyEventQueue = [];
       ]]></handler>
 
       <handler event="dragstart" phase="capturing"><![CDATA[
@@ -1893,7 +2020,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           this.oneOffSearchButtons.handleKeyPress(aEvent, this._matchCount,
                                                   !this._isFirstResultHeuristic,
                                                   gBrowser.userTypedValue);
-          return aEvent.defaultPrevented;
+          return aEvent.defaultPrevented && !aEvent.urlbarDeferred;
         ]]></body>
       </method>
 
@@ -1971,23 +2098,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
 
             this.input.gotResultForCurrentQuery = true;
-
-            // Check if we should perform a delayed handleEnter.
-            if (this.input.handleEnterInstance) {
-              let instance = this.input.handleEnterInstance;
-              this.input.handleEnterInstance = null;
-              // Don't handle this immediately or we could cause a recursive
-              // loop where the controller sets popupOpen and re-enters here.
-              setTimeout(() => {
-                // Safety check: handle only if the search string didn't change.
-                let { event, searchString } = instance;
-                if (this.input.mController.searchString == searchString) {
-                  this.input.maybeCanonizeURL(event, searchString);
-                  this.input.mController.handleEnter(false, event);
-                  this.overrideValue = null;
-                }
-              }, 0);
-            }
+            this.input.maybeReplayDeferredKeyEvents();
           ]]>
         </body>
       </method>
