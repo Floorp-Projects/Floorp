@@ -31,6 +31,7 @@ class WasmInstanceObject;
 namespace wasm {
 
 struct LinkData;
+struct LinkDataTier;
 struct Metadata;
 struct MetadataTier;
 class FrameIterator;
@@ -85,13 +86,13 @@ class CodeSegment
     bool initialize(UniqueCodeBytes bytes,
                     uint32_t codeLength,
                     const ShareableBytes& bytecode,
-                    const LinkData& linkData,
+                    const LinkDataTier& linkData,
                     const Metadata& metadata);
 
     static UniqueConstCodeSegment create(UniqueCodeBytes bytes,
                                          uint32_t codeLength,
                                          const ShareableBytes& bytecode,
-                                         const LinkData& linkData,
+                                         const LinkDataTier& linkData,
                                          const Metadata& metadata);
   public:
     CodeSegment(const CodeSegment&) = delete;
@@ -107,12 +108,12 @@ class CodeSegment
 
     static UniqueConstCodeSegment create(jit::MacroAssembler& masm,
                                          const ShareableBytes& bytecode,
-                                         const LinkData& linkData,
+                                         const LinkDataTier& linkData,
                                          const Metadata& metadata);
 
     static UniqueConstCodeSegment create(const Bytes& unlinkedBytes,
                                          const ShareableBytes& bytecode,
-                                         const LinkData& linkData,
+                                         const LinkDataTier& linkData,
                                          const Metadata& metadata);
 
     uint8_t* base() const { return bytes_.get(); }
@@ -138,9 +139,9 @@ class CodeSegment
     // Structured clone support:
 
     size_t serializedSize() const;
-    uint8_t* serialize(uint8_t* cursor, const LinkData& linkData) const;
+    uint8_t* serialize(uint8_t* cursor, const LinkDataTier& linkData) const;
     const uint8_t* deserialize(const uint8_t* cursor, const ShareableBytes& bytecode,
-                               const LinkData& linkData, const Metadata& metadata);
+                               const LinkDataTier& linkData, const Metadata& metadata);
 
     void addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* code, size_t* data) const;
 };
@@ -322,13 +323,15 @@ struct MetadataCacheablePod
     ModuleKind            kind;
     MemoryUsage           memoryUsage;
     uint32_t              minMemoryLength;
+    uint32_t              globalDataLength;
     Maybe<uint32_t>       maxMemoryLength;
     Maybe<uint32_t>       startFuncIndex;
 
     explicit MetadataCacheablePod(ModuleKind kind)
       : kind(kind),
         memoryUsage(MemoryUsage::None),
-        minMemoryLength(0)
+        minMemoryLength(0),
+        globalDataLength(0)
     {}
 };
 
