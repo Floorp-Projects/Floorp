@@ -24,6 +24,7 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
   DefaultWeakMap,
+  extensionStylesheets,
   promiseEvent,
 } = ExtensionUtils;
 
@@ -49,15 +50,6 @@ function promisePopupShown(popup) {
     }
   });
 }
-
-XPCOMUtils.defineLazyGetter(this, "popupStylesheets", () => {
-  let stylesheets = ["chrome://browser/content/extension.css"];
-
-  if (AppConstants.platform === "macosx") {
-    stylesheets.push("chrome://browser/content/extension-mac.css");
-  }
-  return stylesheets;
-});
 
 XPCOMUtils.defineLazyGetter(this, "standaloneStylesheets", () => {
   let stylesheets = [];
@@ -168,7 +160,7 @@ class BasePopup {
     let sheets = [];
 
     if (this.browserStyle) {
-      sheets.push(...popupStylesheets);
+      sheets.push(...extensionStylesheets);
     }
     if (!this.fixedWidth) {
       sheets.push(...standaloneStylesheets);
