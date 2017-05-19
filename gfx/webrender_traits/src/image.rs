@@ -23,6 +23,7 @@ impl ImageKey {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct ExternalImageId(pub u64);
 
+#[repr(u32)]
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, Serialize, Deserialize)]
 pub enum ExternalImageType {
     Texture2DHandle,        // gl TEXTURE_2D handle
@@ -114,6 +115,22 @@ impl ImageData {
         match self {
             &ImageData::Blob(_) => true,
             _ => false,
+        }
+    }
+
+    #[inline]
+    pub fn uses_texture_cache(&self) -> bool {
+        match self {
+            &ImageData::External(ext_data) => {
+                match ext_data.image_type {
+                    ExternalImageType::Texture2DHandle => false,
+                    ExternalImageType::TextureRectHandle => false,
+                    ExternalImageType::TextureExternalHandle => false,
+                    ExternalImageType::ExternalBuffer => true,
+                }
+            }
+            &ImageData::Blob(_) => true,
+            &ImageData::Raw(_) => true,
         }
     }
 }

@@ -134,12 +134,16 @@ public:
    *                (for JavaScript)
    *
    *  NOTIFY        whether to notify frames and such
+   *
+   *  NO_RESELECT   no need to select something after an option is deselected
+   *                (for reset)
    */
   enum OptionType {
     IS_SELECTED   = 1 << 0,
     CLEAR_ALL     = 1 << 1,
     SET_DISABLED  = 1 << 2,
-    NOTIFY        = 1 << 3
+    NOTIFY        = 1 << 3,
+    NO_RESELECT   = 1 << 4
   };
 
   using nsIConstraintValidation::GetValidationMessage;

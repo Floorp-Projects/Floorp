@@ -596,6 +596,11 @@ public:
    */
   virtual void FlushRendering() { }
 
+  /**
+   * Make sure that the previous transaction has been
+   * received. This will synchronsly wait on a remote compositor. */
+  virtual void WaitOnTransactionProcessed() { }
+
   virtual void SendInvalidRegion(const nsIntRegion& aRegion) {}
 
   /**

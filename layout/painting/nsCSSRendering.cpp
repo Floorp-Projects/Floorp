@@ -2006,12 +2006,12 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams
     // draw the background. The canvas really should be drawing the
     // bg, but there's no way to hook that up via css.
     if (!aParams.frame->StyleDisplay()->UsedAppearance()) {
-      return DrawResult::NOT_READY;
+      return DrawResult::SUCCESS;
     }
 
     nsIContent* content = aParams.frame->GetContent();
     if (!content || content->GetParent()) {
-      return DrawResult::NOT_READY;
+      return DrawResult::SUCCESS;
     }
 
     sc = aParams.frame->StyleContext();
@@ -2777,11 +2777,12 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBG
     return DrawResult::SUCCESS;
   }
 
+  DrawResult result = DrawResult::SUCCESS;
   nsBackgroundLayerState state =
     PrepareImageLayer(&aParams.presCtx, aParams.frame,
                       aParams.paintFlags, paintBorderArea,
                       clipState.mBGClipArea, layer, nullptr);
-
+  result &= state.mImageRenderer.PrepareResult();
   if (!state.mFillArea.IsEmpty()) {
     return state.mImageRenderer.BuildWebRenderDisplayItemsForLayer(&aParams.presCtx,
                                      aBuilder, aSc, aParentCommands, aLayer,
@@ -2791,7 +2792,7 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBG
                                      state.mRepeatSize, aParams.opacity);
   }
 
-  return DrawResult::SUCCESS;
+  return result;
 }
 
 nsRect

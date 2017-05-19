@@ -524,6 +524,12 @@ CompositorBridgeParent::RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
 }
 
 mozilla::ipc::IPCResult
+CompositorBridgeParent::RecvWaitOnTransactionProcessed()
+{
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRendering()
 {
   if (mCompositorScheduler->NeedsComposite()) {
@@ -1595,7 +1601,8 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   RefPtr<widget::CompositorWidget> widget = mWidget;
   RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(
     gfxPrefs::WebRenderProfilerEnabled(), this, Move(widget), aSize);
-  RefPtr<WebRenderCompositableHolder> holder = new WebRenderCompositableHolder();
+  RefPtr<WebRenderCompositableHolder> holder =
+    new WebRenderCompositableHolder(WebRenderBridgeParent::AllocIdNameSpace());
   MOZ_ASSERT(api); // TODO have a fallback
   api->SetRootPipeline(aPipelineId);
   mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr, Move(api), Move(holder));
@@ -1629,6 +1636,12 @@ CompositorBridgeParent::DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aA
   }
   parent->Release(); // IPDL reference
   return true;
+}
+
+RefPtr<WebRenderBridgeParent>
+CompositorBridgeParent::GetWebRenderBridgeParent() const
+{
+  return mWrBridge;
 }
 
 void
@@ -1834,12 +1847,14 @@ CompositorBridgeParent::DidComposite(TimeStamp& aCompositeStart,
 void
 CompositorBridgeParent::NotifyDidCompositeToPipeline(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd)
 {
+  if (!mWrBridge) {
+    return;
+  }
+  mWrBridge->CompositableHolder()->Update(aPipelineId, aEpoch);
+
   if (mPaused) {
     return;
   }
-  MOZ_ASSERT(mWrBridge);
-
-  mWrBridge->CompositableHolder()->Update(aPipelineId, aEpoch);
 
   if (mWrBridge->PipelineId() == aPipelineId) {
     uint64_t transactionId = mWrBridge->FlushTransactionIdsForEpoch(aEpoch);

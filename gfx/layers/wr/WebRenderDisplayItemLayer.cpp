@@ -8,6 +8,7 @@
 #include "LayersLogging.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "nsDisplayList.h"
@@ -37,35 +38,41 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     return;
   }
 
+  ScrollingLayersHelper scroller(this, aBuilder, aSc);
+
   Maybe<WrImageMask> mask = BuildWrMaskLayer(nullptr);
   WrImageMask* imageMask = mask.ptrOr(nullptr);
-  if (imageMask) {
-    ParentLayerRect clip = GetLocalTransformTyped().TransformBounds(Bounds());
-    // As with WebRenderTextLayer, I'm not 100% sure this is correct, but I
-    // think it is. Because we don't push a stacking context for this layer,
-    // WR doesn't know about the transform on this layer. The display items
-    // that we push as part of this layer already take the transform into
-    // account. When we set the clip rect we also need to explicitly apply
-    // the transform to make sure it gets taken into account.
-    // In a sense this is the opposite of what WebRenderLayer::ClipRect() does,
-    // because there we remove the transform from the clip rect to bring it
-    // into the coordinate space of the local stacking context, but here we
-    // need to apply the transform to the bounds to take it into the coordinate
-    // space of the enclosing stacking context.
-    // The conversion from ParentLayerPixel to LayerPixel below is a result of
-    // changing the reference layer from "this layer" to the "the layer that
-    // created aSc".
-    LayerRect clipInParentLayerSpace = ViewAs<LayerPixel>(clip,
-        PixelCastJustification::MovingDownToChildren);
-    aBuilder.PushClip(aSc.ToRelativeWrRect(clipInParentLayerSpace), imageMask);
+
+  ParentLayerRect clip = GetLocalTransformTyped().TransformBounds(Bounds());
+  if (GetClipRect()) {
+    clip = ParentLayerRect(GetClipRect().ref());
   }
 
+  // As with WebRenderTextLayer, I'm not 100% sure this is correct, but I
+  // think it is. Because we don't push a stacking context for this layer,
+  // WR doesn't know about the transform on this layer. The display items
+  // that we push as part of this layer already take the transform into
+  // account. When we set the clip rect we also need to explicitly apply
+  // the transform to make sure it gets taken into account.
+  // In a sense this is the opposite of what WebRenderLayer::ClipRect() does,
+  // because there we remove the transform from the clip rect to bring it
+  // into the coordinate space of the local stacking context, but here we
+  // need to apply the transform to the bounds to take it into the coordinate
+  // space of the enclosing stacking context.
+  // The conversion from ParentLayerPixel to LayerPixel below is a result of
+  // changing the reference layer from "this layer" to the "the layer that
+  // created aSc".
+  LayerRect clipInParentLayerSpace = ViewAs<LayerPixel>(clip,
+      PixelCastJustification::MovingDownToChildren);
+  aBuilder.PushClip(aSc.ToRelativeWrRect(clipInParentLayerSpace), imageMask);
+
   if (mItem) {
-    wr::DisplayListBuilder builder(WrBridge()->GetPipeline());
+    WrSize contentSize; // this won't actually be used by anything
+    wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
     // We might have recycled this layer. Throw away the old commands.
     mParentCommands.Clear();
     mItem->CreateWebRenderCommands(builder, aSc, mParentCommands, this);
-    mBuiltDisplayList = builder.Finalize();
+    builder.Finalize(contentSize, mBuiltDisplayList);
   } else {
     // else we have an empty transaction and just use the
     // old commands.
@@ -83,9 +90,7 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   aBuilder.PushBuiltDisplayList(Move(mBuiltDisplayList));
   WrBridge()->AddWebRenderParentCommands(mParentCommands);
 
-  if (imageMask) {
-    aBuilder.PopClip();
-  }
+  aBuilder.PopClip();
 }
 
 Maybe<wr::ImageKey>
@@ -166,7 +171,7 @@ WebRenderDisplayItemLayer::PushItemAsBlobImage(wr::DisplayListBuilder& aBuilder,
   MOZ_ASSERT(ok);
 
   WrRect dest = aSc.ToRelativeWrRect(imageRect + offset);
-  WrClipRegion clipRegion = aBuilder.BuildClipRegion(dest);
+  WrClipRegionToken clipRegion = aBuilder.PushClipRegion(dest);
   WrImageKey key = GetImageKey();
   WrBridge()->SendAddBlobImage(key, imageSize.ToUnknownSize(), imageSize.width * 4, dt->GetFormat(), bytes);
   WrManager()->AddImageKeyForDiscard(key);

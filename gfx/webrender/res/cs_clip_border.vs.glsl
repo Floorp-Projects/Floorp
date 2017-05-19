@@ -3,30 +3,51 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Matches BorderCorner enum in border.rs
+#define CORNER_TOP_LEFT     0
+#define CORNER_TOP_RIGHT    1
+#define CORNER_BOTTOM_LEFT  2
+#define CORNER_BOTTOM_RIGHT 3
+
+// Matches BorderCornerClipKind enum in border.rs
+#define CLIP_MODE_DASH      0
+#define CLIP_MODE_DOT       1
+
 // Header for a border corner clip.
 struct BorderCorner {
     RectWithSize rect;
     vec2 clip_center;
-    vec2 sign_modifier;
+    int corner;
+    int clip_mode;
 };
 
 BorderCorner fetch_border_corner(int index) {
     vec4 data[2] = fetch_data_2(index);
     return BorderCorner(RectWithSize(data[0].xy, data[0].zw),
                         data[1].xy,
-                        data[1].zw);
+                        int(data[1].z),
+                        int(data[1].w));
 }
 
 // Per-dash clip information.
-// TODO: Expand this to handle dots in the future!
-struct BorderClip {
+struct BorderClipDash {
     vec4 point_tangent_0;
     vec4 point_tangent_1;
 };
 
-BorderClip fetch_border_clip(int index) {
+BorderClipDash fetch_border_clip_dash(int index) {
     vec4 data[2] = fetch_data_2(index);
-    return BorderClip(data[0], data[1]);
+    return BorderClipDash(data[0], data[1]);
+}
+
+// Per-dot clip information.
+struct BorderClipDot {
+    vec3 center_radius;
+};
+
+BorderClipDot fetch_border_clip_dot(int index) {
+    vec4 data[2] = fetch_data_2(index);
+    return BorderClipDot(data[0].xyz);
 }
 
 void main(void) {
@@ -38,10 +59,49 @@ void main(void) {
     BorderCorner corner = fetch_border_corner(cci.data_index);
     vClipCenter = corner.clip_center;
 
-    // Fetch the information about this particular dash.
-    BorderClip clip = fetch_border_clip(cci.data_index + cci.segment_index + 1);
-    vPoint_Tangent0 = clip.point_tangent_0 * corner.sign_modifier.xyxy;
-    vPoint_Tangent1 = clip.point_tangent_1 * corner.sign_modifier.xyxy;
+    if (cci.segment_index == 0) {
+        // The first segment is used to zero out the border corner.
+        vAlphaMask = vec2(0.0);
+        vDotParams = vec3(0.0);
+        vPoint_Tangent0 = vec4(1.0);
+        vPoint_Tangent1 = vec4(1.0);
+    } else {
+        vec2 sign_modifier;
+        switch (corner.corner) {
+            case CORNER_TOP_LEFT:
+                sign_modifier = vec2(-1.0);
+                break;
+            case CORNER_TOP_RIGHT:
+                sign_modifier = vec2(1.0, -1.0);
+                break;
+            case CORNER_BOTTOM_RIGHT:
+                sign_modifier = vec2(1.0);
+                break;
+            case CORNER_BOTTOM_LEFT:
+                sign_modifier = vec2(-1.0, 1.0);
+                break;
+        };
+
+        switch (corner.clip_mode) {
+            case CLIP_MODE_DASH: {
+                // Fetch the information about this particular dash.
+                BorderClipDash dash = fetch_border_clip_dash(cci.data_index + cci.segment_index);
+                vPoint_Tangent0 = dash.point_tangent_0 * sign_modifier.xyxy;
+                vPoint_Tangent1 = dash.point_tangent_1 * sign_modifier.xyxy;
+                vDotParams = vec3(0.0);
+                vAlphaMask = vec2(0.0, 1.0);
+                break;
+            }
+            case CLIP_MODE_DOT: {
+                BorderClipDot cdot = fetch_border_clip_dot(cci.data_index + cci.segment_index);
+                vPoint_Tangent0 = vec4(1.0);
+                vPoint_Tangent1 = vec4(1.0);
+                vDotParams = vec3(cdot.center_radius.xy * sign_modifier, cdot.center_radius.z);
+                vAlphaMask = vec2(1.0, 1.0);
+                break;
+            }
+        }
+    }
 
     // Get local vertex position for the corner rect.
     // TODO(gw): We could reduce the number of pixels written here

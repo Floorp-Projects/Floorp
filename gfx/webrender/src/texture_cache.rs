@@ -778,6 +778,13 @@ impl TextureCache {
         let format = descriptor.format;
         let stride = descriptor.stride;
 
+        if let ImageData::Raw(ref vec) = data {
+            let finish = descriptor.offset +
+                         width * format.bytes_per_pixel().unwrap_or(0) +
+                         (height-1) * descriptor.compute_stride();
+            assert!(vec.len() >= finish as usize);
+        }
+
         let result = self.allocate(image_id,
                                    width,
                                    height,

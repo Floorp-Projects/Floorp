@@ -4,17 +4,19 @@
 
 use clip_scroll_node::{ClipScrollNode, NodeType, ScrollingState};
 use fnv::FnvHasher;
+use print_tree::PrintTree;
 use std::collections::{HashMap, HashSet};
 use std::hash::BuildHasherDefault;
 use webrender_traits::{ClipId, LayerPoint, LayerRect, LayerToScrollTransform};
-use webrender_traits::{LayerToWorldTransform, PipelineId, ScrollEventPhase, ScrollLayerRect};
-use webrender_traits::{ScrollLayerState, ScrollLocation, WorldPoint, as_scroll_parent_rect};
+use webrender_traits::{LayerToWorldTransform, PipelineId, ScrollClamping, ScrollEventPhase};
+use webrender_traits::{ScrollLayerRect, ScrollLayerState, ScrollLocation, WorldPoint};
+use webrender_traits::as_scroll_parent_rect;
 
 pub type ScrollStates = HashMap<ClipId, ScrollingState, BuildHasherDefault<FnvHasher>>;
 
 pub struct ClipScrollTree {
     pub nodes: HashMap<ClipId, ClipScrollNode, BuildHasherDefault<FnvHasher>>,
-    pub pending_scroll_offsets: HashMap<ClipId, LayerPoint>,
+    pub pending_scroll_offsets: HashMap<ClipId, (LayerPoint, ScrollClamping)>,
 
     /// The ClipId of the currently scrolling node. Used to allow the same
     /// node to scroll even if a touch operation leaves the boundaries of that node.
@@ -131,23 +133,22 @@ impl ClipScrollTree {
         scroll_states
     }
 
-    pub fn scroll_nodes(&mut self, origin: LayerPoint, id: ClipId) -> bool {
+    pub fn scroll_node(&mut self, origin: LayerPoint, id: ClipId, clamp: ScrollClamping) -> bool {
         if id.is_reference_frame() {
             warn!("Tried to scroll a reference frame.");
             return false;
         }
 
         if self.nodes.is_empty() {
-            self.pending_scroll_offsets.insert(id, origin);
+            self.pending_scroll_offsets.insert(id, (origin, clamp));
             return false;
         }
 
-        let origin = LayerPoint::new(origin.x.max(0.0), origin.y.max(0.0));
         if let Some(node) = self.nodes.get_mut(&id) {
-            return node.set_scroll_origin(&origin);
+            return node.set_scroll_origin(&origin, clamp);
         }
 
-        self.pending_scroll_offsets.insert(id, origin);
+        self.pending_scroll_offsets.insert(id, (origin, clamp));
         false
     }
 
@@ -308,8 +309,8 @@ impl ClipScrollTree {
 
             node.finalize(&scrolling_state);
 
-            if let Some(pending_offset) = self.pending_scroll_offsets.remove(clip_id) {
-                node.set_scroll_origin(&pending_offset);
+            if let Some((pending_offset, clamping)) = self.pending_scroll_offsets.remove(clip_id) {
+                node.set_scroll_origin(&pending_offset, clamping);
             }
         }
 
@@ -352,6 +353,48 @@ impl ClipScrollTree {
         match self.currently_scrolling_node_id {
             Some(id) if id.pipeline_id() == pipeline_id => self.currently_scrolling_node_id = None,
             _ => {}
+        }
+    }
+
+    fn print_node(&self, id: &ClipId, pt: &mut PrintTree) {
+        let node = self.nodes.get(id).unwrap();
+
+        match node.node_type {
+            NodeType::Clip(ref info) => {
+                pt.new_level("Clip".to_owned());
+                pt.add_item(format!("screen_bounding_rect: {:?}", info.screen_bounding_rect));
+
+                pt.new_level(format!("Clip Sources [{}]", info.clip_sources.len()));
+                for source in &info.clip_sources {
+                    pt.add_item(format!("{:?}", source));
+                }
+                pt.end_level();
+            }
+            NodeType::ReferenceFrame(ref transform) => {
+                pt.new_level(format!("ReferenceFrame {:?}", transform));
+            }
+        }
+
+        pt.add_item(format!("content_size: {:?}", node.content_size));
+        pt.add_item(format!("scroll.offset: {:?}", node.scrolling.offset));
+        pt.add_item(format!("combined_local_viewport_rect: {:?}", node.combined_local_viewport_rect));
+        pt.add_item(format!("local_viewport_rect: {:?}", node.local_viewport_rect));
+        pt.add_item(format!("local_clip_rect: {:?}", node.local_clip_rect));
+        pt.add_item(format!("world_viewport_transform: {:?}", node.world_viewport_transform));
+        pt.add_item(format!("world_content_transform: {:?}", node.world_content_transform));
+
+        for child_id in &node.children {
+            self.print_node(child_id, pt);
+        }
+
+        pt.end_level();
+    }
+
+    #[allow(dead_code)]
+    pub fn print(&self) {
+        if !self.nodes.is_empty() {
+            let mut pt = PrintTree::new("clip_scroll tree");
+            self.print_node(&self.root_reference_frame_id, &mut pt);
         }
     }
 }
