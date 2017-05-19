@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  width="400"
+  height="600"
+  align="start">
+
+<!-- stretch-to-fit: both width and height are considered. -->
+<stack style="background: red;">
+  <box style="width: 10px; height: 10px;"/>
+  <box style="-moz-stack-sizing: stretch-to-fit; width: 20px; height: 20px;"/>
+</stack>
+
+<!-- ignore-horizontal: width is not considered, height is considered. -->
+<stack style="background: green;">
+  <box style="width: 10px; height: 10px;"/>
+  <box style="-moz-stack-sizing: ignore-horizontal; width: 20px; height: 20px;"/>
+</stack>
+
+<!-- ignore-vertical: width is considered, height is not considered. -->
+<stack style="background: blue;">
+  <box style="width: 10px; height: 10px;"/>
+  <box style="-moz-stack-sizing: ignore-vertical; width: 20px; height: 20px;"/>
+</stack>
+
+<!-- ignore: neither width or height are considered. -->
+<stack style="background: yellow;">
+  <box style="width: 10px; height: 10px;"/>
+  <box style="-moz-stack-sizing: ignore; width: 20px; height: 20px;"/>
+</stack>
+
+</window>

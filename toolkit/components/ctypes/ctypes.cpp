@@ -115,8 +115,7 @@ Module::Call(nsIXPConnectWrappedNative* wrapper,
 {
   mozJSComponentLoader* loader = mozJSComponentLoader::Get();
   JS::Rooted<JSObject*> targetObj(cx);
-  nsresult rv = loader->FindTargetObject(cx, &targetObj);
-  NS_ENSURE_SUCCESS(rv, rv);
+  loader->FindTargetObject(cx, &targetObj);
 
   *_retval = InitAndSealCTypesClass(cx, targetObj);
   return NS_OK;

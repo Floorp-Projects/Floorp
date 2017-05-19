@@ -1541,9 +1541,6 @@ Android|WINNT|Darwin)
 esac
 
 if test "$MOZ_MEMORY"; then
-  if test "x$MOZ_DEBUG" = "x1"; then
-    AC_DEFINE(MOZ_MEMORY_DEBUG)
-  fi
   dnl The generic feature tests that determine how to compute ncpus are long and
   dnl complicated.  Therefore, simply define special cpp variables for the
   dnl platforms we have special knowledge of.

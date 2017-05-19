@@ -214,8 +214,8 @@ public:
 
   MediaEventSource<void>& OnMediaNotSeekable() const;
 
-  MediaEventSourceExc<nsAutoPtr<MediaInfo>,
-                      nsAutoPtr<MetadataTags>,
+  MediaEventSourceExc<UniquePtr<MediaInfo>,
+                      UniquePtr<MetadataTags>,
                       MediaDecoderEventVisibility>&
   MetadataLoadedEvent() { return mMetadataLoadedEvent; }
 
@@ -669,8 +669,8 @@ private:
   MediaEventListener mAudibleListener;
   MediaEventListener mOnMediaNotSeekable;
 
-  MediaEventProducerExc<nsAutoPtr<MediaInfo>,
-                        nsAutoPtr<MetadataTags>,
+  MediaEventProducerExc<UniquePtr<MediaInfo>,
+                        UniquePtr<MetadataTags>,
                         MediaDecoderEventVisibility> mMetadataLoadedEvent;
   MediaEventProducerExc<nsAutoPtr<MediaInfo>,
                         MediaDecoderEventVisibility> mFirstFrameLoadedEvent;

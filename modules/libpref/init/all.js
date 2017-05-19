@@ -2791,7 +2791,13 @@ pref("layout.css.prefixes.transitions", true);
 pref("layout.css.prefixes.animations", true);
 pref("layout.css.prefixes.box-sizing", true);
 pref("layout.css.prefixes.font-features", true);
+
+// Is -moz-prefixed gradient functions enabled?
+#ifdef NIGHTLY_BUILD
+pref("layout.css.prefixes.gradients", false);
+#else
 pref("layout.css.prefixes.gradients", true);
+#endif
 
 // Are webkit-prefixed properties & property-values supported?
 pref("layout.css.prefixes.webkit", true);

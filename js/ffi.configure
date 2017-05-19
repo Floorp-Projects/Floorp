@@ -56,5 +56,5 @@ def ffi_target(target):
         dir=target_dir
     )
 
-set_config('FFI_TARGET', delayed_getattr(ffi_target, 'name'))
-set_config('FFI_TARGET_DIR', delayed_getattr(ffi_target, 'dir'))
+set_config('FFI_TARGET', ffi_target.name)
+set_config('FFI_TARGET_DIR', ffi_target.dir)

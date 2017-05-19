@@ -12,6 +12,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
 XPIDL_SOURCES += [
     'nsINativeAppSupport.idl',

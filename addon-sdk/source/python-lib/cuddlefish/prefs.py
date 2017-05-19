@@ -55,12 +55,13 @@ DEFAULT_NO_CONNECTIONS_PREFS = {
     'browser.newtab.url' : 'about:blank',
     'browser.search.update': False,
     'browser.search.suggest.enabled' : False,
+    'browser.safebrowsing.downloads.remote.url': 'http://localhost/safebrowsing-dummy/downloads',
+    'browser.safebrowsing.malware.enabled' : False,
     'browser.safebrowsing.phishing.enabled' : False,
     'browser.safebrowsing.provider.google.updateURL': 'http://localhost/safebrowsing-dummy/update',
     'browser.safebrowsing.provider.google.gethashURL': 'http://localhost/safebrowsing-dummy/gethash',
     'browser.safebrowsing.provider.google4.updateURL': 'http://localhost/safebrowsing4-dummy/update',
     'browser.safebrowsing.provider.google4.gethashURL': 'http://localhost/safebrowsing4-dummy/gethash',
-    'browser.safebrowsing.malware.reportURL': 'http://localhost/safebrowsing-dummy/malwarereport',
     'browser.selfsupport.url': 'https://localhost/selfsupport-dummy',
     'browser.safebrowsing.provider.mozilla.gethashURL': 'http://localhost/safebrowsing-dummy/gethash',
     'browser.safebrowsing.provider.mozilla.updateURL': 'http://localhost/safebrowsing-dummy/update',
@@ -118,6 +119,7 @@ DEFAULT_FIREFOX_PREFS = {
     # Make url-classifier updates so rare that they won't affect tests.
     'urlclassifier.updateinterval' : 172800,
     # Point the url-classifier to a nonexistent local URL for fast failures.
+    'browser.safebrowsing.downloads.remote.url': 'http://localhost/safebrowsing-dummy/downloads',
     'browser.safebrowsing.provider.google.gethashURL' : 'http://localhost/safebrowsing-dummy/gethash',
     'browser.safebrowsing.provider.google.updateURL' : 'http://localhost/safebrowsing-dummy/update',
     'browser.safebrowsing.provider.google4.gethashURL' : 'http://localhost/safebrowsing4-dummy/gethash',

@@ -10,6 +10,7 @@
 
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoDocumentRule.h"
+#include "mozilla/ServoKeyframesRule.h"
 #include "mozilla/ServoMediaRule.h"
 #include "mozilla/ServoNamespaceRule.h"
 #include "mozilla/ServoPageRule.h"
@@ -97,6 +98,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
         break;                                                              \
       }
       CASE_RULE(STYLE, Style)
+      CASE_RULE(KEYFRAMES, Keyframes)
       CASE_RULE(MEDIA, Media)
       CASE_RULE(NAMESPACE, Namespace)
       CASE_RULE(PAGE, Page)
@@ -115,8 +117,9 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
         ruleObj = Servo_CssRules_GetCounterStyleRuleAt(mRawRules, aIndex);
         break;
       }
-      case nsIDOMCSSRule::KEYFRAMES_RULE:
-        // XXX create corresponding rules
+      case nsIDOMCSSRule::KEYFRAME_RULE:
+        MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
+        return nullptr;
       default:
         NS_WARNING("stylo: not implemented yet");
         return nullptr;

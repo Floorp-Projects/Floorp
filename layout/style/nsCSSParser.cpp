@@ -4537,8 +4537,8 @@ CSSParserImpl::ParseSupportsRule(RuleAppendFunc aAppendFunc, void* aProcessData)
   // errors don't get reported.
   nsAutoFailingSupportsRule failing(this, conditionMet);
 
-  RefPtr<css::GroupRule> rule = new CSSSupportsRule(conditionMet, condition,
-                                                      linenum, colnum);
+  RefPtr<css::GroupRule> rule =
+    new mozilla::CSSSupportsRule(conditionMet, condition, linenum, colnum);
   return ParseGroupRule(rule, aAppendFunc, aProcessData);
 }
 

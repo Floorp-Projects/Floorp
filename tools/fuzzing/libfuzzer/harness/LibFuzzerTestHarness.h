@@ -56,24 +56,6 @@ MOZ_FORMAT_PRINTF(1, 2) void fail(const char* msg, ...)
   ++gFailCount;
 }
 
-/**
- * Prints the given success message and arguments using printf, prepending
- * "TEST-PASS " for the benefit of the test harness and
- * appending "\n" to eliminate having to type it at each call site.
- */
-MOZ_FORMAT_PRINTF(1, 2) void passed(const char* msg, ...)
-{
-  va_list ap;
-
-  printf("TEST-PASS | ");
-
-  va_start(ap, msg);
-  vprintf(msg, ap);
-  va_end(ap);
-
-  putchar('\n');
-}
-
 //-----------------------------------------------------------------------------
 
 class ScopedXPCOM : public nsIDirectoryServiceProvider2

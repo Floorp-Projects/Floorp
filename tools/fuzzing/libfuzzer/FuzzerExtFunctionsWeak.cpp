@@ -16,6 +16,7 @@
 #if LIBFUZZER_LINUX
 
 #include "FuzzerExtFunctions.h"
+#include "FuzzerIO.h"
 
 extern "C" {
 // Declare these symbols as weak to allow them to be optionally defined.
@@ -46,5 +47,7 @@ ExternalFunctions::ExternalFunctions() {
 
 #undef EXT_FUNC
 }
+
 } // namespace fuzzer
+
 #endif // LIBFUZZER_LINUX
