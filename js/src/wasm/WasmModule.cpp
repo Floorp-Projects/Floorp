@@ -406,7 +406,7 @@ Module::extractCode(JSContext* cx, MutableHandleValue vp) const
     if (!segments)
         return false;
 
-    for (const CodeRange& p : metadata().codeRanges) {
+    for (const CodeRange& p : metadataTier().codeRanges) {
         RootedObject segment(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
         if (!segment)
             return false;
@@ -509,7 +509,7 @@ Module::initSegments(JSContext* cx,
     for (const ElemSegment& seg : elemSegments_) {
         Table& table = *tables[seg.tableIndex];
         uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
-        const CodeRangeVector& codeRanges = metadata().codeRanges;
+        const CodeRangeVector& codeRanges = metadataTier().codeRanges;
         uint8_t* codeBase = instance.codeBase();
 
         for (uint32_t i = 0; i < seg.elemCodeRangeIndices.length(); i++) {

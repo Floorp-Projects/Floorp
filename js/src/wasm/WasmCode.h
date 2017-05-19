@@ -32,6 +32,7 @@ namespace wasm {
 
 struct LinkData;
 struct Metadata;
+struct MetadataTier;
 class FrameIterator;
 
 // ShareableBytes is a reference-counted Vector of bytes.
@@ -310,6 +311,11 @@ typedef Vector<ExprType, 0, SystemAllocPolicy> FuncReturnTypesVector;
 //
 // Metadata is built incrementally by ModuleGenerator and then shared immutably
 // between modules.
+//
+// The Metadata structure is split into tier-invariant and tier-variant parts;
+// the former points to instances of the latter.  Additionally, the asm.js
+// subsystem subclasses the Metadata, adding more tier-invariant data, some of
+// which is serialized.  See AsmJS.cpp.
 
 struct MetadataCacheablePod
 {
@@ -328,9 +334,35 @@ struct MetadataCacheablePod
 
 typedef uint8_t ModuleHash[8];
 
+struct MetadataTier : public ShareableBase<MetadataTier>
+{
+    MemoryAccessVector    memoryAccesses;
+    CodeRangeVector       codeRanges;
+    CallSiteVector        callSites;
+
+    // Debug information, not serialized.
+    Uint32Vector          debugTrapFarJumpOffsets;
+    Uint32Vector          debugFuncToCodeRange;
+
+    WASM_DECLARE_SERIALIZABLE(MetadataTier);
+};
+
+typedef RefPtr<MetadataTier> MutableMetadataTier;
+typedef RefPtr<const MetadataTier> SharedMetadataTier;
+
 struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
 {
-    explicit Metadata(ModuleKind kind = ModuleKind::Wasm) : MetadataCacheablePod(kind) {}
+    // Both `tier_` and the means of accessing it will become more complicated
+    // when tiering is implemented.
+    MutableMetadataTier tier_;
+
+    const MetadataTier& tier() const { return *tier_; }
+    MetadataTier& tier() { return *tier_; }
+
+    explicit Metadata(MetadataTier* tier, ModuleKind kind = ModuleKind::Wasm)
+      : MetadataCacheablePod(kind),
+        tier_(tier)
+    {}
     virtual ~Metadata() {}
 
     MetadataCacheablePod& pod() { return *this; }
@@ -341,9 +373,6 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     SigWithIdVector       sigIds;
     GlobalDescVector      globals;
     TableDescVector       tables;
-    MemoryAccessVector    memoryAccesses;
-    CodeRangeVector       codeRanges;
-    CallSiteVector        callSites;
     NameInBytecodeVector  funcNames;
     CustomSectionVector   customSections;
     CacheableChars        filename;
@@ -351,8 +380,6 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
 
     // Debug-enabled code is not serialized.
     bool                  debugEnabled;
-    Uint32Vector          debugTrapFarJumpOffsets;
-    Uint32Vector          debugFuncToCodeRange;
     FuncArgTypesVector    debugFuncArgTypes;
     FuncReturnTypesVector debugFuncReturnTypes;
 
@@ -409,6 +436,7 @@ class Code : public ShareableBase<Code>
     Code(UniqueConstCodeSegment segment, const Metadata& metadata);
 
     const CodeSegment& segment() const { return *segment_; }
+    const MetadataTier& metadataTier() const { return metadata_->tier(); }
     const Metadata& metadata() const { return *metadata_; }
 
     // Frame iterator support:

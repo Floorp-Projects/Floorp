@@ -145,6 +145,7 @@ class Module : public JS::WasmModule
     }
     ~Module() override { /* Note: can be called on any thread */ }
 
+    const MetadataTier& metadataTier() const { return code_->metadataTier(); }
     const Metadata& metadata() const { return code_->metadata(); }
     const ImportVector& imports() const { return imports_; }
     const ExportVector& exports() const { return exports_; }
