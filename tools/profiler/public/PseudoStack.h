@@ -9,7 +9,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "js/ProfilingStack.h"
-#include "StoreSequencer.h"
 #include "nsISupportsImpl.h"  // for MOZ_COUNT_{CTOR,DTOR}
 
 #include <stdlib.h>
@@ -64,8 +63,8 @@ public:
       entry.unsetFlag(js::ProfileEntry::FRAME_LABEL_COPY);
     }
 
-    // Prevent the optimizer from re-ordering these instructions
-    STORE_SEQUENCER();
+    // This must happen at the end! The compiler will not reorder this update
+    // because mStackPointer is Atomic.
     mStackPointer++;
   }
 

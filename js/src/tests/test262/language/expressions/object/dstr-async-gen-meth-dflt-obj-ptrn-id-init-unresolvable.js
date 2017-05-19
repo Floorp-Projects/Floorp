@@ -1,3 +1,4 @@
+// |reftest| skip-if(release_or_beta) -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/obj-ptrn-id-init-unresolvable.case
 // - src/dstr-binding/error/async-gen-method-dflt.template

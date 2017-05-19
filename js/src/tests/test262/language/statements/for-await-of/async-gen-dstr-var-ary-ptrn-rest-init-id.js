@@ -1,4 +1,4 @@
-// |reftest| error:SyntaxError
+// |reftest| skip-if(release_or_beta) error:SyntaxError -- async-iteration is not released yet
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/ary-ptrn-rest-init-id.case
 // - src/dstr-binding/default/for-await-of-async-gen-var.template
@@ -21,13 +21,13 @@ info: |
     13.7.5.13 Runtime Semantics: ForIn/OfBodyEvaluation
 
     [...]
-    3. Let destructuring be IsDestructuring of lhs.
+    4. Let destructuring be IsDestructuring of lhs.
     [...]
-    5. Repeat
+    6. Repeat
        [...]
-       h. If destructuring is false, then
+       j. If destructuring is false, then
           [...]
-       i. Else
+       k. Else
           i. If lhsKind is assignment, then
              [...]
           ii. Else if lhsKind is varBinding, then

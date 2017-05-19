@@ -535,7 +535,7 @@ HTMLImageElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         mResponsiveSelector->SetDefaultSource(aValue);
       }
       QueueImageLoadTask(true);
-    } else if (aNotify) {
+    } else if (aNotify && OwnerDoc()->IsCurrentActiveDocument()) {
       // If aNotify is false, we are coming from the parser or some such place;
       // we'll get bound after all the attributes have been set, so we'll do the
       // sync image load from BindToTree. Skip the LoadImage call in that case.
@@ -594,7 +594,7 @@ HTMLImageElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       // per spec, full selection runs when this changes, even though
       // it doesn't directly affect the source selection
       QueueImageLoadTask(true);
-    } else {
+    } else if (OwnerDoc()->IsCurrentActiveDocument()) {
       // Bug 1076583 - We still use the older synchronous algorithm in
       // non-responsive mode. Force a new load of the image with the
       // new cross origin policy
@@ -660,7 +660,8 @@ HTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // If loading is temporarily disabled, don't even launch MaybeLoadImage.
     // Otherwise MaybeLoadImage may run later when someone has reenabled
     // loading.
-    if (LoadingEnabled()) {
+    if (LoadingEnabled() &&
+        OwnerDoc()->IsCurrentActiveDocument()) {
       nsContentUtils::AddScriptRunner(
           NewRunnableMethod(this, &HTMLImageElement::MaybeLoadImage));
     }
@@ -865,7 +866,8 @@ HTMLImageElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
     // really do want it to do the load, so set it up to happen once the cloning
     // reaches a stable state.
     if (!dest->InResponsiveMode() &&
-        dest->HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
+        dest->HasAttr(kNameSpaceID_None, nsGkAtoms::src) &&
+        dest->OwnerDoc()->IsCurrentActiveDocument()) {
       // Mark channel as urgent-start before load image if the image load is
       // initaiated by a user interaction.
       mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();

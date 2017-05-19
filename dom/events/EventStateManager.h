@@ -215,15 +215,16 @@ public:
     }
   }
 
+  static TimeStamp GetHandlingInputStart() {
+    return sHandlingInputStart;
+  }
+
   /**
    * Returns true if the current code is being executed as a result of
    * user input.  This includes anything that is initiated by user,
    * with the exception of page load events or mouse over events. If
    * this method is called from asynchronously executed code, such as
-   * during layout reflows, it will return false. If more time has
-   * elapsed since the user input than is specified by the
-   * dom.event.handling-user-input-time-limit pref (default 1 second),
-   * this function also returns false.
+   * during layout reflows, it will return false.
    */
   static bool IsHandlingUserInput();
 

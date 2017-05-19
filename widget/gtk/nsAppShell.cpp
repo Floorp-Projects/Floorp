@@ -21,11 +21,14 @@
 #ifdef MOZ_ENABLE_DBUS
 #include "WakeLockListener.h"
 #endif
+#include "gfxPlatform.h"
 #include "ScreenHelperGTK.h"
+#include "HeadlessScreenHelper.h"
 #include "mozilla/widget/ScreenManager.h"
 
 using mozilla::Unused;
 using mozilla::widget::ScreenHelperGTK;
+using mozilla::widget::HeadlessScreenHelper;
 using mozilla::widget::ScreenManager;
 using mozilla::LazyLogModule;
 
@@ -162,7 +165,11 @@ nsAppShell::Init()
 
     if (XRE_IsParentProcess()) {
         ScreenManager& screenManager = ScreenManager::GetSingleton();
-        screenManager.SetHelper(mozilla::MakeUnique<ScreenHelperGTK>());
+        if (gfxPlatform::IsHeadless()) {
+            screenManager.SetHelper(mozilla::MakeUnique<HeadlessScreenHelper>());
+        } else {
+            screenManager.SetHelper(mozilla::MakeUnique<ScreenHelperGTK>());
+        }
     }
 
 #if MOZ_WIDGET_GTK == 3

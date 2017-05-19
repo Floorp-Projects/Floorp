@@ -19,16 +19,12 @@ testWithIntlConstructors(function (Constructor) {
     // variant 1: use constructor in a "new" expression
     obj = new Constructor();
     newObj = Intl.NumberFormat.call(obj);
-    if (obj === newObj) {
-      $ERROR("NumberFormat object created with \"new\" was not ignored as this-value.");
-    }
+    assert.notSameValue(obj, newObj, "NumberFormat object created with \"new\" was not ignored as this-value.");
 
     // variant 2: use constructor as a function
     obj = Constructor();
     newObj = Intl.NumberFormat.call(obj);
-    if (obj === newObj) {
-      $ERROR("NumberFormat object created with constructor as function was not ignored as this-value.");
-    }
+    assert.notSameValue(obj, newObj, "NumberFormat object created with constructor as function was not ignored as this-value.");
 
     return true;
 });

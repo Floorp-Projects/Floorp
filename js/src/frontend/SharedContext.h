@@ -566,10 +566,12 @@ class FunctionBox : public ObjectBox, public SharedContext
         // absolute positions within the ScriptSource buffer, and need to
         // de-offset from the starting column.
         uint32_t offset = tokenStream.currentToken().pos.begin;
-        MOZ_ASSERT(offset >= tokenStream.options().column);
-        MOZ_ASSERT(toStringStart >= tokenStream.options().column);
-        toStringStart -= tokenStream.options().column;
-        bufStart = offset - tokenStream.options().column;
+        uint32_t sourceStartColumn = tokenStream.options().sourceStartColumn;
+
+        MOZ_ASSERT(offset >= sourceStartColumn);
+        MOZ_ASSERT(toStringStart >= sourceStartColumn);
+        toStringStart -= sourceStartColumn;
+        bufStart = offset - sourceStartColumn;
         tokenStream.srcCoords.lineNumAndColumnIndex(offset, &startLine, &startColumn);
     }
 
@@ -580,8 +582,10 @@ class FunctionBox : public ObjectBox, public SharedContext
         //
         // Offsets are de-offset for the same reason as in setStart above.
         uint32_t offset = tokenStream.currentToken().pos.end;
-        MOZ_ASSERT(offset >= tokenStream.options().column);
-        bufEnd = offset - tokenStream.options().column;
+        uint32_t sourceStartColumn = tokenStream.options().sourceStartColumn;
+
+        MOZ_ASSERT(offset >= sourceStartColumn);
+        bufEnd = offset - sourceStartColumn;
         toStringEnd = bufEnd;
     }
 

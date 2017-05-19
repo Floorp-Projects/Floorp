@@ -10,7 +10,6 @@ import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.UIAsyncTask;
 
 import android.content.Context;
 import android.graphics.Rect;
@@ -44,32 +43,26 @@ public class GeckoAccessibility {
     private static SelfBrailleClient sSelfBrailleClient;
 
     public static void updateAccessibilitySettings (final Context context) {
-        new UIAsyncTask.WithoutParams<Void>(ThreadUtils.getBackgroundHandler()) {
-                @Override
-                public Void doInBackground() {
-                    sEnabled = false;
-                    AccessibilityManager accessibilityManager =
-                        (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
-                    sEnabled = accessibilityManager.isEnabled() && accessibilityManager.isTouchExplorationEnabled();
-                    if (Build.VERSION.SDK_INT >= 16 && sEnabled && sSelfBrailleClient == null) {
-                        sSelfBrailleClient = new SelfBrailleClient(context, false);
-                    }
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                final AccessibilityManager accessibilityManager = (AccessibilityManager)
+                        context.getSystemService(Context.ACCESSIBILITY_SERVICE);
+                sEnabled = accessibilityManager.isEnabled() &&
+                           accessibilityManager.isTouchExplorationEnabled();
 
-                    final GeckoBundle ret = new GeckoBundle(1);
-                    ret.putBoolean("enabled", sEnabled);
-                    EventDispatcher.getInstance().dispatch("Accessibility:Settings", ret);
-                    return null;
+                if (Build.VERSION.SDK_INT >= 16 && sEnabled && sSelfBrailleClient == null) {
+                    sSelfBrailleClient = new SelfBrailleClient(context, false);
                 }
 
-                @Override
-                public void onPostExecute(Void args) {
-                    final GeckoAppShell.GeckoInterface geckoInterface = GeckoAppShell.getGeckoInterface();
-                    if (geckoInterface == null) {
-                        return;
-                    }
-                    geckoInterface.setAccessibilityEnabled(sEnabled);
-                }
-            }.execute();
+                final GeckoBundle ret = new GeckoBundle(1);
+                ret.putBoolean("enabled", sEnabled);
+                // "Accessibility:Settings" is dispatched to the Gecko thread.
+                EventDispatcher.getInstance().dispatch("Accessibility:Settings", ret);
+                // "Accessibility:Enabled" is dispatched to the UI thread.
+                EventDispatcher.getInstance().dispatch("Accessibility:Enabled", ret);
+            }
+        });
     }
 
     private static void populateEventFromJSON (AccessibilityEvent event, GeckoBundle message) {

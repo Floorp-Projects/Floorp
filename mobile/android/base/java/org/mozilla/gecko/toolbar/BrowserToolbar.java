@@ -877,7 +877,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
             });
         }
 
-        GeckoAppShell.getGeckoInterface().invalidateOptionsMenu();
+        activity.invalidateOptionsMenu();
         if (!menuPopup.isShowing()) {
             menuPopup.showAsDropDown(menuButton);
         }

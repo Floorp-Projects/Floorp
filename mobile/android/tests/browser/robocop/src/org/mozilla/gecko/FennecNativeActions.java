@@ -224,7 +224,9 @@ public class FennecNativeActions implements Actions {
 
     public RepeatedEventExpecter expectWindowEvent(final EventType type, final String geckoEvent) {
         FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG, "waiting for " + geckoEvent);
-        return new GeckoEventExpecter(GeckoApp.getEventDispatcher(), type, geckoEvent);
+        return new GeckoEventExpecter(
+                ((GeckoApp) mSolo.getCurrentActivity()).getAppEventDispatcher(),
+                type, geckoEvent);
     }
 
     public void sendGlobalEvent(final String event, final GeckoBundle data) {
@@ -232,7 +234,7 @@ public class FennecNativeActions implements Actions {
     }
 
     public void sendWindowEvent(final String event, final GeckoBundle data) {
-        GeckoApp.getEventDispatcher().dispatch(event, data);
+        ((GeckoApp) mSolo.getCurrentActivity()).getAppEventDispatcher().dispatch(event, data);
     }
 
     public static final class PrefProxy implements PrefsHelper.PrefHandler, PrefWaiter {

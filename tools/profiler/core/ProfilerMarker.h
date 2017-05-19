@@ -10,7 +10,6 @@
 #include "mozilla/UniquePtrExtensions.h"
 
 #include "ProfilerMarkerPayload.h"
-#include "StoreSequencer.h"
 
 template<typename T>
 class ProfilerLinkedList;
@@ -149,11 +148,9 @@ public:
     MOZ_ASSERT(aElement);
 
     mSignalLock = true;
-    STORE_SEQUENCER();
 
     mList.insert(aElement);
 
-    STORE_SEQUENCER();
     mSignalLock = false;
   }
 
@@ -171,7 +168,7 @@ private:
 
   // If this is set, then it's not safe to read the list because its contents
   // are being changed.
-  volatile bool mSignalLock;
+  mozilla::Atomic<bool> mSignalLock;
 };
 
 #endif  // ProfilerMarker_h

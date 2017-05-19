@@ -10,7 +10,6 @@ import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.FullScreenState;
 import org.mozilla.gecko.gfx.LayerView;
@@ -18,9 +17,6 @@ import org.mozilla.gecko.health.HealthRecorder;
 import org.mozilla.gecko.health.SessionInformation;
 import org.mozilla.gecko.health.StubbedHealthRecorder;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
-import org.mozilla.gecko.icons.IconCallback;
-import org.mozilla.gecko.icons.IconResponse;
-import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.menu.MenuPanel;
@@ -52,7 +48,6 @@ import org.mozilla.gecko.widget.AnchoredPopup;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -64,17 +59,11 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.RectF;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.PowerManager;
 import android.os.StrictMode;
 import android.provider.ContactsContract;
 import android.provider.MediaStore.Images.Media;
@@ -215,8 +204,6 @@ public abstract class GeckoApp extends GeckoActivity
 
     private FullScreenHolder mFullScreenPluginContainer;
     private View mFullScreenPluginView;
-
-    private final HashMap<String, PowerManager.WakeLock> mWakeLocks = new HashMap<String, PowerManager.WakeLock>();
 
     protected boolean mLastSessionCrashed;
     protected boolean mShouldRestore;
@@ -493,9 +480,9 @@ public abstract class GeckoApp extends GeckoActivity
         return false;
     }
 
-    public void refreshChrome() { }
+    public void refreshChrome() {
+    }
 
-    @Override
     public void invalidateOptionsMenu() {
         if (mMenu == null) {
             return;
@@ -720,9 +707,6 @@ public abstract class GeckoApp extends GeckoActivity
      * @return True if the tab UI was hidden.
      */
     public boolean autoHideTabs() { return false; }
-
-    @Override
-    public boolean areTabsShown() { return false; }
 
     @Override
     public void handleMessage(final String event, final GeckoBundle message,
@@ -1399,6 +1383,7 @@ public abstract class GeckoApp extends GeckoActivity
         mMainLayout = (RelativeLayout) findViewById(R.id.main_layout);
         mLayerView = (GeckoView) findViewById(R.id.layer_view);
 
+        mLayerView.setChromeUri("chrome://browser/content/browser.xul");
         mLayerView.setContentListener(this);
 
         getAppEventDispatcher().registerGeckoThreadListener(this,
@@ -2010,12 +1995,6 @@ public abstract class GeckoApp extends GeckoActivity
     }
 
     @RobocopTarget
-    public static @NonNull EventDispatcher getEventDispatcher() {
-        final GeckoApp geckoApp = (GeckoApp) GeckoAppShell.getGeckoInterface();
-        return geckoApp.getAppEventDispatcher();
-    }
-
-    @Override
     public @NonNull EventDispatcher getAppEventDispatcher() {
         if (mLayerView == null) {
             throw new IllegalStateException("Must not call getAppEventDispatcher() until after onCreate()");
@@ -2162,141 +2141,6 @@ public abstract class GeckoApp extends GeckoActivity
     }
 
     @Override
-    public void createShortcut(final String title, final String url) {
-
-        final Tab selectedTab = Tabs.getInstance().getSelectedTab();
-        final String manifestUrl = selectedTab.getManifestUrl();
-
-        if (manifestUrl != null) {
-            // If a page has associated manifest, lets install it
-            final GeckoBundle message = new GeckoBundle();
-            message.putInt("iconSize", GeckoAppShell.getPreferredIconSize());
-            message.putString("manifestUrl", manifestUrl);
-            message.putString("originalUrl", url);
-            message.putString("originalTitle", title);
-            EventDispatcher.getInstance().dispatch("Browser:LoadManifest", message);
-            return;
-        }
-
-        createBrowserShortcut(title, url);
-    }
-
-    public void createBrowserShortcut(final String title, final String url) {
-      Icons.with(this)
-              .pageUrl(url)
-              .skipNetwork()
-              .skipMemory()
-              .forLauncherIcon()
-              .build()
-              .execute(new IconCallback() {
-                  @Override
-                  public void onIconResponse(IconResponse response) {
-                      createShortcut(title, url, response.getBitmap());
-                  }
-              });
-    }
-
-    public void createShortcut(final String aTitle, final String aURI, final Bitmap aIcon) {
-        Intent shortcutIntent = new Intent();
-        shortcutIntent.setAction(GeckoApp.ACTION_HOMESCREEN_SHORTCUT);
-        shortcutIntent.setData(Uri.parse(aURI));
-        shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
-                AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
-        createHomescreenIcon(shortcutIntent, aTitle, aURI, aIcon);
-    }
-
-    public void createAppShortcut(final String aTitle, final String aURI, final String manifestPath, final Bitmap aIcon) {
-        Intent shortcutIntent = new Intent();
-        shortcutIntent.setAction(GeckoApp.ACTION_WEBAPP);
-        shortcutIntent.setData(Uri.parse(aURI));
-        shortcutIntent.putExtra("MANIFEST_PATH", manifestPath);
-        shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, LauncherActivity.class.getName());
-        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU,
-                "pwa_add_to_launcher");
-        createHomescreenIcon(shortcutIntent, aTitle, aURI, aIcon);
-    }
-
-    public void createHomescreenIcon(final Intent shortcutIntent, final String aTitle,
-                                     final String aURI, final Bitmap aIcon) {
-        Intent intent = new Intent();
-        intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
-        intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, getLauncherIcon(aIcon, GeckoAppShell.getPreferredIconSize()));
-
-        if (aTitle != null) {
-            intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aTitle);
-        } else {
-            intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aURI);
-        }
-
-        // Do not allow duplicate items.
-        intent.putExtra("duplicate", false);
-
-        intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
-        getApplicationContext().sendBroadcast(intent);
-
-        // Remember interaction
-        final UrlAnnotations urlAnnotations = BrowserDB.from(getApplicationContext()).getUrlAnnotations();
-        urlAnnotations.insertHomeScreenShortcut(getContentResolver(), aURI, true);
-
-        // After shortcut is created, show the mobile desktop.
-        ActivityUtils.goToHomeScreen(this);
-    }
-
-    private Bitmap getLauncherIcon(Bitmap aSource, int size) {
-        final float[] DEFAULT_LAUNCHER_ICON_HSV = { 32.0f, 1.0f, 1.0f };
-        final int kOffset = 6;
-        final int kRadius = 5;
-
-        int insetSize = aSource != null ? size * 2 / 3 : size;
-
-        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-
-        // draw a base color
-        Paint paint = new Paint();
-        if (aSource == null) {
-            // If we aren't drawing a favicon, just use an orange color.
-            paint.setColor(Color.HSVToColor(DEFAULT_LAUNCHER_ICON_HSV));
-            canvas.drawRoundRect(new RectF(kOffset, kOffset, size - kOffset, size - kOffset), kRadius, kRadius, paint);
-        } else if (aSource.getWidth() >= insetSize || aSource.getHeight() >= insetSize) {
-            // Otherwise, if the icon is large enough, just draw it.
-            Rect iconBounds = new Rect(0, 0, size, size);
-            canvas.drawBitmap(aSource, null, iconBounds, null);
-            return bitmap;
-        } else {
-            // otherwise use the dominant color from the icon + a layer of transparent white to lighten it somewhat
-            int color = BitmapUtils.getDominantColor(aSource);
-            paint.setColor(color);
-            canvas.drawRoundRect(new RectF(kOffset, kOffset, size - kOffset, size - kOffset), kRadius, kRadius, paint);
-            paint.setColor(Color.argb(100, 255, 255, 255));
-            canvas.drawRoundRect(new RectF(kOffset, kOffset, size - kOffset, size - kOffset), kRadius, kRadius, paint);
-        }
-
-        // draw the overlay
-        Bitmap overlay = BitmapUtils.decodeResource(this, R.drawable.home_bg);
-        canvas.drawBitmap(overlay, null, new Rect(0, 0, size, size), null);
-
-        // draw the favicon
-        if (aSource == null)
-            aSource = BitmapUtils.decodeResource(this, R.drawable.home_star);
-
-        // by default, we scale the icon to this size
-        int sWidth = insetSize / 2;
-        int sHeight = sWidth;
-
-        int halfSize = size / 2;
-        canvas.drawBitmap(aSource,
-                null,
-                new Rect(halfSize - sWidth,
-                        halfSize - sHeight,
-                        halfSize + sWidth,
-                        halfSize + sHeight),
-                null);
-
-        return bitmap;
-    }
-
-    @Override
     protected void onNewIntent(Intent externalIntent) {
         super.onNewIntent(externalIntent);
 
@@ -2403,9 +2247,21 @@ public abstract class GeckoApp extends GeckoActivity
         return GeckoScreenOrientation.getInstance().getAndroidOrientation();
     }
 
-    @Override
-    public boolean isForegrounded() {
-        return foregrounded;
+    @WrapForJNI(calledFrom = "gecko")
+    public static void launchOrBringToFront() {
+        final Activity activity = GeckoActivityMonitor.getInstance().getCurrentActivity();
+
+        // Check that BrowserApp is not the current foreground activity.
+        if (activity instanceof BrowserApp && ((GeckoApp) activity).foregrounded) {
+            return;
+        }
+
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+                        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
+                            AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+        GeckoAppShell.getApplicationContext().startActivity(intent);
     }
 
     @Override
@@ -2884,43 +2740,8 @@ public abstract class GeckoApp extends GeckoActivity
         Permissions.onRequestPermissionsResult(this, permissions, grantResults);
     }
 
-    private static final String CPU = "cpu";
-    private static final String SCREEN = "screen";
-
-    // Called when a Gecko Hal WakeLock is changed
-    @Override
-    // We keep the wake lock independent from the function scope, so we need to
-    // suppress the linter warning.
-    @SuppressLint("Wakelock")
-    public void notifyWakeLockChanged(String topic, String state) {
-        PowerManager.WakeLock wl = mWakeLocks.get(topic);
-        if (state.equals("locked-foreground") && wl == null) {
-            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-
-            if (CPU.equals(topic)) {
-              wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, topic);
-            } else if (SCREEN.equals(topic)) {
-              // ON_AFTER_RELEASE is set, the user activity timer will be reset when the
-              // WakeLock is released, causing the illumination to remain on a bit longer.
-              wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, topic);
-            }
-
-            if (wl != null) {
-              wl.acquire();
-              mWakeLocks.put(topic, wl);
-            }
-        } else if (!state.equals("locked-foreground") && wl != null) {
-            wl.release();
-            mWakeLocks.remove(topic);
-        }
-    }
-
     private void geckoConnected() {
         mLayerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
-    }
-
-    @Override
-    public void setAccessibilityEnabled(boolean enabled) {
     }
 
     @Override
@@ -3136,35 +2957,6 @@ public abstract class GeckoApp extends GeckoActivity
     }
 
     @Override
-    public void checkUriVisited(String uri) {
-        GlobalHistory.getInstance().checkUriVisited(uri);
-    }
-
-    @Override
-    public void markUriVisited(final String uri) {
-        final Context context = getApplicationContext();
-        final BrowserDB db = BrowserDB.from(context);
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                GlobalHistory.getInstance().add(context, db, uri);
-            }
-        });
-    }
-
-    @Override
-    public void setUriTitle(final String uri, final String title) {
-        final Context context = getApplicationContext();
-        final BrowserDB db = BrowserDB.from(context);
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                GlobalHistory.getInstance().update(context.getContentResolver(), db, uri, title);
-            }
-        });
-    }
-
-    @Override
     public String[] getHandlersForMimeType(String mimeType, String action) {
         Intent intent = IntentHelper.getIntentForActionString(action);
         if (mimeType != null && mimeType.length() > 0)
@@ -3181,12 +2973,6 @@ public abstract class GeckoApp extends GeckoActivity
                 TextUtils.isEmpty(action) ? Intent.ACTION_VIEW : action, "");
 
         return IntentHelper.getHandlersForIntent(intent);
-    }
-
-    @Override
-    public String getDefaultChromeURI() {
-        // Use the chrome URI specified by Gecko's defaultChromeURI pref.
-        return null;
     }
 
     public GeckoView getGeckoView() {

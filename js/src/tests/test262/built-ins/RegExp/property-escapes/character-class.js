@@ -10,9 +10,11 @@ features: [regexp-unicode-property-escapes]
 ---*/
 
 /[\p{Hex}]/u;
-assert(
-  /[\p{Hex}-\uFFFF]/u.test('-'),
-  'property escape in character class should not be parsed as the start of a range'
+assert.throws(
+  SyntaxError,
+  () => /[\p{Hex}-\uFFFF]/u,
+  // See step 1 of https://tc39.github.io/ecma262/#sec-runtime-semantics-characterrange-abstract-operation.
+  'property escape at start of character class range should throw if it expands to multiple characters'
 );
 assert.throws.early(SyntaxError, "/[\\p{}]/u");
 assert.throws.early(SyntaxError, "/[\\p{invalid}]/u");
