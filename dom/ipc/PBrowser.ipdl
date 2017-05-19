@@ -691,7 +691,7 @@ child:
      */
     async SynthMouseMoveEvent(WidgetMouseEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
     async RealMouseButtonEvent(WidgetMouseEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
-    async RealKeyEvent(WidgetKeyboardEvent event, MaybeNativeKeyBinding keyBinding);
+    async RealKeyEvent(WidgetKeyboardEvent event);
     async MouseWheelEvent(WidgetWheelEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
     async RealTouchEvent(WidgetTouchEvent aEvent,
                          ScrollableLayerGuid aGuid,

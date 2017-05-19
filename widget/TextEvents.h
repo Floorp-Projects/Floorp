@@ -109,6 +109,7 @@ class WidgetKeyboardEvent : public WidgetInputEvent
 private:
   friend class dom::PBrowserParent;
   friend class dom::PBrowserChild;
+  friend struct IPC::ParamTraits<WidgetKeyboardEvent>;
 
 protected:
   WidgetKeyboardEvent()
@@ -287,6 +288,27 @@ public:
   // or an actual event from nsAppShell.
   bool mIsSynthesizedByTIP;
 
+  /**
+   * Retrieves all edit commands from mWidget.  This shouldn't be called when
+   * the instance is an untrusted event, doesn't have widget or in non-chrome
+   * process.
+   */
+  void InitAllEditCommands();
+
+  /**
+   * PreventNativeKeyBindings() makes the instance to not cause any edit
+   * actions even if it matches with a native key binding.
+   */
+  void PreventNativeKeyBindings()
+  {
+    mEditCommandsForSingleLineEditor.Clear();
+    mEditCommandsForMultiLineEditor.Clear();
+    mEditCommandsForRichTextEditor.Clear();
+    mEditCommandsForSingleLineEditorInitialized = true;
+    mEditCommandsForMultiLineEditorInitialized = true;
+    mEditCommandsForRichTextEditorInitialized = true;
+  }
+
 #ifdef DEBUG
   /**
    * IsEditCommandsInitialized() returns true if edit commands for aType
@@ -297,6 +319,17 @@ public:
   {
     return const_cast<WidgetKeyboardEvent*>(this)->
              IsEditCommandsInitializedRef(aType);
+  }
+
+  /**
+   * AreAllEditCommandsInitialized() returns true if edit commands for all
+   * types were already initialized.  Otherwise, false.
+   */
+  bool AreAllEditCommandsInitialized() const
+  {
+    return mEditCommandsForSingleLineEditorInitialized &&
+           mEditCommandsForMultiLineEditorInitialized &&
+           mEditCommandsForRichTextEditorInitialized;
   }
 #endif // #ifdef DEBUG
 

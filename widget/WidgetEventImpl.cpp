@@ -603,6 +603,31 @@ WidgetKeyboardEvent::KeyNameIndexHashtable*
 WidgetKeyboardEvent::CodeNameIndexHashtable*
   WidgetKeyboardEvent::sCodeNameIndexHashtable = nullptr;
 
+void
+WidgetKeyboardEvent::InitAllEditCommands()
+{
+  // If the event was created without widget, e.g., created event in chrome
+  // script, this shouldn't execute native key bindings.
+  if (NS_WARN_IF(!mWidget)) {
+    return;
+  }
+
+  // This event should be trusted event here and we shouldn't expose native
+  // key binding information to web contents with untrusted events.
+  if (NS_WARN_IF(!IsTrusted())) {
+    return;
+  }
+
+  MOZ_ASSERT(XRE_IsParentProcess(),
+    "It's too expensive to retrieve all edit commands from remote process");
+  MOZ_ASSERT(!AreAllEditCommandsInitialized(),
+    "Shouldn't be called two or more times");
+
+  InitEditCommandsFor(nsIWidget::NativeKeyBindingsForSingleLineEditor);
+  InitEditCommandsFor(nsIWidget::NativeKeyBindingsForMultiLineEditor);
+  InitEditCommandsFor(nsIWidget::NativeKeyBindingsForRichTextEditor);
+}
+
 static void
 DoCommandCallback(Command aCommand, void* aData)
 {

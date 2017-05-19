@@ -342,9 +342,14 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
   MOZ_ASSERT(!mChild || mChild->mWindowType == eWindowType_popup,
              "Unexpected event dispatch!");
 
+  MOZ_ASSERT(!aEvent->AsKeyboardEvent() ||
+             aEvent->mFlags.mIsSynthesizedForTests ||
+             aEvent->AsKeyboardEvent()->AreAllEditCommandsInitialized(),
+    "Non-sysnthesized keyboard events should have edit commands for all types "
+    "before dispatched");
+
   AutoCacheNativeKeyCommands autoCache(this);
-  if ((aEvent->mFlags.mIsSynthesizedForTests ||
-       aEvent->mFlags.mIsSuppressedOrDelayed) && !mNativeKeyCommandsValid) {
+  if (aEvent->mFlags.mIsSynthesizedForTests && !mNativeKeyCommandsValid) {
     WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
     if (keyEvent) {
       mTabChild->RequestNativeKeyBindings(&autoCache, keyEvent);
