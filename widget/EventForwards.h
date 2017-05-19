@@ -163,6 +163,7 @@ enum class TextRangeType : RawTextRangeType;
 struct TextRangeStyle;
 struct TextRange;
 
+class EditCommands;
 class TextRangeArray;
 
 // FontRange.h
