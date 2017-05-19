@@ -3529,9 +3529,11 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
       mFrameMetrics.SetZoom(aLayerMetrics.GetZoom());
       mFrameMetrics.SetDevPixelsPerCSSPixel(aLayerMetrics.GetDevPixelsPerCSSPixel());
     }
+    bool scrollableRectChanged = false;
     if (!mFrameMetrics.GetScrollableRect().IsEqualEdges(aLayerMetrics.GetScrollableRect())) {
       mFrameMetrics.SetScrollableRect(aLayerMetrics.GetScrollableRect());
       needContentRepaint = true;
+      scrollableRectChanged = true;
     }
     mFrameMetrics.SetCompositionBounds(aLayerMetrics.GetCompositionBounds());
     mFrameMetrics.SetRootCompositionSize(aLayerMetrics.GetRootCompositionSize());
@@ -3578,6 +3580,13 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
       // Note that even if the CancelAnimation call above requested a repaint
       // this is fine because we already have repaint request deduplication.
       needContentRepaint = true;
+    } else if (scrollableRectChanged) {
+      // Even if we didn't accept a new scroll offset from content, the
+      // scrollable rect may have changed in a way that makes our local
+      // scroll offset out of bounds, so re-clamp it.
+      mFrameMetrics.SetScrollOffset(
+          mFrameMetrics.CalculateScrollRange().ClampPoint(
+              mFrameMetrics.GetScrollOffset()));
     }
   }
 
