@@ -7,6 +7,7 @@ package org.mozilla.gecko.customtabs;
 
 import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -58,7 +59,8 @@ public class ActionBarPresenter {
     @ColorInt
     private int mTextPrimaryColor = DEFAULT_TEXT_PRIMARY_COLOR;
 
-    ActionBarPresenter(@NonNull final ActionBar actionBar) {
+    ActionBarPresenter(@NonNull final ActionBar actionBar, @ColorInt final int textColor) {
+        mTextPrimaryColor = textColor;
         mActionBar = actionBar;
         mActionBar.setDisplayShowCustomEnabled(true);
         mActionBar.setDisplayShowTitleEnabled(false);
@@ -69,7 +71,8 @@ public class ActionBarPresenter {
         mTitleView = (TextView) customView.findViewById(R.id.custom_tabs_action_bar_title);
         mUrlView = (TextView) customView.findViewById(R.id.custom_tabs_action_bar_url);
 
-        onThemeChanged(mActionBar.getThemedContext().getTheme());
+        mTitleView.setTextColor(mTextPrimaryColor);
+        mUrlView.setTextColor(mTextPrimaryColor);
 
         mIdentityPopup = new SiteIdentityPopup(mActionBar.getThemedContext());
         mIdentityPopup.setAnchor(customView);
@@ -228,14 +231,5 @@ public class ActionBarPresenter {
             mUrlView.setText(url);
             mUrlView.setVisibility(View.VISIBLE);
         }
-    }
-
-    private void onThemeChanged(@NonNull final Resources.Theme currentTheme) {
-        // Theme might be light or dark. To get text color for custom-view.
-        final TypedArray themeArray = currentTheme.obtainStyledAttributes(
-                new int[]{android.R.attr.textColorPrimary});
-
-        mTextPrimaryColor = themeArray.getColor(0, DEFAULT_TEXT_PRIMARY_COLOR);
-        themeArray.recycle();
     }
 }
