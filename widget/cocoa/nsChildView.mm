@@ -1850,13 +1850,12 @@ nsChildView::AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent)
   return mTextInputHandler->AttachNativeKeyEvent(aEvent);
 }
 
-bool
-nsChildView::ExecuteNativeKeyBindingRemapped(NativeKeyBindingsType aType,
-                                             const WidgetKeyboardEvent& aEvent,
-                                             DoCommandCallback aCallback,
-                                             void* aCallbackData,
-                                             uint32_t aGeckoKeyCode,
-                                             uint32_t aCocoaKeyCode)
+void
+nsChildView::GetEditCommandsRemapped(NativeKeyBindingsType aType,
+                                     const WidgetKeyboardEvent& aEvent,
+                                     nsTArray<CommandInt>& aCommands,
+                                     uint32_t aGeckoKeyCode,
+                                     uint32_t aCocoaKeyCode)
 {
   NSEvent *originalEvent = reinterpret_cast<NSEvent*>(aEvent.mNativeKeyEvent);
 
@@ -1880,20 +1879,23 @@ nsChildView::ExecuteNativeKeyBindingRemapped(NativeKeyBindingsType aType,
                       keyCode:aCocoaKeyCode];
 
   NativeKeyBindings* keyBindings = NativeKeyBindings::GetInstance(aType);
-  return keyBindings->Execute(modifiedEvent, aCallback, aCallbackData);
+  keyBindings->GetEditCommands(modifiedEvent, aCommands);
 }
 
-bool
-nsChildView::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
-                                     const WidgetKeyboardEvent& aEvent,
-                                     DoCommandCallback aCallback,
-                                     void* aCallbackData)
+void
+nsChildView::GetEditCommands(NativeKeyBindingsType aType,
+                             const WidgetKeyboardEvent& aEvent,
+                             nsTArray<CommandInt>& aCommands)
 {
+  // Validate the arguments.
+  nsIWidget::GetEditCommands(aType, aEvent, aCommands);
+
   // If the key is a cursor-movement arrow, and the current selection has
   // vertical writing-mode, we'll remap so that the movement command
   // generated (in terms of characters/lines) will be appropriate for
   // the physical direction of the arrow.
   if (aEvent.mKeyCode >= NS_VK_LEFT && aEvent.mKeyCode <= NS_VK_DOWN) {
+    // XXX This may be expensive. Should use the cache in TextInputHandler.
     WidgetQueryContentEvent query(true, eQuerySelectedText, this);
     DispatchWindowEvent(query);
 
@@ -1933,14 +1935,13 @@ nsChildView::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
         break;
       }
 
-      return ExecuteNativeKeyBindingRemapped(aType, aEvent, aCallback,
-                                             aCallbackData,
-                                             geckoKey, cocoaKey);
+      GetEditCommandsRemapped(aType, aEvent, aCommands, geckoKey, cocoaKey);
+      return;
     }
   }
 
   NativeKeyBindings* keyBindings = NativeKeyBindings::GetInstance(aType);
-  return keyBindings->Execute(aEvent, aCallback, aCallbackData);
+  keyBindings->GetEditCommands(aEvent, aCommands);
 }
 
 NSView<mozView>* nsChildView::GetEditorView()

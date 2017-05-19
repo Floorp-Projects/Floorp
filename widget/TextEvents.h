@@ -309,7 +309,15 @@ public:
     mEditCommandsForRichTextEditorInitialized = true;
   }
 
-#ifdef DEBUG
+  /**
+   * EditCommandsConstRef() returns reference to edit commands for aType.
+   */
+  const nsTArray<CommandInt>&
+    EditCommandsConstRef(nsIWidget::NativeKeyBindingsType aType) const
+  {
+    return const_cast<WidgetKeyboardEvent*>(this)->EditCommandsRef(aType);
+  }
+
   /**
    * IsEditCommandsInitialized() returns true if edit commands for aType
    * was already initialized.  Otherwise, false.
@@ -321,6 +329,7 @@ public:
              IsEditCommandsInitializedRef(aType);
   }
 
+#ifdef DEBUG
   /**
    * AreAllEditCommandsInitialized() returns true if edit commands for all
    * types were already initialized.  Otherwise, false.
@@ -339,8 +348,9 @@ public:
    * @return        true if the caller should do nothing anymore.
    *                false, otherwise.
    */
+  typedef void (*DoCommandCallback)(Command, void*);
   bool ExecuteEditCommands(nsIWidget::NativeKeyBindingsType aType,
-                           nsIWidget::DoCommandCallback aCallback,
+                           DoCommandCallback aCallback,
                            void* aCallbackData);
 
   // If the key should cause keypress events, this returns true.
