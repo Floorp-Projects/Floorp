@@ -147,28 +147,28 @@ MP4Demuxer::Init()
   }
 
   if (audioTrackCount != 0) {
-    mAudioDemuxers.SetLength(audioTrackCount);
     for (size_t i = 0; i < audioTrackCount; i++) {
       UniquePtr<TrackInfo> info =
         metadata.GetTrackInfo(TrackInfo::kAudioTrack, i);
       if (info) {
         FallibleTArray<mp4_demuxer::Index::Indice> indices;
         if (metadata.ReadTrackIndex(indices, info->mTrackId)) {
-          mAudioDemuxers[i] = new MP4TrackDemuxer(this, Move(info), indices);
+          mAudioDemuxers.AppendElement(
+            new MP4TrackDemuxer(this, Move(info), indices));
         }
       }
     }
   }
 
   if (videoTrackCount != 0) {
-    mVideoDemuxers.SetLength(videoTrackCount);
     for (size_t i = 0; i < videoTrackCount; i++) {
       UniquePtr<TrackInfo> info =
         metadata.GetTrackInfo(TrackInfo::kVideoTrack, i);
       if (info) {
         FallibleTArray<mp4_demuxer::Index::Indice> indices;
         if (metadata.ReadTrackIndex(indices, info->mTrackId)) {
-          mVideoDemuxers[i] = new MP4TrackDemuxer(this, Move(info), indices);
+          mVideoDemuxers.AppendElement(
+            new MP4TrackDemuxer(this, Move(info), indices));
         }
       }
     }
