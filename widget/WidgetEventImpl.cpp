@@ -631,8 +631,9 @@ WidgetKeyboardEvent::InitAllEditCommands()
 void
 WidgetKeyboardEvent::InitEditCommandsFor(nsIWidget::NativeKeyBindingsType aType)
 {
-  MOZ_ASSERT(mWidget);
-  MOZ_RELEASE_ASSERT(IsTrusted());
+  if (NS_WARN_IF(!mWidget) || NS_WARN_IF(!IsTrusted())) {
+    return;
+  }
 
   bool& initialized = IsEditCommandsInitializedRef(aType);
   if (initialized) {

@@ -87,19 +87,6 @@ using mozilla::a11y::IAccessibleHolder from "mozilla/a11y/IPCTypes.h";
 namespace mozilla {
 namespace dom {
 
-struct NativeKeyBinding
-{
-  CommandInt[] singleLineCommands;
-  CommandInt[] multiLineCommands;
-  CommandInt[] richTextCommands;
-};
-
-union MaybeNativeKeyBinding
-{
-  NativeKeyBinding;
-  void_t;
-};
-
 struct ShowInfo
 {
   nsString name;
@@ -511,8 +498,17 @@ parent:
 
     async ReplyKeyEvent(WidgetKeyboardEvent event);
 
-    sync RequestNativeKeyBindings(WidgetKeyboardEvent event)
-        returns (MaybeNativeKeyBinding bindings);
+    /**
+     * Retrieves edit commands for the key combination represented by aEvent.
+     *
+     * @param aType       One of nsIWidget::NativeKeyBindingsType.
+     * @param aEvent      KeyboardEvent which represents a key combination.
+     *                    Note that this must be a trusted event.
+     * @return            Array of edit commands which should be executed in
+     *                    editor of native applications.
+     */
+    sync RequestNativeKeyBindings(uint32_t aType, WidgetKeyboardEvent aEvent)
+        returns (CommandInt[] commands);
 
     async SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                    int32_t aNativeKeyCode,

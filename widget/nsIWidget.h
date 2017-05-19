@@ -1821,7 +1821,7 @@ public:
      * Retrieve edit commands when the key combination of aEvent is used
      * in platform native applications.
      */
-    enum NativeKeyBindingsType
+    enum NativeKeyBindingsType : uint8_t
     {
       NativeKeyBindingsForSingleLineEditor,
       NativeKeyBindingsForMultiLineEditor,
