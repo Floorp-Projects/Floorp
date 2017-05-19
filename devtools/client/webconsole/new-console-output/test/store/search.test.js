@@ -66,6 +66,18 @@ describe("Searching in grips", () => {
       expect(getAllMessages(store.getState()).size).toEqual(1);
     });
   });
+
+  describe("Search in frame", () => {
+    it("matches on file name", () => {
+      store.dispatch(actions.filterTextSet("test-console-api.html:1:27"));
+      expect(getAllMessages(store.getState()).size).toEqual(7);
+    });
+
+    it("do not match on full url", () => {
+      store.dispatch(actions.filterTextSet("http://example.com/browser/devtools"));
+      expect(getAllMessages(store.getState()).size).toEqual(0);
+    });
+  });
 });
 
 function prepareBaseStore() {

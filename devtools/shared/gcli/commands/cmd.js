@@ -5,7 +5,7 @@
 "use strict";
 
 const { Cc, Ci, Cu } = require("chrome");
-const { OS, TextDecoder } = Cu.import("resource://gre/modules/osfile.jsm", {});
+const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
 const { Task } = require("devtools/shared/task");
 
 const gcli = require("gcli/index");

@@ -6,9 +6,7 @@
 
 "use strict";
 
-const WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
-const STRINGS_URI = "devtools/client/locales/webconsole.properties";
-const l10n = new WebConsoleUtils.L10n(STRINGS_URI);
+const l10n = require("devtools/client/webconsole/webconsole-l10n");
 
 const {
   MESSAGE_SOURCE,

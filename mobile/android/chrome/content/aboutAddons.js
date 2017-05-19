@@ -225,15 +225,11 @@ var Addons = {
     let updateable = (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE) > 0;
     let uninstallable = (aAddon.permissions & AddonManager.PERM_CAN_UNINSTALL) > 0;
 
-    let optionsURL;
-    switch (parseInt(aAddon.optionsType)) {
-      case AddonManager.OPTIONS_TYPE_INLINE:
-        optionsURL = aAddon.optionsURL || "";
-        break;
-      default:
-        // Bug 1302504 - Ignore WebExtension options (which are type OPTIONS_TYPE_INLINE_BROWSER)
-        // until options_ui support is added - Bug 1302504.
-        optionsURL = "";
+    let optionsURL = aAddon.optionsURL || "";
+
+    if (aAddon.optionsType == AddonManager.OPTIONS_TYPE_INLINE_BROWSER) {
+      // Ignore OPTIONS_TYPE_INLINE_BROWSER until support is added in bug 1302504.
+      optionsURL = "";
     }
 
     let blocked = "";

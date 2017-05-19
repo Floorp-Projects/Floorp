@@ -37,8 +37,7 @@ const SEVERITY_LOG = 3;
 // The indent of a console group in pixels.
 const GROUP_INDENT = 12;
 
-const WEBCONSOLE_STRINGS_URI = "devtools/client/locales/webconsole.properties";
-var WCUL10n = new WebConsoleUtils.L10n(WEBCONSOLE_STRINGS_URI);
+var WCUL10n = require("devtools/client/webconsole/webconsole-l10n");
 
 const DOCS_GA_PARAMS = "?utm_source=mozilla" +
                        "&utm_medium=firefox-console-errors" +

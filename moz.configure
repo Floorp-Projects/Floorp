@@ -89,11 +89,11 @@ def linux_gtest_defines(target, enable_tests):
                          has_clone='0')
 
 set_define('GTEST_OS_LINUX_ANDROID',
-           delayed_getattr(linux_gtest_defines, 'os_linux_android'))
+           linux_gtest_defines.os_linux_android)
 set_define('GTEST_USE_OWN_TR1_TUPLE',
-           delayed_getattr(linux_gtest_defines, 'use_own_tr1_tuple'))
+           linux_gtest_defines.use_own_tr1_tuple)
 set_define('GTEST_HAS_CLONE',
-           delayed_getattr(linux_gtest_defines, 'has_clone'))
+           linux_gtest_defines.has_clone)
 
 js_option('--enable-debug',
           nargs='?',
@@ -290,13 +290,13 @@ def extra_programs(target):
     if target.os == 'GNU' and target.kernel == 'Linux':
         return namespace(RPMBUILD=('rpmbuild',))
 
-check_prog('DSYMUTIL', delayed_getattr(extra_programs, 'DSYMUTIL'),
+check_prog('DSYMUTIL', extra_programs.DSYMUTIL,
            allow_missing=True)
-check_prog('MKFSHFS', delayed_getattr(extra_programs, 'MKFSHFS'),
+check_prog('MKFSHFS', extra_programs.MKFSHFS,
            allow_missing=True)
-check_prog('HFS_TOOL', delayed_getattr(extra_programs, 'HFS_TOOL'),
+check_prog('HFS_TOOL', extra_programs.HFS_TOOL,
            allow_missing=True)
-check_prog('RPMBUILD', delayed_getattr(extra_programs, 'RPMBUILD'),
+check_prog('RPMBUILD', extra_programs.RPMBUILD,
            allow_missing=True)
 
 option('--enable-system-hunspell',

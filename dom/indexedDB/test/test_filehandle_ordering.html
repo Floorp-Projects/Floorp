@@ -10,6 +10,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript">
+  /* import-globals-from helpers.js */
   function* testSteps()
   {
     const name = window.location.pathname;
@@ -33,8 +34,8 @@
     let fileHandle1 = mutableFile.open("readwrite");
     let fileHandle2 = mutableFile.open("readwrite");
 
-    let request1 = fileHandle2.write("2");
-    let request2 = fileHandle1.write("1");
+    fileHandle2.write("2");
+    fileHandle1.write("1");
 
     fileHandle1.oncomplete = grabEventAndContinueHandler;
     fileHandle2.oncomplete = grabEventAndContinueHandler;

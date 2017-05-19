@@ -6,7 +6,7 @@
 var gActiveListeners = {};
 
 function registerPopupEventHandler(eventName, callback) {
-  gActiveListeners[eventName] = function (event) {
+  gActiveListeners[eventName] = function(event) {
     if (event.target != PopupNotifications.panel)
       return;
     PopupNotifications.panel.removeEventListener(eventName,
@@ -58,7 +58,7 @@ function triggerSecondaryCommand(popup)
 function dismissNotification(popup)
 {
   info("dismissing notification");
-  executeSoon(function () {
+  executeSoon(function() {
     EventUtils.synthesizeKey("VK_ESCAPE", {});
   });
 }

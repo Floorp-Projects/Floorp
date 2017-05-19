@@ -438,7 +438,7 @@ mozJSComponentLoader::LoadModule(FileLocation& aFile)
     return entry.forget();
 }
 
-nsresult
+void
 mozJSComponentLoader::FindTargetObject(JSContext* aCx,
                                        MutableHandleObject aTargetObject)
 {
@@ -463,7 +463,6 @@ mozJSComponentLoader::FindTargetObject(JSContext* aCx,
     }
 
     aTargetObject.set(targetObject);
-    return NS_OK;
 }
 
 // This requires that the keys be strings and the values be pointers.
@@ -987,8 +986,7 @@ mozJSComponentLoader::Import(const nsACString& registryLocation,
                                       PromiseFlatCString(registryLocation).get());
         }
     } else {
-        nsresult rv = FindTargetObject(cx, &targetObject);
-        NS_ENSURE_SUCCESS(rv, rv);
+        FindTargetObject(cx, &targetObject);
     }
 
     Maybe<JSAutoCompartment> ac;
@@ -1154,7 +1152,7 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
     vp.set(mod->obj);
 
     if (targetObj) {
-        // cxhelper must be created before jsapi, so that jsapi is detroyed and
+        // cxhelper must be created before jsapi, so that jsapi is destroyed and
         // pops any context it has pushed before we report to the caller context.
         JSCLContextHelper cxhelper(callercx);
 
@@ -1238,7 +1236,7 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
 
             JSAutoCompartment target_ac(cx, targetObj);
 
-	    JS_MarkCrossZoneId(cx, symbolId);
+            JS_MarkCrossZoneId(cx, symbolId);
 
             if (!JS_WrapValue(cx, &value) ||
                 !JS_SetPropertyById(cx, targetObj, symbolId, value)) {

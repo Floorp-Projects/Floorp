@@ -660,7 +660,7 @@ var BookmarkPropertiesPanel = {
     } else if (this._itemType == BOOKMARK_FOLDER) {
       itemGuid = await PlacesTransactions.NewFolder(info).transact();
       for (let uri of this._URIs) {
-        let placeInfo = await PlacesUtils.promisePlaceInfo(uri);
+        let placeInfo = await PlacesUtils.history.fetch(uri);
         let title = placeInfo ? placeInfo.title : "";
         await PlacesTransactions.transact({ parentGuid: itemGuid, uri, title });
       }

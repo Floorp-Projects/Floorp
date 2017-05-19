@@ -170,6 +170,7 @@
   transition: none;
 }
 
+#urlbar[pageproxystate="invalid"] > #identity-box > #extension-icon,
 #urlbar[pageproxystate="invalid"] > #identity-box > #tracking-protection-icon {
   visibility: collapse;
 }

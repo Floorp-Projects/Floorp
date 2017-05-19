@@ -1966,8 +1966,10 @@ const KTableEntry nsCSSProps::kScrollSnapTypeKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kStackSizingKTable[] = {
-  { eCSSKeyword_ignore, NS_STYLE_STACK_SIZING_IGNORE },
-  { eCSSKeyword_stretch_to_fit, NS_STYLE_STACK_SIZING_STRETCH_TO_FIT },
+  { eCSSKeyword_ignore, StyleStackSizing::Ignore },
+  { eCSSKeyword_stretch_to_fit, StyleStackSizing::StretchToFit },
+  { eCSSKeyword_ignore_horizontal, StyleStackSizing::IgnoreHorizontal },
+  { eCSSKeyword_ignore_vertical, StyleStackSizing::IgnoreVertical },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

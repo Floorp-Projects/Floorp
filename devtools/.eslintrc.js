@@ -28,6 +28,8 @@ module.exports = {
     "setInterval": true,
     "setTimeout": true,
     "uneval": true,
+    "TextDecoder": true,
+    "TextEncoder": true,
     "URL": true,
     "WebSocket": true,
     "XMLHttpRequest": true
