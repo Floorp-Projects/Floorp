@@ -23,8 +23,7 @@ public:
 
   explicit nsXBLDocumentInfo(nsIDocument* aDocument);
 
-  already_AddRefed<nsIDocument> GetDocument()
-    { nsCOMPtr<nsIDocument> copy = mDocument; return copy.forget(); }
+  nsIDocument* GetDocument() const { return mDocument; }
 
   bool GetScriptAccess() const { return mScriptAccess; }
 
