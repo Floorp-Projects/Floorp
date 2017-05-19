@@ -1126,19 +1126,18 @@ protected:
         nTrampBytes = jump.GenerateJump(tramp);
         nOrigBytes += 5;
       } else if (origBytes[nOrigBytes] == 0xff) {
-        COPY_CODES(1);
-        if ((origBytes[nOrigBytes] & (kMaskMod|kMaskReg)) == 0xf0) {
+        if ((origBytes[nOrigBytes + 1] & (kMaskMod|kMaskReg)) == 0xf0) {
           // push r64
-          COPY_CODES(1);
-        } else if (origBytes[nOrigBytes] == 0x25) {
+          COPY_CODES(2);
+        } else if (origBytes[nOrigBytes + 1] == 0x25) {
           // jmp absolute indirect m32
           foundJmp = true;
-          int32_t offset = *(reinterpret_cast<int32_t*>(origBytes + nOrigBytes + 1));
-          int64_t* ptrToJmpDest = reinterpret_cast<int64_t*>(origBytes + nOrigBytes + 5 + offset);
+          int32_t offset = *(reinterpret_cast<int32_t*>(origBytes + nOrigBytes + 2));
+          int64_t* ptrToJmpDest = reinterpret_cast<int64_t*>(origBytes + nOrigBytes + 6 + offset);
           intptr_t jmpDest = static_cast<intptr_t>(*ptrToJmpDest);
           JumpPatch jump(nTrampBytes, jmpDest, JumpType::Jmp);
           nTrampBytes = jump.GenerateJump(tramp);
-          nOrigBytes += 5;
+          nOrigBytes += 6;
         } else {
           MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
