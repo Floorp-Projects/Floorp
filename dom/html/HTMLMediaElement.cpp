@@ -4613,7 +4613,6 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
                                                        nsIStreamListener** aListener)
 {
   NS_ASSERTION(mLoadingSrc, "mLoadingSrc must already be set");
-  NS_ASSERTION(mDecoder == nullptr, "Shouldn't have a decoder");
 
   nsAutoCString mimeType;
 
@@ -5281,10 +5280,6 @@ void HTMLMediaElement::DecodeError(const MediaResult& aError)
   AudioTracks()->EmptyTracks();
   VideoTracks()->EmptyTracks();
   if (mIsLoadingFromSourceChildren) {
-    if (mDecoder) {
-      // Shut down the exiting decoder before loading the next source child.
-      ShutdownDecoder();
-    }
     mErrorSink->ResetError();
     if (mSourceLoadCandidate) {
       DispatchAsyncSourceError(mSourceLoadCandidate);
