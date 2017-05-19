@@ -188,6 +188,11 @@ public class TabsPanel extends LinearLayout
 
     public void showMenu() {
         final Menu menu = mPopupMenu.getMenu();
+        // Ensure we update the anchor here to absolutely guarantee there's an anchor
+        // We do set this during prepareToShow(), however only via a UI-thread callback. There are no
+        // guarantees that that callback will complete before a user clicks on the menu button, so
+        // we need to ensure we've set an anchor here.
+        mPopupMenu.setAnchor(mMenuButton);
 
         // Each panel has a "+" shortcut button, so don't show it for that panel.
         menu.findItem(R.id.new_tab).setVisible(mCurrentPanel != Panel.NORMAL_TABS);
@@ -384,12 +389,16 @@ public class TabsPanel extends LinearLayout
         mAddTab.setVisibility(View.VISIBLE);
 
         mMenuButton.setEnabled(true);
-        // If mPopupMenu is visible then setAnchor redisplays the menu on its new anchor - but we
-        // may have just been inflated, so give mMenuButton a chance to get its true measurements
-        // before mPopupMenu.setAnchor reads them to determine its offset from the anchor.
-        ThreadUtils.postToUiThread(new Runnable() {
+        mMenuButton.addOnLayoutChangeListener(new OnLayoutChangeListener() {
             @Override
-            public void run() {
+            public void onLayoutChange(View v, int left, int top, int right, int bottom,
+                                       int oldLeft,
+                                       int oldTop, int oldRight, int oldBottom) {
+                // We also set the anchor in showMenu(), but we need to update it in case the menu
+                // is already showing.
+                // If mPopupMenu is visible then setAnchor redisplays the menu on its new anchor - but we
+                // may have just been inflated, so give mMenuButton a chance to get its true measurements
+                // before mPopupMenu.setAnchor reads them to determine its offset from the anchor.
                 mPopupMenu.setAnchor(mMenuButton);
             }
         });
