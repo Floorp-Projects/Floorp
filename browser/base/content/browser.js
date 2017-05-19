@@ -996,6 +996,35 @@ function serializeInputStream(aStream) {
   return data;
 }
 
+/**
+ * Handles URIs when we want to deal with them in chrome code rather than pass
+ * them down to a content browser. This can avoid unnecessary process switching
+ * for the browser.
+ * @param aBrowser the browser that is attempting to load the URI
+ * @param aUri the nsIURI that is being loaded
+ * @returns true if the URI is handled, otherwise false
+ */
+function handleUriInChrome(aBrowser, aUri) {
+  if (aUri.scheme == "file") {
+    try {
+      let mimeType = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService)
+                                              .getTypeFromURI(aUri);
+      if (mimeType == "application/x-xpinstall") {
+        let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+        AddonManager.getInstallForURL(aUri.spec, install => {
+          AddonManager.installAddonFromWebpage(mimeType, aBrowser, systemPrincipal,
+                                               install);
+        }, mimeType);
+        return true;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  return false;
+}
+
 // A shared function used by both remote and non-remote browser XBL bindings to
 // load a URI or redirect it to the correct process.
 function _loadURIWithFlags(browser, uri, params) {
@@ -1016,8 +1045,33 @@ function _loadURIWithFlags(browser, uri, params) {
   let postData = params.postData;
 
   let currentRemoteType = browser.remoteType;
-  let requiredRemoteType =
-    E10SUtils.getRemoteTypeForURI(uri, gMultiProcessBrowser, currentRemoteType);
+  let requiredRemoteType;
+  try {
+    let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_NONE;
+    if (flags & Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
+      fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+    }
+    if (flags & Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS) {
+      fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
+    }
+    let uriObject = Services.uriFixup.createFixupURI(uri, fixupFlags);
+    if (handleUriInChrome(browser, uriObject)) {
+      // If we've handled the URI in Chrome then just return here.
+      return;
+    }
+
+    // Note that I had thought that we could set uri = uriObject.spec here, to
+    // save on fixup later on, but that changes behavior and breaks tests.
+    requiredRemoteType =
+      E10SUtils.getRemoteTypeForURIObject(uriObject, gMultiProcessBrowser,
+                                          currentRemoteType, browser.currentURI);
+  } catch (e) {
+    // createFixupURI throws if it can't create a URI. If that's the case then
+    // we still need to pass down the uri because docshell handles this case.
+    requiredRemoteType = gMultiProcessBrowser ? E10SUtils.DEFAULT_REMOTE_TYPE
+                                              : E10SUtils.NOT_REMOTE;
+  }
+
   let mustChangeProcess = requiredRemoteType != currentRemoteType;
 
   // !requiredRemoteType means we're loading in the parent/this process.
@@ -1052,6 +1106,7 @@ function _loadURIWithFlags(browser, uri, params) {
         flags,
         referrer: referrer ? referrer.spec : null,
         referrerPolicy,
+        remoteType: requiredRemoteType,
         postData
       }
 
@@ -1097,6 +1152,18 @@ function LoadInOtherProcess(browser, loadOptions, historyIndex = -1) {
 // Called when a docshell has attempted to load a page in an incorrect process.
 // This function is responsible for loading the page in the correct process.
 function RedirectLoad({ target: browser, data }) {
+  if (data.loadOptions.reloadInFreshProcess) {
+    // Convert the fresh process load option into a large allocation remote type
+    // to use common processing from this point.
+    data.loadOptions.remoteType = E10SUtils.LARGE_ALLOCATION_REMOTE_TYPE;
+    data.loadOptions.newFrameloader = true;
+  } else if (browser.remoteType == E10SUtils.LARGE_ALLOCATION_REMOTE_TYPE) {
+    // If we're in a Large-Allocation process, we prefer switching back into a
+    // normal content process, as that way we can clean up the L-A process.
+    data.loadOptions.remoteType =
+      E10SUtils.getRemoteTypeForURI(data.loadOptions.uri, gMultiProcessBrowser);
+  }
+
   // We should only start the redirection if the browser window has finished
   // starting up. Otherwise, we should wait until the startup is done.
   if (gBrowserInit.delayedStartupFinished) {
@@ -1136,17 +1203,47 @@ addEventListener("DOMContentLoaded", function onDCL() {
   let initBrowser =
     document.getAnonymousElementByAttribute(gBrowser, "anonid", "initialBrowser");
 
-  // The window's first argument is a tab if and only if we are swapping tabs.
-  // We must set the browser's usercontextid before updateBrowserRemoteness(),
-  // so that the newly created remote tab child has the correct usercontextid.
+  // remoteType and sameProcessAsFrameLoader are passed through to
+  // updateBrowserRemoteness as part of an options object, which itself defaults
+  // to an empty object. So defaulting them to undefined here will cause the
+  // default behavior in updateBrowserRemoteness if they don't get set.
+  let isRemote = gMultiProcessBrowser;
+  let remoteType;
+  let sameProcessAsFrameLoader;
   if (window.arguments) {
-    let tabToOpen = window.arguments[0];
-    if (tabToOpen instanceof XULElement && tabToOpen.hasAttribute("usercontextid")) {
-      initBrowser.setAttribute("usercontextid", tabToOpen.getAttribute("usercontextid"));
+    let argToLoad = window.arguments[0];
+    if (argToLoad instanceof XULElement) {
+      // The window's first argument is a tab if and only if we are swapping tabs.
+      // We must set the browser's usercontextid before updateBrowserRemoteness(),
+      // so that the newly created remote tab child has the correct usercontextid.
+      if (argToLoad.hasAttribute("usercontextid")) {
+        initBrowser.setAttribute("usercontextid",
+                                 argToLoad.getAttribute("usercontextid"));
+      }
+
+      let linkedBrowser = argToLoad.linkedBrowser;
+      if (linkedBrowser) {
+        remoteType = linkedBrowser.remoteType;
+        isRemote = remoteType != E10SUtils.NOT_REMOTE;
+        sameProcessAsFrameLoader = linkedBrowser.frameLoader;
+      }
+    } else if (argToLoad instanceof String) {
+      // argToLoad is String, so should be a URL.
+      remoteType = E10SUtils.getRemoteTypeForURI(argToLoad, gMultiProcessBrowser);
+      isRemote = remoteType != E10SUtils.NOT_REMOTE;
+    } else if (argToLoad instanceof Ci.nsIArray) {
+      // argToLoad is nsIArray, so should be an array of URLs, set the remote
+      // type for the initial browser to match the first one.
+      let urisstring = argToLoad.queryElementAt(0, Ci.nsISupportsString);
+      remoteType = E10SUtils.getRemoteTypeForURI(urisstring.data,
+                                                 gMultiProcessBrowser);
+      isRemote = remoteType != E10SUtils.NOT_REMOTE;
     }
   }
 
-  gBrowser.updateBrowserRemoteness(initBrowser, gMultiProcessBrowser);
+  gBrowser.updateBrowserRemoteness(initBrowser, isRemote, {
+    remoteType, sameProcessAsFrameLoader
+  });
 });
 
 let _resolveDelayedStartup;

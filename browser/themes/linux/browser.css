@@ -275,9 +275,9 @@ menuitem.bookmark-item {
   --urlbar-border-color: rgba(0,0,0,.3);
 }
 
-%ifdef MOZ_PHOTON_THEME
+%include ../shared/urlbar-searchbar.inc.css
 
-%include ../shared/location-search-bar.inc.css
+%ifdef MOZ_PHOTON_THEME
 
 #urlbar[focused="true"],
 .searchbar-textbox[focused="true"] {
@@ -345,10 +345,6 @@ menuitem.bookmark-item {
 
 #navigator-toolbox:not(:hover) #nav-bar:not([customizing="true"]) #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
   opacity: 0;
-}
-
-#urlbar-container {
-  -moz-box-align: center;
 }
 
 %ifndef MOZ_PHOTON_THEME
@@ -433,15 +429,6 @@ menuitem.bookmark-item {
 
 #urlbar-search-settings:hover:active {
   background-color: var(--arrowpanel-dimmed-further);
-}
-
-#urlbar-search-splitter {
-  /* The splitter width should equal the location and search bars' combined
-     neighboring margin and border width. */
-  width: 8px;
-  margin: 0 -4px;
-  position: relative;
-  -moz-appearance: none;
 }
 
 #urlbar-display-box {

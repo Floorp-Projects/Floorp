@@ -158,7 +158,7 @@ JSONPrinter::property(const char* name, uint64_t value)
     out_.printf("%" PRIu64, value);
 }
 
-#ifdef XP_DARWIN
+#if defined(XP_DARWIN) || defined(__OpenBSD__)
 void
 JSONPrinter::property(const char* name, size_t value)
 {

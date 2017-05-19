@@ -372,10 +372,11 @@ HTMLOptionElement::GetSelect()
 
 already_AddRefed<HTMLOptionElement>
 HTMLOptionElement::Option(const GlobalObject& aGlobal,
-                          const Optional<nsAString>& aText,
+                          const nsAString& aText,
                           const Optional<nsAString>& aValue,
-                          const Optional<bool>& aDefaultSelected,
-                          const Optional<bool>& aSelected, ErrorResult& aError)
+                          bool aDefaultSelected,
+                          bool aSelected,
+                          ErrorResult& aError)
 {
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
   nsIDocument* doc;
@@ -391,45 +392,43 @@ HTMLOptionElement::Option(const GlobalObject& aGlobal,
 
   RefPtr<HTMLOptionElement> option = new HTMLOptionElement(nodeInfo);
 
-  if (aText.WasPassed()) {
+  if (!aText.IsEmpty()) {
     // Create a new text node and append it to the option
     RefPtr<nsTextNode> textContent =
       new nsTextNode(option->NodeInfo()->NodeInfoManager());
 
-    textContent->SetText(aText.Value(), false);
+    textContent->SetText(aText, false);
 
     aError = option->AppendChildTo(textContent, false);
     if (aError.Failed()) {
       return nullptr;
     }
+  }
 
-    if (aValue.WasPassed()) {
-      // Set the value attribute for this element. We're calling SetAttr
-      // directly because we want to pass aNotify == false.
-      aError = option->SetAttr(kNameSpaceID_None, nsGkAtoms::value,
-                               aValue.Value(), false);
-      if (aError.Failed()) {
-        return nullptr;
-      }
+  if (aValue.WasPassed()) {
+    // Set the value attribute for this element. We're calling SetAttr
+    // directly because we want to pass aNotify == false.
+    aError = option->SetAttr(kNameSpaceID_None, nsGkAtoms::value,
+                             aValue.Value(), false);
+    if (aError.Failed()) {
+      return nullptr;
+    }
+  }
 
-      if (aDefaultSelected.WasPassed()) {
-        if (aDefaultSelected.Value()) {
-          // We're calling SetAttr directly because we want to pass
-          // aNotify == false.
-          aError = option->SetAttr(kNameSpaceID_None, nsGkAtoms::selected,
-                                   EmptyString(), false);
-          if (aError.Failed()) {
-            return nullptr;
-          }
-        }
+  if (aDefaultSelected) {
+    // We're calling SetAttr directly because we want to pass
+    // aNotify == false.
+    aError = option->SetAttr(kNameSpaceID_None, nsGkAtoms::selected,
+                             EmptyString(), false);
+    if (aError.Failed()) {
+      return nullptr;
+    }
+  }
 
-        if (aSelected.WasPassed()) {
-          option->SetSelected(aSelected.Value(), aError);
-          if (aError.Failed()) {
-            return nullptr;
-          }
-        }
-      }
+  if (aSelected) {
+    option->SetSelected(true, aError);
+    if (aError.Failed()) {
+      return nullptr;
     }
   }
 

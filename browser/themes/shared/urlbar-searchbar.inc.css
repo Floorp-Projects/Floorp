@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+%ifdef MOZ_PHOTON_THEME
+
 #urlbar,
 .searchbar-textbox {
   -moz-appearance: none;
@@ -11,7 +13,7 @@
   border-radius: var(--toolbarbutton-border-radius);
   box-shadow: 0 1px 4px hsla(0, 0%, 0%, .05);
   padding: 0;
-  margin: 0 2px;
+  margin: 0 5px;
   min-height: 30px;
 }
 
@@ -34,6 +36,20 @@
   box-shadow: 0 1px 6px hsla(0, 0%, 0%, .1), 0 0 1px 0 rgba(0, 0, 0, .1);
 }
 
+%endif
+
 #urlbar-container {
   -moz-box-align: center;
 }
+
+#urlbar-search-splitter {
+  /* The splitter width should equal the location and search bars' combined
+     neighboring margin and border width. */
+  min-width: 12px;
+  margin: 0 -6px;
+  position: relative;
+  border: none;
+  background: transparent;
+  -moz-appearance: none;
+}
+
