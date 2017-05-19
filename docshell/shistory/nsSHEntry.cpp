@@ -37,6 +37,7 @@ nsSHEntry::nsSHEntry()
   , mURIWasModified(false)
   , mIsSrcdocEntry(false)
   , mScrollRestorationIsManual(false)
+  , mLoadedInThisProcess(false)
 {
 }
 
@@ -60,6 +61,7 @@ nsSHEntry::nsSHEntry(const nsSHEntry& aOther)
   , mURIWasModified(aOther.mURIWasModified)
   , mIsSrcdocEntry(aOther.mIsSrcdocEntry)
   , mScrollRestorationIsManual(false)
+  , mLoadedInThisProcess(aOther.mLoadedInThisProcess)
 {
 }
 
@@ -460,6 +462,8 @@ nsSHEntry::Create(nsIURI* aURI, const nsAString& aTitle,
   mIsSrcdocEntry = false;
   mSrcdocData = NullString();
 
+  mLoadedInThisProcess = true;
+
   return NS_OK;
 }
 
@@ -642,6 +646,13 @@ NS_IMETHODIMP
 nsSHEntry::SetScrollRestorationIsManual(bool aIsManual)
 {
   mScrollRestorationIsManual = aIsManual;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::GetLoadedInThisProcess(bool* aLoadedInThisProcess)
+{
+  *aLoadedInThisProcess = mLoadedInThisProcess;
   return NS_OK;
 }
 

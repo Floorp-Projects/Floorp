@@ -306,6 +306,14 @@ private:
 
   void UnsuppressEventHandlingAndResume();
 
+  // Check pref "dom.mapped_arraybuffer.enabled" to make sure ArrayBuffer is
+  // supported.
+  static bool IsMappedArrayBufferEnabled();
+
+  // Check pref "dom.xhr.lowercase_header.enabled" to make sure lowercased
+  // response header is supported.
+  static bool IsLowercaseResponseHeader();
+
 public:
   virtual void
   Send(JSContext* /*aCx*/, ErrorResult& aRv) override
