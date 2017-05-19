@@ -1217,6 +1217,8 @@ public:
   uint32_t Item(uint32_t, bool&) = delete;
   uint32_t Length();
   void LegacyCall(JS::Handle<JS::Value>);
+  int32_t CachedAttr();
+  int32_t StoreInSlotAttr();
 };
 
 class TestNamedGetterInterface : public nsISupports,

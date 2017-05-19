@@ -89,7 +89,7 @@ SessionStorageManager::GetStorage(mozIDOMWindow* aWindow,
   nsAutoCString originKey;
   nsAutoCString originAttributes;
   nsresult rv = GenerateOriginKey(aPrincipal, originAttributes, originKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
     return rv;
   }
 
@@ -128,7 +128,7 @@ SessionStorageManager::CloneStorage(nsIDOMStorage* aStorage)
   nsAutoCString originAttributes;
   nsresult rv = GenerateOriginKey(storage->Principal(), originAttributes,
                                   originKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
     return rv;
   }
 

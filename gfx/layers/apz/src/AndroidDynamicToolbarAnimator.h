@@ -81,8 +81,6 @@ public:
   // shown, the content may extend beyond the bottom of the surface until the toolbar is completely
   // visible or hidden.
   ScreenIntCoord GetCompositionHeight() const;
-  // Returns true if the composition size has changed from the last time it was set.
-  bool SetCompositionSize(ScreenIntSize aSize);
   // Called to signal that root content is being scrolled. This prevents sub scroll frames from
   // affecting the toolbar when being scrolled up. The idea is a scrolling down will always
   // show the toolbar while scrolling up will only hide the toolbar if it is the root content
@@ -95,6 +93,8 @@ public:
   void FirstPaint();
   // Called whenever the root document's FrameMetrics have reached a steady state.
   void UpdateRootFrameMetrics(const FrameMetrics& aMetrics);
+  // Only update the frame metrics if the root composition size has changed
+  void MaybeUpdateCompositionSizeAndRootFrameMetrics(const FrameMetrics& aMetrics);
   // When aEnable is set to true, it informs the animator that the UI thread expects to
   // be notified when the layer tree  has been updated. Enabled currently by robocop tests.
   void EnableLayersUpdateNotifications(bool aEnable);
@@ -225,7 +225,8 @@ protected:
   bool mCompositorReceivedFirstPaint;   // Set to true when a first paint occurs. Used by toolbar animator to detect a new page load.
   bool mCompositorWaitForPageResize;    // Set to true if the bottom of the page has been reached and the toolbar animator should wait for the page to resize before ending animation.
   bool mCompositorToolbarShowRequested; // Set to true if the animator has already requested the real toolbar chrome be shown
-  AnimationStyle mCompositorAnimationStyle;       // Set to true when the snap should be immediately hidden or shown in the animation update
+  bool mCompositorSendResponseForSnapshotUpdate;  // Set to true when a message should be sent after a static toolbar snapshot update
+  AnimationStyle mCompositorAnimationStyle;       // Set to true when the snapshot should be immediately hidden or shown in the animation update
   ScreenIntCoord mCompositorMaxToolbarHeight;     // Should contain the same value as mControllerMaxToolbarHeight
   ScreenIntCoord mCompositorToolbarHeight;        // This value is only updated by the compositor thread when the mToolbarState == ToolbarAnimating
   ScreenIntCoord mCompositorSurfaceHeight;        // Current height of the render surface

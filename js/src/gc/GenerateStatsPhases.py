@@ -49,6 +49,7 @@
 #            | E |   | E'|
 #            +---+   +---+
 
+import re
 import sys
 import collections
 
@@ -174,52 +175,56 @@ AllPhaseKinds = findAllPhaseKinds()
 # one parent.
 
 class Phase:
-    def __init__(self, phaseKind, parent, depth):
+    def __init__(self, phaseKind, parent):
         self.phaseKind = phaseKind
         self.parent = parent
-        self.depth = depth
+        self.depth = parent.depth + 1 if parent else 0
         self.children = []
         self.nextSibling = None
         self.nextInPhaseKind = None
 
+        self.path = re.sub(r'\W+', '_', phaseKind.name.lower())
+        if parent is not None:
+            self.path = parent.path + '.' + self.path
+
 def expandPhases():
     phases = []
-    phasesForPhase = collections.defaultdict(list)
+    phasesForKind = collections.defaultdict(list)
 
-    def traverse(phaseKind, parent, depth):
-        ep = Phase(phaseKind, parent, depth)
+    def traverse(phaseKind, parent):
+        ep = Phase(phaseKind, parent)
         phases.append(ep)
 
         # Update list of expanded phases for this phase kind.
-        if phasesForPhase[phaseKind]:
-            phasesForPhase[phaseKind][-1].nextInPhaseKind = ep
-        phasesForPhase[phaseKind].append(ep)
+        if phasesForKind[phaseKind]:
+            phasesForKind[phaseKind][-1].nextInPhaseKind = ep
+        phasesForKind[phaseKind].append(ep)
 
         # Recurse over children.
         for child in phaseKind.children:
-            child_ep = traverse(child, ep, depth + 1)
+            child_ep = traverse(child, ep)
             if ep.children:
                 ep.children[-1].nextSibling = child_ep
             ep.children.append(child_ep)
         return ep
 
     for phaseKind in PhaseKindGraphRoots:
-        traverse(phaseKind, None, 0)
+        traverse(phaseKind, None)
 
-    return phases, phasesForPhase
+    return phases, phasesForKind
 
 AllPhases, PhasesForPhaseKind = expandPhases()
 
-# Name expanded phases based on phase kind name and index if there are
-# multiple expanded phases corresponding to a single phase kind.
+# Name phases based on phase kind name and index if there are multiple phases
+# corresponding to a single phase kind.
 
 for phaseKind in AllPhaseKinds:
     phases = PhasesForPhaseKind[phaseKind]
     if len(phases) == 1:
         phases[0].name = "%s" % phaseKind.name
     else:
-        for index, xphase in enumerate(phases):
-            xphase.name = "%s_%d" % (phaseKind.name, index + 1)
+        for index, phase in enumerate(phases):
+            phase.name = "%s_%d" % (phaseKind.name, index + 1)
 
 # Generate code.
 
@@ -250,13 +255,13 @@ def generateHeader(out):
     #
     # Generate Phase enum.
     #
-    expandedPhaseNames = map(lambda xphase: xphase.name, AllPhases)
+    phaseNames = map(lambda phase: phase.name, AllPhases)
     extraPhases = [
         "NONE = LIMIT",
         "EXPLICIT_SUSPENSION = LIMIT",
         "IMPLICIT_SUSPENSION"
     ]
-    writeEnumClass(out, "Phase", "uint8_t", expandedPhaseNames, extraPhases)
+    writeEnumClass(out, "Phase", "uint8_t", phaseNames, extraPhases)
 
 def generateCpp(out):
     #
@@ -264,29 +269,30 @@ def generateCpp(out):
     #
     out.write("static const PhaseKindTable phaseKinds = {\n")
     for phaseKind in AllPhaseKinds:
-        xPhase = PhasesForPhaseKind[phaseKind][0]
+        phase = PhasesForPhaseKind[phaseKind][0]
         out.write("    /* PhaseKind::%s */ PhaseKindInfo { Phase::%s, %d },\n" %
-                  (phaseKind.name, xPhase.name, phaseKind.bucket))
+                  (phaseKind.name, phase.name, phaseKind.bucket))
     out.write("};\n")
     out.write("\n")
 
     #
     # Generate the PhaseInfo tree.
     #
-    def name(xphase):
-        return "Phase::" + xphase.name if xphase else "Phase::NONE"
+    def name(phase):
+        return "Phase::" + phase.name if phase else "Phase::NONE"
 
     out.write("static const PhaseTable phases = {\n")
-    for xphase in AllPhases:
-        firstChild = xphase.children[0] if xphase.children else None
-        phaseKind = xphase.phaseKind
-        out.write("    /* %s */ PhaseInfo { %s, %s, %s, %s, PhaseKind::%s, %d, \"%s\" },\n" %
-                  (name(xphase),
-                   name(xphase.parent),
+    for phase in AllPhases:
+        firstChild = phase.children[0] if phase.children else None
+        phaseKind = phase.phaseKind
+        out.write("    /* %s */ PhaseInfo { %s, %s, %s, %s, PhaseKind::%s, %d, \"%s\", \"%s\" },\n" %
+                  (name(phase),
+                   name(phase.parent),
                    name(firstChild),
-                   name(xphase.nextSibling),
-                   name(xphase.nextInPhaseKind),
+                   name(phase.nextSibling),
+                   name(phase.nextInPhaseKind),
                    phaseKind.name,
-                   xphase.depth,
-                   phaseKind.descr))
+                   phase.depth,
+                   phaseKind.descr,
+                   phase.path))
     out.write("};\n")

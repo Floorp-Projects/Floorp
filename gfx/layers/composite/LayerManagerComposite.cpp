@@ -919,7 +919,7 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
 
   // Render our layers.
   {
-    Diagnostics::Record record;
+    Diagnostics::Record record(mRenderStartTime);
     RootLayer()->Prepare(ViewAs<RenderTargetPixel>(clipRect, PixelCastJustification::RenderTargetIsParentLayerForRoot));
     if (record.Recording()) {
       mDiagnostics->RecordPrepareTime(record.Duration());
