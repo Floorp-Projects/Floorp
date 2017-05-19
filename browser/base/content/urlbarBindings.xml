@@ -1136,6 +1136,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               this._hideURLTooltip();
               break;
             case "overflow":
+              if (!this.value) {
+                // We initially get a spurious overflow event from the
+                // anonymous div containing the placeholder text; bail out.
+                break;
+              }
               this.setAttribute("textoverflow", "true");
               break;
             case "underflow":
