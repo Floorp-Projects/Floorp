@@ -332,6 +332,26 @@ public:
 private:
   static byteptr_t ResolveRedirectedAddress(const byteptr_t aOriginalFunction)
   {
+    // If function entry is jmp rel8 stub to the internal implementation, we
+    // resolve redirected address from the jump target.
+    if (aOriginalFunction[0] == 0xeb) {
+      int8_t offset = (int8_t)(aOriginalFunction[1]);
+      if (offset <= 0) {
+        // Bail out for negative offset: probably already patched by some
+        // third-party code.
+        return aOriginalFunction;
+      }
+
+      for (int8_t i = 0; i < offset; i++) {
+        if (aOriginalFunction[2 + i] != 0x90) {
+          // Bail out on insufficient nop space.
+          return aOriginalFunction;
+        }
+      }
+
+      return aOriginalFunction + 2 + offset;
+    }
+
     // If function entry is jmp [disp32] such as used by kernel32,
     // we resolve redirected address from import table.
     if (aOriginalFunction[0] == 0xff && aOriginalFunction[1] == 0x25) {
@@ -1126,19 +1146,18 @@ protected:
         nTrampBytes = jump.GenerateJump(tramp);
         nOrigBytes += 5;
       } else if (origBytes[nOrigBytes] == 0xff) {
-        COPY_CODES(1);
-        if ((origBytes[nOrigBytes] & (kMaskMod|kMaskReg)) == 0xf0) {
+        if ((origBytes[nOrigBytes + 1] & (kMaskMod|kMaskReg)) == 0xf0) {
           // push r64
-          COPY_CODES(1);
-        } else if (origBytes[nOrigBytes] == 0x25) {
+          COPY_CODES(2);
+        } else if (origBytes[nOrigBytes + 1] == 0x25) {
           // jmp absolute indirect m32
           foundJmp = true;
-          int32_t offset = *(reinterpret_cast<int32_t*>(origBytes + nOrigBytes + 1));
-          int64_t* ptrToJmpDest = reinterpret_cast<int64_t*>(origBytes + nOrigBytes + 5 + offset);
+          int32_t offset = *(reinterpret_cast<int32_t*>(origBytes + nOrigBytes + 2));
+          int64_t* ptrToJmpDest = reinterpret_cast<int64_t*>(origBytes + nOrigBytes + 6 + offset);
           intptr_t jmpDest = static_cast<intptr_t>(*ptrToJmpDest);
           JumpPatch jump(nTrampBytes, jmpDest, JumpType::Jmp);
           nTrampBytes = jump.GenerateJump(tramp);
-          nOrigBytes += 5;
+          nOrigBytes += 6;
         } else {
           MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
@@ -1225,6 +1244,26 @@ protected:
 
   static void* ResolveRedirectedAddress(const byteptr_t aOriginalFunction)
   {
+    // If function entry is jmp rel8 stub to the internal implementation, we
+    // resolve redirected address from the jump target.
+    if (aOriginalFunction[0] == 0xeb) {
+      int8_t offset = (int8_t)(aOriginalFunction[1]);
+      if (offset <= 0) {
+        // Bail out for negative offset: probably already patched by some
+        // third-party code.
+        return aOriginalFunction;
+      }
+
+      for (int8_t i = 0; i < offset; i++) {
+        if (aOriginalFunction[2 + i] != 0x90) {
+          // Bail out on insufficient nop space.
+          return aOriginalFunction;
+        }
+      }
+
+      return aOriginalFunction + 2 + offset;
+    }
+
 #if defined(_M_IX86)
     // If function entry is jmp [disp32] such as used by kernel32,
     // we resolve redirected address from import table.

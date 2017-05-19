@@ -87,13 +87,14 @@ struct JSSubString {
 
 /*
  * Shorthands for ASCII (7-bit) decimal and hex conversion.
- * Manually inline isdigit for performance; MSVC doesn't do this for us.
+ * Manually inline isdigit and isxdigit for performance; MSVC doesn't do this for us.
  */
 #define JS7_ISDEC(c)    ((((unsigned)(c)) - '0') <= 9)
+#define JS7_ISA2F(c)    ((((((unsigned)(c)) - 'a') <= 5) || (((unsigned)(c)) - 'A') <= 5))
 #define JS7_UNDEC(c)    ((c) - '0')
 #define JS7_ISOCT(c)    ((((unsigned)(c)) - '0') <= 7)
 #define JS7_UNOCT(c)    (JS7_UNDEC(c))
-#define JS7_ISHEX(c)    ((c) < 128 && isxdigit(c))
+#define JS7_ISHEX(c)    ((c) < 128 && (JS7_ISDEC(c) || JS7_ISA2F(c)))
 #define JS7_UNHEX(c)    (unsigned)(JS7_ISDEC(c) ? (c) - '0' : 10 + tolower(c) - 'a')
 #define JS7_ISLET(c)    ((c) < 128 && isalpha(c))
 

@@ -15,16 +15,9 @@ import android.widget.AbsoluteLayout;
 
 public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     private final Context mContext;
-    private final EventDispatcher eventDispatcher;
 
     public BaseGeckoInterface(Context context) {
         mContext = context;
-        eventDispatcher = new EventDispatcher();
-    }
-
-    @Override
-    public EventDispatcher getAppEventDispatcher() {
-        return eventDispatcher;
     }
 
     @Override
@@ -40,44 +33,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     // Bug 908787: Implement this
     @Override
     public void removeAppStateListener(GeckoAppShell.AppStateListener listener) {}
-
-    // Bug 908789: Implement this
-    @Override
-    public void notifyWakeLockChanged(String topic, String state) {}
-
-    @Override
-    public boolean areTabsShown() {
-        return false;
-    }
-
-    // Bug 908792: Implement this
-    @Override
-    public void invalidateOptionsMenu() {}
-
-    @Override
-    public void createShortcut(String title, String URI) {
-        // By default, do nothing.
-    }
-
-    @Override
-    public void checkUriVisited(String uri) {
-        // By default, no URIs are considered visited.
-    }
-
-    @Override
-    public void markUriVisited(final String uri) {
-        // By default, no URIs are marked as visited.
-    }
-
-    @Override
-    public void setUriTitle(final String uri, final String title) {
-        // By default, no titles are associated with URIs.
-    }
-
-    @Override
-    public void setAccessibilityEnabled(boolean enabled) {
-        // By default, take no action when accessibility is toggled on or off.
-    }
 
     @Override
     public boolean openUriExternal(String targetURI, String mimeType, String packageName, String className, String action, String title) {
@@ -95,16 +50,5 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     public String[] getHandlersForURL(String url, String action) {
         // By default, offer no handlers for any URL.
         return new String[] {};
-    }
-
-    @Override
-    public String getDefaultChromeURI() {
-        // By default, use the GeckoView-specific chrome URI.
-        return "chrome://geckoview/content/geckoview.xul";
-    }
-
-    @Override
-    public boolean isForegrounded() {
-        return false;
     }
 }
