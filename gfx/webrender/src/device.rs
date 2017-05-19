@@ -45,6 +45,7 @@ static SHADER_PREAMBLE: &'static str = "shared";
 #[repr(u32)]
 pub enum DepthFunction {
     Less = gl::LESS,
+    LessEqual = gl::LEQUAL,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -448,10 +449,10 @@ impl Program {
         self.gl.link_program(self.id);
         if self.gl.get_program_iv(self.id, gl::LINK_STATUS) == (0 as gl::GLint) {
             let error_log = self.gl.get_program_info_log(self.id);
-            println!("Failed to link shader program: {}", error_log);
+            println!("Failed to link shader program: {:?}\n{}", self.name, error_log);
             self.gl.detach_shader(self.id, vs_id);
             self.gl.detach_shader(self.id, fs_id);
-            return Err(ShaderError::Link(error_log));
+            return Err(ShaderError::Link(self.name.clone(), error_log));
         }
 
         Ok(())
@@ -859,7 +860,7 @@ pub struct Capabilities {
 #[derive(Clone, Debug)]
 pub enum ShaderError {
     Compilation(String, String), // name, error mssage
-    Link(String), // error message
+    Link(String, String), // name, error message
 }
 
 pub struct Device {
@@ -1712,12 +1713,7 @@ impl Device {
         let (gl_format, bpp, data) = match self.textures.get(&texture_id).unwrap().format {
             ImageFormat::A8 => {
                 if cfg!(any(target_arch="arm", target_arch="aarch64")) {
-                    for byte in data {
-                        expanded_data.push(*byte);
-                        expanded_data.push(*byte);
-                        expanded_data.push(*byte);
-                        expanded_data.push(*byte);
-                    }
+                    expanded_data.extend(data.iter().flat_map(|byte| repeat(*byte).take(4)));
                     (get_gl_format_bgra(self.gl()), 4, expanded_data.as_slice())
                 } else {
                     (GL_FORMAT_A, 1, data)
@@ -1737,8 +1733,6 @@ impl Device {
         // Take the stride into account for all rows, except the last one.
         let len = bpp * row_length * (height - 1)
                 + width * bpp;
-
-        assert!(data.len() as u32 >= len);
         let data = &data[0..len as usize];
 
         if let Some(..) = stride {

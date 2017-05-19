@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
+use border::{BorderCornerInstance, BorderCornerSide};
 use device::TextureId;
 use fnv::FnvHasher;
 use gpu_store::GpuStoreAddress;
@@ -24,7 +25,7 @@ use std::collections::HashMap;
 use std::hash::BuildHasherDefault;
 use texture_cache::TexturePage;
 use util::{TransformedRect, TransformedRectKind};
-use webrender_traits::{AuxiliaryLists, ClipAndScrollInfo, ClipId, ColorF, DeviceIntPoint};
+use webrender_traits::{BuiltDisplayList, ClipAndScrollInfo, ClipId, ColorF, DeviceIntPoint};
 use webrender_traits::{DeviceIntRect, DeviceIntSize, DeviceUintPoint, DeviceUintSize};
 use webrender_traits::{ExternalImageType, FontRenderMode, ImageRendering, LayerPoint, LayerRect};
 use webrender_traits::{LayerToWorldTransform, MixBlendMode, PipelineId, TransformStyle};
@@ -36,9 +37,9 @@ use webrender_traits::{YuvColorSpace, YuvFormat};
 const OPAQUE_TASK_INDEX: RenderTaskIndex = RenderTaskIndex(i32::MAX as usize);
 
 
-pub type AuxiliaryListsMap = HashMap<PipelineId,
-                                     AuxiliaryLists,
-                                     BuildHasherDefault<FnvHasher>>;
+pub type DisplayListMap = HashMap<PipelineId,
+                                  BuiltDisplayList,
+                                  BuildHasherDefault<FnvHasher>>;
 
 trait AlphaBatchHelpers {
     fn get_color_textures(&self, metadata: &PrimitiveMetadata) -> [SourceTexture; 3];
@@ -76,7 +77,7 @@ impl AlphaBatchHelpers for PrimitiveStore {
         match metadata.prim_kind {
             PrimitiveKind::TextRun => {
                 let text_run_cpu = &self.cpu_text_runs[metadata.cpu_prim_index.0];
-                if text_run_cpu.blur_radius.0 == 0 {
+                if text_run_cpu.blur_radius == 0.0 {
                     match text_run_cpu.render_mode {
                         FontRenderMode::Subpixel => BlendMode::Subpixel(text_run_cpu.color),
                         FontRenderMode::Alpha | FontRenderMode::Mono => BlendMode::Alpha,
@@ -419,29 +420,36 @@ impl AlphaRenderItem {
                 match prim_metadata.prim_kind {
                     PrimitiveKind::Border => {
                         let border_cpu = &ctx.prim_store.cpu_borders[prim_metadata.cpu_prim_index.0];
-                        if border_cpu.use_new_border_path {
-                            // TODO(gw): Select correct blend mode for edges and corners!!
-                            let corner_key = AlphaBatchKey::new(AlphaBatchKind::BorderCorner, flags, blend_mode, textures);
-                            let edge_key = AlphaBatchKey::new(AlphaBatchKind::BorderEdge, flags, blend_mode, textures);
+                        // TODO(gw): Select correct blend mode for edges and corners!!
+                        let corner_key = AlphaBatchKey::new(AlphaBatchKind::BorderCorner, flags, blend_mode, textures);
+                        let edge_key = AlphaBatchKey::new(AlphaBatchKind::BorderEdge, flags, blend_mode, textures);
 
-                            batch_list.with_suitable_batch(&corner_key, item_bounding_rect, |batch| {
-                                for border_segment in 0..4 {
-                                    batch.add_instance(base_instance.build(border_segment, 0, 0));
+                        batch_list.with_suitable_batch(&corner_key, item_bounding_rect, |batch| {
+                            for (i, instance_kind) in border_cpu.corner_instances.iter().enumerate() {
+                                let sub_index = i as i32;
+                                match *instance_kind {
+                                    BorderCornerInstance::Single => {
+                                        batch.add_instance(base_instance.build(sub_index,
+                                                                               BorderCornerSide::Both as i32,
+                                                                               0));
+                                    }
+                                    BorderCornerInstance::Double => {
+                                        batch.add_instance(base_instance.build(sub_index,
+                                                                               BorderCornerSide::First as i32,
+                                                                               0));
+                                        batch.add_instance(base_instance.build(sub_index,
+                                                                               BorderCornerSide::Second as i32,
+                                                                               0));
+                                    }
                                 }
-                            });
+                            }
+                        });
 
-                            batch_list.with_suitable_batch(&edge_key, item_bounding_rect, |batch| {
-                                for border_segment in 0..4 {
-                                    batch.add_instance(base_instance.build(border_segment, 0, 0));
-                                }
-                            });
-                        } else {
-                            let key = AlphaBatchKey::new(AlphaBatchKind::Border, flags, blend_mode, textures);
-                            let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
-                            for border_segment in 0..8 {
+                        batch_list.with_suitable_batch(&edge_key, item_bounding_rect, |batch| {
+                            for border_segment in 0..4 {
                                 batch.add_instance(base_instance.build(border_segment, 0, 0));
                             }
-                        }
+                        });
                     }
                     PrimitiveKind::Rectangle => {
                         let key = AlphaBatchKey::new(AlphaBatchKind::Rectangle, flags, blend_mode, textures);
@@ -475,7 +483,7 @@ impl AlphaRenderItem {
                     }
                     PrimitiveKind::TextRun => {
                         let text_cpu = &ctx.prim_store.cpu_text_runs[prim_metadata.cpu_prim_index.0];
-                        let batch_kind = if text_cpu.blur_radius.0 == 0 {
+                        let batch_kind = if text_cpu.blur_radius == 0.0 {
                             AlphaBatchKind::TextRun
                         } else {
                             // Select a generic primitive shader that can blit the
@@ -643,6 +651,7 @@ pub struct ClipBatcher {
     pub rectangles: Vec<CacheClipInstance>,
     /// Image draws apply the image masking.
     pub images: HashMap<SourceTexture, Vec<CacheClipInstance>>,
+    pub border_clears: Vec<CacheClipInstance>,
     pub borders: Vec<CacheClipInstance>,
 }
 
@@ -651,6 +660,7 @@ impl ClipBatcher {
         ClipBatcher {
             rectangles: Vec::new(),
             images: HashMap::new(),
+            border_clears: Vec::new(),
             borders: Vec::new(),
         }
     }
@@ -717,10 +727,16 @@ impl ClipBatcher {
             }
 
             for &(ref source, gpu_address) in &info.border_corners {
-                for dash_index in 0..source.dash_count {
+                self.border_clears.push(CacheClipInstance {
+                    address: gpu_address,
+                    segment: 0,
+                    ..instance
+                });
+
+                for clip_index in 0..source.actual_clip_count {
                     self.borders.push(CacheClipInstance {
                         address: gpu_address,
-                        segment: dash_index as i32,
+                        segment: 1 + clip_index as i32,
                         ..instance
                     })
                 }
@@ -915,10 +931,10 @@ impl RenderTarget for ColorRenderTarget {
                 render_tasks: &RenderTaskCollection,
                 pass_index: RenderPassIndex) {
         match task.kind {
-            RenderTaskKind::Alpha(info) => {
+            RenderTaskKind::Alpha(mut info) => {
                 self.alpha_batcher.add_task(AlphaBatchTask {
                     task_id: task.id,
-                    items: info.items,
+                    items: mem::replace(&mut info.items, Vec::new()),
                 });
             }
             RenderTaskKind::VerticalBlur(_, prim_index) => {
@@ -968,7 +984,7 @@ impl RenderTarget for ColorRenderTarget {
                     PrimitiveKind::TextRun => {
                         let text = &ctx.prim_store.cpu_text_runs[prim_metadata.cpu_prim_index.0];
                         // We only cache text runs with a text-shadow (for now).
-                        debug_assert!(text.blur_radius.0 != 0);
+                        debug_assert!(text.blur_radius != 0.0);
 
                         // TODO(gw): This should always be fine for now, since the texture
                         // atlas grows to 4k. However, it won't be a problem soon, once
@@ -1180,7 +1196,6 @@ pub enum AlphaBatchKind {
     TextRun,
     Image(ImageBufferKind),
     YuvImage(ImageBufferKind, YuvFormat, YuvColorSpace),
-    Border,
     AlignedGradient,
     AngleGradient,
     RadialGradient,
@@ -1512,6 +1527,15 @@ impl CompositeOps {
     }
 }
 
+impl Default for CompositeOps {
+    fn default() -> CompositeOps {
+        CompositeOps {
+            filters: Vec::new(),
+            mix_blend_mode: None,
+        }
+    }
+}
+
 /// A rendering-oriented representation of frame::Frame built by the render backend
 /// and presented to the renderer.
 pub struct Frame {
@@ -1539,4 +1563,3 @@ pub struct Frame {
     // patch the data structures.
     pub deferred_resolves: Vec<DeferredResolve>,
 }
-

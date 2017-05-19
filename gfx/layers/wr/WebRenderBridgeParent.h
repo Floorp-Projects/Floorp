@@ -53,6 +53,7 @@ public:
 
   wr::PipelineId PipelineId() { return mPipelineId; }
   wr::WebRenderAPI* GetWebRenderAPI() { return mApi; }
+  wr::Epoch WrEpoch() { return wr::NewEpoch(mWrEpoch); }
   WebRenderCompositableHolder* CompositableHolder() { return mCompositableHolder; }
   CompositorVsyncScheduler* CompositorScheduler() { return mCompositorScheduler.get(); }
 
@@ -90,20 +91,18 @@ public:
                                     InfallibleTArray<OpDestroy>&& aToDestroy,
                                     const uint64_t& aFwdTransactionId,
                                     const uint64_t& aTransactionId,
+                                    const WrSize& aContentSize,
                                     const ByteBuffer& dl,
                                     const WrBuiltDisplayListDescriptor& dlDesc,
-                                    const ByteBuffer& aux,
-                                    const WrAuxiliaryListsDescriptor& auxDesc,
                                     const WebRenderScrollData& aScrollData) override;
   mozilla::ipc::IPCResult RecvDPSyncEnd(const gfx::IntSize& aSize,
                                         InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                         InfallibleTArray<OpDestroy>&& aToDestroy,
                                         const uint64_t& aFwdTransactionId,
                                         const uint64_t& aTransactionId,
+                                        const WrSize& aContentSize,
                                         const ByteBuffer& dl,
                                         const WrBuiltDisplayListDescriptor& dlDesc,
-                                        const ByteBuffer& aux,
-                                        const WrAuxiliaryListsDescriptor& auxDesc,
                                         const WebRenderScrollData& aScrollData) override;
   mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture) override;
 
@@ -165,15 +164,20 @@ public:
   void UpdateAPZ();
   const WebRenderScrollData& GetScrollData() const;
 
+  static uint32_t AllocIdNameSpace() {
+    return ++sIdNameSpace;
+  }
+
 private:
   virtual ~WebRenderBridgeParent();
 
   void DeleteOldImages();
-  void ProcessWebRenderCommands(const gfx::IntSize &aSize, InfallibleTArray<WebRenderParentCommand>& commands, const wr::Epoch& aEpoch,
-                                    const ByteBuffer& dl,
-                                    const WrBuiltDisplayListDescriptor& dlDesc,
-                                    const ByteBuffer& aux,
-                                    const WrAuxiliaryListsDescriptor& auxDesc);
+  void ProcessWebRenderCommands(const gfx::IntSize &aSize,
+                                InfallibleTArray<WebRenderParentCommand>& commands,
+                                const wr::Epoch& aEpoch,
+                                const WrSize& aContentSize,
+                                const ByteBuffer& dl,
+                                const WrBuiltDisplayListDescriptor& dlDesc);
   void ScheduleComposition();
   void ClearResources();
   uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }
@@ -183,14 +187,19 @@ private:
                    InfallibleTArray<OpDestroy>&& aToDestroy,
                    const uint64_t& aFwdTransactionId,
                    const uint64_t& aTransactionId,
+                   const WrSize& aContentSize,
                    const ByteBuffer& dl,
                    const WrBuiltDisplayListDescriptor& dlDesc,
-                   const ByteBuffer& aux,
-                   const WrAuxiliaryListsDescriptor& auxDesc,
                    const WebRenderScrollData& aScrollData);
 
   void SampleAnimations(nsTArray<WrOpacityProperty>& aOpacityArray,
                         nsTArray<WrTransformProperty>& aTransformArray);
+
+  CompositorBridgeParent* GetRootCompositorBridgeParent() const;
+
+  // Have APZ push the async scroll state to WR. Returns true if an APZ
+  // animation is in effect and we need to schedule another composition.
+  bool PushAPZStateToWR();
 
 private:
   struct PendingTransactionId {
@@ -227,6 +236,7 @@ private:
 
   bool mPaused;
   bool mDestroyed;
+  bool mIsSnapshotting;
 
   // Can only be accessed on the compositor thread.
   WebRenderScrollData mScrollData;

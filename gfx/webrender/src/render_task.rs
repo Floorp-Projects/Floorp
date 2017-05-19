@@ -37,7 +37,7 @@ pub enum MaskCacheKey {
     ClipNode(ClipId),
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum RenderTaskId {
     Static(RenderTaskIndex),
     Dynamic(RenderTaskKey),

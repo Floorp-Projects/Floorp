@@ -44,6 +44,11 @@ public:
   bool Selected() const;
   bool DefaultSelected() const;
 
+  void SetSelectedChanged(bool aValue)
+  {
+    mSelectedChanged = aValue;
+  }
+
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               int32_t aModType) const override;
 

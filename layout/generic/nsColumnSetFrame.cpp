@@ -34,7 +34,7 @@ public:
                            bool* aSnap) override
   {
     *aSnap = false;
-    return Frame()->GetVisualOverflowRect() + ToReferenceFrame();
+    return static_cast<nsColumnSetFrame*>(mFrame)->CalculateBounds(ToReferenceFrame());
   }
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
@@ -66,8 +66,6 @@ nsDisplayColumnRule::Paint(nsDisplayListBuilder* aBuilder,
   for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end(); iter++) {
     iter->DrawBorders();
   }
-
-
 }
 LayerState
 nsDisplayColumnRule::GetLayerState(nsDisplayListBuilder* aBuilder,
@@ -137,10 +135,8 @@ nsColumnSetFrame::nsColumnSetFrame(nsStyleContext* aContext)
 }
 
 void
-nsColumnSetFrame::CreateBorderRenderers(nsTArray<nsCSSBorderRenderer>& aBorderRenderers,
-                                        nsRenderingContext* aCtx,
-                                        const nsRect& aDirtyRect,
-                                        const nsPoint& aPt)
+nsColumnSetFrame::ForEachColumn(const std::function<void(const nsRect& lineRect)>& aSetLineRect,
+                                const nsPoint& aPt)
 {
   nsIFrame* child = mFrames.FirstChild();
   if (!child)
@@ -150,12 +146,74 @@ nsColumnSetFrame::CreateBorderRenderers(nsTArray<nsCSSBorderRenderer>& aBorderRe
   if (!nextSibling)
     return;  // 1 column only - this means no gap to draw on
 
+  const nsStyleColumn* colStyle = StyleColumn();
+  nscoord ruleWidth = colStyle->GetComputedColumnRuleWidth();
+  if (!ruleWidth)
+    return;
+
   WritingMode wm = GetWritingMode();
   bool isVertical = wm.IsVertical();
   bool isRTL = !wm.IsBidiLTR();
-  const nsStyleColumn* colStyle = StyleColumn();
 
+  // Get our content rect as an absolute coordinate, not relative to
+  // our parent (which is what the X and Y normally is)
+  nsRect contentRect = GetContentRect() - GetRect().TopLeft() + aPt;
+  nsSize ruleSize = isVertical ? nsSize(contentRect.width, ruleWidth)
+                               : nsSize(ruleWidth, contentRect.height);
+
+  while (nextSibling) {
+    // The frame tree goes RTL in RTL.
+    // The |prevFrame| and |nextFrame| frames here are the visually preceding
+    // (left/above) and following (right/below) frames, not in logical writing-
+    // mode direction.
+    nsIFrame* prevFrame = isRTL ? nextSibling : child;
+    nsIFrame* nextFrame = isRTL ? child : nextSibling;
+
+    // Each child frame's position coordinates is actually relative to this
+    // nsColumnSetFrame.
+    // linePt will be at the top-left edge to paint the line.
+    nsPoint linePt;
+    if (isVertical) {
+      nscoord edgeOfPrev = prevFrame->GetRect().YMost() + aPt.y;
+      nscoord edgeOfNext = nextFrame->GetRect().Y() + aPt.y;
+      linePt = nsPoint(contentRect.x,
+                       (edgeOfPrev + edgeOfNext - ruleSize.height) / 2);
+    } else {
+      nscoord edgeOfPrev = prevFrame->GetRect().XMost() + aPt.x;
+      nscoord edgeOfNext = nextFrame->GetRect().X() + aPt.x;
+      linePt = nsPoint((edgeOfPrev + edgeOfNext - ruleSize.width) / 2,
+                       contentRect.y);
+    }
+
+    aSetLineRect(nsRect(linePt, ruleSize));
+
+    child = nextSibling;
+    nextSibling = nextSibling->GetNextSibling();
+  }
+}
+
+nsRect
+nsColumnSetFrame::CalculateBounds(const nsPoint& aOffset)
+{
+  nsRect combined;
+  ForEachColumn([&combined](const nsRect& aLineRect)
+                {
+                  combined = combined.Union(aLineRect);
+                }, aOffset);
+  return combined;
+}
+
+void
+nsColumnSetFrame::CreateBorderRenderers(nsTArray<nsCSSBorderRenderer>& aBorderRenderers,
+                                        nsRenderingContext* aCtx,
+                                        const nsRect& aDirtyRect,
+                                        const nsPoint& aPt)
+{
+  WritingMode wm = GetWritingMode();
+  bool isVertical = wm.IsVertical();
+  const nsStyleColumn* colStyle = StyleColumn();
   uint8_t ruleStyle;
+
   // Per spec, inset => ridge and outset => groove
   if (colStyle->mColumnRuleStyle == NS_STYLE_BORDER_STYLE_INSET)
     ruleStyle = NS_STYLE_BORDER_STYLE_RIDGE;
@@ -194,54 +252,23 @@ nsColumnSetFrame::CreateBorderRenderers(nsTArray<nsCSSBorderRenderer>& aBorderRe
     skipSides |= mozilla::eSideBitsRight;
   }
 
-  // Get our content rect as an absolute coordinate, not relative to
-  // our parent (which is what the X and Y normally is)
-  nsRect contentRect = GetContentRect() - GetRect().TopLeft() + aPt;
-  nsSize ruleSize = isVertical ? nsSize(contentRect.width, ruleWidth)
-                               : nsSize(ruleWidth, contentRect.height);
+  ForEachColumn([&]
+                (const nsRect& aLineRect)
+                {
+                  // Assert that we're not drawing a border-image here; if we were, we
+                  // couldn't ignore the DrawResult that PaintBorderWithStyleBorder returns.
+                  MOZ_ASSERT(border.mBorderImageSource.GetType() == eStyleImageType_Null);
 
-  while (nextSibling) {
-    // The frame tree goes RTL in RTL.
-    // The |prevFrame| and |nextFrame| frames here are the visually preceding
-    // (left/above) and following (right/below) frames, not in logical writing-
-    // mode direction.
-    nsIFrame* prevFrame = isRTL ? nextSibling : child;
-    nsIFrame* nextFrame = isRTL ? child : nextSibling;
-
-    // Each child frame's position coordinates is actually relative to this
-    // nsColumnSetFrame.
-    // linePt will be at the top-left edge to paint the line.
-    nsPoint linePt;
-    if (isVertical) {
-      nscoord edgeOfPrev = prevFrame->GetRect().YMost() + aPt.y;
-      nscoord edgeOfNext = nextFrame->GetRect().Y() + aPt.y;
-      linePt = nsPoint(contentRect.x,
-                       (edgeOfPrev + edgeOfNext - ruleSize.height) / 2);
-    } else {
-      nscoord edgeOfPrev = prevFrame->GetRect().XMost() + aPt.x;
-      nscoord edgeOfNext = nextFrame->GetRect().X() + aPt.x;
-      linePt = nsPoint((edgeOfPrev + edgeOfNext - ruleSize.width) / 2,
-                       contentRect.y);
-    }
-
-    nsRect lineRect(linePt, ruleSize);
-
-    // Assert that we're not drawing a border-image here; if we were, we
-    // couldn't ignore the DrawResult that PaintBorderWithStyleBorder returns.
-    MOZ_ASSERT(border.mBorderImageSource.GetType() == eStyleImageType_Null);
-
-    gfx::DrawTarget* dt = aCtx ? aCtx->GetDrawTarget() : nullptr;
-    Maybe<nsCSSBorderRenderer> br =
-      nsCSSRendering::CreateBorderRendererWithStyleBorder(presContext, dt,
-                                                          this, aDirtyRect,
-                                                          lineRect, border,
-                                                          StyleContext(), skipSides);
-    if (br.isSome()) {
-      aBorderRenderers.AppendElement(br.value());
-    }
-    child = nextSibling;
-    nextSibling = nextSibling->GetNextSibling();
-  }
+                  gfx::DrawTarget* dt = aCtx ? aCtx->GetDrawTarget() : nullptr;
+                  Maybe<nsCSSBorderRenderer> br =
+                    nsCSSRendering::CreateBorderRendererWithStyleBorder(presContext, dt,
+                                                                        this, aDirtyRect,
+                                                                        aLineRect, border,
+                                                                        StyleContext(), skipSides);
+                  if (br.isSome()) {
+                    aBorderRenderers.AppendElement(br.value());
+                  }
+                }, aPt);
 }
 
 static nscoord
@@ -551,7 +578,6 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
   aColData.Reset();
   bool allFit = true;
   WritingMode wm = GetWritingMode();
-  bool isVertical = wm.IsVertical();
   bool isRTL = !wm.IsBidiLTR();
   bool shrinkingBSizeOnly = !NS_SUBTREE_DIRTY(this) &&
     mLastBalanceBSize > aConfig.mColMaxBSize;
@@ -601,7 +627,7 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
   // XXX when all of layout is converted to logical coordinates, we
   //     probably won't need to do this hack any more. For now, we
   //     confine it to the legacy horizontal-rl case
-  if (!isVertical && isRTL) {
+  if (!wm.IsVertical() && isRTL) {
     nscoord availISize = aReflowInput.AvailableISize();
     if (aReflowInput.ComputedISize() != NS_INTRINSICSIZE) {
       availISize = aReflowInput.ComputedISize();

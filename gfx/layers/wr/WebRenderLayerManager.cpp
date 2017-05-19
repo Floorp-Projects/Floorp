@@ -107,7 +107,7 @@ WebRenderLayerManager::~WebRenderLayerManager()
 CompositorBridgeChild*
 WebRenderLayerManager::GetCompositorBridgeChild()
 {
-  return mWidget ? mWidget->GetRemoteRenderer() : nullptr;
+  return WrBridge()->GetCompositorBridgeChild();
 }
 
 int32_t
@@ -192,7 +192,8 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   mRoot->StartPendingAnimations(mAnimationReadyTime);
 
   StackingContextHelper sc;
-  wr::DisplayListBuilder builder(WrBridge()->GetPipeline());
+  WrSize contentSize { (float)size.width, (float)size.height };
+  wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
   WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder, sc);
   WrBridge()->ClearReadLocks();
 
@@ -205,7 +206,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   }
 
   WebRenderScrollData scrollData;
-  if (mWidget->AsyncPanZoomEnabled()) {
+  if (AsyncPanZoomEnabled()) {
     if (mIsFirstPaint) {
       scrollData.SetIsFirstPaint();
       mIsFirstPaint = false;
@@ -231,6 +232,12 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   ClearMutatedLayers();
 
   return true;
+}
+
+bool
+WebRenderLayerManager::AsyncPanZoomEnabled() const
+{
+  return mWidget->AsyncPanZoomEnabled();
 }
 
 void
@@ -304,7 +311,7 @@ WebRenderLayerManager::AddImageKeyForDiscard(wr::ImageKey key)
 void
 WebRenderLayerManager::DiscardImages()
 {
-  if (!WrBridge()->IsDestroyed()) {
+  if (WrBridge()->IPCOpen()) {
     for (auto key : mImageKeys) {
       WrBridge()->SendDeleteImage(key);
     }
@@ -321,11 +328,11 @@ WebRenderLayerManager::AddCompositorAnimationsIdForDiscard(uint64_t aId)
 void
 WebRenderLayerManager::DiscardCompositorAnimations()
 {
-  if (!mDiscardedCompositorAnimationsIds.IsEmpty()) {
+  if (WrBridge()->IPCOpen() && !mDiscardedCompositorAnimationsIds.IsEmpty()) {
     WrBridge()->
       SendDeleteCompositorAnimations(mDiscardedCompositorAnimationsIds);
-    mDiscardedCompositorAnimationsIds.Clear();
   }
+  mDiscardedCompositorAnimationsIds.Clear();
 }
 
 void
@@ -462,6 +469,15 @@ WebRenderLayerManager::FlushRendering()
   CompositorBridgeChild* bridge = GetCompositorBridgeChild();
   if (bridge) {
     bridge->SendFlushRendering();
+  }
+}
+
+void
+WebRenderLayerManager::WaitOnTransactionProcessed()
+{
+  CompositorBridgeChild* bridge = GetCompositorBridgeChild();
+  if (bridge) {
+    bridge->SendWaitOnTransactionProcessed();
   }
 }
 

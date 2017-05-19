@@ -268,11 +268,15 @@ menuitem.bookmark-item {
 #main-window {
   --urlbar-border-color: ThreeDShadow;
   --urlbar-border-color-hover: var(--urlbar-border-color);
-  --urlbar-background-color: -moz-field;
 }
 
 #navigator-toolbox:-moz-lwtheme {
   --urlbar-border-color: rgba(0,0,0,.3);
+}
+
+#urlbar {
+  /* override textbox[enablehistory="true"] styling: */
+  background-color: -moz-field;
 }
 
 %include ../shared/urlbar-searchbar.inc.css
@@ -299,10 +303,6 @@ menuitem.bookmark-item {
 #urlbar[focused],
 .searchbar-textbox[focused] {
   border-color: Highlight;
-}
-
-#urlbar {
-  background-color: -moz-field;
 }
 
 #urlbar:-moz-lwtheme,

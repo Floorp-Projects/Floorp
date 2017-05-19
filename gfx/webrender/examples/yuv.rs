@@ -14,7 +14,7 @@ use glutin::TouchPhase;
 use std::collections::HashMap;
 use std::env;
 use std::path::PathBuf;
-use webrender_traits::{ClipRegion, ColorF, Epoch};
+use webrender_traits::{ColorF, Epoch};
 use webrender_traits::{DeviceIntPoint, DeviceUintSize, LayoutPoint, LayoutRect, LayoutSize};
 use webrender_traits::{ImageData, ImageDescriptor, ImageFormat};
 use webrender_traits::{PipelineId, TransformStyle};
@@ -234,9 +234,10 @@ fn main() {
     let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
 
     let pipeline_id = PipelineId(0, 0);
-    let mut builder = webrender_traits::DisplayListBuilder::new(pipeline_id);
+    let layout_size = LayoutSize::new(width as f32, height as f32);
+    let mut builder = webrender_traits::DisplayListBuilder::new(pipeline_id, layout_size);
 
-    let bounds = LayoutRect::new(LayoutPoint::zero(), LayoutSize::new(width as f32, height as f32));
+    let bounds = LayoutRect::new(LayoutPoint::zero(), layout_size);
     builder.push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                   bounds,
                                   None,
@@ -275,16 +276,18 @@ fn main() {
         None,
     );
 
+    let clip = builder.push_clip_region(&bounds, vec![], None);
     builder.push_yuv_image(
         LayoutRect::new(LayoutPoint::new(100.0, 0.0), LayoutSize::new(100.0, 100.0)),
-        ClipRegion::simple(&bounds),
+        clip,
         YuvData::NV12(yuv_chanel1, yuv_chanel2),
         YuvColorSpace::Rec601,
     );
 
+    let clip = builder.push_clip_region(&bounds, vec![], None);
     builder.push_yuv_image(
         LayoutRect::new(LayoutPoint::new(300.0, 0.0), LayoutSize::new(100.0, 100.0)),
-        ClipRegion::simple(&bounds),
+        clip,
         YuvData::PlanarYCbCr(yuv_chanel1, yuv_chanel2_1, yuv_chanel3),
         YuvColorSpace::Rec601,
     );

@@ -10,10 +10,10 @@ use renderer::VertexDataStore;
 use spring::{DAMPING, STIFFNESS, Spring};
 use tiling::PackedLayerIndex;
 use util::TransformedRectKind;
-use webrender_traits::{ClipId, ClipRegion, LayerPixel, LayerPoint, LayerRect, LayerSize};
-use webrender_traits::{LayerToScrollTransform, LayerToWorldTransform, PipelineId};
-use webrender_traits::{ScrollEventPhase, ScrollLayerRect, ScrollLocation, WorldPoint};
-use webrender_traits::{DeviceIntRect, WorldPoint4D};
+use webrender_traits::{ClipId, ClipRegion, DeviceIntRect, LayerPixel, LayerPoint, LayerRect};
+use webrender_traits::{LayerSize, LayerToScrollTransform, LayerToWorldTransform, PipelineId};
+use webrender_traits::{ScrollClamping, ScrollEventPhase, ScrollLayerRect, ScrollLocation};
+use webrender_traits::{WorldPoint, WorldPoint4D};
 
 #[cfg(target_os = "macos")]
 const CAN_OVERSCROLL: bool = true;
@@ -198,7 +198,7 @@ impl ClipScrollNode {
         LayerSize::new(overscroll_x, overscroll_y)
     }
 
-    pub fn set_scroll_origin(&mut self, origin: &LayerPoint) -> bool {
+    pub fn set_scroll_origin(&mut self, origin: &LayerPoint, clamp: ScrollClamping) -> bool {
         match self.node_type {
             NodeType::ReferenceFrame(_) => {
                 warn!("Tried to scroll a reference frame.");
@@ -210,12 +210,20 @@ impl ClipScrollNode {
 
         let scrollable_height = self.scrollable_height();
         let scrollable_width = self.scrollable_width();
-        if scrollable_height <= 0. && scrollable_width <= 0. {
-            return false;
-        }
 
-        let new_offset = LayerPoint::new((-origin.x).max(-scrollable_width).min(0.0).round(),
-                                         (-origin.y).max(-scrollable_height).min(0.0).round());
+        let new_offset = match clamp {
+            ScrollClamping::ToContentBounds => {
+                if scrollable_height <= 0. && scrollable_width <= 0. {
+                    return false;
+                }
+
+                let origin = LayerPoint::new(origin.x.max(0.0), origin.y.max(0.0));
+                LayerPoint::new((-origin.x).max(-scrollable_width).min(0.0).round(),
+                                (-origin.y).max(-scrollable_height).min(0.0).round())
+            }
+            ScrollClamping::NoClamping => LayerPoint::zero() - *origin,
+        };
+
         if new_offset == self.scrolling.offset {
             return false;
         }
