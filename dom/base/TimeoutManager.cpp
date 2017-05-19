@@ -680,7 +680,7 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
                                    last_expired_tracking_timeout ?
                                      last_expired_tracking_timeout->getNext() :
                                      nullptr);
-    while (!mWindow.IsFrozen()) {
+    while (true) {
       Timeout* timeout = runIter.Next();
       MOZ_ASSERT(timeout != dummy_normal_timeout &&
                  timeout != dummy_tracking_timeout,
@@ -697,6 +697,7 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
         continue;
       }
 
+      MOZ_ASSERT_IF(mWindow.IsFrozen(), mWindow.IsSuspended());
       if (mWindow.IsSuspended()) {
         // Some timer did suspend us. Make sure the
         // rest of the timers get executed later.
@@ -713,7 +714,10 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
 
       if (!scx) {
         // No context means this window was closed or never properly
-        // initialized for this language.
+        // initialized for this language.  This timer will never fire
+        // so just remove it.
+        timeout->remove();
+        timeout->Release();
         continue;
       }
 
@@ -749,6 +753,9 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
 
         mNormalTimeouts.SetInsertionPoint(last_normal_insertion_point);
         mTrackingTimeouts.SetInsertionPoint(last_tracking_insertion_point);
+
+        // Since ClearAllTimeouts() was called the lists should be empty.
+        MOZ_DIAGNOSTIC_ASSERT(!HasTimeouts());
 
         return;
       }
