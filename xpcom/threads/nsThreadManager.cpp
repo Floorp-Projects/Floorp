@@ -386,7 +386,7 @@ nsThreadManager::GetHighestNumberOfThreads()
 }
 
 NS_IMETHODIMP
-nsThreadManager::DispatchToMainThread(nsIRunnable *aEvent)
+nsThreadManager::DispatchToMainThread(nsIRunnable *aEvent, uint32_t aPriority)
 {
   // Note: C++ callers should instead use NS_DispatchToMainThread.
   MOZ_ASSERT(NS_IsMainThread());
@@ -395,7 +395,11 @@ nsThreadManager::DispatchToMainThread(nsIRunnable *aEvent)
   if (NS_WARN_IF(!mMainThread)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-
+  if (aPriority != nsIRunnablePriority::PRIORITY_NORMAL) {
+    nsCOMPtr<nsIRunnable> event(aEvent);
+    return mMainThread->DispatchFromScript(
+             new PrioritizableRunnable(event.forget(), aPriority), 0);
+  }
   return mMainThread->DispatchFromScript(aEvent, 0);
 }
 
