@@ -12,25 +12,27 @@
 #include "nsICryptoHash.h"
 #include "nsNetCID.h"
 #include "nsString.h"
-#include "../../../netwerk/base/nsFileStreams.h"
 #include "nsToolkitCompsCID.h"
+#include "../../../netwerk/base/nsBufferedStreams.h"
+#include "prio.h"
 
-class nsCheckSummedOutputStream : public nsSafeFileOutputStream
+class nsCheckSummedOutputStream : public nsBufferedOutputStream
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Size of MD5 hash in bytes
   static const uint32_t CHECKSUM_SIZE = 16;
+  static const uint32_t MAX_BUFFER_SIZE = 64 * 1024;
 
   nsCheckSummedOutputStream() {}
 
   NS_IMETHOD Finish() override;
   NS_IMETHOD Write(const char *buf, uint32_t count, uint32_t *result) override;
-  NS_IMETHOD Init(nsIFile* file, int32_t ioFlags, int32_t perm, int32_t behaviorFlags) override;
+  NS_IMETHOD Init(nsIOutputStream* stream, uint32_t bufferSize) override;
 
 protected:
-  virtual ~nsCheckSummedOutputStream() { nsSafeFileOutputStream::Close(); }
+  virtual ~nsCheckSummedOutputStream() { nsBufferedOutputStream::Close(); }
 
   nsCOMPtr<nsICryptoHash> mHash;
   nsCString mCheckSum;
@@ -39,13 +41,15 @@ protected:
 // returns a file output stream which can be QI'ed to nsIFileOutputStream.
 inline nsresult
 NS_NewCheckSummedOutputStream(nsIOutputStream **result,
-                              nsIFile         *file,
-                              int32_t         ioFlags       = -1,
-                              int32_t         perm          = -1,
-                              int32_t         behaviorFlags =  0)
+                              nsIFile         *file)
 {
-    nsCOMPtr<nsIFileOutputStream> out = new nsCheckSummedOutputStream();
-    nsresult rv = out->Init(file, ioFlags, perm, behaviorFlags);
+    nsCOMPtr<nsIOutputStream> localOutFile;
+    nsresult rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(localOutFile), file,
+                                                  PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIBufferedOutputStream> out = new nsCheckSummedOutputStream();
+    rv = out->Init(localOutFile, nsCheckSummedOutputStream::CHECKSUM_SIZE);
     if (NS_SUCCEEDED(rv)) {
       out.forget(result);
     }
