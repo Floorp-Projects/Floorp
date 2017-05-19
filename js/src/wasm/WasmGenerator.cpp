@@ -109,6 +109,7 @@ ModuleGenerator::initAsmJS(Metadata* asmJSMetadata)
 {
     MOZ_ASSERT(env_->isAsmJS());
 
+    metadataTier_ = &asmJSMetadata->tier();
     metadata_ = asmJSMetadata;
     MOZ_ASSERT(isAsmJS());
 
@@ -134,7 +135,11 @@ ModuleGenerator::initWasm(const CompileArgs& args)
 {
     MOZ_ASSERT(!env_->isAsmJS());
 
-    metadata_ = js_new<Metadata>();
+    metadataTier_ = js_new<MetadataTier>();
+    if (!metadataTier_)
+        return false;
+
+    metadata_ = js_new<Metadata>(metadataTier_);
     if (!metadata_)
         return false;
 
@@ -297,7 +302,7 @@ const CodeRange&
 ModuleGenerator::funcCodeRange(uint32_t funcIndex) const
 {
     MOZ_ASSERT(funcIsCompiled(funcIndex));
-    const CodeRange& cr = metadata_->codeRanges[funcToCodeRange_[funcIndex]];
+    const CodeRange& cr = metadataTier_->codeRanges[funcToCodeRange_[funcIndex]];
     MOZ_ASSERT(cr.isFunction());
     return cr;
 }
@@ -358,7 +363,7 @@ ModuleGenerator::patchCallSites()
                 if (masm_.oom())
                     return false;
 
-                if (!metadata_->codeRanges.emplaceBack(CodeRange::FarJumpIsland, offsets))
+                if (!metadataTier_->codeRanges.emplaceBack(CodeRange::FarJumpIsland, offsets))
                     return false;
                 if (!existingCallFarJumps.add(p, cs.funcIndex(), offsets.begin))
                     return false;
@@ -379,7 +384,7 @@ ModuleGenerator::patchCallSites()
                 if (masm_.oom())
                     return false;
 
-                if (!metadata_->codeRanges.emplaceBack(CodeRange::FarJumpIsland, offsets))
+                if (!metadataTier_->codeRanges.emplaceBack(CodeRange::FarJumpIsland, offsets))
                     return false;
                 existingTrapFarJumps[cs.trap()] = Some(offsets.begin);
             }
@@ -390,7 +395,7 @@ ModuleGenerator::patchCallSites()
           case CallSiteDesc::Breakpoint:
           case CallSiteDesc::EnterFrame:
           case CallSiteDesc::LeaveFrame: {
-            Uint32Vector& jumps = metadata_->debugTrapFarJumpOffsets;
+            Uint32Vector& jumps = metadataTier_->debugTrapFarJumpOffsets;
             if (jumps.empty() ||
                 uint32_t(abs(int32_t(jumps.back()) - int32_t(callerOffset))) >= JumpRange())
             {
@@ -404,7 +409,7 @@ ModuleGenerator::patchCallSites()
                 if (masm_.oom())
                     return false;
 
-                if (!metadata_->codeRanges.emplaceBack(CodeRange::FarJumpIsland, offsets))
+                if (!metadataTier_->codeRanges.emplaceBack(CodeRange::FarJumpIsland, offsets))
                     return false;
                 if (!debugTrapFarJumps_.emplaceBack(jumpOffset))
                     return false;
@@ -458,8 +463,8 @@ ModuleGenerator::finishTask(CompileTask* task)
         offsets.offsetBy(offsetInWhole);
 
         // Add the CodeRange for this function.
-        uint32_t funcCodeRangeIndex = metadata_->codeRanges.length();
-        if (!metadata_->codeRanges.emplaceBack(func.index(), func.lineOrBytecode(), offsets))
+        uint32_t funcCodeRangeIndex = metadataTier_->codeRanges.length();
+        if (!metadataTier_->codeRanges.emplaceBack(func.index(), func.lineOrBytecode(), offsets))
             return false;
 
         MOZ_ASSERT(!funcIsCompiled(func.index()));
@@ -587,46 +592,46 @@ ModuleGenerator::finishCodegen()
     for (uint32_t i = 0; i < numFuncExports; i++) {
         entries[i].offsetBy(offsetInWhole);
         metadata_->funcExports[i].initEntryOffset(entries[i].begin);
-        if (!metadata_->codeRanges.emplaceBack(CodeRange::Entry, entries[i]))
+        if (!metadataTier_->codeRanges.emplaceBack(CodeRange::Entry, entries[i]))
             return false;
     }
 
     for (uint32_t i = 0; i < numFuncImports(); i++) {
         interpExits[i].offsetBy(offsetInWhole);
         metadata_->funcImports[i].initInterpExitOffset(interpExits[i].begin);
-        if (!metadata_->codeRanges.emplaceBack(CodeRange::ImportInterpExit, interpExits[i]))
+        if (!metadataTier_->codeRanges.emplaceBack(CodeRange::ImportInterpExit, interpExits[i]))
             return false;
 
         jitExits[i].offsetBy(offsetInWhole);
         metadata_->funcImports[i].initJitExitOffset(jitExits[i].begin);
-        if (!metadata_->codeRanges.emplaceBack(CodeRange::ImportJitExit, jitExits[i]))
+        if (!metadataTier_->codeRanges.emplaceBack(CodeRange::ImportJitExit, jitExits[i]))
             return false;
     }
 
     for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
         trapExits[trap].offsetBy(offsetInWhole);
-        if (!metadata_->codeRanges.emplaceBack(CodeRange::TrapExit, trapExits[trap]))
+        if (!metadataTier_->codeRanges.emplaceBack(CodeRange::TrapExit, trapExits[trap]))
             return false;
     }
 
     outOfBoundsExit.offsetBy(offsetInWhole);
-    if (!metadata_->codeRanges.emplaceBack(CodeRange::Inline, outOfBoundsExit))
+    if (!metadataTier_->codeRanges.emplaceBack(CodeRange::Inline, outOfBoundsExit))
         return false;
 
     unalignedAccessExit.offsetBy(offsetInWhole);
-    if (!metadata_->codeRanges.emplaceBack(CodeRange::Inline, unalignedAccessExit))
+    if (!metadataTier_->codeRanges.emplaceBack(CodeRange::Inline, unalignedAccessExit))
         return false;
 
     interruptExit.offsetBy(offsetInWhole);
-    if (!metadata_->codeRanges.emplaceBack(CodeRange::Interrupt, interruptExit))
+    if (!metadataTier_->codeRanges.emplaceBack(CodeRange::Interrupt, interruptExit))
         return false;
 
     throwStub.offsetBy(offsetInWhole);
-    if (!metadata_->codeRanges.emplaceBack(CodeRange::Throw, throwStub))
+    if (!metadataTier_->codeRanges.emplaceBack(CodeRange::Throw, throwStub))
         return false;
 
     debugTrapStub.offsetBy(offsetInWhole);
-    if (!metadata_->codeRanges.emplaceBack(CodeRange::DebugTrap, debugTrapStub))
+    if (!metadataTier_->codeRanges.emplaceBack(CodeRange::DebugTrap, debugTrapStub))
         return false;
 
     // Fill in LinkData with the offsets of these stubs.
@@ -1016,8 +1021,8 @@ ModuleGenerator::finishFuncDefs()
             if (masm_.oom())
                 return false;
 
-            uint32_t codeRangeIndex = metadata_->codeRanges.length();
-            if (!metadata_->codeRanges.emplaceBack(funcIndex, /* bytecodeOffset = */ 0, offsets))
+            uint32_t codeRangeIndex = metadataTier_->codeRanges.length();
+            if (!metadataTier_->codeRanges.emplaceBack(funcIndex, /* bytecodeOffset = */ 0, offsets))
                 return false;
 
             MOZ_ASSERT(!funcIsCompiled(funcIndex));
@@ -1126,11 +1131,11 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
 
     // Convert the CallSiteAndTargetVector (needed during generation) to a
     // CallSiteVector (what is stored in the Module).
-    if (!metadata_->callSites.appendAll(masm_.callSites()))
+    if (!metadataTier_->callSites.appendAll(masm_.callSites()))
         return nullptr;
 
     // The MacroAssembler has accumulated all the memory accesses during codegen.
-    metadata_->memoryAccesses = masm_.extractMemoryAccesses();
+    metadataTier_->memoryAccesses = masm_.extractMemoryAccesses();
 
     // Copy over data from the ModuleEnvironment.
     metadata_->memoryUsage = env_->memoryUsage;
@@ -1145,15 +1150,15 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     metadata_->debugFuncArgTypes = Move(debugFuncArgTypes_);
     metadata_->debugFuncReturnTypes = Move(debugFuncReturnTypes_);
     if (metadata_->debugEnabled)
-        metadata_->debugFuncToCodeRange = Move(funcToCodeRange_);
+        metadataTier_->debugFuncToCodeRange = Move(funcToCodeRange_);
 
     // These Vectors can get large and the excess capacity can be significant,
     // so realloc them down to size.
-    metadata_->memoryAccesses.podResizeToFit();
-    metadata_->codeRanges.podResizeToFit();
-    metadata_->callSites.podResizeToFit();
-    metadata_->debugTrapFarJumpOffsets.podResizeToFit();
-    metadata_->debugFuncToCodeRange.podResizeToFit();
+    metadataTier_->memoryAccesses.podResizeToFit();
+    metadataTier_->codeRanges.podResizeToFit();
+    metadataTier_->callSites.podResizeToFit();
+    metadataTier_->debugTrapFarJumpOffsets.podResizeToFit();
+    metadataTier_->debugFuncToCodeRange.podResizeToFit();
 
     // For asm.js, the tables vector is over-allocated (to avoid resize during
     // parallel copilation). Shrink it back down to fit.
@@ -1163,7 +1168,7 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     // Assert CodeRanges are sorted.
 #ifdef DEBUG
     uint32_t lastEnd = 0;
-    for (const CodeRange& codeRange : metadata_->codeRanges) {
+    for (const CodeRange& codeRange : metadataTier_->codeRanges) {
         MOZ_ASSERT(codeRange.begin() >= lastEnd);
         lastEnd = codeRange.end();
     }
@@ -1172,7 +1177,7 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     // Assert debugTrapFarJumpOffsets are sorted.
 #ifdef DEBUG
     uint32_t lastOffset = 0;
-    for (uint32_t debugTrapFarJumpOffset : metadata_->debugTrapFarJumpOffsets) {
+    for (uint32_t debugTrapFarJumpOffset : metadataTier_->debugTrapFarJumpOffsets) {
         MOZ_ASSERT(debugTrapFarJumpOffset >= lastOffset);
         lastOffset = debugTrapFarJumpOffset;
     }

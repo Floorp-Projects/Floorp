@@ -157,7 +157,7 @@ SendCodeRangesToProfiler(const CodeSegment& cs, const Bytes& bytecode, const Met
     if (!enabled)
         return;
 
-    for (const CodeRange& codeRange : metadata.codeRanges) {
+    for (const CodeRange& codeRange : metadata.tier().codeRanges) {
         if (!codeRange.isFunction())
             continue;
 
@@ -444,38 +444,83 @@ CacheableChars::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 }
 
 size_t
+MetadataTier::serializedSize() const
+{
+    return SerializedPodVectorSize(memoryAccesses) +
+           SerializedPodVectorSize(codeRanges) +
+           SerializedPodVectorSize(callSites);
+}
+
+size_t
+MetadataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+{
+    return memoryAccesses.sizeOfExcludingThis(mallocSizeOf) +
+           codeRanges.sizeOfExcludingThis(mallocSizeOf) +
+           callSites.sizeOfExcludingThis(mallocSizeOf);
+}
+
+uint8_t*
+MetadataTier::serialize(uint8_t* cursor) const
+{
+    MOZ_ASSERT(debugTrapFarJumpOffsets.empty() && debugFuncToCodeRange.empty());
+    cursor = SerializePodVector(cursor, memoryAccesses);
+    cursor = SerializePodVector(cursor, codeRanges);
+    cursor = SerializePodVector(cursor, callSites);
+    return cursor;
+}
+
+/* static */ const uint8_t*
+MetadataTier::deserialize(const uint8_t* cursor)
+{
+    (cursor = DeserializePodVector(cursor, &memoryAccesses)) &&
+    (cursor = DeserializePodVector(cursor, &codeRanges)) &&
+    (cursor = DeserializePodVector(cursor, &callSites));
+    debugTrapFarJumpOffsets.clear();
+    debugFuncToCodeRange.clear();
+    return cursor;
+}
+
+size_t
 Metadata::serializedSize() const
 {
     return sizeof(pod()) +
+           tier().serializedSize() +
            SerializedVectorSize(funcImports) +
            SerializedVectorSize(funcExports) +
            SerializedVectorSize(sigIds) +
            SerializedPodVectorSize(globals) +
            SerializedPodVectorSize(tables) +
-           SerializedPodVectorSize(memoryAccesses) +
-           SerializedPodVectorSize(codeRanges) +
-           SerializedPodVectorSize(callSites) +
            SerializedPodVectorSize(funcNames) +
            SerializedPodVectorSize(customSections) +
            filename.serializedSize() +
            sizeof(hash);
 }
 
+size_t
+Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+{
+    return tier().sizeOfExcludingThis(mallocSizeOf) +
+           SizeOfVectorExcludingThis(funcImports, mallocSizeOf) +
+           SizeOfVectorExcludingThis(funcExports, mallocSizeOf) +
+           SizeOfVectorExcludingThis(sigIds, mallocSizeOf) +
+           globals.sizeOfExcludingThis(mallocSizeOf) +
+           tables.sizeOfExcludingThis(mallocSizeOf) +
+           funcNames.sizeOfExcludingThis(mallocSizeOf) +
+           customSections.sizeOfExcludingThis(mallocSizeOf) +
+           filename.sizeOfExcludingThis(mallocSizeOf);
+}
+
 uint8_t*
 Metadata::serialize(uint8_t* cursor) const
 {
-    MOZ_ASSERT(!debugEnabled && debugTrapFarJumpOffsets.empty() &&
-               debugFuncArgTypes.empty() && debugFuncReturnTypes.empty() &&
-               debugFuncToCodeRange.empty());
+    MOZ_ASSERT(!debugEnabled && debugFuncArgTypes.empty() && debugFuncReturnTypes.empty());
     cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
+    cursor = tier().serialize(cursor);
     cursor = SerializeVector(cursor, funcImports);
     cursor = SerializeVector(cursor, funcExports);
     cursor = SerializeVector(cursor, sigIds);
     cursor = SerializePodVector(cursor, globals);
     cursor = SerializePodVector(cursor, tables);
-    cursor = SerializePodVector(cursor, memoryAccesses);
-    cursor = SerializePodVector(cursor, codeRanges);
-    cursor = SerializePodVector(cursor, callSites);
     cursor = SerializePodVector(cursor, funcNames);
     cursor = SerializePodVector(cursor, customSections);
     cursor = filename.serialize(cursor);
@@ -487,40 +532,20 @@ Metadata::serialize(uint8_t* cursor) const
 Metadata::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
+    (cursor = tier().deserialize(cursor)) &&
     (cursor = DeserializeVector(cursor, &funcImports)) &&
     (cursor = DeserializeVector(cursor, &funcExports)) &&
     (cursor = DeserializeVector(cursor, &sigIds)) &&
     (cursor = DeserializePodVector(cursor, &globals)) &&
     (cursor = DeserializePodVector(cursor, &tables)) &&
-    (cursor = DeserializePodVector(cursor, &memoryAccesses)) &&
-    (cursor = DeserializePodVector(cursor, &codeRanges)) &&
-    (cursor = DeserializePodVector(cursor, &callSites)) &&
     (cursor = DeserializePodVector(cursor, &funcNames)) &&
     (cursor = DeserializePodVector(cursor, &customSections)) &&
     (cursor = filename.deserialize(cursor)) &&
     (cursor = ReadBytes(cursor, hash, sizeof(hash)));
     debugEnabled = false;
-    debugTrapFarJumpOffsets.clear();
-    debugFuncToCodeRange.clear();
     debugFuncArgTypes.clear();
     debugFuncReturnTypes.clear();
     return cursor;
-}
-
-size_t
-Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
-{
-    return SizeOfVectorExcludingThis(funcImports, mallocSizeOf) +
-           SizeOfVectorExcludingThis(funcExports, mallocSizeOf) +
-           SizeOfVectorExcludingThis(sigIds, mallocSizeOf) +
-           globals.sizeOfExcludingThis(mallocSizeOf) +
-           tables.sizeOfExcludingThis(mallocSizeOf) +
-           memoryAccesses.sizeOfExcludingThis(mallocSizeOf) +
-           codeRanges.sizeOfExcludingThis(mallocSizeOf) +
-           callSites.sizeOfExcludingThis(mallocSizeOf) +
-           funcNames.sizeOfExcludingThis(mallocSizeOf) +
-           customSections.sizeOfExcludingThis(mallocSizeOf) +
-           filename.sizeOfExcludingThis(mallocSizeOf);
 }
 
 struct ProjectFuncIndex
@@ -618,10 +643,15 @@ Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const Link
     if (maybeMetadata) {
         metadata = maybeMetadata;
     } else {
-        metadata = js_new<Metadata>();
+        MutableMetadataTier tier(js_new<MetadataTier>());
+        if (!tier)
+            return nullptr;
+
+        metadata = js_new<Metadata>(tier);
         if (!metadata)
             return nullptr;
     }
+
     cursor = metadata->deserialize(cursor);
     if (!cursor)
         return nullptr;
@@ -645,20 +675,20 @@ Code::lookupCallSite(void* returnAddress) const
 {
     uint32_t target = ((uint8_t*)returnAddress) - segment_->base();
     size_t lowerBound = 0;
-    size_t upperBound = metadata().callSites.length();
+    size_t upperBound = metadataTier().callSites.length();
 
     size_t match;
-    if (!BinarySearch(CallSiteRetAddrOffset(metadata().callSites), lowerBound, upperBound, target, &match))
+    if (!BinarySearch(CallSiteRetAddrOffset(metadataTier().callSites), lowerBound, upperBound, target, &match))
         return nullptr;
 
-    return &metadata().callSites[match];
+    return &metadataTier().callSites[match];
 }
 
 const CodeRange*
 Code::lookupRange(void* pc) const
 {
     CodeRange::OffsetInCode target((uint8_t*)pc - segment_->base());
-    return LookupInSorted(metadata().codeRanges, target);
+    return LookupInSorted(metadataTier().codeRanges, target);
 }
 
 struct MemoryAccessOffset
@@ -677,13 +707,13 @@ Code::lookupMemoryAccess(void* pc) const
 
     uint32_t target = ((uint8_t*)pc) - segment_->base();
     size_t lowerBound = 0;
-    size_t upperBound = metadata().memoryAccesses.length();
+    size_t upperBound = metadataTier().memoryAccesses.length();
 
     size_t match;
-    if (!BinarySearch(MemoryAccessOffset(metadata().memoryAccesses), lowerBound, upperBound, target, &match))
+    if (!BinarySearch(MemoryAccessOffset(metadataTier().memoryAccesses), lowerBound, upperBound, target, &match))
         return nullptr;
 
-    return &metadata().memoryAccesses[match];
+    return &metadataTier().memoryAccesses[match];
 }
 
 // When enabled, generate profiling labels for every name in funcNames_ that is
@@ -703,7 +733,7 @@ Code::ensureProfilingLabels(const Bytes* maybeBytecode, bool profilingEnabled) c
     if (!labels->empty())
         return;
 
-    for (const CodeRange& codeRange : metadata().codeRanges) {
+    for (const CodeRange& codeRange : metadataTier().codeRanges) {
         if (!codeRange.isFunction())
             continue;
 
@@ -712,7 +742,7 @@ Code::ensureProfilingLabels(const Bytes* maybeBytecode, bool profilingEnabled) c
         MOZ_ASSERT(bytecodeStr);
 
         UTF8Bytes name;
-        if (!metadata_->getFuncName(maybeBytecode, codeRange.funcIndex(), &name))
+        if (!metadata().getFuncName(maybeBytecode, codeRange.funcIndex(), &name))
             return;
         if (!name.append(" (", 2))
             return;

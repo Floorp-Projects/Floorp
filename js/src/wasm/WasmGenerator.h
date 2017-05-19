@@ -221,6 +221,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Data that is moved into the result of finish()
     Assumptions                     assumptions_;
     LinkData                        linkData_;
+    MutableMetadataTier             metadataTier_;
     MutableMetadata                 metadata_;
 
     // Data scoped to the ModuleGenerator's lifetime
