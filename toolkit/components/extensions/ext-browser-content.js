@@ -22,7 +22,7 @@ const {
   stylesheetMap,
 } = ExtensionUtils;
 
-/* globals addMessageListener, addEventListener, content, docShell, removeEventListener, sendAsyncMessage */
+/* eslint-env mozilla/frame-script */
 
 // Minimum time between two resizes.
 const RESIZE_TIMEOUT = 100;
