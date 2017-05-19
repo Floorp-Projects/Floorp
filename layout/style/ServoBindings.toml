@@ -304,7 +304,6 @@ hide-types = [
 ]
 raw-lines = [
     "pub use nsstring::{nsACString, nsAString, nsString, nsStringRepr};",
-    "use gecko_bindings::structs::nsTArray;",
     "type nsACString_internal = nsACString;",
     "type nsAString_internal = nsAString;",
 ]
@@ -314,6 +313,7 @@ structs-types = [
     "mozilla::css::ImageValue",
     "mozilla::css::URLValue",
     "mozilla::Side",
+    "already_AddRefed",
     "RawGeckoAnimationPropertySegment",
     "RawGeckoComputedTiming",
     "RawGeckoCSSPropertyIDList",
@@ -410,6 +410,7 @@ structs-types = [
     "nsStyleVariables",
     "nsStyleVisibility",
     "nsStyleXUL",
+    "nsTArray",
     "nsTimingFunction",
     "nscolor",
     "nscoord",
