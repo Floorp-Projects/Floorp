@@ -564,8 +564,11 @@ ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
     ++mAnimationGeneration;
   }
 
+  TraversalRestyleBehavior restyleBehavior = mRestyleForCSSRuleChanges
+    ? TraversalRestyleBehavior::ForCSSRuleChanges
+    : TraversalRestyleBehavior::Normal;
   while (animationOnly ? styleSet->StyleDocumentForAnimationOnly()
-                       : styleSet->StyleDocument()) {
+                       : styleSet->StyleDocument(restyleBehavior)) {
     if (!animationOnly) {
       ClearSnapshots();
     }
