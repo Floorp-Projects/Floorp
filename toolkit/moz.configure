@@ -538,6 +538,10 @@ project_flag('MOZ_ANDROID_HISTORY',
              help='Enable Android History instead of Places',
              set_as_define=True)
 
+project_flag('MOZ_ALLOW_LEGACY_EXTENSIONS',
+             help='Allow legacy browser extensions',
+             default=True, set_as_define=True)
+
 option(env='MOZ_PHOTON_ANIMATIONS',
        help='Enable Photon UI animations',
        default=milestone.is_nightly)
