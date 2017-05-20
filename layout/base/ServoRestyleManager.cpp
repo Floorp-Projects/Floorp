@@ -578,6 +578,14 @@ ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
       ProcessRestyledFrames(currentChanges);
       MOZ_ASSERT(currentChanges.IsEmpty());
       for (ReentrantChange& change: newChanges)  {
+        if (!(change.mHint & nsChangeHint_ReconstructFrame) &&
+            !change.mContent->GetPrimaryFrame()) {
+          // SVG Elements post change hints without ensuring that the primary
+          // frame will be there after that (see bug 1366142).
+          //
+          // Just ignore those, since we can't really process them.
+          continue;
+        }
         currentChanges.AppendChange(change.mContent->GetPrimaryFrame(),
                                     change.mContent, change.mHint);
       }
