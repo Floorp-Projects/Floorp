@@ -99,12 +99,6 @@ to mochitest command.
     * ... `-moz-repeating-` [298]
   * serialization of prefixed gradient functions bug 1358710
     * test_specified_value_serialization.html `-webkit-radial-gradient` [1]
-  * moz-prefixed intrinsic width values bug 1355402
-    * test_flexbox_flex_shorthand.html `-moz-fit-content` [4]
-    * test_value_storage.html `-moz-max-content` [43]
-    * ... `-moz-min-content` [3]
-    * ... `-moz-fit-content` [3]
-    * ... `-moz-available` [3]
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
 * Unsupported values
