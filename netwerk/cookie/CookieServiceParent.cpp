@@ -115,7 +115,8 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
                                          const bool& aIsForeign,
                                          const nsCString& aCookieString,
                                          const nsCString& aServerTime,
-                                         const OriginAttributes& aAttrs)
+                                         const OriginAttributes& aAttrs,
+                                         const bool& aFromHttp)
 {
   if (!mCookieService)
     return IPC_OK();
@@ -142,7 +143,7 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
   // NB: dummyChannel could be null if something failed in CreateDummyChannel.
   nsDependentCString cookieString(aCookieString, 0);
   mCookieService->SetCookieStringInternal(hostURI, aIsForeign, cookieString,
-                                          aServerTime, false, aAttrs,
+                                          aServerTime, aFromHttp, aAttrs,
                                           isPrivate, dummyChannel);
   return IPC_OK();
 }

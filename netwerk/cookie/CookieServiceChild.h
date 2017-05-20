@@ -47,7 +47,8 @@ protected:
   nsresult SetCookieStringInternal(nsIURI *aHostURI,
                                    nsIChannel *aChannel,
                                    const char *aCookieString,
-                                   const char *aServerTime);
+                                   const char *aServerTime,
+                                   bool aFromHttp);
 
   void PrefChanged(nsIPrefBranch *aPrefBranch);
 

@@ -32,7 +32,8 @@ protected:
                                                       const bool& aIsForeign,
                                                       const nsCString& aCookieString,
                                                       const nsCString& aServerTime,
-                                                      const OriginAttributes& aAttrs) override;
+                                                      const OriginAttributes& aAttrs,
+                                                      const bool& aFromHttp) override;
 
   RefPtr<nsCookieService> mCookieService;
 };
