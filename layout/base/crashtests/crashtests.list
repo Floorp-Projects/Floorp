@@ -41,7 +41,7 @@ load 265736-1.html
 load 265736-2.html
 load 265899-1.html
 load 265973-1.html
-asserts(6-12) asserts-if(stylo,0) load 265986-1.html # Bug 512405
+asserts(6-12) load 265986-1.html # Bug 512405
 load 265999-1.html
 load 266222-1.html
 asserts(1-7) load 266360-1.html # bug 576358

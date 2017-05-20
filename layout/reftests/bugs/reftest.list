@@ -752,7 +752,7 @@ test-pref(layout.float-fragments-inside-column.enabled,true) == 386147-1.html 38
 == 386401-2.html 386401-2-ref.html
 == 386401-3.html 386401-3-ref.html
 == 386470-1a.html 386470-1-ref.html
-fails-if(stylo) == 386470-1b.html 386470-1-ref.html
+== 386470-1b.html 386470-1-ref.html
 == 386470-1c.html 386470-1-ref.html
 == 386920-1.html 386920-1-ref.html
 == 387201-1.html 387201-1-ref.html
@@ -900,7 +900,7 @@ random-if(cocoaWidget) HTTP(..) == 404149-1.xul 404149-1-ref.xul # HTTP for font
 == 404309-1b.html 404309-1-ref.html
 # Disabled due to compartments for now.
 #!= data:application/xml,<foo/> data:text/plain, # ensure we pretty-print this XML instead of letting it appear blank (test for bug 404419)
-fuzzy-if(Android,8,50) fails-if(stylo) == 404553-1.html 404553-1-ref.html  # assertion test, also tests that marquee binding is applied correctly
+fuzzy-if(Android,8,50) == 404553-1.html 404553-1-ref.html  # assertion test, also tests that marquee binding is applied correctly
 == 404666-1.html 404666-1-ref.html
 == 404666-2.html 404666-2-ref.html
 == 405186-1.xhtml about:blank
@@ -912,8 +912,8 @@ fuzzy-if(Android,8,50) fails-if(stylo) == 404553-1.html 404553-1-ref.html  # ass
 # == 405952-1.html 405952-1-ref.html
 == 406484-1.html 406484-1-ref.html
 == 406568-1.html 406568-1-ref.html
-fails-if(stylo) == 407016-1-a.html 407016-1-ref.html
-fails-if(stylo) == 407016-1-b.html 407016-1-ref.html
+== 407016-1-a.html 407016-1-ref.html
+== 407016-1-b.html 407016-1-ref.html
 == 407078-1.html 407078-1-ref.html
 == 407095-1.html 407095-1-ref.html
 fuzzy-if(Android,13,9) == 407111-1.html 407111-1-ref.html  # Bug 1128229
