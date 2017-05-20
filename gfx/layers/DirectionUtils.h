@@ -50,6 +50,12 @@ float GetAxisScale(ScrollDirection aDir, const ScaleFactors2D<FromUnits, ToUnits
   }
 }
 
+inline ScrollDirection GetPerpendicularDirection(ScrollDirection aDir) {
+  return aDir == ScrollDirection::HORIZONTAL
+       ? ScrollDirection::VERTICAL
+       : ScrollDirection::HORIZONTAL;
+}
+
 } // namespace layers
 } // namespace mozilla
 
