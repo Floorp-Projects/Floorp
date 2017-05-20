@@ -774,6 +774,7 @@ MessageChannel::Open(Transport* aTransport, MessageLoop* aIOLoop, Side aSide)
     mWorkerLoop = MessageLoop::current();
     mWorkerLoopID = mWorkerLoop->id();
     mWorkerLoop->AddDestructionObserver(this);
+    mListener->SetIsMainThreadProtocol();
 
     if (!AbstractThread::GetCurrent()) {
         mWorkerLoop->AddDestructionObserver(
@@ -859,6 +860,7 @@ MessageChannel::CommonThreadOpenInit(MessageChannel *aTargetChan, Side aSide)
     mWorkerLoop = MessageLoop::current();
     mWorkerLoopID = mWorkerLoop->id();
     mWorkerLoop->AddDestructionObserver(this);
+    mListener->SetIsMainThreadProtocol();
 
     if (!AbstractThread::GetCurrent()) {
         mWorkerLoop->AddDestructionObserver(

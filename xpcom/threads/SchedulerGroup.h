@@ -57,10 +57,19 @@ public:
     SchedulerGroup* mPrevRunningDispatcher;
   };
 
+  // This function returns true if it's currently safe to run code associated
+  // with this SchedulerGroup. It will return true either if we're inside an
+  // unlabeled runnable or if we're inside a runnable labeled with this
+  // SchedulerGroup.
+  bool IsSafeToRun() const
+  {
+    return !sRunningDispatcher || mAccessValid;
+  }
+
   // Ensure that it's valid to access the TabGroup at this time.
   void ValidateAccess() const
   {
-    MOZ_ASSERT(!sRunningDispatcher || mAccessValid);
+    MOZ_ASSERT(IsSafeToRun());
   }
 
   class Runnable final : public mozilla::Runnable
