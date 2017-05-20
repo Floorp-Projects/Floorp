@@ -2841,10 +2841,11 @@ nsXPCComponents_Utils::IsDeadWrapper(HandleValue obj, bool* out)
     if (obj.isPrimitive())
         return NS_ERROR_INVALID_ARG;
 
-    // Make sure to unwrap first. Once a proxy is nuked, it ceases to be a
-    // wrapper, meaning that, if passed to another compartment, we'll generate
-    // a CCW for it. Make sure that IsDeadWrapper sees through the confusion.
-    *out = JS_IsDeadWrapper(js::CheckedUnwrap(&obj.toObject()));
+    // We should never have cross-compartment wrappers for dead wrappers.
+    MOZ_ASSERT_IF(js::IsCrossCompartmentWrapper(&obj.toObject()),
+                  !JS_IsDeadWrapper(js::UncheckedUnwrap(&obj.toObject())));
+
+    *out = JS_IsDeadWrapper(&obj.toObject());
     return NS_OK;
 }
 
