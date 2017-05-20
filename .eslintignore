@@ -121,7 +121,6 @@ devtools/client/storage/test/*.html
 devtools/client/webaudioeditor/**
 devtools/client/webconsole/net/**
 devtools/client/webconsole/test/**
-devtools/client/webconsole/console-output.js
 devtools/client/webconsole/hudservice.js
 devtools/client/webconsole/webconsole-connection-proxy.js
 devtools/client/webconsole/webconsole.js
