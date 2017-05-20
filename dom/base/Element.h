@@ -357,7 +357,7 @@ public:
    * Note: This method is analogous to the 'GetStyle' method in
    * nsGenericHTMLElement and nsStyledElement.
    */
-  virtual nsICSSDeclaration* GetSMILOverrideStyle();
+  nsICSSDeclaration* GetSMILOverrideStyle();
 
   /**
    * Returns if the element is labelable as per HTML specification.
