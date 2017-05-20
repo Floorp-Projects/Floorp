@@ -597,6 +597,12 @@ JS_IsDeadWrapper(JSObject* obj)
     return IsDeadProxyObject(obj);
 }
 
+JS_FRIEND_API(JSObject*)
+JS_NewDeadWrapper(JSContext* cx, JSObject* origObj)
+{
+    return NewDeadProxyObject(cx, origObj);
+}
+
 void
 js::TraceWeakMaps(WeakMapTracer* trc)
 {
