@@ -30,6 +30,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "arrayvec"
+version = "0.3.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "nodrop 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "odds 0.2.25 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "aster"
 version = "0.41.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -450,6 +459,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "nodrop"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "odds 0.2.25 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "nom"
 version = "1.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -489,6 +506,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.2.20 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "odds"
+version = "0.2.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "ordered-float"
@@ -768,6 +790,7 @@ name = "style"
 version = "0.0.1"
 dependencies = [
  "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "arrayvec 0.3.23 (registry+https://github.com/rust-lang/crates.io-index)",
  "atomic_refcell 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bindgen 0.25.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bit-vec 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1076,6 +1099,7 @@ dependencies = [
 "checksum aho-corasick 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "0638fd549427caa90c499814196d1b9e3725eb4d15d7339d6de073a680ed0ca2"
 "checksum ansi_term 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "23ac7c30002a5accbf7e8987d0632fa6de155b7c3d39d0067317a391e00a2ef6"
 "checksum app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5a0c3b5be4ed53affe3e1a162b2e7ef9979bcaac80daa9026e9d7988c41e0e83"
+"checksum arrayvec 0.3.23 (registry+https://github.com/rust-lang/crates.io-index)" = "699e63a93b79d717e8c3b5eb1b28b7780d0d6d9e59a72eb769291c83b0c8dc67"
 "checksum aster 0.41.0 (registry+https://github.com/rust-lang/crates.io-index)" = "4ccfdf7355d9db158df68f976ed030ab0f6578af811f5a7bb6dcf221ec24e0e0"
 "checksum atomic_refcell 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fb2dcb6e6d35f20276943cc04bb98e538b348d525a04ac79c10021561d202f21"
 "checksum binary-space-partition 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "88ceb0d16c4fd0e42876e298d7d3ce3780dd9ebdcbe4199816a32c77e08597ff"
@@ -1120,10 +1144,12 @@ dependencies = [
 "checksum log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "ab83497bf8bf4ed2a74259c1c802351fcd67a65baa86394b6ba73c36f4838054"
 "checksum matches 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "efd7622e3022e1a6eaa602c4cea8912254e5582c9c692e9167714182244801b1"
 "checksum memchr 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "1dbccc0e46f1ea47b9f17e6d67c5a96bd27030519c519c9c91327e31275a47b4"
+"checksum nodrop 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)" = "52cd74cd09beba596430cc6e3091b74007169a56246e1262f0ba451ea95117b2"
 "checksum nom 1.2.4 (registry+https://github.com/rust-lang/crates.io-index)" = "a5b8c256fd9471521bcb84c3cdba98921497f1a331cbc15b8030fc63b82050ce"
 "checksum num-integer 0.1.33 (registry+https://github.com/rust-lang/crates.io-index)" = "21e4df1098d1d797d27ef0c69c178c3fab64941559b290fcae198e0825c9c8b5"
 "checksum num-traits 0.1.37 (registry+https://github.com/rust-lang/crates.io-index)" = "e1cbfa3781f3fe73dc05321bed52a06d2d491eaa764c52335cf4399f046ece99"
 "checksum num_cpus 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "a225d1e2717567599c24f88e49f00856c6e825a12125181ee42c4257e3688d39"
+"checksum odds 0.2.25 (registry+https://github.com/rust-lang/crates.io-index)" = "c3df9b730298cea3a1c3faa90b7e2f9df3a9c400d0936d6015e6165734eefcba"
 "checksum ordered-float 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "da12c96037889ae0be29dd2bdd260e5a62a7df24e6466d5a15bb8131c1c200a8"
 "checksum owning_ref 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)" = "9d52571ddcb42e9c900c901a18d8d67e393df723fcd51dd59c5b1a85d0acb6cc"
 "checksum parking_lot 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)" = "fa12d706797d42551663426a45e2db2e0364bd1dbf6aeada87e89c5f981f43e9"
