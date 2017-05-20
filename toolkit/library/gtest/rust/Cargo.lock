@@ -22,7 +22,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "app_units"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "heapsize 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -802,7 +802,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "style"
 version = "0.0.1"
 dependencies = [
- "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "app_units 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "arrayvec 0.3.23 (registry+https://github.com/rust-lang/crates.io-index)",
  "atomic_refcell 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bindgen 0.25.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -841,7 +841,7 @@ dependencies = [
 name = "style_traits"
 version = "0.0.1"
 dependencies = [
- "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "app_units 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cssparser 0.13.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "euclid 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1038,7 +1038,7 @@ dependencies = [
 name = "webrender"
 version = "0.39.0"
 dependencies = [
- "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "app_units 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0-alpha6 (registry+https://github.com/rust-lang/crates.io-index)",
  "bit-set 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1065,7 +1065,7 @@ dependencies = [
 name = "webrender_bindings"
 version = "0.1.0"
 dependencies = [
- "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "app_units 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "euclid 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "gleam 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "webrender 0.39.0",
@@ -1076,7 +1076,7 @@ dependencies = [
 name = "webrender_traits"
 version = "0.39.0"
 dependencies = [
- "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "app_units 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0-alpha6 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-foundation 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1111,7 +1111,7 @@ dependencies = [
 [metadata]
 "checksum aho-corasick 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "0638fd549427caa90c499814196d1b9e3725eb4d15d7339d6de073a680ed0ca2"
 "checksum ansi_term 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "23ac7c30002a5accbf7e8987d0632fa6de155b7c3d39d0067317a391e00a2ef6"
-"checksum app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5a0c3b5be4ed53affe3e1a162b2e7ef9979bcaac80daa9026e9d7988c41e0e83"
+"checksum app_units 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c89beb28482985f88b312de4021d748f45b3eecec6cc8dbaf0c2b3c3d1ce6da5"
 "checksum arrayvec 0.3.23 (registry+https://github.com/rust-lang/crates.io-index)" = "699e63a93b79d717e8c3b5eb1b28b7780d0d6d9e59a72eb769291c83b0c8dc67"
 "checksum aster 0.41.0 (registry+https://github.com/rust-lang/crates.io-index)" = "4ccfdf7355d9db158df68f976ed030ab0f6578af811f5a7bb6dcf221ec24e0e0"
 "checksum atomic_refcell 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fb2dcb6e6d35f20276943cc04bb98e538b348d525a04ac79c10021561d202f21"

@@ -16,6 +16,12 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, Sub, Su
 pub const AU_PER_PX: i32 = 60;
 
 #[derive(Clone, Copy, Hash, PartialEq, PartialOrd, Eq, Ord)]
+/// An App Unit, the fundamental unit of length in Servo. Usually
+/// 1/60th of a pixel (see AU_PER_PX)
+///
+/// Please ensure that the values are between MIN_AU and MAX_AU.
+/// It is safe to construct invalid Au values, but it may lead to
+/// panics and overflows.
 pub struct Au(pub i32);
 
 impl HeapSizeOf for Au {
@@ -24,7 +30,7 @@ impl HeapSizeOf for Au {
 
 impl Deserialize for Au {
     fn deserialize<D: Deserializer>(deserializer: D) -> Result<Au, D::Error> {
-        Ok(Au(try!(i32::deserialize(deserializer))))
+        Ok(Au(try!(i32::deserialize(deserializer))).clamp())
     }
 }
 
@@ -53,8 +59,10 @@ impl Zero for Au {
     }
 }
 
-pub const MIN_AU: Au = Au(i32::MIN);
-pub const MAX_AU: Au = Au(i32::MAX);
+// 1 << 30 lets us add/subtract two Au and check for overflow
+// after the operation. Gecko uses the same min/max values
+pub const MAX_AU: Au = Au(1 << 30);
+pub const MIN_AU: Au = Au(- (1 << 30));
 
 impl Encodable for Au {
     fn encode<S: Encoder>(&self, e: &mut S) -> Result<(), S::Error> {
@@ -73,7 +81,7 @@ impl Add for Au {
 
     #[inline]
     fn add(self, other: Au) -> Au {
-        Au(self.0.wrapping_add(other.0))
+        Au(self.0 + other.0).clamp()
     }
 }
 
@@ -82,7 +90,7 @@ impl Sub for Au {
 
     #[inline]
     fn sub(self, other: Au) -> Au {
-        Au(self.0.wrapping_sub(other.0))
+        Au(self.0 - other.0).clamp()
     }
 
 }
@@ -92,7 +100,13 @@ impl Mul<i32> for Au {
 
     #[inline]
     fn mul(self, other: i32) -> Au {
-        Au(self.0.wrapping_mul(other))
+        if let Some(new) = self.0.checked_mul(other) {
+            Au(new).clamp()
+        } else if (self.0 > 0) ^ (other > 0) {
+            MIN_AU
+        } else {
+            MAX_AU
+        }
     }
 }
 
@@ -127,6 +141,7 @@ impl AddAssign for Au {
     #[inline]
     fn add_assign(&mut self, other: Au) {
         *self = *self + other;
+        self.clamp_self();
     }
 }
 
@@ -134,6 +149,7 @@ impl SubAssign for Au {
     #[inline]
     fn sub_assign(&mut self, other: Au) {
         *self = *self - other;
+        self.clamp_self();
     }
 }
 
@@ -141,6 +157,7 @@ impl MulAssign<i32> for Au {
     #[inline]
     fn mul_assign(&mut self, other: i32) {
         *self = *self * other;
+        self.clamp_self();
     }
 }
 
@@ -148,6 +165,7 @@ impl DivAssign<i32> for Au {
     #[inline]
     fn div_assign(&mut self, other: i32) {
         *self = *self / other;
+        self.clamp_self();
     }
 }
 
@@ -155,17 +173,40 @@ impl Au {
     /// FIXME(pcwalton): Workaround for lack of cross crate inlining of newtype structs!
     #[inline]
     pub fn new(value: i32) -> Au {
-        Au(value)
+        Au(value).clamp()
+    }
+
+    #[inline]
+    fn clamp(self) -> Self {
+        if self.0 > MAX_AU.0 {
+            MAX_AU
+        } else if self.0 < MIN_AU.0 {
+            MIN_AU
+        } else {
+            self
+        }
+    }
+
+    #[inline]
+    fn clamp_self(&mut self) {
+        *self = self.clamp()
     }
 
     #[inline]
     pub fn scale_by(self, factor: f32) -> Au {
-        Au(((self.0 as f32) * factor).round() as i32)
+        let new_float = ((self.0 as f32) * factor).round();
+        if new_float > MAX_AU.0 as f32 {
+            MAX_AU
+        } else if new_float < MIN_AU.0 as f32 {
+            MIN_AU
+        } else {
+            Au(new_float as i32)
+        }
     }
 
     #[inline]
     pub fn from_px(px: i32) -> Au {
-        Au((px * AU_PER_PX) as i32)
+        Au(px) * AU_PER_PX
     }
 
     /// Rounds this app unit down to the pixel towards zero and returns it.
@@ -202,12 +243,26 @@ impl Au {
 
     #[inline]
     pub fn from_f32_px(px: f32) -> Au {
-        Au((px * (AU_PER_PX as f32)).round() as i32)
+        let float = (px * AU_PER_PX as f32).round();
+        if float > MAX_AU.0 as f32 {
+            MAX_AU
+        } else if float < MIN_AU.0 as f32 {
+            MIN_AU
+        } else {
+            Au(float as i32)
+        }
     }
 
     #[inline]
     pub fn from_f64_px(px: f64) -> Au {
-        Au((px * (AU_PER_PX as f64)).round() as i32)
+        let float = (px * AU_PER_PX as f64).round();
+        if float > MAX_AU.0 as f64 {
+            MAX_AU
+        } else if float < MIN_AU.0 as f64 {
+            MIN_AU
+        } else {
+            Au(float as i32)
+        }
     }
 }
 
@@ -221,14 +276,14 @@ fn create() {
 #[test]
 fn operations() {
     assert_eq!(Au(7) + Au(5), Au(12));
-    assert_eq!(MAX_AU + Au(1), MIN_AU);
+    assert_eq!(MAX_AU + Au(1), MAX_AU);
 
     assert_eq!(Au(7) - Au(5), Au(2));
-    assert_eq!(MIN_AU - Au(1), MAX_AU);
+    assert_eq!(MIN_AU - Au(1), MIN_AU);
 
     assert_eq!(Au(7) * 5, Au(35));
-    assert_eq!(MAX_AU * -1, MIN_AU + Au(1));
-    assert_eq!(MIN_AU * -1, MIN_AU);
+    assert_eq!(MAX_AU * -1, MIN_AU);
+    assert_eq!(MIN_AU * -1, MAX_AU);
 
     assert_eq!(Au(35) / 5, Au(7));
     assert_eq!(Au(35) % 6, Au(5));
@@ -237,15 +292,14 @@ fn operations() {
 }
 
 #[test]
-#[should_panic]
-fn overflowing_div() {
-    MIN_AU / -1;
-}
-
-#[test]
-#[should_panic]
-fn overflowing_rem() {
-    MIN_AU % -1;
+fn saturate() {
+    let half = MAX_AU / 2;
+    assert_eq!(half + half + half + half + half, MAX_AU);
+    assert_eq!(-half - half - half - half - half, MIN_AU);
+    assert_eq!(half * -10, MIN_AU);
+    assert_eq!(-half * 10, MIN_AU);
+    assert_eq!(half * 10, MAX_AU);
+    assert_eq!(-half * -10, MAX_AU);
 }
 
 #[test]
