@@ -25,10 +25,9 @@ class nsThreadPool final
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIEVENTTARGET
+  NS_DECL_NSIEVENTTARGET_FULL
   NS_DECL_NSITHREADPOOL
   NS_DECL_NSIRUNNABLE
-  using nsIEventTarget::Dispatch;
 
   nsThreadPool();
 
