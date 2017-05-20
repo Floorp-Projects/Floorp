@@ -155,6 +155,7 @@ jobs:
             job-name: sm-tsan-opt
         treeherder:
             symbol: SM-tc(tsan)
+            tier: 3
         run-on-projects: []
         run:
             spidermonkey-variant: tsan
