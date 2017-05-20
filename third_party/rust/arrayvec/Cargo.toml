@@ -1,0 +1,30 @@
+[package]
+name = "arrayvec"
+version = "0.3.23"
+authors = ["bluss"]
+license = "MIT/Apache-2.0"
+
+description = "A vector with a fixed capacity, it can be stored on the stack too. Implements fixed capacity ArrayVec and ArrayString."
+documentation = "https://docs.rs/arrayvec/"
+repository = "https://github.com/bluss/arrayvec"
+
+keywords = ["stack", "vector", "array", "data-structure", "no_std"]
+
+[dependencies.odds]
+version = "0.2.23"
+default-features = false
+
+[dependencies.nodrop]
+version = "0.1.8"
+path = "nodrop"
+default-features = false
+
+[dependencies.generic-array]
+version = "0.5.1"
+optional = true
+
+[features]
+default = ["std"]
+std = ["odds/std", "nodrop/std"]
+use_union = ["nodrop/use_union"]
+use_generic_array = ["generic-array"]
