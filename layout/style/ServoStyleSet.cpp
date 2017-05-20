@@ -267,6 +267,7 @@ ServoStyleSet::PreTraverseSync()
   mPresContext->Document()->GetUserFontSet();
 
   UpdateStylistIfNeeded();
+  mPresContext->CacheAllLangs();
 }
 
 void

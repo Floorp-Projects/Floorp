@@ -51,8 +51,7 @@ ServoSpecifiedValues::SetIdentStringValue(nsCSSPropertyID aId,
   if (aId == eCSSProperty__x_lang) {
     // This forces the lang prefs result to be cached
     // so that we can access them off main thread during traversal
-    mPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
-                                 atom);
+    mPresContext->ForceCacheLang(atom);
   }
 }
 
