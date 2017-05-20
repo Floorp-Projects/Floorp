@@ -97,7 +97,8 @@ parent:
                                             bool isForeign,
                                             nsCString cookieString,
                                             nsCString serverTime,
-                                            OriginAttributes attrs);
+                                            OriginAttributes attrs,
+                                            bool aFromHttp);
 
   async __delete__();
 };
