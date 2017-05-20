@@ -332,20 +332,18 @@ Gecko_GetImplementedPseudo(RawGeckoElementBorrowed aElement)
 
 nsChangeHint
 Gecko_CalcStyleDifference(nsStyleContext* aOldStyleContext,
-                          ServoComputedValuesBorrowed aComputedValues)
+                          ServoComputedValuesBorrowed aComputedValues,
+                          bool* aAnyStyleChanged)
 {
   MOZ_ASSERT(aOldStyleContext);
   MOZ_ASSERT(aComputedValues);
 
-  // Eventually, we should compute things out of these flags like
-  // ElementRestyler::RestyleSelf does and pass the result to the caller to
-  // potentially halt traversal. See bug 1289868.
   uint32_t equalStructs, samePointerStructs;
   nsChangeHint result =
     aOldStyleContext->CalcStyleDifference(aComputedValues,
                                           &equalStructs,
                                           &samePointerStructs);
-
+  *aAnyStyleChanged = equalStructs != NS_STYLE_INHERIT_MASK;
   return result;
 }
 

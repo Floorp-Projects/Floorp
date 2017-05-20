@@ -322,7 +322,8 @@ nsStyleContext* Gecko_GetStyleContext(RawGeckoElementBorrowed element,
                                       nsIAtom* aPseudoTagOrNull);
 mozilla::CSSPseudoElementType Gecko_GetImplementedPseudo(RawGeckoElementBorrowed element);
 nsChangeHint Gecko_CalcStyleDifference(nsStyleContext* oldstyle,
-                                       ServoComputedValuesBorrowed newstyle);
+                                       ServoComputedValuesBorrowed newstyle,
+                                       bool* any_style_changed);
 nsChangeHint Gecko_HintsHandledForDescendants(nsChangeHint aHint);
 
 // Get an element snapshot for a given element from the table.
