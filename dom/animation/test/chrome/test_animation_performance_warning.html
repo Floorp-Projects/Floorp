@@ -40,17 +40,6 @@ SpecialPowers.pushPrefEnv({ "set": [
                           ] },
                           start);
 
-/**
- * Promise wrapper for requestIdleCallback.
- * NOTE: DON'T move this function into testcommon.js until requestIdleCallback
- * is enabled by default on all channels.
- */
-function waitForIdleCallback() {
-  return new Promise(function(resolve, reject) {
-    window.requestIdleCallback(resolve);
-  });
-}
-
 function compare_property_state(a, b) {
   if (a.property > b.property) {
     return -1;
@@ -963,7 +952,7 @@ function testSynchronizedAnimations() {
     // pay regard to when style is flushed and nor should it). However, we
     // still want transitions generated in this way to be synchronized.
     let timeForFirstFrame;
-    return waitForIdleCallback()
+    return waitForIdle()
       .then(() => {
         timeForFirstFrame = document.timeline.currentTime;
         elemA.style.transform = 'translate(100px)';
