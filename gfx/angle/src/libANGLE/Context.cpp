@@ -2515,9 +2515,6 @@ void Context::updateCaps()
 
 void Context::initWorkarounds()
 {
-    // Lose the context upon out of memory error if the application is
-    // expecting to watch for those events.
-    mWorkarounds.loseContextOnOutOfMemory = (mResetStrategy == GL_LOSE_CONTEXT_ON_RESET_EXT);
 }
 
 void Context::syncRendererState()
