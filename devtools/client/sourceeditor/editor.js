@@ -30,7 +30,6 @@ const RE_SCRATCHPAD_ERROR = /(?:@Scratchpad\/\d+:|\()(\d+):?(\d+)?(?:\)|\n)/;
 const RE_JUMP_TO_LINE = /^(\d+):?(\d+)?/;
 
 const Services = require("Services");
-const promise = require("promise");
 const events = require("devtools/shared/event-emitter");
 const { PrefObserver } = require("devtools/client/shared/prefs");
 const { getClientCssProperties } = require("devtools/shared/fronts/css-properties");
@@ -257,45 +256,45 @@ Editor.prototype = {
    * This method is asynchronous and returns a promise.
    */
   appendTo: function (el, env) {
-    let def = promise.defer();
-    let cm = editors.get(this);
+    return new Promise(resolve => {
+      let cm = editors.get(this);
 
-    if (!env) {
-      env = el.ownerDocument.createElementNS(el.namespaceURI, "iframe");
+      if (!env) {
+        env = el.ownerDocument.createElementNS(el.namespaceURI, "iframe");
 
-      if (el.namespaceURI === XUL_NS) {
-        env.flex = 1;
-      }
-    }
-
-    if (cm) {
-      throw new Error("You can append an editor only once.");
-    }
-
-    let onLoad = () => {
-      let win = env.contentWindow.wrappedJSObject;
-
-      if (!this.config.themeSwitching) {
-        win.document.documentElement.setAttribute("force-theme", "light");
+        if (el.namespaceURI === XUL_NS) {
+          env.flex = 1;
+        }
       }
 
-      Services.scriptloader.loadSubScript(
-        "chrome://devtools/content/shared/theme-switching.js",
-        win, "utf8"
-      );
-      this.container = env;
-      this._setup(win.document.body, el.ownerDocument);
-      env.removeEventListener("load", onLoad, true);
+      if (cm) {
+        throw new Error("You can append an editor only once.");
+      }
 
-      def.resolve();
-    };
+      let onLoad = () => {
+        let win = env.contentWindow.wrappedJSObject;
 
-    env.addEventListener("load", onLoad, true);
-    env.setAttribute("src", CM_IFRAME);
-    el.appendChild(env);
+        if (!this.config.themeSwitching) {
+          win.document.documentElement.setAttribute("force-theme", "light");
+        }
 
-    this.once("destroy", () => el.removeChild(env));
-    return def.promise;
+        Services.scriptloader.loadSubScript(
+          "chrome://devtools/content/shared/theme-switching.js",
+          win, "utf8"
+        );
+        this.container = env;
+        this._setup(win.document.body, el.ownerDocument);
+        env.removeEventListener("load", onLoad, true);
+
+        resolve();
+      };
+
+      env.addEventListener("load", onLoad, true);
+      env.setAttribute("src", CM_IFRAME);
+      el.appendChild(env);
+
+      this.once("destroy", () => el.removeChild(env));
+    });
   },
 
   appendToLocalElement: function (el) {
