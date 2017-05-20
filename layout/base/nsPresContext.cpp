@@ -2311,14 +2311,8 @@ nsPresContext::FlushCounterStyles()
       PresShell()->NotifyCounterStylesAreDirty();
       PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW,
                                    eRestyle_ForceDescendants);
-      if (mShell->StyleSet()->IsGecko()) {
-        RefreshDriver()->AddPostRefreshObserver(
-          new CounterStyleCleaner(RefreshDriver(), mCounterStyleManager));
-      } else {
-        NS_WARNING("stylo: Pseudo-element ::-moz-list-{number,bullet} are not "
-                   "restyled properly, so we cannot clean up retired objects. "
-                   "See bug 1364871.");
-      }
+      RefreshDriver()->AddPostRefreshObserver(
+        new CounterStyleCleaner(RefreshDriver(), mCounterStyleManager));
     }
     mCounterStylesDirty = false;
   }
