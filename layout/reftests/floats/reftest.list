@@ -21,17 +21,17 @@ fails-if(!stylo) == 345369-2.html 345369-2-ref.html
 == 775350-1.html 775350-1-ref.html
 == 1114329.html 1114329-ref.html
 == 1236745-1.html 1236745-1-ref.html
-fails-if(stylo) == 1260031-1.html?display:table 1260031-1-ref.html
-fails-if(stylo) == 1260031-1.html?display:table-cell 1260031-1-ref.html
-fails-if(stylo) == 1260031-1.html?overflow:hidden 1260031-1-ref.html
+== 1260031-1.html?display:table 1260031-1-ref.html
+== 1260031-1.html?display:table-cell 1260031-1-ref.html
+== 1260031-1.html?overflow:hidden 1260031-1-ref.html
 == 1291110-1.html 1291110-1-ref.html
 == 1291110-2.html 1291110-2-ref.html
-fails-if(stylo) == 1322843-1a.html 1322843-1-ref.html
-fails-if(stylo) == 1322843-1b.html 1322843-1-ref.html
-fails-if(stylo) == 1322843-1c.html 1322843-1-ref.html
-fails-if(stylo) == 1322843-1d.html 1322843-1-ref.html
-fails-if(stylo) == 1322843-1e.html 1322843-1-ref.html
-fails-if(stylo) == 1322843-1f.html 1322843-1-ref.html
+== 1322843-1a.html 1322843-1-ref.html
+== 1322843-1b.html 1322843-1-ref.html
+== 1322843-1c.html 1322843-1-ref.html
+== 1322843-1d.html 1322843-1-ref.html
+== 1322843-1e.html 1322843-1-ref.html
+== 1322843-1f.html 1322843-1-ref.html
 == float-in-rtl-1a.html float-in-rtl-1-ref.html
 fuzzy-if(skiaContent,1,27000) == float-in-rtl-1b.html float-in-rtl-1-ref.html
 fuzzy-if(skiaContent,1,27000) == float-in-rtl-1c.html float-in-rtl-1-ref.html
@@ -39,15 +39,15 @@ fuzzy-if(skiaContent,1,27000) == float-in-rtl-1d.html float-in-rtl-1-ref.html
 == float-in-rtl-2a.html float-in-rtl-2-ref.html
 fuzzy-if(skiaContent,1,12000) == float-in-rtl-2b.html float-in-rtl-2-ref.html
 fuzzy-if(skiaContent,1,12000) == float-in-rtl-2c.html float-in-rtl-2-ref.html
-fuzzy-if(skiaContent,1,12000) fails-if(stylo) == float-in-rtl-2d.html float-in-rtl-2-ref.html
+fuzzy-if(skiaContent,1,12000) == float-in-rtl-2d.html float-in-rtl-2-ref.html
 == float-in-rtl-3a.html float-in-rtl-3-ref.html
 fuzzy-if(skiaContent,1,27000) == float-in-rtl-3b.html float-in-rtl-3-ref.html
 fuzzy-if(skiaContent,1,27000) == float-in-rtl-3c.html float-in-rtl-3-ref.html
-fuzzy-if(skiaContent,1,27000) fails-if(stylo) == float-in-rtl-3d.html float-in-rtl-3-ref.html
+fuzzy-if(skiaContent,1,27000) == float-in-rtl-3d.html float-in-rtl-3-ref.html
 == float-in-rtl-4a.html float-in-rtl-4-ref.html
 fuzzy-if(skiaContent,1,12000) == float-in-rtl-4b.html float-in-rtl-4-ref.html
 fuzzy-if(skiaContent,1,12000) == float-in-rtl-4c.html float-in-rtl-4-ref.html
-fuzzy-if(skiaContent,1,12000) fails-if(stylo) == float-in-rtl-4d.html float-in-rtl-4-ref.html
+fuzzy-if(skiaContent,1,12000) == float-in-rtl-4d.html float-in-rtl-4-ref.html
 
 == bfc-displace-1a.html bfc-displace-1a-ref.html
 == bfc-displace-1b.html bfc-displace-1b-ref.html
@@ -66,15 +66,15 @@ fuzzy-if(skiaContent,1,12000) fails-if(stylo) == float-in-rtl-4d.html float-in-r
 == float-in-rtl-vlr-2a.html float-in-rtl-vlr-2-ref.html
 == float-in-rtl-vlr-2b.html float-in-rtl-vlr-2-ref.html
 == float-in-rtl-vlr-2c.html float-in-rtl-vlr-2-ref.html
-fails-if(stylo) == float-in-rtl-vlr-2d.html float-in-rtl-vlr-2-ref.html
+== float-in-rtl-vlr-2d.html float-in-rtl-vlr-2-ref.html
 == float-in-rtl-vlr-3a.html float-in-rtl-vlr-3-ref.html
 == float-in-rtl-vlr-3b.html float-in-rtl-vlr-3-ref.html
 == float-in-rtl-vlr-3c.html float-in-rtl-vlr-3-ref.html
-fails-if(stylo) == float-in-rtl-vlr-3d.html float-in-rtl-vlr-3-ref.html
+== float-in-rtl-vlr-3d.html float-in-rtl-vlr-3-ref.html
 == float-in-rtl-vlr-4a.html float-in-rtl-vlr-4-ref.html
 == float-in-rtl-vlr-4b.html float-in-rtl-vlr-4-ref.html
 == float-in-rtl-vlr-4c.html float-in-rtl-vlr-4-ref.html
-fails-if(stylo) == float-in-rtl-vlr-4d.html float-in-rtl-vlr-4-ref.html
+== float-in-rtl-vlr-4d.html float-in-rtl-vlr-4-ref.html
 == float-in-rtl-vrl-1a.html float-in-rtl-vrl-1-ref.html
 == float-in-rtl-vrl-1b.html float-in-rtl-vrl-1-ref.html
 == float-in-rtl-vrl-1c.html float-in-rtl-vrl-1-ref.html
@@ -82,15 +82,15 @@ fails-if(stylo) == float-in-rtl-vlr-4d.html float-in-rtl-vlr-4-ref.html
 == float-in-rtl-vrl-2a.html float-in-rtl-vrl-2-ref.html
 == float-in-rtl-vrl-2b.html float-in-rtl-vrl-2-ref.html
 == float-in-rtl-vrl-2c.html float-in-rtl-vrl-2-ref.html
-fails-if(stylo) == float-in-rtl-vrl-2d.html float-in-rtl-vrl-2-ref.html
+== float-in-rtl-vrl-2d.html float-in-rtl-vrl-2-ref.html
 == float-in-rtl-vrl-3a.html float-in-rtl-vrl-3-ref.html
 == float-in-rtl-vrl-3b.html float-in-rtl-vrl-3-ref.html
 == float-in-rtl-vrl-3c.html float-in-rtl-vrl-3-ref.html
-fails-if(stylo) == float-in-rtl-vrl-3d.html float-in-rtl-vrl-3-ref.html
+== float-in-rtl-vrl-3d.html float-in-rtl-vrl-3-ref.html
 == float-in-rtl-vrl-4a.html float-in-rtl-vrl-4-ref.html
 == float-in-rtl-vrl-4b.html float-in-rtl-vrl-4-ref.html
 == float-in-rtl-vrl-4c.html float-in-rtl-vrl-4-ref.html
-fails-if(stylo) == float-in-rtl-vrl-4d.html float-in-rtl-vrl-4-ref.html
+== float-in-rtl-vrl-4d.html float-in-rtl-vrl-4-ref.html
 fuzzy-if(OSX==1010,28,7) fuzzy-if(Android,16,2) == orthogonal-floats-1a.html orthogonal-floats-1-ref.html
 fuzzy-if(OSX==1010,28,7) == orthogonal-floats-1b.html orthogonal-floats-1-ref.html
 fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,135,700) HTTP(..) == orthogonal-floats-1c.html orthogonal-floats-1-ref.html
@@ -108,12 +108,12 @@ pref(layout.css.float-logical-values.enabled,true) == logical-float-side-4.html 
 == float-in-rtl-slr-2a.html float-in-rtl-slr-2-ref.html
 == float-in-rtl-slr-2b.html float-in-rtl-slr-2-ref.html
 == float-in-rtl-slr-2c.html float-in-rtl-slr-2-ref.html
-fails-if(stylo) == float-in-rtl-slr-2d.html float-in-rtl-slr-2-ref.html
+== float-in-rtl-slr-2d.html float-in-rtl-slr-2-ref.html
 == float-in-rtl-slr-3a.html float-in-rtl-slr-3-ref.html
 == float-in-rtl-slr-3b.html float-in-rtl-slr-3-ref.html
 == float-in-rtl-slr-3c.html float-in-rtl-slr-3-ref.html
-fails-if(stylo) == float-in-rtl-slr-3d.html float-in-rtl-slr-3-ref.html
+== float-in-rtl-slr-3d.html float-in-rtl-slr-3-ref.html
 == float-in-rtl-slr-4a.html float-in-rtl-slr-4-ref.html
 == float-in-rtl-slr-4b.html float-in-rtl-slr-4-ref.html
 == float-in-rtl-slr-4c.html float-in-rtl-slr-4-ref.html
-fails-if(stylo) == float-in-rtl-slr-4d.html float-in-rtl-slr-4-ref.html
+== float-in-rtl-slr-4d.html float-in-rtl-slr-4-ref.html

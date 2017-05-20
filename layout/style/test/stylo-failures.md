@@ -52,7 +52,7 @@ to mochitest command.
   * test_bug413958.html `monitorConsole` [3]
   * test_parser_diagnostics_unprintables.html [550]
 * Transition support:
-  * test_transitions.html: pseudo elements [12]
+  * test_transitions.html: pseudo elements [4]
   * test_transitions_and_reframes.html `pseudo-element`: bug 1366422 [4]
   * Events:
     * test_animations_event_order.html [2]
@@ -100,12 +100,11 @@ to mochitest command.
   * serialization of prefixed gradient functions bug 1358710
     * test_specified_value_serialization.html `-webkit-radial-gradient` [1]
   * moz-prefixed intrinsic width values bug 1355402
-    * test_box_size_keywords.html [16]
     * test_flexbox_flex_shorthand.html `-moz-fit-content` [4]
-    * test_value_storage.html `-moz-max-content` [46]
-    * ... `-moz-min-content` [6]
-    * ... `-moz-fit-content` [6]
-    * ... `-moz-available` [4]
+    * test_value_storage.html `-moz-max-content` [43]
+    * ... `-moz-min-content` [3]
+    * ... `-moz-fit-content` [3]
+    * ... `-moz-available` [3]
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
 * Unsupported values
