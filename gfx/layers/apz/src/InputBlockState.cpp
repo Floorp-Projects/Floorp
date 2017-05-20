@@ -291,7 +291,7 @@ DragBlockState::DispatchEvent(const InputData& aEvent) const
     return;
   }
 
-  GetTargetApzc()->HandleDragEvent(mouseInput, mDragMetrics);
+  GetTargetApzc()->HandleDragEvent(mouseInput, mDragMetrics, mInitialThumbPos);
 }
 
 bool

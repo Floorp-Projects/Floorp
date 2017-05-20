@@ -834,7 +834,8 @@ AsyncPanZoomController::ArePointerEventsConsumable(TouchBlockState* aBlock, uint
 }
 
 nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
-                                                      const AsyncDragMetrics& aDragMetrics)
+                                                      const AsyncDragMetrics& aDragMetrics,
+                                                      CSSCoord aInitialThumbPos)
 {
   if (!gfxPrefs::APZDragEnabled()) {
     return nsEventStatus_eIgnore;
@@ -863,9 +864,31 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
       (uint32_t) ScrollInputMethod::ApzScrollbarDrag);
 
+  bool isMouseAwayFromThumb = false;
+  if (int snapMultiplier = gfxPrefs::SliderSnapMultiplier()) {
+    // It's fine to ignore the async component of the thumb's transform,
+    // because any async transform of the thumb will be in the direction of
+    // scrolling, but here we're interested in the other direction.
+    ParentLayerRect thumbRect =
+        (node->GetTransform() * AsyncTransformMatrix()).TransformBounds(
+              LayerRect(node->GetVisibleRegion().GetBounds()));
+    ScrollDirection otherDirection = GetPerpendicularDirection(aDragMetrics.mDirection);
+    ParentLayerCoord distance = GetAxisStart(otherDirection,
+        thumbRect.DistanceTo(aEvent.mLocalOrigin));
+    ParentLayerCoord thumbWidth = GetAxisLength(otherDirection, thumbRect);
+    if (thumbWidth * snapMultiplier < distance) {
+      isMouseAwayFromThumb = true;
+    }
+  }
+
   ReentrantMonitorAutoEnter lock(mMonitor);
-  CSSCoord thumbPosition = ConvertScrollbarPoint(aEvent.mLocalOrigin, thumbData) -
-                           aDragMetrics.mScrollbarDragOffset;
+  CSSCoord thumbPosition;
+  if (isMouseAwayFromThumb) {
+    thumbPosition = aInitialThumbPos;
+  } else {
+    thumbPosition = ConvertScrollbarPoint(aEvent.mLocalOrigin, thumbData) -
+                    aDragMetrics.mScrollbarDragOffset;
+  }
 
   CSSCoord maxThumbPos = thumbData.mScrollTrackLength;
   maxThumbPos -= thumbData.mThumbLength;
