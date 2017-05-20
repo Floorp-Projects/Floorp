@@ -790,6 +790,7 @@ WEBIDL_FILES = [
     'StorageEvent.webidl',
     'StorageManager.webidl',
     'StorageType.webidl',
+    'StructuredCloneHolder.webidl',
     'StyleSheet.webidl',
     'StyleSheetList.webidl',
     'SubtleCrypto.webidl',
