@@ -70,6 +70,7 @@ nsLanguageAtomService::GetLanguageGroup(nsIAtom* aLanguage,
   retVal = mLangToGroup.GetWeak(aLanguage);
 
   if (!retVal) {
+    MOZ_ASSERT(NS_IsMainThread(), "Should not append to cache off main thread");
     nsCOMPtr<nsIAtom> uncached = GetUncachedLanguageGroup(aLanguage, aError);
     retVal = uncached.get();
 
