@@ -16,7 +16,7 @@ fuzzy-if(winWidget,12,100) skip-if(stylo) == display-contents-style-inheritance-
 == display-contents-visibility-hidden.html display-contents-visibility-hidden-ref.html
 == display-contents-visibility-hidden-2.html display-contents-visibility-hidden-ref.html
 == display-contents-495385-2d.html display-contents-495385-2d-ref.html
-fuzzy-if(Android,7,3935) fails-if(stylo) == display-contents-xbl.xhtml display-contents-xbl-ref.html
+fuzzy-if(Android,7,3935) == display-contents-xbl.xhtml display-contents-xbl-ref.html
 fuzzy-if(Android,7,1186) pref(dom.webcomponents.enabled,true) skip-if(stylo) == display-contents-shadow-dom-1.html display-contents-shadow-dom-1-ref.html
 == display-contents-xbl-2.xul display-contents-xbl-2-ref.xul
 asserts(1) asserts-if(stylo,2) == display-contents-xbl-3.xul display-contents-xbl-3-ref.xul # bug 1089223
