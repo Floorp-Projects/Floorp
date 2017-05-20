@@ -3871,12 +3871,6 @@
             // Map from tabs to STATE_* (below).
             tabState: new Map(),
 
-            // Holds a collection of <xul:browser>'s for this tabbrowser
-            // that we cannot force paint since their TabChild's haven't
-            // been constructed yet. Instead, we show blank tabs for them
-            // when attempting to switch to them.
-            pendingTabChild: new WeakSet(),
-
             // True if we're in the midst of switching tabs.
             switchInProgress: false,
 
@@ -3951,6 +3945,19 @@
                   this.onLayersCleared(browser);
                 }
               }
+
+              if (!tab.linkedBrowser.isRemoteBrowser) {
+                // setTabState is potentially re-entrant in the non-remote case,
+                // so we must re-get the state for this assertion.
+                let nonRemoteState = this.getTabState(tab);
+                // Non-remote tabs can never stay in the STATE_LOADING
+                // or STATE_UNLOADING states. By the time this function
+                // exits, a non-remote tab must be in STATE_LOADED or
+                // STATE_UNLOADED, since the painting and the layer
+                // upload happen synchronously.
+                this.assert(nonRemoteState == this.STATE_UNLOADED ||
+                            nonRemoteState == this.STATE_LOADED);
+              }
             },
 
             get minimized() {
@@ -3972,7 +3979,6 @@
               window.addEventListener("sizemodechange", this);
               window.addEventListener("SwapDocShells", this, true);
               window.addEventListener("EndSwapDocShells", this, true);
-              window.addEventListener("MozTabChildNotReady", this, true);
 
               let tab = this.requestedTab;
               let browser = tab.linkedBrowser;
@@ -4003,7 +4009,6 @@
               window.removeEventListener("sizemodechange", this);
               window.removeEventListener("SwapDocShells", this, true);
               window.removeEventListener("EndSwapDocShells", this, true);
-              window.removeEventListener("MozTabChildNotReady", this, true);
 
               this.tabbrowser._switcher = null;
 
@@ -4053,10 +4058,26 @@
             // make sure we display the right tab.
             updateDisplay() {
               let requestedTabState = this.getTabState(this.requestedTab);
+              let requestedBrowser = this.requestedTab.linkedBrowser;
 
-              let shouldBeBlank =
-                this.pendingTabChild.has(this.requestedTab.linkedBrowser) &&
-                requestedTabState == this.STATE_LOADING;
+              // It is more desirable to show a blank tab when appropriate than
+              // the tab switch spinner - especially since the spinner is usually
+              // preceded by a perceived lag of TAB_SWITCH_TIMEOUT ms in the
+              // tab switch. We can hide this lag, and hide the time being spent
+              // constructing TabChild's, layer trees, etc, by showing a blank
+              // tab instead and focusing it immediately.
+              let shouldBeBlank = false;
+              if (requestedBrowser.isRemoteBrowser) {
+                // If a tab is remote, we can show a blank tab instead of a
+                // spinner if we know it has never presented before, or if it
+                // has just crashed and we haven't started showing the tab crashed
+                // page yet.
+                let fl = requestedBrowser.frameLoader;
+                shouldBeBlank = (!fl.tabParent || !fl.tabParent.hasPresented);
+              }
+
+              this.log("Tab should be blank: " + shouldBeBlank);
+              this.log("Requested tab is remote?: " + requestedBrowser.isRemoteBrowser);
 
               // Figure out which tab we actually want visible right now.
               let showTab = null;
@@ -4074,16 +4095,14 @@
               // of the spinner when the tab is not currently set up
               // properly in the content process.
               if (!shouldBeBlank && this.blankTab) {
-                this.tabbrowser.removeAttribute("pendingtabchild");
-                this.blankTab.linkedBrowser.removeAttribute("pendingtabchild");
+                this.blankTab.linkedBrowser.removeAttribute("blank");
                 this.blankTab = null;
               } else if (shouldBeBlank && this.blankTab !== showTab) {
                 if (this.blankTab) {
-                  this.blankTab.linkedBrowser.removeAttribute("pendingtabchild");
+                  this.blankTab.linkedBrowser.removeAttribute("blank");
                 }
                 this.blankTab = showTab;
-                this.tabbrowser.setAttribute("pendingtabchild", "true");
-                this.blankTab.linkedBrowser.setAttribute("pendingtabchild", "true");
+                this.blankTab.linkedBrowser.setAttribute("blank", "true");
               }
 
               // Show or hide the spinner as needed.
@@ -4204,6 +4223,18 @@
               this.assert(!this.loadTimer || this.loadingTab);
               this.assert(!this.loadingTab || this.loadTimer);
 
+              // If we're switching to a non-remote tab, there's no need to wait
+              // for it to send layers to the compositor, as this will happen
+              // synchronously. Clearing this here means that in the next step,
+              // we can load the non-remote browser immediately.
+              if (!this.requestedTab.linkedBrowser.isRemoteBrowser) {
+                this.loadingTab = null;
+                if (this.loadTimer) {
+                  this.clearTimer(this.loadTimer);
+                  this.loadTimer = null;
+                }
+              }
+
               // If we're not loading anything, try loading the requested tab.
               let requestedState = this.getTabState(this.requestedTab);
               if (!this.loadTimer && !this.minimized &&
@@ -4235,6 +4266,10 @@
               // Check for that before calling finish() again.
               if (!this.tabbrowser._switcher) {
                 return;
+              }
+
+              if (this.blankTab) {
+                this.maybeFinishTabSwitch();
               }
 
               if (numPending == 0) {
@@ -4290,7 +4325,6 @@
 
             // Fires when the layers become available for a tab.
             onLayersReady(browser) {
-              this.pendingTabChild.delete(browser);
               let tab = this.tabbrowser.getTabForBrowser(browser);
               this.logState(`onLayersReady(${tab._tPos}, ${browser.isRemoteBrowser})`);
 
@@ -4317,7 +4351,6 @@
 
             // Called when we're done clearing the layers for a tab.
             onLayersCleared(browser) {
-              this.pendingTabChild.delete(browser);
               let tab = this.tabbrowser.getTabForBrowser(browser);
               if (tab) {
                 this.logState(`onLayersCleared(${tab._tPos})`);
@@ -4341,11 +4374,7 @@
               } else if (this.getTabState(tab) == this.STATE_LOADED) {
                 // A tab just changed from non-remote to remote, which means
                 // that it's gone back into the STATE_LOADING state until
-                // it sends up a layer tree. We also add the browser to
-                // the pendingTabChild set since this browser is unlikely
-                // to have its TabChild set up right away, and we want to
-                // make it appear "blank" instead of showing a spinner for it.
-                this.pendingTabChild.add(tab.linkedBrowser);
+                // it sends up a layer tree.
                 this.setTabState(tab, this.STATE_LOADING);
               }
             },
@@ -4393,18 +4422,10 @@
 
               let otherTabbrowser = otherBrowser.ownerGlobal.gBrowser;
               let otherState;
-              let pendingTabChild = false;
               if (otherTabbrowser && otherTabbrowser._switcher) {
                 let otherTab = otherTabbrowser.getTabForBrowser(otherBrowser);
                 let otherSwitcher = otherTabbrowser._switcher;
                 otherState = otherSwitcher.getTabState(otherTab);
-                pendingTabChild = otherSwitcher.pendingTabChild.has(otherBrowser);
-
-                if (pendingTabChild) {
-                  this.assert(otherState == this.STATE_LOADING);
-                }
-
-                otherSwitcher.pendingTabChild.delete(otherBrowser);
               } else {
                 otherState = (otherBrowser.docShellIsActive
                               ? this.STATE_LOADED
@@ -4416,7 +4437,6 @@
               }
               this.swapMap.set(otherBrowser, {
                 state: otherState,
-                pendingTabChild,
               });
             },
 
@@ -4436,17 +4456,13 @@
               }
               this.loadingTab = null;
 
-              let { state: otherState, pendingTabChild } =
-                this.swapMap.get(otherBrowser);
+              let { state: otherState } = this.swapMap.get(otherBrowser);
 
               this.swapMap.delete(otherBrowser);
 
               let ourTab = this.tabbrowser.getTabForBrowser(ourBrowser);
               if (ourTab) {
                 this.setTabStateNoAction(ourTab, otherState);
-                if (pendingTabChild) {
-                  this.pendingTabChild.add(ourTab.linkedBrowser);
-                }
               }
             },
 
@@ -4459,28 +4475,6 @@
             activateBrowserForPrintPreview(browser) {
               let tab = this.tabbrowser.getTabForBrowser(browser);
               this.setTabState(tab, this.STATE_LOADING);
-            },
-
-            // The tab for this browser isn't currently set
-            // up in the content process, so we have no chance
-            // of painting it right away. We'll paint a blank
-            // tab instead.
-            onTabChildNotReady(browser) {
-              this.assert(browser.isRemoteBrowser);
-
-              let tab = this.tabbrowser.getTabForBrowser(browser);
-
-              this.assert(this.getTabState(tab) == this.STATE_LOADING);
-
-              this.logState(`onTabChildNotReady(${tab._tPos})`);
-              this.pendingTabChild.add(browser);
-              this.maybeFinishTabSwitch();
-
-              if (this.loadingTab === tab) {
-                this.clearTimer(this.loadTimer);
-                this.loadTimer = null;
-                this.loadingTab = null;
-              }
             },
 
             // Called when the user asks to switch to a given tab.
@@ -4496,6 +4490,7 @@
 
               let browser = this.requestedTab.linkedBrowser;
               let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+
               if (fl && fl.tabParent && !this.activeSuppressDisplayport.has(fl.tabParent)) {
                 fl.tabParent.suppressDisplayport(true);
                 this.activeSuppressDisplayport.add(fl.tabParent);
@@ -4538,8 +4533,6 @@
                 this.onSwapDocShells(event.originalTarget, event.detail);
               } else if (event.type == "EndSwapDocShells") {
                 this.onEndSwapDocShells(event.originalTarget, event.detail);
-              } else if (event.type == "MozTabChildNotReady") {
-                this.onTabChildNotReady(event.originalTarget);
               }
 
               this.postActions();
@@ -4584,6 +4577,7 @@
               this.assert(!this.spinnerTab);
               let browser = this.requestedTab.linkedBrowser;
               this.assert(browser.isRemoteBrowser);
+              this.assert(browser.frameLoader.tabParent.hasPresented);
               TelemetryStopwatch.start("FX_TAB_SWITCH_SPINNER_VISIBLE_MS", window);
               // We have a second, similar probe for capturing recordings of
               // when the spinner is displayed for very long periods.
