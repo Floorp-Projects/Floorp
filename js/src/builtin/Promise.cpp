@@ -846,8 +846,11 @@ TriggerPromiseReactions(JSContext* cx, HandleValue reactionsVal, JS::PromiseStat
     size_t reactionsCount = reactionsList->getDenseInitializedLength();
     MOZ_ASSERT(reactionsCount > 1, "Reactions list should be created lazily");
 
+    RootedValue reactionVal(cx);
     for (size_t i = 0; i < reactionsCount; i++) {
-        reaction = &reactionsList->getDenseElement(i).toObject();
+        reactionVal = reactionsList->getDenseElement(i);
+        MOZ_RELEASE_ASSERT(reactionVal.isObject());
+        reaction = &reactionVal.toObject();
         if (!EnqueuePromiseReactionJob(cx, reaction, valueOrReason, state))
             return false;
     }
@@ -2866,6 +2869,7 @@ static MOZ_MUST_USE bool
 AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
                    Handle<PromiseReactionRecord*> reaction)
 {
+    MOZ_RELEASE_ASSERT(reaction->is<PromiseReactionRecord>());
     RootedValue reactionVal(cx, ObjectValue(*reaction));
 
     // The code that creates Promise reactions can handle wrapped Promises,
@@ -2901,7 +2905,7 @@ AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
             return false;
         }
-        MOZ_ASSERT(reactionsObj->is<PromiseReactionRecord>());
+        MOZ_RELEASE_ASSERT(reactionsObj->is<PromiseReactionRecord>());
     }
 
     if (reactionsObj->is<PromiseReactionRecord>()) {
@@ -2919,6 +2923,7 @@ AddPromiseReaction(JSContext* cx, Handle<PromiseObject*> promise,
         promise->setFixedSlot(PromiseSlot_ReactionsOrResult, ObjectValue(*reactions));
     } else {
         // Otherwise, just store the new reaction.
+        MOZ_RELEASE_ASSERT(reactionsObj->is<NativeObject>());
         reactions = &reactionsObj->as<NativeObject>();
         uint32_t len = reactions->getDenseInitializedLength();
         if (reactions->ensureDenseElements(cx, 0, len + 1) != DenseElementResult::Success)
