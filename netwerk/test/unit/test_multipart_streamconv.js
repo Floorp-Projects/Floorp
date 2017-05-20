@@ -11,7 +11,7 @@ function make_channel(url) {
   return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
 }
 
-var multipartBody = "--boundary\r\n\r\nSome text\r\n--boundary\r\nContent-Type: text/x-test\r\n\r\n<?xml version='1.1'?>\r\n<root/>\r\n--boundary\r\n\r\n<?xml version='1.0'?><root/>\r\n--boundary--";
+var multipartBody = "--boundary\r\nSet-Cookie: foo=bar\r\n\r\nSome text\r\n--boundary\r\nContent-Type: text/x-test\r\n\r\n<?xml version='1.1'?>\r\n<root/>\r\n--boundary\r\n\r\n<?xml version='1.0'?><root/>\r\n--boundary--";
 
 function contentHandler(metadata, response)
 {
