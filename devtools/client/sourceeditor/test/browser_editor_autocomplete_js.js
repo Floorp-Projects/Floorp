@@ -29,17 +29,15 @@ function testJS(ed, win) {
   ed.setText("document.");
   ed.setCursor({line: 0, ch: 9});
 
-  let waitForSuggestion = promise.defer();
+  return new Promise(resolve => {
+    ed.on("before-suggest", () => {
+      info("before-suggest has been triggered");
+      EventUtils.synthesizeKey("VK_ESCAPE", { }, win);
+      resolve();
+    });
 
-  ed.on("before-suggest", () => {
-    info("before-suggest has been triggered");
-    EventUtils.synthesizeKey("VK_ESCAPE", { }, win);
-    waitForSuggestion.resolve();
+    let autocompleteKey =
+      Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
+    EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
   });
-
-  let autocompleteKey =
-    Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
-  EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
-
-  return waitForSuggestion.promise;
 }
