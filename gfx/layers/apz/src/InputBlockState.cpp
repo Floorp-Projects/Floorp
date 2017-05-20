@@ -272,6 +272,12 @@ DragBlockState::MarkMouseUpReceived()
 }
 
 void
+DragBlockState::SetInitialThumbPos(CSSCoord aThumbPos)
+{
+  mInitialThumbPos = aThumbPos;
+}
+
+void
 DragBlockState::SetDragMetrics(const AsyncDragMetrics& aDragMetrics)
 {
   mDragMetrics = aDragMetrics;
