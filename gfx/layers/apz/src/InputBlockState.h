@@ -301,11 +301,13 @@ public:
     return this;
   }
 
+  void SetInitialThumbPos(CSSCoord aThumbPos);
   void SetDragMetrics(const AsyncDragMetrics& aDragMetrics);
 
   void DispatchEvent(const InputData& aEvent) const override;
 private:
   AsyncDragMetrics mDragMetrics;
+  CSSCoord mInitialThumbPos;
   bool mReceivedMouseUp;
 };
 
