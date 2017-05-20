@@ -60,7 +60,6 @@ to mochitest command.
 * test_computed_style.html `gradient`: -webkit-prefixed gradient values [13]
 * test_bug829816.html: counter-{reset,increment} serialization difference bug 1363968 [8]
 * dynamic change on \@counter-style rule bug 1363590
-  * test_counter_style.html [11]
   * test_counter_style.html asserts [11]
   * test_counter_descriptor_storage.html asserts [110]
 * symbols() function and string value on list-style-type bug 1363596
