@@ -11,6 +11,8 @@
 
 namespace js {
 
+class ProxyObject;
+
 enum DeadProxyIsCallableIsConstructorOption
 {
     DeadProxyNotCallableNotConstructor,
@@ -78,6 +80,12 @@ class DeadObjectProxy : public BaseProxyHandler
 
 bool
 IsDeadProxyObject(JSObject* obj);
+
+const BaseProxyHandler*
+SelectDeadProxyHandler(ProxyObject* obj);
+
+JSObject*
+NewDeadProxyObject(JSContext* cx, JSObject* origObj = nullptr);
 
 } /* namespace js */
 
