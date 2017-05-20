@@ -58,8 +58,8 @@ fails-if(stylo) == 1117227-1-text-overflow.html 1117227-1-text-overflow-ref.html
 == ua-style-sheet-border-3.html ua-style-sheet-border-3-ref.html
 == ua-style-sheet-border-4.html ua-style-sheet-border-4-ref.html
 == ua-style-sheet-border-5.html ua-style-sheet-border-5-ref.html
-fails-if(stylo) == ua-style-sheet-size-1.html ua-style-sheet-size-1-ref.html
-fails-if(stylo) == ua-style-sheet-size-2.html ua-style-sheet-size-2-ref.html
+== ua-style-sheet-size-1.html ua-style-sheet-size-1-ref.html
+== ua-style-sheet-size-2.html ua-style-sheet-size-2-ref.html
 
 == ua-style-sheet-fieldset-1.html ua-style-sheet-fieldset-1-ref.html
 skip-if(Android||winWidget) fails-if(stylo) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1a-ref.html
@@ -153,8 +153,8 @@ fuzzy-if(gtkWidget,255,6) fuzzy-if(cocoaWidget,65,69) == 1193519-sideways-lr-dec
 == 1196887-1-computed-display-inline-block.html 1196887-1-computed-display-inline-block-ref.html
 == 1205787-legacy-svg-values-1.html 1205787-legacy-svg-values-1-ref.html
 
-fails-if(stylo) == 1216747-1.html 1216747-1-ref.html
-fails-if(stylo) != 1216747-1.html 1216747-1-notref.html
+== 1216747-1.html 1216747-1-ref.html
+!= 1216747-1.html 1216747-1-notref.html
 
 == 1243125-1-floats-overflowing.html 1243125-1-floats-overflowing-ref.html
 
