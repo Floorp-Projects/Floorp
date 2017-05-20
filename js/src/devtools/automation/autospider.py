@@ -432,13 +432,8 @@ if args.variant in ('tsan', 'msan'):
             print >> outfh, "%d %s" % (count, location)
     print(open(summary_filename, 'rb').read())
 
-    max_allowed = None
     if 'max-errors' in variant:
         max_allowed = variant['max-errors']
-    elif 'expect-errors' in variant:
-        max_allowed = len(variant['expect-errors'])
-
-    if max_allowed is not None:
         print("Found %d errors out of %d allowed" % (len(sites), max_allowed))
         if len(sites) > max_allowed:
             results.append(1)
@@ -467,12 +462,18 @@ if args.variant in ('tsan', 'msan'):
             # expect-errors is an array of (filename, function) tuples.
             expect = tuple(expect)
             if remaining[expect] == 0:
-                print("Did not see expected error in %s function %s" % expect)
+                print("Did not see known error in %s function %s" % expect)
             else:
                 remaining[expect] -= 1
 
+        status = 0
         for filename, function in (e for e, c in remaining.items() if c > 0):
-            print("*** tsan error in %s function %s" % (filename, function))
+            if AUTOMATION:
+                print("TinderboxPrint: tsan error<br/>%s function %s" % (filename, function))
+                status = 1
+            else:
+                print("*** tsan error in %s function %s" % (filename, function))
+        results.append(status)
 
     # Gather individual results into a tarball. Note that these are
     # distinguished only by pid of the JS process running within each test, so
