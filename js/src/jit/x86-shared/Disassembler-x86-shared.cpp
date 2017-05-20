@@ -240,6 +240,8 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t* ptr, HeapAccess* access)
           default:
             goto rex_done;
         }
+        if (l != 0) // 256-bit SIMD
+            MOZ_CRASH("Unable to disassemble instruction");
         type = VexOperandType(p);
         rex = MakeREXFlags(w, r, x, b);
         switch (m) {
@@ -255,8 +257,6 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t* ptr, HeapAccess* access)
           default:
             MOZ_CRASH("Unable to disassemble instruction");
         }
-        if (l != 0) // 256-bit SIMD
-            MOZ_CRASH("Unable to disassemble instruction");
     }
   rex_done:;
     if (REX_W(rex))
