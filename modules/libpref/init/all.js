@@ -4824,6 +4824,7 @@ pref("xpinstall.signatures.required", false);
 pref("extensions.alwaysUnpack", false);
 pref("extensions.minCompatiblePlatformVersion", "2.0");
 pref("extensions.webExtensionsMinPlatformVersion", "42.0a1");
+pref("extensions.legacy.enabled", true);
 pref("extensions.allow-non-mpc-extensions", true);
 
 // Other webextensions prefs
@@ -5716,9 +5717,9 @@ pref("dom.IntersectionObserver.enabled", true);
 // Whether module scripts (<script type="module">) are enabled for content.
 pref("dom.moduleScripts.enabled", false);
 
-// Maximum number of setTimeout()/setInterval() callbacks to run in a single
-// event loop runnable. Minimum value of 1.
-pref("dom.timeout.max_consecutive_callbacks", 5);
+// Maximum amount of time in milliseconds consecutive setTimeout()/setInterval()
+// callback are allowed to run before yielding the event loop.
+pref("dom.timeout.max_consecutive_callbacks_ms", 4);
 
 #ifdef FUZZING
 pref("fuzzing.enabled", false);

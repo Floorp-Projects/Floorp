@@ -4,7 +4,7 @@
 
 // Tests various aspects of the details view
 
-const { REQUIRE_SIGNING } = Components.utils.import("resource://gre/modules/addons/AddonConstants.jsm", {});
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
 const PREF_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault";
 const PREF_GETADDONS_GETSEARCHRESULTS = "extensions.getAddons.search.url";
@@ -710,7 +710,7 @@ add_test(function() {
 });
 
 // These tests are only appropriate when signing can be turned off
-if (!REQUIRE_SIGNING) {
+if (!AppConstants.MOZ_REQUIRE_SIGNING) {
   // Opens and tests the details view for add-on 9
   add_test(function() {
     open_details("addon9@tests.mozilla.org", "extension", function() {
@@ -774,7 +774,7 @@ add_test(function() {
 });
 
 // These tests are only appropriate when signing can be turned off
-if (!REQUIRE_SIGNING) {
+if (!AppConstants.REQUIRE_SIGNING) {
   // Opens and tests the details view for add-on 10
   add_test(function() {
     open_details("addon10@tests.mozilla.org", "extension", function() {

@@ -1302,7 +1302,8 @@
               this._errorLink.value = gStrings.ext.GetStringFromName("notification.blocked.link");
               this._errorLink.href = this.mAddon.blocklistURL;
               this._errorLink.hidden = false;
-            } else if (!isUpgrade && !isCorrectlySigned(this.mAddon) && SIGNING_REQUIRED) {
+            } else if (!isUpgrade && !isCorrectlySigned(this.mAddon) &&
+                       AddonSettings.REQUIRE_SIGNING) {
               this.setAttribute("notification", "error");
               this._error.textContent = gStrings.ext.formatStringFromName(
                 "notification.unsignedAndDisabled", [this.mAddon.name, gStrings.brandShortName], 2

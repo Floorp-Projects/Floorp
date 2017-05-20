@@ -341,9 +341,15 @@ void
 Element::Focus(mozilla::ErrorResult& aError)
 {
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(this);
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  // Also other browsers seem to have the hack to not re-focus (and flush) when
+  // the element is already focused.
   if (fm && domElement) {
-    aError = fm->SetFocus(domElement, 0);
+    if (fm->CanSkipFocus(this)) {
+      fm->NeedsFlushBeforeEventHandling(this);
+    } else {
+      aError = fm->SetFocus(domElement, 0);
+    }
   }
 }
 

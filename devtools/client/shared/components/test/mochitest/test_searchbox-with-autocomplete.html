@@ -51,6 +51,11 @@ window.onload = async function () {
       "pqr",
       "xyz",
       "ABC",
+      "a1",
+      "a2",
+      "a3",
+      "a4",
+      "a5",
     ],
     onChange: () => null,
   });
@@ -61,15 +66,19 @@ window.onload = async function () {
 
     $(".devtools-searchinput").focus();
     await forceRender(component); // Wait for state update
+    ok(!$(".devtools-autocomplete-popup"), "Autocomplete list not visible");
+
+    sendString("a");
+    await forceRender(component);
 
     compareAutocompleteList($(".devtools-autocomplete-listbox"), [
       "ABC",
-      "BAR",
+      "a1",
+      "a2",
+      "a3",
+      "a4",
+      "a5",
       "abc",
-      "baZ",
-      "foo",
-      "pqr",
-      "xyz",
     ]);
 
     is(refs.autocomplete.state.selectedIndex, -1, "Initialised selectedIndex is -1");
@@ -82,16 +91,8 @@ window.onload = async function () {
   }
 
   async function testKeyEventsWithAutocomplete() {
-    // Filtering of list
-    $(".devtools-searchinput").focus();
-    await forceRender(component);
-    sendString("aB");
-    await forceRender(component);
-    compareAutocompleteList($(".devtools-autocomplete-listbox"), ["ABC", "abc"]);
-
     // Clear the initial input
-    synthesizeKey("VK_BACK_SPACE", {});
-    synthesizeKey("VK_BACK_SPACE", {});
+    $(".devtools-searchinput").focus();
 
     // ArrowDown
     synthesizeKey("VK_DOWN", {});

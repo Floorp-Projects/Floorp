@@ -149,6 +149,8 @@ module.exports = createClass({
     let { value } = this.state;
     let divClassList = ["devtools-searchbox", "has-clear-btn"];
     let inputClassList = [`devtools-${type}input`];
+    let showAutocomplete =
+      autocompleteList.length > 0 && this.state.focused && value !== "";
 
     if (value !== "") {
       inputClassList.push("filled");
@@ -170,8 +172,7 @@ module.exports = createClass({
         hidden: value == "",
         onClick: this.onClearButtonClick
       }),
-      autocompleteList.length > 0 && this.state.focused &&
-      AutocompletePopup({
+      showAutocomplete && AutocompletePopup({
         list: autocompleteList,
         filter: value,
         ref: "autocomplete",

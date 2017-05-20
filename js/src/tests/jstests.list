@@ -507,17 +507,11 @@ skip script test262/language/statements/for-await-of/async-func-dstr-let-ary-ptr
 skip script test262/language/statements/for-await-of/async-func-dstr-let-ary-ptrn-rest-id-iter-step-err.js
 skip script test262/language/statements/for-await-of/async-func-dstr-var-ary-ptrn-elision-step-err.js
 skip script test262/language/statements/for-await-of/async-func-dstr-var-ary-ptrn-rest-id-iter-step-err.js
-skip script test262/language/statements/for-await-of/async-gen-dstr-const-ary-ptrn-elision-iter-close.js
 skip script test262/language/statements/for-await-of/async-gen-dstr-const-ary-ptrn-elision-step-err.js
-skip script test262/language/statements/for-await-of/async-gen-dstr-const-ary-ptrn-rest-id-iter-close.js
 skip script test262/language/statements/for-await-of/async-gen-dstr-const-ary-ptrn-rest-id-iter-step-err.js
-skip script test262/language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-elision-iter-close.js
 skip script test262/language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-elision-step-err.js
 skip script test262/language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-rest-id-iter-step-err.js
-skip script test262/language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-rest-id-iter-close.js
-skip script test262/language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-elision-iter-close.js
 skip script test262/language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-elision-step-err.js
-skip script test262/language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-rest-id-iter-close.js
 skip script test262/language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-rest-id-iter-step-err.js
 
 # Missing expression statement restriction for "async function"

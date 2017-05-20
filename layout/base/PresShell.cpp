@@ -8009,6 +8009,13 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
     bool touchIsNew = false;
     bool isHandlingUserInput = false;
 
+    if (mCurrentEventContent && aEvent->IsTargetedAtFocusedWindow()) {
+      nsFocusManager* fm = nsFocusManager::GetFocusManager();
+      if (fm) {
+         fm->FlushBeforeEventHandlingIfNeeded(mCurrentEventContent);
+      }
+    }
+
     // XXX How about IME events and input events for plugins?
     if (aEvent->IsTrusted()) {
       switch (aEvent->mMessage) {

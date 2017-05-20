@@ -5422,7 +5422,14 @@ BytecodeEmitter::emitIteratorClose(IteratorKind iterKind /* = IteratorKind::Sync
     checkTypeSet(JSOP_CALL);
 
     if (iterKind == IteratorKind::Async) {
-        if (!emitAwait())                                 // ... ... RESULT
+        if (completionKind != CompletionKind::Throw) {
+            // Await clobbers rval, so save the current rval.
+            if (!emit1(JSOP_GETRVAL))                     // ... ... RESULT RVAL
+                return false;
+            if (!emit1(JSOP_SWAP))                        // ... ... RVAL RESULT
+                return false;
+        }
+        if (!emitAwait())                                 // ... ... RVAL? RESULT
             return false;
     }
 
@@ -5450,8 +5457,15 @@ BytecodeEmitter::emitIteratorClose(IteratorKind iterKind /* = IteratorKind::Sync
         if (!emitPopN(2))                                 // ... RESULT
             return false;
     } else {
-        if (!emitCheckIsObj(CheckIsObjectKind::IteratorReturn)) // ... RESULT
+        if (!emitCheckIsObj(CheckIsObjectKind::IteratorReturn)) // ... RVAL? RESULT
             return false;
+
+        if (iterKind == IteratorKind::Async) {
+            if (!emit1(JSOP_SWAP))                        // ... RESULT RVAL
+                return false;
+            if (!emit1(JSOP_SETRVAL))                     // ... RESULT
+                return false;
+        }
     }
 
     if (!ifReturnMethodIsDefined.emitElse())
