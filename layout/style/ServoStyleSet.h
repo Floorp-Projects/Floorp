@@ -230,9 +230,14 @@ public:
    * This will traverse all of the document's style roots (that is, its document
    * element, and the roots of the document-level native anonymous content).
    *
+   * |aRestyleBehavior| should be `Normal` or `ForCSSRuleChanges`.
+   * We need to specify |ForCSSRuleChanges| to try to update all CSS animations
+   * when we call this function due to CSS rule changes since @keyframes rules
+   * may have changed.
+   *
    * Returns true if a post-traversal is required.
    */
-  bool StyleDocument();
+  bool StyleDocument(TraversalRestyleBehavior aRestyleBehavior);
 
   /**
    * Performs a Servo animation-only traversal to compute style for all nodes
