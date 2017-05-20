@@ -46,6 +46,14 @@ const EXPECTED_REFLOWS = [
     "openUILinkIn@chrome://browser/content/utilityOverlay.js",
     "BrowserOpenTab@chrome://browser/content/browser.js",
   ],
+
+  [
+    // switching focus in updateCurrentBrowser() causes reflows
+    "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml",
+    "updateDisplay@chrome://browser/content/tabbrowser.xml",
+    "postActions@chrome://browser/content/tabbrowser.xml",
+    "requestTab@chrome://browser/content/tabbrowser.xml"
+  ],
 ];
 
 if (!gMultiProcessBrowser) {
