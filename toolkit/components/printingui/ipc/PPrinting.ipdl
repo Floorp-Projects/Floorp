@@ -21,12 +21,10 @@ sync protocol PPrinting
   manages PRemotePrintJob;
 
 parent:
-  sync ShowProgress(PBrowser browser,
-                    PPrintProgressDialog printProgressDialog,
-                    nullable PRemotePrintJob remotePrintJob,
-                    bool isForPrinting)
-    returns(bool notifyOnOpen,
-            nsresult rv);
+  async ShowProgress(PBrowser browser,
+                     PPrintProgressDialog printProgressDialog,
+                     nullable PRemotePrintJob remotePrintJob,
+                     bool isForPrinting);
 
   async ShowPrintDialog(PPrintSettingsDialog dialog,
                         nullable PBrowser browser,

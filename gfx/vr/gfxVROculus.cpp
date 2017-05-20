@@ -42,9 +42,13 @@
  */
 
 // See CompositorD3D11Shaders.h
+namespace mozilla {
+namespace layers {
 struct ShaderBytes { const void* mData; size_t mLength; };
 extern ShaderBytes sRGBShader;
 extern ShaderBytes sLayerQuadVS;
+} // namespace layers
+} // namespace mozilla
 #ifndef M_PI
 # define M_PI 3.14159265358979323846
 #endif

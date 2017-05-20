@@ -22,7 +22,7 @@ Timeout::Timeout()
     mReason(Reason::eTimeoutOrInterval),
     mTimeoutId(0),
     mInterval(0),
-    mFiringDepth(0),
+    mFiringId(TimeoutManager::InvalidFiringId),
     mNestingLevel(0),
     mPopupState(openAllowed)
 {
@@ -43,13 +43,11 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Timeout)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Timeout)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mScriptHandler)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Timeout)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScriptHandler)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
