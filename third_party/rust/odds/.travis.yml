@@ -1,0 +1,24 @@
+language: rust
+sudo: false
+matrix:
+  include:
+    - rust: 1.2.0
+      env:
+      - TESTFAILOK=1
+    - rust: stable
+      env:
+      - NODEFAULT=1
+    - rust: beta
+    - rust: nightly
+      env:
+      - FEATURES='unstable'
+branches:
+  only:
+    - master
+script:
+  - |
+      cargo build --verbose --features "$FEATURES" &&
+      ([ "$NODEFAULT" != 1 ] || cargo build --verbose --no-default-features) &&
+      (cargo test --verbose --features "$FEATURES" || [ "$TESTFAILOK" = 1 ]) &&
+      (cargo test --release --verbose --features "$FEATURES" || [ "$TESTFAILOK" = 1 ]) &&
+      cargo doc --verbose --features "$FEATURES"

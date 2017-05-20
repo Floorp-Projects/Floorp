@@ -1,0 +1,28 @@
+[package]
+name = "odds"
+version = "0.2.25"
+authors = ["bluss"]
+license = "MIT/Apache-2.0"
+
+description = "Odds and ends — collection miscellania. Extra functionality for slices (`.find()`, `RevSlice`), strings and other things. Debug checked variants of `get_unchecked` and `slice_unchecked`, and extra methods for strings and vectors: `repeat`, `insert_str` and `splice`. Things in odds may move to more appropriate crates if we find them."
+documentation = "https://docs.rs/odds/"
+repository = "https://github.com/bluss/odds"
+
+keywords = ["data-structure", "debug-assert", "slice", "string", "no_std"]
+
+[dependencies]
+
+[dev-dependencies]
+itertools = "0.5.1"
+memchr = "0.1.11"
+lazy_static = "0.2.2"
+
+[features]
+default = ["std"]
+# Default
+# Use libstd
+std = []
+unstable = []
+
+[profile.bench]
+debug = true
