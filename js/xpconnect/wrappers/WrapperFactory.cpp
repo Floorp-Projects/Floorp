@@ -190,11 +190,7 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
         CompartmentPrivate::Get(target)->wasNuked) {
         NS_WARNING("Trying to create a wrapper into or out of a nuked compartment");
 
-        RootedObject ccw(cx, Wrapper::New(cx, obj, &CrossCompartmentWrapper::singleton));
-
-        NukeCrossCompartmentWrapper(cx, ccw);
-
-        retObj.set(ccw);
+        retObj.set(JS_NewDeadWrapper(cx));
         return;
     }
 
