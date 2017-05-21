@@ -13,6 +13,9 @@ pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-008.html a
 pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-009.html abspos-breaking-009-ref.html
 pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-010.html abspos-breaking-010-ref.html
 == abspos-breaking-011.html abspos-breaking-011-ref.html
+== abspos-breaking-dynamic-001.html abspos-breaking-dynamic-001-ref.html
+== abspos-breaking-dynamic-002.html abspos-breaking-dynamic-002-ref.html
+== abspos-breaking-dynamic-003.html abspos-breaking-dynamic-003-ref.html
 == abspos-overflow-01.xhtml abspos-overflow-01.ref.xhtml
 == abspos-overflow-01-cols.xhtml abspos-overflow-01-cols.ref.xhtml
 == border-breaking-000-cols.xhtml border-breaking-000-cols.ref.xhtml
