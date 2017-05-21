@@ -285,16 +285,20 @@ nsDOMCSSDeclaration::GetServoCSSParsingEnvironmentForRule(const css::Rule* aRule
 {
   StyleSheet* sheet = aRule ? aRule->GetStyleSheet() : nullptr;
   if (!sheet) {
-    return ServoCSSParsingEnvironment(nullptr, eCompatibility_FullStandards);
+    return { nullptr, eCompatibility_FullStandards };
   }
 
   if (nsIDocument* document = aRule->GetDocument()) {
-    return ServoCSSParsingEnvironment(sheet->AsServo()->URLData(),
-      document->GetCompatibilityMode());
-  } else {
-    return ServoCSSParsingEnvironment(sheet->AsServo()->URLData(),
-                                      eCompatibility_FullStandards);
+    return {
+      sheet->AsServo()->URLData(),
+      document->GetCompatibilityMode(),
+    };
   }
+
+  return {
+    sheet->AsServo()->URLData(),
+    eCompatibility_FullStandards,
+  };
 }
 
 template<typename GeckoFunc, typename ServoFunc>
