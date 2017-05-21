@@ -4,8 +4,7 @@
 
 this.EXPORTED_SYMBOLS = [ "FormAutoCompleteResult" ];
 
-const Ci = Components.interfaces;
-const Cr = Components.results;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 

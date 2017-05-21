@@ -17,8 +17,8 @@ dictionary MediaTrackSupportedConstraints {
     boolean sampleRate;         // to be supported
     boolean sampleSize;         // to be supported
     boolean echoCancellation = true;
-    boolean mozNoiseSuppression = true;
-    boolean mozAutoGainControl = true;
+    boolean noiseSuppression = true;
+    boolean autoGainControl = true;
     boolean latency;            // to be supported
     boolean deviceId = true;
     boolean groupId;            // to be supported

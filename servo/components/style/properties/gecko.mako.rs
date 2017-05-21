@@ -141,6 +141,13 @@ impl ComputedValues {
         self.get_box().clone_display() == longhands::display::computed_value::T::contents
     }
 
+    /// Returns true if the value of the `content` property would make a
+    /// pseudo-element not rendered.
+    #[inline]
+    pub fn ineffective_content_property(&self) -> bool {
+        self.get_counters().ineffective_content_property()
+    }
+
     % for style_struct in data.style_structs:
     #[inline]
     pub fn clone_${style_struct.name_lower}(&self) -> Arc<style_structs::${style_struct.name}> {
@@ -274,14 +281,25 @@ def set_gecko_property(ffi_name, expr):
     }
 </%def>
 
-<%def name="impl_keyword_clone(ident, gecko_ffi_name, keyword)">
+<%def name="impl_keyword_clone(ident, gecko_ffi_name, keyword, cast_type='u8')">
     #[allow(non_snake_case)]
     pub fn clone_${ident}(&self) -> longhands::${ident}::computed_value::T {
         use properties::longhands::${ident}::computed_value::T as Keyword;
         // FIXME(bholley): Align binary representations and ditch |match| for cast + static_asserts
-        match ${get_gecko_property(gecko_ffi_name)} ${keyword.maybe_cast("u32")} {
+
+        // Some constant macros in the gecko are defined as negative integer(e.g. font-stretch).
+        // And they are convert to signed integer in Rust bindings. We need to cast then
+        // as signed type when we have both signed/unsigned integer in order to use them
+        // as match's arms.
+        // Also, to use same implementation here we use casted constant if we have only singed values.
+        % for value in keyword.values_for('gecko'):
+        const ${keyword.casted_constant_name(value, cast_type)} : ${cast_type} =
+            structs::${keyword.gecko_constant(value)} as ${cast_type};
+        % endfor
+
+        match ${get_gecko_property(gecko_ffi_name)} as ${cast_type} {
             % for value in keyword.values_for('gecko'):
-            structs::${keyword.gecko_constant(value)} => Keyword::${to_rust_ident(value)},
+            ${keyword.casted_constant_name(value, cast_type)} => Keyword::${to_rust_ident(value)},
             % endfor
             % if keyword.gecko_inexhaustive:
             x => panic!("Found unexpected value in style struct for ${ident} property: {:?}", x),
@@ -334,11 +352,11 @@ fn color_to_nscolor_zero_currentcolor(color: Color) -> structs::nscolor {
     }
 </%def>
 
-<%def name="impl_keyword(ident, gecko_ffi_name, keyword, need_clone, **kwargs)">
-<%call expr="impl_keyword_setter(ident, gecko_ffi_name, keyword, **kwargs)"></%call>
+<%def name="impl_keyword(ident, gecko_ffi_name, keyword, need_clone, cast_type='u8', **kwargs)">
+<%call expr="impl_keyword_setter(ident, gecko_ffi_name, keyword, cast_type, **kwargs)"></%call>
 <%call expr="impl_simple_copy(ident, gecko_ffi_name)"></%call>
 %if need_clone:
-<%call expr="impl_keyword_clone(ident, gecko_ffi_name, keyword)"></%call>
+<%call expr="impl_keyword_clone(ident, gecko_ffi_name, keyword, cast_type)"></%call>
 % endif
 </%def>
 
@@ -2010,6 +2028,7 @@ fn static_assert() {
                                             "-moz-grid-group -moz-grid-line -moz-stack -moz-inline-stack -moz-deck " +
                                             "-moz-popup -moz-groupbox",
                                             gecko_enum_prefix="StyleDisplay",
+                                            gecko_inexhaustive="True",
                                             gecko_strip_moz_prefix=False) %>
 
     pub fn set_display(&mut self, v: longhands::display::computed_value::T) {
@@ -2229,7 +2248,7 @@ fn static_assert() {
             % endfor
         }
     </%def>
-    pub fn convert_transform(input: Vec<longhands::transform::computed_value::ComputedOperation>,
+    pub fn convert_transform(input: &[longhands::transform::computed_value::ComputedOperation],
                              output: &mut structs::root::RefPtr<structs::root::nsCSSValueSharedList>) {
         use gecko_bindings::structs::nsCSSKeyword::*;
         use gecko_bindings::sugar::refptr::RefPtr;
@@ -2249,7 +2268,7 @@ fn static_assert() {
             let servo = iter.next().expect("Gecko_NewCSSValueSharedList should create a shared \
                                             value list of the same length as the transform vector");
             unsafe {
-                match servo {
+                match *servo {
                     ${transform_function_arm("Matrix", "matrix3d", ["number"] * 16)}
                     ${transform_function_arm("MatrixWithPercents", "matrix3d", ["number"] * 12 + ["lop"] * 2
                                              + ["length"] + ["number"])}
@@ -2275,7 +2294,7 @@ fn static_assert() {
             }
             return;
         };
-        Self::convert_transform(vec, &mut self.gecko.mSpecifiedTransform);
+        Self::convert_transform(&vec, &mut self.gecko.mSpecifiedTransform);
     }
 
     pub fn copy_transform_from(&mut self, other: &Self) {
@@ -4192,6 +4211,10 @@ clip-path
 
 <%self:impl_trait style_struct_name="Counters"
                   skip_longhands="content counter-increment counter-reset">
+    pub fn ineffective_content_property(&self) -> bool {
+        self.gecko.mContents.is_empty()
+    }
+
     pub fn set_content(&mut self, v: longhands::content::computed_value::T) {
         use properties::longhands::content::computed_value::T;
         use properties::longhands::content::computed_value::ContentItem;

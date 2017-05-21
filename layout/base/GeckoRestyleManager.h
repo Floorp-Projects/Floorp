@@ -584,8 +584,6 @@ private:
   /**
    * Helpers for Restyle().
    */
-  void AddLayerChangesForAnimation();
-
   bool MoveStyleContextsForContentChildren(nsIFrame* aParent,
                                            nsStyleContext* aOldContext,
                                            nsTArray<nsStyleContext*>& aContextsToMove);
