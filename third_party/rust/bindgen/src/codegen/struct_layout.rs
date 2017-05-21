@@ -14,7 +14,9 @@ use std::mem;
 use syntax::ast;
 
 /// Trace the layout of struct.
+#[derive(Debug)]
 pub struct StructLayoutTracker<'a, 'ctx: 'a> {
+    name: &'a str,
     ctx: &'a BindgenContext<'ctx>,
     comp: &'a CompInfo,
     latest_offset: usize,
@@ -36,15 +38,6 @@ pub fn align_to(size: usize, align: usize) -> usize {
     }
 
     size + align - rem
-}
-
-/// Returns the amount of bytes from a given amount of bytes, rounding up.
-pub fn bytes_from_bits(n: usize) -> usize {
-    if n % 8 == 0 {
-        return n / 8;
-    }
-
-    n / 8 + 1
 }
 
 /// Returns the lower power of two byte count that can hold at most n bits.
@@ -87,23 +80,10 @@ fn test_bytes_from_bits_pow2() {
     }
 }
 
-#[test]
-fn test_bytes_from_bits() {
-    assert_eq!(bytes_from_bits(0), 0);
-    for i in 1..9 {
-        assert_eq!(bytes_from_bits(i), 1);
-    }
-    for i in 9..17 {
-        assert_eq!(bytes_from_bits(i), 2);
-    }
-    for i in 17..25 {
-        assert_eq!(bytes_from_bits(i), 3);
-    }
-}
-
 impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
-    pub fn new(ctx: &'a BindgenContext<'ctx>, comp: &'a CompInfo) -> Self {
+    pub fn new(ctx: &'a BindgenContext<'ctx>, comp: &'a CompInfo, name: &'a str) -> Self {
         StructLayoutTracker {
+            name: name,
             ctx: ctx,
             comp: comp,
             latest_offset: 0,
@@ -115,6 +95,8 @@ impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
     }
 
     pub fn saw_vtable(&mut self) {
+        debug!("saw vtable for {}", self.name);
+
         let ptr_size = mem::size_of::<*mut ()>();
         self.latest_offset += ptr_size;
         self.latest_field_layout = Some(Layout::new(ptr_size, ptr_size));
@@ -122,6 +104,7 @@ impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
     }
 
     pub fn saw_base(&mut self, base_ty: &Type) {
+        debug!("saw base for {}", self.name);
         if let Some(layout) = base_ty.layout(self.ctx) {
             self.align_to_latest_field(layout);
 
@@ -131,7 +114,9 @@ impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
         }
     }
 
-    pub fn saw_bitfield_batch(&mut self, layout: Layout) {
+    pub fn saw_bitfield_unit(&mut self, layout: Layout) {
+        debug!("saw bitfield unit for {}: {:?}", self.name, layout);
+
         self.align_to_latest_field(layout);
 
         self.latest_offset += layout.size;
@@ -148,6 +133,7 @@ impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
     }
 
     pub fn saw_union(&mut self, layout: Layout) {
+        debug!("saw union for {}: {:?}", self.name, layout);
         self.align_to_latest_field(layout);
 
         self.latest_offset += self.padding_bytes(layout) + layout.size;
@@ -239,13 +225,12 @@ impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
         padding_layout.map(|layout| self.padding_field(layout))
     }
 
-    pub fn pad_struct(&mut self,
-                      name: &str,
-                      layout: Layout)
-                      -> Option<ast::StructField> {
+    pub fn pad_struct(&mut self, layout: Layout) -> Option<ast::StructField> {
+        debug!("pad_struct:\n\tself = {:#?}\n\tlayout = {:#?}", self, layout);
+
         if layout.size < self.latest_offset {
             error!("Calculated wrong layout for {}, too more {} bytes",
-                   name,
+                   self.name,
                    self.latest_offset - layout.size);
             return None;
         }
@@ -273,7 +258,7 @@ impl<'a, 'ctx> StructLayoutTracker<'a, 'ctx> {
                 Layout::new(padding_bytes, layout.align)
             };
 
-            debug!("pad bytes to struct {}, {:?}", name, layout);
+            debug!("pad bytes to struct {}, {:?}", self.name, layout);
 
             Some(self.padding_field(layout))
         } else {
