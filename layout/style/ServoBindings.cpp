@@ -1849,10 +1849,9 @@ Gecko_CSSValue_SetStringFromAtom(nsCSSValueBorrowedMut aCSSValue,
 }
 
 void
-Gecko_CSSValue_SetAtomIdent(nsCSSValueBorrowedMut aCSSValue,
-                            already_AddRefed<nsIAtom> aAtom)
+Gecko_CSSValue_SetAtomIdent(nsCSSValueBorrowedMut aCSSValue, nsIAtom* aAtom)
 {
-  aCSSValue->SetAtomIdentValue(Move(aAtom));
+  aCSSValue->SetAtomIdentValue(already_AddRefed<nsIAtom>(aAtom));
 }
 
 void
