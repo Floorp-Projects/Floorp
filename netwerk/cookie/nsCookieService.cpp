@@ -2361,6 +2361,31 @@ nsCookieService::GetEnumerator(nsISimpleEnumerator **aEnumerator)
   return NS_NewArrayEnumerator(aEnumerator, cookieList);
 }
 
+NS_IMETHODIMP
+nsCookieService::GetSessionEnumerator(nsISimpleEnumerator **aEnumerator)
+{
+  if (!mDBState) {
+    NS_WARNING("No DBState! Profile already closed?");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  EnsureReadComplete();
+
+  nsCOMArray<nsICookie> cookieList(mDBState->cookieCount);
+  for (auto iter = mDBState->hostTable.Iter(); !iter.Done(); iter.Next()) {
+    const nsCookieEntry::ArrayType& cookies = iter.Get()->GetCookies();
+    for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
+      nsCookie* cookie = cookies[i];
+      // Filter out non-session cookies.
+      if (cookie->IsSession()) {
+        cookieList.AppendObject(cookie);
+      }
+    }
+  }
+
+  return NS_NewArrayEnumerator(aEnumerator, cookieList);
+}
+
 static nsresult
 InitializeOriginAttributes(OriginAttributes* aAttrs,
                            JS::HandleValue aOriginAttributes,
