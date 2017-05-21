@@ -830,7 +830,7 @@ fuzzy-if(skiaContent,2,21) == 398682-1.html 398682-1-ref.html
 == 399209-1.html 399209-1-ref.html
 == 399209-2.html 399209-2-ref.html
 == 399258-1.html 399258-1-ref.html
-fails-if(stylo) == 399384-1.html 399384-1-ref.html
+== 399384-1.html 399384-1-ref.html
 random-if(gtkWidget) == 399636-standards-css.html 399636-standards-ref.html # bug 429022
 random-if(gtkWidget) == 399636-standards-html.html 399636-standards-ref.html # bug 429022
 random-if(gtkWidget) == 399636-quirks-css.html 399636-quirks-ref.html # bug 429022
@@ -1857,7 +1857,7 @@ test-pref(layout.css.grid.enabled,true) == 1053035-1-grid.html 1053035-1-ref.htm
 == 1062792-1.html 1062792-1-ref.html
 == 1062963-floatmanager-reflow.html 1062963-floatmanager-reflow-ref.html
 test-pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1-ref.html
-fails-if(stylo) == 1069716-1.html 1069716-1-ref.html
+== 1069716-1.html 1069716-1-ref.html
 fails-if(webrender) == 1078262-1.html about:blank
 test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1081072-1-ref.html
 == 1081185-1.html 1081185-1-ref.html
@@ -2004,3 +2004,4 @@ fails-if(stylo) == 1348481-3.html 1348481-ref.html
 == 1364280-2b.html 1364280-2-ref.html
 == 1364280-2c.html 1364280-2-ref.html
 == 1364335.html 1364335-ref.html
+== 1366144.html 1366144-ref.html

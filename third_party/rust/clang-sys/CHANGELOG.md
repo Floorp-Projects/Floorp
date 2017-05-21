@@ -1,7 +1,12 @@
+## [0.18.0] - 2017-05-16
+
+### Changed
+- Improved finding of versioned libraries (e.g., `libclang.so.3.9`)
+
 ## [0.17.0] - 2017-05-08
 
 ### Changed
-- Change storage type of include search paths from `Vec<PathBuf>` to `Option<Vec<PathBuf>>`
+- Changed storage type of include search paths from `Vec<PathBuf>` to `Option<Vec<PathBuf>>`
 
 ## [0.16.0] - 2017-05-02
 

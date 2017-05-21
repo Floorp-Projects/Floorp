@@ -89,9 +89,14 @@ already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ResolveStyleFor(dom::Element* aElement,
                                      nsStyleContext* aParentContext,
                                      LazyComputeBehavior aMayCompute,
-                                     TreeMatchContext& aTreeMatchContext)
+                                     TreeMatchContext* aTreeMatchContext)
 {
-  FORWARD(ResolveStyleFor, (aElement, aParentContext, aMayCompute, aTreeMatchContext));
+  if (IsGecko()) {
+    MOZ_ASSERT(aTreeMatchContext);
+    return AsGecko()->ResolveStyleFor(aElement, aParentContext, aMayCompute, *aTreeMatchContext);
+  } else {
+    return AsServo()->ResolveStyleFor(aElement, aParentContext, aMayCompute);
+  }
 }
 
 already_AddRefed<nsStyleContext>
@@ -228,11 +233,17 @@ already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ProbePseudoElementStyle(dom::Element* aParentElement,
                                              CSSPseudoElementType aType,
                                              nsStyleContext* aParentContext,
-                                             TreeMatchContext& aTreeMatchContext,
+                                             TreeMatchContext* aTreeMatchContext,
                                              dom::Element* aPseudoElement)
 {
-  FORWARD(ProbePseudoElementStyle, (aParentElement, aType, aParentContext,
-                                    aTreeMatchContext, aPseudoElement));
+  if (IsGecko()) {
+    MOZ_ASSERT(aTreeMatchContext);
+    return AsGecko()->ProbePseudoElementStyle(aParentElement, aType, aParentContext,
+                                              *aTreeMatchContext, aPseudoElement);
+  } else {
+    return AsServo()->ProbePseudoElementStyle(aParentElement, aType, aParentContext,
+                                              aPseudoElement);
+  }
 }
 
 nsRestyleHint

@@ -3262,6 +3262,18 @@ public:
     }
   }
 
+  // A helper both for UpdateStyleOfChildAnonBox, and to update frame-backed
+  // pseudo-elements in ServoRestyleManager.
+  //
+  // This gets a style context that will be the new style context for
+  // `aChildFrame`, and takes care of updating it, calling CalcStyleDifference,
+  // and adding to the change list as appropriate.
+  //
+  // Returns the generated change hint for the frame.
+  nsChangeHint UpdateStyleOfOwnedChildFrame(nsIFrame* aChildFrame,
+                                            nsStyleContext* aNewStyleContext,
+                                            nsStyleChangeList& aChangeList);
+
   /**
    * Hook subclasses can override to actually implement updating of style of
    * owned anon boxes.
