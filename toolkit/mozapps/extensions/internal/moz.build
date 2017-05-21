@@ -17,6 +17,7 @@ EXTRA_JS_MODULES.addons += [
     'ProductAddonChecker.jsm',
     'SpellCheckDictionaryBootstrap.js',
     'WebExtensionBootstrap.js',
+    'XPIInstall.jsm',
     'XPIProvider.jsm',
     'XPIProviderUtils.js',
 ]
