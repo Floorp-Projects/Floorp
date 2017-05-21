@@ -93,6 +93,10 @@ to mochitest command.
     * test_value_storage.html `font-variant` [167]
     * test_specified_value_serialization.html `bug-721136` [1]
 * Unsupported prefixed values
+  * moz-prefixed gradient functions bug 1337655
+    * test_value_storage.html `-moz-linear-gradient` [322]
+    * ... `-moz-radial-gradient` [309]
+    * ... `-moz-repeating-` [298]
   * serialization of prefixed gradient functions bug 1358710
     * test_specified_value_serialization.html `-webkit-radial-gradient` [1]
   * moz-prefixed intrinsic width values bug 1355402
