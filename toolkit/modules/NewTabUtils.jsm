@@ -1453,6 +1453,14 @@ var Links = {
       }
     }
 
+    return this.mergeLinkLists(linkLists);
+  },
+
+  mergeLinkLists: function Links_mergeLinkLists(linkLists) {
+    if (linkLists.length == 1) {
+      return linkLists[0];
+    }
+
     function getNextLink() {
       let minLinks = null;
       for (let links of linkLists) {

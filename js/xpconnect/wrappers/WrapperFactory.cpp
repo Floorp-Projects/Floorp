@@ -181,6 +181,13 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
         ExposeObjectToActiveJS(obj);
     }
 
+    // If the object is a dead wrapper, return a new dead wrapper rather than
+    // trying to wrap it for a different compartment.
+    if (JS_IsDeadWrapper(obj)) {
+        retObj.set(JS_NewDeadWrapper(cx, obj));
+        return;
+    }
+
     // If we've somehow gotten to this point after either the source or target
     // compartment has been nuked, return a DeadObjectProxy to prevent further
     // access.
@@ -190,11 +197,7 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
         CompartmentPrivate::Get(target)->wasNuked) {
         NS_WARNING("Trying to create a wrapper into or out of a nuked compartment");
 
-        RootedObject ccw(cx, Wrapper::New(cx, obj, &CrossCompartmentWrapper::singleton));
-
-        NukeCrossCompartmentWrapper(cx, ccw);
-
-        retObj.set(ccw);
+        retObj.set(JS_NewDeadWrapper(cx));
         return;
     }
 
