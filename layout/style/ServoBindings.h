@@ -476,7 +476,8 @@ void Gecko_CSSValue_SetString(nsCSSValueBorrowedMut css_value,
                               const uint8_t* string, uint32_t len, nsCSSUnit unit);
 void Gecko_CSSValue_SetStringFromAtom(nsCSSValueBorrowedMut css_value,
                                       nsIAtom* atom, nsCSSUnit unit);
-void Gecko_CSSValue_SetAtomIdent(nsCSSValueBorrowedMut css_value, already_AddRefed<nsIAtom> atom);
+// Take an addrefed nsIAtom and set it to the nsCSSValue
+void Gecko_CSSValue_SetAtomIdent(nsCSSValueBorrowedMut css_value, nsIAtom* atom);
 void Gecko_CSSValue_SetArray(nsCSSValueBorrowedMut css_value, int32_t len);
 void Gecko_CSSValue_SetURL(nsCSSValueBorrowedMut css_value, ServoBundledURI uri);
 void Gecko_CSSValue_SetInt(nsCSSValueBorrowedMut css_value, int32_t integer, nsCSSUnit unit);
