@@ -393,7 +393,7 @@ fuzzy-if(skiaContent,1,3600) == rect-01.svg pass.svg
 fuzzy-if(skiaContent,1,340) fails-if(stylo) == stroke-dasharray-02.svg pass.svg
 fuzzy-if(skiaContent,1,340) == stroke-dasharray-03.svg pass.svg
 == stroke-dasharray-and-pathLength-01.svg pass.svg
-fails-if(stylo) == stroke-dasharray-and-text-01.svg stroke-dasharray-and-text-01-ref.svg
+== stroke-dasharray-and-text-01.svg stroke-dasharray-and-text-01-ref.svg
 == stroke-dashoffset-01.svg pass.svg
 == stroke-dashoffset-and-pathLength-01.svg pass.svg
 == stroke-linecap-circle-ellipse-01.svg stroke-linecap-circle-ellipse-01-ref.svg
@@ -434,7 +434,7 @@ fuzzy-if(skiaContent,1,2600) == svg-in-foreignObject-02.xhtml svg-in-foreignObje
 == text-font-size-01.svg pass.svg
 random-if(gtkWidget) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
 == text-gradient-01.svg text-gradient-01-ref.svg
-random-if(winWidget) fails-if(stylo) == text-gradient-02.svg text-gradient-02-ref.svg # see bug 590101
+random-if(winWidget) == text-gradient-02.svg text-gradient-02-ref.svg # see bug 590101
 fuzzy-if(skiaContent,1,5500) == text-gradient-03.svg pass.svg
 HTTP(..) == text-gradient-04.svg text-gradient-04-ref.svg
 == text-in-link-01.svg text-in-link-01-ref.svg
