@@ -1382,7 +1382,6 @@ static void
 StreamTaskTracer(PSLockRef aLock, SpliceableJSONWriter& aWriter)
 {
 #ifdef MOZ_TASK_TRACER
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
   aWriter.StartArrayProperty("data");
@@ -1566,7 +1565,6 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
 {
   LOG("locked_profiler_stream_json_for_this_process");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
   // Put shared library info
@@ -1631,7 +1629,6 @@ profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter, double aSin
 {
   LOG("profiler_stream_json_for_this_process");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
@@ -2184,7 +2181,6 @@ profiler_get_profile(double aSinceTime)
 {
   LOG("profiler_get_profile");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   SpliceableChunkedJSONWriter b;
@@ -2208,7 +2204,6 @@ void
 profiler_get_start_params(int* aEntries, double* aInterval, uint32_t* aFeatures,
                           mozilla::Vector<const char*>* aFilters)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   if (NS_WARN_IF(!aEntries) || NS_WARN_IF(!aInterval) ||
@@ -2284,7 +2279,6 @@ profiler_save_profile_to_file(const char* aFilename)
 uint32_t
 profiler_get_available_features()
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   uint32_t features = 0;
@@ -2356,7 +2350,6 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
     }
   }
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists() && !ActivePS::Exists(aLock));
 
   // Fall back to the default values if the passed-in values are unreasonable.
@@ -2413,7 +2406,6 @@ profiler_start(int aEntries, double aInterval, uint32_t aFeatures,
 {
   LOG("profiler_start");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   SamplerThread* samplerThread = nullptr;
   {
@@ -2448,7 +2440,6 @@ locked_profiler_stop(PSLockRef aLock)
 {
   LOG("locked_profiler_stop");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
 #ifdef MOZ_TASK_TRACER
@@ -2496,7 +2487,6 @@ profiler_stop()
 {
   LOG("profiler_stop");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   SamplerThread* samplerThread;
@@ -2530,7 +2520,6 @@ profiler_stop()
 bool
 profiler_is_paused()
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
@@ -2547,7 +2536,6 @@ profiler_pause()
 {
   LOG("profiler_pause");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   {
@@ -2569,7 +2557,6 @@ profiler_resume()
 {
   LOG("profiler_resume");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
