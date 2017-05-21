@@ -10238,17 +10238,32 @@ nsFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
   RefPtr<nsStyleContext> newContext =
     aStyleSet.ResolveInheritingAnonymousBoxStyle(pseudo, StyleContext());
 
+  nsChangeHint childHint =
+    UpdateStyleOfOwnedChildFrame(aChildFrame, newContext, aChangeList);
+
+  // Now that we've updated the style on aChildFrame, check whether it itself
+  // has anon boxes to deal with.
+  aChildFrame->UpdateStyleOfOwnedAnonBoxes(aStyleSet, aChangeList, childHint);
+}
+
+nsChangeHint
+nsIFrame::UpdateStyleOfOwnedChildFrame(nsIFrame* aChildFrame,
+                                       nsStyleContext* aNewStyleContext,
+                                       nsStyleChangeList& aChangeList)
+{
   // Figure out whether we have an actual change.  It's important that we do
   // this, for several reasons:
   //
   // 1) Even if all the child's changes are due to properties it inherits from
   //    us, it's possible that no one ever asked us for those style structs and
   //    hence changes to them aren't reflected in aHintForThisFrame at all.
-  // 2) Extensions can add/remove stylesheets that change the styles of
-  //    anonymous boxed directly.
+  //
+  // 2) Content can change stylesheets that change the styles of pseudos, and
+  //    extensions can add/remove stylesheets that change the styles of
+  //    anonymous boxes directly.
   uint32_t equalStructs, samePointerStructs; // Not used, actually.
   nsChangeHint childHint = aChildFrame->StyleContext()->CalcStyleDifference(
-    newContext,
+    aNewStyleContext,
     &equalStructs,
     &samePointerStructs);
   if (childHint) {
@@ -10261,12 +10276,10 @@ nsFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
   }
 
   for (nsIFrame* kid = aChildFrame; kid; kid = kid->GetNextContinuation()) {
-    kid->SetStyleContext(newContext);
+    kid->SetStyleContext(aNewStyleContext);
   }
 
-  // Now that we've updated the style on aChildFrame, check whether it itself
-  // has anon boxes to deal with.
-  aChildFrame->UpdateStyleOfOwnedAnonBoxes(aStyleSet, aChangeList, childHint);
+  return childHint;
 }
 
 /* static */ void

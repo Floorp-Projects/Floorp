@@ -79,6 +79,8 @@ extern crate selectors;
 #[cfg(feature = "servo")] extern crate servo_url;
 extern crate smallvec;
 #[macro_use]
+extern crate style_derive;
+#[macro_use]
 extern crate style_traits;
 extern crate time;
 #[allow(unused_extern_crates)]
@@ -119,6 +121,7 @@ pub mod rule_tree;
 pub mod scoped_tls;
 pub mod selector_parser;
 pub mod shared_lock;
+pub mod sharing;
 pub mod stylist;
 #[cfg(feature = "servo")] #[allow(unsafe_code)] pub mod servo;
 pub mod sequential;

@@ -1,0 +1,16 @@
+[package]
+name = "synstructure"
+version = "0.5.2"
+authors = ["Michael Layzell <michael@thelayzells.com>"]
+
+description = "expand_substructure-like helpers for syn macros 1.1 derive macros"
+documentation = "https://docs.rs/synstructure"
+repository = "https://github.com/mystor/synstructure"
+readme = "README.md"
+license = "MIT"
+keywords = ["syn", "macros", "derive", "expand_substructure", "enum"]
+
+
+[dependencies]
+syn = "0.11"
+quote = "0.3"

@@ -373,6 +373,9 @@ public:
                                                        GetFontPrefsForLang(lang));
   }
 
+  void ForceCacheLang(nsIAtom *aLanguage);
+  void CacheAllLangs();
+
   /** Get a cached boolean pref, by its type */
   // *  - initially created for bugs 31816, 20760, 22963
   bool GetCachedBoolPref(nsPresContext_CachedBoolPrefType aPrefType) const
@@ -1419,6 +1422,9 @@ protected:
   // language groups, so in the worst case scenario we'll need to traverse 31
   // link items.
   LangGroupFontPrefs    mLangGroupFontPrefs;
+
+  bool mFontGroupCacheDirty;
+  nsTHashtable<nsRefPtrHashKey<nsIAtom>> mLanguagesUsed;
 
   nscoord               mBorderWidthTable[3];
 
