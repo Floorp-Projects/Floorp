@@ -185,3 +185,37 @@ js::IsDeadProxyObject(JSObject* obj)
            IsDerivedProxyObject(obj, DeadObjectProxy<DeadProxyIsCallableNotConstructor>::singleton()) ||
            IsDerivedProxyObject(obj, DeadObjectProxy<DeadProxyNotCallableIsConstructor>::singleton());
 }
+
+
+const BaseProxyHandler*
+js::SelectDeadProxyHandler(ProxyObject* obj)
+{
+    // When nuking scripted proxies, isCallable and isConstructor values for
+    // the proxy needs to be preserved.
+    uint32_t callable = obj->handler()->isCallable(obj);
+    uint32_t constructor = obj->handler()->isConstructor(obj);
+
+    if (callable) {
+        if (constructor)
+            return DeadObjectProxy<DeadProxyIsCallableIsConstructor>::singleton();
+        return DeadObjectProxy<DeadProxyIsCallableNotConstructor>::singleton();
+    }
+
+    if (constructor)
+        return DeadObjectProxy<DeadProxyNotCallableIsConstructor>::singleton();
+    return DeadObjectProxy<DeadProxyNotCallableNotConstructor>::singleton();
+}
+
+JSObject*
+js::NewDeadProxyObject(JSContext* cx, JSObject* origObj)
+{
+    MOZ_ASSERT_IF(origObj, origObj->is<ProxyObject>());
+
+    const BaseProxyHandler* handler;
+    if (origObj && origObj->is<ProxyObject>())
+        handler = SelectDeadProxyHandler(&origObj->as<ProxyObject>());
+    else
+        handler = DeadObjectProxy<DeadProxyNotCallableNotConstructor>::singleton();
+
+    return NewProxyObject(cx, handler, NullHandleValue, nullptr, ProxyOptions());
+}

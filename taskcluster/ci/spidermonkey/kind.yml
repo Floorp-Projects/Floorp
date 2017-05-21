@@ -156,7 +156,6 @@ jobs:
         treeherder:
             symbol: SM-tc(tsan)
             tier: 3
-        run-on-projects: []
         run:
             spidermonkey-variant: tsan
             tooltool-manifest: browser/config/tooltool-manifests/linux64/tsan.manifest
