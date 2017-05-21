@@ -10,7 +10,7 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'gecko/nsIProfiler.idl',
     ]
     EXPORTS += [
-        'public/ChildProfilerController.h',
+        'public/CrossProcessProfilerController.h',
         'public/ProfilerMarkerPayload.h',
         'public/PseudoStack.h',
         'public/shared-libraries.h',
@@ -24,7 +24,7 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'core/ProfilerMarkerPayload.cpp',
         'core/StackTop.cpp',
         'core/ThreadInfo.cpp',
-        'gecko/ChildProfilerController.cpp',
+        'gecko/CrossProcessProfilerController.cpp',
         'gecko/nsProfilerFactory.cpp',
         'gecko/nsProfilerStartParams.cpp',
         'gecko/ProfileGatherer.cpp',
@@ -109,7 +109,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
     FINAL_LIBRARY = 'xul'
 
 IPDL_SOURCES += [
-    'gecko/PProfiler.ipdl',
     'gecko/ProfilerTypes.ipdlh',
 ]
 
@@ -118,13 +117,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 EXPORTS += [
     'public/GeckoProfiler.h',
     'public/GeckoProfilerReporter.h',
-    'public/ProfilerChild.h',
-    'public/ProfilerParent.h',
-]
-
-UNIFIED_SOURCES += [
-    'gecko/ProfilerChild.cpp',
-    'gecko/ProfilerParent.cpp',
+    'public/ProfilerControllingProcess.h',
 ]
 
 if CONFIG['MOZ_TASK_TRACER']:
