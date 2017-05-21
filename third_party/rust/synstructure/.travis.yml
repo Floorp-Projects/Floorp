@@ -1,0 +1,7 @@
+language: rust
+rust:
+- nightly
+sudo: false
+notifications:
+  email:
+    on_success: never

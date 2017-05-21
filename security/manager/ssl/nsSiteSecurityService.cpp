@@ -9,12 +9,14 @@
 #include "ScopedNSSTypes.h"
 #include "SharedCertVerifier.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Base64.h"
-#include "mozilla/dom/PContent.h"
-#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Tokenizer.h"
+#include "mozilla/dom/PContent.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "nsArrayEnumerator.h"
 #include "nsCOMArray.h"
 #include "nsISSLStatus.h"
@@ -28,11 +30,9 @@
 #include "nsReadableUtils.h"
 #include "nsSecurityHeaderParser.h"
 #include "nsThreadUtils.h"
-#include "nsXULAppAPI.h"
 #include "nsVariant.h"
-#include "plstr.h"
+#include "nsXULAppAPI.h"
 #include "prnetdb.h"
-#include "prprf.h"
 
 // A note about the preload list:
 // When a site specifically disables HSTS by sending a header with
@@ -57,6 +57,131 @@ const char kHPKPKeySuffix[] = ":HPKP";
 
 NS_IMPL_ISUPPORTS(SiteHSTSState, nsISiteSecurityState, nsISiteHSTSState)
 
+namespace {
+
+static bool
+stringIsBase64EncodingOf256bitValue(const nsCString& encodedString) {
+  nsAutoCString binaryValue;
+  nsresult rv = Base64Decode(encodedString, binaryValue);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  return binaryValue.Length() == SHA256_LENGTH;
+}
+
+class SSSTokenizer final : public Tokenizer
+{
+public:
+  explicit SSSTokenizer(const nsACString& source)
+    : Tokenizer(source)
+  {
+  }
+
+  MOZ_MUST_USE bool
+  ReadBool(/*out*/ bool& value)
+  {
+    uint8_t rawValue;
+    if (!ReadInteger(&rawValue)) {
+      return false;
+    }
+
+    if (rawValue != 0 && rawValue != 1) {
+      return false;
+    }
+
+    value = (rawValue == 1);
+    return true;
+  }
+
+  MOZ_MUST_USE bool
+  ReadState(/*out*/ SecurityPropertyState& state)
+  {
+    uint32_t rawValue;
+    if (!ReadInteger(&rawValue)) {
+      return false;
+    }
+
+    state = static_cast<SecurityPropertyState>(rawValue);
+    switch (state) {
+      case SecurityPropertyKnockout:
+      case SecurityPropertyNegative:
+      case SecurityPropertySet:
+      case SecurityPropertyUnset:
+        break;
+      default:
+        return false;
+    }
+
+    return true;
+  }
+
+  // Note: Ideally, this method would be able to read SHA256 strings without
+  // reading all the way to EOF. Unfortunately, if a token starts with digits
+  // mozilla::Tokenizer will by default not consider the digits part of the
+  // string. This can be worked around by making mozilla::Tokenizer consider
+  // digit characters as "word" characters as well, but this can't be changed at
+  // run time, meaning parsing digits as a number will fail.
+  MOZ_MUST_USE bool
+  ReadUntilEOFAsSHA256Keys(/*out*/ nsTArray<nsCString>& keys)
+  {
+    nsAutoCString mergedKeys;
+    if (!ReadUntil(Token::EndOfFile(), mergedKeys, EXCLUDE_LAST)) {
+      return false;
+    }
+
+    // This check makes sure the Substring() calls below are always valid.
+    static const uint32_t SHA256Base64Len = 44;
+    if (mergedKeys.Length() % SHA256Base64Len != 0) {
+      return false;
+    }
+
+    for (uint32_t i = 0; i < mergedKeys.Length(); i += SHA256Base64Len) {
+      nsAutoCString key(Substring(mergedKeys, i, SHA256Base64Len));
+      if (!stringIsBase64EncodingOf256bitValue(key)) {
+        return false;
+      }
+      keys.AppendElement(key);
+    }
+
+    return !keys.IsEmpty();
+  }
+};
+
+// Parses a state string like "1500918564034,1,1" into its constituent parts.
+bool
+ParseHSTSState(const nsCString& stateString,
+       /*out*/ PRTime& expireTime,
+       /*out*/ SecurityPropertyState& state,
+       /*out*/ bool& includeSubdomains)
+{
+  SSSTokenizer tokenizer(stateString);
+
+  if (!tokenizer.ReadInteger(&expireTime)) {
+    return false;
+  }
+
+  if (!tokenizer.CheckChar(',')) {
+    return false;
+  }
+
+  if (!tokenizer.ReadState(state)) {
+    return false;
+  }
+
+  if (!tokenizer.CheckChar(',')) {
+    return false;
+  }
+
+  if (!tokenizer.ReadBool(includeSubdomains)) {
+    return false;
+  }
+
+  return tokenizer.CheckEOF();
+}
+
+} // namespace
+
 SiteHSTSState::SiteHSTSState(const nsCString& aHost,
                              const OriginAttributes& aOriginAttributes,
                              const nsCString& aStateString)
@@ -66,21 +191,9 @@ SiteHSTSState::SiteHSTSState(const nsCString& aHost,
   , mHSTSState(SecurityPropertyUnset)
   , mHSTSIncludeSubdomains(false)
 {
-  uint32_t hstsState = 0;
-  uint32_t hstsIncludeSubdomains = 0; // PR_sscanf doesn't handle bools.
-  int32_t matches = PR_sscanf(aStateString.get(), "%lld,%lu,%lu",
-                              &mHSTSExpireTime, &hstsState,
-                              &hstsIncludeSubdomains);
-  bool valid = (matches == 3 &&
-                (hstsIncludeSubdomains == 0 || hstsIncludeSubdomains == 1) &&
-                ((SecurityPropertyState)hstsState == SecurityPropertyUnset ||
-                 (SecurityPropertyState)hstsState == SecurityPropertySet ||
-                 (SecurityPropertyState)hstsState == SecurityPropertyKnockout ||
-                 (SecurityPropertyState)hstsState == SecurityPropertyNegative));
-  if (valid) {
-    mHSTSState = (SecurityPropertyState)hstsState;
-    mHSTSIncludeSubdomains = (hstsIncludeSubdomains == 1);
-  } else {
+  bool valid = ParseHSTSState(aStateString, mHSTSExpireTime, mHSTSState,
+                              mHSTSIncludeSubdomains);
+  if (!valid) {
     SSSLOG(("%s is not a valid SiteHSTSState", aStateString.get()));
     mHSTSExpireTime = 0;
     mHSTSState = SecurityPropertyUnset;
@@ -158,18 +271,65 @@ SiteHSTSState::GetOriginAttributes(JSContext* aCx,
 
 NS_IMPL_ISUPPORTS(SiteHPKPState, nsISiteSecurityState, nsISiteHPKPState)
 
-static bool
-stringIsBase64EncodingOf256bitValue(nsCString& encodedString) {
-  nsAutoCString binaryValue;
-  nsresult rv = mozilla::Base64Decode(encodedString, binaryValue);
-  if (NS_FAILED(rv)) {
+namespace {
+
+// Parses a state string like
+// "1494603034103,1,1,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" into its
+// constituent parts.
+bool
+ParseHPKPState(const nsCString& stateString,
+       /*out*/ PRTime& expireTime,
+       /*out*/ SecurityPropertyState& state,
+       /*out*/ bool& includeSubdomains,
+       /*out*/ nsTArray<nsCString>& sha256keys)
+{
+  SSSTokenizer tokenizer(stateString);
+
+  if (!tokenizer.ReadInteger(&expireTime)) {
     return false;
   }
-  if (binaryValue.Length() != SHA256_LENGTH) {
+
+  if (!tokenizer.CheckChar(',')) {
     return false;
   }
-  return true;
+
+  if (!tokenizer.ReadState(state)) {
+    return false;
+  }
+
+  // SecurityPropertyNegative isn't a valid state for HPKP.
+  switch (state) {
+    case SecurityPropertyKnockout:
+    case SecurityPropertySet:
+    case SecurityPropertyUnset:
+      break;
+    case SecurityPropertyNegative:
+    default:
+      return false;
+  }
+
+  if (!tokenizer.CheckChar(',')) {
+    return false;
+  }
+
+  if (!tokenizer.ReadBool(includeSubdomains)) {
+    return false;
+  }
+
+  if (!tokenizer.CheckChar(',')) {
+    return false;
+  }
+
+  if (state == SecurityPropertySet) {
+    // This reads to the end of input, so there's no need to explicitly check
+    // for EOF.
+    return tokenizer.ReadUntilEOFAsSHA256Keys(sha256keys);
+  }
+
+  return tokenizer.CheckEOF();
 }
+
+} // namespace
 
 SiteHPKPState::SiteHPKPState()
   : mExpireTime(0)
@@ -187,52 +347,9 @@ SiteHPKPState::SiteHPKPState(const nsCString& aHost,
   , mState(SecurityPropertyUnset)
   , mIncludeSubdomains(false)
 {
-  uint32_t hpkpState = 0;
-  uint32_t hpkpIncludeSubdomains = 0; // PR_sscanf doesn't handle bools.
-  const uint32_t MaxMergedHPKPPinSize = 1024;
-  char mergedHPKPins[MaxMergedHPKPPinSize];
-  memset(mergedHPKPins, 0, MaxMergedHPKPPinSize);
-
-  if (aStateString.Length() >= MaxMergedHPKPPinSize) {
-    SSSLOG(("SSS: Cannot parse PKPState string, too large\n"));
-    return;
-  }
-
-  int32_t matches = PR_sscanf(aStateString.get(), "%lld,%lu,%lu,%s",
-                              &mExpireTime, &hpkpState,
-                              &hpkpIncludeSubdomains, mergedHPKPins);
-  bool valid = (matches == 4 &&
-                (hpkpIncludeSubdomains == 0 || hpkpIncludeSubdomains == 1) &&
-                ((SecurityPropertyState)hpkpState == SecurityPropertyUnset ||
-                 (SecurityPropertyState)hpkpState == SecurityPropertySet ||
-                 (SecurityPropertyState)hpkpState == SecurityPropertyKnockout));
-
-  SSSLOG(("SSS: loading SiteHPKPState matches=%d\n", matches));
-  const uint32_t SHA256Base64Len = 44;
-
-  if (valid && (SecurityPropertyState)hpkpState == SecurityPropertySet) {
-    // try to expand the merged PKPins
-    const char* cur = mergedHPKPins;
-    nsAutoCString pin;
-    uint32_t collectedLen = 0;
-    mergedHPKPins[MaxMergedHPKPPinSize - 1] = 0;
-    size_t totalLen = strlen(mergedHPKPins);
-    while (collectedLen + SHA256Base64Len <= totalLen) {
-      pin.Assign(cur, SHA256Base64Len);
-      if (stringIsBase64EncodingOf256bitValue(pin)) {
-        mSHA256keys.AppendElement(pin);
-      }
-      cur += SHA256Base64Len;
-      collectedLen += SHA256Base64Len;
-    }
-    if (mSHA256keys.IsEmpty()) {
-      valid = false;
-    }
-  }
-  if (valid) {
-    mState = (SecurityPropertyState)hpkpState;
-    mIncludeSubdomains = (hpkpIncludeSubdomains == 1);
-  } else {
+  bool valid = ParseHPKPState(aStateString, mExpireTime, mState,
+                              mIncludeSubdomains, mSHA256keys);
+  if (!valid) {
     SSSLOG(("%s is not a valid SiteHPKPState", aStateString.get()));
     mExpireTime = 0;
     mState = SecurityPropertyUnset;
@@ -827,17 +944,14 @@ ParseSSSHeaders(uint32_t aType,
       SSSLOG(("SSS: found max-age directive"));
       foundMaxAge = true;
 
-      size_t len = directive->mValue.Length();
-      for (size_t i = 0; i < len; i++) {
-        char chr = directive->mValue.CharAt(i);
-        if (chr < '0' || chr > '9') {
-          SSSLOG(("SSS: invalid value for max-age directive"));
-          return nsISiteSecurityService::ERROR_INVALID_MAX_AGE;
-        }
+      Tokenizer tokenizer(directive->mValue);
+      if (!tokenizer.ReadInteger(&maxAge)) {
+        SSSLOG(("SSS: could not parse delta-seconds"));
+        return nsISiteSecurityService::ERROR_INVALID_MAX_AGE;
       }
 
-      if (PR_sscanf(directive->mValue.get(), "%llu", &maxAge) != 1) {
-        SSSLOG(("SSS: could not parse delta-seconds"));
+      if (!tokenizer.CheckEOF()) {
+        SSSLOG(("SSS: invalid value for max-age directive"));
         return nsISiteSecurityService::ERROR_INVALID_MAX_AGE;
       }
 

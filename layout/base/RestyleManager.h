@@ -180,6 +180,8 @@ public:
                                const nsAttrValue* aOldValue);
   inline nsresult ReparentStyleContext(nsIFrame* aFrame);
 
+  inline void UpdateOnlyAnimationStyles();
+
   // Get a counter that increments on every style change, that we use to
   // track whether off-main-thread animations are up-to-date.
   uint64_t GetAnimationGeneration() const { return mAnimationGeneration; }
@@ -193,6 +195,11 @@ public:
   // but it is also called when we have out-of-band changes to animations
   // such as changes made through the Web Animations API.
   void IncrementAnimationGeneration();
+
+  static void AddLayerChangesForAnimation(nsIFrame* aFrame,
+                                          nsIContent* aContent,
+                                          nsStyleChangeList&
+                                            aChangeListToProcess);
 
 protected:
   RestyleManager(StyleBackendType aType, nsPresContext* aPresContext);

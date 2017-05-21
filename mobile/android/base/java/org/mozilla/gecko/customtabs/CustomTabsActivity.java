@@ -10,14 +10,13 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Browser;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
-import android.support.annotation.StyleRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.util.SparseArrayCompat;
 import android.support.v7.app.ActionBar;
@@ -39,7 +38,6 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
@@ -75,8 +73,6 @@ public class CustomTabsActivity extends SingleTabActivity implements Tabs.OnTabs
 
         final SafeIntent intent = new SafeIntent(getIntent());
 
-        setThemeFromToolbarColor();
-
         doorhangerOverlay = findViewById(R.id.custom_tabs_doorhanger_overlay);
 
         mProgressView = (ProgressBar) findViewById(R.id.page_progress);
@@ -85,7 +81,7 @@ public class CustomTabsActivity extends SingleTabActivity implements Tabs.OnTabs
         final ActionBar actionBar = getSupportActionBar();
         bindNavigationCallback(toolbar);
 
-        actionBarPresenter = new ActionBarPresenter(actionBar);
+        actionBarPresenter = new ActionBarPresenter(actionBar, getActionBarTextColor());
         actionBarPresenter.displayUrlOnly(intent.getDataString());
         actionBarPresenter.setBackgroundColor(IntentUtil.getToolbarColor(intent), getWindow());
         actionBarPresenter.setTextLongClickListener(new UrlCopyListener());
@@ -142,13 +138,9 @@ public class CustomTabsActivity extends SingleTabActivity implements Tabs.OnTabs
         EventDispatcher.getInstance().dispatch("Telemetry:CustomTabsPing", data);
     }
 
-    private void setThemeFromToolbarColor() {
-        final int color = ColorUtil.getReadableTextColor(IntentUtil.getToolbarColor(new SafeIntent(getIntent())));
-        @StyleRes final int styleRes = (color == Color.BLACK)
-                ? R.style.GeckoCustomTabs_Light
-                : R.style.GeckoCustomTabs;
-
-        setTheme(styleRes);
+    @ColorInt
+    private int getActionBarTextColor() {
+        return ColorUtil.getReadableTextColor(IntentUtil.getToolbarColor(new SafeIntent(getIntent())));
     }
 
     // Bug 1329145: 3rd party app could specify customized exit-animation to this activity.

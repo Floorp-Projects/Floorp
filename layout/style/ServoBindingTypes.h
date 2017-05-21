@@ -10,6 +10,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/UniquePtr.h"
+#include "nsCSSPropertyID.h"
 #include "nsStyleAutoArray.h"
 #include "nsTArray.h"
 
@@ -35,6 +36,7 @@ struct PropertyStyleAnimationValuePair;
 using ComputedKeyframeValues = nsTArray<PropertyStyleAnimationValuePair>;
 } // namespace mozilla
 
+class nsCSSPropertyIDSet;
 class nsCSSValue;
 struct nsFontFaceRuleContainer;
 class nsIDocument;
@@ -58,6 +60,7 @@ typedef nsTArray<nsFontFaceRuleContainer> RawGeckoFontFaceRuleList;
 typedef mozilla::AnimationPropertySegment RawGeckoAnimationPropertySegment;
 typedef mozilla::ComputedTiming RawGeckoComputedTiming;
 typedef nsTArray<const RawServoStyleRule*> RawGeckoServoStyleRuleList;
+typedef nsTArray<nsCSSPropertyID> RawGeckoCSSPropertyIDList;
 
 // We have these helper types so that we can directly generate
 // things like &T or Borrowed<T> on the Rust side in the function, providing
@@ -139,6 +142,8 @@ DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoFontFaceRuleList)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoAnimationPropertySegment)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoComputedTiming)
 DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoServoStyleRuleList)
+DECL_BORROWED_MUT_REF_TYPE_FOR(nsCSSPropertyIDSet)
+DECL_BORROWED_REF_TYPE_FOR(RawGeckoCSSPropertyIDList)
 
 #undef DECL_ARC_REF_TYPE_FOR
 #undef DECL_OWNED_REF_TYPE_FOR

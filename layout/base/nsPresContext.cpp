@@ -237,6 +237,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mExistThrottledUpdates(false),
     // mImageAnimationMode is initialised below, in constructor body
     mImageAnimationModePref(imgIContainer::kNormalAnimMode),
+    mFontGroupCacheDirty(true),
     mInterruptChecksToSkip(0),
     mElementsRestyled(0),
     mFramesConstructed(0),
@@ -623,6 +624,7 @@ nsPresContext::GetUserPreferences()
   mPrefScrollbarSide = Preferences::GetInt("layout.scrollbar.side");
 
   mLangGroupFontPrefs.Reset();
+  mFontGroupCacheDirty = true;
   StaticPresData::Get()->ResetCachedFontPrefs();
 
   // * image animation
@@ -1066,6 +1068,7 @@ nsPresContext::UpdateCharSet(const nsCString& aCharSet)
       mLanguage = mLangService->GetLocaleLanguage();
     }
     mLangGroupFontPrefs.Reset();
+    mFontGroupCacheDirty = true;
   }
 
   switch (GET_BIDI_OPTION_TEXTTYPE(GetBidi())) {
@@ -1976,6 +1979,33 @@ void nsPresContext::StopEmulatingMedium()
 }
 
 void
+nsPresContext::ForceCacheLang(nsIAtom *aLanguage)
+{
+  // force it to be cached
+  GetDefaultFont(kPresContext_DefaultVariableFont_ID, aLanguage);
+  if (!mLanguagesUsed.Contains(aLanguage)) {
+    mLanguagesUsed.PutEntry(aLanguage);
+  }
+}
+
+void
+nsPresContext::CacheAllLangs()
+{
+  if (mFontGroupCacheDirty) {
+    nsCOMPtr<nsIAtom> thisLang = nsStyleFont::GetLanguage(this);
+    GetDefaultFont(kPresContext_DefaultVariableFont_ID, thisLang.get());
+    GetDefaultFont(kPresContext_DefaultVariableFont_ID, nsGkAtoms::x_math);
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1362599#c12
+    GetDefaultFont(kPresContext_DefaultVariableFont_ID, nsGkAtoms::Unicode);
+    for (auto iter = mLanguagesUsed.Iter(); !iter.Done(); iter.Next()) {
+
+      GetDefaultFont(kPresContext_DefaultVariableFont_ID, iter.Get()->GetKey());
+    }
+  }
+  mFontGroupCacheDirty = false;
+}
+
+void
 nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,
                                    nsRestyleHint aRestyleHint)
 {
@@ -2311,14 +2341,8 @@ nsPresContext::FlushCounterStyles()
       PresShell()->NotifyCounterStylesAreDirty();
       PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW,
                                    eRestyle_ForceDescendants);
-      if (mShell->StyleSet()->IsGecko()) {
-        RefreshDriver()->AddPostRefreshObserver(
-          new CounterStyleCleaner(RefreshDriver(), mCounterStyleManager));
-      } else {
-        NS_WARNING("stylo: Pseudo-element ::-moz-list-{number,bullet} are not "
-                   "restyled properly, so we cannot clean up retired objects. "
-                   "See bug 1364871.");
-      }
+      RefreshDriver()->AddPostRefreshObserver(
+        new CounterStyleCleaner(RefreshDriver(), mCounterStyleManager));
     }
     mCounterStylesDirty = false;
   }

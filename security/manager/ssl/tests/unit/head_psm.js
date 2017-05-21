@@ -867,3 +867,17 @@ function hexify(data) {
   // prepending a "0" solves the problem.
   return Array.from(data, (c, i) => ("0" + data.charCodeAt(i).toString(16)).slice(-2)).join("");
 }
+
+/**
+ * @param {String[]} lines
+ *        Lines to write. Each line automatically has "\n" appended to it when
+ *        being written.
+ * @param {nsIFileOutputStream} outputStream
+ */
+function writeLinesAndClose(lines, outputStream) {
+  for (let line of lines) {
+    line += "\n";
+    outputStream.write(line, line.length);
+  }
+  outputStream.close();
+}

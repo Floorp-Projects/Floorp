@@ -3,6 +3,8 @@
 set -xeu
 cd "$(dirname "$0")/.."
 
+export RUST_BACKTRACE=1
+
 # Regenerate the test headers' bindings in debug and release modes, and assert
 # that we always get the expected generated bindings.
 

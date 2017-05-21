@@ -18,20 +18,18 @@ function waitForDeviceClosed() {
   if (!webrtcUI.showGlobalIndicator)
     return Promise.resolve();
 
-  let deferred = Promise.defer();
-
-  const message = "webrtc:UpdateGlobalIndicators";
-  let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-               .getService(Ci.nsIMessageBroadcaster);
-  ppmm.addMessageListener(message, function listener(aMessage) {
-    info("Received " + message + " message");
-    if (!aMessage.data.showGlobalIndicator) {
-      ppmm.removeMessageListener(message, listener);
-      deferred.resolve();
-    }
+  return new Promise((resolve, reject) => {
+    const message = "webrtc:UpdateGlobalIndicators";
+    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+                 .getService(Ci.nsIMessageBroadcaster);
+    ppmm.addMessageListener(message, function listener(aMessage) {
+      info("Received " + message + " message");
+      if (!aMessage.data.showGlobalIndicator) {
+        ppmm.removeMessageListener(message, listener);
+        resolve();
+      }
+    });
   });
-
-  return deferred.promise;
 }
 
 add_task(function* () {
