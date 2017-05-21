@@ -6068,19 +6068,12 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   // See ReflowInput::CalculateHypotheticalBox
   display->mOriginalDisplay = display->mDisplay;
 
-  // -moz-appearance: enum, inherit, initial
-  SetValue(*aRuleData->ValueForMozAppearance(),
-           display->mMozAppearance, conditions,
-           SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
-           parentDisplay->mMozAppearance,
-           NS_THEME_NONE);
-
-  // appearance: auto | none
+  // appearance: enum, inherit, initial
   SetValue(*aRuleData->ValueForAppearance(),
            display->mAppearance, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentDisplay->mAppearance,
-           NS_THEME_AUTO);
+           NS_THEME_NONE);
 
   // binding: url, none, inherit
   const nsCSSValue* bindingValue = aRuleData->ValueForBinding();

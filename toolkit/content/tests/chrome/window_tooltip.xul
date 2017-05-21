@@ -15,12 +15,12 @@
 
 <box id="parent" tooltiptext="Box Tooltip" style="margin: 10px">
   <button id="withtext" label="Tooltip Text" tooltiptext="Button Tooltip"
-          style="-moz-appearance: none; appearance: none; padding: 0;"/>
-  <button id="without" label="No Tooltip" style="-moz-appearance: none; appearance: none; padding: 0;"/>
+          style="-moz-appearance: none; padding: 0;"/>
+  <button id="without" label="No Tooltip" style="-moz-appearance: none; padding: 0;"/>
   <!-- remove the native theme and borders to avoid some platform
        specific sizing differences -->
   <button id="withtooltip" label="Tooltip Element" tooltip="thetooltip"
-          class="plain" style="-moz-appearance: none; appearance: none; padding: 0;"/>
+          class="plain" style="-moz-appearance: none; padding: 0;"/>
   <iframe id="childframe" type="content" width="10" height="10"
           src="http://sectest2.example.org:80/chrome/toolkit/content/tests/chrome/popup_childframe_node.xul"/>
 </box>
