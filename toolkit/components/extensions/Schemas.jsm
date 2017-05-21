@@ -2108,6 +2108,7 @@ FunctionEntry = class FunctionEntry extends CallEntry {
       returns = {
         type: Schemas.parseSchema(schema.returns, path, ["optional", "name"]),
         optional: schema.returns.optional || false,
+        name: "result",
       };
     }
 
@@ -2132,7 +2133,7 @@ FunctionEntry = class FunctionEntry extends CallEntry {
     this.hasAsyncCallback = type.hasAsyncCallback;
   }
 
-  checkValue({type, optional}, value, context) {
+  checkValue({type, optional, name}, value, context) {
     if (optional && value == null) {
       return;
     }
@@ -2143,7 +2144,14 @@ FunctionEntry = class FunctionEntry extends CallEntry {
     }
     const {error} = type.normalize(value, context);
     if (error) {
-      this.throwError(context, `Type error for result value (${error})`);
+      this.throwError(context, `Type error for ${name} value (${error})`);
+    }
+  }
+
+  checkCallback(args, context) {
+    const callback = this.parameters[this.parameters.length - 1];
+    for (const [i, param] of callback.type.parameters.entries()) {
+      this.checkValue(param, args[i], context);
     }
   }
 
@@ -2165,7 +2173,21 @@ FunctionEntry = class FunctionEntry extends CallEntry {
           // and lastError values are reported immediately.
           callback = () => {};
         }
-        return apiImpl.callAsyncFunction(actuals, callback);
+        if (DEBUG && this.hasAsyncCallback && callback) {
+          let original = callback;
+          callback = (...args) => {
+            this.checkCallback(args, context);
+            original(...args);
+          };
+        }
+        let result = apiImpl.callAsyncFunction(actuals, callback);
+        if (DEBUG && this.hasAsyncCallback && !callback) {
+          return result.then(result => {
+            this.checkCallback([result], context);
+            return result;
+          });
+        }
+        return result;
       };
     } else if (!this.returns) {
       stub = (...args) => {
