@@ -25,6 +25,7 @@ extern crate syntex_syntax as syntax;
 extern crate aster;
 extern crate quasi;
 extern crate clang_sys;
+extern crate peeking_take_while;
 extern crate regex;
 #[macro_use]
 extern crate lazy_static;
