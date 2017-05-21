@@ -214,7 +214,7 @@ body {
 }
 
 #timeline-rate select.devtools-button {
-  -moz-appearance: none; appearance: none;
+  -moz-appearance: none;
   text-align: center;
   font-family: inherit;
   color: var(--theme-body-color);
