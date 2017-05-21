@@ -10,7 +10,6 @@
 class nsCString;
 %}
 
-[ref] native nsCString(const nsCString);
 [ref] native StringArrayRef(const nsTArray<nsCString>);
 
 /**
@@ -111,7 +110,4 @@ interface nsIProfiler : nsISupports
    * Dump the collected profile to a file.
    */
   void dumpProfileToFile(in string aFilename);
-
-  [noscript, notxpcom, nostdcall]
-  void receiveShutdownProfile(in nsCString aProfile);
 };

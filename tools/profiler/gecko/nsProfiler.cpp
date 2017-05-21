@@ -480,6 +480,29 @@ nsProfiler::GetStartParams(nsIProfilerStartParams** aRetVal)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsProfiler::GetBufferInfo(uint32_t* aCurrentPosition, uint32_t* aTotalSize,
+                          uint32_t* aGeneration)
+{
+  MOZ_ASSERT(aCurrentPosition);
+  MOZ_ASSERT(aTotalSize);
+  MOZ_ASSERT(aGeneration);
+  profiler_get_buffer_info(aCurrentPosition, aTotalSize, aGeneration);
+  return NS_OK;
+}
+
+void
+nsProfiler::WillGatherOOPProfile()
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!mGatherer) {
+    return;
+  }
+
+  mGatherer->WillGatherOOPProfile();
+}
+
 void
 nsProfiler::GatheredOOPProfile(const nsACString& aProfile)
 {
@@ -493,7 +516,7 @@ nsProfiler::GatheredOOPProfile(const nsACString& aProfile)
 }
 
 void
-nsProfiler::ReceiveShutdownProfile(const nsCString& aProfile)
+nsProfiler::OOPExitProfile(const nsACString& aProfile)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -504,13 +527,3 @@ nsProfiler::ReceiveShutdownProfile(const nsCString& aProfile)
   mGatherer->OOPExitProfile(aProfile);
 }
 
-NS_IMETHODIMP
-nsProfiler::GetBufferInfo(uint32_t* aCurrentPosition, uint32_t* aTotalSize,
-                          uint32_t* aGeneration)
-{
-  MOZ_ASSERT(aCurrentPosition);
-  MOZ_ASSERT(aTotalSize);
-  MOZ_ASSERT(aGeneration);
-  profiler_get_buffer_info(aCurrentPosition, aTotalSize, aGeneration);
-  return NS_OK;
-}

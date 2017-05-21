@@ -13,7 +13,7 @@
 class nsProfilerStartParams : public nsIProfilerStartParams
 {
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIPROFILERSTARTPARAMS
 
   nsProfilerStartParams(uint32_t aEntries,

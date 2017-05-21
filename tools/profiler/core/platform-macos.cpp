@@ -78,6 +78,8 @@ SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
   , mIntervalMicroseconds(
       std::max(1, int(floor(aIntervalMilliseconds * 1000 + 0.5))))
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   pthread_attr_t* attr_ptr = nullptr;
   if (pthread_create(&mThread, attr_ptr, ThreadEntry, this) != 0) {
     MOZ_CRASH("pthread_create failed");
@@ -92,6 +94,7 @@ SamplerThread::~SamplerThread()
 void
 SamplerThread::Stop(PSLockRef aLock)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
 }
 
 void

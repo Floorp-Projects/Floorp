@@ -33,7 +33,9 @@ public:
 	return static_cast<nsProfiler*>(iprofiler.get());
     }
 
+    void WillGatherOOPProfile();
     void GatheredOOPProfile(const nsACString& aProfile);
+    void OOPExitProfile(const nsACString& aProfile);
 
 private:
     ~nsProfiler();

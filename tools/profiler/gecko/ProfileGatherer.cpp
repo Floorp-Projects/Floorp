@@ -60,6 +60,12 @@ ProfileGatherer::GatheredOOPProfile(const nsACString& aProfile)
   }
 }
 
+void
+ProfileGatherer::WillGatherOOPProfile()
+{
+  mPendingProfiles++;
+}
+
 RefPtr<ProfileGatherer::ProfileGatherPromise>
 ProfileGatherer::Start(double aSinceTime)
 {
@@ -72,14 +78,20 @@ ProfileGatherer::Start(double aSinceTime)
   }
 
   mGathering = true;
+  mPendingProfiles = 0;
 
-  // Request profiles from the other processes. This will trigger
-  // asynchronous calls to ProfileGatherer::GatheredOOPProfile as the
-  // profiles arrive.
+  // Send a notification to request profiles from other processes. The
+  // observers of this notification will call WillGatherOOPProfile() which
+  // increments mPendingProfiles.
   // Do this before the call to profiler_stream_json_for_this_process because
   // that call is slow and we want to let the other processes grab their
   // profiles as soon as possible.
-  mPendingProfiles = ProfilerParent::GatherProfiles();
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os) {
+    DebugOnly<nsresult> rv =
+      os->NotifyObservers(this, "profiler-subprocess-gather", nullptr);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NotifyObservers failed");
+  }
 
   mWriter.emplace();
 
