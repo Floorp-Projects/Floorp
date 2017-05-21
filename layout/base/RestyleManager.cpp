@@ -360,7 +360,7 @@ RestyleManager::ContentStateChangedInternal(Element* aElement,
                                          NS_EVENT_STATE_LOADING)) {
       *aOutChangeHint = nsChangeHint_ReconstructFrame;
     } else {
-      uint8_t app = primaryFrame->StyleDisplay()->UsedAppearance();
+      uint8_t app = primaryFrame->StyleDisplay()->mAppearance;
       if (app) {
         nsITheme* theme = PresContext()->GetTheme();
         if (theme &&

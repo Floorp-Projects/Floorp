@@ -168,7 +168,7 @@ SimpleTest.waitForFocus(runTest);
 <button id="b2" label="Button"/>
 <button id="b3" label="Button"/>
 
-<iframe id="child" src="data:text/html,&lt;html&gt;&lt;style&gt;* { outline: none; -moz-appearance: none; appearance: none; min-width:10px; min-height:10px; } %23elem:focus { outline: 2px solid red; } %23elem:-moz-focusring { outline: 1px solid blue; }&lt;/style&gt;&lt;div id='container'&gt;&lt;/html&gt;"/>
+<iframe id="child" src="data:text/html,&lt;html&gt;&lt;style&gt;* { outline: none; -moz-appearance: none; min-width:10px; min-height:10px; } %23elem:focus { outline: 2px solid red; } %23elem:-moz-focusring { outline: 1px solid blue; }&lt;/style&gt;&lt;div id='container'&gt;&lt;/html&gt;"/>
 
 <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 

@@ -782,7 +782,7 @@ nsComboboxControlFrame::GetIntrinsicISize(nsRenderingContext* aRenderingContext,
   const nsStyleDisplay* disp = StyleDisplay();
   if ((!IsThemed(disp) ||
        presContext->GetTheme()->ThemeNeedsComboboxDropmarker()) &&
-      disp->UsedAppearance() != NS_THEME_NONE) {
+      disp->mAppearance != NS_THEME_NONE) {
     displayISize += scrollbarWidth;
   }
 
@@ -855,7 +855,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   nscoord buttonISize;
   const nsStyleDisplay *disp = StyleDisplay();
   if ((IsThemed(disp) && !aPresContext->GetTheme()->ThemeNeedsComboboxDropmarker()) ||
-      StyleDisplay()->UsedAppearance() == NS_THEME_NONE) {
+      StyleDisplay()->mAppearance == NS_THEME_NONE) {
     buttonISize = 0;
   }
   else {
@@ -1578,7 +1578,7 @@ nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       nsPresContext *presContext = PresContext();
       const nsStyleDisplay *disp = StyleDisplay();
       if ((!IsThemed(disp) ||
-           !presContext->GetTheme()->ThemeDrawsFocusForWidget(disp->UsedAppearance())) &&
+           !presContext->GetTheme()->ThemeDrawsFocusForWidget(disp->mAppearance)) &&
           mDisplayFrame && IsVisibleForPainting(aBuilder)) {
         aLists.Content()->AppendNewToTop(
           new (aBuilder) nsDisplayComboboxFocus(aBuilder, this));

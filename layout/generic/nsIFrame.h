@@ -1614,16 +1614,16 @@ public:
   bool IsThemed(const nsStyleDisplay* aDisp,
                   nsITheme::Transparency* aTransparencyState = nullptr) const {
     nsIFrame* mutable_this = const_cast<nsIFrame*>(this);
-    if (!aDisp->UsedAppearance())
+    if (!aDisp->mAppearance)
       return false;
     nsPresContext* pc = PresContext();
     nsITheme *theme = pc->GetTheme();
     if(!theme ||
-       !theme->ThemeSupportsWidget(pc, mutable_this, aDisp->UsedAppearance()))
+       !theme->ThemeSupportsWidget(pc, mutable_this, aDisp->mAppearance))
       return false;
     if (aTransparencyState) {
       *aTransparencyState =
-        theme->GetWidgetTransparency(mutable_this, aDisp->UsedAppearance());
+        theme->GetWidgetTransparency(mutable_this, aDisp->mAppearance);
     }
     return true;
   }
