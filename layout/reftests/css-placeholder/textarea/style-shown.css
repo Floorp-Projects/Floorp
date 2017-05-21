@@ -4,14 +4,14 @@ textarea::placeholder {
 }
 
 textarea:placeholder-shown {
-  -moz-appearance: none; appearance: none;
+  -moz-appearance: none;
   color: -moz-FieldText;
   background-color: red;
 }
 
 textarea:placeholder-shown.shown,
 textarea.shown-ref {
-  -moz-appearance: none; appearance: none;
+  -moz-appearance: none;
   color: green;
   background-color: #c7c7c7;
   font-style: italic;
