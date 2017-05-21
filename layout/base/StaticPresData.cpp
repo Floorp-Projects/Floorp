@@ -282,10 +282,12 @@ StaticPresData::GetFontPrefsForLangHelper(nsIAtom* aLanguage,
       }
       prefs = prefs->mNext;
     }
-
+    MOZ_ASSERT(NS_IsMainThread(), "Should not append to cache off main thread");
     // nothing cached, so go on and fetch the prefs for this lang group:
     prefs = prefs->mNext = new LangGroupFontPrefs;
   }
+
+  MOZ_ASSERT(NS_IsMainThread(), "Should not append to cache off main thread");
 
   prefs->Initialize(langGroupAtom);
 

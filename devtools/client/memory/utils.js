@@ -414,15 +414,17 @@ exports.getSnapshotTotals = function (census) {
  *        The file selected by the user, or null, if cancelled.
  */
 exports.openFilePicker = function ({ title, filters, defaultName, mode }) {
-  mode = mode === "save" ? Ci.nsIFilePicker.modeSave : null;
-  mode = mode === "open" ? Ci.nsIFilePicker.modeOpen : null;
-
-  if (mode == void 0) {
+  let fpMode;
+  if (mode === "save") {
+    fpMode = Ci.nsIFilePicker.modeSave;
+  } else if (mode === "open") {
+    fpMode = Ci.nsIFilePicker.modeOpen;
+  } else {
     throw new Error("No valid mode specified for nsIFilePicker.");
   }
 
   let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-  fp.init(window, title, mode);
+  fp.init(window, title, fpMode);
 
   for (let filter of (filters || [])) {
     fp.appendFilter(filter[0], filter[1]);

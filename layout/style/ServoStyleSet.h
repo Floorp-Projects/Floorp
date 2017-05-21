@@ -7,6 +7,7 @@
 #ifndef mozilla_ServoStyleSet_h
 #define mozilla_ServoStyleSet_h
 
+#include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/PostTraversalTask.h"
@@ -118,12 +119,6 @@ public:
                   nsStyleContext* aParentContext,
                   LazyComputeBehavior aMayCompute);
 
-  already_AddRefed<nsStyleContext>
-  ResolveStyleFor(dom::Element* aElement,
-                  nsStyleContext* aParentContext,
-                  LazyComputeBehavior aMayCompute,
-                  TreeMatchContext& aTreeMatchContext);
-
   // Get a style context for a text node (which no rules will match).
   //
   // The returned style context will have nsCSSAnonBoxes::mozText as its pseudo.
@@ -218,13 +213,7 @@ public:
   already_AddRefed<nsStyleContext>
   ProbePseudoElementStyle(dom::Element* aOriginatingElement,
                           mozilla::CSSPseudoElementType aType,
-                          nsStyleContext* aParentContext);
-
-  already_AddRefed<nsStyleContext>
-  ProbePseudoElementStyle(dom::Element* aOriginatingElement,
-                          mozilla::CSSPseudoElementType aType,
                           nsStyleContext* aParentContext,
-                          TreeMatchContext& aTreeMatchContext,
                           dom::Element* aPseudoElement = nullptr);
 
   // Test if style is dependent on content state
@@ -244,6 +233,15 @@ public:
    * Returns true if a post-traversal is required.
    */
   bool StyleDocument();
+
+  /**
+   * Performs a Servo animation-only traversal to compute style for all nodes
+   * with the animation-only dirty bit in the document.
+   *
+   * This will traverse all of the document's style roots (that is, its document
+   * element, and the roots of the document-level native anonymous content).
+   */
+  bool StyleDocumentForAnimationOnly();
 
   /**
    * Eagerly styles a subtree of unstyled nodes that was just appended to the
@@ -422,7 +420,9 @@ private:
    * When aRoot is null, the entire document is pre-traversed.  Otherwise,
    * only the subtree rooted at aRoot is pre-traversed.
    */
-  void PreTraverse(dom::Element* aRoot = nullptr);
+  void PreTraverse(dom::Element* aRoot = nullptr,
+                   EffectCompositor::AnimationRestyleType =
+                     EffectCompositor::AnimationRestyleType::Throttled);
   // Subset of the pre-traverse steps that involve syncing up data
   void PreTraverseSync();
 

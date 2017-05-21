@@ -277,6 +277,8 @@
 @BINPATH@/components/BrowserElementParent.js
 @BINPATH@/components/FeedProcessor.manifest
 @BINPATH@/components/FeedProcessor.js
+@BINPATH@/components/UAOverridesBootstrapper.js
+@BINPATH@/components/UAOverridesBootstrapper.manifest
 @BINPATH@/components/WellKnownOpportunisticUtils.js
 @BINPATH@/components/WellKnownOpportunisticUtils.manifest
 @BINPATH@/components/mozProtocolHandler.js

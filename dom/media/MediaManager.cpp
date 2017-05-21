@@ -2234,6 +2234,14 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
 
   if (c.mAudio.IsMediaTrackConstraints()) {
     auto& ac = c.mAudio.GetAsMediaTrackConstraints();
+    MediaConstraintsHelper::ConvertOldWithWarning(ac.mMozAutoGainControl,
+                                                  ac.mAutoGainControl,
+                                                  "MozAutoGainControlWarning",
+                                                  aWindow);
+    MediaConstraintsHelper::ConvertOldWithWarning(ac.mMozNoiseSuppression,
+                                                  ac.mNoiseSuppression,
+                                                  "MozNoiseSuppressionWarning",
+                                                  aWindow);
     audioType = StringToEnum(dom::MediaSourceEnumValues::strings,
                              ac.mMediaSource,
                              MediaSourceEnum::Other);
@@ -3775,10 +3783,11 @@ SourceListener::CapturingBrowser() const
 }
 
 already_AddRefed<PledgeVoid>
-SourceListener::ApplyConstraintsToTrack(nsPIDOMWindowInner* aWindow,
-                                        TrackID aTrackID,
-                                        const dom::MediaTrackConstraints& aConstraints,
-                                        dom::CallerType aCallerType)
+SourceListener::ApplyConstraintsToTrack(
+    nsPIDOMWindowInner* aWindow,
+    TrackID aTrackID,
+    const MediaTrackConstraints& aConstraintsPassedIn,
+    dom::CallerType aCallerType)
 {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<PledgeVoid> p = new PledgeVoid();
@@ -3797,6 +3806,16 @@ SourceListener::ApplyConstraintsToTrack(nsPIDOMWindowInner* aWindow,
     p->Resolve(false);
     return p.forget();
   }
+  MediaTrackConstraints c(aConstraintsPassedIn); // use a modifiable copy
+
+  MediaConstraintsHelper::ConvertOldWithWarning(c.mMozAutoGainControl,
+                                                c.mAutoGainControl,
+                                                "MozAutoGainControlWarning",
+                                                aWindow);
+  MediaConstraintsHelper::ConvertOldWithWarning(c.mMozNoiseSuppression,
+                                                c.mNoiseSuppression,
+                                                "MozNoiseSuppressionWarning",
+                                                aWindow);
 
   RefPtr<MediaManager> mgr = MediaManager::GetInstance();
   uint32_t id = mgr->mOutstandingVoidPledges.Append(*p);
@@ -3805,27 +3824,27 @@ SourceListener::ApplyConstraintsToTrack(nsPIDOMWindowInner* aWindow,
 
   MediaManager::PostTask(NewTaskFrom([id, windowId,
                                       audioDevice, videoDevice,
-                                      aConstraints, isChrome]() mutable {
+                                      c, isChrome]() mutable {
     MOZ_ASSERT(MediaManager::IsInMediaThread());
     RefPtr<MediaManager> mgr = MediaManager::GetInstance();
     const char* badConstraint = nullptr;
     nsresult rv = NS_OK;
 
     if (audioDevice) {
-      rv = audioDevice->Restart(aConstraints, mgr->mPrefs, &badConstraint);
+      rv = audioDevice->Restart(c, mgr->mPrefs, &badConstraint);
       if (rv == NS_ERROR_NOT_AVAILABLE && !badConstraint) {
         nsTArray<RefPtr<AudioDevice>> audios;
         audios.AppendElement(audioDevice);
         badConstraint = MediaConstraintsHelper::SelectSettings(
-            NormalizedConstraints(aConstraints), audios, isChrome);
+            NormalizedConstraints(c), audios, isChrome);
       }
     } else {
-      rv = videoDevice->Restart(aConstraints, mgr->mPrefs, &badConstraint);
+      rv = videoDevice->Restart(c, mgr->mPrefs, &badConstraint);
       if (rv == NS_ERROR_NOT_AVAILABLE && !badConstraint) {
         nsTArray<RefPtr<VideoDevice>> videos;
         videos.AppendElement(videoDevice);
         badConstraint = MediaConstraintsHelper::SelectSettings(
-            NormalizedConstraints(aConstraints), videos, isChrome);
+            NormalizedConstraints(c), videos, isChrome);
       }
     }
     NS_DispatchToMainThread(NewRunnableFrom([id, windowId, rv,
