@@ -50,6 +50,8 @@ public:
                                     nsRestyleHint aRestyleHint);
   void ProcessPendingRestyles();
 
+  void UpdateOnlyAnimationStyles();
+
   void ContentInserted(nsINode* aContainer, nsIContent* aChild);
   void ContentAppended(nsIContent* aContainer,
                        nsIContent* aFirstNewContent);
@@ -137,6 +139,8 @@ private:
   const SnapshotTable& Snapshots() const { return mSnapshots; }
   void ClearSnapshots();
   ServoElementSnapshot& SnapshotFor(mozilla::dom::Element* aElement);
+
+  void DoProcessPendingRestyles(TraversalRestyleBehavior aRestyleBehavior);
 
   // We use a separate data structure from nsStyleChangeList because we need a
   // frame to create nsStyleChangeList entries, and the primary frame may not be

@@ -123,7 +123,7 @@ public:
     ResolveStyleFor(dom::Element* aElement,
                     nsStyleContext* aParentContext,
                     LazyComputeBehavior aMayCompute,
-                    TreeMatchContext& aTreeMatchContext);
+                    TreeMatchContext* aTreeMatchContext);
     inline already_AddRefed<nsStyleContext>
     ResolveStyleForText(nsIContent* aTextNode,
                         nsStyleContext* aParentContext);
@@ -161,7 +161,7 @@ public:
     ProbePseudoElementStyle(dom::Element* aParentElement,
                             mozilla::CSSPseudoElementType aType,
                             nsStyleContext* aParentContext,
-                            TreeMatchContext& aTreeMatchContext,
+                            TreeMatchContext* aTreeMatchContext,
                             dom::Element* aPseudoElement = nullptr);
     inline nsRestyleHint HasStateDependentStyle(dom::Element* aElement,
                                                 EventStates aStateMask);

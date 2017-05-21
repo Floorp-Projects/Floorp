@@ -267,10 +267,12 @@ ServoStyleSet::PreTraverseSync()
   mPresContext->Document()->GetUserFontSet();
 
   UpdateStylistIfNeeded();
+  mPresContext->CacheAllLangs();
 }
 
 void
-ServoStyleSet::PreTraverse(Element* aRoot)
+ServoStyleSet::PreTraverse(Element* aRoot,
+                           EffectCompositor::AnimationRestyleType aRestyleType)
 {
   PreTraverseSync();
 
@@ -279,12 +281,13 @@ ServoStyleSet::PreTraverse(Element* aRoot)
   nsSMILAnimationController* smilController =
     mPresContext->Document()->GetAnimationController();
   if (aRoot) {
-    mPresContext->EffectCompositor()->PreTraverseInSubtree(aRoot);
+    mPresContext->EffectCompositor()
+                ->PreTraverseInSubtree(aRoot, aRestyleType);
     if (smilController) {
       smilController->PreTraverseInSubtree(aRoot);
     }
   } else {
-    mPresContext->EffectCompositor()->PreTraverse();
+    mPresContext->EffectCompositor()->PreTraverse(aRestyleType);
     if (smilController) {
       smilController->PreTraverse();
     }
@@ -310,9 +313,17 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   bool isInitial = !aRoot->HasServoData();
   bool forReconstruct =
     aRestyleBehavior == TraversalRestyleBehavior::ForReconstruct;
+  bool forAnimationOnly =
+    aRestyleBehavior == TraversalRestyleBehavior::ForAnimationOnly;
   bool postTraversalRequired = Servo_TraverseSubtree(
     aRoot, mRawSet.get(), &snapshots, aRootBehavior, aRestyleBehavior);
   MOZ_ASSERT_IF(isInitial || forReconstruct, !postTraversalRequired);
+
+  // Don't need to trigger a second traversal if this restyle only needs
+  // animation-only restyle.
+  if (forAnimationOnly) {
+    return postTraversalRequired;
+  }
 
   auto root = const_cast<Element*>(aRoot);
 
@@ -324,8 +335,10 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   // traversal caused, for example, the font-size to change, the SMIL style
   // won't be updated until the next tick anyway.
   EffectCompositor* compositor = mPresContext->EffectCompositor();
-  if (forReconstruct ? compositor->PreTraverseInSubtree(root)
-                     : compositor->PreTraverse()) {
+  EffectCompositor::AnimationRestyleType restyleType =
+    EffectCompositor::AnimationRestyleType::Throttled;
+  if (forReconstruct ? compositor->PreTraverseInSubtree(root, restyleType)
+                     : compositor->PreTraverse(restyleType)) {
     if (Servo_TraverseSubtree(
           aRoot, mRawSet.get(), &snapshots, aRootBehavior, aRestyleBehavior)) {
       MOZ_ASSERT(!forReconstruct);
@@ -348,18 +361,6 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   }
 
   return postTraversalRequired;
-}
-
-already_AddRefed<nsStyleContext>
-ServoStyleSet::ResolveStyleFor(Element* aElement,
-                               nsStyleContext* aParentContext,
-                               LazyComputeBehavior aMayCompute,
-                               TreeMatchContext& aTreeMatchContext)
-{
-  // aTreeMatchContext is used to speed up selector matching,
-  // but if the element already has a ServoComputedValues computed in
-  // advance, then we shouldn't need to use it.
-  return ResolveStyleFor(aElement, aParentContext, aMayCompute);
 }
 
 already_AddRefed<nsStyleContext>
@@ -765,9 +766,13 @@ ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
 already_AddRefed<nsStyleContext>
 ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
                                        CSSPseudoElementType aType,
-                                       nsStyleContext* aParentContext)
+                                       nsStyleContext* aParentContext,
+                                       Element* aPseudoElement)
 {
   UpdateStylistIfNeeded();
+  if (aPseudoElement) {
+    NS_ERROR("stylo: We don't support CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE yet");
+  }
 
   // NB: We ignore aParentContext, on the assumption that pseudo element styles
   // should just inherit from aOriginatingElement's primary style, which Servo
@@ -801,19 +806,6 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
                     isBeforeOrAfter ? aOriginatingElement : nullptr);
 }
 
-already_AddRefed<nsStyleContext>
-ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
-                                       CSSPseudoElementType aType,
-                                       nsStyleContext* aParentContext,
-                                       TreeMatchContext& aTreeMatchContext,
-                                       Element* aPseudoElement)
-{
-  if (aPseudoElement) {
-    NS_ERROR("stylo: We don't support CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE yet");
-  }
-  return ProbePseudoElementStyle(aOriginatingElement, aType, aParentContext);
-}
-
 nsRestyleHint
 ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
                                       EventStates aStateMask)
@@ -845,6 +837,23 @@ ServoStyleSet::StyleDocument()
     if (PrepareAndTraverseSubtree(root,
                                   TraversalRootBehavior::Normal,
                                   TraversalRestyleBehavior::Normal)) {
+      postTraversalRequired = true;
+    }
+  }
+  return postTraversalRequired;
+}
+
+bool
+ServoStyleSet::StyleDocumentForAnimationOnly()
+{
+  PreTraverse(nullptr, EffectCompositor::AnimationRestyleType::Full);
+
+  bool postTraversalRequired = false;
+  DocumentStyleRootIterator iter(mPresContext->Document());
+  while (Element* root = iter.GetNextStyleRoot()) {
+    if (PrepareAndTraverseSubtree(root,
+                                  TraversalRootBehavior::Normal,
+                                  TraversalRestyleBehavior::ForAnimationOnly)) {
       postTraversalRequired = true;
     }
   }

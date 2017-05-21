@@ -403,6 +403,8 @@ private:
     void     NotifyObservers(nsIHttpChannel *chan, const char *event);
 
     void SetFastOpenOSSupport();
+
+    void EnsureUAOverridesInit();
 private:
 
     // cached services
