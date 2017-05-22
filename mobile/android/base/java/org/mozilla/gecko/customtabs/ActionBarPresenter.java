@@ -87,6 +87,22 @@ public class ActionBarPresenter {
     }
 
     /**
+     * Called when ActionBar is to start interacting with user. Usually this method is called from
+     * Activity.onResume.
+     */
+    public void onResume() {
+        mIdentityPopup.registerListeners();
+    }
+
+    /**
+     * Called when ActionBar is going to background, but has not yet been killed. Usually this method
+     * is called from Activity.onPause.
+     */
+    public void onPause() {
+        mIdentityPopup.unregisterListeners();
+    }
+
+    /**
      * To display Url in CustomView only and immediately.
      *
      * @param url Url String to display
