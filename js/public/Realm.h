@@ -74,6 +74,17 @@ GetRealmErrorPrototype(JSContext* cx);
 extern JS_PUBLIC_API(JSObject*)
 GetRealmIteratorPrototype(JSContext* cx);
 
+/**
+ * Change the JS language version for the current Realm. This is discouraged,
+ * but necessary to support the `version()` builtin function in the js and xpc
+ * shells.
+ *
+ * It would be nice to put this in jsfriendapi, but the linkage requirements
+ * of the shells make that impossible.
+ */
+JS_PUBLIC_API(void)
+SetVersionForCurrentRealm(JSContext* cx, JSVersion version);
+
 } // namespace JS
 
 #endif // js_Realm_h

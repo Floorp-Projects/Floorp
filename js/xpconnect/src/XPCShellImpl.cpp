@@ -392,8 +392,7 @@ Version(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setInt32(JS_GetVersion(cx));
     if (args.get(0).isInt32())
-        JS_SetVersionForCompartment(js::GetContextCompartment(cx),
-                                    JSVersion(args[0].toInt32()));
+        SetVersionForCurrentRealm(cx, JSVersion(args[0].toInt32()));
     return true;
 }
 
@@ -1086,8 +1085,7 @@ ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc, XPCShellDirProvider* aDirPr
             if (++i == argc) {
                 return printUsageAndSetExitCode();
             }
-            JS_SetVersionForCompartment(js::GetContextCompartment(cx),
-                                        JSVersion(atoi(argv[i])));
+            SetVersionForCurrentRealm(cx, JSVersion(atoi(argv[i])));
             break;
         case 'W':
             reportWarnings = false;
