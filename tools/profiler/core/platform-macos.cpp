@@ -134,7 +134,6 @@ SamplerThread::SuspendAndSampleAndResumeThread(PSLockRef aLock,
   // what we do here, or risk deadlock.  See the corresponding comment in
   // platform-linux-android.cpp for details.
 
-#if defined(GP_ARCH_amd64)
   thread_state_flavor_t flavor = x86_THREAD_STATE64;
   x86_thread_state64_t state;
   mach_msg_type_number_t count = x86_THREAD_STATE64_COUNT;
@@ -143,20 +142,6 @@ SamplerThread::SuspendAndSampleAndResumeThread(PSLockRef aLock,
 # else
 #  define REGISTER_FIELD(name) r ## name
 # endif  // __DARWIN_UNIX03
-
-#elif defined(GP_ARCH_x86)
-  thread_state_flavor_t flavor = i386_THREAD_STATE;
-  i386_thread_state_t state;
-  mach_msg_type_number_t count = i386_THREAD_STATE_COUNT;
-# if __DARWIN_UNIX03
-#  define REGISTER_FIELD(name) __e ## name
-# else
-#  define REGISTER_FIELD(name) e ## name
-# endif  // __DARWIN_UNIX03
-
-#else
-# error Unsupported Mac OS X host architecture.
-#endif  // GP_ARCH_*
 
   if (thread_get_state(samplee_thread,
                        flavor,
@@ -190,13 +175,10 @@ PlatformInit(PSLockRef aLock)
 }
 
 void
-TickSample::PopulateContext(void* aContext)
+TickSample::PopulateContext()
 {
   MOZ_ASSERT(mIsSynchronous);
-  MOZ_ASSERT(!aContext);
 
-  // Note that this asm changes if PopulateContext's parameter list is altered
-#if defined(GP_ARCH_amd64)
   asm (
       // Compute caller's %rsp by adding to %rbp:
       // 8 bytes for previous %rbp, 8 bytes for return address
@@ -207,21 +189,6 @@ TickSample::PopulateContext(void* aContext)
       "=r"(mSP),
       "=r"(mFP)
   );
-#elif defined(GP_ARCH_x86)
-  asm (
-      // Compute caller's %esp by adding to %ebp:
-      // 4 bytes for aContext + 4 bytes for return address +
-      // 4 bytes for previous %ebp
-      "leal 0xc(%%ebp), %0\n\t"
-      // Dereference %ebp to get previous %ebp
-      "movl (%%ebp), %1\n\t"
-      :
-      "=r"(mSP),
-      "=r"(mFP)
-  );
-#else
-# error "Unsupported architecture"
-#endif
   mPC = reinterpret_cast<Address>(__builtin_extract_return_addr(
                                     __builtin_return_address(0)));
 }

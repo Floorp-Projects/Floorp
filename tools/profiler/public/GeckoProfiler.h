@@ -416,9 +416,8 @@ extern MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
 // necessarily bounded by the lifetime of the thread, which ensures that the
 // references held can't be used after the PseudoStack is destroyed.
 inline void*
-profiler_call_enter(const char* aInfo,
-                    js::ProfileEntry::Category aCategory,
-                    void* aFrameAddress, bool aCopy, uint32_t aLine,
+profiler_call_enter(const char* aInfo, js::ProfileEntry::Category aCategory,
+                    void* aFrameAddress, uint32_t aLine,
                     const char* aDynamicString = nullptr)
 {
   // This function runs both on and off the main thread.
@@ -427,8 +426,7 @@ profiler_call_enter(const char* aInfo,
   if (!pseudoStack) {
     return pseudoStack;
   }
-  pseudoStack->push(aInfo, aCategory, aFrameAddress, aCopy, aLine,
-                    aDynamicString);
+  pseudoStack->push(aInfo, aCategory, aFrameAddress, aLine, aDynamicString);
 
   // The handle is meant to support future changes but for now it is simply
   // used to avoid having to call TLSInfo::RacyInfo() in profiler_call_exit().
@@ -514,7 +512,7 @@ public:
     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    mHandle = profiler_call_enter(aInfo, aCategory, this, false, line);
+    mHandle = profiler_call_enter(aInfo, aCategory, this, line);
   }
   ~SamplerStackFrameRAII() {
     profiler_call_exit(mHandle);
@@ -530,7 +528,7 @@ public:
     js::ProfileEntry::Category aCategory, uint32_t aLine,
     const char* aDynamicString)
   {
-    mHandle = profiler_call_enter(aInfo, aCategory, this, true, aLine,
+    mHandle = profiler_call_enter(aInfo, aCategory, this, aLine,
                                   aDynamicString);
   }
 
