@@ -3043,7 +3043,24 @@ public:
     return mContent.mString;
   }
 
-  nsCSSValue::Array* GetCounters() const
+  struct CounterFunction
+  {
+    nsString mIdent;
+    // This is only used when it is a counters() function.
+    nsString mSeparator;
+    mozilla::CounterStylePtr mCounterStyle;
+
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CounterFunction)
+
+    bool operator==(const CounterFunction& aOther) const;
+    bool operator!=(const CounterFunction& aOther) const {
+      return !(*this == aOther);
+    }
+  private:
+    ~CounterFunction() {}
+  };
+
+  CounterFunction* GetCounters() const
   {
     MOZ_ASSERT(mType == eStyleContentType_Counter ||
                mType == eStyleContentType_Counters);
@@ -3084,17 +3101,16 @@ public:
     mContent.mString = NS_strdup(aString);
   }
 
-  void SetCounters(nsStyleContentType aType, nsCSSValue::Array* aCounters)
+  void SetCounters(nsStyleContentType aType,
+                   already_AddRefed<CounterFunction> aCounterFunction)
   {
     MOZ_ASSERT(aType == eStyleContentType_Counter ||
                aType == eStyleContentType_Counters);
-    MOZ_ASSERT(aCounters);
-    MOZ_ASSERT(aCounters->Count() == 2 || aCounters->Count() == 3);
     MOZ_ASSERT(mType == eStyleContentType_Uninitialized,
                "should only initialize nsStyleContentData once");
     mType = aType;
-    mContent.mCounters = aCounters;
-    mContent.mCounters->AddRef();
+    mContent.mCounters = aCounterFunction.take();
+    MOZ_ASSERT(mContent.mCounters);
   }
 
   void SetImageRequest(already_AddRefed<nsStyleImageRequest> aRequest)
@@ -3117,7 +3133,7 @@ private:
   union {
     char16_t *mString;
     nsStyleImageRequest* mImage;
-    nsCSSValue::Array* mCounters;
+    CounterFunction* mCounters;
   } mContent;
 };
 

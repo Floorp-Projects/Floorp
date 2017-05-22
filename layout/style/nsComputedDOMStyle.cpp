@@ -1265,6 +1265,46 @@ nsComputedDOMStyle::DoGetColumnRuleColor()
   return val.forget();
 }
 
+static void
+AppendCounterStyle(CounterStyle* aStyle, nsAString& aString)
+{
+  AnonymousCounterStyle* anonymous = aStyle->AsAnonymous();
+  if (!anonymous) {
+    // want SetIdent
+    nsString type;
+    aStyle->GetStyleName(type);
+    nsStyleUtil::AppendEscapedCSSIdent(type, aString);
+  } else if (anonymous->IsSingleString()) {
+    const nsTArray<nsString>& symbols = anonymous->GetSymbols();
+    MOZ_ASSERT(symbols.Length() == 1);
+    nsStyleUtil::AppendEscapedCSSString(symbols[0], aString);
+  } else {
+    aString.AppendLiteral("symbols(");
+
+    uint8_t system = anonymous->GetSystem();
+    NS_ASSERTION(system == NS_STYLE_COUNTER_SYSTEM_CYCLIC ||
+                 system == NS_STYLE_COUNTER_SYSTEM_NUMERIC ||
+                 system == NS_STYLE_COUNTER_SYSTEM_ALPHABETIC ||
+                 system == NS_STYLE_COUNTER_SYSTEM_SYMBOLIC ||
+                 system == NS_STYLE_COUNTER_SYSTEM_FIXED,
+                 "Invalid system for anonymous counter style.");
+    if (system != NS_STYLE_COUNTER_SYSTEM_SYMBOLIC) {
+      AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(
+              system, nsCSSProps::kCounterSystemKTable), aString);
+      aString.Append(' ');
+    }
+
+    const nsTArray<nsString>& symbols = anonymous->GetSymbols();
+    NS_ASSERTION(symbols.Length() > 0,
+                 "No symbols in the anonymous counter style");
+    for (size_t i = 0, iend = symbols.Length(); i < iend; i++) {
+      nsStyleUtil::AppendEscapedCSSString(symbols[i], aString);
+      aString.Append(' ');
+    }
+    aString.Replace(aString.Length() - 1, 1, char16_t(')'));
+  }
+}
+
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetContent()
 {
@@ -1323,26 +1363,15 @@ nsComputedDOMStyle::DoGetContent()
         else {
           str.AppendLiteral("counters(");
         }
-        // WRITE ME
-        nsCSSValue::Array* a = data.GetCounters();
-
-        nsStyleUtil::AppendEscapedCSSIdent(
-          nsDependentString(a->Item(0).GetStringBufferValue()), str);
-        int32_t typeItem = 1;
+        nsStyleContentData::CounterFunction* counters = data.GetCounters();
+        nsStyleUtil::AppendEscapedCSSIdent(counters->mIdent, str);
         if (type == eStyleContentType_Counters) {
-          typeItem = 2;
           str.AppendLiteral(", ");
-          nsStyleUtil::AppendEscapedCSSString(
-            nsDependentString(a->Item(1).GetStringBufferValue()), str);
+          nsStyleUtil::AppendEscapedCSSString(counters->mSeparator, str);
         }
-        MOZ_ASSERT(eCSSUnit_None != a->Item(typeItem).GetUnit(),
-                   "'none' should be handled as identifier value");
-        nsString type;
-        a->Item(typeItem).AppendToString(eCSSProperty_list_style_type,
-                                         type, nsCSSValue::eNormalized);
-        if (!type.LowerCaseEqualsLiteral("decimal")) {
+        if (counters->mCounterStyle != CounterStyleManager::GetDecimalStyle()) {
           str.AppendLiteral(", ");
-          str.Append(type);
+          AppendCounterStyle(counters->mCounterStyle, str);
         }
 
         str.Append(char16_t(')'));
@@ -3751,43 +3780,8 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetListStyleType()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  CounterStyle* style = StyleList()->mCounterStyle;
-  AnonymousCounterStyle* anonymous = style->AsAnonymous();
   nsAutoString tmp;
-  if (!anonymous) {
-    // want SetIdent
-    nsString type;
-    style->GetStyleName(type);
-    nsStyleUtil::AppendEscapedCSSIdent(type, tmp);
-  } else if (anonymous->IsSingleString()) {
-    const nsTArray<nsString>& symbols = anonymous->GetSymbols();
-    MOZ_ASSERT(symbols.Length() == 1);
-    nsStyleUtil::AppendEscapedCSSString(symbols[0], tmp);
-  } else {
-    tmp.AppendLiteral("symbols(");
-
-    uint8_t system = anonymous->GetSystem();
-    NS_ASSERTION(system == NS_STYLE_COUNTER_SYSTEM_CYCLIC ||
-                 system == NS_STYLE_COUNTER_SYSTEM_NUMERIC ||
-                 system == NS_STYLE_COUNTER_SYSTEM_ALPHABETIC ||
-                 system == NS_STYLE_COUNTER_SYSTEM_SYMBOLIC ||
-                 system == NS_STYLE_COUNTER_SYSTEM_FIXED,
-                 "Invalid system for anonymous counter style.");
-    if (system != NS_STYLE_COUNTER_SYSTEM_SYMBOLIC) {
-      AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(
-              system, nsCSSProps::kCounterSystemKTable), tmp);
-      tmp.Append(' ');
-    }
-
-    const nsTArray<nsString>& symbols = anonymous->GetSymbols();
-    NS_ASSERTION(symbols.Length() > 0,
-                 "No symbols in the anonymous counter style");
-    for (size_t i = 0, iend = symbols.Length(); i < iend; i++) {
-      nsStyleUtil::AppendEscapedCSSString(symbols[i], tmp);
-      tmp.Append(' ');
-    }
-    tmp.Replace(tmp.Length() - 1, 1, char16_t(')'));
-  }
+  AppendCounterStyle(StyleList()->mCounterStyle, tmp);
   val->SetString(tmp);
   return val.forget();
 }
