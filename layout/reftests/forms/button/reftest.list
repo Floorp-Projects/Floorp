@@ -9,7 +9,7 @@
 fuzzy-if(Android,1,16) == overflow-areas-1.html overflow-areas-1-ref.html
 
 # The buttons in these tests have some fancy shading applied to their corners
-# on Android, despite their "-moz-appearance: none; background: gray", so they
+# on Android, despite their "-moz-appearance: none; appearance: none; background: gray", so they
 # don't quite match the reference case's normal <div>. That's why they're fuzzy.
 fuzzy-if(Android,125,20) == percent-height-child.html percent-height-child-ref.html
 fuzzy-if(Android,125,20) == percent-width-child.html  percent-width-child-ref.html
