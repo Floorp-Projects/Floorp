@@ -109,9 +109,10 @@ class Instance
     const Code& code() const { return *code_; }
     DebugState& debug() { return *debug_; }
     const DebugState& debug() const { return *debug_; }
-    const CodeSegment& codeSegment() const { return code_->segment(); }
+    const CodeSegment& codeSegmentTier() const { return code_->segmentTier(); }
     const GlobalSegment& globalSegment() const { return *globals_; }
-    uint8_t* codeBase() const { return code_->segment().base(); }
+    uint8_t* codeBaseTier() const { return code_->segmentTier().base(); }
+    const MetadataTier& metadataTier() const { return code_->metadataTier(); }
     const Metadata& metadata() const { return code_->metadata(); }
     bool isAsmJS() const { return metadata().isAsmJS(); }
     const SharedTableVector& tables() const { return tables_; }
@@ -161,7 +162,7 @@ class Instance
 
     // Debug support:
 
-    bool debugEnabled() const { return code_->metadata().debugEnabled; }
+    bool debugEnabled() const { return metadata().debugEnabled; }
     bool enterFrameTrapsEnabled() const { return enterFrameTrapsEnabled_; }
     void ensureEnterFrameTrapsState(JSContext* cx, bool enabled);
 
