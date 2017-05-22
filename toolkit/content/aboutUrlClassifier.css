@@ -58,7 +58,11 @@ td {
   text-align: center;
 }
 
-#debug-table {
+#cache-table > tbody > tr >  td:last-child {
+  text-align: center;
+}
+
+#debug-table, #cache-table {
   margin-top: 20px;
 }
 

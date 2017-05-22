@@ -9,7 +9,6 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     'nsIAudioChannelAgent.idl',
-    'nsIAudioChannelService.idl',
 ]
 
 XPIDL_MODULE = 'dom_audiochannel'

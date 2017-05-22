@@ -68,4 +68,6 @@ partial interface VTTCue {
   readonly attribute double computedPosition;
   [ChromeOnly]
   readonly attribute PositionAlignSetting computedPositionAlign;
+  [ChromeOnly]
+  readonly attribute boolean getActive;
 };
