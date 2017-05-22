@@ -167,6 +167,9 @@ class FlatSubFormatter(object):
                 # Ideally, we'd actually check whether entry.flags are more
                 # specific than e.flags, but in practice the following test
                 # is enough for now.
+                if entry == e:
+                    errors.warn('"%s" is duplicated. Skipping.' % entry)
+                    return
                 if not entry.flags or e.flags and entry.flags == e.flags:
                     errors.fatal('"%s" overrides "%s"' % (entry, e))
             entries.append(entry)

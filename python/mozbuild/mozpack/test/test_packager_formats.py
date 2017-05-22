@@ -34,6 +34,7 @@ from mozpack.test.test_files import (
     read_interfaces,
 )
 import mozpack.path as mozpath
+from test_errors import TestErrors
 
 
 CONTENTS = {
@@ -306,7 +307,7 @@ def get_contents(registry, read_all=False):
     return result
 
 
-class TestFormatters(unittest.TestCase):
+class TestFormatters(TestErrors, unittest.TestCase):
     maxDiff = None
 
     def test_bases(self):
@@ -495,6 +496,13 @@ class TestFormatters(unittest.TestCase):
         self.assertEqual(e.exception.message,
             'Error: "locale foo en-US foo/locale/en-US/foo" overrides '
             '"locale foo en-US foo/locale/en-US/"')
+
+        # Duplicating existing manifest entries is not an error.
+        f.add_manifest(ManifestContent('chrome', 'foo', 'foo/unix'))
+
+        self.assertEqual(self.get_output(), [
+            'Warning: "content foo foo/unix" is duplicated. Skipping.',
+        ])
 
 
 if __name__ == '__main__':
