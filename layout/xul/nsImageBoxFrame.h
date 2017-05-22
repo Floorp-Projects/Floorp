@@ -97,6 +97,8 @@ public:
 
   bool CanOptimizeToImageLayer();
 
+  nsRect GetDestRect(const nsPoint& aOffset, Maybe<nsPoint>& aAnchorPoint);
+
 protected:
   explicit nsImageBoxFrame(nsStyleContext* aContext);
 

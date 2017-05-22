@@ -1489,13 +1489,14 @@ Parser<ParseHandler, CharT>::noteDeclaredName(HandlePropertyName name, Declarati
 
       case DeclarationKind::LexicalFunction: {
         ParseContext::Scope* scope = pc->innermostScope();
-        if (AddDeclaredNamePtr p = scope->lookupDeclaredNameForAdd(name)) {
+        AddDeclaredNamePtr p = scope->lookupDeclaredNameForAdd(name);
+        if (p) {
             reportRedeclaration(name, p->value()->kind(), pos, p->value()->pos());
             return false;
-        } else {
-            if (!scope->addDeclaredName(pc, p, name, kind, pos.begin))
-                return false;
         }
+
+        if (!scope->addDeclaredName(pc, p, name, kind, pos.begin))
+            return false;
 
         break;
       }
