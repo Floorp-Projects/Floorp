@@ -502,4 +502,17 @@ CheckTracedThing(JSTracer* trc, T thing);
 
 } /* namespace js */
 
+namespace JS {
+class Symbol;
+}
+
+// Exported for Tracer.cpp
+inline bool ThingIsPermanentAtomOrWellKnownSymbol(js::gc::Cell* thing) { return false; }
+bool ThingIsPermanentAtomOrWellKnownSymbol(JSString*);
+bool ThingIsPermanentAtomOrWellKnownSymbol(JSFlatString*);
+bool ThingIsPermanentAtomOrWellKnownSymbol(JSLinearString*);
+bool ThingIsPermanentAtomOrWellKnownSymbol(JSAtom*);
+bool ThingIsPermanentAtomOrWellKnownSymbol(js::PropertyName*);
+bool ThingIsPermanentAtomOrWellKnownSymbol(JS::Symbol*);
+
 #endif /* gc_Marking_h */
