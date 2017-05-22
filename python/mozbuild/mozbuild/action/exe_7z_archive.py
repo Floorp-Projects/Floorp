@@ -24,7 +24,7 @@ def archive_exe(pkg_dir, tagfile, sfx_package, package):
 
 def main(args):
     if len(args) != 4:
-        print('Usage: 7z_exe_archive.py <pkg_dir> <tagfile> <sfx_package> <package>',
+        print('Usage: exe_7z_archive.py <pkg_dir> <tagfile> <sfx_package> <package>',
               file=sys.stderr)
         return 1
     else:
