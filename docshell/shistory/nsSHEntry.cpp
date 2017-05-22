@@ -975,6 +975,14 @@ nsSHEntry::SetLastTouched(uint32_t aLastTouched)
 }
 
 NS_IMETHODIMP
+nsSHEntry::GetSHistory(nsISHistory** aSHistory)
+{
+  nsCOMPtr<nsISHistory> shistory(do_QueryReferent(mShared->mSHistory));
+  shistory.forget(aSHistory);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSHEntry::SetSHistory(nsISHistory* aSHistory)
 {
   nsWeakPtr shistory = do_GetWeakReference(aSHistory);
