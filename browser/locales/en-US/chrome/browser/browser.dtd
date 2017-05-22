@@ -830,8 +830,8 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY customizeMode.menuAndToolbars.emptyLink "Choose from thousands of add-ons">
 <!ENTITY customizeMode.restoreDefaults "Restore Defaults">
 <!ENTITY customizeMode.done "Done">
-<!ENTITY customizeMode.toolbars "Show / Hide Toolbars">
 <!ENTITY customizeMode.titlebar "Title Bar">
+<!ENTITY customizeMode.toolbars2 "Toolbars">
 <!ENTITY customizeMode.lwthemes "Themes">
 <!ENTITY customizeMode.lwthemes.myThemes "My Themes">
 <!ENTITY customizeMode.lwthemes.recommended "Recommended">

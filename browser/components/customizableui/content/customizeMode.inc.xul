@@ -26,7 +26,7 @@
 #    will already have switched the button's state, so this is correct:
                 oncommand="gCustomizeMode.toggleTitlebar(this.checked)"/>
 #endif
-      <button id="customization-toolbar-visibility-button" label="&customizeMode.toolbars;" class="customizationmode-button" type="menu">
+      <button id="customization-toolbar-visibility-button" label="&customizeMode.toolbars2;" class="customizationmode-button" type="menu">
         <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>
       </button>
       <button id="customization-lwtheme-button" label="&customizeMode.lwthemes;" class="customizationmode-button" type="menu">
