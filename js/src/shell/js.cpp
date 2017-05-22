@@ -992,7 +992,7 @@ Version(JSContext* cx, unsigned argc, Value* vp)
                                       "version");
             return false;
         }
-        JS_SetVersionForCompartment(js::GetContextCompartment(cx), JSVersion(v));
+        SetVersionForCurrentRealm(cx, JSVersion(v));
         args.rval().setInt32(origVersion);
     }
     return true;

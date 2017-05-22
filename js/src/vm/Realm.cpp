@@ -69,3 +69,10 @@ JS::GetRealmIteratorPrototype(JSContext* cx)
     CHECK_REQUEST(cx);
     return GlobalObject::getOrCreateIteratorPrototype(cx, cx->global());
 }
+
+JS_PUBLIC_API(void)
+JS::SetVersionForCurrentRealm(JSContext* cx, JSVersion version)
+{
+    JSCompartment* compartment = GetContextCompartment(cx);
+    compartment->behaviors().setVersion(version);
+}
