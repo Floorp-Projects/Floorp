@@ -7,6 +7,7 @@
 #include "prsystem.h"
 
 #include "nsIFile.h"
+#include "nsString.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 
