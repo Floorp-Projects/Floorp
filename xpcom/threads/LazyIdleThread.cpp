@@ -441,6 +441,16 @@ LazyIdleThread::IsOnCurrentThread(bool* aIsOnCurrentThread)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(bool)
+LazyIdleThread::IsOnCurrentThreadInfallible()
+{
+  if (mThread) {
+    return mThread->IsOnCurrentThread();
+  }
+
+  return false;
+}
+
 NS_IMETHODIMP
 LazyIdleThread::GetPRThread(PRThread** aPRThread)
 {

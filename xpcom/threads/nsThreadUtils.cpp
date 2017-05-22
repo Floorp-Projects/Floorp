@@ -545,3 +545,12 @@ GetCurrentPhysicalThread()
 }
 
 } // namespace mozilla
+
+bool
+nsIEventTarget::IsOnCurrentThread()
+{
+  if (mVirtualThread) {
+    return mVirtualThread == GetCurrentVirtualThread();
+  }
+  return IsOnCurrentThreadInfallible();
+}
