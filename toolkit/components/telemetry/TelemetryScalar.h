@@ -7,7 +7,7 @@
 #define TelemetryScalar_h__
 
 #include "mozilla/TelemetryScalarEnums.h"
-#include "mozilla/TelemetryProcessEnums.h"
+#include "nsXULAppAPI.h" // for GeckoProcessType
 #include "ipc/TelemetryComms.h"
 
 // This module is internal to Telemetry. It encapsulates Telemetry's
@@ -61,10 +61,10 @@ void ClearScalars();
 size_t GetMapShallowSizesOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 size_t GetScalarSizesOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
-void UpdateChildData(mozilla::Telemetry::ProcessID aProcessType,
+void UpdateChildData(GeckoProcessType aProcessType,
                      const nsTArray<mozilla::Telemetry::ScalarAction>& aScalarActions);
 
-void UpdateChildKeyedData(mozilla::Telemetry::ProcessID aProcessType,
+void UpdateChildKeyedData(GeckoProcessType aProcessType,
                           const nsTArray<mozilla::Telemetry::KeyedScalarAction>& aScalarActions);
 
 } // namespace TelemetryScalar
