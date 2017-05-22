@@ -10,5 +10,5 @@ fails-if(Android) == margin-padding-1.html margin-padding-1-ref.html
 == block-invalidate-1.html block-invalidate-1-ref.html
 == block-invalidate-2.html block-invalidate-2-ref.html
 fuzzy-if(gtkWidget,8,33) fuzzy-if(skiaContent,8,78) fails-if(Android) == transformations-1.html transformations-1-ref.html
-fails-if(Android) == custom-style-1.html custom-style-1-ref.html
+pref(layout.css.moz-appearance.enabled,true) fails-if(Android) == custom-style-1.html custom-style-1-ref.html
 fails-if(Android) == custom-style-2.html custom-style-2-ref.html
