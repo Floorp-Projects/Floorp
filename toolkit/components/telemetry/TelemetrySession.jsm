@@ -45,8 +45,13 @@ const HISTOGRAM_SUFFIXES = {
   PARENT: "",
   CONTENT: "#content",
   GPU: "#gpu",
-  EXTENSION: "#extension",
-};
+}
+
+const INTERNAL_PROCESSES_NAMES = {
+  PARENT: "default",
+  CONTENT: "tab",
+  GPU: "gpu",
+}
 
 const ENVIRONMENT_CHANGE_LISTENER = "TelemetrySession::onEnvironmentChange";
 
@@ -1302,37 +1307,30 @@ var Impl = {
     payloadObj.keyedHistograms = keyedHistograms[HISTOGRAM_SUFFIXES.PARENT] || {};
     payloadObj.processes = {
       parent: {
-        scalars: scalars["parent"] || {},
-        keyedScalars: keyedScalars["parent"] || {},
-        events: events["parent"] || [],
+        scalars: scalars[INTERNAL_PROCESSES_NAMES.PARENT] || {},
+        keyedScalars: keyedScalars[INTERNAL_PROCESSES_NAMES.PARENT] || {},
+        events: events[INTERNAL_PROCESSES_NAMES.PARENT] || [],
       },
       content: {
-        scalars: scalars["content"],
-        keyedScalars: keyedScalars["content"],
+        scalars: scalars[INTERNAL_PROCESSES_NAMES.CONTENT],
+        keyedScalars: keyedScalars[INTERNAL_PROCESSES_NAMES.CONTENT],
         histograms: histograms[HISTOGRAM_SUFFIXES.CONTENT],
         keyedHistograms: keyedHistograms[HISTOGRAM_SUFFIXES.CONTENT],
-        events: events["content"] || [],
-      },
-      extension: {
-        scalars: scalars["extension"],
-        keyedScalars: keyedScalars["extension"],
-        histograms: histograms[HISTOGRAM_SUFFIXES.EXTENSION],
-        keyedHistograms: keyedHistograms[HISTOGRAM_SUFFIXES.EXTENSION],
-        events: events["extension"] || [],
+        events: events[INTERNAL_PROCESSES_NAMES.CONTENT] || [],
       },
     };
 
     // Only include the GPU process if we've accumulated data for it.
     if (HISTOGRAM_SUFFIXES.GPU in histograms ||
         HISTOGRAM_SUFFIXES.GPU in keyedHistograms ||
-        "gpu" in scalars ||
-        "gpu" in keyedScalars) {
+        INTERNAL_PROCESSES_NAMES.GPU in scalars ||
+        INTERNAL_PROCESSES_NAMES.GPU in keyedScalars) {
       payloadObj.processes.gpu = {
-        scalars: scalars["gpu"],
-        keyedScalars: keyedScalars["gpu"],
+        scalars: scalars[INTERNAL_PROCESSES_NAMES.GPU],
+        keyedScalars: keyedScalars[INTERNAL_PROCESSES_NAMES.GPU],
         histograms: histograms[HISTOGRAM_SUFFIXES.GPU],
         keyedHistograms: keyedHistograms[HISTOGRAM_SUFFIXES.GPU],
-        events: events["gpu"] || [],
+        events: events[INTERNAL_PROCESSES_NAMES.GPU] || [],
       };
     }
 
