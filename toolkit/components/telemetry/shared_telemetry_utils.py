@@ -8,7 +8,6 @@
 from __future__ import print_function
 
 import re
-import yaml
 
 # This is a list of flags that determine which process a measurement is allowed
 # to record from.
@@ -131,15 +130,3 @@ def add_expiration_postfix(expiration):
         return expiration + "a1"
 
     return expiration
-
-
-def load_yaml_file(filename):
-    """ Load a YAML file from disk, throw a ParserError on failure."""
-    try:
-        with open(filename, 'r') as f:
-            return yaml.safe_load(f)
-    except IOError, e:
-        raise ParserError('Error opening ' + filename + ': ' + e.message)
-    except ValueError, e:
-        raise ParserError('Error parsing processes in {}: {}'
-                          .format(filename, e.message))
