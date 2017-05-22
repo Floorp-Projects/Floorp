@@ -20,11 +20,11 @@
     <spacer id="customization-spacer"/>
     <hbox id="customization-footer">
 #ifdef CAN_DRAW_IN_TITLEBAR
-      <button id="customization-titlebar-visibility-button" class="customizationmode-button"
-              label="&customizeMode.titlebar;" type="checkbox"
+      <checkbox id="customization-titlebar-visibility-checkbox" class="customizationmode-checkbox"
+                label="&customizeMode.titlebar;"
 #NB: because oncommand fires after click, by the time we've fired, the checkbox binding
 #    will already have switched the button's state, so this is correct:
-              oncommand="gCustomizeMode.toggleTitlebar(this.hasAttribute('checked'))"/>
+                oncommand="gCustomizeMode.toggleTitlebar(this.checked)"/>
 #endif
       <button id="customization-toolbar-visibility-button" label="&customizeMode.toolbars;" class="customizationmode-button" type="menu">
         <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>
