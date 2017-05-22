@@ -11,7 +11,6 @@
 #include "nsThreadUtils.h"
 
 #include "TelemetryCommon.h"
-#include "TelemetryProcessData.h"
 
 #include <cstring>
 
@@ -79,12 +78,6 @@ CanRecordInProcess(RecordedProcessType processes, GeckoProcessType processType)
          ((processType != GeckoProcessType_Default) && recordAllChild);
 }
 
-bool
-CanRecordInProcess(RecordedProcessType processes, ProcessID processId)
-{
-  return CanRecordInProcess(processes, GetGeckoProcessType(processId));
-}
-
 nsresult
 MsSinceProcessStart(double* aResult)
 {
@@ -117,20 +110,6 @@ LogToBrowserConsole(uint32_t aLogLevel, const nsAString& aMsg)
   nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
   error->Init(aMsg, EmptyString(), EmptyString(), 0, 0, aLogLevel, "chrome javascript");
   console->LogMessage(error);
-}
-
-const char*
-GetNameForProcessID(ProcessID process)
-{
-  MOZ_ASSERT(process < ProcessID::Count);
-  return ProcessIDToString[static_cast<uint32_t>(process)];
-}
-
-GeckoProcessType
-GetGeckoProcessType(ProcessID process)
-{
-  MOZ_ASSERT(process < ProcessID::Count);
-  return ProcessIDToGeckoProcessType[static_cast<uint32_t>(process)];
 }
 
 } // namespace Common
