@@ -7,20 +7,38 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.os.StrictMode;
 import android.support.customtabs.CustomTabsIntent;
 
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mozilla.focus.BuildConfig;
+import org.mozilla.focus.R;
 import org.mozilla.focus.utils.SafeIntent;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
+import org.robolectric.annotation.Config;
 
 import java.lang.reflect.Field;
 
 import static org.junit.Assert.*;
 
 @RunWith(RobolectricTestRunner.class)
+@Config(constants = BuildConfig.class, packageName = "org.mozilla.focus")
 public class CustomTabConfigTest {
+
+    @After
+    public void cleanup() {
+        // Reset strict mode: for every test, Robolectric will create FocusApplication again.
+        // FocusApplication expects strict mode to be disabled (since it loads some preferences from disk),
+        // before enabling it itself. If we run multiple tests, strict mode will stay enabled
+        // and FocusApplication crashes during initialisation for the second test.
+        // This applies across multiple Test classes, e.g. DisconnectTest can cause
+        // TrackingProtectionWebViewCLientTest to fail, unless it clears StrictMode first.
+        // (FocusApplicaiton is initialised before @Before methods are run.)
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().build());
+    }
 
     /**
      * This class can't be unparceled, and can therefore be used to test that SafeIntent and SafeBundle
@@ -165,5 +183,78 @@ public class CustomTabConfigTest {
         assertEquals(1, bitmap.getWidth());
         assertEquals(1, bitmap.getHeight());
         assertEquals(Color.RED, bitmap.getPixel(0, 0));
+    }
+
+    // Tests that a small icon is correctly processed
+    @Test
+    public void closeButton() throws Exception {
+        final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+
+        {
+            final Bitmap bitmap = Bitmap.createBitmap(new int[]{Color.RED}, 1, 1, Bitmap.Config.ARGB_8888);
+
+            builder.setCloseButtonIcon(bitmap);
+        }
+        final CustomTabsIntent customTabsIntent = builder.build();
+
+        final Bitmap bitmap = CustomTabConfig.getCloseButtonIcon(RuntimeEnvironment.application, new SafeIntent(customTabsIntent.intent));
+
+        // An arbitrary icon
+        assertEquals(1, bitmap.getWidth());
+        assertEquals(1, bitmap.getHeight());
+        assertEquals(Color.RED, bitmap.getPixel(0, 0));
+    }
+
+    // Tests that a non-Bitmap is ignored
+    @Test
+    public void malformedCloseButton() throws Exception {
+        final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+        final CustomTabsIntent customTabsIntent = builder.build();
+
+        // Intent is a parcelable but not a Bitmap
+        customTabsIntent.intent.putExtra(CustomTabsIntent.EXTRA_CLOSE_BUTTON_ICON, new Intent());
+
+        final Bitmap bitmap = CustomTabConfig.getCloseButtonIcon(RuntimeEnvironment.application, new SafeIntent(customTabsIntent.intent));
+
+        assertNull(bitmap);
+    }
+
+    // Tests that a max-size bitmap is OK:
+    @Test
+    public void maxSizeCloseButton() throws Exception {
+        final int maxSize = RuntimeEnvironment.application.getResources().getDimensionPixelSize(R.dimen.customtabs_close_button_max_size);
+        final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+
+        {
+            final Bitmap bitmap = Bitmap.createBitmap(new int[maxSize*maxSize], maxSize, maxSize, Bitmap.Config.ARGB_8888);
+
+            builder.setCloseButtonIcon(bitmap);
+        }
+        final CustomTabsIntent customTabsIntent = builder.build();
+
+        final Bitmap bitmap = CustomTabConfig.getCloseButtonIcon(RuntimeEnvironment.application, new SafeIntent(customTabsIntent.intent));
+
+        // An arbitrary icon
+        assertNotNull(bitmap);
+        assertEquals(maxSize, bitmap.getWidth());
+        assertEquals(maxSize, bitmap.getHeight());
+    }
+
+    // Tests that a close bitmap that's too large is ignored:
+    @Test
+    public void oversizedCloseButton() throws Exception {
+        final int maxSize = RuntimeEnvironment.application.getResources().getDimensionPixelSize(R.dimen.customtabs_close_button_max_size);
+        final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+
+        {
+            final Bitmap bitmap = Bitmap.createBitmap(new int[(maxSize + 1) * (maxSize + 1)], maxSize + 1, maxSize + 1, Bitmap.Config.ARGB_8888);
+
+            builder.setCloseButtonIcon(bitmap);
+        }
+        final CustomTabsIntent customTabsIntent = builder.build();
+
+        final Bitmap bitmap = CustomTabConfig.getCloseButtonIcon(RuntimeEnvironment.application, new SafeIntent(customTabsIntent.intent));
+
+        assertNull(bitmap);
     }
 }
