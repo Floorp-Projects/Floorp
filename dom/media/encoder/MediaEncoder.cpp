@@ -6,6 +6,7 @@
 #include "MediaDecoder.h"
 #include "nsIPrincipal.h"
 #include "nsMimeTypes.h"
+#include "TimeUnits.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPtr.h"
@@ -33,7 +34,36 @@ void
 MediaStreamVideoRecorderSink::SetCurrentFrames(const VideoSegment& aSegment)
 {
   MOZ_ASSERT(mVideoEncoder);
-  mVideoEncoder->SetCurrentFrames(aSegment);
+  // If we're suspended (paused) we don't forward frames
+  if (!mSuspended) {
+    mVideoEncoder->SetCurrentFrames(aSegment);
+  }
+}
+
+void
+MediaEncoder::Suspend()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mLastPauseStartTime = TimeStamp::Now();
+  mSuspended = true;
+  mVideoSink->Suspend();
+}
+
+void
+MediaEncoder::Resume()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mSuspended) {
+    return;
+  }
+  media::TimeUnit timeSpentPaused =
+    media::TimeUnit::FromTimeDuration(
+      TimeStamp::Now() - mLastPauseStartTime);
+  MOZ_ASSERT(timeSpentPaused.ToMicroseconds() >= 0);
+  MOZ_RELEASE_ASSERT(timeSpentPaused.IsValid());
+  mMicrosecondsSpentPaused += timeSpentPaused.ToMicroseconds();;
+  mSuspended = false;
+  mVideoSink->Resume();
 }
 
 void
@@ -49,20 +79,21 @@ MediaEncoder::NotifyRealtimeData(MediaStreamGraph* aGraph,
                                  uint32_t aTrackEvents,
                                  const MediaSegment& aRealtimeMedia)
 {
-  if (mSuspended == RECORD_NOT_SUSPENDED) {
-    // Process the incoming raw track data from MediaStreamGraph, called on the
-    // thread of MediaStreamGraph.
-    if (mAudioEncoder && aRealtimeMedia.GetType() == MediaSegment::AUDIO) {
-      mAudioEncoder->NotifyQueuedTrackChanges(aGraph, aID,
-                                              aTrackOffset, aTrackEvents,
-                                              aRealtimeMedia);
-    } else if (mVideoEncoder &&
-               aRealtimeMedia.GetType() == MediaSegment::VIDEO &&
-               aTrackEvents != TrackEventCommand::TRACK_EVENT_NONE) {
-      mVideoEncoder->NotifyQueuedTrackChanges(aGraph, aID,
-                                              aTrackOffset, aTrackEvents,
-                                              aRealtimeMedia);
-    }
+  if (mSuspended) {
+    return;
+  }
+  // Process the incoming raw track data from MediaStreamGraph, called on the
+  // thread of MediaStreamGraph.
+  if (mAudioEncoder && aRealtimeMedia.GetType() == MediaSegment::AUDIO) {
+    mAudioEncoder->NotifyQueuedTrackChanges(aGraph, aID,
+                                            aTrackOffset, aTrackEvents,
+                                            aRealtimeMedia);
+  } else if (mVideoEncoder &&
+              aRealtimeMedia.GetType() == MediaSegment::VIDEO &&
+              aTrackEvents != TrackEventCommand::TRACK_EVENT_NONE) {
+    mVideoEncoder->NotifyQueuedTrackChanges(aGraph, aID,
+                                            aTrackOffset, aTrackEvents,
+                                            aRealtimeMedia);
   }
 }
 
@@ -88,24 +119,6 @@ MediaEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
         NotifyRealtimeData(aGraph, aID, aTrackOffset, aTrackEvents, segment);
       }
     }
-    if (mSuspended == RECORD_RESUMED) {
-      if (mVideoEncoder) {
-        if (aQueuedMedia.GetType() == MediaSegment::VIDEO) {
-          // insert a null frame of duration equal to the first segment passed
-          // after Resume(), so it'll get added to one of the DirectListener frames
-          VideoSegment segment;
-          gfx::IntSize size(0,0);
-          segment.AppendFrame(nullptr, aQueuedMedia.GetDuration(), size,
-                              PRINCIPAL_HANDLE_NONE);
-          mVideoEncoder->NotifyQueuedTrackChanges(aGraph, aID,
-                                                  aTrackOffset, aTrackEvents,
-                                                  segment);
-          mSuspended = RECORD_NOT_SUSPENDED;
-        }
-      } else {
-        mSuspended = RECORD_NOT_SUSPENDED; // no video
-      }
-    }
   }
 }
 
@@ -118,12 +131,6 @@ MediaEncoder::NotifyQueuedAudioData(MediaStreamGraph* aGraph, TrackID aID,
 {
   if (!mDirectConnected) {
     NotifyRealtimeData(aGraph, aID, aTrackOffset, 0, aQueuedMedia);
-  } else {
-    if (mSuspended == RECORD_RESUMED) {
-      if (!mVideoEncoder) {
-        mSuspended = RECORD_NOT_SUSPENDED; // no video
-      }
-    }
   }
 }
 
@@ -341,6 +348,29 @@ MediaEncoder::WriteEncodedDataToMuxer(TrackEncoder *aTrackEncoder)
     mState = ENCODE_ERROR;
     return rv;
   }
+
+  // Update timestamps to accommodate pauses
+  const nsTArray<RefPtr<EncodedFrame> >& encodedFrames =
+    encodedVideoData.GetEncodedFrames();
+  // Take a copy of the atomic so we don't continually access it
+  uint64_t microsecondsSpentPaused = mMicrosecondsSpentPaused;
+  for (size_t i = 0; i < encodedFrames.Length(); ++i) {
+    RefPtr<EncodedFrame> frame = encodedFrames[i];
+    if (frame->GetTimeStamp() > microsecondsSpentPaused &&
+        frame->GetTimeStamp() - microsecondsSpentPaused > mLastMuxedTimestamp) {
+      // Use the adjusted timestamp if it's after the last timestamp
+      frame->SetTimeStamp(frame->GetTimeStamp() - microsecondsSpentPaused);
+    } else {
+      // If not, we force the last time stamp. We do this so the frames are
+      // still around and in order in case the codec needs to reference them.
+      // Dropping them here may result in artifacts in playback.
+      frame->SetTimeStamp(mLastMuxedTimestamp);
+    }
+    MOZ_ASSERT(mLastMuxedTimestamp <= frame->GetTimeStamp(),
+      "Our frames should be ordered by this point!");
+    mLastMuxedTimestamp = frame->GetTimeStamp();
+  }
+
   rv = mWriter->WriteEncodedTrack(encodedVideoData,
                                   aTrackEncoder->IsEncodingComplete() ?
                                   ContainerWriter::END_OF_STREAM : 0);

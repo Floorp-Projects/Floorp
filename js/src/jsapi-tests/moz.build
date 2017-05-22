@@ -27,7 +27,6 @@ UNIFIED_SOURCES += [
     'testDefinePropertyIgnoredAttributes.cpp',
     'testDeflateStringToUTF8Buffer.cpp',
     'testDifferentNewTargetInvokeConstructor.cpp',
-    'testEnclosingFunction.cpp',
     'testErrorCopying.cpp',
     'testException.cpp',
     'testExternalArrayBuffer.cpp',

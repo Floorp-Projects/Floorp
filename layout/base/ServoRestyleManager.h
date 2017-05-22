@@ -44,6 +44,9 @@ public:
                         nsRestyleHint aRestyleHint,
                         nsChangeHint aMinChangeHint);
   void PostRestyleEventForLazyConstruction();
+  void PostRestyleEventForCSSRuleChanges(dom::Element* aElement,
+                                         nsRestyleHint aRestyleHint,
+                                         nsChangeHint aMinChangeHint);
   void RebuildAllStyleData(nsChangeHint aExtraHint,
                            nsRestyleHint aRestyleHint);
   void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
@@ -161,6 +164,14 @@ private:
   // increase mAnimationGeneration before creating new transitions, so their
   // creation sequence will be correct.
   bool mHaveNonAnimationRestyles = false;
+
+  // Set to true when posting restyle events triggered by CSS rule changes.
+  // This flag is cleared once ProcessPendingRestyles has completed.
+  // When we process a traversal all descendants elements of the document
+  // triggered by CSS rule changes, we will need to update all elements with
+  // CSS animations.  We propagate TraversalRestyleBehavior::ForCSSRuleChanges
+  // to traversal function if this flag is set.
+  bool mRestyleForCSSRuleChanges = false;
 
   // A hashtable with the elements that have changed state or attributes, in
   // order to calculate restyle hints during the traversal.

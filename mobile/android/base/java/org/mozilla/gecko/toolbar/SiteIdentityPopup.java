@@ -97,7 +97,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements BundleEventListe
         mContentButtonClickListener = new ContentNotificationButtonListener();
     }
 
-    void registerListeners() {
+    public void registerListeners() {
         EventDispatcher.getInstance().registerUiThreadListener(this,
                 "Doorhanger:Logins",
                 "Permissions:CheckResult");
@@ -540,7 +540,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements BundleEventListe
     void destroy() {
     }
 
-    void unregisterListeners() {
+    public void unregisterListeners() {
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
                 "Doorhanger:Logins",
                 "Permissions:CheckResult");
