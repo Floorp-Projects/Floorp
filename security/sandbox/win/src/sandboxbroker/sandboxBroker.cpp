@@ -8,8 +8,17 @@
 
 #include "base/win/windows_version.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
 #include "mozilla/NSPRLogModulesParser.h"
+#include "mozilla/UniquePtr.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsCOMPtr.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIFile.h"
+#include "nsIProperties.h"
+#include "nsServiceManagerUtils.h"
+#include "nsString.h"
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/security_level.h"
 
@@ -17,6 +26,11 @@ namespace mozilla
 {
 
 sandbox::BrokerServices *SandboxBroker::sBrokerService = nullptr;
+
+// Cached special directories used for adding policy rules.
+static UniquePtr<nsString> sBinDir;
+static UniquePtr<nsString> sProfileDir;
+static UniquePtr<nsString> sContentTempDir;
 
 static LazyLogModule sSandboxBrokerLog("SandboxBroker");
 
@@ -28,6 +42,50 @@ void
 SandboxBroker::Initialize(sandbox::BrokerServices* aBrokerServices)
 {
   sBrokerService = aBrokerServices;
+}
+
+static void
+CacheDirAndAutoClear(nsIProperties* aDirSvc, const char* aDirKey,
+                     UniquePtr<nsString>* cacheVar)
+{
+  nsCOMPtr<nsIFile> dirToCache;
+  nsresult rv =
+    aDirSvc->Get(aDirKey, NS_GET_IID(nsIFile), getter_AddRefs(dirToCache));
+  if (NS_FAILED(rv)) {
+    // This can only be an NS_WARNING, because it can fail for xpcshell tests.
+    NS_WARNING("Failed to get directory to cache.");
+    LOG_E("Failed to get directory to cache, key: %s.", aDirKey);
+    return;
+  }
+
+  *cacheVar = MakeUnique<nsString>();
+  ClearOnShutdown(cacheVar);
+  MOZ_ALWAYS_SUCCEEDS(dirToCache->GetPath(**cacheVar));
+
+  // Convert network share path to format for sandbox policy.
+  if (Substring(**cacheVar, 0, 2).Equals(L"\\\\")) {
+    (*cacheVar)->InsertLiteral(u"??\\UNC", 1);
+  }
+}
+
+/* static */
+void
+SandboxBroker::CacheRulesDirectories()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult rv;
+  nsCOMPtr<nsIProperties> dirSvc =
+    do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    MOZ_ASSERT(false, "Failed to get directory service, cannot cache directories for rules.");
+    LOG_E("Failed to get directory service, cannot cache directories for rules.");
+    return;
+  }
+
+  CacheDirAndAutoClear(dirSvc, NS_GRE_DIR, &sBinDir);
+  CacheDirAndAutoClear(dirSvc, NS_APP_USER_PROFILE_50_DIR, &sProfileDir);
+  CacheDirAndAutoClear(dirSvc, NS_APP_CONTENT_PROCESS_TEMP_DIR, &sContentTempDir);
 }
 
 SandboxBroker::SandboxBroker()
@@ -133,7 +191,35 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
   return true;
 }
 
+static void
+AddCachedDirRule(sandbox::TargetPolicy* aPolicy,
+                 sandbox::TargetPolicy::Semantics aAccess,
+                 const UniquePtr<nsString>& aBaseDir,
+                 const nsLiteralString& aRelativePath)
+{
+  if (!aBaseDir) {
+    // This can only be an NS_WARNING, because it can null for xpcshell tests.
+    NS_WARNING("Tried to add rule with null base dir.");
+    LOG_E("Tried to add rule with null base dir. Relative path: %S, Access: %d",
+          aRelativePath.get(), aAccess);
+    return;
+  }
+
+  nsAutoString rulePath(*aBaseDir);
+  rulePath.Append(aRelativePath);
+
+  sandbox::ResultCode result =
+    aPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES, aAccess,
+                     rulePath.get());
+  if (sandbox::SBOX_ALL_OK != result) {
+    NS_ERROR("Failed to add file policy rule.");
+    LOG_E("Failed (ResultCode %d) to add %d access to: %S",
+          result, aAccess, rulePath.get());
+  }
+}
+
 #if defined(MOZ_CONTENT_SANDBOX)
+
 void
 SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
                                                  base::ChildPrivileges aPrivs)
@@ -159,7 +245,12 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     accessTokenLevel = sandbox::USER_LIMITED;
     initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
     delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
-  } else if (aSandboxLevel >= 2) {
+  } else if (aSandboxLevel >= 3) {
+    jobLevel = sandbox::JOB_RESTRICTED;
+    accessTokenLevel = sandbox::USER_LIMITED;
+    initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
+    delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
+  } else if (aSandboxLevel == 2) {
     jobLevel = sandbox::JOB_INTERACTIVE;
     accessTokenLevel = sandbox::USER_INTERACTIVE;
     initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
@@ -204,7 +295,7 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                      "SetDelayedIntegrityLevel should never fail, what happened?");
 
-  if (aSandboxLevel > 2) {
+  if (aSandboxLevel > 3) {
     result = mPolicy->SetAlternateDesktop(true);
     MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                        "Failed to create alternate desktop for sandbox.");
@@ -229,6 +320,13 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                      "Invalid flags for SetDelayedProcessMitigations.");
 
+  // Add rule to allow read / write access to content temp dir. If for some
+  // reason the addition of the content temp failed, this will give write access
+  // to the normal TEMP dir. However such failures should be pretty rare and
+  // without this printing will not currently work.
+  AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_ANY,
+                   sContentTempDir, NS_LITERAL_STRING("\\*"));
+
   // We still have edge cases where the child at low integrity can't read some
   // files, so add a rule to allow read access to everything when required.
   if (aSandboxLevel == 1 ||
@@ -238,6 +336,18 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
                               L"*");
     MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                        "With these static arguments AddRule should never fail, what happened?");
+  } else {
+    // Add rule to allow read access to installation directory.
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
+                     sBinDir, NS_LITERAL_STRING("\\*"));
+
+    // Add rule to allow read access chrome directory within profile.
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
+                     sProfileDir, NS_LITERAL_STRING("\\chrome\\*"));
+
+    // Add rule to allow read access extensions directory within profile.
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_READONLY,
+                     sProfileDir, NS_LITERAL_STRING("\\extensions\\*"));
   }
 
   // Add the policy for the client side of a pipe. It is just a file
