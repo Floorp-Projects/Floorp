@@ -42,6 +42,26 @@ function* synthesizeNativeMouseClick(aElement) {
   });
 }
 
+function* endCustomizing(aWindow = window) {
+  if (aWindow.document.documentElement.getAttribute("customizing") != "true") {
+    return true;
+  }
+  yield SpecialPowers.pushPrefEnv({set: [["browser.uiCustomization.disableAnimation", true]]});
+  let eventPromise = BrowserTestUtils.waitForEvent(aWindow.gNavToolbox, "aftercustomization");
+  aWindow.gCustomizeMode.exit();
+  return eventPromise;
+}
+
+function* startCustomizing(aWindow = window) {
+  if (aWindow.document.documentElement.getAttribute("customizing") == "true") {
+    return true;
+  }
+  yield SpecialPowers.pushPrefEnv({set: [["browser.uiCustomization.disableAnimation", true]]});
+  let eventPromise = BrowserTestUtils.waitForEvent(aWindow.gNavToolbox, "customizationready");
+  aWindow.gCustomizeMode.enter();
+  return eventPromise;
+}
+
 add_task(function* init() {
   yield promiseNewEngine("testEngine.xml");
 
@@ -518,5 +538,33 @@ add_task(function* dont_rollup_oncaretmove() {
   EventUtils.synthesizeKey("VK_ESCAPE", {});
   yield promise;
 
+  textbox.value = "";
+});
+
+// Entering customization mode shouldn't open the popup.
+add_task(function* dont_open_in_customization() {
+  gURLBar.focus();
+  textbox.value = "foo";
+
+  let promise = promiseEvent(searchPopup, "popupshown");
+  EventUtils.synthesizeKey("VK_TAB", {});
+  yield promise;
+  isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
+
+  info("Entering customization mode");
+  let sawPopup = false;
+  function listener() {
+    sawPopup = true;
+  }
+  searchPopup.addEventListener("popupshowing", listener);
+  yield PanelUI.show();
+  promise =  promiseEvent(searchPopup, "popuphidden");
+  yield startCustomizing();
+  yield promise;
+
+  searchPopup.removeEventListener("popupshowing", listener);
+  ok(!sawPopup, "Shouldn't have seen the suggestions popup");
+
+  yield endCustomizing();
   textbox.value = "";
 });
