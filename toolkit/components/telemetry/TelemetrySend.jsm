@@ -55,10 +55,7 @@ const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_OVERRIDE_OFFICIAL_CHECK = PREF_BRANCH + "send.overrideOfficialCheck";
 
 const TOPIC_IDLE_DAILY = "idle-daily";
-// The following topics are notified when Firefox is closing
-// because the OS is shutting down.
-const TOPIC_QUIT_APPLICATION_GRANTED = "quit-application-granted";
-const TOPIC_QUIT_APPLICATION_FORCED = "quit-application-forced";
+const TOPIC_QUIT_APPLICATION = "quit-application";
 
 // Whether the FHR/Telemetry unification features are enabled.
 // Changing this pref requires a restart.
@@ -589,15 +586,12 @@ var TelemetrySendImpl = {
   _testMode: false,
   // This holds pings that we currently try and haven't persisted yet.
   _currentPings: new Map(),
-  // Used to skip spawning the pingsender if OS is shutting down.
-  _isOSShutdown: false,
+
   // Count of pending pings that were overdue.
   _overduePingCount: 0,
 
   OBSERVER_TOPICS: [
     TOPIC_IDLE_DAILY,
-    TOPIC_QUIT_APPLICATION_GRANTED,
-    TOPIC_QUIT_APPLICATION_FORCED,
   ],
 
   OBSERVED_PREFERENCES: [
@@ -636,11 +630,6 @@ var TelemetrySendImpl = {
 
   earlyInit() {
     this._annotateCrashReport();
-
-    // Install the observer to detect OS shutdown early enough, so
-    // that we catch this before the delayed setup happens.
-    Services.obs.addObserver(this, TOPIC_QUIT_APPLICATION_FORCED);
-    Services.obs.addObserver(this, TOPIC_QUIT_APPLICATION_GRANTED);
   },
 
   async setup(testing) {
@@ -772,7 +761,6 @@ var TelemetrySendImpl = {
     this._shutdown = false;
     this._currentPings = new Map();
     this._overduePingCount = 0;
-    this._isOSShutdown = false;
 
     const histograms = [
       "TELEMETRY_SUCCESS",
@@ -798,23 +786,9 @@ var TelemetrySendImpl = {
   },
 
   observe(subject, topic, data) {
-    let setOSShutdown = () => {
-      this._log.trace("setOSShutdown - in OS shutdown");
-      this._isOSShutdown = true;
-      Telemetry.scalarSet("telemetry.os_shutting_down", true);
-    };
-
     switch (topic) {
     case TOPIC_IDLE_DAILY:
       SendScheduler.triggerSendingPings(true);
-      break;
-    case TOPIC_QUIT_APPLICATION_FORCED:
-      setOSShutdown();
-      break;
-    case TOPIC_QUIT_APPLICATION_GRANTED:
-      if (data == "syncShutdown") {
-        setOSShutdown();
-      }
       break;
     }
   },
@@ -852,14 +826,7 @@ var TelemetrySendImpl = {
     // Send the ping using the PingSender, if requested and the user was
     // notified of our policy. We don't support the pingsender on Android,
     // so ignore this option on that platform (see bug 1335917).
-    // Moreover, if the OS is shutting down, we don't want to spawn the
-    // pingsender as it could unnecessarily slow down OS shutdown.
-    // Additionally, it could be be killed before it can complete its tasks,
-    // for example after successfully sending the ping but before removing
-    // the copy from the disk, resulting in receiving duplicate pings when
-    // Firefox restarts.
     if (options.usePingSender &&
-        !this._isOSShutdown &&
         TelemetryReportingPolicy.canUpload() &&
         AppConstants.platform != "android") {
       const url = this._buildSubmissionURL(ping);
