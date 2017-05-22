@@ -97,13 +97,6 @@ struct nsCharTraits<char16_t>
 
   static char_type* const sEmptyBuffer;
 
-  static void
-  assign(char_type& aLhs, char_type aRhs)
-  {
-    aLhs = aRhs;
-  }
-
-
   // integer representation of characters:
   typedef int int_type;
 
@@ -165,16 +158,6 @@ struct nsCharTraits<char16_t>
       *s = static_cast<char_type>(*aStr2);
     }
     return aStr1;
-  }
-
-  static char_type*
-  assign(char_type* aStr, size_t aN, char_type aChar)
-  {
-    char_type* result = aStr;
-    while (aN--) {
-      assign(*aStr++, aChar);
-    }
-    return result;
   }
 
   static int
@@ -322,13 +305,6 @@ struct nsCharTraits<char>
 
   static char_type* const sEmptyBuffer;
 
-  static void
-  assign(char_type& aLhs, char_type aRhs)
-  {
-    aLhs = aRhs;
-  }
-
-
   // integer representation of characters:
 
   typedef int int_type;
@@ -386,12 +362,6 @@ struct nsCharTraits<char>
   copyASCII(char_type* aStr1, const char* aStr2, size_t aN)
   {
     return copy(aStr1, aStr2, aN);
-  }
-
-  static char_type*
-  assign(char_type* aStr, size_t aN, char_type aChar)
-  {
-    return static_cast<char_type*>(memset(aStr, to_int_type(aChar), aN));
   }
 
   static int

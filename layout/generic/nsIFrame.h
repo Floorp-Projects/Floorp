@@ -787,12 +787,13 @@ public:
    * accepts an *optional* pointer the style struct.
    */
   #define STYLE_STRUCT(name_, checkdata_cb_)                                  \
-    const nsStyle##name_ * Style##name_ () const {                            \
+    const nsStyle##name_ * Style##name_ () const MOZ_NONNULL_RETURN {         \
       NS_ASSERTION(mStyleContext, "No style context found!");                 \
       return mStyleContext->Style##name_ ();                                  \
     }                                                                         \
     const nsStyle##name_ * Style##name_##WithOptionalParam(                   \
-                             const nsStyle##name_ * aStyleStruct) const {     \
+                             const nsStyle##name_ * aStyleStruct) const       \
+                             MOZ_NONNULL_RETURN {                             \
       if (aStyleStruct) {                                                     \
         MOZ_ASSERT(aStyleStruct == Style##name_());                           \
         return aStyleStruct;                                                  \
