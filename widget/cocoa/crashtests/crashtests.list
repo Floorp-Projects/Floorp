@@ -1,11 +1,11 @@
 skip-if(!cocoaWidget) load 373122-1.html # bug 1300017
 load 397209-1.html
 load 403296-1.xhtml
-load 419737-1.html
-load 435223-1.html
+pref(layout.css.moz-appearance.enabled,true) load 419737-1.html
+pref(layout.css.moz-appearance.enabled,true) load 435223-1.html
 load 444260-1.xul
 load 444864-1.html
 load 449111-1.html
-load 460349-1.xhtml
-load 460387-1.html
+pref(layout.css.moz-appearance.enabled,true) load 460349-1.xhtml
+pref(layout.css.moz-appearance.enabled,true) load 460387-1.html
 load 464589-1.html

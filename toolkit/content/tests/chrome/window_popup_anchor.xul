@@ -14,7 +14,7 @@ window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTests, window);
 </script>
 
 <spacer height="13"/>
-<button id="outerbutton" label="Button One" style="margin-left: 6px; -moz-appearance: none;"/>
+<button id="outerbutton" label="Button One" style="margin-left: 6px; -moz-appearance: none; appearance: none;"/>
 <hbox>
   <spacer width="20"/>
   <deck>

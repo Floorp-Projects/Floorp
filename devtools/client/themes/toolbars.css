@@ -90,13 +90,13 @@
 
 /* In-tools sidebar */
 .devtools-sidebar-tabs {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   margin: 0;
   height: 100%;
 }
 
 .devtools-sidebar-tabs > tabpanels {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   background: transparent;
   padding: 0;
   border: 0;
@@ -115,7 +115,7 @@
 }
 
 .devtools-sidebar-alltabs {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   height: 24px;
   line-height: 24px;
   padding: 0 4px;
@@ -135,7 +135,7 @@
 }
 
 .devtools-sidebar-tabs tabs > tab {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   /* We want to match the height of a toolbar with a toolbarbutton
    * First, we need to replicated the padding of toolbar (4px),
    * then we need to take the border of the buttons into account (1px).

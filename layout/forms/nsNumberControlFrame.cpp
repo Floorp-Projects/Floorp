@@ -416,7 +416,7 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     nsContentUtils::AddScriptRunner(focusJob);
   }
 
-  if (StyleDisplay()->mAppearance == NS_THEME_TEXTFIELD) {
+  if (StyleDisplay()->UsedAppearance() == NS_THEME_TEXTFIELD) {
     // The author has elected to hide the spinner by setting this
     // -moz-appearance. We will reframe if it changes.
     return rv;
@@ -615,11 +615,11 @@ nsNumberControlFrame::ShouldUseNativeStyleForSpinner() const
   nsIFrame* spinDownFrame = mSpinDown->GetPrimaryFrame();
 
   return spinUpFrame &&
-    spinUpFrame->StyleDisplay()->mAppearance == NS_THEME_SPINNER_UPBUTTON &&
+    spinUpFrame->StyleDisplay()->UsedAppearance() == NS_THEME_SPINNER_UPBUTTON &&
     !PresContext()->HasAuthorSpecifiedRules(spinUpFrame,
                                             STYLES_DISABLING_NATIVE_THEMING) &&
     spinDownFrame &&
-    spinDownFrame->StyleDisplay()->mAppearance == NS_THEME_SPINNER_DOWNBUTTON &&
+    spinDownFrame->StyleDisplay()->UsedAppearance() == NS_THEME_SPINNER_DOWNBUTTON &&
     !PresContext()->HasAuthorSpecifiedRules(spinDownFrame,
                                             STYLES_DISABLING_NATIVE_THEMING);
 }

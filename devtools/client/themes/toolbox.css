@@ -42,7 +42,7 @@
 /* Toolbox tabbar */
 
 .devtools-tabbar {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   min-height: 24px;
   border: 0px solid;
   border-bottom-width: 1px;

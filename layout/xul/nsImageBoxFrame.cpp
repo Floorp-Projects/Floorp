@@ -260,7 +260,7 @@ nsImageBoxFrame::UpdateImage()
   } else {
     // Only get the list-style-image if we aren't being drawn
     // by a native theme.
-    uint8_t appearance = StyleDisplay()->mAppearance;
+    uint8_t appearance = StyleDisplay()->UsedAppearance();
     if (!(appearance && nsBox::gTheme &&
           nsBox::gTheme->ThemeSupportsWidget(nullptr, this, appearance))) {
       // get the list-style-image
@@ -532,8 +532,8 @@ nsImageBoxFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
   // If we're using a native theme implementation, we shouldn't draw anything.
   const nsStyleDisplay* disp = StyleDisplay();
-  if (disp->mAppearance && nsBox::gTheme &&
-      nsBox::gTheme->ThemeSupportsWidget(nullptr, this, disp->mAppearance))
+  if (disp->UsedAppearance() && nsBox::gTheme &&
+      nsBox::gTheme->ThemeSupportsWidget(nullptr, this, disp->UsedAppearance()))
     return;
 
   // If list-style-image changes, we have a new image.

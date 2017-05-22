@@ -5143,7 +5143,7 @@ AddIntrinsicSizeOffset(nsRenderingContext* aRenderingContext,
     LayoutDeviceIntSize devSize;
     bool canOverride = true;
     nsPresContext* pc = aFrame->PresContext();
-    pc->GetTheme()->GetMinimumWidgetSize(pc, aFrame, disp->mAppearance,
+    pc->GetTheme()->GetMinimumWidgetSize(pc, aFrame, disp->UsedAppearance(),
                                          &devSize, &canOverride);
     nscoord themeSize =
       pc->DevPixelsToAppUnits(aAxis == eAxisVertical ? devSize.height
@@ -7070,10 +7070,10 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
   if (HasNonZeroCorner(aCSSRootFrame->StyleBorder()->mBorderRadius))
     return eTransparencyTransparent;
 
-  if (aCSSRootFrame->StyleDisplay()->mAppearance == NS_THEME_WIN_GLASS)
+  if (aCSSRootFrame->StyleDisplay()->UsedAppearance() == NS_THEME_WIN_GLASS)
     return eTransparencyGlass;
 
-  if (aCSSRootFrame->StyleDisplay()->mAppearance == NS_THEME_WIN_BORDERLESS_GLASS)
+  if (aCSSRootFrame->StyleDisplay()->UsedAppearance() == NS_THEME_WIN_BORDERLESS_GLASS)
     return eTransparencyBorderlessGlass;
 
   nsITheme::Transparency transparency;

@@ -493,7 +493,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // display background if we need to.
     if (aBuilder->IsForEventDelivery() ||
         !StyleBackground()->IsTransparent(this) ||
-        StyleDisplay()->mAppearance) {
+        StyleDisplay()->UsedAppearance()) {
       nsDisplayBackgroundImage::AppendBackgroundItemsToTop(aBuilder,
           this,
           GetRectRelativeToSelf(),

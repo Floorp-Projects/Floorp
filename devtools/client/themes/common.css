@@ -70,7 +70,7 @@ html|button, html|select {
 }
 
 .devtools-autocomplete-listbox {
-  -moz-appearance: none !important;
+  -moz-appearance: none !important; appearance: none !important;
   background-color: transparent;
   border-width: 0px !important;
   margin: 0;
@@ -229,7 +229,7 @@ checkbox:-moz-focusring {
 .devtools-menulist,
 .devtools-toolbarbutton,
 .devtools-button {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   background: transparent;
   border: 1px solid var(--toolbarbutton-border-color);
   border-radius: 2px;
@@ -383,7 +383,7 @@ checkbox:-moz-focusring {
 .devtools-textinput,
 .devtools-searchinput,
 .devtools-filterinput {
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   margin: 1px 3px;
   border: 1px solid;
   border-radius: 2px;

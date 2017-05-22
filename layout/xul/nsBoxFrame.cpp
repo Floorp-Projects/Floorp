@@ -1326,7 +1326,7 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // Check for frames that are marked as a part of the region used
     // in calculating glass margins on Windows.
     const nsStyleDisplay* styles = StyleDisplay();
-    if (styles && styles->mAppearance == NS_THEME_WIN_EXCLUDE_GLASS) {
+    if (styles && styles->UsedAppearance() == NS_THEME_WIN_EXCLUDE_GLASS) {
       aBuilder->AddWindowExcludeGlassRegion(
           nsRect(aBuilder->ToReferenceFrame(this), GetSize()));
     }

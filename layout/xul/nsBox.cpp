@@ -300,13 +300,13 @@ nsBox::GetXULBorder(nsMargin& aMargin)
   aMargin.SizeTo(0,0,0,0);
     
   const nsStyleDisplay* disp = StyleDisplay();
-  if (disp->mAppearance && gTheme) {
+  if (disp->UsedAppearance() && gTheme) {
     // Go to the theme for the border.
     nsPresContext *context = PresContext();
-    if (gTheme->ThemeSupportsWidget(context, this, disp->mAppearance)) {
+    if (gTheme->ThemeSupportsWidget(context, this, disp->UsedAppearance())) {
       nsIntMargin margin(0, 0, 0, 0);
       gTheme->GetWidgetBorder(context->DeviceContext(), this,
-                              disp->mAppearance, &margin);
+                              disp->UsedAppearance(), &margin);
       aMargin.top = context->DevPixelsToAppUnits(margin.top);
       aMargin.right = context->DevPixelsToAppUnits(margin.right);
       aMargin.bottom = context->DevPixelsToAppUnits(margin.bottom);
@@ -324,15 +324,15 @@ nsresult
 nsBox::GetXULPadding(nsMargin& aMargin)
 {
   const nsStyleDisplay *disp = StyleDisplay();
-  if (disp->mAppearance && gTheme) {
+  if (disp->UsedAppearance() && gTheme) {
     // Go to the theme for the padding.
     nsPresContext *context = PresContext();
-    if (gTheme->ThemeSupportsWidget(context, this, disp->mAppearance)) {
+    if (gTheme->ThemeSupportsWidget(context, this, disp->UsedAppearance())) {
       nsIntMargin margin(0, 0, 0, 0);
       bool useThemePadding;
 
       useThemePadding = gTheme->GetWidgetPadding(context->DeviceContext(),
-                                                 this, disp->mAppearance,
+                                                 this, disp->UsedAppearance(),
                                                  &margin);
       if (useThemePadding) {
         aMargin.top = context->DevPixelsToAppUnits(margin.top);
@@ -670,12 +670,12 @@ nsIFrame::AddXULMinSize(nsBoxLayoutState& aState, nsIFrame* aBox, nsSize& aSize,
 
     // See if a native theme wants to supply a minimum size.
     const nsStyleDisplay* display = aBox->StyleDisplay();
-    if (display->mAppearance) {
+    if (display->UsedAppearance()) {
       nsITheme *theme = aState.PresContext()->GetTheme();
-      if (theme && theme->ThemeSupportsWidget(aState.PresContext(), aBox, display->mAppearance)) {
+      if (theme && theme->ThemeSupportsWidget(aState.PresContext(), aBox, display->UsedAppearance())) {
         LayoutDeviceIntSize size;
         theme->GetMinimumWidgetSize(aState.PresContext(), aBox,
-                                    display->mAppearance, &size, &canOverride);
+                                    display->UsedAppearance(), &size, &canOverride);
         if (size.width) {
           aSize.width = aState.PresContext()->DevPixelsToAppUnits(size.width);
           aWidthSet = true;
