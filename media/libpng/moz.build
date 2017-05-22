@@ -55,6 +55,9 @@ if CONFIG['HAVE_ALTIVEC']:
         'powerpc/powerpc_init.c'
     ]
 
+if CONFIG['MOZ_TREE_FREETYPE']:
+    DEFINES['FT_CONFIG_OPTION_USE_PNG'] = True
+
 Library('mozpng')
 
 FINAL_LIBRARY = 'gkmedias'
