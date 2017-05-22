@@ -3117,9 +3117,6 @@ UpdateManager.prototype = {
       if (!handleUpdateFailure(update, parts[1])) {
         handleFallbackToCompleteUpdate(update, true);
       }
-
-      update.QueryInterface(Ci.nsIWritablePropertyBag);
-      update.setProperty("stagingFailed", "true");
     }
     if (update.state == STATE_APPLIED && shouldUseService()) {
       writeStatusFile(getUpdatesDir(), update.state = STATE_APPLIED_SERVICE);
