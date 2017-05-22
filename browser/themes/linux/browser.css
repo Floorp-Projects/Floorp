@@ -265,14 +265,6 @@ menuitem.bookmark-item {
 }
 
 /* Location bar */
-#main-window {
-  --urlbar-border-color: ThreeDShadow;
-  --urlbar-border-color-hover: var(--urlbar-border-color);
-}
-
-#navigator-toolbox:-moz-lwtheme {
-  --urlbar-border-color: rgba(0,0,0,.3);
-}
 
 #urlbar {
   /* override textbox[enablehistory="true"] styling: */
@@ -283,12 +275,26 @@ menuitem.bookmark-item {
 
 %ifdef MOZ_PHOTON_THEME
 
+#urlbar:not(:-moz-lwtheme):not([focused="true"]),
+.searchbar-textbox:not(:-moz-lwtheme):not([focused="true"]) {
+  border-color: ThreeDShadow;
+}
+
 #urlbar[focused="true"],
 .searchbar-textbox[focused="true"] {
   border-color: Highlight;
 }
 
 %else
+
+#main-window {
+  --urlbar-border-color: ThreeDShadow;
+  --urlbar-border-color-hover: var(--urlbar-border-color);
+}
+
+#navigator-toolbox:-moz-lwtheme {
+  --urlbar-border-color: rgba(0,0,0,.3);
+}
 
 #urlbar,
 .searchbar-textbox {
