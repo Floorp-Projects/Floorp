@@ -2973,9 +2973,13 @@ this.XPIProvider = {
    *   object, which is the same as the add-ons ID.
    */
   sortBootstrappedAddons() {
+    function compare(a, b) {
+      return (a === b) ? 0 : ((a < b) ? -1 : 1);
+    }
+
     // Sort the list so that ordering is deterministic.
     let list = Array.from(XPIStates.bootstrappedAddons());
-    list.sort((a, b) => String.localeCompare(a.id, b.id));
+    list.sort((a, b) => compare(a.id, b.id));
 
     let addons = {};
     for (let entry of list) {
