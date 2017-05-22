@@ -1610,6 +1610,35 @@ const dasharrayType = {
   },
 }
 
+const fontStretchType = {
+  testInterpolation: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]:
+                                         ['ultra-condensed',
+					  'extra-condensed'] },
+                                     { duration: 1000, fill: 'both' });
+	testAnimationSamples(
+          animation, idlName,
+          [{ time: 499,  expected: 'ultra-condensed' },
+           { time: 500,  expected: 'extra-condensed' }]);
+    }, property + ' supports animating as a font-stretch (adjacent values)');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]:
+                                         ['ultra-condensed',
+					  'condensed'] },
+                                     { duration: 1000, fill: 'both' });
+	testAnimationSamples(
+          animation, idlName,
+          [{ time: 500,  expected: 'extra-condensed' }]);
+    }, property + ' supports animating as a font-stretch (between value)');
+  },
+}
+
 const types = {
   color: colorType,
   discrete: discreteType,
@@ -1629,5 +1658,6 @@ const types = {
   rect: rectType,
   position: positionType,
   dasharray: dasharrayType,
+  fontStretch: fontStretchType,
 };
 

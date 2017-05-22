@@ -532,8 +532,7 @@ var gCSSProperties = {
   },
   'font-stretch': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-stretch
-    types: [
-    ]
+    types: [ 'fontStretch' ]
   },
   'font-style': {
     // https://drafts.csswg.org/css-fonts/#propdef-font-style
