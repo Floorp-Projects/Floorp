@@ -86,6 +86,7 @@ public final class TelemetryWrapper {
         private static final String ERASE = "erase";
         private static final String IMAGE = "image";
         private static final String LINK = "link";
+        private static final String CUSTOM_TAB = "custom_tab";
     }
 
     private static class Extra {
@@ -210,9 +211,8 @@ public final class TelemetryWrapper {
     /**
      * Sends a list of the custom tab options that a custom-tab intent made use of.
      */
-    public static void customTabsIntentEvent(final List<String> options) {
-        // List.toString() returns a nicely formatted list like "[item1, item2, etc]":
-        TelemetryEvent.create(Category.ACTION, Method.INTENT_CUSTOM_TAB, Object.APP, options.toString()).queue();
+    public static void customTabsIntentEvent(final String options) {
+        TelemetryEvent.create(Category.ACTION, Method.INTENT_CUSTOM_TAB, Object.APP, options).queue();
     }
 
     public static void closeCustomTabEvent() {
@@ -221,6 +221,10 @@ public final class TelemetryWrapper {
 
     public static void customTabActionButtonEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.CUSTOM_TAB_ACTION_BUTTON).queue();
+    }
+
+    public static void customTabMenuEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.CUSTOM_TAB).queue();
     }
 
     public static void textSelectionIntentEvent() {

@@ -37,6 +37,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 * (Browsing) Long press on image or link, or image in link ("action", "long_press", "browser")
 * (CustomTab) Custom Tab close button clicked - ("action", "click", "custom_tab_close_button")
 * (CustomTab) Custom Tab action button clicked - ("action", "click", "custom_tab_action_button")
+* (CustomTab) Browser Menu custom tab item selected - ("action", "open", "menu", "custom_tab")
 * (BrowserContextMenu) Context menu dismissed without any selection ("action", "cancel", "browser_contextmenu")
 * (BrowserContextMenu) Share Link menu item selected ("action", "share", "browser_contextmenu", "link")
 * (BrowserContextMenu) Copy link menu item selected ("action", "copy", "browser_contextmenu", "link")
