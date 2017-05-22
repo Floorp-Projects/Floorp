@@ -497,15 +497,17 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   nsAutoCString mimeType;
   mimeInfoMac->GetMIMEType(mimeType);
   if (*aFound && !mimeType.IsEmpty()) {
-    // If we have a MIME type, make sure its preferred extension is included
-    // in our list.
+    // If we have a MIME type, make sure its extension list is included in our
+    // list.
     NSURLFileTypeMappings *map = [NSURLFileTypeMappings sharedMappings];
     NSString *typeStr = [NSString stringWithCString:mimeType.get() encoding:NSASCIIStringEncoding];
-    NSString *extStr = map ? [map preferredExtensionForMIMEType:typeStr] : NULL;
-    if (extStr) {
-      nsAutoCString preferredExt;
-      preferredExt.Assign((char *)[extStr cStringUsingEncoding:NSASCIIStringEncoding]);
-      mimeInfoMac->AppendExtension(preferredExt);
+    NSArray *extensionsList = map ? [map extensionsForMIMEType:typeStr] : NULL;
+    if (extensionsList) {
+      for (NSString* extension in extensionsList) {
+        nsAutoCString ext;
+        ext.Assign((char *)[extension cStringUsingEncoding:NSASCIIStringEncoding]);
+        mimeInfoMac->AppendExtension(ext);
+      }
     }
 
     CFStringRef cfType = ::CFStringCreateWithCString(NULL, mimeType.get(), kCFStringEncodingUTF8);

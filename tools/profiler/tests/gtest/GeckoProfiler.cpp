@@ -376,7 +376,7 @@ TEST(GeckoProfiler, PseudoStack)
   SamplerStackFrameDynamicRAII raii2("A", js::ProfileEntry::Category::STORAGE,
                                      888, dynamic.get());
   void* handle = profiler_call_enter("A", js::ProfileEntry::Category::NETWORK,
-                                     this, false, 999);
+                                     this, 999);
   ASSERT_TRUE(profiler_get_backtrace());
   profiler_call_exit(handle);
 

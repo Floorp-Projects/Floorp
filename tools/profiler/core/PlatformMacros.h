@@ -18,7 +18,6 @@
 #undef GP_PLAT_aarch64_android
 #undef GP_PLAT_x86_linux
 #undef GP_PLAT_amd64_linux
-#undef GP_PLAT_x86_darwin
 #undef GP_PLAT_amd64_darwin
 #undef GP_PLAT_x86_windows
 #undef GP_PLAT_amd64_windows
@@ -60,11 +59,6 @@
 # define GP_PLAT_amd64_linux 1
 # define GP_ARCH_amd64 1
 # define GP_OS_linux 1
-
-#elif defined(__APPLE__) && defined(__i386__)
-# define GP_PLAT_x86_darwin 1
-# define GP_ARCH_x86 1
-# define GP_OS_darwin 1
 
 #elif defined(__APPLE__) && defined(__x86_64__)
 # define GP_PLAT_amd64_darwin 1

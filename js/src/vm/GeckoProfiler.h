@@ -137,8 +137,8 @@ class GeckoProfiler
     void                (*eventMarker_)(const char*);
 
     UniqueChars allocProfileString(JSScript* script, JSFunction* function);
-    void push(const char* string, void* sp, JSScript* script, jsbytecode* pc, bool copy,
-              ProfileEntry::Category category = ProfileEntry::Category::JS);
+    void push(const char* label, const char* dynamicString, void* sp, JSScript* script,
+              jsbytecode* pc, ProfileEntry::Category category = ProfileEntry::Category::JS);
     void pop();
 
   public:
@@ -185,7 +185,7 @@ class GeckoProfiler
     }
 
     /* Enter wasm code */
-    void beginPseudoJS(const char* string, void* sp);
+    void beginPseudoJS(const char* label, void* sp);    // label must be a static string!
     void endPseudoJS() { pop(); }
 
     void setProfilingStack(ProfileEntry* stack, mozilla::Atomic<uint32_t>* size, uint32_t max);

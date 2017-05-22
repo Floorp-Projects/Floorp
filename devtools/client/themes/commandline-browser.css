@@ -34,7 +34,7 @@
 }
 
 #developer-toolbar {
-  -moz-appearance: none; appearance: none;
+  -moz-appearance: none;
   padding: 0;
   min-height: 32px;
   background-color: var(--gcli-background-color);
@@ -42,7 +42,7 @@
 }
 
 #developer-toolbar > toolbarbutton {
-  -moz-appearance: none; appearance: none;
+  -moz-appearance: none;
   border: none;
   background-color: transparent;
   margin: 0;
@@ -123,7 +123,6 @@ html|*#gcli-output-frame {
   border-width: 0;
   background-color: transparent;
   -moz-appearance: none;
-  appearance: none;
 
   /* We always wanted this to be a percentage of the viewport size but width: x% does not
    * work. vw is the obvious solution.
@@ -146,7 +145,7 @@ html|*#gcli-output-frame {
 }
 
 .gclitoolbar-input-node {
-  -moz-appearance: none; appearance: none;
+  -moz-appearance: none;
   color: var(--gcli-input-color);
   background-color: var(--gcli-input-background);
   background-repeat: no-repeat;
