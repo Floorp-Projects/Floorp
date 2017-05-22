@@ -66,6 +66,7 @@ DIRS += [
     'extensions',
     'modules',
     'themes/core',
+    'themes/geckoview',
     'app',
     'fonts',
 ]
