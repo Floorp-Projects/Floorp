@@ -640,6 +640,10 @@ var Bookmarks = Object.freeze({
       throw new Error("It's not possible to remove Places root folders.");
     }
 
+    if (!("source" in options)) {
+      options.source = Bookmarks.SOURCES.DEFAULT;
+    }
+
     // Even if we ignore any other unneeded property, we still validate any
     // known property to reduce likelihood of hidden bugs.
     let removeInfo = validateBookmarkObject(info);
@@ -652,14 +656,13 @@ var Bookmarks = Object.freeze({
       item = await removeBookmark(item, options);
 
       // Notify onItemRemoved to listeners.
-      let { source = Bookmarks.SOURCES.DEFAULT } = options;
       let observers = PlacesUtils.bookmarks.getObservers();
       let uri = item.hasOwnProperty("url") ? PlacesUtils.toURI(item.url) : null;
       let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
       notify(observers, "onItemRemoved", [ item._id, item._parentId, item.index,
                                            item.type, uri, item.guid,
                                            item.parentGuid,
-                                           source ],
+                                           options.source ],
                                          { isTagging: isUntagging });
 
       if (isUntagging) {
@@ -668,7 +671,7 @@ var Bookmarks = Object.freeze({
                                                PlacesUtils.toPRTime(entry.lastModified),
                                                entry.type, entry._parentId,
                                                entry.guid, entry.parentGuid,
-                                               "", source ]);
+                                               "", options.source ]);
         }
       }
 
@@ -691,6 +694,10 @@ var Bookmarks = Object.freeze({
    * @resolves once the removal is complete.
    */
   eraseEverything(options = {}) {
+    if (!options.source) {
+      options.source = Bookmarks.SOURCES.DEFAULT;
+    }
+
     const folderGuids = [this.toolbarGuid, this.menuGuid, this.unfiledGuid,
                           this.mobileGuid];
     return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: eraseEverything",
@@ -778,6 +785,9 @@ var Bookmarks = Object.freeze({
    *       may be overwritten.
    */
   fetch(guidOrInfo, onResult = null, options = {}) {
+    if (!("concurrent" in options)) {
+      options.concurrent = false;
+    }
     if (onResult && typeof onResult != "function")
       throw new Error("onResult callback must be a valid function");
     let info = guidOrInfo;
@@ -945,6 +955,10 @@ var Bookmarks = Object.freeze({
       orderedChildrenGuids.forEach(PlacesUtils.BOOKMARK_VALIDATORS.guid);
     } catch (ex) {
       throw new Error("Invalid GUID found in the sorted children array.");
+    }
+
+    if (!("source" in options)) {
+      options.source = Bookmarks.SOURCES.DEFAULT;
     }
 
     return (async () => {
@@ -2158,4 +2172,3 @@ function adjustSeparatorsSyncCounter(db, parentId, startIndex, syncChangeDelta) 
       item_type: Bookmarks.TYPE_SEPARATOR
     });
 }
-
