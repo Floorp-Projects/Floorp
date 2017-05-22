@@ -7,7 +7,6 @@
 #define TelemetryHistogram_h__
 
 #include "mozilla/TelemetryHistogramEnums.h"
-#include "mozilla/TelemetryProcessEnums.h"
 
 #include "mozilla/TelemetryComms.h"
 #include "nsXULAppAPI.h"
@@ -46,9 +45,9 @@ void Accumulate(const char* name, const nsCString& key, uint32_t sample);
 
 void AccumulateCategorical(mozilla::Telemetry::HistogramID aId, const nsCString& aLabel);
 
-void AccumulateChild(mozilla::Telemetry::ProcessID aProcessType,
+void AccumulateChild(GeckoProcessType aProcessType,
                      const nsTArray<mozilla::Telemetry::Accumulation>& aAccumulations);
-void AccumulateChildKeyed(mozilla::Telemetry::ProcessID aProcessType,
+void AccumulateChildKeyed(GeckoProcessType aProcessType,
                           const nsTArray<mozilla::Telemetry::KeyedAccumulation>& aAccumulations);
 
 nsresult

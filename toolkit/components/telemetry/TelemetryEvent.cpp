@@ -39,10 +39,8 @@ using mozilla::Telemetry::Common::IsInDataset;
 using mozilla::Telemetry::Common::MsSinceProcessStart;
 using mozilla::Telemetry::Common::LogToBrowserConsole;
 using mozilla::Telemetry::Common::CanRecordInProcess;
-using mozilla::Telemetry::Common::GetNameForProcessID;
 using mozilla::Telemetry::EventExtraEntry;
 using mozilla::Telemetry::ChildEventData;
-using mozilla::Telemetry::ProcessID;
 
 namespace TelemetryIPCAccumulator = mozilla::TelemetryIPCAccumulator;
 
@@ -280,7 +278,7 @@ namespace {
 
 bool
 CanRecordEvent(const StaticMutexAutoLock& lock, const CommonEventInfo& info,
-               ProcessID process)
+               GeckoProcessType process)
 {
   if (!gCanRecordBase) {
     return false;
@@ -298,12 +296,12 @@ CanRecordEvent(const StaticMutexAutoLock& lock, const CommonEventInfo& info,
 }
 
 EventRecordArray*
-GetEventRecordsForProcess(const StaticMutexAutoLock& lock, ProcessID processType)
+GetEventRecordsForProcess(const StaticMutexAutoLock& lock, GeckoProcessType processType)
 {
   EventRecordArray* eventRecords = nullptr;
-  if (!gEventRecords.Get(uint32_t(processType), &eventRecords)) {
+  if (!gEventRecords.Get(processType, &eventRecords)) {
     eventRecords = new EventRecordArray();
-    gEventRecords.Put(uint32_t(processType), eventRecords);
+    gEventRecords.Put(processType, eventRecords);
   }
   return eventRecords;
 }
@@ -319,7 +317,7 @@ GetEventId(const StaticMutexAutoLock& lock, const nsACString& category,
 }
 
 RecordEventResult
-RecordEvent(const StaticMutexAutoLock& lock, ProcessID processType,
+RecordEvent(const StaticMutexAutoLock& lock, GeckoProcessType processType,
             double timestamp, const nsACString& category,
             const nsACString& method, const nsACString& object,
             const Maybe<nsCString>& value, const ExtraArray& extra)
@@ -579,7 +577,7 @@ TelemetryEvent::SetCanRecordExtended(bool b) {
 }
 
 nsresult
-TelemetryEvent::RecordChildEvents(ProcessID aProcessType,
+TelemetryEvent::RecordChildEvents(GeckoProcessType aProcessType,
                                   const nsTArray<mozilla::Telemetry::ChildEventData>& aEvents)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -707,7 +705,7 @@ TelemetryEvent::RecordEvent(const nsACString& aCategory, const nsACString& aMeth
       return NS_ERROR_FAILURE;
     }
 
-    res = ::RecordEvent(lock, ProcessID::Parent, timestamp, aCategory, aMethod, aObject, value, extra);
+    res = ::RecordEvent(lock, GeckoProcessType_Default, timestamp, aCategory, aMethod, aObject, value, extra);
   }
 
   // Trigger warnings or errors where needed.
@@ -770,7 +768,7 @@ TelemetryEvent::CreateSnapshots(uint32_t aDataset, bool aClear, JSContext* cx,
       }
 
       if (events.Length()) {
-        const char* processName = GetNameForProcessID(ProcessID(iter.Key()));
+        const char* processName = XRE_ChildProcessTypeToString(GeckoProcessType(iter.Key()));
         processEvents.AppendElement(mozilla::MakePair(processName, events));
       }
     }
