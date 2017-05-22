@@ -11,10 +11,12 @@
  *
  * @param {object} target
  *        The object the toolbox is debugging.
+ * @param {object} threadClient
+ *        The toolbox's thread client
  * @param {SourceMapService} sourceMapService
  *        The devtools-source-map functions
  */
-function SourceMapURLService(target, sourceMapService) {
+function SourceMapURLService(target, threadClient, sourceMapService) {
   this._target = target;
   this._sourceMapService = sourceMapService;
   this._urls = new Map();
@@ -24,6 +26,14 @@ function SourceMapURLService(target, sourceMapService) {
 
   target.on("source-updated", this._onSourceUpdated);
   target.on("will-navigate", this.reset);
+
+  // Start fetching the sources now.
+  this._loadingPromise = new Promise(resolve => {
+    threadClient.getSources(({sources}) => {
+      // Just ignore errors.
+      resolve(sources);
+    });
+  });
 }
 
 /**
@@ -75,6 +85,14 @@ SourceMapURLService.prototype._onSourceUpdated = function (_, sourceEvent) {
  *        A promise resolving either to the original location, or null.
  */
 SourceMapURLService.prototype.originalPositionFor = async function (url, line, column) {
+  // Ensure the sources are loaded before replying.
+  await this._loadingPromise;
+
+  // Maybe we were shut down while waiting.
+  if (!this._urls) {
+    return null;
+  }
+
   const urlInfo = this._urls.get(url);
   if (!urlInfo) {
     return null;
