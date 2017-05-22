@@ -34,6 +34,17 @@ gc::RealmNeedsSweep(JS::Realm* realm)
     return JS::GetCompartmentForRealm(realm)->globalIsAboutToBeFinalized();
 }
 
+JS_PUBLIC_API(void*)
+JS::GetRealmPrivate(JS::Realm* realm)
+{
+    return GetCompartmentForRealm(realm)->realmData;
+}
+
+JS_PUBLIC_API(void)
+JS::SetRealmPrivate(JS::Realm* realm, void* data)
+{
+    GetCompartmentForRealm(realm)->realmData = data;
+}
 
 JS_PUBLIC_API(JSObject*)
 JS::GetRealmObjectPrototype(JSContext* cx)

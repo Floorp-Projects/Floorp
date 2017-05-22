@@ -59,6 +59,16 @@ GetRealmForCompartment(JSCompartment* compartment) {
     return reinterpret_cast<Realm*>(compartment);
 }
 
+// Get the value of the "private data" internal field of the given Realm.
+// This field is initially null and is set using SetRealmPrivate.
+// It's a pointer to embeddding-specific data that SpiderMonkey never uses.
+extern JS_PUBLIC_API(void*)
+GetRealmPrivate(Realm* realm);
+
+// Set the "private data" internal field of the given Realm.
+extern JS_PUBLIC_API(void)
+SetRealmPrivate(Realm* realm, void* data);
+
 extern JS_PUBLIC_API(JSObject*)
 GetRealmObjectPrototype(JSContext* cx);
 

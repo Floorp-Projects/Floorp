@@ -691,6 +691,7 @@ struct JSCompartment
 
   public:
     void*                        data;
+    void*                        realmData;
 
   private:
     const js::AllocationMetadataBuilder *allocationMetadataBuilder;
