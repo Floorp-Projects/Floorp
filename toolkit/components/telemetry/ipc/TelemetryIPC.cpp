@@ -12,35 +12,35 @@
 namespace mozilla {
 
 void
-TelemetryIPC::AccumulateChildHistograms(Telemetry::ProcessID aProcessType,
+TelemetryIPC::AccumulateChildHistograms(GeckoProcessType aProcessType,
                                         const nsTArray<Telemetry::Accumulation>& aAccumulations)
 {
   TelemetryHistogram::AccumulateChild(aProcessType, aAccumulations);
 }
 
 void
-TelemetryIPC::AccumulateChildKeyedHistograms(Telemetry::ProcessID aProcessType,
+TelemetryIPC::AccumulateChildKeyedHistograms(GeckoProcessType aProcessType,
                                             const nsTArray<Telemetry::KeyedAccumulation>& aAccumulations)
 {
   TelemetryHistogram::AccumulateChildKeyed(aProcessType, aAccumulations);
 }
 
 void
-TelemetryIPC::UpdateChildScalars(Telemetry::ProcessID aProcessType,
+TelemetryIPC::UpdateChildScalars(GeckoProcessType aProcessType,
                                  const nsTArray<Telemetry::ScalarAction>& aScalarActions)
 {
   TelemetryScalar::UpdateChildData(aProcessType, aScalarActions);
 }
 
 void
-TelemetryIPC::UpdateChildKeyedScalars(Telemetry::ProcessID aProcessType,
+TelemetryIPC::UpdateChildKeyedScalars(GeckoProcessType aProcessType,
                                       const nsTArray<Telemetry::KeyedScalarAction>& aScalarActions)
 {
   TelemetryScalar::UpdateChildKeyedData(aProcessType, aScalarActions);
 }
 
 void
-TelemetryIPC::RecordChildEvents(Telemetry::ProcessID aProcessType, const nsTArray<Telemetry::ChildEventData>& aEvents)
+TelemetryIPC::RecordChildEvents(GeckoProcessType aProcessType, const nsTArray<Telemetry::ChildEventData>& aEvents)
 {
   TelemetryEvent::RecordChildEvents(aProcessType, aEvents);
 }
