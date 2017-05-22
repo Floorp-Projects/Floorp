@@ -38,6 +38,7 @@ var gTests = [
   "== color-on-link-before-1.html color-on-link-1-ref.html",
   "== color-on-visited-1.html color-on-visited-1-ref.html",
   "== color-on-visited-before-1.html color-on-visited-1-ref.html",
+  "needs-focus == color-on-visited-focus-1.html color-on-visited-1-ref.html",
   "!= content-color-on-link-before-1-ref.html content-color-on-visited-before-1-ref.html",
   "== content-color-on-link-before-1.html content-color-on-link-before-1-ref.html",
   "== content-color-on-visited-before-1.html content-color-on-visited-before-1-ref.html",
@@ -85,6 +86,12 @@ var gTests = [
   "== link-root-1.xhtml link-root-1-ref.xhtml",
   "== mathml-links.html mathml-links-ref.html",
 ];
+
+let isStylo = SpecialPowers.getBoolPref("layout.css.servo.enabled");
+if (isStylo) {
+  // Bug 1366908: Gecko misses this case currently, but it seems unintentional
+  gTests.push("== color-on-visited-attr-1.html color-on-visited-1-ref.html");
+}
 
 // We record the maximum number of times we had to look at a test before
 // it switched to the passing state (though we assume it's 10 to start
