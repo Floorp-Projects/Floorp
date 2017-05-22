@@ -276,18 +276,18 @@ TextTrackManager::UpdateCueDisplay()
     return;
   }
 
-  nsTArray<RefPtr<TextTrackCue> > activeCues;
-  mTextTracks->GetShowingCues(activeCues);
+  nsTArray<RefPtr<TextTrackCue> > showingCues;
+  mTextTracks->GetShowingCues(showingCues);
 
-  if (activeCues.Length() > 0) {
+  if (showingCues.Length() > 0) {
     WEBVTT_LOG("UpdateCueDisplay ProcessCues");
-    WEBVTT_LOGV("UpdateCueDisplay activeCues.Length() %" PRIuSIZE, activeCues.Length());
+    WEBVTT_LOGV("UpdateCueDisplay showingCues.Length() %" PRIuSIZE, showingCues.Length());
     RefPtr<nsVariantCC> jsCues = new nsVariantCC();
 
     jsCues->SetAsArray(nsIDataType::VTYPE_INTERFACE,
                        &NS_GET_IID(nsIDOMEventTarget),
-                       activeCues.Length(),
-                       static_cast<void*>(activeCues.Elements()));
+                       showingCues.Length(),
+                       static_cast<void*>(showingCues.Elements()));
     nsPIDOMWindowInner* window = mMediaElement->OwnerDoc()->GetInnerWindow();
     if (window) {
       sParserWrapper->ProcessCues(window, jsCues, overlay, controls);
