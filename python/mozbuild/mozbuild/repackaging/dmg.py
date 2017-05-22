@@ -6,9 +6,9 @@ import os
 import tempfile
 import tarfile
 import shutil
-import ConfigParser
 import mozpack.path as mozpath
 from mozpack.dmg import create_dmg
+from application_ini import get_application_ini_value
 
 def repackage_dmg(infile, output):
 
@@ -28,17 +28,7 @@ def repackage_dmg(infile, output):
             if e.errno != errno.ENOENT:
                 raise
 
-        # Grab the volume name
-        volume_name = None
-        for root, dirs, files in os.walk(tmpdir):
-            if 'application.ini' in files:
-                parser = ConfigParser.ConfigParser()
-                parser.read(mozpath.join(root, 'application.ini'))
-                volume_name = parser.get('App', 'CodeName')
-                break
-
-        if volume_name is None:
-            raise Exception("Input package does not contain an application.ini file")
+        volume_name = get_application_ini_value(tmpdir, 'App', 'CodeName')
 
         # The extra_files argument is empty [] because they are already a part
         # of the original dmg produced by the build, and they remain in the

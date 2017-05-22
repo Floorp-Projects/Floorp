@@ -117,4 +117,4 @@ HTTP(..) != subsuper-fallback-omega.html subsuper-fallback-omega-notref.html
 HTTP(..) == subsuper-nofallback.html subsuper-nofallback-ref1.html
 random-if(cocoaWidget) HTTP(..) == subsuper-nofallback.html subsuper-nofallback-ref2.html # bug 1139269
 HTTP(..) != subsuper-nofallback.html subsuper-nofallback-notref.html
-fails-if(stylo) HTTP(..) == subsuper-fallback-size.html subsuper-fallback-size-ref.html
+HTTP(..) == subsuper-fallback-size.html subsuper-fallback-size-ref.html

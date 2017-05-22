@@ -73,7 +73,7 @@ function addPrefixToDB(list, url) {
 
 // manually reset DB to make sure next test won't be affected by cache.
 function reset() {
-  return classifierHelper.resetDB;
+  return classifierHelper.resetDatabase();
 }
 
 // This test has to come before testPositiveCache to ensure gethash server doesn't

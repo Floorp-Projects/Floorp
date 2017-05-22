@@ -17,10 +17,11 @@ function makeDefaultFaviconChannel(uri, loadInfo) {
   let channel = Services.io.newChannelFromURIWithLoadInfo(
     PlacesUtils.favicons.defaultFavicon, loadInfo);
   channel.originalURI = uri;
+  channel.contentType = PlacesUtils.favicons.defaultFaviconMimeType;
   return channel;
 }
 
-function streamDefaultFavicon(uri, loadInfo, outputStream) {
+function streamDefaultFavicon(uri, loadInfo, outputStream, originalChannel) {
   try {
     // Open up a new channel to get that data, and push it to our output stream.
     // Create a listener to hand data to the pipe's output stream.
@@ -33,6 +34,7 @@ function streamDefaultFavicon(uri, loadInfo, outputStream) {
         outputStream.close();
       }
     });
+    originalChannel.contentType = PlacesUtils.favicons.defaultFaviconMimeType;
     let defaultIconChannel = makeDefaultFaviconChannel(uri, loadInfo);
     defaultIconChannel.asyncOpen2(listener);
   } catch (ex) {
@@ -95,14 +97,14 @@ PageIconProtocolHandler.prototype = {
       let pageURI = NetUtil.newURI(uri.path.replace(/[&#]size=[^&]+$/, ""));
       let preferredSize = PlacesUtils.favicons.preferredSizeFromURI(uri);
       PlacesUtils.favicons.getFaviconDataForPage(pageURI, (iconURI, len, data, mimeType) => {
-        channel.contentType = mimeType;
         if (len == 0) {
-          streamDefaultFavicon(uri, loadInfo, pipe.outputStream);
+          streamDefaultFavicon(uri, loadInfo, pipe.outputStream, channel);
         } else {
           try {
+            channel.contentType = mimeType;
             serveIcon(pipe, data, len);
           } catch (ex) {
-            streamDefaultFavicon(uri, loadInfo, pipe.outputStream);
+            streamDefaultFavicon(uri, loadInfo, pipe.outputStream, channel);
           }
         }
       }, preferredSize);

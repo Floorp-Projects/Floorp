@@ -101,6 +101,11 @@ interface nsIFaviconService : nsISupports
    * The default favicon URI
    */
   readonly attribute nsIURI defaultFavicon;
+
+  /**
+   * The default favicon mimeType
+   */
+  readonly attribute AUTF8String defaultFaviconMimeType;
 };
 
 [scriptable, function, uuid(c85e5c82-b70f-4621-9528-beb2aa47fb44)]
@@ -152,7 +157,9 @@ interface nsIFaviconDataCallback : nsISupports
  */
 #define NS_PLACES_FAVICONS_EXPIRED_TOPIC_ID "places-favicons-expired"
 
-#define FAVICON_DEFAULT_URL "chrome://mozapps/skin/places/defaultFavicon.png"
+#define FAVICON_DEFAULT_URL "chrome://mozapps/skin/places/defaultFavicon.svg"
+#define FAVICON_DEFAULT_MIMETYPE "image/svg+xml"
+
 #define FAVICON_ERRORPAGE_URL "chrome://global/skin/icons/warning-16.png"
 
 %}

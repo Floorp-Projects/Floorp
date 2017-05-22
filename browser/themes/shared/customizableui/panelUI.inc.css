@@ -12,7 +12,7 @@
 % There's no calc() here (and therefore lots of calc() where this is used) because
 % we don't support nested calc(): https://bugzilla.mozilla.org/show_bug.cgi?id=968761
 %define menuPanelButtonWidth (@menuPanelWidth@ / 3 - 0.1px)
-%define buttonStateHover :not(:-moz-any([disabled],[open],:active)):hover
+%define buttonStateHover :not(:-moz-any([disabled],[open],:active)):-moz-any(:hover,:focus)
 %define menuStateHover :not(:-moz-any([disabled],:active))[_moz-menuactive]
 %define buttonStateActive :not([disabled]):-moz-any([open],:hover:active)
 %define menuStateActive :not([disabled])[_moz-menuactive]:active
@@ -1157,6 +1157,10 @@ photonpanelmultiview .PanelUI-subView .subviewbutton:not(.panel-subview-footer) 
   padding: 4px 12px;
 }
 
+photonpanelmultiview .subviewbutton:focus {
+  outline: 0;
+}
+
 photonpanelmultiview .subviewbutton-iconic:not(.subviewbutton-back) > .toolbarbutton-text,
 photonpanelmultiview .subviewbutton[checked="true"] > .toolbarbutton-text {
   padding-inline-start: 8px; /* See '.subviewbutton-iconic > .toolbarbutton-text' rule above. */
@@ -1314,14 +1318,7 @@ menuitem.panel-subview-footer@menuStateActive@,
 
 #PanelUI-remotetabs-tabslist > toolbarbutton[itemtype="tab"],
 #PanelUI-historyItems > toolbarbutton {
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  #PanelUI-remotetabs-tabslist > toolbarbutton[itemtype="tab"],
-  #PanelUI-historyItems > toolbarbutton {
-    list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
-  }
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
 #PanelUI-remotetabs-tabslist > toolbarbutton[itemtype="tab"] > .toolbarbutton-icon,

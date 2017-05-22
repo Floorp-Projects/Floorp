@@ -108,22 +108,30 @@ classifierHelper.removeUrlFromDB = function(updateData) {
 
 // This API is used to expire all add/sub chunks we have updated
 // by using addUrlToDB and removeUrlFromDB.
-classifierHelper.resetDB = function() {
-  return new Promise(function(resolve, reject) {
-    var testUpdate = "";
-    for (var update of classifierHelper._updatesToCleanup) {
-      if (testUpdate.includes(update.db))
-        continue;
+classifierHelper.resetDatabase = function() {
+  function removeDatabase() {
+    return new Promise(function(resolve, reject) {
+      var testUpdate = "";
+      for (var update of classifierHelper._updatesToCleanup) {
+        if (testUpdate.includes(update.db))
+          continue;
 
-      testUpdate +=
-        "n:1000\n" +
-        "i:" + update.db + "\n" +
-        "ad:" + ADD_CHUNKNUM + "\n" +
-        "sd:" + SUB_CHUNKNUM + "\n"
-    }
+        testUpdate +=
+          "n:1000\n" +
+          "i:" + update.db + "\n" +
+          "ad:" + ADD_CHUNKNUM + "\n" +
+          "sd:" + SUB_CHUNKNUM + "\n"
+      }
 
-    classifierHelper._update(testUpdate, resolve, reject);
-  });
+      classifierHelper._update(testUpdate, resolve, reject);
+    });
+  }
+
+  // Remove and then reload will ensure both database and cache will
+  // be cleared.
+  return Promise.resolve()
+    .then(removeDatabase)
+    .then(classifierHelper.reloadDatabase);
 };
 
 classifierHelper.reloadDatabase = function() {
@@ -195,7 +203,7 @@ classifierHelper._cleanup = function() {
     return Promise.resolve();
   }
 
-  return classifierHelper.resetDB();
+  return classifierHelper.resetDatabase();
 };
 
 classifierHelper._setup();

@@ -18,7 +18,7 @@ var firstLoad = true;
 
 // Add some URLs to the malware database.
 // Note that we intentionally don't touch test-phish-simple, and will
-// use the URL registered by addMozEntries().  Otherwise, classifierHelper.resetDB()
+// use the URL registered by addMozEntries().  Otherwise, classifierHelper.resetDatabase()
 // will reset this table, and waitForInit() can't find the known phishing
 // URL in test-phish-simple, breaking the tests following this one.
 var testData = [

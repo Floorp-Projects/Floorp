@@ -3285,10 +3285,13 @@ var SessionStoreInternal = {
       let createLazyBrowser = restoreTabsLazily && !select && !tabData.pinned;
 
       let url = "about:blank";
-      if (createLazyBrowser) {
+      if (createLazyBrowser && tabData.entries && tabData.entries.length) {
         // Let tabbrowser know the future URI because progress listeners won't
         // get onLocationChange notification before the browser is inserted.
         let activeIndex = (tabData.index || tabData.entries.length) - 1;
+        // Ensure the index is in bounds.
+        activeIndex = Math.min(activeIndex, tabData.entries.length - 1);
+        activeIndex = Math.max(activeIndex, 0);
         url = tabData.entries[activeIndex].url;
       }
 

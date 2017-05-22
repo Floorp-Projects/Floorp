@@ -46,13 +46,18 @@ using namespace mozilla::places;
  */
 static
 nsresult
-GetDefaultIcon(nsILoadInfo *aLoadInfo, nsIChannel **aChannel)
+GetDefaultIcon(nsIChannel *aOriginalChannel, nsIChannel **aChannel)
 {
   nsCOMPtr<nsIURI> defaultIconURI;
   nsresult rv = NS_NewURI(getter_AddRefs(defaultIconURI),
                           NS_LITERAL_CSTRING(FAVICON_DEFAULT_URL));
   NS_ENSURE_SUCCESS(rv, rv);
-  return NS_NewChannelInternal(aChannel, defaultIconURI, aLoadInfo);
+  nsCOMPtr<nsILoadInfo> loadInfo = aOriginalChannel->GetLoadInfo();
+  rv = NS_NewChannelInternal(aChannel, defaultIconURI, loadInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+  Unused << (*aChannel)->SetContentType(NS_LITERAL_CSTRING(FAVICON_DEFAULT_MIMETYPE));
+  Unused << aOriginalChannel->SetContentType(NS_LITERAL_CSTRING(FAVICON_DEFAULT_MIMETYPE));
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,9 +87,6 @@ public:
     MOZ_ASSERT(aChannel, "Not providing a channel will result in crashes!");
     MOZ_ASSERT(aListener, "Not providing a stream listener will result in crashes!");
     MOZ_ASSERT(aChannel, "Not providing a channel!");
-
-    // Set the default content type.
-    Unused << mChannel->SetContentType(NS_LITERAL_CSTRING(PNG_MIME_TYPE));
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -107,8 +109,10 @@ public:
       // Eventually override the default mimeType for svg.
       if (width == UINT16_MAX) {
         rv = mChannel->SetContentType(NS_LITERAL_CSTRING(SVG_MIME_TYPE));
-        NS_ENSURE_SUCCESS(rv, rv);
+      } else {
+        rv = mChannel->SetContentType(NS_LITERAL_CSTRING(PNG_MIME_TYPE));
       }
+      NS_ENSURE_SUCCESS(rv, rv);
 
       // Obtain the binary blob that contains our favicon data.
       uint8_t *data;
@@ -155,7 +159,7 @@ public:
     // to the new channel. Note that mChannel can not be null,
     // constructor checks that.
     nsCOMPtr<nsIChannel> newChannel;
-    rv = GetDefaultIcon(loadInfo, getter_AddRefs(newChannel));
+    rv = GetDefaultIcon(mChannel, getter_AddRefs(newChannel));
     if (NS_FAILED(rv)) {
       mListener->OnStartRequest(mChannel, nullptr);
       mListener->OnStopRequest(mChannel, nullptr, rv);
@@ -311,8 +315,7 @@ nsAnnoProtocolHandler::NewFaviconChannel(nsIURI *aURI, nsIURI *aAnnotationURI,
     [] (nsIStreamListener* listener, nsIChannel* channel, nsIURI* annotationURI) {
       auto fallback = [&] () -> RequestOrReason {
         nsCOMPtr<nsIChannel> chan;
-        nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-        nsresult rv = GetDefaultIcon(loadInfo, getter_AddRefs(chan));
+        nsresult rv = GetDefaultIcon(channel, getter_AddRefs(chan));
         NS_ENSURE_SUCCESS(rv, Err(rv));
 
         rv = chan->AsyncOpen2(listener);

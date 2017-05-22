@@ -5701,7 +5701,8 @@ class MToString :
         setResultType(MIRType::String);
         setMovable();
 
-        // Objects might override toString and Symbols throw.
+        // Objects might override toString and Symbols throw. We bailout in
+        // those cases and run side-effects in baseline instead.
         if (def->mightBeType(MIRType::Object) || def->mightBeType(MIRType::Symbol))
             setGuard();
     }
@@ -5721,7 +5722,8 @@ class MToString :
     }
 
     bool fallible() const {
-        return input()->mightBeType(MIRType::Object);
+        return input()->mightBeType(MIRType::Object) ||
+               input()->mightBeType(MIRType::Symbol);
     }
 
     ALLOW_CLONE(MToString)

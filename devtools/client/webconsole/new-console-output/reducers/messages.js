@@ -8,6 +8,9 @@
 const Immutable = require("devtools/client/shared/vendor/immutable");
 const constants = require("devtools/client/webconsole/new-console-output/constants");
 const {isGroupType} = require("devtools/client/webconsole/new-console-output/utils/messages");
+const Services = require("Services");
+
+const logLimit = Math.max(Services.prefs.getIntPref("devtools.hud.loglimit"), 1);
 
 const MessageState = Immutable.Record({
   // List of all the messages added to the console.
@@ -22,6 +25,9 @@ const MessageState = Immutable.Record({
   groupsById: Immutable.Map(),
   // Message id of the current group (no corresponding console.groupEnd yet).
   currentGroup: null,
+  // List of removed messages is used to release related (parameters) actors.
+  // This array is not supposed to be consumed by any UI component.
+  removedMessages: [],
 });
 
 function messages(state = new MessageState(), action) {
@@ -82,9 +88,20 @@ function messages(state = new MessageState(), action) {
             record.set("messagesUiById", messagesUiById.push(newMessage.id));
           }
         }
+
+        // Remove top level message if the total count of top level messages
+        // exceeds the current limit.
+        limitTopLevelMessageCount(state, record);
       });
     case constants.MESSAGES_CLEAR:
       return state.withMutations(function (record) {
+        // Store all removed messages associated with some arguments.
+        // This array is used by `releaseActorsEnhancer` to release
+        // all related backend actors.
+        record.set("removedMessages",
+          record.messagesById.filter(msg => msg.parameters).toArray());
+
+        // Clear immutable state.
         record.set("messagesById", Immutable.List());
         record.set("messagesUiById", Immutable.List());
         record.set("groupsById", Immutable.Map());
@@ -103,6 +120,8 @@ function messages(state = new MessageState(), action) {
       return state.set("messagesById", messagesById.map((message) =>
         (message.id === updateMessage.id) ? updateMessage : message
       ));
+    case constants.REMOVED_MESSAGES_CLEAR:
+      return state.set("removedMessages", []);
   }
 
   return state;
@@ -135,6 +154,89 @@ function getParentGroups(currentGroup, groupsById) {
   }
 
   return groups;
+}
+
+/**
+ * Remove all top level messages that exceeds message limit.
+ * Also release all backend actors associated with these
+ * messages.
+ */
+function limitTopLevelMessageCount(state, record) {
+  let tempRecord = {
+    messagesById: record.messagesById,
+    messagesUiById: record.messagesUiById,
+    messagesTableDataById: record.messagesTableDataById,
+    groupsById: record.groupsById,
+  };
+
+  let removedMessages = state.removedMessages;
+
+  // Remove top level messages logged over the limit.
+  let topLevelCount = getToplevelMessageCount(tempRecord);
+  while (topLevelCount > logLimit) {
+    removedMessages.push(...removeFirstMessage(tempRecord));
+    topLevelCount--;
+  }
+
+  // Filter out messages with no arguments. Only actual arguments
+  // can be associated with backend actors.
+  removedMessages = state.removedMessages.filter(msg => msg.parameters);
+
+  // Update original record object
+  record.set("messagesById", tempRecord.messagesById);
+  record.set("messagesUiById", tempRecord.messagesUiById);
+  record.set("messagesTableDataById", tempRecord.messagesTableDataById);
+  record.set("groupsById", tempRecord.groupsById);
+  record.set("removedMessages", removedMessages);
+}
+
+/**
+ * Returns total count of top level messages (those which are not
+ * within a group).
+ */
+function getToplevelMessageCount(record) {
+  return [...record.messagesById].filter(message => !message.groupId).length;
+}
+
+/**
+ * Remove first (the oldest) message from the store. The methods removes
+ * also all its references and children from the store.
+ *
+ * @return {Array} Flat array of removed messages.
+ */
+function removeFirstMessage(record) {
+  let firstMessage = record.messagesById.first();
+  record.messagesById = record.messagesById.shift();
+
+  // Remove from list of opened groups.
+  let uiIndex = record.messagesUiById.indexOf(firstMessage);
+  if (uiIndex >= 0) {
+    record.messagesUiById = record.messagesUiById.delete(uiIndex);
+  }
+
+  // Remove from list of tables.
+  if (record.messagesTableDataById.has(firstMessage.id)) {
+    record.messagesTableDataById = record.messagesTableDataById.delete(firstMessage.id);
+  }
+
+  // Remove from list of parent groups.
+  if (record.groupsById.has(firstMessage.id)) {
+    record.groupsById = record.groupsById.delete(firstMessage.id);
+  }
+
+  let removedMessages = [firstMessage];
+
+  // Remove all children. This loop assumes that children of removed
+  // group immediately follows the group. We use recursion since
+  // there might be inner groups.
+  let message = record.messagesById.first();
+  while (message.groupId == firstMessage.id) {
+    removedMessages.push(...removeFirstMessage(record));
+    message = record.messagesById.first();
+  }
+
+  // Return array with all removed messages.
+  return removedMessages;
 }
 
 exports.messages = messages;

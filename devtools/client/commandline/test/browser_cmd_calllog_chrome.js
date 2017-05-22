@@ -53,64 +53,60 @@ tests.testCallLogStatus = function (options) {
 };
 
 tests.testCallLogExec = function (options) {
-  let deferred = promise.defer();
+  return new Promise((resolve, reject) => {
+    function onWebConsoleOpen(subject) {
+      Services.obs.removeObserver(onWebConsoleOpen, "web-console-created");
 
-  function onWebConsoleOpen(subject) {
-    Services.obs.removeObserver(onWebConsoleOpen, "web-console-created");
+      subject.QueryInterface(Ci.nsISupportsString);
+      let hud = HUDService.getHudReferenceById(subject.data);
+      ok(hud, "console open");
 
-    subject.QueryInterface(Ci.nsISupportsString);
-    let hud = HUDService.getHudReferenceById(subject.data);
-    ok(hud, "console open");
+      helpers.audit(options, [
+        {
+          setup: "calllog chromestop",
+          exec: {
+            output: /Stopped call logging/,
+          }
+        },
+        {
+          setup: "calllog chromestart javascript XXX",
+          exec: {
+            output: /following exception/,
+          }
+        },
+        {
+          setup: "console clear",
+          exec: {
+            output: "",
+          },
+          post: function () {
+            let labels = hud.jsterm.outputNode.querySelectorAll(".webconsole-msg-output");
+            is(labels.length, 0, "no output in console");
+          }
+        },
+        {
+          setup: "console close",
+          exec: {
+            output: "",
+          },
+        },
+      ]).then(resolve);
+    }
+    Services.obs.addObserver(onWebConsoleOpen, "web-console-created", false);
 
     helpers.audit(options, [
       {
         setup: "calllog chromestop",
         exec: {
-          output: /Stopped call logging/,
+          output: /No call logging/
         }
       },
       {
-        setup: "calllog chromestart javascript XXX",
+        setup: "calllog chromestart javascript \"({a1: function() {this.a2()},a2: function() {}});\"",
         exec: {
-          output: /following exception/,
+          output: /Call logging started/,
         }
       },
-      {
-        setup: "console clear",
-        exec: {
-          output: "",
-        },
-        post: function () {
-          let labels = hud.jsterm.outputNode.querySelectorAll(".webconsole-msg-output");
-          is(labels.length, 0, "no output in console");
-        }
-      },
-      {
-        setup: "console close",
-        exec: {
-          output: "",
-        },
-      },
-    ]).then(function () {
-      deferred.resolve();
-    });
-  }
-  Services.obs.addObserver(onWebConsoleOpen, "web-console-created");
-
-  helpers.audit(options, [
-    {
-      setup: "calllog chromestop",
-      exec: {
-        output: /No call logging/
-      }
-    },
-    {
-      setup: "calllog chromestart javascript \"({a1: function() {this.a2()},a2: function() {}});\"",
-      exec: {
-        output: /Call logging started/,
-      }
-    },
-  ]);
-
-  return deferred.promise;
+    ]);
+  });
 };
