@@ -282,12 +282,32 @@ CustomizeMode.prototype = {
       window.PanelUI.hide();
 
       let panelHolder = document.getElementById("customization-panelHolder");
+      let panelContainer = document.getElementById("customization-panel-container");
+      let customizationContainer = document.getElementById("customization-container");
+      let paletteContainer = document.getElementById("customization-palette-container");
+      let contentContainer = document.getElementById("customization-content-container");
+      let footer = document.getElementById("customization-footer");
+      let doneButton = document.getElementById("customization-done-button");
       if (gPhotonStructure) {
+        if (!customizationContainer.hasAttribute("photon")) {
+          contentContainer.appendChild(paletteContainer);
+          contentContainer.appendChild(panelContainer);
+          customizationContainer.appendChild(footer);
+          customizationContainer.setAttribute("photon", "true");
+          doneButton.hidden = false;
+        }
         panelHolder.appendChild(window.PanelUI.overflowFixedList);
         window.PanelUI.overflowFixedList.setAttribute("customizing", true);
         window.PanelUI.menuButton.disabled = true;
         document.getElementById("nav-bar-overflow-button").disabled = true;
       } else {
+        if (customizationContainer.hasAttribute("photon")) {
+          customizationContainer.insertBefore(paletteContainer, contentContainer);
+          customizationContainer.appendChild(panelContainer);
+          paletteContainer.appendChild(footer);
+          customizationContainer.removeAttribute("photon");
+          doneButton.hidden = true;
+        }
         window.PanelUI.menuButton.addEventListener("command", this);
         window.PanelUI.menuButton.open = true;
         window.PanelUI.beginBatchUpdate();

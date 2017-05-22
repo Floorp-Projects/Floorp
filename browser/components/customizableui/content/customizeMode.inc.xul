@@ -2,8 +2,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<hbox id="customization-container" flex="1" hidden="true">
-  <vbox flex="1" id="customization-palette-container">
+<box id="customization-container" flex="1" hidden="true">
+  <box flex="1" id="customization-palette-container">
     <label id="customization-header">
       &customizeMode.menuAndToolbars.header2;
     </label>
@@ -62,8 +62,14 @@
               oncommand="gCustomizeMode.reset();"
               label="&customizeMode.restoreDefaults;"
               class="customizationmode-button"/>
+      <button id="customization-done-button"
+              hidden="true"
+              oncommand="gCustomizeMode.exit();"
+              label="&customizeMode.done;"
+              class="customizationmode-button"/>
     </hbox>
-  </vbox>
+  </box>
+  <box id="customization-content-container"/>
   <vbox id="customization-panel-container">
     <vbox id="customization-panelWrapper">
       <html:style html:type="text/html" scoped="scoped">
@@ -79,4 +85,4 @@
       </box>
     </vbox>
   </vbox>
-</hbox>
+</box>
