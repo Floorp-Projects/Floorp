@@ -30,8 +30,10 @@ using mozilla::Telemetry::Common::IsExpiredVersion;
 using mozilla::Telemetry::Common::CanRecordDataset;
 using mozilla::Telemetry::Common::IsInDataset;
 using mozilla::Telemetry::Common::LogToBrowserConsole;
+using mozilla::Telemetry::Common::GetNameForProcessID;
 using mozilla::Telemetry::ScalarActionType;
 using mozilla::Telemetry::ScalarVariant;
+using mozilla::Telemetry::ProcessID;
 
 namespace TelemetryIPCAccumulator = mozilla::TelemetryIPCAccumulator;
 
@@ -999,7 +1001,8 @@ internal_GetEnumByScalarName(const nsACString& aName, mozilla::Telemetry::Scalar
  *   valid pointer to a scalar type.
  */
 nsresult
-internal_GetScalarByEnum(mozilla::Telemetry::ScalarID aId, GeckoProcessType aProcessStorage,
+internal_GetScalarByEnum(mozilla::Telemetry::ScalarID aId,
+                         ProcessID aProcessStorage,
                          ScalarBase** aRet)
 {
   if (!IsValidEnumId(aId)) {
@@ -1086,7 +1089,7 @@ internal_UpdateScalar(const nsACString& aName, ScalarActionType aType,
 
   // Finally get the scalar.
   ScalarBase* scalar = nullptr;
-  rv = internal_GetScalarByEnum(id, GeckoProcessType_Default, &scalar);
+  rv = internal_GetScalarByEnum(id, ProcessID::Parent, &scalar);
   if (NS_FAILED(rv)) {
     // Don't throw on expired scalars.
     if (rv == NS_ERROR_NOT_AVAILABLE) {
@@ -1135,7 +1138,8 @@ namespace {
  *   valid pointer to a scalar type.
  */
 nsresult
-internal_GetKeyedScalarByEnum(mozilla::Telemetry::ScalarID aId, GeckoProcessType aProcessStorage,
+internal_GetKeyedScalarByEnum(mozilla::Telemetry::ScalarID aId,
+                              ProcessID aProcessStorage,
                               KeyedScalar** aRet)
 {
   if (!IsValidEnumId(aId)) {
@@ -1228,7 +1232,7 @@ internal_UpdateKeyedScalar(const nsACString& aName, const nsAString& aKey,
 
   // Finally get the scalar.
   KeyedScalar* scalar = nullptr;
-  rv = internal_GetKeyedScalarByEnum(id, GeckoProcessType_Default, &scalar);
+  rv = internal_GetKeyedScalarByEnum(id, ProcessID::Parent, &scalar);
   if (NS_FAILED(rv)) {
     // Don't throw on expired scalars.
     if (rv == NS_ERROR_NOT_AVAILABLE) {
@@ -1416,7 +1420,7 @@ TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
   }
 
   ScalarBase* scalar = nullptr;
-  nsresult rv = internal_GetScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  nsresult rv = internal_GetScalarByEnum(aId, ProcessID::Parent, &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1455,7 +1459,7 @@ TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
   }
 
   KeyedScalar* scalar = nullptr;
-  nsresult rv = internal_GetKeyedScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  nsresult rv = internal_GetKeyedScalarByEnum(aId, ProcessID::Parent, &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1564,7 +1568,7 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
   }
 
   ScalarBase* scalar = nullptr;
-  nsresult rv = internal_GetScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  nsresult rv = internal_GetScalarByEnum(aId, ProcessID::Parent, &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1601,7 +1605,7 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aValue)
   }
 
   ScalarBase* scalar = nullptr;
-  nsresult rv = internal_GetScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  nsresult rv = internal_GetScalarByEnum(aId, ProcessID::Parent, &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1638,7 +1642,7 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, bool aValue)
   }
 
   ScalarBase* scalar = nullptr;
-  nsresult rv = internal_GetScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  nsresult rv = internal_GetScalarByEnum(aId, ProcessID::Parent, &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1677,7 +1681,7 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
   }
 
   KeyedScalar* scalar = nullptr;
-  nsresult rv = internal_GetKeyedScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  nsresult rv = internal_GetKeyedScalarByEnum(aId, ProcessID::Parent, &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1716,7 +1720,7 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
   }
 
   KeyedScalar* scalar = nullptr;
-  nsresult rv = internal_GetKeyedScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  nsresult rv = internal_GetKeyedScalarByEnum(aId, ProcessID::Parent, &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1825,7 +1829,7 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
   }
 
   ScalarBase* scalar = nullptr;
-  nsresult rv = internal_GetScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  nsresult rv = internal_GetScalarByEnum(aId, ProcessID::Parent, &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1864,7 +1868,7 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& a
   }
 
   KeyedScalar* scalar = nullptr;
-  nsresult rv = internal_GetKeyedScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  nsresult rv = internal_GetKeyedScalarByEnum(aId, ProcessID::Parent, &scalar);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1944,8 +1948,7 @@ TelemetryScalar::CreateSnapshots(unsigned int aDataset, bool aClearScalars, JSCo
   // Reflect it to JS.
   for (auto iter = scalarsToReflect.Iter(); !iter.Done(); iter.Next()) {
     ScalarArray& processScalars = iter.Data();
-    const char* processName =
-      XRE_ChildProcessTypeToString(static_cast<GeckoProcessType>(iter.Key()));
+    const char* processName = GetNameForProcessID(ProcessID(iter.Key()));
 
     // Create the object that will hold the scalars for this process and add it
     // to the returned root object.
@@ -2048,8 +2051,7 @@ TelemetryScalar::CreateKeyedSnapshots(unsigned int aDataset, bool aClearScalars,
   // Reflect it to JS.
   for (auto iter = scalarsToReflect.Iter(); !iter.Done(); iter.Next()) {
     ScalarArray& processScalars = iter.Data();
-    const char* processName =
-      XRE_ChildProcessTypeToString(static_cast<GeckoProcessType>(iter.Key()));
+    const char* processName = GetNameForProcessID(ProcessID(iter.Key()));
 
     // Create the object that will hold the scalars for this process and add it
     // to the returned root object.
@@ -2146,7 +2148,7 @@ TelemetryScalar::GetScalarSizesOfIncludingThis(mozilla::MallocSizeOf aMallocSize
 }
 
 void
-TelemetryScalar::UpdateChildData(GeckoProcessType aProcessType,
+TelemetryScalar::UpdateChildData(ProcessID aProcessType,
                                  const nsTArray<mozilla::Telemetry::ScalarAction>& aScalarActions)
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
@@ -2237,7 +2239,7 @@ TelemetryScalar::UpdateChildData(GeckoProcessType aProcessType,
 }
 
 void
-TelemetryScalar::UpdateChildKeyedData(GeckoProcessType aProcessType,
+TelemetryScalar::UpdateChildKeyedData(ProcessID aProcessType,
                                       const nsTArray<mozilla::Telemetry::KeyedScalarAction>& aScalarActions)
 {
   MOZ_ASSERT(XRE_IsParentProcess(),

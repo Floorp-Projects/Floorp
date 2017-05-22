@@ -37,6 +37,7 @@ using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
 using mozilla::Telemetry::Accumulation;
 using mozilla::Telemetry::KeyedAccumulation;
+using mozilla::Telemetry::ProcessID;
 using mozilla::Telemetry::Common::LogToBrowserConsole;
 
 namespace TelemetryIPCAccumulator = mozilla::TelemetryIPCAccumulator;
@@ -102,6 +103,7 @@ namespace TelemetryIPCAccumulator = mozilla::TelemetryIPCAccumulator;
 #define KEYED_HISTOGRAM_NAME_SEPARATOR "#"
 #define CONTENT_HISTOGRAM_SUFFIX "#content"
 #define GPU_HISTOGRAM_SUFFIX "#gpu"
+#define EXTENSION_HISTOGRAM_SUFFIX "#extension"
 
 namespace {
 
@@ -385,28 +387,33 @@ internal_HistogramGet(const char *name, const char *expiration,
 
 // Read the process type from the given histogram name. The process type, if
 // one exists, is embedded in a suffix.
-GeckoProcessType
+mozilla::Telemetry::ProcessID
 GetProcessFromName(const nsACString& aString)
 {
   if (StringEndsWith(aString, NS_LITERAL_CSTRING(CONTENT_HISTOGRAM_SUFFIX))) {
-    return GeckoProcessType_Content;
+    return ProcessID::Content;
   }
   if (StringEndsWith(aString, NS_LITERAL_CSTRING(GPU_HISTOGRAM_SUFFIX))) {
-    return GeckoProcessType_GPU;
+    return ProcessID::Gpu;
   }
-  return GeckoProcessType_Default;
+  if (StringEndsWith(aString, NS_LITERAL_CSTRING(EXTENSION_HISTOGRAM_SUFFIX))) {
+    return ProcessID::Extension;
+  }
+  return ProcessID::Parent;
 }
 
 const char*
-SuffixForProcessType(GeckoProcessType aProcessType)
+SuffixForProcessType(mozilla::Telemetry::ProcessID aProcessType)
 {
   switch (aProcessType) {
-    case GeckoProcessType_Default:
+    case ProcessID::Parent:
       return nullptr;
-    case GeckoProcessType_Content:
+    case ProcessID::Content:
       return CONTENT_HISTOGRAM_SUFFIX;
-    case GeckoProcessType_GPU:
+    case ProcessID::Gpu:
       return GPU_HISTOGRAM_SUFFIX;
+    case ProcessID::Extension:
+      return EXTENSION_HISTOGRAM_SUFFIX;
     default:
       MOZ_ASSERT_UNREACHABLE("unknown process type");
       return nullptr;
@@ -417,7 +424,7 @@ CharPtrEntryType*
 internal_GetHistogramMapEntry(const char* aName)
 {
   nsDependentCString name(aName);
-  GeckoProcessType process = GetProcessFromName(name);
+  ProcessID process = GetProcessFromName(name);
   const char* suffix = SuffixForProcessType(process);
   if (!suffix) {
     return gHistogramMap.GetEntry(aName);
@@ -444,23 +451,28 @@ internal_GetHistogramEnumId(const char *name, mozilla::Telemetry::HistogramID *i
 
 // O(1) histogram lookup by numeric id
 nsresult
-internal_GetHistogramByEnumId(mozilla::Telemetry::HistogramID id, Histogram **ret, GeckoProcessType aProcessType)
+internal_GetHistogramByEnumId(mozilla::Telemetry::HistogramID id, Histogram **ret,
+                              ProcessID aProcessType)
 {
   static Histogram* knownHistograms[mozilla::Telemetry::HistogramCount] = {0};
   static Histogram* knownContentHistograms[mozilla::Telemetry::HistogramCount] = {0};
   static Histogram* knownGPUHistograms[mozilla::Telemetry::HistogramCount] = {0};
+  static Histogram* knownExtensionHistograms[mozilla::Telemetry::HistogramCount] = {0};
 
   Histogram** knownList = nullptr;
 
   switch (aProcessType) {
-  case GeckoProcessType_Default:
+  case ProcessID::Parent:
     knownList = knownHistograms;
     break;
-  case GeckoProcessType_Content:
+  case ProcessID::Content:
     knownList = knownContentHistograms;
     break;
-  case GeckoProcessType_GPU:
+  case ProcessID::Gpu:
     knownList = knownGPUHistograms;
+    break;
+  case ProcessID::Extension:
+    knownList = knownExtensionHistograms;
     break;
   default:
     MOZ_ASSERT_UNREACHABLE("unknown process type");
@@ -521,7 +533,7 @@ internal_GetHistogramByName(const nsACString &name, Histogram **ret)
     return rv;
   }
 
-  GeckoProcessType process = GetProcessFromName(name);
+  ProcessID process = GetProcessFromName(name);
   rv = internal_GetHistogramByEnumId(id, ret, process);
   if (NS_FAILED(rv))
     return rv;
@@ -562,7 +574,7 @@ internal_CloneHistogram(const nsACString& newName,
   return clone;
 }
 
-GeckoProcessType
+ProcessID
 GetProcessFromName(const std::string& aString)
 {
   nsDependentCString string(aString.c_str(), aString.length());
@@ -582,19 +594,23 @@ internal_GetSubsessionHistogram(Histogram& existing)
   static Histogram* subsession[mozilla::Telemetry::HistogramCount] = {};
   static Histogram* subsessionContent[mozilla::Telemetry::HistogramCount] = {};
   static Histogram* subsessionGPU[mozilla::Telemetry::HistogramCount] = {};
+  static Histogram* subsessionExtension[mozilla::Telemetry::HistogramCount] = {};
 
   Histogram** cache = nullptr;
 
-  GeckoProcessType process = GetProcessFromName(existing.histogram_name());
+  ProcessID process = GetProcessFromName(existing.histogram_name());
   switch (process) {
-  case GeckoProcessType_Default:
+  case ProcessID::Parent:
     cache = subsession;
     break;
-  case GeckoProcessType_Content:
+  case ProcessID::Content:
     cache = subsessionContent;
     break;
-  case GeckoProcessType_GPU:
+  case ProcessID::Gpu:
     cache = subsessionGPU;
+    break;
+  case ProcessID::Extension:
+    cache = subsessionExtension;
     break;
   default:
     MOZ_ASSERT_UNREACHABLE("unknown process type");
@@ -1148,7 +1164,7 @@ internal_SetHistogramRecordingEnabled(mozilla::Telemetry::HistogramID aID, bool 
     }
   } else {
     Histogram *h;
-    nsresult rv = internal_GetHistogramByEnumId(aID, &h, GeckoProcessType_Default);
+    nsresult rv = internal_GetHistogramByEnumId(aID, &h, ProcessID::Parent);
     if (NS_SUCCEEDED(rv)) {
       h->SetRecordingEnabled(aEnabled);
       return;
@@ -1165,7 +1181,7 @@ internal_RemoteAccumulate(mozilla::Telemetry::HistogramID aId, uint32_t aSample)
     return false;
   }
   Histogram *h;
-  nsresult rv = internal_GetHistogramByEnumId(aId, &h, GeckoProcessType_Default);
+  nsresult rv = internal_GetHistogramByEnumId(aId, &h, ProcessID::Parent);
   if (NS_SUCCEEDED(rv) && !h->IsRecordingEnabled()) {
     return true;
   }
@@ -1198,7 +1214,7 @@ void internal_Accumulate(mozilla::Telemetry::HistogramID aHistogram, uint32_t aS
     return;
   }
   Histogram *h;
-  nsresult rv = internal_GetHistogramByEnumId(aHistogram, &h, GeckoProcessType_Default);
+  nsresult rv = internal_GetHistogramByEnumId(aHistogram, &h, ProcessID::Parent);
   if (NS_SUCCEEDED(rv)) {
     internal_HistogramAdd(*h, aSample, gHistograms[aHistogram].dataset);
   }
@@ -1250,7 +1266,7 @@ internal_Accumulate(KeyedHistogram& aKeyed,
 }
 
 void
-internal_AccumulateChild(GeckoProcessType aProcessType, mozilla::Telemetry::HistogramID aId, uint32_t aSample)
+internal_AccumulateChild(ProcessID aProcessType, mozilla::Telemetry::HistogramID aId, uint32_t aSample)
 {
   if (!internal_CanRecordBase()) {
     return;
@@ -1265,7 +1281,7 @@ internal_AccumulateChild(GeckoProcessType aProcessType, mozilla::Telemetry::Hist
 }
 
 void
-internal_AccumulateChildKeyed(GeckoProcessType aProcessType, mozilla::Telemetry::HistogramID aId,
+internal_AccumulateChildKeyed(ProcessID aProcessType, mozilla::Telemetry::HistogramID aId,
                               const nsCString& aKey, uint32_t aSample)
 {
   if (!gInitDone || !internal_CanRecordBase()) {
@@ -1861,6 +1877,12 @@ void TelemetryHistogram::InitializeGlobalState(bool canRecordBase,
       gKeyedHistograms.Put(gpuId,
                            new KeyedHistogram(id, expiration, h.histogramType,
                                               h.min, h.max, h.bucketCount, h.dataset));
+
+      nsCString extensionId(id);
+      extensionId.AppendLiteral(EXTENSION_HISTOGRAM_SUFFIX);
+      gKeyedHistograms.Put(extensionId,
+                           new KeyedHistogram(id, expiration, h.histogramType,
+                                              h.min, h.max, h.bucketCount, h.dataset));
     }
   }
 
@@ -2049,7 +2071,7 @@ TelemetryHistogram::AccumulateCategorical(mozilla::Telemetry::HistogramID aId,
 }
 
 void
-TelemetryHistogram::AccumulateChild(GeckoProcessType aProcessType,
+TelemetryHistogram::AccumulateChild(ProcessID aProcessType,
                                     const nsTArray<Accumulation>& aAccumulations)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -2068,7 +2090,7 @@ TelemetryHistogram::AccumulateChild(GeckoProcessType aProcessType,
 }
 
 void
-TelemetryHistogram::AccumulateChildKeyed(GeckoProcessType aProcessType,
+TelemetryHistogram::AccumulateChildKeyed(ProcessID aProcessType,
                                          const nsTArray<KeyedAccumulation>& aAccumulations)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -2164,14 +2186,11 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
       mozilla::DebugOnly<nsresult> rv;
       mozilla::Telemetry::HistogramID id = mozilla::Telemetry::HistogramID(i);
 
-      rv = internal_GetHistogramByEnumId(id, &h, GeckoProcessType_Default);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-      rv = internal_GetHistogramByEnumId(id, &h, GeckoProcessType_Content);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-      if (includeGPUProcess) {
-        rv = internal_GetHistogramByEnumId(id, &h, GeckoProcessType_GPU);
+      for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
+        if ((ProcessID(process) == ProcessID::Gpu) && !includeGPUProcess) {
+          continue;
+        }
+        rv = internal_GetHistogramByEnumId(id, &h, ProcessID(process));
         MOZ_ASSERT(NS_SUCCEEDED(rv));
       }
     }
@@ -2190,8 +2209,6 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
 
   // OK, now we can actually reflect things.
   JS::Rooted<JSObject*> hobj(cx);
-  GeckoProcessType const processTypes[] = { GeckoProcessType_Default, GeckoProcessType_Content, GeckoProcessType_GPU };
-  size_t numProcessTypes = (includeGPUProcess ? 3 : 2);
   for (size_t i = 0; i < mozilla::Telemetry::HistogramCount; ++i) {
     if (gHistograms[i].keyed) {
       continue;
@@ -2200,8 +2217,11 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
     Histogram* h = nullptr;
     mozilla::Telemetry::HistogramID id = mozilla::Telemetry::HistogramID(i);
 
-    for (size_t type = 0; type < numProcessTypes; ++type) {
-      nsresult rv = internal_GetHistogramByEnumId(id, &h, processTypes[type]);
+    for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
+      if ((ProcessID(process) == ProcessID::Gpu) && !includeGPUProcess) {
+        continue;
+      }
+      nsresult rv = internal_GetHistogramByEnumId(id, &h, ProcessID(process));
       if (NS_WARN_IF(NS_FAILED(rv)) || !internal_ShouldReflectHistogram(h) ||
         internal_IsEmpty(h) || internal_IsExpired(h)) {
         continue;
