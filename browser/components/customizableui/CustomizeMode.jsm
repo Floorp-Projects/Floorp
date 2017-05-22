@@ -110,7 +110,7 @@ function CustomizeMode(aWindow) {
     lwthemeButton.setAttribute("hidden", "true");
   }
   if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
-    this._updateTitlebarButton();
+    this._updateTitlebarCheckbox();
     Services.prefs.addObserver(kDrawInTitlebarPref, this);
   }
   this.window.addEventListener("unload", this);
@@ -1548,7 +1548,7 @@ CustomizeMode.prototype = {
         this._updateResetButton();
         this._updateUndoResetButton();
         if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
-          this._updateTitlebarButton();
+          this._updateTitlebarCheckbox();
         }
         break;
       case "lightweight-theme-window-updated":
@@ -1560,17 +1560,19 @@ CustomizeMode.prototype = {
     }
   },
 
-  _updateTitlebarButton() {
+  _updateTitlebarCheckbox() {
     if (!AppConstants.CAN_DRAW_IN_TITLEBAR) {
       return;
     }
     let drawInTitlebar = Services.prefs.getBoolPref(kDrawInTitlebarPref, true);
-    let button = this.document.getElementById("customization-titlebar-visibility-button");
-    // Drawing in the titlebar means 'hiding' the titlebar:
+    let checkbox = this.document.getElementById("customization-titlebar-visibility-checkbox");
+    // Drawing in the titlebar means 'hiding' the titlebar.
+    // We use the attribute rather than a property because if we're not in
+    // customize mode the button is hidden and properties don't work.
     if (drawInTitlebar) {
-      button.removeAttribute("checked");
+      checkbox.removeAttribute("checked");
     } else {
-      button.setAttribute("checked", "true");
+      checkbox.setAttribute("checked", "true");
     }
   },
 
