@@ -31,6 +31,8 @@ sandbox::BrokerServices *SandboxBroker::sBrokerService = nullptr;
 static UniquePtr<nsString> sBinDir;
 static UniquePtr<nsString> sProfileDir;
 static UniquePtr<nsString> sContentTempDir;
+static UniquePtr<nsString> sRoamingAppDataDir;
+static UniquePtr<nsString> sLocalAppDataDir;
 
 static LazyLogModule sSandboxBrokerLog("SandboxBroker");
 
@@ -86,6 +88,8 @@ SandboxBroker::CacheRulesDirectories()
   CacheDirAndAutoClear(dirSvc, NS_GRE_DIR, &sBinDir);
   CacheDirAndAutoClear(dirSvc, NS_APP_USER_PROFILE_50_DIR, &sProfileDir);
   CacheDirAndAutoClear(dirSvc, NS_APP_CONTENT_PROCESS_TEMP_DIR, &sContentTempDir);
+  CacheDirAndAutoClear(dirSvc, NS_WIN_APPDATA_DIR, &sRoamingAppDataDir);
+  CacheDirAndAutoClear(dirSvc, NS_WIN_LOCAL_APPDATA_DIR, &sLocalAppDataDir);
 }
 
 SandboxBroker::SandboxBroker()
@@ -565,6 +569,41 @@ SandboxBroker::SetSecurityLevelForPluginProcess(int32_t aSandboxLevel)
   SANDBOX_ENSURE_SUCCESS(result,
                          "Invalid flags for SetProcessMitigations.");
 
+  if (aSandboxLevel >= 2) {
+    // Level 2 and above uses low integrity, so we need to give write access to
+    // the Flash directories.
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_ANY,
+                     sRoamingAppDataDir,
+                     NS_LITERAL_STRING("\\Macromedia\\Flash Player\\*"));
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_ANY,
+                     sLocalAppDataDir,
+                     NS_LITERAL_STRING("\\Macromedia\\Flash Player\\*"));
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_ANY,
+                     sRoamingAppDataDir,
+                     NS_LITERAL_STRING("\\Adobe\\Flash Player\\*"));
+
+    // Access also has to be given to create the parent directories as they may
+    // not exist.
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
+                     sRoamingAppDataDir,
+                     NS_LITERAL_STRING("\\Macromedia"));
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
+                     sRoamingAppDataDir,
+                     NS_LITERAL_STRING("\\Macromedia\\Flash Player"));
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
+                     sLocalAppDataDir,
+                     NS_LITERAL_STRING("\\Macromedia"));
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
+                     sLocalAppDataDir,
+                     NS_LITERAL_STRING("\\Macromedia\\Flash Player"));
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
+                     sRoamingAppDataDir,
+                     NS_LITERAL_STRING("\\Adobe"));
+    AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
+                     sRoamingAppDataDir,
+                     NS_LITERAL_STRING("\\Adobe\\Flash Player"));
+  }
+
   // Add the policy for the client side of a pipe. It is just a file
   // in the \pipe\ namespace. We restrict it to pipes that start with
   // "chrome." so the sandboxed process cannot connect to system services.
@@ -593,13 +632,6 @@ SandboxBroker::SetSecurityLevelForPluginProcess(int32_t aSandboxLevel)
   result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_HANDLES,
                             sandbox::TargetPolicy::HANDLES_DUP_BROKER,
                             L"Section");
-  SANDBOX_ENSURE_SUCCESS(result,
-                         "With these static arguments AddRule should never fail, what happened?");
-
-  // The following is required for the Java plugin.
-  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
-                            sandbox::TargetPolicy::FILES_ALLOW_ANY,
-                            L"\\??\\pipe\\jpi2_pid*_pipe*");
   SANDBOX_ENSURE_SUCCESS(result,
                          "With these static arguments AddRule should never fail, what happened?");
 
@@ -792,45 +824,6 @@ SandboxBroker::AllowReadFile(wchar_t const *file)
                      file);
   if (sandbox::SBOX_ALL_OK != result) {
     LOG_E("Failed (ResultCode %d) to add read access to: %S", result, file);
-    return false;
-  }
-
-  return true;
-}
-
-bool
-SandboxBroker::AllowReadWriteFile(wchar_t const *file)
-{
-  if (!mPolicy) {
-    return false;
-  }
-
-  auto result =
-    mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
-                     sandbox::TargetPolicy::FILES_ALLOW_ANY,
-                     file);
-  if (sandbox::SBOX_ALL_OK != result) {
-    LOG_E("Failed (ResultCode %d) to add read/write access to: %S",
-          result, file);
-    return false;
-  }
-
-  return true;
-}
-
-bool
-SandboxBroker::AllowDirectory(wchar_t const *dir)
-{
-  if (!mPolicy) {
-    return false;
-  }
-
-  auto result =
-    mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
-                     sandbox::TargetPolicy::FILES_ALLOW_DIR_ANY,
-                     dir);
-  if (sandbox::SBOX_ALL_OK != result) {
-    LOG_E("Failed (ResultCode %d) to add directory access to: %S", result, dir);
     return false;
   }
 
