@@ -459,6 +459,7 @@ nsThread::ThreadFunc(void* aArg)
   nsThread* self = initData->thread;  // strong reference
 
   self->mThread = PR_GetCurrentThread();
+  self->mVirtualThread = GetCurrentVirtualThread();
   SetupCurrentThreadForChaosMode();
 
   if (!initData->name.IsEmpty()) {
@@ -705,6 +706,7 @@ nsresult
 nsThread::InitCurrentThread()
 {
   mThread = PR_GetCurrentThread();
+  mVirtualThread = GetCurrentVirtualThread();
   SetupCurrentThreadForChaosMode();
 
   mIdlePeriod = new IdlePeriod();
@@ -887,6 +889,13 @@ nsThread::IsOnCurrentThread(bool* aResult)
 {
   *aResult = (PR_GetCurrentThread() == mThread);
   return NS_OK;
+}
+
+NS_IMETHODIMP_(bool)
+nsThread::IsOnCurrentThreadInfallible()
+{
+  // Rely on mVirtualThread being correct.
+  MOZ_CRASH("IsOnCurrentThreadInfallible should never be called on nsIThread");
 }
 
 //-----------------------------------------------------------------------------
@@ -1684,4 +1693,10 @@ NS_IMETHODIMP
 nsThread::nsNestedEventTarget::IsOnCurrentThread(bool* aResult)
 {
   return mThread->IsOnCurrentThread(aResult);
+}
+
+NS_IMETHODIMP_(bool)
+nsThread::nsNestedEventTarget::IsOnCurrentThreadInfallible()
+{
+  return mThread->IsOnCurrentThread();
 }

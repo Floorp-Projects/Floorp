@@ -24,7 +24,7 @@ native alreadyAddRefed_nsIIdlePeriod(already_AddRefed<nsIIdlePeriod>);
  *
  * See nsIThreadManager for the API used to create and locate threads.
  */
-[scriptable, uuid(5801d193-29d1-4964-a6b7-70eb697ddf2b)]
+[builtinclass, scriptable, uuid(5801d193-29d1-4964-a6b7-70eb697ddf2b)]
 interface nsIThread : nsIEventTarget
 {
   /**

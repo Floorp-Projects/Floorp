@@ -56,6 +56,12 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD_(bool)
+  IsOnCurrentThreadInfallible() override
+  {
+    return mTaskQueue->mTarget->IsOnCurrentThread();
+  }
+
   NS_DECL_THREADSAFE_ISUPPORTS
 };
 

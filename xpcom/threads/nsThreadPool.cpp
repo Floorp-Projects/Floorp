@@ -282,6 +282,20 @@ nsThreadPool::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP_(bool)
+nsThreadPool::IsOnCurrentThreadInfallible()
+{
+  MutexAutoLock lock(mMutex);
+
+  nsIThread* thread = NS_GetCurrentThread();
+  for (uint32_t i = 0; i < static_cast<uint32_t>(mThreads.Count()); ++i) {
+    if (mThreads[i] == thread) {
+      return true;
+    }
+  }
+  return false;
+}
+
 NS_IMETHODIMP
 nsThreadPool::IsOnCurrentThread(bool* aResult)
 {

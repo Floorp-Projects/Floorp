@@ -173,6 +173,14 @@ nsSocketTransportService::IsOnCurrentThread(bool *result)
     return thread->IsOnCurrentThread(result);
 }
 
+NS_IMETHODIMP_(bool)
+nsSocketTransportService::IsOnCurrentThreadInfallible()
+{
+    nsCOMPtr<nsIThread> thread = GetThreadSafely();
+    NS_ENSURE_TRUE(thread, false);
+    return thread->IsOnCurrentThread();
+}
+
 //-----------------------------------------------------------------------------
 // socket api (socket thread only)
 
