@@ -10,8 +10,8 @@ include numeral/reftest.list
 fuzzy-if(gtkWidget,255,17) == bidi-004.html bidi-004-ref.html # inconsistency in the Hebrew font that gets used
 fuzzy-if(gtkWidget,255,17) == bidi-004-j.html bidi-004-ref.html # inconsistency in the Hebrew font that gets used
 == bidi-005.html bidi-005-ref.html
-random-if(cocoaWidget) fails-if(stylo) == bidi-006.html bidi-006-ref.html # bug 734313
-random-if(cocoaWidget) fails-if(stylo) == bidi-006-j.html bidi-006-ref.html # bug 734313
+random-if(cocoaWidget) == bidi-006.html bidi-006-ref.html # bug 734313
+random-if(cocoaWidget) == bidi-006-j.html bidi-006-ref.html # bug 734313
 == bidiSVG-01.svg bidiSVG-01-ref.svg
 == bidiSVG-02.svg bidiSVG-02-ref.svg
 == bidiSVG-03.svg bidiSVG-03-ref.svg

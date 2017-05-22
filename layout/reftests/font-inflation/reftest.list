@@ -39,10 +39,10 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceE
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == css-transform-2.html css-transform-2-ref.html
 fuzzy-if(asyncPan&&!layersGPUAccelerated,102,1764) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == container-with-clamping.html container-with-clamping-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) skip-if(stylo) load video-1.html
-test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) fails-if(stylo) HTTP(..) == intrinsic-min-1.html intrinsic-min-1-ref.html
-test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) fails-if(stylo) HTTP(..) == intrinsic-max-1.html intrinsic-max-1-ref.html
-test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) fails-if(stylo) HTTP(..) == intrinsic-fit-1a.html intrinsic-fit-1a-ref.html
-test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) fails-if(stylo) HTTP(..) == intrinsic-fit-1b.html intrinsic-fit-1b-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-min-1.html intrinsic-min-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-max-1.html intrinsic-max-1-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-1a.html intrinsic-fit-1a-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-1b.html intrinsic-fit-1b-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-1c.html intrinsic-fit-1c-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-2a.html intrinsic-fit-1a-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-2b.html intrinsic-fit-1b-ref.html

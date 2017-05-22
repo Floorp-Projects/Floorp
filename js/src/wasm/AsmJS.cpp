@@ -7510,8 +7510,11 @@ static bool
 HasPureCoercion(JSContext* cx, HandleValue v)
 {
     // Unsigned SIMD types are not allowed in function signatures.
-    if (IsVectorObject<Int32x4>(v) || IsVectorObject<Float32x4>(v) || IsVectorObject<Bool32x4>(v))
+    if (IsVectorObject<Int32x4>(v) || IsVectorObject<Int16x8>(v) ||  IsVectorObject<Int8x16>(v) ||
+        IsVectorObject<Bool32x4>(v) || IsVectorObject<Bool16x8>(v) ||
+        IsVectorObject<Bool8x16>(v) || IsVectorObject<Float32x4>(v)) {
         return true;
+    }
 
     // Ideally, we'd reject all non-SIMD non-primitives, but Emscripten has a
     // bug that generates code that passes functions for some imports. To avoid

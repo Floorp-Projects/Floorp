@@ -125,6 +125,6 @@ fails-if(stylo) == image-srcset-svg-3x.html image-srcset-svg-3x-ref.html
 == image-srcset-svg-default-1x.html image-srcset-svg-default-1x-ref.html
 
 == image-resize-percent-height.html image-resize-ref.html
-fails-if(stylo) == image-resize-percent-width.html image-resize-ref.html
+== image-resize-percent-width.html image-resize-ref.html
 
 == moz-broken-matching-1.html moz-broken-matching-1-ref.html

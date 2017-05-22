@@ -815,7 +815,9 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
         var k = 0;
 
         // Step 5.c, 5.e.
-        var iteratorWrapper = { [std_iterator]() { return GetIterator(items, usingIterator); } };
+        var iterator = GetIterator(items, usingIterator);
+
+        var iteratorWrapper = MakeIteratorWrapper(iterator);
         for (var nextValue of allowContentIter(iteratorWrapper)) {
             // Step 5.e.i.
             // Disabled for performance reason.  We won't hit this case on
@@ -868,6 +870,19 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
 
     // Step 19.
     return A;
+}
+
+function MakeIteratorWrapper(iterator) {
+    // This function is not inlined in ArrayFrom, because function default
+    // parameters combined with nested functions are currently not optimized
+    // correctly.
+    return {
+        // Use a named function expression instead of a method definition, so
+        // we don't create an inferred name for this function at runtime.
+        [std_iterator]: function IteratorMethod() {
+            return iterator;
+        }
+    };
 }
 
 // ES2015 22.1.3.27 Array.prototype.toString.

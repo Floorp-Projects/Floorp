@@ -1451,30 +1451,10 @@ function TypedArrayStaticFrom(source, mapfn = undefined, thisArg = undefined) {
     // Step 7.
     if (usingIterator !== undefined) {
         // Step 7.a.
-        // Inlined: 22.2.2.1.1 Runtime Semantics: IterableToList( items, method ).
-
-        // 22.2.2.1.1 IterableToList, step 1.
-        var iterator = GetIterator(source, usingIterator);
-
-        // 22.2.2.1.1 IterableToList, step 2.
-        var values = new List();
-
-        // 22.2.2.1.1 IterableToList, steps 3-4.
-        var i = 0;
-        while (true) {
-            // 22.2.2.1.1 IterableToList, step 4.a.
-            var next = callContentFunction(iterator.next, iterator);
-            if (!IsObject(next))
-                ThrowTypeError(JSMSG_ITER_METHOD_RETURNED_PRIMITIVE, "next");
-
-            // 22.2.2.1.1 IterableToList, step 4.b.
-            if (next.done)
-                break;
-            values[i++] = next.value;
-        }
+        var values = IterableToList(source, usingIterator);
 
         // Step 7.b.
-        var len = i;
+        var len = values.length;
 
         // Step 7.c.
         var targetObj = TypedArrayCreateWithLength(C, len);

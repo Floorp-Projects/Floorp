@@ -44,6 +44,26 @@ var gMainPane = {
       }
     }
 
+    this.buildContentProcessCountMenuList();
+    let processCountPref =
+      document.getElementById("dom.ipc.processCount");
+    processCountPref.addEventListener("change", () => {
+      this.updateDefaultPerformanceSettingsPref();
+    });
+    let accelerationPref =
+      document.getElementById("layers.acceleration.disabled");
+    accelerationPref.addEventListener("change", () => {
+      this.updateDefaultPerformanceSettingsPref();
+    });
+    this.updateDefaultPerformanceSettingsPref();
+
+    let defaultPerformancePref =
+      document.getElementById("browser.preferences.defaultPerformanceSettings.enabled");
+    defaultPerformancePref.addEventListener("change", () => {
+      this.updatePerformanceSettingsBox();
+    });
+    this.updatePerformanceSettingsBox();
+
     // set up the "use current page" label-changing listener
     this._updateUseCurrentButton();
     window.addEventListener("focus", this._updateUseCurrentButton.bind(this));
@@ -383,6 +403,43 @@ var gMainPane = {
   restoreDefaultHomePage() {
     var homePage = document.getElementById("browser.startup.homepage");
     homePage.value = homePage.defaultValue;
+  },
+
+  updateDefaultPerformanceSettingsPref() {
+    let defaultPerformancePref =
+      document.getElementById("browser.preferences.defaultPerformanceSettings.enabled");
+    let processCountPref = document.getElementById("dom.ipc.processCount");
+    let accelerationPref = document.getElementById("layers.acceleration.disabled");
+    if (processCountPref.value != processCountPref.defaultValue ||
+        accelerationPref.value != accelerationPref.defaultValue) {
+      defaultPerformancePref.value = false;
+    }
+  },
+
+  updatePerformanceSettingsBox() {
+    let defaultPerformancePref =
+      document.getElementById("browser.preferences.defaultPerformanceSettings.enabled");
+    let performanceSettings = document.getElementById("performanceSettings");
+    if (defaultPerformancePref.value) {
+      let processCountPref = document.getElementById("dom.ipc.processCount");
+      let accelerationPref = document.getElementById("layers.acceleration.disabled");
+      processCountPref.value = processCountPref.defaultValue;
+      accelerationPref.value = accelerationPref.defaultValue;
+      performanceSettings.hidden = true;
+    } else {
+      performanceSettings.hidden = false;
+    }
+  },
+
+  buildContentProcessCountMenuList() {
+    let processCountPref = document.getElementById("dom.ipc.processCount");
+    let bundlePreferences = document.getElementById("bundlePreferences");
+    let label = bundlePreferences.getFormattedString("defaultContentProcessCount",
+      [processCountPref.defaultValue]);
+    let contentProcessCount =
+      document.querySelector(`#contentProcessCount > menupopup >
+                              menuitem[value="${processCountPref.defaultValue}"]`);
+    contentProcessCount.label = label;
   },
 
   // DOWNLOADS

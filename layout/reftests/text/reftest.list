@@ -150,7 +150,7 @@ HTTP(..) == zwnj-02.xhtml zwnj-02-ref.xhtml # HTTP(..) for ../filters.svg
 != zwnj-01.html zwnj-01-notref.html
 == initial-zwj-1.html initial-zwj-1-ref.html
 == cgj-01.html cgj-01-ref.html
-fails-if(stylo) == 444656.html 444656-ref.html
+== 444656.html 444656-ref.html
 fails-if(stylo) == 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
 fuzzy-if(skiaContent,1,600) HTTP(..) == 475092-sub.html 475092-ref.html
@@ -186,7 +186,7 @@ HTTP(..) != fallback-mark-stacking-1.html fallback-mark-stacking-1-notref.html
 == 820255.html 820255-ref.html
 HTTP(..) != 1170688.html 1170688-ref.html
 fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1320665-cmap-format-13.html 1320665-cmap-format-13-ref.html # see bug 1320665 comments 8-9
-fails-if(stylo) HTTP(..) == 1331339-script-extensions-shaping-1.html 1331339-script-extensions-shaping-1-ref.html
+HTTP(..) == 1331339-script-extensions-shaping-1.html 1331339-script-extensions-shaping-1-ref.html
 skip-if(!cocoaWidget) != 1349308-1.html 1349308-notref.html # macOS-specific test for -apple-system glyph metrics
 
 # ensure emoji chars don't render blank (bug 715798, bug 779042);

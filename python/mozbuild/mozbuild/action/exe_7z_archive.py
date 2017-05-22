@@ -20,11 +20,11 @@ def archive_exe(pkg_dir, tagfile, sfx_package, package):
     with open(package, 'wb') as o:
         for i in [mozpath.join(tmpdir, '7zSD.sfx'), tagfile, mozpath.join(tmpdir, 'app.7z')]:
             shutil.copyfileobj(open(i, 'rb'), o)
-    os.chmod(package, 755)
+    os.chmod(package, 0755)
 
 def main(args):
     if len(args) != 4:
-        print('Usage: 7z_exe_archive.py <pkg_dir> <tagfile> <sfx_package> <package>',
+        print('Usage: exe_7z_archive.py <pkg_dir> <tagfile> <sfx_package> <package>',
               file=sys.stderr)
         return 1
     else:

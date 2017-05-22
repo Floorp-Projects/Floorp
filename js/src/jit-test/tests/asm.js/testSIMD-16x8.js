@@ -73,6 +73,21 @@ assertAsmTypeFail('glob', USE_ASM + B16x8 + "function f() {var x=b16x8(1,0,0,0, 
 assertAsmTypeFail('glob', USE_ASM + B16x8 + "function f() {var x=b16x8(1,0,0,0, 0,0,0,0, 1);} return f");
 assertEq(asmLink(asmCompile('glob', USE_ASM + B16x8 + "function f() {var x=b16x8(1,0,0,0, 0,-1,-2,0);} return f"), this)(), undefined);
 
+// Global variable of Int16x8 type.
+assertEqVecArr(asmLink(asmCompile('glob', 'ffi', USE_ASM + I16x8 + I16x8CHK + "var g=i16x8chk(ffi.g); function f() { return i16x8chk(g); } return f"), this,
+                       {g: SIMD.Int16x8(1,2,3,4,5,6,7,8)})(), [1,2,3,4,5,6,7,8]);
+assertEqVecArr(asmLink(asmCompile('glob', 'ffi', USE_ASM + I16x8 + I16x8CHK + "var g=i16x8chk(ffi.g); function f() { g=i16x8(5,6,7,8,9,10,11,12); return i16x8chk(g); } return f"), this,
+                       {g: SIMD.Int16x8(1,2,3,4,5,6,7,8)})(), [5,6,7,8,9,10,11,12]);
+
+// Global variable of Bool16x8 type.
+assertEqVecArr(asmLink(asmCompile('glob', 'ffi', USE_ASM + B16x8 + B16x8CHK + "var g=b16x8chk(ffi.g); function f() { return b16x8chk(g); } return f"), this,
+                       {g: SIMD.Bool16x8(1,1,0,1,0,0,1,0)})(), [true,true,false,true,false,false,true,false]);
+assertEqVecArr(asmLink(asmCompile('glob', 'ffi', USE_ASM + B16x8 + B16x8CHK + "var g=b16x8chk(ffi.g); function f() { g=b16x8(1,1,0,1,0,1,1,1); return b16x8chk(g); } return f"), this,
+                       {g: SIMD.Bool16x8(1,1,0,1,0,0,1,0)})(), [true,true,false,true,false,true,true,true]);
+
+// Unsigned SIMD globals are not allowed.
+assertAsmTypeFail('glob', 'ffi', USE_ASM + U16x8 + U16x8CHK + "var g=u16x8chk(ffi.g); function f() { } return f");
+
 // Only signed Int16x8 allowed as return value.
 assertEqVecArr(asmLink(asmCompile('glob', USE_ASM + I16x8 + "function f() {return i16x8(1,2,3,4,5,6,7,8);} return f"), this)(),
            [1, 2, 3, 4, 5, 6, 7, 8]);
