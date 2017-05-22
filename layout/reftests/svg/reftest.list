@@ -137,7 +137,7 @@ fuzzy-if(d2d||skiaContent,1,10000) == dynamic-filter-contents-01b.svg dynamic-fi
 == dynamic-marker-01.svg pass.svg
 == dynamic-marker-02.svg dynamic-marker-02-ref.svg
 == dynamic-marker-03.svg pass.svg
-skip-if(stylo) == dynamic-mask-01.svg pass.svg
+== dynamic-mask-01.svg pass.svg
 == dynamic-mask-contents-01.svg pass.svg
 == dynamic-mask-pre-effects-bbox.html dynamic-mask-pre-effects-bbox-ref.html
 == dynamic-opacity-property-01.svg pass.svg
