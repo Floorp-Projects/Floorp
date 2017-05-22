@@ -124,14 +124,22 @@ const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
  * @returns {nsIFile}
  */
 function getFile(path, base = null) {
-  if (base) {
-    let file = base.clone();
-    try {
-      file.appendRelativePath(path);
-      return file;
-    } catch (e) {}
+  // First try for an absolute path, as we get in the case of proxy
+  // files. Ideally we would try a relative path first, but on Windows,
+  // paths which begin with a drive letter are valid as relative paths,
+  // and treated as such.
+  try {
+    return new nsIFile(path);
+  } catch (e) {
+    // Ignore invalid relative paths. The only other error we should see
+    // here is EOM, and either way, any errors that we care about should
+    // be re-thrown below.
   }
-  return new nsIFile(path);
+
+  // If the path isn't absolute, we must have a base path.
+  let file = base.clone();
+  file.appendRelativePath(path);
+  return file;
 }
 
 /**
