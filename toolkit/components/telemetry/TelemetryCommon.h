@@ -11,7 +11,6 @@
 #include "nsIScriptError.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/TypedEnumBits.h"
-#include "mozilla/TelemetryProcessEnums.h"
 
 namespace mozilla {
 namespace Telemetry {
@@ -63,7 +62,6 @@ bool IsExpiredVersion(const char* aExpiration);
 bool IsInDataset(uint32_t aDataset, uint32_t aContainingDataset);
 bool CanRecordDataset(uint32_t aDataset, bool aCanRecordBase, bool aCanRecordExtended);
 bool CanRecordInProcess(RecordedProcessType aProcesses, GeckoProcessType aProcess);
-bool CanRecordInProcess(RecordedProcessType aProcesses, ProcessID aProcess);
 
 /**
  * Return the number of milliseconds since process start using monotonic
@@ -81,19 +79,6 @@ nsresult MsSinceProcessStart(double* aResult);
  * @param aMsg The text message to print to the console.
  */
 void LogToBrowserConsole(uint32_t aLogLevel, const nsAString& aMsg);
-
-/**
- * Get the name string for a ProcessID.
- * This is the name we use for the Telemetry payloads.
- */
-const char* GetNameForProcessID(ProcessID process);
-
-/**
- * Get the GeckoProcessType for a ProcessID.
- * Telemetry distinguishes between more process types than the GeckoProcessType,
- * so the mapping is not direct.
- */
-GeckoProcessType GetGeckoProcessType(ProcessID process);
 
 } // namespace Common
 } // namespace Telemetry
