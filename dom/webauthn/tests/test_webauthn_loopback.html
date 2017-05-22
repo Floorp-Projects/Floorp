@@ -63,37 +63,36 @@ function() {
   }
 
   function checkAssertionAndSigValid(aPublicKey, aAssertion) {
-    /* WebAuthnAssertion
-    - Credential
-    -- ID: ID of Credential from AllowList that succeeded
-    -- Type: "ScopedCred"
-    - ClientData: serialized JSON
-    - AuthenticatorData: RP ID Hash || U2F Sign() Response
-    - Signature: U2F Sign() Response */
+    /* PublicKeyCredential : Credential
+       - rawId: ID of Credential from AllowList that succeeded
+       - response : AuthenticatorAssertionResponse : AuthenticatorResponse
+         - clientDataJSON: serialized JSON
+         - authenticatorData: RP ID Hash || U2F Sign() Response
+         - signature: U2F Sign() Response
+    */
 
-    is(aAssertion.credential.type, "ScopedCred", "Type is correct");
-    ok(aAssertion.credential.id.length > 0, "Key ID exists");
+    ok(aAssertion.rawId.length > 0, "Key ID exists");
 
-    ok(aAssertion.authenticatorData.length > 0, "Authenticator data exists");
-    let clientData = JSON.parse(buffer2string(aAssertion.clientData));
+    ok(aAssertion.response.authenticatorData.length > 0, "Authenticator data exists");
+    let clientData = JSON.parse(buffer2string(aAssertion.response.clientDataJSON));
     is(clientData.challenge, bytesToBase64UrlSafe(gAssertionChallenge), "Challenge is correct");
     is(clientData.origin, window.location.origin, "Origin is correct");
     is(clientData.hashAlg, "S256", "Hash algorithm is correct");
 
     // Parse the signature data
-    if (aAssertion.signature[0] != 0x01) {
+    if (aAssertion.response.signature[0] != 0x01) {
       throw "User presence byte not set";
     }
-    let presenceAndCounter = aAssertion.signature.slice(0,5);
-    let signatureValue = aAssertion.signature.slice(5);
+    let presenceAndCounter = aAssertion.response.signature.slice(0,5);
+    let signatureValue = aAssertion.response.signature.slice(5);
 
-    let rpIdHash = aAssertion.authenticatorData.slice(0,32);
+    let rpIdHash = aAssertion.response.authenticatorData.slice(0,32);
 
     // Assemble the signed data and verify the signature
-    return deriveAppAndChallengeParam(clientData.origin, aAssertion.clientData)
+    return deriveAppAndChallengeParam(clientData.origin, aAssertion.response.clientDataJSON)
     .then(function(aParams) {
       console.log(aParams.appParam, rpIdHash, presenceAndCounter, aParams.challengeParam);
-      console.log("ClientData buffer: ", hexEncode(aAssertion.clientData));
+      console.log("ClientData buffer: ", hexEncode(aAssertion.response.clientDataJSON));
       console.log("ClientDataHash: ", hexEncode(aParams.challengeParam));
       return assembleSignedData(aParams.appParam, presenceAndCounter, aParams.challengeParam);
     })

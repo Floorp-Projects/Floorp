@@ -50,9 +50,7 @@ dictionary ScopedCredentialOptions {
 };
 
 [SecureContext, Pref="security.webauth.webauthn"]
-interface WebAuthnAssertion {
-    readonly attribute ScopedCredential credential;
-    readonly attribute ArrayBuffer      clientData;
+interface AuthenticatorAssertionResponse : AuthenticatorResponse {
     readonly attribute ArrayBuffer      authenticatorData;
     readonly attribute ArrayBuffer      signature;
 };
@@ -110,7 +108,7 @@ interface WebAuthentication {
         optional ScopedCredentialOptions        options
     );
 
-    Promise<WebAuthnAssertion> getAssertion (
+    Promise<PublicKeyCredential> getAssertion (
         BufferSource               assertionChallenge,
         optional AssertionOptions  options
     );
