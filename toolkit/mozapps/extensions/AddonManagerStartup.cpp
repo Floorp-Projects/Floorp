@@ -385,15 +385,19 @@ private:
 already_AddRefed<nsIFile>
 Addon::FullPath()
 {
-  nsString path = mLocation.Path();
+  nsString path = Path();
 
+  // First check for an absolute path, in case we have a proxy file.
   nsCOMPtr<nsIFile> file;
-  NS_NewLocalFile(path, false, getter_AddRefs(file));
+  if (NS_SUCCEEDED(NS_NewLocalFile(path, false, getter_AddRefs(file)))) {
+    return file.forget();
+  }
+
+  // If not an absolute path, fall back to a relative path from the location.
+  NS_NewLocalFile(mLocation.Path(), false, getter_AddRefs(file));
   MOZ_RELEASE_ASSERT(file);
 
-  path = Path();
   file->AppendRelativePath(path);
-
   return file.forget();
 }
 
