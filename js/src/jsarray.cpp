@@ -890,25 +890,8 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
     ObjectElements* header = arr->getElementsHeader();
     header->initializedLength = Min(header->initializedLength, newLen);
 
-    if (attrs & JSPROP_READONLY) {
-        if (header->numShiftedElements() > 0) {
-            arr->unshiftElements();
-            header = arr->getElementsHeader();
-        }
-
-        header->setNonwritableArrayLength();
-
-        // When an array's length becomes non-writable, writes to indexes
-        // greater than or equal to the length don't change the array.  We
-        // handle this with a check for non-writable length in most places.
-        // But in JIT code every check counts -- so we piggyback the check on
-        // the already-required range check for |index < capacity| by making
-        // capacity of arrays with non-writable length never exceed the length.
-        if (arr->getDenseCapacity() > newLen) {
-            arr->shrinkElements(cx, newLen);
-            arr->getElementsHeader()->capacity = newLen;
-        }
-    }
+    if (attrs & JSPROP_READONLY)
+        arr->setNonWritableLength(cx);
 
     if (!succeeded)
         return result.fail(JSMSG_CANT_TRUNCATE_ARRAY);

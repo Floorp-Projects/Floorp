@@ -259,6 +259,9 @@ class ObjectElements
         return flags & NONWRITABLE_ARRAY_LENGTH;
     }
     void setNonwritableArrayLength() {
+        // See ArrayObject::setNonWritableLength.
+        MOZ_ASSERT(capacity == initializedLength);
+        MOZ_ASSERT(numShiftedElements() == 0);
         MOZ_ASSERT(!isCopyOnWrite());
         flags |= NONWRITABLE_ARRAY_LENGTH;
     }
