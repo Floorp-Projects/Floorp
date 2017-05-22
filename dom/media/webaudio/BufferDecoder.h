@@ -25,8 +25,7 @@ public:
   // This class holds a weak pointer to MediaResource.  It's the responsibility
   // of the caller to manage the memory of the MediaResource object.
   explicit BufferDecoder(MediaResource* aResource,
-                         AbstractThread* aMainThread,
-                         GMPCrashHelper* aCrashHelper);
+                         AbstractThread* aMainThread);
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -42,8 +41,6 @@ public:
 
   MediaDecoderOwner* GetOwner() const final override;
 
-  already_AddRefed<GMPCrashHelper> GetCrashHelper() override;
-
   AbstractThread* AbstractMainThread() const final override;
 
 private:
@@ -51,7 +48,6 @@ private:
   RefPtr<TaskQueue> mTaskQueueIdentity;
   RefPtr<MediaResource> mResource;
   const RefPtr<AbstractThread> mAbstractMainThread;
-  RefPtr<GMPCrashHelper> mCrashHelper;
 };
 
 } // namespace mozilla
