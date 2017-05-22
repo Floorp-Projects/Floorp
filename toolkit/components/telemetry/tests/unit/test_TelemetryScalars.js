@@ -9,8 +9,8 @@ const KEYED_UINT_SCALAR = "telemetry.test.keyed_unsigned_int";
 
 function getParentProcessScalars(aChannel, aKeyed = false, aClear = false) {
   const scalars = aKeyed ?
-    Telemetry.snapshotKeyedScalars(aChannel, aClear)["default"] :
-    Telemetry.snapshotScalars(aChannel, aClear)["default"];
+    Telemetry.snapshotKeyedScalars(aChannel, aClear)["parent"] :
+    Telemetry.snapshotScalars(aChannel, aClear)["parent"];
   return scalars || {};
 }
 
