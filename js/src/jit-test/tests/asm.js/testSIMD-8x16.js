@@ -73,6 +73,21 @@ assertAsmTypeFail('glob', USE_ASM + B8x16 + "function f() {var x=b8x16(1,0,0,0,0
 assertAsmTypeFail('glob', USE_ASM + B8x16 + "function f() {var x=b8x16(1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1);} return f");
 assertEq(asmLink(asmCompile('glob', USE_ASM + B8x16 + "function f() {var x=b8x16(1,0,0,0,0,0,0,0,0,1,-1,2,-2,1,1,1);} return f"), this)(), undefined);
 
+// Global variable of Int8x16 type.
+assertEqVecArr(asmLink(asmCompile('glob', 'ffi', USE_ASM + I8x16 + I8x16CHK + "var g=i8x16chk(ffi.g); function f() { return i8x16chk(g); } return f"), this,
+                       {g: SIMD.Int8x16(1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17)})(), [1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17]);
+assertEqVecArr(asmLink(asmCompile('glob', 'ffi', USE_ASM + I8x16 + I8x16CHK + "var g=i8x16chk(ffi.g); function f() { g=i8x16(5,6,7,8,9,10,11,12,1,2,3,4,5,6,7,8); return i8x16chk(g); } return f"), this,
+                       {g: SIMD.Int8x16(1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17)})(), [5,6,7,8,9,10,11,12,1,2,3,4,5,6,7,8]);
+
+// Global variable of Bool8x16 type.
+assertEqVecArr(asmLink(asmCompile('glob', 'ffi', USE_ASM + B8x16 + B8x16CHK + "var g=b8x16chk(ffi.g); function f() { return b8x16chk(g); } return f"), this,
+                       {g: SIMD.Bool8x16(1,1,0,1,0,0,1,0,0,1,0,1,0,0,1,0)})(), [true,true,false,true,false,false,true,false,false,true,false,true,false,false,true,false]);
+assertEqVecArr(asmLink(asmCompile('glob', 'ffi', USE_ASM + B8x16 + B8x16CHK + "var g=b8x16chk(ffi.g); function f() { g=b8x16(1,1,0,1,0,1,1,1,0,1,0,1,1,1,0,0); return b8x16chk(g); } return f"), this,
+                       {g: SIMD.Bool8x16(1,1,0,1,0,0,1,0)})(), [true,true,false,true,false,true,true,true,false,true,false,true,true,true,false,false]);
+
+// Unsigned SIMD globals are not allowed.
+assertAsmTypeFail('glob', 'ffi', USE_ASM + U8x16 + U8x16CHK + "var g=u8x16chk(ffi.g); function f() { } return f");
+
 // Only signed Int8x16 allowed as return value.
 assertEqVecArr(asmLink(asmCompile('glob', USE_ASM + I8x16 + "function f() {return i8x16(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);} return f"), this)(),
            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);

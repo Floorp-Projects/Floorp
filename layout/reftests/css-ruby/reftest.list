@@ -20,7 +20,7 @@ test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLin
 == intra-level-whitespace-1.html intra-level-whitespace-1-ref.html
 == intra-level-whitespace-2.html intra-level-whitespace-2-ref.html
 == intra-level-whitespace-3.html intra-level-whitespace-3-ref.html
-fails-if(stylo) == intrinsic-isize-1.html intrinsic-isize-1-ref.html
+== intrinsic-isize-1.html intrinsic-isize-1-ref.html
 == intrinsic-isize-2.html intrinsic-isize-2-ref.html
 fails-if(stylo) == justification-1.html justification-1-ref.html
 fails-if(stylo) == justification-2.html justification-2-ref.html

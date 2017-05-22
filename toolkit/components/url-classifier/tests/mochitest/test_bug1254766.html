@@ -80,7 +80,7 @@ function setup() {
 
 // Reset function in helper try to simulate the behavior we restart firefox
 function reset() {
-  return classifierHelper.resetDB()
+  return classifierHelper.resetDatabase()
     .catch(err => {
       ok(false, "Couldn't update classifier. Error code: " + errorCode);
       // Abort test.

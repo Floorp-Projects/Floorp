@@ -12,8 +12,6 @@ const L10N = new LocalizationHelper("devtools/client/locales/inspector.propertie
 const Editor = require("devtools/client/sourceeditor/editor");
 const beautify = require("devtools/shared/jsbeautify/beautify");
 
-loader.lazyRequireGetter(this, "viewSource", "devtools/client/shared/view-source");
-
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const CONTAINER_WIDTH = 500;
 
@@ -64,9 +62,14 @@ EventTooltip.prototype = {
     this.container = doc.createElementNS(XHTML_NS, "div");
     this.container.className = "devtools-tooltip-events-container";
 
+    const sourceMapService = this._toolbox.sourceMapURLService;
+
     for (let listener of this._eventListenerInfos) {
       let phase = listener.capturing ? "Capturing" : "Bubbling";
       let level = listener.DOM0 ? "DOM0" : "DOM2";
+
+      // Create this early so we can refer to it from a closure, below.
+      let content = doc.createElementNS(XHTML_NS, "div");
 
       // Header
       let header = doc.createElementNS(XHTML_NS, "div");
@@ -103,6 +106,23 @@ EventTooltip.prototype = {
       if (listener.hide.filename) {
         text = L10N.getStr("eventsTooltip.unknownLocation");
         title = L10N.getStr("eventsTooltip.unknownLocationExplanation");
+      } else if (sourceMapService) {
+        const location = this._parseLocation(text);
+        if (location) {
+          sourceMapService.originalPositionFor(location.url, location.line)
+            .then((originalLocation) => {
+              if (originalLocation) {
+                const { sourceUrl, line } = originalLocation;
+                let newURI = sourceUrl + ":" + line;
+                filename.textContent = newURI;
+                filename.setAttribute("title", newURI);
+                let eventEditor = this._eventEditors.get(content);
+                eventEditor.uri = newURI;
+              }
+              // This is emitted for testing.
+              this._tooltip.emit("event-tooltip-source-map-ready");
+            });
+        }
       }
 
       filename.textContent = text;
@@ -152,7 +172,6 @@ EventTooltip.prototype = {
       }
 
       // Content
-      let content = doc.createElementNS(XHTML_NS, "div");
       let editor = new Editor(config);
       this._eventEditors.set(content, {
         editor: editor,
@@ -236,24 +255,35 @@ EventTooltip.prototype = {
 
     let {uri} = this._eventEditors.get(content);
 
-    if (uri && uri !== "?") {
+    let location = this._parseLocation(uri);
+    if (location) {
       // Save a copy of toolbox as it will be set to null when we hide the tooltip.
       let toolbox = this._toolbox;
 
       this._tooltip.hide();
 
+      toolbox.viewSourceInDebugger(location.url, location.line);
+    }
+  },
+
+  /**
+   * Parse URI and return {url, line}; or return null if it can't be parsed.
+   */
+  _parseLocation: function (uri) {
+    if (uri && uri !== "?") {
       uri = uri.replace(/"/g, "");
 
       let matches = uri.match(/(.*):(\d+$)/);
-      let line = 1;
 
       if (matches) {
-        uri = matches[1];
-        line = matches[2];
+        return {
+          url: matches[1],
+          line: parseInt(matches[2], 10),
+        };
       }
-
-      viewSource.viewSourceInDebugger(toolbox, uri, line);
+      return {url: uri, line: 1};
     }
+    return null;
   },
 
   destroy: function () {

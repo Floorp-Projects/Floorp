@@ -27,6 +27,7 @@ protected:
 
 private:
   static bool sUseOldPreferences;
+  static bool sActivityStreamEnabled;
 };
 
 } // namespace browser

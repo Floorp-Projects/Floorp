@@ -14,7 +14,7 @@ def extract_exe(package, target):
 
 def main(args):
     if len(args) != 2:
-        print('Usage: 7z_exe_extract.py <package> <target>',
+        print('Usage: exe_7z_extract.py <package> <target>',
               file=sys.stderr)
         return 1
     else:

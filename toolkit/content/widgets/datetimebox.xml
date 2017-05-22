@@ -328,6 +328,12 @@
           let targetField = aEvent.originalTarget;
           let key = aEvent.key;
 
+          // Home/End key does nothing on year field.
+          if (targetField == this.mYearField && (key == "Home" ||
+                                                 key == "End")) {
+            return;
+          }
+
           switch (key) {
             case "ArrowUp":
               this.incrementFieldValue(targetField, 1);

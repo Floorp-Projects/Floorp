@@ -184,16 +184,16 @@ var testData = [
     expectedVal: "2016-01-31"
   },
   {
-    // Home key on year field sets it to the minimum year, which is 0001.
+    // Home key should have no effect on year field.
     keys: ["VK_TAB", "VK_TAB", "VK_HOME"],
     initialVal: "2016-01-01",
-    expectedVal: "0001-01-01"
+    expectedVal: "2016-01-01"
   },
   {
-    // End key on year field sets it to the maximum year, which is 275760.
+    // End key should have no effect on year field.
     keys: ["VK_TAB", "VK_TAB", "VK_END"],
     initialVal: "2016-01-01",
-    expectedVal: "275760-01-01"
+    expectedVal: "2016-01-01"
   },
 ];
 
