@@ -27,10 +27,10 @@ fuzzy-if(skiaContent,2,13) == show-value.html show-value-ref.html
 == number-auto-width-1.html number-auto-width-1-ref.html
 
 # min-height/max-height tests:
-skip-if(Android) == number-min-height-1.html number-min-height-1-ref.html
-skip-if(Android) == number-min-height-2.html number-min-height-2-ref.html
-skip-if(Android) == number-max-height-1.html number-max-height-1-ref.html
-skip-if(Android) == number-max-height-2.html number-max-height-2-ref.html
+pref(layout.css.moz-appearance.enabled,true) skip-if(Android) == number-min-height-1.html number-min-height-1-ref.html
+pref(layout.css.moz-appearance.enabled,true) skip-if(Android) == number-min-height-2.html number-min-height-2-ref.html
+pref(layout.css.moz-appearance.enabled,true) skip-if(Android) == number-max-height-1.html number-max-height-1-ref.html
+pref(layout.css.moz-appearance.enabled,true) skip-if(Android) == number-max-height-2.html number-max-height-2-ref.html
 
 # number of significant fractional digits:
 == number-significant-fractional-digits.html number-significant-fractional-digits-ref.html
@@ -54,4 +54,4 @@ fuzzy(128,4) == number-reframe-anon-text-field.html number-reframe-anon-text-fie
 == pseudo-classes.html about:blank
 
 # Style inheritance:
-== number-style-inheritance.html number-style-inheritance-ref.html
+pref(layout.css.moz-appearance.enabled,true) == number-style-inheritance.html number-style-inheritance-ref.html

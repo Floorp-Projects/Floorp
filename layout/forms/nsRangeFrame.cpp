@@ -300,7 +300,7 @@ nsRangeFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   if (IsThemed(disp) &&
-      PresContext()->GetTheme()->ThemeDrawsFocusForWidget(disp->mAppearance)) {
+      PresContext()->GetTheme()->ThemeDrawsFocusForWidget(disp->UsedAppearance())) {
     return; // the native theme displays its own visual indication of focus
   }
 
@@ -878,7 +878,7 @@ nsRangeFrame::ShouldUseNativeStyle() const
   nsIFrame* progressFrame = mProgressDiv->GetPrimaryFrame();
   nsIFrame* thumbFrame = mThumbDiv->GetPrimaryFrame();
 
-  return (StyleDisplay()->mAppearance == NS_THEME_RANGE) &&
+  return (StyleDisplay()->UsedAppearance() == NS_THEME_RANGE) &&
          !PresContext()->HasAuthorSpecifiedRules(this,
                                                  (NS_AUTHOR_SPECIFIED_BORDER |
                                                   NS_AUTHOR_SPECIFIED_BACKGROUND)) &&

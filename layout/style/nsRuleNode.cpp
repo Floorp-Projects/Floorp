@@ -6068,7 +6068,14 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   // See ReflowInput::CalculateHypotheticalBox
   display->mOriginalDisplay = display->mDisplay;
 
-  // appearance: enum, inherit, initial
+  // -moz-appearance: enum, inherit, initial
+  SetValue(*aRuleData->ValueForMozAppearance(),
+           display->mMozAppearance, conditions,
+           SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
+           parentDisplay->mMozAppearance,
+           NS_THEME_NONE);
+
+  // appearance: none | auto
   SetValue(*aRuleData->ValueForAppearance(),
            display->mAppearance, conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
