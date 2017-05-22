@@ -44,7 +44,7 @@ nsFormControlFrame::GetMinISize(nsRenderingContext *aRenderingContext)
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
 #if !defined(MOZ_WIDGET_ANDROID)
-  result = StyleDisplay()->UsedAppearance() == NS_THEME_NONE ? 0 : DefaultSize();
+  result = StyleDisplay()->mAppearance == NS_THEME_NONE ? 0 : DefaultSize();
 #else
   result = DefaultSize();
 #endif
@@ -57,7 +57,7 @@ nsFormControlFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
 #if !defined(MOZ_WIDGET_ANDROID)
-  result = StyleDisplay()->UsedAppearance() == NS_THEME_NONE ? 0 : DefaultSize();
+  result = StyleDisplay()->mAppearance == NS_THEME_NONE ? 0 : DefaultSize();
 #else
   result = DefaultSize();
 #endif
@@ -77,7 +77,7 @@ nsFormControlFrame::ComputeAutoSize(nsRenderingContext* aRC,
 {
   LogicalSize size(aWM, 0, 0);
 #if !defined(MOZ_WIDGET_ANDROID)
-  if (StyleDisplay()->UsedAppearance() == NS_THEME_NONE) {
+  if (StyleDisplay()->mAppearance == NS_THEME_NONE) {
     return size;
   }
 #endif
@@ -101,7 +101,7 @@ nsFormControlFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 #if !defined(MOZ_WIDGET_ANDROID)
   // For appearance:none we use a standard CSS baseline, i.e. synthesized from
   // our margin-box.
-  if (StyleDisplay()->UsedAppearance() == NS_THEME_NONE) {
+  if (StyleDisplay()->mAppearance == NS_THEME_NONE) {
     return nsAtomicContainerFrame::GetLogicalBaseline(aWritingMode);
   }
 #endif
