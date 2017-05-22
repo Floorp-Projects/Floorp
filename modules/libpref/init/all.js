@@ -1221,14 +1221,6 @@ pref("dom.send_after_paint_to_content", false);
 pref("dom.min_timeout_value", 4);
 // And for background windows
 pref("dom.min_background_timeout_value", 1000);
-// Timeout clamp in ms for tracking timeouts we clamp
-// Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
-pref("dom.min_tracking_timeout_value", 4);
-// And for background windows
-// Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
-pref("dom.min_tracking_background_timeout_value", 10000);
-// Delay in ms from document load until we start throttling tracking timeouts.
-pref("dom.timeout.tracking_throttling_delay", 30000);
 
 // Don't use new input types
 pref("dom.experimental_forms", false);
