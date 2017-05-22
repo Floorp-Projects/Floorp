@@ -696,6 +696,7 @@ public:
   static const KTableEntry kAnimationPlayStateKTable[];
   static const KTableEntry kAnimationTimingFunctionKTable[];
   static const KTableEntry kAppearanceKTable[];
+  static const KTableEntry kMozAppearanceKTable[];
   static const KTableEntry kAzimuthKTable[];
   static const KTableEntry kBackfaceVisibilityKTable[];
   static const KTableEntry kTransformStyleKTable[];

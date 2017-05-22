@@ -600,7 +600,7 @@ input[type="checkbox"]:disabled:hover:active {
 
 %if defined(MOZ_WIDGET_ANDROID)
 /*
- * These platforms doesn't have any theming support and thus -moz-appearance:none
+ * These platforms doesn't have any theming support and thus appearance:none
  * is the same as any other appearance value.
  * XXX This is not web-compatible and should be fixed.
  */
