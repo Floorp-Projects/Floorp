@@ -106,7 +106,7 @@ public:
 
   // Create a new nsIEventTarget wrapper object that dispatches to this
   // TaskQueue.
-  already_AddRefed<nsIEventTarget> WrapAsEventTarget();
+  already_AddRefed<nsISerialEventTarget> WrapAsEventTarget();
 
 protected:
   virtual ~TaskQueue();
