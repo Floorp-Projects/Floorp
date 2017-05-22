@@ -314,6 +314,12 @@ WebGLTexture::IsComplete(const char* funcName, uint32_t texUnit,
 {
     *out_initFailed = false;
 
+    const auto maxLevel = kMaxLevelCount - 1;
+    if (mBaseMipmapLevel > maxLevel) {
+        *out_reason = "`level_base` too high.";
+        return false;
+    }
+
     if (!EnsureLevelInitialized(funcName, mBaseMipmapLevel)) {
         *out_initFailed = true;
         return false;
