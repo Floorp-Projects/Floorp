@@ -2854,13 +2854,18 @@ array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUse
             MOZ_ASSERT(finalLength < len, "finalLength is strictly less than len");
 
             /* Steps 15.a-b. */
-            DenseElementResult result =
-                MoveAnyBoxedOrUnboxedDenseElements(cx, obj, uint32_t(targetIndex),
-                                                   uint32_t(sourceIndex),
-                                                   uint32_t(len - sourceIndex));
-            MOZ_ASSERT(result != DenseElementResult::Incomplete);
-            if (result == DenseElementResult::Failure)
-                return false;
+            if (targetIndex != 0 ||
+                !obj->is<NativeObject>() ||
+                !obj->as<NativeObject>().tryShiftDenseElements(sourceIndex))
+            {
+                DenseElementResult result =
+                    MoveAnyBoxedOrUnboxedDenseElements(cx, obj, uint32_t(targetIndex),
+                                                       uint32_t(sourceIndex),
+                                                       uint32_t(len - sourceIndex));
+                MOZ_ASSERT(result != DenseElementResult::Incomplete);
+                if (result == DenseElementResult::Failure)
+                    return false;
+            }
 
             /* Steps 15.c-d. */
             SetAnyBoxedOrUnboxedInitializedLength(cx, obj, uint32_t(finalLength));
