@@ -51,26 +51,26 @@ add_task(function* test_recording_state() {
   Telemetry.setEventRecordingEnabled("telemetry.test", true);
   events.forEach(e => Telemetry.recordEvent(...e));
   snapshot = Telemetry.snapshotBuiltinEvents(OPTIN, true);
-  Assert.ok(("default" in snapshot), "Should have entry for main process.");
-  Assert.equal(snapshot.default.length, 1, "Should have recorded one event.");
-  Assert.equal(snapshot.default[0][1], "telemetry.test", "Should have recorded one event in telemetry.test");
+  Assert.ok(("parent" in snapshot), "Should have entry for main process.");
+  Assert.equal(snapshot.parent.length, 1, "Should have recorded one event.");
+  Assert.equal(snapshot.parent[0][1], "telemetry.test", "Should have recorded one event in telemetry.test");
 
   // Also enable the other test category and see that we record correctly.
   Telemetry.setEventRecordingEnabled("telemetry.test.second", true);
   events.forEach(e => Telemetry.recordEvent(...e));
   snapshot = Telemetry.snapshotBuiltinEvents(OPTIN, true);
-  Assert.ok(("default" in snapshot), "Should have entry for main process.");
-  Assert.equal(snapshot.default.length, 2, "Should have recorded two events.");
-  Assert.equal(snapshot.default[0][1], "telemetry.test", "Should have recorded one event in telemetry.test");
-  Assert.equal(snapshot.default[1][1], "telemetry.test.second", "Should have recorded one event in telemetry.test.second");
+  Assert.ok(("parent" in snapshot), "Should have entry for main process.");
+  Assert.equal(snapshot.parent.length, 2, "Should have recorded two events.");
+  Assert.equal(snapshot.parent[0][1], "telemetry.test", "Should have recorded one event in telemetry.test");
+  Assert.equal(snapshot.parent[1][1], "telemetry.test.second", "Should have recorded one event in telemetry.test.second");
 
   // Now turn of one category again and check that this works as expected.
   Telemetry.setEventRecordingEnabled("telemetry.test", false);
   events.forEach(e => Telemetry.recordEvent(...e));
   snapshot = Telemetry.snapshotBuiltinEvents(OPTIN, true);
-  Assert.ok(("default" in snapshot), "Should have entry for main process.");
-  Assert.equal(snapshot.default.length, 1, "Should have recorded one event.");
-  Assert.equal(snapshot.default[0][1], "telemetry.test.second", "Should have recorded one event in telemetry.test.second");
+  Assert.ok(("parent" in snapshot), "Should have entry for main process.");
+  Assert.equal(snapshot.parent.length, 1, "Should have recorded one event.");
+  Assert.equal(snapshot.parent[0][1], "telemetry.test.second", "Should have recorded one event in telemetry.test.second");
 });
 
 add_task(function* recording_setup() {
@@ -146,14 +146,14 @@ add_task(function* test_recording() {
 
   // Check that the expected events were recorded.
   let snapshot = Telemetry.snapshotBuiltinEvents(OPTIN, false);
-  Assert.ok(("default" in snapshot), "Should have entry for main process.");
-  checkEvents(snapshot.default, expected);
+  Assert.ok(("parent" in snapshot), "Should have entry for main process.");
+  checkEvents(snapshot.parent, expected);
 
   // Check serializing only opt-out events.
   snapshot = Telemetry.snapshotBuiltinEvents(OPTOUT, false);
-  Assert.ok(("default" in snapshot), "Should have entry for main process.");
+  Assert.ok(("parent" in snapshot), "Should have entry for main process.");
   let filtered = expected.filter(e => e.optout == true);
-  checkEvents(snapshot.default, filtered);
+  checkEvents(snapshot.parent, filtered);
 });
 
 add_task(function* test_clear() {
@@ -168,8 +168,8 @@ add_task(function* test_clear() {
   // Check that events were recorded.
   // The events are cleared by passing the respective flag.
   let snapshot = Telemetry.snapshotBuiltinEvents(OPTIN, true);
-  Assert.ok(("default" in snapshot), "Should have entry for main process.");
-  Assert.equal(snapshot.default.length, 2 * COUNT, `Should have recorded ${2 * COUNT} events.`);
+  Assert.ok(("parent" in snapshot), "Should have entry for main process.");
+  Assert.equal(snapshot.parent.length, 2 * COUNT, `Should have recorded ${2 * COUNT} events.`);
 
   // Now the events should be cleared.
   snapshot = Telemetry.snapshotBuiltinEvents(OPTIN, false);
@@ -192,8 +192,8 @@ add_task(function* test_expiry() {
   // Recording call with event that has expiry_version and expiry_date in the future.
   Telemetry.recordEvent("telemetry.test", "not_expired_optout", "object1");
   snapshot = Telemetry.snapshotBuiltinEvents(OPTOUT, true);
-  Assert.ok(("default" in snapshot), "Should have entry for main process.");
-  Assert.equal(snapshot.default.length, 1, "Should record event when date and version are not expired.");
+  Assert.ok(("parent" in snapshot), "Should have entry for main process.");
+  Assert.equal(snapshot.parent.length, 1, "Should record event when date and version are not expired.");
 });
 
 add_task(function* test_invalidParams() {
@@ -232,8 +232,8 @@ add_task(function* test_storageLimit() {
 
   // Check that the right events were recorded.
   let snapshot = Telemetry.snapshotBuiltinEvents(OPTIN, true);
-  Assert.ok(("default" in snapshot), "Should have entry for main process.");
-  let events = snapshot.default;
+  Assert.ok(("parent" in snapshot), "Should have entry for main process.");
+  let events = snapshot.parent;
   Assert.equal(events.length, LIMIT, `Should have only recorded ${LIMIT} events`);
   Assert.ok(events.every((e, idx) => e[4] === String(idx)),
             "Should have recorded all events from before hitting the limit.");
@@ -275,8 +275,8 @@ add_task(function* test_valueLimits() {
 
   // Check that the right events were recorded.
   let snapshot = Telemetry.snapshotBuiltinEvents(OPTIN, true);
-  Assert.ok(("default" in snapshot), "Should have entry for main process.");
-  let events = snapshot.default;
+  Assert.ok(("parent" in snapshot), "Should have entry for main process.");
+  let events = snapshot.parent;
   Assert.equal(events.length, expected.length,
                "Should have recorded the expected number of events");
   for (let i = 0; i < expected.length; ++i) {
@@ -295,8 +295,8 @@ add_task(function* test_unicodeValues() {
 
   // Check that the values were correctly recorded.
   let snapshot = Telemetry.snapshotBuiltinEvents(OPTIN, true);
-  Assert.ok(("default" in snapshot), "Should have entry for main process.");
-  let events = snapshot.default;
+  Assert.ok(("parent" in snapshot), "Should have entry for main process.");
+  let events = snapshot.parent;
   Assert.equal(events.length, 2, "Should have recorded 2 events.");
   Assert.equal(events[0][4], value, "Should have recorded the right value.");
   Assert.equal(events[1][5]["key1"], value, "Should have recorded the right extra value.");
