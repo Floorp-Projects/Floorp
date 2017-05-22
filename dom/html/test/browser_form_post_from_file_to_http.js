@@ -6,6 +6,12 @@ const TEST_HTTP_POST =
 
 // Test for bug 1351358.
 add_task(async function() {
+  // Set prefs to ensure file content process, to allow linked web content in
+  // file URI process and allow more that one file content process.
+  await SpecialPowers.pushPrefEnv(
+    {set: [["browser.tabs.remote.separateFileUriProcess", true],
+           ["browser.tabs.remote.allowLinkedWebInFileUriProcess", true]]});
+
   // Create file URI and test data file paths.
   let testFile = getChromeDir(getResolvedURI(gTestPath));
   testFile.append("dummy_page.html");

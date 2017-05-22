@@ -534,17 +534,10 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
 
         // Ordinarily ArraySetLength handles this, but we're going behind its back
         // right now, so we must do this manually.
-        //
-        // ArraySetLength also implements the capacity <= length invariant for
-        // arrays with non-writable length.  We don't need to do anything special
-        // for that, because capacity was zeroed out by preventExtensions.  (See
-        // the assertion about getDenseCapacity above.)
         if (level == IntegrityLevel::Frozen && obj->is<ArrayObject>()) {
             if (!obj->as<ArrayObject>().maybeCopyElementsForWrite(cx))
                 return false;
-            if (nobj->getElementsHeader()->numShiftedElements() > 0)
-                nobj->unshiftElements();
-            obj->as<ArrayObject>().getElementsHeader()->setNonwritableArrayLength();
+            obj->as<ArrayObject>().setNonWritableLength(cx);
         }
     } else {
         RootedId id(cx);

@@ -281,6 +281,12 @@ public final class IntentHelper implements BundleEventListener {
                 return null;
             }
 
+            final Uri data = intent.getData();
+            if (data != null && "file".equals(data.normalizeScheme().getScheme())) {
+                Log.w(LOGTAG, "Blocked intent with \"file://\" data scheme.");
+                return null;
+            }
+
             // Only open applications which can accept arbitrary data from a browser.
             intent.addCategory(Intent.CATEGORY_BROWSABLE);
 

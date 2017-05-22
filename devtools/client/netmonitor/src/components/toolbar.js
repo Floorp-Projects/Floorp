@@ -92,6 +92,11 @@ const Toolbar = createClass({
       );
     });
 
+    // Setup autocomplete list
+    let negativeAutocompleteList = FILTER_FLAGS.map((item) => `-${item}`);
+    let autocompleteList = [...FILTER_FLAGS, ...negativeAutocompleteList]
+      .map((item) => `${item}:`);
+
     return (
       span({ className: "devtools-toolbar devtools-toolbar-container" },
         span({ className: "devtools-toolbar-group" },
@@ -109,7 +114,7 @@ const Toolbar = createClass({
             placeholder: SEARCH_PLACE_HOLDER,
             type: "filter",
             onChange: setRequestFilterText,
-            autocompleteList: FILTER_FLAGS.map((item) => `${item}:`),
+            autocompleteList,
           }),
           button({
             className: toggleButtonClassName.join(" "),

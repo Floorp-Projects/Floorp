@@ -147,6 +147,21 @@
 #  define MOZ_NONNULL(...)
 #endif
 
+/**
+ * MOZ_NONNULL_RETURN tells the compiler that the function's return value is
+ * guaranteed to be a non-null pointer, which may enable the compiler to
+ * optimize better at call sites.
+ *
+ * Place this attribute at the end of a function declaration. For example,
+ *
+ *   char* foo(char *p, char *q) MOZ_NONNULL_RETURN;
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#  define MOZ_NONNULL_RETURN __attribute__ ((returns_nonnull))
+#else
+#  define MOZ_NONNULL_RETURN
+#endif
+
 /*
  * MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS, specified at the end of a function
  * declaration, indicates that for the purposes of static analysis, this

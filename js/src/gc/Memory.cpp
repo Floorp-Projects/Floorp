@@ -766,7 +766,11 @@ MarkPagesUnused(void* p, size_t size)
         return false;
 
     MOZ_ASSERT(OffsetFromAligned(p, pageSize) == 0);
+#if defined(XP_SOLARIS)
+    int result = posix_madvise(p, size, POSIX_MADV_DONTNEED);
+#else
     int result = madvise(p, size, MADV_DONTNEED);
+#endif
     return result != -1;
 }
 
