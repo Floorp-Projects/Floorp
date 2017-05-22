@@ -129,6 +129,7 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
   nsDependentCString label(charset);
   nsAutoCString encoding;
   if (!EncodingUtils::FindEncodingForLabelNoReplacement(label, encoding)) {
+    free(unescaped);
     return NS_ERROR_UCONV_NOCONV;
   }
   nsCOMPtr<nsIUnicodeDecoder> decoder =
