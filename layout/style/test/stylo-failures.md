@@ -36,11 +36,8 @@ to mochitest command.
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
 * Animation support:
-  * test_animations.html [1]
-  * test_animations_dynamic_changes.html [1]
-  * test_bug716226.html [3]
   * OMTA
-    * test_animations_omta.html: bug 1361938, bug 1361663 [85]
+    * test_animations_omta.html: bug 1361938, bug 1361663 [*]
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
 * CSSOM support:
