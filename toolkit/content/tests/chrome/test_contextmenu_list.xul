@@ -20,7 +20,7 @@
     <richlistitem id="item4"><checkbox label="Four"/></richlistitem>
   </richlistbox>
 
-  <tree id="tree" rows="5" flex="1" context="themenu" style="-moz-appearance: none; appearance: none; border: 0">
+  <tree id="tree" rows="5" flex="1" context="themenu" style="-moz-appearance: none; border: 0">
     <treecols>
       <treecol label="Name" flex="1"/>
       <splitter class="tree-splitter"/>
