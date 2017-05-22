@@ -201,7 +201,7 @@ select > button {
 
   background-size: auto auto;
   background-color: transparent;
-  background-image: url("chrome://browser/skin/images/dropmarker.svg") !important;
+  background-image: url("chrome://geckoview/skin/images/dropmarker.svg") !important;
   background-position: calc(50% + 1px) center !important;
   background-repeat: no-repeat !important;
 
@@ -356,7 +356,7 @@ div:-moz-native-anonymous.moz-accessiblecaret > #image {
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
-  background-image: url("chrome://browser/skin/images/accessiblecaret-normal-hdpi.png");
+  background-image: url("chrome://geckoview/skin/images/accessiblecaret-normal-hdpi.png");
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.left > #text-overlay,
@@ -365,7 +365,7 @@ div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
-  background-image: url("chrome://browser/skin/images/accessiblecaret-tilt-left-hdpi.png");
+  background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-left-hdpi.png");
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.right > #text-overlay,
@@ -374,47 +374,47 @@ div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
-  background-image: url("chrome://browser/skin/images/accessiblecaret-tilt-right-hdpi.png");
+  background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-right-hdpi.png");
 }
 
 @media (min-resolution: 1.5dppx) {
   div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
-    background-image: url("chrome://browser/skin/images/accessiblecaret-normal-hdpi.png");
+    background-image: url("chrome://geckoview/skin/images/accessiblecaret-normal-hdpi.png");
   }
 
   div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
-    background-image: url("chrome://browser/skin/images/accessiblecaret-tilt-left-hdpi.png");
+    background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-left-hdpi.png");
   }
 
   div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
-    background-image: url("chrome://browser/skin/images/accessiblecaret-tilt-right-hdpi.png");
+    background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-right-hdpi.png");
   }
 }
 
 @media (min-resolution: 2dppx) {
   div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
-    background-image: url("chrome://browser/skin/images/accessiblecaret-normal-xhdpi.png");
+    background-image: url("chrome://geckoview/skin/images/accessiblecaret-normal-xhdpi.png");
   }
 
   div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
-    background-image: url("chrome://browser/skin/images/accessiblecaret-tilt-left-xhdpi.png");
+    background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-left-xhdpi.png");
   }
 
   div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
-    background-image: url("chrome://browser/skin/images/accessiblecaret-tilt-right-xhdpi.png");
+    background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-right-xhdpi.png");
   }
 }
 
 @media (min-resolution: 2.25dppx) {
   div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
-    background-image: url("chrome://browser/skin/images/accessiblecaret-normal-xxhdpi.png");
+    background-image: url("chrome://geckoview/skin/images/accessiblecaret-normal-xxhdpi.png");
   }
 
   div:-moz-native-anonymous.moz-accessiblecaret.left > #image {
-    background-image: url("chrome://browser/skin/images/accessiblecaret-tilt-left-xxhdpi.png");
+    background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-left-xxhdpi.png");
   }
 
   div:-moz-native-anonymous.moz-accessiblecaret.right > #image {
-    background-image: url("chrome://browser/skin/images/accessiblecaret-tilt-right-xxhdpi.png");
+    background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-right-xxhdpi.png");
   }
 }
