@@ -59,10 +59,18 @@ enum class TraversalRootBehavior {
 // hints, which is what's required when handling frame reconstruction.
 // The change hints in this case are unneeded, since the old frames have
 // already been destroyed.
+// Indicates how the Servo style system should perform.
 enum class TraversalRestyleBehavior {
+  // Normal processing.
   Normal,
+  // Traverses in a mode that doesn't generate any change hints, which is what's
+  // required when handling frame reconstruction.  The change hints in this case
+  // are unneeded, since the old frames have already been destroyed.
   ForReconstruct,
+  // Processes animation-only restyle.
   ForAnimationOnly,
+  // Traverses as normal mode but tries to update all CSS animations.
+  ForCSSRuleChanges,
 };
 
 // Represents which tasks are performed in a SequentialTask of UpdateAnimations.

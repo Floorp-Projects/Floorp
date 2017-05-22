@@ -2537,7 +2537,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   // We delay traversing the entire document until here, since we per above we
   // may invalidate the root style when we load doc stylesheets.
   if (ServoStyleSet* set = mPresShell->StyleSet()->GetAsServo()) {
-    set->StyleDocument();
+    set->StyleDocument(TraversalRestyleBehavior::Normal);
   }
 
   // --------- IF SCROLLABLE WRAP IN SCROLLFRAME --------

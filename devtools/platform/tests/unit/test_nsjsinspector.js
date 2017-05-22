@@ -3,9 +3,13 @@
 
 "use strict";
 
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
 // Test the basic functionality of the nsIJSInspector component.
 var gCount = 0;
 const MAX = 10;
+
 var inspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
 var tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
 

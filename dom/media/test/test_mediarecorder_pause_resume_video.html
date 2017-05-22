@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder Recording doesn't record during pause</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/dom/canvas/test/captureStream_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<div id="content">
+  <canvas id="video-src-canvas"></canvas>
+  <video id="recorded-video"></video>>
+</div>
+<script class="testbody" type="text/javascript">
+
+function startTest() {
+  // Setup canvas and take a stream from it
+  let canvas = document.getElementById("video-src-canvas");
+
+  let canvas_size = 100;
+  let new_canvas_size = 50;
+
+  canvas.width = canvas.height = canvas_size;
+
+  let helper = new CaptureStreamTestHelper2D(100, 100);
+  helper.drawColor(canvas, helper.red);
+
+  let canvasStream = canvas.captureStream();
+  // Canvas set up
+
+   // Check values for events
+  let numDataAvailabledRaised = 0;
+  // Recorded data that will be playback.
+  let blob;
+
+  mediaRecorder = new MediaRecorder(canvasStream);
+  is(mediaRecorder.stream, canvasStream,
+     "Media recorder stream = canvas stream at the start of recording");
+
+  mediaRecorder.onwarning = () => ok(false, "warning unexpectedly fired");
+
+  mediaRecorder.onerror = () => ok(false, "Recording failed");
+
+  mediaRecorder.ondataavailable = ev => {
+    info("Got 'dataavailable' event");
+    ++numDataAvailabledRaised;
+    // Save recorded data for playback
+    blob = ev.data;
+  };
+
+  mediaRecorder.onstart = () => {
+    info("Got 'start' event");
+    // We just want one frame encoded before we pause
+    mediaRecorder.pause();
+    // We may rewrite this once we settle Bug 1363915, could listen for pause event instead
+    is(mediaRecorder.state, 'paused', 'Media recorder should be paused');
+    // Change our canvas color and size, these changes should not be recorded due to pause
+    canvas.width = canvas.height = new_canvas_size;
+    helper.drawColor(canvas, helper.blue);
+
+    // Wait awhile with the canvas as blue. Then change color to green, resume, and record green
+    let numberOfPaintsSincePause = 0;
+    let draw = () => {
+      numberOfPaintsSincePause++;
+      if(numberOfPaintsSincePause == 60) {
+        canvas.width = canvas.height = canvas_size;
+        helper.drawColor(canvas, helper.green);
+      } else if (numberOfPaintsSincePause == 62) {
+        // Waited 2 draws since changing canvas to green, should be safe to resume
+        mediaRecorder.resume();
+      } else if (numberOfPaintsSincePause > 120) {
+        mediaRecorder.stop();
+        return; // Early return, we don't want to request any more animation frames
+      }
+      window.requestAnimationFrame(draw);
+    };
+    window.requestAnimationFrame(draw);
+  };
+
+  mediaRecorder.onstop = () => {
+    info("Got 'stop' event");
+    is(mediaRecorder.state, 'inactive', 'Media recorder should be incative after stop');
+    is(numDataAvailabledRaised, 1, "Expected 1 dataavailable event");
+
+    ok(blob, "Should have gotten a data blob");
+    let video = document.getElementById("recorded-video");
+    video.id = "recorded-video";
+    video.src = URL.createObjectURL(blob);
+    // Setup a check to make sure we don't play back any blue
+    let checkVideoHasNoBlue = () => {
+      if(helper.isPixel(helper.getPixel(video), helper.blue, 128)) {
+        ok(false, "Video should have no blue frames");
+        // Remove handler so we don't spam the log
+        video.ontimeupdate = null;
+      }
+    };
+    video.ontimeupdate = checkVideoHasNoBlue;
+    video.onerror = () => {
+      ok(false, "Should be able to play the recording. Got error. code=" + video.error.code);
+      SimpleTest.finish();
+    };
+    video.onended = () => {
+      ok(helper.isPixel(helper.getPixel(video), helper.green, 128), "Last frame should be green");
+      SimpleTest.finish();
+    };
+    // The video will resize once it loads its metadata, only listen for resizes after that
+    video.onloadedmetadata = () => {
+      ok(video.videoWidth === canvas_size && video.videoHeight === canvas_size,
+         "video element should be same size as canvas once metadata is loaded");
+      // We shouldn't have any resize events once the video is loaded
+      video.onresize = () => {
+        ok(false, "Should not have any resize events!");
+      };
+    };
+
+    video.play();
+  };
+
+  mediaRecorder.start();
+  is(mediaRecorder.state, "recording", "Media recorder should be recording");
+}
+
+SimpleTest.waitForExplicitFinish();
+startTest();
+
+</script>
+</pre>
+</body>
+</html>

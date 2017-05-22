@@ -66,6 +66,17 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
   Servo_NoteExplicitHints(aElement, aRestyleHint, aMinChangeHint);
 }
 
+void
+ServoRestyleManager::PostRestyleEventForCSSRuleChanges(
+  Element* aElement,
+  nsRestyleHint aRestyleHint,
+  nsChangeHint aMinChangeHint)
+{
+  mRestyleForCSSRuleChanges = true;
+
+  PostRestyleEvent(aElement, aRestyleHint, aMinChangeHint);
+}
+
 /* static */ void
 ServoRestyleManager::PostRestyleEventForAnimations(Element* aElement,
                                                    nsRestyleHint aRestyleHint)
@@ -553,8 +564,11 @@ ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
     ++mAnimationGeneration;
   }
 
+  TraversalRestyleBehavior restyleBehavior = mRestyleForCSSRuleChanges
+    ? TraversalRestyleBehavior::ForCSSRuleChanges
+    : TraversalRestyleBehavior::Normal;
   while (animationOnly ? styleSet->StyleDocumentForAnimationOnly()
-                       : styleSet->StyleDocument()) {
+                       : styleSet->StyleDocument(restyleBehavior)) {
     if (!animationOnly) {
       ClearSnapshots();
     }
@@ -603,6 +617,7 @@ ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
     styleSet->AssertTreeIsClean();
     mHaveNonAnimationRestyles = false;
   }
+  mRestyleForCSSRuleChanges = false;
   mInStyleRefresh = false;
 
   // Note: We are in the scope of |animationsWithDestroyedFrame|, so
