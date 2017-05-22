@@ -77,13 +77,8 @@
 # define VALGRIND_MAKE_MEM_DEFINED(_addr,_len)   ((void)0)
 #endif
 
-#if defined(GP_OS_windows)
-typedef CONTEXT tick_context_t;
-#elif defined(GP_OS_darwin)
-typedef void tick_context_t;   // this type isn't used meaningfully on Mac
-#elif defined(GP_OS_linux) || defined(GP_OS_android)
+#if defined(GP_OS_linux) || defined(GP_OS_android)
 #include <ucontext.h>
-typedef ucontext_t tick_context_t;
 #endif
 
 using namespace mozilla;
@@ -573,7 +568,7 @@ public:
     , mResponsiveness(aThreadInfo->GetThreadResponsiveness())
     , mRSSMemory(aRSSMemory)    // may be zero
     , mUSSMemory(aUSSMemory)    // may be zero
-#if !defined(GP_OS_darwin)
+#if defined(GP_OS_linux) || defined(GP_OS_android)
     , mContext(nullptr)
 #endif
     , mPC(nullptr)
@@ -598,7 +593,7 @@ public:
     , mResponsiveness(nullptr)
     , mRSSMemory(0)
     , mUSSMemory(0)
-#if !defined(GP_OS_darwin)
+#if defined(GP_OS_linux) || defined(GP_OS_android)
     , mContext(nullptr)
 #endif
     , mPC(nullptr)
@@ -608,7 +603,11 @@ public:
   {}
 
   // Fills in mContext, mPC, mSP, mFP, and mLR for a synchronous sample.
-  void PopulateContext(tick_context_t* aContext);
+#if defined(GP_OS_linux) || defined(GP_OS_android)
+  void PopulateContext(ucontext_t* aContext);
+#else
+  void PopulateContext();
+#endif
 
   // False for periodic samples, true for synchronous samples.
   const bool mIsSynchronous;
@@ -637,8 +636,8 @@ public:
   // PopulateContext() for synchronous samples. They are filled in separately
   // from the other fields in this class because the code that fills them in is
   // platform-specific.
-#if !defined(GP_OS_darwin)
-  void* mContext; // The context from the signal handler.
+#if defined(GP_OS_linux) || defined(GP_OS_android)
+  ucontext_t* mContext; // The context from the signal handler.
 #endif
   Address mPC;    // Instruction pointer.
   Address mSP;    // Stack pointer.
@@ -667,8 +666,6 @@ AddDynamicCodeLocationTag(ProfileBuffer* aBuffer, const char* aStr)
   }
 }
 
-static const int SAMPLER_MAX_STRING_LENGTH = 512;
-
 static void
 AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
                volatile js::ProfileEntry& entry,
@@ -682,33 +679,40 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
 
   int lineno = -1;
 
-  // First entry has kind CodeLocation. Check for magic pointer bit 1 to
-  // indicate copy.
-  const char* sampleLabel = entry.label();
+  // First entry has kind CodeLocation.
+  const char* label = entry.label();
   bool includeDynamicString = !ActivePS::FeaturePrivacy(aLock);
   const char* dynamicString =
-    includeDynamicString ? entry.getDynamicString() : nullptr;
-  char combinedStringBuffer[SAMPLER_MAX_STRING_LENGTH];
+    includeDynamicString ? entry.dynamicString() : nullptr;
 
-  if (entry.isCopyLabel() || dynamicString) {
-    if (dynamicString) {
-      // Create a string that is sampleLabel + ' ' + annotationString.
-      // Avoid sprintf because it can take a lock on Windows, and this
-      // code runs during the profiler's "critical section" as defined
-      // in SamplerThread::SuspendAndSampleAndResumeThread.
-      size_t labelLength = strlen(sampleLabel);
-      size_t dynamicLength = strlen(dynamicString);
-      if (labelLength + 1 + dynamicLength < ArrayLength(combinedStringBuffer)) {
-        PodCopy(combinedStringBuffer, sampleLabel, labelLength);
+  if (dynamicString) {
+    // Create a string that is label + ' ' + annotationString (unless
+    // label is an empty string, in which case the ' ' is omitted).
+    // Avoid sprintf because it can take a lock on Windows, and this
+    // code runs during the profiler's "critical section" as defined
+    // in SamplerThread::SuspendAndSampleAndResumeThread.
+    char combinedStringBuffer[512];
+    const char* locationString;
+    size_t labelLength = strlen(label);
+    size_t spaceLength = label[0] == '\0' ? 0 : 1;
+    size_t dynamicLength = strlen(dynamicString);
+    size_t combinedLength = labelLength + spaceLength + dynamicLength;
+
+    if (combinedLength < ArrayLength(combinedStringBuffer)) {
+      PodCopy(combinedStringBuffer, label, labelLength);
+      if (spaceLength != 0) {
         combinedStringBuffer[labelLength] = ' ';
-        PodCopy(&combinedStringBuffer[labelLength + 1], dynamicString, dynamicLength);
-        combinedStringBuffer[labelLength + 1 + dynamicLength] = '\0';
-        sampleLabel = combinedStringBuffer;
       }
+      PodCopy(&combinedStringBuffer[labelLength + spaceLength], dynamicString, dynamicLength);
+      combinedStringBuffer[combinedLength] = '\0';
+      locationString = combinedStringBuffer;
+    } else {
+      locationString = label;
     }
+
     // Store the string using 1 or more EmbeddedString tags.
     // That will happen to the preceding tag.
-    AddDynamicCodeLocationTag(aBuffer, sampleLabel);
+    AddDynamicCodeLocationTag(aBuffer, locationString);
     if (entry.isJs()) {
       JSScript* script = entry.script();
       if (script) {
@@ -724,7 +728,7 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
       lineno = entry.line();
     }
   } else {
-    aBuffer->addTag(ProfileBufferEntry::CodeLocation(sampleLabel));
+    aBuffer->addTag(ProfileBufferEntry::CodeLocation(label));
 
     // XXX: Bug 1010578. Don't assume a CPP entry and try to get the line for
     // js entries as well.
@@ -739,7 +743,6 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
 
   uint32_t category = entry.category();
   MOZ_ASSERT(!(category & js::ProfileEntry::IS_CPP_ENTRY));
-  MOZ_ASSERT(!(category & js::ProfileEntry::FRAME_LABEL_COPY));
 
   if (category) {
     aBuffer->addTag(ProfileBufferEntry::Category((int)category));
@@ -1034,8 +1037,7 @@ DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
     0
   };
 
-  const mcontext_t* mcontext =
-    &reinterpret_cast<ucontext_t*>(aSample.mContext)->uc_mcontext;
+  const mcontext_t* mcontext = &aSample.mContext->uc_mcontext;
   mcontext_t savedContext;
   NotNull<RacyThreadInfo*> racyInfo = aSample.mRacyInfo;
 
@@ -1114,8 +1116,7 @@ static void
 DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
                   const TickSample& aSample)
 {
-  const mcontext_t* mc =
-    &reinterpret_cast<ucontext_t*>(aSample.mContext)->uc_mcontext;
+  const mcontext_t* mc = &aSample.mContext->uc_mcontext;
 
   lul::UnwindRegs startRegs;
   memset(&startRegs, 0, sizeof(startRegs));
@@ -2768,13 +2769,11 @@ profiler_get_backtrace()
   TickSample sample(info->RacyInfo(), info->mContext, platformData.get());
 
 #if defined(HAVE_NATIVE_UNWIND)
-#if defined(GP_OS_windows) || defined(GP_OS_linux) || defined(GP_OS_android)
-  tick_context_t context;
+#if defined(GP_OS_linux) || defined(GP_OS_android)
+  ucontext_t context;
   sample.PopulateContext(&context);
-#elif defined(GP_OS_darwin)
-  sample.PopulateContext(nullptr);
 #else
-# error "unknown platform"
+  sample.PopulateContext();
 #endif
 #endif
 
@@ -2822,17 +2821,20 @@ profiler_get_backtrace_noalloc(char *output, size_t outputSize)
   for (uint32_t i = 0; i < pseudoCount; i++) {
     const char* label = pseudoFrames[i].label();
     const char* dynamicString =
-      includeDynamicString ? pseudoFrames[i].getDynamicString() : nullptr;
+      includeDynamicString ? pseudoFrames[i].dynamicString() : nullptr;
     size_t labelLength = strlen(label);
     if (dynamicString) {
-      // Put the label, a space, and the dynamic string into output.
+      // Put the label, maybe a space, and the dynamic string into output.
+      size_t spaceLength = label[0] == '\0' ? 0 : 1;
       size_t dynamicStringLength = strlen(dynamicString);
-      if (output + labelLength + 1 + dynamicStringLength >= bound) {
+      if (output + labelLength + spaceLength + dynamicStringLength >= bound) {
         break;
       }
       strcpy(output, label);
       output += labelLength;
-      *output++ = ' ';
+      if (spaceLength != 0) {
+        *output++ = ' ';
+      }
       strcpy(output, dynamicString);
       output += dynamicStringLength;
     } else {
