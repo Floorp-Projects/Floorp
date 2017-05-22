@@ -14,7 +14,8 @@
 
 namespace mozilla {
 
-struct SeekJob {
+struct SeekJob
+{
   SeekJob() = default;
   SeekJob(SeekJob&& aOther) = default;
   SeekJob& operator=(SeekJob&& aOther) = default;
