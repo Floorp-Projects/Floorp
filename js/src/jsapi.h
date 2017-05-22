@@ -716,6 +716,9 @@ typedef void
 (* JSCompartmentNameCallback)(JSContext* cx, JSCompartment* compartment,
                               char* buf, size_t bufsize);
 
+typedef void
+(* JSRealmNameCallback)(JSContext* cx, JS::Handle<JS::Realm*> realm, char* buf, size_t bufsize);
+
 /**
  * Callback used by memory reporting to ask the embedder how much memory an
  * external string is keeping alive.  The embedder is expected to return a value
@@ -1378,6 +1381,9 @@ JS_SetSizeOfIncludingThisCompartmentCallback(JSContext* cx,
 
 extern JS_PUBLIC_API(void)
 JS_SetCompartmentNameCallback(JSContext* cx, JSCompartmentNameCallback callback);
+
+extern JS_PUBLIC_API(void)
+JS_SetRealmNameCallback(JSContext* cx, JSRealmNameCallback callback);
 
 extern JS_PUBLIC_API(void)
 JS_SetWrapObjectCallbacks(JSContext* cx, const JSWrapObjectCallbacks* callbacks);
