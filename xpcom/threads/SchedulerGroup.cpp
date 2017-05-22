@@ -161,6 +161,12 @@ SchedulerEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(bool)
+SchedulerEventTarget::IsOnCurrentThreadInfallible()
+{
+  return NS_IsMainThread();
+}
+
 /* static */ nsresult
 SchedulerGroup::UnlabeledDispatch(const char* aName,
                                   TaskCategory aCategory,

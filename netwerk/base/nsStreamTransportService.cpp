@@ -496,6 +496,20 @@ nsStreamTransportService::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP_(bool)
+nsStreamTransportService::IsOnCurrentThreadInfallible()
+{
+    nsCOMPtr<nsIThreadPool> pool;
+    {
+        mozilla::MutexAutoLock lock(mShutdownLock);
+        pool = mPool;
+    }
+    if (!pool) {
+      return false;
+    }
+    return pool->IsOnCurrentThread();
+}
+
 NS_IMETHODIMP
 nsStreamTransportService::IsOnCurrentThread(bool *result)
 {

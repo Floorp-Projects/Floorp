@@ -77,6 +77,8 @@ public:
 
   NS_IMETHOD IsOnCurrentThread(bool *_retval) override { return !mEventTarget ? NS_ERROR_NULL_POINTER : mEventTarget->IsOnCurrentThread(_retval); }
 
+  NS_IMETHOD_(bool) IsOnCurrentThreadInfallible() override { return mEventTarget && mEventTarget->IsOnCurrentThread(); }
+
   // Creates necessary statics. Called once at startup.
   static void InitStatics();
 
