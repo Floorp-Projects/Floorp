@@ -76,5 +76,5 @@ function mapGlobals(fileGlobals) {
 module.exports = {
   globals: helpers.isMozillaCentralBased() ?
     mapGlobals(getScriptGlobals()) :
-    helpers.getSavedEnvironmentItems("places-overlay")
+    helpers.getSavedEnvironmentItems("places-overlay").globals
 };

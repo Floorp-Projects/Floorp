@@ -53,5 +53,5 @@ function mapGlobals(fileGlobals) {
 module.exports = {
   globals: helpers.isMozillaCentralBased() ?
     mapGlobals(getScriptGlobals()) :
-    helpers.getSavedEnvironmentItems("simpletest")
+    helpers.getSavedEnvironmentItems("simpletest").globals
 };
