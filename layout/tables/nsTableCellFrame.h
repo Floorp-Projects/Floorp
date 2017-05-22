@@ -158,11 +158,8 @@ public:
 
   // there is no set row index because row index depends on the cell's parent row only
 
-  // Update the style on the block wrappers around our kids.
-  virtual void DoUpdateStyleOfOwnedAnonBoxes(
-    mozilla::ServoStyleSet& aStyleSet,
-    nsStyleChangeList& aChangeList,
-    nsChangeHint aHintForThisFrame) override;
+  // Return our cell content frame.
+  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
   /*---------------- nsITableCellLayout methods ------------------------*/
 
