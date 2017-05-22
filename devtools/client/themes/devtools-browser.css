@@ -20,7 +20,7 @@
 
 .devtools-eyedropper-panel {
   pointer-events: none;
-  -moz-appearance: none;
+  -moz-appearance: none; appearance: none;
   width: 156px;
   height: 120px;
   background-color: transparent;

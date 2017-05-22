@@ -22,6 +22,7 @@
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
 
 * {
+  appearance: auto; /* make -moz-appearance work on all XUL elements */
   -moz-user-focus: ignore;
   -moz-user-select: none;
   display: -moz-box;
