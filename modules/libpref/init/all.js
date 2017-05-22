@@ -5238,7 +5238,7 @@ pref("urlclassifier.gethashnoise", 4);
 // Gethash timeout for Safebrowsing.
 pref("urlclassifier.gethash.timeout_ms", 5000);
 // Update server response timeout for Safebrowsing.
-pref("urlclassifier.update.response_timeout_ms", 5000);
+pref("urlclassifier.update.response_timeout_ms", 15000);
 // Download update timeout for Safebrowsing.
 pref("urlclassifier.update.timeout_ms", 60000);
 
@@ -5555,8 +5555,6 @@ pref("narrate.filter-voices", true);
 // loaded without sandboxing even if this pref is changed.
 pref("media.gmp.insecure.allow", false);
 #endif
-
-pref("dom.audiochannel.mutedByDefault", false);
 
 // HTML <dialog> element
 pref("dom.dialog_element.enabled", false);

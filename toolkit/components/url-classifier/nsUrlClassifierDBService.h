@@ -15,6 +15,7 @@
 #include "nsIUrlClassifierHashCompleter.h"
 #include "nsIUrlListManager.h"
 #include "nsIUrlClassifierDBService.h"
+#include "nsIUrlClassifierInfo.h"
 #include "nsIURIClassifier.h"
 #include "nsToolkitCompsCID.h"
 #include "nsICryptoHMAC.h"
@@ -83,6 +84,7 @@ TablesToResponse(const nsACString& tables);
 // calls to the background thread.
 class nsUrlClassifierDBService final : public nsIUrlClassifierDBService,
                                        public nsIURIClassifier,
+                                       public nsIUrlClassifierInfo,
                                        public nsIObserver
 {
 public:
@@ -98,6 +100,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURLCLASSIFIERDBSERVICE
   NS_DECL_NSIURICLASSIFIER
+  NS_DECL_NSIURLCLASSIFIERINFO
   NS_DECL_NSIOBSERVER
 
   bool CanComplete(const nsACString &tableName);
@@ -229,6 +232,10 @@ public:
   // Should be called on the worker thread.
   void FlushAndDisableAsyncUpdate();
 
+  // A synchronous call to get cache information for the given table.
+  // This is only used by about:url-classifier now.
+  nsresult GetCacheInfo(const nsACString& aTable,
+                        nsIUrlClassifierCacheInfo** aCache);
 private:
   // No subclassing
   ~nsUrlClassifierDBServiceWorker();

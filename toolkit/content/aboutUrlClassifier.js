@@ -21,6 +21,7 @@ function unLoad() {
   window.removeEventListener("unload", unLoad);
 
   Provider.uninit();
+  Cache.uninit();
   Debug.uninit();
 }
 
@@ -29,6 +30,7 @@ function onLoad() {
   window.addEventListener("unload", unLoad);
 
   Provider.init();
+  Cache.init();
   Debug.init();
 }
 
@@ -177,6 +179,145 @@ var Provider = {
     }
   },
 
+};
+
+/*
+ * Cache
+ */
+var Cache = {
+  // Tables that show cahe entries.
+  showCacheEnties: null,
+
+  init() {
+    this.showCacheEnties = new Set();
+
+    this.register()
+    this.render();
+  },
+
+  uninit() {
+    Services.obs.removeObserver(this.refresh, UPDATE_FINISH);
+  },
+
+  register() {
+    this.refresh = this.refresh.bind(this);
+    Services.obs.addObserver(this.refresh, UPDATE_FINISH);
+  },
+
+  render() {
+    this.createCacheEntries();
+
+    let refreshBtn = document.getElementById("refresh-cache-btn");
+    refreshBtn.addEventListener("click", () => { this.refresh(); });
+
+    let clearBtn = document.getElementById("clear-cache-btn");
+    clearBtn.addEventListener("click", () => {
+      let dbservice = Cc["@mozilla.org/url-classifier/dbservice;1"]
+                      .getService(Ci.nsIUrlClassifierDBService);
+      dbservice.clearCache();
+      // Since clearCache is async call, we just simply assume it will be
+      // updated in 100 milli-seconds.
+      setTimeout(() => { this.refresh(); }, 100);
+    });
+  },
+
+  refresh() {
+    this.clearCacheEntries();
+    this.createCacheEntries();
+  },
+
+  clearCacheEntries() {
+    let ctbody = document.getElementById("cache-table-body");
+    while (ctbody.firstChild) {
+      ctbody.firstChild.remove();
+    }
+
+    let cetbody = document.getElementById("cache-entries-table-body");
+    while (cetbody.firstChild) {
+      cetbody.firstChild.remove();
+    }
+  },
+
+  createCacheEntries() {
+    function createRow(tds, body, cols) {
+      let tr = document.createElement("tr");
+      tds.forEach(function(v, i, a) {
+        let td = document.createElement("td");
+        if (i == 0 && tds.length != cols) {
+          td.setAttribute("colspan", cols - tds.length + 1);
+        }
+        let elem = typeof v === "object" ? v : document.createTextNode(v);
+        td.appendChild(elem);
+        tr.appendChild(td);
+      })
+      body.appendChild(tr);
+    }
+
+    let dbservice = Cc["@mozilla.org/url-classifier/dbservice;1"]
+                    .getService(Ci.nsIUrlClassifierInfo);
+
+    for (let provider of Provider.providers) {
+      let pref = "browser.safebrowsing.provider." + provider + ".lists";
+      let tables = Services.prefs.getCharPref(pref, "").split(",");
+
+      for (let table of tables) {
+        let cache = dbservice.getCacheInfo(table);
+        let entries = cache.entries;
+        if (entries.length === 0) {
+          this.showCacheEnties.delete(table);
+          continue;
+        }
+
+        let positiveCacheCount = 0;
+        for (let i = 0; i < entries.length ; i++) {
+          let entry = entries.queryElementAt(i, Ci.nsIUrlClassifierCacheEntry);
+          let matches = entry.matches;
+          positiveCacheCount += matches.length;
+
+          // If we don't have to show cache entries for this table then just
+          // skip the following code.
+          if (!this.showCacheEnties.has(table)) {
+            continue;
+          }
+
+          let tds = [table, entry.prefix, new Date(entry.expiry * 1000).toString()];
+          let j = 0;
+          do {
+            if (matches.length >= 1) {
+              let match =
+                matches.queryElementAt(j, Ci.nsIUrlClassifierPositiveCacheEntry);
+              let list = [match.fullhash, new Date(match.expiry * 1000).toString()];
+              tds = tds.concat(list);
+            } else {
+              tds = tds.concat([STR_NA, STR_NA])
+            }
+            createRow(tds, document.getElementById("cache-entries-table-body"), 5);
+            j++;
+            tds = [""];
+          } while (j < matches.length)
+        }
+
+        // Create cache information entries.
+        let chk = document.createElement("input");
+        chk.type = "checkbox";
+        chk.checked = this.showCacheEnties.has(table);
+        chk.addEventListener("click", () => {
+          if (chk.checked) {
+            this.showCacheEnties.add(table);
+          } else {
+            this.showCacheEnties.delete(table);
+          }
+          this.refresh();
+        });
+
+        let tds = [table, entries.length, positiveCacheCount, chk];
+        createRow(tds, document.getElementById("cache-table-body"), tds.length);
+      }
+    }
+
+    let entries_div = document.getElementById("cache-entries");
+    entries_div.style.display = this.showCacheEnties.size == 0 ? "none" : "block";
+  },
 };
 
 /*

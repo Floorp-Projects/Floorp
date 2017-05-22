@@ -201,6 +201,11 @@ interface nsIUrlClassifierDBService : nsISupports
    * for use in tests.
    */
   void reloadDatabase();
+
+  /**
+   * Empty all the caches.
+   */
+  void clearCache();
 };
 
 /**
