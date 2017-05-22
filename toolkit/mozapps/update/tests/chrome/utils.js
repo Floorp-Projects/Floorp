@@ -813,7 +813,6 @@ function setupPrefs() {
   Services.prefs.setIntPref(PREF_APP_UPDATE_IDLETIME, 0);
   Services.prefs.setIntPref(PREF_APP_UPDATE_PROMPTWAITTIME, 0);
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, false);
-  Services.prefs.setIntPref(PREF_APP_UPDATE_DOWNLOADBACKGROUNDINTERVAL, 0);
 }
 
 /**
@@ -905,10 +904,6 @@ function resetPrefs() {
 
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDMAXERRORS)) {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDMAXERRORS);
-  }
-
-  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_DOWNLOADBACKGROUNDINTERVAL)) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_DOWNLOADBACKGROUNDINTERVAL);
   }
 
   try {
