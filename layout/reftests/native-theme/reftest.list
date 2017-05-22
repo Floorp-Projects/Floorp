@@ -30,11 +30,11 @@ fails-if(!nativeThemePref) != checkbox-native.html checkbox-nonnative.html
 != 427122-1.html 427122-1-ref.html
 
 # 403458 is a Windows-only bug
-skip-if(!winWidget) != 403458-winmenu-ltr.xul 403458-winmenu-rtl.xul
+pref(layout.css.moz-appearance.enabled,true) skip-if(!winWidget) != 403458-winmenu-ltr.xul 403458-winmenu-rtl.xul
 
 == 470711-1.xul 470711-1-ref.xul
 
-== 482955-1.xul 482955-1-ref.xul
+pref(layout.css.moz-appearance.enabled,true) == 482955-1.xul 482955-1-ref.xul
 
 == 492155-1.html about:blank
 == 492155-2.html about:blank
@@ -78,7 +78,7 @@ skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minim
 # animated progress bars.
 # Nothing shows up on Android, presumably because that appearance type is
 # not implemented.
-skip-if(cocoaWidget) skip-if(winWidget) == progress-overflow.html progress-overflow-ref.html
-fails-if(Android) skip-if(cocoaWidget) skip-if(winWidget) != progress-overflow-small.html progress-nobar.html
+pref(layout.css.moz-appearance.enabled,true) pref(layout.css.appearance.enabled,true) skip-if(cocoaWidget) skip-if(winWidget) == progress-overflow.html progress-overflow-ref.html
+pref(layout.css.moz-appearance.enabled,true) pref(layout.css.appearance.enabled,true) fails-if(Android) skip-if(cocoaWidget) skip-if(winWidget) != progress-overflow-small.html progress-nobar.html
 
 == 676387-1.xul 676387-1-ref.xul

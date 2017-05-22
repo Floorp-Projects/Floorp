@@ -463,9 +463,21 @@ CSS_PROP_DISPLAY(
 CSS_PROP_DISPLAY(
     -moz-appearance,
     _moz_appearance,
-    CSS_PROP_DOMPROP_PREFIXED(Appearance),
-    CSS_PROPERTY_PARSE_VALUE,
-    "",
+    MozAppearance,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS_AND_CHROME,
+    "layout.css.moz-appearance.enabled",
+    VARIANT_HK,
+    kMozAppearanceKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_Discrete)
+CSS_PROP_DISPLAY(
+    appearance,
+    appearance,
+    Appearance,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS_AND_CHROME,
+    "layout.css.appearance.enabled", // also controls -webkit-appearance
     VARIANT_HK,
     kAppearanceKTable,
     CSS_PROP_NO_OFFSET,

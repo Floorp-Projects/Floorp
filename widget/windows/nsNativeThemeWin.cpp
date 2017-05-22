@@ -924,7 +924,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
       else {
         nsIFrame *parent = aFrame->GetParent();
         EventStates parentState =
-          GetContentState(parent, parent->StyleDisplay()->mAppearance);
+          GetContentState(parent, parent->StyleDisplay()->UsedAppearance());
         if (eventState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE))
           aState += TS_ACTIVE;
         else if (eventState.HasState(NS_EVENT_STATE_HOVER))
