@@ -3814,7 +3814,8 @@ CounterFunction::operator==(const CounterFunction& aOther) const
 {
   return mIdent == aOther.mIdent &&
     mSeparator == aOther.mSeparator &&
-    mCounterStyle == aOther.mCounterStyle;
+    mCounterStyle == aOther.mCounterStyle &&
+    mCounterStyleName == aOther.mCounterStyleName;
 }
 
 nsStyleContentData&
@@ -3843,6 +3844,31 @@ nsStyleContentData::operator==(const nsStyleContentData& aOther) const
     return *mContent.mCounters == *aOther.mContent.mCounters;
   }
   return safe_strcmp(mContent.mString, aOther.mContent.mString) == 0;
+}
+
+void
+nsStyleContentData::Resolve(nsPresContext* aPresContext)
+{
+  switch (mType) {
+    case eStyleContentType_Image:
+      if (!mContent.mImage->IsResolved()) {
+        mContent.mImage->Resolve(aPresContext);
+      }
+      break;
+    case eStyleContentType_Counter:
+    case eStyleContentType_Counters: {
+      CounterFunction* counters = mContent.mCounters;
+      if (counters->mCounterStyleName) {
+        MOZ_ASSERT(!counters->mCounterStyle);
+        counters->mCounterStyle = aPresContext->CounterStyleManager()->
+          BuildCounterStyle(counters->mCounterStyleName);
+        counters->mCounterStyleName = nullptr;
+      }
+      break;
+    }
+    default:
+      break;
+  }
 }
 
 
