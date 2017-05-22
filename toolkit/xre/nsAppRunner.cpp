@@ -4441,6 +4441,10 @@ XREMain::XRE_mainRun()
     // We intentionally leak the string here since it is required by PR_SetEnv.
     PR_SetEnv(saved.release());
   }
+
+  // Call SandboxBroker to cache directories needed for policy rules, this must
+  // be called after mDirProvider.DoStartup as it needs the profile dir.
+  SandboxBroker::CacheRulesDirectories();
 #endif
 
   SaveStateForAppInitiatedRestart();
