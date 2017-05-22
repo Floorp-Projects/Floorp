@@ -78,7 +78,7 @@ public class CustomTabConfig {
         return intent.hasExtra(CustomTabsIntent.EXTRA_SESSION);
     }
 
-    private static @Nullable Bitmap getCloseButtonIcon(final @NonNull Context context, final @NonNull SafeIntent intent) {
+    /* package-private */ static @Nullable Bitmap getCloseButtonIcon(final @NonNull Context context, final @NonNull SafeIntent intent) {
         if (!intent.hasExtra(CustomTabsIntent.EXTRA_CLOSE_BUTTON_ICON)) {
             return null;
         }
@@ -100,7 +100,7 @@ public class CustomTabConfig {
         }
     }
 
-    private static @Nullable ActionButtonConfig getActionButtonConfig(final @NonNull Context context, final @NonNull SafeIntent intent) {
+    /* package-private */ static @Nullable ActionButtonConfig getActionButtonConfig(final @NonNull Context context, final @NonNull SafeIntent intent) {
         if (!intent.hasExtra(CustomTabsIntent.EXTRA_ACTION_BUTTON_BUNDLE)) {
             return null;
         }

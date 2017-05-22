@@ -2,6 +2,8 @@ package org.mozilla.focus.web;
 
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -134,10 +136,34 @@ public class CustomTabConfigTest {
         assertTrue(CustomTabConfig.isCustomTabIntent(new SafeIntent(customTabsIntent.intent)));
 
         // And we still don't crash
-        final CustomTabConfig c = CustomTabConfig.parseCustomTabIntent(RuntimeEnvironment.application, new SafeIntent(customTabsIntent.intent));
+        final CustomTabConfig.ActionButtonConfig actionButtonConfig = CustomTabConfig.getActionButtonConfig(RuntimeEnvironment.application, new SafeIntent(customTabsIntent.intent));
 
         // But we weren't able to read the action button data because of the unparcelable data
-        assertNull(c.actionButtonConfig);
+        assertNull(actionButtonConfig);
     }
 
+    @Test
+    public void actionButtonConfig() throws Exception {
+        final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+
+        final String description = "description";
+        final String intentAction = "ACTION";
+        {
+            final Bitmap bitmap = Bitmap.createBitmap(new int[]{Color.RED}, 1, 1, Bitmap.Config.ARGB_8888);
+            final PendingIntent intent = PendingIntent.getActivity(RuntimeEnvironment.application, 0, new Intent(intentAction), 0);
+
+            builder.setActionButton(bitmap, description, intent);
+        }
+
+        final CustomTabsIntent customTabsIntent = builder.build();
+        final CustomTabConfig.ActionButtonConfig actionButtonConfig = CustomTabConfig.getActionButtonConfig(RuntimeEnvironment.application, new SafeIntent(customTabsIntent.intent));
+
+        assertEquals(description, actionButtonConfig.description);
+        assertNotNull(actionButtonConfig.pendingIntent);
+
+        final Bitmap bitmap = actionButtonConfig.icon;
+        assertEquals(1, bitmap.getWidth());
+        assertEquals(1, bitmap.getHeight());
+        assertEquals(Color.RED, bitmap.getPixel(0, 0));
+    }
 }
