@@ -64,8 +64,10 @@
   <binding id="panelview">
     <content>
       <xul:box class="panel-header" anonid="header">
-        <xul:toolbarbutton class="subviewbutton subviewbutton-iconic subviewbutton-back"
+        <xul:toolbarbutton anonid="back"
+                           class="subviewbutton subviewbutton-iconic subviewbutton-back"
                            closemenu="none"
+                           tabindex="0"
                            tooltip="&backCmd.label;"
                            onclick="document.getBindingParent(this).panelMultiView.goBack()"/>
         <xul:label xbl:inherits="value=title"/>
@@ -76,6 +78,9 @@
       <property name="header"
                 readonly="true"
                 onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'header');"/>
+      <property name="backButton"
+                readonly="true"
+                onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'back');"/>
       <property name="panelMultiView" readonly="true">
         <getter><![CDATA[
           if (!this.parentNode.localName.endsWith("panelmultiview")) {
