@@ -242,7 +242,7 @@ public:
 
   virtual void HandleResumeVideoDecoding(const TimeUnit& aTarget);
 
-  virtual void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) {}
+  virtual void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) { }
 
   virtual nsCString GetDebugInfo() { return nsCString(); }
 
@@ -267,7 +267,7 @@ protected:
   };
 
   using Master = MediaDecoderStateMachine;
-  explicit StateObject(Master* aPtr) : mMaster(aPtr) {}
+  explicit StateObject(Master* aPtr) : mMaster(aPtr) { }
   TaskQueue* OwnerThread() const { return mMaster->mTaskQueue; }
   MediaResource* Resource() const { return mMaster->mResource; }
   MediaDecoderReaderWrapper* Reader() const { return mMaster->mReader; }
@@ -369,15 +369,9 @@ public:
       ->Track(mMetadataRequest);
   }
 
-  void Exit() override
-  {
-    mMetadataRequest.DisconnectIfExists();
-  }
+  void Exit() override { mMetadataRequest.DisconnectIfExists(); }
 
-  State GetState() const override
-  {
-    return DECODER_STATE_DECODING_METADATA;
-  }
+  State GetState() const override { return DECODER_STATE_DECODING_METADATA; }
 
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
   {
@@ -422,10 +416,7 @@ class MediaDecoderStateMachine::WaitForCDMState
 public:
   explicit WaitForCDMState(Master* aPtr) : StateObject(aPtr) { }
 
-  void Enter()
-  {
-    MOZ_ASSERT(!mMaster->mVideoDecodeSuspended);
-  }
+  void Enter() { MOZ_ASSERT(!mMaster->mVideoDecodeSuspended); }
 
   void Exit() override
   {
@@ -508,10 +499,7 @@ public:
     mPendingSeek.RejectIfExists(__func__);
   }
 
-  State GetState() const override
-  {
-    return DECODER_STATE_DORMANT;
-  }
+  State GetState() const override { return DECODER_STATE_DORMANT; }
 
   void HandleVideoSuspendTimeout() override
   {
@@ -525,38 +513,17 @@ public:
 
   void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) override;
 
-  void HandleAudioDecoded(AudioData*) override
-  {
-    MaybeReleaseResources();
-  }
+  void HandleAudioDecoded(AudioData*) override { MaybeReleaseResources(); }
   void HandleVideoDecoded(VideoData*, TimeStamp) override
   {
     MaybeReleaseResources();
   }
-  void HandleWaitingForAudio() override
-  {
-    MaybeReleaseResources();
-  }
-  void HandleWaitingForVideo() override
-  {
-    MaybeReleaseResources();
-  }
-  void HandleAudioCanceled() override
-  {
-    MaybeReleaseResources();
-  }
-  void HandleVideoCanceled() override
-  {
-    MaybeReleaseResources();
-  }
-  void HandleEndOfAudio() override
-  {
-    MaybeReleaseResources();
-  }
-  void HandleEndOfVideo() override
-  {
-    MaybeReleaseResources();
-  }
+  void HandleWaitingForAudio() override { MaybeReleaseResources(); }
+  void HandleWaitingForVideo() override { MaybeReleaseResources(); }
+  void HandleAudioCanceled() override { MaybeReleaseResources(); }
+  void HandleVideoCanceled() override { MaybeReleaseResources(); }
+  void HandleEndOfAudio() override { MaybeReleaseResources(); }
+  void HandleEndOfVideo() override { MaybeReleaseResources(); }
 
 private:
   void MaybeReleaseResources()
@@ -595,10 +562,7 @@ public:
     mPendingSeek.RejectIfExists(__func__);
   }
 
-  State GetState() const override
-  {
-    return DECODER_STATE_DECODING_FIRSTFRAME;
-  }
+  State GetState() const override { return DECODER_STATE_DECODING_FIRSTFRAME; }
 
   void HandleAudioDecoded(AudioData* aAudio) override
   {
@@ -1066,9 +1030,7 @@ class MediaDecoderStateMachine::AccurateSeekingState
   : public MediaDecoderStateMachine::SeekingState
 {
 public:
-  explicit AccurateSeekingState(Master* aPtr) : SeekingState(aPtr)
-  {
-  }
+  explicit AccurateSeekingState(Master* aPtr) : SeekingState(aPtr) { }
 
   RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob&& aSeekJob,
                                           EventVisibility aVisibility)
@@ -1285,8 +1247,10 @@ private:
         return seekTime;
       }
 
-      const int64_t audioStart = audio ? audio->mTime.ToMicroseconds() : INT64_MAX;
-      const int64_t videoStart = video ? video->mTime.ToMicroseconds() : INT64_MAX;
+      const int64_t audioStart =
+        audio ? audio->mTime.ToMicroseconds() : INT64_MAX;
+      const int64_t videoStart =
+        video ? video->mTime.ToMicroseconds() : INT64_MAX;
       const int64_t audioGap = std::abs(audioStart - seekTime.ToMicroseconds());
       const int64_t videoGap = std::abs(videoStart - seekTime.ToMicroseconds());
       return TimeUnit::FromMicroseconds(
@@ -1459,8 +1423,10 @@ private:
     // If the frame end time is less than the seek target, we won't want
     // to display this frame after the seek, so discard it.
     if (target >= aVideo->GetEndTime()) {
-      SLOG("DropVideoUpToSeekTarget() pop video frame [%" PRId64 ", %" PRId64 "] target=%" PRId64,
-           aVideo->mTime.ToMicroseconds(), aVideo->GetEndTime().ToMicroseconds(),
+      SLOG("DropVideoUpToSeekTarget() pop video frame [%" PRId64 ", %" PRId64
+           "] target=%" PRId64,
+           aVideo->mTime.ToMicroseconds(),
+           aVideo->GetEndTime().ToMicroseconds(),
            target.ToMicroseconds());
       mFirstVideoFrameAfterSeek = aVideo;
     } else {
@@ -1472,9 +1438,10 @@ private:
       }
       mFirstVideoFrameAfterSeek = nullptr;
 
-      SLOG("DropVideoUpToSeekTarget() found video frame [%" PRId64 ", %" PRId64 "] "
-           "containing target=%" PRId64,
-           aVideo->mTime.ToMicroseconds(), aVideo->GetEndTime().ToMicroseconds(),
+      SLOG("DropVideoUpToSeekTarget() found video frame [%" PRId64 ", %" PRId64
+           "] containing target=%" PRId64,
+           aVideo->mTime.ToMicroseconds(),
+           aVideo->GetEndTime().ToMicroseconds(),
            target.ToMicroseconds());
 
       MOZ_ASSERT(VideoQueue().GetSize() == 0,
@@ -1535,9 +1502,7 @@ class MediaDecoderStateMachine::NextFrameSeekingState
   : public MediaDecoderStateMachine::SeekingState
 {
 public:
-  explicit NextFrameSeekingState(Master* aPtr) : SeekingState(aPtr)
-  {
-  }
+  explicit NextFrameSeekingState(Master* aPtr) : SeekingState(aPtr) { }
 
   RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob&& aSeekJob,
                                           EventVisibility aVisibility)
@@ -1779,10 +1744,7 @@ public:
 
   void Step() override;
 
-  State GetState() const override
-  {
-    return DECODER_STATE_BUFFERING;
-  }
+  State GetState() const override { return DECODER_STATE_BUFFERING; }
 
   void HandleAudioDecoded(AudioData* aAudio) override
   {
@@ -1800,10 +1762,7 @@ public:
     mMaster->ScheduleStateMachine();
   }
 
-  void HandleAudioCanceled() override
-  {
-    mMaster->RequestAudioData();
-  }
+  void HandleAudioCanceled() override { mMaster->RequestAudioData(); }
 
   void HandleVideoCanceled() override
   {
