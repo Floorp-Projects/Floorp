@@ -26,6 +26,12 @@ public:
 
   static void Initialize(sandbox::BrokerServices* aBrokerServices);
 
+  /**
+   * Cache directory paths for use in policy rules. Must be called on main
+   * thread.
+   */
+  static void CacheRulesDirectories();
+
   bool LaunchApp(const wchar_t *aPath,
                  const wchar_t *aArguments,
                  const bool aEnableLogging,
