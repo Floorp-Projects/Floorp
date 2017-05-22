@@ -18,6 +18,19 @@ const TEST_STATE = {
   }]
 };
 
+const TEST_STATE_2 = {
+  windows: [{
+    tabs: [
+      { entries: [{ url: "about:robots" }]
+      },
+      { entries: [],
+        userTypedValue: "http://example.com",
+        userTypedClear: 1
+      }
+    ]
+  }]
+};
+
 function countNonLazyTabs(win) {
   win = win || window;
   let count = 0;
@@ -81,6 +94,17 @@ add_task(async function test() {
 
     newWindow.close();
   });
+
+  // Bug 1365933.
+  info("Check that session with tab having empty entries array gets restored properly");
+  await promiseBrowserState(TEST_STATE_2);
+
+  is(gBrowser.tabs.length, 2, "Window has 2 tabs");
+  is(gBrowser.selectedBrowser.currentURI.spec, "about:robots", "Tab has the expected URL");
+
+  gBrowser.selectedTab = gBrowser.tabs[1];
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  is(gBrowser.selectedBrowser.currentURI.spec, "http://example.com/", "Tab has the expected URL");
 
   // Cleanup.
   await promiseBrowserState(backupState);
