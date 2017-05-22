@@ -567,7 +567,8 @@ Toolbox.prototype = {
     if (!sourceMaps) {
       return null;
     }
-    this._sourceMapURLService = new SourceMapURLService(this._target, sourceMaps);
+    this._sourceMapURLService = new SourceMapURLService(this._target, this.threadClient,
+                                                        sourceMaps);
     return this._sourceMapURLService;
   },
 
