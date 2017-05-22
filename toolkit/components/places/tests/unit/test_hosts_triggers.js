@@ -84,7 +84,7 @@ add_task(async function test_moz_hosts_update() {
   let places = [];
   urls.forEach(function(url) {
     let place = { uri: url.uri,
-                  title: "test for " + url.url,
+                  title: "test for " + url.uri.spec,
                   transition: url.typed ? TRANSITION_TYPED : undefined };
     places.push(place);
   });

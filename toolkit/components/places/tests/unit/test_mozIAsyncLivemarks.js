@@ -143,7 +143,7 @@ add_task(async function test_addLivemark_badSiteURI_throws() {
 add_task(async function test_addLivemark_badGuid_throws() {
   try {
     await PlacesUtils.livemarks.addLivemark(
-      { parentGuid: PlacesUtils.bookmarks.unfileGuid
+      { parentGuid: PlacesUtils.bookmarks.unfiledGuid
       , feedURI: FEED_URI
       , guid: "123456" });
     do_throw("Invoking addLivemark with a bad guid should throw");
