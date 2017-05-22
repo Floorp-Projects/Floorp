@@ -81,7 +81,7 @@ add_task(async function test_context_menu() {
 
   // Also check events.
   let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
+  events = (events.default || []).filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "contextmenu", null, {engine: "other-MozSearch"}]]);
 
   contextMenu.hidePopup();
@@ -117,7 +117,7 @@ add_task(async function test_about_newtab() {
 
   // Also check events.
   let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
+  events = (events.default || []).filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "about_newtab", "enter", {engine: "other-MozSearch"}]]);
 
   await BrowserTestUtils.removeTab(tab);
