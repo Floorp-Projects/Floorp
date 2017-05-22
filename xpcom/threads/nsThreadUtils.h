@@ -1824,6 +1824,28 @@ GetCurrentPhysicalThread();
 PRThread*
 GetCurrentVirtualThread();
 
+// These functions return event targets that can be used to dispatch to the
+// current or main thread. They can also be used to test if you're on those
+// threads (via IsOnCurrentThread). These functions should be used in preference
+// to the nsIThread-based NS_Get{Current,Main}Thread functions since they will
+// return more useful answers in the case of threads sharing an event loop.
+
+nsIEventTarget*
+GetCurrentThreadEventTarget();
+
+nsIEventTarget*
+GetMainThreadEventTarget();
+
+// These variants of the above functions assert that the given thread has a
+// serial event target (i.e., that it's not part of a thread pool) and returns
+// that.
+
+nsISerialEventTarget*
+GetCurrentThreadSerialEventTarget();
+
+nsISerialEventTarget*
+GetMainThreadSerialEventTarget();
+
 } // namespace mozilla
 
 #endif  // nsThreadUtils_h__

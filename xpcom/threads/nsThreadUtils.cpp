@@ -544,6 +544,54 @@ GetCurrentPhysicalThread()
   return PR_GetCurrentThread();
 }
 
+nsIEventTarget*
+GetCurrentThreadEventTarget()
+{
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_GetCurrentThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return thread->EventTarget();
+}
+
+nsIEventTarget*
+GetMainThreadEventTarget()
+{
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return thread->EventTarget();
+}
+
+nsISerialEventTarget*
+GetCurrentThreadSerialEventTarget()
+{
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_GetCurrentThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return thread->SerialEventTarget();
+}
+
+nsISerialEventTarget*
+GetMainThreadSerialEventTarget()
+{
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return thread->SerialEventTarget();
+}
+
 } // namespace mozilla
 
 bool
