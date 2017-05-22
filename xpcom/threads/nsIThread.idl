@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIEventTarget.idl"
+#include "nsISerialEventTarget.idl"
 #include "nsIIdlePeriod.idl"
 
 %{C++
@@ -25,7 +25,7 @@ native alreadyAddRefed_nsIIdlePeriod(already_AddRefed<nsIIdlePeriod>);
  * See nsIThreadManager for the API used to create and locate threads.
  */
 [builtinclass, scriptable, uuid(5801d193-29d1-4964-a6b7-70eb697ddf2b)]
-interface nsIThread : nsIEventTarget
+interface nsIThread : nsISerialEventTarget
 {
   /**
    * @returns
