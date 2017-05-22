@@ -11,6 +11,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Services.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 #include "nsPermissionManager.h"
 #include "nsPermission.h"
@@ -3356,9 +3357,11 @@ nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
+  auto* thread = SystemGroup::AbstractMainThreadFor(TaskCategory::Other);
+
   RefPtr<nsIRunnable> runnable = aRunnable;
-  GenericPromise::All(AbstractThread::GetCurrent(), promises)->Then(
-    AbstractThread::GetCurrent(), __func__,
+  GenericPromise::All(thread, promises)->Then(
+    thread, __func__,
     [runnable] () { runnable->Run(); },
     [] () {
       NS_WARNING("nsPermissionManager permission promise rejected. We're probably shutting down.");

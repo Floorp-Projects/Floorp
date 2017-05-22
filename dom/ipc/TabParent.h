@@ -577,10 +577,6 @@ public:
 
   layout::RenderFrameParent* GetRenderFrame();
 
-  void AudioChannelChangeNotification(nsPIDOMWindowOuter* aWindow,
-                                      AudioChannel aAudioChannel,
-                                      float aVolume,
-                                      bool aMuted);
   bool SetRenderFrame(PRenderFrameParent* aRFParent);
   bool GetRenderFrameInfo(TextureFactoryIdentifier* aTextureFactoryIdentifier,
                           uint64_t* aLayersId);
@@ -625,9 +621,6 @@ protected:
                                                     const int32_t& aCx, const int32_t& aCy) override;
 
   virtual mozilla::ipc::IPCResult RecvGetTabCount(uint32_t* aValue) override;
-
-  virtual mozilla::ipc::IPCResult RecvAudioChannelActivityNotification(const uint32_t& aAudioChannel,
-                                                                       const bool& aActive) override;
 
   virtual mozilla::ipc::IPCResult RecvSHistoryUpdate(const uint32_t& aCount,
                                                      const uint32_t& aLocalIndex,

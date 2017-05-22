@@ -294,9 +294,9 @@ async function test_swapped_browser_while_not_playing(oldTab, newBrowser) {
     let observer = (subject, topic, data) => {
       ok(false, "Should not see an audio-playback notification");
     };
-    Services.obs.addObserver(observer, "audiochannel-activity-normal");
+    Services.obs.addObserver(observer, "audio-playback");
     setTimeout(() => {
-      Services.obs.removeObserver(observer, "audiochannel-activity-normal");
+      Services.obs.removeObserver(observer, "audio-playback");
       resolve();
     }, 100);
   });
