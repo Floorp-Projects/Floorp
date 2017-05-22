@@ -6,16 +6,12 @@
 # For now this is only used to inform the data pipeline about new processes, but will be used to
 # generate headers with C++ data later (enums, strings, ...).
 parent:
-  gecko_enum: GeckoProcessType_Default
   description: This is the main process. It is also known as the parent or chrome process.
 content:
-  gecko_enum: GeckoProcessType_Content
   description: This is for processes web content is rendered in.
 extension:
-  gecko_enum: GeckoProcessType_Content
   description: >
     This is the WebExtension process. It is a re-used content process, with the data submitted
     separately to avoid skewing other content process Telemetry.
 gpu:
-  gecko_enum: GeckoProcessType_GPU
   description: This is the compositor or GPU process.
