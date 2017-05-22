@@ -16,7 +16,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const ConsoleOutput = React.createFactory(require("devtools/client/webconsole/new-console-output/components/console-output"));
 const FilterBar = React.createFactory(require("devtools/client/webconsole/new-console-output/components/filter-bar"));
 
-const store = configureStore();
+let store = null;
 let queuedActions = [];
 let throttledDispatchTimeout = false;
 
@@ -30,6 +30,8 @@ function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner, document) {
   this.document = document;
 
   this.init = this.init.bind(this);
+
+  store = configureStore(this.jsterm.hud);
 }
 
 NewConsoleOutputWrapper.prototype = {
