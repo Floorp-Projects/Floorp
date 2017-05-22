@@ -35,6 +35,7 @@ struct LookAndFeelInt;
 
 namespace mozilla {
 class RemoteSpellcheckEngineChild;
+class ChildProfilerController;
 
 using mozilla::loader::PScriptCacheChild;
 
@@ -452,14 +453,6 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvUpdateWindow(const uintptr_t& aChildId) override;
 
-  virtual mozilla::ipc::IPCResult RecvStartProfiler(const ProfilerInitParams& params) override;
-
-  virtual mozilla::ipc::IPCResult RecvPauseProfiler(const bool& aPause) override;
-
-  virtual mozilla::ipc::IPCResult RecvStopProfiler() override;
-
-  virtual mozilla::ipc::IPCResult RecvGatherProfile() override;
-
   virtual mozilla::ipc::IPCResult RecvDomainSetChanged(const uint32_t& aSetType,
                                                        const uint32_t& aChangeType,
                                                        const OptionalURIParams& aDomain) override;
@@ -692,8 +685,6 @@ private:
   virtual already_AddRefed<nsIEventTarget>
   GetConstructedEventTarget(const Message& aMsg) override;
 
-  void GatherProfile(bool aIsExitProfile);
-
   InfallibleTArray<nsAutoPtr<AlertObserver> > mAlertObservers;
   RefPtr<ConsoleListener> mConsoleListener;
 
@@ -737,6 +728,10 @@ private:
 
   nsCOMPtr<nsIDomainPolicy> mPolicy;
   nsCOMPtr<nsITimer> mForceKillTimer;
+
+#ifdef MOZ_GECKO_PROFILER
+  RefPtr<ChildProfilerController> mProfilerController;
+#endif
 
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
   nsCOMPtr<nsIFile> mProfileDir;
