@@ -32,7 +32,7 @@ nsresult
 nsDirIndexParser::Init() {
   mLineStart = 0;
   mHasDescription = false;
-  mFormat = nullptr;
+  mFormat[0] = -1;
   mozilla::dom::FallbackEncoding::FromLocale(mEncoding);
  
   nsresult rv;
@@ -46,7 +46,6 @@ nsDirIndexParser::Init() {
 }
 
 nsDirIndexParser::~nsDirIndexParser() {
-  delete[] mFormat;
   // XXX not threadsafe
   if (--gRefCntParser == 0) {
     NS_IF_RELEASE(gTextToSubURI);
@@ -122,41 +121,14 @@ nsrefcnt nsDirIndexParser::gRefCntParser = 0;
 nsITextToSubURI *nsDirIndexParser::gTextToSubURI;
 
 nsresult
-nsDirIndexParser::ParseFormat(const char* aFormatStr) {
+nsDirIndexParser::ParseFormat(const char* aFormatStr)
+{
   // Parse a "200" format line, and remember the fields and their
   // ordering in mFormat. Multiple 200 lines stomp on each other.
+  unsigned int formatNum = 0;
+  mFormat[0] = -1;
 
-  // Lets find out how many elements we have.
-  // easier to do this then realloc
-  const char* pos = aFormatStr;
-  unsigned int num = 0;
   do {
-    while (*pos && nsCRT::IsAsciiSpace(char16_t(*pos)))
-      ++pos;
-    
-    ++num;
-    // There are a maximum of six allowed header fields (doubled plus
-    // terminator, just in case) -- Bug 443299
-    if (num > (2 * ArrayLength(gFieldTable)))
-      return NS_ERROR_UNEXPECTED;
-
-    if (! *pos)
-      break;
-
-    while (*pos && !nsCRT::IsAsciiSpace(char16_t(*pos)))
-      ++pos;
-
-  } while (*pos);
-
-  delete[] mFormat;
-  mFormat = new int[num+1];
-  // Prevent nullptr Deref - Bug 443299 
-  if (mFormat == nullptr)
-    return NS_ERROR_OUT_OF_MEMORY;
-  int formatNum=0;
-  do {
-    mFormat[formatNum] = -1;
-
     while (*aFormatStr && nsCRT::IsAsciiSpace(char16_t(*aFormatStr)))
       ++aFormatStr;
     
@@ -181,12 +153,12 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
     for (Field* i = gFieldTable; i->mName; ++i) {
       if (name.EqualsIgnoreCase(i->mName)) {
         mFormat[formatNum] = i->mType;
-        ++formatNum;
+        mFormat[++formatNum] = -1;
         break;
       }
     }
 
-  } while (*aFormatStr);
+  } while (*aFormatStr && (formatNum < (ArrayLength(mFormat)-1)));
   
   return NS_OK;
 }
@@ -197,7 +169,7 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr, int32_t aLineLen)
   // Parse a "201" data line, using the field ordering specified in
   // mFormat.
 
-  if (!mFormat || (mFormat[0] == -1)) {
+  if(mFormat[0] == -1) {
     // Ignore if we haven't seen a format yet.
     return NS_OK;
   }
