@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IPCBlobInputStreamChild.h"
+#include "WorkerHolder.h"
 
 namespace mozilla {
 namespace dom {
@@ -13,7 +14,7 @@ namespace {
 
 // This runnable is used in case the last stream is forgotten on the 'wrong'
 // thread.
-class ShutdownRunnable final : public Runnable
+class ShutdownRunnable final : public CancelableRunnable
 {
 public:
   explicit ShutdownRunnable(IPCBlobInputStreamChild* aActor)
@@ -33,7 +34,7 @@ private:
 
 // This runnable is used in case StreamNeeded() has been called on a non-owning
 // thread.
-class StreamNeededRunnable final : public Runnable
+class StreamNeededRunnable final : public CancelableRunnable
 {
 public:
   explicit StreamNeededRunnable(IPCBlobInputStreamChild* aActor)
@@ -79,6 +80,26 @@ private:
   nsCOMPtr<nsIInputStream> mCreatedStream;
 };
 
+class IPCBlobInputStreamWorkerHolder final : public WorkerHolder
+{
+public:
+  explicit IPCBlobInputStreamWorkerHolder(IPCBlobInputStreamChild* aActor)
+    : mActor(aActor)
+  {}
+
+  bool Notify(Status aStatus) override
+  {
+    if (aStatus > Running) {
+      mActor->Shutdown();
+      // After this the WorkerHolder is gone.
+    }
+    return true;
+  }
+
+private:
+  RefPtr<IPCBlobInputStreamChild> mActor;
+};
+
 } // anonymous
 
 IPCBlobInputStreamChild::IPCBlobInputStreamChild(const nsID& aID,
@@ -88,7 +109,20 @@ IPCBlobInputStreamChild::IPCBlobInputStreamChild(const nsID& aID,
   , mSize(aSize)
   , mActorAlive(true)
   , mOwningThread(NS_GetCurrentThread())
-{}
+{
+  // If we are running in a worker, we need to send a Close() to the parent side
+  // before the thread is released.
+  if (!NS_IsMainThread()) {
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    if (workerPrivate) {
+      UniquePtr<WorkerHolder> workerHolder(
+        new IPCBlobInputStreamWorkerHolder(this));
+      if (workerHolder->HoldWorker(workerPrivate, Canceling)) {
+        mWorkerHolder.swap(workerHolder);
+      }
+    }
+  }
+}
 
 IPCBlobInputStreamChild::~IPCBlobInputStreamChild()
 {}
@@ -100,6 +134,7 @@ IPCBlobInputStreamChild::Shutdown()
 
   RefPtr<IPCBlobInputStreamChild> kungFuDeathGrip = this;
 
+  mWorkerHolder = nullptr;
   mPendingOperations.Clear();
 
   if (mActorAlive) {
@@ -116,6 +151,7 @@ IPCBlobInputStreamChild::ActorDestroy(IProtocol::ActorDestroyReason aReason)
     mActorAlive = false;
   }
 
+  // Let's cleanup the workerHolder and the pending operation queue.
   Shutdown();
 }
 
