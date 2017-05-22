@@ -226,6 +226,11 @@ this.PanelMultiView = class {
       this.__currentSubView = panel;
     return panel;
   }
+  get _keyNavigationMap() {
+    if (!this.__keyNavigationMap)
+      this.__keyNavigationMap = new Map();
+    return this.__keyNavigationMap;
+  }
 
   constructor(xulNode) {
     this.node = xulNode;
@@ -316,6 +321,19 @@ this.PanelMultiView = class {
   goBack(target) {
     let [current, previous] = this.panelViews.back();
     return this.showSubView(current, target, previous);
+  }
+
+  /**
+   * Checks whether it is possible to navigate backwards currently.
+   * Since the visibility of the back button is dependent - right now - on the
+   * fact that there's a view title set, we use that heuristic to determine this
+   * capability.
+   *
+   * @param  {panelview} view View to check, defaults to the currently active view.
+   * @return {Boolean}
+   */
+  _canGoBack(view = this._currentSubView) {
+    return !!view.getAttribute("title");
   }
 
   setMainView(aNewMainView) {
@@ -548,6 +566,7 @@ this.PanelMultiView = class {
             } else if (ev.target == nodeToAnimate && ev.propertyName == "transform") {
               onTransitionEnd();
               this._transitioning = false;
+              this._resetKeyNavigation(previousViewNode);
 
               // Take another breather, just like before, to wait for the 'current'
               // attribute removal to take effect. This prevents a flicker.
@@ -650,6 +669,12 @@ this.PanelMultiView = class {
           this.showMainView();
         }
         break;
+      case "keydown":
+        this._keyNavigation(aEvent);
+        break;
+      case "mousemove":
+        this._resetKeyNavigation();
+        break;
       case "overflow":
         if (!this.panelViews && aEvent.target.localName == "vbox") {
           // Resize the right view on the next tick.
@@ -677,6 +702,9 @@ this.PanelMultiView = class {
             childList: true,
             subtree: true
           });
+        } else {
+          this.window.addEventListener("keydown", this);
+          this._panel.addEventListener("mousemove", this);
         }
         break;
       case "popupshown":
@@ -686,10 +714,149 @@ this.PanelMultiView = class {
         this.node.removeAttribute("panelopen");
         this._mainView.style.removeProperty("height");
         this.showMainView();
-        if (!this.panelViews)
+        if (!this.panelViews) {
           this._mainViewObserver.disconnect();
+        } else {
+          this.window.removeEventListener("keydown", this);
+          this._panel.removeEventListener("mousemove", this);
+          this._resetKeyNavigation();
+        }
         break;
     }
+  }
+
+  /**
+   * Allow for navigating subview buttons using the arrow keys and the Enter key.
+   * The Up and Down keys can be used to navigate the list up and down and the
+   * Enter, Right or Left - depending on the text direction - key can be used to
+   * simulate a click on the currently selected button.
+   * The Right or Left key - depending on the text direction - can be used to
+   * navigate to the previous view, functioning as a shortcut for the view's
+   * back button.
+   * Thus, in LTR mode:
+   *  - The Right key functions the same as the Enter key, simulating a click
+   *  - The Left key triggers a navigation back to the previous view.
+   *
+   * @param {KeyEvent} event
+   */
+  _keyNavigation(event) {
+    if (this._transitioning)
+      return;
+
+    let view = this._currentSubView;
+    let navMap = this._keyNavigationMap.get(view);
+    if (!navMap) {
+      navMap = {};
+      this._keyNavigationMap.set(view, navMap);
+    }
+
+    let buttons = navMap.buttons;
+    if (!buttons || !buttons.length) {
+      buttons = navMap.buttons = this._getNavigableElements(view);
+      // Set the 'tabindex' attribute on the buttons to make sure they're focussable.
+      for (let button of buttons) {
+        if (button.classList.contains("subviewbutton-back"))
+          continue;
+        // If we've been here before, forget about it!
+        if (button.hasAttribute("tabindex"))
+          break;
+        button.setAttribute("tabindex", 0);
+      }
+    }
+    if (!buttons.length)
+      return;
+
+    let stop = () => {
+      event.stopPropagation();
+      event.preventDefault();
+    };
+
+    let keyCode = event.code;
+    switch (keyCode) {
+      case "ArrowDown":
+      case "ArrowUp": {
+        stop();
+        let isDown = (keyCode == "ArrowDown");
+        let maxIdx = buttons.length - 1;
+        let buttonIndex = isDown ? 0 : maxIdx;
+        if (typeof navMap.selected == "number") {
+          if (isDown) {
+            buttonIndex = ++navMap.selected;
+            if (buttonIndex > maxIdx)
+              buttonIndex = 0;
+          } else {
+            buttonIndex = --navMap.selected;
+            if (buttonIndex < 0)
+              buttonIndex = maxIdx;
+          }
+        }
+        let button = buttons[buttonIndex];
+        button.focus();
+        navMap.selected = buttonIndex;
+        break;
+      }
+      case "ArrowLeft":
+      case "ArrowRight": {
+        stop();
+        let dir = this._dir;
+        if ((dir == "ltr" && keyCode == "ArrowLeft") ||
+            (dir == "rtl" && keyCode == "ArrowRight")) {
+          if (this._canGoBack(view))
+            this.goBack(view.backButton);
+          break;
+        }
+        // If the current button is _not_ one that points to a subview, pressing
+        // the arrow key shouldn't do anything.
+        if (!navMap.selected || !buttons[navMap.selected].classList.contains("subviewbutton-nav"))
+          break;
+        // Fall-through...
+      }
+      case "Enter": {
+        let button = buttons[navMap.selected];
+        if (!button)
+          break;
+        stop();
+        // Unfortunately, 'tabindex' doesn't not execute the default action, so
+        // we explicitly do this here.
+        button.click();
+        break;
+      }
+    }
+  }
+
+  /**
+   * Clear all traces of keyboard navigation happening right now.
+   *
+   * @param {panelview} view View to reset the key navigation attributes of.
+   *                         Defaults to `this._currentSubView`.
+   */
+  _resetKeyNavigation(view = this._currentSubView) {
+    let navMap = this._keyNavigationMap.get(view);
+    this._keyNavigationMap.clear();
+    if (!navMap)
+      return;
+
+    let buttons = this._getNavigableElements(view);
+    if (!buttons.length)
+      return;
+
+    let button = buttons[navMap.selected];
+    if (button)
+      button.blur();
+  }
+
+  /**
+   * Retrieve the button elements from a view node that can be used for navigation
+   * using the keyboard; enabled buttons and the back button, if visible.
+   *
+   * @param  {nsIDOMNode} view
+   * @return {Array}
+   */
+  _getNavigableElements(view) {
+    let buttons = Array.from(view.querySelectorAll(".subviewbutton:not([disabled])"));
+    if (this._canGoBack(view))
+      buttons.unshift(view.backButton);
+    return buttons;
   }
 
   _shouldSetPosition() {
