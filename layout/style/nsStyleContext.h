@@ -345,7 +345,7 @@ public:
    * function, both because they're easier to read and because they're
    * faster.
    */
-  const void* NS_FASTCALL StyleData(nsStyleStructID aSID);
+  const void* NS_FASTCALL StyleData(nsStyleStructID aSID) MOZ_NONNULL_RETURN;
 
   /**
    * Define typesafe getter functions for each style struct by
@@ -354,9 +354,9 @@ public:
    *   const nsStyleBorder* StyleBorder();
    *   const nsStyleColor* StyleColor();
    */
-  #define STYLE_STRUCT(name_, checkdata_cb_)              \
-    const nsStyle##name_ * Style##name_() {               \
-      return DoGetStyle##name_<true>();                   \
+  #define STYLE_STRUCT(name_, checkdata_cb_)                   \
+    const nsStyle##name_ * Style##name_() MOZ_NONNULL_RETURN { \
+      return DoGetStyle##name_<true>();                        \
     }
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
