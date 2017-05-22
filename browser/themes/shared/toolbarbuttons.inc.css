@@ -125,12 +125,6 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   padding-inline-end: 5px;
 }
 
-#nav-bar .toolbarbutton-1[type=panel],
-#nav-bar .toolbarbutton-1[type=menu]:not(#back-button):not(#forward-button):not(#feed-button):not(#PanelUI-menu-button) {
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
 #nav-bar .toolbarbutton-1 > menupopup {
   margin-top: -3px;
 }
@@ -196,22 +190,8 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
   border-inline-end-style: none;
 }
 
-#nav-bar .toolbarbutton-1[type=panel] > .toolbarbutton-icon,
-#nav-bar .toolbarbutton-1[type=panel] > .toolbarbutton-badge-stack,
-#nav-bar .toolbarbutton-1[type=menu]:not(#PanelUI-menu-button):not(#back-button):not(#forward-button):not(#new-tab-button) > .toolbarbutton-icon,
-#nav-bar .toolbarbutton-1[type=menu]:not(#PanelUI-menu-button) > .toolbarbutton-badge-stack,
-#nav-bar .toolbarbutton-1[type=menu] > .toolbarbutton-text /* hack for add-ons that forcefully display the label */ {
-  padding-inline-end: 17px;
-}
-
-#nav-bar .toolbarbutton-1[type=panel] > .toolbarbutton-icon,
-#nav-bar .toolbarbutton-1[type=menu]:not(#PanelUI-menu-button):not(#back-button):not(#forward-button):not(#new-tab-button) > .toolbarbutton-icon {
-  /* horizontal padding + border + icon width */
-  max-width: 43px;
-}
-
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menu-dropmarker {
-  margin-inline-start: -15px;
+  display: none;
 }
 
 #nav-bar #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
