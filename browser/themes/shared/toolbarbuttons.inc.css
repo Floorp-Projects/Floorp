@@ -11,8 +11,8 @@
 
 :root {
 %ifdef MOZ_PHOTON_THEME
-  --toolbarbutton-hover-background: hsla(240, 5%, 5%, .1);
-  --toolbarbutton-active-background: hsla(240, 5%, 5%, .15);
+  --toolbarbutton-hover-background: hsla(240,5%,5%,.1);
+  --toolbarbutton-active-background: hsla(240,5%,5%,.15);
 
   --toolbarbutton-inner-padding: 6px;
 %else
