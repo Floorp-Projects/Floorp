@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<title>Test for privacy restrictions on :visited (Bug 147777)</title>
+<style type="text/css">
+a { text-decoration: none; outline: none; }
+:link { color: fuchsia; }
+:focus:visited { color: purple; }
+</style>
+<a href="visited-page.html">link</a>
+<script>
+  // Attempt to set focus _after_ the visited state takes effect
+  setTimeout(() => {
+    document.querySelector("a").focus();
+  }, 100);
+</script>
