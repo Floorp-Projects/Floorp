@@ -621,7 +621,7 @@ nsSVGRadialGradientFrame::GradientVectorLengthIsZero()
 already_AddRefed<gfxPattern>
 nsSVGRadialGradientFrame::CreateGradient()
 {
-  float cx, cy, r, fx, fy, fr;
+  float cx, cy, r, fx, fy;
 
   cx = GetLengthValue(dom::SVGRadialGradientElement::ATTR_CX);
   cy = GetLengthValue(dom::SVGRadialGradientElement::ATTR_CY);
@@ -629,7 +629,6 @@ nsSVGRadialGradientFrame::CreateGradient()
   // If fx or fy are not set, use cx/cy instead
   fx = GetLengthValue(dom::SVGRadialGradientElement::ATTR_FX, cx);
   fy = GetLengthValue(dom::SVGRadialGradientElement::ATTR_FY, cy);
-  fr = GetLengthValue(dom::SVGRadialGradientElement::ATTR_FR);
 
   if (fx != cx || fy != cy) {
     // The focal point (fFx and fFy) must be clamped to be *inside* - not on -
@@ -650,7 +649,7 @@ nsSVGRadialGradientFrame::CreateGradient()
     }
   }
 
-  RefPtr<gfxPattern> pattern = new gfxPattern(fx, fy, fr, cx, cy, r);
+  RefPtr<gfxPattern> pattern = new gfxPattern(fx, fy, 0, cx, cy, r);
   return pattern.forget();
 }
 
