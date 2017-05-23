@@ -74,10 +74,6 @@
 #include "imgLoader.h"
 #include "GMPServiceChild.h"
 
-#ifdef MOZ_GECKO_PROFILER
-#include "ChildProfilerController.h"
-#endif
-
 #if defined(MOZ_CONTENT_SANDBOX)
 #if defined(XP_WIN)
 #define TARGET_SANDBOX_EXPORTS
@@ -1053,11 +1049,6 @@ ContentChild::InitXPCOM(const XPCOMInitData& aXPCOMInit,
   // The stylesheet cache is not ready yet. Store this URL for future use.
   nsCOMPtr<nsIURI> ucsURL = DeserializeURI(aXPCOMInit.userContentSheetURL());
   nsLayoutStylesheetCache::SetUserContentCSSURL(ucsURL);
-
-#ifdef MOZ_GECKO_PROFILER
-  mProfilerController = new ChildProfilerController();
-  Unused << SendInitProfiler(mProfilerController->SetUpEndpoints(OtherPid()));
-#endif
 
   // This will register cross-process observer.
   mozilla::dom::time::InitializeDateCacheCleaner();
@@ -2661,6 +2652,60 @@ ContentChild::DeallocPOfflineCacheUpdateChild(POfflineCacheUpdateChild* actor)
 }
 
 mozilla::ipc::IPCResult
+ContentChild::RecvStartProfiler(const ProfilerInitParams& params)
+{
+  nsTArray<const char*> filterArray;
+  for (size_t i = 0; i < params.filters().Length(); ++i) {
+    filterArray.AppendElement(params.filters()[i].get());
+  }
+
+  profiler_start(params.entries(), params.interval(), params.features(),
+                 filterArray.Elements(), filterArray.Length());
+
+ return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvStopProfiler()
+{
+  profiler_stop();
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvPauseProfiler(const bool& aPause)
+{
+  if (aPause) {
+    profiler_pause();
+  } else {
+    profiler_resume();
+  }
+
+  return IPC_OK();
+}
+
+void
+ContentChild::GatherProfile(bool aIsExitProfile)
+{
+  nsCString profileCString;
+  UniquePtr<char[]> profile = profiler_get_profile();
+  if (profile) {
+    profileCString = nsCString(profile.get(), strlen(profile.get()));
+  } else {
+    profileCString = EmptyCString();
+  }
+
+  Unused << SendProfile(profileCString, aIsExitProfile);
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvGatherProfile()
+{
+  GatherProfile(false);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 ContentChild::RecvLoadPluginResult(const uint32_t& aPluginId,
                                    const bool& aResult)
 {
@@ -2826,12 +2871,11 @@ ContentChild::RecvShutdown()
   GetIPCChannel()->SetAbortOnError(false);
 
 #ifdef MOZ_GECKO_PROFILER
-  if (mProfilerController) {
-    nsCString shutdownProfile = mProfilerController->GrabShutdownProfileAndShutdown();
-    mProfilerController = nullptr;
-    // Send the shutdown profile to the parent process through our own
-    // message channel, which we know will survive for long enough.
-    Unused << SendShutdownProfile(shutdownProfile);
+  if (profiler_is_active()) {
+    // We're shutting down while we were profiling. Send the
+    // profile up to the parent so that we don't lose this
+    // information.
+    GatherProfile(true);
   }
 #endif
 

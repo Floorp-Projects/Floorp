@@ -24,6 +24,9 @@
 #include "chrome/common/process_watcher.h"
 
 #include "mozilla/a11y/PDocAccessible.h"
+#ifdef MOZ_GECKO_PROFILER
+#include "CrossProcessProfilerController.h"
+#endif
 #include "GeckoProfiler.h"
 #include "GMPServiceParent.h"
 #include "HandlerServiceParent.h"
@@ -185,7 +188,6 @@
 #include "nsHostObjectProtocolHandler.h"
 #include "nsICaptivePortalService.h"
 #include "nsIObjectLoadingContent.h"
-#include "ProfilerParent.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -251,10 +253,6 @@
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
-#endif
-
-#ifdef MOZ_GECKO_PROFILER
-#include "nsIProfiler.h"
 #endif
 
 // For VP9Benchmark::sBenchmarkFpsPref
@@ -1069,6 +1067,38 @@ ContentParent::RecvRemovePermission(const IPC::Principal& aPrincipal,
   return IPC_OK();
 }
 
+void
+ContentParent::SendStartProfiler(const ProfilerInitParams& aParams)
+{
+  if (mSubprocess && mIsAlive) {
+    Unused << PContentParent::SendStartProfiler(aParams);
+  }
+}
+
+void
+ContentParent::SendStopProfiler()
+{
+  if (mSubprocess && mIsAlive) {
+    Unused << PContentParent::SendStopProfiler();
+  }
+}
+
+void
+ContentParent::SendPauseProfiler(const bool& aPause)
+{
+  if (mSubprocess && mIsAlive) {
+    Unused << PContentParent::SendPauseProfiler(aPause);
+  }
+}
+
+void
+ContentParent::SendGatherProfile()
+{
+  if (mSubprocess && mIsAlive) {
+    Unused << PContentParent::SendGatherProfile();
+  }
+}
+
 mozilla::ipc::IPCResult
 ContentParent::RecvConnectPluginBridge(const uint32_t& aPluginId,
                                        nsresult* aRv,
@@ -1320,6 +1350,10 @@ ContentParent::Init()
     Unused << SendActivateA11y(0);
 #endif
   }
+#endif
+
+#ifdef MOZ_GECKO_PROFILER
+  mProfilerController = MakeUnique<CrossProcessProfilerController>(this);
 #endif
 
   // Ensure that the default set of permissions are avaliable in the content
@@ -1715,6 +1749,10 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
   RecvRemoveGeolocationListener();
 
   mConsoleService = nullptr;
+
+#ifdef MOZ_GECKO_PROFILER
+  mProfilerController = nullptr;
+#endif
 
   if (obs) {
     RefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
@@ -2751,15 +2789,6 @@ ContentParent::RecvInitBackground(Endpoint<PBackgroundParent>&& aEndpoint)
     return IPC_FAIL(this, "BackgroundParent::Alloc failed");
   }
 
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvInitProfiler(Endpoint<PProfilerParent>&& aEndpoint)
-{
-  if (!ProfilerParent::Alloc(Move(aEndpoint))) {
-    NS_WARNING("ProfilerParent::Alloc failed");
-  }
   return IPC_OK();
 }
 
@@ -4669,11 +4698,12 @@ ContentParent::RecvCreateWindowInDifferentProcess(
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvShutdownProfile(const nsCString& aProfile)
+ContentParent::RecvProfile(const nsCString& aProfile, const bool& aIsExitProfile)
 {
 #ifdef MOZ_GECKO_PROFILER
-  nsCOMPtr<nsIProfiler> profiler(do_GetService("@mozilla.org/tools/profiler;1"));
-  profiler->ReceiveShutdownProfile(aProfile);
+  if (mProfilerController) {
+    mProfilerController->RecvProfile(aProfile, aIsExitProfile);
+  }
 #endif
   return IPC_OK();
 }
