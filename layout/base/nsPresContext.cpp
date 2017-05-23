@@ -3097,6 +3097,15 @@ nsPresContext::GetRestyleGeneration() const
   return mRestyleManager->GetRestyleGeneration();
 }
 
+uint64_t
+nsPresContext::GetUndisplayedRestyleGeneration() const
+{
+  if (!mRestyleManager) {
+    return 0;
+  }
+  return mRestyleManager->GetUndisplayedRestyleGeneration();
+}
+
 nsBidi&
 nsPresContext::GetBidiEngine()
 {
