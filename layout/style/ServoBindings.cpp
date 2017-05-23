@@ -2350,6 +2350,13 @@ Gecko_CSSFontFaceRule_Create(uint32_t aLine, uint32_t aColumn)
   return rule.forget().take();
 }
 
+nsCSSFontFaceRule*
+Gecko_CSSFontFaceRule_Clone(const nsCSSFontFaceRule* aRule)
+{
+  RefPtr<css::Rule> rule = aRule->Clone();
+  return static_cast<nsCSSFontFaceRule*>(rule.forget().take());
+}
+
 void
 Gecko_CSSFontFaceRule_GetCssText(const nsCSSFontFaceRule* aRule,
                                  nsAString* aResult)
@@ -2394,6 +2401,13 @@ Gecko_CSSCounterStyle_Create(nsIAtom* aName)
 {
   RefPtr<nsCSSCounterStyleRule> rule = new nsCSSCounterStyleRule(aName, 0, 0);
   return rule.forget().take();
+}
+
+nsCSSCounterStyleRule*
+Gecko_CSSCounterStyle_Clone(const nsCSSCounterStyleRule* aRule)
+{
+  RefPtr<css::Rule> rule = aRule->Clone();
+  return static_cast<nsCSSCounterStyleRule*>(rule.forget().take());
 }
 
 void
