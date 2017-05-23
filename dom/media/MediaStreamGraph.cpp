@@ -2432,6 +2432,10 @@ MediaStream::AddTrackListenerImpl(already_AddRefed<MediaStreamTrackListener> aLi
   PrincipalHandle lastPrincipalHandle =
     track->GetSegment()->GetLastPrincipalHandle();
   l->mListener->NotifyPrincipalHandleChanged(Graph(), lastPrincipalHandle);
+  if (track->IsEnded() &&
+      track->GetEnd() <= GraphTimeToStreamTime(GraphImpl()->mStateComputedTime)) {
+    l->mListener->NotifyEnded();
+  }
 }
 
 void
@@ -3035,20 +3039,12 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
     MOZ_ASSERT(false);
     return;
   }
-  LOG(
-    LogLevel::Debug,
-    ("Added direct track listener %p. ended=%d", listener.get(), !updateData));
+  LOG(LogLevel::Debug, ("Added direct track listener %p", listener.get()));
   listener->NotifyDirectListenerInstalled(
     DirectMediaStreamTrackListener::InstallationResult::SUCCESS);
 
   if (bufferedData.GetDuration() != 0) {
     listener->NotifyRealtimeTrackData(Graph(), 0, bufferedData);
-  }
-
-  if (!updateData) {
-    // The track exists but the mUpdateTracks entry was removed.
-    // This means that the track has ended.
-    listener->NotifyEnded();
   }
 }
 
