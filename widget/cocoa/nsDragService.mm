@@ -47,11 +47,12 @@ extern bool gUserCancelledDrag;
 // file destination callback.
 nsIArray *gDraggedTransferables = nullptr;
 
-NSString* const kWildcardPboardType       = @"org.mozilla.MozillaWildcard";
 NSString* const kPublicUrlPboardType      = @"public.url";
 NSString* const kPublicUrlNamePboardType  = @"public.url-name";
 NSString* const kUrlsWithTitlesPboardType = @"WebURLsWithTitlesPboardType";
-NSString* const kCustomTypesPboardType    = @"org.mozilla.custom-clipdata";
+NSString* const kMozWildcardPboardType    = @"org.mozilla.MozillaWildcard";
+NSString* const kMozCustomTypesPboardType = @"org.mozilla.custom-clipdata";
+NSString* const kMozFileUrlsPboardType    = @"org.mozilla.file-urls";
 
 nsDragService::nsDragService()
   : mNativeDragView(nil), mNativeDragEvent(nil), mDragImageChanged(false)
@@ -337,7 +338,7 @@ nsDragService::InvokeDragSessionImpl(nsIArray* aTransferableArray,
       // Gecko is initiating this drag so we always want its own views to
       // consider it. Add our wildcard type to the pasteboard to accomplish
       // this.
-      [types addObject:[UTIHelper stringFromPboardType:kWildcardPboardType]];
+      [types addObject:[UTIHelper stringFromPboardType:kMozWildcardPboardType]];
     }
   }
   [pbItem setDataProvider:mNativeDragView forTypes:types];
@@ -459,7 +460,9 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
       break;
     }
     else if (flavorStr.EqualsLiteral(kCustomTypesMime)) {
-      NSString* availableType = [item availableTypeFromArray:[NSArray arrayWithObject:kCustomTypesPboardType]];
+      NSString* availableType =
+        [item availableTypeFromArray:
+          [NSArray arrayWithObject:kMozCustomTypesPboardType]];
       if (!availableType || !IsValidType(availableType, false)) {
           continue;
       }
@@ -609,7 +612,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
   const NSString* type = nil;
   bool allowFileURL = false;
   if (dataFlavor.EqualsLiteral(kFileMime)) {
-    type = [UTIHelper stringFromPboardType:NSFilenamesPboardType];
+    type = [UTIHelper stringFromPboardType:kMozFileUrlsPboardType];
     allowFileURL = true;
   } else if (dataFlavor.EqualsLiteral(kUnicodeMime)) {
     type = [UTIHelper stringFromPboardType:NSPasteboardTypeString];
@@ -623,7 +626,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
   } else if (dataFlavor.EqualsLiteral(kRTFMime)) {
     type = [UTIHelper stringFromPboardType:NSPasteboardTypeRTF];
   } else if (dataFlavor.EqualsLiteral(kCustomTypesMime)) {
-    type = [UTIHelper stringFromPboardType:kCustomTypesPboardType];
+    type = [UTIHelper stringFromPboardType:kMozCustomTypesPboardType];
   }
 
   NSString* availableType =
