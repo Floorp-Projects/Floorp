@@ -45,12 +45,6 @@ public class GeckoActivityMonitor implements Application.ActivityLifecycleCallba
     @Override
     public void onActivityCreated(Activity activity, Bundle savedInstanceState) { }
 
-    // onNewIntent happens in-between a pause/resume cycle, which means that we wouldn't have
-    // a current activity to report if we were using only the official ActivityLifecycleCallbacks.
-    // For code that wants to know the current activity even at this point we therefore have to
-    // handle this ourselves.
-    public void onActivityNewIntent(Activity activity) { }
-
     @Override
     public void onActivityStarted(Activity activity) {
         if (currentActivity.get() == null) {
