@@ -271,6 +271,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                 backgroundTransition.resetTransition();
 
+                progressView.setProgress(0);
                 progressView.setVisibility(View.VISIBLE);
 
                 updateToolbarButtonStates();

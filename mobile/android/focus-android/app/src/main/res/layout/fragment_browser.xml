@@ -50,7 +50,7 @@
                     android:id="@+id/progress"
                     style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="2dp"
+                    android:layout_height="3dp"
                     android:progressDrawable="@drawable/photon_progressbar"
                     app:shiftDuration="@integer/progress_shift_duration"
                     app:wrapShiftDrawable="true"
