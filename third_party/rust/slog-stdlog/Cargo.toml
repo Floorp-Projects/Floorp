@@ -1,0 +1,21 @@
+[package]
+name = "slog-stdlog"
+version = "1.1.0"
+authors = ["Dawid Ciężarkiewicz <dpc@dpc.pw>"]
+description = "Standard Rust log crate adapter to slog-rs"
+keywords = ["slog", "logging", "json", "log"]
+license = "MPL-2.0"
+documentation = "https://dpc.github.io/slog-rs/"
+homepage = "https://github.com/dpc/slog-rs"
+repository = "https://github.com/dpc/slog-rs"
+readme = "../../README.md"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+slog = { version = "1.1", path = "../.." }
+slog-term = { version = "1", path = "../term" }
+log = "0.3.6"
+lazy_static = "0.2.1"
+crossbeam = "0.2.9"

@@ -1,0 +1,48 @@
+[package]
+name = "slog"
+version = "1.5.2"
+authors = ["Dawid Ciężarkiewicz <dpc@dpc.pw>"]
+description = "Structured, composable logging for Rust"
+keywords = ["log", "logging", "structured", "hierarchical"]
+categories = ["development-tools::debugging"]
+license = "MPL-2.0"
+documentation = "https://docs.rs/slog"
+homepage = "https://github.com/slog-rs/slog"
+repository = "https://github.com/slog-rs/slog"
+readme = "README.md"
+
+[profile.release]
+opt-level = 3
+debug = false
+lto = true
+debug-assertions = false
+
+[profile.bench]
+opt-level = 3
+debug = false
+lto = true
+debug-assertions = false
+
+[workspace]
+members = [
+"crates/nursery",
+]
+
+[features]
+
+std = []
+default = ["std"]
+
+max_level_off   = []
+max_level_error = []
+max_level_warn  = []
+max_level_info  = []
+max_level_debug = []
+max_level_trace = []
+
+release_max_level_off   = []
+release_max_level_error = []
+release_max_level_warn  = []
+release_max_level_info  = []
+release_max_level_debug = []
+release_max_level_trace = []
