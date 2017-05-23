@@ -599,6 +599,8 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
     else if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
       [pasteboardOutputDict setObject:[NSArray arrayWithObject:@""]
                                forKey:(NSString*)kPasteboardTypeFileURLPromise];
+      [pasteboardOutputDict setObject:[NSArray arrayWithObject:@""]
+                               forKey:(NSString*)kPasteboardTypeFilePromiseContent];
     }
     else if (flavorStr.EqualsLiteral(kURLMime)) {
       uint32_t len = 0;
