@@ -37,9 +37,6 @@ public abstract class SingleTabActivity extends GeckoApp {
             // GeckoApp will handle tab selection.
             super.onNewIntent(intent.getUnsafe());
         } else {
-            // We're not calling the superclass in this code path, so we'll
-            // have to notify the activity monitor ourselves.
-            GeckoActivityMonitor.getInstance().onActivityNewIntent(this);
             loadTabFromIntent(intent);
         }
         // Again, unlike GeckoApp's default behaviour we want to keep the intent around

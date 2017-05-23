@@ -2152,8 +2152,6 @@ public abstract class GeckoApp extends GeckoActivity
 
     @Override
     protected void onNewIntent(Intent externalIntent) {
-        super.onNewIntent(externalIntent);
-
         final SafeIntent intent = new SafeIntent(externalIntent);
         final String action = intent.getAction();
 

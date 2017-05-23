@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko;
 
-import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 
 import org.mozilla.gecko.util.IntentUtils;
@@ -39,11 +38,6 @@ public abstract class GeckoActivity extends AppCompatActivity implements GeckoAc
             ((GeckoApplication) getApplication()).onActivityResume(this);
             mGeckoActivityOpened = false;
         }
-    }
-
-    @Override
-    protected void onNewIntent(Intent externalIntent) {
-        GeckoActivityMonitor.getInstance().onActivityNewIntent(this);
     }
 
     @Override
