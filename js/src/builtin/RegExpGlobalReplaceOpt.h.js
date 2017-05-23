@@ -31,10 +31,11 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, fullUnicode
     var lastIndex = 0;
     rx.lastIndex = 0;
 
-#if defined(FUNCTIONAL) || defined(SUBSTITUTION)
-    // Clone RegExp object here to avoid the effect of RegExp#compile,
-    // that may be called in replaceValue function.
-    rx = regexp_clone(rx);
+#if defined(FUNCTIONAL)
+    // Save the original source and flags, so we can check if the replacer
+    // function recompiled the regexp.
+    var originalSource = UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT);
+    var originalFlags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
 #endif
 
     // Step 12 (reordered).
@@ -107,6 +108,16 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, fullUnicode
             if (lastIndex > lengthS)
                 break;
         }
+
+#if defined(FUNCTIONAL)
+        // Ensure the current source and flags match the original regexp, the
+        // replaceValue function may have called RegExp#compile.
+        if (UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT) !== originalSource ||
+            UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT) !== originalFlags)
+        {
+            rx = regexp_construct_raw_flags(originalSource, originalFlags);
+        }
+#endif
     }
 
     // Step 15.

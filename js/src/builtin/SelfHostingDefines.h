@@ -84,6 +84,7 @@
 #define JSITER_SYMBOLSONLY 0x40 /* exclude string property keys */
 
 
+#define REGEXP_SOURCE_SLOT 1
 #define REGEXP_FLAGS_SLOT 2
 
 #define REGEXP_IGNORECASE_FLAG  0x01
