@@ -134,7 +134,7 @@ statusbarpanel:not(.statusbar-resizerpanel):-moz-lwtheme {
 /* XXXBlake yeah, shoot me -- these don't belong here.  I'll move them later. */
 
 sidebarheader {
-  height: 25px;
+  min-height: 25px;
   background-color: -moz-Dialog;
   -moz-appearance: toolbox;
   border-bottom: 1px solid ThreeDShadow;

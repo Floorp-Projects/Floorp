@@ -914,7 +914,7 @@ var annotateOrphan = async function(item, requestedParentSyncId) {
 };
 
 var reparentOrphans = async function(item) {
-  if (item.kind != BookmarkSyncUtils.KINDS.FOLDER) {
+  if (!item.kind || item.kind != BookmarkSyncUtils.KINDS.FOLDER) {
     return;
   }
   let orphanGuids = await fetchGuidsWithAnno(BookmarkSyncUtils.SYNC_PARENT_ANNO,

@@ -98,7 +98,9 @@
 
   skin/classic/browser/addons.svg                     (../shared/icons/addons.svg)
   skin/classic/browser/back.svg                       (../shared/icons/back.svg)
+#ifndef MOZ_PHOTON_THEME
   skin/classic/browser/back-large.svg                 (../shared/icons/back-large.svg)
+#endif
   skin/classic/browser/bookmark.svg                   (../shared/icons/bookmark.svg)
   skin/classic/browser/bookmark-hollow.svg            (../shared/icons/bookmark-hollow.svg)
   skin/classic/browser/bookmarksMenu.svg              (../shared/icons/bookmarksMenu.svg)
