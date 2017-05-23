@@ -41,6 +41,7 @@
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/URLClassifierChild.h"
+#include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/psm/PSMContentListener.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
@@ -988,6 +989,8 @@ ContentChild::InitXPCOM(const XPCOMInitData& aXPCOMInit,
     MOZ_CRASH("Failed to create PBackgroundChild!");
   }
 
+  BlobChild::Startup(BlobChild::FriendKey());
+
   nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   if (!svc) {
     NS_WARNING("Couldn't acquire console service");
@@ -1643,6 +1646,12 @@ ContentChild::DeallocPIPCBlobInputStreamChild(PIPCBlobInputStreamChild* aActor)
   return nsIContentChild::DeallocPIPCBlobInputStreamChild(aActor);
 }
 
+PBlobChild*
+ContentChild::AllocPBlobChild(const BlobConstructorParams& aParams)
+{
+  return nsIContentChild::AllocPBlobChild(aParams);
+}
+
 mozilla::PRemoteSpellcheckEngineChild *
 ContentChild::AllocPRemoteSpellcheckEngineChild()
 {
@@ -1655,6 +1664,23 @@ ContentChild::DeallocPRemoteSpellcheckEngineChild(PRemoteSpellcheckEngineChild *
 {
   delete child;
   return true;
+}
+
+bool
+ContentChild::DeallocPBlobChild(PBlobChild* aActor)
+{
+  return nsIContentChild::DeallocPBlobChild(aActor);
+}
+
+PBlobChild*
+ContentChild::SendPBlobConstructor(PBlobChild* aActor,
+                                   const BlobConstructorParams& aParams)
+{
+  if (IsShuttingDown()) {
+    return nullptr;
+  }
+
+  return PContentChild::SendPBlobConstructor(aActor, aParams);
 }
 
 PPresentationChild*

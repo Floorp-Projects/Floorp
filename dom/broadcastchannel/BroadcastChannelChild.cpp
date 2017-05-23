@@ -7,6 +7,7 @@
 #include "BroadcastChannelChild.h"
 #include "BroadcastChannel.h"
 #include "jsapi.h"
+#include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"

@@ -44,9 +44,11 @@ namespace dom {
 class Blob;
 class BlobConstructorParams;
 class BlobImpl;
+class BlobParent;
 class ContentParent;
 class ContentBridgeParent;
 class IPCTabContext;
+class PBlobParent;
 class PBrowserParent;
 
 class nsIContentParent : public nsISupports
@@ -59,8 +61,15 @@ public:
 
   nsIContentParent();
 
+  BlobParent* GetOrCreateActorForBlob(Blob* aBlob);
+  BlobParent* GetOrCreateActorForBlobImpl(BlobImpl* aImpl);
+
   virtual ContentParentId ChildID() const = 0;
   virtual bool IsForBrowser() const = 0;
+
+  MOZ_MUST_USE virtual PBlobParent*
+  SendPBlobConstructor(PBlobParent* aActor,
+                       const BlobConstructorParams& aParams) = 0;
 
   virtual mozilla::ipc::PIPCBlobInputStreamParent*
   SendPIPCBlobInputStreamConstructor(mozilla::ipc::PIPCBlobInputStreamParent* aActor,
@@ -115,6 +124,10 @@ protected: // IPDL methods
                                               const ContentParentId& aCpId,
                                               const bool& aIsForBrowser);
   virtual bool DeallocPBrowserParent(PBrowserParent* frame);
+
+  virtual PBlobParent* AllocPBlobParent(const BlobConstructorParams& aParams);
+
+  virtual bool DeallocPBlobParent(PBlobParent* aActor);
 
   virtual mozilla::ipc::PIPCBlobInputStreamParent*
   AllocPIPCBlobInputStreamParent(const nsID& aID, const uint64_t& aSize);
