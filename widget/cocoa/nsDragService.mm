@@ -47,15 +47,11 @@ extern bool gUserCancelledDrag;
 // file destination callback.
 nsIArray *gDraggedTransferables = nullptr;
 
-NSString* const kWildcardPboardType    = @"org.mozilla.MozillaWildcard";
-NSString* const kCorePboardType_url    =
-  @"org.mozilla.CorePasteboardFlavorType0x75726C20"; // 'url '  url
-NSString* const kCorePboardType_urld   =
-  @"org.mozilla.CorePasteboardFlavorType0x75726C64"; // 'urld'  desc
-NSString* const kCorePboardType_urln   =
-  @"org.mozilla.CorePasteboardFlavorType0x75726C6E"; // 'urln'  title
-NSString* const kUTTypeURLName         = @"public.url-name";
-NSString* const kCustomTypesPboardType = @"org.mozilla.custom-clipdata";
+NSString* const kWildcardPboardType       = @"org.mozilla.MozillaWildcard";
+NSString* const kPublicUrlPboardType      = @"public.url";
+NSString* const kPublicUrlNamePboardType  = @"public.url-name";
+NSString* const kUrlsWithTitlesPboardType = @"WebURLsWithTitlesPboardType";
+NSString* const kCustomTypesPboardType    = @"org.mozilla.custom-clipdata";
 
 nsDragService::nsDragService()
   : mNativeDragView(nil), mNativeDragEvent(nil), mDragImageChanged(false)
@@ -213,7 +209,7 @@ nsDragService::IsValidType(NSString* availableType, bool allowFileURL)
   // Prevent exposing fileURL for non-fileURL type.
   // We need URL provided by dropped webloc file, but don't need file's URL.
   // kUTTypeFileURL is returned by [NSPasteboard availableTypeFromArray:] for
-  // kUTTypeURL, since it conforms to kUTTypeURL.
+  // kPublicUrlPboardType, since it conforms to kPublicUrlPboardType.
   if (!allowFileURL && [availableType isEqualToString:(id)kUTTypeFileURL]) {
     return false;
   }
@@ -244,7 +240,7 @@ nsDragService::GetTitleForURL(NSPasteboardItem* item)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  NSString* name = GetStringForType(item, (const NSString*)kUTTypeURLName);
+  NSString* name = GetStringForType(item, kPublicUrlNamePboardType);
   if (name) {
     return name;
   }
@@ -486,7 +482,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
     } else if (flavorStr.EqualsLiteral(kHTMLMime)) {
       pString = GetStringForType(item, (const NSString*)kUTTypeHTML);
     } else if (flavorStr.EqualsLiteral(kURLMime)) {
-      pString = GetStringForType(item, (const NSString*)kUTTypeURL);
+      pString = GetStringForType(item, kPublicUrlPboardType);
       if (pString) {
         NSString* title = GetTitleForURL(item);
         if (!title) {
@@ -495,7 +491,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
         pString = [NSString stringWithFormat:@"%@\n%@", pString, title];
       }
     } else if (flavorStr.EqualsLiteral(kURLDataMime)) {
-      pString = GetStringForType(item, (const NSString*)kUTTypeURL);
+      pString = GetStringForType(item, kPublicUrlPboardType);
     } else if (flavorStr.EqualsLiteral(kURLDescriptionMime)) {
       pString = GetTitleForURL(item);
     } else if (flavorStr.EqualsLiteral(kRTFMime)) {
@@ -603,9 +599,9 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
     type = (const NSString*)kUTTypeHTML;
   } else if (dataFlavor.EqualsLiteral(kURLMime) ||
              dataFlavor.EqualsLiteral(kURLDataMime)) {
-    type = (const NSString*)kUTTypeURL;
+    type = kPublicUrlPboardType;
   } else if (dataFlavor.EqualsLiteral(kURLDescriptionMime)) {
-    type = (const NSString*)kUTTypeURLName;
+    type = kPublicUrlNamePboardType;
   } else if (dataFlavor.EqualsLiteral(kRTFMime)) {
     type = (const NSString*)kUTTypeRTF;
   } else if (dataFlavor.EqualsLiteral(kCustomTypesMime)) {
