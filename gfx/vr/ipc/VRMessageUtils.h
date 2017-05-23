@@ -190,6 +190,35 @@ struct ParamTraits<mozilla::gfx::VRControllerInfo>
     return true;
   }
 };
+
+template <>
+struct ParamTraits<mozilla::gfx::VRSubmitFrameResultInfo>
+{
+  typedef mozilla::gfx::VRSubmitFrameResultInfo paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mBase64Image);
+    WriteParam(aMsg, aParam.mFormat);
+    WriteParam(aMsg, aParam.mWidth);
+    WriteParam(aMsg, aParam.mHeight);
+    WriteParam(aMsg, aParam.mFrameNum);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &(aResult->mBase64Image)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mFormat)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mWidth)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mHeight)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mFrameNum))) {
+      return false;
+    }
+
+    return true;
+  }
+};
+
 } // namespace IPC
 
 #endif // mozilla_gfx_vr_VRMessageUtils_h

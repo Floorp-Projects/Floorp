@@ -26,9 +26,11 @@ public:
   explicit VRDisplayClient(const VRDisplayInfo& aDisplayInfo);
 
   void UpdateDisplayInfo(const VRDisplayInfo& aDisplayInfo);
+  void UpdateSubmitFrameResult(const VRSubmitFrameResultInfo& aResult);
 
   const VRDisplayInfo& GetDisplayInfo() const { return mDisplayInfo; }
   virtual VRHMDSensorState GetSensorState();
+  void GetSubmitFrameResult(VRSubmitFrameResultInfo& aResult);
 
   virtual void ZeroSensor();
 
@@ -53,6 +55,9 @@ protected:
 
   TimeStamp mLastVSyncTime;
   int mPresentationCount;
+
+private:
+  VRSubmitFrameResultInfo mSubmitFrameResult;
 };
 
 } // namespace gfx
