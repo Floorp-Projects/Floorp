@@ -6289,6 +6289,8 @@ provideDataForType:(NSString*)aType
 
   // Make sure that the service will accept strings or HTML.
   if (![types containsObject:
+         [UTIHelper stringFromPboardType:NSStringPboardType]] &&
+      ![types containsObject:
          [UTIHelper stringFromPboardType:NSPasteboardTypeString]] &&
       ![types containsObject:
          [UTIHelper stringFromPboardType:NSPasteboardTypeHTML]]) {
