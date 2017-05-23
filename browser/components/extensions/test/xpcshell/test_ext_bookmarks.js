@@ -657,3 +657,45 @@ add_task(async function test_get_recent_with_tag_and_query() {
 
   await extension.unload();
 });
+
+add_task(async function test_tree_with_empty_folder() {
+  async function background() {
+    await browser.bookmarks.create({title: "Empty Folder"});
+    let nonEmptyFolder = await browser.bookmarks.create({title: "Non-Empty Folder"});
+    await browser.bookmarks.create({title: "A bookmark", url: "http://example.com", parentId: nonEmptyFolder.id});
+
+    let tree = await browser.bookmarks.getSubTree(nonEmptyFolder.parentId);
+    browser.test.assertEq(0,
+      tree[0].children[0].children.length,
+      "The empty folder returns an empty array for children.");
+    browser.test.assertEq(1,
+      tree[0].children[1].children.length,
+      "The non-empty folder returns a single item array for children.");
+
+    let children = await browser.bookmarks.getChildren(nonEmptyFolder.parentId);
+    // getChildren should only return immediate children. This is not tested in the
+    // monster test above.
+    for (let child of children) {
+      browser.test.assertEq(undefined,
+        child.children,
+        "Child from getChildren does not contain any children.");
+    }
+
+    browser.test.sendMessage("done");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      permissions: ["bookmarks"],
+    },
+  });
+
+  // Start with an empty bookmarks database.
+  await PlacesUtils.bookmarks.eraseEverything();
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+
+  await extension.unload();
+});
