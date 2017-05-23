@@ -7574,7 +7574,7 @@ js::wasm::BaselineCanCompile()
 bool
 js::wasm::BaselineCompileFunction(CompileTask* task, FuncCompileUnit* unit, UniqueChars *error)
 {
-    MOZ_ASSERT(task->mode() == CompileMode::Baseline);
+    MOZ_ASSERT(task->tier() == Tier::Baseline);
     MOZ_ASSERT(task->env().kind == ModuleKind::Wasm);
 
     const FuncBytes& func = unit->func();

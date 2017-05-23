@@ -213,8 +213,12 @@ FrameIterator::debugEnabled() const
     MOZ_ASSERT(!done());
 
     // Only non-imported functions can have debug frames.
+    //
+    // Metadata::debugEnabled is only set if debugging is actually enabled (both
+    // requested, and available via baseline compilation), and Tier::Debug code
+    // will be available.
     return code_->metadata().debugEnabled &&
-           codeRange_->funcIndex() >= code_->metadataTier().funcImports.length();
+           codeRange_->funcIndex() >= code_->metadata(Tier::Debug).funcImports.length();
 }
 
 DebugFrame*
@@ -607,8 +611,9 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
     uint8_t* codeBase;
     code_ = activation_->compartment()->wasm.lookupCode(pc);
     if (code_) {
-        codeRange = code_->lookupRange(pc);
-        codeBase = code_->segmentTier().base();
+        const CodeSegment* codeSegment;
+        codeRange = code_->lookupRange(pc, &codeSegment);
+        codeBase = codeSegment->base();
     } else if (!LookupBuiltinThunk(pc, &codeRange, &codeBase)) {
         MOZ_ASSERT(done());
         return;
@@ -956,11 +961,12 @@ wasm::LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp)
     if (!code)
         return nullptr;
 
-    const CodeRange* codeRange = code->lookupRange(pc);
+    const CodeSegment* codeSegment;
+    const CodeRange* codeRange = code->lookupRange(pc, &codeSegment);
     if (!codeRange || !codeRange->isFunction())
         return nullptr;
 
-    size_t offsetInModule = ((uint8_t*)pc) - code->segmentTier().base();
+    size_t offsetInModule = ((uint8_t*)pc) - codeSegment->base();
     if (offsetInModule < codeRange->funcNormalEntry() + SetFP)
         return nullptr;
     if (offsetInModule >= codeRange->ret() - PoppedFP)
