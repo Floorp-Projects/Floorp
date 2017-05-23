@@ -100,8 +100,8 @@ function checkKeyedHistogram(h, key, expectedValue) {
  */
 function getParentProcessScalars(aChannel, aKeyed = false, aClear = false) {
   const scalars = aKeyed ?
-    Services.telemetry.snapshotKeyedScalars(aChannel, aClear)["default"] :
-    Services.telemetry.snapshotScalars(aChannel, aClear)["default"];
+    Services.telemetry.snapshotKeyedScalars(aChannel, aClear)["parent"] :
+    Services.telemetry.snapshotScalars(aChannel, aClear)["parent"];
   return scalars || {};
 }
 

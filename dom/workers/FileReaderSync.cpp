@@ -222,9 +222,13 @@ FileReaderSync::ReadAsText(Blob& aBlob,
     return;
   }
 
-  aRv = multiplexStream->AppendStream(syncStream);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
+  // ConvertAsyncToSyncStream returns a null syncStream if the stream has been
+  // already closed or there is nothing to read.
+  if (syncStream) {
+    aRv = multiplexStream->AppendStream(syncStream);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
   }
 
   aRv = ConvertStream(multiplexStream, encoding.get(), aResult);
@@ -261,6 +265,8 @@ FileReaderSync::ReadAsDataURL(Blob& aBlob, nsAString& aResult,
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
+
+  MOZ_ASSERT(syncStream);
 
   uint64_t size;
   aRv = syncStream->Available(&size);
@@ -476,6 +482,12 @@ FileReaderSync::ConvertAsyncToSyncStream(nsIInputStream* aAsyncStream,
 
   uint64_t length;
   nsresult rv = aAsyncStream->Available(&length);
+  if (rv == NS_BASE_STREAM_CLOSED) {
+    // The stream has already been closed. Nothing to do.
+    *aSyncStream = nullptr;
+    return NS_OK;
+  }
+
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

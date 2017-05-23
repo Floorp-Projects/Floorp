@@ -730,13 +730,20 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   }
   mContentInsertions.Clear();
 
-  // Bind hanging child documents.
+  // Bind hanging child documents unless we are using IPC and the
+  // document has no IPC actor.  If we fail to bind the child doc then
+  // shut it down.
   uint32_t hangingDocCnt = mHangingChildDocuments.Length();
   nsTArray<RefPtr<DocAccessible>> newChildDocs;
   for (uint32_t idx = 0; idx < hangingDocCnt; idx++) {
     DocAccessible* childDoc = mHangingChildDocuments[idx];
     if (childDoc->IsDefunct())
       continue;
+
+    if (IPCAccessibilityActive() && !mDocument->IPCDoc()) {
+      childDoc->Shutdown();
+      continue;
+    }
 
     nsIContent* ownerContent = mDocument->DocumentNode()->
       FindContentForSubDocument(childDoc->DocumentNode());
@@ -755,6 +762,8 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
       childDoc->Shutdown();
     }
   }
+
+  // Clear the hanging documents list, even if we didn't bind them.
   mHangingChildDocuments.Clear();
   MOZ_ASSERT(mDocument, "Illicit document shutdown");
   if (!mDocument) {

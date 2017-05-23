@@ -91,9 +91,8 @@
 #define PNG_READ_SCALE_16_TO_8_SUPPORTED
 #define PNG_READ_TRANSFORMS_SUPPORTED
 
-/* necessary for freetype color bitmap support (Android & B2G)
-   and boot animation code (Gonk) */
-#if defined(ANDROID) || defined(FT_CONFIG_OPTION_USE_PNG)
+/* necessary for freetype color bitmap support */
+#if defined(FT_CONFIG_OPTION_USE_PNG)
 #define PNG_READ_PACK_SUPPORTED
 #define PNG_READ_FILLER_SUPPORTED
 #define PNG_READ_STRIP_16_TO_8_SUPPORTED

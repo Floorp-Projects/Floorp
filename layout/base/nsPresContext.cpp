@@ -25,7 +25,7 @@
 #include "nsIFrame.h"
 #include "nsIDocument.h"
 #include "nsIPrintSettings.h"
-#include "nsILanguageAtomService.h"
+#include "nsLanguageAtomService.h"
 #include "mozilla/LookAndFeel.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMHTMLDocument.h"
@@ -879,7 +879,7 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
     }
   }
 
-  mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
+  mLangService = nsLanguageAtomService::GetService();
 
   // Register callbacks so we're notified when the preferences change
   Preferences::RegisterPrefixCallback(nsPresContext::PrefChangedCallback,
@@ -985,10 +985,8 @@ nsPresContext::AttachShell(nsIPresShell* aShell, StyleBackendType aBackendType)
         mImageAnimationMode = imgIContainer::kNormalAnimMode;
     }
 
-    if (mLangService) {
-      doc->AddCharSetObserver(this);
-      UpdateCharSet(doc->GetDocumentCharacterSet());
-    }
+    doc->AddCharSetObserver(this);
+    UpdateCharSet(doc->GetDocumentCharacterSet());
   }
 }
 
@@ -1059,17 +1057,15 @@ nsPresContext::DoChangeCharSet(const nsCString& aCharSet)
 void
 nsPresContext::UpdateCharSet(const nsCString& aCharSet)
 {
-  if (mLangService) {
-    mLanguage = mLangService->LookupCharSet(aCharSet);
-    // this will be a language group (or script) code rather than a true language code
+  mLanguage = mLangService->LookupCharSet(aCharSet);
+  // this will be a language group (or script) code rather than a true language code
 
-    // bug 39570: moved from nsLanguageAtomService::LookupCharSet()
-    if (mLanguage == nsGkAtoms::Unicode) {
-      mLanguage = mLangService->GetLocaleLanguage();
-    }
-    mLangGroupFontPrefs.Reset();
-    mFontGroupCacheDirty = true;
+  // bug 39570: moved from nsLanguageAtomService::LookupCharSet()
+  if (mLanguage == nsGkAtoms::Unicode) {
+    mLanguage = mLangService->GetLocaleLanguage();
   }
+  mLangGroupFontPrefs.Reset();
+  mFontGroupCacheDirty = true;
 
   switch (GET_BIDI_OPTION_TEXTTYPE(GetBidi())) {
 

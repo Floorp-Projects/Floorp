@@ -52,7 +52,8 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBVersionChangeTransactionParent.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsParent.h"
 #include "mozilla/dom/indexedDB/PIndexedDBPermissionRequestParent.h"
-#include "mozilla/dom/ipc/BlobParent.h"
+#include "mozilla/dom/IPCBlobUtils.h"
+#include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/dom/quota/OriginScope.h"
@@ -126,9 +127,6 @@
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
 #define IDB_MOBILE
 #endif
-
-#define BLOB_IMPL_STORED_FILE_IID \
-  {0x6b505c84, 0x2c60, 0x4ffb, {0x8b, 0x91, 0xfe, 0x22, 0xb1, 0xec, 0x75, 0xe2}}
 
 namespace mozilla {
 
@@ -6397,6 +6395,7 @@ class Database final
   friend class VersionChangeTransaction;
 
   class StartTransactionOp;
+  class UnmapBlobCallback;
 
 private:
   RefPtr<Factory> mFactory;
@@ -6405,6 +6404,7 @@ private:
   RefPtr<DirectoryLock> mDirectoryLock;
   nsTHashtable<nsPtrHashKey<TransactionBase>> mTransactions;
   nsTHashtable<nsPtrHashKey<MutableFile>> mMutableFiles;
+  nsRefPtrHashtable<nsIDHashKey, FileInfo> mMappedBlobs;
   RefPtr<DatabaseConnection> mConnection;
   const PrincipalInfo mPrincipalInfo;
   const Maybe<ContentParentId> mOptionalContentParentId;
@@ -6422,6 +6422,9 @@ private:
   bool mActorWasAlive;
   bool mActorDestroyed;
   bool mMetadataCleanedUp;
+#ifdef DEBUG
+  bool mAllBlobsUnmapped;
+#endif
 
 public:
   // Created by OpenDatabaseOp.
@@ -6571,6 +6574,9 @@ public:
   void
   SetActorAlive();
 
+  void
+  MapBlob(const IPCBlob& aIPCBlob, FileInfo* aFileInfo);
+
   bool
   IsActorAlive() const
   {
@@ -6626,6 +6632,15 @@ private:
     MOZ_ASSERT_IF(mActorWasAlive, mActorDestroyed);
   }
 
+  already_AddRefed<FileInfo>
+  GetBlob(const IPCBlob& aID);
+
+  void
+  UnmapBlob(const nsID& aID);
+
+  void
+  UnmapAllBlobs();
+
   bool
   CloseInternal();
 
@@ -6646,8 +6661,7 @@ private:
   ActorDestroy(ActorDestroyReason aWhy) override;
 
   PBackgroundIDBDatabaseFileParent*
-  AllocPBackgroundIDBDatabaseFileParent(PBlobParent* aBlobParent)
-                                        override;
+  AllocPBackgroundIDBDatabaseFileParent(const IPCBlob& aIPCBlob) override;
 
   bool
   DeallocPBackgroundIDBDatabaseFileParent(
@@ -6748,6 +6762,36 @@ private:
   Cleanup() override;
 };
 
+class Database::UnmapBlobCallback final
+  : public IPCBlobInputStreamParentCallback
+{
+  RefPtr<Database> mDatabase;
+
+public:
+  explicit UnmapBlobCallback(Database* aDatabase)
+    : mDatabase(aDatabase)
+  {
+    AssertIsOnBackgroundThread();
+  }
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Database::UnmapBlobCallback, override)
+
+  void
+  ActorDestroyed(const nsID& aID) override
+  {
+    AssertIsOnBackgroundThread();
+    MOZ_ASSERT(mDatabase);
+
+    RefPtr<Database> database;
+    mDatabase.swap(database);
+
+    database->UnmapBlob(aID);
+  }
+
+private:
+  ~UnmapBlobCallback() = default;
+};
+
 /**
  * In coordination with IDBDatabase's mFileActors weak-map on the child side, a
  * long-lived mapping from a child process's live Blobs to their corresponding
@@ -6756,19 +6800,18 @@ private:
  * - Blobs retrieved from this database and sent to the child that do not need
  *   to be written to disk because they already exist on disk in this database's
  *   files directory.
- * - Blobs retrieved from other databases (that are therefore !IsShareable())
- *   or from anywhere else that will need to be written to this database's files
- *   directory.  In this case we will hold a reference to its BlobImpl in
- *   mBlobImpl until we have successfully written the Blob to disk.
+ * - Blobs retrieved from other databases or from anywhere else that will need
+ *   to be written to this database's files directory.  In this case we will
+ *   hold a reference to its BlobImpl in mBlobImpl until we have successfully
+ *   written the Blob to disk.
  *
  * Relevant Blob context: Blobs sent from the parent process to child processes
  * are automatically linked back to their source BlobImpl when the child process
- * references the Blob via IPC.  (This is true even when a new "KnownBlob" actor
- * must be created because the reference is occurring on a different thread than
- * the PBlob actor created when the blob was sent to the child.)  However, when
- * getting an actor in the child process for sending an in-child-created Blob to
- * the parent process, there is (currently) no Blob machinery to automatically
- * establish and reuse a long-lived Actor.  As a result, without IDB's weak-map
+ * references the Blob via IPC. This is done using the internal IPCBlob
+ * inputStream actor ID to FileInfo mapping. However, when getting an actor
+ * in the child process for sending an in-child-created Blob to the parent
+ * process, there is (currently) no Blob machinery to automatically establish
+ * and reuse a long-lived Actor.  As a result, without IDB's weak-map
  * cleverness, a memory-backed Blob repeatedly sent from the child to the parent
  * would appear as a different Blob each time, requiring the Blob data to be
  * sent over IPC each time as well as potentially needing to be written to disk
@@ -9111,70 +9154,6 @@ private:
   ~DatabaseLoggingInfo();
 };
 
-class BlobImplStoredFile final
-  : public FileBlobImpl
-{
-  RefPtr<FileInfo> mFileInfo;
-  const bool mSnapshot;
-
-public:
-  BlobImplStoredFile(nsIFile* aFile, FileInfo* aFileInfo, bool aSnapshot)
-    : FileBlobImpl(aFile)
-    , mFileInfo(aFileInfo)
-    , mSnapshot(aSnapshot)
-  {
-    AssertIsOnBackgroundThread();
-
-    // Getting the content type is not currently supported off the main thread.
-    // This isn't a problem here because:
-    //
-    //   1. The real content type is stored in the structured clone data and
-    //      that's all that the DOM will see. This blob's data will be updated
-    //      during RecvSetMysteryBlobInfo().
-    //   2. The nsExternalHelperAppService guesses the content type based only
-    //      on the file extension. Our stored files have no extension so the
-    //      current code path fails and sets the content type to the empty
-    //      string.
-    //
-    // So, this is a hack to keep the nsExternalHelperAppService out of the
-    // picture entirely. Eventually we should probably fix this some other way.
-    mContentType.Truncate();
-    mIsFile = false;
-  }
-
-  bool
-  IsShareable(FileManager* aFileManager) const
-  {
-    AssertIsOnBackgroundThread();
-
-    return mFileInfo->Manager() == aFileManager && !mSnapshot;
-  }
-
-  FileInfo*
-  GetFileInfo() const
-  {
-    AssertIsOnBackgroundThread();
-
-    return mFileInfo;
-  }
-
-private:
-  ~BlobImplStoredFile() override = default;
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECLARE_STATIC_IID_ACCESSOR(BLOB_IMPL_STORED_FILE_IID)
-
-  int64_t
-  GetFileId() override
-  {
-    MOZ_ASSERT(mFileInfo);
-
-    return mFileInfo->Id();
-  }
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(BlobImplStoredFile, BLOB_IMPL_STORED_FILE_IID)
-
 class QuotaClient final
   : public mozilla::dom::quota::Client
 {
@@ -10159,24 +10138,25 @@ SerializeStructuredCloneFiles(
 
     switch (file.mType) {
       case StructuredCloneFile::eBlob: {
-        RefPtr<BlobImpl> impl = new BlobImplStoredFile(nativeFile,
-                                                       file.mFileInfo,
-                                                       /* aSnapshot */ false);
+        RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
+        impl->SetFileId(file.mFileInfo->Id());
 
-        PBlobParent* actor =
-          BackgroundParent::GetOrCreateActorForBlobImpl(aBackgroundActor, impl);
-        if (!actor) {
+        IPCBlob ipcBlob;
+        nsresult rv = IPCBlobUtils::Serialize(impl, aBackgroundActor, ipcBlob);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
           // This can only fail if the child has crashed.
           IDB_REPORT_INTERNAL_ERR();
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
 
-        SerializedStructuredCloneFile* file = aResult.AppendElement(fallible);
-        MOZ_ASSERT(file);
+        SerializedStructuredCloneFile* serializedFile =
+          aResult.AppendElement(fallible);
+        MOZ_ASSERT(serializedFile);
 
-        file->file() = actor;
-        file->type() = StructuredCloneFile::eBlob;
+        serializedFile->file() = ipcBlob;
+        serializedFile->type() = StructuredCloneFile::eBlob;
 
+        aDatabase->MapBlob(ipcBlob, file.mFileInfo);
         break;
       }
 
@@ -10236,14 +10216,13 @@ SerializeStructuredCloneFiles(
           serializedFile->file() = null_t();
           serializedFile->type() = file.mType;
         } else {
-          RefPtr<BlobImpl> impl = new BlobImplStoredFile(nativeFile,
-                                                         file.mFileInfo,
-                                                         /* aSnapshot */ false);
+          RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
+          impl->SetFileId(file.mFileInfo->Id());
 
-          PBlobParent* actor =
-            BackgroundParent::GetOrCreateActorForBlobImpl(aBackgroundActor,
-                                                          impl);
-          if (!actor) {
+          IPCBlob ipcBlob;
+          nsresult rv =
+            IPCBlobUtils::Serialize(impl, aBackgroundActor, ipcBlob);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
             // This can only fail if the child has crashed.
             IDB_REPORT_INTERNAL_ERR();
             return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -10253,8 +10232,10 @@ SerializeStructuredCloneFiles(
             aResult.AppendElement(fallible);
           MOZ_ASSERT(serializedFile);
 
-          serializedFile->file() = actor;
+          serializedFile->file() = ipcBlob;
           serializedFile->type() = file.mType;
+
+          aDatabase->MapBlob(ipcBlob, file.mFileInfo);
         }
 
         break;
@@ -14173,6 +14154,9 @@ Database::Database(Factory* aFactory,
   , mActorWasAlive(false)
   , mActorDestroyed(false)
   , mMetadataCleanedUp(false)
+#ifdef DEBUG
+  , mAllBlobsUnmapped(false)
+#endif
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aFactory);
@@ -14398,6 +14382,76 @@ Database::SetActorAlive()
   AddRef();
 }
 
+void
+Database::MapBlob(const IPCBlob& aIPCBlob, FileInfo* aFileInfo)
+{
+  AssertIsOnBackgroundThread();
+
+  const IPCBlobStream& stream = aIPCBlob.inputStream();
+  MOZ_ASSERT(stream.type() == IPCBlobStream::TPIPCBlobInputStreamParent);
+
+  IPCBlobInputStreamParent* actor =
+    static_cast<IPCBlobInputStreamParent*>(stream.get_PIPCBlobInputStreamParent());
+
+  MOZ_ASSERT(!mMappedBlobs.GetWeak(actor->ID()));
+  mMappedBlobs.Put(actor->ID(), aFileInfo);
+
+  RefPtr<UnmapBlobCallback> callback = new UnmapBlobCallback(this);
+  actor->SetCallback(callback);
+}
+
+already_AddRefed<FileInfo>
+Database::GetBlob(const IPCBlob& aIPCBlob)
+{
+  AssertIsOnBackgroundThread();
+
+  const IPCBlobStream& stream = aIPCBlob.inputStream();
+  MOZ_ASSERT(stream.type() == IPCBlobStream::TIPCStream);
+
+  const IPCStream& ipcStream = stream.get_IPCStream();
+
+  if (ipcStream.type() != IPCStream::TInputStreamParamsWithFds) {
+    return nullptr;
+  }
+
+  const InputStreamParams& inputStreamParams =
+    ipcStream.get_InputStreamParamsWithFds().stream();
+  if (inputStreamParams.type() !=
+        InputStreamParams::TIPCBlobInputStreamParams) {
+    return nullptr;
+  }
+
+  const nsID& id = inputStreamParams.get_IPCBlobInputStreamParams().id();
+
+  RefPtr<FileInfo> fileInfo;
+  if (!mMappedBlobs.Get(id, getter_AddRefs(fileInfo))) {
+    return nullptr;
+  }
+
+  return fileInfo.forget();
+}
+
+void
+Database::UnmapBlob(const nsID& aID)
+{
+  AssertIsOnBackgroundThread();
+
+  MOZ_ASSERT_IF(!mAllBlobsUnmapped, mMappedBlobs.GetWeak(aID));
+  mMappedBlobs.Remove(aID);
+}
+
+void
+Database::UnmapAllBlobs()
+{
+  AssertIsOnBackgroundThread();
+
+#ifdef DEBUG
+  mAllBlobsUnmapped = true;
+#endif
+
+  mMappedBlobs.Clear();
+}
+
 bool
 Database::CloseInternal()
 {
@@ -14462,6 +14516,8 @@ Database::ConnectionClosedCallback()
   mDirectoryLock = nullptr;
 
   CleanupMetadata();
+
+  UnmapAllBlobs();
 
   if (IsInvalidated() && IsActorAlive()) {
     // Step 3 and 4 of "5.2 Closing a Database":
@@ -14539,24 +14595,17 @@ Database::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 PBackgroundIDBDatabaseFileParent*
-Database::AllocPBackgroundIDBDatabaseFileParent(PBlobParent* aBlobParent)
+Database::AllocPBackgroundIDBDatabaseFileParent(const IPCBlob& aIPCBlob)
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aBlobParent);
 
-  RefPtr<BlobImpl> blobImpl =
-    static_cast<BlobParent*>(aBlobParent)->GetBlobImpl();
+  RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(aIPCBlob);
   MOZ_ASSERT(blobImpl);
 
-  RefPtr<FileInfo> fileInfo;
+  RefPtr<FileInfo> fileInfo = GetBlob(aIPCBlob);
   RefPtr<DatabaseFile> actor;
 
-  RefPtr<BlobImplStoredFile> storedFileImpl = do_QueryObject(blobImpl);
-  if (storedFileImpl && storedFileImpl->IsShareable(mFileManager)) {
-    // This blob was previously shared with the child.
-    fileInfo = storedFileImpl->GetFileInfo();
-    MOZ_ASSERT(fileInfo);
-
+  if (fileInfo) {
     actor = new DatabaseFile(fileInfo);
   } else {
     // This is a blob we haven't seen before.
@@ -17676,14 +17725,6 @@ FileManager::GetUsage(nsIFile* aDirectory, uint64_t* aUsage)
   *aUsage = usage;
   return NS_OK;
 }
-
-/*******************************************************************************
- * FileImplStoredFile
- ******************************************************************************/
-
-NS_IMPL_ISUPPORTS_INHERITED(BlobImplStoredFile,
-                            FileBlobImpl,
-                            BlobImplStoredFile)
 
 /*******************************************************************************
  * QuotaClient
@@ -20849,8 +20890,9 @@ MutableFile::CreateBlobImpl()
 {
   AssertIsOnBackgroundThread();
 
-  RefPtr<BlobImpl> blobImpl =
-    new BlobImplStoredFile(mFile, mFileInfo, /* aSnapshot */ true);
+  RefPtr<FileBlobImpl> blobImpl = new FileBlobImpl(mFile);
+  blobImpl->SetFileId(mFileInfo->Id());
+
   return blobImpl.forget();
 }
 

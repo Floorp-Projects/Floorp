@@ -37,7 +37,7 @@ StaticPresData::Get()
 
 StaticPresData::StaticPresData()
 {
-  mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
+  mLangService = nsLanguageAtomService::GetService();
 
   mBorderWidthTable[NS_STYLE_BORDER_WIDTH_THIN] = nsPresContext::CSSPixelsToAppUnits(1);
   mBorderWidthTable[NS_STYLE_BORDER_WIDTH_MEDIUM] = nsPresContext::CSSPixelsToAppUnits(3);
@@ -238,10 +238,9 @@ LangGroupFontPrefs::Initialize(nsIAtom* aLangGroupAtom)
 nsIAtom*
 StaticPresData::GetLangGroup(nsIAtom* aLanguage) const
 {
-  nsresult rv = NS_OK;
   nsIAtom* langGroupAtom = nullptr;
-  langGroupAtom = mLangService->GetLanguageGroup(aLanguage, &rv);
-  if (NS_FAILED(rv) || !langGroupAtom) {
+  langGroupAtom = mLangService->GetLanguageGroup(aLanguage);
+  if (!langGroupAtom) {
     langGroupAtom = nsGkAtoms::x_western; // Assume x-western is safe...
   }
   return langGroupAtom;
@@ -250,9 +249,8 @@ StaticPresData::GetLangGroup(nsIAtom* aLanguage) const
 already_AddRefed<nsIAtom>
 StaticPresData::GetUncachedLangGroup(nsIAtom* aLanguage) const
 {
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIAtom> langGroupAtom = mLangService->GetUncachedLanguageGroup(aLanguage, &rv);
-  if (NS_FAILED(rv) || !langGroupAtom) {
+  nsCOMPtr<nsIAtom> langGroupAtom = mLangService->GetUncachedLanguageGroup(aLanguage);
+  if (!langGroupAtom) {
     langGroupAtom = nsGkAtoms::x_western; // Assume x-western is safe...
   }
   return langGroupAtom.forget();

@@ -26,6 +26,7 @@ FileBlobImpl::FileBlobImpl(nsIFile* aFile)
   : BaseBlobImpl(EmptyString(), EmptyString(), UINT64_MAX, INT64_MAX)
   , mFile(aFile)
   , mWholeFile(true)
+  , mFileId(-1)
 {
   MOZ_ASSERT(mFile, "must have file");
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -40,6 +41,7 @@ FileBlobImpl::FileBlobImpl(const nsAString& aName,
   : BaseBlobImpl(aName, aContentType, aLength, UINT64_MAX)
   , mFile(aFile)
   , mWholeFile(true)
+  , mFileId(-1)
 {
   MOZ_ASSERT(mFile, "must have file");
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -52,6 +54,7 @@ FileBlobImpl::FileBlobImpl(const nsAString& aName,
   : BaseBlobImpl(aName, aContentType, aLength, aLastModificationDate)
   , mFile(aFile)
   , mWholeFile(true)
+  , mFileId(-1)
 {
   MOZ_ASSERT(mFile, "must have file");
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -62,6 +65,7 @@ FileBlobImpl::FileBlobImpl(nsIFile* aFile, const nsAString& aName,
   : BaseBlobImpl(aName, aContentType, UINT64_MAX, INT64_MAX)
   , mFile(aFile)
   , mWholeFile(true)
+  , mFileId(-1)
 {
   MOZ_ASSERT(mFile, "must have file");
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -76,6 +80,7 @@ FileBlobImpl::FileBlobImpl(const FileBlobImpl* aOther, uint64_t aStart,
   : BaseBlobImpl(aContentType, aOther->mStart + aStart, aLength)
   , mFile(aOther->mFile)
   , mWholeFile(false)
+  , mFileId(-1)
 {
   MOZ_ASSERT(mFile, "must have file");
   MOZ_ASSERT(XRE_IsParentProcess());
