@@ -205,14 +205,20 @@ Layer::~Layer()
 {
 }
 
+void
+Layer::EnsureAnimationsId()
+{
+  if (!mCompositorAnimationsId) {
+    mCompositorAnimationsId = AnimationHelper::GetNextCompositorAnimationsId();
+  }
+}
+
 Animation*
 Layer::AddAnimation()
 {
   // Here generates a new id when the first animation is added and
   // this id is used to represent the animations in this layer.
-  if (!mCompositorAnimationsId) {
-    mCompositorAnimationsId = AnimationHelper::GetNextCompositorAnimationsId();
-  }
+  EnsureAnimationsId();
 
   MOZ_LAYERS_LOG_IF_SHADOWABLE(
     this, ("Layer::Mutated(%p) AddAnimation with id=%" PRIu64, this, mCompositorAnimationsId));
