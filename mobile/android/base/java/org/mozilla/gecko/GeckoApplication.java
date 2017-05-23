@@ -173,8 +173,6 @@ public class GeckoApplication extends Application
         super.onConfigurationChanged(config);
     }
 
-    public void onActivityPause(GeckoActivityStatus activity) { }
-
     public void onApplicationBackground() {
         mInBackground = true;
 
@@ -196,8 +194,6 @@ public class GeckoApplication extends Application
 
         GeckoNetworkManager.getInstance().stop();
     }
-
-    public void onActivityResume(GeckoActivityStatus activity) { }
 
     public void onApplicationForeground() {
         if (mIsInitialResume) {
