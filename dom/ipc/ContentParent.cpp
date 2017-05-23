@@ -66,6 +66,7 @@
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "mozilla/dom/URLClassifierParent.h"
+#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/embedding/printingui/PrintingParent.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -629,6 +630,8 @@ ContentParent::StartUp()
   RegisterStrongMemoryReporter(new ContentParentsMemoryReporter());
 
   mozilla::dom::time::InitializeDateCacheCleaner();
+
+  BlobParent::Startup(BlobParent::FriendKey());
 
   BackgroundChild::Startup();
 
@@ -2835,6 +2838,18 @@ ContentParent::DeallocPBrowserParent(PBrowserParent* frame)
   return nsIContentParent::DeallocPBrowserParent(frame);
 }
 
+PBlobParent*
+ContentParent::AllocPBlobParent(const BlobConstructorParams& aParams)
+{
+  return nsIContentParent::AllocPBlobParent(aParams);
+}
+
+bool
+ContentParent::DeallocPBlobParent(PBlobParent* aActor)
+{
+  return nsIContentParent::DeallocPBlobParent(aActor);
+}
+
 PIPCBlobInputStreamParent*
 ContentParent::AllocPIPCBlobInputStreamParent(const nsID& aID,
                                               const uint64_t& aSize)
@@ -2846,6 +2861,21 @@ bool
 ContentParent::DeallocPIPCBlobInputStreamParent(PIPCBlobInputStreamParent* aActor)
 {
   return nsIContentParent::DeallocPIPCBlobInputStreamParent(aActor);
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvPBlobConstructor(PBlobParent* aActor,
+                                    const BlobConstructorParams& aParams)
+{
+  const ParentBlobConstructorParams& params = aParams.get_ParentBlobConstructorParams();
+  if (params.blobParams().type() == AnyBlobConstructorParams::TKnownBlobConstructorParams) {
+    if (!aActor->SendCreatedFromKnownBlob()) {
+      return IPC_FAIL_NO_REASON(this);
+    }
+    return IPC_OK();
+  }
+
+  return IPC_OK();
 }
 
 mozilla::PRemoteSpellcheckEngineParent *
@@ -3834,6 +3864,13 @@ ContentParent::DoSendAsyncMessage(JSContext* aCx,
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;
+}
+
+PBlobParent*
+ContentParent::SendPBlobConstructor(PBlobParent* aActor,
+                                    const BlobConstructorParams& aParams)
+{
+  return PContentParent::SendPBlobConstructor(aActor, aParams);
 }
 
 PIPCBlobInputStreamParent*
