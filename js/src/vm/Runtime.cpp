@@ -119,6 +119,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     destroyCompartmentCallback(nullptr),
     sizeOfIncludingThisCompartmentCallback(nullptr),
     compartmentNameCallback(nullptr),
+    destroyRealmCallback(nullptr),
     realmNameCallback(nullptr),
     externalStringSizeofCallback(nullptr),
     securityCallbacks(&NullSecurityCallbacks),

@@ -46,6 +46,18 @@ JS::SetRealmPrivate(JS::Realm* realm, void* data)
     GetCompartmentForRealm(realm)->realmData = data;
 }
 
+JS_PUBLIC_API(void)
+JS::SetDestroyRealmCallback(JSContext* cx, JS::DestroyRealmCallback callback)
+{
+    cx->runtime()->destroyRealmCallback = callback;
+}
+
+JS_PUBLIC_API(void)
+JS::SetRealmNameCallback(JSContext* cx, JS::RealmNameCallback callback)
+{
+    cx->runtime()->realmNameCallback = callback;
+}
+
 JS_PUBLIC_API(JSObject*)
 JS::GetRealmObjectPrototype(JSContext* cx)
 {

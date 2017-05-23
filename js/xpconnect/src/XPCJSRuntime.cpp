@@ -2664,7 +2664,7 @@ CompartmentNameCallback(JSContext* cx, JSCompartment* comp,
 }
 
 static void
-RealmNameCallback(JSContext* cx, JS::Handle<JS::Realm*> realm, char* buf, size_t bufsize)
+GetRealmName(JSContext* cx, JS::Handle<JS::Realm*> realm, char* buf, size_t bufsize)
 {
     JSCompartment* comp = JS::GetCompartmentForRealm(realm);
     CompartmentNameCallback(cx, comp, buf, bufsize);
@@ -2841,7 +2841,7 @@ XPCJSRuntime::Initialize(JSContext* cx)
     JS_SetDestroyCompartmentCallback(cx, CompartmentDestroyedCallback);
     JS_SetSizeOfIncludingThisCompartmentCallback(cx, CompartmentSizeOfIncludingThisCallback);
     JS_SetCompartmentNameCallback(cx, CompartmentNameCallback);
-    JS_SetRealmNameCallback(cx, RealmNameCallback);
+    JS::SetRealmNameCallback(cx, GetRealmName);
     mPrevGCSliceCallback = JS::SetGCSliceCallback(cx, GCSliceCallback);
     mPrevDoCycleCollectionCallback = JS::SetDoCycleCollectionCallback(cx,
             DoCycleCollectionCallback);
