@@ -137,8 +137,12 @@ def paramlistAsNative(m, empty='void'):
 
 
 def paramAsNative(p):
-    return "%s%s" % (p.nativeType(),
-                     p.name)
+    default_spec = ''
+    if p.default_value:
+        default_spec = " = " + p.default_value
+    return "%s%s%s" % (p.nativeType(),
+                       p.name,
+                       default_spec)
 
 
 def paramlistNames(m):

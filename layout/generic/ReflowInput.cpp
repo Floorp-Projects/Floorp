@@ -1224,20 +1224,29 @@ ReflowInput::CalculateBorderPaddingMargin(
  * Returns true iff a pre-order traversal of the normal child
  * frames rooted at aFrame finds no non-empty frame before aDescendant.
  */
-static bool AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
-  nsIFrame* aDescendant, bool* aFound) {
+static bool
+AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
+                               nsIFrame* aDescendant,
+                               bool* aFound)
+{
   if (aFrame == aDescendant) {
     *aFound = true;
     return true;
   }
-  if (!aFrame->IsSelfEmpty()) {
-    *aFound = false;
-    return false;
-  }
-  for (nsIFrame* f : aFrame->PrincipalChildList()) {
-    bool allEmpty = AreAllEarlierInFlowFramesEmpty(f, aDescendant, aFound);
-    if (*aFound || !allEmpty) {
-      return allEmpty;
+  if (aFrame->IsPlaceholderFrame()) {
+    auto ph = static_cast<nsPlaceholderFrame*>(aFrame);
+    MOZ_ASSERT(ph->IsSelfEmpty() && ph->PrincipalChildList().IsEmpty());
+    ph->SetLineIsEmptySoFar(true);
+  } else {
+    if (!aFrame->IsSelfEmpty()) {
+      *aFound = false;
+      return false;
+    }
+    for (nsIFrame* f : aFrame->PrincipalChildList()) {
+      bool allEmpty = AreAllEarlierInFlowFramesEmpty(f, aDescendant, aFound);
+      if (*aFound || !allEmpty) {
+        return allEmpty;
+      }
     }
   }
   *aFound = false;
@@ -1256,7 +1265,7 @@ static bool AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
 void
 ReflowInput::CalculateHypotheticalPosition(
   nsPresContext* aPresContext,
-  nsIFrame* aPlaceholderFrame,
+  nsPlaceholderFrame* aPlaceholderFrame,
   const ReflowInput* cbrs,
   nsHypotheticalPosition& aHypotheticalPos,
   LayoutFrameType aFrameType) const
@@ -1389,15 +1398,31 @@ ReflowInput::CalculateHypotheticalPosition(
         // XXXbz the line box is not fully reflowed yet if our
         // containing block is relatively positioned...
         if (lineBox != iter.End()) {
-          nsIFrame * firstFrame = lineBox->mFirstChild;
-          bool found = false;
-          bool allEmpty = true;
-          while (firstFrame) { // See bug 223064
-            allEmpty = AreAllEarlierInFlowFramesEmpty(firstFrame,
-              aPlaceholderFrame, &found);
-            if (found || !allEmpty)
-              break;
-            firstFrame = firstFrame->GetNextSibling();
+          nsIFrame* firstFrame = lineBox->mFirstChild;
+          bool allEmpty = false;
+          if (firstFrame == aPlaceholderFrame) {
+            aPlaceholderFrame->SetLineIsEmptySoFar(true);
+            allEmpty = true;
+          } else {
+            auto prev = aPlaceholderFrame->GetPrevSibling();
+            if (prev && prev->IsPlaceholderFrame()) {
+              auto ph = static_cast<nsPlaceholderFrame*>(prev);
+              if (ph->GetLineIsEmptySoFar(&allEmpty)) {
+                aPlaceholderFrame->SetLineIsEmptySoFar(allEmpty);
+              }
+            }
+          }
+          if (!allEmpty) {
+            bool found = false;
+            while (firstFrame) { // See bug 223064
+              allEmpty = AreAllEarlierInFlowFramesEmpty(firstFrame,
+                aPlaceholderFrame, &found);
+              if (found || !allEmpty) {
+                break;
+              }
+              firstFrame = firstFrame->GetNextSibling();
+            }
+            aPlaceholderFrame->SetLineIsEmptySoFar(allEmpty);
           }
           NS_ASSERTION(firstFrame, "Couldn't find placeholder!");
 
@@ -1581,9 +1606,9 @@ ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
   // have been if it had been in the flow
   nsHypotheticalPosition hypotheticalPos;
   if ((iStartIsAuto && iEndIsAuto) || (bStartIsAuto && bEndIsAuto)) {
-    nsIFrame* placeholderFrame =
+    nsPlaceholderFrame* placeholderFrame =
       aPresContext->PresShell()->GetPlaceholderFrameFor(mFrame);
-    NS_ASSERTION(placeholderFrame, "no placeholder frame");
+    MOZ_ASSERT(placeholderFrame, "no placeholder frame");
 
     if (placeholderFrame->HasAnyStateBits(
           PLACEHOLDER_STATICPOS_NEEDS_CSSALIGN)) {

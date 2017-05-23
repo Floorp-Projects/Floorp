@@ -20,6 +20,12 @@
 namespace mozilla {
 namespace Telemetry {
 
+// This variable controls the maximum number of native hang stacks which may be
+// attached to a ping. This is due to how large native stacks can be. We want to
+// reduce the chance of a ping being discarded due to it exceeding the maximum
+// ping size.
+static const uint32_t kMaximumNativeHangStacks = 300;
+
 static const size_t kTimeHistogramBuckets = 8 * sizeof(PRIntervalTime);
 
 /* TimeHistogram is an efficient histogram that puts time durations into

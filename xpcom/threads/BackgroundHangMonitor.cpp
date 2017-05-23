@@ -32,12 +32,6 @@
 // It can be scaled back again in the future
 #define BHR_BETA_MOD 1;
 
-// This variable controls the maximum number of native hang stacks which may be
-// attached to a ping. This is due to how large native stacks can be. We want to
-// reduce the chance of a ping being discarded due to it exceeding the maximum
-// ping size.
-static const uint32_t kMaximumNativeHangStacks = 300;
-
 // Maximum depth of the call stack in the reported thread hangs. This value represents
 // the 99.9th percentile of the thread hangs stack depths reported by Telemetry.
 static const size_t kMaxThreadHangStackDepth = 30;
@@ -341,7 +335,7 @@ BackgroundHangManager::RunMonitorThread()
         if (MOZ_UNLIKELY(hangTime >= currentThread->mTimeout)) {
           // A hang started
 #ifdef NIGHTLY_BUILD
-          if (currentThread->mStats.mNativeStackCnt < kMaximumNativeHangStacks) {
+          if (currentThread->mStats.mNativeStackCnt < Telemetry::kMaximumNativeHangStacks) {
             // NOTE: In nightly builds of firefox we want to collect native stacks
             // for all hangs, not just permahangs.
             currentThread->mStats.mNativeStackCnt += 1;
@@ -498,7 +492,7 @@ BackgroundHangThread::ReportPermaHang()
   Telemetry::NativeHangStack& stack = hang.GetNativeStack();
   if (stack.empty()) {
     mStats.mNativeStackCnt += 1;
-    if (mStats.mNativeStackCnt <= kMaximumNativeHangStacks) {
+    if (mStats.mNativeStackCnt <= Telemetry::kMaximumNativeHangStacks) {
       mStackHelper.GetNativeStack(stack);
     }
   }

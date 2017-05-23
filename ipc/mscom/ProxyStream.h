@@ -21,7 +21,7 @@ class ProxyStream final
 public:
   ProxyStream();
   ProxyStream(REFIID aIID, IUnknown* aObject);
-  ProxyStream(const BYTE* aInitBuf, const int aInitBufSize);
+  ProxyStream(REFIID aIID, const BYTE* aInitBuf, const int aInitBufSize);
 
   ~ProxyStream();
 

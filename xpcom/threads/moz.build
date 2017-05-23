@@ -25,7 +25,7 @@ EXPORTS += [
     'MainThreadUtils.h',
     'nsEventQueue.h',
     'nsICancelableRunnable.h',
-    'nsIIncrementalRunnable.h',
+    'nsIIdleRunnable.h',
     'nsMemoryPressure.h',
     'nsProcess.h',
     'nsProxyRelease.h',

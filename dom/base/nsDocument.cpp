@@ -5087,7 +5087,7 @@ nsDocument::BeginUpdate(nsUpdateType aUpdateType)
   // in the wrong DocGroup. We're unlikely to run JS or do anything else
   // observable at this point. We reach this point when cycle collecting a
   // <link> element and the unlink code removes a style sheet.
-  if (mDocGroup && !mIsGoingAway && !mIgnoreDocGroupMismatches) {
+  if (mDocGroup && !mIsGoingAway && !mInUnlinkOrDeletion && !mIgnoreDocGroupMismatches) {
     mDocGroup->ValidateAccess();
   }
 
