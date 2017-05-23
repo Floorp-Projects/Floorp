@@ -17,7 +17,6 @@ include protocol PGamepadEventChannel;
 include protocol PGamepadTestChannel;
 include protocol PIPCBlobInputStream;
 include protocol PPendingIPCBlob;
-include protocol PMemoryStream;
 include protocol PMessagePort;
 include protocol PCameras;
 include protocol PQuota;
@@ -65,7 +64,6 @@ sync protocol PBackground
   manages PGamepadEventChannel;
   manages PGamepadTestChannel;
   manages PIPCBlobInputStream;
-  manages PMemoryStream;
   manages PPendingIPCBlob;
   manages PMessagePort;
   manages PCameras;
@@ -118,8 +116,6 @@ parent:
   async PGamepadEventChannel();
 
   async PGamepadTestChannel();
-
-  async PMemoryStream(uint64_t aSize);
 
   async PWebAuthnTransaction();
 

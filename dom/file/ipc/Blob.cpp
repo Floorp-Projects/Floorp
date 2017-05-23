@@ -25,8 +25,6 @@
 #include "mozilla/dom/PBlobStreamChild.h"
 #include "mozilla/dom/PBlobStreamParent.h"
 #include "mozilla/dom/indexedDB/FileSnapshot.h"
-#include "mozilla/dom/ipc/MemoryStreamChild.h"
-#include "mozilla/dom/ipc/MemoryStreamParent.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
@@ -620,115 +618,6 @@ struct MOZ_STACK_CLASS CreateBlobImplMetadata final
   }
 };
 
-template<class M>
-PMemoryStreamChild*
-SerializeInputStreamInChunks(nsIInputStream* aInputStream, uint64_t aLength,
-                             M* aManager)
-{
-  MOZ_ASSERT(aInputStream);
-
-  PMemoryStreamChild* child = aManager->SendPMemoryStreamConstructor(aLength);
-  if (NS_WARN_IF(!child)) {
-    return nullptr;
-  }
-
-  const uint64_t kMaxChunk = 1024 * 1024;
-
-  while (aLength) {
-    FallibleTArray<uint8_t> buffer;
-
-    uint64_t size = XPCOM_MIN(aLength, kMaxChunk);
-    if (NS_WARN_IF(!buffer.SetLength(size, fallible))) {
-      return nullptr;
-    }
-
-    uint32_t read;
-    nsresult rv = aInputStream->Read(reinterpret_cast<char*>(buffer.Elements()),
-                                     size, &read);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
-    }
-
-    if (NS_WARN_IF(read == 0)) {
-      // We were not expecting a read==0 here.
-      return nullptr;
-    }
-
-    MOZ_ASSERT(read <= size);
-    aLength -= read;
-
-    if (NS_WARN_IF(!buffer.SetLength(read, fallible))) {
-      return nullptr;
-    }
-
-    if (NS_WARN_IF(!child->SendAddChunk(buffer))) {
-      return nullptr;
-    }
-  }
-
-  return child;
-}
-
-void
-DeleteStreamMemoryFromBlobDataStream(BlobDataStream& aStream)
-{
-  if (aStream.type() == BlobDataStream::TMemoryBlobDataStream) {
-    PMemoryStreamChild* actor =
-      aStream.get_MemoryBlobDataStream().streamChild();
-    if (actor) {
-      actor->Send__delete__(actor);
-    }
-  }
-}
-
-void
-DeleteStreamMemoryFromBlobData(BlobData& aBlobData)
-{
-  switch (aBlobData.type()) {
-    case BlobData::TBlobDataStream:
-      DeleteStreamMemoryFromBlobDataStream(aBlobData.get_BlobDataStream());
-      return;
-
-    case BlobData::TArrayOfBlobData: {
-      nsTArray<BlobData>& arrayBlobData = aBlobData.get_ArrayOfBlobData();
-      for (uint32_t i = 0; i < arrayBlobData.Length(); ++i) {
-        DeleteStreamMemoryFromBlobData(arrayBlobData[i]);
-      }
-      return;
-    }
-
-    default:
-      // Nothing to do here.
-      return;
-  }
-}
-
-void
-DeleteStreamMemoryFromOptionalBlobData(OptionalBlobData& aParams)
-{
-  if (aParams.type() == OptionalBlobData::Tvoid_t) {
-    return;
-  }
-
-  DeleteStreamMemoryFromBlobData(aParams.get_BlobData());
-}
-
-void
-DeleteStreamMemory(AnyBlobConstructorParams& aParams)
-{
-  if (aParams.type() == AnyBlobConstructorParams::TFileBlobConstructorParams) {
-    FileBlobConstructorParams& fileParams = aParams.get_FileBlobConstructorParams();
-    DeleteStreamMemoryFromOptionalBlobData(fileParams.optionalBlobData());
-    return;
-  }
-
-  if (aParams.type() == AnyBlobConstructorParams::TNormalBlobConstructorParams) {
-    NormalBlobConstructorParams& normalParams = aParams.get_NormalBlobConstructorParams();
-    DeleteStreamMemoryFromOptionalBlobData(normalParams.optionalBlobData());
-    return;
-  }
-}
-
 } // namespace
 
 already_AddRefed<BlobImpl>
@@ -760,32 +649,16 @@ CreateBlobImpl(const BlobDataStream& aStream,
   nsCOMPtr<nsIInputStream> inputStream;
   uint64_t length;
 
-  if (aStream.type() == BlobDataStream::TMemoryBlobDataStream) {
-    const MemoryBlobDataStream& memoryBlobDataStream =
-      aStream.get_MemoryBlobDataStream();
+  MOZ_ASSERT(aStream.type() == BlobDataStream::TIPCStream);
+  inputStream = DeserializeIPCStream(aStream.get_IPCStream());
+  if (!inputStream) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
 
-    MemoryStreamParent* actor =
-      static_cast<MemoryStreamParent*>(memoryBlobDataStream.streamParent());
-
-    actor->GetStream(getter_AddRefs(inputStream));
-    if (!inputStream) {
-      ASSERT_UNLESS_FUZZING();
-      return nullptr;
-    }
-
-    length = memoryBlobDataStream.length();
-  } else {
-    MOZ_ASSERT(aStream.type() == BlobDataStream::TIPCStream);
-    inputStream = DeserializeIPCStream(aStream.get_IPCStream());
-    if (!inputStream) {
-      ASSERT_UNLESS_FUZZING();
-      return nullptr;
-    }
-
-    nsresult rv = inputStream->Available(&length);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
-    }
+  nsresult rv = inputStream->Available(&length);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
   }
 
   RefPtr<BlobImpl> blobImpl;
@@ -1039,14 +912,7 @@ BlobDataFromBlobImpl(ChildManagerType* aManager, BlobImpl* aBlobImpl,
     return true;
   }
 
-  PMemoryStreamChild* streamActor =
-    SerializeInputStreamInChunks(inputStream, length, aManager);
-  if (!streamActor) {
-    return false;
-  }
-
-  aBlobData = MemoryBlobDataStream(nullptr, streamActor, length);
-  return true;
+  return false;
 }
 
 RemoteInputStream::RemoteInputStream(BlobImpl* aBlobImpl,
@@ -3703,8 +3569,6 @@ BlobChild::GetOrCreateFromImpl(ChildManagerType* aManager,
   if (NS_WARN_IF(!aManager->SendPBlobConstructor(actor, params))) {
     return nullptr;
   }
-
-  DeleteStreamMemory(params.blobParams());
 
   autoIPCStreams.Clear();
   return actor;
