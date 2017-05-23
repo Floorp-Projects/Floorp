@@ -7,8 +7,8 @@
 Library('freetype')
 
 if CONFIG['MOZ_TREE_FREETYPE']:
-    USE_LIBS += [
-        'static:/modules/freetype2/.libs/freetype',
+    DIRS += [
+        '/modules/freetype2',
     ]
 else:
     OS_LIBS += CONFIG['FT2_LIBS']

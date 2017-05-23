@@ -21,7 +21,6 @@
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/ImageDataBinding.h"
 #include "mozilla/dom/ipc/BlobChild.h"
-#include "mozilla/dom/ipc/nsIRemoteBlob.h"
 #include "mozilla/dom/StructuredClone.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
@@ -501,95 +500,6 @@ StructuredCloneHolder::WriteFullySerializableObjects(JSContext* aCx,
 
 namespace {
 
-// Recursive!
-already_AddRefed<BlobImpl>
-EnsureBlobForBackgroundManager(BlobImpl* aBlobImpl,
-                               PBackgroundChild* aManager,
-                               ErrorResult& aRv)
-{
-  MOZ_ASSERT(aBlobImpl);
-  RefPtr<BlobImpl> blobImpl = aBlobImpl;
-
-  if (!aManager) {
-    aManager = BackgroundChild::GetForCurrentThread();
-    if (!aManager) {
-      return blobImpl.forget();
-    }
-  }
-
-  const nsTArray<RefPtr<BlobImpl>>* subBlobImpls =
-    aBlobImpl->GetSubBlobImpls();
-
-  if (!subBlobImpls || !subBlobImpls->Length()) {
-    if (nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryObject(blobImpl)) {
-      // Always make sure we have a blob from an actor we can use on this
-      // thread.
-      BlobChild* blobChild = BlobChild::GetOrCreate(aManager, blobImpl);
-      MOZ_ASSERT(blobChild);
-
-      blobImpl = blobChild->GetBlobImpl();
-      MOZ_ASSERT(blobImpl);
-
-      DebugOnly<bool> isMutable;
-      MOZ_ASSERT(NS_SUCCEEDED(blobImpl->GetMutable(&isMutable)));
-      MOZ_ASSERT(!isMutable);
-    } else {
-      MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
-    }
-
-    return blobImpl.forget();
-  }
-
-  const uint32_t subBlobCount = subBlobImpls->Length();
-  MOZ_ASSERT(subBlobCount);
-
-  nsTArray<RefPtr<BlobImpl>> newSubBlobImpls;
-  newSubBlobImpls.SetLength(subBlobCount);
-
-  bool newBlobImplNeeded = false;
-
-  for (uint32_t index = 0; index < subBlobCount; index++) {
-    const RefPtr<BlobImpl>& subBlobImpl = subBlobImpls->ElementAt(index);
-    MOZ_ASSERT(subBlobImpl);
-
-    RefPtr<BlobImpl>& newSubBlobImpl = newSubBlobImpls[index];
-
-    newSubBlobImpl = EnsureBlobForBackgroundManager(subBlobImpl, aManager, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
-
-    MOZ_ASSERT(newSubBlobImpl);
-
-    if (subBlobImpl != newSubBlobImpl) {
-      newBlobImplNeeded = true;
-    }
-  }
-
-  if (newBlobImplNeeded) {
-    nsString contentType;
-    blobImpl->GetType(contentType);
-
-    if (blobImpl->IsFile()) {
-      nsString name;
-      blobImpl->GetName(name);
-
-      blobImpl = MultipartBlobImpl::Create(Move(newSubBlobImpls), name,
-                                           contentType, aRv);
-    } else {
-      blobImpl = MultipartBlobImpl::Create(Move(newSubBlobImpls), contentType, aRv);
-    }
-
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
-
-    MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
-  }
-
-  return blobImpl.forget();
-}
-
 JSObject*
 ReadBlob(JSContext* aCx,
          uint32_t aIndex,
@@ -599,14 +509,7 @@ ReadBlob(JSContext* aCx,
   MOZ_ASSERT(aIndex < aHolder->BlobImpls().Length());
   RefPtr<BlobImpl> blobImpl = aHolder->BlobImpls()[aIndex];
 
-  ErrorResult rv;
-  blobImpl = EnsureBlobForBackgroundManager(blobImpl, nullptr, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    rv.SuppressException();
-    return nullptr;
-  }
-
-  MOZ_ASSERT(blobImpl);
+  MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
 
   // RefPtr<File> needs to go out of scope before toObject() is
   // called because the static analysis thinks dereferencing XPCOM objects
@@ -638,16 +541,7 @@ WriteBlob(JSStructuredCloneWriter* aWriter,
     return false;
   }
 
-  ErrorResult rv;
-  RefPtr<BlobImpl> blobImpl =
-    EnsureBlobForBackgroundManager(aBlob->Impl(), nullptr, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    rv.SuppressException();
-    return false;
-  }
-
-  MOZ_ASSERT(blobImpl);
-
+  RefPtr<BlobImpl> blobImpl = aBlob->Impl();
   MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
 
   // We store the position of the blobImpl in the array as index.
@@ -766,14 +660,7 @@ ReadFileList(JSContext* aCx,
       RefPtr<BlobImpl> blobImpl = aHolder->BlobImpls()[pos];
       MOZ_ASSERT(blobImpl->IsFile());
 
-      ErrorResult rv;
-      blobImpl = EnsureBlobForBackgroundManager(blobImpl, nullptr, rv);
-      if (NS_WARN_IF(rv.Failed())) {
-        rv.SuppressException();
-        return nullptr;
-      }
-
-      MOZ_ASSERT(blobImpl);
+      MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
 
       RefPtr<File> file = File::Create(aHolder->ParentDuringRead(), blobImpl);
       if (!fileList->Append(file)) {
@@ -811,18 +698,11 @@ WriteFileList(JSStructuredCloneWriter* aWriter,
     return false;
   }
 
-  ErrorResult rv;
   nsTArray<RefPtr<BlobImpl>> blobImpls;
 
   for (uint32_t i = 0; i < aFileList->Length(); ++i) {
-    RefPtr<BlobImpl> blobImpl =
-      EnsureBlobForBackgroundManager(aFileList->Item(i)->Impl(), nullptr, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      rv.SuppressException();
-      return false;
-    }
-
-    MOZ_ASSERT(blobImpl);
+    RefPtr<BlobImpl> blobImpl = aFileList->Item(i)->Impl();
+    MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
     blobImpls.AppendElement(blobImpl);
   }
 
@@ -864,20 +744,13 @@ ReadFormData(JSContext* aCx,
 
         RefPtr<BlobImpl> blobImpl =
           aHolder->BlobImpls()[indexOrLengthOfString];
-
-        ErrorResult rv;
-        blobImpl = EnsureBlobForBackgroundManager(blobImpl, nullptr, rv);
-        if (NS_WARN_IF(rv.Failed())) {
-          rv.SuppressException();
-          return nullptr;
-        }
-
-        MOZ_ASSERT(blobImpl);
+        MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
 
         RefPtr<Blob> blob =
           Blob::Create(aHolder->ParentDuringRead(), blobImpl);
         MOZ_ASSERT(blob);
 
+        ErrorResult rv;
         formData->Append(name, *blob, thirdArg, rv);
         if (NS_WARN_IF(rv.Failed())) {
           rv.SuppressException();
@@ -970,19 +843,13 @@ WriteFormData(JSStructuredCloneWriter* aWriter,
       }
 
       if (aValue.IsBlob()) {
-        ErrorResult rv;
-        RefPtr<BlobImpl> blobImpl =
-          EnsureBlobForBackgroundManager(aValue.GetAsBlob()->Impl(), nullptr,
-                                         rv);
-        if (NS_WARN_IF(rv.Failed())) {
-          rv.SuppressException();
-          return false;
-        }
-
         if (!JS_WriteUint32Pair(closure->mWriter, SCTAG_DOM_BLOB,
                                 closure->mHolder->BlobImpls().Length())) {
           return false;
         }
+
+        RefPtr<BlobImpl> blobImpl = aValue.GetAsBlob()->Impl();
+        MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
 
         closure->mHolder->BlobImpls().AppendElement(blobImpl);
         return true;
