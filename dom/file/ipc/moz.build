@@ -5,8 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom.ipc += [
-    'BlobChild.h',
-    'BlobParent.h',
     'IPCBlobInputStream.h',
     'IPCBlobInputStreamChild.h',
     'IPCBlobInputStreamParent.h',
@@ -21,7 +19,6 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
-    'Blob.cpp',
     'IPCBlobInputStream.cpp',
     'IPCBlobInputStreamChild.cpp',
     'IPCBlobInputStreamParent.cpp',
@@ -34,7 +31,6 @@ UNIFIED_SOURCES += [
 IPDL_SOURCES += [
     'BlobTypes.ipdlh',
     'IPCBlob.ipdlh',
-    'PBlob.ipdl',
     'PIPCBlobInputStream.ipdl',
     'PPendingIPCBlob.ipdl',
 ]

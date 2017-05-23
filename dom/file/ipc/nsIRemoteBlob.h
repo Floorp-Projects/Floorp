@@ -18,26 +18,13 @@
 
 namespace mozilla {
 namespace dom {
-
-class BlobChild;
-class BlobParent;
-
 } // namespace dom
 } // namespace mozilla
 
 class NS_NO_VTABLE nsIRemoteBlob : public nsISupports
 {
 public:
-  typedef mozilla::dom::BlobChild BlobChild;
-  typedef mozilla::dom::BlobParent BlobParent;
-
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IREMOTEBLOB_IID)
-
-  virtual BlobChild*
-  GetBlobChild() = 0;
-
-  virtual BlobParent*
-  GetBlobParent() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIRemoteBlob, NS_IREMOTEBLOB_IID)

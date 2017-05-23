@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBlob;
-
 include IPCBlob;
 include IPCStream;
 include ProtocolTypes;
@@ -96,7 +94,7 @@ struct FileBlobConstructorParams
 
 struct SlicedBlobConstructorParams
 {
-  PBlob source;
+  // broken structure: PBlob source;
   nsID id;
   uint64_t begin;
   uint64_t end;

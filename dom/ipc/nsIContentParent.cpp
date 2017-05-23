@@ -14,7 +14,6 @@
 #include "mozilla/dom/PTabContext.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/TabParent.h"
-#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
@@ -205,19 +204,6 @@ nsIContentParent::DeallocPBrowserParent(PBrowserParent* aFrame)
   return true;
 }
 
-PBlobParent*
-nsIContentParent::AllocPBlobParent(const BlobConstructorParams& aParams)
-{
-  return BlobParent::Create(this, aParams);
-}
-
-bool
-nsIContentParent::DeallocPBlobParent(PBlobParent* aActor)
-{
-  BlobParent::Destroy(aActor);
-  return true;
-}
-
 PIPCBlobInputStreamParent*
 nsIContentParent::AllocPIPCBlobInputStreamParent(const nsID& aID,
                                                  const uint64_t& aSize)
@@ -231,30 +217,6 @@ nsIContentParent::DeallocPIPCBlobInputStreamParent(PIPCBlobInputStreamParent* aA
 {
   delete aActor;
   return true;
-}
-
-BlobParent*
-nsIContentParent::GetOrCreateActorForBlob(Blob* aBlob)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aBlob);
-
-  RefPtr<BlobImpl> blobImpl = aBlob->Impl();
-  MOZ_ASSERT(blobImpl);
-
-  return GetOrCreateActorForBlobImpl(blobImpl);
-}
-
-BlobParent*
-nsIContentParent::GetOrCreateActorForBlobImpl(BlobImpl* aImpl)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aImpl);
-
-  BlobParent* actor = BlobParent::GetOrCreate(this, aImpl);
-  NS_ENSURE_TRUE(actor, nullptr);
-
-  return actor;
 }
 
 mozilla::ipc::IPCResult
