@@ -4,9 +4,13 @@
 
 include protocol PBackgroundIDBDatabaseFile;
 include protocol PBackgroundMutableFile;
-include protocol PBlob;
+include protocol PChildToParentStream; // FIXME: bug 792908
+include protocol PFileDescriptorSet; // FIXME: bug 792908
+include protocol PIPCBlobInputStream; // FIXME: bug 792908
+include protocol PParentToChildStream; // FIXME: bug 792908
 
 include DOMTypes;
+include IPCBlob;
 include ProtocolTypes;
 
 include "mozilla/dom/indexedDB/SerializationHelpers.h";
@@ -52,7 +56,7 @@ struct SerializedKeyRange
 union BlobOrMutableFile
 {
   null_t;
-  PBlob;
+  IPCBlob;
   PBackgroundMutableFile;
 };
 
