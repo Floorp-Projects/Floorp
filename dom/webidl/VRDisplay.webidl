@@ -149,6 +149,14 @@ interface VRFrameData {
   [Pure] readonly attribute VRPose pose;
 };
 
+[Constructor,
+ Pref="dom.vr.test.enabled",
+ HeaderFile="mozilla/dom/VRDisplay.h"]
+interface VRSubmitFrameResult {
+  readonly attribute unsigned long frameNum;
+  readonly attribute DOMString? base64Image;
+};
+
 [Pref="dom.vr.enabled",
  HeaderFile="mozilla/dom/VRDisplay.h"]
 interface VREyeParameters {
@@ -219,6 +227,9 @@ interface VRDisplay : EventTarget {
    * and acceleration of each of these properties.
    */
   [NewObject] VRPose getPose();
+
+  [Pref="dom.vr.test.enabled"]
+  boolean getSubmitFrameResult(VRSubmitFrameResult result);
 
   /**
    * Reset the pose for this display, treating its current position and
