@@ -605,13 +605,13 @@ struct ParseTask
     JS::OffThreadCompileCallback callback;
     void* callbackData;
 
-    // Holds the final script between the invocation of the callback and the
+    // Holds the final scripts between the invocation of the callback and the
     // point where FinishOffThreadScript is called, which will destroy the
     // ParseTask.
-    JSScript* script;
+    GCVector<JSScript*, 1> scripts;
 
-    // Holds the ScriptSourceObject generated for the script compilation.
-    ScriptSourceObject* sourceObject;
+    // Holds the ScriptSourceObjects generated for the script compilation.
+    GCVector<ScriptSourceObject*, 1> sourceObjects;
 
     // Any errors or warnings produced during compilation. These are reported
     // when finishing the script.
