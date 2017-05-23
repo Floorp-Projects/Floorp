@@ -19,6 +19,8 @@
   "tests": [
     [[0, 10], ["null", "", "", ""]],
     [[4,  3], ["selector", "class", "de", ".de"]],
+    [[5,  8], ["property", "null", "-moz-a"]],
+    [[5, 21], ["value", "null", "no", "-moz-appearance"]],
     [[6, 18], ["property", "null", "padding"]],
     [[6, 24], ["value", "null", "3", "padding"]],
     [[6, 29], ["property", "null", "bo"]],
@@ -29,6 +31,7 @@
     [[10, 17], ["selector", "class", "de", "#devtools-menu.de"]],
     [[11,  5], ["selector", "class", "devt", ".devt"]],
     [[11, 30], ["selector", "id", "devtoo", ".devtools-toolbarbutton#devtoo"]],
+    [[12, 10], ["property", "null", "-moz-app"]],
     [[16, 27], ["value", "null", "hsl", "text-shadow"]],
     [[19, 24], ["value", "null", "linear-gra", "background"]],
     [[19, 55], ["value", "null", "hsl", "background"]],

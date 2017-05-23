@@ -24,16 +24,16 @@ class U2FSoftTokenManager final : public U2FTokenTransport,
 {
 public:
   explicit U2FSoftTokenManager(uint32_t aCounter);
-  virtual nsresult Register(nsTArray<uint8_t>& aApplication,
-                            nsTArray<uint8_t>& aChallenge,
+  virtual nsresult Register(const nsTArray<uint8_t>& aApplication,
+                            const nsTArray<uint8_t>& aChallenge,
                             /* out */ nsTArray<uint8_t>& aRegistration,
                             /* out */ nsTArray<uint8_t>& aSignature) override;
-  virtual nsresult Sign(nsTArray<uint8_t>& aApplication,
-                        nsTArray<uint8_t>& aChallenge,
-                        nsTArray<uint8_t>& aKeyHandle,
+  virtual nsresult Sign(const nsTArray<uint8_t>& aApplication,
+                        const nsTArray<uint8_t>& aChallenge,
+                        const nsTArray<uint8_t>& aKeyHandle,
                         /* out */ nsTArray<uint8_t>& aSignature) override;
-  nsresult IsRegistered(nsTArray<uint8_t>& aKeyHandle,
-                        nsTArray<uint8_t>& aAppParam,
+  nsresult IsRegistered(const nsTArray<uint8_t>& aKeyHandle,
+                        const nsTArray<uint8_t>& aAppParam,
                         bool& aResult);
 
   // For nsNSSShutDownObject

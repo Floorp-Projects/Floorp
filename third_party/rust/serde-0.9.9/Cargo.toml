@@ -1,0 +1,34 @@
+[package]
+name = "serde"
+version = "0.9.9"
+authors = ["Erick Tryzelaar <erick.tryzelaar@gmail.com>"]
+license = "MIT/Apache-2.0"
+description = "A generic serialization/deserialization framework"
+homepage = "https://serde.rs"
+repository = "https://github.com/serde-rs/serde"
+documentation = "https://docs.serde.rs/serde/"
+keywords = ["serde", "serialization", "no_std"]
+categories = ["encoding"]
+readme = "../README.md"
+include = ["Cargo.toml", "src/**/*.rs", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
+
+[badges]
+travis-ci = { repository = "serde-rs/serde" }
+
+[features]
+default = ["std"]
+
+std = []
+unstable = []
+alloc = ["unstable"]
+collections = ["alloc"]
+unstable-testing = ["unstable", "std"]
+
+# to get serde_derive picked up by play.integer32.com
+playground = ["serde_derive"]
+
+[dependencies]
+serde_derive = { version = "0.9", optional = true }
+
+[dev-dependencies]
+serde_derive = "0.9"

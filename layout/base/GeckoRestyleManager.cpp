@@ -299,11 +299,11 @@ GeckoRestyleManager::AttributeChanged(Element* aElement,
   if (primaryFrame) {
     // See if we have appearance information for a theme.
     const nsStyleDisplay* disp = primaryFrame->StyleDisplay();
-    if (disp->UsedAppearance()) {
+    if (disp->mAppearance) {
       nsITheme* theme = PresContext()->GetTheme();
-      if (theme && theme->ThemeSupportsWidget(PresContext(), primaryFrame, disp->UsedAppearance())) {
+      if (theme && theme->ThemeSupportsWidget(PresContext(), primaryFrame, disp->mAppearance)) {
         bool repaint = false;
-        theme->WidgetStateChanged(primaryFrame, disp->UsedAppearance(), aAttribute,
+        theme->WidgetStateChanged(primaryFrame, disp->mAppearance, aAttribute,
             &repaint, aOldValue);
         if (repaint)
           hint |= nsChangeHint_RepaintFrame;

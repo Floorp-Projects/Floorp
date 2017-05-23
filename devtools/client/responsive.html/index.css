@@ -80,7 +80,7 @@ body,
 }
 
 select {
-  -moz-appearance: none; appearance: none;
+  -moz-appearance: none;
   background-color: var(--theme-toolbar-background);
   background-image: var(--viewport-selection-arrow);
   -moz-context-properties: fill;

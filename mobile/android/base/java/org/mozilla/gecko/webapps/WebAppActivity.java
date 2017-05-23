@@ -96,8 +96,6 @@ public class WebAppActivity extends SingleTabActivity {
                 "Website:AppEntered",
                 "Website:AppLeft",
                 null);
-
-        Tabs.registerOnTabsChangedListener(this);
     }
 
     @Override
@@ -133,6 +131,8 @@ public class WebAppActivity extends SingleTabActivity {
 
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
+        super.onTabChanged(tab, msg, data);
+
         if (tab == null || !Tabs.getInstance().isSelectedTab(tab) ||
                 tab.getType() != Tab.TabType.WEBAPP) {
             return;
@@ -158,7 +158,6 @@ public class WebAppActivity extends SingleTabActivity {
                 "Website:AppEntered",
                 "Website:AppLeft",
                 null);
-        Tabs.unregisterOnTabsChangedListener(this);
     }
 
     @Override
