@@ -7,7 +7,6 @@ Set up a browser environment before running a test.
 """
 
 import os
-import re
 import tempfile
 import mozfile
 import mozinfo
