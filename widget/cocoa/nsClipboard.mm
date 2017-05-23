@@ -47,6 +47,7 @@ mozilla::StaticRefPtr<nsITransferable> nsClipboard::sSelectionCache;
       [aType isEqualToString:(NSString*)kPasteboardTypeFileURLPromise] ||
       [aType isEqualToString:(NSString*)kPasteboardTypeFilePromiseContent] ||
       [aType isEqualToString:(NSString*)kUTTypeFileURL] ||
+      [aType isEqualToString:NSStringPboardType] ||
       [aType isEqualToString:NSPasteboardTypeString] ||
       [aType isEqualToString:NSPasteboardTypeHTML] ||
       [aType isEqualToString:NSPasteboardTypeRTF] ||
