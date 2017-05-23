@@ -56,10 +56,9 @@ FormAutofillParent.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports, Ci.nsIObserver]),
 
   /**
-   * Whether Form Autofill is enabled in preferences.
-   * Caches the latest value of this._getStatus().
+   * Cache of the Form Autofill status (considering preferences and storage).
    */
-  _enabled: false,
+  _active: null,
 
   /**
    * Initializes ProfileStorage and registers the message handler.
@@ -77,9 +76,7 @@ FormAutofillParent.prototype = {
     Services.prefs.addObserver(ENABLED_PREF, this);
     Services.obs.addObserver(this, "formautofill-storage-changed");
 
-    // Force to trigger the onStatusChanged function for setting listeners properly
-    // while initizlization
-    this._setStatus(this._getStatus());
+    // Update the saved field names to compute the status and update child processes.
     this._updateSavedFieldNames();
   },
 
@@ -103,11 +100,8 @@ FormAutofillParent.prototype = {
       }
 
       case "nsPref:changed": {
-        // Observe pref changes and update _enabled cache if status is changed.
-        let currentStatus = this._getStatus();
-        if (currentStatus !== this._enabled) {
-          this._setStatus(currentStatus);
-        }
+        // Observe pref changes and update _active cache if status is changed.
+        this._updateStatus();
         break;
       }
 
@@ -118,10 +112,6 @@ FormAutofillParent.prototype = {
         }
 
         this._updateSavedFieldNames();
-        let currentStatus = this._getStatus();
-        if (currentStatus !== this._enabled) {
-          this._setStatus(currentStatus);
-        }
         break;
       }
 
@@ -135,35 +125,36 @@ FormAutofillParent.prototype = {
    * Broadcast the status to frames when the form autofill status changes.
    */
   _onStatusChanged() {
-    log.debug("_onStatusChanged: Status changed to", this._enabled);
-    Services.ppmm.broadcastAsyncMessage("FormAutofill:enabledStatus", this._enabled);
+    log.debug("_onStatusChanged: Status changed to", this._active);
+    Services.ppmm.broadcastAsyncMessage("FormAutofill:enabledStatus", this._active);
     // Sync process data autofillEnabled to make sure the value up to date
     // no matter when the new content process is initialized.
-    Services.ppmm.initialProcessData.autofillEnabled = this._enabled;
+    Services.ppmm.initialProcessData.autofillEnabled = this._active;
   },
 
   /**
-   * Query pref and storage status to determine the overall status for
+   * Query preference and storage status to determine the overall status of the
    * form autofill feature.
    *
-   * @returns {boolean} status of form autofill feature
+   * @returns {boolean} whether form autofill is active (enabled and has data)
    */
-  _getStatus() {
+  _computeStatus() {
     if (!Services.prefs.getBoolPref(ENABLED_PREF)) {
       return false;
     }
 
-    return profileStorage.addresses.getAll({noComputedFields: true}).length > 0;
+    return Services.ppmm.initialProcessData.autofillSavedFieldNames.size > 0;
   },
 
   /**
-   * Set status and trigger _onStatusChanged.
-   *
-   * @param {boolean} newStatus The latest status we want to set for _enabled
+   * Update the status and trigger _onStatusChanged, if necessary.
    */
-  _setStatus(newStatus) {
-    this._enabled = newStatus;
-    this._onStatusChanged();
+  _updateStatus() {
+    let wasActive = this._active;
+    this._active = this._computeStatus();
+    if (this._active !== wasActive) {
+      this._onStatusChanged();
+    }
   },
 
   /**
@@ -234,6 +225,7 @@ FormAutofillParent.prototype = {
   },
 
   _updateSavedFieldNames() {
+    log.debug("_updateSavedFieldNames");
     if (!Services.ppmm.initialProcessData.autofillSavedFieldNames) {
       Services.ppmm.initialProcessData.autofillSavedFieldNames = new Set();
     } else {
@@ -256,5 +248,6 @@ FormAutofillParent.prototype = {
 
     Services.ppmm.broadcastAsyncMessage("FormAutofill:savedFieldNames",
                                         Services.ppmm.initialProcessData.autofillSavedFieldNames);
+    this._updateStatus();
   },
 };
