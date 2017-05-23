@@ -33,10 +33,6 @@ public:
   static ContentBridgeParent*
   Create(Endpoint<PContentBridgeParent>&& aEndpoint);
 
-  virtual PBlobParent*
-  SendPBlobConstructor(PBlobParent* actor,
-                       const BlobConstructorParams& params) override;
-
   virtual PBrowserParent*
   SendPBrowserConstructor(PBrowserParent* aActor,
                           const TabId& aTabId,
@@ -132,11 +128,6 @@ protected:
                       const bool& aIsForBrowser) override;
 
   virtual bool DeallocPBrowserParent(PBrowserParent*) override;
-
-  virtual PBlobParent*
-  AllocPBlobParent(const BlobConstructorParams& aParams) override;
-
-  virtual bool DeallocPBlobParent(PBlobParent*) override;
 
   virtual PIPCBlobInputStreamParent*
   SendPIPCBlobInputStreamConstructor(PIPCBlobInputStreamParent* aActor,

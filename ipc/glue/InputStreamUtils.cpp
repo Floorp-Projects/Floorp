@@ -10,8 +10,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/ipc/BlobChild.h"
-#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/ipc/IPCBlobInputStream.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamStorage.h"
 #include "nsComponentManagerUtils.h"
@@ -103,28 +101,9 @@ InputStreamHelper::DeserializeInputStream(const InputStreamParams& aParams,
 
     // When the input stream already exists in this process, all we need to do
     // is retrieve the original instead of sending any data over the wire.
-    case InputStreamParams::TRemoteInputStreamParams: {
-      if (NS_WARN_IF(!XRE_IsParentProcess())) {
-        return nullptr;
-      }
-
-      const nsID& id = aParams.get_RemoteInputStreamParams().id();
-
-      RefPtr<BlobImpl> blobImpl = BlobParent::GetBlobImplForID(id);
-
-      MOZ_ASSERT(blobImpl, "Invalid blob contents");
-
-      // If fetching the internal stream fails, we ignore it and return a
-      // null stream.
-      ErrorResult rv;
-      nsCOMPtr<nsIInputStream> stream;
-      blobImpl->GetInternalStream(getter_AddRefs(stream), rv);
-      if (NS_WARN_IF(rv.Failed()) || !stream) {
-        NS_WARNING("Couldn't obtain a valid stream from the blob");
-        rv.SuppressException();
-      }
-      return stream.forget();
-    }
+    case InputStreamParams::TRemoteInputStreamParams:
+      // Thi is broken!
+      return nullptr;
 
     case InputStreamParams::TSameProcessInputStreamParams: {
       MOZ_ASSERT(aFileDescriptors.IsEmpty());
