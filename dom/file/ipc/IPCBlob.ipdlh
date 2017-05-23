@@ -58,6 +58,9 @@ struct IPCBlob
   IPCBlobStream inputStream;
 
   IPCFileUnion file;
+
+  // This ID is used only by indexedDB tests.
+  int64_t fileId;
 };
 
 } // namespace dom
