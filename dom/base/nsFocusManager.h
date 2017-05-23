@@ -101,10 +101,7 @@ public:
     }
   }
 
-  bool CanSkipFocus(nsIContent* aContent)
-  {
-    return mFocusedContent == aContent;
-  }
+  bool CanSkipFocus(nsIContent* aContent);
 
   void FlushBeforeEventHandlingIfNeeded(nsIContent* aContent)
   {

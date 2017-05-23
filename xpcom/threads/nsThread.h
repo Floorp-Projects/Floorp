@@ -35,11 +35,10 @@ class nsThread
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIEVENTTARGET
+  NS_DECL_NSIEVENTTARGET_FULL
   NS_DECL_NSITHREAD
   NS_DECL_NSITHREADINTERNAL
   NS_DECL_NSISUPPORTSPRIORITY
-  using nsIEventTarget::Dispatch;
 
   enum MainThreadFlag
   {
@@ -209,7 +208,7 @@ protected:
   {
   public:
     NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIEVENTTARGET
+    NS_DECL_NSIEVENTTARGET_FULL
 
     nsNestedEventTarget(NotNull<nsThread*> aThread,
                         NotNull<nsChainedEventQueue*> aQueue)

@@ -44,6 +44,7 @@ WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
       ? aLayer->AsContainerLayer()->GetEventRegionsOverride()
       : EventRegionsOverride::NoOverride;
   mScrollThumbData = aLayer->GetScrollThumbData();
+  mScrollbarAnimationId = aLayer->GetCompositorAnimationsId();
   mScrollbarTargetContainerId = aLayer->GetScrollbarTargetContainerId();
   mIsScrollbarContainer = aLayer->IsScrollbarContainer();
   mFixedPosScrollContainerId = aLayer->GetFixedPositionScrollContainerId();
