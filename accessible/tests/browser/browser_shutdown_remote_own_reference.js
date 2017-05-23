@@ -4,11 +4,11 @@
 
 'use strict';
 
-add_task(function* () {
+add_task(async function () {
   // Making sure that the e10s is enabled on Windows for testing.
-  yield setE10sPrefs();
+  await setE10sPrefs();
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: `data:text/html,
       <html>
@@ -18,7 +18,7 @@ add_task(function* () {
         </head>
         <body></body>
       </html>`
-  }, function*(browser) {
+  }, async function(browser) {
     info('Creating a service in parent and waiting for service to be created ' +
       'in content');
     // Create a11y service in the main process. This will trigger creating of
@@ -28,7 +28,7 @@ add_task(function* () {
     let accService = Cc['@mozilla.org/accessibilityService;1'].getService(
       Ci.nsIAccessibilityService);
     ok(accService, 'Service initialized in parent');
-    yield Promise.all([parentA11yInit, contentA11yInit]);
+    await Promise.all([parentA11yInit, contentA11yInit]);
 
     info('Adding additional reference to accessibility service in content ' +
       'process');
@@ -56,10 +56,10 @@ add_task(function* () {
     // is a reference in a content process.
     forceGC();
     loadFrameScripts(browser, `Components.utils.forceGC();`);
-    yield parentA11yShutdown;
+    await parentA11yShutdown;
 
     // Have some breathing room between a11y service shutdowns.
-    yield new Promise(resolve => executeSoon(resolve));
+    await new Promise(resolve => executeSoon(resolve));
 
     info('Removing a service in content');
     // Now allow a11y service to shutdown in content.
@@ -67,9 +67,9 @@ add_task(function* () {
     // Remove last reference to a11y service in content and force garbage
     // collection that should trigger shutdown.
     loadFrameScripts(browser, `accService = null; Components.utils.forceGC();`);
-    yield contentA11yShutdown;
+    await contentA11yShutdown;
 
     // Unsetting e10s related preferences.
-    yield unsetE10sPrefs();
+    await unsetE10sPrefs();
   });
 });
