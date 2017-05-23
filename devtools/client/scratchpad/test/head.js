@@ -18,7 +18,7 @@ const promise = require("promise");
 var gScratchpadWindow; // Reference to the Scratchpad chrome window object
 
 flags.testing = true;
-SimpleTest.registerCleanupFunction(() => {
+registerCleanupFunction(() => {
   flags.testing = false;
 });
 

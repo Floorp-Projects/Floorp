@@ -129,7 +129,7 @@ TEST(cubeb, enumerate_devices)
 
   fprintf(stdout, "Found %u input devices\n", collection->count);
   print_device_collection(collection, stdout);
-  cubeb_device_collection_destroy(collection);
+  cubeb_device_collection_destroy(ctx, collection);
 
   fprintf(stdout, "Enumerating output devices for backend %s\n",
           cubeb_get_backend_id(ctx));
@@ -139,5 +139,5 @@ TEST(cubeb, enumerate_devices)
 
   fprintf(stdout, "Found %u output devices\n", collection->count);
   print_device_collection(collection, stdout);
-  cubeb_device_collection_destroy(collection);
+  cubeb_device_collection_destroy(ctx, collection);
 }

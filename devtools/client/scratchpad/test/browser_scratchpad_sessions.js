@@ -1,10 +1,15 @@
  /* Any copyright is dedicated to the Public Domain.
     http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
+
+const {Utils} = Cu.import("resource://gre/modules/sessionstore/Utils.jsm", {});
+const triggeringPrincipalBase64 = Utils.SERIALIZED_SYSTEMPRINCIPAL;
+const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
 const testState = {
   windows: [{
     tabs: [
-      { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
+      { entries: [{ url: "about:blank", triggeringPrincipalBase64 }] },
     ]
   }],
   scratchpads: [
@@ -35,10 +40,10 @@ function test() {
   ss.setBrowserState(JSON.stringify(testState));
 }
 
-function windowObserver(aSubject, aTopic, aData) {
-  if (aTopic == "domwindowopened") {
-    let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-    win.addEventListener("load", function() {
+function windowObserver(subject, topic, data) {
+  if (topic == "domwindowopened") {
+    let win = subject.QueryInterface(Ci.nsIDOMWindow);
+    win.addEventListener("load", function () {
       if (win.Scratchpad) {
         win.Scratchpad.addObserver({
           onReady() {
@@ -56,11 +61,11 @@ function windowObserver(aSubject, aTopic, aData) {
 }
 
 function statesMatch(restored, states) {
-  return states.every(function(state) {
-    return restored.some(function(restoredState) {
+  return states.every(function (state) {
+    return restored.some(function (restoredState) {
       return state.filename == restoredState.filename &&
              state.text == restoredState.text &&
              state.executionContext == restoredState.executionContext;
-    })
+    });
   });
 }

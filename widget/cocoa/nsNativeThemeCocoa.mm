@@ -311,7 +311,7 @@ static BOOL IsToolbarStyleContainer(nsIFrame* aFrame)
                                   nsGkAtoms::statusbar))
     return YES;
 
-  switch (aFrame->StyleDisplay()->UsedAppearance()) {
+  switch (aFrame->StyleDisplay()->mAppearance) {
     case NS_THEME_TOOLBAR:
     case NS_THEME_STATUSBAR:
       return YES;
@@ -516,7 +516,7 @@ static BOOL IsActive(nsIFrame* aFrame, BOOL aIsToolbarControl)
 
 static bool IsInSourceList(nsIFrame* aFrame) {
   for (nsIFrame* frame = aFrame->GetParent(); frame; frame = frame->GetParent()) {
-    if (frame->StyleDisplay()->UsedAppearance() == NS_THEME_MAC_SOURCE_LIST) {
+    if (frame->StyleDisplay()->mAppearance == NS_THEME_MAC_SOURCE_LIST) {
       return true;
     }
   }
@@ -2769,7 +2769,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       BOOL isHorizontal = (aWidgetType == NS_THEME_SCROLLBARTHUMB_HORIZONTAL);
       BOOL isRolledOver = IsParentScrollbarRolledOver(aFrame);
       nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
-      bool isSmall = (scrollbarFrame && scrollbarFrame->StyleDisplay()->UsedAppearance() == NS_THEME_SCROLLBAR_SMALL);
+      bool isSmall = (scrollbarFrame && scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
       if (isOverlay && !isRolledOver) {
         if (isHorizontal) {
           macRect.origin.y += 4;
@@ -2819,7 +2819,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       if (!isOverlay || IsParentScrollbarRolledOver(aFrame)) {
         BOOL isHorizontal = (aWidgetType == NS_THEME_SCROLLBARTRACK_HORIZONTAL);
         nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
-        bool isSmall = (scrollbarFrame && scrollbarFrame->StyleDisplay()->UsedAppearance() == NS_THEME_SCROLLBAR_SMALL);
+        bool isSmall = (scrollbarFrame && scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
         const BOOL isOnTopOfDarkBackground = IsDarkBackground(aFrame);
         RenderWithCoreUI(macRect, cgContext,
                 [NSDictionary dictionaryWithObjectsAndKeys:
@@ -3390,7 +3390,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       if (!scrollbarFrame)
         return NS_ERROR_FAILURE;
 
-      bool isSmall = (scrollbarFrame->StyleDisplay()->UsedAppearance() == NS_THEME_SCROLLBAR_SMALL);
+      bool isSmall = (scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
       bool isHorizontal = (aWidgetType == NS_THEME_SCROLLBARTHUMB_HORIZONTAL);
       int32_t& minSize = isHorizontal ? aResult->width : aResult->height;
       minSize = isSmall ? kSmallScrollbarThumbMinSize : kRegularScrollbarThumbMinSize;
@@ -3407,7 +3407,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       if (nsLookAndFeel::UseOverlayScrollbars()) {
         nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
         if (scrollbarFrame &&
-            scrollbarFrame->StyleDisplay()->UsedAppearance() ==
+            scrollbarFrame->StyleDisplay()->mAppearance ==
               NS_THEME_SCROLLBAR_SMALL) {
           aResult->SizeTo(14, 14);
         }
@@ -3425,7 +3425,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       nsIFrame *scrollbarFrame = GetParentScrollbarFrame(aFrame);
       if (!scrollbarFrame) return NS_ERROR_FAILURE;
 
-      int32_t themeMetric = (scrollbarFrame->StyleDisplay()->UsedAppearance() == NS_THEME_SCROLLBAR_SMALL) ?
+      int32_t themeMetric = (scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL) ?
                             kThemeMetricSmallScrollBarWidth :
                             kThemeMetricScrollBarWidth;
       SInt32 scrollbarWidth = 0;
@@ -3441,7 +3441,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       if (aFrame) {
         nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
         if (scrollbarFrame &&
-            scrollbarFrame->StyleDisplay()->UsedAppearance() ==
+            scrollbarFrame->StyleDisplay()->mAppearance ==
             NS_THEME_SCROLLBAR_SMALL) {
           // XXX We're interested in the width of non-disappearing scrollbars
           // to leave enough space for a dropmarker in non-native styled
@@ -3466,7 +3466,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       if (!scrollbarFrame) return NS_ERROR_FAILURE;
 
       // Since there is no NS_THEME_SCROLLBARBUTTON_UP_SMALL we need to ask the parent what appearance style it has.
-      int32_t themeMetric = (scrollbarFrame->StyleDisplay()->UsedAppearance() == NS_THEME_SCROLLBAR_SMALL) ?
+      int32_t themeMetric = (scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL) ?
                             kThemeMetricSmallScrollBarWidth :
                             kThemeMetricScrollBarWidth;
       SInt32 scrollbarWidth = 0;

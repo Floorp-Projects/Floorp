@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -14,18 +12,12 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
-import org.mozilla.gecko.customtabs.CustomTabsActivity;
-import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.distribution.PartnerBrowserCustomizationsClient;
 import org.mozilla.gecko.gfx.LayerView;
@@ -35,12 +27,10 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.JavaUtil;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.webapps.WebAppActivity;
-import org.mozilla.gecko.webapps.WebAppIndexer;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -313,10 +303,6 @@ public class Tabs implements BundleEventListener {
     }
 
     public synchronized Tab selectTab(int id) {
-        return selectTab(id, true);
-    }
-
-    public synchronized Tab selectTab(int id, boolean switchActivities) {
         if (!mTabs.containsKey(id))
             return null;
 
@@ -326,14 +312,6 @@ public class Tabs implements BundleEventListener {
         // This avoids a NPE below, but callers need to be careful to
         // handle this case.
         if (tab == null || oldTab == tab) {
-            return tab;
-        }
-
-        if (switchActivities && oldTab != null && oldTab.getType() != tab.getType() &&
-                !currentActivityMatchesTab(tab)) {
-            // We're in the wrong activity for this kind of tab, so launch the correct one
-            // and then try again.
-            launchActivityForTab(tab);
             return tab;
         }
 
@@ -353,82 +331,6 @@ public class Tabs implements BundleEventListener {
         data.putInt("id", tab.getId());
         EventDispatcher.getInstance().dispatch("Tab:Selected", data);
         return tab;
-    }
-
-    /**
-     * Check whether the currently active activity matches the tab type of the passed tab.
-     */
-    public boolean currentActivityMatchesTab(Tab tab) {
-        final Activity currentActivity = GeckoActivityMonitor.getInstance().getCurrentActivity();
-
-        if (currentActivity == null) {
-            return false;
-        }
-        String currentActivityName = currentActivity.getClass().getName();
-        return currentActivityName.equals(getClassNameForTab(tab));
-    }
-
-    private void launchActivityForTab(Tab tab) {
-        final Intent intent;
-        switch (tab.getType()) {
-            case CUSTOMTAB:
-                if (tab.getCustomTabIntent() != null) {
-                    intent = tab.getCustomTabIntent().getUnsafe();
-                } else {
-                    intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse(tab.getURL()));
-                }
-                break;
-            case WEBAPP:
-                intent = new Intent(GeckoApp.ACTION_WEBAPP);
-                final String manifestPath = tab.getManifestPath();
-                try {
-                    intent.setData(getStartUriFromManifest(manifestPath));
-                } catch (IOException | JSONException e) {
-                    Log.e(LOGTAG, "Failed to get start URI from manifest", e);
-                    intent.setData(Uri.parse(tab.getURL()));
-                }
-                intent.putExtra(WebAppActivity.MANIFEST_PATH, manifestPath);
-                break;
-            default:
-                intent = new Intent(GeckoApp.ACTION_SWITCH_TAB);
-                break;
-        }
-
-        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, getClassNameForTab(tab));
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra(BrowserContract.SKIP_TAB_QUEUE_FLAG, true);
-        intent.putExtra(INTENT_EXTRA_TAB_ID, tab.getId());
-        intent.putExtra(INTENT_EXTRA_SESSION_UUID, GeckoApplication.getSessionUUID());
-        mAppContext.startActivity(intent);
-    }
-
-    // TODO: When things have settled down a bit, we should split this and everything similar
-    // TODO: in the WebAppActivity into a dedicated WebAppManifest class (bug 1353868).
-    private Uri getStartUriFromManifest(String manifestPath) throws IOException, JSONException {
-        File manifestFile = new File(manifestPath);
-        final JSONObject manifest = FileUtils.readJSONObjectFromFile(manifestFile);
-        final JSONObject manifestField = manifest.getJSONObject("manifest");
-
-        return Uri.parse(manifestField.getString("start_url"));
-    }
-
-    /**
-     * Get the class name of the activity that should be displaying this tab.
-     */
-    private String getClassNameForTab(Tab tab) {
-        TabType type = tab.getType();
-
-        switch (type) {
-            case CUSTOMTAB:
-                return CustomTabsActivity.class.getName();
-            case WEBAPP:
-                final int index =  WebAppIndexer.getInstance().getIndexForManifest(
-                        tab.getManifestPath(), mAppContext);
-                return WebAppIndexer.WEBAPP_CLASS + index;
-            default:
-                return AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS;
-        }
     }
 
     public synchronized boolean selectLastTab() {
@@ -540,22 +442,16 @@ public class Tabs implements BundleEventListener {
         closeTab(tab, getNextTab(tab));
     }
 
-    /** Don't switch activities even if the default next tab is of a different tab type */
-    public synchronized void closeTabNoActivitySwitch(Tab tab) {
-        closeTab(tab, getNextTab(tab), false, false);
-    }
-
     public synchronized void closeTab(Tab tab, Tab nextTab) {
-        closeTab(tab, nextTab, false, true);
+        closeTab(tab, nextTab, false);
     }
 
     public synchronized void closeTab(Tab tab, boolean showUndoToast) {
-        closeTab(tab, getNextTab(tab), showUndoToast, true);
+        closeTab(tab, getNextTab(tab), showUndoToast);
     }
 
     /** Close tab and then select nextTab */
-    public synchronized void closeTab(final Tab tab, Tab nextTab,
-                                      boolean showUndoToast, boolean switchActivities) {
+    public synchronized void closeTab(final Tab tab, Tab nextTab, boolean showUndoToast) {
         if (tab == null)
             return;
 
@@ -566,7 +462,7 @@ public class Tabs implements BundleEventListener {
             nextTab = loadUrl(getHomepageForNewTab(mAppContext), LOADURL_NEW_TAB);
         }
 
-        selectTab(nextTab.getId(), switchActivities);
+        selectTab(nextTab.getId());
 
         tab.onDestroy();
 
