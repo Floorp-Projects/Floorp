@@ -83,6 +83,7 @@ private:
   nsTHashtable<nsRefPtrHashKey<MediaDecoder>> mDecoders;
 
   bool mIsDoingXPCOMShutDown = false;
+  nsresult mError = NS_OK;
 };
 
 } // namespace mozilla
