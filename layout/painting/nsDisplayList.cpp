@@ -7367,9 +7367,11 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
                        aFrame->PresContext()->DevPixelsToAppUnits(absoluteLimitY));
   nsSize maxSize = Min(relativeLimit, absoluteLimit);
   gfxSize scale = nsLayoutUtils::GetTransformToAncestorScale(aFrame);
-  nsSize frameSize = nsSize(overflow.Size().width * scale.width,
-                            overflow.Size().height * scale.height);
-  if (frameSize <= maxSize) {
+  nsSize frameSize(overflow.Size().width * scale.width,
+                   overflow.Size().height * scale.height);
+  uint64_t maxLimitArea = uint64_t(maxSize.width) * maxSize.height;
+  uint64_t frameArea = uint64_t(frameSize.width) * frameSize.height;
+  if (frameArea <= maxLimitArea && frameSize <= absoluteLimit) {
     *aDirtyRect = overflow;
     return FullPrerender;
   } else if (gfxPrefs::PartiallyPrerenderAnimatedContent()) {
@@ -7377,18 +7379,31 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
     return PartialPrerender;
   }
 
-  EffectCompositor::SetPerformanceWarning(
-    aFrame, eCSSProperty_transform,
-    AnimationPerformanceWarning(
-      AnimationPerformanceWarning::Type::ContentTooLarge,
-      {
-        nsPresContext::AppUnitsToIntCSSPixels(frameSize.width),
-        nsPresContext::AppUnitsToIntCSSPixels(frameSize.height),
-        nsPresContext::AppUnitsToIntCSSPixels(relativeLimit.width),
-        nsPresContext::AppUnitsToIntCSSPixels(relativeLimit.height),
-        nsPresContext::AppUnitsToIntCSSPixels(absoluteLimit.width),
-        nsPresContext::AppUnitsToIntCSSPixels(absoluteLimit.height),
-      }));
+  if (frameArea > maxLimitArea) {
+    uint64_t appUnitsPerPixel = nsPresContext::AppUnitsPerCSSPixel();
+    EffectCompositor::SetPerformanceWarning(
+      aFrame, eCSSProperty_transform,
+      AnimationPerformanceWarning(
+        AnimationPerformanceWarning::Type::ContentTooLargeArea,
+        {
+          int(frameArea / (appUnitsPerPixel * appUnitsPerPixel)),
+          int(maxLimitArea / (appUnitsPerPixel * appUnitsPerPixel)),
+        }));
+  } else {
+    EffectCompositor::SetPerformanceWarning(
+      aFrame, eCSSProperty_transform,
+      AnimationPerformanceWarning(
+        AnimationPerformanceWarning::Type::ContentTooLarge,
+        {
+          nsPresContext::AppUnitsToIntCSSPixels(frameSize.width),
+          nsPresContext::AppUnitsToIntCSSPixels(frameSize.height),
+          nsPresContext::AppUnitsToIntCSSPixels(relativeLimit.width),
+          nsPresContext::AppUnitsToIntCSSPixels(relativeLimit.height),
+          nsPresContext::AppUnitsToIntCSSPixels(absoluteLimit.width),
+          nsPresContext::AppUnitsToIntCSSPixels(absoluteLimit.height),
+        }));
+  }
+
   return NoPrerender;
 }
 
