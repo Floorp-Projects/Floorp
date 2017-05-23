@@ -15,7 +15,12 @@ interface Credential {
 
 [Exposed=Window, SecureContext, Pref="security.webauth.webauthn"]
 interface CredentialsContainer {
+  Promise<Credential?> get(optional CredentialRequestOptions options);
   Promise<Credential?> create(optional CredentialCreationOptions options);
+};
+
+dictionary CredentialRequestOptions {
+  PublicKeyCredentialRequestOptions publicKey;
 };
 
 dictionary CredentialCreationOptions {

@@ -31,6 +31,8 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   already_AddRefed<Promise>
+  Get(const CredentialRequestOptions& aOptions);
+  already_AddRefed<Promise>
   Create(const CredentialCreationOptions& aOptions);
 
 private:

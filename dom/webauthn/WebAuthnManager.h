@@ -78,8 +78,7 @@ public:
 
   already_AddRefed<Promise>
   GetAssertion(nsPIDOMWindowInner* aParent,
-               const ArrayBufferViewOrArrayBuffer& aAssertionChallenge,
-               const AssertionOptions& aOptions);
+               const PublicKeyCredentialRequestOptions& aOptions);
 
   void StartRegister();
   void StartSign();

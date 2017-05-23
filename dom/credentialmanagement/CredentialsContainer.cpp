@@ -35,6 +35,14 @@ CredentialsContainer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPro
 }
 
 already_AddRefed<Promise>
+CredentialsContainer::Get(const CredentialRequestOptions& aOptions)
+{
+  RefPtr<WebAuthnManager> mgr = WebAuthnManager::GetOrCreate();
+  MOZ_ASSERT(mgr);
+  return mgr->GetAssertion(mParent, aOptions.mPublicKey);
+}
+
+already_AddRefed<Promise>
 CredentialsContainer::Create(const CredentialCreationOptions& aOptions)
 {
   RefPtr<WebAuthnManager> mgr = WebAuthnManager::GetOrCreate();
