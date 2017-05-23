@@ -4728,7 +4728,7 @@ pref("layers.tiles.adjust", true);
 // 0  -> full-tilt mode: Recomposite even if not transaction occured.
 pref("layers.offmainthreadcomposition.frame-rate", -1);
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) || defined (OS_OPENBSD)
 pref("layers.enable-tiles", true);
 pref("layers.tile-width", 512);
 pref("layers.tile-height", 512);
