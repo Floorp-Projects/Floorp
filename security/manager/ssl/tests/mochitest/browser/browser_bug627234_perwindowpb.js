@@ -53,7 +53,8 @@ function test() {
       let sslStatus = new FakeSSLStatus();
       uri = aWindow.Services.io.newURI("https://localhost/img.png");
       gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                               "max-age=1000", sslStatus, privacyFlags(aIsPrivateMode));
+                               "max-age=1000", sslStatus, privacyFlags(aIsPrivateMode),
+                               Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
       ok(gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
                                 privacyFlags(aIsPrivateMode)),
                                 "checking sts host");

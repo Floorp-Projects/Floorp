@@ -7,7 +7,7 @@
 // writes its state file.
 
 const EXPECTED_ENTRIES = 6;
-const EXPECTED_HSTS_COLUMNS = 3;
+const EXPECTED_HSTS_COLUMNS = 4;
 const EXPECTED_HPKP_COLUMNS = 4;
 var gProfileDir = null;
 
@@ -118,7 +118,8 @@ function run_test() {
     let sslStatus = new FakeSSLStatus();
     SSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS,
                             uris[uriIndex], maxAge + includeSubdomains,
-                            sslStatus, 0);
+                            sslStatus, 0,
+                            Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   }
 
   do_test_pending();

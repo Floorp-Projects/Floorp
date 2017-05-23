@@ -10230,6 +10230,15 @@
     "keyed": true,
     "description": "The amount of time required for HSTS priming requests (ms), keyed by success or failure of the priming request. (success, failure)"
   },
+  "HSTS_UPGRADE_SOURCE": {
+    "record_in_processes": [ "main" ],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1363546],
+    "expires_in_version": "62",
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "When we record an upgrade due to HSTS, record the source of that HSTS entry. (0: HSTS preload list, 1: HSTS Header seen naturally, 2: HSTS priming)"
+  },
   "MIXED_CONTENT_OBJECT_SUBREQUEST": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["seceng-telemetry@mozilla.com"],

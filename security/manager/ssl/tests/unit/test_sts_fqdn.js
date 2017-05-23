@@ -17,7 +17,8 @@ function run_test() {
 
   let sslStatus = new FakeSSLStatus();
   SSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                          "max-age=1000;includeSubdomains", sslStatus, 0);
+                          "max-age=1000;includeSubdomains", sslStatus, 0,
+                          Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   ok(SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0));
   ok(SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri1, 0));
   ok(SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri2, 0));

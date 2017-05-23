@@ -42,6 +42,13 @@ enum SecurityPropertyState {
   SecurityPropertyNegative = nsISiteSecurityState::SECURITY_PROPERTY_NEGATIVE,
 };
 
+enum SecurityPropertySource {
+  SourceUnknown = nsISiteSecurityService::SOURCE_UNKNOWN,
+  SourcePreload = nsISiteSecurityService::SOURCE_PRELOAD_LIST,
+  SourceOrganic = nsISiteSecurityService::SOURCE_ORGANIC_REQUEST,
+  SourceHSTSPriming = nsISiteSecurityService::SOURCE_HSTS_PRIMING,
+};
+
 /**
  * SiteHPKPState: A utility class that encodes/decodes a string describing
  * the public key pins of a site.
@@ -114,13 +121,15 @@ public:
   SiteHSTSState(const nsCString& aHost,
                 const OriginAttributes& aOriginAttributes,
                 PRTime aHSTSExpireTime, SecurityPropertyState aHSTSState,
-                bool aHSTSIncludeSubdomains);
+                bool aHSTSIncludeSubdomains,
+                SecurityPropertySource aSource);
 
   nsCString mHostname;
   OriginAttributes mOriginAttributes;
   PRTime mHSTSExpireTime;
   SecurityPropertyState mHSTSState;
   bool mHSTSIncludeSubdomains;
+  SecurityPropertySource mHSTSSource;
 
   bool IsExpired(uint32_t aType)
   {
@@ -164,17 +173,20 @@ private:
   nsresult GetHost(nsIURI *aURI, nsACString &aResult);
   nsresult SetHSTSState(uint32_t aType, const char* aHost, int64_t maxage,
                         bool includeSubdomains, uint32_t flags,
-                        SecurityPropertyState aHSTSState, bool aIsPreload,
+                        SecurityPropertyState aHSTSState,
+                        SecurityPropertySource aSource,
                         const OriginAttributes& aOriginAttributes);
   nsresult ProcessHeaderInternal(uint32_t aType, nsIURI* aSourceURI,
                                  const nsCString& aHeader,
                                  nsISSLStatus* aSSLStatus,
                                  uint32_t aFlags,
+                                 SecurityPropertySource aSource,
                                  const OriginAttributes& aOriginAttributes,
                                  uint64_t* aMaxAge, bool* aIncludeSubdomains,
                                  uint32_t* aFailureResult);
   nsresult ProcessSTSHeader(nsIURI* aSourceURI, const nsCString& aHeader,
                             uint32_t flags,
+                            SecurityPropertySource aSource,
                             const OriginAttributes& aOriginAttributes,
                             uint64_t* aMaxAge, bool* aIncludeSubdomains,
                             uint32_t* aFailureResult);
@@ -194,12 +206,14 @@ private:
   bool HostHasHSTSEntry(const nsAutoCString& aHost,
                         bool aRequireIncludeSubdomains, uint32_t aFlags,
                         const OriginAttributes& aOriginAttributes,
-                        bool* aResult, bool* aCached);
+                        bool* aResult, bool* aCached,
+                        SecurityPropertySource* aSource);
   const nsSTSPreload *GetPreloadListEntry(const char *aHost);
   nsresult IsSecureHost(uint32_t aType, const nsACString& aHost,
                         uint32_t aFlags,
                         const OriginAttributes& aOriginAttributes,
-                        bool* aCached, bool* aResult);
+                        bool* aCached, SecurityPropertySource* aSource,
+                        bool* aResult);
 
   uint64_t mMaxMaxAge;
   bool mUsePreloadList;

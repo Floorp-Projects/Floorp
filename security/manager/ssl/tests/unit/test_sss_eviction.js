@@ -58,7 +58,8 @@ function do_state_read(aSubject, aTopic, aData) {
   for (let i = 0; i < 2000; i++) {
     let uri = Services.io.newURI("http://bad" + i + ".example.com");
     gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                            "max-age=1000", sslStatus, 0);
+                            "max-age=1000", sslStatus, 0,
+                            Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   }
   do_test_pending();
   Services.obs.addObserver(do_state_written, "data-storage-written");
