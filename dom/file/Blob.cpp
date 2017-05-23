@@ -9,7 +9,6 @@
 #include "MemoryBlobImpl.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "MultipartBlobImpl.h"
-#include "ipc/nsIRemoteBlob.h"
 #include "nsIInputStream.h"
 #include "nsPIDOMWindow.h"
 #include "TemporaryBlobImpl.h"
@@ -35,9 +34,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Blob)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Blob)
-  // This class should not receive any nsIRemoteBlob QI!
-  MOZ_ASSERT(!aIID.Equals(NS_GET_IID(nsIRemoteBlob)));
-
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMBlob)
   NS_INTERFACE_MAP_ENTRY(nsIDOMBlob)

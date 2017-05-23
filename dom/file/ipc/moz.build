@@ -9,7 +9,6 @@ EXPORTS.mozilla.dom.ipc += [
     'IPCBlobInputStreamChild.h',
     'IPCBlobInputStreamParent.h',
     'IPCBlobInputStreamStorage.h',
-    'nsIRemoteBlob.h',
     'PendingIPCBlobChild.h',
     'PendingIPCBlobParent.h',
 ]
