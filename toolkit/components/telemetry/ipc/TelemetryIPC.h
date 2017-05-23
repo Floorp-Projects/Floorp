@@ -8,6 +8,7 @@
 
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
+#include "mozilla/TelemetryProcessEnums.h"
 
 // This module provides the interface to accumulate Telemetry from child processes.
 // Top-level actors for different child processes types (ContentParent, GPUChild)
@@ -32,7 +33,8 @@ namespace TelemetryIPC {
  * @param aProcessType - the process type to accumulate the histograms for
  * @param aAccumulations - accumulation actions to perform
  */
-void AccumulateChildHistograms(GeckoProcessType aProcessType, const nsTArray<Telemetry::Accumulation>& aAccumulations);
+void AccumulateChildHistograms(Telemetry::ProcessID aProcessType,
+                               const nsTArray<Telemetry::Accumulation>& aAccumulations);
 
 /**
  * Accumulate child process data into keyed histograms for the given process type.
@@ -40,7 +42,8 @@ void AccumulateChildHistograms(GeckoProcessType aProcessType, const nsTArray<Tel
  * @param aProcessType - the process type to accumulate the keyed histograms for
  * @param aAccumulations - accumulation actions to perform
  */
-void AccumulateChildKeyedHistograms(GeckoProcessType aProcessType, const nsTArray<Telemetry::KeyedAccumulation>& aAccumulations);
+void AccumulateChildKeyedHistograms(Telemetry::ProcessID aProcessType,
+                                    const nsTArray<Telemetry::KeyedAccumulation>& aAccumulations);
 
 /**
  * Update scalars for the given process type with the data coming from child process.
@@ -48,7 +51,8 @@ void AccumulateChildKeyedHistograms(GeckoProcessType aProcessType, const nsTArra
  * @param aProcessType - the process type to process the scalar actions for
  * @param aScalarActions - actions to update the scalar data
  */
-void UpdateChildScalars(GeckoProcessType aProcessType, const nsTArray<Telemetry::ScalarAction>& aScalarActions);
+void UpdateChildScalars(Telemetry::ProcessID aProcessType,
+                        const nsTArray<Telemetry::ScalarAction>& aScalarActions);
 
 /**
  * Update keyed scalars for the given process type with the data coming from child process.
@@ -56,7 +60,8 @@ void UpdateChildScalars(GeckoProcessType aProcessType, const nsTArray<Telemetry:
  * @param aProcessType - the process type to process the keyed scalar actions for
  * @param aScalarActions - actions to update the keyed scalar data
  */
-void UpdateChildKeyedScalars(GeckoProcessType aProcessType, const nsTArray<Telemetry::KeyedScalarAction>& aScalarActions);
+void UpdateChildKeyedScalars(Telemetry::ProcessID aProcessType,
+                             const nsTArray<Telemetry::KeyedScalarAction>& aScalarActions);
 
 /**
  * Record events for the given process type with the data coming from child process.
@@ -64,7 +69,8 @@ void UpdateChildKeyedScalars(GeckoProcessType aProcessType, const nsTArray<Telem
  * @param aProcessType - the process type to record the events for
  * @param aEvents - events to record
  */
-void RecordChildEvents(GeckoProcessType aProcessType, const nsTArray<Telemetry::ChildEventData>& aEvents);
+void RecordChildEvents(Telemetry::ProcessID aProcessType,
+                       const nsTArray<Telemetry::ChildEventData>& aEvents);
 
 }
 }

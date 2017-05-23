@@ -27,10 +27,12 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseFileChild.h"
 #include "mozilla/dom/indexedDB/PIndexedDBPermissionRequestChild.h"
-#include "mozilla/dom/ipc/BlobChild.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/TaskQueue.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
+#include "nsIAsyncInputStream.h"
 #include "nsIBFCacheEntry.h"
 #include "nsIDocument.h"
 #include "nsIDOMEvent.h"
@@ -615,17 +617,14 @@ DeserializeStructuredCloneFiles(
 
       switch (serializedFile.type()) {
         case StructuredCloneFile::eBlob: {
-          MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::TPBlobChild);
+          MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::TIPCBlob);
 
-          auto* actor =
-            static_cast<BlobChild*>(blobOrMutableFile.get_PBlobChild());
+          const IPCBlob& ipcBlob = blobOrMutableFile.get_IPCBlob();
 
-          RefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
+          RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(ipcBlob);
           MOZ_ASSERT(blobImpl);
 
           RefPtr<Blob> blob = Blob::Create(aDatabase->GetOwner(), blobImpl);
-
-          aDatabase->NoteReceivedBlob(blob);
 
           StructuredCloneFile* file = aFiles.AppendElement();
           MOZ_ASSERT(file);
@@ -710,18 +709,14 @@ DeserializeStructuredCloneFiles(
             break;
           }
 
-          MOZ_ASSERT(blobOrMutableFile.type() ==
-                       BlobOrMutableFile::TPBlobChild);
+          MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::TIPCBlob);
 
-          auto* actor =
-            static_cast<BlobChild*>(blobOrMutableFile.get_PBlobChild());
+          const IPCBlob& ipcBlob = blobOrMutableFile.get_IPCBlob();
 
-          RefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
+          RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(ipcBlob);
           MOZ_ASSERT(blobImpl);
 
           RefPtr<Blob> blob = Blob::Create(aDatabase->GetOwner(), blobImpl);
-
-          aDatabase->NoteReceivedBlob(blob);
 
           StructuredCloneFile* file = aFiles.AppendElement();
           MOZ_ASSERT(file);
@@ -1155,6 +1150,7 @@ WorkerPermissionRequestChildProcessActor::Recv__delete__(
 // CancelableRunnable is used to make workers happy.
 class BackgroundRequestChild::PreprocessHelper final
   : public CancelableRunnable
+  , public nsIInputStreamCallback
 {
   typedef std::pair<nsCOMPtr<nsIInputStream>,
                     nsCOMPtr<nsIInputStream>> StreamPair;
@@ -1163,6 +1159,14 @@ class BackgroundRequestChild::PreprocessHelper final
   nsTArray<StreamPair> mStreamPairs;
   nsTArray<RefPtr<JS::WasmModule>> mModuleSet;
   BackgroundRequestChild* mActor;
+
+  // These 2 are populated when the processing of the stream pairs runs.
+  PRFileDesc* mCurrentBytecodeFileDesc;
+  PRFileDesc* mCurrentCompiledFileDesc;
+
+  RefPtr<TaskQueue> mTaskQueue;
+  nsCOMPtr<nsIEventTarget> mTaskQueueEventTarget;
+
   uint32_t mModuleSetIndex;
   nsresult mResultCode;
 
@@ -1171,6 +1175,8 @@ public:
     : CancelableRunnable("indexedDB::BackgroundRequestChild::PreprocessHelper")
     , mOwningThread(aActor->GetActorEventTarget())
     , mActor(aActor)
+    , mCurrentBytecodeFileDesc(nullptr)
+    , mCurrentCompiledFileDesc(nullptr)
     , mModuleSetIndex(aModuleSetIndex)
     , mResultCode(NS_OK)
   {
@@ -1210,15 +1216,27 @@ public:
 
 private:
   ~PreprocessHelper()
-  { }
+  {
+    if (mTaskQueue) {
+      mTaskQueue->BeginShutdown();
+    }
+  }
 
   void
   RunOnOwningThread();
 
-  nsresult
-  RunOnStreamTransportThread();
+  void
+  ProcessCurrentStreamPair();
 
+  nsresult
+  WaitForStreamReady(nsIInputStream* aInputStream);
+
+  void
+  ContinueWithStatus(nsresult aStatus);
+
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
+  NS_DECL_NSIINPUTSTREAMCALLBACK
 
   virtual nsresult
   Cancel() override;
@@ -1796,7 +1814,7 @@ BackgroundDatabaseChild::ActorDestroy(ActorDestroyReason aWhy)
 
 PBackgroundIDBDatabaseFileChild*
 BackgroundDatabaseChild::AllocPBackgroundIDBDatabaseFileChild(
-                                                         PBlobChild* aBlobChild)
+                                                        const IPCBlob& aIPCBlob)
 {
   MOZ_CRASH("PBackgroundIDBFileChild actors should be manually constructed!");
 }
@@ -3019,14 +3037,22 @@ PreprocessHelper::Dispatch()
 {
   AssertIsOnOwningThread();
 
-  // The stream transport service is used for asynchronous processing. It has
-  // a threadpool with a high cap of 25 threads. Fortunately, the service can
-  // be used on workers too.
-  nsCOMPtr<nsIEventTarget> target =
-    do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-  MOZ_ASSERT(target);
+  if (!mTaskQueue) {
+    // The stream transport service is used for asynchronous processing. It has
+    // a threadpool with a high cap of 25 threads. Fortunately, the service can
+    // be used on workers too.
+    nsCOMPtr<nsIEventTarget> target =
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+    MOZ_ASSERT(target);
 
-  nsresult rv = target->Dispatch(this, NS_DISPATCH_NORMAL);
+    // We use a TaskQueue here in order to be sure that the events are
+    // dispatched in the correct order. This is not guaranteed in case we use
+    // the I/O thread directly.
+    mTaskQueue = new TaskQueue(target.forget());
+    mTaskQueueEventTarget = mTaskQueue->WrapAsEventTarget();
+  }
+
+  nsresult rv = mTaskQueueEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3051,60 +3077,127 @@ PreprocessHelper::RunOnOwningThread()
   }
 }
 
-nsresult
+void
 BackgroundRequestChild::
-PreprocessHelper::RunOnStreamTransportThread()
+PreprocessHelper::ProcessCurrentStreamPair()
 {
   MOZ_ASSERT(!IsOnOwningThread());
   MOZ_ASSERT(!mStreamPairs.IsEmpty());
-  MOZ_ASSERT(mModuleSet.IsEmpty());
 
-  const uint32_t count = mStreamPairs.Length();
+  nsresult rv;
 
-  for (uint32_t index = 0; index < count; index++) {
-    const StreamPair& streamPair = mStreamPairs[index];
+  const StreamPair& streamPair = mStreamPairs[0];
 
+  // We still don't have the current bytecode FileDesc.
+  if (!mCurrentBytecodeFileDesc) {
     const nsCOMPtr<nsIInputStream>& bytecodeStream = streamPair.first;
-
     MOZ_ASSERT(bytecodeStream);
 
-    PRFileDesc* bytecodeFileDesc = GetFileDescriptorFromStream(bytecodeStream);
-    if (NS_WARN_IF(!bytecodeFileDesc)) {
-      return NS_ERROR_FAILURE;
+    mCurrentBytecodeFileDesc = GetFileDescriptorFromStream(bytecodeStream);
+    if (!mCurrentBytecodeFileDesc) {
+      rv = WaitForStreamReady(bytecodeStream);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        ContinueWithStatus(rv);
+      }
+      return;
     }
-
-    const nsCOMPtr<nsIInputStream>& compiledStream = streamPair.second;
-
-    MOZ_ASSERT(compiledStream);
-
-    PRFileDesc* compiledFileDesc = GetFileDescriptorFromStream(compiledStream);
-    if (NS_WARN_IF(!compiledFileDesc)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    JS::BuildIdCharVector buildId;
-    bool ok = GetBuildId(&buildId);
-    if (NS_WARN_IF(!ok)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    RefPtr<JS::WasmModule> module = JS::DeserializeWasmModule(bytecodeFileDesc,
-                                                              compiledFileDesc,
-                                                              Move(buildId),
-                                                              nullptr,
-                                                              0,
-                                                              0);
-    if (NS_WARN_IF(!module)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    mModuleSet.AppendElement(module);
   }
 
-  mStreamPairs.Clear();
+  if (!mCurrentCompiledFileDesc) {
+    const nsCOMPtr<nsIInputStream>& compiledStream = streamPair.second;
+    MOZ_ASSERT(compiledStream);
+
+    mCurrentCompiledFileDesc = GetFileDescriptorFromStream(compiledStream);
+    if (!mCurrentCompiledFileDesc) {
+      rv = WaitForStreamReady(compiledStream);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        ContinueWithStatus(rv);
+      }
+      return;
+    }
+  }
+
+  MOZ_ASSERT(mCurrentBytecodeFileDesc && mCurrentCompiledFileDesc);
+
+  JS::BuildIdCharVector buildId;
+  bool ok = GetBuildId(&buildId);
+  if (NS_WARN_IF(!ok)) {
+    ContinueWithStatus(NS_ERROR_FAILURE);
+    return;
+  }
+
+  RefPtr<JS::WasmModule> module =
+    JS::DeserializeWasmModule(mCurrentBytecodeFileDesc,
+                              mCurrentCompiledFileDesc,
+                              Move(buildId),
+                              nullptr,
+                              0,
+                              0);
+  if (NS_WARN_IF(!module)) {
+    ContinueWithStatus(NS_ERROR_FAILURE);
+    return;
+  }
+
+  mModuleSet.AppendElement(module);
+  mStreamPairs.RemoveElementAt(0);
+
+  ContinueWithStatus(NS_OK);
+}
+
+nsresult
+BackgroundRequestChild::
+PreprocessHelper::WaitForStreamReady(nsIInputStream* aInputStream)
+{
+  MOZ_ASSERT(!IsOnOwningThread());
+  MOZ_ASSERT(aInputStream);
+
+  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aInputStream);
+  if (!asyncStream) {
+    return NS_ERROR_NO_INTERFACE;
+  }
+
+  nsresult rv = asyncStream->AsyncWait(this, 0, 0, mTaskQueueEventTarget);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   return NS_OK;
 }
+
+void
+BackgroundRequestChild::
+PreprocessHelper::ContinueWithStatus(nsresult aStatus)
+{
+  MOZ_ASSERT(!IsOnOwningThread());
+
+  // Let's reset the value for the next operation.
+  mCurrentBytecodeFileDesc = nullptr;
+  mCurrentCompiledFileDesc = nullptr;
+
+  nsCOMPtr<nsIEventTarget> eventTarget;
+
+  if (NS_WARN_IF(NS_FAILED(aStatus))) {
+    // If the previous operation failed, we don't continue the processing of the
+    // other stream pairs.
+    MOZ_ASSERT(mResultCode == NS_OK);
+    mResultCode = aStatus;
+
+    eventTarget = mOwningThread;
+  } else if (mStreamPairs.IsEmpty()) {
+    // If all the streams have been processed, we can go back to the owning
+    // thread.
+    eventTarget = mOwningThread;
+  } else {
+    // Continue the processing.
+    eventTarget = mTaskQueueEventTarget;
+  }
+
+  nsresult rv = eventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
+  Unused <<  NS_WARN_IF(NS_FAILED(rv));
+}
+
+NS_IMPL_ISUPPORTS_INHERITED(BackgroundRequestChild::PreprocessHelper,
+                            CancelableRunnable, nsIInputStreamCallback)
 
 NS_IMETHODIMP
 BackgroundRequestChild::
@@ -3113,16 +3206,46 @@ PreprocessHelper::Run()
   if (IsOnOwningThread()) {
     RunOnOwningThread();
   } else {
-    nsresult rv = RunOnStreamTransportThread();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      MOZ_ASSERT(mResultCode == NS_OK);
-      mResultCode = rv;
-    }
-
-    MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
+    ProcessCurrentStreamPair();
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+BackgroundRequestChild::
+PreprocessHelper::OnInputStreamReady(nsIAsyncInputStream* aStream)
+{
+  MOZ_ASSERT(!IsOnOwningThread());
+  MOZ_ASSERT(aStream);
+  MOZ_ASSERT(!mStreamPairs.IsEmpty());
+
+  // We still don't have the current bytecode FileDesc.
+  if (!mCurrentBytecodeFileDesc) {
+    mCurrentBytecodeFileDesc = GetFileDescriptorFromStream(aStream);
+    if (!mCurrentBytecodeFileDesc) {
+      ContinueWithStatus(NS_ERROR_FAILURE);
+      return NS_OK;
+    }
+
+    // Let's continue with the processing of the current pair.
+    ProcessCurrentStreamPair();
+    return NS_OK;
+  }
+
+  if (!mCurrentCompiledFileDesc) {
+    mCurrentCompiledFileDesc = GetFileDescriptorFromStream(aStream);
+    if (!mCurrentCompiledFileDesc) {
+      ContinueWithStatus(NS_ERROR_FAILURE);
+      return NS_OK;
+    }
+
+    // Let's continue with the processing of the current pair.
+    ProcessCurrentStreamPair();
+    return NS_OK;
+  }
+
+  MOZ_CRASH("If we have both fileDescs why are we here?");
 }
 
 nsresult

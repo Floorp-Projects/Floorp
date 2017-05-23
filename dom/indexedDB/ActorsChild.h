@@ -365,8 +365,7 @@ private:
   ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual PBackgroundIDBDatabaseFileChild*
-  AllocPBackgroundIDBDatabaseFileChild(PBlobChild* aBlobChild)
-                                       override;
+  AllocPBackgroundIDBDatabaseFileChild(const IPCBlob& aIPCBlob) override;
 
   virtual bool
   DeallocPBackgroundIDBDatabaseFileChild(

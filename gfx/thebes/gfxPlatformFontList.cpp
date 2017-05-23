@@ -188,6 +188,8 @@ gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
     }
     mFaceNameListsInitialized = false;
 
+    mLangService = nsLanguageAtomService::GetService();
+
     LoadBadUnderlineList();
 
     // pref changes notification setup
@@ -1241,31 +1243,13 @@ gfxPlatformFontList::GetFontFamilyNames(nsTArray<nsString>& aFontFamilyNames)
     }
 }
 
-void
-gfxPlatformFontList::InitLangService()
-{
-    if (!mLangService) {
-        mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
-    }
-}
-
-nsILanguageAtomService*
-gfxPlatformFontList::GetLangService()
-{
-    InitLangService();
-    NS_ASSERTION(mLangService, "no language service!");
-    return mLangService;
-}
-
 nsIAtom*
 gfxPlatformFontList::GetLangGroup(nsIAtom* aLanguage)
 {
     // map lang ==> langGroup
     nsIAtom *langGroup = nullptr;
     if (aLanguage) {
-        nsresult rv;
-        nsILanguageAtomService* langService = GetLangService();
-        langGroup = langService->GetLanguageGroup(aLanguage, &rv);
+        langGroup = mLangService->GetLanguageGroup(aLanguage);
     }
     if (!langGroup) {
         langGroup = nsGkAtoms::Unicode;
@@ -1349,8 +1333,8 @@ gfxPlatformFontList::TryLangForGroup(const nsACString& aOSLang,
     // Truncate at '.' or '@' from aOSLang, and convert '_' to '-'.
     // aOSLang is in the form "language[_territory][.codeset][@modifier]".
     // fontconfig takes languages in the form "language-territory".
-    // nsILanguageAtomService takes languages in the form language-subtag,
-    // where subtag may be a territory.  fontconfig and nsILanguageAtomService
+    // nsLanguageAtomService takes languages in the form language-subtag,
+    // where subtag may be a territory.  fontconfig and nsLanguageAtomService
     // handle case-conversion for us.
     const char *pos, *end;
     aOSLang.BeginReading(pos);
@@ -1371,8 +1355,7 @@ gfxPlatformFontList::TryLangForGroup(const nsACString& aOSLang,
         ++pos;
     }
 
-    nsILanguageAtomService* langService = GetLangService();
-    nsIAtom *atom = langService->LookupLanguage(aFcLang);
+    nsIAtom *atom = mLangService->LookupLanguage(aFcLang);
     return atom == aLangGroup;
 }
 

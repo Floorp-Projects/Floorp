@@ -81,7 +81,7 @@ add_task(async function test_abouthome_simpleQuery() {
 
   // Also check events.
   let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  events = (events.default || []).filter(e => e[1] == "navigation" && e[2] == "search");
+  events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "about_home", "enter", {engine: "other-MozSearch"}]]);
 
   await BrowserTestUtils.removeTab(tab);

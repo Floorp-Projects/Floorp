@@ -235,7 +235,8 @@
         </service>
 
         <service android:name="org.mozilla.gecko.media.MediaControlService"
-                 android:exported="false">
+                 android:exported="false"
+                 android:stopWithTask="true">
         </service>
 
         <receiver

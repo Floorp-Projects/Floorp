@@ -127,7 +127,7 @@ GetScalarsSnapshot(bool aKeyed, JSContext* aCx, JS::MutableHandle<JS::Value> aRe
   JS::RootedObject scalarObj(aCx, &scalarsSnapshot.toObject());
   // Don't complain if no scalars for the parent process can be found. Just
   // return an empty object.
-  Unused << JS_GetProperty(aCx, scalarObj, "default", &parentScalars);
+  Unused << JS_GetProperty(aCx, scalarObj, "parent", &parentScalars);
 
   aResult.set(parentScalars);
 }

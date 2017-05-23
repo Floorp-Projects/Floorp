@@ -46,25 +46,25 @@
 }
 
 .playButton {
-  background: url("chrome://browser/skin/images/pause.svg") no-repeat center;
+  background: url("chrome://geckoview/skin/images/videocontrols-pause.svg") no-repeat center;
   background-size: contain;
   background-origin: content-box;
 }
 
 .playButton[paused="true"] {
-  background: url("chrome://browser/skin/images/play.svg") no-repeat center;
+  background: url("chrome://geckoview/skin/images/videocontrols-play.svg") no-repeat center;
   background-size: contain;
   background-origin: content-box;
 }
 
 .castingButton {
-  background: url("chrome://browser/skin/images/cast-ready.svg") no-repeat center;
+  background: url("chrome://geckoview/skin/images/videocontrols-cast-ready.svg") no-repeat center;
   background-size: contain;
   background-origin: content-box;
 }
 
 .castingButton[active="true"] {
-  background: url("chrome://browser/skin/images/cast-active.svg") no-repeat center;
+  background: url("chrome://geckoview/skin/images/videocontrols-cast-active.svg") no-repeat center;
   background-size: contain;
   background-origin: content-box;
 }
@@ -79,26 +79,26 @@
 .muteButton {
   padding-left: 17.25px;
   padding-right: 9.75px;
-  background: url("chrome://browser/skin/images/mute.svg") no-repeat left;
+  background: url("chrome://geckoview/skin/images/videocontrols-mute.svg") no-repeat left;
   background-size: contain;
   background-origin: content-box;
 }
 
 .muteButton[muted="true"] {
-  background: url("chrome://browser/skin/images/unmute.svg") no-repeat left;
+  background: url("chrome://geckoview/skin/images/videocontrols-unmute.svg") no-repeat left;
   background-size: contain;
   background-origin: content-box;
 }
 
 .fullscreenButton {
   background-color: transparent;
-  background: url("chrome://browser/skin/images/fullscreen.svg") no-repeat center;
+  background: url("chrome://geckoview/skin/images/videocontrols-fullscreen.svg") no-repeat center;
   background-size: contain;
   background-origin: content-box;
 }
 
 .fullscreenButton[fullscreened] {
-  background: url("chrome://browser/skin/images/exitfullscreen.svg") no-repeat center;
+  background: url("chrome://geckoview/skin/images/videocontrols-exitfullscreen.svg") no-repeat center;
   background-size: contain;
   background-origin: content-box;
 }
@@ -164,7 +164,7 @@
   display: -moz-box;
   margin: 0px !important;
   padding: 0px !important;
-  background: url("chrome://browser/skin/images/scrubber.svg") no-repeat center;
+  background: url("chrome://geckoview/skin/images/videocontrols-scrubber.svg") no-repeat center;
   background-size: 12px 12px;
   height: 32px;
   width: 32px;

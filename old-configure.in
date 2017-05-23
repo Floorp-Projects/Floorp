@@ -5473,36 +5473,6 @@ AC_SUBST(NSS_DISABLE_LIBPKIX)
 
 MOZ_CREATE_CONFIG_STATUS()
 
-# Run freetype configure script
-
-if test "$MOZ_TREE_FREETYPE"; then
-   export CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS -std=c99"
-   export CPPFLAGS="$CPPFLAGS $MOZ_DEBUG_FLAGS"
-   export CXXFLAGS="$CXXFLAGS $MOZ_DEBUG_FLAGS"
-   export LDFLAGS="$LDFLAGS $MOZ_DEBUG_LDFLAGS"
-   # Spaces in the *_CFLAGS and *_LIBS variables are intentionally placed
-   # to force freetype to use our settings rather than autodetecting
-   if test -n "$MOZ_SYSTEM_PNG"; then
-     export LIBPNG_CFLAGS="$MOZ_PNG_CFLAGS "
-   else
-     export LIBPNG_CFLAGS="-I$_objdir/dist/include"
-   fi
-   export LIBPNG_LIBS="$MOZ_PNG_LIBS "
-   export ZLIB_CFLAGS="$MOZ_ZLIB_CFLAGS "
-   export ZLIB_LIBS="$MOZ_ZLIB_LIBS "
-   export CONFIG_FILES="unix-cc.mk:unix-cc.in unix-def.mk:unix-def.in freetype-config freetype2.pc:freetype2.in"
-   ac_configure_args="$ac_configure_args --host=$target --disable-shared --with-pic=yes --with-zlib=yes --without-bzip2 --with-png=yes --without-harfbuzz"
-
-   if ! test -e modules; then
-     mkdir modules
-   fi
-   # Only export CC, CXX and RANLIB for the subconfigure, and avoid spilling
-   # that further down the road.
-   (export CC CXX RANLIB;
-    AC_OUTPUT_SUBDIRS(modules/freetype2)
-   ) || exit 1
-fi
-
 if test -z "$direct_nspr_config"; then
     dnl ========================================================
     dnl = Setup a nice relatively clean build environment for
