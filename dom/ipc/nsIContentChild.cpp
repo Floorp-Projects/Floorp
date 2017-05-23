@@ -20,6 +20,7 @@
 #include "mozilla/ipc/IPCStreamSource.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
 #include "mozilla/ipc/PParentToChildStreamChild.h"
+#include "mozilla/dom/ipc/MemoryStreamChild.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
 
 #include "nsPrintfCString.h"
@@ -104,6 +105,19 @@ nsIContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
   }
 
   return IPC_OK();
+}
+
+PMemoryStreamChild*
+nsIContentChild::AllocPMemoryStreamChild(const uint64_t& aSize)
+{
+  return new MemoryStreamChild();
+}
+
+bool
+nsIContentChild::DeallocPMemoryStreamChild(PMemoryStreamChild* aActor)
+{
+  delete aActor;
+  return true;
 }
 
 PIPCBlobInputStreamChild*
