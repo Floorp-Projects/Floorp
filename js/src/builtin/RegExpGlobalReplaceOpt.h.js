@@ -52,13 +52,13 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, fullUnicode
         if (result === null)
             break;
 
-        var nCaptures;
-#if defined(FUNCTIONAL) || defined(SUBSTITUTION)
+#if defined(SUBSTITUTION)
         // Steps 14.a-b.
-        nCaptures = std_Math_max(result.length - 1, 0);
+        assert(result.length >= 1, "RegExpMatcher doesn't return an empty array");
+        var nCaptures = result.length - 1;
 #endif
 
-        // Step 14.c (reordered).
+        // Step 14.c.
         var matched = result[0];
 
         // Step 14.d.
@@ -68,38 +68,28 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, fullUnicode
         var position = result.index;
         lastIndex = position + matchLength;
 
-        // Steps g-j.
+        // Steps g-k.
         var replacement;
 #if defined(FUNCTIONAL)
-        replacement = RegExpGetComplexReplacement(result, matched, S, position,
-
-                                                  nCaptures, replaceValue,
-                                                  true, -1);
+        replacement = RegExpGetFunctionalReplacement(result, S, position, replaceValue);
 #elif defined(SUBSTITUTION)
         replacement = RegExpGetComplexReplacement(result, matched, S, position,
-
                                                   nCaptures, replaceValue,
                                                   false, firstDollarIndex);
 #elif defined(ELEMBASE)
         if (IsObject(elemBase)) {
             var prop = GetStringDataProperty(elemBase, matched);
             if (prop !== undefined) {
-                assert(typeof prop === "string", "GetStringDataProperty should return either string or undefined");
+                assert(typeof prop === "string",
+                       "GetStringDataProperty should return either string or undefined");
                 replacement = prop;
             } else {
                 elemBase = undefined;
             }
         }
 
-        if (!IsObject(elemBase)) {
-            // Steps 14.a-b (reordered).
-            nCaptures = std_Math_max(result.length - 1, 0);
-
-            replacement = RegExpGetComplexReplacement(result, matched, S, position,
-
-                                                      nCaptures, replaceValue,
-                                                      true, -1);
-        }
+        if (!IsObject(elemBase))
+            replacement = RegExpGetFunctionalReplacement(result, S, position, replaceValue);
 #else
         replacement = replaceValue;
 #endif
