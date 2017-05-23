@@ -1,0 +1,24 @@
+[package]
+name = "winreg"
+version = "0.3.5"
+authors = ["Igor Shaula <gentoo90@gmail.com>"]
+license = "MIT"
+description = "Rust bindings to MS Windows Registry API"
+repository = "https://github.com/gentoo90/winreg-rs"
+documentation = "https://gentoo90.github.io/winreg-rs/v0.3.5/winreg/"
+readme = "README.md"
+keywords = ["Windows", "WinSDK", "Registry"]
+
+[dependencies]
+winapi = "0.2.0"
+kernel32-sys = "0.1.2"
+advapi32-sys = "0.1.1"
+ktmw32-sys = "0.1.0"
+rustc-serialize = "0.3.14"
+clippy = { version = "^0", optional = true }
+
+[dev-dependencies]
+rand = "0.3"
+
+[features]
+default=[]
