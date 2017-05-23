@@ -12,6 +12,7 @@
 #include "nsIFileStreams.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "nsISeekableStream.h"
+#include "nsCOMPtr.h"
 
 namespace mozilla {
 namespace dom {
