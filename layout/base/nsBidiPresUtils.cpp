@@ -1316,6 +1316,14 @@ nsBidiPresUtils::ChildListMayRequireBidi(nsIFrame*    aFirstChild,
 
     if (IsBidiLeaf(frame)) {
       if (frame->IsTextFrame()) {
+        // If the frame already has a BidiDataProperty, we know we need to
+        // perform bidi resolution (even if no bidi content is NOW present --
+        // we might need to remove the property set by a previous reflow, if
+        // content has changed; see bug 1366623).
+        if (frame->Properties().Has(nsIFrame::BidiDataProperty())) {
+          return true;
+        }
+
         // Check whether the text frame has any RTL characters; if so, bidi
         // resolution will be needed.
         nsIContent* content = frame->GetContent();
