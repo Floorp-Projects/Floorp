@@ -367,7 +367,8 @@ APZCTreeManager::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
 
 bool
 APZCTreeManager::PushStateToWR(wr::WebRenderAPI* aWrApi,
-                               const TimeStamp& aSampleTime)
+                               const TimeStamp& aSampleTime,
+                               nsTArray<WrTransformProperty>& aTransformArray)
 {
   APZThreadUtils::AssertOnCompositorThread();
   MOZ_ASSERT(aWrApi);

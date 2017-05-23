@@ -199,7 +199,9 @@ private:
 
   // Have APZ push the async scroll state to WR. Returns true if an APZ
   // animation is in effect and we need to schedule another composition.
-  bool PushAPZStateToWR();
+  // If scrollbars need their transforms updated, the provided aTransformArray
+  // is populated with the property update details.
+  bool PushAPZStateToWR(nsTArray<WrTransformProperty>& aTransformArray);
 
 private:
   struct PendingTransactionId {
