@@ -99,25 +99,6 @@ InputStreamHelper::DeserializeInputStream(const InputStreamParams& aParams,
       serializable = do_CreateInstance(kMultiplexInputStreamCID);
       break;
 
-    // When the input stream already exists in this process, all we need to do
-    // is retrieve the original instead of sending any data over the wire.
-    case InputStreamParams::TRemoteInputStreamParams:
-      // Thi is broken!
-      return nullptr;
-
-    case InputStreamParams::TSameProcessInputStreamParams: {
-      MOZ_ASSERT(aFileDescriptors.IsEmpty());
-
-      const SameProcessInputStreamParams& params =
-        aParams.get_SameProcessInputStreamParams();
-
-      stream = dont_AddRef(
-        reinterpret_cast<nsIInputStream*>(params.addRefedInputStream()));
-      MOZ_ASSERT(stream);
-
-      return stream.forget();
-    }
-
     case InputStreamParams::TSlicedInputStreamParams:
       serializable = new SlicedInputStream();
       break;
