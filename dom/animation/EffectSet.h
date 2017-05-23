@@ -260,8 +260,8 @@ private:
   bool mCalledPropertyDtor;
 #endif
 
-  uint32_t mMayHaveOpacityAnim;
-  uint32_t mMayHaveTransformAnim;
+  bool mMayHaveOpacityAnim;
+  bool mMayHaveTransformAnim;
 };
 
 } // namespace mozilla
