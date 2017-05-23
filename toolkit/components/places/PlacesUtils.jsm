@@ -2276,6 +2276,8 @@ var Keywords = {
    *          keyword: non-empty string,
    *          URL: URL or href to associate to the keyword,
    *          postData: optional POST data to associate to the keyword
+   *          source: The change source, forwarded to all bookmark observers.
+   *            Defaults to nsINavBookmarksService::SOURCE_DEFAULT.
    *        }
    * @note Do not define a postData property if there isn't any POST data.
    * @resolves when the addition is complete.
@@ -2292,8 +2294,11 @@ var Keywords = {
       throw new Error("Invalid POST data");
     if (!("url" in keywordEntry))
       throw new Error("undefined is not a valid URL");
-    let { keyword, url,
-          source = Ci.nsINavBookmarksService.SOURCE_DEFAULT } = keywordEntry;
+
+    if (!("source" in keywordEntry)) {
+      keywordEntry.source = PlacesUtils.bookmarks.SOURCES.DEFAULT;
+    }
+    let { keyword, url, source } = keywordEntry;
     keyword = keyword.trim().toLowerCase();
     let postData = keywordEntry.postData || null;
     // This also checks href for validity
@@ -2358,8 +2363,12 @@ var Keywords = {
    * @resolves when the removal is complete.
    */
   remove(keywordOrEntry) {
-    if (typeof(keywordOrEntry) == "string")
-      keywordOrEntry = { keyword: keywordOrEntry };
+    if (typeof(keywordOrEntry) == "string") {
+      keywordOrEntry = {
+        keyword: keywordOrEntry,
+        source: Ci.nsINavBookmarksService.SOURCE_DEFAULT
+      };
+    }
 
     if (keywordOrEntry === null || typeof(keywordOrEntry) != "object" ||
         !keywordOrEntry.keyword || typeof keywordOrEntry.keyword != "string")

@@ -197,7 +197,11 @@ function ensureItemsChanged(...items) {
     let changes = observer.itemsChanged.get(item.guid);
     do_check_true(changes.has(item.property));
     let info = changes.get(item.property);
-    do_check_eq(info.isAnnoProperty, Boolean(item.isAnnoProperty));
+    if (!("isAnnoProperty" in item)) {
+      do_check_false(info.isAnnoProperty);
+    } else {
+      do_check_eq(info.isAnnoProperty, Boolean(item.isAnnoProperty));
+    }
     do_check_eq(info.newValue, item.newValue);
     if ("url" in item)
       do_check_true(item.url.equals(info.url));
