@@ -926,12 +926,8 @@ protected:
     auto pairs = session.GetNegotiatedTrackPairs();
 
     for (JsepTrackPair& pair : pairs) {
-      if (types.size() == 1) {
-        ASSERT_FALSE(pair.HasBundleLevel()) << context;
-      } else {
-        ASSERT_TRUE(pair.HasBundleLevel()) << context;
-        ASSERT_EQ(0U, pair.BundleLevel()) << context;
-      }
+      ASSERT_TRUE(pair.HasBundleLevel()) << context;
+      ASSERT_EQ(0U, pair.BundleLevel()) << context;
     }
   }
 
