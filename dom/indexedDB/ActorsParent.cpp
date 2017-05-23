@@ -52,7 +52,7 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBVersionChangeTransactionParent.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsParent.h"
 #include "mozilla/dom/indexedDB/PIndexedDBPermissionRequestParent.h"
-#include "mozilla/dom/ipc/BlobParent.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/dom/quota/OriginScope.h"
@@ -6646,8 +6646,7 @@ private:
   ActorDestroy(ActorDestroyReason aWhy) override;
 
   PBackgroundIDBDatabaseFileParent*
-  AllocPBackgroundIDBDatabaseFileParent(PBlobParent* aBlobParent)
-                                        override;
+  AllocPBackgroundIDBDatabaseFileParent(const IPCBlob& aIPCBlob) override;
 
   bool
   DeallocPBackgroundIDBDatabaseFileParent(
@@ -6763,12 +6762,11 @@ private:
  *
  * Relevant Blob context: Blobs sent from the parent process to child processes
  * are automatically linked back to their source BlobImpl when the child process
- * references the Blob via IPC.  (This is true even when a new "KnownBlob" actor
- * must be created because the reference is occurring on a different thread than
- * the PBlob actor created when the blob was sent to the child.)  However, when
- * getting an actor in the child process for sending an in-child-created Blob to
- * the parent process, there is (currently) no Blob machinery to automatically
- * establish and reuse a long-lived Actor.  As a result, without IDB's weak-map
+ * references the Blob via IPC. This is done using the internal IPCBlob
+ * inputStream ID and IPCBlobInputStreamStorage. However, when getting an actor
+ * in the child process for sending an in-child-created Blob to the parent
+ * process, there is (currently) no Blob machinery to automatically establish
+ * and reuse a long-lived Actor.  As a result, without IDB's weak-map
  * cleverness, a memory-backed Blob repeatedly sent from the child to the parent
  * would appear as a different Blob each time, requiring the Blob data to be
  * sent over IPC each time as well as potentially needing to be written to disk
@@ -10163,9 +10161,9 @@ SerializeStructuredCloneFiles(
                                                        file.mFileInfo,
                                                        /* aSnapshot */ false);
 
-        PBlobParent* actor =
-          BackgroundParent::GetOrCreateActorForBlobImpl(aBackgroundActor, impl);
-        if (!actor) {
+        IPCBlob ipcBlob;
+        nsresult rv = IPCBlobUtils::Serialize(impl, aBackgroundActor, ipcBlob);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
           // This can only fail if the child has crashed.
           IDB_REPORT_INTERNAL_ERR();
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -10174,7 +10172,7 @@ SerializeStructuredCloneFiles(
         SerializedStructuredCloneFile* file = aResult.AppendElement(fallible);
         MOZ_ASSERT(file);
 
-        file->file() = actor;
+        file->file() = ipcBlob;
         file->type() = StructuredCloneFile::eBlob;
 
         break;
@@ -10240,10 +10238,10 @@ SerializeStructuredCloneFiles(
                                                          file.mFileInfo,
                                                          /* aSnapshot */ false);
 
-          PBlobParent* actor =
-            BackgroundParent::GetOrCreateActorForBlobImpl(aBackgroundActor,
-                                                          impl);
-          if (!actor) {
+          IPCBlob ipcBlob;
+          nsresult rv =
+            IPCBlobUtils::Serialize(impl, aBackgroundActor, ipcBlob);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
             // This can only fail if the child has crashed.
             IDB_REPORT_INTERNAL_ERR();
             return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -10253,7 +10251,7 @@ SerializeStructuredCloneFiles(
             aResult.AppendElement(fallible);
           MOZ_ASSERT(serializedFile);
 
-          serializedFile->file() = actor;
+          serializedFile->file() = ipcBlob;
           serializedFile->type() = file.mType;
         }
 
@@ -14539,13 +14537,11 @@ Database::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 PBackgroundIDBDatabaseFileParent*
-Database::AllocPBackgroundIDBDatabaseFileParent(PBlobParent* aBlobParent)
+Database::AllocPBackgroundIDBDatabaseFileParent(const IPCBlob& aIPCBlob)
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aBlobParent);
 
-  RefPtr<BlobImpl> blobImpl =
-    static_cast<BlobParent*>(aBlobParent)->GetBlobImpl();
+  RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(aIPCBlob);
   MOZ_ASSERT(blobImpl);
 
   RefPtr<FileInfo> fileInfo;
