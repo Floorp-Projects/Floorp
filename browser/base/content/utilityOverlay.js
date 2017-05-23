@@ -396,6 +396,8 @@ function openLinkIn(url, where, params) {
     }
   }
 
+  let focusUrlBar = false;
+
   switch (where) {
   case "current":
     let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
@@ -437,6 +439,8 @@ function openLinkIn(url, where, params) {
     loadInBackground = !loadInBackground;
     // fall through
   case "tab":
+    focusUrlBar = !loadInBackground && w.isBlankPageURL(url);
+
     let tabUsedForLoad = w.gBrowser.loadOneTab(url, {
       referrerURI: aReferrerURI,
       referrerPolicy: aReferrerPolicy,
@@ -451,6 +455,7 @@ function openLinkIn(url, where, params) {
       userContextId: aUserContextId,
       originPrincipal: aPrincipal,
       triggeringPrincipal: aTriggeringPrincipal,
+      focusUrlBar,
     });
     targetBrowser = tabUsedForLoad.linkedBrowser;
 
@@ -471,13 +476,9 @@ function openLinkIn(url, where, params) {
     break;
   }
 
-  // Focus the content, but only if the browser used for the load is selected.
-  if (targetBrowser == w.gBrowser.selectedBrowser) {
+  if (!focusUrlBar && targetBrowser == w.gBrowser.selectedBrowser) {
+    // Focus the content, but only if the browser used for the load is selected.
     targetBrowser.focus();
-  }
-
-  if (!loadInBackground && w.isBlankPageURL(url)) {
-    w.focusAndSelectUrlBar();
   }
 }
 

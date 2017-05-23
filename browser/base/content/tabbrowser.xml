@@ -1246,26 +1246,10 @@
                 });
               }
 
-              oldBrowser._urlbarFocused = (gURLBar && gURLBar.focused);
-              if (this.isFindBarInitialized(oldTab)) {
-                let findBar = this.getFindBar(oldTab);
-                oldTab._findBarFocused = (!findBar.hidden &&
-                  findBar._findField.getAttribute("focused") == "true");
-              }
-
-              // If focus is in the tab bar, retain it there.
-              if (document.activeElement == oldTab) {
-                // We need to explicitly focus the new tab, because
-                // tabbox.xml does this only in some cases.
-                this.mCurrentTab.focus();
-              } else if (gMultiProcessBrowser && document.activeElement !== newBrowser) {
-                // Clear focus so that _adjustFocusAfterTabSwitch can detect if
-                // some element has been focused and respect that.
-                document.activeElement.blur();
-              }
-
-              if (!gMultiProcessBrowser)
+              if (!gMultiProcessBrowser) {
+                this._adjustFocusBeforeTabSwitch(oldTab, this.mCurrentTab);
                 this._adjustFocusAfterTabSwitch(this.mCurrentTab);
+              }
             }
 
             updateUserContextUIIndicator();
@@ -1287,6 +1271,45 @@
               TelemetryStopwatch.finish("FX_TAB_SWITCH_UPDATE_MS");
           ]]>
         </body>
+      </method>
+
+      <method name="_adjustFocusBeforeTabSwitch">
+        <parameter name="oldTab"/>
+        <parameter name="newTab"/>
+        <body><![CDATA[
+          if (this._previewMode) {
+            return;
+          }
+
+          let oldBrowser = oldTab.linkedBrowser;
+          let newBrowser = newTab.linkedBrowser;
+
+          oldBrowser._urlbarFocused = (gURLBar && gURLBar.focused);
+
+          if (this.isFindBarInitialized(oldTab)) {
+            let findBar = this.getFindBar(oldTab);
+            oldTab._findBarFocused = (!findBar.hidden &&
+              findBar._findField.getAttribute("focused") == "true");
+          }
+
+          // If focus is in the tab bar, retain it there.
+          if (document.activeElement == oldTab) {
+            // We need to explicitly focus the new tab, because
+            // tabbox.xml does this only in some cases.
+            newTab.focus();
+          } else if (gMultiProcessBrowser && document.activeElement !== newBrowser) {
+
+            let keepFocusOnUrlBar = newBrowser &&
+                                    newBrowser._urlbarFocused &&
+                                    gURLBar &&
+                                    gURLBar.focused;
+            if (!keepFocusOnUrlBar) {
+              // Clear focus so that _adjustFocusAfterTabSwitch can detect if
+              // some element has been focused and respect that.
+              document.activeElement.blur();
+            }
+          }
+        ]]></body>
       </method>
 
       <method name="_adjustFocusAfterTabSwitch">
@@ -1314,12 +1337,15 @@
           // Explicitly close the popup if the URL bar retains focus
           gURLBar.closePopup();
 
-          if (!window.fullScreen) {
-            gURLBar.focus();
+          // If the user happened to type into the URL bar for this browser
+          // by the time we got here, focusing will cause the text to be
+          // selected which could cause them to overwrite what they've
+          // already typed in.
+          if (gURLBar.focused && newBrowser.userTypedValue) {
             return;
           }
 
-          if (isTabEmpty(this.mCurrentTab)) {
+          if (!window.fullScreen || isTabEmpty(this.mCurrentTab)) {
             focusAndSelectUrlBar();
             return;
           }
@@ -1531,6 +1557,7 @@
             var aIsPrerendered;
             var aCreateLazyBrowser;
             var aNextTabParentId;
+            var aFocusUrlBar;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -1556,6 +1583,7 @@
               aIsPrerendered            = params.isPrerendered;
               aCreateLazyBrowser        = params.createLazyBrowser;
               aNextTabParentId          = params.nextTabParentId;
+              aFocusUrlBar              = params.focusUrlBar;
             }
 
             var bgLoad = (aLoadInBackground != null) ? aLoadInBackground :
@@ -1583,7 +1611,8 @@
                                   sameProcessAsFrameLoader: aSameProcessAsFrameLoader,
                                   opener: aOpener,
                                   isPrerendered: aIsPrerendered,
-                                  nextTabParentId: aNextTabParentId });
+                                  nextTabParentId: aNextTabParentId,
+                                  focusUrlBar: aFocusUrlBar });
             if (!bgLoad)
               this.selectedTab = tab;
 
@@ -2288,6 +2317,7 @@
             var aSkipBackgroundNotify;
             var aNextTabParentId;
             var aNoInitialLabel;
+            var aFocusUrlBar;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -2317,6 +2347,7 @@
               aSkipBackgroundNotify     = params.skipBackgroundNotify;
               aNextTabParentId          = params.nextTabParentId;
               aNoInitialLabel           = params.noInitialLabel;
+              aFocusUrlBar              = params.focusUrlBar;
             }
 
             // if we're adding tabs, we're past interrupt mode, ditch the owner
@@ -2443,6 +2474,11 @@
             }
 
             t.linkedBrowser = b;
+
+            if (aFocusUrlBar) {
+              b._urlbarFocused = true;
+            }
+
             this._tabForBrowser.set(b, t);
             t.permanentKey = b.permanentKey;
             t._browserParams = { uriIsAboutBlank,
@@ -4035,8 +4071,6 @@
               let toBrowser = this.requestedTab.linkedBrowser;
               toBrowser.setAttribute("primary", "true");
 
-              this.tabbrowser._adjustFocusAfterTabSwitch(this.requestedTab);
-
               let fromBrowser = this.originalTab.linkedBrowser;
               // It's possible that the tab we're switching from closed
               // before we were able to finalize, in which case, fromBrowser
@@ -4128,6 +4162,7 @@
 
               // Switch to the tab we've decided to make visible.
               if (this.visibleTab !== showTab) {
+                this.tabbrowser._adjustFocusBeforeTabSwitch(this.visibleTab, showTab);
                 this.visibleTab = showTab;
 
                 this.maybeVisibleTabs.add(showTab);

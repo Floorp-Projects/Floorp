@@ -18,9 +18,7 @@ const EXPECTED_REFLOWS = [
   [
     "select@chrome://global/content/bindings/textbox.xml",
     "focusAndSelectUrlBar@chrome://browser/content/browser.js",
-    "openLinkIn@chrome://browser/content/utilityOverlay.js",
-    "openUILinkIn@chrome://browser/content/utilityOverlay.js",
-    "BrowserOpenTab@chrome://browser/content/browser.js",
+    "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml",
   ],
 
   // selection change notification may cause querying the focused editor content
@@ -28,43 +26,15 @@ const EXPECTED_REFLOWS = [
   [
     "select@chrome://global/content/bindings/textbox.xml",
     "focusAndSelectUrlBar@chrome://browser/content/browser.js",
-    "openLinkIn@chrome://browser/content/utilityOverlay.js",
-    "openUILinkIn@chrome://browser/content/utilityOverlay.js",
-    "BrowserOpenTab@chrome://browser/content/browser.js",
+    "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml",
   ],
 
   [
     "select@chrome://global/content/bindings/textbox.xml",
     "focusAndSelectUrlBar@chrome://browser/content/browser.js",
-    "openLinkIn@chrome://browser/content/utilityOverlay.js",
-    "openUILinkIn@chrome://browser/content/utilityOverlay.js",
-    "BrowserOpenTab@chrome://browser/content/browser.js",
-  ],
-
-  [
-    "openLinkIn@chrome://browser/content/utilityOverlay.js",
-    "openUILinkIn@chrome://browser/content/utilityOverlay.js",
-    "BrowserOpenTab@chrome://browser/content/browser.js",
-  ],
-
-  [
-    // switching focus in updateCurrentBrowser() causes reflows
     "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml",
-    "updateDisplay@chrome://browser/content/tabbrowser.xml",
-    "postActions@chrome://browser/content/tabbrowser.xml",
-    "requestTab@chrome://browser/content/tabbrowser.xml"
   ],
 ];
-
-if (!gMultiProcessBrowser) {
-  EXPECTED_REFLOWS.push(
-    [
-      "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml",
-      "updateCurrentBrowser@chrome://browser/content/tabbrowser.xml",
-      "onselect@chrome://browser/content/browser.xul",
-    ],
-  );
-}
 
 /*
  * This test ensures that there are no unexpected

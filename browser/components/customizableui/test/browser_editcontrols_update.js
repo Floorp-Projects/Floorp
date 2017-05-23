@@ -101,6 +101,11 @@ add_task(async function test_panelui_customize_to_toolbar() {
   // updateEditUIVisibility should be called when customization ends but isn't. See bug 1359790.
   updateEditUIVisibility();
 
+  // The URL bar may have been focused to begin with, which means
+  // that subsequent calls to focus it won't result in command
+  // updates, so we'll make sure to blur it.
+  gURLBar.blur();
+
   let overridePromise = expectCommandUpdate(1);
   gURLBar.select();
   gURLBar.focus();
