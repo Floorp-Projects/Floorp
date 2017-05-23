@@ -69,12 +69,6 @@ protected:
   virtual bool
   DeallocPBlobParent(PBlobParent* aActor) override;
 
-  virtual PMemoryStreamParent*
-  AllocPMemoryStreamParent(const uint64_t& aSize) override;
-
-  virtual bool
-  DeallocPMemoryStreamParent(PMemoryStreamParent* aActor) override;
-
   virtual PPendingIPCBlobParent*
   AllocPPendingIPCBlobParent(const IPCBlob& aBlob) override;
 
