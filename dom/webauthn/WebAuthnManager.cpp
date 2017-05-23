@@ -40,7 +40,7 @@ NS_IMPL_ISUPPORTS(WebAuthnManager, nsIIPCBackgroundChildCreateCallback);
 
 template<class OOS>
 static nsresult
-GetAlgorithmName(JSContext* aCx, const OOS& aAlgorithm,
+GetAlgorithmName(const OOS& aAlgorithm,
                  /* out */ nsString& aName)
 {
   MOZ_ASSERT(aAlgorithm.IsString()); // TODO: remove assertion when we coerce.
@@ -100,10 +100,10 @@ AssembleClientData(const nsAString& aOrigin, const CryptoBuffer& aChallenge,
     return NS_ERROR_FAILURE;
   }
 
-  WebAuthnClientData clientDataObject;
-  clientDataObject.mOrigin.Assign(aOrigin);
-  clientDataObject.mHashAlg.SetAsString().Assign(NS_LITERAL_STRING("S256"));
+  CollectedClientData clientDataObject;
   clientDataObject.mChallenge.Assign(challengeBase64);
+  clientDataObject.mOrigin.Assign(aOrigin);
+  clientDataObject.mHashAlg.Assign(NS_LITERAL_STRING("S256"));
 
   nsAutoString temp;
   if (NS_WARN_IF(!clientDataObject.ToJSON(temp))) {
@@ -215,11 +215,8 @@ WebAuthnManager::Get()
 }
 
 already_AddRefed<Promise>
-WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
-                                const Account& aAccountInformation,
-                                const Sequence<ScopedCredentialParameters>& aCryptoParameters,
-                                const ArrayBufferViewOrArrayBuffer& aChallenge,
-                                const ScopedCredentialOptions& aOptions)
+WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
+                                const MakeCredentialOptions& aOptions)
 {
   MOZ_ASSERT(aParent);
 
@@ -245,15 +242,15 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
   // closest value lying within that range.
 
   double adjustedTimeout = 30.0;
-  if (aOptions.mTimeoutSeconds.WasPassed()) {
-    adjustedTimeout = aOptions.mTimeoutSeconds.Value();
+  if (aOptions.mTimeout.WasPassed()) {
+    adjustedTimeout = aOptions.mTimeout.Value();
     adjustedTimeout = std::max(15.0, adjustedTimeout);
     adjustedTimeout = std::min(120.0, adjustedTimeout);
   }
 
   nsCString rpId;
-  if (!aOptions.mRpId.WasPassed()) {
-    // If rpId is not specified, then set rpId to callerOrigin, and rpIdHash to
+  if (!aOptions.mRp.mId.WasPassed()) {
+    // If rp.id is not specified, then set rpId to callerOrigin, and rpIdHash to
     // the SHA-256 hash of rpId.
     rpId.Assign(NS_ConvertUTF16toUTF8(origin));
   } else {
@@ -265,7 +262,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
     // Otherwise, reject promise with a DOMException whose name is
     // "SecurityError", and terminate this algorithm.
 
-    if (NS_FAILED(RelaxSameOrigin(aParent, aOptions.mRpId.Value(), rpId))) {
+    if (NS_FAILED(RelaxSameOrigin(aParent, aOptions.mRp.mId.Value(), rpId))) {
       promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
       return promise.forget();
     }
@@ -293,15 +290,15 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
 
   // Process each element of cryptoParameters using the following steps, to
   // produce a new sequence normalizedParameters.
-  nsTArray<ScopedCredentialParameters> normalizedParams;
-  for (size_t a = 0; a < aCryptoParameters.Length(); ++a) {
+  nsTArray<PublicKeyCredentialParameters> normalizedParams;
+  for (size_t a = 0; a < aOptions.mParameters.Length(); ++a) {
     // Let current be the currently selected element of
     // cryptoParameters.
 
-    // If current.type does not contain a ScopedCredentialType
+    // If current.type does not contain a PublicKeyCredentialType
     // supported by this implementation, then stop processing current and move
     // on to the next element in cryptoParameters.
-    if (aCryptoParameters[a].mType != ScopedCredentialType::ScopedCred) {
+    if (aOptions.mParameters[a].mType != PublicKeyCredentialType::Public_key) {
       continue;
     }
 
@@ -312,16 +309,16 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
     // element in cryptoParameters.
 
     nsString algName;
-    if (NS_FAILED(GetAlgorithmName(aCx, aCryptoParameters[a].mAlgorithm,
+    if (NS_FAILED(GetAlgorithmName(aOptions.mParameters[a].mAlgorithm,
                                    algName))) {
       continue;
     }
 
-    // Add a new object of type ScopedCredentialParameters to
+    // Add a new object of type PublicKeyCredentialParameters to
     // normalizedParameters, with type set to current.type and algorithm set to
     // normalizedAlgorithm.
-    ScopedCredentialParameters normalizedObj;
-    normalizedObj.mType = aCryptoParameters[a].mType;
+    PublicKeyCredentialParameters normalizedObj;
+    normalizedObj.mType = aOptions.mParameters[a].mType;
     normalizedObj.mAlgorithm.SetAsString().Assign(algName);
 
     if (!normalizedParams.AppendElement(normalizedObj, mozilla::fallible)){
@@ -333,7 +330,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
   // If normalizedAlgorithm is empty and cryptoParameters was not empty, cancel
   // the timer started in step 2, reject promise with a DOMException whose name
   // is "NotSupportedError", and terminate this algorithm.
-  if (normalizedParams.IsEmpty() && !aCryptoParameters.IsEmpty()) {
+  if (normalizedParams.IsEmpty() && !aOptions.mParameters.IsEmpty()) {
     promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return promise.forget();
   }
@@ -341,16 +338,17 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
   // TODO: The following check should not be here. This is checking for
   // parameters specific to the soft key, and should be put in the soft key
   // manager in the parent process. Still need to serialize
-  // ScopedCredentialParameters first.
+  // PublicKeyCredentialParameters first.
 
-  // Check if at least one of the specified combinations of ScopedCredentialType
-  // and cryptographic parameters is supported. If not, return an error code
-  // equivalent to NotSupportedError and terminate the operation.
+  // Check if at least one of the specified combinations of
+  // PublicKeyCredentialParameters and cryptographic parameters is supported. If
+  // not, return an error code equivalent to NotSupportedError and terminate the
+  // operation.
 
   bool isValidCombination = false;
 
   for (size_t a = 0; a < normalizedParams.Length(); ++a) {
-    if (normalizedParams[a].mType == ScopedCredentialType::ScopedCred &&
+    if (normalizedParams[a].mType == PublicKeyCredentialType::Public_key &&
         normalizedParams[a].mAlgorithm.IsString() &&
         normalizedParams[a].mAlgorithm.GetAsString().EqualsLiteral(
           WEBCRYPTO_NAMED_CURVE_P256)) {
@@ -379,7 +377,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
   // and compute the clientDataJSON and clientDataHash.
 
   CryptoBuffer challenge;
-  if (!challenge.Assign(aChallenge)) {
+  if (!challenge.Assign(aOptions.mChallenge)) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();
   }
@@ -407,15 +405,9 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent, JSContext* aCx,
   if (aOptions.mExcludeList.WasPassed()) {
     for (const auto& s: aOptions.mExcludeList.Value()) {
       WebAuthnScopedCredentialDescriptor c;
-      c.type() = static_cast<uint32_t>(s.mType);
       CryptoBuffer cb;
       cb.Assign(s.mId);
       c.id() = cb;
-      if (s.mTransports.WasPassed()) {
-        for (const auto& t: s.mTransports.Value()) {
-          c.transports().AppendElement(static_cast<uint32_t>(t));
-        }
-      }
       excludeList.AppendElement(c);
     }
   }
@@ -576,15 +568,9 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
   nsTArray<WebAuthnScopedCredentialDescriptor> allowList;
   for (const auto& s: aOptions.mAllowList.Value()) {
     WebAuthnScopedCredentialDescriptor c;
-    c.type() = static_cast<uint32_t>(s.mType);
     CryptoBuffer cb;
     cb.Assign(s.mId);
     c.id() = cb;
-    if (s.mTransports.WasPassed()) {
-      for (const auto& t: s.mTransports.Value()) {
-        c.transports().AppendElement(static_cast<uint32_t>(t));
-      }
-    }
     allowList.AppendElement(c);
   }
 

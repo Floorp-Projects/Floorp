@@ -20,11 +20,7 @@ namespace mozilla {
 namespace dom {
 
 struct WebAuthnScopedCredentialDescriptor {
-  // Converted from mozilla::dom::ScopedCredentialType enum
-  uint32_t type;
   uint8_t[] id;
-  // Converted from mozilla::dom::WebAuthnTransport enum
-  uint32_t[] transports;
 };
 
 struct WebAuthnExtension {

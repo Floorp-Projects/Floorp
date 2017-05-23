@@ -43,12 +43,6 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   already_AddRefed<Promise>
-  MakeCredential(JSContext* aCx, const Account& accountInformation,
-                 const Sequence<ScopedCredentialParameters>& cryptoParameters,
-                 const ArrayBufferViewOrArrayBuffer& attestationChallenge,
-                 const ScopedCredentialOptions& options);
-
-  already_AddRefed<Promise>
   GetAssertion(const ArrayBufferViewOrArrayBuffer& assertionChallenge,
                const AssertionOptions& options);
 private:

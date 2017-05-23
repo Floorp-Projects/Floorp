@@ -35,17 +35,6 @@ WebAuthentication::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 already_AddRefed<Promise>
-WebAuthentication::MakeCredential(JSContext* aCx, const Account& aAccount,
-                                  const Sequence<ScopedCredentialParameters>& aCryptoParameters,
-                                  const ArrayBufferViewOrArrayBuffer& aChallenge,
-                                  const ScopedCredentialOptions& aOptions)
-{
-  RefPtr<WebAuthnManager> mgr = WebAuthnManager::GetOrCreate();
-  MOZ_ASSERT(mgr);
-  return mgr->MakeCredential(mParent, aCx, aAccount, aCryptoParameters, aChallenge, aOptions);
-}
-
-already_AddRefed<Promise>
 WebAuthentication::GetAssertion(const ArrayBufferViewOrArrayBuffer& aChallenge,
                                 const AssertionOptions& aOptions)
 {
