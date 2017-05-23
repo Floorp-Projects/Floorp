@@ -363,7 +363,9 @@ static inline WrRepeatMode ToWrRepeatMode(uint8_t repeatMode)
   return WrRepeatMode::Stretch;
 }
 
-static inline WrTransformProperty ToWrTransformProperty(uint64_t id, gfx::Matrix4x4& transform)
+template<class S, class T>
+static inline WrTransformProperty ToWrTransformProperty(uint64_t id,
+                                                        const gfx::Matrix4x4Typed<S, T>& transform)
 {
   WrTransformProperty prop;
   prop.id = id;
