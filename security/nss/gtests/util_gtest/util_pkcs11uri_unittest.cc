@@ -31,17 +31,13 @@ class PK11URITest : public ::testing::Test {
     size_t i;
     for (i = 0; i < num_pattrs; i++) {
       const char *value = PK11URI_GetPathAttribute(tmp.get(), pattrs[i].name);
-      EXPECT_TRUE(value);
-      if (value) {
-        EXPECT_EQ(std::string(value), std::string(pattrs[i].value));
-      }
+      ASSERT_TRUE(value);
+      ASSERT_EQ(std::string(value), std::string(pattrs[i].value));
     }
     for (i = 0; i < num_qattrs; i++) {
       const char *value = PK11URI_GetQueryAttribute(tmp.get(), qattrs[i].name);
-      EXPECT_TRUE(value);
-      if (value) {
-        EXPECT_EQ(std::string(value), std::string(qattrs[i].value));
-      }
+      ASSERT_TRUE(value);
+      ASSERT_EQ(std::string(value), std::string(qattrs[i].value));
     }
   }
 
@@ -52,10 +48,8 @@ class PK11URITest : public ::testing::Test {
         PK11URI_CreateURI(pattrs, num_pattrs, qattrs, num_qattrs));
     ASSERT_TRUE(tmp);
     char *out = PK11URI_FormatURI(nullptr, tmp.get());
-    EXPECT_TRUE(out);
-    if (out) {
-      EXPECT_EQ(std::string(out), formatted);
-    }
+    ASSERT_TRUE(out);
+    ASSERT_EQ(std::string(out), formatted);
     PORT_Free(out);
   }
 
@@ -73,17 +67,13 @@ class PK11URITest : public ::testing::Test {
     size_t i;
     for (i = 0; i < num_pattrs; i++) {
       const char *value = PK11URI_GetPathAttribute(tmp.get(), pattrs[i].name);
-      EXPECT_TRUE(value);
-      if (value) {
-        EXPECT_EQ(std::string(value), std::string(pattrs[i].value));
-      }
+      ASSERT_TRUE(value);
+      ASSERT_EQ(std::string(value), std::string(pattrs[i].value));
     }
     for (i = 0; i < num_qattrs; i++) {
       const char *value = PK11URI_GetQueryAttribute(tmp.get(), qattrs[i].name);
-      EXPECT_TRUE(value);
-      if (value) {
-        EXPECT_EQ(std::string(value), std::string(qattrs[i].value));
-      }
+      ASSERT_TRUE(value);
+      ASSERT_EQ(std::string(value), std::string(qattrs[i].value));
     }
   }
 
@@ -91,11 +81,9 @@ class PK11URITest : public ::testing::Test {
     ScopedPK11URI tmp(PK11URI_ParseURI(str.c_str()));
     ASSERT_TRUE(tmp);
     char *out = PK11URI_FormatURI(nullptr, tmp.get());
-    EXPECT_TRUE(out);
-    if (out) {
-      EXPECT_EQ(std::string(out), formatted);
-      PORT_Free(out);
-    }
+    ASSERT_TRUE(out);
+    ASSERT_EQ(std::string(out), formatted);
+    PORT_Free(out);
   }
 
  protected:
