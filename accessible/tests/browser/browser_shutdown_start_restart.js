@@ -4,13 +4,13 @@
 
 'use strict';
 
-add_task(function* () {
+add_task(async function () {
   info('Creating a service');
   // Create a11y service.
   let a11yInit = initPromise();
   let accService = Cc['@mozilla.org/accessibilityService;1'].getService(
     Ci.nsIAccessibilityService);
-  yield a11yInit;
+  await a11yInit;
   ok(accService, 'Service initialized');
 
   info('Removing a service');
@@ -20,14 +20,14 @@ add_task(function* () {
   ok(!accService, 'Service is removed');
   // Force garbage collection that should trigger shutdown.
   forceGC();
-  yield a11yShutdown;
+  await a11yShutdown;
 
   info('Recreating a service');
   // Re-create a11y service.
   a11yInit = initPromise();
   accService = Cc['@mozilla.org/accessibilityService;1'].getService(
     Ci.nsIAccessibilityService);
-  yield a11yInit;
+  await a11yInit;
   ok(accService, 'Service initialized again');
 
   info('Removing a service again');
@@ -37,5 +37,5 @@ add_task(function* () {
   ok(!accService, 'Service is removed again');
   // Force garbage collection that should trigger shutdown.
   forceGC();
-  yield a11yShutdown;
+  await a11yShutdown;
 });

@@ -18,7 +18,7 @@ addAccessibleTask(`
   </style>
   <div id="container1"></div>
   <div id="container2"><div id="container2_child">text</div></div>`,
-  function*(browser, accDoc) {
+  async function(browser, accDoc) {
     const id1 = 'container1';
     const id2 = 'container2';
     let container1 = findAccessibleChildByID(accDoc, id1);
@@ -40,13 +40,13 @@ addAccessibleTask(`
 
     let onReorder = waitForEvent(EVENT_REORDER, id1);
     // Create and add an element with CSS generated content to container1
-    yield ContentTask.spawn(browser, id1, id => {
+    await ContentTask.spawn(browser, id1, id => {
       let node = content.document.createElement('div');
       node.textContent = 'text';
       node.setAttribute('class', 'gentext');
       content.document.getElementById(id).appendChild(node);
     });
-    yield onReorder;
+    await onReorder;
 
     tree = {
       SECTION: [ // container
@@ -61,8 +61,8 @@ addAccessibleTask(`
 
     onReorder = waitForEvent(EVENT_REORDER, id2);
     // Add CSS generated content to an element in container2's subtree
-    yield invokeSetAttribute(browser, 'container2_child', 'class', 'gentext');
-    yield onReorder;
+    await invokeSetAttribute(browser, 'container2_child', 'class', 'gentext');
+    await onReorder;
 
     tree = {
       SECTION: [ // container2
