@@ -20,6 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
 
 SimpleTest.waitForExplicitFinish();
 
+var isDataUnique = SpecialPowers.Services.prefs.getBoolPref("security.data_uri.unique_opaque_origin");
 var B64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 /**
@@ -140,9 +141,7 @@ function messageReceiver(evt)
     }
     else if (evt.data === "data-response")
     {
-      // HTML5 defines the origin of a data: URI as the origin of the window or
-      // script that opened the data: URI.
-      is(evt.origin, "http://mochi.test:8888",
+      is(evt.origin, isDataUnique ? "null" : "http://mochi.test:8888",
          "wrong origin for event from data URL (should be the origin of the " +
          "window/script that opened the URL, in this case the origin of this " +
          "file)");
@@ -299,7 +298,7 @@ function testBlank2()
 
 function testData()
 {
-  dataWindow.postMessage("from-opener", "http://mochi.test:8888");
+  dataWindow.postMessage("from-opener", isDataUnique ? "*" : "http://mochi.test:8888");
 }
 
 window.addEventListener("message", messageReceiver);
