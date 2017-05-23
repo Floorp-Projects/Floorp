@@ -39,12 +39,14 @@ mozilla::StaticRefPtr<nsITransferable> nsClipboard::sSelectionCache;
 
 + (NSString*)stringFromPboardType:(NSString*)aType
 {
-  if ([aType isEqualToString:kWildcardPboardType] ||
-      [aType isEqualToString:kCustomTypesPboardType] ||
+  if ([aType isEqualToString:kMozWildcardPboardType] ||
+      [aType isEqualToString:kMozCustomTypesPboardType] ||
       [aType isEqualToString:kPublicUrlPboardType] ||
       [aType isEqualToString:kPublicUrlNamePboardType] ||
+      [aType isEqualToString:kMozFileUrlsPboardType] ||
       [aType isEqualToString:(NSString*)kPasteboardTypeFileURLPromise] ||
       [aType isEqualToString:(NSString*)kPasteboardTypeFilePromiseContent] ||
+      [aType isEqualToString:(NSString*)kUTTypeFileURL] ||
       [aType isEqualToString:NSPasteboardTypeString] ||
       [aType isEqualToString:NSPasteboardTypeHTML] ||
       [aType isEqualToString:NSPasteboardTypeRTF] ||
@@ -164,6 +166,9 @@ nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard)
                    [UTIHelper stringFromPboardType:NSPasteboardTypeHTML]]) {
         [cocoaPasteboard setString:(nsClipboard::WrapHtmlForSystemPasteboard(currentValue))
                          forType:currentKey];
+      } else if ([currentKey isEqualToString:
+                   [UTIHelper stringFromPboardType:kMozFileUrlsPboardType]]) {
+        [cocoaPasteboard writeObjects:currentValue];
       } else {
         [cocoaPasteboard setData:currentValue forType:currentKey];
       }
@@ -250,7 +255,7 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
       NSString* type =
         [cocoaPasteboard availableTypeFromArray:
           [NSArray arrayWithObject:
-            [UTIHelper stringFromPboardType:kCustomTypesPboardType]]];
+            [UTIHelper stringFromPboardType:kMozCustomTypesPboardType]]];
       if (!type) {
         continue;
       }
@@ -467,7 +472,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
       NSString* availableType =
         [generalPBoard availableTypeFromArray:
           [NSArray arrayWithObject:
-            [UTIHelper stringFromPboardType:kCustomTypesPboardType]]];
+            [UTIHelper stringFromPboardType:kMozCustomTypesPboardType]]];
       if (availableType) {
         *outResult = true;
         break;
@@ -565,7 +570,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       if (data) {
         NSData* nativeData = [NSData dataWithBytes:data length:dataSize];
         NSString* customType =
-          [UTIHelper stringFromPboardType:kCustomTypesPboardType];
+          [UTIHelper stringFromPboardType:kMozCustomTypesPboardType];
         [pasteboardOutputDict setObject:nativeData forKey:customType];
         free(data);
       }
@@ -656,10 +661,11 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       }
 
       NSString* str = nsCocoaUtils::ToNSString(fileURI);
-      NSArray* fileList = [NSArray arrayWithObjects:str, nil];
-      NSString* filenamesType =
-        [UTIHelper stringFromPboardType:NSFilenamesPboardType];
-      [pasteboardOutputDict setObject:fileList forKey:filenamesType];
+      NSURL* url = [NSURL fileURLWithPath:str isDirectory:NO];
+      NSString* fileUTType =
+        [UTIHelper stringFromPboardType:(NSString*)kUTTypeFileURL];
+      [pasteboardOutputDict setObject:[url absoluteString]
+                               forKey:fileUTType];
     }
     else if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
       NSString* urlPromise =
