@@ -68,12 +68,6 @@ ContentBridgeChild::SendPBlobConstructor(PBlobChild* actor,
   return PContentBridgeChild::SendPBlobConstructor(actor, params);
 }
 
-PMemoryStreamChild*
-ContentBridgeChild::SendPMemoryStreamConstructor(const uint64_t& aSize)
-{
-  return PContentBridgeChild::SendPMemoryStreamConstructor(aSize);
-}
-
 bool
 ContentBridgeChild::SendPBrowserConstructor(PBrowserChild* aActor,
                                             const TabId& aTabId,
@@ -178,18 +172,6 @@ bool
 ContentBridgeChild::DeallocPBlobChild(PBlobChild* aActor)
 {
   return nsIContentChild::DeallocPBlobChild(aActor);
-}
-
-PMemoryStreamChild*
-ContentBridgeChild::AllocPMemoryStreamChild(const uint64_t& aSize)
-{
-  return nsIContentChild::AllocPMemoryStreamChild(aSize);
-}
-
-bool
-ContentBridgeChild::DeallocPMemoryStreamChild(PMemoryStreamChild* aActor)
-{
-  return nsIContentChild::DeallocPMemoryStreamChild(aActor);
 }
 
 PIPCBlobInputStreamChild*
