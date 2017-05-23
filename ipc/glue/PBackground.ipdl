@@ -6,7 +6,6 @@ include protocol PAsmJSCacheEntry;
 include protocol PBackgroundIDBFactory;
 include protocol PBackgroundIndexedDBUtils;
 include protocol PBackgroundTest;
-include protocol PBlob;
 include protocol PBroadcastChannel;
 include protocol PCache;
 include protocol PCacheStorage;
@@ -54,7 +53,6 @@ sync protocol PBackground
   manages PBackgroundIDBFactory;
   manages PBackgroundIndexedDBUtils;
   manages PBackgroundTest;
-  manages PBlob;
   manages PBroadcastChannel;
   manages PCache;
   manages PCacheStorage;
@@ -130,8 +128,6 @@ child:
   async PPendingIPCBlob(IPCBlob blob);
 
 both:
-  async PBlob(BlobConstructorParams params);
-
   async PFileDescriptorSet(FileDescriptor fd);
 };
 
