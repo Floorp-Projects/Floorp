@@ -2850,18 +2850,6 @@ ContentParent::DeallocPBlobParent(PBlobParent* aActor)
   return nsIContentParent::DeallocPBlobParent(aActor);
 }
 
-PMemoryStreamParent*
-ContentParent::AllocPMemoryStreamParent(const uint64_t& aSize)
-{
-  return nsIContentParent::AllocPMemoryStreamParent(aSize);
-}
-
-bool
-ContentParent::DeallocPMemoryStreamParent(PMemoryStreamParent* aActor)
-{
-  return nsIContentParent::DeallocPMemoryStreamParent(aActor);
-}
-
 PIPCBlobInputStreamParent*
 ContentParent::AllocPIPCBlobInputStreamParent(const nsID& aID,
                                               const uint64_t& aSize)

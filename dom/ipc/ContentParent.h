@@ -848,11 +848,6 @@ private:
 
   virtual bool DeallocPBlobParent(PBlobParent* aActor) override;
 
-  virtual PMemoryStreamParent*
-  AllocPMemoryStreamParent(const uint64_t& aSize) override;
-
-  virtual bool DeallocPMemoryStreamParent(PMemoryStreamParent* aActor) override;
-
   virtual PIPCBlobInputStreamParent*
   SendPIPCBlobInputStreamConstructor(PIPCBlobInputStreamParent* aActor,
                                      const nsID& aID,
