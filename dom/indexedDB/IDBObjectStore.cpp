@@ -639,8 +639,18 @@ public:
         NullString(), aData.type, aData.size, INT64_MAX);
       MOZ_ASSERT(!aFile.mBlob->IsFile());
 
+      // ActorsParent sends here a kind of half blob and half file wrapped into
+      // a DOM File object. DOM File and DOM Blob are a WebIDL wrapper around a
+      // BlobImpl object. SetLazyData() has just changed the BlobImpl to be a
+      // Blob (see the previous assert), but 'aFile.mBlob' still has the WebIDL
+      // DOM File wrapping.
+      // Before exposing it to content, we must recreate a DOM Blob object.
+
+      RefPtr<Blob> blob =
+        Blob::Create(aFile.mBlob->GetParentObject(), aFile.mBlob->Impl());
+      MOZ_ASSERT(blob);
       JS::Rooted<JS::Value> wrappedBlob(aCx);
-      if (!ToJSValue(aCx, aFile.mBlob, &wrappedBlob)) {
+      if (!ToJSValue(aCx, blob, &wrappedBlob)) {
         return false;
       }
 
