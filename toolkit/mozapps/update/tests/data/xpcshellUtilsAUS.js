@@ -3707,13 +3707,10 @@ function adjustGeneralPaths() {
       switch (aProp) {
         case NS_GRE_DIR:
           return getApplyDirFile(DIR_RESOURCES, true);
-          break;
         case NS_GRE_BIN_DIR:
           return getApplyDirFile(DIR_MACOS, true);
-          break;
         case XRE_EXECUTABLE_FILE:
           return getApplyDirFile(DIR_MACOS + FILE_APP_BIN, true);
-          break;
         case XRE_UPDATE_ROOT_DIR:
           return getMockUpdRootD();
       }
