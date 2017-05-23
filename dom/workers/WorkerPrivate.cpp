@@ -1689,7 +1689,7 @@ public:
   }
 
   NS_IMETHOD
-  Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags) override
+  Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags = NS_DISPATCH_NORMAL) override
   {
     MutexAutoLock lock(mMutex);
 
@@ -2106,7 +2106,7 @@ public:
   }
 
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIEVENTTARGET
+  NS_DECL_NSIEVENTTARGET_FULL
 
 private:
   ~EventTarget()

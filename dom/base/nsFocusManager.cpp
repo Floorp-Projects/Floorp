@@ -3732,6 +3732,37 @@ nsFocusManager::MarkUncollectableForCCGeneration(uint32_t aGeneration)
   }
 }
 
+bool
+nsFocusManager::CanSkipFocus(nsIContent* aContent)
+{
+  if (!aContent ||
+      nsContentUtils::IsChromeDoc(aContent->OwnerDoc())) {
+    return false;
+  }
+
+  if (mFocusedContent == aContent) {
+    return true;
+  }
+
+  nsIDocShell* ds = aContent->OwnerDoc()->GetDocShell();
+  if (!ds) {
+    return true;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> root;
+  ds->GetRootTreeItem(getter_AddRefs(root));
+  nsCOMPtr<nsPIDOMWindowOuter> newRootWindow =
+    root ? root->GetWindow() : nullptr;
+  if (mActiveWindow != newRootWindow) {
+    nsPIDOMWindowOuter* outerWindow = aContent->OwnerDoc()->GetWindow();
+    if (outerWindow && outerWindow->GetFocusedNode() == aContent) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 nsresult
 NS_NewFocusManager(nsIFocusManager** aResult)
 {

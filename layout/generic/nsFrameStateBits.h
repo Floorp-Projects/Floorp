@@ -624,6 +624,10 @@ FRAME_STATE_BIT(Placeholder, 24, PLACEHOLDER_FOR_TOPLAYER)
 // resolve the actual static position using the alignment properties.
 FRAME_STATE_BIT(Placeholder, 25, PLACEHOLDER_STATICPOS_NEEDS_CSSALIGN)
 
+// Are all earlier frames on the same block line empty?
+FRAME_STATE_BIT(Placeholder, 26, PLACEHOLDER_LINE_IS_EMPTY_SO_FAR)
+// Does the above bit have a valid value?
+FRAME_STATE_BIT(Placeholder, 27, PLACEHOLDER_HAVE_LINE_IS_EMPTY_SO_FAR)
 
 // == Frame state bits that apply to table cell frames ========================
 

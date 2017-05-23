@@ -126,7 +126,7 @@ struct ParamTraits<mozilla::mscom::COMPtrHolder<Interface, _IID>>
       }
     }
 
-    mozilla::mscom::ProxyStream proxyStream(buf.get(), length);
+    mozilla::mscom::ProxyStream proxyStream(_IID, buf.get(), length);
     if (!proxyStream.IsValid()) {
       return false;
     }

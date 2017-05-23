@@ -1579,7 +1579,7 @@ void
 TimeoutManager::MaybeStartThrottleTrackingTimout()
 {
   if (gTrackingTimeoutThrottlingDelay <= 0 ||
-      mWindow.AsInner()->InnerObjectsFreed()) {
+      mWindow.AsInner()->InnerObjectsFreed() || mWindow.IsSuspended()) {
     return;
   }
 

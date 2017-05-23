@@ -69,6 +69,7 @@ public:
                                           nsFrameState aTypeBit);
   nsPlaceholderFrame(nsStyleContext* aContext, nsFrameState aTypeBit)
     : nsFrame(aContext, mozilla::LayoutFrameType::Placeholder)
+    , mOutOfFlowFrame(nullptr)
   {
     NS_PRECONDITION(aTypeBit == PLACEHOLDER_FOR_FLOAT ||
                     aTypeBit == PLACEHOLDER_FOR_ABSPOS ||
@@ -121,6 +122,21 @@ public:
 
   virtual bool CanContinueTextRun() const override;
 
+  void SetLineIsEmptySoFar(bool aValue) {
+    AddOrRemoveStateBits(PLACEHOLDER_LINE_IS_EMPTY_SO_FAR, aValue);
+    AddStateBits(PLACEHOLDER_HAVE_LINE_IS_EMPTY_SO_FAR);
+  }
+  bool GetLineIsEmptySoFar(bool* aResult) const {
+    bool haveValue = HasAnyStateBits(PLACEHOLDER_HAVE_LINE_IS_EMPTY_SO_FAR);
+    if (haveValue) {
+      *aResult = HasAnyStateBits(PLACEHOLDER_LINE_IS_EMPTY_SO_FAR);
+    }
+    return haveValue;
+  }
+  void ForgetLineIsEmptySoFar() {
+    RemoveStateBits(PLACEHOLDER_HAVE_LINE_IS_EMPTY_SO_FAR);
+  }
+
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override
   {
@@ -166,7 +182,7 @@ public:
   }
 
 protected:
-  nsIFrame* mOutOfFlowFrame { nullptr };
+  nsIFrame* mOutOfFlowFrame;
 };
 
 #endif /* nsPlaceholderFrame_h___ */

@@ -27,6 +27,7 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
   , mIsPrimaryApzcHolder(aIsPrimaryHolder)
   , mLayersId(aLayersId)
   , mScrollViewId(FrameMetrics::NULL_SCROLL_ID)
+  , mScrollbarAnimationId(0)
   , mIsScrollbarContainer(false)
   , mFixedPosTarget(FrameMetrics::NULL_SCROLL_ID)
   , mOverride(EventRegionsOverride::NoOverride)
@@ -94,10 +95,12 @@ HitTestingTreeNode::SetLastChild(HitTestingTreeNode* aChild)
 
 void
 HitTestingTreeNode::SetScrollbarData(FrameMetrics::ViewID aScrollViewId,
+                                     const uint64_t& aScrollbarAnimationId,
                                      const ScrollThumbData& aThumbData,
                                      bool aIsScrollContainer)
 {
   mScrollViewId = aScrollViewId;
+  mScrollbarAnimationId = aScrollbarAnimationId;
   mScrollThumbData = aThumbData;
   mIsScrollbarContainer = aIsScrollContainer;
 }
@@ -126,6 +129,12 @@ FrameMetrics::ViewID
 HitTestingTreeNode::GetScrollTargetId() const
 {
   return mScrollViewId;
+}
+
+const uint64_t&
+HitTestingTreeNode::GetScrollbarAnimationId() const
+{
+  return mScrollbarAnimationId;
 }
 
 const ScrollThumbData&

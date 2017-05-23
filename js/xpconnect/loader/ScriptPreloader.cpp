@@ -269,19 +269,16 @@ ScriptPreloader::Cleanup()
 void
 ScriptPreloader::InvalidateCache()
 {
+    mMonitor.AssertNotCurrentThreadOwns();
     MonitorAutoLock mal(mMonitor);
 
     mCacheInvalidated = true;
 
-    for (auto& script : IterHash(mScripts)) {
-        // We can only purge finished scripts here. Async scripts that are
-        // still being parsed off-thread have a non-refcounted reference to
-        // this script, which needs to stay alive until they finish parsing.
-        if (script->mReadyToExecute) {
-            script->Cancel();
-            script.Remove();
-        }
-    }
+    mParsingScripts.clearAndFree();
+    while (auto script = mPendingScripts.getFirst())
+        script->remove();
+    for (auto& script : IterHash(mScripts))
+        script.Remove();
 
     // If we've already finished saving the cache at this point, start a new
     // delayed save operation. This will write out an empty cache file in place
@@ -437,12 +434,12 @@ ScriptPreloader::InitCacheInternal()
         return Err(NS_ERROR_UNEXPECTED);
     }
 
-    AutoTArray<CachedScript*, 256> scripts;
-
     {
         auto cleanup = MakeScopeExit([&] () {
             mScripts.Clear();
         });
+
+        LinkedList<CachedScript> scripts;
 
         Range<uint8_t> header(data, data + headerSize);
         data += headerSize;
@@ -468,7 +465,14 @@ ScriptPreloader::InitCacheInternal()
 
             script->mXDRRange.emplace(scriptData, scriptData + script->mSize);
 
-            scripts.AppendElement(script.get());
+            // Don't pre-decode the script unless it was used in this process type during the
+            // previous session.
+            if (script->mOriginalProcessTypes.contains(CurrentProcessType())) {
+                scripts.insertBack(script.get());
+            } else {
+                script->mReadyToExecute = true;
+            }
+
             mScripts.Put(script->mCachePath, script.get());
             Unused << script.release();
         }
@@ -477,32 +481,11 @@ ScriptPreloader::InitCacheInternal()
             return Err(NS_ERROR_UNEXPECTED);
         }
 
+        mPendingScripts = Move(scripts);
         cleanup.release();
     }
 
-    AutoJSAPI jsapi;
-    MOZ_RELEASE_ASSERT(jsapi.Init(xpc::CompilationScope()));
-    JSContext* cx = jsapi.cx();
-
-    auto start = TimeStamp::Now();
-    LOG(Info, "Off-thread decoding scripts...\n");
-
-    JS::CompileOptions options(cx, JSVERSION_LATEST);
-
-    for (auto& script : scripts) {
-        // Only async decode scripts which have been used in this process type.
-        if (script->mProcessTypes.contains(CurrentProcessType()) &&
-            script->AsyncDecodable() &&
-            JS::CanCompileOffThread(cx, options, script->mSize)) {
-            DecodeScriptOffThread(cx, script);
-        } else {
-            script->mReadyToExecute = true;
-        }
-    }
-
-    LOG(Info, "Initialized decoding in %fms\n",
-        (TimeStamp::Now() - start).ToMilliseconds());
-
+    DecodeNextBatch(OFF_THREAD_FIRST_CHUNK_SIZE);
     return Ok();
 }
 
@@ -530,37 +513,35 @@ ScriptPreloader::PrepareCacheWrite()
         return;
     }
 
-    bool found = Find(IterHash(mScripts), [] (CachedScript* script) {
-        return (script->mStatus == ScriptStatus::Restored ||
-                !script->HasRange() || script->HasArray());
-    });
-
-    if (!found) {
-        mSaveComplete = true;
-        return;
-    }
-
     AutoSafeJSAPI jsapi;
-
+    bool found = false;
     for (auto& script : IterHash(mScripts, Match<ScriptStatus::Saved>())) {
         // Don't write any scripts that are also in the child cache. They'll be
         // loaded from the child cache in that case, so there's no need to write
         // them twice.
         CachedScript* childScript = mChildCache ? mChildCache->mScripts.Get(script->mCachePath) : nullptr;
-        if (childScript) {
-            if (childScript->mStatus == ScriptStatus::Saved) {
-                childScript->UpdateLoadTime(script->mLoadTime);
-                childScript->mProcessTypes += script->mProcessTypes;
-            } else {
-                childScript = nullptr;
-            }
+        if (childScript && !childScript->mProcessTypes.isEmpty()) {
+            childScript->UpdateLoadTime(script->mLoadTime);
+            childScript->mProcessTypes += script->mProcessTypes;
+            script.Remove();
+            continue;
         }
 
-        if (childScript || (!script->mSize && !script->XDREncode(jsapi.cx()))) {
+        if (!(script->mProcessTypes == script->mOriginalProcessTypes)) {
+            // Note: EnumSet doesn't support operator!=, hence the weird form above.
+            found = true;
+        }
+
+        if (!script->mSize && !script->XDREncode(jsapi.cx())) {
             script.Remove();
         } else {
             script->mSize = script->Range().length();
         }
+    }
+
+    if (!found) {
+        mSaveComplete = true;
+        return;
     }
 
     mDataPrepared = true;
@@ -693,9 +674,7 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
 
     auto script = mScripts.LookupOrAdd(cachePath, *this, url, cachePath, jsscript);
 
-    if (script->mStatus == ScriptStatus::Restored) {
-        script->mStatus = ScriptStatus::Saved;
-
+    if (!script->mScript) {
         MOZ_ASSERT(jsscript);
         script->mScript = jsscript;
         script->mReadyToExecute = true;
@@ -712,20 +691,14 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
 {
     auto script = mScripts.LookupOrAdd(cachePath, *this, url, cachePath, nullptr);
 
-    if (script->mStatus == ScriptStatus::Restored) {
-        script->mStatus = ScriptStatus::Saved;
+    if (!script->HasRange()) {
+        MOZ_ASSERT(!script->HasArray());
 
-        script->mReadyToExecute = true;
-    } else {
-        if (!script->HasRange()) {
-            MOZ_ASSERT(!script->HasArray());
+        script->mSize = xdrData.Length();
+        script->mXDRData.construct<nsTArray<uint8_t>>(Forward<nsTArray<uint8_t>>(xdrData));
 
-            script->mSize = xdrData.Length();
-            script->mXDRData.construct<nsTArray<uint8_t>>(Forward<nsTArray<uint8_t>>(xdrData));
-
-            auto& data = script->Array();
-            script->mXDRRange.emplace(data.Elements(), data.Length());
-        }
+        auto& data = script->Array();
+        script->mXDRRange.emplace(data.Elements(), data.Length());
     }
 
     if (!script->mSize && !script->mScript) {
@@ -770,11 +743,24 @@ ScriptPreloader::GetCachedScript(JSContext* cx, const nsCString& path)
 JSScript*
 ScriptPreloader::WaitForCachedScript(JSContext* cx, CachedScript* script)
 {
+    // Check for finished operations before locking so that we can move onto
+    // decoding the next batch as soon as possible after the pending batch is
+    // ready. If we wait until we hit an unfinished script, we wind up having at
+    // most one batch of buffered scripts, and occasionally under-running that
+    // buffer.
+    FinishOffThreadDecode();
+
     if (!script->mReadyToExecute) {
         LOG(Info, "Must wait for async script load: %s\n", script->mURL.get());
         auto start = TimeStamp::Now();
 
+        mMonitor.AssertNotCurrentThreadOwns();
         MonitorAutoLock mal(mMonitor);
+
+        // Check for finished operations again *after* locking, or we may race
+        // against mToken being set between our last check and the time we
+        // entered the mutex.
+        FinishOffThreadDecode();
 
         if (!script->mReadyToExecute && script->mSize < MAX_MAINTHREAD_DECODE_SIZE) {
             LOG(Info, "Script is small enough to recompile on main thread\n");
@@ -783,68 +769,178 @@ ScriptPreloader::WaitForCachedScript(JSContext* cx, CachedScript* script)
         } else {
             while (!script->mReadyToExecute) {
                 mal.Wait();
+
+                MonitorAutoUnlock mau(mMonitor);
+                FinishOffThreadDecode();
             }
         }
 
-        LOG(Info, "Waited %fms\n", (TimeStamp::Now() - start).ToMilliseconds());
+        LOG(Debug, "Waited %fms\n", (TimeStamp::Now() - start).ToMilliseconds());
     }
 
     return script->GetJSScript(cx);
 }
 
 
-void
-ScriptPreloader::DecodeScriptOffThread(JSContext* cx, CachedScript* script)
+
+/* static */ void
+ScriptPreloader::OffThreadDecodeCallback(void* token, void* context)
 {
-    JS::CompileOptions options(cx, JSVERSION_LATEST);
+    auto cache = static_cast<ScriptPreloader*>(context);
 
-    options.setNoScriptRval(true)
-           .setFileAndLine(script->mURL.get(), 1);
+    cache->mMonitor.AssertNotCurrentThreadOwns();
+    MonitorAutoLock mal(cache->mMonitor);
 
-    if (!JS::DecodeOffThreadScript(cx, options, script->Range(),
-                                   OffThreadDecodeCallback,
-                                   static_cast<void*>(script))) {
+    // First notify any tasks that are already waiting on scripts, since they'll
+    // be blocking the main thread, and prevent any runnables from executing.
+    cache->mToken = token;
+    mal.NotifyAll();
+
+    // If nothing processed the token, and we don't already have a pending
+    // runnable, then dispatch a new one to finish the processing on the main
+    // thread as soon as possible.
+    if (cache->mToken && !cache->mFinishDecodeRunnablePending) {
+        cache->mFinishDecodeRunnablePending = true;
+        NS_DispatchToMainThread(
+            NewRunnableMethod(cache, &ScriptPreloader::DoFinishOffThreadDecode));
+    }
+}
+
+void
+ScriptPreloader::DoFinishOffThreadDecode()
+{
+    mFinishDecodeRunnablePending = false;
+    FinishOffThreadDecode();
+}
+
+void
+ScriptPreloader::FinishOffThreadDecode()
+{
+    if (!mToken) {
+        return;
+    }
+
+    auto cleanup = MakeScopeExit([&] () {
+        mToken = nullptr;
+        mParsingSources.clear();
+        mParsingScripts.clear();
+
+        DecodeNextBatch(OFF_THREAD_CHUNK_SIZE);
+    });
+
+    AutoJSAPI jsapi;
+    MOZ_RELEASE_ASSERT(jsapi.Init(xpc::CompilationScope()));
+
+    JSContext* cx = jsapi.cx();
+    JS::Rooted<JS::ScriptVector> jsScripts(cx, JS::ScriptVector(cx));
+
+    // If this fails, we still need to mark the scripts as finished. Any that
+    // weren't successfully compiled in this operation (which should never
+    // happen under ordinary circumstances) will be re-decoded on the main
+    // thread, and raise the appropriate errors when they're executed.
+    //
+    // The exception from the off-thread decode operation will be reported when
+    // we pop the AutoJSAPI off the stack.
+    Unused << JS::FinishMultiOffThreadScriptsDecoder(cx, mToken, &jsScripts);
+
+    unsigned i = 0;
+    for (auto script : mParsingScripts) {
+        LOG(Debug, "Finished off-thread decode of %s\n", script->mURL.get());
+        if (i < jsScripts.length())
+            script->mScript = jsScripts[i++];
         script->mReadyToExecute = true;
     }
 }
 
 void
-ScriptPreloader::CancelOffThreadParse(void* token)
+ScriptPreloader::DecodeNextBatch(size_t chunkSize)
 {
-    AutoSafeJSAPI jsapi;
-    JS::CancelOffThreadScriptDecoder(jsapi.cx(), token);
-}
+    MOZ_ASSERT(mParsingSources.length() == 0);
+    MOZ_ASSERT(mParsingScripts.length() == 0);
 
-/* static */ void
-ScriptPreloader::OffThreadDecodeCallback(void* token, void* context)
-{
-    auto script = static_cast<CachedScript*>(context);
+    auto cleanup = MakeScopeExit([&] () {
+        mParsingScripts.clearAndFree();
+        mParsingSources.clearAndFree();
+    });
 
-    MonitorAutoLock mal(script->mCache.mMonitor);
+    auto start = TimeStamp::Now();
+    LOG(Debug, "Off-thread decoding scripts...\n");
 
-    if (script->mReadyToExecute) {
-        // We've already executed this script on the main thread, and opted to
-        // main thread decode it rather waiting for off-thread decoding to
-        // finish. So just cancel the off-thread parse rather than completing
-        // it.
-        NS_DispatchToMainThread(
-            NewRunnableMethod<void*>(&script->mCache,
-                                     &ScriptPreloader::CancelOffThreadParse,
-                                     token));
+    size_t size = 0;
+    for (CachedScript* next = mPendingScripts.getFirst(); next;) {
+        auto script = next;
+        next = script->getNext();
+
+        // Skip any scripts that we decoded on the main thread rather than
+        // waiting for an off-thread operation to complete.
+        if (script->mReadyToExecute) {
+            script->remove();
+            continue;
+        }
+        // If we have enough data for one chunk and this script would put us
+        // over our chunk size limit, we're done.
+        if (size > SMALL_SCRIPT_CHUNK_THRESHOLD &&
+            size + script->mSize > chunkSize) {
+            break;
+        }
+        if (!mParsingScripts.append(script) ||
+            !mParsingSources.emplaceBack(script->Range(), script->mURL.get(), 0)) {
+            break;
+        }
+
+        LOG(Debug, "Beginning off-thread decode of script %s (%u bytes)\n",
+            script->mURL.get(), script->mSize);
+
+        script->remove();
+        size += script->mSize;
+    }
+
+    if (size == 0 && mPendingScripts.isEmpty()) {
         return;
     }
 
-    script->mToken = token;
-    script->mReadyToExecute = true;
+    AutoJSAPI jsapi;
+    MOZ_RELEASE_ASSERT(jsapi.Init(xpc::CompilationScope()));
+    JSContext* cx = jsapi.cx();
 
-    mal.NotifyAll();
+    JS::CompileOptions options(cx, JSVERSION_LATEST);
+    options.setNoScriptRval(true);
+
+    if (!JS::CanCompileOffThread(cx, options, size) ||
+        !JS::DecodeMultiOffThreadScripts(cx, options, mParsingSources,
+                                         OffThreadDecodeCallback,
+                                         static_cast<void*>(this))) {
+        // If we fail here, we don't move on to process the next batch, so make
+        // sure we don't have any other scripts left to process.
+        MOZ_ASSERT(mPendingScripts.isEmpty());
+        for (auto script : mPendingScripts) {
+            script->mReadyToExecute = true;
+        }
+
+        LOG(Info, "Can't decode %lu bytes of scripts off-thread", (unsigned long)size);
+        for (auto script : mParsingScripts) {
+            script->mReadyToExecute = true;
+        }
+        return;
+    }
+
+    cleanup.release();
+
+    LOG(Debug, "Initialized decoding of %u scripts (%u bytes) in %fms\n",
+        (unsigned)mParsingSources.length(), (unsigned)size, (TimeStamp::Now() - start).ToMilliseconds());
 }
+
 
 ScriptPreloader::CachedScript::CachedScript(ScriptPreloader& cache, InputBuffer& buf)
     : mCache(cache)
-    , mStatus(ScriptStatus::Restored)
 {
     Code(buf);
+
+    // Swap the mProcessTypes and mOriginalProcessTypes values, since we want to
+    // start with an empty set of processes loaded into for this session, and
+    // compare against last session's values later.
+    mOriginalProcessTypes = mProcessTypes;
+    mProcessTypes = {};
 }
 
 bool
@@ -864,20 +960,6 @@ ScriptPreloader::CachedScript::XDREncode(JSContext* cx)
     return false;
 }
 
-void
-ScriptPreloader::CachedScript::Cancel()
-{
-    if (mToken) {
-        mCache.mMonitor.AssertCurrentThreadOwns();
-
-        AutoSafeJSAPI jsapi;
-        JS::CancelOffThreadScriptDecoder(jsapi.cx(), mToken);
-
-        mReadyToExecute = true;
-        mToken = nullptr;
-    }
-}
-
 JSScript*
 ScriptPreloader::CachedScript::GetJSScript(JSContext* cx)
 {
@@ -886,35 +968,27 @@ ScriptPreloader::CachedScript::GetJSScript(JSContext* cx)
         return mScript;
     }
 
-    // If we have no token at this point, the script was too small to decode
+    // If we have no script at this point, the script was too small to decode
     // off-thread, or it was needed before the off-thread compilation was
     // finished, and is small enough to decode on the main thread rather than
     // wait for the off-thread decoding to finish. In either case, we decode
     // it synchronously the first time it's needed.
-    if (!mToken) {
-        MOZ_ASSERT(HasRange());
+    MOZ_ASSERT(HasRange());
 
-        JS::RootedScript script(cx);
-        if (JS::DecodeScript(cx, Range(), &script)) {
-            mScript = script;
+    auto start = TimeStamp::Now();
+    LOG(Info, "Decoding script %s on main thread...\n", mURL.get());
 
-            if (mCache.mSaveComplete) {
-                FreeData();
-            }
+    JS::RootedScript script(cx);
+    if (JS::DecodeScript(cx, Range(), &script)) {
+        mScript = script;
+
+        if (mCache.mSaveComplete) {
+            FreeData();
         }
-
-        return mScript;
     }
 
-    Maybe<JSAutoCompartment> ac;
-    if (JS::CompartmentCreationOptionsRef(cx).addonIdOrNull()) {
-        // Make sure we never try to finish the parse in a compartment with an
-        // add-on ID, it wasn't started in one.
-        ac.emplace(cx, xpc::CompilationScope());
-    }
+    LOG(Debug, "Finished decoding in %fms", (TimeStamp::Now() - start).ToMilliseconds());
 
-    mScript = JS::FinishOffThreadScriptDecoder(cx, mToken);
-    mToken = nullptr;
     return mScript;
 }
 

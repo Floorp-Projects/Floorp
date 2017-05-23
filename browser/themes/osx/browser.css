@@ -526,20 +526,15 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 
 %ifdef MOZ_PHOTON_THEME
 
-#main-window {
-  --urlbar-border-color: hsla(240, 5%, 5%, .25);
-  --urlbar-border-color-hover: hsla(240, 5%, 5%, .35);
+#urlbar,
+.searchbar-textbox {
+  font-size: 1.25em;
 }
 
 #urlbar[focused="true"],
 .searchbar-textbox[focused="true"] {
   border-color: -moz-mac-focusring;
   box-shadow: var(--focus-ring-box-shadow);
-}
-
-#urlbar,
-.searchbar-textbox {
-  font-size: 1.25em;
 }
 
 %else

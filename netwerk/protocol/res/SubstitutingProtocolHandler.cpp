@@ -246,6 +246,8 @@ SubstitutingProtocolHandler::NewChannel2(nsIURI* uri,
                                          nsIChannel** result)
 {
   NS_ENSURE_ARG_POINTER(uri);
+  NS_ENSURE_ARG_POINTER(aLoadInfo);
+
   nsAutoCString spec;
   nsresult rv = ResolveURI(uri, spec);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -254,12 +256,18 @@ SubstitutingProtocolHandler::NewChannel2(nsIURI* uri,
   rv = NS_NewURI(getter_AddRefs(newURI), spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // We don't want to allow the inner protocol handler to modify the result
+  // principal URI since we want either |uri| or anything pre-set by upper
+  // layers to prevail.
+  nsCOMPtr<nsIURI> savedResultPrincipalURI;
+  rv = aLoadInfo->GetResultPrincipalURI(getter_AddRefs(savedResultPrincipalURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = NS_NewChannelInternal(result, newURI, aLoadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsLoadFlags loadFlags = 0;
-  (*result)->GetLoadFlags(&loadFlags);
-  (*result)->SetLoadFlags(loadFlags & ~nsIChannel::LOAD_REPLACE);
+  rv = aLoadInfo->SetResultPrincipalURI(savedResultPrincipalURI);
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = (*result)->SetOriginalURI(uri);
   NS_ENSURE_SUCCESS(rv, rv);
 

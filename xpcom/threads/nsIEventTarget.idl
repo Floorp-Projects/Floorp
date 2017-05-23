@@ -13,7 +13,7 @@
 
 native alreadyAddRefed_nsIRunnable(already_AddRefed<nsIRunnable>);
 
-[scriptable, uuid(88145945-3278-424e-9f37-d874cbdd9f6f)]
+[scriptable, uuid(a03b8b63-af8b-4164-b0e5-c41e8b2b7cfa)]
 interface nsIEventTarget : nsISupports
 {
   /* until we can get rid of all uses, keep the non-alreadyAddRefed<> version */
@@ -79,7 +79,8 @@ interface nsIEventTarget : nsISupports
    *   Indicates that the thread is shutting down and has finished processing
    * events, so this event would never run and has not been dispatched.
    */
-  [noscript, binaryname(Dispatch)] void dispatchFromC(in alreadyAddRefed_nsIRunnable event, in unsigned long flags);
+  [noscript, binaryname(Dispatch)] void dispatchFromC(in alreadyAddRefed_nsIRunnable event,
+                                                      [default(DISPATCH_NORMAL)] in unsigned long flags);
   /**
    * Version of Dispatch to expose to JS, which doesn't require an alreadyAddRefed<>
    * (it will be converted to that internally)
@@ -124,4 +125,10 @@ interface nsIEventTarget : nsISupports
 #define NS_DISPATCH_NORMAL nsIEventTarget::DISPATCH_NORMAL
 #define NS_DISPATCH_SYNC   nsIEventTarget::DISPATCH_SYNC
 #define NS_DISPATCH_AT_END nsIEventTarget::DISPATCH_AT_END
+
+// Convenient NS_DECL variant that includes some C++-only methods.
+#define NS_DECL_NSIEVENTTARGET_FULL                                   \
+    NS_DECL_NSIEVENTTARGET                                            \
+    /* Avoid hiding this method */                                    \
+    using nsIEventTarget::Dispatch;
 %}

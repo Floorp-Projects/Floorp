@@ -3864,7 +3864,7 @@ Selection::AddItem(nsRange* aItem, int32_t* aOutIndex, bool aNoStartSelect)
 
   if (mUserInitiated) {
     AutoTArray<RefPtr<nsRange>, 4> rangesToAdd;
-    *aOutIndex = -1;
+    *aOutIndex = int32_t(mRanges.Length()) - 1;
 
     nsIDocument* doc = GetParentObject();
     bool selectEventsEnabled =

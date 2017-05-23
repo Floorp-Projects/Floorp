@@ -20,7 +20,6 @@ from manifestparser import TestManifest
 from reftest import ReftestManifest
 
 from mozbuild.util import ensureParentDir
-from mozpack.archive import create_tar_gz_from_files
 from mozpack.copier import FileRegistry
 from mozpack.files import ExistingFile, FileFinder
 from mozpack.manifests import InstallManifest
@@ -615,31 +614,22 @@ def main(argv):
 
     args = parser.parse_args(argv)
 
-    out_file = args.outputfile
-    if not out_file.endswith(('.tar.gz', '.zip')):
-        raise Exception('expected tar.gz or zip output file')
+    if not args.outputfile.endswith('.zip'):
+        raise Exception('expected zip output file')
 
     file_count = 0
     t_start = time.time()
-    ensureParentDir(out_file)
-    res = find_files(args.archive)
-    with open(out_file, 'wb') as fh:
+    ensureParentDir(args.outputfile)
+    with open(args.outputfile, 'wb') as fh:
         # Experimentation revealed that level 5 is significantly faster and has
         # marginally larger sizes than higher values and is the sweet spot
         # for optimal compression. Read the detailed commit message that
         # introduced this for raw numbers.
-        if out_file.endswith('.tar.gz'):
-            files = dict(res)
-            create_tar_gz_from_files(fh, files, compresslevel=5)
-            file_count = len(files)
-        elif out_file.endswith('.zip'):
-            with JarWriter(fileobj=fh, optimize=False, compress_level=5) as writer:
-                for p, f in res:
-                    writer.add(p.encode('utf-8'), f.read(), mode=f.mode,
-                               skip_duplicates=True)
-                    file_count += 1
-        else:
-            raise Exception('unhandled file extension: %s' % out_file)
+        with JarWriter(fileobj=fh, optimize=False, compress_level=5) as writer:
+            res = find_files(args.archive)
+            for p, f in res:
+                writer.add(p.encode('utf-8'), f.read(), mode=f.mode, skip_duplicates=True)
+                file_count += 1
 
     duration = time.time() - t_start
     zip_size = os.path.getsize(args.outputfile)
