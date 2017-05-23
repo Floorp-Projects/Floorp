@@ -46,7 +46,7 @@ static const unsigned COMPILATION_LIFO_DEFAULT_CHUNK_SIZE = 64 * 1024;
 static const uint32_t BAD_CODE_RANGE = UINT32_MAX;
 
 ModuleGenerator::ModuleGenerator(UniqueChars* error)
-  : compileMode_(CompileMode(-1)),
+  : tier_(Tier(-1)),
     error_(error),
     linkDataTier_(nullptr),
     metadataTier_(nullptr),
@@ -111,11 +111,11 @@ ModuleGenerator::initAsmJS(Metadata* asmJSMetadata)
 {
     MOZ_ASSERT(env_->isAsmJS());
 
-    if (!linkData_.initTier(CompileMode::Ion))
+    if (!linkData_.initTier(Tier::Ion))
         return false;
-    linkDataTier_ = &linkData_.tier();
+    linkDataTier_ = &linkData_.linkData(Tier::Ion);
 
-    metadataTier_ = &asmJSMetadata->tier();
+    metadataTier_ = &asmJSMetadata->metadata(Tier::Ion);
     metadata_ = asmJSMetadata;
     MOZ_ASSERT(isAsmJS());
 
@@ -123,7 +123,7 @@ ModuleGenerator::initAsmJS(Metadata* asmJSMetadata)
     // wasm (since the baseline does not currently support Atomics or SIMD).
 
     metadata_->debugEnabled = false;
-    compileMode_ = CompileMode::Ion;
+    tier_ = Tier::Ion;
 
     // For asm.js, the Vectors in ModuleEnvironment are max-sized reservations
     // and will be initialized in a linear order via init* functions as the
@@ -143,15 +143,15 @@ ModuleGenerator::initWasm(const CompileArgs& args)
 
     bool canBaseline = BaselineCanCompile();
     bool debugEnabled = args.debugEnabled && canBaseline;
-    compileMode_ = ((args.alwaysBaseline || debugEnabled) && canBaseline)
-                   ? CompileMode::Baseline
-                   : CompileMode::Ion;
+    tier_ = ((args.alwaysBaseline || debugEnabled) && canBaseline)
+            ? Tier::Baseline
+            : Tier::Ion;
 
-    if (!linkData_.initTier(compileMode_))
+    if (!linkData_.initTier(tier_))
         return false;
-    linkDataTier_ = &linkData_.tier();
+    linkDataTier_ = &linkData_.linkData(tier_);
 
-    auto metadataTier = js::MakeUnique<MetadataTier>(compileMode_);
+    auto metadataTier = js::MakeUnique<MetadataTier>(tier_);
     if (!metadataTier)
         return false;
 
@@ -159,7 +159,7 @@ ModuleGenerator::initWasm(const CompileArgs& args)
     if (!metadata_)
         return false;
 
-    metadataTier_ = &metadata_->tier();
+    metadataTier_ = &metadata_->metadata(tier_);
 
     MOZ_ASSERT(!isAsmJS());
 
@@ -907,7 +907,7 @@ ModuleGenerator::startFuncDefs()
     if (!tasks_.initCapacity(numTasks))
         return false;
     for (size_t i = 0; i < numTasks; i++)
-        tasks_.infallibleEmplaceBack(*env_, compileMode_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
+        tasks_.infallibleEmplaceBack(*env_, tier_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
 
     if (!freeTasks_.reserve(numTasks))
         return false;
@@ -987,9 +987,10 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
         return false;
 
     uint32_t threshold;
-    switch (compileMode_) {
-      case CompileMode::Baseline: threshold = JitOptions.wasmBatchBaselineThreshold; break;
-      case CompileMode::Ion:      threshold = JitOptions.wasmBatchIonThreshold;      break;
+    switch (tier_) {
+      case Tier::Baseline: threshold = JitOptions.wasmBatchBaselineThreshold; break;
+      case Tier::Ion:      threshold = JitOptions.wasmBatchIonThreshold;      break;
+      default:             MOZ_CRASH("Invalid tier value");                   break;
     }
 
     batchedBytecode_ += funcBytecodeLength;
@@ -1200,7 +1201,7 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
 
     generateBytecodeHash(bytecode);
 
-    UniqueConstCodeSegment codeSegment = CodeSegment::create(compileMode_,
+    UniqueConstCodeSegment codeSegment = CodeSegment::create(tier_,
                                                              masm_,
                                                              bytecode,
                                                              *linkDataTier_,
@@ -1240,19 +1241,21 @@ wasm::CompileFunction(CompileTask* task, UniqueChars* error)
     TraceLoggerThread* logger = TraceLoggerForCurrentThread();
     AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
 
-    switch (task->mode()) {
-      case CompileMode::Ion:
+    switch (task->tier()) {
+      case Tier::Ion:
         for (FuncCompileUnit& unit : task->units()) {
             if (!IonCompileFunction(task, &unit, error))
                 return false;
         }
         break;
-      case CompileMode::Baseline:
+      case Tier::Baseline:
         for (FuncCompileUnit& unit : task->units()) {
             if (!BaselineCompileFunction(task, &unit, error))
                 return false;
         }
         break;
+      default:
+        MOZ_CRASH("Invalid tier value");
     }
 
     return true;

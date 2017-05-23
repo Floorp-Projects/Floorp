@@ -653,6 +653,8 @@ WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp)
     if (!elems.reserve(module->imports().length()))
         return false;
 
+    const FuncImportVector& funcImports = module->metadata(module->code().anyTier()).funcImports;
+
     size_t numFuncImport = 0;
     for (const Import& import : module->imports()) {
         Rooted<IdValueVector> props(cx, IdValueVector(cx));
@@ -675,7 +677,7 @@ WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp)
         props.infallibleAppend(IdValuePair(NameToId(names.kind), StringValue(kindStr)));
 
         if (JitOptions.wasmTestMode && import.kind == DefinitionKind::Function) {
-            JSString* sigStr = SigToString(cx, module->metadataTier().funcImports[numFuncImport++].sig());
+            JSString* sigStr = SigToString(cx, funcImports[numFuncImport++].sig());
             if (!sigStr)
                 return false;
             if (!props.append(IdValuePair(NameToId(names.signature), StringValue(sigStr))))
@@ -714,6 +716,8 @@ WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp)
     if (!elems.reserve(module->exports().length()))
         return false;
 
+    const FuncExportVector& funcExports = module->metadata(module->code().anyTier()).funcExports;
+
     size_t numFuncExport = 0;
     for (const Export& exp : module->exports()) {
         Rooted<IdValueVector> props(cx, IdValueVector(cx));
@@ -731,7 +735,7 @@ WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp)
         props.infallibleAppend(IdValuePair(NameToId(names.kind), StringValue(kindStr)));
 
         if (JitOptions.wasmTestMode && exp.kind() == DefinitionKind::Function) {
-            JSString* sigStr = SigToString(cx, module->metadataTier().funcExports[numFuncExport++].sig());
+            JSString* sigStr = SigToString(cx, funcExports[numFuncExport++].sig());
             if (!sigStr)
                 return false;
             if (!props.append(IdValuePair(NameToId(names.signature), StringValue(sigStr))))
@@ -815,7 +819,9 @@ WasmModuleObject::create(JSContext* cx, Module& module, HandleObject proto)
 
     obj->initReservedSlot(MODULE_SLOT, PrivateValue(&module));
     module.AddRef();
-    cx->zone()->updateJitCodeMallocBytes(module.codeLengthTier());
+    // We account for the first tier here; the second tier, if different, will be
+    // accounted for separately when it's been compiled.
+    cx->zone()->updateJitCodeMallocBytes(module.codeLength(module.code().anyTier()));
     return obj;
 }
 
@@ -1127,7 +1133,7 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
     }
 
     const Instance& instance = instanceObj->instance();
-    unsigned numArgs = instance.metadata().lookupFuncExport(funcIndex).sig().args().length();
+    unsigned numArgs = instance.metadata(instance.code().anyTier()).lookupFuncExport(funcIndex).sig().args().length();
 
     // asm.js needs to act like a normal JS function which means having the name
     // from the original source and being callable as a constructor.
@@ -1162,12 +1168,12 @@ WasmInstanceObject::getExportedFunction(JSContext* cx, HandleWasmInstanceObject 
 }
 
 const CodeRange&
-WasmInstanceObject::getExportedFunctionCodeRange(HandleFunction fun)
+WasmInstanceObject::getExportedFunctionCodeRange(HandleFunction fun, Tier tier)
 {
     uint32_t funcIndex = ExportedFunctionToFuncIndex(fun);
     MOZ_ASSERT(exports().lookup(funcIndex)->value() == fun);
-    const FuncExport& funcExport = instance().metadata().lookupFuncExport(funcIndex);
-    return instance().metadataTier().codeRanges[funcExport.codeRangeIndex()];
+    const FuncExport& funcExport = instance().metadata(tier).lookupFuncExport(funcIndex);
+    return instance().metadata(tier).codeRanges[funcExport.codeRangeIndex()];
 }
 
 /* static */ WasmFunctionScope*
@@ -1707,6 +1713,7 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
     if (value) {
         RootedWasmInstanceObject instanceObj(cx, ExportedFunctionToInstanceObject(value));
         uint32_t funcIndex = ExportedFunctionToFuncIndex(value);
+        Tier tier = Tier::TBD;  // Perhaps the tier that the function is at?
 
 #ifdef DEBUG
         RootedFunction f(cx);
@@ -1715,9 +1722,9 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
 #endif
 
         Instance& instance = instanceObj->instance();
-        const FuncExport& funcExport = instance.metadata().lookupFuncExport(funcIndex);
-        const CodeRange& codeRange = instance.metadataTier().codeRanges[funcExport.codeRangeIndex()];
-        void* code = instance.codeBaseTier() + codeRange.funcTableEntry();
+        const FuncExport& funcExport = instance.metadata(tier).lookupFuncExport(funcIndex);
+        const CodeRange& codeRange = instance.metadata(tier).codeRanges[funcExport.codeRangeIndex()];
+        void* code = instance.codeBase(tier) + codeRange.funcTableEntry();
         table.set(index, code, instance);
     } else {
         table.setNull(index);

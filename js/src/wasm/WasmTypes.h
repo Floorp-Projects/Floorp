@@ -1178,12 +1178,54 @@ enum ModuleKind
     AsmJS
 };
 
-// Code can be compiled either with the Baseline compiler or the Ion compiler.
+// Code can be compiled either with the Baseline compiler or the Ion compiler,
+// and tier-variant data are tagged with the Tier value.
+//
+// A tier value is used to request tier-variant aspects of code, metadata, or
+// linkdata.  The tiers are normally explicit (Baseline and Ion); implicit tiers
+// can be obtained through accessors on Code objects (eg, anyTier).
 
-enum class CompileMode
+enum class Tier
 {
     Baseline,
-    Ion
+    Ion,
+
+    Debug,   // An alias for Baseline in calls to tier-variant accessors
+
+    TBD,     // A placeholder while tiering is being implemented
+};
+
+// Iterator over tiers present in a tiered data structure.
+
+class Tiers
+{
+    Tier t_[2];
+    uint32_t n_;
+
+  public:
+    explicit Tiers() {
+        n_ = 0;
+    }
+    explicit Tiers(Tier t) {
+        MOZ_ASSERT(t == Tier::Baseline || t == Tier::Ion);
+        t_[0] = t;
+        n_ = 1;
+    }
+    explicit Tiers(Tier t, Tier u) {
+        MOZ_ASSERT(t == Tier::Baseline || t == Tier::Ion);
+        MOZ_ASSERT(u == Tier::Baseline || u == Tier::Ion);
+        MOZ_ASSERT(t != u);
+        t_[0] = t;
+        t_[1] = u;
+        n_ = 2;
+    }
+
+    Tier* begin() {
+        return t_;
+    }
+    Tier* end() {
+        return t_ + n_;
+    }
 };
 
 // Represents the resizable limits of memories and tables.

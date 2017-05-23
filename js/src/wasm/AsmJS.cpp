@@ -1775,7 +1775,7 @@ class MOZ_STACK_CLASS ModuleValidator
 
   public:
     bool init() {
-        auto tierMetadata = js::MakeUnique<MetadataTier>(CompileMode::Ion);
+        auto tierMetadata = js::MakeUnique<MetadataTier>(Tier::Ion);
         if (!tierMetadata)
             return false;
 
@@ -8555,7 +8555,7 @@ LookupAsmJSModuleInCache(JSContext* cx, AsmJSParser& parser, bool* loadedFromCac
     if (!Module::assumptionsMatch(assumptions, cursor, remain))
         return true;
 
-    auto tierMetadata = js::MakeUnique<MetadataTier>(CompileMode::Ion);
+    auto tierMetadata = js::MakeUnique<MetadataTier>(Tier::Ion);
     if (!tierMetadata)
         return false;
 

@@ -199,7 +199,7 @@ class WasmInstanceObject : public NativeObject
                                     uint32_t funcIndex,
                                     MutableHandleFunction fun);
 
-    const wasm::CodeRange& getExportedFunctionCodeRange(HandleFunction fun);
+    const wasm::CodeRange& getExportedFunctionCodeRange(HandleFunction fun, wasm::Tier tier);
 
     static WasmFunctionScope* getFunctionScope(JSContext* cx,
                                                HandleWasmInstanceObject instanceObj,
