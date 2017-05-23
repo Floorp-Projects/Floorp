@@ -10665,33 +10665,110 @@ BytecodeEmitter::emitClass(ParseNode* pn)
             return false;
     }
 
+    // Pseudocode for class declarations:
+    //
+    //     class extends BaseExpression {
+    //       constructor() { ... }
+    //       ...
+    //       }
+    //
+    //
+    //   if defined <BaseExpression> {
+    //     let heritage = BaseExpression;
+    //
+    //     if (heritage !== null) {
+    //       funProto = heritage;
+    //       objProto = heritage.prototype;
+    //     } else {
+    //       funProto = %FunctionPrototype%;
+    //       objProto = null;
+    //     }
+    //   } else {
+    //     objProto = %ObjectPrototype%;
+    //   }
+    //
+    //   let homeObject = ObjectCreate(objProto);
+    //
+    //   if defined <constructor> {
+    //     if defined <BaseExpression> {
+    //       cons = DefineMethod(<constructor>, proto=homeObject, funProto=funProto);
+    //     } else {
+    //       cons = DefineMethod(<constructor>, proto=homeObject);
+    //     }
+    //   } else {
+    //     if defined <BaseExpression> {
+    //       cons = DefaultDerivedConstructor(proto=homeObject, funProto=funProto);
+    //     } else {
+    //       cons = DefaultConstructor(proto=homeObject);
+    //     }
+    //   }
+    //
+    //   cons.prototype = homeObject;
+    //   homeObject.constructor = cons;
+    //
+    //   EmitPropertyList(...)
+
     // This is kind of silly. In order to the get the home object defined on
     // the constructor, we have to make it second, but we want the prototype
     // on top for EmitPropertyList, because we expect static properties to be
     // rarer. The result is a few more swaps than we would like. Such is life.
     if (heritageExpression) {
-        if (!emitTree(heritageExpression))
-            return false;
-        if (!emit1(JSOP_CLASSHERITAGE))
-            return false;
-        if (!emit1(JSOP_OBJWITHPROTO))
+        IfThenElseEmitter ifThenElse(this);
+
+        if (!emitTree(heritageExpression))                      // ... HERITAGE
             return false;
 
-        // JSOP_CLASSHERITAGE leaves both protos on the stack. After
-        // creating the prototype, swap it to the bottom to make the
-        // constructor.
-        if (!emit1(JSOP_SWAP))
+        // Heritage must be null or a non-generator constructor
+        if (!emit1(JSOP_CHECKCLASSHERITAGE))                    // ... HERITAGE
+            return false;
+
+        // [IF] (heritage !== null)
+        if (!emit1(JSOP_DUP))                                   // ... HERITAGE HERITAGE
+            return false;
+        if (!emit1(JSOP_NULL))                                  // ... HERITAGE HERITAGE NULL
+            return false;
+        if (!emit1(JSOP_STRICTNE))                              // ... HERITAGE NE
+            return false;
+
+        // [THEN] funProto = heritage, objProto = heritage.prototype
+        if (!ifThenElse.emitIfElse())
+            return false;
+        if (!emit1(JSOP_DUP))                                   // ... HERITAGE HERITAGE
+            return false;
+        if (!emitAtomOp(cx->names().prototype, JSOP_GETPROP))   // ... HERITAGE PROTO
+            return false;
+
+        // [ELSE] funProto = %FunctionPrototype%, objProto = null
+        if (!ifThenElse.emitElse())
+            return false;
+        if (!emit1(JSOP_POP))                                   // ...
+            return false;
+        if (!emit2(JSOP_BUILTINPROTO, JSProto_Function))        // ... PROTO
+            return false;
+        if (!emit1(JSOP_NULL))                                  // ... PROTO NULL
+            return false;
+
+        // [ENDIF]
+        if (!ifThenElse.emitEnd())
+            return false;
+
+        if (!emit1(JSOP_OBJWITHPROTO))                          // ... HERITAGE HOMEOBJ
+            return false;
+        if (!emit1(JSOP_SWAP))                                  // ... HOMEOBJ HERITAGE
             return false;
     } else {
-        if (!emitNewInit(JSProto_Object))
+        if (!emitNewInit(JSProto_Object))                       // ... HOMEOBJ
             return false;
     }
 
+    // Stack currently has HOMEOBJ followed by optional HERITAGE. When HERITAGE
+    // is not used, an implicit value of %FunctionPrototype% is implied.
+
     if (constructor) {
-        if (!emitFunction(constructor, !!heritageExpression))
+        if (!emitFunction(constructor, !!heritageExpression))   // ... HOMEOBJ CONSTRUCTOR
             return false;
         if (constructor->pn_funbox->needsHomeObject()) {
-            if (!emit2(JSOP_INITHOMEOBJECT, 0))
+            if (!emit2(JSOP_INITHOMEOBJECT, 0))                 // ... HOMEOBJ CONSTRUCTOR
                 return false;
         }
     } else {
@@ -10712,34 +10789,34 @@ BytecodeEmitter::emitClass(ParseNode* pn)
 
         JSAtom *name = names ? names->innerBinding()->pn_atom : cx->names().empty;
         if (heritageExpression) {
-            if (!emitAtomOp(name, JSOP_DERIVEDCONSTRUCTOR))
+            if (!emitAtomOp(name, JSOP_DERIVEDCONSTRUCTOR))     // ... HOMEOBJ CONSTRUCTOR
                 return false;
         } else {
-            if (!emitAtomOp(name, JSOP_CLASSCONSTRUCTOR))
+            if (!emitAtomOp(name, JSOP_CLASSCONSTRUCTOR))       // ... HOMEOBJ CONSTRUCTOR
                 return false;
         }
     }
 
-    if (!emit1(JSOP_SWAP))
+    if (!emit1(JSOP_SWAP))                                      // ... CONSTRUCTOR HOMEOBJ
         return false;
 
-    if (!emit1(JSOP_DUP2))
+    if (!emit1(JSOP_DUP2))                                          // ... CONSTRUCTOR HOMEOBJ CONSTRUCTOR HOMEOBJ
         return false;
-    if (!emitAtomOp(cx->names().prototype, JSOP_INITLOCKEDPROP))
+    if (!emitAtomOp(cx->names().prototype, JSOP_INITLOCKEDPROP))    // ... CONSTRUCTOR HOMEOBJ CONSTRUCTOR
         return false;
-    if (!emitAtomOp(cx->names().constructor, JSOP_INITHIDDENPROP))
+    if (!emitAtomOp(cx->names().constructor, JSOP_INITHIDDENPROP))  // ... CONSTRUCTOR HOMEOBJ
         return false;
 
     RootedPlainObject obj(cx);
-    if (!emitPropertyList(classMethods, &obj, ClassBody))
+    if (!emitPropertyList(classMethods, &obj, ClassBody))       // ... CONSTRUCTOR HOMEOBJ
         return false;
 
-    if (!emit1(JSOP_POP))
+    if (!emit1(JSOP_POP))                                       // ... CONSTRUCTOR
         return false;
 
     if (names) {
         ParseNode* innerName = names->innerBinding();
-        if (!emitLexicalInitialization(innerName))
+        if (!emitLexicalInitialization(innerName))              // ... CONSTRUCTOR
             return false;
 
         // Pop the inner scope.
@@ -10749,14 +10826,16 @@ BytecodeEmitter::emitClass(ParseNode* pn)
 
         ParseNode* outerName = names->outerBinding();
         if (outerName) {
-            if (!emitLexicalInitialization(outerName))
+            if (!emitLexicalInitialization(outerName))          // ... CONSTRUCTOR
                 return false;
             // Only class statements make outer bindings, and they do not leave
             // themselves on the stack.
-            if (!emit1(JSOP_POP))
+            if (!emit1(JSOP_POP))                               // ...
                 return false;
         }
     }
+
+    // The CONSTRUCTOR is left on stack if this is an expression.
 
     MOZ_ALWAYS_TRUE(sc->setLocalStrictMode(savedStrictness));
 

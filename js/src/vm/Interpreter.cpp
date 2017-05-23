@@ -971,6 +971,43 @@ js::TypeOfValue(const Value& v)
     return JSTYPE_SYMBOL;
 }
 
+bool
+js::CheckClassHeritageOperation(JSContext* cx, HandleValue heritage)
+{
+    if (IsConstructor(heritage))
+        return true;
+
+    if (heritage.isNull())
+        return true;
+
+    if (heritage.isObject()) {
+        ReportIsNotFunction(cx, heritage, 0, CONSTRUCT);
+        return false;
+    }
+
+    ReportValueError2(cx, JSMSG_BAD_HERITAGE, -1, heritage, nullptr, "not an object or null");
+    return false;
+}
+
+JSObject*
+js::ObjectWithProtoOperation(JSContext* cx, HandleValue val)
+{
+    if (!val.isObjectOrNull()) {
+        ReportValueError(cx, JSMSG_NOT_OBJORNULL, -1, val, nullptr);
+        return nullptr;
+    }
+
+    RootedObject proto(cx, val.toObjectOrNull());
+    return NewObjectWithGivenProto<PlainObject>(cx, proto);
+}
+
+JSObject*
+js::FunWithProtoOperation(JSContext* cx, HandleFunction fun, HandleObject parent,
+                          HandleObject proto)
+{
+    return CloneFunctionObjectIfNotSingleton(cx, fun, parent, proto);
+}
+
 /*
  * Enter the new with environment using an object at sp[-1] and associate the
  * depth of the with block with sp + stackIndex.
@@ -1942,7 +1979,6 @@ CASE(EnableInterruptsPseudoOpcode)
 CASE(JSOP_NOP)
 CASE(JSOP_NOP_DESTRUCTURING)
 CASE(JSOP_TRY_DESTRUCTURING_ITERCLOSE)
-CASE(JSOP_UNUSED221)
 CASE(JSOP_UNUSED222)
 CASE(JSOP_UNUSED223)
 CASE(JSOP_CONDSWITCH)
@@ -4099,37 +4135,25 @@ CASE(JSOP_ARRAYPUSH)
 }
 END_CASE(JSOP_ARRAYPUSH)
 
-CASE(JSOP_CLASSHERITAGE)
+CASE(JSOP_CHECKCLASSHERITAGE)
 {
-    ReservedRooted<Value> val(&rootValue0, REGS.sp[-1]);
+    HandleValue heritage = REGS.stackHandleAt(-1);
 
-    ReservedRooted<Value> objProto(&rootValue1);
-    ReservedRooted<JSObject*> funcProto(&rootObject0);
-    if (val.isNull()) {
-        objProto = NullValue();
-        if (!GetBuiltinPrototype(cx, JSProto_Function, &funcProto))
-            goto error;
-    } else {
-        if (!IsConstructor(val)) {
-            ReportIsNotFunction(cx, val, 0, CONSTRUCT);
-            goto error;
-        }
-
-        funcProto = &val.toObject();
-
-        if (!GetProperty(cx, funcProto, funcProto, cx->names().prototype, &objProto))
-            goto error;
-
-        if (!objProto.isObjectOrNull()) {
-            ReportValueError(cx, JSMSG_PROTO_NOT_OBJORNULL, -1, objProto, nullptr);
-            goto error;
-        }
-    }
-
-    REGS.sp[-1].setObject(*funcProto);
-    PUSH_COPY(objProto);
+    if (!CheckClassHeritageOperation(cx, heritage))
+        goto error;
 }
-END_CASE(JSOP_CLASSHERITAGE)
+END_CASE(JSOP_CHECKCLASSHERITAGE)
+
+CASE(JSOP_BUILTINPROTO)
+{
+    ReservedRooted<JSObject*> builtin(&rootObject0);
+    MOZ_ASSERT(GET_UINT8(REGS.pc) < JSProto_LIMIT);
+    JSProtoKey key = static_cast<JSProtoKey>(GET_UINT8(REGS.pc));
+    if (!GetBuiltinPrototype(cx, key, &builtin))
+        goto error;
+    PUSH_OBJECT(*builtin);
+}
+END_CASE(JSOP_BUILTINPROTO)
 
 CASE(JSOP_FUNWITHPROTO)
 {
@@ -4138,8 +4162,7 @@ CASE(JSOP_FUNWITHPROTO)
     /* Load the specified function object literal. */
     ReservedRooted<JSFunction*> fun(&rootFunction0, script->getFunction(GET_UINT32_INDEX(REGS.pc)));
 
-    JSObject* obj = CloneFunctionObjectIfNotSingleton(cx, fun, REGS.fp()->environmentChain(),
-                                                      proto, GenericObject);
+    JSObject* obj = FunWithProtoOperation(cx, fun, REGS.fp()->environmentChain(), proto);
     if (!obj)
         goto error;
 
@@ -4149,9 +4172,7 @@ END_CASE(JSOP_FUNWITHPROTO)
 
 CASE(JSOP_OBJWITHPROTO)
 {
-    ReservedRooted<JSObject*> proto(&rootObject0, REGS.sp[-1].toObjectOrNull());
-
-    JSObject* obj = NewObjectWithGivenProto<PlainObject>(cx, proto);
+    JSObject* obj = ObjectWithProtoOperation(cx, REGS.stackHandleAt(-1));
     if (!obj)
         goto error;
 
