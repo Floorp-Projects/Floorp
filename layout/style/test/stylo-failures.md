@@ -64,7 +64,9 @@ to mochitest command.
   * ... `'list-style'` [18]
 * Unimplemented \@font-face descriptors:
   * test_font_face_parser.html `font-language-override`: bug 1355364 [8]
-* test_font_face_parser.html `font-weight`: keyword values should be preserved in \@font-face [4]
+* keyword values should be preserved in \@font-face
+  * test_font_face_parser.html `font-weight` [4]
+  * test_font_loading_api.html `weight` [1]
 * @namespace support:
   * test_namespace_rule.html: bug 1355715 [6]
 * test_dont_use_document_colors.html: support of disabling document color bug 1355716 [21]
