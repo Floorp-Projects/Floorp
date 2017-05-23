@@ -3732,6 +3732,13 @@ nsFocusManager::MarkUncollectableForCCGeneration(uint32_t aGeneration)
   }
 }
 
+bool
+nsFocusManager::CanSkipFocus(nsIContent* aContent)
+{
+  return mFocusedContent == aContent &&
+         (!aContent || !nsContentUtils::IsChromeDoc(aContent->OwnerDoc()));
+}
+
 nsresult
 NS_NewFocusManager(nsIFocusManager** aResult)
 {
