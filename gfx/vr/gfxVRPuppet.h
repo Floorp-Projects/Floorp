@@ -53,7 +53,24 @@ protected:
   bool mIsPresenting;
 
 private:
+#if defined(XP_WIN)
+  bool UpdateConstantBuffers();
+
+  RefPtr<ID3D11Device> mDevice;
+  RefPtr<ID3D11DeviceContext> mContext;
+  ID3D11VertexShader* mQuadVS;
+  ID3D11PixelShader* mQuadPS;
+  RefPtr<ID3D11SamplerState> mLinearSamplerState;
+  layers::VertexShaderConstants mVSConstants;
+  layers::PixelShaderConstants mPSConstants;
+  RefPtr<ID3D11Buffer> mVSConstantBuffer;
+  RefPtr<ID3D11Buffer> mPSConstantBuffer;
+  RefPtr<ID3D11Buffer> mVertexBuffer;
+  RefPtr<ID3D11InputLayout> mInputLayout;
+#endif
+
   VRHMDSensorState mSensorState;
+  uint32_t mFrameNum;
 };
 
 class VRControllerPuppet : public VRControllerHost
