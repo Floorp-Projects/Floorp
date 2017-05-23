@@ -38,7 +38,7 @@ sdnAccessible::QueryInterface(REFIID aREFIID, void** aInstancePtr)
     return S_OK;
   }
 
-  AccessibleWrap* accessible = static_cast<AccessibleWrap*>(GetAccessible());
+  AccessibleWrap* accessible = GetAccessible();
   if (accessible)
     return accessible->QueryInterface(aREFIID, aInstancePtr);
 
@@ -98,7 +98,7 @@ sdnAccessible::get_nodeInfo(BSTR __RPC_FAR* aNodeName,
   // application can compare this to the childID we return for events such as
   // focus events, to correlate back to data nodes in their internal object
   // model.
-  Accessible* accessible = GetAccessible();
+  AccessibleWrap* accessible = GetAccessible();
   if (accessible) {
     *aUniqueID = AccessibleWrap::GetChildIDFor(accessible);
   } else {

@@ -12,6 +12,7 @@
 #include "IUnknownImpl.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/NotNull.h"
 
 namespace mozilla {
 namespace a11y {
@@ -27,6 +28,12 @@ public:
   }
   ~sdnAccessible() { }
 
+  explicit sdnAccessible(NotNull<AccessibleWrap*> aAccWrap)
+    : mNode(aAccWrap->GetNode())
+    , mWrap(aAccWrap)
+  {
+  }
+
   /**
    * Retrun if the object is defunct.
    */
@@ -40,7 +47,7 @@ public:
   /*
    * Return associated accessible if any.
    */
-  Accessible* GetAccessible() const;
+  AccessibleWrap* GetAccessible();
 
   //IUnknown
   DECL_IUNKNOWN
@@ -111,6 +118,7 @@ public:
 
 private:
   nsCOMPtr<nsINode> mNode;
+  RefPtr<AccessibleWrap> mWrap;
 };
 
 } // namespace a11y
