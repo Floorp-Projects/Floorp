@@ -98,6 +98,9 @@ GPATH
 # Git clone directory for updating web-platform-tests
 ^testing/web-platform/sync/
 
+# Third party metadata for web-platform-tests
+^testing/web-platform/products/
+
 # Android Gradle artifacts.
 ^mobile/android/gradle/.gradle
 
