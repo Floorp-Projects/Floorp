@@ -173,6 +173,11 @@ def make_s3_uploader_task(parent_task):
         "deadline": parent_task.task['deadline'],
         "routes": parent_task.task['routes'],
         "payload": {},
+        "extra": {
+            "index": {
+                "rank": 1493912914,
+            }
+        },
         "metadata": {
             "name": "Buildbot/mozharness S3 uploader",
             "description": "Upload outputs of buildbot/mozharness builds to S3",
