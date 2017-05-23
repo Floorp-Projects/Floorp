@@ -8,16 +8,17 @@
 run awsy tests in a virtualenv
 """
 
+import copy
 import json
 import os
+import re
 import sys
-import copy
 
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.script import PreScriptAction
-from mozharness.base.log import INFO, ERROR, WARNING, CRITICAL
+from mozharness.base.log import INFO, ERROR
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
@@ -25,7 +26,7 @@ from mozharness.mozilla.tooltool import TooltoolMixin
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 
 
-class AWSY(TestingMixin, MercurialScript, BlobUploadMixin,TooltoolMixin):
+class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin):
     config_options = [
         [["--e10s"],
         {"action": "store_true",
@@ -34,6 +35,10 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin,TooltoolMixin):
          "help": "Run tests with multiple processes. (Desktop builds only)",
          }]
     ] + testing_config_options + copy.deepcopy(blobupload_config_options)
+
+    error_list = [
+        {'regex': re.compile(r'''(TEST-UNEXPECTED|PROCESS-CRASH)'''), 'level': ERROR},
+    ]
 
     def __init__(self, **kwargs):
 
@@ -149,9 +154,14 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin,TooltoolMixin):
         env['MOZ_UPLOAD_DIR'] = dirs['abs_blob_upload_dir']
         if not os.path.isdir(env['MOZ_UPLOAD_DIR']):
             self.mkdir_p(env['MOZ_UPLOAD_DIR'])
+        if self.query_minidump_stackwalk():
+            env['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
+        env['MINIDUMP_SAVE_PATH'] = dirs['abs_blob_upload_dir']
+        env['RUST_BACKTRACE'] = '1'
         env = self.query_env(partial_env=env)
         parser = StructuredOutputParser(config=self.config,
                                         log_obj=self.log_obj,
+                                        error_list=self.error_list,
                                         strict=False)
         return_code = self.run_command(command=cmd,
                                        cwd=self.awsy_path,
