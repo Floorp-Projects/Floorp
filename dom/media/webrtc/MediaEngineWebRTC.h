@@ -181,7 +181,7 @@ public:
   {
     if (mDevices) {
       // This doesn't require anything more than support for free()
-      cubeb_device_collection_destroy(mDevices);
+      cubeb_device_collection_destroy(CubebUtils::GetCubebContext(), mDevices);
       mDevices = nullptr;
     }
     delete mDeviceIndexes;
