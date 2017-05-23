@@ -3257,38 +3257,26 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!initialized) {
     // Inform the OS about the types of services (from the "Services" menu)
     // that we can handle.
-
-    NSArray* sendTypes =
-      [[NSArray alloc] initWithObjects:NSPasteboardTypeString,
-                                       NSPasteboardTypeHTML,
-                                       nil];
-    NSArray* returnTypes =
-      [[NSArray alloc] initWithObjects:NSPasteboardTypeString,
-                                       NSPasteboardTypeHTML,
-                                       nil];
-
-    [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:returnTypes];
-
-    [sendTypes release];
-    [returnTypes release];
-
+    NSArray* types = @[[UTIHelper stringFromPboardType:NSPasteboardTypeString],
+                       [UTIHelper stringFromPboardType:NSPasteboardTypeHTML]];
+    [NSApp registerServicesMenuSendTypes:types returnTypes:types];
     initialized = YES;
   }
 }
 
 + (void)registerViewForDraggedTypes:(NSView*)aView
 {
-  [aView registerForDraggedTypes:[NSArray arrayWithObjects:
-                                    NSFilenamesPboardType,
-                                    NSPasteboardTypeString,
-                                    NSPasteboardTypeHTML,
-                                    NSURLPboardType,
-                                    kPasteboardTypeFileURLPromise,
-                                    kWildcardPboardType,
-                                    kPublicUrlPboardType,
-                                    kPublicUrlNamePboardType,
-                                    kUrlsWithTitlesPboardType,
-                                    nil]];
+  [aView registerForDraggedTypes:
+    [NSArray arrayWithObjects:
+      [UTIHelper stringFromPboardType:NSFilenamesPboardType],
+      [UTIHelper stringFromPboardType:NSPasteboardTypeString],
+      [UTIHelper stringFromPboardType:NSPasteboardTypeHTML],
+      [UTIHelper stringFromPboardType:(NSString*)kPasteboardTypeFileURLPromise],
+      [UTIHelper stringFromPboardType:kWildcardPboardType],
+      [UTIHelper stringFromPboardType:kPublicUrlPboardType],
+      [UTIHelper stringFromPboardType:kPublicUrlNamePboardType],
+      [UTIHelper stringFromPboardType:kUrlsWithTitlesPboardType],
+      nil]];
 }
 
 // initWithFrame:geckoChild:
@@ -6112,29 +6100,39 @@ provideDataForType:(NSString*)aType
     unsigned int typeCount = [pasteboardOutputDict count];
     NSMutableArray* types = [NSMutableArray arrayWithCapacity:typeCount + 1];
     [types addObjectsFromArray:[pasteboardOutputDict allKeys]];
-    [types addObject:kWildcardPboardType];
+    [types addObject:[UTIHelper stringFromPboardType:kWildcardPboardType]];
     for (unsigned int k = 0; k < typeCount; k++) {
       NSString* curType = [types objectAtIndex:k];
-      if ([curType isEqualToString:NSPasteboardTypeString] ||
-          [curType isEqualToString:kPublicUrlPboardType] ||
-          [curType isEqualToString:kPublicUrlNamePboardType]) {
+      if ([curType isEqualToString:
+            [UTIHelper stringFromPboardType:NSPasteboardTypeString]] ||
+          [curType isEqualToString:
+            [UTIHelper stringFromPboardType:kPublicUrlPboardType]] ||
+          [curType isEqualToString:
+            [UTIHelper stringFromPboardType:kPublicUrlNamePboardType]]) {
         [aPasteboard setString:[pasteboardOutputDict valueForKey:curType]
                        forType:curType];
-      } else if ([curType isEqualToString:kUrlsWithTitlesPboardType]) {
+      } else if ([curType isEqualToString:
+                   [UTIHelper stringFromPboardType:
+                     kUrlsWithTitlesPboardType]]) {
         [aPasteboard setPropertyList:[pasteboardOutputDict valueForKey:curType]
                        forType:curType];
-      } else if ([curType isEqualToString:NSPasteboardTypeHTML]) {
+      } else if ([curType isEqualToString:
+                   [UTIHelper stringFromPboardType:NSPasteboardTypeHTML]]) {
         [aPasteboard setString:
           (nsClipboard::WrapHtmlForSystemPasteboard(
             [pasteboardOutputDict valueForKey:curType]))
                       forType:curType];
-      } else if ([curType isEqualToString:NSPasteboardTypeTIFF] ||
-                 [curType isEqualToString:kCustomTypesPboardType]) {
+      } else if ([curType isEqualToString:
+                   [UTIHelper stringFromPboardType:NSPasteboardTypeTIFF]] ||
+                 [curType isEqualToString:
+                   [UTIHelper stringFromPboardType:kCustomTypesPboardType]]) {
         [aPasteboard setData:[pasteboardOutputDict valueForKey:curType]
                      forType:curType];
-      } else if (
-        [curType isEqualToString:(NSString*)kPasteboardTypeFileURLPromise] ||
-        [curType isEqualToString:NSFilenamesPboardType]) {
+      } else if ([curType isEqualToString:
+                   [UTIHelper stringFromPboardType:
+                     (NSString*)kPasteboardTypeFileURLPromise]] ||
+                  [curType isEqualToString:
+                    [UTIHelper stringFromPboardType:NSFilenamesPboardType]]) {
 
         nsCOMPtr<nsIFile> targFile;
         NS_NewLocalFile(EmptyString(), true, getter_AddRefs(targFile));
@@ -6232,14 +6230,15 @@ provideDataForType:(NSString*)aType
   // or HTML from us or no data at all AND when the service will either not
   // send back any data to us or will send a string or HTML back to us.
 
-#define IsSupportedType(typeStr) \
-  ([typeStr isEqualToString:NSPasteboardTypeString] || \
-   [typeStr isEqualToString:NSPasteboardTypeHTML])
-
   id result = nil;
 
-  if ((!sendType || IsSupportedType(sendType)) &&
-      (!returnType || IsSupportedType(returnType))) {
+  NSString* stringType =
+    [UTIHelper stringFromPboardType:NSPasteboardTypeString];
+  NSString* htmlType = [UTIHelper stringFromPboardType:NSPasteboardTypeHTML];
+  if ((!sendType || [sendType isEqualToString:stringType] ||
+        [sendType isEqualToString:htmlType]) &&
+      (!returnType || [returnType isEqualToString:stringType] ||
+        [returnType isEqualToString:htmlType])) {
     if (mGeckoChild) {
       // Assume that this object will be able to handle this request.
       result = self;
@@ -6267,8 +6266,6 @@ provideDataForType:(NSString*)aType
     }
   }
 
-#undef IsSupportedType
-
   // Give the superclass a chance if this object will not handle this request.
   if (!result)
     result = [super validRequestorForSendType:sendType returnType:returnType];
@@ -6286,9 +6283,12 @@ provideDataForType:(NSString*)aType
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   // Make sure that the service will accept strings or HTML.
-  if ([types containsObject:NSPasteboardTypeString] == NO &&
-      [types containsObject:NSPasteboardTypeHTML] == NO)
+  if (![types containsObject:
+         [UTIHelper stringFromPboardType:NSPasteboardTypeString]] &&
+      ![types containsObject:
+         [UTIHelper stringFromPboardType:NSPasteboardTypeHTML]]) {
     return NO;
+  }
 
   // Bail out if there is no Gecko object.
   if (!mGeckoChild)
@@ -6314,22 +6314,28 @@ provideDataForType:(NSString*)aType
     NSString* currentKey = [declaredTypes objectAtIndex:i];
     id currentValue = [pasteboardOutputDict valueForKey:currentKey];
 
-    if ([currentKey isEqualToString:NSPasteboardTypeString] ||
-        [currentKey isEqualToString:kPublicUrlPboardType] ||
-        [currentKey isEqualToString:kPublicUrlNamePboardType]) {
+    if ([currentKey isEqualToString:
+          [UTIHelper stringFromPboardType:NSPasteboardTypeString]] ||
+        [currentKey isEqualToString:
+          [UTIHelper stringFromPboardType:kPublicUrlPboardType]] ||
+        [currentKey isEqualToString:
+          [UTIHelper stringFromPboardType:kPublicUrlNamePboardType]]) {
       [pboard setString:currentValue forType:currentKey];
-    } else if ([currentKey isEqualToString:NSPasteboardTypeHTML]) {
+    } else if ([currentKey isEqualToString:
+                 [UTIHelper stringFromPboardType:NSPasteboardTypeHTML]]) {
       [pboard setString:(nsClipboard::WrapHtmlForSystemPasteboard(currentValue))
                 forType:currentKey];
-    } else if ([currentKey isEqualToString:NSPasteboardTypeTIFF]) {
+    } else if ([currentKey isEqualToString:
+                 [UTIHelper stringFromPboardType:NSPasteboardTypeTIFF]]) {
       [pboard setData:currentValue forType:currentKey];
     } else if ([currentKey isEqualToString:
-                 (NSString*)kPasteboardTypeFileURLPromise] ||
-               [currentKey isEqualToString:kUrlsWithTitlesPboardType]) {
+                 [UTIHelper stringFromPboardType:
+                   (NSString*)kPasteboardTypeFileURLPromise]] ||
+               [currentKey isEqualToString:
+                 [UTIHelper stringFromPboardType:kUrlsWithTitlesPboardType]]) {
       [pboard setPropertyList:currentValue forType:currentKey];
     }
   }
-
   return YES;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
