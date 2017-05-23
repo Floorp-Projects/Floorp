@@ -4674,7 +4674,7 @@ PresShell::StyleRuleRemoved(StyleSheet* aStyleSheet)
   RecordStyleSheetChange(aStyleSheet);
 }
 
-nsIFrame*
+nsPlaceholderFrame*
 PresShell::GetPlaceholderFrameFor(nsIFrame* aFrame) const
 {
   return mFrameConstructor->GetPlaceholderFrameFor(aFrame);

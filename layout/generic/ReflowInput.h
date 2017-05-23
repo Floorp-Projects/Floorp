@@ -14,12 +14,13 @@
 #include "mozilla/Assertions.h"
 #include <algorithm>
 
+class nsFloatManager;
+struct nsHypotheticalPosition;
+class nsIPercentBSizeObserver;
+class nsLineLayout;
+class nsPlaceholderFrame;
 class nsPresContext;
 class nsRenderingContext;
-class nsFloatManager;
-class nsLineLayout;
-class nsIPercentBSizeObserver;
-struct nsHypotheticalPosition;
 
 /**
  * @return aValue clamped to [aMinValue, aMaxValue].
@@ -992,7 +993,7 @@ protected:
   // mode with the same block direction as the absolute containing block
   // (cbrs->frame), though it may differ in inline direction.
   void CalculateHypotheticalPosition(nsPresContext* aPresContext,
-                                     nsIFrame* aPlaceholderFrame,
+                                     nsPlaceholderFrame* aPlaceholderFrame,
                                      const ReflowInput* cbrs,
                                      nsHypotheticalPosition& aHypotheticalPos,
                                      mozilla::LayoutFrameType aFrameType) const;
