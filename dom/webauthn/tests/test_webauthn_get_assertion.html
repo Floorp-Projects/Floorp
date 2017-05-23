@@ -43,8 +43,10 @@
 
    function runTests() {
      isnot(navigator.authentication, undefined, "WebAuthn API endpoint must exist");
-     isnot(navigator.authentication.makeCredential, undefined, "WebAuthn makeCredential API endpoint must exist");
+     isnot(navigator.credentials, undefined, "Credential Management API endpoint must exist");
+     is(navigator.authentication.makeCredential, undefined, "WebAuthn makeCredential API endpoint does not exist any longer");
      isnot(navigator.authentication.getAssertion, undefined, "WebAuthn getAssertion API endpoint must exist");
+     isnot(navigator.credentials.create, undefined, "CredentialManagement create API endpoint must exist");
 
      let authn = navigator.authentication;
 

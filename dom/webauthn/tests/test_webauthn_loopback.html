@@ -26,10 +26,13 @@ SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
                                    ["security.webauth.webauthn_enable_usbtoken", false]]},
 function() {
   isnot(navigator.authentication, undefined, "WebAuthn API endpoint must exist");
-  isnot(navigator.authentication.makeCredential, undefined, "WebAuthn makeCredential API endpoint must exist");
+  isnot(navigator.credentials, undefined, "Credential Management API endpoint must exist");
+  is(navigator.authentication.makeCredential, undefined, "WebAuthn makeCredential API endpoint does not exist any longer");
   isnot(navigator.authentication.getAssertion, undefined, "WebAuthn getAssertion API endpoint must exist");
+  isnot(navigator.credentials.create, undefined, "CredentialManagement create API endpoint must exist");
 
   let authn = navigator.authentication;
+  let credm = navigator.credentials;
 
   let gCredentialChallenge = new Uint8Array(16);
   window.crypto.getRandomValues(gCredentialChallenge);
@@ -103,10 +106,16 @@ function() {
   }
 
   function testMakeCredential() {
-    let acct = {rpDisplayName: "none", displayName: "none", id: "none"};
-    let param = {type: "ScopedCred", algorithm: "p-256"};
-
-    authn.makeCredential(acct, [param], gCredentialChallenge)
+    let rp = {id: document.origin, name: "none", icon: "none"};
+    let user = {id: "none", name: "none", icon: "none", displayName: "none"};
+    let param = {type: "public-key", algorithm: "P-256"};
+    let makeCredentialOptions = {
+      rp: rp,
+      user: user,
+      challenge: gCredentialChallenge,
+      parameters: [param]
+    };
+    credm.create({publicKey: makeCredentialOptions})
     .then(checkCredentialValid)
     .then(testMakeDuplicate)
     .catch(function(aReason) {
@@ -116,14 +125,18 @@ function() {
   }
 
   function testMakeDuplicate(aCredInfo) {
-    let acct = {rpDisplayName: "none", displayName: "none", id: "none"};
-    let param = {type: "ScopedCred", algorithm: "p-256"};
-    let options = {rpId: document.origin,
-                   excludeList: [{type: "ScopedCred",
-                                  id: Uint8Array.from(aCredInfo.rawId),
-                                  transports: ["usb"]}]};
-
-    authn.makeCredential(acct, [param], gCredentialChallenge, options)
+    let rp = {id: document.origin, name: "none", icon: "none"};
+    let user = {id: "none", name: "none", icon: "none", displayName: "none"};
+    let param = {type: "public-key", algorithm: "P-256"};
+    let makeCredentialOptions = {
+      rp: rp,
+      user: user,
+      challenge: gCredentialChallenge,
+      parameters: [param],
+      excludeList: [{type: "public-key", id: Uint8Array.from(aCredInfo.rawId),
+                     transports: ["usb"]}]
+    };
+    credm.create({publicKey: makeCredentialOptions})
     .then(function() {
       // We should have errored here!
       ok(false, "The excludeList didn't stop a duplicate being created!");
