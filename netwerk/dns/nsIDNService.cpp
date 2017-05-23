@@ -813,12 +813,14 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
       ch = SURROGATE_TO_UCS4(ch, *current++);
     }
 
-    // Check for restricted characters; aspirational scripts are permitted
+    // Check for restricted characters; aspirational scripts are NOT permitted,
+    // in anticipation of the category being merged into Limited-Use scripts
+    // in the upcoming (Unicode 10.0-based) revision of UAX #31.
     IdentifierType idType = GetIdentifierType(ch);
-    if (idType == IDTYPE_RESTRICTED) {
+    if (idType == IDTYPE_RESTRICTED || idType == IDTYPE_ASPIRATIONAL) {
       return false;
     }
-    MOZ_ASSERT(idType == IDTYPE_ALLOWED || idType == IDTYPE_ASPIRATIONAL);
+    MOZ_ASSERT(idType == IDTYPE_ALLOWED);
 
     // Check for mixed script
     Script script = GetScriptCode(ch);
