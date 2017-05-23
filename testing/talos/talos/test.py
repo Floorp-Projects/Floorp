@@ -108,6 +108,7 @@ class TsBase(Test):
         'filters',
         'setup',
         'cleanup',
+        'webextensions',
         'reinstall',     # A list of files from the profile directory that
                          # should be copied to the temporary profile prior to
                          # running each cycle, to avoid one cycle overwriting
@@ -139,6 +140,12 @@ class ts_paint(TsBase):
     mainthread = False
     responsiveness = False
     unit = 'ms'
+
+
+@register_test()
+class ts_paint_webext(ts_paint):
+    webextensions = '${talos}/webextensions/dummy/dummy.xpi'
+    preferences = {'xpinstall.signatures.required': False}
 
 
 @register_test()
@@ -235,7 +242,7 @@ class PageloaderTest(Test):
             'timeout', 'shutdown', 'responsiveness', 'profile_path',
             'xperf_providers', 'xperf_user_providers', 'xperf_stackwalk',
             'filters', 'preferences', 'extensions', 'setup', 'cleanup',
-            'lower_is_better', 'alert_threshold', 'unit']
+            'lower_is_better', 'alert_threshold', 'unit', 'webextensions']
 
 
 @register_test()
@@ -499,6 +506,12 @@ class tp5o(PageloaderTest):
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()
     timeout = 1800
     unit = 'ms'
+
+
+@register_test()
+class tp5o_webext(tp5o):
+    webextensions = '${talos}/webextensions/dummy/dummy.xpi'
+    preferences = {'xpinstall.signatures.required': False}
 
 
 @register_test()
