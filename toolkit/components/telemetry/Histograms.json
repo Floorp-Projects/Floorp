@@ -8330,6 +8330,16 @@
     "n_values": 50,
     "description": "Counts of the maximum number of shared memory buffers used for transferring video frames between the CDM and Gecko processes during playback of DRM'd video. Reported once per CDMVideoDecoder instance, i.e., once per JavaScript SourceBuffer during playback of video using EME."
   },
+  "MEDIACACHE_WATERMARK_KB": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["gsquelart@mozilla.com"],
+    "bug_numbers": [1366929],
+    "expires_in_version": "60",
+    "kind": "linear",
+    "high": 520000,
+    "n_buckets": 66,
+    "description": "Maximum MediaCache buffer size reached, in KB. Recorded at every MediaCache destruction, i.e., whenever there is no more media data to be downloaded or kept for playback."
+  },
   "VIDEO_MFT_OUTPUT_NULL_SAMPLES": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["cpearce@mozilla.com"],
