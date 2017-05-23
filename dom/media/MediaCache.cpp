@@ -132,6 +132,12 @@ public:
     Telemetry::Accumulate(
       Telemetry::HistogramID::MEDIACACHE_WATERMARK_KB,
       uint32_t(mIndexWatermark * MediaCache::BLOCK_SIZE / 1024));
+    LOG("MediaCache::~MediaCache(this=%p) MEDIACACHE_BLOCKOWNERS_WATERMARK=%u",
+        this, unsigned(mBlockOwnersWatermark));
+    Telemetry::Accumulate(
+      Telemetry::HistogramID::MEDIACACHE_BLOCKOWNERS_WATERMARK,
+      mBlockOwnersWatermark);
+
     MOZ_COUNT_DTOR(MediaCache);
   }
 
@@ -356,6 +362,8 @@ protected:
   nsTArray<Block> mIndex;
   // Keep track for highest number of blocks used, for telemetry purposes.
   int32_t mIndexWatermark = 0;
+  // Keep track for highest number of blocks owners, for telemetry purposes.
+  uint32_t mBlockOwnersWatermark = 0;
   // Writer which performs IO, asynchronously writing cache blocks.
   RefPtr<FileBlockCache> mFileCache;
   // The list of free blocks; they are not ordered.
@@ -943,6 +951,8 @@ MediaCache::AddBlockOwnerAsReadahead(int32_t aBlockIndex,
     mFreeBlocks.RemoveBlock(aBlockIndex);
   }
   BlockOwner* bo = block->mOwners.AppendElement();
+  mBlockOwnersWatermark =
+    std::max(mBlockOwnersWatermark, uint32_t(block->mOwners.Length()));
   bo->mStream = aStream;
   bo->mStreamBlock = aStreamBlockIndex;
   aStream->mBlocks[aStreamBlockIndex] = aBlockIndex;
@@ -1540,6 +1550,8 @@ MediaCache::AllocateAndWriteBlock(
         block->mOwners.Clear();
         return;
       }
+      mBlockOwnersWatermark =
+        std::max(mBlockOwnersWatermark, uint32_t(block->mOwners.Length()));
       bo->mStream = stream;
     }
 
