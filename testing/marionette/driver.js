@@ -1370,10 +1370,6 @@ GeckoDriver.prototype.setWindowRect = function* (cmd, resp) {
 
   let {x, y, width, height} = cmd.parameters;
 
-  if (win.windowState == win.STATE_FULLSCREEN) {
-    win.document.exitFullscreen();
-  }
-
   if (height != null && width != null) {
     assert.positiveInteger(height);
     assert.positiveInteger(width);
