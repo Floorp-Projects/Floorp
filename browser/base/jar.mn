@@ -129,6 +129,7 @@ browser.jar:
         content/browser/pageinfo/permissions.js       (content/pageinfo/permissions.js)
         content/browser/pageinfo/security.js          (content/pageinfo/security.js)
         content/browser/robot.ico                     (content/robot.ico)
+        content/browser/static-robot.png              (content/static-robot.png)
         content/browser/safeMode.css                  (content/safeMode.css)
         content/browser/safeMode.js                   (content/safeMode.js)
         content/browser/safeMode.xul                  (content/safeMode.xul)
