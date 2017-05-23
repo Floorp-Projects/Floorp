@@ -16,6 +16,14 @@ add_task(async function test_activeStatus_init() {
   do_check_eq(Services.ppmm.initialProcessData.autofillEnabled, undefined);
 
   await formAutofillParent.init();
+  // init shouldn't call updateStatus since that requires storage which will
+  // lead to startup time regressions.
+  do_check_eq(formAutofillParent._updateStatus.called, false);
+  do_check_eq(Services.ppmm.initialProcessData.autofillEnabled, undefined);
+
+  // Initialize profile storage
+  await formAutofillParent.profileStorage.initialize();
+  // Upon first initializing profile storage, status should be computed.
   do_check_eq(formAutofillParent._updateStatus.called, true);
   do_check_eq(Services.ppmm.initialProcessData.autofillEnabled, false);
 

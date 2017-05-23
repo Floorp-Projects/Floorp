@@ -305,12 +305,18 @@ var FormAutofillContent = {
     Services.cpmm.addMessageListener("FormAutofill:savedFieldNames", this);
     Services.obs.addObserver(this, "earlyformsubmit");
 
-    if (Services.cpmm.initialProcessData.autofillEnabled) {
+    let autofillEnabled = Services.cpmm.initialProcessData.autofillEnabled;
+    if (autofillEnabled ||
+        // If storage hasn't be initialized yet autofillEnabled is undefined but we need to ensure
+        // autocomplete is registered before the focusin so register it in this case as long as the
+        // pref is true.
+        (autofillEnabled === undefined &&
+         Services.prefs.getBoolPref("extensions.formautofill.addresses.enabled"))) {
       ProfileAutocomplete.ensureRegistered();
     }
 
     this.savedFieldNames =
-      Services.cpmm.initialProcessData.autofillSavedFieldNames || new Set();
+      Services.cpmm.initialProcessData.autofillSavedFieldNames;
   },
 
   _onFormSubmit(handler) {
@@ -400,6 +406,12 @@ var FormAutofillContent = {
 
   identifyAutofillFields(doc) {
     this.log.debug("identifyAutofillFields:", "" + doc.location);
+
+    if (!this.savedFieldNames) {
+      this.log.debug("identifyAutofillFields: savedFieldNames are not known yet");
+      Services.cpmm.sendAsyncMessage("FormAutofill:InitStorage");
+    }
+
     let forms = [];
 
     // Collects root forms from inputs.

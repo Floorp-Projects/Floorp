@@ -12,6 +12,7 @@ add_task(async function test_profileSavedFieldNames_init() {
   sinon.stub(formAutofillParent, "_updateSavedFieldNames");
 
   await formAutofillParent.init();
+  await formAutofillParent.profileStorage.initialize();
   do_check_eq(formAutofillParent._updateSavedFieldNames.called, true);
 
   formAutofillParent._uninit();
