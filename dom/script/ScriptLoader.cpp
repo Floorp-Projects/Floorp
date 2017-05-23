@@ -275,12 +275,12 @@ ScriptLoader::ModuleScriptsEnabled()
 }
 
 bool
-ScriptLoader::ModuleMapContainsModule(ModuleLoadRequest* aRequest) const
+ScriptLoader::ModuleMapContainsURL(nsIURI* aURL) const
 {
   // Returns whether we have fetched, or are currently fetching, a module script
-  // for the request's URL.
-  return mFetchingModules.Contains(aRequest->mURI) ||
-         mFetchedModules.Contains(aRequest->mURI);
+  // for a URL.
+  return mFetchingModules.Contains(aURL) ||
+         mFetchedModules.Contains(aURL);
 }
 
 bool
@@ -297,7 +297,7 @@ ScriptLoader::SetModuleFetchStarted(ModuleLoadRequest* aRequest)
   // Update the module map to indicate that a module is currently being fetched.
 
   MOZ_ASSERT(aRequest->IsLoading());
-  MOZ_ASSERT(!ModuleMapContainsModule(aRequest));
+  MOZ_ASSERT(!ModuleMapContainsURL(aRequest->mURI));
   mFetchingModules.Put(aRequest->mURI, nullptr);
 }
 
@@ -328,21 +328,21 @@ ScriptLoader::SetModuleFetchFinishedAndResumeWaitingRequests(ModuleLoadRequest* 
 }
 
 RefPtr<GenericPromise>
-ScriptLoader::WaitForModuleFetch(ModuleLoadRequest* aRequest)
+ScriptLoader::WaitForModuleFetch(nsIURI* aURL)
 {
-  MOZ_ASSERT(ModuleMapContainsModule(aRequest));
+  MOZ_ASSERT(ModuleMapContainsURL(aURL));
 
   RefPtr<GenericPromise::Private> promise;
-  if (mFetchingModules.Get(aRequest->mURI, getter_AddRefs(promise))) {
+  if (mFetchingModules.Get(aURL, getter_AddRefs(promise))) {
     if (!promise) {
       promise = new GenericPromise::Private(__func__);
-      mFetchingModules.Put(aRequest->mURI, promise);
+      mFetchingModules.Put(aURL, promise);
     }
     return promise;
   }
 
   RefPtr<ModuleScript> ms;
-  MOZ_ALWAYS_TRUE(mFetchedModules.Get(aRequest->mURI, getter_AddRefs(ms)));
+  MOZ_ALWAYS_TRUE(mFetchedModules.Get(aURL, getter_AddRefs(ms)));
   if (!ms || ms->InstantiationFailed()) {
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
@@ -626,9 +626,15 @@ ScriptLoader::StartFetchingModuleDependencies(ModuleLoadRequest* aRequest)
   // CORS setting, and module script's settings object.
   nsTArray<RefPtr<GenericPromise>> importsReady;
   for (size_t i = 0; i < urls.Length(); i++) {
-    RefPtr<GenericPromise> childReady =
-      StartFetchingModuleAndDependencies(aRequest, urls[i]);
-    importsReady.AppendElement(childReady);
+    nsCOMPtr<nsIURI> url = urls[i];
+    // If we're already fetching the url, then wait for the current fetch to
+    // complete rather than creating a new module request.
+    if (ModuleMapContainsURL(url)) {
+      importsReady.AppendElement(WaitForModuleFetch(url));
+    } else {
+      importsReady.AppendElement(
+        StartFetchingModuleAndDependencies(aRequest, url));
+    }
   }
 
   // Wait for all imports to become ready.
@@ -869,8 +875,8 @@ ScriptLoader::StartLoad(ScriptLoadRequest* aRequest)
     // Check whether the module has been fetched or is currently being fetched,
     // and if so wait for it.
     ModuleLoadRequest* request = aRequest->AsModuleRequest();
-    if (ModuleMapContainsModule(request)) {
-      WaitForModuleFetch(request)
+    if (ModuleMapContainsURL(request->mURI)) {
+      WaitForModuleFetch(request->mURI)
         ->Then(AbstractThread::MainThread(), __func__, request,
                &ModuleLoadRequest::ModuleLoaded,
                &ModuleLoadRequest::LoadFailed);
