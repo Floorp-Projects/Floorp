@@ -6,20 +6,21 @@
   pointer-events: none;
 }
 
-.panel-mainview,
-.panel-viewcontainer,
-.panel-viewstack {
+.panel-viewcontainer {
   overflow: hidden;
 }
 
 .panel-viewstack {
-  position: relative;
+  transition: height var(--panelui-subview-transition-duration);
 }
 
 .panel-subviews {
-  -moz-stack-sizing: ignore;
+  -moz-stack-sizing: ignore-horizontal;
   transform: translateX(0);
-  overflow-y: auto;
+}
+
+.panel-viewstack[viewtype="main"] > .panel-subviews {
+  -moz-stack-sizing: ignore;
 }
 
 .panel-subviews[panelopen] {
