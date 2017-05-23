@@ -1740,6 +1740,7 @@ static struct cubeb_ops const opensl_ops = {
   .get_preferred_sample_rate = opensl_get_preferred_sample_rate,
   .get_preferred_channel_layout = NULL,
   .enumerate_devices = NULL,
+  .device_collection_destroy = NULL,
   .destroy = opensl_destroy,
   .stream_init = opensl_stream_init,
   .stream_destroy = opensl_stream_destroy,

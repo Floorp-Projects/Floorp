@@ -19,6 +19,7 @@
 #include <math.h>
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
+#include "cubeb_utils.h"
 
 /* This is missing from the MinGW headers. Use a safe fallback. */
 #if !defined(MEMORY_ALLOCATION_ALIGNMENT)
@@ -1050,6 +1051,7 @@ static struct cubeb_ops const winmm_ops = {
   /*.get_preferred_sample_rate =*/ winmm_get_preferred_sample_rate,
   /*.get_preferred_channel_layout =*/ NULL,
   /*.enumerate_devices =*/ winmm_enumerate_devices,
+  /*.device_collection_destroy =*/ cubeb_utils_default_device_collection_destroy,
   /*.destroy =*/ winmm_destroy,
   /*.stream_init =*/ winmm_stream_init,
   /*.stream_destroy =*/ winmm_stream_destroy,

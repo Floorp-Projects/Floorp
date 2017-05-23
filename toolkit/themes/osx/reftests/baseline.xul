@@ -46,7 +46,7 @@
 
 <html:style><![CDATA[
 window {
-  -moz-appearance: none; appearance: none;
+  -moz-appearance: none;
   background-color: white;
 }
 .regular {

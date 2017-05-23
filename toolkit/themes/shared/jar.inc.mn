@@ -78,8 +78,6 @@ toolkit.jar:
   skin/classic/global/media/error.png                      (../../shared/media/error.png)
   skin/classic/global/media/throbber.png                   (../../shared/media/throbber.png)
   skin/classic/global/media/stalled.png                    (../../shared/media/stalled.png)
-  skin/classic/global/media/clicktoplay-bgtexture.png      (../../shared/media/clicktoplay-bgtexture.png)
-  skin/classic/global/media/videoClickToPlayButton.svg     (../../shared/media/videoClickToPlayButton.svg)
 #ifdef MOZ_PLACES
   skin/classic/mozapps/places/defaultFavicon.svg           (../../shared/places/defaultFavicon.svg)
 #endif

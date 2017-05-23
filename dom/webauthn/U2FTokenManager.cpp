@@ -168,7 +168,7 @@ U2FTokenManager::Cancel(const nsresult& aError)
 
 void
 U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
-                          WebAuthnTransactionInfo& aTransactionInfo)
+                          const WebAuthnTransactionInfo& aTransactionInfo)
 {
   MOZ_LOG(gU2FTokenManagerLog, LogLevel::Debug, ("U2FAuthRegister"));
   MOZ_ASSERT(U2FPrefManager::Get());
@@ -229,7 +229,7 @@ U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
 
 void
 U2FTokenManager::Sign(WebAuthnTransactionParent* aTransactionParent,
-                      WebAuthnTransactionInfo& aTransactionInfo)
+                      const WebAuthnTransactionInfo& aTransactionInfo)
 {
   MOZ_LOG(gU2FTokenManagerLog, LogLevel::Debug, ("U2FAuthSign"));
   MOZ_ASSERT(U2FPrefManager::Get());

@@ -415,6 +415,16 @@ interface nsIBrowserSearchService : nsISupports
             [retval, array, size_is(engineCount)] out nsISearchEngine engines);
 
   /**
+   * Returns an array of search engines installed by a given extension.
+   *
+   * @returns an array of nsISearchEngine objects.
+   */
+  void getEnginesByExtensionID(in AString extensionID,
+            [optional] out unsigned long engineCount,
+            [retval, array, size_is(engineCount)] out nsISearchEngine engines);
+
+
+  /**
    * Moves a visible search engine.
    *
    * @param  engine
