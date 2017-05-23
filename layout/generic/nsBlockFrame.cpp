@@ -4209,6 +4209,11 @@ nsBlockFrame::ReflowInlineFrame(BlockReflowInput& aState,
          aLineLayout.GetFirstLetterStyleOK() ? "on" : "off");
 #endif
 
+  if (aFrame->IsPlaceholderFrame()) {
+    auto ph = static_cast<nsPlaceholderFrame*>(aFrame);
+    ph->ForgetLineIsEmptySoFar();
+  }
+
   // Reflow the inline frame
   nsReflowStatus frameReflowStatus;
   bool           pushedFrame;
