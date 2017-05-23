@@ -12,7 +12,6 @@ import android.support.customtabs.CustomTabsIntent;
 import android.util.Log;
 
 import org.mozilla.focus.R;
-import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.SafeBundle;
 import org.mozilla.focus.utils.SafeIntent;
 
@@ -89,7 +88,7 @@ public class CustomTabConfig {
         }
 
         final Bitmap candidateIcon = (Bitmap) closeButtonParcelable;
-        final int maxSize = context.getResources().getDimensionPixelSize(R.dimen.customtabs_close_button_max_size);
+        final int maxSize = context.getResources().getDimensionPixelSize(R.dimen.customtabs_toolbar_icon_size);
 
         if (candidateIcon.getWidth() <= maxSize &&
                 candidateIcon.getHeight() <= maxSize){

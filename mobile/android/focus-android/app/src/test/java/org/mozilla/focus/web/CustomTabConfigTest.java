@@ -222,7 +222,7 @@ public class CustomTabConfigTest {
     // Tests that a max-size bitmap is OK:
     @Test
     public void maxSizeCloseButton() throws Exception {
-        final int maxSize = RuntimeEnvironment.application.getResources().getDimensionPixelSize(R.dimen.customtabs_close_button_max_size);
+        final int maxSize = RuntimeEnvironment.application.getResources().getDimensionPixelSize(R.dimen.customtabs_toolbar_icon_size);
         final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
 
         {
@@ -243,7 +243,7 @@ public class CustomTabConfigTest {
     // Tests that a close bitmap that's too large is ignored:
     @Test
     public void oversizedCloseButton() throws Exception {
-        final int maxSize = RuntimeEnvironment.application.getResources().getDimensionPixelSize(R.dimen.customtabs_close_button_max_size);
+        final int maxSize = RuntimeEnvironment.application.getResources().getDimensionPixelSize(R.dimen.customtabs_toolbar_icon_size);
         final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
 
         {

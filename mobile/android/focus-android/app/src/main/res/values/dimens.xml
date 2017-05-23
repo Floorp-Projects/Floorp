@@ -12,5 +12,5 @@
     <dimen name="firstrun_container_width">@dimen/match_parent</dimen>
 
     <!-- The custom tabs spec defines a maximum close button size, we need to define this here to enforce that sizing. -->
-    <dimen name="customtabs_close_button_max_size">24dp</dimen>
+    <dimen name="customtabs_toolbar_icon_size">24dp</dimen>
 </resources>
