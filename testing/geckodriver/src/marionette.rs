@@ -637,7 +637,7 @@ impl MarionetteSession {
         Ok(match msg.command {
             // Everything that doesn't have a response value
             Get(_) | GoBack | GoForward | Refresh | SetTimeouts(_) |
-            SetWindowRect(_) | MaximizeWindow | SwitchToWindow(_) | SwitchToFrame(_) |
+            MaximizeWindow | SwitchToWindow(_) | SwitchToFrame(_) |
             SwitchToParentFrame | AddCookie(_) | DeleteCookies | DeleteCookie(_) |
             DismissAlert | AcceptAlert | SendAlertText(_) | ElementClick(_) |
             ElementTap(_) | ElementClear(_) | ElementSendKeys(_, _) |
@@ -740,6 +740,37 @@ impl MarionetteSession {
                                                                   height: height})
             },
             GetElementRect(_) => {
+                let x = try_opt!(
+                    try_opt!(resp.result.find("x"),
+                             ErrorStatus::UnknownError,
+                             "Failed to find x field").as_f64(),
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret x as float");
+
+                let y = try_opt!(
+                    try_opt!(resp.result.find("y"),
+                             ErrorStatus::UnknownError,
+                             "Failed to find y field").as_f64(),
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret y as float");
+
+                let width = try_opt!(
+                    try_opt!(resp.result.find("width"),
+                             ErrorStatus::UnknownError,
+                             "Failed to find width field").as_f64(),
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret width as float");
+
+                let height = try_opt!(
+                    try_opt!(resp.result.find("height"),
+                             ErrorStatus::UnknownError,
+                             "Failed to find height field").as_f64(),
+                    ErrorStatus::UnknownError,
+                    "Failed to interpret width as float");
+
+                WebDriverResponse::ElementRect(ElementRectResponse::new(x, y, width, height))
+            },
+            SetWindowRect(_) => {
                 let x = try_opt!(
                     try_opt!(resp.result.find("x"),
                              ErrorStatus::UnknownError,
