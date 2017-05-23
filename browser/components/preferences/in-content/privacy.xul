@@ -319,8 +319,7 @@
               accesskey="&passwordExceptions.accesskey;"
               preference="pref.privacy.disable_button.view_passwords_exceptions"/>
     </hbox>
-    <hbox id="showPasswordBox">
-      <hbox id="showPasswordsBox"/>
+    <hbox id="showPasswordBox" pack="end">
       <button id="showPasswords"
               class="accessory-button"
               label="&savedLogins.label;" accesskey="&savedLogins.accesskey;"
