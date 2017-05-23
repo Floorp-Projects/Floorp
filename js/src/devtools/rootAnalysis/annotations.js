@@ -231,6 +231,8 @@ var ignoreFunctions = {
     // The big hammers.
     "PR_GetCurrentThread" : true,
     "calloc" : true,
+
+    "uint8 nsContentUtils::IsExpandedPrincipal(nsIPrincipal*)" : true,
 };
 
 function extraGCFunctions() {
