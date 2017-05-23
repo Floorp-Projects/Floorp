@@ -765,12 +765,7 @@ find_certs_from_nickname(const char *nickname, void *wincx)
         *delimit = ':';
     } else {
         slot = PK11_GetInternalKeySlot();
-        token = PK11Slot_GetNSSToken(slot);
-        if (token) {
-            nssToken_AddRef(token);
-        } else {
-            PORT_SetError(SEC_ERROR_NO_TOKEN);
-        }
+        token = nssToken_AddRef(PK11Slot_GetNSSToken(slot));
     }
     if (token) {
         nssList *certList;
