@@ -19,7 +19,7 @@ const TEST_ADDRESS_1 = {
   "address-level1": "MA",
   "postal-code": "02139",
   country: "US",
-  tel: "+1 617 253 5702",
+  tel: "+16172535702",
   email: "timbl@w3.org",
 };
 
