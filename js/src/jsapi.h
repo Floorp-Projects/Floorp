@@ -841,6 +841,8 @@ class MOZ_STACK_CLASS SourceBufferHolder final
     bool ownsChars_;
 };
 
+struct TranscodeSource;
+
 } /* namespace JS */
 
 /************************************************************************/
@@ -4301,6 +4303,17 @@ FinishOffThreadScriptDecoder(JSContext* cx, void* token);
 extern JS_PUBLIC_API(void)
 CancelOffThreadScriptDecoder(JSContext* cx, void* token);
 
+extern JS_PUBLIC_API(bool)
+DecodeMultiOffThreadScripts(JSContext* cx, const ReadOnlyCompileOptions& options,
+                            mozilla::Vector<TranscodeSource>& sources,
+                            OffThreadCompileCallback callback, void* callbackData);
+
+extern JS_PUBLIC_API(bool)
+FinishMultiOffThreadScriptsDecoder(JSContext* cx, void* token, JS::MutableHandle<JS::ScriptVector> scripts);
+
+extern JS_PUBLIC_API(void)
+CancelMultiOffThreadScriptsDecoder(JSContext* cx, void* token);
+
 /**
  * Compile a function with envChain plus the global as its scope chain.
  * envChain must contain objects in the current compartment of cx.  The actual
@@ -6186,6 +6199,19 @@ class MOZ_RAII AutoHideScriptedCaller
 
 typedef mozilla::Vector<uint8_t> TranscodeBuffer;
 typedef mozilla::Range<uint8_t> TranscodeRange;
+
+struct TranscodeSource
+{
+    TranscodeSource(const TranscodeRange& range_, const char* file, uint32_t line)
+        : range(range_), filename(file), lineno(line)
+    {}
+
+    const TranscodeRange range;
+    const char* filename;
+    const uint32_t lineno;
+};
+
+typedef mozilla::Vector<JS::TranscodeSource> TranscodeSources;
 
 enum TranscodeResult
 {
