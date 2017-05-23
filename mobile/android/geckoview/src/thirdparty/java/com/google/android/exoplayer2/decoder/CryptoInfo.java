@@ -130,16 +130,18 @@ public final class CryptoInfo {
   private static final class PatternHolderV24 {
 
     private final android.media.MediaCodec.CryptoInfo frameworkCryptoInfo;
-    private final android.media.MediaCodec.CryptoInfo.Pattern pattern;
+
+    // Reference to the two tickets (Bug 1259098, Bug 1365543)
+    // private final android.media.MediaCodec.CryptoInfo.Pattern pattern;
 
     private PatternHolderV24(android.media.MediaCodec.CryptoInfo frameworkCryptoInfo) {
       this.frameworkCryptoInfo = frameworkCryptoInfo;
-      pattern = new android.media.MediaCodec.CryptoInfo.Pattern(0, 0);
+      // pattern = new android.media.MediaCodec.CryptoInfo.Pattern(0, 0);
     }
 
     private void set(int blocksToEncrypt, int blocksToSkip) {
-      pattern.set(blocksToEncrypt, blocksToSkip);
-      frameworkCryptoInfo.setPattern(pattern);
+      // pattern.set(blocksToEncrypt, blocksToSkip);
+      // frameworkCryptoInfo.setPattern(pattern);
     }
 
   }
