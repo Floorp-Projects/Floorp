@@ -16,7 +16,7 @@ const TEST_ADDRESS_1 = {
   "address-level1": "MA",
   "postal-code": "02139",
   country: "US",
-  tel: "+1 617 253 5702",
+  tel: "+16172535702",
   email: "timbl@w3.org",
 };
 
@@ -48,18 +48,18 @@ const MERGE_TESTCASES = [
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "1-650-903-0800",
+      "tel": "+16509030800",
     },
     addressToMerge: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "1-650-903-0800",
+      "tel": "+16509030800",
       country: "US",
     },
     expectedAddress: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "1-650-903-0800",
+      "tel": "+16509030800",
       country: "US",
     },
   },
@@ -68,18 +68,18 @@ const MERGE_TESTCASES = [
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "1-650-903-0800",
+      "tel": "+16509030800",
       country: "US",
     },
     addressToMerge: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "1-650-903-0800",
+      "tel": "+16509030800",
     },
     expectedAddress: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "1-650-903-0800",
+      "tel": "+16509030800",
       country: "US",
     },
   },
@@ -88,17 +88,17 @@ const MERGE_TESTCASES = [
     addressInStorage: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "1-650-903-0800",
+      "tel": "+16509030800",
     },
     addressToMerge: {
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "1-650-903-0800",
+      "tel": "+16509030800",
       country: "US",
     },
     expectedAddress: {
       "given-name": "Timothy",
       "street-address": "331 E. Evelyn Avenue",
-      "tel": "1-650-903-0800",
+      "tel": "+16509030800",
       country: "US",
     },
   },
