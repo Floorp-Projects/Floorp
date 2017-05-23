@@ -596,10 +596,10 @@ public final class Format implements Parcelable {
     if (colorInfo == null) {
       return;
     }
-    maybeSetIntegerV16(format, MediaFormat.KEY_COLOR_TRANSFER, colorInfo.colorTransfer);
-    maybeSetIntegerV16(format, MediaFormat.KEY_COLOR_STANDARD, colorInfo.colorSpace);
-    maybeSetIntegerV16(format, MediaFormat.KEY_COLOR_RANGE, colorInfo.colorRange);
-    maybeSetByteBufferV16(format, MediaFormat.KEY_HDR_STATIC_INFO, colorInfo.hdrStaticInfo);
+    maybeSetIntegerV16(format, "color-transfer", colorInfo.colorTransfer);
+    maybeSetIntegerV16(format, "color-standard", colorInfo.colorSpace);
+    maybeSetIntegerV16(format, "color-range", colorInfo.colorRange);
+    maybeSetByteBufferV16(format, "hdr-static-info", colorInfo.hdrStaticInfo);
   }
 
   @TargetApi(16)
