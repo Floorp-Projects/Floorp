@@ -64,18 +64,12 @@ public:
   nsresult PostDOMEvent();
   void RunDOMEventWhenSafe();
 
-  // Calling this causes the Run() method to check that
-  // mTarget->IsInComposedDoc(). mTarget must be an nsINode or else we'll
-  // assert.
-  void RequireNodeInDocument();
-
   nsCOMPtr<dom::EventTarget> mTarget;
   nsCOMPtr<nsIDOMEvent> mEvent;
   nsString              mEventType;
   bool                  mBubbles = false;
   bool                  mOnlyChromeDispatch = false;
   bool                  mCanceled = false;
-  bool                  mCheckStillInDoc = false;
 };
 
 class LoadBlockingAsyncEventDispatcher final : public AsyncEventDispatcher
