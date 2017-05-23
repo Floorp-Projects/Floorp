@@ -38,7 +38,8 @@ function add_tests() {
                       .getService(Ci.nsISiteSecurityService);
     let sslStatus = new FakeSSLStatus();
     sslStatus.serverCert = constructCertFromFile("ocsp_certs/must-staple-ee-with-must-staple-int.pem");
-    ssservice.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri, header, sslStatus, 0);
+    ssservice.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri, header, sslStatus, 0,
+                            Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
     ok(ssservice.isSecureURI(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0),
        "ocsp-stapling-must-staple-ee-with-must-staple-int.example.com should have HPKP set");
 

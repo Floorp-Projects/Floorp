@@ -28,7 +28,8 @@ function checkFailParseInvalidPin(pinValue) {
   let uri = Services.io.newURI("https://a.pinning2.example.com");
   throws(() => {
     gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri,
-                             pinValue, sslStatus, 0);
+                             pinValue, sslStatus, 0,
+                             Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   }, /NS_ERROR_FAILURE/, `Invalid pin "${pinValue}" should be rejected`);
 }
 
@@ -46,11 +47,14 @@ function checkPassValidPin(pinValue, settingPin, expectedMaxAge) {
     // add a known valid pin!
     let validPinValue = "max-age=5000;" + VALID_PIN1 + BACKUP_PIN1;
     gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri,
-                             validPinValue, sslStatus, 0);
+                             validPinValue, sslStatus, 0,
+                             Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   }
   try {
     gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri,
-                             pinValue, sslStatus, 0, {}, maxAge);
+                             pinValue, sslStatus, 0,
+                             Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
+                             {}, maxAge);
     ok(true, "Valid pin should be accepted");
   } catch (e) {
     ok(false, "Valid pin should have been accepted");

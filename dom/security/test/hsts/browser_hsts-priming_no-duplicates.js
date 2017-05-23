@@ -9,6 +9,7 @@ var expected_telemetry = {
   "histograms": {
     "MIXED_CONTENT_HSTS_PRIMING_RESULT": 3,
     "MIXED_CONTENT_HSTS_PRIMING_REQUESTS": 8,
+    "HSTS_UPGRADE_SOURCE": [ 0,0,2,0,0,0,0,0,0 ]
   },
   "keyed-histograms": {
     "HSTS_PRIMING_REQUEST_DURATION": {

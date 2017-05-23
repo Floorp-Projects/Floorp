@@ -53,7 +53,9 @@ function doTest(originAttributes1, originAttributes2, shouldShare) {
       header += VALID_PIN + BACKUP_PIN;
     }
     // Set HSTS or HPKP for originAttributes1.
-    sss.processHeader(type, uri, header, sslStatus, 0, originAttributes1);
+    sss.processHeader(type, uri, header, sslStatus, 0,
+                      Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
+                      originAttributes1);
     ok(sss.isSecureURI(type, uri, 0, originAttributes1),
        "URI should be secure given original origin attributes");
     equal(sss.isSecureURI(type, uri, 0, originAttributes2), shouldShare,
@@ -100,6 +102,7 @@ function testInvalidOriginAttributes(originAttributes) {
 
     let callbacks = [
       () => sss.processHeader(type, uri, header, sslStatus, 0,
+                              Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
                               originAttributes),
       () => sss.isSecureURI(type, uri, 0, originAttributes),
       () => sss.removeState(type, uri, 0, originAttributes),

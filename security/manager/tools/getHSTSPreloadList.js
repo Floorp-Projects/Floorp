@@ -116,8 +116,9 @@ function processStsHeader(host, header, status, securityInfo) {
       var sslStatus = securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
                                   .SSLStatus;
       gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS,
-                               uri, header, sslStatus, 0, {}, maxAge,
-                               includeSubdomains);
+                               uri, header, sslStatus, 0,
+                               Ci.nsISiteSecurityService.SOURCE_PRELOAD_LIST,
+                               {}, maxAge, includeSubdomains);
     } catch (e) {
       dump("ERROR: could not process header '" + header + "' from " +
            host.name + ": " + e + "\n");

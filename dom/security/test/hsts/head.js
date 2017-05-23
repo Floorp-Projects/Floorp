@@ -447,6 +447,7 @@ async function execute_test(test, mimetype) {
     "histograms": {
       "MIXED_CONTENT_HSTS_PRIMING_RESULT": 6,
       "HSTS_PRIMING_REQUESTS": 10,
+      "HSTS_UPGRADE_SOURCE": [ 0,0,2,0,0,0,0,0,0 ]
     },
     "keyed-histograms": {
       "HSTS_PRIMING_REQUEST_DURATION": {
@@ -473,8 +474,24 @@ function test_telemetry(expected) {
       continue;
     }
 
-    // there may have been other background requests processed
-    ok(hs.counts.reduce(sum) >= expected['histograms'][key], "Histogram counts match expected, got " + hs.counts.reduce(sum) + ", expected at least " + expected['histograms'][key]);
+    if (Array.isArray(expected['histograms'][key])) {
+      var is_ok = true;
+      if (expected['histograms'][key].length != hs.counts.length) {
+        ok(false, "Histogram lengths match");
+        continue;
+      }
+
+      for (let idx in expected['histograms'][key]) {
+        is_ok = (hs.counts[idx] >= expected['histograms'][key][idx]);
+        if (!is_ok) {
+          break;
+        }
+      }
+      ok(is_ok, "Histogram counts match for " + key + " - Got " + hs.counts + ", expected " + expected['histograms'][key]);
+    } else {
+      // there may have been other background requests processed
+      ok(hs.counts.reduce(sum) >= expected['histograms'][key], "Histogram counts match expected, got " + hs.counts.reduce(sum) + ", expected at least " + expected['histograms'][key]);
+    }
   }
 
   for (let key in expected['keyed-histograms']) {
