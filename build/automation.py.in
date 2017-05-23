@@ -585,7 +585,7 @@ class Automation(object):
     if os.path.exists(processLog):
       os.unlink(processLog)
 
-    return status
+    return status, self.lastTestSeen
 
   def elf_arm(self, filename):
     data = open(filename, 'rb').read(20)

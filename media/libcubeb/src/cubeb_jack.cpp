@@ -19,6 +19,7 @@
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
 #include "cubeb_resampler.h"
+#include "cubeb_utils.h"
 
 #include <jack/jack.h>
 #include <jack/statistics.h>
@@ -116,6 +117,7 @@ static struct cubeb_ops const cbjack_ops = {
   .get_preferred_sample_rate = cbjack_get_preferred_sample_rate,
   .get_preferred_channel_layout = NULL,
   .enumerate_devices = cbjack_enumerate_devices,
+  .device_collection_destroy = cubeb_utils_default_device_collection_destroy,
   .destroy = cbjack_destroy,
   .stream_init = cbjack_stream_init,
   .stream_destroy = cbjack_stream_destroy,

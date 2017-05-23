@@ -14,7 +14,7 @@ var gTests = [
   // Interact with the ::-moz-progress-bar.
   { markup:                 '<progress value="75" max="100"></progress>',
     pseudoelement:          '::-moz-progress-bar',
-    common_style:           'progress { -moz-appearance: none; appearance: none; } progress::-moz-progress-bar { background: black; }',
+    common_style:           'progress { -moz-appearance: none; } progress::-moz-progress-bar { background: black; }',
     hover_test_style:       'progress::-moz-progress-bar:hover { background: green; }',
     hover_reference_style:  'progress::-moz-progress-bar { background: green; }',
     active_test_style:      'progress::-moz-progress-bar:active { background: lime; }',
@@ -23,7 +23,7 @@ var gTests = [
   // Interact with the part of the <progress> not covered by the ::-moz-progress-bar.
   { markup:                 '<progress value="25" max="100"></progress>',
     pseudoelement:          '::-moz-progress-bar',
-    common_style:           'progress { -moz-appearance: none; appearance: none; } progress::-moz-progress-bar { background: black; }',
+    common_style:           'progress { -moz-appearance: none; } progress::-moz-progress-bar { background: black; }',
     hover_test_style:       'progress::-moz-progress-bar { background: green; } progress::-moz-progress-bar:hover { background: red; }',
     hover_reference_style:  'progress::-moz-progress-bar { background: green; }',
     active_test_style:      'progress::-moz-progress-bar { background: lime; } progress::-moz-progress-bar:active { background: red; }',
@@ -32,7 +32,7 @@ var gTests = [
   // Interact with the ::-moz-range-thumb.
   { markup:                 '<input type="range" value="50" min="0" max="100">',
     pseudoelement:          '::-moz-range-thumb',
-    common_style:           'input { -moz-appearance: none; appearance: none; } input::-moz-range-thumb { background: black; }',
+    common_style:           'input { -moz-appearance: none; } input::-moz-range-thumb { background: black; }',
     hover_test_style:       'input::-moz-range-thumb:hover { background: green; }',
     hover_reference_style:  'input::-moz-range-thumb { background: green; }',
     active_test_style:      'input::-moz-range-thumb:active { background: lime; }',
@@ -41,7 +41,7 @@ var gTests = [
   // Interact with the part of the <input type="range"> not covered by the ::-moz-range-thumb.
   { markup:                 '<input type="range" value="25" min="0" max="100">',
     pseudoelement:          '::-moz-range-thumb',
-    common_style:           'input { -moz-appearance: none; appearance: none; } input::-moz-range-thumb { background: black; }',
+    common_style:           'input { -moz-appearance: none; } input::-moz-range-thumb { background: black; }',
     hover_test_style:       'input::-moz-range-thumb { background: green; } input::-moz-range-thumb:hover { background: red; }',
     hover_reference_style:  'input::-moz-range-thumb { background: green; }',
     active_test_style:      'input::-moz-range-thumb { background: lime; } input::-moz-range-thumb:active { background: red; }',
@@ -50,7 +50,7 @@ var gTests = [
   // Interact with the ::-moz-meter-bar.
   { markup:                 '<meter value="75" min="0" max="100"></meter>',
     pseudoelement:          '::-moz-meter-bar',
-    common_style:           'meter { -moz-appearance: none; appearance: none; } meter::-moz-meter-bar { background: black; }',
+    common_style:           'meter { -moz-appearance: none; } meter::-moz-meter-bar { background: black; }',
     hover_test_style:       'meter::-moz-meter-bar:hover { background: green; }',
     hover_reference_style:  'meter::-moz-meter-bar { background: green; }',
     active_test_style:      'meter::-moz-meter-bar:active { background: lime; }',
@@ -59,7 +59,7 @@ var gTests = [
   // Interact with the part of the <meter> not covered by the ::-moz-meter-bar.
   { markup:                 '<meter value="25" min="0" max="100"></meter>',
     pseudoelement:          '::-moz-meter-bar',
-    common_style:           'meter { -moz-appearance: none; appearance: none; } meter::-moz-meter-bar { background: black; }',
+    common_style:           'meter { -moz-appearance: none; } meter::-moz-meter-bar { background: black; }',
     hover_test_style:       'meter::-moz-meter-bar { background: green; } meter::-moz-meter-bar:hover { background: red; }',
     hover_reference_style:  'meter::-moz-meter-bar { background: green; }',
     active_test_style:      'meter::-moz-meter-bar { background: lime; } meter::-moz-meter-bar:active { background: red; }',
@@ -69,7 +69,7 @@ var gTests = [
   // but with selectors that include descendant operators.
   { markup:                 '<input type="range" value="50" min="0" max="100">',
     pseudoelement:          '::-moz-range-thumb',
-    common_style:           'body input { -moz-appearance: none; appearance: none; } input::-moz-range-thumb { background: black; }',
+    common_style:           'body input { -moz-appearance: none; } input::-moz-range-thumb { background: black; }',
     hover_test_style:       'body input::-moz-range-thumb:hover { background: green; }',
     hover_reference_style:  'body input::-moz-range-thumb { background: green; }',
     active_test_style:      'body input::-moz-range-thumb:active { background: lime; }',

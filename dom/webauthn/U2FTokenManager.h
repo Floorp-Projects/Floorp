@@ -45,9 +45,9 @@ public:
   NS_INLINE_DECL_REFCOUNTING(U2FTokenManager)
   static U2FTokenManager* Get();
   void Register(WebAuthnTransactionParent* aTransactionParent,
-                WebAuthnTransactionInfo& aTransactionInfo);
+                const WebAuthnTransactionInfo& aTransactionInfo);
   void Sign(WebAuthnTransactionParent* aTransactionParent,
-            WebAuthnTransactionInfo& aTransactionInfo);
+            const WebAuthnTransactionInfo& aTransactionInfo);
   void MaybeClearTransaction(WebAuthnTransactionParent* aParent);
   static void Initialize();
 private:

@@ -577,6 +577,8 @@ TEST(cubeb, resampler_passthrough_output_only)
     got = cubeb_resampler_fill(resampler, nullptr, nullptr, output_buffer, 256);
     ASSERT_EQ(got, 256);
   }
+
+  cubeb_resampler_destroy(resampler);
 }
 
 // gtest does not support using ASSERT_EQ and friend in a function that returns
@@ -620,6 +622,8 @@ TEST(cubeb, resampler_passthrough_input_only)
     got = cubeb_resampler_fill(resampler, input_buffer, &frames, nullptr, 0);
     ASSERT_EQ(got, 256);
   }
+
+  cubeb_resampler_destroy(resampler);
 }
 
 template<typename T>
@@ -748,4 +752,6 @@ TEST(cubeb, resampler_passthrough_duplex_callback_reordering)
     }
     ASSERT_EQ(got, BUF_BASE_SIZE);
   }
+
+  cubeb_resampler_destroy(resampler);
 }

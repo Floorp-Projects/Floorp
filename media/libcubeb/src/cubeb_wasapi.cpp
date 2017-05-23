@@ -421,14 +421,13 @@ double stream_to_mix_samplerate_ratio(cubeb_stream_params & stream, cubeb_stream
 static DWORD
 channel_layout_to_mask(cubeb_channel_layout layout)
 {
-  XASSERT(layout > CUBEB_LAYOUT_UNDEFINED && layout < CUBEB_LAYOUT_MAX &&
-          "This mask conversion is not allowed.");
+  XASSERT(layout < CUBEB_LAYOUT_MAX && "invalid conversion.");
 
   // This variable may be used for multiple times, so we should avoid to
   // allocate it in stack, or it will be created and removed repeatedly.
   // Use static to allocate this local variable in data space instead of stack.
   static DWORD map[CUBEB_LAYOUT_MAX] = {
-    0,                    // CUBEB_LAYOUT_UNDEFINED (this won't be used.)
+    0,                    // CUBEB_LAYOUT_UNDEFINED
     MASK_DUAL_MONO,       // CUBEB_LAYOUT_DUAL_MONO
     MASK_DUAL_MONO_LFE,   // CUBEB_LAYOUT_DUAL_MONO_LFE
     MASK_MONO,            // CUBEB_LAYOUT_MONO
@@ -1390,9 +1389,12 @@ waveformatex_update_derived_properties(WAVEFORMATEX * format)
 /* Based on the mix format and the stream format, try to find a way to play
    what the user requested. */
 static void
-handle_channel_layout(cubeb_stream * stm,  com_heap_ptr<WAVEFORMATEX> & mix_format, const cubeb_stream_params * stream_params)
+handle_channel_layout(cubeb_stream * stm,  EDataFlow direction, com_heap_ptr<WAVEFORMATEX> & mix_format, const cubeb_stream_params * stream_params)
 {
-  XASSERT(stream_params->layout != CUBEB_LAYOUT_UNDEFINED);
+  // The CUBEB_LAYOUT_UNDEFINED can be used for input but it's not allowed for output.
+  XASSERT(direction == eCapture || stream_params->layout != CUBEB_LAYOUT_UNDEFINED);
+  com_ptr<IAudioClient> & audio_client = (direction == eRender) ? stm->output_client : stm->input_client;
+  XASSERT(audio_client);
   /* The docs say that GetMixFormat is always of type WAVEFORMATEXTENSIBLE [1],
      so the reinterpret_cast below should be safe. In practice, this is not
      true, and we just want to bail out and let the rest of the code find a good
@@ -1415,9 +1417,9 @@ handle_channel_layout(cubeb_stream * stm,  com_heap_ptr<WAVEFORMATEX> & mix_form
 
   /* Check if wasapi will accept our channel layout request. */
   WAVEFORMATEX * closest;
-  HRESULT hr = stm->output_client->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED,
-                                                     mix_format.get(),
-                                                     &closest);
+  HRESULT hr = audio_client->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED,
+                                               mix_format.get(),
+                                               &closest);
   if (hr == S_FALSE) {
     /* Channel layout not supported, but WASAPI gives us a suggestion. Use it,
        and handle the eventual upmix/downmix ourselves. Ignore the subformat of
@@ -1513,12 +1515,11 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
   mix_format->wBitsPerSample = stm->bytes_per_sample * 8;
   format_pcm->SubFormat = stm->waveformatextensible_sub_format;
   waveformatex_update_derived_properties(mix_format.get());
-
   /* Set channel layout only when there're more than two channels. Otherwise,
    * use the default setting retrieved from the stream format of the audio
    * engine's internal processing by GetMixFormat. */
   if (mix_format->nChannels > 2) {
-    handle_channel_layout(stm, mix_format, stream_params);
+    handle_channel_layout(stm, direction ,mix_format, stream_params);
   }
 
   mix_params->format = stream_params->format;
@@ -1752,7 +1753,8 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
     stm->input_stream_params = *input_stream_params;
     stm->input_device = utf8_to_wstr(reinterpret_cast<char const *>(input_device));
     // Make sure the layout matches the channel count.
-    XASSERT(stm->input_stream_params.channels == CUBEB_CHANNEL_LAYOUT_MAPS[stm->input_stream_params.layout].channels);
+    XASSERT(stm->input_stream_params.layout == CUBEB_LAYOUT_UNDEFINED ||
+            stm->input_stream_params.channels == CUBEB_CHANNEL_LAYOUT_MAPS[stm->input_stream_params.layout].channels);
   }
   if (output_stream_params) {
     stm->output_stream_params = *output_stream_params;
@@ -2321,6 +2323,7 @@ cubeb_ops const wasapi_ops = {
   /*.get_preferred_sample_rate =*/ wasapi_get_preferred_sample_rate,
   /*.get_preferred_channel_layout =*/ wasapi_get_preferred_channel_layout,
   /*.enumerate_devices =*/ wasapi_enumerate_devices,
+  /*.device_collection_destroy =*/ cubeb_utils_default_device_collection_destroy,
   /*.destroy =*/ wasapi_destroy,
   /*.stream_init =*/ wasapi_stream_init,
   /*.stream_destroy =*/ wasapi_stream_destroy,
