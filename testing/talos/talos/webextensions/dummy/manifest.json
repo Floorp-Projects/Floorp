@@ -1,0 +1,12 @@
+{
+  "applications": {
+    "gecko": {
+      "id": "talos@mozilla.org"
+    }
+  },
+  "manifest_version": 2,
+  "name": "Talos Blank Web Extension System Add-on",
+  "version": "0.1",
+  "permissions": [],
+  "background": {"scripts": ["background.js"]}
+}

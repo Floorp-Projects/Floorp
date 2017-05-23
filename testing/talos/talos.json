@@ -75,7 +75,7 @@
             "tests": ["basic_compositor_video", "glvideo"]
         },
         "g5-e10s": {
-            "tests": ["ts_paint", "tp5o"],
+            "tests": ["ts_paint_webext", "tp5o_webext"],
             "pagesets_name": "tp5n.zip"
         },
         "svgr": {
