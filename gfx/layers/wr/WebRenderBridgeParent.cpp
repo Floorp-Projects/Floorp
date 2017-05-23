@@ -373,7 +373,7 @@ WebRenderBridgeParent::UpdateAPZ()
 }
 
 bool
-WebRenderBridgeParent::PushAPZStateToWR()
+WebRenderBridgeParent::PushAPZStateToWR(nsTArray<WrTransformProperty>& aTransformArray)
 {
   CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
   if (!cbp) {
@@ -387,7 +387,7 @@ WebRenderBridgeParent::PushAPZStateToWR()
     if (frameInterval != TimeDuration::Forever()) {
       animationTime += frameInterval;
     }
-    return apzc->PushStateToWR(mApi, animationTime);
+    return apzc->PushStateToWR(mApi, animationTime, aTransformArray);
   }
   return false;
 }
@@ -776,28 +776,36 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     return;
   }
 
-  if (PushAPZStateToWR()) {
-    ScheduleComposition();
-  }
+  bool scheduleComposite = false;
+  nsTArray<WrOpacityProperty> opacityArray;
+  nsTArray<WrTransformProperty> transformArray;
 
   if (gfxPrefs::WebRenderOMTAEnabled()) {
-    nsTArray<WrOpacityProperty> opacityArray;
-    nsTArray<WrTransformProperty> transformArray;
     SampleAnimations(opacityArray, transformArray);
 
     if (!transformArray.IsEmpty() || !opacityArray.IsEmpty()) {
-      mApi->GenerateFrame(opacityArray, transformArray);
-      ScheduleComposition();
-      return;
+      scheduleComposite = true;
     }
   }
 
-  mApi->GenerateFrame();
+  if (PushAPZStateToWR(transformArray)) {
+    scheduleComposite = true;
+  }
+
+  if (!transformArray.IsEmpty() || !opacityArray.IsEmpty()) {
+    mApi->GenerateFrame(opacityArray, transformArray);
+  } else {
+    mApi->GenerateFrame();
+  }
 
   // XXX Enable it when async video is supported.
   // if (!mCompositableHolder->GetCompositeUntilTime().IsNull()) {
-  //   ScheduleComposition();
+  //   scheduleComposite = true;
   // }
+
+  if (scheduleComposite) {
+    ScheduleComposition();
+  }
 }
 
 void
