@@ -297,6 +297,7 @@ class OutputParser(LogMixin):
         Args:
             line (str): command line output to parse.
         """
+        log_level = INFO
         for error_check in self.error_list:
             # TODO buffer for context_lines.
             match = False
@@ -310,7 +311,7 @@ class OutputParser(LogMixin):
                 self.warning("error_list: 'substr' and 'regex' not in %s" %
                              error_check)
             if match:
-                log_level = error_check.get('level', INFO)
+                log_level = error_check.get('level', log_level)
                 if self.log_output:
                     message = ' %s' % line
                     if error_check.get('explanation'):
@@ -328,7 +329,9 @@ class OutputParser(LogMixin):
                 break
         else:
             if self.log_output:
-                self.info(' %s' % line)
+                self.log(' %s' % line, level=log_level)
+
+        return log_level
 
     def add_lines(self, output):
         """ process a string or list of strings, decode them to utf-8,strip
