@@ -82,6 +82,7 @@ int has_available_input_device(cubeb * ctx)
 
   if (devices->count == 0) {
     fprintf(stderr, "no input device available, skipping test.\n");
+    cubeb_device_collection_destroy(ctx, devices);
     return 0;
   }
 
@@ -93,10 +94,10 @@ int has_available_input_device(cubeb * ctx)
   if (!input_device_available) {
     fprintf(stderr, "there are input devices, but they are not "
         "available, skipping\n");
-    return 0;
   }
 
-  return 1;
+  cubeb_device_collection_destroy(ctx, devices);
+  return !!input_device_available;
 }
 
 void print_log(const char * msg, ...)
