@@ -3269,10 +3269,11 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [aView registerForDraggedTypes:
     [NSArray arrayWithObjects:
       [UTIHelper stringFromPboardType:NSFilenamesPboardType],
+      [UTIHelper stringFromPboardType:kMozFileUrlsPboardType],
       [UTIHelper stringFromPboardType:NSPasteboardTypeString],
       [UTIHelper stringFromPboardType:NSPasteboardTypeHTML],
       [UTIHelper stringFromPboardType:(NSString*)kPasteboardTypeFileURLPromise],
-      [UTIHelper stringFromPboardType:kWildcardPboardType],
+      [UTIHelper stringFromPboardType:kMozWildcardPboardType],
       [UTIHelper stringFromPboardType:kPublicUrlPboardType],
       [UTIHelper stringFromPboardType:kPublicUrlNamePboardType],
       [UTIHelper stringFromPboardType:kUrlsWithTitlesPboardType],
@@ -6100,7 +6101,7 @@ provideDataForType:(NSString*)aType
     unsigned int typeCount = [pasteboardOutputDict count];
     NSMutableArray* types = [NSMutableArray arrayWithCapacity:typeCount + 1];
     [types addObjectsFromArray:[pasteboardOutputDict allKeys]];
-    [types addObject:[UTIHelper stringFromPboardType:kWildcardPboardType]];
+    [types addObject:[UTIHelper stringFromPboardType:kMozWildcardPboardType]];
     for (unsigned int k = 0; k < typeCount; k++) {
       NSString* curType = [types objectAtIndex:k];
       if ([curType isEqualToString:
@@ -6108,7 +6109,9 @@ provideDataForType:(NSString*)aType
           [curType isEqualToString:
             [UTIHelper stringFromPboardType:kPublicUrlPboardType]] ||
           [curType isEqualToString:
-            [UTIHelper stringFromPboardType:kPublicUrlNamePboardType]]) {
+            [UTIHelper stringFromPboardType:kPublicUrlNamePboardType]] ||
+          [curType isEqualToString:
+            [UTIHelper stringFromPboardType:(NSString*)kUTTypeFileURL]]) {
         [aPasteboard setString:[pasteboardOutputDict valueForKey:curType]
                        forType:curType];
       } else if ([curType isEqualToString:
@@ -6125,14 +6128,16 @@ provideDataForType:(NSString*)aType
       } else if ([curType isEqualToString:
                    [UTIHelper stringFromPboardType:NSPasteboardTypeTIFF]] ||
                  [curType isEqualToString:
-                   [UTIHelper stringFromPboardType:kCustomTypesPboardType]]) {
+                   [UTIHelper stringFromPboardType:kMozCustomTypesPboardType]]) {
         [aPasteboard setData:[pasteboardOutputDict valueForKey:curType]
                      forType:curType];
       } else if ([curType isEqualToString:
+                   [UTIHelper stringFromPboardType:kMozFileUrlsPboardType]]) {
+        [aPasteboard writeObjects:[pasteboardOutputDict valueForKey:curType]];
+      } else if ([curType isEqualToString:
                    [UTIHelper stringFromPboardType:
-                     (NSString*)kPasteboardTypeFileURLPromise]] ||
-                  [curType isEqualToString:
-                    [UTIHelper stringFromPboardType:NSFilenamesPboardType]]) {
+                     (NSString*)kPasteboardTypeFileURLPromise]]) {
+
 
         nsCOMPtr<nsIFile> targFile;
         NS_NewLocalFile(EmptyString(), true, getter_AddRefs(targFile));
