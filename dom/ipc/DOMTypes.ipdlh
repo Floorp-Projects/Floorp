@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBlob;
+include protocol PMemoryStream;
 
 include IPCBlob;
 include IPCStream;
@@ -46,9 +47,18 @@ struct ClonedMessageData
   MessagePortIdentifier[] identfiers;
 };
 
-// I could remove this completely, but this will be gone in the following patch.
+struct MemoryBlobDataStream
+{
+  PMemoryStream stream;
+  uint64_t length;
+};
+
 union BlobDataStream
 {
+  MemoryBlobDataStream;
+
+  // InputStreamParams is used only when we are _sure_ that the serialized size
+  // is lower than 1 Mb. Otherwise we use MemoryBlobDataStream.
   IPCStream;
 };
 
