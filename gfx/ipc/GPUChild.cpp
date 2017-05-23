@@ -165,35 +165,35 @@ GPUChild::RecvNotifyUiObservers(const nsCString& aTopic)
 mozilla::ipc::IPCResult
 GPUChild::RecvAccumulateChildHistograms(InfallibleTArray<Accumulation>&& aAccumulations)
 {
-  TelemetryIPC::AccumulateChildHistograms(GeckoProcessType_GPU, aAccumulations);
+  TelemetryIPC::AccumulateChildHistograms(Telemetry::ProcessID::Gpu, aAccumulations);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 GPUChild::RecvAccumulateChildKeyedHistograms(InfallibleTArray<KeyedAccumulation>&& aAccumulations)
 {
-  TelemetryIPC::AccumulateChildKeyedHistograms(GeckoProcessType_GPU, aAccumulations);
+  TelemetryIPC::AccumulateChildKeyedHistograms(Telemetry::ProcessID::Gpu, aAccumulations);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 GPUChild::RecvUpdateChildScalars(InfallibleTArray<ScalarAction>&& aScalarActions)
 {
-  TelemetryIPC::UpdateChildScalars(GeckoProcessType_GPU, aScalarActions);
+  TelemetryIPC::UpdateChildScalars(Telemetry::ProcessID::Gpu, aScalarActions);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 GPUChild::RecvUpdateChildKeyedScalars(InfallibleTArray<KeyedScalarAction>&& aScalarActions)
 {
-  TelemetryIPC::UpdateChildKeyedScalars(GeckoProcessType_GPU, aScalarActions);
+  TelemetryIPC::UpdateChildKeyedScalars(Telemetry::ProcessID::Gpu, aScalarActions);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 GPUChild::RecvRecordChildEvents(nsTArray<mozilla::Telemetry::ChildEventData>&& aEvents)
 {
-  TelemetryIPC::RecordChildEvents(GeckoProcessType_GPU, aEvents);
+  TelemetryIPC::RecordChildEvents(Telemetry::ProcessID::Gpu, aEvents);
   return IPC_OK();
 }
 
