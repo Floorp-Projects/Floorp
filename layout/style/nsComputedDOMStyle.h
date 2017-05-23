@@ -168,8 +168,9 @@ private:
 
   // Helper functions called by UpdateCurrentStyleSources.
   void ClearStyleContext();
-  void SetResolvedStyleContext(RefPtr<nsStyleContext>&& aContext);
-  void SetFrameStyleContext(nsStyleContext* aContext);
+  void SetResolvedStyleContext(RefPtr<nsStyleContext>&& aContext,
+                               uint64_t aGeneration);
+  void SetFrameStyleContext(nsStyleContext* aContext, uint64_t aGeneration);
 
   static already_AddRefed<nsStyleContext>
   DoGetStyleContextNoFlush(mozilla::dom::Element* aElement,
