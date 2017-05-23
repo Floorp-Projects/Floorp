@@ -2245,6 +2245,13 @@ function openLocation() {
 }
 
 function BrowserOpenTab(event) {
+  // A notification intended to be useful for modular peformance tracking
+  // starting as close as is reasonably possible to the time when the user
+  // expressed the intent to open a new tab.  Since there are a lot of
+  // entry points, this won't catch every single tab created, but most
+  // initiated by the user should go through here.
+  Services.obs.notifyObservers(null, "browser-open-newtab-start");
+
   let where = "tab";
   let relatedToCurrent = false;
 
