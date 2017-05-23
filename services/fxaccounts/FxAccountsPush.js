@@ -179,9 +179,6 @@ FxAccountsPushService.prototype = {
       case ON_PASSWORD_RESET_NOTIFICATION:
         this._onPasswordChanged();
         return;
-      case ON_ACCOUNT_DESTROYED_NOTIFICATION:
-        this.fxAccounts.handleAccountDestroyed(payload.data.uid);
-        return;
       case ON_COLLECTION_CHANGED_NOTIFICATION:
         Services.obs.notifyObservers(null, ON_COLLECTION_CHANGED_NOTIFICATION, payload.data.collections);
       default:
