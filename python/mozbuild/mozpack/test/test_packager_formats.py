@@ -19,6 +19,8 @@ from mozpack.chrome.manifest import (
     ManifestComponent,
     ManifestResource,
     ManifestBinaryComponent,
+    ManifestSkin,
+    ManifestLocale,
 )
 from mozpack.errors import (
     errors,
@@ -32,6 +34,7 @@ from mozpack.test.test_files import (
     read_interfaces,
 )
 import mozpack.path as mozpath
+from test_errors import TestErrors
 
 
 CONTENTS = {
@@ -304,7 +307,7 @@ def get_contents(registry, read_all=False):
     return result
 
 
-class TestFormatters(unittest.TestCase):
+class TestFormatters(TestErrors, unittest.TestCase):
     maxDiff = None
 
     def test_bases(self):
@@ -465,6 +468,42 @@ class TestFormatters(unittest.TestCase):
         # Adding something more specific still works.
         f.add_manifest(ManifestContent('chrome', 'bar', 'bar/win',
                                        'os=WINNT osversion>=7.0'))
+
+        # Variations of skin/locales are allowed.
+        f.add_manifest(ManifestSkin('chrome', 'foo', 'classic/1.0',
+                                    'foo/skin/classic/'))
+        f.add_manifest(ManifestSkin('chrome', 'foo', 'modern/1.0',
+                                    'foo/skin/modern/'))
+
+        f.add_manifest(ManifestLocale('chrome', 'foo', 'en-US',
+                                    'foo/locale/en-US/'))
+        f.add_manifest(ManifestLocale('chrome', 'foo', 'ja-JP',
+                                    'foo/locale/ja-JP/'))
+
+        # But same-skin/locale still error out.
+        with self.assertRaises(ErrorMessage) as e:
+            f.add_manifest(ManifestSkin('chrome', 'foo', 'classic/1.0',
+                                        'foo/skin/classic/foo'))
+
+        self.assertEqual(e.exception.message,
+            'Error: "skin foo classic/1.0 foo/skin/classic/foo" overrides '
+            '"skin foo classic/1.0 foo/skin/classic/"')
+
+        with self.assertRaises(ErrorMessage) as e:
+            f.add_manifest(ManifestLocale('chrome', 'foo', 'en-US',
+                                         'foo/locale/en-US/foo'))
+
+        self.assertEqual(e.exception.message,
+            'Error: "locale foo en-US foo/locale/en-US/foo" overrides '
+            '"locale foo en-US foo/locale/en-US/"')
+
+        # Duplicating existing manifest entries is not an error.
+        f.add_manifest(ManifestContent('chrome', 'foo', 'foo/unix'))
+
+        self.assertEqual(self.get_output(), [
+            'Warning: "content foo foo/unix" is duplicated. Skipping.',
+        ])
+
 
 if __name__ == '__main__':
     mozunit.main()

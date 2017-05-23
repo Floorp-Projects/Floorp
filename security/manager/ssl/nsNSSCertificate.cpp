@@ -664,6 +664,7 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
                                nullptr, /*XXX fixme*/
                                nullptr, /* hostname */
                                nssChain,
+                               nullptr, // no peerCertChain
                                CertVerifier::FLAG_LOCAL_ONLY)
         != mozilla::pkix::Success) {
     nssChain = nullptr;
@@ -688,6 +689,7 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
                                  nullptr, /*XXX fixme*/
                                  nullptr, /*hostname*/
                                  nssChain,
+                                 nullptr, // no peerCertChain
                                  CertVerifier::FLAG_LOCAL_ONLY)
           != mozilla::pkix::Success) {
       nssChain = nullptr;

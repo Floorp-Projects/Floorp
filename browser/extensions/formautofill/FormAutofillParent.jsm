@@ -39,8 +39,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "profileStorage",
-                                  "resource://formautofill/ProfileStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillPreferences",
                                   "resource://formautofill/FormAutofillPreferences.jsm");
 
@@ -50,25 +48,35 @@ FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 const ENABLED_PREF = "extensions.formautofill.addresses.enabled";
 
 function FormAutofillParent() {
+  // Lazily load the storage JSM to avoid disk I/O until absolutely needed.
+  // Once storage is loaded we need to update saved field names and inform content processes.
+  XPCOMUtils.defineLazyGetter(this, "profileStorage", () => {
+    let {profileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {});
+    log.debug("Loading profileStorage");
+
+    profileStorage.initialize().then(function onStorageInitialized() {
+      // Update the saved field names to compute the status and update child processes.
+      this._updateSavedFieldNames();
+    }.bind(this));
+
+    return profileStorage;
+  });
 }
 
 FormAutofillParent.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports, Ci.nsIObserver]),
 
   /**
-   * Whether Form Autofill is enabled in preferences.
-   * Caches the latest value of this._getStatus().
+   * Cache of the Form Autofill status (considering preferences and storage).
    */
-  _enabled: false,
+  _active: null,
 
   /**
    * Initializes ProfileStorage and registers the message handler.
    */
   async init() {
-    log.debug("init");
-    await profileStorage.initialize();
-
     Services.obs.addObserver(this, "advanced-pane-loaded");
+    Services.ppmm.addMessageListener("FormAutofill:InitStorage", this);
     Services.ppmm.addMessageListener("FormAutofill:GetAddresses", this);
     Services.ppmm.addMessageListener("FormAutofill:SaveAddress", this);
     Services.ppmm.addMessageListener("FormAutofill:RemoveAddresses", this);
@@ -76,11 +84,6 @@ FormAutofillParent.prototype = {
     // Observing the pref and storage changes
     Services.prefs.addObserver(ENABLED_PREF, this);
     Services.obs.addObserver(this, "formautofill-storage-changed");
-
-    // Force to trigger the onStatusChanged function for setting listeners properly
-    // while initizlization
-    this._setStatus(this._getStatus());
-    this._updateSavedFieldNames();
   },
 
   observe(subject, topic, data) {
@@ -103,11 +106,8 @@ FormAutofillParent.prototype = {
       }
 
       case "nsPref:changed": {
-        // Observe pref changes and update _enabled cache if status is changed.
-        let currentStatus = this._getStatus();
-        if (currentStatus !== this._enabled) {
-          this._setStatus(currentStatus);
-        }
+        // Observe pref changes and update _active cache if status is changed.
+        this._updateStatus();
         break;
       }
 
@@ -118,10 +118,6 @@ FormAutofillParent.prototype = {
         }
 
         this._updateSavedFieldNames();
-        let currentStatus = this._getStatus();
-        if (currentStatus !== this._enabled) {
-          this._setStatus(currentStatus);
-        }
         break;
       }
 
@@ -135,35 +131,36 @@ FormAutofillParent.prototype = {
    * Broadcast the status to frames when the form autofill status changes.
    */
   _onStatusChanged() {
-    log.debug("_onStatusChanged: Status changed to", this._enabled);
-    Services.ppmm.broadcastAsyncMessage("FormAutofill:enabledStatus", this._enabled);
+    log.debug("_onStatusChanged: Status changed to", this._active);
+    Services.ppmm.broadcastAsyncMessage("FormAutofill:enabledStatus", this._active);
     // Sync process data autofillEnabled to make sure the value up to date
     // no matter when the new content process is initialized.
-    Services.ppmm.initialProcessData.autofillEnabled = this._enabled;
+    Services.ppmm.initialProcessData.autofillEnabled = this._active;
   },
 
   /**
-   * Query pref and storage status to determine the overall status for
+   * Query preference and storage status to determine the overall status of the
    * form autofill feature.
    *
-   * @returns {boolean} status of form autofill feature
+   * @returns {boolean} whether form autofill is active (enabled and has data)
    */
-  _getStatus() {
+  _computeStatus() {
     if (!Services.prefs.getBoolPref(ENABLED_PREF)) {
       return false;
     }
 
-    return profileStorage.addresses.getAll({noComputedFields: true}).length > 0;
+    return Services.ppmm.initialProcessData.autofillSavedFieldNames.size > 0;
   },
 
   /**
-   * Set status and trigger _onStatusChanged.
-   *
-   * @param {boolean} newStatus The latest status we want to set for _enabled
+   * Update the status and trigger _onStatusChanged, if necessary.
    */
-  _setStatus(newStatus) {
-    this._enabled = newStatus;
-    this._onStatusChanged();
+  _updateStatus() {
+    let wasActive = this._active;
+    this._active = this._computeStatus();
+    if (this._active !== wasActive) {
+      this._onStatusChanged();
+    }
   },
 
   /**
@@ -175,20 +172,24 @@ FormAutofillParent.prototype = {
    */
   receiveMessage({name, data, target}) {
     switch (name) {
+      case "FormAutofill:InitStorage": {
+        this.profileStorage.initialize();
+        break;
+      }
       case "FormAutofill:GetAddresses": {
         this._getAddresses(data, target);
         break;
       }
       case "FormAutofill:SaveAddress": {
         if (data.guid) {
-          profileStorage.addresses.update(data.guid, data.address);
+          this.profileStorage.addresses.update(data.guid, data.address);
         } else {
-          profileStorage.addresses.add(data.address);
+          this.profileStorage.addresses.add(data.address);
         }
         break;
       }
       case "FormAutofill:RemoveAddresses": {
-        data.guids.forEach(guid => profileStorage.addresses.remove(guid));
+        data.guids.forEach(guid => this.profileStorage.addresses.remove(guid));
         break;
       }
     }
@@ -200,8 +201,9 @@ FormAutofillParent.prototype = {
    * @private
    */
   _uninit() {
-    profileStorage._saveImmediately();
+    this.profileStorage._saveImmediately();
 
+    Services.ppmm.removeMessageListener("FormAutofill:InitStorage", this);
     Services.ppmm.removeMessageListener("FormAutofill:GetAddresses", this);
     Services.ppmm.removeMessageListener("FormAutofill:SaveAddress", this);
     Services.ppmm.removeMessageListener("FormAutofill:RemoveAddresses", this);
@@ -225,22 +227,23 @@ FormAutofillParent.prototype = {
     let addresses = [];
 
     if (info && info.fieldName) {
-      addresses = profileStorage.addresses.getByFilter({searchString, info});
+      addresses = this.profileStorage.addresses.getByFilter({searchString, info});
     } else {
-      addresses = profileStorage.addresses.getAll();
+      addresses = this.profileStorage.addresses.getAll();
     }
 
     target.sendAsyncMessage("FormAutofill:Addresses", addresses);
   },
 
   _updateSavedFieldNames() {
+    log.debug("_updateSavedFieldNames");
     if (!Services.ppmm.initialProcessData.autofillSavedFieldNames) {
       Services.ppmm.initialProcessData.autofillSavedFieldNames = new Set();
     } else {
       Services.ppmm.initialProcessData.autofillSavedFieldNames.clear();
     }
 
-    profileStorage.addresses.getAll().forEach((address) => {
+    this.profileStorage.addresses.getAll().forEach((address) => {
       Object.keys(address).forEach((fieldName) => {
         if (!address[fieldName]) {
           return;
@@ -250,11 +253,12 @@ FormAutofillParent.prototype = {
     });
 
     // Remove the internal guid and metadata fields.
-    profileStorage.INTERNAL_FIELDS.forEach((fieldName) => {
+    this.profileStorage.INTERNAL_FIELDS.forEach((fieldName) => {
       Services.ppmm.initialProcessData.autofillSavedFieldNames.delete(fieldName);
     });
 
     Services.ppmm.broadcastAsyncMessage("FormAutofill:savedFieldNames",
                                         Services.ppmm.initialProcessData.autofillSavedFieldNames);
+    this._updateStatus();
   },
 };
