@@ -12,7 +12,6 @@ include IPCStream;
 include URIParams;
 include NeckoChannelParams;
 
-include protocol PBlob; //FIXME: bug #792908
 include protocol PFileDescriptorSet; //FIXME: bug #792908
 include protocol PChildToParentStream; //FIXME: bug #792908
 include protocol PParentToChildStream; //FIXME: bug #792908
