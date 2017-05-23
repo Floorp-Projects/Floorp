@@ -7296,6 +7296,12 @@ nsRuleNode::FillAllBackgroundLists(nsStyleImageLayers& aImage,
   FillImageLayerList(aImage.mLayers,
                      &nsStyleImageLayers::Layer::mSize,
                      aImage.mSizeCount, fillCount);
+  FillImageLayerList(aImage.mLayers,
+                     &nsStyleImageLayers::Layer::mMaskMode,
+                     aImage.mMaskModeCount, fillCount);
+  FillImageLayerList(aImage.mLayers,
+                     &nsStyleImageLayers::Layer::mComposite,
+                     aImage.mCompositeCount, fillCount);
 }
 
 const void*
