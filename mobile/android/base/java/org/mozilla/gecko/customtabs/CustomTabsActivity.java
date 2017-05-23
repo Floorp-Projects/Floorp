@@ -409,6 +409,12 @@ public class CustomTabsActivity extends SingleTabActivity implements Tabs.OnTabs
         }
 
         menuItemControl = geckoMenu.findItem(R.id.custom_tabs_menu_control);
+        // on some configurations(ie. Android 5.1.1 + Nexus 5), no idea why the state not be enabled
+        // if the Drawable is a LevelListDrawable, then the icon color is incorrect.
+        final Drawable icon = menuItemControl.getIcon();
+        if (icon != null && !icon.isStateful()) {
+            icon.setState(new int[]{android.R.attr.state_enabled});
+        }
 
         geckoMenu.addFooterView(
                 getLayoutInflater().inflate(R.layout.customtabs_options_menu_footer, geckoMenu, false),
