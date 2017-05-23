@@ -13,6 +13,7 @@
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
 #include "cubeb_mixer.h"
+#include "cubeb_utils.h"
 #include <stdio.h>
 
 #ifdef DISABLE_LIBPULSE_DLOPEN
@@ -1495,6 +1496,7 @@ static struct cubeb_ops const pulse_ops = {
   .get_preferred_sample_rate = pulse_get_preferred_sample_rate,
   .get_preferred_channel_layout = pulse_get_preferred_channel_layout,
   .enumerate_devices = pulse_enumerate_devices,
+  .device_collection_destroy = cubeb_utils_default_device_collection_destroy,
   .destroy = pulse_destroy,
   .stream_init = pulse_stream_init,
   .stream_destroy = pulse_stream_destroy,

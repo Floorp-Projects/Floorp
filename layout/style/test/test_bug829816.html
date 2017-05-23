@@ -29,17 +29,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829816
   for (var i = 0; i < 6; i++) {
     is(ss.cssRules[i].style.content, "\"\uFFFD\"",
         "\\0 in strings should be converted to U+FFFD");
-    is(ss.cssRules[i].style.counterReset, "\uFFFD",
+    is(ss.cssRules[i].style.counterReset, "\uFFFD 0",
         "\\0 in identifiers should be converted to U+FFFD");
   }
 
   is(document.styleSheets[2].cssRules[0].style.content, "\"\uFFFD\"",
       "U+0000 in strings should be converted to U+FFFD");
-  is(document.styleSheets[2].cssRules[0].style.counterReset, "\uFFFD",
+  is(document.styleSheets[2].cssRules[0].style.counterReset, "\uFFFD 0",
       "U+0000 in identifiers should be converted to U+FFFD");
   is(document.styleSheets[2].cssRules[1].style.content, "\"\uFFFD\"",
       "U+0000 in strings should be converted to U+FFFD");
-  is(document.styleSheets[2].cssRules[1].style.counterReset, "\uFFFD",
+  is(document.styleSheets[2].cssRules[1].style.counterReset, "\uFFFD 0",
       "U+0000 in identifiers should be converted to U+FFFD");
 
 

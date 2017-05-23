@@ -16,7 +16,9 @@ import android.view.Surface;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -323,7 +325,6 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         }
     }
 
-    private String mName;
     private volatile ICodecCallbacks mCallbacks;
     private AsyncCodec mCodec;
     private InputProcessor mInputProcessor;
@@ -360,94 +361,98 @@ import org.mozilla.gecko.gfx.GeckoSurface;
 
         if (mCodec != null) {
             if (DEBUG) { Log.d(LOGTAG, "release existing codec: " + mCodec); }
-            releaseCodec();
+            mCodec.release();
         }
 
         if (DEBUG) { Log.d(LOGTAG, "configure " + this); }
 
-        try {
-            MediaFormat fmt = format.asFormat();
-            AsyncCodec codec = createCodecForFormat(fmt, flags == MediaCodec.CONFIGURE_FLAG_ENCODE ? true : false);
-            MediaCrypto crypto = RemoteMediaDrmBridgeStub.getMediaCrypto(drmStubId);
-            if (DEBUG) {
-                boolean hasCrypto = crypto != null;
-                Log.d(LOGTAG, "configure mediacodec with crypto(" + hasCrypto + ") / Id :" + drmStubId);
+        final MediaFormat fmt = format.asFormat();
+        final String mime = fmt.getString(MediaFormat.KEY_MIME);
+        if (mime == null || mime.isEmpty()) {
+            Log.e(LOGTAG, "invalid MIME type: " + mime);
+            return false;
+        }
+
+        final List<String> found = findMatchingCodecNames(mime, flags == MediaCodec.CONFIGURE_FLAG_ENCODE);
+        for (final String name : found) {
+            final AsyncCodec codec = configureCodec(name, fmt, surface, flags, drmStubId);
+            if (codec == null) {
+                Log.w(LOGTAG, "unable to configure " + name + ". Try next.");
+                continue;
             }
-
-            codec.setCallbacks(new Callbacks(), null);
-
-            boolean renderToSurface = surface != null;
-            // Video decoder should config with adaptive playback capability.
-            if (renderToSurface) {
-                mIsAdaptivePlaybackSupported = codec.isAdaptivePlaybackSupported(
-                                                   fmt.getString(MediaFormat.KEY_MIME));
-                if (mIsAdaptivePlaybackSupported) {
-                    if (DEBUG) { Log.d(LOGTAG, "codec supports adaptive playback  = " + mIsAdaptivePlaybackSupported); }
-                    // TODO: may need to find a way to not use hard code to decide the max w/h.
-                    fmt.setInteger(MediaFormat.KEY_MAX_WIDTH, 1920);
-                    fmt.setInteger(MediaFormat.KEY_MAX_HEIGHT, 1080);
-                }
-            }
-
-            codec.configure(fmt, surface, crypto, flags);
             mCodec = codec;
             mInputProcessor = new InputProcessor();
+            final boolean renderToSurface = surface != null;
             mOutputProcessor = new OutputProcessor(renderToSurface);
-            mSamplePool = new SamplePool(mName, renderToSurface);
+            mSamplePool = new SamplePool(name, renderToSurface);
             if (DEBUG) { Log.d(LOGTAG, codec.toString() + " created. Render to surface?" + renderToSurface); }
             return true;
-        } catch (Exception e) {
+        }
+
+        return false;
+    }
+
+    private List<String> findMatchingCodecNames(final String mimeType, final boolean isEncoder) {
+        final int numCodecs = MediaCodecList.getCodecCount();
+        final List<String> found = new ArrayList<>();
+        for (int i = 0; i < numCodecs; i++) {
+            final MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
+            if (info.isEncoder() == !isEncoder) {
+                continue;
+            }
+
+            final String[] types = info.getSupportedTypes();
+            for (final String t : types) {
+                if (t.equalsIgnoreCase(mimeType)) {
+                    found.add(info.getName());
+                    if (DEBUG) {
+                        Log.d(LOGTAG, "found " + (isEncoder ? "encoder:" : "decoder:") +
+                                info.getName() + " for mime:" + mimeType);
+                    }
+                }
+            }
+        }
+        return found;
+    }
+
+    private AsyncCodec configureCodec(final String name, final MediaFormat format,
+            final Surface surface, final int flags, final String drmStubId) {
+        try {
+            final AsyncCodec codec = AsyncCodecFactory.create(name);
+            codec.setCallbacks(new Callbacks(), null);
+
+            final MediaCrypto crypto = RemoteMediaDrmBridgeStub.getMediaCrypto(drmStubId);
+            if (DEBUG) {
+                Log.d(LOGTAG, "configure mediacodec with crypto(" + (crypto != null) + ") / Id :" + drmStubId);
+            }
+
+            if (surface != null) {
+                setupAdaptivePlayback(codec, format);
+            }
+
+            codec.configure(format, surface, crypto, flags);
+            return codec;
+        } catch (final Exception e) {
             Log.e(LOGTAG, "codec creation error", e);
-            return false;
+            return null;
+        }
+    }
+
+    private void setupAdaptivePlayback(final AsyncCodec codec, final MediaFormat format) {
+        // Video decoder should config with adaptive playback capability.
+        mIsAdaptivePlaybackSupported = codec.isAdaptivePlaybackSupported(
+                format.getString(MediaFormat.KEY_MIME));
+        if (mIsAdaptivePlaybackSupported) {
+            if (DEBUG) { Log.d(LOGTAG, "codec supports adaptive playback  = " + mIsAdaptivePlaybackSupported); }
+            // TODO: may need to find a way to not use hard code to decide the max w/h.
+            format.setInteger(MediaFormat.KEY_MAX_WIDTH, 1920);
+            format.setInteger(MediaFormat.KEY_MAX_HEIGHT, 1080);
         }
     }
 
     @Override
     public synchronized boolean isAdaptivePlaybackSupported() {
         return mIsAdaptivePlaybackSupported;
-    }
-
-    private void releaseCodec() {
-        try {
-            // In case Codec.stop() is not called yet.
-            mInputProcessor.stop();
-            mOutputProcessor.stop();
-
-            mCodec.release();
-        } catch (Exception e) {
-            reportError(Error.FATAL, e);
-        }
-        mCodec = null;
-    }
-
-    private AsyncCodec createCodecForFormat(MediaFormat format, boolean isEncoder) throws IOException {
-        String mime = format.getString(MediaFormat.KEY_MIME);
-        if (mime == null || mime.isEmpty()) {
-            throw new IllegalArgumentException("invalid MIME type: " + mime);
-        }
-
-        int numCodecs = MediaCodecList.getCodecCount();
-        for (int i = 0; i < numCodecs; i++) {
-            MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
-            if (info.isEncoder() == !isEncoder) {
-                continue;
-            }
-
-            String[] types = info.getSupportedTypes();
-            for (String t : types) {
-                if (!t.equalsIgnoreCase(mime)) {
-                    continue;
-                }
-                try {
-                    AsyncCodec codec = AsyncCodecFactory.create(info.getName());
-                    mName = info.getName();
-                    return codec;
-                } catch (IllegalArgumentException e) {
-                    Log.w(LOGTAG, "unable to create " + info.getName() + ". Try next codec.");
-                }
-            }
-        }
-        throw new RuntimeException("cannot create codec for " + mime);
     }
 
     @Override
@@ -543,7 +548,16 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     @Override
     public synchronized void release() throws RemoteException {
         if (DEBUG) { Log.d(LOGTAG, "release " + this); }
-        releaseCodec();
+        try {
+            // In case Codec.stop() is not called yet.
+            mInputProcessor.stop();
+            mOutputProcessor.stop();
+
+            mCodec.release();
+        } catch (Exception e) {
+            reportError(Error.FATAL, e);
+        }
+        mCodec = null;
         mSamplePool.reset();
         mSamplePool = null;
         mCallbacks.asBinder().unlinkToDeath(this, 0);

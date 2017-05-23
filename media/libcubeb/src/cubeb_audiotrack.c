@@ -423,6 +423,7 @@ static struct cubeb_ops const audiotrack_ops = {
   .get_preferred_sample_rate = audiotrack_get_preferred_sample_rate,
   .get_preferred_channel_layout = NULL,
   .enumerate_devices = NULL,
+  .device_collection_destroy = NULL,
   .destroy = audiotrack_destroy,
   .stream_init = audiotrack_stream_init,
   .stream_destroy = audiotrack_stream_destroy,

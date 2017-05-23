@@ -1181,13 +1181,6 @@ public class BrowserApp extends GeckoApp
 
     @Override
     protected void restoreLastSelectedTab() {
-        if (mIgnoreLastSelectedTab) {
-            // We're either the first activity to run, so our startup code will (have) handle(d) tab
-            // selection, or else we've received a new intent and want to open and select a new tab
-            // as well.
-            return;
-        }
-
         if (mLastSelectedTabId < 0) {
             // Normally, session restore will select the correct tab when starting up, however this
             // is linked to Gecko powering up. If we're not the first activity to launch, the

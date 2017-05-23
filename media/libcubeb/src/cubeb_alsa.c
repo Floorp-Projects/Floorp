@@ -17,6 +17,7 @@
 #include <alsa/asoundlib.h>
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
+#include "cubeb_utils.h"
 
 #define CUBEB_STREAM_MAX 16
 #define CUBEB_WATCHDOG_MS 10000
@@ -1342,6 +1343,7 @@ static struct cubeb_ops const alsa_ops = {
   .get_preferred_sample_rate = alsa_get_preferred_sample_rate,
   .get_preferred_channel_layout = NULL,
   .enumerate_devices = alsa_enumerate_devices,
+  .device_collection_destroy = cubeb_utils_default_device_collection_destroy,
   .destroy = alsa_destroy,
   .stream_init = alsa_stream_init,
   .stream_destroy = alsa_stream_destroy,

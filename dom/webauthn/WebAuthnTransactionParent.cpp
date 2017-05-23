@@ -14,8 +14,7 @@ mozilla::ipc::IPCResult
 WebAuthnTransactionParent::RecvRequestRegister(const WebAuthnTransactionInfo& aTransactionInfo)
 {
   U2FTokenManager* mgr = U2FTokenManager::Get();
-  // Cast away const here since NSS wants to be able to use non-const functions
-  mgr->Register(this, const_cast<WebAuthnTransactionInfo&>(aTransactionInfo));
+  mgr->Register(this, aTransactionInfo);
   return IPC_OK();
 }
 
@@ -23,8 +22,7 @@ mozilla::ipc::IPCResult
 WebAuthnTransactionParent::RecvRequestSign(const WebAuthnTransactionInfo& aTransactionInfo)
 {
   U2FTokenManager* mgr = U2FTokenManager::Get();
-  // Cast away const here since NSS wants to be able to use non-const functions
-  mgr->Sign(this, const_cast<WebAuthnTransactionInfo&>(aTransactionInfo));
+  mgr->Sign(this, aTransactionInfo);
   return IPC_OK();
 }
 

@@ -25,9 +25,10 @@ from __future__ import print_function
 import difflib
 import os
 import re
-import subprocess
 import sys
-from check_utils import get_all_toplevel_filenames
+
+from mozversioncontrol import get_repository_from_env
+
 
 architecture_independent = set([ 'generic' ])
 all_architecture_names = set([ 'x86', 'x64', 'arm', 'arm64', 'mips32', 'mips64' ])
@@ -131,7 +132,7 @@ def get_macroassembler_definitions(filename):
     code_section = False
     lines = ''
     signatures = []
-    with open(os.path.join('../..', filename)) as f:
+    with open(filename) as f:
         for line in f:
             if '//{{{ check_macroassembler_style' in line:
                 style_section = True
@@ -171,7 +172,7 @@ def get_macroassembler_declaration(filename):
     style_section = False
     lines = ''
     signatures = []
-    with open(os.path.join('../..', filename)) as f:
+    with open(filename) as f:
         for line in f:
             if '//{{{ check_macroassembler_style' in line:
                 style_section = True
@@ -238,12 +239,16 @@ def check_style():
     # We infer from each file the signature of each MacroAssembler function.
     defs = dict()       # type: dict(signature => ['x86', 'x64'])
 
+    repo = get_repository_from_env()
+
     # Select the appropriate files.
-    for filename in get_all_toplevel_filenames():
+    for filename in repo.get_files_in_working_directory():
         if not filename.startswith('js/src/jit/'):
             continue
         if 'MacroAssembler' not in filename:
             continue
+
+        filename = os.path.join(repo.path, filename)
 
         if filename.endswith('MacroAssembler.h'):
             decls = append_signatures(decls, get_macroassembler_declaration(filename))
