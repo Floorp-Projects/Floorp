@@ -16,6 +16,7 @@
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
+        android:padding="4dp"
         android:contentDescription="@string/content_description_customtab_exit"
         android:visibility="gone"/>
 
@@ -122,10 +123,17 @@
     <ImageButton
         tools:ignore="contentDescription"
         android:id="@+id/customtab_actionbutton"
-        android:visibility="gone"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"/>
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:adjustViewBounds="true"
+        android:maxWidth="@dimen/customtabs_toolbar_icon_size"
+        android:maxHeight="@dimen/customtabs_toolbar_icon_size"
+        android:scaleType="centerInside"
+        android:visibility="gone"
+        android:layout_gravity="center_vertical"
+        android:background="?android:attr/selectableItemBackgroundBorderless"/>
+
 
     <ImageButton
         android:id="@+id/menu"
