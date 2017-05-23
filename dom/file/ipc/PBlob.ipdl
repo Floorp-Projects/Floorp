@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackground;
-include protocol PBlobStream;
 include protocol PContent;
 include protocol PContentBridge;
 include protocol PFileDescriptorSet;
@@ -26,18 +25,12 @@ union ResolveMysteryParams
 sync protocol PBlob
 {
   manager PBackground or PContent or PContentBridge;
-  manages PBlobStream;
 
 both:
   async __delete__();
 
 parent:
-  async PBlobStream(uint64_t begin, uint64_t length);
-
   async ResolveMystery(ResolveMysteryParams params);
-
-  sync BlobStreamSync(uint64_t begin, uint64_t length)
-    returns (InputStreamParams params, OptionalFileDescriptorSet fds);
 
   sync WaitForSliceCreation();
 
