@@ -12,3 +12,12 @@ interface Credential {
   readonly attribute USVString id;
   readonly attribute DOMString type;
 };
+
+[Exposed=Window, SecureContext, Pref="security.webauth.webauthn"]
+interface CredentialsContainer {
+  Promise<Credential?> create(optional CredentialCreationOptions options);
+};
+
+dictionary CredentialCreationOptions {
+  MakeCredentialOptions publicKey;
+};

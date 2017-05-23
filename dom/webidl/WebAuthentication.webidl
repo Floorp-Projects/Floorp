@@ -27,27 +27,66 @@ interface AuthenticatorAttestationResponse : AuthenticatorResponse {
     readonly attribute ArrayBuffer attestationObject;
 };
 
-dictionary Account {
-    required DOMString rpDisplayName;
-    required DOMString displayName;
-    required DOMString id;
-    DOMString          name;
-    DOMString          imageURL;
+dictionary PublicKeyCredentialParameters {
+    required PublicKeyCredentialType  type;
+    required WebAuthnAlgorithmID algorithm; // NOTE: changed from AllgorithmIdentifier because typedef (object or DOMString) not serializable
+};
+
+dictionary PublicKeyCredentialUserEntity : PublicKeyCredentialEntity {
+    DOMString displayName;
+};
+
+dictionary MakeCredentialOptions {
+    required PublicKeyCredentialEntity rp;
+    required PublicKeyCredentialUserEntity user;
+
+    required BufferSource                         challenge;
+    required sequence<PublicKeyCredentialParameters> parameters;
+
+    unsigned long                        timeout;
+    sequence<PublicKeyCredentialDescriptor> excludeList;
+    AuthenticatorSelectionCriteria       authenticatorSelection;
+    // Extensions are not supported yet.
+    // AuthenticationExtensions             extensions;
+};
+
+dictionary PublicKeyCredentialEntity {
+    DOMString id;
+    DOMString name;
+    USVString icon;
+};
+
+dictionary AuthenticatorSelectionCriteria {
+    Attachment    attachment;
+    boolean       requireResidentKey = false;
+};
+
+enum Attachment {
+    "platform",
+    "cross-platform"
+};
+
+dictionary CollectedClientData {
+    required DOMString           challenge;
+    required DOMString           origin;
+    required DOMString           hashAlg;
+    DOMString                    tokenBinding;
+    // Extensions are not supported yet.
+    // AuthenticationExtensions     clientExtensions;
+    // AuthenticationExtensions     authenticatorExtensions;
+};
+
+enum PublicKeyCredentialType {
+    "public-key"
+};
+
+dictionary PublicKeyCredentialDescriptor {
+    required PublicKeyCredentialType type;
+    required BufferSource id;
+    sequence<WebAuthnTransport>   transports;
 };
 
 typedef (boolean or DOMString) WebAuthnAlgorithmID; // Fix when upstream there's a definition of how to serialize AlgorithmIdentifier
-
-dictionary ScopedCredentialParameters {
-    required ScopedCredentialType type;
-    required WebAuthnAlgorithmID  algorithm; // NOTE: changed from AllgorithmIdentifier because typedef (object or DOMString) not serializable
-};
-
-dictionary ScopedCredentialOptions {
-    unsigned long                        timeoutSeconds;
-    USVString                            rpId;
-    sequence<ScopedCredentialDescriptor> excludeList;
-    WebAuthnExtensions                   extensions;
-};
 
 [SecureContext, Pref="security.webauth.webauthn"]
 interface AuthenticatorAssertionResponse : AuthenticatorResponse {
@@ -65,23 +104,8 @@ dictionary AssertionOptions {
 dictionary WebAuthnExtensions {
 };
 
-// Renamed from "ClientData" to avoid a collision with U2F
-dictionary WebAuthnClientData {
-    required DOMString           challenge;
-    required DOMString           origin;
-    required WebAuthnAlgorithmID hashAlg; // NOTE: changed from AllgorithmIdentifier because typedef (object or DOMString) not serializable
-    DOMString                    tokenBinding;
-    WebAuthnExtensions           extensions;
-};
-
 enum ScopedCredentialType {
     "ScopedCred"
-};
-
-[SecureContext, Pref="security.webauth.webauthn"]
-interface ScopedCredential {
-    readonly attribute ScopedCredentialType type;
-    readonly attribute ArrayBuffer          id;
 };
 
 dictionary ScopedCredentialDescriptor {
@@ -101,13 +125,6 @@ enum WebAuthnTransport {
 
 [SecureContext, Pref="security.webauth.webauthn"]
 interface WebAuthentication {
-    Promise<PublicKeyCredential> makeCredential (
-        Account                                 accountInformation,
-        sequence<ScopedCredentialParameters>    cryptoParameters,
-        BufferSource                            attestationChallenge,
-        optional ScopedCredentialOptions        options
-    );
-
     Promise<PublicKeyCredential> getAssertion (
         BufferSource               assertionChallenge,
         optional AssertionOptions  options

@@ -9,10 +9,14 @@ with Files("**"):
 
 EXPORTS.mozilla.dom += [
     'Credential.h',
+    'CredentialsContainer.h',
 ]
 
 UNIFIED_SOURCES += [
     'Credential.cpp',
+    'CredentialsContainer.cpp',
 ]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
