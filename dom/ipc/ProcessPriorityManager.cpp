@@ -14,7 +14,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
-#include "AudioChannelService.h"
 #include "mozilla/Logging.h"
 #include "nsPrintfCString.h"
 #include "nsXULAppAPI.h"
@@ -1041,11 +1040,6 @@ ParticularProcessPriorityManager::ComputePriority()
 
   if ((mHoldsCPUWakeLock || mHoldsHighPriorityWakeLock) &&
       IsExpectingSystemMessage()) {
-    return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
-  }
-
-  RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-  if (service && service->ProcessContentOrNormalChannelIsActive(ChildID())) {
     return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
   }
 

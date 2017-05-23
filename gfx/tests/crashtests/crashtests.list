@@ -86,10 +86,10 @@ load 580100-1.html
 load 580212-1.html
 load 580233-1.html
 load 580719-1.html
-pref(layout.css.moz-appearance.enabled,true) load 593526.html
-pref(layout.css.moz-appearance.enabled,true) load 593526.xul
+load 593526.html
+load 593526.xul
 load 594654-1.xhtml
-pref(layout.css.moz-appearance.enabled,true) load 595042-1.html
+load 595042-1.html
 load 595727-1.html
 load 624198.xhtml
 load 633322-1.html

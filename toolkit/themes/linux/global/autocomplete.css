@@ -125,20 +125,7 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   max-height: 16px;
   margin-inline-start: 0;
   margin-inline-end: 11px;
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
-}
-
-.ac-site-icon[selected] {
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon-inverted.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  .ac-site-icon {
-    list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
-  }
-  .ac-site-icon[selected] {
-    list-style-image: url("chrome://mozapps/skin/places/defaultFavicon-inverted@2x.png");
-  }
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
 .ac-title {

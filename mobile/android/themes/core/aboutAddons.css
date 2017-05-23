@@ -241,7 +241,7 @@ menulist > dropmarker {
   border: none;
   -moz-box-align: center;
   -moz-box-pack: center;
-  list-style-image: url("chrome://browser/skin/images/dropmarker.svg") !important;
+  list-style-image: url("chrome://geckoview/skin/images/dropmarker.svg") !important;
   -moz-image-region: auto;
   display: block;
 }

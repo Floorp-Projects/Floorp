@@ -1,10 +1,6 @@
 "use strict";
 
 module.exports = {
-  extends: [
-    "plugin:mozilla/recommended"
-  ],
-
   globals: {
     // TODO: Create custom rule for `Cu.import`
     "AddonManager": false,

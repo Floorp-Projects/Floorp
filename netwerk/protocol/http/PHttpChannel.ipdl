@@ -12,8 +12,6 @@ include PBackgroundSharedTypes;
 include NeckoChannelParams;
 include PURLClassifierInfo;
 
-include protocol PBlob; //FIXME: bug #792908
-
 include "mozilla/net/NeckoMessageUtils.h";
 
 using class nsHttpHeaderArray from "nsHttpHeaderArray.h";

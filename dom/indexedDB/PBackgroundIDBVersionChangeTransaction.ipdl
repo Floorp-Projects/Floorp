@@ -7,7 +7,10 @@ include protocol PBackgroundIDBDatabase;
 include protocol PBackgroundIDBDatabaseFile;
 include protocol PBackgroundIDBRequest;
 include protocol PBackgroundMutableFile;
-include protocol PBlob;
+include protocol PChildToParentStream; // FIXME: bug 792908
+include protocol PFileDescriptorSet; // FIXME: bug 792908
+include protocol PIPCBlobInputStream; // FIXME: bug 792908
+include protocol PParentToChildStream; // FIXME: bug 792908
 
 include PBackgroundIDBSharedTypes;
 

@@ -8,7 +8,6 @@
 
 #include "TabParent.h"
 
-#include "AudioChannelService.h"
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "nsAccessibilityService.h"
@@ -304,11 +303,6 @@ TabParent::AddWindowListeners()
                                       this, false, false);
       }
     }
-
-    RefPtr<AudioChannelService> acs = AudioChannelService::GetOrCreate();
-    if (acs) {
-      acs->RegisterTabParent(this);
-    }
   }
 }
 
@@ -322,11 +316,6 @@ TabParent::RemoveWindowListeners()
       eventTarget->RemoveEventListener(NS_LITERAL_STRING("MozUpdateWindowPos"),
                                        this, false);
     }
-  }
-
-  RefPtr<AudioChannelService> acs = AudioChannelService::GetOrCreate();
-  if (acs) {
-    acs->UnregisterTabParent(this);
   }
 }
 
@@ -1214,22 +1203,24 @@ TabParent::RecvDispatchKeyboardEvent(const mozilla::WidgetKeyboardEvent& aEvent)
   return IPC_OK();
 }
 
-static void
-DoCommandCallback(mozilla::Command aCommand, void* aData)
-{
-  static_cast<InfallibleTArray<mozilla::CommandInt>*>(aData)->
-    AppendElement(aCommand);
-}
-
 mozilla::ipc::IPCResult
-TabParent::RecvRequestNativeKeyBindings(const WidgetKeyboardEvent& aEvent,
-                                        MaybeNativeKeyBinding* aBindings)
+TabParent::RecvRequestNativeKeyBindings(const uint32_t& aType,
+                                        const WidgetKeyboardEvent& aEvent,
+                                        nsTArray<CommandInt>* aCommands)
 {
-  AutoTArray<mozilla::CommandInt, 4> singleLine;
-  AutoTArray<mozilla::CommandInt, 4> multiLine;
-  AutoTArray<mozilla::CommandInt, 4> richText;
+  MOZ_ASSERT(aCommands);
+  MOZ_ASSERT(aCommands->IsEmpty());
 
-  *aBindings = mozilla::void_t();
+  nsIWidget::NativeKeyBindingsType keyBindingsType =
+    static_cast<nsIWidget::NativeKeyBindingsType>(aType);
+  switch (keyBindingsType) {
+    case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+    case nsIWidget::NativeKeyBindingsForMultiLineEditor:
+    case nsIWidget::NativeKeyBindingsForRichTextEditor:
+      break;
+    default:
+      return IPC_FAIL(this, "Invalid aType value");
+  }
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -1237,24 +1228,14 @@ TabParent::RecvRequestNativeKeyBindings(const WidgetKeyboardEvent& aEvent,
   }
 
   WidgetKeyboardEvent localEvent(aEvent);
+  localEvent.mWidget = widget;
 
   if (NS_FAILED(widget->AttachNativeKeyEvent(localEvent))) {
     return IPC_OK();
   }
 
-  widget->ExecuteNativeKeyBinding(
-            nsIWidget::NativeKeyBindingsForSingleLineEditor,
-            localEvent, DoCommandCallback, &singleLine);
-  widget->ExecuteNativeKeyBinding(
-            nsIWidget::NativeKeyBindingsForMultiLineEditor,
-            localEvent, DoCommandCallback, &multiLine);
-  widget->ExecuteNativeKeyBinding(
-            nsIWidget::NativeKeyBindingsForRichTextEditor,
-            localEvent, DoCommandCallback, &richText);
-
-  if (!singleLine.IsEmpty() || !multiLine.IsEmpty() || !richText.IsEmpty()) {
-    *aBindings = NativeKeyBinding(singleLine, multiLine, richText);
-  }
+  localEvent.InitEditCommandsFor(keyBindingsType);
+  *aCommands = localEvent.EditCommandsConstRef(keyBindingsType);
 
   return IPC_OK();
 }
@@ -1444,31 +1425,15 @@ TabParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent)
   }
   aEvent.mRefPoint += GetChildProcessOffset();
 
-  MaybeNativeKeyBinding bindings;
-  bindings = void_t();
   if (aEvent.mMessage == eKeyPress) {
-    nsCOMPtr<nsIWidget> widget = GetWidget();
-
-    AutoTArray<mozilla::CommandInt, 4> singleLine;
-    AutoTArray<mozilla::CommandInt, 4> multiLine;
-    AutoTArray<mozilla::CommandInt, 4> richText;
-
-    widget->ExecuteNativeKeyBinding(
-              nsIWidget::NativeKeyBindingsForSingleLineEditor,
-              aEvent, DoCommandCallback, &singleLine);
-    widget->ExecuteNativeKeyBinding(
-              nsIWidget::NativeKeyBindingsForMultiLineEditor,
-              aEvent, DoCommandCallback, &multiLine);
-    widget->ExecuteNativeKeyBinding(
-              nsIWidget::NativeKeyBindingsForRichTextEditor,
-              aEvent, DoCommandCallback, &richText);
-
-    if (!singleLine.IsEmpty() || !multiLine.IsEmpty() || !richText.IsEmpty()) {
-      bindings = NativeKeyBinding(singleLine, multiLine, richText);
-    }
+    // XXX Should we do this only when input context indicates an editor having
+    //     focus and the key event won't cause inputting text?
+    aEvent.InitAllEditCommands();
+  } else {
+    aEvent.PreventNativeKeyBindings();
   }
 
-  return PBrowserParent::SendRealKeyEvent(aEvent, bindings);
+  return PBrowserParent::SendRealKeyEvent(aEvent);
 }
 
 bool
@@ -2532,28 +2497,6 @@ TabParent::GetRenderFrameInfo(TextureFactoryIdentifier* aTextureFactoryIdentifie
   return true;
 }
 
-mozilla::ipc::IPCResult
-TabParent::RecvAudioChannelActivityNotification(const uint32_t& aAudioChannel,
-                                                const bool& aActive)
-{
-  if (aAudioChannel >= NUMBER_OF_AUDIO_CHANNELS) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (os) {
-    nsAutoCString topic;
-    topic.Assign("audiochannel-activity-");
-    topic.Append(AudioChannelService::GetAudioChannelTable()[aAudioChannel].tag);
-
-    os->NotifyObservers(NS_ISUPPORTS_CAST(nsITabParent*, this),
-                        topic.get(),
-                        aActive ? u"active" : u"inactive");
-  }
-
-  return IPC_OK();
-}
-
 already_AddRefed<nsFrameLoader>
 TabParent::GetFrameLoader(bool aUseCachedFrameLoaderAfterDestroy) const
 {
@@ -3239,33 +3182,6 @@ TabParent::GetShowInfo()
 
   return ShowInfo(EmptyString(), false, false, false,
                   false, mDPI, mRounding, mDefaultScale.scale);
-}
-
-void
-TabParent::AudioChannelChangeNotification(nsPIDOMWindowOuter* aWindow,
-                                          AudioChannel aAudioChannel,
-                                          float aVolume,
-                                          bool aMuted)
-{
-  if (!mFrameElement || !mFrameElement->OwnerDoc()) {
-    return;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> window = mFrameElement->OwnerDoc()->GetWindow();
-  while (window) {
-    if (window == aWindow) {
-      Unused << SendAudioChannelChangeNotification(static_cast<uint32_t>(aAudioChannel),
-                                                   aVolume, aMuted);
-      break;
-    }
-
-    nsCOMPtr<nsPIDOMWindowOuter> win = window->GetScriptableParentOrNull();
-    if (!win) {
-      break;
-    }
-
-    window = win;
-  }
 }
 
 mozilla::ipc::IPCResult

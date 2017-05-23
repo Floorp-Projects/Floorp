@@ -16,18 +16,6 @@ BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-XPIDL_SOURCES += [
-    'nsIJSInspector.idl',
-]
-
-XPIDL_MODULE = 'jsinspector'
-
-SOURCES += [
-    'nsJSInspector.cpp',
-]
-
-FINAL_LIBRARY = 'xul'
-
 DevToolsModules(
     'child.js',
     'content-server.jsm',

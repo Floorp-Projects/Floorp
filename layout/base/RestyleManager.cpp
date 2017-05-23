@@ -6,9 +6,13 @@
 
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
+
+#include "Layers.h"
+#include "LayerAnimationInfo.h" // For LayerAnimationInfo::sRecords
 #include "mozilla/StyleSetHandleInlines.h"
 #include "nsIFrame.h"
 #include "nsIPresShellInlines.h"
+
 
 namespace mozilla {
 
@@ -356,7 +360,7 @@ RestyleManager::ContentStateChangedInternal(Element* aElement,
                                          NS_EVENT_STATE_LOADING)) {
       *aOutChangeHint = nsChangeHint_ReconstructFrame;
     } else {
-      uint8_t app = primaryFrame->StyleDisplay()->UsedAppearance();
+      uint8_t app = primaryFrame->StyleDisplay()->mAppearance;
       if (app) {
         nsITheme* theme = PresContext()->GetTheme();
         if (theme &&
@@ -1768,6 +1772,62 @@ RestyleManager::IncrementAnimationGeneration()
   if ((IsGecko() && !AsGecko()->IsProcessingRestyles()) ||
       (IsServo() && !mInStyleRefresh)) {
     ++mAnimationGeneration;
+  }
+}
+
+/* static */ void
+RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
+                                            nsIContent* aContent,
+                                            nsStyleChangeList&
+                                              aChangeListToProcess)
+{
+  if (!aFrame || !aContent) {
+    return;
+  }
+
+  uint64_t frameGeneration =
+    RestyleManager::GetAnimationGenerationForFrame(aFrame);
+
+  nsChangeHint hint = nsChangeHint(0);
+  for (const LayerAnimationInfo::Record& layerInfo :
+         LayerAnimationInfo::sRecords) {
+    layers::Layer* layer =
+      FrameLayerBuilder::GetDedicatedLayer(aFrame, layerInfo.mLayerType);
+    if (layer && frameGeneration != layer->GetAnimationGeneration()) {
+      // If we have a transform layer but don't have any transform style, we
+      // probably just removed the transform but haven't destroyed the layer
+      // yet. In this case we will add the appropriate change hint
+      // (nsChangeHint_UpdateContainingBlock) when we compare style contexts
+      // so we can skip adding any change hint here. (If we *were* to add
+      // nsChangeHint_UpdateTransformLayer, ApplyRenderingChangeToTree would
+      // complain that we're updating a transform layer without a transform).
+      if (layerInfo.mLayerType == nsDisplayItem::TYPE_TRANSFORM &&
+          !aFrame->StyleDisplay()->HasTransformStyle()) {
+        continue;
+      }
+      hint |= layerInfo.mChangeHint;
+    }
+
+    // We consider it's the first paint for the frame if we have an animation
+    // for the property but have no layer.
+    // Note that in case of animations which has properties preventing running
+    // on the compositor, e.g., width or height, corresponding layer is not
+    // created at all, but even in such cases, we normally set valid change
+    // hint for such animations in each tick, i.e. restyles in each tick. As
+    // a result, we usually do restyles for such animations in every tick on
+    // the main-thread.  The only animations which will be affected by this
+    // explicit change hint are animations that have opacity/transform but did
+    // not have those properies just before. e.g, setting transform by
+    // setKeyframes or changing target element from other target which prevents
+    // running on the compositor, etc.
+    if (!layer &&
+        nsLayoutUtils::HasEffectiveAnimation(aFrame, layerInfo.mProperty)) {
+      hint |= layerInfo.mChangeHint;
+    }
+  }
+
+  if (hint) {
+    aChangeListToProcess.AppendChange(aFrame, aContent, hint);
   }
 }
 

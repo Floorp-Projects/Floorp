@@ -107,12 +107,13 @@ struct PhaseInfo
     PhaseKind phaseKind;
     uint8_t depth;
     const char* name;
+    const char* path;
 };
 
-// A table of ExpandePhaseInfo indexed by Phase.
+// A table of PhaseInfo indexed by Phase.
 using PhaseTable = EnumeratedArray<Phase, Phase::LIMIT, PhaseInfo>;
 
-// A table of PhaseKindInfo indexed by Phase.
+// A table of PhaseKindInfo indexed by PhaseKind.
 using PhaseKindTable = EnumeratedArray<PhaseKind, PhaseKind::LIMIT, PhaseKindInfo>;
 
 #include "gc/StatsPhasesGenerated.cpp"
@@ -132,8 +133,8 @@ Statistics::currentPhase() const
 PhaseKind
 Statistics::currentPhaseKind() const
 {
-    // Public API to get the current phase.  Return the current phase,
-    // suppressing the synthetic PhaseKind::MUTATOR phase.
+    // Public API to get the current phase kind, suppressing the synthetic
+    // PhaseKind::MUTATOR phase.
 
     Phase phase = currentPhase();
     MOZ_ASSERT_IF(phase == Phase::MUTATOR, phaseNestingDepth == 1);
@@ -621,35 +622,13 @@ Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice, JSONP
     json.property("end_timestamp", slice.end - originTime, JSONPrinter::SECONDS);
 }
 
-static UniqueChars
-SanitizeJsonKey(const char* const buffer)
-{
-    char* mut = strdup(buffer);
-    if (!mut)
-        return UniqueChars(nullptr);
-
-    char* c = mut;
-    while (*c) {
-        if (!isalpha(*c))
-            *c = '_';
-        else if (isupper(*c))
-            *c = tolower(*c);
-        ++c;
-    }
-
-    return UniqueChars(mut);
-}
-
 void
 Statistics::formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes, JSONPrinter& json) const
 {
     for (auto phase : AllPhases()) {
-        UniqueChars name = SanitizeJsonKey(phases[phase].name);
-        if (!name)
-            json.outOfMemory();
         TimeDuration ownTime = phaseTimes[phase];
         if (!ownTime.IsZero())
-            json.property(name.get(), ownTime, JSONPrinter::MILLISECONDS);
+            json.property(phases[phase].path, ownTime, JSONPrinter::MILLISECONDS);
     }
 }
 

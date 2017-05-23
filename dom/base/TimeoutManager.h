@@ -8,6 +8,7 @@
 #define mozilla_dom_TimeoutManager_h__
 
 #include "mozilla/dom/Timeout.h"
+#include "nsTArray.h"
 
 class nsIEventTarget;
 class nsITimeoutHandler;
@@ -27,7 +28,7 @@ public:
   TimeoutManager(const TimeoutManager& rhs) = delete;
   void operator=(const TimeoutManager& rhs) = delete;
 
-  bool IsRunningTimeout() const { return mTimeoutFiringDepth > 0; }
+  bool IsRunningTimeout() const;
 
   static uint32_t GetNestingLevel() { return sNestingLevel; }
   static void SetNestingLevel(uint32_t aLevel) { sNestingLevel = aLevel; }
@@ -117,11 +118,24 @@ public:
 
   void BeginSyncOperation();
   void EndSyncOperation();
+
+  static const uint32_t InvalidFiringId;
+
 private:
   nsresult ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS);
   void MaybeStartThrottleTrackingTimout();
 
   bool IsBackground() const;
+
+  uint32_t
+  CreateFiringId();
+
+  void
+  DestroyFiringId(uint32_t aFiringId);
+
+  bool
+  IsInvalidFiringId(uint32_t aFiringId) const;
+
 private:
   struct Timeouts {
     Timeouts()
@@ -209,7 +223,8 @@ private:
   // The list of timeouts coming from scripts on the tracking protection list.
   Timeouts                    mTrackingTimeouts;
   uint32_t                    mTimeoutIdCounter;
-  uint32_t                    mTimeoutFiringDepth;
+  uint32_t                    mNextFiringId;
+  AutoTArray<uint32_t, 2>     mFiringIdStack;
   mozilla::dom::Timeout*      mRunningTimeout;
 
    // The current idle request callback timeout handle

@@ -854,12 +854,6 @@ parent:
     // Tell the parent that the child has gone idle for the first time.
     async FirstIdle();
 
-    async AudioChannelServiceStatus(bool aActiveTelephonyChannel,
-                                    bool aContentOrNormalChannel,
-                                    bool aAnyActiveChannel);
-
-    async AudioChannelChangeDefVolChannel(int32_t aChannel, bool aHidden);
-
     sync KeywordToURI(nsCString keyword)
         returns (nsString providerName, OptionalIPCStream postData, OptionalURIParams uri);
 

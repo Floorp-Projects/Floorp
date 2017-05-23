@@ -8293,9 +8293,9 @@
   "MEDIA_OGG_LOADED_IS_CHAINED": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["cpearce@mozilla.com"],
-    "expires_in_version": "53",
+    "expires_in_version": "70",
     "kind": "boolean",
-    "description": "Whether Ogg audio/video encountered are chained or not.",
+    "description": "Whether while playing Ogg audio/video we encountered a chained Ogg. Reported on every audio or video element that loads an Ogg file.",
     "bug_numbers": [1230295]
   },
   "MEDIA_HLS_CANPLAY_REQUESTED": {
@@ -8330,6 +8330,15 @@
     "kind": "boolean",
     "description": "Reports whether a navigator.requestMediaKeySystemAccess() was called in a secure context (i.e. on an origin served over HTTPS) or not.",
     "bug_numbers": [1360438]
+  },
+  "VIDEO_CHROMIUM_CDM_MAX_SHMEMS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["cpearce@mozilla.com"],
+    "bug_numbers": [1366639],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 50,
+    "description": "Counts of the maximum number of shared memory buffers used for transferring video frames between the CDM and Gecko processes during playback of DRM'd video. Reported once per CDMVideoDecoder instance, i.e., once per JavaScript SourceBuffer during playback of video using EME."
   },
   "VIDEO_MFT_OUTPUT_NULL_SAMPLES": {
     "record_in_processes": ["main", "content"],
@@ -12914,7 +12923,7 @@
   },
   "DISPLAY_ITEM_USAGE_COUNT": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["mchang@mozilla.com", "gfx-telemetry@mozilla.com"],
+    "alert_emails": ["mchang@mozilla.com", "gfx-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1353521],
     "expires_in_version": "56",
     "kind": "enumerated",
@@ -13115,5 +13124,82 @@
     "n_buckets": 30,
     "bug_numbers": [1351021],
     "description": "Every time we run an unlabeled runnable, this histogram records the time (in ms) since the last unlabeled runnable ran."
+  },
+  "VFC_INVALIDATE_LOCK_WAIT_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["jwwang@mozilla.com"],
+    "expires_in_version": "57",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1366640],
+    "description": "Time (ms) VideoFrameContainer::InvalidateWithFlags spent waiting for a lock."
+  },
+  "VFC_INVALIDATE_LOCK_HOLD_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["jwwang@mozilla.com"],
+    "expires_in_version": "57",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1366640],
+    "description": "Time (ms) VideoFrameContainer::InvalidateWithFlags spent holding a lock."
+  },
+  "VFC_SETVIDEOSEGMENT_LOCK_HOLD_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["jwwang@mozilla.com"],
+    "expires_in_version": "57",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1366640],
+    "description": "Time (ms) VideoFrameContainer::SetCurrentFrames(VideoSegment) spent holding a lock."
+  },
+  "VFC_SETIMAGES_LOCK_HOLD_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["jwwang@mozilla.com"],
+    "expires_in_version": "57",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1366640],
+    "description": "Time (ms) VideoFrameContainer::SetCurrentFrames(nsTArray<ImageContainer::NonOwningImage>) spent holding a lock."
+  },
+  "VFC_SETCURRENTFRAME_LOCK_HOLD_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["jwwang@mozilla.com"],
+    "expires_in_version": "57",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1366640],
+    "description": "Time (ms) VideoFrameContainer::SetCurrentFrame spent holding a lock."
+  },
+  "VFC_CLEARCURRENTFRAME_LOCK_HOLD_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["jwwang@mozilla.com"],
+    "expires_in_version": "57",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1366640],
+    "description": "Time (ms) VideoFrameContainer::ClearCurrentFrame spent holding a lock."
+  },
+  "VFC_CLEARFUTUREFRAMES_LOCK_HOLD_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["jwwang@mozilla.com"],
+    "expires_in_version": "57",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1366640],
+    "description": "Time (ms) VideoFrameContainer::ClearFutureFrames spent holding a lock."
   }
 }

@@ -8,6 +8,8 @@
 // shared-head.js handles imports, constants, and utility functions
 Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js", this);
 
+const EventEmitter = require("devtools/shared/event-emitter");
+
 function toggleAllTools(state) {
   for (let [, tool] of gDevTools._tools) {
     if (!tool.visibilityswitch) {
@@ -187,4 +189,58 @@ function waitForSourceLoad(toolbox, url) {
 
     target.on("source-updated", sourceHandler);
   });
+}
+
+/**
+* When a Toolbox is started it creates a DevToolPanel for each of the tools
+* by calling toolDefinition.build(). The returned object should
+* at least implement these functions. They will be used by the ToolBox.
+*
+* There may be no benefit in doing this as an abstract type, but if nothing
+* else gives us a place to write documentation.
+*/
+function DevToolPanel(iframeWindow, toolbox) {
+  EventEmitter.decorate(this);
+
+  this._toolbox = toolbox;
+}
+
+DevToolPanel.prototype = {
+  open: function () {
+    let deferred = defer();
+
+    executeSoon(() => {
+      this._isReady = true;
+      this.emit("ready");
+      deferred.resolve(this);
+    });
+
+    return deferred.promise;
+  },
+
+  get target() {
+    return this._toolbox.target;
+  },
+
+  get toolbox() {
+    return this._toolbox;
+  },
+
+  get isReady() {
+    return this._isReady;
+  },
+
+  _isReady: false,
+
+  destroy: function () {
+    return defer(null);
+  },
+};
+
+/**
+ * Create a simple devtools test panel that implements the minimum API needed to be
+ * registered and opened in the toolbox.
+ */
+function createTestPanel(iframeWindow, toolbox) {
+  return new DevToolPanel(iframeWindow, toolbox);
 }

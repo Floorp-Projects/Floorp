@@ -565,7 +565,7 @@ LexicalScope::XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
     {
         auto deleteOnLeave = MakeScopeExit([&data]() {
             if (mode == XDR_DECODE)
-                js_delete(data.get());
+                DeleteScopeData(data.get());
         });
 
         uint32_t firstFrameSlot;
@@ -877,7 +877,7 @@ VarScope::XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
     {
         auto deleteOnLeave = MakeScopeExit([&data]() {
             if (mode == XDR_DECODE)
-                js_delete(data.get());
+                DeleteScopeData(data.get());
         });
 
         uint8_t needsEnvironment;

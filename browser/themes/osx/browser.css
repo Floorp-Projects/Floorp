@@ -18,10 +18,6 @@
   --space-above-tabbar: 9px;
   --tabs-toolbar-color: #333;
 
-  --backbutton-border-color: rgba(0,0,0,0.2);
-  --backbutton-background: linear-gradient(rgba(255,255,255,0.9),
-                                           rgba(255,255,255,0.7)) repeat-x;
-
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) + 1px);
 
 %ifdef MOZ_PHOTON_THEME
@@ -31,6 +27,10 @@
 
   --toolbarbutton-hover-background: hsla(0,0%,100%,.1) linear-gradient(hsla(0,0%,100%,.3), hsla(0,0%,100%,.1)) padding-box;
   --toolbarbutton-active-background: hsla(0,0%,0%,.02) linear-gradient(hsla(0,0%,0%,.12), transparent) border-box;
+
+  --backbutton-border-color: rgba(0,0,0,0.2);
+  --backbutton-background: linear-gradient(rgba(255,255,255,0.9),
+                                           rgba(255,255,255,0.7)) repeat-x;
 %endif
 
   --toolbarbutton-hover-bordercolor: hsla(0,0%,0%,.2);
@@ -59,12 +59,14 @@
   --urlbar-separator-color: hsla(0,0%,16%,.2);
 }
 
+%ifndef MOZ_PHOTON_THEME
 toolbar:-moz-lwtheme {
   --backbutton-background: linear-gradient(rgba(255,255,255,0.5),
                               rgba(255,255,255,0.2) 50%,
                               rgba(255,255,255,0.1) 50%,
                               rgba(255,255,255,0.2)) repeat-x;
 }
+%endif
 
 #urlbar:-moz-lwtheme:not([focused="true"]),
 .searchbar-textbox:-moz-lwtheme:not([focused="true"]) {
@@ -527,7 +529,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 #main-window {
   --urlbar-border-color: hsla(240, 5%, 5%, .25);
   --urlbar-border-color-hover: hsla(240, 5%, 5%, .35);
-  --urlbar-background-color: -moz-field;
 }
 
 #urlbar[focused="true"],
@@ -1375,17 +1376,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .bookmark-item {
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
-}
-
-@media (min-resolution: 2dppx) {
-  .bookmark-item {
-    list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
-  }
-
-  image.bookmark-item {
-    width: 16px;
-  }
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
 .openintabs-menuitem {
@@ -1791,7 +1782,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 /* All Tabs Menupopup */
 .alltabs-item > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
 .alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
@@ -1799,10 +1790,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 @media (min-resolution: 2dppx) {
-  .alltabs-item > .menu-iconic-left > .menu-iconic-icon {
-    list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
-  }
-
   .alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
     list-style-image: url("chrome://global/skin/icons/loading@2x.png") !important;
   }

@@ -9,7 +9,7 @@ const XPINSTALL_URL = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
 const PROGRESS_NOTIFICATION = "addon-progress";
 
-const { REQUIRE_SIGNING } = Cu.import("resource://gre/modules/addons/AddonConstants.jsm", {});
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 var rootDir = getRootDirectory(gTestPath);
 var rootPath = rootDir.split("/");
@@ -38,97 +38,93 @@ function getObserverTopic(aNotificationId) {
   return topic;
 }
 
-function waitForProgressNotification(aPanelOpen = false, aExpectedCount = 1) {
-  return (async function() {
-    let notificationId = PROGRESS_NOTIFICATION;
-    info("Waiting for " + notificationId + " notification");
+async function waitForProgressNotification(aPanelOpen = false, aExpectedCount = 1) {
+  let notificationId = PROGRESS_NOTIFICATION;
+  info("Waiting for " + notificationId + " notification");
 
-    let topic = getObserverTopic(notificationId);
+  let topic = getObserverTopic(notificationId);
 
-    let observerPromise = new Promise(resolve => {
-      Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
-        // Ignore the progress notification unless that is the notification we want
-        if (notificationId != PROGRESS_NOTIFICATION &&
-            aTopic == getObserverTopic(PROGRESS_NOTIFICATION)) {
-          return;
-        }
-        Services.obs.removeObserver(observer, topic);
+  let observerPromise = new Promise(resolve => {
+    Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+      // Ignore the progress notification unless that is the notification we want
+      if (notificationId != PROGRESS_NOTIFICATION &&
+          aTopic == getObserverTopic(PROGRESS_NOTIFICATION)) {
+            return;
+      }
+      Services.obs.removeObserver(observer, topic);
+      resolve();
+    }, topic);
+  });
+
+  let panelEventPromise;
+  if (aPanelOpen) {
+    panelEventPromise = Promise.resolve();
+  } else {
+    panelEventPromise = new Promise(resolve => {
+      PopupNotifications.panel.addEventListener("popupshowing", function() {
         resolve();
-      }, topic);
+      }, {once: true});
     });
+  }
 
-    let panelEventPromise;
-    if (aPanelOpen) {
-      panelEventPromise = Promise.resolve();
-    } else {
-      panelEventPromise = new Promise(resolve => {
-        PopupNotifications.panel.addEventListener("popupshowing", function() {
-          resolve();
-        }, {once: true});
-      });
-    }
+  await observerPromise;
+  await panelEventPromise;
 
-    await observerPromise;
-    await panelEventPromise;
+  info("Saw a notification");
+  ok(PopupNotifications.isPanelOpen, "Panel should be open");
+  is(PopupNotifications.panel.childNodes.length, aExpectedCount, "Should be the right number of notifications");
+  if (PopupNotifications.panel.childNodes.length) {
+    let nodes = Array.from(PopupNotifications.panel.childNodes);
+    let notification = nodes.find(n => n.id == notificationId + "-notification");
+    ok(notification, `Should have seen the right notification`);
+    ok(notification.button.hasAttribute("disabled"),
+       "The install button should be disabled");
+  }
 
-    info("Saw a notification");
-    ok(PopupNotifications.isPanelOpen, "Panel should be open");
-    is(PopupNotifications.panel.childNodes.length, aExpectedCount, "Should be the right number of notifications");
-    if (PopupNotifications.panel.childNodes.length) {
-      let nodes = Array.from(PopupNotifications.panel.childNodes);
-      let notification = nodes.find(n => n.id == notificationId + "-notification");
-      ok(notification, `Should have seen the right notification`);
-      ok(notification.button.hasAttribute("disabled"),
-         "The install button should be disabled");
-    }
-
-    return PopupNotifications.panel;
-  })();
+  return PopupNotifications.panel;
 }
 
-function waitForNotification(aId, aExpectedCount = 1) {
-  return (async function() {
-    info("Waiting for " + aId + " notification");
+async function waitForNotification(aId, aExpectedCount = 1) {
+  info("Waiting for " + aId + " notification");
 
-    let topic = getObserverTopic(aId);
+  let topic = getObserverTopic(aId);
 
-    let observerPromise = new Promise(resolve => {
-      Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
-        // Ignore the progress notification unless that is the notification we want
-        if (aId != PROGRESS_NOTIFICATION &&
-            aTopic == getObserverTopic(PROGRESS_NOTIFICATION)) {
-          return;
-        }
-        Services.obs.removeObserver(observer, topic);
-        resolve();
-      }, topic);
+  let observerPromise = new Promise(resolve => {
+    Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+      // Ignore the progress notification unless that is the notification we want
+      if (aId != PROGRESS_NOTIFICATION &&
+          aTopic == getObserverTopic(PROGRESS_NOTIFICATION)) {
+            return;
+      }
+      Services.obs.removeObserver(observer, topic);
+      resolve();
+    }, topic);
+  });
+
+  let panelEventPromise = new Promise(resolve => {
+    PopupNotifications.panel.addEventListener("PanelUpdated", function eventListener(e) {
+      // Skip notifications that are not the one that we are supposed to be looking for
+      if (e.detail.indexOf(aId) == -1) {
+        return;
+      }
+      PopupNotifications.panel.removeEventListener("PanelUpdated", eventListener);
+      resolve();
     });
+  });
 
-    let panelEventPromise = new Promise(resolve => {
-      PopupNotifications.panel.addEventListener("PanelUpdated", function eventListener(e) {
-        // Skip notifications that are not the one that we are supposed to be looking for
-        if (e.detail.indexOf(aId) == -1) {
-          return;
-        }
-        PopupNotifications.panel.removeEventListener("PanelUpdated", eventListener);
-        resolve();
-      });
-    });
+  await observerPromise;
+  await panelEventPromise;
 
-    await observerPromise;
-    await panelEventPromise;
+  info("Saw a " + aId + " notification");
+  ok(PopupNotifications.isPanelOpen, "Panel should be open");
+  is(PopupNotifications.panel.childNodes.length, aExpectedCount, "Should be the right number of notifications");
+  if (PopupNotifications.panel.childNodes.length) {
+    let nodes = Array.from(PopupNotifications.panel.childNodes);
+    let notification = nodes.find(n => n.id == aId + "-notification");
+    ok(notification, "Should have seen the " + aId + " notification");
+  }
 
-    info("Saw a " + aId + " notification");
-    ok(PopupNotifications.isPanelOpen, "Panel should be open");
-    is(PopupNotifications.panel.childNodes.length, aExpectedCount, "Should be the right number of notifications");
-    if (PopupNotifications.panel.childNodes.length) {
-      let nodes = Array.from(PopupNotifications.panel.childNodes);
-      let notification = nodes.find(n => n.id == aId + "-notification");
-      ok(notification, "Should have seen the " + aId + " notification");
-    }
-
-    return PopupNotifications.panel;
-  })();
+  return PopupNotifications.panel;
 }
 
 function waitForNotificationClose() {
@@ -140,45 +136,43 @@ function waitForNotificationClose() {
   });
 }
 
-function waitForInstallDialog() {
-  return (async function() {
-    if (Preferences.get("xpinstall.customConfirmationUI", false)) {
-      let panel = await waitForNotification("addon-install-confirmation");
-      return panel.childNodes[0];
-    }
+async function waitForInstallDialog() {
+  if (Preferences.get("xpinstall.customConfirmationUI", false)) {
+    let panel = await waitForNotification("addon-install-confirmation");
+    return panel.childNodes[0];
+  }
 
-    info("Waiting for install dialog");
+  info("Waiting for install dialog");
 
-    let window = await new Promise(resolve => {
-      Services.wm.addListener({
-        onOpenWindow(aXULWindow) {
-          Services.wm.removeListener(this);
-          resolve(aXULWindow);
-        },
-        onCloseWindow(aXULWindow) {
-        },
-        onWindowTitleChange(aXULWindow, aNewTitle) {
-        }
-      });
+  let window = await new Promise(resolve => {
+    Services.wm.addListener({
+      onOpenWindow(aXULWindow) {
+        Services.wm.removeListener(this);
+        resolve(aXULWindow);
+      },
+      onCloseWindow(aXULWindow) {
+      },
+      onWindowTitleChange(aXULWindow, aNewTitle) {
+      }
     });
-    info("Install dialog opened, waiting for focus");
+  });
+  info("Install dialog opened, waiting for focus");
 
-    let domwindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindow);
-    await new Promise(resolve => {
-      waitForFocus(function() {
-        resolve();
-      }, domwindow);
-    });
-    info("Saw install dialog");
-    is(domwindow.document.location.href, XPINSTALL_URL, "Should have seen the right window open");
+  let domwindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIDOMWindow);
+  await new Promise(resolve => {
+    waitForFocus(function() {
+      resolve();
+    }, domwindow);
+  });
+  info("Saw install dialog");
+  is(domwindow.document.location.href, XPINSTALL_URL, "Should have seen the right window open");
 
-    // Override the countdown timer on the accept button
-    let button = domwindow.document.documentElement.getButton("accept");
-    button.disabled = false;
+  // Override the countdown timer on the accept button
+  let button = domwindow.document.documentElement.getButton("accept");
+  button.disabled = false;
 
-    return null;
-  })();
+  return null;
 }
 
 function removeTab() {
@@ -206,16 +200,14 @@ function cancelInstallDialog(installDialog) {
   }
 }
 
-function waitForSingleNotification(aCallback) {
-  return (async function() {
-    while (PopupNotifications.panel.childNodes.length == 2) {
-      await new Promise(resolve => executeSoon(resolve));
+async function waitForSingleNotification(aCallback) {
+  while (PopupNotifications.panel.childNodes.length == 2) {
+    await new Promise(resolve => executeSoon(resolve));
 
-      info("Waiting for single notification");
-      // Notification should never close while we wait
-      ok(PopupNotifications.isPanelOpen, "Notification should still be open");
-    }
-  })();
+    info("Waiting for single notification");
+    // Notification should never close while we wait
+    ok(PopupNotifications.isPanelOpen, "Notification should still be open");
+  }
 }
 
 function setupRedirect(aSettings) {
@@ -236,799 +228,757 @@ function getInstalls() {
 }
 
 var TESTS = [
-function test_disabledInstall() {
-  return (async function() {
-    Services.prefs.setBoolPref("xpinstall.enabled", false);
+async function test_disabledInstall() {
+  Services.prefs.setBoolPref("xpinstall.enabled", false);
 
-    let notificationPromise = waitForNotification("xpinstall-disabled");
-    let triggers = encodeURIComponent(JSON.stringify({
-      "XPI": "amosigned.xpi"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
-    let panel = await notificationPromise;
+  let notificationPromise = waitForNotification("xpinstall-disabled");
+  let triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "amosigned.xpi"
+  }));
+  BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  let panel = await notificationPromise;
 
-    let notification = panel.childNodes[0];
-    is(notification.button.label, "Enable", "Should have seen the right button");
-    is(notification.getAttribute("label"),
-       "Software installation is currently disabled. Click Enable and try again.");
+  let notification = panel.childNodes[0];
+  is(notification.button.label, "Enable", "Should have seen the right button");
+  is(notification.getAttribute("label"),
+     "Software installation is currently disabled. Click Enable and try again.");
 
-    let closePromise = waitForNotificationClose();
-    // Click on Enable
-    EventUtils.synthesizeMouseAtCenter(notification.button, {});
-    await closePromise;
+  let closePromise = waitForNotificationClose();
+  // Click on Enable
+  EventUtils.synthesizeMouseAtCenter(notification.button, {});
+  await closePromise;
 
-    try {
-      ok(Services.prefs.getBoolPref("xpinstall.enabled"), "Installation should be enabled");
-    } catch (e) {
-      ok(false, "xpinstall.enabled should be set");
-    }
+  try {
+    ok(Services.prefs.getBoolPref("xpinstall.enabled"), "Installation should be enabled");
+  } catch (e) {
+    ok(false, "xpinstall.enabled should be set");
+  }
 
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-    let installs = await getInstalls();
-    is(installs.length, 0, "Shouldn't be any pending installs");
-  })();
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  let installs = await getInstalls();
+  is(installs.length, 0, "Shouldn't be any pending installs");
 },
 
-function test_blockedInstall() {
-  return (async function() {
-    let notificationPromise = waitForNotification("addon-install-blocked");
-    let triggers = encodeURIComponent(JSON.stringify({
-      "XPI": "amosigned.xpi"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
-    let panel = await notificationPromise;
+async function test_blockedInstall() {
+  let notificationPromise = waitForNotification("addon-install-blocked");
+  let triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "amosigned.xpi"
+  }));
+  BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  let panel = await notificationPromise;
 
-    let notification = panel.childNodes[0];
-    is(notification.button.label, "Allow", "Should have seen the right button");
-    is(notification.getAttribute("origin"), "example.com",
-       "Should have seen the right origin host");
-    is(notification.getAttribute("label"),
-       gApp + " prevented this site from asking you to install software on your computer.",
-       "Should have seen the right message");
+  let notification = panel.childNodes[0];
+  is(notification.button.label, "Allow", "Should have seen the right button");
+  is(notification.getAttribute("origin"), "example.com",
+     "Should have seen the right origin host");
+  is(notification.getAttribute("label"),
+     gApp + " prevented this site from asking you to install software on your computer.",
+     "Should have seen the right message");
 
-    let dialogPromise = waitForInstallDialog();
-    // Click on Allow
-    EventUtils.synthesizeMouse(notification.button, 20, 10, {});
-    // Notification should have changed to progress notification
-    ok(PopupNotifications.isPanelOpen, "Notification should still be open");
-    notification = panel.childNodes[0];
-    is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
-    let installDialog = await dialogPromise;
+  let dialogPromise = waitForInstallDialog();
+  // Click on Allow
+  EventUtils.synthesizeMouse(notification.button, 20, 10, {});
+  // Notification should have changed to progress notification
+  ok(PopupNotifications.isPanelOpen, "Notification should still be open");
+  notification = panel.childNodes[0];
+  is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
+  let installDialog = await dialogPromise;
 
-    notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog(installDialog);
-    panel = await notificationPromise;
+  notificationPromise = waitForNotification("addon-install-restart");
+  acceptInstallDialog(installDialog);
+  panel = await notificationPromise;
 
-    notification = panel.childNodes[0];
-    is(notification.button.label, "Restart Now", "Should have seen the right button");
-    is(notification.getAttribute("label"),
-       "XPI Test will be installed after you restart " + gApp + ".",
-       "Should have seen the right message");
+  notification = panel.childNodes[0];
+  is(notification.button.label, "Restart Now", "Should have seen the right button");
+  is(notification.getAttribute("label"),
+     "XPI Test will be installed after you restart " + gApp + ".",
+     "Should have seen the right message");
 
-    let installs = await getInstalls();
-    is(installs.length, 1, "Should be one pending install");
-    installs[0].cancel();
-    await removeTab();
-  })();
+  let installs = await getInstalls();
+  is(installs.length, 1, "Should be one pending install");
+  installs[0].cancel();
+  await removeTab();
 },
 
-function test_whitelistedInstall() {
-  return (async function() {
-    let originalTab = gBrowser.selectedTab;
-    let tab;
-    gBrowser.selectedTab = originalTab;
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+async function test_whitelistedInstall() {
+  let originalTab = gBrowser.selectedTab;
+  let tab;
+  gBrowser.selectedTab = originalTab;
+  let pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-    let progressPromise = waitForProgressNotification();
-    let dialogPromise = waitForInstallDialog();
-    let triggers = encodeURIComponent(JSON.stringify({
-      "XPI": "amosigned.xpi"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?"
-      + triggers).then(newTab => tab = newTab);
-    await progressPromise;
-    let installDialog = await dialogPromise;
-    await BrowserTestUtils.waitForCondition(() => !!tab, "tab should be present");
+  let progressPromise = waitForProgressNotification();
+  let dialogPromise = waitForInstallDialog();
+  let triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "amosigned.xpi"
+  }));
+  BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?"
+                                                + triggers).then(newTab => tab = newTab);
+  await progressPromise;
+  let installDialog = await dialogPromise;
+  await BrowserTestUtils.waitForCondition(() => !!tab, "tab should be present");
 
-    is(gBrowser.selectedTab, tab,
-       "tab selected in response to the addon-install-confirmation notification");
+  is(gBrowser.selectedTab, tab,
+     "tab selected in response to the addon-install-confirmation notification");
 
-    let notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog(installDialog);
-    let panel = await notificationPromise;
+  let notificationPromise = waitForNotification("addon-install-restart");
+  acceptInstallDialog(installDialog);
+  let panel = await notificationPromise;
 
-    let notification = panel.childNodes[0];
-    is(notification.button.label, "Restart Now", "Should have seen the right button");
-    is(notification.getAttribute("label"),
-             "XPI Test will be installed after you restart " + gApp + ".",
-             "Should have seen the right message");
+  let notification = panel.childNodes[0];
+  is(notification.button.label, "Restart Now", "Should have seen the right button");
+  is(notification.getAttribute("label"),
+     "XPI Test will be installed after you restart " + gApp + ".",
+     "Should have seen the right message");
 
-    let installs = await getInstalls();
-    is(installs.length, 1, "Should be one pending install");
-    installs[0].cancel();
+  let installs = await getInstalls();
+  is(installs.length, 1, "Should be one pending install");
+  installs[0].cancel();
 
-    Services.perms.remove(makeURI("http://example.com/"), "install");
-    await removeTab();
-  })();
+  Services.perms.remove(makeURI("http://example.com/"), "install");
+  await removeTab();
 },
 
-function test_failedDownload() {
-  return (async function() {
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+async function test_failedDownload() {
+  let pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-    let progressPromise = waitForProgressNotification();
-    let failPromise = waitForNotification("addon-install-failed");
-    let triggers = encodeURIComponent(JSON.stringify({
-      "XPI": "missing.xpi"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
-    await progressPromise;
-    let panel = await failPromise;
+  let progressPromise = waitForProgressNotification();
+  let failPromise = waitForNotification("addon-install-failed");
+  let triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "missing.xpi"
+  }));
+  BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  await progressPromise;
+  let panel = await failPromise;
 
-    let notification = panel.childNodes[0];
-    is(notification.getAttribute("label"),
-       "The add-on could not be downloaded because of a connection failure.",
-       "Should have seen the right message");
+  let notification = panel.childNodes[0];
+  is(notification.getAttribute("label"),
+     "The add-on could not be downloaded because of a connection failure.",
+     "Should have seen the right message");
 
-    Services.perms.remove(makeURI("http://example.com/"), "install");
-    await removeTab();
-  })();
+  Services.perms.remove(makeURI("http://example.com/"), "install");
+  await removeTab();
 },
 
-function test_corruptFile() {
-  return (async function() {
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+async function test_corruptFile() {
+  let pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-    let progressPromise = waitForProgressNotification();
-    let failPromise = waitForNotification("addon-install-failed");
-    let triggers = encodeURIComponent(JSON.stringify({
-      "XPI": "corrupt.xpi"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
-    await progressPromise;
-    let panel = await failPromise;
+  let progressPromise = waitForProgressNotification();
+  let failPromise = waitForNotification("addon-install-failed");
+  let triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "corrupt.xpi"
+  }));
+  BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  await progressPromise;
+  let panel = await failPromise;
 
-    let notification = panel.childNodes[0];
-    is(notification.getAttribute("label"),
-       "The add-on downloaded from this site could not be installed " +
-       "because it appears to be corrupt.",
-       "Should have seen the right message");
+  let notification = panel.childNodes[0];
+  is(notification.getAttribute("label"),
+     "The add-on downloaded from this site could not be installed " +
+     "because it appears to be corrupt.",
+     "Should have seen the right message");
 
-    Services.perms.remove(makeURI("http://example.com/"), "install");
-    await removeTab();
-  })();
+  Services.perms.remove(makeURI("http://example.com/"), "install");
+  await removeTab();
 },
 
-function test_incompatible() {
-  return (async function() {
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+async function test_incompatible() {
+  let pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-    let progressPromise = waitForProgressNotification();
-    let failPromise = waitForNotification("addon-install-failed");
-    let triggers = encodeURIComponent(JSON.stringify({
-      "XPI": "incompatible.xpi"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
-    await progressPromise;
-    let panel = await failPromise;
+  let progressPromise = waitForProgressNotification();
+  let failPromise = waitForNotification("addon-install-failed");
+  let triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "incompatible.xpi"
+  }));
+  BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  await progressPromise;
+  let panel = await failPromise;
 
-    let notification = panel.childNodes[0];
-    is(notification.getAttribute("label"),
-       "XPI Test could not be installed because it is not compatible with " +
-       gApp + " " + gVersion + ".",
-       "Should have seen the right message");
+  let notification = panel.childNodes[0];
+  is(notification.getAttribute("label"),
+     "XPI Test could not be installed because it is not compatible with " +
+     gApp + " " + gVersion + ".",
+     "Should have seen the right message");
 
-    Services.perms.remove(makeURI("http://example.com/"), "install");
-    await removeTab();
-  })();
+  Services.perms.remove(makeURI("http://example.com/"), "install");
+  await removeTab();
 },
 
-function test_restartless() {
-  return (async function() {
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+async function test_restartless() {
+  let pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-    let progressPromise = waitForProgressNotification();
-    let dialogPromise = waitForInstallDialog();
-    let triggers = encodeURIComponent(JSON.stringify({
-      "XPI": "restartless.xpi"
-    }));
-    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-    gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
-    await progressPromise;
-    let installDialog = await dialogPromise;
+  let progressPromise = waitForProgressNotification();
+  let dialogPromise = waitForInstallDialog();
+  let triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "restartless.xpi"
+  }));
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
+  await progressPromise;
+  let installDialog = await dialogPromise;
 
-    let notificationPromise = waitForNotification("addon-installed");
-    acceptInstallDialog(installDialog);
-    await notificationPromise;
+  let notificationPromise = waitForNotification("addon-installed");
+  acceptInstallDialog(installDialog);
+  await notificationPromise;
 
-    let installs = await getInstalls();
-    is(installs.length, 0, "Should be no pending installs");
+  let installs = await getInstalls();
+  is(installs.length, 0, "Should be no pending installs");
 
-    let addon = await new Promise(resolve => {
-      AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org", result => {
-        resolve(result);
-      });
+  let addon = await new Promise(resolve => {
+    AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org", result => {
+      resolve(result);
     });
-    addon.uninstall();
+  });
+  addon.uninstall();
 
-    Services.perms.remove(makeURI("http://example.com/"), "install");
+  Services.perms.remove(makeURI("http://example.com/"), "install");
 
-    let closePromise = waitForNotificationClose();
-    gBrowser.removeTab(gBrowser.selectedTab);
-    await closePromise;
-  })();
+  let closePromise = waitForNotificationClose();
+  gBrowser.removeTab(gBrowser.selectedTab);
+  await closePromise;
 },
 
-function test_sequential() {
-  return (async function() {
-    // This test is only relevant if using the new doorhanger UI
-    // TODO: this subtest is disabled until multiple notification prompts are
-    // reworked in bug 1188152
-    if (true || !Preferences.get("xpinstall.customConfirmationUI", false)) {
-      return;
-    }
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+async function test_sequential() {
+  // This test is only relevant if using the new doorhanger UI
+  // TODO: this subtest is disabled until multiple notification prompts are
+  // reworked in bug 1188152
+  if (true || !Preferences.get("xpinstall.customConfirmationUI", false)) {
+    return;
+  }
+  let pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-    let progressPromise = waitForProgressNotification();
-    let dialogPromise = waitForInstallDialog();
-    let triggers = encodeURIComponent(JSON.stringify({
-      "Restartless XPI": "restartless.xpi"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
-    await progressPromise;
-    let installDialog = await dialogPromise;
+  let progressPromise = waitForProgressNotification();
+  let dialogPromise = waitForInstallDialog();
+  let triggers = encodeURIComponent(JSON.stringify({
+    "Restartless XPI": "restartless.xpi"
+  }));
+  BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  await progressPromise;
+  let installDialog = await dialogPromise;
 
-    // Should see the right add-on
-    let container = document.getElementById("addon-install-confirmation-content");
-    is(container.childNodes.length, 1, "Should be one item listed");
-    is(container.childNodes[0].firstChild.getAttribute("value"), "XPI Test", "Should have the right add-on");
+  // Should see the right add-on
+  let container = document.getElementById("addon-install-confirmation-content");
+  is(container.childNodes.length, 1, "Should be one item listed");
+  is(container.childNodes[0].firstChild.getAttribute("value"), "XPI Test", "Should have the right add-on");
 
-    progressPromise = waitForProgressNotification(true, 2);
-    triggers = encodeURIComponent(JSON.stringify({
-      "Theme XPI": "theme.xpi"
-    }));
-    gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
-    await progressPromise;
+  progressPromise = waitForProgressNotification(true, 2);
+  triggers = encodeURIComponent(JSON.stringify({
+    "Theme XPI": "theme.xpi"
+  }));
+  gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
+  await progressPromise;
 
-    // Should still have the right add-on in the confirmation notification
-    is(container.childNodes.length, 1, "Should be one item listed");
-    is(container.childNodes[0].firstChild.getAttribute("value"), "XPI Test", "Should have the right add-on");
+  // Should still have the right add-on in the confirmation notification
+  is(container.childNodes.length, 1, "Should be one item listed");
+  is(container.childNodes[0].firstChild.getAttribute("value"), "XPI Test", "Should have the right add-on");
 
-    // Wait for the install to complete, we won't see a new confirmation
-    // notification
-    await new Promise(resolve => {
-      Services.obs.addObserver(function observer() {
-        Services.obs.removeObserver(observer, "addon-install-confirmation");
-        resolve();
-      }, "addon-install-confirmation");
+  // Wait for the install to complete, we won't see a new confirmation
+  // notification
+  await new Promise(resolve => {
+    Services.obs.addObserver(function observer() {
+      Services.obs.removeObserver(observer, "addon-install-confirmation");
+      resolve();
+    }, "addon-install-confirmation");
+  });
+
+  // Make sure browser-addons.js executes first
+  await new Promise(resolve => executeSoon(resolve));
+
+  // Should have dropped the progress notification
+  is(PopupNotifications.panel.childNodes.length, 1, "Should be the right number of notifications");
+  is(PopupNotifications.panel.childNodes[0].id, "addon-install-confirmation-notification",
+     "Should only be showing one install confirmation");
+
+  // Should still have the right add-on in the confirmation notification
+  is(container.childNodes.length, 1, "Should be one item listed");
+  is(container.childNodes[0].firstChild.getAttribute("value"), "XPI Test", "Should have the right add-on");
+
+  cancelInstallDialog(installDialog);
+
+  ok(PopupNotifications.isPanelOpen, "Panel should still be open");
+  is(PopupNotifications.panel.childNodes.length, 1, "Should be the right number of notifications");
+  is(PopupNotifications.panel.childNodes[0].id, "addon-install-confirmation-notification",
+     "Should still have an install confirmation open");
+
+  // Should have the next add-on's confirmation dialog
+  is(container.childNodes.length, 1, "Should be one item listed");
+  is(container.childNodes[0].firstChild.getAttribute("value"), "Theme Test", "Should have the right add-on");
+
+  Services.perms.remove(makeURI("http://example.com"), "install");
+  let closePromise = waitForNotificationClose();
+  cancelInstallDialog(installDialog);
+  await closePromise;
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+},
+
+async function test_allUnverified() {
+  // This test is only relevant if using the new doorhanger UI and allowing
+  // unsigned add-ons
+  if (!Preferences.get("xpinstall.customConfirmationUI", false) ||
+      Preferences.get("xpinstall.signatures.required", true) ||
+      AppConstants.MOZ_REQUIRE_SIGNING) {
+        return;
+  }
+  let pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+
+  let progressPromise = waitForProgressNotification();
+  let dialogPromise = waitForInstallDialog();
+  let triggers = encodeURIComponent(JSON.stringify({
+    "Extension XPI": "restartless-unsigned.xpi"
+  }));
+  BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  await progressPromise;
+  let installDialog = await dialogPromise;
+
+  let notification = document.getElementById("addon-install-confirmation-notification");
+  let message = notification.getAttribute("label");
+  is(message, "Caution: This site would like to install an unverified add-on in " + gApp + ". Proceed at your own risk.");
+
+  let container = document.getElementById("addon-install-confirmation-content");
+  is(container.childNodes.length, 1, "Should be one item listed");
+  is(container.childNodes[0].firstChild.getAttribute("value"), "XPI Test", "Should have the right add-on");
+  is(container.childNodes[0].childNodes.length, 1, "Shouldn't have the unverified marker");
+
+  let notificationPromise = waitForNotification("addon-installed");
+  acceptInstallDialog(installDialog);
+  await notificationPromise;
+
+  let addon = await new Promise(resolve => {
+    AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org", function(result) {
+      resolve(result);
     });
+  });
+  addon.uninstall();
 
-    // Make sure browser-addons.js executes first
-    await new Promise(resolve => executeSoon(resolve));
-
-    // Should have dropped the progress notification
-    is(PopupNotifications.panel.childNodes.length, 1, "Should be the right number of notifications");
-    is(PopupNotifications.panel.childNodes[0].id, "addon-install-confirmation-notification",
-       "Should only be showing one install confirmation");
-
-    // Should still have the right add-on in the confirmation notification
-    is(container.childNodes.length, 1, "Should be one item listed");
-    is(container.childNodes[0].firstChild.getAttribute("value"), "XPI Test", "Should have the right add-on");
-
-    cancelInstallDialog(installDialog);
-
-    ok(PopupNotifications.isPanelOpen, "Panel should still be open");
-    is(PopupNotifications.panel.childNodes.length, 1, "Should be the right number of notifications");
-    is(PopupNotifications.panel.childNodes[0].id, "addon-install-confirmation-notification",
-       "Should still have an install confirmation open");
-
-    // Should have the next add-on's confirmation dialog
-    is(container.childNodes.length, 1, "Should be one item listed");
-    is(container.childNodes[0].firstChild.getAttribute("value"), "Theme Test", "Should have the right add-on");
-
-    Services.perms.remove(makeURI("http://example.com"), "install");
-    let closePromise = waitForNotificationClose();
-    cancelInstallDialog(installDialog);
-    await closePromise;
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  })();
+  Services.perms.remove(makeURI("http://example.com/"), "install");
+  await removeTab();
 },
 
-function test_allUnverified() {
-  return (async function() {
-    // This test is only relevant if using the new doorhanger UI and allowing
-    // unsigned add-ons
-    if (!Preferences.get("xpinstall.customConfirmationUI", false) ||
-        Preferences.get("xpinstall.signatures.required", true) ||
-        REQUIRE_SIGNING) {
-      return;
-    }
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+async function test_url() {
+  let progressPromise = waitForProgressNotification();
+  let dialogPromise = waitForInstallDialog();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  gBrowser.loadURI(TESTROOT + "amosigned.xpi");
+  await progressPromise;
+  let installDialog = await dialogPromise;
 
-    let progressPromise = waitForProgressNotification();
-    let dialogPromise = waitForInstallDialog();
-    let triggers = encodeURIComponent(JSON.stringify({
-      "Extension XPI": "restartless-unsigned.xpi"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
-    await progressPromise;
-    let installDialog = await dialogPromise;
+  let notificationPromise = waitForNotification("addon-install-restart");
+  acceptInstallDialog(installDialog);
+  let panel = await notificationPromise;
 
-    let notification = document.getElementById("addon-install-confirmation-notification");
-    let message = notification.getAttribute("label");
-    is(message, "Caution: This site would like to install an unverified add-on in " + gApp + ". Proceed at your own risk.");
+  let notification = panel.childNodes[0];
+  is(notification.button.label, "Restart Now", "Should have seen the right button");
+  is(notification.getAttribute("label"),
+     "XPI Test will be installed after you restart " + gApp + ".",
+     "Should have seen the right message");
 
-    let container = document.getElementById("addon-install-confirmation-content");
-    is(container.childNodes.length, 1, "Should be one item listed");
-    is(container.childNodes[0].firstChild.getAttribute("value"), "XPI Test", "Should have the right add-on");
-    is(container.childNodes[0].childNodes.length, 1, "Shouldn't have the unverified marker");
+  let installs = await getInstalls();
+  is(installs.length, 1, "Should be one pending install");
+  installs[0].cancel();
 
-    let notificationPromise = waitForNotification("addon-installed");
-    acceptInstallDialog(installDialog);
-    await notificationPromise;
-
-    let addon = await new Promise(resolve => {
-      AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org", function(result) {
-        resolve(result);
-      });
-    });
-    addon.uninstall();
-
-    Services.perms.remove(makeURI("http://example.com/"), "install");
-    await removeTab();
-  })();
+  await removeTab();
 },
 
-function test_url() {
-  return (async function() {
-    let progressPromise = waitForProgressNotification();
-    let dialogPromise = waitForInstallDialog();
-    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
-    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    gBrowser.loadURI(TESTROOT + "amosigned.xpi");
-    await progressPromise;
-    let installDialog = await dialogPromise;
+async function test_localFile() {
+  let cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                     .getService(Components.interfaces.nsIChromeRegistry);
+  let path;
+  try {
+    path = cr.convertChromeURL(makeURI(CHROMEROOT + "corrupt.xpi")).spec;
+  } catch (ex) {
+    path = CHROMEROOT + "corrupt.xpi";
+  }
 
-    let notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog(installDialog);
-    let panel = await notificationPromise;
+  let failPromise = new Promise(resolve => {
+    Services.obs.addObserver(function observer() {
+      Services.obs.removeObserver(observer, "addon-install-failed");
+      resolve();
+    }, "addon-install-failed");
+  });
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  gBrowser.loadURI(path);
+  await failPromise;
 
-    let notification = panel.childNodes[0];
-    is(notification.button.label, "Restart Now", "Should have seen the right button");
-    is(notification.getAttribute("label"),
-       "XPI Test will be installed after you restart " + gApp + ".",
-       "Should have seen the right message");
+  // Wait for the browser code to add the failure notification
+  await waitForSingleNotification();
 
-    let installs = await getInstalls();
-    is(installs.length, 1, "Should be one pending install");
-    installs[0].cancel();
+  let notification = PopupNotifications.panel.childNodes[0];
+  is(notification.id, "addon-install-failed-notification", "Should have seen the install fail");
+  is(notification.getAttribute("label"),
+     "This add-on could not be installed because it appears to be corrupt.",
+     "Should have seen the right message");
 
-    await removeTab();
-  })();
+  await removeTab();
 },
 
-function test_localFile() {
-  return (async function() {
-    let cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                       .getService(Components.interfaces.nsIChromeRegistry);
-    let path;
-    try {
-      path = cr.convertChromeURL(makeURI(CHROMEROOT + "corrupt.xpi")).spec;
-    } catch (ex) {
-      path = CHROMEROOT + "corrupt.xpi";
-    }
+async function test_tabClose() {
+  if (!Preferences.get("xpinstall.customConfirmationUI", false)) {
+    info("Test skipped due to xpinstall.customConfirmationUI being false.");
+    return;
+  }
 
-    let failPromise = new Promise(resolve => {
-      Services.obs.addObserver(function observer() {
-        Services.obs.removeObserver(observer, "addon-install-failed");
-        resolve();
-      }, "addon-install-failed");
-    });
-    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
-    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    gBrowser.loadURI(path);
-    await failPromise;
+  let progressPromise = waitForProgressNotification();
+  let dialogPromise = waitForInstallDialog();
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  gBrowser.loadURI(TESTROOT + "amosigned.xpi");
+  await progressPromise;
+  await dialogPromise;
 
-    // Wait for the browser code to add the failure notification
-    await waitForSingleNotification();
+  let installs = await getInstalls();
+  is(installs.length, 1, "Should be one pending install");
 
-    let notification = PopupNotifications.panel.childNodes[0];
-    is(notification.id, "addon-install-failed-notification", "Should have seen the install fail");
-    is(notification.getAttribute("label"),
-       "This add-on could not be installed because it appears to be corrupt.",
-       "Should have seen the right message");
+  let closePromise = waitForNotificationClose();
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await closePromise;
 
-    await removeTab();
-  })();
-},
-
-function test_tabClose() {
-  return (async function() {
-    if (!Preferences.get("xpinstall.customConfirmationUI", false)) {
-      info("Test skipped due to xpinstall.customConfirmationUI being false.");
-      return;
-    }
-
-    let progressPromise = waitForProgressNotification();
-    let dialogPromise = waitForInstallDialog();
-    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
-    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    gBrowser.loadURI(TESTROOT + "amosigned.xpi");
-    await progressPromise;
-    await dialogPromise;
-
-    let installs = await getInstalls();
-    is(installs.length, 1, "Should be one pending install");
-
-    let closePromise = waitForNotificationClose();
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-    await closePromise;
-
-    installs = await getInstalls();
-    is(installs.length, 0, "Should be no pending install since the tab is closed");
-  })();
+  installs = await getInstalls();
+  is(installs.length, 0, "Should be no pending install since the tab is closed");
 },
 
 // Add-ons should be cancelled and the install notification destroyed when
 // navigating to a new origin
-function test_tabNavigate() {
-  return (async function() {
-    if (!Preferences.get("xpinstall.customConfirmationUI", false)) {
-      return;
-    }
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+async function test_tabNavigate() {
+  if (!Preferences.get("xpinstall.customConfirmationUI", false)) {
+    return;
+  }
+  let pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-    let progressPromise = waitForProgressNotification();
-    let dialogPromise = waitForInstallDialog();
-    let triggers = encodeURIComponent(JSON.stringify({
-      "Extension XPI": "amosigned.xpi"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
-    await progressPromise;
-    await dialogPromise;
+  let progressPromise = waitForProgressNotification();
+  let dialogPromise = waitForInstallDialog();
+  let triggers = encodeURIComponent(JSON.stringify({
+    "Extension XPI": "amosigned.xpi"
+  }));
+  BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  await progressPromise;
+  await dialogPromise;
 
-    let closePromise = waitForNotificationClose();
-    let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    gBrowser.loadURI("about:blank");
-    await closePromise;
+  let closePromise = waitForNotificationClose();
+  let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  gBrowser.loadURI("about:blank");
+  await closePromise;
 
-    let installs = await getInstalls();
-    is(installs.length, 0, "Should be no pending install");
+  let installs = await getInstalls();
+  is(installs.length, 0, "Should be no pending install");
 
-    Services.perms.remove(makeURI("http://example.com/"), "install");
-    await loadPromise;
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  })();
+  Services.perms.remove(makeURI("http://example.com/"), "install");
+  await loadPromise;
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 },
 
-function test_urlBar() {
-  return (async function() {
-    let progressPromise = waitForProgressNotification();
-    let dialogPromise = waitForInstallDialog();
+async function test_urlBar() {
+  let progressPromise = waitForProgressNotification();
+  let dialogPromise = waitForInstallDialog();
 
-    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
-    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-    gURLBar.value = TESTROOT + "amosigned.xpi";
-    gURLBar.focus();
-    EventUtils.synthesizeKey("VK_RETURN", {});
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  gURLBar.value = TESTROOT + "amosigned.xpi";
+  gURLBar.focus();
+  EventUtils.synthesizeKey("VK_RETURN", {});
 
-    await progressPromise;
-    let installDialog = await dialogPromise;
+  await progressPromise;
+  let installDialog = await dialogPromise;
 
-    let notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog(installDialog);
-    let panel = await notificationPromise;
+  let notificationPromise = waitForNotification("addon-install-restart");
+  acceptInstallDialog(installDialog);
+  let panel = await notificationPromise;
 
-    let notification = panel.childNodes[0];
-    is(notification.button.label, "Restart Now", "Should have seen the right button");
-    is(notification.getAttribute("label"),
-             "XPI Test will be installed after you restart " + gApp + ".",
-             "Should have seen the right message");
+  let notification = panel.childNodes[0];
+  is(notification.button.label, "Restart Now", "Should have seen the right button");
+  is(notification.getAttribute("label"),
+     "XPI Test will be installed after you restart " + gApp + ".",
+     "Should have seen the right message");
 
-    let installs = await getInstalls();
-    is(installs.length, 1, "Should be one pending install");
-    installs[0].cancel();
+  let installs = await getInstalls();
+  is(installs.length, 1, "Should be one pending install");
+  installs[0].cancel();
 
-    await removeTab();
-  })();
+  await removeTab();
 },
 
-function test_wrongHost() {
-  return (async function() {
-    let requestedUrl = TESTROOT2 + "enabled.html";
-    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+async function test_wrongHost() {
+  let requestedUrl = TESTROOT2 + "enabled.html";
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
-    let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, requestedUrl);
-    gBrowser.loadURI(TESTROOT2 + "enabled.html");
-    await loadedPromise;
+  let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, requestedUrl);
+  gBrowser.loadURI(TESTROOT2 + "enabled.html");
+  await loadedPromise;
 
-    let progressPromise = waitForProgressNotification();
-    let notificationPromise = waitForNotification("addon-install-failed");
-    gBrowser.loadURI(TESTROOT + "corrupt.xpi");
-    await progressPromise;
-    let panel = await notificationPromise;
+  let progressPromise = waitForProgressNotification();
+  let notificationPromise = waitForNotification("addon-install-failed");
+  gBrowser.loadURI(TESTROOT + "corrupt.xpi");
+  await progressPromise;
+  let panel = await notificationPromise;
 
-    let notification = panel.childNodes[0];
-    is(notification.getAttribute("label"),
-       "The add-on downloaded from this site could not be installed " +
-       "because it appears to be corrupt.",
-       "Should have seen the right message");
+  let notification = panel.childNodes[0];
+  is(notification.getAttribute("label"),
+     "The add-on downloaded from this site could not be installed " +
+     "because it appears to be corrupt.",
+     "Should have seen the right message");
 
-    await removeTab();
-  })();
+  await removeTab();
 },
 
-function test_reload() {
-  return (async function() {
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+async function test_reload() {
+  let pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-    let progressPromise = waitForProgressNotification();
-    let dialogPromise = waitForInstallDialog();
-    let triggers = encodeURIComponent(JSON.stringify({
-      "Unsigned XPI": "amosigned.xpi"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
-    await progressPromise;
-    let installDialog = await dialogPromise;
+  let progressPromise = waitForProgressNotification();
+  let dialogPromise = waitForInstallDialog();
+  let triggers = encodeURIComponent(JSON.stringify({
+    "Unsigned XPI": "amosigned.xpi"
+  }));
+  BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  await progressPromise;
+  let installDialog = await dialogPromise;
 
-    let notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog(installDialog);
-    let panel = await notificationPromise;
+  let notificationPromise = waitForNotification("addon-install-restart");
+  acceptInstallDialog(installDialog);
+  let panel = await notificationPromise;
 
-    let notification = panel.childNodes[0];
-    is(notification.button.label, "Restart Now", "Should have seen the right button");
-    is(notification.getAttribute("label"),
-       "XPI Test will be installed after you restart " + gApp + ".",
-       "Should have seen the right message");
+  let notification = panel.childNodes[0];
+  is(notification.button.label, "Restart Now", "Should have seen the right button");
+  is(notification.getAttribute("label"),
+     "XPI Test will be installed after you restart " + gApp + ".",
+     "Should have seen the right message");
 
-    function testFail() {
-      ok(false, "Reloading should not have hidden the notification");
-    }
-    PopupNotifications.panel.addEventListener("popuphiding", testFail);
-    let requestedUrl = TESTROOT2 + "enabled.html";
-    let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, requestedUrl);
-    gBrowser.loadURI(TESTROOT2 + "enabled.html");
-    await loadedPromise;
-    PopupNotifications.panel.removeEventListener("popuphiding", testFail);
+  function testFail() {
+    ok(false, "Reloading should not have hidden the notification");
+  }
+  PopupNotifications.panel.addEventListener("popuphiding", testFail);
+  let requestedUrl = TESTROOT2 + "enabled.html";
+  let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, requestedUrl);
+  gBrowser.loadURI(TESTROOT2 + "enabled.html");
+  await loadedPromise;
+  PopupNotifications.panel.removeEventListener("popuphiding", testFail);
 
-    let installs = await getInstalls();
-    is(installs.length, 1, "Should be one pending install");
-    installs[0].cancel();
+  let installs = await getInstalls();
+  is(installs.length, 1, "Should be one pending install");
+  installs[0].cancel();
 
-    Services.perms.remove(makeURI("http://example.com/"), "install");
-    await removeTab();
-  })();
+  Services.perms.remove(makeURI("http://example.com/"), "install");
+  await removeTab();
 },
 
-function test_theme() {
-  return (async function() {
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+async function test_theme() {
+  let pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-    let progressPromise = waitForProgressNotification();
-    let dialogPromise = waitForInstallDialog();
-    let triggers = encodeURIComponent(JSON.stringify({
-      "Theme XPI": "theme.xpi"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
-    await progressPromise;
-    let installDialog = await dialogPromise;
+  let progressPromise = waitForProgressNotification();
+  let dialogPromise = waitForInstallDialog();
+  let triggers = encodeURIComponent(JSON.stringify({
+    "Theme XPI": "theme.xpi"
+  }));
+  BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  await progressPromise;
+  let installDialog = await dialogPromise;
 
-    let notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog(installDialog);
-    let panel = await notificationPromise;
+  let notificationPromise = waitForNotification("addon-install-restart");
+  acceptInstallDialog(installDialog);
+  let panel = await notificationPromise;
 
-    let notification = panel.childNodes[0];
-    is(notification.button.label, "Restart Now", "Should have seen the right button");
-    is(notification.getAttribute("label"),
-       "Theme Test will be installed after you restart " + gApp + ".",
-       "Should have seen the right message");
+  let notification = panel.childNodes[0];
+  is(notification.button.label, "Restart Now", "Should have seen the right button");
+  is(notification.getAttribute("label"),
+     "Theme Test will be installed after you restart " + gApp + ".",
+     "Should have seen the right message");
 
-    let addon = await new Promise(resolve => {
-      AddonManager.getAddonByID("{972ce4c6-7e08-4474-a285-3208198ce6fd}", function(result) {
-        resolve(result);
-      });
+  let addon = await new Promise(resolve => {
+    AddonManager.getAddonByID("{972ce4c6-7e08-4474-a285-3208198ce6fd}", function(result) {
+      resolve(result);
     });
-    ok(addon.userDisabled, "Should be switching away from the default theme.");
-    // Undo the pending theme switch
-    addon.userDisabled = false;
+  });
+  ok(addon.userDisabled, "Should be switching away from the default theme.");
+  // Undo the pending theme switch
+  addon.userDisabled = false;
 
-    addon = await new Promise(resolve => {
-      AddonManager.getAddonByID("theme-xpi@tests.mozilla.org", function(result) {
-        resolve(result);
-      });
+  addon = await new Promise(resolve => {
+    AddonManager.getAddonByID("theme-xpi@tests.mozilla.org", function(result) {
+      resolve(result);
     });
-    isnot(addon, null, "Test theme will have been installed");
-    addon.uninstall();
+  });
+  isnot(addon, null, "Test theme will have been installed");
+  addon.uninstall();
 
-    Services.perms.remove(makeURI("http://example.com/"), "install");
-    await removeTab();
-  })();
+  Services.perms.remove(makeURI("http://example.com/"), "install");
+  await removeTab();
 },
 
-function test_renotifyBlocked() {
-  return (async function() {
-    let notificationPromise = waitForNotification("addon-install-blocked");
-    let triggers = encodeURIComponent(JSON.stringify({
-      "XPI": "amosigned.xpi"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
-    let panel = await notificationPromise;
+async function test_renotifyBlocked() {
+  let notificationPromise = waitForNotification("addon-install-blocked");
+  let triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "amosigned.xpi"
+  }));
+  BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  let panel = await notificationPromise;
 
-    let closePromise = waitForNotificationClose();
-    // hide the panel (this simulates the user dismissing it)
-    panel.hidePopup();
-    await closePromise;
+  let closePromise = waitForNotificationClose();
+  // hide the panel (this simulates the user dismissing it)
+  panel.hidePopup();
+  await closePromise;
 
-    info("Timeouts after this probably mean bug 589954 regressed");
+  info("Timeouts after this probably mean bug 589954 regressed");
 
-    await new Promise(resolve => executeSoon(resolve));
+  await new Promise(resolve => executeSoon(resolve));
 
-    notificationPromise = waitForNotification("addon-install-blocked");
-    gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
-    await notificationPromise;
+  notificationPromise = waitForNotification("addon-install-blocked");
+  gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
+  await notificationPromise;
 
-    let installs = await getInstalls();
-    is(installs.length, 2, "Should be two pending installs");
+  let installs = await getInstalls();
+  is(installs.length, 2, "Should be two pending installs");
 
-    closePromise = waitForNotificationClose();
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-    await closePromise;
+  closePromise = waitForNotificationClose();
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await closePromise;
 
-    installs = await getInstalls();
-    is(installs.length, 0, "Should have cancelled the installs");
-  })();
+  installs = await getInstalls();
+  is(installs.length, 0, "Should have cancelled the installs");
 },
 
-function test_renotifyInstalled() {
-  return (async function() {
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+async function test_renotifyInstalled() {
+  let pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-    let progressPromise = waitForProgressNotification();
-    let dialogPromise = waitForInstallDialog();
-    let triggers = encodeURIComponent(JSON.stringify({
-      "XPI": "amosigned.xpi"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
-    await progressPromise;
-    let installDialog = await dialogPromise;
+  let progressPromise = waitForProgressNotification();
+  let dialogPromise = waitForInstallDialog();
+  let triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "amosigned.xpi"
+  }));
+  BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  await progressPromise;
+  let installDialog = await dialogPromise;
 
-    // Wait for the complete notification
-    let notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog(installDialog);
-    let panel = await notificationPromise;
+  // Wait for the complete notification
+  let notificationPromise = waitForNotification("addon-install-restart");
+  acceptInstallDialog(installDialog);
+  let panel = await notificationPromise;
 
-    let closePromise = waitForNotificationClose();
-    // hide the panel (this simulates the user dismissing it)
-    panel.hidePopup();
-    await closePromise;
+  let closePromise = waitForNotificationClose();
+  // hide the panel (this simulates the user dismissing it)
+  panel.hidePopup();
+  await closePromise;
 
-    // Install another
-    await new Promise(resolve => executeSoon(resolve));
+  // Install another
+  await new Promise(resolve => executeSoon(resolve));
 
-    progressPromise = waitForProgressNotification();
-    dialogPromise = waitForInstallDialog();
-    gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
-    await progressPromise;
-    installDialog = await dialogPromise;
+  progressPromise = waitForProgressNotification();
+  dialogPromise = waitForInstallDialog();
+  gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
+  await progressPromise;
+  installDialog = await dialogPromise;
 
-    info("Timeouts after this probably mean bug 589954 regressed");
+  info("Timeouts after this probably mean bug 589954 regressed");
 
-    // Wait for the complete notification
-    notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog(installDialog);
-    await notificationPromise;
+  // Wait for the complete notification
+  notificationPromise = waitForNotification("addon-install-restart");
+  acceptInstallDialog(installDialog);
+  await notificationPromise;
 
-    let installs = await getInstalls();
-    is(installs.length, 1, "Should be one pending installs");
-    installs[0].cancel();
+  let installs = await getInstalls();
+  is(installs.length, 1, "Should be one pending installs");
+  installs[0].cancel();
 
-    Services.perms.remove(makeURI("http://example.com/"), "install");
-    await removeTab();
-  })();
+  Services.perms.remove(makeURI("http://example.com/"), "install");
+  await removeTab();
 },
 
-function test_cancel() {
-  return (async function() {
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
+async function test_cancel() {
+  let pm = Services.perms;
+  pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 
-    let notificationPromise = waitForNotification(PROGRESS_NOTIFICATION);
-    let triggers = encodeURIComponent(JSON.stringify({
-      "XPI": "slowinstall.sjs?file=amosigned.xpi"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
-    let panel = await notificationPromise;
+  let notificationPromise = waitForNotification(PROGRESS_NOTIFICATION);
+  let triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "slowinstall.sjs?file=amosigned.xpi"
+  }));
+  BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
+  let panel = await notificationPromise;
 
-    let notification = panel.childNodes[0];
-    // Close the notification
-    let anchor = document.getElementById("addons-notification-icon");
-    anchor.click();
-    // Reopen the notification
-    anchor.click();
+  let notification = panel.childNodes[0];
+  // Close the notification
+  let anchor = document.getElementById("addons-notification-icon");
+  anchor.click();
+  // Reopen the notification
+  anchor.click();
 
-    ok(PopupNotifications.isPanelOpen, "Notification should still be open");
-    is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
-    notification = panel.childNodes[0];
-    is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
+  ok(PopupNotifications.isPanelOpen, "Notification should still be open");
+  is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
+  notification = panel.childNodes[0];
+  is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
 
-    // Cancel the download
-    let install = notification.notification.options.installs[0];
-    let cancelledPromise = new Promise(resolve => {
-      install.addListener({
-        onDownloadCancelled() {
-          install.removeListener(this);
-          resolve();
-        }
-      });
-    });
-    EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});
-    await cancelledPromise;
-
-    await new Promise(resolve => executeSoon(resolve));
-
-    ok(!PopupNotifications.isPanelOpen, "Notification should be closed");
-
-    let installs = await getInstalls();
-    is(installs.length, 0, "Should be no pending install");
-
-    Services.perms.remove(makeURI("http://example.com/"), "install");
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  })();
-},
-
-function test_failedSecurity() {
-  return (async function() {
-    Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, false);
-    setupRedirect({
-      "Location": TESTROOT + "amosigned.xpi"
-    });
-
-    let notificationPromise = waitForNotification("addon-install-blocked");
-    let triggers = encodeURIComponent(JSON.stringify({
-      "XPI": "redirect.sjs?mode=redirect"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, SECUREROOT + "installtrigger.html?" + triggers);
-    let panel = await notificationPromise;
-
-    let notification = panel.childNodes[0];
-    // Click on Allow
-    EventUtils.synthesizeMouse(notification.button, 20, 10, {});
-
-    // Notification should have changed to progress notification
-    ok(PopupNotifications.isPanelOpen, "Notification should still be open");
-    is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
-    notification = panel.childNodes[0];
-    is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
-
-    // Wait for it to fail
-    await new Promise(resolve => {
-      Services.obs.addObserver(function observer() {
-        Services.obs.removeObserver(observer, "addon-install-failed");
+  // Cancel the download
+  let install = notification.notification.options.installs[0];
+  let cancelledPromise = new Promise(resolve => {
+    install.addListener({
+      onDownloadCancelled() {
+        install.removeListener(this);
         resolve();
-      }, "addon-install-failed");
+      }
     });
+  });
+  EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});
+  await cancelledPromise;
 
-    // Allow the browser code to add the failure notification and then wait
-    // for the progress notification to dismiss itself
-    await waitForSingleNotification();
-    is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
-    notification = panel.childNodes[0];
-    is(notification.id, "addon-install-failed-notification", "Should have seen the install fail");
+  await new Promise(resolve => executeSoon(resolve));
 
-    Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, true);
-    await removeTab();
-  })();
+  ok(!PopupNotifications.isPanelOpen, "Notification should be closed");
+
+  let installs = await getInstalls();
+  is(installs.length, 0, "Should be no pending install");
+
+  Services.perms.remove(makeURI("http://example.com/"), "install");
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+},
+
+async function test_failedSecurity() {
+  Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, false);
+  setupRedirect({
+    "Location": TESTROOT + "amosigned.xpi"
+  });
+
+  let notificationPromise = waitForNotification("addon-install-blocked");
+  let triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "redirect.sjs?mode=redirect"
+  }));
+  BrowserTestUtils.openNewForegroundTab(gBrowser, SECUREROOT + "installtrigger.html?" + triggers);
+  let panel = await notificationPromise;
+
+  let notification = panel.childNodes[0];
+  // Click on Allow
+  EventUtils.synthesizeMouse(notification.button, 20, 10, {});
+
+  // Notification should have changed to progress notification
+  ok(PopupNotifications.isPanelOpen, "Notification should still be open");
+  is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
+  notification = panel.childNodes[0];
+  is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
+
+  // Wait for it to fail
+  await new Promise(resolve => {
+    Services.obs.addObserver(function observer() {
+      Services.obs.removeObserver(observer, "addon-install-failed");
+      resolve();
+    }, "addon-install-failed");
+  });
+
+  // Allow the browser code to add the failure notification and then wait
+  // for the progress notification to dismiss itself
+  await waitForSingleNotification();
+  is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
+  notification = panel.childNodes[0];
+  is(notification.id, "addon-install-failed-notification", "Should have seen the install fail");
+
+  Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, true);
+  await removeTab();
 }
 ];
 

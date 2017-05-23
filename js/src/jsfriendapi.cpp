@@ -419,34 +419,6 @@ js::RunningWithTrustedPrincipals(JSContext* cx)
 }
 
 JS_FRIEND_API(JSFunction*)
-js::GetOutermostEnclosingFunctionOfScriptedCaller(JSContext* cx)
-{
-    ScriptFrameIter iter(cx);
-
-    // Skip eval frames.
-    while (!iter.done() && iter.isEvalFrame())
-        ++iter;
-
-    if (iter.done())
-        return nullptr;
-
-    if (!iter.isFunctionFrame())
-        return nullptr;
-
-    if (iter.compartment() != cx->compartment())
-        return nullptr;
-
-    RootedFunction curr(cx, iter.callee(cx));
-    for (ScopeIter si(curr->nonLazyScript()); si; si++) {
-        if (si.kind() == ScopeKind::Function)
-            curr = si.scope()->as<FunctionScope>().canonicalFunction();
-    }
-
-    assertSameCompartment(cx, curr);
-    return curr;
-}
-
-JS_FRIEND_API(JSFunction*)
 js::DefineFunctionWithReserved(JSContext* cx, JSObject* objArg, const char* name, JSNative call,
                                unsigned nargs, unsigned attrs)
 {
@@ -595,6 +567,12 @@ JS_FRIEND_API(bool)
 JS_IsDeadWrapper(JSObject* obj)
 {
     return IsDeadProxyObject(obj);
+}
+
+JS_FRIEND_API(JSObject*)
+JS_NewDeadWrapper(JSContext* cx, JSObject* origObj)
+{
+    return NewDeadProxyObject(cx, origObj);
 }
 
 void

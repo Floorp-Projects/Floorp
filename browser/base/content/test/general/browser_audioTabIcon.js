@@ -7,7 +7,7 @@ async function wait_for_tab_playing_event(tab, expectPlaying) {
     ok(true, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
     return true;
   }
-  return await BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
+  return BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
     if (event.detail.changed.includes("soundplaying")) {
       is(tab.hasAttribute("soundplaying"), expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
       is(tab.soundPlaying, expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
@@ -53,8 +53,6 @@ async function pause(tab, options) {
     let browser = tab.linkedBrowser;
     let awaitDOMAudioPlaybackStopped =
       BrowserTestUtils.waitForEvent(browser, "DOMAudioPlaybackStopped", "DOMAudioPlaybackStopped event should get fired after pause");
-    let awaitTabPausedAttrModified =
-      wait_for_tab_playing_event(tab, false);
     await ContentTask.spawn(browser, {}, async function() {
       let audio = content.document.querySelector("audio");
       audio.pause();
@@ -73,7 +71,7 @@ async function pause(tab, options) {
       ok(tab.hasAttribute("soundplaying"), "The tab should still have the soundplaying attribute immediately after DOMAudioPlaybackStopped");
     }
 
-    await awaitTabPausedAttrModified;
+    await wait_for_tab_playing_event(tab, false);
     ok(!tab.hasAttribute("soundplaying"), "The tab should not have the soundplaying attribute after the timeout has resolved");
   } finally {
     // Make sure other tests don't timeout if an exception gets thrown above.
@@ -296,9 +294,9 @@ async function test_swapped_browser_while_not_playing(oldTab, newBrowser) {
     let observer = (subject, topic, data) => {
       ok(false, "Should not see an audio-playback notification");
     };
-    Services.obs.addObserver(observer, "audiochannel-activity-normal");
+    Services.obs.addObserver(observer, "audio-playback");
     setTimeout(() => {
-      Services.obs.removeObserver(observer, "audiochannel-activity-normal");
+      Services.obs.removeObserver(observer, "audio-playback");
       resolve();
     }, 100);
   });

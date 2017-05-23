@@ -887,6 +887,18 @@ Classifier::ApplyFullHashes(nsTArray<TableUpdate*>* aUpdates)
 }
 
 void
+Classifier::GetCacheInfo(const nsACString& aTable,
+                         nsIUrlClassifierCacheInfo** aCache)
+{
+  LookupCache* lookupCache = GetLookupCache(aTable);
+  if (!lookupCache) {
+    return;
+  }
+
+  lookupCache->GetCacheInfo(aCache);
+}
+
+void
 Classifier::DropStores()
 {
   for (uint32_t i = 0; i < mLookupCaches.Length(); i++) {

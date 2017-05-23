@@ -25,6 +25,15 @@ RestyleManager::PostRestyleEvent(dom::Element* aElement,
 }
 
 void
+RestyleManager::PostRestyleEventForCSSRuleChanges(dom::Element* aElement,
+                                                   nsRestyleHint aRestyleHint,
+                                                   nsChangeHint aMinChangeHint)
+{
+  MOZ_STYLO_FORWARD(PostRestyleEventForCSSRuleChanges,
+                    (aElement, aRestyleHint, aMinChangeHint));
+}
+
+void
 RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                                     nsRestyleHint aRestyleHint)
 {
@@ -77,6 +86,12 @@ nsresult
 RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 {
   MOZ_STYLO_FORWARD(ReparentStyleContext, (aFrame));
+}
+
+void
+RestyleManager::UpdateOnlyAnimationStyles()
+{
+  MOZ_STYLO_FORWARD(UpdateOnlyAnimationStyles, ());
 }
 
 } // namespace mozilla

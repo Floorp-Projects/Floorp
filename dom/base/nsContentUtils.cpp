@@ -301,6 +301,7 @@ bool nsContentUtils::sAnimationsAPIElementAnimateEnabled = false;
 bool nsContentUtils::sGetBoxQuadsEnabled = false;
 bool nsContentUtils::sSkipCursorMoveForSameValueSet = false;
 bool nsContentUtils::sRequestIdleCallbackEnabled = false;
+bool nsContentUtils::sLowerNetworkPriority = false;
 
 int32_t nsContentUtils::sPrivacyMaxInnerWidth = 1000;
 int32_t nsContentUtils::sPrivacyMaxInnerHeight = 1000;
@@ -714,6 +715,9 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sRequestIdleCallbackEnabled,
                                "dom.requestIdleCallback.enabled", false);
+
+  Preferences::AddBoolVarCache(&sLowerNetworkPriority,
+                               "privacy.trackingprotection.lower_network_priority", false);
 
   Element::InitCCCallbacks();
 

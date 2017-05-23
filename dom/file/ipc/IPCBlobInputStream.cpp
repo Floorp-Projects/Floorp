@@ -28,7 +28,7 @@ public:
 
     nsCOMPtr<nsIEventTarget> target = aEventTarget;
     if (!target) {
-      target = SystemGroup::EventTargetFor(TaskCategory::Other);
+      target = NS_GetCurrentThread();
     }
 
     target->Dispatch(runnable, NS_DISPATCH_NORMAL);
@@ -69,6 +69,7 @@ NS_INTERFACE_MAP_BEGIN(IPCBlobInputStream)
   NS_INTERFACE_MAP_ENTRY(nsICloneableInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream, IsSeekableStream())
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFileMetadata, IsFileMetadata())
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
@@ -192,6 +193,10 @@ IPCBlobInputStream::Clone(nsIInputStream** aResult)
   MOZ_ASSERT(mActor);
 
   nsCOMPtr<nsIInputStream> stream = mActor->CreateStream();
+  if (!stream) {
+    return NS_ERROR_FAILURE;
+  }
+
   stream.forget(aResult);
   return NS_OK;
 }
@@ -363,6 +368,50 @@ mozilla::Maybe<uint64_t>
 IPCBlobInputStream::ExpectedSerializedLength()
 {
   return mozilla::Nothing();
+}
+
+// nsIFileMetadata
+
+bool
+IPCBlobInputStream::IsFileMetadata() const
+{
+  // We are nsIFileMetadata only if we have the remote stream and that is a
+  // nsIFileMetadata.
+  nsCOMPtr<nsIFileMetadata> fileMetadata = do_QueryInterface(mRemoteStream);
+  return !!fileMetadata;
+}
+
+NS_IMETHODIMP
+IPCBlobInputStream::GetSize(int64_t* aRetval)
+{
+  nsCOMPtr<nsIFileMetadata> fileMetadata = do_QueryInterface(mRemoteStream);
+  if (!fileMetadata) {
+    return mState == eClosed ? NS_BASE_STREAM_CLOSED : NS_ERROR_FAILURE;
+  }
+
+  return fileMetadata->GetSize(aRetval);
+}
+
+NS_IMETHODIMP
+IPCBlobInputStream::GetLastModified(int64_t* aRetval)
+{
+  nsCOMPtr<nsIFileMetadata> fileMetadata = do_QueryInterface(mRemoteStream);
+  if (!fileMetadata) {
+    return mState == eClosed ? NS_BASE_STREAM_CLOSED : NS_ERROR_FAILURE;
+  }
+
+  return fileMetadata->GetLastModified(aRetval);
+}
+
+NS_IMETHODIMP
+IPCBlobInputStream::GetFileDescriptor(PRFileDesc** aRetval)
+{
+  nsCOMPtr<nsIFileMetadata> fileMetadata = do_QueryInterface(mRemoteStream);
+  if (!fileMetadata) {
+    return mState == eClosed ? NS_BASE_STREAM_CLOSED : NS_ERROR_FAILURE;
+  }
+
+  return fileMetadata->GetFileDescriptor(aRetval);
 }
 
 // nsISeekableStream

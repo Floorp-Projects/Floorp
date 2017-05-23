@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaTrackConstraints.h"
+#include "nsIScriptError.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 
 #include <limits>
@@ -371,11 +372,11 @@ FlattenedConstraints::FlattenedConstraints(const NormalizedConstraints& aOther)
     if (mEchoCancellation.Intersects(set.mEchoCancellation)) {
         mEchoCancellation.Intersect(set.mEchoCancellation);
     }
-    if (mMozNoiseSuppression.Intersects(set.mMozNoiseSuppression)) {
-        mMozNoiseSuppression.Intersect(set.mMozNoiseSuppression);
+    if (mNoiseSuppression.Intersects(set.mNoiseSuppression)) {
+        mNoiseSuppression.Intersect(set.mNoiseSuppression);
     }
-    if (mMozAutoGainControl.Intersects(set.mMozAutoGainControl)) {
-        mMozAutoGainControl.Intersect(set.mMozAutoGainControl);
+    if (mAutoGainControl.Intersects(set.mAutoGainControl)) {
+        mAutoGainControl.Intersect(set.mAutoGainControl);
     }
   }
 }
@@ -467,6 +468,33 @@ MediaConstraintsHelper::FindBadConstraint(
   nsTArray<RefPtr<MockDevice>> devices;
   devices.AppendElement(new MockDevice(&aMediaEngineSource, aDeviceId));
   return FindBadConstraint(aConstraints, devices);
+}
+
+void
+MediaConstraintsHelper::ConvertOldWithWarning(
+    const dom::OwningBooleanOrConstrainBooleanParameters& old,
+    dom::OwningBooleanOrConstrainBooleanParameters& to,
+    const char* aMessageName,
+    nsPIDOMWindowInner* aWindow) {
+  if ((old.IsBoolean() ||
+       old.GetAsConstrainBooleanParameters().mExact.WasPassed() ||
+       old.GetAsConstrainBooleanParameters().mIdeal.WasPassed()) &&
+      !(to.IsBoolean() ||
+        to.GetAsConstrainBooleanParameters().mExact.WasPassed() ||
+        to.GetAsConstrainBooleanParameters().mIdeal.WasPassed())) {
+    nsCOMPtr<nsIDocument> doc = aWindow->GetDoc();
+    if (doc) {
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                      NS_LITERAL_CSTRING("DOM"), doc,
+                                      nsContentUtils::eDOM_PROPERTIES,
+                                      aMessageName);
+    }
+    if (old.IsBoolean()) {
+      to.SetAsBoolean() = old.GetAsBoolean();
+    } else {
+      to.SetAsConstrainBooleanParameters() = old.GetAsConstrainBooleanParameters();
+    }
+  }
 }
 
 }

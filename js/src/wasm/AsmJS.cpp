@@ -338,8 +338,8 @@ struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod
         return srcStart + srcLengthWithRightBrace;
     }
 
-    AsmJSMetadata()
-      : Metadata(ModuleKind::AsmJS),
+    explicit AsmJSMetadata(UniqueMetadataTier tier)
+      : Metadata(Move(tier), ModuleKind::AsmJS),
         cacheResult(CacheResult::Miss),
         srcStart(0),
         srcBodyStart(0),
@@ -1775,7 +1775,11 @@ class MOZ_STACK_CLASS ModuleValidator
 
   public:
     bool init() {
-        asmJSMetadata_ = cx_->new_<AsmJSMetadata>();
+        auto tierMetadata = js::MakeUnique<MetadataTier>(CompileMode::Ion);
+        if (!tierMetadata)
+            return false;
+
+        asmJSMetadata_ = cx_->new_<AsmJSMetadata>(Move(tierMetadata));
         if (!asmJSMetadata_)
             return false;
 
@@ -7506,8 +7510,11 @@ static bool
 HasPureCoercion(JSContext* cx, HandleValue v)
 {
     // Unsigned SIMD types are not allowed in function signatures.
-    if (IsVectorObject<Int32x4>(v) || IsVectorObject<Float32x4>(v) || IsVectorObject<Bool32x4>(v))
+    if (IsVectorObject<Int32x4>(v) || IsVectorObject<Int16x8>(v) ||  IsVectorObject<Int8x16>(v) ||
+        IsVectorObject<Bool32x4>(v) || IsVectorObject<Bool16x8>(v) ||
+        IsVectorObject<Bool8x16>(v) || IsVectorObject<Float32x4>(v)) {
         return true;
+    }
 
     // Ideally, we'd reject all non-SIMD non-primitives, but Emscripten has a
     // bug that generates code that passes functions for some imports. To avoid
@@ -8548,7 +8555,11 @@ LookupAsmJSModuleInCache(JSContext* cx, AsmJSParser& parser, bool* loadedFromCac
     if (!Module::assumptionsMatch(assumptions, cursor, remain))
         return true;
 
-    MutableAsmJSMetadata asmJSMetadata = cx->new_<AsmJSMetadata>();
+    auto tierMetadata = js::MakeUnique<MetadataTier>(CompileMode::Ion);
+    if (!tierMetadata)
+        return false;
+
+    MutableAsmJSMetadata asmJSMetadata = cx->new_<AsmJSMetadata>(Move(tierMetadata));
     if (!asmJSMetadata)
         return false;
 

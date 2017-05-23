@@ -4,15 +4,14 @@
 
 //! Per-node data used in style calculation.
 
-#![deny(missing_docs)]
-
 use context::SharedStyleContext;
 use dom::TElement;
 use properties::ComputedValues;
 use properties::longhands::display::computed_value as display;
-use restyle_hints::{RESTYLE_DESCENDANTS, RESTYLE_LATER_SIBLINGS, RESTYLE_SELF, RestyleHint};
+use restyle_hints::{HintComputationContext, RestyleReplacements, RestyleHint};
 use rule_tree::StrongRuleNode;
 use selector_parser::{EAGER_PSEUDO_COUNT, PseudoElement, RestyleDamage};
+use shared_lock::StylesheetGuards;
 #[cfg(feature = "servo")] use std::collections::HashMap;
 use std::fmt;
 #[cfg(feature = "servo")] use std::hash::BuildHasherDefault;
@@ -197,21 +196,18 @@ impl StoredRestyleHint {
         // In the middle of an animation only restyle, we don't need to
         // propagate any restyle hints, and we need to remove ourselves.
         if traversal_flags.for_animation_only() {
-            self.0.remove(RestyleHint::for_animations());
+            self.0.remove_animation_hints();
             return Self::empty();
         }
 
-        debug_assert!(!self.0.intersects(RestyleHint::for_animations()),
+        debug_assert!(!self.0.has_animation_hint(),
                       "There should not be any animation restyle hints \
                        during normal traversal");
 
         // Else we should clear ourselves, and return the propagated hint.
-        let hint = mem::replace(&mut self.0, RestyleHint::empty());
-        StoredRestyleHint(if hint.contains(RESTYLE_DESCENDANTS) {
-            RESTYLE_SELF | RESTYLE_DESCENDANTS
-        } else {
-            RestyleHint::empty()
-        })
+        let new_hint = mem::replace(&mut self.0, RestyleHint::empty())
+                       .propagate_for_non_animation_restyle();
+        StoredRestyleHint(new_hint)
     }
 
     /// Creates an empty `StoredRestyleHint`.
@@ -222,25 +218,25 @@ impl StoredRestyleHint {
     /// Creates a restyle hint that forces the whole subtree to be restyled,
     /// including the element.
     pub fn subtree() -> Self {
-        StoredRestyleHint(RESTYLE_SELF | RESTYLE_DESCENDANTS)
+        StoredRestyleHint(RestyleHint::subtree())
     }
 
     /// Creates a restyle hint that forces the element and all its later
     /// siblings to have their whole subtrees restyled, including the elements
     /// themselves.
     pub fn subtree_and_later_siblings() -> Self {
-        StoredRestyleHint(RESTYLE_SELF | RESTYLE_DESCENDANTS | RESTYLE_LATER_SIBLINGS)
+        StoredRestyleHint(RestyleHint::subtree_and_later_siblings())
     }
 
     /// Returns true if the hint indicates that our style may be invalidated.
     pub fn has_self_invalidations(&self) -> bool {
-        self.0.intersects(RestyleHint::for_self())
+        self.0.affects_self()
     }
 
     /// Returns true if the hint indicates that our sibling's style may be
     /// invalidated.
     pub fn has_sibling_invalidations(&self) -> bool {
-        self.0.intersects(RESTYLE_LATER_SIBLINGS)
+        self.0.affects_later_siblings()
     }
 
     /// Whether the restyle hint is empty (nothing requires to be restyled).
@@ -249,13 +245,18 @@ impl StoredRestyleHint {
     }
 
     /// Insert another restyle hint, effectively resulting in the union of both.
-    pub fn insert(&mut self, other: &Self) {
-        self.0 |= other.0
+    pub fn insert(&mut self, other: Self) {
+        self.0.insert(other.0)
+    }
+
+    /// Insert another restyle hint, effectively resulting in the union of both.
+    pub fn insert_from(&mut self, other: &Self) {
+        self.0.insert_from(&other.0)
     }
 
     /// Returns true if the hint has animation-only restyle.
     pub fn has_animation_hint(&self) -> bool {
-        self.0.intersects(RestyleHint::for_animations())
+        self.0.has_animation_hint()
     }
 }
 
@@ -355,7 +356,7 @@ pub enum RestyleKind {
     MatchAndCascade,
     /// We need to recascade with some replacement rule, such as the style
     /// attribute, or animation rules.
-    CascadeWithReplacements(RestyleHint),
+    CascadeWithReplacements(RestyleReplacements),
     /// We only need to recascade, for example, because only inherited
     /// properties in the parent changed.
     CascadeOnly,
@@ -369,18 +370,19 @@ impl ElementData {
     /// explicit sibling restyle hints from the stored restyle hint.
     ///
     /// Returns true if later siblings must be restyled.
-    pub fn compute_final_hint<E: TElement>(
+    pub fn compute_final_hint<'a, E: TElement>(
         &mut self,
         element: E,
-        context: &SharedStyleContext)
+        shared_context: &SharedStyleContext,
+        hint_context: HintComputationContext<'a, E>)
         -> bool
     {
         debug!("compute_final_hint: {:?}, {:?}",
                element,
-               context.traversal_flags);
+               shared_context.traversal_flags);
 
         let mut hint = match self.get_restyle() {
-            Some(r) => r.hint.0,
+            Some(r) => r.hint.0.clone(),
             None => RestyleHint::empty(),
         };
 
@@ -392,7 +394,11 @@ impl ElementData {
                 element.implemented_pseudo_element());
 
         if element.has_snapshot() && !element.handled_snapshot() {
-            hint |= context.stylist.compute_restyle_hint(&element, context.snapshot_map);
+            let snapshot_hint =
+                shared_context.stylist.compute_restyle_hint(&element,
+                                                            shared_context,
+                                                            hint_context);
+            hint.insert(snapshot_hint);
             unsafe { element.set_handled_snapshot() }
             debug_assert!(element.handled_snapshot());
         }
@@ -401,8 +407,7 @@ impl ElementData {
 
         // If the hint includes a directive for later siblings, strip it out and
         // notify the caller to modify the base hint for future siblings.
-        let later_siblings = hint.contains(RESTYLE_LATER_SIBLINGS);
-        hint.remove(RESTYLE_LATER_SIBLINGS);
+        let later_siblings = hint.remove_later_siblings_hint();
 
         // Insert the hint, overriding the previous hint. This effectively takes
         // care of removing the later siblings restyle hint.
@@ -444,13 +449,13 @@ impl ElementData {
         debug_assert!(self.restyle.is_some());
         let restyle_data = self.restyle.as_ref().unwrap();
 
-        let hint = restyle_data.hint.0;
-        if hint.contains(RESTYLE_SELF) {
+        let hint = &restyle_data.hint.0;
+        if hint.match_self() {
             return RestyleKind::MatchAndCascade;
         }
 
         if !hint.is_empty() {
-            return RestyleKind::CascadeWithReplacements(hint);
+            return RestyleKind::CascadeWithReplacements(hint.replacements);
         }
 
         debug_assert!(restyle_data.recascade,
@@ -504,6 +509,24 @@ impl ElementData {
 
         self.styles_mut().primary.rules = rules;
         true
+    }
+
+    /// Return true if important rules are different.
+    /// We use this to make sure the cascade of off-main thread animations is correct.
+    /// Note: Ignore custom properties for now because we only support opacity and transform
+    ///       properties for animations running on compositor. Actually, we only care about opacity
+    ///       and transform for now, but it's fine to compare all properties and let the user
+    ///       the check which properties do they want.
+    ///       If it costs too much, get_properties_overriding_animations() should return a set
+    ///       containing only opacity and transform properties.
+    pub fn important_rules_are_different(&self,
+                                         rules: &StrongRuleNode,
+                                         guards: &StylesheetGuards) -> bool {
+        debug_assert!(self.has_styles());
+        let (important_rules, _custom) =
+            self.styles().primary.rules.get_properties_overriding_animations(&guards);
+        let (other_important_rules, _custom) = rules.get_properties_overriding_animations(&guards);
+        important_rules != other_important_rules
     }
 
     /// Returns true if the Element has a RestyleData.

@@ -29,14 +29,14 @@
 
 using namespace mozilla::safebrowsing;
 
-#define DEFAULT_RESPONSE_TIMEOUT 5 * 1000
+#define DEFAULT_RESPONSE_TIMEOUT_MS 15 * 1000
 #define DEFAULT_TIMEOUT_MS 60 * 1000
-static_assert(DEFAULT_TIMEOUT_MS > DEFAULT_RESPONSE_TIMEOUT,
+static_assert(DEFAULT_TIMEOUT_MS > DEFAULT_RESPONSE_TIMEOUT_MS,
   "General timeout must be greater than reponse timeout");
 
 static const char* gQuitApplicationMessage = "quit-application";
 
-static uint32_t sResponseTimeoutMs = DEFAULT_RESPONSE_TIMEOUT;
+static uint32_t sResponseTimeoutMs = DEFAULT_RESPONSE_TIMEOUT_MS;
 static uint32_t sTimeoutMs = DEFAULT_TIMEOUT_MS;
 
 // Limit the list file size to 32mb
@@ -209,7 +209,7 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
                                           DEFAULT_TIMEOUT_MS);
     mozilla::Preferences::AddUintVarCache(&sResponseTimeoutMs,
                                           "urlclassifier.update.response_timeout_ms",
-                                          DEFAULT_RESPONSE_TIMEOUT);
+                                          DEFAULT_RESPONSE_TIMEOUT_MS);
     preferencesInitialized = true;
   }
 

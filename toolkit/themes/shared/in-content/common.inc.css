@@ -517,6 +517,7 @@ html|a:hover:active,
 
 xul|checkbox {
   margin-inline-start: 0;
+  -moz-appearance: none;
 }
 
 xul|*.checkbox-check,
@@ -564,6 +565,7 @@ html|*.toggle-container-with-text {
 
 xul|radio {
   margin-inline-start: 0;
+  -moz-appearance: none;
 }
 
 xul|*.radio-check {

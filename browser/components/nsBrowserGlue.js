@@ -34,10 +34,10 @@ XPCOMUtils.defineLazyGetter(this, "WeaveService", () =>
           PageThumbs:false, PdfJs:false, PermissionUI:false, PlacesBackups:false,
           PlacesUtils:false, PluralForm:false, PrivateBrowsingUtils:false,
           ProcessHangMonitor:false, ReaderParent:false, RecentWindow:false,
-          RemotePrompt:false, SelfSupportBackend:false, SessionStore:false,
+          RemotePrompt:false, SessionStore:false,
           ShellService:false, SimpleServiceDiscovery:false, TabCrashHandler:false,
           Task:false, UITour:false, WebChannel:false,
-          WindowsRegistry:false, webrtcUI:false, UserAgentOverrides: false */
+          WindowsRegistry:false, webrtcUI:false */
 
 /**
  * IF YOU ADD OR REMOVE FROM THIS LIST, PLEASE UPDATE THE LIST ABOVE AS WELL.
@@ -83,7 +83,6 @@ let initializedModules = {};
   ["ReaderParent", "resource:///modules/ReaderParent.jsm"],
   ["RecentWindow", "resource:///modules/RecentWindow.jsm"],
   ["RemotePrompt", "resource:///modules/RemotePrompt.jsm"],
-  ["SelfSupportBackend", "resource:///modules/SelfSupportBackend.jsm", "init"],
   ["SessionStore", "resource:///modules/sessionstore/SessionStore.jsm"],
   ["ShellService", "resource:///modules/ShellService.jsm"],
   ["SimpleServiceDiscovery", "resource://gre/modules/SimpleServiceDiscovery.jsm"],
@@ -93,7 +92,6 @@ let initializedModules = {};
   ["WebChannel", "resource://gre/modules/WebChannel.jsm"],
   ["WindowsRegistry", "resource://gre/modules/WindowsRegistry.jsm"],
   ["webrtcUI", "resource:///modules/webrtcUI.jsm", "init"],
-  ["UserAgentOverrides", "resource://gre/modules/UserAgentOverrides.jsm"],
 ].forEach(([name, resource, init]) => {
   if (init) {
     XPCOMUtils.defineLazyGetter(this, name, () => {
@@ -126,10 +124,6 @@ XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
 const global = this;
 
 const listeners = {
-  observers: {
-    "sessionstore-windows-restored": ["SelfSupportBackend"],
-  },
-
   ppmm: {
     // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN ContentPrefServiceParent.init
     "ContentPrefs:FunctionCall": ["ContentPrefServiceParent"],
@@ -171,16 +165,6 @@ const listeners = {
     "webrtc:UpdateBrowserIndicators": ["webrtcUI"],
   },
 
-  observe(subject, topic, data) {
-    for (let module of this.observers[topic]) {
-      try {
-        this[module].observe(subject, topic, data);
-      } catch (e) {
-        Cu.reportError(e);
-      }
-    }
-  },
-
   receiveMessage(modules, data) {
     let val;
     for (let module of modules[data.name]) {
@@ -194,10 +178,6 @@ const listeners = {
   },
 
   init() {
-    for (let observer of Object.keys(this.observers)) {
-      Services.obs.addObserver(this, observer);
-    }
-
     let receiveMessageMM = this.receiveMessage.bind(this, this.mm);
     for (let message of Object.keys(this.mm)) {
       Services.mm.addMessageListener(message, receiveMessageMM);
@@ -535,8 +515,6 @@ BrowserGlue.prototype = {
       // and e10s are active together.
       E10SAccessibilityCheck.init();
     }
-
-    UserAgentOverrides.init();
   },
 
   // cleanup (called on application shutdown)
@@ -580,8 +558,6 @@ BrowserGlue.prototype = {
     os.removeObserver(this, "browser-search-engine-modified");
     os.removeObserver(this, "flash-plugin-hang");
     os.removeObserver(this, "xpi-signature-changed");
-
-    UserAgentOverrides.uninit();
   },
 
   _onAppDefaults: function BG__onAppDefaults() {

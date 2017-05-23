@@ -159,9 +159,6 @@ var whitelist = new Set([
    platforms: ["linux"]},
   // Bug 1348362
   {file: "chrome://global/skin/icons/warning-64.png", platforms: ["linux", "win"]},
-  // Bug 1348522
-  {file: "chrome://global/skin/media/clicktoplay-bgtexture.png"},
-  {file: "chrome://global/skin/media/videoClickToPlayButton.svg"},
   // Bug 1348524
   {file: "chrome://global/skin/notification/close.png", platforms: ["macosx"]},
   // Bug 1348525

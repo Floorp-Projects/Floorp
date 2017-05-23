@@ -4378,14 +4378,6 @@ nsComputedDOMStyle::DoGetAppearance()
   return val.forget();
 }
 
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetMozAppearance()
-{
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mMozAppearance,
-                                               nsCSSProps::kMozAppearanceKTable));
-  return val.forget();
-}
 
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetBoxAlign()

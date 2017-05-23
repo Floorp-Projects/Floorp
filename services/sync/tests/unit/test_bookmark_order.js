@@ -2,45 +2,251 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 _("Making sure after processing incoming bookmarks, they show up in the right order");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
-var check = async function(expected, message) {
-  let root = await PlacesUtils.promiseBookmarksTree();
+function run_test() {
+  Svc.Prefs.set("log.logger.engine.bookmarks", "Trace");
+  initTestLogging("Trace");
+  Log.repository.getLogger("Sqlite").level = Log.Level.Info;
 
-  let bookmarks = (function mapTree(children) {
-    return children.map(child => {
-      let result = {
-        guid: child.guid,
-        index: child.index,
-      };
-      if (child.children) {
-        result.children = mapTree(child.children);
-      }
-      if (child.annos) {
-        let orphanAnno = child.annos.find(
-          anno => anno.name == "sync/parent");
-        if (orphanAnno) {
-          result.requestedParent = orphanAnno.value;
-        }
-      }
-      return result;
-    });
-  }(root.children));
+  run_next_test();
+}
 
-  _("Checking if the bookmark structure is", JSON.stringify(expected));
-  _("Got bookmarks:", JSON.stringify(bookmarks));
-  deepEqual(bookmarks, expected);
-};
+function serverForFoo(engine) {
+  generateNewKeys(Service.collectionKeys);
+
+  let clientsEngine = Service.clientsEngine;
+  return serverForUsers({"foo": "password"}, {
+    meta: {
+      global: {
+        syncID: Service.syncID,
+        storageVersion: STORAGE_VERSION,
+        engines: {
+          clients: {
+            version: clientsEngine.version,
+            syncID: clientsEngine.syncID,
+          },
+          [engine.name]: {
+            version: engine.version,
+            syncID: engine.syncID,
+          },
+        },
+      },
+    },
+    crypto: {
+      keys: encryptPayload({
+        id: "keys",
+        // Generate a fake default key bundle to avoid resetting the client
+        // before the first sync.
+        default: [
+          Svc.Crypto.generateRandomKey(),
+          Svc.Crypto.generateRandomKey(),
+        ],
+      }),
+    },
+    [engine.name]: {},
+  });
+}
+
+async function resolveConflict(engine, collection, timestamp, buildTree,
+                               message) {
+  let guids = {
+    // These items don't exist on the server.
+    fx: Utils.makeGUID(),
+    nightly: Utils.makeGUID(),
+    support: Utils.makeGUID(),
+    customize: Utils.makeGUID(),
+
+    // These exist on the server, but in a different order, and `res`
+    // has completely different children.
+    res: Utils.makeGUID(),
+    tb: Utils.makeGUID(),
+
+    // These don't exist locally.
+    bz: Utils.makeGUID(),
+    irc: Utils.makeGUID(),
+    mdn: Utils.makeGUID(),
+  };
+
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [{
+      guid: guids.fx,
+      title: "Get Firefox!",
+      url: "http://getfirefox.com/",
+    }, {
+      guid: guids.res,
+      title: "Resources",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      children: [{
+        guid: guids.nightly,
+        title: "Nightly",
+        url: "https://nightly.mozilla.org/",
+      }, {
+        guid: guids.support,
+        title: "Support",
+        url: "https://support.mozilla.org/",
+      }, {
+        guid: guids.customize,
+        title: "Customize",
+        url: "https://mozilla.org/firefox/customize/",
+      }],
+    }, {
+      title: "Get Thunderbird!",
+      guid: guids.tb,
+      url: "http://getthunderbird.com/",
+    }],
+  });
+
+  let serverRecords = [{
+    id: "menu",
+    type: "folder",
+    title: "Bookmarks Menu",
+    parentid: "places",
+    children: [guids.tb, guids.res],
+  }, {
+    id: guids.tb,
+    type: "bookmark",
+    parentid: "menu",
+    bmkUri: "http://getthunderbird.com/",
+    title: "Get Thunderbird!",
+  }, {
+    id: guids.res,
+    type: "folder",
+    parentid: "menu",
+    title: "Resources",
+    children: [guids.irc, guids.bz, guids.mdn],
+  }, {
+    id: guids.bz,
+    type: "bookmark",
+    parentid: guids.res,
+    bmkUri: "https://bugzilla.mozilla.org/",
+    title: "Bugzilla",
+  }, {
+    id: guids.mdn,
+    type: "bookmark",
+    parentid: guids.res,
+    bmkUri: "https://developer.mozilla.org/",
+    title: "MDN",
+  }, {
+    id: guids.irc,
+    type: "bookmark",
+    parentid: guids.res,
+    bmkUri: "ircs://irc.mozilla.org/nightly",
+    title: "IRC",
+  }];
+  for (let record of serverRecords) {
+    collection.insert(record.id, encryptPayload(record), timestamp);
+  }
+
+  await sync_engine_and_validate_telem(engine, false);
+
+  let expectedTree = buildTree(guids);
+  await assertBookmarksTreeMatches(PlacesUtils.bookmarks.menuGuid,
+    expectedTree, message);
+}
+
+add_task(async function test_local_order_newer() {
+  let engine = Service.engineManager.get("bookmarks");
+
+  let server = serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  try {
+    let collection = server.user("foo").collection("bookmarks");
+    let serverModified = Date.now() / 1000 - 120;
+    await resolveConflict(engine, collection, serverModified, guids => [{
+      guid: guids.fx,
+      index: 0,
+    }, {
+      guid: guids.res,
+      index: 1,
+      children: [{
+        guid: guids.nightly,
+        index: 0,
+      }, {
+        guid: guids.support,
+        index: 1,
+      }, {
+        guid: guids.customize,
+        index: 2,
+      }, {
+        guid: guids.irc,
+        index: 3,
+      }, {
+        guid: guids.bz,
+        index: 4,
+      }, {
+        guid: guids.mdn,
+        index: 5,
+      }],
+    }, {
+      guid: guids.tb,
+      index: 2,
+    }], "Should use local order as base if remote is older");
+  } finally {
+    engine.wipeClient();
+    Service.startOver();
+    await promiseStopServer(server);
+  }
+});
+
+add_task(async function test_remote_order_newer() {
+  let engine = Service.engineManager.get("bookmarks");
+
+  let server = serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  try {
+    let collection = server.user("foo").collection("bookmarks");
+    let serverModified = Date.now() / 1000 + 120;
+    await resolveConflict(engine, collection, serverModified, guids => [{
+      guid: guids.tb,
+      index: 0,
+    }, {
+      guid: guids.res,
+      index: 1,
+      children: [{
+        guid: guids.irc,
+        index: 0,
+      }, {
+        guid: guids.bz,
+        index: 1,
+      }, {
+        guid: guids.mdn,
+        index: 2,
+      }, {
+        guid: guids.nightly,
+        index: 3,
+      }, {
+        guid: guids.support,
+        index: 4,
+      }, {
+        guid: guids.customize,
+        index: 5,
+      }],
+    }, {
+      guid: guids.fx,
+      index: 2,
+    }], "Should use remote order as base if local is older");
+  } finally {
+    engine.wipeClient();
+    Service.startOver();
+    await promiseStopServer(server);
+  }
+});
 
 add_task(async function test_bookmark_order() {
-  let store = new BookmarksEngine(Service)._store;
-  initTestLogging("Trace");
+  let engine = new BookmarksEngine(Service);
+  let store = engine._store;
 
   _("Starting with a clean slate of no bookmarks");
   store.wipe();
-  await check([{
+  await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -84,7 +290,7 @@ add_task(async function test_bookmark_order() {
   let id10 = "10_aaaaaaaaa";
   _("basic add first bookmark");
   apply(bookmark(id10, ""));
-  await check([{
+  await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -104,7 +310,7 @@ add_task(async function test_bookmark_order() {
   let id20 = "20_aaaaaaaaa";
   _("basic append behind 10");
   apply(bookmark(id20, ""));
-  await check([{
+  await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -131,7 +337,7 @@ add_task(async function test_bookmark_order() {
   apply(bookmark(id31, id30));
   let f30 = folder(id30, "", [id31]);
   apply(f30);
-  await check([{
+  await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -163,7 +369,7 @@ add_task(async function test_bookmark_order() {
   let id40 = "f40_aaaaaaaa";
   _("insert missing parent -> append to unfiled");
   apply(bookmark(id41, id40));
-  await check([{
+  await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -199,7 +405,7 @@ add_task(async function test_bookmark_order() {
 
   _("insert another missing parent -> append");
   apply(bookmark(id42, id40));
-  await check([{
+  await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -238,7 +444,7 @@ add_task(async function test_bookmark_order() {
   _("insert folder -> move children and followers");
   let f40 = folder(id40, "", [id41, id42]);
   apply(f40);
-  await check([{
+  await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -279,7 +485,7 @@ add_task(async function test_bookmark_order() {
   _("Moving 41 behind 42 -> update f40");
   f40.children = [id42, id41];
   apply(f40);
-  await check([{
+  await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -320,7 +526,7 @@ add_task(async function test_bookmark_order() {
   _("Moving 10 back to front -> update 10, 20");
   f40.children = [id41, id42];
   apply(f40);
-  await check([{
+  await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -360,7 +566,7 @@ add_task(async function test_bookmark_order() {
 
   _("Moving 20 behind 42 in f40 -> update 50");
   apply(bookmark(id20, id40));
-  await check([{
+  await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -402,7 +608,7 @@ add_task(async function test_bookmark_order() {
   apply(bookmark(id10, id30));
   f30.children = [id10, id31];
   apply(f30);
-  await check([{
+  await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -444,7 +650,7 @@ add_task(async function test_bookmark_order() {
   apply(bookmark(id20, id30));
   f30.children = [id10, id20, id31];
   apply(f30);
-  await check([{
+  await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -486,7 +692,7 @@ add_task(async function test_bookmark_order() {
   apply(bookmark(id20, ""));
   f30.children = [id10, id31];
   apply(f30);
-  await check([{
+  await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -524,4 +730,6 @@ add_task(async function test_bookmark_order() {
     index: 4,
   }], "Move 20 back to front -> update 20, f30");
 
+  engine.resetClient();
+  await engine.finalize();
 });

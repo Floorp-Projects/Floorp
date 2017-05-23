@@ -389,10 +389,39 @@ function runTest(event) {
       is(event.type, "pause", "checking event type");
 
       SimpleTest.executeSoon(() => {
-        SimpleTest.finish();
+        synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
       });
       break;
 
+    case 29:
+      is(event.type, "play", "checking event type");
+
+      SimpleTest.executeSoon(() => {
+        // Bug 1352724: Click and hold on timeline should pause video immediately.
+        synthesizeMouse(video, scrubberOffsetX + 10, scrubberCenterY, { type: "mousedown", button: 0 });
+      });
+      break;
+
+    case 30:
+      is(event.type, "pause", "checking event type");
+      break;
+
+    case 31:
+      is(event.type, "seeking", "checking event type");
+      ok(true, "video position is at " + video.currentTime);
+      break;
+
+    case 32:
+      is(event.type, "seeked", "checking event type");
+      ok(true, "video position is at " + video.currentTime);
+      synthesizeMouse(video, scrubberOffsetX + 10, scrubberCenterY, {});
+      break;
+
+    case 33:
+      is(event.type, "play", "checking event type");
+      ok(true, "video resume after mouseup");
+      SimpleTest.finish();
+      break;
 
 
     default:

@@ -4,11 +4,9 @@
 
 //! Selector matching.
 
-#![deny(missing_docs)]
-
 use {Atom, LocalName, Namespace};
 use bit_vec::BitVec;
-use context::QuirksMode;
+use context::{QuirksMode, SharedStyleContext};
 use data::ComputedStyle;
 use dom::{AnimationRules, TElement};
 use element_state::ElementState;
@@ -23,9 +21,9 @@ use properties::{self, CascadeFlags, ComputedValues};
 #[cfg(feature = "servo")]
 use properties::INHERIT_ALL;
 use properties::PropertyDeclarationBlock;
-use restyle_hints::{RestyleHint, DependencySet};
+use restyle_hints::{HintComputationContext, DependencySet, RestyleHint};
 use rule_tree::{CascadeLevel, RuleTree, StrongRuleNode, StyleSource};
-use selector_parser::{SelectorImpl, PseudoElement, SnapshotMap};
+use selector_parser::{SelectorImpl, PseudoElement};
 use selectors::attr::NamespaceConstraint;
 use selectors::bloom::BloomFilter;
 use selectors::matching::{AFFECTED_BY_STYLE_ATTRIBUTE, AFFECTED_BY_PRESENTATIONAL_HINTS};
@@ -88,7 +86,7 @@ pub struct Stylist {
     ///
     /// In both cases, the device is actually _owned_ by the Stylist, and it's
     /// only an `Arc` so we can implement `add_stylesheet` more idiomatically.
-    pub device: Arc<Device>,
+    device: Arc<Device>,
 
     /// Viewport constraints based on the current device.
     viewport_constraints: Option<ViewportConstraints>,
@@ -108,9 +106,7 @@ pub struct Stylist {
     element_map: PerPseudoElementSelectorMap,
 
     /// The rule tree, that stores the results of selector matching.
-    ///
-    /// FIXME(emilio): Not `pub`!
-    pub rule_tree: RuleTree,
+    rule_tree: RuleTree,
 
     /// The selector maps corresponding to a given pseudo-element
     /// (depending on the implementation)
@@ -1029,13 +1025,14 @@ impl Stylist {
     /// Given an element, and a snapshot table that represents a previous state
     /// of the tree, compute the appropriate restyle hint, that is, the kind of
     /// restyle we need to do.
-    pub fn compute_restyle_hint<E>(&self,
-                                   element: &E,
-                                   snapshots: &SnapshotMap)
-                                   -> RestyleHint
+    pub fn compute_restyle_hint<'a, E>(&self,
+                                       element: &E,
+                                       shared_context: &SharedStyleContext,
+                                       context: HintComputationContext<'a, E>)
+                                       -> RestyleHint
         where E: TElement,
     {
-        self.dependencies.compute_hint(element, snapshots)
+        self.dependencies.compute_hint(element, shared_context, context)
     }
 
     /// Computes styles for a given declaration with parent_style.
@@ -1064,6 +1061,21 @@ impl Stylist {
                                      &metrics,
                                      CascadeFlags::empty(),
                                      self.quirks_mode))
+    }
+
+    /// Accessor for a shared reference to the device.
+    pub fn device(&self) -> &Device {
+        &self.device
+    }
+
+    /// Accessor for a mutable reference to the device.
+    pub fn device_mut(&mut self) -> &mut Arc<Device> {
+        &mut self.device
+    }
+
+    /// Accessor for a shared reference to the rule tree.
+    pub fn rule_tree(&self) -> &RuleTree {
+        &self.rule_tree
     }
 }
 

@@ -245,11 +245,11 @@ void Simulator::handle_wasm_interrupt() {
 
   js::WasmActivation* activation = js::wasm::MaybeActiveActivation(cx_);
   const js::wasm::Code* code = activation->compartment()->wasm.lookupCode(pc);
-  if (!code || !code->segment().containsFunctionPC(pc))
+  if (!code || !code->segmentTier().containsFunctionPC(pc))
     return;
 
   activation->startInterrupt(pc, fp);
-  set_pc((Instruction*)code->segment().interruptCode());
+  set_pc((Instruction*)code->segmentTier().interruptCode());
 }
 
 

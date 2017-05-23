@@ -26,6 +26,7 @@ function checkExternalFunction(entry)
         "ceil",
         /memchr/,
         "strlen",
+        /Servo_DeclarationBlock_GetCssText/,
         // Assume that atomic accesses are threadsafe.
         /^__atomic_fetch_/,
         /^__atomic_load_/,
@@ -207,7 +208,10 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_DestroyShapeSource", "aShape", null],
         ["Gecko_StyleShapeSource_SetURLValue", "aShape", null],
         ["Gecko_nsFont_InitSystem", "aDest", null],
+        ["Gecko_nsStyleFont_FixupNoneGeneric", "aFont", null],
         ["Gecko_StyleTransition_SetUnsupportedProperty", "aTransition", null],
+        ["Gecko_AddPropertyToSet", "aPropertySet", null],
+        ["Gecko_CalcStyleDifference", "aAnyStyleChanged", null],
     ];
     for (var [entryMatch, varMatch, csuMatch] of whitelist) {
         assert(entryMatch || varMatch || csuMatch);
@@ -373,6 +377,7 @@ function ignoreContents(entry)
         "Gecko_GetOrCreateFinalKeyframe",
         "Gecko_NewStyleQuoteValues",
         "Gecko_NewCSSValueSharedList",
+        "Gecko_NewNoneTransform",
         "Gecko_NewGridTemplateAreasValue",
         /nsCSSValue::SetCalcValue/,
         /CSSValueSerializeCalcOps::Append/,
@@ -391,6 +396,7 @@ function ignoreContents(entry)
         /LookAndFeel::GetColor/,
         "Gecko_CopyStyleContentsFrom",
         "Gecko_CSSValue_SetAbsoluteLength",
+        /nsCSSPropertyIDSet::AddProperty/,
     ];
     if (entry.matches(whitelist))
         return true;

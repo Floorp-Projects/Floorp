@@ -25,7 +25,7 @@
 #include "nsIFrame.h"
 #include "nsIDocument.h"
 #include "nsIPrintSettings.h"
-#include "nsILanguageAtomService.h"
+#include "nsLanguageAtomService.h"
 #include "mozilla/LookAndFeel.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMHTMLDocument.h"
@@ -237,6 +237,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mExistThrottledUpdates(false),
     // mImageAnimationMode is initialised below, in constructor body
     mImageAnimationModePref(imgIContainer::kNormalAnimMode),
+    mFontGroupCacheDirty(true),
     mInterruptChecksToSkip(0),
     mElementsRestyled(0),
     mFramesConstructed(0),
@@ -623,6 +624,7 @@ nsPresContext::GetUserPreferences()
   mPrefScrollbarSide = Preferences::GetInt("layout.scrollbar.side");
 
   mLangGroupFontPrefs.Reset();
+  mFontGroupCacheDirty = true;
   StaticPresData::Get()->ResetCachedFontPrefs();
 
   // * image animation
@@ -877,7 +879,7 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
     }
   }
 
-  mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
+  mLangService = nsLanguageAtomService::GetService();
 
   // Register callbacks so we're notified when the preferences change
   Preferences::RegisterPrefixCallback(nsPresContext::PrefChangedCallback,
@@ -983,10 +985,8 @@ nsPresContext::AttachShell(nsIPresShell* aShell, StyleBackendType aBackendType)
         mImageAnimationMode = imgIContainer::kNormalAnimMode;
     }
 
-    if (mLangService) {
-      doc->AddCharSetObserver(this);
-      UpdateCharSet(doc->GetDocumentCharacterSet());
-    }
+    doc->AddCharSetObserver(this);
+    UpdateCharSet(doc->GetDocumentCharacterSet());
   }
 }
 
@@ -1057,16 +1057,15 @@ nsPresContext::DoChangeCharSet(const nsCString& aCharSet)
 void
 nsPresContext::UpdateCharSet(const nsCString& aCharSet)
 {
-  if (mLangService) {
-    mLanguage = mLangService->LookupCharSet(aCharSet);
-    // this will be a language group (or script) code rather than a true language code
+  mLanguage = mLangService->LookupCharSet(aCharSet);
+  // this will be a language group (or script) code rather than a true language code
 
-    // bug 39570: moved from nsLanguageAtomService::LookupCharSet()
-    if (mLanguage == nsGkAtoms::Unicode) {
-      mLanguage = mLangService->GetLocaleLanguage();
-    }
-    mLangGroupFontPrefs.Reset();
+  // bug 39570: moved from nsLanguageAtomService::LookupCharSet()
+  if (mLanguage == nsGkAtoms::Unicode) {
+    mLanguage = mLangService->GetLocaleLanguage();
   }
+  mLangGroupFontPrefs.Reset();
+  mFontGroupCacheDirty = true;
 
   switch (GET_BIDI_OPTION_TEXTTYPE(GetBidi())) {
 
@@ -1976,6 +1975,33 @@ void nsPresContext::StopEmulatingMedium()
 }
 
 void
+nsPresContext::ForceCacheLang(nsIAtom *aLanguage)
+{
+  // force it to be cached
+  GetDefaultFont(kPresContext_DefaultVariableFont_ID, aLanguage);
+  if (!mLanguagesUsed.Contains(aLanguage)) {
+    mLanguagesUsed.PutEntry(aLanguage);
+  }
+}
+
+void
+nsPresContext::CacheAllLangs()
+{
+  if (mFontGroupCacheDirty) {
+    nsCOMPtr<nsIAtom> thisLang = nsStyleFont::GetLanguage(this);
+    GetDefaultFont(kPresContext_DefaultVariableFont_ID, thisLang.get());
+    GetDefaultFont(kPresContext_DefaultVariableFont_ID, nsGkAtoms::x_math);
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1362599#c12
+    GetDefaultFont(kPresContext_DefaultVariableFont_ID, nsGkAtoms::Unicode);
+    for (auto iter = mLanguagesUsed.Iter(); !iter.Done(); iter.Next()) {
+
+      GetDefaultFont(kPresContext_DefaultVariableFont_ID, iter.Get()->GetKey());
+    }
+  }
+  mFontGroupCacheDirty = false;
+}
+
+void
 nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,
                                    nsRestyleHint aRestyleHint)
 {
@@ -2311,14 +2337,8 @@ nsPresContext::FlushCounterStyles()
       PresShell()->NotifyCounterStylesAreDirty();
       PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW,
                                    eRestyle_ForceDescendants);
-      if (mShell->StyleSet()->IsGecko()) {
-        RefreshDriver()->AddPostRefreshObserver(
-          new CounterStyleCleaner(RefreshDriver(), mCounterStyleManager));
-      } else {
-        NS_WARNING("stylo: Pseudo-element ::-moz-list-{number,bullet} are not "
-                   "restyled properly, so we cannot clean up retired objects. "
-                   "See bug 1364871.");
-      }
+      RefreshDriver()->AddPostRefreshObserver(
+        new CounterStyleCleaner(RefreshDriver(), mCounterStyleManager));
     }
     mCounterStylesDirty = false;
   }

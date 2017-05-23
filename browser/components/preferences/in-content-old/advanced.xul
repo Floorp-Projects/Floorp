@@ -34,10 +34,6 @@
   <preference id="general.smoothScroll"
               name="general.smoothScroll"
               type="bool"/>
-  <preference id="layers.acceleration.disabled"
-              name="layers.acceleration.disabled"
-              type="bool"
-              inverted="true"/>
 #ifdef XP_WIN
   <preference id="gfx.direct2d.disabled"
               name="gfx.direct2d.disabled"
@@ -187,10 +183,6 @@
                   label="&useSmoothScrolling.label;"
                   accesskey="&useSmoothScrolling.accesskey;"
                   preference="general.smoothScroll"/>
-        <checkbox id="allowHWAccel"
-                  label="&allowHWAccel.label;"
-                  accesskey="&allowHWAccel.accesskey;"
-                  preference="layers.acceleration.disabled"/>
         <checkbox id="checkSpelling"
                   label="&checkUserSpelling.label;"
                   accesskey="&checkUserSpelling.accesskey;"

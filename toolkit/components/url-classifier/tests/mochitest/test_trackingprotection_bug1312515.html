@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>Test Bug 1312515</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+
+var Cc = SpecialPowers.Cc;
+var Ci = SpecialPowers.Ci;
+
+var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIWebNavigation)
+                       .QueryInterface(Ci.nsIDocShellTreeItem)
+                       .rootTreeItem
+                       .QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDOMWindow);
+var contentPage = "http://www.itisatrap.org/tests/toolkit/components/url-classifier/tests/mochitest/trackingRequest.html";
+
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+      setTimeout(aCallback, 0);
+    }
+  }, "browser-delayed-startup-finished");
+}
+
+function testOnWindow(aPrivate, aCallback) {
+  var win = mainWindow.OpenBrowserWindow({private: aPrivate});
+  win.addEventListener("load", function() {
+    whenDelayedStartupFinished(win, function() {
+      win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+        if (win.content.location.href != contentPage) {
+          win.gBrowser.loadURI(contentPage);
+          return;
+        }
+        win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+
+        win.content.addEventListener('load', function innerLoad2() {
+          win.content.removeEventListener('load', innerLoad2);
+          SimpleTest.executeSoon(function() { aCallback(win); });
+        }, false, true);
+      }, true);
+      SimpleTest.executeSoon(function() { win.gBrowser.loadURI(contentPage); });
+    });
+  }, {capture: true, once: true});
+}
+
+const topic = "http-on-opening-request";
+var testUrl;
+var testWindow;
+var resolve;
+
+function checkLowestPriority(aSubject) {
+  var channel = aSubject.QueryInterface(Ci.nsIChannel);
+  info("Channel's url=" + channel.name);
+  if (channel.name !== testUrl) {
+    return;
+  }
+
+  var p = aSubject.QueryInterface(Ci.nsISupportsPriority);
+  is(p.priority, Ci.nsISupportsPriority.PRIORITY_LOWEST, "Priority should be lowest.");
+  SpecialPowers.removeObserver(checkLowestPriority, topic);
+  resolve();
+}
+
+function testXHR() {
+  return new Promise(function(aResolve, aReject) {
+    resolve = aResolve;
+    SpecialPowers.addObserver(checkLowestPriority, topic);
+    testUrl = "http://mochi.test:8888/";
+    testWindow.content.postMessage({type: "doXHR", url: testUrl}, "*");
+  });
+}
+
+function testFetch() {
+  return new Promise(function(aResolve, aReject) {
+    resolve = aResolve;
+    SpecialPowers.addObserver(checkLowestPriority, topic);
+    testUrl = "http://itisatracker.org/";
+    testWindow.content.postMessage({type: "doFetch", url: testUrl}, "*");
+  });
+}
+
+function endTest() {
+  testWindow.close();
+  testWindow = null;
+  SimpleTest.finish();
+}
+
+SpecialPowers.pushPrefEnv(
+  {"set" : [["urlclassifier.trackingTable", "test-track-simple"],
+            ["privacy.trackingprotection.annotate_channels", true],
+            ["privacy.trackingprotection.lower_network_priority", true],
+            ["channelclassifier.allowlist_example", true]]},
+  test);
+
+function test() {
+  SimpleTest.registerCleanupFunction(UrlClassifierTestUtils.cleanupTestTrackers);
+  UrlClassifierTestUtils.addTestTrackers().then(() => {
+    testOnWindow(false, function(aWindow) {
+      testWindow = aWindow;
+      testXHR().
+      then(testFetch).
+      then(endTest)
+    });
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</pre>
+</body>
+</html>

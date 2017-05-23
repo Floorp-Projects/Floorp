@@ -1560,7 +1560,7 @@ Simulator::handleWasmInterrupt()
 
     WasmActivation* activation = wasm::MaybeActiveActivation(cx_);
     const wasm::Code* code = activation->compartment()->wasm.lookupCode(pc);
-    if (!code || !code->segment().containsFunctionPC(pc))
+    if (!code || !code->segmentTier().containsFunctionPC(pc))
         return;
 
     // fp can be null during the prologue/epilogue of the entry function.
@@ -1568,7 +1568,7 @@ Simulator::handleWasmInterrupt()
         return;
 
     activation->startInterrupt(pc, fp);
-    set_pc(int32_t(code->segment().interruptCode()));
+    set_pc(int32_t(code->segmentTier().interruptCode()));
 }
 
 // WebAssembly memories contain an extra region of guard pages (see
@@ -1593,12 +1593,12 @@ Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
     const wasm::MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);
     if (!memoryAccess) {
         act->startInterrupt(pc, fp);
-        set_pc(int32_t(instance->codeSegment().outOfBoundsCode()));
+        set_pc(int32_t(instance->codeSegmentTier().outOfBoundsCode()));
         return true;
     }
 
     MOZ_ASSERT(memoryAccess->hasTrapOutOfLineCode());
-    set_pc(int32_t(memoryAccess->trapOutOfLineCode(instance->codeBase())));
+    set_pc(int32_t(memoryAccess->trapOutOfLineCode(instance->codeBaseTier())));
     return true;
 }
 

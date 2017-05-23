@@ -1124,7 +1124,7 @@ nsXREDirProvider::DoShutdown()
 
 #ifdef XP_WIN
 static nsresult
-GetShellFolderPath(int folder, nsAString& _retval)
+GetShellFolderPath(KNOWNFOLDERID folder, nsAString& _retval)
 {
   wchar_t* buf;
   uint32_t bufLength = _retval.GetMutableData(&buf, MAXPATHLEN + 3);
@@ -1134,7 +1134,8 @@ GetShellFolderPath(int folder, nsAString& _retval)
 
   LPITEMIDLIST pItemIDList = nullptr;
 
-  if (SUCCEEDED(SHGetSpecialFolderLocation(nullptr, folder, &pItemIDList)) &&
+  if (SUCCEEDED(SHGetKnownFolderIDList(folder, KF_FLAG_SIMPLE_IDLIST | KF_FLAG_DONT_VERIFY,
+                                       NULL, &pItemIDList)) &&
       SHGetPathFromIDListW(pItemIDList, buf)) {
     // We're going to use wcslen (wcsnlen not available in msvc7.1) so make
     // sure to null terminate.
@@ -1363,7 +1364,7 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
   // Program Files> if app dir is under Program Files to avoid the
   // folder virtualization mess on Windows Vista
   nsAutoString programFiles;
-  rv = GetShellFolderPath(CSIDL_PROGRAM_FILES, programFiles);
+  rv = GetShellFolderPath(FOLDERID_ProgramFiles, programFiles);
   NS_ENSURE_SUCCESS(rv, rv);
 
   programFiles.Append('\\');
@@ -1477,12 +1478,12 @@ nsXREDirProvider::GetUserDataDirectoryHome(nsIFile** aFile, bool aLocal)
 #elif defined(XP_WIN)
   nsString path;
   if (aLocal) {
-    rv = GetShellFolderPath(CSIDL_LOCAL_APPDATA, path);
+    rv = GetShellFolderPath(FOLDERID_LocalAppData, path);
     if (NS_FAILED(rv))
       rv = GetRegWindowsAppDataFolder(aLocal, path);
   }
   if (!aLocal || NS_FAILED(rv)) {
-    rv = GetShellFolderPath(CSIDL_APPDATA, path);
+    rv = GetShellFolderPath(FOLDERID_RoamingAppData, path);
     if (NS_FAILED(rv)) {
       if (!aLocal)
         rv = GetRegWindowsAppDataFolder(aLocal, path);

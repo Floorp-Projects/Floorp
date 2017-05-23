@@ -47,6 +47,19 @@
         "async": "callback",
         "parameters": [
           {
+            "type": "object",
+            "name": "options",
+            "properties": {
+              "providers": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Which providers to get top sites from. Possible values are \"places\" and \"activityStream\".",
+                "optional": true
+              }
+            },
+            "optional": true
+          },
+          {
             "name": "callback",
             "type": "function",
             "parameters": [

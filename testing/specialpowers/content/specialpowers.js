@@ -5,6 +5,8 @@
  * order to be used as a replacement for UniversalXPConnect
  */
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 function SpecialPowers(window) {
   this.window = Components.utils.getWeakReference(window);
   this._windowID = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)

@@ -57,6 +57,23 @@ IPCBlobInputStreamParent::ActorDestroy(IProtocol::ActorDestroyReason aReason)
   mPBackgroundManager = nullptr;
 
   IPCBlobInputStreamStorage::Get()->ForgetStream(mID);
+
+  RefPtr<IPCBlobInputStreamParentCallback> callback;
+  mCallback.swap(callback);
+
+  if (callback) {
+    callback->ActorDestroyed(mID);
+  }
+}
+
+void
+IPCBlobInputStreamParent::SetCallback(
+                                    IPCBlobInputStreamParentCallback* aCallback)
+{
+  MOZ_ASSERT(aCallback);
+  MOZ_ASSERT(!mCallback);
+
+  mCallback = aCallback;
 }
 
 mozilla::ipc::IPCResult
@@ -93,6 +110,15 @@ IPCBlobInputStreamParent::RecvStreamNeeded()
     return IPC_FAIL(this, "SendStreamReady failed");
   }
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+IPCBlobInputStreamParent::RecvClose()
+{
+  MOZ_ASSERT(mContentManager || mPBackgroundManager);
+
+  Unused << Send__delete__(this);
   return IPC_OK();
 }
 

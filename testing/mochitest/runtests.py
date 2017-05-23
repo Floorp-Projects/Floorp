@@ -2168,7 +2168,7 @@ toolbar#nav-bar {
                 os.remove(processLog)
             self.urlOpts = []
 
-        return status
+        return status, self.lastTestSeen
 
     def initializeLooping(self, options):
         """
@@ -2489,7 +2489,7 @@ toolbar#nav-bar {
 
                 self.log.info("runtests.py | Running with e10s: {}".format(options.e10s))
                 self.log.info("runtests.py | Running tests: start.\n")
-                ret = self.runApp(
+                ret, _ = self.runApp(
                     testURL,
                     self.browserEnv,
                     options.app,

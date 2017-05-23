@@ -370,6 +370,7 @@ static struct cubeb_ops const sndio_ops = {
   .get_preferred_sample_rate = sndio_get_preferred_sample_rate,
   .get_preferred_channel_layout = NULL,
   .enumerate_devices = NULL,
+  .device_collection_destroy = NULL,
   .destroy = sndio_destroy,
   .stream_init = sndio_stream_init,
   .stream_destroy = sndio_stream_destroy,

@@ -389,8 +389,7 @@ public:
                                                     const uint32_t& aDropEffect) override;
 
   virtual mozilla::ipc::IPCResult
-  RecvRealKeyEvent(const mozilla::WidgetKeyboardEvent& aEvent,
-                   const MaybeNativeKeyBinding& aBindings) override;
+  RecvRealKeyEvent(const mozilla::WidgetKeyboardEvent& aEvent) override;
 
   virtual mozilla::ipc::IPCResult RecvMouseWheelEvent(const mozilla::WidgetWheelEvent& aEvent,
                                                       const ScrollableLayerGuid& aGuid,
@@ -512,8 +511,9 @@ public:
 
   void NotifyPainted();
 
-  void RequestNativeKeyBindings(mozilla::widget::AutoCacheNativeKeyCommands* aAutoCache,
-                                const WidgetKeyboardEvent* aEvent);
+  void RequestEditCommands(nsIWidget::NativeKeyBindingsType aType,
+                           const WidgetKeyboardEvent& aEvent,
+                           nsTArray<CommandInt>& aCommands);
 
   /**
    * Signal to this TabChild that it should be made visible:
@@ -589,10 +589,6 @@ public:
   virtual mozilla::ipc::IPCResult RecvHandleAccessKey(const WidgetKeyboardEvent& aEvent,
                                                       nsTArray<uint32_t>&& aCharCodes,
                                                       const int32_t& aModifierMask) override;
-
-  virtual mozilla::ipc::IPCResult RecvAudioChannelChangeNotification(const uint32_t& aAudioChannel,
-                                                                     const float& aVolume,
-                                                                     const bool& aMuted) override;
 
   virtual mozilla::ipc::IPCResult RecvSetUseGlobalHistory(const bool& aUse) override;
 
@@ -844,8 +840,6 @@ private:
   mozilla::TimeStamp mLastWheelProcessedTimeFromParent;
   mozilla::TimeDuration mLastWheelProcessingDuration;
   CoalescedWheelData mCoalescedWheelData;
-
-  AutoTArray<bool, NUMBER_OF_AUDIO_CHANNELS> mAudioChannelsActive;
 
   RefPtr<layers::IAPZCTreeManager> mApzcTreeManager;
 

@@ -19,6 +19,7 @@ Cu.import("resource://gre/modules/DownloadUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/addons/AddonRepository.jsm");
+Cu.import("resource://gre/modules/addons/AddonSettings.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils", "resource:///modules/E10SUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Extension",
@@ -28,11 +29,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
 
-const CONSTANTS = {};
-Cu.import("resource://gre/modules/addons/AddonConstants.jsm", CONSTANTS);
-const SIGNING_REQUIRED = CONSTANTS.REQUIRE_SIGNING ?
-                         true :
-                         Services.prefs.getBoolPref("xpinstall.signatures.required");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
@@ -2916,7 +2912,7 @@ var gListView = {
   filterDisabledUnsigned(aFilter = true) {
     let foundDisabledUnsigned = false;
 
-    if (SIGNING_REQUIRED) {
+    if (AddonSettings.REQUIRE_SIGNING) {
       for (let item of this._listBox.childNodes) {
         if (!isCorrectlySigned(item.mAddon))
           foundDisabledUnsigned = true;
@@ -3396,7 +3392,7 @@ var gDetailView = {
         errorLink.value = gStrings.ext.GetStringFromName("details.notification.blocked.link");
         errorLink.href = this._addon.blocklistURL;
         errorLink.hidden = false;
-      } else if (!isCorrectlySigned(this._addon) && SIGNING_REQUIRED) {
+      } else if (!isCorrectlySigned(this._addon) && AddonSettings.REQUIRE_SIGNING) {
         this.node.setAttribute("notification", "error");
         document.getElementById("detail-error").textContent = gStrings.ext.formatStringFromName(
           "details.notification.unsignedAndDisabled", [this._addon.name, gStrings.brandShortName], 2

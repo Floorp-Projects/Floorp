@@ -84,8 +84,7 @@ ContentSearchUIController.prototype = {
     if (engine.iconBuffer) {
       icon = this._getFaviconURIFromBuffer(engine.iconBuffer);
     } else {
-      icon = this._getImageURIForCurrentResolution(
-        "chrome://mozapps/skin/places/defaultFavicon.png");
+      icon = "chrome://mozapps/skin/places/defaultFavicon.svg";
     }
     this._defaultEngine = {
       name: engine.name,

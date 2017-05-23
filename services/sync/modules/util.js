@@ -552,7 +552,8 @@ this.Utils = {
   arraySub: function arraySub(minuend, subtrahend) {
     if (!minuend.length || !subtrahend.length)
       return minuend;
-    return minuend.filter(i => subtrahend.indexOf(i) == -1);
+    let setSubtrahend = new Set(subtrahend);
+    return minuend.filter(i => !setSubtrahend.has(i));
   },
 
   /**

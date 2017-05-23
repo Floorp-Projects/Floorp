@@ -46,6 +46,16 @@ public:
     return true;
   }
 
+  int64_t GetFileId() override
+  {
+    return mFileId;
+  }
+
+  void SetFileId(int64_t aFileId)
+  {
+    mFileId = aFileId;
+  }
+
   void SetFullPath(const nsAString& aFullPath)
   {
     mFullPath = aFullPath;
@@ -91,6 +101,7 @@ private:
 
   nsString mFullPath;
   bool mIsDirectory;
+  int64_t mFileId;
 };
 
 } // namespace dom

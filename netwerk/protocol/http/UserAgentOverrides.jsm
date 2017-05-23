@@ -14,10 +14,14 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/UserAgentUpdates.jsm");
 
 const PREF_OVERRIDES_ENABLED = "general.useragent.site_specific_overrides";
-const DEFAULT_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
-                     .getService(Ci.nsIHttpProtocolHandler)
-                     .userAgent;
 const MAX_OVERRIDE_FOR_HOST_CACHE_SIZE = 250;
+
+// lazy load nsHttpHandler to improve startup performance.
+XPCOMUtils.defineLazyGetter(this, "DEFAULT_UA", function() {
+  return Cc["@mozilla.org/network/protocol;1?name=http"]
+           .getService(Ci.nsIHttpProtocolHandler)
+           .userAgent;
+});
 
 var gPrefBranch;
 var gOverrides = new Map;
@@ -45,18 +49,24 @@ this.UserAgentOverrides = {
       // The http-on-useragent-request notification is disallowed in content processes.
     }
 
-    UserAgentUpdates.init(function(overrides) {
-      gOverrideForHostCache.clear();
-      if (overrides) {
-        for (let domain in overrides) {
-          overrides[domain] = getUserAgentFromOverride(overrides[domain]);
+    try {
+      UserAgentUpdates.init(function(overrides) {
+        gOverrideForHostCache.clear();
+        if (overrides) {
+          for (let domain in overrides) {
+            overrides[domain] = getUserAgentFromOverride(overrides[domain]);
+          }
+          overrides.get = function(key) { return this[key]; };
         }
-        overrides.get = function(key) { return this[key]; };
-      }
-      gUpdatedOverrides = overrides;
-    });
+        gUpdatedOverrides = overrides;
+      });
 
-    buildOverrides();
+      buildOverrides();
+    } catch (e) {
+      // UserAgentOverrides is initialized before profile is ready.
+      // UA override might not work correctly.
+    }
+
     gInitialized = true;
   },
 
