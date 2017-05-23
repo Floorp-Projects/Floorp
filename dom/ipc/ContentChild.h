@@ -189,6 +189,12 @@ public:
 
   virtual bool DeallocPBlobChild(PBlobChild* aActor) override;
 
+  virtual PMemoryStreamChild*
+  AllocPMemoryStreamChild(const uint64_t& aSize) override;
+
+  virtual bool
+  DeallocPMemoryStreamChild(PMemoryStreamChild* aActor) override;
+
   virtual PIPCBlobInputStreamChild*
   AllocPIPCBlobInputStreamChild(const nsID& aID,
                                 const uint64_t& aSize) override;
@@ -516,6 +522,9 @@ public:
   virtual PBlobChild*
   SendPBlobConstructor(PBlobChild* actor,
                        const BlobConstructorParams& params) override;
+
+  virtual PMemoryStreamChild*
+  SendPMemoryStreamConstructor(const uint64_t& aSize) override;
 
   virtual PFileDescriptorSetChild*
   SendPFileDescriptorSetConstructor(const FileDescriptor&) override;
