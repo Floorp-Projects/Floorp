@@ -563,7 +563,7 @@ NS_INTERFACE_MAP_END_INHERITING(TimeoutHandler)
 class IdleRequestExecutor final : public nsIRunnable
                                 , public nsICancelableRunnable
                                 , public nsINamed
-                                , public nsIIncrementalRunnable
+                                , public nsIIdleRunnable
 {
 public:
   explicit IdleRequestExecutor(nsGlobalWindow* aWindow)
@@ -650,7 +650,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IdleRequestExecutor)
   NS_INTERFACE_MAP_ENTRY(nsIRunnable)
   NS_INTERFACE_MAP_ENTRY(nsICancelableRunnable)
   NS_INTERFACE_MAP_ENTRY(nsINamed)
-  NS_INTERFACE_MAP_ENTRY(nsIIncrementalRunnable)
+  NS_INTERFACE_MAP_ENTRY(nsIIdleRunnable)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRunnable)
 NS_INTERFACE_MAP_END
 

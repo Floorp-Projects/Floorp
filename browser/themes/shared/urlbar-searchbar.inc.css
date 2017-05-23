@@ -8,12 +8,18 @@
 .searchbar-textbox {
   -moz-appearance: none;
   background-clip: content-box;
-  border: 1px solid var(--urlbar-border-color);
+  border: 1px solid hsla(240,5%,5%,.25);
   border-radius: var(--toolbarbutton-border-radius);
-  box-shadow: 0 1px 4px hsla(0, 0%, 0%, .05);
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
   padding: 0;
   margin: 0 5px;
   min-height: 30px;
+}
+
+#urlbar:hover,
+.searchbar-textbox:hover {
+  border-color: hsla(240,5%,5%,.35);
+  box-shadow: 0 1px 6px rgba(0,0,0,.1), 0 0 1px rgba(0,0,0,.1);
 }
 
 #urlbar:-moz-lwtheme,
@@ -27,12 +33,6 @@
 .searchbar-textbox:-moz-lwtheme:hover,
 .searchbar-textbox:-moz-lwtheme[focused="true"] {
   background-color: white;
-}
-
-#urlbar:hover,
-.searchbar-textbox:hover {
-  border: 1px solid var(--urlbar-border-color-hover);
-  box-shadow: 0 1px 6px hsla(0, 0%, 0%, .1), 0 0 1px 0 rgba(0, 0, 0, .1);
 }
 
 %endif
