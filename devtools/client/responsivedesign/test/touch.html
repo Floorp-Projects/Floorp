@@ -70,7 +70,10 @@
   div.addEventListener("mousedown", function(evt){
     if (previousEvent === "touchend" && touchendTime !== 0) {
       let now = performance.now();
-      div.dataset.isDelay = ((now - touchendTime) >= 300) ? true : false;
+      // Do to time spent processing events our measurement might
+      // be fractionally short of the actual delay.  Round up any
+      // microsecond changes in case we get something like 299.9.
+      div.dataset.isDelay = ((now - touchendTime) >= 299.5) ? true : false;
     } else {
       div.dataset.isDelay = false;
     }
