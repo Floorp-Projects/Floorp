@@ -96,11 +96,6 @@ struct nsCounterUseNode : public nsCounterNode {
     virtual bool InitTextFrame(nsGenConList* aList,
             nsIFrame* aPseudoFrame, nsIFrame* aTextFrame) override;
 
-    void SetCounterStyleDirty()
-    {
-        mCounterStyle = nullptr;
-    }
-
     // assign the correct |mValueAfter| value to a node that has been inserted
     // Should be called immediately after calling |Insert|.
     void Calc(nsCounterList* aList);
@@ -223,8 +218,8 @@ public:
     // Clean up data in any dirty counter lists.
     void RecalcAll();
 
-    // Set all counter styles dirty
-    void SetAllCounterStylesDirty();
+    // Set all counter lists dirty
+    void SetAllDirty();
 
     // Destroy nodes for the frame in any lists, and return whether any
     // nodes were destroyed.

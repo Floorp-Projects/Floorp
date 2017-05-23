@@ -255,22 +255,10 @@ nsCounterManager::RecalcAll()
 }
 
 void
-nsCounterManager::SetAllCounterStylesDirty()
+nsCounterManager::SetAllDirty()
 {
   for (auto iter = mNames.Iter(); !iter.Done(); iter.Next()) {
-    nsCounterList* list = iter.UserData();
-    bool changed = false;
-
-    for (nsCounterNode* node = list->First(); node; node = list->Next(node)) {
-      if (node->mType == nsCounterNode::USE) {
-        node->UseNode()->SetCounterStyleDirty();
-        changed = true;
-      }
-    }
-
-    if (changed) {
-      list->SetDirty();
-    }
+    iter.UserData()->SetDirty();
   }
 }
 

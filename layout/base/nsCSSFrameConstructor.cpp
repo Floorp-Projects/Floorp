@@ -9026,7 +9026,7 @@ void
 nsCSSFrameConstructor::NotifyCounterStylesAreDirty()
 {
   NS_PRECONDITION(mUpdateCount != 0, "Should be in an update");
-  mCounterManager.SetAllCounterStylesDirty();
+  mCounterManager.SetAllDirty();
   CountersDirty();
 }
 
