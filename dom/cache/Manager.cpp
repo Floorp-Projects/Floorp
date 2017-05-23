@@ -82,7 +82,7 @@ public:
         rv = db::DeleteCacheId(aConn, orphanedCacheIdList[i], deletedBodyIdList);
         if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-        rv = BodyDeleteFiles(aDBDir, deletedBodyIdList);
+        rv = BodyDeleteFiles(aQuotaInfo, aDBDir, deletedBodyIdList);
         if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
       }
 
@@ -90,7 +90,7 @@ public:
       AutoTArray<nsID, 64> knownBodyIdList;
       rv = db::GetKnownBodyIds(aConn, knownBodyIdList);
 
-      rv = BodyDeleteOrphanedFiles(aDBDir, knownBodyIdList);
+      rv = BodyDeleteOrphanedFiles(aQuotaInfo, aDBDir, knownBodyIdList);
       if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
     }
 
@@ -136,7 +136,7 @@ public:
       return;
     }
 
-    rv = BodyDeleteFiles(dbDir, mDeletedBodyIdList);
+    rv = BodyDeleteFiles(aQuotaInfo, dbDir, mDeletedBodyIdList);
     Unused << NS_WARN_IF(NS_FAILED(rv));
 
     aResolver->Resolve(rv);
@@ -661,6 +661,7 @@ private:
     mResolver = aResolver;
     mDBDir = aDBDir;
     mConn = aConn;
+    mQuotaInfo.emplace(aQuotaInfo);
 
     // File bodies are streamed to disk via asynchronous copying.  Start
     // this copying now.  Each copy will eventually result in a call
@@ -935,7 +936,7 @@ private:
 
     // Clean up any files we might have written before hitting the error.
     if (NS_FAILED(aRv)) {
-      BodyDeleteFiles(mDBDir, mBodyIdWrittenList);
+      BodyDeleteFiles(mQuotaInfo.ref(), mDBDir, mBodyIdWrittenList);
     }
 
     // Must be released on the target thread where it was opened.
@@ -977,6 +978,8 @@ private:
   // accessed from any thread while mMutex locked
   Mutex mMutex;
   nsTArray<nsCOMPtr<nsISupports>> mCopyContextList;
+
+  Maybe<QuotaInfo> mQuotaInfo;
 };
 
 // ----------------------------------------------------------------------------
