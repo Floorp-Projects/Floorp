@@ -115,6 +115,11 @@ public:
     OCSP_STAPLING_INVALID = 4,
   };
 
+  // As an optimization, a pointer to the certificate chain sent by the peer
+  // may be specified as peerCertChain. This can prevent NSSCertDBTrustDomain
+  // from calling CERT_CreateSubjectCertList to find potential issuers, which
+  // can be expensive.
+  //
   // *evOidPolicy == SEC_OID_UNKNOWN means the cert is NOT EV
   // Only one usage per verification is supported.
   mozilla::pkix::Result VerifyCert(
@@ -124,7 +129,8 @@ public:
                     void* pinArg,
                     const char* hostname,
             /*out*/ UniqueCERTCertList& builtChain,
-                    Flags flags = 0,
+    /*optional in*/ UniqueCERTCertList* peerCertChain = nullptr,
+    /*optional in*/ Flags flags = 0,
     /*optional in*/ const SECItem* stapledOCSPResponse = nullptr,
     /*optional in*/ const SECItem* sctsFromTLS = nullptr,
     /*optional in*/ const OriginAttributes& originAttributes =
@@ -144,6 +150,7 @@ public:
        /*optional*/ void* pinarg,
                     const char* hostname,
             /*out*/ UniqueCERTCertList& builtChain,
+       /*optional*/ UniqueCERTCertList* peerCertChain = nullptr,
        /*optional*/ bool saveIntermediatesInPermanentDatabase = false,
        /*optional*/ Flags flags = 0,
        /*optional*/ const OriginAttributes& originAttributes =

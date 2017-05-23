@@ -30,33 +30,25 @@ function insertStyleSheet(domWindow, url) {
   }
 }
 
-let windowListener = {
-  onOpenWindow(window) {
-    let domWindow = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+function onMaybeOpenPopup(evt) {
+  let domWindow = evt.target.ownerGlobal;
+  if (CACHED_STYLESHEETS.has(domWindow)) {
+    // This window already has autofill stylesheets.
+    return;
+  }
 
-    domWindow.addEventListener("load", function onWindowLoaded() {
-      insertStyleSheet(domWindow, STYLESHEET_URI);
-    }, {once: true});
-  },
-};
+  insertStyleSheet(domWindow, STYLESHEET_URI);
+}
 
 function startup() {
   if (!Services.prefs.getBoolPref("extensions.formautofill.experimental")) {
     return;
   }
 
+  // Listen for the autocomplete popup message to lazily append our stylesheet related to the popup.
+  Services.mm.addMessageListener("FormAutoComplete:MaybeOpenPopup", onMaybeOpenPopup);
+
   let parent = new FormAutofillParent();
-  let enumerator = Services.wm.getEnumerator("navigator:browser");
-  // Load stylesheet to already opened windows
-  while (enumerator.hasMoreElements()) {
-    let win = enumerator.getNext();
-    let domWindow = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
-
-    insertStyleSheet(domWindow, STYLESHEET_URI);
-  }
-
-  Services.wm.addListener(windowListener);
-
   parent.init().catch(Cu.reportError);
   Services.ppmm.loadProcessScript("data:,new " + function() {
     Components.utils.import("resource://formautofill/FormAutofillContent.jsm");
@@ -65,10 +57,9 @@ function startup() {
 }
 
 function shutdown() {
-  Services.wm.removeListener(windowListener);
+  Services.mm.removeMessageListener("FormAutoComplete:MaybeOpenPopup", onMaybeOpenPopup);
 
   let enumerator = Services.wm.getEnumerator("navigator:browser");
-
   while (enumerator.hasMoreElements()) {
     let win = enumerator.getNext();
     let domWindow = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);

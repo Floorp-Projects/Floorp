@@ -170,6 +170,10 @@ async function test_promiseBookmarksTreeForEachNode(aNode, aOptions, aExcludedGu
   let item = await PlacesUtils.promiseBookmarksTree(aNode.bookmarkGuid, aOptions);
   await compareToNode(item, aNode, true, aExcludedGuids);
 
+  if (!PlacesUtils.nodeIsContainer(aNode)) {
+    return item;
+  }
+
   for (let i = 0; i < aNode.childCount; i++) {
     let child = aNode.getChild(i);
     if (child.itemId != PlacesUtils.tagsFolderId)

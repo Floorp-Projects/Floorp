@@ -5,31 +5,6 @@
 const ADDON_ID = "test-devtools@mozilla.org";
 const ADDON_NAME = "test-devtools";
 
-/**
- * Returns a promise that resolves when the given add-on event is fired. The
- * resolved value is an array of arguments passed for the event.
- */
-function promiseAddonEvent(event) {
-  return new Promise(resolve => {
-    let listener = {
-      [event]: function (...args) {
-        AddonManager.removeAddonListener(listener);
-        resolve(args);
-      }
-    };
-
-    AddonManager.addAddonListener(listener);
-  });
-}
-
-function* tearDownAddon(addon) {
-  const onUninstalled = promiseAddonEvent("onUninstalled");
-  addon.uninstall();
-  const [uninstalledAddon] = yield onUninstalled;
-  is(uninstalledAddon.id, addon.id,
-     `Add-on was uninstalled: ${uninstalledAddon.id}`);
-}
-
 function getReloadButton(document, addonName) {
   const names = getInstalledAddonNames(document);
   const name = names.filter(element => element.textContent === addonName)[0];
@@ -38,30 +13,6 @@ function getReloadButton(document, addonName) {
   const reloadButton = targetElement.querySelector(".reload-button");
   info(`Found reload button for ${addonName}`);
   return reloadButton;
-}
-
-function installAddonWithManager(filePath) {
-  return new Promise((resolve, reject) => {
-    AddonManager.getInstallForFile(filePath, install => {
-      if (!install) {
-        throw new Error(`An install was not created for ${filePath}`);
-      }
-      install.addListener({
-        onDownloadFailed: reject,
-        onDownloadCancelled: reject,
-        onInstallFailed: reject,
-        onInstallCancelled: reject,
-        onInstallEnded: resolve
-      });
-      install.install();
-    });
-  });
-}
-
-function getAddonByID(addonId) {
-  return new Promise(resolve => {
-    AddonManager.getAddonByID(addonId, addon => resolve(addon));
-  });
 }
 
 /**
@@ -116,7 +67,6 @@ add_task(function* reloadButtonReloadsAddon() {
   });
 
   const reloadButton = getReloadButton(document, ADDON_NAME);
-  is(reloadButton.disabled, false, "Reload button should not be disabled");
   is(reloadButton.title, "", "Reload button should not have a tooltip");
   const onInstalled = promiseAddonEvent("onInstalled");
 
@@ -198,9 +148,7 @@ add_task(function* onlyTempInstalledAddonsCanBeReloaded() {
   const addon = yield getAddonByID("bug1273184@tests");
 
   const reloadButton = getReloadButton(document, addon.name);
-  ok(reloadButton, "Reload button exists");
-  is(reloadButton.disabled, true, "Reload button should be disabled");
-  ok(reloadButton.title, "Disabled reload button should have a tooltip");
+  ok(!reloadButton, "There should not be a reload button");
 
   yield tearDownAddon(addon);
   yield closeAboutDebugging(tab);
