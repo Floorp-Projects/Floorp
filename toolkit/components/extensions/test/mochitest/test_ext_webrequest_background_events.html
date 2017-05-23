@@ -82,6 +82,7 @@ add_task(async function test_webRequest_background_events() {
         eventNames.delete(name);
 
         if (eventNames.size === 0) {
+          browser.test.assertEq("xmlhttprequest", details.type, "correct type for fetch [bug 1366710]");
           browser.test.assertEq(0, eventNames.size, "messages recieved");
           browser.test.sendMessage("done");
         }
