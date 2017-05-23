@@ -235,11 +235,7 @@ pref("general.autoScroll", true);
 pref("browser.shell.checkDefaultBrowser", true);
 pref("browser.shell.shortcutFavicons",true);
 pref("browser.shell.mostRecentDateSetAsDefault", "");
-#ifdef RELEASE_OR_BETA
-pref("browser.shell.skipDefaultBrowserCheckOnFirstRun", false);
-#else
 pref("browser.shell.skipDefaultBrowserCheckOnFirstRun", true);
-#endif
 pref("browser.shell.didSkipDefaultBrowserCheckOnFirstRun", false);
 pref("browser.shell.defaultBrowserCheckCount", 0);
 pref("browser.defaultbrowser.notificationbar", false);
