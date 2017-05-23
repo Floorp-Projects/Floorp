@@ -868,7 +868,6 @@ gfxPlatform::Shutdown()
     // These may be called before the corresponding subsystems have actually
     // started up. That's OK, they can handle it.
     gfxFontCache::Shutdown();
-    gfxFontGroup::Shutdown();
     gfxGradientCache::Shutdown();
     gfxAlphaBoxBlur::ShutdownBlurCache();
     gfxGraphiteShaper::Shutdown();

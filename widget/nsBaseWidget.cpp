@@ -2289,6 +2289,15 @@ nsIWidget::PostHandleKeyEvent(mozilla::WidgetKeyboardEvent* aEvent)
 {
 }
 
+void
+nsIWidget::GetEditCommands(nsIWidget::NativeKeyBindingsType aType,
+                           const WidgetKeyboardEvent& aEvent,
+                           nsTArray<CommandInt>& aCommands)
+{
+  MOZ_ASSERT(aEvent.IsTrusted());
+  MOZ_ASSERT(aCommands.IsEmpty());
+}
+
 namespace mozilla {
 namespace widget {
 

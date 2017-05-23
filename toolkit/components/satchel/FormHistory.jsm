@@ -85,13 +85,11 @@
 
 this.EXPORTED_SYMBOLS = ["FormHistory"];
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "uuidService",
                                    "@mozilla.org/uuid-generator;1",
@@ -112,8 +110,9 @@ var Prefs = {
   get expireDays() { this.ensureInitialized(); return this._expireDays; },
 
   ensureInitialized() {
-    if (this.initialized)
+    if (this.initialized) {
       return;
+    }
 
     this.initialized = true;
 
@@ -213,7 +212,7 @@ function validateOpData(aData, aDataType) {
     thisValidFields = ["guid", "newGuid"];
   }
   for (let field in aData) {
-    if (field != "op" && thisValidFields.indexOf(field) == -1) {
+    if (field != "op" && !thisValidFields.includes(field)) {
       throw Components.Exception(
         aDataType + " query contains an unrecognized field: " + field,
         Cr.NS_ERROR_ILLEGAL_VALUE);
@@ -224,7 +223,7 @@ function validateOpData(aData, aDataType) {
 
 function validateSearchData(aData, aDataType) {
   for (let field in aData) {
-    if (field != "op" && validFields.indexOf(field) == -1 && searchFilters.indexOf(field) == -1) {
+    if (field != "op" && !validFields.includes(field) && !searchFilters.includes(field)) {
       throw Components.Exception(
         aDataType + " query contains an unrecognized field: " + field,
         Cr.NS_ERROR_ILLEGAL_VALUE);
@@ -233,16 +232,22 @@ function validateSearchData(aData, aDataType) {
 }
 
 function makeQueryPredicates(aQueryData, delimiter = " AND ") {
-  return Object.keys(aQueryData).map(function(field) {
-    if (field == "firstUsedStart") {
-      return "firstUsed >= :" + field;
-    } else if (field == "firstUsedEnd") {
-      return "firstUsed <= :" + field;
-    } else if (field == "lastUsedStart") {
-      return "lastUsed >= :" + field;
-    } else if (field == "lastUsedEnd") {
-      return "lastUsed <= :" + field;
+  return Object.keys(aQueryData).map(field => {
+    switch (field) {
+      case "firstUsedStart": {
+        return "firstUsed >= :" + field;
+      }
+      case "firstUsedEnd": {
+        return "firstUsed <= :" + field;
+      }
+      case "lastUsedStart": {
+        return "lastUsed >= :" + field;
+      }
+      case "lastUsedEnd": {
+        return "lastUsed <= :" + field;
+      }
     }
+
     return field + " = :" + field;
   }).join(delimiter);
 }
@@ -352,8 +357,9 @@ function generateGUID() {
   let bytes = 0;
   for (let i = 1; bytes < 12 ; i += 2) {
     // Skip dashes
-    if (uuid[i] == "-")
+    if (uuid[i] == "-") {
       i++;
+    }
     let hexVal = parseInt(uuid[i] + uuid[i + 1], 16);
     raw += String.fromCharCode(hexVal);
     bytes++;
@@ -396,8 +402,9 @@ var dbStmts = new Map();
  * Creates a statement, wraps it, and then does parameter replacement
  */
 function dbCreateAsyncStatement(aQuery, aParams, aBindingArrays) {
-  if (!aQuery)
+  if (!aQuery) {
     return null;
+  }
 
   let stmt = dbStmts.get(aQuery);
   if (!stmt) {
@@ -523,7 +530,7 @@ var Migrators = {
    * Updates the DB schema to v3 (bug 506402).
    * Adds deleted form history table.
    */
-  dbMigrateToVersion4: function dbMigrateToVersion4() {
+  dbMigrateToVersion4() {
     if (!_dbConnection.tableExists("moz_deleted_formhistory")) {
       let table = dbSchema.tables["moz_deleted_formhistory"];
       let tSQL = Object.keys(table).map(col => [col, table[col]].join(" ")).join(", ");
@@ -633,10 +640,12 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
       case "remove":
         log("Remove from form history  " + change);
         let delStmt = makeMoveToDeletedStatement(change.guid, now, change, bindingArrays);
-        if (delStmt && stmts.indexOf(delStmt) == -1)
+        if (delStmt && !stmts.includes(delStmt)) {
           stmts.push(delStmt);
-        if ("timeDeleted" in change)
+        }
+        if ("timeDeleted" in change) {
           delete change.timeDeleted;
+        }
         stmt = makeRemoveStatement(change, bindingArrays);
         notifications.push([ "formhistory-remove", change.guid ]);
         break;
@@ -677,7 +686,7 @@ function updateFormHistoryWrite(aChanges, aCallbacks) {
     }
 
     // As identical statements are reused, only add statements if they aren't already present.
-    if (stmt && stmts.indexOf(stmt) == -1) {
+    if (stmt && !stmts.includes(stmt)) {
       stmts.push(stmt);
     }
   }
@@ -771,9 +780,11 @@ this.FormHistory = {
     return Prefs.enabled;
   },
 
-  search: function formHistorySearch(aSelectTerms, aSearchData, aCallbacks) {
+  search(aSelectTerms, aSearchData, aCallbacks) {
     // if no terms selected, select everything
-    aSelectTerms = (aSelectTerms) ? aSelectTerms : validFields;
+    if (!aSelectTerms) {
+      aSelectTerms = validFields;
+    }
     validateSearchData(aSearchData, "Search");
 
     let stmt = makeSearchStatement(aSearchData, aSelectTerms);
@@ -798,7 +809,7 @@ this.FormHistory = {
         }
       },
 
-      handleCompletion: function searchCompletionHandler(aReason) {
+      handleCompletion(aReason) {
         if (aCallbacks && aCallbacks.handleCompletion) {
           aCallbacks.handleCompletion(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ? 0 : 1);
         }
@@ -808,11 +819,11 @@ this.FormHistory = {
     stmt.executeAsync(handlers);
   },
 
-  count: function formHistoryCount(aSearchData, aCallbacks) {
+  count(aSearchData, aCallbacks) {
     validateSearchData(aSearchData, "Count");
     let stmt = makeCountStatement(aSearchData);
     let handlers = {
-      handleResult: function countResultHandler(aResultSet) {
+      handleResult(aResultSet) {
         let row = aResultSet.getNextRow();
         let count = row.getResultByName("numEntries");
         if (aCallbacks && aCallbacks.handleResult) {
@@ -826,7 +837,7 @@ this.FormHistory = {
         }
       },
 
-      handleCompletion: function searchCompletionHandler(aReason) {
+      handleCompletion(aReason) {
         if (aCallbacks && aCallbacks.handleCompletion) {
           aCallbacks.handleCompletion(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ? 0 : 1);
         }
@@ -836,7 +847,7 @@ this.FormHistory = {
     stmt.executeAsync(handlers);
   },
 
-  update: function formHistoryUpdate(aChanges, aCallbacks) {
+  update(aChanges, aCallbacks) {
     // Used to keep track of how many searches have been started. When that number
     // are finished, updateFormHistoryWrite can be called.
     let numSearches = 0;
@@ -844,12 +855,13 @@ this.FormHistory = {
     let searchFailed = false;
 
     function validIdentifier(change) {
-      // The identifier is only valid if one of either the guid or the (fieldname/value) are set
+      // The identifier is only valid if one of either the guid or the (fieldname/value) are set (so an X-OR)
       return Boolean(change.guid) != Boolean(change.fieldname && change.value);
     }
 
-    if (!("length" in aChanges))
+    if (!("length" in aChanges)) {
       aChanges = [aChanges];
+    }
 
     let isRemoveOperation = aChanges.every(change => change && change.op && change.op == "remove");
     if (!Prefs.enabled && !isRemoveOperation) {
@@ -963,7 +975,7 @@ this.FormHistory = {
     }
   },
 
-  getAutoCompleteResults: function getAutoCompleteResults(searchString, params, aCallbacks) {
+  getAutoCompleteResults(searchString, params, aCallbacks) {
     // only do substring matching when the search string contains more than one character
     let searchTokens;
     let where = ""
@@ -1026,8 +1038,9 @@ this.FormHistory = {
 
     // Chicken and egg problem: Need the statement to escape the params we
     // pass to the function that gives us the statement. So, fix it up now.
-    if (searchString.length >= 1)
+    if (searchString.length >= 1) {
       stmt.params.valuePrefix = stmt.escapeStringForLIKE(searchString, "/") + "%";
+    }
     if (searchString.length > 1) {
       let searchTokenCount = Math.min(searchTokens.length, MAX_SEARCH_TOKENS);
       for (let i = 0; i < searchTokenCount; i++) {
@@ -1086,11 +1099,11 @@ this.FormHistory = {
   },
 
   // The remaining methods are called by FormHistoryStartup.js
-  updatePrefs: function updatePrefs() {
+  updatePrefs() {
     Prefs.initialized = false;
   },
 
-  expireOldEntries: function expireOldEntries() {
+  expireOldEntries() {
     log("expireOldEntries");
 
     // Determine how many days of history we're supposed to keep.
@@ -1109,7 +1122,7 @@ this.FormHistory = {
     });
   },
 
-  shutdown: function shutdown() { dbClose(true); }
+  shutdown() { dbClose(true); }
 };
 
 // Prevent add-ons from redefining this API

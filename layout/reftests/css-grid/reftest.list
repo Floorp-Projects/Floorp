@@ -115,7 +115,7 @@ fails-if(stylo) == grid-item-intrinsic-size-normal-002.html grid-item-intrinsic-
 == grid-item-auto-min-size-clamp-004.html grid-item-auto-min-size-clamp-004-ref.html
 == grid-item-auto-min-size-clamp-005.html grid-item-auto-min-size-clamp-005-ref.html
 == grid-item-auto-min-size-clamp-006.html grid-item-auto-min-size-clamp-006-ref.html
-fails-if(stylo) == grid-item-auto-min-size-clamp-007.html grid-item-auto-min-size-clamp-007-ref.html
+== grid-item-auto-min-size-clamp-007.html grid-item-auto-min-size-clamp-007-ref.html
 fails-if(stylo) == grid-item-overflow-stretch-001.html grid-item-overflow-stretch-001-ref.html
 fails-if(stylo) == grid-item-overflow-stretch-002.html grid-item-overflow-stretch-002-ref.html
 fails-if(stylo) == grid-item-overflow-stretch-003.html grid-item-overflow-stretch-003-ref.html

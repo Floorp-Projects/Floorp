@@ -31,7 +31,7 @@ class gfxFontGroup;
 class gfxUserFontEntry;
 class gfxUserFontSet;
 class nsIAtom;
-class nsILanguageAtomService;
+class nsLanguageAtomService;
 class gfxMissingFontRecorder;
 
 namespace mozilla {
@@ -1246,8 +1246,6 @@ protected:
 
     // do style selection and add entries to list
     void AddFamilyToFontList(gfxFontFamily* aFamily);
-
-    static nsILanguageAtomService* gLangService;
 };
 
 // A "missing font recorder" is to be used during text-run creation to keep

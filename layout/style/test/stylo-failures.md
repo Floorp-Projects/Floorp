@@ -36,21 +36,8 @@ to mochitest command.
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
 * Animation support:
-  * test_animations.html [3]
-  * test_animations_dynamic_changes.html [1]
-  * test_bug716226.html [3]
-  * inserting keyframes rule doesn't trigger restyle bug 1364799:
-    * test_rule_insertion.html `@keyframes` [36]
   * OMTA
-    * test_animations_effect_timing_duration.html [1]
-    * test_animations_effect_timing_enddelay.html [1]
-    * test_animations_effect_timing_iterations.html [1]
-    * test_animations_iterationstart.html [1]
-    * test_animations_omta.html [1]
-    * test_animations_omta_start.html [1]
-    * test_animations_pausing.html [1]
-    * test_animations_playbackrate.html [1]
-    * test_animations_reverse.html [1]
+    * test_animations_omta.html: bug 1361938, bug 1361663 [*]
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
 * CSSOM support:
@@ -62,13 +49,12 @@ to mochitest command.
   * test_bug413958.html `monitorConsole` [3]
   * test_parser_diagnostics_unprintables.html [550]
 * Transition support:
-  * test_transitions.html: pseudo elements [12]
+  * test_transitions.html: pseudo elements [4]
+  * test_transitions_and_reframes.html `pseudo-element`: bug 1366422 [4]
   * Events:
     * test_animations_event_order.html [2]
 * test_computed_style.html `gradient`: -webkit-prefixed gradient values [13]
-* test_bug829816.html: counter-{reset,increment} serialization difference bug 1363968 [8]
 * dynamic change on \@counter-style rule bug 1363590
-  * test_counter_style.html [11]
   * test_counter_style.html asserts [11]
   * test_counter_descriptor_storage.html asserts [110]
 * symbols() function and string value on list-style-type bug 1363596
@@ -76,12 +62,10 @@ to mochitest command.
   * ... `list-style-type` [8]
   * ... `'list-style'` [18]
 * Unimplemented \@font-face descriptors:
-  * font-display bug 1355345
-    * test_descriptor_storage.html `font-display` [5]
-    * test_font_face_parser.html `font-display` [15]
   * test_font_face_parser.html `font-language-override`: bug 1355364 [8]
-  * ... `font-feature-settings`: bug 1355366 [10]
-* test_font_face_parser.html `font-weight`: keyword values should be preserved in \@font-face [4]
+* keyword values should be preserved in \@font-face
+  * test_font_face_parser.html `font-weight` [4]
+  * test_font_loading_api.html `weight` [1]
 * @namespace support:
   * test_namespace_rule.html: bug 1355715 [6]
 * test_dont_use_document_colors.html: support of disabling document color bug 1355716 [21]
@@ -107,15 +91,12 @@ to mochitest command.
     * test_value_storage.html `font-variant` [167]
     * test_specified_value_serialization.html `bug-721136` [1]
 * Unsupported prefixed values
+  * moz-prefixed gradient functions bug 1337655
+    * test_value_storage.html `-moz-linear-gradient` [322]
+    * ... `-moz-radial-gradient` [309]
+    * ... `-moz-repeating-` [298]
   * serialization of prefixed gradient functions bug 1358710
     * test_specified_value_serialization.html `-webkit-radial-gradient` [1]
-  * moz-prefixed intrinsic width values bug 1355402
-    * test_box_size_keywords.html [16]
-    * test_flexbox_flex_shorthand.html `-moz-fit-content` [4]
-    * test_value_storage.html `-moz-max-content` [46]
-    * ... `-moz-min-content` [6]
-    * ... `-moz-fit-content` [6]
-    * ... `-moz-available` [4]
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
 * Unsupported values
@@ -123,10 +104,6 @@ to mochitest command.
     * test_value_storage.html `context-` [7]
     * test_bug798843_pref.html [7]
 * Incorrect parsing
-  * Incorrect bounds
-    * test_bug664955.html `font size is larger than max font size` [2]
-  * -moz-alt-content parsing is wrong: servo/servo#15726
-    * test_property_syntax_errors.html `-moz-alt-content` [4]
   * mask shorthand servo/servo#15772
     * test_property_syntax_errors.html `mask'` [76]
   * different parsing bug 1364260
@@ -156,9 +133,6 @@ to mochitest command.
   * :dir
     * test_selectors.html `:dir` [11]
 * Quirks mode support
-  * hashless color servo/servo#15341
-    * test_property_syntax_errors.html `color: 000000` [10]
-    * ... `color: 96ed2a` [10]
   * test_hover_quirk.html: hover quirks bug 1355724 [6]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]

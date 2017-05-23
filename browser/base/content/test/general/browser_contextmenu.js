@@ -56,19 +56,23 @@ add_task(async function test_setup_html() {
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let doc = content.document;
-    let videoIframe = doc.querySelector("#test-video-in-iframe");
-    let video = videoIframe.contentDocument.querySelector("video");
-    let awaitPause = ContentTaskUtils.waitForEvent(video, "pause");
-    await ContentTaskUtils.waitForCondition(() => !video.paused, "Making sure video is playing before calling pause");
-    video.pause();
-    await awaitPause;
-
     let audioIframe = doc.querySelector("#test-audio-in-iframe");
     // media documents always use a <video> tag.
     let audio = audioIframe.contentDocument.querySelector("video");
-    awaitPause = ContentTaskUtils.waitForEvent(audio, "pause");
+    let videoIframe = doc.querySelector("#test-video-in-iframe");
+    let video = videoIframe.contentDocument.querySelector("video");
+
+    audio.loop = true;
+    video.loop = true;
+
+    let awaitPause = ContentTaskUtils.waitForEvent(audio, "pause");
     await ContentTaskUtils.waitForCondition(() => !audio.paused, "Making sure audio is playing before calling pause");
     audio.pause();
+    await awaitPause;
+
+    awaitPause = ContentTaskUtils.waitForEvent(video, "pause");
+    await ContentTaskUtils.waitForCondition(() => !video.paused, "Making sure video is playing before calling pause");
+    video.pause();
     await awaitPause;
   });
 });

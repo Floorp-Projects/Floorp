@@ -306,33 +306,27 @@
 <groupbox id="passwordsGroup" orient="vertical" data-category="panePrivacy" hidden="true">
   <caption><label>&formsAndPasswords.label;</label></caption>
 
-  <grid id="passwordGrid">
-    <columns>
-      <column flex="1"/>
-      <column/>
-    </columns>
-    <rows id="passwordRows">
-      <row id="savePasswordsBox">
-        <checkbox id="savePasswords"
-                  label="&rememberLogins1.label;" accesskey="&rememberLogins1.accesskey;"
-                  preference="signon.rememberSignons"
-                  onsyncfrompreference="return gPrivacyPane.readSavePasswords();"
-                  flex="1" />
-        <button id="passwordExceptions"
-                class="accessory-button"
-                label="&passwordExceptions.label;"
-                accesskey="&passwordExceptions.accesskey;"
-                preference="pref.privacy.disable_button.view_passwords_exceptions"/>
-      </row>
-      <row id="showPasswordRow">
-        <hbox id="showPasswordsBox"/>
-        <button id="showPasswords"
-                class="accessory-button"
-                label="&savedLogins.label;" accesskey="&savedLogins.accesskey;"
-                preference="pref.privacy.disable_button.view_passwords"/>
-      </row>
-    </rows>
-  </grid>
+  <vbox id="passwordSettings">
+    <hbox id="savePasswordsBox">
+      <checkbox id="savePasswords"
+                label="&rememberLogins1.label;" accesskey="&rememberLogins1.accesskey;"
+                preference="signon.rememberSignons"
+                onsyncfrompreference="return gPrivacyPane.readSavePasswords();"
+                flex="1" />
+      <button id="passwordExceptions"
+              class="accessory-button"
+              label="&passwordExceptions.label;"
+              accesskey="&passwordExceptions.accesskey;"
+              preference="pref.privacy.disable_button.view_passwords_exceptions"/>
+    </hbox>
+    <hbox id="showPasswordBox">
+      <hbox id="showPasswordsBox"/>
+      <button id="showPasswords"
+              class="accessory-button"
+              label="&savedLogins.label;" accesskey="&savedLogins.accesskey;"
+              preference="pref.privacy.disable_button.view_passwords"/>
+    </hbox>
+  </vbox>
   <hbox id="masterPasswordRow">
     <checkbox id="useMasterPassword"
               label="&useMasterPassword.label;"

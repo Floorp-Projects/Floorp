@@ -65,11 +65,19 @@ function runTest() {
 
   info("--- add cue ---");
   track.addCue(cue);
-
+  video.ontimeupdate = function () {
+    info("--- video.currentTime is " + video.currentTime);
+  };
   cue.onenter = function () {
     cue.onenter = null;
     isReceivedOnEnterEvent = true;
-    checkCueDisplayState(cue, true /* has display-state */);
+    var cueChrome = SpecialPowers.wrap(cue);
+    info("cueChrome.getActive " + cueChrome.getActive);
+    if (cueChrome.getActive) {
+      checkCueDisplayState(cue, true /* has display-state */);
+    } else {
+      ok(false, "The cue start time is 0, should be always active!?");
+    }
 
     cue.onexit = function () {
       cue.onexit = null;

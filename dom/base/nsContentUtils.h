@@ -2953,6 +2953,10 @@ public:
   static bool
   GetUserIsInteracting();
 
+  // Check pref "privacy.trackingprotection.lower_network_priority" to see
+  // if we want to lower the priority of the channel.
+  static bool IsLowerNetworkPriority() { return sLowerNetworkPriority; }
+
 private:
   static bool InitializeEventTable();
 
@@ -3079,6 +3083,7 @@ private:
   static bool sGetBoxQuadsEnabled;
   static bool sSkipCursorMoveForSameValueSet;
   static bool sRequestIdleCallbackEnabled;
+  static bool sLowerNetworkPriority;
   static uint32_t sCookiesLifetimePolicy;
   static uint32_t sCookiesBehavior;
 

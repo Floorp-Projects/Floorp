@@ -11,9 +11,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
   "resource:///modules/ContentSearch.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "SelfSupportBackend",
-  "resource:///modules/SelfSupportBackend.jsm");
-
 const SIMPLETEST_OVERRIDES =
   ["ok", "is", "isnot", "todo", "todo_is", "todo_isnot", "info", "expectAssertions", "requestCompleteLog"];
 
@@ -97,8 +94,8 @@ function testInit() {
     };
 
     var listener = 'data:,function doLoad(e) { var data=e.detail&&e.detail.data;removeEventListener("contentEvent", function (e) { doLoad(e); }, false, true);sendAsyncMessage("chromeEvent", {"data":data}); };addEventListener("contentEvent", function (e) { doLoad(e); }, false, true);';
-    messageManager.loadFrameScript(listener, true);
     messageManager.addMessageListener("chromeEvent", messageHandler);
+    messageManager.loadFrameScript(listener, true);
   }
   if (gConfig.e10s) {
     e10s_init();
@@ -602,7 +599,6 @@ Tester.prototype = {
             sidebar.docShell.createAboutBlankContentViewer(null);
             sidebar.setAttribute("src", "about:blank");
 
-            SelfSupportBackend.uninit();
             SocialShare.uninit();
           }
 

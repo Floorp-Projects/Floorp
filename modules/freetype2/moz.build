@@ -1,0 +1,94 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEFINES['FT2_BUILD_LIBRARY'] = True
+
+CFLAGS += ['-std=c99']
+
+LOCAL_INCLUDES += [
+    'include',
+]
+
+# We allow warnings for third-party code that can be updated from upstream.
+ALLOW_COMPILER_WARNINGS = True
+
+# base components
+SOURCES += [
+    'src/base/ftbase.c',
+    'src/base/ftdebug.c',
+    'src/base/ftinit.c',
+    'src/base/ftsystem.c',
+]
+
+# font modules
+SOURCES += [
+    'src/bdf/bdf.c',            # BDF font driver.
+    'src/cff/cff.c',            # CFF/OpenType font driver.
+    'src/cid/type1cid.c',       # Type 1 CID-keyed font driver.
+    'src/pcf/pcf.c',            # PCF font driver.
+    'src/pfr/pfr.c',            # PFR/TrueDoc font driver.
+    'src/sfnt/sfnt.c',          # SFNT files support.
+    'src/truetype/truetype.c',  # TrueType font driver.
+    'src/type1/type1.c',        # PostScript Type 1 font driver.
+    'src/type42/type42.c',      # PostScript Type 42 font driver.
+    'src/winfonts/winfnt.c',    # Windows FONT/FNT font driver.
+]
+
+# hinting modules
+SOURCES += [
+    'src/autofit/autofit.c',    # FreeType's auto hinter.
+    'src/pshinter/pshinter.c',  # PostScript hinter.
+]
+
+# raster modules
+SOURCES += [
+    'src/raster/raster.c',      # Monochrome rasterizer.
+    'src/smooth/smooth.c',      # Anti-aliasing rasterizer.
+]
+
+# auxiliary modules
+SOURCES += [
+    'src/bzip2/ftbzip2.c',      # Support for streams compressed with bzip2 (files with suffix .bz2).
+    'src/cache/ftcache.c',      # FreeType's cache sub-system.
+    'src/gzip/ftgzip.c',        # Support for streams compressed with gzip (files with suffix .gz).
+    'src/lzw/ftlzw.c',          # Support for streams compressed with LZW (files with suffix .Z).
+    'src/psaux/psaux.c',        # Auxiliary PostScript driver component to share common code.
+    'src/psnames/psnames.c',    # Support for PostScript glyph names.
+]
+
+# base module extensions
+SOURCES += [
+    'src/base/ftbbox.c',        # Exact bounding box calculation.
+    'src/base/ftbdf.c',         # Access BDF-specific strings.
+    'src/base/ftbitmap.c',      # Utility functions for converting 1bpp, 2bpp, 4bpp, and 8bpp bitmaps into 8bpp format, and for emboldening of bitmap glyphs.
+    'src/base/ftcid.c',         # Access CID font information.
+    'src/base/ftfntfmt.c',      # Support functions for font formats.
+    'src/base/ftfstype.c',      # Access FSType information.
+    'src/base/ftgasp.c',        # Support for GASP table queries.
+    'src/base/ftglyph.c',       # Convenience functions to handle glyphs.
+    'src/base/ftgxval.c',       # Interface for gxvalid module.
+    'src/base/ftlcdfil.c',      # Support for LCD color filtering of subpixel bitmaps.
+    'src/base/ftmm.c',          # Multiple Master font interface.
+    'src/base/ftotval.c',       # Interface for otvalid module.
+    'src/base/ftpatent.c',      # Support for FT_Face_CheckTrueTypePatents.
+    'src/base/ftpfr.c',         # Interface for accessing PFR-specific data.
+    'src/base/ftstroke.c',      # Path stroker.
+    'src/base/ftsynth.c',       # Support for synthetic embolding and slanting of fonts.
+    'src/base/fttype1.c',       # Interface to access data specific to PostScript Type 1 and Type 2 (CFF)
+    'src/base/ftwinfnt.c',      # Interface for accessing data specific to Windows FNT files.
+]
+
+# zlib library
+DEFINES['FT_CONFIG_OPTION_SYSTEM_ZLIB'] = True
+CFLAGS += CONFIG['MOZ_ZLIB_CFLAGS']
+USE_LIBS += ['zlib']
+
+# png library
+DEFINES['FT_CONFIG_OPTION_USE_PNG'] = True
+CFLAGS += CONFIG['MOZ_PNG_CFLAGS']
+USE_LIBS += ['mozpng']
+
+FINAL_LIBRARY = 'freetype'

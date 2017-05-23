@@ -92,12 +92,7 @@ PuppetWidget::PuppetWidget(TabChild* aTabChild)
   , mDefaultScale(-1)
   , mCursorHotspotX(0)
   , mCursorHotspotY(0)
-  , mNativeKeyCommandsValid(false)
 {
-  mSingleLineCommands.SetCapacity(4);
-  mMultiLineCommands.SetCapacity(4);
-  mRichTextCommands.SetCapacity(4);
-
   // Setting 'Unknown' means "not yet cached".
   mInputContext.mIMEState.mEnabled = IMEState::UNKNOWN;
 
@@ -342,14 +337,11 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
   MOZ_ASSERT(!mChild || mChild->mWindowType == eWindowType_popup,
              "Unexpected event dispatch!");
 
-  AutoCacheNativeKeyCommands autoCache(this);
-  if ((aEvent->mFlags.mIsSynthesizedForTests ||
-       aEvent->mFlags.mIsSuppressedOrDelayed) && !mNativeKeyCommandsValid) {
-    WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
-    if (keyEvent) {
-      mTabChild->RequestNativeKeyBindings(&autoCache, keyEvent);
-    }
-  }
+  MOZ_ASSERT(!aEvent->AsKeyboardEvent() ||
+             aEvent->mFlags.mIsSynthesizedForTests ||
+             aEvent->AsKeyboardEvent()->AreAllEditCommandsInitialized(),
+    "Non-sysnthesized keyboard events should have edit commands for all types "
+    "before dispatched");
 
   if (aEvent->mClass == eCompositionEventClass) {
     // Store the latest native IME context of parent process's widget or
@@ -552,49 +544,15 @@ PuppetWidget::AsyncPanZoomEnabled() const
   return mTabChild && mTabChild->AsyncPanZoomEnabled();
 }
 
-bool
-PuppetWidget::ExecuteNativeKeyBinding(
-                NativeKeyBindingsType aType,
-                const mozilla::WidgetKeyboardEvent& aEvent,
-                DoCommandCallback aCallback,
-                void* aCallbackData)
+void
+PuppetWidget::GetEditCommands(NativeKeyBindingsType aType,
+                              const WidgetKeyboardEvent& aEvent,
+                              nsTArray<CommandInt>& aCommands)
 {
-  AutoCacheNativeKeyCommands autoCache(this);
-  if (!aEvent.mWidget && !mNativeKeyCommandsValid) {
-    MOZ_ASSERT(!aEvent.mFlags.mIsSynthesizedForTests);
-    // Abort if untrusted to avoid leaking system settings
-    if (NS_WARN_IF(!aEvent.IsTrusted())) {
-      return false;
-    }
-    mTabChild->RequestNativeKeyBindings(&autoCache, &aEvent);
-  }
+  // Validate the arguments.
+  nsIWidget::GetEditCommands(aType, aEvent, aCommands);
 
-  MOZ_ASSERT(mNativeKeyCommandsValid);
-
-  const nsTArray<mozilla::CommandInt>* commands = nullptr;
-  switch (aType) {
-    case nsIWidget::NativeKeyBindingsForSingleLineEditor:
-      commands = &mSingleLineCommands;
-      break;
-    case nsIWidget::NativeKeyBindingsForMultiLineEditor:
-      commands = &mMultiLineCommands;
-      break;
-    case nsIWidget::NativeKeyBindingsForRichTextEditor:
-      commands = &mRichTextCommands;
-      break;
-    default:
-      MOZ_CRASH("Invalid type");
-      break;
-  }
-
-  if (commands->IsEmpty()) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < commands->Length(); i++) {
-    aCallback(static_cast<mozilla::Command>((*commands)[i]), aCallbackData);
-  }
-  return true;
+  mTabChild->RequestEditCommands(aType, aEvent, aCommands);
 }
 
 LayerManager*

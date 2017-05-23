@@ -1,9 +1,6 @@
 "use strict";
 
 module.exports = {
-  "extends": [
-    "plugin:mozilla/recommended"
-  ],
   "rules": {
     // Enforce return statements in callbacks of array methods.
     "array-callback-return": "error",

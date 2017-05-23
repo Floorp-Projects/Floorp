@@ -12,6 +12,9 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/ElementInlines.h"
+#include "nsBlockFrame.h"
+#include "nsBulletFrame.h"
+#include "nsPlaceholderFrame.h"
 #include "nsContentUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsPrintfCString.h"
@@ -63,6 +66,17 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
   Servo_NoteExplicitHints(aElement, aRestyleHint, aMinChangeHint);
 }
 
+void
+ServoRestyleManager::PostRestyleEventForCSSRuleChanges(
+  Element* aElement,
+  nsRestyleHint aRestyleHint,
+  nsChangeHint aMinChangeHint)
+{
+  mRestyleForCSSRuleChanges = true;
+
+  PostRestyleEvent(aElement, aRestyleHint, aMinChangeHint);
+}
+
 /* static */ void
 ServoRestyleManager::PostRestyleEventForAnimations(Element* aElement,
                                                    nsRestyleHint aRestyleHint)
@@ -74,21 +88,9 @@ void
 ServoRestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                                          nsRestyleHint aRestyleHint)
 {
-  StyleSet()->RebuildData();
-
-  mHaveNonAnimationRestyles = true;
-
-  // NOTE(emilio): GeckoRestlyeManager does a sync style flush, which seems
-  // not to be needed in my testing.
-  //
-  // If it is, we can just do a content flush and call ProcessPendingRestyles.
-  if (Element* root = mPresContext->Document()->GetRootElement()) {
-    PostRestyleEvent(root, aRestyleHint, aExtraHint);
-  }
-
-  // TODO(emilio, bz): Extensions can add/remove stylesheets that can affect
-  // non-inheriting anon boxes. It's not clear if we want to support that, but
-  // if we do, we need to re-selector-match them here.
+   // NOTE(emilio): GeckoRestlyeManager does a sync style flush, which seems not
+   // to be needed in my testing.
+  PostRebuildAllStyleDataEvent(aExtraHint, aRestyleHint);
 }
 
 void
@@ -100,6 +102,10 @@ ServoRestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
   if (Element* root = mPresContext->Document()->GetRootElement()) {
     PostRestyleEvent(root, aRestyleHint, aExtraHint);
   }
+
+  // TODO(emilio, bz): Extensions can add/remove stylesheets that can affect
+  // non-inheriting anon boxes. It's not clear if we want to support that, but
+  // if we do, we need to re-selector-match them here.
 }
 
 /* static */ void
@@ -210,6 +216,76 @@ struct ServoRestyleManager::TextPostTraversalState
     }
   }
 };
+
+static void
+UpdateBlockFramePseudoElements(nsBlockFrame* aFrame,
+                               ServoStyleSet& aStyleSet,
+                               nsStyleChangeList& aChangeList)
+{
+  if (nsBulletFrame* bullet = aFrame->GetBullet()) {
+    RefPtr<nsStyleContext> newContext =
+      aStyleSet.ResolvePseudoElementStyle(
+          aFrame->GetContent()->AsElement(),
+          bullet->StyleContext()->GetPseudoType(),
+          aFrame->StyleContext(),
+          /* aPseudoElement = */ nullptr);
+
+    aFrame->UpdateStyleOfOwnedChildFrame(bullet, newContext, aChangeList);
+  }
+}
+
+static void
+UpdateBackdropIfNeeded(nsIFrame* aFrame,
+                       ServoStyleSet& aStyleSet,
+                       nsStyleChangeList& aChangeList)
+{
+  const nsStyleDisplay* display = aFrame->StyleContext()->StyleDisplay();
+  if (display->mTopLayer != NS_STYLE_TOP_LAYER_TOP) {
+    return;
+  }
+
+  // Elements in the top layer are guaranteed to have absolute or fixed
+  // position per https://fullscreen.spec.whatwg.org/#new-stacking-layer.
+  MOZ_ASSERT(display->IsAbsolutelyPositionedStyle());
+
+  nsIFrame* backdropPlaceholder =
+    aFrame->GetChildList(nsIFrame::kBackdropList).FirstChild();
+  if (!backdropPlaceholder) {
+    return;
+  }
+
+  MOZ_ASSERT(backdropPlaceholder->IsPlaceholderFrame());
+  nsIFrame* backdropFrame =
+    nsPlaceholderFrame::GetRealFrameForPlaceholder(backdropPlaceholder);
+  MOZ_ASSERT(backdropFrame->IsBackdropFrame());
+  MOZ_ASSERT(backdropFrame->StyleContext()->GetPseudoType() ==
+             CSSPseudoElementType::backdrop);
+
+  RefPtr<nsStyleContext> newContext =
+    aStyleSet.ResolvePseudoElementStyle(
+        aFrame->GetContent()->AsElement(),
+        CSSPseudoElementType::backdrop,
+        aFrame->StyleContext(),
+        /* aPseudoElement = */ nullptr);
+
+  aFrame->UpdateStyleOfOwnedChildFrame(backdropFrame,
+                                       newContext,
+                                       aChangeList);
+}
+
+static void
+UpdateFramePseudoElementStyles(nsIFrame* aFrame,
+                               ServoStyleSet& aStyleSet,
+                               nsStyleChangeList& aChangeList)
+{
+  if (aFrame->IsFrameOfType(nsIFrame::eBlockFrame)) {
+    UpdateBlockFramePseudoElements(static_cast<nsBlockFrame*>(aFrame),
+                                   aStyleSet,
+                                   aChangeList);
+  }
+
+  UpdateBackdropIfNeeded(aFrame, aStyleSet, aChangeList);
+}
 
 void
 ServoRestyleManager::ProcessPostTraversal(Element* aElement,
@@ -322,7 +398,19 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
 
     if (styleFrame) {
       styleFrame->UpdateStyleOfOwnedAnonBoxes(*aStyleSet, aChangeList, changeHint);
+      UpdateFramePseudoElementStyles(styleFrame, *aStyleSet, aChangeList);
     }
+
+    // Some changes to animations don't affect the computed style and yet still
+    // require the layer to be updated. For example, pausing an animation via
+    // the Web Animations API won't affect an element's style but still
+    // requires to update the animation on the layer.
+    //
+    // We can sometimes reach this when the animated style is being removed.
+    // Since AddLayerChangesForAnimation checks if |styleFrame| has a transform
+    // style or not, we need to call it *after* setting |newContext| to
+    // |styleFrame| to ensure the animated transform has been removed first.
+    AddLayerChangesForAnimation(styleFrame, aElement, aChangeList);
   }
 
   const bool descendantsNeedFrames =
@@ -437,7 +525,8 @@ ServoRestyleManager::FrameForPseudoElement(const nsIContent* aContent,
 }
 
 void
-ServoRestyleManager::ProcessPendingRestyles()
+ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
+                                                aRestyleBehavior)
 {
   MOZ_ASSERT(PresContext()->Document(), "No document?  Pshaw!");
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(), "Missing a script blocker!");
@@ -459,6 +548,8 @@ ServoRestyleManager::ProcessPendingRestyles()
 
   ServoStyleSet* styleSet = StyleSet();
   nsIDocument* doc = PresContext()->Document();
+  bool animationOnly = aRestyleBehavior ==
+                         TraversalRestyleBehavior::ForAnimationOnly;
 
   // Ensure the refresh driver is active during traversal to avoid mutating
   // mActiveTimer and mMostRecentRefresh time.
@@ -469,12 +560,18 @@ ServoRestyleManager::ProcessPendingRestyles()
   // in a loop because certain rare paths in the frame constructor (like
   // uninstalling XBL bindings) can trigger additional style validations.
   mInStyleRefresh = true;
-  if (mHaveNonAnimationRestyles) {
+  if (mHaveNonAnimationRestyles && !animationOnly) {
     ++mAnimationGeneration;
   }
 
-  while (styleSet->StyleDocument()) {
-    ClearSnapshots();
+  TraversalRestyleBehavior restyleBehavior = mRestyleForCSSRuleChanges
+    ? TraversalRestyleBehavior::ForCSSRuleChanges
+    : TraversalRestyleBehavior::Normal;
+  while (animationOnly ? styleSet->StyleDocumentForAnimationOnly()
+                       : styleSet->StyleDocument(restyleBehavior)) {
+    if (!animationOnly) {
+      ClearSnapshots();
+    }
 
     // Recreate style contexts, and queue up change hints (which also handle
     // lazy frame construction).
@@ -495,6 +592,14 @@ ServoRestyleManager::ProcessPendingRestyles()
       ProcessRestyledFrames(currentChanges);
       MOZ_ASSERT(currentChanges.IsEmpty());
       for (ReentrantChange& change: newChanges)  {
+        if (!(change.mHint & nsChangeHint_ReconstructFrame) &&
+            !change.mContent->GetPrimaryFrame()) {
+          // SVG Elements post change hints without ensuring that the primary
+          // frame will be there after that (see bug 1366142).
+          //
+          // Just ignore those, since we can't really process them.
+          continue;
+        }
         currentChanges.AppendChange(change.mContent->GetPrimaryFrame(),
                                     change.mContent, change.mHint);
       }
@@ -505,17 +610,38 @@ ServoRestyleManager::ProcessPendingRestyles()
     IncrementRestyleGeneration();
   }
 
-  ClearSnapshots();
   FlushOverflowChangedTracker();
 
-  mHaveNonAnimationRestyles = false;
+  if (!animationOnly) {
+    ClearSnapshots();
+    styleSet->AssertTreeIsClean();
+    mHaveNonAnimationRestyles = false;
+  }
+  mRestyleForCSSRuleChanges = false;
   mInStyleRefresh = false;
-  styleSet->AssertTreeIsClean();
 
   // Note: We are in the scope of |animationsWithDestroyedFrame|, so
   //       |mAnimationsWithDestroyedFrame| is still valid.
   MOZ_ASSERT(mAnimationsWithDestroyedFrame);
   mAnimationsWithDestroyedFrame->StopAnimationsForElementsWithoutFrames();
+}
+
+void
+ServoRestyleManager::ProcessPendingRestyles()
+{
+  DoProcessPendingRestyles(TraversalRestyleBehavior::Normal);
+}
+
+void
+ServoRestyleManager::UpdateOnlyAnimationStyles()
+{
+  // Bug 1365855: We also need to implement this for SMIL.
+  bool doCSS = PresContext()->EffectCompositor()->HasPendingStyleUpdates();
+  if (!doCSS) {
+    return;
+  }
+
+  DoProcessPendingRestyles(TraversalRestyleBehavior::ForAnimationOnly);
 }
 
 void

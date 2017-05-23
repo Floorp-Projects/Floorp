@@ -279,6 +279,10 @@ button {
   margin: 0;
 }
 
+.addon-target-info-more {
+  padding-left: 1ch;
+}
+
 .addon-target-button {
   background: none;
   border: none;

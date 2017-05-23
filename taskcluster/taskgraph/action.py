@@ -75,9 +75,15 @@ def backfill(project, job_id):
 
     job = s.get(url="{}/project/{}/jobs/{}/".format(TREEHERDER_URL, project, job_id)).json()
 
-    if job["build_system_type"] != "taskcluster":
-        logger.warning("Invalid build system type! Must be a Taskcluster job. Aborting.")
-        return
+    job_type_name = job['job_type_name']
+
+    if job['build_system_type'] != 'taskcluster':
+        if 'Created by BBB for task' not in job['reason']:
+            logger.warning("Invalid build system type! Must be a Taskcluster job. Aborting.")
+            return
+        task_id = job['reason'].split(' ')[-1]
+        task = requests.get("https://queue.taskcluster.net/v1/task/{}".format(task_id)).json()
+        job_type_name = task['metadata']['name']
 
     filters = dict((k, job[k]) for k in ("build_platform_id", "platform_option", "job_type_id"))
 
@@ -87,7 +93,7 @@ def backfill(project, job_id):
     resultsets = [resultset["id"] for resultset in results]
 
     for decision in load_decisions(s, project, resultsets, filters):
-        add_tasks(decision, [job["job_type_name"]], '{}-'.format(decision))
+        add_tasks(decision, [job_type_name], '{}-'.format(decision))
 
 
 def add_talos(decision_task_id, times=1):

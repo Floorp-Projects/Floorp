@@ -238,9 +238,14 @@ nsHtml5TreeOpExecutor::MarkAsBroken(nsresult aReason)
   // We are under memory pressure, but let's hope the following allocation
   // works out so that we get to terminate and clean up the parser from
   // a safer point.
-  if (mParser) { // can mParser ever be null here?
-    MOZ_ALWAYS_SUCCEEDS(
-      NS_DispatchToMainThread(NewRunnableMethod(GetParser(), &nsHtml5Parser::Terminate)));
+  if (mParser && mDocument) { // can mParser ever be null here?
+    nsCOMPtr<nsIRunnable> terminator =
+      NewRunnableMethod(GetParser(), &nsHtml5Parser::Terminate);
+    if (NS_FAILED(mDocument->Dispatch("nsHtml5Parser::Terminate",
+                                      TaskCategory::Network,
+                                      terminator.forget()))) {
+      NS_WARNING("failed to dispatch executor flush event");
+    }
   }
   return aReason;
 }
@@ -264,9 +269,9 @@ void
 nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync()
 {
   if (!mDocument || !mDocument->IsInBackgroundWindow()) {
-    nsCOMPtr<nsIRunnable> flusher = new nsHtml5ExecutorReflusher(this);  
+    nsCOMPtr<nsIRunnable> flusher = new nsHtml5ExecutorReflusher(this);
     if (NS_FAILED(mDocument->Dispatch("nsHtml5ExecutorReflusher",
-                                      TaskCategory::Other,
+                                      TaskCategory::Network,
                                       flusher.forget()))) {
       NS_WARNING("failed to dispatch executor flush event");
     }

@@ -106,13 +106,7 @@ body {
 }
 
 .item.tab > .item-title-container > .item-icon-container {
-  background-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-.item.tab > .item-title-container > .item-icon-container {
-    background-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
-  }
+  background-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
 .item-icon-container {

@@ -459,7 +459,7 @@ class RobocopTestRunner(MochitestDesktop):
             timeout = self.options.timeout
             if not timeout:
                 timeout = self.NO_OUTPUT_TIMEOUT
-            result = self.auto.runApp(
+            result, _ = self.auto.runApp(
                 None, browserEnv, "am", self.localProfile, browserArgs,
                 timeout=timeout, symbolsPath=self.options.symbolsPath)
             self.log.debug("runApp completes with status %d" % result)

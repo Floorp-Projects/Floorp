@@ -33,23 +33,12 @@ mozilla::ipc::IPCResult
 PrintingParent::RecvShowProgress(PBrowserParent* parent,
                                  PPrintProgressDialogParent* printProgressDialog,
                                  PRemotePrintJobParent* remotePrintJob,
-                                 const bool& isForPrinting,
-                                 bool* notifyOnOpen,
-                                 nsresult* result)
+                                 const bool& isForPrinting)
 {
-  *result = NS_ERROR_FAILURE;
-  *notifyOnOpen = false;
+  bool notifyOnOpen = false;
 
   nsCOMPtr<nsPIDOMWindowOuter> parentWin = DOMWindowFromBrowserParent(parent);
-  if (!parentWin) {
-    return IPC_OK();
-  }
-
   nsCOMPtr<nsIPrintingPromptService> pps(do_GetService("@mozilla.org/embedcomp/printingprompt-service;1"));
-
-  if (!pps) {
-    return IPC_OK();
-  }
 
   PrintProgressDialogParent* dialogParent =
     static_cast<PrintProgressDialogParent*>(printProgressDialog);
@@ -58,24 +47,42 @@ PrintingParent::RecvShowProgress(PBrowserParent* parent,
   nsCOMPtr<nsIWebProgressListener> printProgressListener;
   nsCOMPtr<nsIPrintProgressParams> printProgressParams;
 
-  *result = pps->ShowProgress(parentWin, nullptr, nullptr, observer,
-                              isForPrinting,
-                              getter_AddRefs(printProgressListener),
-                              getter_AddRefs(printProgressParams),
-                              notifyOnOpen);
-  NS_ENSURE_SUCCESS(*result, IPC_OK());
-
-  if (remotePrintJob) {
-    // If we have a RemotePrintJob use that as a more general forwarder for
-    // print progress listeners.
-    static_cast<RemotePrintJobParent*>(remotePrintJob)
-      ->RegisterListener(printProgressListener);
-  } else {
-    dialogParent->SetWebProgressListener(printProgressListener);
+  nsresult rv = NS_ERROR_INVALID_ARG;
+  if (parentWin && pps) {
+    rv = pps->ShowProgress(parentWin, nullptr, nullptr, observer,
+                           isForPrinting,
+                           getter_AddRefs(printProgressListener),
+                           getter_AddRefs(printProgressParams),
+                           &notifyOnOpen);
   }
 
-  dialogParent->SetPrintProgressParams(printProgressParams);
+  if (NS_SUCCEEDED(rv)) {
+    if (remotePrintJob) {
+      // If we have a RemotePrintJob use that as a more general forwarder for
+      // print progress listeners.
+      static_cast<RemotePrintJobParent*>(remotePrintJob)
+          ->RegisterListener(printProgressListener);
+    } else {
+      dialogParent->SetWebProgressListener(printProgressListener);
+    }
 
+    dialogParent->SetPrintProgressParams(printProgressParams);
+  }
+
+  // NOTE: If we aren't going to observe an event on our observer, we need to
+  // fake one. This takes the form of sending the SendDialogOpened message. This
+  // is safe because the child process proxy will always return `true` for
+  // notifyOnOpen, as the request will always be async when performed across
+  // process boundaries.
+  //
+  // We can pass nullptr for all of the arguments, as all consumers of this
+  // observer don't care about the subject, topic, or data.
+  //
+  // If notifyOnOpen is true, then the ShowProgress call will handle notifying
+  // our observer for us.
+  if (!notifyOnOpen) {
+    observer->Observe(nullptr, nullptr, nullptr);
+  }
   return IPC_OK();
 }
 

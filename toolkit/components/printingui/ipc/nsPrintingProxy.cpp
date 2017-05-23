@@ -166,12 +166,12 @@ nsPrintingProxy::ShowProgress(mozIDOMWindowProxy*      parent,
     }
   }
 
-  nsresult rv = NS_OK;
+  // NOTE: We set notifyOnOpen to true unconditionally. If the parent process
+  // would get `false` for notifyOnOpen, then it will synthesize a notification
+  // which will be sent asynchronously down to the child.
+  *notifyOnOpen = true;
   mozilla::Unused << SendShowProgress(pBrowser, dialogChild, remotePrintJob,
-                                      isForPrinting, notifyOnOpen, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+                                      isForPrinting);
 
   // If we have a RemotePrintJob that will be being used as a more general
   // forwarder for print progress listeners. Once we always have one we can

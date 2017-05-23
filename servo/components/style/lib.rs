@@ -38,6 +38,7 @@
 #![recursion_limit = "500"]  // For define_css_keyword_enum! in -moz-appearance
 
 extern crate app_units;
+extern crate arrayvec;
 extern crate atomic_refcell;
 extern crate bit_vec;
 #[macro_use]
@@ -78,10 +79,16 @@ extern crate selectors;
 #[cfg(feature = "servo")] extern crate servo_url;
 extern crate smallvec;
 #[macro_use]
+extern crate style_derive;
+#[macro_use]
 extern crate style_traits;
 extern crate time;
+extern crate unicode_bidi;
 #[allow(unused_extern_crates)]
 extern crate unicode_segmentation;
+
+#[macro_use]
+mod macros;
 
 pub mod animation;
 #[allow(missing_docs)] // TODO.
@@ -115,6 +122,7 @@ pub mod rule_tree;
 pub mod scoped_tls;
 pub mod selector_parser;
 pub mod shared_lock;
+pub mod sharing;
 pub mod stylist;
 #[cfg(feature = "servo")] #[allow(unsafe_code)] pub mod servo;
 pub mod sequential;

@@ -176,9 +176,10 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aC
 nsDOMCSSDeclaration::ServoCSSParsingEnvironment
 nsDOMCSSAttributeDeclaration::GetServoCSSParsingEnvironment() const
 {
-  ServoCSSParsingEnvironment parsingEnv(mElement->GetURLDataForStyleAttr(),
-    mElement->OwnerDoc()->GetCompatibilityMode());
-  return parsingEnv;
+  return {
+    mElement->GetURLDataForStyleAttr(),
+    mElement->OwnerDoc()->GetCompatibilityMode(),
+  };
 }
 
 NS_IMETHODIMP

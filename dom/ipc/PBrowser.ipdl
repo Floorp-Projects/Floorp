@@ -87,19 +87,6 @@ using mozilla::a11y::IAccessibleHolder from "mozilla/a11y/IPCTypes.h";
 namespace mozilla {
 namespace dom {
 
-struct NativeKeyBinding
-{
-  CommandInt[] singleLineCommands;
-  CommandInt[] multiLineCommands;
-  CommandInt[] richTextCommands;
-};
-
-union MaybeNativeKeyBinding
-{
-  NativeKeyBinding;
-  void_t;
-};
-
 struct ShowInfo
 {
   nsString name;
@@ -511,8 +498,17 @@ parent:
 
     async ReplyKeyEvent(WidgetKeyboardEvent event);
 
-    sync RequestNativeKeyBindings(WidgetKeyboardEvent event)
-        returns (MaybeNativeKeyBinding bindings);
+    /**
+     * Retrieves edit commands for the key combination represented by aEvent.
+     *
+     * @param aType       One of nsIWidget::NativeKeyBindingsType.
+     * @param aEvent      KeyboardEvent which represents a key combination.
+     *                    Note that this must be a trusted event.
+     * @return            Array of edit commands which should be executed in
+     *                    editor of native applications.
+     */
+    sync RequestNativeKeyBindings(uint32_t aType, WidgetKeyboardEvent aEvent)
+        returns (CommandInt[] commands);
 
     async SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                    int32_t aNativeKeyCode,
@@ -591,9 +587,6 @@ parent:
                             OptionalShmem visualData,
                             uint32_t stride, uint8_t format,
                             LayoutDeviceIntRect dragRect);
-
-    async AudioChannelActivityNotification(uint32_t aAudioChannel,
-                                           bool aActive);
 
     // After a compositor reset, it is necessary to reconnect each layers ID to
     // the compositor of the widget that will render those layers. Note that
@@ -691,7 +684,7 @@ child:
      */
     async SynthMouseMoveEvent(WidgetMouseEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
     async RealMouseButtonEvent(WidgetMouseEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
-    async RealKeyEvent(WidgetKeyboardEvent event, MaybeNativeKeyBinding keyBinding);
+    async RealKeyEvent(WidgetKeyboardEvent event);
     async MouseWheelEvent(WidgetWheelEvent event, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
     async RealTouchEvent(WidgetTouchEvent aEvent,
                          ScrollableLayerGuid aGuid,
@@ -830,13 +823,6 @@ child:
      */
     async HandleAccessKey(WidgetKeyboardEvent event,
                           uint32_t[] charCodes, int32_t modifierMask);
-
-    /**
-     * Propagate a refresh to the child process
-     */
-    async AudioChannelChangeNotification(uint32_t aAudioChannel,
-                                         float aVolume,
-                                         bool aMuted);
 
     /**
      * Tells the root child docShell whether or not to use

@@ -145,7 +145,8 @@
            noautofocus="true"
            hidden="true"
            overflowpadding="4"
-           norolluponanchor="true" />
+           norolluponanchor="true"
+           nomaxresults="true" />
 
     <!-- for search with one-off buttons -->
     <panel type="autocomplete" id="PopupSearchAutoComplete" noautofocus="true" hidden="true"/>
@@ -320,7 +321,7 @@
          <observes element="viewTabsSidebar" attribute="checked"/>
        </toolbarbutton>
       <toolbarseparator/>
-      <toolbarbutton label="&sidebarCloseButton.tooltip;"
+      <toolbarbutton label="&sidebarMenuClose.label;"
                      class="subviewbutton"
                      oncommand="SidebarUI.hide()"/>
     </panel>

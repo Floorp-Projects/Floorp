@@ -18,9 +18,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/BrowserElementPromptService.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "acs",
-                                   "@mozilla.org/audiochannel/service;1",
-                                   "nsIAudioChannelService");
 XPCOMUtils.defineLazyModuleGetter(this, "ManifestFinder",
                                   "resource://gre/modules/ManifestFinder.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ManifestObtainer",
@@ -295,11 +292,6 @@ BrowserElementChild.prototype = {
       "send-touch-event": this._recvSendTouchEvent,
       "get-can-go-back": this._recvCanGoBack,
       "get-can-go-forward": this._recvCanGoForward,
-      "mute": this._recvMute,
-      "unmute": this._recvUnmute,
-      "get-muted": this._recvGetMuted,
-      "set-volume": this._recvSetVolume,
-      "get-volume": this._recvGetVolume,
       "go-back": this._recvGoBack,
       "go-forward": this._recvGoForward,
       "reload": this._recvReload,
@@ -316,11 +308,6 @@ BrowserElementChild.prototype = {
       "find-next": this._recvFindNext,
       "clear-match": this._recvClearMatch,
       "execute-script": this._recvExecuteScript,
-      "get-audio-channel-volume": this._recvGetAudioChannelVolume,
-      "set-audio-channel-volume": this._recvSetAudioChannelVolume,
-      "get-audio-channel-muted": this._recvGetAudioChannelMuted,
-      "set-audio-channel-muted": this._recvSetAudioChannelMuted,
-      "get-is-audio-channel-active": this._recvIsAudioChannelActive,
       "get-web-manifest": this._recvGetWebManifest,
     }
 
@@ -1318,32 +1305,6 @@ BrowserElementChild.prototype = {
     });
   },
 
-  _recvMute: function(data) {
-    this._windowUtils.audioMuted = true;
-  },
-
-  _recvUnmute: function(data) {
-    this._windowUtils.audioMuted = false;
-  },
-
-  _recvGetMuted: function(data) {
-    sendAsyncMsg('got-muted', {
-      id: data.json.id,
-      successRv: this._windowUtils.audioMuted
-    });
-  },
-
-  _recvSetVolume: function(data) {
-    this._windowUtils.audioVolume = data.json.volume;
-  },
-
-  _recvGetVolume: function(data) {
-    sendAsyncMsg('got-volume', {
-      id: data.json.id,
-      successRv: this._windowUtils.audioVolume
-    });
-  },
-
   _recvGoBack: function(data) {
     try {
       docShell.QueryInterface(Ci.nsIWebNavigation).goBack();
@@ -1381,54 +1342,6 @@ BrowserElementChild.prototype = {
     docShell.contentViewer.fullZoom = data.json.zoom;
   },
 
-  _recvGetAudioChannelVolume: function(data) {
-    debug("Received getAudioChannelVolume message: (" + data.json.id + ")");
-
-    let volume = acs.getAudioChannelVolume(content,
-                                           data.json.args.audioChannel);
-    sendAsyncMsg('got-audio-channel-volume', {
-      id: data.json.id, successRv: volume
-    });
-  },
-
-  _recvSetAudioChannelVolume: function(data) {
-    debug("Received setAudioChannelVolume message: (" + data.json.id + ")");
-
-    acs.setAudioChannelVolume(content,
-                              data.json.args.audioChannel,
-                              data.json.args.volume);
-    sendAsyncMsg('got-set-audio-channel-volume', {
-      id: data.json.id, successRv: true
-    });
-  },
-
-  _recvGetAudioChannelMuted: function(data) {
-    debug("Received getAudioChannelMuted message: (" + data.json.id + ")");
-
-    let muted = acs.getAudioChannelMuted(content, data.json.args.audioChannel);
-    sendAsyncMsg('got-audio-channel-muted', {
-      id: data.json.id, successRv: muted
-    });
-  },
-
-  _recvSetAudioChannelMuted: function(data) {
-    debug("Received setAudioChannelMuted message: (" + data.json.id + ")");
-
-    acs.setAudioChannelMuted(content, data.json.args.audioChannel,
-                             data.json.args.muted);
-    sendAsyncMsg('got-set-audio-channel-muted', {
-      id: data.json.id, successRv: true
-    });
-  },
-
-  _recvIsAudioChannelActive: function(data) {
-    debug("Received isAudioChannelActive message: (" + data.json.id + ")");
-
-    let active = acs.isAudioChannelActive(content, data.json.args.audioChannel);
-    sendAsyncMsg('got-is-audio-channel-active', {
-      id: data.json.id, successRv: active
-    });
-  },
   _recvGetWebManifest: Task.async(function* (data) {
     debug(`Received GetWebManifest message: (${data.json.id})`);
     let manifest = null;

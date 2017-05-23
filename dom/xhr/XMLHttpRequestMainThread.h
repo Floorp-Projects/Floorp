@@ -314,6 +314,8 @@ private:
   // response header is supported.
   static bool IsLowercaseResponseHeader();
 
+  void MaybeLowerChannelPriority();
+
 public:
   virtual void
   Send(JSContext* /*aCx*/, ErrorResult& aRv) override

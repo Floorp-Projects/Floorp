@@ -288,9 +288,11 @@ class MachCommands(CommandBase):
     @Command('test-stylo',
              description='Run stylo unit tests',
              category='testing')
+    @CommandArgument('test_name', nargs=argparse.REMAINDER,
+                     help="Only run tests that match this pattern or file path")
     @CommandArgument('--release', default=False, action="store_true",
                      help="Run with a release build of servo")
-    def test_stylo(self, release=False):
+    def test_stylo(self, release=False, test_name=None):
         self.set_use_stable_rust()
         self.ensure_bootstrapped()
 
@@ -298,9 +300,10 @@ class MachCommands(CommandBase):
         env["RUST_BACKTRACE"] = "1"
         env["CARGO_TARGET_DIR"] = path.join(self.context.topdir, "target", "geckolib").encode("UTF-8")
 
-        release = ["--release"] if release else []
+        args = (["cargo", "test", "-p", "stylo_tests", "--features", "testing"] +
+                (["--release"] if release else []) + (test_name or []))
         with cd(path.join("ports", "geckolib")):
-            return call(["cargo", "test", "-p", "stylo_tests", "--features", "testing"] + release, env=env)
+            return call(args, env=env)
 
     @Command('test-compiletest',
              description='Run compiletests',
@@ -454,6 +457,14 @@ class MachCommands(CommandBase):
     # Helper for test_css and test_wpt:
     def wptrunner(self, run_file, **kwargs):
         self.set_software_rendering_env(kwargs['release'])
+
+        # By default, Rayon selects the number of worker threads
+        # based on the available CPU count. This doesn't work very
+        # well when running tests on CI, since we run so many
+        # Servo processes in parallel. The result is a lot of
+        # extra timeouts. Instead, force Rayon to assume we are
+        # running on a 2 CPU environment.
+        os.environ['RAYON_RS_NUM_CPUS'] = "2"
 
         os.environ["RUST_BACKTRACE"] = "1"
         kwargs["debug"] = not kwargs["release"]

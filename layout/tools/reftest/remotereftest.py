@@ -312,16 +312,16 @@ class RemoteReftest(RefTest):
                timeout=None, debuggerInfo=None,
                symbolsPath=None, options=None,
                valgrindPath=None, valgrindArgs=None, valgrindSuppFiles=None):
-        status = self.automation.runApp(None, env,
-                                        binary,
-                                        profile.profile,
-                                        cmdargs,
-                                        utilityPath=options.utilityPath,
-                                        xrePath=options.xrePath,
-                                        debuggerInfo=debuggerInfo,
-                                        symbolsPath=symbolsPath,
-                                        timeout=timeout)
-        return status, None
+        status, lastTestSeen = self.automation.runApp(None, env,
+                                                      binary,
+                                                      profile.profile,
+                                                      cmdargs,
+                                                      utilityPath=options.utilityPath,
+                                                      xrePath=options.xrePath,
+                                                      debuggerInfo=debuggerInfo,
+                                                      symbolsPath=symbolsPath,
+                                                      timeout=timeout)
+        return status, lastTestSeen
 
     def cleanup(self, profileDir):
         # Pull results back from device

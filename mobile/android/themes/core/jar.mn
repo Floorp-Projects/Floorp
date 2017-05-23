@@ -21,11 +21,8 @@ chrome.jar:
   skin/aboutReaderContent.css               (aboutReaderContent.css)
   skin/aboutReaderControls.css              (aboutReaderControls.css)
   skin/aboutSupport.css                     (aboutSupport.css)
-  skin/content.css                          (content.css)
-  skin/scrollbar.css                        (scrollbar-apz.css)
   skin/config.css                           (config.css)
   skin/defines.css                          (defines.css)
-  skin/touchcontrols.css                    (touchcontrols.css)
   skin/netError.css                         (netError.css)
   skin/spinner.css                          (spinner.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
@@ -34,7 +31,6 @@ chrome.jar:
 % override chrome://global/skin/aboutReaderContent.css chrome://browser/skin/aboutReaderContent.css
 % override chrome://global/skin/aboutReaderControls.css chrome://browser/skin/aboutReaderControls.css
 % override chrome://global/skin/aboutSupport.css chrome://browser/skin/aboutSupport.css
-% override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 % override chrome://global/skin/netError.css chrome://browser/skin/netError.css
 
   skin/aboutLogins.css                      (aboutLogins.css)
@@ -55,23 +51,12 @@ chrome.jar:
   skin/images/checkbox_unchecked_pressed.png  (images/checkbox_unchecked_pressed.png)
   skin/images/chevron.png                   (images/chevron.png)
   skin/images/chevron-rtl.png               (images/chevron-rtl.png)
-  skin/images/dropmarker.svg                (images/dropmarker.svg)
-  skin/images/dropmarker-right.svg          (images/dropmarker-right.svg)
   skin/images/errorpage-warning.png         (images/errorpage-warning.png)
-  skin/images/exitfullscreen.svg            (images/exitfullscreen.svg)
-  skin/images/fullscreen.svg                (images/fullscreen.svg)
   skin/images/grey-caution.svg              (images/grey-caution.svg)
   skin/images/certerror-warning.png         (images/certerror-warning.png)
   skin/images/throbber.png                  (images/throbber.png)
   skin/images/search-clear-30.png           (images/search-clear-30.png)
   skin/images/placeholder_image.svg         (images/placeholder_image.svg)
-  skin/images/play.svg                 (images/play.svg)
-  skin/images/pause.svg                (images/pause.svg)
-  skin/images/cast-ready.svg           (images/cast-ready.svg)
-  skin/images/cast-active.svg          (images/cast-active.svg)
-  skin/images/mute.svg                 (images/mute.svg)
-  skin/images/unmute.svg               (images/unmute.svg)
-  skin/images/scrubber.svg             (images/scrubber.svg)
   skin/images/about-btn-darkgrey.png        (images/about-btn-darkgrey.png)
   skin/images/logo-hdpi.png                 (images/logo-hdpi.png)
   skin/images/wordmark-hdpi.png             (images/wordmark-hdpi.png)
@@ -88,12 +73,3 @@ chrome.jar:
   skin/images/privatebrowsing-mask.png           (images/privatebrowsing-mask.png)
   skin/images/privatebrowsing-mask-and-shield.svg (images/privatebrowsing-mask-and-shield.svg)
   skin/images/icon_key_emptypage.svg             (images/icon_key_emptypage.svg)
-  skin/images/accessiblecaret-normal-hdpi.png       (images/accessiblecaret-normal-hdpi.png)
-  skin/images/accessiblecaret-normal-xhdpi.png      (images/accessiblecaret-normal-xhdpi.png)
-  skin/images/accessiblecaret-normal-xxhdpi.png     (images/accessiblecaret-normal-xxhdpi.png)
-  skin/images/accessiblecaret-tilt-left-hdpi.png    (images/accessiblecaret-tilt-left-hdpi.png)
-  skin/images/accessiblecaret-tilt-left-xhdpi.png   (images/accessiblecaret-tilt-left-xhdpi.png)
-  skin/images/accessiblecaret-tilt-left-xxhdpi.png  (images/accessiblecaret-tilt-left-xxhdpi.png)
-  skin/images/accessiblecaret-tilt-right-hdpi.png   (images/accessiblecaret-tilt-right-hdpi.png)
-  skin/images/accessiblecaret-tilt-right-xhdpi.png  (images/accessiblecaret-tilt-right-xhdpi.png)
-  skin/images/accessiblecaret-tilt-right-xxhdpi.png (images/accessiblecaret-tilt-right-xxhdpi.png)

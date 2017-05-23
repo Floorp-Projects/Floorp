@@ -12,7 +12,7 @@ const FIXTURE = [
         "type": "tab",
         "title": "Firefox for Android — Mobile Web browser — More ways to customize and protect your privacy — Mozilla",
         "url": "https://www.mozilla.org/en-US/firefox/android/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=synced-tabs-sidebar",
-        "icon": "chrome://mozapps/skin/places/defaultFavicon.png",
+        "icon": "chrome://mozapps/skin/places/defaultFavicon.svg",
         "client": "7cqCr77ptzX3",
         "lastUsed": 1452124677
       }

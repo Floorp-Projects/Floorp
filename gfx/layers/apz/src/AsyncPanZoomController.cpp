@@ -3477,12 +3477,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
     if (APZCTreeManager* manager = GetApzcTreeManager()) {
       AndroidDynamicToolbarAnimator* animator = manager->GetAndroidDynamicToolbarAnimator();
       MOZ_ASSERT(animator);
-      CSSToScreenScale scale = ViewTargetAs<ScreenPixel>(aLayerMetrics.GetZoom().ToScaleFactor(),
-                                                         PixelCastJustification::ScreenIsParentLayerForRoot);
-      ScreenIntSize size = ScreenIntSize::Round(aLayerMetrics.GetRootCompositionSize() * scale);
-      if (animator->SetCompositionSize(size)) {
-        animator->UpdateRootFrameMetrics(aLayerMetrics);
-      }
+      animator->MaybeUpdateCompositionSizeAndRootFrameMetrics(aLayerMetrics);
     }
   }
 #endif

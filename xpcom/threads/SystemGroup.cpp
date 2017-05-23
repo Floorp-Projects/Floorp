@@ -22,6 +22,8 @@ public:
   static void ShutdownStatic();
   static SystemGroupImpl* Get();
 
+  static bool Initialized() { return !!sSingleton; }
+
   NS_METHOD_(MozExternalRefCountType) AddRef(void)
   {
     return 2;
@@ -74,6 +76,12 @@ void
 SystemGroup::Shutdown()
 {
   SystemGroupImpl::ShutdownStatic();
+}
+
+bool
+SystemGroup::Initialized()
+{
+  return SystemGroupImpl::Initialized();
 }
 
 /* static */ nsresult

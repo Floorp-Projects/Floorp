@@ -24,6 +24,7 @@ import org.mozilla.gecko.bookmarks.BookmarkEditFragment;
 import org.mozilla.gecko.bookmarks.BookmarkUtils;
 import org.mozilla.gecko.bookmarks.EditBookmarkTask;
 import org.mozilla.gecko.cleanup.FileCleanupController;
+import org.mozilla.gecko.dawn.DawnHelper;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
@@ -1111,6 +1112,8 @@ public class BrowserApp extends GeckoApp
     public void onAttachedToWindow() {
         // We can't show the first run experience until Gecko has finished initialization (bug 1077583).
         checkFirstrun(this, new SafeIntent(getIntent()));
+
+        DawnHelper.conditionallyNotifyDawn(this);
     }
 
     @Override
@@ -1178,13 +1181,6 @@ public class BrowserApp extends GeckoApp
 
     @Override
     protected void restoreLastSelectedTab() {
-        if (mIgnoreLastSelectedTab) {
-            // We're either the first activity to run, so our startup code will (have) handle(d) tab
-            // selection, or else we've received a new intent and want to open and select a new tab
-            // as well.
-            return;
-        }
-
         if (mLastSelectedTabId < 0) {
             // Normally, session restore will select the correct tab when starting up, however this
             // is linked to Gecko powering up. If we're not the first activity to launch, the
@@ -1705,7 +1701,15 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void toggleToolbarChrome(final boolean aShow) {
-        toggleChrome(aShow);
+        if (aShow) {
+            mBrowserChrome.setVisibility(View.VISIBLE);
+        } else {
+            // The chrome needs to be INVISIBLE instead of GONE so that
+            // it will continue update when the layout changes. This
+            // ensures the bitmap generated for the static toolbar
+            // snapshot is the correct size.
+            mBrowserChrome.setVisibility(View.INVISIBLE);
+        }
     }
 
     public void refreshToolbarHeight() {
@@ -1727,22 +1731,17 @@ public class BrowserApp extends GeckoApp
 
     @Override
     void toggleChrome(final boolean aShow) {
-        if (aShow) {
-            mBrowserChrome.setVisibility(View.VISIBLE);
-        } else {
-            // The chrome needs to be INVISIBLE instead of GONE so that
-            // it will continue update when the layout changes. This
-            // ensures the bitmap generated for the static toolbar
-            // snapshot is the correct size.
-            mBrowserChrome.setVisibility(View.INVISIBLE);
+        if (mDynamicToolbar != null) {
+            mDynamicToolbar.setVisible(aShow, VisibilityTransition.IMMEDIATE);
         }
-
         super.toggleChrome(aShow);
     }
 
     @Override
     void focusChrome() {
-        mBrowserChrome.setVisibility(View.VISIBLE);
+        if (mDynamicToolbar != null) {
+            mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
+        }
         mActionBarFlipper.requestFocusFromTouch();
 
         super.focusChrome();

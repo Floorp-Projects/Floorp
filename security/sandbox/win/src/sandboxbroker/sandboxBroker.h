@@ -26,6 +26,12 @@ public:
 
   static void Initialize(sandbox::BrokerServices* aBrokerServices);
 
+  /**
+   * Cache directory paths for use in policy rules. Must be called on main
+   * thread.
+   */
+  static void CacheRulesDirectories();
+
   bool LaunchApp(const wchar_t *aPath,
                  const wchar_t *aArguments,
                  const bool aEnableLogging,
@@ -49,8 +55,6 @@ public:
 
   // File system permissions
   bool AllowReadFile(wchar_t const *file);
-  bool AllowReadWriteFile(wchar_t const *file);
-  bool AllowDirectory(wchar_t const *dir);
 
   // Exposes AddTargetPeer from broker services, so that none sandboxed
   // processes can be added as handle duplication targets.

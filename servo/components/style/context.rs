@@ -17,13 +17,13 @@ use euclid::Size2D;
 use fnv::FnvHashMap;
 use font_metrics::FontMetricsProvider;
 #[cfg(feature = "gecko")] use gecko_bindings::structs;
-use matching::StyleSharingCandidateCache;
 #[cfg(feature = "servo")] use parking_lot::RwLock;
 #[cfg(feature = "gecko")] use properties::ComputedValues;
 use selector_parser::SnapshotMap;
 use selectors::matching::ElementSelectorFlags;
 #[cfg(feature = "servo")] use servo_config::opts;
 use shared_lock::StylesheetGuards;
+use sharing::StyleSharingCandidateCache;
 #[cfg(feature = "servo")] use std::collections::HashMap;
 #[cfg(feature = "gecko")] use std::env;
 use std::fmt;
@@ -150,7 +150,7 @@ pub struct SharedStyleContext<'a> {
 impl<'a> SharedStyleContext<'a> {
     /// Return a suitable viewport size in order to be used for viewport units.
     pub fn viewport_size(&self) -> Size2D<Au> {
-        self.stylist.device.au_viewport_size()
+        self.stylist.device().au_viewport_size()
     }
 }
 

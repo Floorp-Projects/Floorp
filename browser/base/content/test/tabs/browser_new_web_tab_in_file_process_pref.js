@@ -19,18 +19,18 @@ function CheckBrowserNotInPid(browser, unExpectedPid, message) {
 
 // Test for bug 1343184.
 add_task(async function() {
+  // Set prefs to ensure file content process, to allow linked web content in
+  // file URI process and allow more that one file content process.
+  await SpecialPowers.pushPrefEnv(
+    {set: [["browser.tabs.remote.separateFileUriProcess", true],
+           ["browser.tabs.remote.allowLinkedWebInFileUriProcess", true],
+           ["dom.ipc.processCount.file", 2]]});
+
   // Open file:// page.
   let dir = getChromeDir(getResolvedURI(gTestPath));
   dir.append(TEST_FILE);
   const uriString = Services.io.newFileURI(dir).spec;
   await BrowserTestUtils.withNewTab(uriString, async function(fileBrowser) {
-    // Set prefs to ensure file content process, to allow linked web content
-    // in file URI process and allow more that one file content process.
-    await SpecialPowers.pushPrefEnv(
-      {set: [["browser.tabs.remote.separateFileUriProcess", true],
-             ["browser.tabs.remote.allowLinkedWebInFileUriProcess", true],
-             ["dom.ipc.processCount.file", 2]]});
-
     // Get the file:// URI pid for comparison later.
     let filePid = await ContentTask.spawn(fileBrowser, null, () => {
       return Services.appinfo.processID;

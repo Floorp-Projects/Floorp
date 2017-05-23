@@ -1007,15 +1007,13 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
   },
 
   getDocument: function (sheet) {
-    let document;
-
-    if (sheet.ownerNode instanceof Ci.nsIDOMHTMLDocument) {
-      document = sheet.ownerNode;
-    } else {
-      document = sheet.ownerNode.ownerDocument;
+    if (sheet.ownerNode) {
+      return sheet.ownerNode instanceof Ci.nsIDOMHTMLDocument ?
+             sheet.ownerNode : sheet.ownerNode.ownerDocument;
+    } else if (sheet.parentStyleSheet) {
+      return this.getDocument(sheet.parentStyleSheet);
     }
-
-    return document;
+    throw (new Error("Failed trying to get the document of an invalid stylesheet"));
   },
 
   toString: function () {

@@ -149,7 +149,6 @@ public:
     DebugOnly<bool> result = mChildDocs.RemoveElement(aChildDoc->mActorID);
     aChildDoc->mParentDoc = kNoParentDoc;
     MOZ_ASSERT(result);
-    MOZ_ASSERT(aChildDoc->mChildDocs.Length() == 0);
   }
 
   void RemoveAccessible(ProxyAccessible* aAccessible)

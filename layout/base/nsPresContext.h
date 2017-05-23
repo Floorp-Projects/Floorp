@@ -23,6 +23,7 @@
 #include "nsITimer.h"
 #include "nsCRT.h"
 #include "nsIWidgetListener.h"
+#include "nsLanguageAtomService.h"
 #include "FramePropertyTable.h"
 #include "nsGkAtoms.h"
 #include "nsCycleCollectionParticipant.h"
@@ -51,7 +52,6 @@ class nsIPrintSettings;
 class nsDocShell;
 class nsIDocShell;
 class nsIDocument;
-class nsILanguageAtomService;
 class nsITheme;
 class nsIContent;
 class nsIFrame;
@@ -372,6 +372,9 @@ public:
     return StaticPresData::Get()->GetDefaultFontHelper(aFontID, lang,
                                                        GetFontPrefsForLang(lang));
   }
+
+  void ForceCacheLang(nsIAtom *aLanguage);
+  void CacheAllLangs();
 
   /** Get a cached boolean pref, by its type */
   // *  - initially created for bugs 31816, 20760, 22963
@@ -1360,7 +1363,7 @@ protected:
   int32_t               mAutoQualityMinFontSizePixelsPref;
 
   nsCOMPtr<nsITheme> mTheme;
-  nsCOMPtr<nsILanguageAtomService> mLangService;
+  nsLanguageAtomService* mLangService;
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsITimer>    mPrefChangedTimer;
 
@@ -1419,6 +1422,9 @@ protected:
   // language groups, so in the worst case scenario we'll need to traverse 31
   // link items.
   LangGroupFontPrefs    mLangGroupFontPrefs;
+
+  bool mFontGroupCacheDirty;
+  nsTHashtable<nsRefPtrHashKey<nsIAtom>> mLanguagesUsed;
 
   nscoord               mBorderWidthTable[3];
 

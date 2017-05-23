@@ -675,7 +675,7 @@ WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp)
         props.infallibleAppend(IdValuePair(NameToId(names.kind), StringValue(kindStr)));
 
         if (JitOptions.wasmTestMode && import.kind == DefinitionKind::Function) {
-            JSString* sigStr = SigToString(cx, module->metadata().funcImports[numFuncImport++].sig());
+            JSString* sigStr = SigToString(cx, module->metadataTier().funcImports[numFuncImport++].sig());
             if (!sigStr)
                 return false;
             if (!props.append(IdValuePair(NameToId(names.signature), StringValue(sigStr))))
@@ -731,7 +731,7 @@ WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp)
         props.infallibleAppend(IdValuePair(NameToId(names.kind), StringValue(kindStr)));
 
         if (JitOptions.wasmTestMode && exp.kind() == DefinitionKind::Function) {
-            JSString* sigStr = SigToString(cx, module->metadata().funcExports[numFuncExport++].sig());
+            JSString* sigStr = SigToString(cx, module->metadataTier().funcExports[numFuncExport++].sig());
             if (!sigStr)
                 return false;
             if (!props.append(IdValuePair(NameToId(names.signature), StringValue(sigStr))))
@@ -815,7 +815,7 @@ WasmModuleObject::create(JSContext* cx, Module& module, HandleObject proto)
 
     obj->initReservedSlot(MODULE_SLOT, PrivateValue(&module));
     module.AddRef();
-    cx->zone()->updateJitCodeMallocBytes(module.codeLength());
+    cx->zone()->updateJitCodeMallocBytes(module.codeLengthTier());
     return obj;
 }
 
@@ -1166,8 +1166,8 @@ WasmInstanceObject::getExportedFunctionCodeRange(HandleFunction fun)
 {
     uint32_t funcIndex = ExportedFunctionToFuncIndex(fun);
     MOZ_ASSERT(exports().lookup(funcIndex)->value() == fun);
-    const Metadata& metadata = instance().metadata();
-    return metadata.codeRanges[metadata.lookupFuncExport(funcIndex).codeRangeIndex()];
+    const FuncExport& funcExport = instance().metadata().lookupFuncExport(funcIndex);
+    return instance().metadataTier().codeRanges[funcExport.codeRangeIndex()];
 }
 
 /* static */ WasmFunctionScope*
@@ -1716,8 +1716,8 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
 
         Instance& instance = instanceObj->instance();
         const FuncExport& funcExport = instance.metadata().lookupFuncExport(funcIndex);
-        const CodeRange& codeRange = instance.metadata().codeRanges[funcExport.codeRangeIndex()];
-        void* code = instance.codeSegment().base() + codeRange.funcTableEntry();
+        const CodeRange& codeRange = instance.metadataTier().codeRanges[funcExport.codeRangeIndex()];
+        void* code = instance.codeBaseTier() + codeRange.funcTableEntry();
         table.set(index, code, instance);
     } else {
         table.setNull(index);

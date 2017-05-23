@@ -172,6 +172,7 @@ devtools/client/debugger/test/mochitest/code_math_bogus_map.js
 devtools/client/debugger/test/mochitest/code_ugly*
 devtools/client/debugger/test/mochitest/code_worker-source-map.js
 devtools/client/framework/test/code_ugly*
+devtools/client/inspector/markup/test/events_bundle.js
 devtools/server/tests/unit/babel_and_browserify_script_with_source_map.js
 devtools/server/tests/unit/setBreakpoint*
 devtools/server/tests/unit/sourcemapped.js

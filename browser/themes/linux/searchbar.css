@@ -14,7 +14,7 @@
 .searchbar-engine-image {
   height: 16px;
   width: 16px;
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
   margin-inline-start: -1px;
 }
 
@@ -76,10 +76,6 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 }
 
 @media (min-resolution: 1.1dppx) {
-  .searchbar-engine-image {
-    list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
-  }
-
   .searchbar-search-button {
     list-style-image: url("chrome://browser/skin/search-indicator@2x.png");
     -moz-image-region: rect(0, 40px, 40px, 0);

@@ -89,12 +89,6 @@ class FuncBytes
 typedef UniquePtr<FuncBytes> UniqueFuncBytes;
 typedef Vector<UniqueFuncBytes, 8, SystemAllocPolicy> UniqueFuncBytesVector;
 
-enum class CompileMode
-{
-    Baseline,
-    Ion
-};
-
 // FuncCompileUnit contains all the data necessary to produce and store the
 // results of a single function's compilation.
 
@@ -220,7 +214,9 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Data that is moved into the result of finish()
     Assumptions                     assumptions_;
+    LinkDataTier*                   linkDataTier_; // Owned by linkData_
     LinkData                        linkData_;
+    MetadataTier*                   metadataTier_; // Owned by metadata_
     MutableMetadata                 metadata_;
 
     // Data scoped to the ModuleGenerator's lifetime

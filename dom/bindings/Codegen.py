@@ -424,6 +424,10 @@ def DOMClass(descriptor):
         hooks=NativePropertyHooks(descriptor))
 
 
+def InstanceReservedSlots(descriptor):
+    return INSTANCE_RESERVED_SLOTS + descriptor.interface.totalMembersInSlots
+
+
 class CGDOMJSClass(CGThing):
     """
     Generate a DOMJSClass for a given descriptor
@@ -438,7 +442,7 @@ class CGDOMJSClass(CGThing):
     def define(self):
         callHook = LEGACYCALLER_HOOK_NAME if self.descriptor.operations["LegacyCaller"] else 'nullptr'
         objectMovedHook = OBJECT_MOVED_HOOK_NAME if self.descriptor.wrapperCache else 'nullptr'
-        slotCount = INSTANCE_RESERVED_SLOTS + self.descriptor.interface.totalMembersInSlots
+        slotCount = InstanceReservedSlots(self.descriptor)
         classFlags = "JSCLASS_IS_DOMJSCLASS | JSCLASS_FOREGROUND_FINALIZE | "
         if self.descriptor.isGlobal():
             classFlags += "JSCLASS_DOM_GLOBAL | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(DOM_GLOBAL_SLOTS)"
@@ -528,9 +532,10 @@ class CGDOMProxyJSClass(CGThing):
         return ""
 
     def define(self):
+        slotCount = InstanceReservedSlots(self.descriptor)
         # We need one reserved slot (DOM_OBJECT_SLOT).
         flags = ["JSCLASS_IS_DOMJSCLASS",
-                 "JSCLASS_HAS_RESERVED_SLOTS(1)"]
+                 "JSCLASS_HAS_RESERVED_SLOTS(%d)" % slotCount]
         # We don't use an IDL annotation for JSCLASS_EMULATES_UNDEFINED because
         # we don't want people ever adding that to any interface other than
         # HTMLAllCollection.  So just hardcode it here.
@@ -12717,10 +12722,6 @@ class CGDescriptor(CGThing):
 
         if descriptor.concrete:
             if descriptor.proxy:
-                if descriptor.interface.totalMembersInSlots != 0:
-                    raise TypeError("We can't have extra reserved slots for "
-                                    "proxy interface %s" %
-                                    descriptor.interface.identifier.name)
                 cgThings.append(CGGeneric(fill(
                     """
                     static_assert(IsBaseOf<nsISupports, ${nativeType} >::value,
@@ -12741,8 +12742,9 @@ class CGDescriptor(CGThing):
             else:
                 cgThings.append(CGDOMJSClass(descriptor))
                 cgThings.append(CGGetJSClassMethod(descriptor))
-                if descriptor.interface.hasMembersInSlots():
-                    cgThings.append(CGUpdateMemberSlotsMethod(descriptor))
+
+            if descriptor.interface.hasMembersInSlots():
+                cgThings.append(CGUpdateMemberSlotsMethod(descriptor))
 
             if descriptor.isGlobal():
                 assert descriptor.wrapperCache

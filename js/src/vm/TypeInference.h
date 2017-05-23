@@ -829,6 +829,9 @@ class TemporaryTypeSet : public TypeSet
     /* Whether clasp->isCallable() is true for one or more objects in this set. */
     bool maybeCallable(CompilerConstraintList* constraints);
 
+    /* Whether clasp->isProxy() might be true for one or more objects in this set. */
+    bool maybeProxy(CompilerConstraintList* constraints);
+
     /* Whether clasp->emulatesUndefined() is true for one or more objects in this set. */
     bool maybeEmulatesUndefined(CompilerConstraintList* constraints);
 

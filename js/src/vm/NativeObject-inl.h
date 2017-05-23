@@ -172,17 +172,17 @@ inline bool
 NativeObject::tryShiftDenseElements(uint32_t count)
 {
     ObjectElements* header = getElementsHeader();
-    if (header->isCopyOnWrite() ||
+    if (header->initializedLength == count ||
+        count > ObjectElements::MaxShiftedElements ||
+        header->isCopyOnWrite() ||
         header->isFrozen() ||
-        header->hasNonwritableArrayLength() ||
-        header->initializedLength == count)
+        header->hasNonwritableArrayLength())
     {
         return false;
     }
 
     MOZ_ASSERT(count > 0);
     MOZ_ASSERT(count < header->initializedLength);
-    MOZ_ASSERT(count <= ObjectElements::MaxShiftedElements);
 
     if (MOZ_UNLIKELY(header->numShiftedElements() + count > ObjectElements::MaxShiftedElements)) {
         unshiftElements();

@@ -24,7 +24,7 @@
                        oncommand="PanelUI._onBannerItemSelected(event)"
                        wrap="true"
                        hidden="true"/>
-        <hbox id="PanelUI-footer-fxa">
+        <hbox id="PanelUI-fxa-container">
           <hbox id="PanelUI-fxa-status"
                 label="&fxaSignedIn.tooltip;"
                 defaultlabel="&fxaSignIn.label;"
@@ -508,6 +508,31 @@
                        oncommand="PanelUI._onBannerItemSelected(event)"
                        wrap="true"
                        hidden="true"/>
+        <toolbaritem id="appMenu-fxa-container">
+          <hbox id="appMenu-fxa-status"
+                flex="1"
+                defaultlabel="&fxaSignIn.label;"
+                signedinTooltiptext="&fxaSignedIn.tooltip;"
+                tooltiptext="&fxaSignedIn.tooltip;"
+                errorlabel="&fxaSignInError.label;"
+                unverifiedlabel="&fxaUnverified.label;"
+                onclick="if (event.which == 1) gSync.onMenuPanelCommand();">
+            <image id="appMenu-fxa-avatar"/>
+            <toolbarbutton id="appMenu-fxa-label"
+                           class="subviewbutton subviewbutton-iconic"
+                           label="&fxaSignIn.label;"
+                           fxabrandname="&syncBrand.fxAccount.label;"/>
+          </hbox>
+          <toolbarseparator/>
+          <toolbarbutton id="appMenu-fxa-icon"
+                         class="subviewbutton subviewbutton-iconic"
+                         oncommand="gSync.doSync();"
+                         closemenu="none">
+            <observes element="sync-status" attribute="syncstatus"/>
+            <observes element="sync-status" attribute="tooltiptext"/>
+          </toolbarbutton>
+        </toolbaritem>
+        <toolbarseparator/>
         <toolbarbutton id="appMenu-new-window-button"
                        class="subviewbutton subviewbutton-iconic"
                        label="&newNavigatorCmd.label;"

@@ -10,7 +10,9 @@ import java.io.IOException;
 
 public final class AsyncCodecFactory {
     public static AsyncCodec create(String name) throws IOException {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
+        // A bug that getInputBuffer() could fail after flush() then start() wasn't fixed until MR1.
+        // See: https://android.googlesource.com/platform/frameworks/av/+/d9e0603a1be07dbb347c55050c7d4629ea7492e8
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1
                ? new LollipopAsyncCodec(name)
                : new JellyBeanAsyncCodec(name);
     }

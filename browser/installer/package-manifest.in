@@ -361,6 +361,8 @@
 @RESPATH@/components/BrowserElementParent.js
 @RESPATH@/components/FeedProcessor.manifest
 @RESPATH@/components/FeedProcessor.js
+@RESPATH@/components/UAOverridesBootstrapper.js
+@RESPATH@/components/UAOverridesBootstrapper.manifest
 @RESPATH@/components/WellKnownOpportunisticUtils.js
 @RESPATH@/components/WellKnownOpportunisticUtils.manifest
 #ifndef XP_MACOSX
@@ -621,6 +623,10 @@
 @RESPATH@/browser/chrome/webide@JAREXT@
 @RESPATH@/browser/chrome/webide.manifest
 @RESPATH@/browser/@PREF_DIR@/webide-prefs.js
+
+; [DevTools Shim Files]
+@RESPATH@/browser/chrome/devtools-shim@JAREXT@
+@RESPATH@/browser/chrome/devtools-shim.manifest
 
 ; DevTools
 @RESPATH@/browser/chrome/devtools@JAREXT@

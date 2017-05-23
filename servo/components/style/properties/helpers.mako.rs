@@ -13,8 +13,11 @@
     <%def name="predefined_type_inner(name, type, initial_value, parse_method)">
         #[allow(unused_imports)]
         use app_units::Au;
+        #[allow(unused_imports)]
         use cssparser::{Color as CSSParserColor, RGBA};
+        #[allow(unused_imports)]
         use values::specified::AllowQuirks;
+        #[allow(unused_imports)]
         use smallvec::SmallVec;
         pub use values::specified::${type} as SpecifiedValue;
         pub mod computed_value {
@@ -78,22 +81,22 @@
         % if not gecko_only:
             use smallvec::SmallVec;
             use std::fmt;
-            use values::HasViewportPercentage;
+            #[allow(unused_imports)]
+            use style_traits::HasViewportPercentage;
             use style_traits::ToCss;
 
-            impl HasViewportPercentage for SpecifiedValue {
-                fn has_viewport_percentage(&self) -> bool {
-                    let &SpecifiedValue(ref vec) = self;
-                    vec.iter().any(|ref x| x.has_viewport_percentage())
-                }
-            }
-
             pub mod single_value {
+                #[allow(unused_imports)]
                 use cssparser::Parser;
+                #[allow(unused_imports)]
                 use parser::{Parse, ParserContext};
+                #[allow(unused_imports)]
                 use properties::ShorthandId;
+                #[allow(unused_imports)]
                 use values::computed::{Context, ToComputedValue};
+                #[allow(unused_imports)]
                 use values::{computed, specified};
+                #[allow(unused_imports)]
                 use values::{Auto, Either, None_, Normal};
                 ${caller.body()}
             }
@@ -168,7 +171,7 @@
             }
 
             /// The specified value of ${name}.
-            #[derive(Debug, Clone, PartialEq)]
+            #[derive(Clone, Debug, HasViewportPercentage, PartialEq)]
             #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
             pub struct SpecifiedValue(pub Vec<single_value::SpecifiedValue>);
 
@@ -205,6 +208,7 @@
             }
 
             pub fn parse(context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
+                #[allow(unused_imports)]
                 use parser::parse_space_or_comma_separated;
 
                 <%
@@ -260,22 +264,35 @@
     %>
     /// ${property.spec}
     pub mod ${property.ident} {
-        #![allow(unused_imports)]
         % if not property.derived_from:
+            #[allow(unused_imports)]
             use cssparser::Parser;
+            #[allow(unused_imports)]
             use parser::{Parse, ParserContext};
+            #[allow(unused_imports)]
             use properties::{UnparsedValue, ShorthandId};
         % endif
+        #[allow(unused_imports)]
         use values::{Auto, Either, None_, Normal};
+        #[allow(unused_imports)]
         use cascade_info::CascadeInfo;
+        #[allow(unused_imports)]
         use error_reporting::ParseErrorReporter;
+        #[allow(unused_imports)]
         use properties::longhands;
+        #[allow(unused_imports)]
         use properties::{DeclaredValue, LonghandId, LonghandIdSet};
+        #[allow(unused_imports)]
         use properties::{CSSWideKeyword, ComputedValues, PropertyDeclaration};
+        #[allow(unused_imports)]
         use properties::style_structs;
+        #[allow(unused_imports)]
         use stylearc::Arc;
+        #[allow(unused_imports)]
         use values::computed::{Context, ToComputedValue};
+        #[allow(unused_imports)]
         use values::{computed, generics, specified};
+        #[allow(unused_imports)]
         use Atom;
         ${caller.body()}
         #[allow(unused_variables)]
@@ -461,7 +478,6 @@
         keyword = keyword=Keyword(name, values, **keyword_kwargs)
     %>
     <%call expr="longhand(name, keyword=Keyword(name, values, **keyword_kwargs), **kwargs)">
-        use values::HasViewportPercentage;
         use properties::longhands::system_font::SystemFont;
         use std::fmt;
         use style_traits::ToCss;
@@ -583,7 +599,6 @@
             impl ComputedValueAsSpecified for SpecifiedValue {}
         % endif
 
-        use values::HasViewportPercentage;
         no_viewport_percentage!(SpecifiedValue);
     </%call>
 </%def>
@@ -745,18 +760,25 @@
     % if shorthand:
     /// ${shorthand.spec}
     pub mod ${shorthand.ident} {
-        #[allow(unused_imports)]
         use cssparser::Parser;
         use parser::ParserContext;
-        use properties::{PropertyDeclaration, ParsedDeclaration};
-        use properties::{ShorthandId, UnparsedValue, longhands};
+        use properties::{PropertyDeclaration, SourcePropertyDeclaration, MaybeBoxed};
+        use properties::{ShorthandId, LonghandId, UnparsedValue, longhands};
         use std::fmt;
         use stylearc::Arc;
         use style_traits::ToCss;
 
         pub struct Longhands {
             % for sub_property in shorthand.sub_properties:
-                pub ${sub_property.ident}: longhands::${sub_property.ident}::SpecifiedValue,
+                pub ${sub_property.ident}:
+                    % if sub_property.boxed:
+                        Box<
+                    % endif
+                    longhands::${sub_property.ident}::SpecifiedValue
+                    % if sub_property.boxed:
+                        >
+                    % endif
+                    ,
             % endfor
         }
 
@@ -816,7 +838,8 @@
 
         /// Parse the given shorthand and fill the result into the
         /// `declarations` vector.
-        pub fn parse(context: &ParserContext, input: &mut Parser) -> Result<ParsedDeclaration, ()> {
+        pub fn parse_into(declarations: &mut SourcePropertyDeclaration,
+                     context: &ParserContext, input: &mut Parser) -> Result<(), ()> {
             input.look_for_var_functions();
             let start = input.position();
             let value = input.parse_entirely(|input| parse_value(context, input));
@@ -825,17 +848,29 @@
             }
             let var = input.seen_var_functions();
             if let Ok(value) = value {
-                Ok(ParsedDeclaration::${shorthand.camel_case}(value))
+                % for sub_property in shorthand.sub_properties:
+                    declarations.push(PropertyDeclaration::${sub_property.camel_case}(
+                        value.${sub_property.ident}
+                    ));
+                % endfor
+                Ok(())
             } else if var {
                 input.reset(start);
                 let (first_token_type, css) = try!(
                     ::custom_properties::parse_non_custom_with_var(input));
-                Ok(ParsedDeclaration::${shorthand.camel_case}WithVariables(Arc::new(UnparsedValue {
+                let unparsed = Arc::new(UnparsedValue {
                     css: css.into_owned(),
                     first_token_type: first_token_type,
                     url_data: context.url_data.clone(),
                     from_shorthand: Some(ShorthandId::${shorthand.camel_case}),
-                })))
+                });
+                % for sub_property in shorthand.sub_properties:
+                    declarations.push(PropertyDeclaration::WithVariables(
+                        LonghandId::${sub_property.camel_case},
+                        unparsed.clone()
+                    ));
+                % endfor
+                Ok(())
             } else {
                 Err(())
             }
@@ -865,7 +900,7 @@
                 try!(parse_four_sides(input, ${parser_function}));
                 let _unused = context;
             % endif
-            Ok(Longhands {
+            Ok(expanded! {
                 % for side in ["top", "right", "bottom", "left"]:
                     ${to_rust_ident(sub_property_pattern % side)}: ${side},
                 % endfor
@@ -1032,3 +1067,104 @@
         }
     }
 </%def>
+
+// Define property that supports prefixed intrinsic size keyword values for gecko.
+// E.g. -moz-max-content, -moz-min-content, etc.
+<%def name="gecko_size_type(name, length_type, initial_value, logical, **kwargs)">
+    <%call expr="longhand(name,
+                          predefined_type=length_type,
+                          logical=logical,
+                          **kwargs)">
+        use std::fmt;
+        use style_traits::ToCss;
+        % if not logical:
+            use values::specified::AllowQuirks;
+        % endif
+        use values::specified::${length_type};
+
+        pub mod computed_value {
+            pub type T = ::values::computed::${length_type};
+        }
+
+        #[derive(Clone, Debug, HasViewportPercentage, PartialEq)]
+        #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
+        pub struct SpecifiedValue(pub ${length_type});
+
+        % if length_type == "MozLength":
+        impl SpecifiedValue {
+            /// Returns the `auto` value.
+            pub fn auto() -> Self {
+                use values::specified::length::LengthOrPercentageOrAuto;
+                SpecifiedValue(MozLength::LengthOrPercentageOrAuto(LengthOrPercentageOrAuto::Auto))
+            }
+
+            /// Returns a value representing a `0` length.
+            pub fn zero() -> Self {
+                use values::specified::length::{LengthOrPercentageOrAuto, NoCalcLength};
+                SpecifiedValue(MozLength::LengthOrPercentageOrAuto(
+                    LengthOrPercentageOrAuto::Length(NoCalcLength::zero())))
+            }
+        }
+        % endif
+
+        #[inline]
+        pub fn get_initial_value() -> computed_value::T {
+            use values::computed::${length_type};
+            ${length_type}::${initial_value}
+        }
+        fn parse(context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
+            % if logical:
+            let ret = ${length_type}::parse(context, input);
+            % else:
+            let ret = ${length_type}::parse_quirky(context, input, AllowQuirks::Yes);
+            % endif
+            // Keyword values don't make sense in the block direction; don't parse them
+            % if "block" in name:
+                if let Ok(${length_type}::ExtremumLength(..)) = ret {
+                    return Err(())
+                }
+            % endif
+            ret.map(SpecifiedValue)
+        }
+
+        impl ToCss for SpecifiedValue {
+            fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
+                self.0.to_css(dest)
+            }
+        }
+
+        impl ToComputedValue for SpecifiedValue {
+            type ComputedValue = computed_value::T;
+            #[inline]
+            fn to_computed_value(&self, context: &Context) -> computed_value::T {
+                % if not logical or "block" in name:
+                    use values::computed::${length_type};
+                % endif
+                let computed = self.0.to_computed_value(context);
+
+                // filter out keyword values in the block direction
+                % if logical:
+                    % if "block" in name:
+                        if let ${length_type}::ExtremumLength(..) = computed {
+                            return get_initial_value()
+                        }
+                    % endif
+                % else:
+                    if let ${length_type}::ExtremumLength(..) = computed {
+                        <% is_height = "true" if "height" in name else "false" %>
+                        if ${is_height} != context.style().writing_mode.is_vertical() {
+                            return get_initial_value()
+                        }
+                    }
+                % endif
+                computed
+            }
+
+            #[inline]
+            fn from_computed_value(computed: &computed_value::T) -> Self {
+                SpecifiedValue(ToComputedValue::from_computed_value(computed))
+            }
+        }
+    </%call>
+</%def>
+

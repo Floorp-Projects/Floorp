@@ -19,7 +19,6 @@
 #include "AnimationCommon.h" // For GetLayerAnimationInfo
 #include "FrameLayerBuilder.h"
 #include "GeckoProfiler.h"
-#include "LayerAnimationInfo.h" // For LayerAnimationInfo::sRecords
 #include "nsAutoPtr.h"
 #include "nsStyleChangeList.h"
 #include "nsRuleProcessorData.h"
@@ -50,7 +49,6 @@
 #include "nsSMILAnimationController.h"
 #include "nsCSSRuleProcessor.h"
 #include "ChildIterator.h"
-#include "Layers.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -301,11 +299,11 @@ GeckoRestyleManager::AttributeChanged(Element* aElement,
   if (primaryFrame) {
     // See if we have appearance information for a theme.
     const nsStyleDisplay* disp = primaryFrame->StyleDisplay();
-    if (disp->UsedAppearance()) {
+    if (disp->mAppearance) {
       nsITheme* theme = PresContext()->GetTheme();
-      if (theme && theme->ThemeSupportsWidget(PresContext(), primaryFrame, disp->UsedAppearance())) {
+      if (theme && theme->ThemeSupportsWidget(PresContext(), primaryFrame, disp->mAppearance)) {
         bool repaint = false;
-        theme->WidgetStateChanged(primaryFrame, disp->UsedAppearance(), aAttribute,
+        theme->WidgetStateChanged(primaryFrame, disp->mAppearance, aAttribute,
             &repaint, aOldValue);
         if (repaint)
           hint |= nsChangeHint_RepaintFrame;
@@ -1227,54 +1225,6 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
 }
 
 void
-ElementRestyler::AddLayerChangesForAnimation()
-{
-  uint64_t frameGeneration =
-    GeckoRestyleManager::GetAnimationGenerationForFrame(mFrame);
-
-  nsChangeHint hint = nsChangeHint(0);
-  for (const LayerAnimationInfo::Record& layerInfo :
-         LayerAnimationInfo::sRecords) {
-    Layer* layer =
-      FrameLayerBuilder::GetDedicatedLayer(mFrame, layerInfo.mLayerType);
-    if (layer && frameGeneration != layer->GetAnimationGeneration()) {
-      // If we have a transform layer but don't have any transform style, we
-      // probably just removed the transform but haven't destroyed the layer
-      // yet. In this case we will add the appropriate change hint
-      // (nsChangeHint_UpdateContainingBlock) when we compare style contexts
-      // so we can skip adding any change hint here. (If we *were* to add
-      // nsChangeHint_UpdateTransformLayer, ApplyRenderingChangeToTree would
-      // complain that we're updating a transform layer without a transform).
-      if (layerInfo.mLayerType == nsDisplayItem::TYPE_TRANSFORM &&
-          !mFrame->StyleDisplay()->HasTransformStyle()) {
-        continue;
-      }
-      hint |= layerInfo.mChangeHint;
-    }
-
-    // We consider it's the first paint for the frame if we have an animation
-    // for the property but have no layer.
-    // Note that in case of animations which has properties preventing running
-    // on the compositor, e.g., width or height, corresponding layer is not
-    // created at all, but even in such cases, we normally set valid change
-    // hint for such animations in each tick, i.e. restyles in each tick. As
-    // a result, we usually do restyles for such animations in every tick on
-    // the main-thread.  The only animations which will be affected by this
-    // explicit change hint are animations that have opacity/transform but did
-    // not have those properies just before. e.g,  setting transform by
-    // setKeyframes or changing target element from other target which prevents
-    // running on the compositor, etc.
-    if (!layer &&
-        nsLayoutUtils::HasEffectiveAnimation(mFrame, layerInfo.mProperty)) {
-      hint |= layerInfo.mChangeHint;
-    }
-  }
-  if (hint) {
-    mChangeList->AppendChange(mFrame, mContent, hint);
-  }
-}
-
-void
 ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
                                nsStyleContext* aNewContext,
                                nsChangeHint aChangeToAssume,
@@ -1879,7 +1829,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   // Some changes to animations don't affect the computed style and yet still
   // require the layer to be updated. For example, pausing an animation via
   // the Web Animations API won't affect an element's style but still
-  // requires us to pull the animation off the layer.
+  // requires to update the animation on the layer.
   //
   // Although we only expect this code path to be called when computed style
   // is not changing, we can sometimes reach this at the end of a transition
@@ -1887,7 +1837,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   // AddLayerChangesForAnimation checks if mFrame has a transform style or not,
   // we need to call it *after* calling RestyleSelf to ensure the animated
   // transform has been removed first.
-  AddLayerChangesForAnimation();
+  RestyleManager::AddLayerChangesForAnimation(mFrame, mContent, *mChangeList);
 
   if (haveMoreContinuations && hintToRestore) {
     // If we have more continuations with different style (e.g., because
@@ -3170,7 +3120,7 @@ ElementRestyler::RestyleUndisplayedNodes(nsRestyleHint      aChildRestyleHint,
 {
   nsIContent* undisplayedParent = aUndisplayedParent;
   UndisplayedNode* undisplayed = aUndisplayed;
-  TreeMatchContext::AutoAncestorPusher pusher(mTreeMatchContext);
+  TreeMatchContext::AutoAncestorPusher pusher(&mTreeMatchContext);
   if (undisplayed) {
     pusher.PushAncestorAndStyleScope(undisplayedParent);
   }
@@ -3190,7 +3140,7 @@ ElementRestyler::RestyleUndisplayedNodes(nsRestyleHint      aChildRestyleHint,
     // children element. Push the children element as an ancestor here because it does
     // not have a frame and would not otherwise be pushed as an ancestor.
     nsIContent* parent = undisplayed->mContent->GetParent();
-    TreeMatchContext::AutoAncestorPusher insertionPointPusher(mTreeMatchContext);
+    TreeMatchContext::AutoAncestorPusher insertionPointPusher(&mTreeMatchContext);
     if (parent && nsContentUtils::IsContentInsertionPoint(parent)) {
       insertionPointPusher.PushAncestorAndStyleScope(parent);
     }
@@ -3398,7 +3348,7 @@ ElementRestyler::RestyleContentChildren(nsIFrame* aParent,
   LOG_RESTYLE("RestyleContentChildren");
 
   nsIFrame::ChildListIterator lists(aParent);
-  TreeMatchContext::AutoAncestorPusher ancestorPusher(mTreeMatchContext);
+  TreeMatchContext::AutoAncestorPusher ancestorPusher(&mTreeMatchContext);
   if (!lists.IsDone()) {
     ancestorPusher.PushAncestorAndStyleScope(mContent);
   }
@@ -3416,7 +3366,7 @@ ElementRestyler::RestyleContentChildren(nsIFrame* aParent,
         // Check if the frame has a content because |child| may be a
         // nsPageFrame that does not have a content.
         nsIContent* parent = child->GetContent() ? child->GetContent()->GetParent() : nullptr;
-        TreeMatchContext::AutoAncestorPusher insertionPointPusher(mTreeMatchContext);
+        TreeMatchContext::AutoAncestorPusher insertionPointPusher(&mTreeMatchContext);
         if (parent && nsContentUtils::IsContentInsertionPoint(parent)) {
           insertionPointPusher.PushAncestorAndStyleScope(parent);
         }

@@ -497,11 +497,6 @@ ThreadStackHelper::FillStackBuffer()
   // Deduplicate identical, consecutive frames
   const char* prevLabel = nullptr;
   for (; reservedSize-- && entry != end; entry++) {
-    /* We only accept non-copy labels, including js::RunScript,
-       because we only want static labels in the hang stack. */
-    if (entry->isCopyLabel()) {
-      continue;
-    }
     if (entry->isJs()) {
       prevLabel = AppendJSEntry(entry, availableBufferSize, prevLabel);
       continue;

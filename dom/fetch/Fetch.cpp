@@ -14,6 +14,7 @@
 
 #include "nsCharSeparatedTokenizer.h"
 #include "nsDOMString.h"
+#include "nsJSUtils.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
 #include "nsStreamUtils.h"
@@ -279,7 +280,10 @@ public:
       MOZ_ASSERT(principal);
       nsCOMPtr<nsILoadGroup> loadGroup = proxy->GetWorkerPrivate()->GetLoadGroup();
       MOZ_ASSERT(loadGroup);
-      fetch = new FetchDriver(mRequest, principal, loadGroup);
+
+      // We don't track if a worker is spawned from a tracking script for now,
+      // so pass false as the last argument to FetchDriver().
+      fetch = new FetchDriver(mRequest, principal, loadGroup, false);
       nsAutoCString spec;
       if (proxy->GetWorkerPrivate()->GetBaseURI()) {
         proxy->GetWorkerPrivate()->GetBaseURI()->GetAsciiSpec(spec);
@@ -344,6 +348,7 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
     nsCOMPtr<nsIDocument> doc;
     nsCOMPtr<nsILoadGroup> loadGroup;
     nsIPrincipal* principal;
+    bool isTrackingFetch = false;
     if (window) {
       doc = window->GetExtantDoc();
       if (!doc) {
@@ -352,6 +357,11 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
       }
       principal = doc->NodePrincipal();
       loadGroup = doc->GetDocumentLoadGroup();
+
+      nsAutoCString fileNameString;
+      if (nsJSUtils::GetCallingLocation(cx, fileNameString)) {
+        isTrackingFetch = doc->IsScriptTracking(fileNameString);
+      }
     } else {
       principal = aGlobal->PrincipalOrNull();
       if (NS_WARN_IF(!principal)) {
@@ -369,7 +379,8 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
 
     RefPtr<MainThreadFetchResolver> resolver =
       new MainThreadFetchResolver(p, observer);
-    RefPtr<FetchDriver> fetch = new FetchDriver(r, principal, loadGroup);
+    RefPtr<FetchDriver> fetch =
+      new FetchDriver(r, principal, loadGroup, isTrackingFetch);
     fetch->SetDocument(doc);
     resolver->SetLoadGroup(loadGroup);
     aRv = fetch->Fetch(signal, resolver);

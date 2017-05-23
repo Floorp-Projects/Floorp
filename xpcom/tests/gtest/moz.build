@@ -29,6 +29,7 @@ UNIFIED_SOURCES += [
     'TestPLDHash.cpp',
     'TestPriorityQueue.cpp',
     'TestRacingServiceManager.cpp',
+    'TestRWLock.cpp',
     'TestSlicedInputStream.cpp',
     'TestSnappyStreams.cpp',
     'TestStateWatching.cpp',

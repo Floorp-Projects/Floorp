@@ -41,6 +41,7 @@
 #include "mozilla/Preferences.h"
 #include "nsTextNode.h"
 #include "nsIController.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/HTMLInputElement.h"
@@ -992,15 +993,22 @@ nsTextInputListener::HandleEvent(nsIDOMEvent* aEvent)
     mTxtCtrlElement->IsTextArea() ?
       nsIWidget::NativeKeyBindingsForMultiLineEditor :
       nsIWidget::NativeKeyBindingsForSingleLineEditor;
+
   nsIWidget* widget = keyEvent->mWidget;
   // If the event is created by chrome script, the widget is nullptr.
   if (!widget) {
     widget = mFrame->GetNearestWidget();
     NS_ENSURE_TRUE(widget, NS_OK);
   }
-                                         
-  if (widget->ExecuteNativeKeyBinding(nativeKeyBindingsType,
-                                      *keyEvent, DoCommandCallback, mFrame)) {
+
+  // WidgetKeyboardEvent::ExecuteEditCommands() requires non-nullptr mWidget.
+  // If the event is created by chrome script, it is nullptr but we need to
+  // execute native key bindings.  Therefore, we need to set widget to
+  // WidgetEvent::mWidget temporarily.
+  AutoRestore<nsCOMPtr<nsIWidget>> saveWidget(keyEvent->mWidget);
+  keyEvent->mWidget = widget;
+  if (keyEvent->ExecuteEditCommands(nativeKeyBindingsType,
+                                    DoCommandCallback, mFrame)) {
     aEvent->PreventDefault();
   }
   return NS_OK;

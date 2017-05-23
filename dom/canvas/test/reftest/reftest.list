@@ -1,5 +1,5 @@
 # WebGL Reftests!
-default-preferences pref(webgl.force-enabled,true) pref(media.useAudioChannelAPI,true) pref(dom.audiochannel.mutedByDefault,false)
+default-preferences pref(webgl.force-enabled,true) pref(media.useAudioChannelAPI,true)
 
 # Check that disabling works:
 skip-if(Android)                           == webgl-disable-test.html?nogl wrapper.html?green.png
