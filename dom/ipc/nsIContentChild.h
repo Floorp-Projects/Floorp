@@ -42,10 +42,12 @@ class CpowEntry;
 namespace dom {
 
 class Blob;
+class BlobChild;
 class BlobImpl;
 class BlobConstructorParams;
 class ClonedMessageData;
 class IPCTabContext;
+class PBlobChild;
 class PBrowserChild;
 
 class nsIContentChild : public nsISupports
@@ -54,6 +56,13 @@ class nsIContentChild : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTCHILD_IID)
+
+  BlobChild* GetOrCreateActorForBlob(Blob* aBlob);
+  BlobChild* GetOrCreateActorForBlobImpl(BlobImpl* aImpl);
+
+  virtual PBlobChild*
+  SendPBlobConstructor(PBlobChild* aActor,
+                       const BlobConstructorParams& aParams) = 0;
 
   virtual bool
   SendPBrowserConstructor(PBrowserChild* aActor,
@@ -89,6 +98,10 @@ protected:
                                                           const uint32_t& aChromeFlags,
                                                           const ContentParentId& aCpID,
                                                           const bool& aIsForBrowse);
+
+  virtual PBlobChild* AllocPBlobChild(const BlobConstructorParams& aParams);
+
+  virtual bool DeallocPBlobChild(PBlobChild* aActor);
 
   virtual mozilla::ipc::PIPCBlobInputStreamChild*
   AllocPIPCBlobInputStreamChild(const nsID& aID, const uint64_t& aSize);

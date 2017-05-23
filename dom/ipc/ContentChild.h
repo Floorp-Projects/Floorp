@@ -184,6 +184,11 @@ public:
 
   virtual bool DeallocPBrowserChild(PBrowserChild*) override;
 
+  virtual PBlobChild*
+  AllocPBlobChild(const BlobConstructorParams& aParams) override;
+
+  virtual bool DeallocPBlobChild(PBlobChild* aActor) override;
+
   virtual PIPCBlobInputStreamChild*
   AllocPIPCBlobInputStreamChild(const nsID& aID,
                                 const uint64_t& aSize) override;
@@ -507,6 +512,10 @@ public:
 #endif
 
   bool IsForBrowser() const { return mIsForBrowser; }
+
+  virtual PBlobChild*
+  SendPBlobConstructor(PBlobChild* actor,
+                       const BlobConstructorParams& params) override;
 
   virtual PFileDescriptorSetChild*
   SendPFileDescriptorSetConstructor(const FileDescriptor&) override;
