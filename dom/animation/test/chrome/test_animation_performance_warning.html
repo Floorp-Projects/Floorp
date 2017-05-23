@@ -1180,8 +1180,43 @@ function start() {
     }).then(function() {
       // viewport depends on test environment.
       var expectedWarning = new RegExp(
+        "Animation cannot be run on the compositor because the area of the frame size " +
+        "\\(\\d+\\) is too large relative to the viewport " +
+        "\\(larger than \\d+\\)");
+      assert_animation_property_state_equals(
+        animation.effect.getProperties(),
+        [ {
+          property: 'transform',
+          runningOnCompositor: false,
+          warning: expectedWarning
+        } ]);
+      animation.effect.target.style = 'width: 100px; height: 100px';
+      return waitForFrame();
+    }).then(function() {
+      // FIXME: Bug 1253164: the animation should get back on compositor.
+      assert_animation_property_state_equals(
+        animation.effect.getProperties(),
+        [ { property: 'transform', runningOnCompositor: false } ]);
+    });
+  }, 'transform on too big element - area');
+
+  promise_test(function(t) {
+    var animation = addDivAndAnimate(t,
+                                     { class: 'compositable' },
+                                     { transform: [ 'translate(0px)',
+                                                    'translate(100px)'] },
+                                     100 * MS_PER_SEC);
+    return animation.ready.then(function() {
+      assert_animation_property_state_equals(
+        animation.effect.getProperties(),
+        [ { property: 'transform', runningOnCompositor: true } ]);
+      animation.effect.target.style = 'width: 1000000px; height: 1px';
+      return waitForFrame();
+    }).then(function() {
+      // viewport depends on test environment.
+      var expectedWarning = new RegExp(
         "Animation cannot be run on the compositor because the frame size " +
-        "\\(10000, 10000\\) is too large relative to the viewport " + 
+        "\\(1000000, 1\\) is too large relative to the viewport " +
         "\\(larger than \\(\\d+, \\d+\\)\\) or larger than the " +
         "maximum allowed value \\(\\d+, \\d+\\)");
       assert_animation_property_state_equals(
@@ -1199,7 +1234,7 @@ function start() {
         animation.effect.getProperties(),
         [ { property: 'transform', runningOnCompositor: false } ]);
     });
-  }, 'transform on too big element');
+  }, 'transform on too big element - dimensions');
 
   promise_test(function(t) {
     var svg  = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
