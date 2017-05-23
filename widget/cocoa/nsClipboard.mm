@@ -120,10 +120,13 @@ nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard)
         [cocoaPasteboard setString:currentValue forType:currentKey];
     } else {
       if ([currentKey isEqualToString:NSPasteboardTypeString] ||
-          [currentKey isEqualToString:kCorePboardType_url] ||
-          [currentKey isEqualToString:kCorePboardType_urld] ||
-          [currentKey isEqualToString:kCorePboardType_urln]) {
+          [currentKey isEqualToString:kPublicUrlPboardType] ||
+          [currentKey isEqualToString:kPublicUrlNamePboardType]) {
         [cocoaPasteboard setString:currentValue forType:currentKey];
+      } else if ([currentKey isEqualToString:kUrlsWithTitlesPboardType]) {
+        [cocoaPasteboard setPropertyList:
+          [pasteboardOutputDict valueForKey:currentKey]
+                                 forType:currentKey];
       } else if ([currentKey isEqualToString:NSPasteboardTypeHTML]) {
         [cocoaPasteboard setString:(nsClipboard::WrapHtmlForSystemPasteboard(currentValue))
                          forType:currentKey];
@@ -611,6 +614,19 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       nsAutoString url;
       urlObject->GetData(url);
 
+      // The Finder doesn't like getting random binary data aka
+      // Unicode, so change it into an escaped URL containing only
+      // ASCII.
+      nsAutoCString utf8Data = NS_ConvertUTF16toUTF8(url.get(), url.Length());
+      nsAutoCString escData;
+      NS_EscapeURL(utf8Data.get(),
+                   utf8Data.Length(),
+                   esc_OnlyNonASCII|esc_AlwaysCopy,
+                   escData);
+
+      NSString* nativeURL = [NSString stringWithUTF8String:escData.get()];
+      [pasteboardOutputDict setObject:nativeURL forKey:kPublicUrlPboardType];
+
       // A newline embedded in the URL means that the form is actually URL + title.
       int32_t newlinePos = url.FindChar(char16_t('\n'));
       if (newlinePos >= 0) {
@@ -622,24 +638,13 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
 
         NSString *nativeTitle = [[NSString alloc] initWithCharacters:reinterpret_cast<const unichar*>(urlTitle.get())
                                                               length:urlTitle.Length()];
-        // be nice to Carbon apps, normalize the receiver's contents using Form C.
-        [pasteboardOutputDict setObject:[nativeTitle precomposedStringWithCanonicalMapping] forKey:kCorePboardType_urln];
-        // Also put the title out as 'urld', since some recipients will look for that.
-        [pasteboardOutputDict setObject:[nativeTitle precomposedStringWithCanonicalMapping] forKey:kCorePboardType_urld];
+        NSArray* urlsAndTitles = @[@[nativeURL], @[nativeTitle]];
+        [pasteboardOutputDict setObject:nativeTitle
+                                 forKey:kPublicUrlNamePboardType];
+        [pasteboardOutputDict setObject:urlsAndTitles
+                                 forKey:kUrlsWithTitlesPboardType];
         [nativeTitle release];
       }
-
-      // The Finder doesn't like getting random binary data aka
-      // Unicode, so change it into an escaped URL containing only
-      // ASCII.
-      nsAutoCString utf8Data = NS_ConvertUTF16toUTF8(url.get(), url.Length());
-      nsAutoCString escData;
-      NS_EscapeURL(utf8Data.get(), utf8Data.Length(), esc_OnlyNonASCII|esc_AlwaysCopy, escData);
-
-      // printf("Escaped url is %s, length %d\n", escData.get(), escData.Length());
-
-      NSString *nativeURL = [NSString stringWithUTF8String:escData.get()];
-      [pasteboardOutputDict setObject:nativeURL forKey:kCorePboardType_url];
     }
     // If it wasn't a type that we recognize as exportable we don't put it on the system
     // clipboard. We'll just access it from our cached transferable when we need it.
