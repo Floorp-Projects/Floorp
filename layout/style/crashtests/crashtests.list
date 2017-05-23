@@ -148,9 +148,9 @@ load border-image-visited-link.html
 load font-face-truncated-src.html
 load large_border_image_width.html
 load long-url-list-stack-overflow.html
-pref(layout.css.background-clip-text.enabled,true) load 1264949.html
-pref(layout.css.background-clip-text.enabled,true) load 1270795.html
-pref(layout.css.background-clip-text.enabled,true) load 1275026.html
+load 1264949.html
+load 1270795.html
+load 1275026.html
 load 1278463-1.html
 pref(dom.animations-api.core.enabled,true) load 1277908-1.html # bug 1323652
 load 1277908-2.html
