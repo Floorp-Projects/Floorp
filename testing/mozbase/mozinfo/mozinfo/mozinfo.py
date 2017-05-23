@@ -87,7 +87,7 @@ if system in ["Microsoft", "Windows"]:
         version = "%d.%d.%d" % (major, minor, build_number)
 
     os_version = "%d.%d" % (major, minor)
-elif system.startswith('MINGW'):
+elif system.startswith(('MINGW', 'MSYS_NT')):
     # windows/mingw python build (msys)
     info['os'] = 'win'
     os_version = version = unknown
