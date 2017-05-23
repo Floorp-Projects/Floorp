@@ -544,6 +544,22 @@
                        key="key_privatebrowsing"
                        command="Tools:PrivateBrowsing"/>
         <toolbarseparator/>
+        <toolbaritem id="appMenu-edit-controls" class="toolbaritem-combined-buttons" closemenu="none">
+          <label value="&editMenu.label;"/>
+          <toolbarbutton id="appMenu-cut-button"
+                         class="subviewbutton subviewbutton-iconic"
+                         command="cmd_cut"
+                         tooltip="dynamic-shortcut-tooltip"/>
+          <toolbarbutton id="appMenu-copy-button"
+                         class="subviewbutton subviewbutton-iconic"
+                         command="cmd_copy"
+                         tooltip="dynamic-shortcut-tooltip"/>
+          <toolbarbutton id="appMenu-paste-button"
+                         class="subviewbutton subviewbutton-iconic"
+                         command="cmd_paste"
+                         tooltip="dynamic-shortcut-tooltip"/>
+        </toolbaritem>
+        <toolbarseparator/>
         <toolbarbutton id="appMenu-open-file-button"
                        class="subviewbutton"
                        label="&openFileCmd.label;"
