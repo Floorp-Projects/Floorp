@@ -715,6 +715,10 @@ private:
   void BasicShapeRadiiToString(nsAString& aCssText,
                                const nsStyleCorners& aCorners);
 
+  // Find out if we can safely skip flushing for aDocument (i.e. pending
+  // restyles does not affect mContent).
+  mozilla::FlushTarget GetFlushTarget(nsIDocument* aDocument) const;
+
 
   static nsComputedStyleMap* GetComputedStyleMap();
 
