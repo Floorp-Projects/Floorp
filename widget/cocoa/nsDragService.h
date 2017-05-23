@@ -12,9 +12,9 @@
 #include <Cocoa/Cocoa.h>
 
 extern NSString* const kWildcardPboardType;
-extern NSString* const kCorePboardType_url;
-extern NSString* const kCorePboardType_urld;
-extern NSString* const kCorePboardType_urln;
+extern NSString* const kPublicUrlPboardType;
+extern NSString* const kPublicUrlNamePboardType;
+extern NSString* const kUrlsWithTitlesPboardType;
 extern NSString* const kCustomTypesPboardType;
 
 class nsDragService : public nsBaseDragService
