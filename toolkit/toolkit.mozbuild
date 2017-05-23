@@ -154,6 +154,14 @@ if CONFIG['ENABLE_MARIONETTE']:
         '/testing/marionette',
     ]
 
+    # Disable building of geckodriver for artifcat builds and in
+    # environments where cross compiling occurs (macOS and Android).
+    #
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=1341041
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=1329737
+    if CONFIG['COMPILE_ENVIRONMENT'] and not CONFIG['CROSS_COMPILE']:
+        DIRS += ['/testing/geckodriver']
+
 DIRS += [
     '/tools/quitter',
     '/media/gmp-clearkey/0.1',
