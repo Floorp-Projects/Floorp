@@ -992,7 +992,7 @@ typedef struct SSLWrappedSymWrappingKeyStr {
 } SSLWrappedSymWrappingKey;
 
 typedef struct SessionTicketStr {
-    PRBool valid;
+    PRUint16 ticket_version;
     SSL3ProtocolVersion ssl_version;
     ssl3CipherSuite cipher_suite;
     SSLCompressionMethod compression_method;
@@ -1010,7 +1010,7 @@ typedef struct SessionTicketStr {
     PRUint16 ms_length;
     SSL3Opaque master_secret[48];
     PRBool extendedMasterSecretUsed;
-    ClientAuthenticationType client_auth_type;
+    ClientIdentity client_identity;
     SECItem peer_cert;
     PRUint32 timestamp;
     PRUint32 flags;
