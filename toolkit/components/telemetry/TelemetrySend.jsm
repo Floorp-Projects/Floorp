@@ -39,8 +39,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
                                    "@mozilla.org/base/telemetry;1",
                                    "nsITelemetry");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryLog",
-                                  "resource://gre/modules/TelemetryLog.jsm");
 
 const Utils = TelemetryUtils;
 
@@ -93,9 +91,6 @@ const SEND_MAXIMUM_BACKOFF_DELAY_MS = 120 * MS_IN_A_MINUTE;
 
 // The age of a pending ping to be considered overdue (in milliseconds).
 const OVERDUE_PING_FILE_AGE = 7 * 24 * 60 * MS_IN_A_MINUTE; // 1 week
-
-// TelemetryLog Key for logging failures to send Telemetry
-const LOG_FAILURE_KEY = "TELEMETRY_SEND_FAILURE";
 
 function monotonicNow() {
   try {
@@ -1112,7 +1107,6 @@ var TelemetrySendImpl = {
     };
 
     let errorhandler = (event) => {
-      TelemetryLog.log(LOG_FAILURE_KEY, ["errorhandler", event.type]);
       this._log.error("_doPing - error making request to " + url + ": " + event.type);
       onRequestFinished(false, event);
     };
@@ -1136,18 +1130,15 @@ var TelemetrySendImpl = {
         Telemetry.getHistogramById("TELEMETRY_PING_EVICTED_FOR_SERVER_ERRORS").add();
         // TODO: we should handle this better, but for now we should avoid resubmitting
         // broken requests by pretending success.
-        TelemetryLog.log(LOG_FAILURE_KEY, ["4xx 'failure'", status]);
         success = true;
       } else if (statusClass === 500) {
         // 5XX means there was a server-side error and we should try again later.
         this._log.error("_doPing - error submitting to " + url + ", status: " + status
                         + " - server error, should retry later");
-        TelemetryLog.log(LOG_FAILURE_KEY, ["5xx failure", status]);
       } else {
         // We received an unexpected status code.
         this._log.error("_doPing - error submitting to " + url + ", status: " + status
                         + ", type: " + event.type);
-        TelemetryLog.log(LOG_FAILURE_KEY, ["Unhandled HTTP failure", status]);
       }
 
       onRequestFinished(success, event);

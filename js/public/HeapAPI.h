@@ -66,6 +66,20 @@ static const uint32_t BLACK = 0;
 static const uint32_t GRAY = 1;
 
 /*
+ * Two bits determine the mark color as follows:
+ *   BLACK_BIT   GRAY_OR_BLACK_BIT   color
+ *       0               0           white
+ *       0               1           gray
+ *       1               0           black
+ *       1               1           black
+ */
+enum class ColorBit : uint32_t
+{
+    BlackBit = 0,
+    GrayOrBlackBit = 1
+};
+
+/*
  * The "location" field in the Chunk trailer is a enum indicating various roles
  * of the chunk.
  */
@@ -301,11 +315,12 @@ GetGCThingMarkBitmap(const uintptr_t addr)
 }
 
 static MOZ_ALWAYS_INLINE void
-GetGCThingMarkWordAndMask(const uintptr_t addr, uint32_t color,
+GetGCThingMarkWordAndMask(const uintptr_t addr, ColorBit colorBit,
                           uintptr_t** wordp, uintptr_t* maskp)
 {
     MOZ_ASSERT(addr);
-    const size_t bit = (addr & js::gc::ChunkMask) / js::gc::CellBytesPerMarkBit + color;
+    const size_t bit = (addr & js::gc::ChunkMask) / js::gc::CellBytesPerMarkBit +
+                       static_cast<uint32_t>(colorBit);
     MOZ_ASSERT(bit < js::gc::ChunkMarkBitmapBits);
     uintptr_t* bitmap = GetGCThingMarkBitmap(addr);
     const uintptr_t nbits = sizeof(*bitmap) * CHAR_BIT;
@@ -325,12 +340,20 @@ GetGCThingZone(const uintptr_t addr)
 static MOZ_ALWAYS_INLINE bool
 TenuredCellIsMarkedGray(const Cell* cell)
 {
+    // Return true if GrayOrBlackBit is set and BlackBit is not set.
     MOZ_ASSERT(cell);
     MOZ_ASSERT(!js::gc::IsInsideNursery(cell));
 
-    uintptr_t* word, mask;
-    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), js::gc::GRAY, &word, &mask);
-    return *word & mask;
+    uintptr_t* grayWord, grayMask;
+    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), js::gc::ColorBit::GrayOrBlackBit,
+                                              &grayWord, &grayMask);
+    if (!(*grayWord & grayMask))
+        return false;
+
+    uintptr_t* blackWord, blackMask;
+    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), js::gc::ColorBit::BlackBit,
+                                              &blackWord, &blackMask);
+    return !(*blackWord & blackMask);
 }
 
 static MOZ_ALWAYS_INLINE bool

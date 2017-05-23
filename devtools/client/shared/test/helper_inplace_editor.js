@@ -99,7 +99,7 @@ function* testCompletion([key, completion, index, total], editor) {
 
   yield onSuggest;
   yield onVisibilityChange;
-  yield waitForTick();
+  yield waitForTime(5);
 
   info("Checking the state");
   if (completion !== null) {

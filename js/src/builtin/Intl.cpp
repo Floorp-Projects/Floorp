@@ -907,7 +907,6 @@ intl_availableLocales(JSContext* cx, CountAvailable countAvailable,
 #if ENABLE_INTL_API
     RootedAtom a(cx);
     uint32_t count = countAvailable();
-    RootedValue t(cx, BooleanValue(true));
     for (uint32_t i = 0; i < count; i++) {
         const char* locale = getAvailable(i);
         auto lang = DuplicateString(cx, locale);
@@ -919,7 +918,7 @@ intl_availableLocales(JSContext* cx, CountAvailable countAvailable,
         a = Atomize(cx, lang.get(), strlen(lang.get()));
         if (!a)
             return false;
-        if (!DefineProperty(cx, locales, a->asPropertyName(), t, nullptr, nullptr,
+        if (!DefineProperty(cx, locales, a->asPropertyName(), TrueHandleValue, nullptr, nullptr,
                             JSPROP_ENUMERATE))
         {
             return false;
@@ -1215,7 +1214,6 @@ js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp)
     if (!DefineElement(cx, collations, index++, NullHandleValue))
         return false;
 
-    RootedString jscollation(cx);
     RootedValue element(cx);
     for (uint32_t i = 0; i < count; i++) {
         const char* collation = uenum_next(values, nullptr, &status);
@@ -1232,7 +1230,7 @@ js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp)
             continue;
 
         // ICU returns old-style keyword values; map them to BCP 47 equivalents.
-        jscollation = JS_NewStringCopyZ(cx, uloc_toUnicodeLocaleType("co", collation));
+        JSString* jscollation = JS_NewStringCopyZ(cx, uloc_toUnicodeLocaleType("co", collation));
         if (!jscollation)
             return false;
         element = StringValue(jscollation);
@@ -2674,6 +2672,30 @@ js::intl_DateTimeFormat_availableLocales(JSContext* cx, unsigned argc, Value* vp
     return true;
 }
 
+static bool
+DefaultCalendar(JSContext* cx, const JSAutoByteString& locale, MutableHandleValue rval)
+{
+    UErrorCode status = U_ZERO_ERROR;
+    UCalendar* cal = ucal_open(nullptr, 0, locale.ptr(), UCAL_DEFAULT, &status);
+
+    // This correctly handles nullptr |cal| when opening failed.
+    ScopedICUObject<UCalendar, ucal_close> closeCalendar(cal);
+
+    const char* calendar = ucal_getType(cal, &status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+
+    // ICU returns old-style keyword values; map them to BCP 47 equivalents
+    JSString* str = JS_NewStringCopyZ(cx, uloc_toUnicodeLocaleType("ca", calendar));
+    if (!str)
+        return false;
+
+    rval.setString(str);
+    return true;
+}
+
 struct CalendarAlias
 {
     const char* const calendar;
@@ -2702,31 +2724,15 @@ js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp)
     uint32_t index = 0;
 
     // We need the default calendar for the locale as the first result.
-    UErrorCode status = U_ZERO_ERROR;
-    RootedString jscalendar(cx);
-    {
-        UCalendar* cal = ucal_open(nullptr, 0, locale.ptr(), UCAL_DEFAULT, &status);
+    RootedValue element(cx);
+    if (!DefaultCalendar(cx, locale, &element))
+        return false;
 
-        // This correctly handles nullptr |cal| when opening failed.
-        ScopedICUObject<UCalendar, ucal_close> closeCalendar(cal);
-
-        const char* calendar = ucal_getType(cal, &status);
-        if (U_FAILURE(status)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-            return false;
-        }
-
-        // ICU returns old-style keyword values; map them to BCP 47 equivalents
-        jscalendar = JS_NewStringCopyZ(cx, uloc_toUnicodeLocaleType("ca", calendar));
-        if (!jscalendar)
-            return false;
-    }
-
-    RootedValue element(cx, StringValue(jscalendar));
     if (!DefineElement(cx, calendars, index++, element))
         return false;
 
     // Now get the calendars that "would make a difference", i.e., not the default.
+    UErrorCode status = U_ZERO_ERROR;
     UEnumeration* values = ucal_getKeywordValuesForLocale("ca", locale.ptr(), false, &status);
     if (U_FAILURE(status)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
@@ -2750,7 +2756,7 @@ js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp)
         // ICU returns old-style keyword values; map them to BCP 47 equivalents
         calendar = uloc_toUnicodeLocaleType("ca", calendar);
 
-        jscalendar = JS_NewStringCopyZ(cx, calendar);
+        JSString* jscalendar = JS_NewStringCopyZ(cx, calendar);
         if (!jscalendar)
             return false;
         element = StringValue(jscalendar);
@@ -2760,7 +2766,7 @@ js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp)
         // ICU doesn't return calendar aliases, append them here.
         for (const auto& calendarAlias : calendarAliases) {
             if (equal(calendar, calendarAlias.calendar)) {
-                jscalendar = JS_NewStringCopyZ(cx, calendarAlias.alias);
+                JSString* jscalendar = JS_NewStringCopyZ(cx, calendarAlias.alias);
                 if (!jscalendar)
                     return false;
                 element = StringValue(jscalendar);
@@ -2772,6 +2778,20 @@ js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp)
 
     args.rval().setObject(*calendars);
     return true;
+}
+
+bool
+js::intl_defaultCalendar(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].isString());
+
+    JSAutoByteString locale(cx, args[0].toString());
+    if (!locale)
+        return false;
+
+    return DefaultCalendar(cx, locale, args.rval());
 }
 
 template<typename Char>
