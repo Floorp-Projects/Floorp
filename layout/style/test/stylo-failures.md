@@ -106,8 +106,6 @@ to mochitest command.
     * test_value_storage.html `context-` [7]
     * test_bug798843_pref.html [7]
 * Incorrect parsing
-  * -moz-alt-content parsing is wrong: servo/servo#15726
-    * test_property_syntax_errors.html `-moz-alt-content` [4]
   * mask shorthand servo/servo#15772
     * test_property_syntax_errors.html `mask'` [76]
   * different parsing bug 1364260
