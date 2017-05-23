@@ -165,7 +165,6 @@ var gCallbackBinFile = "callback_app" + BIN_SUFFIX;
 var gCallbackArgs = ["./", "callback.log", "Test Arg 2", "Test Arg 3"];
 var gPostUpdateBinFile = "postup_app" + BIN_SUFFIX;
 var gSvcOriginalLogContents;
-var gUseTestAppDir = true;
 // Some update staging failures can remove the update. This allows tests to
 // specify that the status file and the active update should not be checked
 // after an update is staged.
@@ -3707,19 +3706,13 @@ function adjustGeneralPaths() {
       aPersistent.value = true;
       switch (aProp) {
         case NS_GRE_DIR:
-          if (gUseTestAppDir) {
-            return getApplyDirFile(DIR_RESOURCES, true);
-          }
+          return getApplyDirFile(DIR_RESOURCES, true);
           break;
         case NS_GRE_BIN_DIR:
-          if (gUseTestAppDir) {
-            return getApplyDirFile(DIR_MACOS, true);
-          }
+          return getApplyDirFile(DIR_MACOS, true);
           break;
         case XRE_EXECUTABLE_FILE:
-          if (gUseTestAppDir) {
-            return getApplyDirFile(DIR_MACOS + FILE_APP_BIN, true);
-          }
+          return getApplyDirFile(DIR_MACOS + FILE_APP_BIN, true);
           break;
         case XRE_UPDATE_ROOT_DIR:
           return getMockUpdRootD();
