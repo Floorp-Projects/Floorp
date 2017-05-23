@@ -303,20 +303,6 @@ const DownloadsPanel = {
       case "keypress":
         this._onKeyPress(aEvent);
         break;
-      case "popupshown":
-        if (this.setHeightToFitOnShow) {
-          this.setHeightToFitOnShow = false;
-          this.setHeightToFit();
-        }
-        break;
-    }
-  },
-
-  setHeightToFit() {
-    if (this._state == this.kStateShown) {
-      DownloadsBlockedSubview.view.setHeightToFit();
-    } else {
-      this.setHeightToFitOnShow = true;
     }
   },
 
@@ -406,8 +392,6 @@ const DownloadsPanel = {
     // Handle keypress to be able to preventDefault() events before they reach
     // the richlistbox, for keyboard navigation.
     this.panel.addEventListener("keypress", this);
-    // Handle height adjustment on show.
-    this.panel.addEventListener("popupshown", this);
   },
 
   /**
@@ -417,7 +401,6 @@ const DownloadsPanel = {
   _unattachEventListeners() {
     this.panel.removeEventListener("keydown", this);
     this.panel.removeEventListener("keypress", this);
-    this.panel.removeEventListener("popupshown", this);
   },
 
   _onKeyPress(aEvent) {
@@ -858,9 +841,6 @@ const DownloadsView = {
     }
 
     this._itemCountChanged();
-
-    // Adjust the panel height if we removed items.
-    DownloadsPanel.setHeightToFit();
   },
 
   /**
@@ -1544,10 +1524,6 @@ const DownloadsFooter = {
         this._footerNode.setAttribute("showingsummary", "true");
       } else {
         this._footerNode.removeAttribute("showingsummary");
-      }
-      if (!aValue && this._showingSummary) {
-        // Make sure the panel's height shrinks when the summary is hidden.
-        DownloadsPanel.setHeightToFit();
       }
       this._showingSummary = aValue;
     }
