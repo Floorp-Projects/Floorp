@@ -13,9 +13,17 @@
   <string name="menu_about">Oer</string>
   <string name="menu_help">Help</string>
   <string name="menu_rights">Jo rjochten</string>
+  <string name="menu_trackers_blocked_title">Trackers blokkearre</string>
+  <string name="share_dialog_title">Diele fia</string>
+  <string name="notification_erase_text">Navigaasjeskiednis wiskje</string>
+  <string name="shortcut_erase_short_label">Wiskje</string>
+  <string name="shortcut_erase_long_label">Navigaasjeskiednis wiskje</string>
+  <string name="text_selection_search_action">Privee sykje</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s jout jo de kontr&#244;le.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Br&#251;k as in priveebrowser:\n  "<ul>"\n    "<li>Streekrjocht fan de app &#250;t sykje en browse</li>"\n    "<li>Trackers blokkearje (of ynstellingen bywurkje om se ta te stean)</li>"\n    "<li>Wiskjen smyt sawol cookies as syk- en navigaasjeskiednis fuort</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wurdt makke troch Mozilla. Us misje is it fersoargjen fan in s&#251;n en iepen ynternet.<br/>\n<a href="%2$s">Mear ynfo</a></p>]]></string>
   <string name="preference_category_search">Sykje</string>
   <string name="preference_search_engine_default">Standert</string>
+  <string name="preference_language">Taal</string>
+  <string name="preference_language_systemdefault">Systeemstandert</string>
   <string name="preference_dialog_title_search_engine">Standertsykmasine</string>
   <string name="preference_category_privacy">Privacy</string>
   <string name="preference_privacy_block_ads">Advertinsjetrackers blokkearje</string>
@@ -30,7 +38,7 @@
   <string name="preference_default_browser">Standertbrowser meitsje</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Anonime brûksgegevens ferstjoere</string>
-  <string name="preference_mozilla_telemetry_summary">Lês mear</string>
+  <string name="preference_mozilla_telemetry_summary">Mear ynfo</string>
   <string name="preference_about">Oer %1$s</string>
   <string name="content_description_clear_input">Ynfier wiskje</string>
   <string name="content_description_dismiss_input">Fuortsmite</string>
@@ -43,6 +51,7 @@
   <string name="content_description_reload">Website opnij lade</string>
   <string name="content_description_back">Werom blêdzje</string>
   <string name="content_description_stop">Laden fan website stopje</string>
+  <string name="content_description_customtab_exit">Tebek nei foarige app</string>
   <string name="context_menu_paste_go">Plakke &amp; iepenje</string>
   <string name="firstrun_title">Sneup as oft net ien meisjocht.</string>
   <string name="firstrun_description">Blokkearje automatysk onlinetrackers wylst jo sneupje. Tik dêrnei om besochte siden, sykopdrachten, cookies en wachtwurden op jo apparaat te wiskjen.</string>
@@ -71,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dit kin in probleem mei de serverkonfiguraasje w&#234;ze, of ien probearret\ndizze server nei te meitsjen.</li>"\n  "<li>As jo yn it ferline wol mei sukses ferbining makke hawwe mei dizze server,\ndan is de flater mooglik tydlik en kinne jo it letter nochris probearje.</li>\n</ul>]]></string>
   <string name="error_generic_title">Oeps</string>
   <string name="error_generic_message">De side kin om de ien oft oare reden net laden wurde.</string>
+  <string name="contextmenu_link_share">Keppeling diele</string>
+  <string name="contextmenu_link_copy">Keppelingsadres kopiearje</string>
+  <string name="contextmenu_image_share">Ofbylding diele</string>
+  <string name="contextmenu_image_copy">Ofbyldingsadres kopiearje</string>
+  <string name="contextmenu_image_save">Ofbylding bewarje</string>
 </resources>

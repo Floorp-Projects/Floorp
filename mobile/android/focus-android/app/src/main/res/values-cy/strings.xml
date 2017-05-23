@@ -1,13 +1,30 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">Diddymu</string>
+  <string name="action_ok">Iawn</string>
   <string name="urlbar_hint">Chwilio neu gyfeiriad</string>
   <string name="teaser">Pori preifat awtomatig.\nPori. Dileu. Ailadrodd.</string>
   <string name="feedback_erase">Mae eich hanes pori wedi cael ei ddileu.</string>
   <string name="search_hint">Chwilio am %1$s</string>
+  <string name="menu_share">Rhannu</string>
+  <string name="menu_open_with_default_browser">Agor gyda %1$s</string>
+  <string name="menu_open_with_a_browser">Agor gyda…</string>
   <string name="menu_settings">Gosodiadau</string>
   <string name="menu_about">Ynghylch</string>
   <string name="menu_help">Cymorth</string>
   <string name="menu_rights">Eich Hawliau</string>
+  <string name="menu_trackers_blocked_title">Tracwyr wedi eu rhwystro</string>
+  <string name="share_dialog_title">Rhannu drwy</string>
+  <string name="notification_erase_text">Dileu\'r hanes pori</string>
+  <string name="shortcut_erase_short_label">Dileu</string>
+  <string name="shortcut_erase_long_label">Dileu\'r hanes pori</string>
+  <string name="text_selection_search_action">"Chwilio preifat "</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Gyda %1$s chi sy\'n rheoli.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Ei ddefnyddio fel porwr preifat:\n  "<ul>"\n    "<li>Chwilio a phori o fewn yr ap</li>"\n    "<li>Rhwystro tracwyr (neu diweddaru\'r gosodiadau i ganiat&#225;u tracwyr)</li>"\n    "<li>Dileu cwcis, yn ogystal &#226; hanes chwilio a phori</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Mae %1$s wedi ei gynhyrchu gan Mozilla. Ein amcan yw i hybu Rhyngrwyd iach ac agored.<br/>\n<a href="%2$s">Dysgu rhagor</a></p>]]></string>
+  <string name="preference_category_search">Chwilio</string>
+  <string name="preference_search_engine_default">Rhagosodiad</string>
+  <string name="preference_language">Iaith</string>
+  <string name="preference_language_systemdefault">Rhagosodiad y system</string>
+  <string name="preference_dialog_title_search_engine">Chwilio rhagosodedig</string>
   <string name="preference_category_privacy">Preifatrwydd</string>
   <string name="preference_privacy_block_ads">Rhwystro tracwyr hysbysebion</string>
   <string name="preference_privacy_block_analytics">Rhwystro tracwyr dadansoddi</string>
@@ -16,7 +33,56 @@
   <string name="preference_privacy_block_content_summary">Gall dorri rhai fideos a thudalennau Gwe</string>
   <string name="preference_category_performance">Perfformiad</string>
   <string name="preference_performance_block_webfonts">Rhwystro ffontiau Gwe</string>
+  <string name="preference_performance_block_webfonts_summary">Gall olygu eiconau neu ddelweddau coll</string>
+  <string name="preference_performance_block_images">Rhwystro delweddau</string>
+  <string name="preference_default_browser">Gwneud yn borwr rhagosodedig</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Anfon defnydd data dienw</string>
   <string name="preference_mozilla_telemetry_summary">Dysgu rhagor</string>
+  <string name="preference_about">Ynghylch %1$s</string>
+  <string name="content_description_clear_input">Clirio\'r mewnbwn</string>
+  <string name="content_description_dismiss_input">Cau</string>
+  <string name="content_description_erase">Dileu\'r hanes pori</string>
+  <string name="content_description_lock">Cysylltiadau diogel</string>
+  <string name="accessibility_announcement_loading">Llwytho</string>
+  <string name="accessibility_announcement_loading_finished">Gwefan wedi ei lwytho</string>
+  <string name="content_description_menu">Rhagor o ddewisiadau</string>
+  <string name="content_description_forward">Symud ymlaen</string>
+  <string name="content_description_reload">Ail-lwytho\'r wefan</string>
+  <string name="content_description_back">Symud nôl</string>
+  <string name="content_description_stop">Atal llwytho\'r wefan</string>
+  <string name="content_description_customtab_exit">Nôl i\'r ap blaenorol</string>
+  <string name="context_menu_paste_go">Gludo a Mynd</string>
+  <string name="firstrun_title">Pori fel petai neb yn eich gwylio.</string>
+  <string name="firstrun_description">Rhwystrwch tracwyr ar-lein yn awtomatig wrth i chi bori. Gallwch dapio i ddileu tudalennau, chwilio, cwcis a chyfrineiriau o\'ch dyfais.</string>
+  <string name="firstrun_button">Iawn!</string>
+  <string name="firstrun_footer">I fod yn glir, gall gwefannau a gwasanaethau dal wybod lle rydych wedi bod.</string>
+  <string name="your_rights">Eich Hawliau</string>
+  <string name="external_app_prompt_title">Agor dolen mewn ap arall</string>
+  <string name="external_app_prompt">Gallwch adael i %1$s agor y ddolen yn %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Canfod ap sy\'n gallu agor dolen</string>
+  <string name="external_app_prompt_no_app">0oes dim o\'r apiau ar eich dyfais yn gallu i agor y ddolen. Mae modd gofyn i %1$s chwilio %2$s am ap sy\' n gallu gwneud.</string>
+  <string name="external_multiple_apps_matched_exit">Gadael Pori Preifat?</string>
+  <string name="errorpage_title">Anhawster llwytho tudalen</string>
+  <string name="errorpage_refresh">Ceisiwch eto</string>
+  <string name="error_connectionfailure_title">Methu cysylltu</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n        "<li>Mae\'n bosib fod y wefan yn brysur neu ddim ar gael. Ceisiwch eto cyn bo hir.</li>" \n        "<li>Os nad oes modd i chi lwytho unrhyw dudalennau, gwiriwch gysylltiad data neu ddiwifr eich dyfais symudol.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Daeth cyfnod y cysylltiad i ben</string>
+  <string name="error_hostLookup_title">Heb ganfod gweinydd</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Gwiriwch y cyfeiriad am wallau teipio megis\n        "<strong>ww</strong>".example.com yn lle\n        "<strong>www</strong>.example.com</li>"\n        "<li>Os ydych yn gallu llwytho unrhyw dudalennau, gwiriwch eich dyfais data neu wi-fi cysylltiad.</li>"\n     "</ul>]]></string>
+  <string name="error_malformedURI_title">Nid yw\'r cyfeiriad yn ddilys</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>"Fel rheol mae cyfeiriadau Gwe\'n cael eu hysgrifennu fel "<strong>http://www.example.com/</strong></li>"\n  "<li>"Gwnewch yn si&#373;r eich bod yn defnyddio blaen slaes (h.y. "<strong>/</strong>).</li>" \n"</ul>]]></string>
+  <string name="error_redirectLoop_title">Nid yw\'r dudalen yn ailgyfeirio\'n iawn</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>Gall y broblem yma fod wedi ei achosi drwy anablu neu wrthod cwcis.</li>" \n"</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Heb ddeall y cyfeiriad</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>Efallai bydd angen i chi osod meddalwedd arall i agor y cyfeiriad yma.</li>" \n"</ul>]]></string>
+  <string name="error_sslhandshake_title">Methodd y cysylltiad diogel</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>Gall hwn fod yn anhawster gyda ffurfweddiad y gweinydd neu gall fod \nyn rhywun sy\'n ceisio dynwared y gweinydd.</li>" \n  "<li>Os ydych wedi cysylltu\'n llwyddiannus gyda\'r gweinydd yn y gorffennol, efallai \nmai gwall dros dro ydyw ac i geisio eto.</li>" \n"</ul>]]></string>
+  <string name="error_generic_title">Wps.</string>
+  <string name="error_generic_message">Methu llwytho\'r dudalen am ryw reswm</string>
+  <string name="contextmenu_link_share">Rhannu dolen</string>
+  <string name="contextmenu_link_copy">Copïo cyfeiriad dolen</string>
+  <string name="contextmenu_image_share">Rhannu delwedd</string>
+  <string name="contextmenu_image_copy">Copïo cyfeiriad delwedd</string>
+  <string name="contextmenu_image_save">Cadw delwedd</string>
 </resources>

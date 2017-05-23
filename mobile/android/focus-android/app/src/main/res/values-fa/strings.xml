@@ -13,23 +13,31 @@
   <string name="menu_about">درباره</string>
   <string name="menu_help">راهنما</string>
   <string name="menu_rights">حقوق شما</string>
+  <string name="menu_trackers_blocked_title">دنبال کننده‌های مسدود شده</string>
+  <string name="share_dialog_title">اشتراک‌گذاری از طریق</string>
+  <string name="notification_erase_text">پاک کردن تاریخچهٔ مرورگر</string>
+  <string name="shortcut_erase_short_label">پاک کردن</string>
+  <string name="shortcut_erase_long_label">پاک کردن تاریخچهٔ مرورگر</string>
+  <string name="text_selection_search_action">جست‌وجو ناشناس</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1588;&#1605;&#1575; &#1585;&#1575; &#1583;&#1585; &#1705;&#1606;&#1578;&#1585;&#1604; &#1602;&#1585;&#1575;&#1585; &#1605;&#1740;&#1583;&#1607;&#1583;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1575;&#1586; &#1575;&#1740;&#1606; &#1576;&#1585;&#1606;&#1575;&#1605;&#1607; &#1576;&#1607; &#1593;&#1606;&#1608;&#1575;&#1606; &#1740;&#1705; &#1605;&#1585;&#1608;&#1585;&#1711;&#1585; &#1606;&#1575;&#1588;&#1606;&#1575;&#1587; &#1575;&#1587;&#1578;&#1601;&#1575;&#1583;&#1607; &#1705;&#1606;&#1740;&#1583;:\n  "<ul>"\n    "<li>&#1576;&#1583;&#1608;&#1606; &#1582;&#1585;&#1608;&#1580; &#1575;&#1586; &#1576;&#1585;&#1606;&#1575;&#1605;&#1607;&#1548; &#1575;&#1740;&#1606;&#1578;&#1585;&#1606;&#1578; &#1585;&#1575; &#1580;&#1587;&#1578;&#8204;&#1608;&#1580;&#1608; &#1608; &#1605;&#1585;&#1608;&#1585; &#1705;&#1606;&#1740;&#1583;</li>"\n    "<li>&#1585;&#1583;&#1740;&#1575;&#1576;&#8204;&#1607;&#1575; &#1585;&#1575; &#1605;&#1587;&#1583;&#1608;&#1583; &#1705;&#1606;&#1740;&#1583; (&#1740;&#1575; &#1575;&#1740;&#1606;&#1705;&#1607; &#1578;&#1606;&#1592;&#1740;&#1605;&#1575;&#1578; &#1582;&#1608;&#1583; &#1585;&#1575; &#1576;&#1585;&#1575;&#1740; &#1575;&#1580;&#1575;&#1586;&#1607; &#1583;&#1575;&#1583;&#1606; &#1576;&#1607; &#1585;&#1583;&#1740;&#1575;&#1576;&#8204;&#1607;&#1575; &#1578;&#1594;&#1740;&#1740;&#1585; &#1583;&#1607;&#1740;&#1583;)</li>"\n    "<li>&#1662;&#1575;&#1705; &#1705;&#1606;&#1740;&#1583; &#1578;&#1575; &#1575;&#1591;&#1604;&#1575;&#1593;&#1575;&#1578;&#1740; &#1605;&#1575;&#1606;&#1606;&#1583; &#1705;&#1608;&#1705;&#1740;&#8204;&#1607;&#1575; &#1608; &#1607;&#1605;&#1670;&#1606;&#1740;&#1606; &#1580;&#1587;&#1578;&#8204;&#1608;&#1580;&#1608;&#1607;&#1575; &#1608; &#1578;&#1575;&#1585;&#1740;&#1582;&#1670;&#1607; &#1605;&#1585;&#1608;&#1585; &#1581;&#1584;&#1601; &#1588;&#1608;&#1606;&#1583;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1578;&#1608;&#1587;&#1617;&#1591; &#1605;&#1608;&#1586;&#1740;&#1604;&#1575; &#1605;&#1606;&#1578;&#1588;&#1585; &#1588;&#1583;&#1607; &#1575;&#1587;&#1578;. &#1605;&#1571;&#1605;&#1608;&#1585;&#1740;&#1578; &#1605;&#1575; &#1578;&#1575; &#1585;&#1608;&#1575;&#1580; &#1740;&#1705; &#1575;&#1740;&#1606;&#1578;&#1585;&#1606;&#1578; &#1587;&#1575;&#1604;&#1605;&#1548; &#1576;&#1575;&#1586; &#1575;&#1587;&#1578;.<br/>\n<a href="%2$s">&#1576;&#1740;&#1588;&#1578;&#1585; &#1576;&#1583;&#1575;&#1606;&#1740;&#1583;</a></p>]]></string>
   <string name="preference_category_search">جست‌وجو</string>
   <string name="preference_search_engine_default">پیش‌فرض</string>
+  <string name="preference_language">زبان</string>
+  <string name="preference_language_systemdefault">پیش‌فرض سیستم</string>
   <string name="preference_dialog_title_search_engine">جست‌وجوی پیش‌فرض</string>
   <string name="preference_category_privacy">حریم‌خصوصی</string>
   <string name="preference_privacy_block_ads">مسدود کردن ردیاب‌های تبلیغاتی</string>
   <string name="preference_privacy_block_analytics">مسدود کردن ردیاب‌های آماری</string>
   <string name="preference_privacy_block_social">مسدود کردن ردیاب‌های شبکه‌های اجتماعی</string>
   <string name="preference_privacy_block_content">مسدود کردن سایر ردیاب‌های محتوا</string>
-  <string name="preference_privacy_block_content_summary">ممکن است بعضی از ویدئوها یا صفحات وب را دُچار مشکل کند</string>
+  <string name="preference_privacy_block_content_summary">ممکن است بعضی از ویدئوها یا صفحات وب را دچار مشکل کند</string>
   <string name="preference_category_performance">کارایی</string>
   <string name="preference_performance_block_webfonts">مسدود کردن قلم‌های وب</string>
   <string name="preference_performance_block_webfonts_summary">ممکن است باعث بارگیری نشدن برخی از شمایل‌ها و تصاویر بشود</string>
   <string name="preference_performance_block_images">مسدود کردن تصاویر</string>
   <string name="preference_default_browser">تبدیل به مرورگر پیش‌فرض</string>
   <string name="preference_category_mozilla">موزیلا</string>
-  <string name="preference_mozilla_telemetry">ارسال داده‌های ناشناس مربوط به استفاده</string>
+  <string name="preference_mozilla_telemetry">ارسال داده‌های ناشناس مربوط به شیوه استفاده</string>
   <string name="preference_mozilla_telemetry_summary">اطلاعات بیشتر</string>
   <string name="preference_about">درباره %1$s</string>
   <string name="content_description_clear_input">پاک کردن وروردی</string>
@@ -43,11 +51,12 @@
   <string name="content_description_reload">بارگیری مجدد سایت</string>
   <string name="content_description_back">بازگشت به عقب</string>
   <string name="content_description_stop">توقف بارگیری وب‌سایت</string>
+  <string name="content_description_customtab_exit">بازگشت به برنامهٔ قبل</string>
   <string name="context_menu_paste_go">جایگذاری و ارسال</string>
   <string name="firstrun_title">بدون دغدغهٔ نگاه‌ها مرور کنید.</string>
   <string name="firstrun_description">به طور خودکار ردیاب‌های برخط را هنگام مرور مسدود کنید. بعد از آن با یک لمس، صفحات، جست‌وجوها، کوکی‌ها و گذرواژه‌هایی که مشاهده کرده‌اید را از روی دستگاه خود حذف کنید.</string>
   <string name="firstrun_button">باشه، گرفتم!</string>
-  <string name="firstrun_footer">دقت کنید که سایت‌ها و سرویس‌هایی که از آنها استفاده می‌کنید هنوز میتوانند بدانند که چه کارهایی انجام داده‌اید.</string>
+  <string name="firstrun_footer">دقت کنید که سایت‌ها و سرویس‌هایی که از آنها استفاده می‌کنید هنوز میتوانند بدانند که کجاها بوده‌اید.</string>
   <string name="your_rights">حقوق شما</string>
   <string name="external_app_prompt_title">باز کردن پیوند در برنامه‌ای دیگر</string>
   <string name="external_app_prompt">می‌توانید از %1$s خارج شوید تا پیوند را در %2$s باز کنید.</string>
@@ -71,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n<li>&#1575;&#1605;&#1705;&#1575;&#1606; &#1583;&#1575;&#1585;&#1740;&#1583; &#1575;&#1740;&#1606; &#1575;&#1588;&#1705;&#1575;&#1604;&#1740; &#1583;&#1585; &#1578;&#1606;&#1592;&#1740;&#1605;&#1575;&#1578; &#1705;&#1575;&#1585;&#1711;&#1586;&#1575;&#1585; &#1576;&#1575;&#1588;&#1583;&#1548; &#1740;&#1575; &#1705;&#1587;&#1740; &#1576;&#1607; &#1583;&#1606;&#1576;&#1575;&#1604; &#1576;&#1575;&#1586;&#1740; &#1705;&#1585;&#1583;&#1606; &#1606;&#1602;&#1588; &#1575;&#1740;&#1606; &#1705;&#1575;&#1585;&#1711;&#1586;&#1575;&#1585; &#1576;&#1575;&#1588;&#1583;.</li>\n<li>&#1575;&#1711;&#1585; &#1662;&#1740;&#1588; &#1575;&#1586; &#1575;&#1740;&#1606; &#1576;&#1583;&#1608;&#1606; &#1583;&#1585;&#1740;&#1575;&#1601;&#1578; &#1575;&#1740;&#1606; &#1582;&#1591;&#1575; &#1575;&#1586; &#1575;&#1740;&#1606; &#1608;&#1576;&#8204;&#1711;&#1575;&#1607; &#1576;&#1575;&#1586;&#1583;&#1740;&#1583; &#1705;&#1585;&#1583;&#1607;&#8204;&#1575;&#1740;&#1583;&#1548; &#1575;&#1740;&#1606; &#1582;&#1591;&#1575; &#1575;&#1605;&#1705;&#1575;&#1606; &#1583;&#1575;&#1585;&#1583; &#1605;&#1608;&#1602;&#1578;&#1740; &#1576;&#1575;&#1588;&#1583;&#1548; &#1576;&#1593;&#1583;&#1575;&#1611; &#1583;&#1608;&#1576;&#1575;&#1585;&#1607; &#1578;&#1604;&#1575;&#1588; &#1705;&#1606;&#1740;&#1583;.</li>\n</ul>]]></string>
   <string name="error_generic_title">اوه</string>
   <string name="error_generic_message">بنا به دلایلی بارگیری این صفحه ممکن نبود.</string>
+  <string name="contextmenu_link_share">اشتراک‌گذاری پیوند</string>
+  <string name="contextmenu_link_copy">رونوشت از آدرس پیوند</string>
+  <string name="contextmenu_image_share">اشتراک‌گذاری تصویر</string>
+  <string name="contextmenu_image_copy">رونوشت از آدرس تصویر</string>
+  <string name="contextmenu_image_save">ذخیره تصویر</string>
 </resources>

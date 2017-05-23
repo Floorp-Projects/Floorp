@@ -13,9 +13,17 @@
   <string name="menu_about">O aplikácii</string>
   <string name="menu_help">Pomocník</string>
   <string name="menu_rights">Vaše práva</string>
+  <string name="menu_trackers_blocked_title">Počet zablokovaných sledovacích prvkov</string>
+  <string name="share_dialog_title">Zdieľať cez</string>
+  <string name="notification_erase_text">Vymazať históriu prehliadania</string>
+  <string name="shortcut_erase_short_label">Vymazať</string>
+  <string name="shortcut_erase_long_label">Vymazať históriu</string>
+  <string name="text_selection_search_action">Súkromné vyhľadávanie</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s v&#225;m d&#225;va kontrolu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Pou&#382;&#237;vajte ho ako s&#250;kromn&#253; prehliada&#269;:\n  "<ul>"\n    "<li>Vyh&#318;ad&#225;vajte a prehliadajte priamo prostredn&#237;ctvom aplik&#225;cie</li>"\n    "<li>Blokujte sledovacie prvky (v nastaveniach m&#244;&#382;ete sledovacie prvky povoli&#357;)</li>"\n    "<li>Vyma&#382;te cookies, hist&#243;riu vyh&#318;ad&#225;vania a prehliadania</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vyv&#237;ja Mozilla. Na&#353;a misia je podporova&#357; zdrav&#253; a otvoren&#253; internet.<br/>\n<a href="%2$s">&#270;al&#353;ie inform&#225;cie</a></p>]]></string>
   <string name="preference_category_search">Vyhľadávanie</string>
   <string name="preference_search_engine_default">Predvolený</string>
+  <string name="preference_language">Jazyk</string>
+  <string name="preference_language_systemdefault">Jazyk zariadenia</string>
   <string name="preference_dialog_title_search_engine">Predvolený vyhľadávací modul</string>
   <string name="preference_category_privacy">Súkromie</string>
   <string name="preference_privacy_block_ads">Blokovať reklamné sledovacie prvky</string>
@@ -43,6 +51,7 @@
   <string name="content_description_reload">Obnoviť stránku</string>
   <string name="content_description_back">Prejsť dozadu</string>
   <string name="content_description_stop">Zastaviť načítavanie webovej stránky</string>
+  <string name="content_description_customtab_exit">Návrat do predchádzajúcej aplikácie</string>
   <string name="context_menu_paste_go">Prilepiť a prejsť</string>
   <string name="firstrun_title">Prehliadajte, akoby sa nikto nepozeral.</string>
   <string name="firstrun_description">Automaticky počas prehliadania blokujte sledovacie prvky. Potom jedným ťuknutím z vášho zariadenia vymažte zoznam navštívených stránok, výsledky vyhľadávania, cookies a heslá.</string>
@@ -71,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Toto m&#244;&#382;e by&#357; probl&#233;m s konfigur&#225;ciou servera alebo\n sa ho niekto sna&#382;&#237; napodobni&#357;.</li>"\n  "<li>Ak ste sa k tomuto serveru &#250;spe&#353;ne pripojili v minulosti,\n chyba m&#244;&#382;e by&#357; do&#269;asn&#225; a pokus by ste mali opakova&#357; nesk&#244;r.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Z nejakého dôvodu nebolo možné načítať stránku.</string>
+  <string name="contextmenu_link_share">Zdieľať odkaz</string>
+  <string name="contextmenu_link_copy">Kopírovať adresu odkazu</string>
+  <string name="contextmenu_image_share">Zdieľať obrázok</string>
+  <string name="contextmenu_image_copy">Kopírovať adresu obrázku</string>
+  <string name="contextmenu_image_save">Uložiť obrázok</string>
 </resources>

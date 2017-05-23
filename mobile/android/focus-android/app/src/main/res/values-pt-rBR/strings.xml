@@ -13,9 +13,17 @@
   <string name="menu_about">Sobre</string>
   <string name="menu_help">Ajuda</string>
   <string name="menu_rights">Seus direitos</string>
+  <string name="menu_trackers_blocked_title">Rastreadores bloqueados</string>
+  <string name="share_dialog_title">Compartilhar via</string>
+  <string name="notification_erase_text">Apagar o histórico de navegação</string>
+  <string name="shortcut_erase_short_label">Apagar</string>
+  <string name="shortcut_erase_long_label">Apagar o histórico de navegação</string>
+  <string name="text_selection_search_action">Pesquisa privativa</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s coloca voc&#234; no controle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Use-o como o seu navegador privativo:\n  "<ul>"\n    "<li>Pesquise e navegue direto no aplicativo</li>"\n    "<li>Bloqueie rastreadores (ou atualize as configura&#231;&#245;es para permiti-los)</li>"\n    "<li>Apague para excluir cookies assim como o hist&#243;rico de pesquisa e navega&#231;&#227;o</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#233; produzido pela Mozilla. Nossa miss&#227;o &#233; promover uma Internet saud&#225;vel e aberta.<br/>\n<a href="%2$s">Saiba mais</a></p>]]></string>
   <string name="preference_category_search">Pesquisar</string>
   <string name="preference_search_engine_default">Padrão</string>
+  <string name="preference_language">Idioma</string>
+  <string name="preference_language_systemdefault">Padrão do sistema</string>
   <string name="preference_dialog_title_search_engine">Pesquisa padrão</string>
   <string name="preference_category_privacy">Privacidade</string>
   <string name="preference_privacy_block_ads">Bloquear rastreadores de anúncio</string>
@@ -43,11 +51,12 @@
   <string name="content_description_reload">Recarregar o site</string>
   <string name="content_description_back">Navegar de volta</string>
   <string name="content_description_stop">Parar de carregar o site</string>
+  <string name="content_description_customtab_exit">Retornar ao aplicativo anterior</string>
   <string name="context_menu_paste_go">Colar e ir</string>
-  <string name="firstrun_title">Navegar como se ninguém estivesse olhando.</string>
+  <string name="firstrun_title">Navegue como se ninguém estivesse olhando.</string>
   <string name="firstrun_description">Bloqueie automaticamente os rastreadores on-line enquanto navega. Então, toque para apagar páginas visitadas, pesquisas, cookies e senhas do seu dispositivo.</string>
   <string name="firstrun_button">Ok, entendi!</string>
-  <string name="firstrun_footer">Para ser claro, sites e serviços que você usa ainda podem saber onde você esteve.</string>
+  <string name="firstrun_footer">Para ser claro, sites e serviços que você usa ainda podem saber onde esteve.</string>
   <string name="your_rights">Seus direitos</string>
   <string name="external_app_prompt_title">Abrir link em um outro app</string>
   <string name="external_app_prompt">Você pode sair do %1$s para abrir este link no %2$s.</string>
@@ -71,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Isto pode ser um problema com a configura&#231;&#227;o do servidor ou pode ser algu&#233;m tentando se passar pelo servidor.</li>"\n  "<li>Se voc&#234; se conectou a este servidor com sucesso no passado, o erro pode ser tempor&#225;rio, e voc&#234; pode tentar novamente mais tarde.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ops</string>
   <string name="error_generic_message">Não podemos carregar esta página por algum motivo.</string>
+  <string name="contextmenu_link_share">Compartilhar link</string>
+  <string name="contextmenu_link_copy">Copiar endereço do link</string>
+  <string name="contextmenu_image_share">Compartilhar imagem</string>
+  <string name="contextmenu_image_copy">Copiar endereço da imagem</string>
+  <string name="contextmenu_image_save">Salvar imagem</string>
 </resources>

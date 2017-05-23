@@ -16,6 +16,7 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s menempatkan Anda dalam kendali.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakan sebagai peramban privat:\n  "<ul>"\n    "<li>Cari dan menjelajah langsung di dalam aplikasi</li>"\n    "<li>Memblokir pelacak (atau ubah di pengaturan untuk izinkan pelacak)</li>"\n    "<li>Hapus untuk menghilangkan kuki termasuk juga pencarian dan riwayat penjelajahan</li>"\n  "</ul>"\n "</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s diproduksi oleh Mozilla. Misi kami adalah untuk memelihara Internet yang sehat dan terbuka.<br/>" "<a href="%2$s">Pelajari lebih lanjut</a></p>]]></string>
   <string name="preference_category_search">Cari</string>
   <string name="preference_search_engine_default">Baku</string>
+  <string name="preference_language">Bahasa</string>
   <string name="preference_dialog_title_search_engine">Pencarian baku</string>
   <string name="preference_category_privacy">Privasi</string>
   <string name="preference_privacy_block_ads">Blokir pelacak iklan</string>
@@ -71,4 +72,5 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Hal ini mungkin dikarenakan ada masalah terkait dengan konfigurasi server, atau bisa jadi ada seseorang mencoba untuk berkedok sebagai server.</li>"\n  "<li>Jika Anda berhasil tersambung ke server ini sebelumnya, gangguan dapat bersifat sementara, dan Anda dapat mencoba kembali nanti.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Kami tidak dapat memuat laman ini karena sejumlah alasan.</string>
+  <string name="contextmenu_image_save">Simpan gambar</string>
 </resources>

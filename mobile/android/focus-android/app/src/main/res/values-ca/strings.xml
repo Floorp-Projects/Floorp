@@ -13,19 +13,28 @@
   <string name="menu_about">Quant a</string>
   <string name="menu_help">Ajuda</string>
   <string name="menu_rights">Els vostres drets</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">El %1$s us d&#243;na el control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Com a navegador privat, us permet:\n  "<ul>"\n    "<li>Cercar i navegar directament des de l\'aplicaci&#243;</li>"\n    "<li>Bloquejar els elements de seguiment (o canviar els par&#224;metres per permetre\'ls)</li>"\n    "<li>Esborrar les galetes i l\'historial de cerques i de navegaci&#243;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">El %1$s est&#224; creat per Mozilla. La nostra missi&#243; &#233;s fomentar un Internet obert i saludable.<br/>\n<a href="%2$s">M&#233;s informaci&#243;</a></p>]]></string>
+  <string name="menu_trackers_blocked_title">Elements de seguiment blocats</string>
+  <string name="share_dialog_title">Comparteix mitjançant</string>
+  <string name="notification_erase_text">Esborra l\'historial de navegació</string>
+  <string name="shortcut_erase_short_label">Esborra</string>
+  <string name="shortcut_erase_long_label">Esborra l\'historial de navegació</string>
+  <string name="text_selection_search_action">Cerca privada</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">El %1$s us d&#243;na el control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Com a navegador privat, us permet:\n  "<ul>"\n    "<li>Cercar i navegar directament des de l\'aplicaci&#243;</li>"\n    "<li>Blocar els elements de seguiment (o canviar els par&#224;metres per permetre\'ls)</li>"\n    "<li>Esborrar les galetes i l\'historial de cerques i de navegaci&#243;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">El %1$s est&#224; creat per Mozilla. La nostra missi&#243; &#233;s fomentar un Internet obert i saludable.<br/>\n<a href="%2$s">M&#233;s informaci&#243;</a></p>]]></string>
   <string name="preference_category_search">Cerca</string>
   <string name="preference_search_engine_default">Per defecte</string>
+  <string name="preference_language">Llengua</string>
+  <string name="preference_language_systemdefault">Valor per defecte del sistema</string>
   <string name="preference_dialog_title_search_engine">Cercador per defecte</string>
   <string name="preference_category_privacy">Privadesa</string>
-  <string name="preference_privacy_block_ads">Bloqueja els elements de seguiment de publicitat</string>
-  <string name="preference_privacy_block_analytics">Bloqueja els elements de seguiment d\'anàlisi</string>
-  <string name="preference_privacy_block_social">Bloqueja els elements de seguiment social</string>
-  <string name="preference_privacy_block_content">Bloqueja altres elements de seguiment de contingut</string>
+  <string name="preference_privacy_block_ads">Bloca els elements de seguiment de publicitat</string>
+  <string name="preference_privacy_block_analytics">Bloca els elements de seguiment d\'anàlisi</string>
+  <string name="preference_privacy_block_social">Bloca els elements de seguiment social</string>
+  <string name="preference_privacy_block_content">Bloca altres elements de seguiment de contingut</string>
   <string name="preference_privacy_block_content_summary">Pot causar problemes amb alguns vídeos i pàgines web</string>
   <string name="preference_category_performance">Rendiment</string>
-  <string name="preference_performance_block_webfonts">Bloqueja tipus de lletra web</string>
-  <string name="preference_performance_block_images">Bloqueja les imatges</string>
+  <string name="preference_performance_block_webfonts">Bloca tipus de lletra web</string>
+  <string name="preference_performance_block_webfonts_summary">Pot fer que no es vegin algunes icones o imatges</string>
+  <string name="preference_performance_block_images">Bloca les imatges</string>
   <string name="preference_default_browser">Fes que sigui el navegador per defecte</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Envia dades d\'ús anònimes</string>
@@ -40,8 +49,12 @@
   <string name="content_description_menu">Més opcions</string>
   <string name="content_description_forward">Navega cap endavant</string>
   <string name="content_description_reload">Actualitza el lloc web</string>
+  <string name="content_description_back">Vés enrere</string>
+  <string name="content_description_stop">Atura la càrrega del lloc web</string>
+  <string name="content_description_customtab_exit">Torna a l\'aplicació anterior</string>
+  <string name="context_menu_paste_go">Enganxa i vés-hi</string>
   <string name="firstrun_title">Navegueu sense sentir-vos observat.</string>
-  <string name="firstrun_description">Bloquegeu automàticament els elements que us fan el seguiment mentre navegueu. Esborreu amb un sol toc les pàgines visitades, cerques, galetes i contrasenyes del dispositiu.</string>
+  <string name="firstrun_description">Bloqueu automàticament els elements que us fan el seguiment mentre navegueu. Esborreu amb un sol toc les pàgines visitades, cerques, galetes i contrasenyes del dispositiu.</string>
   <string name="firstrun_button">Entesos</string>
   <string name="firstrun_footer">Tingueu en compte que els serveis i els llocs web que utilitzeu poden saber igualment on heu estat.</string>
   <string name="your_rights">Els vostres drets</string>
@@ -67,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Aix&#242; podria ser un problema amb la configuraci&#243; del servidor, o b&#233; podria ser que alg&#250; estigu&#233;s intentant fer-se passar pel servidor.</li>"\n  "<li>Si us hi heu connectat sense cap problema alguna altra vegada, l\'error podria ser temporal, i podeu tornar-ho a provar m&#233;s tard.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups.</string>
   <string name="error_generic_message">No s\'ha pogut carregar aquesta pàgina per algun motiu.</string>
+  <string name="contextmenu_link_share">Comparteix l\'enllaç</string>
+  <string name="contextmenu_link_copy">Copia l\'adreça de l\'enllaç</string>
+  <string name="contextmenu_image_share">Comparteix la imatge</string>
+  <string name="contextmenu_image_copy">Copia l\'adreça de la imatge</string>
+  <string name="contextmenu_image_save">Desa la imatge</string>
 </resources>

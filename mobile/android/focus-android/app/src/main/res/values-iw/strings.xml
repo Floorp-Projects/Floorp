@@ -1,6 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
   <string name="action_cancel">ביטול</string>
+  <string name="action_ok">אישור</string>
   <string name="urlbar_hint">חיפוש או הכנסת כתובת</string>
   <string name="teaser">גלישה פרטית אוטומטית.\nגלישה. מחיקה. חזרה להתחלה.</string>
   <string name="feedback_erase">היסטוריית הגלישה שלך נמחקה.</string>
@@ -12,8 +13,17 @@
   <string name="menu_about">אודות</string>
   <string name="menu_help">עזרה</string>
   <string name="menu_rights">הזכויות שלך</string>
+  <string name="menu_trackers_blocked_title">רכיבי מעקב חסומים</string>
+  <string name="share_dialog_title">שיתוף באמצעות</string>
+  <string name="notification_erase_text">מחיקת היסטורית גלישה</string>
+  <string name="shortcut_erase_short_label">מחיקה</string>
+  <string name="shortcut_erase_long_label">מחיקת היסטורית גלישה</string>
+  <string name="text_selection_search_action">חיפוש פרטי</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1492;&#1513;&#1500;&#1497;&#1496;&#1492; &#1495;&#1493;&#1494;&#1512;&#1514; &#1500;&#1497;&#1491;&#1497;&#1498; &#1506;&#1501; %1$s.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1502;&#1497;&#1493;&#1506;&#1491; &#1500;&#1513;&#1497;&#1502;&#1493;&#1513; &#1499;&#1491;&#1508;&#1491;&#1508;&#1503; &#1508;&#1512;&#1496;&#1497;:\n  "<ul>"\n    "<li>&#1504;&#1497;&#1514;&#1503; &#1500;&#1495;&#1508;&#1513; &#1493;&#1500;&#1490;&#1500;&#1493;&#1513; &#1497;&#1513;&#1497;&#1512;&#1493;&#1514; &#1502;&#1492;&#1497;&#1497;&#1513;&#1493;&#1502;&#1493;&#1503;</li>"\n    "<li>&#1495;&#1505;&#1497;&#1502;&#1514; &#1502;&#1504;&#1490;&#1504;&#1493;&#1504;&#1497; &#1502;&#1506;&#1511;&#1489; (&#1488;&#1493; &#1500;&#1513;&#1504;&#1493;&#1514; &#1492;&#1490;&#1491;&#1512;&#1493;&#1514; &#1499;&#1491;&#1497; &#1500;&#1488;&#1508;&#1513;&#1512; &#1488;&#1493;&#1514;&#1501;)</li>"\n    "<li>&#1504;&#1497;&#1514;&#1503; &#1500;&#1488;&#1508;&#1505; &#1499;&#1491;&#1497; &#1500;&#1502;&#1495;&#1493;&#1511; &#1506;&#1493;&#1490;&#1497;&#1493;&#1514; &#1499;&#1502;&#1493; &#1490;&#1501; &#1488;&#1514; &#1492;&#1497;&#1505;&#1496;&#1493;&#1512;&#1497;&#1497;&#1514; &#1492;&#1495;&#1497;&#1508;&#1493;&#1513;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1502;&#1489;&#1497;&#1514; &#1502;&#1493;&#1494;&#1497;&#1500;&#1492; Mozilla. &#1492;&#1502;&#1496;&#1512;&#1492; &#1513;&#1500;&#1504;&#1493; &#1492;&#1497;&#1488; &#1500;&#1496;&#1508;&#1495; &#1488;&#1497;&#1504;&#1496;&#1512;&#1504;&#1496; &#1489;&#1512;&#1497;&#1488; &#1493;&#1508;&#1514;&#1493;&#1495;.<br/>\n<a href="%2$s">&#1502;&#1497;&#1491;&#1506; &#1504;&#1493;&#1505;&#1507;</a></p>]]></string>
   <string name="preference_category_search">חיפוש</string>
   <string name="preference_search_engine_default">בררת מחדל</string>
+  <string name="preference_language">שפה</string>
+  <string name="preference_language_systemdefault">בררת מחדל של המערכת</string>
   <string name="preference_dialog_title_search_engine">חיפוש בררת מחדל</string>
   <string name="preference_category_privacy">פרטיות</string>
   <string name="preference_privacy_block_ads">חסימת רכיבי מעקב</string>
@@ -23,11 +33,13 @@
   <string name="preference_privacy_block_content_summary">עלולה לשבש את פעילותם של דפי אינטרנט ומספר סרטונים</string>
   <string name="preference_category_performance">ביצועים</string>
   <string name="preference_performance_block_webfonts">חסימת גופני רשת</string>
+  <string name="preference_performance_block_webfonts_summary">עשוי לגרום לסמלים או תמונות חסרים</string>
   <string name="preference_performance_block_images">חסימת תמונות</string>
   <string name="preference_default_browser">הפיכה לדפדפן בררת המחדל</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">שליחת נתוני שימוש אנונימיים</string>
   <string name="preference_mozilla_telemetry_summary">מידע נוסף</string>
+  <string name="preference_about">על אודות %1$s</string>
   <string name="content_description_clear_input">מחיקת קלט</string>
   <string name="content_description_dismiss_input">התעלמות</string>
   <string name="content_description_erase">מחיקת היסטורית גלישה</string>
@@ -37,8 +49,40 @@
   <string name="content_description_menu">אפשרויות נוספות</string>
   <string name="content_description_forward">ניווט קדימה</string>
   <string name="content_description_reload">טעינה מחדש של האתר</string>
+  <string name="content_description_back">ניווט אחורה</string>
+  <string name="content_description_stop">עצירת טעינת האתר</string>
+  <string name="content_description_customtab_exit">חזרה ליישום קודם</string>
+  <string name="context_menu_paste_go">להדביק ולהמשיך</string>
   <string name="firstrun_title">גלישה כאילו אף־אחד אינו צופה בך.</string>
   <string name="firstrun_description">חסימה אוטומטית של מעקב מקוון לאורך הגלישה. מחיקה בלחיצה של האתרים שביקרת בהם, חיפושים, עוגיות וססמאות מההתקן שברשותך.</string>
   <string name="firstrun_button">קיבלתי!</string>
-  <string name="firstrun_footer">שיהיה ברור, אתרים ושירותים בהם נעשה שימוש יוכלו עדיין לדעת מתי ביקרת בהם.</string>
+  <string name="firstrun_footer">לידיעתך, אתרים ושירותים בהם נעשה שימוש יוכלו עדיין לדעת מתי ביקרת בהם.</string>
+  <string name="your_rights">הזכויות שלך</string>
+  <string name="external_app_prompt_title">פתיחת קישור ביישומון אחר</string>
+  <string name="external_app_prompt">ניתן לעזוב את %1$s כדי לפתוח את הקישור הזה בעזרת %2$s.</string>
+  <string name="external_app_prompt_no_app_title">חיפוש יישומון שיוכל לפתוח את הקישור</string>
+  <string name="external_app_prompt_no_app">אף אחד מהיישומים שבהתקן שלך יכולים לפתוח את הקישור הזה. ניתן לעזוב את %1$s כדי לחפש תחת %2$s יישומון שיכול לבצע זאת.</string>
+  <string name="external_multiple_apps_matched_exit">האם ברצונך לצאת ממצב גלישה פרטית?</string>
+  <string name="errorpage_title">בעיה בטעינת דף</string>
+  <string name="errorpage_refresh">לנסות שוב</string>
+  <string name="error_connectionfailure_title">לא ניתן להתחבר</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>&#1492;&#1488;&#1514;&#1512; &#1506;&#1513;&#1493;&#1497; &#1500;&#1492;&#1497;&#1493;&#1514; &#1500;&#1488; &#1494;&#1502;&#1497;&#1503; &#1499;&#1506;&#1514; &#1488;&#1493; &#1506;&#1502;&#1493;&#1505;. &#1504;&#1488; &#1500;&#1504;&#1505;&#1493;&#1514; &#1513;&#1493;&#1489; &#1489;&#1506;&#1493;&#1491; &#1502;&#1505;&#1508;&#1512; &#1512;&#1490;&#1506;&#1497;&#1501;.</li>"\n        "<li>&#1488;&#1501; &#1500;&#1488; &#1504;&#1497;&#1514;&#1503; &#1500;&#1496;&#1506;&#1493;&#1503; &#1490;&#1501; &#1491;&#1508;&#1497;&#1501; &#1488;&#1495;&#1512;&#1497;&#1501;, &#1504;&#1488; &#1500;&#1489;&#1491;&#1493;&#1511; &#1488;&#1514; &#1495;&#1497;&#1489;&#1493;&#1512; &#1492;&#1504;&#1514;&#1493;&#1504;&#1497;&#1501; &#1488;&#1493; &#1492;&#1488;&#1497;&#1504;&#1496;&#1512;&#1504;&#1496; &#1492;&#1488;&#1500;&#1495;&#1493;&#1496;&#1497; &#1513;&#1500; &#1492;&#1492;&#1514;&#1511;&#1503; &#1513;&#1489;&#1512;&#1513;&#1493;&#1514;&#1498;.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">תם הזמן המוקצב לחיבור</string>
+  <string name="error_hostLookup_title">שרת לא נמצא</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"&#1504;&#1488; &#1500;&#1493;&#1493;&#1491;&#1488; &#1513;&#1492;&#1499;&#1514;&#1493;&#1489;&#1514; &#1492;&#1493;&#1499;&#1504;&#1505;&#1492; &#1499;&#1512;&#1488;&#1493;&#1497;, &#1500;&#1502;&#1513;&#1500;\n          "<strong>ww</strong>".example.com &#1489;&#1502;&#1511;&#1493;&#1501;\n          "<strong>www</strong>.example.com</li>"\n        "<li>&#1488;&#1501; &#1488;&#1497;&#1503; &#1488;&#1508;&#1513;&#1512;&#1493;&#1514; &#1500;&#1496;&#1506;&#1493;&#1503; &#1491;&#1508;&#1497;&#1501; &#1488;&#1495;&#1512;&#1497;&#1501;, &#1504;&#1488; &#1500;&#1489;&#1491;&#1493;&#1511; &#1488;&#1514; &#1495;&#1497;&#1489;&#1493;&#1512; &#1492;&#1504;&#1514;&#1493;&#1504;&#1497;&#1501; &#1488;&#1493; &#1492;&#1488;&#1497;&#1504;&#1496;&#1512;&#1504;&#1496; &#1492;&#1488;&#1500;&#1495;&#1493;&#1496;&#1497; &#1513;&#1500; &#1492;&#1492;&#1514;&#1511;&#1503;.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">כתובת זו אינה חוקית</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"&#1499;&#1514;&#1493;&#1489;&#1493;&#1514; &#1488;&#1497;&#1504;&#1496;&#1512;&#1504;&#1496; &#1500;&#1512;&#1493;&#1489; &#1504;&#1499;&#1514;&#1489;&#1493;&#1514; &#1489;&#1510;&#1493;&#1512;&#1492; &#1491;&#1493;&#1502;&#1492; &#1500;&#1494;&#1493;: "<strong>http://www.example.com/</strong></li>"\n  "<li>"&#1497;&#1513; &#1500;&#1493;&#1493;&#1491;&#1488; &#1499;&#1497; &#1504;&#1506;&#1513;&#1492; &#1513;&#1497;&#1502;&#1493;&#1513; &#1489;&#1500;&#1493;&#1499;&#1505;&#1504;&#1497;&#1501; &#1511;&#1491;&#1502;&#1497;&#1497;&#1501; (&#1499;&#1500;&#1493;&#1502;&#1512; "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">הדף מבצע העברה לא תקינה</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#1508;&#1506;&#1493;&#1500;&#1492; &#1494;&#1493; &#1504;&#1490;&#1512;&#1502;&#1514; &#1500;&#1506;&#1514;&#1497;&#1501; &#1499;&#1488;&#1513;&#1512; &#1506;&#1493;&#1490;&#1497;&#1493;&#1514; &#1502;&#1504;&#1493;&#1496;&#1512;&#1500;&#1493;&#1514; &#1488;&#1493; &#1499;&#1488;&#1513;&#1512; &#1502;&#1505;&#1512;&#1489;&#1497;&#1501; &#1500;&#1511;&#1489;&#1500; &#1506;&#1493;&#1490;&#1497;&#1493;&#1514;.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">כתובת זו אינה מובנת</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#1497;&#1497;&#1514;&#1499;&#1503; &#1513;&#1497;&#1513; &#1510;&#1493;&#1512;&#1498; &#1489;&#1492;&#1514;&#1511;&#1504;&#1514; &#1514;&#1493;&#1499;&#1504;&#1492; &#1488;&#1495;&#1512;&#1514; &#1499;&#1491;&#1497; &#1500;&#1490;&#1513;&#1514; &#1500;&#1499;&#1514;&#1493;&#1489;&#1514; &#1492;&#1502;&#1489;&#1493;&#1511;&#1513;&#1514;.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">קישור מאובטח נכשל</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#1497;&#1497;&#1514;&#1499;&#1503; &#1513;&#1497;&#1513;&#1504;&#1492; &#1489;&#1506;&#1497;&#1492; &#1489;&#1492;&#1490;&#1491;&#1512;&#1493;&#1514; &#1492;&#1513;&#1512;&#1514; &#1488;&#1493; &#1513;&#1490;&#1493;&#1512;&#1501; &#1499;&#1500;&#1513;&#1492;&#1493; &#1502;&#1504;&#1505;&#1492; &#1500;&#1492;&#1514;&#1495;&#1494;&#1493;&#1514; &#1488;&#1500;&#1497;&#1493;.</li>"\n  "<li>&#1489;&#1502;&#1497;&#1491;&#1492; &#1513;&#1492;&#1510;&#1500;&#1495;&#1514; &#1500;&#1492;&#1514;&#1495;&#1489;&#1512; &#1500;&#1488;&#1514;&#1512; &#1499;&#1512;&#1488;&#1493;&#1497; &#1489;&#1506;&#1489;&#1512;, &#1497;&#1497;&#1514;&#1499;&#1503; &#1513;&#1513;&#1490;&#1497;&#1488;&#1492; &#1494;&#1493; &#1492;&#1497;&#1488; &#1494;&#1502;&#1504;&#1497;&#1514; &#1489;&#1500;&#1489;&#1491;, &#1493;&#1488;&#1508;&#1513;&#1512; &#1497;&#1492;&#1497;&#1492; &#1500;&#1504;&#1505;&#1493;&#1514; &#1513;&#1493;&#1489; &#1502;&#1488;&#1493;&#1495;&#1512; &#1497;&#1493;&#1514;&#1512;.</li>\n</ul>]]></string>
+  <string name="error_generic_title">אבוי</string>
+  <string name="error_generic_message">מסיבה כלשהי לא ניתן לטעון את דף זה.</string>
+  <string name="contextmenu_link_share">שיתוף קישור</string>
+  <string name="contextmenu_link_copy">העתקת כתובת קישור</string>
+  <string name="contextmenu_image_share">שיתוף תמונה</string>
+  <string name="contextmenu_image_copy">העתקת כתובת תמונה</string>
+  <string name="contextmenu_image_save">שמירת תמונה</string>
 </resources>

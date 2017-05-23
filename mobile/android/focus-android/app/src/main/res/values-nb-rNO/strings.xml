@@ -13,9 +13,17 @@
   <string name="menu_about">Om</string>
   <string name="menu_help">Hjelp</string>
   <string name="menu_rights">Dine rettigheter</string>
+  <string name="menu_trackers_blocked_title">Sporere blokkert</string>
+  <string name="share_dialog_title">Del via</string>
+  <string name="notification_erase_text">Slett nettleserhistorikk</string>
+  <string name="shortcut_erase_short_label">Slett</string>
+  <string name="shortcut_erase_long_label">Slett nettleserhistorikk</string>
+  <string name="text_selection_search_action">Privat søk</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gir deg kontroll.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Bruk den som en privat nettleser:\n  "<ul>"\n    "<li>S&#248;k og surf rett i appen</li>"\n    "<li>Blokker sporere (eller oppdater innstillingene for &#229; tillate sporere)</li>"\n    "<li>Slett for &#229; fjerne infokapsler samt s&#248;k- og nettleserhistorikk</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s er produsert av Mozilla. V&#229;r misjon er &#229; fremme et sunt, &#229;pent Internett.<br/>\n<a href="%2$s">Les mer</a></p>]]></string>
   <string name="preference_category_search">Søk</string>
   <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_language">Språk</string>
+  <string name="preference_language_systemdefault">Systemstandard</string>
   <string name="preference_dialog_title_search_engine">Standard søkemotor</string>
   <string name="preference_category_privacy">Personvern</string>
   <string name="preference_privacy_block_ads">Blokker reklamesporere</string>
@@ -43,11 +51,12 @@
   <string name="content_description_reload">Last siden på nytt</string>
   <string name="content_description_back">Naviger tilbake</string>
   <string name="content_description_stop">Stopp lasting av nettside</string>
+  <string name="content_description_customtab_exit">Gå tilbake til forrige app</string>
   <string name="context_menu_paste_go">Lim inn og åpne</string>
   <string name="firstrun_title">Surf uten å føle deg overvåket.</string>
   <string name="firstrun_description">Automatisk blokkering av nettsporere mens du surfer. Deretter trykker du for å slette besøkte sider, søk, informasjonskapsler og passord fra enheten.</string>
   <string name="firstrun_button">OK, jeg skjønner!</string>
-  <string name="firstrun_footer">For å være tydelig, kan nettsteder og tjenester du bruker fortsatt se hvor du har vært.</string>
+  <string name="firstrun_footer">For å være tydelig, kan nettsteder og tjenester du bruker, fortsatt vite hvor du har vært.</string>
   <string name="your_rights">Dine rettigheter</string>
   <string name="external_app_prompt_title">Åpne lenke i en annen app</string>
   <string name="external_app_prompt">Du kan gå ut av %1$s for å åpne denne lenken i %2$s.</string>
@@ -71,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dette kan v&#230;re p&#229; grunn av et problem med serverens konfigurasjon, eller det kan v&#230;re fordi noen fors&#248;ker &#229; forfalske tilkoblingen til serveren.</li>"\n  "<li>Dersom du har klart &#229; koble til serveren tidligere kan problemet v&#230;re midlertidig, og du kan pr&#248;ve igjen senere.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Vi klarte ikke å laste denne siden av ukjent årsak.</string>
+  <string name="contextmenu_link_share">Del lenke</string>
+  <string name="contextmenu_link_copy">Kopier lenkeadresse</string>
+  <string name="contextmenu_image_share">Del bilde</string>
+  <string name="contextmenu_image_copy">Kopier bildeadresse</string>
+  <string name="contextmenu_image_save">Lagre bilde</string>
 </resources>

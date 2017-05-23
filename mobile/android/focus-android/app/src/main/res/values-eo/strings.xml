@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Tio povas misfunkciigi kelkajn filmetojn kaj retpaĝojn</string>
   <string name="preference_category_performance">Efikeco</string>
   <string name="preference_performance_block_webfonts">Bloki retajn tiparojn</string>
+  <string name="preference_performance_block_webfonts_summary">Tio povus malaperigi emblemojn aŭ bildojn</string>
   <string name="preference_performance_block_images">Bloki bildojn</string>
   <string name="preference_default_browser">Igi ĉefa retumilo</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -38,8 +39,11 @@
   <string name="accessibility_announcement_loading">Ŝargado</string>
   <string name="accessibility_announcement_loading_finished">Retejo ŝargita</string>
   <string name="content_description_menu">Pli da elektebloj</string>
-  <string name="content_description_forward">Retumi antaŭen</string>
+  <string name="content_description_forward">Iri antaŭen</string>
   <string name="content_description_reload">Reŝargi retejon</string>
+  <string name="content_description_back">Iri reen</string>
+  <string name="content_description_stop">Haltigi ŝargadon de retejo</string>
+  <string name="context_menu_paste_go">Alglui kaj iri</string>
   <string name="firstrun_title">Retumu, kvazaŭ neniu vin rigardus.</string>
   <string name="firstrun_description">Aŭtomate bloki retajn spurilojn dum vi retumas. Poste tuŝetu por forigi vizititajn paĝojn, serĉojn, kuketojn kaj pasvortojn el via aparato.</string>
   <string name="firstrun_button">Bone, mi komprenis!</string>

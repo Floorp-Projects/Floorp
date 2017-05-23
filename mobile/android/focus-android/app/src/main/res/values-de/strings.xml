@@ -13,9 +13,17 @@
   <string name="menu_about">Über</string>
   <string name="menu_help">Hilfe</string>
   <string name="menu_rights">Ihre Rechte</string>
+  <string name="menu_trackers_blocked_title">Verfolger blockiert</string>
+  <string name="share_dialog_title">Teilen über</string>
+  <string name="notification_erase_text">Browser-Chronik löschen</string>
+  <string name="shortcut_erase_short_label">Löschen</string>
+  <string name="shortcut_erase_long_label">Browser-Chronik löschen</string>
+  <string name="text_selection_search_action">Private Suche</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gibt Ihnen die Kontrolle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Verwenden Sie es als privaten Browser:\n  "<ul>"\n    "<li>Suchen und bl&#228;ttern Sie in der App</li>"\n    "<li>Blockieren Sie Tracker (oder aktualisieren Sie die Einstellungen, um Tracker zu erlauben)</li>"\n    "<li>Entfernen Sie Cookies, um Such- und Browserverlauf zu l&#246;schen</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wird von Mozilla entwickelt. Unsere Mission ist es, ein gesundes, offenes Internet zu f&#246;rdern.<br/>\n<a href="%2$s">Erfahren Sie mehr</a></p>]]></string>
   <string name="preference_category_search">Suche</string>
   <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_language">Sprache</string>
+  <string name="preference_language_systemdefault">Systemstandard</string>
   <string name="preference_dialog_title_search_engine">Standardsuchmaschine</string>
   <string name="preference_category_privacy">Datenschutz</string>
   <string name="preference_privacy_block_ads">Werbeverfolgung blockieren</string>
@@ -43,6 +51,7 @@
   <string name="content_description_reload">Website neu laden</string>
   <string name="content_description_back">Rückwärts navigieren</string>
   <string name="content_description_stop">Laden der Website stoppen</string>
+  <string name="content_description_customtab_exit">Zurück zur vorherigen App</string>
   <string name="context_menu_paste_go">Einfügen &amp; Los</string>
   <string name="firstrun_title">Surfen Sie, als würde niemand zusehen.</string>
   <string name="firstrun_description">Blockieren Sie automatisch Online-Verfolgung beim Surfen. Durch Tippen können Sie dann besuchte Seiten, Suchanfragen, Cookies und Passwörter von Ihrem Gerät löschen.</string>
@@ -71,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Das k&#246;nnte ein Problem mit der Konfiguration des Servers sein, oder jemand will sich als dieser Server ausgeben.</li>"\n  "<li>Wenn Sie mit diesem Server in der Vergangenheit erfolgreich Verbindungen herstellen konnten, ist der Fehler eventuell nur vor&#252;bergehend, und Sie k&#246;nnen es sp&#228;ter erneut versuchen.</li>\n</ul>]]></string>
   <string name="error_generic_title">Hoppla</string>
   <string name="error_generic_message">Aus unbekannten Gründen konnte diese Seite nicht geladen werden.</string>
+  <string name="contextmenu_link_share">Link teilen</string>
+  <string name="contextmenu_link_copy">Link-Adresse kopieren</string>
+  <string name="contextmenu_image_share">Grafik teilen</string>
+  <string name="contextmenu_image_copy">Grafikadresse kopieren</string>
+  <string name="contextmenu_image_save">Grafik speichern</string>
 </resources>

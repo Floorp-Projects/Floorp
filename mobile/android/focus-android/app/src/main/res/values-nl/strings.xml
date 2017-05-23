@@ -13,9 +13,17 @@
   <string name="menu_about">Over</string>
   <string name="menu_help">Help</string>
   <string name="menu_rights">Uw rechten</string>
+  <string name="menu_trackers_blocked_title">Trackers geblokkeerd</string>
+  <string name="share_dialog_title">Delen via</string>
+  <string name="notification_erase_text">Navigatiegeschiedenis wissen</string>
+  <string name="shortcut_erase_short_label">Wissen</string>
+  <string name="shortcut_erase_long_label">Navigatiegeschiedenis wissen</string>
+  <string name="text_selection_search_action">Privé zoeken</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s geeft u de controle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gebruik als een priv&#233;browser:\n  "<ul>"\n    "<li>Rechtstreeks vanuit de app zoeken en browsen</li>"\n    "<li>Trackers blokkeren (of instellingen bijwerken om ze toe te staan)</li>"\n    "<li>Wissen verwijdert zowel cookies als zoek- en navigatiegeschiedenis</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wordt gemaakt door Mozilla. Onze missie is het verzorgen van een gezond en open internet.<br/>\n<a href="%2$s">Meer info</a></p>]]></string>
   <string name="preference_category_search">Zoeken</string>
   <string name="preference_search_engine_default">Standaard</string>
+  <string name="preference_language">Taal</string>
+  <string name="preference_language_systemdefault">Systeemstandaard</string>
   <string name="preference_dialog_title_search_engine">Standaardzoekmachine</string>
   <string name="preference_category_privacy">Privacy</string>
   <string name="preference_privacy_block_ads">Advertentietrackers blokkeren</string>
@@ -43,6 +51,7 @@
   <string name="content_description_reload">Website opnieuw laden</string>
   <string name="content_description_back">Terug bladeren</string>
   <string name="content_description_stop">Laden van website stoppen</string>
+  <string name="content_description_customtab_exit">Terug naar vorige app</string>
   <string name="context_menu_paste_go">Plakken &amp; Gaan</string>
   <string name="firstrun_title">Surf alsof niemand meekijkt.</string>
   <string name="firstrun_description">Blokkeer automatisch onlinetrackers terwijl u surft. Tik daarna om bezochte pagina’s, zoekopdrachten, cookies en wachtwoorden op uw apparaat te wissen.</string>
@@ -68,7 +77,12 @@
   <string name="error_unsupportedprotocol_title">Het adres werd niet begrepen</string>
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Misschien moet u andere software installeren om dit adres te openen.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Beveiligde verbinding mislukt</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dit kan een probleem met de serverconfiguratie zijn, of iemand probeert\ndeze server na te bootsen.</li>"\n  "<li>Als u in het verleden wel met succes verbinding hebt gemaakt met deze server,\ndan is de fout wellicht tijdelijk en kunt u het later nogmaals proberen.</li>\n</ul>]]></string>
-  <string name="error_generic_title">Oei</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dit kan een probleem met de serverconfiguratie zijn, of iemand probeert\nde server na te bootsen.</li>"\n  "<li>Als u in het verleden met succes verbinding met deze server hebt gemaakt,\nkan de fout van tijdelijke aard zijn en kunt u het later nogmaals proberen.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Oeps</string>
   <string name="error_generic_message">Deze pagina kan om de een of andere reden niet worden geladen.</string>
+  <string name="contextmenu_link_share">Koppeling delen</string>
+  <string name="contextmenu_link_copy">Koppelingsadres kopiëren</string>
+  <string name="contextmenu_image_share">Afbeelding delen</string>
+  <string name="contextmenu_image_copy">Afbeeldingsadres kopiëren</string>
+  <string name="contextmenu_image_save">Afbeelding opslaan</string>
 </resources>

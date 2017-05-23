@@ -13,9 +13,17 @@
   <string name="menu_about">Om</string>
   <string name="menu_help">Hjälp</string>
   <string name="menu_rights">Dina rättigheter</string>
+  <string name="menu_trackers_blocked_title">Trackers blockerade</string>
+  <string name="share_dialog_title">Dela via</string>
+  <string name="notification_erase_text">Radera webbhistorik</string>
+  <string name="shortcut_erase_short_label">Radera</string>
+  <string name="shortcut_erase_long_label">Radera webbhistorik</string>
+  <string name="text_selection_search_action">Privat sökning</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ger dig full kontroll.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Anv&#228;nd den som en privat webbl&#228;sare:\n  "<ul>"\n    "<li>S&#246;k och surfa direkt i appen</li>"\n    "<li>Blockera trackers (eller uppdatera inst&#228;llningar att till&#229;ta trackers)</li>"\n    "<li>Radera f&#246;r att ta bort kakor samt s&#246;k- och webbhistorik</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.<br/>\n<a href="%2$s">Learn more</a></p>]]></string>
   <string name="preference_category_search">Sök</string>
   <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_language">Språk</string>
+  <string name="preference_language_systemdefault">Systemstandard</string>
   <string name="preference_dialog_title_search_engine">Standardsökmotor</string>
   <string name="preference_category_privacy">Sekretess</string>
   <string name="preference_privacy_block_ads">Blockera annons trackers</string>
@@ -43,6 +51,7 @@
   <string name="content_description_reload">Ladda om webbplats</string>
   <string name="content_description_back">Navigera bakåt</string>
   <string name="content_description_stop">Sluta ladda webbplats</string>
+  <string name="content_description_customtab_exit">Återgå till föregående app</string>
   <string name="context_menu_paste_go">Klistra in och kör</string>
   <string name="firstrun_title">Surfa utan att känna dig övervakad.</string>
   <string name="firstrun_description">Blockera automatiskt online-trackers när du surfar. Tryck på radera för att ta bort besökta sidor, sökningar, kakor och lösenord från din enhet.</string>
@@ -71,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Det kan vara ett problem med serverns konfiguration, eller det kan vara\nn&#229;gon som f&#246;rs&#246;ker imitera servern.</li>"\n  "<li>Om du har anslutit till den h&#228;r servern med framg&#229;ng i det f&#246;rflutna, kan felet\nvara tillf&#228;lligt, och du kan f&#246;rs&#246;ka igen senare.</li>\n</ul>]]></string>
   <string name="error_generic_title">Hoppsan</string>
   <string name="error_generic_message">Vi kan inte ladda den här sidan av någon anledning.</string>
+  <string name="contextmenu_link_share">Dela länk</string>
+  <string name="contextmenu_link_copy">Kopiera länkadress</string>
+  <string name="contextmenu_image_share">Dela bild</string>
+  <string name="contextmenu_image_copy">Kopiera bildadress</string>
+  <string name="contextmenu_image_save">Spara bild</string>
 </resources>

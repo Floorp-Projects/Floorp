@@ -13,9 +13,17 @@
   <string name="menu_about">Γef</string>
   <string name="menu_help">Tallalt</string>
   <string name="menu_rights">Izerfan-inek</string>
+  <string name="menu_trackers_blocked_title">Ineḍfaṛen ttwaḥebsen</string>
+  <string name="share_dialog_title">Bdu s</string>
+  <string name="notification_erase_text">Sfeḍ amazray n tunigin</string>
+  <string name="shortcut_erase_short_label">Sfeḍ</string>
+  <string name="shortcut_erase_long_label">Sfeḍ amazray n tunigin</string>
+  <string name="text_selection_search_action">Anadi uslig</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s puts you in control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Seqdec-it d iminig uslig:\n  "<ul>"\n    "<li>Nadi sakin snirem akken iwata deg usnas</li>"\n    "<li>Sew&#7717;el imesfu&#611;al (ne&#611; snifel i&#611;ewwa&#7771;en akken ad tsirge&#7693; imesfu&#611;al)</li>"\n    "<li>Erase to delete cookies as well as search and browsing history</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s yesnulfa-t-id Mozilla. Tu&#611;da&#7789;-nne&#611; is to foster a healthy, open Internet.<br/>\n<a href="%2$s">Learn more</a></p>]]></string>
   <string name="preference_category_search">Nadi</string>
   <string name="preference_search_engine_default">Amezwer</string>
+  <string name="preference_language">Tutlayt</string>
+  <string name="preference_language_systemdefault">Amezwer n unagraw</string>
   <string name="preference_dialog_title_search_engine">Anadi amezwer</string>
   <string name="preference_category_privacy">Tabaḍnit</string>
   <string name="preference_privacy_block_ads">Sewḥel ineḍfaṛen</string>
@@ -43,11 +51,12 @@
   <string name="content_description_reload">Ales asali n usmel web</string>
   <string name="content_description_back">Inig ar deffir</string>
   <string name="content_description_stop">Seḥbes asali n usmel</string>
+  <string name="content_description_customtab_exit">Uɣal ar usnas izrin</string>
   <string name="context_menu_paste_go">Senteḍ &amp; kemmel</string>
   <string name="firstrun_title">Inig am akken ulac win i k-id-ittmuqqulen.</string>
   <string name="firstrun_description">Sewḥel s wudem awurman inedfaṛen ticki tettinigeḍ. Senned sakin ɣef tqeffalt Sfeḍ akken ad tekkseḍ isebtar yettwarzan, inadiyen, inagan n tuqqna akked wawalen uffiren.</string>
   <string name="firstrun_button">Ih, gziγ!</string>
-  <string name="firstrun_footer">Akken ad tegzuḍ, ismal akked imeẓla zeren yakan ad ẓren anida telliḍ.</string>
+  <string name="firstrun_footer">"Akken ad tegzuḍ, ismal akked imeẓla  i tseqdaceḍ, zemren yakan ad ẓren anida telliḍ."</string>
   <string name="your_rights">Izerfan-ik</string>
   <string name="external_app_prompt_title">Ldi aseγwen deg usnas-nniḍen</string>
   <string name="external_app_prompt">Tzemred ad teffqeḍ seg %1$s akken ad d-ldid aseγwen di %2$s.</string>
@@ -71,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" "<li>Ayagi yekka-d ahat seg ugur n twila n uqeddac ne&#611; amdan yetta&#603;ra&#7693;en ad yakker tim agit n uqeddac.</li>"\n  "<li>Ma yella teqqne&#7693; yakan ar uqeddac-agi, ahat tucc&#7693;a d umatu kan, tzemre&#7693; ad t&#603;er&#7693;e&#7693; tikelt-nni&#7693;en ticki.</li></ul>]]></string>
   <string name="error_generic_title">Ihuh</string>
   <string name="error_generic_message">Ur nezmir ara ad d-nsali asebter-agi, ur neẓri ara acuγer.</string>
+  <string name="contextmenu_link_share">Bḍu aseɣwen</string>
+  <string name="contextmenu_link_copy">Nɣel tansa n useɣwen</string>
+  <string name="contextmenu_image_share">Bḍu tugna</string>
+  <string name="contextmenu_image_copy">Nɣel tansa n tugna</string>
+  <string name="contextmenu_image_save">Sekles tugna</string>
 </resources>

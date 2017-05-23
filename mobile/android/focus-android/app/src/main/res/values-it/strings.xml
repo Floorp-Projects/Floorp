@@ -13,9 +13,17 @@
   <string name="menu_about">Informazioni su</string>
   <string name="menu_help">Aiuto</string>
   <string name="menu_rights">I tuoi diritti</string>
+  <string name="menu_trackers_blocked_title">Elementi traccianti bloccati</string>
+  <string name="share_dialog_title">Condividi con</string>
+  <string name="notification_erase_text">Elimina cronologia di navigazione</string>
+  <string name="shortcut_erase_short_label">Elimina</string>
+  <string name="shortcut_erase_long_label">Elimina cronologia di navigazione</string>
+  <string name="text_selection_search_action">Ricerca anonima</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Prendi il controllo con %1$s.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Utilizzalo per la navigazione anonima:\n  "<ul>"\n    "<li>Cerca e naviga direttamente nell&#8217;app.</li>"\n    "<li>Blocca il tracciamento (o aggiorna le impostazioni per consentirlo).</li>"\n    "<li>Utilizza &#8220;Elimina&#8221; per rimuovere i cookie cos&#236; come la cronologia di ricerca e navigazione.</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#232; realizzato da Mozilla. La nostra missione &#232; promuovere un Internet integro e aperto.<br/>\n<a href="%2$s">Ulteriori informazioni</a></p>]]></string>
   <string name="preference_category_search">Ricerca</string>
   <string name="preference_search_engine_default">Predefinito</string>
+  <string name="preference_language">Lingua</string>
+  <string name="preference_language_systemdefault">Predefinita del sistema</string>
   <string name="preference_dialog_title_search_engine">Motore di ricerca predefinito</string>
   <string name="preference_category_privacy">Privacy</string>
   <string name="preference_privacy_block_ads">Blocca pubblicità traccianti</string>
@@ -43,11 +51,12 @@
   <string name="content_description_reload">Ricarica il sito web</string>
   <string name="content_description_back">Torna indietro</string>
   <string name="content_description_stop">Interrompi il caricamento del sito</string>
+  <string name="content_description_customtab_exit">Torna all’applicazione precedente</string>
   <string name="context_menu_paste_go">Incolla e vai</string>
   <string name="firstrun_title">Naviga come se nessuno ti stesse guardando.</string>
   <string name="firstrun_description">Blocca automaticamente gli elementi in grado di tracciarti durante la navigazione. Poi, con un semplice tocco, elimina le pagine visitate, i cookie e le password dal dispositivo.</string>
   <string name="firstrun_button">Ho capito!</string>
-  <string name="firstrun_footer">Per essere chiari, i siti web visitati e il gestore in uso potranno comunque stabilire dove sei stato.</string>
+  <string name="firstrun_footer">Per essere chiari, i siti web visitati e i servizi utilizzati potranno comunque stabilire dove sei stato.</string>
   <string name="your_rights">I tuoi diritti</string>
   <string name="external_app_prompt_title">Apri link in un’altra app</string>
   <string name="external_app_prompt">È possibile uscire da %1$s e aprire questo link in %2$s.</string>
@@ -71,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Potrebbe trattarsi di un problema nella configurazione del server oppure di un tentativo da parte di qualcuno di sostituirsi al server stesso.</li>"\n  "<li>Se &#232; stato possibile connettersi a questo server in passato, il problema potrebbe essere solo temporaneo. Si consiglia di riprovare in seguito.</li>\n</ul>]]></string>
   <string name="error_generic_title">Oops</string>
   <string name="error_generic_message">Non è stato possibile caricare questa pagina per qualche motivo.</string>
+  <string name="contextmenu_link_share">Condividi link</string>
+  <string name="contextmenu_link_copy">Copia indirizzo link</string>
+  <string name="contextmenu_image_share">Condividi immagine</string>
+  <string name="contextmenu_image_copy">Copia indirizzo immagine</string>
+  <string name="contextmenu_image_save">Salva immagine</string>
 </resources>

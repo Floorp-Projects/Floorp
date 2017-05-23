@@ -13,9 +13,17 @@
   <string name="menu_about">關於</string>
   <string name="menu_help">說明</string>
   <string name="menu_rights">您的權利</string>
+  <string name="menu_trackers_blocked_title">封鎖的追蹤器數量</string>
+  <string name="share_dialog_title">透過下列程式分享</string>
+  <string name="notification_erase_text">清除瀏覽紀錄</string>
+  <string name="shortcut_erase_short_label">清除</string>
+  <string name="shortcut_erase_long_label">清除瀏覽紀錄</string>
+  <string name="text_selection_search_action">隱私瀏覽</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#35731;&#24744;&#21487;&#33258;&#34892;&#25511;&#21046;&#32218;&#19978;&#29983;&#27963;&#12290;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#21487;&#30070;&#20316;&#31169;&#23494;&#28687;&#35261;&#22120;&#20351;&#29992;:\n  "<ul>"\n    "<li>&#30452;&#25509;&#22312;&#31243;&#24335;&#20013;&#25628;&#23563;&#12289;&#28687;&#35261;</li>"\n    "<li>&#23553;&#37782;&#36861;&#36452;&#22120;&#65288;&#20063;&#21487;&#35519;&#25972;&#35373;&#23450;&#65292;&#20801;&#35377;&#36861;&#36452;&#22120;&#65289;</li>"\n    "<li>&#28165;&#38500; Cookie&#12289;&#25628;&#23563;&#32000;&#37636;&#12289;&#19978;&#32178;&#32000;&#37636;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#26159;&#30001; Mozilla &#25152;&#25171;&#36896;&#65292;&#25105;&#20497;&#30340;&#20351;&#21629;&#26159;&#22521;&#39178;&#19968;&#20491;&#20581;&#24247;&#12289;&#38283;&#25918;&#30340;&#32178;&#38555;&#32178;&#36335;&#12290;<br/>\n<a href="%2$s">&#20102;&#35299;&#26356;&#22810;</a></p>]]></string>
   <string name="preference_category_search">搜尋</string>
   <string name="preference_search_engine_default">預設</string>
+  <string name="preference_language">語言</string>
+  <string name="preference_language_systemdefault">系統預設</string>
   <string name="preference_dialog_title_search_engine">預設搜尋引擎</string>
   <string name="preference_category_privacy">隱私權</string>
   <string name="preference_privacy_block_ads">封鎖廣告型追蹤器</string>
@@ -43,11 +51,12 @@
   <string name="content_description_reload">重新載入網站</string>
   <string name="content_description_back">瀏覽上一頁</string>
   <string name="content_description_stop">停止載入網站</string>
+  <string name="content_description_customtab_exit">回到先前的應用程式</string>
   <string name="context_menu_paste_go">貼上並瀏覽</string>
   <string name="firstrun_title">讓上網時不被偷看。</string>
   <string name="firstrun_description">自動在您上網時封鎖線上追蹤器；只要一點即可清除裝置中造訪過的頁面、搜尋、Cookie、密碼等紀錄。</string>
   <string name="firstrun_button">好，知道了！</string>
-  <string name="firstrun_footer">您開啟的網站或服務本身還是會知道您曾經來過。</string>
+  <string name="firstrun_footer">要特別說明的是，您開啟的網站或服務本身還是會知道您曾經來過。</string>
   <string name="your_rights">您的權利</string>
   <string name="external_app_prompt_title">用其他應用程式開啟鏈結</string>
   <string name="external_app_prompt">您可離開 %1$s，到 %2$s 安裝一套應用程式開啟此鏈結。</string>
@@ -71,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2"><li>&#21487;&#33021;&#26159;&#20282;&#26381;&#22120;&#35373;&#23450;&#21839;&#38988;&#36896;&#25104;&#65292;&#25110;&#26159;&#26377;&#20154;&#22039;&#35430;&#20605;&#35037;&#25104;&#35442;&#20282;&#26381;&#22120;&#12290;</li><li>&#33509;&#24744;&#20197;&#21069;&#21487;&#20197;&#33287;&#35442;&#20282;&#26381;&#22120;&#27491;&#24120;&#36899;&#32218;&#65292;&#37027;&#40636;&#36889;&#20491;&#37679;&#35492;&#21487;&#33021;&#21482;&#26159;&#26283;&#26178;&#30340;&#65292;&#35531;&#31245;&#20505;&#20877;&#35430;&#35430;&#30475;&#12290;</li>" "</ul>]]></string>
   <string name="error_generic_title">糟糕</string>
   <string name="error_generic_message">因為某些原因，我們無法載入此頁面。</string>
+  <string name="contextmenu_link_share">分享鏈結</string>
+  <string name="contextmenu_link_copy">複製鏈結網址</string>
+  <string name="contextmenu_image_share">分享圖片</string>
+  <string name="contextmenu_image_copy">複製圖片網址</string>
+  <string name="contextmenu_image_save">儲存圖片</string>
 </resources>

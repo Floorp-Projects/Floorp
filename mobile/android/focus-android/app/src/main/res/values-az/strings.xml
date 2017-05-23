@@ -13,9 +13,17 @@
   <string name="menu_about">Haqqında</string>
   <string name="menu_help">Kömək</string>
   <string name="menu_rights">Hüquqlarınız</string>
+  <string name="menu_trackers_blocked_title">İzləyicilər bloklandı</string>
+  <string name="share_dialog_title">Bununla paylaş:</string>
+  <string name="notification_erase_text">Səyahət keçmişini poz</string>
+  <string name="shortcut_erase_short_label">Poz</string>
+  <string name="shortcut_erase_long_label">Səyahət keçmişini poz</string>
+  <string name="text_selection_search_action">Məxfi Axtarış</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s sizi idar&#601;nin ba&#351;&#305;na qoyur</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Bunu m&#601;xfi s&#601;yyah olaraq i&#351;l&#601;din:\n  "<ul>"\n    "<li>Birba&#351;a t&#601;tbiqd&#601; axtar&#305;n v&#601; g&#601;zin</li>"\n    "<li>&#304;zl&#601;yicil&#601;ri &#601;ng&#601;ll&#601;yin (v&#601; ya t&#601;nziml&#601;m&#601;d&#601;n icaz&#601; verin)</li>"\n    "<li>&#199;&#601;r&#601;zl&#601;ri, axtar&#305;&#351; v&#601; g&#601;zm&#601; tarix&#231;&#601;sini silm&#601;k &#252;&#231;&#252;n pozun</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s q&#252;rurla Mozilla t&#601;r&#601;find&#601;n. Missiyam&#305;z sa&#287;lam v&#601; a&#231;&#305;q interneti t&#601;min etm&#601;kdir.<br/>\n<a href="%2$s">&#399;trafl&#305; &#246;yr&#601;n</a></p>]]></string>
   <string name="preference_category_search">Axtar</string>
   <string name="preference_search_engine_default">İlkin hal</string>
+  <string name="preference_language">Dil</string>
+  <string name="preference_language_systemdefault">Sistemin dili</string>
   <string name="preference_dialog_title_search_engine">Əsas Axtarış</string>
   <string name="preference_category_privacy">Məxfilik</string>
   <string name="preference_privacy_block_ads">Reklam izləyicilərini əngəllə</string>
@@ -43,11 +51,12 @@
   <string name="content_description_reload">Saytı yenilə</string>
   <string name="content_description_back">Geri get</string>
   <string name="content_description_stop">Səhifəni yükləməyi dayandır</string>
+  <string name="content_description_customtab_exit">Əvvəlki tətbiqə qayıt</string>
   <string name="context_menu_paste_go">Yapışdır və get</string>
   <string name="firstrun_title">Başqalarınız izləməsindən narahat olmadan internetdə gəzin.</string>
   <string name="firstrun_description">İnternetdə gəzərkən avtomatik olaraq onlayn izləyiciləri əngəlləyin. Sonra ziyarət edilən səhifələri, axtar, çərəz və parolları cihazınızdan pozmaq üçün basın.</string>
   <string name="firstrun_button">Tamam, başa düşdüm!</string>
-  <string name="firstrun_footer">Əslində, saytlar və xidmətlər yenə də harada olduğunuzu öyrənə bilərlər.</string>
+  <string name="firstrun_footer">Düzünü desək, saytlar və xidmətlər yenə də harada olduğunuzu öyrənə bilərlər.</string>
   <string name="your_rights">Hüquqlarınız</string>
   <string name="external_app_prompt_title">Keçidi başqa tətbiqdə aç</string>
   <string name="external_app_prompt">%1$s səyyahını tərk edərək keçidi %2$s üzərində aça bilərsiz.</string>
@@ -71,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Bu serverin konfiqurasiyas&#305; il&#601; v&#601; ya biril&#601;rinin server&#601; h&#252;c&#252;m etm&#601;si il&#601; ba&#287;l&#305; ola bil&#601;r.</li>"\n  "<li>&#399;g&#601;r daha sonra bu server&#601; u&#287;urlu ba&#287;lana bilmi&#351;dinizs&#601;, bu x&#601;ta m&#252;v&#601;qq&#601;ti ola bil&#601;r v&#601; daha sonra t&#601;krar yoxlaya bil&#601;rsiz.</li>\n</ul>]]></string>
   <string name="error_generic_title">Uups</string>
   <string name="error_generic_message">Bəzi səbəblərdən bu səhifəni yükləyə bilmirik.</string>
+  <string name="contextmenu_link_share">Keçidi paylaş</string>
+  <string name="contextmenu_link_copy">Keçid ünvanını köçür</string>
+  <string name="contextmenu_image_share">Şəkli paylaş</string>
+  <string name="contextmenu_image_copy">Şəkil ünvanını köçür</string>
+  <string name="contextmenu_image_save">Şəkli saxla</string>
 </resources>

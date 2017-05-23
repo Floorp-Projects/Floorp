@@ -13,9 +13,17 @@
   <string name="menu_about">Acerca de</string>
   <string name="menu_help">Ayuda</string>
   <string name="menu_rights">Tus derechos</string>
+  <string name="menu_trackers_blocked_title">Rastreadores bloqueados</string>
+  <string name="share_dialog_title">Compartir vía</string>
+  <string name="notification_erase_text">Borrar historial de navegación</string>
+  <string name="shortcut_erase_short_label">Borrar</string>
+  <string name="shortcut_erase_long_label">Borrar historial de navegación</string>
+  <string name="text_selection_search_action">Búsqueda privada</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s te da el control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Usalo como un navegador privado:\n  "<ul>"\n    "<li>Buscar y navegar en la aplicaci&#243;n</li>"\n    "<li>Bloquear rastreadores (o actualizar opciones para permitir rastreadores)</li>"\n    "<li>Borrar para eliminar cookies e historial de b&#250;squeda y navegaci&#243;n</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s es producido por Mozilla. Nuestra misi&#243;n es promover una internet abierta y saludable.<br/>\n<a href="%2$s">Conocer m&#225;s</a></p>]]></string>
   <string name="preference_category_search">Buscar</string>
   <string name="preference_search_engine_default">Predeterminado</string>
+  <string name="preference_language">Idioma</string>
+  <string name="preference_language_systemdefault">Predeterminado del sistema</string>
   <string name="preference_dialog_title_search_engine">Buscador predeterminado</string>
   <string name="preference_category_privacy">Privacidad</string>
   <string name="preference_privacy_block_ads">Bloquear rastreadores de publicidad</string>
@@ -43,6 +51,7 @@
   <string name="content_description_reload">Recargar sitio web</string>
   <string name="content_description_back">Navegar hacia atrás</string>
   <string name="content_description_stop">Dejar de cargar el sitio web</string>
+  <string name="content_description_customtab_exit">Volver a la aplicación anterior</string>
   <string name="context_menu_paste_go">Pegar e ir</string>
   <string name="firstrun_title">Navegar como si nadie estuviera mirando.</string>
   <string name="firstrun_description">Bloqueá automáticamente rastreadores en línea al navegar. Depsués tocá para borrar páginas visitadas, búsquedas, cookies y contraseñas de tu dispositivo.</string>
@@ -71,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Podr&#237;a haber un problema con la configuraci&#243;n del servidor o podr&#237;a ser\nalguien tratando de hacerse pasar por ese servidor.</li>"\n  "<li>Si te conectaste exitosamente a este servidor en el pasado, el error puede\nser temporal y pod&#233;s probar m&#225;s tarde.</li>\n</ul>]]></string>
   <string name="error_generic_title">Epa</string>
   <string name="error_generic_message">No se puede cargar esta página por alguna razón.</string>
+  <string name="contextmenu_link_share">Compartir enlace</string>
+  <string name="contextmenu_link_copy">Copiar dirección del enlace</string>
+  <string name="contextmenu_image_share">Compartir imagen</string>
+  <string name="contextmenu_image_copy">Copiar dirección de la imagen</string>
+  <string name="contextmenu_image_save">Guardar imagen</string>
 </resources>

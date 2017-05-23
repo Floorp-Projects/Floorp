@@ -4,7 +4,7 @@
   <string name="action_ok">OK</string>
   <string name="urlbar_hint">Zadejte hledání nebo adresu</string>
   <string name="teaser">Automatické anonymní prohlížení.\nProhlížejte. Vymažte. Opakujte.</string>
-  <string name="feedback_erase">Vaše historie procházení byla vymazána.</string>
+  <string name="feedback_erase">Vaše historie prohlížení byla vymazána.</string>
   <string name="search_hint">Hledat %1$s</string>
   <string name="menu_share">Sdílet…</string>
   <string name="menu_open_with_default_browser">Otevřít pomocí %1$s</string>
@@ -13,9 +13,17 @@
   <string name="menu_about">O nás</string>
   <string name="menu_help">Nápověda</string>
   <string name="menu_rights">Vaše práva</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s v&#225;m d&#225;v&#225; kontrolu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Pou&#382;&#237;vejte ho jako soukrom&#253; prohl&#237;&#382;e&#269;:\n  "<ul>"\n    "<li>Vyhled&#225;vejte a prohl&#237;&#382;ejte p&#345;&#237;mo v aplikaci</li>"\n    "<li>Blokujte sledovac&#237; prvky (nebo aktualizujte nastaven&#237; pro povolen&#237; sledovac&#237;ch prvk&#367;)</li>"\n    "<li>Vyma&#382;te pro smaz&#225;n&#237; cookies a historie vyhled&#225;v&#225;n&#237; a prohl&#237;&#382;en&#237;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s je vyv&#237;jen Mozillou. Na&#353;&#237; mis&#237; je podporovat zdrav&#253; a otev&#345;en&#253; internet.<br/>\n<a href="%2$s">Zjist&#283;te v&#237;ce</a></p>]]></string>
+  <string name="menu_trackers_blocked_title">Zablokováno sledujících prvků</string>
+  <string name="share_dialog_title">Sdílet přes</string>
+  <string name="notification_erase_text">Vymazat historii prohlížení</string>
+  <string name="shortcut_erase_short_label">Vymazat</string>
+  <string name="shortcut_erase_long_label">Vymazat historii prohlížení</string>
+  <string name="text_selection_search_action">Soukromé vyhledávání</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s v&#225;m d&#225;v&#225; kontrolu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Pou&#382;&#237;vejte ho jako soukrom&#253; prohl&#237;&#382;e&#269;:\n  "<ul>"\n    "<li>Vyhled&#225;vejte a prohl&#237;&#382;ejte p&#345;&#237;mo v aplikaci</li>"\n    "<li>Blokujte sledovac&#237; prvky (nebo aktualizujte nastaven&#237; pro povolen&#237; sledovac&#237;ch prvk&#367;)</li>"\n    "<li>Tla&#269;&#237;tkem sma&#382;te cookies a historii vyhled&#225;v&#225;n&#237; a prohl&#237;&#382;en&#237;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s je vyv&#237;jen Mozillou. Na&#353;&#237; mis&#237; je podporovat zdrav&#253; a otev&#345;en&#253; internet.<br/>\n<a href="%2$s">Zjist&#283;te v&#237;ce</a></p>]]></string>
   <string name="preference_category_search">Hledat</string>
   <string name="preference_search_engine_default">Výchozí</string>
+  <string name="preference_language">Jazyk</string>
+  <string name="preference_language_systemdefault">Systémové nastavení</string>
   <string name="preference_dialog_title_search_engine">Výchozí vyhledávač</string>
   <string name="preference_category_privacy">Soukromí</string>
   <string name="preference_privacy_block_ads">Blokovat sledující reklamy</string>
@@ -43,9 +51,10 @@
   <string name="content_description_reload">Obnovit stránku</string>
   <string name="content_description_back">Návrat zpět</string>
   <string name="content_description_stop">Zastavit načítání stránky</string>
+  <string name="content_description_customtab_exit">Návrat do předchozí aplikace</string>
   <string name="context_menu_paste_go">Vložit a přejít</string>
-  <string name="firstrun_title">Procházejte, jako když se nikdo nedívá.</string>
-  <string name="firstrun_description">Automaticky blokuje sledovací prvky, zatímco prohlížíte. Poté stačí klepnout pro vymazání zobrazených stránek, vyhledávání, souborů cookie a hesel z vašeho zařízení.</string>
+  <string name="firstrun_title">Prohlížejte web, jako když se nikdo nedívá.</string>
+  <string name="firstrun_description">Automaticky blokuje sledovací prvky, zatímco prohlížíte. Poté stačí klepnout pro vymazání zobrazených stránek, vyhledávání, cookies a hesel z vašeho zařízení.</string>
   <string name="firstrun_button">Ok, rozumím!</string>
   <string name="firstrun_footer">Připomínáme, že služby a stránky, které využíváte, mohou sledovat vaši činnost.</string>
   <string name="your_rights">Vaše práva</string>
@@ -71,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Tohle m&#367;&#382;e b&#253;t probl&#233;m s konfigurac&#237; serveru, nebo je mo&#382;n&#233;, &#382;e se za tento server n&#283;kdo sna&#382;&#237; vyd&#225;vat.</li>"\n  "<li>Pokud jste se k tomuto serveru v minulosti p&#345;ipojili &#250;sp&#283;&#353;n&#283;, m&#367;&#382;e j&#237;t o do&#269;asnou chybu a m&#367;&#382;ete to zkusit znovu pozd&#283;ji.</li>\n</ul>]]></string>
   <string name="error_generic_title">Jejda</string>
   <string name="error_generic_message">Tuto stránku nelze načíst.</string>
+  <string name="contextmenu_link_share">Sdílet odkaz</string>
+  <string name="contextmenu_link_copy">Kopírovat adresu odkazu</string>
+  <string name="contextmenu_image_share">Sdílet obrázek</string>
+  <string name="contextmenu_image_copy">Kopírovat adresu obrázku</string>
+  <string name="contextmenu_image_save">Uložit obrázek</string>
 </resources>

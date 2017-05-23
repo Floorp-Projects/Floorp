@@ -13,9 +13,17 @@
   <string name="menu_about">Hakkında</string>
   <string name="menu_help">Yardım</string>
   <string name="menu_rights">Haklarınız</string>
+  <string name="menu_trackers_blocked_title">Engellenen takipçi</string>
+  <string name="share_dialog_title">Paylaş</string>
+  <string name="notification_erase_text">Tarama geçmişini sil</string>
+  <string name="shortcut_erase_short_label">Sil</string>
+  <string name="shortcut_erase_long_label">Tarama geçmişini sil</string>
+  <string name="text_selection_search_action">Gizli Arama</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s kontrol&#252; size verir.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Onu gizlilik odakl&#305; bir taray&#305;c&#305; olarak kullanabilirsiniz:\n  "<ul>"\n    "<li>Do&#287;rudan uygulamada arama yapabilir ve web&#8217;de gezinebilirsiniz</li>"\n    "<li>Takip&#231;ileri engelleyebilirsiniz (veya belli takip&#231;ilere izin verebilirsiniz)</li>"\n    "<li>Tek d&#252;&#287;meyle &#231;erezleri, arama ve gezinti ge&#231;mi&#351;inizi silebilirsiniz</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla taraf&#305;ndan geli&#351;tirilmi&#351;tir. Misyonumuz daha sa&#287;l&#305;kl&#305; ve a&#231;&#305;k bir internet yaratmakt&#305;r.<br/>\n<a href="%2$s">Daha fazla bilgi al&#305;n</a></p>]]></string>
   <string name="preference_category_search">Arama</string>
   <string name="preference_search_engine_default">Varsayılan</string>
+  <string name="preference_language">Dil</string>
+  <string name="preference_language_systemdefault">Sistem varsayılanı</string>
   <string name="preference_dialog_title_search_engine">Varsayılan arama</string>
   <string name="preference_category_privacy">Gizlilik</string>
   <string name="preference_privacy_block_ads">Reklam takipçilerini engelle</string>
@@ -43,6 +51,7 @@
   <string name="content_description_reload">Siteyi tazele</string>
   <string name="content_description_back">Geri git</string>
   <string name="content_description_stop">Siteyi yüklemeyi durdur</string>
+  <string name="content_description_customtab_exit">Önceki uygulamaya dön</string>
   <string name="context_menu_paste_go">Yapıştır ve git</string>
   <string name="firstrun_title">Hiç kimse izlemiyormuş gibi gez.</string>
   <string name="firstrun_description">Siz gezerken çevrimiçi takipçiler otomatik olarak engellenecektir. Girdiğiniz sayfaları, aramalarınızı, çerezleri ve parolaları cihazınızdan silmek için SİL düğmesine dokunmanız yeterli.</string>
@@ -71,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>Sunucunun yap&#305;land&#305;rmas&#305;yla ilgili bir sorun olabilir veya birisi sunucuyu taklit etmeye &#231;al&#305;&#351;&#305;yor olabilir.</li>"\n  "<li>Daha &#246;nce bu sunucuya sorunsuz ba&#287;land&#305;ysan&#305;z sorun ge&#231;ici olabilir ve daha sonra yeniden ba&#287;lanmay&#305; deneyebilirsiniz.</li>\n</ul>]]></string>
   <string name="error_generic_title">Hata</string>
   <string name="error_generic_message">Bilinmeyen bir nedenden dolayı bu sayfa yüklenemedi.</string>
+  <string name="contextmenu_link_share">Bağlantıyı paylaş</string>
+  <string name="contextmenu_link_copy">Bağlantı adresini kopyala</string>
+  <string name="contextmenu_image_share">Resmi paylaş</string>
+  <string name="contextmenu_image_copy">Resmin adresini kopyala</string>
+  <string name="contextmenu_image_save">Resmi kaydet</string>
 </resources>

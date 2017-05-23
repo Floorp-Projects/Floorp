@@ -13,9 +13,17 @@
   <string name="menu_about">关于</string>
   <string name="menu_help">帮助</string>
   <string name="menu_rights">您的权利</string>
+  <string name="menu_trackers_blocked_title">已拦截跟踪器</string>
+  <string name="share_dialog_title">分享方式</string>
+  <string name="notification_erase_text">擦除浏览记录</string>
+  <string name="shortcut_erase_short_label">擦除</string>
+  <string name="shortcut_erase_long_label">擦除浏览记录</string>
+  <string name="text_selection_search_action">私密搜索</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#35753;&#24744;&#25484;&#25511;&#32447;&#19978;&#29983;&#27963;&#12290;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#20351;&#29992;&#23427;&#20316;&#20026;&#38544;&#31169;&#27983;&#35272;&#22120;&#65306;\n  "<ul>"\n    "<li>&#22312;&#24212;&#29992;&#20013;&#25628;&#32034;&#21644;&#27983;&#35272;</li>"\n    "<li>&#23631;&#34109;&#36319;&#36394;&#22120;&#65288;&#25110;&#26356;&#26032;&#35774;&#32622;&#20197;&#20801;&#35768;&#36319;&#36394;&#22120;&#65289;</li>"\n    "<li>&#33258;&#21160;&#21024;&#38500; Cookie &#21450;&#25628;&#32034;&#21644;&#27983;&#35272;&#35760;&#24405;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#30001; Mozilla &#20986;&#21697;&#12290;&#25105;&#20204;&#30340;&#20351;&#21629;&#26159;&#20419;&#25104;&#20581;&#24247;&#12289;&#24320;&#25918;&#30340;&#20114;&#32852;&#32593;&#12290;<br/>\n<a href="%2$s">&#35814;&#32454;&#20102;&#35299;</a></p>]]></string>
   <string name="preference_category_search">搜索</string>
   <string name="preference_search_engine_default">默认</string>
+  <string name="preference_language">语言</string>
+  <string name="preference_language_systemdefault">系统默认</string>
   <string name="preference_dialog_title_search_engine">默认搜索</string>
   <string name="preference_category_privacy">隐私</string>
   <string name="preference_privacy_block_ads">拦截广告跟踪器</string>
@@ -43,11 +51,12 @@
   <string name="content_description_reload">重新加载网站</string>
   <string name="content_description_back">导航回退</string>
   <string name="content_description_stop">停止加载</string>
+  <string name="content_description_customtab_exit">返回之前的应用</string>
   <string name="context_menu_paste_go">粘贴并转到</string>
   <string name="firstrun_title">悄然浏览。</string>
   <string name="firstrun_description">在您浏览时自动屏蔽在线跟踪器。一按即可清除您的设备上的访问记录、搜索记录、Cookie 以及保存的密码。</string>
   <string name="firstrun_button">了解了！</string>
-  <string name="firstrun_footer">也请了解，您使用的网站和服务仍然可能获知您造访的内容。</string>
+  <string name="firstrun_footer">请您了解，您使用的网站和服务仍然可获知您造访的内容。</string>
   <string name="your_rights">您的权利</string>
   <string name="external_app_prompt_title">在另一个应用中打开链接</string>
   <string name="external_app_prompt">您可以离开 %1$s 以在 %2$s 中打开此链接。</string>
@@ -71,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#36825;&#21487;&#33021;&#26159;&#26381;&#21153;&#22120;&#37197;&#32622;&#30340;&#38382;&#39064;&#65292;&#25110;&#32773;&#26377;&#20154;&#23581;&#35797;&#20882;&#20805;&#35813;&#26381;&#21153;&#22120;&#25152;&#33268;&#12290;</li>"\n  "<li>&#22914;&#26524;&#24744;&#20043;&#21069;&#26366;&#25104;&#21151;&#36830;&#25509;&#35813;&#26381;&#21153;&#22120;&#65292;&#37027;&#20040;&#27492;&#38169;&#35823;&#21487;&#33021;&#26159;&#26242;&#26102;&#30340;&#65292;&#24744;&#21487;&#20197;&#31245;&#21518;&#20877;&#35797;&#12290;</li>\n</ul>]]></string>
   <string name="error_generic_title">哎呀</string>
   <string name="error_generic_message">由于某些原因，我们无法加载此页面。</string>
+  <string name="contextmenu_link_share">分享链接</string>
+  <string name="contextmenu_link_copy">复制链接地址</string>
+  <string name="contextmenu_image_share">分享图片</string>
+  <string name="contextmenu_image_copy">复制图片地址</string>
+  <string name="contextmenu_image_save">保存图片</string>
 </resources>

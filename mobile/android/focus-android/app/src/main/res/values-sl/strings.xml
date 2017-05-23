@@ -13,9 +13,17 @@
   <string name="menu_about">Predstavitev</string>
   <string name="menu_help">Pomoč</string>
   <string name="menu_rights">Vaše pravice</string>
+  <string name="menu_trackers_blocked_title">Sledilci zavrnjeni</string>
+  <string name="share_dialog_title">Deli preko</string>
+  <string name="notification_erase_text">Počisti zgodovino brskanja</string>
+  <string name="shortcut_erase_short_label">Izbriši</string>
+  <string name="shortcut_erase_long_label">Počisti zgodovino brskanja</string>
+  <string name="text_selection_search_action">Zasebno iskanje</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s daje nadzor v va&#353;e roke.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Uporabljajte ga kot zaseben brskalnik:\n  "<ul>"\n    "<li>I&#353;&#269;ite in brskajte naravnost iz aplikacije</li>"\n    "<li>Zavra&#269;ajte sledilce (ali spremenite nastavitve zavra&#269;anja sledilcev)</li>"\n    "<li>Bri&#353;ite pi&#353;kotke ter zgodovino strani in iskanja</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s razvija Mozilla. Na&#353;e poslanstvo je spodbujati zdrav in odprt internet.<br/>\n<a href="%2$s">Ve&#269; o tem</a></p>]]></string>
   <string name="preference_category_search">Išči</string>
   <string name="preference_search_engine_default">Privzet</string>
+  <string name="preference_language">Jezik</string>
+  <string name="preference_language_systemdefault">Privzet v sistemu</string>
   <string name="preference_dialog_title_search_engine">Privzeti iskalnik</string>
   <string name="preference_category_privacy">Zasebnost</string>
   <string name="preference_privacy_block_ads">Zavračaj sledilce oglasov</string>
@@ -43,6 +51,7 @@
   <string name="content_description_reload">Ponovno naloži stran</string>
   <string name="content_description_back">Krmari nazaj</string>
   <string name="content_description_stop">Prekini nalaganje strani</string>
+  <string name="content_description_customtab_exit">Nazaj na prejšnjo aplikacijo</string>
   <string name="context_menu_paste_go">Prilepi in odpri</string>
   <string name="firstrun_title">Brskajte, kot da vas nihče ne gleda.</string>
   <string name="firstrun_description">Samodejno zavračajte spletne sledilce med brskanjem. Nato z enim dotikom izbrišite obiskane strani, iskanja, piškotke in gesla z naprave.</string>
@@ -71,4 +80,9 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Te&#382;ava je morda v nastavitvah stre&#382;nika ali pa nekdo posku&#353;a\nta stre&#382;nik opona&#353;ati.</li>"\n  "<li>&#268;e ste se v preteklosti &#382;e uspe&#353;no povezali na ta stre&#382;nik, je morda\nnapaka za&#269;asna in lahko znova poskusite kasneje.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Iz neznanega razloga ne moremo naložiti strani.</string>
+  <string name="contextmenu_link_share">Deli povezavo</string>
+  <string name="contextmenu_link_copy">Kopiraj naslov povezave</string>
+  <string name="contextmenu_image_share">Deli sliko</string>
+  <string name="contextmenu_image_copy">Kopiraj naslov slike</string>
+  <string name="contextmenu_image_save">Shrani sliko</string>
 </resources>

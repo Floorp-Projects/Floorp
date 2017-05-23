@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">နေတော့</string>
+  <string name="action_ok">OK</string>
+  <string name="urlbar_hint">ရှာသို့ လိပ်စာအား ရိုက်ထည့်ပါ</string>
+  <string name="teaser">အလိုအလျောက် တစ်ကိုယ်ရေသုံး၊ \nသုံးပြီးဖျက်</string>
+  <string name="feedback_erase">သင့် ဘယောက်ဆာသုံး မှတ်တမ်းဖျက်ပြီး</string>
+  <string name="search_hint">%1$s ကိုရှာမယ်</string>
+  <string name="menu_share">မျှဝေပါ…</string>
+  <string name="menu_open_with_default_browser">%1$s ဖြင့်ဖွင့်</string>
+  <string name="menu_open_with_a_browser">…တွင် ဖွင့်ရန်</string>
+  <string name="menu_settings">အပြင်အဆင်များ</string>
+  <string name="menu_about">အကြောင်း</string>
+  <string name="menu_help">အကူအညီ</string>
+  <string name="menu_rights">သင်၏ အခွင့်အရေးများ</string>
+  <string name="preference_category_search">ရှာဖွေရန်</string>
+  <string name="preference_search_engine_default">မူလသတ်မှတ်ချက်</string>
+  <string name="preference_dialog_title_search_engine">မူသေရှာဖွေရေး</string>
+  <string name="preference_category_privacy">ကိုယ်ပိုင်လွတ်လပ်ခွင့်</string>
+  <string name="preference_privacy_block_ads">ကြော်ငြာနောက်ယောက်ခံ ကိရိယာများကို ပိတ်ပင်ပါ</string>
+  <string name="preference_privacy_block_analytics">သရုပ်ခွဲလေ့လာသည့် နောက်ယောင်ခံကိရိယာများကို ပိတ်ပင်ပါ</string>
+  <string name="preference_privacy_block_social">လူမှုမီဒီယာ နောက်ယောင်ခံကိရိယာများကို ပိတ်ပင်ပါ</string>
+  <string name="preference_privacy_block_content">အခြားသော အကြောင်းအရာနောက်ယောက်ခံကိရိယာများကို ပိတ်ပင်ပါ</string>
+  <string name="preference_privacy_block_content_summary">အချို့သော ဗီဒီယိုများနှင့် ဝဘ်စာမျက်နှာများကို ထိခိုက်စေသည်</string>
+  <string name="preference_category_performance">လုပ်ဆောင်မှု</string>
+  <string name="preference_performance_block_webfonts">ဝဘ်ဖောင့်များကို ပိတ်ပင်ပါ</string>
+  <string name="preference_performance_block_webfonts_summary">အိုင်ကွန်များ သို့မဟုတ် ရုပ်ပုံများမပေါ်ခြင်း ဖြစ်စေနိုင်သည်</string>
+  <string name="preference_performance_block_images">ရုပ်ပုံများကို မပြပါနှင့်</string>
+  <string name="preference_default_browser">ပုံသေအသုံးပြုမည့် ဘရောင်ဇာအဖြစ် သတ်မှတ်ပါ</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">အမျိုးအမည်မဲ့ အသုံးပြုမှု အချက်အလက်များကို ပေးပို့ရန်</string>
+  <string name="preference_mozilla_telemetry_summary">ပိုမိုလေ့လာရန်</string>
+  <string name="preference_about">%1$s အကြောင်း</string>
+  <string name="content_description_dismiss_input">ပိတ်ရန်</string>
+  <string name="accessibility_announcement_loading">ဆောင်ရွက်နေသည်</string>
+  <string name="errorpage_refresh">ထပ်မံ ဆောင်ရွက်ကြည့်ပါ</string>
+  <string name="error_connectionfailure_title">မချိတ်ဆက်နိုင်ပါ</string>
+  <string name="error_hostLookup_title">ဆာဗာကို မတွေ့ပါ</string>
+  <string name="error_generic_title">Oops</string>
+</resources>
