@@ -2219,6 +2219,8 @@ var gCSSProperties = {
         "url(404.png) green padding-box padding-box",
         "url(404.png) green padding-box border-box",
         "content-box border-box url(404.png) blue",
+        "url(404.png) green padding-box text",
+        "content-box text url(404.png) blue"
     ],
     invalid_values: [
       /* mixes with keywords have to be in correct order */
@@ -2271,7 +2273,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "border-box" ],
-    other_values: [ "content-box", "padding-box", "border-box, padding-box", "padding-box, padding-box, padding-box", "border-box, border-box" ],
+    other_values: [ "content-box", "padding-box", "border-box, padding-box", "padding-box, padding-box, padding-box", "border-box, border-box", "text", "content-box, text", "text, border-box", "text, text" ],
     invalid_values: [ "margin-box", "border-box border-box", "fill-box", "stroke-box", "view-box", "no-clip" ]
   },
   "background-color": {
@@ -7844,30 +7846,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.float-logical-values.enabled")) {
   gCSSProperties["float"].invalid_values.push("inline-end");
   gCSSProperties["clear"].invalid_values.push("inline-start");
   gCSSProperties["clear"].invalid_values.push("inline-end");
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.background-clip-text.enabled")) {
-  gCSSProperties["background-clip"].other_values.push(
-    "text",
-    "content-box, text",
-    "text, border-box",
-    "text, text"
-  );
-  gCSSProperties["background"].other_values.push(
-    "url(404.png) green padding-box text",
-    "content-box text url(404.png) blue"
-  );
-} else {
-  gCSSProperties["background-clip"].invalid_values.push(
-    "text",
-    "content-box, text",
-    "text, border-box",
-    "text, text"
-  );
-  gCSSProperties["background"].invalid_values.push(
-    "url(404.png) green padding-box text",
-    "content-box text url(404.png) blue"
-  );
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.display-flow-root.enabled")) {
