@@ -582,8 +582,8 @@ U2FSoftTokenManager::IsCompatibleVersion(const nsAString& aVersion)
 
 // IsRegistered determines if the provided key handle is usable by this token.
 nsresult
-U2FSoftTokenManager::IsRegistered(nsTArray<uint8_t>& aKeyHandle,
-                                  nsTArray<uint8_t>& aAppParam,
+U2FSoftTokenManager::IsRegistered(const nsTArray<uint8_t>& aKeyHandle,
+                                  const nsTArray<uint8_t>& aAppParam,
                                   bool& aResult)
 {
   nsNSSShutDownPreventionLock locker;
@@ -603,9 +603,9 @@ U2FSoftTokenManager::IsRegistered(nsTArray<uint8_t>& aKeyHandle,
 
   // Decode the key handle
   UniqueSECKEYPrivateKey privKey = PrivateKeyFromKeyHandle(slot, mWrappingKey,
-                                                           aKeyHandle.Elements(),
+                                                           const_cast<uint8_t*>(aKeyHandle.Elements()),
                                                            aKeyHandle.Length(),
-                                                           aAppParam.Elements(),
+                                                           const_cast<uint8_t*>(aAppParam.Elements()),
                                                            aAppParam.Length(),
                                                            locker);
   aResult = privKey.get() != nullptr;
@@ -632,8 +632,8 @@ U2FSoftTokenManager::IsRegistered(nsTArray<uint8_t>& aKeyHandle,
 // *      attestation signature
 //
 nsresult
-U2FSoftTokenManager::Register(nsTArray<uint8_t>& aApplication,
-                              nsTArray<uint8_t>& aChallenge,
+U2FSoftTokenManager::Register(const nsTArray<uint8_t>& aApplication,
+                              const nsTArray<uint8_t>& aChallenge,
                               /* out */ nsTArray<uint8_t>& aRegistration,
                               /* out */ nsTArray<uint8_t>& aSignature)
 {
@@ -676,7 +676,7 @@ U2FSoftTokenManager::Register(nsTArray<uint8_t>& aApplication,
 
   // The key handle will be the result of keywrap(privKey, key=mWrappingKey)
   UniqueSECItem keyHandleItem = KeyHandleFromPrivateKey(slot, mWrappingKey,
-                                                        aApplication.Elements(),
+                                                        const_cast<uint8_t*>(aApplication.Elements()),
                                                         aApplication.Length(),
                                                         privKey, locker);
   if (NS_WARN_IF(!keyHandleItem.get())) {
@@ -744,9 +744,9 @@ U2FSoftTokenManager::Register(nsTArray<uint8_t>& aApplication,
 //  *     Signature
 //
 nsresult
-U2FSoftTokenManager::Sign(nsTArray<uint8_t>& aApplication,
-                          nsTArray<uint8_t>& aChallenge,
-                          nsTArray<uint8_t>& aKeyHandle,
+U2FSoftTokenManager::Sign(const nsTArray<uint8_t>& aApplication,
+                          const nsTArray<uint8_t>& aChallenge,
+                          const nsTArray<uint8_t>& aKeyHandle,
                           nsTArray<uint8_t>& aSignature)
 {
   nsNSSShutDownPreventionLock locker;
@@ -777,9 +777,9 @@ U2FSoftTokenManager::Sign(nsTArray<uint8_t>& aApplication,
 
   // Decode the key handle
   UniqueSECKEYPrivateKey privKey = PrivateKeyFromKeyHandle(slot, mWrappingKey,
-                                                           aKeyHandle.Elements(),
+                                                           const_cast<uint8_t*>(aKeyHandle.Elements()),
                                                            aKeyHandle.Length(),
-                                                           aApplication.Elements(),
+                                                           const_cast<uint8_t*>(aApplication.Elements()),
                                                            aApplication.Length(),
                                                            locker);
   if (NS_WARN_IF(!privKey.get())) {

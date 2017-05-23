@@ -330,9 +330,10 @@ typedef enum {
 } cubeb_device_pref;
 
 /** This structure holds the characteristics
- *  of an input or output audio device. It can be obtained using
- *  `cubeb_enumerate_devices`, and must be destroyed using
- *  `cubeb_device_info_destroy`. */
+ *  of an input or output audio device. It is obtained using
+ *  `cubeb_enumerate_devices`, which returns these structures via
+ *  `cubeb_device_collection` and must be destroyed via
+ *  `cubeb_device_collection_destroy`. */
 typedef struct {
   cubeb_devid devid;          /**< Device identifier handle. */
   char const * device_id;     /**< Device identifier which might be presented in a UI. */
@@ -355,10 +356,12 @@ typedef struct {
   unsigned int latency_hi; /**< Higest possible latency in frames. */
 } cubeb_device_info;
 
-/** Device collection. */
+/** Device collection.
+ *  Returned by `cubeb_enumerate_devices` and destroyed by
+ *  `cubeb_device_collection_destroy`. */
 typedef struct {
   uint32_t count;                 /**< Device count in collection. */
-  cubeb_device_info * device[1];   /**< Array of pointers to device info. */
+  cubeb_device_info * device[1];  /**< Array of pointers to device info. */
 } cubeb_device_collection;
 
 /** User supplied data callback.
@@ -612,16 +615,12 @@ CUBEB_EXPORT int cubeb_enumerate_devices(cubeb * context,
                                          cubeb_device_collection ** collection);
 
 /** Destroy a cubeb_device_collection, and its `cubeb_device_info`.
+    @param context
     @param collection collection to destroy
     @retval CUBEB_OK
     @retval CUBEB_ERROR_INVALID_PARAMETER if collection is an invalid pointer */
-CUBEB_EXPORT int cubeb_device_collection_destroy(cubeb_device_collection * collection);
-
-/** Destroy a cubeb_device_info structure.
-    @param info pointer to device info structure
-    @retval CUBEB_OK
-    @retval CUBEB_ERROR_INVALID_PARAMETER if info is an invalid pointer */
-CUBEB_EXPORT int cubeb_device_info_destroy(cubeb_device_info * info);
+CUBEB_EXPORT int cubeb_device_collection_destroy(cubeb * context,
+                                                 cubeb_device_collection * collection);
 
 /** Registers a callback which is called when the system detects
     a new device or a device is removed.

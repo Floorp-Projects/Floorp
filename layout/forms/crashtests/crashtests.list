@@ -26,7 +26,7 @@ load 378369.html
 load 378413-1.xhtml
 load 380116-1.xhtml
 load 382212-1.xhtml
-pref(layout.css.moz-appearance.enabled,true) load 382610-1.html
+load 382610-1.html
 load 383887-1.html
 load 386554-1.html
 load 388374-1.xhtml
@@ -62,7 +62,7 @@ load 959311.html
 load 960277-2.html
 load 997709-1.html
 load 1102791.html
-pref(layout.css.moz-appearance.enabled,true) skip-if(stylo) load 1140216.html # bug 1323693, bug 1341973
+skip-if(stylo) load 1140216.html # bug 1323693, bug 1341973
 load 1182414.html
 load 1212688.html
 load 1228670.xhtml

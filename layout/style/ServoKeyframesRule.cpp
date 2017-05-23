@@ -56,6 +56,8 @@ public:
       ServoKeyframeRule* rule = new ServoKeyframeRule(
         Servo_KeyframesRule_GetKeyframe(mRawRule, aIndex).Consume());
       mRules.ReplaceObjectAt(rule, aIndex);
+      rule->SetStyleSheet(mStyleSheet);
+      rule->SetParentRule(mParentRule);
     }
     return static_cast<ServoKeyframeRule*>(mRules[aIndex]);
   }

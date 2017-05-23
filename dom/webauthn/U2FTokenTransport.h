@@ -21,13 +21,13 @@ class U2FTokenTransport
 public:
   NS_INLINE_DECL_REFCOUNTING(U2FTokenTransport);
   U2FTokenTransport() {}
-  virtual nsresult Register(nsTArray<uint8_t>& aApplication,
-                            nsTArray<uint8_t>& aChallenge,
+  virtual nsresult Register(const nsTArray<uint8_t>& aApplication,
+                            const nsTArray<uint8_t>& aChallenge,
                             /* out */ nsTArray<uint8_t>& aRegistration,
                             /* out */ nsTArray<uint8_t>& aSignature) = 0;
-  virtual nsresult Sign(nsTArray<uint8_t>& aApplication,
-                        nsTArray<uint8_t>& aChallenge,
-                        nsTArray<uint8_t>& aKeyHandle,
+  virtual nsresult Sign(const nsTArray<uint8_t>& aApplication,
+                        const nsTArray<uint8_t>& aChallenge,
+                        const nsTArray<uint8_t>& aKeyHandle,
                         /* out */ nsTArray<uint8_t>& aSignature) = 0;
 protected:
   virtual ~U2FTokenTransport() = default;

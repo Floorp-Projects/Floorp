@@ -571,33 +571,16 @@ int cubeb_enumerate_devices(cubeb * context,
   return rv;
 }
 
-int cubeb_device_collection_destroy(cubeb_device_collection * collection)
+int cubeb_device_collection_destroy(cubeb * context,
+                                    cubeb_device_collection * collection)
 {
-  uint32_t i;
-
-  if (collection == NULL)
+  if (context == NULL || collection == NULL)
     return CUBEB_ERROR_INVALID_PARAMETER;
 
-  for (i = 0; i < collection->count; i++)
-    cubeb_device_info_destroy(collection->device[i]);
+  if (!context->ops->device_collection_destroy)
+    return CUBEB_ERROR_NOT_SUPPORTED;
 
-  free(collection);
-  return CUBEB_OK;
-}
-
-int cubeb_device_info_destroy(cubeb_device_info * info)
-{
-  if (info == NULL) {
-    return CUBEB_ERROR_INVALID_PARAMETER;
-  }
-
-  free((void *) info->device_id);
-  free((void *) info->friendly_name);
-  free((void *) info->group_id);
-  free((void *) info->vendor_name);
-
-  free(info);
-  return CUBEB_OK;
+  return context->ops->device_collection_destroy(context, collection);
 }
 
 int cubeb_register_device_collection_changed(cubeb * context,

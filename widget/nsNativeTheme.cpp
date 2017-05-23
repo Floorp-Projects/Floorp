@@ -287,7 +287,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
       parentFrame = parentFrame->GetParent();
       if (parentFrame) {
         return IsWidgetStyled(aPresContext, parentFrame,
-                              parentFrame->StyleDisplay()->UsedAppearance());
+                              parentFrame->StyleDisplay()->mAppearance);
       }
     }
   }
@@ -701,7 +701,7 @@ nsNativeTheme::GetAdjacentSiblingFrameWithSameAppearance(nsIFrame* aFrame,
 
   // Check same appearance and adjacency.
   if (!sibling ||
-      sibling->StyleDisplay()->UsedAppearance() != aFrame->StyleDisplay()->UsedAppearance() ||
+      sibling->StyleDisplay()->mAppearance != aFrame->StyleDisplay()->mAppearance ||
       (sibling->GetRect().XMost() != aFrame->GetRect().x &&
        aFrame->GetRect().XMost() != sibling->GetRect().x))
     return nullptr;
