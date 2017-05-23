@@ -28,6 +28,7 @@ TEST_DIRS += [
     'test_intermediate_basic_usage_constraints',
     'test_keysize',
     'test_keysize_ev',
+    'test_missing_intermediate',
     'test_name_constraints',
     'test_ocsp_fetch_method',
     'test_ocsp_url',

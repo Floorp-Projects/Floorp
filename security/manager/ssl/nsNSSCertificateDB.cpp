@@ -1409,6 +1409,7 @@ VerifyCertAtTime(nsIX509Cert* aCert,
                                                nullptr, // Assume no context
                                                flatHostname.get(),
                                                resultChain,
+                                               nullptr, // no peerCertChain
                                                false, // don't save intermediates
                                                aFlags,
                                                OriginAttributes(),
@@ -1419,6 +1420,7 @@ VerifyCertAtTime(nsIX509Cert* aCert,
                                       aHostname.IsVoid() ? nullptr
                                                          : flatHostname.get(),
                                       resultChain,
+                                      nullptr, // no peerCertChain
                                       aFlags,
                                       nullptr, // stapledOCSPResponse
                                       nullptr, // sctsFromTLSExtension

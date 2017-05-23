@@ -583,21 +583,6 @@ BrowserGlue.prototype = {
     // handle any UI migration
     this._migrateUI();
 
-    // This is support code for the location bar search suggestions; passing
-    // from opt-in to opt-out should respect the user's choice, thus we need
-    // to cache that choice in a pref for future use.
-    // Note: this is not in migrateUI because we need to uplift it. This
-    // code is also short-lived, since we can remove it as soon as opt-out
-    // search suggestions shipped in release (Bug 1344928).
-    try {
-      let urlbarPrefs = Services.prefs.getBranch("browser.urlbar.");
-      if (!urlbarPrefs.prefHasUserValue("searchSuggestionsChoice") &&
-          urlbarPrefs.getBoolPref("userMadeSearchSuggestionsChoice")) {
-        urlbarPrefs.setBoolPref("searchSuggestionsChoice",
-                                urlbarPrefs.getBoolPref("suggest.searches"));
-      }
-    } catch (ex) { /* missing any of the prefs is not critical */ }
-
     listeners.init();
 
     PageThumbs.init();
@@ -1693,7 +1678,7 @@ BrowserGlue.prototype = {
 
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 45;
+    const UI_VERSION = 46;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -1993,6 +1978,22 @@ BrowserGlue.prototype = {
         Services.prefs.setBoolPref("browser.shell.didSkipDefaultBrowserCheckOnFirstRun",
                                    !Services.prefs.getBoolPref(LEGACY_PREF));
         Services.prefs.clearUserPref(LEGACY_PREF);
+      }
+    }
+
+    if (currentUIVersion < 46) {
+      // Search suggestions are now on by default.
+      // For privacy reasons, we want to respect previously made user's choice
+      // regarding the feature, so if it's known reflect that choice into the
+      // current pref.
+      // Note that in case of downgrade/upgrade we won't guarantee anything.
+      try {
+        Services.prefs.setBoolPref(
+          "browser.urlbar.suggest.searches",
+          Services.prefs.getBoolPref("browser.urlbar.searchSuggestionsChoice")
+        );
+      } catch (ex) {
+        // The pref is not set, nothing to do.
       }
     }
 
