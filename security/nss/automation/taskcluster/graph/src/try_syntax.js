@@ -23,7 +23,7 @@ function parseOptions(opts) {
 
   // Parse platforms.
   let allPlatforms = ["linux", "linux64", "linux64-asan", "win64",
-                      "linux64-make", "linux-make", "linux64-fuzz", "aarch64"];
+                      "linux64-make", "linux-make", "linux-fuzz", "linux64-fuzz", "aarch64"];
   let platforms = intersect(opts.platform.split(/\s*,\s*/), allPlatforms);
 
   // If the given value is nonsense or "none" default to all platforms.
@@ -104,6 +104,7 @@ function filter(opts) {
     let found = opts.platforms.some(platform => {
       let aliases = {
         "linux": "linux32",
+        "linux-fuzz": "linux32",
         "linux64-asan": "linux64",
         "linux64-fuzz": "linux64",
         "linux64-make": "linux64",
@@ -119,7 +120,7 @@ function filter(opts) {
         keep &= coll("asan");
       } else if (platform == "linux64-make" || platform == "linux-make") {
         keep &= coll("make");
-      } else if (platform == "linux64-fuzz") {
+      } else if (platform == "linux64-fuzz" || platform == "linux-fuzz") {
         keep &= coll("fuzz");
       } else {
         keep &= coll("opt") || coll("debug");

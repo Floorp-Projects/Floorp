@@ -1261,11 +1261,13 @@ DoChallengeResponse(SECKEYPrivateKey *privKey,
             return 908;
         }
         keyID = PK11_MakeIDFromPubKey(publicValue);
+        SECITEM_FreeItem(publicValue, PR_TRUE);
         if (keyID == NULL) {
             printf("Could not make the keyID from the public value\n");
             return 909;
         }
         foundPrivKey = PK11_FindKeyByKeyID(privKey->pkcs11Slot, keyID, &pwdata);
+        SECITEM_FreeItem(keyID, PR_TRUE);
         if (foundPrivKey == NULL) {
             printf("Could not find the private key corresponding to the public"
                    " value.\n");
