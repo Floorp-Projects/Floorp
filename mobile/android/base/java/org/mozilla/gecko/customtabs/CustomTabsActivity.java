@@ -10,14 +10,13 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Browser;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
-import android.support.annotation.StyleRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.util.SparseArrayCompat;
 import android.support.v7.app.ActionBar;
@@ -39,7 +38,6 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
@@ -75,8 +73,6 @@ public class CustomTabsActivity extends SingleTabActivity implements Tabs.OnTabs
 
         final SafeIntent intent = new SafeIntent(getIntent());
 
-        setThemeFromToolbarColor();
-
         doorhangerOverlay = findViewById(R.id.custom_tabs_doorhanger_overlay);
 
         mProgressView = (ProgressBar) findViewById(R.id.page_progress);
@@ -85,12 +81,10 @@ public class CustomTabsActivity extends SingleTabActivity implements Tabs.OnTabs
         final ActionBar actionBar = getSupportActionBar();
         bindNavigationCallback(toolbar);
 
-        actionBarPresenter = new ActionBarPresenter(actionBar);
+        actionBarPresenter = new ActionBarPresenter(actionBar, getActionBarTextColor());
         actionBarPresenter.displayUrlOnly(intent.getDataString());
         actionBarPresenter.setBackgroundColor(IntentUtil.getToolbarColor(intent), getWindow());
         actionBarPresenter.setTextLongClickListener(new UrlCopyListener());
-
-        Tabs.registerOnTabsChangedListener(this);
     }
 
     @Override
@@ -142,13 +136,9 @@ public class CustomTabsActivity extends SingleTabActivity implements Tabs.OnTabs
         EventDispatcher.getInstance().dispatch("Telemetry:CustomTabsPing", data);
     }
 
-    private void setThemeFromToolbarColor() {
-        final int color = ColorUtil.getReadableTextColor(IntentUtil.getToolbarColor(new SafeIntent(getIntent())));
-        @StyleRes final int styleRes = (color == Color.BLACK)
-                ? R.style.GeckoCustomTabs_Light
-                : R.style.GeckoCustomTabs;
-
-        setTheme(styleRes);
+    @ColorInt
+    private int getActionBarTextColor() {
+        return ColorUtil.getReadableTextColor(IntentUtil.getToolbarColor(new SafeIntent(getIntent())));
     }
 
     // Bug 1329145: 3rd party app could specify customized exit-animation to this activity.
@@ -191,12 +181,6 @@ public class CustomTabsActivity extends SingleTabActivity implements Tabs.OnTabs
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Tabs.unregisterOnTabsChangedListener(this);
-    }
-
-    @Override
     public int getLayout() {
         return R.layout.customtabs_activity;
     }
@@ -208,6 +192,8 @@ public class CustomTabsActivity extends SingleTabActivity implements Tabs.OnTabs
 
     @Override
     public void onTabChanged(Tab tab, TabEvents msg, String data) {
+        super.onTabChanged(tab, msg, data);
+
         if (!Tabs.getInstance().isSelectedTab(tab) ||
                 tab.getType() != Tab.TabType.CUSTOMTAB) {
             return;
@@ -239,12 +225,14 @@ public class CustomTabsActivity extends SingleTabActivity implements Tabs.OnTabs
     public void onResume() {
         super.onResume();
         mLayerView.getDynamicToolbarAnimator().setPinned(true, PinReason.CUSTOM_TAB);
+        actionBarPresenter.onResume();
     }
 
     @Override
     public void onPause() {
         super.onPause();
         mLayerView.getDynamicToolbarAnimator().setPinned(false, PinReason.CUSTOM_TAB);
+        actionBarPresenter.onPause();
     }
 
     // Usually should use onCreateOptionsMenu() to initialize menu items. But GeckoApp overwrite
@@ -355,8 +343,8 @@ public class CustomTabsActivity extends SingleTabActivity implements Tabs.OnTabs
                 onDone();
                 final Tabs tabs = Tabs.getInstance();
                 final Tab tab = tabs.getSelectedTab();
-                tabs.closeTabNoActivitySwitch(tab);
-                mCheckTabSelectionOnResume = true;
+                mSuppressActivitySwitch = true;
+                tabs.closeTab(tab);
             }
         });
     }

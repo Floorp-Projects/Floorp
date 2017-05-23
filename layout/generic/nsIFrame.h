@@ -787,12 +787,13 @@ public:
    * accepts an *optional* pointer the style struct.
    */
   #define STYLE_STRUCT(name_, checkdata_cb_)                                  \
-    const nsStyle##name_ * Style##name_ () const {                            \
+    const nsStyle##name_ * Style##name_ () const MOZ_NONNULL_RETURN {         \
       NS_ASSERTION(mStyleContext, "No style context found!");                 \
       return mStyleContext->Style##name_ ();                                  \
     }                                                                         \
     const nsStyle##name_ * Style##name_##WithOptionalParam(                   \
-                             const nsStyle##name_ * aStyleStruct) const {     \
+                             const nsStyle##name_ * aStyleStruct) const       \
+                             MOZ_NONNULL_RETURN {                             \
       if (aStyleStruct) {                                                     \
         MOZ_ASSERT(aStyleStruct == Style##name_());                           \
         return aStyleStruct;                                                  \
@@ -1614,16 +1615,16 @@ public:
   bool IsThemed(const nsStyleDisplay* aDisp,
                   nsITheme::Transparency* aTransparencyState = nullptr) const {
     nsIFrame* mutable_this = const_cast<nsIFrame*>(this);
-    if (!aDisp->UsedAppearance())
+    if (!aDisp->mAppearance)
       return false;
     nsPresContext* pc = PresContext();
     nsITheme *theme = pc->GetTheme();
     if(!theme ||
-       !theme->ThemeSupportsWidget(pc, mutable_this, aDisp->UsedAppearance()))
+       !theme->ThemeSupportsWidget(pc, mutable_this, aDisp->mAppearance))
       return false;
     if (aTransparencyState) {
       *aTransparencyState =
-        theme->GetWidgetTransparency(mutable_this, aDisp->UsedAppearance());
+        theme->GetWidgetTransparency(mutable_this, aDisp->mAppearance);
     }
     return true;
   }
@@ -3261,6 +3262,18 @@ public:
       DoUpdateStyleOfOwnedAnonBoxes(aStyleSet, aChangeList, aHintForThisFrame);
     }
   }
+
+  // A helper both for UpdateStyleOfChildAnonBox, and to update frame-backed
+  // pseudo-elements in ServoRestyleManager.
+  //
+  // This gets a style context that will be the new style context for
+  // `aChildFrame`, and takes care of updating it, calling CalcStyleDifference,
+  // and adding to the change list as appropriate.
+  //
+  // Returns the generated change hint for the frame.
+  nsChangeHint UpdateStyleOfOwnedChildFrame(nsIFrame* aChildFrame,
+                                            nsStyleContext* aNewStyleContext,
+                                            nsStyleChangeList& aChangeList);
 
   /**
    * Hook subclasses can override to actually implement updating of style of

@@ -4,6 +4,7 @@
 
 //! Computed values.
 
+use Atom;
 use context::QuirksMode;
 use euclid::size::Size2D;
 use font_metrics::FontMetricsProvider;
@@ -17,9 +18,9 @@ use std::fmt;
 use style_traits::ToCss;
 use super::{CSSFloat, CSSInteger, RGBA};
 use super::generics::BorderRadiusSize as GenericBorderRadiusSize;
+use super::generics::grid::{TrackBreadth as GenericTrackBreadth, TrackSize as GenericTrackSize};
+use super::generics::grid::TrackList as GenericTrackList;
 use super::specified;
-use super::specified::grid::{TrackBreadth as GenericTrackBreadth, TrackSize as GenericTrackSize};
-use super::specified::grid::TrackList as GenericTrackList;
 
 pub use app_units::Au;
 pub use cssparser::Color as CSSColor;
@@ -27,11 +28,12 @@ pub use self::image::{Gradient, GradientItem, ImageLayer, LineDirection, Image, 
 pub use super::{Auto, Either, None_};
 #[cfg(feature = "gecko")]
 pub use super::specified::{AlignItems, AlignJustifyContent, AlignJustifySelf, JustifyItems};
-pub use super::specified::{BorderStyle, GridLine, Percentage, UrlOrNone};
+pub use super::specified::{BorderStyle, Percentage, UrlOrNone};
+pub use super::generics::grid::GridLine;
 pub use super::specified::url::SpecifiedUrl;
 pub use self::length::{CalcLengthOrPercentage, Length, LengthOrNumber, LengthOrPercentage, LengthOrPercentageOrAuto};
 pub use self::length::{LengthOrPercentageOrAutoOrContent, LengthOrPercentageOrNone, LengthOrNone};
-pub use self::length::{MaxLength, MinLength};
+pub use self::length::{MaxLength, MozLength};
 pub use self::position::Position;
 
 pub mod basic_shape;
@@ -154,6 +156,79 @@ pub trait ToComputedValue {
     fn from_computed_value(computed: &Self::ComputedValue) -> Self;
 }
 
+impl<A, B> ToComputedValue for (A, B)
+    where A: ToComputedValue, B: ToComputedValue,
+{
+    type ComputedValue = (
+        <A as ToComputedValue>::ComputedValue,
+        <B as ToComputedValue>::ComputedValue,
+    );
+
+    #[inline]
+    fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
+        (self.0.to_computed_value(context), self.1.to_computed_value(context))
+    }
+
+    #[inline]
+    fn from_computed_value(computed: &Self::ComputedValue) -> Self {
+        (A::from_computed_value(&computed.0), B::from_computed_value(&computed.1))
+    }
+}
+
+impl<T> ToComputedValue for Option<T>
+    where T: ToComputedValue
+{
+    type ComputedValue = Option<<T as ToComputedValue>::ComputedValue>;
+
+    #[inline]
+    fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
+        self.as_ref().map(|item| item.to_computed_value(context))
+    }
+
+    #[inline]
+    fn from_computed_value(computed: &Self::ComputedValue) -> Self {
+        computed.as_ref().map(T::from_computed_value)
+    }
+}
+
+impl<T> ToComputedValue for Size2D<T>
+    where T: ToComputedValue
+{
+    type ComputedValue = Size2D<<T as ToComputedValue>::ComputedValue>;
+
+    #[inline]
+    fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
+        Size2D::new(
+            self.width.to_computed_value(context),
+            self.height.to_computed_value(context),
+        )
+    }
+
+    #[inline]
+    fn from_computed_value(computed: &Self::ComputedValue) -> Self {
+        Size2D::new(
+            T::from_computed_value(&computed.width),
+            T::from_computed_value(&computed.height),
+        )
+    }
+}
+
+impl<T> ToComputedValue for Vec<T>
+    where T: ToComputedValue
+{
+    type ComputedValue = Vec<<T as ToComputedValue>::ComputedValue>;
+
+    #[inline]
+    fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
+        self.iter().map(|item| item.to_computed_value(context)).collect()
+    }
+
+    #[inline]
+    fn from_computed_value(computed: &Self::ComputedValue) -> Self {
+        computed.iter().map(T::from_computed_value).collect()
+    }
+}
+
 /// A marker trait to represent that the specified value is also the computed
 /// value.
 pub trait ComputedValueAsSpecified {}
@@ -174,8 +249,11 @@ impl<T> ToComputedValue for T
     }
 }
 
+impl ComputedValueAsSpecified for Atom {}
+impl ComputedValueAsSpecified for bool {}
+
 /// A computed `<angle>` value.
-#[derive(Clone, PartialEq, PartialOrd, Copy, Debug)]
+#[derive(Clone, Copy, Debug, HasViewportPercentage, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf, Deserialize, Serialize))]
 pub enum Angle {
     /// An angle with degree unit

@@ -47,9 +47,16 @@ the `runtime` Cargo feature.
 These libraries can be either be installed as a part of Clang or downloaded
 [here](http://llvm.org/releases/download.html).
 
-**Note:** Installing `libclang` through a package manager might install the `libclang` shared
-library as something like `libclang.so.1` instead of `libclang.so`. In this case, you need to make a
-symbolic link from the versioned shared library to `libclang.so`.
+**Note:** This crate supports finding versioned instances of `libclang.so` (e.g.,
+`libclang.so.3.9`). In the case where there are multiple instances to choose from, this crate will
+prefer an unversioned instance first, then the version with the shortest and highest version. For
+example, the following instances of `libclang.so` are listed in descending order of preference:
+
+1. `libclang.so`
+2. `libclang.so.4`
+3. `libclang.so.4.0`
+4. `libclang.so.3`
+5. `libclang.so.3.9`
 
 **Note:** The downloads for LLVM and Clang 3.8 and later do not include the `libclang.a` static
 library. This means you cannot link to any of these versions of `libclang` statically unless you

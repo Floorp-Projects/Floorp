@@ -113,6 +113,8 @@ using namespace js;
 using namespace js::cli;
 using namespace js::shell;
 
+using js::shell::RCFile;
+
 using mozilla::ArrayLength;
 using mozilla::Atomic;
 using mozilla::MakeScopeExit;
@@ -152,187 +154,95 @@ static const TimeDuration MAX_TIMEOUT_INTERVAL = TimeDuration::FromSeconds(1800.
 // SharedArrayBuffer and Atomics are enabled by default (tracking Firefox).
 #define SHARED_MEMORY_DEFAULT 1
 
-// Some platform hooks must be implemented for single-step profiling.
-#if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS64)
-# define SINGLESTEP_PROFILING
-#endif
-
-enum class ScriptKind
+bool
+OffThreadState::startIfIdle(JSContext* cx, ScriptKind kind, ScopedJSFreePtr<char16_t>& newSource)
 {
-    Script,
-    DecodeScript,
-    Module
-};
+    AutoLockMonitor alm(monitor);
+    if (state != IDLE)
+        return false;
 
-class OffThreadState {
-    enum State {
-        IDLE,           /* ready to work; no token, no source */
-        COMPILING,      /* working; no token, have source */
-        DONE            /* compilation done: have token and source */
-    };
+    MOZ_ASSERT(!token);
 
-  public:
-    OffThreadState()
-      : monitor(mutexid::ShellOffThreadState),
-        state(IDLE),
-        token(),
-        source(nullptr)
-    { }
+    source = newSource.forget();
 
-    bool startIfIdle(JSContext* cx, ScriptKind kind,
-                     ScopedJSFreePtr<char16_t>& newSource)
-    {
-        AutoLockMonitor alm(monitor);
-        if (state != IDLE)
-            return false;
+    scriptKind = kind;
+    state = COMPILING;
+    return true;
+}
 
-        MOZ_ASSERT(!token);
-
-        source = newSource.forget();
-
-        scriptKind = kind;
-        state = COMPILING;
-        return true;
-    }
-
-    bool startIfIdle(JSContext* cx, ScriptKind kind,
-                     JS::TranscodeBuffer&& newXdr)
-    {
-        AutoLockMonitor alm(monitor);
-        if (state != IDLE)
-            return false;
-
-        MOZ_ASSERT(!token);
-
-        xdr = mozilla::Move(newXdr);
-
-        scriptKind = kind;
-        state = COMPILING;
-        return true;
-    }
-
-    void abandon(JSContext* cx) {
-        AutoLockMonitor alm(monitor);
-        MOZ_ASSERT(state == COMPILING);
-        MOZ_ASSERT(!token);
-        MOZ_ASSERT(source || !xdr.empty());
-
-        if (source)
-            js_free(source);
-        source = nullptr;
-        xdr.clearAndFree();
-
-        state = IDLE;
-    }
-
-    void markDone(void* newToken) {
-        AutoLockMonitor alm(monitor);
-        MOZ_ASSERT(state == COMPILING);
-        MOZ_ASSERT(!token);
-        MOZ_ASSERT(source || !xdr.empty());
-        MOZ_ASSERT(newToken);
-
-        token = newToken;
-        state = DONE;
-        alm.notify();
-    }
-
-    void* waitUntilDone(JSContext* cx, ScriptKind kind) {
-        AutoLockMonitor alm(monitor);
-        if (state == IDLE || scriptKind != kind)
-            return nullptr;
-
-        if (state == COMPILING) {
-            while (state != DONE)
-                alm.wait();
-        }
-
-        MOZ_ASSERT(source || !xdr.empty());
-        if (source)
-            js_free(source);
-        source = nullptr;
-        xdr.clearAndFree();
-
-        MOZ_ASSERT(token);
-        void* holdToken = token;
-        token = nullptr;
-        state = IDLE;
-        return holdToken;
-    }
-
-    JS::TranscodeBuffer& xdrBuffer() { return xdr; }
-
-  private:
-    Monitor monitor;
-    ScriptKind scriptKind;
-    State state;
-    void* token;
-    char16_t* source;
-    JS::TranscodeBuffer xdr;
-};
-
-#ifdef SINGLESTEP_PROFILING
-typedef Vector<char16_t, 0, SystemAllocPolicy> StackChars;
-#endif
-
-class NonshrinkingGCObjectVector : public GCVector<JSObject*, 0, SystemAllocPolicy>
+bool
+OffThreadState::startIfIdle(JSContext* cx, ScriptKind kind, JS::TranscodeBuffer&& newXdr)
 {
-  public:
-    void sweep() {
-        for (uint32_t i = 0; i < this->length(); i++) {
-            if (JS::GCPolicy<JSObject*>::needsSweep(&(*this)[i]))
-                (*this)[i] = nullptr;
-        }
-    }
-};
+    AutoLockMonitor alm(monitor);
+    if (state != IDLE)
+        return false;
 
-using MarkBitObservers = JS::WeakCache<NonshrinkingGCObjectVector>;
+    MOZ_ASSERT(!token);
+
+    xdr = mozilla::Move(newXdr);
+
+    scriptKind = kind;
+    state = COMPILING;
+    return true;
+}
+
+void
+OffThreadState::abandon(JSContext* cx)
+{
+    AutoLockMonitor alm(monitor);
+    MOZ_ASSERT(state == COMPILING);
+    MOZ_ASSERT(!token);
+    MOZ_ASSERT(source || !xdr.empty());
+
+    if (source)
+        js_free(source);
+    source = nullptr;
+    xdr.clearAndFree();
+
+    state = IDLE;
+}
+
+void
+OffThreadState::markDone(void* newToken)
+{
+    AutoLockMonitor alm(monitor);
+    MOZ_ASSERT(state == COMPILING);
+    MOZ_ASSERT(!token);
+    MOZ_ASSERT(source || !xdr.empty());
+    MOZ_ASSERT(newToken);
+
+    token = newToken;
+    state = DONE;
+    alm.notify();
+}
+
+void*
+OffThreadState::waitUntilDone(JSContext* cx, ScriptKind kind)
+{
+    AutoLockMonitor alm(monitor);
+    if (state == IDLE || scriptKind != kind)
+        return nullptr;
+
+    if (state == COMPILING) {
+        while (state != DONE)
+            alm.wait();
+    }
+
+    MOZ_ASSERT(source || !xdr.empty());
+    if (source)
+        js_free(source);
+    source = nullptr;
+    xdr.clearAndFree();
+
+    MOZ_ASSERT(token);
+    void* holdToken = token;
+    token = nullptr;
+    state = IDLE;
+    return holdToken;
+}
 
 struct ShellCompartmentPrivate {
     JS::Heap<JSObject*> grayRoot;
-};
-
-// Per-context shell state.
-struct ShellContext
-{
-    explicit ShellContext(JSContext* cx);
-    bool isWorker;
-    double timeoutInterval;
-    double startTime;
-    Atomic<bool> serviceInterrupt;
-    Atomic<bool> haveInterruptFunc;
-    JS::PersistentRootedValue interruptFunc;
-    bool lastWarningEnabled;
-    JS::PersistentRootedValue lastWarning;
-    JS::PersistentRootedValue promiseRejectionTrackerCallback;
-#ifdef SINGLESTEP_PROFILING
-    Vector<StackChars, 0, SystemAllocPolicy> stacks;
-#endif
-
-    /*
-     * Watchdog thread state.
-     */
-    Mutex watchdogLock;
-    ConditionVariable watchdogWakeup;
-    Maybe<Thread> watchdogThread;
-    Maybe<TimeStamp> watchdogTimeout;
-
-    ConditionVariable sleepWakeup;
-
-    int exitCode;
-    bool quitting;
-
-    UniqueChars readLineBuf;
-    size_t readLineBufPos;
-
-    static const uint32_t GeckoProfilingMaxStackSize = 1000;
-    ProfileEntry geckoProfilingStack[GeckoProfilingMaxStackSize];
-    mozilla::Atomic<uint32_t> geckoProfilingStackSize;
-
-    OffThreadState offThreadState;
-
-    UniqueChars moduleLoadPath;
-    UniquePtr<MarkBitObservers> markObservers;
 };
 
 struct MOZ_STACK_CLASS EnvironmentPreparer : public js::ScriptEnvironmentPreparer {
@@ -476,11 +386,13 @@ ShellContext::ShellContext(JSContext* cx)
     exitCode(0),
     quitting(false),
     readLineBufPos(0),
+    errFilePtr(nullptr),
+    outFilePtr(nullptr),
     geckoProfilingStackSize(0)
 {}
 
-static ShellContext*
-GetShellContext(JSContext* cx)
+ShellContext*
+js::shell::GetShellContext(JSContext* cx)
 {
     ShellContext* sc = static_cast<ShellContext*>(JS_GetContextPrivate(cx));
     MOZ_ASSERT(sc);
@@ -803,7 +715,11 @@ DrainJobQueue(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    MOZ_ASSERT(!GetShellContext(cx)->quitting);
+    if (GetShellContext(cx)->quitting) {
+        JS_ReportErrorASCII(cx, "Mustn't drain the job queue when the shell is quitting");
+        return false;
+    }
+
     js::RunJobs(cx);
 
     args.rval().setUndefined();

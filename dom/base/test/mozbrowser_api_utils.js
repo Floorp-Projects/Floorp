@@ -25,16 +25,9 @@ const METHODS = {
   clearMatch: {},
   executeScript: {},
   getWebManifest: {},
-  mute: {},
-  unmute: {},
-  getMuted: {},
-  setVolume: {},
-  getVolume: {},
 };
 
-const ATTRIBUTES = [
-  "allowedAudioChannels",
-];
+const ATTRIBUTES = [];
 
 function once(target, eventName, useCapture = false) {
   info("Waiting for event: '" + JSON.stringify(eventName) + "' on " + target + ".");

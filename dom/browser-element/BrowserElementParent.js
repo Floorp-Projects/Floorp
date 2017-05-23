@@ -168,8 +168,6 @@ BrowserElementParent.prototype = {
       "got-contentdimensions": this._gotDOMRequestResult,
       "got-can-go-back": this._gotDOMRequestResult,
       "got-can-go-forward": this._gotDOMRequestResult,
-      "got-muted": this._gotDOMRequestResult,
-      "got-volume": this._gotDOMRequestResult,
       "requested-dom-fullscreen": this._requestedDOMFullscreen,
       "fullscreen-origin-change": this._fullscreenOriginChange,
       "exit-dom-fullscreen": this._exitDomFullscreen,
@@ -180,11 +178,6 @@ BrowserElementParent.prototype = {
       "caretstatechanged": this._handleCaretStateChanged,
       "findchange": this._handleFindChange,
       "execute-script-done": this._gotDOMRequestResult,
-      "got-audio-channel-volume": this._gotDOMRequestResult,
-      "got-set-audio-channel-volume": this._gotDOMRequestResult,
-      "got-audio-channel-muted": this._gotDOMRequestResult,
-      "got-set-audio-channel-muted": this._gotDOMRequestResult,
-      "got-is-audio-channel-active": this._gotDOMRequestResult,
       "got-web-manifest": this._gotDOMRequestResult,
     };
 
@@ -629,22 +622,6 @@ BrowserElementParent.prototype = {
     return this._sendAsyncMsg('clear-match');
   }),
 
-  mute: defineNoReturnMethod(function() {
-    this._sendAsyncMsg('mute');
-  }),
-
-  unmute: defineNoReturnMethod(function() {
-    this._sendAsyncMsg('unmute');
-  }),
-
-  getMuted: defineDOMRequestMethod('get-muted'),
-
-  getVolume: defineDOMRequestMethod('get-volume'),
-
-  setVolume: defineNoReturnMethod(function(volume) {
-    this._sendAsyncMsg('set-volume', {volume});
-  }),
-
   goBack: defineNoReturnMethod(function() {
     this._sendAsyncMsg('go-back');
   }),
@@ -894,33 +871,6 @@ BrowserElementParent.prototype = {
     } else {
       run();
     }
-  },
-
-  getAudioChannelVolume: function(aAudioChannel) {
-    return this._sendDOMRequest('get-audio-channel-volume',
-                                {audioChannel: aAudioChannel});
-  },
-
-  setAudioChannelVolume: function(aAudioChannel, aVolume) {
-    return this._sendDOMRequest('set-audio-channel-volume',
-                                {audioChannel: aAudioChannel,
-                                 volume: aVolume});
-  },
-
-  getAudioChannelMuted: function(aAudioChannel) {
-    return this._sendDOMRequest('get-audio-channel-muted',
-                                {audioChannel: aAudioChannel});
-  },
-
-  setAudioChannelMuted: function(aAudioChannel, aMuted) {
-    return this._sendDOMRequest('set-audio-channel-muted',
-                                {audioChannel: aAudioChannel,
-                                 muted: aMuted});
-  },
-
-  isAudioChannelActive: function(aAudioChannel) {
-    return this._sendDOMRequest('get-is-audio-channel-active',
-                                {audioChannel: aAudioChannel});
   },
 
   getWebManifest: defineDOMRequestMethod('get-web-manifest'),

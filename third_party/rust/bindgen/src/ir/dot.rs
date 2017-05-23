@@ -30,7 +30,7 @@ pub fn write_dot_file<P>(ctx: &BindgenContext, path: P) -> io::Result<()>
 
     for (id, item) in ctx.items() {
         try!(writeln!(&mut dot_file,
-                      r#"{} [fontname="courier", label=< <table border="0">"#,
+                      r#"{} [fontname="courier", label=< <table border="0" align="left">"#,
                       id.as_usize()));
         try!(item.dot_attributes(ctx, &mut dot_file));
         try!(writeln!(&mut dot_file, r#"</table> >];"#));

@@ -2,9 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys
-import unittest
-
 from firefox_puppeteer import PuppeteerMixin
 from marionette_driver import Wait
 from marionette_harness import MarionetteTestCase
@@ -57,25 +54,3 @@ class TestBrowserWindowShortcuts(PuppeteerMixin, MarionetteTestCase):
             return selection_name == "input"
 
         Wait(self.marionette).until(has_input_selected)
-
-
-@unittest.skipIf(sys.platform == 'darwin',
-                 'Quit Shotcut not supported due to native menu of Mac OS')
-class TestBrowserQuitShortcut(PuppeteerMixin, MarionetteTestCase):
-
-    def test_quit_firefox_shortcut(self):
-        def quit_via_shortcut_callback():
-            if self.puppeteer.platform == 'win':
-                key = 'quitApplicationCmdWin2.accesskey'
-            else:
-                key = 'quitApplicationCmdUnix.key'
-
-            self.browser.send_shortcut(self.browser.localize_entity(key),
-                                       accel=True)
-
-        self.marionette.quit(in_app=True, callback=quit_via_shortcut_callback)
-        self.assertIsNone(self.marionette.session)
-
-    def tearDown(self):
-        self.marionette.start_session()
-        super(TestBrowserQuitShortcut, self).tearDown()

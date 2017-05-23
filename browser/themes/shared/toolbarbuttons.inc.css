@@ -11,10 +11,14 @@
 
 :root {
 %ifdef MOZ_PHOTON_THEME
-  --toolbarbutton-hover-background: hsla(240, 5%, 5%, .1);
-  --toolbarbutton-active-background: hsla(240, 5%, 5%, .15);
+  --toolbarbutton-hover-background: hsla(240,5%,5%,.1);
+  --toolbarbutton-active-background: hsla(240,5%,5%,.15);
 
-  --toolbarbutton-inner-padding: 5px;
+  --toolbarbutton-inner-padding: 6px;
+
+  --backbutton-background: hsla(0,100%,100%,.8);
+
+  --backbutton-border-color: hsla(240,5%,5%,.3);
 %else
   --backbutton-urlbar-overlap: 6px;
 
@@ -38,6 +42,12 @@ toolbar:-moz-lwtheme {
 
   --toolbarbutton-checkedhover-backgroundcolor: rgba(85%,85%,85%,.25);
 }
+
+%ifdef MOZ_PHOTON_THEME
+toolbar[brighttext] {
+  --backbutton-background: hsla(240,5%,5%,.1);
+}
+%endif
 
 /* ::::: primary toolbar buttons ::::: */
 
@@ -125,12 +135,6 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   padding-inline-end: 5px;
 }
 
-#nav-bar .toolbarbutton-1[type=panel],
-#nav-bar .toolbarbutton-1[type=menu]:not(#back-button):not(#forward-button):not(#feed-button):not(#PanelUI-menu-button) {
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
 #nav-bar .toolbarbutton-1 > menupopup {
   margin-top: -3px;
 }
@@ -164,10 +168,10 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
   padding: var(--toolbarbutton-inner-padding);
 %else
   padding: var(--toolbarbutton-inner-padding) 7px;
-%endif
   background-origin: padding-box !important;
   background-clip: padding-box !important;
   border: 1px solid transparent;
+%endif
   border-radius: var(--toolbarbutton-border-radius);
   transition-property: background-color, border-color, box-shadow;
   transition-duration: 150ms;
@@ -196,22 +200,8 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
   border-inline-end-style: none;
 }
 
-#nav-bar .toolbarbutton-1[type=panel] > .toolbarbutton-icon,
-#nav-bar .toolbarbutton-1[type=panel] > .toolbarbutton-badge-stack,
-#nav-bar .toolbarbutton-1[type=menu]:not(#PanelUI-menu-button):not(#back-button):not(#forward-button):not(#new-tab-button) > .toolbarbutton-icon,
-#nav-bar .toolbarbutton-1[type=menu]:not(#PanelUI-menu-button) > .toolbarbutton-badge-stack,
-#nav-bar .toolbarbutton-1[type=menu] > .toolbarbutton-text /* hack for add-ons that forcefully display the label */ {
-  padding-inline-end: 17px;
-}
-
-#nav-bar .toolbarbutton-1[type=panel] > .toolbarbutton-icon,
-#nav-bar .toolbarbutton-1[type=menu]:not(#PanelUI-menu-button):not(#back-button):not(#forward-button):not(#new-tab-button) > .toolbarbutton-icon {
-  /* horizontal padding + border + icon width */
-  max-width: 43px;
-}
-
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menu-dropmarker {
-  margin-inline-start: -15px;
+  display: none;
 }
 
 #nav-bar #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
@@ -373,11 +363,26 @@ toolbarbutton.bookmark-item[open="true"],
 #back-button > .toolbarbutton-icon {
 %ifdef MOZ_PHOTON_THEME
   background: var(--backbutton-background);
-  border-color: var(--backbutton-border-color) !important;
+  border: 1px solid var(--backbutton-border-color);
+  background-origin: padding-box;
+  background-clip: padding-box;
 %endif
   border-radius: 10000px !important;
   padding: 7px !important;
 }
+
+%ifdef MOZ_PHOTON_THEME
+#back-button:not([disabled]):hover > .toolbarbutton-icon {
+  background: var(--backbutton-background) !important;
+  box-shadow: 0 1px 6px hsla(0,0%,0%,.1);
+  border-color: hsla(240,5%,5%,.35);
+}
+
+#back-button:not([disabled]):hover:active > .toolbarbutton-icon {
+  background: var(--toolbarbutton-active-background) !important;
+  border-color: hsla(240,5%,5%,.40);
+}
+%endif
 
 /* bookmarks menu-button */
 

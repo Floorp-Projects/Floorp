@@ -300,8 +300,9 @@ nsFormFillController::MarkAsLoginManagerField(nsIDOMHTMLInputElement *aInput)
     }
   }
 
-  if (!mLoginManager)
+  if (!mLoginManager) {
     mLoginManager = do_GetService("@mozilla.org/login-manager;1");
+  }
 
   return NS_OK;
 }
@@ -367,10 +368,11 @@ nsFormFillController::GetController(nsIAutoCompleteController **aController)
 NS_IMETHODIMP
 nsFormFillController::GetPopupOpen(bool *aPopupOpen)
 {
-  if (mFocusedPopup)
+  if (mFocusedPopup) {
     mFocusedPopup->GetPopupOpen(aPopupOpen);
-  else
+  } else {
     *aPopupOpen = false;
+  }
   return NS_OK;
 }
 
@@ -399,8 +401,9 @@ nsFormFillController::SetPopupOpen(bool aPopupOpen)
         nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mFocusedInput);
         mFocusedPopup->OpenAutocompletePopup(this, element);
       }
-    } else
+    } else {
       mFocusedPopup->ClosePopup();
+    }
   }
 
   return NS_OK;
@@ -900,37 +903,43 @@ nsFormFillController::HandleEvent(nsIDOMEvent* aEvent)
            mController->HandleText(&unused) : NS_OK;
   }
   if (type.EqualsLiteral("blur")) {
-    if (mFocusedInput)
+    if (mFocusedInput) {
       StopControllingInput();
+    }
     return NS_OK;
   }
   if (type.EqualsLiteral("compositionstart")) {
     NS_ASSERTION(mController, "should have a controller!");
-    if (mController && mFocusedInput)
+    if (mController && mFocusedInput) {
       mController->HandleStartComposition();
+    }
     return NS_OK;
   }
   if (type.EqualsLiteral("compositionend")) {
     NS_ASSERTION(mController, "should have a controller!");
-    if (mController && mFocusedInput)
+    if (mController && mFocusedInput) {
       mController->HandleEndComposition();
+    }
     return NS_OK;
   }
   if (type.EqualsLiteral("contextmenu")) {
-    if (mFocusedPopup)
+    if (mFocusedPopup) {
       mFocusedPopup->ClosePopup();
+    }
     return NS_OK;
   }
   if (type.EqualsLiteral("pagehide")) {
 
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(
       aEvent->InternalDOMEvent()->GetTarget());
-    if (!doc)
+    if (!doc) {
       return NS_OK;
+    }
 
     if (mFocusedInput) {
-      if (doc == mFocusedInputNode->OwnerDoc())
+      if (doc == mFocusedInputNode->OwnerDoc()) {
         StopControllingInput();
+      }
     }
 
     RemoveForDocument(doc);
@@ -971,17 +980,20 @@ void
 nsFormFillController::MaybeStartControllingInput(nsIDOMHTMLInputElement* aInput)
 {
   nsCOMPtr<nsINode> inputNode = do_QueryInterface(aInput);
-  if (!inputNode)
+  if (!inputNode) {
     return;
+  }
 
   nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aInput);
-  if (!formControl || !formControl->IsSingleLineTextControl(false))
+  if (!formControl || !formControl->IsSingleLineTextControl(false)) {
     return;
+  }
 
   bool isReadOnly = false;
   aInput->GetReadOnly(&isReadOnly);
-  if (isReadOnly)
+  if (isReadOnly) {
     return;
+  }
 
   bool autocomplete = nsContentUtils::IsAutocompleteEnabled(aInput);
 
@@ -1047,12 +1059,14 @@ nsresult
 nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
 {
   NS_ASSERTION(mController, "should have a controller!");
-  if (!mFocusedInput || !mController)
+  if (!mFocusedInput || !mController) {
     return NS_OK;
+  }
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
-  if (!keyEvent)
+  if (!keyEvent) {
     return NS_ERROR_FAILURE;
+  }
 
   bool cancel = false;
   bool unused = false;
@@ -1089,8 +1103,9 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
       keyEvent->GetCtrlKey(&isCtrl);
       keyEvent->GetAltKey(&isAlt);
       keyEvent->GetMetaKey(&isMeta);
-      if (isCtrl || isAlt || isMeta)
+      if (isCtrl || isAlt || isMeta) {
         break;
+      }
     }
     MOZ_FALLTHROUGH;
   case nsIDOMKeyEvent::DOM_VK_UP:
@@ -1159,13 +1174,15 @@ nsresult
 nsFormFillController::MouseDown(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aEvent));
-  if (!mouseEvent)
+  if (!mouseEvent) {
     return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIDOMHTMLInputElement> targetInput = do_QueryInterface(
     aEvent->InternalDOMEvent()->GetTarget());
-  if (!targetInput)
+  if (!targetInput) {
     return NS_OK;
+  }
 
   int16_t button;
   mouseEvent->GetButton(&button);
@@ -1178,8 +1195,9 @@ nsFormFillController::MouseDown(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  if (button != 0)
+  if (button != 0) {
     return NS_OK;
+  }
 
   return ShowPopup();
 }
@@ -1195,8 +1213,9 @@ nsFormFillController::ShowPopup()
 
   nsCOMPtr<nsIAutoCompleteInput> input;
   mController->GetInput(getter_AddRefs(input));
-  if (!input)
+  if (!input) {
     return NS_OK;
+  }
 
   nsAutoString value;
   input->GetTextValue(value);
@@ -1221,13 +1240,15 @@ nsFormFillController::ShowPopup()
 void
 nsFormFillController::AddWindowListeners(nsPIDOMWindowOuter* aWindow)
 {
-  if (!aWindow)
+  if (!aWindow) {
     return;
+  }
 
   EventTarget* target = aWindow->GetChromeEventHandler();
 
-  if (!target)
+  if (!target) {
     return;
+  }
 
   target->AddEventListener(NS_LITERAL_STRING("focus"), this,
                            true, false);
@@ -1254,8 +1275,9 @@ nsFormFillController::AddWindowListeners(nsPIDOMWindowOuter* aWindow)
 void
 nsFormFillController::RemoveWindowListeners(nsPIDOMWindowOuter* aWindow)
 {
-  if (!aWindow)
+  if (!aWindow) {
     return;
+  }
 
   StopControllingInput();
 
@@ -1264,8 +1286,9 @@ nsFormFillController::RemoveWindowListeners(nsPIDOMWindowOuter* aWindow)
 
   EventTarget* target = aWindow->GetChromeEventHandler();
 
-  if (!target)
+  if (!target) {
     return;
+  }
 
   target->RemoveEventListener(NS_LITERAL_STRING("focus"), this, true);
   target->RemoveEventListener(NS_LITERAL_STRING("blur"), this, true);
@@ -1293,8 +1316,9 @@ nsFormFillController::StartControllingInput(nsIDOMHTMLInputElement *aInput)
   // Find the currently focused docShell
   nsCOMPtr<nsIDocShell> docShell = GetDocShellForInput(aInput);
   int32_t index = GetIndexOfDocShell(docShell);
-  if (index < 0)
+  if (index < 0) {
     return;
+  }
 
   // Cache the popup for the focused docShell
   mFocusedPopup = mPopups.SafeElementAt(index);
@@ -1333,8 +1357,9 @@ nsFormFillController::StopControllingInput()
     // focus by clicking another autocomplete textbox
     nsCOMPtr<nsIAutoCompleteInput> input;
     mController->GetInput(getter_AddRefs(input));
-    if (input == this)
+    if (input == this) {
       mController->SetInput(nullptr);
+    }
   }
 
   if (mFocusedInputNode) {
@@ -1387,14 +1412,16 @@ nsFormFillController::GetWindowForDocShell(nsIDocShell *aDocShell)
 int32_t
 nsFormFillController::GetIndexOfDocShell(nsIDocShell *aDocShell)
 {
-  if (!aDocShell)
+  if (!aDocShell) {
     return -1;
+  }
 
   // Loop through our cached docShells looking for the given docShell
   uint32_t count = mDocShells.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    if (mDocShells[i] == aDocShell)
+    if (mDocShells[i] == aDocShell) {
       return i;
+    }
   }
 
   // Recursively check the parent docShell of this one

@@ -331,7 +331,9 @@ interface nsIPermissionManager : nsISupports
   /**
    * Add a callback which should be run when all permissions are available for
    * the given nsIPrincipal. This method invokes the callback runnable
-   * synchronously when the permissions are already available.
+   * synchronously when the permissions are already available. Otherwise the
+   * callback will be run asynchronously in SystemGroup when all permissions
+   * are available in the future.
    *
    * NOTE: This method will not request the permissions be sent by the parent
    * process. This should only be used to wait for permissions which may not

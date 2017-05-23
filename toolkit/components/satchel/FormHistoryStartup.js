@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -45,8 +44,9 @@ FormHistoryStartup.prototype = {
   pendingQuery: null,
 
   init() {
-    if (this.inited)
+    if (this.inited) {
       return;
+    }
     this.inited = true;
 
     Services.prefs.addObserver("browser.formfill.", this, true);
@@ -73,13 +73,11 @@ FormHistoryStartup.prototype = {
     switch (message.name) {
       case "FormHistory:FormSubmitEntries": {
         let entries = message.data;
-        let changes = entries.map(function(entry) {
-          return {
-            op: "bump",
-            fieldname: entry.name,
-            value: entry.value,
-          }
-        });
+        let changes = entries.map(entry => ({
+          op: "bump",
+          fieldname: entry.name,
+          value: entry.value,
+        }));
 
         FormHistory.update(changes);
         break;

@@ -370,7 +370,7 @@ pub struct Item {
     /// This item's id.
     id: ItemId,
 
-    /// The item's local id, unique only amongst its siblings.  Only used for
+    /// The item's local id, unique only amongst its siblings. Only used for
     /// anonymous items.
     ///
     /// Lazily initialized in local_id().
@@ -379,7 +379,7 @@ pub struct Item {
     /// case this is an implementation detail.
     local_id: Cell<Option<usize>>,
 
-    /// The next local id to use for a child..
+    /// The next local id to use for a child or template instantiation.
     next_child_local_id: Cell<usize>,
 
     /// A cached copy of the canonical name, as returned by `canonical_name`.
@@ -490,11 +490,21 @@ impl Item {
     pub fn local_id(&self, ctx: &BindgenContext) -> usize {
         if self.local_id.get().is_none() {
             let parent = ctx.resolve_item(self.parent_id);
-            let local_id = parent.next_child_local_id.get();
-            parent.next_child_local_id.set(local_id + 1);
-            self.local_id.set(Some(local_id));
+            self.local_id.set(Some(parent.next_child_local_id()));
         }
         self.local_id.get().unwrap()
+    }
+
+    /// Get an identifier that differentiates a child of this item of other
+    /// related items.
+    ///
+    /// This is currently used for anonymous items, and template instantiation
+    /// tests, in both cases in order to reduce noise when system headers are at
+    /// place.
+    pub fn next_child_local_id(&self) -> usize {
+        let local_id = self.next_child_local_id.get();
+        self.next_child_local_id.set(local_id + 1);
+        local_id
     }
 
     /// Returns whether this item is a top-level item, from the point of view of
@@ -777,13 +787,16 @@ impl Item {
         ctx.rust_mangle(&name).into_owned()
     }
 
-    fn exposed_id(&self, ctx: &BindgenContext) -> String {
+    /// The exposed id that represents an unique id among the siblings of a
+    /// given item.
+    pub fn exposed_id(&self, ctx: &BindgenContext) -> String {
         // Only use local ids for enums, classes, structs and union types.  All
         // other items use their global id.
         let ty_kind = self.kind().as_type().map(|t| t.kind());
         if let Some(ty_kind) = ty_kind {
             match *ty_kind {
                 TypeKind::Comp(..) |
+                TypeKind::TemplateInstantiation(..) |
                 TypeKind::Enum(..) => return self.local_id(ctx).to_string(),
                 _ => {}
             }
@@ -829,6 +842,11 @@ impl DotAttributes for Item {
                        <tr><td>name</td><td>{}</td></tr>",
                       self.id,
                       self.name(ctx).get()));
+
+        if self.is_opaque(ctx) {
+            writeln!(out, "<tr><td>opaque</td><td>true</td></tr>")?;
+        }
+
         self.kind.dot_attributes(ctx, out)
     }
 }

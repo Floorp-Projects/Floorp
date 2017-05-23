@@ -20,7 +20,7 @@
 .searchbar-engine-image {
   width: 16px;
   height: 16px;
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
 .search-go-container {
@@ -65,10 +65,6 @@
 }
 
 @media (min-resolution: 2dppx) {
-  .searchbar-engine-image {
-    list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
-  }
-
   .search-go-button {
     list-style-image: url("chrome://browser/skin/reload-stop-go@2x.png");
     -moz-image-region: rect(0, 84px, 28px, 56px);

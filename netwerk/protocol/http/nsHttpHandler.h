@@ -164,7 +164,11 @@ public:
       return mTCPKeepaliveLongLivedIdleTimeS;
     }
 
-    bool UseFastOpen() { return mUseFastOpen && mFastOpenSupported; }
+    bool UseFastOpen()
+    {
+        return mUseFastOpen && mFastOpenSupported &&
+               mFastOpenConsecutiveFailureCounter < mFastOpenConsecutiveFailureLimit;
+    }
     // If one of tcp connections return PR_NOT_TCP_SOCKET_ERROR while trying
     // fast open, it means that Fast Open is turned off so we will not try again
     // until a restart. This is only on Linux.
@@ -399,6 +403,8 @@ private:
     void     NotifyObservers(nsIHttpChannel *chan, const char *event);
 
     void SetFastOpenOSSupport();
+
+    void EnsureUAOverridesInit();
 private:
 
     // cached services

@@ -704,10 +704,6 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
 }
 
 /* ::::: Unified Back-/Forward Button ::::: */
-#back-button > .toolbarbutton-menu-dropmarker,
-#forward-button > .toolbarbutton-menu-dropmarker {
-  display: none;
-}
 .unified-nav-current {
   font-weight: bold;
 }

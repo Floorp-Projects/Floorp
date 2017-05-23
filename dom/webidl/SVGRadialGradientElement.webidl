@@ -21,5 +21,7 @@ interface SVGRadialGradientElement : SVGGradientElement {
   readonly attribute SVGAnimatedLength fx;
   [Constant]
   readonly attribute SVGAnimatedLength fy;
-  // readonly attribute SVGAnimatedLength fr;
+  // XXX: Bug 1242048
+  // [SameObject]
+  readonly attribute SVGAnimatedLength fr;
 };

@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+      SimpleTest.waitForExplicitFinish();
+      SimpleTest.setExpected(["pass", 1]);
+
+      function good_correctlyBlockedStylesheet() {
+        ok(true, "Non-base64 hash blocked the load.")
+      };
+      function bad_shouldNotLoadStylesheet() {
+        ok(false, "Non-base64 hashes should not load!")
+      }
+      window.onload = function() {
+        SimpleTest.finish();
+      }
+
+      link = document.createElement('link');
+      document.head.appendChild(link);
+      link.setAttribute('rel', 'stylesheet');
+      link.onerror = good_correctlyBlockedStylesheet;
+      link.onload = bad_shouldNotLoadStylesheet;
+      link.integrity = 'sha512-\uD89D\uDF05\uD89D\uDEE6';
+      link.setAttribute('href', 'data:text/css;small[contenteditable^="false"], summary { }');
+    </script>
+</head>
+<body>
+    <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1364262">Bug 1364262</a>
+</body>
+</html>

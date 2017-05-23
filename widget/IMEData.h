@@ -365,7 +365,11 @@ struct InputContextAction final
     MENU_GOT_PSEUDO_FOCUS,
     // Menu lost pseudo focus that means focused content will handle keyboard
     // events.
-    MENU_LOST_PSEUDO_FOCUS
+    MENU_LOST_PSEUDO_FOCUS,
+    // The widget is created.  When a widget is crated, it may need to notify
+    // IME module to initialize its native IME context.  In such case, this is
+    // used.  I.e., this isn't used by IMEStateManager.
+    WIDGET_CREATED
   };
   FocusChange mFocusChange;
 

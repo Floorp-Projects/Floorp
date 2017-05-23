@@ -1068,13 +1068,6 @@ private:
 
   virtual mozilla::ipc::IPCResult RecvFirstIdle() override;
 
-  virtual mozilla::ipc::IPCResult RecvAudioChannelChangeDefVolChannel(const int32_t& aChannel,
-                                                                      const bool& aHidden) override;
-
-  virtual mozilla::ipc::IPCResult RecvAudioChannelServiceStatus(const bool& aTelephonyChannel,
-                                                                const bool& aContentOrNormalChannel,
-                                                                const bool& aAnyChannel) override;
-
   virtual mozilla::ipc::IPCResult RecvKeywordToURI(const nsCString& aKeyword,
                                                    nsString* aProviderName,
                                                    OptionalIPCStream* aPostData,

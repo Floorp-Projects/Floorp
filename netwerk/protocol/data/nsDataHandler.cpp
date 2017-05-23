@@ -58,7 +58,7 @@ nsDataHandler::GetProtocolFlags(uint32_t *result) {
 
     // Until Bug 1324406 and all it's dependencies are fixed
     // data: URIs inherit the security context.
-    if (nsIOService::IsInheritSecurityContextForDataURIEnabled()) {
+    if (!nsIOService::IsDataURIUniqueOpaqueOrigin()) {
         *result |= URI_INHERITS_SECURITY_CONTEXT;
     }
     return NS_OK;

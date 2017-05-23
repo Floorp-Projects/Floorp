@@ -275,7 +275,7 @@ public:
 
     /**
      * SMIL Overridde style rules (for SMIL animation of CSS properties)
-     * @see nsIContent::GetSMILOverrideStyle
+     * @see Element::GetSMILOverrideStyle
      */
     nsCOMPtr<nsICSSDeclaration> mSMILOverrideStyle;
 

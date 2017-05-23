@@ -286,7 +286,8 @@ class MochiRemote(MochitestDesktop):
         # remove args not supported by automation.py
         kwargs.pop('marionette_args', None)
 
-        return self._automation.runApp(*args, **kwargs)
+        ret, _ = self._automation.runApp(*args, **kwargs)
+        return ret, None
 
 
 def run_test_harness(parser, options):

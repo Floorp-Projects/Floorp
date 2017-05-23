@@ -3095,23 +3095,6 @@ js::GetDebugEnvironmentForGlobalLexicalEnvironment(JSContext* cx)
     return GetDebugEnvironment(cx, ei);
 }
 
-// See declaration and documentation in jsfriendapi.h
-JS_FRIEND_API(JSObject*)
-js::GetNearestEnclosingWithEnvironmentObjectForFunction(JSFunction* fun)
-{
-    if (!fun->isInterpreted())
-        return &fun->global();
-
-    JSObject* env = fun->environment();
-    while (env && !env->is<WithEnvironmentObject>())
-        env = env->enclosingEnvironment();
-
-    if (!env)
-        return &fun->global();
-
-    return &env->as<WithEnvironmentObject>().object();
-}
-
 bool
 js::CreateObjectsForEnvironmentChain(JSContext* cx, AutoObjectVector& chain,
                                      HandleObject terminatingEnv, MutableHandleObject envObj)

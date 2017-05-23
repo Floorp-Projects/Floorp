@@ -7,6 +7,7 @@
 EXTRA_JS_MODULES.addons += [
     'AddonRepository.jsm',
     'AddonRepository_SQLiteMigrator.jsm',
+    'AddonSettings.jsm',
     'AddonUpdateChecker.jsm',
     'APIExtensionBootstrap.js',
     'Content.js',
@@ -29,7 +30,3 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     EXTRA_JS_MODULES.addons += [
         'PluginProvider.jsm',
     ]
-
-EXTRA_PP_JS_MODULES.addons += [
-    'AddonConstants.jsm',
-]

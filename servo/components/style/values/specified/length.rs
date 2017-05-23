@@ -14,11 +14,11 @@ use parser::{Parse, ParserContext};
 use std::{cmp, fmt, mem};
 use std::ascii::AsciiExt;
 use std::ops::Mul;
-use style_traits::ToCss;
+use style_traits::{HasViewportPercentage, ToCss};
 use style_traits::values::specified::{AllowedLengthType, AllowedNumericType};
 use stylesheets::CssRuleType;
 use super::{AllowQuirks, Number, ToComputedValue};
-use values::{Auto, CSSFloat, Either, FONT_MEDIUM_PX, HasViewportPercentage, None_, Normal};
+use values::{Auto, CSSFloat, Either, FONT_MEDIUM_PX, None_, Normal};
 use values::ExtremumLength;
 use values::computed::{ComputedValueAsSpecified, Context};
 use values::specified::calc::CalcNode;
@@ -531,7 +531,7 @@ impl NoCalcLength {
 /// This is commonly used for the `<length>` values.
 ///
 /// https://drafts.csswg.org/css-values/#lengths
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Debug, HasViewportPercentage, PartialEq)]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
 pub enum Length {
     /// The internal length type that cannot parse `calc`
@@ -546,15 +546,6 @@ impl From<NoCalcLength> for Length {
     #[inline]
     fn from(len: NoCalcLength) -> Self {
         Length::NoCalc(len)
-    }
-}
-
-impl HasViewportPercentage for Length {
-    fn has_viewport_percentage(&self) -> bool {
-        match *self {
-            Length::NoCalc(ref inner) => inner.has_viewport_percentage(),
-            Length::Calc(ref calc) => calc.has_viewport_percentage(),
-        }
     }
 }
 
@@ -629,7 +620,8 @@ impl Length {
             Token::Dimension(ref value, ref unit) if num_context.is_ok(value.value) =>
                 Length::parse_dimension(context, value.value, unit),
             Token::Number(ref value) if num_context.is_ok(value.value) => {
-                if value.value != 0. && !context.parsing_mode.allows_unitless_lengths() &&
+                if value.value != 0. &&
+                   !context.parsing_mode.allows_unitless_lengths() &&
                    !allow_quirks.allowed(context.quirks_mode) {
                     return Err(())
                 }
@@ -713,7 +705,7 @@ impl<T: Parse> Either<Length, T> {
 /// As of today, only `-moz-image-rect` supports percentages without length.
 /// This is not a regression, and that's a non-standard extension anyway, so I'm
 /// not implementing it for now.
-#[derive(Clone, PartialEq, Copy, Debug)]
+#[derive(Clone, Copy, Debug, HasViewportPercentage, PartialEq)]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
 pub struct Percentage(pub CSSFloat);
 
@@ -754,7 +746,7 @@ impl Parse for Percentage {
 impl ComputedValueAsSpecified for Percentage {}
 
 /// A length or a percentage value.
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Debug, HasViewportPercentage, PartialEq)]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
 #[allow(missing_docs)]
 pub enum LengthOrPercentage {
@@ -786,16 +778,6 @@ impl From<Percentage> for LengthOrPercentage {
     }
 }
 
-impl HasViewportPercentage for LengthOrPercentage {
-    fn has_viewport_percentage(&self) -> bool {
-        match *self {
-            LengthOrPercentage::Length(ref length) => length.has_viewport_percentage(),
-            LengthOrPercentage::Calc(ref calc) => calc.has_viewport_percentage(),
-            _ => false
-        }
-    }
-}
-
 impl ToCss for LengthOrPercentage {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
         match *self {
@@ -824,9 +806,14 @@ impl LengthOrPercentage {
                 NoCalcLength::parse_dimension(context, value.value, unit).map(LengthOrPercentage::Length),
             Token::Percentage(ref value) if num_context.is_ok(value.unit_value) =>
                 Ok(LengthOrPercentage::Percentage(Percentage(value.unit_value))),
-            Token::Number(value) if value.value == 0. ||
-                                    (num_context.is_ok(value.value) && allow_quirks.allowed(context.quirks_mode)) =>
-                Ok(LengthOrPercentage::Length(NoCalcLength::from_px(value.value))),
+            Token::Number(value) if num_context.is_ok(value.value) => {
+                if value.value != 0. &&
+                   !context.parsing_mode.allows_unitless_lengths() &&
+                   !allow_quirks.allowed(context.quirks_mode) {
+                    return Err(())
+                }
+                Ok(LengthOrPercentage::Length(NoCalcLength::from_px(value.value)))
+            }
             Token::Function(ref name) if name.eq_ignore_ascii_case("calc") => {
                 let calc = try!(input.parse_nested_block(|i| {
                     CalcNode::parse_length_or_percentage(context, i, num_context)
@@ -914,7 +901,7 @@ impl LengthOrPercentage {
 }
 
 /// Either a `<length>`, a `<percentage>`, or the `auto` keyword.
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Debug, HasViewportPercentage, PartialEq)]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
 #[allow(missing_docs)]
 pub enum LengthOrPercentageOrAuto {
@@ -935,16 +922,6 @@ impl From<Percentage> for LengthOrPercentageOrAuto {
     #[inline]
     fn from(pc: Percentage) -> Self {
         LengthOrPercentageOrAuto::Percentage(pc)
-    }
-}
-
-impl HasViewportPercentage for LengthOrPercentageOrAuto {
-    fn has_viewport_percentage(&self) -> bool {
-        match *self {
-            LengthOrPercentageOrAuto::Length(ref length) => length.has_viewport_percentage(),
-            LengthOrPercentageOrAuto::Calc(ref calc) => calc.has_viewport_percentage(),
-            _ => false
-        }
     }
 }
 
@@ -971,7 +948,8 @@ impl LengthOrPercentageOrAuto {
             Token::Percentage(ref value) if num_context.is_ok(value.unit_value) =>
                 Ok(LengthOrPercentageOrAuto::Percentage(Percentage(value.unit_value))),
             Token::Number(ref value) if num_context.is_ok(value.value) => {
-                if value.value != 0. && !context.parsing_mode.allows_unitless_lengths() &&
+                if value.value != 0. &&
+                   !context.parsing_mode.allows_unitless_lengths() &&
                    !allow_quirks.allowed(context.quirks_mode) {
                     return Err(())
                 }
@@ -1036,7 +1014,7 @@ impl LengthOrPercentageOrAuto {
 }
 
 /// Either a `<length>`, a `<percentage>`, or the `none` keyword.
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Debug, HasViewportPercentage, PartialEq)]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
 #[allow(missing_docs)]
 pub enum LengthOrPercentageOrNone {
@@ -1044,16 +1022,6 @@ pub enum LengthOrPercentageOrNone {
     Percentage(Percentage),
     Calc(Box<CalcLengthOrPercentage>),
     None,
-}
-
-impl HasViewportPercentage for LengthOrPercentageOrNone {
-    fn has_viewport_percentage(&self) -> bool {
-        match *self {
-            LengthOrPercentageOrNone::Length(ref length) => length.has_viewport_percentage(),
-            LengthOrPercentageOrNone::Calc(ref calc) => calc.has_viewport_percentage(),
-            _ => false
-        }
-    }
 }
 
 impl ToCss for LengthOrPercentageOrNone {
@@ -1133,7 +1101,7 @@ pub type LengthOrAuto = Either<Length, Auto>;
 
 /// Either a `<length>` or a `<percentage>` or the `auto` keyword or the
 /// `content` keyword.
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Debug, HasViewportPercentage, PartialEq)]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
 pub enum LengthOrPercentageOrAutoOrContent {
     /// A `<length>`.
@@ -1185,16 +1153,6 @@ impl LengthOrPercentageOrAutoOrContent {
     }
 }
 
-impl HasViewportPercentage for LengthOrPercentageOrAutoOrContent {
-    fn has_viewport_percentage(&self) -> bool {
-        match *self {
-            LengthOrPercentageOrAutoOrContent::Length(ref length) => length.has_viewport_percentage(),
-            LengthOrPercentageOrAutoOrContent::Calc(ref calc) => calc.has_viewport_percentage(),
-            _ => false
-        }
-    }
-}
-
 impl ToCss for LengthOrPercentageOrAutoOrContent {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
         match *self {
@@ -1225,83 +1183,58 @@ impl LengthOrNumber {
 }
 
 /// A value suitable for a `min-width` or `min-height` property.
-/// Unlike `max-width` or `max-height` properties, a MinLength can be
+/// Unlike `max-width` or `max-height` properties, a MozLength can be
 /// `auto`, and cannot be `none`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, Debug, HasViewportPercentage, PartialEq)]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
 #[allow(missing_docs)]
-pub enum MinLength {
-    LengthOrPercentage(LengthOrPercentage),
-    Auto,
+pub enum MozLength {
+    LengthOrPercentageOrAuto(LengthOrPercentageOrAuto),
     ExtremumLength(ExtremumLength),
 }
 
-impl HasViewportPercentage for MinLength {
-    fn has_viewport_percentage(&self) -> bool {
-        match *self {
-            MinLength::LengthOrPercentage(ref lop) => lop.has_viewport_percentage(),
-            _ => false
-        }
-    }
-}
-
-impl ToCss for MinLength {
+impl ToCss for MozLength {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
         match *self {
-            MinLength::LengthOrPercentage(ref lop) =>
-                lop.to_css(dest),
-            MinLength::Auto =>
-                dest.write_str("auto"),
-            MinLength::ExtremumLength(ref ext) =>
+            MozLength::LengthOrPercentageOrAuto(ref lopoa) =>
+                lopoa.to_css(dest),
+            MozLength::ExtremumLength(ref ext) =>
                 ext.to_css(dest),
         }
     }
 }
 
-impl Parse for MinLength {
+impl Parse for MozLength {
     fn parse(context: &ParserContext, input: &mut Parser) -> Result<Self, ()> {
-        MinLength::parse_quirky(context, input, AllowQuirks::No)
+        MozLength::parse_quirky(context, input, AllowQuirks::No)
     }
 }
 
-impl MinLength {
+impl MozLength {
     /// Parses, with quirks.
     pub fn parse_quirky(context: &ParserContext,
                         input: &mut Parser,
                         allow_quirks: AllowQuirks) -> Result<Self, ()> {
-        input.try(ExtremumLength::parse).map(MinLength::ExtremumLength)
-            .or_else(|()| input.try(|i| LengthOrPercentage::parse_non_negative_quirky(context, i, allow_quirks))
-                               .map(MinLength::LengthOrPercentage))
-            .or_else(|()| input.expect_ident_matching("auto").map(|()| MinLength::Auto))
+        input.try(ExtremumLength::parse).map(MozLength::ExtremumLength)
+            .or_else(|()| input.try(|i| LengthOrPercentageOrAuto::parse_non_negative_quirky(context, i, allow_quirks))
+                               .map(MozLength::LengthOrPercentageOrAuto))
     }
 }
 
 /// A value suitable for a `max-width` or `max-height` property.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, Debug, HasViewportPercentage, PartialEq)]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
 #[allow(missing_docs)]
 pub enum MaxLength {
-    LengthOrPercentage(LengthOrPercentage),
-    None,
+    LengthOrPercentageOrNone(LengthOrPercentageOrNone),
     ExtremumLength(ExtremumLength),
-}
-
-impl HasViewportPercentage for MaxLength {
-    fn has_viewport_percentage(&self) -> bool {
-        match *self {
-            MaxLength::LengthOrPercentage(ref lop) => lop.has_viewport_percentage(),
-            _ => false
-        }
-    }
 }
 
 impl ToCss for MaxLength {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
         match *self {
-            MaxLength::LengthOrPercentage(ref lop) =>
-                lop.to_css(dest),
-            MaxLength::None =>
-                dest.write_str("none"),
+            MaxLength::LengthOrPercentageOrNone(ref lopon) =>
+                lopon.to_css(dest),
             MaxLength::ExtremumLength(ref ext) =>
                 ext.to_css(dest),
         }
@@ -1320,14 +1253,7 @@ impl MaxLength {
                         input: &mut Parser,
                         allow_quirks: AllowQuirks) -> Result<Self, ()> {
         input.try(ExtremumLength::parse).map(MaxLength::ExtremumLength)
-            .or_else(|()| input.try(|i| LengthOrPercentage::parse_non_negative_quirky(context, i, allow_quirks))
-                               .map(MaxLength::LengthOrPercentage))
-            .or_else(|()| {
-                match_ignore_ascii_case! { &try!(input.expect_ident()),
-                    "none" =>
-                        Ok(MaxLength::None),
-                    _ => Err(())
-                }
-            })
+            .or_else(|()| input.try(|i| LengthOrPercentageOrNone::parse_non_negative_quirky(context, i, allow_quirks))
+                               .map(MaxLength::LengthOrPercentageOrNone))
     }
 }

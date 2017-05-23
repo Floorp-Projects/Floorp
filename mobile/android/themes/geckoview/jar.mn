@@ -1,0 +1,35 @@
+#filter substitution
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+geckoview.jar:
+
+% skin geckoview classic/1.0 %skin/
+  skin/content.css                          (content.css)
+  skin/defines.css                          (defines.css)
+  skin/scrollbar.css                        (scrollbar-apz.css)
+  skin/videocontrols.css                    (videocontrols.css)
+
+  skin/images/accessiblecaret-normal-hdpi.png       (images/accessiblecaret-normal-hdpi.png)
+  skin/images/accessiblecaret-normal-xhdpi.png      (images/accessiblecaret-normal-xhdpi.png)
+  skin/images/accessiblecaret-normal-xxhdpi.png     (images/accessiblecaret-normal-xxhdpi.png)
+  skin/images/accessiblecaret-tilt-left-hdpi.png    (images/accessiblecaret-tilt-left-hdpi.png)
+  skin/images/accessiblecaret-tilt-left-xhdpi.png   (images/accessiblecaret-tilt-left-xhdpi.png)
+  skin/images/accessiblecaret-tilt-left-xxhdpi.png  (images/accessiblecaret-tilt-left-xxhdpi.png)
+  skin/images/accessiblecaret-tilt-right-hdpi.png   (images/accessiblecaret-tilt-right-hdpi.png)
+  skin/images/accessiblecaret-tilt-right-xhdpi.png  (images/accessiblecaret-tilt-right-xhdpi.png)
+  skin/images/accessiblecaret-tilt-right-xxhdpi.png (images/accessiblecaret-tilt-right-xxhdpi.png)
+  skin/images/dropmarker.svg                        (images/dropmarker.svg)
+  skin/images/dropmarker-right.svg                  (images/dropmarker-right.svg)
+  skin/images/videocontrols-cast-ready.svg          (images/videocontrols-cast-ready.svg)
+  skin/images/videocontrols-cast-active.svg         (images/videocontrols-cast-active.svg)
+  skin/images/videocontrols-exitfullscreen.svg      (images/videocontrols-exitfullscreen.svg)
+  skin/images/videocontrols-fullscreen.svg          (images/videocontrols-fullscreen.svg)
+  skin/images/videocontrols-mute.svg                (images/videocontrols-mute.svg)
+  skin/images/videocontrols-play.svg                (images/videocontrols-play.svg)
+  skin/images/videocontrols-pause.svg               (images/videocontrols-pause.svg)
+  skin/images/videocontrols-scrubber.svg            (images/videocontrols-scrubber.svg)
+  skin/images/videocontrols-unmute.svg              (images/videocontrols-unmute.svg)
+
+% override chrome://global/skin/media/videocontrols.css chrome://geckoview/skin/videocontrols.css

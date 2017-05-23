@@ -110,7 +110,7 @@ load 423514-1.xhtml
 load 430374.html
 load 444431-1.html
 load 444702-1.html
-asserts-if(stylo,1) load 448988-1.xhtml # bug 1324681
+load 448988-1.xhtml
 load 450311-1.html
 load 451170.html
 load 451355-1.html

@@ -7,7 +7,24 @@
 #ifndef jsshell_js_h
 #define jsshell_js_h
 
+#include "mozilla/Atomics.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/TimeStamp.h"
+
 #include "jsapi.h"
+
+#include "js/GCVector.h"
+#include "threading/ConditionVariable.h"
+#include "threading/LockGuard.h"
+#include "threading/Mutex.h"
+#include "threading/Thread.h"
+#include "vm/GeckoProfiler.h"
+#include "vm/Monitor.h"
+
+// Some platform hooks must be implemented for single-step profiling.
+#if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS64)
+# define SINGLESTEP_PROFILING
+#endif
 
 namespace js {
 namespace shell {
@@ -89,6 +106,115 @@ struct RCFile {
 // global names.
 bool
 CreateAlias(JSContext* cx, const char* dstName, JS::HandleObject namespaceObj, const char* srcName);
+
+enum class ScriptKind
+{
+    Script,
+    DecodeScript,
+    Module
+};
+
+class OffThreadState {
+    enum State {
+        IDLE,           /* ready to work; no token, no source */
+        COMPILING,      /* working; no token, have source */
+        DONE            /* compilation done: have token and source */
+    };
+
+  public:
+    OffThreadState()
+      : monitor(mutexid::ShellOffThreadState),
+        state(IDLE),
+        token(),
+        source(nullptr)
+    { }
+
+    bool startIfIdle(JSContext* cx, ScriptKind kind, ScopedJSFreePtr<char16_t>& newSource);
+
+    bool startIfIdle(JSContext* cx, ScriptKind kind, JS::TranscodeBuffer&& newXdr);
+
+    void abandon(JSContext* cx);
+
+    void markDone(void* newToken);
+
+    void* waitUntilDone(JSContext* cx, ScriptKind kind);
+
+    JS::TranscodeBuffer& xdrBuffer() { return xdr; }
+
+  private:
+    js::Monitor monitor;
+    ScriptKind scriptKind;
+    State state;
+    void* token;
+    char16_t* source;
+    JS::TranscodeBuffer xdr;
+};
+
+class NonshrinkingGCObjectVector : public GCVector<JSObject*, 0, SystemAllocPolicy>
+{
+  public:
+    void sweep() {
+        for (uint32_t i = 0; i < this->length(); i++) {
+            if (JS::GCPolicy<JSObject*>::needsSweep(&(*this)[i]))
+                (*this)[i] = nullptr;
+        }
+    }
+};
+
+using MarkBitObservers = JS::WeakCache<NonshrinkingGCObjectVector>;
+
+#ifdef SINGLESTEP_PROFILING
+using StackChars = Vector<char16_t, 0, SystemAllocPolicy>;
+#endif
+
+// Per-context shell state.
+struct ShellContext
+{
+    explicit ShellContext(JSContext* cx);
+    bool isWorker;
+    double timeoutInterval;
+    double startTime;
+    mozilla::Atomic<bool> serviceInterrupt;
+    mozilla::Atomic<bool> haveInterruptFunc;
+    JS::PersistentRootedValue interruptFunc;
+    bool lastWarningEnabled;
+    JS::PersistentRootedValue lastWarning;
+    JS::PersistentRootedValue promiseRejectionTrackerCallback;
+#ifdef SINGLESTEP_PROFILING
+    Vector<StackChars, 0, SystemAllocPolicy> stacks;
+#endif
+
+    /*
+     * Watchdog thread state.
+     */
+    js::Mutex watchdogLock;
+    js::ConditionVariable watchdogWakeup;
+    mozilla::Maybe<js::Thread> watchdogThread;
+    mozilla::Maybe<mozilla::TimeStamp> watchdogTimeout;
+
+    js::ConditionVariable sleepWakeup;
+
+    int exitCode;
+    bool quitting;
+
+    JS::UniqueChars readLineBuf;
+    size_t readLineBufPos;
+
+    js::shell::RCFile** errFilePtr;
+    js::shell::RCFile** outFilePtr;
+
+    static const uint32_t GeckoProfilingMaxStackSize = 1000;
+    js::ProfileEntry geckoProfilingStack[GeckoProfilingMaxStackSize];
+    mozilla::Atomic<uint32_t> geckoProfilingStackSize;
+
+    OffThreadState offThreadState;
+
+    JS::UniqueChars moduleLoadPath;
+    UniquePtr<MarkBitObservers> markObservers;
+};
+
+extern ShellContext*
+GetShellContext(JSContext* cx);
 
 } /* namespace shell */
 } /* namespace js */

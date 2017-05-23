@@ -3357,9 +3357,19 @@ StyleAnimationValue::Accumulate(nsCSSPropertyID aProperty,
       MOZ_ASSERT(listB);
 
       nsAutoPtr<nsCSSValueList> resultList;
-      if (listA->mValue.GetUnit() == eCSSUnit_None ||
-          listB->mValue.GetUnit() == eCSSUnit_None) {
+      if (listA->mValue.GetUnit() == eCSSUnit_None) {
+        // If |aA| is 'none' then we are calculating:
+        //
+        //    none * |aCount| + |aB|
+        //    = none + |aB|
+        //    = |aB|
+        //
+        // Hence the result should just be |aB|, even if |aB| is also 'none'.
+        // Since |result| is already initialized to |aB|, we just return that.
         break;
+      } else if (listB->mValue.GetUnit() == eCSSUnit_None) {
+        resultList = AddTransformLists(0.0, listA, aCount, listA,
+                                       eCSSKeyword_accumulatematrix);
       } else if (TransformFunctionListsMatch(listA, listB)) {
         resultList = AddTransformLists(1.0, listB, aCount, listA,
                                        eCSSKeyword_accumulatematrix);

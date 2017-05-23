@@ -167,6 +167,24 @@ public:
     RefPtr<nsUrlClassifierDBServiceWorker> mTarget;
   };
 
+  class GetCacheInfoRunnable: public mozilla::Runnable
+  {
+  public:
+    explicit GetCacheInfoRunnable(nsUrlClassifierDBServiceWorker* aTarget,
+                                  const nsACString& aTable,
+                                  nsIUrlClassifierCacheInfo** aCache)
+      : mTarget(aTarget),
+        mTable(aTable),
+        mCache(aCache)
+    { }
+
+    NS_DECL_NSIRUNNABLE
+  private:
+    RefPtr<nsUrlClassifierDBServiceWorker> mTarget;
+    nsCString mTable;
+    nsIUrlClassifierCacheInfo** mCache;
+  };
+
 public:
   nsresult DoLocalLookup(const nsACString& spec,
                          const nsACString& tables,
@@ -177,6 +195,8 @@ public:
 
   nsresult CacheCompletions(mozilla::safebrowsing::CacheResultArray * aEntries);
 
+  nsresult GetCacheInfo(const nsACString& aTable,
+                        nsIUrlClassifierCacheInfo** aCache);
 private:
   ~UrlClassifierDBServiceWorkerProxy() {}
 

@@ -7,7 +7,7 @@
 var tempScope = {};
 Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", tempScope);
 var LightweightThemeManager = tempScope.LightweightThemeManager;
-const { REQUIRE_SIGNING } = Components.utils.import("resource://gre/modules/addons/AddonConstants.jsm", {});
+ Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
 var gProvider;
 var gManagerWindow;
@@ -418,7 +418,7 @@ add_task(async function() {
   is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
 
   // These tests are only appropriate when signing can be turned off
-  if (!REQUIRE_SIGNING) {
+  if (!AppConstants.MOZ_REQUIRE_SIGNING) {
     info("Addon 10");
     addon = items["Test add-on 10"];
     addon.parentNode.ensureElementIsVisible(addon);

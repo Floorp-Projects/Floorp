@@ -301,8 +301,7 @@ user_pref("browser.search.countryCode", "US");
 // This will prevent HTTP requests for region defaults.
 user_pref("browser.search.geoSpecificDefaults", false);
 
-// Make sure self support doesn't hit the network.
-user_pref("browser.selfsupport.url", "https://example.com/selfsupport-dummy/");
+// Make sure Shield doesn't hit the network.
 user_pref("extensions.shield-recipe-client.api_url", "https://example.com/selfsupport-dummy/");
 
 user_pref("media.eme.enabled", true);
@@ -341,8 +340,6 @@ user_pref("browser.urlbar.suggest.searches", false);
 user_pref("browser.urlbar.userMadeSearchSuggestionsChoice", true);
 
 user_pref("browser.urlbar.usepreloadedtopurls.enabled", false);
-
-user_pref("dom.audiochannel.mutedByDefault", false);
 
 user_pref("webextensions.tests", true);
 user_pref("startup.homepage_welcome_url", "about:blank");

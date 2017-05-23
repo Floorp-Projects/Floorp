@@ -46,7 +46,7 @@ load 265999-1.html
 load 266222-1.html
 asserts(1-7) load 266360-1.html # bug 576358
 load 266445-1.html
-asserts(2) asserts-if(stylo,0) load 266445-2.html
+asserts(2) load 266445-2.html
 load 268157-1.html
 load 269566-1.html
 load 272647-1.html
@@ -431,7 +431,7 @@ load 812665.html
 load 813372-1.html
 load 817219.html
 load 818454.html
-pref(layout.css.moz-appearance.enabled,true) load 822865.html
+load 822865.html
 load 824300.html
 load 824862.html
 load 826163.html

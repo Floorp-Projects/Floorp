@@ -4,7 +4,7 @@
 // Insert your (minimal) C/C++ header here.
 ```
 
-### Bindgen Invokation
+### Bindgen Invocation
 
 <!-- Place either the `bindgen::Builder` or the command line flags used here. -->
 

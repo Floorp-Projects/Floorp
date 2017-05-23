@@ -40,11 +40,14 @@ use style::gecko_bindings::bindings::{RawServoStyleSheetBorrowed, ServoComputedV
 use style::gecko_bindings::bindings::{RawServoStyleSheetStrong, ServoComputedValuesStrong};
 use style::gecko_bindings::bindings::{RawServoSupportsRule, RawServoSupportsRuleBorrowed};
 use style::gecko_bindings::bindings::{ServoCssRulesBorrowed, ServoCssRulesStrong};
-use style::gecko_bindings::bindings::{nsACString, nsAString};
+use style::gecko_bindings::bindings::{nsACString, nsAString, nsCSSPropertyIDSetBorrowedMut};
+use style::gecko_bindings::bindings::Gecko_AddPropertyToSet;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateFinalKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateInitialKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateKeyframeAtStart;
+use style::gecko_bindings::bindings::Gecko_NewNoneTransform;
 use style::gecko_bindings::bindings::RawGeckoAnimationPropertySegmentBorrowed;
+use style::gecko_bindings::bindings::RawGeckoCSSPropertyIDListBorrowed;
 use style::gecko_bindings::bindings::RawGeckoComputedKeyframeValuesListBorrowedMut;
 use style::gecko_bindings::bindings::RawGeckoComputedTimingBorrowed;
 use style::gecko_bindings::bindings::RawGeckoElementBorrowed;
@@ -80,11 +83,11 @@ use style::keyframes::{Keyframe, KeyframeSelector, KeyframesStepValue};
 use style::media_queries::{MediaList, parse_media_query_list};
 use style::parallel;
 use style::parser::{PARSING_MODE_DEFAULT, ParserContext};
-use style::properties::{CascadeFlags, ComputedValues, Importance, ParsedDeclaration, StyleBuilder};
-use style::properties::{LonghandIdSet, PropertyDeclarationBlock, PropertyId};
+use style::properties::{CascadeFlags, ComputedValues, Importance, SourcePropertyDeclaration};
+use style::properties::{LonghandIdSet, PropertyDeclarationBlock, PropertyId, StyleBuilder};
 use style::properties::SKIP_ROOT_AND_ITEM_BASED_DISPLAY_FIXUP;
 use style::properties::animated_properties::{Animatable, AnimationValue, TransitionProperty};
-use style::properties::parse_one_declaration;
+use style::properties::parse_one_declaration_into;
 use style::restyle_hints::{self, RestyleHint};
 use style::rule_tree::StyleSource;
 use style::selector_parser::PseudoElementCascadeType;
@@ -100,7 +103,7 @@ use style::stylesheets::StylesheetLoader as StyleStylesheetLoader;
 use style::supports::parse_condition_or_declaration;
 use style::thread_state;
 use style::timer::Timer;
-use style::traversal::{ANIMATION_ONLY, FOR_RECONSTRUCT, UNSTYLED_CHILDREN_ONLY};
+use style::traversal::{ANIMATION_ONLY, FOR_CSS_RULE_CHANGES, FOR_RECONSTRUCT, UNSTYLED_CHILDREN_ONLY};
 use style::traversal::{resolve_style, DomTraversal, TraversalDriver, TraversalFlags};
 use style::values::{CustomIdent, KeyframesName};
 use style_traits::ToCss;
@@ -247,18 +250,28 @@ pub extern "C" fn Servo_TraverseSubtree(root: RawGeckoElementBorrowed,
     debug!("Servo_TraverseSubtree: {:?}", element);
 
     let traversal_flags = match (root_behavior, restyle_behavior) {
-        (Root::Normal, Restyle::Normal) => TraversalFlags::empty(),
-        (Root::UnstyledChildrenOnly, Restyle::Normal) => UNSTYLED_CHILDREN_ONLY,
+        (Root::Normal, Restyle::Normal) |
+        (Root::Normal, Restyle::ForAnimationOnly)
+            => TraversalFlags::empty(),
+        (Root::UnstyledChildrenOnly, Restyle::Normal) |
+        (Root::UnstyledChildrenOnly, Restyle::ForAnimationOnly)
+            => UNSTYLED_CHILDREN_ONLY,
+        (Root::Normal, Restyle::ForCSSRuleChanges) => FOR_CSS_RULE_CHANGES,
         (Root::Normal, Restyle::ForReconstruct) => FOR_RECONSTRUCT,
         _ => panic!("invalid combination of TraversalRootBehavior and TraversalRestyleBehavior"),
     };
 
-    if element.has_animation_only_dirty_descendants() ||
-       element.has_animation_restyle_hints() {
+    let needs_animation_only_restyle = element.has_animation_only_dirty_descendants() ||
+                                       element.has_animation_restyle_hints();
+    if needs_animation_only_restyle {
         traverse_subtree(element,
                          raw_data,
                          traversal_flags | ANIMATION_ONLY,
                          unsafe { &*snapshots });
+    }
+
+    if restyle_behavior == Restyle::ForAnimationOnly {
+        return needs_animation_only_restyle;
     }
 
     traverse_subtree(element,
@@ -449,7 +462,15 @@ pub extern "C" fn Servo_AnimationValue_GetTransform(value: RawServoAnimationValu
 {
     let value = AnimationValue::as_arc(&value);
     if let AnimationValue::Transform(ref servo_list) = **value {
-        style_structs::Box::convert_transform(servo_list.0.clone().unwrap(), unsafe { &mut *list });
+        let list = unsafe { &mut *list };
+        match servo_list.0 {
+            Some(ref servo_list) => {
+                style_structs::Box::convert_transform(servo_list, list);
+            },
+            None => unsafe {
+                list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
+            }
+        }
     } else {
         panic!("The AnimationValue should be transform");
     }
@@ -1252,22 +1273,25 @@ pub extern "C" fn Servo_StyleSet_Drop(data: RawServoStyleSetOwned) {
     let _ = data.into_box::<PerDocumentStyleData>();
 }
 
-fn parse_property(property_id: PropertyId,
-                  value: *const nsACString,
-                  data: *mut URLExtraData,
-                  parsing_mode: structs::ParsingMode,
-                  quirks_mode: QuirksMode) -> Result<ParsedDeclaration, ()> {
+fn parse_property_into(declarations: &mut SourcePropertyDeclaration,
+                       property_id: PropertyId,
+                       value: *const nsACString,
+                       data: *mut URLExtraData,
+                       parsing_mode: structs::ParsingMode,
+                       quirks_mode: QuirksMode) -> Result<(), ()> {
     use style::parser::ParsingMode;
     let value = unsafe { value.as_ref().unwrap().as_str_unchecked() };
     let url_data = unsafe { RefPtr::from_ptr_ref(&data) };
     let parsing_mode = ParsingMode::from_bits_truncate(parsing_mode);
 
-    parse_one_declaration(property_id,
-                          value,
-                          url_data,
-                          &RustLogReporter,
-                          parsing_mode,
-                          quirks_mode)
+    parse_one_declaration_into(
+        declarations,
+        property_id,
+        value,
+        url_data,
+        &RustLogReporter,
+        parsing_mode,
+        quirks_mode)
 }
 
 #[no_mangle]
@@ -1278,11 +1302,13 @@ pub extern "C" fn Servo_ParseProperty(property: nsCSSPropertyID, value: *const n
                                       -> RawServoDeclarationBlockStrong {
     let id = get_property_id_from_nscsspropertyid!(property,
                                                    RawServoDeclarationBlockStrong::null());
-    match parse_property(id, value, data, parsing_mode, quirks_mode.into()) {
-        Ok(parsed) => {
+    let mut declarations = SourcePropertyDeclaration::new();
+    match parse_property_into(&mut declarations, id, value, data,
+                              parsing_mode, quirks_mode.into()) {
+        Ok(()) => {
             let global_style_data = &*GLOBAL_STYLE_DATA;
             let mut block = PropertyDeclarationBlock::new();
-            parsed.expand_push_into(&mut block, Importance::Normal);
+            block.extend(declarations.drain(), Importance::Normal);
             Arc::new(global_style_data.shared_lock.wrap(block)).into_strong()
         }
         Err(_) => RawServoDeclarationBlockStrong::null()
@@ -1311,6 +1337,38 @@ pub extern "C" fn Servo_ParseEasing(easing: *const nsAString,
             true
         },
         Err(_) => false
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_GetProperties_Overriding_Animation(element: RawGeckoElementBorrowed,
+                                                           list: RawGeckoCSSPropertyIDListBorrowed,
+                                                           set: nsCSSPropertyIDSetBorrowedMut) {
+    let element = GeckoElement(element);
+    let element_data = match element.borrow_data() {
+        Some(data) => data,
+        None => return
+    };
+    let global_style_data = &*GLOBAL_STYLE_DATA;
+    let guard = global_style_data.shared_lock.read();
+    let guards = StylesheetGuards::same(&guard);
+    let (overridden, custom) =
+        element_data.styles().primary.rules.get_properties_overriding_animations(&guards);
+    for p in list.iter() {
+        match PropertyId::from_nscsspropertyid(*p) {
+            Ok(property) => {
+                if let PropertyId::Longhand(id) = property {
+                    if overridden.contains(id) {
+                        unsafe { Gecko_AddPropertyToSet(set, *p) };
+                    }
+                }
+            },
+            Err(_) => {
+                if *p == nsCSSPropertyID::eCSSPropertyExtra_variable && custom {
+                    unsafe { Gecko_AddPropertyToSet(set, *p) };
+                }
+            }
+        }
     }
 }
 
@@ -1370,6 +1428,29 @@ pub extern "C" fn Servo_DeclarationBlock_SerializeOneValue(
     read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
         let mut string = String::new();
         let rv = decls.single_value_to_css(&property_id, &mut string);
+        debug_assert!(rv.is_ok());
+
+        write!(unsafe { &mut *buffer }, "{}", string).expect("Failed to copy string");
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_SerializeFontValueForCanvas(
+    declarations: RawServoDeclarationBlockBorrowed,
+    buffer: *mut nsAString) {
+    use style::properties::shorthands::font;
+
+    read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
+        let longhands = match font::LonghandsToSerialize::from_iter(decls.declarations_iter()) {
+            Ok(l) => l,
+            Err(()) => {
+                warn!("Unexpected property!");
+                return;
+            }
+        };
+
+        let mut string = String::new();
+        let rv = longhands.to_css_for_canvas(&mut string);
         debug_assert!(rv.is_ok());
 
         write!(unsafe { &mut *buffer }, "{}", string).expect("Failed to copy string");
@@ -1439,11 +1520,13 @@ fn set_property(declarations: RawServoDeclarationBlockBorrowed, property_id: Pro
                 value: *const nsACString, is_important: bool, data: *mut URLExtraData,
                 parsing_mode: structs::ParsingMode,
                 quirks_mode: QuirksMode) -> bool {
-    match parse_property(property_id, value, data, parsing_mode, quirks_mode) {
-        Ok(parsed) => {
+    let mut source_declarations = SourcePropertyDeclaration::new();
+    match parse_property_into(&mut source_declarations, property_id, value, data,
+                              parsing_mode, quirks_mode) {
+        Ok(()) => {
             let importance = if is_important { Importance::Important } else { Importance::Normal };
             write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
-                parsed.expand_set_into(decls, importance)
+                decls.extend_reset(source_declarations.drain(), importance)
             })
         },
         Err(_) => false,
@@ -1509,7 +1592,7 @@ pub extern "C" fn Servo_MediaList_Matches(list: RawServoMediaListBorrowed,
                                           -> bool {
     let per_doc_data = PerDocumentStyleData::from_ffi(raw_data).borrow();
     read_locked_arc(list, |list: &MediaList| {
-        list.evaluate(&per_doc_data.stylist.device, per_doc_data.stylist.quirks_mode())
+        list.evaluate(per_doc_data.stylist.device(), per_doc_data.stylist.quirks_mode())
     })
 }
 
@@ -1711,15 +1794,18 @@ pub extern "C" fn Servo_DeclarationBlock_SetPixelValue(declarations:
                                                        value: f32) {
     use style::properties::{PropertyDeclaration, LonghandId};
     use style::properties::longhands::border_spacing::SpecifiedValue as BorderSpacing;
+    use style::properties::longhands::height::SpecifiedValue as Height;
+    use style::properties::longhands::width::SpecifiedValue as Width;
     use style::values::specified::BorderWidth;
+    use style::values::specified::MozLength;
     use style::values::specified::length::{NoCalcLength, LengthOrPercentage};
 
     let long = get_longhand_from_id!(property);
     let nocalc = NoCalcLength::from_px(value);
 
     let prop = match_wrap_declared! { long,
-        Height => nocalc.into(),
-        Width => nocalc.into(),
+        Height => Height(MozLength::LengthOrPercentageOrAuto(nocalc.into())),
+        Width => Width(MozLength::LengthOrPercentageOrAuto(nocalc.into())),
         BorderTopWidth => BorderWidth::Width(nocalc.into()),
         BorderRightWidth => BorderWidth::Width(nocalc.into()),
         BorderBottomWidth => BorderWidth::Width(nocalc.into()),
@@ -1757,6 +1843,8 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(declarations:
                                                         unit: structs::nsCSSUnit) {
     use style::properties::{PropertyDeclaration, LonghandId};
     use style::properties::longhands::_moz_script_min_size::SpecifiedValue as MozScriptMinSize;
+    use style::properties::longhands::width::SpecifiedValue as Width;
+    use style::values::specified::MozLength;
     use style::values::specified::length::{AbsoluteLength, FontRelativeLength, PhysicalLength};
     use style::values::specified::length::{LengthOrPercentage, NoCalcLength};
 
@@ -1776,7 +1864,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(declarations:
     };
 
     let prop = match_wrap_declared! { long,
-        Width => nocalc.into(),
+        Width => Width(MozLength::LengthOrPercentageOrAuto(nocalc.into())),
         FontSize => LengthOrPercentage::from(nocalc).into(),
         MozScriptMinSize => MozScriptMinSize(nocalc),
     };
@@ -1811,14 +1899,17 @@ pub extern "C" fn Servo_DeclarationBlock_SetPercentValue(declarations:
                                                          property: nsCSSPropertyID,
                                                          value: f32) {
     use style::properties::{PropertyDeclaration, LonghandId};
+    use style::properties::longhands::height::SpecifiedValue as Height;
+    use style::properties::longhands::width::SpecifiedValue as Width;
+    use style::values::specified::MozLength;
     use style::values::specified::length::{LengthOrPercentage, Percentage};
 
     let long = get_longhand_from_id!(property);
     let pc = Percentage(value);
 
     let prop = match_wrap_declared! { long,
-        Height => pc.into(),
-        Width => pc.into(),
+        Height => Height(MozLength::LengthOrPercentageOrAuto(pc.into())),
+        Width => Width(MozLength::LengthOrPercentageOrAuto(pc.into())),
         MarginTop => pc.into(),
         MarginRight => pc.into(),
         MarginBottom => pc.into(),
@@ -1835,14 +1926,16 @@ pub extern "C" fn Servo_DeclarationBlock_SetAutoValue(declarations:
                                                       RawServoDeclarationBlockBorrowed,
                                                       property: nsCSSPropertyID) {
     use style::properties::{PropertyDeclaration, LonghandId};
+    use style::properties::longhands::height::SpecifiedValue as Height;
+    use style::properties::longhands::width::SpecifiedValue as Width;
     use style::values::specified::LengthOrPercentageOrAuto;
 
     let long = get_longhand_from_id!(property);
     let auto = LengthOrPercentageOrAuto::Auto;
 
     let prop = match_wrap_declared! { long,
-        Height => auto,
-        Width => auto,
+        Height => Height::auto(),
+        Width => Width::auto(),
         MarginTop => auto,
         MarginRight => auto,
         MarginBottom => auto,
@@ -1968,11 +2061,15 @@ pub extern "C" fn Servo_CSSSupports2(property: *const nsACString,
                                      value: *const nsACString) -> bool {
     let id = get_property_id_from_property!(property, false);
 
-    parse_property(id,
-                   value,
-                   unsafe { DUMMY_URL_DATA },
-                   structs::ParsingMode_Default,
-                   QuirksMode::NoQuirks).is_ok()
+    let mut declarations = SourcePropertyDeclaration::new();
+    parse_property_into(
+        &mut declarations,
+        id,
+        value,
+        unsafe { DUMMY_URL_DATA },
+        structs::ParsingMode_Default,
+        QuirksMode::NoQuirks
+    ).is_ok()
 }
 
 #[no_mangle]
@@ -2053,16 +2150,16 @@ pub extern "C" fn Servo_NoteExplicitHints(element: RawGeckoElementBorrowed,
            element, restyle_hint, change_hint);
 
     let restyle_hint: RestyleHint = restyle_hint.into();
-    debug_assert!(RestyleHint::for_animations().contains(restyle_hint) ||
-                  !RestyleHint::for_animations().intersects(restyle_hint),
+    debug_assert!(!(restyle_hint.has_animation_hint() &&
+                    restyle_hint.has_non_animation_hint()),
                   "Animation restyle hints should not appear with non-animation restyle hints");
 
     let mut maybe_data = element.mutate_data();
     let maybe_restyle_data = maybe_data.as_mut().and_then(|d| unsafe {
-        maybe_restyle(d, element, restyle_hint.intersects(RestyleHint::for_animations()))
+        maybe_restyle(d, element, restyle_hint.has_animation_hint())
     });
     if let Some(restyle_data) = maybe_restyle_data {
-        restyle_data.hint.insert(&restyle_hint.into());
+        restyle_data.hint.insert(restyle_hint.into());
         restyle_data.damage |= damage;
     } else {
         debug!("(Element not styled, discarding hints)");
@@ -2193,7 +2290,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(keyframes: RawGeckoKeyframeLis
 
     let mut context = Context {
         is_root_element: false,
-        device: &data.stylist.device,
+        device: data.stylist.device(),
         inherited_style: parent_style.unwrap_or(default_values),
         layout_parent_style: parent_style.unwrap_or(default_values),
         style: StyleBuilder::for_derived_style(&style),
@@ -2271,7 +2368,7 @@ pub extern "C" fn Servo_AnimationValue_Compute(declarations: RawServoDeclaration
     let metrics = get_metrics_provider_for_product();
     let mut context = Context {
         is_root_element: false,
-        device: &data.stylist.device,
+        device: data.stylist.device(),
         inherited_style: parent_style.unwrap_or(default_values),
         layout_parent_style: parent_style.unwrap_or(default_values),
         style: StyleBuilder::for_derived_style(&style),

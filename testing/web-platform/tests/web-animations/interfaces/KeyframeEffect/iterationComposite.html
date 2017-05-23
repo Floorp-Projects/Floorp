@@ -669,15 +669,18 @@ test(function(t) {
 
   anim.currentTime = anim.effect.timing.duration / 2;
   assert_equals(getComputedStyle(div).transform,
-    'matrix(1, 0, 0, 1, 5, 0)', // (0px + 10px) / 2
+    // translateX(none) -> translateX(10px) @ 50%
+    'matrix(1, 0, 0, 1, 5, 0)',
     'Animated transform list at 50s of the first iteration');
   anim.currentTime = anim.effect.timing.duration * 2;
   assert_equals(getComputedStyle(div).transform,
-    'matrix(1, 0, 0, 1, 0, 0)', // 'none' overrides any transforms.
+    // translateX(10px * 2 + none) -> translateX(10px * 2 + 10px) @ 0%
+    'matrix(1, 0, 0, 1, 20, 0)',
     'Animated transform list at 0s of the third iteration');
   anim.currentTime += anim.effect.timing.duration / 2;
   assert_equals(getComputedStyle(div).transform,
-    'matrix(1, 0, 0, 1, 15, 0)', // (0px + 10px*2)/2
+    // translateX(10px * 2 + none) -> translateX(10px * 2 + 10px) @ 50%
+    'matrix(1, 0, 0, 1, 25, 0)',
     'Animated transform list at 50s of the third iteration');
 }, 'iterationComposite of transform from none to translate');
 

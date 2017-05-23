@@ -27,7 +27,7 @@ treechildren::-moz-tree-image(title) {
   margin: 0px 2px;
   width: 16px;
   height: 16px;
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
 treechildren::-moz-tree-image(title, livemarkItem) {

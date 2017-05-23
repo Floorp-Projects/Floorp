@@ -100,7 +100,7 @@ use ipc_channel::ipc::{self, IpcSender};
 use js::jsapi::{JSContext, JSObject, JSRuntime};
 use js::jsapi::JS_GetRuntime;
 use msg::constellation_msg::{ALT, CONTROL, SHIFT, SUPER};
-use msg::constellation_msg::{BrowsingContextId, Key, KeyModifiers, KeyState};
+use msg::constellation_msg::{BrowsingContextId, Key, KeyModifiers, KeyState, TopLevelBrowsingContextId};
 use net_traits::{FetchResponseMsg, IpcSend, ReferrerPolicy};
 use net_traits::CookieSource::NonHTTP;
 use net_traits::CoreResourceMsg::{GetCookiesForUrl, SetCookiesForUrl};
@@ -131,7 +131,7 @@ use std::rc::Rc;
 use std::time::{Duration, Instant};
 use style::attr::AttrValue;
 use style::context::{QuirksMode, ReflowGoal};
-use style::restyle_hints::{RestyleHint, RESTYLE_SELF, RESTYLE_STYLE_ATTRIBUTE};
+use style::restyle_hints::{RestyleHint, RESTYLE_STYLE_ATTRIBUTE};
 use style::selector_parser::{RestyleDamage, Snapshot};
 use style::shared_lock::SharedRwLock as StyleSharedRwLock;
 use style::str::{HTML_SPACE_CHARACTERS, split_html_space_chars, str_join};
@@ -1899,7 +1899,21 @@ impl Document {
     /// Find an iframe element in the document.
     pub fn find_iframe(&self, browsing_context_id: BrowsingContextId) -> Option<Root<HTMLIFrameElement>> {
         self.iter_iframes()
-            .find(|node| node.browsing_context_id() == browsing_context_id)
+            .find(|node| node.browsing_context_id() == Some(browsing_context_id))
+    }
+
+    /// Find a mozbrowser iframe element in the document.
+    pub fn find_mozbrowser_iframe(&self,
+                                  top_level_browsing_context_id: TopLevelBrowsingContextId)
+                                  -> Option<Root<HTMLIFrameElement>>
+    {
+        match self.find_iframe(BrowsingContextId::from(top_level_browsing_context_id)) {
+            None => None,
+            Some(iframe) => {
+                assert!(iframe.Mozbrowser());
+                Some(iframe)
+            },
+        }
     }
 
     pub fn get_dom_loading(&self) -> u64 {
@@ -2361,14 +2375,14 @@ impl Document {
             entry.snapshot = Some(Snapshot::new(el.html_element_in_html_document()));
         }
         if attr.local_name() == &local_name!("style") {
-            entry.hint |= RESTYLE_STYLE_ATTRIBUTE;
+            entry.hint.insert(RestyleHint::for_replacements(RESTYLE_STYLE_ATTRIBUTE));
         }
 
         // FIXME(emilio): This should become something like
         // element.is_attribute_mapped(attr.local_name()).
         if attr.local_name() == &local_name!("width") ||
            attr.local_name() == &local_name!("height") {
-            entry.hint |= RESTYLE_SELF;
+            entry.hint.insert(RestyleHint::for_self());
         }
 
         let mut snapshot = entry.snapshot.as_mut().unwrap();

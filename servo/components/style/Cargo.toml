@@ -21,12 +21,17 @@ use_bindgen = ["bindgen", "regex", "toml"]
 servo = ["serde", "serde_derive", "heapsize", "heapsize_derive",
          "style_traits/servo", "servo_atoms", "servo_config", "html5ever",
          "cssparser/heapsize", "cssparser/serde", "encoding", "smallvec/heapsizeof",
+
+         # FIXME: Uncomment when https://github.com/servo/servo/pull/16953 has landed:
+         #"arrayvec/use_union"
+
          "rayon/unstable", "servo_url"]
 testing = []
 gecko_debug = ["nsstring_vendor/gecko_debug"]
 
 [dependencies]
-app_units = "0.4"
+app_units = "0.4.1"
+arrayvec = "0.3.20"
 atomic_refcell = "0.1"
 bitflags = "0.7"
 bit-vec = "0.4.3"
@@ -58,9 +63,11 @@ serde_derive = {version = "0.9", optional = true}
 servo_atoms = {path = "../atoms", optional = true}
 servo_config = {path = "../config", optional = true}
 smallvec = "0.3.3"
+style_derive = {path = "../style_derive"}
 style_traits = {path = "../style_traits"}
 servo_url = {path = "../url", optional = true}
 time = "0.1"
+unicode-bidi = {version = "0.3", features = ["with_serde"]}
 unicode-segmentation = "1.0"
 
 [target.'cfg(windows)'.dependencies]
@@ -69,7 +76,7 @@ kernel32-sys = "0.2"
 [build-dependencies]
 lazy_static = "0.2"
 log = "0.3"
-bindgen = { version = "0.25", optional = true }
+bindgen = { version = "0.25.1", optional = true }
 regex = {version = "0.2", optional = true}
 walkdir = "1.0"
 toml = {version = "0.2.1", optional = true, default-features = false}

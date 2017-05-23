@@ -587,7 +587,7 @@ class TryOptionSyntax(object):
         job_try_name = attr('job_try_name')
         if job_try_name:
             if self.jobs is None or job_try_name in self.jobs:
-                if self.platforms is None or attr('build_platform') not in self.platforms:
+                if self.platforms is None or attr('build_platform') in self.platforms:
                     return True
         elif attr('kind') == 'test':
             return match_test(self.unittests, 'unittest_try_name') \

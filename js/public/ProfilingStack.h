@@ -36,13 +36,14 @@ class ProfileEntry
     //
     // A ProfileEntry represents both a C++ profile entry and a JS one.
 
-    // Descriptive string of this entry. Can be a static string or a dynamic
-    // string. If it's a dynamic string (which will need to be copied during
-    // sampling), then isCopyLabel() needs to return true.
-    const char * volatile string;
+    // Descriptive label for this entry. Must be a static string! Can be an
+    // empty string, but not a null pointer.
+    const char * volatile label_;
 
-    // An additional descriptive string of this entry. Can be null.
-    const char * volatile dynamicString;
+    // An additional descriptive string of this entry which is combined with
+    // |label_| in profiler output. Need not be (and usually isn't) static. Can
+    // be null.
+    const char * volatile dynamicString_;
 
     // Stack pointer for non-JS entries, the script pointer otherwise.
     void * volatile spOrScript;
@@ -60,22 +61,18 @@ class ProfileEntry
         // a JS frame is assumed by default. You're not allowed to publicly
         // change the frame type. Instead, initialize the ProfileEntry as either
         // a JS or CPP frame with `initJsFrame` or `initCppFrame` respectively.
-        IS_CPP_ENTRY = 0x01,
-
-        // Indicates that the label string is not a static string and needs to
-        // be copied during sampling.
-        FRAME_LABEL_COPY = 0x02,
+        IS_CPP_ENTRY = 1 << 0,
 
         // This ProfileEntry is a dummy entry indicating the start of a run
         // of JS pseudostack entries.
-        BEGIN_PSEUDO_JS = 0x04,
+        BEGIN_PSEUDO_JS = 1 << 1,
 
         // This flag is used to indicate that an interpreter JS entry has OSR-ed
         // into baseline.
-        OSR = 0x08,
+        OSR = 1 << 2,
 
         // Union of all flags.
-        ALL = IS_CPP_ENTRY|FRAME_LABEL_COPY|BEGIN_PSEUDO_JS|OSR,
+        ALL = IS_CPP_ENTRY|BEGIN_PSEUDO_JS|OSR,
 
         // Mask for removing all flags except the category information.
         CATEGORY_MASK = ~ALL
@@ -108,13 +105,11 @@ class ProfileEntry
     bool isCpp() const volatile { return hasFlag(IS_CPP_ENTRY); }
     bool isJs() const volatile { return !isCpp(); }
 
-    bool isCopyLabel() const volatile { return hasFlag(FRAME_LABEL_COPY); }
+    void setLabel(const char* aLabel) volatile { label_ = aLabel; }
+    const char* label() const volatile { return label_; }
 
-    void setLabel(const char* aString) volatile { string = aString; }
-    const char* label() const volatile { return string; }
-
-    void setDynamicString(const char* aDynamicString) volatile { dynamicString = aDynamicString; }
-    const char* getDynamicString() const volatile { return dynamicString; }
+    void setDynamicString(const char* aDynamicString) volatile { dynamicString_ = aDynamicString; }
+    const char* dynamicString() const volatile { return dynamicString_; }
 
     void initJsFrame(JSScript* aScript, jsbytecode* aPc) volatile {
         flags_ = 0;
@@ -192,7 +187,7 @@ class ProfileEntry
     // pc() and setPC() to set/get the right pc.
     static const int32_t NullPCOffset = -1;
 
-    static size_t offsetOfLabel() { return offsetof(ProfileEntry, string); }
+    static size_t offsetOfLabel() { return offsetof(ProfileEntry, label_); }
     static size_t offsetOfSpOrScript() { return offsetof(ProfileEntry, spOrScript); }
     static size_t offsetOfLineOrPcOffset() { return offsetof(ProfileEntry, lineOrPcOffset); }
     static size_t offsetOfFlags() { return offsetof(ProfileEntry, flags_); }

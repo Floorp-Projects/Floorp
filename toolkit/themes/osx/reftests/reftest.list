@@ -1,5 +1,5 @@
-pref(layout.css.moz-appearance.enabled,true) skip-if(!cocoaWidget) == 482681.xul 482681-ref.xul
-pref(layout.css.moz-appearance.enabled,true) skip-if(!cocoaWidget) == radiosize.xul radiosize-ref.xul
-pref(layout.css.moz-appearance.enabled,true) skip-if(!cocoaWidget) == checkboxsize.xul checkboxsize-ref.xul
+skip-if(!cocoaWidget) == 482681.xul 482681-ref.xul
+skip-if(!cocoaWidget) == radiosize.xul radiosize-ref.xul
+skip-if(!cocoaWidget) == checkboxsize.xul checkboxsize-ref.xul
 skip-if(!cocoaWidget) == baseline.xul about:blank
 skip-if(!cocoaWidget) == nostretch.xul nostretch-ref.xul

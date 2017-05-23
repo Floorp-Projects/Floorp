@@ -233,32 +233,48 @@ impl TemplateInstantiation {
 
         let template_args = ty.template_args()
             .map_or(vec![], |args| {
-                args.filter(|t| t.kind() != CXType_Invalid)
-                    .map(|t| {
-                        Item::from_ty_or_ref(t, t.declaration(), None, ctx)
-                    })
-                    .collect()
-            });
-
-        let definition = ty.declaration()
-            .specialized()
-            .or_else(|| {
-                let mut template_ref = None;
-                ty.declaration().visit(|child| {
-                    if child.kind() == CXCursor_TemplateRef {
-                        template_ref = Some(child);
-                        return CXVisit_Break;
+                match ty.canonical_type().template_args() {
+                    Some(canonical_args) => {
+                        let arg_count = args.len();
+                        args.chain(canonical_args.skip(arg_count))
+                            .filter(|t| t.kind() != CXType_Invalid)
+                            .map(|t| {
+                                Item::from_ty_or_ref(t, t.declaration(), None, ctx)
+                            }).collect()
                     }
-
-                    // Instantiations of template aliases might have the
-                    // TemplateRef to the template alias definition arbitrarily
-                    // deep, so we need to recurse here and not only visit
-                    // direct children.
-                    CXChildVisit_Recurse
-                });
-
-                template_ref.and_then(|cur| cur.referenced())
+                    None => {
+                        args.filter(|t| t.kind() != CXType_Invalid)
+                            .map(|t| {
+                                Item::from_ty_or_ref(t, t.declaration(), None, ctx)
+                            }).collect()
+                    }
+                }
             });
+
+        let declaration = ty.declaration();
+        let definition = if declaration.kind() == CXCursor_TypeAliasTemplateDecl {
+            Some(declaration)
+        } else {
+            declaration
+                .specialized()
+                .or_else(|| {
+                    let mut template_ref = None;
+                    ty.declaration().visit(|child| {
+                        if child.kind() == CXCursor_TemplateRef {
+                            template_ref = Some(child);
+                            return CXVisit_Break;
+                        }
+
+                        // Instantiations of template aliases might have the
+                        // TemplateRef to the template alias definition arbitrarily
+                        // deep, so we need to recurse here and not only visit
+                        // direct children.
+                        CXChildVisit_Recurse
+                    });
+
+                    template_ref.and_then(|cur| cur.referenced())
+                })
+        };
 
         let definition = match definition {
             Some(def) => def,

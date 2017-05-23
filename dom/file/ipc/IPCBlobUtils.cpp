@@ -65,6 +65,8 @@ Deserialize(const IPCBlob& aIPCBlob)
     blobImpl->SetIsDirectory(file.isDirectory());
   }
 
+  blobImpl->SetFileId(aIPCBlob.fileId());
+
   return blobImpl.forget();
 }
 
@@ -177,6 +179,8 @@ SerializeInternal(BlobImpl* aBlobImpl, M* aManager, IPCBlob& aIPCBlob)
 
     aIPCBlob.file() = file;
   }
+
+  aIPCBlob.fileId() = aBlobImpl->GetFileId();
 
   nsCOMPtr<nsIInputStream> inputStream;
   aBlobImpl->GetInternalStream(getter_AddRefs(inputStream), rv);

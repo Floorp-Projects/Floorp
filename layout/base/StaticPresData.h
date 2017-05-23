@@ -12,7 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsFont.h"
 #include "nsIAtom.h"
-#include "nsILanguageAtomService.h"
+#include "nsLanguageAtomService.h"
 
 namespace mozilla {
 
@@ -166,7 +166,7 @@ private:
   StaticPresData();
   ~StaticPresData() {}
 
-  nsCOMPtr<nsILanguageAtomService> mLangService;
+  nsLanguageAtomService* mLangService;
   nscoord mBorderWidthTable[3];
   LangGroupFontPrefs mStaticLangGroupFontPrefs;
 };

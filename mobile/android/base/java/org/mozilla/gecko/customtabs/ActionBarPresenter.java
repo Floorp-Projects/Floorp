@@ -7,6 +7,7 @@ package org.mozilla.gecko.customtabs;
 
 import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -58,7 +59,8 @@ public class ActionBarPresenter {
     @ColorInt
     private int mTextPrimaryColor = DEFAULT_TEXT_PRIMARY_COLOR;
 
-    ActionBarPresenter(@NonNull final ActionBar actionBar) {
+    ActionBarPresenter(@NonNull final ActionBar actionBar, @ColorInt final int textColor) {
+        mTextPrimaryColor = textColor;
         mActionBar = actionBar;
         mActionBar.setDisplayShowCustomEnabled(true);
         mActionBar.setDisplayShowTitleEnabled(false);
@@ -69,7 +71,8 @@ public class ActionBarPresenter {
         mTitleView = (TextView) customView.findViewById(R.id.custom_tabs_action_bar_title);
         mUrlView = (TextView) customView.findViewById(R.id.custom_tabs_action_bar_url);
 
-        onThemeChanged(mActionBar.getThemedContext().getTheme());
+        mTitleView.setTextColor(mTextPrimaryColor);
+        mUrlView.setTextColor(mTextPrimaryColor);
 
         mIdentityPopup = new SiteIdentityPopup(mActionBar.getThemedContext());
         mIdentityPopup.setAnchor(customView);
@@ -81,6 +84,22 @@ public class ActionBarPresenter {
         });
 
         initIndicator();
+    }
+
+    /**
+     * Called when ActionBar is to start interacting with user. Usually this method is called from
+     * Activity.onResume.
+     */
+    public void onResume() {
+        mIdentityPopup.registerListeners();
+    }
+
+    /**
+     * Called when ActionBar is going to background, but has not yet been killed. Usually this method
+     * is called from Activity.onPause.
+     */
+    public void onPause() {
+        mIdentityPopup.unregisterListeners();
     }
 
     /**
@@ -137,9 +156,12 @@ public class ActionBarPresenter {
         btn.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
         if (tint) {
-            DrawableCompat.setTint(icon, mTextPrimaryColor);
+            Drawable wrapped = DrawableCompat.wrap(icon);
+            DrawableCompat.setTint(wrapped, mTextPrimaryColor);
+            btn.setImageDrawable(wrapped);
+        } else {
+            btn.setImageDrawable(icon);
         }
-        btn.setImageDrawable(icon);
 
         // menu id does not matter here. We can directly bind callback to the returned-view.
         final MenuItem item = menu.add(Menu.NONE, -1, Menu.NONE, "");
@@ -185,8 +207,9 @@ public class ActionBarPresenter {
                 .getResources()
                 .getDrawable(R.drawable.ic_close_light);
 
-        DrawableCompat.setTint(icon, mTextPrimaryColor);
-        mActionBar.setHomeAsUpIndicator(icon);
+        Drawable wrapped = DrawableCompat.wrap(icon);
+        DrawableCompat.setTint(wrapped, mTextPrimaryColor);
+        mActionBar.setHomeAsUpIndicator(wrapped);
     }
 
     /**
@@ -228,14 +251,5 @@ public class ActionBarPresenter {
             mUrlView.setText(url);
             mUrlView.setVisibility(View.VISIBLE);
         }
-    }
-
-    private void onThemeChanged(@NonNull final Resources.Theme currentTheme) {
-        // Theme might be light or dark. To get text color for custom-view.
-        final TypedArray themeArray = currentTheme.obtainStyledAttributes(
-                new int[]{android.R.attr.textColorPrimary});
-
-        mTextPrimaryColor = themeArray.getColor(0, DEFAULT_TEXT_PRIMARY_COLOR);
-        themeArray.recycle();
     }
 }

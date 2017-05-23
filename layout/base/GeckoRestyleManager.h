@@ -273,6 +273,12 @@ public:
                         nsChangeHint aMinChangeHint,
                         const RestyleHintData* aRestyleHintData = nullptr);
 
+  void PostRestyleEventForCSSRuleChanges(Element* aElement,
+                                         nsRestyleHint aRestyleHint,
+                                         nsChangeHint aMinChangeHint) {
+    PostRestyleEvent(aElement, aRestyleHint, aMinChangeHint);
+  }
+
 public:
   /**
    * Asynchronously clear style data from the root frame downwards and ensure
@@ -584,8 +590,6 @@ private:
   /**
    * Helpers for Restyle().
    */
-  void AddLayerChangesForAnimation();
-
   bool MoveStyleContextsForContentChildren(nsIFrame* aParent,
                                            nsStyleContext* aOldContext,
                                            nsTArray<nsStyleContext*>& aContextsToMove);

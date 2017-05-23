@@ -1188,6 +1188,8 @@ interface TestIndexedGetterInterface {
   getter long item(unsigned long idx);
   readonly attribute unsigned long length;
   legacycaller void();
+  [Cached, Pure] readonly attribute long cachedAttr;
+  [StoreInSlot, Pure] readonly attribute long storeInSlotAttr;
 };
 
 interface TestNamedGetterInterface {

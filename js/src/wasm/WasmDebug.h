@@ -34,7 +34,8 @@ class WasmInstanceObject;
 namespace wasm {
 
 struct LinkData;
-struct Metadata;
+struct LinkDataTier;
+struct MetadataTier;
 class FrameIterator;
 
 // The generated source location for the AST node/expression. The offset field refers
@@ -150,13 +151,14 @@ class DebugState
 
     // Accessors for commonly used elements of linked structures.
 
+    const MetadataTier& metadataTier() const { return code_->metadataTier(); }
     const Metadata& metadata() const { return code_->metadata(); }
     bool debugEnabled() const { return metadata().debugEnabled; }
-    const CodeRangeVector& codeRanges() const { return metadata().codeRanges; }
-    const CallSiteVector& callSites() const { return metadata().callSites; }
+    const CodeRangeVector& codeRanges() const { return metadataTier().codeRanges; }
+    const CallSiteVector& callSites() const { return metadataTier().callSites; }
 
     uint32_t debugFuncToCodeRange(uint32_t funcIndex) const {
-        return metadata().debugFuncToCodeRange[funcIndex];
+        return metadataTier().debugFuncToCodeRange[funcIndex];
     }
 
     // about:memory reporting:

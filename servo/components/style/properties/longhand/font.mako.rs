@@ -68,14 +68,11 @@
     use self::computed_value::{FontFamily, FamilyName};
     use std::fmt;
     use style_traits::ToCss;
-    use values::HasViewportPercentage;
-    use values::computed::ComputedValueAsSpecified;
 
     no_viewport_percentage!(SpecifiedValue);
 
     pub mod computed_value {
         use cssparser::{CssStringWriter, Parser, serialize_identifier};
-        use properties::longhands::system_font::SystemFont;
         use std::fmt::{self, Write};
         use Atom;
         use style_traits::ToCss;
@@ -355,7 +352,6 @@ ${helpers.single_keyword_system("font-variant-caps",
                    spec="https://drafts.csswg.org/css-fonts/#propdef-font-weight">
     use std::fmt;
     use style_traits::ToCss;
-    use values::HasViewportPercentage;
     use properties::longhands::system_font::SystemFont;
 
     no_viewport_percentage!(SpecifiedValue);
@@ -449,7 +445,6 @@ ${helpers.single_keyword_system("font-variant-caps",
     }
 
     pub mod computed_value {
-        use std::fmt;
         #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
         #[cfg_attr(feature = "servo", derive(HeapSizeOf, Deserialize, Serialize))]
         #[repr(u16)]
@@ -555,9 +550,9 @@ ${helpers.single_keyword_system("font-variant-caps",
     use properties::longhands::system_font::SystemFont;
     use properties::style_structs::Font;
     use std::fmt;
-    use style_traits::ToCss;
-    use values::{FONT_MEDIUM_PX, HasViewportPercentage};
-    use values::specified::{AllowQuirks, FontRelativeLength, LengthOrPercentage, Length};
+    use style_traits::{HasViewportPercentage, ToCss};
+    use values::FONT_MEDIUM_PX;
+    use values::specified::{AllowQuirks, FontRelativeLength, LengthOrPercentage};
     use values::specified::{NoCalcLength, Percentage};
     use values::specified::length::FontBaseSize;
 
@@ -694,8 +689,7 @@ ${helpers.single_keyword_system("font-variant-caps",
             type ComputedValue = Au;
             #[inline]
             fn to_computed_value(&self, cx: &Context) -> computed_value::T {
-                use gecko_bindings::bindings::Gecko_GetBaseSize;
-                use gecko_bindings::structs::{self, nsIAtom};
+                use gecko_bindings::structs::nsIAtom;
                 use values::specified::length::au_to_int_px;
                 // Data from nsRuleNode.cpp in Gecko
                 // Mapping from base size and HTML size to pixels
@@ -977,7 +971,6 @@ ${helpers.single_keyword_system("font-variant-caps",
     use properties::longhands::system_font::SystemFont;
     use std::fmt;
     use style_traits::ToCss;
-    use values::HasViewportPercentage;
 
     no_viewport_percentage!(SpecifiedValue);
 
@@ -1119,7 +1112,6 @@ ${helpers.single_keyword_system("font-variant-caps",
                    spec="https://drafts.csswg.org/css-fonts/#propdef-font-synthesis">
     use std::fmt;
     use style_traits::ToCss;
-    use values::HasViewportPercentage;
     use values::computed::ComputedValueAsSpecified;
 
     impl ComputedValueAsSpecified for SpecifiedValue {}
@@ -1178,7 +1170,6 @@ ${helpers.single_keyword_system("font-variant-caps",
     }
 </%helpers:longhand>
 
-// FIXME: This prop should be animatable
 ${helpers.single_keyword_system("font-stretch",
                                 "normal ultra-condensed extra-condensed condensed \
                                  semi-condensed semi-expanded expanded extra-expanded \
@@ -1187,14 +1178,14 @@ ${helpers.single_keyword_system("font-stretch",
                                 gecko_constant_prefix="NS_FONT_STRETCH",
                                 cast_type='i16',
                                 spec="https://drafts.csswg.org/css-fonts/#propdef-font-stretch",
-                                animation_value_type="none")}
+                                animation_value_type="ComputedValue")}
 
 ${helpers.single_keyword_system("font-kerning",
                                 "auto none normal",
                                 products="gecko",
                                 gecko_ffi_name="mFont.kerning",
                                 gecko_constant_prefix="NS_FONT_KERNING",
-                                spec="https://drafts.csswg.org/css-fonts/#propdef-font-stretch",
+                                spec="https://drafts.csswg.org/css-fonts/#propdef-font-kerning",
                                 animation_value_type="none")}
 
 /// FIXME: Implement proper handling of each values.
@@ -1204,7 +1195,6 @@ ${helpers.single_keyword_system("font-kerning",
     use properties::longhands::system_font::SystemFont;
     use std::fmt;
     use style_traits::ToCss;
-    use values::HasViewportPercentage;
 
     no_viewport_percentage!(SpecifiedValue);
 
@@ -1325,6 +1315,7 @@ ${helpers.single_keyword_system("font-kerning",
     }
 </%helpers:longhand>
 
+#[cfg(any(feature = "gecko", feature = "testing"))]
 macro_rules! exclusive_value {
     (($value:ident, $set:expr) => $ident:ident) => {
         if $value.intersects($set) {
@@ -1340,7 +1331,6 @@ macro_rules! exclusive_value {
     use properties::longhands::system_font::SystemFont;
     use std::fmt;
     use style_traits::ToCss;
-    use values::HasViewportPercentage;
 
     no_viewport_percentage!(SpecifiedValue);
 
@@ -1481,7 +1471,6 @@ macro_rules! exclusive_value {
     use properties::longhands::system_font::SystemFont;
     use std::fmt;
     use style_traits::ToCss;
-    use values::HasViewportPercentage;
 
     no_viewport_percentage!(SpecifiedValue);
 
@@ -1632,7 +1621,6 @@ macro_rules! exclusive_value {
     use properties::longhands::system_font::SystemFont;
     use std::fmt;
     use style_traits::ToCss;
-    use values::HasViewportPercentage;
 
     no_viewport_percentage!(SpecifiedValue);
 
@@ -1785,8 +1773,6 @@ ${helpers.single_keyword_system("font-variant-position",
     use properties::longhands::system_font::SystemFont;
     use std::fmt;
     use style_traits::ToCss;
-    use values::HasViewportPercentage;
-    use values::computed::ComputedValueAsSpecified;
 
     #[derive(Debug, Clone, PartialEq)]
     pub enum SpecifiedValue {
@@ -1803,14 +1789,14 @@ ${helpers.single_keyword_system("font-variant-position",
         use std::fmt;
         use style_traits::ToCss;
 
-        #[derive(Debug, Clone, PartialEq)]
+        #[derive(Clone, Debug, Eq, PartialEq)]
         #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
         pub enum T {
             Normal,
             Tag(Vec<FeatureTagValue>)
         }
 
-        #[derive(Debug, Clone, PartialEq)]
+        #[derive(Clone, Debug, Eq, PartialEq)]
         #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
         pub struct FeatureTagValue {
             pub tag: u32,
@@ -1833,6 +1819,16 @@ ${helpers.single_keyword_system("font-variant-position",
                         Ok(())
                     }
                 }
+            }
+        }
+
+        impl Parse for T {
+            /// https://www.w3.org/TR/css-fonts-3/#propdef-font-feature-settings
+            fn parse(context: &ParserContext, input: &mut Parser) -> Result<Self, ()> {
+                if input.try(|i| i.expect_ident_matching("normal")).is_ok() {
+                    return Ok(T::Normal);
+                }
+                input.parse_comma_separated(|i| FeatureTagValue::parse(context, i)).map(T::Tag)
             }
         }
 
@@ -1859,8 +1855,6 @@ ${helpers.single_keyword_system("font-variant-position",
             /// <string> [ on | off | <integer> ]
             fn parse(_context: &ParserContext, input: &mut Parser) -> Result<Self, ()> {
                 use std::io::Cursor;
-                use std::str;
-                use std::ops::Deref;
                 use byteorder::{ReadBytesExt, BigEndian};
 
                 let tag = try!(input.expect_string());
@@ -1908,12 +1902,7 @@ ${helpers.single_keyword_system("font-variant-position",
 
     /// normal | <feature-tag-value>#
     pub fn parse(context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
-        if input.try(|input| input.expect_ident_matching("normal")).is_ok() {
-            Ok(SpecifiedValue::Value(computed_value::T::Normal))
-        } else {
-            input.parse_comma_separated(|i| computed_value::FeatureTagValue::parse(context, i))
-                 .map(computed_value::T::Tag).map(SpecifiedValue::Value)
-        }
+        computed_value::T::parse(context, input).map(SpecifiedValue::Value)
     }
 </%helpers:longhand>
 
@@ -1924,7 +1913,6 @@ ${helpers.single_keyword_system("font-variant-position",
     use std::fmt;
     use style_traits::ToCss;
     use byteorder::{BigEndian, ByteOrder};
-    use values::HasViewportPercentage;
     no_viewport_percentage!(SpecifiedValue);
 
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -2059,7 +2047,6 @@ ${helpers.single_keyword_system("font-variant-position",
 
 <%helpers:longhand name="-x-lang" products="gecko" animation_value_type="none" internal="True"
                    spec="Internal (not web-exposed)">
-    use values::HasViewportPercentage;
     use values::computed::ComputedValueAsSpecified;
     pub use self::computed_value::T as SpecifiedValue;
 
@@ -2098,12 +2085,10 @@ ${helpers.single_keyword_system("font-variant-position",
                    predefined_type="Number" gecko_ffi_name="mScriptSizeMultiplier"
                    spec="Internal (not web-exposed)"
                    internal="True" disable_when_testing="True">
-    use values::HasViewportPercentage;
     use values::computed::ComputedValueAsSpecified;
     pub use self::computed_value::T as SpecifiedValue;
 
     impl ComputedValueAsSpecified for SpecifiedValue {}
-    no_viewport_percentage!(SpecifiedValue);
 
     pub mod computed_value {
         pub type T = f32;
@@ -2126,7 +2111,6 @@ ${helpers.single_keyword_system("font-variant-position",
                    internal="True" disable_when_testing="True" need_clone="True">
     use std::fmt;
     use style_traits::ToCss;
-    use values::HasViewportPercentage;
 
     no_viewport_percentage!(SpecifiedValue);
 
@@ -2226,11 +2210,9 @@ ${helpers.single_keyword("-moz-math-variant",
     use gecko_bindings::structs::NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT;
     use std::fmt;
     use style_traits::ToCss;
-    use values::HasViewportPercentage;
-    use values::computed::ComputedValueAsSpecified;
     use values::specified::length::{AU_PER_PT, FontBaseSize, NoCalcLength};
 
-    #[derive(Clone, PartialEq, Debug)]
+    #[derive(Clone, Debug, HasViewportPercentage, PartialEq)]
     pub struct SpecifiedValue(pub NoCalcLength);
 
     pub mod computed_value {
@@ -2265,12 +2247,6 @@ ${helpers.single_keyword("-moz-math-variant",
     impl ToCss for SpecifiedValue {
         fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
             self.0.to_css(dest)
-        }
-    }
-
-    impl HasViewportPercentage for SpecifiedValue {
-        fn has_viewport_percentage(&self) -> bool {
-            self.0.has_viewport_percentage()
         }
     }
 

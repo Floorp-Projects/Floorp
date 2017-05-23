@@ -31,8 +31,8 @@ function setupActions() {
 /**
  * Prepare the store for use in testing.
  */
-function setupStore(input) {
-  const store = configureStore();
+function setupStore(input, hud) {
+  const store = configureStore(hud);
 
   // Add the messages from the input commands to the store.
   input.forEach((cmd) => {

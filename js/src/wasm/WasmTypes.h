@@ -1178,6 +1178,14 @@ enum ModuleKind
     AsmJS
 };
 
+// Code can be compiled either with the Baseline compiler or the Ion compiler.
+
+enum class CompileMode
+{
+    Baseline,
+    Ion
+};
+
 // Represents the resizable limits of memories and tables.
 
 struct Limits

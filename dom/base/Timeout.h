@@ -90,11 +90,9 @@ public:
   // Interval in milliseconds
   uint32_t mInterval;
 
-  // Principal with which to execute
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-
-  // stack depth at which timeout is firing
-  uint32_t mFiringDepth;
+  // Identifies which firing level this Timeout is being processed in
+  // when sync loops trigger nested firing.
+  uint32_t mFiringId;
 
   uint32_t mNestingLevel;
 

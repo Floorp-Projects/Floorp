@@ -12,9 +12,6 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Sprintf.h"
-#include "nsGkAtoms.h"
-#include "nsILanguageAtomService.h"
-#include "nsServiceManagerUtils.h"
 
 #include "gfxContext.h"
 #include "gfxFontConstants.h"
@@ -3419,14 +3416,6 @@ gfxFontGroup::WhichSystemFontSupportsChar(uint32_t aCh, uint32_t aNextCh,
 
     return nullptr;
 }
-
-/*static*/ void
-gfxFontGroup::Shutdown()
-{
-    NS_IF_RELEASE(gLangService);
-}
-
-nsILanguageAtomService* gfxFontGroup::gLangService = nullptr;
 
 void
 gfxMissingFontRecorder::Flush()

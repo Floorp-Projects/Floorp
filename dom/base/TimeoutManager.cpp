@@ -139,10 +139,71 @@ static int32_t gMinTrackingBackgroundTimeoutValue = 0;
 static int32_t gTrackingTimeoutThrottlingDelay = 0;
 static bool    gAnnotateTrackingChannels = false;
 
+// static
+const uint32_t TimeoutManager::InvalidFiringId = 0;
+
 bool
 TimeoutManager::IsBackground() const
 {
   return !mWindow.AsInner()->IsPlayingAudio() && mWindow.IsBackgroundInternal();
+}
+
+uint32_t
+TimeoutManager::CreateFiringId()
+{
+  uint32_t id = mNextFiringId;
+  mNextFiringId += 1;
+  if (mNextFiringId == InvalidFiringId) {
+    mNextFiringId += 1;
+  }
+
+  mFiringIdStack.AppendElement(id);
+
+  return id;
+}
+
+void
+TimeoutManager::DestroyFiringId(uint32_t aFiringId)
+{
+  MOZ_DIAGNOSTIC_ASSERT(!mFiringIdStack.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(mFiringIdStack.LastElement() == aFiringId);
+  mFiringIdStack.RemoveElementAt(mFiringIdStack.Length() - 1);
+}
+
+bool
+TimeoutManager::IsInvalidFiringId(uint32_t aFiringId) const
+{
+  // Check the most common ways to invalidate a firing id first.
+  // These should be quite fast.
+  if (aFiringId == InvalidFiringId ||
+      mFiringIdStack.IsEmpty() ||
+      (mFiringIdStack.Length() == 1 && mFiringIdStack[0] != aFiringId)) {
+    return true;
+  }
+
+  // Next do a range check on the first and last items in the stack
+  // of active firing ids.  This is a bit slower.
+  uint32_t low = mFiringIdStack[0];
+  uint32_t high = mFiringIdStack.LastElement();
+  MOZ_DIAGNOSTIC_ASSERT(low != high);
+  if (low > high) {
+    // If the first element is bigger than the last element in the
+    // stack, that means mNextFiringId wrapped around to zero at
+    // some point.
+    Swap(low, high);
+  }
+  MOZ_DIAGNOSTIC_ASSERT(low < high);
+
+  if (aFiringId < low || aFiringId > high) {
+    return true;
+  }
+
+  // Finally, fall back to verifying the firing id is not anywhere
+  // in the stack.  This could be slow for a large stack, but that
+  // should be rare.  It can only happen with deeply nested event
+  // loop spinning.  For example, a page that does a lot of timers
+  // and a lot of sync XHRs within those timers could be slow here.
+  return !mFiringIdStack.Contains(aFiringId);
 }
 
 int32_t
@@ -184,10 +245,10 @@ uint32_t TimeoutManager::sNestingLevel = 0;
 
 namespace {
 
-// The maximum number of timer callbacks we will try to run in a single event
-// loop runnable.
-#define DEFAULT_TARGET_MAX_CONSECUTIVE_CALLBACKS 5
-uint32_t gTargetMaxConsecutiveCallbacks;
+// The maximum number of milliseconds to allow consecutive timer callbacks
+// to run in a single event loop runnable.
+#define DEFAULT_MAX_CONSECUTIVE_CALLBACKS_MILLISECONDS 4
+uint32_t gMaxConsecutiveCallbacksMilliseconds;
 
 // The number of queued runnables within the TabGroup ThrottledEventQueue
 // at which to begin applying back pressure to the window.
@@ -241,7 +302,7 @@ CalculateNewBackPressureDelayMS(uint32_t aBacklogDepth)
 TimeoutManager::TimeoutManager(nsGlobalWindow& aWindow)
   : mWindow(aWindow),
     mTimeoutIdCounter(1),
-    mTimeoutFiringDepth(0),
+    mNextFiringId(InvalidFiringId + 1),
     mRunningTimeout(nullptr),
     mIdleCallbackTimeoutCounter(1),
     mBackPressureDelayMS(0),
@@ -256,6 +317,7 @@ TimeoutManager::TimeoutManager(nsGlobalWindow& aWindow)
 
 TimeoutManager::~TimeoutManager()
 {
+  MOZ_DIAGNOSTIC_ASSERT(mWindow.AsInner()->InnerObjectsFreed());
   MOZ_DIAGNOSTIC_ASSERT(!mThrottleTrackingTimeoutsTimer);
 
   MOZ_LOG(gLog, LogLevel::Debug,
@@ -301,9 +363,9 @@ TimeoutManager::Initialize()
                                "dom.timeout.back_pressure_delay_minimum_ms",
                                DEFAULT_BACK_PRESSURE_DELAY_MINIMUM_MS);
 
-  Preferences::AddUintVarCache(&gTargetMaxConsecutiveCallbacks,
-                               "dom.timeout.max_consecutive_callbacks",
-                               DEFAULT_TARGET_MAX_CONSECUTIVE_CALLBACKS);
+  Preferences::AddUintVarCache(&gMaxConsecutiveCallbacksMilliseconds,
+                               "dom.timeout.max_consecutive_callbacks_ms",
+                               DEFAULT_MAX_CONSECUTIVE_CALLBACKS_MILLISECONDS);
 }
 
 uint32_t
@@ -316,6 +378,12 @@ TimeoutManager::GetTimeoutId(Timeout::Reason aReason)
     default:
       return ++mTimeoutIdCounter;
   }
+}
+
+bool
+TimeoutManager::IsRunningTimeout() const
+{
+  return mRunningTimeout;
 }
 
 nsresult
@@ -521,12 +589,33 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
 
   NS_ASSERTION(!mWindow.IsFrozen(), "Timeout running on a window in the bfcache!");
 
+  // Limit the overall time spent in RunTimeout() to reduce jank.
+  uint32_t totalTimeLimitMS = std::max(1u, gMaxConsecutiveCallbacksMilliseconds);
+  const TimeDuration totalTimeLimit = TimeDuration::FromMilliseconds(totalTimeLimitMS);
+
+  // Allow up to 25% of our total time budget to be used figuring out which
+  // timers need to run.  This is the initial loop in this method.
+  const TimeDuration initalTimeLimit =
+    TimeDuration::FromMilliseconds(totalTimeLimit.ToMilliseconds() / 4);
+
+  // Ammortize overhead from from calling TimeStamp::Now() in the initial
+  // loop, though, by only checking for an elapsed limit every N timeouts.
+  const uint32_t kNumTimersPerInitialElapsedCheck = 100;
+
+  // Start measuring elapsed time immediately.  We won't potentially expire
+  // the time budget until at least one Timeout has run, though.
+  TimeStamp start = TimeStamp::Now();
+
   Timeout* last_expired_normal_timeout = nullptr;
   Timeout* last_expired_tracking_timeout = nullptr;
   bool     last_expired_timeout_is_normal = false;
   Timeout* last_normal_insertion_point = nullptr;
   Timeout* last_tracking_insertion_point = nullptr;
-  uint32_t firingDepth = mTimeoutFiringDepth + 1;
+
+  uint32_t firingId = CreateFiringId();
+  auto guard = MakeScopeExit([&] {
+    DestroyFiringId(firingId);
+  });
 
   // Make sure that the window and the script context don't go away as
   // a result of running timeouts
@@ -576,10 +665,10 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
         break;
       }
 
-      if (timeout->mFiringDepth == 0) {
+      if (IsInvalidFiringId(timeout->mFiringId)) {
         // Mark any timeouts that are on the list to be fired with the
         // firing depth so that we can reentrantly run timeouts
-        timeout->mFiringDepth = firingDepth;
+        timeout->mFiringId = firingId;
         last_expired_timeout_is_normal = expiredIter.PickedNormalIter();
         if (last_expired_timeout_is_normal) {
           last_expired_normal_timeout = timeout;
@@ -599,16 +688,13 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
         // maximum.  Note, we must always run our target timer however.
         // Further timers that are ready will get picked up by their own
         // nsITimer runnables when they execute.
-        //
-        // For chrome windows, however, we do coalesce all timers and
-        // do not yield the main thread.  This is partly because we
-        // trust chrome windows not to misbehave and partly because a
-        // number of browser chrome tests have races that depend on this
-        // coalescing.
-        if (targetTimerSeen &&
-            numTimersToRun >= gTargetMaxConsecutiveCallbacks &&
-            !mWindow.IsChromeWindow()) {
-          break;
+        if (targetTimerSeen) {
+          if (numTimersToRun % kNumTimersPerInitialElapsedCheck == 0) {
+            TimeDuration elapsed(TimeStamp::Now() - start);
+            if (elapsed >= initalTimeLimit) {
+              break;
+            }
+          }
         }
       }
 
@@ -629,14 +715,14 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
   // win_run_timeout(). This dummy timeout serves as the head of the
   // list for any timeouts inserted as a result of running a timeout.
   RefPtr<Timeout> dummy_normal_timeout = new Timeout();
-  dummy_normal_timeout->mFiringDepth = firingDepth;
+  dummy_normal_timeout->mFiringId = firingId;
   dummy_normal_timeout->SetDummyWhen(now);
   if (last_expired_timeout_is_normal) {
     last_expired_normal_timeout->setNext(dummy_normal_timeout);
   }
 
   RefPtr<Timeout> dummy_tracking_timeout = new Timeout();
-  dummy_tracking_timeout->mFiringDepth = firingDepth;
+  dummy_tracking_timeout->mFiringId = firingId;
   dummy_tracking_timeout->SetDummyWhen(now);
   if (!last_expired_timeout_is_normal) {
     last_expired_tracking_timeout->setNext(dummy_tracking_timeout);
@@ -662,6 +748,8 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
     mTrackingTimeouts.SetInsertionPoint(dummy_tracking_timeout);
   }
 
+  bool targetTimeoutSeen = false;
+
   // We stop iterating each list when we go past the last expired timeout from
   // that list that we have observed above.  That timeout will either be the
   // dummy timeout for the list that the last expired timeout came from, or it
@@ -679,7 +767,7 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
                                    last_expired_tracking_timeout ?
                                      last_expired_tracking_timeout->getNext() :
                                      nullptr);
-    while (!mWindow.IsFrozen()) {
+    while (true) {
       Timeout* timeout = runIter.Next();
       MOZ_ASSERT(timeout != dummy_normal_timeout &&
                  timeout != dummy_tracking_timeout,
@@ -690,17 +778,15 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
       }
       runIter.UpdateIterator();
 
-      if (timeout->mFiringDepth != firingDepth) {
+      if (timeout->mFiringId != firingId) {
         // We skip the timeout since it's on the list to run at another
         // depth.
         continue;
       }
 
+      MOZ_ASSERT_IF(mWindow.IsFrozen(), mWindow.IsSuspended());
       if (mWindow.IsSuspended()) {
-        // Some timer did suspend us. Make sure the
-        // rest of the timers get executed later.
-        timeout->mFiringDepth = 0;
-        continue;
+        break;
       }
 
       // The timeout is on the list to run at this depth, go ahead and
@@ -712,8 +798,15 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
 
       if (!scx) {
         // No context means this window was closed or never properly
-        // initialized for this language.
+        // initialized for this language.  This timer will never fire
+        // so just remove it.
+        timeout->remove();
+        timeout->Release();
         continue;
+      }
+
+      if (timeout == aTimeout) {
+        targetTimeoutSeen = true;
       }
 
       // This timeout is good to run
@@ -749,6 +842,9 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
         mNormalTimeouts.SetInsertionPoint(last_normal_insertion_point);
         mTrackingTimeouts.SetInsertionPoint(last_tracking_insertion_point);
 
+        // Since ClearAllTimeouts() was called the lists should be empty.
+        MOZ_DIAGNOSTIC_ASSERT(!HasTimeouts());
+
         return;
       }
 
@@ -778,6 +874,18 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
 
       // Release the timeout struct since it's possibly out of the list
       timeout->Release();
+
+      // Check to see if we have run out of time to execute timeout handlers.
+      // If we've exceeded our time budget then terminate the loop immediately.
+      //
+      // Note, we only do this if we have seen the Timeout object explicitly
+      // passed to RunTimeout().  The target timeout must always be executed.
+      if (targetTimeoutSeen) {
+        TimeDuration elapsed = TimeStamp::Now() - start;
+        if (elapsed >= totalTimeLimit) {
+          break;
+        }
+      }
     }
   }
 
@@ -1099,11 +1207,11 @@ TimeoutManager::Timeouts::ResetTimersForThrottleReduction(int32_t aPreviousThrot
         NS_ASSERTION(!nextTimeout ||
                      timeout->When() < nextTimeout->When(), "How did that happen?");
         timeout->remove();
-        // Insert() will addref |timeout| and reset mFiringDepth.  Make sure to
+        // Insert() will addref |timeout| and reset mFiringId.  Make sure to
         // undo that after calling it.
-        uint32_t firingDepth = timeout->mFiringDepth;
+        uint32_t firingId = timeout->mFiringId;
         Insert(timeout, aSortBy);
-        timeout->mFiringDepth = firingDepth;
+        timeout->mFiringId = firingId;
         timeout->Release();
       }
 
@@ -1197,7 +1305,7 @@ TimeoutManager::Timeouts::Insert(Timeout* aTimeout, SortBy aSortBy)
     InsertFront(aTimeout);
   }
 
-  aTimeout->mFiringDepth = 0;
+  aTimeout->mFiringId = InvalidFiringId;
 
   // Increment the timeout's reference count since it's now held on to
   // by the list
@@ -1211,7 +1319,6 @@ TimeoutManager::BeginRunningTimeout(Timeout* aTimeout)
   mRunningTimeout = aTimeout;
 
   ++gRunningTimeoutDepth;
-  ++mTimeoutFiringDepth;
 
   if (!mWindow.IsChromeWindow()) {
     TimeStamp now = TimeStamp::Now();
@@ -1232,7 +1339,6 @@ TimeoutManager::BeginRunningTimeout(Timeout* aTimeout)
 void
 TimeoutManager::EndRunningTimeout(Timeout* aTimeout)
 {
-  --mTimeoutFiringDepth;
   --gRunningTimeoutDepth;
 
   if (!mWindow.IsChromeWindow()) {
@@ -1472,7 +1578,8 @@ TimeoutManager::OnDocumentLoaded()
 void
 TimeoutManager::MaybeStartThrottleTrackingTimout()
 {
-  if (gTrackingTimeoutThrottlingDelay <= 0) {
+  if (gTrackingTimeoutThrottlingDelay <= 0 ||
+      mWindow.AsInner()->InnerObjectsFreed()) {
     return;
   }
 

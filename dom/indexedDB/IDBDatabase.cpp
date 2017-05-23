@@ -30,11 +30,10 @@
 #include "mozilla/dom/IDBObjectStoreBinding.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseFileChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
+#include "mozilla/dom/IPCBlobUtils.h"
+#include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
-#include "mozilla/dom/ipc/BlobChild.h"
-#include "mozilla/dom/ipc/nsIRemoteBlob.h"
-#include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/InputStreamParams.h"
 #include "mozilla/ipc/InputStreamUtils.h"
@@ -927,63 +926,27 @@ IDBDatabase::GetOrCreateFileActorForBlob(Blob* aBlob)
     BlobImpl* blobImpl = aBlob->Impl();
     MOZ_ASSERT(blobImpl);
 
-    if (mReceivedBlobs.GetEntry(weakRef)) {
-      // This blob was previously retrieved from the database.
-      nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryObject(blobImpl);
-      MOZ_ASSERT(remoteBlob);
+    PBackgroundChild* backgroundManager =
+      mBackgroundActor->Manager()->Manager();
+    MOZ_ASSERT(backgroundManager);
 
-      BlobChild* blobChild = remoteBlob->GetBlobChild();
-      MOZ_ASSERT(blobChild);
-
-#ifdef DEBUG
-      {
-        PBackgroundChild* backgroundManager = blobChild->GetBackgroundManager();
-        MOZ_ASSERT(backgroundManager);
-
-        PBackgroundChild* thisManager = mBackgroundActor->Manager()->Manager();
-        MOZ_ASSERT(thisManager);
-
-        MOZ_ASSERT(thisManager == backgroundManager);
-      }
-#endif
-      auto* dbFile = new DatabaseFile(this);
-
-      actor =
-        mBackgroundActor->SendPBackgroundIDBDatabaseFileConstructor(dbFile,
-                                                                    blobChild);
-      if (NS_WARN_IF(!actor)) {
-        return nullptr;
-      }
-
-      MOZ_ASSERT(actor->GetActorEventTarget(),
-        "The event target shall be inherited from its manager actor.");
-    } else {
-      // Make sure that the input stream we get here is one that can actually be
-      // serialized to PBackground.
-      PBackgroundChild* backgroundManager =
-        mBackgroundActor->Manager()->Manager();
-      MOZ_ASSERT(backgroundManager);
-
-      auto* blobChild =
-        static_cast<BlobChild*>(
-          BackgroundChild::GetOrCreateActorForBlob(backgroundManager, aBlob));
-      MOZ_ASSERT(blobChild);
-
-      auto* dbFile = new DatabaseFile(this);
-
-      actor =
-        mBackgroundActor->SendPBackgroundIDBDatabaseFileConstructor(dbFile,
-                                                                    blobChild);
-      if (NS_WARN_IF(!actor)) {
-        return nullptr;
-      }
-
-      MOZ_ASSERT(actor->GetActorEventTarget(),
-        "The event target shall be inherited from its manager actor.");
+    IPCBlob ipcBlob;
+    nsresult rv = IPCBlobUtils::Serialize(blobImpl, backgroundManager, ipcBlob);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
     }
 
-    MOZ_ASSERT(actor);
+    auto* dbFile = new DatabaseFile(this);
 
+    actor =
+      mBackgroundActor->SendPBackgroundIDBDatabaseFileConstructor(dbFile,
+                                                                  ipcBlob);
+    if (NS_WARN_IF(!actor)) {
+      return nullptr;
+    }
+
+    MOZ_ASSERT(actor->GetActorEventTarget(),
+     "The event target shall be inherited from its manager actor.");
     mFileActors.Put(weakRef, actor);
   }
 
@@ -1007,42 +970,6 @@ IDBDatabase::NoteFinishedFileActor(PBackgroundIDBDatabaseFileChild* aFileActor)
       iter.Remove();
     }
   }
-}
-
-void
-IDBDatabase::NoteReceivedBlob(Blob* aBlob)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aBlob);
-  MOZ_ASSERT(mBackgroundActor);
-
-#ifdef DEBUG
-  {
-    RefPtr<BlobImpl> blobImpl = aBlob->Impl();
-    MOZ_ASSERT(blobImpl);
-
-    nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryObject(blobImpl);
-    MOZ_ASSERT(remoteBlob);
-
-    BlobChild* blobChild = remoteBlob->GetBlobChild();
-    MOZ_ASSERT(blobChild);
-
-    PBackgroundChild* backgroundManager = blobChild->GetBackgroundManager();
-    MOZ_ASSERT(backgroundManager);
-
-    PBackgroundChild* thisManager = mBackgroundActor->Manager()->Manager();
-    MOZ_ASSERT(thisManager);
-
-    MOZ_ASSERT(thisManager == backgroundManager);
-  }
-#endif
-
-  nsCOMPtr<nsIDOMBlob> blob = aBlob;
-  nsCOMPtr<nsIWeakReference> weakRef = do_GetWeakReference(blob);
-  MOZ_ASSERT(weakRef);
-
-  // It's ok if this entry already exists in the table.
-  mReceivedBlobs.PutEntry(weakRef);
 }
 
 void
@@ -1155,25 +1082,6 @@ IDBDatabase::ExpireFileActors(bool aExpireAll)
     }
   } else {
     MOZ_ASSERT(!mFileActors.Count());
-  }
-
-  if (mReceivedBlobs.Count()) {
-    if (aExpireAll) {
-      mReceivedBlobs.Clear();
-    } else {
-      for (auto iter = mReceivedBlobs.Iter(); !iter.Done(); iter.Next()) {
-        nsISupports* key = iter.Get()->GetKey();
-        MOZ_ASSERT(key);
-
-        nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(key);
-        MOZ_ASSERT(weakRef);
-
-        nsCOMPtr<nsISupports> referent = do_QueryReferent(weakRef);
-        if (!referent) {
-          iter.Remove();
-        }
-      }
-    }
   }
 }
 
