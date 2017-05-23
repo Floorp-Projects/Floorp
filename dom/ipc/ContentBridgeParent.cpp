@@ -87,13 +87,6 @@ ContentBridgeParent::RecvAsyncMessage(const nsString& aMsg,
                                             aPrincipal, aData);
 }
 
-PBlobParent*
-ContentBridgeParent::SendPBlobConstructor(PBlobParent* actor,
-                                          const BlobConstructorParams& params)
-{
-  return PContentBridgeParent::SendPBlobConstructor(actor, params);
-}
-
 PBrowserParent*
 ContentBridgeParent::SendPBrowserConstructor(PBrowserParent* aActor,
                                              const TabId& aTabId,
@@ -116,18 +109,6 @@ PParentToChildStreamParent*
 ContentBridgeParent::SendPParentToChildStreamConstructor(PParentToChildStreamParent* aActor)
 {
   return PContentBridgeParent::SendPParentToChildStreamConstructor(aActor);
-}
-
-PBlobParent*
-ContentBridgeParent::AllocPBlobParent(const BlobConstructorParams& aParams)
-{
-  return nsIContentParent::AllocPBlobParent(aParams);
-}
-
-bool
-ContentBridgeParent::DeallocPBlobParent(PBlobParent* aActor)
-{
-  return nsIContentParent::DeallocPBlobParent(aActor);
 }
 
 PIPCBlobInputStreamParent*

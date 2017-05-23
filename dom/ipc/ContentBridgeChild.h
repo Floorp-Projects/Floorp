@@ -32,10 +32,6 @@ public:
                                                    const IPC::Principal& aPrincipal,
                                                    const ClonedMessageData& aData) override;
 
-  virtual PBlobChild*
-  SendPBlobConstructor(PBlobChild* actor,
-                       const BlobConstructorParams& aParams) override;
-
   jsipc::CPOWManager* GetCPOWManager() override;
 
   virtual bool SendPBrowserConstructor(PBrowserChild* aActor,
@@ -81,9 +77,6 @@ protected:
 
   virtual mozilla::jsipc::PJavaScriptChild* AllocPJavaScriptChild() override;
   virtual bool DeallocPJavaScriptChild(mozilla::jsipc::PJavaScriptChild*) override;
-
-  virtual PBlobChild* AllocPBlobChild(const BlobConstructorParams& aParams) override;
-  virtual bool DeallocPBlobChild(PBlobChild*) override;
 
   virtual PIPCBlobInputStreamChild*
   AllocPIPCBlobInputStreamChild(const nsID& aID,
