@@ -61,6 +61,7 @@ talos:
     - talos-g2
     - talos-g3
     - talos-g4
+    - talos-g5
     - talos-other
     - talos-svgr
     - talos-tp5o
@@ -192,6 +193,7 @@ macosx64-tests-talos:
     - talos-g1
     - talos-g2
     - talos-g4
+    - talos-g5
     - talos-other
     - talos-svgr
     - talos-tp5o
