@@ -53,7 +53,7 @@ typedef IntMarginTyped<UnknownUnits> IntMargin;
 
 template<class units, class F = Float>
 struct MarginTyped:
-    public BaseMargin<F, MarginTyped<units> >,
+    public BaseMargin<F, MarginTyped<units, F> >,
     public units {
     static_assert(IsPixel<units>::value,
                   "'units' must be a coordinate system tag");

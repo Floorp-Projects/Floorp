@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<body>
+<script>
+canvas = document.createElement('canvas');
+document.body.appendChild(canvas);
+ctx = canvas.getContext('2d');
+
+canvas.width = 1000;
+canvas.height = 1000;
+ctx.translate(420.31465167323177, 40.531991340689785);
+ctx.scale(3, 3);
+
+ctx.strokeStyle = 'red';
+ctx.lineWidth = 1;
+ctx.setLineDash([8, 4]);
+ctx.strokeRect(5, -147, 20, 140);
+
+</script>
