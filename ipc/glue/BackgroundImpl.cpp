@@ -24,8 +24,6 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/ipc/BlobChild.h"
-#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/ipc/ProtocolTypes.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -811,24 +809,6 @@ BackgroundParent::GetContentParent(PBackgroundParent* aBackgroundActor)
 }
 
 // static
-PBlobParent*
-BackgroundParent::GetOrCreateActorForBlobImpl(
-                                            PBackgroundParent* aBackgroundActor,
-                                            BlobImpl* aBlobImpl)
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aBackgroundActor);
-  MOZ_ASSERT(aBlobImpl);
-
-  BlobParent* actor = BlobParent::GetOrCreate(aBackgroundActor, aBlobImpl);
-  if (NS_WARN_IF(!actor)) {
-    return nullptr;
-  }
-
-  return actor;
-}
-
-// static
 intptr_t
 BackgroundParent::GetRawContentParentForComparison(
                                             PBackgroundParent* aBackgroundActor)
@@ -875,39 +855,6 @@ PBackgroundChild*
 BackgroundChild::SynchronouslyCreateForCurrentThread()
 {
   return ChildImpl::SynchronouslyCreateForCurrentThread();
-}
-
-// static
-PBlobChild*
-BackgroundChild::GetOrCreateActorForBlob(PBackgroundChild* aBackgroundActor,
-                                         nsIDOMBlob* aBlob)
-{
-  MOZ_ASSERT(aBlob);
-
-  RefPtr<BlobImpl> blobImpl = static_cast<Blob*>(aBlob)->Impl();
-  MOZ_ASSERT(blobImpl);
-
-  return GetOrCreateActorForBlobImpl(aBackgroundActor, blobImpl);
-}
-
-// static
-PBlobChild*
-BackgroundChild::GetOrCreateActorForBlobImpl(PBackgroundChild* aBackgroundActor,
-                                             BlobImpl* aBlobImpl)
-{
-  MOZ_ASSERT(aBackgroundActor);
-  MOZ_ASSERT(aBlobImpl);
-  MOZ_ASSERT(GetForCurrentThread(),
-             "BackgroundChild not created on this thread yet!");
-  MOZ_ASSERT(aBackgroundActor == GetForCurrentThread(),
-             "BackgroundChild is bound to a different thread!");
-
-  BlobChild* actor = BlobChild::GetOrCreate(aBackgroundActor, aBlobImpl);
-  if (NS_WARN_IF(!actor)) {
-    return nullptr;
-  }
-
-  return actor;
 }
 
 // static
