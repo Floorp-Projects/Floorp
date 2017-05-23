@@ -436,6 +436,16 @@ extern MOZ_MUST_USE bool
 intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp);
 
 /**
+ * Returns the calendar type identifier per Unicode Technical Standard 35,
+ * Unicode Locale Data Markup Language, for the default calendar for the given
+ * locale.
+ *
+ * Usage: calendar = intl_defaultCalendar(locale)
+ */
+extern MOZ_MUST_USE bool
+intl_defaultCalendar(JSContext* cx, unsigned argc, Value* vp);
+
+/**
  * 6.4.1 IsValidTimeZoneName ( timeZone )
  *
  * Verifies that the given string is a valid time zone name. If it is a valid
