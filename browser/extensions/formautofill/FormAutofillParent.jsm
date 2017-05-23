@@ -39,8 +39,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "profileStorage",
-                                  "resource://formautofill/ProfileStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillPreferences",
                                   "resource://formautofill/FormAutofillPreferences.jsm");
 
@@ -50,6 +48,19 @@ FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 const ENABLED_PREF = "extensions.formautofill.addresses.enabled";
 
 function FormAutofillParent() {
+  // Lazily load the storage JSM to avoid disk I/O until absolutely needed.
+  // Once storage is loaded we need to update saved field names and inform content processes.
+  XPCOMUtils.defineLazyGetter(this, "profileStorage", () => {
+    let {profileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {});
+    log.debug("Loading profileStorage");
+
+    profileStorage.initialize().then(function onStorageInitialized() {
+      // Update the saved field names to compute the status and update child processes.
+      this._updateSavedFieldNames();
+    }.bind(this));
+
+    return profileStorage;
+  });
 }
 
 FormAutofillParent.prototype = {
@@ -65,9 +76,9 @@ FormAutofillParent.prototype = {
    */
   async init() {
     log.debug("init");
-    await profileStorage.initialize();
 
     Services.obs.addObserver(this, "advanced-pane-loaded");
+    Services.ppmm.addMessageListener("FormAutofill:InitStorage", this);
     Services.ppmm.addMessageListener("FormAutofill:GetAddresses", this);
     Services.ppmm.addMessageListener("FormAutofill:SaveAddress", this);
     Services.ppmm.addMessageListener("FormAutofill:RemoveAddresses", this);
@@ -75,9 +86,6 @@ FormAutofillParent.prototype = {
     // Observing the pref and storage changes
     Services.prefs.addObserver(ENABLED_PREF, this);
     Services.obs.addObserver(this, "formautofill-storage-changed");
-
-    // Update the saved field names to compute the status and update child processes.
-    this._updateSavedFieldNames();
   },
 
   observe(subject, topic, data) {
@@ -166,20 +174,24 @@ FormAutofillParent.prototype = {
    */
   receiveMessage({name, data, target}) {
     switch (name) {
+      case "FormAutofill:InitStorage": {
+        this.profileStorage.initialize();
+        break;
+      }
       case "FormAutofill:GetAddresses": {
         this._getAddresses(data, target);
         break;
       }
       case "FormAutofill:SaveAddress": {
         if (data.guid) {
-          profileStorage.addresses.update(data.guid, data.address);
+          this.profileStorage.addresses.update(data.guid, data.address);
         } else {
-          profileStorage.addresses.add(data.address);
+          this.profileStorage.addresses.add(data.address);
         }
         break;
       }
       case "FormAutofill:RemoveAddresses": {
-        data.guids.forEach(guid => profileStorage.addresses.remove(guid));
+        data.guids.forEach(guid => this.profileStorage.addresses.remove(guid));
         break;
       }
     }
@@ -191,8 +203,9 @@ FormAutofillParent.prototype = {
    * @private
    */
   _uninit() {
-    profileStorage._saveImmediately();
+    this.profileStorage._saveImmediately();
 
+    Services.ppmm.removeMessageListener("FormAutofill:InitStorage", this);
     Services.ppmm.removeMessageListener("FormAutofill:GetAddresses", this);
     Services.ppmm.removeMessageListener("FormAutofill:SaveAddress", this);
     Services.ppmm.removeMessageListener("FormAutofill:RemoveAddresses", this);
@@ -216,9 +229,9 @@ FormAutofillParent.prototype = {
     let addresses = [];
 
     if (info && info.fieldName) {
-      addresses = profileStorage.addresses.getByFilter({searchString, info});
+      addresses = this.profileStorage.addresses.getByFilter({searchString, info});
     } else {
-      addresses = profileStorage.addresses.getAll();
+      addresses = this.profileStorage.addresses.getAll();
     }
 
     target.sendAsyncMessage("FormAutofill:Addresses", addresses);
@@ -232,7 +245,7 @@ FormAutofillParent.prototype = {
       Services.ppmm.initialProcessData.autofillSavedFieldNames.clear();
     }
 
-    profileStorage.addresses.getAll().forEach((address) => {
+    this.profileStorage.addresses.getAll().forEach((address) => {
       Object.keys(address).forEach((fieldName) => {
         if (!address[fieldName]) {
           return;
@@ -242,7 +255,7 @@ FormAutofillParent.prototype = {
     });
 
     // Remove the internal guid and metadata fields.
-    profileStorage.INTERNAL_FIELDS.forEach((fieldName) => {
+    this.profileStorage.INTERNAL_FIELDS.forEach((fieldName) => {
       Services.ppmm.initialProcessData.autofillSavedFieldNames.delete(fieldName);
     });
 
