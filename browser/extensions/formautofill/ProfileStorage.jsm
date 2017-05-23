@@ -26,16 +26,22 @@
  *       address-level1,       // Province (Standardized code if possible)
  *       postal-code,
  *       country,              // ISO 3166
- *       tel,
+ *       tel,                  // Stored in E.164 format
  *       email,
  *
- *       // computed fields (These fields are not stored in the file as they are
- *       // generated at runtime.)
+ *       // computed fields (These fields are computed based on the above fields
+ *       // and are not allowed to be modified directly.)
  *       name,
  *       address-line1,
  *       address-line2,
  *       address-line3,
  *       country-name,
+ *       tel-country-code,
+ *       tel-national,
+ *       tel-area-code,
+ *       tel-local,
+ *       tel-local-prefix,
+ *       tel-local-suffix,
  *
  *       // metadata
  *       timeCreated,          // in ms
@@ -57,8 +63,8 @@
  *       cc-exp-year,          // 2-digit year will be converted to 4 digits
  *                             // upon saving
  *
- *       // computed fields (These fields are not stored in the file as they are
- *       // generated at runtime.)
+ *       // computed fields (These fields are computed based on the above fields
+ *       // and are not allowed to be modified directly.)
  *       cc-given-name,
  *       cc-additional-name,
  *       cc-family-name,
@@ -91,6 +97,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "JSONFile",
                                   "resource://gre/modules/JSONFile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillNameUtils",
                                   "resource://formautofill/FormAutofillNameUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PhoneNumber",
+                                  "resource://formautofill/phonenumberutils/PhoneNumber.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",
@@ -132,10 +140,19 @@ const STREET_ADDRESS_COMPONENTS = [
   "address-line3",
 ];
 
+const TEL_COMPONENTS = [
+  "tel-country-code",
+  "tel-national",
+  "tel-area-code",
+  "tel-local",
+  "tel-local-prefix",
+  "tel-local-suffix",
+];
+
 const VALID_ADDRESS_COMPUTED_FIELDS = [
   "name",
   "country-name",
-].concat(STREET_ADDRESS_COMPONENTS);
+].concat(STREET_ADDRESS_COMPONENTS, TEL_COMPONENTS);
 
 const VALID_CREDIT_CARD_FIELDS = [
   "cc-name",
@@ -553,44 +570,94 @@ class Addresses extends AutofillRecords {
       hasNewComputedFields = true;
     }
 
+    // Compute tel
+    if (!("tel-national" in address)) {
+      if (address.tel) {
+        // Set "US" as the default region as we only support "en-US" for now.
+        let browserCountryCode = Services.prefs.getCharPref("browser.search.countryCode", "US");
+        let tel = PhoneNumber.Parse(address.tel, address.country || browserCountryCode);
+        if (tel) {
+          if (tel.countryCode) {
+            address["tel-country-code"] = tel.countryCode;
+          }
+          if (tel.nationalNumber) {
+            address["tel-national"] = tel.nationalNumber;
+          }
+
+          // PhoneNumberUtils doesn't support parsing the components of a telephone
+          // number so we hard coded the parser for US numbers only. We will need
+          // to figure out how to parse numbers from other regions when we support
+          // new countries in the future.
+          if (tel.nationalNumber && tel.countryCode == "+1") {
+            let telComponents = tel.nationalNumber.match(/(\d{3})((\d{3})(\d{4}))$/);
+            if (telComponents) {
+              address["tel-area-code"] = telComponents[1];
+              address["tel-local"] = telComponents[2];
+              address["tel-local-prefix"] = telComponents[3];
+              address["tel-local-suffix"] = telComponents[4];
+            }
+          }
+        } else {
+          // Treat "tel" as "tel-national" directly if it can't be parsed.
+          address["tel-national"] = address.tel;
+        }
+      }
+
+      TEL_COMPONENTS.forEach(c => {
+        address[c] = address[c] || "";
+      });
+    }
+
     return hasNewComputedFields;
   }
 
   _normalizeFields(address) {
-    // Normalize name
-    if (address.name) {
-      let nameParts = FormAutofillNameUtils.splitName(address.name);
-      if (!address["given-name"] && nameParts.given) {
-        address["given-name"] = nameParts.given;
-      }
-      if (!address["additional-name"] && nameParts.middle) {
-        address["additional-name"] = nameParts.middle;
-      }
-      if (!address["family-name"] && nameParts.family) {
-        address["family-name"] = nameParts.family;
-      }
-      delete address.name;
+    this._normalizeName(address);
+    this._normalizeAddress(address);
+    this._normalizeCountry(address);
+    this._normalizeTel(address);
+  }
+
+  _normalizeName(address) {
+    if (!address.name) {
+      return;
     }
 
-    // Normalize address lines
-    if (STREET_ADDRESS_COMPONENTS.some(c => address[c])) {
-      // Treat "street-address" as "address-line1" if it contains only one line
-      // and "address-line1" is omitted.
-      if (!address["address-line1"] && address["street-address"] &&
-          !address["street-address"].includes("\n")) {
-        address["address-line1"] = address["street-address"];
-        delete address["street-address"];
-      }
+    let nameParts = FormAutofillNameUtils.splitName(address.name);
+    if (!address["given-name"] && nameParts.given) {
+      address["given-name"] = nameParts.given;
+    }
+    if (!address["additional-name"] && nameParts.middle) {
+      address["additional-name"] = nameParts.middle;
+    }
+    if (!address["family-name"] && nameParts.family) {
+      address["family-name"] = nameParts.family;
+    }
+    delete address.name;
+  }
 
-      // Concatenate "address-line*" if "street-address" is omitted.
-      if (!address["street-address"]) {
-        address["street-address"] = STREET_ADDRESS_COMPONENTS.map(c => address[c]).join("\n");
-      }
-
-      STREET_ADDRESS_COMPONENTS.forEach(c => delete address[c]);
+  _normalizeAddress(address) {
+    if (STREET_ADDRESS_COMPONENTS.every(c => !address[c])) {
+      return;
     }
 
-    // Normalize country
+    // Treat "street-address" as "address-line1" if it contains only one line
+    // and "address-line1" is omitted.
+    if (!address["address-line1"] && address["street-address"] &&
+        !address["street-address"].includes("\n")) {
+      address["address-line1"] = address["street-address"];
+      delete address["street-address"];
+    }
+
+    // Concatenate "address-line*" if "street-address" is omitted.
+    if (!address["street-address"]) {
+      address["street-address"] = STREET_ADDRESS_COMPONENTS.map(c => address[c]).join("\n");
+    }
+
+    STREET_ADDRESS_COMPONENTS.forEach(c => delete address[c]);
+  }
+
+  _normalizeCountry(address) {
     if (address.country) {
       let country = address.country.toUpperCase();
       // Only values included in the region list will be saved.
@@ -608,6 +675,38 @@ class Addresses extends AutofillRecords {
       }
     }
     delete address["country-name"];
+  }
+
+  _normalizeTel(address) {
+    if (!address.tel && TEL_COMPONENTS.every(c => !address[c])) {
+      return;
+    }
+
+    // Set "US" as the default region as we only support "en-US" for now.
+    let browserCountryCode = Services.prefs.getCharPref("browser.search.countryCode", "US");
+    let region = address["tel-country-code"] || address.country || browserCountryCode;
+    let number;
+
+    if (address.tel) {
+      number = address.tel;
+    } else if (address["tel-national"]) {
+      number = address["tel-national"];
+    } else if (address["tel-local"]) {
+      number = (address["tel-area-code"] || "") + address["tel-local"];
+    } else if (address["tel-local-prefix"] && address["tel-local-suffix"]) {
+      number = (address["tel-area-code"] || "") + address["tel-local-prefix"] + address["tel-local-suffix"];
+    }
+
+    let tel = PhoneNumber.Parse(number, region);
+    if (tel) {
+      // Force to save numbers in E.164 format if parse success.
+      address.tel = tel.internationalNumber;
+    } else if (!address.tel) {
+      // Save the original number anyway if "tel" is omitted.
+      address.tel = number;
+    }
+
+    TEL_COMPONENTS.forEach(c => delete address[c]);
   }
 
   /**
