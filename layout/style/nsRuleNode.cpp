@@ -8965,14 +8965,9 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
 
     count = 0;
     for (const nsCSSValuePairList* p = ourIncrement; p; p = p->mNext, count++) {
-      int32_t increment;
-      if (p->mYValue.GetUnit() == eCSSUnit_Integer) {
-        increment = p->mYValue.GetIntValue();
-      } else {
-        increment = 1;
-      }
+      MOZ_ASSERT(p->mYValue.GetUnit() == eCSSUnit_Integer);
       p->mXValue.GetStringValue(buffer);
-      content->SetCounterIncrementAt(count, buffer, increment);
+      content->SetCounterIncrementAt(count, buffer, p->mYValue.GetIntValue());
     }
     break;
   }
@@ -9013,14 +9008,9 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
     content->AllocateCounterResets(count);
     count = 0;
     for (const nsCSSValuePairList* p = ourReset; p; p = p->mNext, count++) {
-      int32_t reset;
-      if (p->mYValue.GetUnit() == eCSSUnit_Integer) {
-        reset = p->mYValue.GetIntValue();
-      } else {
-        reset = 0;
-      }
+      MOZ_ASSERT(p->mYValue.GetUnit() == eCSSUnit_Integer);
       p->mXValue.GetStringValue(buffer);
-      content->SetCounterResetAt(count, buffer, reset);
+      content->SetCounterResetAt(count, buffer, p->mYValue.GetIntValue());
     }
     break;
   }
