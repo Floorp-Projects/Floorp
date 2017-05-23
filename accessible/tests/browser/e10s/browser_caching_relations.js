@@ -22,7 +22,7 @@ const attrRelationsSpec = [
   ['aria-flowto', RELATION_FLOWS_TO, RELATION_FLOWS_FROM]
 ];
 
-function* testRelated(browser, accDoc, attr, hostRelation, dependantRelation) {
+async function testRelated(browser, accDoc, attr, hostRelation, dependantRelation) {
   let host = findAccessibleChildByID(accDoc, 'host');
   let dependant1 = findAccessibleChildByID(accDoc, 'dependant1');
   let dependant2 = findAccessibleChildByID(accDoc, 'dependant2');
@@ -58,7 +58,7 @@ function* testRelated(browser, accDoc, attr, hostRelation, dependantRelation) {
 
     if (attrs) {
       for (let { key, value } of attrs) {
-        yield invokeSetAttribute(browser, 'host', key, value);
+        await invokeSetAttribute(browser, 'host', key, value);
       }
     }
 
@@ -75,9 +75,9 @@ addAccessibleTask(`
   <div id="dependant1">label</div>
   <div id="dependant2">label2</div>
   <div role="checkbox" id="host"></div>`,
-  function* (browser, accDoc) {
+  async function (browser, accDoc) {
     for (let spec of attrRelationsSpec) {
-      yield testRelated(browser, accDoc, ...spec);
+      await testRelated(browser, accDoc, ...spec);
     }
   }
 );

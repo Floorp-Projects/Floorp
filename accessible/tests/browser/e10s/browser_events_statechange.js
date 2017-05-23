@@ -36,14 +36,14 @@ let iframeSrc = `data:text/html,
  */
 addAccessibleTask(`
   <iframe id="iframe" src="${iframeSrc}"></iframe>
-  <input id="checkbox" type="checkbox" />`, function*(browser) {
+  <input id="checkbox" type="checkbox" />`, async function(browser) {
   // Test state change
   let onStateChange = waitForEvent(EVENT_STATE_CHANGE, 'checkbox');
   // Set checked for a checkbox.
-  yield ContentTask.spawn(browser, {}, () => {
+  await ContentTask.spawn(browser, {}, () => {
     content.document.getElementById('checkbox').checked = true;
   });
-  let event = yield onStateChange;
+  let event = await onStateChange;
 
   checkStateChangeEvent(event, STATE_CHECKED, false, true);
   testStates(event.accessible, STATE_CHECKED, 0);
@@ -51,10 +51,10 @@ addAccessibleTask(`
   // Test extra state
   onStateChange = waitForEvent(EVENT_STATE_CHANGE, 'iframe');
   // Set design mode on.
-  yield ContentTask.spawn(browser, {}, () => {
+  await ContentTask.spawn(browser, {}, () => {
     content.document.getElementById('iframe').contentDocument.designMode = 'on';
   });
-  event = yield onStateChange;
+  event = await onStateChange;
 
   checkStateChangeEvent(event, EXT_STATE_EDITABLE, true, true);
   testStates(event.accessible, 0, EXT_STATE_EDITABLE);

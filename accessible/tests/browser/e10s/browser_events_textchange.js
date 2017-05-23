@@ -15,34 +15,34 @@ function checkTextChangeEvent(event, id, text, start, end, isInserted, isFromUse
     `Correct value of isFromUserInput for ${prettyName(id)}`);
 }
 
-function* changeText(browser, id, value, events) {
+async function changeText(browser, id, value, events) {
   let onEvents = waitForMultipleEvents(events.map(({ isInserted }) => {
     let eventType = isInserted ? EVENT_TEXT_INSERTED : EVENT_TEXT_REMOVED;
     return { id, eventType };
   }));
   // Change text in the subtree.
-  yield ContentTask.spawn(browser, [id, value], ([contentId, contentValue]) => {
+  await ContentTask.spawn(browser, [id, value], ([contentId, contentValue]) => {
     content.document.getElementById(contentId).firstChild.textContent =
       contentValue;
   });
-  let resolvedEvents = yield onEvents;
+  let resolvedEvents = await onEvents;
 
   events.forEach(({ isInserted, str, offset }, idx) =>
     checkTextChangeEvent(resolvedEvents[idx],
       id, str, offset, offset + str.length, isInserted, false));
 }
 
-function* removeTextFromInput(browser, id, value, start, end) {
+async function removeTextFromInput(browser, id, value, start, end) {
   let onTextRemoved = waitForEvent(EVENT_TEXT_REMOVED, id);
   // Select text and delete it.
-  yield ContentTask.spawn(browser, [id, start, end], ([contentId, contentStart, contentEnd]) => {
+  await ContentTask.spawn(browser, [id, start, end], ([contentId, contentStart, contentEnd]) => {
     let el = content.document.getElementById(contentId);
     el.focus();
     el.setSelectionRange(contentStart, contentEnd);
   });
-  yield BrowserTestUtils.sendChar('VK_DELETE', browser);
+  await BrowserTestUtils.sendChar('VK_DELETE', browser);
 
-  let event = yield onTextRemoved;
+  let event = await onTextRemoved;
   checkTextChangeEvent(event, id, value, start, end, false, true);
 }
 
@@ -56,16 +56,16 @@ function* removeTextFromInput(browser, id, value, start, end) {
  */
 addAccessibleTask(`
   <p id="p">abc</p>
-  <input id="input" value="input" />`, function*(browser) {
+  <input id="input" value="input" />`, async function(browser) {
   let events = [
     { isInserted: false, str: 'abc', offset: 0 },
     { isInserted: true, str: 'def', offset: 0 }
   ];
-  yield changeText(browser, 'p', 'def', events);
+  await changeText(browser, 'p', 'def', events);
 
   events = [{ isInserted: true, str: 'DEF', offset: 2 }];
-  yield changeText(browser, 'p', 'deDEFf', events);
+  await changeText(browser, 'p', 'deDEFf', events);
 
   // Test isFromUserInput property.
-  yield removeTextFromInput(browser, 'input', 'n', 1, 2);
+  await removeTextFromInput(browser, 'input', 'n', 1, 2);
 });

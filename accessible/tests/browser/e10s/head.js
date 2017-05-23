@@ -15,14 +15,14 @@ Services.scriptloader.loadSubScript(
 /**
  * A wrapper around browser test add_task that triggers an accessible test task
  * as a new browser test task with given document, data URL or markup snippet.
- * @param  {String}             doc    URL (relative to current directory) or
- *                                     data URL or markup snippet that is used
- *                                     to test content with
- * @param  {Function|Function*} task   a generator or a function with tests to
- *                                     run
+ * @param  {String}                 doc  URL (relative to current directory) or
+ *                                       data URL or markup snippet that is used
+ *                                       to test content with
+ * @param  {Function|AsyncFunction} task a generator or a function with tests to
+ *                                       run
  */
 function addAccessibleTask(doc, task) {
-  add_task(function*() {
+  add_task(async function() {
     let url;
     if (doc.includes('doc_')) {
       url = `${CURRENT_CONTENT_DIR}e10s/${doc}`;
@@ -49,10 +49,10 @@ function addAccessibleTask(doc, task) {
 
     let onDocLoad = waitForEvent(EVENT_DOCUMENT_LOAD_COMPLETE, 'body');
 
-    yield BrowserTestUtils.withNewTab({
+    await BrowserTestUtils.withNewTab({
       gBrowser,
       url: url
-    }, function*(browser) {
+    }, async function(browser) {
       registerCleanupFunction(() => {
         if (browser) {
           let tab = gBrowser.getTabForBrowser(browser);
@@ -62,7 +62,7 @@ function addAccessibleTask(doc, task) {
         }
       });
 
-      yield SimpleTest.promiseFocus(browser);
+      await SimpleTest.promiseFocus(browser);
 
       loadFrameScripts(browser,
         'let { document, window, navigator } = content;',
@@ -72,8 +72,8 @@ function addAccessibleTask(doc, task) {
         `e10s enabled: ${Services.appinfo.browserTabsRemoteAutostart}`);
       Logger.log(`Actually remote browser: ${browser.isRemoteBrowser}`);
 
-      let event = yield onDocLoad;
-      yield task(browser, event.accessible);
+      let event = await onDocLoad;
+      await task(browser, event.accessible);
     });
   });
 }

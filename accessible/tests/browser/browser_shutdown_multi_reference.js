@@ -4,13 +4,13 @@
 
 'use strict';
 
-add_task(function* () {
+add_task(async function () {
   info('Creating a service');
   // Create a11y service.
   let a11yInit = initPromise();
   let accService1 = Cc['@mozilla.org/accessibilityService;1'].getService(
     Ci.nsIAccessibilityService);
-  yield a11yInit;
+  await a11yInit;
   ok(accService1, 'Service initialized');
 
   // Add another reference to a11y service. This will not trigger
@@ -35,7 +35,7 @@ add_task(function* () {
   forceGC();
 
   // Have some breathing room when removing a11y service references.
-  yield new Promise(resolve => executeSoon(resolve));
+  await new Promise(resolve => executeSoon(resolve));
 
   // Now allow a11y service to shutdown.
   canShutdown = true;
@@ -44,5 +44,5 @@ add_task(function* () {
   ok(!accService2, 'Service is removed');
   // Force garbage collection that should trigger shutdown.
   forceGC();
-  yield a11yShutdown;
+  await a11yShutdown;
 });

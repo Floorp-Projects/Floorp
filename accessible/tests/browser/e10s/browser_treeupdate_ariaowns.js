@@ -7,7 +7,7 @@
 /* import-globals-from ../../mochitest/role.js */
 loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
 
-function* testContainer1(browser, accDoc) {
+async function testContainer1(browser, accDoc) {
   const id = 't1_container';
   const docID = getAccessibleDOMNodeID(accDoc);
   const acc = findAccessibleChildByID(accDoc, id);
@@ -26,8 +26,8 @@ function* testContainer1(browser, accDoc) {
 
   /* ================ Change ARIA owns ====================================== */
   let onReorder = waitForEvent(EVENT_REORDER, id);
-  yield invokeSetAttribute(browser, id, 'aria-owns', 't1_button t1_subdiv');
-  yield onReorder;
+  await invokeSetAttribute(browser, id, 'aria-owns', 't1_button t1_subdiv');
+  await onReorder;
 
   // children are swapped again, button and subdiv are appended to
   // the children.
@@ -42,8 +42,8 @@ function* testContainer1(browser, accDoc) {
 
   /* ================ Remove ARIA owns ====================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
-  yield invokeSetAttribute(browser, id, 'aria-owns');
-  yield onReorder;
+  await invokeSetAttribute(browser, id, 'aria-owns');
+  await onReorder;
 
   // children follow the DOM order
   tree = {
@@ -58,8 +58,8 @@ function* testContainer1(browser, accDoc) {
 
   /* ================ Set ARIA owns ========================================= */
   onReorder = waitForEvent(EVENT_REORDER, id);
-  yield invokeSetAttribute(browser, id, 'aria-owns', 't1_button t1_subdiv');
-  yield onReorder;
+  await invokeSetAttribute(browser, id, 'aria-owns', 't1_button t1_subdiv');
+  await onReorder;
 
   // children are swapped again, button and subdiv are appended to
   // the children.
@@ -74,9 +74,9 @@ function* testContainer1(browser, accDoc) {
 
   /* ================ Add ID to ARIA owns =================================== */
   onReorder = waitForEvent(EVENT_REORDER, docID);
-  yield invokeSetAttribute(browser, id, 'aria-owns',
+  await invokeSetAttribute(browser, id, 'aria-owns',
     't1_button t1_subdiv t1_group');
-  yield onReorder;
+  await onReorder;
 
   // children are swapped again, button and subdiv are appended to
   // the children.
@@ -92,13 +92,13 @@ function* testContainer1(browser, accDoc) {
 
   /* ================ Append element ======================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
-  yield ContentTask.spawn(browser, id, contentId => {
+  await ContentTask.spawn(browser, id, contentId => {
     let div = content.document.createElement('div');
     div.setAttribute('id', 't1_child3');
     div.setAttribute('role', 'radio');
     content.document.getElementById(contentId).appendChild(div);
   });
-  yield onReorder;
+  await onReorder;
 
   // children are invalidated, they includes aria-owns swapped kids and
   // newly inserted child.
@@ -115,9 +115,9 @@ function* testContainer1(browser, accDoc) {
 
   /* ================ Remove element ======================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
-  yield ContentTask.spawn(browser, {}, () =>
+  await ContentTask.spawn(browser, {}, () =>
     content.document.getElementById('t1_span').remove());
-  yield onReorder;
+  await onReorder;
 
   // subdiv should go away
   tree = {
@@ -132,8 +132,8 @@ function* testContainer1(browser, accDoc) {
 
   /* ================ Remove ID ============================================= */
   onReorder = waitForEvent(EVENT_REORDER, docID);
-  yield invokeSetAttribute(browser, 't1_group', 'id');
-  yield onReorder;
+  await invokeSetAttribute(browser, 't1_group', 'id');
+  await onReorder;
 
   tree = {
     SECTION: [
@@ -146,8 +146,8 @@ function* testContainer1(browser, accDoc) {
 
   /* ================ Set ID ================================================ */
   onReorder = waitForEvent(EVENT_REORDER, docID);
-  yield invokeSetAttribute(browser, 't1_grouptmp', 'id', 't1_group');
-  yield onReorder;
+  await invokeSetAttribute(browser, 't1_grouptmp', 'id', 't1_group');
+  await onReorder;
 
   tree = {
     SECTION: [
@@ -160,7 +160,7 @@ function* testContainer1(browser, accDoc) {
   testAccessibleTree(acc, tree);
 }
 
-function* removeContainer(browser, accDoc) {
+async function removeContainer(browser, accDoc) {
   const id = 't2_container1';
   const acc = findAccessibleChildByID(accDoc, id);
 
@@ -172,10 +172,10 @@ function* removeContainer(browser, accDoc) {
   testAccessibleTree(acc, tree);
 
   let onReorder = waitForEvent(EVENT_REORDER, id);
-  yield ContentTask.spawn(browser, {}, () =>
+  await ContentTask.spawn(browser, {}, () =>
     content.document.getElementById('t2_container2').removeChild(
       content.document.getElementById('t2_container3')));
-  yield onReorder;
+  await onReorder;
 
   tree = {
     SECTION: [ ]
@@ -183,7 +183,7 @@ function* removeContainer(browser, accDoc) {
   testAccessibleTree(acc, tree);
 }
 
-function* stealAndRecacheChildren(browser, accDoc) {
+async function stealAndRecacheChildren(browser, accDoc) {
   const id1 = 't3_container1';
   const id2 = 't3_container2';
   const acc1 = findAccessibleChildByID(accDoc, id1);
@@ -191,8 +191,8 @@ function* stealAndRecacheChildren(browser, accDoc) {
 
   /* ================ Steal from other ARIA owns ============================ */
   let onReorder = waitForEvent(EVENT_REORDER, id2);
-  yield invokeSetAttribute(browser, id2, 'aria-owns', 't3_child');
-  yield onReorder;
+  await invokeSetAttribute(browser, id2, 'aria-owns', 't3_child');
+  await onReorder;
 
   let tree = {
     SECTION: [ ]
@@ -208,12 +208,12 @@ function* stealAndRecacheChildren(browser, accDoc) {
 
   /* ================ Append element to recache children ==================== */
   onReorder = waitForEvent(EVENT_REORDER, id2);
-  yield ContentTask.spawn(browser, id2, id => {
+  await ContentTask.spawn(browser, id2, id => {
     let div = content.document.createElement('div');
     div.setAttribute('role', 'radio');
     content.document.getElementById(id).appendChild(div);
   });
-  yield onReorder;
+  await onReorder;
 
   tree = {
     SECTION: [ ]
@@ -229,7 +229,7 @@ function* stealAndRecacheChildren(browser, accDoc) {
   testAccessibleTree(acc2, tree);
 }
 
-function* showHiddenElement(browser, accDoc) {
+async function showHiddenElement(browser, accDoc) {
   const id = 't4_container1';
   const acc = findAccessibleChildByID(accDoc, id);
 
@@ -241,8 +241,8 @@ function* showHiddenElement(browser, accDoc) {
   testAccessibleTree(acc, tree);
 
   let onReorder = waitForEvent(EVENT_REORDER, id);
-  yield invokeSetStyle(browser, 't4_child1', 'display', 'block');
-  yield onReorder;
+  await invokeSetStyle(browser, 't4_child1', 'display', 'block');
+  await onReorder;
 
   tree = {
     SECTION: [
@@ -253,7 +253,7 @@ function* showHiddenElement(browser, accDoc) {
   testAccessibleTree(acc, tree);
 }
 
-function* rearrangeARIAOwns(browser, accDoc) {
+async function rearrangeARIAOwns(browser, accDoc) {
   const id = 't5_container';
   const acc = findAccessibleChildByID(accDoc, id);
   const tests = [{
@@ -266,8 +266,8 @@ function* rearrangeARIAOwns(browser, accDoc) {
 
   for (let { val, roleList } of tests) {
     let onReorder = waitForEvent(EVENT_REORDER, id);
-    yield invokeSetAttribute(browser, id, 'aria-owns', val);
-    yield onReorder;
+    await invokeSetAttribute(browser, id, 'aria-owns', val);
+    await onReorder;
 
     let tree = { SECTION: [ ] };
     for (let role of roleList) {
@@ -279,7 +279,7 @@ function* rearrangeARIAOwns(browser, accDoc) {
   }
 }
 
-function* removeNotARIAOwnedEl(browser, accDoc) {
+async function removeNotARIAOwnedEl(browser, accDoc) {
   const id = 't6_container';
   const acc = findAccessibleChildByID(accDoc, id);
 
@@ -292,11 +292,11 @@ function* removeNotARIAOwnedEl(browser, accDoc) {
   testAccessibleTree(acc, tree);
 
   let onReorder = waitForEvent(EVENT_REORDER, id);
-  yield ContentTask.spawn(browser, id, contentId => {
+  await ContentTask.spawn(browser, id, contentId => {
     content.document.getElementById(contentId).removeChild(
       content.document.getElementById('t6_span'));
   });
-  yield onReorder;
+  await onReorder;
 
   tree = {
     SECTION: [
@@ -306,11 +306,11 @@ function* removeNotARIAOwnedEl(browser, accDoc) {
   testAccessibleTree(acc, tree);
 }
 
-addAccessibleTask('doc_treeupdate_ariaowns.html', function*(browser, accDoc) {
-  yield testContainer1(browser, accDoc);
-  yield removeContainer(browser, accDoc);
-  yield stealAndRecacheChildren(browser, accDoc);
-  yield showHiddenElement(browser, accDoc);
-  yield rearrangeARIAOwns(browser, accDoc);
-  yield removeNotARIAOwnedEl(browser, accDoc);
+addAccessibleTask('doc_treeupdate_ariaowns.html', async function(browser, accDoc) {
+  await testContainer1(browser, accDoc);
+  await removeContainer(browser, accDoc);
+  await stealAndRecacheChildren(browser, accDoc);
+  await showHiddenElement(browser, accDoc);
+  await rearrangeARIAOwns(browser, accDoc);
+  await removeNotARIAOwnedEl(browser, accDoc);
 });

@@ -318,8 +318,8 @@ const markupTests = [{
  *                                accessible, its parent and its content element
  *                                id.
  */
-function* updateAccessibleIfNeeded(onEvent, target) {
-  let event = yield onEvent;
+async function updateAccessibleIfNeeded(onEvent, target) {
+  let event = await onEvent;
   if (isDefunct(target.acc)) {
     target.acc = findAccessibleChildByID(event.accessible, target.id);
   }
@@ -338,7 +338,7 @@ function* updateAccessibleIfNeeded(onEvent, target) {
  * @param {Object} rule         current attr rule for name calculation
  * @param {[type]} expected     expected name value
  */
-function* testAttrRule(browser, target, rule, expected) {
+async function testAttrRule(browser, target, rule, expected) {
   testName(target.acc, expected);
   let onEvent;
   if (rule.recreated) {
@@ -346,9 +346,9 @@ function* testAttrRule(browser, target, rule, expected) {
   } else if (rule.textchanged) {
     onEvent = waitForEvent(EVENT_TEXT_INSERTED, target.id);
   }
-  yield invokeSetAttribute(browser, target.id, rule.attr);
+  await invokeSetAttribute(browser, target.id, rule.attr);
   if (onEvent) {
-    yield updateAccessibleIfNeeded(onEvent, target);
+    await updateAccessibleIfNeeded(onEvent, target);
   }
 }
 
@@ -364,13 +364,13 @@ function* testAttrRule(browser, target, rule, expected) {
  * @param {Object} rule         current elm rule for name calculation
  * @param {[type]} expected     expected name value
  */
-function* testElmRule(browser, target, rule, expected) {
+async function testElmRule(browser, target, rule, expected) {
   testName(target.acc, expected);
   let onEvent = waitForEvent(EVENT_REORDER, rule.isSibling ?
     target.parent : target.id);
-  yield ContentTask.spawn(browser, rule.elm, elm =>
+  await ContentTask.spawn(browser, rule.elm, elm =>
     content.document.querySelector(`${elm}`).remove());
-  yield updateAccessibleIfNeeded(onEvent, target);
+  await updateAccessibleIfNeeded(onEvent, target);
 }
 
 /**
@@ -385,16 +385,16 @@ function* testElmRule(browser, target, rule, expected) {
  * @param {Object} rule         current subtree rule for name calculation
  * @param {[type]} expected     expected name value
  */
-function* testSubtreeRule(browser, target, rule, expected) {
+async function testSubtreeRule(browser, target, rule, expected) {
   testName(target.acc, expected);
   let onEvent = waitForEvent(EVENT_REORDER, target.id);
-  yield ContentTask.spawn(browser, target.id, id => {
+  await ContentTask.spawn(browser, target.id, id => {
     let elm = content.document.getElementById(id);
     while (elm.firstChild) {
       elm.firstChild.remove();
     }
   });
-  yield updateAccessibleIfNeeded(onEvent, target);
+  await updateAccessibleIfNeeded(onEvent, target);
 }
 
 /**
@@ -407,7 +407,7 @@ function* testSubtreeRule(browser, target, rule, expected) {
  * @param {Array}  ruleset      A list of rules to test a target with
  * @param {Array}  expected     A list of expected name value for each rule
  */
-function* testNameRule(browser, target, ruleset, expected) {
+async function testNameRule(browser, target, ruleset, expected) {
   for (let i = 0; i < ruleset.length; ++i) {
     let rule = ruleset[i];
     let testFn;
@@ -418,16 +418,16 @@ function* testNameRule(browser, target, ruleset, expected) {
     } else if (rule.fromsubtree) {
       testFn = testSubtreeRule;
     }
-    yield testFn(browser, target, rule, expected[i]);
+    await testFn(browser, target, rule, expected[i]);
   }
 }
 
 markupTests.forEach(({ id, ruleset, markup, expected }) =>
-  addAccessibleTask(markup, function*(browser, accDoc) {
+  addAccessibleTask(markup, async function(browser, accDoc) {
     // Find a target accessible from an accessible subtree.
     let acc = findAccessibleChildByID(accDoc, id);
     // Find target's parent accessible from an accessible subtree.
     let parent = getAccessibleDOMNodeID(acc.parent);
     let target = { id, parent, acc };
-    yield testNameRule(browser, target, rules[ruleset], expected);
+    await testNameRule(browser, target, rules[ruleset], expected);
   }));

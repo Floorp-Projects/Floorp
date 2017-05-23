@@ -7,12 +7,12 @@
 /* import-globals-from ../../mochitest/role.js */
 loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
 
-addAccessibleTask('<select id="select"></select>', function*(browser, accDoc) {
+addAccessibleTask('<select id="select"></select>', async function(browser, accDoc) {
   let select = findAccessibleChildByID(accDoc, 'select');
 
   let onEvent = waitForEvent(EVENT_REORDER, 'select');
   // Create a combobox with grouping and 2 standalone options
-  yield ContentTask.spawn(browser, {}, () => {
+  await ContentTask.spawn(browser, {}, () => {
     let doc = content.document;
     let contentSelect = doc.getElementById('select');
     let optGroup = doc.createElement('optgroup');
@@ -31,7 +31,7 @@ addAccessibleTask('<select id="select"></select>', function*(browser, accDoc) {
     }
     contentSelect.firstChild.firstChild.id = 'option1Node';
   });
-  let event = yield onEvent;
+  let event = await onEvent;
   let option1Node = findAccessibleChildByID(event.accessible, 'option1Node');
 
   let tree = {
@@ -53,11 +53,11 @@ addAccessibleTask('<select id="select"></select>', function*(browser, accDoc) {
 
   onEvent = waitForEvent(EVENT_REORDER, 'select');
   // Remove grouping from combobox
-  yield ContentTask.spawn(browser, {}, () => {
+  await ContentTask.spawn(browser, {}, () => {
     let contentSelect = content.document.getElementById('select');
     contentSelect.firstChild.remove();
   });
-  yield onEvent;
+  await onEvent;
 
   tree = {
     COMBOBOX: [ {
@@ -73,13 +73,13 @@ addAccessibleTask('<select id="select"></select>', function*(browser, accDoc) {
 
   onEvent = waitForEvent(EVENT_REORDER, 'select');
   // Remove all options from combobox
-  yield ContentTask.spawn(browser, {}, () => {
+  await ContentTask.spawn(browser, {}, () => {
     let contentSelect = content.document.getElementById('select');
     while (contentSelect.length) {
       contentSelect.remove(0);
     }
   });
-  yield onEvent;
+  await onEvent;
 
   tree = {
     COMBOBOX: [ {

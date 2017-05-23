@@ -7,16 +7,16 @@
 /* import-globals-from ../../mochitest/role.js */
 loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
 
-addAccessibleTask('doc_treeupdate_removal.xhtml', function*(browser, accDoc) {
+addAccessibleTask('doc_treeupdate_removal.xhtml', async function(browser, accDoc) {
   ok(isAccessible(findAccessibleChildByID(accDoc, 'the_table')),
     'table should be accessible');
 
   // Move the_table element into hidden subtree.
   let onReorder = waitForEvent(EVENT_REORDER, 'body');
-  yield ContentTask.spawn(browser, {}, () => content.document.getElementById(
+  await ContentTask.spawn(browser, {}, () => content.document.getElementById(
     'the_displaynone').appendChild(content.document.getElementById(
       'the_table')));
-  yield onReorder;
+  await onReorder;
 
   ok(!isAccessible(findAccessibleChildByID(accDoc, 'the_table')),
     'table in display none tree shouldn\'t be accessible');
@@ -24,7 +24,7 @@ addAccessibleTask('doc_treeupdate_removal.xhtml', function*(browser, accDoc) {
     'row shouldn\'t be accessible');
 
   // Remove the_row element (since it did not have accessible, no event needed).
-  yield ContentTask.spawn(browser, {}, () =>
+  await ContentTask.spawn(browser, {}, () =>
     content.document.body.removeChild(
       content.document.getElementById('the_row')));
 
