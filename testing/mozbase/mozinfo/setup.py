@@ -4,7 +4,7 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.9'
+PACKAGE_VERSION = '0.10'
 
 # dependencies
 deps = ['mozfile >= 0.12']
