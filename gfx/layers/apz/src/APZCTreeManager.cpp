@@ -404,10 +404,15 @@ APZCTreeManager::PushStateToWR(wr::WebRenderAPI* aWrApi,
         if (aNode->GetLayersId() != lastLayersId) {
           // If we walked into or out of a subtree, we need to get the new
           // pipeline id.
-          lastLayersId = aNode->GetLayersId();
-          const LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(lastLayersId);
-          MOZ_ASSERT(state && state->mWrBridge);
+          const LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(aNode->GetLayersId());
+          if (!(state && state->mWrBridge)) {
+            // During shutdown we might have layer tree information for stuff
+            // that has already been torn down. In that case just skip over
+            // those layers.
+            return;
+          }
           lastPipelineId = state->mWrBridge->PipelineId();
+          lastLayersId = aNode->GetLayersId();
         }
 
         // Use a 0 presShellId because when we do a lookup in this map for the
