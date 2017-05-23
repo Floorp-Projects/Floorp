@@ -11,11 +11,12 @@
 
 #include <Cocoa/Cocoa.h>
 
-extern NSString* const kWildcardPboardType;
 extern NSString* const kPublicUrlPboardType;
 extern NSString* const kPublicUrlNamePboardType;
 extern NSString* const kUrlsWithTitlesPboardType;
-extern NSString* const kCustomTypesPboardType;
+extern NSString* const kMozWildcardPboardType;
+extern NSString* const kMozCustomTypesPboardType;
+extern NSString* const kMozFileUrlsPboardType;
 
 class nsDragService : public nsBaseDragService
 {
