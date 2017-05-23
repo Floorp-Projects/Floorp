@@ -3285,9 +3285,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
                                     NSURLPboardType,
                                     kPasteboardTypeFileURLPromise,
                                     kWildcardPboardType,
-                                    kCorePboardType_url,
-                                    kCorePboardType_urld,
-                                    kCorePboardType_urln,
+                                    kPublicUrlPboardType,
+                                    kPublicUrlNamePboardType,
+                                    kUrlsWithTitlesPboardType,
                                     nil]];
 }
 
@@ -6116,10 +6116,12 @@ provideDataForType:(NSString*)aType
     for (unsigned int k = 0; k < typeCount; k++) {
       NSString* curType = [types objectAtIndex:k];
       if ([curType isEqualToString:NSPasteboardTypeString] ||
-          [curType isEqualToString:kCorePboardType_url] ||
-          [curType isEqualToString:kCorePboardType_urld] ||
-          [curType isEqualToString:kCorePboardType_urln]) {
+          [curType isEqualToString:kPublicUrlPboardType] ||
+          [curType isEqualToString:kPublicUrlNamePboardType]) {
         [aPasteboard setString:[pasteboardOutputDict valueForKey:curType]
+                       forType:curType];
+      } else if ([curType isEqualToString:kUrlsWithTitlesPboardType]) {
+        [aPasteboard setPropertyList:[pasteboardOutputDict valueForKey:curType]
                        forType:curType];
       } else if ([curType isEqualToString:NSPasteboardTypeHTML]) {
         [aPasteboard setString:
@@ -6313,9 +6315,8 @@ provideDataForType:(NSString*)aType
     id currentValue = [pasteboardOutputDict valueForKey:currentKey];
 
     if ([currentKey isEqualToString:NSPasteboardTypeString] ||
-        [currentKey isEqualToString:kCorePboardType_url] ||
-        [currentKey isEqualToString:kCorePboardType_urld] ||
-        [currentKey isEqualToString:kCorePboardType_urln]) {
+        [currentKey isEqualToString:kPublicUrlPboardType] ||
+        [currentKey isEqualToString:kPublicUrlNamePboardType]) {
       [pboard setString:currentValue forType:currentKey];
     } else if ([currentKey isEqualToString:NSPasteboardTypeHTML]) {
       [pboard setString:(nsClipboard::WrapHtmlForSystemPasteboard(currentValue))
@@ -6323,7 +6324,8 @@ provideDataForType:(NSString*)aType
     } else if ([currentKey isEqualToString:NSPasteboardTypeTIFF]) {
       [pboard setData:currentValue forType:currentKey];
     } else if ([currentKey isEqualToString:
-                 (NSString*)kPasteboardTypeFileURLPromise]) {
+                 (NSString*)kPasteboardTypeFileURLPromise] ||
+               [currentKey isEqualToString:kUrlsWithTitlesPboardType]) {
       [pboard setPropertyList:currentValue forType:currentKey];
     }
   }
