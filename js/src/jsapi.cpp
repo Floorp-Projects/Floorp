@@ -684,12 +684,6 @@ JS_SetCompartmentNameCallback(JSContext* cx, JSCompartmentNameCallback callback)
 }
 
 JS_PUBLIC_API(void)
-JS_SetRealmNameCallback(JSContext* cx, JSRealmNameCallback callback)
-{
-    cx->runtime()->realmNameCallback = callback;
-}
-
-JS_PUBLIC_API(void)
 JS_SetWrapObjectCallbacks(JSContext* cx, const JSWrapObjectCallbacks* callbacks)
 {
     cx->runtime()->wrapObjectCallbacks = callbacks;

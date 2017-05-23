@@ -3444,6 +3444,8 @@ void
 JSCompartment::destroy(FreeOp* fop)
 {
     JSRuntime* rt = fop->runtime();
+    if (auto callback = rt->destroyRealmCallback)
+        callback(fop, JS::GetRealmForCompartment(this));
     if (auto callback = rt->destroyCompartmentCallback)
         callback(fop, this);
     if (principals())
