@@ -5688,6 +5688,9 @@ const nodeToTooltipMap = {
   "reload-button": "reloadButton.tooltip",
   "stop-button": "stopButton.tooltip",
   "urlbar-zoom-button": "urlbar-zoom-button.tooltip",
+  "appMenu-cut-button": "cut-button.tooltip",
+  "appMenu-copy-button": "copy-button.tooltip",
+  "appMenu-paste-button": "paste-button.tooltip",
 };
 const nodeToShortcutMap = {
   "bookmarks-menu-button": "manBookmarkKb",
@@ -5701,6 +5704,9 @@ const nodeToShortcutMap = {
   "reload-button": "key_reload",
   "stop-button": "key_stop",
   "urlbar-zoom-button": "key_fullZoomReset",
+  "appMenu-cut-button": "key_cut",
+  "appMenu-copy-button": "key_copy",
+  "appMenu-paste-button": "key_paste",
 };
 
 if (AppConstants.platform == "macosx") {
