@@ -42,7 +42,7 @@
 
     function keepThisPublicKeyCredential(aPublicKeyCredential) {
       gTrackedCredential = {
-        type: "ScopedCred",
+        type: "public-key",
         id: Uint8Array.from(aPublicKeyCredential.rawId),
         transports: [ "usb" ],
       }
@@ -50,13 +50,11 @@
     }
 
     function runTests() {
-      isnot(navigator.authentication, undefined, "WebAuthn API endpoint must exist");
+      is(navigator.authentication, undefined, "navigator.authentication does not exist any longer");
       isnot(navigator.credentials, undefined, "Credential Management API endpoint must exist");
-      is(navigator.authentication.makeCredential, undefined, "WebAuthn makeCredential API endpoint does not exist any longer");
-      isnot(navigator.authentication.getAssertion, undefined, "WebAuthn getAssertion API endpoint must exist");
       isnot(navigator.credentials.create, undefined, "CredentialManagement create API endpoint must exist");
+      isnot(navigator.credentials.get, undefined, "CredentialManagement get API endpoint must exist");
 
-      let authn = navigator.authentication;
       let credm = navigator.credentials;
 
       let chall = new Uint8Array(16);
@@ -139,49 +137,77 @@
         },
         function () {
           // Test basic good call
-          return authn.getAssertion(chall, {allowList: [gTrackedCredential],
-                                            rpId: document.origin})
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: document.origin,
+            allowList: [gTrackedCredential]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsGood)
                       .catch(arrivingHereIsBad);
         },
         function () {
           // Test rpId being unset
-          return authn.getAssertion(chall, {allowList: [gTrackedCredential]})
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            allowList: [gTrackedCredential]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsGood)
                       .catch(arrivingHereIsBad);
         },
         function () {
           // Test this origin with optional fields
-          return authn.getAssertion(chall, {allowList: [gTrackedCredential],
-                                            rpId: "user:pass@" + document.origin + ":8888"})
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: "user:pass@" + document.origin + ":8888",
+            allowList: [gTrackedCredential]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsBad)
                       .catch(expectSecurityError);
         },
         function () {
           // Test blank rpId
-          return authn.getAssertion(chall, {allowList: [gTrackedCredential],
-                                            rpId: ""})
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: "",
+            allowList: [gTrackedCredential]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsBad)
                       .catch(expectSecurityError);
         },
         function () {
           // Test subdomain of this origin
-          return authn.getAssertion(chall, {allowList: [gTrackedCredential],
-                                            rpId: "subdomain." + document.origin})
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: "subdomain." + document.origin,
+            allowList: [gTrackedCredential]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsBad)
                       .catch(expectSecurityError);
         },
         function () {
           // Test another origin
-          return authn.getAssertion(chall, {allowList: [gTrackedCredential],
-                                            rpId: "example.com"})
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: "example.com",
+            allowList: [gTrackedCredential]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsBad)
                       .catch(expectSecurityError);
         },
         function () {
           // Test a different domain within the same TLD
-          return authn.getAssertion(chall, {allowList: [gTrackedCredential],
-                                            rpId: "alt.test"})
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: "alt.test",
+            allowList: [gTrackedCredential]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsBad)
                       .catch(expectSecurityError)
         },

@@ -456,8 +456,7 @@ WebAuthnManager::StartSign() {
 
 already_AddRefed<Promise>
 WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
-                              const ArrayBufferViewOrArrayBuffer& aChallenge,
-                              const AssertionOptions& aOptions)
+                              const PublicKeyCredentialRequestOptions& aOptions)
 {
   MOZ_ASSERT(aParent);
 
@@ -482,11 +481,11 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
   // reasonable range as defined by the platform and if not, correct it to the
   // closest value lying within that range.
 
-  double adjustedTimeout = 30.0;
-  if (aOptions.mTimeoutSeconds.WasPassed()) {
-    adjustedTimeout = aOptions.mTimeoutSeconds.Value();
-    adjustedTimeout = std::max(15.0, adjustedTimeout);
-    adjustedTimeout = std::min(120.0, adjustedTimeout);
+  uint32_t adjustedTimeout = 30000;
+  if (aOptions.mTimeout.WasPassed()) {
+    adjustedTimeout = aOptions.mTimeout.Value();
+    adjustedTimeout = std::max(15000u, adjustedTimeout);
+    adjustedTimeout = std::min(120000u, adjustedTimeout);
   }
 
   nsCString rpId;
@@ -534,7 +533,7 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
   // representing this request. Choose a hash algorithm for hashAlg and compute
   // the clientDataJSON and clientDataHash.
   CryptoBuffer challenge;
-  if (!challenge.Assign(aChallenge)) {
+  if (!challenge.Assign(aOptions.mChallenge)) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();
   }
@@ -560,13 +559,13 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
 
   // Note: we only support U2F-style authentication for now, so we effectively
   // require an AllowList.
-  if (!aOptions.mAllowList.WasPassed()) {
+  if (aOptions.mAllowList.Length() < 1) {
     promise->MaybeReject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
     return promise.forget();
   }
 
   nsTArray<WebAuthnScopedCredentialDescriptor> allowList;
-  for (const auto& s: aOptions.mAllowList.Value()) {
+  for (const auto& s: aOptions.mAllowList) {
     WebAuthnScopedCredentialDescriptor c;
     CryptoBuffer cb;
     cb.Assign(s.mId);
@@ -584,7 +583,7 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
 
   WebAuthnTransactionInfo info(rpIdHash,
                                clientDataHash,
-                               10000,
+                               adjustedTimeout,
                                allowList,
                                extensions);
   RefPtr<MozPromise<nsresult, nsresult, false>> p = GetOrCreateBackgroundActor();

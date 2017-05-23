@@ -66,6 +66,15 @@ enum Attachment {
     "cross-platform"
 };
 
+dictionary PublicKeyCredentialRequestOptions {
+    required BufferSource                challenge;
+    unsigned long                        timeout;
+    USVString                            rpId;
+    sequence<PublicKeyCredentialDescriptor> allowList = [];
+    // Extensions are not supported yet.
+    // AuthenticationExtensions             extensions;
+};
+
 dictionary CollectedClientData {
     required DOMString           challenge;
     required DOMString           origin;
@@ -94,39 +103,9 @@ interface AuthenticatorAssertionResponse : AuthenticatorResponse {
     readonly attribute ArrayBuffer      signature;
 };
 
-dictionary AssertionOptions {
-    unsigned long                        timeoutSeconds;
-    USVString                            rpId;
-    sequence<ScopedCredentialDescriptor> allowList;
-    WebAuthnExtensions                   extensions;
-};
-
-dictionary WebAuthnExtensions {
-};
-
-enum ScopedCredentialType {
-    "ScopedCred"
-};
-
-dictionary ScopedCredentialDescriptor {
-    required ScopedCredentialType type;
-    required BufferSource         id;
-    sequence <WebAuthnTransport>  transports;
-};
-
 // Renamed from "Transport" to avoid a collision with U2F
 enum WebAuthnTransport {
     "usb",
     "nfc",
     "ble"
-};
-
-/***** The Main API *****/
-
-[SecureContext, Pref="security.webauth.webauthn"]
-interface WebAuthentication {
-    Promise<PublicKeyCredential> getAssertion (
-        BufferSource               assertionChallenge,
-        optional AssertionOptions  options
-    );
 };
