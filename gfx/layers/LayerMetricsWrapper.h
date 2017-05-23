@@ -416,6 +416,15 @@ public:
     return mLayer->GetScrollThumbData();
   }
 
+  uint64_t GetScrollbarAnimationId() const
+  {
+    MOZ_ASSERT(IsValid());
+    // This function is only really needed for template-compatibility with
+    // WebRenderScrollDataWrapper. Although it will be called, the return
+    // value is not used.
+    return 0;
+  }
+
   FrameMetrics::ViewID GetScrollbarTargetContainerId() const
   {
     MOZ_ASSERT(IsValid());
