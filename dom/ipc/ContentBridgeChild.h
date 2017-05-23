@@ -36,9 +36,6 @@ public:
   SendPBlobConstructor(PBlobChild* actor,
                        const BlobConstructorParams& aParams) override;
 
-  virtual PMemoryStreamChild*
-  SendPMemoryStreamConstructor(const uint64_t& aSize) override;
-
   jsipc::CPOWManager* GetCPOWManager() override;
 
   virtual bool SendPBrowserConstructor(PBrowserChild* aActor,
@@ -87,10 +84,6 @@ protected:
 
   virtual PBlobChild* AllocPBlobChild(const BlobConstructorParams& aParams) override;
   virtual bool DeallocPBlobChild(PBlobChild*) override;
-
-  virtual PMemoryStreamChild*
-  AllocPMemoryStreamChild(const uint64_t& aSize) override;
-  virtual bool DeallocPMemoryStreamChild(PMemoryStreamChild*) override;
 
   virtual PIPCBlobInputStreamChild*
   AllocPIPCBlobInputStreamChild(const nsID& aID,
