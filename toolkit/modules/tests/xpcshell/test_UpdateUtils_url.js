@@ -129,6 +129,43 @@ function getProcArchitecture() {
   }
 }
 
+// Provides system capability information for application update though it may
+// be used by other consumers.
+function getSystemCapabilities() {
+  if (AppConstants.platform == "win") {
+    const PF_MMX_INSTRUCTIONS_AVAILABLE = 3; // MMX
+    const PF_XMMI_INSTRUCTIONS_AVAILABLE = 6; // SSE
+    const PF_XMMI64_INSTRUCTIONS_AVAILABLE = 10; // SSE2
+    const PF_SSE3_INSTRUCTIONS_AVAILABLE = 13; // SSE3
+
+    let lib = ctypes.open("kernel32.dll");
+    let IsProcessorFeaturePresent = lib.declare("IsProcessorFeaturePresent",
+                                                ctypes.winapi_abi,
+                                                ctypes.int32_t, /* success */
+                                                ctypes.uint32_t); /* DWORD */
+    let instructionSet = "unknown";
+    try {
+      if (IsProcessorFeaturePresent(PF_SSE3_INSTRUCTIONS_AVAILABLE)) {
+        instructionSet = "SSE3";
+      } else if (IsProcessorFeaturePresent(PF_XMMI64_INSTRUCTIONS_AVAILABLE)) {
+        instructionSet = "SSE2";
+      } else if (IsProcessorFeaturePresent(PF_XMMI_INSTRUCTIONS_AVAILABLE)) {
+        instructionSet = "SSE";
+      } else if (IsProcessorFeaturePresent(PF_MMX_INSTRUCTIONS_AVAILABLE)) {
+        instructionSet = "MMX";
+      }
+    } catch (e) {
+      Cu.reportError("Error getting processor instruction set. " +
+                     "Exception: " + e);
+    }
+
+    lib.close();
+    return instructionSet;
+  }
+
+  return "NA";
+}
+
 // Helper function for formatting a url and getting the result we're
 // interested in
 function getResult(url) {
@@ -289,4 +326,11 @@ add_task(function* test_custom() {
   let url = URL_PREFIX + "%CUSTOM%/";
   Assert.equal(getResult(url), "custom",
                "the url query string for %CUSTOM%" + MSG_SHOULD_EQUAL);
+});
+
+// url constructed with %SYSTEM_CAPABILITIES%
+add_task(function* test_systemCapabilities() {
+  let url = URL_PREFIX + "%SYSTEM_CAPABILITIES%/";
+  Assert.equal(getResult(url), getSystemCapabilities(),
+               "the url param for %SYSTEM_CAPABILITIES%" + MSG_SHOULD_EQUAL);
 });
