@@ -16,14 +16,12 @@
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/SchedulerGroup.h"
-#include "mozilla/dom/PBlobChild.h"
 #include "mozilla/dom/PFileSystemRequestChild.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
-#include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/ipc/PendingIPCBlobChild.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
@@ -200,24 +198,6 @@ BackgroundChildImpl::DeallocPBackgroundIndexedDBUtilsChild(
   MOZ_ASSERT(aActor);
 
   delete aActor;
-  return true;
-}
-
-auto
-BackgroundChildImpl::AllocPBlobChild(const BlobConstructorParams& aParams)
-  -> PBlobChild*
-{
-  MOZ_ASSERT(aParams.type() != BlobConstructorParams::T__None);
-
-  return mozilla::dom::BlobChild::Create(this, aParams);
-}
-
-bool
-BackgroundChildImpl::DeallocPBlobChild(PBlobChild* aActor)
-{
-  MOZ_ASSERT(aActor);
-
-  mozilla::dom::BlobChild::Destroy(aActor);
   return true;
 }
 
