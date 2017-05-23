@@ -29,7 +29,6 @@ class Blob;
 class BlobImpl;
 class ContentChild;
 class nsIContentChild;
-class PBlobStreamChild;
 
 class BlobChild final
   : public PBlobChild
@@ -210,13 +209,6 @@ private:
   // These methods are only called by the IPDL message machinery.
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) override;
-
-  virtual PBlobStreamChild*
-  AllocPBlobStreamChild(const uint64_t& aStart,
-                        const uint64_t& aLength) override;
-
-  virtual bool
-  DeallocPBlobStreamChild(PBlobStreamChild* aActor) override;
 
   virtual mozilla::ipc::IPCResult
   RecvCreatedFromKnownBlob() override;
