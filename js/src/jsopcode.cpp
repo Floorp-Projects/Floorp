@@ -729,6 +729,7 @@ BytecodeParser::simulateOp(JSOp op, uint32_t offset, OffsetAndDefIndex* offsetSt
       case JSOP_CHECKOBJCOERCIBLE:
       case JSOP_CHECKTHIS:
       case JSOP_CHECKTHISREINIT:
+      case JSOP_CHECKCLASSHERITAGE:
       case JSOP_DEBUGCHECKSELFHOSTED:
       case JSOP_INITGLEXICAL:
       case JSOP_INITLEXICAL:
@@ -1969,12 +1970,6 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex)
           case JSOP_CLASSCONSTRUCTOR:
           case JSOP_DERIVEDCONSTRUCTOR:
             return write("CONSTRUCTOR");
-
-          case JSOP_CLASSHERITAGE:
-            if (defIndex == 0)
-                return write("FUNCPROTO");
-            MOZ_ASSERT(defIndex == 1);
-            return write("OBJPROTO");
 
           case JSOP_DOUBLE:
             return sprinter.printf("%lf", script->getConst(GET_UINT32_INDEX(pc)).toDouble());
