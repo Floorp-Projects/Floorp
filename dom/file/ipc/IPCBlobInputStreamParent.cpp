@@ -6,7 +6,6 @@
 
 #include "IPCBlobInputStreamParent.h"
 #include "IPCBlobInputStreamStorage.h"
-#include "mozilla/ipc/IPCStreamUtils.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {
@@ -92,7 +91,7 @@ IPCBlobInputStreamParent::RecvStreamNeeded()
     return IPC_OK();
   }
 
-  mozilla::ipc::AutoIPCStream ipcStream;
+  AutoIPCStream ipcStream;
   bool ok = false;
 
   if (mContentManager) {
