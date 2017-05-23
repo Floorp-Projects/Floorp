@@ -375,6 +375,13 @@ APZCTreeManager::PushStateToWR(wr::WebRenderAPI* aWrApi,
 
   MutexAutoLock lock(mTreeLock);
 
+  // During the first pass through the tree, we build a cache of guid->HTTN so
+  // that we can find the relevant APZC instances quickly in subsequent passes,
+  // such as the one below to generate scrollbar transforms. Without this, perf
+  // could end up being O(n^2) instead of O(n log n) because we'd have to search
+  // the tree to find the corresponding APZC every time we hit a thumb node.
+  std::map<ScrollableLayerGuid, HitTestingTreeNode*> httnMap;
+
   bool activeAnimations = false;
   uint64_t lastLayersId = -1;
   WrPipelineId lastPipelineId;
@@ -403,6 +410,11 @@ APZCTreeManager::PushStateToWR(wr::WebRenderAPI* aWrApi,
           lastPipelineId = state->mWrBridge->PipelineId();
         }
 
+        // Use a 0 presShellId because when we do a lookup in this map for the
+        // scrollbar below we don't have (or care about) the presShellId.
+        ScrollableLayerGuid guid(lastLayersId, 0, apzc->GetGuid().mScrollId);
+        httnMap.emplace(guid, aNode);
+
         ParentLayerPoint layerTranslation = apzc->GetCurrentAsyncTransform(
             AsyncPanZoomController::RESPECT_FORCE_DISABLE).mTranslation;
         // The positive translation means the painted content is supposed to
@@ -415,6 +427,45 @@ APZCTreeManager::PushStateToWR(wr::WebRenderAPI* aWrApi,
 
         apzc->ReportCheckerboard(aSampleTime);
         activeAnimations |= apzc->AdvanceAnimations(aSampleTime);
+      });
+
+  // Now we iterate over the nodes again, and generate the transforms needed
+  // for scrollbar thumbs. Although we *could* do this as part of the previous
+  // iteration, it's cleaner and more efficient to do it as a separate pass
+  // because now we have a populated httnMap which allows O(log n) lookup here,
+  // resulting in O(n log n) runtime.
+  ForEachNode<ReverseIterator>(mRootNode.get(),
+      [&](HitTestingTreeNode* aNode)
+      {
+        if (!aNode->IsScrollThumbNode()) {
+          return;
+        }
+        ScrollableLayerGuid guid(aNode->GetLayersId(), 0, aNode->GetScrollTargetId());
+        auto it = httnMap.find(guid);
+        if (it == httnMap.end()) {
+          // A scrollbar for content which didn't have an APZC. Possibly the
+          // content isn't layerized. Regardless, we can't async-scroll it so
+          // we can skip the async transform on the scrollbar.
+          return;
+        }
+
+        HitTestingTreeNode* scrollTargetNode = it->second;
+        AsyncPanZoomController* scrollTargetApzc = scrollTargetNode->GetApzc();
+        MOZ_ASSERT(scrollTargetApzc);
+        LayerToParentLayerMatrix4x4 transform = scrollTargetApzc->CallWithLastContentPaintMetrics(
+            [&](const FrameMetrics& aMetrics) {
+                return AsyncCompositionManager::ComputeTransformForScrollThumb(
+                    aNode->GetTransform() * AsyncTransformMatrix(),
+                    scrollTargetNode->GetTransform().ToUnknownMatrix(),
+                    scrollTargetApzc,
+                    aMetrics,
+                    aNode->GetScrollThumbData(),
+                    scrollTargetNode->IsAncestorOf(aNode),
+                    nullptr);
+            });
+        aTransformArray.AppendElement(wr::ToWrTransformProperty(
+            aNode->GetScrollbarAnimationId(),
+            transform));
       });
 
   return activeAnimations;
