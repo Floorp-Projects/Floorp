@@ -35,6 +35,7 @@ IPDL_SOURCES += [
     'BlobTypes.ipdlh',
     'IPCBlob.ipdlh',
     'PBlob.ipdl',
+    'PBlobStream.ipdl',
     'PIPCBlobInputStream.ipdl',
     'PPendingIPCBlob.ipdl',
 ]
