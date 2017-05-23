@@ -325,4 +325,14 @@ public class AppConstants {
 //#else
         false;
 //#endif
+    /**
+     * This flag is for enabling custom code used only in the
+     * MozillaOnline (Mozilla China) version of Fennec.
+     */
+    public static final boolean MOZ_ANDROID_MOZILLA_ONLINE =
+//#ifdef MOZ_ANDROID_MOZILLA_ONLINE
+        true;
+//#else
+        false;
+//#endif
 }
