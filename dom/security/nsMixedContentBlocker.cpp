@@ -924,7 +924,7 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
       do_GetService(NS_SSSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aContentLocation,
-        0, originAttributes, &cached, &hsts);
+        0, originAttributes, &cached, nullptr, &hsts);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (hsts && sUseHSTS) {
@@ -1150,7 +1150,7 @@ nsMixedContentBlocker::AccumulateMixedContentHSTS(
     return;
   }
   rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, 0,
-                        aOriginAttributes, nullptr, &hsts);
+                        aOriginAttributes, nullptr, nullptr, &hsts);
   if (NS_FAILED(rv)) {
     return;
   }

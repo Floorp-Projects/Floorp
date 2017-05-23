@@ -1796,9 +1796,13 @@ nsHttpChannel::ProcessSingleSecurityHeader(uint32_t aType,
         OriginAttributes originAttributes;
         NS_GetOriginAttributes(this, originAttributes);
         uint32_t failureResult;
+        uint32_t headerSource = nsISiteSecurityService::SOURCE_ORGANIC_REQUEST;
+        if (mLoadInfo && mLoadInfo->GetIsHSTSPriming()) {
+            headerSource = nsISiteSecurityService::SOURCE_HSTS_PRIMING;
+        }
         rv = sss->ProcessHeader(aType, mURI, securityHeader, aSSLStatus,
-                                aFlags, originAttributes, nullptr, nullptr,
-                                &failureResult);
+                                aFlags, headerSource, originAttributes,
+                                nullptr, nullptr, &failureResult);
         if (NS_FAILED(rv)) {
             nsAutoString consoleErrorCategory;
             nsAutoString consoleErrorTag;
@@ -8660,8 +8664,10 @@ nsHttpChannel::OnHSTSPrimingSucceeded(bool aCached)
         Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
                 (aCached) ? HSTSPrimingResult::eHSTS_PRIMING_CACHED_DO_UPGRADE :
                             HSTSPrimingResult::eHSTS_PRIMING_SUCCEEDED);
-        // we have to record this upgrade here
+        // we have to record this upgrade here since we have already
+        // been through NS_ShouldSecureUpgrade
         Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 3);
+        Telemetry::Accumulate(Telemetry::HSTS_UPGRADE_SOURCE, 2);
         mLoadInfo->SetIsHSTSPrimingUpgrade(true);
         return AsyncCall(&nsHttpChannel::HandleAsyncRedirectChannelToHttps);
     }

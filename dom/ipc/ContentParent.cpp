@@ -3560,7 +3560,7 @@ ContentParent::RecvIsSecureURI(const uint32_t& aType,
     return IPC_FAIL_NO_REASON(this);
   }
   nsresult rv = sss->IsSecureURI(aType, ourURI, aFlags, aOriginAttributes, nullptr,
-                                 aIsSecureURI);
+                                 nullptr, aIsSecureURI);
   if (NS_FAILED(rv)) {
     return IPC_FAIL_NO_REASON(this);
   }

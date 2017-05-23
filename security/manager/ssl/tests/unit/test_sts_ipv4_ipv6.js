@@ -19,7 +19,8 @@ function check_ip(s, v, ip) {
   let parsedMaxAge = {};
   let parsedIncludeSubdomains = {};
   s.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                  "max-age=1000;includeSubdomains", sslStatus, 0, {},
+                  "max-age=1000;includeSubdomains", sslStatus, 0,
+                  Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST, {},
                   parsedMaxAge, parsedIncludeSubdomains);
   ok(!s.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0),
      "URI should not be secure if it contains an IP address");
@@ -31,6 +32,8 @@ function check_ip(s, v, ip) {
    */
   notEqual(parsedMaxAge.value, 1000);
   notEqual(parsedIncludeSubdomains.value, true);
+  notEqual(parsedMaxAge.value, undefined);
+  notEqual(parsedIncludeSubdomains.value, undefined);
 }
 
 function run_test() {

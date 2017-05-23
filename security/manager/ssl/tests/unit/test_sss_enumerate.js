@@ -52,12 +52,14 @@ function insertEntries() {
       header += "; includeSubdomains";
     }
     sss.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri, header,
-                      sslStatus, 0);
+                      sslStatus, 0,
+                      Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
     for (let key of KEY_HASHES) {
       header += `; pin-sha256="${key}"`;
     }
     sss.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri, header,
-                      sslStatus, 0);
+                      sslStatus, 0,
+                      Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
   }
 }
 

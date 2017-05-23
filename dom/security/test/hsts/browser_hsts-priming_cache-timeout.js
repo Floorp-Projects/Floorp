@@ -32,9 +32,9 @@ add_task(function*() {
 
   let pre_promise = performance.now();
 
-  while ((performance.now() - pre_promise) < 2000) {
+  while ((performance.now() - pre_promise) < 1000) {
     yield new Promise(function (resolve) {
-      setTimeout(resolve, 2000);
+      setTimeout(resolve, 1000);
     });
   }
 

@@ -60,7 +60,8 @@ function run_test() {
   // Now let's simulate overriding the entry by setting an entry from a header
   // with max-age set to 0
   SSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                          "max-age=0", sslStatus, 0);
+                          "max-age=0", sslStatus, 0,
+                          Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST);
 
   // this should no longer be an HSTS host
   ok(!SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0));
