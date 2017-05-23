@@ -16,7 +16,6 @@
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
-#include "mozilla/dom/ipc/MemoryStreamParent.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
@@ -216,19 +215,6 @@ bool
 nsIContentParent::DeallocPBlobParent(PBlobParent* aActor)
 {
   BlobParent::Destroy(aActor);
-  return true;
-}
-
-PMemoryStreamParent*
-nsIContentParent::AllocPMemoryStreamParent(const uint64_t& aSize)
-{
-  return new MemoryStreamParent(aSize);
-}
-
-bool
-nsIContentParent::DeallocPMemoryStreamParent(PMemoryStreamParent* aActor)
-{
-  delete aActor;
   return true;
 }
 

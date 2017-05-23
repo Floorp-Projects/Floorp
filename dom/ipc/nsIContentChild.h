@@ -64,9 +64,6 @@ public:
   SendPBlobConstructor(PBlobChild* aActor,
                        const BlobConstructorParams& aParams) = 0;
 
-  virtual mozilla::ipc::PMemoryStreamChild*
-  SendPMemoryStreamConstructor(const uint64_t& aSize) = 0;
-
   virtual bool
   SendPBrowserConstructor(PBrowserChild* aActor,
                           const TabId& aTabId,
@@ -105,11 +102,6 @@ protected:
   virtual PBlobChild* AllocPBlobChild(const BlobConstructorParams& aParams);
 
   virtual bool DeallocPBlobChild(PBlobChild* aActor);
-
-  virtual mozilla::ipc::PMemoryStreamChild*
-  AllocPMemoryStreamChild(const uint64_t& aSize);
-
-  virtual bool DeallocPMemoryStreamChild(mozilla::ipc::PMemoryStreamChild* aActor);
 
   virtual mozilla::ipc::PIPCBlobInputStreamChild*
   AllocPIPCBlobInputStreamChild(const nsID& aID, const uint64_t& aSize);

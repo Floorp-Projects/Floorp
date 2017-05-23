@@ -1637,18 +1637,6 @@ ContentChild::DeallocPBrowserChild(PBrowserChild* aIframe)
   return nsIContentChild::DeallocPBrowserChild(aIframe);
 }
 
-PMemoryStreamChild*
-ContentChild::AllocPMemoryStreamChild(const uint64_t& aSize)
-{
-  return nsIContentChild::AllocPMemoryStreamChild(aSize);
-}
-
-bool
-ContentChild::DeallocPMemoryStreamChild(PMemoryStreamChild* aActor)
-{
-  return nsIContentChild::DeallocPMemoryStreamChild(aActor);
-}
-
 PIPCBlobInputStreamChild*
 ContentChild::AllocPIPCBlobInputStreamChild(const nsID& aID,
                                             const uint64_t& aSize)
@@ -1697,16 +1685,6 @@ ContentChild::SendPBlobConstructor(PBlobChild* aActor,
   }
 
   return PContentChild::SendPBlobConstructor(aActor, aParams);
-}
-
-PMemoryStreamChild*
-ContentChild::SendPMemoryStreamConstructor(const uint64_t& aSize)
-{
-  if (IsShuttingDown()) {
-    return nullptr;
-  }
-
-  return PContentChild::SendPMemoryStreamConstructor(aSize);
 }
 
 PPresentationChild*
