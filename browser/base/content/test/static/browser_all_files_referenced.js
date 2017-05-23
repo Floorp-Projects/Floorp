@@ -137,24 +137,6 @@ var whitelist = new Set([
   {file: "chrome://global/content/url-classifier/unittests.xul"},
   // Bug 1343839
   {file: "chrome://global/locale/headsUpDisplay.properties"},
-  // Bug 1348358
-  {file: "chrome://global/skin/arrow.css"},
-  {file: "chrome://global/skin/arrow/arrow-dn-sharp.gif",
-   platforms: ["linux", "win"]},
-  {file: "chrome://global/skin/arrow/arrow-down.png",
-   platforms: ["linux", "win"]},
-  {file: "chrome://global/skin/arrow/arrow-lft-sharp-end.gif"},
-  {file: "chrome://global/skin/arrow/arrow-lft-sharp.gif",
-   platforms: ["linux", "win"]},
-  {file: "chrome://global/skin/arrow/arrow-rit-sharp-end.gif"},
-  {file: "chrome://global/skin/arrow/arrow-rit-sharp.gif",
-   platforms: ["linux", "win"]},
-  {file: "chrome://global/skin/arrow/arrow-up-sharp.gif",
-   platforms: ["linux", "win"]},
-  {file: "chrome://global/skin/arrow/panelarrow-horizontal.svg",
-   platforms: ["linux"]},
-  {file: "chrome://global/skin/arrow/panelarrow-vertical.svg",
-   platforms: ["linux"]},
   // Bug 1348362
   {file: "chrome://global/skin/icons/warning-64.png", platforms: ["linux", "win"]},
   // Bug 1348525

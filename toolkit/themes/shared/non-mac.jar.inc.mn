@@ -10,7 +10,6 @@
 
 #include jar.inc.mn
 
-  skin/classic/global/arrow.css                            (../../windows/global/arrow.css)
   skin/classic/global/customizeToolbar.css                 (../../windows/global/customizeToolbar.css)
   skin/classic/global/datetimepicker.css                   (../../windows/global/datetimepicker.css)
   skin/classic/global/dialog.css                           (../../windows/global/dialog.css)
@@ -27,23 +26,12 @@
 
   skin/classic/global/arrow/arrow-dn.gif                   (../../windows/global/arrow/arrow-dn.gif)
   skin/classic/global/arrow/arrow-dn-dis.gif               (../../windows/global/arrow/arrow-dn-dis.gif)
-  skin/classic/global/arrow/arrow-dn-hov.gif               (../../windows/global/arrow/arrow-dn-hov.gif)
-  skin/classic/global/arrow/arrow-dn-sharp.gif             (../../windows/global/arrow/arrow-dn-sharp.gif)
-  skin/classic/global/arrow/arrow-down.png                 (../../windows/global/arrow/arrow-down.png)
   skin/classic/global/arrow/arrow-lft.gif                  (../../windows/global/arrow/arrow-lft.gif)
   skin/classic/global/arrow/arrow-lft-dis.gif              (../../windows/global/arrow/arrow-lft-dis.gif)
-  skin/classic/global/arrow/arrow-lft-sharp.gif            (../../windows/global/arrow/arrow-lft-sharp.gif)
-  skin/classic/global/arrow/arrow-lft-sharp-end.gif        (../../windows/global/arrow/arrow-lft-sharp-end.gif)
   skin/classic/global/arrow/arrow-rit.gif                  (../../windows/global/arrow/arrow-rit.gif)
   skin/classic/global/arrow/arrow-rit-dis.gif              (../../windows/global/arrow/arrow-rit-dis.gif)
-  skin/classic/global/arrow/arrow-rit-sharp.gif            (../../windows/global/arrow/arrow-rit-sharp.gif)
-  skin/classic/global/arrow/arrow-rit-sharp-end.gif        (../../windows/global/arrow/arrow-rit-sharp-end.gif)
   skin/classic/global/arrow/arrow-up.gif                   (../../windows/global/arrow/arrow-up.gif)
   skin/classic/global/arrow/arrow-up-dis.gif               (../../windows/global/arrow/arrow-up-dis.gif)
-  skin/classic/global/arrow/arrow-up-hov.gif               (../../windows/global/arrow/arrow-up-hov.gif)
-  skin/classic/global/arrow/arrow-up-sharp.gif             (../../windows/global/arrow/arrow-up-sharp.gif)
-  skin/classic/global/arrow/panelarrow-horizontal.svg      (../../windows/global/arrow/panelarrow-horizontal.svg)
-  skin/classic/global/arrow/panelarrow-vertical.svg        (../../windows/global/arrow/panelarrow-vertical.svg)
   skin/classic/global/arrow/panelarrow-horizontal-themed.svg (../../windows/global/arrow/panelarrow-horizontal-themed.svg)
   skin/classic/global/arrow/panelarrow-vertical-themed.svg   (../../windows/global/arrow/panelarrow-vertical-themed.svg)
 
