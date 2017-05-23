@@ -209,6 +209,21 @@ struct VRHMDSensorState {
   }
 };
 
+struct VRSubmitFrameResultInfo
+{
+  VRSubmitFrameResultInfo()
+   : mFrameNum(0),
+     mWidth(0),
+     mHeight(0)
+  {}
+
+  nsCString mBase64Image;
+  SurfaceFormat mFormat;
+  uint32_t mFrameNum;
+  uint32_t mWidth;
+  uint32_t mHeight;
+};
+
 struct VRControllerInfo
 {
   VRDeviceType GetType() const { return mType; }

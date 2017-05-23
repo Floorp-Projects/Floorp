@@ -468,5 +468,13 @@ VRManager::NotifyVibrateHapticCompleted(uint32_t aPromiseID)
   }
 }
 
+void
+VRManager::DispatchSubmitFrameResult(uint32_t aDisplayID, const VRSubmitFrameResultInfo& aResult)
+{
+  for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
+    Unused << iter.Get()->GetKey()->SendDispatchSubmitFrameResult(aDisplayID, aResult);
+  }
+}
+
 } // namespace gfx
 } // namespace mozilla
