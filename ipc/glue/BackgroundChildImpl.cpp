@@ -25,6 +25,7 @@
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
+#include "mozilla/dom/ipc/MemoryStreamChild.h"
 #include "mozilla/dom/ipc/PendingIPCBlobChild.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
 #include "mozilla/dom/GamepadEventChannelChild.h"
@@ -218,6 +219,19 @@ BackgroundChildImpl::DeallocPBlobChild(PBlobChild* aActor)
   MOZ_ASSERT(aActor);
 
   mozilla::dom::BlobChild::Destroy(aActor);
+  return true;
+}
+
+PMemoryStreamChild*
+BackgroundChildImpl::AllocPMemoryStreamChild(const uint64_t& aSize)
+{
+  return new mozilla::dom::MemoryStreamChild();
+}
+
+bool
+BackgroundChildImpl::DeallocPMemoryStreamChild(PMemoryStreamChild* aActor)
+{
+  delete aActor;
   return true;
 }
 

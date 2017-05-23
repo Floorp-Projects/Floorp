@@ -10,6 +10,7 @@ include protocol PContent;
 include protocol PJavaScript;
 include protocol PFileDescriptorSet;
 include protocol PChildToParentStream;
+include protocol PMemoryStream;
 include protocol PParentToChildStream;
 include protocol PIPCBlobInputStream;
 
@@ -42,6 +43,7 @@ nested(upto inside_cpow) sync protocol PContentBridge
     manages PFileDescriptorSet;
     manages PJavaScript;
     manages PChildToParentStream;
+    manages PMemoryStream;
     manages PParentToChildStream;
     manages PIPCBlobInputStream;
 
@@ -68,6 +70,8 @@ parent:
     async PJavaScript();
 
     async PChildToParentStream();
+
+    async PMemoryStream(uint64_t aSize);
 
 both:
     // Both the parent and the child can construct the PBrowser.
