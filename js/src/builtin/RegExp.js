@@ -309,6 +309,8 @@ function RegExpReplace(string, replaceValue) {
             return RegExpLocalReplaceOptFunc(rx, S, lengthS, replaceValue);
         if (firstDollarIndex !== -1)
             return RegExpLocalReplaceOptSubst(rx, S, lengthS, replaceValue, firstDollarIndex);
+        if (lengthS < 0x7fff)
+            return RegExpLocalReplaceOptShort(rx, S, lengthS, replaceValue);
         return RegExpLocalReplaceOpt(rx, S, lengthS, replaceValue);
     }
 
@@ -392,7 +394,6 @@ function RegExpReplaceSlowPath(rx, S, lengthS, replaceValue,
         if (functionalReplace || firstDollarIndex !== -1) {
             // Steps 14.g-j.
             replacement = RegExpGetComplexReplacement(result, matched, S, position,
-
                                                       nCaptures, replaceValue,
                                                       functionalReplace, firstDollarIndex);
         } else {
@@ -412,8 +413,8 @@ function RegExpReplaceSlowPath(rx, S, lengthS, replaceValue,
         // Step 14.l.
         if (position >= nextSourcePosition) {
             // Step 14.l.ii.
-          accumulatedResult += Substring(S, nextSourcePosition,
-                                         position - nextSourcePosition) + replacement;
+            accumulatedResult += Substring(S, nextSourcePosition,
+                                           position - nextSourcePosition) + replacement;
 
             // Step 14.l.iii.
             nextSourcePosition = position + matchLength;
@@ -430,12 +431,9 @@ function RegExpReplaceSlowPath(rx, S, lengthS, replaceValue,
 
 // ES 2017 draft rev 03bfda119d060aca4099d2b77cf43f6d4f11cfa2 21.2.5.8
 // steps 14.g-k.
-// Calculates functional/substitution replaceement from match result.
+// Calculates functional/substitution replacement from match result.
 // Used in the following functions:
-//   * RegExpGlobalReplaceOptFunc
-//   * RegExpGlobalReplaceOptElemBase
 //   * RegExpGlobalReplaceOptSubst
-//   * RegExpLocalReplaceOptFunc
 //   * RegExpLocalReplaceOptSubst
 //   * RegExpReplaceSlowPath
 function RegExpGetComplexReplacement(result, matched, S, position,
@@ -484,13 +482,55 @@ function RegExpGetComplexReplacement(result, matched, S, position,
             // Steps 14.j.ii-v.
             _DefineDataProperty(captures, capturesLength++, position);
             _DefineDataProperty(captures, capturesLength++, S);
-            return ToString(callFunction(std_Function_apply, replaceValue, null, captures));
+            return ToString(callFunction(std_Function_apply, replaceValue, undefined, captures));
         }
     }
 
     // Steps 14.k.i.
     return RegExpGetSubstitution(matched, S, position, captures, replaceValue,
                                  firstDollarIndex);
+}
+
+// ES 2017 draft rev 03bfda119d060aca4099d2b77cf43f6d4f11cfa2 21.2.5.8
+// steps 14.g-j.
+// Calculates functional replacement from match result.
+// Used in the following functions:
+//   * RegExpGlobalReplaceOptFunc
+//   * RegExpGlobalReplaceOptElemBase
+//   * RegExpLocalReplaceOptFunc
+function RegExpGetFunctionalReplacement(result, S, position, replaceValue) {
+    // For `nCaptures` <= 4 case, call `replaceValue` directly, otherwise
+    // use `std_Function_apply` with all arguments stored in `captures`.
+    assert(result.length >= 1, "RegExpMatcher doesn't return an empty array");
+    var nCaptures = result.length - 1;
+
+    switch (nCaptures) {
+      case 0:
+        return ToString(replaceValue(SPREAD(result, 1), position, S));
+      case 1:
+        return ToString(replaceValue(SPREAD(result, 2), position, S));
+      case 2:
+        return ToString(replaceValue(SPREAD(result, 3), position, S));
+      case 3:
+        return ToString(replaceValue(SPREAD(result, 4), position, S));
+      case 4:
+        return ToString(replaceValue(SPREAD(result, 5), position, S));
+    }
+
+    // Steps 14.g-i, 14.j.i-ii.
+    var captures = [];
+    for (var n = 0; n <= nCaptures; n++) {
+        assert(typeof result[n] === "string" || result[n] === undefined,
+               "RegExpMatcher returns only strings and undefined");
+        _DefineDataProperty(captures, n, result[n]);
+    }
+
+    // Step 14.j.iii.
+    _DefineDataProperty(captures, nCaptures + 1, position);
+    _DefineDataProperty(captures, nCaptures + 2, S);
+
+    // Steps 14.j.iv-v.
+    return ToString(callFunction(std_Function_apply, replaceValue, undefined, captures));
 }
 
 // ES 2017 draft rev 03bfda119d060aca4099d2b77cf43f6d4f11cfa2 21.2.5.8
@@ -589,6 +629,16 @@ function RegExpGlobalReplaceShortOpt(rx, S, lengthS, replaceValue, fullUnicode)
 //   * replaceValue is a string without "$"
 #define FUNC_NAME RegExpLocalReplaceOpt
 #include "RegExpLocalReplaceOpt.h.js"
+#undef FUNC_NAME
+
+// Conditions:
+//   * global flag is false
+//   * S is a short string (lengthS < 0x7fff)
+//   * replaceValue is a string without "$"
+#define FUNC_NAME RegExpLocalReplaceOptShort
+#define SHORT_STRING
+#include "RegExpLocalReplaceOpt.h.js"
+#undef SHORT_STRING
 #undef FUNC_NAME
 
 // Conditions:
@@ -732,7 +782,12 @@ function RegExpSplit(string, limit) {
 
         // Steps 8-10.
         // If split operation is optimizable, perform non-sticky match.
-        splitter = regexp_construct_raw_flags(rx, flags & ~REGEXP_STICKY_FLAG);
+        if (flags & REGEXP_STICKY_FLAG) {
+            var source = UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT);
+            splitter = regexp_construct_raw_flags(source, flags & ~REGEXP_STICKY_FLAG);
+        } else {
+            splitter = rx;
+        }
     } else {
         // Step 5.
         flags = ToString(rx.flags);
@@ -760,7 +815,7 @@ function RegExpSplit(string, limit) {
     // Step 13.
     var lim;
     if (limit === undefined)
-        lim = MAX_NUMERIC_INDEX;
+        lim = MAX_UINT32;
     else
         lim = limit >>> 0;
 

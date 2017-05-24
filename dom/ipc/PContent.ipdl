@@ -930,9 +930,6 @@ parent:
      */
     async NotifyTabDestroying(TabId tabId,
                               ContentParentId cpId);
-
-    async TabChildNotReady(TabId tabId);
-
     /**
      * Starts an offline application cache update.
      * @param manifestURI
@@ -1020,7 +1017,8 @@ parent:
                nsCString urlToLoad,
                TextureFactoryIdentifier textureFactoryIdentifier,
                uint64_t layersId,
-               CompositorOptions compositorOptions);
+               CompositorOptions compositorOptions,
+               uint32_t maxTouchPoints);
 
     async CreateWindowInDifferentProcess(
       PBrowser aThisTab,

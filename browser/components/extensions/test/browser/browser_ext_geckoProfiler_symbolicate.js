@@ -37,7 +37,7 @@ let getExtension = () => {
 };
 
 add_task(async function testProfilerControl() {
-  SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [
       [
         "extensions.geckoProfiler.symbols.url",

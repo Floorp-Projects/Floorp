@@ -1,5 +1,7 @@
 "use strict";
 
+Cu.import("resource://gre/modules/AppMenuNotifications.jsm");
+
 /**
  * Tests that when we click on the main call-to-action of the doorhanger, the provided
  * action is called, and the doorhanger removed.
@@ -18,7 +20,7 @@ add_task(async function testMainActionCalled() {
     let mainAction = {
       callback: () => { mainActionCalled = true; }
     };
-    PanelUI.showNotification("update-manual", mainAction);
+    AppMenuNotifications.showNotification("update-manual", mainAction);
 
     isnot(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is showing.");
     let notifications = [...PanelUI.notificationPanel.children].filter(n => !n.hidden);
@@ -32,108 +34,6 @@ add_task(async function testMainActionCalled() {
     ok(mainActionCalled, "Main action callback was called");
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
     is(PanelUI.menuButton.hasAttribute("badge-status"), false, "Should not have a badge status");
-  });
-});
-
-/**
- * Tests that when we try to show a notification in a background window, it
- * does not display until the window comes back into the foreground. However,
- * it should display a badge.
- */
-add_task(async function testDoesNotShowDoorhangerForBackgroundWindow() {
-  let options = {
-    gBrowser: window.gBrowser,
-    url: "about:blank"
-  };
-
-  await BrowserTestUtils.withNewTab(options, async function(browser) {
-    let doc = browser.ownerDocument;
-
-    let win = await BrowserTestUtils.openNewBrowserWindow();
-    let mainActionCalled = false;
-    let mainAction = {
-      callback: () => { mainActionCalled = true; }
-    };
-    PanelUI.showNotification("update-manual", mainAction);
-    is(PanelUI.notificationPanel.state, "closed", "The background window's doorhanger is closed.");
-    is(PanelUI.menuButton.hasAttribute("badge-status"), true, "The background window has a badge.");
-
-    await BrowserTestUtils.closeWindow(win);
-    await SimpleTest.promiseFocus(window);
-    isnot(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is showing.");
-    let notifications = [...PanelUI.notificationPanel.children].filter(n => !n.hidden);
-    is(notifications.length, 1, "PanelUI doorhanger is only displaying one notification.");
-    let doorhanger = notifications[0];
-    is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
-
-    let button = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "button");
-    button.click();
-
-    ok(mainActionCalled, "Main action callback was called");
-    is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
-    is(PanelUI.menuButton.hasAttribute("badge-status"), false, "Should not have a badge status");
-  });
-});
-
-/**
- * Tests that when we try to show a notification in a background window and in
- * a foreground window, if the foreground window's main action is called, the
- * background window's doorhanger will be removed.
- */
-add_task(async function testBackgroundWindowNotificationsAreRemovedByForeground() {
-  let options = {
-    gBrowser: window.gBrowser,
-    url: "about:blank"
-  };
-
-  await BrowserTestUtils.withNewTab(options, async function(browser) {
-    let win = await BrowserTestUtils.openNewBrowserWindow();
-    PanelUI.showNotification("update-manual", {callback() {}});
-    win.PanelUI.showNotification("update-manual", {callback() {}});
-    let doc = win.gBrowser.ownerDocument;
-    let notifications = [...win.PanelUI.notificationPanel.children].filter(n => !n.hidden);
-    let doorhanger = notifications[0];
-    let button = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "button");
-    button.click();
-
-    await BrowserTestUtils.closeWindow(win);
-    await SimpleTest.promiseFocus(window);
-
-    is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
-    is(PanelUI.menuButton.hasAttribute("badge-status"), false, "Should not have a badge status");
-  });
-});
-
-/**
- * Tests that when we try to show a notification in a background window and in
- * a foreground window, if the foreground window's doorhanger is dismissed,
- * the background window's doorhanger will also be dismissed once the window
- * regains focus.
- */
-add_task(async function testBackgroundWindowNotificationsAreDismissedByForeground() {
-  let options = {
-    gBrowser: window.gBrowser,
-    url: "about:blank"
-  };
-
-  await BrowserTestUtils.withNewTab(options, async function(browser) {
-    let win = await BrowserTestUtils.openNewBrowserWindow();
-    PanelUI.showNotification("update-manual", {callback() {}});
-    win.PanelUI.showNotification("update-manual", {callback() {}});
-    let doc = win.gBrowser.ownerDocument;
-    let notifications = [...win.PanelUI.notificationPanel.children].filter(n => !n.hidden);
-    let doorhanger = notifications[0];
-    let button = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "secondarybutton");
-    button.click();
-
-    await BrowserTestUtils.closeWindow(win);
-    await SimpleTest.promiseFocus(window);
-
-    is(PanelUI.notificationPanel.state, "closed", "The background window's doorhanger is closed.");
-    is(PanelUI.menuButton.hasAttribute("badge-status"), true,
-       "The dismissed notification should still have a badge status");
-
-    PanelUI.removeNotification(/.*/);
   });
 });
 
@@ -158,7 +58,7 @@ add_task(async function testSecondaryActionWorkflow() {
     let mainAction = {
       callback: () => { mainActionCalled = true; },
     };
-    PanelUI.showNotification("update-manual", mainAction);
+    AppMenuNotifications.showNotification("update-manual", mainAction);
 
     isnot(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is showing.");
     let notifications = [...PanelUI.notificationPanel.children].filter(n => !n.hidden);
@@ -186,7 +86,7 @@ add_task(async function testSecondaryActionWorkflow() {
     menuItem.click();
     ok(mainActionCalled, "Main action callback was called");
 
-    PanelUI.removeNotification(/.*/);
+    AppMenuNotifications.removeNotification(/.*/);
   });
 });
 
@@ -200,7 +100,7 @@ add_task(async function testInteractionWithBadges() {
   await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
     let doc = browser.ownerDocument;
 
-    PanelUI.showBadgeOnlyNotification("fxa-needs-authentication");
+    AppMenuNotifications.showBadgeOnlyNotification("fxa-needs-authentication");
     is(PanelUI.menuButton.getAttribute("badge-status"), "fxa-needs-authentication", "Fxa badge is shown on PanelUI button.");
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
 
@@ -208,7 +108,7 @@ add_task(async function testInteractionWithBadges() {
     let mainAction = {
       callback: () => { mainActionCalled = true; },
     };
-    PanelUI.showNotification("update-manual", mainAction);
+    AppMenuNotifications.showNotification("update-manual", mainAction);
 
     isnot(PanelUI.menuButton.getAttribute("badge-status"), "fxa-needs-authentication", "Fxa badge is hidden on PanelUI button.");
     isnot(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is showing.");
@@ -234,7 +134,7 @@ add_task(async function testInteractionWithBadges() {
     ok(mainActionCalled, "Main action callback was called");
 
     is(PanelUI.menuButton.getAttribute("badge-status"), "fxa-needs-authentication", "Fxa badge is shown on PanelUI button.");
-    PanelUI.removeNotification(/.*/);
+    AppMenuNotifications.removeNotification(/.*/);
     is(PanelUI.menuButton.hasAttribute("badge-status"), false, "Should not have a badge status");
   });
 });
@@ -251,8 +151,8 @@ add_task(async function testAddingBadgeWhileDoorhangerIsShowing() {
     let mainAction = {
       callback: () => { mainActionCalled = true; }
     };
-    PanelUI.showNotification("update-manual", mainAction);
-    PanelUI.showBadgeOnlyNotification("fxa-needs-authentication");
+    AppMenuNotifications.showNotification("update-manual", mainAction);
+    AppMenuNotifications.showBadgeOnlyNotification("fxa-needs-authentication");
 
     isnot(PanelUI.menuButton.getAttribute("badge-status"), "fxa-needs-authentication", "Fxa badge is hidden on PanelUI button.");
     isnot(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is showing.");
@@ -267,7 +167,7 @@ add_task(async function testAddingBadgeWhileDoorhangerIsShowing() {
     ok(mainActionCalled, "Main action callback was called");
     is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
     is(PanelUI.menuButton.getAttribute("badge-status"), "fxa-needs-authentication", "Fxa badge is shown on PanelUI button.");
-    PanelUI.removeNotification(/.*/);
+    AppMenuNotifications.removeNotification(/.*/);
     is(PanelUI.menuButton.hasAttribute("badge-status"), false, "Should not have a badge status");
   });
 });
@@ -283,37 +183,37 @@ add_task(async function testMultipleBadges() {
     is(menuButton.hasAttribute("badge-status"), false, "Should not have a badge status");
     is(menuButton.hasAttribute("badge"), false, "Should not have the badge attribute set");
 
-    PanelUI.showBadgeOnlyNotification("fxa-needs-authentication");
+    AppMenuNotifications.showBadgeOnlyNotification("fxa-needs-authentication");
     is(menuButton.getAttribute("badge-status"), "fxa-needs-authentication", "Should have fxa-needs-authentication badge status");
 
-    PanelUI.showBadgeOnlyNotification("update-succeeded");
+    AppMenuNotifications.showBadgeOnlyNotification("update-succeeded");
     is(menuButton.getAttribute("badge-status"), "update-succeeded", "Should have update-succeeded badge status (update > fxa)");
 
-    PanelUI.showBadgeOnlyNotification("update-failed");
+    AppMenuNotifications.showBadgeOnlyNotification("update-failed");
     is(menuButton.getAttribute("badge-status"), "update-failed", "Should have update-failed badge status");
 
-    PanelUI.showBadgeOnlyNotification("download-severe");
+    AppMenuNotifications.showBadgeOnlyNotification("download-severe");
     is(menuButton.getAttribute("badge-status"), "download-severe", "Should have download-severe badge status");
 
-    PanelUI.showBadgeOnlyNotification("download-warning");
+    AppMenuNotifications.showBadgeOnlyNotification("download-warning");
     is(menuButton.getAttribute("badge-status"), "download-warning", "Should have download-warning badge status");
 
-    PanelUI.removeNotification(/^download-/);
+    AppMenuNotifications.removeNotification(/^download-/);
     is(menuButton.getAttribute("badge-status"), "update-failed", "Should have update-failed badge status");
 
-    PanelUI.removeNotification(/^update-/);
+    AppMenuNotifications.removeNotification(/^update-/);
     is(menuButton.getAttribute("badge-status"), "fxa-needs-authentication", "Should have fxa-needs-authentication badge status");
 
-    PanelUI.removeNotification(/^fxa-/);
+    AppMenuNotifications.removeNotification(/^fxa-/);
     is(menuButton.hasAttribute("badge-status"), false, "Should not have a badge status");
 
     await PanelUI.show();
     is(menuButton.hasAttribute("badge-status"), false, "Should not have a badge status (Hamburger menu opened)");
     PanelUI.hide();
 
-    PanelUI.showBadgeOnlyNotification("fxa-needs-authentication");
-    PanelUI.showBadgeOnlyNotification("update-succeeded");
-    PanelUI.removeNotification(/.*/);
+    AppMenuNotifications.showBadgeOnlyNotification("fxa-needs-authentication");
+    AppMenuNotifications.showBadgeOnlyNotification("update-succeeded");
+    AppMenuNotifications.removeNotification(/.*/);
     is(menuButton.hasAttribute("badge-status"), false, "Should not have a badge status");
   });
 });
@@ -336,7 +236,7 @@ add_task(async function testMultipleNonBadges() {
         callback: () => { updateRestartAction.called = true; },
     };
 
-    PanelUI.showNotification("update-manual", updateManualAction);
+    AppMenuNotifications.showNotification("update-manual", updateManualAction);
 
     let notifications;
     let doorhanger;
@@ -347,7 +247,7 @@ add_task(async function testMultipleNonBadges() {
     doorhanger = notifications[0];
     is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
 
-    PanelUI.showNotification("update-restart", updateRestartAction);
+    AppMenuNotifications.showNotification("update-restart", updateRestartAction);
 
     isnot(PanelUI.notificationPanel.state, "closed", "Doorhanger is showing.");
     notifications = [...PanelUI.notificationPanel.children].filter(n => !n.hidden);
@@ -381,43 +281,4 @@ add_task(async function testMultipleNonBadges() {
     menuItem.click();
     ok(updateManualAction.called, "update-manual main action callback was called");
   });
-});
-
-add_task(async function testFullscreen() {
-  let doc = document;
-
-  is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
-  let mainActionCalled = false;
-  let mainAction = {
-    callback: () => { mainActionCalled = true; }
-  };
-  PanelUI.showNotification("update-manual", mainAction);
-
-  isnot(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is showing.");
-  let notifications = [...PanelUI.notificationPanel.children].filter(n => !n.hidden);
-  is(notifications.length, 1, "PanelUI doorhanger is only displaying one notification.");
-  let doorhanger = notifications[0];
-  is(doorhanger.id, "appMenu-update-manual-notification", "PanelUI is displaying the update-manual notification.");
-
-  let popuphiddenPromise = BrowserTestUtils.waitForEvent(PanelUI.notificationPanel, "popuphidden");
-  EventUtils.synthesizeKey("VK_F11", {});
-  await popuphiddenPromise;
-  await new Promise(executeSoon);
-  is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
-
-  window.FullScreen.showNavToolbox();
-  is(PanelUI.menuButton.getAttribute("badge-status"), "update-manual", "Badge is displaying on PanelUI button.");
-
-  let popupshownPromise = BrowserTestUtils.waitForEvent(PanelUI.notificationPanel, "popupshown");
-  EventUtils.synthesizeKey("VK_F11", {});
-  await popupshownPromise;
-  await new Promise(executeSoon);
-  isnot(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is showing.");
-  isnot(PanelUI.menuButton.getAttribute("badge-status"), "update-manual", "Badge is not displaying on PanelUI button.");
-
-  let mainActionButton = doc.getAnonymousElementByAttribute(doorhanger, "anonid", "button");
-  mainActionButton.click();
-  ok(mainActionCalled, "Main action callback was called");
-  is(PanelUI.notificationPanel.state, "closed", "update-manual doorhanger is closed.");
-  is(PanelUI.menuButton.hasAttribute("badge-status"), false, "Should not have a badge status");
 });

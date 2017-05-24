@@ -293,7 +293,7 @@ class TenuredCell : public Cell
     MOZ_ALWAYS_INLINE bool isMarked(uint32_t color = BLACK) const;
     // The return value indicates if the cell went from unmarked to marked.
     MOZ_ALWAYS_INLINE bool markIfUnmarked(uint32_t color = BLACK) const;
-    MOZ_ALWAYS_INLINE void unmark(uint32_t color) const;
+    MOZ_ALWAYS_INLINE void markBlack() const;
     MOZ_ALWAYS_INLINE void copyMarkBitsFrom(const TenuredCell* src);
 
     // Access to the arena.
@@ -898,31 +898,42 @@ struct ChunkBitmap
   public:
     ChunkBitmap() { }
 
-    MOZ_ALWAYS_INLINE void getMarkWordAndMask(const Cell* cell, uint32_t color,
+    MOZ_ALWAYS_INLINE void getMarkWordAndMask(const Cell* cell, ColorBit colorBit,
                                               uintptr_t** wordp, uintptr_t* maskp)
     {
-        detail::GetGCThingMarkWordAndMask(uintptr_t(cell), color, wordp, maskp);
+        detail::GetGCThingMarkWordAndMask(uintptr_t(cell), colorBit, wordp, maskp);
+    }
+
+    MOZ_ALWAYS_INLINE MOZ_TSAN_BLACKLIST bool markBit(const Cell* cell, ColorBit colorBit) {
+        uintptr_t* word, mask;
+        getMarkWordAndMask(cell, colorBit, &word, &mask);
+        return *word & mask;
     }
 
     MOZ_ALWAYS_INLINE MOZ_TSAN_BLACKLIST bool isMarked(const Cell* cell, uint32_t color) {
-        uintptr_t* word, mask;
-        getMarkWordAndMask(cell, color, &word, &mask);
-        return *word & mask;
+        if (color == BLACK) {
+            return markBit(cell, ColorBit::BlackBit) ||
+                   markBit(cell, ColorBit::GrayOrBlackBit);
+        } else {
+            return !markBit(cell, ColorBit::BlackBit) &&
+                   markBit(cell, ColorBit::GrayOrBlackBit);
+        }
     }
 
     // The return value indicates if the cell went from unmarked to marked.
     MOZ_ALWAYS_INLINE bool markIfUnmarked(const Cell* cell, uint32_t color) {
         uintptr_t* word, mask;
-        getMarkWordAndMask(cell, BLACK, &word, &mask);
+        getMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
         if (*word & mask)
             return false;
-        *word |= mask;
-        if (color != BLACK) {
+        if (color == BLACK) {
+            *word |= mask;
+        } else {
             /*
              * We use getMarkWordAndMask to recalculate both mask and word as
              * doing just mask << color may overflow the mask.
              */
-            getMarkWordAndMask(cell, color, &word, &mask);
+            getMarkWordAndMask(cell, ColorBit::GrayOrBlackBit, &word, &mask);
             if (*word & mask)
                 return false;
             *word |= mask;
@@ -930,16 +941,22 @@ struct ChunkBitmap
         return true;
     }
 
-    MOZ_ALWAYS_INLINE void unmark(const Cell* cell, uint32_t color) {
+    MOZ_ALWAYS_INLINE void markBlack(const Cell* cell) {
         uintptr_t* word, mask;
-        getMarkWordAndMask(cell, color, &word, &mask);
-        *word &= ~mask;
+        getMarkWordAndMask(cell, ColorBit::BlackBit, &word, &mask);
+        *word |= mask;
     }
 
-    MOZ_ALWAYS_INLINE void copyMarkBit(Cell* dst, const TenuredCell* src, uint32_t color) {
-        uintptr_t* word, mask;
-        getMarkWordAndMask(dst, color, &word, &mask);
-        *word = (*word & ~mask) | (src->isMarked(color) ? mask : 0);
+    MOZ_ALWAYS_INLINE void copyMarkBit(Cell* dst, const TenuredCell* src, ColorBit colorBit) {
+        uintptr_t* srcWord, srcMask;
+        getMarkWordAndMask(src, colorBit, &srcWord, &srcMask);
+
+        uintptr_t* dstWord, dstMask;
+        getMarkWordAndMask(dst, colorBit, &dstWord, &dstMask);
+
+        *dstWord &= ~dstMask;
+        if (*srcWord & srcMask)
+            *dstWord |= dstMask;
     }
 
     void clear() {
@@ -953,7 +970,7 @@ struct ChunkBitmap
                       "that covers bits from two arenas.");
 
         uintptr_t* word, unused;
-        getMarkWordAndMask(reinterpret_cast<Cell*>(arena->address()), BLACK, &word, &unused);
+        getMarkWordAndMask(reinterpret_cast<Cell*>(arena->address()), ColorBit::BlackBit, &word, &unused);
         return word;
     }
 };
@@ -1239,19 +1256,17 @@ TenuredCell::markIfUnmarked(uint32_t color /* = BLACK */) const
 }
 
 void
-TenuredCell::unmark(uint32_t color) const
+TenuredCell::markBlack() const
 {
-    MOZ_ASSERT(color != BLACK);
-    AssertValidColor(this, color);
-    chunk()->bitmap.unmark(this, color);
+    chunk()->bitmap.markBlack(this);
 }
 
 void
 TenuredCell::copyMarkBitsFrom(const TenuredCell* src)
 {
     ChunkBitmap& bitmap = chunk()->bitmap;
-    bitmap.copyMarkBit(this, src, BLACK);
-    bitmap.copyMarkBit(this, src, GRAY);
+    bitmap.copyMarkBit(this, src, ColorBit::BlackBit);
+    bitmap.copyMarkBit(this, src, ColorBit::GrayOrBlackBit);
 }
 
 inline Arena*

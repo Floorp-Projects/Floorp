@@ -7,6 +7,9 @@
 
 /* exported LIBC, Win, createPipe, libc */
 
+// This file is loaded into the same scope as subprocess_win.jsm
+/* import-globals-from subprocess_win.jsm */
+
 const LIBC = OS.Constants.libc;
 
 const Win = OS.Constants.Win;

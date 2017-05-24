@@ -515,11 +515,6 @@ const gExtensionsNotifications = {
   updateAlerts() {
     let sideloaded = ExtensionsUI.sideloaded;
     let updates = ExtensionsUI.updates;
-    if (sideloaded.size + updates.size == 0) {
-      PanelUI.removeNotification("addon-alert");
-    } else {
-      PanelUI.showBadgeOnlyNotification("addon-alert");
-    }
 
     let container = PanelUI.addonNotificationContainer;
 

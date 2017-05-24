@@ -24,7 +24,11 @@ toolbar[brighttext] :-moz-any(@primaryToolbarButtons@) {
 }
 
 #back-button {
+%ifdef MOZ_PHOTON_THEME
+  list-style-image: url("chrome://browser/skin/back.svg");
+%else
   list-style-image: url("chrome://browser/skin/back-large.svg");
+%endif
 }
 
 #forward-button {

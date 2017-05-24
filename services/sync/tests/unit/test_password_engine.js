@@ -1,3 +1,4 @@
+Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://services-sync/engines/passwords.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
@@ -8,11 +9,90 @@ const LoginInfo = Components.Constructor(
 const PropertyBag = Components.Constructor(
   "@mozilla.org/hash-property-bag;1", Ci.nsIWritablePropertyBag);
 
+function run_test() {
+  Service.engineManager.unregister("addons"); // To silence errors.
+  run_next_test();
+}
+
+async function cleanup(engine, server) {
+  Svc.Obs.notify("weave:engine:stop-tracking");
+  engine.wipeClient();
+  Svc.Prefs.resetBranch("");
+  Service.recordManager.clearCache();
+  await promiseStopServer(server);
+}
+
+add_task(async function test_ignored_fields() {
+  _("Only changes to syncable fields should be tracked");
+
+  let engine = Service.engineManager.get("passwords");
+
+  let server = serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  enableValidationPrefs();
+
+  let login = Services.logins.addLogin(new LoginInfo("https://example.com", "",
+    null, "username", "password", "", ""));
+  login.QueryInterface(Ci.nsILoginMetaInfo); // For `guid`.
+
+  Svc.Obs.notify("weave:engine:start-tracking");
+
+  try {
+    let nonSyncableProps = new PropertyBag();
+    nonSyncableProps.setProperty("timeLastUsed", Date.now());
+    nonSyncableProps.setProperty("timesUsed", 3);
+    Services.logins.modifyLogin(login, nonSyncableProps);
+
+    let noChanges = await engine.pullNewChanges();
+    deepEqual(noChanges, {}, "Should not track non-syncable fields");
+
+    let syncableProps = new PropertyBag();
+    syncableProps.setProperty("username", "newuser");
+    Services.logins.modifyLogin(login, syncableProps);
+
+    let changes = await engine.pullNewChanges();
+    deepEqual(Object.keys(changes), [login.guid],
+      "Should track syncable fields");
+  } finally {
+    await cleanup(engine, server);
+  }
+});
+
+add_task(async function test_ignored_sync_credentials() {
+  _("Sync credentials in login manager should be ignored");
+
+  let engine = Service.engineManager.get("passwords");
+
+  let server = serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  enableValidationPrefs();
+
+  Svc.Obs.notify("weave:engine:start-tracking");
+
+  try {
+    let login = Services.logins.addLogin(new LoginInfo(FXA_PWDMGR_HOST, null,
+      FXA_PWDMGR_REALM, "fxa-uid", "creds", "", ""));
+
+    let noChanges = await engine.pullNewChanges();
+    deepEqual(noChanges, {}, "Should not track new FxA credentials");
+
+    let props = new PropertyBag();
+    props.setProperty("password", "newcreds");
+    Services.logins.modifyLogin(login, props);
+
+    noChanges = await engine.pullNewChanges();
+    deepEqual(noChanges, {}, "Should not track changes to FxA credentials");
+  } finally {
+    await cleanup(engine, server);
+  }
+});
+
 add_task(async function test_password_engine() {
   _("Basic password sync test");
 
   let engine = Service.engineManager.get("passwords");
-  let store = engine._store;
 
   let server = serverForFoo(engine);
   await SyncTestingInfrastructure(server);
@@ -91,10 +171,6 @@ add_task(async function test_password_engine() {
     equal(logins[0].password, "n3wpa55",
       "Should update local password for older login");
   } finally {
-    store.wipe();
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
-    await promiseStopServer(server);
-    Svc.Obs.notify("weave:engine:stop-tracking");
+    await cleanup(engine, server);
   }
 });

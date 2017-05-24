@@ -11,6 +11,7 @@ from mozpack.chrome.manifest import (
     ManifestChrome,
     ManifestBinaryComponent,
     ManifestResource,
+    ManifestMultiContent,
 )
 from mozpack.errors import errors
 from urlparse import urlparse
@@ -157,11 +158,18 @@ class FlatSubFormatter(object):
 
         if isinstance(entry, ManifestChrome):
             data = self._chrome_db.setdefault(entry.name, {})
-            entries = data.setdefault(entry.type, [])
+            if isinstance(entry, ManifestMultiContent):
+                entries = data.setdefault(entry.type, {}) \
+                              .setdefault(entry.id, [])
+            else:
+                entries = data.setdefault(entry.type, [])
             for e in entries:
                 # Ideally, we'd actually check whether entry.flags are more
                 # specific than e.flags, but in practice the following test
                 # is enough for now.
+                if entry == e:
+                    errors.warn('"%s" is duplicated. Skipping.' % entry)
+                    return
                 if not entry.flags or e.flags and entry.flags == e.flags:
                     errors.fatal('"%s" overrides "%s"' % (entry, e))
             entries.append(entry)

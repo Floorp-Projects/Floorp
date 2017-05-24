@@ -138,6 +138,10 @@ pref("app.update.enabled", true);
 // Whether or not to use the doorhanger application update UI.
 pref("app.update.doorhanger", true);
 
+// Ids of the links to the "What's new" update documentation
+pref("app.update.link.updateAvailableWhatsNew", "update-available-whats-new");
+pref("app.update.link.updateManualWhatsNew", "update-manual-whats-new");
+
 // How many times we should let downloads fail before prompting the user to
 // download a fresh installer.
 pref("app.update.download.promptMaxAttempts", 2);
@@ -235,11 +239,7 @@ pref("general.autoScroll", true);
 pref("browser.shell.checkDefaultBrowser", true);
 pref("browser.shell.shortcutFavicons",true);
 pref("browser.shell.mostRecentDateSetAsDefault", "");
-#ifdef RELEASE_OR_BETA
-pref("browser.shell.skipDefaultBrowserCheckOnFirstRun", false);
-#else
 pref("browser.shell.skipDefaultBrowserCheckOnFirstRun", true);
-#endif
 pref("browser.shell.didSkipDefaultBrowserCheckOnFirstRun", false);
 pref("browser.shell.defaultBrowserCheckCount", 0);
 pref("browser.defaultbrowser.notificationbar", false);
@@ -318,7 +318,7 @@ pref("browser.urlbar.match.url", "@");
 pref("browser.urlbar.suggest.history",              true);
 pref("browser.urlbar.suggest.bookmark",             true);
 pref("browser.urlbar.suggest.openpage",             true);
-pref("browser.urlbar.suggest.searches",             false);
+pref("browser.urlbar.suggest.searches",             true);
 pref("browser.urlbar.userMadeSearchSuggestionsChoice", false);
 // The suggestion opt-in notification will be shown on 4 different days.
 pref("browser.urlbar.daysBeforeHidingSuggestionsPrompt", 4);
@@ -337,11 +337,7 @@ pref("browser.urlbar.suggest.history.onlyTyped",    false);
 pref("browser.urlbar.formatting.enabled", true);
 pref("browser.urlbar.trimURLs", true);
 
-#if defined(NIGHTLY_BUILD)
 pref("browser.urlbar.oneOffSearches", true);
-#else
-pref("browser.urlbar.oneOffSearches", false);
-#endif
 
 // If changed to true, copying the entire URL from the location bar will put the
 // human readable (percent-decoded) URL on the clipboard.

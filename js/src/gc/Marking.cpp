@@ -157,23 +157,22 @@ IsMovingTracer(JSTracer *trc)
 }
 #endif
 
-template <typename T> bool ThingIsPermanentAtomOrWellKnownSymbol(T* thing) { return false; }
-template <> bool ThingIsPermanentAtomOrWellKnownSymbol<JSString>(JSString* str) {
+bool ThingIsPermanentAtomOrWellKnownSymbol(JSString* str) {
     return str->isPermanentAtom();
 }
-template <> bool ThingIsPermanentAtomOrWellKnownSymbol<JSFlatString>(JSFlatString* str) {
+bool ThingIsPermanentAtomOrWellKnownSymbol(JSFlatString* str) {
     return str->isPermanentAtom();
 }
-template <> bool ThingIsPermanentAtomOrWellKnownSymbol<JSLinearString>(JSLinearString* str) {
+bool ThingIsPermanentAtomOrWellKnownSymbol(JSLinearString* str) {
     return str->isPermanentAtom();
 }
-template <> bool ThingIsPermanentAtomOrWellKnownSymbol<JSAtom>(JSAtom* atom) {
+bool ThingIsPermanentAtomOrWellKnownSymbol(JSAtom* atom) {
     return atom->isPermanent();
 }
-template <> bool ThingIsPermanentAtomOrWellKnownSymbol<PropertyName>(PropertyName* name) {
+bool ThingIsPermanentAtomOrWellKnownSymbol(PropertyName* name) {
     return name->isPermanent();
 }
-template <> bool ThingIsPermanentAtomOrWellKnownSymbol<JS::Symbol>(JS::Symbol* sym) {
+bool ThingIsPermanentAtomOrWellKnownSymbol(JS::Symbol* sym) {
     return sym->isWellKnownSymbol();
 }
 
@@ -3369,7 +3368,7 @@ UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing)
     if (!tenured.isMarked(GRAY))
         return;
 
-    tenured.unmark(GRAY);
+    tenured.markBlack();
     unmarkedAny = true;
 
     if (!stack.append(thing))
@@ -3459,19 +3458,22 @@ GetMarkWordAddress(Cell* cell)
 
     uintptr_t* wordp;
     uintptr_t mask;
-    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), js::gc::BLACK, &wordp, &mask);
+    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), ColorBit::BlackBit, &wordp, &mask);
     return wordp;
 }
 
 uintptr_t
 GetMarkMask(Cell* cell, uint32_t color)
 {
+    MOZ_ASSERT(color == 0 || color == 1);
+
     if (!cell->isTenured())
         return 0;
 
+    ColorBit bit = color == 0 ? ColorBit::BlackBit : ColorBit::GrayOrBlackBit;
     uintptr_t* wordp;
     uintptr_t mask;
-    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), color, &wordp, &mask);
+    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), bit, &wordp, &mask);
     return mask;
 }
 

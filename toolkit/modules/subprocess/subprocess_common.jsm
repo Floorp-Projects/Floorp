@@ -22,6 +22,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
 
 Services.scriptloader.loadSubScript("resource://gre/modules/subprocess/subprocess_shared.js", this);
 
+/* global SubprocessConstants */
 var EXPORTED_SYMBOLS = ["BaseProcess", "PromiseWorker", "SubprocessConstants"];
 
 const BUFFER_SIZE = 4096;

@@ -493,8 +493,6 @@ public:
   virtual mozilla::ipc::IPCResult RecvNotifyTabDestroying(const TabId& aTabId,
                                                           const ContentParentId& aCpId) override;
 
-  virtual mozilla::ipc::IPCResult RecvTabChildNotReady(const TabId& aTabId) override;
-
   nsTArray<TabContext> GetManagedTabContext();
 
   virtual POfflineCacheUpdateParent*
@@ -549,7 +547,8 @@ public:
                    nsCString* aURLToLoad,
                    layers::TextureFactoryIdentifier* aTextureFactoryIdentifier,
                    uint64_t* aLayersId,
-                   mozilla::layers::CompositorOptions* aCompositorOptions) override;
+                   mozilla::layers::CompositorOptions* aCompositorOptions,
+                   uint32_t* aMaxTouchPoints) override;
 
   virtual mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
     PBrowserParent* aThisTab,

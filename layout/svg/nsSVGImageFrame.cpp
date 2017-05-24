@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsSVGImageFrame.h"
+
 // Keep in (case-insensitive) order:
 #include "gfxContext.h"
 #include "gfxPlatform.h"
@@ -29,97 +31,11 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-class nsSVGImageFrame;
-
-class nsSVGImageListener final : public imgINotificationObserver
-{
-public:
-  explicit nsSVGImageListener(nsSVGImageFrame *aFrame);
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_IMGINOTIFICATIONOBSERVER
-
-  void SetFrame(nsSVGImageFrame *frame) { mFrame = frame; }
-
-private:
-  ~nsSVGImageListener() {}
-
-  nsSVGImageFrame *mFrame;
-};
-
-class nsSVGImageFrame final
-  : public SVGGeometryFrame
-  , public nsIReflowCallback
-{
-  friend nsIFrame*
-  NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-
-protected:
-  explicit nsSVGImageFrame(nsStyleContext* aContext)
-    : SVGGeometryFrame(aContext, LayoutFrameType::SVGImage)
-    , mReflowCallbackPosted(false)
-  {
-    EnableVisibilityTracking();
-  }
-
-  virtual ~nsSVGImageFrame();
-
-public:
-  NS_DECL_FRAMEARENA_HELPERS
-
-  // nsSVGDisplayableFrame interface:
-  virtual void PaintSVG(gfxContext& aContext,
-                        const gfxMatrix& aTransform,
-                        imgDrawingParams& aImgParams,
-                        const nsIntRect* aDirtyRect = nullptr) override;
-  virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
-  virtual void ReflowSVG() override;
-
-  // SVGGeometryFrame methods:
-  virtual uint16_t GetHitTestFlags() override;
-
-  // nsIFrame interface:
-  virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
-                                     nsIAtom*        aAttribute,
-                                     int32_t         aModType) override;
-
-  void OnVisibilityChange(Visibility aNewVisibility,
-                          const Maybe<OnNonvisible>& aNonvisibleAction = Nothing()) override;
-
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
-
-#ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override
-  {
-    return MakeFrameName(NS_LITERAL_STRING("SVGImage"), aResult);
-  }
-#endif
-
-  // nsIReflowCallback
-  virtual bool ReflowFinished() override;
-  virtual void ReflowCallbackCanceled() override;
-
-private:
-  gfx::Matrix GetRasterImageTransform(int32_t aNativeWidth,
-                                      int32_t aNativeHeight);
-  gfx::Matrix GetVectorImageTransform();
-  bool TransformContextForPainting(gfxContext* aGfxContext,
-                                   const gfxMatrix& aTransform);
-
-  nsCOMPtr<imgINotificationObserver> mListener;
-
-  nsCOMPtr<imgIContainer> mImageContainer;
-
-  bool mReflowCallbackPosted;
-
-  friend class nsSVGImageListener;
-};
-
-//----------------------------------------------------------------------
-// Implementation
+// ---------------------------------------------------------------------
+// nsQueryFrame methods
+NS_QUERYFRAME_HEAD(nsSVGImageFrame)
+  NS_QUERYFRAME_ENTRY(nsSVGImageFrame)
+NS_QUERYFRAME_TAIL_INHERITING(SVGGeometryFrame)
 
 nsIFrame*
 NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -397,6 +313,11 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
       dirtyRect.MoveBy(-rootRect.TopLeft());
     }
 
+    uint32_t flags = aImgParams.imageFlags;
+    if (mForceSyncDecoding) {
+      flags |= imgIContainer::FLAG_SYNC_DECODE;
+    }
+
     if (mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
       // Package up the attributes of this image element which can override the
       // attributes of mImageContainer's internal SVG document.  The 'width' &
@@ -426,7 +347,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
         destRect,
         aDirtyRect ? dirtyRect : destRect,
         context,
-        aImgParams.imageFlags);
+        flags);
     } else { // mImageContainer->GetType() == TYPE_RASTER
       aImgParams.result &= nsLayoutUtils::DrawSingleUnscaledImage(
         aContext,
@@ -435,7 +356,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
         nsLayoutUtils::GetSamplingFilterForFrame(this),
         nsPoint(0, 0),
         aDirtyRect ? &dirtyRect : nullptr,
-        aImgParams.imageFlags);
+        flags);
     }
 
     if (opacity != 1.0f || StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {

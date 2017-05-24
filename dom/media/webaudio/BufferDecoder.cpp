@@ -8,18 +8,15 @@
 
 #include "nsISupports.h"
 #include "MediaResource.h"
-#include "GMPCrashHelper.h"
 
 namespace mozilla {
 
 NS_IMPL_ISUPPORTS0(BufferDecoder)
 
 BufferDecoder::BufferDecoder(MediaResource* aResource,
-                             AbstractThread* aMainThread,
-                             GMPCrashHelper* aCrashHelper)
+                             AbstractThread* aMainThread)
   : mResource(aResource)
   , mAbstractMainThread(aMainThread)
-  , mCrashHelper(aCrashHelper)
 {
   MOZ_ASSERT(NS_IsMainThread());
 }
@@ -67,12 +64,6 @@ BufferDecoder::GetOwner() const
 {
   // unknown
   return nullptr;
-}
-
-already_AddRefed<GMPCrashHelper>
-BufferDecoder::GetCrashHelper()
-{
-  return do_AddRef(mCrashHelper);
 }
 
 AbstractThread*
