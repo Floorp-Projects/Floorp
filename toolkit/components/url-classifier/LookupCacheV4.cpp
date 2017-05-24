@@ -330,7 +330,10 @@ LookupCacheV4::ApplyUpdate(TableUpdateV4* aTableUpdate,
 nsresult
 LookupCacheV4::AddFullHashResponseToCache(const FullHashResponseMap& aResponseMap)
 {
-  CopyClassHashTable<FullHashResponseMap>(aResponseMap, mFullHashCache);
+  for (auto iter = aResponseMap.ConstIter(); !iter.Done(); iter.Next()) {
+    CachedFullHashResponse* response = mCache.LookupOrAdd(iter.Key());
+    *response = *(iter.Data());
+  }
 
   return NS_OK;
 }
