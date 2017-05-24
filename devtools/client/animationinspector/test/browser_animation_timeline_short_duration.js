@@ -39,59 +39,64 @@ add_task(function* () {
 
 function checkSummaryGraph(el, state, isDetail) {
   info("Check the coordinates of summary graph");
-  const pathEls = el.querySelectorAll(".iteration-path");
-  let expectedIterationCount = 0;
-  if (isDetail) {
-    expectedIterationCount = state.iterationCount ? state.iterationCount : 1;
-  } else {
-    expectedIterationCount = state.iterationCount ? state.iterationCount : 2;
-  }
-  is(pathEls.length, expectedIterationCount,
-     `The count of path shoud be ${ expectedIterationCount }`);
-  pathEls.forEach((pathEl, index) => {
-    const startX = index * state.duration;
-    const endX = startX + state.duration;
+  const groupEls = el.querySelectorAll("svg g");
+  groupEls.forEach(groupEl => {
+    const pathEls = groupEl.querySelectorAll(".iteration-path");
+    let expectedIterationCount = 0;
+    if (isDetail) {
+      expectedIterationCount = state.iterationCount ? state.iterationCount : 1;
+    } else {
+      expectedIterationCount = state.iterationCount ? state.iterationCount : 2;
+    }
+    is(pathEls.length, expectedIterationCount,
+       `The count of path shoud be ${ expectedIterationCount }`);
+    pathEls.forEach((pathEl, index) => {
+      const startX = index * state.duration;
+      const endX = startX + state.duration;
 
-    const pathSegList = pathEl.pathSegList;
-    const firstPathSeg = pathSegList.getItem(0);
-    is(firstPathSeg.x, startX,
-       `The x of first segment should be ${ startX }`);
-    is(firstPathSeg.y, 0, "The y of first segment should be 0");
+      const pathSegList = pathEl.pathSegList;
+      const firstPathSeg = pathSegList.getItem(0);
+      is(firstPathSeg.x, startX,
+         `The x of first segment should be ${ startX }`);
+      is(firstPathSeg.y, 0, "The y of first segment should be 0");
 
-    // The easing of test animation is 'linear'.
-    // Therefore, the y of second path segment will be 0.
-    const secondPathSeg = pathSegList.getItem(1);
-    is(secondPathSeg.x, startX,
-       `The x of second segment should be ${ startX }`);
-    is(secondPathSeg.y, 0, "The y of second segment should be 0");
+      // The easing of test animation is 'linear'.
+      // Therefore, the y of second path segment will be 0.
+      const secondPathSeg = pathSegList.getItem(1);
+      is(secondPathSeg.x, startX,
+         `The x of second segment should be ${ startX }`);
+      is(secondPathSeg.y, 0, "The y of second segment should be 0");
 
-    const thirdLastPathSeg = pathSegList.getItem(pathSegList.numberOfItems - 4);
-    approximate(thirdLastPathSeg.x, endX - 0.001, 0.005,
-                `The x of third last segment should be approximately ${ endX - 0.001 }`);
-    approximate(thirdLastPathSeg.y, 0.999, 0.005,
-                " The y of third last segment should be approximately "
-                + thirdLastPathSeg.x);
+      const thirdLastPathSeg = pathSegList.getItem(pathSegList.numberOfItems - 4);
+      approximate(thirdLastPathSeg.x, endX - 0.001, 0.005,
+                  "The x of third last segment should be approximately "
+                  + (endX - 0.001));
+      approximate(thirdLastPathSeg.y, 0.999, 0.005,
+                  " The y of third last segment should be approximately "
+                  + thirdLastPathSeg.x);
 
-    // The test animation is not 'forwards' fill-mode.
-    // Therefore, the y of second last path segment will be 0.
-    const secondLastPathSeg =
-      pathSegList.getItem(pathSegList.numberOfItems - 3);
-    is(secondLastPathSeg.x, endX,
-       `The x of second last segment should be ${ endX }`);
-    // We use computed style of 'opacity' to create summary graph.
-    // So, if currentTime is same to the duration, although progress is null opacity is 1.
-    const expectedY =
-      state.iterationCount && expectedIterationCount === index + 1 ? 1 : 0;
-    is(secondLastPathSeg.y, expectedY,
-       `The y of second last segment should be ${ expectedY }`);
+      // The test animation is not 'forwards' fill-mode.
+      // Therefore, the y of second last path segment will be 0.
+      const secondLastPathSeg =
+        pathSegList.getItem(pathSegList.numberOfItems - 3);
+      is(secondLastPathSeg.x, endX,
+         `The x of second last segment should be ${ endX }`);
+      // We use computed style of 'opacity' to create summary graph.
+      // So, if currentTime is same to the duration, although progress is null
+      // opacity is 1.
+      const expectedY =
+        state.iterationCount && expectedIterationCount === index + 1 ? 1 : 0;
+      is(secondLastPathSeg.y, expectedY,
+         `The y of second last segment should be ${ expectedY }`);
 
-    const lastPathSeg = pathSegList.getItem(pathSegList.numberOfItems - 2);
-    is(lastPathSeg.x, endX, `The x of last segment should be ${ endX }`);
-    is(lastPathSeg.y, 0, "The y of last segment should be 0");
+      const lastPathSeg = pathSegList.getItem(pathSegList.numberOfItems - 2);
+      is(lastPathSeg.x, endX, `The x of last segment should be ${ endX }`);
+      is(lastPathSeg.y, 0, "The y of last segment should be 0");
 
-    const closePathSeg = pathSegList.getItem(pathSegList.numberOfItems - 1);
-    is(closePathSeg.pathSegType, closePathSeg.PATHSEG_CLOSEPATH,
-       `The actual last segment should be close path`);
+      const closePathSeg = pathSegList.getItem(pathSegList.numberOfItems - 1);
+      is(closePathSeg.pathSegType, closePathSeg.PATHSEG_CLOSEPATH,
+         `The actual last segment should be close path`);
+    });
   });
 }
 

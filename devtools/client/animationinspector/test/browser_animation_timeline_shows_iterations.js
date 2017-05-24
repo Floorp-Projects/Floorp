@@ -20,9 +20,12 @@ add_task(function* () {
   const timelineComponent = panel.animationsTimelineComponent;
   const timelineEl = timelineComponent.rootWrapperEl;
   let animation = timelineEl.querySelector(".time-block");
+
   // Get iteration count from summary graph path.
   let iterationCount = getIterationCount(animation);
 
+  is(animation.querySelectorAll("svg g").length, 1,
+     "The animation timeline contains one g element");
   is(iterationCount, 10,
      "The animation timeline contains the right number of iterations");
   ok(!animation.querySelector(".infinity"),
@@ -36,6 +39,8 @@ add_task(function* () {
   animation = timelineEl.querySelector(".time-block");
   iterationCount = getIterationCount(animation);
 
+  is(animation.querySelectorAll("svg g").length, 1,
+     "The animation timeline contains one g element");
   is(iterationCount, 1,
      "The animation timeline contains one iteration");
   ok(animation.querySelector(".infinity"),
@@ -43,5 +48,5 @@ add_task(function* () {
 });
 
 function getIterationCount(timeblockEl) {
-  return timeblockEl.querySelectorAll(".iteration-path").length;
+  return timeblockEl.querySelectorAll("svg g .iteration-path").length;
 }
