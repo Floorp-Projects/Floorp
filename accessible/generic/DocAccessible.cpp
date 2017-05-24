@@ -1973,7 +1973,12 @@ DocAccessible::UpdateTreeOnRemoval(Accessible* aContainer, nsIContent* aChildNod
 
   TreeMutation mt(aContainer);
   if (child) {
+    RefPtr<Accessible> kungFuDeathGripChild(child);
     mt.BeforeRemoval(child);
+    if (child->IsDefunct()) {
+      return; // event coalescence may kill us
+    }
+
     MOZ_ASSERT(aContainer == child->Parent(), "Wrong parent");
     aContainer->RemoveChild(child);
     UncacheChildrenInSubtree(child);
@@ -1983,7 +1988,12 @@ DocAccessible::UpdateTreeOnRemoval(Accessible* aContainer, nsIContent* aChildNod
 
   TreeWalker walker(aContainer, aChildNode, TreeWalker::eWalkCache);
   while (Accessible* child = walker.Next()) {
+    RefPtr<Accessible> kungFuDeathGripChild(child);
     mt.BeforeRemoval(child);
+    if (child->IsDefunct()) {
+      return; // event coalescence may kill us
+    }
+
     MOZ_ASSERT(aContainer == child->Parent(), "Wrong parent");
     aContainer->RemoveChild(child);
     UncacheChildrenInSubtree(child);
