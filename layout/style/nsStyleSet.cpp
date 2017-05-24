@@ -2369,7 +2369,8 @@ nsStyleSet::Shutdown()
 }
 
 void
-nsStyleSet::RecordStyleSheetChange(CSSStyleSheet* aStyleSheet)
+nsStyleSet::RecordStyleSheetChange(CSSStyleSheet* aStyleSheet,
+                                   StyleSheet::ChangeType)
 {
   MOZ_ASSERT(mBatching != 0, "Should be in an update");
 

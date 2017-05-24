@@ -63,6 +63,21 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(StyleSheet,
                                                          nsIDOMCSSStyleSheet)
 
+  /**
+   * The different changes that a stylesheet may go through.
+   *
+   * Used by the StyleSets in order to handle more efficiently some kinds of
+   * changes.
+   */
+  enum class ChangeType {
+    Added,
+    Removed,
+    ApplicableStateChanged,
+    RuleAdded,
+    RuleRemoved,
+    RuleChanged,
+  };
+
   void SetOwningNode(nsINode* aOwningNode)
   {
     mOwningNode = aOwningNode;
