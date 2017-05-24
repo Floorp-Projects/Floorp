@@ -13,7 +13,7 @@ add_task(function* test() {
   let contentDocDead = yield ContentTask.spawn(browser,{innerWindowId}, function*(args){
     let doc = content.document;
     let {TestUtils} = Components.utils.import("resource://testing-common/TestUtils.jsm", {});
-    let promise = TestUtils.topicObserved("inner-window-destroyed", (subject, data) => {
+    let promise = TestUtils.topicObserved("inner-window-nuked", (subject, data) => {
       let id = subject.QueryInterface(Components.interfaces.nsISupportsPRUint64).data;
       return id == args.innerWindowId;
     });
