@@ -22,6 +22,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.generated.LocaleList;
 
 /**
  * This class manages persistence, application, and otherwise handling of
@@ -330,13 +331,7 @@ public class LocaleManager {
      * Returns a list of supported locale codes
      */
     public static Collection<String> getPackagedLocaleTags(final Context context) {
-        // TODO: figure out how to get this dynamically, either at buildtime or runtime
-        return Arrays.asList(new String[] { "en-US",
-                "ar", "ast", "az", "bg", "bn-BD", "bn-IN",
-                "ca", "cs", "cy", "de", "el", "eo", "es-AR", "es-CL", "es-ES", "es-MX",
-                "fa", "fr", "fy-NL","hi", "hu", "hy-AM", "in", "it", "iw", "ja", "kab", "ko",
-                "lo", "nb-NO", "nl", "nn-NO", "pl", "pt", "pt-BR", "ro", "ru", "sk", "sl",
-                "sq", "sr", "sv-SE", "th", "tr", "uk", "ur", "zh-CN", "zh-TW" });
+        return LocaleList.BUNDLED_LOCALES;
     }
 
     public static String getFallbackLocaleTag() {
