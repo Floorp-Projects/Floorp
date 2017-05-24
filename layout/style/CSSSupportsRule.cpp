@@ -13,8 +13,8 @@ using namespace mozilla::css;
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ADDREF_INHERITED(CSSSupportsRule, css::ConditionRule)
-NS_IMPL_RELEASE_INHERITED(CSSSupportsRule, css::ConditionRule)
+NS_IMPL_ADDREF_INHERITED(mozilla::dom::CSSSupportsRule, css::ConditionRule)
+NS_IMPL_RELEASE_INHERITED(mozilla::dom::CSSSupportsRule, css::ConditionRule)
 
 // QueryInterface implementation for CSSSupportsRule
 NS_INTERFACE_MAP_BEGIN(CSSSupportsRule)

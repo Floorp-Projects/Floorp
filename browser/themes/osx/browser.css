@@ -1357,6 +1357,11 @@ html|span.ac-emphasize-text-url {
   -moz-appearance: -moz-mac-source-list;
 }
 
+#sidebar-header {
+  /* match the font size used in side bar content */
+  font-size: 12px;
+}
+
 /* ----- CONTENT ----- */
 
 .browserContainer > findbar {

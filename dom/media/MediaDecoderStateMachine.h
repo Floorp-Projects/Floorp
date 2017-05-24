@@ -248,6 +248,7 @@ private:
   class SeekingState;
   class AccurateSeekingState;
   class NextFrameSeekingState;
+  class NextFrameSeekingFromDormantState;
   class BufferingState;
   class CompletedState;
   class ShutdownState;

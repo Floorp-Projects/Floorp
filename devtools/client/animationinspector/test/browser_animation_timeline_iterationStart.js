@@ -50,12 +50,15 @@ function checkAnimationTooltip(el, {iterationStart, duration}) {
 
 function checkProgressAtStartingTime(el, { iterationStart }) {
   info("Check the progress of starting time");
-  const pathEl = el.querySelector(".iteration-path");
-  const pathSegList = pathEl.pathSegList;
-  const pathSeg = pathSegList.getItem(1);
-  const progress = pathSeg.y;
-  is(progress, iterationStart % 1,
-     `The progress at starting point should be ${ iterationStart % 1 }`);
+  const groupEls = el.querySelectorAll("svg g");
+  groupEls.forEach(groupEl => {
+    const pathEl = groupEl.querySelector(".iteration-path");
+    const pathSegList = pathEl.pathSegList;
+    const pathSeg = pathSegList.getItem(1);
+    const progress = pathSeg.y;
+    is(progress, iterationStart % 1,
+       `The progress at starting point should be ${ iterationStart % 1 }`);
+  });
 }
 
 function checkKeyframeOffset(timeBlockEl, frameEl, {iterationStart}) {

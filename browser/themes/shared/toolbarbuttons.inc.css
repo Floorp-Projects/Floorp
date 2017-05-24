@@ -372,12 +372,13 @@ toolbarbutton.bookmark-item[open="true"],
 }
 
 %ifdef MOZ_PHOTON_THEME
-#back-button:not([disabled]):hover > .toolbarbutton-icon {
+#back-button:not([disabled]):not([open]):hover > .toolbarbutton-icon {
   background: var(--backbutton-background) !important;
   box-shadow: 0 1px 6px hsla(0,0%,0%,.1);
   border-color: hsla(240,5%,5%,.35);
 }
 
+#back-button[open] > .toolbarbutton-icon,
 #back-button:not([disabled]):hover:active > .toolbarbutton-icon {
   background: var(--toolbarbutton-active-background) !important;
   border-color: hsla(240,5%,5%,.40);
