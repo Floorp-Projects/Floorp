@@ -493,10 +493,12 @@ MetadataTier::deserialize(const uint8_t* cursor)
     return cursor;
 }
 
-bool
-Metadata::hasTier2() const
+void
+Metadata::commitTier2() const
 {
-    return false;
+    MOZ_RELEASE_ASSERT(metadata2_.get());
+    MOZ_RELEASE_ASSERT(!hasTier2_);
+    hasTier2_ = true;
 }
 
 void
@@ -504,7 +506,7 @@ Metadata::setTier2(UniqueMetadataTier metadata) const
 {
     MOZ_RELEASE_ASSERT(metadata->tier == Tier::Ion && metadata1_->tier != Tier::Ion);
     MOZ_RELEASE_ASSERT(!metadata2_.get());
-    MOZ_CRASH("FIXME - NYI");
+    metadata2_ = Move(metadata);
 }
 
 Tiers
@@ -683,18 +685,12 @@ Code::Code()
 {
 }
 
-bool
-Code::hasTier2() const
-{
-    return false;
-}
-
 void
 Code::setTier2(UniqueConstCodeSegment segment) const
 {
     MOZ_RELEASE_ASSERT(segment->tier() == Tier::Ion && segment1_->tier() != Tier::Ion);
     MOZ_RELEASE_ASSERT(!segment2_.get());
-    MOZ_CRASH("FIXME - NYI");
+    segment2_ = Move(segment);
 }
 
 Tiers
@@ -796,22 +792,9 @@ Code::serialize(uint8_t* cursor, const LinkData& linkData) const
 
 const uint8_t*
 Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const LinkData& linkData,
-                  Metadata* maybeMetadata)
+                  Metadata& metadata)
 {
-    MutableMetadata metadata;
-    if (maybeMetadata) {
-        metadata = maybeMetadata;
-    } else {
-        auto tier = js::MakeUnique<MetadataTier>(Tier::Serialized);
-        if (!tier)
-            return nullptr;
-
-        metadata = js_new<Metadata>(Move(tier));
-        if (!metadata)
-            return nullptr;
-    }
-
-    cursor = metadata->deserialize(cursor);
+    cursor = metadata.deserialize(cursor);
     if (!cursor)
         return nullptr;
 
@@ -819,12 +802,12 @@ Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const Link
     if (!codeSegment)
         return nullptr;
 
-    cursor = codeSegment->deserialize(cursor, *bytecode, linkData.linkData(Tier::Serialized), *metadata);
+    cursor = codeSegment->deserialize(cursor, *bytecode, linkData.linkData(Tier::Serialized), metadata);
     if (!cursor)
         return nullptr;
 
     segment1_ = UniqueConstCodeSegment(codeSegment.release());
-    metadata_ = metadata;
+    metadata_ = &metadata;
 
     return cursor;
 }

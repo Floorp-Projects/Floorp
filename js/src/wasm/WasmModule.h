@@ -81,13 +81,14 @@ typedef UniquePtr<LinkDataTier> UniqueLinkDataTier;
 
 class LinkData
 {
+    SharedMetadata             metadata_;
     UniqueLinkDataTier         linkData1_;     // Always present
     mutable UniqueLinkDataTier linkData2_;     // Access only if hasTier2() is true
 
   public:
-    bool initTier1(Tier tier);
+    bool initTier1(Tier tier, const Metadata& metadata);
 
-    bool hasTier2() const;
+    bool hasTier2() const { return metadata_->hasTier2(); }
     void setTier2(UniqueLinkDataTier linkData) const;
     Tiers tiers() const;
 

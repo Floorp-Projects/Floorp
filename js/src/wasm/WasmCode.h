@@ -373,6 +373,7 @@ class Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod
 {
     UniqueMetadataTier            metadata1_;
     mutable UniqueMetadataTier    metadata2_;     // Access only when hasTier2() is true
+    mutable mozilla::Atomic<bool> hasTier2_;
 
   public:
     explicit Metadata(UniqueMetadataTier tier, ModuleKind kind = ModuleKind::Wasm)
@@ -384,7 +385,8 @@ class Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod
     MetadataCacheablePod& pod() { return *this; }
     const MetadataCacheablePod& pod() const { return *this; }
 
-    bool hasTier2() const;
+    void commitTier2() const;
+    bool hasTier2() const { return hasTier2_; }
     void setTier2(UniqueMetadataTier metadata) const;
     Tiers tiers() const;
 
@@ -453,7 +455,7 @@ class Code : public ShareableBase<Code>
 
     Code(UniqueConstCodeSegment tier, const Metadata& metadata);
 
-    bool hasTier2() const;
+    bool hasTier2() const { return metadata_->hasTier2(); }
     void setTier2(UniqueConstCodeSegment segment) const;
     Tiers tiers() const;
     bool hasTier(Tier t) const;
@@ -496,7 +498,7 @@ class Code : public ShareableBase<Code>
     size_t serializedSize() const;
     uint8_t* serialize(uint8_t* cursor, const LinkData& linkData) const;
     const uint8_t* deserialize(const uint8_t* cursor, const SharedBytes& bytecode,
-                               const LinkData& linkData, Metadata* maybeMetadata);
+                               const LinkData& linkData, Metadata& metadata);
 };
 
 typedef RefPtr<const Code> SharedCode;
