@@ -414,6 +414,75 @@ clean.doLast {
 }
 
 // -------------------------------------------------------------------------------------------------
+// L10N: Verify locales
+// -------------------------------------------------------------------------------------------------
+
+// Fetches the available locales - this doesn't always match the actually available locales (getEnabledLocales()),
+// e.g. if there were import problems:
+def getTranslatedLocales() {
+    def localesDir = file('../l10n-repo/locales')
+
+    def potentialLanguageDirs = localesDir.listFiles(new FilenameFilter() {
+        @Override
+        boolean accept(File dir, String name) {
+            return !name.equals("templates");
+        }
+    })
+
+    def langs = potentialLanguageDirs.collect {
+        // Reduce from list of files to actual names
+        return it.name
+    } .collect {
+        switch(it) {
+            case "id":
+                return "in"
+            case "he":
+                return "iw"
+            default:
+                return it;
+        }
+    } .collect {
+        return '"' + it + '"'
+    }
+
+    langs << "\"en-US\""
+
+    return langs
+}
+
+task verifyLocales << {
+    group = 'Localization'
+    description = 'Verify that all locales in the L10N repository were imported'
+
+    def l10nRepo = file("../l10n-repo")
+    if (!l10nRepo.isDirectory()) {
+        throw new GradleException('l10n-repo does not exist, ensure you have run |gradle stringsSetup|')
+    }
+
+    def availableLocales = getTranslatedLocales()
+    def successfullyImportedLocales = getEnabledLocales()
+
+    def missingLocales = availableLocales.clone()
+    missingLocales.removeAll(successfullyImportedLocales)
+
+    if (missingLocales.size > 0) {
+        throw new GradleException('The following locales were not successfully imported: ' + missingLocales.join(","))
+    }
+
+    def unexpectedLocales = successfullyImportedLocales.clone()
+    unexpectedLocales.removeAll(availableLocales)
+
+    if (unexpectedLocales.size > 0) {
+        throw new GradleException('Project has additional locales: ' + unexpectedLocales.join(","))
+    }
+}
+
+// Ensure we always check locale import imported all locales:
+stringsImport.doLast {
+    tasks.verifyLocales.execute()
+}
+
+// -------------------------------------------------------------------------------------------------
 // Static Analysis: findbugs and pmd
 // -------------------------------------------------------------------------------------------------
 
