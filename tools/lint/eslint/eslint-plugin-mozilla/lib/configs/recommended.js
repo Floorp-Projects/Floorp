@@ -11,6 +11,7 @@ module.exports = {
     "BrowserFeedWriter": false,
     "CSSPrimitiveValue": false,
     "CSSValueList": false,
+    "CheckerboardReportService": false,
     // Specific to Firefox (Chrome code only).
     "ChromeUtils": false,
     "ChromeWindow": false,
@@ -37,6 +38,7 @@ module.exports = {
     // generators, see bug 968038.
     "StopIteration": false,
     "WebAssembly": false,
+    "WebrtcGlobalInformation": false,
     // Non-standard, specific to Firefox.
     "XULElement": false,
     "dump": true,

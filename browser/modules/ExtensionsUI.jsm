@@ -14,6 +14,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
                                   "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppMenuNotifications",
+                                  "resource://gre/modules/AppMenuNotifications.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
@@ -71,7 +73,7 @@ this.ExtensionsUI = {
             }
 
             this.sideloaded.delete(addon);
-            this.emit("change");
+              this._updateNotifications();
 
             if (this.sideloaded.size == 0) {
               AddonManager.removeAddonListener(this.sideloadListener);
@@ -85,7 +87,7 @@ this.ExtensionsUI = {
       for (let addon of sideloaded) {
         this.sideloaded.add(addon);
       }
-      this.emit("change");
+        this._updateNotifications();
     } else {
       // This and all the accompanying about:newaddon code can eventually
       // be removed.  See bug 1331521.
@@ -94,6 +96,15 @@ this.ExtensionsUI = {
         win.openUILinkIn(`about:newaddon?id=${addon.id}`, "tab");
       }
     }
+  },
+
+  _updateNotifications() {
+    if (this.sideloaded.size + this.updates.size == 0) {
+      AppMenuNotifications.removeNotification("addon-alert");
+    } else {
+      AppMenuNotifications.showBadgeOnlyNotification("addon-alert");
+    }
+    this.emit("change");
   },
 
   showAddonsManager(browser, strings, icon, histkey) {
@@ -109,7 +120,7 @@ this.ExtensionsUI = {
   showSideloaded(browser, addon) {
     addon.markAsSeen();
     this.sideloaded.delete(addon);
-    this.emit("change");
+    this._updateNotifications();
 
     let strings = this._buildStrings({
       addon,
@@ -133,7 +144,7 @@ this.ExtensionsUI = {
           // At the moment, this prompt will re-appear next time we do an update
           // check.  See bug 1332360 for proposal to avoid this.
           this.updates.delete(info);
-          this.emit("change");
+          this._updateNotifications();
         });
   },
 
@@ -205,7 +216,7 @@ this.ExtensionsUI = {
       };
 
       this.updates.add(update);
-      this.emit("change");
+      this._updateNotifications();
     } else if (topic == "webextension-install-notify") {
       let {target, addon, callback} = subject.wrappedJSObject;
       this.showInstallNotification(target, addon).then(() => {

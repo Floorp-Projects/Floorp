@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyGetter(this, "WeaveService", () =>
 
 // lazy module getters
 
-/* global AboutHome:false, AboutNewTab:false, AddonManager:false,
+/* global AboutHome:false, AboutNewTab:false, AddonManager:false, AppMenuNotifications:false,
           AsyncShutdown:false, AutoCompletePopup:false, BookmarkHTMLUtils:false,
           BookmarkJSONUtils:false, BrowserUITelemetry:false, BrowserUsageTelemetry:false,
           ContentClick:false, ContentPrefServiceParent:false, ContentSearch:false,
@@ -36,8 +36,10 @@ XPCOMUtils.defineLazyGetter(this, "WeaveService", () =>
           ProcessHangMonitor:false, ReaderParent:false, RecentWindow:false,
           RemotePrompt:false, SessionStore:false,
           ShellService:false, SimpleServiceDiscovery:false, TabCrashHandler:false,
-          Task:false, UITour:false, WebChannel:false,
+          Task:false, UITour:false, UIState:false, UpdateListener:false, WebChannel:false,
           WindowsRegistry:false, webrtcUI:false */
+
+
 
 /**
  * IF YOU ADD OR REMOVE FROM THIS LIST, PLEASE UPDATE THE LIST ABOVE AS WELL.
@@ -50,6 +52,7 @@ let initializedModules = {};
   ["AboutHome", "resource:///modules/AboutHome.jsm", "init"],
   ["AboutNewTab", "resource:///modules/AboutNewTab.jsm"],
   ["AddonManager", "resource://gre/modules/AddonManager.jsm"],
+  ["AppMenuNotifications", "resource://gre/modules/AppMenuNotifications.jsm"],
   ["AsyncShutdown", "resource://gre/modules/AsyncShutdown.jsm"],
   ["AutoCompletePopup", "resource://gre/modules/AutoCompletePopup.jsm"],
   ["BookmarkHTMLUtils", "resource://gre/modules/BookmarkHTMLUtils.jsm"],
@@ -88,7 +91,9 @@ let initializedModules = {};
   ["SimpleServiceDiscovery", "resource://gre/modules/SimpleServiceDiscovery.jsm"],
   ["TabCrashHandler", "resource:///modules/ContentCrashHandlers.jsm"],
   ["Task", "resource://gre/modules/Task.jsm"],
+  ["UIState", "resource://services-sync/UIState.jsm"],
   ["UITour", "resource:///modules/UITour.jsm"],
+  ["UpdateListener", "resource://gre/modules/UpdateListener.jsm", "init"],
   ["WebChannel", "resource://gre/modules/WebChannel.jsm"],
   ["WindowsRegistry", "resource://gre/modules/WindowsRegistry.jsm"],
   ["webrtcUI", "resource:///modules/webrtcUI.jsm", "init"],
@@ -124,6 +129,13 @@ XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
 const global = this;
 
 const listeners = {
+  observers: {
+    "update-staged": ["UpdateListener"],
+    "update-downloaded": ["UpdateListener"],
+    "update-available": ["UpdateListener"],
+    "update-error": ["UpdateListener"],
+  },
+
   ppmm: {
     // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN ContentPrefServiceParent.init
     "ContentPrefs:FunctionCall": ["ContentPrefServiceParent"],
@@ -165,6 +177,16 @@ const listeners = {
     "webrtc:UpdateBrowserIndicators": ["webrtcUI"],
   },
 
+  observe(subject, topic, data) {
+    for (let module of this.observers[topic]) {
+      try {
+        global[module].observe(subject, topic, data);
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    }
+  },
+
   receiveMessage(modules, data) {
     let val;
     for (let module of modules[data.name]) {
@@ -178,6 +200,10 @@ const listeners = {
   },
 
   init() {
+    for (let observer of Object.keys(this.observers)) {
+      Services.obs.addObserver(this, observer);
+    }
+
     let receiveMessageMM = this.receiveMessage.bind(this, this.mm);
     for (let message of Object.keys(this.mm)) {
       Services.mm.addMessageListener(message, receiveMessageMM);
@@ -468,6 +494,9 @@ BrowserGlue.prototype = {
       case "test-initialize-sanitizer":
         this._sanitizer.onStartup();
         break;
+      case "sync-ui-state:update":
+        this._updateFxaBadges();
+        break;
     }
   },
 
@@ -506,6 +535,7 @@ BrowserGlue.prototype = {
     os.addObserver(this, "restart-in-safe-mode");
     os.addObserver(this, "flash-plugin-hang");
     os.addObserver(this, "xpi-signature-changed");
+    os.addObserver(this, "sync-ui-state:update");
 
     this._flashHangCount = 0;
     this._firstWindowReady = new Promise(resolve => this._firstWindowLoaded = resolve);
@@ -558,6 +588,7 @@ BrowserGlue.prototype = {
     os.removeObserver(this, "browser-search-engine-modified");
     os.removeObserver(this, "flash-plugin-hang");
     os.removeObserver(this, "xpi-signature-changed");
+    os.removeObserver(this, "sync-ui-state:update");
   },
 
   _onAppDefaults: function BG__onAppDefaults() {
@@ -2314,6 +2345,16 @@ BrowserGlue.prototype = {
     let nb = win.document.getElementById("global-notificationbox");
     nb.appendNotification(message, "flash-hang", null,
                           nb.PRIORITY_INFO_MEDIUM, buttons);
+  },
+
+  _updateFxaBadges() {
+    let state = UIState.get();
+    if (state.status == UIState.STATUS_LOGIN_FAILED ||
+        state.status == UIState.STATUS_NOT_VERIFIED) {
+      AppMenuNotifications.showBadgeOnlyNotification("fxa-needs-authentication");
+    } else {
+      AppMenuNotifications.removeNotification("fxa-needs-authentication");
+    }
   },
 
   // for XPCOM
