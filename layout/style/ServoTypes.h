@@ -73,6 +73,15 @@ enum class TraversalRestyleBehavior {
   ForCSSRuleChanges,
 };
 
+// Indicates which rules should be included when performing selecting matching
+// on an element.  DefaultOnly is used to exclude all rules except for those
+// that come from UA style sheets, and is used to implemented
+// getDefaultComputedStyle.
+enum class StyleRuleInclusion {
+  All,
+  DefaultOnly,
+};
+
 // Represents which tasks are performed in a SequentialTask of UpdateAnimations.
 enum class UpdateAnimationsTasks : uint8_t {
   CSSAnimations    = 1 << 0,

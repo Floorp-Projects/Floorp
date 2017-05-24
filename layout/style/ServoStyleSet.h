@@ -172,13 +172,17 @@ public:
   already_AddRefed<nsStyleContext>
   ResolveTransientStyle(dom::Element* aElement,
                         nsIAtom* aPseudoTag,
-                        CSSPseudoElementType aPseudoType);
+                        CSSPseudoElementType aPseudoType,
+                        StyleRuleInclusion aRules =
+                          StyleRuleInclusion::All);
 
   // Similar to ResolveTransientStyle() but returns ServoComputedValues.
   // Unlike ResolveServoStyle() this function calls PreTraverseSync().
   already_AddRefed<ServoComputedValues>
   ResolveTransientServoStyle(dom::Element* aElement,
-                             CSSPseudoElementType aPseudoTag);
+                             CSSPseudoElementType aPseudoTag,
+                             StyleRuleInclusion aRules =
+                               StyleRuleInclusion::All);
 
   // Get a style context for an anonymous box.  aPseudoTag is the pseudo-tag to
   // use and must be non-null.  It must be an anon box, and must be one that
@@ -491,7 +495,10 @@ private:
   void UpdateStylist();
 
   already_AddRefed<ServoComputedValues>
-    ResolveStyleLazily(dom::Element* aElement, CSSPseudoElementType aPseudoType);
+    ResolveStyleLazily(dom::Element* aElement,
+                       CSSPseudoElementType aPseudoType,
+                       StyleRuleInclusion aRules =
+                         StyleRuleInclusion::All);
 
   void RunPostTraversalTasks();
 

@@ -662,11 +662,10 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
   // For Servo, compute the result directly without recursively building up
   // a throwaway style context chain.
   if (ServoStyleSet* servoSet = styleSet->GetAsServo()) {
-    if (aStyleType == eDefaultOnly) {
-      NS_WARNING("stylo: ServoStyleSets cannot supply UA-only styles yet");
-      return nullptr;
-    }
-    return servoSet->ResolveTransientStyle(aElement, aPseudo, type);
+    StyleRuleInclusion rules = aStyleType == eDefaultOnly
+                               ? StyleRuleInclusion::DefaultOnly
+                               : StyleRuleInclusion::All;
+    return servoSet->ResolveTransientStyle(aElement, aPseudo, type, rules);
   }
 
   RefPtr<nsStyleContext> parentContext;
