@@ -6,27 +6,59 @@
 
 package org.mozilla.gecko.mma;
 
-import android.app.Application;
-import android.content.Context;
+import android.app.Activity;
+import android.util.Log;
 
 import org.mozilla.gecko.MmaConstants;
+import org.mozilla.gecko.PrefsHelper;
 
 
 public class MmaDelegate {
 
-    private static final String ENABLE_PREF = "mma.enabled";
+    private static final String TAG = "MmaDelegate";
+    private static final String KEY_PREF_BOOLEAN_MMA_ENABLED = "mma.enabled";
+    private static final String[] PREFS = { KEY_PREF_BOOLEAN_MMA_ENABLED };
 
+
+    private static boolean isGeckoPrefOn = false;
     private static MmaInterface mmaHelper = MmaConstants.getMma();
 
-    private static final String[] prefs = { ENABLE_PREF };
 
-
-    public static void init(Application application) {
-        setupPrefHandler(application);
+    public static void init(Activity activity) {
+        setupPrefHandler(activity);
     }
 
     public static void stop() {
         mmaHelper.stop();
     }
 
+    private static void setupPrefHandler(final Activity activity) {
+        PrefsHelper.PrefHandler handler = new PrefsHelper.PrefHandlerBase() {
+            @Override
+            public void prefValue(String pref, boolean value) {
+                if (pref.equals(KEY_PREF_BOOLEAN_MMA_ENABLED)) {
+                    Log.d(TAG, "prefValue() called with: pref = [" + pref + "], value = [" + value + "]");
+                    if (value) {
+                        mmaHelper.init(activity);
+                        isGeckoPrefOn = true;
+                    } else {
+                        isGeckoPrefOn = false;
+                    }
+                }
+            }
+        };
+        PrefsHelper.addObserver(PREFS, handler);
+    }
+
+    public static void track(String event) {
+        if (isGeckoPrefOn) {
+            mmaHelper.track(event);
+        }
+    }
+
+    public static void track(String event, long value) {
+        if (isGeckoPrefOn) {
+            mmaHelper.track(event, value);
+        }
+    }
 }
