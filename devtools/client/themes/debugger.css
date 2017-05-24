@@ -62,7 +62,7 @@
 /* Firebug theme uses breakpoint icon istead of a checkbox */
 
 .theme-firebug #sources-pane .dbg-breakpoint-checkbox .checkbox-check {
-  -moz-appearance: none; appearance: none;
+  -moz-appearance: none;
   border: none;
   background: url(chrome://devtools/skin/images/firebug/breakpoint.svg) no-repeat 50% 50%;
 }
@@ -327,7 +327,7 @@
 }
 
 .dbg-expression-button {
-  -moz-appearance: none; appearance: none;
+  -moz-appearance: none;
   border: none;
   background: none;
   text-decoration: underline;

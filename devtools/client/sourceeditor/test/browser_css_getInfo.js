@@ -9,14 +9,14 @@ const CSSCompleter =
 
 const source = [
   ".devtools-toolbar {",
-  "  -moz-appearance: none; appearance: none;",
+  "  -moz-appearance: none;",
   "           padding:4px 3px;border-bottom-width: 1px;",
   "  border-bottom-style: solid;",
   "}",
   "",
   "#devtools-menu.devtools-menulist,",
   ".devtools-toolbarbutton#devtools-menu {",
-  "  -moz-appearance: none; appearance: none;",
+  "  -moz-appearance: none;",
   "  -moz-box-align: center;",
   "  min-width: 78px;",
   "  min-height: 22px;",

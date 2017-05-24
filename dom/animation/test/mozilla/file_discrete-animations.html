@@ -9,6 +9,11 @@
 "use strict";
 
 const gMozillaSpecificProperties = {
+  "-moz-appearance": {
+    // https://drafts.csswg.org/css-align/#propdef-align-content
+    from: "button",
+    to: "none"
+  },
   "-moz-border-bottom-colors": {
     from: "rgb(255, 0, 0) rgb(255, 0, 0) rgb(255, 0, 0) rgb(255, 0, 0)",
     to: "rgb(0, 255, 0) rgb(0, 255, 0) rgb(0, 255, 0) rgb(0, 255, 0)"

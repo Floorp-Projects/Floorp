@@ -74,7 +74,7 @@ load 420697-2.svg
 load 429774-1.svg
 load 441368-1.svg
 load 453754-1.svg
-pref(layout.css.moz-appearance.enabled,true) load 455314-1.xhtml
+load 455314-1.xhtml
 load 458453.html
 load 459666-1.html # bug 1323652
 load 459883.xhtml
@@ -153,7 +153,7 @@ load 789390-1.html # bug 1323652
 load 790072.svg
 load 791826-1.svg
 load 808318-1.svg
-pref(layout.css.moz-appearance.enabled,true) load 803562-1.svg
+load 803562-1.svg
 load 813420-1.svg
 load 841163-1.svg
 load 841812-1.svg

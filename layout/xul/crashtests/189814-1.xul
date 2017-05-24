@@ -6,7 +6,7 @@
   style="background-color: white">
 
   <label>
-  With the Classic theme, printing causes the browser to crash. adding style="-moz-appearance: none; appearance: none" to the
+  With the Classic theme, printing causes the browser to crash. adding style="-moz-appearance: none" to the
   thumb prevents the crash. The crash doesn't happen at all with Modern.
   </label>
   <spacer height="10"/>
