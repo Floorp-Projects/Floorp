@@ -451,7 +451,7 @@ class XDRIncrementalEncoder : public XDREncoder
     bool oom_;
 
   public:
-    XDRIncrementalEncoder(JSContext* cx)
+    explicit XDRIncrementalEncoder(JSContext* cx)
       : XDREncoder(cx, slices_, 0),
         scope_(nullptr),
         node_(nullptr),
