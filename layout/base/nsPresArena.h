@@ -30,20 +30,6 @@ public:
   ~nsPresArena();
 
   /**
-   * Pool allocation with recycler lists indexed by object size, aSize.
-   */
-  void* AllocateBySize(size_t aSize)
-  {
-    return Allocate(uint32_t(aSize) |
-                    uint32_t(mozilla::eArenaObjectID_NON_OBJECT_MARKER), aSize);
-  }
-  void FreeBySize(size_t aSize, void* aPtr)
-  {
-    Free(uint32_t(aSize) |
-         uint32_t(mozilla::eArenaObjectID_NON_OBJECT_MARKER), aPtr);
-  }
-
-  /**
    * Pool allocation with recycler lists indexed by frame-type ID.
    * Every aID must always be used with the same object size, aSize.
    */
