@@ -26,8 +26,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionContent",
                                   "resource://gre/modules/ExtensionContent.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MatchGlobs",
-                                  "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
@@ -483,7 +481,7 @@ class BrowserExtensionContent extends EventEmitter {
       return data.content_scripts.map(scriptData => new ExtensionContent.Script(this, scriptData));
     });
 
-    this.webAccessibleResources = new MatchGlobs(data.webAccessibleResources);
+    this.webAccessibleResources = data.webAccessibleResources.map(res => new MatchGlob(res));
     this.whiteListedHosts = new MatchPattern(data.whiteListedHosts);
     this.permissions = data.permissions;
     this.optionalPermissions = data.optionalPermissions;
