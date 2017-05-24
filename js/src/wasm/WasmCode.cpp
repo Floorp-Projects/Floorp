@@ -493,10 +493,26 @@ MetadataTier::deserialize(const uint8_t* cursor)
     return cursor;
 }
 
+bool
+Metadata::hasTier2() const
+{
+    return false;
+}
+
+void
+Metadata::setTier2(UniqueMetadataTier metadata) const
+{
+    MOZ_RELEASE_ASSERT(metadata->tier == Tier::Ion && metadata1_->tier != Tier::Ion);
+    MOZ_RELEASE_ASSERT(!metadata2_.get());
+    MOZ_CRASH("FIXME - NYI");
+}
+
 Tiers
 Metadata::tiers() const
 {
-    return Tiers(tier_->tier);
+    if (hasTier2())
+        return Tiers(metadata1_->tier, metadata2_->tier);
+    return Tiers(metadata1_->tier);
 }
 
 const MetadataTier&
@@ -504,13 +520,17 @@ Metadata::metadata(Tier t) const
 {
     switch (t) {
       case Tier::Baseline:
-        MOZ_RELEASE_ASSERT(tier_->tier == Tier::Baseline);
-        return *tier_;
+        if (metadata1_->tier == Tier::Baseline)
+            return *metadata1_;
+        MOZ_CRASH("No metadata at this tier");
       case Tier::Ion:
-        MOZ_RELEASE_ASSERT(tier_->tier == Tier::Ion);
-        return *tier_;
+        if (metadata1_->tier == Tier::Ion)
+            return *metadata1_;
+        if (hasTier2())
+            return *metadata2_;
+        MOZ_CRASH("No metadata at this tier");
       case Tier::TBD:
-        return *tier_;
+        return *metadata1_;
       default:
         MOZ_CRASH();
     }
@@ -521,13 +541,17 @@ Metadata::metadata(Tier t)
 {
     switch (t) {
       case Tier::Baseline:
-        MOZ_RELEASE_ASSERT(tier_->tier == Tier::Baseline);
-        return *tier_;
+        if (metadata1_->tier == Tier::Baseline)
+            return *metadata1_;
+        MOZ_CRASH("No metadata at this tier");
       case Tier::Ion:
-        MOZ_RELEASE_ASSERT(tier_->tier == Tier::Ion);
-        return *tier_;
+        if (metadata1_->tier == Tier::Ion)
+            return *metadata1_;
+        if (hasTier2())
+            return *metadata2_;
+        MOZ_CRASH("No metadata at this tier");
       case Tier::TBD:
-        return *tier_;
+        return *metadata1_;
       default:
         MOZ_CRASH();
     }
@@ -648,7 +672,7 @@ Metadata::getFuncName(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes*
 }
 
 Code::Code(UniqueConstCodeSegment tier, const Metadata& metadata)
-  : tier_(Move(tier)),
+  : segment1_(Move(tier)),
     metadata_(&metadata),
     profilingLabels_(mutexid::WasmCodeProfilingLabels, CacheableCharsVector())
 {
@@ -659,16 +683,40 @@ Code::Code()
 {
 }
 
-Tier
-Code::stableTier() const
+bool
+Code::hasTier2() const
 {
-    return tier_->tier();
+    return false;
+}
+
+void
+Code::setTier2(UniqueConstCodeSegment segment) const
+{
+    MOZ_RELEASE_ASSERT(segment->tier() == Tier::Ion && segment1_->tier() != Tier::Ion);
+    MOZ_RELEASE_ASSERT(!segment2_.get());
+    MOZ_CRASH("FIXME - NYI");
 }
 
 Tiers
 Code::tiers() const
 {
-    return Tiers(tier_->tier());
+    if (hasTier2())
+        return Tiers(segment1_->tier(), segment2_->tier());
+    return Tiers(segment1_->tier());
+}
+
+bool
+Code::hasTier(Tier t) const
+{
+    if (hasTier2() && segment2_->tier() == t)
+        return true;
+    return segment1_->tier() == t;
+}
+
+Tier
+Code::stableTier() const
+{
+    return segment1_->tier();
 }
 
 const CodeSegment&
@@ -676,13 +724,17 @@ Code::segment(Tier tier) const
 {
     switch (tier) {
       case Tier::Baseline:
-        MOZ_RELEASE_ASSERT(tier_->tier() == Tier::Baseline);
-        return *tier_;
+        if (segment1_->tier() == Tier::Baseline)
+            return *segment1_;
+        MOZ_CRASH("No code segment at this tier");
       case Tier::Ion:
-        MOZ_RELEASE_ASSERT(tier_->tier() == Tier::Ion);
-        return *tier_;
+        if (segment1_->tier() == Tier::Ion)
+            return *segment1_;
+        if (hasTier2())
+            return *segment2_;
+        MOZ_CRASH("No code segment at this tier");
       case Tier::TBD:
-        return *tier_;
+        return *segment1_;
       default:
         MOZ_CRASH();
     }
@@ -771,7 +823,7 @@ Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const Link
     if (!cursor)
         return nullptr;
 
-    tier_ = UniqueConstCodeSegment(codeSegment.release());
+    segment1_ = UniqueConstCodeSegment(codeSegment.release());
     metadata_ = metadata;
 
     return cursor;

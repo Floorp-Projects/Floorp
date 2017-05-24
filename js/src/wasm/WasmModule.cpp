@@ -137,10 +137,26 @@ LinkDataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            symbolicLinks.sizeOfExcludingThis(mallocSizeOf);
 }
 
+bool
+LinkData::hasTier2() const
+{
+    return false;
+}
+
+void
+LinkData::setTier2(UniqueLinkDataTier linkData) const
+{
+    MOZ_RELEASE_ASSERT(linkData->tier == Tier::Ion && linkData1_->tier != Tier::Ion);
+    MOZ_RELEASE_ASSERT(!linkData2_.get());
+    MOZ_CRASH("FIXME - NYI");
+}
+
 Tiers
 LinkData::tiers() const
 {
-    return Tiers(tier_->tier);
+    if (hasTier2())
+        return Tiers(linkData1_->tier, linkData2_->tier);
+    return Tiers(linkData1_->tier);
 }
 
 const LinkDataTier&
@@ -148,13 +164,17 @@ LinkData::linkData(Tier tier) const
 {
     switch (tier) {
       case Tier::Baseline:
-        MOZ_RELEASE_ASSERT(tier_->tier == Tier::Baseline);
-        return *tier_;
+        if (linkData1_->tier == Tier::Baseline)
+            return *linkData1_;
+        MOZ_CRASH("No linkData at this tier");
       case Tier::Ion:
-        MOZ_RELEASE_ASSERT(tier_->tier == Tier::Ion);
-        return *tier_;
+        if (linkData1_->tier == Tier::Ion)
+            return *linkData1_;
+        if (hasTier2())
+            return *linkData2_;
+        MOZ_CRASH("No linkData at this tier");
       case Tier::TBD:
-        return *tier_;
+        return *linkData1_;
       default:
         MOZ_CRASH();
     }
@@ -165,50 +185,57 @@ LinkData::linkData(Tier tier)
 {
     switch (tier) {
       case Tier::Baseline:
-        MOZ_RELEASE_ASSERT(tier_->tier == Tier::Baseline);
-        return *tier_;
+        if (linkData1_->tier == Tier::Baseline)
+            return *linkData1_;
+        MOZ_CRASH("No linkData at this tier");
       case Tier::Ion:
-        MOZ_RELEASE_ASSERT(tier_->tier == Tier::Ion);
-        return *tier_;
+        if (linkData1_->tier == Tier::Ion)
+            return *linkData1_;
+        if (hasTier2())
+            return *linkData2_;
+        MOZ_CRASH("No linkData at this tier");
       case Tier::TBD:
-        return *tier_;
+        return *linkData1_;
       default:
         MOZ_CRASH();
     }
 }
 
 bool
-LinkData::initTier(Tier tier)
+LinkData::initTier1(Tier tier)
 {
-    MOZ_ASSERT(!tier_);
-    tier_ = js::MakeUnique<LinkDataTier>(tier);
-    return tier_ != nullptr;
+    MOZ_ASSERT(!linkData1_);
+    linkData1_ = js::MakeUnique<LinkDataTier>(tier);
+    return linkData1_ != nullptr;
 }
 
 size_t
 LinkData::serializedSize() const
 {
-    return tier_->serializedSize();
+    return linkData(Tier::Serialized).serializedSize();
 }
 
 uint8_t*
 LinkData::serialize(uint8_t* cursor) const
 {
-    cursor = tier_->serialize(cursor);
+    cursor = linkData(Tier::Serialized).serialize(cursor);
     return cursor;
 }
 
 const uint8_t*
 LinkData::deserialize(const uint8_t* cursor)
 {
-    (cursor = tier_->deserialize(cursor));
+    (cursor = linkData(Tier::Serialized).deserialize(cursor));
     return cursor;
 }
 
 size_t
 LinkData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return tier_->sizeOfExcludingThis(mallocSizeOf);
+    size_t sum = 0;
+    for (auto t : tiers())
+        sum += linkData(t).sizeOfExcludingThis(mallocSizeOf);
+    return sum;
 }
 
 /* virtual */ size_t
@@ -299,7 +326,7 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
         return nullptr;
 
     LinkData linkData;
-    if (!linkData.initTier(Tier::Serialized))
+    if (!linkData.initTier1(Tier::Serialized))
         return nullptr;
 
     cursor = linkData.deserialize(cursor);

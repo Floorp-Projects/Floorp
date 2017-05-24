@@ -33,10 +33,10 @@ class WasmInstanceObject;
 
 namespace wasm {
 
-struct LinkData;
 struct LinkDataTier;
 struct MetadataTier;
 class FrameIterator;
+class LinkData;
 
 // The generated source location for the AST node/expression. The offset field refers
 // an offset in an binary format file.

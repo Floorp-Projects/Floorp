@@ -79,17 +79,18 @@ struct LinkDataTier : LinkDataTierCacheablePod
 
 typedef UniquePtr<LinkDataTier> UniqueLinkDataTier;
 
-struct LinkData
+class LinkData
 {
-    // `tier_` will become more complicated once tiering is implemented.
-    UniqueLinkDataTier tier_;
+    UniqueLinkDataTier         linkData1_;     // Always present
+    mutable UniqueLinkDataTier linkData2_;     // Access only if hasTier2() is true
 
-    LinkData() : tier_(nullptr) {}
+  public:
+    bool initTier1(Tier tier);
 
-    // Construct the tier_ object.
-    bool initTier(Tier tier);
-
+    bool hasTier2() const;
+    void setTier2(UniqueLinkDataTier linkData) const;
     Tiers tiers() const;
+
     const LinkDataTier& linkData(Tier tier) const;
     LinkDataTier& linkData(Tier tier);
 
