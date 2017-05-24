@@ -1272,6 +1272,9 @@ pref("pdfjs.previousHandler.alwaysAskBeforeHandling", false);
 // (This is intentionally on the high side; see bug 746055.)
 pref("image.mem.max_decoded_image_kb", 256000);
 
+// Is the sidebar positioned ahead of the content browser
+pref("sidebar.position_start", true);
+
 // Activation from inside of share panel is possible if activationPanelEnabled
 // is true. Pref'd off for release while usage testing is done through beta.
 pref("social.share.activationPanelEnabled", true);

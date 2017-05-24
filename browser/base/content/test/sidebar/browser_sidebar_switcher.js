@@ -1,4 +1,8 @@
 
+registerCleanupFunction(() => {
+  SidebarUI.hide();
+});
+
 function showSwitcherPanelPromise() {
   return new Promise(resolve => {
     SidebarUI._switcherPanel.addEventListener("popupshown", () => {
