@@ -1,5 +1,7 @@
 "use strict";
 
+// List these manually due to bug 1366719.
+/* global Cc, Ci, Cu */
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
@@ -24,5 +26,7 @@ Components.manager.addBootstrappedManifestLocation(extensionDir);
 Cu.import("resource://gre/modules/Timer.jsm");
 const self = {}; // eslint-disable-line no-unused-vars
 
+/* global sinon */
+/* exported sinon */
 const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
 loader.loadSubScript("resource://testing-common/sinon-1.16.1.js");
