@@ -479,6 +479,12 @@ public:
   virtual void
   SetMozBackgroundRequest(bool aMozBackgroundRequest, ErrorResult& aRv) override;
 
+  virtual uint16_t
+  ErrorCode() const override
+  {
+    return static_cast<uint16_t>(mErrorLoad);
+  }
+
   virtual bool
   MozAnon() const override;
 

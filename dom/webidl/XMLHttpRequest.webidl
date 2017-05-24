@@ -155,6 +155,11 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [ChromeOnly, Exposed=Window]
   void setOriginAttributes(optional OriginAttributesDictionary originAttributes);
 
+  // Only works on MainThread.
+  // Its permanence is to be evaluated in bug 1368540 for Firefox 60.
+  [ChromeOnly]
+  readonly attribute unsigned short errorCode;
+
   readonly attribute boolean mozAnon;
   readonly attribute boolean mozSystem;
 };
