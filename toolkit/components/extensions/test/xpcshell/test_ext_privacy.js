@@ -214,45 +214,59 @@ add_task(async function test_privacy() {
   await promiseShutdownManager();
 });
 
-add_task(async function test_privacy_webRTCIPHandlingPolicy() {
-  // Create a object to hold the default values of all the prefs.
-  const PREF_DEFAULTS = {
-    "media.peerconnection.ice.default_address_only": null,
-    "media.peerconnection.ice.no_host": null,
-    "media.peerconnection.ice.proxy_only": null,
+// This test can be used for any settings that are added which utilize only
+// boolean prefs.
+add_task(async function test_privacy_boolean_prefs() {
+  // Create an object to hold the values to which we will initialize the prefs.
+  const SETTINGS = {
+    "network.webRTCIPHandlingPolicy": {
+      "media.peerconnection.ice.default_address_only": false,
+      "media.peerconnection.ice.no_host": false,
+      "media.peerconnection.ice.proxy_only": false,
+    },
+    "network.peerConnectionEnabled": {
+      "media.peerconnection.enabled": true,
+    },
   };
 
-  // Store the default values of each pref.
-  for (let pref in PREF_DEFAULTS) {
-    PREF_DEFAULTS[pref] = ExtensionPreferencesManager.getDefaultValue(pref);
+  async function background() {
+    browser.test.onMessage.addListener(async (msg, ...args) => {
+      let data = args[0];
+      // The second argument is the end of the api name,
+      // e.g., "network.webRTCIPHandlingPolicy".
+      let apiObj = args[1].split(".").reduce((o, i) => o[i], browser.privacy);
+      let settingData;
+      switch (msg) {
+        case "set":
+          await apiObj.set(data);
+          settingData = await apiObj.get({});
+          browser.test.sendMessage("settingData", settingData);
+          break;
+
+        case "clear":
+          await apiObj.clear(data);
+          settingData = await apiObj.get({});
+          browser.test.sendMessage("settingData", settingData);
+          break;
+      }
+    });
+  }
+
+  // Set prefs to our initial values.
+  for (let setting in SETTINGS) {
+    for (let pref in SETTINGS[setting]) {
+      Preferences.set(pref, SETTINGS[setting][pref]);
+    }
   }
 
   do_register_cleanup(() => {
     // Reset the prefs.
-    for (let pref in PREF_DEFAULTS) {
-      Preferences.reset(pref);
+    for (let setting in SETTINGS) {
+      for (let pref in SETTINGS[setting]) {
+        Preferences.reset(pref);
+      }
     }
   });
-
-  async function background() {
-    browser.test.onMessage.addListener(async (msg, value) => {
-      let rtcData;
-      switch (msg) {
-        case "set":
-          await browser.privacy.network.webRTCIPHandlingPolicy.set({value});
-          rtcData = await browser.privacy.network.webRTCIPHandlingPolicy.get({});
-          browser.test.sendMessage("rtcData", rtcData);
-          break;
-
-        case "clear":
-          await browser.privacy.network.webRTCIPHandlingPolicy.clear({});
-          rtcData = await browser.privacy.network.webRTCIPHandlingPolicy.get({});
-          browser.test.sendMessage("rtcData", rtcData);
-          break;
-
-      }
-    });
-  }
 
   let extension = ExtensionTestUtils.loadExtension({
     background,
@@ -265,33 +279,35 @@ add_task(async function test_privacy_webRTCIPHandlingPolicy() {
   await promiseStartupManager();
   await extension.startup();
 
-  async function testSetting(value, truePrefs) {
-    extension.sendMessage("set", value);
-    let data = await extension.awaitMessage("rtcData");
+  async function testSetting(setting, value, truePrefs) {
+    extension.sendMessage("set", {value: value}, setting);
+    let data = await extension.awaitMessage("settingData");
     equal(data.value, value);
-    for (let pref in PREF_DEFAULTS) {
+    for (let pref in SETTINGS[setting]) {
       let prefValue = Preferences.get(pref);
-      if (truePrefs.includes(pref)) {
-        ok(prefValue, `${pref} set correctly for ${value}`);
-      } else {
-        equal(prefValue, PREF_DEFAULTS[pref], `${pref} contains default value for ${value}`);
-      }
+      equal(prefValue, truePrefs.includes(pref), `${pref} set correctly for ${value}`);
     }
   }
 
   await testSetting(
+    "network.webRTCIPHandlingPolicy",
     "default_public_and_private_interfaces",
     ["media.peerconnection.ice.default_address_only"]);
 
   await testSetting(
+    "network.webRTCIPHandlingPolicy",
     "default_public_interface_only",
     ["media.peerconnection.ice.default_address_only", "media.peerconnection.ice.no_host"]);
 
   await testSetting(
+    "network.webRTCIPHandlingPolicy",
     "disable_non_proxied_udp",
     ["media.peerconnection.ice.proxy_only"]);
 
-  await testSetting("default", []);
+  await testSetting("network.webRTCIPHandlingPolicy", "default", []);
+
+  await testSetting("network.peerConnectionEnabled", false, []);
+  await testSetting("network.peerConnectionEnabled", true, ["media.peerconnection.enabled"]);
 
   await extension.unload();
 
