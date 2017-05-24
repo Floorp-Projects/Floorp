@@ -395,6 +395,7 @@
        type="arrow"
        position="after_start"
        hidden="true"
+       flip="slide"
        orient="vertical"
        noautofocus="true"
        noautohide="true"

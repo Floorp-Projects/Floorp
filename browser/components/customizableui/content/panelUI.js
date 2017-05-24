@@ -719,7 +719,7 @@ const PanelUI = {
       return;
     }
 
-    if (window.fullScreen && FullScreen.navToolboxHidden) {
+    if ((window.fullScreen && FullScreen.navToolboxHidden) || document.fullscreenElement) {
       this._hidePopup();
       return;
     }
@@ -737,8 +737,10 @@ const PanelUI = {
         this._showBannerItem(notifications[0]);
       }
     } else if (doorhangers.length > 0) {
+      let autoHideFullScreen = Services.prefs.getBoolPref("browser.fullscreen.autohide", false) &&
+                               Services.appinfo.OS !== "Darwin";
       // Only show the doorhanger if the window is focused and not fullscreen
-      if (window.fullScreen || Services.focus.activeWindow !== window) {
+      if ((window.fullScreen && autoHideFullScreen) || Services.focus.activeWindow !== window) {
         this._hidePopup();
         this._showBadge(doorhangers[0]);
         this._showBannerItem(doorhangers[0]);
