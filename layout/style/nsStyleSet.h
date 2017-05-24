@@ -333,7 +333,8 @@ class nsStyleSet final
   void Shutdown();
 
   // Notes that a style sheet has changed.
-  void RecordStyleSheetChange(mozilla::CSSStyleSheet* aStyleSheet);
+  void RecordStyleSheetChange(mozilla::CSSStyleSheet* aStyleSheet,
+                              mozilla::StyleSheet::ChangeType);
 
   // Notes that style sheets have changed in a shadow root.
   void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot);

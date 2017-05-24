@@ -4564,13 +4564,14 @@ nsIPresShell::RestyleForCSSRuleChanges()
 }
 
 void
-PresShell::RecordStyleSheetChange(StyleSheet* aStyleSheet)
+PresShell::RecordStyleSheetChange(StyleSheet* aStyleSheet,
+                                  StyleSheet::ChangeType aChangeType)
 {
   // too bad we can't check that the update is UPDATE_STYLE
   NS_ASSERTION(mUpdateCount != 0, "must be in an update");
   MOZ_ASSERT(aStyleSheet->IsServo() == mStyleSet->IsServo());
 
-  mStyleSet->RecordStyleSheetChange(aStyleSheet);
+  mStyleSet->RecordStyleSheetChange(aStyleSheet, aChangeType);
 }
 
 void
@@ -4581,7 +4582,7 @@ PresShell::StyleSheetAdded(StyleSheet* aStyleSheet,
   NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
 
   if (aStyleSheet->IsApplicable() && aStyleSheet->HasRules()) {
-    RecordStyleSheetChange(aStyleSheet);
+    RecordStyleSheetChange(aStyleSheet, StyleSheet::ChangeType::Added);
   }
 }
 
@@ -4593,7 +4594,7 @@ PresShell::StyleSheetRemoved(StyleSheet* aStyleSheet,
   NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
 
   if (aStyleSheet->IsApplicable() && aStyleSheet->HasRules()) {
-    RecordStyleSheetChange(aStyleSheet);
+    RecordStyleSheetChange(aStyleSheet, StyleSheet::ChangeType::Removed);
   }
 }
 
@@ -4601,26 +4602,27 @@ void
 PresShell::StyleSheetApplicableStateChanged(StyleSheet* aStyleSheet)
 {
   if (aStyleSheet->HasRules()) {
-    RecordStyleSheetChange(aStyleSheet);
+    RecordStyleSheetChange(
+        aStyleSheet, StyleSheet::ChangeType::ApplicableStateChanged);
   }
 }
 
 void
 PresShell::StyleRuleChanged(StyleSheet* aStyleSheet)
 {
-  RecordStyleSheetChange(aStyleSheet);
+  RecordStyleSheetChange(aStyleSheet, StyleSheet::ChangeType::RuleChanged);
 }
 
 void
 PresShell::StyleRuleAdded(StyleSheet* aStyleSheet)
 {
-  RecordStyleSheetChange(aStyleSheet);
+  RecordStyleSheetChange(aStyleSheet, StyleSheet::ChangeType::RuleAdded);
 }
 
 void
 PresShell::StyleRuleRemoved(StyleSheet* aStyleSheet)
 {
-  RecordStyleSheetChange(aStyleSheet);
+  RecordStyleSheetChange(aStyleSheet, StyleSheet::ChangeType::RuleRemoved);
 }
 
 nsPlaceholderFrame*
