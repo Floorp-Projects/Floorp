@@ -519,6 +519,9 @@ int main()
 #endif
       TestHook(TestTlsAlloc, "kernel32.dll", "TlsAlloc") &&
       TestHook(TestTlsFree, "kernel32.dll", "TlsFree") &&
+#ifdef _M_IX86
+      TestDetour("kernel32.dll", "BaseThreadInitThunk") &&
+#endif
       TestDetour("ntdll.dll", "LdrLoadDll")) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
     return 0;
