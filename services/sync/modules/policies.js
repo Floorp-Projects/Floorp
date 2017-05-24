@@ -184,9 +184,11 @@ SyncScheduler.prototype = {
           } else {
             this._log.warn(`Resync attempt ${this._resyncs} exceeded ` +
                            `maximum ${this.maxResyncs}`);
+            Svc.Obs.notify("weave:service:resyncs-finished");
           }
         } else {
           this._resyncs = 0;
+          Svc.Obs.notify("weave:service:resyncs-finished");
         }
 
         this._syncErrors = 0;
