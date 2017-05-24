@@ -14,15 +14,15 @@ In addition to the core ping an event ping for UI telemetry is generated and sen
 
 #### Settings
 
-As part of the event ping the most recent state of the user's setting is sent:
+As part of the event ping the most recent state of the user's setting is sent (default values in **bold**):
 
-* Search engine selection (`pref_search_engine`: search engine identifier)
-* Block ad trackers (`pref_privacy_block_ads`: true/false)
-* Block analytics trackers (`pref_privacy_block_other`: true/false)
-* Block social trackers (`pref_privacy_block_social`: true/false)
-* Block content trackers (`pref_privacy_block_analytics`: true/false)
-* Block web fonts (`pref_performance_block_webfonts`: true/false)
-* Block images (`pref_performance_block_images`: true/false)
+* Search engine selection (`pref_search_engine`: search engine identifier; *default value depends on user's locale*)
+* Block ad trackers (`pref_privacy_block_ads`: **true**/false)
+* Block analytics trackers (`pref_privacy_block_other`: true/**false**)
+* Block social trackers (`pref_privacy_block_social`: **true**/false)
+* Block content trackers (`pref_privacy_block_analytics`: **true**/false)
+* Block web fonts (`pref_performance_block_webfonts`: true/**false**)
+* Block images (`pref_performance_block_images`: true/**false**)
 
 #### Events
 
