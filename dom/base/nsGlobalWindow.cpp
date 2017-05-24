@@ -9674,7 +9674,7 @@ nsGlobalWindow::NotifyWindowIDDestroyed(const char* aTopic)
 {
   nsCOMPtr<nsIRunnable> runnable = new WindowDestroyedEvent(this, mWindowID, aTopic);
   nsresult rv =
-    NS_IdleDispatchToCurrentThread(runnable.forget());
+    Dispatch("WindowDestroyedEvent", TaskCategory::Other, runnable.forget());
   if (NS_SUCCEEDED(rv)) {
     mNotifiedIDDestroyed = true;
   }
