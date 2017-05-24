@@ -26,6 +26,10 @@
 namespace mozilla {
 namespace widget {
 
+namespace detail {
+class DoneCommitListBuildCallback;
+} // namespace detail
+
 class JumpListBuilder : public nsIJumpListBuilder, 
                         public nsIObserver
 {
@@ -39,7 +43,7 @@ public:
   JumpListBuilder();
 
 protected:
-  static bool sBuildingList; 
+  static Atomic<bool> sBuildingList;
 
 private:
   RefPtr<ICustomDestinationList> mJumpListMgr;
@@ -51,6 +55,7 @@ private:
   nsresult TransferIObjectArrayToIMutableArray(IObjectArray *objArray, nsIMutableArray *removedItems);
   nsresult RemoveIconCacheForItems(nsIMutableArray *removedItems);
   nsresult RemoveIconCacheForAllItems();
+  void DoCommitListBuild(RefPtr<detail::DoneCommitListBuildCallback> aCallback);
 
   friend class WinTaskbar;
 };

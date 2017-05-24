@@ -8,6 +8,12 @@
 interface nsIArray;
 interface nsIMutableArray;
 
+[scriptable, function, uuid(5131a62a-e99f-4631-9138-751f8aad1ae4)]
+interface nsIJumpListCommittedCallback : nsISupports
+{
+  void done(in boolean result);
+};
+
 [scriptable, uuid(1FE6A9CD-2B18-4dd5-A176-C2B32FA4F683)]
 interface nsIJumpListBuilder : nsISupports
 {
@@ -136,9 +142,11 @@ interface nsIJumpListBuilder : nsISupports
   /**
    * Commits the current jump list build to the Taskbar.
    *
-   * @returns true if the operation completed successfully.
+   * @param callback
+   *        Receives one argument, which is true if the operation completed
+   *        successfully, otherwise it is false.
    */
-  boolean commitListBuild();
+  void commitListBuild([optional] in nsIJumpListCommittedCallback callback);
 
   /**
    * Deletes any currently applied taskbar jump list for this application.
