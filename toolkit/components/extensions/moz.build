@@ -48,10 +48,12 @@ DIRS += [
 EXPORTS.mozilla.extensions = [
     'MatchGlob.h',
     'MatchPattern.h',
+    'WebExtensionPolicy.h',
 ]
 
 UNIFIED_SOURCES += [
     'MatchPattern.cpp',
+    'WebExtensionPolicy.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'
