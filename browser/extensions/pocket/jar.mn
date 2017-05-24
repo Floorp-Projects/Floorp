@@ -9,14 +9,7 @@
 % skin pocket classic/1.0 %skin/windows/ os=WINNT
 % skin pocket-shared classic/1.0 %skin/shared/
   content/  (content/*)
-  skin/linux/ (skin/linux/*.png)
-* skin/linux/pocket.css (skin/linux/pocket.css)
-  skin/osx/ (skin/osx/*.png)
-* skin/osx/pocket.css (skin/osx/pocket.css)
-  skin/shared (skin/shared/*)
-  skin/windows/ (skin/windows/*.png)
-* skin/windows/pocket.css (skin/windows/pocket.css)
-
+  skin/  (skin/*)
 # windows overrides
 % override chrome://pocket/skin/menuPanel.png             chrome://pocket/skin/menuPanel-aero.png            os=WINNT osversion=6
 % override chrome://pocket/skin/menuPanel.png             chrome://pocket/skin/menuPanel-aero.png            os=WINNT osversion=6.1
