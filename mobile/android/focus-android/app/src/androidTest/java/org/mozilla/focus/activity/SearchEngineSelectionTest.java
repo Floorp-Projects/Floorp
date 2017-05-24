@@ -52,7 +52,7 @@ public class SearchEngineSelectionTest {
 
         UiObject SearchEngineSelection = TestHelper.settingsList.getChild(new UiSelector()
                 .className("android.widget.LinearLayout")
-                .instance(0));
+                .instance(1));
         UiObject searchName = SearchEngineSelection.getChild(new UiSelector()
                 .resourceId("android:id/title")
                 .enabled(true));
