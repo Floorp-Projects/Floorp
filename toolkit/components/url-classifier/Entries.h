@@ -356,16 +356,6 @@ struct CachedFullHashResponse {
 
 typedef nsClassHashtable<nsUint32HashKey, CachedFullHashResponse> FullHashResponseMap;
 
-template<class T>
-void
-CopyClassHashTable(const T& aSource, T& aDestination)
-{
-  for (auto iter = aSource.ConstIter(); !iter.Done(); iter.Next()) {
-    auto value = aDestination.LookupOrAdd(iter.Key());
-    *value = *(iter.Data());
-  }
-}
-
 } // namespace safebrowsing
 } // namespace mozilla
 
