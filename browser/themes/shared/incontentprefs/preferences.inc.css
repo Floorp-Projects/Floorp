@@ -615,14 +615,14 @@ description > html|a {
   pointer-events: none;
   padding: 0 10px;
   bottom: 100%;
-  background-color: #ffe352;
+  background-color: #ffe900;
 }
 
 .search-tooltip::before {
   position: absolute;
   content: "";
   border: 6px solid transparent;
-  border-top-color: #ffe352;
+  border-top-color: #ffe900;
   top: 100%;
   offset-inline-start: calc(50% - 6px);
 }

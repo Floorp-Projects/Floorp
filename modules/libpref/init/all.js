@@ -1309,6 +1309,14 @@ pref("privacy.trackingprotection.enabled",  false);
 pref("privacy.trackingprotection.pbmode.enabled",  true);
 // Annotate channels based on the tracking protection list in all modes
 pref("privacy.trackingprotection.annotate_channels",  true);
+// First Party Isolation (double keying), disabled by default
+pref("privacy.firstparty.isolate",                        false);
+// If false, two windows in the same domain with different first party domains
+// (top level URLs) can access resources through window.opener.
+// This pref is effective only when "privacy.firstparty.isolate" is true.
+pref("privacy.firstparty.isolate.restrict_opener_access", true);
+// Anti-fingerprinting, disabled by default
+pref("privacy.resistFingerprinting", false);
 // Lower the priority of network loads for resources on the tracking protection list.
 // Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
 #ifdef NIGHTLY_BUILD
@@ -1675,9 +1683,9 @@ pref("network.http.keep_empty_response_headers_as_empty_string", true);
 pref("network.http.max_response_header_size", 393216);
 
 // If we should attempt to race the cache and network
-pref("network.http.rcwn.enabled", false);
-pref("network.http.rcwn.cache_queue_normal_threshold", 50);
-pref("network.http.rcwn.cache_queue_priority_threshold", 10);
+pref("network.http.rcwn.enabled", true);
+pref("network.http.rcwn.cache_queue_normal_threshold", 8);
+pref("network.http.rcwn.cache_queue_priority_threshold", 2);
 // We might attempt to race the cache with the network only if a resource
 // is smaller than this size.
 pref("network.http.rcwn.small_resource_size_kb", 256);
@@ -5126,6 +5134,10 @@ pref("gfx.vr.osvr.clientLibPath", "");
 pref("gfx.vr.osvr.clientKitLibPath", "");
 // Puppet device, used for simulating VR hardware within tests and dev tools
 pref("dom.vr.puppet.enabled", false);
+// Allow displaying the result of vr submitframe (0: disable, 1: store the
+// result as a base64 image, 2: show it on the screen).
+pref("dom.vr.puppet.submitframe", 0);
+// VR test system.
 pref("dom.vr.test.enabled", false);
 // MMS UA Profile settings
 pref("wap.UAProf.url", "");

@@ -63,7 +63,9 @@
      property names like 'border-bottom-right-radius' without ellipsis) */
   --timeline-sidebar-width: 200px;
   /* How high should animations displayed in the timeline be */
-  --timeline-animation-height: 20px;
+  --timeline-animation-height: 30px;
+  /* How high should animated properties displayed in the details view be */
+  --detail-animation-height: 20px;
   /* The size of a keyframe marker in the keyframes diagram */
   --keyframes-marker-size: 10px;
   /* The color of the time graduation borders */
@@ -244,7 +246,8 @@ body {
 .animation-timeline {
   position: relative;
   width: 100%;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Useful for positioning animations or keyframes in the timeline */
@@ -257,6 +260,10 @@ body {
      selected easily */
   right: var(--keyframes-marker-size);
   height: var(--timeline-animation-height);
+}
+
+.animation-detail .track-container {
+  height: var(--detail-animation-height);
 }
 
 .animation-timeline .scrubber-wrapper {
@@ -306,9 +313,9 @@ body {
 }
 
 .animation-timeline .time-header {
-  min-height: var(--timeline-animation-height);
   cursor: col-resize;
   -moz-user-select: none;
+  height: 100%;
 }
 
 .animated-properties-header .header-item,
@@ -325,13 +332,13 @@ body {
   background-color: var(--theme-body-background);
   border-bottom: 1px solid var(--time-graduation-border-color);
   z-index: 3;
-  height: var(--timeline-animation-height);
+  height: var(--toolbar-height);
   width: 100%;
   overflow: hidden;
 }
 
 .animation-timeline .time-body {
-  top: var(--timeline-animation-height);
+  top: var(--toolbar-height);
 }
 
 .progress-tick-container .progress-tick,
@@ -402,9 +409,14 @@ body {
   height: 100%;
 }
 
-.animation-timeline .animation .summary path {
-  fill: var(--timeline-background-color);
+.animation-timeline .animation .summary .effect-easing path {
+  fill: none;
   stroke: var(--timeline-border-color);
+  stroke-dasharray: 2px 2px;
+}
+
+.animation-timeline .animation .summary .keyframes-easing path {
+  fill: var(--timeline-background-color);
 }
 
 .animation-timeline .animation .summary .infinity.copied {
@@ -420,26 +432,27 @@ body {
 
 .animation-timeline .animation .name {
   position: absolute;
-  color: var(--theme-content-color3);
   top: 0px;
   left: 0px;
   height: 100%;
   width: 100%;
-  display: flex;
-  align-items: center;
-  padding: 0 2px;
-  box-sizing: border-box;
   --fast-track-icon-width: 15px;
-  z-index: 1;
 }
 
-.animation-timeline .animation .name div {
-  /* Flex items don't support text-overflow, so a child div is used */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  background-color: rgba(255, 255, 255, 0.7);
-  max-width: 50%;
+.animation-timeline .animation .name svg {
+  height: 100%;
+  width: calc(100% - 20px);
+}
+
+.animation-timeline .animation .name text {
+  fill: var(--theme-focus-outline-color);
+  stroke: var(--theme-body-background);
+  stroke-width: 4;
+  stroke-opacity: .5;
+  stroke-linejoin: round;
+  paint-order: stroke;
+  text-anchor: end;
+  dominant-baseline: middle;
 }
 
 .animation-timeline .fast-track .name::after {
@@ -447,7 +460,7 @@ body {
   content: "";
   display: block;
   position: absolute;
-  top: 1px;
+  top: 5px;
   right: 0;
   height: 100%;
   width: var(--fast-track-icon-width);
@@ -542,7 +555,7 @@ body {
 /* Inline keyframes info in the timeline */
 
 .animation-detail .animated-properties .property {
-  height: var(--timeline-animation-height);
+  height: var(--detail-animation-height);
   position: relative;
 }
 
@@ -749,8 +762,8 @@ body {
 .animated-properties-header {
   -moz-user-select: none;
   position: sticky;
-  top: var(--timeline-animation-height);
-  min-height: var(--timeline-animation-height);
+  top: var(--toolbar-height);
+  min-height: var(--toolbar-height);
   padding-top: 2px;
   z-index: 3;
   background-color: var(--theme-body-background);
@@ -776,7 +789,7 @@ body {
 
 .animated-properties-body .property:last-child {
   /* To display animation progress graph clealy when the scroll is bottom. */
-  padding-bottom: calc(var(--timeline-animation-height) / 2);
+  padding-bottom: calc(var(--detail-animation-height) / 2);
 }
 
 .animated-properties .progress-indicator-wrapper {
