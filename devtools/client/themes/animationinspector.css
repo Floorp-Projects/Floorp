@@ -246,7 +246,8 @@ body {
 .animation-timeline {
   position: relative;
   width: 100%;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Useful for positioning animations or keyframes in the timeline */
