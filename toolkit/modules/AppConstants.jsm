@@ -354,4 +354,12 @@ this.AppConstants = Object.freeze({
 #else
     false,
 #endif
+
+  MOZ_PHOTON_ANIMATIONS:
+#ifdef MOZ_PHOTON_ANIMATIONS
+    true,
+#else
+    false,
+#endif
+
 });
