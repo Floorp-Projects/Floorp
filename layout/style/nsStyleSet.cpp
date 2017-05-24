@@ -33,6 +33,7 @@
 #include "nsAnimationManager.h"
 #include "nsStyleSheetService.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "GeckoProfiler.h"
 #include "nsHTMLCSSStyleSheet.h"
 #include "nsHTMLStyleSheet.h"
@@ -210,6 +211,7 @@ nsStyleSet::IsCSSSheetType(SheetType aSheetType)
 nsStyleSet::nsStyleSet()
   : mRuleTree(nullptr),
     mBatching(0),
+    mStylesHaveChanged(0),
     mInShutdown(false),
     mInGC(false),
     mAuthorStyleDisabled(false),
@@ -2366,6 +2368,68 @@ nsStyleSet::Shutdown()
   MOZ_ASSERT(mUnusedRuleNodeCount == 0);
 }
 
+void
+nsStyleSet::RecordStyleSheetChange(CSSStyleSheet* aStyleSheet)
+{
+  MOZ_ASSERT(mBatching != 0, "Should be in an update");
+
+  if (mStylesHaveChanged) {
+    return;
+  }
+
+  if (Element* scopeElement = aStyleSheet->GetScopeElement()) {
+    mChangedScopeStyleRoots.AppendElement(scopeElement);
+    return;
+  }
+
+  mStylesHaveChanged = true;
+  // If we need to restyle everything, no need to restyle individual
+  // scoped style roots.
+  mChangedScopeStyleRoots.Clear();
+}
+
+void
+nsStyleSet::RecordShadowStyleChange(ShadowRoot* aShadowRoot)
+{
+  if (mStylesHaveChanged) {
+    return;
+  }
+
+  mChangedScopeStyleRoots.AppendElement(aShadowRoot->GetHost()->AsElement());
+}
+
+void
+nsStyleSet::InvalidateStyleForCSSRuleChanges()
+{
+  MOZ_ASSERT_IF(mStylesHaveChanged, mChangedScopeStyleRoots.IsEmpty());
+
+  AutoTArray<RefPtr<mozilla::dom::Element>, 1> scopeRoots;
+  mChangedScopeStyleRoots.SwapElements(scopeRoots);
+  mStylesHaveChanged = false;
+
+  nsPresContext* presContext = PresContext();
+  RestyleManager* restyleManager = presContext->RestyleManager();
+  Element* root = presContext->Document()->GetRootElement();
+  if (!root) {
+    // No content to restyle
+    return;
+  }
+
+  if (scopeRoots.IsEmpty()) {
+    // If scopeRoots is empty, we know that mStylesHaveChanged was true at
+    // the beginning of this function, and that we need to restyle the whole
+    // document.
+    restyleManager->PostRestyleEventForCSSRuleChanges(root,
+                                                      eRestyle_Subtree,
+                                                      nsChangeHint(0));
+  } else {
+    for (Element* scopeRoot : scopeRoots) {
+      restyleManager->PostRestyleEventForCSSRuleChanges(scopeRoot,
+                                                        eRestyle_Subtree,
+                                                        nsChangeHint(0));
+    }
+  }
+}
 
 void
 nsStyleSet::GCRuleTrees()
