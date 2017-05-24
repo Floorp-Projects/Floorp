@@ -168,6 +168,9 @@ public:
   virtual void
   SetOriginAttributes(const mozilla::dom::OriginAttributesDictionary& aAttrs) = 0;
 
+  virtual uint16_t
+  ErrorCode() const = 0;
+
   virtual bool
   MozAnon() const = 0;
 
