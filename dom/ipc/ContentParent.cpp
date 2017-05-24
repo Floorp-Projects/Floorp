@@ -4600,7 +4600,8 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                                 nsCString* aURLToLoad,
                                 TextureFactoryIdentifier* aTextureFactoryIdentifier,
                                 uint64_t* aLayersId,
-                                CompositorOptions* aCompositorOptions)
+                                CompositorOptions* aCompositorOptions,
+                                uint32_t* aMaxTouchPoints)
 {
   // We always expect to open a new window here. If we don't, it's an error.
   *aWindowIsNew = true;
@@ -4653,6 +4654,9 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
     *aResult = NS_ERROR_FAILURE;
   }
   *aCompositorOptions = rfp->GetCompositorOptions();
+
+  nsCOMPtr<nsIWidget> widget = newTab->GetWidget();
+  *aMaxTouchPoints = widget ? widget->GetMaxTouchPoints() : 0;
 
   return IPC_OK();
 }

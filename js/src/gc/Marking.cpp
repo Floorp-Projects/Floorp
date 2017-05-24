@@ -157,23 +157,22 @@ IsMovingTracer(JSTracer *trc)
 }
 #endif
 
-template <typename T> bool ThingIsPermanentAtomOrWellKnownSymbol(T* thing) { return false; }
-template <> bool ThingIsPermanentAtomOrWellKnownSymbol<JSString>(JSString* str) {
+bool ThingIsPermanentAtomOrWellKnownSymbol(JSString* str) {
     return str->isPermanentAtom();
 }
-template <> bool ThingIsPermanentAtomOrWellKnownSymbol<JSFlatString>(JSFlatString* str) {
+bool ThingIsPermanentAtomOrWellKnownSymbol(JSFlatString* str) {
     return str->isPermanentAtom();
 }
-template <> bool ThingIsPermanentAtomOrWellKnownSymbol<JSLinearString>(JSLinearString* str) {
+bool ThingIsPermanentAtomOrWellKnownSymbol(JSLinearString* str) {
     return str->isPermanentAtom();
 }
-template <> bool ThingIsPermanentAtomOrWellKnownSymbol<JSAtom>(JSAtom* atom) {
+bool ThingIsPermanentAtomOrWellKnownSymbol(JSAtom* atom) {
     return atom->isPermanent();
 }
-template <> bool ThingIsPermanentAtomOrWellKnownSymbol<PropertyName>(PropertyName* name) {
+bool ThingIsPermanentAtomOrWellKnownSymbol(PropertyName* name) {
     return name->isPermanent();
 }
-template <> bool ThingIsPermanentAtomOrWellKnownSymbol<JS::Symbol>(JS::Symbol* sym) {
+bool ThingIsPermanentAtomOrWellKnownSymbol(JS::Symbol* sym) {
     return sym->isWellKnownSymbol();
 }
 
