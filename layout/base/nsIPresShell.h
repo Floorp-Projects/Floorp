@@ -246,29 +246,6 @@ public:
       mFrameArena.FreeByObjectID(aID, aPtr);
   }
 
-  /**
-   * Other objects closely related to the frame tree that are allocated
-   * from a separate set of per-size free lists.  Note that different types
-   * of objects that has the same size are allocated from the same list.
-   * AllocateMisc does *not* clear the memory that it returns.
-   * AllocateMisc is infallible and will abort on out-of-memory.
-   *
-   * @deprecated use AllocateByObjectID/FreeByObjectID instead
-   */
-  void* AllocateMisc(size_t aSize)
-  {
-    void* result = mFrameArena.AllocateBySize(aSize);
-    RecordAlloc(result);
-    return result;
-  }
-
-  void FreeMisc(size_t aSize, void* aPtr)
-  {
-    RecordFree(aPtr);
-    if (!mIsDestroying)
-      mFrameArena.FreeBySize(aSize, aPtr);
-  }
-
   template<typename T>
   void RegisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr)
   {
