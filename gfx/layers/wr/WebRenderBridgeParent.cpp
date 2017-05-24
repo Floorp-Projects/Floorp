@@ -275,7 +275,7 @@ WebRenderBridgeParent::RecvDeleteCompositorAnimations(InfallibleTArray<uint64_t>
     return IPC_OK();
   }
 
-  uint64_t storageId = mWidget ? 0 : mPipelineId.mHandle;
+  uint64_t storageId = mWidget ? 0 : wr::AsUint64(mPipelineId);
   CompositorAnimationStorage* storage =
     mCompositorBridge->GetAnimationStorage(storageId);
   MOZ_ASSERT(storage);
