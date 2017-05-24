@@ -241,6 +241,17 @@ ProgressGraphHelper.prototype = {
            : createPathSegments(startTime, endTime,
                                 minSegmentDuration, minProgressThreshold, this);
   },
+
+  /**
+   * Append path element.
+   * @param {Element} parentEl - Parent element of this appended path element.
+   * @param {Array} pathSegments - Path segments. Please see createPathSegments.
+   * @param {String} cls - Class name.
+   * @return {Element} path element.
+   */
+  appendPathElement: function (parentEl, pathSegments, cls) {
+    return appendPathElement(parentEl, pathSegments, cls);
+  },
 };
 
 exports.ProgressGraphHelper = ProgressGraphHelper;
@@ -480,7 +491,6 @@ function createPathSegments(startTime, endTime, minSegmentDuration,
 
   return pathSegments;
 }
-exports.createPathSegments = createPathSegments;
 
 /**
  * Append path element.
@@ -526,7 +536,6 @@ function appendPathElement(parentEl, pathSegments, cls, isClosePathNeeded = true
     }
   });
 }
-exports.appendPathElement = appendPathElement;
 
 /**
  * Create the path segments from given keyframes.
