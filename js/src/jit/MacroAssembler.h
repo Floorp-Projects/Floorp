@@ -1479,6 +1479,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Assert invariants that should be true within any non-exit-stub wasm code.
     void wasmAssertNonExitInvariants(Register activation);
 
+    // Perform a stack-overflow test, branching to the given Label on overflow.
+    void wasmEmitStackCheck(Register sp, Register scratch, Label* onOverflow);
+
   public:
     // ========================================================================
     // Clamping functions.

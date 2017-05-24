@@ -80,10 +80,6 @@ MOZ_MUST_USE bool
 Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
      MutableHandleWasmInstanceObject instanceObj);
 
-// The field name of the export object on the instance object.
-
-extern const char InstanceExportField[];
-
 // These accessors can be used to probe JS values for being an exported wasm
 // function.
 
@@ -148,9 +144,12 @@ class WasmModuleObject : public NativeObject
 class WasmInstanceObject : public NativeObject
 {
     static const unsigned INSTANCE_SLOT = 0;
-    static const unsigned EXPORTS_SLOT = 1;
-    static const unsigned SCOPES_SLOT = 2;
+    static const unsigned EXPORTS_OBJ_SLOT = 1;
+    static const unsigned EXPORTS_SLOT = 2;
+    static const unsigned SCOPES_SLOT = 3;
     static const ClassOps classOps_;
+    static bool exportsGetterImpl(JSContext* cx, const CallArgs& args);
+    static bool exportsGetter(JSContext* cx, unsigned argc, Value* vp);
     bool isNewborn() const;
     static void finalize(FreeOp* fop, JSObject* obj);
     static void trace(JSTracer* trc, JSObject* obj);
@@ -176,7 +175,7 @@ class WasmInstanceObject : public NativeObject
     WeakScopeMap& scopes() const;
 
   public:
-    static const unsigned RESERVED_SLOTS = 3;
+    static const unsigned RESERVED_SLOTS = 4;
     static const Class class_;
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
@@ -192,14 +191,17 @@ class WasmInstanceObject : public NativeObject
                                       Handle<FunctionVector> funcImports,
                                       const wasm::ValVector& globalImports,
                                       HandleObject proto);
+    void initExportsObj(JSObject& exportsObj);
+
     wasm::Instance& instance() const;
+    JSObject& exportsObj() const;
 
     static bool getExportedFunction(JSContext* cx,
                                     HandleWasmInstanceObject instanceObj,
                                     uint32_t funcIndex,
                                     MutableHandleFunction fun);
 
-    const wasm::CodeRange& getExportedFunctionCodeRange(HandleFunction fun);
+    const wasm::CodeRange& getExportedFunctionCodeRange(HandleFunction fun, wasm::Tier tier);
 
     static WasmFunctionScope* getFunctionScope(JSContext* cx,
                                                HandleWasmInstanceObject instanceObj,

@@ -7,7 +7,6 @@
 #include "mozilla/dom/ContentBridgeParent.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
-#include "mozilla/dom/ipc/MemoryStreamParent.h"
 #include "nsXULAppAPI.h"
 #include "nsIObserverService.h"
 #include "base/task.h"
@@ -88,13 +87,6 @@ ContentBridgeParent::RecvAsyncMessage(const nsString& aMsg,
                                             aPrincipal, aData);
 }
 
-PBlobParent*
-ContentBridgeParent::SendPBlobConstructor(PBlobParent* actor,
-                                          const BlobConstructorParams& params)
-{
-  return PContentBridgeParent::SendPBlobConstructor(actor, params);
-}
-
 PBrowserParent*
 ContentBridgeParent::SendPBrowserConstructor(PBrowserParent* aActor,
                                              const TabId& aTabId,
@@ -119,18 +111,6 @@ ContentBridgeParent::SendPParentToChildStreamConstructor(PParentToChildStreamPar
   return PContentBridgeParent::SendPParentToChildStreamConstructor(aActor);
 }
 
-PBlobParent*
-ContentBridgeParent::AllocPBlobParent(const BlobConstructorParams& aParams)
-{
-  return nsIContentParent::AllocPBlobParent(aParams);
-}
-
-bool
-ContentBridgeParent::DeallocPBlobParent(PBlobParent* aActor)
-{
-  return nsIContentParent::DeallocPBlobParent(aActor);
-}
-
 PIPCBlobInputStreamParent*
 ContentBridgeParent::SendPIPCBlobInputStreamConstructor(PIPCBlobInputStreamParent* aActor,
                                                         const nsID& aID,
@@ -138,18 +118,6 @@ ContentBridgeParent::SendPIPCBlobInputStreamConstructor(PIPCBlobInputStreamParen
 {
   return
     PContentBridgeParent::SendPIPCBlobInputStreamConstructor(aActor, aID, aSize);
-}
-
-PMemoryStreamParent*
-ContentBridgeParent::AllocPMemoryStreamParent(const uint64_t& aSize)
-{
-  return nsIContentParent::AllocPMemoryStreamParent(aSize);
-}
-
-bool
-ContentBridgeParent::DeallocPMemoryStreamParent(PMemoryStreamParent* aActor)
-{
-  return nsIContentParent::DeallocPMemoryStreamParent(aActor);
 }
 
 PIPCBlobInputStreamParent*

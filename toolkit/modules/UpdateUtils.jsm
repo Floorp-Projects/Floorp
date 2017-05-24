@@ -68,7 +68,7 @@ this.UpdateUtils = {
     url = url.replace(/%BUILD_ID%/g, Services.appinfo.appBuildID);
     url = url.replace(/%BUILD_TARGET%/g, Services.appinfo.OS + "_" + this.ABI);
     url = url.replace(/%OS_VERSION%/g, this.OSVersion);
-    url = url.replace(/%SYSTEM_CAPABILITIES%/g, gSystemCapabilities);
+    url = url.replace(/%SYSTEM_CAPABILITIES%/g, getSystemCapabilities());
     if (/%LOCALE%/.test(url)) {
       url = url.replace(/%LOCALE%/g, this.Locale);
     }
@@ -119,10 +119,32 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "Locale", function() {
   return null;
 });
 
+function getSystemCapabilities() {
+  return gInstructionSet + "," + getMemoryMB();
+}
+
 /**
- * Provides adhoc system capability information for application update.
+ * Gets the RAM size in megabytes. This will round the value because sysinfo
+ * doesn't always provide RAM in multiples of 1024.
  */
-XPCOMUtils.defineLazyGetter(this, "gSystemCapabilities", function aus_gSC() {
+function getMemoryMB() {
+  let memoryMB = "unknown";
+  try {
+    memoryMB = Services.sysinfo.getProperty("memsize");
+    if (memoryMB) {
+      memoryMB = Math.round(memoryMB / 1024 / 1024);
+    }
+  } catch (e) {
+    Cu.reportError("Error getting system info memsize property. " +
+                   "Exception: " + e);
+  }
+  return memoryMB;
+}
+
+/**
+ * Gets the supported CPU instruction set.
+ */
+XPCOMUtils.defineLazyGetter(this, "gInstructionSet", function aus_gIS() {
   if (AppConstants.platform == "win") {
     const PF_MMX_INSTRUCTIONS_AVAILABLE = 3; // MMX
     const PF_XMMI_INSTRUCTIONS_AVAILABLE = 6; // SSE
