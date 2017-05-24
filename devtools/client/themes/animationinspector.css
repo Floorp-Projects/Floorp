@@ -402,9 +402,14 @@ body {
   height: 100%;
 }
 
-.animation-timeline .animation .summary path {
-  fill: var(--timeline-background-color);
+.animation-timeline .animation .summary .effect-easing path {
+  fill: none;
   stroke: var(--timeline-border-color);
+  stroke-dasharray: 2px 2px;
+}
+
+.animation-timeline .animation .summary .keyframes-easing path {
+  fill: var(--timeline-background-color);
 }
 
 .animation-timeline .animation .summary .infinity.copied {

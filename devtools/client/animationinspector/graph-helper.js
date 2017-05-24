@@ -246,6 +246,185 @@ ProgressGraphHelper.prototype = {
 exports.ProgressGraphHelper = ProgressGraphHelper;
 
 /**
+ * This class is used for creating the summary graph in animation-timeline.
+ * The shape of the graph can be changed by using the following methods:
+ * setKeyframes:
+ *   If null, the shape is by computed timing progress.
+ *   Otherwise, by computed style of 'opacity' to combine effect easing and
+ *   keyframe's easing.
+ * setFillMode:
+ *   Animation fill-mode (e.g. "none", "backwards", "forwards" or "both")
+ * setClosePathNeeded:
+ *   If true, appendPathElement make the last segment of <path> element to
+ *   "close" segment("Z").
+ *   Therefore, if don't need under-line of graph, please set false.
+ * setOriginalBehavior:
+ *   In Animation::SetCurrentTime spec, even if current time of animation is over
+ *   the endTime, the progress is changed. Likewise, in case the time is less than 0.
+ *   If set true, prevent the time to make the same animation behavior as the original.
+ * setMinProgressThreshold:
+ *   SummaryGraphHelper searches and creates the summary graph until the progress
+ *   distance is less than this minProgressThreshold.
+ *   So, while setting a low threshold produces a smooth graph,
+ *   it will have an effect on performance.
+ * @param {Object} win - window object.
+ * @param {Object} state - animation state.
+ * @param {Number} minSegmentDuration - Minimum segment duration.
+ */
+function SummaryGraphHelper(win, state, minSegmentDuration) {
+  this.win = win;
+  const doc = this.win.document;
+  this.targetEl = doc.createElement("div");
+  doc.documentElement.appendChild(this.targetEl);
+
+  const effectTiming = Object.assign({}, state, {
+    iterations: state.iterationCount ? state.iterationCount : Infinity
+  });
+  this.animation = this.targetEl.animate(null, effectTiming);
+  this.animation.pause();
+  this.endTime = this.animation.effect.getComputedTiming().endTime;
+
+  this.minSegmentDuration = minSegmentDuration;
+  this.minProgressThreshold = DEFAULT_MIN_PROGRESS_THRESHOLD;
+}
+
+SummaryGraphHelper.prototype = {
+  /**
+   * Destory this object.
+   */
+  destroy: function () {
+    this.animation.cancel();
+    this.targetEl.remove();
+    this.targetEl = null;
+    this.animation = null;
+    this.win = null;
+  },
+
+  /*
+   * Set keyframes to shape graph by computed style. This method creates new keyframe
+   * object using only offset and easing of given keyframes.
+   * Also, allows null value. In case of null, this graph helper shapes graph using
+   * computed timing progress.
+   * @param {Object} keyframes - Should have offset and easing, or null.
+   */
+  setKeyframes: function (keyframes) {
+    let frames = null;
+    if (keyframes) {
+      // Create new keyframes for opacity as computed style.
+      frames = keyframes.map(keyframe => {
+        return {
+          opacity: keyframe.offset,
+          offset: keyframe.offset,
+          easing: keyframe.easing
+        };
+      });
+    }
+    this.animation.effect.setKeyframes(frames);
+    this.hasFrames = !!frames;
+  },
+
+  /*
+   * Set animation behavior.
+   * In Animation::SetCurrentTime spec, even if current time of animation is over
+   * endTime, the progress is changed. Likewise, in case the time is less than 0.
+   * If set true, we prevent the time to make the same animation behavior as the original.
+   * @param {bool} isOriginalBehavior - true: original behavior
+   *                                    false: according to spec.
+   */
+  setOriginalBehavior: function (isOriginalBehavior) {
+    this.isOriginalBehavior = isOriginalBehavior;
+  },
+
+  /**
+   * Set animation fill mode.
+   * @param {String} fill - "both", "forwards", "backwards" or "both"
+   */
+  setFillMode: function (fill) {
+    this.animation.effect.timing.fill = fill;
+  },
+
+  /**
+   * Set true if need to close path in appendPathElement.
+   * @param {bool} isClosePathNeeded - true: close, false: open.
+   */
+  setClosePathNeeded: function (isClosePathNeeded) {
+    this.isClosePathNeeded = isClosePathNeeded;
+  },
+
+  /**
+   * SummaryGraphHelper searches and creates the summary graph untill the progress
+   * distance is less than this minProgressThreshold.
+   */
+  setMinProgressThreshold: function (minProgressThreshold) {
+    this.minProgressThreshold = minProgressThreshold;
+  },
+
+  /**
+   * Return a segment in graph by given the time.
+   * @return {Object} Computed result which has follwing values.
+   * - x: x value of graph (float)
+   * - y: y value of graph (float between 0 - 1)
+   */
+  getSegment: function (time) {
+    if (this.isOriginalBehavior) {
+      // If the given time is less than 0, returned progress is 0.
+      if (time < 0) {
+        return { x: time, y: 0 };
+      }
+      // Avoid to apply over endTime.
+      this.animation.currentTime = time < this.endTime ? time : this.endTime;
+    } else {
+      this.animation.currentTime = time;
+    }
+    const value = this.hasFrames ? this.getOpacityValue() : this.getProgressValue();
+    return { x: time, y: value };
+  },
+
+  /**
+   * Create the path segments from given parameters.
+   * @param {Number} startTime - Starting time of animation.
+   * @param {Number} endTime - Ending time of animation.
+   * @param {Number} minSegmentDuration - Minimum segment duration.
+   * @param {Number} minProgressThreshold - Minimum progress threshold.
+   * @return {Array} path segments -
+   *                 [{x: {Number} time, y: {Number} progress}, ...]
+   */
+  createPathSegments: function (startTime, endTime) {
+    return createPathSegments(startTime, endTime,
+                              this.minSegmentDuration, this.minProgressThreshold, this);
+  },
+
+  /**
+   * Append path element.
+   * @param {Element} parentEl - Parent element of this appended path element.
+   * @param {Array} pathSegments - Path segments. Please see createPathSegments.
+   * @param {String} cls - Class name.
+   * @return {Element} path element.
+   */
+  appendPathElement: function (parentEl, pathSegments, cls) {
+    return appendPathElement(parentEl, pathSegments, cls, this.isClosePathNeeded);
+  },
+
+  /**
+   * Return current computed timing progress of the animation.
+   * @return {float} computed timing progress as float value of Y axis.
+   */
+  getProgressValue: function () {
+    return Math.max(this.animation.effect.getComputedTiming().progress, 0);
+  },
+
+  /**
+   * Return current computed 'opacity' value of the element which is animating.
+   * @return {float} computed timing progress as float value of Y axis.
+   */
+  getOpacityValue: function () {
+    return this.win.getComputedStyle(this.targetEl).opacity;
+  }
+};
+
+exports.SummaryGraphHelper = SummaryGraphHelper;
+
+/**
  * Create the path segments from given parameters.
  * @param {Number} startTime - Starting time of animation.
  * @param {Number} endTime - Ending time of animation.
@@ -308,9 +487,10 @@ exports.createPathSegments = createPathSegments;
  * @param {Element} parentEl - Parent element of this appended path element.
  * @param {Array} pathSegments - Path segments. Please see createPathSegments.
  * @param {String} cls - Class name.
+ * @param {bool} isClosePathNeeded - Set true if need to close the path. (default true)
  * @return {Element} path element.
  */
-function appendPathElement(parentEl, pathSegments, cls) {
+function appendPathElement(parentEl, pathSegments, cls, isClosePathNeeded = true) {
   // Create path string.
   let path = `M${ pathSegments[0].x },0`;
   for (let i = 0; i < pathSegments.length; i++) {
@@ -330,7 +510,10 @@ function appendPathElement(parentEl, pathSegments, cls) {
             ? createStepsPathString(pathSegment, nextPathSegment)
             : createCubicBezierPathString(pathSegment, nextPathSegment);
   }
-  path += ` L${ pathSegments[pathSegments.length - 1].x },0 Z`;
+  path += ` L${ pathSegments[pathSegments.length - 1].x },0`;
+  if (isClosePathNeeded) {
+    path += " Z";
+  }
   // Append and return the path element.
   return createSVGNode({
     parent: parentEl,
@@ -459,3 +642,42 @@ function getRGBADistance(rgba1, rgba2) {
   const diffB = startB - endB;
   return Math.sqrt(diffA * diffA + diffR * diffR + diffG * diffG + diffB * diffB);
 }
+
+/**
+ * Return preferred progress threshold for given keyframes.
+ * See the documentation of DURATION_RESOLUTION and DEFAULT_MIN_PROGRESS_THRESHOLD
+ * for more information regarding this.
+ * @param {Array} keyframes - keyframes
+ * @return {float} - preferred progress threshold.
+ */
+function getPreferredKeyframesProgressThreshold(keyframes) {
+  let minProgressTreshold = DEFAULT_MIN_PROGRESS_THRESHOLD;
+  for (let i = 0; i < keyframes.length - 1; i++) {
+    const keyframe = keyframes[i];
+    if (!keyframe.easing) {
+      continue;
+    }
+    let keyframeProgressThreshold = getPreferredProgressThreshold(keyframe.easing);
+    if (keyframeProgressThreshold !== DEFAULT_MIN_PROGRESS_THRESHOLD) {
+      // We should consider the keyframe's duration.
+      keyframeProgressThreshold *=
+        (keyframes[i + 1].offset - keyframe.offset);
+    }
+    minProgressTreshold = Math.min(keyframeProgressThreshold, minProgressTreshold);
+  }
+  return minProgressTreshold;
+}
+exports.getPreferredKeyframesProgressThreshold = getPreferredKeyframesProgressThreshold;
+
+/**
+ * Return preferred progress threshold to render summary graph.
+ * @param {String} - easing e.g. steps(2), linear and so on.
+ * @return {float} - preferred threshold.
+ */
+function getPreferredProgressThreshold(easing) {
+  const stepFunction = easing.match(/steps\((\d+)/);
+  return stepFunction
+       ? 1 / (parseInt(stepFunction[1], 10) + 1)
+       : DEFAULT_MIN_PROGRESS_THRESHOLD;
+}
+exports.getPreferredProgressThreshold = getPreferredProgressThreshold;

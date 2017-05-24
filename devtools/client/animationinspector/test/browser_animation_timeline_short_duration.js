@@ -78,7 +78,12 @@ function checkSummaryGraph(el, state, isDetail) {
       pathSegList.getItem(pathSegList.numberOfItems - 3);
     is(secondLastPathSeg.x, endX,
        `The x of second last segment should be ${ endX }`);
-    is(secondLastPathSeg.y, 0, "The y of second last segment should be 0");
+    // We use computed style of 'opacity' to create summary graph.
+    // So, if currentTime is same to the duration, although progress is null opacity is 1.
+    const expectedY =
+      state.iterationCount && expectedIterationCount === index + 1 ? 1 : 0;
+    is(secondLastPathSeg.y, expectedY,
+       `The y of second last segment should be ${ expectedY }`);
 
     const lastPathSeg = pathSegList.getItem(pathSegList.numberOfItems - 2);
     is(lastPathSeg.x, endX, `The x of last segment should be ${ endX }`);
