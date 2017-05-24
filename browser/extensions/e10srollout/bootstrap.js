@@ -19,9 +19,12 @@ const TEST_THRESHOLD = {
 };
 
 // If a user qualifies for the e10s-multi experiement, this is how many
-// content processes to use.
-const MULTI_BUCKETS = {
-  "beta": { 1: .5, 4: 1, },
+// content processes to use and whether to allow addons for the experiment.
+const MULTI_EXPERIMENT = {
+  "beta": { buckets: { 1: .5, 4: 1, }, // 1 process: 50%, 4 processes: 50%
+            addons: true },
+  "release": { buckets: { 1: .2, 4: 1 }, // 1 process: 20%, 4 processes: 80%
+               addons: false },
 };
 
 const ADDON_ROLLOUT_POLICY = {
@@ -160,14 +163,17 @@ function defineCohort() {
   }
 
   // Now determine if this user should be in the e10s-multi experiment.
-  // - We only run the experiment on channels defined in MULTI_BUCKETS.
+  // - We only run the experiment on channels defined in MULTI_EXPERIMENT.
+  // - If this experiment doesn't allow addons and we have a cohort prefix
+  //   (i.e. there's at least one addon installed) we stop here.
   // - We decided above whether this user qualifies for the experiment.
   // - If the user already opted into multi, then their prefs are already set
   //   correctly, we're done.
   // - If the user has addons that disqualify them for multi, leave them with
   //   the default number of content processes (1 on beta) but still in the
   //   test cohort.
-  if (!(updateChannel in MULTI_BUCKETS) ||
+  if (!(updateChannel in MULTI_EXPERIMENT) ||
+      (!MULTI_EXPERIMENT[updateChannel].addons && cohortPrefix) ||
       !eligibleForMulti ||
       userOptedIn.multi ||
       disqualified) {
@@ -185,7 +191,7 @@ function defineCohort() {
 
   // The user is in the multi experiment!
   // Decide how many content processes to use for this user.
-  let buckets = MULTI_BUCKETS[updateChannel];
+  let buckets = MULTI_EXPERIMENT[updateChannel].buckets;
 
   let multiUserSample = getUserSample(true);
   for (let sampleName of Object.getOwnPropertyNames(buckets)) {
