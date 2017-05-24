@@ -45,7 +45,8 @@
             toolbox,
           };
           const App = createFactory(require("./src/components/app"));
-          render(Provider({ store }, App()), this.mount);
+          const sourceMapService = toolbox.sourceMapURLService;
+          render(Provider({ store }, App({ sourceMapService })), this.mount);
           return onFirefoxConnect(connection, actions, store.getState);
         },
 

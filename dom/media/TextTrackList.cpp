@@ -43,9 +43,12 @@ TextTrackList::~TextTrackList()
 void
 TextTrackList::GetShowingCues(nsTArray<RefPtr<TextTrackCue> >& aCues)
 {
+  // Only Subtitles and Captions can show on the screen.
   nsTArray< RefPtr<TextTrackCue> > cues;
   for (uint32_t i = 0; i < Length(); i++) {
-    if (mTextTracks[i]->Mode() == TextTrackMode::Showing) {
+    if (mTextTracks[i]->Mode() == TextTrackMode::Showing &&
+        (mTextTracks[i]->Kind() == TextTrackKind::Subtitles ||
+         mTextTracks[i]->Kind() == TextTrackKind::Captions)) {
       mTextTracks[i]->GetActiveCueArray(cues);
       aCues.AppendElements(cues);
     }

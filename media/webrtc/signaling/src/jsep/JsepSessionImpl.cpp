@@ -675,7 +675,7 @@ JsepSessionImpl::SetupBundle(Sdp* sdp) const
     }
   }
 
-  if (mids.size() > 1) {
+  if (mids.size() >= 1) {
     UniquePtr<SdpGroupAttributeList> groupAttr(new SdpGroupAttributeList);
     groupAttr->PushEntry(SdpGroupAttributeList::kBundle, mids);
     sdp->GetAttributeList().SetAttribute(groupAttr.release());

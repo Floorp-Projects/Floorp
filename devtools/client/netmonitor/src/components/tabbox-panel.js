@@ -41,6 +41,7 @@ function TabboxPanel({
   cloneSelectedRequest,
   request,
   selectTab,
+  sourceMapService,
 }) {
   if (!request) {
     return null;
@@ -88,7 +89,7 @@ function TabboxPanel({
         id: "stack-trace",
         title: STACK_TRACE_TITLE,
       },
-        StackTracePanel({ request }),
+        StackTracePanel({ request, sourceMapService }),
       ),
       request.securityState && request.securityState !== "insecure" &&
       TabPanel({
@@ -108,6 +109,8 @@ TabboxPanel.propTypes = {
   cloneSelectedRequest: PropTypes.func.isRequired,
   request: PropTypes.object,
   selectTab: PropTypes.func.isRequired,
+  // Service to enable the source map feature.
+  sourceMapService: PropTypes.object,
 };
 
 module.exports = connect(

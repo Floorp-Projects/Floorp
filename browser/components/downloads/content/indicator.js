@@ -441,15 +441,8 @@ const DownloadsIndicatorView = {
 
     if (suppressAttention || this._attention == DownloadsCommon.ATTENTION_NONE) {
       this.indicator.removeAttribute("attention");
-      if (inMenu) {
-        PanelUI.removeNotification(/^download-/);
-      }
     } else {
       this.indicator.setAttribute("attention", this._attention);
-      if (inMenu) {
-        let badgeClass = "download-" + this._attention;
-        PanelUI.showBadgeOnlyNotification(badgeClass);
-      }
     }
   },
   _attention: DownloadsCommon.ATTENTION_NONE,

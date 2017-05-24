@@ -41,6 +41,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppMenuNotifications",
+                                  "resource://gre/modules/AppMenuNotifications.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
+                                  "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadUIHelper",
@@ -1203,6 +1207,18 @@ DownloadsIndicatorDataCtor.prototype = {
     }
 
     this._refreshProperties();
+
+    let widgetGroup = CustomizableUI.getWidget("downloads-button");
+    let inMenu = widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL;
+    if (inMenu) {
+      if (this._attention == DownloadsCommon.ATTENTION_NONE) {
+        AppMenuNotifications.removeNotification(/^download-/);
+      } else {
+        let badgeClass = "download-" + this._attention;
+        AppMenuNotifications.showBadgeOnlyNotification(badgeClass);
+      }
+    }
+
     this._views.forEach(this._updateView, this);
   },
 

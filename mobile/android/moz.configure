@@ -72,6 +72,10 @@ project_flag('MOZ_SWITCHBOARD',
              help='Include Switchboard A/B framework on Android',
              default=True)
 
+project_flag('MOZ_ANDROID_HLS_SUPPORT',
+             help='Enable HLS (HTTP Live Streaming) support (currently using the ExoPlayer library)',
+             default=milestone.is_nightly)
+
 option(env='MOZ_ANDROID_ACTIVITY_STREAM',
        help='Enable Activity Stream on Android (replacing the default HomePager)',
        default=False)

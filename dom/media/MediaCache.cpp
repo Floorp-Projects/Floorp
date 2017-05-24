@@ -19,6 +19,7 @@
 #include "nsIPrincipal.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Services.h"
+#include "mozilla/Telemetry.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -126,6 +127,17 @@ public:
       mFileCache->Close();
       mFileCache = nullptr;
     }
+    LOG("MediaCache::~MediaCache(this=%p) MEDIACACHE_WATERMARK_KB=%u",
+        this, unsigned(mIndexWatermark * MediaCache::BLOCK_SIZE / 1024));
+    Telemetry::Accumulate(
+      Telemetry::HistogramID::MEDIACACHE_WATERMARK_KB,
+      uint32_t(mIndexWatermark * MediaCache::BLOCK_SIZE / 1024));
+    LOG("MediaCache::~MediaCache(this=%p) MEDIACACHE_BLOCKOWNERS_WATERMARK=%u",
+        this, unsigned(mBlockOwnersWatermark));
+    Telemetry::Accumulate(
+      Telemetry::HistogramID::MEDIACACHE_BLOCKOWNERS_WATERMARK,
+      mBlockOwnersWatermark);
+
     MOZ_COUNT_DTOR(MediaCache);
   }
 
@@ -348,6 +360,10 @@ protected:
   nsTArray<MediaCacheStream*> mStreams;
   // The Blocks describing the cache entries.
   nsTArray<Block> mIndex;
+  // Keep track for highest number of blocks used, for telemetry purposes.
+  int32_t mIndexWatermark = 0;
+  // Keep track for highest number of blocks owners, for telemetry purposes.
+  uint32_t mBlockOwnersWatermark = 0;
   // Writer which performs IO, asynchronously writing cache blocks.
   RefPtr<FileBlockCache> mFileCache;
   // The list of free blocks; they are not ordered.
@@ -720,6 +736,7 @@ MediaCache::FindBlockForIncomingData(TimeStamp aNow,
       blockIndex = mIndex.Length();
       if (!mIndex.AppendElement())
         return -1;
+      mIndexWatermark = std::max(mIndexWatermark, blockIndex + 1);
       mFreeBlocks.AddFirstBlock(blockIndex);
       return blockIndex;
     }
@@ -934,6 +951,8 @@ MediaCache::AddBlockOwnerAsReadahead(int32_t aBlockIndex,
     mFreeBlocks.RemoveBlock(aBlockIndex);
   }
   BlockOwner* bo = block->mOwners.AppendElement();
+  mBlockOwnersWatermark =
+    std::max(mBlockOwnersWatermark, uint32_t(block->mOwners.Length()));
   bo->mStream = aStream;
   bo->mStreamBlock = aStreamBlockIndex;
   aStream->mBlocks[aStreamBlockIndex] = aBlockIndex;
@@ -1531,6 +1550,8 @@ MediaCache::AllocateAndWriteBlock(
         block->mOwners.Clear();
         return;
       }
+      mBlockOwnersWatermark =
+        std::max(mBlockOwnersWatermark, uint32_t(block->mOwners.Length()));
       bo->mStream = stream;
     }
 

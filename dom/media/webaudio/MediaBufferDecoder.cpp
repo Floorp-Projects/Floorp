@@ -29,7 +29,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Telemetry.h"
 #include "nsPrintfCString.h"
-#include "GMPCrashHelper.h"
 
 namespace mozilla {
 
@@ -166,24 +165,6 @@ MediaDecodeTask::Run()
   return NS_OK;
 }
 
-class BufferDecoderGMPCrashHelper : public GMPCrashHelper
-{
-public:
-  explicit BufferDecoderGMPCrashHelper(nsPIDOMWindowInner* aParent)
-    : mParent(do_GetWeakReference(aParent))
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-  }
-  already_AddRefed<nsPIDOMWindowInner> GetPluginCrashedEventTarget() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mParent);
-    return window.forget();
-  }
-private:
-  nsWeakPtr mParent;
-};
-
 bool
 MediaDecodeTask::CreateReader()
 {
@@ -205,8 +186,7 @@ MediaDecodeTask::CreateReader()
   MOZ_ASSERT(!mBufferDecoder);
   mMainThread =
     mDecodeJob.mContext->GetOwnerGlobal()->AbstractMainThreadFor(TaskCategory::Other);
-  mBufferDecoder = new BufferDecoder(resource, mMainThread,
-                                     new BufferDecoderGMPCrashHelper(parent));
+  mBufferDecoder = new BufferDecoder(resource, mMainThread);
 
   // If you change this list to add support for new decoders, please consider
   // updating HTMLMediaElement::CreateDecoder as well.
