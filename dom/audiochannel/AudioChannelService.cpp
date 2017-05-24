@@ -285,10 +285,6 @@ AudioChannelService::Shutdown()
     if (obs) {
       obs->RemoveObserver(gAudioChannelService, "xpcom-shutdown");
       obs->RemoveObserver(gAudioChannelService, "outer-window-destroyed");
-
-      if (IsParentProcess()) {
-        obs->RemoveObserver(gAudioChannelService, "ipc:content-shutdown");
-      }
     }
 
     gAudioChannelService->mWindows.Clear();
