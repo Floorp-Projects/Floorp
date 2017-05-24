@@ -1051,8 +1051,11 @@ public:
   {
     PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == &mMutex);
     MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s resolving MozPromise (%p created at %s)", aResolveSite, this, mCreationSite);
+    if (!IsPending()) {
+      PROMISE_LOG("%s ignored already resolved or rejected MozPromise (%p created at %s)", aResolveSite, this, mCreationSite);
+      return;
+    }
     mValue.SetResolve(Forward<ResolveValueT_>(aResolveValue));
     DispatchAll();
   }
@@ -1062,8 +1065,11 @@ public:
   {
     PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == &mMutex);
     MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s rejecting MozPromise (%p created at %s)", aRejectSite, this, mCreationSite);
+    if (!IsPending()) {
+      PROMISE_LOG("%s ignored already resolved or rejected MozPromise (%p created at %s)", aRejectSite, this, mCreationSite);
+      return;
+    }
     mValue.SetReject(Forward<RejectValueT_>(aRejectValue));
     DispatchAll();
   }
@@ -1073,8 +1079,11 @@ public:
   {
     PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == &mMutex);
     MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s resolveOrRejecting MozPromise (%p created at %s)", aSite, this, mCreationSite);
+    if (!IsPending()) {
+      PROMISE_LOG("%s ignored already resolved or rejected MozPromise (%p created at %s)", aSite, this, mCreationSite);
+      return;
+    }
     mValue = Forward<ResolveOrRejectValue_>(aValue);
     DispatchAll();
   }
