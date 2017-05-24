@@ -145,7 +145,8 @@ public final class TelemetryWrapper {
                             resources.getString(R.string.pref_key_privacy_block_analytics),
                             resources.getString(R.string.pref_key_privacy_block_social),
                             resources.getString(R.string.pref_key_privacy_block_other),
-                            resources.getString(R.string.pref_key_performance_block_webfonts))
+                            resources.getString(R.string.pref_key_performance_block_webfonts),
+                            resources.getString(R.string.pref_key_locale))
                     .setCollectionEnabled(telemetryEnabled)
                     .setUploadEnabled(telemetryEnabled);
 
