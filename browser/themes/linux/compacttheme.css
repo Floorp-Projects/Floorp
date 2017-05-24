@@ -40,12 +40,6 @@
   -moz-image-region: var(--urlbar-dropmarker-region);
 }
 
-/* Add the proper background for tab overflow */
-#alltabs-button,
-#new-tab-button {
-  background: var(--chrome-background-color);
-}
-
 #new-tab-button:hover > .toolbarbutton-icon {
   border-color: transparent !important;
 }
