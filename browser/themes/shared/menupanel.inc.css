@@ -184,47 +184,38 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
 
 #appMenu-new-window-button {
   list-style-image: url(chrome://browser/skin/menu-icons/new-window.svg);
-  -moz-context-properties: fill;
 }
 
 #appMenu-private-window-button {
   list-style-image: url(chrome://browser/skin/menu-icons/private-window.svg);
-  -moz-context-properties: fill;
 }
 
 #appMenu-print-button {
   list-style-image: url(chrome://browser/skin/menu-icons/print.svg);
-  -moz-context-properties: fill;
 }
 
 #appMenu-library-button {
   list-style-image: url(chrome://browser/skin/menu-icons/library.svg);
-  -moz-context-properties: fill;
 }
 
 #appMenu-addons-button {
   list-style-image: url(chrome://browser/skin/menu-icons/addons.svg);
-  -moz-context-properties: fill;
 }
 
 #appMenu-preferences-button {
   list-style-image: url(chrome://browser/skin/menu-icons/settings.svg);
-  -moz-context-properties: fill;
 }
 
 #appMenu-customize-button {
   list-style-image: url(chrome://browser/skin/menu-icons/customize.svg);
-  -moz-context-properties: fill;
 }
 
 #appMenu-find-button {
   list-style-image: url(chrome://browser/skin/menu-icons/find.svg);
-  -moz-context-properties: fill;
 }
 
 #appMenu-help-button {
   list-style-image: url(chrome://browser/skin/menu-icons/help.svg);
-  -moz-context-properties: fill;
 }
 
 #appMenu-cut-button {

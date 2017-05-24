@@ -7737,6 +7737,11 @@ var gPageActionButton = {
     return this.panel = document.getElementById("page-action-panel");
   },
 
+  get sendToDeviceBody() {
+    delete this.sendToDeviceBody;
+    return this.sendToDeviceBody = document.getElementById("page-action-sendToDeviceView-body");
+  },
+
   init() {
     if (getBoolPref("browser.photon.structure.enabled")) {
       this.button.hidden = false;
@@ -7752,8 +7757,18 @@ var gPageActionButton = {
       return; // Left click, space or enter only
     }
 
+    this._preparePanelToBeShown();
     this.panel.hidden = false;
     this.panel.openPopup(this.button, "bottomcenter topright");
+  },
+
+  _preparePanelToBeShown() {
+    let browser = gBrowser.selectedBrowser;
+    let url = browser.currentURI.spec;
+
+    let sendToDeviceItem =
+      document.getElementById("page-action-send-to-device-button");
+    sendToDeviceItem.disabled = !gSync.isSendableURI(url);
   },
 
   copyURL() {
@@ -7766,6 +7781,44 @@ var gPageActionButton = {
   emailLink() {
     this.panel.hidePopup();
     MailIntegration.sendLinkForBrowser(gBrowser.selectedBrowser);
+  },
+
+  showSendToDeviceView(subviewButton) {
+    let browser = gBrowser.selectedBrowser;
+    let url = browser.currentURI.spec;
+    let title = browser.contentTitle;
+    let body = this.sendToDeviceBody;
+
+    gSync.populateSendTabToDevicesMenu(body, url, title, (clientId, name, clientType) => {
+      if (!name) {
+        return document.createElement("toolbarseparator");
+      }
+      let item = document.createElement("toolbarbutton");
+      item.classList.add("page-action-sendToDevice-device", "subviewbutton");
+      if (clientId) {
+        item.classList.add("subviewbutton-iconic");
+      }
+      return item;
+    });
+
+    if (gSync.remoteClients.length) {
+      body.setAttribute("hasdevices", "true");
+    } else {
+      body.removeAttribute("hasdevices");
+    }
+
+    if (UIState.get().status == UIState.STATUS_SIGNED_IN) {
+      body.setAttribute("signedin", "true");
+    } else {
+      body.removeAttribute("signedin");
+    }
+
+    PanelUI.showSubView("page-action-sendToDeviceView", subviewButton);
+  },
+
+  fxaButtonClicked() {
+    this.panel.hidePopup();
+    gSync.openPrefs();
   },
 };
 
