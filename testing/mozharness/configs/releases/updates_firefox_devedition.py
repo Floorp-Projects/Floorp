@@ -24,6 +24,9 @@ config = {
             "version_regex": r"^.*$",
             "requires_mirrors": True,
             "patcher_config": "mozDevedition-branch-patcher2.cfg",
+            # Allow to override the patcher config product name, regardless
+            # the value set by buildbot properties
+            "patcher_config_product_override": "firefox",
             "update_verify_channel": "aurora-localtest",
             "mar_channel_ids": [],
             "channel_names": ["aurora", "aurora-localtest", "aurora-cdntest"],
@@ -32,4 +35,6 @@ config = {
         },
     },
     "balrog_use_dummy_suffix": False,
+    "stage_product": "devedition",
+    "bouncer_product": "devedition",
 }
