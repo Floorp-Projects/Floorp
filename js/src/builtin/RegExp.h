@@ -88,20 +88,16 @@ extern MOZ_MUST_USE bool
 regexp_test_no_statics(JSContext* cx, unsigned argc, Value* vp);
 
 /*
- * Behaves like RegExp(pattern, flags).
- * |pattern| should be a RegExp object, |flags| should be a raw integer value.
+ * Behaves like RegExp(source, flags).
+ * |source| must be a valid regular expression pattern, |flags| is a raw
+ * integer value representing the regular expression flags.
  * Must be called without |new|.
- * Dedicated function for RegExp.prototype[@@split] optimized path.
+ *
+ * Dedicated function for RegExp.prototype[@@replace] and
+ * RegExp.prototype[@@split] optimized paths.
  */
 extern MOZ_MUST_USE bool
 regexp_construct_raw_flags(JSContext* cx, unsigned argc, Value* vp);
-
-/*
- * Clone given RegExp object, inheriting pattern and flags, ignoring other
- * properties.
- */
-extern MOZ_MUST_USE bool
-regexp_clone(JSContext* cx, unsigned argc, Value* vp);
 
 extern MOZ_MUST_USE bool
 IsRegExp(JSContext* cx, HandleValue value, bool* result);

@@ -790,14 +790,18 @@ FlyWebMDNSService::PairWithService(const nsAString& aServiceId,
   } else {
     url.AssignLiteral("https://");
   }
-  url.Append(aInfo->mService.mHostname + NS_LITERAL_STRING("/"));
+  url.Append(aInfo->mService.mHostname);
+  if (!discInfo->mService.mPath.IsEmpty()) {
+    if (discInfo->mService.mPath.Find("/") != 0) {
+      url.Append(NS_LITERAL_STRING("/"));
+    }
+    url.Append(discInfo->mService.mPath);
+  } else {
+    url.Append(NS_LITERAL_STRING("/"));
+  }
   nsCOMPtr<nsIURI> uiURL;
   NS_NewURI(getter_AddRefs(uiURL), url);
   MOZ_ASSERT(uiURL);
-  if (!discInfo->mService.mPath.IsEmpty()) {
-    nsCOMPtr<nsIURI> tmp = uiURL.forget();
-    NS_NewURI(getter_AddRefs(uiURL), discInfo->mService.mPath, nullptr, tmp);
-  }
   if (uiURL) {
     nsAutoCString spec;
     uiURL->GetSpec(spec);

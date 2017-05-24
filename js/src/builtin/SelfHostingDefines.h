@@ -13,6 +13,7 @@
 #define TO_INT32(x) ((x) | 0)
 #define TO_UINT32(x) ((x) >>> 0)
 #define IS_UINT32(x) ((x) >>> 0 === (x))
+#define MAX_UINT32 0xffffffff
 #define MAX_NUMERIC_INDEX 0x1fffffffffffff // == Math.pow(2, 53) - 1
 
 // Unforgeable version of Function.prototype.apply.
@@ -83,6 +84,7 @@
 #define JSITER_SYMBOLSONLY 0x40 /* exclude string property keys */
 
 
+#define REGEXP_SOURCE_SLOT 1
 #define REGEXP_FLAGS_SLOT 2
 
 #define REGEXP_IGNORECASE_FLAG  0x01

@@ -15,8 +15,8 @@
 #### Selectors 4 ####################################################
 
 # focus-within
-needs-focus selectors-4/focus-within-00*.html
-pref(dom.webcomponents.enabled,true) needs-focus skip-if(stylo) selectors-4/focus-within-shadow-*.html
+needs-focus selectors4/focus-within-00*.html
+pref(dom.webcomponents.enabled,true) needs-focus skip-if(stylo) selectors4/focus-within-shadow-*.html
 
 # Bug 1208113
 fails-if(!stylo) needs-focus selectors-4/focus-within-shadow-001.html
@@ -167,7 +167,7 @@ fuzzy(87,180) css-multicol-1/multicol-columns-005.xht
 fuzzy(87,180) css-multicol-1/multicol-columns-006.xht
 fuzzy(87,180) css-multicol-1/multicol-columns-007.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol-1/multicol-columns-invalid-001.xht
-fails-if(!stylo)-if(OSX||winWidget) css-multicol-1/multicol-columns-invalid-002.xht
+fails-if(OSX||winWidget) css-multicol-1/multicol-columns-invalid-002.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol-1/multicol-columns-toolong-001.xht
 fuzzy(116,530) css-multicol-1/multicol-containing-001.xht
 fuzzy(215,241) css-multicol-1/multicol-containing-002.xht
@@ -176,7 +176,7 @@ fails-if(!stylo) css-multicol-1/multicol-count-002.xht
 fails-if(!stylo) css-multicol-1/multicol-count-computed-001.xht
 fails-if(!stylo) css-multicol-1/multicol-count-computed-002.xht
 fails-if(!stylo) css-multicol-1/multicol-count-computed-003.xht
-fuzzy-if(winWidget||OSX||gtkWidget,112,861) fails-if(!stylo)-if(Android) css-multicol-1/multicol-count-computed-004.xht
+fuzzy-if(winWidget||OSX||gtkWidget,112,861) fails-if(Android) css-multicol-1/multicol-count-computed-004.xht
 fails-if(!stylo) css-multicol-1/multicol-count-computed-005.xht
 fails-if(!stylo) css-multicol-1/multicol-count-large-001.xht
 fuzzy(255,132) css-multicol-1/multicol-count-large-002.xht
@@ -194,7 +194,7 @@ fuzzy(255,290) css-multicol-1/multicol-gap-001.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol-1/multicol-gap-002.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol-1/multicol-gap-003.xht
 fuzzy(107,1823) css-multicol-1/multicol-gap-fraction-001.xht
-fuzzy-if(winWidget||OSX||gtkWidget,204,1048) fuzzy-if(skiaContent,208,1048) fails-if(!stylo)-if(Android) css-multicol-1/multicol-gap-large-001.xht
+fuzzy-if(winWidget||OSX||gtkWidget,204,1048) fuzzy-if(skiaContent,208,1048) fails-if(Android) css-multicol-1/multicol-gap-large-001.xht
 fuzzy(225,920) css-multicol-1/multicol-gap-large-002.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol-1/multicol-gap-negative-001.xht
 fails-if(!stylo) css-multicol-1/multicol-height-block-child-001.xht
@@ -219,13 +219,13 @@ fuzzy-if(OSX,61,2) fuzzy-if(skiaContent,64,2) css-multicol-1/multicol-reduce-000
 fuzzy-if(OSX,8,20) css-multicol-1/multicol-rule-000.xht
 fuzzy(116,1584) css-multicol-1/multicol-rule-001.xht
 fails-if(!stylo) css-multicol-1/multicol-rule-002.xht
-fails-if(!stylo)-if(OSX||winWidget) css-multicol-1/multicol-rule-003.xht
-fails-if(!stylo)-if(OSX||winWidget) css-multicol-1/multicol-rule-color-001.xht
+fails-if(OSX||winWidget) css-multicol-1/multicol-rule-003.xht
+fails-if(OSX||winWidget) css-multicol-1/multicol-rule-color-001.xht
 fuzzy(106,354) css-multicol-1/multicol-rule-dashed-000.xht
 fuzzy(106,354) css-multicol-1/multicol-rule-dotted-000.xht
 fuzzy(106,354) css-multicol-1/multicol-rule-double-000.xht
-fails-if(!stylo)-if(OSX||winWidget) css-multicol-1/multicol-rule-fraction-001.xht
-fails-if(!stylo)-if(OSX||winWidget) css-multicol-1/multicol-rule-fraction-002.xht
+fails-if(OSX||winWidget) css-multicol-1/multicol-rule-fraction-001.xht
+fails-if(OSX||winWidget) css-multicol-1/multicol-rule-fraction-002.xht
 fails-if(!stylo) css-multicol-1/multicol-rule-fraction-003.xht
 fuzzy(106,354) css-multicol-1/multicol-rule-groove-000.xht
 fuzzy(94,256) css-multicol-1/multicol-rule-hidden-000.xht
@@ -241,7 +241,7 @@ fails-if(!stylo) css-multicol-1/multicol-span-all-001.xht
 fails-if(!stylo) css-multicol-1/multicol-span-all-002.xht
 fails-if(!stylo) css-multicol-1/multicol-span-all-003.xht
 fails-if(!stylo) css-multicol-1/multicol-span-all-child-001.xht
-fails-if(!stylo)-if(OSX||winWidget) css-multicol-1/multicol-span-all-child-002.xht
+fails-if(OSX||winWidget) css-multicol-1/multicol-span-all-child-002.xht
 fails-if(!stylo) css-multicol-1/multicol-span-all-margin-001.xht
 fails-if(!stylo) css-multicol-1/multicol-span-all-margin-002.xht
 fails-if(!stylo) css-multicol-1/multicol-span-all-margin-bottom-001.xht
