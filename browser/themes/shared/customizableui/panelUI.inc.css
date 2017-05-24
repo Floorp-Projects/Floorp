@@ -1297,10 +1297,14 @@ photonpanelmultiview .PanelUI-subView .panel-subview-footer {
   font-size: 1.2rem;
 }
 
+photonpanelmultiview .subviewbutton {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
 photonpanelmultiview .subviewbutton[checked="true"] {
   background: none;
   list-style-image: url(chrome://browser/skin/menu-icons/check.svg);
-  -moz-context-properties: fill;
 }
 
 photonpanelmultiview .subviewbutton > .menu-iconic-left {

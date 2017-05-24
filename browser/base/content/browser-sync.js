@@ -280,10 +280,20 @@ var gSync = {
     Weave.Service.clientsEngine.sendURIToClientForDisplay(url, clientId, title);
   },
 
-  populateSendTabToDevicesMenu(devicesPopup, url, title) {
+  populateSendTabToDevicesMenu(devicesPopup, url, title, createDeviceNodeFn) {
+    if (!createDeviceNodeFn) {
+      createDeviceNodeFn = (clientId, name, clientType) => {
+        let eltName = name ? "menuitem" : "menuseparator";
+        return document.createElement(eltName);
+      };
+    }
+
     // remove existing menu items
-    while (devicesPopup.hasChildNodes()) {
-      devicesPopup.firstChild.remove();
+    for (let i = devicesPopup.childNodes.length - 1; i >= 0; --i) {
+      let child = devicesPopup.childNodes[i];
+      if (child.classList.contains("sync-menuitem")) {
+        child.remove();
+      }
     }
 
     const fragment = document.createDocumentFragment();
@@ -296,26 +306,28 @@ var gSync = {
       clients.forEach(clientId => this.sendTabToDevice(url, clientId, title));
     }
 
-    function addTargetDevice(clientId, name) {
-      const targetDevice = document.createElement("menuitem");
+    function addTargetDevice(clientId, name, clientType) {
+      const targetDevice = createDeviceNodeFn(clientId, name, clientType);
       targetDevice.addEventListener("command", onTargetDeviceCommand, true);
-      targetDevice.setAttribute("class", "sendtab-target");
+      targetDevice.classList.add("sync-menuitem", "sendtab-target");
       targetDevice.setAttribute("clientId", clientId);
+      targetDevice.setAttribute("clientType", clientType);
       targetDevice.setAttribute("label", name);
       fragment.appendChild(targetDevice);
     }
 
     const clients = this.remoteClients;
     for (let client of clients) {
-      addTargetDevice(client.id, client.name);
+      addTargetDevice(client.id, client.name, client.type);
     }
 
     // "All devices" menu item
     if (clients.length > 1) {
-      const separator = document.createElement("menuseparator");
+      const separator = createDeviceNodeFn();
+      separator.classList.add("sync-menuitem");
       fragment.appendChild(separator);
       const allDevicesLabel = this.fxaStrings.GetStringFromName("sendTabToAllDevices.menuitem");
-      addTargetDevice("", allDevicesLabel);
+      addTargetDevice("", allDevicesLabel, "");
     }
 
     devicesPopup.appendChild(fragment);
