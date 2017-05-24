@@ -1098,8 +1098,7 @@ void
 ServoStyleSet::RebuildData()
 {
   ClearNonInheritingStyleContexts();
-  Element* root = mPresContext->Document()->GetDocumentElement();
-  Servo_StyleSet_RebuildData(mRawSet.get(), root);
+  Servo_StyleSet_RebuildData(mRawSet.get());
   mStylistState = StylistState::NotDirty;
 }
 
