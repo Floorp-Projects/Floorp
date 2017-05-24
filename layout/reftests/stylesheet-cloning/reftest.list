@@ -1,1 +1,4 @@
-== style_rule_clone.html shouldbegreen-ref.html
+== document-rule-clone.html shouldbegreen-ref.html
+== media-rule-clone.html shouldbegreen-ref.html
+== style-rule-clone.html shouldbegreen-ref.html
+skip-if(stylo) == supports-rule-clone.html shouldbegreen-ref.html # bug 1367610
