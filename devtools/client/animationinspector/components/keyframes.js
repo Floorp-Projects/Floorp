@@ -9,7 +9,7 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const {createNode, createSVGNode} =
   require("devtools/client/animationinspector/utils");
-const {ProgressGraphHelper, appendPathElement, DEFAULT_MIN_PROGRESS_THRESHOLD} =
+const {ProgressGraphHelper, appendPathElement, getPreferredKeyframesProgressThreshold} =
          require("devtools/client/animationinspector/graph-helper.js");
 
 // Counter for linearGradient ID.
@@ -76,7 +76,7 @@ Keyframes.prototype = {
                               propertyName, animationType, keyframes, totalDuration);
 
     renderPropertyGraph(graphEl, totalDuration, minSegmentDuration,
-                        DEFAULT_MIN_PROGRESS_THRESHOLD, graphHelper);
+                        getPreferredKeyframesProgressThreshold(keyframes), graphHelper);
 
     // Destroy ProgressGraphHelper resources.
     graphHelper.destroy();

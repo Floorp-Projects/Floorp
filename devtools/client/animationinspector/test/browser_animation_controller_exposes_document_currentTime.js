@@ -39,5 +39,6 @@ function* startNewAnimation(controller, panel) {
     attributeValue: "ball still short"
   });
   yield onPlayerAdded;
+  yield waitForAnimationTimelineRendering(panel);
   yield waitForAllAnimationTargets(panel);
 }

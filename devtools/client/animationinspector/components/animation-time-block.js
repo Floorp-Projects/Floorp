@@ -9,7 +9,8 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const {createNode, createSVGNode, TimeScale, getFormattedAnimationTitle} =
   require("devtools/client/animationinspector/utils");
-const {createPathSegments, appendPathElement, DEFAULT_MIN_PROGRESS_THRESHOLD} =
+const {SummaryGraphHelper, getPreferredKeyframesProgressThreshold,
+       getPreferredProgressThreshold} =
   require("devtools/client/animationinspector/graph-helper");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
@@ -19,6 +20,9 @@ const L10N =
 // Show max 10 iterations for infinite animations
 // to give users a clue that the animation does repeat.
 const MAX_INFINITE_ANIMATIONS_ITERATIONS = 10;
+
+// Minimum opacity for semitransparent fill color for keyframes's easing graph.
+const MIN_KEYFRAMES_EASING_OPACITY = .5;
 
 /**
  * UI component responsible for displaying a single animation timeline, which
@@ -50,7 +54,7 @@ AnimationTimeBlock.prototype = {
     }
   },
 
-  render: function (animation) {
+  render: function (animation, tracks) {
     this.unrender();
 
     this.animation = animation;
@@ -86,116 +90,21 @@ AnimationTimeBlock.prototype = {
                             ${ totalDisplayedDuration }
                             ${ 1 + strokeHeightForViewBox * 2 }`);
 
-    // Get a helper function that returns the path segment of timing-function.
-    const segmentHelper = getSegmentHelper(state, this.win);
-
     // Minimum segment duration is the duration of one pixel.
-    const minSegmentDuration =
-      totalDisplayedDuration / this.containerEl.clientWidth;
-    // Minimum progress threshold.
-    let minProgressThreshold = DEFAULT_MIN_PROGRESS_THRESHOLD;
-    // If the easing is step function,
-    // minProgressThreshold should be changed by the steps.
-    const stepFunction = state.easing.match(/steps\((\d+)/);
-    if (stepFunction) {
-      minProgressThreshold = 1 / (parseInt(stepFunction[1], 10) + 1);
+    const minSegmentDuration = totalDisplayedDuration / this.containerEl.clientWidth;
+    // Minimum progress threshold for effect timing.
+    const minEffectProgressThreshold = getPreferredProgressThreshold(state.easing);
+
+    // Render summary graph.
+    // The summary graph is constructed from keyframes's easing and effect timing.
+    const graphHelper = new SummaryGraphHelper(this.win, state, minSegmentDuration);
+    renderKeyframesEasingGraph(summaryEl, state, totalDisplayedDuration,
+                               minEffectProgressThreshold, tracks, graphHelper);
+    if (state.easing !== "linear") {
+      renderEffectEasingGraph(summaryEl, state, totalDisplayedDuration,
+                              minEffectProgressThreshold, graphHelper);
     }
-
-    // Starting time of main iteration.
-    let mainIterationStartTime = 0;
-    let iterationStart = state.iterationStart;
-    let iterationCount = state.iterationCount ? state.iterationCount : Infinity;
-
-    // Append delay.
-    if (state.delay > 0) {
-      renderDelay(summaryEl, state, segmentHelper);
-      mainIterationStartTime = state.delay;
-    } else {
-      const negativeDelayCount = -state.delay / state.duration;
-      // Move to forward the starting point for negative delay.
-      iterationStart += negativeDelayCount;
-      // Consume iteration count by negative delay.
-      if (iterationCount !== Infinity) {
-        iterationCount -= negativeDelayCount;
-      }
-    }
-
-    // Append 1st section of iterations,
-    // This section is only useful in cases where iterationStart has decimals.
-    // e.g.
-    // if { iterationStart: 0.25, iterations: 3 }, firstSectionCount is 0.75.
-    const firstSectionCount =
-      iterationStart % 1 === 0
-      ? 0 : Math.min(iterationCount, 1) - iterationStart % 1;
-    if (firstSectionCount) {
-      renderFirstIteration(summaryEl, state, mainIterationStartTime,
-                           firstSectionCount, minSegmentDuration,
-                           minProgressThreshold, segmentHelper);
-    }
-
-    if (iterationCount === Infinity) {
-      // If the animation repeats infinitely,
-      // we fill the remaining area with iteration paths.
-      renderInfinity(summaryEl, state, mainIterationStartTime,
-                     firstSectionCount, totalDisplayedDuration,
-                     minSegmentDuration, minProgressThreshold, segmentHelper);
-    } else {
-      // Otherwise, we show remaining iterations, endDelay and fill.
-
-      // Append forwards fill-mode.
-      if (state.fill === "both" || state.fill === "forwards") {
-        renderForwardsFill(summaryEl, state, mainIterationStartTime,
-                           iterationCount, totalDisplayedDuration,
-                           segmentHelper);
-      }
-
-      // Append middle section of iterations.
-      // e.g.
-      // if { iterationStart: 0.25, iterations: 3 }, middleSectionCount is 2.
-      const middleSectionCount =
-        Math.floor(iterationCount - firstSectionCount);
-      renderMiddleIterations(summaryEl, state, mainIterationStartTime,
-                             firstSectionCount, middleSectionCount,
-                             minSegmentDuration, minProgressThreshold,
-                             segmentHelper);
-
-      // Append last section of iterations, if there is remaining iteration.
-      // e.g.
-      // if { iterationStart: 0.25, iterations: 3 }, lastSectionCount is 0.25.
-      const lastSectionCount =
-        iterationCount - middleSectionCount - firstSectionCount;
-      if (lastSectionCount) {
-        renderLastIteration(summaryEl, state, mainIterationStartTime,
-                            firstSectionCount, middleSectionCount,
-                            lastSectionCount, minSegmentDuration,
-                            minProgressThreshold, segmentHelper);
-      }
-
-      // Append endDelay.
-      if (state.endDelay > 0) {
-        renderEndDelay(summaryEl, state,
-                       mainIterationStartTime, iterationCount, segmentHelper);
-      }
-    }
-
-    // Append negative delay (which overlap the animation).
-    if (state.delay < 0) {
-      segmentHelper.animation.effect.timing.fill = "both";
-      segmentHelper.asOriginalBehavior = false;
-      renderNegativeDelayHiddenProgress(summaryEl, state, minSegmentDuration,
-                                        minProgressThreshold, segmentHelper);
-    }
-    // Append negative endDelay (which overlap the animation).
-    if (state.iterationCount && state.endDelay < 0) {
-      if (segmentHelper.asOriginalBehavior) {
-        segmentHelper.animation.effect.timing.fill = "both";
-        segmentHelper.asOriginalBehavior = false;
-      }
-      renderNegativeEndDelayHiddenProgress(summaryEl, state,
-                                           minSegmentDuration,
-                                           minProgressThreshold,
-                                           segmentHelper);
-    }
+    graphHelper.destroy();
 
     // The animation name is displayed over the animation.
     createNode({
@@ -341,15 +250,165 @@ AnimationTimeBlock.prototype = {
 };
 
 /**
+ * Render keyframes's easing graph.
+ * @param {Element} parentEl - Parent element of this appended path element.
+ * @param {Object} state - State of animation.
+ * @param {float} totalDisplayedDuration - Displayable total duration.
+ * @param {float} minEffectProgressThreshold - Minimum progress threshold for effect.
+ * @param {Object} tracks - The value of AnimationsTimeline.getTracks().
+ * @param {Object} graphHelper - SummaryGraphHelper.
+ */
+function renderKeyframesEasingGraph(parentEl, state, totalDisplayedDuration,
+                                    minEffectProgressThreshold, tracks, graphHelper) {
+  const keyframesList = getOffsetAndEasingOnlyKeyframesList(tracks);
+  const keyframeEasingOpacity = Math.max(1 / keyframesList.length,
+                                         MIN_KEYFRAMES_EASING_OPACITY);
+  for (let keyframes of keyframesList) {
+    const minProgressTreshold =
+      Math.min(minEffectProgressThreshold,
+               getPreferredKeyframesProgressThreshold(keyframes));
+    graphHelper.setMinProgressThreshold(minProgressTreshold);
+    graphHelper.setKeyframes(keyframes);
+    graphHelper.setClosePathNeeded(true);
+    const element = renderGraph(parentEl, state, totalDisplayedDuration,
+                                "keyframes-easing", graphHelper);
+    element.style.opacity = keyframeEasingOpacity;
+  }
+}
+
+/**
+ * Render effect easing graph.
+ * @param {Element} parentEl - Parent element of this appended path element.
+ * @param {Object} state - State of animation.
+ * @param {float} totalDisplayedDuration - Displayable total duration.
+ * @param {float} minEffectProgressThreshold - Minimum progress threshold for effect.
+ * @param {Object} graphHelper - SummaryGraphHelper.
+ */
+function renderEffectEasingGraph(parentEl, state, totalDisplayedDuration,
+                                 minEffectProgressThreshold, graphHelper) {
+  graphHelper.setMinProgressThreshold(minEffectProgressThreshold);
+  graphHelper.setKeyframes(null);
+  graphHelper.setClosePathNeeded(false);
+  renderGraph(parentEl, state, totalDisplayedDuration, "effect-easing", graphHelper);
+}
+
+/**
+ * Render a graph of given parameters.
+ * @param {Element} parentEl - Parent element of this appended path element.
+ * @param {Object} state - State of animation.
+ * @param {float} totalDisplayedDuration - Displayable total duration.
+ * @param {String} className - Class name for graph element.
+ * @param {Object} graphHelper - SummaryGraphHelper.
+ */
+function renderGraph(parentEl, state, totalDisplayedDuration, className, graphHelper) {
+  const graphEl = createSVGNode({
+    parent: parentEl,
+    nodeType: "g",
+    attributes: {
+      "class": className,
+    }
+  });
+
+  // Starting time of main iteration.
+  let mainIterationStartTime = 0;
+  let iterationStart = state.iterationStart;
+  let iterationCount = state.iterationCount ? state.iterationCount : Infinity;
+
+  graphHelper.setFillMode(state.fill);
+  graphHelper.setOriginalBehavior(true);
+
+  // Append delay.
+  if (state.delay > 0) {
+    renderDelay(graphEl, state, graphHelper);
+    mainIterationStartTime = state.delay;
+  } else {
+    const negativeDelayCount = -state.delay / state.duration;
+    // Move to forward the starting point for negative delay.
+    iterationStart += negativeDelayCount;
+    // Consume iteration count by negative delay.
+    if (iterationCount !== Infinity) {
+      iterationCount -= negativeDelayCount;
+    }
+  }
+
+  // Append 1st section of iterations,
+  // This section is only useful in cases where iterationStart has decimals.
+  // e.g.
+  // if { iterationStart: 0.25, iterations: 3 }, firstSectionCount is 0.75.
+  const firstSectionCount =
+    iterationStart % 1 === 0
+    ? 0 : Math.min(iterationCount, 1) - iterationStart % 1;
+  if (firstSectionCount) {
+    renderFirstIteration(graphEl, state, mainIterationStartTime,
+                         firstSectionCount, graphHelper);
+  }
+
+  if (iterationCount === Infinity) {
+    // If the animation repeats infinitely,
+    // we fill the remaining area with iteration paths.
+    renderInfinity(graphEl, state, mainIterationStartTime,
+                   firstSectionCount, totalDisplayedDuration, graphHelper);
+  } else {
+    // Otherwise, we show remaining iterations, endDelay and fill.
+
+    // Append forwards fill-mode.
+    if (state.fill === "both" || state.fill === "forwards") {
+      renderForwardsFill(graphEl, state, mainIterationStartTime,
+                         iterationCount, totalDisplayedDuration, graphHelper);
+    }
+
+    // Append middle section of iterations.
+    // e.g.
+    // if { iterationStart: 0.25, iterations: 3 }, middleSectionCount is 2.
+    const middleSectionCount =
+      Math.floor(iterationCount - firstSectionCount);
+    renderMiddleIterations(graphEl, state, mainIterationStartTime,
+                           firstSectionCount, middleSectionCount, graphHelper);
+
+    // Append last section of iterations, if there is remaining iteration.
+    // e.g.
+    // if { iterationStart: 0.25, iterations: 3 }, lastSectionCount is 0.25.
+    const lastSectionCount =
+      iterationCount - middleSectionCount - firstSectionCount;
+    if (lastSectionCount) {
+      renderLastIteration(graphEl, state, mainIterationStartTime,
+                          firstSectionCount, middleSectionCount,
+                          lastSectionCount, graphHelper);
+    }
+
+    // Append endDelay.
+    if (state.endDelay > 0) {
+      renderEndDelay(graphEl, state,
+                     mainIterationStartTime, iterationCount, graphHelper);
+    }
+  }
+
+  // Append negative delay (which overlap the animation).
+  if (state.delay < 0) {
+    graphHelper.setFillMode("both");
+    graphHelper.setOriginalBehavior(false);
+    renderNegativeDelayHiddenProgress(graphEl, state, graphHelper);
+  }
+  // Append negative endDelay (which overlap the animation).
+  if (state.iterationCount && state.endDelay < 0) {
+    graphHelper.setFillMode("both");
+    graphHelper.setOriginalBehavior(false);
+    renderNegativeEndDelayHiddenProgress(graphEl, state, graphHelper);
+  }
+
+  return graphEl;
+}
+
+/**
  * Render delay section.
  * @param {Element} parentEl - Parent element of this appended path element.
  * @param {Object} state - State of animation.
- * @param {Object} segmentHelper - The object returned by getSegmentHelper.
+ * @param {Object} graphHelper - SummaryGraphHelper.
  */
-function renderDelay(parentEl, state, segmentHelper) {
-  const startSegment = segmentHelper.getSegment(0);
+function renderDelay(parentEl, state, graphHelper) {
+  const startSegment = graphHelper.getSegment(0);
   const endSegment = { x: state.delay, y: startSegment.y };
-  appendPathElement(parentEl, [startSegment, endSegment], "delay-path");
+  graphHelper.appendPathElement(parentEl, [startSegment, endSegment], "delay-path");
 }
 
 /**
@@ -358,19 +417,14 @@ function renderDelay(parentEl, state, segmentHelper) {
  * @param {Object} state - State of animation.
  * @param {Number} mainIterationStartTime - Starting time of main iteration.
  * @param {Number} firstSectionCount - Iteration count of first section.
- * @param {Number} minSegmentDuration - Minimum segment duration.
- * @param {Number} minProgressThreshold - Minimum progress threshold.
- * @param {Object} segmentHelper - The object returned by getSegmentHelper.
+ * @param {Object} graphHelper - SummaryGraphHelper.
  */
 function renderFirstIteration(parentEl, state, mainIterationStartTime,
-                              firstSectionCount, minSegmentDuration,
-                              minProgressThreshold, segmentHelper) {
+                              firstSectionCount, graphHelper) {
   const startTime = mainIterationStartTime;
   const endTime = startTime + firstSectionCount * state.duration;
-  const segments =
-    createPathSegments(startTime, endTime, minSegmentDuration,
-                       minProgressThreshold, segmentHelper);
-  appendPathElement(parentEl, segments, "iteration-path");
+  const segments = graphHelper.createPathSegments(startTime, endTime);
+  graphHelper.appendPathElement(parentEl, segments, "iteration-path");
 }
 
 /**
@@ -380,23 +434,18 @@ function renderFirstIteration(parentEl, state, mainIterationStartTime,
  * @param {Number} mainIterationStartTime - Starting time of main iteration.
  * @param {Number} firstSectionCount - Iteration count of first section.
  * @param {Number} middleSectionCount - Iteration count of middle section.
- * @param {Number} minSegmentDuration - Minimum segment duration.
- * @param {Number} minProgressThreshold - Minimum progress threshold.
- * @param {Object} segmentHelper - The object returned by getSegmentHelper.
+ * @param {Object} graphHelper - SummaryGraphHelper.
  */
 function renderMiddleIterations(parentEl, state, mainIterationStartTime,
                                 firstSectionCount, middleSectionCount,
-                                minSegmentDuration, minProgressThreshold,
-                                segmentHelper) {
+                                graphHelper) {
   const offset = mainIterationStartTime + firstSectionCount * state.duration;
   for (let i = 0; i < middleSectionCount; i++) {
     // Get the path segments of each iteration.
     const startTime = offset + i * state.duration;
     const endTime = startTime + state.duration;
-    const segments =
-      createPathSegments(startTime, endTime, minSegmentDuration,
-                         minProgressThreshold, segmentHelper);
-    appendPathElement(parentEl, segments, "iteration-path");
+    const segments = graphHelper.createPathSegments(startTime, endTime);
+    graphHelper.appendPathElement(parentEl, segments, "iteration-path");
   }
 }
 
@@ -408,21 +457,16 @@ function renderMiddleIterations(parentEl, state, mainIterationStartTime,
  * @param {Number} firstSectionCount - Iteration count of first section.
  * @param {Number} middleSectionCount - Iteration count of middle section.
  * @param {Number} lastSectionCount - Iteration count of last section.
- * @param {Number} minSegmentDuration - Minimum segment duration.
- * @param {Number} minProgressThreshold - Minimum progress threshold.
- * @param {Object} segmentHelper - The object returned by getSegmentHelper.
+ * @param {Object} graphHelper - SummaryGraphHelper.
  */
 function renderLastIteration(parentEl, state, mainIterationStartTime,
                              firstSectionCount, middleSectionCount,
-                             lastSectionCount, minSegmentDuration,
-                             minProgressThreshold, segmentHelper) {
+                             lastSectionCount, graphHelper) {
   const startTime = mainIterationStartTime +
                       (firstSectionCount + middleSectionCount) * state.duration;
   const endTime = startTime + lastSectionCount * state.duration;
-  const segments =
-    createPathSegments(startTime, endTime, minSegmentDuration,
-                       minProgressThreshold, segmentHelper);
-  appendPathElement(parentEl, segments, "iteration-path");
+  const segments = graphHelper.createPathSegments(startTime, endTime);
+  graphHelper.appendPathElement(parentEl, segments, "iteration-path");
 }
 
 /**
@@ -432,13 +476,10 @@ function renderLastIteration(parentEl, state, mainIterationStartTime,
  * @param {Number} mainIterationStartTime - Starting time of main iteration.
  * @param {Number} firstSectionCount - Iteration count of first section.
  * @param {Number} totalDuration - Displayed max duration.
- * @param {Number} minSegmentDuration - Minimum segment duration.
- * @param {Number} minProgressThreshold - Minimum progress threshold.
- * @param {Object} segmentHelper - The object returned by getSegmentHelper.
+ * @param {Object} graphHelper - SummaryGraphHelper.
  */
 function renderInfinity(parentEl, state, mainIterationStartTime,
-                        firstSectionCount, totalDuration, minSegmentDuration,
-                        minProgressThreshold, segmentHelper) {
+                        firstSectionCount, totalDuration, graphHelper) {
   // Calculate the number of iterations to display,
   // with a maximum of MAX_INFINITE_ANIMATIONS_ITERATIONS
   let uncappedInfinityIterationCount =
@@ -456,9 +497,8 @@ function renderInfinity(parentEl, state, mainIterationStartTime,
     mainIterationStartTime + firstSectionCount * state.duration;
   const firstEndTime = firstStartTime + state.duration;
   const firstSegments =
-    createPathSegments(firstStartTime, firstEndTime, minSegmentDuration,
-                       minProgressThreshold, segmentHelper);
-  appendPathElement(parentEl, firstSegments, "iteration-path infinity");
+    graphHelper.createPathSegments(firstStartTime, firstEndTime);
+  graphHelper.appendPathElement(parentEl, firstSegments, "iteration-path infinity");
 
   // Append other iterations. We can copy first segments.
   const isAlternate = state.direction.match(/alternate/);
@@ -476,7 +516,7 @@ function renderInfinity(parentEl, state, mainIterationStartTime,
         return { x: segment.x - firstStartTime + startTime, y: segment.y };
       });
     }
-    appendPathElement(parentEl, segments, "iteration-path infinity copied");
+    graphHelper.appendPathElement(parentEl, segments, "iteration-path infinity copied");
   }
 }
 
@@ -486,14 +526,14 @@ function renderInfinity(parentEl, state, mainIterationStartTime,
  * @param {Object} state - State of animation.
  * @param {Number} mainIterationStartTime - Starting time of main iteration.
  * @param {Number} iterationCount - Whole iteration count.
- * @param {Object} segmentHelper - The object returned by getSegmentHelper.
+ * @param {Object} graphHelper - SummaryGraphHelper.
  */
 function renderEndDelay(parentEl, state,
-                        mainIterationStartTime, iterationCount, segmentHelper) {
+                        mainIterationStartTime, iterationCount, graphHelper) {
   const startTime = mainIterationStartTime + iterationCount * state.duration;
-  const startSegment = segmentHelper.getSegment(startTime);
+  const startSegment = graphHelper.getSegment(startTime);
   const endSegment = { x: startTime + state.endDelay, y: startSegment.y };
-  appendPathElement(parentEl, [startSegment, endSegment], "enddelay-path");
+  graphHelper.appendPathElement(parentEl, [startSegment, endSegment], "enddelay-path");
 }
 
 /**
@@ -503,100 +543,74 @@ function renderEndDelay(parentEl, state,
  * @param {Number} mainIterationStartTime - Starting time of main iteration.
  * @param {Number} iterationCount - Whole iteration count.
  * @param {Number} totalDuration - Displayed max duration.
- * @param {Object} segmentHelper - The object returned by getSegmentHelper.
+ * @param {Object} graphHelper - SummaryGraphHelper.
  */
 function renderForwardsFill(parentEl, state, mainIterationStartTime,
-                            iterationCount, totalDuration, segmentHelper) {
+                            iterationCount, totalDuration, graphHelper) {
   const startTime = mainIterationStartTime + iterationCount * state.duration +
                       (state.endDelay > 0 ? state.endDelay : 0);
-  const startSegment = segmentHelper.getSegment(startTime);
+  const startSegment = graphHelper.getSegment(startTime);
   const endSegment = { x: totalDuration, y: startSegment.y };
-  appendPathElement(parentEl, [startSegment, endSegment], "fill-forwards-path");
+  graphHelper.appendPathElement(parentEl, [startSegment, endSegment],
+                                "fill-forwards-path");
 }
 
 /**
  * Render hidden progress of negative delay.
  * @param {Element} parentEl - Parent element of this appended path element.
  * @param {Object} state - State of animation.
- * @param {Number} minSegmentDuration - Minimum segment duration.
- * @param {Number} minProgressThreshold - Minimum progress threshold.
- * @param {Object} segmentHelper - The object returned by getSegmentHelper.
+ * @param {Object} graphHelper - SummaryGraphHelper.
  */
-function renderNegativeDelayHiddenProgress(parentEl, state, minSegmentDuration,
-                                           minProgressThreshold,
-                                           segmentHelper) {
+function renderNegativeDelayHiddenProgress(parentEl, state, graphHelper) {
   const startTime = state.delay;
   const endTime = 0;
   const segments =
-    createPathSegments(startTime, endTime, minSegmentDuration,
-                       minProgressThreshold, segmentHelper);
-  appendPathElement(parentEl, segments, "delay-path negative");
+    graphHelper.createPathSegments(startTime, endTime);
+  graphHelper.appendPathElement(parentEl, segments, "delay-path negative");
 }
 
 /**
  * Render hidden progress of negative endDelay.
  * @param {Element} parentEl - Parent element of this appended path element.
  * @param {Object} state - State of animation.
- * @param {Number} minSegmentDuration - Minimum segment duration.
- * @param {Number} minProgressThreshold - Minimum progress threshold.
- * @param {Object} segmentHelper - The object returned by getSegmentHelper.
+ * @param {Object} graphHelper - SummaryGraphHelper.
  */
-function renderNegativeEndDelayHiddenProgress(parentEl, state,
-                                              minSegmentDuration,
-                                              minProgressThreshold,
-                                              segmentHelper) {
+function renderNegativeEndDelayHiddenProgress(parentEl, state, graphHelper) {
   const endTime = state.delay + state.iterationCount * state.duration;
   const startTime = endTime + state.endDelay;
-  const segments =
-    createPathSegments(startTime, endTime, minSegmentDuration,
-                       minProgressThreshold, segmentHelper);
-  appendPathElement(parentEl, segments, "enddelay-path negative");
+  const segments = graphHelper.createPathSegments(startTime, endTime);
+  graphHelper.appendPathElement(parentEl, segments, "enddelay-path negative");
 }
 
 /**
- * Get a helper function which returns the segment coord from given time.
- * @param {Object} state - animation state
- * @param {Object} win - window object
- * @return {Object} A segmentHelper object that has the following properties:
- * - animation: The script animation used to get the progress
- * - endTime: The end time of the animation
- * - asOriginalBehavior: The spec is that the progress of animation is changed
- *                       if the time of setCurrentTime is during the endDelay.
- *                       Likewise, in case the time is less than 0.
- *                       If this flag is true, we prevent the time
- *                       to make the same animation behavior as the original.
- * - getSegment: Helper function that, given a time,
- *               will calculate the progress through the dummy animation.
+ * Create new keyframes object which has only offset and easing.
+ * Also, the returned value has no duplication.
+ * @param {Object} tracks - The value of AnimationsTimeline.getTracks().
+ * @return {Array} keyframes list.
  */
-function getSegmentHelper(state, win) {
-  // Create a dummy Animation timing data as the
-  // state object we're being passed in.
-  const timing = Object.assign({}, state, {
-    iterations: state.iterationCount ? state.iterationCount : Infinity
-  });
-
-  // Create a dummy Animation with the given timing.
-  const dummyAnimation =
-    new win.Animation(new win.KeyframeEffect(null, null, timing), null);
-
-  // Returns segment helper object.
-  return {
-    animation: dummyAnimation,
-    endTime: dummyAnimation.effect.getComputedTiming().endTime,
-    asOriginalBehavior: true,
-    getSegment: function (time) {
-      if (this.asOriginalBehavior) {
-        // If the given time is less than 0, returned progress is 0.
-        if (time < 0) {
-          return { x: time, y: 0 };
-        }
-        // Avoid to apply over endTime.
-        this.animation.currentTime = time < this.endTime ? time : this.endTime;
-      } else {
-        this.animation.currentTime = time;
+function getOffsetAndEasingOnlyKeyframesList(tracks) {
+  return Object.keys(tracks).reduce((result, name) => {
+    const track = tracks[name];
+    const exists = result.find(keyframes => {
+      if (track.length !== keyframes.length) {
+        return false;
       }
-      const progress = this.animation.effect.getComputedTiming().progress;
-      return { x: time, y: Math.max(progress, 0) };
+      for (let i = 0; i < track.length; i++) {
+        const keyframe1 = track[i];
+        const keyframe2 = keyframes[i];
+        if (keyframe1.offset !== keyframe2.offset ||
+            keyframe1.easing !== keyframe2.easing) {
+          return false;
+        }
+      }
+      return true;
+    });
+    if (!exists) {
+      const keyframes = track.map(keyframe => {
+        return { offset: keyframe.offset, easing: keyframe.easing };
+      });
+      result.push(keyframes);
     }
-  };
+    return result;
+  }, []);
 }
