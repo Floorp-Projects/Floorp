@@ -571,7 +571,7 @@ LCovRuntime::fillWithFilename(char *name, size_t length)
 
     int len = snprintf(name, length, "%s/%" PRId64 "-%" PRIu32 "-%" PRIuSIZE ".info",
                        outDir, timestamp, pid_, rid);
-    if (length != size_t(len)) {
+    if (len < 0 || size_t(len) >= length) {
         fprintf(stderr, "Warning: LCovRuntime::init: Cannot serialize file name.");
         return false;
     }
