@@ -170,6 +170,8 @@ BALROG_SERVER_SCOPES = {
 BALROG_CHANNEL_SCOPES = {
     'nightly': [
         'project:releng:balrog:channel:nightly'
+        'project:releng:balrog:channel:nightly-old-id'
+        'project:releng:balrog:channel:aurora'
     ],
     'aurora': [
         'project:releng:balrog:channel:aurora'
@@ -191,6 +193,7 @@ BALROG_CHANNEL_SCOPES = {
     ],
     'default': [
         'project:releng:balrog:channel:nightly'
+        'project:releng:balrog:channel:nightly-old-id'
         'project:releng:balrog:channel:aurora'
         'project:releng:balrog:channel:beta',
         'project:releng:balrog:channel:beta-localtest',
@@ -206,8 +209,8 @@ BALROG_CHANNEL_SCOPES = {
 
 
 PUSH_APK_SCOPE_ALIAS_TO_PROJECT = [[
-    'aurora', set([
-        'mozilla-aurora',
+    'central', set([
+        'mozilla-central',
     ])
 ], [
     'beta', set([
@@ -221,7 +224,7 @@ PUSH_APK_SCOPE_ALIAS_TO_PROJECT = [[
 
 
 PUSH_APK_SCOPES = {
-    'aurora': 'project:releng:googleplay:aurora',
+    'central': 'project:releng:googleplay:aurora',
     'beta': 'project:releng:googleplay:beta',
     'release': 'project:releng:googleplay:release',
     'default': 'project:releng:googleplay:invalid',
@@ -229,21 +232,21 @@ PUSH_APK_SCOPES = {
 
 # See https://github.com/mozilla-releng/pushapkscript#aurora-beta-release-vs-alpha-beta-production
 PUSH_APK_GOOGLE_PLAY_TRACT = {
-    'aurora': 'beta',
+    'central': 'alpha',
     'beta': 'rollout',
     'release': 'rollout',
     'default': 'invalid',
 }
 
 PUSH_APK_BREAKPOINT_WORKER_TYPE = {
-    'aurora': 'aws-provisioner-v1/taskcluster-generic',
+    'central': 'aws-provisioner-v1/taskcluster-generic',
     'beta': 'null-provisioner/human-breakpoint',
     'release': 'null-provisioner/human-breakpoint',
     'default': 'invalid/invalid',
 }
 
 PUSH_APK_DRY_RUN_OPTION = {
-    'aurora': False,
+    'central': True,
     'beta': False,
     'release': False,
     'default': True,
