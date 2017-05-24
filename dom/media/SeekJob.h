@@ -27,6 +27,7 @@ struct SeekJob
 
   Maybe<SeekTarget> mTarget;
   MozPromiseHolder<MediaDecoder::SeekPromise> mPromise;
+  bool mTransition = true;
 };
 
 } // namespace mozilla

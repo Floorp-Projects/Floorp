@@ -479,6 +479,8 @@ public:
     mPendingSeek.mTarget.emplace(t, SeekTarget::Accurate);
     // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
     // need to create the promise even it is not used at all.
+    // The promise may be used when coming out of DormantState into
+    // SeekingState.
     RefPtr<MediaDecoder::SeekPromise> x =
       mPendingSeek.mPromise.Ensure(__func__);
 
@@ -500,6 +502,8 @@ public:
   }
 
   State GetState() const override { return DECODER_STATE_DORMANT; }
+
+  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override;
 
   void HandleVideoSuspendTimeout() override
   {
@@ -1703,6 +1707,68 @@ private:
   RefPtr<AysncNextFrameSeekTask> mAsyncSeekTask;
 };
 
+class MediaDecoderStateMachine::NextFrameSeekingFromDormantState
+  : public MediaDecoderStateMachine::AccurateSeekingState
+{
+public:
+  explicit NextFrameSeekingFromDormantState(Master* aPtr)
+    : AccurateSeekingState(aPtr)
+  {
+  }
+
+  RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob&& aCurrentSeekJob,
+                                          SeekJob&& aFutureSeekJob)
+  {
+    mFutureSeekJob = Move(aFutureSeekJob);
+
+    SeekJob seekJob(Move(aCurrentSeekJob));
+    // Ensure that we don't transition to DecodingState once this seek
+    // completes.
+    seekJob.mTransition = false;
+
+    AccurateSeekingState::Enter(Move(seekJob), EventVisibility::Suppressed)
+      ->Then(OwnerThread(),
+             __func__,
+             [this]() {
+               mAccurateSeekRequest.Complete();
+               SetState<NextFrameSeekingState>(Move(mFutureSeekJob),
+                                               EventVisibility::Observable);
+             },
+             [this]() { mAccurateSeekRequest.Complete(); })
+      ->Track(mAccurateSeekRequest);
+    return mFutureSeekJob.mPromise.Ensure(__func__);
+  }
+
+  void Exit() override
+  {
+    mAccurateSeekRequest.DisconnectIfExists();
+    mFutureSeekJob.RejectIfExists(__func__);
+    AccurateSeekingState::Exit();
+  }
+
+private:
+  MozPromiseRequestHolder<MediaDecoder::SeekPromise> mAccurateSeekRequest;
+  SeekJob mFutureSeekJob;
+};
+
+RefPtr<MediaDecoder::SeekPromise>
+MediaDecoderStateMachine::DormantState::HandleSeek(SeekTarget aTarget)
+{
+  if (aTarget.IsNextFrame()) {
+    // NextFrameSeekingState doesn't reset the decoder unlike
+    // AccurateSeekingState. So we first must come out of dormant by seeking to
+    // mPendingSeek and continue later with the NextFrameSeek
+    SLOG("Changed state to SEEKING (to %" PRId64 ")",
+        aTarget.GetTime().ToMicroseconds());
+    SeekJob seekJob;
+    seekJob.mTarget = Some(aTarget);
+    return StateObject::SetState<NextFrameSeekingFromDormantState>(
+      Move(mPendingSeek), Move(seekJob));
+  }
+
+  return StateObject::HandleSeek(aTarget);
+}
+
 /**
  * Purpose: stop playback until enough data is decoded to continue playback.
  *
@@ -2457,7 +2523,9 @@ SeekingState::SeekCompleted()
     mMaster->mOnPlaybackEvent.Notify(MediaEventType::Invalidate);
   }
 
-  SetState<DecodingState>();
+  if (mSeekJob.mTransition) {
+    SetState<DecodingState>();
+  }
 }
 
 void
