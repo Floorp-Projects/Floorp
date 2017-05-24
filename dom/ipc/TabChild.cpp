@@ -376,6 +376,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mRemoteFrame(nullptr)
   , mManager(aManager)
   , mChromeFlags(aChromeFlags)
+  , mMaxTouchPoints(0)
   , mActiveSuppressDisplayport(0)
   , mLayersId(0)
   , mBeforeUnloadListeners(0)
@@ -2703,13 +2704,6 @@ TabChild::GetWidgetRounding(int32_t* aRounding)
 
   // Fallback to a sync call if needed.
   SendGetWidgetRounding(aRounding);
-}
-
-void
-TabChild::GetMaxTouchPoints(uint32_t* aTouchPoints)
-{
-  // Fallback to a sync call.
-  SendGetMaxTouchPoints(aTouchPoints);
 }
 
 void

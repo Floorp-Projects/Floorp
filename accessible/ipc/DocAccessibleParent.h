@@ -80,8 +80,11 @@ public:
                                                        const uint64_t& aState,
                                                        const bool& aEnabled) override final;
 
-  virtual mozilla::ipc::IPCResult RecvCaretMoveEvent(const uint64_t& aID, const int32_t& aOffset)
-    override final;
+  virtual mozilla::ipc::IPCResult RecvCaretMoveEvent(const uint64_t& aID,
+#if defined(XP_WIN)
+                                                     const LayoutDeviceIntRect& aCaretRect,
+#endif
+                                                     const int32_t& aOffset) override final;
 
   virtual mozilla::ipc::IPCResult RecvTextChangeEvent(const uint64_t& aID, const nsString& aStr,
                                                       const int32_t& aStart, const uint32_t& aLen,
@@ -93,6 +96,9 @@ public:
                                                           const int32_t& aStart, const uint32_t& aLen,
                                                           const bool& aIsInsert,
                                                           const bool& aFromUser) override;
+
+  virtual mozilla::ipc::IPCResult RecvFocusEvent(const uint64_t& aID,
+                                                 const LayoutDeviceIntRect& aCaretRect) override;
 #endif // defined(XP_WIN)
 
   virtual mozilla::ipc::IPCResult RecvSelectionEvent(const uint64_t& aID,
