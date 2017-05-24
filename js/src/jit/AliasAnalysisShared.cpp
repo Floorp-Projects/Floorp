@@ -123,6 +123,7 @@ GetObject(const MDefinition* ins)
       case MDefinition::Op_LoadElementHole:
       case MDefinition::Op_TypedArrayElements:
       case MDefinition::Op_TypedObjectElements:
+      case MDefinition::Op_CopyLexicalEnvironmentObject:
         object = ins->getOperand(0);
         break;
       case MDefinition::Op_GetPropertyCache:
