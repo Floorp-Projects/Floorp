@@ -98,6 +98,32 @@ interface WebExtensionPolicy {
    */
   [Throws]
   DOMString getURL(optional DOMString path = "");
+
+
+  /**
+   * Returns the list of currently active extension policies.
+   */
+  static sequence<WebExtensionPolicy> getActiveExtensions();
+
+  /**
+   * Returns the currently-active policy for the extension with the given ID,
+   * or null if no policy is active for that ID.
+   */
+  static WebExtensionPolicy? getByID(DOMString id);
+
+  /**
+   * Returns the currently-active policy for the extension with the given
+   * moz-extension: hostname, or null if no policy is active for that
+   * hostname.
+   */
+  static WebExtensionPolicy? getByHostname(ByteString hostname);
+
+  /**
+   * Returns the currently-active policy for the extension extension URI, or
+   * null if the URI is not an extension URI, or no policy is currently active
+   * for it.
+   */
+  static WebExtensionPolicy? getByURI(URI uri);
 };
 
 dictionary WebExtensionInit {

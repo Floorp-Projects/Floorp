@@ -111,6 +111,19 @@ public:
   void SetActive(bool aActive, ErrorResult& aRv);
 
 
+  static void
+  GetActiveExtensions(dom::GlobalObject& aGlobal, nsTArray<RefPtr<WebExtensionPolicy>>& aResults);
+
+  static already_AddRefed<WebExtensionPolicy>
+  GetByID(dom::GlobalObject& aGlobal, const nsAString& aID);
+
+  static already_AddRefed<WebExtensionPolicy>
+  GetByHostname(dom::GlobalObject& aGlobal, const nsACString& aHostname);
+
+  static already_AddRefed<WebExtensionPolicy>
+  GetByURI(dom::GlobalObject& aGlobal, nsIURI* aURI);
+
+
   nsISupports* GetParentObject() const { return mParent; }
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) override;

@@ -75,4 +75,66 @@ add_task(async function test_WebExtensinonPolicy() {
   // Localization
 
   equal(policy.localize("foo"), "<foo>", "Localization callback should work as expected");
+
+
+  // Protocol and lookups.
+
+  let proto = Services.io.getProtocolHandler("moz-extension", uuid).QueryInterface(Ci.nsISubstitutingProtocolHandler);
+
+  deepEqual(WebExtensionPolicy.getActiveExtensions(), [], "Should have no active extensions");
+  equal(WebExtensionPolicy.getByID(id), null, "ID lookup should not return extension when not active");
+  equal(WebExtensionPolicy.getByHostname(uuid), null, "Hostname lookup should not return extension when not active");
+  Assert.throws(() => proto.resolveURI(mozExtURI), /NS_ERROR_NOT_AVAILABLE/,
+                "URL should not resolve when not active");
+
+  policy.active = true;
+  equal(policy.active, true, "Active attribute should be updated");
+
+  let exts = WebExtensionPolicy.getActiveExtensions();
+  equal(exts.length, 1, "Should have one active extension");
+  equal(exts[0], policy, "Should have the correct active extension");
+
+  equal(WebExtensionPolicy.getByID(id), policy, "ID lookup should return extension when active");
+  equal(WebExtensionPolicy.getByHostname(uuid), policy, "Hostname lookup should return extension when active");
+
+  equal(proto.resolveURI(mozExtURI), baseURL, "URL should resolve correctly while active");
+
+  policy.active = false;
+  equal(policy.active, false, "Active attribute should be updated");
+
+  deepEqual(WebExtensionPolicy.getActiveExtensions(), [], "Should have no active extensions");
+  equal(WebExtensionPolicy.getByID(id), null, "ID lookup should not return extension when not active");
+  equal(WebExtensionPolicy.getByHostname(uuid), null, "Hostname lookup should not return extension when not active");
+  Assert.throws(() => proto.resolveURI(mozExtURI), /NS_ERROR_NOT_AVAILABLE/,
+                "URL should not resolve when not active");
+
+
+  // Conflicting policies.
+
+  // This asserts in debug builds, so only test in non-debug builds.
+  if (!AppConstants.DEBUG) {
+    policy.active = true;
+
+    let attrs = [{id, uuid},
+                 {id, uuid: "d916886c-cfdf-482e-b7b1-d7f5b0facfa5"},
+                 {id: "foo@quux", uuid}];
+
+    // eslint-disable-next-line no-shadow
+    for (let {id, uuid} of attrs) {
+      let policy2 = new WebExtensionPolicy({
+        id,
+        mozExtensionHostname: uuid,
+        baseURL: "file://bar/",
+
+        localizeCallback() {},
+
+        allowedOrigins: new MatchPatternSet([]),
+      });
+
+      Assert.throws(() => { policy2.active = true; }, /NS_ERROR_UNEXPECTED/,
+                    `Should not be able to activate conflicting policy: ${id} ${uuid}`);
+    }
+
+    policy.active = false;
+  }
 });
