@@ -583,7 +583,7 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
     LOG(("nsHttpConnection::Activate [this=%p trans=%p caps=%x]\n",
          this, trans, caps));
 
-    if (!trans->IsNullTransaction())
+    if (!trans->IsNullTransaction() && !mFastOpen)
         mExperienced = true;
 
     mTransactionCaps = caps;
@@ -2396,6 +2396,17 @@ nsHttpConnection::CloseConnectionFastOpenTakesTooLongOrError(bool aCloseSocketTr
     }
     Close(NS_ERROR_NET_RESET);
     return trans;
+}
+
+void
+nsHttpConnection::SetFastOpen(bool aFastOpen)
+{
+    mFastOpen = aFastOpen;
+    if (!mFastOpen &&
+        mTransaction &&
+        !mTransaction->IsNullTransaction()) {
+        mExperienced = true;
+    }
 }
 
 } // namespace net
