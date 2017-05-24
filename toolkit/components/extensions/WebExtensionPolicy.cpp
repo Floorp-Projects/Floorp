@@ -59,6 +59,12 @@ public:
 };
 
 
+static inline ExtensionPolicyService&
+EPS()
+{
+  return ExtensionPolicyService::GetSingleton();
+}
+
 static nsISubstitutingProtocolHandler*
 Proto()
 {
@@ -101,6 +107,10 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
     mBackgroundScripts.SetValue().AppendElements(aInit.mBackgroundScripts.Value());
   }
 
+  if (mContentSecurityPolicy.IsVoid()) {
+    EPS().DefaultCSP(mContentSecurityPolicy);
+  }
+
   nsresult rv = NS_NewURI(getter_AddRefs(mBaseURI), aInit.mBaseURL);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
@@ -117,6 +127,32 @@ WebExtensionPolicy::Constructor(GlobalObject& aGlobal,
     return nullptr;
   }
   return policy.forget();
+}
+
+
+/* static */ void
+WebExtensionPolicy::GetActiveExtensions(dom::GlobalObject& aGlobal,
+                                        nsTArray<RefPtr<WebExtensionPolicy>>& aResults)
+{
+  EPS().GetAll(aResults);
+}
+
+/* static */ already_AddRefed<WebExtensionPolicy>
+WebExtensionPolicy::GetByID(dom::GlobalObject& aGlobal, const nsAString& aID)
+{
+  return do_AddRef(EPS().GetByID(aID));
+}
+
+/* static */ already_AddRefed<WebExtensionPolicy>
+WebExtensionPolicy::GetByHostname(dom::GlobalObject& aGlobal, const nsACString& aHostname)
+{
+  return do_AddRef(EPS().GetByHost(aHostname));
+}
+
+/* static */ already_AddRefed<WebExtensionPolicy>
+WebExtensionPolicy::GetByURI(dom::GlobalObject& aGlobal, nsIURI* aURI)
+{
+  return do_AddRef(EPS().GetByURL(aURI));
 }
 
 
@@ -139,6 +175,10 @@ WebExtensionPolicy::Enable()
 {
   MOZ_ASSERT(!mActive);
 
+  if (!EPS().RegisterExtension(*this)) {
+    return false;
+  }
+
   Unused << Proto()->SetSubstitution(MozExtensionHostname(), mBaseURI);
 
   mActive = true;
@@ -149,6 +189,11 @@ bool
 WebExtensionPolicy::Disable()
 {
   MOZ_ASSERT(mActive);
+  MOZ_ASSERT(EPS().GetByID(Id()) == this);
+
+  if (!EPS().UnregisterExtension(*this)) {
+    return false;
+  }
 
   Unused << Proto()->SetSubstitution(MozExtensionHostname(), nullptr);
 

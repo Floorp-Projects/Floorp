@@ -2010,6 +2010,7 @@ GK_ATOM(ondevicechange, "ondevicechange")
 GK_ATOM(mozinputrangeignorepreventdefault, "mozinputrangeignorepreventdefault")
 
 // WebExtensions
+GK_ATOM(moz_extension, "moz-extension")
 GK_ATOM(http, "http")
 GK_ATOM(https, "https")
 
