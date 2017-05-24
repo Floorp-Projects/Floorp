@@ -137,7 +137,7 @@ class DebugState
 
     bool stepModeEnabled(uint32_t funcIndex) const;
     bool incrementStepModeCount(JSContext* cx, uint32_t funcIndex);
-    bool decrementStepModeCount(JSContext* cx, uint32_t funcIndex);
+    bool decrementStepModeCount(FreeOp* fop, uint32_t funcIndex);
 
     // Stack inspection helpers.
 

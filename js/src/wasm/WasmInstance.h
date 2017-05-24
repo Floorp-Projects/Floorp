@@ -104,7 +104,6 @@ class Instance
     bool init(JSContext* cx);
     void trace(JSTracer* trc);
 
-    JSContext* cx() const { return tlsData()->cx; }
     JSCompartment* compartment() const { return compartment_; }
     const Code& code() const { return *code_; }
     DebugState& debug() { return *debug_; }
