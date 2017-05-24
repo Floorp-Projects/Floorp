@@ -37,9 +37,94 @@ class nsXULTreeBuilder : public nsXULTemplateBuilder,
                          public nsINativeTreeView
 {
 public:
+    explicit nsXULTreeBuilder(Element* aElement);
+
     // nsISupports
     NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULTreeBuilder, nsXULTemplateBuilder)
+    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULTreeBuilder,
+                                             nsXULTemplateBuilder)
+
+    virtual JSObject* WrapObject(JSContext* aCx,
+                                 JS::Handle<JSObject*> aGivenProto) override;
+
+    already_AddRefed<nsIRDFResource>
+      GetResourceAtIndex(int32_t aIndex, mozilla::ErrorResult& aError);
+    int32_t GetIndexOfResource(nsIRDFResource* aResource,
+                               mozilla::ErrorResult& aError);
+    void AddObserver(mozilla::dom::XULTreeBuilderObserver& aObserver);
+    void RemoveObserver(mozilla::dom::XULTreeBuilderObserver& aObserver);
+    void Sort(Element&);
+
+    int32_t RowCount()
+    {
+        return mRows.Count();
+    }
+    nsITreeSelection* GetSelection()
+    {
+        return mSelection;
+    }
+    void SetSelection(nsITreeSelection* aSelection,
+                      mozilla::ErrorResult& aError);
+    void GetRowProperties(int32_t aRow, nsAString& aProperties,
+                          mozilla::ErrorResult& aError);
+    void GetCellProperties(int32_t aRow, nsTreeColumn& aColumn,
+                           nsAString& aProperties, mozilla::ErrorResult& aError);
+    void GetColumnProperties(nsTreeColumn& aColumn, nsAString& aProperties)
+    {
+    }
+    bool IsContainer(int32_t aRow, mozilla::ErrorResult& aError);
+    bool IsContainerOpen(int32_t aRow, mozilla::ErrorResult& aError);
+    bool IsContainerEmpty(int32_t aRow, mozilla::ErrorResult& aError);
+    bool IsSeparator(int32_t aRow, mozilla::ErrorResult& aError);
+    bool IsSorted()
+    {
+        return mSortVariable != nullptr;
+    }
+    bool CanDrop(int32_t aRow, int32_t aOrientation,
+                 mozilla::dom::DataTransfer* aDataTransfer,
+                 mozilla::ErrorResult& aError);
+    void Drop(int32_t aRow, int32_t aOrientation,
+              mozilla::dom::DataTransfer* aDataTransfer,
+              mozilla::ErrorResult& aError);
+    int32_t GetParentIndex(int32_t aRow, mozilla::ErrorResult& aError);
+    bool HasNextSibling(int32_t aRow, int32_t aAfterIndex,
+                        mozilla::ErrorResult& aError);
+    int32_t GetLevel(int32_t aRow, mozilla::ErrorResult& aError);
+    void GetImageSrc(int32_t aRow, nsTreeColumn& aColumn, nsAString& aSrc,
+                     mozilla::ErrorResult& aError);
+    int32_t GetProgressMode(int32_t aRow, nsTreeColumn& aColumn,
+                            mozilla::ErrorResult& aError);
+    void GetCellValue(int32_t aRow, nsTreeColumn& aColumn, nsAString& aValue,
+                      mozilla::ErrorResult& aError);
+    void GetCellText(int32_t aRow, nsTreeColumn& aColumn, nsAString& aText,
+                     mozilla::ErrorResult& aError);
+    void SetTree(mozilla::dom::TreeBoxObject* aTree,
+                 mozilla::ErrorResult& aError);
+    void ToggleOpenState(int32_t aRow, mozilla::ErrorResult& aError);
+    void CycleHeader(nsTreeColumn& aColumn, mozilla::ErrorResult& aError);
+    // XPCOM SelectionChanged() is OK
+    void CycleCell(int32_t aRow, nsTreeColumn& aColumn);
+    bool IsEditable(int32_t aRow, nsTreeColumn& aColumn,
+                    mozilla::ErrorResult& aError);
+    bool IsSelectable(int32_t aRow, nsTreeColumn& aColumn,
+                      mozilla::ErrorResult& aError);
+    void SetCellValue(int32_t aRow, nsTreeColumn& aColumn,
+                      const nsAString& aValue, mozilla::ErrorResult& aError)
+    {
+    }
+    void SetCellText(int32_t aRow, nsTreeColumn& aColumn,
+                      const nsAString& aText, mozilla::ErrorResult& aError)
+    {
+    }
+    void PerformAction(const nsAString& aAction);
+    void PerformActionOnRow(const nsAString& aAction, int32_t aRow);
+    void PerformActionOnCell(const nsAString& aAction, int32_t aRow,
+                             nsTreeColumn& aColumn);
+
+    using nsIXULTemplateBuilder::HasGeneratedContent;
+    virtual bool HasGeneratedContent(nsIRDFResource* aResource,
+                                     const nsAString& aTag,
+                                     mozilla::ErrorResult& aError) override;
 
     // nsIXULTreeBuilder
     NS_DECL_NSIXULTREEBUILDER
@@ -53,12 +138,8 @@ public:
     NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
 protected:
-    friend nsresult
-    NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-
     friend struct ResultComparator;
 
-    nsXULTreeBuilder();
     ~nsXULTreeBuilder();
 
     /**
@@ -86,8 +167,8 @@ protected:
      * Given a row and a column ID, use the row's match to figure out
      * the appropriate <treecell> in the rule's <action>.
      */
-    nsresult
-    GetTemplateActionCellFor(int32_t aRow, nsITreeColumn* aCol, nsIContent** aResult);
+    nsIContent*
+    GetTemplateActionCellFor(int32_t aRow, nsTreeColumn& aCol);
 
     /**
      * Return the resource corresponding to a row in the tree.
@@ -158,11 +239,6 @@ protected:
     nsresult
     SortSubtree(nsTreeRows::Subtree* aSubtree);
 
-    NS_IMETHOD
-    HasGeneratedContent(nsIRDFResource* aResource,
-                        nsIAtom* aTag,
-                        bool* aGenerated) override;
-
     // GetInsertionLocations, ReplaceMatch and SynchronizeResult are inherited
     // from nsXULTemplateBuilder
 
@@ -188,6 +264,8 @@ protected:
      */
     virtual nsresult
     SynchronizeResult(nsIXULTemplateResult* aResult) override;
+
+    bool IsValidRowIndex(int32_t aRowIndex);
 
     /**
      * The tree's box object, used to communicate with the front-end.
@@ -233,7 +311,7 @@ protected:
     /** 
      * The builder observers.
      */
-    nsCOMArray<nsIXULTreeBuilderObserver> mObservers;
+    nsTArray<nsCOMPtr<nsIXULTreeBuilderObserver>> mObservers;
 
     /*
      * XUL store for holding open container state
