@@ -626,6 +626,7 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
     AttachNodeToTree(node, aParent, aNextSibling);
     node->SetHitTestData(
         GetEventRegions(aLayer),
+        aLayer.GetVisibleRegion(),
         aLayer.GetTransformTyped(),
         aLayer.GetClipRect() ? Some(ParentLayerIntRegion(*aLayer.GetClipRect())) : Nothing(),
         GetEventRegionsOverride(aParent, aLayer));
@@ -737,6 +738,7 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
     ParentLayerIntRegion clipRegion = ComputeClipRegion(state->mController, aLayer);
     node->SetHitTestData(
         GetEventRegions(aLayer),
+        aLayer.GetVisibleRegion(),
         aLayer.GetTransformTyped(),
         Some(clipRegion),
         GetEventRegionsOverride(aParent, aLayer));
@@ -811,6 +813,7 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
     ParentLayerIntRegion clipRegion = ComputeClipRegion(state->mController, aLayer);
     node->SetHitTestData(
         GetEventRegions(aLayer),
+        aLayer.GetVisibleRegion(),
         aLayer.GetTransformTyped(),
         Some(clipRegion),
         GetEventRegionsOverride(aParent, aLayer));
