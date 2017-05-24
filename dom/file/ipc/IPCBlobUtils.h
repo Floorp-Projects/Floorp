@@ -140,6 +140,7 @@ class PBackgroundParent;
 
 namespace dom {
 
+class IPCBlob;
 class nsIContentChild;
 class nsIContentParent;
 

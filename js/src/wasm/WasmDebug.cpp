@@ -189,7 +189,7 @@ DebugState::getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offse
         return true;
 
     if (binarySource_) {
-        const CallSite* callsite = SlowCallSiteSearchByOffset(metadataTier(), lineno);
+        const CallSite* callsite = SlowCallSiteSearchByOffset(metadata(Tier::Debug), lineno);
         if (callsite && !offsets->append(lineno))
             return false;
         return true;
@@ -228,7 +228,7 @@ DebugState::getAllColumnOffsets(JSContext* cx, Vector<ExprLoc>* offsets)
         return true;
 
     if (binarySource_) {
-        for (const CallSite& callSite : metadataTier().callSites) {
+        for (const CallSite& callSite : metadata(Tier::Debug).callSites) {
             if (callSite.kind() != CallSite::Breakpoint)
                 continue;
             uint32_t offset = callSite.lineOrBytecode();
@@ -255,7 +255,7 @@ DebugState::getOffsetLocation(JSContext* cx, uint32_t offset, bool* found, size_
         return true;
 
     if (binarySource_) {
-        if (!SlowCallSiteSearchByOffset(metadataTier(), offset))
+        if (!SlowCallSiteSearchByOffset(metadata(Tier::Debug), offset))
             return true; // offset was not found
         *found = true;
         *lineno = offset;
@@ -311,7 +311,7 @@ bool
 DebugState::incrementStepModeCount(JSContext* cx, uint32_t funcIndex)
 {
     MOZ_ASSERT(debugEnabled());
-    const CodeRange& codeRange = codeRanges()[debugFuncToCodeRange(funcIndex)];
+    const CodeRange& codeRange = codeRanges(Tier::Debug)[debugFuncToCodeRangeIndex(funcIndex)];
     MOZ_ASSERT(codeRange.isFunction());
 
     if (!stepModeCounters_.initialized() && !stepModeCounters_.init()) {
@@ -330,11 +330,11 @@ DebugState::incrementStepModeCount(JSContext* cx, uint32_t funcIndex)
         return false;
     }
 
-    AutoWritableJitCode awjc(cx->runtime(), code_->segmentTier().base() + codeRange.begin(),
+    AutoWritableJitCode awjc(cx->runtime(), code_->segment(Tier::Debug).base() + codeRange.begin(),
                              codeRange.end() - codeRange.begin());
     AutoFlushICache afc("Code::incrementStepModeCount");
 
-    for (const CallSite& callSite : callSites()) {
+    for (const CallSite& callSite : callSites(Tier::Debug)) {
         if (callSite.kind() != CallSite::Breakpoint)
             continue;
         uint32_t offset = callSite.returnAddressOffset();
@@ -345,10 +345,10 @@ DebugState::incrementStepModeCount(JSContext* cx, uint32_t funcIndex)
 }
 
 bool
-DebugState::decrementStepModeCount(JSContext* cx, uint32_t funcIndex)
+DebugState::decrementStepModeCount(FreeOp* fop, uint32_t funcIndex)
 {
     MOZ_ASSERT(debugEnabled());
-    const CodeRange& codeRange = codeRanges()[debugFuncToCodeRange(funcIndex)];
+    const CodeRange& codeRange = codeRanges(Tier::Debug)[debugFuncToCodeRangeIndex(funcIndex)];
     MOZ_ASSERT(codeRange.isFunction());
 
     MOZ_ASSERT(stepModeCounters_.initialized() && !stepModeCounters_.empty());
@@ -359,11 +359,11 @@ DebugState::decrementStepModeCount(JSContext* cx, uint32_t funcIndex)
 
     stepModeCounters_.remove(p);
 
-    AutoWritableJitCode awjc(cx->runtime(), code_->segmentTier().base() + codeRange.begin(),
+    AutoWritableJitCode awjc(fop->runtime(), code_->segment(Tier::Debug).base() + codeRange.begin(),
                              codeRange.end() - codeRange.begin());
     AutoFlushICache afc("Code::decrementStepModeCount");
 
-    for (const CallSite& callSite : callSites()) {
+    for (const CallSite& callSite : callSites(Tier::Debug)) {
         if (callSite.kind() != CallSite::Breakpoint)
             continue;
         uint32_t offset = callSite.returnAddressOffset();
@@ -380,27 +380,28 @@ DebugState::hasBreakpointTrapAtOffset(uint32_t offset)
 {
     if (!debugEnabled())
         return false;
-    return SlowCallSiteSearchByOffset(metadataTier(), offset);
+    return SlowCallSiteSearchByOffset(metadata(Tier::Debug), offset);
 }
 
 void
 DebugState::toggleBreakpointTrap(JSRuntime* rt, uint32_t offset, bool enabled)
 {
     MOZ_ASSERT(debugEnabled());
-    const CallSite* callSite = SlowCallSiteSearchByOffset(metadataTier(), offset);
+    const CallSite* callSite = SlowCallSiteSearchByOffset(metadata(Tier::Debug), offset);
     if (!callSite)
         return;
     size_t debugTrapOffset = callSite->returnAddressOffset();
 
-    const CodeRange* codeRange = code_->lookupRange(code_->segmentTier().base() + debugTrapOffset);
+    const CodeSegment& codeSegment = code_->segment(Tier::Debug);
+    const CodeRange* codeRange = code_->lookupRange(codeSegment.base() + debugTrapOffset);
     MOZ_ASSERT(codeRange && codeRange->isFunction());
 
     if (stepModeCounters_.initialized() && stepModeCounters_.lookup(codeRange->funcIndex()))
         return; // no need to toggle when step mode is enabled
 
-    AutoWritableJitCode awjc(rt, code_->segmentTier().base(), code_->segmentTier().length());
+    AutoWritableJitCode awjc(rt, codeSegment.base(), codeSegment.length());
     AutoFlushICache afc("Code::toggleBreakpointTrap");
-    AutoFlushICache::setRange(uintptr_t(code_->segmentTier().base()), code_->segmentTier().length());
+    AutoFlushICache::setRange(uintptr_t(codeSegment.base()), codeSegment.length());
     toggleDebugTrap(debugTrapOffset, enabled);
 }
 
@@ -478,8 +479,8 @@ void
 DebugState::toggleDebugTrap(uint32_t offset, bool enabled)
 {
     MOZ_ASSERT(offset);
-    uint8_t* trap = code_->segmentTier().base() + offset;
-    const Uint32Vector& farJumpOffsets = metadataTier().debugTrapFarJumpOffsets;
+    uint8_t* trap = code_->segment(Tier::Debug).base() + offset;
+    const Uint32Vector& farJumpOffsets = metadata(Tier::Debug).debugTrapFarJumpOffsets;
     if (enabled) {
         MOZ_ASSERT(farJumpOffsets.length() > 0);
         size_t i = 0;
@@ -488,7 +489,7 @@ DebugState::toggleDebugTrap(uint32_t offset, bool enabled)
         if (i >= farJumpOffsets.length() ||
             (i > 0 && offset - farJumpOffsets[i - 1] < farJumpOffsets[i] - offset))
             i--;
-        uint8_t* farJump = code_->segmentTier().base() + farJumpOffsets[i];
+        uint8_t* farJump = code_->segment(Tier::Debug).base() + farJumpOffsets[i];
         MacroAssembler::patchNopToCall(trap, farJump);
     } else {
         MacroAssembler::patchCallToNop(trap);
@@ -510,10 +511,11 @@ DebugState::adjustEnterAndLeaveFrameTrapsState(JSContext* cx, bool enabled)
     if (wasEnabled == stillEnabled)
         return;
 
-    AutoWritableJitCode awjc(cx->runtime(), code_->segmentTier().base(), code_->segmentTier().length());
+    const CodeSegment& codeSegment = code_->segment(Tier::Debug);
+    AutoWritableJitCode awjc(cx->runtime(), codeSegment.base(), codeSegment.length());
     AutoFlushICache afc("Code::adjustEnterAndLeaveFrameTrapsState");
-    AutoFlushICache::setRange(uintptr_t(code_->segmentTier().base()), code_->segmentTier().length());
-    for (const CallSite& callSite : callSites()) {
+    AutoFlushICache::setRange(uintptr_t(codeSegment.base()), codeSegment.length());
+    for (const CallSite& callSite : callSites(Tier::Debug)) {
         if (callSite.kind() != CallSite::EnterFrame && callSite.kind() != CallSite::LeaveFrame)
             continue;
         toggleDebugTrap(callSite.returnAddressOffset(), stillEnabled);
@@ -531,7 +533,7 @@ DebugState::debugGetLocalTypes(uint32_t funcIndex, ValTypeVector* locals, size_t
         return false;
 
     // Decode local var types from wasm binary function body.
-    const CodeRange& range = codeRanges()[debugFuncToCodeRange(funcIndex)];
+    const CodeRange& range = codeRanges(Tier::Debug)[debugFuncToCodeRangeIndex(funcIndex)];
     // In wasm, the Code points to the function start via funcLineOrBytecode.
     MOZ_ASSERT(!metadata().isAsmJS() && maybeBytecode_);
     size_t offsetInModule = range.funcLineOrBytecode();

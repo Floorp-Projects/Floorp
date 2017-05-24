@@ -30,7 +30,7 @@ promise_test(t => {
           return;
         }
 
-        assert_true(i === 0 || i === 1 || i === 2, `Any message events must come from expected sources; got ${i}`);
+        assert_in_array(i, [0, 1, 2], "Any message events must come from expected sources");
         ++soFar;
 
         if (soFar === 3) {

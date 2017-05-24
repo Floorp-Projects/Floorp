@@ -2225,14 +2225,11 @@ class BaseCompiler
         // be (we may need arbitrary spill slots and outgoing param slots) so
         // emit a patchable add that is patched in endFunction().
         //
-        // ScratchReg may be used by branchPtr(), so use ABINonArgReg0 for the
-        // effective address.
+        // ScratchReg may be used by branchPtr(), so use ABINonArgReg0/1 for
+        // temporaries.
 
         stackAddOffset_ = masm.add32ToPtrWithPatch(StackPointer, ABINonArgReg0);
-        masm.branchPtr(Assembler::AboveOrEqual,
-                       Address(WasmTlsReg, offsetof(TlsData, stackLimit)),
-                       ABINonArgReg0,
-                       &stackOverflowLabel_);
+        masm.wasmEmitStackCheck(ABINonArgReg0, ABINonArgReg1, &stackOverflowLabel_);
 
         // Copy arguments from registers to stack.
 
@@ -7574,7 +7571,7 @@ js::wasm::BaselineCanCompile()
 bool
 js::wasm::BaselineCompileFunction(CompileTask* task, FuncCompileUnit* unit, UniqueChars *error)
 {
-    MOZ_ASSERT(task->mode() == CompileMode::Baseline);
+    MOZ_ASSERT(task->tier() == Tier::Baseline);
     MOZ_ASSERT(task->env().kind == ModuleKind::Wasm);
 
     const FuncBytes& func = unit->func();

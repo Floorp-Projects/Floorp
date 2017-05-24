@@ -16,7 +16,7 @@
 let observedResetSelectionDirection;
 function assertSelectionDirectionIsReset(element) {
   if (!observedResetSelectionDirection) {
-    assert_true(element.selectionDirection === "none" || element.selectionDirection === "forward",
+    assert_in_array(element.selectionDirection, ["none", "forward"],
       "selectionDirection must be set to either none or forward");
     observedResetSelectionDirection = element.selectionDirection;
   } else {

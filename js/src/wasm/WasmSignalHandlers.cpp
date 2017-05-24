@@ -663,20 +663,23 @@ MOZ_COLD static void
 HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
                    const Instance& instance, WasmActivation* activation, uint8_t** ppc)
 {
-    MOZ_RELEASE_ASSERT(instance.codeSegmentTier().containsFunctionPC(pc));
+    MOZ_RELEASE_ASSERT(instance.code().containsFunctionPC(pc));
 
-    const MemoryAccess* memoryAccess = instance.code().lookupMemoryAccess(pc);
+    const CodeSegment* segment;
+    const MemoryAccess* memoryAccess = instance.code().lookupMemoryAccess(pc, &segment);
     if (!memoryAccess) {
         // If there is no associated MemoryAccess for the faulting PC, this must be
         // experimental SIMD.js or Atomics. When these are converted to
         // non-experimental wasm features, this case, as well as outOfBoundsCode,
         // can be removed.
         activation->startInterrupt(pc, ContextToFP(context));
-        *ppc = instance.codeSegmentTier().outOfBoundsCode();
+        if (!instance.code().containsCodePC(pc, &segment))
+            MOZ_CRASH("Cannot map PC to trap handler");
+        *ppc = segment->outOfBoundsCode();
         return;
     }
 
-    MOZ_RELEASE_ASSERT(memoryAccess->insnOffset() == (pc - instance.codeBaseTier()));
+    MOZ_RELEASE_ASSERT(memoryAccess->insnOffset() == (pc - segment->base()));
 
     // On WASM_HUGE_MEMORY platforms, asm.js code may fault. asm.js does not
     // trap on fault and so has no trap out-of-line path. Instead, stores are
@@ -684,7 +687,7 @@ HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddr
     // loads silently succeed with a JS-semantics-determined value.
 
     if (memoryAccess->hasTrapOutOfLineCode()) {
-        *ppc = memoryAccess->trapOutOfLineCode(instance.codeBaseTier());
+        *ppc = memoryAccess->trapOutOfLineCode(segment->base());
         return;
     }
 
@@ -696,7 +699,7 @@ HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddr
     uint8_t* end = Disassembler::DisassembleHeapAccess(pc, &access);
     const Disassembler::ComplexAddress& address = access.address();
     MOZ_RELEASE_ASSERT(end > pc);
-    MOZ_RELEASE_ASSERT(instance.codeSegmentTier().containsFunctionPC(end));
+    MOZ_RELEASE_ASSERT(segment->containsFunctionPC(end));
 
     // Check x64 asm.js heap access invariants.
     MOZ_RELEASE_ASSERT(address.disp() >= 0);
@@ -809,18 +812,21 @@ MOZ_COLD static void
 HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
                    const Instance& instance, WasmActivation* activation, uint8_t** ppc)
 {
-    MOZ_RELEASE_ASSERT(instance.codeSegmentTier().containsFunctionPC(pc));
+    MOZ_RELEASE_ASSERT(instance.code().containsFunctionPC(pc));
 
-    const MemoryAccess* memoryAccess = instance.code().lookupMemoryAccess(pc);
+    const CodeSegment* segment;
+    const MemoryAccess* memoryAccess = instance.code().lookupMemoryAccess(pc, &segment);
     if (!memoryAccess) {
         // See explanation in the WASM_HUGE_MEMORY HandleMemoryAccess.
         activation->startInterrupt(pc, ContextToFP(context));
-        *ppc = instance.codeSegmentTier().outOfBoundsCode();
+        if (!instance.code().containsCodePC(pc, &segment))
+            MOZ_CRASH("Cannot map PC to trap handler");
+        *ppc = segment->outOfBoundsCode();
         return;
     }
 
     MOZ_RELEASE_ASSERT(memoryAccess->hasTrapOutOfLineCode());
-    *ppc = memoryAccess->trapOutOfLineCode(instance.codeBaseTier());
+    *ppc = memoryAccess->trapOutOfLineCode(segment->base());
 }
 
 #endif // WASM_HUGE_MEMORY
@@ -862,11 +868,12 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (!activation)
         return false;
 
-    const Code* code = activation->compartment()->wasm.lookupCode(pc);
+    const CodeSegment* codeSegment;
+    const Code* code = activation->compartment()->wasm.lookupCode(pc, &codeSegment);
     if (!code)
         return false;
 
-    if (!code->segmentTier().containsFunctionPC(pc)) {
+    if (!codeSegment->containsFunctionPC(pc)) {
         // On Windows, it is possible for InterruptRunningJitCode to execute
         // between a faulting heap access and the handling of the fault due
         // to InterruptRunningJitCode's use of SuspendThread. When this happens,
@@ -876,9 +883,16 @@ HandleFault(PEXCEPTION_POINTERS exception)
         // always the logically-faulting pc). Fortunately, we can detect this
         // case and silence the exception ourselves (the exception will
         // retrigger after the interrupt jumps back to resumePC).
-        return pc == code->segmentTier().interruptCode() &&
-               activation->interrupted() &&
-               code->segmentTier().containsFunctionPC(activation->resumePC());
+
+        for (auto t : code->tiers()) {
+            if (pc == code->segment(t).interruptCode() &&
+                activation->interrupted() &&
+                code->segment(t).containsFunctionPC(activation->resumePC()))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     const Instance* instance = LookupFaultingInstance(activation, pc, ContextToFP(context));
@@ -1021,7 +1035,7 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
         return false;
 
     const Instance* instance = LookupFaultingInstance(activation, pc, ContextToFP(&context));
-    if (!instance || !instance->codeSegmentTier().containsFunctionPC(pc))
+    if (!instance || !instance->code().containsFunctionPC(pc))
         return false;
 
     uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(request.body.code[1]);
@@ -1227,8 +1241,9 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
     if (!activation)
         return false;
 
+    const CodeSegment* segment;
     const Instance* instance = LookupFaultingInstance(activation, pc, ContextToFP(context));
-    if (!instance || !instance->codeSegmentTier().containsFunctionPC(pc))
+    if (!instance || !instance->code().containsFunctionPC(pc, &segment))
         return false;
 
     uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(info->si_addr);
@@ -1259,7 +1274,7 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
         // error and we should signal that properly, but to do so we must inspect
         // the operand of the failed access.
         activation->startInterrupt(pc, ContextToFP(context));
-        *ppc = instance->codeSegmentTier().unalignedAccessCode();
+        *ppc = segment->unalignedAccessCode();
         return true;
     }
 #endif
@@ -1348,8 +1363,9 @@ RedirectJitCodeToInterruptCheck(JSContext* cx, CONTEXT* context)
     // get into any weird interrupt-during-interrupt-stub cases.
     if (!cx->compartment())
         return false;
-    const Code* code = cx->compartment()->wasm.lookupCode(pc);
-    if (!code || !code->segmentTier().containsFunctionPC(pc))
+    const CodeSegment* codeSegment;
+    const Code* code = cx->compartment()->wasm.lookupCode(pc, &codeSegment);
+    if (!code || !codeSegment->containsFunctionPC(pc))
         return false;
 
     // Only probe cx->activation() via MaybeActiveActivation after we know the
@@ -1375,7 +1391,7 @@ RedirectJitCodeToInterruptCheck(JSContext* cx, CONTEXT* context)
         return false;
 
     activation->startInterrupt(pc, fp);
-    *ContextToPC(context) = code->segmentTier().interruptCode();
+    *ContextToPC(context) = codeSegment->interruptCode();
 #endif
 
     return true;
