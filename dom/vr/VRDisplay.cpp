@@ -12,9 +12,12 @@
 #include "mozilla/dom/VRDisplay.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/VRDisplayBinding.h"
+#include "mozilla/Base64.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "Navigator.h"
 #include "gfxPrefs.h"
+#include "gfxUtils.h"
 #include "gfxVR.h"
 #include "VRDisplayClient.h"
 #include "VRManagerChild.h"
@@ -438,6 +441,40 @@ VRDisplay::GetFrameData(VRFrameData& aFrameData)
 {
   UpdateFrameInfo();
   aFrameData.Update(mFrameInfo);
+  return true;
+}
+
+bool
+VRDisplay::GetSubmitFrameResult(VRSubmitFrameResult& aResult)
+{
+  if (!mPresentation) {
+    return false;
+  }
+
+  VRSubmitFrameResultInfo resultInfo;
+  mClient->GetSubmitFrameResult(resultInfo);
+  if (!resultInfo.mBase64Image.Length()) {
+    return false;  // The submit frame result is not ready.
+  }
+
+  nsAutoCString decodedImg;
+  if (Base64Decode(resultInfo.mBase64Image, decodedImg) != NS_OK) {
+    MOZ_ASSERT(false, "Failed to do decode base64 images.");
+    return false;
+  }
+
+  const char* srcData = (decodedImg.get());
+  const gfx::IntSize size(resultInfo.mWidth, resultInfo.mHeight);
+  RefPtr<DataSourceSurface> dataSurface = gfx::CreateDataSourceSurfaceFromData(
+                                            size, resultInfo.mFormat, (uint8_t*)srcData,
+                                            StrideForFormatAndWidth(resultInfo.mFormat, resultInfo.mWidth));
+  if (!dataSurface || !dataSurface->IsValid()) {
+    MOZ_ASSERT(false, "dataSurface is null.");
+    return false;
+  }
+
+  nsAutoCString encodedImg(gfxUtils::GetAsDataURI(dataSurface));
+  aResult.Update(resultInfo.mFrameNum, encodedImg);
   return true;
 }
 
@@ -872,6 +909,55 @@ void
 VRFrameInfo::Clear()
 {
   mVRState.Clear();
+}
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(VRSubmitFrameResult, mParent)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(VRSubmitFrameResult, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(VRSubmitFrameResult, Release)
+
+VRSubmitFrameResult::VRSubmitFrameResult(nsISupports* aParent)
+  : mParent(aParent)
+  , mFrameNum(0)
+{
+  mozilla::HoldJSObjects(this);
+}
+
+VRSubmitFrameResult::~VRSubmitFrameResult()
+{
+  mozilla::DropJSObjects(this);
+}
+
+/* static */ already_AddRefed<VRSubmitFrameResult>
+VRSubmitFrameResult::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
+{
+  RefPtr<VRSubmitFrameResult> obj = new VRSubmitFrameResult(aGlobal.GetAsSupports());
+  return obj.forget();
+}
+
+JSObject*
+VRSubmitFrameResult::WrapObject(JSContext* aCx,
+                                JS::Handle<JSObject*> aGivenProto)
+{
+  return VRSubmitFrameResultBinding::Wrap(aCx, this, aGivenProto);
+}
+
+void
+VRSubmitFrameResult::Update(uint32_t aFrameNum, const nsACString& aBase64Image)
+{
+  mFrameNum = aFrameNum;
+  mBase64Image = NS_ConvertASCIItoUTF16(aBase64Image);
+}
+
+double
+VRSubmitFrameResult::FrameNum() const
+{
+  return mFrameNum;
+}
+
+void
+VRSubmitFrameResult::GetBase64Image(nsAString& aImage) const
+{
+  aImage = mBase64Image;
 }
 
 } // namespace dom

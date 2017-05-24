@@ -122,7 +122,7 @@
   box-shadow: none;
   border: 2px solid -moz-dialog;
   /* "!important" is necessary to override the rule in toolbarbutton.css */
-  margin: -8px 0 0 !important;
+  margin: -9px 0 0 !important;
   margin-inline-end: -6px !important;
   min-width: 16px;
   min-height: 16px;
@@ -2003,8 +2003,6 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   #PanelUI-menu-button[badge-status="update-manual"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
   #PanelUI-menu-button[badge-status="update-restart"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
     border: 1px solid -moz-dialog;
-    /* "!important" is necessary to override the rule in toolbarbutton.css */
-    margin: -9px 0 0 !important;
   }
 }
 

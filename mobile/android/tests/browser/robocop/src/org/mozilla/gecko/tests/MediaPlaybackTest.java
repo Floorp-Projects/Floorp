@@ -96,19 +96,6 @@ abstract class MediaPlaybackTest extends BaseTest {
     /**
      * Use these methods to wait the tab playing related states changed.
      */
-    protected final void waitUntilTabMediaStarted(final Tab tab) {
-        if (tab.isMediaPlaying()) {
-            return;
-        }
-        // Tab:MediaPlaybackChange would be dispatched when media started or
-        // ended, but it won't be dispatched when we pause/resume media via
-        // media control.
-        Actions.EventExpecter contentEventExpecter =
-                mActions.expectGlobalEvent(Actions.EventType.UI, "Tab:MediaPlaybackChange");
-        contentEventExpecter.blockForEvent();
-        contentEventExpecter.unregisterListener();
-    }
-
     private final void waitUntilTabAudioPlayingStateChanged(final Tab tab,
                                                             final boolean isTabPlaying) {
         if (tab.isAudioPlaying() == isTabPlaying) {
