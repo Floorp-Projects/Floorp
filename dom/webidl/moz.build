@@ -944,6 +944,7 @@ WEBIDL_FILES = [
     'WaveShaperNode.webidl',
     'WebAuthentication.webidl',
     'WebComponents.webidl',
+    'WebExtensionPolicy.webidl',
     'WebGL2RenderingContext.webidl',
     'WebGLRenderingContext.webidl',
     'WebKitCSSMatrix.webidl',
