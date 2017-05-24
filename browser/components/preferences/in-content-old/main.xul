@@ -322,10 +322,13 @@
 <groupbox id="performanceGroup" data-category="paneGeneral" hidden="true">
   <caption><label>&performance.label;</label></caption>
 
-  <checkbox id="useRecommendedPerformanceSettings"
-            label="&useRecommendedPerformanceSettings.label;"
-            accesskey="&useRecommendedPerformanceSettings.accesskey;"
-            preference="browser.preferences.defaultPerformanceSettings.enabled"/>
+  <hbox align="center">
+    <checkbox id="useRecommendedPerformanceSettings"
+              label="&useRecommendedPerformanceSettings.label;"
+              accesskey="&useRecommendedPerformanceSettings.accesskey;"
+              preference="browser.preferences.defaultPerformanceSettings.enabled"/>
+    <label id="performanceSettingsLearnMore" class="learnMore text-link">&performanceSettingsLearnMore.label;</label>
+  </hbox>
   <description class="indent">&useRecommendedPerformanceSettings.description;</description>
 
   <vbox id="performanceSettings" class="indent" hidden="true">
