@@ -1110,10 +1110,14 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onAttachedToWindow() {
-        // We can't show the first run experience until Gecko has finished initialization (bug 1077583).
-        checkFirstrun(this, new SafeIntent(getIntent()));
+        final SafeIntent intent = new SafeIntent(getIntent());
 
-        DawnHelper.conditionallyNotifyDawn(this);
+        // We can't show the first run experience until Gecko has finished initialization (bug 1077583).
+        checkFirstrun(this, intent);
+
+        if (!IntentUtils.getIsInAutomationFromEnvironment(intent)) {
+            DawnHelper.conditionallyNotifyDawn(this);
+        }
     }
 
     @Override
