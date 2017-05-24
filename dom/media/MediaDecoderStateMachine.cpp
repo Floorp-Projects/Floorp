@@ -1018,11 +1018,8 @@ public:
 protected:
   SeekJob mSeekJob;
 
-  void SeekCompleted();
-
-private:
   virtual void DoSeek() = 0;
-
+  void SeekCompleted();
   virtual TimeUnit CalculateNewCurrentTime() const = 0;
 };
 
@@ -1194,21 +1191,6 @@ public:
     RequestVideoData();
   }
 
-private:
-  void DemuxerSeek()
-  {
-    // Request the demuxer to perform seek.
-    Reader()->Seek(mSeekJob.mTarget.ref())
-      ->Then(OwnerThread(), __func__,
-             [this] (const media::TimeUnit& aUnit) {
-               OnSeekResolved(aUnit);
-             },
-             [this] (const SeekRejectValue& aReject) {
-               OnSeekRejected(aReject);
-             })
-      ->Track(mSeekRequest);
-  }
-
   void DoSeek() override
   {
     mDoneAudioSeeking = !Info().HasAudio() || mSeekJob.mTarget->IsVideoOnly();
@@ -1259,6 +1241,21 @@ private:
 
     MOZ_ASSERT(false, "AccurateSeekTask doesn't handle other seek types.");
     return TimeUnit::Zero();
+  }
+
+private:
+  void DemuxerSeek()
+  {
+    // Request the demuxer to perform seek.
+    Reader()->Seek(mSeekJob.mTarget.ref())
+      ->Then(OwnerThread(), __func__,
+             [this] (const media::TimeUnit& aUnit) {
+               OnSeekResolved(aUnit);
+             },
+             [this] (const SeekRejectValue& aReject) {
+               OnSeekRejected(aReject);
+             })
+      ->Track(mSeekRequest);
   }
 
   void OnSeekResolved(media::TimeUnit)
@@ -1522,61 +1519,6 @@ public:
     mSeekJob.RejectIfExists(__func__);
   }
 
-private:
-  void DoSeekInternal()
-  {
-    auto currentTime = mCurrentTime;
-    DiscardFrames(VideoQueue(), [currentTime] (int64_t aSampleTime) {
-      return aSampleTime <= currentTime.ToMicroseconds();
-    });
-
-    if (!NeedMoreVideo()) {
-      FinishSeek();
-    } else if (!mMaster->IsRequestingVideoData()
-               && !mMaster->IsWaitingVideoData()) {
-      RequestVideoData();
-    }
-  }
-
-  class AysncNextFrameSeekTask : public Runnable
-  {
-  public:
-    explicit AysncNextFrameSeekTask(NextFrameSeekingState* aStateObject)
-      : mStateObj(aStateObject)
-    {
-    }
-
-    void Cancel() { mStateObj = nullptr; }
-
-    NS_IMETHOD Run() override
-    {
-      if (mStateObj) {
-        mStateObj->DoSeekInternal();
-      }
-      return NS_OK;
-    }
-
-  private:
-    NextFrameSeekingState* mStateObj;
-  };
-
-  void DoSeek() override
-  {
-    // We need to do the seek operation asynchronously. Because for a special
-    // case (bug504613.ogv) which has no data at all, the 1st seekToNextFrame()
-    // operation reaches to the end of the media. If we did the seek operation
-    // synchronously, we immediately resolve the SeekPromise in mSeekJob and
-    // then switch to the CompletedState which dispatches an "ended" event.
-    // However, the ThenValue of the SeekPromise has not yet been set, so the
-    // promise resolving is postponed and then the JS developer receives the
-    // "ended" event before the seek promise is resolved.
-    // An asynchronous seek operation helps to solve this issue since while the
-    // seek is actually performed, the ThenValue of SeekPromise has already
-    // been set so that it won't be postponed.
-    RefPtr<Runnable> r = mAsyncSeekTask = new AysncNextFrameSeekTask(this);
-    OwnerThread()->Dispatch(r.forget());
-  }
-
   void HandleAudioDecoded(AudioData* aAudio) override
   {
     mMaster->PushAudio(aAudio);
@@ -1660,6 +1602,61 @@ private:
     // which has been updated to the next frame's time.
     return mSeekJob.mTarget->GetTime();
   }
+
+  void DoSeek() override
+  {
+    // We need to do the seek operation asynchronously. Because for a special
+    // case (bug504613.ogv) which has no data at all, the 1st seekToNextFrame()
+    // operation reaches the end of the media. If we did the seek operation
+    // synchronously, we immediately resolve the SeekPromise in mSeekJob and
+    // then switch to the CompletedState which dispatches an "ended" event.
+    // However, the ThenValue of the SeekPromise has not yet been set, so the
+    // promise resolving is postponed and then the JS developer receives the
+    // "ended" event before the seek promise is resolved.
+    // An asynchronous seek operation helps to solve this issue since while the
+    // seek is actually performed, the ThenValue of SeekPromise has already
+    // been set so that it won't be postponed.
+    RefPtr<Runnable> r = mAsyncSeekTask = new AysncNextFrameSeekTask(this);
+    OwnerThread()->Dispatch(r.forget());
+  }
+
+private:
+  void DoSeekInternal()
+  {
+    auto currentTime = mCurrentTime;
+    DiscardFrames(VideoQueue(), [currentTime] (int64_t aSampleTime) {
+      return aSampleTime <= currentTime.ToMicroseconds();
+    });
+
+    if (!NeedMoreVideo()) {
+      FinishSeek();
+    } else if (!mMaster->IsRequestingVideoData()
+               && !mMaster->IsWaitingVideoData()) {
+      RequestVideoData();
+    }
+  }
+
+  class AysncNextFrameSeekTask : public Runnable
+  {
+  public:
+    explicit AysncNextFrameSeekTask(NextFrameSeekingState* aStateObject)
+      : mStateObj(aStateObject)
+    {
+    }
+
+    void Cancel() { mStateObj = nullptr; }
+
+    NS_IMETHOD Run() override
+    {
+      if (mStateObj) {
+        mStateObj->DoSeekInternal();
+      }
+      return NS_OK;
+    }
+
+  private:
+    NextFrameSeekingState* mStateObj;
+  };
 
   void RequestVideoData()
   {
