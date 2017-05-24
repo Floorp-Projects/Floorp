@@ -309,7 +309,8 @@ LoadActivation(MacroAssembler& masm, Register dest)
 {
     // WasmCall pushes a WasmActivation and an inactive JitActivation. The
     // JitActivation only becomes active when calling into JS from wasm.
-    masm.loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, cx)), dest);
+    masm.loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, addressOfContext)), dest);
+    masm.loadPtr(Address(dest, 0), dest);
     masm.loadPtr(Address(dest, JSContext::offsetOfActivation()), dest);
     masm.loadPtr(Address(dest, Activation::offsetOfPrev()), dest);
 }

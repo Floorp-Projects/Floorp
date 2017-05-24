@@ -345,7 +345,7 @@ DebugState::incrementStepModeCount(JSContext* cx, uint32_t funcIndex)
 }
 
 bool
-DebugState::decrementStepModeCount(JSContext* cx, uint32_t funcIndex)
+DebugState::decrementStepModeCount(FreeOp* fop, uint32_t funcIndex)
 {
     MOZ_ASSERT(debugEnabled());
     const CodeRange& codeRange = codeRanges(Tier::Debug)[debugFuncToCodeRangeIndex(funcIndex)];
@@ -359,7 +359,7 @@ DebugState::decrementStepModeCount(JSContext* cx, uint32_t funcIndex)
 
     stepModeCounters_.remove(p);
 
-    AutoWritableJitCode awjc(cx->runtime(), code_->segment(Tier::Debug).base() + codeRange.begin(),
+    AutoWritableJitCode awjc(fop->runtime(), code_->segment(Tier::Debug).base() + codeRange.begin(),
                              codeRange.end() - codeRange.begin());
     AutoFlushICache afc("Code::decrementStepModeCount");
 

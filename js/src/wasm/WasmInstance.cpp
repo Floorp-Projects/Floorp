@@ -256,7 +256,7 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
 /* static */ int32_t
 Instance::callImport_void(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
-    JSContext* cx = instance->cx();
+    JSContext* cx = TlsContext.get();
     RootedValue rval(cx);
     return instance->callImport(cx, funcImportIndex, argc, argv, &rval);
 }
@@ -264,7 +264,7 @@ Instance::callImport_void(Instance* instance, int32_t funcImportIndex, int32_t a
 /* static */ int32_t
 Instance::callImport_i32(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
-    JSContext* cx = instance->cx();
+    JSContext* cx = TlsContext.get();
     RootedValue rval(cx);
     if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
@@ -275,7 +275,7 @@ Instance::callImport_i32(Instance* instance, int32_t funcImportIndex, int32_t ar
 /* static */ int32_t
 Instance::callImport_i64(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
-    JSContext* cx = instance->cx();
+    JSContext* cx = TlsContext.get();
     RootedValue rval(cx);
     if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
@@ -286,7 +286,7 @@ Instance::callImport_i64(Instance* instance, int32_t funcImportIndex, int32_t ar
 /* static */ int32_t
 Instance::callImport_f64(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
-    JSContext* cx = instance->cx();
+    JSContext* cx = TlsContext.get();
     RootedValue rval(cx);
     if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
@@ -299,7 +299,7 @@ Instance::growMemory_i32(Instance* instance, uint32_t delta)
 {
     MOZ_ASSERT(!instance->isAsmJS());
 
-    JSContext* cx = instance->cx();
+    JSContext* cx = TlsContext.get();
     RootedWasmMemoryObject memory(cx, instance->memory_);
 
     uint32_t ret = WasmMemoryObject::grow(memory, delta, cx);
@@ -343,14 +343,13 @@ Instance::Instance(JSContext* cx,
 #endif
     MOZ_ASSERT(tables_.length() == metadata().tables.length());
 
-    tlsData()->cx = cx;
-    tlsData()->instance = this;
-    tlsData()->globalData = globals_->globalData();
     tlsData()->memoryBase = memory ? memory->buffer().dataPointerEither().unwrap() : nullptr;
 #ifndef WASM_HUGE_MEMORY
     tlsData()->boundsCheckLimit = memory ? memory->buffer().wasmBoundsCheckLimit() : 0;
 #endif
-    tlsData()->stackLimit = *(void**)cx->stackLimitAddressForJitCode(JS::StackForUntrustedScript);
+    tlsData()->globalData = globals_->globalData();
+    tlsData()->instance = this;
+    tlsData()->addressOfContext = (JSContext**)object->zone()->group()->addressOfOwnerContext();
 
     Tier callerTier = Tier::TBD;
     Tier calleeTier = Tier::TBD;
