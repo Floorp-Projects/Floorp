@@ -3,17 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "domstubs.idl"
+interface MozRDFCompositeDataSource;
+interface MozRDFResource;
+interface nsISupports;
+interface XULTemplateResult;
+interface XULTemplateRuleFilter;
 
-interface nsIAtom;
-interface nsIContent;
-interface nsIXULBuilderListener;
-interface nsIXULTemplateResult;
-interface nsIXULTemplateRuleFilter;
-interface nsIXULTemplateQueryProcessor;
-interface nsIRDFResource;
-interface nsIRDFCompositeDataSource;
-interface nsIDOMDataTransfer;
+callback interface XULBuilderListener
+{
+    void willRebuild(XULTemplateBuilder aBuilder);
+    void didRebuild(XULTemplateBuilder aBuilder);
+};
 
 /**
  * A template builder, given an input source of data, a template, and a
@@ -121,13 +121,13 @@ interface nsIDOMDataTransfer;
  *
  * See http://wiki.mozilla.org/XUL:Templates_Plan for details about templates.
  */
-[scriptable, uuid(A583B676-5B02-4F9C-A0C9-CB850CB99818)]
-interface nsIXULTemplateBuilder : nsISupports
+[Func="IsChromeOrXBL"]
+interface XULTemplateBuilder
 {
     /**
      * The root node in the DOM to which this builder is attached.
      */
-    readonly attribute nsIDOMElement root;
+    readonly attribute Element? root;
 
     /**
      * The opaque datasource object that is used for the template. This object
@@ -140,7 +140,8 @@ interface nsIXULTemplateBuilder : nsISupports
      * an inline reference (such as #name). Other query processors may use
      * other types for the datasource.
      */
-    attribute nsISupports datasource;
+    [SetterThrows]
+    attribute nsISupports? datasource;
 
     /**
      * The composite datasource that the template builder observes
@@ -148,19 +149,14 @@ interface nsIXULTemplateBuilder : nsISupports
      * maintained for backwards compatibility. It will be the same object as
      * the datasource property. For non-RDF queries, it will always be null.
      */
-    readonly attribute nsIRDFCompositeDataSource database;
+    readonly attribute MozRDFCompositeDataSource? database;
 
     /**
      * The virtual result representing the starting reference point,
      * determined by calling the query processor's translateRef method
      * with the root node's ref attribute as an argument.
      */
-    readonly attribute nsIXULTemplateResult rootResult;
-
-    /**
-     * The query processor used to generate results.
-     */
-    [noscript] readonly attribute nsIXULTemplateQueryProcessor queryProcessor;
+    readonly attribute XULTemplateResult? rootResult;
 
     /**
      * Force the template builder to rebuild its content. All existing content
@@ -169,6 +165,7 @@ interface nsIXULTemplateBuilder : nsISupports
      * when the content is to be regenerated.
      * 
      */
+    [Throws]
     void rebuild();
 
     /**
@@ -178,6 +175,7 @@ interface nsIXULTemplateBuilder : nsISupports
      *       reload remote datasources. When RDF becomes remote-scriptable,
      *       this will no longer be necessary.
      */
+    [Throws]
     void refresh();
 
     /**
@@ -192,22 +190,23 @@ interface nsIXULTemplateBuilder : nsISupports
      *
      * @param aResult the result to add
      * @param aQueryNode the query that the result applies to
-     *
-     * @throws NS_ERROR_NULL_POINTER if aResult or aQueryNode are null
      */
-    void addResult(in nsIXULTemplateResult aResult, in nsIDOMNode aQueryNode);
+    [Throws]
+    void addResult(XULTemplateResult aResult, Node aQueryNode);
 
     /**
      * Inform the template builder that a result no longer applies. The builder
-     * will call the remove content generated for the result, if any. If a different
-     * query would then match instead, it will become the active match. This
-     * method will have no effect if the result isn't known to the builder.
+     * will call the remove content generated for the result, if any. If a
+     * different query would then match instead, it will become the active
+     * match. This method will have no effect if the result isn't known to the
+     * builder.
      *
      * @param aResult the result to remove
      *
      * @throws NS_ERROR_NULL_POINTER if aResult is null
      */
-    void removeResult(in nsIXULTemplateResult aResult);
+    [Throws]
+    void removeResult(XULTemplateResult aResult);
 
     /**
      * Inform the template builder that one result should be replaced with
@@ -225,9 +224,10 @@ interface nsIXULTemplateBuilder : nsISupports
      * @throws NS_ERROR_NULL_POINTER if either argument is null, or
      *         NS_ERROR_INVALID_ARG if the ids don't match
      */
-    void replaceResult(in nsIXULTemplateResult aOldResult,
-                       in nsIXULTemplateResult aNewResult,
-                       in nsIDOMNode aQueryNode);
+    [Throws]
+    void replaceResult(XULTemplateResult aOldResult,
+                       XULTemplateResult aNewResult,
+                       Node aQueryNode);
 
     /**
      * Inform the template builder that one or more of the optional bindings
@@ -239,7 +239,8 @@ interface nsIXULTemplateBuilder : nsISupports
      *
      * @throws NS_ERROR_NULL_POINTER if aResult is null
      */
-    void resultBindingChanged(in nsIXULTemplateResult aResult);
+    [Throws]
+    void resultBindingChanged(XULTemplateResult aResult);
 
     /**
      * Return the result for a given id. Only one such result is returned and
@@ -248,7 +249,8 @@ interface nsIXULTemplateBuilder : nsISupports
      *
      * @param aId the id to return the result for
      */
-    nsIXULTemplateResult getResultForId(in AString aId);
+    [Throws]
+    XULTemplateResult? getResultForId(DOMString aId);
 
     /**
      * Retrieve the result corresponding to a generated element, or null is
@@ -256,7 +258,7 @@ interface nsIXULTemplateBuilder : nsISupports
      *
      * @param aContent element to result the result of
      */
-    nsIXULTemplateResult getResultForContent(in nsIDOMElement aElement);
+    XULTemplateResult? getResultForContent(Element aElement);
 
     /**
      * Returns true if the node has content generated for it. This method is
@@ -267,7 +269,8 @@ interface nsIXULTemplateBuilder : nsISupports
      * @param aNode node to check
      * @param aTag tag that must match
      */
-    boolean hasGeneratedContent(in nsIRDFResource aNode, in nsIAtom aTag);
+    [Throws]
+    boolean hasGeneratedContent(MozRDFResource aNode, DOMString? aTag);
 
     /**
      * Adds a rule filter for a given rule, which may be used for specialized
@@ -280,70 +283,62 @@ interface nsIXULTemplateBuilder : nsISupports
      * @param aRule the rule to apply the filter to
      * @param aFilter the filter to add
      */
-    void addRuleFilter(in nsIDOMNode aRule, in nsIXULTemplateRuleFilter aFilter);
-
-    /**
-     * Invoked lazily by a XUL element that needs its child content built.
-     * If aForceCreation is true, then the contents of an element will be
-     * generated even if it is closed. If false, the element will only
-     * generate its contents if it is open. This behaviour is used with menus.
-     */
-    [noscript] void createContents(in nsIContent aElement,
-                                   in boolean aForceCreation);
+    [Throws]
+    void addRuleFilter(Node aRule, XULTemplateRuleFilter aFilter);
 
     /**
      * Add a listener to this template builder. The template builder
      * holds a strong reference to the listener.
      */
-    void addListener(in nsIXULBuilderListener aListener);
+    void addListener(XULBuilderListener aListener);
 
     /**
      * Remove a listener from this template builder.
      */
-    void removeListener(in nsIXULBuilderListener aListener);
+    void removeListener(XULBuilderListener aListener);
 };
 
 /**
- * nsIXULTreeBuilderObserver
+ *  XULTreeBuilderObserver
  *  This interface allows clients of the XULTreeBuilder to define domain 
  *  specific handling of specific nsITreeView methods that 
  *  XULTreeBuilder does not implement.
  */
-[scriptable, uuid(57CED9A7-EC0B-4A0E-8AEB-5DA32EBE951C)]
-interface nsIXULTreeBuilderObserver : nsISupports
+[Func="IsChromeOrXBL"]
+callback interface XULTreeBuilderObserver
 {
     const long DROP_BEFORE = -1;
     const long DROP_ON = 0;
     const long DROP_AFTER = 1;
     /**
-     * Methods used by the drag feedback code to determine if a drag is allowable at
-     * the current location. To get the behavior where drops are only allowed on
-     * items, such as the mailNews folder pane, always return false whe
-     * the orientation is not DROP_ON.
+     * Methods used by the drag feedback code to determine if a drag is
+     * allowable at the current location. To get the behavior where drops are
+     * only allowed on items, such as the mailNews folder pane, always return
+     * false when the orientation is not DROP_ON.
      */
-    boolean canDrop(in long index, in long orientation, in nsIDOMDataTransfer dataTransfer);
+    boolean canDrop(long index, long orientation, DataTransfer? dataTransfer);
 
     /**
-     * Called when the user drops something on this view. The |orientation| param
-     * specifies before/on/after the given |row|.
+     * Called when the user drops something on this view. The |orientation|
+     * param specifies before/on/after the given |row|.
      */
-    void onDrop(in long row, in long orientation, in nsIDOMDataTransfer dataTransfer);
+    void onDrop(long row, long orientation, DataTransfer? dataTransfer);
  
     /** 
      * Called when an item is opened or closed. 
      */
-    void onToggleOpenState (in long index);
+    void onToggleOpenState(long index);
 
     /** 
 	 * Called when a header is clicked.
      */
-    void onCycleHeader(in wstring colID, in nsIDOMElement elt);
+    void onCycleHeader(DOMString colID, Element? elt);
 
     /**
      * Called when a cell in a non-selectable cycling column (e.g. 
      * unread/flag/etc.) is clicked.
      */
-    void onCycleCell(in long row, in wstring colID);
+    void onCycleCell(long row, DOMString colID);
 
     /** 
      * Called when selection in the tree changes
@@ -356,46 +351,48 @@ interface nsIXULTreeBuilderObserver : nsISupports
      * are pressed.  For example, when the DEL key is pressed, performAction 
      * will be called with the "delete" string. 
      */
-    void onPerformAction(in wstring action);
+    void onPerformAction(DOMString action);
 
     /**
      * A command API that can be used to invoke commands on a specific row.
      */
-    void onPerformActionOnRow(in wstring action, in long row);
+    void onPerformActionOnRow(DOMString action, long row);
 
     /**
      * A command API that can be used to invoke commands on a specific cell.
      */
-    void onPerformActionOnCell(in wstring action, in long row, in wstring colID);
+    void onPerformActionOnCell(DOMString action, long row, DOMString colID);
 };
 
-[scriptable, uuid(06b31b15-ebf5-4e74-a0e2-6bc0a18a3969)]
-interface nsIXULTreeBuilder : nsISupports
+[Func="IsChromeOrXBL"]
+interface XULTreeBuilder : XULTemplateBuilder
 {
     /**
      * Retrieve the RDF resource associated with the specified row.
      */
-    nsIRDFResource getResourceAtIndex(in long aRowIndex);
+    [Throws]
+    MozRDFResource? getResourceAtIndex(long aRowIndex);
 
     /**
      * Retrieve the index associated with specified RDF resource.
      */
-    long getIndexOfResource(in nsIRDFResource resource);
+    [Throws]
+    long getIndexOfResource(MozRDFResource resource);
 
     /** 
      * Add a Tree Builder Observer to handle Tree View 
      * methods that the base builder does not implement. 
      */
-    void addObserver(in nsIXULTreeBuilderObserver aObserver);
+    void addObserver(XULTreeBuilderObserver aObserver);
 
     /** 
      * Remove an Tree Builder Observer.
      */
-    void removeObserver(in nsIXULTreeBuilderObserver aObserver);
+    void removeObserver(XULTreeBuilderObserver aObserver);
 
     /** 
      * Sort the contents of the tree using the specified column.
      */
-    void sort(in nsIDOMElement aColumnElement);
+    void sort(Element aColumnElement);
 };
-
+XULTreeBuilder implements TreeView;
