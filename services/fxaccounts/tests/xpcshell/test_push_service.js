@@ -201,6 +201,36 @@ add_test(function observePushTopicDeviceDisconnected() {
   pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
 });
 
+add_test(function observePushTopicAccountDestroyed() {
+  const uid = "bogusuid";
+  let msg = {
+    data: {
+      json: () => ({
+        command: ON_ACCOUNT_DESTROYED_NOTIFICATION,
+        data: {
+          uid
+        }
+      })
+    },
+    QueryInterface() {
+      return this;
+    }
+  };
+  let customAccounts = Object.assign(mockFxAccounts, {
+    handleAccountDestroyed() {
+      // checking verification status on push messages without data
+      run_next_test();
+    }
+  });
+
+  let pushService = new FxAccountsPushService({
+    pushService: mockPushService,
+    fxAccounts: customAccounts,
+  });
+
+  pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
+});
+
 add_test(function observePushTopicProfileUpdated() {
   let msg = {
     data: {

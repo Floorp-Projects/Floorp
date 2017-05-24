@@ -4263,23 +4263,6 @@ ContentParent::RecvNotifyTabDestroying(const TabId& aTabId,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-ContentParent::RecvTabChildNotReady(const TabId& aTabId)
-{
-  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  RefPtr<TabParent> tp =
-    cpm->GetTopLevelTabParentByProcessAndTabId(this->ChildID(), aTabId);
-
-  if (!tp) {
-    NS_WARNING("Couldn't find TabParent for TabChildNotReady message.");
-    return IPC_OK();
-  }
-
-  tp->DispatchTabChildNotReadyEvent();
-
-  return IPC_OK();
-}
-
 nsTArray<TabContext>
 ContentParent::GetManagedTabContext()
 {
@@ -4617,7 +4600,8 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                                 nsCString* aURLToLoad,
                                 TextureFactoryIdentifier* aTextureFactoryIdentifier,
                                 uint64_t* aLayersId,
-                                CompositorOptions* aCompositorOptions)
+                                CompositorOptions* aCompositorOptions,
+                                uint32_t* aMaxTouchPoints)
 {
   // We always expect to open a new window here. If we don't, it's an error.
   *aWindowIsNew = true;
@@ -4670,6 +4654,9 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
     *aResult = NS_ERROR_FAILURE;
   }
   *aCompositorOptions = rfp->GetCompositorOptions();
+
+  nsCOMPtr<nsIWidget> widget = newTab->GetWidget();
+  *aMaxTouchPoints = widget ? widget->GetMaxTouchPoints() : 0;
 
   return IPC_OK();
 }

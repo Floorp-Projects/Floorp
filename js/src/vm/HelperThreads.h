@@ -15,9 +15,9 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
-#include "mozilla/MaybeOneOf.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/TypeTraits.h"
 #include "mozilla/Variant.h"
 
 #include "jsapi.h"
@@ -53,7 +53,8 @@ enum class ParseTaskKind
 {
     Script,
     Module,
-    ScriptDecode
+    ScriptDecode,
+    MultiScriptsDecode
 };
 
 // Per-process state for off thread work items.
@@ -262,7 +263,19 @@ class GlobalHelperThreadState
         return bool(numWasmFailedJobs);
     }
 
+    template <
+        typename F,
+        typename = typename mozilla::EnableIf<
+            // Matches when the type is a function or lambda with the signature `bool(ParseTask*)`
+            mozilla::IsSame<bool, decltype((*(F*)nullptr)((ParseTask*)nullptr))>::value
+        >::Type
+    >
+    bool finishParseTask(JSContext* cx, ParseTaskKind kind, void* token, F&& finishCallback);
+
     JSScript* finishParseTask(JSContext* cx, ParseTaskKind kind, void* token);
+
+    bool finishParseTask(JSContext* cx, ParseTaskKind kind, void* token, MutableHandle<ScriptVector> scripts);
+
     void cancelParseTask(JSRuntime* rt, ParseTaskKind kind, void* token);
 
     void mergeParseTaskCompartment(JSContext* cx, ParseTask* parseTask,
@@ -286,6 +299,7 @@ class GlobalHelperThreadState
   public:
     JSScript* finishScriptParseTask(JSContext* cx, void* token);
     JSScript* finishScriptDecodeTask(JSContext* cx, void* token);
+    bool finishMultiScriptsDecodeTask(JSContext* cx, void* token, MutableHandle<ScriptVector> scripts);
     JSObject* finishModuleParseTask(JSContext* cx, void* token);
 
     bool hasActiveThreads(const AutoLockHelperThreadState&);
@@ -538,6 +552,11 @@ StartOffThreadDecodeScript(JSContext* cx, const ReadOnlyCompileOptions& options,
                            const JS::TranscodeRange& range,
                            JS::OffThreadCompileCallback callback, void* callbackData);
 
+bool
+StartOffThreadDecodeMultiScripts(JSContext* cx, const ReadOnlyCompileOptions& options,
+                                 JS::TranscodeSources& sources,
+                                 JS::OffThreadCompileCallback callback, void* callbackData);
+
 /*
  * Called at the end of GC to enqueue any Parse tasks that were waiting on an
  * atoms-zone GC to finish.
@@ -595,7 +614,9 @@ struct ParseTask
     ParseTaskKind kind;
     OwningCompileOptions options;
 
-    mozilla::MaybeOneOf<const JS::TranscodeRange, JS::TwoByteChars> data;
+    mozilla::Variant<const JS::TranscodeRange,
+                     JS::TwoByteChars,
+                     JS::TranscodeSources*> data;
 
     LifoAlloc alloc;
 
@@ -606,13 +627,13 @@ struct ParseTask
     JS::OffThreadCompileCallback callback;
     void* callbackData;
 
-    // Holds the final script between the invocation of the callback and the
+    // Holds the final scripts between the invocation of the callback and the
     // point where FinishOffThreadScript is called, which will destroy the
     // ParseTask.
-    JSScript* script;
+    GCVector<JSScript*, 1> scripts;
 
-    // Holds the ScriptSourceObject generated for the script compilation.
-    ScriptSourceObject* sourceObject;
+    // Holds the ScriptSourceObjects generated for the script compilation.
+    GCVector<ScriptSourceObject*, 1> sourceObjects;
 
     // Any errors or warnings produced during compilation. These are reported
     // when finishing the script.
@@ -625,6 +646,9 @@ struct ParseTask
               JS::OffThreadCompileCallback callback, void* callbackData);
     ParseTask(ParseTaskKind kind, JSContext* cx, JSObject* parseGlobal,
               const JS::TranscodeRange& range,
+              JS::OffThreadCompileCallback callback, void* callbackData);
+    ParseTask(ParseTaskKind kind, JSContext* cx, JSObject* parseGlobal,
+              JS::TranscodeSources& sources,
               JS::OffThreadCompileCallback callback, void* callbackData);
     bool init(JSContext* cx, const ReadOnlyCompileOptions& options);
 
@@ -662,6 +686,14 @@ struct ScriptDecodeTask : public ParseTask
     ScriptDecodeTask(JSContext* cx, JSObject* parseGlobal,
                      const JS::TranscodeRange& range,
                      JS::OffThreadCompileCallback callback, void* callbackData);
+    void parse(JSContext* cx) override;
+};
+
+struct MultiScriptsDecodeTask : public ParseTask
+{
+    MultiScriptsDecodeTask(JSContext* cx, JSObject* parseGlobal,
+                           JS::TranscodeSources& sources,
+                           JS::OffThreadCompileCallback callback, void* callbackData);
     void parse(JSContext* cx) override;
 };
 

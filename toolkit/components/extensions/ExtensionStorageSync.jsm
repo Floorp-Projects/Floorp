@@ -17,8 +17,6 @@ const Cu = Components.utils;
 const Cr = Components.results;
 const global = this;
 
-/* globals atob, btoa */
-
 Cu.importGlobalProperties(["atob", "btoa"]);
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
@@ -87,8 +85,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "prefStorageSyncServerURL",
 const {
   runSafeSyncWithoutClone,
 } = ExtensionUtils;
-
-/* globals prefPermitsStorageSync, prefStorageSyncServerURL */
 
 // Map of Extensions to Set<Contexts> to track contexts that are still
 // "live" and use storage.sync.

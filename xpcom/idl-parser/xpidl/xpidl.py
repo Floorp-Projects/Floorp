@@ -930,6 +930,7 @@ class Param(object):
     optional = False
     null = None
     undefined = None
+    default_value = None
 
     def __init__(self, paramtype, type, name, attlist, location, realtype=None):
         self.paramtype = paramtype
@@ -963,6 +964,10 @@ class Param(object):
                     raise IDLError("'Undefined' parameter value must be 'Empty' or 'Null'",
                                    aloc)
                 self.undefined = value
+            elif name == 'default':
+                if value is None:
+                    raise IDLError("'default' must specify a default value", aloc)
+                self.default_value = value
             else:
                 if value is not None:
                     raise IDLError("Unexpected value for attribute '%s'" % name,

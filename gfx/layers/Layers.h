@@ -1223,6 +1223,9 @@ public:
     }
   }
 
+  // Ensure that this layer has a valid (non-zero) animations id. This value is
+  // unique across layers.
+  void EnsureAnimationsId();
   // Call AddAnimation to add a new animation to this layer from layout code.
   // Caller must fill in all the properties of the returned animation.
   // A later animation overrides an earlier one.

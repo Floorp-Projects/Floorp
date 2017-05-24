@@ -23,6 +23,7 @@
 #include "mozilla/layers/AndroidDynamicToolbarAnimator.h"
 #endif // defined(MOZ_WIDGET_ANDROID)
 
+struct WrTransformProperty;
 
 namespace mozilla {
 class MultiTouchInput;
@@ -153,12 +154,15 @@ public:
    * walks through the tree of APZC instances and tells webrender about the
    * async scroll position. It also advances APZ animations to the specified
    * sample time. In effect it is the webrender equivalent of (part of) the
-   * code in AsyncCompositionManager.
+   * code in AsyncCompositionManager. If scrollbar transforms need updating
+   * to reflect the async scroll position, the updated transforms are appended
+   * to the provided aTransformArray.
    * Returns true if any APZ animations are in progress and we need to keep
    * compositing.
    */
   bool PushStateToWR(wr::WebRenderAPI* aWrApi,
-                     const TimeStamp& aSampleTime);
+                     const TimeStamp& aSampleTime,
+                     nsTArray<WrTransformProperty>& aTransformArray);
 
   /**
    * Walk the tree of APZCs and flushes the repaint requests for all the APZCS

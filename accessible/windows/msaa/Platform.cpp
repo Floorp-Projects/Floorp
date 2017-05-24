@@ -116,8 +116,19 @@ a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t, bool)
 }
 
 void
-a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset)
+a11y::ProxyFocusEvent(ProxyAccessible* aTarget,
+                      const LayoutDeviceIntRect& aCaretRect)
 {
+  AccessibleWrap::UpdateSystemCaretFor(aTarget, aCaretRect);
+  AccessibleWrap::FireWinEvent(WrapperFor(aTarget),
+                               nsIAccessibleEvent::EVENT_FOCUS);
+}
+
+void
+a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget,
+                          const LayoutDeviceIntRect& aCaretRect)
+{
+  AccessibleWrap::UpdateSystemCaretFor(aTarget, aCaretRect);
   AccessibleWrap::FireWinEvent(WrapperFor(aTarget),
                                nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED);
 }

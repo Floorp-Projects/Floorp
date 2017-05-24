@@ -20,6 +20,12 @@ Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", true);
 registerCleanupFunction(function* () {
   Services.prefs.clearUserPref("devtools.webconsole.new-frontend-enabled");
 
+  // Reset all filter prefs between tests. First flushPrefEnv in case one of the
+  // filter prefs has been pushed for the test
+  yield SpecialPowers.flushPrefEnv();
+  Services.prefs.getChildList("devtools.webconsole.filter").forEach(pref => {
+    Services.prefs.clearUserPref(pref);
+  });
   let browserConsole = HUDService.getBrowserConsole();
   if (browserConsole) {
     if (browserConsole.jsterm) {

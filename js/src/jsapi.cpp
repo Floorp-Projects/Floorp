@@ -4224,6 +4224,21 @@ JS::DecodeOffThreadScript(JSContext* cx, const ReadOnlyCompileOptions& options,
     return StartOffThreadDecodeScript(cx, options, range, callback, callbackData);
 }
 
+JS_PUBLIC_API(bool)
+JS::DecodeMultiOffThreadScripts(JSContext* cx, const ReadOnlyCompileOptions& options,
+                                TranscodeSources& sources,
+                                OffThreadCompileCallback callback, void* callbackData)
+{
+#ifdef DEBUG
+    size_t length = 0;
+    for (auto& source : sources) {
+        length += source.range.length();
+    }
+    MOZ_ASSERT(CanCompileOffThread(cx, options, length));
+#endif
+    return StartOffThreadDecodeMultiScripts(cx, options, sources, callback, callbackData);
+}
+
 JS_PUBLIC_API(JSScript*)
 JS::FinishOffThreadScriptDecoder(JSContext* cx, void* token)
 {
@@ -4238,6 +4253,22 @@ JS::CancelOffThreadScriptDecoder(JSContext* cx, void* token)
     MOZ_ASSERT(cx);
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
     HelperThreadState().cancelParseTask(cx->runtime(), ParseTaskKind::ScriptDecode, token);
+}
+
+JS_PUBLIC_API(bool)
+JS::FinishMultiOffThreadScriptsDecoder(JSContext* cx, void* token, MutableHandle<ScriptVector> scripts)
+{
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+    return HelperThreadState().finishMultiScriptsDecodeTask(cx, token, scripts);
+}
+
+JS_PUBLIC_API(void)
+JS::CancelMultiOffThreadScriptsDecoder(JSContext* cx, void* token)
+{
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+    HelperThreadState().cancelParseTask(cx->runtime(), ParseTaskKind::MultiScriptsDecode, token);
 }
 
 JS_PUBLIC_API(bool)

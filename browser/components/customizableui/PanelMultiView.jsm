@@ -406,11 +406,20 @@ this.PanelMultiView = class {
         dwu = this._dwu;
         previousRect = previousViewNode.__lastKnownBoundingRect =
           dwu.getBoundsWithoutFlushing(previousViewNode);
-        if (this.panelViews && !this._mainViewWidth) {
-          this._mainViewWidth = previousRect.width;
-          let top = dwu.getBoundsWithoutFlushing(previousViewNode.firstChild).top;
-          let bottom = dwu.getBoundsWithoutFlushing(previousViewNode.lastChild).bottom;
-          this._viewVerticalPadding = previousRect.height - (bottom - top);
+        if (this.panelViews) {
+          // Here go the measures that have the same caching lifetime as the width
+          // of the main view, i.e. 'forever', during the instance lifetime.
+          if (!this._mainViewWidth) {
+            this._mainViewWidth = previousRect.width;
+            let top = dwu.getBoundsWithoutFlushing(previousViewNode.firstChild).top;
+            let bottom = dwu.getBoundsWithoutFlushing(previousViewNode.lastChild).bottom;
+            this._viewVerticalPadding = previousRect.height - (bottom - top);
+          }
+          // Here go the measures that have the same caching lifetime as the height
+          // of the main view, i.e. whilst the panel is shown and/ or visible.
+          if (!this._mainViewHeight) {
+            this._mainViewHeight = previousRect.height;
+          }
         }
       }
 
@@ -491,7 +500,7 @@ this.PanelMultiView = class {
 
         if (aAnchor)
           aAnchor.setAttribute("open", true);
-        this._viewContainer.style.height = previousRect.height + "px";
+        this._viewContainer.style.height = Math.max(previousRect.height, this._mainViewHeight) + "px";
         this._viewContainer.style.width = previousRect.width + "px";
 
         this._transitioning = true;
@@ -538,7 +547,7 @@ this.PanelMultiView = class {
 
           // Set the viewContainer dimensions to make sure only the current view
           // is visible.
-          this._viewContainer.style.height = viewRect.height + "px";
+          this._viewContainer.style.height = Math.max(viewRect.height, this._mainViewHeight) + "px";
           this._viewContainer.style.width = viewRect.width + "px";
 
           // The 'magic' part: build up the amount of pixels to move right or left.
@@ -551,44 +560,47 @@ this.PanelMultiView = class {
           nodeToAnimate.style.width = viewRect.width + "px";
 
           let listener;
-          let seen = 0;
           this._viewContainer.addEventListener("transitionend", listener = ev => {
-            if (ev.target == this._viewContainer && ev.propertyName == "height") {
-              // Myeah, panel layout auto-resizing is a funky thing. We'll wait
-              // another few milliseconds to remove the width and height 'fixtures',
-              // to be sure we don't flicker annoyingly.
-              // NB: HACK! Bug 1363756 is there to fix this.
-              window.setTimeout(() => {
+            // It's quite common that `height` on the view container doesn't need
+            // to transition, so we make sure to do all the work on the transform
+            // transition-end, because that is guaranteed to happen.
+            if (ev.target != nodeToAnimate || ev.propertyName != "transform")
+              return;
+
+            this._viewContainer.removeEventListener("transitionend", listener);
+            onTransitionEnd();
+            this._transitioning = false;
+            this._resetKeyNavigation(previousViewNode);
+
+            // Myeah, panel layout auto-resizing is a funky thing. We'll wait
+            // another few milliseconds to remove the width and height 'fixtures',
+            // to be sure we don't flicker annoyingly.
+            // NB: HACK! Bug 1363756 is there to fix this.
+            window.setTimeout(() => {
+              // Only remove the height when the view is larger than the main
+              // view, otherwise it'll snap back to its own height.
+              if (viewRect.height > this._mainViewHeight)
                 this._viewContainer.style.removeProperty("height");
-                this._viewContainer.style.removeProperty("width");
-              }, 500);
-              ++seen;
-            } else if (ev.target == nodeToAnimate && ev.propertyName == "transform") {
-              onTransitionEnd();
-              this._transitioning = false;
-              this._resetKeyNavigation(previousViewNode);
+              this._viewContainer.style.removeProperty("width");
+            }, 500);
 
-              // Take another breather, just like before, to wait for the 'current'
-              // attribute removal to take effect. This prevents a flicker.
-              // The cleanup we do doesn't affect the display anymore, so we're not
-              // too fussed about the timing here.
-              window.addEventListener("MozAfterPaint", () => {
-                nodeToAnimate.style.removeProperty("border-inline-start");
-                nodeToAnimate.style.removeProperty("transition");
-                nodeToAnimate.style.removeProperty("transform");
-                nodeToAnimate.style.removeProperty("width");
+            // Take another breather, just like before, to wait for the 'current'
+            // attribute removal to take effect. This prevents a flicker.
+            // The cleanup we do doesn't affect the display anymore, so we're not
+            // too fussed about the timing here.
+            window.addEventListener("MozAfterPaint", () => {
+              nodeToAnimate.style.removeProperty("border-inline-start");
+              nodeToAnimate.style.removeProperty("transition");
+              nodeToAnimate.style.removeProperty("transform");
+              nodeToAnimate.style.removeProperty("width");
 
-                if (!reverse)
-                  viewNode.style.removeProperty("margin-inline-start");
-                if (aAnchor)
-                  aAnchor.removeAttribute("open");
+              if (!reverse)
+                viewNode.style.removeProperty("margin-inline-start");
+              if (aAnchor)
+                aAnchor.removeAttribute("open");
 
-                this._viewContainer.removeAttribute("transition-reverse");
-              }, { once: true });
-              ++seen;
-            }
-            if (seen == 2)
-              this._viewContainer.removeEventListener("transitionend", listener);
+              this._viewContainer.removeAttribute("transition-reverse");
+            }, { once: true });
           });
         }, { once: true });
       } else if (!this.panelViews) {
@@ -720,6 +732,7 @@ this.PanelMultiView = class {
           this.window.removeEventListener("keydown", this);
           this._panel.removeEventListener("mousemove", this);
           this._resetKeyNavigation();
+          this._mainViewHeight = 0;
         }
         break;
     }

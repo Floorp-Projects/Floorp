@@ -6,8 +6,10 @@
 "use strict";
 
 /* exported Process */
-/* globals BaseProcess, BasePipe */
 
+/* import-globals-from subprocess_shared.js */
+/* import-globals-from subprocess_shared_unix.js */
+/* import-globals-from subprocess_worker_common.js */
 importScripts("resource://gre/modules/subprocess/subprocess_shared.js",
               "resource://gre/modules/subprocess/subprocess_shared_unix.js",
               "resource://gre/modules/subprocess/subprocess_worker_common.js");

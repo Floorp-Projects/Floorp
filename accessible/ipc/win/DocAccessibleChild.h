@@ -43,6 +43,12 @@ public:
   bool SendStateChangeEvent(const uint64_t& aID, const uint64_t& aState,
                             const bool& aEnabled);
   bool SendCaretMoveEvent(const uint64_t& aID, const int32_t& aOffset);
+  bool SendCaretMoveEvent(const uint64_t& aID,
+                          const LayoutDeviceIntRect& aCaretRect,
+                          const int32_t& aOffset);
+  bool SendFocusEvent(const uint64_t& aID);
+  bool SendFocusEvent(const uint64_t& aID,
+                      const LayoutDeviceIntRect& aCaretRect);
   bool SendTextChangeEvent(const uint64_t& aID, const nsString& aStr,
                            const int32_t& aStart, const uint32_t& aLen,
                            const bool& aIsInsert, const bool& aFromUser);
@@ -64,6 +70,8 @@ private:
 
   bool IsConstructedInParentProcess() const { return mIsRemoteConstructed; }
   void SetConstructedInParentProcess() { mIsRemoteConstructed = true; }
+
+  LayoutDeviceIntRect GetCaretRectFor(const uint64_t& aID);
 
   /**
    * DocAccessibleChild should not fire events until it has asynchronously
@@ -159,19 +167,39 @@ private:
   struct SerializedCaretMove final : public DeferredEvent
   {
     SerializedCaretMove(DocAccessibleChild* aTarget, uint64_t aID,
-                        int32_t aOffset)
+                        const LayoutDeviceIntRect& aCaretRect, int32_t aOffset)
       : DeferredEvent(aTarget)
       , mID(aID)
+      , mCaretRect(aCaretRect)
       , mOffset(aOffset)
     {}
 
     void Dispatch(DocAccessibleChild* aIPCDoc) override
     {
-      Unused << aIPCDoc->SendCaretMoveEvent(mID, mOffset);
+      Unused << aIPCDoc->SendCaretMoveEvent(mID, mCaretRect, mOffset);
     }
 
-    uint64_t  mID;
-    int32_t   mOffset;
+    uint64_t            mID;
+    LayoutDeviceIntRect mCaretRect;
+    int32_t             mOffset;
+  };
+
+  struct SerializedFocus final : public DeferredEvent
+  {
+    SerializedFocus(DocAccessibleChild* aTarget, uint64_t aID,
+                    const LayoutDeviceIntRect& aCaretRect)
+      : DeferredEvent(aTarget)
+      , mID(aID)
+      , mCaretRect(aCaretRect)
+    {}
+
+    void Dispatch(DocAccessibleChild* aIPCDoc) override
+    {
+      Unused << aIPCDoc->SendFocusEvent(mID, mCaretRect);
+    }
+
+    uint64_t            mID;
+    LayoutDeviceIntRect mCaretRect;
   };
 
   struct SerializedTextChange final : public DeferredEvent

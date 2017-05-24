@@ -898,8 +898,6 @@ KTableEntry nsCSSProps::kBackgroundClipKTable[] = {
   { eCSSKeyword_border_box, StyleGeometryBox::BorderBox },
   { eCSSKeyword_padding_box, StyleGeometryBox::PaddingBox },
   { eCSSKeyword_content_box, StyleGeometryBox::ContentBox },
-  // The next entry is controlled by the layout.css.background-clip-text.enabled
-  // pref.
   { eCSSKeyword_text, StyleGeometryBox::Text },
   { eCSSKeyword_UNKNOWN, -1 }
 };
