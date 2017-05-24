@@ -86,8 +86,8 @@ class BackendTupfile(object):
             'extra_outputs': ' | ' + ' '.join(extra_outputs) if extra_outputs else '',
         })
 
-    def symlink_rule(self, source, output_group=None):
-        outputs = [mozpath.basename(source)]
+    def symlink_rule(self, source, output=None, output_group=None):
+        outputs = [output] if output else [mozpath.basename(source)]
         if output_group:
             outputs.append(output_group)
 
@@ -297,7 +297,7 @@ class TupOnly(CommonBackend, PartialBackend):
                             # TODO: This is needed for tests
                             pass
                     else:
-                        backend_file.symlink_rule(f.full_path, output_group=self._installed_files)
+                        backend_file.symlink_rule(f.full_path, output=f.target_basename, output_group=self._installed_files)
                 else:
                     # TODO: Support installing generated files
                     pass
