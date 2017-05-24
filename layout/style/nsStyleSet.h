@@ -41,8 +41,11 @@ struct TreeMatchContext;
 
 namespace mozilla {
 class CSSStyleSheet;
-class EventStates;
 enum class CSSPseudoElementType : uint8_t;
+class EventStates;
+namespace dom {
+class ShadowRoot;
+} // namespace dom
 } // namespace mozilla
 
 class nsEmptyStyleRule final : public nsIStyleRule
@@ -329,6 +332,19 @@ class nsStyleSet final
   // Free all of the data associated with this style set.
   void Shutdown();
 
+  // Notes that a style sheet has changed.
+  void RecordStyleSheetChange(mozilla::CSSStyleSheet* aStyleSheet);
+
+  // Notes that style sheets have changed in a shadow root.
+  void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot);
+
+  bool StyleSheetsHaveChanged() const
+  {
+    return mStylesHaveChanged || !mChangedScopeStyleRoots.IsEmpty();
+  }
+
+  void InvalidateStyleForCSSRuleChanges();
+
   // Get a new style context that lives in a different parent
   // The new context will be the same as the old if the new parent is the
   // same as the old parent.
@@ -603,8 +619,21 @@ private:
                                 // lexicographic tree of matched rules that style
                                 // contexts use to look up properties.
 
+  // List of subtrees rooted at style scope roots that need to be restyled.
+  // When a change to a scoped style sheet is made, we add the style scope
+  // root to this array rather than setting mStylesHaveChanged = true, since
+  // we know we don't need to restyle the whole document.  However, if in the
+  // same update block we have already had other changes that require
+  // the whole document to be restyled (i.e., mStylesHaveChanged is already
+  // true), then we don't bother adding the scope root here.
+  AutoTArray<RefPtr<mozilla::dom::Element>,1> mChangedScopeStyleRoots;
+
   uint16_t mBatching;
 
+  // Indicates that the whole document must be restyled.  Changes to scoped
+  // style sheets are recorded in mChangedScopeStyleRoots rather than here
+  // in mStylesHaveChanged.
+  unsigned mStylesHaveChanged : 1;
   unsigned mInShutdown : 1;
   unsigned mInGC : 1;
   unsigned mAuthorStyleDisabled: 1;
