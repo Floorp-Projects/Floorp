@@ -741,10 +741,6 @@ body,
 
 /* Network details panel toggle */
 
-.network-details-panel-toggle[disabled] {
-  display: none;
-}
-
 .network-details-panel-toggle:dir(ltr)::before,
 .network-details-panel-toggle.pane-collapsed:dir(rtl)::before {
   background-image: var(--theme-pane-collapse-image);
