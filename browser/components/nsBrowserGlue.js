@@ -2180,27 +2180,35 @@ BrowserGlue.prototype = {
     chromeWindow.openPreferences(...args);
   },
 
+  _openURLInNewWindow(url) {
+    let urlString = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+    urlString.data = url;
+    return new Promise(resolve => {
+      let win = Services.ww.openWindow(null, Services.prefs.getCharPref("browser.chromeURL"),
+                                       "_blank", "chrome,all,dialog=no", urlString);
+      win.addEventListener("load", () => { resolve(win); }, {once: true});
+    });
+  },
+
   /**
    * Called as an observer when Sync's "display URIs" notification is fired.
    *
    * We open the received URIs in background tabs.
    */
-  _onDisplaySyncURIs: function _onDisplaySyncURIs(data) {
+  async _onDisplaySyncURIs(data) {
     try {
       // The payload is wrapped weirdly because of how Sync does notifications.
       const URIs = data.wrappedJSObject.object;
 
-      const findWindow = () => RecentWindow.getMostRecentBrowserWindow({private: false});
-
       // win can be null, but it's ok, we'll assign it later in openTab()
-      let win = findWindow();
+      let win = RecentWindow.getMostRecentBrowserWindow({private: false});
 
-      const openTab = URI => {
+      const openTab = async (URI) => {
         let tab;
         if (!win) {
-          Services.appShell.hiddenDOMWindow.open(URI.uri);
-          win = findWindow();
-          tab = win.gBrowser.tabs[0];
+          win = await this._openURLInNewWindow(URI.uri);
+          let tabs = win.gBrowser.tabs;
+          tab = tabs[tabs.length - 1];
         } else {
           tab = win.gBrowser.addTab(URI.uri);
         }
@@ -2208,8 +2216,8 @@ BrowserGlue.prototype = {
         return tab;
       };
 
-      const firstTab = openTab(URIs[0]);
-      URIs.slice(1).forEach(URI => openTab(URI));
+      const firstTab = await openTab(URIs[0]);
+      await Promise.all(URIs.slice(1).map(URI => openTab(URI)));
 
       let title, body;
       const deviceName = Weave.Service.clientsEngine.getClientName(URIs[0].clientId);
@@ -2280,7 +2288,7 @@ BrowserGlue.prototype = {
       let url = await this.fxAccounts.promiseAccountsManageDevicesURI("device-connected-notification");
       let win = RecentWindow.getMostRecentBrowserWindow({private: false});
       if (!win) {
-        Services.appShell.hiddenDOMWindow.open(url);
+        this._openURLInNewWindow(url);
       } else {
         win.gBrowser.addTab(url);
       }
