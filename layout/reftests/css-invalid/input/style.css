@@ -1,6 +1,6 @@
 /* Override default style */
 input {
-  -moz-appearance: none; appearance: none;
+  -moz-appearance: none;
   background: none;
 }
 input:invalid {

@@ -831,11 +831,11 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
   // renderer draw the border.  DO not get the data from aForFrame, since the passed in style context
   // may be different!  Always use |aStyleContext|!
   const nsStyleDisplay* displayData = aStyleContext->StyleDisplay();
-  if (displayData->UsedAppearance()) {
+  if (displayData->mAppearance) {
     nsITheme *theme = aPresContext->GetTheme();
     if (theme &&
         theme->ThemeSupportsWidget(aPresContext, aForFrame,
-                                   displayData->UsedAppearance())) {
+                                   displayData->mAppearance)) {
       return DrawResult::SUCCESS; // Let the theme handle it.
     }
   }
@@ -901,11 +901,11 @@ nsCSSRendering::CreateBorderRendererWithStyleBorder(nsPresContext* aPresContext,
                                                     Sides aSkipSides)
 {
   const nsStyleDisplay* displayData = aStyleContext->StyleDisplay();
-  if (displayData->UsedAppearance()) {
+  if (displayData->mAppearance) {
     nsITheme *theme = aPresContext->GetTheme();
     if (theme &&
         theme->ThemeSupportsWidget(aPresContext, aForFrame,
-                                   displayData->UsedAppearance())) {
+                                   displayData->mAppearance)) {
       return Nothing();
     }
   }
@@ -1587,7 +1587,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
       nativeRect.IntersectRect(frameRect, nativeRect);
       nsRenderingContext wrapperCtx(shadowContext);
       aPresContext->GetTheme()->DrawWidgetBackground(&wrapperCtx, aForFrame,
-          styleDisplay->UsedAppearance(), aFrameArea, nativeRect);
+          styleDisplay->mAppearance, aFrameArea, nativeRect);
 
       blurringArea.DoPaint();
       renderContext->Restore();
@@ -1932,7 +1932,7 @@ nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams)
     // a root, otherwise keep going in order to let the theme stuff
     // draw the background. The canvas really should be drawing the
     // bg, but there's no way to hook that up via css.
-    if (!aParams.frame->StyleDisplay()->UsedAppearance()) {
+    if (!aParams.frame->StyleDisplay()->mAppearance) {
       return DrawResult::SUCCESS;
     }
 
@@ -3386,18 +3386,18 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
   // renderer draw the background and bail out.
   // XXXzw this ignores aParams.bgClipRect.
   const nsStyleDisplay* displayData = aParams.frame->StyleDisplay();
-  if (displayData->UsedAppearance()) {
+  if (displayData->mAppearance) {
     nsITheme *theme = aParams.presCtx.GetTheme();
     if (theme && theme->ThemeSupportsWidget(&aParams.presCtx,
                                             aParams.frame,
-                                            displayData->UsedAppearance())) {
+                                            displayData->mAppearance)) {
       nsRect drawing(aParams.borderArea);
       theme->GetWidgetOverflow(aParams.presCtx.DeviceContext(),
-                               aParams.frame, displayData->UsedAppearance(),
+                               aParams.frame, displayData->mAppearance,
                                &drawing);
       drawing.IntersectRect(drawing, aParams.dirtyRect);
       theme->DrawWidgetBackground(&aParams.renderingCtx, aParams.frame,
-                                  displayData->UsedAppearance(), aParams.borderArea,
+                                  displayData->mAppearance, aParams.borderArea,
                                   drawing);
       return DrawResult::SUCCESS;
     }

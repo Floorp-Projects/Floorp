@@ -6,7 +6,7 @@
     /* Make sure our splitter's background doesn't depend on its hover styles */
     splitter {
       background-color: yellow;
-      -moz-appearance: none; appearance: none;
+      -moz-appearance: none;
     }
   </html:style>
   <splitter collapse="before" resizeafter="farthest" width="200" id="s">
