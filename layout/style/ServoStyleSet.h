@@ -105,6 +105,24 @@ public:
   void BeginShutdown();
   void Shutdown();
 
+  void RecordStyleSheetChange(mozilla::ServoStyleSheet*)
+  {
+    NoteStyleSheetsChanged();
+  }
+
+  void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot) {
+    // FIXME(emilio): When we properly support shadow dom we'll need to do
+    // better.
+    NoteStyleSheetsChanged();
+  }
+
+  bool StyleSheetsHaveChanged() const
+  {
+    return StylistNeedsUpdate();
+  }
+
+  void InvalidateStyleForCSSRuleChanges();
+
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   const RawServoStyleSet& RawSet() const { return *mRawSet; }
 
