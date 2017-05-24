@@ -164,6 +164,8 @@ to mochitest command.
 * test_variables.html `var(--var6)`: irrelevant test for stylo bug 1367306 [1]
 * clip and origin should be allowed to separated in shorthand bug 1188074
   * test_property_syntax_errors.html `padding-box` [80]
+* Difference in rect serialization bug 1367028
+  * test_shorthand_property_getters.html `5 5 5 5` [1]
 
 ## Unknown / Unsure
 
