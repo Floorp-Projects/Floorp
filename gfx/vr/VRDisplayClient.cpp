@@ -148,3 +148,15 @@ VRDisplayClient::NotifyDisconnected()
 {
   mDisplayInfo.mIsConnected = false;
 }
+
+void
+VRDisplayClient::UpdateSubmitFrameResult(const VRSubmitFrameResultInfo& aResult)
+{
+  mSubmitFrameResult = aResult;
+}
+
+void
+VRDisplayClient::GetSubmitFrameResult(VRSubmitFrameResultInfo& aResult)
+{
+  aResult = mSubmitFrameResult;
+}

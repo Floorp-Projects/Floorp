@@ -144,21 +144,50 @@
 %endif
 
 .customizationmode-button {
-  border: 1px solid rgb(192,192,192);
-  border-radius: 3px;
-  margin: 5px;
-  padding: 2px 10px;
-  background-color: rgb(251,251,251);
+  border: 1px solid #b1b1b1;
+  margin: 6px 10px;
+  padding: 2px 5px;
+  background-color: #fcfcfd;
   color: rgb(71,71,71);
-  box-shadow: 0 1px rgba(255, 255, 255, 0.5),
-              inset 0 1px rgba(255, 255, 255, 0.5);
   -moz-appearance: none;
+}
+
+.customizationmode-checkbox {
+  margin: 6px 10px;
+  padding: 2px 5px;
+}
+
+#customization-reset-button,
+#customization-undo-reset-button,
+#customization-done-button {
+  min-width: 10em;
+}
+
+#customization-done-button {
+  color: #fff;
+  font-weight: 700;
+  border-color: #0060df;
+  background-color: #0a84ff;
 }
 
 .customizationmode-button > .box-inherit {
   border-width: 0;
+  padding: 3px 0;
   padding-inline-start: 0;
   padding-inline-end: 0;
+}
+
+/* We use a smaller padding to ensure images don't have padding.
+ * We can't detect whether a button has an image. This button doesn't
+ * so it needs more padding, so we unfortunately hardcode the extra
+ * padding in here:
+ */
+#customization-toolbar-visibility-button {
+  padding-inline-start: 8px;
+}
+
+.customizationmode-button[type=menu] > .box-inherit > .box-inherit > .button-text {
+  padding-inline-end: 10px;
 }
 
 .customizationmode-button > .button-icon {
@@ -169,19 +198,19 @@
   margin-inline-end: 0;
 }
 
-.customizationmode-button > .button-menu-dropmarker {
+.customizationmode-button > .box-inherit > .button-menu-dropmarker {
   margin-inline-end: 0;
   padding-inline-end: 0;
+  list-style-image: url(chrome://browser/skin/arrow-dropdown.svg);
 }
 
-.customizationmode-button:hover:active:not([disabled]),
-.customizationmode-button[open],
-.customizationmode-button[checked] {
-  background-color: rgb(218, 218, 218);
-  border-color: rgb(168, 168, 168);
-  text-shadow: 0 1px rgb(236, 236, 236);
-  box-shadow: 0 1px rgba(255, 255, 255, 0.5),
-              inset 0 1px rgb(196, 196, 196);
+.customizationmode-button:-moz-any(:focus,:active,:hover):not([disabled]),
+.customizationmode-button[open] {
+  background-color: #e1e1e5;
+}
+
+#customization-done-button:-moz-any(:focus,:active,:hover):not([disabled]) {
+  background-color: #0060df;
 }
 
 .customizationmode-button[disabled="true"] {
@@ -195,50 +224,21 @@
 
 .customizationmode-button > .box-inherit > .box-inherit > .button-icon,
 .customizationmode-button > .button-box > .button-icon {
-  height: 24px;
+  height: 16px;
 }
 
-%ifdef CAN_DRAW_IN_TITLEBAR
-#customization-titlebar-visibility-button > .button-box > .button-text,
-%endif
 #customization-lwtheme-button > .box-inherit > .box-inherit > .button-text {
   /* Sadly, button.css thinks its margins are perfect for everyone. */
   margin-inline-start: 6px !important;
 }
 
 #customization-lwtheme-button > .box-inherit > .box-inherit > .button-icon {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border-radius: 2px;
   background-image: url("chrome://browser/content/default-theme-icon.svg");
   background-size: contain;
 }
-
-%ifdef CAN_DRAW_IN_TITLEBAR
-#customization-titlebar-visibility-button {
-  list-style-image: url("chrome://browser/skin/customizableui/customize-titleBar-toggle.png");
-  -moz-image-region: rect(0, 24px, 24px, 0);
-}
-
-#customization-titlebar-visibility-button > .button-box > .button-icon {
-  vertical-align: middle;
-}
-
-#customization-titlebar-visibility-button[checked] {
-  -moz-image-region: rect(0, 48px, 24px, 24px);
-}
-
-@media (min-resolution: 1.1dppx) {
-  #customization-titlebar-visibility-button {
-    list-style-image: url("chrome://browser/skin/customizableui/customize-titleBar-toggle@2x.png");
-    -moz-image-region: rect(0, 48px, 48px, 0);
-  }
-
-  #customization-titlebar-visibility-button[checked] {
-    -moz-image-region: rect(0, 96px, 48px, 48px);
-  }
-}
-%endif /* CAN_DRAW_IN_TITLEBAR */
 
 #main-window[customize-entered] #customization-panel-container {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-separatorHorizontal.png"),

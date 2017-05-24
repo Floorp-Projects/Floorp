@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+  div {
+    background-color: lime;
+    height: 50px;
+  }
+  </style>
+</head>
+<body>
+  <script>
+  "use strict";
+  const DURATION = 100 * 1000;
+  [
+    {
+      id: "no-easing",
+      frames: { opacity: [1, 0] },
+      timing: {
+        duration: DURATION
+      }
+    },
+    {
+      id: "effect-easing",
+      frames: { opacity: [1, 0] },
+      timing: {
+        easing: "steps(2)",
+        duration: DURATION
+      }
+    },
+    {
+      id: "keyframe-easing",
+      frames: [
+        {
+          offset: 0,
+          easing: "steps(2)",
+          opacity: 1
+        },
+        {
+          offset: 1,
+          opacity: 0
+        }
+      ],
+      timing: {
+        duration: DURATION,
+      }
+    },
+    {
+      id: "both-easing",
+      frames: [
+        {
+          offset: 0,
+          easing: "steps(2)",
+          opacity: 1
+        },
+        {
+          offset: 0,
+          easing: "steps(5)",
+          marginLeft: "0px",
+          marginTop: "0px"
+        },
+        {
+          offset: 1,
+          opacity: 0,
+          marginLeft: "100px",
+          marginTop: "100px"
+        },
+      ],
+      timing: {
+        easing: "steps(10)",
+        duration: DURATION,
+      }
+    },
+  ].forEach(({ id, frames, timing }) => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+    const effect = new KeyframeEffect(target, frames, timing);
+    const animation = new Animation(effect, document.timeline);
+    animation.id = id;
+    animation.play();
+  });
+
+  </script>
+</body>
+</html>

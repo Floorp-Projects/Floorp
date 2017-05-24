@@ -138,17 +138,17 @@
 <!ENTITY viewSecurityDevices.accesskey   "D">
 
 <!ENTITY performance.label               "Performance">
-<!ENTITY useRecommendedPerformanceSettings.label
+<!ENTITY useRecommendedPerformanceSettings2.label
                                          "Use recommended performance settings">
-<!ENTITY useRecommendedPerformanceSettings.description
-                                         "Recommended performance settings are tailored to your computer.">
-<!ENTITY useRecommendedPerformanceSettings.accesskey
+<!ENTITY useRecommendedPerformanceSettings2.description
+                                         "These settings are tailored to your computer’s hardware and operating system.">
+<!ENTITY useRecommendedPerformanceSettings2.accesskey
                                          "U">
 <!ENTITY performanceSettingsLearnMore.label
                                          "Learn more">
-<!ENTITY limitContentProcess.label       "Content process limit">
-<!ENTITY limitContentProcess.description
-                                         "More content processes can make &brandShortName; more responsive when using multiple tabs, but will also consume more memory.">
-<!ENTITY limitContentProcess.accesskey   "L">
+<!ENTITY limitContentProcess2.label       "Content process limit">
+<!ENTITY limitContentProcess2.description
+                                         "Additional content processes can improve &brandShortName; performance when using multiple tabs, but will also use more memory.">
+<!ENTITY limitContentProcess2.accesskey   "L">
 <!ENTITY allowHWAccel.label              "Use hardware acceleration when available">
 <!ENTITY allowHWAccel.accesskey          "r">

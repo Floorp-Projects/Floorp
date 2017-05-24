@@ -24,14 +24,30 @@ add_task(function* () {
   info("The first animation has its rate set to 1, let's measure it");
 
   let el = timeBlocks[0];
-  let duration = getDuration(el.querySelector("path"));
   let delay = parseInt(el.querySelector(".delay").style.width, 10);
+  let duration = null;
+  el.querySelectorAll("svg g").forEach(groupEl => {
+    const dur = getDuration(groupEl.querySelector("path"));
+    if (!duration) {
+      duration = dur;
+      return;
+    }
+    is(duration, dur, "The durations shuld be same at all paths in one group");
+  });
 
   info("The second animation has its rate set to 2, so should be shorter");
 
   let el2 = timeBlocks[1];
-  let duration2 = getDuration(el2.querySelector("path"));
   let delay2 = parseInt(el2.querySelector(".delay").style.width, 10);
+  let duration2 = null;
+  el2.querySelectorAll("svg g").forEach(groupEl => {
+    const dur = getDuration(groupEl.querySelector("path"));
+    if (!duration2) {
+      duration2 = dur;
+      return;
+    }
+    is(duration2, dur, "The durations shuld be same at all paths in one group");
+  });
 
   // The width are calculated by the animation-inspector dynamically depending
   // on the size of the panel, and therefore depends on the test machine/OS.

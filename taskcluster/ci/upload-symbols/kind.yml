@@ -18,7 +18,9 @@ only-for-build-platforms:
     - linux-nightly/opt
     - android-api-15/opt
     - android-api-15-nightly/opt
+    - android-api-15-old-id-nightly/opt
     - android-x86-nightly/opt
+    - android-x86-old-id-nightly/opt
     - macosx64-nightly/opt
     - win64-nightly/opt
 

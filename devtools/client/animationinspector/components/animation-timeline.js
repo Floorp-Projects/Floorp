@@ -12,7 +12,8 @@ const {
   createNode,
   findOptimalTimeInterval,
   getFormattedAnimationTitle,
-  TimeScale
+  TimeScale,
+  getCssPropertyName
 } = require("devtools/client/animationinspector/utils");
 const {AnimationDetails} = require("devtools/client/animationinspector/components/animation-details");
 const {AnimationTargetNode} = require("devtools/client/animationinspector/components/animation-target-node");
@@ -46,6 +47,7 @@ const TIMELINE_BACKGROUND_RESIZE_DEBOUNCE_TIMER = 50;
  */
 function AnimationsTimeline(inspector, serverTraits) {
   this.animations = [];
+  this.tracksMap = new WeakMap();
   this.targetNodes = [];
   this.timeBlocks = [];
   this.inspector = inspector;
@@ -244,6 +246,7 @@ AnimationsTimeline.prototype = {
 
     this.rootWrapperEl.remove();
     this.animations = [];
+    this.tracksMap = null;
     this.rootWrapperEl = null;
     this.timeHeaderEl = null;
     this.animationsEl = null;
@@ -342,10 +345,10 @@ AnimationsTimeline.prototype = {
     const selectedAnimationEl = animationEls[index];
     selectedAnimationEl.classList.add("selected");
     this.animationRootEl.classList.add("animation-detail-visible");
+    // Don't render if the detail displays same animation already.
     if (animation !== this.details.animation) {
       this.selectedAnimation = animation;
-      // Don't render if the detail displays same animation already.
-      yield this.details.render(animation);
+      yield this.details.render(animation, this.tracksMap.get(animation));
       this.animationAnimationNameEl.textContent = getFormattedAnimationTitle(animation);
     }
     this.onTimelineDataChanged(null, { time: this.currentTime || 0 });
@@ -429,11 +432,12 @@ AnimationsTimeline.prototype = {
     return className;
   },
 
-  render: function (animations, documentCurrentTime) {
+  render: Task.async(function* (animations, documentCurrentTime) {
     this.unrenderButLeaveDetailsComponent();
 
     this.animations = animations;
     if (!this.animations.length) {
+      this.emit("animation-timeline-rendering-completed");
       return;
     }
 
@@ -481,10 +485,12 @@ AnimationsTimeline.prototype = {
       });
 
       // Draw the animation time block.
+      const tracks = yield this.getTracks(animation);
       let timeBlock = new AnimationTimeBlock();
       timeBlock.init(timeBlockEl);
-      timeBlock.render(animation);
+      timeBlock.render(animation, tracks);
       this.timeBlocks.push(timeBlock);
+      this.tracksMap.set(animation, tracks);
 
       timeBlock.on("selected", this.onAnimationSelected);
     }
@@ -505,22 +511,21 @@ AnimationsTimeline.prototype = {
     // To indicate the animation progress in AnimationDetails.
     this.on("timeline-data-changed", this.onTimelineDataChanged);
 
-    // Display animation's detail if there is only one animation,
-    // or the previously displayed animation is included in timeline list.
     if (this.animations.length === 1) {
-      this.onAnimationSelected(null, this.animations[0]);
-      return;
+      // Display animation's detail if there is only one animation,
+      // even if the detail pane is closing.
+      yield this.onAnimationSelected(null, this.animations[0]);
+    } else if (this.animationRootEl.classList.contains("animation-detail-visible") &&
+               this.animations.indexOf(this.selectedAnimation) >= 0) {
+      // animation's detail displays in case of the previously displayed animation is
+      // included in timeline list and the detail pane is not closing.
+      yield this.onAnimationSelected(null, this.selectedAnimation);
+    } else {
+      // Otherwise, close detail pane.
+      this.onDetailCloseButtonClick();
     }
-    if (!this.animationRootEl.classList.contains("animation-detail-visible")) {
-      // Do nothing since the animation detail pane is closing now.
-      return;
-    }
-    if (this.animations.indexOf(this.selectedAnimation) >= 0) {
-      this.onAnimationSelected(null, this.selectedAnimation);
-      return;
-    }
-    this.onDetailCloseButtonClick();
-  },
+    this.emit("animation-timeline-rendering-completed");
+  }),
 
   isAtLeastOneAnimationPlaying: function () {
     return this.animations.some(({state}) => state.playState === "running");
@@ -639,7 +644,72 @@ AnimationsTimeline.prototype = {
   },
 
   onDetailCloseButtonClick: function (e) {
+    if (!this.animationRootEl.classList.contains("animation-detail-visible")) {
+      return;
+    }
     this.animationRootEl.classList.remove("animation-detail-visible");
     this.emit("animation-detail-closed");
-  }
+  },
+
+  /**
+   * Get a list of the tracks of the animation actor
+   * @param {Object} animation
+   * @return {Object} A list of tracks, one per animated property, each
+   * with a list of keyframes
+   */
+  getTracks: Task.async(function* (animation) {
+    let tracks = {};
+
+    /*
+     * getFrames is a AnimationPlayorActor method that returns data about the
+     * keyframes of the animation.
+     * In FF48, the data it returns change, and will hold only longhand
+     * properties ( e.g. borderLeftWidth ), which does not match what we
+     * want to display in the animation detail.
+     * A new AnimationPlayerActor function, getProperties, is introduced,
+     * that returns the animated css properties of the animation and their
+     * keyframes values.
+     * If the animation actor has the getProperties function, we use it, and if
+     * not, we fall back to getFrames, which then returns values we used to
+     * handle.
+     */
+    if (this.serverTraits.hasGetProperties) {
+      let properties = yield animation.getProperties();
+      for (let {name, values} of properties) {
+        if (!tracks[name]) {
+          tracks[name] = [];
+        }
+
+        for (let {value, offset, easing, distance} of values) {
+          distance = distance ? distance : 0;
+          tracks[name].push({value, offset, easing, distance});
+        }
+      }
+    } else {
+      let frames = yield animation.getFrames();
+      for (let frame of frames) {
+        for (let name in frame) {
+          if (this.NON_PROPERTIES.indexOf(name) != -1) {
+            continue;
+          }
+
+          // We have to change to CSS property name
+          // since GetKeyframes returns JS property name.
+          const propertyCSSName = getCssPropertyName(name);
+          if (!tracks[propertyCSSName]) {
+            tracks[propertyCSSName] = [];
+          }
+
+          tracks[propertyCSSName].push({
+            value: frame[name],
+            offset: frame.computedOffset,
+            easing: frame.easing,
+            distance: 0
+          });
+        }
+      }
+    }
+
+    return tracks;
+  })
 };

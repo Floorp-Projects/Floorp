@@ -959,8 +959,7 @@ fn static_assert() {
 
     pub fn set_border_image_outset(&mut self, v: longhands::border_image_outset::computed_value::T) {
         % for side in SIDES:
-            v.${side.index}.to_gecko_style_coord(&mut self.gecko.mBorderImageOutset
-                                                          .data_at_mut(${side.index}));
+        v.${side.ident}.to_gecko_style_coord(&mut self.gecko.mBorderImageOutset.data_at_mut(${side.index}));
         % endfor
     }
 
@@ -994,17 +993,17 @@ fn static_assert() {
     }
 
     pub fn set_border_image_width(&mut self, v: longhands::border_image_width::computed_value::T) {
-        use properties::longhands::border_image_width::computed_value::SingleComputedValue;
+        use values::generics::border::BorderImageWidthSide;
 
         % for side in SIDES:
-        match v.${side.index} {
-            SingleComputedValue::Auto => {
+        match v.${side.ident} {
+            BorderImageWidthSide::Auto => {
                 self.gecko.mBorderImageWidth.data_at_mut(${side.index}).set_value(CoordDataValue::Auto)
             },
-            SingleComputedValue::LengthOrPercentage(l) => {
+            BorderImageWidthSide::Length(l) => {
                 l.to_gecko_style_coord(&mut self.gecko.mBorderImageWidth.data_at_mut(${side.index}))
             },
-            SingleComputedValue::Number(n) => {
+            BorderImageWidthSide::Number(n) => {
                 self.gecko.mBorderImageWidth.data_at_mut(${side.index}).set_value(CoordDataValue::Factor(n))
             },
         }
@@ -1021,9 +1020,9 @@ fn static_assert() {
     pub fn set_border_image_slice(&mut self, v: longhands::border_image_slice::computed_value::T) {
         use gecko_bindings::structs::{NS_STYLE_BORDER_IMAGE_SLICE_NOFILL, NS_STYLE_BORDER_IMAGE_SLICE_FILL};
 
-        for (i, corner) in v.corners.iter().enumerate() {
-            corner.to_gecko_style_coord(&mut self.gecko.mBorderImageSlice.data_at_mut(i));
-        }
+        % for side in SIDES:
+        v.offsets.${side.ident}.to_gecko_style_coord(&mut self.gecko.mBorderImageSlice.data_at_mut(${side.index}));
+        % endfor
 
         let fill = if v.fill {
             NS_STYLE_BORDER_IMAGE_SLICE_FILL
@@ -3769,7 +3768,7 @@ fn static_assert() {
     }
     pub fn set_text_overflow(&mut self, v: longhands::text_overflow::computed_value::T) {
         use gecko_bindings::structs::nsStyleTextOverflowSide;
-        use properties::longhands::text_overflow::{SpecifiedValue, Side};
+        use properties::longhands::text_overflow::Side;
 
         fn set(side: &mut nsStyleTextOverflowSide, value: &Side) {
             let ty = match *value {
@@ -3784,13 +3783,10 @@ fn static_assert() {
         }
 
         self.clear_overflow_sides_if_string();
-        self.gecko.mTextOverflow.mLogicalDirections = v.second.is_none();
+        self.gecko.mTextOverflow.mLogicalDirections = v.sides_are_logical;
 
-        let SpecifiedValue { ref first, ref second } = v;
-        let second = second.as_ref().unwrap_or(&first);
-
-        set(&mut self.gecko.mTextOverflow.mLeft, first);
-        set(&mut self.gecko.mTextOverflow.mRight, second);
+        set(&mut self.gecko.mTextOverflow.mLeft, &v.first);
+        set(&mut self.gecko.mTextOverflow.mRight, &v.second);
     }
 
     pub fn copy_text_overflow_from(&mut self, other: &Self) {

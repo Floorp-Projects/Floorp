@@ -90,22 +90,22 @@ add_task(async function() {
   let prefName = "browser.tabs.drawInTitlebar";
   let defaultValue = Services.prefs.getBoolPref(prefName);
   let restoreDefaultsButton = document.getElementById("customization-reset-button");
-  let titleBarButton = document.getElementById("customization-titlebar-visibility-button");
+  let titlebarCheckbox = document.getElementById("customization-titlebar-visibility-checkbox");
   let undoResetButton = document.getElementById("customization-undo-reset-button");
   ok(CustomizableUI.inDefaultState, "Should be in default state at start of test");
   ok(restoreDefaultsButton.disabled, "Restore defaults button should be disabled when in default state");
-  is(titleBarButton.hasAttribute("checked"), !defaultValue, "Title bar button should reflect pref value");
+  is(titlebarCheckbox.hasAttribute("checked"), !defaultValue, "Title bar checkbox should reflect pref value");
   is(undoResetButton.hidden, true, "Undo reset button should be hidden at start of test");
 
   Services.prefs.setBoolPref(prefName, !defaultValue);
   ok(!restoreDefaultsButton.disabled, "Restore defaults button should be enabled when pref changed");
-  is(titleBarButton.hasAttribute("checked"), defaultValue, "Title bar button should reflect changed pref value");
+  is(titlebarCheckbox.hasAttribute("checked"), defaultValue, "Title bar checkbox should reflect changed pref value");
   ok(!CustomizableUI.inDefaultState, "With titlebar flipped, no longer default");
   is(undoResetButton.hidden, true, "Undo reset button should be hidden after pref change");
 
   await gCustomizeMode.reset();
   ok(restoreDefaultsButton.disabled, "Restore defaults button should be disabled after reset");
-  is(titleBarButton.hasAttribute("checked"), !defaultValue, "Title bar button should reflect default value after reset");
+  is(titlebarCheckbox.hasAttribute("checked"), !defaultValue, "Title bar checkbox should reflect default value after reset");
   is(Services.prefs.getBoolPref(prefName), defaultValue, "Reset should reset drawInTitlebar");
   ok(CustomizableUI.inDefaultState, "In default state after titlebar reset");
   is(undoResetButton.hidden, false, "Undo reset button should be visible after reset");
@@ -113,7 +113,7 @@ add_task(async function() {
 
   await gCustomizeMode.undoReset();
   ok(!restoreDefaultsButton.disabled, "Restore defaults button should be enabled after undo-reset");
-  is(titleBarButton.hasAttribute("checked"), defaultValue, "Title bar button should reflect undo-reset value");
+  is(titlebarCheckbox.hasAttribute("checked"), defaultValue, "Title bar checkbox should reflect undo-reset value");
   ok(!CustomizableUI.inDefaultState, "No longer in default state after undo");
   is(Services.prefs.getBoolPref(prefName), !defaultValue, "Undo-reset goes back to previous pref value");
   is(undoResetButton.hidden, true, "Undo reset button should be hidden after undo-reset clicked");
