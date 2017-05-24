@@ -87,11 +87,15 @@ CancelableRunnable::Cancel()
 NS_IMPL_ISUPPORTS_INHERITED(IdleRunnable, CancelableRunnable,
                             nsIIdleRunnable)
 
-void
-IdleRunnable::SetDeadline(TimeStamp aDeadline)
+namespace mozilla {
+namespace detail {
+already_AddRefed<nsITimer> CreateTimer()
 {
-  // Do nothing
+  nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  return timer.forget();
 }
+} // namespace detail
+} // namespace mozilla
 
 #endif  // XPCOM_GLUE_AVOID_NSPR
 
@@ -279,6 +283,7 @@ NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
 {
   nsresult rv;
   nsCOMPtr<nsIRunnable> event(aEvent);
+  NS_ENSURE_TRUE(event, NS_ERROR_INVALID_ARG);
 #ifdef MOZILLA_INTERNAL_API
   nsIThread* thread = NS_GetCurrentThread();
   if (!thread) {
@@ -303,6 +308,80 @@ NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
   }
 
   return rv;
+}
+
+class IdleRunnableWrapper : public IdleRunnable
+{
+public:
+  explicit IdleRunnableWrapper(already_AddRefed<nsIRunnable>&& aEvent)
+    : mRunnable(Move(aEvent))
+  {
+  }
+
+  NS_IMETHOD Run() override
+  {
+    if (!mRunnable) {
+      return NS_OK;
+    }
+    CancelTimer();
+    nsCOMPtr<nsIRunnable> runnable = mRunnable.forget();
+    return runnable->Run();
+  }
+
+  static void
+  TimedOut(nsITimer* aTimer, void* aClosure)
+  {
+    RefPtr<IdleRunnableWrapper> runnable =
+      static_cast<IdleRunnableWrapper*>(aClosure);
+    runnable->Run();
+  }
+
+  void SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) override
+  {
+    MOZ_ASSERT(aTarget);
+    MOZ_ASSERT(!mTimer);
+    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    if (mTimer) {
+      mTimer->SetTarget(aTarget);
+      mTimer->InitWithFuncCallback(TimedOut, this, aDelay,
+                                   nsITimer::TYPE_ONE_SHOT);
+    }
+  }
+private:
+  ~IdleRunnableWrapper()
+  {
+    CancelTimer();
+  }
+
+  void CancelTimer()
+  {
+    if (mTimer) {
+      mTimer->Cancel();
+    }
+  }
+
+  nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsIRunnable> mRunnable;
+};
+
+extern nsresult
+NS_IdleDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent,
+                               uint32_t aTimeout)
+{
+  nsCOMPtr<nsIRunnable> event(Move(aEvent));
+  NS_ENSURE_TRUE(event, NS_ERROR_INVALID_ARG);
+  nsCOMPtr<nsIIdleRunnable> idleEvent = do_QueryInterface(event);
+
+  if (!idleEvent) {
+    idleEvent = new IdleRunnableWrapper(event.forget());
+    event = do_QueryInterface(idleEvent);
+    MOZ_DIAGNOSTIC_ASSERT(event);
+  }
+
+  //XXX Using current thread for now as the nsIEventTarget.
+  idleEvent->SetTimer(aTimeout, NS_GetCurrentThread());
+
+  return NS_IdleDispatchToCurrentThread(event.forget());
 }
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
