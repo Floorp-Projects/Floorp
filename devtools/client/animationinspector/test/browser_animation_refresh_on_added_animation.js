@@ -22,7 +22,7 @@ add_task(function* () {
     selector: ".still",
     attributeName: "class",
     attributeValue: "ball animated"
-  }, panel, inspector, true);
+  }, panel, inspector);
 
   assertAnimationsDisplayed(panel, 1);
 
@@ -31,21 +31,18 @@ add_task(function* () {
     selector: ".ball.animated",
     attributeName: "class",
     attributeValue: "ball still"
-  }, panel, inspector, false);
+  }, panel, inspector);
 
   assertAnimationsDisplayed(panel, 0);
 });
 
-function* changeElementAndWait(options, panel, inspector, isDetailDisplayed) {
+function* changeElementAndWait(options, panel, inspector) {
   let onPanelUpdated = panel.once(panel.UI_UPDATED_EVENT);
   let onInspectorUpdated = inspector.once("inspector-updated");
-  let onDetailRendered = isDetailDisplayed
-                         ? panel.animationsTimelineComponent
-                                .details.once("animation-detail-rendering-completed")
-                         : Promise.resolve();
 
   yield executeInContent("devtools:test:setAttribute", options);
 
   yield promise.all([onInspectorUpdated, onPanelUpdated,
-                     waitForAllAnimationTargets(panel), onDetailRendered]);
+                     waitForAllAnimationTargets(panel),
+                     waitForAnimationTimelineRendering(panel)]);
 }

@@ -1045,8 +1045,10 @@ var gMainPane = {
 
       // Check for duplicates in changes we haven't committed yet
       let engines = gEngineView._engineStore.engines;
+      let lc_keyword = keyword.toLocaleLowerCase();
       for (let engine of engines) {
-        if (engine.alias == keyword &&
+        if (engine.alias &&
+            engine.alias.toLocaleLowerCase() == lc_keyword &&
             engine.name != aEngine.name) {
           eduplicate = true;
           dupName = engine.name;

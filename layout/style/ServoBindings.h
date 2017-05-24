@@ -43,6 +43,9 @@ namespace mozilla {
     struct URLValue;
     struct ImageValue;
   };
+  namespace dom {
+    enum class IterationCompositeOperation : uint8_t;
+  };
   enum class UpdateAnimationsTasks : uint8_t;
   struct LangGroupFontPrefs;
   class ServoStyleSheet;
