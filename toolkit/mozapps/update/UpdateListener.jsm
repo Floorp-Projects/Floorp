@@ -101,7 +101,11 @@ var UpdateListener = {
                                           action,
                                           secondaryAction,
                                           { dismissed, beforeShowDoorhanger });
-    Services.telemetry.getHistogramById("UPDATE_NOTIFICATION_SHOWN").add(type);
+    if (dismissed) {
+      Services.telemetry.getHistogramById("UPDATE_NOTIFICATION_BADGE_SHOWN").add(type);
+    } else {
+      Services.telemetry.getHistogramById("UPDATE_NOTIFICATION_SHOWN").add(type);
+    }
   },
 
   showRestartNotification(dismissed) {

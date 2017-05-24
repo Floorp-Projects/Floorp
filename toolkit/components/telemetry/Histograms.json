@@ -5820,6 +5820,16 @@
     "description": "Update: the application update doorhanger type that was displayed.",
     "labels": ["restart", "available", "manual"]
   },
+  "UPDATE_NOTIFICATION_BADGE_SHOWN": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "bug_numbers": [893505, 1365204],
+    "releaseChannelCollection": "opt-out",
+    "description": "Update: the application update badge type that was displayed.",
+    "labels": ["restart", "available", "manual"]
+  },
   "UPDATE_NOTIFICATION_DISMISSED": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
