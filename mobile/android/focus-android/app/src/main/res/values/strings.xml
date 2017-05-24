@@ -272,4 +272,7 @@ be temporary, and you can try again later.</li>
     <string name="contextmenu_image_copy">Copy image address</string>
     <!-- Label used in the contextmenu shown when long-pressing on an image -->
     <string name="contextmenu_image_save">Save image</string>
+
+    <!-- This is a warning shown in the browser's context menu (when long pressing an image). -->
+    <string name="contextmenu_image_warning"><![CDATA[Saved and shared images <b>will not be deleted</b> when you erase Firefox Focus history.]]></string>
 </resources>

@@ -15,6 +15,7 @@ import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v7.app.AlertDialog;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -54,8 +55,8 @@ public class WebContextMenu {
         }
         builder.setCustomTitle(titleView);
 
-        final NavigationView menu = new NavigationView(context);
-        builder.setView(menu);
+        final View view = LayoutInflater.from(context).inflate(R.layout.context_menu, null);
+        builder.setView(view);
 
         builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
             @Override
@@ -68,7 +69,15 @@ public class WebContextMenu {
 
         final Dialog dialog = builder.create();
 
+        final NavigationView menu = (NavigationView) view.findViewById(R.id.context_menu);
         setupMenuForHitTarget(dialog, menu, callback, hitTarget);
+
+        final TextView warningView = (TextView) view.findViewById(R.id.warning);
+        if (hitTarget.isImage) {
+            warningView.setText(Html.fromHtml(context.getString(R.string.contextmenu_image_warning)));
+        } else {
+            warningView.setVisibility(View.GONE);
+        }
 
         dialog.show();
     }
