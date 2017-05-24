@@ -613,12 +613,10 @@ nsWindowMediator::GetZLevel(nsIXULWindow *aWindow, uint32_t *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsIXULWindow::normalZ;
+  // This can fail during window destruction.
   nsWindowInfo *info = GetInfoFor(aWindow);
   if (info) {
     *_retval = info->mZLevel;
-  } else {
-    NS_WARNING("getting z level of unregistered window");
-    // this goes off during window destruction
   }
   return NS_OK;
 }

@@ -1260,16 +1260,11 @@ PuppetWidget::GetScreenBounds()
 
 uint32_t PuppetWidget::GetMaxTouchPoints() const
 {
-  static uint32_t sTouchPoints = 0;
-  static bool sIsInitialized = false;
-  if (sIsInitialized) {
-    return sTouchPoints;
-  }
+  uint32_t maxTouchPoints = 0;
   if (mTabChild) {
-    mTabChild->GetMaxTouchPoints(&sTouchPoints);
-    sIsInitialized = true;
+    mTabChild->GetMaxTouchPoints(&maxTouchPoints);
   }
-  return sTouchPoints;
+  return maxTouchPoints;
 }
 
 void

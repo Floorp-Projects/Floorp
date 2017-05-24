@@ -533,10 +533,10 @@ js::regexp_construct_raw_flags(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 2);
     MOZ_ASSERT(!args.isConstructing());
 
-    Rooted<RegExpObject*> rx(cx, &args[0].toObject().as<RegExpObject>());
-
     // Step 4.a.
-    RootedAtom sourceAtom(cx, rx->getSource());
+    RootedAtom sourceAtom(cx, AtomizeString(cx, args[0].toString()));
+    if (!sourceAtom)
+        return false;
 
     // Step 4.c.
     int32_t flags = int32_t(args[1].toNumber());
@@ -548,33 +548,6 @@ js::regexp_construct_raw_flags(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 8.
     regexp->initAndZeroLastIndex(sourceAtom, RegExpFlag(flags), cx);
-    args.rval().setObject(*regexp);
-    return true;
-}
-
-bool
-js::regexp_clone(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    RootedObject from(cx, &args[0].toObject());
-
-    RootedAtom sourceAtom(cx);
-    RegExpFlag flags;
-    {
-        RootedRegExpShared g(cx);
-        if (!RegExpToShared(cx, from, &g))
-            return false;
-        sourceAtom = g->getSource();
-        flags = g->getFlags();
-    }
-
-    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx));
-    if (!regexp)
-        return false;
-
-    regexp->initAndZeroLastIndex(sourceAtom, flags, cx);
-
     args.rval().setObject(*regexp);
     return true;
 }
@@ -1028,11 +1001,9 @@ js::RegExpMatcher(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject regexp(cx, &args[0].toObject());
     RootedString string(cx, args[1].toString());
-    RootedValue lastIndexVal(cx, args[2]);
 
-    int32_t lastIndex = 0;
-    if (!ToInt32(cx, lastIndexVal, &lastIndex))
-        return false;
+    int32_t lastIndex;
+    MOZ_ALWAYS_TRUE(ToInt32(cx, args[2], &lastIndex));
 
     /* Steps 3, 9-25, except 12.a.i, 12.c.i.1, 15. */
     return RegExpMatcherImpl(cx, regexp, string, lastIndex,
@@ -1103,11 +1074,9 @@ js::RegExpSearcher(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject regexp(cx, &args[0].toObject());
     RootedString string(cx, args[1].toString());
-    RootedValue lastIndexVal(cx, args[2]);
 
-    int32_t lastIndex = 0;
-    if (!ToInt32(cx, lastIndexVal, &lastIndex))
-        return false;
+    int32_t lastIndex;
+    MOZ_ALWAYS_TRUE(ToInt32(cx, args[2], &lastIndex));
 
     /* Steps 3, 9-25, except 12.a.i, 12.c.i.1, 15. */
     int32_t result = 0;
@@ -1168,11 +1137,9 @@ js::RegExpTester(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject regexp(cx, &args[0].toObject());
     RootedString string(cx, args[1].toString());
-    RootedValue lastIndexVal(cx, args[2]);
 
-    int32_t lastIndex = 0;
-    if (!ToInt32(cx, lastIndexVal, &lastIndex))
-        return false;
+    int32_t lastIndex;
+    MOZ_ALWAYS_TRUE(ToInt32(cx, args[2], &lastIndex));
 
     /* Steps 3, 9-14, except 12.a.i, 12.c.i.1. */
     size_t endIndex = 0;

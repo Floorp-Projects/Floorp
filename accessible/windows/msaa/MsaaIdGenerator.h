@@ -10,11 +10,13 @@
 #include "mozilla/a11y/IDSet.h"
 
 #include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/NotNull.h"
 
 namespace mozilla {
 namespace a11y {
 
 class AccessibleWrap;
+class sdnAccessible;
 
 /**
  * This class is responsible for generating child IDs used by our MSAA
@@ -33,7 +35,8 @@ public:
   constexpr MsaaIdGenerator();
 
   uint32_t GetID();
-  void ReleaseID(AccessibleWrap* aAccWrap);
+  void ReleaseID(NotNull<AccessibleWrap*> aAccWrap);
+  void ReleaseID(NotNull<sdnAccessible*> aSdnAcc);
   bool IsChromeID(uint32_t aID);
   bool IsIDForThisContentProcess(uint32_t aID);
   bool IsIDForContentProcess(uint32_t aID,
@@ -44,6 +47,7 @@ public:
   void ReleaseContentProcessIDFor(dom::ContentParentId aIPCContentProcessID);
 
 private:
+  bool ReleaseID(uint32_t aID);
   uint32_t ResolveContentProcessID();
 
 private:

@@ -74,7 +74,15 @@ void ProxyDestroyed(ProxyAccessible*);
 void ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType);
 void ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t aState,
                            bool aEnabled);
+
+#if defined(XP_WIN)
+void ProxyFocusEvent(ProxyAccessible* aTarget,
+                     const LayoutDeviceIntRect& aCaretRect);
+void ProxyCaretMoveEvent(ProxyAccessible* aTarget,
+                         const LayoutDeviceIntRect& aCaretRect);
+#else
 void ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset);
+#endif
 void ProxyTextChangeEvent(ProxyAccessible* aTarget, const nsString& aStr,
                           int32_t aStart, uint32_t aLen, bool aIsInsert,
                           bool aFromUser);
