@@ -63,7 +63,9 @@
      property names like 'border-bottom-right-radius' without ellipsis) */
   --timeline-sidebar-width: 200px;
   /* How high should animations displayed in the timeline be */
-  --timeline-animation-height: 20px;
+  --timeline-animation-height: 30px;
+  /* How high should animated properties displayed in the details view be */
+  --detail-animation-height: 20px;
   /* The size of a keyframe marker in the keyframes diagram */
   --keyframes-marker-size: 10px;
   /* The color of the time graduation borders */
@@ -259,6 +261,10 @@ body {
   height: var(--timeline-animation-height);
 }
 
+.animation-detail .track-container {
+  height: var(--detail-animation-height);
+}
+
 .animation-timeline .scrubber-wrapper {
   position: absolute;
   z-index: 5;
@@ -306,9 +312,9 @@ body {
 }
 
 .animation-timeline .time-header {
-  min-height: var(--timeline-animation-height);
   cursor: col-resize;
   -moz-user-select: none;
+  height: 100%;
 }
 
 .animated-properties-header .header-item,
@@ -325,13 +331,13 @@ body {
   background-color: var(--theme-body-background);
   border-bottom: 1px solid var(--time-graduation-border-color);
   z-index: 3;
-  height: var(--timeline-animation-height);
+  height: var(--toolbar-height);
   width: 100%;
   overflow: hidden;
 }
 
 .animation-timeline .time-body {
-  top: var(--timeline-animation-height);
+  top: var(--toolbar-height);
 }
 
 .progress-tick-container .progress-tick,
@@ -452,7 +458,7 @@ body {
   content: "";
   display: block;
   position: absolute;
-  top: 1px;
+  top: 5px;
   right: 0;
   height: 100%;
   width: var(--fast-track-icon-width);
@@ -547,7 +553,7 @@ body {
 /* Inline keyframes info in the timeline */
 
 .animation-detail .animated-properties .property {
-  height: var(--timeline-animation-height);
+  height: var(--detail-animation-height);
   position: relative;
 }
 
@@ -754,8 +760,8 @@ body {
 .animated-properties-header {
   -moz-user-select: none;
   position: sticky;
-  top: var(--timeline-animation-height);
-  min-height: var(--timeline-animation-height);
+  top: var(--toolbar-height);
+  min-height: var(--toolbar-height);
   padding-top: 2px;
   z-index: 3;
   background-color: var(--theme-body-background);
@@ -781,7 +787,7 @@ body {
 
 .animated-properties-body .property:last-child {
   /* To display animation progress graph clealy when the scroll is bottom. */
-  padding-bottom: calc(var(--timeline-animation-height) / 2);
+  padding-bottom: calc(var(--detail-animation-height) / 2);
 }
 
 .animated-properties .progress-indicator-wrapper {
