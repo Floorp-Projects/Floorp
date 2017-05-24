@@ -2580,10 +2580,12 @@ void nsCellMap::DestroyCellData(CellData* aData)
   if (mIsBC) {
     BCCellData* bcData = static_cast<BCCellData*>(aData);
     bcData->~BCCellData();
-    mPresContext->FreeToShell(sizeof(BCCellData), bcData);
+    mPresContext->PresShell()->
+      FreeByObjectID(eArenaObjectID_BCCellData, bcData);
   } else {
     aData->~CellData();
-    mPresContext->FreeToShell(sizeof(CellData), aData);
+    mPresContext->PresShell()->
+      FreeByObjectID(eArenaObjectID_CellData, aData);
   }
 }
 
@@ -2591,7 +2593,8 @@ CellData* nsCellMap::AllocCellData(nsTableCellFrame* aOrigCell)
 {
   if (mIsBC) {
     BCCellData* data = (BCCellData*)
-      mPresContext->AllocateFromShell(sizeof(BCCellData));
+      mPresContext->PresShell()->
+        AllocateByObjectID(eArenaObjectID_BCCellData, sizeof(BCCellData));
     if (data) {
       new (data) BCCellData(aOrigCell);
     }
@@ -2599,7 +2602,8 @@ CellData* nsCellMap::AllocCellData(nsTableCellFrame* aOrigCell)
   }
 
   CellData* data = (CellData*)
-    mPresContext->AllocateFromShell(sizeof(CellData));
+    mPresContext->PresShell()->
+      AllocateByObjectID(eArenaObjectID_CellData, sizeof(CellData));
   if (data) {
     new (data) CellData(aOrigCell);
   }

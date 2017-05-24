@@ -1263,6 +1263,12 @@ TelemetryImpl::TelemetryImpl()
 
 TelemetryImpl::~TelemetryImpl() {
   UnregisterWeakMemoryReporter(this);
+
+  // This is still racey as access to these collections is guarded using sTelemetry.
+  // We will fix this in bug 1367344.
+  MutexAutoLock hashLock(mHashMutex);
+  MutexAutoLock hangReportsLock(mHangReportsMutex);
+  MutexAutoLock threadHangsLock(mThreadHangStatsMutex);
 }
 
 void

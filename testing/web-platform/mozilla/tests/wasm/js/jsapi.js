@@ -97,6 +97,7 @@ let CompileError;
 let LinkError;
 let RuntimeError;
 let Memory;
+let instanceProto;
 let memoryProto;
 let mem1;
 let Table;
@@ -350,7 +351,7 @@ test(() => {
 }, "'WebAssembly.Instance.prototype' data property");
 
 test(() => {
-    const instanceProto = Instance.prototype;
+    instanceProto = Instance.prototype;
     const instanceProtoDesc = Object.getOwnPropertyDescriptor(Instance, 'prototype');
     assert_equals(instanceProto, instanceProtoDesc.value);
     assert_equals(String(instanceProto), "[object WebAssembly.Instance]");
@@ -366,12 +367,16 @@ test(() => {
 }, "'WebAssembly.Instance' instance objects");
 
 test(() => {
-    const instanceExportsDesc = Object.getOwnPropertyDescriptor(exportingInstance, 'exports');
-    assert_equals(typeof instanceExportsDesc.value, "object");
-    assert_equals(instanceExportsDesc.writable, true);
-    assert_equals(instanceExportsDesc.enumerable, true);
-    assert_equals(instanceExportsDesc.configurable, true);
-}, "'WebAssembly.Instance' 'exports' data property");
+    const exportsDesc = Object.getOwnPropertyDescriptor(instanceProto, 'exports');
+    assert_equals(typeof exportsDesc.get, "function");
+    assert_equals(exportsDesc.set, undefined);
+    assert_equals(exportsDesc.enumerable, false);
+    assert_equals(exportsDesc.configurable, true);
+    const exportsGetter = exportsDesc.get;
+    assertThrows(() => exportsGetter.call(), TypeError);
+    assertThrows(() => exportsGetter.call({}), TypeError);
+    assert_equals(typeof exportsGetter.call(exportingInstance), "object");
+}, "'WebAssembly.Instance.prototype.exports' accessor property");
 
 test(() => {
     exportsObj = exportingInstance.exports;
@@ -385,7 +390,7 @@ test(() => {
     assert_equals(Object.getPrototypeOf(exportsObj), null);
     assertThrows(() => Object.defineProperty(exportsObj, 'g', {}), TypeError);
     assert_equals(Object.keys(exportsObj).join(), "f");
-}, "'WebAssembly.Instance' 'exports' object");
+}, "exports object");
 
 test(() => {
     const f = exportsObj.f;

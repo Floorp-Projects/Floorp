@@ -231,6 +231,13 @@ def run_tests(config, test_paths, product, **kwargs):
 
     return unexpected_total == 0
 
+def start(**kwargs):
+    if kwargs["list_test_groups"]:
+        list_test_groups(**kwargs)
+    elif kwargs["list_disabled"]:
+        list_disabled(**kwargs)
+    else:
+        return not run_tests(**kwargs)
 
 def main():
     """Main entry point when calling from the command line"""
@@ -242,12 +249,7 @@ def main():
 
         setup_logging(kwargs, {"raw": sys.stdout})
 
-        if kwargs["list_test_groups"]:
-            list_test_groups(**kwargs)
-        elif kwargs["list_disabled"]:
-            list_disabled(**kwargs)
-        else:
-            return not run_tests(**kwargs)
+        return start(**kwargs)
     except Exception:
         if kwargs["pdb"]:
             import pdb, traceback

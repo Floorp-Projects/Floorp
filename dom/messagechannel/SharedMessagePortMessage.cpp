@@ -7,8 +7,6 @@
 #include "MessagePort.h"
 #include "MessagePortChild.h"
 #include "MessagePortParent.h"
-#include "mozilla/dom/ipc/BlobChild.h"
-#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/ipc/BackgroundChild.h"

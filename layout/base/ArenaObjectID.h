@@ -20,15 +20,7 @@ enum ArenaObjectID {
 #include "nsPresArenaObjectList.h"
 #undef PRES_ARENA_OBJECT
 
-  /**
-   * The PresArena implementation uses this bit to distinguish objects
-   * allocated by size from objects allocated by type ID (that is, frames
-   * using AllocateByFrameID and other objects using AllocateByObjectID).
-   * It should not collide with any Object ID (above) or frame ID (in
-   * nsQueryFrame.h).  It is not 0x80000000 to avoid the question of
-   * whether enumeration constants are signed.
-   */
-  eArenaObjectID_NON_OBJECT_MARKER = 0x40000000
+  eArenaObjectID_COUNT
 };
 
 };

@@ -28,6 +28,7 @@ class WasmActivation;
 namespace wasm {
 
 class Code;
+class CodeSegment;
 typedef Vector<Instance*, 0, SystemAllocPolicy> InstanceVector;
 
 // wasm::Compartment lives in JSCompartment and contains the wasm-related
@@ -75,9 +76,10 @@ class Compartment
     const InstanceVector& instances() const { return instances_; }
 
     // This methods returns the wasm::Code containing the given pc, if any
-    // exists in the compartment.
+    // exists in the compartment, and the segment for the tier in which the
+    // pc was found.
 
-    const Code* lookupCode(const void* pc) const;
+    const Code* lookupCode(const void* pc, const CodeSegment** segment = nullptr) const;
 
     // Ensure all Instances in this JSCompartment have profiling labels created.
 

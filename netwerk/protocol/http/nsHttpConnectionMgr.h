@@ -243,6 +243,7 @@ private:
         nsTArray<RefPtr<nsHttpConnection> >  mActiveConns; // active connections
         nsTArray<RefPtr<nsHttpConnection> >  mIdleConns;   // idle persistent connections
         nsTArray<nsHalfOpenSocket*>  mHalfOpens;   // half open connections
+        nsTArray<RefPtr<nsHalfOpenSocket> >  mHalfOpenFastOpenBackups;   // backup half open connections for connection in fast open phase
 
         bool AvailableForDispatchNow();
 
@@ -291,7 +292,8 @@ private:
         // Add a transaction information into the pending queue in
         // |mPendingTransactionTable| according to the transaction's
         // top level outer content window id.
-        void InsertTransaction(PendingTransactionInfo *info);
+        void InsertTransaction(PendingTransactionInfo *info,
+                               bool aInsertAsFirstForTheSamePriority = false);
 
         // Append transactions to the |result| whose window id
         // is equal to |windowId|.
@@ -376,15 +378,9 @@ private:
 
         bool FastOpenEnabled() override;
         nsresult StartFastOpen() override;
-        void SetFastOpenConnected(nsresult) override;
+        void SetFastOpenConnected(nsresult, bool aWillRetry) override;
         void FastOpenNotSupported() override;
         void SetFastOpenStatus(uint8_t tfoStatus) override;
-
-        bool IsFastOpenBackupHalfOpen()
-        {
-            return mConnectionNegotiatingFastOpen;
-        }
-
         void CancelFastOpenConnection();
     private:
         nsresult SetupConn(nsIAsyncOutputStream *out,
@@ -443,7 +439,7 @@ private:
         bool                           mFreeToUse;
         nsresult                       mPrimaryStreamStatus;
 
-        bool                           mUsingFastOpen;
+        bool                           mFastOpenInProgress;
         RefPtr<nsHttpConnection>       mConnectionNegotiatingFastOpen;
     };
     friend class nsHalfOpenSocket;
@@ -543,7 +539,8 @@ private:
                                PendingTransactionInfo * pendingTransInfo);
 
     void InsertTransactionSorted(nsTArray<RefPtr<PendingTransactionInfo> > &pendingQ,
-                                 PendingTransactionInfo *pendingTransInfo);
+                                 PendingTransactionInfo *pendingTransInfo,
+                                 bool aInsertAsFirstForTheSamePriority = false);
 
     nsConnectionEntry *GetOrCreateConnectionEntry(nsHttpConnectionInfo *,
                                                   bool allowWildCard);

@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackground;
-include protocol PBlob;
 include protocol PBrowser;
 include protocol PCompositorBridge;
 include protocol PContentBridge;
@@ -21,7 +20,6 @@ include protocol PProcessHangMonitor;
 include protocol PImageBridge;
 include protocol PIPCBlobInputStream;
 include protocol PMedia;
-include protocol PMemoryStream;
 include protocol PNecko;
 include protocol PGMPContent;
 include protocol PGMPService;
@@ -283,7 +281,6 @@ struct XPCOMInitData
  */
 nested(upto inside_cpow) sync protocol PContent
 {
-    manages PBlob;
     manages PBrowser;
     manages PContentPermissionRequest;
     manages PCycleCollectWithLogs;
@@ -295,7 +292,6 @@ nested(upto inside_cpow) sync protocol PContent
     manages PHeapSnapshotTempFileHelper;
     manages PIPCBlobInputStream;
     manages PMedia;
-    manages PMemoryStream;
     manages PNecko;
     manages POfflineCacheUpdate;
     manages PPrinting;
@@ -340,8 +336,6 @@ both:
     async PBrowser(TabId tabId, TabId sameTabGroupAs,
                    IPCTabContext context, uint32_t chromeFlags,
                    ContentParentId cpId, bool isForBrowser);
-
-    async PBlob(BlobConstructorParams params);
 
     async PFileDescriptorSet(FileDescriptor fd);
 
@@ -679,8 +673,6 @@ parent:
     async PJavaScript();
 
     async PRemoteSpellcheckEngine();
-
-    async PMemoryStream(uint64_t aSize);
 
     async InitCrashReporter(Shmem shmem, NativeThreadId tid);
 

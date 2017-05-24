@@ -18,7 +18,7 @@
       <stylesheet src="chrome://browser/content/customizableui/panelUI.css"/>
     </resources>
     <content>
-      <xul:box anonid="viewContainer" class="panel-viewcontainer" xbl:inherits="panelopen,viewtype,transitioning">
+      <xul:vbox anonid="viewContainer" class="panel-viewcontainer" xbl:inherits="panelopen,viewtype,transitioning">
         <xul:stack anonid="viewStack" xbl:inherits="viewtype,transitioning" class="panel-viewstack">
           <xul:vbox anonid="mainViewContainer" class="panel-mainview" xbl:inherits="viewtype"/>
 
@@ -37,18 +37,18 @@
             <children includes="panelview"/>
           </xul:vbox>
         </xul:stack>
-      </xul:box>
+      </xul:vbox>
     </content>
     <implementation>
       <constructor><![CDATA[
         const {PanelMultiView} = Components.utils.import("resource:///modules/PanelMultiView.jsm", {});
         this.instance = new PanelMultiView(this);
-       ]]></constructor>
- 
-       <destructor><![CDATA[
+      ]]></constructor>
+
+      <destructor><![CDATA[
         this.instance.destructor();
-       ]]></destructor>
-     </implementation>
+      ]]></destructor>
+    </implementation>
   </binding>
 
   <binding id="photonpanelmultiview" extends="chrome://browser/content/customizableui/panelUI.xml#panelmultiview">
