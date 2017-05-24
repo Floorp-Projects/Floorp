@@ -52,7 +52,7 @@ function test() {
 
     gBrowser.removeCurrentTab();
 
-    yield TestUtils.topicObserved("outer-window-destroyed", (subject, data) => {
+    yield TestUtils.topicObserved("outer-window-nuked", (subject, data) => {
       let id = subject.QueryInterface(Components.interfaces.nsISupportsPRUint64).data;
       return id == winID;
     });
