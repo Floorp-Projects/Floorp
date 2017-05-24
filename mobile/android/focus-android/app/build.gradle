@@ -337,6 +337,83 @@ task stringsCleanUpdate()  {
 }
 
 // -------------------------------------------------------------------------------------------------
+// L10N: Generate list of locales
+// Focus provides its own (Android independent) locale switcher. That switcher requires a list
+// of locale codes. We generate that list here to avoid having to manually maintain a list of locales:
+// -------------------------------------------------------------------------------------------------
+
+def getEnabledLocales() {
+    def resDir = file('src/main/res')
+
+    def potentialLanguageDirs = resDir.listFiles(new FilenameFilter() {
+        @Override
+        boolean accept(File dir, String name) {
+            return name.startsWith("values-");
+        }
+    })
+
+    def langs = potentialLanguageDirs.findAll {
+        // Only select locales where strings.xml exists
+        // Some locales might only contain e.g. sumo URLS in urls.xml, and should be skipped (see es vs es-ES/es-MX/etc)
+        return  file(new File(it, "strings.xml")).exists()
+    } .collect {
+        // And reduce down to actual values-* names
+        return it.name
+    } .collect {
+        return it.substring("values-".length())
+    } .collect {
+        if (it.length() > 3 && it.contains("-r")) {
+            // Android resource dirs add an "r" prefix to the region - we need to strip that for java usage
+            // Add 1 to have the index of the r, without the dash
+            def regionPrefixPosition = it.indexOf("-r") + 1
+
+            return it.substring(0, regionPrefixPosition) + it.substring(regionPrefixPosition + 1)
+        } else {
+            return it
+        }
+    } .collect {
+        return '"' + it + '"'
+    }
+
+    // en-US is the default language (in "values") and therefore needs to be added separately
+    langs << "\"en-US\""
+
+    return langs
+}
+
+def generatedLocaleListDir = 'src/main/java/org/mozilla/focus/generated'
+def generatedLocaleListFilename = 'LocaleList.java'
+
+task generateLocaleList {
+    def dir = file(generatedLocaleListDir)
+    dir.mkdir()
+    def localeList = file(new File(dir, generatedLocaleListFilename))
+
+    localeList.delete()
+    localeList.createNewFile()
+    localeList << "package org.mozilla.focus.generated;" << "\n" << "\n"
+    localeList << "import java.util.Arrays;" << "\n"
+    localeList << "import java.util.Collections;" << "\n"
+    localeList << "import java.util.List;" << "\n"
+    localeList << "\n"
+    localeList << "public class LocaleList {" << "\n"
+    // findbugs doesn't like "public static final String[]", see http://findbugs.sourceforge.net/bugDescriptions.html#MS_MUTABLE_ARRAY
+    localeList << "    public static final List<String> BUNDLED_LOCALES = Collections.unmodifiableList(Arrays.asList(new String[] { "
+    localeList << getEnabledLocales().join(",") + " }));" << "\n"
+    localeList <<"}" << "\n"
+}
+
+tasks.whenTaskAdded { task ->
+    if (name.contains("compile")) {
+        task.dependsOn generateLocaleList
+    }
+}
+
+clean.doLast {
+    file(generatedLocaleListDir).deleteDir()
+}
+
+// -------------------------------------------------------------------------------------------------
 // Static Analysis: findbugs and pmd
 // -------------------------------------------------------------------------------------------------
 
