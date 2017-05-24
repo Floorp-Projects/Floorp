@@ -288,8 +288,8 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
                         now + TimeDuration::FromSeconds(i));
   }
 
-  // track change notification.
-  encoder.SetCurrentFrames(segment);
+  encoder.AppendVideoSegment(Move(segment));
+  encoder.AdvanceCurrentTime(images.Length() * 90000);
 
   // Pull Encoded Data back from encoder.
   EncodedFrameContainer container;
@@ -313,11 +313,9 @@ TEST(VP8VideoTrackEncoder, SingleFrameEncode)
                       generator.GetSize(),
                       PRINCIPAL_HANDLE_NONE);
 
-  encoder.SetCurrentFrames(segment);
-
-  // End the track.
-  segment.Clear();
-  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, TrackEventCommand::TRACK_EVENT_ENDED, segment);
+  encoder.AppendVideoSegment(Move(segment));
+  encoder.AdvanceCurrentTime(45000);
+  encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
   ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
@@ -359,11 +357,9 @@ TEST(VP8VideoTrackEncoder, SameFrameEncode)
                         now + TimeDuration::FromSeconds(i * 0.1));
   }
 
-  encoder.SetCurrentFrames(segment);
-
-  // End the track.
-  segment.Clear();
-  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, TrackEventCommand::TRACK_EVENT_ENDED, segment);
+  encoder.AppendVideoSegment(Move(segment));
+  encoder.AdvanceCurrentTime(15 * 9000);
+  encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
   ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
@@ -410,11 +406,9 @@ TEST(VP8VideoTrackEncoder, NullFrameFirst)
                       false,
                       now + TimeDuration::FromSeconds(0.3));
 
-  encoder.SetCurrentFrames(segment);
-
-  // End the track.
-  segment.Clear();
-  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, TrackEventCommand::TRACK_EVENT_ENDED, segment);
+  encoder.AppendVideoSegment(Move(segment));
+  encoder.AdvanceCurrentTime(3 * 9000);
+  encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
   ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
@@ -453,11 +447,9 @@ TEST(VP8VideoTrackEncoder, SkippedFrames)
                         now + TimeDuration::FromMilliseconds(i));
   }
 
-  encoder.SetCurrentFrames(segment);
-
-  // End the track.
-  segment.Clear();
-  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, TrackEventCommand::TRACK_EVENT_ENDED, segment);
+  encoder.AppendVideoSegment(Move(segment));
+  encoder.AdvanceCurrentTime(100 * 90);
+  encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
   ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
@@ -505,11 +497,9 @@ TEST(VP8VideoTrackEncoder, RoundingErrorFramesEncode)
                       false,
                       now + TimeDuration::FromSeconds(0.9));
 
-  encoder.SetCurrentFrames(segment);
-
-  // End the track.
-  segment.Clear();
-  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, TrackEventCommand::TRACK_EVENT_ENDED, segment);
+  encoder.AppendVideoSegment(Move(segment));
+  encoder.AdvanceCurrentTime(10 * 9000);
+  encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
   ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
@@ -559,7 +549,7 @@ TEST(VP8VideoTrackEncoder, TimestampFrameEncode)
                       now + TimeDuration::FromSeconds(0.2));
 
   encoder.AppendVideoSegment(Move(segment));
-  encoder.NotifyCurrentTime(3 * 9000);
+  encoder.AdvanceCurrentTime(3 * 9000);
   encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
@@ -603,9 +593,9 @@ TEST(VP8VideoTrackEncoder, Suspended)
                       now);
 
   encoder.AppendVideoSegment(Move(segment));
-  encoder.NotifyCurrentTime(9000);
+  encoder.AdvanceCurrentTime(9000);
 
-  encoder.Suspend();
+  encoder.Suspend(now + TimeDuration::FromSeconds(0.1));
 
   segment.AppendFrame(generator.GenerateI420Image(),
                       mozilla::StreamTime(9000), // 0.1s
@@ -614,9 +604,9 @@ TEST(VP8VideoTrackEncoder, Suspended)
                       false,
                       now + TimeDuration::FromSeconds(0.1));
   encoder.AppendVideoSegment(Move(segment));
-  encoder.NotifyCurrentTime(2 * 9000);
+  encoder.AdvanceCurrentTime(9000);
 
-  encoder.Resume();
+  encoder.Resume(now + TimeDuration::FromSeconds(0.2));
 
   segment.AppendFrame(generator.GenerateI420Image(),
                       mozilla::StreamTime(9000), // 0.1s
@@ -625,7 +615,7 @@ TEST(VP8VideoTrackEncoder, Suspended)
                       false,
                       now + TimeDuration::FromSeconds(0.2));
   encoder.AppendVideoSegment(Move(segment));
-  encoder.NotifyCurrentTime(3 * 9000);
+  encoder.AdvanceCurrentTime(9000);
 
   encoder.NotifyEndOfStream();
 
@@ -667,9 +657,9 @@ TEST(VP8VideoTrackEncoder, SuspendedUntilEnd)
                       now);
 
   encoder.AppendVideoSegment(Move(segment));
-  encoder.NotifyCurrentTime(9000);
+  encoder.AdvanceCurrentTime(9000);
 
-  encoder.Suspend();
+  encoder.Suspend(now + TimeDuration::FromSeconds(0.1));
 
   segment.AppendFrame(generator.GenerateI420Image(),
                       mozilla::StreamTime(9000), // 0.1s
@@ -678,7 +668,7 @@ TEST(VP8VideoTrackEncoder, SuspendedUntilEnd)
                       false,
                       now + TimeDuration::FromSeconds(0.1));
   encoder.AppendVideoSegment(Move(segment));
-  encoder.NotifyCurrentTime(2 * 9000);
+  encoder.AdvanceCurrentTime(9000);
 
   encoder.NotifyEndOfStream();
 
@@ -711,7 +701,9 @@ TEST(VP8VideoTrackEncoder, AlwaysSuspended)
   YUVBufferGenerator generator;
   generator.Init(mozilla::gfx::IntSize(640, 480));
 
-  encoder.Suspend();
+  TimeStamp now = TimeStamp::Now();
+
+  encoder.Suspend(now);
 
   VideoSegment segment;
   segment.AppendFrame(generator.GenerateI420Image(),
@@ -719,10 +711,10 @@ TEST(VP8VideoTrackEncoder, AlwaysSuspended)
                       generator.GetSize(),
                       PRINCIPAL_HANDLE_NONE,
                       false,
-                      TimeStamp::Now());
+                      now);
 
   encoder.AppendVideoSegment(Move(segment));
-  encoder.NotifyCurrentTime(180000);
+  encoder.AdvanceCurrentTime(180000);
 
   encoder.NotifyEndOfStream();
 
@@ -743,34 +735,34 @@ TEST(VP8VideoTrackEncoder, SuspendedBeginning)
   TestVP8TrackEncoder encoder;
   InitParam param = {true, 640, 480};
   encoder.TestInit(param);
+  TimeStamp now = TimeStamp::Now();
 
-  // Suspend and pass a frame with duration 1.5s. Then resume and pass one more.
-  encoder.Suspend();
+  // Suspend and pass a frame with duration 0.5s. Then resume and pass one more.
+  encoder.Suspend(now);
 
   YUVBufferGenerator generator;
   generator.Init(mozilla::gfx::IntSize(640, 480));
-  TimeStamp now = TimeStamp::Now();
   VideoSegment segment;
   segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(135000), // 1.5s
+                      mozilla::StreamTime(45000), // 0.5s
                       generator.GetSize(),
                       PRINCIPAL_HANDLE_NONE,
                       false,
                       now);
 
   encoder.AppendVideoSegment(Move(segment));
-  encoder.NotifyCurrentTime(135000);
+  encoder.AdvanceCurrentTime(45000);
 
-  encoder.Resume();
+  encoder.Resume(now + TimeDuration::FromSeconds(0.5));
 
   segment.AppendFrame(generator.GenerateI420Image(),
-                      mozilla::StreamTime(135000), // 1.5s
+                      mozilla::StreamTime(45000), // 0.5s
                       generator.GetSize(),
                       PRINCIPAL_HANDLE_NONE,
                       false,
-                      now + TimeDuration::FromSeconds(1.5));
+                      now + TimeDuration::FromSeconds(0.5));
   encoder.AppendVideoSegment(Move(segment));
-  encoder.NotifyCurrentTime(270000);
+  encoder.AdvanceCurrentTime(45000);
 
   encoder.NotifyEndOfStream();
 
@@ -787,8 +779,8 @@ TEST(VP8VideoTrackEncoder, SuspendedBeginning)
   for (auto& frame : container.GetEncodedFrames()) {
     totalDuration += frame->GetDuration();
   }
-  const uint64_t oneAndAHalf = PR_USEC_PER_SEC / 2 * 3;
-  EXPECT_EQ(oneAndAHalf, totalDuration);
+  const uint64_t half = PR_USEC_PER_SEC / 2;
+  EXPECT_EQ(half, totalDuration);
 }
 
 // Test that suspending and resuming in the middle of already pushed data
@@ -814,8 +806,8 @@ TEST(VP8VideoTrackEncoder, SuspendedOverlap)
 
   encoder.AppendVideoSegment(Move(segment));
 
-  encoder.NotifyCurrentTime(45000);
-  encoder.Suspend();
+  encoder.AdvanceCurrentTime(45000);
+  encoder.Suspend(now + TimeDuration::FromSeconds(0.5));
 
   // Pass another 1s frame and resume after 0.3 of this new frame.
   segment.AppendFrame(generator.GenerateI420Image(),
@@ -825,9 +817,9 @@ TEST(VP8VideoTrackEncoder, SuspendedOverlap)
                       false,
                       now + TimeDuration::FromSeconds(1));
   encoder.AppendVideoSegment(Move(segment));
-  encoder.NotifyCurrentTime(117000);
-  encoder.Resume();
-  encoder.NotifyCurrentTime(180000);
+  encoder.AdvanceCurrentTime(72000);
+  encoder.Resume(now + TimeDuration::FromSeconds(1.3));
+  encoder.AdvanceCurrentTime(63000);
 
   encoder.NotifyEndOfStream();
 
@@ -869,7 +861,7 @@ TEST(VP8VideoTrackEncoder, PrematureEnding)
                       now);
 
   encoder.AppendVideoSegment(Move(segment));
-  encoder.NotifyCurrentTime(45000);
+  encoder.AdvanceCurrentTime(45000);
   encoder.NotifyEndOfStream();
 
   EncodedFrameContainer container;
@@ -894,8 +886,7 @@ TEST(VP8VideoTrackEncoder, EncodeComplete)
   encoder.TestInit(param);
 
   // track end notification.
-  VideoSegment segment;
-  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, TrackEventCommand::TRACK_EVENT_ENDED, segment);
+  encoder.NotifyEndOfStream();
 
   // Pull Encoded Data back from encoder. Since we have sent
   // EOS to encoder, encoder.GetEncodedTrack should return
