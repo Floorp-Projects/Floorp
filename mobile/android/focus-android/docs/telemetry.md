@@ -43,6 +43,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 * (BrowserContextMenu) Copy link menu item selected ("action", "copy", "browser_contextmenu", "link")
 * (BrowserContextMenu) Share Image menu item selected ("action", "share", "browser_contextmenu", "image")
 * (BrowserContextMenu) Copy Image menu item selected ("action", "copy", "browser_contextmenu", "image")
+* (BrowserContextMenu) Save Image menu item selected ("action", "save", "browser_contextmenu", "image")
 * (Search) Query entered: - ("action", "type_query", "search_bar")
 * (Search) Query/Hint clicked: - ("action", "select_query", "search_bar")
 * (Erase) UI button clicked - ("action", "click", "erase_button")

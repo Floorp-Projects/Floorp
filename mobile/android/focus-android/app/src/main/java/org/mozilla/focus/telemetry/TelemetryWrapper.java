@@ -56,6 +56,7 @@ public final class TelemetryWrapper {
         private static final String FOREGROUND = "foreground";
         private static final String BACKGROUND = "background";
         private static final String SHARE = "share";
+        private static final String SAVE = "save";
         private static final String COPY = "copy";
         private static final String OPEN = "open";
         private static final String INTENT_URL = "intent_url";
@@ -285,6 +286,10 @@ public final class TelemetryWrapper {
 
     public static void shareImageEvent() {
         TelemetryEvent.create(Category.ACTION, Method.SHARE, Object.BROWSER_CONTEXTMENU, Value.IMAGE).queue();
+    }
+
+    public static void saveImageEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.SAVE, Object.BROWSER_CONTEXTMENU, Value.IMAGE).queue();
     }
 
     public static void copyLinkEvent() {
