@@ -16,7 +16,6 @@ module.exports = {
     "new-parens": "error",
     "no-array-constructor": "error",
     "no-control-regex": "error",
-    "no-eval": "error",
     "no-extend-native": "error",
     "no-fallthrough": ["error", { "commentPattern": ".*[Ii]ntentional(?:ly)?\\s+fall(?:ing)?[\\s-]*through.*" }],
     "no-multi-str": "error",
