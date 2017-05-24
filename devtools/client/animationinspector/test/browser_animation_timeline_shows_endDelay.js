@@ -48,32 +48,35 @@ function checkEndDelayAndName(animationEl) {
 }
 
 function checkPath(animationEl, state) {
-  // Check existance of enddelay path.
-  const endDelayPathEl = animationEl.querySelector(".enddelay-path");
-  ok(endDelayPathEl, "The endDelay path should exist");
+  const groupEls = animationEl.querySelectorAll("svg g");
+  groupEls.forEach(groupEl => {
+    // Check existance of enddelay path.
+    const endDelayPathEl = groupEl.querySelector(".enddelay-path");
+    ok(endDelayPathEl, "The endDelay path should exist");
 
-  // Check enddelay path coordinates.
-  const pathSegList = endDelayPathEl.pathSegList;
-  const startingPathSeg = pathSegList.getItem(0);
-  const endingPathSeg = pathSegList.getItem(pathSegList.numberOfItems - 2);
-  if (state.endDelay < 0) {
-    ok(endDelayPathEl.classList.contains("negative"),
-       "The endDelay path should have 'negative' class");
-    const endingX = state.delay + state.iterationCount * state.duration;
-    const startingX = endingX + state.endDelay;
-    is(startingPathSeg.x, startingX,
-       `The x of starting point should be ${ startingX }`);
-    is(endingPathSeg.x, endingX,
-       `The x of ending point should be ${ endingX }`);
-  } else {
-    ok(!endDelayPathEl.classList.contains("negative"),
-       "The endDelay path should not have 'negative' class");
-    const startingX =
-      state.delay + state.iterationCount * state.duration;
-    const endingX = startingX + state.endDelay;
-    is(startingPathSeg.x, startingX,
-       `The x of starting point should be ${ startingX }`);
-    is(endingPathSeg.x, endingX,
-       `The x of ending point should be ${ endingX }`);
-  }
+    // Check enddelay path coordinates.
+    const pathSegList = endDelayPathEl.pathSegList;
+    const startingPathSeg = pathSegList.getItem(0);
+    const endingPathSeg = pathSegList.getItem(pathSegList.numberOfItems - 2);
+    if (state.endDelay < 0) {
+      ok(endDelayPathEl.classList.contains("negative"),
+         "The endDelay path should have 'negative' class");
+      const endingX = state.delay + state.iterationCount * state.duration;
+      const startingX = endingX + state.endDelay;
+      is(startingPathSeg.x, startingX,
+         `The x of starting point should be ${ startingX }`);
+      is(endingPathSeg.x, endingX,
+         `The x of ending point should be ${ endingX }`);
+    } else {
+      ok(!endDelayPathEl.classList.contains("negative"),
+         "The endDelay path should not have 'negative' class");
+      const startingX =
+        state.delay + state.iterationCount * state.duration;
+      const endingX = startingX + state.endDelay;
+      is(startingPathSeg.x, startingX,
+         `The x of starting point should be ${ startingX }`);
+      is(endingPathSeg.x, endingX,
+         `The x of ending point should be ${ endingX }`);
+    }
+  });
 }
