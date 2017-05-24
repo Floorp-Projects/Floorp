@@ -197,8 +197,10 @@ protected:
   /**
    * Finalizes the cached statements and closes the database connection.
    * A TOPIC_PLACES_CONNECTION_CLOSED notification is fired when done.
+   *
+   * @param Whether database init succeeded.
    */
-  void Shutdown();
+  void Shutdown(bool aInitSucceeded);
 
   bool IsShutdownStarted() const;
 
@@ -216,13 +218,12 @@ protected:
                             bool* aNewDatabaseCreated);
 
   /**
-   * Initializes the favicons database file.  If it does not exist or is
-   * corrupt, a new one is created.
+   * Ensure the favicons database file exists.
    *
    * @param aStorage
    *        mozStorage service instance.
    */
-  nsresult InitFaviconsDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage);
+  nsresult EnsureFaviconsDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage);
 
   /**
    * Creates a database backup and replaces the original file with a new
@@ -240,7 +241,16 @@ protected:
   nsresult ForceCrashAndReplaceDatabase(const nsCString& aReason);
 
   /**
-   * Initializes the database.  This performs any necessary migrations for the
+   * Set up the connection environment through PRAGMAs.
+   * Will return NS_ERROR_FILE_CORRUPTED if any critical setting fails.
+   *
+   * @param aStorage
+   *        mozStorage service instance.
+   */
+  nsresult SetupDatabaseConnection(nsCOMPtr<mozIStorageService>& aStorage);
+
+  /**
+   * Initializes the schema.  This performs any necessary migrations for the
    * database.  All migration is done inside a transaction that is rolled back
    * if any error occurs.
    * @param aDatabaseMigrated
