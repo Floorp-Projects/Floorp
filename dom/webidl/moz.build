@@ -926,6 +926,7 @@ WEBIDL_FILES = [
     'TreeBoxObject.webidl',
     'TreeColumn.webidl',
     'TreeColumns.webidl',
+    'TreeView.webidl',
     'TreeWalker.webidl',
     'U2F.webidl',
     'UDPMessageEvent.webidl',
@@ -977,6 +978,7 @@ WEBIDL_FILES = [
     'XULCommandEvent.webidl',
     'XULDocument.webidl',
     'XULElement.webidl',
+    'XULTemplateBuilder.webidl',
 ]
 
 if CONFIG['MOZ_WEBRTC']:

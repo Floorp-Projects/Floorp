@@ -10,9 +10,9 @@
 #include "nsTArray.h"
 #include "PLDHashTable.h"
 #include "nsIXULTemplateResult.h"
-#include "nsTemplateMatch.h"
 #include "nsIRDFResource.h"
 
+class nsTemplateMatch;
 
 /**
  * This class maintains the state of the XUL tree builder's
