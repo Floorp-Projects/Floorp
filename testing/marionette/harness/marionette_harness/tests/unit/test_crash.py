@@ -5,11 +5,13 @@
 import glob
 import shutil
 
-from marionette_driver.errors import MarionetteException
-# Import runner module to monkey patch mozcrash module
-from mozrunner.base import runner
+from marionette_driver import Wait
+from marionette_driver.errors import MarionetteException, NoSuchWindowException
 
 from marionette_harness import MarionetteTestCase, expectedFailure, run_if_e10s
+
+# Import runner module to monkey patch mozcrash module
+from mozrunner.base import runner
 
 
 class MockMozCrash(object):
@@ -107,8 +109,23 @@ class TestCrash(BaseCrashTestCase):
     def test_crash_content_process(self):
         self.marionette.navigate(self.remote_uri)
 
-        self.assertRaisesRegexp(IOError, 'Content process crashed',
-                                self.crash, chrome=False)
+        # With MOZ_CRASHREPORTER_SHUTDOWN each window of the browser will be
+        # closed in case of a content crash. So the "unload" handler fires for
+        # the current window, which causes the command to return early.
+        # To check for an IOError, further commands have to be executed until
+        # Firefox has been shutdown.
+        self.crash(chrome=False)
+        with self.assertRaises(IOError):
+            Wait(self.marionette, timeout=self.socket_timeout,
+                 ignored_exceptions=NoSuchWindowException).until(
+                lambda _: self.marionette.get_url(),
+                message="Expected IOError exception for content crash not raised."
+            )
+
+        # In the case of a content crash Firefox will be closed and its
+        # returncode will report 0 (this will change with 1370520).
+        self.assertEqual(self.marionette.instance.runner.returncode, 0)
+
         self.assertEqual(self.marionette.crashed, 1)
         self.assertIsNone(self.marionette.session)
         self.assertRaisesRegexp(MarionetteException, 'Please start a session',
