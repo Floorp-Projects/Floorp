@@ -76,7 +76,6 @@
 #ifdef MOZ_XUL
 #include "nsITreeContentView.h"
 #include "nsITreeView.h"
-#include "nsIXULTemplateBuilder.h"
 #endif
 
 #include "nsIEventListenerService.h"
@@ -178,11 +177,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   // XUL classes
 #ifdef MOZ_XUL
   NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(TreeContentView, nsDOMGenericSH,
-                                      DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(XULTemplateBuilder, nsDOMGenericSH,
-                                      DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(XULTreeBuilder, nsDOMGenericSH,
                                       DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
@@ -457,16 +451,6 @@ nsDOMClassInfo::Init()
 #ifdef MOZ_XUL
   DOM_CLASSINFO_MAP_BEGIN(TreeContentView, nsITreeContentView)
     DOM_CLASSINFO_MAP_ENTRY(nsITreeContentView)
-    DOM_CLASSINFO_MAP_ENTRY(nsITreeView)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(XULTemplateBuilder, nsIXULTemplateBuilder)
-    DOM_CLASSINFO_MAP_ENTRY(nsIXULTemplateBuilder)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(XULTreeBuilder, nsIXULTreeBuilder)
-    DOM_CLASSINFO_MAP_ENTRY(nsIXULTreeBuilder)
-    DOM_CLASSINFO_MAP_ENTRY(nsIXULTemplateBuilder)
     DOM_CLASSINFO_MAP_ENTRY(nsITreeView)
   DOM_CLASSINFO_MAP_END
 #endif

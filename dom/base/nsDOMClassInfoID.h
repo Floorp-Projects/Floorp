@@ -24,11 +24,6 @@ enum nsDOMClassInfoID
   eDOMClassInfo_TreeContentView_id,
 #endif
 
-#ifdef MOZ_XUL
-  eDOMClassInfo_XULTemplateBuilder_id,
-  eDOMClassInfo_XULTreeBuilder_id,
-#endif
-
   eDOMClassInfo_ContentFrameMessageManager_id,
   eDOMClassInfo_ContentProcessMessageManager_id,
   eDOMClassInfo_ChromeMessageBroadcaster_id,
