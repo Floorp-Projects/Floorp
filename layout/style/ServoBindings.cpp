@@ -2023,6 +2023,26 @@ Gecko_nsStyleFont_FixupNoneGeneric(nsStyleFont* aFont,
 }
 
 void
+Gecko_nsStyleFont_FixupMinFontSize(nsStyleFont* aFont,
+                                   RawGeckoPresContextBorrowed aPresContext)
+{
+  nscoord minFontSize;
+  bool needsCache = false;
+
+  {
+    AutoReadLock guard(*sServoLangFontPrefsLock);
+    minFontSize = aPresContext->MinFontSize(aFont->mLanguage, &needsCache);
+  }
+
+  if (needsCache) {
+    AutoWriteLock guard(*sServoLangFontPrefsLock);
+    minFontSize = aPresContext->MinFontSize(aFont->mLanguage, nullptr);
+  }
+
+  nsRuleNode::ApplyMinFontSize(aFont, aPresContext, minFontSize);
+}
+
+void
 FontSizePrefs::CopyFrom(const LangGroupFontPrefs& prefs)
 {
   mDefaultVariableSize = prefs.mDefaultVariableFont.size;
