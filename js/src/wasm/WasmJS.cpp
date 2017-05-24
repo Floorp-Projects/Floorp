@@ -947,8 +947,31 @@ const Class WasmInstanceObject::class_ =
     &WasmInstanceObject::classOps_,
 };
 
+static bool
+IsInstance(HandleValue v)
+{
+    return v.isObject() && v.toObject().is<WasmInstanceObject>();
+}
+
+/* static */ bool
+WasmInstanceObject::exportsGetterImpl(JSContext* cx, const CallArgs& args)
+{
+    args.rval().setObject(args.thisv().toObject().as<WasmInstanceObject>().exportsObj());
+    return true;
+}
+
+/* static */ bool
+WasmInstanceObject::exportsGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsInstance, exportsGetterImpl>(cx, args);
+}
+
 const JSPropertySpec WasmInstanceObject::properties[] =
-{ JS_PS_END };
+{
+    JS_PSG("exports", WasmInstanceObject::exportsGetter, 0),
+    JS_PS_END
+};
 
 const JSFunctionSpec WasmInstanceObject::methods[] =
 { JS_FS_END };
@@ -1037,6 +1060,13 @@ WasmInstanceObject::create(JSContext* cx,
     return obj;
 }
 
+void
+WasmInstanceObject::initExportsObj(JSObject& exportsObj)
+{
+    MOZ_ASSERT(getReservedSlot(EXPORTS_OBJ_SLOT).isUndefined());
+    setReservedSlot(EXPORTS_OBJ_SLOT, ObjectValue(exportsObj));
+}
+
 static bool
 GetImportArg(JSContext* cx, CallArgs callArgs, MutableHandleObject importObj)
 {
@@ -1098,6 +1128,12 @@ WasmInstanceObject::instance() const
 {
     MOZ_ASSERT(!isNewborn());
     return *(Instance*)getReservedSlot(INSTANCE_SLOT).toPrivate();
+}
+
+JSObject&
+WasmInstanceObject::exportsObj() const
+{
+    return getReservedSlot(EXPORTS_OBJ_SLOT).toObject();
 }
 
 WasmInstanceObject::ExportMap&

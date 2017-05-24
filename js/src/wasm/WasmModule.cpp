@@ -37,8 +37,6 @@ using namespace js::wasm;
 
 using mozilla::IsNaN;
 
-const char wasm::InstanceExportField[] = "exports";
-
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 // On MIPS, CodeLabels are instruction immediates so InternalLinks only
 // patch instruction immediates.
@@ -883,8 +881,7 @@ CreateExportObject(JSContext* cx,
                    HandleWasmTableObject tableObj,
                    HandleWasmMemoryObject memoryObj,
                    const ValVector& globalImports,
-                   const ExportVector& exports,
-                   MutableHandleObject exportObj)
+                   const ExportVector& exports)
 {
     const Instance& instance = instanceObj->instance();
     const Metadata& metadata = instance.metadata();
@@ -893,14 +890,15 @@ CreateExportObject(JSContext* cx,
         RootedValue val(cx);
         if (!GetFunctionExport(cx, instanceObj, funcImports, exports[0], &val))
             return false;
-        exportObj.set(&val.toObject());
+        instanceObj->initExportsObj(val.toObject());
         return true;
     }
 
+    RootedObject exportObj(cx);
     if (metadata.isAsmJS())
-        exportObj.set(NewBuiltinClassInstance<PlainObject>(cx));
+        exportObj = NewBuiltinClassInstance<PlainObject>(cx);
     else
-        exportObj.set(NewObjectWithGivenProto<PlainObject>(cx, nullptr));
+        exportObj = NewObjectWithGivenProto<PlainObject>(cx, nullptr);
     if (!exportObj)
         return false;
 
@@ -937,6 +935,7 @@ CreateExportObject(JSContext* cx,
             return false;
     }
 
+    instanceObj->initExportsObj(*exportObj);
     return true;
 }
 
@@ -1023,17 +1022,7 @@ Module::instantiate(JSContext* cx,
     if (!instance)
         return false;
 
-    RootedObject exportObj(cx);
-    if (!CreateExportObject(cx, instance, funcImports, table, memory, globalImports, exports_, &exportObj))
-        return false;
-
-    JSAtom* atom = Atomize(cx, InstanceExportField, strlen(InstanceExportField));
-    if (!atom)
-        return false;
-    RootedId id(cx, AtomToId(atom));
-
-    RootedValue val(cx, ObjectValue(*exportObj));
-    if (!JS_DefinePropertyById(cx, instance, id, val, JSPROP_ENUMERATE))
+    if (!CreateExportObject(cx, instance, funcImports, table, memory, globalImports, exports_))
         return false;
 
     // Register the instance with the JSCompartment so that it can find out

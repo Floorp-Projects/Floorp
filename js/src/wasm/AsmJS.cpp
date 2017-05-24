@@ -8072,12 +8072,7 @@ TryInstantiate(JSContext* cx, CallArgs args, Module& module, const AsmJSMetadata
     if (!module.instantiate(cx, funcs, table, memory, valImports, nullptr, instanceObj))
         return false;
 
-    RootedValue exportObjVal(cx);
-    if (!JS_GetProperty(cx, instanceObj, InstanceExportField, &exportObjVal))
-        return false;
-
-    MOZ_RELEASE_ASSERT(exportObjVal.isObject());
-    exportObj.set(&exportObjVal.toObject());
+    exportObj.set(&instanceObj->exportsObj());
     return true;
 }
 
