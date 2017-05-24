@@ -38,7 +38,6 @@ this.LightweightThemes = {
           id:          "black",
           name:        "black",
           headerURL:   LightweightThemes._blackImageURL,
-          footerURL:   LightweightThemes._blackImageURL,
           textcolor:   "#eeeeee",
           accentcolor: "#111111",
         });
@@ -58,7 +57,6 @@ this.LightweightThemes = {
           id:          "white",
           name:        "white",
           headerURL:   LightweightThemes._whiteImageURL,
-          footerURL:   LightweightThemes._whiteImageURL,
           textcolor:   "#111111",
           accentcolor: "#eeeeee",
         });
