@@ -82,12 +82,6 @@ private:
   const bool mActive;
 };
 
-bool
-IsParentProcess()
-{
-  return XRE_GetProcessType() == GeckoProcessType_Default;
-}
-
 class AudioPlaybackRunnable final : public Runnable
 {
 public:
