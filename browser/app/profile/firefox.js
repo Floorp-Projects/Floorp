@@ -72,7 +72,7 @@ pref("extensions.startupScanScopes", 0);
 // This is where the profiler WebExtension API will look for breakpad symbols.
 // NOTE: deliberately http right now since https://symbols.mozilla.org is not supported.
 pref("extensions.geckoProfiler.symbols.url", "http://symbols.mozilla.org/");
-pref("extensions.geckoProfiler.acceptedExtensionIds", "geckoprofiler@mozilla.com");
+pref("extensions.geckoProfiler.acceptedExtensionIds", "geckoprofiler@mozilla.com,quantum-foxfooding@mozilla.com");
 #if defined(XP_LINUX) || defined (XP_MACOSX)
 pref("extensions.geckoProfiler.getSymbolRules", "localBreakpad,remoteBreakpad,nm");
 #else // defined(XP_WIN)
