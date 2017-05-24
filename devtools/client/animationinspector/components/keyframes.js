@@ -9,7 +9,7 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const {createNode, createSVGNode} =
   require("devtools/client/animationinspector/utils");
-const {ProgressGraphHelper, appendPathElement, getPreferredKeyframesProgressThreshold} =
+const {ProgressGraphHelper, getPreferredKeyframesProgressThreshold} =
          require("devtools/client/animationinspector/graph-helper.js");
 
 // Counter for linearGradient ID.
@@ -113,7 +113,7 @@ function renderPropertyGraph(parentEl, duration, minSegmentDuration,
 
   const graphType = graphHelper.getGraphType();
   if (graphType !== "color") {
-    appendPathElement(parentEl, segments, graphType);
+    graphHelper.appendPathElement(parentEl, segments, graphType);
     return;
   }
 
@@ -121,7 +121,7 @@ function renderPropertyGraph(parentEl, duration, minSegmentDuration,
   segments.forEach(segment => {
     segment.y = 1;
   });
-  const path = appendPathElement(parentEl, segments, graphType);
+  const path = graphHelper.appendPathElement(parentEl, segments, graphType);
   const defEl = createSVGNode({
     parent: parentEl,
     nodeType: "def"
