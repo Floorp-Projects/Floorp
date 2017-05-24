@@ -7260,6 +7260,23 @@
     "n_buckets": 20,
     "description": "Time needed (in ms) for a failed send of a Telemetry ping to the servers and getting a reply back."
   },
+  "TELEMETRY_SEND_FAILURE_TYPE" : {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "bug_numbers": [1367110],
+    "expires_in_version": "61",
+    "kind": "categorical",
+    "labels": [
+      "eOK",
+      "eRequest",
+      "eUnreachable",
+      "eChannelOpen",
+      "eRedirect",
+      "abort",
+      "timeout"
+    ],
+    "description": "Counts of the different ways sending a Telemetry ping can fail."
+  },
   "TELEMETRY_STRINGIFY" : {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
