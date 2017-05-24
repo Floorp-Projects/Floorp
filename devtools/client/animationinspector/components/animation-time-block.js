@@ -107,14 +107,24 @@ AnimationTimeBlock.prototype = {
     graphHelper.destroy();
 
     // The animation name is displayed over the animation.
-    createNode({
-      parent: createNode({
-        parent: this.containerEl,
-        attributes: {
-          "class": "name",
-          "title": this.getTooltipText(state)
-        },
+    const nameEl = createNode({
+      parent: this.containerEl,
+      attributes: {
+        "class": "name",
+        "title": this.getTooltipText(state)
+      }
+    });
+
+    createSVGNode({
+      parent: createSVGNode({
+        parent: nameEl,
+        nodeType: "svg",
       }),
+      nodeType: "text",
+      attributes: {
+        "y": "50%",
+        "x": "100%",
+      },
       textContent: state.name
     });
 

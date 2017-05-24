@@ -431,26 +431,27 @@ body {
 
 .animation-timeline .animation .name {
   position: absolute;
-  color: var(--theme-content-color3);
   top: 0px;
   left: 0px;
   height: 100%;
   width: 100%;
-  display: flex;
-  align-items: center;
-  padding: 0 2px;
-  box-sizing: border-box;
   --fast-track-icon-width: 15px;
-  z-index: 1;
 }
 
-.animation-timeline .animation .name div {
-  /* Flex items don't support text-overflow, so a child div is used */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  background-color: rgba(255, 255, 255, 0.7);
-  max-width: 50%;
+.animation-timeline .animation .name svg {
+  height: 100%;
+  width: calc(100% - 20px);
+}
+
+.animation-timeline .animation .name text {
+  fill: var(--theme-focus-outline-color);
+  stroke: var(--theme-body-background);
+  stroke-width: 4;
+  stroke-opacity: .5;
+  stroke-linejoin: round;
+  paint-order: stroke;
+  text-anchor: end;
+  dominant-baseline: middle;
 }
 
 .animation-timeline .fast-track .name::after {
