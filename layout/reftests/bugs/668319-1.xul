@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/css" href="data:text/css,
-tree { height: 100px; -moz-appearance: none; appearance: none; border: none; background-color: transparent; }
+tree { height: 100px; -moz-appearance: none; border: none; background-color: transparent; }
 treecol, treecolpicker { visibility: hidden; }
 treechildren::-moz-tree-cell-text { opacity: 0; }
 "?>

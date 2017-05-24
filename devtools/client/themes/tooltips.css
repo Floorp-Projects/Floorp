@@ -109,7 +109,7 @@
 }
 
 .tooltip-xul-wrapper {
-  -moz-appearance: none; appearance: none;
+  -moz-appearance: none;
   background: transparent;
   overflow: visible;
   border-style: none;

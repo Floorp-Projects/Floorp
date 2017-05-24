@@ -24,14 +24,14 @@
         <button id="button1" label="1" width="90" maxwidth="100"
                 minheight="25" height="35" maxheight="50"
                 style="min-width: 80px; margin: 5px; border: 4px; padding: 7px;
-                       -moz-appearance: none; appearance: none;"/>
+                       -moz-appearance: none;"/>
         <menu id="menu">
-          <menupopup id="popup" style="-moz-appearance: none; appearance: none; margin:0; border: 0; padding: 0;"
+          <menupopup id="popup" style="-moz-appearance: none; margin:0; border: 0; padding: 0;"
                                 onpopupshown="menuOpened()"
                                 onpopuphidden="if (event.target == this) SimpleTest.finish()">
             <menuitem label="One"/>
             <menu id="submenu" label="Three">
-              <menupopup id="subpopup" style="-moz-appearance: none; appearance: none; margin:0; border: 0; padding: 0;"
+              <menupopup id="subpopup" style="-moz-appearance: none; margin:0; border: 0; padding: 0;"
                          onpopupshown="submenuOpened()">
                 <menuitem label="Four"/>
               </menupopup>

@@ -24,7 +24,7 @@
 
 textbox[multiline="true"], html|textarea {
   border: none !important;
-  -moz-appearance: none; appearance: none !important;
+  -moz-appearance: none !important;
   background-color: white !important;
   border-top-right-radius: 0;
   border-bottom-left-radius: 0;

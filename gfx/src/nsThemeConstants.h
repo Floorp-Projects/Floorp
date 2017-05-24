@@ -14,9 +14,6 @@
 // A checkbox element. 
 #define NS_THEME_CHECKBOX                                  3
 
-// appearance:auto (only used in the style system, not in layout)
-#define NS_THEME_AUTO                                      4
-
 // A rectangular button that contains complex content
 // like images (e.g. HTML <button> elements)
 #define NS_THEME_BUTTON_BEVEL                              7

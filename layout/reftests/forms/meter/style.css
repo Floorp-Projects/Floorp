@@ -26,7 +26,7 @@ div.meter-bar {
 }
 
 meter, meter::-moz-meter-bar, div.meter-element, div.meter-bar {
-  -moz-appearance: none; appearance: none;
+  -moz-appearance: none;
 }
 
 meter {

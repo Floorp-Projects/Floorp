@@ -3,7 +3,7 @@
 <window title="Content/chrome integration subwindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTests()"
-        style="background:black; -moz-appearance:none; appearance: none;">
+        style="background:black; -moz-appearance:none;">
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
 
   <stack style="height:300px; width:200px;">
