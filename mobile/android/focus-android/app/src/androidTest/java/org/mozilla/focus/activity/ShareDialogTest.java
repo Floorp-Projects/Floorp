@@ -52,13 +52,6 @@ public class ShareDialogTest {
         UiObject shareBtn = TestHelper.mDevice.findObject(new UiSelector()
                 .resourceId("org.mozilla.focus.debug:id/share")
                 .enabled(true));
-        UiObject shareMenuHeader = TestHelper.mDevice.findObject(new UiSelector()
-                .resourceId("android:id/title")
-                .text("Share via")
-                .enabled(true));
-        UiObject shareAppList = TestHelper.mDevice.findObject(new UiSelector()
-                .resourceId("android:id/resolver_list")
-                .enabled(true));
 
         /* Wait for app to load, and take the First View screenshot */
         TestHelper.firstViewBtn.waitForExists(waitingTime);
@@ -80,9 +73,9 @@ public class ShareDialogTest {
         shareBtn.click();
 
         // For simulators, where apps are not installed, it'll take to message app
-        shareMenuHeader.waitForExists(waitingTime);
-        assertTrue(shareMenuHeader.exists());
-        assertTrue(shareAppList.exists());
+        TestHelper.shareMenuHeader.waitForExists(waitingTime);
+        assertTrue(TestHelper.shareMenuHeader.exists());
+        assertTrue(TestHelper.shareAppList.exists());
         TestHelper.pressBackKey();
     }
 }

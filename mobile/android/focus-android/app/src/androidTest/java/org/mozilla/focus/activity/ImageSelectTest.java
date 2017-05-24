@@ -105,10 +105,10 @@ public class ImageSelectTest {
             .resourceId("org.mozilla.focus.debug:id/design_menu_item_text")
             .text("Save image")
             .enabled(true));
+    final long waitingTime = TestHelper.waitingTime;
 
     @Test
     public void ImageMenuTest() throws InterruptedException, UiObjectNotFoundException, IOException {
-        final long waitingTime = TestHelper.waitingTime;
         final String imagePath = webServer.url(TEST_PATH).toString() + "rabbit.jpg";
 
         // Load website with service worker
@@ -154,5 +154,76 @@ public class ImageSelectTest {
             TestHelper.mDevice.pressKeyCode(KeyEvent.KEYCODE_PASTE);
             Assert.assertEquals(TestHelper.inlineAutocompleteEditText.getText(), imagePath);
         }
+    }
+
+    @Test
+    public void ShareImageTest() throws UiObjectNotFoundException {
+
+        // Load website with service worker
+        TestHelper.urlBar.waitForExists(waitingTime);
+        TestHelper.urlBar.click();
+        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+        TestHelper.inlineAutocompleteEditText.clearTextField();
+        TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
+        TestHelper.hint.waitForExists(waitingTime);
+        TestHelper.pressEnterKey();
+        TestHelper.webView.waitForExists(waitingTime);
+
+        // Assert website is loaded
+        assertTrue("Website title loaded", titleMsg.exists());
+
+        // Find image and long tap it
+        Assert.assertTrue(rabbitImage.exists());
+        rabbitImage.dragTo(rabbitImage,5);
+        imageMenuTitle.waitForExists(waitingTime);
+        Assert.assertTrue(imageMenuTitle.exists());
+        Assert.assertEquals(imageMenuTitle.getText(), webServer.url(TEST_PATH).toString() + "rabbit.jpg");
+        Assert.assertTrue(shareMenu.exists());
+        Assert.assertTrue(copyMenu.exists());
+        Assert.assertTrue(saveMenu.exists());
+        shareMenu.click();
+
+        // For simulators, where apps are not installed, it'll take to message app
+        TestHelper.shareMenuHeader.waitForExists(waitingTime);
+        Assert.assertTrue(TestHelper.shareMenuHeader.exists());
+        Assert.assertTrue(TestHelper.shareAppList.exists());
+        TestHelper.pressBackKey();
+    }
+
+    @Test
+    public void DownloadImageMenuTest() throws UiObjectNotFoundException {
+
+        // Load website with service worker
+        TestHelper.urlBar.waitForExists(waitingTime);
+        TestHelper.urlBar.click();
+        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
+        TestHelper.inlineAutocompleteEditText.clearTextField();
+        TestHelper.inlineAutocompleteEditText.setText("http://www.google.com");
+        TestHelper.hint.waitForExists(waitingTime);
+        TestHelper.pressEnterKey();
+        TestHelper.webView.waitForExists(waitingTime);
+
+        // Find image and long tap it
+        UiObject webImage = TestHelper.mDevice.findObject(new UiSelector()
+                .className("android.widget.Image")
+                .enabled(true));
+
+        Assert.assertTrue(webImage.exists());
+        webImage.dragTo(webImage,5);
+        imageMenuTitle.waitForExists(waitingTime);
+        Assert.assertTrue(imageMenuTitle.exists());
+        Assert.assertTrue(shareMenu.exists());
+        Assert.assertTrue(copyMenu.exists());
+        Assert.assertTrue(saveMenu.exists());
+        saveMenu.click();
+
+        TestHelper.mDevice.openNotification();
+        UiObject savedNotification = TestHelper.mDevice.findObject(new UiSelector()
+                .text("Download complete.")
+                .resourceId("android:id/text")
+                .enabled(true));
+        savedNotification.waitForExists(waitingTime);
+        Assert.assertTrue(savedNotification.exists());
+        TestHelper.pressBackKey();
     }
 }

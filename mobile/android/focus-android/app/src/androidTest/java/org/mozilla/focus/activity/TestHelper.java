@@ -116,6 +116,14 @@ public final class TestHelper {
     static UiObject blockToggleSwitch = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/blocking_switch"));
 
+    /********** Share Menu Dialog ********************/
+    static UiObject shareMenuHeader = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId("android:id/title")
+            .text("Share via")
+            .enabled(true));
+    static UiObject shareAppList = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId("android:id/resolver_list")
+            .enabled(true));
 
     /********* Settings Menu Item Locators ***********/
     static UiScrollable settingsList = new UiScrollable(new UiSelector()
