@@ -333,7 +333,7 @@ public class LocaleManager {
         // TODO: figure out how to get this dynamically, either at buildtime or runtime
         return Arrays.asList(new String[] { "en-US",
                 "ar", "ast", "az", "bg", "bn-BD", "bn-IN",
-                "ca", "cs", "cy", "de", "el", "eo", "es", "es-AR", "es-CL", "es-ES", "es-MX",
+                "ca", "cs", "cy", "de", "el", "eo", "es-AR", "es-CL", "es-ES", "es-MX",
                 "fa", "fr", "fy-NL","hi", "hu", "hy-AM", "in", "it", "iw", "ja", "kab", "ko",
                 "lo", "nb-NO", "nl", "nn-NO", "pl", "pt", "pt-BR", "ro", "ru", "sk", "sl",
                 "sq", "sr", "sv-SE", "th", "tr", "uk", "ur", "zh-CN", "zh-TW" });
