@@ -1133,6 +1133,29 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   }
 }
 
+#customization-container {
+  -moz-box-orient: horizontal;
+}
+
+#customization-container[photon] {
+  display: flex;
+  flex-direction: column;
+}
+
+#customization-container[photon] > #customization-content-container {
+  display: flex;
+  flex-grow: 1; /* Grow so there isn't empty space below the footer */
+  min-height: 0; /* Allow this to shrink so the footer doesn't get pushed out. */
+}
+
+#customization-container[photon] > #customization-content-container > #customization-palette-container {
+  flex-grow: 1;
+}
+
+#customization-panelHolder > #widget-overflow-fixed-list {
+  padding-bottom: 50px; /* Make sure there's always space to drop stuff. */
+}
+
 #customization-panelHolder {
   overflow-y: hidden;
 }

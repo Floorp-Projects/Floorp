@@ -26,8 +26,8 @@ add_task(function* () {
   info("Simulate spacebar stroke and check playResume button" +
        " is in paused state");
 
-  // sending the key will lead to a UI_UPDATE_EVENT
-  let onUpdated = panel.once(panel.UI_UPDATED_EVENT);
+  // sending the key will lead to render animation timeline
+  let onUpdated = waitForAnimationTimelineRendering(panel);
   EventUtils.sendKey("SPACE", window);
   yield onUpdated;
   ok(playTimelineButtonEl.classList.contains("paused"),
@@ -36,8 +36,8 @@ add_task(function* () {
   info("Simulate spacebar stroke and check playResume button" +
        " is in playing state");
 
-  // sending the key will lead to a UI_UPDATE_EVENT
-  onUpdated = panel.once(panel.UI_UPDATED_EVENT);
+  // sending the key will lead to render animation timeline
+  onUpdated = waitForAnimationTimelineRendering(panel);
   EventUtils.sendKey("SPACE", window);
   yield onUpdated;
   ok(!playTimelineButtonEl.classList.contains("paused"),

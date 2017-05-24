@@ -316,7 +316,9 @@ SERVO_BINDING_FUNC(Servo_AnimationCompose, void,
                    void* base_values,
                    nsCSSPropertyID property,
                    RawGeckoAnimationPropertySegmentBorrowed animation_segment,
-                   RawGeckoComputedTimingBorrowed computed_timing)
+                   RawGeckoAnimationPropertySegmentBorrowed last_segment,
+                   RawGeckoComputedTimingBorrowed computed_timing,
+                   mozilla::dom::IterationCompositeOperation iteration_composite)
 
 // presentation attributes
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_PropertyIsSet, bool,
