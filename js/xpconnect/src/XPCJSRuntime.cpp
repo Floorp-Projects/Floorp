@@ -155,14 +155,12 @@ public:
 
   nsresult Dispatch()
   {
-      if (NS_IsMainThread()) {
-          nsCOMPtr<nsIRunnable> self(this);
-          return SystemGroup::Dispatch("AsyncFreeSnowWhite",
-                                       TaskCategory::GarbageCollection,
-                                       self.forget());
-      } else {
-          return NS_DispatchToCurrentThread(this);
+      nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
+      if (!thread) {
+          return NS_ERROR_FAILURE;
       }
+      nsCOMPtr<nsIRunnable> self(this);
+      return thread->IdleDispatch(self.forget());
   }
 
   void Start(bool aContinuation = false, bool aPurge = false)

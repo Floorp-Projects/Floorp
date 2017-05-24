@@ -271,7 +271,11 @@ DocAccessibleParent::RecvStateChangeEvent(const uint64_t& aID,
 }
 
 mozilla::ipc::IPCResult
-DocAccessibleParent::RecvCaretMoveEvent(const uint64_t& aID, const int32_t& aOffset)
+DocAccessibleParent::RecvCaretMoveEvent(const uint64_t& aID,
+#if defined(XP_WIN)
+                                        const LayoutDeviceIntRect& aCaretRect,
+#endif // defined (XP_WIN)
+                                        const int32_t& aOffset)
 {
   if (mShutdown) {
     return IPC_OK();
@@ -283,7 +287,11 @@ DocAccessibleParent::RecvCaretMoveEvent(const uint64_t& aID, const int32_t& aOff
     return IPC_OK();
   }
 
+#if defined(XP_WIN)
+  ProxyCaretMoveEvent(proxy, aCaretRect);
+#else
   ProxyCaretMoveEvent(proxy, aOffset);
+#endif
 
   if (!nsCoreUtils::AccEventObserversExist()) {
     return IPC_OK();
@@ -706,6 +714,37 @@ DocAccessibleParent::RecvGetWindowedPluginIAccessible(
 #else
   return IPC_FAIL(this, "Message unsupported in this build configuration");
 #endif
+}
+
+mozilla::ipc::IPCResult
+DocAccessibleParent::RecvFocusEvent(const uint64_t& aID,
+                                    const LayoutDeviceIntRect& aCaretRect)
+{
+  if (mShutdown) {
+    return IPC_OK();
+  }
+
+  ProxyAccessible* proxy = GetAccessible(aID);
+  if (!proxy) {
+    NS_ERROR("no proxy for event!");
+    return IPC_OK();
+  }
+
+  ProxyFocusEvent(proxy, aCaretRect);
+
+  if (!nsCoreUtils::AccEventObserversExist()) {
+    return IPC_OK();
+  }
+
+  xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(proxy);
+  xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
+  nsIDOMNode* node = nullptr;
+  bool fromUser = true; // XXX fix me
+  RefPtr<xpcAccEvent> event = new xpcAccEvent(nsIAccessibleEvent::EVENT_FOCUS,
+                                              xpcAcc, doc, node, fromUser);
+  nsCoreUtils::DispatchAccEvent(Move(event));
+
+  return IPC_OK();
 }
 
 #endif // defined(XP_WIN)

@@ -378,11 +378,6 @@ parent:
     sync GetWidgetRounding() returns (int32_t value);
 
     /**
-     * Gets maximum of touch points at current device.
-     */
-    sync GetMaxTouchPoints() returns (uint32_t value);
-
-    /**
      * Set the native cursor.
      * @param value
      *   The widget cursor to set.
@@ -466,7 +461,8 @@ parent:
       returns (bool windowOpened,
                TextureFactoryIdentifier textureFactoryIdentifier,
                uint64_t layersId,
-               CompositorOptions compositorOptions);
+               CompositorOptions compositorOptions,
+               uint32_t maxTouchPoints);
 
     /**
      * Tells the containing widget whether the given input block results in a
