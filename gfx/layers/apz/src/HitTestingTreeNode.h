@@ -86,6 +86,7 @@ public:
   /* Hit test related methods */
 
   void SetHitTestData(const EventRegions& aRegions,
+                      const LayerIntRegion& aVisibleRegion,
                       const CSSTransformMatrix& aTransform,
                       const Maybe<ParentLayerIntRegion>& aClipRegion,
                       const EventRegionsOverride& aOverride);
@@ -120,6 +121,7 @@ public:
   /* Returns the mOverride flag. */
   EventRegionsOverride GetEventRegionsOverride() const;
   const CSSTransformMatrix& GetTransform() const;
+  const LayerIntRegion& GetVisibleRegion() const;
 
   /* Debug helpers */
   void Dump(const char* aPrefix = "") const;
@@ -161,6 +163,8 @@ private:
    * This value is in L's LayerPixels.
    */
   EventRegions mEventRegions;
+
+  LayerIntRegion mVisibleRegion;
 
   /* This is the transform from layer L. This does NOT include any async
    * transforms. */
