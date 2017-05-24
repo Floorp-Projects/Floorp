@@ -30,10 +30,10 @@ class WasmInstanceObject;
 
 namespace wasm {
 
-struct LinkData;
 struct LinkDataTier;
-struct Metadata;
 struct MetadataTier;
+class LinkData;
+class Metadata;
 
 // ShareableBytes is a reference-counted Vector of bytes.
 
@@ -369,23 +369,27 @@ struct MetadataTier
 
 typedef UniquePtr<MetadataTier> UniqueMetadataTier;
 
-struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
+class Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod
 {
-    // `tier_` will become more complicated when tiering is implemented.
-    UniqueMetadataTier tier_;
+    UniqueMetadataTier            metadata1_;
+    mutable UniqueMetadataTier    metadata2_;     // Access only when hasTier2() is true
 
-    Tiers tiers() const;
-    const MetadataTier& metadata(Tier t) const;
-    MetadataTier& metadata(Tier t);
-
+  public:
     explicit Metadata(UniqueMetadataTier tier, ModuleKind kind = ModuleKind::Wasm)
       : MetadataCacheablePod(kind),
-        tier_(Move(tier))
+        metadata1_(Move(tier))
     {}
     virtual ~Metadata() {}
 
     MetadataCacheablePod& pod() { return *this; }
     const MetadataCacheablePod& pod() const { return *this; }
+
+    bool hasTier2() const;
+    void setTier2(UniqueMetadataTier metadata) const;
+    Tiers tiers() const;
+
+    const MetadataTier& metadata(Tier t) const;
+    MetadataTier& metadata(Tier t);
 
     SigWithIdVector       sigIds;
     GlobalDescVector      globals;
@@ -439,8 +443,8 @@ typedef RefPtr<const Metadata> SharedMetadata;
 
 class Code : public ShareableBase<Code>
 {
-    // `tier_` will become more complicated when tiering is implemented.
-    UniqueConstCodeSegment              tier_;
+    UniqueConstCodeSegment              segment1_;
+    mutable UniqueConstCodeSegment      segment2_; // Access only when hasTier2() is true
     SharedMetadata                      metadata_;
     ExclusiveData<CacheableCharsVector> profilingLabels_;
 
@@ -449,8 +453,12 @@ class Code : public ShareableBase<Code>
 
     Code(UniqueConstCodeSegment tier, const Metadata& metadata);
 
-    Tier stableTier() const;
+    bool hasTier2() const;
+    void setTier2(UniqueConstCodeSegment segment) const;
     Tiers tiers() const;
+    bool hasTier(Tier t) const;
+
+    Tier stableTier() const;
 
     const CodeSegment& segment(Tier tier) const;
     const MetadataTier& metadata(Tier tier) const { return metadata_->metadata(tier); }
