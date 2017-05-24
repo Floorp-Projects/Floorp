@@ -137,18 +137,12 @@ LinkDataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            symbolicLinks.sizeOfExcludingThis(mallocSizeOf);
 }
 
-bool
-LinkData::hasTier2() const
-{
-    return false;
-}
-
 void
 LinkData::setTier2(UniqueLinkDataTier linkData) const
 {
     MOZ_RELEASE_ASSERT(linkData->tier == Tier::Ion && linkData1_->tier != Tier::Ion);
     MOZ_RELEASE_ASSERT(!linkData2_.get());
-    MOZ_CRASH("FIXME - NYI");
+    linkData2_ = Move(linkData);
 }
 
 Tiers
@@ -202,9 +196,10 @@ LinkData::linkData(Tier tier)
 }
 
 bool
-LinkData::initTier1(Tier tier)
+LinkData::initTier1(Tier tier, const Metadata& metadata)
 {
     MOZ_ASSERT(!linkData1_);
+    metadata_ = &metadata;
     linkData1_ = js::MakeUnique<LinkDataTier>(tier);
     return linkData1_ != nullptr;
 }
@@ -325,8 +320,19 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
     if (!cursor)
         return nullptr;
 
+    MutableMetadata metadata(maybeMetadata);
+    if (!metadata) {
+        auto tierMetadata = js::MakeUnique<MetadataTier>(Tier::Ion);
+        if (!tierMetadata)
+            return nullptr;
+
+        metadata = js_new<Metadata>(Move(tierMetadata));
+        if (!metadata)
+            return nullptr;
+    }
+
     LinkData linkData;
-    if (!linkData.initTier1(Tier::Serialized))
+    if (!linkData.initTier1(Tier::Serialized, *metadata))
         return nullptr;
 
     cursor = linkData.deserialize(cursor);
@@ -354,7 +360,7 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
         return nullptr;
 
     MutableCode code = js_new<Code>();
-    cursor = code->deserialize(cursor, bytecode, linkData, maybeMetadata);
+    cursor = code->deserialize(cursor, bytecode, linkData, *metadata);
     if (!cursor)
         return nullptr;
 

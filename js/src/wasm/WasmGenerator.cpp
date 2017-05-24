@@ -111,7 +111,7 @@ ModuleGenerator::initAsmJS(Metadata* asmJSMetadata)
 {
     MOZ_ASSERT(env_->isAsmJS());
 
-    if (!linkData_.initTier1(Tier::Ion))
+    if (!linkData_.initTier1(Tier::Ion, *asmJSMetadata))
         return false;
     linkDataTier_ = &linkData_.linkData(Tier::Ion);
 
@@ -147,10 +147,6 @@ ModuleGenerator::initWasm(const CompileArgs& args)
             ? Tier::Baseline
             : Tier::Ion;
 
-    if (!linkData_.initTier1(tier_))
-        return false;
-    linkDataTier_ = &linkData_.linkData(tier_);
-
     auto metadataTier = js::MakeUnique<MetadataTier>(tier_);
     if (!metadataTier)
         return false;
@@ -160,6 +156,10 @@ ModuleGenerator::initWasm(const CompileArgs& args)
         return false;
 
     metadataTier_ = &metadata_->metadata(tier_);
+
+    if (!linkData_.initTier1(tier_, *metadata_))
+        return false;
+    linkDataTier_ = &linkData_.linkData(tier_);
 
     MOZ_ASSERT(!isAsmJS());
 
