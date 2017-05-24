@@ -22,6 +22,7 @@ class CSSStyleSheet;
 class ServoStyleSet;
 namespace dom {
 class Element;
+class ShadowRoot;
 } // namespace dom
 } // namespace mozilla
 class nsCSSCounterStyleRule;
@@ -153,6 +154,10 @@ public:
     inline StyleSheet* StyleSheetAt(SheetType aType, int32_t aIndex) const;
     inline nsresult RemoveDocStyleSheet(StyleSheet* aSheet);
     inline nsresult AddDocStyleSheet(StyleSheet* aSheet, nsIDocument* aDocument);
+    inline void RecordStyleSheetChange(StyleSheet* aSheet);
+    inline void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot);
+    inline bool StyleSheetsHaveChanged() const;
+    inline void InvalidateStyleForCSSRuleChanges();
     inline already_AddRefed<nsStyleContext>
     ProbePseudoElementStyle(dom::Element* aParentElement,
                             mozilla::CSSPseudoElementType aType,
