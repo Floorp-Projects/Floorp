@@ -83,7 +83,7 @@ public:
     MOZ_MUST_USE nsresult Activate(nsAHttpTransaction *, uint32_t caps,
                                    int32_t pri);
 
-    void SetFastOpen(bool aFastOpen) { mFastOpen = aFastOpen; }
+    void SetFastOpen(bool aFastOpen);
     // Close this connection and return the transaction. The transaction is
     // restarted as well. This will only happened before connection is
     // connected.

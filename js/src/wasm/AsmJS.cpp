@@ -1775,7 +1775,7 @@ class MOZ_STACK_CLASS ModuleValidator
 
   public:
     bool init() {
-        auto tierMetadata = js::MakeUnique<MetadataTier>(CompileMode::Ion);
+        auto tierMetadata = js::MakeUnique<MetadataTier>(Tier::Ion);
         if (!tierMetadata)
             return false;
 
@@ -8072,12 +8072,7 @@ TryInstantiate(JSContext* cx, CallArgs args, Module& module, const AsmJSMetadata
     if (!module.instantiate(cx, funcs, table, memory, valImports, nullptr, instanceObj))
         return false;
 
-    RootedValue exportObjVal(cx);
-    if (!JS_GetProperty(cx, instanceObj, InstanceExportField, &exportObjVal))
-        return false;
-
-    MOZ_RELEASE_ASSERT(exportObjVal.isObject());
-    exportObj.set(&exportObjVal.toObject());
+    exportObj.set(&instanceObj->exportsObj());
     return true;
 }
 
@@ -8555,7 +8550,7 @@ LookupAsmJSModuleInCache(JSContext* cx, AsmJSParser& parser, bool* loadedFromCac
     if (!Module::assumptionsMatch(assumptions, cursor, remain))
         return true;
 
-    auto tierMetadata = js::MakeUnique<MetadataTier>(CompileMode::Ion);
+    auto tierMetadata = js::MakeUnique<MetadataTier>(Tier::Ion);
     if (!tierMetadata)
         return false;
 

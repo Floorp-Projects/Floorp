@@ -23,22 +23,6 @@ int32_t nsFloatManager::sCachedFloatManagerCount = 0;
 void* nsFloatManager::sCachedFloatManagers[NS_FLOAT_MANAGER_CACHE_SIZE];
 
 /////////////////////////////////////////////////////////////////////////////
-
-// PresShell Arena allocate callback (for nsIntervalSet use below)
-static void*
-PSArenaAllocCB(size_t aSize, void* aClosure)
-{
-  return static_cast<nsIPresShell*>(aClosure)->AllocateMisc(aSize);
-}
-
-// PresShell Arena free callback (for nsIntervalSet use below)
-static void
-PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
-{
-  static_cast<nsIPresShell*>(aClosure)->FreeMisc(aSize, aPtr);
-}
-
-/////////////////////////////////////////////////////////////////////////////
 // nsFloatManager
 
 nsFloatManager::nsFloatManager(nsIPresShell* aPresShell,
@@ -48,7 +32,7 @@ nsFloatManager::nsFloatManager(nsIPresShell* aPresShell,
     mWritingMode(aWM),
 #endif
     mLineLeft(0), mBlockStart(0),
-    mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell),
+    mFloatDamage(aPresShell),
     mPushedLeftFloatPastBreak(false),
     mPushedRightFloatPastBreak(false),
     mSplitLeftFloatAcrossBreak(false),

@@ -9,15 +9,12 @@
 #include "nsIntervalSet.h"
 #include <new>
 #include <algorithm>
+#include "nsIPresShell.h" // for allocation
 
-nsIntervalSet::nsIntervalSet(IntervalSetAlloc aAlloc, IntervalSetFree aFree,
-                             void* aAllocatorClosure)
+nsIntervalSet::nsIntervalSet(nsIPresShell* aPresShell)
     : mList(nullptr),
-      mAlloc(aAlloc),
-      mFree(aFree),
-      mAllocatorClosure(aAllocatorClosure)
+      mPresShell(aPresShell)
 {
-    NS_ASSERTION(mAlloc && mFree, "null callback params");
 }
 
 nsIntervalSet::~nsIntervalSet()
@@ -30,22 +27,24 @@ nsIntervalSet::~nsIntervalSet()
     }
 }
 
+void*
+nsIntervalSet::AllocateInterval()
+{
+    return mPresShell->AllocateByObjectID(
+        eArenaObjectID_nsIntervalSet_Interval, sizeof(Interval));
+}
+
 void nsIntervalSet::FreeInterval(nsIntervalSet::Interval *aInterval)
 {
     NS_ASSERTION(aInterval, "null interval");
 
     aInterval->Interval::~Interval();
-    (*mFree)(sizeof(Interval), aInterval, mAllocatorClosure);
+    mPresShell->FreeByObjectID(eArenaObjectID_nsIntervalSet_Interval, aInterval);
 }
 
 void nsIntervalSet::IncludeInterval(coord_type aBegin, coord_type aEnd)
 {
-    Interval *newInterval = static_cast<Interval*>
-                                       ((*mAlloc)(sizeof(Interval), mAllocatorClosure));
-    if (!newInterval) {
-        NS_NOTREACHED("allocation failure");
-        return;
-    }
+    auto newInterval = static_cast<Interval*>(AllocateInterval());
     new(newInterval) Interval(aBegin, aEnd);
 
     Interval **current = &mList;

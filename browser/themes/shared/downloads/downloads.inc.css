@@ -15,7 +15,6 @@
 
 #downloadsPanel > .panel-arrowcontainer > .panel-arrowcontent {
   overflow: hidden;
-  display: block;
 }
 
 #downloadsPanel > .panel-arrowcontainer > .panel-arrowcontent,

@@ -82,12 +82,6 @@ private:
   const bool mActive;
 };
 
-bool
-IsParentProcess()
-{
-  return XRE_GetProcessType() == GeckoProcessType_Default;
-}
-
 class AudioPlaybackRunnable final : public Runnable
 {
 public:
@@ -285,10 +279,6 @@ AudioChannelService::Shutdown()
     if (obs) {
       obs->RemoveObserver(gAudioChannelService, "xpcom-shutdown");
       obs->RemoveObserver(gAudioChannelService, "outer-window-destroyed");
-
-      if (IsParentProcess()) {
-        obs->RemoveObserver(gAudioChannelService, "ipc:content-shutdown");
-      }
     }
 
     gAudioChannelService->mWindows.Clear();

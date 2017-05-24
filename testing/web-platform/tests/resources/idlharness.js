@@ -8,7 +8,7 @@ policies and contribution forms [3].
 [3] http://www.w3.org/2004/10/27-testcases
 */
 
-/* For user documentation see docs/idlharness.md */
+/* For user documentation see docs/_writing-tests/idlharness.md */
 
 /**
  * Notes for people who want to edit this file (not just use it as a library):
@@ -617,7 +617,7 @@ IdlArray.prototype.assert_type_is = function(value, type)
             return;
 
         case "object":
-            assert_true(typeof value == "object" || typeof value == "function", "wrong type: not object or function");
+            assert_in_array(typeof value, ["object", "function"], "wrong type: not object or function");
             return;
     }
 
@@ -633,7 +633,7 @@ IdlArray.prototype.assert_type_is = function(value, type)
         // in an infinite loop.  TODO: This means we don't have tests for
         // NoInterfaceObject interfaces, and we also can't test objects that
         // come from another self.
-        assert_true(typeof value == "object" || typeof value == "function", "wrong type: not object or function");
+        assert_in_array(typeof value, ["object", "function"], "wrong type: not object or function");
         if (value instanceof Object
         && !this.members[type].has_extended_attribute("NoInterfaceObject")
         && type in self)
@@ -1633,6 +1633,13 @@ IdlInterface.prototype.test_object = function(desc)
 IdlInterface.prototype.test_primary_interface_of = function(desc, obj, exception, expected_typeof)
 //@{
 {
+    // Only the object itself, not its members, are tested here, so if the
+    // interface is untested, there is nothing to do.
+    if (!this.untested)
+    {
+        return;
+    }
+
     // We can't easily test that its prototype is correct if there's no
     // interface object, or the object is from a different global environment
     // (not instanceof Object).  TODO: test in this case that its prototype at
@@ -1684,6 +1691,9 @@ IdlInterface.prototype.test_interface_of = function(desc, obj, exception, expect
     for (var i = 0; i < this.members.length; i++)
     {
         var member = this.members[i];
+        if (member.untested) {
+            continue;
+        }
         if (!exposed_in(exposure_set(member, this.exposureSet))) {
             test(function() {
                 assert_false(member.name in obj);
@@ -1891,6 +1901,7 @@ IdlInterface.prototype.do_interface_attribute_asserts = function(obj, member, a_
     // TODO: Test calling setter on the interface prototype (should throw
     // TypeError in most cases).
     if (member.readonly
+    && !member.has_extended_attribute("LenientSetter")
     && !member.has_extended_attribute("PutForwards")
     && !member.has_extended_attribute("Replaceable"))
     {

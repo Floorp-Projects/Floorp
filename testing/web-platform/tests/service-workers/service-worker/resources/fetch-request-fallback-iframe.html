@@ -12,4 +12,21 @@ function xhr(url) {
       request.send();
     });
 }
+
+function load_image(url, cross_origin) {
+  return new Promise(function(resolve, reject) {
+      var img = document.createElement('img');
+      document.body.appendChild(img);
+      img.onload = function() {
+        resolve();
+      };
+      img.onerror = function() {
+        reject();
+      };
+      if (cross_origin != '') {
+        img.crossOrigin = cross_origin;
+      }
+      img.src = url;
+    });
+}
 </script>

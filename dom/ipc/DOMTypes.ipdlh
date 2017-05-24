@@ -4,9 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBlob;
-include protocol PMemoryStream;
-
 include IPCBlob;
 include IPCStream;
 include ProtocolTypes;
@@ -45,125 +42,6 @@ struct ClonedMessageData
   IPCBlob[] blobs;
   IPCStream[] inputStreams;
   MessagePortIdentifier[] identfiers;
-};
-
-struct MemoryBlobDataStream
-{
-  PMemoryStream stream;
-  uint64_t length;
-};
-
-union BlobDataStream
-{
-  MemoryBlobDataStream;
-
-  // InputStreamParams is used only when we are _sure_ that the serialized size
-  // is lower than 1 Mb. Otherwise we use MemoryBlobDataStream.
-  IPCStream;
-};
-
-union BlobData
-{
-  // For remote blobs.
-  nsID;
-
-  // For memory-backed blobs.
-  BlobDataStream;
-
-  // For multiplex blobs.
-  BlobData[];
-};
-
-union OptionalBlobData
-{
-  BlobData;
-  void_t;
-};
-
-struct NormalBlobConstructorParams
-{
-  nsString contentType;
-  uint64_t length;
-
-  // This must be of type BlobData in a child->parent message, and will always
-  // be of type void_t in a parent->child message.
-  OptionalBlobData optionalBlobData;
-};
-
-struct FileBlobConstructorParams
-{
-  nsString name;
-  nsString contentType;
-  nsString path;
-  uint64_t length;
-  int64_t modDate;
-  bool isDirectory;
-
-  // This must be of type BlobData in a child->parent message, and will always
-  // be of type void_t in a parent->child message.
-  OptionalBlobData optionalBlobData;
-};
-
-struct SlicedBlobConstructorParams
-{
-  PBlob source;
-  nsID id;
-  uint64_t begin;
-  uint64_t end;
-  nsString contentType;
-};
-
-struct MysteryBlobConstructorParams
-{
-  // Nothing is known about this type of blob.
-};
-
-struct KnownBlobConstructorParams
-{
-  nsID id;
-};
-
-// This may only be used for same-process inter-thread communication!
-struct SameProcessBlobConstructorParams
-{
-  // This member should be reinterpret_cast'd to mozilla::dom::BlobImpl. It
-  // carries a reference.
-  intptr_t addRefedBlobImpl;
-};
-
-union AnyBlobConstructorParams
-{
-  // These types may be sent to/from parent and child.
-  NormalBlobConstructorParams;
-  FileBlobConstructorParams;
-  SameProcessBlobConstructorParams;
-
-  // This type may only be sent from parent to child.
-  MysteryBlobConstructorParams;
-
-  // These types may only be sent from child to parent.
-  SlicedBlobConstructorParams;
-  KnownBlobConstructorParams;
-};
-
-struct ChildBlobConstructorParams
-{
-  nsID id;
-
-  // May not be SlicedBlobConstructorParams or KnownBlobConstructorParams.
-  AnyBlobConstructorParams blobParams;
-};
-
-struct ParentBlobConstructorParams
-{
-  // May not be MysteryBlobConstructorParams.
-  AnyBlobConstructorParams blobParams;
-};
-
-union BlobConstructorParams
-{
-  ChildBlobConstructorParams;
-  ParentBlobConstructorParams;
 };
 
 union IPCDataTransferData

@@ -63,18 +63,6 @@ protected:
   virtual mozilla::ipc::IPCResult
   RecvFlushPendingFileDeletions() override;
 
-  virtual PBlobParent*
-  AllocPBlobParent(const BlobConstructorParams& aParams) override;
-
-  virtual bool
-  DeallocPBlobParent(PBlobParent* aActor) override;
-
-  virtual PMemoryStreamParent*
-  AllocPMemoryStreamParent(const uint64_t& aSize) override;
-
-  virtual bool
-  DeallocPMemoryStreamParent(PMemoryStreamParent* aActor) override;
-
   virtual PPendingIPCBlobParent*
   AllocPPendingIPCBlobParent(const IPCBlob& aBlob) override;
 
@@ -87,10 +75,6 @@ protected:
 
   virtual bool
   DeallocPIPCBlobInputStreamParent(PIPCBlobInputStreamParent* aActor) override;
-
-  virtual mozilla::ipc::IPCResult
-  RecvPBlobConstructor(PBlobParent* aActor,
-                       const BlobConstructorParams& params) override;
 
   virtual PFileDescriptorSetParent*
   AllocPFileDescriptorSetParent(const FileDescriptor& aFileDescriptor)

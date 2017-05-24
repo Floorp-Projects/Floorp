@@ -10,9 +10,15 @@
 #include "IPCBlobInputStreamParent.h"
 #include "IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/IPCBlob.h"
+#include "mozilla/dom/nsIContentParent.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
+#include "StreamBlobImpl.h"
 #include "prtime.h"
 
 namespace mozilla {
+
+using namespace ipc;
+
 namespace dom {
 namespace IPCBlobUtils {
 
