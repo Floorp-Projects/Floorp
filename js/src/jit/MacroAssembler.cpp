@@ -3090,6 +3090,17 @@ MacroAssembler::wasmAssertNonExitInvariants(Register activation)
 #endif
 }
 
+void
+MacroAssembler::wasmEmitStackCheck(Register sp, Register scratch, Label* onOverflow)
+{
+    loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, addressOfContext)), scratch);
+    loadPtr(Address(scratch, 0), scratch);
+    branchPtr(Assembler::AboveOrEqual,
+              Address(scratch, offsetof(JSContext, jitStackLimitNoInterrupt)),
+              sp,
+              onOverflow);
+}
+
 //}}} check_macroassembler_style
 
 void

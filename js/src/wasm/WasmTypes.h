@@ -1287,15 +1287,6 @@ struct ExportArg
 
 struct TlsData
 {
-    // Pointer to the JSContext that contains this TLS data.
-    JSContext* cx;
-
-    // Pointer to the Instance that contains this TLS data.
-    Instance* instance;
-
-    // Pointer to the global data for this Instance.
-    uint8_t* globalData;
-
     // Pointer to the base of the default memory (or null if there is none).
     uint8_t* memoryBase;
 
@@ -1304,10 +1295,14 @@ struct TlsData
     uint32_t boundsCheckLimit;
 #endif
 
-    // Stack limit for the current thread. This limit is checked against the
-    // stack pointer in the prologue of functions that allocate stack space. See
-    // `CodeGenerator::generateWasm`.
-    void* stackLimit;
+    // Pointer to the global data for this Instance.
+    uint8_t* globalData;
+
+    // Pointer to the Instance that contains this TLS data.
+    Instance* instance;
+
+    // Shortcut to instance->zone->group->addressOfOwnerContext
+    JSContext** addressOfContext;
 
     // The globalArea must be the last field.  Globals for the module start here
     // and are inline in this structure.  16-byte alignment is required for SIMD
