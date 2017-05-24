@@ -198,13 +198,19 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
   display: none;
 }
 
-.panel-viewstack:not([viewtype="main"]) > .panel-mainview > #PanelUI-mainView {
+panelview {
+  -moz-box-orient: vertical;
   -moz-box-flex: 1;
 }
 
 .panel-subview-body {
   overflow-y: auto;
   overflow-x: hidden;
+  -moz-box-flex: 1;
+}
+
+.panel-view-body-unscrollable {
+  overflow: hidden;
   -moz-box-flex: 1;
 }
 
@@ -225,6 +231,8 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
   border-bottom: 1px solid var(--panel-separator-color);
   color: GrayText;
   font-variant: small-caps;
+  /* Workaround for min-height not being accounted for in vertical layout. */
+  height: 41px;
 }
 
 .cui-widget-panelview .panel-subview-header,

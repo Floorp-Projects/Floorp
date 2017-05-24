@@ -1178,12 +1178,54 @@ enum ModuleKind
     AsmJS
 };
 
-// Code can be compiled either with the Baseline compiler or the Ion compiler.
+// Code can be compiled either with the Baseline compiler or the Ion compiler,
+// and tier-variant data are tagged with the Tier value.
+//
+// A tier value is used to request tier-variant aspects of code, metadata, or
+// linkdata.  The tiers are normally explicit (Baseline and Ion); implicit tiers
+// can be obtained through accessors on Code objects (eg, anyTier).
 
-enum class CompileMode
+enum class Tier
 {
     Baseline,
-    Ion
+    Ion,
+
+    Debug,   // An alias for Baseline in calls to tier-variant accessors
+
+    TBD,     // A placeholder while tiering is being implemented
+};
+
+// Iterator over tiers present in a tiered data structure.
+
+class Tiers
+{
+    Tier t_[2];
+    uint32_t n_;
+
+  public:
+    explicit Tiers() {
+        n_ = 0;
+    }
+    explicit Tiers(Tier t) {
+        MOZ_ASSERT(t == Tier::Baseline || t == Tier::Ion);
+        t_[0] = t;
+        n_ = 1;
+    }
+    explicit Tiers(Tier t, Tier u) {
+        MOZ_ASSERT(t == Tier::Baseline || t == Tier::Ion);
+        MOZ_ASSERT(u == Tier::Baseline || u == Tier::Ion);
+        MOZ_ASSERT(t != u);
+        t_[0] = t;
+        t_[1] = u;
+        n_ = 2;
+    }
+
+    Tier* begin() {
+        return t_;
+    }
+    Tier* end() {
+        return t_ + n_;
+    }
 };
 
 // Represents the resizable limits of memories and tables.
@@ -1245,15 +1287,6 @@ struct ExportArg
 
 struct TlsData
 {
-    // Pointer to the JSContext that contains this TLS data.
-    JSContext* cx;
-
-    // Pointer to the Instance that contains this TLS data.
-    Instance* instance;
-
-    // Pointer to the global data for this Instance.
-    uint8_t* globalData;
-
     // Pointer to the base of the default memory (or null if there is none).
     uint8_t* memoryBase;
 
@@ -1262,10 +1295,14 @@ struct TlsData
     uint32_t boundsCheckLimit;
 #endif
 
-    // Stack limit for the current thread. This limit is checked against the
-    // stack pointer in the prologue of functions that allocate stack space. See
-    // `CodeGenerator::generateWasm`.
-    void* stackLimit;
+    // Pointer to the global data for this Instance.
+    uint8_t* globalData;
+
+    // Pointer to the Instance that contains this TLS data.
+    Instance* instance;
+
+    // Shortcut to instance->zone->group->addressOfOwnerContext
+    JSContext** addressOfContext;
 
     // The globalArea must be the last field.  Globals for the module start here
     // and are inline in this structure.  16-byte alignment is required for SIMD

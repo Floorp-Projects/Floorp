@@ -20,7 +20,6 @@
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/ImageDataBinding.h"
-#include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/StructuredClone.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"

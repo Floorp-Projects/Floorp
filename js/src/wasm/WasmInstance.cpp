@@ -127,7 +127,9 @@ bool
 Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, const uint64_t* argv,
                      MutableHandleValue rval)
 {
-    const FuncImport& fi = metadataTier().funcImports[funcImportIndex];
+    Tier tier = Tier::TBD;
+
+    const FuncImport& fi = metadata(tier).funcImports[funcImportIndex];
 
     InvokeArgs args(cx);
     if (!args.init(cx, argc))
@@ -189,7 +191,7 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
         return true;
 
     // The import may already have become optimized.
-    void* jitExitCode = codeBaseTier() + fi.jitExitCodeOffset();
+    void* jitExitCode = codeBase(tier) + fi.jitExitCodeOffset();
     if (import.code == jitExitCode)
         return true;
 
@@ -254,7 +256,7 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
 /* static */ int32_t
 Instance::callImport_void(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
-    JSContext* cx = instance->cx();
+    JSContext* cx = TlsContext.get();
     RootedValue rval(cx);
     return instance->callImport(cx, funcImportIndex, argc, argv, &rval);
 }
@@ -262,7 +264,7 @@ Instance::callImport_void(Instance* instance, int32_t funcImportIndex, int32_t a
 /* static */ int32_t
 Instance::callImport_i32(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
-    JSContext* cx = instance->cx();
+    JSContext* cx = TlsContext.get();
     RootedValue rval(cx);
     if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
@@ -273,7 +275,7 @@ Instance::callImport_i32(Instance* instance, int32_t funcImportIndex, int32_t ar
 /* static */ int32_t
 Instance::callImport_i64(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
-    JSContext* cx = instance->cx();
+    JSContext* cx = TlsContext.get();
     RootedValue rval(cx);
     if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
@@ -284,7 +286,7 @@ Instance::callImport_i64(Instance* instance, int32_t funcImportIndex, int32_t ar
 /* static */ int32_t
 Instance::callImport_f64(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
-    JSContext* cx = instance->cx();
+    JSContext* cx = TlsContext.get();
     RootedValue rval(cx);
     if (!instance->callImport(cx, funcImportIndex, argc, argv, &rval))
         return false;
@@ -297,7 +299,7 @@ Instance::growMemory_i32(Instance* instance, uint32_t delta)
 {
     MOZ_ASSERT(!instance->isAsmJS());
 
-    JSContext* cx = instance->cx();
+    JSContext* cx = TlsContext.get();
     RootedWasmMemoryObject memory(cx, instance->memory_);
 
     uint32_t ret = WasmMemoryObject::grow(memory, delta, cx);
@@ -335,28 +337,33 @@ Instance::Instance(JSContext* cx,
     tables_(Move(tables)),
     enterFrameTrapsEnabled_(false)
 {
-    MOZ_ASSERT(funcImports.length() == metadataTier().funcImports.length());
+#ifdef DEBUG
+    for (auto t : metadata().tiers())
+        MOZ_ASSERT(funcImports.length() == metadata(t).funcImports.length());
+#endif
     MOZ_ASSERT(tables_.length() == metadata().tables.length());
 
-    tlsData()->cx = cx;
-    tlsData()->instance = this;
-    tlsData()->globalData = globals_->globalData();
     tlsData()->memoryBase = memory ? memory->buffer().dataPointerEither().unwrap() : nullptr;
 #ifndef WASM_HUGE_MEMORY
     tlsData()->boundsCheckLimit = memory ? memory->buffer().wasmBoundsCheckLimit() : 0;
 #endif
-    tlsData()->stackLimit = *(void**)cx->stackLimitAddressForJitCode(JS::StackForUntrustedScript);
+    tlsData()->globalData = globals_->globalData();
+    tlsData()->instance = this;
+    tlsData()->addressOfContext = (JSContext**)object->zone()->group()->addressOfOwnerContext();
 
-    for (size_t i = 0; i < metadataTier().funcImports.length(); i++) {
+    Tier callerTier = Tier::TBD;
+    Tier calleeTier = Tier::TBD;
+
+    for (size_t i = 0; i < metadata(callerTier).funcImports.length(); i++) {
         HandleFunction f = funcImports[i];
-        const FuncImport& fi = metadataTier().funcImports[i];
+        const FuncImport& fi = metadata(callerTier).funcImports[i];
         FuncImportTls& import = funcImportTls(fi);
         if (!isAsmJS() && IsExportedWasmFunction(f)) {
             WasmInstanceObject* calleeInstanceObj = ExportedFunctionToInstanceObject(f);
-            const CodeRange& codeRange = calleeInstanceObj->getExportedFunctionCodeRange(f);
+            const CodeRange& codeRange = calleeInstanceObj->getExportedFunctionCodeRange(f, calleeTier);
             Instance& calleeInstance = calleeInstanceObj->instance();
             import.tls = calleeInstance.tlsData();
-            import.code = calleeInstance.codeBaseTier() + codeRange.funcNormalEntry();
+            import.code = calleeInstance.codeBase(calleeTier) + codeRange.funcNormalEntry();
             import.baselineScript = nullptr;
             import.obj = calleeInstanceObj;
         } else if (void* thunk = MaybeGetBuiltinThunk(f, fi.sig(), cx)) {
@@ -366,7 +373,7 @@ Instance::Instance(JSContext* cx,
             import.obj = f;
         } else {
             import.tls = tlsData();
-            import.code = codeBaseTier() + fi.interpExitCodeOffset();
+            import.code = codeBase(callerTier) + fi.interpExitCodeOffset();
             import.baselineScript = nullptr;
             import.obj = f;
         }
@@ -447,8 +454,10 @@ Instance::~Instance()
 {
     compartment_->wasm.unregisterInstance(*this);
 
-    for (unsigned i = 0; i < metadataTier().funcImports.length(); i++) {
-        FuncImportTls& import = funcImportTls(metadataTier().funcImports[i]);
+    const FuncImportVector& funcImports = metadata(code().anyTier()).funcImports;
+
+    for (unsigned i = 0; i < funcImports.length(); i++) {
+        FuncImportTls& import = funcImportTls(funcImports[i]);
         if (import.baselineScript)
             import.baselineScript->removeDependentWasmImport(*this, i);
     }
@@ -495,7 +504,7 @@ Instance::tracePrivate(JSTracer* trc)
     MOZ_ASSERT(!gc::IsAboutToBeFinalized(&object_));
     TraceEdge(trc, &object_, "wasm instance object");
 
-    for (const FuncImport& fi : metadataTier().funcImports)
+    for (const FuncImport& fi : metadata(code().anyTier()).funcImports)
         TraceNullableEdge(trc, &funcImportTls(fi).obj, "wasm import");
 
     for (const SharedTable& table : tables_)
@@ -547,7 +556,9 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
     // If there has been a moving grow, this Instance should have been notified.
     MOZ_RELEASE_ASSERT(!memory_ || tlsData()->memoryBase == memory_->buffer().dataPointerEither());
 
-    const FuncExport& func = metadata().lookupFuncExport(funcIndex);
+    Tier tier = Tier::TBD;
+
+    const FuncExport& func = metadata(tier).lookupFuncExport(funcIndex);
 
     // The calling convention for an external call into wasm is to pass an
     // array of 16-byte values where each value contains either a coerced int32
@@ -660,7 +671,7 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
         JitActivation jitActivation(cx, /* active */ false);
 
         // Call the per-exported-function trampoline created by GenerateEntry.
-        auto funcPtr = JS_DATA_TO_FUNC_PTR(ExportFuncPtr, codeBaseTier() + func.entryOffset());
+        auto funcPtr = JS_DATA_TO_FUNC_PTR(ExportFuncPtr, codeBase(tier) + func.entryOffset());
         if (!CALL_GENERATED_2(funcPtr, exportArgs.begin(), tlsData()))
             return false;
     }
@@ -804,9 +815,9 @@ Instance::onMovingGrowTable()
 void
 Instance::deoptimizeImportExit(uint32_t funcImportIndex)
 {
-    const FuncImport& fi = metadataTier().funcImports[funcImportIndex];
+    const FuncImport& fi = metadata(code().anyTier()).funcImports[funcImportIndex];
     FuncImportTls& import = funcImportTls(fi);
-    import.code = codeBaseTier() + fi.interpExitCodeOffset();
+    import.code = codeBase(Tier::TBD) + fi.interpExitCodeOffset();
     import.baselineScript = nullptr;
 }
 

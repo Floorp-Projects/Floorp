@@ -244,12 +244,13 @@ void Simulator::handle_wasm_interrupt() {
   uint8_t* fp = (uint8_t*)xreg(30);
 
   js::WasmActivation* activation = js::wasm::MaybeActiveActivation(cx_);
-  const js::wasm::Code* code = activation->compartment()->wasm.lookupCode(pc);
-  if (!code || !code->segmentTier().containsFunctionPC(pc))
+  const js::wasm::CodeSegment* segment;
+  const js::wasm::Code* code = activation->compartment()->wasm.lookupCode(pc, &segment);
+  if (!code || !segment->containsFunctionPC(pc))
     return;
 
   activation->startInterrupt(pc, fp);
-  set_pc((Instruction*)code->segmentTier().interruptCode());
+  set_pc((Instruction*)segment->interruptCode());
 }
 
 

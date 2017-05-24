@@ -43,19 +43,6 @@ struct MultiplexInputStreamParams
   bool startedReadingCurrent;
 };
 
-struct RemoteInputStreamParams
-{
-  nsID id;
-};
-
-// XXX This may only be used for same-process inter-thread communication! The
-//     value should be reinterpret_cast'd to nsIInputStream. It carries a
-//     reference.
-struct SameProcessInputStreamParams
-{
-  intptr_t addRefedInputStream;
-};
-
 struct SlicedInputStreamParams
 {
   InputStreamParams stream;
@@ -78,8 +65,6 @@ union InputStreamParams
   BufferedInputStreamParams;
   MIMEInputStreamParams;
   MultiplexInputStreamParams;
-  RemoteInputStreamParams;
-  SameProcessInputStreamParams;
   SlicedInputStreamParams;
   IPCBlobInputStreamParams;
 };

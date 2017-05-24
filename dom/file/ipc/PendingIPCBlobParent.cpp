@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PendingIPCBlobParent.h"
+#include "mozilla/ipc/PBackgroundParent.h"
 
 namespace mozilla {
 

@@ -15,6 +15,7 @@
 #include "nsPrintfCString.h"
 #include "nsStyleContext.h"
 #include "FrameLayerBuilder.h"
+#include "mozilla/ArrayUtils.h"
 
 #include <inttypes.h>
 
@@ -29,8 +30,7 @@ nsPresArena::~nsPresArena()
   ClearArenaRefPtrs();
 
 #if defined(MOZ_HAVE_MEM_CHECKS)
-  for (auto iter = mFreeLists.Iter(); !iter.Done(); iter.Next()) {
-    FreeList* entry = iter.Get();
+  for (FreeList* entry = mFreeLists; entry != ArrayEnd(mFreeLists); ++entry) {
     nsTArray<void*>::index_type len;
     while ((len = entry->mEntries.Length())) {
       void* result = entry->mEntries.ElementAt(len - 1);
@@ -97,13 +97,12 @@ void*
 nsPresArena::Allocate(uint32_t aCode, size_t aSize)
 {
   MOZ_ASSERT(aSize > 0, "PresArena cannot allocate zero bytes");
+  MOZ_ASSERT(aCode < ArrayLength(mFreeLists));
 
   // We only hand out aligned sizes
   aSize = mPool.AlignedSize(aSize);
 
-  // If there is no free-list entry for this type already, we have
-  // to create one now, to record its size.
-  FreeList* list = mFreeLists.PutEntry(aCode);
+  FreeList* list = &mFreeLists[aCode];
 
   nsTArray<void*>::index_type len = list->mEntries.Length();
   if (list->mEntrySize == 0) {
@@ -153,10 +152,11 @@ nsPresArena::Allocate(uint32_t aCode, size_t aSize)
 void
 nsPresArena::Free(uint32_t aCode, void* aPtr)
 {
+  MOZ_ASSERT(aCode < ArrayLength(mFreeLists));
+
   // Try to recycle this entry.
-  FreeList* list = mFreeLists.GetEntry(aCode);
-  MOZ_ASSERT(list, "no free list for pres arena object");
-  MOZ_ASSERT(list->mEntrySize > 0, "PresArena cannot free zero bytes");
+  FreeList* list = &mFreeLists[aCode];
+  MOZ_ASSERT(list->mEntrySize > 0, "object of this type was never allocated");
 
   mozWritePoison(aPtr, list->mEntrySize);
 
@@ -180,11 +180,10 @@ nsPresArena::AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
   // we've not measured explicitly.
 
   size_t mallocSize = mPool.SizeOfExcludingThis(aMallocSizeOf);
-  mallocSize += mFreeLists.SizeOfExcludingThis(aMallocSizeOf);
 
   size_t totalSizeInFreeLists = 0;
-  for (auto iter = mFreeLists.Iter(); !iter.Done(); iter.Next()) {
-    FreeList* entry = iter.Get();
+  for (FreeList* entry = mFreeLists; entry != ArrayEnd(mFreeLists); ++entry) {
+    mallocSize += entry->SizeOfExcludingThis(aMallocSizeOf);
 
     // Note that we're not measuring the size of the entries on the free
     // list here.  The free list knows how many objects we've allocated
@@ -194,7 +193,7 @@ nsPresArena::AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
     size_t totalSize = entry->mEntrySize * entry->mEntriesEverAllocated;
     size_t* p;
 
-    switch (NS_PTR_TO_INT32(entry->mKey)) {
+    switch (entry - mFreeLists) {
 #define FRAME_ID(classname)                               \
       case nsQueryFrame::classname##_id:                  \
         p = &aArenaStats->FRAME_ID_STAT_FIELD(classname); \

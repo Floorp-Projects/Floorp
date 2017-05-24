@@ -7,8 +7,8 @@
 #include "IPCBlobInputStream.h"
 #include "IPCBlobInputStreamChild.h"
 #include "IPCBlobInputStreamStorage.h"
+#include "mozilla/ipc/InputStreamParams.h"
 #include "nsIAsyncInputStream.h"
-#include "mozilla/SystemGroup.h"
 
 namespace mozilla {
 namespace dom {
@@ -350,7 +350,7 @@ void
 IPCBlobInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
                               FileDescriptorArray& aFileDescriptors)
 {
-  IPCBlobInputStreamParams params;
+  mozilla::ipc::IPCBlobInputStreamParams params;
   params.id() = mActor->ID();
 
   aParams = params;
