@@ -26,6 +26,7 @@ jobs:
             tier: 2
             kind: other
         run-on-projects:
+            - mozilla-central
             - mozilla-beta
             - mozilla-release
         deadline-after: 5 days

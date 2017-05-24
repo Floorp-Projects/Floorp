@@ -8057,7 +8057,8 @@ DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame, OnStep
                 return false;
         } else if (!handler && prior) {
             // Single stepping toggled on->off.
-            if (!instance->debug().decrementStepModeCount(cx, wasmFrame->funcIndex()))
+            FreeOp* fop = cx->runtime()->defaultFreeOp();
+            if (!instance->debug().decrementStepModeCount(fop, wasmFrame->funcIndex()))
                 return false;
         }
     } else {
@@ -8391,8 +8392,7 @@ DebuggerFrame_maybeDecrementFrameScriptStepModeCount(FreeOp* fop, AbstractFrameP
         return;
     if (frame.isWasmDebugFrame()) {
         wasm::Instance* instance = frame.wasmInstance();
-        instance->debug().decrementStepModeCount(instance->cx(),
-                                                 frame.asWasmDebugFrame()->funcIndex());
+        instance->debug().decrementStepModeCount(fop, frame.asWasmDebugFrame()->funcIndex());
     } else {
         frame.script()->decrementStepModeCount(fop);
     }

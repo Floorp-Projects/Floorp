@@ -62,13 +62,10 @@ public:
 #include "nsFrameIdList.h"
 #undef FRAME_ID
 
-    // The PresArena implementation uses this bit to distinguish objects
-    // allocated by size from objects allocated by type ID (that is, frames
-    // using AllocateByFrameID, and other objects using AllocateByObjectID).
-    // It should not collide with any frame ID (above) or Object ID (in
-    // nsPresArena.h).  It is not 0x80000000 to avoid the question of
-    // whether enumeration constants are signed.
-    NON_FRAME_MARKER = 0x20000000
+    // This marker allows mozilla::ArenaObjectID to "extend" this enum
+    // with additional sequential values for use in nsPresArena and
+    // nsIPresShell::{Allocate,Free}ByObjectId
+    NON_FRAME_MARKER
   };
 
   virtual void* QueryFrame(FrameIID id) = 0;

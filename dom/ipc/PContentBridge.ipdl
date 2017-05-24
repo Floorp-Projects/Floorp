@@ -4,13 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBlob;
 include protocol PBrowser;
 include protocol PContent;
 include protocol PJavaScript;
 include protocol PFileDescriptorSet;
 include protocol PChildToParentStream;
-include protocol PMemoryStream;
 include protocol PParentToChildStream;
 include protocol PIPCBlobInputStream;
 
@@ -38,12 +36,10 @@ namespace dom {
  */
 nested(upto inside_cpow) sync protocol PContentBridge
 {
-    manages PBlob;
     manages PBrowser;
     manages PFileDescriptorSet;
     manages PJavaScript;
     manages PChildToParentStream;
-    manages PMemoryStream;
     manages PParentToChildStream;
     manages PIPCBlobInputStream;
 
@@ -71,16 +67,12 @@ parent:
 
     async PChildToParentStream();
 
-    async PMemoryStream(uint64_t aSize);
-
 both:
     // Both the parent and the child can construct the PBrowser.
     // See the comment in PContent::PBrowser().
     async PBrowser(TabId tabId, TabId sameTabGroupAs,
                    IPCTabContext context, uint32_t chromeFlags,
                    ContentParentId cpId, bool isForBrowser);
-
-    async PBlob(BlobConstructorParams params);
 
     async PFileDescriptorSet(FileDescriptor fd);
 

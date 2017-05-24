@@ -33,6 +33,7 @@ wptrunner_root = None
 
 logger = None
 
+
 def do_delayed_imports():
     """Import and set up modules only needed if execution gets to this point."""
     global BaseHandler
@@ -189,6 +190,9 @@ class Firefox(Browser):
     binary = "%s/firefox/firefox"
     platform_ini = "%s/firefox/platform.ini"
 
+    def __init__(self, **kwargs):
+        pass
+
     def install(self):
         """Install Firefox."""
         call("pip", "install", "-r", os.path.join(wptrunner_root, "requirements_firefox.txt"))
@@ -259,6 +263,9 @@ class Chrome(Browser):
     product = "chrome"
     binary = "/usr/bin/google-chrome"
 
+    def __init__(self, **kwargs):
+        pass
+
     def install(self):
         """Install Chrome."""
 
@@ -308,6 +315,53 @@ class Chrome(Browser):
             else:
                 logger.critical("dbus not running and can't be started")
                 sys.exit(1)
+
+
+class Sauce(Browser):
+    """Sauce-specific interface.
+
+    Includes installation and wptrunner setup methods.
+    """
+
+    product = "sauce"
+
+    def __init__(self, **kwargs):
+        browser = kwargs["product"].split(":")
+        self.browser_name = browser[1]
+        self.browser_version = browser[2]
+        self.sauce_platform = kwargs["sauce_platform"]
+        self.sauce_build = kwargs["sauce_build_number"]
+        self.sauce_key = kwargs["sauce_key"]
+        self.sauce_user = kwargs["sauce_user"]
+        self.sauce_build_tags = kwargs["sauce_build_tags"]
+        self.sauce_tunnel_id = kwargs["sauce_tunnel_identifier"]
+
+    def install(self):
+        """Install sauce selenium python deps."""
+        call("pip", "install", "-r", os.path.join(wptrunner_root, "requirements_sauce.txt"))
+
+    def install_webdriver(self):
+        """No need to install webdriver locally."""
+        pass
+
+    def version(self, root):
+        """Retrieve the release version of the browser under test."""
+        return self.browser_version
+
+    def wptrunner_args(self, root):
+        """Return Sauce-specific wptrunner arguments."""
+        return {
+            "product": "sauce",
+            "sauce_browser": self.browser_name,
+            "sauce_build": self.sauce_build,
+            "sauce_key": self.sauce_key,
+            "sauce_platform": self.sauce_platform,
+            "sauce_tags": self.sauce_build_tags,
+            "sauce_tunnel_id": self.sauce_tunnel_id,
+            "sauce_user": self.sauce_user,
+            "sauce_version": self.browser_version,
+            "test_types": ["testharness", "reftest"]
+        }
 
 
 def get(url):
@@ -486,9 +540,19 @@ def get_files_changed(branch_point, ignore_changes):
 
     return changed, ignored
 
+
+def _in_repo_root(full_path):
+    rel_path = os.path.relpath(full_path, wpt_root)
+    path_components = rel_path.split(os.sep)
+    return len(path_components) < 2
+
+
 def get_affected_testfiles(files_changed, skip_tests):
     """Determine and return list of test files that reference changed files."""
     affected_testfiles = set()
+    # Exclude files that are in the repo root, because
+    # they are not part of any test.
+    files_changed = [f for f in files_changed if not _in_repo_root(f)]
     nontests_changed = set(files_changed)
     manifest_file = os.path.join(wpt_root, "MANIFEST.json")
     test_types = ["testharness", "reftest", "wdspec"]
@@ -497,6 +561,8 @@ def get_affected_testfiles(files_changed, skip_tests):
 
     support_files = {os.path.join(wpt_root, path)
                      for _, path, _ in wpt_manifest.itertypes("support")}
+    wdspec_test_files = {os.path.join(wpt_root, path)
+                         for _, path, _ in wpt_manifest.itertypes("wdspec")}
     test_files = {os.path.join(wpt_root, path)
                   for _, path, _ in wpt_manifest.itertypes(*test_types)}
 
@@ -506,19 +572,30 @@ def get_affected_testfiles(files_changed, skip_tests):
     for full_path in nontests_changed:
         rel_path = os.path.relpath(full_path, wpt_root)
         path_components = rel_path.split(os.sep)
-        if len(path_components) < 2:
-            # This changed file is in the repo root, so skip it
-            # (because it's not part of any test).
-            continue
         top_level_subdir = path_components[0]
         if top_level_subdir in skip_tests:
             continue
         repo_path = "/" + os.path.relpath(full_path, wpt_root).replace(os.path.sep, "/")
         nontest_changed_paths.add((full_path, repo_path))
 
+    def affected_by_wdspec(test):
+        affected = False
+        if test in wdspec_test_files:
+            for support_full_path, _ in nontest_changed_paths:
+                # parent of support file or of "support" directory
+                parent = os.path.dirname(support_full_path)
+                if os.path.basename(parent) == "support":
+                    parent = os.path.dirname(parent)
+                relpath = os.path.relpath(test, parent)
+                if not relpath.startswith(os.pardir):
+                    # testfile is in subtree of support file
+                    affected = True
+                    break
+        return affected
+
     for root, dirs, fnames in os.walk(wpt_root):
         # Walk top_level_subdir looking for test files containing either the
-        # relative filepath or absolute filepatch to the changed files.
+        # relative filepath or absolute filepath to the changed files.
         if root == wpt_root:
             for dir_name in skip_tests:
                 dirs.remove(dir_name)
@@ -527,6 +604,10 @@ def get_affected_testfiles(files_changed, skip_tests):
             # Skip any file that's not a test file.
             if test_full_path not in test_files:
                 continue
+            if affected_by_wdspec(test_full_path):
+                affected_testfiles.add(test_full_path)
+                continue
+
             with open(test_full_path, "rb") as fh:
                 file_contents = fh.read()
                 if file_contents.startswith("\xfe\xff"):
@@ -655,7 +736,7 @@ def format_comment_title(product):
     title = parts[0].title()
 
     if len(parts) > 1:
-       title += " (%s channel)" % parts[1]
+       title += " (%s)" % parts[1]
 
     return "# %s #" % title
 
@@ -685,6 +766,7 @@ def table(headings, data, log):
     for row in data:
         log("|%s|" % "|".join(" %s" % row[i].ljust(max_widths[i] - 1) for i in cols))
     log("")
+
 
 def write_inconsistent(inconsistent, iterations):
     """Output inconsistent tests to logger.error."""
@@ -772,6 +854,30 @@ def get_parser():
                         type=str,
                         help="Location of ini-formatted configuration file",
                         default="check_stability.ini")
+    parser.add_argument("--sauce-platform",
+                        action="store",
+                        default=os.environ.get("PLATFORM"),
+                        help="Sauce Labs OS")
+    parser.add_argument("--sauce-build-number",
+                        action="store",
+                        default=os.environ.get("TRAVIS_BUILD_NUMBER"),
+                        help="Sauce Labs build identifier")
+    parser.add_argument("--sauce-build-tags",
+                        action="store", nargs="*",
+                        default=[os.environ.get("TRAVIS_PYTHON_VERSION")],
+                        help="Sauce Labs build tag")
+    parser.add_argument("--sauce-tunnel-identifier",
+                        action="store",
+                        default=os.environ.get("TRAVIS_JOB_NUMBER"),
+                        help="Sauce Connect tunnel identifier")
+    parser.add_argument("--sauce-user",
+                        action="store",
+                        default=os.environ.get("SAUCE_USERNAME"),
+                        help="Sauce Labs user name")
+    parser.add_argument("--sauce-key",
+                        action="store",
+                        default=os.environ.get("SAUCE_ACCESS_KEY"),
+                        help="Sauce Labs access key")
     parser.add_argument("product",
                         action="store",
                         help="Product to run against (`browser-name` or 'browser-name:channel')")
@@ -809,14 +915,18 @@ def main():
         return 1
 
     os.chdir(args.root)
-
     browser_name = args.product.split(":")[0]
+
+    if browser_name == "sauce" and not args.sauce_key:
+        logger.warning("Cannot run tests on Sauce Labs. No access key.")
+        return retcode
 
     with TravisFold("browser_setup"):
         logger.info(format_comment_title(args.product))
 
         browser_cls = {"firefox": Firefox,
-                       "chrome": Chrome}.get(browser_name)
+                       "chrome": Chrome,
+                       "sauce": Sauce}.get(browser_name)
         if browser_cls is None:
             logger.critical("Unrecognised browser %s" % browser_name)
             return 1
@@ -844,7 +954,7 @@ def main():
         install_wptrunner()
         do_delayed_imports()
 
-        browser = browser_cls()
+        browser = browser_cls(**vars(args))
         browser.install()
         browser.install_webdriver()
 
