@@ -376,7 +376,7 @@ private:
 
         bool FastOpenEnabled() override;
         nsresult StartFastOpen() override;
-        void SetFastOpenConnected(nsresult) override;
+        void SetFastOpenConnected(nsresult, bool aWillRetry) override;
         void FastOpenNotSupported() override;
         void SetFastOpenStatus(uint8_t tfoStatus) override;
 
