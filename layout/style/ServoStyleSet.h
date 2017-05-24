@@ -105,8 +105,11 @@ public:
   void BeginShutdown();
   void Shutdown();
 
-  void RecordStyleSheetChange(mozilla::ServoStyleSheet*)
+  void RecordStyleSheetChange(mozilla::ServoStyleSheet*, StyleSheet::ChangeType)
   {
+    // TODO(emilio): Record which kind of changes have we handled, and act
+    // properly in InvalidateStyleForCSSRuleChanges instead of invalidating the
+    // whole document.
     NoteStyleSheetsChanged();
   }
 
