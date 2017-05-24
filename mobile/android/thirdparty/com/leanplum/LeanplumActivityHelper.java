@@ -209,7 +209,7 @@ public class LeanplumActivityHelper {
     }
   }
 
-  private static void onResume(Activity activity) {
+  public static void onResume(Activity activity) {
     isActivityPaused = false;
     currentActivity = activity;
     if (LeanplumInternal.isPaused() || LeanplumInternal.hasStartedInBackground()) {
