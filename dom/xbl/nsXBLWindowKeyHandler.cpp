@@ -110,21 +110,6 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
                                       nullptr,
                                       true,
                                       getter_AddRefs(mHTMLBindings));
-
-  const nsAdoptingCString& userHTMLBindingStr =
-    Preferences::GetCString("dom.userHTMLBindings.uri");
-  if (!userHTMLBindingStr.IsEmpty()) {
-    NS_NewURI(getter_AddRefs(bindingURI), userHTMLBindingStr);
-    if (!bindingURI) {
-      return;
-    }
-
-    xblService->LoadBindingDocumentInfo(nullptr, nullptr,
-                                        bindingURI,
-                                        nullptr,
-                                        true,
-                                        getter_AddRefs(mUserHTMLBindings));
-  }
 }
 
 //
