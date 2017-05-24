@@ -31,7 +31,6 @@ UNIFIED_SOURCES += [
 
 if CONFIG['MOZ_WEBM_ENCODER']:
     UNIFIED_SOURCES += [
-        'TestAudioTrackEncoder.cpp',
         'TestVideoTrackEncoder.cpp',
         'TestWebMWriter.cpp',
     ]
