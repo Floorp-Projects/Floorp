@@ -230,10 +230,7 @@ add_task(async function test_filter_hidden() {
   _(`Framed link visit GUID: ${embedGUID}`);
 
   _("Run Places maintenance to mark redirect visit as hidden");
-  let maintenanceFinishedPromise =
-    promiseOneObserver("places-maintenance-finished");
-  PlacesDBUtils.maintenanceOnIdle();
-  await maintenanceFinishedPromise;
+  await PlacesDBUtils.maintenanceOnIdle();
 
   await verifyTrackedItems([trackedGUID]);
 

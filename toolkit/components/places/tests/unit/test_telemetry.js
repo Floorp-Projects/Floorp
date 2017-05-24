@@ -151,9 +151,7 @@ add_task(async function test_execute() {
   // Test idle probes.
   PlacesUtils.history.QueryInterface(Ci.nsIObserver)
                      .observe(null, "idle-daily", null);
-  PlacesDBUtils.maintenanceOnIdle();
-
-  await promiseTopicObserved("places-maintenance-finished");
+  await PlacesDBUtils.maintenanceOnIdle();
 
   for (let histogramId in histograms) {
     do_print("checking histogram " + histogramId);
