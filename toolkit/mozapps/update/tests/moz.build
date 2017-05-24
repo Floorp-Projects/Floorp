@@ -8,6 +8,9 @@ HAS_MISC_RULE = True
 
 FINAL_TARGET = '_tests/xpcshell/toolkit/mozapps/update/tests/data'
 
+if not CONFIG['MOZ_SUITE']:
+  BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
+
 MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
 
 XPCSHELL_TESTS_MANIFESTS += [
@@ -59,6 +62,13 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     USE_STATIC_LIBS = True
     if CONFIG['GNU_CC']:
         WIN32_EXE_LDFLAGS += ['-municode']
+
+TEST_HARNESS_FILES.testing.mochitest.browser.toolkit.mozapps.update.tests.browser += [
+    'chrome/update.sjs',
+    'data/shared.js',
+    'data/sharedUpdateXML.js',
+    'data/simple.mar',
+]
 
 TEST_HARNESS_FILES.testing.mochitest.chrome.toolkit.mozapps.update.tests.data += [
     'data/shared.js',

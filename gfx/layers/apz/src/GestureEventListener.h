@@ -105,7 +105,8 @@ private:
     // A user put down her finger again right after a single tap thus the
     // gesture can't be a single tap, but rather a double tap. But we're
     // still not sure about that until the user lifts her finger again.
-    // Allowed next states: GESTURE_MULTI_TOUCH_DOWN, GESTURE_NONE.
+    // Allowed next states: GESTURE_MULTI_TOUCH_DOWN, GESTURE_ONE_TOUCH_PINCH,
+    //                      GESTURE_NONE.
     GESTURE_SECOND_SINGLE_TOUCH_DOWN,
 
     // A long touch has happened, but the user still keeps her finger down.
@@ -122,7 +123,12 @@ private:
     // There are two or more fingers on the screen, and the user has already
     // pinched enough for us to start zooming the screen.
     // Allowed next states: GESTURE_NONE
-    GESTURE_PINCH
+    GESTURE_PINCH,
+
+    // The user has double tapped, but not lifted her finger, and moved her
+    // finger more than PINCH_START_THRESHOLD.
+    // Allowed next states: GESTURE_NONE.
+    GESTURE_ONE_TOUCH_PINCH
   };
 
   /**
@@ -140,6 +146,12 @@ private:
   void TriggerSingleTapConfirmedEvent();
 
   bool MoveDistanceIsLarge();
+
+  /**
+   * Returns current vertical span, counting from the where the user first put
+   * her finger down.
+   */
+  ParentLayerCoord GetYSpanFromStartPoint();
 
   /**
    * Do actual state transition and reset substates.

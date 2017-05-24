@@ -224,7 +224,7 @@ toolbar[customizing] > .overflow-button {
   display: none;
 }
 
-#nav-bar[nonemptyoverflow] > .overflow-button,
+window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-button,
 #nav-bar[customizing][photon-structure] > .overflow-button {
   display: -moz-box;
 }

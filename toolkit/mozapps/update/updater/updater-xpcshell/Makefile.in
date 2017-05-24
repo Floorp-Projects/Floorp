@@ -9,7 +9,7 @@ XPCSHELLTESTDIR = $(topobjdir)/_tests/xpcshell/toolkit/mozapps/update/tests
 MOCHITESTCHROMEDIR = $(topobjdir)/_tests/testing/mochitest/chrome/toolkit/mozapps/update/tests
 
 ifeq (,$(MOZ_SUITE)$(MOZ_THUNDERBIRD))
-MOCHITESTBROWSERDIR = $(topobjdir)/_tests/testing/mochitest/browser/browser/base/content/test/appUpdate
+MOCHITESTBROWSERDIR = $(topobjdir)/_tests/testing/mochitest/browser/toolkit/mozapps/update/tests/browser
 endif
 
 include $(topsrcdir)/config/rules.mk

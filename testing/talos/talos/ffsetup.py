@@ -7,12 +7,15 @@ Set up a browser environment before running a test.
 """
 
 import os
-import re
 import tempfile
 import mozfile
-from mozprocess import ProcessHandler
-from mozprofile.profile import Profile
+import mozinfo
+import mozrunner
 
+from mozprocess import ProcessHandlerMixin
+from mozprofile.profile import Profile
+from marionette_driver.marionette import Marionette
+from marionette_driver.addons import Addons
 from mozlog import get_proxy_logger
 
 from talos import utils
@@ -46,9 +49,6 @@ class FFSetup(object):
           pass
       # here the profile is removed
     """
-
-    PROFILE_REGEX = re.compile('__metrics(.*)__metrics',
-                               re.DOTALL | re.MULTILINE)
 
     def __init__(self, browser_config, test_config):
         self.browser_config, self.test_config = browser_config, test_config
@@ -108,34 +108,71 @@ class FFSetup(object):
         profile.addon_manager.install_addons(extensions)
 
     def _run_profile(self):
-        command_args = utils.GenerateBrowserCommandLine(
-            self.browser_config["browser_path"],
-            self.browser_config["extra_args"],
-            self.profile_dir,
-            self.browser_config["init_url"]
-        )
+        runner_cls = mozrunner.runners.get(
+            mozinfo.info.get(
+                'appname',
+                'firefox'),
+            mozrunner.Runner)
 
-        def browser_log(line):
-            LOG.process_output(browser.pid, line)
+        if self.test_config.get('webextensions', None):
+            args = [self.browser_config["extra_args"], "-marionette"]
+            runner = runner_cls(profile=self.profile_dir,
+                                binary=self.browser_config["browser_path"],
+                                cmdargs=args,
+                                process_class=ProcessHandlerMixin,
+                                process_args={})
 
-        browser = ProcessHandler(command_args, env=self.env,
-                                 processOutputLine=browser_log)
-        browser.run()
-        LOG.process_start(browser.pid, ' '.join(command_args))
+            runner.start(outputTimeout=30)
+            proc = runner.process_handler
+            LOG.process_start(proc.pid, "%s %s" % (self.browser_config["browser_path"],
+                                                   ' '.join(args)))
+
+            try:
+                client = Marionette(host='localhost', port=2828)
+                client.start_session()
+                addons = Addons(client)
+            except Exception, e:
+                print e
+                raise TalosError("Failed to initialize Talos profile with Marionette")
+
+            extensions = self.test_config.get('webextensions', None)
+            if isinstance(extensions, str):
+                extensions = [self.test_config.get('webextensions', None)]
+            for ext in extensions:
+                filename = utils.interpolate(ext)
+                if mozinfo.os == 'win':
+                    filename = filename.replace('/', '\\')
+
+                if not filename.endswith('.xpi'):
+                    continue
+                if not os.path.exists(filename):
+                    continue
+
+                addons.install(filename)
+
+            # browse to init_url which will close the browser
+            client.navigate(self.browser_config["init_url"])
+            client.close()
+        else:
+            args = [self.browser_config["extra_args"], self.browser_config["init_url"]]
+            runner = runner_cls(profile=self.profile_dir,
+                                binary=self.browser_config["browser_path"],
+                                cmdargs=args,
+                                process_class=ProcessHandlerMixin,
+                                process_args={})
+
+            runner.start(outputTimeout=30)
+            proc = runner.process_handler
+            LOG.process_start(proc.pid, "%s %s" % (self.browser_config["browser_path"],
+                                                   ' '.join(args)))
+
         try:
-            exit_code = browser.wait()
-        except KeyboardInterrupt:
-            browser.kill()
-            raise
+            exit_code = proc.wait()
+        except Exception, e:
+            proc.kill()
+            raise TalosError("Browser Failed to close properly during warmup")
 
-        LOG.process_exit(browser.pid, exit_code)
-        results_raw = '\n'.join(browser.output)
-
-        if not self.PROFILE_REGEX.search(results_raw):
-            LOG.info("Could not find %s in browser output"
-                     % self.PROFILE_REGEX.pattern)
-            LOG.info("Raw results:%s" % results_raw)
-            raise TalosError("browser failed to close after being initialized")
+        LOG.process_exit(proc.pid, exit_code)
 
     def _init_gecko_profile(self):
         upload_dir = os.getenv('MOZ_UPLOAD_DIR')
@@ -149,7 +186,12 @@ class FFSetup(object):
             self.gecko_profile.update_env(self.env)
 
     def clean(self):
-        mozfile.remove(self._tmp_dir)
+        try:
+            mozfile.remove(self._tmp_dir)
+        except Exception, e:
+            print "Exception while removing profile directory: %s" % self._tmp_dir
+            print e
+
         if self.gecko_profile:
             self.gecko_profile.clean()
 

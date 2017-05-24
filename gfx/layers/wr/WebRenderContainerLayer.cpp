@@ -90,6 +90,23 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     WrBridge()->AddWebRenderParentCommand(anim);
   }
 
+  // If APZ is enabled and this layer is a scroll thumb, then it might need
+  // to move in the compositor to represent the async scroll position. So we
+  // ensure that there is an animations id set on it, we will use this to give
+  // WebRender updated transforms for composition.
+  if (WrManager()->AsyncPanZoomEnabled() &&
+      GetScrollThumbData().mDirection != ScrollDirection::NONE) {
+    // A scroll thumb better not have a transform animation already or we're
+    // going to end up clobbering it with APZ animating it too.
+    MOZ_ASSERT(transformForSC);
+
+    EnsureAnimationsId();
+    animationsId = GetCompositorAnimationsId();
+    // We need to set the transform in the stacking context to null for it to
+    // pick up and install the animation id.
+    transformForSC = nullptr;
+  }
+
   ScrollingLayersHelper scroller(this, aBuilder, aSc);
   StackingContextHelper sc(aSc, aBuilder, this, animationsId, opacityForSC, transformForSC);
 

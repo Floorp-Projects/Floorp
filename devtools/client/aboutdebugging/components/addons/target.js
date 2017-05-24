@@ -8,7 +8,7 @@
 
 const { createClass, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
-const { debugAddon } = require("../../modules/addon");
+const { debugAddon, uninstallAddon } = require("../../modules/addon");
 const Services = require("Services");
 
 loader.lazyImporter(this, "BrowserToolboxProcess",
@@ -88,6 +88,11 @@ module.exports = createClass({
     debugAddon(target.addonID);
   },
 
+  uninstall() {
+    let { target } = this.props;
+    uninstallAddon(target.addonID);
+  },
+
   reload() {
     let { client, target } = this.props;
     // This function sometimes returns a partial promise that only
@@ -103,8 +108,6 @@ module.exports = createClass({
 
   render() {
     let { target, debugDisabled } = this.props;
-    // Only temporarily installed add-ons can be reloaded.
-    const canBeReloaded = target.temporarilyInstalled;
 
     return dom.li(
       { className: "addon-target-container", "data-addon-id": target.addonID },
@@ -127,13 +130,18 @@ module.exports = createClass({
           onClick: this.debug,
           disabled: debugDisabled,
         }, Strings.GetStringFromName("debug")),
-        dom.button({
-          className: "reload-button addon-target-button",
-          onClick: this.reload,
-          disabled: !canBeReloaded,
-          title: !canBeReloaded ?
-            Strings.GetStringFromName("reloadDisabledTooltip") : ""
-        }, Strings.GetStringFromName("reload"))
+        target.temporarilyInstalled
+          ? dom.button({
+            className: "reload-button addon-target-button",
+            onClick: this.reload,
+          }, Strings.GetStringFromName("reload"))
+          : null,
+        target.temporarilyInstalled
+          ? dom.button({
+            className: "uninstall-button addon-target-button",
+            onClick: this.uninstall,
+          }, Strings.GetStringFromName("remove"))
+          : null,
       ),
     );
   }

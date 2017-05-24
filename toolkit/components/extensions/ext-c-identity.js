@@ -1,6 +1,5 @@
 /* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim: set sts=2 sw=2 et tw=80: */
-/* global redirectDomain */
 "use strict";
 
 var {Constructor: CC} = Components;
@@ -13,8 +12,6 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "redirectDomain",
                                       "extensions.webextensions.identity.redirectDomain");
 
 let CryptoHash = CC("@mozilla.org/security/hash;1", "nsICryptoHash", "initWithString");
-
-/* globals URL, XMLHttpRequest */
 
 Cu.importGlobalProperties(["URL", "XMLHttpRequest", "TextEncoder"]);
 

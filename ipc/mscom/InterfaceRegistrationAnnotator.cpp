@@ -11,6 +11,7 @@
 #include "mozilla/NotNull.h"
 #include "nsExceptionHandler.h"
 #include "nsWindowsHelpers.h"
+#include "nsXULAppAPI.h"
 
 #include <oleauto.h>
 
@@ -354,7 +355,14 @@ AnnotateInterfaceRegistration(REFIID aIid)
 
   json.End();
 
-  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("InterfaceRegistrationInfo"),
+  nsAutoCString annotationKey;
+  annotationKey.AppendLiteral("InterfaceRegistrationInfo");
+  if (XRE_IsParentProcess()) {
+    annotationKey.AppendLiteral("Parent");
+  } else {
+    annotationKey.AppendLiteral("Child");
+  }
+  CrashReporter::AnnotateCrashReport(annotationKey,
                                      static_cast<CStringWriter*>(json.WriteFunc())->Get());
 }
 

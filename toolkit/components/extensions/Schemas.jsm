@@ -37,8 +37,6 @@ const {DEBUG} = AppConstants;
 
 const isParentProcess = Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
 
-/* globals Schemas, URL */
-
 function readJSON(url) {
   return new Promise((resolve, reject) => {
     NetUtil.asyncFetch({uri: url, loadUsingSystemPrincipal: true}, (inputStream, status) => {

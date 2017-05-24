@@ -7,12 +7,15 @@
 #include "MsaaIdGenerator.h"
 
 #include "mozilla/a11y/AccessibleWrap.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
 #include "nsDataHashtable.h"
 #include "nsIXULRuntime.h"
+#include "sdnAccessible.h"
 
 // These constants may be adjusted to modify the proportion of the Child ID
 // allocated to the content ID vs proportion allocated to the unique ID. They
@@ -95,22 +98,38 @@ MsaaIdGenerator::GetID()
   return detail::BuildMsaaID(id, ResolveContentProcessID());
 }
 
-void
-MsaaIdGenerator::ReleaseID(AccessibleWrap* aAccWrap)
+bool
+MsaaIdGenerator::ReleaseID(uint32_t aID)
 {
-  MOZ_ASSERT(aAccWrap);
-  uint32_t id = aAccWrap->GetExistingID();
-  MOZ_ASSERT(id != AccessibleWrap::kNoID);
-  detail::MsaaIDCracker cracked(id);
+  MOZ_ASSERT(aID != AccessibleWrap::kNoID);
+  detail::MsaaIDCracker cracked(aID);
   if (cracked.GetContentProcessId() != ResolveContentProcessID()) {
+    return false;
+  }
+  mIDSet.ReleaseID(cracked.GetUniqueId());
+  return true;
+}
+
+void
+MsaaIdGenerator::ReleaseID(NotNull<AccessibleWrap*> aAccWrap)
+{
+  if (!ReleaseID(aAccWrap->GetExistingID())) {
     // This may happen if chrome holds a proxy whose ID was originally generated
     // by a content process. Since ReleaseID only has meaning in the process
     // that originally generated that ID, we ignore ReleaseID calls for any ID
     // that did not come from the current process.
     MOZ_ASSERT(aAccWrap->IsProxy());
-    return;
   }
-  mIDSet.ReleaseID(cracked.GetUniqueId());
+}
+
+void
+MsaaIdGenerator::ReleaseID(NotNull<sdnAccessible*> aSdnAcc)
+{
+  Maybe<uint32_t> id = aSdnAcc->ReleaseUniqueID();
+  if (id.isSome()) {
+    DebugOnly<bool> released = ReleaseID(id.value());
+    MOZ_ASSERT(released);
+  }
 }
 
 bool

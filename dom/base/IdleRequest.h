@@ -13,7 +13,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsICancelableRunnable.h"
-#include "nsIIncrementalRunnable.h"
 #include "nsIRunnable.h"
 #include "nsString.h"
 
