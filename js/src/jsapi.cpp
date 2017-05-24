@@ -7097,21 +7097,21 @@ JS::DecodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer,
 }
 
 JS_PUBLIC_API(bool)
-JS::StartIncrementalEncoding(JSContext* cx, TranscodeBuffer& buffer, JS::HandleScript script)
+JS::StartIncrementalEncoding(JSContext* cx, JS::HandleScript script)
 {
     if (!script)
         return false;
-    if (!script->scriptSource()->xdrEncodeTopLevel(cx, buffer, script))
+    if (!script->scriptSource()->xdrEncodeTopLevel(cx, script))
         return false;
     return true;
 }
 
 JS_PUBLIC_API(bool)
-JS::FinishIncrementalEncoding(JSContext* cx, JS::HandleScript script)
+JS::FinishIncrementalEncoding(JSContext* cx, JS::HandleScript script, TranscodeBuffer& buffer)
 {
     if (!script)
         return false;
-    if (!script->scriptSource()->xdrFinalizeEncoder())
+    if (!script->scriptSource()->xdrFinalizeEncoder(buffer))
         return false;
     return true;
 }

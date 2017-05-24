@@ -2010,7 +2010,6 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
                 MOZ_ASSERT(aRequest->mBytecodeOffset ==
                            aRequest->mScriptBytecode.length());
                 rv = exec.JoinEncodeAndExec(&aRequest->mOffThreadToken,
-                                            aRequest->mScriptBytecode,
                                             &script);
                 // Queue the current script load request to later save the bytecode.
                 if (NS_SUCCEEDED(rv)) {
@@ -2140,7 +2139,7 @@ ScriptLoader::EncodeRequestBytecode(JSContext* aCx, ScriptLoadRequest* aRequest)
   });
 
   JS::RootedScript script(aCx, aRequest->mScript);
-  if (!JS::FinishIncrementalEncoding(aCx, script)) {
+  if (!JS::FinishIncrementalEncoding(aCx, script, aRequest->mScriptBytecode)) {
     LOG(("ScriptLoadRequest (%p): Cannot serialize bytecode",
          aRequest));
     return;
@@ -2188,7 +2187,8 @@ ScriptLoader::GiveUpBytecodeEncoding()
 {
   // Ideally we prefer to properly end the incremental encoder, such that we
   // would not keep a large buffer around.  If we cannot, we fallback on the
-  // removal of all request from the current list.
+  // removal of all request from the current list and these large buffers would
+  // be removed at the same time as the source object.
   nsCOMPtr<nsIScriptGlobalObject> globalObject = GetScriptGlobalObject();
   if (globalObject) {
     nsCOMPtr<nsIScriptContext> context = globalObject->GetScriptContext();
@@ -2200,7 +2200,8 @@ ScriptLoader::GiveUpBytecodeEncoding()
         LOG(("ScriptLoadRequest (%p): Cannot serialize bytecode", request.get()));
         TRACE_FOR_TEST_NONE(request->mElement, "scriptloader_bytecode_failed");
         script.set(request->mScript);
-        Unused << JS::FinishIncrementalEncoding(aes.cx(), script);
+        Unused << JS::FinishIncrementalEncoding(aes.cx(), script,
+                                                request->mScriptBytecode);
         request->mScriptBytecode.clearAndFree();
         request->DropBytecodeCacheReferences();
       }
@@ -2212,11 +2213,8 @@ ScriptLoader::GiveUpBytecodeEncoding()
     RefPtr<ScriptLoadRequest> request = mBytecodeEncodingQueue.StealFirst();
     LOG(("ScriptLoadRequest (%p): Cannot serialize bytecode", request.get()));
     TRACE_FOR_TEST_NONE(request->mElement, "scriptloader_bytecode_failed");
-    // Note: Do not clear the mScriptBytecode buffer, because the incremental
-    // encoder owned by the ScriptSource object still has a reference to this
-    // buffer. This reference would be removed as soon as the ScriptSource
-    // object would be GC.
-    request->mCacheInfo = nullptr;
+    request->mScriptBytecode.clearAndFree();
+    request->DropBytecodeCacheReferences();
   }
 }
 
