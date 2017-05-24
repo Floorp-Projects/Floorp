@@ -203,9 +203,6 @@ module.exports = {
     // Allow division operators explicitly at beginning of regular expression.
     "no-div-regex": "off",
 
-    // Disallow use of eval(). We have other APIs to evaluate code in content.
-    "no-eval": "error",
-
     // Disallow adding to native types
     "no-extend-native": "error",
 
@@ -329,9 +326,6 @@ module.exports = {
 
     // Disallow Yoda conditions (where literal value comes first).
     "yoda": "error",
-
-    // disallow use of eval()-like methods
-    "no-implied-eval": "error",
 
     // Disallow function or variable declarations in nested blocks
     "no-inner-declarations": "error",
