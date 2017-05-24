@@ -7478,7 +7478,12 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       nsPoint eventPoint;
       uint32_t flags = 0;
       if (aEvent->mMessage == eTouchStart) {
-        flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
+        if (gfxPrefs::APZAllowZooming()) {
+          // Setting this flag will skip the scrollbars on the root frame from
+          // participating in hit-testing, and we only want that to happen on
+          // zoomable platforms (for now).
+          flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
+        }
         WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
         // if this is a continuing session, ensure that all these events are
         // in the same document by taking the target of the events already in
