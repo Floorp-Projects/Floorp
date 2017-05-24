@@ -132,6 +132,9 @@ async function alterSetting(extension, type, key, action) {
 
   let keyInfo = store.data[type][key];
   if (!keyInfo) {
+    if (action === "remove") {
+      return null;
+    }
     throw new Error(
       `Cannot alter the setting for ${type}:${key} as it does not exist.`);
   }
@@ -140,6 +143,9 @@ async function alterSetting(extension, type, key, action) {
   let foundIndex = keyInfo.precedenceList.findIndex(item => item.id == id);
 
   if (foundIndex === -1) {
+    if (action === "remove") {
+      return null;
+    }
     throw new Error(
       `Cannot alter the setting for ${type}:${key} as it does not exist.`);
   }
