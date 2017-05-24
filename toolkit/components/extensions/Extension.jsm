@@ -62,8 +62,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Locale",
                                   "resource://gre/modules/Locale.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Log",
                                   "resource://gre/modules/Log.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MatchGlobs",
-                                  "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
@@ -860,7 +858,7 @@ this.Extension = class extends ExtensionData {
       resourceURL: this.addonData.resourceURI.spec,
       baseURL: this.baseURI.spec,
       content_scripts: this.manifest.content_scripts || [],  // eslint-disable-line camelcase
-      webAccessibleResources: this.webAccessibleResources.serialize(),
+      webAccessibleResources: this.webAccessibleResources.map(res => res.glob),
       whiteListedHosts: this.whiteListedHosts.serialize(),
       localeData: this.localeData.serialize(),
       permissions: this.permissions,
@@ -904,13 +902,12 @@ this.Extension = class extends ExtensionData {
   }
 
   runManifest(manifest) {
-    // Strip leading slashes from web_accessible_resources.
-    let strippedWebAccessibleResources = [];
+    let resources = [];
     if (manifest.web_accessible_resources) {
-      strippedWebAccessibleResources = manifest.web_accessible_resources.map(path => path.replace(/^\/+/, ""));
+      resources = manifest.web_accessible_resources.map(path => path.replace(/^\/*/, "/"));
     }
 
-    this.webAccessibleResources = new MatchGlobs(strippedWebAccessibleResources);
+    this.webAccessibleResources = resources.map(res => new MatchGlob(res));
 
     let promises = [];
     for (let directive in manifest) {
