@@ -156,13 +156,18 @@ if CONFIG['ENABLE_MARIONETTE']:
 
     # Disable building of geckodriver for artifact builds and in
     # environments where cross compiling occurs (macOS and Android),
-    # and on hazard builds.
+    # on hazard builds, and on Linux x86 (linking problems).
     #
     # https://bugzilla.mozilla.org/show_bug.cgi?id=1341041
     # https://bugzilla.mozilla.org/show_bug.cgi?id=1329737
-    if CONFIG['COMPILE_ENVIRONMENT'] and \
-            not CONFIG['CROSS_COMPILE'] and \
-            not CONFIG['MOZ_HAZARD']:
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=1367519
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=1367736
+    if (not CONFIG['COMPILE_ENVIRONMENT'] or
+            CONFIG['CROSS_COMPILE'] or
+            (CONFIG['OS_TARGET'] == 'Linux' and CONFIG['TARGET_CPU'] == 'i686') or
+            CONFIG['MOZ_HAZARD']):
+        pass
+    else:
         DIRS += ['/testing/geckodriver']
 
 DIRS += [
