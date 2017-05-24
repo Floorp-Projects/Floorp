@@ -1,0 +1,31 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "browserSettings"
+          ]
+        }]
+      }
+    ]
+  },
+  {
+    "namespace": "browserSettings",
+    "description": "Use the <code>browser.browserSettings</code> API to control global settings of the browser.",
+    "permissions": ["browserSettings"],
+    "properties": {
+      "cacheEnabled": {
+        "$ref": "types.Setting",
+        "description": "Enables or disables the browser cache."
+      }
+    }
+  }
+]
