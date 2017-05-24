@@ -54,6 +54,10 @@ var gMainPane = {
     });
     this.updatePerformanceSettingsBox();
 
+    let performanceSettingsLink = document.getElementById("performanceSettingsLearnMore");
+    let performanceSettingsUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "performance";
+    performanceSettingsLink.setAttribute("href", performanceSettingsUrl);
+
     // set up the "use current page" label-changing listener
     this._updateUseCurrentButton();
     window.addEventListener("focus", this._updateUseCurrentButton.bind(this));
