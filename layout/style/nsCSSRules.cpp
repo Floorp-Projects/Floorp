@@ -2222,8 +2222,8 @@ CSSSupportsRule::UseForPresentation(nsPresContext* aPresContext,
   return mUseGroup;
 }
 
-NS_IMPL_ADDREF_INHERITED(CSSSupportsRule, css::ConditionRule)
-NS_IMPL_RELEASE_INHERITED(CSSSupportsRule, css::ConditionRule)
+NS_IMPL_ADDREF_INHERITED(mozilla::CSSSupportsRule, dom::CSSSupportsRule)
+NS_IMPL_RELEASE_INHERITED(mozilla::CSSSupportsRule, dom::CSSSupportsRule)
 
 // QueryInterface implementation for CSSSupportsRule
 NS_INTERFACE_MAP_BEGIN(CSSSupportsRule)
