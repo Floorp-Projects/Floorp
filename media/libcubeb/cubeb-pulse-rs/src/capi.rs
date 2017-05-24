@@ -76,7 +76,7 @@ unsafe extern "C" fn capi_get_preferred_channel_layout(c: *mut cubeb::Context,
 
 unsafe extern "C" fn capi_enumerate_devices(c: *mut cubeb::Context,
                                             devtype: cubeb::DeviceType,
-                                            collection: *mut *mut cubeb::DeviceCollection)
+                                            collection: *mut cubeb::DeviceCollection)
                                             -> i32 {
     let ctx = &*(c as *mut backend::Context);
 
@@ -87,6 +87,15 @@ unsafe extern "C" fn capi_enumerate_devices(c: *mut cubeb::Context,
         },
         Err(e) => e,
     }
+}
+
+unsafe extern "C" fn capi_device_collection_destroy(c: *mut cubeb::Context,
+                                                    collection: *mut cubeb::DeviceCollection)
+                                                    -> i32 {
+    let ctx = &*(c as *mut backend::Context);
+
+    ctx.device_collection_destroy(collection);
+    cubeb::OK
 }
 
 unsafe extern "C" fn capi_destroy(c: *mut cubeb::Context) {
@@ -219,6 +228,7 @@ pub const PULSE_OPS: cubeb::Ops = cubeb::Ops {
     get_preferred_sample_rate: Some(capi_get_preferred_sample_rate),
     get_preferred_channel_layout: Some(capi_get_preferred_channel_layout),
     enumerate_devices: Some(capi_enumerate_devices),
+    device_collection_destroy: Some(capi_device_collection_destroy),
     destroy: Some(capi_destroy),
     stream_init: Some(capi_stream_init),
     stream_destroy: Some(capi_stream_destroy),
