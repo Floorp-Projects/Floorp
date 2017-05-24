@@ -470,20 +470,25 @@ class Build(MachCommandBase):
             # inline output from the compiler itself. However, unlike inline
             # output, this list is sorted and grouped by file, making it
             # easier to triage output.
-            for warning in sorted(monitor.instance_warnings):
-                path = mozpath.normsep(warning['filename'])
-                if path.startswith(self.topsrcdir):
-                    path = path[len(self.topsrcdir) + 1:]
+            #
+            # Only do this if we had a successful build. If the build failed,
+            # there are more important things in the log to look for than
+            # whatever code we warned about.
+            if not status:
+                for warning in sorted(monitor.instance_warnings):
+                    path = mozpath.normsep(warning['filename'])
+                    if path.startswith(self.topsrcdir):
+                        path = path[len(self.topsrcdir) + 1:]
 
-                warning['normpath'] = path
+                    warning['normpath'] = path
 
-                if warning['column'] is not None:
-                    self.log(logging.WARNING, 'compiler_warning', warning,
-                             'warning: {normpath}:{line}:{column} [{flag}] '
-                             '{message}')
-                else:
-                    self.log(logging.WARNING, 'compiler_warning', warning,
-                             'warning: {normpath}:{line} [{flag}] {message}')
+                    if warning['column'] is not None:
+                        self.log(logging.WARNING, 'compiler_warning', warning,
+                                 'warning: {normpath}:{line}:{column} [{flag}] '
+                                 '{message}')
+                    else:
+                        self.log(logging.WARNING, 'compiler_warning', warning,
+                                 'warning: {normpath}:{line} [{flag}] {message}')
 
             monitor.finish(record_usage=status==0)
 
