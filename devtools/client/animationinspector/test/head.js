@@ -495,3 +495,98 @@ function* setStyle(animation, panel, name, value, selector) {
   // And wait for animation timeline rendering.
   yield waitForAnimationTimelineRendering(panel);
 }
+
+/**
+ * Graph shapes of summary and detail are constructed by <path> element.
+ * This function checks the vertex of path segments.
+ * Also, if needed, checks the color for <stop> element.
+ * @param pathEl - <path> element.
+ * @param duration - float as duration which pathEl represetns.
+ * @param hasClosePath - set true if the path shoud be closing.
+ * @param expectedValues - JSON object format. We can test the vertex and color.
+ *                         e.g.
+ *                         [
+ *                           // Test the vertex (x=0, y=0) should be passing through.
+ *                           { x: 0, y: 0 },
+ *                           { x: 0, y: 1 },
+ *                           // If we have to test the color as well,
+ *                           // we can write as following.
+ *                           { x: 500, y: 1, color: "rgb(0, 0, 255)" },
+ *                           { x: 1000, y: 1 }
+ *                         ]
+ */
+function assertPathSegments(pathEl, duration, hasClosePath, expectedValues) {
+  const pathSegList = pathEl.pathSegList;
+  ok(pathSegList, "The tested element should have pathSegList");
+
+  expectedValues.forEach(expectedValue => {
+    ok(isPassingThrough(pathSegList, expectedValue.x, expectedValue.y),
+       `The path segment of x ${ expectedValue.x }, y ${ expectedValue.y } `
+       + `should be passing through`);
+
+    if (expectedValue.color) {
+      assertColor(pathEl.closest("svg"), expectedValue.x / duration, expectedValue.color);
+    }
+  });
+
+  if (hasClosePath) {
+    const closePathSeg = pathSegList.getItem(pathSegList.numberOfItems - 1);
+    is(closePathSeg.pathSegType, closePathSeg.PATHSEG_CLOSEPATH,
+       "The last segment should be close path");
+  }
+}
+
+/**
+ * Check the color for <stop> element.
+ * @param svgEl - <svg> element which has <stop> element.
+ * @param offset - float which represents the "offset" attribute of <stop>.
+ * @param expectedColor - e.g. rgb(0, 0, 255)
+ */
+function assertColor(svgEl, offset, expectedColor) {
+  const stopEl = findStopElement(svgEl, offset);
+  ok(stopEl, `stop element at offset ${ offset } should exist`);
+  is(stopEl.getAttribute("stop-color"), expectedColor,
+     `stop-color of stop element at offset ${ offset } should be ${ expectedColor }`);
+}
+
+/**
+ * Check whether the given vertex is passing throug on the path.
+ * @param pathSegList - pathSegList of <path> element.
+ * @param x - float x of vertex.
+ * @param y - float y of vertex.
+ * @return true: passing through, false: no on the path.
+ */
+function isPassingThrough(pathSegList, x, y) {
+  let previousPathSeg = pathSegList.getItem(0);
+  for (let i = 0; i < pathSegList.numberOfItems; i++) {
+    const pathSeg = pathSegList.getItem(i);
+    if (pathSeg.x === undefined) {
+      continue;
+    }
+    const currentX = parseFloat(pathSeg.x.toFixed(3));
+    const currentY = parseFloat(pathSeg.y.toFixed(6));
+    if (currentX === x && currentY === y) {
+      return true;
+    }
+    const previousX = parseFloat(previousPathSeg.x.toFixed(3));
+    const previousY = parseFloat(previousPathSeg.y.toFixed(6));
+    if (previousX <= x && x <= currentX &&
+        Math.min(previousY, currentY) <= y && y <= Math.max(previousY, currentY)) {
+      return true;
+    }
+    previousPathSeg = pathSeg;
+  }
+  return false;
+}
+
+/**
+ * Find <stop> element which has given offset from given <svg> element.
+ * @param svgEl - <svg> element which has <stop> element.
+ * @param offset - float which represents the "offset" attribute of <stop>.
+ * @return <stop> element.
+ */
+function findStopElement(svgEl, offset) {
+  return [...svgEl.querySelectorAll("stop")].find(stopEl => {
+    return stopEl.getAttribute("offset") == offset;
+  });
+}
