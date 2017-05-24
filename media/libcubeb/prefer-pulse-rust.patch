@@ -1,0 +1,14 @@
+diff --git a/media/libcubeb/src/cubeb.c b/media/libcubeb/src/cubeb.c
+index 1db59240e335..241f3cfed041 100644
+--- a/media/libcubeb/src/cubeb.c
++++ b/media/libcubeb/src/cubeb.c
+@@ -166,6 +166,9 @@ cubeb_init(cubeb ** context, char const * context_name, char const * backend_nam
+      * to override all other choices
+      */
+     init_oneshot,
++#if defined(USE_PULSE_RUST)
++    pulse_rust_init,
++#endif
+ #if defined(USE_PULSE)
+     pulse_init,
+ #endif
