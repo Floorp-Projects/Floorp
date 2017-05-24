@@ -1,23 +1,17 @@
 "use strict";
 
 module.exports = {
+  extends: [
+    "plugin:mozilla/browser-test"
+  ],
+
+  plugins: [
+    "mozilla"
+  ],
+
   globals: {
-    BrowserTestUtils: false,
-    is: false,
-    isnot: false,
-    ok: false,
-    SpecialPowers: false,
-    SimpleTest: false,
-    registerCleanupFunction: false,
-    window: false,
-    sinon: false,
-    Cu: false,
-    Ci: false,
-    Cc: false,
-    UUID_REGEX: false,
-    withSandboxManager: false,
-    withDriver: false,
-    withMockNormandyApi: false,
-    withMockPreferences: false,
-  },
+    // Bug 1366720 - SimpleTest isn't being exported correctly, so list
+    // it here for now.
+    "SimpleTest": false
+  }
 };
