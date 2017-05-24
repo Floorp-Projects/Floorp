@@ -90,6 +90,12 @@ this.TestRunner = {
     Services.prefs.setIntPref("ui.caretBlinkTime", -1);
 
     let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+
+    // When being automated through Marionette, Firefox shows a prominent indication
+    // in the urlbar and identity block. We don't want this to show when testing browser UI.
+    // Note that this doesn't prevent subsequently opened windows from showing the automation UI.
+    browserWindow.document.getElementById("main-window").removeAttribute("remotecontrol");
+
     let selectedBrowser = browserWindow.gBrowser.selectedBrowser;
     await BrowserTestUtils.loadURI(selectedBrowser, HOME_PAGE);
     await BrowserTestUtils.browserLoaded(selectedBrowser);
