@@ -90,6 +90,14 @@ extensions.registerModules({
     scopes: ["addon_parent"],
     manifest: ["background"],
   },
+  browserSettings: {
+    url: "chrome://extensions/content/ext-browserSettings.js",
+    schema: "chrome://extensions/content/schemas/browser_settings.json",
+    scopes: ["addon_parent"],
+    paths: [
+      ["browserSettings"],
+    ],
+  },
   contextualIdentities: {
     url: "chrome://extensions/content/ext-contextualIdentities.js",
     schema: "chrome://extensions/content/schemas/contextual_identities.json",
