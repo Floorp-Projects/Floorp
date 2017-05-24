@@ -53,10 +53,6 @@
   <string name="content_description_stop">Διακοπή φόρτωσης ιστοσελίδας</string>
   <string name="content_description_customtab_exit">Επιστροφή στην προηγούμενη εφαρμογή</string>
   <string name="context_menu_paste_go">Επικόλληση &amp; μετάβαση</string>
-  <string name="firstrun_title">Περιηγηθείτε σαν να μην σάς παρακολουθεί κανείς.</string>
-  <string name="firstrun_description">Αποκλείστε αυτόματα τα διαδικτυακά trackers όσο περιηγείστε. Έπειτα, πατήστε για διαγραφή του ιστορικού, των αναζητήσεων, των cookies και των κωδικών πρόσβασης από τη συσκευή σας.</string>
-  <string name="firstrun_button">OK, το \'πιασα!</string>
-  <string name="firstrun_footer">Για να είμαστε ξεκάθαροι, οι ιστοσελίδες και οι υπηρεσίες που χρησιμοποιείτε μπορούν ακόμη να γνωρίζουν που έχετε βρεθεί.</string>
   <string name="your_rights">Τα δικαιώματά σας</string>
   <string name="external_app_prompt_title">Άνοιγμα συνδέσμου σε άλλη εφαρμογή</string>
   <string name="external_app_prompt">Μπορείτε να φύγετε από το %1$s για να ανοίξετε αυτό το σύνδεσμο στο %2$s.</string>

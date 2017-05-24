@@ -53,10 +53,6 @@
   <string name="content_description_stop">Webhely betöltésének leállítása</string>
   <string name="content_description_customtab_exit">Vissza az előző apphoz</string>
   <string name="context_menu_paste_go">Beillesztés és ugrás</string>
-  <string name="firstrun_title">Böngésszen úgy, mintha senki sem figyelné.</string>
-  <string name="firstrun_description">Automatikusan blokkolja az online követőket böngészés közben. Aztán érintse meg a gombot a meglátogatott oldalak, keresések, sütik és jelszavak törléséhez az eszközéről.</string>
-  <string name="firstrun_button">Rendben, értem!</string>
-  <string name="firstrun_footer">Hogy egyértelmű legyen, a webhelyek és szolgáltatások még mindig tudhatják, hogy hol járt.</string>
   <string name="your_rights">Az Ön jogai</string>
   <string name="external_app_prompt_title">Hivatkozás megnyitása egy másik appban</string>
   <string name="external_app_prompt">Elhagyhatja a %1$st, hogy itt nyissa meg ezt a hivatkozást: %2$s.</string>

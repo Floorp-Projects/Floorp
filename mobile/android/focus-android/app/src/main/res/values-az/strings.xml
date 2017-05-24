@@ -53,10 +53,6 @@
   <string name="content_description_stop">Səhifəni yükləməyi dayandır</string>
   <string name="content_description_customtab_exit">Əvvəlki tətbiqə qayıt</string>
   <string name="context_menu_paste_go">Yapışdır və get</string>
-  <string name="firstrun_title">Başqalarınız izləməsindən narahat olmadan internetdə gəzin.</string>
-  <string name="firstrun_description">İnternetdə gəzərkən avtomatik olaraq onlayn izləyiciləri əngəlləyin. Sonra ziyarət edilən səhifələri, axtar, çərəz və parolları cihazınızdan pozmaq üçün basın.</string>
-  <string name="firstrun_button">Tamam, başa düşdüm!</string>
-  <string name="firstrun_footer">Düzünü desək, saytlar və xidmətlər yenə də harada olduğunuzu öyrənə bilərlər.</string>
   <string name="your_rights">Hüquqlarınız</string>
   <string name="external_app_prompt_title">Keçidi başqa tətbiqdə aç</string>
   <string name="external_app_prompt">%1$s səyyahını tərk edərək keçidi %2$s üzərində aça bilərsiz.</string>

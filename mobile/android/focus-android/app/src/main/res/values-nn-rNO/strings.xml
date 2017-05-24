@@ -53,10 +53,6 @@
   <string name="content_description_stop">Stopp lasting av nettside</string>
   <string name="content_description_customtab_exit">Gå tilbake til førre app</string>
   <string name="context_menu_paste_go">Lim inn og gå</string>
-  <string name="firstrun_title">Surf utan å kjenne deg overvaka.</string>
-  <string name="firstrun_description">Automatisk blokkering av nettsporarar medan du surfar. Deretter trykkjer du for å slette besøkte sider, søk, informasjonskapslar og passord frå eininga.</string>
-  <string name="firstrun_button">OK, eg forstår det!</string>
-  <string name="firstrun_footer">For å vere tydeleg, kan nettstadar og tenester du brukar, framleis vite kvar du har vore.</string>
   <string name="your_rights">Dine rettar</string>
   <string name="external_app_prompt_title">Opne lenke i ein annan app</string>
   <string name="external_app_prompt">Du kan gå ut av %1$s for å opne denne lenka i %2$s.</string>

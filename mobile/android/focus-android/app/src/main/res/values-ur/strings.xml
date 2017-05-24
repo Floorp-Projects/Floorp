@@ -44,10 +44,6 @@
   <string name="content_description_back">پیچھے کی طرف جائے</string>
   <string name="content_description_stop">ویبسائَٹ لوڈ کرنا بند کریں</string>
   <string name="context_menu_paste_go">چسپاں کریں اور چلیں</string>
-  <string name="firstrun_title">اس طرح براؤز کریں جیسے کوئی نہیں دیکھ رہا۔</string>
-  <string name="firstrun_description">براوز کرنے وقت آنلائن ٹریکر کو خودکار طور پر بلاک کریں۔ پھر دورہ شدہ صفحات، تلاش، کوکیاں اور پاسورڈ کو تھپتھپا کر اپنے آلہ سے مٹائیں۔</string>
-  <string name="firstrun_button">ٹھیک ہے مجھے سمجھ آگئی ہے!\n</string>
-  <string name="firstrun_footer">واضح رہے، سائٹس اور خدمات جو آپ استعمال کرتے رہے اب بھی جان سکتے ہیں کہ آپ کہاں جا چکے ہیں۔</string>
   <string name="your_rights">آپ کے حقوق</string>
   <string name="external_app_prompt_title">کسی دوسری اپلیکیشن میں ربط کھولیں</string>
   <string name="external_app_prompt">اس ربط کو %2$s میں کھولنے کے لیےآپ %1$s چھوڑ سکتے ہیں۔</string>

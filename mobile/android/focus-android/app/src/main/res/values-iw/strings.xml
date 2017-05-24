@@ -53,10 +53,6 @@
   <string name="content_description_stop">עצירת טעינת האתר</string>
   <string name="content_description_customtab_exit">חזרה ליישום קודם</string>
   <string name="context_menu_paste_go">להדביק ולהמשיך</string>
-  <string name="firstrun_title">גלישה כאילו אף־אחד אינו צופה בך.</string>
-  <string name="firstrun_description">חסימה אוטומטית של מעקב מקוון לאורך הגלישה. מחיקה בלחיצה של האתרים שביקרת בהם, חיפושים, עוגיות וססמאות מההתקן שברשותך.</string>
-  <string name="firstrun_button">קיבלתי!</string>
-  <string name="firstrun_footer">לידיעתך, אתרים ושירותים בהם נעשה שימוש יוכלו עדיין לדעת מתי ביקרת בהם.</string>
   <string name="your_rights">הזכויות שלך</string>
   <string name="external_app_prompt_title">פתיחת קישור ביישומון אחר</string>
   <string name="external_app_prompt">ניתן לעזוב את %1$s כדי לפתוח את הקישור הזה בעזרת %2$s.</string>

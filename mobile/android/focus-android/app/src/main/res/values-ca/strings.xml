@@ -53,10 +53,6 @@
   <string name="content_description_stop">Atura la càrrega del lloc web</string>
   <string name="content_description_customtab_exit">Torna a l\'aplicació anterior</string>
   <string name="context_menu_paste_go">Enganxa i vés-hi</string>
-  <string name="firstrun_title">Navegueu sense sentir-vos observat.</string>
-  <string name="firstrun_description">Bloqueu automàticament els elements que us fan el seguiment mentre navegueu. Esborreu amb un sol toc les pàgines visitades, cerques, galetes i contrasenyes del dispositiu.</string>
-  <string name="firstrun_button">Entesos</string>
-  <string name="firstrun_footer">Tingueu en compte que els serveis i els llocs web que utilitzeu poden saber igualment on heu estat.</string>
   <string name="your_rights">Els vostres drets</string>
   <string name="external_app_prompt_title">Obre l\'enllaç en una altra aplicació</string>
   <string name="external_app_prompt">Podeu sortir del %1$s per obrir aquest enllaç amb el %2$s.</string>

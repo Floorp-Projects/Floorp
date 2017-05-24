@@ -15,7 +15,7 @@ import android.view.ViewGroup;
 import org.mozilla.focus.R;
 
 public class FirstrunPagerAdapter extends PagerAdapter {
-    private static int[] PAGE_LAYOUTS = {
+    private static final int[] PAGE_LAYOUTS = {
             R.layout.item_firstrun_page1,
             R.layout.item_firstrun_page2,
             R.layout.item_firstrun_page3,

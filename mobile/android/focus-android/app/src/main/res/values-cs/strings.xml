@@ -53,10 +53,6 @@
   <string name="content_description_stop">Zastavit načítání stránky</string>
   <string name="content_description_customtab_exit">Návrat do předchozí aplikace</string>
   <string name="context_menu_paste_go">Vložit a přejít</string>
-  <string name="firstrun_title">Prohlížejte web, jako když se nikdo nedívá.</string>
-  <string name="firstrun_description">Automaticky blokuje sledovací prvky, zatímco prohlížíte. Poté stačí klepnout pro vymazání zobrazených stránek, vyhledávání, cookies a hesel z vašeho zařízení.</string>
-  <string name="firstrun_button">Ok, rozumím!</string>
-  <string name="firstrun_footer">Připomínáme, že služby a stránky, které využíváte, mohou sledovat vaši činnost.</string>
   <string name="your_rights">Vaše práva</string>
   <string name="external_app_prompt_title">Otevřít odkaz v jiné aplikaci</string>
   <string name="external_app_prompt">Můžete opustit aplikaci %1$s a otevřít tento odkaz v aplikaci %2$s.</string>

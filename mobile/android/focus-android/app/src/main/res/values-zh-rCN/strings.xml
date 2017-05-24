@@ -53,10 +53,6 @@
   <string name="content_description_stop">停止加载</string>
   <string name="content_description_customtab_exit">返回之前的应用</string>
   <string name="context_menu_paste_go">粘贴并转到</string>
-  <string name="firstrun_title">悄然浏览。</string>
-  <string name="firstrun_description">在您浏览时自动屏蔽在线跟踪器。一按即可清除您的设备上的访问记录、搜索记录、Cookie 以及保存的密码。</string>
-  <string name="firstrun_button">了解了！</string>
-  <string name="firstrun_footer">请您了解，您使用的网站和服务仍然可获知您造访的内容。</string>
   <string name="your_rights">您的权利</string>
   <string name="external_app_prompt_title">在另一个应用中打开链接</string>
   <string name="external_app_prompt">您可以离开 %1$s 以在 %2$s 中打开此链接。</string>

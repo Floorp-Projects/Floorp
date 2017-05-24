@@ -53,10 +53,6 @@
   <string name="content_description_stop">停止載入網站</string>
   <string name="content_description_customtab_exit">回到先前的應用程式</string>
   <string name="context_menu_paste_go">貼上並瀏覽</string>
-  <string name="firstrun_title">讓上網時不被偷看。</string>
-  <string name="firstrun_description">自動在您上網時封鎖線上追蹤器；只要一點即可清除裝置中造訪過的頁面、搜尋、Cookie、密碼等紀錄。</string>
-  <string name="firstrun_button">好，知道了！</string>
-  <string name="firstrun_footer">要特別說明的是，您開啟的網站或服務本身還是會知道您曾經來過。</string>
   <string name="your_rights">您的權利</string>
   <string name="external_app_prompt_title">用其他應用程式開啟鏈結</string>
   <string name="external_app_prompt">您可離開 %1$s，到 %2$s 安裝一套應用程式開啟此鏈結。</string>

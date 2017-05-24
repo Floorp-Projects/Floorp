@@ -53,10 +53,6 @@
   <string name="content_description_stop">Вебсайтты жүктеуді тоқтату</string>
   <string name="content_description_customtab_exit">Алдыңғы қолданбаға оралу</string>
   <string name="context_menu_paste_go">Кірістіру және өту</string>
-  <string name="firstrun_title">Бақылаудан қорықпай-ақ интернетті шолыңыз.</string>
-  <string name="firstrun_description">Интернетті шолу кезінде онлайн трекерлерді автоматты түрде блоктаңыз. Одан кейін құрылғыңыздан қаралған парақтар, іздеулер, cookies және парольдерді өшіру үшін батырманы басыңыз.</string>
-  <string name="firstrun_button">Жақсы, түсіндім!</string>
-  <string name="firstrun_footer">Нақты айтсақ, сайттар және қызметтер сіз қайда болғаныңызды біле алады.</string>
   <string name="your_rights">Құқықтарыңыз</string>
   <string name="external_app_prompt_title">Сілтемені басқа қолданбада ашу</string>
   <string name="external_app_prompt">Бұл сілтемені %2$s ішінде ашу үшін, сіз %1$s ішінен шыға аласыз.</string>

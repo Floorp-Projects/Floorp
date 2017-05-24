@@ -44,10 +44,6 @@
   <string name="content_description_back">ນຳທາງຍ້ອນກັບ</string>
   <string name="content_description_stop">ຢຸດການໂຫລດເວັບໄຊທ໌</string>
   <string name="context_menu_paste_go">ວາງ &amp; ໄປ</string>
-  <string name="firstrun_title">ທ່ອງເວັບແບບບໍ່ມີໃຜມາຫລັກເຝົ້າຕິດຕາມ.</string>
-  <string name="firstrun_description">ມັນຈະບັອກຕົວຕິດຕາມອອນໄລນ໌ແບບອັດຕະໂນມັດໃນຂະນະທີ່ທ່ານກຳລັງທ່ອງເວັບຢູ່. ຫລັງຈາກນັ້ນໃຫ້ແຕະເພື່ອລົບລ້າງຫນ້າເວັບທີ່ທ່ານໄດ້ເຂົ້າໄປເບິງ, ການຄົ້ນຫາ, ຄຸກກີ້ ແລະ ລະຫັດຜ່ານອອກຈາກອຸປະກອນຂອງທ່ານ.</string>
-  <string name="firstrun_button">ຕົກລົງ, ເຂົ້າໃຈແລ້ວ!</string>
-  <string name="firstrun_footer">ເພື່ອເຮັດໃຫ້ຊັດເຈນ, ບາງເວັບໄຊທ໌ ແລະ ບໍລິການທີ່ທ່ານໃຊ້ຍັງຄົງເຮັດໃຫ້ທ່ານສາມາດຮັບຮູ້ໄດ້ວ່າທ່ານໄດ້ໄປຢູ່ໃສ່ມາ.</string>
   <string name="your_rights">ສິດທິຂອງທ່ານ</string>
   <string name="external_app_prompt_title">ເປີດລີ້ງນີ້ໃນແອັບອື່ນ</string>
   <string name="external_app_prompt">ທ່ານສາມາດອອກຈາກ %1$s ເພື່ອເປີດລີ້ງນີ້ໃນ %2$s.</string>

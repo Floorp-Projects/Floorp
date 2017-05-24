@@ -53,10 +53,6 @@
   <string name="content_description_stop">Resht së ngarkuari sajtin</string>
   <string name="content_description_customtab_exit">Kthehu te aplikacioni i mëparshëm</string>
   <string name="context_menu_paste_go">Ngjite &amp; Shko</string>
-  <string name="firstrun_title">Shfletoni sikur të mos ju vëzhgonte njeri.</string>
-  <string name="firstrun_description">Bllokojini vetvetiu gjurmuesit në internet, teksa shfletoni. Mandej prekeni, që të fshihen nga pajisja juaj faqe të vizituara, kërkime, cookies dhe fjalëkalime.</string>
-  <string name="firstrun_button">OK, e mora vesh!</string>
-  <string name="firstrun_footer">Për ta thënë troç, sajtet dhe shërbimet që përdorni prapë mund të dinë se ku keni qenë.</string>
   <string name="your_rights">Të drejtat Tuaja</string>
   <string name="external_app_prompt_title">Hape lidhjen me një aplikacion tjetër</string>
   <string name="external_app_prompt">Mund të lini %1$s-in ta hapë këtë lidhje me %2$s.</string>

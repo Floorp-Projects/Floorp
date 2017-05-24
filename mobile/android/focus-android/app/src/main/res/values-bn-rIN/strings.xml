@@ -44,10 +44,6 @@
   <string name="content_description_back">পেছনে নেবিগেট করুন</string>
   <string name="content_description_stop">ওয়েবসাইট লোডিং বন্ধ করুন</string>
   <string name="context_menu_paste_go">পেস্ট করুন এবং এগিয়ে যান</string>
-  <string name="firstrun_title">ব্রাউজ করুন এমন ভাবে, যেনো কেউ দেখছে না বলে মনে হয়।</string>
-  <string name="firstrun_description">আপনার ব্রাউজিংয়ের সময় স্বয়ংক্রিয়ভাবে অনলাইন ট্রাকারদেরকে অবরুদ্ধ করা হয়। তারপর আপনার ডিভাইস থেকে দেখা পৃষ্ঠাগুলি, অনুসন্ধান, কুকি এবং পাসওয়ার্ড মুছতে ট্যাপ করুন।</string>
-  <string name="firstrun_button">ঠিক আছে, আমি বুঝতে পেরেছি!</string>
-  <string name="firstrun_footer">একটা বিষয় স্পষ্ট জেনে রাখুন, যেসকল সাইট এবং অনলাইন সেবা আপনি ব্যবহার করছেন, তারা কিন্তু জেনে যায় আপনি কোন সাইটে গিয়েছেন।</string>
   <string name="your_rights">আপনার অধিকার</string>
   <string name="external_app_prompt_title">নতুন অ্যাপে লিংক খুলুন</string>
   <string name="external_app_prompt">লিংকটি %2$s এ খুলতে, আপনি %1$s কে ছেড়ে দিতে পারেন।</string>

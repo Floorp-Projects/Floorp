@@ -53,10 +53,6 @@
   <string name="content_description_stop">Interrompi il caricamento del sito</string>
   <string name="content_description_customtab_exit">Torna all’applicazione precedente</string>
   <string name="context_menu_paste_go">Incolla e vai</string>
-  <string name="firstrun_title">Naviga come se nessuno ti stesse guardando.</string>
-  <string name="firstrun_description">Blocca automaticamente gli elementi in grado di tracciarti durante la navigazione. Poi, con un semplice tocco, elimina le pagine visitate, i cookie e le password dal dispositivo.</string>
-  <string name="firstrun_button">Ho capito!</string>
-  <string name="firstrun_footer">Per essere chiari, i siti web visitati e i servizi utilizzati potranno comunque stabilire dove sei stato.</string>
   <string name="your_rights">I tuoi diritti</string>
   <string name="external_app_prompt_title">Apri link in un’altra app</string>
   <string name="external_app_prompt">È possibile uscire da %1$s e aprire questo link in %2$s.</string>

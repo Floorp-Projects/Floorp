@@ -53,10 +53,6 @@
   <string name="content_description_stop">Stop ag luchtú an tsuímh</string>
   <string name="content_description_customtab_exit">Fill ar an aip roimhe seo</string>
   <string name="context_menu_paste_go">Greamaigh agus Téigh</string>
-  <string name="firstrun_title">Brabhsáil i leith is nach bhfuil éinne ag cúlchoimhéad ort.</string>
-  <string name="firstrun_description">Cuir cosc ar lorgairí ar líne go huathoibríoch le linn brabhsála. Ansin, tapáil chun na leathanaigh ar thug tú cuairt orthu a bhánú ó do ghléas, chomh maith le haon fhianáin, focail fhaire, nó cuardaigh a rinne tú.</string>
-  <string name="firstrun_button">OK, tuigim!</string>
-  <string name="firstrun_footer">Le bheith soiléir, beidh na suímh agus na seirbhísí a úsáideann tú ábalta na leathanaigh a dtugann tú cuairt orthu a fheiceáil.</string>
   <string name="your_rights">Cearta an úsáideora</string>
   <string name="external_app_prompt_title">Oscail an nasc in aip eile</string>
   <string name="external_app_prompt">Is féidir leat %1$s a fhágáil chun an nasc seo a oscailt in %2$s.</string>

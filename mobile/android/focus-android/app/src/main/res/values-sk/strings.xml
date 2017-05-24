@@ -53,10 +53,6 @@
   <string name="content_description_stop">Zastaviť načítavanie webovej stránky</string>
   <string name="content_description_customtab_exit">Návrat do predchádzajúcej aplikácie</string>
   <string name="context_menu_paste_go">Prilepiť a prejsť</string>
-  <string name="firstrun_title">Prehliadajte, akoby sa nikto nepozeral.</string>
-  <string name="firstrun_description">Automaticky počas prehliadania blokujte sledovacie prvky. Potom jedným ťuknutím z vášho zariadenia vymažte zoznam navštívených stránok, výsledky vyhľadávania, cookies a heslá.</string>
-  <string name="firstrun_button">Ok, rozumiem!</string>
-  <string name="firstrun_footer">Len pre úplnosť, stránky a služby, ktoré používate môžu stále vedieť kde ste boli.</string>
   <string name="your_rights">Vaše práva</string>
   <string name="external_app_prompt_title">Otvoriť odkaz v inej aplikácii</string>
   <string name="external_app_prompt">Môžete opustiť aplikáciu %1$s a otvoriť tento odkaz v aplikácii %2$s.</string>

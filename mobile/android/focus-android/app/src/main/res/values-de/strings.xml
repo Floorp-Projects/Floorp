@@ -53,10 +53,6 @@
   <string name="content_description_stop">Laden der Website stoppen</string>
   <string name="content_description_customtab_exit">Zurück zur vorherigen App</string>
   <string name="context_menu_paste_go">Einfügen &amp; Los</string>
-  <string name="firstrun_title">Surfen Sie, als würde niemand zusehen.</string>
-  <string name="firstrun_description">Blockieren Sie automatisch Online-Verfolgung beim Surfen. Durch Tippen können Sie dann besuchte Seiten, Suchanfragen, Cookies und Passwörter von Ihrem Gerät löschen.</string>
-  <string name="firstrun_button">Ok, verstanden!</string>
-  <string name="firstrun_footer">Beachten Sie: Websites und von Ihnen genutzte Dienste können immer noch nachvollziehen, wo Sie waren.</string>
   <string name="your_rights">Ihre Rechte</string>
   <string name="external_app_prompt_title">Link in anderer App öffnen</string>
   <string name="external_app_prompt">Sie können %1$s verlassen, um diesen Link in %2$s zu öffnen.</string>

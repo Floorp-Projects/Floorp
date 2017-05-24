@@ -53,10 +53,6 @@
   <string name="content_description_stop">หยุดการโหลดเว็บไซต์</string>
   <string name="content_description_customtab_exit">กลับไปที่แอปก่อนหน้า</string>
   <string name="context_menu_paste_go">วางแล้วไป</string>
-  <string name="firstrun_title">ท่องเว็บเหมือนไม่มีใครเฝ้ามองอยู่</string>
-  <string name="firstrun_description">ปิดกั้นตัวติดตามออนไลน์โดยอัตโนมัติขณะที่คุณท่องเว็บ จากนั้นแตะเพื่อล้างหน้าที่เยี่ยมชม, การค้นหา, คุกกี้ และรหัสผ่านจากอุปกรณ์ของคุณ</string>
-  <string name="firstrun_button">ตกลง เข้าใจแล้ว!</string>
-  <string name="firstrun_footer">เพื่อให้ชัดเจน ไซต์และบริการที่คุณใช้ยังคงสามารถทราบว่าคุณอยู่ที่ไหน</string>
   <string name="your_rights">สิทธิของคุณ</string>
   <string name="external_app_prompt_title">เปิดลิงก์ในแอปอื่น</string>
   <string name="external_app_prompt">คุณสามารถออกจาก %1$s เพื่อเปิดลิงก์นี้ใน %2$s</string>

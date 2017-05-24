@@ -53,10 +53,6 @@
   <string name="content_description_stop">أوقف تحميل الموقع</string>
   <string name="content_description_customtab_exit">ارجع للتطبيق السابق</string>
   <string name="context_menu_paste_go">ألصق و اذهب</string>
-  <string name="firstrun_title">تصفح و لا أحد يراقبك.</string>
-  <string name="firstrun_description">احجب متعقبات الإنترنت تلقائيًا أثناء التصفح. ثم انقر لمسح الصفحات التي زرتها، و تأريخ البحث، و الكعكات، و كلمات السر من جهازك.</string>
-  <string name="firstrun_button">حسنًا، فهمت</string>
-  <string name="firstrun_footer">للتوضيح؛ المواقع و الخدمات التي تستخدمها يمكنها أن تعرف أين كنت.</string>
   <string name="your_rights">حقوقك</string>
   <string name="external_app_prompt_title">افتح الرابط في تطبيق آخر</string>
   <string name="external_app_prompt">يمكنك مغادرة %1$s لفتح هذا الرابط في %2$s.</string>

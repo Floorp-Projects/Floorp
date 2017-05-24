@@ -53,10 +53,6 @@
   <string name="content_description_stop">Parar de carregar o site</string>
   <string name="content_description_customtab_exit">Retornar ao aplicativo anterior</string>
   <string name="context_menu_paste_go">Colar e ir</string>
-  <string name="firstrun_title">Navegue como se ninguém estivesse olhando.</string>
-  <string name="firstrun_description">Bloqueie automaticamente os rastreadores on-line enquanto navega. Então, toque para apagar páginas visitadas, pesquisas, cookies e senhas do seu dispositivo.</string>
-  <string name="firstrun_button">Ok, entendi!</string>
-  <string name="firstrun_footer">Para ser claro, sites e serviços que você usa ainda podem saber onde esteve.</string>
   <string name="your_rights">Seus direitos</string>
   <string name="external_app_prompt_title">Abrir link em um outro app</string>
   <string name="external_app_prompt">Você pode sair do %1$s para abrir este link no %2$s.</string>

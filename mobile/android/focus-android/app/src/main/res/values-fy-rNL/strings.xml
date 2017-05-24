@@ -53,10 +53,6 @@
   <string name="content_description_stop">Laden fan website stopje</string>
   <string name="content_description_customtab_exit">Tebek nei foarige app</string>
   <string name="context_menu_paste_go">Plakke &amp; iepenje</string>
-  <string name="firstrun_title">Sneup as oft net ien meisjocht.</string>
-  <string name="firstrun_description">Blokkearje automatysk onlinetrackers wylst jo sneupje. Tik dêrnei om besochte siden, sykopdrachten, cookies en wachtwurden op jo apparaat te wiskjen.</string>
-  <string name="firstrun_button">Ok, begrepen!</string>
-  <string name="firstrun_footer">Foar de dúdlikens: websites en tsjinsten dy\'t jo brûke, kinne noch hieltyd sjen wêr\'t jo west binne.</string>
   <string name="your_rights">Jo rjochten</string>
   <string name="external_app_prompt_title">Keppeling yn oare app iepenje</string>
   <string name="external_app_prompt">Jo kinne %1$s ferlitte om dizze keppeling yn %2$s te iepenjen.</string>

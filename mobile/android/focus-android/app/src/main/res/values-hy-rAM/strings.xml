@@ -53,10 +53,6 @@
   <string name="content_description_stop">Կանգնեցնել էջի բեռնումը</string>
   <string name="content_description_customtab_exit">Վերադառնալ նախորդ հավելվածին</string>
   <string name="context_menu_paste_go">Տեղադրել և Առաջ</string>
-  <string name="firstrun_title">Դիտարկեք այնպես, որ ոչ ոք Ձեզ չի հետևում:</string>
-  <string name="firstrun_description">Ինքնաշխատ արգելափակել առցանց հետագծումները դիտարկելիս: Ապա հպեք՝ ջնջելու այցելած էջերը, որոնումները, cookie-ները և գաղտնաբառերը ձեր սարքից:</string>
-  <string name="firstrun_button">Լավ, հասկացա:</string>
-  <string name="firstrun_footer">Անկեղծ ասած կայքերը և ծառայությունը, որոնք օգտագործում եք, դեռ կարող են իմանալ, թե որտեղ եք դուք եղել:</string>
   <string name="your_rights">Ձեր իրավունքները</string>
   <string name="external_app_prompt_title">Բացել հղումը այլ հավելվածում</string>
   <string name="external_app_prompt">Կարող եք բաց պահել %1$s-ը և բացել այս հղումը %2$s-ում:</string>

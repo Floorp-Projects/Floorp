@@ -53,10 +53,6 @@
   <string name="content_description_stop">サイトの読み込みを中止</string>
   <string name="content_description_customtab_exit">前のアプリへ戻る</string>
   <string name="context_menu_paste_go">貼り付けて移動</string>
-  <string name="firstrun_title">誰にも監視されないブラウジング。</string>
-  <string name="firstrun_description">ブラウジング中のオンライン追跡を自動的にブロックします。タップするだけで、訪問したページ、検索履歴、Cookie、パスワードを端末から消去できます。</string>
-  <string name="firstrun_button">了解</string>
-  <string name="firstrun_footer">誤解のないように言っておきますが、あなたが使ったサイトやサービスは、あなたがどのページを見たかを引き続き把握できます。</string>
   <string name="your_rights">あなたの権利</string>
   <string name="external_app_prompt_title">リンクを他のアプリで開く</string>
   <string name="external_app_prompt">%1$s を離れてこのリンクを %2$s で開くことができます。</string>

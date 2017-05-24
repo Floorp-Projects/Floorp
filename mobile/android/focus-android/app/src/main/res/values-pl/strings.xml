@@ -53,10 +53,6 @@
   <string name="content_description_stop">Zatrzymaj wczytywanie strony</string>
   <string name="content_description_customtab_exit">Wróć do poprzedniej aplikacji</string>
   <string name="context_menu_paste_go">Wklej i przejdź</string>
-  <string name="firstrun_title">Przeglądaj, jak gdyby nikt nie patrzył.</string>
-  <string name="firstrun_description">Automatycznie blokuj śledzące elementy podczas przeglądania stron. Wystarczy stuknąć, aby usunąć z urządzenia odwiedzone strony, wyszukiwania, ciasteczka i hasła.</string>
-  <string name="firstrun_button">OK!</string>
-  <string name="firstrun_footer">Nie oznacza to, że odwiedzane strony nic o Tobie nie wiedzą.</string>
   <string name="your_rights">O prawach użytkownika</string>
   <string name="external_app_prompt_title">Otwieranie odnośnika w innej aplikacji</string>
   <string name="external_app_prompt">Można wyjść z aplikacji %1$s, aby otworzyć ten odnośnik w aplikacji %2$s.</string>

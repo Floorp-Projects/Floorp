@@ -53,10 +53,6 @@
   <string name="content_description_stop">Prekini nalaganje strani</string>
   <string name="content_description_customtab_exit">Nazaj na prejšnjo aplikacijo</string>
   <string name="context_menu_paste_go">Prilepi in odpri</string>
-  <string name="firstrun_title">Brskajte, kot da vas nihče ne gleda.</string>
-  <string name="firstrun_description">Samodejno zavračajte spletne sledilce med brskanjem. Nato z enim dotikom izbrišite obiskane strani, iskanja, piškotke in gesla z naprave.</string>
-  <string name="firstrun_button">V redu, razumem!</string>
-  <string name="firstrun_footer">Pozor, spletna mesta sama in storitve, ki jih uporabljate, vam še vedno lahko sledijo.</string>
   <string name="your_rights">Vaše pravice</string>
   <string name="external_app_prompt_title">Odpri povezavo v drugi aplikaciji</string>
   <string name="external_app_prompt">Lahko zapustite %1$s in to povezavo odprete v %2$s.</string>

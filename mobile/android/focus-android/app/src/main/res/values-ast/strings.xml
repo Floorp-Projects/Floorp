@@ -37,10 +37,6 @@
   <string name="content_description_forward">Dir haza alantre</string>
   <string name="content_description_reload">Recargar sitiu web</string>
   <string name="context_menu_paste_go">Apegar y dir</string>
-  <string name="firstrun_title">Restola como si naide nun te viere.</string>
-  <string name="firstrun_description">Bloquia automáticamente los rastrexadores en llinia entrín restoles. Dempués calca pa desaniciar les páxines visitaes, guetes, cookies y contraseñes del to preséu.</string>
-  <string name="firstrun_button">¡Val, píllolo!</string>
-  <string name="firstrun_footer">Siendo claros, los sitios y servicios entá puen saber onde tas.</string>
   <string name="your_rights">Los tos drechos</string>
   <string name="external_app_prompt_title">Abrir l\'enllaz n\'otra aplicación</string>
   <string name="error_generic_title">Ups</string>

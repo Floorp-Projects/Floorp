@@ -45,10 +45,6 @@
   <string name="content_description_back">Arahkan kembali</string>
   <string name="content_description_stop">Berhenti memuat situs web</string>
   <string name="context_menu_paste_go">Tempelkan &amp; Kunjungi</string>
-  <string name="firstrun_title">Menjelajah seperti tidak ada yang mengawasi.</string>
-  <string name="firstrun_description">Blokir pelacak daring secara otomatis ketika Anda menjelajah. Kemudian ketuk untuk menghapus laman yang dikunjungi, pencarian, kuki, dan sandi dari perangkat Anda.</string>
-  <string name="firstrun_button">Oke, beres!</string>
-  <string name="firstrun_footer">Agar jelas, situs dan layanan yang Anda gunakan masih dapat mengetahui di mana Anda berada.</string>
   <string name="your_rights">Hak Anda</string>
   <string name="external_app_prompt_title">Buka tautan di aplikasi lainnya</string>
   <string name="external_app_prompt">Anda dapat meninggalkan %1$s untuk membuka tautan ini di %2$s.</string>

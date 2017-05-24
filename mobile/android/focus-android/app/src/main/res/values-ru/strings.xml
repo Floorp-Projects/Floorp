@@ -53,10 +53,6 @@
   <string name="content_description_stop">Остановить загрузку сайта</string>
   <string name="content_description_customtab_exit">Вернуться к последнему приложению</string>
   <string name="context_menu_paste_go">Вставить и перейти</string>
-  <string name="firstrun_title">Сёрфите Интернет не опасаясь слежки.</string>
-  <string name="firstrun_description">Автоматически блокируйте онлайн-трекеры во время веб-сёрфинга. Затем нажмите кнопку, чтобы стереть посещённые страницы, поиски, куки и пароли со своего устройства.</string>
-  <string name="firstrun_button">Ок, понятно!</string>
-  <string name="firstrun_footer">Для ясности, сайты и службы, которые вы используете, всё ещё смогут знать, где вы были.</string>
   <string name="your_rights">Ваши права</string>
   <string name="external_app_prompt_title">Открыть ссылку в другом приложении</string>
   <string name="external_app_prompt">Вы можете выйти из %1$s, чтобы открыть эту ссылку в %2$s.</string>

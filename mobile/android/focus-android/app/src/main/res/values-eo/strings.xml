@@ -44,10 +44,6 @@
   <string name="content_description_back">Iri reen</string>
   <string name="content_description_stop">Haltigi ŝargadon de retejo</string>
   <string name="context_menu_paste_go">Alglui kaj iri</string>
-  <string name="firstrun_title">Retumu, kvazaŭ neniu vin rigardus.</string>
-  <string name="firstrun_description">Aŭtomate bloki retajn spurilojn dum vi retumas. Poste tuŝetu por forigi vizititajn paĝojn, serĉojn, kuketojn kaj pasvortojn el via aparato.</string>
-  <string name="firstrun_button">Bone, mi komprenis!</string>
-  <string name="firstrun_footer">Ni klarigu, retejoj kaj servoj plu scios kie vi estis.</string>
   <string name="your_rights">Viaj rajtoj</string>
   <string name="external_app_prompt_title">Malfermi ligilon en alia programo</string>
   <string name="external_app_prompt">Vi povas forlasi %1$s por malfermi tiun ĉi ligilon en %2$s.</string>

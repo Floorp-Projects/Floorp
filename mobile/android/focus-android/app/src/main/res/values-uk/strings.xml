@@ -53,10 +53,6 @@
   <string name="content_description_stop">Зупинити завантаження сайту</string>
   <string name="content_description_customtab_exit">Повернутись до попередньої програми</string>
   <string name="context_menu_paste_go">Вставити і перейти</string>
-  <string name="firstrun_title">Переглядайте без думки, що за вами хтось спостерігає.</string>
-  <string name="firstrun_description">Автоматично блокуйте стеження онлайн під час перегляду. Потім торкніться, щоб стерти відвідані сторінки, пошукові запити, куки й паролі з вашого пристрою.</string>
-  <string name="firstrun_button">Гаразд, зрозуміло!</string>
-  <string name="firstrun_footer">Однак, сайти й служби, якими ви користуєтесь, все ж можуть дізнатись, що ви переглядали.</string>
   <string name="your_rights">Ваші права</string>
   <string name="external_app_prompt_title">Відкрити посилання в іншій програмі</string>
   <string name="external_app_prompt">Ви можете вийти з %1$s, щоб відкрити це посилання в %2$s.</string>

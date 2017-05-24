@@ -44,10 +44,6 @@
   <string name="content_description_back">Navighează înapoi</string>
   <string name="content_description_stop">Oprește încărcarea site-ului web</string>
   <string name="context_menu_paste_go">Lipește și accesează</string>
-  <string name="firstrun_title">Navighează fără grija de a fi urmărit.</string>
-  <string name="firstrun_description">Blochează automat urmăritorii online în timp ce navighezi. Apoi apasă pentru a șterge paginile vizitate, căutările, cookie-urile și parolele de pe un dispozitiv.</string>
-  <string name="firstrun_button">Ok, am înțeles!</string>
-  <string name="firstrun_footer">Ca să fie clar, site-urile și serviciile pe care le folosești pot știi în continuare pe unde ai navigat.</string>
   <string name="your_rights">Drepturile tale</string>
   <string name="external_app_prompt_title">Deschide linkul în altă aplicație</string>
   <string name="external_app_prompt">Poți părăsi %1$s pentru a deschide acest link în %2$s.</string>

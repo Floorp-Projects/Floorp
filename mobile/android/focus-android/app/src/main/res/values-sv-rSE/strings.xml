@@ -53,10 +53,6 @@
   <string name="content_description_stop">Sluta ladda webbplats</string>
   <string name="content_description_customtab_exit">Återgå till föregående app</string>
   <string name="context_menu_paste_go">Klistra in och kör</string>
-  <string name="firstrun_title">Surfa utan att känna dig övervakad.</string>
-  <string name="firstrun_description">Blockera automatiskt online-trackers när du surfar. Tryck på radera för att ta bort besökta sidor, sökningar, kakor och lösenord från din enhet.</string>
-  <string name="firstrun_button">Ok, jag förstår!</string>
-  <string name="firstrun_footer">För att vara tydlig, webbplatser och tjänster som du använder kan fortfarande se var du har varit.</string>
   <string name="your_rights">Dina rättigheter</string>
   <string name="external_app_prompt_title">Öppna länk i en annan app</string>
   <string name="external_app_prompt">Du kan lämna %1$s för att öppna denna länk i %2$s.</string>

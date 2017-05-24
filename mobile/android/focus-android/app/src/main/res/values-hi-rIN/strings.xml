@@ -44,10 +44,6 @@
   <string name="content_description_back">पीछे मार्गनिर्देशित करें</string>
   <string name="content_description_stop">वेबसाइट लोड करना रोकें</string>
   <string name="context_menu_paste_go">पेस्ट करें व जाएँ</string>
-  <string name="firstrun_title">ऐसे ब्राउज़ करें जैसे कोई नहीं देख रहा हो.</string>
-  <string name="firstrun_description">आप ब्राउज़ करते समय स्वचालित रूप से ऑनलाइन ट्रैकर्स ब्लॉक करें. फिर अपने उपकरण से देखे गये पृष्ठों, खोजों, कुकीज़ और पासवर्ड को मिटाने के लिए टैप करें.</string>
-  <string name="firstrun_button">ठीक है, समझ गया!</string>
-  <string name="firstrun_footer">स्पष्ट रूप से, आपके द्वारा उपयोग किये जाने वाले साइटों और सेवाओं को पता है कि आप कहां रहे हैं.</string>
   <string name="your_rights">आपके अधिकार</string>
   <string name="external_app_prompt_title">किसी अन्य अनुप्रयोग में लिंक खोलें</string>
   <string name="external_app_prompt">आप इस लिंक को %2$s में खोलने के लिए %1$s को छोड़ सकते हैं.</string>

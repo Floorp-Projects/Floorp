@@ -53,10 +53,6 @@
   <string name="content_description_stop">Престани са учитавањем веб сајта</string>
   <string name="content_description_customtab_exit">Повратак на претходну</string>
   <string name="context_menu_paste_go">Налепи и иди</string>
-  <string name="firstrun_title">Сурфујте као да нико не гледа.</string>
-  <string name="firstrun_description">Аутоматски блокирај интернет трагаче док сурфујете. Затим притисните да обришете посећене странице, претраге, колачиће и лозинке са вашег уређаја.</string>
-  <string name="firstrun_button">Разумем!</string>
-  <string name="firstrun_footer">Да се разумемо, сајтови и услуге које користите и даље могу знати шта сте гледали.</string>
   <string name="your_rights">Ваша права</string>
   <string name="external_app_prompt_title">Отворите везу у другој апликацији</string>
   <string name="external_app_prompt">Можете угасити %1$s да отворите ову везу у %2$s.</string>

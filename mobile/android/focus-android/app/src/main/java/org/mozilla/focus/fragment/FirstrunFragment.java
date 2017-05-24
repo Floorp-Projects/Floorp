@@ -92,6 +92,9 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
 
                 ((MainActivity) getActivity()).firstrunFinished();
                 break;
+
+            default:
+                throw new IllegalArgumentException("Unknown view");
         }
     }
 }

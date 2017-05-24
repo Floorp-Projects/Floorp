@@ -53,10 +53,6 @@
   <string name="content_description_stop">வலைத்தளம் ஏற்றுவதை நிறுத்து</string>
   <string name="content_description_customtab_exit">முந்தைய செயலியிக்கு திரும்பு</string>
   <string name="context_menu_paste_go">ஒட்டிச் செல்</string>
-  <string name="firstrun_title">மற்றவர்களுக்கு தெரியா வண்ணம் உலாவு.</string>
-  <string name="firstrun_description">நீங்கள் உலாவும் போது இணயை தொடருதலை தானாக தடு. உங்கள் சாதனத்தில் உள்ள தளங்கள், தேடல்கள், நினைவிகள், மற்றும் கடவுச்சொல்லை அகற்றிவிடும்.</string>
-  <string name="firstrun_button">சரி, கிடைத்தது!</string>
-  <string name="firstrun_footer">புரியும்படிச் சொன்னால், தளங்கள் மற்றும் சேவைகளுக்கு நீங்கள் எங்குள்ளீர்கள் எனத் தெரியும்.</string>
   <string name="your_rights">உங்கள் உரிமைகள்</string>
   <string name="external_app_prompt_title">தொடுப்பை இன்னொரு செயலியில் திற</string>
   <string name="external_app_prompt">%1$s என்பதை விட்டு விலகி இந்தத் தொடுப்பை %2$s உலாவியில் திற.</string>

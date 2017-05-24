@@ -44,10 +44,6 @@
   <string name="content_description_back">Връщане назад</string>
   <string name="content_description_stop">Спиране зареждането на страницата</string>
   <string name="context_menu_paste_go">Поставяне и посещаване</string>
-  <string name="firstrun_title">Разглеждайте все едно никой не ви наблюдава.</string>
-  <string name="firstrun_description">Автоматично спира проследяването онлайн докато разглеждате. След това докоснете, за да изтриете посетените страници, търсения, бисквитки и пароли от устройството.</string>
-  <string name="firstrun_button">Добре</string>
-  <string name="firstrun_footer">За да сме наясно, страниците и услугите, които използвате може да знаят къде сте били.</string>
   <string name="your_rights">Вашите права</string>
   <string name="external_app_prompt_title">Отваряне на препратка в приложение</string>
   <string name="external_app_prompt">Може да напуснете %1$s, за да отворите препратката в %2$s.</string>

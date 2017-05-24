@@ -53,10 +53,6 @@
   <string name="content_description_stop">Atal llwytho\'r wefan</string>
   <string name="content_description_customtab_exit">Nôl i\'r ap blaenorol</string>
   <string name="context_menu_paste_go">Gludo a Mynd</string>
-  <string name="firstrun_title">Pori fel petai neb yn eich gwylio.</string>
-  <string name="firstrun_description">Rhwystrwch tracwyr ar-lein yn awtomatig wrth i chi bori. Gallwch dapio i ddileu tudalennau, chwilio, cwcis a chyfrineiriau o\'ch dyfais.</string>
-  <string name="firstrun_button">Iawn!</string>
-  <string name="firstrun_footer">I fod yn glir, gall gwefannau a gwasanaethau dal wybod lle rydych wedi bod.</string>
   <string name="your_rights">Eich Hawliau</string>
   <string name="external_app_prompt_title">Agor dolen mewn ap arall</string>
   <string name="external_app_prompt">Gallwch adael i %1$s agor y ddolen yn %2$s.</string>

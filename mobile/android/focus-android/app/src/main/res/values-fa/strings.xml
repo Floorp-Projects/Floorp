@@ -53,10 +53,6 @@
   <string name="content_description_stop">توقف بارگیری وب‌سایت</string>
   <string name="content_description_customtab_exit">بازگشت به برنامهٔ قبل</string>
   <string name="context_menu_paste_go">جایگذاری و ارسال</string>
-  <string name="firstrun_title">بدون دغدغهٔ نگاه‌ها مرور کنید.</string>
-  <string name="firstrun_description">به طور خودکار ردیاب‌های برخط را هنگام مرور مسدود کنید. بعد از آن با یک لمس، صفحات، جست‌وجوها، کوکی‌ها و گذرواژه‌هایی که مشاهده کرده‌اید را از روی دستگاه خود حذف کنید.</string>
-  <string name="firstrun_button">باشه، گرفتم!</string>
-  <string name="firstrun_footer">دقت کنید که سایت‌ها و سرویس‌هایی که از آنها استفاده می‌کنید هنوز میتوانند بدانند که کجاها بوده‌اید.</string>
   <string name="your_rights">حقوق شما</string>
   <string name="external_app_prompt_title">باز کردن پیوند در برنامه‌ای دیگر</string>
   <string name="external_app_prompt">می‌توانید از %1$s خارج شوید تا پیوند را در %2$s باز کنید.</string>

@@ -53,10 +53,6 @@
   <string name="content_description_stop">Seḥbes asali n usmel</string>
   <string name="content_description_customtab_exit">Uɣal ar usnas izrin</string>
   <string name="context_menu_paste_go">Senteḍ &amp; kemmel</string>
-  <string name="firstrun_title">Inig am akken ulac win i k-id-ittmuqqulen.</string>
-  <string name="firstrun_description">Sewḥel s wudem awurman inedfaṛen ticki tettinigeḍ. Senned sakin ɣef tqeffalt Sfeḍ akken ad tekkseḍ isebtar yettwarzan, inadiyen, inagan n tuqqna akked wawalen uffiren.</string>
-  <string name="firstrun_button">Ih, gziγ!</string>
-  <string name="firstrun_footer">"Akken ad tegzuḍ, ismal akked imeẓla  i tseqdaceḍ, zemren yakan ad ẓren anida telliḍ."</string>
   <string name="your_rights">Izerfan-ik</string>
   <string name="external_app_prompt_title">Ldi aseγwen deg usnas-nniḍen</string>
   <string name="external_app_prompt">Tzemred ad teffqeḍ seg %1$s akken ad d-ldid aseγwen di %2$s.</string>

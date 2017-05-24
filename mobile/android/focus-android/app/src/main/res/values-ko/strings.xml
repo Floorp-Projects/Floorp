@@ -44,10 +44,6 @@
   <string name="content_description_back">뒤로 가기</string>
   <string name="content_description_stop">웹사이트 로딩 중지</string>
   <string name="context_menu_paste_go">붙여넣고 바로 가기</string>
-  <string name="firstrun_title">아무도 모르게 탐색합니다.</string>
-  <string name="firstrun_description">검색 중 온라인 추적을 자동으로 차단합니다. 클릭만으로 방문한 페이지, 검색 기록, 쿠키, 암호를 단말기에서 삭제할 수 있습니다.</string>
-  <string name="firstrun_button">알겠습니다!</string>
-  <string name="firstrun_footer">명확히 하자면, 사이트와 서비스는 여전히 사용자가 어디에서 왔는지 알 수 있습니다.</string>
   <string name="your_rights">권리</string>
   <string name="external_app_prompt_title">다른 앱으로 링크 열기</string>
   <string name="external_app_prompt">%2$s로 링크를 열면 %1$s를 떠나게 됩니다.</string>

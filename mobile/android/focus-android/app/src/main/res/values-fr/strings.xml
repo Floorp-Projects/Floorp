@@ -53,10 +53,6 @@
   <string name="content_description_stop">Arrêter le chargement du site web</string>
   <string name="content_description_customtab_exit">Revenir à l’application précédente</string>
   <string name="context_menu_paste_go">Coller et aller</string>
-  <string name="firstrun_title">Naviguez comme si personne ne vous regardait.</string>
-  <string name="firstrun_description">Bloquez automatiquement les traqueurs lorsque vous naviguez. Appuyez ensuite sur le bouton Effacer pour supprimer les pages visitées, les recherches, les cookies et les mots de passe.</string>
-  <string name="firstrun_button">D’accord, j’ai compris.</string>
-  <string name="firstrun_footer">Note : votre fournisseur d’accès à Internet et les sites web que vous visitez peuvent toujours savoir quelles pages vous avez consultées.</string>
   <string name="your_rights">Droits de l’utilisateur</string>
   <string name="external_app_prompt_title">Ouvrir le lien dans une autre application</string>
   <string name="external_app_prompt">Vous pouvez quitter %1$s pour ouvrir ce lien dans %2$s.</string>

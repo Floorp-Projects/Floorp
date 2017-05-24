@@ -53,10 +53,6 @@
   <string name="content_description_stop">Laden van website stoppen</string>
   <string name="content_description_customtab_exit">Terug naar vorige app</string>
   <string name="context_menu_paste_go">Plakken &amp; Gaan</string>
-  <string name="firstrun_title">Surf alsof niemand meekijkt.</string>
-  <string name="firstrun_description">Blokkeer automatisch onlinetrackers terwijl u surft. Tik daarna om bezochte pagina’s, zoekopdrachten, cookies en wachtwoorden op uw apparaat te wissen.</string>
-  <string name="firstrun_button">OK, begrepen!</string>
-  <string name="firstrun_footer">Voor de duidelijkheid: websites en services die u gebruikt, kunnen nog steeds zien waar u bent geweest.</string>
   <string name="your_rights">Uw rechten</string>
   <string name="external_app_prompt_title">Koppeling openen in andere app</string>
   <string name="external_app_prompt">U kunt %1$s verlaten om deze koppeling in %2$s te openen.</string>
