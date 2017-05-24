@@ -48,6 +48,11 @@ ServoStyleSet::ServoStyleSet()
 
 ServoStyleSet::~ServoStyleSet()
 {
+  for (auto& sheetArray : mSheets) {
+    for (auto& sheet : sheetArray) {
+      sheet->DropStyleSet(this);
+    }
+  }
 }
 
 void
@@ -648,8 +653,9 @@ ServoStyleSet::ReplaceSheets(SheetType aType,
   SetStylistStyleSheetsDirty();
 
   // Remove all the existing sheets first.
-  if (mRawSet) {
-    for (const auto& sheet : mSheets[aType]) {
+  for (const auto& sheet : mSheets[aType]) {
+    sheet->DropStyleSet(this);
+    if (mRawSet) {
       Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), UniqueIDForSheet(sheet));
     }
   }
@@ -1101,6 +1107,7 @@ void
 ServoStyleSet::PrependSheetOfType(SheetType aType,
                                   ServoStyleSheet* aSheet)
 {
+  aSheet->AddStyleSet(this);
   mSheets[aType].InsertElementAt(0, aSheet);
 }
 
@@ -1108,6 +1115,7 @@ void
 ServoStyleSet::AppendSheetOfType(SheetType aType,
                                  ServoStyleSheet* aSheet)
 {
+  aSheet->AddStyleSet(this);
   mSheets[aType].AppendElement(aSheet);
 }
 
@@ -1118,6 +1126,7 @@ ServoStyleSet::InsertSheetOfType(SheetType aType,
 {
   for (uint32_t i = 0; i < mSheets[aType].Length(); ++i) {
     if (mSheets[aType][i] == aBeforeSheet) {
+      aSheet->AddStyleSet(this);
       mSheets[aType].InsertElementAt(i, aSheet);
       return;
     }
@@ -1130,6 +1139,7 @@ ServoStyleSet::RemoveSheetOfType(SheetType aType,
 {
   for (uint32_t i = 0; i < mSheets[aType].Length(); ++i) {
     if (mSheets[aType][i] == aSheet) {
+      aSheet->DropStyleSet(this);
       mSheets[aType].RemoveElementAt(i);
     }
   }
