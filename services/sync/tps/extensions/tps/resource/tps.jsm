@@ -100,7 +100,8 @@ const OBSERVER_TOPICS = ["fxaccounts:onlogin",
                          "weave:service:sync:finish",
                          "weave:service:sync:delayed",
                          "weave:service:sync:error",
-                         "weave:service:sync:start"
+                         "weave:service:sync:start",
+                         "weave:service:resyncs-finished",
                         ];
 
 var TPS = {
@@ -213,7 +214,7 @@ var TPS = {
 
           break;
 
-        case "weave:service:sync:finish":
+        case "weave:service:resyncs-finished":
           this._syncActive = false;
           this._syncErrors = 0;
           this._triggeredSync = false;
@@ -1117,7 +1118,7 @@ var TPS = {
    */
   waitForSyncFinished: function TPS__waitForSyncFinished() {
     if (this._syncActive) {
-      this.waitForEvent("weave:service:sync:finished");
+      this.waitForEvent("weave:service:resyncs-finished");
     }
   },
 
