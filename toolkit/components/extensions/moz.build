@@ -45,6 +45,18 @@ DIRS += [
     'webrequest',
 ]
 
+EXPORTS.mozilla.extensions = [
+    'MatchGlob.h',
+    'MatchPattern.h',
+]
+
+UNIFIED_SOURCES += [
+    'MatchPattern.cpp',
+]
+
+FINAL_LIBRARY = 'xul'
+
+
 JAR_MANIFESTS += ['jar.mn']
 
 BROWSER_CHROME_MANIFESTS += [
