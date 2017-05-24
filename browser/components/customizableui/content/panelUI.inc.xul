@@ -457,11 +457,15 @@
   <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
             closemenu="single"
             class="customize-context-moveToToolbar"
+            photonaccesskey="&customizeMenu.unpinFromOverflowMenu.accesskey;"
+            photonlabel="&customizeMenu.unpinFromOverflowMenu.label;"
             accesskey="&customizeMenu.moveToToolbar.accesskey;"
             label="&customizeMenu.moveToToolbar.label;"/>
   <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode)"
             closemenu="single"
             class="customize-context-removeFromPanel"
+            photonaccesskey="&customizeMenu.removeFromToolbar.accesskey;"
+            photonlabel="&customizeMenu.removeFromToolbar.label;"
             accesskey="&customizeMenu.removeFromMenu.accesskey;"
             label="&customizeMenu.removeFromMenu.label;"/>
   <menuseparator/>
@@ -478,6 +482,8 @@
             label="&customizeMenu.addToToolbar.label;"/>
   <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
             class="customize-context-addToPanel"
+            photonaccesskey="&customizeMenu.addToOverflowMenu.accesskey;"
+            photonlabel="&customizeMenu.addToOverflowMenu.label;"
             accesskey="&customizeMenu.addToPanel.accesskey;"
             label="&customizeMenu.addToPanel.label;"/>
 </menupopup>
