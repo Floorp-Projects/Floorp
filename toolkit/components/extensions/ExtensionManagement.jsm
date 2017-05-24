@@ -138,10 +138,7 @@ var Service = {
     }
 
     let path = uri.QueryInterface(Ci.nsIURL).filePath;
-    if (path.length > 0 && path[0] == "/") {
-      path = path.substr(1);
-    }
-    return extension.webAccessibleResources.matches(path);
+    return extension.webAccessibleResources.some(res => res.matches(path));
   },
 
   // Checks whether a given extension can load this URI (typically via
