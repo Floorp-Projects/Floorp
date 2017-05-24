@@ -525,7 +525,7 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChanne
     //
     unsigned int len = strlen(challenge);
 
-    void *inToken, *outToken;
+    void *inToken = nullptr, *outToken;
     uint32_t inTokenLen, outTokenLen;
 
     if (len > kNegotiateLen) {
@@ -545,6 +545,7 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChanne
             Base64Decode(challenge, len, (char**)&inToken, &inTokenLen);
 
         if (NS_FAILED(rv)) {
+            free(inToken);
             return rv;
         }
     }
@@ -552,7 +553,6 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChanne
         //
         // Initializing, don't use an input token.
         //
-        inToken = nullptr;
         inTokenLen = 0;
     }
 
