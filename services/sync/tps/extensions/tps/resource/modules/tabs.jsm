@@ -29,10 +29,10 @@ var BrowserTabs = {
     let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
                .getService(Ci.nsIWindowMediator);
     let mainWindow = wm.getMostRecentWindow("navigator:browser");
-    let newtab = mainWindow.getBrowser().addTab(uri);
-    mainWindow.getBrowser().selectedTab = newtab;
-    let win = mainWindow.getBrowser().getBrowserForTab(newtab);
-    win.addEventListener("load", function() { fn.call(); }, true);
+    let browser = mainWindow.getBrowser();
+    browser.addEventListener("load", fn, { once: true });
+    let newtab = browser.addTab(uri);
+    browser.selectedTab = newtab;
   },
 
   /**
