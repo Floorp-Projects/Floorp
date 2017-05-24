@@ -2973,11 +2973,8 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
                                               TrackID aTrackID)
 {
   MOZ_ASSERT(IsTrackIDExplicit(aTrackID));
-  TrackData* updateData = nullptr;
-  StreamTracks::Track* track = nullptr;
-  VideoSegment bufferedData;
-  bool isAudio = false;
-  bool isVideo = false;
+  MutexAutoLock lock(mMutex);
+
   RefPtr<DirectMediaStreamTrackListener> listener = aListener;
   LOG(LogLevel::Debug,
       ("Adding direct track listener %p bound to track %d to source stream %p",
@@ -2985,44 +2982,8 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
        aTrackID,
        this));
 
-  {
-    MutexAutoLock lock(mMutex);
-    updateData = FindDataForTrack(aTrackID);
-    track = FindTrack(aTrackID);
-    if (track) {
-      isAudio = track->GetType() == MediaSegment::AUDIO;
-      isVideo = track->GetType() == MediaSegment::VIDEO;
-    }
+  StreamTracks::Track* track = FindTrack(aTrackID);
 
-    if (track && isVideo && listener->AsMediaStreamVideoSink()) {
-      // Re-send missed VideoSegment to new added MediaStreamVideoSink.
-      VideoSegment* trackSegment = static_cast<VideoSegment*>(track->GetSegment());
-      if (mTracks.GetForgottenDuration() < trackSegment->GetDuration()) {
-        bufferedData.AppendSlice(*trackSegment,
-                                 mTracks.GetForgottenDuration(),
-                                 trackSegment->GetDuration());
-      }
-      if (updateData) {
-        bufferedData.AppendSlice(*updateData->mData, 0, updateData->mData->GetDuration());
-      }
-    }
-
-    if (track && (isAudio || isVideo)) {
-      for (auto entry : mDirectTrackListeners) {
-        if (entry.mListener == listener &&
-            (entry.mTrackID == TRACK_ANY || entry.mTrackID == aTrackID)) {
-          listener->NotifyDirectListenerInstalled(
-            DirectMediaStreamTrackListener::InstallationResult::ALREADY_EXISTS);
-          return;
-        }
-      }
-
-      TrackBound<DirectMediaStreamTrackListener>* sourceListener =
-        mDirectTrackListeners.AppendElement();
-      sourceListener->mListener = listener;
-      sourceListener->mTrackID = aTrackID;
-    }
-  }
   if (!track) {
     LOG(LogLevel::Warning,
         ("Couldn't find source track for direct track listener %p",
@@ -3031,17 +2992,52 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStream
       DirectMediaStreamTrackListener::InstallationResult::TRACK_NOT_FOUND_AT_SOURCE);
     return;
   }
+
+  bool isAudio = track->GetType() == MediaSegment::AUDIO;
+  bool isVideo = track->GetType() == MediaSegment::VIDEO;
   if (!isAudio && !isVideo) {
     LOG(
       LogLevel::Warning,
       ("Source track for direct track listener %p is unknown", listener.get()));
-    // It is not a video or audio track.
     MOZ_ASSERT(false);
     return;
   }
+
+  for (auto entry : mDirectTrackListeners) {
+    if (entry.mListener == listener &&
+        (entry.mTrackID == TRACK_ANY || entry.mTrackID == aTrackID)) {
+      listener->NotifyDirectListenerInstalled(
+        DirectMediaStreamTrackListener::InstallationResult::ALREADY_EXISTS);
+      return;
+    }
+  }
+
+  TrackBound<DirectMediaStreamTrackListener>* sourceListener =
+    mDirectTrackListeners.AppendElement();
+  sourceListener->mListener = listener;
+  sourceListener->mTrackID = aTrackID;
+
   LOG(LogLevel::Debug, ("Added direct track listener %p", listener.get()));
   listener->NotifyDirectListenerInstalled(
     DirectMediaStreamTrackListener::InstallationResult::SUCCESS);
+
+  // Pass buffered data to the listener
+  AudioSegment bufferedAudio;
+  VideoSegment bufferedVideo;
+  MediaSegment& bufferedData =
+    isAudio ? static_cast<MediaSegment&>(bufferedAudio)
+            : static_cast<MediaSegment&>(bufferedVideo);
+
+  MediaSegment& trackSegment = *track->GetSegment();
+  if (mTracks.GetForgottenDuration() < trackSegment.GetDuration()) {
+    bufferedData.AppendSlice(trackSegment,
+                             mTracks.GetForgottenDuration(),
+                             trackSegment.GetDuration());
+  }
+
+  if (TrackData* updateData = FindDataForTrack(aTrackID)) {
+    bufferedData.AppendSlice(*updateData->mData, 0, updateData->mData->GetDuration());
+  }
 
   if (bufferedData.GetDuration() != 0) {
     listener->NotifyRealtimeTrackData(Graph(), 0, bufferedData);
