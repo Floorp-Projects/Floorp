@@ -1788,6 +1788,10 @@ HTMLInputElement::GetNonFileValueInternal(nsAString& aValue) const
 bool
 HTMLInputElement::IsValueEmpty() const
 {
+  if (GetValueMode() == VALUE_MODE_VALUE && IsSingleLineTextControl(false)) {
+    return !mInputData.mState->HasNonEmptyValue();
+  }
+
   nsAutoString value;
   GetNonFileValueInternal(value);
 

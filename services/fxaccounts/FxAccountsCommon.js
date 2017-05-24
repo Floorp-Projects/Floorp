@@ -94,6 +94,7 @@ exports.ON_DEVICE_DISCONNECTED_NOTIFICATION = "fxaccounts:device_disconnected";
 exports.ON_PROFILE_UPDATED_NOTIFICATION = "fxaccounts:profile_updated"; // Push
 exports.ON_PASSWORD_CHANGED_NOTIFICATION = "fxaccounts:password_changed";
 exports.ON_PASSWORD_RESET_NOTIFICATION = "fxaccounts:password_reset";
+exports.ON_ACCOUNT_DESTROYED_NOTIFICATION = "fxaccounts:account_destroyed";
 exports.ON_COLLECTION_CHANGED_NOTIFICATION = "sync:collection_changed";
 
 exports.FXA_PUSH_SCOPE_ACCOUNT_UPDATE = "chrome://fxa-device-update";

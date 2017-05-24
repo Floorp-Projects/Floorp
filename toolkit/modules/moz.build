@@ -173,6 +173,7 @@ EXTRA_JS_MODULES += [
     'addons/WebRequestCommon.jsm',
     'addons/WebRequestContent.js',
     'addons/WebRequestUpload.jsm',
+    'AppMenuNotifications.jsm',
     'AsyncPrefs.jsm',
     'Battery.jsm',
     'BinarySearch.jsm',

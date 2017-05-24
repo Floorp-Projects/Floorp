@@ -63,13 +63,13 @@ Categorical histograms are similar to enumerated histograms. However, instead of
 
 ``enumerated``
 --------------
-This histogram type is intended for storing "enum" values, when you can't specify labels and thus cannot use ``categorical`` histograms. An enumerated histogram consists of a fixed number of *buckets*, each of which is associated with a consecutive integer value (the bucket's *label*). Each bucket corresponds to an enum value and counts the number of times its particular enum value was recorded.
+This histogram type is intended for storing "enum" values, when you can't specify labels and thus cannot use ``categorical`` histograms. An enumerated histogram consists of a fixed number of *buckets* (specified by ``n_values``), each of which is associated with a consecutive integer value (the bucket's *label*), `0` to `n_values`. Each bucket corresponds to an enum value and counts the number of times its particular enum value was recorded; except for the `n_values` bucket, which counts all values greater than or equal to n_values.
 
 You might use this type of histogram if, for example, you wanted to track the relative popularity of SSL handshake types. Whenever the browser started an SSL handshake, it would record one of a limited number of enum values which uniquely identifies the handshake type.
 
 .. note::
 
-    Set ``n_buckets`` to a slightly larger value than needed to allow for new enum values in the future. See `Changing a histogram`_ if you need to add more enums later.
+    Set ``n_values`` to a slightly larger value than needed to allow for new enum values in the future. See `Changing a histogram`_ if you need to add more enums later.
 
 ``flag``
 --------

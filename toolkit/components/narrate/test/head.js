@@ -64,6 +64,9 @@ function spawnInNewReaderTab(url, func) {
       url: `about:reader?url=${encodeURIComponent(url)}` },
       async function(browser) {
         await ContentTask.spawn(browser, null, async function() {
+          // This imports the test utils for all tests, so we'll declare it as
+          // a global here which will make it ESLint happy.
+          /* global NarrateTestUtils */
           Components.utils.import("chrome://mochitests/content/browser/" +
             "toolkit/components/narrate/test/NarrateTestUtils.jsm");
 

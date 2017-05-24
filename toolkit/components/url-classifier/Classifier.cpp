@@ -628,6 +628,19 @@ Classifier::RemoveUpdateIntermediaries()
 }
 
 void
+Classifier::CopyFullHashCacheToNewLookupCache(LookupCache* aNewLookupCache)
+{
+  MOZ_ASSERT(aNewLookupCache);
+
+  for (auto c: mLookupCaches) {
+    if (c->TableName() == aNewLookupCache->TableName()) {
+      aNewLookupCache->CopyFullHashCache(c);
+      return;
+    }
+  }
+}
+
+void
 Classifier::MergeNewLookupCaches()
 {
   MOZ_ASSERT(NS_GetCurrentThread() != mUpdateThread,
@@ -1465,6 +1478,13 @@ Classifier::GetLookupCache(const nsACString& aTable, bool aForUpdate)
   }
   rv = cache->Open();
   if (NS_SUCCEEDED(rv)) {
+    if (aForUpdate) {
+      // Since update algorithm will invalidate expired cache entries, we need
+      // to copy fullhash cache in "old LookupCache" to "update Lookupcache" before
+      // applying an update.
+      CopyFullHashCacheToNewLookupCache(cache.get());
+    }
+
     lookupCaches.AppendElement(cache.get());
     return cache.release();
   }

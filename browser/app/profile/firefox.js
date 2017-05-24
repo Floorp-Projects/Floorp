@@ -138,6 +138,10 @@ pref("app.update.enabled", true);
 // Whether or not to use the doorhanger application update UI.
 pref("app.update.doorhanger", true);
 
+// Ids of the links to the "What's new" update documentation
+pref("app.update.link.updateAvailableWhatsNew", "update-available-whats-new");
+pref("app.update.link.updateManualWhatsNew", "update-manual-whats-new");
+
 // How many times we should let downloads fail before prompting the user to
 // download a fresh installer.
 pref("app.update.download.promptMaxAttempts", 2);
