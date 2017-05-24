@@ -184,6 +184,15 @@ public:
     ENUM_MAX
   };
 
+  enum class ErrorType : uint16_t {
+    eOK,
+    eRequest,
+    eUnreachable,
+    eChannelOpen,
+    eRedirect,
+    ENUM_MAX
+  };
+
   XMLHttpRequestMainThread();
 
   void Construct(nsIPrincipal* aPrincipal,
@@ -759,7 +768,7 @@ protected:
   void HandleSyncTimeoutTimer();
   void CancelSyncTimeoutTimer();
 
-  bool mErrorLoad;
+  ErrorType mErrorLoad;
   bool mErrorParsingXML;
   bool mWaitingForOnStopRequest;
   bool mProgressTimerIsActive;
