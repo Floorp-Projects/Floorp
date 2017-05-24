@@ -1077,11 +1077,13 @@ treechildren.searchbar-treebody::-moz-tree-row(selected) {
 }
 
 .ac-type-icon[type=bookmark] {
-  list-style-image: url("chrome://browser/skin/urlbar-star.svg#star");
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
+  -moz-context-properties: fill;
+  fill: #b2b2b2;
 }
 
 .ac-type-icon[type=bookmark][selected][current] {
-  list-style-image: url("chrome://browser/skin/urlbar-star.svg#star-inverted");
+  fill: white;
 }
 
 .ac-type-icon[type=keyword],
