@@ -169,8 +169,8 @@ BALROG_SERVER_SCOPES = {
 """
 BALROG_CHANNEL_SCOPES = {
     'nightly': [
-        'project:releng:balrog:channel:nightly',
-        'project:releng:balrog:channel:nightly-old-id',
+        'project:releng:balrog:channel:nightly'
+        'project:releng:balrog:channel:nightly-old-id'
         'project:releng:balrog:channel:aurora'
     ],
     'aurora': [
@@ -192,15 +192,15 @@ BALROG_CHANNEL_SCOPES = {
         'project:releng:balrog:channel:esr-cdntest'
     ],
     'default': [
-        'project:releng:balrog:channel:nightly',
-        'project:releng:balrog:channel:nightly-old-id',
+        'project:releng:balrog:channel:nightly'
+        'project:releng:balrog:channel:nightly-old-id'
         'project:releng:balrog:channel:aurora'
         'project:releng:balrog:channel:beta',
         'project:releng:balrog:channel:beta-localtest',
-        'project:releng:balrog:channel:beta-cdntest',
+        'project:releng:balrog:channel:beta-cdntest'
         'project:releng:balrog:channel:release',
         'project:releng:balrog:channel:release-localtest',
-        'project:releng:balrog:channel:release-cdntest',
+        'project:releng:balrog:channel:release-cdntest'
         'project:releng:balrog:channel:esr',
         'project:releng:balrog:channel:esr-localtest',
         'project:releng:balrog:channel:esr-cdntest'
