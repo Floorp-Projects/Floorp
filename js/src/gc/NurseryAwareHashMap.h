@@ -87,7 +87,6 @@ class NurseryAwareHashMap
     using Lookup = typename MapType::Lookup;
     using Ptr = typename MapType::Ptr;
     using Range = typename MapType::Range;
-    using Entry = typename MapType::Entry;
 
     explicit NurseryAwareHashMap(AllocPolicy a = AllocPolicy()) : map(a) {}
 

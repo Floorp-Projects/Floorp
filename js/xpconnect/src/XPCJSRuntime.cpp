@@ -591,7 +591,8 @@ NukeAllWrappersForCompartment(JSContext* cx, JSCompartment* compartment,
     // we need to be sure that we don't have any existing cross-compartment
     // wrappers which may be replaced with dead wrappers during unrelated
     // wrapper recomputation *before* we set that bit.
-    js::NukeCrossCompartmentWrappers(cx, js::AllCompartments(), compartment,
+    js::NukeCrossCompartmentWrappers(cx, js::AllCompartments(),
+                                     js::SingleCompartment(compartment),
                                      nukeReferencesToWindow,
                                      js::NukeAllReferences);
 
