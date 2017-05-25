@@ -62,6 +62,7 @@ DIRS += [
     'python',
     'taskcluster',
     'testing/mozbase',
+    'third_party/python',
 ]
 
 if not CONFIG['JS_STANDALONE']:
