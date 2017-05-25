@@ -50,10 +50,18 @@ UNIFIED_SOURCES += [
     'nsCollationFactory.cpp',
     'nsLanguageAtomService.cpp',
     'nsLocale.cpp',
-    'nsLocaleService.cpp',
     'nsScriptableDateFormat.cpp',
     'nsUConvPropertySearch.cpp',
     'OSPreferences.cpp',
+]
+
+# This file includes Carbon.h, which pulls
+# in CoreServices on OSX. This requires
+# a TextRange struct, which clashes with mozilla::TextRange,
+# because of a `using namespace mozilla;` somewhere
+# in the unified build
+SOURCES += [
+    'nsLocaleService.cpp',
 ]
 
 if CONFIG['ENABLE_INTL_API']:
