@@ -397,6 +397,20 @@ bool TestProcessCaretEvents(void* aFunc)
   return true;
 }
 
+bool TestSetCursorPos(void* aFunc)
+{
+  auto patchedSetCursorPos =
+    reinterpret_cast<decltype(&SetCursorPos)>(aFunc);
+  POINT cursorPos;
+  BOOL ok = GetCursorPos(&cursorPos);
+  if (ok) {
+    ok = patchedSetCursorPos(cursorPos.x, cursorPos.y);
+  } else {
+    ok = patchedSetCursorPos(512, 512);
+  }
+  return ok;
+}
+
 static DWORD sTlsIndex = 0;
 
 bool TestTlsAlloc(void* aFunc)
@@ -517,6 +531,7 @@ int main()
 #ifdef _M_IX86
       TestHook(TestSendMessageTimeoutW, "user32.dll", "SendMessageTimeoutW") &&
 #endif
+      TestHook(TestSetCursorPos, "user32.dll", "SetCursorPos") &&
       TestHook(TestTlsAlloc, "kernel32.dll", "TlsAlloc") &&
       TestHook(TestTlsFree, "kernel32.dll", "TlsFree") &&
 #ifdef _M_IX86

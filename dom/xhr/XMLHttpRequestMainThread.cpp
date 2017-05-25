@@ -3149,7 +3149,8 @@ XMLHttpRequestMainThread::SetRequestHeader(const nsACString& aName,
   bool isPrivilegedCaller = IsSystemXHR();
   bool isForbiddenHeader = nsContentUtils::IsForbiddenRequestHeader(aName);
   if (!isPrivilegedCaller && isForbiddenHeader) {
-    const char16_t* params[] = { NS_ConvertUTF8toUTF16(aName).get() };
+    NS_ConvertUTF8toUTF16 name(aName);
+    const char16_t* params[] = { name.get() };
     LogMessage("ForbiddenHeaderWarning", GetOwner(), params, ArrayLength(params));
     return NS_OK;
   }

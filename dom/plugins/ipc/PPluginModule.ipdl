@@ -169,6 +169,8 @@ parent:
   // Used to broker the GetOpenFileName/GetSaveFileName file pickers on Windows.
   intr GetFileName(GetFileNameFunc aFunc, OpenFileNameIPC aOfnIn)
     returns (OpenFileNameRetIPC aOfnOut, bool aResult);
+
+  intr SetCursorPos(int x, int y) returns (bool aResult);
 };
 
 } // namespace plugins
