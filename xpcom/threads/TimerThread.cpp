@@ -590,10 +590,11 @@ TimerThread::RemoveTimer(nsTimerImpl* aTimer)
 }
 
 TimeStamp
-TimerThread::FindNextFireTimeForCurrentThread(TimeStamp aDefault)
+TimerThread::FindNextFireTimeForCurrentThread(TimeStamp aDefault, uint32_t aSearchBound)
 {
   MonitorAutoLock lock(mMonitor);
   TimeStamp timeStamp = aDefault;
+  uint32_t index = 0;
 
   for (auto timers = mTimers.begin(); timers != mTimers.end(); ++timers) {
     nsTimerImpl* timer = (*timers)->Value();
@@ -603,8 +604,13 @@ TimerThread::FindNextFireTimeForCurrentThread(TimeStamp aDefault)
     }
 
     if (timer->mTimeout > aDefault) {
+      timeStamp = aDefault;
       break;
     }
+
+    // Track the currently highest timeout so that we can bail when we
+    // reach the bound or when we find a timer for the current thread.
+    timeStamp = timer->mTimeout;
 
     // Don't yield to timers created with the *_LOW_PRIORITY type.
     if (timer->IsLowPriority()) {
@@ -618,7 +624,11 @@ TimerThread::FindNextFireTimeForCurrentThread(TimeStamp aDefault)
     }
 
     if (isOnCurrentThread) {
-      timeStamp = timer->mTimeout;
+
+      break;
+    }
+
+    if (++index > aSearchBound) {
       break;
     }
   }
