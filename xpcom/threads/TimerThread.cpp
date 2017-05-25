@@ -589,6 +589,43 @@ TimerThread::RemoveTimer(nsTimerImpl* aTimer)
   return NS_OK;
 }
 
+TimeStamp
+TimerThread::FindNextFireTimeForCurrentThread(TimeStamp aDefault)
+{
+  MonitorAutoLock lock(mMonitor);
+  TimeStamp timeStamp = aDefault;
+
+  for (auto timers = mTimers.begin(); timers != mTimers.end(); ++timers) {
+    nsTimerImpl* timer = (*timers)->Value();
+
+    if (!timer) {
+      continue;
+    }
+
+    if (timer->mTimeout > aDefault) {
+      break;
+    }
+
+    // Don't yield to timers created with the *_LOW_PRIORITY type.
+    if (timer->IsLowPriority()) {
+      continue;
+    }
+
+    bool isOnCurrentThread = false;
+    nsresult rv = timer->mEventTarget->IsOnCurrentThread(&isOnCurrentThread);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+
+    if (isOnCurrentThread) {
+      timeStamp = timer->mTimeout;
+      break;
+    }
+  }
+
+  return timeStamp;
+}
+
 // This function must be called from within a lock
 bool
 TimerThread::AddTimerInternal(nsTimerImpl* aTimer)

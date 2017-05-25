@@ -1767,6 +1767,20 @@ private:
 void
 NS_SetMainThread();
 
+/**
+ * Return the expiration time of the next timer to run on the current
+ * thread.  If that expiration time is greater than aDefault, then
+ * return aDefault.
+ *
+ * Timers with either the type nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY or
+ * nsITIMER::TYPE_REPEATING_SLACK_LOW_PRIORITY will be skipped when
+ * searching for the next expiration time.  This enables timers to
+ * have lower priority than callbacks dispatched from
+ * nsIThread::IdleDispatch.
+ */
+extern mozilla::TimeStamp
+NS_GetTimerDeadlineHintOnCurrentThread(mozilla::TimeStamp aDefault);
+
 namespace mozilla {
 
 /**
