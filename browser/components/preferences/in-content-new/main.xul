@@ -5,7 +5,7 @@
 <!-- General panel -->
 
 <script type="application/javascript"
-        src="chrome://browser/content/preferences/in-content/main.js"/>
+        src="chrome://browser/content/preferences/in-content-new/main.js"/>
 
 <script type="application/javascript"
         src="chrome://mozapps/content/preferences/fontbuilder.js"/>
