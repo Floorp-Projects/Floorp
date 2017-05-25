@@ -22,18 +22,16 @@
   .menu-iconic-accel {
     color: graytext;
   }
-
+%ifndef MOZ_PHOTON_THEME
   @media (-moz-os-version: windows-win7) {
     #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme),
     #browser-bottombox:not(:-moz-lwtheme),
-    .browserContainer > findbar {
-      background-color: @customToolbarColor@;
-    }
-
+    .browserContainer > findbar,
     .tab-background-middle[selected=true]:not(:-moz-lwtheme) {
       background-color: @customToolbarColor@;
     }
   }
+%endif
 }
 
 @media (-moz-windows-compositor) {
