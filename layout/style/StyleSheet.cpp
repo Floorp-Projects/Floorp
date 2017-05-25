@@ -127,15 +127,6 @@ StyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
   }
 }
 
-void
-StyleSheet::ClearRuleCascades()
-{
-  ClearRuleCascadesInternal();
-  if (mParent) {
-    mParent->ClearRuleCascades();
-  }
-}
-
 // QueryInterface implementation for StyleSheet
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StyleSheet)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -448,7 +439,14 @@ StyleSheet::EnsureUniqueInner()
   mInner = clone;
 
   // Ensure we're using the new rules.
-  ClearRuleCascades();
+  //
+  // NOTE: In Servo, all kind of changes that change the set of selectors or
+  // rules we match are covered by the PresShell notifications. In Gecko that's
+  // true too, but this is probably needed because selectors are not refcounted
+  // and can become stale.
+  if (CSSStyleSheet* geckoSheet = GetAsGecko()) {
+    geckoSheet->ClearRuleCascades();
+  }
 
   // let our containing style sets know that if we call
   // nsPresContext::EnsureSafeToHandOutCSSRules we will need to restyle the

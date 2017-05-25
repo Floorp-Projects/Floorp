@@ -123,8 +123,6 @@ public:
 protected:
   virtual ~ServoStyleSheet();
 
-  void ClearRuleCascadesInternal() override;
-
   ServoStyleSheetInner* Inner() const
   {
     return static_cast<ServoStyleSheetInner*>(mInner);
