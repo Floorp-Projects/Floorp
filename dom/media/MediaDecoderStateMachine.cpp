@@ -1025,6 +1025,8 @@ protected:
   SeekJob mSeekJob;
 
   virtual void DoSeek() = 0;
+  // Transition to the next state (defined by the subclass) when seek is completed.
+  virtual void GoToNextState() { SetState<DecodingState>(); }
   void SeekCompleted();
   virtual TimeUnit CalculateNewCurrentTime() const = 0;
 };
@@ -1733,12 +1735,8 @@ public:
   {
     mFutureSeekJob = Move(aFutureSeekJob);
 
-    SeekJob seekJob(Move(aCurrentSeekJob));
-    // Ensure that we don't transition to DecodingState once this seek
-    // completes.
-    seekJob.mTransition = false;
-
-    AccurateSeekingState::Enter(Move(seekJob), EventVisibility::Suppressed)
+    AccurateSeekingState::Enter(Move(aCurrentSeekJob),
+                                EventVisibility::Suppressed)
       ->Then(OwnerThread(),
              __func__,
              [this]() {
@@ -1761,6 +1759,9 @@ public:
 private:
   MozPromiseRequestHolder<MediaDecoder::SeekPromise> mAccurateSeekRequest;
   SeekJob mFutureSeekJob;
+
+  // We don't want to transition to DecodingState once this seek completes.
+  void GoToNextState() override { // No transition after seek completed. }
 };
 
 RefPtr<MediaDecoder::SeekPromise>
@@ -2535,9 +2536,7 @@ SeekingState::SeekCompleted()
     mMaster->mOnPlaybackEvent.Notify(MediaEventType::Invalidate);
   }
 
-  if (mSeekJob.mTransition) {
-    SetState<DecodingState>();
-  }
+  GoToNextState();
 }
 
 void
