@@ -220,32 +220,6 @@ StyleSetHandle::Ptr::AddDocStyleSheet(StyleSheet* aSheet,
                                      (aSheet->AsServo(), aDocument));
 }
 
-void
-StyleSetHandle::Ptr::RecordStyleSheetChange(StyleSheet* aSheet,
-                                            StyleSheet::ChangeType aChangeType)
-{
-  FORWARD_CONCRETE(RecordStyleSheetChange, (aSheet->AsGecko(), aChangeType),
-                                           (aSheet->AsServo(), aChangeType));
-}
-
-void
-StyleSetHandle::Ptr::RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot)
-{
-  FORWARD(RecordShadowStyleChange, (aShadowRoot));
-}
-
-bool
-StyleSetHandle::Ptr::StyleSheetsHaveChanged() const
-{
-  FORWARD(StyleSheetsHaveChanged, ());
-}
-
-void
-StyleSetHandle::Ptr::InvalidateStyleForCSSRuleChanges()
-{
-  FORWARD(InvalidateStyleForCSSRuleChanges, ());
-}
-
 // check whether there is ::before/::after style for an element
 already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ProbePseudoElementStyle(dom::Element* aParentElement,
