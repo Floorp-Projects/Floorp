@@ -147,6 +147,9 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin):
             cmd.append('--disable-e10s')
         cmd.append('--gecko-log=%s' % os.path.join(dirs["abs_blob_upload_dir"],
                                                    'gecko.log'))
+        # TestingMixin._download_and_extract_symbols() should set
+        # self.symbols_path
+        cmd.append('--symbols-path=%s' % self.symbols_path)
 
         test_file = os.path.join(self.awsy_libdir, 'test_memory_usage.py')
         cmd.append(test_file)
