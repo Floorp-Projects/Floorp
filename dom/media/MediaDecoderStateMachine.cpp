@@ -1736,32 +1736,27 @@ public:
     mFutureSeekJob = Move(aFutureSeekJob);
 
     AccurateSeekingState::Enter(Move(aCurrentSeekJob),
-                                EventVisibility::Suppressed)
-      ->Then(OwnerThread(),
-             __func__,
-             [this]() {
-               mAccurateSeekRequest.Complete();
-               SetState<NextFrameSeekingState>(Move(mFutureSeekJob),
-                                               EventVisibility::Observable);
-             },
-             [this]() { mAccurateSeekRequest.Complete(); })
-      ->Track(mAccurateSeekRequest);
+                                EventVisibility::Suppressed);
+
     return mFutureSeekJob.mPromise.Ensure(__func__);
   }
 
   void Exit() override
   {
-    mAccurateSeekRequest.DisconnectIfExists();
     mFutureSeekJob.RejectIfExists(__func__);
     AccurateSeekingState::Exit();
   }
 
 private:
-  MozPromiseRequestHolder<MediaDecoder::SeekPromise> mAccurateSeekRequest;
   SeekJob mFutureSeekJob;
 
-  // We don't want to transition to DecodingState once this seek completes.
-  void GoToNextState() override { // No transition after seek completed. }
+  // We don't want to transition to DecodingState once this seek completes,
+  // instead, we transition to NextFrameSeekingState.
+  void GoToNextState() override
+  {
+    SetState<NextFrameSeekingState>(Move(mFutureSeekJob),
+                                    EventVisibility::Observable);
+  }
 };
 
 RefPtr<MediaDecoder::SeekPromise>
