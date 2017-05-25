@@ -8,10 +8,10 @@
  * Test caret move event and its interface:
  *   - caretOffset
  */
-addAccessibleTask('<input id="textbox" value="hello"/>', function*(browser) {
+addAccessibleTask('<input id="textbox" value="hello"/>', async function(browser) {
   let onCaretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, 'textbox');
-  yield invokeFocus(browser, 'textbox');
-  let event = yield onCaretMoved;
+  await invokeFocus(browser, 'textbox');
+  let event = await onCaretMoved;
 
   let caretMovedEvent = event.QueryInterface(nsIAccessibleCaretMoveEvent);
   is(caretMovedEvent.caretOffset, 5,

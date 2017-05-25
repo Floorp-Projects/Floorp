@@ -4639,8 +4639,6 @@ JS::CloneAndExecuteScript(JSContext* cx, JS::AutoObjectVector& envChain,
     return ExecuteScript(cx, envChain, script, rval.address());
 }
 
-static const unsigned LARGE_SCRIPT_LENGTH = 500*1024;
-
 static bool
 Evaluate(JSContext* cx, ScopeKind scopeKind, HandleObject env,
          const ReadOnlyCompileOptions& optionsArg,
@@ -4663,17 +4661,6 @@ Evaluate(JSContext* cx, ScopeKind scopeKind, HandleObject env,
 
     bool result = Execute(cx, script, *env,
                           options.noScriptRval ? nullptr : rval.address());
-
-    // After evaluation, the compiled script will not be run again.
-    // script->ensureRanAnalysis allocated 1 analyze::Bytecode for every opcode
-    // which for large scripts means significant memory. Perform a GC eagerly
-    // to clear out this analysis data before anything happens to inhibit the
-    // flushing of this memory (such as setting requestAnimationFrame).
-    if (script->length() > LARGE_SCRIPT_LENGTH) {
-        script = nullptr;
-        PrepareZoneForGC(cx->zone());
-        cx->runtime()->gc.gc(GC_NORMAL, JS::gcreason::FINISH_LARGE_EVALUATE);
-    }
 
     return result;
 }
@@ -7110,21 +7097,21 @@ JS::DecodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer,
 }
 
 JS_PUBLIC_API(bool)
-JS::StartIncrementalEncoding(JSContext* cx, TranscodeBuffer& buffer, JS::HandleScript script)
+JS::StartIncrementalEncoding(JSContext* cx, JS::HandleScript script)
 {
     if (!script)
         return false;
-    if (!script->scriptSource()->xdrEncodeTopLevel(cx, buffer, script))
+    if (!script->scriptSource()->xdrEncodeTopLevel(cx, script))
         return false;
     return true;
 }
 
 JS_PUBLIC_API(bool)
-JS::FinishIncrementalEncoding(JSContext* cx, JS::HandleScript script)
+JS::FinishIncrementalEncoding(JSContext* cx, JS::HandleScript script, TranscodeBuffer& buffer)
 {
     if (!script)
         return false;
-    if (!script->scriptSource()->xdrFinalizeEncoder())
+    if (!script->scriptSource()->xdrFinalizeEncoder(buffer))
         return false;
     return true;
 }

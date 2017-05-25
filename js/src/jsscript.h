@@ -646,7 +646,7 @@ class ScriptSource
     // of the encoding would be available in the |buffer| provided as argument,
     // as soon as |xdrFinalize| is called and all xdr function calls returned
     // successfully.
-    bool xdrEncodeTopLevel(JSContext* cx, JS::TranscodeBuffer& buffer, HandleScript script);
+    bool xdrEncodeTopLevel(JSContext* cx, HandleScript script);
 
     // Encode a delazified JSFunction.  In case of errors, the XDR encoder is
     // freed and the |buffer| provided as argument to |xdrEncodeTopLevel| is
@@ -660,7 +660,7 @@ class ScriptSource
     // Linearize the encoded content in the |buffer| provided as argument to
     // |xdrEncodeTopLevel|, and free the XDR encoder.  In case of errors, the
     // |buffer| is considered undefined.
-    bool xdrFinalizeEncoder();
+    bool xdrFinalizeEncoder(JS::TranscodeBuffer& buffer);
 
     const mozilla::TimeStamp parseEnded() const {
         return parseEnded_;

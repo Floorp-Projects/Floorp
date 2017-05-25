@@ -1640,7 +1640,6 @@ class ConnectionHandle : public nsAHttpConnection
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSAHTTPCONNECTION(mConn)
-    virtual void ThrottleResponse(bool aThrottle) override;
 
     explicit ConnectionHandle(nsHttpConnection *conn) : mConn(conn) { }
     void Reset() { mConn = nullptr; }
@@ -1653,13 +1652,6 @@ nsAHttpConnection *
 nsHttpConnectionMgr::MakeConnectionHandle(nsHttpConnection *aWrapped)
 {
     return new ConnectionHandle(aWrapped);
-}
-
-void ConnectionHandle::ThrottleResponse(bool aThrottle)
-{
-    if (mConn) {
-        mConn->ThrottleResponse(aThrottle);
-    }
 }
 
 ConnectionHandle::~ConnectionHandle()

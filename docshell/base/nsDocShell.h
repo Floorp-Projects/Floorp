@@ -60,7 +60,6 @@
 #include "nsRect.h"
 #include "Units.h"
 #include "nsIDeprecationWarner.h"
-#include "nsIThrottlingService.h"
 
 namespace mozilla {
 enum class TaskCategory;
@@ -1101,9 +1100,6 @@ public:
     InterfaceRequestorProxy() {}
     nsWeakPtr mWeakPtr;
   };
-
-private:
-  mozilla::UniquePtr<mozilla::net::Throttler> mThrottler;
 };
 
 #endif /* nsDocShell_h__ */

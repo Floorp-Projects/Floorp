@@ -4,11 +4,11 @@
 
 'use strict';
 
-add_task(function* () {
+add_task(async function () {
   // Making sure that the e10s is enabled on Windows for testing.
-  yield setE10sPrefs();
+  await setE10sPrefs();
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: `data:text/html,
       <html>
@@ -18,7 +18,7 @@ add_task(function* () {
         </head>
         <body></body>
       </html>`
-  }, function*(browser) {
+  }, async function(browser) {
     info('Creating a service in parent and waiting for service to be created ' +
       'in content');
     // Create a11y service in the main process. This will trigger creating of
@@ -28,7 +28,7 @@ add_task(function* () {
     let accService = Cc['@mozilla.org/accessibilityService;1'].getService(
       Ci.nsIAccessibilityService);
     ok(accService, 'Service initialized in parent');
-    yield Promise.all([parentA11yInit, contentA11yInit]);
+    await Promise.all([parentA11yInit, contentA11yInit]);
 
     info('Removing a service in parent and waiting for service to be shut ' +
       'down in content');
@@ -40,9 +40,9 @@ add_task(function* () {
     // Force garbage collection that should trigger shutdown in both main and
     // content process.
     forceGC();
-    yield Promise.all([parentA11yShutdown, contentA11yShutdown]);
+    await Promise.all([parentA11yShutdown, contentA11yShutdown]);
   });
 
   // Unsetting e10s related preferences.
-  yield unsetE10sPrefs();
+  await unsetE10sPrefs();
 });
