@@ -855,7 +855,15 @@ Element::ScrollTop()
 void
 Element::SetScrollTop(int32_t aScrollTop)
 {
-  nsIScrollableFrame* sf = GetScrollFrame();
+  // When aScrollTop is 0, we don't need to flush layout to scroll to that
+  // point; we know 0 is always in range.  At least we think so...  But we do
+  // need to flush frames so we ensure we find the right scrollable frame if
+  // there is one.
+  //
+  // If aScrollTop is nonzero, we need to flush layout because we need to figure
+  // out what our real scrollTopMax is.
+  FlushType flushType = aScrollTop == 0 ? FlushType::Frames : FlushType::Layout;
+  nsIScrollableFrame* sf = GetScrollFrame(nullptr, flushType);
   if (sf) {
     nsIScrollableFrame::ScrollMode scrollMode = nsIScrollableFrame::INSTANT;
     if (sf->GetScrollbarStyles().mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
@@ -877,6 +885,9 @@ Element::ScrollLeft()
 void
 Element::SetScrollLeft(int32_t aScrollLeft)
 {
+  // We can't assume things here based on the value of aScrollLeft, because
+  // depending on our direction and layout 0 may or may not be in our scroll
+  // range.  So we need to flush layout no matter what.
   nsIScrollableFrame* sf = GetScrollFrame();
   if (sf) {
     nsIScrollableFrame::ScrollMode scrollMode = nsIScrollableFrame::INSTANT;
