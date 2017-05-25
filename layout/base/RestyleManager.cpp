@@ -1397,7 +1397,12 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
             // Under these conditions, we're OK to assume that this "overflow"
             // change only impacts the root viewport's scrollframe, which
             // already exists, so we can simply reflow instead of reframing.
-            data.mHint |= nsChangeHint_AllReflowHints;
+            // When requesting this reflow, we send the exact same change hints
+            // that "width" and "height" would send (since conceptually,
+            // adding/removing scrollbars is like changing the available
+            // space).
+            data.mHint |= (nsChangeHint_ReflowHintsForISizeChange |
+                           nsChangeHint_ReflowHintsForBSizeChange);
             doReconstruct = false;
           }
         }
