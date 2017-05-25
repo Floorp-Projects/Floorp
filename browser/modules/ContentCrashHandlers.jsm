@@ -383,7 +383,7 @@ this.TabCrashHandler = {
     CrashSubmit.submit(dumpID, {
       recordSubmission: true,
       extraExtraKeyVals,
-    }).then(null, Cu.reportError);
+    }).catch(Cu.reportError);
 
     this.prefs.setBoolPref("sendReport", true);
     this.prefs.setBoolPref("includeURL", includeURL);
@@ -881,7 +881,7 @@ this.UnsubmittedCrashHandler = {
         extraExtraKeyVals: {
           "SubmittedFromInfobar": true,
         },
-      });
+      }).catch(Cu.reportError);
     }
   },
 };
@@ -995,7 +995,7 @@ this.PluginCrashReporter = {
     });
 
     if (browserDumpID)
-      CrashSubmit.submit(browserDumpID);
+      CrashSubmit.submit(browserDumpID).catch(Cu.reportError);
 
     this.broadcastState(runID, "submitting");
 
