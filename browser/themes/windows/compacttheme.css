@@ -43,7 +43,6 @@
 }
 
 .findbar-closebutton:-moz-lwtheme-brighttext,
-#sidebar-header > .close-icon:-moz-lwtheme-brighttext,
 /* Tab styling - make sure to use an inverted icon for the selected tab
    (brighttext only covers the unselected tabs) */
 .tab-close-button[selected=true] {
@@ -52,7 +51,6 @@
 
 @media (min-resolution: 1.1dppx) {
   .findbar-closebutton:-moz-lwtheme-brighttext,
-  #sidebar-header > .close-icon:-moz-lwtheme-brighttext,
   .tab-close-button[selected=true] {
     list-style-image: url("chrome://global/skin/icons/close-inverted@2x.png");
   }
@@ -207,14 +205,6 @@
 /* Disable dragging like in the default theme: */
 #main-window[tabsintitlebar] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):-moz-lwtheme {
   -moz-window-dragging: no-drag;
-}
-
-/* The sidebar header has no background now that the background of the #browser-panel
- * has no image and is transparent. Fix: */
-.sidebar-header:-moz-lwtheme,
-#sidebar-header {
-  background-color: var(--chrome-background-color);
-  color: var(--chrome-color);
 }
 
 @media (-moz-os-version: windows-win7),
