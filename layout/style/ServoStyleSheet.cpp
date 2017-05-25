@@ -219,15 +219,6 @@ ServoStyleSheet::Clone(StyleSheet* aCloneParent,
   return clone.forget();
 }
 
-void
-ServoStyleSheet::ClearRuleCascadesInternal()
-{
-  for (StyleSetHandle& setHandle : mStyleSets) {
-    setHandle->AsServo()->NoteStyleSheetsChanged();
-    setHandle->AsServo()->UpdateStylistIfNeeded();
-  }
-}
-
 CSSRuleList*
 ServoStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
 {
