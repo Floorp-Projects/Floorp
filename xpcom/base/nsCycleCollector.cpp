@@ -3544,6 +3544,7 @@ nsCycleCollector::CleanupAfterCollection()
 {
   TimeLog timeLog;
   MOZ_ASSERT(mIncrementalPhase == CleanupPhase);
+  MOZ_RELEASE_ASSERT(!mScanInProgress);
   mGraph.Clear();
   timeLog.Checkpoint("CleanupAfterCollection::mGraph.Clear()");
 
@@ -3784,6 +3785,7 @@ nsCycleCollector::BeginCollection(ccType aCCType,
 {
   TimeLog timeLog;
   MOZ_ASSERT(IsIdle());
+  MOZ_RELEASE_ASSERT(!mScanInProgress);
 
   mCollectionStart = TimeStamp::Now();
 

@@ -8902,7 +8902,26 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
           nsStyleContentType type =
             unit == eCSSUnit_Counter ? eStyleContentType_Counter
                                      : eStyleContentType_Counters;
-          data.SetCounters(type, value.GetArrayValue());
+          RefPtr<nsStyleContentData::CounterFunction>
+            counterFunc = new nsStyleContentData::CounterFunction();
+          nsCSSValue::Array* arrayValue = value.GetArrayValue();
+          arrayValue->Item(0).GetStringValue(counterFunc->mIdent);
+          if (unit == eCSSUnit_Counters) {
+            arrayValue->Item(1).GetStringValue(counterFunc->mSeparator);
+          }
+          const nsCSSValue& style =
+            value.GetArrayValue()->Item(unit == eCSSUnit_Counters ? 2 : 1);
+          if (style.GetUnit() == eCSSUnit_AtomIdent) {
+            counterFunc->mCounterStyle = mPresContext->
+              CounterStyleManager()->BuildCounterStyle(style.GetAtomValue());
+          } else if (style.GetUnit() == eCSSUnit_Symbols) {
+            counterFunc->mCounterStyle =
+              new AnonymousCounterStyle(style.GetArrayValue());
+          } else {
+            MOZ_ASSERT_UNREACHABLE("Unknown counter style");
+            counterFunc->mCounterStyle = CounterStyleManager::GetDecimalStyle();
+          }
+          data.SetCounters(type, counterFunc.forget());
           break;
         }
         case eCSSUnit_Enumerated:
