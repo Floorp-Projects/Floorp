@@ -501,7 +501,10 @@ nsMultiplexInputStream::Seek(int32_t aWhence, int64_t aOffset)
         }
       } else {
         NS_ASSERTION(remaining == streamPos, "Huh?");
+        MOZ_ASSERT(remaining != 0, "Zero remaining should be handled earlier");
         remaining = 0;
+        mCurrentStream = i;
+        mStartedReadingCurrent = true;
       }
     }
 
