@@ -569,6 +569,35 @@
                          tooltip="dynamic-shortcut-tooltip"/>
         </toolbaritem>
         <toolbarseparator/>
+        <toolbarbutton id="appMenu-library-button"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       label="&places.library.title;"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('appMenu-libraryView', this)"/>
+        <toolbarbutton id="appMenu-addons-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&addons.label;"
+                       key="key_openAddons"
+                       command="Tools:Addons"
+                       />
+        <toolbarbutton id="appMenu-preferences-button"
+                       class="subviewbutton subviewbutton-iconic"
+#ifdef XP_WIN
+                       label="&preferencesCmd2.label;"
+#else
+                       label="&preferencesCmdUnix.label;"
+#ifdef XP_MACOSX
+                       key="key_preferencesCmdMac"
+#endif
+#endif
+                       oncommand="openPreferences()"
+                       />
+        <toolbarbutton id="appMenu-customize-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&viewCustomizeToolbar.label;"
+                       command="cmd_CustomizeToolbars"
+                       />
+        <toolbarseparator/>
         <toolbarbutton id="appMenu-open-file-button"
                        class="subviewbutton"
                        label="&openFileCmd.label;"
@@ -595,35 +624,6 @@
 #else
                        command="cmd_printPreview"
 #endif
-                       />
-        <toolbarseparator/>
-        <toolbarbutton id="appMenu-library-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       label="&places.library.title;"
-                       command="Browser:ShowAllBookmarks"
-                       />
-        <toolbarbutton id="appMenu-addons-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       label="&addons.label;"
-                       key="key_openAddons"
-                       command="Tools:Addons"
-                       />
-        <toolbarbutton id="appMenu-preferences-button"
-                       class="subviewbutton subviewbutton-iconic"
-#ifdef XP_WIN
-                       label="&preferencesCmd2.label;"
-#else
-                       label="&preferencesCmdUnix.label;"
-#ifdef XP_MACOSX
-                       key="key_preferencesCmdMac"
-#endif
-#endif
-                       oncommand="openPreferences()"
-                       />
-        <toolbarbutton id="appMenu-customize-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       label="&viewCustomizeToolbar.label;"
-                       command="cmd_CustomizeToolbars"
                        />
         <toolbarseparator/>
         <toolbarbutton id="appMenu-find-button"
@@ -674,6 +674,20 @@
                        type="checkbox"
                        observes="workOfflineMenuitemState"
                        oncommand="BrowserOffline.toggleOfflineStatus();"/>
+      </vbox>
+    </panelview>
+    <panelview id="appMenu-libraryView" class="PanelUI-subView">
+      <vbox class="panel-subview-body">
+        <toolbarbutton id="appMenu-library-history-button"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       label="&historyMenu.label;"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('PanelUI-history', this)"/>
+        <toolbarbutton id="appMenu-library-remotetabs-button"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       label="&appMenuRemoteTabs.label;"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('PanelUI-remotetabs', this)"/>
       </vbox>
     </panelview>
   </photonpanelmultiview>
