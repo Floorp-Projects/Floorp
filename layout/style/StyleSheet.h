@@ -13,7 +13,6 @@
 #include "mozilla/StyleBackendType.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/ServoUtils.h"
-#include "mozilla/StyleSetHandle.h"
 
 #include "nsICSSLoaderObserver.h"
 #include "nsIDOMCSSStyleSheet.h"
@@ -238,8 +237,8 @@ public:
   void WillDirty();
   virtual void DidDirty() {}
 
-  void AddStyleSet(StyleSetHandle aStyleSet);
-  void DropStyleSet(StyleSetHandle aStyleSet);
+  void AddStyleSet(const StyleSetHandle& aStyleSet);
+  void DropStyleSet(const StyleSetHandle& aStyleSet);
 
   nsresult DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex);
   nsresult InsertRuleIntoGroup(const nsAString& aRule,
