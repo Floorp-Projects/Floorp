@@ -1,10 +1,10 @@
 == input.html input-ref.html
 == button.html button-ref.html
-fails-if(stylo) == textarea.html textarea-ref.html
+fails-if(styloVsGecko) == textarea.html textarea-ref.html
 == select.html select-ref.html
 == fieldset.html fieldset-ref.html
 == output.html output-ref.html
 random-if(winWidget) needs-focus == input-focus.html input-focus-ref.html # Intermittent failures, bug 660224
 needs-focus == button-focus.html button-focus-ref.html
-needs-focus fails-if(stylo) == textarea-focus.html textarea-focus-ref.html
+needs-focus fails-if(styloVsGecko) == textarea-focus.html textarea-focus-ref.html
 random-if(winWidget) needs-focus == select-focus.html select-focus-ref.html # Intermittent failures, bug 660224

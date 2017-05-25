@@ -57,30 +57,30 @@ fuzzy(1,2) fuzzy-if(azureSkia,1,40000) == canvas-drawImage-alpha-2.html canvas-d
 # Context paint tests (this feature is currently not part of any spec.)
 # context-fill:
 == context-fill-01.html blue100x100-ref.html
-fails-if(stylo) test-pref(svg.context-properties.content.enabled,true) == context-fill-01.html lime100x100-ref.html
+fails-if(styloVsGecko) test-pref(svg.context-properties.content.enabled,true) == context-fill-01.html lime100x100-ref.html
 == context-fill-02.html transparent100x100-w-border-ref.html
-fails-if(stylo) test-pref(svg.context-properties.content.enabled,true) == context-fill-02.html lime100x100-w-border-ref.html
-fails-if(stylo) test-pref(svg.context-properties.content.enabled,true) == context-fill-03.html lime100x100-50pct-ref.html
+fails-if(styloVsGecko) test-pref(svg.context-properties.content.enabled,true) == context-fill-02.html lime100x100-w-border-ref.html
+fails-if(styloVsGecko) test-pref(svg.context-properties.content.enabled,true) == context-fill-03.html lime100x100-50pct-ref.html
 # fuzz because on win8 the r & b components are off by one
-fails-if(stylo) fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-04.html lime100x100-50pct-ref.html
-fails-if(stylo) test-pref(svg.context-properties.content.enabled,true) == context-fill-05.html context-fill-or-stroke-05-ref.html
-fails-if(stylo) test-pref(svg.context-properties.content.enabled,true) == context-fill-06.html lime100x100-ref.html
-fails-if(stylo) test-pref(svg.context-properties.content.enabled,true) == context-fill-07.html context-fill-07-ref.html
+fails-if(styloVsGecko) fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-04.html lime100x100-50pct-ref.html
+fails-if(styloVsGecko) test-pref(svg.context-properties.content.enabled,true) == context-fill-05.html context-fill-or-stroke-05-ref.html
+fails-if(styloVsGecko) test-pref(svg.context-properties.content.enabled,true) == context-fill-06.html lime100x100-ref.html
+fails-if(styloVsGecko) test-pref(svg.context-properties.content.enabled,true) == context-fill-07.html context-fill-07-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-fill-08.html blue100x100-ref.html
-fails-if(stylo) test-pref(svg.context-properties.content.enabled,true) == context-fill-bg-image-01.html blue100x100-ref.html
+fails-if(styloVsGecko) test-pref(svg.context-properties.content.enabled,true) == context-fill-bg-image-01.html blue100x100-ref.html
 # context-stroke:
 == context-stroke-01.html blue100x100-ref.html
-fails-if(stylo) test-pref(svg.context-properties.content.enabled,true) == context-stroke-01.html lime100x100-ref.html
+fails-if(styloVsGecko) test-pref(svg.context-properties.content.enabled,true) == context-stroke-01.html lime100x100-ref.html
 == context-stroke-02.html transparent100x100-w-border-ref.html
-fails-if(stylo) test-pref(svg.context-properties.content.enabled,true) == context-stroke-02.html lime100x100-w-border-ref.html
-fails-if(stylo) test-pref(svg.context-properties.content.enabled,true) == context-stroke-03.html lime100x100-50pct-ref.html
+fails-if(styloVsGecko) test-pref(svg.context-properties.content.enabled,true) == context-stroke-02.html lime100x100-w-border-ref.html
+fails-if(styloVsGecko) test-pref(svg.context-properties.content.enabled,true) == context-stroke-03.html lime100x100-50pct-ref.html
 # fuzz because on win8 the r & b components are off by one
-fails-if(stylo) fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-04.html lime100x100-50pct-ref.html
-fails-if(stylo) test-pref(svg.context-properties.content.enabled,true) == context-stroke-05.html context-fill-or-stroke-05-ref.html
-fails-if(stylo) test-pref(svg.context-properties.content.enabled,true) == context-stroke-06.html lime100x100-ref.html
+fails-if(styloVsGecko) fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-04.html lime100x100-50pct-ref.html
+fails-if(styloVsGecko) test-pref(svg.context-properties.content.enabled,true) == context-stroke-05.html context-fill-or-stroke-05-ref.html
+fails-if(styloVsGecko) test-pref(svg.context-properties.content.enabled,true) == context-stroke-06.html lime100x100-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-07.html context-stroke-07-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-08.html blue100x100-border-ref.html
-fails-if(stylo) test-pref(svg.context-properties.content.enabled,true) == context-stroke-bg-image-01.html blue100x100-border-ref.html
+fails-if(styloVsGecko) test-pref(svg.context-properties.content.enabled,true) == context-stroke-bg-image-01.html blue100x100-border-ref.html
 
 # Simple <img> tests
 == img-simple-1.html  lime100x100-ref.html
