@@ -12,7 +12,7 @@
 
 #include "platform.h"
 #include "ProfileBuffer.h"
-#include "PseudoStack.h"
+#include "js/ProfilingStack.h"
 
 // Stub eventMarker function for js-engine event generation.
 void ProfilerJSEventMarker(const char* aEvent);
@@ -232,9 +232,9 @@ public:
 
     js::SetContextProfilingStack(
       aContext,
-      (js::ProfileEntry*) RacyInfo()->mStack,
+      (js::ProfileEntry*) RacyInfo()->entries,
       RacyInfo()->AddressOfStackPointer(),
-      (uint32_t) mozilla::ArrayLength(RacyInfo()->mStack));
+      (uint32_t) mozilla::ArrayLength(RacyInfo()->entries));
 
     PollJSSampling();
   }
