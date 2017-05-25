@@ -83,13 +83,6 @@ option(env='MOZ_ANDROID_ACTIVITY_STREAM',
 set_config('MOZ_ANDROID_ACTIVITY_STREAM',
            depends_if('MOZ_ANDROID_ACTIVITY_STREAM')(lambda _: True))
 
-option(env='MOZ_ANDROID_MOZILLA_ONLINE',
-       help='Enable MozillaOnline (Mozilla China) specific Android code',
-       default=False)
-
-set_config('MOZ_ANDROID_MOZILLA_ONLINE',
-           depends_if('MOZ_ANDROID_MOZILLA_ONLINE')(lambda _: True))
-
 option(env='MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER',
        help='Build and package the install bouncer APK',
        default=True)
