@@ -12309,11 +12309,16 @@ CSSParserImpl::ParseImageLayersItem(
        haveAttach = false,
        havePositionAndSize = false,
        haveOrigin = false,
+       haveClip = false,
        haveComposite = false,
        haveMode = false,
        haveSomething = false;
 
-  const KTableEntry* originTable = nsCSSProps::kKeywordTableTable[aTable[nsStyleImageLayers::origin]];
+  const KTableEntry* originTable =
+    nsCSSProps::kKeywordTableTable[aTable[nsStyleImageLayers::origin]];
+  const KTableEntry* clipTable =
+    nsCSSProps::kKeywordTableTable[aTable[nsStyleImageLayers::clip]];
+
   while (GetToken(true)) {
     nsCSSTokenType tt = mToken.mType;
     UngetToken(); // ...but we'll still cheat and use mToken
@@ -12387,30 +12392,31 @@ CSSParserImpl::ParseImageLayersItem(
           NS_NOTREACHED("should be able to parse");
           return false;
         }
-
-        // The spec allows a second box value (for background-clip),
-        // immediately following the first one (for background-origin).
-
+        // Set clip value to origin if clip is not set yet.
+        // Note that we don't set haveClip here so that it can be
+        // overridden if we see it later.
+        if (!haveClip) {
 #ifdef DEBUG
-        const KTableEntry* clipTable = nsCSSProps::kKeywordTableTable[aTable[nsStyleImageLayers::clip]];
-        for (size_t i = 0; originTable[i].mValue != -1; i++) {
-          // For each keyword & value in kOriginKTable, ensure that
-          // kBackgroundKTable has a matching entry at the same position.
-          MOZ_ASSERT(originTable[i].mKeyword == clipTable[i].mKeyword);
-          MOZ_ASSERT(originTable[i].mValue == clipTable[i].mValue);
-        }
+          for (size_t i = 0; originTable[i].mValue != -1; i++) {
+            // For each keyword & value in kOriginKTable, ensure that
+            // kBackgroundKTable has a matching entry at the same position.
+            MOZ_ASSERT(originTable[i].mKeyword == clipTable[i].mKeyword);
+            MOZ_ASSERT(originTable[i].mValue == clipTable[i].mValue);
+          }
 #endif
-        CSSParseResult result =
-          ParseSingleValueProperty(aState.mClip->mValue,
-                                   aTable[nsStyleImageLayers::clip]);
-        MOZ_ASSERT(result != CSSParseResult::Error,
-                   "how can failing to parse a single background-clip value "
-                   "consume tokens?");
-        if (result == CSSParseResult::NotFound) {
-          // When exactly one <box> value is set, it is used for both
-          // 'background-origin' and 'background-clip'.
-          // See assertions above showing these values are compatible.
           aState.mClip->mValue = aState.mOrigin->mValue;
+        }
+      } else if (!haveClip &&
+                 nsCSSProps::FindKeyword(keyword, clipTable, dummy)) {
+        // It is important that we try parsing clip later than origin
+        // because if there are two <box> / <geometry-box> values, the
+        // first should be origin, and the second should be clip.
+        haveClip = true;
+        if (ParseSingleValueProperty(aState.mClip->mValue,
+                                     aTable[nsStyleImageLayers::clip]) !=
+            CSSParseResult::Ok) {
+          NS_NOTREACHED("should be able to parse");
+          return false;
         }
       } else if (!haveComposite &&
                  aTable[nsStyleImageLayers::composite] !=
