@@ -306,7 +306,7 @@ TimeoutManager::TimeoutManager(nsGlobalWindow& aWindow)
     mRunningTimeout(nullptr),
     mIdleCallbackTimeoutCounter(1),
     mBackPressureDelayMS(0),
-    mThrottleTrackingTimeouts(gTrackingTimeoutThrottlingDelay <= 0)
+    mThrottleTrackingTimeouts(false)
 {
   MOZ_DIAGNOSTIC_ASSERT(aWindow.IsInnerWindow());
 
