@@ -133,7 +133,6 @@ to mochitest command.
 * test_css_supports.html: issues around @supports syntax servo/servo#15482 [8]
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
-* test_default_computed_style.html: getDefaultComputedStyle bug 1366157 [1]
 
 ## Assertions
 
