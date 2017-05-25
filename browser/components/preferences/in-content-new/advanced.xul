@@ -9,7 +9,7 @@
 #endif
 
 <script type="application/javascript"
-        src="chrome://browser/content/preferences/in-content/advanced.js"/>
+        src="chrome://browser/content/preferences/in-content-new/advanced.js"/>
 
 <preferences id="advancedPreferences" hidden="true" data-category="paneAdvanced">
   <preference id="browser.preferences.advanced.selectedTabIndex"

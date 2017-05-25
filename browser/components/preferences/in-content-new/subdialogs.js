@@ -18,8 +18,8 @@ var gSubDialog = {
   _injectedStyleSheets: [
     "chrome://browser/skin/preferences/preferences.css",
     "chrome://global/skin/in-content/common.css",
-    "chrome://browser/skin/preferences/in-content/preferences.css",
-    "chrome://browser/skin/preferences/in-content/dialog.css",
+    "chrome://browser/skin/preferences/in-content-new/preferences.css",
+    "chrome://browser/skin/preferences/in-content-new/dialog.css",
   ],
   _resizeObserver: null,
 

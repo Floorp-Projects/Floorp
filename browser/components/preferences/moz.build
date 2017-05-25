@@ -5,13 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-	'in-content-old',
-	'in-content'
+	'in-content-new',
+	'in-content-old'
 ]
 
 BROWSER_CHROME_MANIFESTS += [
-    'in-content-old/tests/browser.ini',
-    'in-content/tests/browser.ini'
+    'in-content-new/tests/browser.ini',
+    'in-content-old/tests/browser.ini'
 ]
 
 for var in ('MOZ_APP_NAME', 'MOZ_MACBUNDLE_NAME'):

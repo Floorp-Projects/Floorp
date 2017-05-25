@@ -8,12 +8,12 @@
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
 <?xml-stylesheet href="chrome://global/skin/in-content/common.css"?>
 <?xml-stylesheet
-  href="chrome://browser/skin/preferences/in-content/preferences.css"?>
+  href="chrome://browser/skin/preferences/in-content-new/preferences.css"?>
 <?xml-stylesheet
   href="chrome://browser/content/preferences/handlers.css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/applications.css"?>
-<?xml-stylesheet href="chrome://browser/skin/preferences/in-content/search.css"?>
-<?xml-stylesheet href="chrome://browser/skin/preferences/in-content/containers.css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/in-content-new/search.css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/in-content-new/containers.css"?>
 
 <!DOCTYPE page [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
@@ -95,14 +95,14 @@
 #endif
 
   <html:link rel="shortcut icon"
-              href="chrome://browser/skin/preferences/in-content/favicon.ico"/>
+              href="chrome://browser/skin/preferences/in-content-new/favicon.ico"/>
 
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript"
-          src="chrome://browser/content/preferences/in-content/preferences.js"/>
-  <script src="chrome://browser/content/preferences/in-content/findInPage.js"/>
-  <script src="chrome://browser/content/preferences/in-content/subdialogs.js"/>
+          src="chrome://browser/content/preferences/in-content-new/preferences.js"/>
+  <script src="chrome://browser/content/preferences/in-content-new/findInPage.js"/>
+  <script src="chrome://browser/content/preferences/in-content-new/subdialogs.js"/>
 
   <stringbundle id="bundleBrand"
                 src="chrome://branding/locale/brand.properties"/>
