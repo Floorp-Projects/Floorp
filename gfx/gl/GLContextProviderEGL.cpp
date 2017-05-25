@@ -497,9 +497,7 @@ GLContextEGL::CreateGLContext(CreateContextFlags flags,
             // Skip EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT, since it doesn't help us.
         }
 
-        if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::KHR_create_context) &&
-            !sEGLLibrary.IsANGLE())
-        {
+        if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::KHR_create_context)) {
             rbab_attribs = required_attribs;
             rbab_attribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR);
             rbab_attribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_KHR);
