@@ -314,7 +314,6 @@ MOZ_CrashPrintf(const char* aFilename, int aLine, const char* aFormat, ...);
  */
 #define MOZ_CRASH_UNSAFE_PRINTF(format, ...) \
    do { \
-     MOZ_STATIC_ASSERT_VALID_ARG_COUNT(__VA_ARGS__); \
      static_assert( \
        MOZ_PASTE_PREFIX_AND_ARG_COUNT(, __VA_ARGS__) <= sPrintfMaxArgs, \
        "Only up to 4 additional arguments are allowed!"); \
