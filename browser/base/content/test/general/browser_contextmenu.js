@@ -63,7 +63,9 @@ add_task(async function test_setup_html() {
     let video = videoIframe.contentDocument.querySelector("video");
 
     audio.loop = true;
+    audio.src = "audio.ogg";
     video.loop = true;
+    video.src = "video.ogg";
 
     let awaitPause = ContentTaskUtils.waitForEvent(audio, "pause");
     await ContentTaskUtils.waitForCondition(() => !audio.paused, "Making sure audio is playing before calling pause");
