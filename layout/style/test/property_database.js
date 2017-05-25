@@ -2204,23 +2204,31 @@ var gCSSProperties = {
       "radial-gradient(at 10% bottom, #ffffff, black) scroll no-repeat",
       "repeating-radial-gradient(at 10% bottom, #ffffff, black) scroll no-repeat",
       "-moz-element(#test) lime",
-        /* multiple backgrounds */
-        "url(404.png), url(404.png)",
-        "url(404.png), url(404.png) transparent",
-        "url(404.png), url(404.png) red",
-        "repeat-x, fixed, none",
-        "0% top url(404.png), url(404.png) 0% top",
-        "fixed repeat-y top left url(404.png), repeat-x green",
-        "top left / contain, bottom right / cover",
-        /* test cases with clip+origin in the shorthand */
-        "url(404.png) green padding-box",
-        "url(404.png) border-box transparent",
-        "content-box url(404.png) blue",
-        "url(404.png) green padding-box padding-box",
-        "url(404.png) green padding-box border-box",
-        "content-box border-box url(404.png) blue",
-        "url(404.png) green padding-box text",
-        "content-box text url(404.png) blue"
+      /* multiple backgrounds */
+      "url(404.png), url(404.png)",
+      "url(404.png), url(404.png) transparent",
+      "url(404.png), url(404.png) red",
+      "repeat-x, fixed, none",
+      "0% top url(404.png), url(404.png) 0% top",
+      "fixed repeat-y top left url(404.png), repeat-x green",
+      "top left / contain, bottom right / cover",
+      /* test cases with clip+origin in the shorthand */
+      "url(404.png) green padding-box",
+      "url(404.png) border-box transparent",
+      "content-box url(404.png) blue",
+      "url(404.png) green padding-box padding-box",
+      "url(404.png) green padding-box border-box",
+      "content-box border-box url(404.png) blue",
+      "url(404.png) green padding-box text",
+      "content-box text url(404.png) blue",
+      /* clip and origin separated in the shorthand */
+      "url(404.png) padding-box green border-box",
+      "url(404.png) padding-box green padding-box",
+      "transparent padding-box url(404.png) border-box",
+      "transparent padding-box url(404.png) padding-box",
+      /* text */
+      "text",
+      "text border-box",
     ],
     invalid_values: [
       /* mixes with keywords have to be in correct order */
@@ -2242,16 +2250,9 @@ var gCSSProperties = {
       "url(404.png) rgba(0, 0, 0, 0), url(404.png) rgba(0, 0, 0, 0)",
       "url(404.png) rgba(0, 0, 0, 0) rgb(255, 0, 0), url(404.png) rgba(0, 0, 0, 0) rgb(255, 0, 0)",
       "url(404.png) rgb(255, 0, 0), url(404.png) rgb(255, 0, 0)",
-      /* clip and origin separated in the shorthand */
-      "url(404.png) padding-box green border-box",
-      "url(404.png) padding-box green padding-box",
-      "transparent padding-box url(404.png) border-box",
-      "transparent padding-box url(404.png) padding-box",
       /* error inside functions */
       "-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), rubbish, 50%, 30%, 0) transparent",
       "-moz-element(#a rubbish) black",
-      "text",
-      "text border-box",
       "content-box text text",
       "padding-box text url(404.png) text",
     ]
@@ -7063,6 +7064,8 @@ if (SupportsMaskShorthand()) {
       "url(404.png) alpha padding-box padding-box",
       "url(404.png) alpha padding-box border-box",
       "content-box border-box url(404.png)",
+      "alpha padding-box url(404.png) border-box",
+      "alpha padding-box url(404.png) padding-box",
     ],
     invalid_values: [
       /* mixes with keywords have to be in correct order */
@@ -7073,8 +7076,6 @@ if (SupportsMaskShorthand()) {
       "linear-gradient(red -99, yellow, green, blue 120%)",
       /* bug 258080: don't accept background-position separated */
       "left url(404.png) top", "top url(404.png) left",
-      "alpha padding-box url(404.png) border-box",
-      "alpha padding-box url(404.png) padding-box",
       "-moz-element(#a rubbish)",
       "left top / match-source"
     ]

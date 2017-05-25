@@ -12309,11 +12309,16 @@ CSSParserImpl::ParseImageLayersItem(
        haveAttach = false,
        havePositionAndSize = false,
        haveOrigin = false,
+       haveClip = false,
        haveComposite = false,
        haveMode = false,
        haveSomething = false;
 
-  const KTableEntry* originTable = nsCSSProps::kKeywordTableTable[aTable[nsStyleImageLayers::origin]];
+  const KTableEntry* originTable =
+    nsCSSProps::kKeywordTableTable[aTable[nsStyleImageLayers::origin]];
+  const KTableEntry* clipTable =
+    nsCSSProps::kKeywordTableTable[aTable[nsStyleImageLayers::clip]];
+
   while (GetToken(true)) {
     nsCSSTokenType tt = mToken.mType;
     UngetToken(); // ...but we'll still cheat and use mToken
@@ -12330,9 +12335,7 @@ CSSParserImpl::ParseImageLayersItem(
           keyword == eCSSKeyword_initial ||
           keyword == eCSSKeyword_unset) {
         return false;
-      } else if (keyword == eCSSKeyword_none) {
-        if (haveImage)
-          return false;
+      } else if (!haveImage && keyword == eCSSKeyword_none) {
         haveImage = true;
         if (ParseSingleValueProperty(aState.mImage->mValue,
                                      aTable[nsStyleImageLayers::image]) !=
@@ -12340,12 +12343,11 @@ CSSParserImpl::ParseImageLayersItem(
           NS_NOTREACHED("should be able to parse");
           return false;
         }
-      } else if (aTable[nsStyleImageLayers::attachment] !=
+      } else if (!haveAttach &&
+                 aTable[nsStyleImageLayers::attachment] !=
                    eCSSProperty_UNKNOWN &&
-                 nsCSSProps::FindKeyword(keyword,
-                   nsCSSProps::kImageLayerAttachmentKTable, dummy)) {
-        if (haveAttach)
-          return false;
+                 nsCSSProps::FindKeyword(
+                   keyword, nsCSSProps::kImageLayerAttachmentKTable, dummy)) {
         haveAttach = true;
         if (ParseSingleValueProperty(aState.mAttachment->mValue,
                                      aTable[nsStyleImageLayers::attachment]) !=
@@ -12353,10 +12355,9 @@ CSSParserImpl::ParseImageLayersItem(
           NS_NOTREACHED("should be able to parse");
           return false;
         }
-      } else if (nsCSSProps::FindKeyword(keyword,
-                   nsCSSProps::kImageLayerRepeatKTable, dummy)) {
-        if (haveRepeat)
-          return false;
+      } else if (!haveRepeat &&
+                 nsCSSProps::FindKeyword(
+                   keyword, nsCSSProps::kImageLayerRepeatKTable, dummy)) {
         haveRepeat = true;
         nsCSSValuePair scratch;
         if (!ParseImageLayerRepeatValues(scratch)) {
@@ -12365,10 +12366,9 @@ CSSParserImpl::ParseImageLayersItem(
         }
         aState.mRepeat->mXValue = scratch.mXValue;
         aState.mRepeat->mYValue = scratch.mYValue;
-      } else if (nsCSSProps::FindKeyword(keyword,
+      } else if (!havePositionAndSize &&
+                 nsCSSProps::FindKeyword(keyword,
                    nsCSSProps::kImageLayerPositionKTable, dummy)) {
-        if (havePositionAndSize)
-          return false;
         havePositionAndSize = true;
 
         if (!ParsePositionValueSeparateCoords(aState.mPositionX->mValue,
@@ -12383,9 +12383,8 @@ CSSParserImpl::ParseImageLayersItem(
           aState.mSize->mXValue = scratch.mXValue;
           aState.mSize->mYValue = scratch.mYValue;
         }
-      } else if (nsCSSProps::FindKeyword(keyword, originTable, dummy)) {
-        if (haveOrigin)
-          return false;
+      } else if (!haveOrigin &&
+                 nsCSSProps::FindKeyword(keyword, originTable, dummy)) {
         haveOrigin = true;
         if (ParseSingleValueProperty(aState.mOrigin->mValue,
                                      aTable[nsStyleImageLayers::origin]) !=
@@ -12393,36 +12392,37 @@ CSSParserImpl::ParseImageLayersItem(
           NS_NOTREACHED("should be able to parse");
           return false;
         }
-
-        // The spec allows a second box value (for background-clip),
-        // immediately following the first one (for background-origin).
-
+        // Set clip value to origin if clip is not set yet.
+        // Note that we don't set haveClip here so that it can be
+        // overridden if we see it later.
+        if (!haveClip) {
 #ifdef DEBUG
-        const KTableEntry* clipTable = nsCSSProps::kKeywordTableTable[aTable[nsStyleImageLayers::clip]];
-        for (size_t i = 0; originTable[i].mValue != -1; i++) {
-          // For each keyword & value in kOriginKTable, ensure that
-          // kBackgroundKTable has a matching entry at the same position.
-          MOZ_ASSERT(originTable[i].mKeyword == clipTable[i].mKeyword);
-          MOZ_ASSERT(originTable[i].mValue == clipTable[i].mValue);
-        }
+          for (size_t i = 0; originTable[i].mValue != -1; i++) {
+            // For each keyword & value in kOriginKTable, ensure that
+            // kBackgroundKTable has a matching entry at the same position.
+            MOZ_ASSERT(originTable[i].mKeyword == clipTable[i].mKeyword);
+            MOZ_ASSERT(originTable[i].mValue == clipTable[i].mValue);
+          }
 #endif
-        CSSParseResult result =
-          ParseSingleValueProperty(aState.mClip->mValue,
-                                   aTable[nsStyleImageLayers::clip]);
-        MOZ_ASSERT(result != CSSParseResult::Error,
-                   "how can failing to parse a single background-clip value "
-                   "consume tokens?");
-        if (result == CSSParseResult::NotFound) {
-          // When exactly one <box> value is set, it is used for both
-          // 'background-origin' and 'background-clip'.
-          // See assertions above showing these values are compatible.
           aState.mClip->mValue = aState.mOrigin->mValue;
         }
-      } else if (aTable[nsStyleImageLayers::composite] != eCSSProperty_UNKNOWN &&
-                 nsCSSProps::FindKeyword(keyword,
-                   nsCSSProps::kImageLayerCompositeKTable, dummy)) {
-        if (haveComposite)
+      } else if (!haveClip &&
+                 nsCSSProps::FindKeyword(keyword, clipTable, dummy)) {
+        // It is important that we try parsing clip later than origin
+        // because if there are two <box> / <geometry-box> values, the
+        // first should be origin, and the second should be clip.
+        haveClip = true;
+        if (ParseSingleValueProperty(aState.mClip->mValue,
+                                     aTable[nsStyleImageLayers::clip]) !=
+            CSSParseResult::Ok) {
+          NS_NOTREACHED("should be able to parse");
           return false;
+        }
+      } else if (!haveComposite &&
+                 aTable[nsStyleImageLayers::composite] !=
+                   eCSSProperty_UNKNOWN &&
+                 nsCSSProps::FindKeyword(
+                   keyword, nsCSSProps::kImageLayerCompositeKTable, dummy)) {
         haveComposite = true;
         if (ParseSingleValueProperty(aState.mComposite->mValue,
                                      aTable[nsStyleImageLayers::composite]) !=
@@ -12430,11 +12430,10 @@ CSSParserImpl::ParseImageLayersItem(
           NS_NOTREACHED("should be able to parse");
           return false;
         }
-      } else if (aTable[nsStyleImageLayers::maskMode] != eCSSProperty_UNKNOWN &&
-                 nsCSSProps::FindKeyword(keyword,
-                   nsCSSProps::kImageLayerModeKTable, dummy)) {
-        if (haveMode)
-          return false;
+      } else if (!haveMode &&
+                 aTable[nsStyleImageLayers::maskMode] != eCSSProperty_UNKNOWN &&
+                 nsCSSProps::FindKeyword(
+                   keyword, nsCSSProps::kImageLayerModeKTable, dummy)) {
         haveMode = true;
         if (ParseSingleValueProperty(aState.mMode->mValue,
                                      aTable[nsStyleImageLayers::maskMode]) !=
@@ -12442,9 +12441,8 @@ CSSParserImpl::ParseImageLayersItem(
           NS_NOTREACHED("should be able to parse");
           return false;
         }
-      } else if (aTable[nsStyleImageLayers::color] != eCSSProperty_UNKNOWN) {
-        if (haveColor)
-          return false;
+      } else if (!haveColor &&
+                 aTable[nsStyleImageLayers::color] != eCSSProperty_UNKNOWN) {
         haveColor = true;
         if (ParseSingleValueProperty(aState.mColor,
                                      aTable[nsStyleImageLayers::color]) !=

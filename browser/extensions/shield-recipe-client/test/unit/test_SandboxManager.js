@@ -4,7 +4,7 @@ Cu.import("resource://shield-recipe-client/lib/SandboxManager.jsm");
 
 // wrapAsync should wrap privileged Promises with Promises that are usable by
 // the sandbox.
-add_task(async function() {
+add_task(function* () {
   const manager = new SandboxManager();
   manager.addHold("testing");
 
@@ -25,7 +25,7 @@ add_task(async function() {
   manager.addGlobal("ok", ok);
   manager.addGlobal("equal", equal);
 
-  const sandboxResult = await new Promise(resolve => {
+  const sandboxResult = yield new Promise(resolve => {
     manager.addGlobal("resolve", result => resolve(result));
     manager.evalInSandbox(`
       // Unwrapped privileged promises are not accessible in the sandbox
@@ -45,7 +45,7 @@ add_task(async function() {
   });
   equal(sandboxResult, "wrapped", "wrapAsync methods return Promises that work in the sandbox");
 
-  await manager.evalInSandbox(`
+  yield manager.evalInSandbox(`
     (async function sandboxTest() {
       equal(
         await driver.wrappedThis(),
@@ -59,7 +59,7 @@ add_task(async function() {
 });
 
 // wrapAsync cloning options
-add_task(async function() {
+add_task(function* () {
   const manager = new SandboxManager();
   manager.addHold("testing");
 
@@ -80,7 +80,7 @@ add_task(async function() {
   manager.addGlobal("ok", ok);
   manager.addGlobal("deepEqual", deepEqual);
 
-  await new Promise(resolve => {
+  yield new Promise(resolve => {
     manager.addGlobal("resolve", resolve);
     manager.evalInSandbox(`
       (async function() {

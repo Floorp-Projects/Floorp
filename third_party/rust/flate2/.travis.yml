@@ -1,0 +1,32 @@
+language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+sudo: false
+before_script:
+  - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
+script:
+  - export CARGO_TARGET_DIR=`pwd`/target
+  - cargo build --verbose
+  - cargo test --verbose
+  - cargo test --verbose --features zlib
+  - cargo test --verbose --features tokio
+  - cargo test --verbose --features 'tokio zlib'
+  - cargo test --verbose --features zlib --no-default-features
+  - cargo clean && cargo build
+  - rustdoc --test README.md -L target/debug -L target/debug/deps
+  - cargo doc --no-deps
+  - cargo doc --no-deps --manifest-path=miniz-sys/Cargo.toml
+after_success:
+  - travis-cargo --only nightly doc-upload
+env:
+  global:
+    secure: "PHVT7IaeP5nQQVwGHKwqCYBDp0QyetSlER7se2j2Xgfx+lw3Bu6VWH6VF04B636Gb0tHPN/sUCXSgGRcvDuy6XFOev4LfynoYxNKgHJYg2E34EP2QLwsFfnvE4iujaG3GJk3o935Y7OYGv2OP1HeG4Mv6JhQK0GLnNDBZQ65kWI="
+
+notifications:
+  email:
+    on_success: never
+os:
+  - linux
+  - osx

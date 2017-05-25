@@ -464,6 +464,19 @@ xul|textbox.tree-input {
   padding-left: unset;
 }
 
+xul|textbox[type="search"] > .textbox-input-box {
+  background: url(chrome://global/skin/icons/search-textbox.svg) no-repeat center left;
+  padding-inline-start: 16px;
+}
+
+xul|textbox[type="search"] > .textbox-input-box:-moz-locale-dir(rtl) {
+  background-position-x: right;
+}
+
+xul|textbox[type="search"] > .textbox-input-box > .textbox-search-icons > .textbox-search-icon {
+  visibility: hidden;
+}
+
 html|input[type="email"],
 html|input[type="tel"],
 html|input[type="text"],

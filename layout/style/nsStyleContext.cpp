@@ -1166,6 +1166,9 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
     // Presume a difference.
     hint |= nsChangeHint_RepaintFrame;
   } else if (thisVis && !NS_IsHintSubset(nsChangeHint_RepaintFrame, hint)) {
+    // Bug 1364484: Update comments here and potentially remove the assertion
+    // below once we return a non-null visited context in CalcStyleDifference
+    // using Servo values.  The approach is becoming quite similar to Gecko.
     // We'll handle visited style differently in servo. Assert against being
     // in the parallel traversal to avoid static analysis hazards when calling
     // StyleFoo() below.
@@ -1249,8 +1252,11 @@ public:
   }
 
   nsStyleContext* GetStyleIfVisited() {
-    // XXXbholley: This is wrong. Need to implement to get visited handling
-    // corrrect!
+    // Bug 1364484: Figure out what to do here for Stylo visited values.  We can
+    // get the visited computed values:
+    // RefPtr<ServoComputedValues> visitedComputedValues =
+    //   Servo_ComputedValues_GetVisitedStyle(mComputedValues).Consume();
+    // But what's the best way to create the nsStyleContext?
     return nullptr;
   }
 

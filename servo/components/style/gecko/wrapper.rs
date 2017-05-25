@@ -65,13 +65,15 @@ use rule_tree::CascadeLevel as ServoCascadeLevel;
 use selector_parser::ElementExt;
 use selectors::Element;
 use selectors::attr::{AttrSelectorOperation, AttrSelectorOperator, CaseSensitivity, NamespaceConstraint};
-use selectors::matching::{ElementSelectorFlags, MatchingContext, MatchingMode};
+use selectors::matching::{ElementSelectorFlags, MatchingContext, MatchingMode, RelevantLinkStatus};
 use shared_lock::Locked;
 use sink::Push;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
 use std::hash::{Hash, Hasher};
+use std::mem;
+use std::ops::DerefMut;
 use std::ptr;
 use string_cache::{Atom, Namespace, WeakAtom, WeakNamespace};
 use stylearc::Arc;
@@ -419,6 +421,29 @@ impl<'le> GeckoElement<'le> {
                 self.0.mServoData.set(ptr);
                 unsafe { &* ptr }
             },
+        }
+    }
+
+    /// Sets the specified element data, return any existing data.
+    ///
+    /// Like `ensure_data`, only safe to call with exclusive access to the
+    /// element.
+    pub unsafe fn set_data(&self, replace_data: Option<ElementData>) -> Option<ElementData> {
+        match (self.get_data(), replace_data) {
+            (Some(old), Some(replace_data)) => {
+                Some(mem::replace(old.borrow_mut().deref_mut(), replace_data))
+            }
+            (Some(old), None) => {
+                let old_data = mem::replace(old.borrow_mut().deref_mut(), ElementData::new(None));
+                self.0.mServoData.set(ptr::null_mut());
+                Some(old_data)
+            }
+            (None, Some(replace_data)) => {
+                let ptr = Box::into_raw(Box::new(AtomicRefCell::new(replace_data)));
+                self.0.mServoData.set(ptr);
+                None
+            }
+            (None, None) => None,
         }
     }
 
@@ -1236,6 +1261,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
     fn match_non_ts_pseudo_class<F>(&self,
                                     pseudo_class: &NonTSPseudoClass,
                                     context: &mut MatchingContext,
+                                    relevant_link: &RelevantLinkStatus,
                                     flags_setter: &mut F)
                                     -> bool
         where F: FnMut(&Self, ElementSelectorFlags),
@@ -1243,8 +1269,6 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
         use selectors::matching::*;
         match *pseudo_class {
             NonTSPseudoClass::AnyLink |
-            NonTSPseudoClass::Link |
-            NonTSPseudoClass::Visited |
             NonTSPseudoClass::Active |
             NonTSPseudoClass::Focus |
             NonTSPseudoClass::Hover |
@@ -1293,6 +1317,8 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
                 // here, to handle `:any-link` correctly.
                 self.get_state().intersects(pseudo_class.state_flag())
             },
+            NonTSPseudoClass::Link => relevant_link.is_unvisited(self, context),
+            NonTSPseudoClass::Visited => relevant_link.is_visited(self, context),
             NonTSPseudoClass::MozFirstNode => {
                 flags_setter(self, HAS_EDGE_CHILD_SELECTOR);
                 let mut elem = self.as_node();
@@ -1369,6 +1395,15 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
         }
     }
 
+    #[inline]
+    fn is_link(&self) -> bool {
+        let mut context = MatchingContext::new(MatchingMode::Normal, None);
+        self.match_non_ts_pseudo_class(&NonTSPseudoClass::AnyLink,
+                                       &mut context,
+                                       &RelevantLinkStatus::default(),
+                                       &mut |_, _| {})
+    }
+
     fn get_id(&self) -> Option<Atom> {
         if !self.has_id() {
             return None;
@@ -1420,14 +1455,6 @@ impl<'a> NamespaceConstraintHelpers for NamespaceConstraint<&'a Namespace> {
 }
 
 impl<'le> ElementExt for GeckoElement<'le> {
-    #[inline]
-    fn is_link(&self) -> bool {
-        let mut context = MatchingContext::new(MatchingMode::Normal, None);
-        self.match_non_ts_pseudo_class(&NonTSPseudoClass::AnyLink,
-                                       &mut context,
-                                       &mut |_, _| {})
-    }
-
     #[inline]
     fn matches_user_and_author_rules(&self) -> bool {
         self.flags() & (NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE as u32) == 0

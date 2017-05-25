@@ -1,0 +1,12 @@
+[package]
+
+name = "semver"
+version = "0.1.20"
+authors = ["The Rust Project Developers"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/rust-lang/semver"
+homepage = "https://github.com/rust-lang/semver"
+documentation = "http://doc.rust-lang.org/semver"
+description = """
+Semantic version parsing and comparison.
+"""

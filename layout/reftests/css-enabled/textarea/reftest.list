@@ -1,9 +1,9 @@
-fuzzy-if(skiaContent,1,5) fails-if(stylo) == textarea-fieldset-1.html textarea-fieldset-ref.html
-fuzzy-if(skiaContent,1,5) fails-if(stylo) == textarea-fieldset-2.html textarea-fieldset-ref.html
-fails-if(stylo) == textarea-fieldset-3.html textarea-fieldset-ref.html
-fails-if(stylo) == textarea-fieldset-4.html textarea-fieldset-ref.html
-fuzzy-if(skiaContent,1,5) fails-if(stylo) == textarea-fieldset-legend-1.html textarea-fieldset-legend-ref-1.html
-fuzzy-if(skiaContent,1,5) fails-if(stylo) == textarea-fieldset-legend-2.html textarea-fieldset-legend-ref-2.html
-fuzzy-if(skiaContent,1,5) fails-if(stylo) == textarea-fieldset-legend-3.html textarea-fieldset-legend-ref-3.html
-fuzzy-if(skiaContent,1,5) fails-if(stylo) == textarea-fieldset-legend-4.html textarea-fieldset-legend-ref-4.html
-fuzzy-if(skiaContent,1,10) fails-if(stylo) == textarea-fieldset-legend-5.html textarea-fieldset-legend-ref-5.html
+fuzzy-if(skiaContent,1,5) fails-if(styloVsGecko) == textarea-fieldset-1.html textarea-fieldset-ref.html
+fuzzy-if(skiaContent,1,5) fails-if(styloVsGecko) == textarea-fieldset-2.html textarea-fieldset-ref.html
+fails-if(styloVsGecko) == textarea-fieldset-3.html textarea-fieldset-ref.html
+fails-if(styloVsGecko) == textarea-fieldset-4.html textarea-fieldset-ref.html
+fuzzy-if(skiaContent,1,5) fails-if(styloVsGecko) == textarea-fieldset-legend-1.html textarea-fieldset-legend-ref-1.html
+fuzzy-if(skiaContent,1,5) fails-if(styloVsGecko) == textarea-fieldset-legend-2.html textarea-fieldset-legend-ref-2.html
+fuzzy-if(skiaContent,1,5) fails-if(styloVsGecko) == textarea-fieldset-legend-3.html textarea-fieldset-legend-ref-3.html
+fuzzy-if(skiaContent,1,5) fails-if(styloVsGecko) == textarea-fieldset-legend-4.html textarea-fieldset-legend-ref-4.html
+fuzzy-if(skiaContent,1,10) fails-if(styloVsGecko) == textarea-fieldset-legend-5.html textarea-fieldset-legend-ref-5.html

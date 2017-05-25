@@ -37,7 +37,7 @@ fuzzy-if(skiaContent,12,83) == corner-4.html corner-4-ref.svg
 skip-if(!webrender) pref(layers.advanced.border-layers,1) == border-reduce-height.html border-reduce-height-ref.html
 
 # Tests for border clipping
-fails-if(!stylo) == clipping-1.html clipping-1-ref.html # background color should completely fill box; bug 466572
+fails-if(!styloVsGecko) == clipping-1.html clipping-1-ref.html # background color should completely fill box; bug 466572
 != clipping-2.html about:blank # background color clipped to inner/outer border, can't get
 # great tests for this due to antialiasing problems described in bug 466572
 fuzzy-if(skiaContent,17,62) == clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background

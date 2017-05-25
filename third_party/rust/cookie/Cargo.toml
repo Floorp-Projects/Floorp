@@ -1,0 +1,23 @@
+[package]
+
+name = "cookie"
+authors = ["Alex Crichton <alex@alexcrichton.com>", "Sergio Benitez <sb@sergio.bz>"]
+version = "0.6.2"
+license = "MIT/Apache-2.0"
+repository = "https://github.com/alexcrichton/cookie-rs"
+documentation = "https://docs.rs/cookie"
+description = """
+Crate for parsing HTTP cookie headers and managing a cookie jar. Supports
+encrypted, signed, and permanent cookie chars composed together in a manner
+similar to Rails' cookie jar.
+"""
+
+[features]
+secure = ["openssl", "rustc-serialize"]
+percent-encode = ["url"]
+
+[dependencies]
+time = "0.1"
+url = { version = "1.0", optional = true }
+openssl = { version = "0.9.0", optional = true }
+rustc-serialize = { version = "0.3", optional = true }

@@ -25,19 +25,17 @@ namespace dom {
 enum MenuType : uint8_t
 {
   MENU_TYPE_CONTEXT = 1,
-  MENU_TYPE_TOOLBAR,
-  MENU_TYPE_LIST
+  MENU_TYPE_TOOLBAR
 };
 
 static const nsAttrValue::EnumTable kMenuTypeTable[] = {
   { "context", MENU_TYPE_CONTEXT },
   { "toolbar", MENU_TYPE_TOOLBAR },
-  { "list", MENU_TYPE_LIST },
   { nullptr, 0 }
 };
 
 static const nsAttrValue::EnumTable* kMenuDefaultType =
-  &kMenuTypeTable[2];
+  &kMenuTypeTable[1];
 
 enum SeparatorType
 {
@@ -49,7 +47,7 @@ enum SeparatorType
 
 
 HTMLMenuElement::HTMLMenuElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo), mType(MENU_TYPE_LIST)
+  : nsGenericHTMLElement(aNodeInfo), mType(MENU_TYPE_TOOLBAR)
 {
 }
 
@@ -84,7 +82,7 @@ HTMLMenuElement::SendShowEvent()
   if (!shell) {
     return;
   }
- 
+
   RefPtr<nsPresContext> presContext = shell->GetPresContext();
   nsEventStatus status = nsEventStatus_eIgnore;
   EventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
@@ -244,7 +242,7 @@ HTMLMenuElement::AddSeparator(nsIMenuBuilder* aBuilder, int8_t& aSeparator)
   if (aSeparator) {
     return;
   }
- 
+
   aBuilder->AddSeparator();
   aSeparator = ST_TRUE;
 }

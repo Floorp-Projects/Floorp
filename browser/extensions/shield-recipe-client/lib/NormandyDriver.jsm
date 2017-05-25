@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource:///modules/ShellService.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
-Cu.import("resource://gre/modules/Timer.jsm"); /* globals setTimeout, clearTimeout */
+Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://shield-recipe-client/lib/LogManager.jsm");
 Cu.import("resource://shield-recipe-client/lib/Storage.jsm");
 Cu.import("resource://shield-recipe-client/lib/Heartbeat.jsm");
@@ -123,15 +123,20 @@ this.NormandyDriver = function(sandboxManager) {
       return ret;
     },
 
-    createStorage(keyPrefix) {
-      let storage;
-      try {
-        storage = Storage.makeStorage(keyPrefix, sandbox);
-      } catch (e) {
-        log.error(e.stack);
-        throw e;
+    createStorage(prefix) {
+      const storage = new Storage(prefix);
+
+      // Wrapped methods that we expose to the sandbox. These are documented in
+      // the driver spec in docs/dev/driver.rst.
+      const storageInterface = {};
+      for (const method of ["getItem", "setItem", "removeItem", "clear"]) {
+        storageInterface[method] = sandboxManager.wrapAsync(storage[method].bind(storage), {
+          cloneArguments: true,
+          cloneInto: true,
+        });
       }
-      return storage;
+
+      return sandboxManager.cloneInto(storageInterface, {cloneFunctions: true});
     },
 
     setTimeout(cb, time) {

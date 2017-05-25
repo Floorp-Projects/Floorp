@@ -25,7 +25,6 @@ module.exports = {
     "new-parens": "error",
     "no-array-constructor": "error",
     "no-control-regex": "error",
-    "no-eval": "error",
     "no-extend-native": "error",
     "no-fallthrough": "error",
     "no-inline-comments": "warn",

@@ -31,5 +31,5 @@ fails-if(webrender) == dependent-builtin.html           dependent-builtin-ref.ht
 == redefine-builtin.html            redefine-builtin-ref.html
 == redefine-attr-mapping.html       redefine-attr-mapping-ref.html
 == disclosure-styles.html           disclosure-styles-ref.html
-fails-if(stylo) == symbols-function.html            symbols-function-ref.html
+fails-if(styloVsGecko) == symbols-function.html            symbols-function-ref.html
 == symbols-function-invalid.html    symbols-function-invalid-ref.html

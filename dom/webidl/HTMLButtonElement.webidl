@@ -35,8 +35,6 @@ interface HTMLButtonElement : HTMLElement {
            attribute DOMString type;
   [SetterThrows, Pure]
            attribute DOMString value;
-// Not yet implemented:
-//           attribute HTMLMenuElement? menu;
 
   readonly attribute boolean willValidate;
   readonly attribute ValidityState validity;

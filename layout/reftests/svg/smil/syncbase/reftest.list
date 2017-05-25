@@ -1,48 +1,48 @@
 # Tests related to SVG Animation (using SMIL) that use syncbase timing.
 
 # New intervals
-fails-if(stylo) == new-interval-simple-1.svg green-box-ref.svg
-fails-if(stylo) == new-interval-simple-2.svg green-box-ref.svg
-fails-if(stylo) == new-interval-negative-offset-1.svg green-box-ref.svg
-fails-if(stylo) == new-interval-negative-offset-2.svg green-box-ref.svg
-fails-if(stylo) == new-interval-negative-offset-3.svg green-box-ref.svg
-fails-if(stylo) == new-interval-negative-offset-4.svg green-box-ref.svg
-fails-if(stylo) == new-interval-negative-syncbase-1.svg green-box-ref.svg
-fails-if(stylo) == new-interval-restart-1.svg green-box-ref.svg
-fails-if(stylo) == new-interval-restart-2.svg green-box-ref.svg
-fails-if(stylo) == new-interval-restart-3.svg green-box-ref.svg
-fails-if(stylo) == new-interval-early-end-1.svg green-box-ref.svg
-fails-if(stylo) == new-interval-early-end-2.svg green-box-ref.svg
-fails-if(stylo) == new-interval-early-end-3.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-simple-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-simple-2.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-negative-offset-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-negative-offset-2.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-negative-offset-3.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-negative-offset-4.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-negative-syncbase-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-restart-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-restart-2.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-restart-3.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-early-end-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-early-end-2.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-early-end-3.svg green-box-ref.svg
 == new-interval-early-end-4.svg green-box-ref.svg
-fails-if(stylo) == new-interval-early-end-5.svg green-box-ref.svg
-fails-if(stylo) == new-interval-early-end-6.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-early-end-5.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-early-end-6.svg green-box-ref.svg
 == new-interval-early-end-7.svg green-box-ref.svg
-fails-if(stylo) == new-interval-doubly-dependent-1.svg green-box-ref.svg
-fails-if(stylo) == new-interval-doubly-dependent-2.svg green-box-ref.svg
-fails-if(stylo) == new-interval-doubly-dependent-3.svg green-box-ref.svg
-fails-if(stylo) == new-interval-triply-dependent-1.svg green-box-ref.svg
-fails-if(stylo) == new-interval-triply-dependent-2.svg green-box-ref.svg
-fails-if(stylo) == new-interval-end-negative-1.svg green-box-ref.svg
-fails-if(stylo) == new-interval-end-negative-2.svg green-box-ref.svg
-fails-if(stylo) == new-interval-end-dep-1.svg green-box-ref.svg
-fails-if(stylo) == new-interval-chain-1.svg green-box-ref.svg
-fails-if(stylo) == new-interval-chain-2.svg green-box-ref.svg
-fails-if(stylo) == new-interval-sample-order-1.svg green-box-ref.svg
-fails-if(stylo) == new-interval-freeze-begin-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-doubly-dependent-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-doubly-dependent-2.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-doubly-dependent-3.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-triply-dependent-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-triply-dependent-2.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-end-negative-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-end-negative-2.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-end-dep-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-chain-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-chain-2.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-sample-order-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == new-interval-freeze-begin-1.svg green-box-ref.svg
 
 # Changing intervals
-fails-if(stylo) == changed-interval-simple-1.svg green-box-ref.svg
-fails-if(stylo) == changed-interval-simple-2.svg green-box-ref.svg
-fails-if(stylo) == changed-interval-simple-3.svg green-box-ref.svg
-fails-if(stylo) == changed-interval-simple-4.svg green-box-ref.svg
+fails-if(styloVsGecko) == changed-interval-simple-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == changed-interval-simple-2.svg green-box-ref.svg
+fails-if(styloVsGecko) == changed-interval-simple-3.svg green-box-ref.svg
+fails-if(styloVsGecko) == changed-interval-simple-4.svg green-box-ref.svg
 == changed-interval-simple-5.svg green-box-ref.svg
-fails-if(stylo) == changed-interval-resolved-1.svg green-box-ref.svg
-fails-if(stylo) == changed-interval-resolved-2.svg green-box-ref.svg
-fails-if(stylo) == changed-interval-sort-1.svg green-box-ref.svg
-fails-if(stylo) == changed-interval-change-spec-1.svg green-box-ref.svg
-fails-if(stylo) == changed-interval-change-spec-2.svg green-box-ref.svg
-fails-if(stylo) == changed-interval-change-spec-3.svg green-box-ref.svg
+fails-if(styloVsGecko) == changed-interval-resolved-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == changed-interval-resolved-2.svg green-box-ref.svg
+fails-if(styloVsGecko) == changed-interval-sort-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == changed-interval-change-spec-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == changed-interval-change-spec-2.svg green-box-ref.svg
+fails-if(styloVsGecko) == changed-interval-change-spec-3.svg green-box-ref.svg
 == changed-interval-change-spec-4.svg green-box-ref.svg
 
 # Deleted intervals
@@ -53,47 +53,47 @@ fails-if(stylo) == changed-interval-change-spec-3.svg green-box-ref.svg
 == deleted-interval-simple-5.svg green-box-ref.svg
 
 # Trimmed intervals
-fails-if(stylo) == trimmed-interval-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == trimmed-interval-1.svg green-box-ref.svg
 
 # Cyclic dependencies
-fails-if(stylo) == cycle-ok-1.svg green-box-ref.svg
-fails-if(stylo) == cycle-ok-2.svg green-box-ref.svg
-fails-if(stylo) == cycle-ok-3.svg green-box-ref.svg
-fails-if(stylo) == cycle-ok-4.svg green-box-ref.svg
-fails-if(stylo) == cycle-ok-5.svg green-box-ref.svg
-fails-if(stylo) == cycle-self-ref-1.svg green-box-ref.svg
-fails-if(stylo) == cycle-self-ref-2.svg green-box-ref.svg
-fails-if(stylo) == cycle-self-ref-3.svg green-box-ref.svg
+fails-if(styloVsGecko) == cycle-ok-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == cycle-ok-2.svg green-box-ref.svg
+fails-if(styloVsGecko) == cycle-ok-3.svg green-box-ref.svg
+fails-if(styloVsGecko) == cycle-ok-4.svg green-box-ref.svg
+fails-if(styloVsGecko) == cycle-ok-5.svg green-box-ref.svg
+fails-if(styloVsGecko) == cycle-self-ref-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == cycle-self-ref-2.svg green-box-ref.svg
+fails-if(styloVsGecko) == cycle-self-ref-3.svg green-box-ref.svg
 == cycle-self-ref-4.svg green-box-ref.svg
-fails-if(stylo) == cycle-self-ref-5.svg green-box-ref.svg
+fails-if(styloVsGecko) == cycle-self-ref-5.svg green-box-ref.svg
 == cycle-invalid-1.svg green-box-ref.svg
-fails-if(stylo) == cycle-invalid-2.svg green-box-ref.svg
-fails-if(stylo) == cycle-invalid-3.svg green-box-ref.svg
+fails-if(styloVsGecko) == cycle-invalid-2.svg green-box-ref.svg
+fails-if(styloVsGecko) == cycle-invalid-3.svg green-box-ref.svg
 == cycle-invalid-4.svg green-box-ref.svg
-fails-if(stylo) == cycle-change-1.svg green-box-ref.svg
-fails-if(stylo) == cycle-change-2.svg green-box-ref.svg
+fails-if(styloVsGecko) == cycle-change-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == cycle-change-2.svg green-box-ref.svg
 == cycle-delete-1.svg green-box-ref.svg
-fails-if(stylo) == cycle-recursion-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == cycle-recursion-1.svg green-box-ref.svg
 == cycle-recursion-2.svg green-box-ref.svg
 
 # Animation sandwich priority
-fails-if(stylo) == sandwich-priority-1.svg green-box-ref.svg
-fails-if(stylo) == sandwich-priority-2.svg green-box-ref.svg
-fails-if(stylo) == sandwich-priority-3.svg green-box-ref.svg
-fails-if(stylo) == sandwich-priority-4.svg green-box-ref.svg
-fails-if(stylo) == sandwich-priority-5.svg green-box-ref.svg
-fails-if(stylo) == sandwich-priority-6.svg green-box-ref.svg
-fails-if(stylo) == sandwich-priority-7.svg green-box-ref.svg
-fails-if(stylo) == sandwich-priority-8.svg green-box-ref.svg
-fails-if(stylo) == sandwich-priority-9.svg green-box-ref.svg
-fails-if(stylo) == sandwich-priority-10.svg green-box-ref.svg
-fails-if(stylo) == sandwich-priority-11.svg green-box-ref.svg
-fails-if(stylo) == sandwich-priority-12.svg green-box-ref.svg
+fails-if(styloVsGecko) == sandwich-priority-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == sandwich-priority-2.svg green-box-ref.svg
+fails-if(styloVsGecko) == sandwich-priority-3.svg green-box-ref.svg
+fails-if(styloVsGecko) == sandwich-priority-4.svg green-box-ref.svg
+fails-if(styloVsGecko) == sandwich-priority-5.svg green-box-ref.svg
+fails-if(styloVsGecko) == sandwich-priority-6.svg green-box-ref.svg
+fails-if(styloVsGecko) == sandwich-priority-7.svg green-box-ref.svg
+fails-if(styloVsGecko) == sandwich-priority-8.svg green-box-ref.svg
+fails-if(styloVsGecko) == sandwich-priority-9.svg green-box-ref.svg
+fails-if(styloVsGecko) == sandwich-priority-10.svg green-box-ref.svg
+fails-if(styloVsGecko) == sandwich-priority-11.svg green-box-ref.svg
+fails-if(styloVsGecko) == sandwich-priority-12.svg green-box-ref.svg
 
 # Cross-time container dependencies
-fails-if(stylo) == cross-container-1.xhtml green-box-ref.xhtml
+fails-if(styloVsGecko) == cross-container-1.xhtml green-box-ref.xhtml
 == cross-container-2.xhtml green-box-ref.xhtml
-fails-if(stylo) == cross-container-3.xhtml green-box-ref.xhtml
+fails-if(styloVsGecko) == cross-container-3.xhtml green-box-ref.xhtml
 
 # Filtering
-fails-if(stylo) == filtered-interval-1.svg green-box-ref.svg
+fails-if(styloVsGecko) == filtered-interval-1.svg green-box-ref.svg

@@ -1,0 +1,11 @@
+language: c
+env:
+  - LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib/rustlib/x86_64-unknown-linux-gnu/lib/
+install:
+  - curl https://static.rust-lang.org/rustup.sh | sudo bash
+script:
+  - cargo build -v
+  - cargo test -v
+  - cargo doc -v
+os:
+  - linux

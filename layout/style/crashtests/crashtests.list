@@ -1,5 +1,4 @@
 load 105619-1.html
-load 147777-1.html
 load 187671-1.html
 load 192408-1.html
 load 285727-1.html
@@ -76,7 +75,7 @@ load 621596-1.html
 load 622314-1.xhtml
 load 637242.xhtml
 load 645142.html
-== 645951-1.html 645951-1-ref.html
+fails-if(stylo) == 645951-1.html 645951-1-ref.html # bug 1367213
 load 652976-1.svg
 load 665209-1.html
 load 671799-1.html
@@ -172,3 +171,5 @@ HTTP load 1333001-1.html
 pref(dom.animations-api.core.enabled,true) load 1340344.html
 load 1342316-1.html
 load 1356601-1.html
+load content-only-on-link-before.html
+load content-only-on-visited-before.html

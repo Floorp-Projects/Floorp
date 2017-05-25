@@ -1,1 +1,1 @@
-fails-if(stylo) == test1.html test1-ref.html
+fails-if(styloVsGecko) == test1.html test1-ref.html

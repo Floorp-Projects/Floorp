@@ -63,10 +63,10 @@ random != text-emoji.html text-emoji-notref.html
 # azure quartz uses CGDrawLinearGradient instead of DrawShading
 # so we have less control over degenerate behaviour as tested by this
 # test
-fails-if((azureSkia&&!azureSkiaGL&&!stylo)||(azureSkiaGL&&Android)) == linear-gradient-1a.html linear-gradient-1-ref.html
+fails-if((azureSkia&&!azureSkiaGL&&!styloVsGecko)||(azureSkiaGL&&Android)) == linear-gradient-1a.html linear-gradient-1-ref.html
 
 # this passes with cairo on 10.7 and 10.8 but not with azure for reasons unknown
-fails-if((azureSkia&&!azureSkiaGL&&!stylo)||(azureSkiaGL&&Android)) == linear-gradient-1b.html linear-gradient-1-ref.html
+fails-if((azureSkia&&!azureSkiaGL&&!styloVsGecko)||(azureSkiaGL&&Android)) == linear-gradient-1b.html linear-gradient-1-ref.html
 
 == zero-dimensions.html zero-dimensions-ref.html
 
