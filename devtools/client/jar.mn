@@ -216,6 +216,7 @@ devtools.jar:
     skin/images/gcli_sec_good.svg (themes/images/gcli_sec_good.svg)
     skin/images/gcli_sec_moderate.svg (themes/images/gcli_sec_moderate.svg)
     skin/images/globe.svg (themes/images/globe.svg)
+    skin/images/sad-face.svg (themes/images/sad-face.svg)
     skin/images/tool-options.svg (themes/images/tool-options.svg)
     skin/images/tool-webconsole.svg (themes/images/tool-webconsole.svg)
     skin/images/tool-canvas.svg (themes/images/tool-canvas.svg)
