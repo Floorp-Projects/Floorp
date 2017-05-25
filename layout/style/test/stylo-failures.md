@@ -33,7 +33,6 @@ to mochitest command.
   * "layout.css.prefixes.device-pixel-ratio-webkit" support bug 1366956
     * test_media_queries.html `-device-pixel-ratio` [27]
     * test_webkit_device_pixel_ratio.html [3]
-  * test_media_queries.html `resolution`: non-positive value should be rejected bug 1366961 [9]
   * test_media_queries_dynamic.html `restyle count`: support elementsRestyled [6]
   * test_media_queries_dynamic_xbl.html: xbl support bug 1290276 [2]
 * Animation support:
