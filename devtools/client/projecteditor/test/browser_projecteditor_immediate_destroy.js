@@ -4,13 +4,6 @@
 
 "use strict";
 
-//
-// Whitelisting this test.
-// As part of bug 1077403, the leaking uncaught rejection should be fixed.
-//
-thisTestLeaksUncaughtRejectionsAndShouldBeFixed("destroy");
-thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: this.window is null");
-
 // Test that projecteditor can be destroyed in various states of loading
 // without causing any leaks or exceptions.
 
