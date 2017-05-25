@@ -4,13 +4,13 @@
 
 'use strict';
 
-add_task(function* () {
+add_task(async function () {
   // Create a11y service.
   let a11yInit = initPromise();
   let accService = Cc['@mozilla.org/accessibilityService;1'].getService(
     Ci.nsIAccessibilityService);
 
-  yield a11yInit;
+  await a11yInit;
   ok(accService, 'Service initialized');
 
   let docAcc = accService.getAccessibleFor(document);
@@ -18,7 +18,7 @@ add_task(function* () {
 
   // Accessible object reference will live longer than the scope of this
   // function.
-  let acc = yield new Promise(resolve => {
+  let acc = await new Promise(resolve => {
     let intervalId = setInterval(() => {
       let tabAcc = accService.getAccessibleFor(gBrowser.mCurrentTab);
       if (tabAcc) {
@@ -44,7 +44,7 @@ add_task(function* () {
   // references to accessible objects.
   forceGC();
   // Have some breathing room when removing a11y service references.
-  yield new Promise(resolve => executeSoon(resolve));
+  await new Promise(resolve => executeSoon(resolve));
 
   // Remove a reference to an accessible object.
   acc = null;
@@ -53,7 +53,7 @@ add_task(function* () {
   // a reference to an accessible document.
   forceGC();
   // Have some breathing room when removing a11y service references.
-  yield new Promise(resolve => executeSoon(resolve));
+  await new Promise(resolve => executeSoon(resolve));
 
   // Now allow a11y service to shutdown.
   canShutdown = true;
@@ -63,5 +63,5 @@ add_task(function* () {
 
   // Force garbage collection that should now trigger shutdown.
   forceGC();
-  yield a11yShutdown;
+  await a11yShutdown;
 });

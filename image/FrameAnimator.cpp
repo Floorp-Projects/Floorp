@@ -7,6 +7,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/CheckedInt.h"
 #include "imgIContainer.h"
 #include "LookupResult.h"
 #include "MainThreadUtils.h"
@@ -14,6 +15,7 @@
 #include "gfxPrefs.h"
 
 #include "pixman.h"
+#include <algorithm>
 
 namespace mozilla {
 
@@ -336,17 +338,32 @@ FrameAnimator::AdvanceFrame(AnimationState& aState,
   // If we can get closer to the current time by a multiple of the image's loop
   // time, we should. We can only do this if we're done decoding; otherwise, we
   // don't know the full loop length, and LoopLength() will have to return
-  // FrameTimeout::Forever().
+  // FrameTimeout::Forever(). We also skip this for images with a finite loop
+  // count if we have initialized mLoopRemainingCount (it only gets initialized
+  // after one full loop).
   FrameTimeout loopTime = aState.LoopLength();
-  if (loopTime != FrameTimeout::Forever()) {
+  if (loopTime != FrameTimeout::Forever() &&
+      (aState.LoopCount() < 0 || aState.mLoopRemainingCount >= 0)) {
     TimeDuration delay = aTime - aState.mCurrentAnimationFrameTime;
     if (delay.ToMilliseconds() > loopTime.AsMilliseconds()) {
       // Explicitly use integer division to get the floor of the number of
       // loops.
       uint64_t loops = static_cast<uint64_t>(delay.ToMilliseconds())
                      / loopTime.AsMilliseconds();
+
+      // If we have a finite loop count limit the number of loops we advance.
+      if (aState.mLoopRemainingCount >= 0) {
+        MOZ_ASSERT(aState.LoopCount() >= 0);
+        loops = std::min(loops, CheckedUint64(aState.mLoopRemainingCount).value());
+      }
+
       aState.mCurrentAnimationFrameTime +=
         TimeDuration::FromMilliseconds(loops * loopTime.AsMilliseconds());
+
+      if (aState.mLoopRemainingCount >= 0) {
+        MOZ_ASSERT(loops <= CheckedUint64(aState.mLoopRemainingCount).value());
+        aState.mLoopRemainingCount -= CheckedInt32(loops).value();
+      }
     }
   }
 

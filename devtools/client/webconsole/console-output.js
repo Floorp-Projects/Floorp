@@ -2705,10 +2705,10 @@ Widgets.ObjectRenderers.add({
 
   _onClick: function () {
     let location = this.objectActor.location;
-    if (location && IGNORED_SOURCE_URLS.indexOf(location.url) === -1) {
+    let url = location && location.url;
+    if (url && IGNORED_SOURCE_URLS.indexOf(url) === -1) {
       this.output.openLocationInDebugger(location);
-    }
-    else {
+    } else {
       this.openObjectInVariablesView();
     }
   }

@@ -137,7 +137,7 @@ addAccessibleTask(`
   <p id="description">aria description</p>
   <p id="description2">another description</p>
   <img id="image" />`,
-  function*(browser, accDoc) {
+  async function(browser, accDoc) {
     let imgAcc = findAccessibleChildByID(accDoc, 'image');
 
     for (let { desc, waitFor, attrs, expected } of tests) {
@@ -148,10 +148,10 @@ addAccessibleTask(`
       }
       if (attrs) {
         for (let { attr, value } of attrs) {
-          yield invokeSetAttribute(browser, 'image', attr, value);
+          await invokeSetAttribute(browser, 'image', attr, value);
         }
       }
-      yield onUpdate;
+      await onUpdate;
       // When attribute change (alt) triggers reorder event, accessible will
       // become defunct.
       if (isDefunct(imgAcc)) {
