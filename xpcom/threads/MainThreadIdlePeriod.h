@@ -17,10 +17,17 @@ class MainThreadIdlePeriod final : public IdlePeriod
 public:
   NS_DECL_NSIIDLEPERIOD
 
+  MainThreadIdlePeriod()
+    : mLastIdleDeadline(TimeStamp::Now())
+  {
+  }
+
   static float GetLongIdlePeriod();
   static float GetMinIdlePeriod();
 private:
   virtual ~MainThreadIdlePeriod() {}
+
+  TimeStamp mLastIdleDeadline;
 };
 
 } // namespace mozilla
