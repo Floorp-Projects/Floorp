@@ -29,6 +29,11 @@
 %endif
 }
 
+/* Larger buttons in touch mode */
+:root[uidensity=touch] {
+  --toolbarbutton-inner-padding: 9px;
+}
+
 toolbar:-moz-lwtheme {
 %ifndef MOZ_PHOTON_THEME
   --toolbarbutton-hover-background: rgba(255,255,255,.25);
@@ -180,8 +185,13 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
 #nav-bar .toolbarbutton-1 > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 #nav-bar #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-  /* horizontal padding + border + actual icon width */
+%ifdef MOZ_PHOTON_THEME
+  /* horizontal padding + actual icon width */
+  max-width: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
+%else
+  /* Before Photon horizontal padding is 7px, but --toolbarbutton-inner-padding is set to 3px */
   max-width: 32px;
+%endif
 }
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon:-moz-locale-dir(ltr),
@@ -204,10 +214,12 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
   display: none;
 }
 
+%ifndef MOZ_PHOTON_THEME
 #nav-bar #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
   /* horizontal padding + border + actual icon width */
   max-width: 31px;
 }
+%endif
 
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   padding-top: calc(var(--toolbarbutton-inner-padding) + 6px);
@@ -217,11 +229,19 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
 #nav-bar .toolbarbutton-1 > .toolbarbutton-text {
   padding-top: var(--toolbarbutton-vertical-text-padding);
   padding-bottom: 0;
+%ifdef MOZ_PHOTON_THEME
+  /* To make the hover feedback line up with sibling buttons, it needs the same
+   * height as the button icons and the same vertical padding, but as a minimum,
+   * because otherwise an increase in text sizes would break things.
+   */
+  min-height: calc(16px + 2 * var(--toolbarbutton-inner-padding));
+%else
   /* To make the hover feedback line up with sibling buttons, it needs the same
    * height (16px) + padding (2 * 3px) + border (2 * 1px), but as a minimum
    * because otherwise an increase in text sizes would break things.
    */
   min-height: calc(18px + 2 * var(--toolbarbutton-inner-padding));
+%endif
 }
 
 #nav-bar .toolbaritem-combined-buttons {
@@ -342,44 +362,55 @@ toolbarbutton.bookmark-item[open="true"],
 }
 %endif
 
-#back-button {
-  padding-top: 3px !important;
-  padding-bottom: 3px !important;
+:root:not([uidensity=compact]) #back-button {
+  padding-top: 3px;
+  padding-bottom: 3px;
   padding-inline-start: 5px !important;
   padding-inline-end: 0 !important;
   position: relative !important;
   z-index: 1 !important;
-  border-radius: 0 10000px 10000px 0 !important;
+  border-radius: 0 10000px 10000px 0;
 }
 
-#back-button:-moz-locale-dir(rtl) {
-  border-radius: 10000px 0 0 10000px !important;
+:root:not([uidensity=compact]) #back-button:-moz-locale-dir(rtl) {
+  border-radius: 10000px 0 0 10000px;
 }
 
 #back-button > menupopup {
   margin-top: -1px !important;
 }
 
-#back-button > .toolbarbutton-icon {
+:root:not([uidensity=compact]) #back-button > .toolbarbutton-icon {
 %ifdef MOZ_PHOTON_THEME
   background: var(--backbutton-background);
   border: 1px solid var(--backbutton-border-color);
   background-origin: padding-box;
   background-clip: padding-box;
 %endif
-  border-radius: 10000px !important;
-  padding: 7px !important;
+  border-radius: 10000px;
+  max-width: 32px;
+  padding: 7px;
+}
+
+:root[uidensity=touch] #back-button {
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+:root[uidensity=touch] #back-button > .toolbarbutton-icon {
+  max-width: 38px;
+  padding: 10px;
 }
 
 %ifdef MOZ_PHOTON_THEME
-#back-button:not([disabled]):not([open]):hover > .toolbarbutton-icon {
+:root:not([uidensity=compact]) #back-button:not([disabled]):not([open]):hover > .toolbarbutton-icon {
   background: var(--backbutton-background) !important;
   box-shadow: 0 1px 6px hsla(0,0%,0%,.1);
   border-color: hsla(240,5%,5%,.35);
 }
 
-#back-button[open] > .toolbarbutton-icon,
-#back-button:not([disabled]):hover:active > .toolbarbutton-icon {
+:root:not([uidensity=compact]) #back-button[open] > .toolbarbutton-icon,
+:root:not([uidensity=compact]) #back-button:not([disabled]):hover:active > .toolbarbutton-icon {
   background: var(--toolbarbutton-active-background) !important;
   border-color: hsla(240,5%,5%,.40);
 }

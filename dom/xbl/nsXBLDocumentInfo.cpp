@@ -184,7 +184,8 @@ nsXBLDocumentInfo::RemovePrototypeBinding(const nsACString& aRef)
 
 // static
 nsresult
-nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocInfo)
+nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocInfo,
+                                         nsIDocument* aBoundDocument)
 {
   *aDocInfo = nullptr;
 
@@ -210,7 +211,7 @@ nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocI
 
   // The file compatibility.ini stores the build id. This is checked in
   // nsAppRunner.cpp and will delete the cache if a different build is
-  // present. However, we check that the version matches here to be safe. 
+  // present. However, we check that the version matches here to be safe.
   uint32_t version;
   rv = stream->Read32(&version);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -231,6 +232,12 @@ nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocI
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
   NS_ASSERTION(doc, "Must have a document!");
+
+  // Set the style backend type immediately after creating the XBL document.
+  // Assume gecko if there's no bound document.
+  doc->SetStyleBackendType(aBoundDocument ? aBoundDocument->GetStyleBackendType()
+                                          : StyleBackendType::Gecko);
+
   RefPtr<nsXBLDocumentInfo> docInfo = new nsXBLDocumentInfo(doc);
 
   while (1) {

@@ -1730,7 +1730,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
   #TabsToolbar > #new-tab-button > .toolbarbutton-icon,
   #TabsToolbar > toolbarpaletteitem > #new-tab-button > .toolbarbutton-icon {
-    width: 18px;
+    max-width: 18px;
   }
 }
 

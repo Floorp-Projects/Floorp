@@ -21,10 +21,16 @@
  */
 var SidebarUI = {
   browser: null,
+  POSITION_START_PREF: "sidebar.position_start",
 
   _box: null,
   _title: null,
   _splitter: null,
+  _icon: null,
+  _reversePositionButton: null,
+  _switcherPanel: null,
+  _switcherTarget: null,
+  _switcherArrow: null,
 
   init() {
     this._box = document.getElementById("sidebar-box");
@@ -32,6 +38,7 @@ var SidebarUI = {
     this._title = document.getElementById("sidebar-title");
     this._splitter = document.getElementById("sidebar-splitter");
     this._icon = document.getElementById("sidebar-icon");
+    this._reversePositionButton = document.getElementById("sidebar-reverse-position");
     this._switcherPanel = document.getElementById("sidebarMenu-popup");
     this._switcherTarget = document.getElementById("sidebar-switcher-target");
     this._switcherArrow = document.getElementById("sidebar-switcher-arrow");
@@ -72,6 +79,13 @@ var SidebarUI = {
     this._switcherPanel.addEventListener("popuphiding", () => {
       this._switcherTarget.classList.remove("active");
     }, {once: true});
+
+    // Combine start/end position with ltr/rtl to set the label in the popup appropriately.
+    let label = this._positionStart == this.isRTL ?
+                  gNavigatorBundle.getString("sidebar.moveToLeft") :
+                  gNavigatorBundle.getString("sidebar.moveToRight");
+    this._reversePositionButton.setAttribute("label", label);
+
     this._switcherPanel.hidden = false;
     this._switcherPanel.openPopup(this._icon);
     this._switcherTarget.classList.add("active");
@@ -91,6 +105,37 @@ var SidebarUI = {
       }
       button.setAttribute("shortcut", ShortcutUtils.prettifyShortcut(key));
     }
+  },
+
+  /**
+   * Change the pref that will trigger a call to setPosition
+   */
+  reversePosition() {
+    Services.prefs.setBoolPref(this.POSITION_START_PREF, !this._positionStart);
+  },
+
+  /**
+   * Read the positioning pref and position the sidebar and the splitter
+   * appropriately within the browser container.
+   */
+  setPosition() {
+    // First reset all ordinals to match DOM ordering.
+    let browser = document.getElementById("browser");
+    [...browser.childNodes].forEach((node, i) => {
+      node.ordinal = i + 1;
+    });
+
+    if (!this._positionStart) {
+      // DOM ordering is:     |  sidebar-box  | splitter |   appcontent  |
+      // Want to display as:  |   appcontent  | splitter |  sidebar-box  |
+      // So we just swap box and appcontent ordering
+      let appcontent = document.getElementById("appcontent");
+      let boxOrdinal = this._box.ordinal;
+      this._box.ordinal = appcontent.ordinal;
+      appcontent.ordinal = boxOrdinal;
+    }
+
+    this.hideSwitcherPanel();
   },
 
   /**
@@ -132,8 +177,7 @@ var SidebarUI = {
     // delayedStartup().
     this._box.setAttribute("src", sourceUI.browser.getAttribute("src"));
 
-    this._box.hidden = false;
-    this._splitter.hidden = false;
+    this._setVisibility(true);
     commandElem.setAttribute("checked", "true");
     this.browser.setAttribute("src", this._box.getAttribute("src"));
     return true;
@@ -170,8 +214,7 @@ var SidebarUI = {
 
     let command = document.getElementById(commandID);
     if (command) {
-      this._box.hidden = false;
-      this._splitter.hidden = false;
+      this._setVisibility(true);
       command.setAttribute("checked", "true");
       this.browser.setAttribute("src", this._box.getAttribute("src"));
     } else {
@@ -217,6 +260,19 @@ var SidebarUI = {
 
   set title(value) {
     this._title.value = value;
+  },
+
+  /**
+   * Internal helper to show/hide the box and splitter elements.
+   *
+   * @param {bool} visible
+   */
+  _setVisibility(visible) {
+    this._box.hidden = !visible;
+    this._splitter.hidden = !visible;
+    if (visible) {
+      this.setPosition();
+    }
   },
 
   /**
@@ -268,8 +324,7 @@ var SidebarUI = {
         }
       }
 
-      this._box.hidden = false;
-      this._splitter.hidden = false;
+      this._setVisibility(true);
 
       this.hideSwitcherPanel();
 
@@ -347,8 +402,7 @@ var SidebarUI = {
     sidebarBroadcaster.removeAttribute("checked");
     this._box.setAttribute("sidebarcommand", "");
     this._title.value = "";
-    this._box.hidden = true;
-    this._splitter.hidden = true;
+    this._setVisibility(false);
 
     let selBrowser = gBrowser.selectedBrowser;
     selBrowser.focus();
@@ -358,6 +412,14 @@ var SidebarUI = {
     BrowserUITelemetry.countSidebarEvent(commandID, "hide");
   },
 };
+
+// Add getters related to the position here, since we will want them
+// available for both startDelayedLoad and init.
+XPCOMUtils.defineLazyPreferenceGetter(SidebarUI, "_positionStart",
+  SidebarUI.POSITION_START_PREF, true, SidebarUI.setPosition.bind(SidebarUI));
+XPCOMUtils.defineLazyGetter(SidebarUI, "isRTL", () => {
+  return getComputedStyle(document.documentElement).direction == "rtl";
+});
 
 /**
  * This exists for backwards compatibility - it will be called once a sidebar is

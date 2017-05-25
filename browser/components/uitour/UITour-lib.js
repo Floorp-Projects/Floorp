@@ -361,7 +361,6 @@ if (typeof Mozilla == "undefined") {
    *   "accentcolor":  "#000000",
    *   "header":       "https://addons.mozilla.org/_files/….jpg",
    *   "version":      "1.0",
-   *   "footerURL":    "https://addons.mozilla.org/_files/….jpg",
    *   "detailURL":    "https://addons.mozilla.org/firefox/addon/…",
    *   "textcolor":    "#ffffff",
    *   "id":           "18066",

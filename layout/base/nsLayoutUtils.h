@@ -2913,14 +2913,6 @@ public:
                                             const nsSize& aPrerenderSize);
 
   /*
-   * Returns whether the given document supports being rendered with a
-   * Servo-backed style system.  This checks whether Stylo is enabled
-   * globally, that the document is an HTML document, and that it is
-   * being presented in a content docshell.
-   */
-  static bool SupportsServoStyleBackend(nsIDocument* aDocument);
-
-  /*
    * Checks whether a node is an invisible break.
    * If not, returns the first frame on the next line if such a next line exists.
    *

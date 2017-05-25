@@ -115,7 +115,7 @@ nsXBLResourceLoader::LoadResources(bool* aResult)
     if (curr->mType == nsGkAtoms::image) {
       // Now kick off the image load...
       // Passing nullptr for pretty much everything -- cause we don't care!
-      // XXX: initialDocumentURI is nullptr! 
+      // XXX: initialDocumentURI is nullptr!
       RefPtr<imgRequestProxy> req;
       nsContentUtils::LoadImage(url, doc, doc, docPrincipal, docURL,
                                 doc->GetReferrerPolicy(), nullptr,
@@ -156,7 +156,7 @@ nsXBLResourceLoader::LoadResources(bool* aResult)
 
   *aResult = (mPendingSheets == 0);
   mInLoadResourcesFunc = false;
-  
+
   // Destroy our resource list.
   delete mResourceList;
   mResourceList = nullptr;
@@ -172,15 +172,17 @@ nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet,
     // Our resources got destroyed -- just bail out
     return NS_OK;
   }
-   
+
   mResources->AppendStyleSheet(aSheet);
 
   if (!mInLoadResourcesFunc)
     mPendingSheets--;
-  
+
   if (mPendingSheets == 0) {
-    // All stylesheets are loaded.  
-    mResources->GatherRuleProcessor();
+    // All stylesheets are loaded.
+    if (aSheet->IsGecko()) {
+      mResources->GatherRuleProcessor();
+    }
 
     // XXX Check for mPendingScripts when scripts also come online.
     if (!mInLoadResourcesFunc)
@@ -189,7 +191,7 @@ nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet,
   return NS_OK;
 }
 
-void 
+void
 nsXBLResourceLoader::AddResource(nsIAtom* aResourceType, const nsAString& aSrc)
 {
   nsXBLResource* res = new nsXBLResource(aResourceType, aSrc);
@@ -202,7 +204,7 @@ nsXBLResourceLoader::AddResource(nsIAtom* aResourceType, const nsAString& aSrc)
 }
 
 void
-nsXBLResourceLoader::AddResourceListener(nsIContent* aBoundElement) 
+nsXBLResourceLoader::AddResourceListener(nsIContent* aBoundElement)
 {
   if (aBoundElement) {
     mBoundElements.AppendObject(aBoundElement);

@@ -65,9 +65,9 @@ public:
     JSScript* GetScript(nsIURI* aURI);
     nsresult PutScript(nsIURI* aURI, JS::Handle<JSScript*> aScriptObject);
 
-    nsXBLDocumentInfo* GetXBLDocumentInfo(nsIURI* aURL) {
-        return mXBLDocTable.GetWeak(aURL);
-    }
+    nsXBLDocumentInfo* GetXBLDocumentInfo(nsIURI* aURL,
+                                          mozilla::StyleBackendType aType);
+
     nsresult PutXBLDocumentInfo(nsXBLDocumentInfo* aDocumentInfo);
 
     /**
@@ -122,17 +122,25 @@ protected:
 
     void FlushSkinFiles();
 
-    typedef nsRefPtrHashtable<nsURIHashKey, mozilla::StyleSheet> StyleSheetTable;
-    StyleSheetTable& TableForBackendType(mozilla::StyleBackendType aType) {
+    using StyleSheetTable = nsRefPtrHashtable<nsURIHashKey, mozilla::StyleSheet>;
+    using XBLDocTable = nsRefPtrHashtable<nsURIHashKey, nsXBLDocumentInfo>;
+
+    StyleSheetTable& StyleSheetTableFor(mozilla::StyleBackendType aType) {
       return aType == mozilla::StyleBackendType::Gecko ? mGeckoStyleSheetTable
                                                        : mServoStyleSheetTable;
+    }
+
+    XBLDocTable& XBLDocTableFor(mozilla::StyleBackendType aType) {
+      return aType == mozilla::StyleBackendType::Gecko ? mGeckoXBLDocTable
+                                                       : mServoXBLDocTable;
     }
 
     nsRefPtrHashtable<nsURIHashKey,nsXULPrototypeDocument>   mPrototypeTable; // owns the prototypes
     StyleSheetTable                                          mGeckoStyleSheetTable;
     StyleSheetTable                                          mServoStyleSheetTable;
     nsJSThingHashtable<nsURIHashKey, JSScript*>              mScriptTable;
-    nsRefPtrHashtable<nsURIHashKey,nsXBLDocumentInfo>        mXBLDocTable;
+    XBLDocTable                                              mGeckoXBLDocTable;
+    XBLDocTable                                              mServoXBLDocTable;
 
     // URIs already written to the startup cache, to prevent double-caching.
     nsTHashtable<nsURIHashKey>                               mStartupCacheURITable;

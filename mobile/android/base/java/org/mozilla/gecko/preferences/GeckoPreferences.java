@@ -15,8 +15,6 @@ import org.mozilla.gecko.DataReportingNotification;
 import org.mozilla.gecko.DynamicToolbar;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.Experiments;
-import org.mozilla.gecko.GeckoActivityStatus;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
@@ -45,7 +43,6 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.InputOptionsUtils;
-import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ViewUtil;
 
@@ -105,7 +102,6 @@ import java.util.Map;
 public class GeckoPreferences
     extends AppCompatPreferenceActivity
     implements BundleEventListener,
-               GeckoActivityStatus,
                OnPreferenceChangeListener,
                OnSharedPreferenceChangeListener
 {
@@ -122,9 +118,6 @@ public class GeckoPreferences
     public static final String PREFS_TRACKING_PROTECTION_PROMPT_SHOWN = NON_PREF_PREFIX + "trackingProtectionPromptShown";
     public static final String PREFS_HEALTHREPORT_UPLOAD_ENABLED = NON_PREF_PREFIX + "healthreport.uploadEnabled";
     public static final String PREFS_SYNC = NON_PREF_PREFIX + "sync";
-
-    // Has this activity recently started another Gecko activity?
-    private boolean mGeckoActivityOpened;
 
     private static boolean sIsCharEncodingEnabled;
     private boolean mInitialized;
@@ -552,10 +545,6 @@ public class GeckoPreferences
         }
 
         super.onPause();
-
-        if (getApplication() instanceof GeckoApplication) {
-            ((GeckoApplication) getApplication()).onActivityPause(this);
-        }
     }
 
     @Override
@@ -563,11 +552,6 @@ public class GeckoPreferences
         super.onResume();
 
         EventDispatcher.getInstance().registerUiThreadListener(this, "Snackbar:Show");
-
-        if (getApplication() instanceof GeckoApplication) {
-            ((GeckoApplication) getApplication()).onActivityResume(this);
-            mGeckoActivityOpened = false;
-        }
 
         // Watch prefs, otherwise we don't reliably get told when they change.
         // See documentation for onSharedPreferenceChange for more.
@@ -590,12 +574,6 @@ public class GeckoPreferences
     }
 
     @Override
-    public void startActivityForResult(Intent intent, int request) {
-        mGeckoActivityOpened = IntentUtils.checkIfGeckoActivity(intent);
-        super.startActivityForResult(intent, request);
-    }
-
-    @Override
     public void startWithFragment(String fragmentName, Bundle args,
             Fragment resultTo, int resultRequestCode, int titleRes, int shortTitleRes) {
         Log.v(LOGTAG, "Starting with fragment: " + fragmentName + ", title " + titleRes);
@@ -605,7 +583,6 @@ public class GeckoPreferences
         if (resultTo == null) {
             startActivityForResultChoosingTransition(intent, REQUEST_CODE_PREF_SCREEN);
         } else {
-            mGeckoActivityOpened = IntentUtils.checkIfGeckoActivity(intent);
             resultTo.startActivityForResult(intent, resultRequestCode);
             if (NO_TRANSITIONS) {
                 overridePendingTransition(0, 0);
@@ -1510,11 +1487,6 @@ public class GeckoPreferences
         final String[] prefNames = prefs.toArray(new String[prefs.size()]);
         PrefsHelper.addObserver(prefNames, prefHandler);
         return prefHandler;
-    }
-
-    @Override
-    public boolean isGeckoActivityOpened() {
-        return mGeckoActivityOpened;
     }
 
     /**
