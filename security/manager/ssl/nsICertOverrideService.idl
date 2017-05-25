@@ -53,6 +53,7 @@ interface nsICertOverrideService : nsISupports {
    *  @param aCert The cert that should always be accepted
    *  @param aOverrideBits The precise set of errors we want to be overriden
    */
+  [must_use]
   void rememberValidityOverride(in ACString aHostName,
                                 in int32_t aPort,
                                 in nsIX509Cert aCert,
@@ -72,6 +73,7 @@ interface nsICertOverrideService : nsISupports {
    *          the format 'AA:BB:...' (colon-separated upper-case hex bytes).
    *  @param aOverrideBits The errors we want to be overriden
    */
+  [must_use]
   void rememberTemporaryValidityOverrideUsingFingerprint(
       in ACString aHostName,
       in int32_t aPort,
@@ -93,6 +95,7 @@ interface nsICertOverrideService : nsISupports {
    *         or permanent
    *  @return Whether an override has been stored for this host+port+cert
    */
+  [must_use]
   boolean hasMatchingOverride(in ACString aHostName,
                               in int32_t aPort,
                               in nsIX509Cert aCert,
@@ -112,6 +115,7 @@ interface nsICertOverrideService : nsISupports {
    *  @return whether a matching override entry for aHostNameWithPort
    *          and aFingerprint is currently on file
    */
+  [must_use]
   boolean getValidityOverride(in ACString aHostName,
                               in int32_t aPort,
                               out ACString aHashAlg,
@@ -138,6 +142,7 @@ interface nsICertOverrideService : nsISupports {
    *  @return how many override entries are currently on file
    *          for the given certificate
    */
+  [must_use]
   uint32_t isCertUsedForOverrides(in nsIX509Cert aCert,
                                   in boolean aCheckTemporaries,
                                   in boolean aCheckPermanents);
