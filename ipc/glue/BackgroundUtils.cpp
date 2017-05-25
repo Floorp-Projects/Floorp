@@ -21,7 +21,6 @@
 #include "nsContentUtils.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "URIUtils.h"
 
 namespace mozilla {
 namespace net {
@@ -305,13 +304,6 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
     sandboxedLoadingPrincipalInfo = sandboxedLoadingPrincipalInfoTemp;
   }
 
-  OptionalURIParams optionalResultPrincipalURI = mozilla::void_t();
-  nsCOMPtr<nsIURI> resultPrincipalURI;
-  Unused << aLoadInfo->GetResultPrincipalURI(getter_AddRefs(resultPrincipalURI));
-  if (resultPrincipalURI) {
-    SerializeURI(resultPrincipalURI, optionalResultPrincipalURI);
-  }
-
   nsTArray<PrincipalInfo> redirectChainIncludingInternalRedirects;
   for (const nsCOMPtr<nsIPrincipal>& principal : aLoadInfo->RedirectChainIncludingInternalRedirects()) {
     rv = PrincipalToPrincipalInfo(principal, redirectChainIncludingInternalRedirects.AppendElement());
@@ -330,7 +322,6 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
       triggeringPrincipalInfo,
       principalToInheritInfo,
       sandboxedLoadingPrincipalInfo,
-      optionalResultPrincipalURI,
       aLoadInfo->GetSecurityFlags(),
       aLoadInfo->InternalContentPolicyType(),
       static_cast<uint32_t>(aLoadInfo->GetTainting()),
@@ -394,12 +385,6 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsIURI> resultPrincipalURI;
-  if (loadInfoArgs.resultPrincipalURI().type() != OptionalURIParams::Tvoid_t) {
-    resultPrincipalURI = DeserializeURI(loadInfoArgs.resultPrincipalURI());
-    NS_ENSURE_TRUE(resultPrincipalURI, NS_ERROR_UNEXPECTED);
-  }
-
   nsTArray<nsCOMPtr<nsIPrincipal>> redirectChainIncludingInternalRedirects;
   for (const PrincipalInfo& principalInfo : loadInfoArgs.redirectChainIncludingInternalRedirects()) {
     nsCOMPtr<nsIPrincipal> redirectedPrincipal =
@@ -421,7 +406,6 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
                           triggeringPrincipal,
                           principalToInherit,
                           sandboxedLoadingPrincipal,
-                          resultPrincipalURI,
                           loadInfoArgs.securityFlags(),
                           loadInfoArgs.contentPolicyType(),
                           static_cast<LoadTainting>(loadInfoArgs.tainting()),

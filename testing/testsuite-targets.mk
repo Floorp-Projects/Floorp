@@ -119,26 +119,23 @@ ifdef COMPILE_ENVIRONMENT
 stage-all: stage-cppunittests
 endif
 
-TEST_PKGS_ZIP := \
+TEST_PKGS := \
   common \
   cppunittest \
   mochitest \
   reftest \
   talos \
   awsy \
-  xpcshell \
-  $(NULL)
-
-TEST_PKGS_TARGZ := \
   web-platform \
+  xpcshell \
   $(NULL)
 
 ifdef LINK_GTEST_DURING_COMPILE
 stage-all: stage-gtest
-TEST_PKGS_ZIP += gtest
+TEST_PKGS += gtest
 endif
 
-PKG_ARG = --$(1) '$(PKG_BASENAME).$(1).tests.$(2)'
+PKG_ARG = --$(1) '$(PKG_BASENAME).$(1).tests.zip'
 
 test-packages-manifest:
 	@rm -f $(MOZ_TEST_PACKAGES_FILE)
@@ -146,9 +143,8 @@ test-packages-manifest:
 	$(PYTHON) $(topsrcdir)/build/gen_test_packages_manifest.py \
       --jsshell $(JSSHELL_NAME) \
       --dest-file '$(MOZ_TEST_PACKAGES_FILE)' \
-      $(call PKG_ARG,common,zip) \
-      $(foreach pkg,$(TEST_PKGS_ZIP),$(call PKG_ARG,$(pkg),zip)) \
-      $(foreach pkg,$(TEST_PKGS_TARGZ),$(call PKG_ARG,$(pkg),tar.gz))
+      $(call PKG_ARG,common) \
+      $(foreach pkg,$(TEST_PKGS),$(call PKG_ARG,$(pkg)))
 
 package-tests-prepare-dest:
 	@rm -f '$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)'
@@ -158,12 +154,11 @@ define package_archive
 package-tests-$(1): stage-all package-tests-prepare-dest
 	$$(call py_action,test_archive, \
 		$(1) \
-		'$$(abspath $$(DIST))/$$(PKG_PATH)/$$(PKG_BASENAME).$(1).tests.$(2)')
+		'$$(abspath $$(DIST))/$$(PKG_PATH)/$$(PKG_BASENAME).$(1).tests.zip')
 package-tests: package-tests-$(1)
 endef
 
-$(foreach name,$(TEST_PKGS_ZIP),$(eval $(call package_archive,$(name),zip)))
-$(foreach name,$(TEST_PKGS_TARGZ),$(eval $(call package_archive,$(name),tar.gz)))
+$(foreach name,$(TEST_PKGS),$(eval $(call package_archive,$(name))))
 
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 stage-all: stage-android

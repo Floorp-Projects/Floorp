@@ -1076,7 +1076,16 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 75,
-    "description": "The longest phase in any slice that goes over 2x the budget"
+    "description": "The longest phase in any slice that goes over 2x the budget. The phase values are defined in js/src/gc/GenerateStatsPhases.py."
+  },
+  "GC_SLOW_TASK": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org","jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 75,
+    "description": "The longest parallel task in any slice that goes over 2x the budget. The phase values are defined in js/src/gc/GenerateStatsPhases.py.",
+    "bug_numbers": [1309651]
   },
   "GC_MMU_50": {
     "record_in_processes": ["main", "content"],

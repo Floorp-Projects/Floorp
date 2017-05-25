@@ -219,14 +219,6 @@ class BaseFile(object):
     def read(self):
         raise NotImplementedError('BaseFile.read() not implemented. Bug 1170329.')
 
-    def size(self):
-        """Returns size of the entry.
-
-        Derived classes are highly encouraged to override this with a more
-        optimal implementation.
-        """
-        return len(self.read())
-
     @property
     def mode(self):
         '''
@@ -257,9 +249,6 @@ class File(BaseFile):
         '''Return the contents of the file.'''
         with open(self.path, 'rb') as fh:
             return fh.read()
-
-    def size(self):
-        return os.stat(self.path).st_size
 
 
 class ExecutableFile(File):
@@ -507,12 +496,6 @@ class GeneratedFile(BaseFile):
 
     def open(self):
         return BytesIO(self.content)
-
-    def read(self):
-        return self.content
-
-    def size(self):
-        return len(self.content)
 
 
 class DeflatedFile(BaseFile):
