@@ -62,8 +62,8 @@ function wait_for_clientId() {
 }
 
 var expected = [
-    /* visibilityState, focused, url, frameType */
-    ['visible', true, normalizeURL(scope) + '-frame.html', 'nested'],
-    [undefined, undefined, normalizeURL(scope) + '-shared-worker.js', 'none']
+    // visibilityState, focused, url, type, frameType
+    ['visible', true, normalizeURL(scope) + '-frame.html', 'window', 'nested'],
+    [undefined, undefined, normalizeURL(scope) + '-shared-worker.js', 'sharedworker', 'none']
 ];
 </script>

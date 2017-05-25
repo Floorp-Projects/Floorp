@@ -76,24 +76,18 @@ struct nsCounterNode : public nsGenConNode {
 };
 
 struct nsCounterUseNode : public nsCounterNode {
-    // The same structure passed through the style system:  an array
-    // containing the values in the counter() or counters() in the order
-    // given in the CSS spec.
-    RefPtr<nsCSSValue::Array> mCounterFunction;
-
-    nsPresContext* mPresContext;
     mozilla::CounterStylePtr mCounterStyle;
+    nsString mSeparator;
 
     // false for counter(), true for counters()
     bool mAllCounters;
 
     // args go directly to member variables here and of nsGenConNode
-    nsCounterUseNode(nsPresContext* aPresContext,
-                     nsCSSValue::Array* aCounterFunction,
+    nsCounterUseNode(nsStyleContentData::CounterFunction* aCounterFunction,
                      uint32_t aContentIndex, bool aAllCounters)
         : nsCounterNode(aContentIndex, USE)
-        , mCounterFunction(aCounterFunction)
-        , mPresContext(aPresContext)
+        , mCounterStyle(aCounterFunction->mCounterStyle)
+        , mSeparator(aCounterFunction->mSeparator)
         , mAllCounters(aAllCounters)
     {
         NS_ASSERTION(aContentIndex <= INT32_MAX, "out of range");
@@ -101,12 +95,6 @@ struct nsCounterUseNode : public nsCounterNode {
 
     virtual bool InitTextFrame(nsGenConList* aList,
             nsIFrame* aPseudoFrame, nsIFrame* aTextFrame) override;
-
-    mozilla::CounterStyle* GetCounterStyle();
-    void SetCounterStyleDirty()
-    {
-        mCounterStyle = nullptr;
-    }
 
     // assign the correct |mValueAfter| value to a node that has been inserted
     // Should be called immediately after calling |Insert|.
@@ -230,8 +218,8 @@ public:
     // Clean up data in any dirty counter lists.
     void RecalcAll();
 
-    // Set all counter styles dirty
-    void SetAllCounterStylesDirty();
+    // Set all counter lists dirty
+    void SetAllDirty();
 
     // Destroy nodes for the frame in any lists, and return whether any
     // nodes were destroyed.

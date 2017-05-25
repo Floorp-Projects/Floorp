@@ -1347,7 +1347,7 @@ public:
         sContentUnbinder = next;
         next->mLast = mLast;
         mLast = nullptr;
-        NS_DispatchToMainThread(next);
+        NS_IdleDispatchToCurrentThread(next.forget());
       }
     }
     return NS_OK;
@@ -1368,7 +1368,7 @@ public:
     if (!sContentUnbinder) {
       sContentUnbinder = new ContentUnbinder();
       nsCOMPtr<nsIRunnable> e = sContentUnbinder;
-      NS_DispatchToMainThread(e);
+      NS_IdleDispatchToCurrentThread(e.forget());
     }
 
     if (sContentUnbinder->mLast->mSubtreeRoots.Length() >=

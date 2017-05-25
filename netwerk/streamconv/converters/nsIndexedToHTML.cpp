@@ -127,8 +127,19 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
 
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
     nsCOMPtr<nsIURI> uri;
-    rv = channel->GetURI(getter_AddRefs(uri));
+    rv = channel->GetOriginalURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
+
+    bool isResource = false;
+    rv = uri->SchemeIs("resource", &isResource);
+    if (NS_FAILED(rv)) return rv;
+
+    // We use the original URI for the title and parent link when it's a
+    // resource:// url, instead of the jar:file:// url it resolves to.
+    if (!isResource) {
+        rv = channel->GetURI(getter_AddRefs(uri));
+        if (NS_FAILED(rv)) return rv;
+    }
 
     channel->SetContentType(NS_LITERAL_CSTRING("text/html"));
 
@@ -544,12 +555,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         // will prematurely close the string.  Go ahead an
         // add a base href, but only do so if we're not
         // dealing with a resource URI.
-        nsCOMPtr<nsIURI> originalUri;
-        rv = channel->GetOriginalURI(getter_AddRefs(originalUri));
-        bool wasResource = false;
-        if (NS_FAILED(rv) ||
-            NS_FAILED(originalUri->SchemeIs("resource", &wasResource)) ||
-            !wasResource) {
+        if (!isResource) {
             buffer.AppendLiteral("<base href=\"");
             nsAdoptingCString htmlEscapedUri(nsEscapeHTML(baseUri.get()));
             buffer.Append(htmlEscapedUri);

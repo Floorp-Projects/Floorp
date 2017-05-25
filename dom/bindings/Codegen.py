@@ -4940,10 +4940,8 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
             JS::Rooted<JSObject*> recordObj(cx, &$${val}.toObject());
             JS::AutoIdVector ids(cx);
-            // Keep skipping symbols until
-            // https://github.com/heycam/webidl/issues/294 is sorted out.
             if (!js::GetPropertyKeys(cx, recordObj,
-                                     JSITER_OWNONLY | JSITER_HIDDEN, &ids)) {
+                                     JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &ids)) {
               $*{exceptionCode}
             }
             if (!recordEntries.SetCapacity(ids.length(), mozilla::fallible)) {
@@ -4963,8 +4961,6 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             for (size_t i = 0; i < ids.length(); ++i) {
               curId = ids[i];
 
-              MOZ_ASSERT(!JSID_IS_SYMBOL(curId), "No symbols, we said!");
-
               JS::Rooted<JS::PropertyDescriptor> desc(cx);
               if (!JS_GetOwnPropertyDescriptorById(cx, recordObj, curId,
                                                    &desc)) {
@@ -4978,6 +4974,8 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
               idVal = js::IdToValue(curId);
               ${keyType} propName;
+              // This will just throw if idVal is a Symbol, like the spec says
+              // to do.
               if (!${keyConversionFunction}(cx, idVal, propName)) {
                 $*{exceptionCode}
               }

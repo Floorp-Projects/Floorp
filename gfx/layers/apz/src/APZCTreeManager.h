@@ -315,7 +315,7 @@ public:
    * Find the hit testing node for the scrollbar thumb that matches these
    * drag metrics.
    */
-  RefPtr<HitTestingTreeNode> FindScrollNode(const AsyncDragMetrics& aDragMetrics);
+  RefPtr<HitTestingTreeNode> FindScrollThumbNode(const AsyncDragMetrics& aDragMetrics);
 
   /**
    * Sets allowed touch behavior values for current touch-session for specific

@@ -19,13 +19,13 @@ class nsXBLProtoImplProperty: public nsXBLProtoImplMember
 {
 public:
   nsXBLProtoImplProperty(const char16_t* aName,
-                         const char16_t* aGetter, 
+                         const char16_t* aGetter,
                          const char16_t* aSetter,
                          const char16_t* aReadOnly,
                          uint32_t aLineNumber);
 
   nsXBLProtoImplProperty(const char16_t* aName, const bool aIsReadOnly);
- 
+
   virtual ~nsXBLProtoImplProperty();
 
   void AppendGetterText(const nsAString& aGetter);
@@ -55,7 +55,7 @@ protected:
 
   // The raw text for the setter, or the JS object (after compilation).
   PropertyOp mSetter;
-  
+
   unsigned mJSAttributes;  // A flag for all our JS properties (getter/setter/readonly/shared/enum)
 
 #ifdef DEBUG

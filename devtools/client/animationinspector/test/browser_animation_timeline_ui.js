@@ -37,7 +37,9 @@ add_task(function* () {
     is(animationEl.querySelector(".name").textContent,
        animation.state.name,
        "The name on the timeline is correct");
-    ok(animationEl.querySelector("svg path"),
+    is(animationEl.querySelectorAll("svg g").length, 1,
+       "The g element should be one since this doc's all animation has only one shape");
+    ok(animationEl.querySelector("svg g path"),
        "The timeline has svg and path element as summary graph");
 
     const expectedBackgroundColor =

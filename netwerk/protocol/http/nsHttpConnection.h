@@ -83,7 +83,7 @@ public:
     MOZ_MUST_USE nsresult Activate(nsAHttpTransaction *, uint32_t caps,
                                    int32_t pri);
 
-    void SetFastOpen(bool aFastOpen) { mFastOpen = aFastOpen; }
+    void SetFastOpen(bool aFastOpen);
     // Close this connection and return the transaction. The transaction is
     // restarted as well. This will only happened before connection is
     // connected.
@@ -230,8 +230,6 @@ public:
 
     bool TestJoinConnection(const nsACString &hostname, int32_t port);
     bool JoinConnection(const nsACString &hostname, int32_t port);
-
-    void ThrottleResponse(bool aThrottle);
 
     void SetFastOpenStatus(uint8_t tfoStatus) {
         mFastOpenStatus = tfoStatus;
@@ -395,13 +393,6 @@ private:
     bool                           mEarlyDataNegotiated; //Only used for telemetry
     nsCString                      mEarlyNegotiatedALPN;
     bool                           mDid0RTTSpdy;
-
-    // Reflects throttling request, effects if we resume read from the socket.
-    // Accessed only on the socket thread.
-    bool                           mResponseThrottled;
-    // A read from the socket was requested while we where throttled, means
-    // to ResumeRecv() when untrottled again. Only accessed on the socket thread.
-    bool                           mResumeRecvOnUnthrottle;
 
     bool                           mFastOpen;
     uint8_t                        mFastOpenStatus;

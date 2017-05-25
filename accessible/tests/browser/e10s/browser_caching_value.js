@@ -10,12 +10,12 @@ loadScripts({ name: 'value.js', dir: MOCHITESTS_DIR });
 /**
  * Test data has the format of:
  * {
- *   desc      {String}       description for better logging
- *   id        {String}       given accessible DOMNode ID
- *   expected  {String}       expected value for a given accessible
- *   action    {?Function*}   an optional action that yields a value change
- *   attrs     {?Array}       an optional list of attributes to update
- *   waitFor   {?Number}      an optional value change event to wait for
+ *   desc      {String}            description for better logging
+ *   id        {String}            given accessible DOMNode ID
+ *   expected  {String}            expected value for a given accessible
+ *   action    {?AsyncFunction}    an optional action that awaits a value change
+ *   attrs     {?Array}            an optional list of attributes to update
+ *   waitFor   {?Number}           an optional value change event to wait for
  * }
  */
 const valueTests = [{
@@ -25,9 +25,9 @@ const valueTests = [{
 }, {
   desc: 'Value should update to 3rd when 3 is pressed',
   id: 'select',
-  action: function*(browser) {
-    yield invokeFocus(browser, 'select');
-    yield BrowserTestUtils.synthesizeKey('3', {}, browser);
+  action: async function(browser) {
+    await invokeFocus(browser, 'select');
+    await BrowserTestUtils.synthesizeKey('3', {}, browser);
   },
   waitFor: EVENT_TEXT_VALUE_CHANGE,
   expected: '3rd'
@@ -102,9 +102,9 @@ const valueTests = [{
 }, {
   desc: 'Value should change when slider is moved',
   id: 'range',
-  action: function*(browser) {
-    yield invokeFocus(browser, 'range');
-    yield BrowserTestUtils.synthesizeKey('VK_LEFT', {}, browser);
+  action: async function(browser) {
+    await invokeFocus(browser, 'range');
+    await BrowserTestUtils.synthesizeKey('VK_LEFT', {}, browser);
   },
   waitFor: EVENT_VALUE_CHANGE,
   expected: '5'
@@ -124,7 +124,7 @@ addAccessibleTask(`
   <input id="combobox" role="combobox" aria-autocomplete="inline">
   <progress id="progress" value="22" max="100"></progress>
   <input type="range" id="range" min="0" max="10" value="6">`,
-  function* (browser, accDoc) {
+  async function (browser, accDoc) {
     for (let { desc, id, action, attrs, expected, waitFor } of valueTests) {
       info(desc);
       let acc = findAccessibleChildByID(accDoc, id);
@@ -135,14 +135,14 @@ addAccessibleTask(`
       }
 
       if (action) {
-        yield action(browser);
+        await action(browser);
       } else if (attrs) {
         for (let { attr, value } of attrs) {
-          yield invokeSetAttribute(browser, id, attr, value);
+          await invokeSetAttribute(browser, id, attr, value);
         }
       }
 
-      yield onUpdate;
+      await onUpdate;
       if (Array.isArray(expected)) {
         acc.QueryInterface(nsIAccessibleValue);
         testValue(acc, ...expected);

@@ -7112,7 +7112,8 @@ var gIdentityHandler = {
     this._sharingState = tab._sharingState;
 
     if (this._identityPopup.state == "open") {
-      this._handleHeightChange(() => this.updateSitePermissions());
+      this.updateSitePermissions();
+      this._identityPopupMultiView.descriptionHeightWorkaround();
     }
   },
 
@@ -7623,20 +7624,6 @@ var gIdentityHandler = {
     }
   },
 
-  _handleHeightChange(aFunction, aWillShowReloadHint) {
-    let heightBefore = getComputedStyle(this._permissionList).height;
-    aFunction();
-    let heightAfter = getComputedStyle(this._permissionList).height;
-    // Showing the reload hint increases the height, we need to account for it.
-    if (aWillShowReloadHint) {
-      heightAfter = parseInt(heightAfter) +
-                    parseInt(getComputedStyle(this._permissionList.nextSibling).height);
-    }
-    let heightChange = parseInt(heightAfter) - parseInt(heightBefore);
-    if (heightChange)
-      this._identityPopupMultiView.setHeightToFit(heightChange);
-  },
-
   _createPermissionItem(aPermission) {
     let container = document.createElement("hbox");
     container.setAttribute("class", "identity-popup-permission-item");
@@ -7673,9 +7660,7 @@ var gIdentityHandler = {
     button.setAttribute("tooltiptext", tooltiptext);
     button.addEventListener("command", () => {
       let browser = gBrowser.selectedBrowser;
-      // Only resize the window if the reload hint was previously hidden.
-      this._handleHeightChange(() => this._permissionList.removeChild(container),
-                               this._permissionReloadHint.hasAttribute("hidden"));
+      this._permissionList.removeChild(container);
       if (aPermission.inUse &&
           ["camera", "microphone", "screen"].includes(aPermission.id)) {
         let windowId = this._sharingState.windowId;
@@ -7706,6 +7691,7 @@ var gIdentityHandler = {
       SitePermissions.remove(gBrowser.currentURI, aPermission.id, browser);
 
       this._permissionReloadHint.removeAttribute("hidden");
+      this._identityPopupMultiView.descriptionHeightWorkaround();
 
       // Set telemetry values for clearing a permission
       let histogram = Services.telemetry.getKeyedHistogramById("WEB_PERMISSION_CLEARED");
@@ -7751,6 +7737,11 @@ var gPageActionButton = {
     return this.panel = document.getElementById("page-action-panel");
   },
 
+  get sendToDeviceBody() {
+    delete this.sendToDeviceBody;
+    return this.sendToDeviceBody = document.getElementById("page-action-sendToDeviceView-body");
+  },
+
   init() {
     if (getBoolPref("browser.photon.structure.enabled")) {
       this.button.hidden = false;
@@ -7766,8 +7757,18 @@ var gPageActionButton = {
       return; // Left click, space or enter only
     }
 
+    this._preparePanelToBeShown();
     this.panel.hidden = false;
     this.panel.openPopup(this.button, "bottomcenter topright");
+  },
+
+  _preparePanelToBeShown() {
+    let browser = gBrowser.selectedBrowser;
+    let url = browser.currentURI.spec;
+
+    let sendToDeviceItem =
+      document.getElementById("page-action-send-to-device-button");
+    sendToDeviceItem.disabled = !gSync.isSendableURI(url);
   },
 
   copyURL() {
@@ -7780,6 +7781,44 @@ var gPageActionButton = {
   emailLink() {
     this.panel.hidePopup();
     MailIntegration.sendLinkForBrowser(gBrowser.selectedBrowser);
+  },
+
+  showSendToDeviceView(subviewButton) {
+    let browser = gBrowser.selectedBrowser;
+    let url = browser.currentURI.spec;
+    let title = browser.contentTitle;
+    let body = this.sendToDeviceBody;
+
+    gSync.populateSendTabToDevicesMenu(body, url, title, (clientId, name, clientType) => {
+      if (!name) {
+        return document.createElement("toolbarseparator");
+      }
+      let item = document.createElement("toolbarbutton");
+      item.classList.add("page-action-sendToDevice-device", "subviewbutton");
+      if (clientId) {
+        item.classList.add("subviewbutton-iconic");
+      }
+      return item;
+    });
+
+    if (gSync.remoteClients.length) {
+      body.setAttribute("hasdevices", "true");
+    } else {
+      body.removeAttribute("hasdevices");
+    }
+
+    if (UIState.get().status == UIState.STATUS_SIGNED_IN) {
+      body.setAttribute("signedin", "true");
+    } else {
+      body.removeAttribute("signedin");
+    }
+
+    PanelUI.showSubView("page-action-sendToDeviceView", subviewButton);
+  },
+
+  fxaButtonClicked() {
+    this.panel.hidePopup();
+    gSync.openPrefs();
   },
 };
 

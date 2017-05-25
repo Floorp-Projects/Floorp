@@ -28,7 +28,7 @@ public:
   void SetLineNumber(uint32_t aLineNumber) {
     mLineNumber = aLineNumber;
   }
-  
+
   nsXBLProtoImplField* GetNext() const { return mNext; }
   void SetNext(nsXBLProtoImplField* aNext) { mNext = aNext; }
 

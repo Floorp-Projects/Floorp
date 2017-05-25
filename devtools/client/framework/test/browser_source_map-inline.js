@@ -12,6 +12,8 @@ const JS_URL = `${TEST_ROOT}code_inline_bundle.js`;
 const ORIGINAL_URL = "webpack:///code_inline_original.js";
 
 add_task(function* () {
+  yield pushPref("devtools.debugger.new-debugger-frontend", true);
+
   const toolbox = yield openNewTabAndToolbox(PAGE_URL, "jsdebugger");
   const service = toolbox.sourceMapURLService;
 

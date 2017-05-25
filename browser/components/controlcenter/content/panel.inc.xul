@@ -16,7 +16,8 @@
   </broadcasterset>
 
   <panelmultiview id="identity-popup-multiView"
-                  mainViewId="identity-popup-mainView">
+                  mainViewId="identity-popup-mainView"
+                  descriptionheightworkaround="true">
     <panelview id="identity-popup-mainView" flex="1">
 
       <!-- Security Section -->
@@ -96,7 +97,7 @@
     </panelview>
 
     <!-- Security SubView -->
-    <panelview id="identity-popup-securityView" flex="1">
+    <panelview id="identity-popup-securityView">
       <vbox id="identity-popup-securityView-header">
         <label class="plain">
           <label class="identity-popup-headline identity-popup-host"></label>
@@ -108,7 +109,7 @@
                      when-connection="secure secure-ev">&identity.connectionSecure;</description>
       </vbox>
 
-      <vbox id="identity-popup-securityView-body" flex="1">
+      <vbox id="identity-popup-securityView-body" class="panel-view-body-unscrollable">
         <!-- (EV) Certificate Information -->
         <description id="identity-popup-content-verified-by"
                      when-connection="secure-ev">&identity.connectionVerified2;</description>

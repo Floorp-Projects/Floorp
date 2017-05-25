@@ -26,8 +26,10 @@ function getTree(rootGuid, onlyChildren) {
     } else {
       treenode.dateGroupModified = node.lastModified / 1000;
 
-      if (node.children && !onlyChildren) {
-        treenode.children = node.children.map(child => convert(child, node));
+      if (!onlyChildren) {
+        treenode.children = node.children
+          ? node.children.map(child => convert(child, node))
+          : [];
       }
     }
 

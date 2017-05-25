@@ -297,6 +297,12 @@ printf_stderr(const char *fmt, ...)
   fclose(fp);
 }
 
+
+#ifdef _M_IX86
+typedef void (__fastcall* BaseThreadInitThunk_func)(BOOL aIsInitialThread, void* aStartAddress, void* aThreadParam);
+static BaseThreadInitThunk_func stub_BaseThreadInitThunk = nullptr;
+#endif
+
 typedef NTSTATUS (NTAPI *LdrLoadDll_func) (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle);
 static LdrLoadDll_func stub_LdrLoadDll;
 
@@ -766,6 +772,46 @@ continue_loading:
   return stub_LdrLoadDll(filePath, flags, moduleFileName, handle);
 }
 
+
+#ifdef _M_IX86
+static bool
+ShouldBlockThread(void* aStartAddress)
+{
+  // Allows crashfirefox.exe to continue to work. Also if your threadproc is null, this crash is intentional.
+  if (aStartAddress == 0)
+    return false;
+
+  bool shouldBlock = false;
+  MEMORY_BASIC_INFORMATION startAddressInfo = {0};
+  if (VirtualQuery(aStartAddress, &startAddressInfo, sizeof(startAddressInfo))) {
+    shouldBlock |= startAddressInfo.State != MEM_COMMIT;
+    shouldBlock |= startAddressInfo.Protect != PAGE_EXECUTE_READ;
+  }
+
+  return shouldBlock;
+}
+
+// Allows blocked threads to still run normally through BaseThreadInitThunk, in case there's any magic there that we shouldn't skip.
+static DWORD WINAPI
+NopThreadProc(void* /* aThreadParam */)
+{
+  return 0;
+}
+
+static MOZ_NORETURN void __fastcall
+patched_BaseThreadInitThunk(BOOL aIsInitialThread, void* aStartAddress,
+                            void* aThreadParam)
+{
+  if (ShouldBlockThread(aStartAddress)) {
+    aStartAddress = NopThreadProc;
+  }
+
+  stub_BaseThreadInitThunk(aIsInitialThread, aStartAddress, aThreadParam);
+}
+
+#endif // _M_IX86
+
+
 static WindowsDllInterceptor NtDllIntercept;
 static WindowsDllInterceptor Kernel32Intercept;
 
@@ -813,6 +859,18 @@ DllBlocklist_Initialize(uint32_t aInitFlags)
                               (void**)&stub_RtlInstallFunctionTableCallback);
   }
 #endif
+
+#ifdef _M_IX86 // Minimize impact; crashes in BaseThreadInitThunk are vastly more frequent on x86
+  if(!Kernel32Intercept.AddDetour("BaseThreadInitThunk",
+                                    reinterpret_cast<intptr_t>(patched_BaseThreadInitThunk),
+                                    (void**) &stub_BaseThreadInitThunk)) {
+#ifdef DEBUG
+    printf_stderr("BaseThreadInitThunk hook failed\n");
+#endif
+  }
+#endif // _M_IX86
+
+
 }
 
 MFBT_API void

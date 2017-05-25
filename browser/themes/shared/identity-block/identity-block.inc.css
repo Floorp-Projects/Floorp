@@ -76,21 +76,21 @@
 /* MAIN IDENTITY ICON */
 
 #identity-icon {
-  list-style-image: url(chrome://browser/skin/identity-icon.svg#normal);
+  list-style-image: url(chrome://browser/skin/identity-icon.svg);
 }
 
 #identity-box:hover > #identity-icon:not(.no-hover),
 #identity-box[open=true] > #identity-icon {
-  list-style-image: url(chrome://browser/skin/identity-icon.svg#hover);
+  list-style-image: url(chrome://browser/skin/identity-icon-hover.svg);
 }
 
 #identity-box.grantedPermissions > #identity-icon {
-  list-style-image: url(chrome://browser/skin/identity-icon.svg#notice);
+  list-style-image: url(chrome://browser/skin/identity-icon-notice.svg);
 }
 
 #identity-box.grantedPermissions:hover > #identity-icon:not(.no-hover),
 #identity-box.grantedPermissions[open=true] > #identity-icon {
-  list-style-image: url(chrome://browser/skin/identity-icon.svg#notice-hover);
+  list-style-image: url(chrome://browser/skin/identity-icon-notice-hover.svg);
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon {
@@ -217,7 +217,7 @@
 /* REMOTE CONTROL ICON */
 
 #main-window[remotecontrol] #remote-control-icon {
-  list-style-image: url(chrome://browser/content/robot.ico);
+  list-style-image: url(chrome://browser/content/static-robot.png);
   visibility: visible;
   width: 16px;
   height: 16px;

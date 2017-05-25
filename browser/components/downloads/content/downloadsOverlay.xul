@@ -108,22 +108,20 @@
 
       <panelmultiview id="downloadsPanel-multiView"
                       mainViewId="downloadsPanel-mainView"
-                      align="stretch">
+                      descriptionheightworkaround="true">
 
-        <panelview id="downloadsPanel-mainView"
-                   flex="1"
-                   align="stretch">
-          <richlistbox id="downloadsListBox"
-                       context="downloadsContextMenu"
-                       onmouseover="DownloadsView.onDownloadMouseOver(event);"
-                       onmouseout="DownloadsView.onDownloadMouseOut(event);"
-                       oncontextmenu="DownloadsView.onDownloadContextMenu(event);"
-                       ondragstart="DownloadsView.onDownloadDragStart(event);"/>
-          <description id="emptyDownloads"
-                       mousethrough="always">
-             &downloadsPanelEmpty.label;
-          </description>
-          <spacer flex="1"/>
+        <panelview id="downloadsPanel-mainView">
+          <vbox class="panel-view-body-unscrollable">
+            <richlistbox id="downloadsListBox"
+                         context="downloadsContextMenu"
+                         onmouseover="DownloadsView.onDownloadMouseOver(event);"
+                         onmouseout="DownloadsView.onDownloadMouseOut(event);"
+                         oncontextmenu="DownloadsView.onDownloadContextMenu(event);"
+                         ondragstart="DownloadsView.onDownloadDragStart(event);"/>
+            <description id="emptyDownloads"
+                         mousethrough="always"
+                         value="&downloadsPanelEmpty.label;"/>
+          </vbox>
           <vbox id="downloadsFooter"
                 class="downloadsPanelFooter">
             <stack>
@@ -159,13 +157,12 @@
           </vbox>
         </panelview>
 
-        <panelview id="downloadsPanel-blockedSubview"
-                   orient="vertical"
-                   flex="1">
-          <description id="downloadsPanel-blockedSubview-title"/>
-          <description id="downloadsPanel-blockedSubview-details1"/>
-          <description id="downloadsPanel-blockedSubview-details2"/>
-          <spacer flex="1"/>
+        <panelview id="downloadsPanel-blockedSubview">
+          <vbox class="panel-view-body-unscrollable">
+            <description id="downloadsPanel-blockedSubview-title"/>
+            <description id="downloadsPanel-blockedSubview-details1"/>
+            <description id="downloadsPanel-blockedSubview-details2"/>
+          </vbox>
           <hbox id="downloadsPanel-blockedSubview-buttons"
                 class="downloadsPanelFooter"
                 align="stretch">

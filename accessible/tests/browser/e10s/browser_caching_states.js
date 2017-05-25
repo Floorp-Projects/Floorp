@@ -91,15 +91,15 @@ const extraStateTests = [{
   expected: [0, EXT_STATE_ENABLED]
 }];
 
-function* runStateTests(browser, accDoc, id, tests) {
+async function runStateTests(browser, accDoc, id, tests) {
   let acc = findAccessibleChildByID(accDoc, id);
   for (let { desc, attrs, expected } of tests) {
     info(desc);
     let onUpdate = waitForEvent(EVENT_STATE_CHANGE, id);
     for (let { attr, value } of attrs) {
-      yield invokeSetAttribute(browser, id, attr, value);
+      await invokeSetAttribute(browser, id, attr, value);
     }
-    yield onUpdate;
+    await onUpdate;
     testStates(acc, ...expected);
   }
 }
@@ -111,9 +111,9 @@ addAccessibleTask(`
   <input id="checkbox" type="checkbox">
   <input id="file" type="file">
   <input id="text">`,
-  function* (browser, accDoc) {
-    yield runStateTests(browser, accDoc, 'checkbox', attributeTests);
-    yield runStateTests(browser, accDoc, 'file', ariaTests);
-    yield runStateTests(browser, accDoc, 'text', extraStateTests);
+  async function (browser, accDoc) {
+    await runStateTests(browser, accDoc, 'checkbox', attributeTests);
+    await runStateTests(browser, accDoc, 'file', ariaTests);
+    await runStateTests(browser, accDoc, 'text', extraStateTests);
   }
 );

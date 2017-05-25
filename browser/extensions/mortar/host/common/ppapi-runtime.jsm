@@ -1818,7 +1818,8 @@ class PPAPIInstance {
         break;
       case 'startPrint':
         // We need permission for showing print dialog to get print settings
-        this.mm.sendAsyncMessage("ppapipdf.js:getPrintSettings");
+        this.mm.sendAsyncMessage("ppapipdf.js:getPrintSettings", {
+          url: this.info.url });
         break;
       case 'openLink':
         this.mm.sendAsyncMessage("ppapipdf.js:openLink", {

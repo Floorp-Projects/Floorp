@@ -154,6 +154,11 @@ public:
       AsAnonymous()->AddRef();
     }
   }
+  CounterStylePtr(CounterStylePtr&& aOther)
+    : mRaw(aOther.mRaw)
+  {
+    aOther.mRaw = 0;
+  }
   ~CounterStylePtr() { Reset(); }
 
   CounterStylePtr& operator=(const CounterStylePtr& aOther)

@@ -242,7 +242,7 @@ public:
 
   virtual void HandleResumeVideoDecoding(const TimeUnit& aTarget);
 
-  virtual void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) {}
+  virtual void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) { }
 
   virtual nsCString GetDebugInfo() { return nsCString(); }
 
@@ -267,7 +267,7 @@ protected:
   };
 
   using Master = MediaDecoderStateMachine;
-  explicit StateObject(Master* aPtr) : mMaster(aPtr) {}
+  explicit StateObject(Master* aPtr) : mMaster(aPtr) { }
   TaskQueue* OwnerThread() const { return mMaster->mTaskQueue; }
   MediaResource* Resource() const { return mMaster->mResource; }
   MediaDecoderReaderWrapper* Reader() const { return mMaster->mReader; }
@@ -369,15 +369,9 @@ public:
       ->Track(mMetadataRequest);
   }
 
-  void Exit() override
-  {
-    mMetadataRequest.DisconnectIfExists();
-  }
+  void Exit() override { mMetadataRequest.DisconnectIfExists(); }
 
-  State GetState() const override
-  {
-    return DECODER_STATE_DECODING_METADATA;
-  }
+  State GetState() const override { return DECODER_STATE_DECODING_METADATA; }
 
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
   {
@@ -422,10 +416,7 @@ class MediaDecoderStateMachine::WaitForCDMState
 public:
   explicit WaitForCDMState(Master* aPtr) : StateObject(aPtr) { }
 
-  void Enter()
-  {
-    MOZ_ASSERT(!mMaster->mVideoDecodeSuspended);
-  }
+  void Enter() { MOZ_ASSERT(!mMaster->mVideoDecodeSuspended); }
 
   void Exit() override
   {
@@ -488,6 +479,8 @@ public:
     mPendingSeek.mTarget.emplace(t, SeekTarget::Accurate);
     // SeekJob asserts |mTarget.IsValid() == !mPromise.IsEmpty()| so we
     // need to create the promise even it is not used at all.
+    // The promise may be used when coming out of DormantState into
+    // SeekingState.
     RefPtr<MediaDecoder::SeekPromise> x =
       mPendingSeek.mPromise.Ensure(__func__);
 
@@ -508,10 +501,9 @@ public:
     mPendingSeek.RejectIfExists(__func__);
   }
 
-  State GetState() const override
-  {
-    return DECODER_STATE_DORMANT;
-  }
+  State GetState() const override { return DECODER_STATE_DORMANT; }
+
+  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override;
 
   void HandleVideoSuspendTimeout() override
   {
@@ -525,38 +517,17 @@ public:
 
   void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) override;
 
-  void HandleAudioDecoded(AudioData*) override
-  {
-    MaybeReleaseResources();
-  }
+  void HandleAudioDecoded(AudioData*) override { MaybeReleaseResources(); }
   void HandleVideoDecoded(VideoData*, TimeStamp) override
   {
     MaybeReleaseResources();
   }
-  void HandleWaitingForAudio() override
-  {
-    MaybeReleaseResources();
-  }
-  void HandleWaitingForVideo() override
-  {
-    MaybeReleaseResources();
-  }
-  void HandleAudioCanceled() override
-  {
-    MaybeReleaseResources();
-  }
-  void HandleVideoCanceled() override
-  {
-    MaybeReleaseResources();
-  }
-  void HandleEndOfAudio() override
-  {
-    MaybeReleaseResources();
-  }
-  void HandleEndOfVideo() override
-  {
-    MaybeReleaseResources();
-  }
+  void HandleWaitingForAudio() override { MaybeReleaseResources(); }
+  void HandleWaitingForVideo() override { MaybeReleaseResources(); }
+  void HandleAudioCanceled() override { MaybeReleaseResources(); }
+  void HandleVideoCanceled() override { MaybeReleaseResources(); }
+  void HandleEndOfAudio() override { MaybeReleaseResources(); }
+  void HandleEndOfVideo() override { MaybeReleaseResources(); }
 
 private:
   void MaybeReleaseResources()
@@ -595,10 +566,7 @@ public:
     mPendingSeek.RejectIfExists(__func__);
   }
 
-  State GetState() const override
-  {
-    return DECODER_STATE_DECODING_FIRSTFRAME;
-  }
+  State GetState() const override { return DECODER_STATE_DECODING_FIRSTFRAME; }
 
   void HandleAudioDecoded(AudioData* aAudio) override
   {
@@ -1054,11 +1022,8 @@ public:
 protected:
   SeekJob mSeekJob;
 
-  void SeekCompleted();
-
-private:
   virtual void DoSeek() = 0;
-
+  void SeekCompleted();
   virtual TimeUnit CalculateNewCurrentTime() const = 0;
 };
 
@@ -1066,9 +1031,7 @@ class MediaDecoderStateMachine::AccurateSeekingState
   : public MediaDecoderStateMachine::SeekingState
 {
 public:
-  explicit AccurateSeekingState(Master* aPtr) : SeekingState(aPtr)
-  {
-  }
+  explicit AccurateSeekingState(Master* aPtr) : SeekingState(aPtr) { }
 
   RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob&& aSeekJob,
                                           EventVisibility aVisibility)
@@ -1232,21 +1195,6 @@ public:
     RequestVideoData();
   }
 
-private:
-  void DemuxerSeek()
-  {
-    // Request the demuxer to perform seek.
-    Reader()->Seek(mSeekJob.mTarget.ref())
-      ->Then(OwnerThread(), __func__,
-             [this] (const media::TimeUnit& aUnit) {
-               OnSeekResolved(aUnit);
-             },
-             [this] (const SeekRejectValue& aReject) {
-               OnSeekRejected(aReject);
-             })
-      ->Track(mSeekRequest);
-  }
-
   void DoSeek() override
   {
     mDoneAudioSeeking = !Info().HasAudio() || mSeekJob.mTarget->IsVideoOnly();
@@ -1285,8 +1233,10 @@ private:
         return seekTime;
       }
 
-      const int64_t audioStart = audio ? audio->mTime.ToMicroseconds() : INT64_MAX;
-      const int64_t videoStart = video ? video->mTime.ToMicroseconds() : INT64_MAX;
+      const int64_t audioStart =
+        audio ? audio->mTime.ToMicroseconds() : INT64_MAX;
+      const int64_t videoStart =
+        video ? video->mTime.ToMicroseconds() : INT64_MAX;
       const int64_t audioGap = std::abs(audioStart - seekTime.ToMicroseconds());
       const int64_t videoGap = std::abs(videoStart - seekTime.ToMicroseconds());
       return TimeUnit::FromMicroseconds(
@@ -1295,6 +1245,21 @@ private:
 
     MOZ_ASSERT(false, "AccurateSeekTask doesn't handle other seek types.");
     return TimeUnit::Zero();
+  }
+
+private:
+  void DemuxerSeek()
+  {
+    // Request the demuxer to perform seek.
+    Reader()->Seek(mSeekJob.mTarget.ref())
+      ->Then(OwnerThread(), __func__,
+             [this] (const media::TimeUnit& aUnit) {
+               OnSeekResolved(aUnit);
+             },
+             [this] (const SeekRejectValue& aReject) {
+               OnSeekRejected(aReject);
+             })
+      ->Track(mSeekRequest);
   }
 
   void OnSeekResolved(media::TimeUnit)
@@ -1459,8 +1424,10 @@ private:
     // If the frame end time is less than the seek target, we won't want
     // to display this frame after the seek, so discard it.
     if (target >= aVideo->GetEndTime()) {
-      SLOG("DropVideoUpToSeekTarget() pop video frame [%" PRId64 ", %" PRId64 "] target=%" PRId64,
-           aVideo->mTime.ToMicroseconds(), aVideo->GetEndTime().ToMicroseconds(),
+      SLOG("DropVideoUpToSeekTarget() pop video frame [%" PRId64 ", %" PRId64
+           "] target=%" PRId64,
+           aVideo->mTime.ToMicroseconds(),
+           aVideo->GetEndTime().ToMicroseconds(),
            target.ToMicroseconds());
       mFirstVideoFrameAfterSeek = aVideo;
     } else {
@@ -1472,9 +1439,10 @@ private:
       }
       mFirstVideoFrameAfterSeek = nullptr;
 
-      SLOG("DropVideoUpToSeekTarget() found video frame [%" PRId64 ", %" PRId64 "] "
-           "containing target=%" PRId64,
-           aVideo->mTime.ToMicroseconds(), aVideo->GetEndTime().ToMicroseconds(),
+      SLOG("DropVideoUpToSeekTarget() found video frame [%" PRId64 ", %" PRId64
+           "] containing target=%" PRId64,
+           aVideo->mTime.ToMicroseconds(),
+           aVideo->GetEndTime().ToMicroseconds(),
            target.ToMicroseconds());
 
       MOZ_ASSERT(VideoQueue().GetSize() == 0,
@@ -1535,9 +1503,7 @@ class MediaDecoderStateMachine::NextFrameSeekingState
   : public MediaDecoderStateMachine::SeekingState
 {
 public:
-  explicit NextFrameSeekingState(Master* aPtr) : SeekingState(aPtr)
-  {
-  }
+  explicit NextFrameSeekingState(Master* aPtr) : SeekingState(aPtr) { }
 
   RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob&& aSeekJob,
                                           EventVisibility aVisibility)
@@ -1555,61 +1521,6 @@ public:
 
     // Disconnect MediaDecoder.
     mSeekJob.RejectIfExists(__func__);
-  }
-
-private:
-  void DoSeekInternal()
-  {
-    auto currentTime = mCurrentTime;
-    DiscardFrames(VideoQueue(), [currentTime] (int64_t aSampleTime) {
-      return aSampleTime <= currentTime.ToMicroseconds();
-    });
-
-    if (!NeedMoreVideo()) {
-      FinishSeek();
-    } else if (!mMaster->IsRequestingVideoData()
-               && !mMaster->IsWaitingVideoData()) {
-      RequestVideoData();
-    }
-  }
-
-  class AysncNextFrameSeekTask : public Runnable
-  {
-  public:
-    explicit AysncNextFrameSeekTask(NextFrameSeekingState* aStateObject)
-      : mStateObj(aStateObject)
-    {
-    }
-
-    void Cancel() { mStateObj = nullptr; }
-
-    NS_IMETHOD Run() override
-    {
-      if (mStateObj) {
-        mStateObj->DoSeekInternal();
-      }
-      return NS_OK;
-    }
-
-  private:
-    NextFrameSeekingState* mStateObj;
-  };
-
-  void DoSeek() override
-  {
-    // We need to do the seek operation asynchronously. Because for a special
-    // case (bug504613.ogv) which has no data at all, the 1st seekToNextFrame()
-    // operation reaches to the end of the media. If we did the seek operation
-    // synchronously, we immediately resolve the SeekPromise in mSeekJob and
-    // then switch to the CompletedState which dispatches an "ended" event.
-    // However, the ThenValue of the SeekPromise has not yet been set, so the
-    // promise resolving is postponed and then the JS developer receives the
-    // "ended" event before the seek promise is resolved.
-    // An asynchronous seek operation helps to solve this issue since while the
-    // seek is actually performed, the ThenValue of SeekPromise has already
-    // been set so that it won't be postponed.
-    RefPtr<Runnable> r = mAsyncSeekTask = new AysncNextFrameSeekTask(this);
-    OwnerThread()->Dispatch(r.forget());
   }
 
   void HandleAudioDecoded(AudioData* aAudio) override
@@ -1696,6 +1607,61 @@ private:
     return mSeekJob.mTarget->GetTime();
   }
 
+  void DoSeek() override
+  {
+    // We need to do the seek operation asynchronously. Because for a special
+    // case (bug504613.ogv) which has no data at all, the 1st seekToNextFrame()
+    // operation reaches the end of the media. If we did the seek operation
+    // synchronously, we immediately resolve the SeekPromise in mSeekJob and
+    // then switch to the CompletedState which dispatches an "ended" event.
+    // However, the ThenValue of the SeekPromise has not yet been set, so the
+    // promise resolving is postponed and then the JS developer receives the
+    // "ended" event before the seek promise is resolved.
+    // An asynchronous seek operation helps to solve this issue since while the
+    // seek is actually performed, the ThenValue of SeekPromise has already
+    // been set so that it won't be postponed.
+    RefPtr<Runnable> r = mAsyncSeekTask = new AysncNextFrameSeekTask(this);
+    OwnerThread()->Dispatch(r.forget());
+  }
+
+private:
+  void DoSeekInternal()
+  {
+    auto currentTime = mCurrentTime;
+    DiscardFrames(VideoQueue(), [currentTime] (int64_t aSampleTime) {
+      return aSampleTime <= currentTime.ToMicroseconds();
+    });
+
+    if (!NeedMoreVideo()) {
+      FinishSeek();
+    } else if (!mMaster->IsRequestingVideoData()
+               && !mMaster->IsWaitingVideoData()) {
+      RequestVideoData();
+    }
+  }
+
+  class AysncNextFrameSeekTask : public Runnable
+  {
+  public:
+    explicit AysncNextFrameSeekTask(NextFrameSeekingState* aStateObject)
+      : mStateObj(aStateObject)
+    {
+    }
+
+    void Cancel() { mStateObj = nullptr; }
+
+    NS_IMETHOD Run() override
+    {
+      if (mStateObj) {
+        mStateObj->DoSeekInternal();
+      }
+      return NS_OK;
+    }
+
+  private:
+    NextFrameSeekingState* mStateObj;
+  };
+
   void RequestVideoData()
   {
     mMaster->RequestVideoData(false, media::TimeUnit());
@@ -1741,6 +1707,68 @@ private:
   RefPtr<AysncNextFrameSeekTask> mAsyncSeekTask;
 };
 
+class MediaDecoderStateMachine::NextFrameSeekingFromDormantState
+  : public MediaDecoderStateMachine::AccurateSeekingState
+{
+public:
+  explicit NextFrameSeekingFromDormantState(Master* aPtr)
+    : AccurateSeekingState(aPtr)
+  {
+  }
+
+  RefPtr<MediaDecoder::SeekPromise> Enter(SeekJob&& aCurrentSeekJob,
+                                          SeekJob&& aFutureSeekJob)
+  {
+    mFutureSeekJob = Move(aFutureSeekJob);
+
+    SeekJob seekJob(Move(aCurrentSeekJob));
+    // Ensure that we don't transition to DecodingState once this seek
+    // completes.
+    seekJob.mTransition = false;
+
+    AccurateSeekingState::Enter(Move(seekJob), EventVisibility::Suppressed)
+      ->Then(OwnerThread(),
+             __func__,
+             [this]() {
+               mAccurateSeekRequest.Complete();
+               SetState<NextFrameSeekingState>(Move(mFutureSeekJob),
+                                               EventVisibility::Observable);
+             },
+             [this]() { mAccurateSeekRequest.Complete(); })
+      ->Track(mAccurateSeekRequest);
+    return mFutureSeekJob.mPromise.Ensure(__func__);
+  }
+
+  void Exit() override
+  {
+    mAccurateSeekRequest.DisconnectIfExists();
+    mFutureSeekJob.RejectIfExists(__func__);
+    AccurateSeekingState::Exit();
+  }
+
+private:
+  MozPromiseRequestHolder<MediaDecoder::SeekPromise> mAccurateSeekRequest;
+  SeekJob mFutureSeekJob;
+};
+
+RefPtr<MediaDecoder::SeekPromise>
+MediaDecoderStateMachine::DormantState::HandleSeek(SeekTarget aTarget)
+{
+  if (aTarget.IsNextFrame()) {
+    // NextFrameSeekingState doesn't reset the decoder unlike
+    // AccurateSeekingState. So we first must come out of dormant by seeking to
+    // mPendingSeek and continue later with the NextFrameSeek
+    SLOG("Changed state to SEEKING (to %" PRId64 ")",
+        aTarget.GetTime().ToMicroseconds());
+    SeekJob seekJob;
+    seekJob.mTarget = Some(aTarget);
+    return StateObject::SetState<NextFrameSeekingFromDormantState>(
+      Move(mPendingSeek), Move(seekJob));
+  }
+
+  return StateObject::HandleSeek(aTarget);
+}
+
 /**
  * Purpose: stop playback until enough data is decoded to continue playback.
  *
@@ -1779,10 +1807,7 @@ public:
 
   void Step() override;
 
-  State GetState() const override
-  {
-    return DECODER_STATE_BUFFERING;
-  }
+  State GetState() const override { return DECODER_STATE_BUFFERING; }
 
   void HandleAudioDecoded(AudioData* aAudio) override
   {
@@ -1800,10 +1825,7 @@ public:
     mMaster->ScheduleStateMachine();
   }
 
-  void HandleAudioCanceled() override
-  {
-    mMaster->RequestAudioData();
-  }
+  void HandleAudioCanceled() override { mMaster->RequestAudioData(); }
 
   void HandleVideoCanceled() override
   {
@@ -2501,7 +2523,9 @@ SeekingState::SeekCompleted()
     mMaster->mOnPlaybackEvent.Notify(MediaEventType::Invalidate);
   }
 
-  SetState<DecodingState>();
+  if (mSeekJob.mTransition) {
+    SetState<DecodingState>();
+  }
 }
 
 void

@@ -25,14 +25,14 @@ const defaultAttributes = {
 /**
  * Test data has the format of:
  * {
- *   desc        {String}       description for better logging
- *   expected    {Object}       expected attributes for given accessibles
- *   unexpected  {Object}       unexpected attributes for given accessibles
+ *   desc        {String}         description for better logging
+ *   expected    {Object}         expected attributes for given accessibles
+ *   unexpected  {Object}         unexpected attributes for given accessibles
  *
- *   action      {?Function*}   an optional action that yields a change in
- *                              attributes
- *   attrs       {?Array}       an optional list of attributes to update
- *   waitFor     {?Number}      an optional event to wait for
+ *   action      {?AsyncFunction} an optional action that awaits a change in
+ *                                attributes
+ *   attrs       {?Array}         an optional list of attributes to update
+ *   waitFor     {?Number}        an optional event to wait for
  * }
  */
 const attributesTests = [{
@@ -46,8 +46,8 @@ const attributesTests = [{
   }
 }, {
   desc: '@line-number attribute is present when textbox is focused',
-  action: function*(browser) {
-    yield invokeFocus(browser, 'textbox');
+  action: async function(browser) {
+    await invokeFocus(browser, 'textbox');
   },
   waitFor: EVENT_FOCUS,
   expected: Object.assign({}, defaultAttributes, { 'line-number': '1' }),
@@ -90,7 +90,7 @@ const attributesTests = [{
  */
 addAccessibleTask(`
   <input id="textbox" value="hello">`,
-  function* (browser, accDoc) {
+  async function (browser, accDoc) {
     let textbox = findAccessibleChildByID(accDoc, 'textbox');
     for (let { desc, action, attrs, expected, waitFor, unexpected } of attributesTests) {
       info(desc);
@@ -101,14 +101,14 @@ addAccessibleTask(`
       }
 
       if (action) {
-        yield action(browser);
+        await action(browser);
       } else if (attrs) {
         for (let { attr, value } of attrs) {
-          yield invokeSetAttribute(browser, 'textbox', attr, value);
+          await invokeSetAttribute(browser, 'textbox', attr, value);
         }
       }
 
-      yield onUpdate;
+      await onUpdate;
       testAttrs(textbox, expected);
       testAbsentAttrs(textbox, unexpected);
     }

@@ -655,8 +655,6 @@ KeyframeEffectReadOnly::ComposeStyleRule(
   }
 }
 
-// Bug 1333311 - We use two branches for Gecko and Stylo. However, it's
-// better to remove the duplicated code.
 void
 KeyframeEffectReadOnly::ComposeStyleRule(
   RawServoAnimationValueMap& aAnimationValues,
@@ -664,14 +662,13 @@ KeyframeEffectReadOnly::ComposeStyleRule(
   const AnimationPropertySegment& aSegment,
   const ComputedTiming& aComputedTiming)
 {
-  // Bug 1329878 - Stylo: Implement accumulate and addition on Servo
-  // AnimationValue.
-
   Servo_AnimationCompose(&aAnimationValues,
                          &mBaseStyleValuesForServo,
                          aProperty.mProperty,
                          &aSegment,
-                         &aComputedTiming);
+                         &aProperty.mSegments.LastElement(),
+                         &aComputedTiming,
+                         mEffectOptions.mIterationComposite);
 }
 
 template<typename ComposeAnimationResult>

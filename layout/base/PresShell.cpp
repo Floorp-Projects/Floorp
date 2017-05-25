@@ -3927,7 +3927,8 @@ PresShell::UnsuppressPainting()
 nsresult
 PresShell::PostReflowCallback(nsIReflowCallback* aCallback)
 {
-  void* result = AllocateMisc(sizeof(nsCallbackEventRequest));
+  void* result = AllocateByObjectID(eArenaObjectID_nsCallbackEventRequest,
+                                    sizeof(nsCallbackEventRequest));
   nsCallbackEventRequest* request = (nsCallbackEventRequest*)result;
 
   request->callback = aCallback;
@@ -3968,7 +3969,7 @@ PresShell::CancelReflowCallback(nsIReflowCallback* aCallback)
           mLastCallbackEventRequest = before;
         }
 
-        FreeMisc(sizeof(nsCallbackEventRequest), toFree);
+        FreeByObjectID(eArenaObjectID_nsCallbackEventRequest, toFree);
       } else {
         before = node;
         node = node->next;
@@ -3986,7 +3987,7 @@ PresShell::CancelPostedReflowCallbacks()
       mLastCallbackEventRequest = nullptr;
     }
     nsIReflowCallback* callback = node->callback;
-    FreeMisc(sizeof(nsCallbackEventRequest), node);
+    FreeByObjectID(eArenaObjectID_nsCallbackEventRequest, node);
     if (callback) {
       callback->ReflowCallbackCanceled();
     }
@@ -4005,7 +4006,7 @@ PresShell::HandlePostedReflowCallbacks(bool aInterruptible)
        mLastCallbackEventRequest = nullptr;
      }
      nsIReflowCallback* callback = node->callback;
-     FreeMisc(sizeof(nsCallbackEventRequest), node);
+     FreeByObjectID(eArenaObjectID_nsCallbackEventRequest, node);
      if (callback) {
        if (callback->ReflowFinished()) {
          shouldFlush = true;

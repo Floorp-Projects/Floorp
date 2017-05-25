@@ -22,6 +22,7 @@ Structure:
         why: <string>, // Why did we submit the ping? Either "shutdown", "schedule", or "idchanged".
         uid: <string>, // Hashed FxA unique ID, or string of 32 zeros. If this changes between syncs, the payload is submitted.
         deviceID: <string>, // Hashed FxA Device ID, hex string of 64 characters, not included if the user is not logged in. If this changes between syncs, the payload is submitted.
+        sessionStartDate: <ISO date>, // hourly precision, ISO date in local time
         // Array of recorded syncs. The ping is not submitted if this would be empty
         syncs: [{
           when: <integer milliseconds since epoch>,

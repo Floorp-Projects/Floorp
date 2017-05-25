@@ -4,15 +4,9 @@
 
 package org.mozilla.gecko;
 
-import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 
-import org.mozilla.gecko.util.IntentUtils;
-
-public abstract class GeckoActivity extends AppCompatActivity implements GeckoActivityStatus {
-    // Has this activity recently started another Gecko activity?
-    private boolean mGeckoActivityOpened;
-
+public abstract class GeckoActivity extends AppCompatActivity {
     /**
      * Display any resources that show strings or encompass locale-specific
      * representations.
@@ -20,30 +14,6 @@ public abstract class GeckoActivity extends AppCompatActivity implements GeckoAc
      * onLocaleReady must always be called on the UI thread.
      */
     public void onLocaleReady(final String locale) {
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-
-        if (getApplication() instanceof GeckoApplication) {
-            ((GeckoApplication) getApplication()).onActivityPause(this);
-        }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        if (getApplication() instanceof GeckoApplication) {
-            ((GeckoApplication) getApplication()).onActivityResume(this);
-            mGeckoActivityOpened = false;
-        }
-    }
-
-    @Override
-    protected void onNewIntent(Intent externalIntent) {
-        GeckoActivityMonitor.getInstance().onActivityNewIntent(this);
     }
 
     @Override
@@ -60,23 +30,6 @@ public abstract class GeckoActivity extends AppCompatActivity implements GeckoAc
             ANRReporter.unregister();
         }
         super.onDestroy();
-    }
-
-    @Override
-    public void startActivity(Intent intent) {
-        mGeckoActivityOpened = IntentUtils.checkIfGeckoActivity(intent);
-        super.startActivity(intent);
-    }
-
-    @Override
-    public void startActivityForResult(Intent intent, int request) {
-        mGeckoActivityOpened = IntentUtils.checkIfGeckoActivity(intent);
-        super.startActivityForResult(intent, request);
-    }
-
-    @Override
-    public boolean isGeckoActivityOpened() {
-        return mGeckoActivityOpened;
     }
 
     public boolean isApplicationInBackground() {

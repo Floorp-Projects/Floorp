@@ -11,10 +11,10 @@
 add_task(function* () {
   yield addTab(URL_ROOT + "doc_delayed_starttime_animations.html");
   const { panel } = yield openAnimationInspector();
-  yield setStyleAndWaitForAnimationSelecting(panel, "animation", "anim 100s", "#target2");
-  yield setStyleAndWaitForAnimationSelecting(panel, "animation", "anim 100s", "#target3");
-  yield setStyleAndWaitForAnimationSelecting(panel, "animation", "anim 100s", "#target4");
-  yield setStyleAndWaitForAnimationSelecting(panel, "animation", "anim 100s", "#target5");
+  yield setStyle(null, panel, "animation", "anim 100s", "#target2");
+  yield setStyle(null, panel, "animation", "anim 100s", "#target3");
+  yield setStyle(null, panel, "animation", "anim 100s", "#target4");
+  yield setStyle(null, panel, "animation", "anim 100s", "#target5");
 
   const timelineComponent = panel.animationsTimelineComponent;
   const detailsComponent = timelineComponent.details;
@@ -42,9 +42,3 @@ add_task(function* () {
   is(progressIndicatorEl.style.left, "0%",
      "The progress indicator position should be 0% at end of animation");
 });
-
-function* setStyleAndWaitForAnimationSelecting(panel, name, value, selector) {
-  const onSelecting = waitForAnimationSelecting(panel);
-  yield setStyle(null, panel, name, value, selector);
-  yield onSelecting;
-}

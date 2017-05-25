@@ -1088,6 +1088,13 @@ nsThread::IdleDispatch(already_AddRefed<nsIRunnable> aEvent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsThread::IdleDispatchFromScript(nsIRunnable* aEvent)
+{
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  return IdleDispatch(event.forget());
+}
+
 #ifdef MOZ_CANARY
 void canary_alarm_handler(int signum);
 
@@ -1157,9 +1164,9 @@ nsThread::GetIdleEvent(nsIRunnable** aEvent, MutexAutoLock& aProofOfLock)
   mIdleEvents.GetEvent(false, aEvent, aProofOfLock);
 
   if (*aEvent) {
-    nsCOMPtr<nsIIdleRunnable> incrementalEvent(do_QueryInterface(*aEvent));
-    if (incrementalEvent) {
-      incrementalEvent->SetDeadline(idleDeadline);
+    nsCOMPtr<nsIIdleRunnable> idleEvent(do_QueryInterface(*aEvent));
+    if (idleEvent) {
+      idleEvent->SetDeadline(idleDeadline);
     }
   }
 }

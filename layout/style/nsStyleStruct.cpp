@@ -3808,6 +3808,16 @@ nsStyleContentData::nsStyleContentData(const nsStyleContentData& aOther)
   }
 }
 
+bool
+nsStyleContentData::
+CounterFunction::operator==(const CounterFunction& aOther) const
+{
+  return mIdent == aOther.mIdent &&
+    mSeparator == aOther.mSeparator &&
+    mCounterStyle == aOther.mCounterStyle &&
+    mCounterStyleName == aOther.mCounterStyleName;
+}
+
 nsStyleContentData&
 nsStyleContentData::operator=(const nsStyleContentData& aOther)
 {
@@ -3834,6 +3844,31 @@ nsStyleContentData::operator==(const nsStyleContentData& aOther) const
     return *mContent.mCounters == *aOther.mContent.mCounters;
   }
   return safe_strcmp(mContent.mString, aOther.mContent.mString) == 0;
+}
+
+void
+nsStyleContentData::Resolve(nsPresContext* aPresContext)
+{
+  switch (mType) {
+    case eStyleContentType_Image:
+      if (!mContent.mImage->IsResolved()) {
+        mContent.mImage->Resolve(aPresContext);
+      }
+      break;
+    case eStyleContentType_Counter:
+    case eStyleContentType_Counters: {
+      CounterFunction* counters = mContent.mCounters;
+      if (counters->mCounterStyleName) {
+        MOZ_ASSERT(!counters->mCounterStyle);
+        counters->mCounterStyle = aPresContext->CounterStyleManager()->
+          BuildCounterStyle(counters->mCounterStyleName);
+        counters->mCounterStyleName = nullptr;
+      }
+      break;
+    }
+    default:
+      break;
+  }
 }
 
 
@@ -3892,6 +3927,10 @@ nsStyleContent::CalcDifference(const nsStyleContent& aNewData) const
   // Unfortunately we need to reframe even if the content lengths are the same;
   // a simple reflow will not pick up different text or different image URLs,
   // since we set all that up in the CSSFrameConstructor
+  //
+  // Also note that we also rely on this to return ReconstructFrame when
+  // content changes to ensure that nsCounterUseNode wouldn't reference
+  // to stale counter stylex.
   if (mContents != aNewData.mContents ||
       mIncrements != aNewData.mIncrements ||
       mResets != aNewData.mResets) {

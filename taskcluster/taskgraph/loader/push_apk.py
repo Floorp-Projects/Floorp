@@ -27,7 +27,10 @@ def get_dependent_loaded_tasks(config, loaded_tasks):
     )
     android_tasks = [
         task for task in tasks_with_matching_kind
-        if task.attributes.get('build_platform', '').startswith('android')
+        # old-id builds are not shipped through the Play store, so we don't
+        # want them as dependencies.
+        if task.attributes.get('build_platform', '').startswith('android') \
+        and 'old-id' not in task.attributes.get('build_platform', '')
     ]
 
     return android_tasks

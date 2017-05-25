@@ -5,20 +5,21 @@
 
 package org.mozilla.gecko;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 import android.os.Bundle;
+
+import java.lang.ref.WeakReference;
 
 public class GeckoActivityMonitor implements Application.ActivityLifecycleCallbacks {
     private static final String LOGTAG = "GeckoActivityMonitor";
 
-    // We only hold a reference to the currently running activity - when this activity pauses,
-    // the reference is released or else overwritten by the next activity.
-    @SuppressLint("StaticFieldLeak")
     private static final GeckoActivityMonitor instance = new GeckoActivityMonitor();
 
-    private Activity currentActivity;
+    private GeckoApplication appContext;
+    private WeakReference<Activity> currentActivity = new WeakReference<>(null);
+    private boolean mInitialized;
 
     public static GeckoActivityMonitor getInstance() {
         return instance;
@@ -27,55 +28,52 @@ public class GeckoActivityMonitor implements Application.ActivityLifecycleCallba
     private GeckoActivityMonitor() { }
 
     public Activity getCurrentActivity() {
-        return currentActivity;
+        return currentActivity.get();
+    }
+
+    public synchronized void initialize(final Context context) {
+        if (mInitialized) {
+            return;
+        }
+
+        appContext = (GeckoApplication) context.getApplicationContext();
+
+        appContext.registerActivityLifecycleCallbacks(this);
+        mInitialized = true;
     }
 
     @Override
-    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
-        currentActivity = activity;
-    }
-
-    // onNewIntent happens in-between a pause/resume cycle, which means that we wouldn't have
-    // a current activity to report if we were using only the official ActivityLifecycleCallbacks.
-    // For code that wants to know the current activity even at this point we therefore have to
-    // handle this ourselves.
-    public void onActivityNewIntent(Activity activity) {
-        currentActivity = activity;
-    }
+    public void onActivityCreated(Activity activity, Bundle savedInstanceState) { }
 
     @Override
     public void onActivityStarted(Activity activity) {
-        currentActivity = activity;
+        if (currentActivity.get() == null) {
+            appContext.onApplicationForeground();
+        }
+        currentActivity = new WeakReference<>(activity);
     }
 
     @Override
-    public void onActivityResumed(Activity activity) {
-        currentActivity = activity;
-    }
+    public void onActivityResumed(Activity activity) { }
 
     @Override
-    public void onActivityPaused(Activity activity) {
-        releaseIfCurrentActivity(activity);
-    }
+    public void onActivityPaused(Activity activity) { }
 
     @Override
     public void onActivityStopped(Activity activity) {
-        releaseIfCurrentActivity(activity);
+        // onStop for the previous activity is called after onStart for the new activity, so if
+        // we're switching activities within our app, currentActivity should already refer to the
+        // next activity at this point.
+        // If it doesn't, it means we've been backgrounded.
+        if (currentActivity.get() == activity) {
+            currentActivity.clear();
+            appContext.onApplicationBackground();
+        }
     }
 
     @Override
     public void onActivitySaveInstanceState(Activity activity, Bundle outState) { }
 
     @Override
-    public void onActivityDestroyed(Activity activity) {
-        releaseIfCurrentActivity(activity);
-    }
-
-    private void releaseIfCurrentActivity(Activity activity) {
-        // If the next activity has already started by the time the previous activity is being
-        // stopped/destroyed, we no longer need to clear the previous activity.
-        if (currentActivity == activity) {
-            currentActivity = null;
-        }
-    }
+    public void onActivityDestroyed(Activity activity) { }
 }
