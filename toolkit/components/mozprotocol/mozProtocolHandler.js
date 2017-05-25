@@ -32,7 +32,7 @@ mozProtocolHandler.prototype = {
   newChannel2(uri, loadInfo) {
     let realURL = NetUtil.newURI(this.urlToLoad);
     let channel = Services.io.newChannelFromURIWithLoadInfo(realURL, loadInfo)
-    loadInfo.resultPrincipalURI = realURL;
+    channel.loadFlags |= Ci.nsIChannel.LOAD_REPLACE;
     return channel;
   },
 

@@ -31,7 +31,7 @@ garbage();
 
 setGCCallback({
   action: "majorGC",
-  depth: 10,
+  depth: 8,
   phases: "begin"
 });
 

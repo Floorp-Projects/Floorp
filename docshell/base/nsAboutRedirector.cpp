@@ -158,7 +158,6 @@ nsAboutRedirector::NewChannel(nsIURI* aURI,
                               nsIChannel** aResult)
 {
   NS_ENSURE_ARG_POINTER(aURI);
-  NS_ENSURE_ARG_POINTER(aLoadInfo);
   NS_ASSERTION(aResult, "must not be null");
 
   nsAutoCString path;
@@ -175,14 +174,9 @@ nsAboutRedirector::NewChannel(nsIURI* aURI,
       rv = NS_NewURI(getter_AddRefs(tempURI), kRedirMap[i].url);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = NS_NewChannelInternal(getter_AddRefs(tempChannel),
-                                 tempURI,
-                                 aLoadInfo);
-      NS_ENSURE_SUCCESS(rv, rv);
-
       // If tempURI links to an external URI (i.e. something other than
-      // chrome:// or resource://) then set result principal URI on the
-      // load info which forces the channel principal to reflect the displayed
+      // chrome:// or resource://) then set the LOAD_REPLACE flag on the
+      // channel which forces the channel owner to reflect the displayed
       // URL rather then being the systemPrincipal.
       bool isUIResource = false;
       rv = NS_URIChainHasFlags(tempURI, nsIProtocolHandler::URI_IS_UI_RESOURCE,
@@ -191,9 +185,17 @@ nsAboutRedirector::NewChannel(nsIURI* aURI,
 
       bool isAboutBlank = NS_IsAboutBlank(tempURI);
 
-      if (!isUIResource && !isAboutBlank) {
-        aLoadInfo->SetResultPrincipalURI(tempURI);
-      }
+      nsLoadFlags loadFlags = isUIResource || isAboutBlank
+                    ? static_cast<nsLoadFlags>(nsIChannel::LOAD_NORMAL)
+                    : static_cast<nsLoadFlags>(nsIChannel::LOAD_REPLACE);
+
+      rv = NS_NewChannelInternal(getter_AddRefs(tempChannel),
+                                 tempURI,
+                                 aLoadInfo,
+                                 nullptr, // aLoadGroup
+                                 nullptr, // aCallbacks
+                                 loadFlags);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       tempChannel->SetOriginalURI(aURI);
 

@@ -10,7 +10,6 @@
 interface nsIDOMDocument;
 interface nsINode;
 interface nsIPrincipal;
-interface nsIURI;
 
 %{C++
 #include "nsTArray.h"
@@ -740,14 +739,6 @@ interface nsILoadInfo : nsISupports
    * Note that the load for a sub-frame's document will return false here.
    */
   [infallible] readonly attribute boolean isTopLevelLoad;
-
-  /**
-   * If this is non-null, this property represents two things: (1) the
-   * URI to be used for the principal if the channel with this loadinfo
-   * gets a principal based on URI and (2) the URI to use for a document
-   * created from the channel with this loadinfo.
-   */
-  attribute nsIURI resultPrincipalURI;
 
   /**
    * Returns the null principal of the resulting resource if the SEC_SANDBOXED
