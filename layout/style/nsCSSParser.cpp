@@ -12330,9 +12330,7 @@ CSSParserImpl::ParseImageLayersItem(
           keyword == eCSSKeyword_initial ||
           keyword == eCSSKeyword_unset) {
         return false;
-      } else if (keyword == eCSSKeyword_none) {
-        if (haveImage)
-          return false;
+      } else if (!haveImage && keyword == eCSSKeyword_none) {
         haveImage = true;
         if (ParseSingleValueProperty(aState.mImage->mValue,
                                      aTable[nsStyleImageLayers::image]) !=
@@ -12340,12 +12338,11 @@ CSSParserImpl::ParseImageLayersItem(
           NS_NOTREACHED("should be able to parse");
           return false;
         }
-      } else if (aTable[nsStyleImageLayers::attachment] !=
+      } else if (!haveAttach &&
+                 aTable[nsStyleImageLayers::attachment] !=
                    eCSSProperty_UNKNOWN &&
-                 nsCSSProps::FindKeyword(keyword,
-                   nsCSSProps::kImageLayerAttachmentKTable, dummy)) {
-        if (haveAttach)
-          return false;
+                 nsCSSProps::FindKeyword(
+                   keyword, nsCSSProps::kImageLayerAttachmentKTable, dummy)) {
         haveAttach = true;
         if (ParseSingleValueProperty(aState.mAttachment->mValue,
                                      aTable[nsStyleImageLayers::attachment]) !=
@@ -12353,10 +12350,9 @@ CSSParserImpl::ParseImageLayersItem(
           NS_NOTREACHED("should be able to parse");
           return false;
         }
-      } else if (nsCSSProps::FindKeyword(keyword,
-                   nsCSSProps::kImageLayerRepeatKTable, dummy)) {
-        if (haveRepeat)
-          return false;
+      } else if (!haveRepeat &&
+                 nsCSSProps::FindKeyword(
+                   keyword, nsCSSProps::kImageLayerRepeatKTable, dummy)) {
         haveRepeat = true;
         nsCSSValuePair scratch;
         if (!ParseImageLayerRepeatValues(scratch)) {
@@ -12365,10 +12361,9 @@ CSSParserImpl::ParseImageLayersItem(
         }
         aState.mRepeat->mXValue = scratch.mXValue;
         aState.mRepeat->mYValue = scratch.mYValue;
-      } else if (nsCSSProps::FindKeyword(keyword,
+      } else if (!havePositionAndSize &&
+                 nsCSSProps::FindKeyword(keyword,
                    nsCSSProps::kImageLayerPositionKTable, dummy)) {
-        if (havePositionAndSize)
-          return false;
         havePositionAndSize = true;
 
         if (!ParsePositionValueSeparateCoords(aState.mPositionX->mValue,
@@ -12383,9 +12378,8 @@ CSSParserImpl::ParseImageLayersItem(
           aState.mSize->mXValue = scratch.mXValue;
           aState.mSize->mYValue = scratch.mYValue;
         }
-      } else if (nsCSSProps::FindKeyword(keyword, originTable, dummy)) {
-        if (haveOrigin)
-          return false;
+      } else if (!haveOrigin &&
+                 nsCSSProps::FindKeyword(keyword, originTable, dummy)) {
         haveOrigin = true;
         if (ParseSingleValueProperty(aState.mOrigin->mValue,
                                      aTable[nsStyleImageLayers::origin]) !=
@@ -12418,11 +12412,11 @@ CSSParserImpl::ParseImageLayersItem(
           // See assertions above showing these values are compatible.
           aState.mClip->mValue = aState.mOrigin->mValue;
         }
-      } else if (aTable[nsStyleImageLayers::composite] != eCSSProperty_UNKNOWN &&
-                 nsCSSProps::FindKeyword(keyword,
-                   nsCSSProps::kImageLayerCompositeKTable, dummy)) {
-        if (haveComposite)
-          return false;
+      } else if (!haveComposite &&
+                 aTable[nsStyleImageLayers::composite] !=
+                   eCSSProperty_UNKNOWN &&
+                 nsCSSProps::FindKeyword(
+                   keyword, nsCSSProps::kImageLayerCompositeKTable, dummy)) {
         haveComposite = true;
         if (ParseSingleValueProperty(aState.mComposite->mValue,
                                      aTable[nsStyleImageLayers::composite]) !=
@@ -12430,11 +12424,10 @@ CSSParserImpl::ParseImageLayersItem(
           NS_NOTREACHED("should be able to parse");
           return false;
         }
-      } else if (aTable[nsStyleImageLayers::maskMode] != eCSSProperty_UNKNOWN &&
-                 nsCSSProps::FindKeyword(keyword,
-                   nsCSSProps::kImageLayerModeKTable, dummy)) {
-        if (haveMode)
-          return false;
+      } else if (!haveMode &&
+                 aTable[nsStyleImageLayers::maskMode] != eCSSProperty_UNKNOWN &&
+                 nsCSSProps::FindKeyword(
+                   keyword, nsCSSProps::kImageLayerModeKTable, dummy)) {
         haveMode = true;
         if (ParseSingleValueProperty(aState.mMode->mValue,
                                      aTable[nsStyleImageLayers::maskMode]) !=
@@ -12442,9 +12435,8 @@ CSSParserImpl::ParseImageLayersItem(
           NS_NOTREACHED("should be able to parse");
           return false;
         }
-      } else if (aTable[nsStyleImageLayers::color] != eCSSProperty_UNKNOWN) {
-        if (haveColor)
-          return false;
+      } else if (!haveColor &&
+                 aTable[nsStyleImageLayers::color] != eCSSProperty_UNKNOWN) {
         haveColor = true;
         if (ParseSingleValueProperty(aState.mColor,
                                      aTable[nsStyleImageLayers::color]) !=
