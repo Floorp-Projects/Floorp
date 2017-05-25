@@ -322,7 +322,7 @@ XDRIncrementalEncoder::endSubTree()
 }
 
 bool
-XDRIncrementalEncoder::linearize()
+XDRIncrementalEncoder::linearize(JS::TranscodeBuffer& buffer)
 {
     if (oom_) {
         ReportOutOfMemory(cx());
@@ -356,7 +356,7 @@ XDRIncrementalEncoder::linearize()
         // buffer which would be serialized.
         MOZ_ASSERT(slice.sliceBegin <= slices_.length());
         MOZ_ASSERT(slice.sliceBegin + slice.sliceLength <= slices_.length());
-        if (!buffer_.append(slices_.begin() + slice.sliceBegin, slice.sliceLength)) {
+        if (!buffer.append(slices_.begin() + slice.sliceBegin, slice.sliceLength)) {
             ReportOutOfMemory(cx());
             return fail(JS::TranscodeResult_Throw);
         }

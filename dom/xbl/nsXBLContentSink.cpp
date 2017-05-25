@@ -166,7 +166,7 @@ nsXBLContentSink::FlushText(bool aReleaseTextNode)
 }
 
 NS_IMETHODIMP
-nsXBLContentSink::ReportError(const char16_t* aErrorText, 
+nsXBLContentSink::ReportError(const char16_t* aErrorText,
                               const char16_t* aSourceText,
                               nsIScriptError *aError,
                               bool *_retval)
@@ -191,8 +191,8 @@ nsXBLContentSink::ReportError(const char16_t* aErrorText,
 
   // Most of what this does won't be too useful, but whatever...
   // nsXMLContentSink::ReportError will handle the console logging.
-  return nsXMLContentSink::ReportError(aErrorText, 
-                                       aSourceText, 
+  return nsXMLContentSink::ReportError(aErrorText,
+                                       aSourceText,
                                        aError,
                                        _retval);
 }
@@ -245,10 +245,10 @@ nsXBLContentSink::AddField(nsXBLProtoImplField* aField)
   mImplField = aField; // Adjust our pointer to point to the new last field in the chain.
 }
 
-NS_IMETHODIMP 
-nsXBLContentSink::HandleStartElement(const char16_t *aName, 
-                                     const char16_t **aAtts, 
-                                     uint32_t aAttsCount, 
+NS_IMETHODIMP
+nsXBLContentSink::HandleStartElement(const char16_t *aName,
+                                     const char16_t **aAtts,
+                                     uint32_t aAttsCount,
                                      uint32_t aLineNumber)
 {
   nsresult rv = nsXMLContentSink::HandleStartElement(aName, aAtts, aAttsCount,
@@ -260,7 +260,7 @@ nsXBLContentSink::HandleStartElement(const char16_t *aName,
     rv = ConstructBinding(aLineNumber);
     if (NS_FAILED(rv))
       return rv;
-    
+
     // mBinding may still be null, if the binding had no id.  If so,
     // we'll deal with that later in the sink.
   }
@@ -268,7 +268,7 @@ nsXBLContentSink::HandleStartElement(const char16_t *aName,
   return rv;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXBLContentSink::HandleEndElement(const char16_t *aName)
 {
   FlushText();
@@ -334,7 +334,7 @@ nsXBLContentSink::HandleEndElement(const char16_t *aName)
                localName == nsGkAtoms::bindings) {
         mState = eXBL_InDocument;
       }
-      
+
       nsresult rv = nsXMLContentSink::HandleEndElement(aName);
       if (NS_FAILED(rv))
         return rv;
@@ -354,8 +354,8 @@ nsXBLContentSink::HandleEndElement(const char16_t *aName)
   return nsXMLContentSink::HandleEndElement(aName);
 }
 
-NS_IMETHODIMP 
-nsXBLContentSink::HandleCDataSection(const char16_t *aData, 
+NS_IMETHODIMP
+nsXBLContentSink::HandleCDataSection(const char16_t *aData,
                                      uint32_t aLength)
 {
   if (mState == eXBL_InHandlers || mState == eXBL_InImplementation)
@@ -368,17 +368,17 @@ nsXBLContentSink::HandleCDataSection(const char16_t *aData,
     if (!(_cond)) { ReportUnexpectedElement(aTagName, aLineNumber); return true; } \
   PR_END_MACRO
 
-bool 
-nsXBLContentSink::OnOpenContainer(const char16_t **aAtts, 
-                                  uint32_t aAttsCount, 
-                                  int32_t aNameSpaceID, 
+bool
+nsXBLContentSink::OnOpenContainer(const char16_t **aAtts,
+                                  uint32_t aAttsCount,
+                                  int32_t aNameSpaceID,
                                   nsIAtom* aTagName,
                                   uint32_t aLineNumber)
 {
   if (mState == eXBL_Error) {
     return true;
   }
-  
+
   if (aNameSpaceID != kNameSpaceID_XBL) {
     // Construct non-XBL nodes
     return true;
@@ -449,7 +449,7 @@ nsXBLContentSink::OnOpenContainer(const char16_t **aAtts,
     ENSURE_XBL_STATE(mState == eXBL_InImplementation &&
                      mSecondaryState == eXBL_None);
     NS_ASSERTION(mBinding, "Must have binding here");
-      
+
     mSecondaryState = eXBL_InConstructor;
     nsAutoString name;
     if (!mCurrentBindingID.IsEmpty()) {
@@ -700,7 +700,7 @@ nsXBLContentSink::ConstructImplementation(const char16_t **aAtts)
   mImplementation = nullptr;
   mImplMember = nullptr;
   mImplField = nullptr;
-  
+
   if (!mBinding)
     return;
 
@@ -880,7 +880,7 @@ nsXBLContentSink::CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
 #endif
 }
 
-nsresult 
+nsresult
 nsXBLContentSink::AddAttributes(const char16_t** aAtts,
                                 nsIContent* aContent)
 {
@@ -892,8 +892,8 @@ nsXBLContentSink::AddAttributes(const char16_t** aAtts,
 
 #ifdef MOZ_XUL
 nsresult
-nsXBLContentSink::AddAttributesToXULPrototype(const char16_t **aAtts, 
-                                              uint32_t aAttsCount, 
+nsXBLContentSink::AddAttributesToXULPrototype(const char16_t **aAtts,
+                                              uint32_t aAttsCount,
                                               nsXULPrototypeElement* aElement)
 {
   // Add tag attributes to the element
@@ -911,7 +911,7 @@ nsXBLContentSink::AddAttributesToXULPrototype(const char16_t **aAtts,
   // Copy the attributes into the prototype
   nsCOMPtr<nsIAtom> prefix, localName;
 
-  uint32_t i;  
+  uint32_t i;
   for (i = 0; i < aAttsCount; ++i) {
     int32_t nameSpaceID;
     nsContentUtils::SplitExpatName(aAtts[i * 2], getter_AddRefs(prefix),
@@ -926,9 +926,9 @@ nsXBLContentSink::AddAttributesToXULPrototype(const char16_t **aAtts,
                                          nsIDOMNode::ATTRIBUTE_NODE);
       attrs[i].mName.SetTo(ni);
     }
-    
+
     rv = aElement->SetAttrAt(i, nsDependentString(aAtts[i * 2 + 1]),
-                             mDocumentURI); 
+                             mDocumentURI);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -2300,7 +2300,7 @@ class nsJSIID : public nsIJSIID,
 public:
     NS_DECL_ISUPPORTS
 
-    // we manually delagate these to nsJSID
+    // we manually delegate these to nsJSID
     NS_DECL_NSIJSID
 
     // we implement the rest...
@@ -2325,7 +2325,7 @@ class nsJSCID : public nsIJSCID, public nsIXPCScriptable
 public:
     NS_DECL_ISUPPORTS
 
-    // we manually delagate these to nsJSID
+    // we manually delegate these to nsJSID
     NS_DECL_NSIJSID
 
     // we implement the rest...

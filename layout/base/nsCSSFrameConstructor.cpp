@@ -1771,13 +1771,12 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
 
     case eStyleContentType_Counter:
     case eStyleContentType_Counters: {
-      nsCSSValue::Array* counters = data.GetCounters();
-      nsCounterList* counterList = mCounterManager.CounterListFor(
-          nsDependentString(counters->Item(0).GetStringBufferValue()));
+      nsStyleContentData::CounterFunction* counters = data.GetCounters();
+      nsCounterList* counterList =
+        mCounterManager.CounterListFor(counters->mIdent);
 
       nsCounterUseNode* node =
-        new nsCounterUseNode(mPresShell->GetPresContext(),
-                             counters, aContentIndex,
+        new nsCounterUseNode(counters, aContentIndex,
                              type == eStyleContentType_Counters);
 
       nsGenConInitializer* initializer =
@@ -9027,7 +9026,7 @@ void
 nsCSSFrameConstructor::NotifyCounterStylesAreDirty()
 {
   NS_PRECONDITION(mUpdateCount != 0, "Should be in an update");
-  mCounterManager.SetAllCounterStylesDirty();
+  mCounterManager.SetAllDirty();
   CountersDirty();
 }
 

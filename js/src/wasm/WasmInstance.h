@@ -104,15 +104,14 @@ class Instance
     bool init(JSContext* cx);
     void trace(JSTracer* trc);
 
-    JSContext* cx() const { return tlsData()->cx; }
     JSCompartment* compartment() const { return compartment_; }
     const Code& code() const { return *code_; }
     DebugState& debug() { return *debug_; }
     const DebugState& debug() const { return *debug_; }
-    const CodeSegment& codeSegmentTier() const { return code_->segmentTier(); }
+    const CodeSegment& codeSegment(Tier t) const { return code_->segment(t); }
     const GlobalSegment& globalSegment() const { return *globals_; }
-    uint8_t* codeBaseTier() const { return code_->segmentTier().base(); }
-    const MetadataTier& metadataTier() const { return code_->metadataTier(); }
+    uint8_t* codeBase(Tier t) const { return code_->segment(t).base(); }
+    const MetadataTier& metadata(Tier t) const { return code_->metadata(t); }
     const Metadata& metadata() const { return code_->metadata(); }
     bool isAsmJS() const { return metadata().isAsmJS(); }
     const SharedTableVector& tables() const { return tables_; }

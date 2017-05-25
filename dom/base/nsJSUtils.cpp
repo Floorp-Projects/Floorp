@@ -307,7 +307,6 @@ nsJSUtils::ExecutionContext::DecodeJoinAndExec(void **aOffThreadToken)
 
 nsresult
 nsJSUtils::ExecutionContext::JoinEncodeAndExec(void **aOffThreadToken,
-                                               mozilla::Vector<uint8_t>& aBytecodeBuf,
                                                JS::MutableHandle<JSScript*> aScript)
 {
   MOZ_ASSERT_IF(aOffThreadToken, !mWantsReturnValue);
@@ -319,7 +318,7 @@ nsJSUtils::ExecutionContext::JoinEncodeAndExec(void **aOffThreadToken,
     return mRv;
   }
 
-  if (!StartIncrementalEncoding(mCx, aBytecodeBuf, aScript)) {
+  if (!StartIncrementalEncoding(mCx, aScript)) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
     return mRv;

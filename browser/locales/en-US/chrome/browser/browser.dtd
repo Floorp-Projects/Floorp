@@ -829,8 +829,9 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY customizeMode.menuAndToolbars.empty "Want more tools?">
 <!ENTITY customizeMode.menuAndToolbars.emptyLink "Choose from thousands of add-ons">
 <!ENTITY customizeMode.restoreDefaults "Restore Defaults">
-<!ENTITY customizeMode.toolbars "Show / Hide Toolbars">
+<!ENTITY customizeMode.done "Done">
 <!ENTITY customizeMode.titlebar "Title Bar">
+<!ENTITY customizeMode.toolbars2 "Toolbars">
 <!ENTITY customizeMode.lwthemes "Themes">
 <!ENTITY customizeMode.lwthemes.myThemes "My Themes">
 <!ENTITY customizeMode.lwthemes.recommended "Recommended">
@@ -944,6 +945,11 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY updateRestart.acceptButton.accesskey "R">
 <!ENTITY updateRestart.cancelButton.label "Not Now">
 <!ENTITY updateRestart.cancelButton.accesskey "N">
-<!ENTITY updateRestart.panelUI.label "Restart &brandShorterName; to apply the update">
+<!ENTITY updateRestart.panelUI.label2 "Restart to update &brandShorterName;">
 
 <!ENTITY pageActionButton.tooltip "Page actions">
+
+<!ENTITY sendToDevice.label "Send to Device…">
+<!ENTITY sendToDevice.viewTitle "Send to Device">
+<!ENTITY sendToDevice.fxaRequired.label "Required">
+<!ENTITY sendToDevice.noDevices.label "No Devices Available">

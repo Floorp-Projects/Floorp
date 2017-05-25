@@ -5,6 +5,7 @@ const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const CHOICE_PREF = "browser.urlbar.userMadeSearchSuggestionsChoice";
 const TIMES_PREF = "browser.urlbar.timesBeforeHidingSuggestionsHint";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
+const ONEOFF_PREF = "browser.urlbar.oneOffSearches";
 
 add_task(async function prepare() {
   let engine = await promiseNewSearchEngine(TEST_ENGINE_BASENAME);
@@ -16,13 +17,15 @@ add_task(async function prepare() {
   defaults.setBoolPref("suggest.searches", true);
   let suggestionsChoice = Services.prefs.getBoolPref(CHOICE_PREF);
   Services.prefs.setBoolPref(CHOICE_PREF, false);
+  let oneOffs = Services.prefs.getBoolPref(ONEOFF_PREF);
+  Services.prefs.setBoolPref(ONEOFF_PREF, true);
   registerCleanupFunction(async function() {
     defaults.setBoolPref("suggest.searches", searchSuggestionsDefault);
     Services.search.currentEngine = oldCurrentEngine;
     Services.prefs.clearUserPref(SUGGEST_ALL_PREF);
     Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
     Services.prefs.setBoolPref(CHOICE_PREF, suggestionsChoice);
-
+    Services.prefs.setBoolPref(ONEOFF_PREF, oneOffs);
     // Make sure the popup is closed for the next test.
     gURLBar.blur();
     Assert.ok(!gURLBar.popup.popupOpen, "popup should be closed");
@@ -39,6 +42,7 @@ add_task(async function focus() {
   await popupPromise;
   Assert.ok(gURLBar.popup.popupOpen, "popup should be open");
   assertVisible(true);
+  assertFooterVisible(false);
   Assert.equal(gURLBar.popup._matchCount, 0, "popup should have no results");
 
   // Start searching.
@@ -48,6 +52,7 @@ add_task(async function focus() {
   await promiseSearchComplete();
   Assert.ok(suggestionsPresent());
   assertVisible(true);
+  assertFooterVisible(true);
 
   // Check the Change Options link.
   let changeOptionsLink = document.getElementById("search-suggestions-change-settings");
@@ -65,6 +70,7 @@ add_task(async function privateWindow() {
   let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   await promiseAutocompleteResultPopup("foo", win);
   assertVisible(false, win);
+  assertFooterVisible(true, win);
   win.gURLBar.blur();
   await BrowserTestUtils.closeWindow(win);
 });
@@ -76,6 +82,7 @@ add_task(async function enableOutsideNotification() {
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, false);
   await promiseAutocompleteResultPopup("foo");
   assertVisible(false);
+  assertFooterVisible(true);
 });
 
 add_task(async function userMadeChoice() {
@@ -84,6 +91,7 @@ add_task(async function userMadeChoice() {
   Services.prefs.setBoolPref(CHOICE_PREF, true);
   await promiseAutocompleteResultPopup("foo");
   assertVisible(false);
+  assertFooterVisible(true);
 });
 
 function setupVisibleHint() {
@@ -114,5 +122,9 @@ function suggestionsPresent() {
 function assertVisible(visible, win = window) {
   let style =
     win.getComputedStyle(win.gURLBar.popup.searchSuggestionsNotification);
+  Assert.equal(style.visibility, visible ? "visible" : "collapse");
+}
+function assertFooterVisible(visible, win = window) {
+  let style = win.getComputedStyle(win.gURLBar.popup.footer);
   Assert.equal(style.visibility, visible ? "visible" : "collapse");
 }

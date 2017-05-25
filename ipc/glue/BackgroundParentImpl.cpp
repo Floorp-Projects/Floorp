@@ -19,7 +19,6 @@
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/GamepadEventChannelParent.h"
 #include "mozilla/dom/GamepadTestChannelParent.h"
-#include "mozilla/dom/PBlobParent.h"
 #include "mozilla/dom/PGamepadEventChannelParent.h"
 #include "mozilla/dom/PGamepadTestChannelParent.h"
 #include "mozilla/dom/MessagePortParent.h"
@@ -27,9 +26,7 @@
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
-#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
-#include "mozilla/dom/ipc/MemoryStreamParent.h"
 #include "mozilla/dom/ipc/PendingIPCBlobParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -244,53 +241,6 @@ BackgroundParentImpl::RecvFlushPendingFileDeletions()
   return IPC_OK();
 }
 
-auto
-BackgroundParentImpl::AllocPBlobParent(const BlobConstructorParams& aParams)
-  -> PBlobParent*
-{
-  AssertIsInMainProcess();
-  AssertIsOnBackgroundThread();
-
-  if (NS_WARN_IF(aParams.type() !=
-                   BlobConstructorParams::TParentBlobConstructorParams)) {
-    ASSERT_UNLESS_FUZZING();
-    return nullptr;
-  }
-
-  return mozilla::dom::BlobParent::Create(this, aParams);
-}
-
-bool
-BackgroundParentImpl::DeallocPBlobParent(PBlobParent* aActor)
-{
-  AssertIsInMainProcess();
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  mozilla::dom::BlobParent::Destroy(aActor);
-  return true;
-}
-
-PMemoryStreamParent*
-BackgroundParentImpl::AllocPMemoryStreamParent(const uint64_t& aSize)
-{
-  AssertIsInMainProcess();
-  AssertIsOnBackgroundThread();
-
-  return new mozilla::dom::MemoryStreamParent(aSize);
-}
-
-bool
-BackgroundParentImpl::DeallocPMemoryStreamParent(PMemoryStreamParent* aActor)
-{
-  AssertIsInMainProcess();
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  delete aActor;
-  return true;
-}
-
 PPendingIPCBlobParent*
 BackgroundParentImpl::AllocPPendingIPCBlobParent(const IPCBlob& aBlob)
 {
@@ -324,21 +274,6 @@ BackgroundParentImpl::DeallocPIPCBlobInputStreamParent(PIPCBlobInputStreamParent
 
   delete aActor;
   return true;
-}
-
-mozilla::ipc::IPCResult
-BackgroundParentImpl::RecvPBlobConstructor(PBlobParent* aActor,
-                                           const BlobConstructorParams& aParams)
-{
-  const ParentBlobConstructorParams& params = aParams;
-  if (params.blobParams().type() == AnyBlobConstructorParams::TKnownBlobConstructorParams) {
-    if (!aActor->SendCreatedFromKnownBlob()) {
-      return IPC_FAIL_NO_REASON(this);
-    }
-    return IPC_OK();
-  }
-
-  return IPC_OK();
 }
 
 PFileDescriptorSetParent*

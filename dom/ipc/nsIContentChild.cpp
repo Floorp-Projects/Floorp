@@ -11,7 +11,6 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/TabChild.h"
-#include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
@@ -20,7 +19,6 @@
 #include "mozilla/ipc/IPCStreamSource.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
 #include "mozilla/ipc/PParentToChildStreamChild.h"
-#include "mozilla/dom/ipc/MemoryStreamChild.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
 
 #include "nsPrintfCString.h"
@@ -107,19 +105,6 @@ nsIContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
   return IPC_OK();
 }
 
-PMemoryStreamChild*
-nsIContentChild::AllocPMemoryStreamChild(const uint64_t& aSize)
-{
-  return new MemoryStreamChild();
-}
-
-bool
-nsIContentChild::DeallocPMemoryStreamChild(PMemoryStreamChild* aActor)
-{
-  delete aActor;
-  return true;
-}
-
 PIPCBlobInputStreamChild*
 nsIContentChild::AllocPIPCBlobInputStreamChild(const nsID& aID,
                                                const uint64_t& aSize)
@@ -138,43 +123,6 @@ nsIContentChild::DeallocPIPCBlobInputStreamChild(PIPCBlobInputStreamChild* aActo
   RefPtr<IPCBlobInputStreamChild> actor =
     dont_AddRef(static_cast<IPCBlobInputStreamChild*>(aActor));
   return true;
-}
-
-PBlobChild*
-nsIContentChild::AllocPBlobChild(const BlobConstructorParams& aParams)
-{
-  return BlobChild::Create(this, aParams);
-}
-
-bool
-nsIContentChild::DeallocPBlobChild(PBlobChild* aActor)
-{
-  BlobChild::Destroy(aActor);
-  return true;
-}
-
-BlobChild*
-nsIContentChild::GetOrCreateActorForBlob(Blob* aBlob)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aBlob);
-
-  RefPtr<BlobImpl> blobImpl = aBlob->Impl();
-  MOZ_ASSERT(blobImpl);
-
-  return GetOrCreateActorForBlobImpl(blobImpl);
-}
-
-BlobChild*
-nsIContentChild::GetOrCreateActorForBlobImpl(BlobImpl* aImpl)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aImpl);
-
-  BlobChild* actor = BlobChild::GetOrCreate(this, aImpl);
-  NS_ENSURE_TRUE(actor, nullptr);
-
-  return actor;
 }
 
 PChildToParentStreamChild*

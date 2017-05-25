@@ -49,8 +49,10 @@ public:
 
   bool IsScrollInfoLayer() const { return mIsScrollInfoLayer; }
   gfx::Matrix4x4 GetTransform() const { return mTransform; }
+  CSSTransformMatrix GetTransformTyped() const;
   bool GetTransformIsPerspective() const { return mTransformIsPerspective; }
   EventRegions GetEventRegions() const { return mEventRegions; }
+  const LayerIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
   Maybe<uint64_t> GetReferentId() const { return mReferentId; }
   EventRegionsOverride GetEventRegionsOverride() const { return mEventRegionsOverride; }
   const ScrollThumbData& GetScrollThumbData() const { return mScrollThumbData; }
@@ -81,6 +83,7 @@ private:
   gfx::Matrix4x4 mTransform;
   bool mTransformIsPerspective;
   EventRegions mEventRegions;
+  LayerIntRegion mVisibleRegion;
   Maybe<uint64_t> mReferentId;
   EventRegionsOverride mEventRegionsOverride;
   ScrollThumbData mScrollThumbData;
@@ -175,6 +178,7 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData>
     WriteParam(aMsg, aParam.mTransform);
     WriteParam(aMsg, aParam.mTransformIsPerspective);
     WriteParam(aMsg, aParam.mEventRegions);
+    WriteParam(aMsg, aParam.mVisibleRegion);
     WriteParam(aMsg, aParam.mReferentId);
     WriteParam(aMsg, aParam.mEventRegionsOverride);
     WriteParam(aMsg, aParam.mScrollThumbData);
@@ -193,6 +197,7 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData>
         && ReadParam(aMsg, aIter, &aResult->mTransform)
         && ReadParam(aMsg, aIter, &aResult->mTransformIsPerspective)
         && ReadParam(aMsg, aIter, &aResult->mEventRegions)
+        && ReadParam(aMsg, aIter, &aResult->mVisibleRegion)
         && ReadParam(aMsg, aIter, &aResult->mReferentId)
         && ReadParam(aMsg, aIter, &aResult->mEventRegionsOverride)
         && ReadParam(aMsg, aIter, &aResult->mScrollThumbData)

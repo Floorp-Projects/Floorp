@@ -24,6 +24,8 @@ Cu.import("resource://services-sync/constants.js", constants);
 
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryController",
                               "resource://gre/modules/TelemetryController.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryUtils",
+                                  "resource://gre/modules/TelemetryUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 
@@ -417,6 +419,9 @@ class SyncTelemetryImpl {
     this.lastSubmissionTime = Telemetry.msSinceProcessStart();
     this.lastUID = EMPTY_UID;
     this.lastDeviceID = undefined;
+    let sessionStartDate = Services.startup.getStartupInfo().main;
+    this.sessionStartDate = TelemetryUtils.toLocalTimeISOString(
+      TelemetryUtils.truncateToHours(sessionStartDate));
   }
 
   getPingJSON(reason) {
@@ -427,6 +432,7 @@ class SyncTelemetryImpl {
       syncs: this.payloads.slice(),
       uid: this.lastUID,
       deviceID: this.lastDeviceID,
+      sessionStartDate: this.sessionStartDate,
       events: this.events.length == 0 ? undefined : this.events,
     };
   }

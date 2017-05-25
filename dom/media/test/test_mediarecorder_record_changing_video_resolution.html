@@ -12,9 +12,7 @@
 <script class="testbody" type="text/javascript">
 
 function startTest() {
-  var content = document.getElementById("content");
-
-  var canvas = document.createElement("canvas");
+  let canvas = document.createElement("canvas");
   const resolution_change = [
     {width: 100, height: 100, color: "red"},
     {width: 150, height: 150, color: "blue"},
@@ -23,21 +21,21 @@ function startTest() {
   canvas.width = resolution_change[0].width;
   canvas.height = resolution_change[0].height;
 
-  var ctx = canvas.getContext("2d");
+  let ctx = canvas.getContext("2d");
   ctx.fillStyle = resolution_change[0].color;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // The recorded stream coming from canvas.
-  var stream = canvas.captureStream();
+  let stream = canvas.captureStream();
 
   // Check values for events
-  var numDataAvailabledRaised = 0;
-  var numResizeRaised = 0;
+  let numDataAvailabledRaised = 0;
+  let numResizeRaised = 0;
   // Recorded data that will be playback.
-  var blob;
+  let blob;
 
   // Media recorder for VP8 and canvas stream.
-  var mediaRecorder = new MediaRecorder(stream);
+  let mediaRecorder = new MediaRecorder(stream);
   is(mediaRecorder.stream, stream,
      "Media recorder stream = canvas stream at the start of recording");
 
@@ -67,7 +65,7 @@ function startTest() {
     // Playback stream and verify resolution changes.
     ok(blob, "Should have gotten a data blob");
 
-    var video = document.createElement("video");
+    let video = document.createElement("video");
     video.id = "recorded-video";
     video.src = URL.createObjectURL(blob);
     video.preload = "metadata";
@@ -77,30 +75,22 @@ function startTest() {
       SimpleTest.finish();
     };
 
-    video.onloadedmetadata = function(){
-      info("onloadedmetadata");
-      video.seekToNextFrame()
-      .then(()=>video.seekToNextFrame())
-      .catch((reason)=>{
-        info("seekToNextFrame rejected: " + reason)
-        callSeekToNextFrame();
-      });
-    }
-
-    // Check that resize is correct for playback stream.
+    // Check that the encoded frames have the correct sizes.
     video.onresize = function() {
       if (numResizeRaised < resolution_change.length) {
         is(video.videoWidth, resolution_change[numResizeRaised].width,
           "onresize width should be as expected");
         is(video.videoHeight, resolution_change[numResizeRaised].height,
           "onresize height should be as expected");
-        if (numResizeRaised > 0) {
-          callSeekToNextFrame();
-        }
       } else {
         ok(false, "Got more resize events than expected");
       }
       ++numResizeRaised;
+    };
+
+    video.onloadedmetadata = function() {
+      info("loadedmetadata");
+      seekThroughFrames();
     };
 
     video.onended = function() {
@@ -110,14 +100,25 @@ function startTest() {
 
     document.getElementById("content").appendChild(video);
 
-    function callSeekToNextFrame() {
+    function seekThroughFrames() {
+      info("Seeking to next frame");
       video.seekToNextFrame()
-      .then()
-      .catch((reason)=>{
-        info("seekToNextFrame rejected: " + reason)
-        callSeekToNextFrame();
-      });
-    };
+        .then(() => {
+          info("Seeking to next frame finished. width=" + video.videoWidth
+               + ", height=" + video.videoHeight);
+
+          if (video.ended) {
+            return;
+          }
+
+          // After seeking finished we queue the next seek task on the event
+          // loop so it gets in the same queue as the "resize" events.
+          setTimeout(seekThroughFrames, 0);
+        })
+        .catch(error => {
+          ok(false, "seekToNextFrame rejected: " + error);
+        });
+    }
   };
 
   // Start here by stream recorder.
@@ -127,8 +128,8 @@ function startTest() {
 
   // Change resolution in every frame
   // Stop recorder on last frame
-  var countFrames=0;
-  var previous_time = performance.now();
+  let countFrames = 0;
+  let previous_time = performance.now();
   function draw(timestamp) {
     if (timestamp - previous_time < 100) {
       requestAnimationFrame(draw);
@@ -136,18 +137,19 @@ function startTest() {
     }
     previous_time = timestamp;
 
-    if (countFrames < resolution_change.length) {
-      canvas.width = resolution_change[countFrames].width;
-      canvas.height = resolution_change[countFrames].height;
-      ctx.fillStyle = resolution_change[countFrames].color;
-      // Resize and draw canvas
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      // Register draw to be called on next rendering
-      requestAnimationFrame(draw);
-      countFrames++;
-    } else {
+    if (countFrames == resolution_change.length) {
       mediaRecorder.stop();
+      return;
     }
+
+    canvas.width = resolution_change[countFrames].width;
+    canvas.height = resolution_change[countFrames].height;
+    ctx.fillStyle = resolution_change[countFrames].color;
+    // Resize and draw canvas
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Register draw to be called on next rendering
+    requestAnimationFrame(draw);
+    countFrames++;
   }
 }
 

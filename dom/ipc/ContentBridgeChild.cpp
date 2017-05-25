@@ -8,7 +8,6 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/TabChild.h"
-#include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "base/task.h"
@@ -59,19 +58,6 @@ ContentBridgeChild::RecvAsyncMessage(const nsString& aMsg,
                                      const ClonedMessageData& aData)
 {
   return nsIContentChild::RecvAsyncMessage(aMsg, Move(aCpows), aPrincipal, aData);
-}
-
-PBlobChild*
-ContentBridgeChild::SendPBlobConstructor(PBlobChild* actor,
-                                         const BlobConstructorParams& params)
-{
-  return PContentBridgeChild::SendPBlobConstructor(actor, params);
-}
-
-PMemoryStreamChild*
-ContentBridgeChild::SendPMemoryStreamConstructor(const uint64_t& aSize)
-{
-  return PContentBridgeChild::SendPMemoryStreamConstructor(aSize);
 }
 
 bool
@@ -166,30 +152,6 @@ ContentBridgeChild::RecvPBrowserConstructor(PBrowserChild* aActor,
                                                   aChromeFlags,
                                                   aCpID,
                                                   aIsForBrowser);
-}
-
-PBlobChild*
-ContentBridgeChild::AllocPBlobChild(const BlobConstructorParams& aParams)
-{
-  return nsIContentChild::AllocPBlobChild(aParams);
-}
-
-bool
-ContentBridgeChild::DeallocPBlobChild(PBlobChild* aActor)
-{
-  return nsIContentChild::DeallocPBlobChild(aActor);
-}
-
-PMemoryStreamChild*
-ContentBridgeChild::AllocPMemoryStreamChild(const uint64_t& aSize)
-{
-  return nsIContentChild::AllocPMemoryStreamChild(aSize);
-}
-
-bool
-ContentBridgeChild::DeallocPMemoryStreamChild(PMemoryStreamChild* aActor)
-{
-  return nsIContentChild::DeallocPMemoryStreamChild(aActor);
 }
 
 PIPCBlobInputStreamChild*

@@ -129,9 +129,8 @@ function getProcArchitecture() {
   }
 }
 
-// Provides system capability information for application update though it may
-// be used by other consumers.
-function getSystemCapabilities() {
+// Gets the supported CPU instruction set.
+function getInstructionSet() {
   if (AppConstants.platform == "win") {
     const PF_MMX_INSTRUCTIONS_AVAILABLE = 3; // MMX
     const PF_XMMI_INSTRUCTIONS_AVAILABLE = 6; // SSE
@@ -164,6 +163,21 @@ function getSystemCapabilities() {
   }
 
   return "NA";
+}
+
+// Gets the RAM size in megabytes. This will round the value because sysinfo
+// doesn't always provide RAM in multiples of 1024.
+function getMemoryMB() {
+  let memoryMB = "unknown";
+  try {
+    memoryMB = Services.sysinfo.getProperty("memsize");
+    if (memoryMB) {
+      memoryMB = Math.round(memoryMB / 1024 / 1024);
+    }
+  } catch (e) {
+    do_throw("Error getting system info memsize property. Exception: " + e);
+  }
+  return memoryMB;
 }
 
 // Helper function for formatting a url and getting the result we're
@@ -331,6 +345,7 @@ add_task(function* test_custom() {
 // url constructed with %SYSTEM_CAPABILITIES%
 add_task(function* test_systemCapabilities() {
   let url = URL_PREFIX + "%SYSTEM_CAPABILITIES%/";
-  Assert.equal(getResult(url), getSystemCapabilities(),
+  let systemCapabilities = getInstructionSet() + "," + getMemoryMB();
+  Assert.equal(getResult(url), systemCapabilities,
                "the url param for %SYSTEM_CAPABILITIES%" + MSG_SHOULD_EQUAL);
 });

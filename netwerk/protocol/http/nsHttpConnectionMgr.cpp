@@ -70,7 +70,8 @@ TransactionComparator(nsHttpTransaction *t1, nsHttpTransaction *t2)
 
 void
 nsHttpConnectionMgr::InsertTransactionSorted(nsTArray<RefPtr<nsHttpConnectionMgr::PendingTransactionInfo> > &pendingQ,
-                                             nsHttpConnectionMgr::PendingTransactionInfo *pendingTransInfo)
+                                             nsHttpConnectionMgr::PendingTransactionInfo *pendingTransInfo,
+                                             bool aInsertAsFirstForTheSamePriority /*= false*/)
 {
     // insert the transaction into the front of the queue based on following rules:
     // 1. The transaction has NS_HTTP_LOAD_AS_BLOCKING or NS_HTTP_LOAD_UNBLOCKED.
@@ -84,15 +85,19 @@ nsHttpConnectionMgr::InsertTransactionSorted(nsTArray<RefPtr<nsHttpConnectionMgr
     for (int32_t i = pendingQ.Length() - 1; i >= 0; --i) {
         nsHttpTransaction *t = pendingQ[i]->mTransaction;
         if (TransactionComparator(trans, t)) {
-            if (ChaosMode::isActive(ChaosFeature::NetworkScheduling)) {
+            if (ChaosMode::isActive(ChaosFeature::NetworkScheduling) || aInsertAsFirstForTheSamePriority) {
                 int32_t samePriorityCount;
                 for (samePriorityCount = 0; i - samePriorityCount >= 0; ++samePriorityCount) {
                     if (pendingQ[i - samePriorityCount]->mTransaction->Priority() != trans->Priority()) {
                         break;
                     }
                 }
-                // skip over 0...all of the elements with the same priority.
-                i -= ChaosMode::randomUint32LessThan(samePriorityCount + 1);
+                if (aInsertAsFirstForTheSamePriority) {
+                    i -= samePriorityCount;
+                } else {
+                    // skip over 0...all of the elements with the same priority.
+                    i -= ChaosMode::randomUint32LessThan(samePriorityCount + 1);
+                }
             }
             pendingQ.InsertElementAt(i+1, pendingTransInfo);
             return;
@@ -793,18 +798,6 @@ nsHttpConnectionMgr::UpdateCoalescingForNewConn(nsHttpConnection *newConn,
         nsHalfOpenSocket *half = ent->mHalfOpens[index];
         LOG(("UpdateCoalescingForNewConn() forcing halfopen abandon %p\n",
              half));
-
-        RefPtr<nsHalfOpenSocket> deleteProtector;
-        if (half->IsFastOpenBackupHalfOpen()) {
-            LOG(("UpdateCoalescingForNewConn() halfOpen %p is in Fast Open "
-                 "state.\n", half));
-            // Hold pointer to halfOpen because it might go away if
-            // BackupSocketTransport has not ben started yet.
-            // On the other hand we want to call Abandon if
-            // BackupSocketTransport was started to clean up everything.
-            deleteProtector = half;
-            half->CancelFastOpenConnection();
-        }
         ent->mHalfOpens[index]->Abandon();
     }
 
@@ -823,6 +816,13 @@ nsHttpConnectionMgr::UpdateCoalescingForNewConn(nsHttpConnection *newConn,
                 otherConn->DontReuse();
             }
         }
+    }
+
+    for (int32_t index = ent->mHalfOpenFastOpenBackups.Length() - 1; index >= 0; --index) {
+        LOG(("UpdateCoalescingForNewConn() shutting down connection in fast "
+             "open state (%p) because new spdy connection (%p) takes "
+             "precedence\n", ent->mHalfOpenFastOpenBackups[index].get(), newConn));
+        ent->mHalfOpenFastOpenBackups[index]->CancelFastOpenConnection();
     }
 }
 
@@ -1640,7 +1640,6 @@ class ConnectionHandle : public nsAHttpConnection
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSAHTTPCONNECTION(mConn)
-    virtual void ThrottleResponse(bool aThrottle) override;
 
     explicit ConnectionHandle(nsHttpConnection *conn) : mConn(conn) { }
     void Reset() { mConn = nullptr; }
@@ -1653,13 +1652,6 @@ nsAHttpConnection *
 nsHttpConnectionMgr::MakeConnectionHandle(nsHttpConnection *aWrapped)
 {
     return new ConnectionHandle(aWrapped);
-}
-
-void ConnectionHandle::ThrottleResponse(bool aThrottle)
-{
-    if (mConn) {
-        mConn->ThrottleResponse(aThrottle);
-    }
 }
 
 ConnectionHandle::~ConnectionHandle()
@@ -2050,6 +2042,14 @@ nsHttpConnectionMgr::GetSpdyActiveConn(nsConnectionEntry *ent)
                 tmp->DontReuse();
             }
         }
+        for (int32_t index = ent->mHalfOpenFastOpenBackups.Length() - 1; index >= 0; --index) {
+             LOG(("GetSpdyActiveConn() shutting down connection in fast "
+                 "open state (%p) because we have an experienced spdy "
+                 "connection (%p).\n",
+                 ent->mHalfOpenFastOpenBackups[index].get(), experienced));
+             ent->mHalfOpenFastOpenBackups[index]->CancelFastOpenConnection();
+        }
+
         LOG(("GetSpdyActiveConn() request for ent %p %s "
              "found an active experienced connection %p in native connection entry\n",
              ent, ci->HashKey().get(), experienced));
@@ -2854,11 +2854,6 @@ nsHttpConnectionMgr::TimeoutTick()
                 index--;
 
                 nsHalfOpenSocket *half = ent->mHalfOpens[index];
-                if (half->IsFastOpenBackupHalfOpen()) {
-                    // this transport belongs to a fast open connection.
-                    // It will be canceled through that connection.
-                    continue;
-                }
                 double delta = half->Duration(currentTime);
                 // If the socket has timed out, close it so the waiting
                 // transaction will get the proper signal.
@@ -3061,7 +3056,7 @@ nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,
     , mBackupConnectedOK(false)
     , mFreeToUse(true)
     , mPrimaryStreamStatus(NS_OK)
-    , mUsingFastOpen(false)
+    , mFastOpenInProgress(false)
 {
     MOZ_ASSERT(ent && trans, "constructor with null arguments");
     LOG(("Creating nsHalfOpenSocket [this=%p trans=%p ent=%s key=%s]\n",
@@ -3284,12 +3279,12 @@ nsHttpConnectionMgr::nsHalfOpenSocket::SetupBackupTimer()
 {
     uint16_t timeout = gHttpHandler->GetIdleSynTimeout();
     MOZ_ASSERT(!mSynTimer, "timer already initd");
-    if (!timeout && mUsingFastOpen) {
+    if (!timeout && mFastOpenInProgress) {
         timeout = 250;
     }
     // When using Fast Open the correct transport will be setup for sure (it is
     // guaranteed), but it can be that it will happened a bit later.
-    if (mUsingFastOpen ||
+    if (mFastOpenInProgress ||
         (timeout && !mSpeculative)) {
         // Setup the timer that will establish a backup socket
         // if we do not get a writable event on the main one.
@@ -3349,9 +3344,9 @@ nsHttpConnectionMgr::nsHalfOpenSocket::Abandon()
 
     // Tell output stream (and backup) to forget the half open socket.
     if (mStreamOut) {
-        if (!mConnectionNegotiatingFastOpen) {
-            // if mConnectionNegotiatingFastOpen is active it takes care of
-            // mNumActiveConns bookkeeping.
+        if (!mFastOpenInProgress) {
+            // If mFastOpenInProgress is true HalfOpen are not in mHalfOpen
+            // list and are not counted so we do not need to decrease counter.
             gHttpHandler->ConnMgr()->RecvdConnect();
         }
         mStreamOut->AsyncWait(nullptr, 0, 0, nullptr);
@@ -3442,12 +3437,15 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
 
     CancelBackupTimer();
 
-    if (mConnectionNegotiatingFastOpen && mUsingFastOpen) {
+    if (mFastOpenInProgress) {
+        LOG(("nsHalfOpenSocket::OnOutputStreamReady backup stream is ready, "
+             "close the fast open socket %p [this=%p ent=%s]\n",
+             mSocketTransport.get(), this, mEnt->mConnInfo->Origin()));
         // If fast open is used, right after a socket for the primary stream is
         // created a nsHttpConnection is created for that socket. The connection
         // listens for  OnOutputStreamReady not HalfOpenSocket. So this stream
         // cannot be mStreamOut.
-        MOZ_ASSERT(out == mBackupStreamOut);
+        MOZ_ASSERT((out == mBackupStreamOut) && mConnectionNegotiatingFastOpen);
         // Here the backup, non-TFO connection has connected successfully,
         // before the TFO connection.
         //
@@ -3458,30 +3456,34 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         // SetupConn should set up a new nsHttpConnection with the backup
         // socketTransport and the rewind transaction.
         mSocketTransport->SetFastOpenCallback(nullptr);
+        mConnectionNegotiatingFastOpen->SetFastOpen(false);
+        mEnt->mHalfOpenFastOpenBackups.RemoveElement(this);
         RefPtr<nsAHttpTransaction> trans =
             mConnectionNegotiatingFastOpen->CloseConnectionFastOpenTakesTooLongOrError(true);
-        mConnectionNegotiatingFastOpen = nullptr;
         mSocketTransport = nullptr;
         mStreamOut = nullptr;
         mStreamIn = nullptr;
 
         if (trans && trans->QueryHttpTransaction()) {
-            mTransaction = trans;
             RefPtr<PendingTransactionInfo> pendingTransInfo =
                 new PendingTransactionInfo(trans->QueryHttpTransaction());
             pendingTransInfo->mHalfOpen =
                 do_GetWeakReference(static_cast<nsISupportsWeakReference*>(this));
             if (trans->Caps() & NS_HTTP_URGENT_START) {
                 gHttpHandler->ConnMgr()->InsertTransactionSorted(mEnt->mUrgentStartQ,
-                                                                 pendingTransInfo);
+                                                                 pendingTransInfo,
+                                                                 true);
             } else {
-                mEnt->InsertTransaction(pendingTransInfo);
+                mEnt->InsertTransaction(pendingTransInfo, true);
             }
         }
         if (mEnt->mUseFastOpen) {
             gHttpHandler->IncrementFastOpenConsecutiveFailureCounter();
             mEnt->mUseFastOpen = false;
         }
+
+        mFastOpenInProgress = false;
+        mConnectionNegotiatingFastOpen = nullptr;
     }
 
     return SetupConn(out, false);
@@ -3494,6 +3496,12 @@ nsHalfOpenSocket::FastOpenEnabled()
     LOG(("nsHalfOpenSocket::FastOpenEnabled [this=%p]\n", this));
 
     if (!mEnt) {
+        return false;
+    }
+
+    // If mEnt is present this HalfOpen must be in the mHalfOpens,
+    // but we want to be sure!!!
+    if (!mEnt->mHalfOpens.Contains(this)) {
         return false;
     }
 
@@ -3537,74 +3545,149 @@ nsHalfOpenSocket::StartFastOpen()
 {
     MOZ_ASSERT(mStreamOut);
     MOZ_ASSERT(mEnt && !mBackupTransport);
-    mUsingFastOpen = true;
-    // SetupBackupTimer should setup timer which will hold a ref to this
-    // halfOpen. It will failed only if it cannot create timer. Anyway just
-    // to be sure I will add this deleteProtector!!!
+
+    LOG(("nsHalfOpenSocket::StartFastOpen [this=%p]\n",
+         this));
+
     RefPtr<nsHalfOpenSocket> deleteProtector(this);
-    if (mEnt && !mBackupTransport && !mSynTimer) {
-        // For Fast Open we will setup backup timer also for NullTransaction.
-        // So maybe it is not set and we need to set it here.
-        SetupBackupTimer();
-    }
-    mStreamOut->AsyncWait(nullptr, 0, 0, nullptr);
-    mSocketTransport->SetEventSink(nullptr, nullptr);
-    gHttpHandler->ConnMgr()->RecvdConnect();
-    nsresult rv = SetupConn(mStreamOut, true);
-    if (NS_FAILED(rv)) {
-        // If SetupConn failed this will CloseTransaction and socketTransport
-        // with an error, therefore we can close this HalfOpen. socketTransport
-        // will remove reference to this HalfOpen as well.
-        mConnectionNegotiatingFastOpen->SetFastOpen(false);
-        mConnectionNegotiatingFastOpen = nullptr;
+
+    mFastOpenInProgress = true;
+    // Remove this HalfOpen from mEnt->mHalfOpens.
+    // The new connection will take care of closing this HalfOpen from now on!
+    if (!mEnt->mHalfOpens.RemoveElement(this)) {
+        MOZ_ASSERT(false, "HalfOpen is not in mHalfOpens!");
+        mSocketTransport->SetFastOpenCallback(nullptr);
         CancelBackupTimer();
         mStreamOut = nullptr;
         mStreamIn = nullptr;
         mSocketTransport = nullptr;
+        mFastOpenInProgress = false;
+        return NS_ERROR_ABORT;
+    }
+    MOZ_ASSERT(gHttpHandler->ConnMgr()->mNumHalfOpenConns);
+    if (gHttpHandler->ConnMgr()->mNumHalfOpenConns) { // just in case
+        gHttpHandler->ConnMgr()->mNumHalfOpenConns--;
+    }
+
+    // Count this socketTransport as connected.
+    gHttpHandler->ConnMgr()->RecvdConnect();
+
+    // Remove HalfOpen from callbacks, the new connection will take them.
+    mSocketTransport->SetEventSink(nullptr, nullptr);
+    mSocketTransport->SetSecurityCallbacks(nullptr);
+    mStreamOut->AsyncWait(nullptr, 0, 0, nullptr);
+
+    nsresult rv = SetupConn(mStreamOut, true);
+    if (!mConnectionNegotiatingFastOpen) {
+        LOG(("nsHalfOpenSocket::StartFastOpen SetupConn failed "
+             "[this=%p rv=%x]\n", this, static_cast<uint32_t>(rv)));
+        if (NS_SUCCEEDED(rv)) {
+            rv = NS_ERROR_ABORT;
+        }
+        // If SetupConn failed this will CloseTransaction and socketTransport
+        // with an error, therefore we can close this HalfOpen. socketTransport
+        // will remove reference to this HalfOpen as well.
+        mSocketTransport->SetFastOpenCallback(nullptr);
+        CancelBackupTimer();
+        mStreamOut = nullptr;
+        mStreamIn = nullptr;
+        mSocketTransport = nullptr;
+        mFastOpenInProgress = false;
+
+        // The connection is responsible to take care of the halfOpen so we
+        // need to clean it up.
+        Abandon();
+    } else {
+        LOG(("nsHalfOpenSocket::StartFastOpen [this=%p conn=%p]\n",
+             this, mConnectionNegotiatingFastOpen.get()));
+        mEnt->mHalfOpenFastOpenBackups.AppendElement(this);
+        // SetupBackupTimer should setup timer which will hold a ref to this
+        // halfOpen. It will failed only if it cannot create timer. Anyway just
+        // to be sure I will add this deleteProtector!!!
+        if (!mSynTimer) {
+            // For Fast Open we will setup backup timer also for
+            // NullTransaction.
+            // So maybe it is not set and we need to set it here.
+            SetupBackupTimer();
+        }
     }
     return rv;
 }
 
 void
 nsHttpConnectionMgr::
-nsHalfOpenSocket::SetFastOpenConnected(nsresult aError)
+nsHalfOpenSocket::SetFastOpenConnected(nsresult aError, bool aWillRetry)
 {
+    MOZ_ASSERT(mFastOpenInProgress);
+
+    LOG(("nsHalfOpenSocket::SetFastOpenConnected [this=%p conn=%p error=%x]\n",
+         this, mConnectionNegotiatingFastOpen.get(),
+         static_cast<uint32_t>(aError)));
+
+    // mConnectionNegotiatingFastOpen is set after a StartFastOpen creates
+    // and activates a nsHttpConnection successfully (SetupConn calls
+    // DispatchTransaction and DispatchAbstractTransaction which calls
+    // conn->Activate).
+    // nsHttpConnection::Activate can fail which will close socketTransport
+    // and socketTransport will call this function. The FastOpen clean up
+    // in case nsHttpConnection::Activate fails will be done in StartFastOpen.
+    // Also OnMsgReclaimConnection can decided that we do not need this
+    // transaction and cancel it as well.
+    // In all other cases mConnectionNegotiatingFastOpen must not be nullptr.
+    if (!mConnectionNegotiatingFastOpen) {
+        return;
+    }
+
     RefPtr<nsHalfOpenSocket> deleteProtector(this);
 
+    // Delete 2 points of entry to FastOpen function so that we do not reenter.
+    mEnt->mHalfOpenFastOpenBackups.RemoveElement(this);
+    mSocketTransport->SetFastOpenCallback(nullptr);
+
+    mConnectionNegotiatingFastOpen->SetFastOpen(false);
+
     // Check if we want to restart connection!
-    if ((aError == NS_ERROR_CONNECTION_REFUSED) ||
-        (aError == NS_ERROR_NET_TIMEOUT)) {
+    if (aWillRetry &&
+        ((aError == NS_ERROR_CONNECTION_REFUSED) ||
+         (aError == NS_ERROR_NET_TIMEOUT))) {
         if (mEnt->mUseFastOpen) {
             gHttpHandler->IncrementFastOpenConsecutiveFailureCounter();
             mEnt->mUseFastOpen = false;
         }
         // This is called from nsSocketTransport::RecoverFromError. The
-        // socket will try connect and we need to rewind nsHttpTransaction
-        MOZ_ASSERT(mConnectionNegotiatingFastOpen);
-        RefPtr<nsAHttpTransaction> trans = mConnectionNegotiatingFastOpen->CloseConnectionFastOpenTakesTooLongOrError(false);
+        // socket will try connect and we need to rewind nsHttpTransaction.
+
+        RefPtr<nsAHttpTransaction> trans =
+            mConnectionNegotiatingFastOpen->CloseConnectionFastOpenTakesTooLongOrError(false);
         if (trans && trans->QueryHttpTransaction()) {
-            mTransaction = trans;
             RefPtr<PendingTransactionInfo> pendingTransInfo =
                 new PendingTransactionInfo(trans->QueryHttpTransaction());
             pendingTransInfo->mHalfOpen =
                 do_GetWeakReference(static_cast<nsISupportsWeakReference*>(this));
             if (trans->Caps() & NS_HTTP_URGENT_START) {
                 gHttpHandler->ConnMgr()->InsertTransactionSorted(mEnt->mUrgentStartQ,
-                                                                 pendingTransInfo);
+                                                                 pendingTransInfo,
+                                                                 true);
             } else {
-                mEnt->InsertTransaction(pendingTransInfo);
+                mEnt->InsertTransaction(pendingTransInfo, true);
             }
         }
-
         // We are doing a restart without fast open, so the easiest way is to
         // return mSocketTransport to the halfOpenSock and destroy connection.
         // This makes http2 implemenntation easier.
         // mConnectionNegotiatingFastOpen is going away and halfOpen is taking
-        // this mSocketTransport so update mNumActiveConns.
+        // this mSocketTransport so add halfOpen to mEnt and update
+        // mNumActiveConns.
+        mEnt->mHalfOpens.AppendElement(this);
+        gHttpHandler->ConnMgr()->mNumHalfOpenConns++;
         gHttpHandler->ConnMgr()->StartedConnect();
+
+        // Restore callbacks.
         mStreamOut->AsyncWait(this, 0, 0, nullptr);
         mSocketTransport->SetEventSink(this, nullptr);
-        mSocketTransport->SetFastOpenCallback(nullptr);
+        mSocketTransport->SetSecurityCallbacks(this);
+        mStreamOut->AsyncWait(this, 0, 0, nullptr);
+
     } else {
         // On success or other error we proceed with connection, we just need
         // to close backup timer and halfOpenSock.
@@ -3619,14 +3702,16 @@ nsHalfOpenSocket::SetFastOpenConnected(nsresult aError)
         mSocketTransport = nullptr;
         mStreamOut = nullptr;
         mStreamIn = nullptr;
+
+        // If backup transport ha already started put this HalfOpen back to
+        // mEnt list.
+        if (mBackupTransport) {
+            mEnt->mHalfOpens.AppendElement(this);
+            gHttpHandler->ConnMgr()->mNumHalfOpenConns++;
+        }
     }
 
-#ifndef DEBUG
-    if (!mConnectionNegotiatingFastOpen) {
-        return;
-    }
-#endif
-    mConnectionNegotiatingFastOpen->SetFastOpen(false);
+    mFastOpenInProgress = false;
     mConnectionNegotiatingFastOpen = nullptr;
 }
 
@@ -3634,28 +3719,26 @@ void
 nsHttpConnectionMgr::
 nsHalfOpenSocket::SetFastOpenStatus(uint8_t tfoStatus)
 {
+    MOZ_ASSERT(mFastOpenInProgress);
     mConnectionNegotiatingFastOpen->SetFastOpenStatus(tfoStatus);
-    if (mConnectionNegotiatingFastOpen->Transaction()->QueryHttpTransaction()) {
-        mConnectionNegotiatingFastOpen->Transaction()->SetFastOpenStatus(tfoStatus);
-    }
+    mConnectionNegotiatingFastOpen->Transaction()->SetFastOpenStatus(tfoStatus);
 }
 
 void
 nsHttpConnectionMgr::
 nsHalfOpenSocket::CancelFastOpenConnection()
 {
-    // This must be called on a halfOpenSocket that has
-    // mConnectionNegotiatingFastOpen.
-    if (!mConnectionNegotiatingFastOpen) {
-        return;
-    }
+    MOZ_ASSERT(mFastOpenInProgress);
 
-    // This function will cancel the mConnectionNegotiatingFastOpen connection
-    // and return transaction to the pending queue.
+    LOG(("nsHalfOpenSocket::CancelFastOpenConnection [this=%p conn=%p]\n",
+         this, mConnectionNegotiatingFastOpen.get()));
+
+    RefPtr<nsHalfOpenSocket> deleteProtector(this);
+    mEnt->mHalfOpenFastOpenBackups.RemoveElement(this);
     mSocketTransport->SetFastOpenCallback(nullptr);
+    mConnectionNegotiatingFastOpen->SetFastOpen(false);
     RefPtr<nsAHttpTransaction> trans =
         mConnectionNegotiatingFastOpen->CloseConnectionFastOpenTakesTooLongOrError(true);
-    mConnectionNegotiatingFastOpen = nullptr;
     mSocketTransport = nullptr;
     mStreamOut = nullptr;
     mStreamIn = nullptr;
@@ -3666,18 +3749,22 @@ nsHalfOpenSocket::CancelFastOpenConnection()
 
         if (trans->Caps() & NS_HTTP_URGENT_START) {
             gHttpHandler->ConnMgr()->InsertTransactionSorted(mEnt->mUrgentStartQ,
-                                                             pendingTransInfo);
+                                                             pendingTransInfo, true);
         } else {
-            mEnt->InsertTransaction(pendingTransInfo);
+            mEnt->InsertTransaction(pendingTransInfo, true);
         }
     }
+
+    mFastOpenInProgress = false;
+    mConnectionNegotiatingFastOpen = nullptr;
+    Abandon();
 }
 
 void
 nsHttpConnectionMgr::
 nsHalfOpenSocket::FastOpenNotSupported()
 {
-  MOZ_ASSERT(mUsingFastOpen);
+  MOZ_ASSERT(mFastOpenInProgress);
   gHttpHandler->SetFastOpenNotSupported();
 }
 
@@ -3721,7 +3808,6 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
             mSocketTransport = nullptr;
         } else {
             conn->SetFastOpen(true);
-            mConnectionNegotiatingFastOpen = conn;
         }
     } else if (out == mBackupStreamOut) {
         TimeDuration rtt = TimeStamp::Now() - mBackupSynStarted;
@@ -3838,6 +3924,19 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
                         DispatchAbstractTransaction(mEnt, trans, mCaps, conn, 0);
                 }
             }
+        }
+    }
+
+    // If this connection has a transaction get reference to its
+    // ConnectionHandler.
+    if (aFastOpen) {
+        MOZ_ASSERT(mEnt);
+        MOZ_ASSERT(static_cast<int32_t>(mEnt->mIdleConns.IndexOf(conn)) == -1);
+        int32_t idx = mEnt->mActiveConns.IndexOf(conn);
+        if (NS_SUCCEEDED(rv) && (idx != -1)) {
+            mConnectionNegotiatingFastOpen = conn;
+        } else {
+            conn->SetFastOpen(false);
         }
     }
 
@@ -4178,6 +4277,8 @@ nsConnectionEntry::RemoveHalfOpen(nsHalfOpenSocket *halfOpen)
         if (gHttpHandler->ConnMgr()->mNumHalfOpenConns) { // just in case
             gHttpHandler->ConnMgr()->mNumHalfOpenConns--;
         }
+    } else {
+        mHalfOpenFastOpenBackups.RemoveElement(halfOpen);
     }
 
     if (!UnconnectedHalfOpens()) {
@@ -4224,7 +4325,8 @@ nsHttpConnectionMgr::nsConnectionEntry::PendingQLength() const
 
 void
 nsHttpConnectionMgr::
-nsConnectionEntry::InsertTransaction(PendingTransactionInfo *info)
+nsConnectionEntry::InsertTransaction(PendingTransactionInfo *info,
+                                     bool aInsertAsFirstForTheSamePriority /*= false*/)
 {
   LOG(("nsHttpConnectionMgr::nsConnectionEntry::InsertTransaction"
        " trans=%p, windowId=%" PRIu64 "\n",
@@ -4238,7 +4340,8 @@ nsConnectionEntry::InsertTransaction(PendingTransactionInfo *info)
     mPendingTransactionTable.Put(windowId, infoArray);
   }
 
-  gHttpHandler->ConnMgr()->InsertTransactionSorted(*infoArray, info);
+  gHttpHandler->ConnMgr()->InsertTransactionSorted(*infoArray, info,
+                                                   aInsertAsFirstForTheSamePriority);
 }
 
 void

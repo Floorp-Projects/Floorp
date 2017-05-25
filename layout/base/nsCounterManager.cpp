@@ -43,24 +43,6 @@ nsCounterUseNode::InitTextFrame(nsGenConList* aList,
   return false;
 }
 
-CounterStyle*
-nsCounterUseNode::GetCounterStyle()
-{
-    if (!mCounterStyle) {
-        const nsCSSValue& style = mCounterFunction->Item(mAllCounters ? 2 : 1);
-        CounterStyleManager* manager = mPresContext->CounterStyleManager();
-        if (style.GetUnit() == eCSSUnit_AtomIdent) {
-            mCounterStyle = manager->BuildCounterStyle(style.GetAtomValue());
-        } else if (style.GetUnit() == eCSSUnit_Symbols) {
-            mCounterStyle = new AnonymousCounterStyle(style.GetArrayValue());
-        } else {
-            NS_NOTREACHED("Unknown counter style");
-            mCounterStyle = CounterStyleManager::GetDecimalStyle();
-        }
-    }
-    return mCounterStyle;
-}
-
 // assign the correct |mValueAfter| value to a node that has been inserted
 // Should be called immediately after calling |Insert|.
 void nsCounterUseNode::Calc(nsCounterList *aList)
@@ -98,23 +80,17 @@ nsCounterUseNode::GetText(nsString& aResult)
         for (nsCounterNode *n = mScopeStart; n->mScopePrev; n = n->mScopeStart)
             stack.AppendElement(n->mScopePrev);
 
-    const char16_t* separator;
-    if (mAllCounters)
-        separator = mCounterFunction->Item(1).GetStringBufferValue();
-
-    CounterStyle* style = GetCounterStyle();
     WritingMode wm = mPseudoFrame ?
         mPseudoFrame->GetWritingMode() : WritingMode();
     for (uint32_t i = stack.Length() - 1;; --i) {
         nsCounterNode *n = stack[i];
         nsAutoString text;
         bool isTextRTL;
-        style->GetCounterText(n->mValueAfter, wm, text, isTextRTL);
+        mCounterStyle->GetCounterText(n->mValueAfter, wm, text, isTextRTL);
         aResult.Append(text);
         if (i == 0)
             break;
-        NS_ASSERTION(mAllCounters, "yikes, separator is uninitialized");
-        aResult.Append(separator);
+        aResult.Append(mSeparator);
     }
 }
 
@@ -279,22 +255,10 @@ nsCounterManager::RecalcAll()
 }
 
 void
-nsCounterManager::SetAllCounterStylesDirty()
+nsCounterManager::SetAllDirty()
 {
   for (auto iter = mNames.Iter(); !iter.Done(); iter.Next()) {
-    nsCounterList* list = iter.UserData();
-    bool changed = false;
-
-    for (nsCounterNode* node = list->First(); node; node = list->Next(node)) {
-      if (node->mType == nsCounterNode::USE) {
-        node->UseNode()->SetCounterStyleDirty();
-        changed = true;
-      }
-    }
-
-    if (changed) {
-      list->SetDirty();
-    }
+    iter.UserData()->SetDirty();
   }
 }
 

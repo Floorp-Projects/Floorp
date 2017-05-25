@@ -173,32 +173,29 @@ public class GeckoApplication extends Application
         super.onConfigurationChanged(config);
     }
 
-    public void onActivityPause(GeckoActivityStatus activity) {
+    public void onApplicationBackground() {
         mInBackground = true;
 
-        if ((activity.isFinishing() == false) &&
-            (activity.isGeckoActivityOpened() == false)) {
-            // Notify Gecko that we are pausing; the cache service will be
-            // shutdown, closing the disk cache cleanly. If the android
-            // low memory killer subsequently kills us, the disk cache will
-            // be left in a consistent state, avoiding costly cleanup and
-            // re-creation.
-            GeckoThread.onPause();
-            mPausedGecko = true;
+        // Notify Gecko that we are pausing; the cache service will be
+        // shutdown, closing the disk cache cleanly. If the android
+        // low memory killer subsequently kills us, the disk cache will
+        // be left in a consistent state, avoiding costly cleanup and
+        // re-creation.
+        GeckoThread.onPause();
+        mPausedGecko = true;
 
-            final BrowserDB db = BrowserDB.from(this);
-            ThreadUtils.postToBackgroundThread(new Runnable() {
-                @Override
-                public void run() {
-                    db.expireHistory(getContentResolver(), BrowserContract.ExpirePriority.NORMAL);
-                }
-            });
+        final BrowserDB db = BrowserDB.from(this);
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                db.expireHistory(getContentResolver(), BrowserContract.ExpirePriority.NORMAL);
+            }
+        });
 
-            GeckoNetworkManager.getInstance().stop();
-        }
+        GeckoNetworkManager.getInstance().stop();
     }
 
-    public void onActivityResume(GeckoActivityStatus activity) {
+    public void onApplicationForeground() {
         if (mIsInitialResume) {
             GeckoBatteryManager.getInstance().start(this);
             GeckoFontScaleListener.getInstance().initialize(this);
@@ -236,7 +233,7 @@ public class GeckoApplication extends Application
 
         sSessionUUID = UUID.randomUUID().toString();
 
-        registerActivityLifecycleCallbacks(GeckoActivityMonitor.getInstance());
+        GeckoActivityMonitor.getInstance().initialize(this);
 
         final Context context = getApplicationContext();
         GeckoAppShell.setApplicationContext(context);

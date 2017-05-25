@@ -37,6 +37,18 @@
 
 %endif
 
+:root[uidensity=compact] #urlbar,
+:root[uidensity=compact] .searchbar-textbox {
+  min-height: 26px;
+  margin-top: 3px;
+  margin-bottom: 3px;
+}
+
+:root[uidensity=touch] #urlbar,
+:root[uidensity=touch] .searchbar-textbox {
+  min-height: 32px;
+}
+
 #urlbar-container {
   -moz-box-align: center;
 }

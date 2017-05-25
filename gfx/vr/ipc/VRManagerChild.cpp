@@ -718,5 +718,18 @@ VRManagerChild::RecvReplyGamepadVibrateHaptic(const uint32_t& aPromiseID)
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+VRManagerChild::RecvDispatchSubmitFrameResult(const uint32_t& aDisplayID,
+                                              const VRSubmitFrameResultInfo& aResult)
+{
+   for (auto& display : mDisplays) {
+    if (display->GetDisplayInfo().GetDisplayID() == aDisplayID) {
+      display->UpdateSubmitFrameResult(aResult);
+    }
+  }
+
+  return IPC_OK();
+}
+
 } // namespace gfx
 } // namespace mozilla

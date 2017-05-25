@@ -477,6 +477,8 @@ private:
     // A Fast Open callback.
     TCPFastOpen *mFastOpenCallback;
     bool mFastOpenLayerHasBufferedData;
+
+    bool mDoNotRetryToConnect;
 };
 
 } // namespace net
