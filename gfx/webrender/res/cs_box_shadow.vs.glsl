@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 void main(void) {
-    CachePrimitiveInstance cpi = fetch_cache_instance();
-    RenderTaskData task = fetch_render_task(cpi.render_task_index);
-    BoxShadow bs = fetch_boxshadow(cpi.specific_prim_index);
+    PrimitiveInstance pi = fetch_prim_instance();
+    RenderTaskData task = fetch_render_task(pi.render_task_index);
+    BoxShadow bs = fetch_boxshadow(pi.specific_prim_address);
 
     vec2 p0 = task.data0.xy;
     vec2 p1 = p0 + task.data0.zw;
