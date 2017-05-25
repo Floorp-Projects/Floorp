@@ -58,7 +58,7 @@ TEST(cubeb, overload_callback)
   int r;
   uint32_t latency_frames = 0;
 
-  r = cubeb_init(&ctx, "Cubeb callback overload", NULL);
+  r = common_init(&ctx, "Cubeb callback overload");
   ASSERT_EQ(r, CUBEB_OK);
 
   std::unique_ptr<cubeb, decltype(&cubeb_destroy)>
