@@ -5250,6 +5250,9 @@ Selection::Collapse(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
     return;
   }
 
+  // Cache current range is if there is because it may be reusable.
+  RefPtr<nsRange> oldRange = !mRanges.IsEmpty() ? mRanges[0].mRange : nullptr;
+
   // Delete all of the current ranges
   Clear(presContext);
 
@@ -5273,7 +5276,14 @@ Selection::Collapse(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
     }
   }
 
-  RefPtr<nsRange> range = new nsRange(parentNode);
+  RefPtr<nsRange> range;
+  // If the old range isn't referred by anybody other than this method,
+  // we should reuse it for reducing the recreation cost.
+  if (oldRange && oldRange->GetRefCount() == 1) {
+    range = oldRange;
+  } else {
+    range = new nsRange(parentNode);
+  }
   result = range->CollapseTo(parentNode, aOffset);
   if (NS_FAILED(result)) {
     aRv.Throw(result);
