@@ -17,10 +17,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
                                   "resource://gre/modules/ExtensionManagement.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MatchGlobs",
-                                  "resource://gre/modules/MatchPattern.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
-                                  "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
@@ -56,13 +52,10 @@ class ScriptMatcher {
     this.frameId = options.frame_id;
     this.runAt = options.run_at;
 
-    this.matches = new MatchPattern(options.matches);
-    this.excludeMatches = new MatchPattern(options.exclude_matches || null);
-    // TODO: MatchPattern should pre-mangle host-only patterns so that we
-    // don't need to call a separate match function.
-    this.matchesHost = new MatchPattern(options.matchesHost || null);
-    this.includeGlobs = options.include_globs && new MatchGlobs(options.include_globs);
-    this.excludeGlobs = new MatchGlobs(options.exclude_globs);
+    this.matches = new MatchPatternSet(options.matches);
+    this.excludeMatches = new MatchPatternSet(options.exclude_matches || []);
+    this.includeGlobs = options.include_globs && options.include_globs.map(glob => new MatchGlob(glob));
+    this.excludeGlobs = options.include_globs && options.exclude_globs.map(glob => new MatchGlob(glob));
   }
 
   toString() {
@@ -97,7 +90,7 @@ class ScriptMatcher {
   }
 
   matchesURI(uri) {
-    if (!(this.matches.matches(uri) || this.matchesHost.matchesIgnoringPath(uri))) {
+    if (!(this.matches.matches(uri))) {
       return false;
     }
 
@@ -105,11 +98,11 @@ class ScriptMatcher {
       return false;
     }
 
-    if (this.includeGlobs != null && !this.includeGlobs.matches(uri.spec)) {
+    if (this.includeGlobs && !this.includeGlobs.some(glob => glob.matches(uri.spec))) {
       return false;
     }
 
-    if (this.excludeGlobs.matches(uri.spec)) {
+    if (this.excludeGlobs && this.excludeGlobs.some(glob => glob.matches(uri.spec))) {
       return false;
     }
 
