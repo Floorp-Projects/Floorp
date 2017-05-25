@@ -612,7 +612,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
   const NSString* type = nil;
   bool allowFileURL = false;
   if (dataFlavor.EqualsLiteral(kFileMime)) {
-    type = [UTIHelper stringFromPboardType:kMozFileUrlsPboardType];
+    type = [UTIHelper stringFromPboardType:(NSString*)kUTTypeFileURL];
     allowFileURL = true;
   } else if (dataFlavor.EqualsLiteral(kUnicodeMime)) {
     type = [UTIHelper stringFromPboardType:NSPasteboardTypeString];
