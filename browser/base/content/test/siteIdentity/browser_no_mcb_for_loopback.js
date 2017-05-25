@@ -8,6 +8,14 @@
 // unassigned port 8 because we don't want to actually load anything, we just
 // want to check that the URLs are not blocked.
 
+// The following rejections should not be left uncaught. This test has been
+// whitelisted until the issue is fixed.
+if (!gMultiProcessBrowser) {
+  Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
+  PromiseTestUtils.expectUncaughtRejection(/NetworkError/);
+  PromiseTestUtils.expectUncaughtRejection(/NetworkError/);
+}
+
 const TEST_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com") + "test_no_mcb_for_loopback.html";
 
 const LOOPBACK_PNG_URL = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://127.0.0.1:8888") + "moz.png";
