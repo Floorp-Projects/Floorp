@@ -50,9 +50,7 @@
  *
  * If the |aFixedArgs| list is not empty, a trailing comma must be included.
  *
- * The |aArgs| list must be not be empty and may be up to 50 items long. Use
- * MOZ_STATIC_ASSERT_VALID_ARG_COUNT to ensure that violating this constraint
- * results in a compile-time error.
+ * The |aArgs| list may be up to 50 items long.
  */
 #define MOZ_FOR_EACH_EXPAND_HELPER(...) __VA_ARGS__
 #define MOZ_FOR_EACH_GLUE(a, b) a b
@@ -70,6 +68,7 @@
     aMacro, \
     (MOZ_FOR_EACH_EXPAND_HELPER aFixedArgs MOZ_ARG_1 aArgs))
 
+#define MOZ_FOR_EACH_0(m, s, fa, a)
 #define MOZ_FOR_EACH_1(m, s, fa, a) \
   MOZ_FOR_EACH_HELPER(m, fa, a)
 #define MOZ_FOR_EACH_2(m, s, fa, a) \
