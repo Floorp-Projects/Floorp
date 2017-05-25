@@ -97,13 +97,9 @@ to mochitest command.
     * test_value_storage.html `context-` [7]
     * test_bug798843_pref.html [7]
 * Incorrect parsing
-  * mask shorthand servo/servo#15772
-    * test_property_syntax_errors.html `mask'` [76]
   * different parsing bug 1364260
     * test_supports_rules.html [6]
     * test_condition_text.html [1]
-  * text should be supported in background for second box
-    * test_value_storage.html `box text` [20]
 * Incorrect serialization
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
@@ -151,8 +147,6 @@ to mochitest command.
 * test_property_syntax_errors.html `linear-gradient(0,`: unitless zero as degree bug 1363292 [10]
 * test_specified_value_serialization.html `-webkit-radial-gradient`: bug 1367299 [1]
 * test_variables.html `var(--var6)`: irrelevant test for stylo bug 1367306 [1]
-* clip and origin should be allowed to separated in shorthand bug 1188074
-  * test_property_syntax_errors.html `padding-box` [80]
 * Difference in rect serialization bug 1367028
   * test_shorthand_property_getters.html `5 5 5 5` [1]
 
