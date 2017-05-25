@@ -36,7 +36,7 @@ def _defines():
     CONFIG.update(buildconfig.substs)
     DEFINES = dict(buildconfig.defines)
 
-    for var in ('MOZ_ANDROID_ACTIVITY_STREAM',
+    for var in ('MOZ_ANDROID_ACTIVITY_STREAM'
                 'MOZ_ANDROID_ANR_REPORTER',
                 'MOZ_ANDROID_BEAM',
                 'MOZ_ANDROID_CUSTOM_TABS',
@@ -46,7 +46,6 @@ def _defines():
                 'MOZ_ANDROID_GCM',
                 'MOZ_ANDROID_MLS_STUMBLER',
                 'MOZ_ANDROID_MMA',
-                'MOZ_ANDROID_MOZILLA_ONLINE',
                 'MOZ_LEANPLUM_SDK_KEY',
                 'MOZ_LEANPLUM_SDK_CLIENTID',
                 'MOZ_ANDROID_SEARCH_ACTIVITY',
