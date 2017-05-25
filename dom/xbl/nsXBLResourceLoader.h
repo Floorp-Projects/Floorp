@@ -51,7 +51,7 @@ public:
                                        // information.  May be null if the
                                        // resources have already been
                                        // destroyed.
-  
+
   nsXBLResource* mResourceList; // The list of resources we need to load.
   nsXBLResource* mLastResource;
 

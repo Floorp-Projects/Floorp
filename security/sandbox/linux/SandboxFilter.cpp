@@ -37,6 +37,9 @@ using namespace sandbox::bpf_dsl;
 
 // Fill in defines in case of old headers.
 // (Warning: these are wrong on PA-RISC.)
+#ifndef MADV_HUGEPAGE
+#define MADV_HUGEPAGE 14
+#endif
 #ifndef MADV_NOHUGEPAGE
 #define MADV_NOHUGEPAGE 15
 #endif
@@ -500,6 +503,16 @@ private:
     return 0;
   }
 
+  static intptr_t SocketpairDatagramTrap(ArgsRef aArgs, void* aux) {
+    auto fds = reinterpret_cast<int*>(aArgs.args[3]);
+    // Return sequential packet sockets instead of the expected
+    // datagram sockets; see bug 1355274 for details.
+    if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds) != 0) {
+      return -errno;
+    }
+    return 0;
+  }
+
 public:
   explicit ContentSandboxPolicy(SandboxBrokerClient* aBroker,
                                 const std::vector<int>& aSyscallWhitelist)
@@ -515,6 +528,7 @@ public:
     switch(aCall) {
     case SYS_RECVFROM:
     case SYS_SENDTO:
+    case SYS_SENDMMSG: // libresolv via libasyncns; see bug 1355274
       return Some(Allow());
 
     case SYS_SOCKETPAIR: {
@@ -524,9 +538,12 @@ public:
         return Some(Allow());
       }
       Arg<int> domain(0), type(1);
-      return Some(If(AllOf(domain == AF_UNIX,
-                           AnyOf(type == SOCK_STREAM, type == SOCK_SEQPACKET)),
-                     Allow())
+      return Some(If(domain == AF_UNIX,
+                     Switch(type)
+                     .Case(SOCK_STREAM, Allow())
+                     .Case(SOCK_SEQPACKET, Allow())
+                     .Case(SOCK_DGRAM, Trap(SocketpairDatagramTrap, nullptr))
+                     .Default(InvalidSyscall()))
                   .Else(InvalidSyscall()));
     }
 
@@ -952,8 +969,9 @@ public:
       Arg<int> advice(2);
       return If(advice == MADV_DONTNEED, Allow())
         .ElseIf(advice == MADV_FREE, Allow())
-#ifdef MOZ_ASAN
+        .ElseIf(advice == MADV_HUGEPAGE, Allow())
         .ElseIf(advice == MADV_NOHUGEPAGE, Allow())
+#ifdef MOZ_ASAN
         .ElseIf(advice == MADV_DONTDUMP, Allow())
 #endif
         .Else(InvalidSyscall());

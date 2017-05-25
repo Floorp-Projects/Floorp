@@ -80,7 +80,7 @@ TablesToResponse(const nsACString& tables);
 } // namespace safebrowsing
 } // namespace mozilla
 
-// This is a proxy class that just creates a background thread and delagates
+// This is a proxy class that just creates a background thread and delegates
 // calls to the background thread.
 class nsUrlClassifierDBService final : public nsIUrlClassifierDBService,
                                        public nsIURIClassifier,

@@ -83,7 +83,7 @@ void nsXBLProtoImplProperty::EnsureUncompiledText(PropertyOp& aPropertyOp)
   }
 }
 
-void 
+void
 nsXBLProtoImplProperty::AppendGetterText(const nsAString& aText)
 {
   NS_PRECONDITION(!mIsCompiled,
@@ -92,7 +92,7 @@ nsXBLProtoImplProperty::AppendGetterText(const nsAString& aText)
   mGetter.GetUncompiled()->AppendText(aText);
 }
 
-void 
+void
 nsXBLProtoImplProperty::AppendSetterText(const nsAString& aText)
 {
   NS_PRECONDITION(!mIsCompiled,
@@ -210,7 +210,7 @@ nsXBLProtoImplProperty::CompileMember(AutoJSAPI& jsapi, const nsString& aClassSt
       deletedGetter = true;
 
       mGetter.SetJSFunction(getterObject);
-    
+
       if (mGetter.GetJSFunction() && NS_SUCCEEDED(rv)) {
         mJSAttributes |= JSPROP_GETTER | JSPROP_SHARED;
       }
@@ -226,7 +226,7 @@ nsXBLProtoImplProperty::CompileMember(AutoJSAPI& jsapi, const nsString& aClassSt
     delete getterText;
     mGetter.SetJSFunction(nullptr);
   }
-  
+
   if (NS_FAILED(rv)) {
     // We failed to compile our getter.  So either we've set it to null, or
     // it's still set to the text object.  In either case, it's safe to return

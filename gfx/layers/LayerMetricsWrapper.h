@@ -334,6 +334,19 @@ public:
     return EventRegions();
   }
 
+  LayerIntRegion GetVisibleRegion() const
+  {
+    MOZ_ASSERT(IsValid());
+
+    if (AtBottomLayer()) {
+      return mLayer->GetVisibleRegion();
+    }
+
+    return ViewAs<LayerPixel>(
+        TransformBy(mLayer->GetTransformTyped(), mLayer->GetVisibleRegion()),
+        PixelCastJustification::MovingDownToChildren);
+  }
+
   bool HasTransformAnimation() const
   {
     MOZ_ASSERT(IsValid());

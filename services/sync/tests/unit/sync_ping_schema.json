@@ -16,6 +16,7 @@
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
     },
+    "sessionStartDate": { "type": "string" },
     "syncs": {
       "type": "array",
       "minItems": 1,

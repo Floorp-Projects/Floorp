@@ -36,7 +36,7 @@ nsXBLProtoImplField::nsXBLProtoImplField(const char16_t* aName, const char16_t* 
 {
   MOZ_COUNT_CTOR(nsXBLProtoImplField);
   mName = NS_strdup(aName);  // XXXbz make more sense to use a stringbuffer?
-  
+
   mJSAttributes = JSPROP_ENUMERATE;
   if (aReadOnly) {
     nsAutoString readOnly; readOnly.Assign(aReadOnly);
@@ -68,7 +68,7 @@ nsXBLProtoImplField::~nsXBLProtoImplField()
   NS_CONTENT_DELETE_LIST_MEMBER(nsXBLProtoImplField, this, mNext);
 }
 
-void 
+void
 nsXBLProtoImplField::AppendFieldText(const nsAString& aText)
 {
   if (mFieldText) {
