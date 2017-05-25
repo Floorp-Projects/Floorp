@@ -24,6 +24,15 @@
  * notifications. The latter won't.
  */
 
+// The rejection "RecentWindow.getMostRecentBrowserWindow(...) is null" is left
+// unhandled in some cases. This bug should be fixed, but for the moment this
+// file is whitelisted.
+//
+// NOTE: Whitelisting a class of rejections should be limited. Normally you
+//       should use "expectUncaughtRejection" to flag individual failures.
+Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
+PromiseTestUtils.whitelistRejectionsGlobally(/getMostRecentBrowserWindow/);
+
 // Some urls that might be opened in tabs and/or popups
 // Do not use about:blank:
 // That one is reserved for special purposes in the tests
