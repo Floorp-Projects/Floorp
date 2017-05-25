@@ -1,0 +1,99 @@
+<html>
+<head>
+  <title>Test for bug 1358025</title>
+  <script type="text/javascript"
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1358025">Mozilla Bug 1358025</a>
+<div id="display">
+  <input type="text" id="edit">
+</div>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  let input = document.getElementById("edit");
+  input.focus();
+
+  let controller =
+    SpecialPowers.wrap(input).controllers.getControllerForCommand("cmd_undo");
+
+  // Create undo transaction
+  SpecialPowers.wrap(input).setUserInput("XXX");
+  SpecialPowers.wrap(input).setUserInput("");
+
+  // Enable undo because this is user input
+  SpecialPowers.wrap(input).setUserInput("");
+  is(input.value, "", "value is empty");
+  ok(controller.isCommandEnabled('cmd_undo'),
+     "Undo is enabled by same empty string");
+
+  SpecialPowers.wrap(input).setUserInput("ABC");
+  is(input.value, "ABC", "value is ABC");
+  ok(controller.isCommandEnabled('cmd_undo'), "Undo is enabled by a string");
+
+  SpecialPowers.wrap(input).setUserInput("ABC");
+  is(input.value, "ABC", "value is ABC");
+  ok(controller.isCommandEnabled('cmd_undo'), "Undo is enabled by same string");
+
+  SpecialPowers.wrap(input).setUserInput("DEF");
+  is(input.value, "DEF", "value is DEF");
+  ok(controller.isCommandEnabled('cmd_undo'),
+     "Undo is enabled by different string");
+
+  SpecialPowers.wrap(input).setUserInput("");
+  is(input.value, "", "value is empty");
+  ok(controller.isCommandEnabled('cmd_undo'),
+     "Undo is enabled by empty string");
+
+  // disable undo because this is by script
+
+  // But Edge and Chrome still turn on undo when setting empty value from
+  // empty value.  So we are same behaviour for this case.
+  input.value = "";
+  is (input.value, "", "value is empty");
+  ok(controller.isCommandEnabled('cmd_undo'),
+     "Undo is still enabled by same empty string");
+
+  input.value = "ABC";
+  is(input.value, "ABC", "value is ABC");
+  ok(!controller.isCommandEnabled('cmd_undo'), "Undo is disabled by a string");
+
+  // When setting same value by script, all browsers (Edge, Safari and Chrome)
+  // keep undo state.
+  input.value = "";
+  SpecialPowers.wrap(input).setUserInput("ABC");
+  ok(controller.isCommandEnabled('cmd_undo'), "Undo is enabled");
+  input.value = "ABC";
+  is(input.value, "ABC", "value is ABC");
+  ok(controller.isCommandEnabled('cmd_undo'),
+     "Undo is still enabled by same string");
+
+  input.value = "";
+  SpecialPowers.wrap(input).setUserInput("ABC");
+  ok(controller.isCommandEnabled('cmd_undo'), "Undo is enabled");
+  input.value = "DEF";
+  is(input.value, "DEF", "value is DEF");
+  ok(!controller.isCommandEnabled('cmd_undo'),
+     "Undo is disabled by different string");
+
+  input.value = "";
+  SpecialPowers.wrap(input).setUserInput("DEF");
+  ok(controller.isCommandEnabled('cmd_undo'), "Undo is enabled");
+  input.value = "";
+  is(input.value, "", "value is empty");
+  ok(!controller.isCommandEnabled('cmd_undo'),
+     "Undo is disabled by empty string");
+
+  SimpleTest.finish();
+}, window);
+</script>
+</pre>
+</body>
+</html>
