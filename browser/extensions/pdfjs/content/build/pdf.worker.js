@@ -21842,9 +21842,9 @@ var Catalog = function CatalogClosure() {
               remoteDest = remoteDest.name;
             }
             if (isString(url)) {
-              var baseUrl = url.split('#')[0];
+              let baseUrl = url.split('#')[0];
               if (isString(remoteDest)) {
-                url = baseUrl + '#' + (/^\d+$/.test(remoteDest) ? 'nameddest=' : '') + remoteDest;
+                url = baseUrl + '#' + remoteDest;
               } else if (isArray(remoteDest)) {
                 url = baseUrl + '#' + JSON.stringify(remoteDest);
               }
@@ -25065,23 +25065,31 @@ var CMap = function CMapClosure() {
       return this._map[code] !== undefined;
     },
     forEach(callback) {
-      var map = this._map;
-      var length = map.length;
-      var i;
+      let map = this._map;
+      let length = map.length;
       if (length <= 0x10000) {
-        for (i = 0; i < length; i++) {
+        for (let i = 0; i < length; i++) {
           if (map[i] !== undefined) {
             callback(i, map[i]);
           }
         }
       } else {
-        for (i in this._map) {
+        for (let i in map) {
           callback(i, map[i]);
         }
       }
     },
     charCodeOf(value) {
-      return this._map.indexOf(value);
+      let map = this._map;
+      if (map.length <= 0x10000) {
+        return map.indexOf(value);
+      }
+      for (let charCode in map) {
+        if (map[charCode] === value) {
+          return charCode | 0;
+        }
+      }
+      return -1;
     },
     getMap() {
       return this._map;
@@ -27138,8 +27146,17 @@ var ToUnicodeMap = function ToUnicodeMapClosure() {
     get(i) {
       return this._map[i];
     },
-    charCodeOf(v) {
-      return this._map.indexOf(v);
+    charCodeOf(value) {
+      let map = this._map;
+      if (map.length <= 0x10000) {
+        return map.indexOf(value);
+      }
+      for (let charCode in map) {
+        if (map[charCode] === value) {
+          return charCode | 0;
+        }
+      }
+      return -1;
     },
     amend(map) {
       for (var charCode in map) {
@@ -27287,7 +27304,7 @@ var OpenTypeFileBuilder = function OpenTypeFileBuilderClosure() {
   };
   return OpenTypeFileBuilder;
 }();
-var ProblematicCharRanges = new Int32Array([0x0000, 0x0020, 0x007F, 0x00A1, 0x00AD, 0x00AE, 0x0600, 0x0780, 0x08A0, 0x10A0, 0x1780, 0x1800, 0x1C00, 0x1C50, 0x2000, 0x2010, 0x2011, 0x2012, 0x2028, 0x2030, 0x205F, 0x2070, 0x25CC, 0x25CD, 0x3000, 0x3001, 0xAA60, 0xAA80, 0xFFF0, 0x10000]);
+var ProblematicCharRanges = new Int32Array([0x0000, 0x0020, 0x007F, 0x00A1, 0x00AD, 0x00AE, 0x0600, 0x0780, 0x08A0, 0x10A0, 0x1780, 0x1800, 0x1C00, 0x1C50, 0x2000, 0x2010, 0x2011, 0x2012, 0x2028, 0x2030, 0x205F, 0x2070, 0x25CC, 0x25CD, 0x3000, 0x3001, 0x3164, 0x3165, 0xAA60, 0xAA80, 0xFFF0, 0x10000]);
 var Font = function FontClosure() {
   function Font(name, file, properties) {
     var charCode, glyphName, unicode;
@@ -36645,8 +36662,8 @@ exports.Type1Parser = Type1Parser;
 "use strict";
 
 
-var pdfjsVersion = '1.8.363';
-var pdfjsBuild = '658fb03d';
+var pdfjsVersion = '1.8.384';
+var pdfjsBuild = '8d55e6a0';
 var pdfjsCoreWorker = __w_pdfjs_require__(17);
 ;
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
