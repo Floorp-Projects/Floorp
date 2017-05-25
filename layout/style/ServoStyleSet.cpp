@@ -216,54 +216,10 @@ ServoStyleSet::GetContext(already_AddRefed<ServoComputedValues> aComputedValues,
                           CSSPseudoElementType aPseudoType,
                           Element* aElementForAnimation)
 {
-  bool isLink = false;
-  bool isVisitedLink = false;
-  // If we need visited styles for callers where `aElementForAnimation` is null,
-  // we can precompute these and pass them as flags, similar to nsStyleSet.cpp.
-  if (aElementForAnimation) {
-    isLink = nsCSSRuleProcessor::IsLink(aElementForAnimation);
-    isVisitedLink = nsCSSRuleProcessor::GetContentState(aElementForAnimation)
-                                       .HasState(NS_EVENT_STATE_VISITED);
-  }
+  // XXXbholley: nsStyleSet does visited handling here.
 
-  RefPtr<ServoComputedValues> computedValues = Move(aComputedValues);
-  RefPtr<ServoComputedValues> visitedComputedValues =
-    Servo_ComputedValues_GetVisitedStyle(computedValues).Consume();
-
-  // If `visitedComputedValues` is non-null, then there was a relevant link and
-  // visited styles were computed.  This corresponds to the cases where Gecko's
-  // style system produces `aVisitedRuleNode`.
-  // Set up `parentIfVisited` depending on whether our parent context has a
-  // a visited style.  If it doesn't but we do have visited styles, use the
-  // regular parent context for visited.
-  nsStyleContext *parentIfVisited =
-    aParentContext ? aParentContext->GetStyleIfVisited() : nullptr;
-  if (!parentIfVisited) {
-    if (visitedComputedValues) {
-      parentIfVisited = aParentContext;
-    }
-  }
-
-  // The true visited state of the relevant link is used to decided whether
-  // visited styles should be consulted for all visited dependent properties.
-  bool relevantLinkVisited = isLink ? isVisitedLink :
-    (aParentContext && aParentContext->RelevantLinkVisited());
-
-  RefPtr<nsStyleContext> result =
-    NS_NewStyleContext(aParentContext, mPresContext, aPseudoTag, aPseudoType,
-                       computedValues.forget());
-
-  if (visitedComputedValues) {
-    RefPtr<nsStyleContext> resultIfVisited =
-      NS_NewStyleContext(parentIfVisited, mPresContext, aPseudoTag, aPseudoType,
-                         visitedComputedValues.forget());
-    resultIfVisited->SetIsStyleIfVisited();
-    result->SetStyleIfVisited(resultIfVisited.forget());
-
-    if (relevantLinkVisited) {
-      result->AddStyleBit(NS_STYLE_RELEVANT_LINK_VISITED);
-    }
-  }
+  RefPtr<nsStyleContext> result = NS_NewStyleContext(aParentContext, mPresContext, aPseudoTag,
+                                                     aPseudoType, Move(aComputedValues));
 
   // Set the body color on the pres context. See nsStyleSet::GetContext
   if (aElementForAnimation &&
