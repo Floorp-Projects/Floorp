@@ -19,6 +19,7 @@ import android.graphics.RectF;
 import android.net.Uri;
 import android.os.Process;
 import android.os.SystemClock;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.squareup.leakcanary.LeakCanary;
@@ -237,6 +238,38 @@ public class GeckoApplication extends Application
 
         final Context context = getApplicationContext();
         GeckoAppShell.setApplicationContext(context);
+        GeckoAppShell.setGeckoInterface(new GeckoAppShell.GeckoInterface() {
+            @Override
+            public boolean openUriExternal(final String targetURI, final String mimeType,
+                                           final String packageName, final String className,
+                                           final String action, final String title) {
+                // Default to showing prompt in private browsing to be safe.
+                return IntentHelper.openUriExternal(targetURI, mimeType, packageName,
+                                                    className, action, title, true);
+            }
+
+            @Override
+            public String[] getHandlersForMimeType(final String mimeType,
+                                                   final String action) {
+                final Intent intent = IntentHelper.getIntentForActionString(action);
+                if (mimeType != null && mimeType.length() > 0) {
+                    intent.setType(mimeType);
+                }
+                return IntentHelper.getHandlersForIntent(intent);
+            }
+
+            @Override
+            public String[] getHandlersForURL(final String url, final String action) {
+                // May contain the whole URL or just the protocol.
+                final Uri uri = url.indexOf(':') >= 0 ? Uri.parse(url)
+                                                      : new Uri.Builder().scheme(url).build();
+                final Intent intent = IntentHelper.getOpenURIIntent(
+                        getApplicationContext(), uri.toString(), "",
+                        TextUtils.isEmpty(action) ? Intent.ACTION_VIEW : action, "");
+                return IntentHelper.getHandlersForIntent(intent);
+            }
+        });
+
         HardwareUtils.init(context);
         FilePicker.init(context);
         DownloadsIntegration.init();
