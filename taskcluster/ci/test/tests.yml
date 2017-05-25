@@ -919,7 +919,6 @@ mochitest-media:
     run-on-projects:
         by-test-platform:
             windows10.*: []
-            linux64-qr/.*: ['graphics']
             default: built-projects
     mozharness:
         by-test-platform:
@@ -951,6 +950,10 @@ mochitest-media:
                             - remove_executables.py
                 extra-options:
                     - --mochitest-suite=mochitest-media
+    tier:
+        by-test-platform:
+            linux64-qr/.*: 1
+            default: default
 
 mochitest-style:
     description: "Mochitest plain run for style system"

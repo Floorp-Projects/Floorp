@@ -88,7 +88,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.Window;
-import android.widget.AbsoluteLayout;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -1433,25 +1432,27 @@ public abstract class GeckoApp extends GeckoActivity
         }
         mTextSelection.create();
 
-        // Determine whether we should restore tabs.
-        mLastSessionCrashed = updateCrashedState();
-        mShouldRestore = getSessionRestoreState(savedInstanceState);
-        if (mShouldRestore && savedInstanceState != null) {
-            boolean wasInBackground =
-                savedInstanceState.getBoolean(SAVED_STATE_IN_BACKGROUND, false);
-
-            // Don't log OOM-kills if only one activity was destroyed. (For example
-            // from "Don't keep activities" on ICS)
-            if (!wasInBackground && !mIsRestoringActivity) {
-                Telemetry.addToHistogram("FENNEC_WAS_KILLED", 1);
-            }
-
-            mPrivateBrowsingSession = savedInstanceState.getString(SAVED_STATE_PRIVATE_SESSION);
-        }
-
+        final Bundle finalSavedInstanceState = savedInstanceState;
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
+                // Determine whether we should restore tabs.
+                mLastSessionCrashed = updateCrashedState();
+                mShouldRestore = getSessionRestoreState(finalSavedInstanceState);
+                if (mShouldRestore && finalSavedInstanceState != null) {
+                    boolean wasInBackground =
+                            finalSavedInstanceState.getBoolean(SAVED_STATE_IN_BACKGROUND, false);
+
+                    // Don't log OOM-kills if only one activity was destroyed. (For example
+                    // from "Don't keep activities" on ICS)
+                    if (!wasInBackground && !mIsRestoringActivity) {
+                        Telemetry.addToHistogram("FENNEC_WAS_KILLED", 1);
+                    }
+
+                    mPrivateBrowsingSession =
+                            finalSavedInstanceState.getString(SAVED_STATE_PRIVATE_SESSION);
+                }
+
                 // If we are doing a restore, read the session data so we can send it to Gecko later.
                 GeckoBundle restoreMessage = null;
                 if (!mIsRestoringActivity && mShouldRestore) {
@@ -2151,8 +2152,6 @@ public abstract class GeckoApp extends GeckoActivity
 
     @Override
     protected void onNewIntent(Intent externalIntent) {
-        super.onNewIntent(externalIntent);
-
         final SafeIntent intent = new SafeIntent(externalIntent);
         final String action = intent.getAction();
 

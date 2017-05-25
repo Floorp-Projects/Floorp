@@ -757,6 +757,10 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar.png);
 }
 
+#appMenu-fxa-status {
+  -moz-box-align: center;
+}
+
 #appMenu-fxa-avatar {
   pointer-events: none;
   list-style-image: url(chrome://browser/skin/fxa/default-avatar.svg);

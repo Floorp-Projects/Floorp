@@ -53,7 +53,7 @@ class nsXBLPrototypeBinding;
 
 // The XBL content sink overrides the XML content sink to
 // builds its own lightweight data structures for the <resources>,
-// <handlers>, <implementation>, and 
+// <handlers>, <implementation>, and
 
 class nsXBLContentSink : public nsXMLContentSink {
 public:
@@ -65,23 +65,23 @@ public:
                 nsISupports* aContainer);
 
   // nsIContentSink overrides
-  NS_IMETHOD HandleStartElement(const char16_t *aName, 
-                                const char16_t **aAtts, 
-                                uint32_t aAttsCount, 
+  NS_IMETHOD HandleStartElement(const char16_t *aName,
+                                const char16_t **aAtts,
+                                uint32_t aAttsCount,
                                 uint32_t aLineNumber) override;
 
   NS_IMETHOD HandleEndElement(const char16_t *aName) override;
-  
-  NS_IMETHOD HandleCDataSection(const char16_t *aData, 
+
+  NS_IMETHOD HandleCDataSection(const char16_t *aData,
                                 uint32_t aLength) override;
 
 protected:
     // nsXMLContentSink overrides
     virtual void MaybeStartLayout(bool aIgnorePendingSheets) override;
 
-    bool OnOpenContainer(const char16_t **aAtts, 
-                           uint32_t aAttsCount, 
-                           int32_t aNameSpaceID, 
+    bool OnOpenContainer(const char16_t **aAtts,
+                           uint32_t aAttsCount,
+                           int32_t aNameSpaceID,
                            nsIAtom* aTagName,
                            uint32_t aLineNumber) override;
 
@@ -91,13 +91,13 @@ protected:
                            mozilla::dom::NodeInfo* aNodeInfo, uint32_t aLineNumber,
                            nsIContent** aResult, bool* aAppendContent,
                            mozilla::dom::FromParser aFromParser) override;
-    
-    nsresult AddAttributes(const char16_t** aAtts, 
+
+    nsresult AddAttributes(const char16_t** aAtts,
                            nsIContent* aContent) override;
 
-#ifdef MOZ_XUL    
-    nsresult AddAttributesToXULPrototype(const char16_t **aAtts, 
-                                         uint32_t aAttsCount, 
+#ifdef MOZ_XUL
+    nsresult AddAttributesToXULPrototype(const char16_t **aAtts,
+                                         uint32_t aAttsCount,
                                          nsXULPrototypeElement* aElement);
 #endif
 
@@ -110,7 +110,7 @@ protected:
     void ConstructMethod(const char16_t **aAtts);
     void ConstructParameter(const char16_t **aAtts);
     void ConstructField(const char16_t **aAtts, uint32_t aLineNumber);
-  
+
 
   // nsXMLContentSink overrides
   nsresult FlushText(bool aReleaseTextNode = true) override;
@@ -126,7 +126,7 @@ protected:
 
   void AddMember(nsXBLProtoImplMember* aMember);
   void AddField(nsXBLProtoImplField* aField);
-  
+
   XBLPrimaryState mState;
   XBLSecondaryState mSecondaryState;
   nsXBLDocumentInfo* mDocInfo;

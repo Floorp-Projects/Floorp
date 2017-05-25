@@ -364,7 +364,7 @@ nsBindingManager::PostProcessAttachedQueueEvent()
 void
 nsBindingManager::PostPAQEventCallback(nsITimer* aTimer, void* aClosure)
 {
-  RefPtr<nsBindingManager> mgr = 
+  RefPtr<nsBindingManager> mgr =
     already_AddRefed<nsBindingManager>(static_cast<nsBindingManager*>(aClosure));
   mgr->PostProcessAttachedQueueEvent();
   NS_RELEASE(aTimer);

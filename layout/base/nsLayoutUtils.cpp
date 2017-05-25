@@ -9341,15 +9341,6 @@ nsLayoutUtils::ComputePartialPrerenderArea(const nsRect& aDirtyRect,
   return result.MoveInsideAndClamp(aOverflow);
 }
 
-
-/* static */ bool
-nsLayoutUtils::SupportsServoStyleBackend(nsIDocument* aDocument)
-{
-  return StyloEnabled() &&
-         (aDocument->IsHTMLOrXHTML() || aDocument->IsSVGDocument()) &&
-         static_cast<nsDocument*>(aDocument)->IsContentDocument();
-}
-
 static
 bool
 LineHasNonEmptyContentWorker(nsIFrame* aFrame)
