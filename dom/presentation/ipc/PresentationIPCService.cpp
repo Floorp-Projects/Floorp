@@ -35,7 +35,7 @@ NS_IMPL_ISUPPORTS(PresentationIPCService,
 PresentationIPCService::PresentationIPCService()
 {
   ContentChild* contentChild = ContentChild::GetSingleton();
-  if (NS_WARN_IF(!contentChild)) {
+  if (NS_WARN_IF(!contentChild || contentChild->IsShuttingDown())) {
     return;
   }
   sPresentationChild = new PresentationChild(this);
