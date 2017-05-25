@@ -83,7 +83,7 @@ TEST(cubeb, duplex)
   user_state_duplex stream_state = { false };
   uint32_t latency_frames = 0;
 
-  r = cubeb_init(&ctx, "Cubeb duplex example", NULL);
+  r = common_init(&ctx, "Cubeb duplex example");
   ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb library";
 
   std::unique_ptr<cubeb, decltype(&cubeb_destroy)>

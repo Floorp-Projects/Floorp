@@ -51,8 +51,9 @@ struct cubeb_ops {
   int (* get_preferred_sample_rate)(cubeb * context, uint32_t * rate);
   int (* get_preferred_channel_layout)(cubeb * context, cubeb_channel_layout * layout);
   int (* enumerate_devices)(cubeb * context, cubeb_device_type type,
-                            cubeb_device_collection ** collection);
-  int (* device_collection_destroy)(cubeb * context, cubeb_device_collection * collection);
+                            cubeb_device_collection * collection);
+  int (* device_collection_destroy)(cubeb * context,
+                                    cubeb_device_collection * collection);
   void (* destroy)(cubeb * context);
   int (* stream_init)(cubeb * context,
                       cubeb_stream ** stream,
