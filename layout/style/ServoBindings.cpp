@@ -1262,12 +1262,14 @@ Gecko_SetContentDataImageValue(nsStyleContentData* aContent,
   aContent->SetImageRequest(req.forget());
 }
 
-void
-Gecko_SetContentDataArray(nsStyleContentData* aContent,
-                          nsStyleContentType aType, uint32_t aLen)
+nsStyleContentData::CounterFunction*
+Gecko_SetCounterFunction(nsStyleContentData* aContent, nsStyleContentType aType)
 {
-  nsCSSValue::Array* arr = nsCSSValue::Array::Create(aLen);
-  aContent->SetCounters(aType, arr);
+  RefPtr<nsStyleContentData::CounterFunction>
+    counterFunc = new nsStyleContentData::CounterFunction();
+  nsStyleContentData::CounterFunction* ptr = counterFunc;
+  aContent->SetCounters(aType, counterFunc.forget());
+  return ptr;
 }
 
 nsStyleGradient*

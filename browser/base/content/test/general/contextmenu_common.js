@@ -48,8 +48,8 @@ function getVisibleMenuItems(aMenu, aData) {
         var isPageMenuItem = item.hasAttribute("generateditemid");
 
         if (item.nodeName == "menuitem") {
-            var isGenerated = item.className == "spell-suggestion"
-                              || item.className == "sendtab-target";
+            var isGenerated = item.classList.contains("spell-suggestion")
+                              || item.classList.contains("sendtab-target");
             if (isGenerated) {
               is(item.id, "", "child menuitem #" + i + " is generated");
             } else if (isPageMenuItem) {
