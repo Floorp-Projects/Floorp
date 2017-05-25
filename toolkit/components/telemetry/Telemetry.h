@@ -191,6 +191,7 @@ public:
     : start(aStart)
     , key(aKey)
   {
+    MOZ_ASSERT(!aKey.IsEmpty(), "The key must not be empty.");
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
 
