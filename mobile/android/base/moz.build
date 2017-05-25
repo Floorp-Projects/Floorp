@@ -461,6 +461,14 @@ gvjar.sources += [geckoview_thirdparty_source_dir + f for f in [
     'java/com/googlecode/eyesfree/braille/selfbraille/WriteData.java',
 ]]
 
+if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:
+    gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x for x in [
+        'media/GeckoAudioInfo.java',
+        'media/GeckoHlsSample.java',
+        'media/GeckoVideoInfo.java',
+    ]]
+
+
 gvjar.extra_jars += [
     CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
     CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
