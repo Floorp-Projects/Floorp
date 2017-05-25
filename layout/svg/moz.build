@@ -20,6 +20,7 @@ EXPORTS += [
     'nsSVGEffects.h',
     'nsSVGFilterInstance.h',
     'nsSVGForeignObjectFrame.h',
+    'nsSVGImageFrame.h',
     'nsSVGIntegrationUtils.h',
     'nsSVGUtils.h',
     'SVGImageContext.h',
