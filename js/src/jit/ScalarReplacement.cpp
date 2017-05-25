@@ -139,7 +139,7 @@ static inline bool
 IsOptimizableObjectInstruction(MInstruction* ins)
 {
     return ins->isNewObject() || ins->isCreateThisWithTemplate() || ins->isNewCallObject() ||
-           ins->isNewArrayIterator();
+           ins->isNewIterator();
 }
 
 // Returns False if the object is not escaped and if it is optimizable by
