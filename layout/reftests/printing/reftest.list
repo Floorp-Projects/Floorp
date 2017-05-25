@@ -23,7 +23,7 @@
 == 626395-2c.html 626395-2-ref.html
 == 626395-2d.html 626395-2-ref.html
 == 652178-1.html 652178-1-ref.html
-fails-if(styloVsGecko) == 115199-1.html 115199-1-ref.html
+fails-if(styloVsGecko||stylo) == 115199-1.html 115199-1-ref.html
 == 115199-2a.html 115199-2-ref.html
 == 115199-2b.html 115199-2-ref.html
 == 652178-1.html 652178-1-ref2.html
