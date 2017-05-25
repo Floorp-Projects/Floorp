@@ -947,6 +947,7 @@ private:
  *   SEEKING if any new seek request.
  *   SHUTDOWN if seek failed.
  *   COMPLETED if the new playback position is the end of the media resource.
+ *   NextFrameSeekingState if completing a NextFrameSeekingFromDormantState.
  *   DECODING otherwise.
  */
 class MediaDecoderStateMachine::SeekingState
