@@ -105,18 +105,12 @@ public:
   void BeginShutdown();
   void Shutdown();
 
-  void RecordStyleSheetChange(mozilla::ServoStyleSheet*, StyleSheet::ChangeType)
-  {
-    // TODO(emilio): Record which kind of changes have we handled, and act
-    // properly in InvalidateStyleForCSSRuleChanges instead of invalidating the
-    // whole document.
-    NoteStyleSheetsChanged();
-  }
+  void RecordStyleSheetChange(mozilla::ServoStyleSheet*, StyleSheet::ChangeType);
 
   void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot) {
     // FIXME(emilio): When we properly support shadow dom we'll need to do
     // better.
-    NoteStyleSheetsChanged();
+    ForceAllStyleDirty();
   }
 
   bool StyleSheetsHaveChanged() const
@@ -303,7 +297,7 @@ public:
    * restyle.  Calling this will ensure that the Stylist rebuilds its
    * selector maps.
    */
-  void NoteStyleSheetsChanged();
+  void ForceAllStyleDirty();
 
   /**
    * Helper for correctly calling RebuildStylist without paying the cost of an
