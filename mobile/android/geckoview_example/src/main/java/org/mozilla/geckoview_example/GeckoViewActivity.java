@@ -90,6 +90,11 @@ public class GeckoViewActivity extends Activity {
         public void onFullScreen(final GeckoView view, final boolean fullScreen) {
             getWindow().setFlags(fullScreen ? WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
                                  WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            if (fullScreen) {
+                getActionBar().hide();
+            } else {
+                getActionBar().show();
+            }
         }
     }
 
