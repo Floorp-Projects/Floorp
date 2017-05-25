@@ -4,13 +4,13 @@
 
 'use strict';
 
-add_task(function* () {
+add_task(async function () {
   // Create a11y service.
   let a11yInit = initPromise();
   let accService = Cc['@mozilla.org/accessibilityService;1'].getService(
     Ci.nsIAccessibilityService);
 
-  yield a11yInit;
+  await a11yInit;
   ok(accService, 'Service initialized');
 
   // Accessible document reference will live longer than the scope of this
@@ -33,7 +33,7 @@ add_task(function* () {
   // a reference to an accessible document.
   forceGC();
   // Have some breathing room when removing a11y service references.
-  yield new Promise(resolve => executeSoon(resolve));
+  await new Promise(resolve => executeSoon(resolve));
 
   // Now allow a11y service to shutdown.
   canShutdown = true;
@@ -43,5 +43,5 @@ add_task(function* () {
 
   // Force garbage collection that should now trigger shutdown.
   forceGC();
-  yield a11yShutdown;
+  await a11yShutdown;
 });

@@ -7,23 +7,23 @@
 /* import-globals-from ../../mochitest/role.js */
 loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
 
-function* setHidden(browser, value) {
+async function setHidden(browser, value) {
   let onReorder = waitForEvent(EVENT_REORDER, 'container');
-  yield invokeSetAttribute(browser, 'child', 'hidden', value);
-  yield onReorder;
+  await invokeSetAttribute(browser, 'child', 'hidden', value);
+  await onReorder;
 }
 
 addAccessibleTask('<div id="container"><input id="child"></div>',
-  function*(browser, accDoc) {
+  async function(browser, accDoc) {
     let container = findAccessibleChildByID(accDoc, 'container');
 
     testAccessibleTree(container, { SECTION: [ { ENTRY: [ ] } ] });
 
     // Set @hidden attribute
-    yield setHidden(browser, 'true');
+    await setHidden(browser, 'true');
     testAccessibleTree(container, { SECTION: [ ] });
 
     // Remove @hidden attribute
-    yield setHidden(browser);
+    await setHidden(browser);
     testAccessibleTree(container, { SECTION: [ { ENTRY: [ ] } ] });
   });

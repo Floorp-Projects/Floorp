@@ -125,12 +125,6 @@ parent:
 
   async PStunAddrsRequest();
 
-  /**
-   * Throttling of channels
-   */
-  async IncreaseThrottlePressure();
-  async DecreaseThrottlePressure();
-
   prio(high) async NotifyCurrentTopLevelOuterContentWindowId(uint64_t windowId);
 
 child:

@@ -107,7 +107,6 @@
 #include "HSTSPrimerListener.h"
 #include "CacheStorageService.h"
 #include "HttpChannelParent.h"
-#include "nsIThrottlingService.h"
 #include "nsIBufferedStreams.h"
 #include "nsIFileStreams.h"
 #include "nsIMIMEInputStream.h"
@@ -711,7 +710,7 @@ nsHttpChannel::ContinueConnect()
     while (suspendCount--)
         mTransactionPump->Suspend();
 
-    if (mSuspendCount && mClassOfService & nsIClassOfService::Throttleable) {
+    if (mClassOfService & nsIClassOfService::Throttleable) {
         gHttpHandler->ThrottleTransaction(mTransaction, true);
     }
 
@@ -6627,17 +6626,8 @@ nsHttpChannel::OnClassOfServiceUpdated()
 {
     bool throttleable = !!(mClassOfService & nsIClassOfService::Throttleable);
 
-    if (mSuspendCount && mTransaction) {
+    if (mTransaction) {
         gHttpHandler->ThrottleTransaction(mTransaction, throttleable);
-    }
-
-    nsIThrottlingService *throttler = gHttpHandler->GetThrottlingService();
-    if (throttler) {
-        if (throttleable) {
-            throttler->AddChannel(this);
-        } else {
-            throttler->RemoveChannel(this);
-        }
     }
 }
 

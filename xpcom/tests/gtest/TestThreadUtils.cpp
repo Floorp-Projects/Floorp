@@ -465,6 +465,116 @@ TEST(ThreadUtils, NamedRunnableMethod)
   }
 }
 
+class IdleObject final
+{
+public:
+  NS_INLINE_DECL_REFCOUNTING(IdleObject)
+  IdleObject()
+  {
+    for (uint32_t index = 0; index < ArrayLength(mRunnableExecuted); ++index) {
+      mRunnableExecuted[index] = false;
+    }
+  }
+  void SetDeadline(TimeStamp aTimeStamp)
+  {
+  }
+
+  void CheckExecutedMethods(const char* aKey, uint32_t aNumExecuted)
+  {
+    uint32_t index;
+    for (index = 0; index < aNumExecuted; ++index) {
+      ASSERT_TRUE(mRunnableExecuted[index]) << aKey << ": Method" << index << " should've executed";
+    }
+
+    for (; index < ArrayLength(mRunnableExecuted); ++index) {
+      ASSERT_FALSE(mRunnableExecuted[index]) << aKey << ": Method" << index << " shouldn't have executed";
+    }
+  }
+
+  void Method0()
+  {
+    CheckExecutedMethods("Method0", 0);
+    mRunnableExecuted[0] = true;
+  }
+
+  void Method1()
+  {
+    CheckExecutedMethods("Method1", 1);
+    mRunnableExecuted[1] = true;
+  }
+
+  void Method2()
+  {
+    CheckExecutedMethods("Method2", 2);
+    mRunnableExecuted[2] = true;
+    NS_DispatchToCurrentThread(NewRunnableMethod(this, &IdleObject::Method3));
+  }
+
+  void Method3()
+  {
+    CheckExecutedMethods("Method3", 3);
+
+    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    mTimer->InitWithFuncCallback(Method4, this, 10, nsITimer::TYPE_ONE_SHOT);
+    NS_IdleDispatchToCurrentThread(
+      NewIdleRunnableMethodWithTimer(this, &IdleObject::Method5), 50);
+    NS_IdleDispatchToCurrentThread(
+      NewRunnableMethod(this, &IdleObject::Method6), 100);
+
+    PR_Sleep(PR_MillisecondsToInterval(200));
+    mRunnableExecuted[3] = true;
+  }
+
+  static void Method4(nsITimer* aTimer, void* aClosure)
+  {
+    RefPtr<IdleObject> self = static_cast<IdleObject*>(aClosure);
+    self->CheckExecutedMethods("Method4", 4);
+    self->mRunnableExecuted[4] = true;
+  }
+
+  void Method5()
+  {
+    CheckExecutedMethods("Method5", 5);
+    mRunnableExecuted[5] = true;
+  }
+
+  void Method6()
+  {
+    CheckExecutedMethods("Method6", 6);
+    mRunnableExecuted[6] = true;
+  }
+
+  void Method7()
+  {
+    CheckExecutedMethods("Method7", 7);
+    mRunnableExecuted[7] = true;
+  }
+
+private:
+  nsCOMPtr<nsITimer> mTimer;
+  bool mRunnableExecuted[8];
+  ~IdleObject() {}
+};
+
+TEST(ThreadUtils, IdleRunnableMethod)
+{
+  {
+    RefPtr<IdleObject> idle = new IdleObject();
+
+    NS_DispatchToCurrentThread(NewRunnableMethod(idle, &IdleObject::Method0));
+    NS_IdleDispatchToCurrentThread(
+      NewIdleRunnableMethod(idle, &IdleObject::Method1));
+    NS_IdleDispatchToCurrentThread(
+      NewIdleRunnableMethodWithTimer(idle, &IdleObject::Method2), 60000);
+    NS_IdleDispatchToCurrentThread(
+      NewIdleRunnableMethod(idle, &IdleObject::Method7));
+    NS_IdleDispatchToCurrentThread(NewIdleRunnableMethod<const char*, uint32_t>(
+      idle, &IdleObject::CheckExecutedMethods, "final", 8));
+  }
+
+  NS_ProcessPendingEvents(nullptr);
+}
+
 // {9e70a320-be02-11d1-8031-006008159b5a}
 #define NS_IFOO_IID \
   {0x9e70a320, 0xbe02, 0x11d1,    \

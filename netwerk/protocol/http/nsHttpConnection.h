@@ -231,8 +231,6 @@ public:
     bool TestJoinConnection(const nsACString &hostname, int32_t port);
     bool JoinConnection(const nsACString &hostname, int32_t port);
 
-    void ThrottleResponse(bool aThrottle);
-
     void SetFastOpenStatus(uint8_t tfoStatus) {
         mFastOpenStatus = tfoStatus;
     }
@@ -395,13 +393,6 @@ private:
     bool                           mEarlyDataNegotiated; //Only used for telemetry
     nsCString                      mEarlyNegotiatedALPN;
     bool                           mDid0RTTSpdy;
-
-    // Reflects throttling request, effects if we resume read from the socket.
-    // Accessed only on the socket thread.
-    bool                           mResponseThrottled;
-    // A read from the socket was requested while we where throttled, means
-    // to ResumeRecv() when untrottled again. Only accessed on the socket thread.
-    bool                           mResumeRecvOnUnthrottle;
 
     bool                           mFastOpen;
     uint8_t                        mFastOpenStatus;

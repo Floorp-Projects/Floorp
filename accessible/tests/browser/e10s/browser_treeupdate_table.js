@@ -13,7 +13,7 @@ addAccessibleTask(`
       <td>cell1</td>
       <td>cell2</td>
     </tr>
-  </table>`, function*(browser, accDoc) {
+  </table>`, async function(browser, accDoc) {
   let table = findAccessibleChildByID(accDoc, 'table');
 
   let tree = {
@@ -27,7 +27,7 @@ addAccessibleTask(`
   testAccessibleTree(table, tree);
 
   let onReorder = waitForEvent(EVENT_REORDER, 'table');
-  yield ContentTask.spawn(browser, {}, () => {
+  await ContentTask.spawn(browser, {}, () => {
     // append a caption, it should appear as a first element in the
     // accessible tree.
     let doc = content.document;
@@ -35,7 +35,7 @@ addAccessibleTask(`
     caption.textContent = 'table caption';
     doc.getElementById('table').appendChild(caption);
   });
-  yield onReorder;
+  await onReorder;
 
   tree = {
     TABLE: [
