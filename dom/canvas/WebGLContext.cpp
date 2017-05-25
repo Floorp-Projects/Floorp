@@ -166,7 +166,6 @@ WebGLContext::WebGLContext()
     mDitherEnabled = 1;
     mRasterizerDiscardEnabled = 0; // OpenGL ES 3.0 spec p244
     mScissorTestEnabled = 0;
-    mDepthTestEnabled = 0;
     mStencilTestEnabled = 0;
 
     if (NS_IsMainThread()) {
