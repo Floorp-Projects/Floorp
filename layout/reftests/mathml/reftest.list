@@ -290,7 +290,7 @@ fails-if(Android) == mathvariant-1b.html mathvariant-1b-ref.html # Bug 1010679
 fails-if(Android) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679
 == mathvariant-1d.html mathvariant-1d-ref.html
 fails-if(Android||OSX) == mathvariant-2.html mathvariant-2-ref.html # Bugs 1010678, 1010679
-fails-if(styloVsGecko) == mathvariant-3.html mathvariant-3-ref.html
+== mathvariant-3.html mathvariant-3-ref.html
 == mathvariant-4.html mathvariant-4-ref.html
 == mathvariant-5.html mathvariant-5-ref.html
 == dtls-1.html dtls-1-ref.html
