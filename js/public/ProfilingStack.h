@@ -7,10 +7,14 @@
 #ifndef js_ProfilingStack_h
 #define js_ProfilingStack_h
 
+#include "mozilla/ArrayUtils.h"
+
+#include <algorithm>
+#include <stdint.h>
+
 #include "jsbytecode.h"
 #include "jstypes.h"
 #include "js/TypeDecls.h"
-
 #include "js/Utility.h"
 
 struct JSRuntime;
@@ -204,5 +208,65 @@ JS_FRIEND_API(void)
 RegisterContextProfilingEventMarker(JSContext* cx, void (*fn)(const char*));
 
 } // namespace js
+
+// The PseudoStack members are accessed in parallel by multiple threads: the
+// profiler's sampler thread reads these members while other threads modify
+// them.
+class PseudoStack
+{
+  public:
+    PseudoStack()
+      : stackPointer(0)
+    {}
+
+    ~PseudoStack() {
+        // The label macros keep a reference to the PseudoStack to avoid a TLS
+        // access. If these are somehow not all cleared we will get a
+        // use-after-free so better to crash now.
+        MOZ_RELEASE_ASSERT(stackPointer == 0);
+    }
+
+    void push(const char* label, js::ProfileEntry::Category category,
+              void* stackAddress, uint32_t line, const char* dynamicString) {
+        if (size_t(stackPointer) >= mozilla::ArrayLength(entries)) {
+            stackPointer++;
+            return;
+        }
+
+        volatile js::ProfileEntry& entry = entries[int(stackPointer)];
+
+        entry.initCppFrame(stackAddress, line);
+        entry.setLabel(label);
+        entry.setDynamicString(dynamicString);
+        MOZ_ASSERT(entry.flags() == js::ProfileEntry::IS_CPP_ENTRY);
+        entry.setCategory(category);
+
+        // This must happen at the end! The compiler will not reorder this
+        // update because stackPointer is Atomic.
+        stackPointer++;
+    }
+
+    void pop() { stackPointer--; }
+
+    uint32_t stackSize() const {
+        return std::min(uint32_t(stackPointer), uint32_t(mozilla::ArrayLength(entries)));
+    }
+
+    mozilla::Atomic<uint32_t>* AddressOfStackPointer() { return &stackPointer; }
+
+  private:
+    // No copying.
+    PseudoStack(const PseudoStack&) = delete;
+    void operator=(const PseudoStack&) = delete;
+
+  public:
+    // The stack entries.
+    js::ProfileEntry volatile entries[1024];
+
+  protected:
+    // This may exceed the length of |entries|, so instead use the stackSize()
+    // method to determine the number of valid samples in |entries|.
+    mozilla::Atomic<uint32_t> stackPointer;
+};
 
 #endif  /* js_ProfilingStack_h */
