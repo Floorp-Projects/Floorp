@@ -101,40 +101,6 @@ replace_malloc_init_funcs()
  * replacement functions if they exist.
  */
 
-/*
- * Malloc implementation functions are MOZ_MEMORY_API, and jemalloc
- * specific functions MOZ_JEMALLOC_API; see mozmemory_wrap.h
- */
-#define MACRO_CALL(a, b) a b
-/* Can't use macros recursively, so we need another one doing the same as above. */
-#define MACRO_CALL2(a, b) a b
-
-#define TYPED_ARGS(...) MACRO_CALL2( \
-  MOZ_PASTE_PREFIX_AND_ARG_COUNT(TYPED_ARGS, ##__VA_ARGS__), \
-  (__VA_ARGS__))
-#define TYPED_ARGS0()
-#define TYPED_ARGS1(t1) t1 arg1
-#define TYPED_ARGS2(t1, t2) TYPED_ARGS1(t1), t2 arg2
-#define TYPED_ARGS3(t1, t2, t3) TYPED_ARGS2(t1, t2), t3 arg3
-
-#define GENERIC_MALLOC_DECL_HELPER(name, return_type, ...) \
-  return_type name ## _impl(TYPED_ARGS(__VA_ARGS__));
-
-#define GENERIC_MALLOC_DECL(name, return_type, ...) \
-  GENERIC_MALLOC_DECL_HELPER(name, return_type, ##__VA_ARGS__)
-#define GENERIC_MALLOC_DECL_VOID(name, ...) \
-  GENERIC_MALLOC_DECL_HELPER(name, void, ##__VA_ARGS__)
-
-#define MALLOC_DECL(...) MOZ_MEMORY_API MACRO_CALL(GENERIC_MALLOC_DECL, (__VA_ARGS__))
-#define MALLOC_DECL_VOID(...) MOZ_MEMORY_API MACRO_CALL(GENERIC_MALLOC_DECL_VOID, (__VA_ARGS__))
-#define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
-#include "malloc_decls.h"
-
-#define MALLOC_DECL(...) MOZ_JEMALLOC_API MACRO_CALL(GENERIC_MALLOC_DECL, (__VA_ARGS__))
-#define MALLOC_DECL_VOID(...) MOZ_JEMALLOC_API MACRO_CALL(GENERIC_MALLOC_DECL_VOID, (__VA_ARGS__))
-#define MALLOC_FUNCS MALLOC_FUNCS_JEMALLOC
-#include "malloc_decls.h"
-
 static int replace_malloc_initialized = 0;
 static void
 init()
@@ -149,6 +115,54 @@ init()
     replace_init(&malloc_table);
 }
 
+/*
+ * Malloc implementation functions are MOZ_MEMORY_API, and jemalloc
+ * specific functions MOZ_JEMALLOC_API; see mozmemory_wrap.h
+ */
+#define MACRO_CALL(a, b) a b
+/* Can't use macros recursively, so we need another one doing the same as above. */
+#define MACRO_CALL2(a, b) a b
+
+#define ARGS_HELPER(name, ...) MACRO_CALL2( \
+  MOZ_PASTE_PREFIX_AND_ARG_COUNT(name, ##__VA_ARGS__), \
+  (__VA_ARGS__))
+#define TYPED_ARGS0()
+#define TYPED_ARGS1(t1) t1 arg1
+#define TYPED_ARGS2(t1, t2) TYPED_ARGS1(t1), t2 arg2
+#define TYPED_ARGS3(t1, t2, t3) TYPED_ARGS2(t1, t2), t3 arg3
+
+#define ARGS0()
+#define ARGS1(t1) arg1
+#define ARGS2(t1, t2) ARGS1(t1), arg2
+#define ARGS3(t1, t2, t3) ARGS2(t1, t2), arg3
+
+#define GENERIC_MALLOC_DECL_HELPER(name, return, return_type, ...) \
+  return_type name ## _impl(ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) \
+  { \
+    if (MOZ_UNLIKELY(!replace_malloc_initialized)) \
+      init(); \
+    if (MOZ_LIKELY(!replace_ ## name)) { \
+      return je_ ## name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
+    } else { \
+      return replace_ ## name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
+    } \
+  }
+
+#define GENERIC_MALLOC_DECL(name, return_type, ...) \
+  GENERIC_MALLOC_DECL_HELPER(name, return, return_type, ##__VA_ARGS__)
+#define GENERIC_MALLOC_DECL_VOID(name, ...) \
+  GENERIC_MALLOC_DECL_HELPER(name, , void, ##__VA_ARGS__)
+
+#define MALLOC_DECL(...) MOZ_MEMORY_API MACRO_CALL(GENERIC_MALLOC_DECL, (__VA_ARGS__))
+#define MALLOC_DECL_VOID(...) MOZ_MEMORY_API MACRO_CALL(GENERIC_MALLOC_DECL_VOID, (__VA_ARGS__))
+#define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
+#include "malloc_decls.h"
+
+#define MALLOC_DECL(...) MOZ_JEMALLOC_API MACRO_CALL(GENERIC_MALLOC_DECL, (__VA_ARGS__))
+#define MALLOC_DECL_VOID(...) MOZ_JEMALLOC_API MACRO_CALL(GENERIC_MALLOC_DECL_VOID, (__VA_ARGS__))
+#define MALLOC_FUNCS MALLOC_FUNCS_JEMALLOC
+#include "malloc_decls.h"
+
 MFBT_API struct ReplaceMallocBridge*
 get_bridge(void)
 {
@@ -157,151 +171,6 @@ get_bridge(void)
   if (MOZ_LIKELY(!replace_get_bridge))
     return NULL;
   return replace_get_bridge();
-}
-
-void*
-malloc_impl(size_t size)
-{
-  if (MOZ_UNLIKELY(!replace_malloc_initialized))
-    init();
-  if (MOZ_LIKELY(!replace_malloc))
-    return je_malloc(size);
-  return replace_malloc(size);
-}
-
-int
-posix_memalign_impl(void **memptr, size_t alignment, size_t size)
-{
-  if (MOZ_UNLIKELY(!replace_malloc_initialized))
-    init();
-  if (MOZ_LIKELY(!replace_posix_memalign))
-    return je_posix_memalign(memptr, alignment, size);
-  return replace_posix_memalign(memptr, alignment, size);
-}
-
-void*
-aligned_alloc_impl(size_t alignment, size_t size)
-{
-  if (MOZ_UNLIKELY(!replace_malloc_initialized))
-    init();
-  if (MOZ_LIKELY(!replace_aligned_alloc))
-    return je_aligned_alloc(alignment, size);
-  return replace_aligned_alloc(alignment, size);
-}
-
-void*
-calloc_impl(size_t num, size_t size)
-{
-  if (MOZ_UNLIKELY(!replace_malloc_initialized))
-    init();
-  if (MOZ_LIKELY(!replace_calloc))
-    return je_calloc(num, size);
-  return replace_calloc(num, size);
-}
-
-void*
-realloc_impl(void *ptr, size_t size)
-{
-  if (MOZ_UNLIKELY(!replace_malloc_initialized))
-    init();
-  if (MOZ_LIKELY(!replace_realloc))
-    return je_realloc(ptr, size);
-  return replace_realloc(ptr, size);
-}
-
-void
-free_impl(void *ptr)
-{
-  if (MOZ_UNLIKELY(!replace_malloc_initialized))
-    init();
-  if (MOZ_LIKELY(!replace_free))
-    je_free(ptr);
-  else
-    replace_free(ptr);
-}
-
-void*
-memalign_impl(size_t alignment, size_t size)
-{
-  if (MOZ_UNLIKELY(!replace_malloc_initialized))
-    init();
-  if (MOZ_LIKELY(!replace_memalign))
-    return je_memalign(alignment, size);
-  return replace_memalign(alignment, size);
-}
-
-void*
-valloc_impl(size_t size)
-{
-  if (MOZ_UNLIKELY(!replace_malloc_initialized))
-    init();
-  if (MOZ_LIKELY(!replace_valloc))
-    return je_valloc(size);
-  return replace_valloc(size);
-}
-
-size_t
-malloc_usable_size_impl(usable_ptr_t ptr)
-{
-  if (MOZ_UNLIKELY(!replace_malloc_initialized))
-    init();
-  if (MOZ_LIKELY(!replace_malloc_usable_size))
-    return je_malloc_usable_size(ptr);
-  return replace_malloc_usable_size(ptr);
-}
-
-size_t
-malloc_good_size_impl(size_t size)
-{
-  if (MOZ_UNLIKELY(!replace_malloc_initialized))
-    init();
-  if (MOZ_LIKELY(!replace_malloc_good_size))
-    return je_malloc_good_size(size);
-  return replace_malloc_good_size(size);
-}
-
-void
-jemalloc_stats_impl(jemalloc_stats_t *stats)
-{
-  if (MOZ_UNLIKELY(!replace_malloc_initialized))
-    init();
-  if (MOZ_LIKELY(!replace_jemalloc_stats))
-    je_jemalloc_stats(stats);
-  else
-    replace_jemalloc_stats(stats);
-}
-
-void
-jemalloc_purge_freed_pages_impl()
-{
-  if (MOZ_UNLIKELY(!replace_malloc_initialized))
-    init();
-  if (MOZ_LIKELY(!replace_jemalloc_purge_freed_pages))
-    je_jemalloc_purge_freed_pages();
-  else
-    replace_jemalloc_purge_freed_pages();
-}
-
-void
-jemalloc_free_dirty_pages_impl()
-{
-  if (MOZ_UNLIKELY(!replace_malloc_initialized))
-    init();
-  if (MOZ_LIKELY(!replace_jemalloc_free_dirty_pages))
-    je_jemalloc_free_dirty_pages();
-  else
-    replace_jemalloc_free_dirty_pages();
-}
-
-void
-jemalloc_thread_local_arena_impl(jemalloc_bool enabled)
-{
-  if (MOZ_UNLIKELY(!replace_malloc_initialized))
-    init();
-  if (MOZ_LIKELY(!replace_jemalloc_thread_local_arena))
-    je_jemalloc_thread_local_arena(enabled);
-  else
-    replace_jemalloc_thread_local_arena(enabled);
 }
 
 /* The following comment and definitions are from jemalloc.c: */
