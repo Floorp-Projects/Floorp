@@ -771,8 +771,6 @@ struct JSCompartment
 
     void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
 
-    MOZ_MUST_USE bool findDeadProxyZoneEdges(bool* foundAny);
-
     js::DtoaCache dtoaCache;
     js::NewProxyCache newProxyCache;
 
