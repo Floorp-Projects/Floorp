@@ -262,7 +262,7 @@ linux64-asan-fuzzing/opt:
         job-name: linux64-fuzzing-asan-opt
     treeherder:
         platform: linux64/asan
-        symbol: tc(Bo)
+        symbol: tc(Bof)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         implementation: docker-worker
