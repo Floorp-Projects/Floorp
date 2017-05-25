@@ -1615,27 +1615,45 @@ const fontStretchType = {
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
-      var animation = target.animate({ [idlName]:
-                                         ['ultra-condensed',
-					  'extra-condensed'] },
-                                     { duration: 1000, fill: 'both' });
-	testAnimationSamples(
-          animation, idlName,
-          [{ time: 499,  expected: 'ultra-condensed' },
-           { time: 500,  expected: 'extra-condensed' }]);
+      var animation =
+        target.animate({ [idlName]: ['ultra-condensed', 'extra-condensed'] },
+                       { duration: 1000, fill: 'both' });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 499,  expected: 'ultra-condensed' },
+                            { time: 500,  expected: 'extra-condensed' }]);
     }, property + ' supports animating as a font-stretch (adjacent values)');
 
     test(function(t) {
       var idlName = propertyToIDL(property);
       var target = createTestElement(t, setup);
-      var animation = target.animate({ [idlName]:
-                                         ['ultra-condensed',
-					  'condensed'] },
-                                     { duration: 1000, fill: 'both' });
-	testAnimationSamples(
-          animation, idlName,
-          [{ time: 500,  expected: 'extra-condensed' }]);
+      var animation =
+        target.animate({ [idlName]: ['ultra-condensed', 'condensed'] },
+                       { duration: 1000, fill: 'both' });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 500,  expected: 'extra-condensed' }]);
     }, property + ' supports animating as a font-stretch (between value)');
+  },
+
+  testAdditionOrAccumulation: function(property, setup, composite) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = 'condensed';
+      var animation =
+        target.animate({ [idlName]: ['expanded', 'ultra-expanded'] },
+                       { duration: 1000, composite: composite });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 0, expected: 'normal' },
+                            { time: 250, expected: 'semi-expanded' }]);
+    }, property + ' uses font-stretch behavior for composite type ' + composite);
+  },
+
+  testAddition: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'add');
+  },
+
+  testAccumulation: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'accumulate');
   },
 }
 

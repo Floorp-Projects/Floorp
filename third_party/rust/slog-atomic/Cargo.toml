@@ -1,0 +1,25 @@
+[package]
+name = "slog-atomic"
+version = "0.4.3"
+authors = ["Dawid Ciężarkiewicz <dpc@dpc.pw>"]
+description = "Atomic run-time controllable drain for slog-rs"
+keywords = ["slog", "logging", "log",  "atomic"]
+license = "MPL-2.0"
+documentation = "https://docs.rs/slog-atomic"
+homepage = "https://github.com/slog-rs/slog"
+repository = "https://github.com/slog-rs/atomic"
+readme = "README.md"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+slog = "1"
+crossbeam = "0.2.9"
+
+[dev-dependencies]
+lazy_static = "0.1.16"
+nix = "0.6.0"
+slog-term = "1"
+slog-json = "1"
+slog-stream = "1"

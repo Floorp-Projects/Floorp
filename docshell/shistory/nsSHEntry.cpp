@@ -975,11 +975,19 @@ nsSHEntry::SetLastTouched(uint32_t aLastTouched)
 }
 
 NS_IMETHODIMP
+nsSHEntry::GetSHistory(nsISHistory** aSHistory)
+{
+  nsCOMPtr<nsISHistory> shistory(do_QueryReferent(mShared->mSHistory));
+  shistory.forget(aSHistory);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSHEntry::SetSHistory(nsISHistory* aSHistory)
 {
   nsWeakPtr shistory = do_GetWeakReference(aSHistory);
   // mSHistory can not be changed once it's set
-  MOZ_DIAGNOSTIC_ASSERT(!mShared->mSHistory || (mShared->mSHistory == shistory));
+  MOZ_ASSERT(!mShared->mSHistory || (mShared->mSHistory == shistory));
   mShared->mSHistory = shistory;
   return NS_OK;
 }

@@ -27,6 +27,7 @@ namespace mozilla {
 
 class CSSStyleSheet;
 class ServoStyleSheet;
+class StyleSetHandle;
 struct StyleSheetInfo;
 struct CSSStyleSheetInner;
 
@@ -60,6 +61,21 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(StyleSheet,
                                                          nsIDOMCSSStyleSheet)
+
+  /**
+   * The different changes that a stylesheet may go through.
+   *
+   * Used by the StyleSets in order to handle more efficiently some kinds of
+   * changes.
+   */
+  enum class ChangeType {
+    Added,
+    Removed,
+    ApplicableStateChanged,
+    RuleAdded,
+    RuleRemoved,
+    RuleChanged,
+  };
 
   void SetOwningNode(nsINode* aOwningNode)
   {
@@ -118,7 +134,12 @@ public:
                                              nsIDocument* aCloneDocument,
                                              nsINode* aCloneOwningNode) const = 0;
 
-  virtual bool IsModified() const = 0;
+  bool IsModified() const { return mDirty; }
+
+  void EnsureUniqueInner();
+
+  // Append all of this sheet's child sheets to aArray.
+  void AppendAllChildSheets(nsTArray<StyleSheet*>& aArray);
 
   // style sheet owner info
   enum DocumentAssociationMode {
@@ -213,8 +234,11 @@ public:
   // Changes to sheets should be inside of a WillDirty-DidDirty pair.
   // However, the calls do not need to be matched; it's ok to call
   // WillDirty and then make no change and skip the DidDirty call.
-  inline void WillDirty();
-  inline void DidDirty();
+  void WillDirty();
+  virtual void DidDirty() {}
+
+  void AddStyleSet(const StyleSetHandle& aStyleSet);
+  void DropStyleSet(const StyleSetHandle& aStyleSet);
 
   nsresult DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex);
   nsresult InsertRuleIntoGroup(const nsAString& aRule,
@@ -264,6 +288,9 @@ protected:
   // Traverse our inner, if needed, for cycle collection
   virtual void TraverseInner(nsCycleCollectionTraversalCallback &);
 
+  void ClearRuleCascades();
+  virtual void ClearRuleCascadesInternal() {}
+
   StyleSheet*           mParent;    // weak ref
 
   nsString              mTitle;
@@ -290,6 +317,10 @@ protected:
   // Core information we get from parsed sheets, which are shared amongst
   // StyleSheet clones.
   StyleSheetInfo* mInner;
+
+  bool mDirty; // has been modified
+
+  nsTArray<StyleSetHandle> mStyleSets;
 
   friend class ::nsCSSRuleProcessor;
 

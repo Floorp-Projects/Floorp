@@ -5,8 +5,8 @@
 random == enveloped-tree-1.xhtml enveloped-tree-1-ref.xhtml  # bug 470868
 fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,3) fuzzy-if(skiaContent,1,810) == promoted-tree-1.xhtml promoted-tree-1-ref.xhtml
 random == moved-tree-1.xhtml moved-tree-1-ref.xhtml  # bug 470868
-random-if(cocoaWidget||d2d) fails-if(stylo) == deferred-anim-1.xhtml deferred-anim-1-ref.xhtml # bug 470868, bug 585484
-random-if(cocoaWidget&&layersGPUAccelerated) fails-if(stylo) == deferred-tree-1.xhtml deferred-tree-1-ref.xhtml # bug 470868
+random-if(cocoaWidget||d2d) fails-if(styloVsGecko) == deferred-anim-1.xhtml deferred-anim-1-ref.xhtml # bug 470868, bug 585484
+random-if(cocoaWidget&&layersGPUAccelerated) fails-if(styloVsGecko) == deferred-tree-1.xhtml deferred-tree-1-ref.xhtml # bug 470868
 random-if(cocoaWidget&&layersGPUAccelerated) fuzzy-if(skiaContent,1,530) == deferred-tree-2a.xhtml deferred-tree-2-ref.xhtml # bug 470868
 random-if(cocoaWidget&&layersGPUAccelerated) fuzzy-if(skiaContent,1,530) == deferred-tree-2b.xhtml deferred-tree-2-ref.xhtml # bug 470868
 fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,16) fuzzy-if(skiaContent,1,410) == deferred-tree-3a.xhtml deferred-tree-3-ref.xhtml

@@ -1,0 +1,21 @@
+[package]
+name = "slog-term"
+version = "1.5.0"
+authors = ["Dawid Ciężarkiewicz <dpc@dpc.pw>"]
+description = "Unix terminal drain and formatter for slog-rs"
+keywords = ["slog", "logging", "log", "term"]
+license = "MPL-2.0"
+documentation = "https://docs.rs/slog-term"
+homepage = "https://github.com/slog-rs/slog"
+repository = "https://github.com/slog-rs/term"
+readme = "README.md"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+slog = "1.5.0"
+slog-stream = "1.2"
+isatty = "0.1"
+chrono = "0.2"
+thread_local = "0.3"

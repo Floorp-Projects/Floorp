@@ -29,3 +29,6 @@ slog-stream = "1"
 uuid = "0.1.18"
 webdriver = "0.25"
 zip = "0.1"
+
+[[bin]]
+name = "geckodriver"

@@ -21,6 +21,8 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionChildDevToolsUtils",
+                                  "resource://gre/modules/ExtensionChildDevToolsUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
                                   "resource://gre/modules/ExtensionManagement.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
@@ -264,6 +266,8 @@ class DevToolsContextChild extends ExtensionBaseContextChild {
     super(extension, Object.assign(params, {envType: "devtools_child"}));
 
     this.devtoolsToolboxInfo = params.devtoolsToolboxInfo;
+    ExtensionChildDevToolsUtils.initThemeChangeObserver(
+      params.devtoolsToolboxInfo.themeName, this);
 
     this.extension.devtoolsViews.add(this);
   }

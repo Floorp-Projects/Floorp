@@ -16,4 +16,4 @@ fuzzy-if(Android,8,454) == mq_print_maxheight.xhtml mq_print-ref.xhtml
 == mq_print_minwidth_updown.xhtml mq_print-ref.xhtml
 
 == scoped-mq-update.html scoped-mq-update-ref.html
-fails-if(stylo) == system-metrics-1.html system-metrics-1-ref.html
+fails-if(styloVsGecko) == system-metrics-1.html system-metrics-1-ref.html

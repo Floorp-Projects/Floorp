@@ -1,0 +1,22 @@
+[package]
+
+name = "zip"
+version = "0.1.19"
+authors = ["Mathijs van de Nes <git@mathijs.vd-nes.nl>"]
+license = "MIT"
+repository = "https://github.com/mvdnes/zip-rs.git"
+documentation = "http://mvdnes.github.io/rust-docs/zip-rs/zip/index.html"
+keywords = ["zip", "archive"]
+description = """
+Library to support the reading and writing of zip files.
+"""
+
+[dependencies]
+flate2 = "0.2"
+time = "0.1"
+podio = "0.1"
+msdos_time = "0.1"
+bzip2 = { version = "0.3", optional = true }
+
+[features]
+default = ["bzip2"]

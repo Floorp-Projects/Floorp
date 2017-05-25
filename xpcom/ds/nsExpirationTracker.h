@@ -147,8 +147,8 @@ public:
   nsresult AddObjectLocked(T* aObj, const AutoLock& aAutoLock)
   {
     nsExpirationState* state = aObj->GetExpirationState();
-    MOZ_DIAGNOSTIC_ASSERT(!state->IsTracked(),
-                          "Tried to add an object that's already tracked");
+    MOZ_ASSERT(!state->IsTracked(),
+               "Tried to add an object that's already tracked");
     nsTArray<T*>& generation = mGenerations[mNewestGeneration];
     uint32_t index = generation.Length();
     if (index > nsExpirationState::MAX_INDEX_IN_GENERATION) {
@@ -176,18 +176,18 @@ public:
   void RemoveObjectLocked(T* aObj, const AutoLock& aAutoLock)
   {
     nsExpirationState* state = aObj->GetExpirationState();
-    MOZ_DIAGNOSTIC_ASSERT(state->IsTracked(), "Tried to remove an object that's not tracked");
+    MOZ_ASSERT(state->IsTracked(), "Tried to remove an object that's not tracked");
     nsTArray<T*>& generation = mGenerations[state->mGeneration];
     uint32_t index = state->mIndexInGeneration;
-    MOZ_DIAGNOSTIC_ASSERT(generation.Length() > index &&
-                          generation[index] == aObj, "Object is lying about its index");
+    MOZ_ASSERT(generation.Length() > index &&
+               generation[index] == aObj, "Object is lying about its index");
     // Move the last object to fill the hole created by removing aObj
     uint32_t last = generation.Length() - 1;
     T* lastObj = generation[last];
     generation[index] = lastObj;
     lastObj->GetExpirationState()->mIndexInGeneration = index;
     generation.RemoveElementAt(last);
-    MOZ_DIAGNOSTIC_ASSERT(generation.Length() == last);
+    MOZ_ASSERT(generation.Length() == last);
     state->mGeneration = nsExpirationState::NOT_TRACKED;
     // We do not check whether we need to stop the timer here. The timer
     // will check that itself next time it fires. Checking here would not

@@ -97,7 +97,7 @@ CompositorAnimationStorage::SetAnimations(uint64_t aId, const AnimationArray& aV
 }
 
 static StyleAnimationValue
-SampleValue(float aPortion, const layers::Animation& aAnimation,
+SampleValue(double aPortion, const layers::Animation& aAnimation,
             const StyleAnimationValueCompositePair& aStart,
             const StyleAnimationValueCompositePair& aEnd,
             const StyleAnimationValue& aLastValue,

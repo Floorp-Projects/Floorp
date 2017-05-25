@@ -1,0 +1,12 @@
+[package]
+
+name = "podio"
+version = "0.1.5"
+authors = ["Mathijs van de Nes <git@mathijs.vd-nes.nl>"]
+license = "MIT OR Apache-2.0"
+keywords = ["byte", "byteorder", "io"]
+repository = "https://github.com/mvdnes/podio.git"
+documentation = "http://mvdnes.github.io/rust-docs/podio/podio/index.html"
+description = """
+Additional trait for Read and Write to read and write Plain Old Data
+"""
