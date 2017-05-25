@@ -90,7 +90,7 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
 
       // Array intrinsics.
       case InlinableNative::IntrinsicNewArrayIterator:
-        return inlineNewArrayIterator(callInfo);
+        return inlineNewIterator(callInfo, MNewIterator::ArrayIterator);
 
       // Atomic natives.
       case InlinableNative::AtomicsCompareExchange:
@@ -897,24 +897,30 @@ IonBuilder::inlineArraySlice(CallInfo& callInfo)
 }
 
 IonBuilder::InliningResult
-IonBuilder::inlineNewArrayIterator(CallInfo& callInfo)
+IonBuilder::inlineNewIterator(CallInfo& callInfo, MNewIterator::Type type)
 {
     if (callInfo.argc() != 0 || callInfo.constructing()) {
         trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
         return InliningStatus_NotInlined;
     }
 
-    JSObject* templateObject = inspector->getTemplateObjectForNative(pc, js::intrinsic_NewArrayIterator);
+    JSObject* templateObject = nullptr;
+    switch (type) {
+      case MNewIterator::ArrayIterator:
+        templateObject = inspector->getTemplateObjectForNative(pc, js::intrinsic_NewArrayIterator);
+        MOZ_ASSERT_IF(templateObject, templateObject->is<ArrayIteratorObject>());
+        break;
+    }
+
     if (!templateObject)
         return InliningStatus_NotInlined;
-    MOZ_ASSERT(templateObject->is<ArrayIteratorObject>());
 
     callInfo.setImplicitlyUsedUnchecked();
 
     MConstant* templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
     current->add(templateConst);
 
-    MNewArrayIterator* ins = MNewArrayIterator::New(alloc(), constraints(), templateConst);
+    MNewIterator* ins = MNewIterator::New(alloc(), constraints(), templateConst, type);
     current->add(ins);
     current->push(ins);
 

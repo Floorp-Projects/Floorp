@@ -5654,15 +5654,22 @@ static const VMFunction NewArrayIteratorObjectInfo =
     FunctionInfo<NewArrayIteratorObjectFn>(NewArrayIteratorObject, "NewArrayIteratorObject");
 
 void
-CodeGenerator::visitNewArrayIterator(LNewArrayIterator* lir)
+CodeGenerator::visitNewIterator(LNewIterator* lir)
 {
     Register objReg = ToRegister(lir->output());
     Register tempReg = ToRegister(lir->temp());
     JSObject* templateObject = lir->mir()->templateObject();
 
-    OutOfLineCode* ool = oolCallVM(NewArrayIteratorObjectInfo, lir,
-                                   ArgList(Imm32(GenericObject)),
-                                   StoreRegisterTo(objReg));
+    OutOfLineCode* ool;
+    switch (lir->mir()->type()) {
+      case MNewIterator::ArrayIterator:
+        ool = oolCallVM(NewArrayIteratorObjectInfo, lir,
+                        ArgList(Imm32(GenericObject)),
+                        StoreRegisterTo(objReg));
+        break;
+      default:
+          MOZ_CRASH("unexpected iterator type");
+    }
 
     masm.createGCObject(objReg, tempReg, templateObject, gc::DefaultHeap, ool->entry());
 
