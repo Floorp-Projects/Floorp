@@ -11,6 +11,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.util.Collection;
@@ -67,19 +68,21 @@ public class Browsers {
     // installed then higher priority one will be stored here
     private ActivityInfo firefoxBrandedBrowser;
 
-    public Browsers(Context context, String url) {
+    public Browsers(Context context, @NonNull String url) {
         final PackageManager packageManager = context.getPackageManager();
 
-        final Map<String, ActivityInfo> browsers = resolveBrowsers(packageManager, url);
+        final Uri uri = Uri.parse(url);
+
+        final Map<String, ActivityInfo> browsers = resolveBrowsers(packageManager, uri);
 
         // If there's a default browser set then modern Android systems won't return other browsers
         // anymore when using queryIntentActivities(). That's annoying and our only option is
         // to go through a list of known browsers and see if anyone of them is installed and
         // wants to handle our URL.
-        findKnownBrowsers(packageManager, browsers, url);
+        findKnownBrowsers(packageManager, browsers, uri);
 
         this.browsers = browsers;
-        this.defaultBrowser = findDefault(packageManager, url);
+        this.defaultBrowser = findDefault(packageManager, uri);
         this.firefoxBrandedBrowser = findFirefoxBrandedBrowser();
     }
 
@@ -96,11 +99,11 @@ public class Browsers {
         return null;
     }
 
-    private Map<String, ActivityInfo> resolveBrowsers(PackageManager packageManager, String url) {
+    private Map<String, ActivityInfo> resolveBrowsers(PackageManager packageManager, @NonNull Uri uri) {
         final Map<String, ActivityInfo> browsers = new HashMap<>();
 
         final Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(Uri.parse(url));
+        intent.setData(uri);
 
         final List<ResolveInfo> infos = packageManager.queryIntentActivities(intent, 0);
 
@@ -111,14 +114,14 @@ public class Browsers {
         return browsers;
     }
 
-    private void findKnownBrowsers(PackageManager packageManager, Map<String, ActivityInfo> browsers, String url) {
+    private void findKnownBrowsers(PackageManager packageManager, Map<String, ActivityInfo> browsers, @NonNull Uri uri) {
         for (KnownBrowser browser : KnownBrowser.values()) {
             if (browsers.containsKey(browser.packageName)) {
                 continue;
             }
 
             final Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(url));
+            intent.setData(uri);
             intent.setPackage(browser.packageName);
 
             final ResolveInfo info = packageManager.resolveActivity(intent, 0);
@@ -134,8 +137,8 @@ public class Browsers {
         }
     }
 
-    private ActivityInfo findDefault(PackageManager packageManager, String url) {
-        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+    private ActivityInfo findDefault(PackageManager packageManager, @NonNull Uri uri) {
+        final Intent intent = new Intent(Intent.ACTION_VIEW, uri);
 
         final ResolveInfo resolveInfo = packageManager.resolveActivity(intent, 0);
         if (resolveInfo == null || resolveInfo.activityInfo == null) {
