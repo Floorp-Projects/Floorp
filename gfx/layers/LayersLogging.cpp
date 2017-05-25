@@ -70,6 +70,17 @@ AppendToString(std::stringstream& aStream, const nsRect& r,
 }
 
 void
+AppendToString(std::stringstream& aStream, const WrRect& r,
+               const char* pfx, const char* sfx)
+{
+  aStream << pfx;
+  aStream << nsPrintfCString(
+    "(x=%f, y=%f, w=%f, h=%f)",
+    r.x, r.y, r.width, r.height).get();
+  aStream << sfx;
+}
+
+void
 AppendToString(std::stringstream& aStream, const nsRegion& r,
                const char* pfx, const char* sfx)
 {
