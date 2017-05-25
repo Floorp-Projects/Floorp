@@ -21,20 +21,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
     }
 
     @Override
-    public void enableOrientationListener() {}
-
-    @Override
-    public void disableOrientationListener() {}
-
-    // Bug 908786: Implement this
-    @Override
-    public void addAppStateListener(GeckoAppShell.AppStateListener listener) {}
-
-    // Bug 908787: Implement this
-    @Override
-    public void removeAppStateListener(GeckoAppShell.AppStateListener listener) {}
-
-    @Override
     public boolean openUriExternal(String targetURI, String mimeType, String packageName, String className, String action, String title) {
         // By default, never open external URIs.
         return false;
