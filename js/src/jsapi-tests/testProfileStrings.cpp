@@ -13,15 +13,13 @@
 
 #include "jsapi-tests/tests.h"
 
-static js::ProfileEntry pstack[10];
-static mozilla::Atomic<uint32_t> psize;
-static uint32_t max_stack = 0;
+static PseudoStack pseudoStack;
+static uint32_t peakStackPointer = 0;
 
 static void
 reset(JSContext* cx)
 {
-    psize = max_stack = 0;
-    memset(pstack, 0, sizeof(pstack));
+    pseudoStack.stackPointer = 0;
     cx->runtime()->geckoProfiler().stringsReset();
     cx->runtime()->geckoProfiler().enableSlowAssertions(true);
     js::EnableContextProfilingStack(cx, true);
@@ -34,7 +32,7 @@ static const JSClass ptestClass = {
 static bool
 test_fn(JSContext* cx, unsigned argc, JS::Value* vp)
 {
-    max_stack = psize;
+    peakStackPointer = pseudoStack.stackPointer;
     return true;
 }
 
@@ -82,7 +80,7 @@ static const JSFunctionSpec ptestFunctions[] = {
 static JSObject*
 initialize(JSContext* cx)
 {
-    js::SetContextProfilingStack(cx, pstack, &psize, 10);
+    js::SetContextProfilingStack(cx, &pseudoStack);
     JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
     return JS_InitClass(cx, global, nullptr, &ptestClass, Prof, 0,
                         nullptr, ptestFunctions, nullptr, nullptr);
@@ -108,15 +106,15 @@ BEGIN_TEST(testProfileStrings_isCalledWithInterpreter)
         /* Make sure the stack resets and we have an entry for each stack */
         CHECK(JS_CallFunctionName(cx, global, "check", JS::HandleValueArray::empty(),
                                   &rval));
-        CHECK(psize == 0);
-        CHECK(max_stack >= 8);
+        CHECK(pseudoStack.stackPointer == 0);
+        CHECK(peakStackPointer >= 8);
         CHECK(cx->runtime()->geckoProfiler().stringsCount() == 8);
         /* Make sure the stack resets and we added no new entries */
-        max_stack = 0;
+        peakStackPointer = 0;
         CHECK(JS_CallFunctionName(cx, global, "check", JS::HandleValueArray::empty(),
                                   &rval));
-        CHECK(psize == 0);
-        CHECK(max_stack >= 8);
+        CHECK(pseudoStack.stackPointer == 0);
+        CHECK(peakStackPointer >= 8);
         CHECK(cx->runtime()->geckoProfiler().stringsCount() == 8);
     }
     reset(cx);
@@ -125,20 +123,8 @@ BEGIN_TEST(testProfileStrings_isCalledWithInterpreter)
         CHECK(JS_CallFunctionName(cx, global, "check2", JS::HandleValueArray::empty(),
                                   &rval));
         CHECK(cx->runtime()->geckoProfiler().stringsCount() == 5);
-        CHECK(max_stack >= 6);
-        CHECK(psize == 0);
-    }
-    js::EnableContextProfilingStack(cx, false);
-    js::SetContextProfilingStack(cx, pstack, &psize, 3);
-    reset(cx);
-    {
-        JS::RootedValue rval(cx);
-        pstack[3].setLabel((char*) 1234);
-        CHECK(JS_CallFunctionName(cx, global, "check", JS::HandleValueArray::empty(),
-                                  &rval));
-        CHECK((size_t) pstack[3].label() == 1234);
-        CHECK(max_stack >= 8);
-        CHECK(psize == 0);
+        CHECK(peakStackPointer >= 6);
+        CHECK(pseudoStack.stackPointer == 0);
     }
     return true;
 }
@@ -166,32 +152,19 @@ BEGIN_TEST(testProfileStrings_isCalledWithJIT)
         /* Make sure the stack resets and we have an entry for each stack */
         CHECK(JS_CallFunctionName(cx, global, "check", JS::HandleValueArray::empty(),
                                   &rval));
-        CHECK(psize == 0);
-        CHECK(max_stack >= 8);
+        CHECK(pseudoStack.stackPointer == 0);
+        CHECK(peakStackPointer >= 8);
 
         /* Make sure the stack resets and we added no new entries */
         uint32_t cnt = cx->runtime()->geckoProfiler().stringsCount();
-        max_stack = 0;
+        peakStackPointer = 0;
         CHECK(JS_CallFunctionName(cx, global, "check", JS::HandleValueArray::empty(),
                                   &rval));
-        CHECK(psize == 0);
+        CHECK(pseudoStack.stackPointer == 0);
         CHECK(cx->runtime()->geckoProfiler().stringsCount() == cnt);
-        CHECK(max_stack >= 8);
+        CHECK(peakStackPointer >= 8);
     }
 
-    js::EnableContextProfilingStack(cx, false);
-    js::SetContextProfilingStack(cx, pstack, &psize, 3);
-    reset(cx);
-    {
-        /* Limit the size of the stack and make sure we don't overflow */
-        JS::RootedValue rval(cx);
-        pstack[3].setLabel((char*) 1234);
-        CHECK(JS_CallFunctionName(cx, global, "check", JS::HandleValueArray::empty(),
-                                  &rval));
-        CHECK(psize == 0);
-        CHECK(max_stack >= 8);
-        CHECK((size_t) pstack[3].label() == 1234);
-    }
     return true;
 }
 END_TEST(testProfileStrings_isCalledWithJIT)
@@ -211,11 +184,12 @@ BEGIN_TEST(testProfileStrings_isCalledWhenError)
         bool ok = JS_CallFunctionName(cx, global, "check2", JS::HandleValueArray::empty(),
                                       &rval);
         CHECK(!ok);
-        CHECK(psize == 0);
+        CHECK(pseudoStack.stackPointer == 0);
         CHECK(cx->runtime()->geckoProfiler().stringsCount() == 1);
 
         JS_ClearPendingException(cx);
     }
+
     return true;
 }
 END_TEST(testProfileStrings_isCalledWhenError)
@@ -234,8 +208,8 @@ BEGIN_TEST(testProfileStrings_worksWhenEnabledOnTheFly)
         /* enable it in the middle of JS and make sure things check out */
         JS::RootedValue rval(cx);
         JS_CallFunctionName(cx, global, "a", JS::HandleValueArray::empty(), &rval);
-        CHECK(psize == 0);
-        CHECK(max_stack >= 1);
+        CHECK(pseudoStack.stackPointer == 0);
+        CHECK(peakStackPointer >= 1);
         CHECK(cx->runtime()->geckoProfiler().stringsCount() == 1);
     }
 
@@ -246,7 +220,7 @@ BEGIN_TEST(testProfileStrings_worksWhenEnabledOnTheFly)
         /* now disable in the middle of js */
         JS::RootedValue rval(cx);
         JS_CallFunctionName(cx, global, "c", JS::HandleValueArray::empty(), &rval);
-        CHECK(psize == 0);
+        CHECK(pseudoStack.stackPointer == 0);
     }
 
     EXEC("function e() { var p = new Prof(); d(p); p.enable(); b(p); }");
@@ -255,8 +229,8 @@ BEGIN_TEST(testProfileStrings_worksWhenEnabledOnTheFly)
         /* now disable in the middle of js, but re-enable before final exit */
         JS::RootedValue rval(cx);
         JS_CallFunctionName(cx, global, "e", JS::HandleValueArray::empty(), &rval);
-        CHECK(psize == 0);
-        CHECK(max_stack >= 3);
+        CHECK(pseudoStack.stackPointer == 0);
+        CHECK(peakStackPointer >= 3);
     }
 
     EXEC("function h() { }");
@@ -269,7 +243,7 @@ BEGIN_TEST(testProfileStrings_worksWhenEnabledOnTheFly)
         /* disable, and make sure that if we try to re-enter the JIT the pop
          * will still happen */
         JS_CallFunctionName(cx, global, "f", JS::HandleValueArray::empty(), &rval);
-        CHECK(psize == 0);
+        CHECK(pseudoStack.stackPointer == 0);
     }
     return true;
 }
