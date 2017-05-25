@@ -648,18 +648,6 @@ static const struct EVInfo kEVInfos[] = {
     "CYP0",
   },
   {
-    // CN=Swisscom Root EV CA 2,OU=Digital Certificate Services,O=Swisscom,C=ch
-    "2.16.756.1.83.21.0",
-    "Swisscom  EV OID",
-    { 0xD9, 0x5F, 0xEA, 0x3C, 0xA4, 0xEE, 0xDC, 0xE7, 0x4C, 0xD7, 0x6E,
-      0x75, 0xFC, 0x6D, 0x1F, 0xF6, 0x2C, 0x44, 0x1F, 0x0F, 0xA8, 0xBC,
-      0x77, 0xF0, 0x34, 0xB1, 0x9E, 0x5D, 0xB2, 0x58, 0x01, 0x5D },
-    "MGcxCzAJBgNVBAYTAmNoMREwDwYDVQQKEwhTd2lzc2NvbTElMCMGA1UECxMcRGln"
-    "aXRhbCBDZXJ0aWZpY2F0ZSBTZXJ2aWNlczEeMBwGA1UEAxMVU3dpc3Njb20gUm9v"
-    "dCBFViBDQSAy",
-    "APL6ZOJ0Y9ON/RAdBB92ylg=",
-  },
-  {
     // CN=VeriSign Universal Root Certification Authority,OU="(c) 2008 VeriSign, Inc. - For authorized use only",OU=VeriSign Trust Network,O="VeriSign, Inc.",C=US
     "2.16.840.1.113733.1.7.23.6",
     "VeriSign EV OID",
