@@ -77,7 +77,7 @@
 == underline-table-cell-quirks.html underline-table-cell-quirks-ref.html
 != underline-table-cell-quirks.html underline-table-cell-quirks-notref.html
 == underline-block-propagation-quirks.html underline-block-propagation-quirks-ref.html
-fails-if(stylo) == underline-block-propagation-2-quirks.html underline-block-propagation-2-quirks-ref.html
+fails-if(styloVsGecko) == underline-block-propagation-2-quirks.html underline-block-propagation-2-quirks-ref.html
 == underline-block-standards.html underline-block-standards-ref.html
 != underline-block-standards.html underline-block-standards-notref.html
 == underline-inline-block-standards.html underline-inline-block-standards-ref.html
@@ -87,7 +87,7 @@ fails-if(stylo) == underline-block-propagation-2-quirks.html underline-block-pro
 == underline-table-cell-standards.html underline-table-cell-standards-ref.html
 != underline-table-cell-standards.html underline-table-cell-standards-notref.html
 == underline-block-propagation-standards.html underline-block-propagation-standards-ref.html
-fails-if(stylo) == underline-block-propagation-2-standards.html underline-block-propagation-2-standards-ref.html
+fails-if(styloVsGecko) == underline-block-propagation-2-standards.html underline-block-propagation-2-standards-ref.html
 == text-decoration-zorder-1-standards.html text-decoration-zorder-1-ref.html
 == text-decoration-zorder-1-quirks.html text-decoration-zorder-1-ref.html
 == table-quirk-1.html table-quirk-1-ref.html
