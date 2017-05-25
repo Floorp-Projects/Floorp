@@ -1062,12 +1062,12 @@ class LNewArrayDynamicLength : public LInstructionHelper<1, 1, 1>
     }
 };
 
-class LNewArrayIterator : public LInstructionHelper<1, 0, 1>
+class LNewIterator : public LInstructionHelper<1, 0, 1>
 {
   public:
-    LIR_HEADER(NewArrayIterator)
+    LIR_HEADER(NewIterator)
 
-    explicit LNewArrayIterator(const LDefinition& temp) {
+    explicit LNewIterator(const LDefinition& temp) {
         setTemp(0, temp);
     }
 
@@ -1075,8 +1075,8 @@ class LNewArrayIterator : public LInstructionHelper<1, 0, 1>
         return getTemp(0);
     }
 
-    MNewArrayIterator* mir() const {
-        return mir_->toNewArrayIterator();
+    MNewIterator* mir() const {
+        return mir_->toNewIterator();
     }
 };
 

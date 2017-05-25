@@ -67,7 +67,7 @@
     _(NewArray)                     \
     _(NewArrayCopyOnWrite)          \
     _(NewArrayDynamicLength)        \
-    _(NewArrayIterator)             \
+    _(NewIterator)                  \
     _(NewTypedArray)                \
     _(NewTypedArrayDynamicLength)   \
     _(NewObject)                    \
