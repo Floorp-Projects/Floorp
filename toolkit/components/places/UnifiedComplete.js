@@ -1599,8 +1599,8 @@ Search.prototype = {
     // But, some schemes are expected to have no host. So we check just against
     // schemes we know should have a host. This allows new schemes to be
     // implemented without us accidentally blocking access to them.
-    let hostExpected = new Set(["http", "https", "ftp", "chrome"]);
-    if (hostExpected.has(uri.scheme) && !uri.host)
+    let hostExpected = ["http", "https", "ftp", "chrome"].includes(uri.scheme);
+    if (hostExpected && !uri.host)
       return false;
 
     // getFixupURIInfo() escaped the URI, so it may not be pretty.  Embed the
@@ -1621,8 +1621,18 @@ Search.prototype = {
       comment: displayURL,
       style: "action visiturl",
       frecency: 0,
-      icon: "page-icon:" + escapedURL
     };
+
+    // We don't know if this url is in Places or not, and checking that would
+    // be expensive. Thus we also don't know if we may have an icon.
+    // If we'd just try to fetch the icon for the typed string, we'd cause icon
+    // flicker, since the url keeps changing while the user types.
+    // By default we won't provide an icon, but for the subset of urls with a
+    // host we'll check for a typed slash and set favicon for the host part.
+    if (hostExpected &&
+        (this._trimmedOriginalSearchString.endsWith("/") || uri.path.length > 1)) {
+      match.icon = `page-icon:${uri.prePath}/`;
+    }
 
     this._addMatch(match);
     return true;
