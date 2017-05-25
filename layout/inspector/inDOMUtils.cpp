@@ -1369,10 +1369,19 @@ NS_IMETHODIMP
 inDOMUtils::ParseStyleSheet(nsIDOMCSSStyleSheet *aSheet,
                             const nsAString& aInput)
 {
-  RefPtr<CSSStyleSheet> sheet = do_QueryObject(aSheet);
-  NS_ENSURE_ARG_POINTER(sheet);
+  RefPtr<CSSStyleSheet> geckoSheet = do_QueryObject(aSheet);
+  if (geckoSheet) {
+    NS_ENSURE_ARG_POINTER(geckoSheet);
+    return geckoSheet->ReparseSheet(aInput);
+  }
 
-  return sheet->ReparseSheet(aInput);
+  RefPtr<ServoStyleSheet> servoSheet = do_QueryObject(aSheet);
+  if (servoSheet) {
+    NS_ENSURE_ARG_POINTER(servoSheet);
+    return servoSheet->ReparseSheet(aInput);
+  }
+
+  return NS_ERROR_INVALID_POINTER;
 }
 
 NS_IMETHODIMP
