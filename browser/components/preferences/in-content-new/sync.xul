@@ -26,7 +26,7 @@
 </preferences>
 
 <script type="application/javascript"
-        src="chrome://browser/content/preferences/in-content/sync.js"/>
+        src="chrome://browser/content/preferences/in-content-new/sync.js"/>
 
 <hbox id="header-sync"
       class="header"
