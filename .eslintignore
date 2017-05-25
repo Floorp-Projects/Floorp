@@ -37,7 +37,6 @@ python/**
 rdf/**
 servo/**
 startupcache/**
-testing/**
 tools/update-packaging/**
 uriloader/**
 view/**
@@ -294,6 +293,19 @@ security/nss/**
 # Uses `#filter substitution`
 services/sync/modules/constants.js
 services/sync/services-sync.js
+
+# testing/ exclusions
+testing/firefox-ui/**
+testing/marionette/**
+testing/mochitest/**
+testing/modules/**
+testing/mozbase/**
+testing/profiles/**
+testing/specialpowers/**
+testing/talos/**
+testing/web-platform/**
+testing/xpcshell/moz-http2/**
+testing/xpcshell/node-http2/**
 
 # Third party services
 services/common/kinto-http-client.js
