@@ -7763,9 +7763,12 @@ var gPageActionButton = {
   },
 
   _preparePanelToBeShown() {
+    // Update the bookmark item's label.
+    BookmarkingUI.updateBookmarkPageMenuItem();
+
+    // Update the send-to-device item's disabled state.
     let browser = gBrowser.selectedBrowser;
     let url = browser.currentURI.spec;
-
     let sendToDeviceItem =
       document.getElementById("page-action-send-to-device-button");
     sendToDeviceItem.disabled = !gSync.isSendableURI(url);
