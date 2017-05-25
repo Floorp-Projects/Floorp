@@ -190,7 +190,6 @@ compartment.
         * "REFRESH_FRAME"
         * "FULL_GC_TIMER"
         * "SHUTDOWN_CC"
-        * "FINISH_LARGE_EVALUATE"
         * "USER_INACTIVE"
 
     `nonincrementalReason`
