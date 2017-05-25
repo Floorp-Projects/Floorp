@@ -125,15 +125,6 @@ ServoStyleSet::Shutdown()
   mRawSet = nullptr;
 }
 
-void
-ServoStyleSet::InvalidateStyleForCSSRuleChanges()
-{
-  if (Element* root = mPresContext->Document()->GetRootElement()) {
-    mPresContext->RestyleManager()->PostRestyleEventForCSSRuleChanges(
-        root, eRestyle_Subtree, nsChangeHint(0));
-  }
-}
-
 size_t
 ServoStyleSet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
