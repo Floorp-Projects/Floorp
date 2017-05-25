@@ -71,30 +71,6 @@ struct MethodTrait : MethodTraitsHelper<typename RemoveReference<T>::Type>
 {
 };
 
-template<typename ThisType, typename Ret, typename ArgType>
-static TrueType TakesArgumentHelper(Ret (ThisType::*)(ArgType));
-template<typename ThisType, typename Ret, typename ArgType>
-static TrueType TakesArgumentHelper(Ret (ThisType::*)(ArgType) const);
-template<typename ThisType, typename Ret>
-static FalseType TakesArgumentHelper(Ret (ThisType::*)());
-template<typename ThisType, typename Ret>
-static FalseType TakesArgumentHelper(Ret (ThisType::*)() const);
-
-template<typename ThisType, typename Ret, typename ArgType>
-static Ret ReturnTypeHelper(Ret (ThisType::*)(ArgType));
-template<typename ThisType, typename Ret, typename ArgType>
-static Ret ReturnTypeHelper(Ret (ThisType::*)(ArgType) const);
-template<typename ThisType, typename Ret>
-static Ret ReturnTypeHelper(Ret (ThisType::*)());
-template<typename ThisType, typename Ret>
-static Ret ReturnTypeHelper(Ret (ThisType::*)() const);
-
-template<typename MethodType>
-struct ReturnType
-{
-  using Type = typename MethodTrait<MethodType>::ReturnType;
-};
-
 } // namespace detail
 
 template<typename MethodType>
