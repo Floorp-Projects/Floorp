@@ -1195,6 +1195,11 @@
                      type="checkbox"
                      label="&fullScreenCmd.label;"
                      tooltip="dynamic-shortcut-tooltip"/>
+#ifdef MOZ_PHOTON_THEME
+      <toolbarbutton id="library-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     oncommand="PanelUI.showSubView('appMenu-libraryView', this, null, true);"
+                     label="&places.library.title;"/>
+#endif
     </toolbarpalette>
   </toolbox>
 
