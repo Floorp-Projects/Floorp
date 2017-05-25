@@ -1198,6 +1198,9 @@ protected:
           JumpPatch jump(nTrampBytes, jmpDest, JumpType::Jmp);
           nTrampBytes = jump.GenerateJump(tramp);
           nOrigBytes += 6;
+        } else if ((origBytes[nOrigBytes + 1] & (kMaskMod|kMaskReg)) == BuildModRmByte(kModReg, 2, 0)) {
+          // CALL reg (ff nn)
+          COPY_CODES(2);
         } else {
           MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
