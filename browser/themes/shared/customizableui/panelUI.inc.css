@@ -340,7 +340,6 @@ panelview:not([mainview]) .toolbarbutton-text,
 
 #appMenu-popup > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
-  margin: 0;
   border-radius: 0;
 }
 
