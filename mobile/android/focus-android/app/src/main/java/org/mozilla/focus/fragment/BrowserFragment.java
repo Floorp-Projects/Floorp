@@ -499,14 +499,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
 
             case R.id.share: {
-                final IWebView webView = getWebView();
-                if (webView == null) {
-                    return;
-                }
-
                 final Intent shareIntent = new Intent(Intent.ACTION_SEND);
                 shareIntent.setType("text/plain");
-                shareIntent.putExtra(Intent.EXTRA_TEXT, webView.getUrl());
+                shareIntent.putExtra(Intent.EXTRA_TEXT, getUrl());
                 startActivity(Intent.createChooser(shareIntent, getString(R.string.share_dialog_title)));
 
                 TelemetryWrapper.shareEvent();
@@ -518,12 +513,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 break;
 
             case R.id.open_default: {
-                final IWebView webView = getWebView();
-                if (webView == null) {
-                    return;
-                }
-
-                final Browsers browsers = new Browsers(getContext(), webView.getUrl());
+                final Browsers browsers = new Browsers(getContext(), getUrl());
 
                 final ActivityInfo defaultBrowser = browsers.getDefaultBrowser();
 
@@ -533,7 +523,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                     throw new IllegalStateException("<Open with $Default> was shown when no default browser is set");
                 }
 
-                final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(webView.getUrl()));
+                final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getUrl()));
                 intent.setPackage(defaultBrowser.packageName);
                 startActivity(intent);
 
@@ -542,15 +532,10 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
 
             case R.id.open_firefox: {
-                final IWebView webView = getWebView();
-                if (webView == null) {
-                    return;
-                }
-
-                final Browsers browsers = new Browsers(getContext(), webView.getUrl());
+                final Browsers browsers = new Browsers(getContext(), getUrl());
 
                 if (browsers.hasFirefoxBrandedBrowserInstalled()) {
-                    final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(webView.getUrl()));
+                    final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getUrl()));
                     intent.setPackage(browsers.getFirefoxBrandedBrowser().packageName);
                     startActivity(intent);
                 } else {
@@ -562,15 +547,10 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
 
             case R.id.open_select_browser: {
-                final IWebView webView = getWebView();
-                if (webView == null) {
-                    return;
-                }
-
-                final Browsers browsers = new Browsers(getContext(), webView.getUrl());
+                final Browsers browsers = new Browsers(getContext(), getUrl());
 
                 final OpenWithFragment fragment = OpenWithFragment.newInstance(
-                        browsers.getInstalledBrowsers(), webView.getUrl());
+                        browsers.getInstalledBrowsers(), getUrl());
                 fragment.show(getFragmentManager(), OpenWithFragment.FRAGMENT_TAG);
 
                 TelemetryWrapper.openSelectionEvent();
@@ -612,10 +592,13 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         stopButton.setVisibility(isLoading ? View.VISIBLE : View.GONE);
     }
 
-    @Nullable
+    @NonNull
     public String getUrl() {
-        final IWebView webView = getWebView();
-        return webView != null ? webView.getUrl() : null;
+        // getUrl() is used for things like sharing the current URL. We could try to use the webview,
+        // but sometimes it's null, and sometimes it returns a null URL. Sometimes it returns a data:
+        // URL for error pages. The URL we show in the toolbar is (A) always correct and (B) what the
+        // user is probably expecting to share, so lets use that here:
+        return urlView.getText().toString();
     }
 
     public boolean canGoForward() {
