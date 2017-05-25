@@ -19,6 +19,7 @@ include protocol PChildToParentStream;
 include protocol PParentToChildStream;
 include protocol PFileDescriptorSet;
 include protocol PIPCBlobInputStream;
+include protocol PPaymentRequest;
 
 include DOMTypes;
 include IPCBlob;
@@ -115,6 +116,7 @@ nested(upto inside_cpow) sync protocol PBrowser
     manages PIndexedDBPermissionRequest;
     manages PRenderFrame;
     manages PPluginWidget;
+    manages PPaymentRequest;
 
 both:
     async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
@@ -144,6 +146,8 @@ parent:
      * to windowed plugin creation.
      */
     sync PPluginWidget();
+
+    async PPaymentRequest();
 
     /**
      * Return native data of root widget
