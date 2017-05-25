@@ -17,7 +17,9 @@ add_task(function* () {
        "(they're added with setTimeout)");
   while (controller.animationPlayers.length < 3) {
     yield controller.once(controller.PLAYERS_UPDATED_EVENT);
+    yield waitForAnimationTimelineRendering(panel);
   }
+
   yield waitForAllAnimationTargets(panel);
 
   is(panel.animationsTimelineComponent.animations.length, 3,

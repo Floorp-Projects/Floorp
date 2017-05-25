@@ -261,7 +261,8 @@ public:
     const ParentLayerPoint& aVelocity);
 
   nsEventStatus HandleDragEvent(const MouseInput& aEvent,
-                                const AsyncDragMetrics& aDragMetrics);
+                                const AsyncDragMetrics& aDragMetrics,
+                                CSSCoord aInitialThumbPos);
 
   /**
    * Handler for events which should not be intercepted by the touch listener.

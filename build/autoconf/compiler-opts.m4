@@ -267,7 +267,7 @@ MOZ_ARG_ENABLE_BOOL(pie,
 if test "$GNU_CC$CLANG_CC" -a -n "$MOZ_PIE"; then
     AC_MSG_CHECKING([for PIE support])
     _SAVE_LDFLAGS=$LDFLAGS
-    LDFLAGS="$LDFLAGS -pie"
+    LDFLAGS="$LDFLAGS $DSO_PIC_CFLAGS -pie"
     AC_TRY_LINK(,,AC_MSG_RESULT([yes])
                   [MOZ_PROGRAM_LDFLAGS="$MOZ_PROGRAM_LDFLAGS -pie"],
                   AC_MSG_RESULT([no])

@@ -23,8 +23,7 @@ public:
 
   explicit nsXBLDocumentInfo(nsIDocument* aDocument);
 
-  already_AddRefed<nsIDocument> GetDocument()
-    { nsCOMPtr<nsIDocument> copy = mDocument; return copy.forget(); }
+  nsIDocument* GetDocument() const { return mDocument; }
 
   bool GetScriptAccess() const { return mScriptAccess; }
 
@@ -47,7 +46,8 @@ public:
 
   void MarkInCCGeneration(uint32_t aGeneration);
 
-  static nsresult ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocInfo);
+  static nsresult ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocInfo,
+                                        nsIDocument* aBoundDocument);
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsXBLDocumentInfo)
 

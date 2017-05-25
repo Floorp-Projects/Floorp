@@ -1178,7 +1178,7 @@ policies and contribution forms [3].
                 throw e;
             }
             if (code === null) {
-                return;
+                throw new AssertionError('Test bug: need to pass exception to assert_throws()');
             }
             if (typeof code === "object") {
                 assert(typeof e == "object" && "name" in e && e.name == code.name,

@@ -91,7 +91,7 @@ class ADBAndroid(ADBDevice):
                 self._logger.info('Setting SELinux Permissive Mode')
                 self.shell_output("setenforce Permissive", timeout=timeout, root=True)
         except (ADBError, ADBRootError), e:
-            self._logger.warning('Unable to set SELinux Permissive due to %s.', e)
+            self._logger.warning('Unable to set SELinux Permissive due to %s.' % e)
             self.selinux = False
 
         self.version = int(self.shell_output("getprop ro.build.version.sdk",

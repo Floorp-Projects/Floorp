@@ -1345,9 +1345,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           if (Services.prefs.getBoolPref("browser.search.suggest.enabled") &&
               !this.inPrivateContext &&
-              // When _urlbarFocused is true, tabbrowser would close the
-              // popup if it's opened here, so don't show the notification.
-              !gBrowser.selectedBrowser._urlbarFocused &&
               // In any case, if the user made a choice we should not nag him.
               !this._userMadeSearchSuggestionsChoice) {
             let enabledByDefault = this._defaultPrefs.getBoolPref("suggest.searches");
@@ -1423,34 +1420,31 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             UpdatePopupNotificationsVisibility();
           }
 
-          // We may want to show the search suggestions hint.
-          if (!gBrowser.selectedBrowser._urlbarFocused) {
-            // We show the opt-out notification on every kind of focus to the urlbar
-            // included opening a new tab, but we want to enforce at least one
-            // notification when the user focuses it with the mouse.
-            let whichNotification = this.whichSearchSuggestionsNotification;
-            if (whichNotification == "opt-out" &&
-                this._showSearchSuggestionNotificationOnMouseFocus === undefined) {
-              this._showSearchSuggestionNotificationOnMouseFocus = true;
-            }
+          // We show the opt-out notification on every kind of focus to the urlbar
+          // included opening a new tab, but we want to enforce at least one
+          // notification when the user focuses it with the mouse.
+          let whichNotification = this.whichSearchSuggestionsNotification;
+          if (whichNotification == "opt-out" &&
+              this._showSearchSuggestionNotificationOnMouseFocus === undefined) {
+            this._showSearchSuggestionNotificationOnMouseFocus = true;
+          }
 
-            // Check whether the focus change came from a user mouse action.
-            let focusMethod = Services.focus.getLastFocusMethod(window);
-            let mouseFocused = !!(focusMethod & Services.focus.FLAG_BYMOUSE);
-            if (this._showSearchSuggestionNotificationOnMouseFocus &&
-                mouseFocused) {
-              // Force showing the opt-out notification.
-              this._whichSearchSuggestionsNotification = whichNotification = "opt-out";
-            }
+          // Check whether the focus change came from a user mouse action.
+          let focusMethod = Services.focus.getLastFocusMethod(window);
+          let mouseFocused = !!(focusMethod & Services.focus.FLAG_BYMOUSE);
+          if (this._showSearchSuggestionNotificationOnMouseFocus &&
+              mouseFocused) {
+            // Force showing the opt-out notification.
+            this._whichSearchSuggestionsNotification = whichNotification = "opt-out";
+          }
 
-            if (whichNotification == "opt-out") {
-              try {
-                this.popup.openAutocompletePopup(this, this);
-              } finally {
-                if (mouseFocused) {
-                  delete this._whichSearchSuggestionsNotification;
-                  this._showSearchSuggestionNotificationOnMouseFocus = false;
-                }
+          if (whichNotification == "opt-out") {
+            try {
+              this.popup.openAutocompletePopup(this, this);
+            } finally {
+              if (mouseFocused) {
+                delete this._whichSearchSuggestionsNotification;
+                this._showSearchSuggestionNotificationOnMouseFocus = false;
               }
             }
           }
@@ -1871,14 +1865,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
-      <method name="_updateFooterVisibility">
-        <body>
-          <![CDATA[
-          this.footer.collapsed = this._matchCount == 0;
-          ]]>
-        </body>
-      </method>
-
       <method name="_showSearchSuggestionsNotification">
         <parameter name="whichNotification"/>
         <parameter name="popupDirection"/>
@@ -1923,7 +1909,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           this.setAttribute("dontanimate", "true");
 
           this.classList.add("showSearchSuggestionsNotification");
-          this._updateFooterVisibility();
+          // Don't show the one-off buttons if we are showing onboarding and
+          // there's no result, since it would be ugly and pointless.
+          this.footer.collapsed = this._matchCount == 0;
 
           // This event allows accessibility APIs to see the notification.
           if (!this.popupOpen) {
@@ -2101,6 +2089,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               this.input.controller.setInitiallySelectedIndex(0);
               this.richlistbox.suppressMenuItemEvent = false;
             }
+
+            // When a result is present the footer should always be visible.
+            this.footer.collapsed = false;
 
             this.input.gotResultForCurrentQuery = true;
             this.input.maybeReplayDeferredKeyEvents();

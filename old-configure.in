@@ -66,7 +66,7 @@ W32API_VERSION=3.14
 GCONF_VERSION=1.2.1
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.18.0
+SQLITE_VERSION=3.19.1
 
 dnl Set various checks
 dnl ========================================================
@@ -5087,7 +5087,20 @@ if test -z "$MOZ_APP_VERSION_DISPLAY"; then
 fi
 
 if test -z "$ANDROID_PACKAGE_NAME" ; then
-   ANDROID_PACKAGE_NAME="org.mozilla.$MOZ_APP_NAME"
+   # When we got rid of the Aurora channel we decided to replace the old
+   # Nightly ANDROID_PACKAGE_NAME with Aurora. To make sure this is inherited
+   # by all mozilla-central based branches we make this the new "default"
+   # for Fennec. Non mozilla-central based branches set ANDROID_PACKAGE_NAME
+   # in their mozconfig, so they will never get this. If there are ever
+   # non-Fennec builds for Android, they will fall into the else block
+   # and use their own default name.
+   # https://bugzilla.mozilla.org/show_bug.cgi?id=1357808 has additional
+   # background on this.
+   if test "$MOZ_APP_NAME" = "fennec"; then
+      ANDROID_PACKAGE_NAME="org.mozilla.fennec_aurora"
+   else
+      ANDROID_PACKAGE_NAME="org.mozilla.$MOZ_APP_NAME"
+   fi
 fi
 
 # Mozilla released Firefox for Android {Release,Beta} and {Aurora,Nightly} to

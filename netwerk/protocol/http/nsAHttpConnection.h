@@ -146,14 +146,6 @@ public:
 
     // nsHttp.h version
     virtual uint32_t Version() = 0;
-
-    // Throttling control, can be called only on the socket thread. HTTP/1
-    // implementation effects whether we AsyncWait on the socket input stream
-    // after reading data.  This doesn't have a counter-like logic, hence
-    // calling it with aThrottle = false will re-enable read from the socket
-    // immediately.  Calling more than once with the same argument value has
-    // no effect.
-    virtual void ThrottleResponse(bool aThrottle) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)

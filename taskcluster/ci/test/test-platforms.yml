@@ -29,6 +29,11 @@ linux32-nightly/opt:
     test-sets:
         -  linux32-tests
         -  linux32-opt-tests
+linux32-devedition/opt:
+    build-platform: linux-devedition-nightly/opt
+    test-sets:
+        -  linux32-tests
+        -  linux32-opt-tests
 
 linux64/debug:
     build-platform: linux64/debug
@@ -54,6 +59,15 @@ linux64-nightly/opt:
         - opt-only-tests
         - desktop-screenshot-capture
         - talos
+        - awsy
+        - headless
+linux64-devedition/opt:
+    build-platform: linux64-devedition-nightly/opt
+    test-sets:
+        - common-tests
+        - web-platform-tests
+        - opt-only-tests
+        - desktop-screenshot-capture
         - awsy
         - headless
 

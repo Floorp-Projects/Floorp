@@ -1342,6 +1342,8 @@ nsIDocument::nsIDocument()
     mDidFireDOMContentLoaded(true),
     mHasScrollLinkedEffect(false),
     mFrameRequestCallbacksScheduled(false),
+    mIsTopLevelContentDocument(false),
+    mIsContentDocument(false),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
     mStyleBackendType(StyleBackendType::None),
@@ -1380,8 +1382,6 @@ nsIDocument::nsIDocument()
 
 nsDocument::nsDocument(const char* aContentType)
   : nsIDocument()
-  , mIsTopLevelContentDocument(false)
-  , mIsContentDocument(false)
   , mSubDocuments(nullptr)
   , mFlashClassification(FlashClassification::Unclassified)
   , mHeaderData(nullptr)
@@ -4968,30 +4968,6 @@ nsDocument::SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject)
     SetScopeObject(aScriptObject);
     mHasHadDefaultView = false;
   }
-}
-
-bool
-nsDocument::IsTopLevelContentDocument()
-{
-  return mIsTopLevelContentDocument;
-}
-
-void
-nsDocument::SetIsTopLevelContentDocument(bool aIsTopLevelContentDocument)
-{
-  mIsTopLevelContentDocument = aIsTopLevelContentDocument;
-}
-
-bool
-nsDocument::IsContentDocument() const
-{
-  return mIsContentDocument;
-}
-
-void
-nsDocument::SetIsContentDocument(bool aIsContentDocument)
-{
-  mIsContentDocument = aIsContentDocument;
 }
 
 nsPIDOMWindowOuter*
@@ -12545,17 +12521,17 @@ nsDocument::Evaluate(const nsAString& aExpression, nsIDOMNode* aContextNode,
 nsIDocument*
 nsIDocument::GetTopLevelContentDocument()
 {
-  nsDocument* parent;
+  nsIDocument* parent;
 
   if (!mLoadedAsData) {
-    parent = static_cast<nsDocument*>(this);
+    parent = this;
   } else {
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetScopeObject());
     if (!window) {
       return nullptr;
     }
 
-    parent = static_cast<nsDocument*>(window->GetExtantDoc());
+    parent = window->GetExtantDoc();
     if (!parent) {
       return nullptr;
     }
@@ -13168,17 +13144,13 @@ nsIDocument::UpdateStyleBackendType()
   mStyleBackendType = StyleBackendType::Gecko;
 
 #ifdef MOZ_STYLO
-  // XXX For now we use a Servo-backed style set only for (X)HTML documents
-  // in content docshells.  This should let us avoid implementing XUL-specific
-  // CSS features.  And apart from not supporting SVG properties in Servo
-  // yet, the root SVG element likes to create a style sheet for an SVG
-  // document before we have a pres shell (i.e. before we make the decision
-  // here about whether to use a Gecko- or Servo-backed style system), so
-  // we avoid Servo-backed style sets for SVG documents.
-  if (!mDocumentContainer) {
-    NS_WARNING("stylo: No docshell yet, assuming Gecko style system");
-  } else if (nsLayoutUtils::SupportsServoStyleBackend(this)) {
-    mStyleBackendType = StyleBackendType::Servo;
+  if (nsLayoutUtils::StyloEnabled()) {
+    if (!mDocumentContainer) {
+      NS_WARNING("stylo: No docshell yet, assuming Gecko style system");
+    } else if ((IsHTMLOrXHTML() || IsSVGDocument()) &&
+               IsContentDocument()) {
+      mStyleBackendType = StyleBackendType::Servo;
+    }
   }
 #endif
 }

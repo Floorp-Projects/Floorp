@@ -110,7 +110,7 @@ function CustomizeMode(aWindow) {
     lwthemeButton.setAttribute("hidden", "true");
   }
   if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
-    this._updateTitlebarButton();
+    this._updateTitlebarCheckbox();
     Services.prefs.addObserver(kDrawInTitlebarPref, this);
   }
   this.window.addEventListener("unload", this);
@@ -282,12 +282,32 @@ CustomizeMode.prototype = {
       window.PanelUI.hide();
 
       let panelHolder = document.getElementById("customization-panelHolder");
+      let panelContainer = document.getElementById("customization-panel-container");
+      let customizationContainer = document.getElementById("customization-container");
+      let paletteContainer = document.getElementById("customization-palette-container");
+      let contentContainer = document.getElementById("customization-content-container");
+      let footer = document.getElementById("customization-footer");
+      let doneButton = document.getElementById("customization-done-button");
       if (gPhotonStructure) {
+        if (!customizationContainer.hasAttribute("photon")) {
+          contentContainer.appendChild(paletteContainer);
+          contentContainer.appendChild(panelContainer);
+          customizationContainer.appendChild(footer);
+          customizationContainer.setAttribute("photon", "true");
+          doneButton.hidden = false;
+        }
         panelHolder.appendChild(window.PanelUI.overflowFixedList);
         window.PanelUI.overflowFixedList.setAttribute("customizing", true);
         window.PanelUI.menuButton.disabled = true;
         document.getElementById("nav-bar-overflow-button").disabled = true;
       } else {
+        if (customizationContainer.hasAttribute("photon")) {
+          customizationContainer.insertBefore(paletteContainer, contentContainer);
+          customizationContainer.appendChild(panelContainer);
+          paletteContainer.appendChild(footer);
+          customizationContainer.removeAttribute("photon");
+          doneButton.hidden = true;
+        }
         window.PanelUI.menuButton.addEventListener("command", this);
         window.PanelUI.menuButton.open = true;
         window.PanelUI.beginBatchUpdate();
@@ -1528,7 +1548,7 @@ CustomizeMode.prototype = {
         this._updateResetButton();
         this._updateUndoResetButton();
         if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
-          this._updateTitlebarButton();
+          this._updateTitlebarCheckbox();
         }
         break;
       case "lightweight-theme-window-updated":
@@ -1540,17 +1560,19 @@ CustomizeMode.prototype = {
     }
   },
 
-  _updateTitlebarButton() {
+  _updateTitlebarCheckbox() {
     if (!AppConstants.CAN_DRAW_IN_TITLEBAR) {
       return;
     }
     let drawInTitlebar = Services.prefs.getBoolPref(kDrawInTitlebarPref, true);
-    let button = this.document.getElementById("customization-titlebar-visibility-button");
-    // Drawing in the titlebar means 'hiding' the titlebar:
+    let checkbox = this.document.getElementById("customization-titlebar-visibility-checkbox");
+    // Drawing in the titlebar means 'hiding' the titlebar.
+    // We use the attribute rather than a property because if we're not in
+    // customize mode the button is hidden and properties don't work.
     if (drawInTitlebar) {
-      button.removeAttribute("checked");
+      checkbox.removeAttribute("checked");
     } else {
-      button.setAttribute("checked", "true");
+      checkbox.setAttribute("checked", "true");
     }
   },
 

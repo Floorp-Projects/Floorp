@@ -794,6 +794,7 @@ nsSocketTransport::nsSocketTransport()
     , mKeepaliveProbeCount(-1)
     , mFastOpenCallback(nullptr)
     , mFastOpenLayerHasBufferedData(false)
+    , mDoNotRetryToConnect(false)
 {
     SOCKET_LOG(("creating nsSocketTransport @%p\n", this));
 
@@ -1698,6 +1699,13 @@ nsSocketTransport::RecoverFromError()
     SOCKET_LOG(("nsSocketTransport::RecoverFromError [this=%p state=%x cond=%" PRIx32 "]\n",
                 this, mState, static_cast<uint32_t>(mCondition)));
 
+    if (mDoNotRetryToConnect) {
+        SOCKET_LOG(("nsSocketTransport::RecoverFromError do not retry because "
+                    "mDoNotRetryToConnect is set [this=%p]\n",
+                    this));
+        return false;
+    }
+
 #if defined(XP_UNIX)
     // Unix domain connections don't have multiple addresses to try,
     // so the recovery techniques here don't apply.
@@ -1745,7 +1753,7 @@ nsSocketTransport::RecoverFromError()
         // connected, mFDFastOpenInProgress will be true but mFastOpenCallback
         // will be nullptr.
         if (mFastOpenCallback) {
-            mFastOpenCallback->SetFastOpenConnected(mCondition);
+            mFastOpenCallback->SetFastOpenConnected(mCondition, true);
         }
         mFastOpenCallback = nullptr;
     } else {
@@ -1875,7 +1883,7 @@ nsSocketTransport::OnSocketConnected()
         // mFastOpenCallback can be null when for example h2 is negotiated on
         // another connection to the same host and all connections are
         // abandoned.
-        mFastOpenCallback->SetFastOpenConnected(NS_OK);
+        mFastOpenCallback->SetFastOpenConnected(NS_OK, false);
     }
     mFastOpenCallback = nullptr;
 
@@ -2302,7 +2310,7 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
         // connected, mFDFastOpenInProgress will be true but mFastOpenCallback
         // will be nullptr.
         if (mFDFastOpenInProgress && mFastOpenCallback) {
-            mFastOpenCallback->SetFastOpenConnected(mCondition);
+            mFastOpenCallback->SetFastOpenConnected(mCondition, false);
         }
         mFastOpenCallback = nullptr;
 
@@ -2503,8 +2511,10 @@ nsSocketTransport::Close(nsresult reason)
     if (NS_SUCCEEDED(reason))
         reason = NS_BASE_STREAM_CLOSED;
 
+    mDoNotRetryToConnect = true;
+
     if (mFDFastOpenInProgress && mFastOpenCallback) {
-        mFastOpenCallback->SetFastOpenConnected(reason);
+        mFastOpenCallback->SetFastOpenConnected(reason, false);
     }
     mFastOpenCallback = nullptr;
 

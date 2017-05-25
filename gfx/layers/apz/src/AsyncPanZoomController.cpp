@@ -54,6 +54,7 @@
 #include "mozilla/layers/AxisPhysicsModel.h" // for AxisPhysicsModel
 #include "mozilla/layers/AxisPhysicsMSDModel.h" // for AxisPhysicsMSDModel
 #include "mozilla/layers/CompositorController.h" // for CompositorController
+#include "mozilla/layers/DirectionUtils.h"   // for GetAxis{Start,End,Length,Scale}
 #include "mozilla/layers/LayerTransactionParent.h" // for LayerTransactionParent
 #include "mozilla/layers/MetricsSharingController.h" // for MetricsSharingController
 #include "mozilla/layers/ScrollInputMethods.h" // for ScrollInputMethod
@@ -832,62 +833,9 @@ AsyncPanZoomController::ArePointerEventsConsumable(TouchBlockState* aBlock, uint
   return true;
 }
 
-template <typename Units>
-static CoordTyped<Units> GetAxisStart(ScrollDirection aDir, const PointTyped<Units>& aValue) {
-  if (aDir == ScrollDirection::HORIZONTAL) {
-    return aValue.x;
-  } else {
-    return aValue.y;
-  }
-}
-
-template <typename Units>
-static CoordTyped<Units> GetAxisStart(ScrollDirection aDir, const RectTyped<Units>& aValue) {
-  if (aDir == ScrollDirection::HORIZONTAL) {
-    return aValue.x;
-  } else {
-    return aValue.y;
-  }
-}
-
-template <typename Units>
-static IntCoordTyped<Units> GetAxisStart(ScrollDirection aDir, const IntRectTyped<Units>& aValue) {
-  if (aDir == ScrollDirection::HORIZONTAL) {
-    return aValue.x;
-  } else {
-    return aValue.y;
-  }
-}
-
-template <typename Units>
-static CoordTyped<Units> GetAxisEnd(ScrollDirection aDir, const RectTyped<Units>& aValue) {
-  if (aDir == ScrollDirection::HORIZONTAL) {
-    return aValue.x + aValue.width;
-  } else {
-    return aValue.y + aValue.height;
-  }
-}
-
-template <typename Units>
-static CoordTyped<Units> GetAxisLength(ScrollDirection aDir, const RectTyped<Units>& aValue) {
-  if (aDir == ScrollDirection::HORIZONTAL) {
-    return aValue.width;
-  } else {
-    return aValue.height;
-  }
-}
-
-template <typename FromUnits, typename ToUnits>
-static float GetAxisScale(ScrollDirection aDir, const ScaleFactors2D<FromUnits, ToUnits>& aValue) {
-  if (aDir == ScrollDirection::HORIZONTAL) {
-    return aValue.xScale;
-  } else {
-    return aValue.yScale;
-  }
-}
-
 nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
-                                                      const AsyncDragMetrics& aDragMetrics)
+                                                      const AsyncDragMetrics& aDragMetrics,
+                                                      CSSCoord aInitialThumbPos)
 {
   if (!gfxPrefs::APZDragEnabled()) {
     return nsEventStatus_eIgnore;
@@ -906,7 +854,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
   }
 
   RefPtr<HitTestingTreeNode> node =
-    GetApzcTreeManager()->FindScrollNode(aDragMetrics);
+    GetApzcTreeManager()->FindScrollThumbNode(aDragMetrics);
   if (!node) {
     return nsEventStatus_eConsumeNoDefault;
   }
@@ -916,14 +864,36 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
       (uint32_t) ScrollInputMethod::ApzScrollbarDrag);
 
+  bool isMouseAwayFromThumb = false;
+  if (int snapMultiplier = gfxPrefs::SliderSnapMultiplier()) {
+    // It's fine to ignore the async component of the thumb's transform,
+    // because any async transform of the thumb will be in the direction of
+    // scrolling, but here we're interested in the other direction.
+    ParentLayerRect thumbRect =
+        (node->GetTransform() * AsyncTransformMatrix()).TransformBounds(
+              LayerRect(node->GetVisibleRegion().GetBounds()));
+    ScrollDirection otherDirection = GetPerpendicularDirection(aDragMetrics.mDirection);
+    ParentLayerCoord distance = GetAxisStart(otherDirection,
+        thumbRect.DistanceTo(aEvent.mLocalOrigin));
+    ParentLayerCoord thumbWidth = GetAxisLength(otherDirection, thumbRect);
+    if (thumbWidth * snapMultiplier < distance) {
+      isMouseAwayFromThumb = true;
+    }
+  }
+
   ReentrantMonitorAutoEnter lock(mMonitor);
-  CSSCoord mousePosition = ConvertScrollbarPoint(aEvent.mLocalOrigin, thumbData) -
-                           aDragMetrics.mScrollbarDragOffset;
+  CSSCoord thumbPosition;
+  if (isMouseAwayFromThumb) {
+    thumbPosition = aInitialThumbPos;
+  } else {
+    thumbPosition = ConvertScrollbarPoint(aEvent.mLocalOrigin, thumbData) -
+                    aDragMetrics.mScrollbarDragOffset;
+  }
 
-  CSSCoord scrollMax = thumbData.mScrollTrackLength;
-  scrollMax -= thumbData.mThumbLength;
+  CSSCoord maxThumbPos = thumbData.mScrollTrackLength;
+  maxThumbPos -= thumbData.mThumbLength;
 
-  float scrollPercent = mousePosition / scrollMax;
+  float scrollPercent = thumbPosition / maxThumbPos;
 
   CSSCoord minScrollPosition =
     GetAxisStart(aDragMetrics.mDirection, mFrameMetrics.GetScrollableRect().TopLeft());
@@ -3529,9 +3499,11 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
       mFrameMetrics.SetZoom(aLayerMetrics.GetZoom());
       mFrameMetrics.SetDevPixelsPerCSSPixel(aLayerMetrics.GetDevPixelsPerCSSPixel());
     }
+    bool scrollableRectChanged = false;
     if (!mFrameMetrics.GetScrollableRect().IsEqualEdges(aLayerMetrics.GetScrollableRect())) {
       mFrameMetrics.SetScrollableRect(aLayerMetrics.GetScrollableRect());
       needContentRepaint = true;
+      scrollableRectChanged = true;
     }
     mFrameMetrics.SetCompositionBounds(aLayerMetrics.GetCompositionBounds());
     mFrameMetrics.SetRootCompositionSize(aLayerMetrics.GetRootCompositionSize());
@@ -3578,6 +3550,13 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
       // Note that even if the CancelAnimation call above requested a repaint
       // this is fine because we already have repaint request deduplication.
       needContentRepaint = true;
+    } else if (scrollableRectChanged) {
+      // Even if we didn't accept a new scroll offset from content, the
+      // scrollable rect may have changed in a way that makes our local
+      // scroll offset out of bounds, so re-clamp it.
+      mFrameMetrics.SetScrollOffset(
+          mFrameMetrics.CalculateScrollRange().ClampPoint(
+              mFrameMetrics.GetScrollOffset()));
     }
   }
 

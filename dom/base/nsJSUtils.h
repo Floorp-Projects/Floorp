@@ -168,7 +168,6 @@ public:
     // Similar to JoinAndExec, except that in addition to fecthing the source,
     // we register the fact that we plan to encode its bytecode later.
     MOZ_MUST_USE nsresult JoinEncodeAndExec(void **aOffThreadToken,
-                                            mozilla::Vector<uint8_t>& aBytecodeBuf,
                                             JS::MutableHandle<JSScript*> aScript);
   };
 

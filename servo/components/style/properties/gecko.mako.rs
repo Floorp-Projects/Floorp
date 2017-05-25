@@ -959,8 +959,7 @@ fn static_assert() {
 
     pub fn set_border_image_outset(&mut self, v: longhands::border_image_outset::computed_value::T) {
         % for side in SIDES:
-            v.${side.index}.to_gecko_style_coord(&mut self.gecko.mBorderImageOutset
-                                                          .data_at_mut(${side.index}));
+        v.${side.ident}.to_gecko_style_coord(&mut self.gecko.mBorderImageOutset.data_at_mut(${side.index}));
         % endfor
     }
 
@@ -994,17 +993,17 @@ fn static_assert() {
     }
 
     pub fn set_border_image_width(&mut self, v: longhands::border_image_width::computed_value::T) {
-        use properties::longhands::border_image_width::computed_value::SingleComputedValue;
+        use values::generics::border::BorderImageWidthSide;
 
         % for side in SIDES:
-        match v.${side.index} {
-            SingleComputedValue::Auto => {
+        match v.${side.ident} {
+            BorderImageWidthSide::Auto => {
                 self.gecko.mBorderImageWidth.data_at_mut(${side.index}).set_value(CoordDataValue::Auto)
             },
-            SingleComputedValue::LengthOrPercentage(l) => {
+            BorderImageWidthSide::Length(l) => {
                 l.to_gecko_style_coord(&mut self.gecko.mBorderImageWidth.data_at_mut(${side.index}))
             },
-            SingleComputedValue::Number(n) => {
+            BorderImageWidthSide::Number(n) => {
                 self.gecko.mBorderImageWidth.data_at_mut(${side.index}).set_value(CoordDataValue::Factor(n))
             },
         }
@@ -1021,9 +1020,9 @@ fn static_assert() {
     pub fn set_border_image_slice(&mut self, v: longhands::border_image_slice::computed_value::T) {
         use gecko_bindings::structs::{NS_STYLE_BORDER_IMAGE_SLICE_NOFILL, NS_STYLE_BORDER_IMAGE_SLICE_FILL};
 
-        for (i, corner) in v.corners.iter().enumerate() {
-            corner.to_gecko_style_coord(&mut self.gecko.mBorderImageSlice.data_at_mut(i));
-        }
+        % for side in SIDES:
+        v.offsets.${side.ident}.to_gecko_style_coord(&mut self.gecko.mBorderImageSlice.data_at_mut(${side.index}));
+        % endfor
 
         let fill = if v.fill {
             NS_STYLE_BORDER_IMAGE_SLICE_FILL
@@ -3769,7 +3768,7 @@ fn static_assert() {
     }
     pub fn set_text_overflow(&mut self, v: longhands::text_overflow::computed_value::T) {
         use gecko_bindings::structs::nsStyleTextOverflowSide;
-        use properties::longhands::text_overflow::{SpecifiedValue, Side};
+        use properties::longhands::text_overflow::Side;
 
         fn set(side: &mut nsStyleTextOverflowSide, value: &Side) {
             let ty = match *value {
@@ -3784,13 +3783,10 @@ fn static_assert() {
         }
 
         self.clear_overflow_sides_if_string();
-        self.gecko.mTextOverflow.mLogicalDirections = v.second.is_none();
+        self.gecko.mTextOverflow.mLogicalDirections = v.sides_are_logical;
 
-        let SpecifiedValue { ref first, ref second } = v;
-        let second = second.as_ref().unwrap_or(&first);
-
-        set(&mut self.gecko.mTextOverflow.mLeft, first);
-        set(&mut self.gecko.mTextOverflow.mRight, second);
+        set(&mut self.gecko.mTextOverflow.mLeft, &v.first);
+        set(&mut self.gecko.mTextOverflow.mRight, &v.second);
     }
 
     pub fn copy_text_overflow_from(&mut self, other: &Self) {
@@ -4215,7 +4211,9 @@ clip-path
         use properties::longhands::content::computed_value::T;
         use properties::longhands::content::computed_value::ContentItem;
         use values::generics::CounterStyleOrNone;
-        use gecko_bindings::structs::nsCSSValue;
+        use gecko_bindings::structs::nsIAtom;
+        use gecko_bindings::structs::nsStyleContentData;
+        use gecko_bindings::structs::nsStyleContentType;
         use gecko_bindings::structs::nsStyleContentType::*;
         use gecko_bindings::bindings::Gecko_ClearAndResizeStyleContents;
 
@@ -4229,11 +4227,23 @@ clip-path
             ptr
         }
 
-        fn set_counter_style(style: CounterStyleOrNone, dest: &mut nsCSSValue) {
-            dest.set_atom_ident(match style {
+        fn set_counter_function(data: &mut nsStyleContentData,
+                                content_type: nsStyleContentType,
+                                name: &str, sep: &str, style: CounterStyleOrNone) {
+            debug_assert!(content_type == eStyleContentType_Counter ||
+                          content_type == eStyleContentType_Counters);
+            let counter_func = unsafe {
+                bindings::Gecko_SetCounterFunction(data, content_type).as_mut().unwrap()
+            };
+            counter_func.mIdent.assign_utf8(name);
+            if content_type == eStyleContentType_Counters {
+                counter_func.mSeparator.assign_utf8(sep);
+            }
+            let ptr = match style {
                 CounterStyleOrNone::None_ => atom!("none"),
                 CounterStyleOrNone::Name(name) => name.0,
-            });
+            }.into_addrefed();
+            unsafe { counter_func.mCounterStyleName.set_raw_from_addrefed::<nsIAtom>(ptr); }
         }
 
         match v {
@@ -4296,23 +4306,12 @@ clip-path
                         ContentItem::NoCloseQuote
                             => self.gecko.mContents[i].mType = eStyleContentType_NoCloseQuote,
                         ContentItem::Counter(name, style) => {
-                            unsafe {
-                                bindings::Gecko_SetContentDataArray(&mut self.gecko.mContents[i],
-                                                                    eStyleContentType_Counter, 2)
-                            }
-                            let mut array = unsafe { &mut **self.gecko.mContents[i].mContent.mCounters.as_mut() };
-                            array[0].set_string(&name);
-                            set_counter_style(style, &mut array[1]);
+                            set_counter_function(&mut self.gecko.mContents[i],
+                                                 eStyleContentType_Counter, &name, "", style);
                         }
                         ContentItem::Counters(name, sep, style) => {
-                            unsafe {
-                                bindings::Gecko_SetContentDataArray(&mut self.gecko.mContents[i],
-                                                                    eStyleContentType_Counters, 3)
-                            }
-                            let mut array = unsafe { &mut **self.gecko.mContents[i].mContent.mCounters.as_mut() };
-                            array[0].set_string(&name);
-                            array[1].set_string(&sep);
-                            set_counter_style(style, &mut array[2]);
+                            set_counter_function(&mut self.gecko.mContents[i],
+                                                 eStyleContentType_Counters, &name, &sep, style);
                         }
                         ContentItem::Url(ref url) => {
                             unsafe {

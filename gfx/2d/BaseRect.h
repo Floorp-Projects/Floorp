@@ -567,6 +567,17 @@ struct BaseRect {
     );
   };
 
+  // Returns a point representing the distance, along each dimension, of the
+  // given point from this rectangle. The distance along a dimension is defined
+  // as zero if the point is within the bounds of the rectangle in that
+  // dimension; otherwise, it's the distance to the closer endpoint of the
+  // rectangle in that dimension.
+  Point DistanceTo(const Point& aPoint) const
+  {
+    return {DistanceFromInterval(aPoint.x, x, XMost()),
+            DistanceFromInterval(aPoint.y, y, YMost())};
+  }
+
   friend std::ostream& operator<<(std::ostream& stream,
       const BaseRect<T, Sub, Point, SizeT, MarginT>& aRect) {
     return stream << '(' << aRect.x << ',' << aRect.y << ','
@@ -578,6 +589,19 @@ private:
   // Use IsEqualEdges or IsEqualInterior explicitly.
   bool operator==(const Sub& aRect) const { return false; }
   bool operator!=(const Sub& aRect) const { return false; }
+
+  // Helper function for DistanceTo() that computes the distance of a
+  // coordinate along one dimension from an interval in that dimension.
+  static T DistanceFromInterval(T aCoord, T aIntervalStart, T aIntervalEnd)
+  {
+    if (aCoord < aIntervalStart) {
+      return aIntervalStart - aCoord;
+    }
+    if (aCoord > aIntervalEnd) {
+      return aCoord - aIntervalEnd;
+    }
+    return 0;
+  }
 };
 
 } // namespace gfx

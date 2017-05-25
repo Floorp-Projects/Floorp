@@ -28,7 +28,6 @@
 <!ENTITY aboutUrlClassifier.lookupMatchBtn              "Check Match Result">
 <!ENTITY aboutUrlClassifier.lookupLookup                "Lookup">
 <!ENTITY aboutUrlClassifier.lookupBtn                   "Check Lookup Result">
-<!ENTITY aboutUrlClassifier.cacheTitle                  "Cache">
 <!ENTITY aboutUrlClassifier.memoryTitle                 "Memory">
 <!ENTITY aboutUrlClassifier.databaseTitle               "Database">
 <!ENTITY aboutUrlClassifier.debugTitle                  "Debug">

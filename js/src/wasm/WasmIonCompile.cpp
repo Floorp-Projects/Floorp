@@ -3787,7 +3787,7 @@ EmitBodyExprs(FunctionCompiler& f)
 bool
 wasm::IonCompileFunction(CompileTask* task, FuncCompileUnit* unit, UniqueChars* error)
 {
-    MOZ_ASSERT(task->mode() == CompileMode::Ion);
+    MOZ_ASSERT(task->tier() == Tier::Ion);
 
     const FuncBytes& func = unit->func();
     const ModuleEnvironment& env = task->env();

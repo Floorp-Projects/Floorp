@@ -153,6 +153,7 @@ EXPORTS.mozilla.layers += [
     'CompositorTypes.h',
     'D3D11ShareHandleImage.h',
     'D3D9SurfaceImage.h',
+    'DirectionUtils.h',
     'Effects.h',
     'ImageDataSerializer.h',
     'ipc/APZChild.h',

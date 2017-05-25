@@ -11,11 +11,7 @@
 
 #include "nsCoord.h"
 
-typedef void *
-(* IntervalSetAlloc)(size_t aBytes, void *aClosure);
-
-typedef void
-(* IntervalSetFree) (size_t aBytes, void *aPtr, void *aClosure);
+class nsIPresShell;
 
 /*
  * A list-based class (hopefully tree-based when I get around to it)
@@ -27,8 +23,7 @@ public:
 
     typedef nscoord coord_type;
 
-    nsIntervalSet(IntervalSetAlloc aAlloc, IntervalSetFree aFree,
-                  void* aAllocatorClosure);
+    explicit nsIntervalSet(nsIPresShell* aPresShell);
     ~nsIntervalSet();
 
     /*
@@ -77,13 +72,11 @@ private:
         Interval *mNext;
     };
 
+    void* AllocateInterval();
     void FreeInterval(Interval *aInterval);
 
     Interval           *mList;
-    IntervalSetAlloc    mAlloc;
-    IntervalSetFree     mFree;
-    void               *mAllocatorClosure;
-        
+    nsIPresShell       *mPresShell;
 };
 
 #endif // !defined(nsIntervalSet_h___)

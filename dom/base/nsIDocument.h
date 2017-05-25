@@ -1257,6 +1257,23 @@ public:
     return mStyleBackendType;
   }
 
+  /**
+   * Documents generally decide their style backend type themselves, and
+   * this is only used for XBL documents to set their style backend type to
+   * their bounding document's.
+   */
+  void SetStyleBackendType(mozilla::StyleBackendType aStyleBackendType) {
+    // We cannot assert mStyleBackendType == mozilla::StyleBackendType::None
+    // because NS_NewXBLDocument() might result GetStyleBackendType() being
+    // called.
+    MOZ_ASSERT(aStyleBackendType != mozilla::StyleBackendType::None,
+               "The StyleBackendType should be set to either Gecko or Servo!");
+    mStyleBackendType = aStyleBackendType;
+  }
+
+  /**
+   * Decide this document's own style backend type.
+   */
   void UpdateStyleBackendType();
 
   bool IsStyledByServo() const {
@@ -1661,6 +1678,18 @@ public:
   }
 
   virtual bool IsScriptEnabled() = 0;
+
+  bool IsTopLevelContentDocument() const { return mIsTopLevelContentDocument; }
+  void SetIsTopLevelContentDocument(bool aIsTopLevelContentDocument)
+  {
+    mIsTopLevelContentDocument = aIsTopLevelContentDocument;
+  }
+
+  bool IsContentDocument() const { return mIsContentDocument; }
+  void SetIsContentDocument(bool aIsContentDocument)
+  {
+    mIsContentDocument = aIsContentDocument;
+  }
 
   /**
    * Create an element with the specified name, prefix and namespace ID.
@@ -3237,6 +3266,10 @@ protected:
   // This should generally be updated only via
   // UpdateFrameRequestCallbackSchedulingState.
   bool mFrameRequestCallbacksScheduled : 1;
+
+  bool mIsTopLevelContentDocument : 1;
+
+  bool mIsContentDocument : 1;
 
   // Compatibility mode
   nsCompatibility mCompatMode;

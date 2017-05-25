@@ -249,11 +249,13 @@ HitTestingTreeNode::GetLayersId() const
 
 void
 HitTestingTreeNode::SetHitTestData(const EventRegions& aRegions,
+                                   const LayerIntRegion& aVisibleRegion,
                                    const CSSTransformMatrix& aTransform,
                                    const Maybe<ParentLayerIntRegion>& aClipRegion,
                                    const EventRegionsOverride& aOverride)
 {
   mEventRegions = aRegions;
+  mVisibleRegion = aVisibleRegion;
   mTransform = aTransform;
   mClipRegion = aClipRegion;
   mOverride = aOverride;
@@ -322,6 +324,12 @@ const CSSTransformMatrix&
 HitTestingTreeNode::GetTransform() const
 {
   return mTransform;
+}
+
+const LayerIntRegion&
+HitTestingTreeNode::GetVisibleRegion() const
+{
+  return mVisibleRegion;
 }
 
 void

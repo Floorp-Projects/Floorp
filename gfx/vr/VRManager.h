@@ -53,6 +53,7 @@ public:
                      double aIntensity, double aDuration, uint32_t aPromiseID);
   void StopVibrateHaptic(uint32_t aControllerIdx);
   void NotifyVibrateHapticCompleted(uint32_t aPromiseID);
+  void DispatchSubmitFrameResult(uint32_t aDisplayID, const VRSubmitFrameResultInfo& aResult);
 
 protected:
   VRManager();

@@ -20,7 +20,7 @@
         <toolbarbutton class="panel-banner-item"
                        label-update-available="&updateAvailable.panelUI.label;"
                        label-update-manual="&updateManual.panelUI.label;"
-                       label-update-restart="&updateRestart.panelUI.label;"
+                       label-update-restart="&updateRestart.panelUI.label2;"
                        oncommand="PanelUI._onBannerItemSelected(event)"
                        wrap="true"
                        hidden="true"/>
@@ -504,7 +504,7 @@
         <toolbarbutton class="panel-banner-item"
                        label-update-available="&updateAvailable.panelUI.label;"
                        label-update-manual="&updateManual.panelUI.label;"
-                       label-update-restart="&updateRestart.panelUI.label;"
+                       label-update-restart="&updateRestart.panelUI.label2;"
                        oncommand="PanelUI._onBannerItemSelected(event)"
                        wrap="true"
                        hidden="true"/>

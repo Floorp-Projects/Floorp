@@ -29,8 +29,9 @@ test(() => {
   assert_equals(channel.maxRetransmits, null, 'maxRetransmits');
   assert_equals(channel.protocol, '', 'protocol');
   assert_equals(channel.negotiated, false, 'negotiated');
-  // Initial id value is not defined.
-  assert_equals(typeof channel.id, 'number', 'id type');
+  // Since no offer/answer exchange has occurred yet, the DTLS role is unknown
+  // and so the ID should be null.
+  assert_equals(channel.id, null, 'id');
   assert_equals(channel.priority, 'low', 'priority');
 }, 'createDataChannel defaults');
 

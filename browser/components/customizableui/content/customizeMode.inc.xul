@@ -2,8 +2,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<hbox id="customization-container" flex="1" hidden="true">
-  <vbox flex="1" id="customization-palette-container">
+<box id="customization-container" flex="1" hidden="true">
+  <box flex="1" id="customization-palette-container">
     <label id="customization-header">
       &customizeMode.menuAndToolbars.header2;
     </label>
@@ -20,13 +20,13 @@
     <spacer id="customization-spacer"/>
     <hbox id="customization-footer">
 #ifdef CAN_DRAW_IN_TITLEBAR
-      <button id="customization-titlebar-visibility-button" class="customizationmode-button"
-              label="&customizeMode.titlebar;" type="checkbox"
+      <checkbox id="customization-titlebar-visibility-checkbox" class="customizationmode-checkbox"
+                label="&customizeMode.titlebar;"
 #NB: because oncommand fires after click, by the time we've fired, the checkbox binding
 #    will already have switched the button's state, so this is correct:
-              oncommand="gCustomizeMode.toggleTitlebar(this.hasAttribute('checked'))"/>
+                oncommand="gCustomizeMode.toggleTitlebar(this.checked)"/>
 #endif
-      <button id="customization-toolbar-visibility-button" label="&customizeMode.toolbars;" class="customizationmode-button" type="menu">
+      <button id="customization-toolbar-visibility-button" label="&customizeMode.toolbars2;" class="customizationmode-button" type="menu">
         <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>
       </button>
       <button id="customization-lwtheme-button" label="&customizeMode.lwthemes;" class="customizationmode-button" type="menu">
@@ -62,8 +62,14 @@
               oncommand="gCustomizeMode.reset();"
               label="&customizeMode.restoreDefaults;"
               class="customizationmode-button"/>
+      <button id="customization-done-button"
+              hidden="true"
+              oncommand="gCustomizeMode.exit();"
+              label="&customizeMode.done;"
+              class="customizationmode-button"/>
     </hbox>
-  </vbox>
+  </box>
+  <box id="customization-content-container"/>
   <vbox id="customization-panel-container">
     <vbox id="customization-panelWrapper">
       <html:style html:type="text/html" scoped="scoped">
@@ -79,4 +85,4 @@
       </box>
     </vbox>
   </vbox>
-</hbox>
+</box>

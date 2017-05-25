@@ -8,7 +8,6 @@
   --icon-fill: rgba(12, 12, 13, 0.8);
   --header-background-color: #F2F2F2;
   --header-background-color-hover: rgba(204, 204, 204, 0.6);
-  --title-font-size: 13px;
 }
 
 .sidebar-header,
@@ -49,20 +48,18 @@
   }
 }
 
-.sidebar-title,
 #sidebar-title {
   margin: 0;
   padding: 0;
   padding-inline-start: 8px;
   padding-inline-end: 4px;
   color: -moz-DialogText;
-  font-size: var(--title-font-size);
 }
 
 #sidebar-switcher-arrow {
   -moz-context-properties: fill;
   fill: var(--icon-fill);
-  list-style-image: url(chrome://browser/skin/sidebar/arrow-dropdown.svg);
+  list-style-image: url(chrome://browser/skin/arrow-dropdown.svg);
   width: 12px;
   height: 12px;
 }

@@ -345,20 +345,6 @@ public:
    */
   void StopEmulatingMedium();
 
-  void* AllocateFromShell(size_t aSize)
-  {
-    if (mShell)
-      return mShell->AllocateMisc(aSize);
-    return nullptr;
-  }
-
-  void FreeToShell(size_t aSize, void* aFreeChunk)
-  {
-    NS_ASSERTION(mShell, "freeing after shutdown");
-    if (mShell)
-      mShell->FreeMisc(aSize, aFreeChunk);
-  }
-
   /**
    * Get the default font for the given language and generic font ID.
    * If aLanguage is nullptr, the document's language is used.
