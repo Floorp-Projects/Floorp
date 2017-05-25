@@ -88,6 +88,14 @@
   width: 16px;
 }
 
+#page-action-bookmark-button {
+  list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
+}
+
+#page-action-bookmark-button[starred] {
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
+}
+
 #page-action-copy-url-button {
   list-style-image: url("chrome://browser/skin/link.svg");
 }
