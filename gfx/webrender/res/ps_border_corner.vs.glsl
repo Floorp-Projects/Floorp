@@ -91,6 +91,7 @@ int select_style(int color_select, vec2 fstyle) {
 
     switch (color_select) {
         case SIDE_BOTH:
+        {
             // TODO(gw): A temporary hack! While we don't support
             //           border corners that have dots or dashes
             //           with another style, pretend they are solid
@@ -102,6 +103,7 @@ int select_style(int color_select, vec2 fstyle) {
             if (style.x != style.y && (has_dots || has_dashes))
                 return BORDER_STYLE_SOLID;
             return style.x;
+        }
         case SIDE_FIRST:
             return style.x;
         case SIDE_SECOND:
@@ -112,7 +114,7 @@ int select_style(int color_select, vec2 fstyle) {
 void main(void) {
     Primitive prim = load_primitive();
     Border border = fetch_border(prim.prim_index);
-    int sub_part = prim.sub_index;
+    int sub_part = prim.user_data0;
     BorderCorners corners = get_border_corners(border, prim.local_rect);
 
     vec2 p0, p1;
@@ -135,7 +137,7 @@ void main(void) {
             color1 = border.colors[1];
             vClipCenter = corners.tl_outer + border.radii[0].xy;
             vClipSign = vec2(1.0);
-            style = select_style(prim.user_data.x, border.style.yx);
+            style = select_style(prim.user_data1, border.style.yx);
             vec4 adjusted_widths = get_effective_border_widths(border, style);
             vec4 inv_adjusted_widths = border.widths - adjusted_widths;
             set_radii(style,
@@ -157,7 +159,7 @@ void main(void) {
             color1 = border.colors[2];
             vClipCenter = corners.tr_outer + vec2(-border.radii[0].z, border.radii[0].w);
             vClipSign = vec2(-1.0, 1.0);
-            style = select_style(prim.user_data.x, border.style.zy);
+            style = select_style(prim.user_data1, border.style.zy);
             vec4 adjusted_widths = get_effective_border_widths(border, style);
             vec4 inv_adjusted_widths = border.widths - adjusted_widths;
             set_radii(style,
@@ -181,7 +183,7 @@ void main(void) {
             color1 = border.colors[3];
             vClipCenter = corners.br_outer - border.radii[1].xy;
             vClipSign = vec2(-1.0, -1.0);
-            style = select_style(prim.user_data.x, border.style.wz);
+            style = select_style(prim.user_data1, border.style.wz);
             vec4 adjusted_widths = get_effective_border_widths(border, style);
             vec4 inv_adjusted_widths = border.widths - adjusted_widths;
             set_radii(style,
@@ -205,7 +207,7 @@ void main(void) {
             color1 = border.colors[0];
             vClipCenter = corners.bl_outer + vec2(border.radii[1].z, -border.radii[1].w);
             vClipSign = vec2(1.0, -1.0);
-            style = select_style(prim.user_data.x, border.style.xw);
+            style = select_style(prim.user_data1, border.style.xw);
             vec4 adjusted_widths = get_effective_border_widths(border, style);
             vec4 inv_adjusted_widths = border.widths - adjusted_widths;
             set_radii(style,
@@ -253,7 +255,7 @@ void main(void) {
         }
     }
 
-    write_color(color0, color1, style, color_delta, prim.user_data.x);
+    write_color(color0, color1, style, color_delta, prim.user_data1);
 
     RectWithSize segment_rect;
     segment_rect.p0 = p0;

@@ -73,6 +73,9 @@ mod texture_cache;
 mod tiling;
 mod util;
 
+#[doc(hidden)] // for benchmarks
+pub use texture_cache::TexturePage;
+
 #[cfg(feature = "webgl")]
 mod webgl_types;
 
@@ -140,4 +143,4 @@ extern crate plane_split;
 extern crate gamma_lut;
 
 pub use renderer::{ExternalImage, ExternalImageSource, ExternalImageHandler};
-pub use renderer::{Renderer, RendererOptions};
+pub use renderer::{GraphicsApi, GraphicsApiInfo, ReadPixelsFormat, Renderer, RendererOptions};

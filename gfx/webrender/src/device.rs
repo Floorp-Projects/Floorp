@@ -6,7 +6,7 @@ use euclid::Matrix4D;
 use fnv::FnvHasher;
 use gleam::gl;
 use internal_types::{PackedVertex, RenderTargetMode, TextureSampler, DEFAULT_TEXTURE};
-use internal_types::{BlurAttribute, ClearAttribute, ClipAttribute, VertexAttribute};
+use internal_types::{BlurAttribute, ClipAttribute, VertexAttribute};
 use internal_types::{DebugFontVertex, DebugColorVertex};
 //use notify::{self, Watcher};
 use super::shader_source;
@@ -76,10 +76,8 @@ pub enum TextureFilter {
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum VertexFormat {
     Triangles,
-    Rectangles,
     DebugFont,
     DebugColor,
-    Clear,
     Blur,
     Clip,
 }
@@ -89,7 +87,7 @@ enum FBOTarget {
     Draw,
 }
 
-fn get_gl_format_bgra(gl: &gl::Gl) -> gl::GLuint {
+pub fn get_gl_format_bgra(gl: &gl::Gl) -> gl::GLuint {
     match gl.get_type() {
         gl::GlType::Gl => {
             GL_FORMAT_BGRA_GL
@@ -190,7 +188,6 @@ impl VertexFormat {
                                           vertex_stride as gl::GLint,
                                           8 + vertex_stride * offset);
             }
-            VertexFormat::Rectangles |
             VertexFormat::Triangles => {
                 let vertex_stride = mem::size_of::<PackedVertex>() as gl::GLuint;
                 gl.enable_vertex_attrib_array(VertexAttribute::Position as gl::GLuint);
@@ -206,53 +203,18 @@ impl VertexFormat {
                 instance.bind(gl);
                 let mut offset = 0;
 
-                for &attrib in [VertexAttribute::GlobalPrimId,
-                                VertexAttribute::PrimitiveAddress,
-                                VertexAttribute::TaskIndex,
-                                VertexAttribute::ClipTaskIndex,
-                                VertexAttribute::LayerIndex,
-                                VertexAttribute::ElementIndex,
-                                VertexAttribute::ZIndex,
+                for &attrib in [VertexAttribute::Data0,
+                                VertexAttribute::Data1,
                                ].into_iter() {
                     gl.enable_vertex_attrib_array(attrib as gl::GLuint);
                     gl.vertex_attrib_divisor(attrib as gl::GLuint, 1);
                     gl.vertex_attrib_i_pointer(attrib as gl::GLuint,
-                                                1,
+                                                4,
                                                 gl::INT,
                                                 instance_stride,
                                                 offset);
-                    offset += 4;
+                    offset += 16;
                 }
-
-                gl.enable_vertex_attrib_array(VertexAttribute::UserData as gl::GLuint);
-                gl.vertex_attrib_divisor(VertexAttribute::UserData as gl::GLuint, 1);
-                gl.vertex_attrib_i_pointer(VertexAttribute::UserData as gl::GLuint,
-                                            2,
-                                            gl::INT,
-                                            instance_stride,
-                                            offset);
-            }
-            VertexFormat::Clear => {
-                let vertex_stride = mem::size_of::<PackedVertex>() as gl::GLuint;
-                gl.enable_vertex_attrib_array(ClearAttribute::Position as gl::GLuint);
-                gl.vertex_attrib_divisor(ClearAttribute::Position as gl::GLuint, 0);
-
-                gl.vertex_attrib_pointer(ClearAttribute::Position as gl::GLuint,
-                                          2,
-                                          gl::FLOAT,
-                                          false,
-                                          vertex_stride as gl::GLint,
-                                          0);
-
-                instance.bind(gl);
-
-                gl.enable_vertex_attrib_array(ClearAttribute::Rectangle as gl::GLuint);
-                gl.vertex_attrib_divisor(ClearAttribute::Rectangle as gl::GLuint, 1);
-                gl.vertex_attrib_i_pointer(ClearAttribute::Rectangle as gl::GLuint,
-                                            4,
-                                            gl::INT,
-                                            instance_stride,
-                                            0);
             }
             VertexFormat::Blur => {
                 let vertex_stride = mem::size_of::<PackedVertex>() as gl::GLuint;
@@ -412,24 +374,15 @@ impl Program {
         self.gl.attach_shader(self.id, fs_id);
 
         match vertex_format {
-            VertexFormat::Triangles | VertexFormat::Rectangles |
-            VertexFormat::DebugFont |  VertexFormat::DebugColor => {
+            VertexFormat::Triangles |
+            VertexFormat::DebugFont |
+            VertexFormat::DebugColor => {
                 self.gl.bind_attrib_location(self.id, VertexAttribute::Position as gl::GLuint, "aPosition");
                 self.gl.bind_attrib_location(self.id, VertexAttribute::Color as gl::GLuint, "aColor");
                 self.gl.bind_attrib_location(self.id, VertexAttribute::ColorTexCoord as gl::GLuint, "aColorTexCoord");
 
-                self.gl.bind_attrib_location(self.id, VertexAttribute::GlobalPrimId as gl::GLuint, "aGlobalPrimId");
-                self.gl.bind_attrib_location(self.id, VertexAttribute::PrimitiveAddress as gl::GLuint, "aPrimitiveAddress");
-                self.gl.bind_attrib_location(self.id, VertexAttribute::TaskIndex as gl::GLuint, "aTaskIndex");
-                self.gl.bind_attrib_location(self.id, VertexAttribute::ClipTaskIndex as gl::GLuint, "aClipTaskIndex");
-                self.gl.bind_attrib_location(self.id, VertexAttribute::LayerIndex as gl::GLuint, "aLayerIndex");
-                self.gl.bind_attrib_location(self.id, VertexAttribute::ElementIndex as gl::GLuint, "aElementIndex");
-                self.gl.bind_attrib_location(self.id, VertexAttribute::UserData as gl::GLuint, "aUserData");
-                self.gl.bind_attrib_location(self.id, VertexAttribute::ZIndex as gl::GLuint, "aZIndex");
-            }
-            VertexFormat::Clear => {
-                self.gl.bind_attrib_location(self.id, ClearAttribute::Position as gl::GLuint, "aPosition");
-                self.gl.bind_attrib_location(self.id, ClearAttribute::Rectangle as gl::GLuint, "aClearRectangle");
+                self.gl.bind_attrib_location(self.id, VertexAttribute::Data0 as gl::GLuint, "aData0");
+                self.gl.bind_attrib_location(self.id, VertexAttribute::Data1 as gl::GLuint, "aData1");
             }
             VertexFormat::Blur => {
                 self.gl.bind_attrib_location(self.id, BlurAttribute::Position as gl::GLuint, "aPosition");
