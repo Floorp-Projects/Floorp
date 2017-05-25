@@ -22,6 +22,8 @@
 #include "SkTemplates.h"
 #include "SkUtils.h"
 
+#include "mozilla/Assertions.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /*
@@ -1008,6 +1010,8 @@ static inline void aaa_walk_convex_edges(SkAnalyticEdge* prevHead,
     SkAnalyticEdge* riteE = (SkAnalyticEdge*) leftE->fNext;
     SkAnalyticEdge* currE = (SkAnalyticEdge*) riteE->fNext;
 
+    bool currENullInit = !currE, currEChanged = false;
+
     SkFixed y = SkTMax(leftE->fUpperY, riteE->fUpperY);
 
     #ifdef SK_DEBUG
@@ -1020,11 +1024,17 @@ static inline void aaa_walk_convex_edges(SkAnalyticEdge* prevHead,
         // a left edge but no right edge in a given y scan line) due to precision limit.
         while (leftE->fLowerY <= y) { // Due to smooth jump, we may pass multiple short edges
             if (update_edge(leftE, y)) {
+                if (!currE) {
+                    MOZ_RELEASE_ASSERT((!currENullInit || currEChanged) || (stop_y < SkFixedFloorToInt(SK_MaxS32)), "Please help us! Use crash reporter to report me and comment what site you were viewing when this happened.");
+                    MOZ_RELEASE_ASSERT(!currENullInit || currEChanged, "Please help us! Use crash reporter to report me and comment what site you were viewing when this happened.");
+                    MOZ_RELEASE_ASSERT(stop_y < SkFixedFloorToInt(SK_MaxS32), "Please help us! Use crash reporter to report me and comment what site you were viewing when this happened.");
+                }
                 if (SkFixedFloorToInt(currE->fUpperY) >= stop_y) {
                     goto END_WALK;
                 }
                 leftE = currE;
                 currE = (SkAnalyticEdge*)currE->fNext;
+                currEChanged = true;
             }
         }
         while (riteE->fLowerY <= y) { // Due to smooth jump, we may pass multiple short edges
@@ -1034,6 +1044,7 @@ static inline void aaa_walk_convex_edges(SkAnalyticEdge* prevHead,
                 }
                 riteE = currE;
                 currE = (SkAnalyticEdge*)currE->fNext;
+                currEChanged = true;
             }
         }
 

@@ -322,6 +322,6 @@
 
 .search-setting-button-compact > .button-box > .button-icon {
   list-style-image: url("chrome://browser/skin/gear.svg");
-  filter: url(chrome://global/skin/filters.svg#fill);
+  -moz-context-properties: fill;
   fill: currentColor;
 }

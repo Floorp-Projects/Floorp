@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
+
+/* import-globals-from ../../devtools/server/main.js */
 
 const { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
@@ -19,8 +21,7 @@ const { BrowserTabList } = devtools.require("devtools/server/actors/webbrowser")
  * Construct a root actor appropriate for use in a server running xpcshell
  * tests. <snip boilerplate> :)
  */
-function createRootActor(connection)
-{
+function createRootActor(connection) {
   let parameters = {
     tabList: new XPCSTTabList(connection),
     globalActorFactories: DebuggerServer.globalActorFactories,
@@ -37,8 +38,7 @@ function createRootActor(connection)
  * A "stub" TabList implementation that provides no tabs.
  */
 
-function XPCSTTabList(connection)
-{
+function XPCSTTabList(connection) {
   BrowserTabList.call(this, connection);
 }
 

@@ -251,20 +251,7 @@ nsFileUploadContentStream::OnCopyComplete()
 //-----------------------------------------------------------------------------
 
 nsFileChannel::nsFileChannel(nsIURI *uri) 
-  : mFileURI(uri)
 {
-}
-
-nsresult
-nsFileChannel::Init()
-{
-  NS_ENSURE_STATE(mLoadInfo);
-
-  nsresult rv;
-
-  rv = nsBaseChannel::Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // If we have a link file, we should resolve its target right away.
   // This is to protect against a same origin attack where the same link file
   // can point to different resources right after the first resource is loaded.
@@ -277,24 +264,24 @@ nsFileChannel::Init()
 #endif
   nsCOMPtr<nsIFile> resolvedFile;
   bool symLink;
-  nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mFileURI);
-  if (fileURL &&
+  nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(uri);
+  if (fileURL && 
       NS_SUCCEEDED(fileURL->GetFile(getter_AddRefs(file))) &&
-      NS_SUCCEEDED(file->IsSymlink(&symLink)) &&
+      NS_SUCCEEDED(file->IsSymlink(&symLink)) && 
       symLink &&
 #ifdef XP_WIN
       NS_SUCCEEDED(file->GetTarget(fileTarget)) &&
-      NS_SUCCEEDED(NS_NewLocalFile(fileTarget, true,
+      NS_SUCCEEDED(NS_NewLocalFile(fileTarget, PR_TRUE, 
                                    getter_AddRefs(resolvedFile))) &&
 #else
       NS_SUCCEEDED(file->GetNativeTarget(fileTarget)) &&
-      NS_SUCCEEDED(NS_NewNativeLocalFile(fileTarget, true,
+      NS_SUCCEEDED(NS_NewNativeLocalFile(fileTarget, PR_TRUE, 
                                          getter_AddRefs(resolvedFile))) &&
 #endif
-      NS_SUCCEEDED(NS_NewFileURI(getter_AddRefs(targetURI),
-                                 resolvedFile, nullptr))) {
+      NS_SUCCEEDED(NS_NewFileURI(getter_AddRefs(targetURI), 
+                   resolvedFile, nullptr))) {
     // Make an effort to match up the query strings.
-    nsCOMPtr<nsIURL> origURL = do_QueryInterface(mFileURI);
+    nsCOMPtr<nsIURL> origURL = do_QueryInterface(uri);
     nsCOMPtr<nsIURL> targetURL = do_QueryInterface(targetURI);
     nsAutoCString queryString;
     if (origURL && targetURL && NS_SUCCEEDED(origURL->GetQuery(queryString))) {
@@ -302,13 +289,13 @@ nsFileChannel::Init()
     }
 
     SetURI(targetURI);
-    SetOriginalURI(mFileURI);
-    mLoadInfo->SetResultPrincipalURI(targetURI);
+    SetOriginalURI(uri);
+    nsLoadFlags loadFlags = 0;
+    GetLoadFlags(&loadFlags);
+    SetLoadFlags(loadFlags | nsIChannel::LOAD_REPLACE);
   } else {
-    SetURI(mFileURI);
+    SetURI(uri);
   }
-
-  return NS_OK;
 }
 
 nsFileChannel::~nsFileChannel()
