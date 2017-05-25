@@ -3955,6 +3955,11 @@ Element::RegisteredIntersectionObservers()
   return &slots->mRegisteredIntersectionObservers;
 }
 
+enum nsPreviousIntersectionThreshold {
+  eUninitialized = -2,
+  eNonIntersecting = -1
+};
+
 void
 Element::RegisterIntersectionObserver(DOMIntersectionObserver* aObserver)
 {
@@ -3963,7 +3968,13 @@ Element::RegisterIntersectionObserver(DOMIntersectionObserver* aObserver)
   if (observers->Contains(aObserver)) {
     return;
   }
-  RegisteredIntersectionObservers()->Put(aObserver, -1);
+
+  // Value can be:
+  //   -2:   Makes sure next calculated threshold always differs, leading to a
+  //         notification task being scheduled.
+  //   -1:   Non-intersecting.
+  //   >= 0: Intersecting, valid index of aObserver->mThresholds.
+  RegisteredIntersectionObservers()->Put(aObserver, eUninitialized);
 }
 
 void
