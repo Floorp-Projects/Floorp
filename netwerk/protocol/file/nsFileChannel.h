@@ -22,8 +22,6 @@ public:
 
   explicit nsFileChannel(nsIURI *uri);
 
-  nsresult Init();
-
 protected:
   ~nsFileChannel();
 
@@ -42,7 +40,6 @@ protected:
 private:
   nsCOMPtr<nsIInputStream> mUploadStream;
   int64_t mUploadLength;
-  nsCOMPtr<nsIURI> mFileURI;
 };
 
 #endif // !nsFileChannel_h__

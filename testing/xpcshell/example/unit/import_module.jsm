@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* globals __URI__ */
+
 // Module used by test_import_module.js
 
 const EXPORTED_SYMBOLS = [ "MODULE_IMPORTED", "MODULE_URI", "SUBMODULE_IMPORTED", "same_scope", "SUBMODULE_IMPORTED_TO_SCOPE" ];
@@ -14,8 +16,8 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.importRelative(this, "import_sub_module.jsm");
 
 // Prepare two scopes that we can import the submodule into.
-var scope1 = { __URI__: __URI__ };
-var scope2 = { __URI__: __URI__ };
+var scope1 = { __URI__ };
+var scope2 = { __URI__ };
 // First one is the regular path.
 XPCOMUtils.importRelative(scope1, "import_sub_module.jsm");
 scope1.test_obj.i++;

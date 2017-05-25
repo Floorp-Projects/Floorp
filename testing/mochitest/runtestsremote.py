@@ -50,6 +50,7 @@ class MochiRemote(MochitestDesktop):
             "chrome")
         self._dm.removeDir(self.remoteChromeTestDir)
         self._dm.mkDir(self.remoteChromeTestDir)
+        self._dm.removeDir(self.remoteProfile)
 
     def cleanup(self, options):
         if self._dm.fileExists(self.remoteLog):
@@ -329,6 +330,7 @@ def run_test_harness(parser, options):
     auto.setAppName(options.remoteappname)
 
     logParent = os.path.dirname(options.remoteLogFile)
+    dm.removeDir(logParent)
     dm.mkDir(logParent)
     auto.setRemoteLog(options.remoteLogFile)
     auto.setServerInfo(options.webServer, options.httpPort, options.sslPort)
