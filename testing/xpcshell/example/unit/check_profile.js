@@ -4,8 +4,7 @@
 
 var {classes: Cc, interfaces: Ci} = Components;
 
-function check_profile_dir(profd)
-{
+function check_profile_dir(profd) {
   Assert.ok(profd.exists());
   Assert.ok(profd.isDirectory());
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
@@ -17,8 +16,7 @@ function check_profile_dir(profd)
   Assert.ok(profd.equals(profd2));
 }
 
-function check_do_get_profile(fireProfileAfterChange)
-{
+function check_do_get_profile(fireProfileAfterChange) {
   const observedTopics = new Map([
     ["profile-do-change", 0],
     ["profile-after-change", 0],
@@ -27,7 +25,7 @@ function check_do_get_profile(fireProfileAfterChange)
 
   const obs = Cc["@mozilla.org/observer-service;1"]
                    .getService(Ci.nsIObserverService);
-  for (let [topic,] of observedTopics) {
+  for (let [topic, ] of observedTopics) {
     obs.addObserver(() => {
       let val = observedTopics.get(topic) + 1;
       observedTopics.set(topic, val);
