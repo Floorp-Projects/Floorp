@@ -1593,7 +1593,7 @@ private:
   nsRect GetClientAreaRect();
 
   nsIScrollableFrame* GetScrollFrame(nsIFrame **aStyledFrame = nullptr,
-                                     bool aFlushLayout = true);
+                                     FlushType aFlushType = FlushType::Layout);
 
   // Data members
   EventStates mState;
