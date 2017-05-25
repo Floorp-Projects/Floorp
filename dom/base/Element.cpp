@@ -683,30 +683,30 @@ Element::GetScrollFrame(nsIFrame **aStyledFrame, bool aFlushLayout)
   if (aStyledFrame) {
     *aStyledFrame = frame;
   }
-  if (!frame) {
-    return nullptr;
-  }
-
-  // menu frames implement GetScrollTargetFrame but we don't want
-  // to use it here.  Similar for comboboxes.
-  LayoutFrameType type = frame->Type();
-  if (type != LayoutFrameType::Menu &&
-      type != LayoutFrameType::ComboboxControl) {
-    nsIScrollableFrame *scrollFrame = frame->GetScrollTargetFrame();
-    if (scrollFrame)
-      return scrollFrame;
+  if (frame) {
+    // menu frames implement GetScrollTargetFrame but we don't want
+    // to use it here.  Similar for comboboxes.
+    LayoutFrameType type = frame->Type();
+    if (type != LayoutFrameType::Menu &&
+        type != LayoutFrameType::ComboboxControl) {
+      nsIScrollableFrame *scrollFrame = frame->GetScrollTargetFrame();
+      if (scrollFrame) {
+        MOZ_ASSERT(!OwnerDoc()->IsScrollingElement(this),
+                   "How can we have a scrollframe if we're the "
+                   "scrollingElement for our document?");
+        return scrollFrame;
+      }
+    }
   }
 
   nsIDocument* doc = OwnerDoc();
-  bool quirksMode = doc->GetCompatibilityMode() == eCompatibility_NavQuirks;
-  Element* elementWithRootScrollInfo =
-    quirksMode ? doc->GetBodyElement() : doc->GetRootElement();
-  if (this == elementWithRootScrollInfo) {
-    // In quirks mode, the scroll info for the body element should map to the
-    // root scrollable frame.
-    // In strict mode, the scroll info for the root element should map to the
-    // the root scrollable frame.
-    return frame->PresContext()->PresShell()->GetRootScrollFrameAsScrollable();
+  // Note: This IsScrollingElement() call can flush frames, if we're the body of
+  // a quirks mode document.
+  if (OwnerDoc()->IsScrollingElement(this)) {
+    // Our scroll info should map to the root scrollable frame if there is one.
+    if (nsIPresShell* shell = doc->GetShell()) {
+      return shell->GetRootScrollFrameAsScrollable();
+    }
   }
 
   return nullptr;

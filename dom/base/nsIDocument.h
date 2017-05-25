@@ -2777,6 +2777,11 @@ public:
     CaretPositionFromPoint(float aX, float aY);
 
   Element* GetScrollingElement();
+  // A way to check whether a given element is what would get returned from
+  // GetScrollingElement.  It can be faster than comparing to the return value
+  // of GetScrollingElement() due to being able to avoid flushes in various
+  // cases.  This method assumes that null is NOT passed.
+  bool IsScrollingElement(Element* aElement);
 
   // QuerySelector and QuerySelectorAll already defined on nsINode
   nsINodeList* GetAnonymousNodes(Element& aElement);
@@ -3027,6 +3032,9 @@ protected:
   // mPresShell is becoming null; in that case it will be used to get hold of
   // the relevant refresh driver.
   void UpdateFrameRequestCallbackSchedulingState(nsIPresShell* aOldShell = nullptr);
+
+  // Helper for GetScrollingElement/IsScrollingElement.
+  bool IsPotentiallyScrollable(mozilla::dom::HTMLBodyElement* aBody);
 
   nsCString mReferrer;
   nsString mLastModified;
