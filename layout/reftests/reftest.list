@@ -305,6 +305,9 @@ include selection/reftest.list
 # sticky positioning
 include position-sticky/reftest.list
 
+# stylesheet cloning
+include stylesheet-cloning/reftest.list
+
 # svg/
 include svg/reftest.list
 
@@ -426,3 +429,6 @@ include ../../dom/encoding/test/reftest/reftest.list
 
 # APZ/async positioning tests
 include ../../gfx/layers/apz/test/reftest/reftest.list
+
+# Media
+include ../../dom/media/test/reftest/reftest.list

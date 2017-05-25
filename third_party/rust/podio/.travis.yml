@@ -1,0 +1,29 @@
+language: rust
+
+rust:
+    - stable
+    - nightly
+
+sudo: false
+
+addons:
+    apt:
+        packages:
+            - libcurl4-openssl-dev
+            - libelf-dev
+            - libdw-dev
+
+notifications:
+    email:
+        on_success: never
+        on_failure: always
+
+script:
+    - cargo build
+    - cargo test
+    - '[ "$TRAVIS_RUST_VERSION" != "nightly" ] || cargo bench'
+    - cargo doc --no-deps
+    - rustdoc --test README.md -L target/debug
+
+after_success:
+    - curl https://mvdnes.github.io/rust-docs/travis-doc-upload.sh | bash

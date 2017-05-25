@@ -192,7 +192,6 @@ CSSStyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
     // is worthwhile:
     // - s->mRuleCollection
     // - s->mRuleProcessors
-    // - s->mStyleSets
     //
     // The following members are not measured:
     // - s->mOwnerRule, because it's non-owning
@@ -232,10 +231,11 @@ CSSStyleSheetInner::~CSSStyleSheetInner()
   }
 }
 
-CSSStyleSheetInner*
-CSSStyleSheetInner::CloneFor(CSSStyleSheet* aPrimarySheet)
+StyleSheetInfo*
+CSSStyleSheetInner::CloneFor(StyleSheet* aPrimarySheet)
 {
-  return new CSSStyleSheetInner(*this, aPrimarySheet);
+  return new CSSStyleSheetInner(*this,
+                                static_cast<CSSStyleSheet*>(aPrimarySheet));
 }
 
 void
@@ -328,7 +328,6 @@ CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
                              CORSMode aCORSMode, ReferrerPolicy aReferrerPolicy)
   : StyleSheet(StyleBackendType::Gecko, aParsingMode),
     mOwnerRule(nullptr),
-    mDirty(false),
     mInRuleProcessorCache(false),
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
@@ -344,7 +343,6 @@ CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
                              const SRIMetadata& aIntegrity)
   : StyleSheet(StyleBackendType::Gecko, aParsingMode),
     mOwnerRule(nullptr),
-    mDirty(false),
     mInRuleProcessorCache(false),
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
@@ -361,21 +359,11 @@ CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
                              nsINode* aOwningNodeToUse)
   : StyleSheet(aCopy, aDocumentToUse, aOwningNodeToUse),
     mOwnerRule(aOwnerRuleToUse),
-    mDirty(aCopy.mDirty),
     mInRuleProcessorCache(false),
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
 {
-  MOZ_ASSERT(mInner, "We should have an mInner after copy.");
-  MOZ_ASSERT(mInner->mSheets.Contains(this), "Our mInner should include us.");
-
   mParent = aParentToUse;
-
-  if (mDirty) { // CSSOM's been there, force full copy now
-    NS_ASSERTION(mInner->mComplete, "Why have rules been accessed on an incomplete sheet?");
-    // FIXME: handle failure?
-    EnsureUniqueInner();
-  }
 }
 
 CSSStyleSheet::~CSSStyleSheet()
@@ -493,21 +481,6 @@ CSSStyleSheet::DropRuleProcessor(nsCSSRuleProcessor* aProcessor)
            : NS_ERROR_FAILURE;
 }
 
-void
-CSSStyleSheet::AddStyleSet(nsStyleSet* aStyleSet)
-{
-  NS_ASSERTION(!mStyleSets.Contains(aStyleSet),
-               "style set already registered");
-  mStyleSets.AppendElement(aStyleSet);
-}
-
-void
-CSSStyleSheet::DropStyleSet(nsStyleSet* aStyleSet)
-{
-  DebugOnly<bool> found = mStyleSets.RemoveElement(aStyleSet);
-  NS_ASSERTION(found, "didn't find style set");
-}
-
 bool
 CSSStyleSheet::UseForPresentation(nsPresContext* aPresContext,
                                   nsMediaQueryResultCacheKey& aKey) const
@@ -595,43 +568,6 @@ CSSStyleSheet::GetStyleRuleAt(int32_t aIndex) const
   return Inner()->mOrderedRules.SafeObjectAt(aIndex);
 }
 
-void
-CSSStyleSheet::EnsureUniqueInner()
-{
-  mDirty = true;
-
-  MOZ_ASSERT(mInner->mSheets.Length() != 0,
-             "unexpected number of outers");
-  if (mInner->mSheets.Length() == 1) {
-    // already unique
-    return;
-  }
-  CSSStyleSheetInner* clone = Inner()->CloneFor(this);
-  MOZ_ASSERT(clone);
-  mInner->RemoveSheet(this);
-  mInner = clone;
-
-  // otherwise the rule processor has pointers to the old rules
-  ClearRuleCascades();
-
-  // let our containing style sets know that if we call
-  // nsPresContext::EnsureSafeToHandOutCSSRules we will need to restyle the
-  // document
-  for (nsStyleSet* styleSet : mStyleSets) {
-    styleSet->SetNeedsRestyleAfterEnsureUniqueInner();
-  }
-}
-
-void
-CSSStyleSheet::AppendAllChildSheets(nsTArray<CSSStyleSheet*>& aArray)
-{
-  for (StyleSheet* child = GetFirstChild(); child;
-       child = child->mNext) {
-
-    aArray.AppendElement(child->AsGecko());
-  }
-}
-
 already_AddRefed<StyleSheet>
 CSSStyleSheet::Clone(StyleSheet* aCloneParent,
                      css::ImportRule* aCloneOwnerRule,
@@ -666,15 +602,15 @@ CSSStyleSheet::List(FILE* out, int32_t aIndent) const
 #endif
 
 void 
-CSSStyleSheet::ClearRuleCascades()
+CSSStyleSheet::ClearRuleCascadesInternal()
 {
-  // We might be in ClearRuleCascades because we had a modification
+  // We might be in ClearRuleCascadesInternal because we had a modification
   // to the sheet that resulted in an nsCSSSelector being destroyed.
   // Tell the RestyleManager for each document we're used in
   // so that they can drop any nsCSSSelector pointers (used for
   // eRestyle_SomeDescendants) in their mPendingRestyles.
-  for (nsStyleSet* styleSet : mStyleSets) {
-    styleSet->ClearSelectors();
+  for (StyleSetHandle setHandle : mStyleSets) {
+    setHandle->AsGecko()->ClearSelectors();
   }
 
   bool removedSheetFromRuleProcessorCache = false;
@@ -691,18 +627,6 @@ CSSStyleSheet::ClearRuleCascades()
       }
       (*iter)->ClearRuleCascades();
     }
-  }
-  if (mParent) {
-    CSSStyleSheet* parent = (CSSStyleSheet*)mParent;
-    parent->ClearRuleCascades();
-  }
-}
-
-void
-CSSStyleSheet::WillDirty()
-{
-  if (mInner->mComplete) {
-    EnsureUniqueInner();
   }
 }
 

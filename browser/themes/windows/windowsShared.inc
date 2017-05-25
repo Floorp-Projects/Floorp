@@ -8,4 +8,6 @@
 %define fgTabTexture linear-gradient(transparent 2px, @toolbarHighlight@ 2px, @toolbarHighlight@)
 %define fgTabBackgroundColor -moz-dialog
 %define fgTabTextureLWT @fgTabTexture@
+%ifndef MOZ_PHOTON_THEME
 %define customToolbarColor hsl(210,75%,92%)
+%endif

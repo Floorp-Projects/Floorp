@@ -1234,7 +1234,7 @@ nsCSSRuleProcessor::GetWindowsThemeIdentifier()
 
 /* static */
 EventStates
-nsCSSRuleProcessor::GetContentState(Element* aElement, const TreeMatchContext& aTreeMatchContext)
+nsCSSRuleProcessor::GetContentState(Element* aElement, bool aUsingPrivateBrowsing)
 {
   EventStates state = aElement->StyleState();
 
@@ -1245,11 +1245,30 @@ nsCSSRuleProcessor::GetContentState(Element* aElement, const TreeMatchContext& a
   if (state.HasState(NS_EVENT_STATE_VISITED) &&
       (!gSupportVisitedPseudo ||
        aElement->OwnerDoc()->IsBeingUsedAsImage() ||
-       aTreeMatchContext.mUsingPrivateBrowsing)) {
+       aUsingPrivateBrowsing)) {
     state &= ~NS_EVENT_STATE_VISITED;
     state |= NS_EVENT_STATE_UNVISITED;
   }
   return state;
+}
+
+/* static */
+EventStates
+nsCSSRuleProcessor::GetContentState(Element* aElement, const TreeMatchContext& aTreeMatchContext)
+{
+  return nsCSSRuleProcessor::GetContentState(
+    aElement,
+    aTreeMatchContext.mUsingPrivateBrowsing
+  );
+}
+
+/* static */
+EventStates
+nsCSSRuleProcessor::GetContentState(Element* aElement)
+{
+  nsILoadContext* loadContext = aElement->OwnerDoc()->GetLoadContext();
+  bool usingPrivateBrowsing = loadContext && loadContext->UsePrivateBrowsing();
+  return nsCSSRuleProcessor::GetContentState(aElement, usingPrivateBrowsing);
 }
 
 /* static */
@@ -1264,31 +1283,33 @@ nsCSSRuleProcessor::IsLink(const Element* aElement)
 EventStates
 nsCSSRuleProcessor::GetContentStateForVisitedHandling(
                      Element* aElement,
-                     const TreeMatchContext& aTreeMatchContext,
                      nsRuleWalker::VisitedHandlingType aVisitedHandling,
                      bool aIsRelevantLink)
 {
-  EventStates contentState = GetContentState(aElement, aTreeMatchContext);
-  if (contentState.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED)) {
+  // It's unnecessary to call GetContentState() here (which may flip visited to
+  // unvisited) since this function will remove both unvisited and visited if
+  // either is set and produce a new value.
+  EventStates state = aElement->StyleState();
+  if (state.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED)) {
     MOZ_ASSERT(IsLink(aElement), "IsLink() should match state");
-    contentState &= ~(NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED);
+    state &= ~(NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED);
     if (aIsRelevantLink) {
       switch (aVisitedHandling) {
         case nsRuleWalker::eRelevantLinkUnvisited:
-          contentState |= NS_EVENT_STATE_UNVISITED;
+          state |= NS_EVENT_STATE_UNVISITED;
           break;
         case nsRuleWalker::eRelevantLinkVisited:
-          contentState |= NS_EVENT_STATE_VISITED;
+          state |= NS_EVENT_STATE_VISITED;
           break;
         case nsRuleWalker::eLinksVisitedOrUnvisited:
-          contentState |= NS_EVENT_STATE_UNVISITED | NS_EVENT_STATE_VISITED;
+          state |= NS_EVENT_STATE_UNVISITED | NS_EVENT_STATE_VISITED;
           break;
       }
     } else {
-      contentState |= NS_EVENT_STATE_UNVISITED;
+      state |= NS_EVENT_STATE_UNVISITED;
     }
   }
-  return contentState;
+  return state;
 }
 
 /**
@@ -1604,7 +1625,6 @@ StateSelectorMatches(Element* aElement,
     EventStates contentState =
       nsCSSRuleProcessor::GetContentStateForVisitedHandling(
                                    aElement,
-                                   aTreeMatchContext,
                                    aTreeMatchContext.VisitedHandling(),
                                    aNodeMatchContext.mIsRelevantLink);
     if (!contentState.HasAtLeastOneOfStates(aStatesToCheck)) {

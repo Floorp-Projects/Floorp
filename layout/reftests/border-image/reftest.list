@@ -30,7 +30,7 @@ fails-if(Android) fails-if(usesRepeatResampling) == center-scaling-3.html center
 == border-image-width-1a.html border-image-width-1-ref.html
 == border-image-width-1b.html border-image-width-1-ref.html
 == border-image-width-1c.html border-image-width-1-ref.html
-skip-if(stylo) == border-image-width-large.html border-image-width-large-ref.html
+skip-if(styloVsGecko) == border-image-width-large.html border-image-width-large-ref.html
 == border-image-outset-1a.html border-image-outset-1-ref.html
 == border-image-outset-1b.html border-image-outset-1-ref.html
 == border-image-outset-1c.html border-image-outset-1-ref.html

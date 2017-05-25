@@ -1,0 +1,20 @@
+[package]
+name = "msdos_time"
+version = "0.1.5"
+authors = ["Mathijs van de Nes <git@mathijs.vd-nes.nl>"]
+license = "MIT OR Apache-2.0"
+description = """
+Converts an MsDosDateTime (FAT time) to a Tm value
+"""
+repository = "https://github.com/mvdnes/msdos_time"
+documentation = "https://mvdnes.github.io/rust-docs/msdos_time/msdos_time/"
+
+[lib]
+name = "msdos_time"
+
+[dependencies]
+time = "0.1"
+
+[target.'cfg(windows)'.dependencies]
+winapi = "0.2"
+kernel32-sys = "0.2"

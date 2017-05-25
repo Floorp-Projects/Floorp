@@ -1,0 +1,69 @@
+[package]
+authors = ["The Rust Project Developers"]
+description = "A collection of numeric types and traits for Rust, including bigint,\ncomplex, rational, range iterators, generic integers, and more!\n"
+documentation = "http://rust-num.github.io/num"
+homepage = "https://github.com/rust-num/num"
+keywords = ["mathematics", "numerics"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/rust-num/num"
+name = "num"
+version = "0.1.37"
+
+[[bench]]
+name = "bigint"
+
+[[bench]]
+harness = false
+name = "shootout-pidigits"
+
+[dependencies]
+
+[dependencies.num-bigint]
+optional = true
+path = "bigint"
+version = "0.1.36"
+
+[dependencies.num-complex]
+optional = true
+path = "complex"
+version = "0.1.36"
+
+[dependencies.num-integer]
+path = "./integer"
+version = "0.1.33"
+
+[dependencies.num-iter]
+optional = false
+path = "iter"
+version = "0.1.33"
+
+[dependencies.num-rational]
+optional = true
+path = "rational"
+version = "0.1.36"
+
+[dependencies.num-traits]
+path = "./traits"
+version = "0.1.37"
+
+[dev-dependencies]
+
+[dev-dependencies.rand]
+version = "0.3.8"
+
+[features]
+bigint = ["num-bigint"]
+complex = ["num-complex"]
+rational = ["num-rational"]
+default = ["bigint", "complex", "rational", "rustc-serialize"]
+
+serde = [
+  "num-bigint/serde",
+  "num-complex/serde",
+  "num-rational/serde"
+]
+rustc-serialize = [
+  "num-bigint/rustc-serialize",
+  "num-complex/rustc-serialize",
+  "num-rational/rustc-serialize"
+]

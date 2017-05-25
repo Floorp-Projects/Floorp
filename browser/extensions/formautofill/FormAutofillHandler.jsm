@@ -133,4 +133,27 @@ FormAutofillHandler.prototype = {
     }
     */
   },
+
+  /**
+   * Return the profile that is converted from fieldDetails and only non-empty fields
+   * are included.
+   *
+   * @returns {Object} The new profile that convert from details with trimmed result.
+   */
+  createProfile() {
+    let profile = {};
+
+    this.fieldDetails.forEach(detail => {
+      let element = detail.elementWeakRef.get();
+      // Remove the unnecessary spaces
+      let value = element && element.value.trim();
+      if (!value) {
+        return;
+      }
+
+      profile[detail.fieldName] = value;
+    });
+
+    return profile;
+  },
 };

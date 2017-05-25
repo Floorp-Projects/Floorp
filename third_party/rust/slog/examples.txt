@@ -1,0 +1,1 @@
+Examples have been moved to: https://github.com/slog-rs/misc/tree/master/examples

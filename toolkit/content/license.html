@@ -8,22 +8,14 @@
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
     <title>Licenses</title>
 
-    <style type="text/css">
-      .path {
-        font-family: monospace;
-      }
-
-      dt {
-        font-weight: bold;
-      }
-    </style>
-    <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css">
+    <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css">
   </head>
 
-  <body id="lic-info" class="aboutPageWideContainer">
-    <h1><a id="top"></a>Licenses</h1>
+  <body id="lic-info">
+    <div class="container">
+      <h1><a id="top"></a>Licenses</h1>
 
-    <div>
+      <div>
 
 #ifdef APP_LICENSE_BLOCK
 #includesubst @APP_LICENSE_BLOCK@
@@ -2072,7 +2064,7 @@ Public License instead of this License.  But first, please read
     <h1><a id="ACE"></a>ACE License</h1>
 
     <p>This license applies to the file
-    <span class="path">media/webrtc/trunk/webrtc/system_wrappers/source/condition_variable_event_win.cc</span>.</p>
+    <code>media/webrtc/trunk/webrtc/system_wrappers/source/condition_variable_event_win.cc</code>.</p>
 
 <pre>
 ACE(TM), TAO(TM), CIAO(TM), DAnCE(TM), and CoSMIC(TM)
@@ -2096,7 +2088,7 @@ executables of your software products.
     <h1><a id="adobecmap"></a>Adobe CMap License</h1>
 
     <p>This license applies to files in the directory
-    <span class="path">browser/extensions/pdfjs/content/web/cmaps/</span>.</p>
+    <code>browser/extensions/pdfjs/content/web/cmaps/</code>.</p>
 
 <pre>
 Copyright 1990-2009 Adobe Systems Incorporated.
@@ -2141,7 +2133,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="android"></a>Android Open Source License</h1>
 
     <p>This license applies to various files in the Mozilla codebase,
-    including those in the directory <span class="path">gfx/skia/</span>.</p>
+    including those in the directory <code>gfx/skia/</code>.</p>
 <!-- This is the wrong directory, what was intended? -->
 
 <pre>
@@ -2174,7 +2166,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a id="angle"></a>ANGLE License</h1>
 
-    <p>This license applies to files in the directory <span class="path">gfx/angle/</span>.</p>
+    <p>This license applies to files in the directory <code>gfx/angle/</code>.</p>
 
 <pre>
 Copyright (C) 2002-2010 The ANGLE Project Authors.
@@ -2217,7 +2209,7 @@ POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="acorn"></a>acorn License</h1>
 
     <p>This license applies to all files in
-      <span class="path">devtools/shared/acorn</span>.
+      <code>devtools/shared/acorn</code>.
     </p>
 <pre>
 Copyright (C) 2012 by Marijn Haverbeke &lt;marijnh@gmail.com&gt;
@@ -2252,7 +2244,7 @@ licences.
     <h1><a id="adjust"></a>Adjust SDK License</h1>
 
     <p>This license applies to all files in the directory
-    <span class="path">mobile/android/thirdparty/com/adjust/sdk</span>.</p>
+    <code>mobile/android/thirdparty/com/adjust/sdk</code>.</p>
 
 <pre>
 Copyright (c) 2012-2014 adjust GmbH,
@@ -2470,7 +2462,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     <h1><a id="apple"></a>Apple License</h1>
 
-    <p>This license applies to certain files in the directories <span class="path">dom/media/webaudio/blink</span>, and <span class="path">widget/cocoa</span>.</p>
+    <p>This license applies to certain files in the directories <code>dom/media/webaudio/blink</code>, and <code>widget/cocoa</code>.</p>
 
 <pre>
 Copyright (C) 2008, 2009 Apple Inc. All rights reserved.
@@ -2503,7 +2495,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="apple-mozilla"></a>Apple/Mozilla NPRuntime License</h1>
 
     <p>This license applies to the file
-    <span class="path">dom/plugins/base/npruntime.h</span>.</p>
+    <code>dom/plugins/base/npruntime.h</code>.</p>
 
 <pre>
 Copyright &copy; 2004, Apple Computer, Inc. and The Mozilla Foundation.
@@ -2541,7 +2533,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a id="arm"></a>ARM License</h1>
 
-    <p>This license applies to files in the directory <span class="path">js/src/jit/arm64/vixl/</span>.</p>
+    <p>This license applies to files in the directory <code>js/src/jit/arm64/vixl/</code>.</p>
 
 <pre>
 Copyright 2013, ARM Limited
@@ -2577,7 +2569,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="babel"></a>Babel License</h1>
 
     <p>This license applies to this file in the directory
-      <span class="path">devtools/client/debugger/new/debugger.js/</span>.
+      <code>devtools/client/debugger/new/debugger.js/</code>.
     </p>
 
 <pre>
@@ -2608,7 +2600,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <h1><a id="babylon"></a>Babylon License</h1>
 
     <p>This license applies to this file in the directory
-      <span class="path">devtools/client/debugger/new/debugger.js/</span>.
+      <code>devtools/client/debugger/new/debugger.js/</code>.
     </p>
 
 <pre>
@@ -2636,8 +2628,8 @@ THE SOFTWARE.
     <h1><a id="bspatch"></a>bspatch License</h1>
 
     <p>This license applies to the files
-    <span class="path">toolkit/mozapps/update/updater/bspatch.cpp</span> and
-    <span class="path">toolkit/mozapps/update/updater/bspatch.h</span>.
+    <code>toolkit/mozapps/update/updater/bspatch.cpp</code> and
+    <code>toolkit/mozapps/update/updater/bspatch.h</code>.
     </p>
 
 <pre>
@@ -2672,7 +2664,7 @@ POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="cairo"></a>Cairo Component Licenses</h1>
 
     <p>This license, with different copyright holders, applies to certain files
-     in the directory <span class="path">gfx/cairo/</span>. The copyright
+     in the directory <code>gfx/cairo/</code>. The copyright
      holders and the applicable ranges of dates are as follows:
 
     <ul>
@@ -2725,25 +2717,25 @@ WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
     <p>This license applies to parts of the code in:</p>
     <ul>
-        <li><span class="path">browser/extensions/formautofill/content/nameReferences.js</span></li>
-        <li><span class="path">browser/extensions/formautofill/FormAutofillNameUtils.jsm</span></li>
-        <li><span class="path">browser/extensions/mortar/host/common/opengles2-utils.jsm</span></li>
-        <li><span class="path">editor/libeditor/EditorEventListener.cpp</span></li>
-        <li><span class="path">security/sandbox/</span></li>
-        <li><span class="path">widget/cocoa/GfxInfo.mm</span></li>
+        <li><code>browser/extensions/formautofill/content/nameReferences.js</code></li>
+        <li><code>browser/extensions/formautofill/FormAutofillNameUtils.jsm</code></li>
+        <li><code>browser/extensions/mortar/host/common/opengles2-utils.jsm</code></li>
+        <li><code>editor/libeditor/EditorEventListener.cpp</code></li>
+        <li><code>security/sandbox/</code></li>
+        <li><code>widget/cocoa/GfxInfo.mm</code></li>
     </ul>
     <p>and also some files in these directories:</p>
     <ul>
-        <li><span class="path">browser/extensions/mortar/ppapi/</span></li>
-        <li><span class="path">dom/media/webspeech/recognition/</span></li>
-        <li><span class="path">dom/plugins/</span></li>
-        <li><span class="path">gfx/ots/</span></li>
-        <li><span class="path">gfx/ycbcr/</span></li>
-        <li><span class="path">ipc/chromium/</span></li>
-        <li><span class="path">media/openmax_dl/</span></li>
-        <li><span class="path">toolkit/components/downloads/chromium/</span></li>
-        <li><span class="path">toolkit/components/url-classifier/chromium/</span></li>
-        <li><span class="path">tools/profiler/</span></li>
+        <li><code>browser/extensions/mortar/ppapi/</code></li>
+        <li><code>dom/media/webspeech/recognition/</code></li>
+        <li><code>dom/plugins/</code></li>
+        <li><code>gfx/ots/</code></li>
+        <li><code>gfx/ycbcr/</code></li>
+        <li><code>ipc/chromium/</code></li>
+        <li><code>media/openmax_dl/</code></li>
+        <li><code>toolkit/components/downloads/chromium/</code></li>
+        <li><code>toolkit/components/url-classifier/chromium/</code></li>
+        <li><code>tools/profiler/</code></li>
     </ul>
 
 <pre>
@@ -2782,16 +2774,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="codemirror"></a>CodeMirror License</h1>
 
     <p>This license applies to all files in
-      <span class="path">devtools/client/sourceeditor/codemirror</span> and
-      to specified files in the <span class="path">devtools/client/sourceeditor/test/</span>:
+      <code>devtools/client/sourceeditor/codemirror</code> and
+      to specified files in the <code>devtools/client/sourceeditor/test/</code>:
     </p>
     <ul>
-      <li><span class="path">cm_comment_test.js</span></li>
-      <li><span class="path">cm_driver.js</span></li>
-      <li><span class="path">cm_mode_javascript_test.js</span></li>
-      <li><span class="path">cm_mode_test.css</span></li>
-      <li><span class="path">cm_mode_test.js</span></li>
-      <li><span class="path">cm_test.js</span></li>
+      <li><code>cm_comment_test.js</code></li>
+      <li><code>cm_driver.js</code></li>
+      <li><code>cm_mode_javascript_test.js</code></li>
+      <li><code>cm_mode_test.css</code></li>
+      <li><code>cm_mode_test.js</code></li>
+      <li><code>cm_test.js</code></li>
     </ul>
 <pre>
 Copyright (C) 2013 by Marijn Haverbeke <marijnh@gmail.com>
@@ -2825,8 +2817,8 @@ licences.
     <h1><a id="cubic-bezier"></a>cubic-bezier License</h1>
 
     <p>This license applies to the file
-    <span class="path">devtools/client/shared/widgets/CubicBezierWidget.js
-    </span>.</p>
+    <code>devtools/client/shared/widgets/CubicBezierWidget.js
+    </code>.</p>
 <pre>
 Copyright (c) 2013 Lea Verou. All rights reserved.
 
@@ -2855,7 +2847,7 @@ DEALINGS IN THE SOFTWARE.
     <h1><a id="d3"></a>D3 License</h1>
 
     <p>This license applies to the file
-      <span class="path">devtools/client/shared/d3.js</span>.
+      <code>devtools/client/shared/d3.js</code>.
     </p>
 <pre>
 Copyright (c) 2014, Michael Bostock
@@ -2892,7 +2884,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="dagre-d3"></a>Dagre-D3 License</h1>
 
     <p>This license applies to the file
-      <span class="path">devtools/client/webaudioeditor/lib/dagre-d3.js</span>.
+      <code>devtools/client/webaudioeditor/lib/dagre-d3.js</code>.
     </p>
 <pre>
 Copyright (c) 2013 Chris Pettitt
@@ -2922,7 +2914,7 @@ THE SOFTWARE.
 <h1><a id="diff"></a>diff License</h1>
 
 <p>This license applies to the file
-<span class="path">devtools/client/inspector/markup/test/helper_diff.js</span>.</p>
+<code>devtools/client/inspector/markup/test/helper_diff.js</code>.</p>
 
 <pre>
 Copyright (c) 2014 Slava
@@ -2952,7 +2944,7 @@ THE SOFTWARE.
 <h1><a id="dtoa"></a>dtoa License</h1>
 
 <p>This license applies to the file
-<span class="path">nsprpub/pr/src/misc/dtoa.c</span>.</p>
+<code>nsprpub/pr/src/misc/dtoa.c</code>.</p>
 
 <pre>
 The author of this software is David M. Gay.
@@ -2976,7 +2968,7 @@ OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
     <h1><a id="fuzz-aldrin"></a>fuzz-aldrin License</h1>
 
     <p>This license applies to some of the code in
-    <span class="path">devtools/client/debugger/new/debugger.js</span>.</p>
+    <code>devtools/client/debugger/new/debugger.js</code>.</p>
 
 <pre>
 Copyright (c) 2015 Jean Christophe Roy
@@ -3145,7 +3137,7 @@ Phone &amp; Fax: +372 6411443
     <h1><a id="expat"></a>Expat License</h1>
 
     <p>This license applies to certain files in the directory
-    <span class="path">parser/expat/</span>.</p>
+    <code>parser/expat/</code>.</p>
 
 <pre>
 Copyright (c) 1998, 1999, 2000 Thai Open Source Software Center Ltd
@@ -3180,7 +3172,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <h1><a id="firebug"></a>Firebug License</h1>
 
     <p>This license applies to the code
-    <span class="path">devtools/shared/webconsole/network-helper.js</span>.</p>
+    <code>devtools/shared/webconsole/network-helper.js</code>.</p>
 
 <pre>
 Copyright (c) 2007, Parakey Inc.
@@ -3223,8 +3215,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="gfx-font-list"></a>gfxFontList License</h1>
 
     <p>This license applies to the files
-    <span class="path">gfx/thebes/gfxMacPlatformFontList.mm</span> and
-    <span class="path">gfx/thebes/gfxPlatformFontList.cpp</span>.
+    <code>gfx/thebes/gfxMacPlatformFontList.mm</code> and
+    <code>gfx/thebes/gfxPlatformFontList.cpp</code>.
     </p>
 
 <pre>
@@ -3262,9 +3254,9 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="google-bsd"></a>Google BSD License</h1>
 
     <p>This license applies to files in the directories
-    <span class="path">toolkit/crashreporter/google-breakpad/</span>,
-    <span class="path">toolkit/components/protobuf/</span> and
-    <span class="path">devtools/client/netmonitor/src/utils/filter-text-utils.js.</p>
+    <code>toolkit/crashreporter/google-breakpad/</code>,
+    <code>toolkit/components/protobuf/</code> and
+    <code>devtools/client/netmonitor/src/utils/filter-text-utils.js.</code></p>
 
 <pre>
 Copyright (c) 2006, Google Inc.
@@ -3303,7 +3295,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="vp8"></a>Google VP8 License</h1>
 
     <p>This license applies to certain files in the directory
-    <span class="path">media/libvpx</span>.</p>
+    <code>media/libvpx</code>.</p>
 <pre>
 Copyright (c) 2010, Google, Inc.
 
@@ -3360,7 +3352,7 @@ shall terminate as of the date such litigation is filed.
     <h1><a id="gears-istumbler"></a>Google Gears/iStumbler License</h1>
 
     <p>This license applies to the file
-    <span class="path">netwerk/wifi/osx_wifi.h</span>.</p>
+    <code>netwerk/wifi/osx_wifi.h</code>.</p>
 
 <pre>
 Copyright 2008, Google Inc.
@@ -3426,8 +3418,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a id="gsl"></a>GSL License</h1>
 
-    <p>This license applies to <span class="path">mfbt/Span.h</span> and
-    <span class="path">mfbt/tests/gtest/TestSpan.cpp</span>.</p>
+    <p>This license applies to <code>mfbt/Span.h</code> and
+    <code>mfbt/tests/gtest/TestSpan.cpp</code>.</p>
     <!-- https://github.com/Microsoft/GSL/blob/3819df6e378ffccf0e29465afe99c3b324c2aa70/LICENSE -->
 <pre>
 Copyright (c) 2015 Microsoft Corporation. All rights reserved.
@@ -3459,7 +3451,7 @@ THE SOFTWARE.
     <h1><a id="gyp"></a>gyp License</h1>
 
     <p>This license applies to certain files in the directory
-    <span class="path">media/webrtc/trunk/tools/gyp</span>.</p>
+    <code>media/webrtc/trunk/tools/gyp</code>.</p>
 <pre>
 Copyright (c) 2009 Google Inc. All rights reserved.
 
@@ -3496,7 +3488,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="halloc"></a>halloc License</h1>
 
     <p>This license applies to certain files in the directory
-    <span class="path">media/libnestegg/src</span>.</p>
+    <code>media/libnestegg/src</code>.</p>
 <pre>
 Copyright (c) 2004-2010 Alex Pankratov. All rights reserved.
 
@@ -3529,7 +3521,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="harfbuzz"></a>HarfBuzz License</h1>
 
     <p>This license, with different copyright holders, applies to the files in
-    the directory <span class="path">gfx/harfbuzz/</span>.
+    the directory <code>gfx/harfbuzz/</code>.
     The copyright holders and the applicable ranges of dates are as follows:</p>
 
     <ul>
@@ -3571,7 +3563,7 @@ PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
     <h1><a id="icu"></a>ICU License</h1>
 
     <p>This license applies to some code in the
-    <span class="path">gfx/thebes</span> directory.</p>
+    <code>gfx/thebes</code> directory.</p>
 
 <pre>
 ICU License - ICU 1.8.1 and later
@@ -3650,7 +3642,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a id="jpnic"></a>Japan Network Information Center License</h1>
     <p>This license applies to certain files in the
-    directory <span class="path">netwerk/dns/</span>.</p>
+    directory <code>netwerk/dns/</code>.</p>
 <pre>
 Copyright (c) 2001,2002 Japan Network Information Center.
 All rights reserved.
@@ -3700,7 +3692,7 @@ Chiyoda-ku, Tokyo 101-0047, Japan.
     <h1><a id="jsmn"></a>JSMN License</h1>
 
     <p>This license applies to files in the directories
-    <span class="path">browser/extensions/mortar/json/</span>.
+    <code>browser/extensions/mortar/json/</code>.
     </p>
 
 <pre>
@@ -3731,7 +3723,7 @@ THE SOFTWARE.
     <h1><a id="jszip"></a>JSZip License</h1>
 
     <p>This license applies to the file
-    <span class="path">devtools/client/shared/vendor/jszip.js</span>.</p>
+    <code>devtools/client/shared/vendor/jszip.js</code>.</p>
 
 <pre>
 Copyright (c) 2009-2016 Stuart Knightley, David Duponchel, Franz Buchinger, António Afonso
@@ -3760,7 +3752,7 @@ THE SOFTWARE.
     <h1><a id="jemalloc"></a>jemalloc License</h1>
 
     <p>This license applies to files in the directories
-    <span class="path">memory/mozjemalloc/</span> and
+    <code>memory/mozjemalloc/</code> and
     </p>
 
 <pre>
@@ -3827,7 +3819,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <h1><a id="k_exp"></a>k_exp License</h1>
 
     <p>This license applies to the file
-    <span class="path">modules/fdlibm/src/k_exp.cpp</span>.
+    <code>modules/fdlibm/src/k_exp.cpp</code>.
     </p>
 
 <pre>
@@ -3863,14 +3855,14 @@ SUCH DAMAGE.
     <p>This license applies to the following files:</p>
 
     <ul>
-      <li class="path">openmax_dl/dl/api/omxtypes.h</li>
-      <li class="path">openmax_dl/dl/sp/api/omxSP.h</li>
+      <li><code>openmax_dl/dl/api/omxtypes.h</code></li>
+      <li><code>openmax_dl/dl/sp/api/omxSP.h</code></li>
     </ul>
 
     <p>and also some files in these directories:</p>
 
     <ul>
-      <li class="path">browser/extensions/mortar/ppapi/</li>
+      <li><code>browser/extensions/mortar/ppapi/</code></li>
     </ul>
 
 <pre>
@@ -3904,7 +3896,7 @@ Khronos and OpenMAX are trademarks of the Khronos Group Inc.
     <h1><a id="kiss_fft"></a>Kiss FFT License</h1>
 
     <p>This license applies to files in the directory
-      <span class="path">media/kiss_fft/</span>.</p>
+      <code>media/kiss_fft/</code>.</p>
 
 <pre>
 Copyright (c) 2003-2010 Mark Borgerding
@@ -3972,7 +3964,7 @@ THE SOFTWARE.
     <h1><a id="libcubeb"></a>libcubeb License</h1>
 
     <p class="correctme">This license applies to files in the directory
-    <span class="path">media/libcubeb</span>.
+    <code>media/libcubeb</code>.
     </p>
 
 <pre>
@@ -3996,7 +3988,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
     <h1><a id="libevent"></a>libevent License</h1>
 
     <p>This license applies to files in the directory
-    <span class="path">ipc/chromium/src/third_party/libevent/</span>.
+    <code>ipc/chromium/src/third_party/libevent/</code>.
     </p>
 
 <pre>
@@ -4032,7 +4024,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="libffi"></a>libffi License</h1>
 
     <p>This license applies to files in the directory
-    <span class="path">js/src/ctypes/libffi/</span>.
+    <code>js/src/ctypes/libffi/</code>.
     </p>
 
 <pre>
@@ -4066,8 +4058,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     <p>This license applies to the following files:</p>
     <ul>
-      <li class="path">media/mtransport/sigslot.h</li>
-      <li class="path">media/mtransport/test/gtest_utils.h</li>
+      <li><code>media/mtransport/sigslot.h</code></li>
+      <li><code>media/mtransport/test/gtest_utils.h</code></li>
     </ul>
 
 <pre>
@@ -4104,7 +4096,7 @@ SUCH DAMAGE.
     <h1><a id="libnestegg"></a>libnestegg License</h1>
 
     <p>This license applies to certain files in the directory
-    <span class="path">media/libnestegg</span>.
+    <code>media/libnestegg</code>.
     </p>
 
 <pre>
@@ -4128,7 +4120,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
     <h1><a id="libsoundtouch"></a>libsoundtouch License</h1>
 
     <p>This license applies to certain files in the directory
-    <span class="path">media/libsoundtouch/src/</span>.
+    <code>media/libsoundtouch/src/</code>.
     </p>
 
 <pre>
@@ -4154,8 +4146,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
     <h1><a id="libyuv"></a>libyuv License</h1>
 
     <p>This license applies to files in the directory
-    <span class="path">media/libyuv</span> except
-    for the file <span class="path">media/libyuv/source/x86inc.asm</span>.
+    <code>media/libyuv</code> except
+    for the file <code>media/libyuv/source/x86inc.asm</code>.
     </p>
 
 <pre>
@@ -4231,7 +4223,7 @@ SUCH DAMAGE.
     <h1><a id="lodash"></a>License - lodash</h1>
 
     <p>This license applies to some of the code in
-    <span class="path">devtools/client/debugger/new/debugger.js</span>.</p>
+    <code>devtools/client/debugger/new/debugger.js</code>.</p>
 
 <pre>
 Copyright JS Foundation and other contributors <https://js.foundation/>
@@ -4289,7 +4281,7 @@ terms above.
     <h1><a id="microformatsshiv"></a>MIT license — microformat-shiv</h1>
 
     <p>This license applies to some files in the directory
-    <span class="path">toolkit/components/microformats</span>.</p>
+    <code>toolkit/components/microformats</code>.</p>
 
 <pre>
 MIT license — microformat-shiv
@@ -4320,7 +4312,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <h1><a id="myspell"></a>MySpell License</h1>
 
     <p>This license applies to some files in the directory
-    <span class="path">extensions/spellcheck/hunspell</span>.</p>
+    <code>extensions/spellcheck/hunspell</code>.</p>
 
 <pre>
 Copyright 2002 Kevin B. Hendricks, Stratford, Ontario, Canada
@@ -4361,7 +4353,7 @@ SUCH DAMAGE.
 
 <h1><a id="naturalSort"></a>naturalSort License</h1>
 
-<p>This license applies to <span class="path">devtools/client/shared/natural-sort.js</span>.</p>
+<p>This license applies to <code>devtools/client/shared/natural-sort.js</code>.</p>
 
 <pre>
 The MIT License (MIT)
@@ -4392,7 +4384,7 @@ THE SOFTWARE.
     <h1><a id="nicer"></a>nICEr License</h1>
 
     <p>This license applies to certain files in the directory
-    <span class="path">media/mtransport/third_party/nICEr</span>.</p>
+    <code>media/mtransport/third_party/nICEr</code>.</p>
 
 <pre>
    Copyright (C) 2007, Adobe Systems Inc.
@@ -4437,7 +4429,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="openaes"></a>OpenAES License</h1>
 
     <p>This license applies to certain files in the directory
-    <span class="path">media/gmp-clearkey/0.1/openaes</span>.
+    <code>media/gmp-clearkey/0.1/openaes</code>.
     </p>
 
 <pre>
@@ -4472,7 +4464,7 @@ POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="openvision"></a>OpenVision License</h1>
 
     <p>This license applies to the file
-    <span class="path">extensions/auth/gssapi.h</span>.</p>
+    <code>extensions/auth/gssapi.h</code>.</p>
 
 <pre>
 Copyright 1993 by OpenVision Technologies, Inc.
@@ -4503,7 +4495,7 @@ PERFORMANCE OF THIS SOFTWARE.
     <h1><a id="openvr"></a>OpenVR License</h1>
 
     <p>This license applies to certain files in the directory
-    <span class="path">gfx/vr/openvr</span>.</p>
+    <code>gfx/vr/openvr</code>.</p>
 <pre>
 Copyright (c) 2015, Valve Corporation
 All rights reserved.
@@ -4541,7 +4533,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="node-md5"></a>node-md5 License</h1>
 
     <p>This license applies to some of the code in
-    <span class="path">devtools/client/debugger/new/debugger.js</span>.</p>
+    <code>devtools/client/debugger/new/debugger.js</code>.</p>
 
 <pre>
 Copyright © 2011-2012, Paul Vorbach.
@@ -4578,7 +4570,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="node-properties"></a>node-properties License</h1>
 
     <p>This license applies to
-    <span class="path">devtools/shared/node-properties/node-properties.js</span>.</p>
+    <code>devtools/shared/node-properties/node-properties.js</code>.</p>
 
 <pre>
 The MIT License (MIT)
@@ -4609,7 +4601,7 @@ THE SOFTWARE.
     <h1><a id="nrappkit"></a>nrappkit License</h1>
 
     <p>This license applies to certain files in the directory
-    <span class="path">media/mtransport/third_party/nrappkit</span>.</p>
+    <code>media/mtransport/third_party/nrappkit</code>.</p>
 
 <pre>
 Copyright (C) 2001-2007, Network Resonance, Inc.
@@ -4643,7 +4635,7 @@ POSSIBILITY OF SUCH DAMAGE.
 </pre>
 
     <p>This license applies to certain files in the directory
-    <span class="path">media/mtransport/third_party/nrappkit</span>.</p>
+    <code>media/mtransport/third_party/nrappkit</code>.</p>
 
 <pre>
 Copyright (C) 1999-2003 RTFM, Inc.
@@ -4688,7 +4680,7 @@ SUCH DAMAGE.
    files included in this distribution. it does not apply to any other
    part of ssldump not included in this distribution.</p>
 
-    <p>This license applies to the file <span class="path">media/mtransport/third_party/nrappkit/src/port/generic/include/sys/queue.h</span>.</p>
+    <p>This license applies to the file <code>media/mtransport/third_party/nrappkit/src/port/generic/include/sys/queue.h</code>.</p>
 
 <pre>
 Copyright (c) 1991, 1993
@@ -4720,8 +4712,8 @@ SUCH DAMAGE.
 </pre>
 
 
-    <p>This license applies to the file:
-  <span class="path">media/mtransport/third_party/nrappkit/src/util/util.c</span>.</p>
+  <p>This license applies to the file:
+  <code>media/mtransport/third_party/nrappkit/src/util/util.c</code>.</p>
 
 <pre>
 Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -4756,7 +4748,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="praton"></a>praton License</h1>
 
     <p>This license applies to the file
-    <span class="path">nsprpub/pr/src/misc/praton.c</span>.</p>
+    <code>nsprpub/pr/src/misc/praton.c</code>.</p>
 
 <pre>
 Copyright (c) 1983, 1990, 1993
@@ -4812,8 +4804,8 @@ SOFTWARE.
     <h1><a id="praton1"></a>praton and inet_ntop License</h1>
 
     <p>This license applies to the files
-    <span class="path">nsprpub/pr/src/misc/praton.c</span> and
-    <span class="path">media/mtransport/third_party/nrappkit/src/util/util.c</span>.</p>
+    <code>nsprpub/pr/src/misc/praton.c</code> and
+    <code>media/mtransport/third_party/nrappkit/src/util/util.c</code>.</p>
 
 <pre>
 Copyright (c) 2004 by Internet Systems Consortium, Inc. ("ISC")
@@ -4838,8 +4830,8 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
     <h1><a id="pbkdf2-sha256"></a>pbkdf2_sha256 License</h1>
 
     <p>This license applies to the code
-    <span class="path">mozglue/android/pbkdf2_sha256.c</span> and
-    <span class="path">mozglue/android/pbkdf2_sha256.h</span>.
+    <code>mozglue/android/pbkdf2_sha256.c</code> and
+    <code>mozglue/android/pbkdf2_sha256.h</code>.
     </p>
 
 <pre>
@@ -4874,8 +4866,8 @@ SUCH DAMAGE.
     <h1><a id="pocketsphinx"></a>Pocketsphinx License</h1>
 
     <p>This license applies to files in the directories
-      <span class="path">media/pocketsphinx/</span> and
-      <span class="path">media/sphinxbase/</span>.
+      <code>media/pocketsphinx/</code> and
+      <code>media/sphinxbase/</code>.
     </p>
 
 <pre>
@@ -4917,7 +4909,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="qcms"></a>qcms License</h1>
 
     <p>This license applies to certain files in the directory
-      <span class="path">gfx/qcms/</span>.</p>
+      <code>gfx/qcms/</code>.</p>
 <pre>
 Copyright (C) 2009 Mozilla Corporation
 Copyright (C) 1998-2007 Marti Maria
@@ -4947,7 +4939,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <h1><a id="qrcode-generator"></a>QR Code Generator License</h1>
 
     <p>This license applies to certain files in the directory
-      <span class="path">devtools/shared/qrcode/encoder/</span>.</p>
+      <code>devtools/shared/qrcode/encoder/</code>.</p>
 <pre>
 Copyright (c) 2009 Kazuhiko Arase
 
@@ -4975,7 +4967,7 @@ THE SOFTWARE.
     <h1><a id="raven-js"></a>Raven.js License</h1>
 
     <p>This license applies to the file
-      <span class="path">browser/extensions/screenshots/webextension/build/raven.js</span>.</p>
+      <code>browser/extensions/screenshots/webextension/build/raven.js</code>.</p>
 <pre>
 Copyright (c) 2014 Matt Robenolt and other contributors
 All rights reserved.
@@ -5043,7 +5035,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="react-intl"></a>React Intl License</h1>
 
     <p>This license applies to the files
-    <span class="path">browser/extensions/activity-stream/vendor/react-intl.js</span>.</p>
+    <code>browser/extensions/activity-stream/vendor/react-intl.js</code>.</p>
 <pre>
 Copyright 2014 Yahoo Inc.
 All rights reserved.
@@ -5079,8 +5071,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="react-redux"></a>React-Redux License</h1>
 
     <p>This license applies to the files
-    <span class="path">devtools/client/shared/vendor/react-redux.js</span> and
-    <span class="path">browser/extensions/activity-stream/vendor/react-redux.js</span>.</p>
+    <code>devtools/client/shared/vendor/react-redux.js</code> and
+    <code>browser/extensions/activity-stream/vendor/react-redux.js</code>.</p>
 <pre>
 Copyright (c) 2015 Dan Abramov
 
@@ -5108,7 +5100,7 @@ SOFTWARE.
     <h1><a id="react-virtualized"></a>React Virtualized License</h1>
 
     <p>This license applies to the file
-    <span class="path">devtools/client/shared/vendor/react-virtualized.js</span>.</p>
+    <code>devtools/client/shared/vendor/react-virtualized.js</code>.</p>
 <pre>
 Copyright (c) 2015 Brian Vaughn
 
@@ -5136,8 +5128,8 @@ SOFTWARE.
     <h1><a id="xdg"></a>Red Hat xdg_user_dir_lookup License</h1>
 
     <p>This license applies to the
-    <span class="path">xdg_user_dir_lookup</span> function in
-    <span class="path">xpcom/io/SpecialSystemDirectory.cpp</span>.</p>
+    <code>xdg_user_dir_lookup</code> function in
+    <code>xpcom/io/SpecialSystemDirectory.cpp</code>.</p>
 
 <pre>
 Copyright (c) 2007 Red Hat, Inc.
@@ -5168,8 +5160,8 @@ SOFTWARE.
     <h1><a id="redux"></a>Redux License</h1>
 
     <p>This license applies to the file
-    <span class="path">devtools/client/shared/vendor/redux.js</span> and
-    <span class="path">browser/extensions/activity-stream/vendor/Redux.jsm</span>.</p>
+    <code>devtools/client/shared/vendor/redux.js</code> and
+    <code>browser/extensions/activity-stream/vendor/Redux.jsm</code>.</p>
 <pre>
 Copyright (c) 2015 Dan Abramov
 
@@ -5197,8 +5189,8 @@ SOFTWARE.
 <h1><a id="reselect"></a>Reselect License</h1>
 
 <p>This license applies to the file
-<span class="path">devtools/client/shared/vendor/reselect.js</span> and
-<span class="path">browser/extensions/activity-stream/vendor/reselect.js</span>.</p>
+<code>devtools/client/shared/vendor/reselect.js</code> and
+<code>browser/extensions/activity-stream/vendor/reselect.js</code>.</p>
 <pre>
 The MIT License (MIT)
 
@@ -5266,7 +5258,7 @@ POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="sctp"></a>SCTP Licenses</h1>
 
     <p>These licenses apply to certain files in the directory
-    <span class="path">netwerk/sctp/src/</span>.</p>
+    <code>netwerk/sctp/src/</code>.</p>
 
 <pre>
 Copyright (c) 2009-2010 Brad Penoff
@@ -5337,7 +5329,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="skia"></a>Skia License</h1>
 
     <p>This license applies to certain files in the directory
-    <span class="path">gfx/skia/</span>.</p>
+    <code>gfx/skia/</code>.</p>
 
 <pre>
 Copyright (c) 2011 Google Inc. All rights reserved.
@@ -5374,7 +5366,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="snappy"></a>Snappy License</h1>
 
     <p>This license applies to certain files in the directory
-    <span class="path">other-licenses/snappy/</span>.</p>
+    <code>other-licenses/snappy/</code>.</p>
 
 <pre>
 Copyright 2011, Google Inc.
@@ -5412,7 +5404,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="sprintf.js"></a>sprintf.js License</h1>
 
     <p>This license applies to
-    <span class="path">devtools/shared/sprintfjs/sprintf.js</span>.</p>
+    <code>devtools/shared/sprintfjs/sprintf.js</code>.</p>
 
 <pre>
 Copyright (c) 2007-2016, Alexandru Marasteanu &lt;hello [at) alexei (dot] ro&gt;
@@ -5446,8 +5438,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="sunsoft"></a>SunSoft License</h1>
 
     <p>This license applies to the
-      <span class="path">ICC_H</span> block in
-      <span class="path">gfx/qcms/qcms.h</span>.</p>
+      <code>ICC_H</code> block in
+      <code>gfx/qcms/qcms.h</code>.</p>
 
 <pre>
 Copyright (c) 1994-1996 SunSoft, Inc.
@@ -5486,7 +5478,7 @@ authorization from SunSoft Inc.
     <h1><a id="superfasthash"></a>SuperFastHash License</h1>
 
     <p>This license applies to files in the directory
-      <span class="path">security/sandbox/chromium/base/third_party/superfasthash/</span>.</p>
+      <code>security/sandbox/chromium/base/third_party/superfasthash/</code>.</p>
 
 <pre>
 Copyright (c) 2010, Paul Hsieh
@@ -5521,9 +5513,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a id="unicode"></a>Unicode License</h1>
 
-    <p>This license applies to files in the <span class="path">intl/icu</span>
-    and <span class="path">intl/tzdata</span> directories and certain files in
-    the <span class="path">js/src/vm</span> directory.</p>
+    <p>This license applies to files in the <code>intl/icu</code>
+    and <code>intl/tzdata</code> directories and certain files in
+    the <code>js/src/vm</code> directory.</p>
     </p>
 
 <pre>
@@ -5922,11 +5914,11 @@ Database section 7.
     directories, certain files in those directories:</p>
 
     <ul>
-      <li class="path">dbm/</li>
-      <li class="path">db/mork/src/morkQuickSort.cpp</li>
-      <li class="path">xpcom/ds/nsQuickSort.cpp</li>
-      <li class="path">nsprpub/pr/src/misc/praton.c</li>
-      <li class="path">media/mtransport/third_party/nICEr/src/stun/addrs.c</li>
+      <li><code>dbm/</code></li>
+      <li><code>db/mork/src/morkQuickSort.cpp</code></li>
+      <li><code>xpcom/ds/nsQuickSort.cpp</code></li>
+      <li><code>nsprpub/pr/src/misc/praton.c</code></li>
+      <li><code>media/mtransport/third_party/nICEr/src/stun/addrs.c</code></li>
     </ul>
 
 <pre>
@@ -5967,7 +5959,7 @@ SUCH DAMAGE.
     <h1><a id="hunspell-en-US"></a>US English Spellchecking Dictionary Licenses</h1>
 
     <p>These licenses apply to certain files in the directory
-      <span class="path">extensions/spellcheck/locales/en-US/hunspell/</span>. (This
+      <code>extensions/spellcheck/locales/en-US/hunspell/</code>. (This
       code only ships in some localized versions of this product.)</p>
 
 <pre>
@@ -6064,10 +6056,10 @@ Additional Contributors:
     <h1><a id="v8"></a>V8 License</h1>
 
     <p>This license applies to certain files in the directories
-      <span class="path">js/src/irregexp</span>,
-      <span class="path">js/src/builtin</span>,
-      <span class="path">js/src/jit/arm</span> and
-      <span class="path">js/src/jit/mips</span>.
+      <code>js/src/irregexp</code>,
+      <code>js/src/builtin</code>,
+      <code>js/src/jit/arm</code> and
+      <code>js/src/jit/mips</code>.
     </p>
 <pre>
 Copyright 2006-2012 the V8 project authors. All rights reserved.
@@ -6104,7 +6096,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="vtune"></a>VTune License</h1>
 
     <p>This license applies to certain files in the directory
-    <span class="path">js/src/vtune</span>.</p>
+    <code>js/src/vtune</code>.</p>
 <pre>
 Copyright (c) 2011 Intel Corporation.
 All rights reserved.
@@ -6142,7 +6134,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <h1><a id="webrtc"></a>WebRTC License</h1>
 
     <p>This license applies to certain files in the directory
-    <span class="path">media/webrtc/trunk</span>.</p>
+    <code>media/webrtc/trunk</code>.</p>
 <pre>
 Copyright (c) 2011, The WebRTC project authors. All rights reserved.
 
@@ -6180,8 +6172,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <h1><a id="x264"></a>x264 License</h1>
 
-    <p>This license applies to the file <span class="path">
-    media/webrtc/trunk/third_party/libyuv/source/x86inc.asm</span>.
+    <p>This license applies to the file <code>
+    media/webrtc/trunk/third_party/libyuv/source/x86inc.asm</code>.
     </p>
 
 <pre>
@@ -6212,11 +6204,11 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
     <p>This license applies to files in the following directories
       with the specified copyright year ranges:</p>
     <ul>
-      <li><span class="path">media/libogg/</span>, 2002</li>
-      <li><span class="path">media/libtheora/</span>, 2002-2007</li>
-      <li><span class="path">media/libvorbis/</span>, 2002-2004</li>
-      <li><span class="path">media/libtremor/</span>, 2002-2010</li>
-      <li><span class="path">media/libspeex_resampler/</span>, 2002-2008</li>
+      <li><code>media/libogg/</code>, 2002</li>
+      <li><code>media/libtheora/</code>, 2002-2007</li>
+      <li><code>media/libvorbis/</code>, 2002-2004</li>
+      <li><code>media/libtremor/</code>, 2002-2010</li>
+      <li><code>media/libspeex_resampler/</code>, 2002-2008</li>
     </ul>
 
 <pre>
@@ -6308,8 +6300,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <p>These terms apply to the following files;
     they are referred to below as "Distributable Code":
       <ul>
-        <li><span class="path">d3d*.dll</span> (Direct3D libraries)</li>
-        <li><span class="path">msvc*.dll</span> (C and C++ runtime libraries)</li>
+        <li><code>d3d*.dll</code> (Direct3D libraries)</li>
+        <li><code>msvc*.dll</code> (C and C++ runtime libraries)</li>
       </ul>
     </p>
 
@@ -6336,9 +6328,9 @@ following terms:
 #endif
 
 
-    <hr>
+      <hr>
 
-    <p><a href="about:license#top">Return to top</a>.</p>
-
+      <p><a href="about:license#top">Return to top</a>.</p>
+    </div>
   </body>
 </html>
