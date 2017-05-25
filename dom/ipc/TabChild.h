@@ -620,12 +620,6 @@ public:
   nsresult CreatePluginWidget(nsIWidget* aParent, nsIWidget** aOut);
 #endif
 
-  virtual PPaymentRequestChild*
-  AllocPPaymentRequestChild() override;
-
-  virtual bool
-  DeallocPPaymentRequestChild(PPaymentRequestChild* aActor) override;
-
   LayoutDeviceIntPoint GetClientOffset() const { return mClientOffset; }
   LayoutDeviceIntPoint GetChromeDisplacement() const { return mChromeDisp; };
 
