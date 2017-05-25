@@ -45,10 +45,10 @@ GetTimerLog()
 }
 
 TimeStamp
-NS_GetTimerDeadlineHintOnCurrentThread(TimeStamp aDefault)
+NS_GetTimerDeadlineHintOnCurrentThread(TimeStamp aDefault, uint32_t aSearchBound)
 {
   return gThread
-           ? gThread->FindNextFireTimeForCurrentThread(aDefault)
+           ? gThread->FindNextFireTimeForCurrentThread(aDefault, aSearchBound)
            : TimeStamp();
 }
 
