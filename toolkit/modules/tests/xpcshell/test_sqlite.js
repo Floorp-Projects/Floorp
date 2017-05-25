@@ -33,7 +33,7 @@ function sleep(ms) {
 // When testing finalization, use this to tell Sqlite.jsm to not throw
 // an uncatchable `Promise.reject`
 function failTestsOnAutoClose(enabled) {
-  Cu.getGlobalForObject(Sqlite).Debugging.failTestsOnAutoClose = enabled;
+  Sqlite.failTestsOnAutoClose(enabled);
 }
 
 function getConnection(dbName, extraOptions = {}) {
