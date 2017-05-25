@@ -201,7 +201,7 @@
   skin/classic/browser/urlbar-star.svg                         (../shared/urlbar-star.svg)
   skin/classic/browser/urlbar-tab.svg                          (../shared/urlbar-tab.svg)
   skin/classic/browser/page-action.svg                         (../shared/icons/page-action.svg)
-  skin/classic/browser/copy-url.svg                            (../shared/icons/copy-url.svg)
+  skin/classic/browser/link.svg                                (../shared/icons/link.svg)
   skin/classic/browser/email-link.svg                          (../shared/icons/email-link.svg)
   skin/classic/browser/device-mobile.svg                       (../shared/icons/device-mobile.svg)
   skin/classic/browser/device-desktop.svg                      (../shared/icons/device-desktop.svg)
