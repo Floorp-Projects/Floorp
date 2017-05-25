@@ -217,6 +217,7 @@ dom/messagechannel/**
 dom/network/**
 dom/notification/**
 dom/offline/**
+dom/payments/**
 dom/performance/**
 dom/permission/**
 dom/plugins/**
