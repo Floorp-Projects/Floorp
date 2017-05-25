@@ -274,7 +274,7 @@ public:
   nsStyleContext* GetStyleIfVisited() const
     { return mStyleIfVisited; }
 
-  // To be called only from nsStyleSet / ServoStyleSet.
+  // To be called only from nsStyleSet.
   void SetStyleIfVisited(already_AddRefed<nsStyleContext> aStyleIfVisited)
   {
     MOZ_ASSERT(!IsStyleIfVisited(), "this context is not visited data");
@@ -288,15 +288,13 @@ public:
                "other context does not have visited data");
     NS_ASSERTION(GetStyleIfVisited()->GetPseudo() == GetPseudo(),
                  "pseudo tag mismatch");
-    if (GetParentAllowServo() && GetParentAllowServo()->GetStyleIfVisited()) {
-      NS_ASSERTION(GetStyleIfVisited()->GetParentAllowServo() ==
-                     GetParentAllowServo()->GetStyleIfVisited() ||
-                   GetStyleIfVisited()->GetParentAllowServo() ==
-                     GetParentAllowServo(),
+    if (GetParent() && GetParent()->GetStyleIfVisited()) {
+      NS_ASSERTION(GetStyleIfVisited()->GetParent() ==
+                     GetParent()->GetStyleIfVisited() ||
+                   GetStyleIfVisited()->GetParent() == GetParent(),
                    "parent mismatch");
     } else {
-      NS_ASSERTION(GetStyleIfVisited()->GetParentAllowServo() ==
-                     GetParentAllowServo(),
+      NS_ASSERTION(GetStyleIfVisited()->GetParent() == GetParent(),
                    "parent mismatch");
     }
   }
