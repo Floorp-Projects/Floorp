@@ -10,6 +10,20 @@
  * for more information.
  */
 
+/* defined by the harness */
+/* globals _HEAD_FILES, _HEAD_JS_PATH, _JSDEBUGGER_PORT, _JSCOV_DIR,
+    _MOZINFO_JS_PATH, _TEST_FILE, _TEST_NAME, _TESTING_MODULES_DIR,
+    _XPCSHELL_PROCESS:true */
+
+/* defined by XPCShellImpl.cpp */
+/* globals load, sendCommand */
+
+/* must be defined by tests using do_await_remote_message/do_send_remote_message */
+/* globals Cc, Ci */
+
+/* may be defined in test files */
+/* globals run_test */
+
 var _quit = false;
 var _passed = true;
 var _tests_pending = 0;
@@ -119,14 +133,14 @@ try {
   }
 
   let listener = {
-    QueryInterface: function(iid) {
+    QueryInterface(iid) {
       if (!iid.equals(Components.interfaces.nsISupports) &&
           !iid.equals(Components.interfaces.nsIConsoleListener)) {
         throw Components.results.NS_NOINTERFACE;
       }
       return this;
     },
-    observe: function(msg) {
+    observe(msg) {
       if (typeof do_print === "function")
         do_print("CONSOLE_MESSAGE: (" + levelNames[msg.logLevel] + ") " + msg.toString());
     }
@@ -163,7 +177,7 @@ function _Timer(func, delay) {
   _pendingTimers.push(timer);
 }
 _Timer.prototype = {
-  QueryInterface: function(iid) {
+  QueryInterface(iid) {
     if (iid.equals(Components.interfaces.nsITimerCallback) ||
         iid.equals(Components.interfaces.nsISupports))
       return this;
@@ -171,7 +185,7 @@ _Timer.prototype = {
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
 
-  notify: function(timer) {
+  notify(timer) {
     _pendingTimers.splice(_pendingTimers.indexOf(timer), 1);
 
     // The current nsITimer implementation can undershoot, but even if it
@@ -265,16 +279,16 @@ var _fakeIdleService = {
 
   factory: {
     // nsIFactory
-    createInstance: function(aOuter, aIID) {
+    createInstance(aOuter, aIID) {
       if (aOuter) {
         throw Components.results.NS_ERROR_NO_AGGREGATION;
       }
       return _fakeIdleService.QueryInterface(aIID);
     },
-    lockFactory: function(aLock) {
+    lockFactory(aLock) {
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
-    QueryInterface: function(aIID) {
+    QueryInterface(aIID) {
       if (aIID.equals(Components.interfaces.nsIFactory) ||
           aIID.equals(Components.interfaces.nsISupports)) {
         return this;
@@ -287,10 +301,10 @@ var _fakeIdleService = {
   get idleTime() {
     return 0;
   },
-  addIdleObserver: function() {},
-  removeIdleObserver: function() {},
+  addIdleObserver() {},
+  removeIdleObserver() {},
 
-  QueryInterface: function(aIID) {
+  QueryInterface(aIID) {
     // Useful for testing purposes, see test_get_idle.js.
     if (aIID.equals(Components.interfaces.nsIFactory)) {
       return this.factory;
@@ -599,8 +613,7 @@ function _execute_test() {
       }
     }
     _cleanupFunctions = [];
-  }.bind(this)).catch(reportCleanupError)
-               .then(() => complete = true);
+  }).catch(reportCleanupError).then(() => complete = true);
   let thr = Components.classes["@mozilla.org/thread-manager;1"]
                       .getService().currentThread;
   while (!complete) {
@@ -692,7 +705,7 @@ function do_execute_soon(callback, aName) {
                      .getService(Components.interfaces.nsIThreadManager);
 
   tm.dispatchToMainThread({
-    run: function() {
+    run() {
       try {
         callback();
       } catch (e) {
@@ -858,22 +871,20 @@ function do_report_result(passed, text, stack, todo) {
                              "PASS",
                              message);
     }
+  } else if (todo) {
+    _testLogger.testStatus(_TEST_NAME,
+                           name,
+                           "FAIL",
+                           "FAIL",
+                           message);
   } else {
-    if (todo) {
-      _testLogger.testStatus(_TEST_NAME,
-                             name,
-                             "FAIL",
-                             "FAIL",
-                             message);
-    } else {
-      _testLogger.testStatus(_TEST_NAME,
-                             name,
-                             "FAIL",
-                             "PASS",
-                             message,
-                             _format_stack(stack));
-      _abort_failed_test();
-    }
+    _testLogger.testStatus(_TEST_NAME,
+                           name,
+                           "FAIL",
+                           "PASS",
+                           message,
+                           _format_stack(stack));
+    _abort_failed_test();
   }
 }
 
@@ -1139,9 +1150,8 @@ function do_get_minidumpdir() {
                          .createInstance(Components.interfaces.nsILocalFile);
     file.initWithPath(path);
     return file;
-  } else {
-    return do_get_tempdir();
   }
+  return do_get_tempdir();
 }
 
 /**
@@ -1168,7 +1178,7 @@ function do_get_profile(notifyProfileAfterChange = false) {
   let dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
                          .getService(Components.interfaces.nsIProperties);
   let provider = {
-    getFile: function(prop, persistent) {
+    getFile(prop, persistent) {
       persistent.value = true;
       if (prop == "ProfD" || prop == "ProfLD" || prop == "ProfDS" ||
           prop == "ProfLDS" || prop == "TmpD") {
@@ -1176,7 +1186,7 @@ function do_get_profile(notifyProfileAfterChange = false) {
       }
       return null;
     },
-    QueryInterface: function(iid) {
+    QueryInterface(iid) {
       if (iid.equals(Components.interfaces.nsIDirectoryServiceProvider) ||
           iid.equals(Components.interfaces.nsISupports)) {
         return this;
@@ -1307,7 +1317,7 @@ function run_test_in_child(testFile, optionalCallback) {
 function do_await_remote_message(name, optionalCallback) {
   return new Promise((resolve) => {
     var listener = {
-      receiveMessage: function(message) {
+      receiveMessage(message) {
         if (message.name == name) {
           mm.removeMessageListener(name, listener);
           resolve();
