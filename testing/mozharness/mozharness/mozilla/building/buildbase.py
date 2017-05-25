@@ -374,6 +374,7 @@ class BuildOptionParser(object):
         'x86-old-id': 'builds/releng_sub_%s_configs/%s_x86_old_id.py',
         'x86-artifact': 'builds/releng_sub_%s_configs/%s_x86_artifact.py',
         'api-15-partner-sample1': 'builds/releng_sub_%s_configs/%s_api_15_partner_sample1.py',
+        'aarch64': 'builds/releng_sub_%s_configs/%s_aarch64.py',
         'android-test': 'builds/releng_sub_%s_configs/%s_test.py',
         'android-checkstyle': 'builds/releng_sub_%s_configs/%s_checkstyle.py',
         'android-lint': 'builds/releng_sub_%s_configs/%s_lint.py',
