@@ -124,10 +124,10 @@ t(TimeDuration duration)
     return duration.ToMilliseconds();
 }
 
-Phase
+inline Phase
 Statistics::currentPhase() const
 {
-    return phaseNestingDepth ? phaseNesting[phaseNestingDepth - 1] : Phase::NONE;
+    return phaseStack.empty() ? Phase::NONE : phaseStack.back();
 }
 
 PhaseKind
@@ -137,7 +137,7 @@ Statistics::currentPhaseKind() const
     // PhaseKind::MUTATOR phase.
 
     Phase phase = currentPhase();
-    MOZ_ASSERT_IF(phase == Phase::MUTATOR, phaseNestingDepth == 1);
+    MOZ_ASSERT_IF(phase == Phase::MUTATOR, phaseStack.length() == 1);
     if (phase == Phase::NONE || phase == Phase::MUTATOR)
         return PhaseKind::NONE;
 
@@ -638,8 +638,6 @@ Statistics::Statistics(JSRuntime* rt)
     nonincrementalReason_(gc::AbortReason::None),
     preBytes(0),
     maxPauseInInterval(0),
-    phaseNestingDepth(0),
-    suspended(0),
     sliceCallback(nullptr),
     nurseryCollectionCallback(nullptr),
     aborted(false),
@@ -648,6 +646,10 @@ Statistics::Statistics(JSRuntime* rt)
 {
     for (auto& count : counts)
         count = 0;
+    PodZero(&totalTimes_);
+
+    MOZ_ALWAYS_TRUE(phaseStack.reserve(MAX_PHASE_NESTING));
+    MOZ_ALWAYS_TRUE(suspendedPhases.reserve(MAX_SUSPENDED_PHASES));
 
     const char* env = getenv("MOZ_GCTIMER");
     if (env) {
@@ -674,8 +676,6 @@ Statistics::Statistics(JSRuntime* rt)
         enableProfiling_ = true;
         profileThreshold_ = TimeDuration::FromMilliseconds(atoi(env));
     }
-
-    PodZero(&totalTimes_);
 }
 
 Statistics::~Statistics()
@@ -1030,14 +1030,14 @@ Statistics::reportLongestPhase(const PhaseTimeTable& times, int telemetryId)
 bool
 Statistics::startTimingMutator()
 {
-    if (phaseNestingDepth != 0) {
+    if (phaseStack.length() != 0) {
         // Should only be called from outside of GC.
-        MOZ_ASSERT(phaseNestingDepth == 1);
-        MOZ_ASSERT(phaseNesting[0] == Phase::MUTATOR);
+        MOZ_ASSERT(phaseStack.length() == 1);
+        MOZ_ASSERT(phaseStack[0] == Phase::MUTATOR);
         return false;
     }
 
-    MOZ_ASSERT(suspended == 0);
+    MOZ_ASSERT(suspendedPhases.empty());
 
     timedGCTime = 0;
     phaseStartTimes[Phase::MUTATOR] = TimeStamp();
@@ -1052,7 +1052,7 @@ bool
 Statistics::stopTimingMutator(double& mutator_ms, double& gc_ms)
 {
     // This should only be called from outside of GC, while timing the mutator.
-    if (phaseNestingDepth != 1 || phaseNesting[0] != Phase::MUTATOR)
+    if (phaseStack.length() != 1 || phaseStack[0] != Phase::MUTATOR)
         return false;
 
     endPhase(PhaseKind::MUTATOR);
@@ -1067,30 +1067,27 @@ Statistics::suspendPhases(PhaseKind suspension)
 {
     MOZ_ASSERT(suspension == PhaseKind::EXPLICIT_SUSPENSION ||
                suspension == PhaseKind::IMPLICIT_SUSPENSION);
-    while (phaseNestingDepth) {
-        MOZ_ASSERT(suspended < mozilla::ArrayLength(suspendedPhases));
-        Phase parent = phaseNesting[phaseNestingDepth - 1];
-        suspendedPhases[suspended++] = parent;
+    while (!phaseStack.empty()) {
+        MOZ_ASSERT(suspendedPhases.length() < MAX_SUSPENDED_PHASES);
+        Phase parent = phaseStack.back();
+        suspendedPhases.infallibleAppend(parent);
         recordPhaseEnd(parent);
     }
-    suspendedPhases[suspended++] = lookupChildPhase(suspension);
+    suspendedPhases.infallibleAppend(lookupChildPhase(suspension));
 }
 
 void
 Statistics::resumePhases()
 {
-    suspended--;
-#ifdef DEBUG
-    Phase popped = suspendedPhases[suspended];
-    MOZ_ASSERT(popped == Phase::EXPLICIT_SUSPENSION ||
-               popped == Phase::IMPLICIT_SUSPENSION);
-#endif
+    MOZ_ASSERT(suspendedPhases.back() == Phase::EXPLICIT_SUSPENSION ||
+               suspendedPhases.back() == Phase::IMPLICIT_SUSPENSION);
+    suspendedPhases.popBack();
 
-    while (suspended &&
-           suspendedPhases[suspended - 1] != Phase::EXPLICIT_SUSPENSION &&
-           suspendedPhases[suspended - 1] != Phase::IMPLICIT_SUSPENSION)
+    while (!suspendedPhases.empty() &&
+           suspendedPhases.back() != Phase::EXPLICIT_SUSPENSION &&
+           suspendedPhases.back() != Phase::IMPLICIT_SUSPENSION)
     {
-        Phase resumePhase = suspendedPhases[--suspended];
+        Phase resumePhase = suspendedPhases.popCopy();
         if (resumePhase == Phase::MUTATOR)
             timedGCTime += TimeStamp::Now() - timedGCStart;
         recordPhaseBegin(resumePhase);
@@ -1104,9 +1101,8 @@ Statistics::beginPhase(PhaseKind phaseKind)
     MOZ_ASSERT(phaseKind != PhaseKind::GC_BEGIN && phaseKind != PhaseKind::GC_END);
 
     // PhaseKind::MUTATOR is suspended while performing GC.
-    if (currentPhase() == Phase::MUTATOR) {
+    if (currentPhase() == Phase::MUTATOR)
         suspendPhases(PhaseKind::IMPLICIT_SUSPENSION);
-    }
 
     recordPhaseBegin(lookupChildPhase(phaseKind));
 }
@@ -1117,12 +1113,10 @@ Statistics::recordPhaseBegin(Phase phase)
     // Guard against any other re-entry.
     MOZ_ASSERT(!phaseStartTimes[phase]);
 
-    MOZ_ASSERT(phaseNestingDepth < MAX_NESTING);
+    MOZ_ASSERT(phaseStack.length() < MAX_PHASE_NESTING);
     MOZ_ASSERT(phases[phase].parent == currentPhase());
 
-    phaseNesting[phaseNestingDepth] = phase;
-    phaseNestingDepth++;
-
+    phaseStack.infallibleAppend(phase);
     phaseStartTimes[phase] = TimeStamp::Now();
 }
 
@@ -1134,7 +1128,7 @@ Statistics::recordPhaseEnd(Phase phase)
     if (phase == Phase::MUTATOR)
         timedGCStart = now;
 
-    phaseNestingDepth--;
+    phaseStack.popBack();
 
     TimeDuration t = now - phaseStartTimes[phase];
     if (!slices_.empty())
@@ -1154,9 +1148,9 @@ Statistics::endPhase(PhaseKind phaseKind)
 
     // When emptying the stack, we may need to return to timing the mutator
     // (PhaseKind::MUTATOR).
-    if (phaseNestingDepth == 0 &&
-        suspended > 0 &&
-        suspendedPhases[suspended - 1] == Phase::IMPLICIT_SUSPENSION)
+    if (phaseStack.empty() &&
+        !suspendedPhases.empty() &&
+        suspendedPhases.back() == Phase::IMPLICIT_SUSPENSION)
     {
         resumePhases();
     }
@@ -1182,7 +1176,7 @@ void
 Statistics::endParallelPhase(PhaseKind phaseKind, const GCParallelTask* task)
 {
     Phase phase = lookupChildPhase(phaseKind);
-    phaseNestingDepth--;
+    phaseStack.popBack();
 
     if (!slices_.empty())
         slices_.back().phaseTimes[phase] += task->duration();

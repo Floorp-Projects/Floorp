@@ -3737,7 +3737,11 @@ SetGCCallback(JSContext* cx, unsigned argc, Value* vp)
             if (!ToInt32(cx, v, &depth))
                 return false;
         }
-        if (depth > int32_t(gcstats::Statistics::MAX_NESTING - 4)) {
+        if (depth < 0) {
+            JS_ReportErrorASCII(cx, "Nesting depth cannot be negative");
+            return false;
+        }
+        if (depth + gcstats::MAX_PHASE_NESTING > gcstats::Statistics::MAX_SUSPENDED_PHASES) {
             JS_ReportErrorASCII(cx, "Nesting depth too large, would overflow");
             return false;
         }
