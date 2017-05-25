@@ -331,6 +331,7 @@ EventStateManager::EventStateManager()
                                  "dom.w3c_pointer_events.enabled", false);
     sAddedPointerEventEnabled = true;
   }
+  WheelTransaction::InitializeStatics();
 }
 
 nsresult

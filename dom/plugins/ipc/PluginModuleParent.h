@@ -225,6 +225,12 @@ protected:
       return IPC_FAIL_NO_REASON(this);
     }
 
+    virtual mozilla::ipc::IPCResult
+    AnswerSetCursorPos(const int &x, const int &y, bool* aResult) override
+    {
+      return IPC_FAIL_NO_REASON(this);
+    }
+
 protected:
     void SetChildTimeout(const int32_t aChildTimeout);
     static void TimeoutChanged(const char* aPref, void* aModule);
@@ -537,6 +543,10 @@ class PluginModuleChromeParent
     AnswerGetFileName(const GetFileNameFunc& aFunc,
                       const OpenFileNameIPC& aOfnIn,
                       OpenFileNameRetIPC* aOfnOut, bool* aResult) override;
+
+    // Proxy SetCursorPos on Windows.
+    virtual mozilla::ipc::IPCResult
+    AnswerSetCursorPos(const int &x, const int &y, bool* aResult) override;
 
 private:
     virtual void

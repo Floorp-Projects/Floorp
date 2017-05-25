@@ -143,12 +143,19 @@ public:
   }
   static void OnEvent(WidgetEvent* aEvent);
   static void Shutdown();
-  static uint32_t GetTimeoutTime();
+  static uint32_t GetTimeoutTime()
+  {
+    return Prefs::sMouseWheelTransactionTimeout;
+  }
 
   static void OwnScrollbars(bool aOwn);
 
   static DeltaValues AccelerateWheelDelta(WidgetWheelEvent* aEvent,
                                           bool aAllowScrollSpeedOverride);
+  static void InitializeStatics()
+  {
+    Prefs::InitializeStatics();
+  }
 
 protected:
   static void BeginTransaction(nsIFrame* aTargetFrame,
@@ -162,9 +169,18 @@ protected:
   static void OnFailToScrollTarget();
   static void OnTimeout(nsITimer* aTimer, void* aClosure);
   static void SetTimeout();
-  static uint32_t GetIgnoreMoveDelayTime();
-  static int32_t GetAccelerationStart();
-  static int32_t GetAccelerationFactor();
+  static uint32_t GetIgnoreMoveDelayTime()
+  {
+    return Prefs::sMouseWheelTransactionIgnoreMoveDelay;
+  }
+  static int32_t GetAccelerationStart()
+  {
+    return Prefs::sMouseWheelAccelerationStart;
+  }
+  static int32_t GetAccelerationFactor()
+  {
+    return Prefs::sMouseWheelAccelerationFactor;
+  }
   static DeltaValues OverrideSystemScrollSpeed(WidgetWheelEvent* aEvent);
   static double ComputeAcceleratedWheelDelta(double aDelta, int32_t aFactor);
   static bool OutOfTime(uint32_t aBaseTime, uint32_t aThreshold);
@@ -175,6 +191,17 @@ protected:
   static nsITimer* sTimer;
   static int32_t sScrollSeriesCounter;
   static bool sOwnScrollbars;
+
+  class Prefs
+  {
+  public:
+    static void InitializeStatics();
+    static int32_t sMouseWheelAccelerationStart;
+    static int32_t sMouseWheelAccelerationFactor;
+    static uint32_t sMouseWheelTransactionTimeout;
+    static uint32_t sMouseWheelTransactionIgnoreMoveDelay;
+    static bool sTestMouseScroll;
+  };
 };
 
 } // namespace mozilla
