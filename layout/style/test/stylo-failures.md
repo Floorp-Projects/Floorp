@@ -33,7 +33,6 @@ to mochitest command.
   * "layout.css.prefixes.device-pixel-ratio-webkit" support bug 1366956
     * test_media_queries.html `-device-pixel-ratio` [27]
     * test_webkit_device_pixel_ratio.html [3]
-  * test_media_queries.html `-webkit-transform-3d`: serialize -webkit-prefix servo/servo#17000 [2]
   * test_media_queries.html `resolution`: non-positive value should be rejected bug 1366961 [9]
   * test_media_queries_dynamic.html `restyle count`: support elementsRestyled [6]
   * test_media_queries_dynamic_xbl.html: xbl support bug 1290276 [2]
@@ -108,11 +107,8 @@ to mochitest command.
   * different parsing bug 1364260
     * test_supports_rules.html [6]
     * test_condition_text.html [1]
-  * test_property_syntax_errors.html `text`: incorrectly accept text for background shorthand servo/servo#17018 [40]
-  * color is accepted everywhere
-    * test_property_syntax_errors.html `url(404.png) transparent` [20]
-    * ... `url(404.png) red` [20]
-    * ... `url(404.png) rgb` [40]
+  * text should be supported in background for second box
+    * test_value_storage.html `box text` [20]
 * Incorrect serialization
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
@@ -127,8 +123,6 @@ to mochitest command.
 * Unsupported pseudo-elements or anon boxes
   * :-moz-tree bits bug 1348488
     * test_selectors.html `:-moz-tree` [10]
-  * :-moz-placeholder bug 1348490
-    * test_selectors.html `:-moz-placeholder` [1]
 * Unsupported pseudo-classes
   * :-moz-locale-dir is internal bug 1367310
     * test_selectors.html `:-moz-locale-dir` [15]

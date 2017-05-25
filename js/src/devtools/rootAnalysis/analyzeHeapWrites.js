@@ -185,6 +185,7 @@ function treatAsSafeArgument(entry, varName, csuName)
         [/Gecko_CopyCounter.*?From/, "aContent", null],
         [/Gecko_SetContentDataImageValue/, "aList", null],
         [/Gecko_SetContentData/, "aContent", null],
+        ["Gecko_SetCounterFunction", "aContent", null],
         [/Gecko_EnsureStyle.*?ArrayLength/, "aArray", null],
         ["Gecko_GetOrCreateKeyframeAtStart", "aKeyframes", null],
         ["Gecko_GetOrCreateInitialKeyframe", "aKeyframes", null],

@@ -377,6 +377,7 @@ structs-types = [
     "nsStyleColumn",
     "nsStyleContent",
     "nsStyleContentData",
+    "nsStyleContentData_CounterFunction",
     "nsStyleContentType",
     "nsStyleContext",
     "nsStyleCoord",

@@ -42,3 +42,7 @@
 .meta-rating > .star[on="true"] {
   list-style-image: url("chrome://mozapps/skin/extensions/rating-won.png");
 }
+
+#detail-view .legacy-warning {
+  margin-top: 1rem;
+}
