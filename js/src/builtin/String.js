@@ -556,15 +556,20 @@ function StringIteratorNext() {
 
     var charCount = 1;
     var first = callFunction(std_String_charCodeAt, S, index);
-    if (first >= 0xD800 && first <= 0xDBFF && index + 1 < size) {
-        var second = callFunction(std_String_charCodeAt, S, index + 1);
-        if (second >= 0xDC00 && second <= 0xDFFF) {
-            charCount = 2;
+    if (first <= 0xff) {
+        // String.fromCharCode has an optimized path for Latin-1 strings.
+        result.value = callFunction(std_String_fromCharCode, null, first);
+    } else {
+        if (first >= 0xD800 && first <= 0xDBFF && index + 1 < size) {
+            var second = callFunction(std_String_charCodeAt, S, index + 1);
+            if (second >= 0xDC00 && second <= 0xDFFF) {
+                charCount = 2;
+            }
         }
+        result.value = callFunction(String_substring, S, index, index + charCount);
     }
 
     UnsafeSetReservedSlot(this, ITERATOR_SLOT_NEXT_INDEX, index + charCount);
-    result.value = callFunction(String_substring, S, index, index + charCount);
 
     return result;
 }

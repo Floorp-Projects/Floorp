@@ -225,6 +225,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineStringReplaceString(callInfo);
       case InlinableNative::IntrinsicStringSplitString:
         return inlineStringSplitString(callInfo);
+      case InlinableNative::IntrinsicNewStringIterator:
+        return inlineNewIterator(callInfo, MNewIterator::StringIterator);
 
       // Object natives.
       case InlinableNative::ObjectCreate:
@@ -909,6 +911,10 @@ IonBuilder::inlineNewIterator(CallInfo& callInfo, MNewIterator::Type type)
       case MNewIterator::ArrayIterator:
         templateObject = inspector->getTemplateObjectForNative(pc, js::intrinsic_NewArrayIterator);
         MOZ_ASSERT_IF(templateObject, templateObject->is<ArrayIteratorObject>());
+        break;
+      case MNewIterator::StringIterator:
+        templateObject = inspector->getTemplateObjectForNative(pc, js::intrinsic_NewStringIterator);
+        MOZ_ASSERT_IF(templateObject, templateObject->is<StringIteratorObject>());
         break;
     }
 
