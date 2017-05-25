@@ -230,11 +230,10 @@ public:
 
     mContext = aContext;
 
-    js::SetContextProfilingStack(
-      aContext,
-      (js::ProfileEntry*) RacyInfo()->entries,
-      RacyInfo()->AddressOfStackPointer(),
-      (uint32_t) mozilla::ArrayLength(RacyInfo()->entries));
+    // We give the JS engine a non-owning reference to the RacyInfo (just the
+    // PseudoStack, really). It's important that the JS engine doesn't touch
+    // this once the thread dies.
+    js::SetContextProfilingStack(aContext, RacyInfo());
 
     PollJSSampling();
   }
