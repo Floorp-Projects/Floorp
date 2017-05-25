@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* import-globals-from import_module.jsm */
+/* import-globals-from import_sub_module.jsm */
+
 /**
  * Ensures that tests can import a module in the same folder through:
  * Components.utils.import("resource://test/module.jsm");
