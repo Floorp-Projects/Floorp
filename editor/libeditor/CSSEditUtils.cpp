@@ -549,15 +549,13 @@ CSSEditUtils::GetCSSInlinePropertyBase(nsINode* aNode,
   if (!decl) {
     return NS_OK;
   }
-  if (decl->IsServo()) {
-    MOZ_CRASH("stylo: not implemented");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+
   nsCSSPropertyID prop =
     nsCSSProps::LookupProperty(nsDependentAtomString(aProperty),
                                CSSEnabledState::eForAllContent);
   MOZ_ASSERT(prop != eCSSProperty_UNKNOWN);
-  decl->AsGecko()->GetPropertyValueByID(prop, aValue);
+
+  decl->GetPropertyValueByID(prop, aValue);
 
   return NS_OK;
 }
