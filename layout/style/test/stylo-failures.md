@@ -74,14 +74,10 @@ to mochitest command.
   * test_grid_container_shorthands.html [65]
   * test_grid_item_shorthands.html [23]
   * test_grid_shorthand_serialization.html [28]
-  * test_inherit_computation.html `grid` [4]
-  * test_inherit_storage.html `'grid` [13]
-  * ... `"grid` [2]
-  * test_initial_computation.html `grid` [8]
-  * test_initial_storage.html `grid` [30]
-  * test_property_syntax_errors.html `grid`: actually there are issues with this [28]
-  * test_value_storage.html `'grid` [577]
-  * test_exposed_prop_accessors.html `grid` [2]
+  * test_inherit_computation.html `grid` [2]
+  * test_initial_computation.html `grid` [4]
+  * test_property_syntax_errors.html `grid`: actually there are issues with this [8]
+  * test_value_storage.html `'grid` [195]
 * Unimplemented CSS properties:
   * font-variant shorthand bug 1356134
     * test_value_storage.html `'font-variant'` [65]
