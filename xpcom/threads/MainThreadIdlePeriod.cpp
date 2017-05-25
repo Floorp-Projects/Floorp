@@ -21,19 +21,20 @@ MainThreadIdlePeriod::GetIdlePeriodHint(TimeStamp* aIdleDeadline)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aIdleDeadline);
 
-  Maybe<TimeStamp> deadline = nsRefreshDriver::GetIdleDeadlineHint();
+  TimeStamp now = TimeStamp::Now();
+  TimeStamp currentGuess =
+    now + TimeDuration::FromMilliseconds(GetLongIdlePeriod());
 
-  if (deadline.isSome()) {
-    // If the idle period is too small, then just return a null time
-    // to indicate we are busy. Otherwise return the actual deadline.
-    TimeDuration minIdlePeriod =
-      TimeDuration::FromMilliseconds(GetMinIdlePeriod());
-    bool busySoon = deadline.value().IsNull() ||
-                    (TimeStamp::Now() >= (deadline.value() - minIdlePeriod));
-    *aIdleDeadline = busySoon ? TimeStamp() : deadline.value();
-  } else {
-    *aIdleDeadline =
-      TimeStamp::Now() + TimeDuration::FromMilliseconds(GetLongIdlePeriod());
+  currentGuess = nsRefreshDriver::GetIdleDeadlineHint(currentGuess);
+  // If the idle period is too small, then just return a null time
+  // to indicate we are busy. Otherwise return the actual deadline.
+  TimeDuration minIdlePeriod =
+    TimeDuration::FromMilliseconds(GetMinIdlePeriod());
+  bool busySoon = currentGuess.IsNull() ||
+                  (now >= (currentGuess - minIdlePeriod)) ||
+
+  if (!busySoon) {
+    *aIdleDeadline = currentGuess;
   }
 
   return NS_OK;
