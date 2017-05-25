@@ -132,6 +132,7 @@ struct Statistics
     void beginPhase(PhaseKind phaseKind);
     void endPhase(PhaseKind phaseKind);
     void endParallelPhase(PhaseKind phaseKind, const GCParallelTask* task);
+    void recordParallelPhase(PhaseKind phaseKind, TimeDuration duration);
 
     // Occasionally, we may be in the middle of something that is tracked by
     // this class, and we need to do something unusual (eg evict the nursery)
@@ -205,7 +206,7 @@ struct Statistics
 
     PhaseKind currentPhaseKind() const;
 
-    static const size_t MAX_NESTING = 20;
+    static const size_t MAX_SUSPENDED_PHASES = MAX_PHASE_NESTING * 3;
 
     struct SliceData {
         SliceData(SliceBudget budget, JS::gcreason::Reason reason,
@@ -225,6 +226,7 @@ struct Statistics
         TimeStamp start, end;
         size_t startFaults, endFaults;
         PhaseTimeTable phaseTimes;
+        PhaseTimeTable parallelTimes;
 
         TimeDuration duration() const { return end - start; }
         bool wasReset() const { return resetReason != gc::AbortReason::None; }
@@ -284,6 +286,7 @@ struct Statistics
 
     /* Total time in a given phase for this GC. */
     PhaseTimeTable phaseTimes;
+    PhaseTimeTable parallelTimes;
 
     /* Number of events of this type for this GC. */
     EnumeratedArray<Stat,
@@ -301,8 +304,7 @@ struct Statistics
     mutable TimeDuration maxPauseInInterval;
 
     /* Phases that are currently on stack. */
-    Array<Phase, MAX_NESTING> phaseNesting;
-    size_t phaseNestingDepth;
+    Vector<Phase, MAX_PHASE_NESTING, SystemAllocPolicy> phaseStack;
 
     /*
      * Certain phases can interrupt the phase stack, eg callback phases. When
@@ -311,8 +313,7 @@ struct Statistics
      * suspensions by suspending multiple stacks with a PhaseKind::SUSPENSION in
      * between).
      */
-    Array<Phase, MAX_NESTING * 3> suspendedPhases;
-    size_t suspended;
+    Vector<Phase, MAX_SUSPENDED_PHASES, SystemAllocPolicy> suspendedPhases;
 
     /* Sweep times for SCCs of compartments. */
     Vector<TimeDuration, 0, SystemAllocPolicy> sccTimes;
@@ -358,6 +359,8 @@ FOR_EACH_GC_PROFILE_TIME(DEFINE_TIME_KEY)
     void sccDurations(TimeDuration* total, TimeDuration* maxPause) const;
     void printStats();
 
+    void reportLongestPhase(const PhaseTimeTable& times, int telemetryId);
+
     UniqueChars formatCompactSlicePhaseTimes(const PhaseTimeTable& phaseTimes) const;
 
     UniqueChars formatDetailedDescription() const;
@@ -392,37 +395,24 @@ struct MOZ_RAII AutoGCSlice
 struct MOZ_RAII AutoPhase
 {
     AutoPhase(Statistics& stats, PhaseKind phaseKind)
-      : stats(stats), task(nullptr), phaseKind(phaseKind), enabled(true)
+      : stats(stats), phaseKind(phaseKind), enabled(true)
     {
         stats.beginPhase(phaseKind);
     }
 
     AutoPhase(Statistics& stats, bool condition, PhaseKind phaseKind)
-      : stats(stats), task(nullptr), phaseKind(phaseKind), enabled(condition)
-    {
-        if (enabled)
-            stats.beginPhase(phaseKind);
-    }
-
-    AutoPhase(Statistics& stats, const GCParallelTask& task, PhaseKind phaseKind)
-      : stats(stats), task(&task), phaseKind(phaseKind), enabled(true)
+      : stats(stats), phaseKind(phaseKind), enabled(condition)
     {
         if (enabled)
             stats.beginPhase(phaseKind);
     }
 
     ~AutoPhase() {
-        if (enabled) {
-            // Bug 1309651 - we only record active thread time (including time
-            // spent waiting to join with helper threads), but should start
-            // recording total work on helper threads sometime by calling
-            // endParallelPhase here if task is nonnull.
+        if (enabled)
             stats.endPhase(phaseKind);
-        }
     }
 
     Statistics& stats;
-    const GCParallelTask* task;
     PhaseKind phaseKind;
     bool enabled;
 };

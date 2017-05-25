@@ -188,17 +188,11 @@ NS_NewChannelInternal(nsIChannel           **outChannel,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-#ifdef DEBUG
-  nsLoadFlags channelLoadFlags = 0;
-  channel->GetLoadFlags(&channelLoadFlags);
-  // Will be removed when we remove LOAD_REPLACE altogether
-  // This check is trying to catch protocol handlers that still
-  // try to set the LOAD_REPLACE flag.
-  MOZ_DIAGNOSTIC_ASSERT(!(channelLoadFlags & nsIChannel::LOAD_REPLACE));
-#endif
-
   if (aLoadFlags != nsIRequest::LOAD_NORMAL) {
-    rv = channel->SetLoadFlags(aLoadFlags);
+    // Retain the LOAD_REPLACE load flag if set.
+    nsLoadFlags normalLoadFlags = 0;
+    channel->GetLoadFlags(&normalLoadFlags);
+    rv = channel->SetLoadFlags(aLoadFlags | (normalLoadFlags & nsIChannel::LOAD_REPLACE));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -273,17 +267,11 @@ NS_NewChannelInternal(nsIChannel           **outChannel,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-#ifdef DEBUG
-  nsLoadFlags channelLoadFlags = 0;
-  channel->GetLoadFlags(&channelLoadFlags);
-  // Will be removed when we remove LOAD_REPLACE altogether
-  // This check is trying to catch protocol handlers that still
-  // try to set the LOAD_REPLACE flag.
-  MOZ_DIAGNOSTIC_ASSERT(!(channelLoadFlags & nsIChannel::LOAD_REPLACE));
-#endif
-
   if (aLoadFlags != nsIRequest::LOAD_NORMAL) {
-    rv = channel->SetLoadFlags(aLoadFlags);
+    // Retain the LOAD_REPLACE load flag if set.
+    nsLoadFlags normalLoadFlags = 0;
+    channel->GetLoadFlags(&normalLoadFlags);
+    rv = channel->SetLoadFlags(aLoadFlags | (normalLoadFlags & nsIChannel::LOAD_REPLACE));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1897,15 +1885,12 @@ nsresult
 NS_GetFinalChannelURI(nsIChannel *channel, nsIURI **uri)
 {
     *uri = nullptr;
+    nsLoadFlags loadFlags = 0;
+    nsresult rv = channel->GetLoadFlags(&loadFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-    if (loadInfo) {
-        nsCOMPtr<nsIURI> resultPrincipalURI;
-        loadInfo->GetResultPrincipalURI(getter_AddRefs(resultPrincipalURI));
-        if (resultPrincipalURI) {
-            resultPrincipalURI.forget(uri);
-            return NS_OK;
-        }
+    if (loadFlags & nsIChannel::LOAD_REPLACE) {
+        return channel->GetURI(uri);
     }
 
     return channel->GetOriginalURI(uri);
