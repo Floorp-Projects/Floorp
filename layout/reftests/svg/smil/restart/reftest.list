@@ -1,8 +1,8 @@
 # Tests for restart behaviour
 == reset-1.svg reset-1-ref.svg
 == reset-2.svg green-box-ref.svg
-fails-if(stylo) == reset-3.svg green-box-ref.svg
+fails-if(styloVsGecko) == reset-3.svg green-box-ref.svg
 == reset-4.svg green-box-ref.svg
 # reset-5.svg is no longer valid and has been removed
-fails-if(stylo) == reset-6.svg green-box-ref.svg
+fails-if(styloVsGecko) == reset-6.svg green-box-ref.svg
 == reset-7.svg green-box-ref.svg

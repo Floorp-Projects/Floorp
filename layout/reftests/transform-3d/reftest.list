@@ -60,13 +60,13 @@ fails-if(webrender) == transform-style-flat-1a.html transform-style-flat-1-ref.h
 != willchange-containing-block.html?willchange willchange-containing-block.html?noblock
 fuzzy-if(winWidget&&!layersGPUAccelerated,1,606) == scroll-perspective-1.html scroll-perspective-1-ref.html
 # Bugs
-fails-if(!layersGPUAccelerated&&!stylo) fails-if(webrender) == 1035611-1.html 1035611-1-ref.html # Bug 1072898 for !layersGPUAccelerated failures
+fails-if(!layersGPUAccelerated&&!styloVsGecko) fails-if(webrender) == 1035611-1.html 1035611-1-ref.html # Bug 1072898 for !layersGPUAccelerated failures
 != 1157984-1.html about:blank # Bug 1157984
 fuzzy(3,99) == animate-cube-radians.html animate-cube-radians-ref.html # subpixel AA
-fuzzy(3,99) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated,16,6) fails-if(stylo) == animate-cube-radians-zoom.html animate-cube-radians-zoom-ref.html
+fuzzy(3,99) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated,16,6) fails-if(styloVsGecko) == animate-cube-radians-zoom.html animate-cube-radians-zoom-ref.html
 != animate-cube-radians-ref.html animate-cube-radians-zoom-ref.html
 fuzzy(3,99) == animate-cube-degrees.html animate-cube-degrees-ref.html # subpixel AA
-fails-if(stylo) == animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html
+fails-if(styloVsGecko) == animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html
 != animate-cube-degrees-ref.html animate-cube-degrees-zoom-ref.html
 fuzzy-if(gtkWidget,128,100) fuzzy-if(Android||OSX==1010||(gtkWidget&&layersGPUAccelerated),143,100) fuzzy-if(winWidget||OSX<1010,141,100) fails-if(webrender) == preserves3d-nested.html preserves3d-nested-ref.html
 fuzzy-if(cocoaWidget,128,9) == animate-preserve3d-parent.html animate-preserve3d-ref.html # intermittently fuzzy on Mac

@@ -714,11 +714,12 @@ function BuildConditionSandbox(aURL) {
     sandbox.webrtc = false;
 #endif
 
-sandbox.stylo =
 #ifdef MOZ_STYLO
-    prefs.getBoolPref("layout.css.servo.enabled", false);
+    sandbox.stylo = prefs.getBoolPref("layout.css.servo.enabled", false);
+    sandbox.styloVsGecko = gCompareStyloToGecko;
 #else
-    false;
+    sandbox.stylo = false;
+    sandbox.styloVsGecko = false;
 #endif
 
 #ifdef RELEASE_OR_BETA

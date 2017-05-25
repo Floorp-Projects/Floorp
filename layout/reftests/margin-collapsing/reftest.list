@@ -368,12 +368,12 @@
 # then its bottom margin collapses with its last-child's bottom margin.
 # This is true even if the two margins do not actually touch each other,
 # as they are still considered 'adjoining'.
-fails-if(!stylo) == block-min-height-last-child-1a.html block-min-height-last-child-1-ref.html # Bug 616339
+fails-if(!styloVsGecko) == block-min-height-last-child-1a.html block-min-height-last-child-1-ref.html # Bug 616339
 == block-min-height-last-child-1b.html block-min-height-last-child-1-ref.html
 == block-min-height-last-child-1c.html block-min-height-last-child-1-ref.html
-fails-if(!stylo) == block-min-height-last-child-2a.html block-min-height-last-child-2-ref.html # Bug 616339
-fails-if(!stylo) == block-min-height-last-child-2b.html block-min-height-last-child-2-ref.html # Bug 616339
-fails-if(!stylo) == block-min-height-last-child-3a.html block-min-height-last-child-3-ref.html # Bug 616339
+fails-if(!styloVsGecko) == block-min-height-last-child-2a.html block-min-height-last-child-2-ref.html # Bug 616339
+fails-if(!styloVsGecko) == block-min-height-last-child-2b.html block-min-height-last-child-2-ref.html # Bug 616339
+fails-if(!styloVsGecko) == block-min-height-last-child-3a.html block-min-height-last-child-3-ref.html # Bug 616339
 == block-min-height-last-child-3b.html block-min-height-last-child-3-ref.html
 == block-min-height-last-child-3c.html block-min-height-last-child-3-ref.html
 == block-min-height-last-child-4a.html block-min-height-last-child-4-ref.html
@@ -392,12 +392,12 @@ fails-if(!stylo) == block-min-height-last-child-3a.html block-min-height-last-ch
 == block-min-height-last-child-9a.html block-min-height-last-child-9-ref.html
 == block-min-height-last-child-9b.html block-min-height-last-child-9-ref.html
 == block-min-height-last-child-9c.html block-min-height-last-child-9-ref.html
-fails-if(!stylo) == block-min-height-last-child-1a-dyn.html block-min-height-last-child-1-ref.html # Bug 616339
+fails-if(!styloVsGecko) == block-min-height-last-child-1a-dyn.html block-min-height-last-child-1-ref.html # Bug 616339
 == block-min-height-last-child-1b-dyn.html block-min-height-last-child-1-ref.html
 == block-min-height-last-child-1c-dyn.html block-min-height-last-child-1-ref.html
-fails-if(!stylo) == block-min-height-last-child-2a-dyn.html block-min-height-last-child-2-ref.html # Bug 616339
-fails-if(!stylo) == block-min-height-last-child-2b-dyn.html block-min-height-last-child-2-ref.html # Bug 616339
-fails-if(!stylo) == block-min-height-last-child-3a-dyn.html block-min-height-last-child-3-ref.html # Bug 616339
+fails-if(!styloVsGecko) == block-min-height-last-child-2a-dyn.html block-min-height-last-child-2-ref.html # Bug 616339
+fails-if(!styloVsGecko) == block-min-height-last-child-2b-dyn.html block-min-height-last-child-2-ref.html # Bug 616339
+fails-if(!styloVsGecko) == block-min-height-last-child-3a-dyn.html block-min-height-last-child-3-ref.html # Bug 616339
 == block-min-height-last-child-3b-dyn.html block-min-height-last-child-3-ref.html
 == block-min-height-last-child-3c-dyn.html block-min-height-last-child-3-ref.html
 == block-min-height-last-child-4a-dyn.html block-min-height-last-child-4-ref.html
@@ -436,12 +436,12 @@ fails-if(!stylo) == block-min-height-last-child-3a-dyn.html block-min-height-las
 == block-max-height-last-child-6a.html block-max-height-last-child-6-ref.html
 == block-max-height-last-child-6b.html block-max-height-last-child-6-ref.html
 == block-max-height-last-child-6c.html block-max-height-last-child-6-ref.html
-fails-if(!stylo) == block-max-height-last-child-7a.html block-max-height-last-child-7-ref.html # Bug 616339
+fails-if(!styloVsGecko) == block-max-height-last-child-7a.html block-max-height-last-child-7-ref.html # Bug 616339
 == block-max-height-last-child-7b.html block-max-height-last-child-7-ref.html
 == block-max-height-last-child-7c.html block-max-height-last-child-7-ref.html
-fails-if(!stylo) == block-max-height-last-child-8a.html block-max-height-last-child-8-ref.html # Bug 616339
-fails-if(!stylo) == block-max-height-last-child-8b.html block-max-height-last-child-8-ref.html # Bug 616339
-fails-if(!stylo) == block-max-height-last-child-9a.html block-max-height-last-child-9-ref.html # Bug 616339
+fails-if(!styloVsGecko) == block-max-height-last-child-8a.html block-max-height-last-child-8-ref.html # Bug 616339
+fails-if(!styloVsGecko) == block-max-height-last-child-8b.html block-max-height-last-child-8-ref.html # Bug 616339
+fails-if(!styloVsGecko) == block-max-height-last-child-9a.html block-max-height-last-child-9-ref.html # Bug 616339
 == block-max-height-last-child-9b.html block-max-height-last-child-9-ref.html
 == block-max-height-last-child-9c.html block-max-height-last-child-9-ref.html
 == block-max-height-last-child-1a-dyn.html block-max-height-last-child-1-ref.html
@@ -460,12 +460,12 @@ fails-if(!stylo) == block-max-height-last-child-9a.html block-max-height-last-ch
 == block-max-height-last-child-6a-dyn.html block-max-height-last-child-6-ref.html
 == block-max-height-last-child-6b-dyn.html block-max-height-last-child-6-ref.html
 == block-max-height-last-child-6c-dyn.html block-max-height-last-child-6-ref.html
-fails-if(!stylo) == block-max-height-last-child-7a-dyn.html block-max-height-last-child-7-ref.html # Bug 616339
+fails-if(!styloVsGecko) == block-max-height-last-child-7a-dyn.html block-max-height-last-child-7-ref.html # Bug 616339
 == block-max-height-last-child-7b-dyn.html block-max-height-last-child-7-ref.html
 == block-max-height-last-child-7c-dyn.html block-max-height-last-child-7-ref.html
-fails-if(!stylo) == block-max-height-last-child-8a-dyn.html block-max-height-last-child-8-ref.html # Bug 616339
-fails-if(!stylo) == block-max-height-last-child-8b-dyn.html block-max-height-last-child-8-ref.html # Bug 616339
-fails-if(!stylo) == block-max-height-last-child-9a-dyn.html block-max-height-last-child-9-ref.html # Bug 616339
+fails-if(!styloVsGecko) == block-max-height-last-child-8a-dyn.html block-max-height-last-child-8-ref.html # Bug 616339
+fails-if(!styloVsGecko) == block-max-height-last-child-8b-dyn.html block-max-height-last-child-8-ref.html # Bug 616339
+fails-if(!styloVsGecko) == block-max-height-last-child-9a-dyn.html block-max-height-last-child-9-ref.html # Bug 616339
 == block-max-height-last-child-9b-dyn.html block-max-height-last-child-9-ref.html
 == block-max-height-last-child-9c-dyn.html block-max-height-last-child-9-ref.html
 # If a parent box's height is not 'auto' then its bottom margin
@@ -683,19 +683,19 @@ fails-if(!stylo) == block-max-height-last-child-9a-dyn.html block-max-height-las
 == table-caption-bottom-2-dyn.html table-caption-bottom-1-ref.html
 == table-caption-bottom-outside-1-dyn.html table-caption-bottom-1-ref.html
 == table-caption-bottom-outside-2-dyn.html table-caption-bottom-1-ref.html
-fails-if(!stylo) == caption-sibling-1a.html caption-sibling-1-ref.html # Bug 144517
+fails-if(!styloVsGecko) == caption-sibling-1a.html caption-sibling-1-ref.html # Bug 144517
 != caption-sibling-1a.html caption-sibling-1-noref.html
-fails-if(!stylo) == caption-sibling-1b.html caption-sibling-1-ref.html # Bug 144517
+fails-if(!styloVsGecko) == caption-sibling-1b.html caption-sibling-1-ref.html # Bug 144517
 != caption-sibling-1b.html caption-sibling-1-noref.html
-fails-if(!stylo) == caption-sibling-1c.html caption-sibling-1-ref.html # Bug 144517
+fails-if(!styloVsGecko) == caption-sibling-1c.html caption-sibling-1-ref.html # Bug 144517
 != caption-sibling-1c.html caption-sibling-1-noref2.html
-fails-if(!stylo) == caption-sibling-1a-dyn.html caption-sibling-1-ref.html # Bug 144517
+fails-if(!styloVsGecko) == caption-sibling-1a-dyn.html caption-sibling-1-ref.html # Bug 144517
 != caption-sibling-1a-dyn.html caption-sibling-1-noref.html
-fails-if(!stylo) == caption-sibling-1b-dyn.html caption-sibling-1-ref.html # Bug 144517
+fails-if(!styloVsGecko) == caption-sibling-1b-dyn.html caption-sibling-1-ref.html # Bug 144517
 != caption-sibling-1b-dyn.html caption-sibling-1-noref.html
-fails-if(!stylo) == caption-sibling-1c-dyn.html caption-sibling-1-ref.html # Bug 144517
+fails-if(!styloVsGecko) == caption-sibling-1c-dyn.html caption-sibling-1-ref.html # Bug 144517
 != caption-sibling-1c-dyn.html caption-sibling-1-noref2.html
-fails-if(!stylo) == caption-sibling-2-dyn.html caption-sibling-2-ref.html # Bug 144517
+fails-if(!styloVsGecko) == caption-sibling-2-dyn.html caption-sibling-2-ref.html # Bug 144517
 != caption-sibling-2-dyn.html caption-sibling-2-noref.html
 == caption-child-1.html caption-child-1-ref.html
 == caption-child-1-dyn.html caption-child-1-ref.html
@@ -790,25 +790,25 @@ fails-if(!stylo) == caption-sibling-2-dyn.html caption-sibling-2-ref.html # Bug 
 == block-clear-5f.html block-clear-5-right-ref.html
 == block-clear-5g.html block-clear-5-right-ref.html
 == block-clear-5h.html block-clear-5-right-ref.html
-fails-if(!stylo) == block-clear-6a-left.html block-clear-6abc-left-ref.html # Bug 493380
+fails-if(!styloVsGecko) == block-clear-6a-left.html block-clear-6abc-left-ref.html # Bug 493380
 == block-clear-6b-left.html block-clear-6abc-left-ref.html
 == block-clear-6c-left.html block-clear-6abc-left-ref.html
-fails-if(!stylo) == block-clear-6d-left.html block-clear-6def-left-ref1.html # Bug 493380
-fails-if(!stylo) == block-clear-6d-left.html block-clear-6def-left-ref2.html # Bug 493380
+fails-if(!styloVsGecko) == block-clear-6d-left.html block-clear-6def-left-ref1.html # Bug 493380
+fails-if(!styloVsGecko) == block-clear-6d-left.html block-clear-6def-left-ref2.html # Bug 493380
 == block-clear-6e-left.html block-clear-6def-left-ref1.html
 == block-clear-6e-left.html block-clear-6def-left-ref2.html
 == block-clear-6f-left.html block-clear-6def-left-ref1.html
 == block-clear-6f-left.html block-clear-6def-left-ref2.html
-fails-if(!stylo) == block-clear-7a-left.html block-clear-7abcd-left-ref.html # Bug 493380
-fails-if(!stylo) == block-clear-7b-left.html block-clear-7abcd-left-ref.html # Bug 493380
-fails-if(!stylo) == block-clear-7c-left.html block-clear-7abcd-left-ref.html # Bug 493380
+fails-if(!styloVsGecko) == block-clear-7a-left.html block-clear-7abcd-left-ref.html # Bug 493380
+fails-if(!styloVsGecko) == block-clear-7b-left.html block-clear-7abcd-left-ref.html # Bug 493380
+fails-if(!styloVsGecko) == block-clear-7c-left.html block-clear-7abcd-left-ref.html # Bug 493380
 == block-clear-7d-left.html block-clear-7abcd-left-ref.html
-fails-if(!stylo) == block-clear-7e-left.html block-clear-7efgh-left-ref1.html # Bug 493380
-fails-if(!stylo) == block-clear-7e-left.html block-clear-7efgh-left-ref2.html # Bug 493380
-fails-if(!stylo) == block-clear-7f-left.html block-clear-7efgh-left-ref1.html # Bug 493380
-fails-if(!stylo) == block-clear-7f-left.html block-clear-7efgh-left-ref2.html # Bug 493380
-fails-if(!stylo) == block-clear-7g-left.html block-clear-7efgh-left-ref1.html # Bug 493380
-fails-if(!stylo) == block-clear-7g-left.html block-clear-7efgh-left-ref2.html # Bug 493380
+fails-if(!styloVsGecko) == block-clear-7e-left.html block-clear-7efgh-left-ref1.html # Bug 493380
+fails-if(!styloVsGecko) == block-clear-7e-left.html block-clear-7efgh-left-ref2.html # Bug 493380
+fails-if(!styloVsGecko) == block-clear-7f-left.html block-clear-7efgh-left-ref1.html # Bug 493380
+fails-if(!styloVsGecko) == block-clear-7f-left.html block-clear-7efgh-left-ref2.html # Bug 493380
+fails-if(!styloVsGecko) == block-clear-7g-left.html block-clear-7efgh-left-ref1.html # Bug 493380
+fails-if(!styloVsGecko) == block-clear-7g-left.html block-clear-7efgh-left-ref2.html # Bug 493380
 == block-clear-7h-left.html block-clear-7efgh-left-ref1.html
 == block-clear-7h-left.html block-clear-7efgh-left-ref2.html
 # "Margins of the root element's box do not collapse."

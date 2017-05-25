@@ -171,3 +171,6 @@ include filters/reftest.list
 # Bug 1305963
 == mozCurrentTransform.html mozCurrentTransform-ref.html
 == mozCurrentTransformInverse.html mozCurrentTransform-ref.html
+
+# Bug 1366027
+== clipped-dash-stroke-rect.html clipped-dash-stroke-rect-ref.html

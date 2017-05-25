@@ -16,6 +16,7 @@ namespace mozilla {
 namespace gfx {
 
 typedef float Float;
+typedef double Double;
 
 enum class SurfaceType : int8_t {
   DATA, /* Data surface - bitmap in memory */

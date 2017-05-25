@@ -27,6 +27,7 @@ StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMod
   , mDisabled(false)
   , mDocumentAssociationMode(NotOwnedByDocument)
   , mInner(nullptr)
+  , mDirty(false)
 {
 }
 
@@ -44,9 +45,16 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
     // responsibility to notify us if we end up being owned by a document.
   , mDocumentAssociationMode(NotOwnedByDocument)
   , mInner(aCopy.mInner) // Shallow copy, but concrete subclasses will fix up.
+  , mDirty(aCopy.mDirty)
 {
   MOZ_ASSERT(mInner, "Should only copy StyleSheets with an mInner.");
   mInner->AddSheet(this);
+
+  if (mDirty) { // CSSOM's been there, force full copy now
+    NS_ASSERTION(mInner->mComplete, "Why have rules been accessed on an incomplete sheet?");
+    // FIXME: handle failure?
+    EnsureUniqueInner();
+  }
 
   if (aCopy.mMedia) {
     // XXX This is wrong; we should be keeping @import rules and
@@ -119,6 +127,15 @@ StyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
   }
 }
 
+void
+StyleSheet::ClearRuleCascades()
+{
+  ClearRuleCascadesInternal();
+  if (mParent) {
+    mParent->ClearRuleCascades();
+  }
+}
+
 // QueryInterface implementation for StyleSheet
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StyleSheet)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -170,8 +187,7 @@ StyleSheet::IsComplete() const
 void
 StyleSheet::SetComplete()
 {
-  NS_ASSERTION(!IsGecko() || !AsGecko()->mDirty,
-               "Can't set a dirty sheet complete!");
+  NS_ASSERTION(!mDirty, "Can't set a dirty sheet complete!");
   SheetInfo().mComplete = true;
   if (mDocument && !mDisabled) {
     // Let the document know
@@ -238,6 +254,10 @@ StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy,
 #endif
 {
   AddSheet(aPrimarySheet);
+}
+
+StyleSheetInfo::~StyleSheetInfo()
+{
 }
 
 void
@@ -385,6 +405,65 @@ StyleSheet::DeleteRule(uint32_t aIndex)
   ErrorResult rv;
   DeleteRule(aIndex, *nsContentUtils::SubjectPrincipal(), rv);
   return rv.StealNSResult();
+}
+
+void
+StyleSheet::WillDirty()
+{
+  if (mInner->mComplete) {
+    EnsureUniqueInner();
+  }
+}
+
+void
+StyleSheet::AddStyleSet(const StyleSetHandle& aStyleSet)
+{
+  NS_ASSERTION(!mStyleSets.Contains(aStyleSet),
+               "style set already registered");
+  mStyleSets.AppendElement(aStyleSet);
+}
+
+void
+StyleSheet::DropStyleSet(const StyleSetHandle& aStyleSet)
+{
+  DebugOnly<bool> found = mStyleSets.RemoveElement(aStyleSet);
+  NS_ASSERTION(found, "didn't find style set");
+}
+
+void
+StyleSheet::EnsureUniqueInner()
+{
+  MOZ_ASSERT(mInner->mSheets.Length() != 0,
+             "unexpected number of outers");
+  mDirty = true;
+
+  if (mInner->mSheets.Length() == 1) {
+    // already unique
+    return;
+  }
+
+  StyleSheetInfo* clone = mInner->CloneFor(this);
+  MOZ_ASSERT(clone);
+  mInner->RemoveSheet(this);
+  mInner = clone;
+
+  // Ensure we're using the new rules.
+  ClearRuleCascades();
+
+  // let our containing style sets know that if we call
+  // nsPresContext::EnsureSafeToHandOutCSSRules we will need to restyle the
+  // document
+  for (StyleSetHandle& setHandle : mStyleSets) {
+    setHandle->SetNeedsRestyleAfterEnsureUniqueInner();
+  }
+}
+
+void
+StyleSheet::AppendAllChildSheets(nsTArray<StyleSheet*>& aArray)
+{
+  for (StyleSheet* child = GetFirstChild(); child; child = child->mNext) {
+    aArray.AppendElement(child);
+  }
 }
 
 // WebIDL CSSStyleSheet API
@@ -638,6 +717,7 @@ StyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
     // is worthwhile:
     // - s->mTitle
     // - s->mMedia
+    // - s->mStyleSets
 
     s = s->mNext;
   }

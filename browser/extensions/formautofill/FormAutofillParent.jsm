@@ -80,6 +80,7 @@ FormAutofillParent.prototype = {
     Services.ppmm.addMessageListener("FormAutofill:GetAddresses", this);
     Services.ppmm.addMessageListener("FormAutofill:SaveAddress", this);
     Services.ppmm.addMessageListener("FormAutofill:RemoveAddresses", this);
+    Services.ppmm.addMessageListener("FormAutofill:OnFormSubmit", this);
 
     // Observing the pref and storage changes
     Services.prefs.addObserver(ENABLED_PREF, this);
@@ -192,6 +193,9 @@ FormAutofillParent.prototype = {
         data.guids.forEach(guid => this.profileStorage.addresses.remove(guid));
         break;
       }
+      case "FormAutofill:OnFormSubmit": {
+        this._onFormSubmit(data, target);
+      }
     }
   },
 
@@ -260,5 +264,18 @@ FormAutofillParent.prototype = {
     Services.ppmm.broadcastAsyncMessage("FormAutofill:savedFieldNames",
                                         Services.ppmm.initialProcessData.autofillSavedFieldNames);
     this._updateStatus();
+  },
+
+  _onFormSubmit(data, target) {
+    let {address} = data;
+
+    if (address.guid) {
+      // TODO: Show update doorhanger(bug 1303513) and set probe(bug 990200)
+      // if (!profileStorage.addresses.mergeIfPossible(address.guid, address.record)) {
+      // }
+    } else {
+      // TODO: Add first time use probe(bug 990199) and doorhanger(bug 1303510)
+      // profileStorage.addresses.add(address.record);
+    }
   },
 };

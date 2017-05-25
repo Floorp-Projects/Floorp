@@ -1,5 +1,4 @@
 "use strict";
-/* globals Cu */
 
 Cu.import("resource://shield-recipe-client/lib/Utils.jsm");
 

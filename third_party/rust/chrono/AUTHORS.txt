@@ -1,0 +1,26 @@
+Chrono is mainly written by Kang Seonghoon <public+rust@mearie.org>,
+and also the following people (in ascending order):
+
+Alexander Bulaev <alexbool@yandex-team.ru>
+Ben Eills <ben@beneills.com>
+Colin Ray <r.colinray@gmail.com>
+Corey Farwell <coreyf@rwell.org>
+Dan <dan@ebip.co.uk>
+Danilo Bargen <mail@dbrgn.ch>
+David Hewson <dev@daveid.co.uk>
+David Ross <daboross@daboross.net>
+David Willie <david.willie.1@gmail.com>
+Eunchong Yu <kroisse@gmail.com>
+Huon Wilson <dbau.pp+github@gmail.com>
+Jisoo Park <xxxyel@gmail.com>
+Joe Wilm <joe@jwilm.com>
+John Heitmann <jheitmann@gmail.com>
+John Nagle <nagle@sitetruth.com>
+Ken Tossell <ken@tossell.net>
+Martin Risell Lilja <martin.risell.lilja@gmail.com>
+Ryan Lewis <ryansname@gmail.com>
+Sergey V. Galtsev <sergey.v.galtsev@github.com>
+Steve Klabnik <steve@steveklabnik.com>
+Tom Gallacher <tomgallacher23@gmail.com>
+klutzy <klutzytheklutzy@gmail.com>
+kud1ing <github@kudling.de>

@@ -1,6 +1,6 @@
 # 468496-1 will also detect bugs in video drivers.
 == 468496-1.html 468496-1-ref.html
-fuzzy(175,443) skip-if(stylo) == 611498-1.html 611498-ref.html
+fuzzy(175,443) skip-if(styloVsGecko) == 611498-1.html 611498-ref.html
 fuzzy-if(Android,8,1000) == 709477-1.html 709477-1-ref.html
 skip-if(!asyncPan) == 1086723.html 1086723-ref.html
 == 853889-1.html 853889-1-ref.html

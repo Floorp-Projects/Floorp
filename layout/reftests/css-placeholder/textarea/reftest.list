@@ -8,19 +8,19 @@
 # ::value (bug 648643), depending of the ::value behaviour (it could change the
 # caret colour and the text colour or just the text colour).
 
-fails-if(stylo) == placeholder-simple.html placeholder-simple-ref.html
+fails-if(styloVsGecko) == placeholder-simple.html placeholder-simple-ref.html
 # needs-focus == placeholder-focus.html placeholder-focus-ref.html
-needs-focus fails-if(stylo) == placeholder-blur.html placeholder-simple-ref.html
-fails-if(stylo) == placeholder-value.html placeholder-value-ref.html
-fails-if(stylo) == placeholder-empty-string.html placeholder-empty-string-ref.html
-fails-if(stylo) == placeholder-add.html placeholder-simple-ref.html
-fails-if(stylo) == placeholder-removal.html textarea-ref.html
-fails-if(stylo) == placeholder-value-set.html placeholder-value-ref.html
-fails-if(stylo) == placeholder-value-unset.html placeholder-simple-ref.html
-fails-if(stylo) == placeholder-value-reset.html placeholder-simple-ref.html
-fails-if(stylo) == placeholdershown.html placeholdershown-ref.html
+needs-focus fails-if(styloVsGecko) == placeholder-blur.html placeholder-simple-ref.html
+fails-if(styloVsGecko) == placeholder-value.html placeholder-value-ref.html
+fails-if(styloVsGecko) == placeholder-empty-string.html placeholder-empty-string-ref.html
+fails-if(styloVsGecko) == placeholder-add.html placeholder-simple-ref.html
+fails-if(styloVsGecko) == placeholder-removal.html textarea-ref.html
+fails-if(styloVsGecko) == placeholder-value-set.html placeholder-value-ref.html
+fails-if(styloVsGecko) == placeholder-value-unset.html placeholder-simple-ref.html
+fails-if(styloVsGecko) == placeholder-value-reset.html placeholder-simple-ref.html
+fails-if(styloVsGecko) == placeholdershown.html placeholdershown-ref.html
 == css-resize.html css-resize-ref.html
-fails-if(stylo) == css-display.html placeholder-simple-ref.html
+fails-if(styloVsGecko) == css-display.html placeholder-simple-ref.html
 # We can't check except by verifying that the output is different.
 # Same reasons as focus issues explained above.
-fails-if(stylo) != css-opacity.html placeholder-simple-ref.html
+fails-if(styloVsGecko) != css-opacity.html placeholder-simple-ref.html
