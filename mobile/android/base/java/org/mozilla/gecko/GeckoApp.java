@@ -126,7 +126,6 @@ public abstract class GeckoApp extends GeckoActivity
                                implements AnchoredPopup.OnVisibilityChangeListener,
                                           BundleEventListener,
                                           ContextGetter,
-                                          GeckoAppShell.GeckoInterface,
                                           GeckoMenu.Callback,
                                           GeckoMenu.MenuPresenter,
                                           GeckoView.ContentListener,
@@ -1278,7 +1277,6 @@ public abstract class GeckoApp extends GeckoActivity
         // When that's fixed, `this` can change to
         // `(GeckoApplication) getApplication()` here.
         GeckoAppShell.setContextGetter(this);
-        GeckoAppShell.setGeckoInterface(this);
         GeckoAppShell.setScreenOrientationDelegate(this);
 
         // Tell Stumbler to register a local broadcast listener to listen for preference intents.
@@ -2246,7 +2244,6 @@ public abstract class GeckoApp extends GeckoActivity
 
         foregrounded = true;
 
-        GeckoAppShell.setGeckoInterface(this);
         GeckoAppShell.setScreenOrientationDelegate(this);
 
         // If mIgnoreLastSelectedTab is set, we're either the first activity to run, so our startup
@@ -2719,12 +2716,6 @@ public abstract class GeckoApp extends GeckoActivity
         mLayerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
     }
 
-    @Override
-    public boolean openUriExternal(String targetURI, String mimeType, String packageName, String className, String action, String title) {
-        // Default to showing prompt in private browsing to be safe.
-        return IntentHelper.openUriExternal(targetURI, mimeType, packageName, className, action, title, true);
-    }
-
     public static class MainLayout extends RelativeLayout {
         private TouchEventInterceptor mTouchEventInterceptor;
         private MotionEventInterceptor mMotionEventInterceptor;
@@ -2929,25 +2920,6 @@ public abstract class GeckoApp extends GeckoActivity
     }
 
     protected void recordStartupActionTelemetry(final String passedURL, final String action) {
-    }
-
-    @Override
-    public String[] getHandlersForMimeType(String mimeType, String action) {
-        Intent intent = IntentHelper.getIntentForActionString(action);
-        if (mimeType != null && mimeType.length() > 0)
-            intent.setType(mimeType);
-        return IntentHelper.getHandlersForIntent(intent);
-    }
-
-    @Override
-    public String[] getHandlersForURL(String url, String action) {
-        // May contain the whole URL or just the protocol.
-        Uri uri = url.indexOf(':') >= 0 ? Uri.parse(url) : new Uri.Builder().scheme(url).build();
-
-        Intent intent = IntentHelper.getOpenURIIntent(getApplicationContext(), uri.toString(), "",
-                TextUtils.isEmpty(action) ? Intent.ACTION_VIEW : action, "");
-
-        return IntentHelper.getHandlersForIntent(intent);
     }
 
     public GeckoView getGeckoView() {
