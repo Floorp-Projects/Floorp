@@ -60,6 +60,11 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsRange, nsIDOMRange)
 
+  nsrefcnt GetRefCount() const
+  {
+    return mRefCnt;
+  }
+
   /**
    * The DOM Range spec requires that when a node is removed from its parent,
    * and the node's subtree contains the start or end point of a range, that
