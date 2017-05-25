@@ -346,6 +346,7 @@ class BuildOptionParser(object):
         'add-on-devel': 'builds/releng_sub_%s_configs/%s_add-on-devel.py',
         'asan': 'builds/releng_sub_%s_configs/%s_asan.py',
         'asan-tc': 'builds/releng_sub_%s_configs/%s_asan_tc.py',
+        'fuzzing-asan-tc': 'builds/releng_sub_%s_configs/%s_fuzzing_asan_tc.py',
         'tsan': 'builds/releng_sub_%s_configs/%s_tsan.py',
         'cross-debug': 'builds/releng_sub_%s_configs/%s_cross_debug.py',
         'cross-debug-st-an': 'builds/releng_sub_%s_configs/%s_cross_debug_st_an.py',
