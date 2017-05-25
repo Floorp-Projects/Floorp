@@ -4,11 +4,11 @@
 
 'use strict';
 
-add_task(function* () {
+add_task(async function () {
   // Making sure that the e10s is enabled on Windows for testing.
-  yield setE10sPrefs();
+  await setE10sPrefs();
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: `data:text/html,
       <html>
@@ -18,23 +18,23 @@ add_task(function* () {
         </head>
         <body></body>
       </html>`
-  }, function*(browser) {
+  }, async function(browser) {
     info('Creating a service in content');
     // Create a11y service in the content process.
     let a11yInit = initPromise(browser);
     loadFrameScripts(browser, `let accService = Components.classes[
       '@mozilla.org/accessibilityService;1'].getService(
         Components.interfaces.nsIAccessibilityService);`);
-    yield a11yInit;
+    await a11yInit;
 
     info('Removing a service in content');
     // Remove a11y service reference from the content process.
     let a11yShutdown = shutdownPromise(browser);
     // Force garbage collection that should trigger shutdown.
     loadFrameScripts(browser, `accService = null; Components.utils.forceGC();`);
-    yield a11yShutdown;
+    await a11yShutdown;
 
     // Unsetting e10s related preferences.
-    yield unsetE10sPrefs();
+    await unsetE10sPrefs();
   });
 });

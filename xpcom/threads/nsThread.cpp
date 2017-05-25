@@ -1164,9 +1164,9 @@ nsThread::GetIdleEvent(nsIRunnable** aEvent, MutexAutoLock& aProofOfLock)
   mIdleEvents.GetEvent(false, aEvent, aProofOfLock);
 
   if (*aEvent) {
-    nsCOMPtr<nsIIdleRunnable> incrementalEvent(do_QueryInterface(*aEvent));
-    if (incrementalEvent) {
-      incrementalEvent->SetDeadline(idleDeadline);
+    nsCOMPtr<nsIIdleRunnable> idleEvent(do_QueryInterface(*aEvent));
+    if (idleEvent) {
+      idleEvent->SetDeadline(idleDeadline);
     }
   }
 }

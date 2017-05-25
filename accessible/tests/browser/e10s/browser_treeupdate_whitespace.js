@@ -7,7 +7,7 @@
 /* import-globals-from ../../mochitest/role.js */
 loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
 
-addAccessibleTask('doc_treeupdate_whitespace.html', function*(browser, accDoc) {
+addAccessibleTask('doc_treeupdate_whitespace.html', async function(browser, accDoc) {
   let container1 = findAccessibleChildByID(accDoc, 'container1');
   let container2Parent = findAccessibleChildByID(accDoc, 'container2-parent');
 
@@ -24,12 +24,12 @@ addAccessibleTask('doc_treeupdate_whitespace.html', function*(browser, accDoc) {
 
   let onReorder = waitForEvent(EVENT_REORDER, 'container1');
   // Remove img1 from container1
-  yield ContentTask.spawn(browser, {}, () => {
+  await ContentTask.spawn(browser, {}, () => {
     let doc = content.document;
     doc.getElementById('container1').removeChild(
       doc.getElementById('img1'));
   });
-  yield onReorder;
+  await onReorder;
 
   tree = {
     SECTION: [
@@ -50,14 +50,14 @@ addAccessibleTask('doc_treeupdate_whitespace.html', function*(browser, accDoc) {
 
   onReorder = waitForEvent(EVENT_REORDER, 'container2-parent');
   // Append an img with valid src to container2
-  yield ContentTask.spawn(browser, {}, () => {
+  await ContentTask.spawn(browser, {}, () => {
     let doc = content.document;
     let img = doc.createElement('img');
     img.setAttribute('src',
       'http://example.com/a11y/accessible/tests/mochitest/moz.png');
     doc.getElementById('container2').appendChild(img);
   });
-  yield onReorder;
+  await onReorder;
 
   tree = {
     SECTION: [

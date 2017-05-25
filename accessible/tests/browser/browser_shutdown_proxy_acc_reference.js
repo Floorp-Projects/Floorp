@@ -4,17 +4,17 @@
 
 'use strict';
 
-add_task(function* () {
+add_task(async function () {
   // Making sure that the e10s is enabled on Windows for testing.
-  yield setE10sPrefs();
+  await setE10sPrefs();
 
   let a11yInit = initPromise();
   let accService = Cc['@mozilla.org/accessibilityService;1'].getService(
     Ci.nsIAccessibilityService);
   ok(accService, 'Service initialized');
-  yield a11yInit;
+  await a11yInit;
 
-  yield BrowserTestUtils.withNewTab({
+  await BrowserTestUtils.withNewTab({
     gBrowser,
     url: `data:text/html,
       <html>
@@ -24,10 +24,10 @@ add_task(function* () {
         </head>
         <body><div id="div" style="visibility: hidden;"></div></body>
       </html>`
-  }, function*(browser) {
+  }, async function(browser) {
     let onShow = waitForEvent(Ci.nsIAccessibleEvent.EVENT_SHOW, 'div');
-    yield invokeSetStyle(browser, 'div', 'visibility', 'visible');
-    let showEvent = yield onShow;
+    await invokeSetStyle(browser, 'div', 'visibility', 'visible');
+    let showEvent = await onShow;
     let divAcc = showEvent.accessible;
     ok(divAcc, 'Accessible proxy is created');
     // Remove unnecessary dangling references
@@ -46,7 +46,7 @@ add_task(function* () {
     // is a reference to an accessible proxy.
     forceGC();
     // Have some breathing room when removing a11y service references.
-    yield new Promise(resolve => executeSoon(resolve));
+    await new Promise(resolve => executeSoon(resolve));
 
     // Now allow a11y service to shutdown.
     canShutdown = true;
@@ -56,9 +56,9 @@ add_task(function* () {
 
     // Force garbage collection that should now trigger shutdown.
     forceGC();
-    yield a11yShutdown;
+    await a11yShutdown;
   });
 
   // Unsetting e10s related preferences.
-  yield unsetE10sPrefs();
+  await unsetE10sPrefs();
 });
