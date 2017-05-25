@@ -2755,8 +2755,6 @@ nsHttpChannel::StartRedirectChannelToURI(nsIURI *upgradedURI, uint32_t flags)
     LOG(("nsHttpChannel::StartRedirectChannelToURI()\n"));
 
     nsCOMPtr<nsIChannel> newChannel;
-    nsCOMPtr<nsILoadInfo> redirectLoadInfo = CloneLoadInfoForRedirect(upgradedURI,
-                                                                      flags);
 
     nsCOMPtr<nsIIOService> ioService;
     rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
@@ -2764,7 +2762,7 @@ nsHttpChannel::StartRedirectChannelToURI(nsIURI *upgradedURI, uint32_t flags)
 
     rv = NS_NewChannelInternal(getter_AddRefs(newChannel),
                                upgradedURI,
-                               redirectLoadInfo,
+                               mLoadInfo,
                                nullptr, // aLoadGroup
                                nullptr, // aCallbacks
                                nsIRequest::LOAD_NORMAL,
@@ -5622,22 +5620,21 @@ nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv)
     rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
     if (NS_FAILED(rv)) return rv;
 
-    uint32_t redirectFlags;
-    if (nsHttp::IsPermanentRedirect(mRedirectType))
-        redirectFlags = nsIChannelEventSink::REDIRECT_PERMANENT;
-    else
-        redirectFlags = nsIChannelEventSink::REDIRECT_TEMPORARY;
-
     nsCOMPtr<nsIChannel> newChannel;
-    nsCOMPtr<nsILoadInfo> redirectLoadInfo = CloneLoadInfoForRedirect(mRedirectURI, redirectFlags);
     rv = NS_NewChannelInternal(getter_AddRefs(newChannel),
                                mRedirectURI,
-                               redirectLoadInfo,
+                               mLoadInfo,
                                nullptr, // aLoadGroup
                                nullptr, // aCallbacks
                                nsIRequest::LOAD_NORMAL,
                                ioService);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    uint32_t redirectFlags;
+    if (nsHttp::IsPermanentRedirect(mRedirectType))
+        redirectFlags = nsIChannelEventSink::REDIRECT_PERMANENT;
+    else
+        redirectFlags = nsIChannelEventSink::REDIRECT_TEMPORARY;
 
     rv = SetupReplacementChannel(mRedirectURI, newChannel,
                                  !rewriteToGET, redirectFlags);
