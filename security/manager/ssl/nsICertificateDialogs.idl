@@ -20,11 +20,12 @@ interface nsICertificateDialogs : nsISupports
    *
    *  @param ctx A user interface context.
    *  @param cert The certificate that is about to get installed.
-   *  @param trust a bit mask of trust flags, 
-   *               see nsIX509CertDB for possible values.
+   *  @param trust A bit mask of trust flags.
+   *               See nsIX509CertDB for possible values.
    *
    *  @return true if the user allows to import the certificate.
    */
+  [must_use]
   boolean confirmDownloadCACert(in nsIInterfaceRequestor ctx,
                                 in nsIX509Cert cert,
                                 out unsigned long trust);
@@ -32,18 +33,18 @@ interface nsICertificateDialogs : nsISupports
   /**
    *  UI shown when a user's personal certificate is going to be
    *  exported to a backup file.
-   *  The implementation of this dialog should make sure 
-   *  to prompt the user to type the password twice in order to
-   *  confirm correct input.
-   *  The wording in the dialog should also motivate the user 
-   *  to enter a strong password.
+   *  The implementation of this dialog should make sure to prompt the user to
+   *  type the password twice in order to confirm correct input.
+   *  The wording in the dialog should also motivate the user to enter a strong
+   *  password.
    *
    *  @param ctx A user interface context.
    *  @param password The password provided by the user.
    *
    *  @return false if the user requests to cancel.
    */
-  boolean setPKCS12FilePassword(in nsIInterfaceRequestor ctx, 
+  [must_use]
+  boolean setPKCS12FilePassword(in nsIInterfaceRequestor ctx,
                                 out AString password);
 
   /**
@@ -57,7 +58,8 @@ interface nsICertificateDialogs : nsISupports
    *
    *  @return false if the user requests to cancel.
    */
-  boolean getPKCS12FilePassword(in nsIInterfaceRequestor ctx, 
+  [must_use]
+  boolean getPKCS12FilePassword(in nsIInterfaceRequestor ctx,
                                 out AString password);
 
   /**
@@ -68,8 +70,8 @@ interface nsICertificateDialogs : nsISupports
    *  @param ctx A user interface context.
    *  @param cert The certificate to be shown to the user.
    */
-  void viewCert(in nsIInterfaceRequestor ctx, 
-                in nsIX509Cert cert);
+  [must_use]
+  void viewCert(in nsIInterfaceRequestor ctx, in nsIX509Cert cert);
 };
 
 %{C++
