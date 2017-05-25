@@ -106,14 +106,21 @@ replace_malloc_init_funcs()
  */
 #define MACRO_CALL(a, b) a b
 
-#define GENERIC_MALLOC_DECL(name, return_type, ...) \
+#define GENERIC_MALLOC_DECL_HELPER(name, return_type, ...) \
   return_type name ## _impl(__VA_ARGS__);
 
+#define GENERIC_MALLOC_DECL(name, return_type, ...) \
+  GENERIC_MALLOC_DECL_HELPER(name, return_type, ##__VA_ARGS__)
+#define GENERIC_MALLOC_DECL_VOID(name, ...) \
+  GENERIC_MALLOC_DECL_HELPER(name, void, ##__VA_ARGS__)
+
 #define MALLOC_DECL(...) MOZ_MEMORY_API MACRO_CALL(GENERIC_MALLOC_DECL, (__VA_ARGS__))
+#define MALLOC_DECL_VOID(...) MOZ_MEMORY_API MACRO_CALL(GENERIC_MALLOC_DECL_VOID, (__VA_ARGS__))
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
 #include "malloc_decls.h"
 
 #define MALLOC_DECL(...) MOZ_JEMALLOC_API MACRO_CALL(GENERIC_MALLOC_DECL, (__VA_ARGS__))
+#define MALLOC_DECL_VOID(...) MOZ_JEMALLOC_API MACRO_CALL(GENERIC_MALLOC_DECL_VOID, (__VA_ARGS__))
 #define MALLOC_FUNCS MALLOC_FUNCS_JEMALLOC
 #include "malloc_decls.h"
 
