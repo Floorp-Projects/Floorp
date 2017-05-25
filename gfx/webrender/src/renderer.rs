@@ -13,6 +13,7 @@ use debug_colors;
 use debug_render::DebugRenderer;
 use device::{DepthFunction, Device, FrameId, ProgramId, TextureId, VertexFormat, GpuMarker, GpuProfiler};
 use device::{GpuSample, TextureFilter, VAOId, VertexUsageHint, FileWatcherHandler, TextureTarget, ShaderError};
+use device::get_gl_format_bgra;
 use euclid::Matrix4D;
 use fnv::FnvHasher;
 use frame_builder::FrameBuilderConfig;
@@ -43,7 +44,7 @@ use std::thread;
 use texture_cache::TextureCache;
 use rayon::ThreadPool;
 use rayon::Configuration as ThreadPoolConfig;
-use tiling::{AlphaBatchKind, BlurCommand, Frame, PrimitiveBatch, RenderTarget};
+use tiling::{AlphaBatchKind, BlurCommand, CompositePrimitiveInstance, Frame, PrimitiveBatch, RenderTarget};
 use tiling::{AlphaRenderTarget, CacheClipInstance, PrimitiveInstance, ColorRenderTarget, RenderTargetKind};
 use time::precise_time_ns;
 use thread_profiler::{register_thread_with_profiler, write_profile};
@@ -51,7 +52,7 @@ use util::TransformedRectKind;
 use webgl_types::GLContextHandleWrapper;
 use webrender_traits::{ColorF, Epoch, PipelineId, RenderNotifier, RenderDispatcher};
 use webrender_traits::{ExternalImageId, ExternalImageType, ImageData, ImageFormat, RenderApiSender};
-use webrender_traits::{DeviceIntRect, DevicePoint, DeviceIntPoint, DeviceIntSize, DeviceUintSize};
+use webrender_traits::{DeviceIntRect, DeviceUintRect, DevicePoint, DeviceIntPoint, DeviceIntSize, DeviceUintSize};
 use webrender_traits::{ImageDescriptor, BlobImageRenderer};
 use webrender_traits::{channel, FontRenderMode};
 use webrender_traits::VRCompositorHandler;
@@ -82,6 +83,18 @@ const GPU_TAG_PRIM_BORDER_CORNER: GpuProfileTag = GpuProfileTag { label: "Border
 const GPU_TAG_PRIM_BORDER_EDGE: GpuProfileTag = GpuProfileTag { label: "BorderEdge", color: debug_colors::LAVENDER };
 const GPU_TAG_PRIM_CACHE_IMAGE: GpuProfileTag = GpuProfileTag { label: "CacheImage", color: debug_colors::SILVER };
 const GPU_TAG_BLUR: GpuProfileTag = GpuProfileTag { label: "Blur", color: debug_colors::VIOLET };
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum GraphicsApi {
+    OpenGL,
+}
+
+#[derive(Clone, Debug)]
+pub struct GraphicsApiInfo {
+    pub kind: GraphicsApi,
+    pub renderer: String,
+    pub version: String,
+}
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 pub enum ImageBufferKind {
@@ -500,6 +513,12 @@ impl GpuDataTextures {
         device.bind_texture(TextureSampler::Gradients, self.gradient_data_texture.id);
         device.bind_texture(TextureSampler::SplitGeometry, self.split_geometry_texture.id);
     }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum ReadPixelsFormat {
+    Rgba8,
+    Bgra8,
 }
 
 /// The renderer is responsible for submitting to the GPU the work prepared by the
@@ -1136,12 +1155,16 @@ impl Renderer {
         Ok((renderer, sender))
     }
 
-    fn get_yuv_shader_index(buffer_kind: ImageBufferKind, format: YuvFormat, color_space: YuvColorSpace) -> usize {
-        ((buffer_kind as usize) * YUV_FORMATS.len() + (format as usize)) * YUV_COLOR_SPACES.len() + (color_space as usize)
+    pub fn get_graphics_api_info(&self) -> GraphicsApiInfo {
+        GraphicsApiInfo {
+            kind: GraphicsApi::OpenGL,
+            version: self.device.gl().get_string(gl::VERSION),
+            renderer: self.device.gl().get_string(gl::RENDERER),
+        }
     }
 
-    pub fn gl(&self) -> &gl::Gl {
-        self.device.gl()
+    fn get_yuv_shader_index(buffer_kind: ImageBufferKind, format: YuvFormat, color_space: YuvColorSpace) -> usize {
+        ((buffer_kind as usize) * YUV_FORMATS.len() + (format as usize)) * YUV_COLOR_SPACES.len() + (color_space as usize)
     }
 
     /// Sets the new RenderNotifier.
@@ -1505,8 +1528,12 @@ impl Renderer {
         let transform_kind = batch.key.flags.transform_kind();
         let needs_clipping = batch.key.flags.needs_clipping();
         debug_assert!(!needs_clipping ||
-                      batch.key.blend_mode == BlendMode::Alpha ||
-                      batch.key.blend_mode == BlendMode::PremultipliedAlpha);
+                      match batch.key.blend_mode {
+                          BlendMode::Alpha |
+                          BlendMode::PremultipliedAlpha |
+                          BlendMode::Subpixel(..) => true,
+                          BlendMode::None => false,
+                      });
 
         let (marker, shader) = match batch.key.kind {
             AlphaBatchKind::Composite => {
@@ -1586,7 +1613,7 @@ impl Renderer {
             // composites can't be grouped together because
             // they may overlap and affect each other.
             debug_assert!(batch.instances.len() == 1);
-            let instance = &batch.instances[0];
+            let instance = CompositePrimitiveInstance::from(&batch.instances[0]);
 
             // TODO(gw): This code branch is all a bit hacky. We rely
             // on pulling specific values from the render target data
@@ -1599,9 +1626,9 @@ impl Renderer {
             // composite operation in this batch.
             let cache_texture_dimensions = self.device.get_texture_dimensions(cache_texture);
 
-            let backdrop = &render_task_data[instance.task_index as usize];
-            let readback = &render_task_data[instance.user_data[0] as usize];
-            let source = &render_task_data[instance.user_data[1] as usize];
+            let backdrop = &render_task_data[instance.task_index.0 as usize];
+            let readback = &render_task_data[instance.backdrop_task_index.0 as usize];
+            let source = &render_task_data[instance.src_task_index.0 as usize];
 
             // Bind the FBO to blit the backdrop to.
             // Called per-instance in case the layer (and therefore FBO)
@@ -2142,6 +2169,31 @@ impl Renderer {
                 }
             }
         }
+    }
+
+    pub fn read_pixels_rgba8(&self, rect: DeviceUintRect) -> Vec<u8> {
+        let mut pixels = vec![0u8; (4 * rect.size.width * rect.size.height) as usize];
+        self.read_pixels_into(rect, ReadPixelsFormat::Rgba8, &mut pixels);
+        pixels
+    }
+
+    pub fn read_pixels_into(&self,
+                            rect: DeviceUintRect,
+                            format: ReadPixelsFormat,
+                            output: &mut [u8]) {
+        let (gl_format, gl_type, size) = match format {
+            ReadPixelsFormat::Rgba8 => (gl::RGBA, gl::UNSIGNED_BYTE, 4),
+            ReadPixelsFormat::Bgra8 => (get_gl_format_bgra(self.device.gl()), gl::UNSIGNED_BYTE, 4),
+        };
+        assert_eq!(output.len(), (size * rect.size.width * rect.size.height) as usize);
+        self.device.gl().flush();
+        self.device.gl().read_pixels_into_buffer(rect.origin.x as gl::GLint,
+                                                 rect.origin.y as gl::GLint,
+                                                 rect.size.width as gl::GLsizei,
+                                                 rect.size.height as gl::GLsizei,
+                                                 gl_format,
+                                                 gl_type,
+                                                 output);
     }
 
     // De-initialize the Renderer safely, assuming the GL is still alive and active.
