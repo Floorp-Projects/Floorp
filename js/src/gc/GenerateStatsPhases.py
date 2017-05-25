@@ -231,6 +231,10 @@ for phaseKind in AllPhaseKinds:
         for index, phase in enumerate(phases):
             phase.name = "%s_%d" % (phaseKind.name, index + 1)
 
+# Find the maximum phase nesting.
+
+MaxPhaseNesting = max(phase.depth for phase in AllPhases) + 1
+
 # Generate code.
 
 def writeList(out, items):
@@ -267,6 +271,12 @@ def generateHeader(out):
         "IMPLICIT_SUSPENSION"
     ]
     writeEnumClass(out, "Phase", "uint8_t", phaseNames, extraPhases)
+    out.write("\n")
+
+    #
+    # Generate MAX_PHASE_NESTING constant.
+    #
+    out.write("static const size_t MAX_PHASE_NESTING = %d;\n" % MaxPhaseNesting)
 
 def generateCpp(out):
     #
