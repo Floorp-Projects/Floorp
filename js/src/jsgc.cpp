@@ -5034,8 +5034,11 @@ GCRuntime::startTask(GCParallelTask& task, gcstats::PhaseKind phase, AutoLockHel
 void
 GCRuntime::joinTask(GCParallelTask& task, gcstats::PhaseKind phase, AutoLockHelperThreadState& locked)
 {
-    gcstats::AutoPhase ap(stats(), task, phase);
-    task.joinWithLockHeld(locked);
+    {
+        gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::JOIN_PARALLEL_TASKS);
+        task.joinWithLockHeld(locked);
+    }
+    stats().recordParallelPhase(phase, task.duration());
 }
 
 void
@@ -5157,7 +5160,7 @@ class MOZ_RAII js::gc::AutoRunParallelTask : public GCParallelTask
 
   public:
     AutoRunParallelTask(JSRuntime* rt, Func func, gcstats::PhaseKind phase,
-                       AutoLockHelperThreadState& lock)
+                        AutoLockHelperThreadState& lock)
       : GCParallelTask(rt),
         func_(func),
         phase_(phase),
@@ -5184,6 +5187,8 @@ GCRuntime::beginSweepingSweepGroup()
      */
 
     using namespace gcstats;
+
+    AutoSCC scc(stats(), sweepGroupIndex);
 
     bool sweepingAtoms = false;
     for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
@@ -5233,7 +5238,6 @@ GCRuntime::beginSweepingSweepGroup()
             sweepAtoms.emplace(rt, SweepAtoms, PhaseKind::SWEEP_ATOMS, lock);
 
         AutoPhase ap(stats(), PhaseKind::SWEEP_COMPARTMENTS);
-        AutoSCC scc(stats(), sweepGroupIndex);
 
         AutoRunParallelTask sweepCCWrappers(rt, SweepCCWrappers, PhaseKind::SWEEP_CC_WRAPPER, lock);
         AutoRunParallelTask sweepObjectGroups(rt, SweepObjectGroups, PhaseKind::SWEEP_TYPE_OBJECT, lock);
@@ -5260,7 +5264,6 @@ GCRuntime::beginSweepingSweepGroup()
     // or on the background thread.
 
     for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
-        AutoSCC scc(stats(), sweepGroupIndex);
 
         zone->arenas.queueForForegroundSweep(&fop, ForegroundObjectFinalizePhase);
         for (unsigned i = 0; i < ArrayLength(IncrementalFinalizePhases); ++i)

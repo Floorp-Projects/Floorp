@@ -70,6 +70,8 @@ MarkRootsPhaseKind = PhaseKind("MARK_ROOTS", "Mark Roots", 48, [
     PhaseKind("MARK_COMPARTMENTS", "Mark Compartments", 54),
 ])
 
+JoinParallelTasksPhaseKind = PhaseKind("JOIN_PARALLEL_TASKS", "Join Parallel Tasks", 67)
+
 PhaseKindGraphRoots = [
     PhaseKind("MUTATOR", "Mutator Running", 0),
     PhaseKind("GC_BEGIN", "Begin Callback", 1),
@@ -115,6 +117,7 @@ PhaseKindGraphRoots = [
                 PhaseKind("SWEEP_TYPES_BEGIN", "Sweep type tables and compilations", 31),
                 PhaseKind("SWEEP_TYPES_END", "Free type arena", 32),
             ]),
+            JoinParallelTasksPhaseKind
         ]),
         PhaseKind("SWEEP_OBJECT", "Sweep Object", 33),
         PhaseKind("SWEEP_STRING", "Sweep String", 34),
@@ -124,13 +127,15 @@ PhaseKindGraphRoots = [
         PhaseKind("SWEEP_SHAPE", "Sweep Shape", 36),
         PhaseKind("SWEEP_JITCODE", "Sweep JIT code", 37),
         PhaseKind("FINALIZE_END", "Finalize End Callback", 38),
-        PhaseKind("DESTROY", "Deallocate", 39)
+        PhaseKind("DESTROY", "Deallocate", 39),
+        JoinParallelTasksPhaseKind
         ]),
     PhaseKind("COMPACT", "Compact", 40, [
         PhaseKind("COMPACT_MOVE", "Compact Move", 41),
         PhaseKind("COMPACT_UPDATE", "Compact Update", 42, [
             MarkRootsPhaseKind,
             PhaseKind("COMPACT_UPDATE_CELLS", "Compact Update Cells", 43),
+            JoinParallelTasksPhaseKind
         ]),
     ]),
     PhaseKind("GC_END", "End Callback", 44),

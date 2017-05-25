@@ -951,27 +951,31 @@ void
 Statistics::endSlice()
 {
     if (!aborted) {
-        slices_.back().end = TimeStamp::Now();
-        slices_.back().endFaults = GetPageFaultCount();
-        slices_.back().finalState = runtime->gc.state();
+        auto& slice = slices_.back();
+        slice.end = TimeStamp::Now();
+        slice.endFaults = GetPageFaultCount();
+        slice.finalState = runtime->gc.state();
 
-        TimeDuration sliceTime = slices_.back().end - slices_.back().start;
+        TimeDuration sliceTime = slice.end - slice.start;
         runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_MS, t(sliceTime));
-        runtime->addTelemetry(JS_TELEMETRY_GC_RESET, slices_.back().wasReset());
-        if (slices_.back().wasReset())
-            runtime->addTelemetry(JS_TELEMETRY_GC_RESET_REASON, uint32_t(slices_.back().resetReason));
+        runtime->addTelemetry(JS_TELEMETRY_GC_RESET, slice.wasReset());
+        if (slice.wasReset())
+            runtime->addTelemetry(JS_TELEMETRY_GC_RESET_REASON, uint32_t(slice.resetReason));
 
-        if (slices_.back().budget.isTimeBudget()) {
-            int64_t budget_ms = slices_.back().budget.timeBudget.budget;
+        if (slice.budget.isTimeBudget()) {
+            int64_t budget_ms = slice.budget.timeBudget.budget;
             runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_MS, budget_ms);
             if (budget_ms == runtime->gc.defaultSliceBudget())
                 runtime->addTelemetry(JS_TELEMETRY_GC_ANIMATION_MS, t(sliceTime));
 
             // Record any phase that goes more than 2x over its budget.
             if (sliceTime.ToMilliseconds() > 2 * budget_ms) {
-                PhaseKind longest = LongestPhaseSelfTime(slices_.back().phaseTimes);
-                uint8_t bucket = phaseKinds[longest].telemetryBucket;
-                runtime->addTelemetry(JS_TELEMETRY_GC_SLOW_PHASE, bucket);
+                reportLongestPhase(slice.phaseTimes, JS_TELEMETRY_GC_SLOW_PHASE);
+                // If we spend a significant length of time waiting for parallel
+                // tasks then report the longest task.
+                TimeDuration joinTime = SumPhase(PhaseKind::JOIN_PARALLEL_TASKS, slice.phaseTimes);
+                if (joinTime.ToMilliseconds() > budget_ms)
+                    reportLongestPhase(slice.parallelTimes, JS_TELEMETRY_GC_SLOW_TASK);
             }
         }
 
@@ -1010,6 +1014,17 @@ Statistics::endSlice()
         phaseStartTimes[Phase::MUTATOR] = mutatorStartTime;
         phaseTimes[Phase::MUTATOR] = mutatorTime;
     }
+}
+
+void
+Statistics::reportLongestPhase(const PhaseTimeTable& times, int telemetryId)
+{
+    PhaseKind longest = LongestPhaseSelfTime(times);
+    if (longest == PhaseKind::NONE)
+        return;
+
+    uint8_t bucket = phaseKinds[longest].telemetryBucket;
+    runtime->addTelemetry(telemetryId, bucket);
 }
 
 bool
@@ -1144,6 +1159,22 @@ Statistics::endPhase(PhaseKind phaseKind)
         suspendedPhases[suspended - 1] == Phase::IMPLICIT_SUSPENSION)
     {
         resumePhases();
+    }
+}
+
+void
+Statistics::recordParallelPhase(PhaseKind phaseKind, TimeDuration duration)
+{
+    Phase phase = lookupChildPhase(phaseKind);
+
+    // Record the duration for all phases in the tree up to the root. This is
+    // not strictly necessary but makes the invariant that parent phase times
+    // include their children apply to both phaseTimes and parallelTimes.
+    while (phase != Phase::NONE) {
+        if (!slices_.empty())
+            slices_.back().parallelTimes[phase] += duration;
+        parallelTimes[phase] += duration;
+        phase = phases[phase].parent;
     }
 }
 
