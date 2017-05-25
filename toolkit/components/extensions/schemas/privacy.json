@@ -49,6 +49,17 @@
     }
   },
   {
+    "namespace": "privacy.services",
+    "description": "Use the <code>browser.privacy</code> API to control usage of the features in the browser that can affect a user's privacy.",
+    "permissions": ["privacy"],
+    "properties": {
+      "passwordSavingEnabled": {
+        "$ref": "types.Setting",
+        "description": "If enabled, the password manager will ask if you want to save passwords. This preference's value is a boolean, defaulting to <code>true</code>."
+      }
+    }
+  },
+  {
     "namespace": "privacy.websites",
     "description": "Use the <code>browser.privacy</code> API to control usage of the features in the browser that can affect a user's privacy.",
     "permissions": ["privacy"],
