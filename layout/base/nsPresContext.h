@@ -352,11 +352,14 @@ public:
    * See the comment in StaticPresData::GetDefaultFont.
    */
   const nsFont* GetDefaultFont(uint8_t aFontID,
-                               nsIAtom *aLanguage) const
+                               nsIAtom *aLanguage, bool* aNeedsToCache = nullptr) const
   {
     nsIAtom* lang = aLanguage ? aLanguage : mLanguage.get();
-    return StaticPresData::Get()->GetDefaultFontHelper(aFontID, lang,
-                                                       GetFontPrefsForLang(lang));
+    const LangGroupFontPrefs* prefs = GetFontPrefsForLang(lang, aNeedsToCache);
+    if (aNeedsToCache && *aNeedsToCache) {
+      return nullptr;
+    }
+    return StaticPresData::Get()->GetDefaultFontHelper(aFontID, lang, prefs);
   }
 
   void ForceCacheLang(nsIAtom *aLanguage);
@@ -1232,10 +1235,10 @@ protected:
    * Fetch the user's font preferences for the given aLanguage's
    * langugage group.
    */
-  const LangGroupFontPrefs* GetFontPrefsForLang(nsIAtom *aLanguage) const
+  const LangGroupFontPrefs* GetFontPrefsForLang(nsIAtom *aLanguage, bool* aNeedsToCache = nullptr) const
   {
     nsIAtom* lang = aLanguage ? aLanguage : mLanguage.get();
-    return StaticPresData::Get()->GetFontPrefsForLangHelper(lang, &mLangGroupFontPrefs);
+    return StaticPresData::Get()->GetFontPrefsForLangHelper(lang, &mLangGroupFontPrefs, aNeedsToCache);
   }
 
   void UpdateCharSet(const nsCString& aCharSet);

@@ -57,6 +57,7 @@
 #include "mozilla/SystemGroup.h"
 #include "mozilla/ServoMediaList.h"
 #include "mozilla/ServoComputedValuesWithParent.h"
+#include "mozilla/RWLock.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/HTMLTableCellElement.h"
@@ -83,6 +84,37 @@ using namespace mozilla::dom;
 
 
 static Mutex* sServoFontMetricsLock = nullptr;
+static RWLock* sServoLangFontPrefsLock = nullptr;
+
+
+static
+const nsFont*
+ThreadSafeGetDefaultFontHelper(const nsPresContext* aPresContext, nsIAtom* aLanguage)
+{
+  bool needsCache = false;
+  const nsFont* retval;
+
+  {
+    AutoReadLock guard(*sServoLangFontPrefsLock);
+    retval = aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
+                                          aLanguage, &needsCache);
+  }
+  if (!needsCache) {
+    return retval;
+  }
+  {
+    AutoWriteLock guard(*sServoLangFontPrefsLock);
+  retval = aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
+                                        aLanguage, nullptr);
+  }
+  return retval;
+}
+
+void
+AssertIsMainThreadOrServoLangFontPrefsCacheLocked()
+{
+  MOZ_ASSERT(NS_IsMainThread() || sServoLangFontPrefsLock->LockedForWritingByCurrentThread());
+}
 
 uint32_t
 Gecko_ChildrenCount(RawGeckoNodeBorrowed aNode)
@@ -1083,9 +1115,7 @@ Gecko_nsFont_InitSystem(nsFont* aDest, int32_t aFontId,
                         const nsStyleFont* aFont, RawGeckoPresContextBorrowed aPresContext)
 {
   MutexAutoLock lock(*sServoFontMetricsLock);
-  const nsFont* defaultVariableFont =
-    aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
-                                 aFont->mLanguage);
+  const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(aPresContext, aFont->mLanguage);
 
   // We have passed uninitialized memory to this function,
   // initialize it. We can't simply return an nsFont because then
@@ -1954,9 +1984,7 @@ void
 Gecko_nsStyleFont_FixupNoneGeneric(nsStyleFont* aFont,
                                    RawGeckoPresContextBorrowed aPresContext)
 {
-  const nsFont* defaultVariableFont =
-    aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
-                                 aFont->mLanguage);
+  const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(aPresContext, aFont->mLanguage);
   nsRuleNode::FixupNoneGeneric(&aFont->mFont, aPresContext,
                                aFont->mGenericID, defaultVariableFont);
 }
@@ -1993,12 +2021,14 @@ InitializeServo()
   Servo_Initialize(URLExtraData::Dummy());
 
   sServoFontMetricsLock = new Mutex("Gecko_GetFontMetrics");
+  sServoLangFontPrefsLock = new RWLock("nsPresContext::GetDefaultFont");
 }
 
 void
 ShutdownServo()
 {
   delete sServoFontMetricsLock;
+  delete sServoLangFontPrefsLock;
   Servo_Shutdown();
 }
 

@@ -55,6 +55,7 @@ public:
 #endif
 
 #ifdef DEBUG
+  bool LockedForWritingByCurrentThread();
   void ReadLock();
   void ReadUnlock();
   void WriteLock();
