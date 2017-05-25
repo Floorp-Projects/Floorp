@@ -18,6 +18,7 @@
 #include "malloc_decls.h"
 
 #include "mozilla/Likely.h"
+#include "mozilla/MacroArgs.h"
 
 /*
  * Windows doesn't come with weak imports as they are possible with
@@ -105,9 +106,19 @@ replace_malloc_init_funcs()
  * specific functions MOZ_JEMALLOC_API; see mozmemory_wrap.h
  */
 #define MACRO_CALL(a, b) a b
+/* Can't use macros recursively, so we need another one doing the same as above. */
+#define MACRO_CALL2(a, b) a b
+
+#define TYPED_ARGS(...) MACRO_CALL2( \
+  MOZ_PASTE_PREFIX_AND_ARG_COUNT(TYPED_ARGS, ##__VA_ARGS__), \
+  (__VA_ARGS__))
+#define TYPED_ARGS0()
+#define TYPED_ARGS1(t1) t1 arg1
+#define TYPED_ARGS2(t1, t2) TYPED_ARGS1(t1), t2 arg2
+#define TYPED_ARGS3(t1, t2, t3) TYPED_ARGS2(t1, t2), t3 arg3
 
 #define GENERIC_MALLOC_DECL_HELPER(name, return_type, ...) \
-  return_type name ## _impl(__VA_ARGS__);
+  return_type name ## _impl(TYPED_ARGS(__VA_ARGS__));
 
 #define GENERIC_MALLOC_DECL(name, return_type, ...) \
   GENERIC_MALLOC_DECL_HELPER(name, return_type, ##__VA_ARGS__)
