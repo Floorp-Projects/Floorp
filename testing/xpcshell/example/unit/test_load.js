@@ -13,9 +13,8 @@ function run_test() {
   try {
     load("file_that_does_not_exist.js");
     subscriptLoaded = true;
-  }
-  catch (ex) {
-    do_check_eq(ex.message.substring(0,16), "cannot open file");
+  } catch (ex) {
+    do_check_eq(ex.message.substring(0, 16), "cannot open file");
   }
   do_check_false(subscriptLoaded, "load() should throw an error");
 }
