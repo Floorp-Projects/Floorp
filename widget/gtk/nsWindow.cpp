@@ -3604,6 +3604,31 @@ nsWindow::Create(nsIWidget* aParent,
               GTK_WINDOW_TOPLEVEL : GTK_WINDOW_POPUP;
         mShell = gtk_window_new(type);
 
+        bool useAlphaVisual = (mWindowType == eWindowType_popup &&
+                               aInitData->mSupportTranslucency);
+
+        // mozilla.widget.use-argb-visuals is a hidden pref defaulting to false
+        // to allow experimentation
+        if (Preferences::GetBool("mozilla.widget.use-argb-visuals", false))
+            useAlphaVisual = true;
+
+        // We need to select an ARGB visual here instead of in
+        // SetTransparencyMode() because it has to be done before the
+        // widget is realized.  An ARGB visual is only useful if we
+        // are on a compositing window manager.
+        if (useAlphaVisual) {
+            GdkScreen *screen = gtk_widget_get_screen(mShell);
+            if (gdk_screen_is_composited(screen)) {
+#if (MOZ_WIDGET_GTK == 2)
+                GdkColormap *colormap = gdk_screen_get_rgba_colormap(screen);
+                gtk_widget_set_colormap(mShell, colormap);
+#else
+                GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
+                gtk_widget_set_visual(mShell, visual);
+#endif
+            }
+        }
+
         // We only move a general managed toplevel window if someone has
         // actually placed the window somewhere.  If no placement has taken
         // place, we just let the window manager Do The Right Thing.
@@ -3627,23 +3652,6 @@ nsWindow::Create(nsIWidget* aParent,
             gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup",
                                    gdk_get_program_class());
 
-            if (aInitData->mSupportTranslucency) {
-                // We need to select an ARGB visual here instead of in
-                // SetTransparencyMode() because it has to be done before the
-                // widget is realized.  An ARGB visual is only useful if we
-                // are on a compositing window manager.
-                GdkScreen *screen = gtk_widget_get_screen(mShell);
-                if (gdk_screen_is_composited(screen)) {
-#if (MOZ_WIDGET_GTK == 2)
-                    GdkColormap *colormap =
-                        gdk_screen_get_rgba_colormap(screen);
-                    gtk_widget_set_colormap(mShell, colormap);
-#else
-                    GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
-                    gtk_widget_set_visual(mShell, visual);
-#endif
-                }
-            }
             if (aInitData->mNoAutoHide) {
                 // ... but the window manager does not decorate this window,
                 // nor provide a separate taskbar icon.
