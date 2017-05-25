@@ -414,13 +414,11 @@ static_assert(!(nsChangeHint_Hints_AlwaysHandledForDescendants &
 // NOTE: You might think that BSize changes could exclude
 // nsChangeHint_ClearAncestorIntrinsics (which is inline-axis specific), but we
 // do need to send it, to clear cached results from CSS Flex measuring reflows.
-//
-// XXXdholbert The next patch rewrites this hint to be similar to the ISize one.
 #define nsChangeHint_ReflowHintsForBSizeChange            \
-  nsChangeHint(nsChangeHint_NeedReflow |                  \
-               nsChangeHint_UpdateComputedBSize |         \
-               nsChangeHint_ReflowChangesSizeOrPosition | \
-               nsChangeHint_ClearAncestorIntrinsics)
+  nsChangeHint((nsChangeHint_AllReflowHints |             \
+                nsChangeHint_UpdateComputedBSize) &       \
+               ~(nsChangeHint_ClearDescendantIntrinsics | \
+                 nsChangeHint_NeedDirtyReflow))
 
 #define NS_STYLE_HINT_REFLOW \
   nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_AllReflowHints)
