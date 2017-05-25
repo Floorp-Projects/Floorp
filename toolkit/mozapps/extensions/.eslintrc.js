@@ -7,9 +7,6 @@ module.exports = {
     // be removed & synced with the mozilla/recommended value.
     "complexity": ["error", {"max": 60}],
 
-    // No using undeclared variables
-    "no-undef": "error",
-
     "no-unused-vars": ["error", {"args": "none", "varsIgnorePattern": "^(Cc|Ci|Cr|Cu|EXPORTED_SYMBOLS)$"}],
   }
 };

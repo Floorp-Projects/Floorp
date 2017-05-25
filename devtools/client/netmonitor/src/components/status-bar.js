@@ -40,7 +40,7 @@ function StatusBar({ summary, openStatistics, timingMarkers }) {
     getFormattedTime(millis));
 
   return (
-    div({ className: "devtools-toolbar devtools-status-bottom" },
+    div({ className: "devtools-toolbar devtools-toolbar-bottom" },
       button({
         className: "devtools-button requests-list-network-summary-button",
         title: L10N.getStr("networkMenu.summary.tooltip.perf"),

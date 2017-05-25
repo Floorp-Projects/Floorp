@@ -22,7 +22,7 @@ pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-010.html a
 == border-breaking-001-cols.xhtml border-breaking-001-cols.ref.xhtml
 == border-breaking-002-cols.xhtml border-breaking-002-cols.ref.xhtml
 == border-breaking-003-cols.xhtml border-breaking-003-cols.ref.xhtml
-fails-if(!stylo) == border-breaking-004-cols.xhtml border-breaking-002-cols.ref.xhtml
+fails-if(!styloVsGecko) == border-breaking-004-cols.xhtml border-breaking-002-cols.ref.xhtml
 == content-inserted-000.xhtml content-inserted-000.ref.xhtml
 == content-inserted-001.xhtml content-inserted-001.ref.xhtml
 == content-inserted-002.xhtml content-inserted-002.ref.xhtml
@@ -34,17 +34,17 @@ fails-if(!stylo) == border-breaking-004-cols.xhtml border-breaking-002-cols.ref.
 == content-inserted-008.xhtml content-inserted-001.ref.xhtml
 == content-inserted-009.xhtml content-inserted-002.ref.xhtml
 == dynamic-abspos-overflow-01-cols.xhtml dynamic-abspos-overflow-01-cols.ref.xhtml
-test-pref(layout.float-fragments-inside-column.enabled,false) fails-if(!stylo) == float-clear-000.html float-clear-000.ref.html
+test-pref(layout.float-fragments-inside-column.enabled,false) fails-if(!styloVsGecko) == float-clear-000.html float-clear-000.ref.html
 test-pref(layout.float-fragments-inside-column.enabled,true) == float-clear-000.html float-clear-000.ref.html
-fails-if(!stylo) == float-clear-001.html float-clear-000.ref.html
-test-pref(layout.float-fragments-inside-column.enabled,false) fails-if(!stylo) == float-clear-002.html float-clear-000.ref.html
+fails-if(!styloVsGecko) == float-clear-001.html float-clear-000.ref.html
+test-pref(layout.float-fragments-inside-column.enabled,false) fails-if(!styloVsGecko) == float-clear-002.html float-clear-000.ref.html
 test-pref(layout.float-fragments-inside-column.enabled,true) == float-clear-002.html float-clear-000.ref.html
-fails-if(!stylo) == float-clear-003.html float-clear-000.ref.html
+fails-if(!styloVsGecko) == float-clear-003.html float-clear-000.ref.html
 == float-clear-000-print.html float-clear-000-print.ref.html
 == float-clear-001-print.html float-clear-000-print.ref.html
 == float-clear-002-print.html float-clear-000-print.ref.html
 == float-clear-003-print.html float-clear-000-print.ref.html
-fails-if(!stylo) == float-continuations-000.html float-continuations-000.ref.html
+fails-if(!styloVsGecko) == float-continuations-000.html float-continuations-000.ref.html
 fuzzy-if(skiaContent,1,21) == resize-reflow-000.html resize-reflow-000.ref.html
 fuzzy-if(skiaContent,1,23) == resize-reflow-001.html resize-reflow-001.ref.html
 == table-page-break-before-auto-1.html table-page-break-before-auto-1-ref.html
@@ -74,4 +74,4 @@ fuzzy-if(skiaContent,1,23) == resize-reflow-001.html resize-reflow-001.ref.html
 # == table-caption-splitaftercaption-10.html blank.html # bug 672654
 # == table-caption-splitaftercaption-11.html blank.html # bug 672654
 == column-balancing-break-inside-avoid-2.html column-balancing-break-inside-avoid-2-ref.html
-fails-if(stylo) == combobox-page-break-inside.html combobox-page-break-inside-ref.html
+fails-if(styloVsGecko) == combobox-page-break-inside.html combobox-page-break-inside-ref.html

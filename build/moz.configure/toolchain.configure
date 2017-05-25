@@ -140,6 +140,9 @@ def sccache_verbose_stats(using_sccache, verbose_stats):
 
 set_config('SCCACHE_VERBOSE_STATS', sccache_verbose_stats)
 
+option(env='MOZ_HAZARD', help='Build for the GC rooting hazard analysis')
+set_config('MOZ_HAZARD', depends_if('MOZ_HAZARD')(lambda _: True))
+
 @depends('--with-compiler-wrapper', ccache)
 @imports(_from='mozbuild.shellutil', _import='split', _as='shell_split')
 def compiler_wrapper(wrapper, ccache):

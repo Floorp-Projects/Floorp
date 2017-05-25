@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<link rel="stylesheet" href="data:text/css,@font-face { font-family: 'MarkA'; src: url(../fonts/markA.ttf); }">
+<link rel="stylesheet" href="data:text/css,@font-face { font-family: 'MarkA'; src: url(../fonts/markA.ttf); }">
+
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<style>
+  body { font-family: "MarkA"; }
+</style>
+<div>ABC</div>
+<script>
+  function runTest() {
+    var links = document.getElementsByTagName("link");
+    links[0].sheet.cssRules[0].style.src = "../fonts/markB.ttf";
+
+    // Test that the cloned sheet is unaffected.
+    isnot(links[1].sheet.cssRules[0].style.src, "../fonts/markB.ttf", "Cloned sheet left unchanged.");
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  runTest();
+</script>
+</html>

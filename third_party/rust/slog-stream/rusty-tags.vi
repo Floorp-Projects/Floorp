@@ -1,0 +1,341 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+ASCII_LOWERCASE_MAP	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^static ASCII_LOWERCASE_MAP: [u8; 256] = [$/;"	c
+AsFmtSerializer	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^pub struct AsFmtSerializer<F>(pub F)$/;"	s
+Async	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^impl Async {$/;"	i
+Async	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^pub struct Async {$/;"	s
+AsyncMsg	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^enum AsyncMsg {$/;"	g
+AsyncRecord	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^struct AsyncRecord {$/;"	s
+BoxExt	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^trait BoxExt<T: ?Sized> {$/;"	t
+BoxExt for Box	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T: ?Sized> BoxExt<T> for Box<T> {$/;"	i
+CachedIntoIter	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^pub type CachedIntoIter<T> = Chain<OptionIter<Box<T>>, IntoIter<T>>;$/;"	T
+CachedIterMut	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^pub type CachedIterMut<'a, T> = Chain<OptionIter<&'a mut Box<T>>, IterMut<'a, T>>;$/;"	T
+CachedThreadLocal	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T: ?Sized + Send> CachedThreadLocal<T> {$/;"	i
+CachedThreadLocal	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T: Send + Default> CachedThreadLocal<T> {$/;"	i
+CachedThreadLocal	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^pub struct CachedThreadLocal<T: ?Sized + Send> {$/;"	s
+CheckOwned	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/tests.rs	/^        struct CheckOwned;$/;"	s
+Clone for TableEntry	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T: ?Sized + Send> Clone for TableEntry<T> {$/;"	i
+Default for CachedThreadLocal	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T: ?Sized + Send> Default for CachedThreadLocal<T> {$/;"	i
+Default for ThreadLocal	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T: ?Sized + Send> Default for ThreadLocal<T> {$/;"	i
+Discard	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^pub struct Discard;$/;"	s
+Drain	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^pub trait Drain {$/;"	t
+Drain for Arc	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl<D: Drain+?Sized> Drain for Arc<D> {$/;"	i
+Drain for Async	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^impl Drain for Async {$/;"	i
+Drain for Box	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl<D: Drain+?Sized> Drain for Box<D> {$/;"	i
+Drain for CheckOwned	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/tests.rs	/^        impl Drain for CheckOwned {$/;"	i
+Drain for Discard	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl Drain for Discard {$/;"	i
+Drain for Duplicate	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl<D1 : Drain, D2 : Drain> Drain for Duplicate<D1, D2> {$/;"	i
+Drain for Filter	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl<D: Drain> Drain for Filter<D> {$/;"	i
+Drain for Fuse	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl<D: Drain> Drain for Fuse<D> where D::Error : fmt::Display {$/;"	i
+Drain for IgnoreErr	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl<D: Drain> Drain for IgnoreErr<D> {$/;"	i
+Drain for LevelFilter	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl<D: Drain> Drain for LevelFilter<D> {$/;"	i
+Drain for Logger	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_logger.rs	/^impl Drain for Logger {$/;"	i
+Drain for MapError	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl<D: Drain, E> Drain for MapError<D, E> {$/;"	i
+Drain for Streamer	/home/dpc/lab/rust/slog/slog-stream/lib.rs	/^impl<W: 'static + io::Write + Send, F: Format + Send> Drain for Streamer<W, F> {$/;"	i
+DrainExt	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^pub trait DrainExt: Sized + Drain {$/;"	t
+DrainExt for D	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl<D : Drain> DrainExt for D {}$/;"	i
+Drop for Async	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^impl Drop for Async {$/;"	i
+Drop for PushFnSerializer	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl<'a> Drop for PushFnSerializer<'a> {$/;"	i
+Drop for ThreadLocal	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T: ?Sized + Send> Drop for ThreadLocal<T> {$/;"	i
+Duplicate	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl<D1: Drain, D2: Drain> Duplicate<D1, D2> {$/;"	i
+Duplicate	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^pub struct Duplicate<D1: Drain, D2: Drain> {$/;"	s
+DuplicateError	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^pub enum DuplicateError<E1, E2> {$/;"	g
+Err	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^    type Err = ();$/;"	T
+Error	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    type Error = io::Error;$/;"	T
+Error	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    type Error = D::Error;$/;"	T
+Error	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    type Error = DuplicateError<D1::Error, D2::Error>;$/;"	T
+Error	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    type Error = E;$/;"	T
+Error	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    type Error = Never;$/;"	T
+Error	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    type Error;$/;"	T
+Error	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_logger.rs	/^    type Error = Never;$/;"	T
+Error	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^pub enum Error {$/;"	g
+Error	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/tests.rs	/^            type Error = Never;$/;"	T
+Error	/home/dpc/lab/rust/slog/slog-stream/lib.rs	/^    type Error = io::Error;$/;"	T
+ExactSizeIterator for IntoIter	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T: ?Sized + Send> ExactSizeIterator for IntoIter<T> {}$/;"	i
+ExactSizeIterator for IterMut	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<'a, T: ?Sized + Send + 'a> ExactSizeIterator for IterMut<'a, T> {}$/;"	i
+Filter	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl<D: Drain> Filter<D> {$/;"	i
+Filter	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^pub struct Filter<D: Drain> {$/;"	s
+FilterLevel	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^impl FilterLevel {$/;"	i
+FilterLevel	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^pub enum FilterLevel {$/;"	g
+FnValue	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^pub struct FnValue<V: 'static + Value, F>(pub F)$/;"	s
+Format	/home/dpc/lab/rust/slog/slog-stream/format.rs	/^pub trait Format: Send + Sync + Sized {$/;"	t
+From for Error	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl From<core::fmt::Error> for Error {$/;"	i
+From for Error	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl From<std::io::Error> for Error {$/;"	i
+From for std	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl From<Error> for std::io::Error {$/;"	i
+FromStr for FilterLevel	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^impl FromStr for FilterLevel {$/;"	i
+Fuse	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl<D: Drain> Fuse<D> {$/;"	i
+Fuse	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^pub struct Fuse<D: Drain> {$/;"	s
+IgnoreErr	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl<D: Drain> IgnoreErr<D> {$/;"	i
+IgnoreErr	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^pub struct IgnoreErr<D: Drain> {$/;"	s
+IntoIter	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    type IntoIter = CachedIntoIter<T>;$/;"	T
+IntoIter	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    type IntoIter = CachedIterMut<'a, T>;$/;"	T
+IntoIter	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    type IntoIter = IntoIter<T>;$/;"	T
+IntoIter	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    type IntoIter = IterMut<'a, T>;$/;"	T
+IntoIter	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^pub struct IntoIter<T: ?Sized + Send> {$/;"	s
+IntoIterator	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<'a, T: ?Sized + Send + 'a> IntoIterator for &'a mut CachedThreadLocal<T> {$/;"	i
+IntoIterator	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<'a, T: ?Sized + Send + 'a> IntoIterator for &'a mut ThreadLocal<T> {$/;"	i
+IntoIterator for CachedThreadLocal	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T: ?Sized + Send> IntoIterator for CachedThreadLocal<T> {$/;"	i
+IntoIterator for ThreadLocal	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T: ?Sized + Send> IntoIterator for ThreadLocal<T> {$/;"	i
+Item	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^    type Item = &'a KV;$/;"	T
+Item	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    type Item = &'a mut Box<T>;$/;"	T
+Item	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    type Item = Box<T>;$/;"	T
+IterMut	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^pub struct IterMut<'a, T: ?Sized + Send + 'a> {$/;"	s
+Iterator for IntoIter	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T: ?Sized + Send> Iterator for IntoIter<T> {$/;"	i
+Iterator for IterMut	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<'a, T: ?Sized + Send + 'a> Iterator for IterMut<'a, T> {$/;"	i
+Iterator for OwnedKVGroupIterator	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^impl<'a> Iterator for OwnedKVGroupIterator<'a> {$/;"	i
+Iterator for OwnedKVIterator	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^impl<'a> Iterator for OwnedKVIterator<'a> {$/;"	i
+KV	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl KV for () {$/;"	i
+KV	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl<T: KV, R: KV> KV for (T, R) {$/;"	i
+KV	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^pub trait KV {$/;"	t
+KV for SingleKV	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl<K, V> KV for SingleKV<K, V>$/;"	i
+Key	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl<'a> Key for &'a str {$/;"	i
+Key	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^pub trait Key {$/;"	t
+Key for String	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl Key for String {$/;"	i
+Key for str	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl Key for str {$/;"	i
+LOG_LEVEL_NAMES	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^pub static LOG_LEVEL_NAMES: [&'static str; 7] = ["OFF", "CRITICAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"];$/;"	c
+LOG_LEVEL_SHORT_NAMES	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^pub static LOG_LEVEL_SHORT_NAMES: [&'static str; 7] = ["OFF", "CRIT", "ERRO", "WARN", "INFO", "DEBG", "TRCE"];$/;"	c
+Level	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^impl Level {$/;"	i
+Level	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^pub enum Level {$/;"	g
+LevelFilter	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl<D: Drain> LevelFilter<D> {$/;"	i
+LevelFilter	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^pub struct LevelFilter<D: Drain> {$/;"	s
+Logger	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_logger.rs	/^impl Logger {$/;"	i
+Logger	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_logger.rs	/^pub struct Logger {$/;"	s
+MapError	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl<D: Drain, E> MapError<D, E> {$/;"	i
+MapError	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^pub struct MapError<D: Drain, E> {$/;"	s
+Never	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/lib.rs	/^pub type Never = ();$/;"	T
+OwnedKVGroup	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^pub struct OwnedKVGroup($/;"	s
+OwnedKVGroupIterator	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^impl<'a> OwnedKVGroupIterator<'a> {$/;"	i
+OwnedKVGroupIterator	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^pub struct OwnedKVGroupIterator<'a> {$/;"	s
+OwnedKVIterator	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^impl<'a> OwnedKVIterator<'a> {$/;"	i
+OwnedKVIterator	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^pub struct OwnedKVIterator<'a> {$/;"	s
+OwnedKVList	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^impl OwnedKVList {$/;"	i
+OwnedKVList	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^pub struct OwnedKVList {$/;"	s
+OwnedKVListNode	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^struct OwnedKVListNode {$/;"	s
+PushFnSerializer	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl<'a> PushFnSerializer<'a> {$/;"	i
+PushFnSerializer	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^pub struct PushFnSerializer<'a> {$/;"	s
+PushFnValue	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^pub struct PushFnValue<F>(pub F)$/;"	s
+RS	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^            static RS : $crate::RecordStatic<'static> = $crate::RecordStatic {$/;"	c
+RawIter	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T: ?Sized + Send> RawIter<T> {$/;"	i
+RawIter	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^struct RawIter<T: ?Sized + Send> {$/;"	s
+Record	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_record.rs	/^impl<'a> Record<'a> {$/;"	i
+Record	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_record.rs	/^pub struct Record<'a> {$/;"	s
+RecordStatic	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_record.rs	/^pub struct RecordStatic<'a> {$/;"	s
+RecordValues	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^type RecordValues = Vec<Box<slog::KV+Send>>;$/;"	T
+Result	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^pub type Result<T=()> = result::Result<T, Error>;$/;"	T
+STATIC_TERMINATOR_UNIT	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^static STATIC_TERMINATOR_UNIT : () = ();$/;"	c
+Serializer	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^pub trait Serializer {$/;"	t
+Serializer for AsFmtSerializer	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl<F> Serializer for AsFmtSerializer<F>$/;"	i
+Serializer for ToSendSerializer	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^impl Serializer for ToSendSerializer {$/;"	i
+SingleKV	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^pub struct SingleKV<K, V>(pub K, pub V)$/;"	s
+Streamer	/home/dpc/lab/rust/slog/slog-stream/lib.rs	/^impl<W: io::Write, F: Format> Streamer<W, F> {$/;"	i
+Streamer	/home/dpc/lab/rust/slog/slog-stream/lib.rs	/^pub struct Streamer<W: io::Write, F: Format> {$/;"	s
+Sync for CachedThreadLocal	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^unsafe impl<T: ?Sized + Send> Sync for CachedThreadLocal<T> {}$/;"	i
+Sync for ThreadLocal	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^unsafe impl<T: ?Sized + Send> Sync for ThreadLocal<T> {}$/;"	i
+TL_BUF	/home/dpc/lab/rust/slog/slog-stream/lib.rs	/^    static TL_BUF: RefCell<Vec<u8>> = RefCell::new(Vec::with_capacity(128))$/;"	c
+Table	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^struct Table<T: ?Sized + Send> {$/;"	s
+TableEntry	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^struct TableEntry<T: ?Sized + Send> {$/;"	s
+ThreadLocal	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T: ?Sized + Send> ThreadLocal<T> {$/;"	i
+ThreadLocal	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T: Send + Default> ThreadLocal<T> {$/;"	i
+ThreadLocal	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^pub struct ThreadLocal<T: ?Sized + Send> {$/;"	s
+ToSendSerializer	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^impl ToSendSerializer {$/;"	i
+ToSendSerializer	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^struct ToSendSerializer {$/;"	s
+UncheckedOptionExt	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^trait UncheckedOptionExt<T> {$/;"	t
+UncheckedOptionExt for Option	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T> UncheckedOptionExt<T> for Option<T> {$/;"	i
+UncheckedOptionExt for Result	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T, E> UncheckedOptionExt<T> for Result<T, E> {$/;"	i
+Value	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^        impl Value for $t {$/;"	i
+Value	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl Value for () {$/;"	i
+Value	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl<'a> Value for &'a str {$/;"	i
+Value	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^pub trait Value {$/;"	t
+Value for Arc	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl<T> Value for Arc<T>$/;"	i
+Value for Box	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl Value for Box<Value + Send + 'static> {$/;"	i
+Value for F	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl<V: 'static + Value, F> Value for F$/;"	i
+Value for FnValue	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl<V: 'static + Value, F> Value for FnValue<V, F>$/;"	i
+Value for Option	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl<T: Value> Value for Option<T> {$/;"	i
+Value for PushFnValue	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl<F> Value for PushFnValue<F>$/;"	i
+Value for Rc	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl<T> Value for Rc<T>$/;"	i
+Value for String	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl Value for String {$/;"	i
+Value for core	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl<T> Value for core::num::Wrapping<T>$/;"	i
+Value for fmt	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl<'a> Value for fmt::Arguments<'a> {$/;"	i
+Value for str	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl Value for str {$/;"	i
+Void	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    enum Void {}$/;"	g
+__slog_static_max_level	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^pub fn __slog_static_max_level() -> FilterLevel {$/;"	f
+append	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^    fn append(&self, other: &OwnedKVList) -> OwnedKVList {$/;"	f
+as_short_str	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^    pub fn as_short_str(&self) -> &'static str {$/;"	f
+as_str	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^    pub fn as_str(&self) -> &'static str {$/;"	f
+as_str	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn as_str(&self) -> &str {$/;"	f
+as_str	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn as_str(&self) -> &str;$/;"	f
+as_usize	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^    pub fn as_usize(&self) -> usize {$/;"	f
+async_stream	/home/dpc/lab/rust/slog/slog-stream/lib.rs	/^pub fn async_stream<W: io::Write + Send + 'static, F: Format + Send + 'static>(io: W,$/;"	f
+cause	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn cause(&self) -> Option<&std::error::Error> {$/;"	f
+clear	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    pub fn clear(&mut self) {$/;"	f
+clone	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn clone(&self) -> TableEntry<T> {$/;"	f
+column	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_record.rs	/^    pub fn column(&self) -> u32 {$/;"	f
+core::fmt::Display for Error	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl core::fmt::Display for Error {$/;"	i
+crit	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^macro_rules! crit($/;"	d
+debug	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^macro_rules! debug($/;"	d
+default	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn default() -> CachedThreadLocal<T> {$/;"	f
+default	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn default() -> ThreadLocal<T> {$/;"	f
+description	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn description(&self) -> &str {$/;"	f
+different_thread	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn different_thread() {$/;"	f
+different_thread_cached	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn different_thread_cached() {$/;"	f
+drop	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn drop(&mut self) {$/;"	f
+drop	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn drop(&mut self) {$/;"	f
+drop	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn drop(&mut self) {$/;"	f
+duplicate	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^pub fn duplicate<D1: Drain, D2: Drain>(d1: D1, d2: D2) -> Duplicate<D1, D2> {$/;"	f
+emit_arguments	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_arguments(&mut self, key: &str, val: &fmt::Arguments) -> slog::Result {$/;"	f
+emit_arguments	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn emit_arguments(&mut self, key: &str, val: &fmt::Arguments) -> Result {$/;"	f
+emit_arguments	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn emit_arguments(&mut self, key: &str, val: &fmt::Arguments) -> Result;$/;"	f
+emit_bool	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_bool(&mut self, key: &str, val: bool) -> slog::Result {$/;"	f
+emit_char	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_char(&mut self, key: &str, val: char) -> slog::Result {$/;"	f
+emit_f32	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_f32(&mut self, key: &str, val: f32) -> slog::Result {$/;"	f
+emit_f64	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_f64(&mut self, key: &str, val: f64) -> slog::Result {$/;"	f
+emit_i16	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_i16(&mut self, key: &str, val: i16) -> slog::Result {$/;"	f
+emit_i32	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_i32(&mut self, key: &str, val: i32) -> slog::Result {$/;"	f
+emit_i64	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_i64(&mut self, key: &str, val: i64) -> slog::Result {$/;"	f
+emit_i8	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_i8(&mut self, key: &str, val: i8) -> slog::Result {$/;"	f
+emit_isize	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_isize(&mut self, key: &str, val: isize) -> slog::Result {$/;"	f
+emit_none	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_none(&mut self, key: &str) -> slog::Result {$/;"	f
+emit_none	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn emit_none(&mut self, key: &str) -> Result {$/;"	f
+emit_str	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_str(&mut self, key: &str, val: &str) -> slog::Result {$/;"	f
+emit_u16	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_u16(&mut self, key: &str, val: u16) -> slog::Result {$/;"	f
+emit_u32	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_u32(&mut self, key: &str, val: u32) -> slog::Result {$/;"	f
+emit_u64	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_u64(&mut self, key: &str, val: u64) -> slog::Result {$/;"	f
+emit_u8	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_u8(&mut self, key: &str, val: u8) -> slog::Result {$/;"	f
+emit_unit	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_unit(&mut self, key: &str) -> slog::Result {$/;"	f
+emit_unit	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn emit_unit(&mut self, key: &str) -> Result {$/;"	f
+emit_usize	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn emit_usize(&mut self, key: &str, val: usize) -> slog::Result {$/;"	f
+error	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^macro_rules! error($/;"	d
+file	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_record.rs	/^    pub fn file(&self) -> &'static str {$/;"	f
+filter	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^pub fn filter<D: Drain, F: 'static + Send + Sync + Fn(&Record) -> bool>($/;"	f
+filterlevel_sanity	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^fn filterlevel_sanity() {$/;"	f
+finish	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn finish(self) -> RecordValues {$/;"	f
+fmt	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {$/;"	f
+fmt	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {$/;"	f
+fmt	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {$/;"	f
+fmt	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_logger.rs	/^    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {$/;"	f
+fmt	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> std::fmt::Result {$/;"	f
+fmt	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {$/;"	f
+fmt::Debug for CachedThreadLocal	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T: ?Sized + Send + fmt::Debug> fmt::Debug for CachedThreadLocal<T> {$/;"	i
+fmt::Debug for Logger	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_logger.rs	/^impl fmt::Debug for Logger {$/;"	i
+fmt::Debug for OwnedKVList	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^impl fmt::Debug for OwnedKVList {$/;"	i
+fmt::Debug for ThreadLocal	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^impl<T: ?Sized + Send + fmt::Debug> fmt::Debug for ThreadLocal<T> {$/;"	i
+fmt::Display for DuplicateError	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^impl<E1 : fmt::Display, E2 : fmt::Display> fmt::Display for DuplicateError<E1, E2> {$/;"	i
+fmt::Display for Level	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^impl fmt::Display for Level {$/;"	i
+foo	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^        fn foo<T: Sync>() {}$/;"	f
+format	/home/dpc/lab/rust/slog/slog-stream/format.rs	/^    fn format(&self,$/;"	f
+from	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn from(_: core::fmt::Error) -> Error {$/;"	f
+from	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn from(e: Error) -> std::io::Error {$/;"	f
+from	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn from(err: std::io::Error) -> Error {$/;"	f
+from_raw	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    unsafe fn from_raw(raw: *mut T) -> Self {$/;"	f
+from_raw	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    unsafe fn from_raw(raw: *mut T) -> Self;$/;"	f
+from_str	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^    fn from_str(level: &str) -> core::result::Result<FilterLevel, ()> {$/;"	f
+from_usize	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^    pub fn from_usize(u: usize) -> Option<FilterLevel> {$/;"	f
+from_usize	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^    pub fn from_usize(u: usize) -> Option<Level> {$/;"	f
+function	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_record.rs	/^    pub fn function(&self) -> &'static str {$/;"	f
+fuse	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    fn fuse(self) -> Fuse<Self> where <Self as Drain>::Error : fmt::Display {$/;"	f
+get	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    pub fn get(&self) -> Option<&T> {$/;"	f
+get_default	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    pub fn get_default(&self) -> &T {$/;"	f
+get_fast	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn get_fast(&self, id: usize) -> Option<&T> {$/;"	f
+get_or	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    pub fn get_or<F>(&self, create: F) -> &T$/;"	f
+get_or_try	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    pub fn get_or_try<F, E>(&self, create: F) -> Result<&T, E>$/;"	f
+get_or_try_slow	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn get_or_try_slow<F, E>(&self, id: usize, owner: usize, create: F) -> Result<&T, E>$/;"	f
+get_sender	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn get_sender(&self) -> &mpsc::Sender<AsyncMsg> {$/;"	f
+get_slow	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn get_slow(&self, id: usize, table_top: &Table<T>) -> Option<&T> {$/;"	f
+hash	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^fn hash(id: usize, bits: usize) -> usize {$/;"	f
+ignore_err	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    fn ignore_err(self) -> IgnoreErr<Self> {$/;"	f
+impl_default_as_fmt	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^macro_rules! impl_default_as_fmt{$/;"	d
+impl_value_for	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^macro_rules! impl_value_for{$/;"	d
+info	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^macro_rules! info($/;"	d
+insert	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn insert(&self, id: usize, data: Box<T>, new: bool) -> &T {$/;"	f
+into_iter	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn into_iter(self) -> CachedIntoIter<T> {$/;"	f
+into_iter	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn into_iter(self) -> CachedIterMut<'a, T> {$/;"	f
+into_iter	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn into_iter(self) -> IntoIter<T> {$/;"	f
+into_iter	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn into_iter(self) -> IterMut<'a, T> {$/;"	f
+into_raw	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn into_raw(b: Self) -> *mut T;$/;"	f
+into_raw	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn into_raw(mut b: Self) -> *mut T {$/;"	f
+is_at_least	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^    pub fn is_at_least(&self, level : Self) -> bool {$/;"	f
+is_sync	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn is_sync() {$/;"	f
+iter	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn iter() {$/;"	f
+iter_cached	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn iter_cached() {$/;"	f
+iter_groups	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^    pub fn iter_groups(&self) -> OwnedKVGroupIterator {$/;"	f
+iter_mut	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    pub fn iter_mut(&mut self) -> CachedIterMut<T> {$/;"	f
+iter_mut	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    pub fn iter_mut(&mut self) -> IterMut<T> {$/;"	f
+iter_single	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^    pub fn iter_single(&self) -> OwnedKVIterator {$/;"	f
+level	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_record.rs	/^    pub fn level(&self) -> Level {$/;"	f
+level_at_least	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^fn level_at_least() {$/;"	f
+level_filter	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^pub fn level_filter<D: Drain>(level: Level, d: D) -> LevelFilter<D> {$/;"	f
+level_from_str	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^fn level_from_str() {$/;"	f
+line	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_record.rs	/^    pub fn line(&self) -> u32 {$/;"	f
+log	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn log(&self, record: &Record, logger_values: &OwnedKVList) -> io::Result<()> {$/;"	f
+log	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    fn log(&self, _: &Record, _: &OwnedKVList) -> result::Result<(), Never> {$/;"	f
+log	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    fn log(&self, info: &Record, o: &OwnedKVList) -> result::Result<(), D::Error> {$/;"	f
+log	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    fn log(&self, record: &Record, values : &OwnedKVList) -> result::Result<(), Self::Error>;$/;"	f
+log	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    fn log(&self,$/;"	f
+log	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_logger.rs	/^    fn log(&self, record: &Record, values : &OwnedKVList) -> result::Result<(), Self::Error> {$/;"	f
+log	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_logger.rs	/^    pub fn log(&self, record: &Record) {$/;"	f
+log	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^macro_rules! log($/;"	d
+log	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/tests.rs	/^            fn log(&self,$/;"	f
+log	/home/dpc/lab/rust/slog/slog-stream/lib.rs	/^    fn log(&self, info: &Record, logger_values: &OwnedKVList) -> io::Result<()> {$/;"	f
+logger_fmt_debug_sanity	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/tests.rs	/^    fn logger_fmt_debug_sanity() {$/;"	f
+lookup	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn lookup(id: usize, table: &Table<T>) -> Option<&UnsafeCell<Option<Box<T>>>> {$/;"	f
+make_create	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn make_create() -> Arc<Fn() -> Box<usize> + Send + Sync> {$/;"	f
+map_err	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    fn map_err<F, E>(self, f : F) -> MapError<Self, E> where F : 'static + Sync + Send + Fn(<Self as Drain>::Error) -> E {$/;"	f
+max	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^    pub fn max() -> Self {$/;"	f
+min	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_level.rs	/^    pub fn min() -> Self {$/;"	f
+module	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_record.rs	/^    pub fn module(&self) -> &'static str {$/;"	f
+msg	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_record.rs	/^    pub fn msg(&self) -> fmt::Arguments {$/;"	f
+multichain	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/tests.rs	/^    fn multichain() {$/;"	f
+new	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn new() -> Self {$/;"	f
+new	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    pub fn new<D: slog::Drain<Error=slog::Never> + Send + 'static>(drain: D) -> Self {$/;"	f
+new	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    pub fn new(drain1: D1, drain2: D2) -> Self {$/;"	f
+new	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    pub fn new(drain: D) -> Self {$/;"	f
+new	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    pub fn new(drain: D, level: Level) -> Self {$/;"	f
+new	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    pub fn new<F: 'static + Sync + Send + Fn(&Record) -> bool>(drain: D, cond: F) -> Self {$/;"	f
+new	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_drain.rs	/^    pub fn new<F: 'static + Sync + Send + Fn(<D as Drain>::Error) -> E>(drain: D, map_fn: F) -> Self {$/;"	f
+new	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^    fn new(list: &'a OwnedKVList) -> Self {$/;"	f
+new	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^    fn new(values: OwnedKVGroup, parent: &OwnedKVList) -> Self {$/;"	f
+new	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_logger.rs	/^    pub fn new(&self, values: OwnedKVGroup) -> Logger {$/;"	f
+new	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_record.rs	/^    pub fn new($/;"	f
+new	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    pub fn new() -> CachedThreadLocal<T> {$/;"	f
+new	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    pub fn new() -> ThreadLocal<T> {$/;"	f
+new	/home/dpc/lab/rust/slog/slog-stream/lib.rs	/^    pub fn new(io: W, format: F) -> Self {$/;"	f
+next	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^    fn next(&mut self) -> Option<Self::Item> {$/;"	f
+next	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn next(&mut self) -> Option<&'a mut Box<T>> {$/;"	f
+next	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn next(&mut self) -> Option<*mut Option<Box<T>>> {$/;"	f
+next	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn next(&mut self) -> Option<Box<T>> {$/;"	f
+no_imports	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/tests.rs	/^mod no_imports {$/;"	m
+o	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^macro_rules! o($/;"	d
+root	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_kv.rs	/^    fn root(values: OwnedKVGroup) -> Self {$/;"	f
+root	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_logger.rs	/^    pub fn root<D>(d: D, values: OwnedKVGroup) -> Logger$/;"	f
+same_thread	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn same_thread() {$/;"	f
+same_thread_cached	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn same_thread_cached() {$/;"	f
+send	/home/dpc/.cargo/git/checkouts/extra-4841682ba715deeb/35f528f/lib.rs	/^    fn send(&self, r: AsyncRecord) -> io::Result<()> {$/;"	f
+serialize	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^            fn serialize(&self, _record : &Record, key : &str, serializer : &mut Serializer)$/;"	f
+serialize	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn serialize(&self, record: &Record, key: &str, serializer: &mut Serializer)$/;"	f
+serialize	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn serialize(&self,$/;"	f
+serialize	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    pub fn serialize<'b, S: 'b + Value>(mut self, s: S) -> Result {$/;"	f
+size_hint	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    fn size_hint(&self) -> (usize, Option<usize>) {$/;"	f
+slog_crit	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^macro_rules! slog_crit($/;"	d
+slog_debug	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^macro_rules! slog_debug($/;"	d
+slog_error	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^macro_rules! slog_error($/;"	d
+slog_info	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^macro_rules! slog_info($/;"	d
+slog_log	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^macro_rules! slog_log($/;"	d
+slog_o	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^macro_rules! slog_o($/;"	d
+slog_trace	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^macro_rules! slog_trace($/;"	d
+slog_warn	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^macro_rules! slog_warn($/;"	d
+split_first	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn split_first(&self) -> Option<(&KV, &KV)> {$/;"	f
+split_first	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^    fn split_first(&self) -> Option<(&KV, &KV)>;$/;"	f
+std::error::Error for Error	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_ser.rs	/^impl std::error::Error for Error {$/;"	i
+std_only	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/tests.rs	/^mod std_only {$/;"	m
+stream	/home/dpc/lab/rust/slog/slog-stream/lib.rs	/^pub fn stream<W: io::Write + Send, F: Format>(io: W, format: F) -> Streamer<W, F> {$/;"	f
+target	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_record.rs	/^    pub fn target(&self) -> &str {$/;"	f
+test_o_macro_expansion	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/tests.rs	/^    fn test_o_macro_expansion() {$/;"	f
+test_slog_o_macro_expansion	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/tests.rs	/^    fn test_slog_o_macro_expansion() {$/;"	f
+tests	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/lib.rs	/^mod tests;$/;"	m
+tests	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^mod tests {$/;"	m
+trace	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^macro_rules! trace($/;"	d
+unchecked_unwrap	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    unsafe fn unchecked_unwrap(self) -> T {$/;"	f
+unchecked_unwrap	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^    unsafe fn unchecked_unwrap(self) -> T;$/;"	f
+unreachable	/home/dpc/.cargo/registry/src/github.com-1ecc6299db9ec823/thread_local-0.2.7/src/lib.rs	/^unsafe fn unreachable() -> ! {$/;"	f
+values	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_record.rs	/^    pub fn values(&self) -> &'a [&KV] {$/;"	f
+warn	/home/dpc/.cargo/git/checkouts/slog-1186f70b488e4d02/00b4390/src/_macros.rs	/^macro_rules! warn($/;"	d

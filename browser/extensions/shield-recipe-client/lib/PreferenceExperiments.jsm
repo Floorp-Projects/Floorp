@@ -41,8 +41,6 @@
  *   unset.
  * @property {PreferenceBranchType} preferenceBranchType
  *   Controls how we modify the preference to affect the client.
- * @rejects {Error}
- *   If the given preferenceType does not match the existing stored preference.
  *
  *   If "default", when the experiment is active, the default value for the
  *   preference is modified on startup of the add-on. If "user", the user value
@@ -173,8 +171,9 @@ this.PreferenceExperiments = {
    * @param {string|integer|boolean} experiment.preferenceValue
    * @param {PreferenceBranchType} experiment.preferenceBranchType
    * @rejects {Error}
-   *   If an experiment with the given name already exists, or if an experiment
-   *   for the given preference is active.
+   *   - If an experiment with the given name already exists
+   *   - if an experiment for the given preference is active
+   *   - If the given preferenceType does not match the existing stored preference
    */
   async start({name, branch, preferenceName, preferenceValue, preferenceBranchType, preferenceType}) {
     log.debug(`PreferenceExperiments.start(${name}, ${branch})`);
@@ -221,7 +220,8 @@ this.PreferenceExperiments = {
 
     if (prevPrefType !== Services.prefs.PREF_INVALID && prevPrefType !== givenPrefType) {
       throw new Error(
-        `Previous preference value is of type "${prevPrefType}", but was given "${givenPrefType}" (${preferenceType})`
+        `Previous preference value is of type "${prevPrefType}", but was given ` +
+        `"${givenPrefType}" (${preferenceType})`
       );
     }
 

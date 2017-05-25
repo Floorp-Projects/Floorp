@@ -89,7 +89,7 @@
 }
 
 #page-action-copy-url-button {
-  list-style-image: url("chrome://browser/skin/copy-url.svg");
+  list-style-image: url("chrome://browser/skin/link.svg");
 }
 
 #page-action-email-link-button {

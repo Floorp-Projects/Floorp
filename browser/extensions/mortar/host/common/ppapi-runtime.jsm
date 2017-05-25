@@ -1811,7 +1811,8 @@ class PPAPIInstance {
         this.mm.sendAsyncMessage("ppapi.js:setFullscreen", message.fullscreen);
         break;
       case 'save':
-        this.mm.sendAsyncMessage("ppapipdf.js:save");
+        this.mm.sendAsyncMessage("ppapipdf.js:save", {
+          url: this.info.url });
         break;
       case 'setHash':
         this.mm.sendAsyncMessage("ppapipdf.js:setHash", message.hash);

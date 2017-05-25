@@ -68,6 +68,7 @@ typedef void* FPDF_SCHHANDLE;
 typedef void* FPDF_STRUCTELEMENT;
 typedef void* FPDF_STRUCTTREE;
 typedef void* FPDF_TEXTPAGE;
+typedef const char* FPDF_STRING;
 
 // Basic data types
 typedef int FPDF_BOOL;
@@ -82,6 +83,9 @@ typedef void (*FPDF_DestroyLibrary_Pfn)();
 typedef FPDF_DOCUMENT (*FPDF_LoadMemDocument_Pfn)(const void* aDataBuf,
                                                   int aSize,
                                                   FPDF_BYTESTRING aPassword);
+typedef FPDF_DOCUMENT (*FPDF_LoadDocument_Pfn)(FPDF_STRING file_path,
+                                               FPDF_BYTESTRING password);
+
 typedef void(*FPDF_CloseDocument_Pfn)(FPDF_DOCUMENT aDocument);
 
 typedef int (*FPDF_GetPageCount_Pfn)(FPDF_DOCUMENT aDocument);
@@ -103,6 +107,7 @@ typedef void (*FPDF_RenderPage_Pfn)(HDC aDC,
 typedef void (*FPDF_RenderPage_Close_Pfn) (FPDF_PAGE aPage);
 
 
+
 /**
  * This class exposes an interface to the PDFium library and
  * takes care of loading and linking to the appropriate PDFium symbols.
@@ -117,6 +122,8 @@ public:
   FPDF_DOCUMENT LoadMemDocument(const void* aDataBuf,
                                 int aSize,
                                 FPDF_BYTESTRING aPassword);
+  FPDF_DOCUMENT LoadDocument(FPDF_STRING file_path,
+                             FPDF_BYTESTRING aPassword);
   void CloseDocument(FPDF_DOCUMENT aDocument);
   int GetPageCount(FPDF_DOCUMENT aDocument);
   int GetPageSizeByIndex(FPDF_DOCUMENT aDocument, int aPageIndex,
@@ -143,6 +150,7 @@ private:
   FPDF_InitLibrary_Pfn        mFPDF_InitLibrary;
   FPDF_DestroyLibrary_Pfn     mFPDF_DestroyLibrary;
   FPDF_LoadMemDocument_Pfn    mFPDF_LoadMemDocument;
+  FPDF_LoadDocument_Pfn       mFPDF_LoadDocument;
   FPDF_CloseDocument_Pfn      mFPDF_CloseDocument;
   FPDF_GetPageCount_Pfn       mFPDF_GetPageCount;
   FPDF_GetPageSizeByIndex_Pfn mFPDF_GetPageSizeByIndex;

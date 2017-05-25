@@ -37,7 +37,7 @@ fails-if(Android) == disabled-1.html disabled-1-ref.html
 == width-auto-size-em-rtl.html width-auto-size-em-rtl-ref.html
 == width-auto-size-rtl.html width-auto-size-rtl-ref.html
 == width-exact-fit-rtl.html width-auto-size-rtl-ref.html
-fails-if(stylo) == display-grid-flex-columnset.html display-grid-flex-columnset-ref.html
+fails-if(styloVsGecko) == display-grid-flex-columnset.html display-grid-flex-columnset-ref.html
 == 1317351.html 1317351-ref.html
 
 == dynamic-text-indent.html dynamic-text-indent-ref.html

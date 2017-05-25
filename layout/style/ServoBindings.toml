@@ -250,6 +250,7 @@ whitelist-types = [
     "mozilla::binding_danger::AssertAndSuppressCleanupPolicy",
     "mozilla::ParsingMode",
     "mozilla::InheritTarget",
+    "mozilla::StyleRuleInclusion",
 ]
 opaque-types = [
     "std::pair__PCCP",
@@ -426,6 +427,7 @@ structs-types = [
     "ParsingMode",
     "InheritTarget",
     "URLMatchingFunction",
+    "StyleRuleInclusion",
 ]
 array-types = [
     { cpp-type = "uintptr_t", rust-type = "usize" },

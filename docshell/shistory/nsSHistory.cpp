@@ -385,6 +385,15 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
 {
   NS_ENSURE_ARG(aSHEntry);
 
+  nsCOMPtr<nsISHistory> shistoryOfEntry;
+  aSHEntry->GetSHistory(getter_AddRefs(shistoryOfEntry));
+  if (shistoryOfEntry && shistoryOfEntry != this) {
+    NS_WARNING("The entry has been associated to another nsISHistory instance. "
+               "Try nsISHEntry.clone() and nsISHEntry.abandonBFCacheEntry() "
+               "first if you're copying an entry from another nsISHistory.");
+    return NS_ERROR_FAILURE;
+  }
+
   aSHEntry->SetSHistory(this);
 
   // If we have a root docshell, update the docshell id of the root shentry to
@@ -867,6 +876,17 @@ nsSHistory::ReplaceEntry(int32_t aIndex, nsISHEntry* aReplaceEntry)
   rv = GetTransactionAtIndex(aIndex, getter_AddRefs(currentTxn));
 
   if (currentTxn) {
+    nsCOMPtr<nsISHistory> shistoryOfEntry;
+    aReplaceEntry->GetSHistory(getter_AddRefs(shistoryOfEntry));
+    if (shistoryOfEntry && shistoryOfEntry != this) {
+      NS_WARNING("The entry has been associated to another nsISHistory instance. "
+                 "Try nsISHEntry.clone() and nsISHEntry.abandonBFCacheEntry() "
+                 "first if you're copying an entry from another nsISHistory.");
+      return NS_ERROR_FAILURE;
+    }
+
+    aReplaceEntry->SetSHistory(this);
+
     NOTIFY_LISTENERS(OnHistoryReplaceEntry, (aIndex));
 
     // Set the replacement entry in the transaction
@@ -1320,7 +1340,7 @@ NS_IMETHODIMP
 nsSHistory::RemoveFromExpirationTracker(nsIBFCacheEntry* aEntry)
 {
   RefPtr<nsSHEntryShared> entry = static_cast<nsSHEntryShared*>(aEntry);
-  MOZ_DIAGNOSTIC_ASSERT(mHistoryTracker && !mHistoryTracker->IsEmpty());
+  MOZ_ASSERT(mHistoryTracker && !mHistoryTracker->IsEmpty());
   if (!mHistoryTracker || !entry) {
     return NS_ERROR_FAILURE;
   }
@@ -1928,7 +1948,6 @@ nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry, nsIDocShell* aFrameDS,
 NS_IMETHODIMP
 nsSHistory::SetRootDocShell(nsIDocShell* aDocShell)
 {
-  MOZ_DIAGNOSTIC_ASSERT(!aDocShell || !mRootDocShell);
   mRootDocShell = aDocShell;
 
   // Init mHistoryTracker on setting mRootDocShell so we can bind its event
@@ -1939,8 +1958,14 @@ nsSHistory::SetRootDocShell(nsIDocShell* aDocShell)
       return NS_ERROR_UNEXPECTED;
     }
 
-    // mHistroyTracker can only be set once.
-    MOZ_DIAGNOSTIC_ASSERT(!mHistoryTracker);
+    // Seamonkey moves shistory between <xul:browser>s when restoring a tab.
+    // Let's try not to break our friend too badly...
+    if (mHistoryTracker) {
+      NS_WARNING("Change the root docshell of a shistory is unsafe and "
+                 "potentially problematic.");
+      mHistoryTracker->AgeAllGenerations();
+    }
+
     RefPtr<mozilla::dom::TabGroup> tabGroup = win->TabGroup();
     mHistoryTracker = mozilla::MakeUnique<HistoryTracker>(
       this,
