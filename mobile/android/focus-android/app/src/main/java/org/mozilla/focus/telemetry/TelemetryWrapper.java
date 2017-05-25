@@ -76,8 +76,8 @@ public final class TelemetryWrapper {
         private static final String BLOCKING_SWITCH = "blocking_switch";
         private static final String BROWSER = "browser";
         private static final String BROWSER_CONTEXTMENU = "browser_contextmenu";
-        private static final String CUSTOM_TAB_CLOSE_BUTTON = "custom_tab_close_button";
-        private static final String CUSTOM_TAB_ACTION_BUTTON = "custom_tab_action_button";
+        private static final String CUSTOM_TAB_CLOSE_BUTTON = "custom_tab_close_but";
+        private static final String CUSTOM_TAB_ACTION_BUTTON = "custom_tab_action_bu";
     }
 
     private static class Value {
