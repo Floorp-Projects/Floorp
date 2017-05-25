@@ -24,7 +24,6 @@
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/StaticPtr.h"
-#include "PseudoStack.h"
 #include "ThreadInfo.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIObserverService.h"
@@ -719,7 +718,7 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
         if (!entry.pc()) {
           // The JIT only allows the top-most entry to have a nullptr pc.
           MOZ_ASSERT(&entry ==
-                     &aRacyInfo->mStack[aRacyInfo->stackSize() - 1]);
+                     &aRacyInfo->entries[aRacyInfo->stackSize() - 1]);
         } else {
           lineno = JS_PCToLineNumber(script, entry.pc());
         }
@@ -779,7 +778,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
                        const TickSample& aSample, NativeStack& aNativeStack)
 {
   NotNull<RacyThreadInfo*> racyInfo = aSample.mRacyInfo;
-  volatile js::ProfileEntry* pseudoFrames = racyInfo->mStack;
+  volatile js::ProfileEntry* pseudoEntries = racyInfo->entries;
   uint32_t pseudoCount = racyInfo->stackSize();
   JSContext* context = aSample.mJSContext;
 
@@ -854,10 +853,10 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
     uint8_t* nativeStackAddr = nullptr;
 
     if (pseudoIndex != pseudoCount) {
-      volatile js::ProfileEntry& pseudoFrame = pseudoFrames[pseudoIndex];
+      volatile js::ProfileEntry& pseudoEntry = pseudoEntries[pseudoIndex];
 
-      if (pseudoFrame.isCpp()) {
-        lastPseudoCppStackAddr = (uint8_t*) pseudoFrame.stackAddress();
+      if (pseudoEntry.isCpp()) {
+        lastPseudoCppStackAddr = (uint8_t*) pseudoEntry.stackAddress();
       }
 
       // Skip any pseudo-stack JS frames which are marked isOSR. Pseudostack
@@ -866,7 +865,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
       // pseudoframe and jit frame being recorded (and showing up twice), the
       // interpreter marks the interpreter pseudostack entry with the OSR flag
       // to ensure that it doesn't get counted.
-      if (pseudoFrame.isJs() && pseudoFrame.isOSR()) {
+      if (pseudoEntry.isJs() && pseudoEntry.isOSR()) {
           pseudoIndex++;
           continue;
       }
@@ -905,8 +904,8 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
     // Check to see if pseudoStack frame is top-most.
     if (pseudoStackAddr > jsStackAddr && pseudoStackAddr > nativeStackAddr) {
       MOZ_ASSERT(pseudoIndex < pseudoCount);
-      volatile js::ProfileEntry& pseudoFrame = pseudoFrames[pseudoIndex];
-      AddPseudoEntry(aLock, aBuffer, pseudoFrame, racyInfo);
+      volatile js::ProfileEntry& pseudoEntry = pseudoEntries[pseudoIndex];
+      AddPseudoEntry(aLock, aBuffer, pseudoEntry, racyInfo);
       pseudoIndex++;
       continue;
     }
@@ -1048,7 +1047,7 @@ DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
   for (uint32_t i = racyInfo->stackSize(); i > 0; --i) {
     // The pseudostack grows towards higher indices, so we iterate
     // backwards (from callee to caller).
-    volatile js::ProfileEntry& entry = racyInfo->mStack[i - 1];
+    volatile js::ProfileEntry& entry = racyInfo->entries[i - 1];
     if (!entry.isJs() && strcmp(entry.label(), "EnterJIT") == 0) {
       // Found JIT entry frame.  Unwind up to that point (i.e., force
       // the stack walk to stop before the block of saved registers;
@@ -2815,13 +2814,13 @@ profiler_get_backtrace_noalloc(char *output, size_t outputSize)
 
   bool includeDynamicString = !ActivePS::FeaturePrivacy(lock);
 
-  volatile js::ProfileEntry* pseudoFrames = pseudoStack->mStack;
+  volatile js::ProfileEntry* pseudoEntries = pseudoStack->entries;
   uint32_t pseudoCount = pseudoStack->stackSize();
 
   for (uint32_t i = 0; i < pseudoCount; i++) {
-    const char* label = pseudoFrames[i].label();
+    const char* label = pseudoEntries[i].label();
     const char* dynamicString =
-      includeDynamicString ? pseudoFrames[i].dynamicString() : nullptr;
+      includeDynamicString ? pseudoEntries[i].dynamicString() : nullptr;
     size_t labelLength = strlen(label);
     if (dynamicString) {
       // Put the label, maybe a space, and the dynamic string into output.
