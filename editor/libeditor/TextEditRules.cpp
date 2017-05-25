@@ -34,8 +34,10 @@
 #include "nsIPlaintextEditor.h"
 #include "nsISupportsBase.h"
 #include "nsLiteralString.h"
+#include "nsTextNode.h"
 #include "nsUnicharUtils.h"
 #include "nsIHTMLCollection.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
 
@@ -263,6 +265,10 @@ TextEditRules::WillDoAction(Selection* aSelection,
       UndefineCaretBidiLevel(aSelection);
       return WillInsertText(info->action, aSelection, aCancel, aHandled,
                             info->inString, info->outString, info->maxLength);
+    case EditAction::setText:
+      UndefineCaretBidiLevel(aSelection);
+      return WillSetText(*aSelection, aCancel, aHandled, info->inString,
+                         info->maxLength);
     case EditAction::deleteSelection:
       return WillDeleteSelection(aSelection, info->collapsedAction,
                                  aCancel, aHandled);
@@ -308,6 +314,8 @@ TextEditRules::DidDoAction(Selection* aSelection,
     case EditAction::insertText:
     case EditAction::insertIMEText:
       return DidInsertText(aSelection, aResult);
+    case EditAction::setText:
+      return DidSetText(*aSelection, aResult);
     case EditAction::deleteSelection:
       return DidDeleteSelection(aSelection, info->collapsedAction, aResult);
     case EditAction::undo:
@@ -764,6 +772,118 @@ TextEditRules::DidInsertText(Selection* aSelection,
                              nsresult aResult)
 {
   return DidInsert(aSelection, aResult);
+}
+
+nsresult
+TextEditRules::WillSetText(Selection& aSelection,
+                           bool* aCancel,
+                           bool* aHandled,
+                           const nsAString* aString,
+                           int32_t aMaxLength)
+{
+  MOZ_ASSERT(aCancel);
+  MOZ_ASSERT(aHandled);
+  MOZ_ASSERT(aString);
+
+  CANCEL_OPERATION_IF_READONLY_OR_DISABLED
+
+  *aHandled = false;
+  *aCancel = false;
+
+  if (NS_WARN_IF(!mTextEditor)) {
+    return NS_ERROR_FAILURE;
+  }
+  RefPtr<TextEditor> textEditor = mTextEditor;
+
+  if (!IsPlaintextEditor() || textEditor->IsIMEComposing() ||
+      aMaxLength != -1) {
+    // SetTextTransaction only supports plain text editor without IME.
+    return NS_OK;
+  }
+
+  if (IsPasswordEditor() && LookAndFeel::GetEchoPassword() &&
+      !DontEchoPassword()) {
+    // Echo password timer will implement on InsertText.
+    return NS_OK;
+  }
+
+  WillInsert(aSelection, aCancel);
+  // we want to ignore result of WillInsert()
+  *aCancel = false;
+
+  RefPtr<Element> rootElement = textEditor->GetRoot();
+  uint32_t count = rootElement->GetChildCount();
+
+  // handles only when there is only one node and it's a text node, or empty.
+
+  if (count > 1) {
+    return NS_OK;
+  }
+
+  nsAutoString tString(*aString);
+
+  if (IsPasswordEditor()) {
+    mPasswordText.Assign(tString);
+    FillBufWithPWChars(&tString, tString.Length());
+  } else if (IsSingleLineEditor()) {
+    HandleNewLines(tString, textEditor->mNewlineHandling);
+  }
+
+  if (!count) {
+    if (tString.IsEmpty()) {
+      *aHandled = true;
+      return NS_OK;
+    }
+    RefPtr<nsIDocument> doc = textEditor->GetDocument();
+    if (NS_WARN_IF(!doc)) {
+      return NS_OK;
+    }
+    RefPtr<nsTextNode> newNode = doc->CreateTextNode(tString);
+    if (NS_WARN_IF(!newNode)) {
+      return NS_OK;
+    }
+    nsresult rv = textEditor->InsertNode(*newNode, *rootElement, 0);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    *aHandled = true;
+
+    ASSERT_PASSWORD_LENGTHS_EQUAL();
+
+    return NS_OK;
+  }
+
+  nsINode* curNode = rootElement->GetFirstChild();
+  if (NS_WARN_IF(!EditorBase::IsTextNode(curNode))) {
+    return NS_OK;
+  }
+  if (tString.IsEmpty()) {
+    nsresult rv = textEditor->DeleteNode(curNode);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    *aHandled = true;
+    return NS_OK;
+  }
+
+  nsresult rv = textEditor->SetTextImpl(tString, *curNode->GetAsText());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  *aHandled = true;
+
+  ASSERT_PASSWORD_LENGTHS_EQUAL();
+
+  return NS_OK;
+}
+
+nsresult
+TextEditRules::DidSetText(Selection& aSelection,
+                          nsresult aResult)
+{
+  return NS_OK;
 }
 
 nsresult
