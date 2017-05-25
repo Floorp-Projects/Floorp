@@ -7,8 +7,8 @@
 #include "mozilla/StaticPresData.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/ServoBindings.h"
 #include "nsPresContext.h"
-
 namespace mozilla {
 
 static StaticPresData* sSingleton = nullptr;
@@ -236,10 +236,11 @@ LangGroupFontPrefs::Initialize(nsIAtom* aLangGroupAtom)
 }
 
 nsIAtom*
-StaticPresData::GetLangGroup(nsIAtom* aLanguage) const
+StaticPresData::GetLangGroup(nsIAtom* aLanguage,
+                             bool* aNeedsToCache) const
 {
   nsIAtom* langGroupAtom = nullptr;
-  langGroupAtom = mLangService->GetLanguageGroup(aLanguage);
+  langGroupAtom = mLangService->GetLanguageGroup(aLanguage, aNeedsToCache);
   if (!langGroupAtom) {
     langGroupAtom = nsGkAtoms::x_western; // Assume x-western is safe...
   }
@@ -258,14 +259,19 @@ StaticPresData::GetUncachedLangGroup(nsIAtom* aLanguage) const
 
 const LangGroupFontPrefs*
 StaticPresData::GetFontPrefsForLangHelper(nsIAtom* aLanguage,
-                                          const LangGroupFontPrefs* aPrefs) const
+                                          const LangGroupFontPrefs* aPrefs,
+                                          bool* aNeedsToCache) const
 {
   // Get language group for aLanguage:
   MOZ_ASSERT(aLanguage);
   MOZ_ASSERT(mLangService);
   MOZ_ASSERT(aPrefs);
 
-  nsIAtom* langGroupAtom = GetLangGroup(aLanguage);
+  nsIAtom* langGroupAtom = GetLangGroup(aLanguage, aNeedsToCache);
+
+  if (aNeedsToCache && *aNeedsToCache) {
+    return nullptr;
+  }
 
   LangGroupFontPrefs* prefs = const_cast<LangGroupFontPrefs*>(aPrefs);
   if (prefs->mLangGroup) { // if initialized
@@ -280,13 +286,21 @@ StaticPresData::GetFontPrefsForLangHelper(nsIAtom* aLanguage,
       }
       prefs = prefs->mNext;
     }
-    MOZ_ASSERT(NS_IsMainThread(), "Should not append to cache off main thread");
+    if (aNeedsToCache) {
+      *aNeedsToCache = true;
+      return nullptr;
+    }
+    AssertIsMainThreadOrServoLangFontPrefsCacheLocked();
     // nothing cached, so go on and fetch the prefs for this lang group:
     prefs = prefs->mNext = new LangGroupFontPrefs;
   }
 
-  MOZ_ASSERT(NS_IsMainThread(), "Should not append to cache off main thread");
+  if (aNeedsToCache) {
+    *aNeedsToCache = true;
+    return nullptr;
+  }
 
+  AssertIsMainThreadOrServoLangFontPrefsCacheLocked();
   prefs->Initialize(langGroupAtom);
 
   return prefs;

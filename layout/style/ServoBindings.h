@@ -513,6 +513,7 @@ GeckoFontMetrics Gecko_GetFontMetrics(RawGeckoPresContextBorrowed pres_context,
 int32_t Gecko_GetAppUnitsPerPhysicalInch(RawGeckoPresContextBorrowed pres_context);
 void InitializeServo();
 void ShutdownServo();
+void AssertIsMainThreadOrServoLangFontPrefsCacheLocked();
 
 const nsMediaFeature* Gecko_GetMediaFeatures();
 nsCSSKeyword Gecko_LookupCSSKeyword(const uint8_t* string, uint32_t len);
