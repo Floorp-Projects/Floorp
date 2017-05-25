@@ -7,3 +7,6 @@
   content/lib/ (./lib/*)
   content/data/ (./data/*)
   content/node_modules/jexl/ (./node_modules/jexl/*)
+
+% skin shield-recipe-client classic/1.0 %content/
+  content/skin/  (skin/*)
