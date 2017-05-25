@@ -104,13 +104,16 @@ replace_malloc_init_funcs()
  * Malloc implementation functions are MOZ_MEMORY_API, and jemalloc
  * specific functions MOZ_JEMALLOC_API; see mozmemory_wrap.h
  */
-#define MALLOC_DECL(name, return_type, ...) \
-  MOZ_MEMORY_API return_type name ## _impl(__VA_ARGS__);
+#define MACRO_CALL(a, b) a b
+
+#define GENERIC_MALLOC_DECL(name, return_type, ...) \
+  return_type name ## _impl(__VA_ARGS__);
+
+#define MALLOC_DECL(...) MOZ_MEMORY_API MACRO_CALL(GENERIC_MALLOC_DECL, (__VA_ARGS__))
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
 #include "malloc_decls.h"
 
-#define MALLOC_DECL(name, return_type, ...) \
-  MOZ_JEMALLOC_API return_type name ## _impl(__VA_ARGS__);
+#define MALLOC_DECL(...) MOZ_JEMALLOC_API MACRO_CALL(GENERIC_MALLOC_DECL, (__VA_ARGS__))
 #define MALLOC_FUNCS MALLOC_FUNCS_JEMALLOC
 #include "malloc_decls.h"
 
