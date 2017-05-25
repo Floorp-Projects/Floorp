@@ -255,6 +255,12 @@ EdgeInclusiveIntersection(const nsRect& aRect, const nsRect& aOtherRect)
   return Some(nsRect(left, top, right - left, bottom - top));
 }
 
+enum class BrowsingContextInfo {
+  SimilarOriginBrowsingContext,
+  DifferentOriginBrowsingContext,
+  UnknownBrowsingContext
+};
+
 void
 DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time)
 {
@@ -374,11 +380,22 @@ DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time
       }
     }
 
-    nsRect rootIntersectionRect = rootRect;
-    bool isInSimilarOriginBrowsingContext = rootFrame && targetFrame &&
-                                            CheckSimilarOrigin(root, target);
+    nsRect rootIntersectionRect;
+    BrowsingContextInfo isInSimilarOriginBrowsingContext =
+      BrowsingContextInfo::UnknownBrowsingContext;
 
-    if (isInSimilarOriginBrowsingContext) {
+    if (rootFrame && targetFrame) {
+      rootIntersectionRect = rootRect;
+    }
+
+    if (root && target) {
+      isInSimilarOriginBrowsingContext = CheckSimilarOrigin(root, target) ?
+        BrowsingContextInfo::SimilarOriginBrowsingContext :
+        BrowsingContextInfo::DifferentOriginBrowsingContext;
+    }
+
+    if (isInSimilarOriginBrowsingContext ==
+        BrowsingContextInfo::SimilarOriginBrowsingContext) {
       rootIntersectionRect.Inflate(rootMargin);
     }
 
@@ -428,7 +445,9 @@ DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time
     if (target->UpdateIntersectionObservation(this, threshold)) {
       QueueIntersectionObserverEntry(
         target, time,
-        isInSimilarOriginBrowsingContext ? Some(rootIntersectionRect) : Nothing(),
+        isInSimilarOriginBrowsingContext ==
+          BrowsingContextInfo::DifferentOriginBrowsingContext ?
+          Nothing() : Some(rootIntersectionRect),
         targetRect, intersectionRect, intersectionRatio
       );
     }
