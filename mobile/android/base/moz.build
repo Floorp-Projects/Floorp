@@ -464,8 +464,13 @@ gvjar.sources += [geckoview_thirdparty_source_dir + f for f in [
 if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:
     gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x for x in [
         'media/GeckoAudioInfo.java',
+        'media/GeckoHlsAudioRenderer.java',
+        'media/GeckoHlsPlayer.java',
+        'media/GeckoHlsRendererBase.java',
         'media/GeckoHlsSample.java',
+        'media/GeckoHlsVideoRenderer.java',
         'media/GeckoVideoInfo.java',
+        'media/Utils.java',
     ]]
 
 
