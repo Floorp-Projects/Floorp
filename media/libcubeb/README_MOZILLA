@@ -5,4 +5,4 @@ Makefile.in build files for the Mozilla build system.
 
 The cubeb git repository is: git://github.com/kinetiknz/cubeb.git
 
-The git commit ID used was 96cdb173f86dfc86cbd21d097b24ec1e256d69fc (2017-05-22 11:55:15 +0300)
+The git commit ID used was 087dc942a9a3bb5cbb88e3763cde7fe709db99e9 (2017-05-29 15:51:19 +1200)

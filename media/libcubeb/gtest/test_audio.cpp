@@ -100,7 +100,7 @@ int run_test(int num_channels, layout_info layout, int sampling_rate, int is_flo
 
   cubeb *ctx = NULL;
 
-  r = cubeb_init(&ctx, "Cubeb audio test: channels", NULL);
+  r = common_init(&ctx, "Cubeb audio test: channels");
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb library\n");
     return r;
@@ -150,7 +150,7 @@ int run_panning_volume_test(int is_float)
 
   cubeb *ctx = NULL;
 
-  r = cubeb_init(&ctx, "Cubeb audio test", NULL);
+  r = common_init(&ctx, "Cubeb audio test");
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb library\n");
     return r;

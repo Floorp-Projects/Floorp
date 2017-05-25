@@ -84,7 +84,7 @@ TEST(cubeb, tone)
   cubeb_stream_params params;
   int r;
 
-  r = cubeb_init(&ctx, "Cubeb tone example", NULL);
+  r = common_init(&ctx, "Cubeb tone example");
   ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb library";
 
   std::unique_ptr<cubeb, decltype(&cubeb_destroy)>
