@@ -503,42 +503,42 @@ protected:
    * We create two overloads for invoking Resolve/Reject Methods so as to
    * make the resolve/reject value argument "optional".
    */
-
   template<typename ThisType, typename MethodType, typename ValueType>
-  static typename EnableIf<ReturnTypeIs<MethodType, RefPtr<MozPromise>>::value &&
-                           TakesArgument<MethodType>::value,
-                           already_AddRefed<MozPromise>>::Type
-  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue)
+  static typename EnableIf<
+    TakesArgument<MethodType>::value,
+    typename detail::MethodTrait<MethodType>::ReturnType>::Type
+  InvokeMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue)
   {
-    return ((*aThisVal).*aMethod)(Forward<ValueType>(aValue)).forget();
+    return (aThisVal->*aMethod)(Forward<ValueType>(aValue));
   }
 
   template<typename ThisType, typename MethodType, typename ValueType>
-  static typename EnableIf<ReturnTypeIs<MethodType, void>::value &&
-                           TakesArgument<MethodType>::value,
-                           already_AddRefed<MozPromise>>::Type
-  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue)
+  static typename EnableIf<
+    !TakesArgument<MethodType>::value,
+    typename detail::MethodTrait<MethodType>::ReturnType>::Type
+  InvokeMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue)
   {
-    ((*aThisVal).*aMethod)(Forward<ValueType>(aValue));
-    return nullptr;
+    return (aThisVal->*aMethod)();
   }
 
   template<typename ThisType, typename MethodType, typename ValueType>
-  static typename EnableIf<ReturnTypeIs<MethodType, RefPtr<MozPromise>>::value &&
-                           !TakesArgument<MethodType>::value,
+  static typename EnableIf<ReturnTypeIs<MethodType, RefPtr<MozPromise>>::value,
                            already_AddRefed<MozPromise>>::Type
-  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue)
+  InvokeCallbackMethod(ThisType* aThisVal,
+                       MethodType aMethod,
+                       ValueType&& aValue)
   {
-    return ((*aThisVal).*aMethod)().forget();
+    return InvokeMethod(aThisVal, aMethod, Forward<ValueType>(aValue)).forget();
   }
 
   template<typename ThisType, typename MethodType, typename ValueType>
-  static typename EnableIf<ReturnTypeIs<MethodType, void>::value &&
-                           !TakesArgument<MethodType>::value,
+  static typename EnableIf<ReturnTypeIs<MethodType, void>::value,
                            already_AddRefed<MozPromise>>::Type
-  InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue)
+  InvokeCallbackMethod(ThisType* aThisVal,
+                       MethodType aMethod,
+                       ValueType&& aValue)
   {
-    ((*aThisVal).*aMethod)();
+    InvokeMethod(aThisVal, aMethod, Forward<ValueType>(aValue));
     return nullptr;
   }
 
