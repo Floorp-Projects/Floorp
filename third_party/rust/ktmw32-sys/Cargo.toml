@@ -1,0 +1,20 @@
+[package]
+name = "ktmw32-sys"
+version = "0.1.0"
+authors = ["Peter Atashian <retep998@gmail.com>"]
+description = "FFI bindings to ktmw32."
+documentation = "https://retep998.github.io/doc/ktmw32-sys/"
+repository = "https://github.com/retep998/winapi-rs"
+readme = "README.md"
+keywords = ["Windows", "FFI", "WinSDK"]
+license = "MIT"
+build = "build.rs"
+links = "ktmw32"
+
+[lib]
+name = "ktmw32"
+
+[dependencies]
+winapi = { version = "*", path = "../.." }
+[build-dependencies]
+winapi-build = { version = "*", path = "../../build" }

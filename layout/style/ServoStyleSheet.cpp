@@ -15,7 +15,9 @@
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/MediaList.h"
 
+
 #include "mozAutoDocUpdate.h"
+#include "nsIDOMCSSStyleSheet.h"
 
 using namespace mozilla::dom;
 
@@ -30,6 +32,31 @@ ServoStyleSheetInner::ServoStyleSheetInner(CORSMode aCORSMode,
                                            const SRIMetadata& aIntegrity)
   : StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity)
 {
+  MOZ_COUNT_CTOR(ServoStyleSheetInner);
+}
+
+ServoStyleSheetInner::ServoStyleSheetInner(ServoStyleSheetInner& aCopy,
+                                           ServoStyleSheet* aPrimarySheet)
+  : StyleSheetInfo(aCopy, aPrimarySheet)
+{
+  MOZ_COUNT_CTOR(ServoStyleSheetInner);
+
+  // Actually clone aCopy's mSheet and use that as our mSheet.
+  mSheet = Servo_StyleSheet_Clone(aCopy.mSheet).Consume();
+
+  mURLData = aCopy.mURLData;
+}
+
+ServoStyleSheetInner::~ServoStyleSheetInner()
+{
+  MOZ_COUNT_DTOR(ServoStyleSheetInner);
+}
+
+StyleSheetInfo*
+ServoStyleSheetInner::CloneFor(StyleSheet* aPrimarySheet)
+{
+  return new ServoStyleSheetInner(*this,
+                                  static_cast<ServoStyleSheet*>(aPrimarySheet));
 }
 
 size_t
@@ -71,6 +98,10 @@ ServoStyleSheet::~ServoStyleSheet()
 
 // QueryInterface implementation for ServoStyleSheet
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServoStyleSheet)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCSSStyleSheet)
+  if (aIID.Equals(NS_GET_IID(ServoStyleSheet)))
+    foundInterface = reinterpret_cast<nsISupports*>(this);
+  else
 NS_INTERFACE_MAP_END_INHERITING(StyleSheet)
 
 NS_IMPL_ADDREF_INHERITED(ServoStyleSheet, StyleSheet)
@@ -188,12 +219,24 @@ ServoStyleSheet::Clone(StyleSheet* aCloneParent,
   return clone.forget();
 }
 
+void
+ServoStyleSheet::ClearRuleCascadesInternal()
+{
+  for (StyleSetHandle& setHandle : mStyleSets) {
+    setHandle->AsServo()->NoteStyleSheetsChanged();
+    setHandle->AsServo()->UpdateStylistIfNeeded();
+  }
+}
+
 CSSRuleList*
 ServoStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
 {
   if (!mRuleList) {
+    EnsureUniqueInner();
+
     RefPtr<ServoCssRules> rawRules =
       Servo_StyleSheet_GetRules(Inner()->mSheet).Consume();
+    MOZ_ASSERT(rawRules);
     mRuleList = new ServoCSSRuleList(rawRules.forget());
     mRuleList->SetStyleSheet(this);
   }

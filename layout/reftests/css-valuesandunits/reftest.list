@@ -9,7 +9,7 @@
 == unit-vh-vw.html unit-vh-vw-ref.html
 == unit-vh-vw-zoom.html unit-vh-vw-zoom-ref.html
 == unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-auto-ref.html
-fails-if(stylo) == unit-vh-vw-overflow-scroll.html unit-vh-vw-overflow-scroll-ref.html
-fails-if(stylo) == unit-vh-vw-overflow-scroll-x.html unit-vh-vw-overflow-scroll-x-ref.html
-fails-if(stylo) == unit-vh-vw-overflow-scroll-y.html unit-vh-vw-overflow-scroll-y-ref.html
+fails-if(styloVsGecko) == unit-vh-vw-overflow-scroll.html unit-vh-vw-overflow-scroll-ref.html
+fails-if(styloVsGecko) == unit-vh-vw-overflow-scroll-x.html unit-vh-vw-overflow-scroll-x-ref.html
+fails-if(styloVsGecko) == unit-vh-vw-overflow-scroll-y.html unit-vh-vw-overflow-scroll-y-ref.html
 skip-if(Android) != unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-scroll.html

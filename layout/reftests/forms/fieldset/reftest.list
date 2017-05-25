@@ -2,7 +2,7 @@ fuzzy-if(skiaContent,2,13) == dynamic-legend-scroll-1.html dynamic-legend-scroll
 == fieldset-hidden-1.html fieldset-hidden-1-ref.html
 == fieldset-intrinsic-width-1.html fieldset-intrinsic-width-1-ref.html
 == fieldset-percentage-padding-1.html fieldset-percentage-padding-1-ref.html
-fails-if(stylo) == fieldset-scroll-1.html fieldset-scroll-1-ref.html
+fails-if(styloVsGecko) == fieldset-scroll-1.html fieldset-scroll-1-ref.html
 == fieldset-scrolled-1.html fieldset-scrolled-1-ref.html
 == fieldset-overflow-auto-1.html fieldset-overflow-auto-1-ref.html
 fuzzy-if(winWidget&&!layersGPUAccelerated,140,276) == positioned-container-1.html positioned-container-1-ref.html
@@ -14,8 +14,8 @@ fuzzy-if(winWidget&&!layersGPUAccelerated,140,276) == positioned-container-1.htm
 fuzzy-if(skiaContent,1,40768) == abs-pos-child-sizing.html abs-pos-child-sizing-ref.html
 == overflow-hidden.html overflow-hidden-ref.html
 == legend-rtl.html legend-rtl-ref.html
-fails-if(stylo) == fieldset-grid-001.html fieldset-grid-001-ref.html
-fails-if(stylo) == fieldset-flexbox-001.html fieldset-flexbox-001-ref.html
+fails-if(styloVsGecko) == fieldset-grid-001.html fieldset-grid-001-ref.html
+fails-if(styloVsGecko) == fieldset-flexbox-001.html fieldset-flexbox-001-ref.html
 == fieldset-min-width-1a.html fieldset-min-width-1-ref.html
 == fieldset-min-width-1b.html fieldset-min-width-1-ref.html
 == fieldset-min-width-2a.html fieldset-min-width-2-ref.html

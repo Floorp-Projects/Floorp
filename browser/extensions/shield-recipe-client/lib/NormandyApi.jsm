@@ -62,9 +62,12 @@ this.NormandyApi = {
   },
 
   async getApiUrl(name) {
-    const apiBase = prefs.getCharPref("api_url");
     if (!indexPromise) {
-      indexPromise = this.get(apiBase).then(res => res.json());
+      let apiBase = new URL(prefs.getCharPref("api_url"));
+      if (!apiBase.pathname.endsWith("/")) {
+        apiBase.pathname += "/";
+      }
+      indexPromise = this.get(apiBase.toString()).then(res => res.json());
     }
     const index = await indexPromise;
     if (!(name in index)) {

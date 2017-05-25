@@ -1,0 +1,49 @@
+environment:
+    matrix:
+        - RUST_INSTALL_TOOLCHAIN: gnu
+          RUST_CHANNEL: stable
+        - RUST_INSTALL_TOOLCHAIN: msvc
+          RUST_CHANNEL: nightly
+
+matrix:
+    allow_failures:
+        - RUST_CHANNEL: nightly
+
+platform:
+    - x86
+    - x64
+
+install:
+    - ps: Start-FileDownload "http://static.rust-lang.org/dist/channel-rust-${env:RUST_CHANNEL}"
+    - ps: |
+          if ($env:PLATFORM -eq "x86") {
+            $env:RUST_INSTALLER = Select-String "i686-pc-windows-${env:RUST_INSTALL_TOOLCHAIN}.*exe" "channel-rust-${env:RUST_CHANNEL}" | select -exp line
+          } else {
+            $env:RUST_INSTALLER = Select-String "x86_64-pc-windows-${env:RUST_INSTALL_TOOLCHAIN}.*exe" "channel-rust-${env:RUST_CHANNEL}" | select -exp line
+          }
+    - ps: Start-FileDownload "http://static.rust-lang.org/dist/${env:RUST_INSTALLER}"
+    - '%RUST_INSTALLER% /VERYSILENT /NORESTART /DIR="C:\Rust"'
+    - ps: $env:path = "C:\Rust\bin;" + $env:path
+    - ps: |
+        if ($env:RUST_INSTALL_TOOLCHAIN -eq "gnu" -And $env:PLATFORM -eq "x64") {
+            Start-FileDownload "http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/5.1.0/threads-win32/seh/x86_64-5.1.0-release-win32-seh-rt_v4-rev0.7z/download" -FileName mingw64.7z
+            7z x -oC:\ mingw64.7z > $null
+            $env:path = "C:\mingw64\bin;" + $env:path
+            gcc --version
+        }
+        elseif ($env:RUST_INSTALL_TOOLCHAIN -eq "gnu") {
+            $env:path = "C:\mingw\bin;" + $env:path
+            gcc --version
+        }
+    - ps: |
+        if ($env:PLATFORM -eq "x64") { $env:vcargs = "amd64" }
+        else { $env:vcargs = "x86" }
+    - call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" %vcargs%
+    - rustc --version --verbose
+    - cargo --version
+
+build: false
+
+test_script:
+    - cargo build
+    - cargo test

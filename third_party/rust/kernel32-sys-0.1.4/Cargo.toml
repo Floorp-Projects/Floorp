@@ -1,0 +1,20 @@
+[package]
+name = "kernel32-sys"
+version = "0.1.4"
+authors = ["Peter Atashian <retep998@gmail.com>"]
+description = "FFI bindings to kernel32."
+documentation = "https://retep998.github.io/doc/kernel32/"
+repository = "https://github.com/retep998/winapi-rs"
+readme = "README.md"
+keywords = ["Windows", "FFI", "WinSDK"]
+license = "MIT"
+build = "build.rs"
+links = "kernel32"
+
+[lib]
+name = "kernel32"
+
+[dependencies]
+winapi = { version = "*", path = "../.." }
+[build-dependencies]
+winapi-build = { version = "*", path = "../../build" }

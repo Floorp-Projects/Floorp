@@ -22,7 +22,7 @@ HTTP(..) == table-cell.html table-cell-ref.html
 fuzzy-if(gtkWidget,10,32) HTTP(..) == two-value-syntax.html two-value-syntax-ref.html
 HTTP(..) == single-value.html single-value-ref.html
 fuzzy-if(gtkWidget,10,2) HTTP(..) == atomic-under-marker.html atomic-under-marker-ref.html
-fuzzy(1,2616) skip-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,12352) fails-if(gtkWidget&&!stylo) HTTP(..) == xulscroll.html xulscroll-ref.html # gtkWidget:bug 1309107, bug 1328771
+fuzzy(1,2616) skip-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,12352) fails-if(gtkWidget&&!styloVsGecko) HTTP(..) == xulscroll.html xulscroll-ref.html # gtkWidget:bug 1309107, bug 1328771
 HTTP(..) == combobox-zoom.html combobox-zoom-ref.html
 == dynamic-change-1.html dynamic-change-1-ref.html
 == float-edges-1-ref.html float-edges-1-ref.html

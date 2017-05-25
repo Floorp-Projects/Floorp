@@ -1,0 +1,28 @@
+<!doctype html>
+<html class="reftest-wait">
+  <head>
+    <meta charset=utf-8>
+    <title>Bug 1363639</title>
+    <style>
+      #outer {
+        position: absolute;
+        width: 100px;
+        height: 200px;
+        background: green;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="outer"><div id="inner"></div></div>
+    <script>
+      var target = document.querySelector("#outer");
+      var anim = target.animate([
+          {clip: 'rect(0px, auto, 0px, 0px)'},
+          {clip: 'rect(0px, auto, 200px, 0px)'}
+      ], 2000);
+      anim.pause();
+      anim.currentTime = 1000;
+      document.documentElement.removeAttribute("class");
+    </script>
+  </body>
+</html>
