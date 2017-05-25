@@ -5714,6 +5714,9 @@ pref("dom.moduleScripts.enabled", false);
 // callback are allowed to run before yielding the event loop.
 pref("dom.timeout.max_consecutive_callbacks_ms", 4);
 
+// Use this preference to house "Payment Request API" during development
+pref("dom.payments.request.enabled", false);
+
 #ifdef FUZZING
 pref("fuzzing.enabled", false);
 #endif
