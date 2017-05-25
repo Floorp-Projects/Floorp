@@ -1,0 +1,76 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIVariant.idl"
+#include "nsIPaymentRequest.idl"
+
+interface nsIArray;
+
+[builtinclass, uuid(7ddbe8be-beac-4952-96f6-619981dff7a6)]
+interface nsIPaymentActionRequest : nsISupports
+{
+  const uint32_t CREATE_ACTION = 1;
+  /*
+   *  The payment request identifier.
+   */
+  readonly attribute AString requestId;
+
+  /*
+   *  The type of the requested task.
+   */
+  readonly attribute uint32_t type;
+
+  /*
+   *  Initialize function for this request.
+   */
+  void init(in AString aRequestId,
+            in uint32_t aType);
+};
+
+[builtinclass, uuid(1d38dce6-8bcd-441b-aa94-68e300b6e175)]
+interface nsIPaymentCreateActionRequest : nsIPaymentActionRequest
+{
+  /*
+   *  The tab identifier
+   */
+  readonly attribute uint64_t tabId;
+
+  /*
+   *  The methodData information of the payment request.
+   */
+  readonly attribute nsIArray methodData;
+
+  /*
+   *  The Details information of the payment request.
+   */
+  readonly attribute nsIPaymentDetails details;
+
+  /*
+   *  The Options information of the payment request.
+   */
+  readonly attribute nsIPaymentOptions options;
+
+  /*
+   *  Initialize function the this request.
+   */
+  void initRequest(in AString aRequestId,
+                   in uint64_t aTabId,
+                   in nsIArray aMethodData,
+                   in nsIPaymentDetails aDetails,
+                   in nsIPaymentOptions aOptions);
+};
+
+%{C++
+#define NS_PAYMENT_ACTION_REQUEST_CID \
+  { 0x7ddbe8be, 0xbeac, 0x4952, { 0x96, 0xf6, 0x61, 0x99, 0x81, 0xdf, 0xf7, 0xa6 } }
+#define NS_PAYMENT_ACTION_REQUEST_CONTRACT_ID \
+  "@mozilla.org/dom/payments/payment-action-request;1"
+
+#define NS_PAYMENT_CREATE_ACTION_REQUEST_CID \
+  { 0x1d38dce6, 0x8bcd, 0x441b, { 0xaa, 0x94, 0x68, 0xe3, 0x00, 0xb6, 0xe1, 0x75 } }
+#define NS_PAYMENT_CREATE_ACTION_REQUEST_CONTRACT_ID \
+  "@mozilla.org/dom/payments/payment-create-action-request;1"
+%}
