@@ -2575,12 +2575,23 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             CppDirective('include', '"'+ p.channelHeaderFile() +'"'),
             Whitespace.NL ])
 
+        hasAsyncReturns = False
+        for md in p.messageDecls:
+            if self.receivesMessage(md) and md.hasAsyncReturns():
+                hasAsyncReturns = True
+                break
+
         inherits = []
         if ptype.isToplevel():
             inherits.append(Inherit(p.openedProtocolInterfaceType(),
                                     viz='public'))
         else:
             inherits.append(Inherit(p.managerInterfaceType(), viz='public'))
+
+        if hasAsyncReturns:
+            inherits.append(Inherit(Type('SupportsWeakPtr', T=ExprVar(self.clsname)),
+                                    viz='public'))
+            self.hdrfile.addthing(CppDirective('include', '"mozilla/WeakPtr.h"'))
 
         if ptype.isToplevel() and self.side is 'parent':
             self.hdrfile.addthings([
@@ -2593,6 +2604,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             inherits=inherits,
             abstract=True)
 
+        if hasAsyncReturns:
+            self.cls.addstmts([
+                Label.PUBLIC,
+                Whitespace('', indent=1),
+                ExprCall(ExprVar('MOZ_DECLARE_WEAKREFERENCE_TYPENAME'),
+                         [ ExprVar(self.clsname) ]),
+                Whitespace.NL
+            ])
+
+        self.cls.addstmt(Label.PRIVATE)
         friends = _FindFriends().findFriends(ptype)
         if ptype.isManaged():
             friends.update(ptype.managers)
@@ -2608,10 +2629,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 _makeForwardDeclForActor(friend, self.prettyside),
                 Whitespace.NL
             ])
-            self.cls.addstmts([
-                FriendClassDecl(_actorName(friend.fullname(),
-                                           self.prettyside)),
-                Whitespace.NL ])
+            self.cls.addstmt(FriendClassDecl(_actorName(friend.fullname(),
+                                                        self.prettyside)))
 
         self.cls.addstmt(Label.PROTECTED)
         for typedef in p.cxxTypedefs():
@@ -4253,9 +4272,20 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         else:
             resolvedecl = Decl(md.returns[0].bareType(self.side), 'aParam')
             destructexpr = md.returns[0].var()
-        promisethen = ExprLambda([ExprVar.THIS, routingId, seqno],
+        selfvar = ExprVar('self__')
+        ifactorisdead = StmtIf(ExprNot(selfvar))
+        ifactorisdead.addifstmts([_printWarningMessage("Not resolving promise because actor is dead."),
+                                  StmtReturn()])
+        ifactorisdestroyed = StmtIf(ExprBinary(self.protocol.stateVar(), '==',
+                                               self.protocol.deadState()))
+        ifactorisdestroyed.addifstmts([_printWarningMessage("Not resolving promise because actor is destroyed."),
+                                  StmtReturn()])
+        returnifactorisdead = [ ifactorisdead,
+                                ifactorisdestroyed ]
+        promisethen = ExprLambda([ExprVar.THIS, selfvar, routingId, seqno],
                                  [resolvedecl])
-        promisethen.addstmts([ StmtDecl(Decl(Type.BOOL, resolve.name),
+        promisethen.addstmts(returnifactorisdead
+                             + [ StmtDecl(Decl(Type.BOOL, resolve.name),
                                         init=ExprLiteral.TRUE) ]
                              + [ StmtDecl(Decl(p.bareType(self.side), p.var().name))
                                for p in md.returns ]
@@ -4269,7 +4299,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                                    sentinelKey=r.name)
                                  for r in md.returns ])
         promisethen.addstmts(sendmsg)
-        promiserej = ExprLambda([ExprVar.THIS, routingId, seqno],
+        promiserej = ExprLambda([ExprVar.THIS, selfvar, routingId, seqno],
                                 [Decl(_PromiseRejectReason.Type(), reason.name)])
 
         # If-statement for silently cancelling the promise due to ActorDestroyed.
@@ -4278,7 +4308,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         returnifactordestroyed.addifstmts([_printWarningMessage("Reject due to ActorDestroyed"),
                                            StmtReturn()])
 
-        promiserej.addstmts([ returnifactordestroyed,
+        promiserej.addstmts(returnifactorisdead +
+                            [ returnifactordestroyed,
                               StmtExpr(ExprCall(ExprVar('MOZ_ASSERT'),
                                                 args=[ ExprBinary(reason, '==',
                                                                   _PromiseRejectReason.HandlerRejected) ])),
@@ -4297,6 +4328,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         makepromise = [ Whitespace.NL,
                         StmtDecl(Decl(Type.INT32, seqno.name),
                                  init=ExprCall(ExprSelect(self.msgvar, '.', 'seqno'))),
+                        StmtDecl(Decl(Type('WeakPtr', T=ExprVar(self.clsname)),
+                                      selfvar.name),
+                                 init=ExprVar.THIS),
                         StmtDecl(Decl(_refptr(promise), 'promise'),
                                  init=ExprNew(promise, args=[ExprVar('__func__')])),
                         StmtExpr(ExprCall(
