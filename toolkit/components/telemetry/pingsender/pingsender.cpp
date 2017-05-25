@@ -103,11 +103,7 @@ GzipCompress(const std::string& rawData)
     // much data to compress. When the buffer is full, we repeadetly
     // flush out.
     while (deflater.avail_out == 0) {
-      size_t bytesToWrite = kBufferSize - deflater.avail_out;
-      if (bytesToWrite == 0) {
-        break;
-      }
-      gzipData.append(reinterpret_cast<const char*>(outputBuffer), bytesToWrite);
+      gzipData.append(reinterpret_cast<const char*>(outputBuffer), kBufferSize);
 
       // Update the state and let the deflater know about it.
       deflater.next_out = outputBuffer;
