@@ -264,7 +264,7 @@ class BaseBootstrapper(object):
             '%s does not yet implement suggest_mobile_android_artifact_mode_mozconfig()'
             % __name__)
 
-    def ensure_stylo_packages(self, state_dir):
+    def ensure_stylo_packages(self, state_dir, checkout_root):
         '''
         Install any necessary packages needed for Stylo development.
         '''
@@ -272,11 +272,10 @@ class BaseBootstrapper(object):
             '%s does not yet implement ensure_stylo_packages()'
             % __name__)
 
-    def install_tooltool_clang_package(self, state_dir, manifest_file):
-        topsrcdir = os.path.join(os.path.dirname(__file__) '..', '..', '..')
-        abs_manifest_file = os.path.join(topsrcdir, manifest_file)
+    def install_tooltool_clang_package(self, state_dir, checkout_root, manifest_file):
+        abs_manifest_file = os.path.join(checkout_root, manifest_file)
 
-        mach_binary = os.path.join(topsrcdir, 'mach')
+        mach_binary = os.path.join(checkout_root, 'mach')
         if not os.path.exists(mach_binary):
             raise ValueError("mach not found at %s" % mach_binary)
 
