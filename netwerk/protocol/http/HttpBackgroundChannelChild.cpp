@@ -357,6 +357,57 @@ HttpBackgroundChannelChild::RecvDivertMessages()
   return IPC_OK();
 }
 
+IPCResult
+HttpBackgroundChannelChild::RecvNotifyTrackingProtectionDisabled()
+{
+  LOG(("HttpBackgroundChannelChild::RecvNotifyTrackingProtectionDisabled [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (NS_WARN_IF(!mChannelChild)) {
+    return IPC_OK();
+  }
+
+  // NotifyTrackingProtectionDisabled has no order dependency to OnStartRequest.
+  // It this be handled as soon as possible
+  mChannelChild->ProcessNotifyTrackingProtectionDisabled();
+
+  return IPC_OK();
+}
+
+IPCResult
+HttpBackgroundChannelChild::RecvNotifyTrackingResource()
+{
+  LOG(("HttpBackgroundChannelChild::RecvNotifyTrackingResource [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (NS_WARN_IF(!mChannelChild)) {
+    return IPC_OK();
+  }
+
+  // NotifyTrackingResource has no order dependency to OnStartRequest.
+  // It this be handled as soon as possible
+  mChannelChild->ProcessNotifyTrackingResource();
+
+  return IPC_OK();
+}
+
+IPCResult
+HttpBackgroundChannelChild::RecvSetClassifierMatchedInfo(const ClassifierInfo& info)
+{
+  LOG(("HttpBackgroundChannelChild::RecvSetClassifierMatchedInfo [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (NS_WARN_IF(!mChannelChild)) {
+    return IPC_OK();
+  }
+
+  // SetClassifierMatchedInfo has no order dependency to OnStartRequest.
+  // It this be handled as soon as possible
+  mChannelChild->ProcessSetClassifierMatchedInfo(info.list(), info.provider(), info.prefix());
+
+  return IPC_OK();
+}
+
 void
 HttpBackgroundChannelChild::ActorDestroy(ActorDestroyReason aWhy)
 {

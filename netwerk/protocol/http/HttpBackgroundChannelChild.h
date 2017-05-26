@@ -13,6 +13,7 @@
 #include "nsTArray.h"
 
 using mozilla::ipc::IPCResult;
+using mozilla::dom::ClassifierInfo;
 
 namespace mozilla {
 namespace net {
@@ -62,6 +63,12 @@ protected:
   IPCResult RecvDivertMessages() override;
 
   IPCResult RecvOnStartRequestSent() override;
+
+  IPCResult RecvNotifyTrackingProtectionDisabled() override;
+
+  IPCResult RecvNotifyTrackingResource() override;
+
+  IPCResult RecvSetClassifierMatchedInfo(const ClassifierInfo& info) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

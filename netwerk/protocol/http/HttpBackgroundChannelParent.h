@@ -64,6 +64,17 @@ public:
   // over background channel.
   bool OnDiversion();
 
+  // To send NotifyTrackingProtectionDisabled message over background channel.
+  bool OnNotifyTrackingProtectionDisabled();
+
+  // To send NotifyTrackingResource message over background channel.
+  bool OnNotifyTrackingResource();
+
+  // To send SetClassifierMatchedInfo message over background channel.
+  bool OnSetClassifierMatchedInfo(const nsACString& aList,
+                                  const nsACString& aProvider,
+                                  const nsACString& aPrefix);
+
 protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
