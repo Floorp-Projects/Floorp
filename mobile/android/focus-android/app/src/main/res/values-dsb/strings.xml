@@ -53,10 +53,6 @@
   <string name="content_description_stop">Cytanje websedła zastajiś</string>
   <string name="content_description_customtab_exit">Slědk k pjerwjejšnemu nałoženjeju</string>
   <string name="context_menu_paste_go">Zasajźiś a zachopiś</string>
-  <string name="firstrun_title">Pśeglědujśo mimo až njeby nichten wobglědował.</string>
-  <string name="firstrun_description">Blokěrujśo pśeslědowaki online awtomatiski, mjaztym až pśeglědujośo. Pótusniśo pótom, aby woglědane boki, pytanja, cookije a gronidła ze swójogo rěda wulašował.</string>
-  <string name="firstrun_button">W pórěźe, som zrozměł!</string>
-  <string name="firstrun_footer">Wy měł se togo wědobny byś, až sedła a słužby, kótarež wužywaśo, wěźe, źož wy sćo był.</string>
   <string name="your_rights">Waše pšawa</string>
   <string name="external_app_prompt_title">Wótkaz w drugem nałoženju wócyniś</string>
   <string name="external_app_prompt">Móžośo %1$s spušćiś, aby toś ten wótkaz w %2$s wócynił.</string>

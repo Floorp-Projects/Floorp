@@ -53,10 +53,6 @@
   <string name="content_description_stop">Čitanje websydła zastajić</string>
   <string name="content_description_customtab_exit">Wróćo k předchadnemu nałoženju</string>
   <string name="context_menu_paste_go">Zasadźić a započeć</string>
-  <string name="firstrun_title">Přehladujće bjez toho, zo njeby nichtó wobkedźbował.</string>
-  <string name="firstrun_description">Blokujće přesćěhowaki online awtomatisce, mjeztym zo přehladujeće. Podótkńće so potom, zo byšće wopytane strony, pytanja, placki a hesła ze swojeho grata zhašał.</string>
-  <string name="firstrun_button">W porjadku, sym zrozumił!</string>
-  <string name="firstrun_footer">Wy měł sej toho wědomy być, zo sydła a słužby, kotrež wužiwaće, wědźa, hdźež wy sće był.</string>
   <string name="your_rights">Waše prawa</string>
   <string name="external_app_prompt_title">Wotkaz w druhim nałoženju wočinić</string>
   <string name="external_app_prompt">Móžeće %1$s wopušćić, zo byšće tutón wotkaz w %2$s wočinił.</string>
