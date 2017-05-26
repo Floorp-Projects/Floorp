@@ -2,10 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
-                                  "resource://devtools/client/framework/gDevTools.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-                                  "resource://devtools/shared/Loader.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DevToolsShim",
+                                  "chrome://devtools-shim/content/DevToolsShim.jsm");
 
 /**
  * this test file ensures that:
@@ -56,7 +54,9 @@ add_task(async function test_devtools_inspectedWindow_eval_bindings() {
 
   await extension.startup();
 
-  const target = devtools.TargetFactory.forTab(tab);
+  const {gDevTools} = DevToolsShim;
+
+  const target = gDevTools.getTargetForTab(tab);
   // Open the toolbox on the styleeditor, so that the inspector and the
   // console panel have not been explicitly activated yet.
   const toolbox = await gDevTools.showToolbox(target, "styleeditor");
