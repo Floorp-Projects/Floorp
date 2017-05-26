@@ -4370,6 +4370,33 @@ nsWindow::GetTransparencyMode()
     return mIsTransparent ? eTransparencyTransparent : eTransparencyOpaque;
 }
 
+#if (MOZ_WIDGET_GTK >= 3)
+void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion)
+{
+    // Available as of GTK 3.10+
+    static auto sGdkWindowSetOpaqueRegion =
+        (void (*)(GdkWindow*, cairo_region_t*))
+            dlsym(RTLD_DEFAULT, "gdk_window_set_opaque_region");
+
+    if (sGdkWindowSetOpaqueRegion && mGdkWindow &&
+        gdk_window_get_window_type(mGdkWindow) == GDK_WINDOW_TOPLEVEL) {
+        if (aOpaqueRegion.IsEmpty()) {
+            (*sGdkWindowSetOpaqueRegion)(mGdkWindow, nullptr);
+        } else {
+            cairo_region_t *region = cairo_region_create();
+            for (auto iter = aOpaqueRegion.RectIter(); !iter.Done();
+                 iter.Next()) {
+                const LayoutDeviceIntRect &r = iter.Get();
+                cairo_rectangle_int_t rect = { r.x, r.y, r.width, r.height };
+                cairo_region_union_rectangle(region, &rect);
+            }
+            (*sGdkWindowSetOpaqueRegion)(mGdkWindow, region);
+            cairo_region_destroy(region);
+        }
+    }
+}
+#endif
+
 nsresult
 nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 {
