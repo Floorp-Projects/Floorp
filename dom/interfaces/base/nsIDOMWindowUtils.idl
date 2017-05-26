@@ -1887,6 +1887,13 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute unsigned long long elementsRestyled;
 
   /**
+   * Restyle generation for the current document.
+   *
+   * May throw NS_ERROR_NOT_AVAILABLE.
+   */
+  readonly attribute unsigned long long restyleGeneration;
+
+  /**
    * Number of frames constructed (excluding breaking) for the curent
    * document.
    *
