@@ -56,10 +56,6 @@ fn public_api() {
                         assert!(!vpx.codec_init.is_empty());
                         "VPx"
                     }
-                    mp4::VideoCodecSpecific::ESDSConfig(mp4v) => {
-                        assert!(!mp4v.is_empty());
-                        "MP4V"
-                    }
                 }, "AVC");
             }
             Some(mp4::SampleEntry::Audio(a)) => {

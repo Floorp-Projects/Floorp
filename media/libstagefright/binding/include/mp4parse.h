@@ -38,7 +38,6 @@ typedef enum mp4parse_codec {
 	mp4parse_codec_AVC,
 	mp4parse_codec_VP9,
 	mp4parse_codec_MP3,
-	mp4parse_codec_MP4V,
 } mp4parse_codec;
 
 typedef struct mp4parse_track_info {
