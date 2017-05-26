@@ -41,7 +41,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Locale",
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyGetter(this, "IconDetails", () => {
-  return Cu.import("resource://gre/modules/ExtensionUtils.jsm", {}).ExtensionUtils.IconDetails;
+  return Cu.import("resource://gre/modules/ExtensionParent.jsm", {}).ExtensionParent.IconDetails;
 });
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
