@@ -17,6 +17,7 @@ import android.view.View;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.InfoFragment;
+import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
 
@@ -51,7 +52,7 @@ public class InfoActivity extends AppCompatActivity {
 
     public static final Intent getHelpIntent(final Context context) {
         final Resources resources = context.getResources();
-        return getIntentFor(context, resources.getString(R.string.url_sumo_help), resources.getString(R.string.menu_help));
+        return getIntentFor(context, SupportUtils.HELP_URL, resources.getString(R.string.menu_help));
     }
 
     @Override
