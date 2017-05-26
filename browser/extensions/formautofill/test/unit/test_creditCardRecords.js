@@ -123,8 +123,8 @@ add_task(async function test_getAll() {
   do_check_eq(creditCards[0]["cc-given-name"], "John");
   do_check_eq(creditCards[0]["cc-family-name"], "Doe");
 
-  // Test with noComputedFields set.
-  creditCards = profileStorage.creditCards.getAll({noComputedFields: true});
+  // Test with rawData set.
+  creditCards = profileStorage.creditCards.getAll({rawData: true});
   do_check_eq(creditCards[0]["cc-given-name"], undefined);
   do_check_eq(creditCards[0]["cc-family-name"], undefined);
 
