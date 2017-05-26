@@ -107,7 +107,6 @@ function filterObject(obj, filterOut) {
   return ret;
 }
 
-
 /**
  * This turns a JSON object into a "flat" stringified form, separated into top-level sections.
  *
@@ -2084,6 +2083,14 @@ function displayPingData(ping, updatePayloadList = false) {
   let pre = document.getElementById("raw-ping-data");
   pre.textContent = JSON.stringify(gPingData, null, 2);
 
+  try {
+    displayRichPingData(ping, updatePayloadList);
+  } catch (err) {
+    PingPicker._showRawPingData();
+  }
+}
+
+function displayRichPingData(ping, updatePayloadList) {
   // Update the structured data rendering.
   const keysHeader = bundle.GetStringFromName("keysHeader");
   const valuesHeader = bundle.GetStringFromName("valuesHeader");
