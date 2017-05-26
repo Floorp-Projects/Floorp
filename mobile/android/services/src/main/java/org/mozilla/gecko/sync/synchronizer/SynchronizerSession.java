@@ -75,8 +75,16 @@ implements RecordsChannelDelegate,
   private boolean flowAToBCompleted = false;
   private boolean flowBToACompleted = false;
 
-  protected final AtomicInteger numInboundRecords = new AtomicInteger(-1);
-  protected final AtomicInteger numOutboundRecords = new AtomicInteger(-1);
+  private final AtomicInteger numInboundRecords = new AtomicInteger(-1);
+  private final AtomicInteger numInboundRecordsStored = new AtomicInteger(-1);
+  private final AtomicInteger numInboundRecordsFailed = new AtomicInteger(-1);
+  private final AtomicInteger numInboundRecordsReconciled = new AtomicInteger(-1);
+  private final AtomicInteger numOutboundRecords = new AtomicInteger(-1);
+  private final AtomicInteger numOutboundRecordsStored = new AtomicInteger(-1);
+  private final AtomicInteger numOutboundRecordsFailed = new AtomicInteger(-1);
+
+  private Exception fetchFailedCauseException;
+  private Exception storeFailedCauseException;
 
   /*
    * Public API: constructor, init, synchronize.
@@ -126,6 +134,22 @@ implements RecordsChannelDelegate,
     return numOutboundRecords.get();
   }
 
+  public int getOutboundCountStored() {
+    return numOutboundRecordsStored.get();
+  }
+
+  public int getOutboundCountFailed() {
+    return numOutboundRecordsFailed.get();
+  }
+
+  public Exception getFetchFailedCauseException() {
+    return fetchFailedCauseException;
+  }
+
+  public Exception getStoreFailedCauseException() {
+    return storeFailedCauseException;
+  }
+
   // These are accessed by `abort` and `synchronize`, both of which are synchronized.
   // Guarded by `this`.
   protected RecordsChannel channelAToB;
@@ -172,11 +196,16 @@ implements RecordsChannelDelegate,
       @Override
       public void onFlowFetchFailed(RecordsChannel recordsChannel, Exception ex) {
         Logger.warn(LOG_TAG, "First RecordsChannel onFlowFetchFailed. Logging remote fetch error.", ex);
+        fetchFailedCauseException = ex;
       }
 
       @Override
       public void onFlowStoreFailed(RecordsChannel recordsChannel, Exception ex, String recordGuid) {
         Logger.warn(LOG_TAG, "First RecordsChannel onFlowStoreFailed. Logging local store error.", ex);
+        // Currently we're just recording the very last exception which occurred. This is a reasonable
+        // approach, but ideally we'd want to categorize the exceptions and count them for the purposes
+        // of better telemetry. See Bug 1362208.
+        storeFailedCauseException = ex;
       }
 
       @Override
