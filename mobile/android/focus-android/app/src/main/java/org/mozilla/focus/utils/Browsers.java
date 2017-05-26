@@ -115,8 +115,18 @@ public class Browsers {
     }
 
     private void findKnownBrowsers(PackageManager packageManager, Map<String, ActivityInfo> browsers, @NonNull Uri uri) {
-        for (KnownBrowser browser : KnownBrowser.values()) {
+        for (final KnownBrowser browser : KnownBrowser.values()) {
             if (browsers.containsKey(browser.packageName)) {
+                continue;
+            }
+
+            // resolveActivity() can be slow if the package isn't installed (e.g. 200ms on an N6 with a bad WiFi connection).
+            // Hence we query if the package is installed first, and only call resolveActivity for installed packages.
+            // getPackageInfo() is fast regardless of a package being installed
+            try {
+                // We don't need the result, we only need to detect when the package doesn't exist
+                packageManager.getPackageInfo(browser.packageName, 0);
+            } catch (PackageManager.NameNotFoundException e) {
                 continue;
             }
 
