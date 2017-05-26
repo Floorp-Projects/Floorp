@@ -1695,8 +1695,11 @@ HttpChannelParent::SetParentListener(HttpChannelParentListener* aListener)
 NS_IMETHODIMP
 HttpChannelParent::NotifyTrackingProtectionDisabled()
 {
-  if (!mIPCClosed)
-    Unused << SendNotifyTrackingProtectionDisabled();
+  LOG(("HttpChannelParent::NotifyTrackingProtectionDisabled [this=%p]\n", this));
+  if (!mIPCClosed) {
+    MOZ_ASSERT(mBgParent);
+    Unused << mBgParent->OnNotifyTrackingProtectionDisabled();
+  }
   return NS_OK;
 }
 
@@ -1705,13 +1708,10 @@ HttpChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
                                             const nsACString& aProvider,
                                             const nsACString& aPrefix)
 {
+  LOG(("HttpChannelParent::SetClassifierMatchedInfo [this=%p]\n", this));
   if (!mIPCClosed) {
-    ClassifierInfo info;
-    info.list() = aList;
-    info.prefix() = aPrefix;
-    info.provider() = aProvider;
-
-    Unused << SendSetClassifierMatchedInfo(info);
+    MOZ_ASSERT(mBgParent);
+    Unused << mBgParent->OnSetClassifierMatchedInfo(aList, aProvider, aPrefix);
   }
   return NS_OK;
 }
@@ -1719,8 +1719,11 @@ HttpChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
 NS_IMETHODIMP
 HttpChannelParent::NotifyTrackingResource()
 {
-  if (!mIPCClosed)
-    Unused << SendNotifyTrackingResource();
+  LOG(("HttpChannelParent::NotifyTrackingResource [this=%p]\n", this));
+  if (!mIPCClosed) {
+    MOZ_ASSERT(mBgParent);
+    Unused << mBgParent->OnNotifyTrackingResource();
+  }
   return NS_OK;
 }
 
