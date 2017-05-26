@@ -98,12 +98,14 @@ audio > xul|videocontrols {
 }
 
 .playButton:hover,
-.muteButton:hover {
+.muteButton:hover,
+.closedCaptionButton:hover {
   fill: #48a0f7;
 }
 
 .playButton:hover:active,
-.muteButton:hover:active {
+.muteButton:hover:active,
+.closedCaptionButton:hover:active {
   fill: #2d89e6;
 }
 
@@ -131,22 +133,10 @@ audio > xul|videocontrols {
 }
 
 .closedCaptionButton {
-  background-image: url(chrome://global/skin/media/closedCaptionButton.svg#cc-off);
-}
-.closedCaptionButton:hover {
-  background-image: url(chrome://global/skin/media/closedCaptionButton.svg#cc-off-hover);
-}
-.closedCaptionButton:hover:active {
-  background-image: url(chrome://global/skin/media/closedCaptionButton.svg#cc-off-active);
+  background-image: url(chrome://global/skin/media/closedCaptionButton-cc-off.svg);
 }
 .closedCaptionButton[enabled] {
-  background-image: url(chrome://global/skin/media/closedCaptionButton.svg#cc);
-}
-.closedCaptionButton[enabled]:hover {
-  background-image: url(chrome://global/skin/media/closedCaptionButton.svg#cc-hover);
-}
-.closedCaptionButton[enabled]:hover:active {
-  background-image: url(chrome://global/skin/media/closedCaptionButton.svg#cc-active);
+  background-image: url(chrome://global/skin/media/closedCaptionButton-cc-on.svg);
 }
 
 .fullscreenButton {
