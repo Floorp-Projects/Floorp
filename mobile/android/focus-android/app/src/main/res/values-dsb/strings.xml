@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Pśetergnuś</string>
+  <string name="action_ok">W pórěźe</string>
+  <string name="urlbar_hint">Adresu pytaś abo zapódaś</string>
+  <string name="teaser">Awtomatiski priwatny modus.\nPśeglědowaś. Lašowaś. Wóspjetowaś.</string>
+  <string name="feedback_erase">Waša pśeglědowańska historija jo se wulašowała.</string>
+  <string name="search_hint">Pytanje za %1$s</string>
+  <string name="menu_share">Źěliś…</string>
+  <string name="menu_open_with_default_browser">Z %1$s wócyniś</string>
+  <string name="menu_open_with_a_browser">Wócyniś z…</string>
+  <string name="menu_settings">Nastajenja</string>
+  <string name="menu_about">Wó</string>
+  <string name="menu_help">Pomoc</string>
+  <string name="menu_rights">Waše pšawa</string>
+  <string name="menu_trackers_blocked_title">Pśeslědowaki blokěrowane</string>
+  <string name="share_dialog_title">Źěliś pśez</string>
+  <string name="notification_erase_text">Pśeglědowańsku historiju lašowaś</string>
+  <string name="shortcut_erase_short_label">Lašowaś</string>
+  <string name="shortcut_erase_long_label">Pśeglědowańsku historiju lašowaś</string>
+  <string name="text_selection_search_action">Priwatne pytanje</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s dajo was kontrolu wobchowa&#347;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Wu&#382;ywaj&#347;o jen ako priwatny wobgl&#283;dowak:\n  "<ul>"\n    "<li>Pytaj&#347;o a p&#347;egl&#283;duj&#347;o direktnje w na&#322;o&#382;enju</li>"\n    "<li>Blok&#283;ruj&#347;o p&#347;esl&#283;dowaki (abo aktualiz&#283;ruj&#347;o nastajenja, aby p&#347;esl&#283;dowaki dow&#243;li&#322;)</li>"\n    "<li>La&#353;uj&#347;o cookieje a pyta&#324;sku a p&#347;egl&#283;dowa&#324;sku historiju</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s se w&#243;t Mozilla wuwija. Na&#353;a misija jo sp&#283;chowanje strowego, w&#243;tw&#243;rjonego interneta.<br/>\n<a href="%2$s">Dal&#353;ne informacije</a></p>]]></string>
+  <string name="preference_category_search">Pytaś</string>
+  <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_language">Rěc</string>
+  <string name="preference_language_systemdefault">Systemowy standard</string>
+  <string name="preference_dialog_title_search_engine">Systemowy standard</string>
+  <string name="preference_category_privacy">Priwatnosć</string>
+  <string name="preference_privacy_block_ads">Wabjeńske pśeslědowaki blokěrowaś</string>
+  <string name="preference_privacy_block_analytics">Analyzowe pśeslědowaki blokěrowaś</string>
+  <string name="preference_privacy_block_social">Socialne pśeslědowaki blokěrowaś</string>
+  <string name="preference_privacy_block_content">Druge wopśimjeśowe pśeslědowaki blokěrowaś</string>
+  <string name="preference_privacy_block_content_summary">Kazy snaź někotare wideo a webboki</string>
+  <string name="preference_category_performance">Wugbaśe</string>
+  <string name="preference_performance_block_webfonts">Webpisma blokěrowaś</string>
+  <string name="preference_performance_block_webfonts_summary">Móžo k tomu wjasć, až symbole abo wobraze feluju</string>
+  <string name="preference_performance_block_images">Wobraze blokěrowaś</string>
+  <string name="preference_default_browser">Jako standardny wobglědowak nastajiś</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Anonymne wužywańske daty pósłaś</string>
+  <string name="preference_mozilla_telemetry_summary">Dalšne informacije</string>
+  <string name="preference_about">Wó %1$s</string>
+  <string name="content_description_clear_input">Zapódaśe wuprozniś</string>
+  <string name="content_description_dismiss_input">Zachyśiś</string>
+  <string name="content_description_erase">Pśeglědowańsku historiju lašowaś</string>
+  <string name="content_description_lock">Wěsty zwisk</string>
+  <string name="accessibility_announcement_loading">Zacytanje</string>
+  <string name="accessibility_announcement_loading_finished">Websedło jo se zacytało</string>
+  <string name="content_description_menu">Dalšne nastajenja</string>
+  <string name="content_description_forward">Doprědka</string>
+  <string name="content_description_reload">Websedło znowego zacytaś</string>
+  <string name="content_description_back">Slědk</string>
+  <string name="content_description_stop">Cytanje websedła zastajiś</string>
+  <string name="content_description_customtab_exit">Slědk k pjerwjejšnemu nałoženjeju</string>
+  <string name="context_menu_paste_go">Zasajźiś a zachopiś</string>
+  <string name="firstrun_title">Pśeglědujśo mimo až njeby nichten wobglědował.</string>
+  <string name="firstrun_description">Blokěrujśo pśeslědowaki online awtomatiski, mjaztym až pśeglědujośo. Pótusniśo pótom, aby woglědane boki, pytanja, cookije a gronidła ze swójogo rěda wulašował.</string>
+  <string name="firstrun_button">W pórěźe, som zrozměł!</string>
+  <string name="firstrun_footer">Wy měł se togo wědobny byś, až sedła a słužby, kótarež wužywaśo, wěźe, źož wy sćo był.</string>
+  <string name="your_rights">Waše pšawa</string>
+  <string name="external_app_prompt_title">Wótkaz w drugem nałoženju wócyniś</string>
+  <string name="external_app_prompt">Móžośo %1$s spušćiś, aby toś ten wótkaz w %2$s wócynił.</string>
+  <string name="external_app_prompt_no_app_title">Nałoženje pytaś, kótarež móžo wótkaz wócyniś</string>
+  <string name="external_app_prompt_no_app">Žedno z nałoženjow na wašom rěźe njamóžo toś ten wótkaz wócyniś. Móžośo %1$s spušćiś, aby %2$s za nałoženim pśepytował.</string>
+  <string name="external_multiple_apps_matched_exit">Priwatny modus spušćiś?</string>
+  <string name="errorpage_title">Zmólka pśi cytanju boka</string>
+  <string name="errorpage_refresh">Hyšći raz wopytaś</string>
+  <string name="error_connectionfailure_title">Žeden zwisk móžny</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Sed&#322;o njestoj sna&#378; nachylu k dispoziciji abo jo p&#347;e&#347;&#283;&#382;one. Wopytaj&#347;o za ma&#322;o wokognu&#347;ow hy&#353;&#263;i raz.</li>"\n        "<li>Jolic njam&#243;&#382;o&#347;o boki zacyta&#347;, p&#347;egl&#283;daj&#347;o datowy abo WLAN-zwisk wa&#353;ogo mobilnego r&#283;da.</li>"\n        "</ul>]]></string>
+  <string name="error_timeout_title">Cas zwiska jo pśekšocony</string>
+  <string name="error_hostLookup_title">Serwer njejo se namakał</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"P&#347;egl&#283;daj&#347;o adresu za pisa&#324;skimi zm&#243;lkami ako\n          "<strong>ww</strong>".example.com m&#283;sto\n          "<strong>www</strong>.example.com</li>"\n        "<li>Jolic njam&#243;&#382;o&#347;o boki zacyta&#347;, p&#347;egl&#283;daj&#347;o daty sw&#243;jogo r&#283;da abo sw&#243;j WLAN-zwisk.</li>"\n      "</ul>]]></string>
+  <string name="error_malformedURI_title">Adresa njejo płaśiwa</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Webadrese se zw&#283;t&#353;ego ako "<strong>http://www.example.com/</strong>" pi&#353;u."</li>"\n  "<li>"Zaw&#283;s&#263;&#263;o, a&#382; wu&#382;ywa&#347;o dopr&#283;dka schylone nak&#243;sne smu&#382;ki (t. gr. "<strong>/</strong>).</li>\n</ul>]]></string>
+  <string name="error_redirectLoop_title">Bok pšawje njepósrědnja</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>To&#347; ten problem zawinujo se w&#243;tergi p&#347;ez zm&#243;&#382;njanje abo znjem&#243;&#382;njanje ookiejow.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Adresa njejo se zrozměła</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Musy&#347;o sna&#378; druge programy instal&#283;rowa&#347;, aby se to&#347; ta adresa w&#243;cyni&#322;a.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Wěsty zwisk njejo móžny</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>To by m&#243;g&#322;o problem z konfiguraciju serwera by&#347;, abo by m&#243;g&#322;o by&#347;,\na&#382; n&#283;chten wopytujo serwer imit&#283;rowa&#347;.</li>"\n  "<li>Jolic s&#263;o by&#322; ze serwerom w zachadnos&#263;i wusp&#283;&#353;nje zw&#283;zany, by m&#243;g&#322;a zm&#243;lka sna&#378;\nnachylna by&#347; a m&#243;&#382;o&#347;o p&#243;zd&#378;ej hy&#353;&#263;i raz wopyta&#347;.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Hopla</string>
+  <string name="error_generic_message">Z někakeje pśicyny njamóžomy toś ten bok zacytaś.</string>
+  <string name="contextmenu_link_share">Wótkaz źěliś</string>
+  <string name="contextmenu_link_copy">Wótkazowu adresu kopěrowaś</string>
+  <string name="contextmenu_image_share">Wobraz śěliś</string>
+  <string name="contextmenu_image_copy">Wobrazowu adresu kopěrowaś</string>
+  <string name="contextmenu_image_save">Wobraz składowaś</string>
+</resources>
