@@ -203,7 +203,7 @@ public class TestRecordsChannel {
     assertEquals(sourceRepository.wbos, sinkRepository.wbos);
     assertEquals(0, recordsChannel.getFetchFailureCount());
     assertEquals(0, recordsChannel.getStoreFailureCount());
-    assertEquals(6, recordsChannel.getStoreCount());
+    assertEquals(6, recordsChannel.getStoreAttemptedCount());
   }
 
   @Test
@@ -217,7 +217,7 @@ public class TestRecordsChannel {
     assertTrue(sinkRepository.wbos.size() < 6);
     assertTrue(recordsChannel.getFetchFailureCount() > 0);
     assertEquals(0, recordsChannel.getStoreFailureCount());
-    assertTrue(recordsChannel.getStoreCount() < 6);
+    assertTrue(recordsChannel.getStoreAttemptedCount() < 6);
   }
 
   @Test
@@ -232,7 +232,7 @@ public class TestRecordsChannel {
 
     assertTrue(recordsChannel.getFetchFailureCount() > 0);
     assertEquals(0, recordsChannel.getStoreFailureCount());
-    assertTrue(recordsChannel.getStoreCount() < sourceRepository.wbos.size());
+    assertTrue(recordsChannel.getStoreAttemptedCount() < sourceRepository.wbos.size());
 
     assertEquals(CollectionConcurrentModificationException.class, fetchException.getClass());
     final Exception ex = recordsChannel.getReflowException();
@@ -252,7 +252,7 @@ public class TestRecordsChannel {
 
     assertTrue(recordsChannel.getFetchFailureCount() > 0);
     assertEquals(0, recordsChannel.getStoreFailureCount());
-    assertTrue(recordsChannel.getStoreCount() < sourceRepository.wbos.size());
+    assertTrue(recordsChannel.getStoreAttemptedCount() < sourceRepository.wbos.size());
 
     assertEquals(SyncDeadlineReachedException.class, fetchException.getClass());
     final Exception ex = recordsChannel.getReflowException();
@@ -275,7 +275,7 @@ public class TestRecordsChannel {
     assertEquals(0, recordsChannel.getFetchFailureCount());
     assertEquals(1, recordsChannel.getStoreFailureCount());
     // Number of store attempts.
-    assertEquals(sourceRepository.wbos.size(), recordsChannel.getStoreCount());
+    assertEquals(sourceRepository.wbos.size(), recordsChannel.getStoreAttemptedCount());
   }
 
   @Test
@@ -314,7 +314,7 @@ public class TestRecordsChannel {
     assertEquals(0, recordsChannel.getFetchFailureCount());
     assertEquals(3, recordsChannel.getStoreFailureCount());
     // Number of store attempts.
-    assertEquals(sourceRepository.wbos.size(), recordsChannel.getStoreCount());
+    assertEquals(sourceRepository.wbos.size(), recordsChannel.getStoreAttemptedCount());
   }
 
 
@@ -331,6 +331,6 @@ public class TestRecordsChannel {
     assertEquals(0, recordsChannel.getFetchFailureCount());
     assertEquals(6, recordsChannel.getStoreFailureCount());
     // Number of store attempts.
-    assertEquals(sourceRepository.wbos.size(), recordsChannel.getStoreCount());
+    assertEquals(sourceRepository.wbos.size(), recordsChannel.getStoreAttemptedCount());
   }
 }
