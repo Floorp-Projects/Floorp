@@ -6,19 +6,18 @@
 
 package org.mozilla.gecko.mma;
 
-import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 
 
 public interface MmaInterface {
-    void init(Activity Activity);
+    void init(Application application);
 
     void start(Context context);
 
-    void track(String mmaEvent);
+    void track(String leanplumEvent);
 
-    void track(String mmaEvent, double value);
+    void track(String leanplumEvent, double value);
 
     void stop();
 }

@@ -6,7 +6,6 @@
 
 package org.mozilla.gecko.mma;
 
-import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 
@@ -14,21 +13,16 @@ import com.leanplum.Leanplum;
 import com.leanplum.LeanplumActivityHelper;
 import com.leanplum.annotations.Parser;
 
-import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.MmaConstants;
-import org.mozilla.gecko.util.ContextUtils;
-
-import java.util.HashMap;
-import java.util.Map;
 
 
 public class MmaLeanplumImp implements MmaInterface {
     @Override
-    public void init(Activity activity) {
-        Leanplum.setApplicationContext(activity.getApplicationContext());
-
-        LeanplumActivityHelper.enableLifecycleCallbacks(activity.getApplication());
+    public void init(Application application) {
+        Leanplum.setApplicationContext(application);
+        Parser.parseVariables(application);
+        LeanplumActivityHelper.enableLifecycleCallbacks(application);
 
         if (AppConstants.MOZILLA_OFFICIAL) {
             Leanplum.setAppIdForProductionMode(MmaConstants.MOZ_LEANPLUM_SDK_CLIENTID, MmaConstants.MOZ_LEANPLUM_SDK_KEY);
@@ -36,18 +30,7 @@ public class MmaLeanplumImp implements MmaInterface {
             Leanplum.setAppIdForDevelopmentMode(MmaConstants.MOZ_LEANPLUM_SDK_CLIENTID, MmaConstants.MOZ_LEANPLUM_SDK_KEY);
         }
 
-
-        Map<String, Object> attributes = new HashMap<>();
-        boolean installedFocus = ContextUtils.isPackageInstalled(activity, "org.mozilla.focus");
-        boolean installedKlar = ContextUtils.isPackageInstalled(activity, "org.mozilla.klar");
-        if (installedFocus || installedKlar) {
-            attributes.put("focus", "installed");
-        }
-        Leanplum.start(activity, attributes);
-        Leanplum.track("Launch");
-        // this is special to Leanplum. Since we defer LeanplumActivityHelper's onResume call till
-        // switchboard completes loading, we manually call it here.
-        LeanplumActivityHelper.onResume(activity);
+        Leanplum.start(application);
     }
 
     @Override
