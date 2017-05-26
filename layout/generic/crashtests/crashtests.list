@@ -652,3 +652,4 @@ load 1304441.html
 load 1316649.html
 load 1349650.html
 asserts-if(browserIsRemote,0-5) load 1349816-1.html # bug 1350352
+load 1367413-1.html
