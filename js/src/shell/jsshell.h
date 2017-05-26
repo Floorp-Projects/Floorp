@@ -203,9 +203,7 @@ struct ShellContext
     js::shell::RCFile** errFilePtr;
     js::shell::RCFile** outFilePtr;
 
-    static const uint32_t GeckoProfilingMaxStackSize = 1000;
-    js::ProfileEntry geckoProfilingStack[GeckoProfilingMaxStackSize];
-    mozilla::Atomic<uint32_t> geckoProfilingStackSize;
+    PseudoStack geckoProfilingStack;
 
     OffThreadState offThreadState;
 
