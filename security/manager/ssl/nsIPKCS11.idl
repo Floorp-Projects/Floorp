@@ -12,7 +12,9 @@
 [scriptable, uuid(5743f870-958e-4f02-aef2-c0afeef67f05)]
 interface nsIPKCS11 : nsISupports
 {
+  [must_use]
   void deleteModule(in AString moduleName);
+  [must_use]
   void addModule(in AString moduleName,
                  in AString libraryFullPath,
                  in long cryptoMechanismFlags,

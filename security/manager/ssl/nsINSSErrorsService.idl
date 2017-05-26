@@ -13,6 +13,7 @@ interface nsINSSErrorsService : nsISupports
      *  @param aNSPRCode An error code obtained using PR_GetError()
      *  @return True if it is error code defined by the NSS library
      */
+    [must_use]
     boolean isNSSErrorCode(in int32_t aNSPRCode);
 
     /**
@@ -20,6 +21,7 @@ interface nsINSSErrorsService : nsISupports
      *  @param aNSPRCode An error code obtained using PR_GetError()
      *  @return The result of the conversion, an XPCOM error code
      */
+    [must_use]
     nsresult getXPCOMFromNSSError(in int32_t aNSPRCode);
 
     /**
@@ -35,6 +37,7 @@ interface nsINSSErrorsService : nsISupports
      *  return the error class of the code, either ERROR_CLASS_BAD_CERT
      *         or ERROR_CLASS_SSL_PROTOCOL
      */
+    [must_use]
     uint32_t getErrorClass(in nsresult aXPCOMErrorCode);
 
     const unsigned long ERROR_CLASS_SSL_PROTOCOL = 1;

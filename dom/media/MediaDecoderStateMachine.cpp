@@ -990,9 +990,11 @@ public:
         MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING);
     }
 
+    RefPtr<MediaDecoder::SeekPromise> p = mSeekJob.mPromise.Ensure(__func__);
+
     DoSeek();
 
-    return mSeekJob.mPromise.Ensure(__func__);
+    return p;
   }
 
   virtual void Exit() override = 0;
@@ -1517,7 +1519,7 @@ public:
   void Exit() override
   {
     // Disconnect my async seek operation.
-    mAsyncSeekTask->Cancel();
+    if (mAsyncSeekTask) { mAsyncSeekTask->Cancel(); }
 
     // Disconnect MediaDecoder.
     mSeekJob.RejectIfExists(__func__);
@@ -1545,7 +1547,6 @@ public:
   void HandleWaitingForAudio() override
   {
     MOZ_ASSERT(!mSeekJob.mPromise.IsEmpty(), "Seek shouldn't be finished");
-    MOZ_ASSERT(NeedMoreVideo());
     // We don't care about audio decode errors in this state which will be
     // handled by other states after seeking.
   }
@@ -1553,7 +1554,6 @@ public:
   void HandleAudioCanceled() override
   {
     MOZ_ASSERT(!mSeekJob.mPromise.IsEmpty(), "Seek shouldn't be finished");
-    MOZ_ASSERT(NeedMoreVideo());
     // We don't care about audio decode errors in this state which will be
     // handled by other states after seeking.
   }
@@ -1561,7 +1561,6 @@ public:
   void HandleEndOfAudio() override
   {
     MOZ_ASSERT(!mSeekJob.mPromise.IsEmpty(), "Seek shouldn't be finished");
-    MOZ_ASSERT(NeedMoreVideo());
     // We don't care about audio decode errors in this state which will be
     // handled by other states after seeking.
   }
@@ -1609,7 +1608,21 @@ public:
 
   void DoSeek() override
   {
-    // We need to do the seek operation asynchronously. Because for a special
+    auto currentTime = mCurrentTime;
+    DiscardFrames(VideoQueue(), [currentTime] (int64_t aSampleTime) {
+      return aSampleTime <= currentTime.ToMicroseconds();
+    });
+
+    // If there is a pending video request, finish the seeking if we don't need
+    // more data, or wait for HandleVideoDecoded() to finish seeking.
+    if (mMaster->IsRequestingVideoData()) {
+      if (!NeedMoreVideo()) {
+        FinishSeek();
+      }
+      return;
+    }
+
+    // Otherwise, we need to do the seek operation asynchronously for a special
     // case (bug504613.ogv) which has no data at all, the 1st seekToNextFrame()
     // operation reaches the end of the media. If we did the seek operation
     // synchronously, we immediately resolve the SeekPromise in mSeekJob and
@@ -1627,10 +1640,9 @@ public:
 private:
   void DoSeekInternal()
   {
-    auto currentTime = mCurrentTime;
-    DiscardFrames(VideoQueue(), [currentTime] (int64_t aSampleTime) {
-      return aSampleTime <= currentTime.ToMicroseconds();
-    });
+    // We don't need to discard frames to the mCurrentTime here because we have
+    // done it at DoSeek() and any video data received in between either
+    // finishes the seek operation or be discarded, see HandleVideoDecoded().
 
     if (!NeedMoreVideo()) {
       FinishSeek();

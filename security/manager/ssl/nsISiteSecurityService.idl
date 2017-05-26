@@ -29,12 +29,13 @@ namespace mozilla
 [scriptable, uuid(31313372-842c-4110-bdf1-6aea17c845ad), builtinclass]
 interface nsISiteSecurityState : nsISupports
 {
+  [must_use]
   readonly attribute ACString hostname;
   [infallible] readonly attribute long long expireTime;
   [infallible] readonly attribute short securityPropertyState;
   [infallible] readonly attribute boolean includeSubdomains;
 
-  [implicit_jscontext]
+  [implicit_jscontext, must_use]
   readonly attribute jsval originAttributes;
 
   /*
@@ -63,6 +64,7 @@ interface nsISiteHSTSState : nsISiteSecurityState
 [scriptable, uuid(ae395078-c7d0-474d-b147-f4aa203a9b2c), builtinclass]
 interface nsISiteHPKPState : nsISiteSecurityState
 {
+  [must_use]
   readonly attribute nsISimpleEnumerator sha256Keys;
 };
 
@@ -121,7 +123,7 @@ interface nsISiteSecurityService : nsISupports
      *         NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA
      *                          if there are unrecognized tokens in the header.
      */
-    [binaryname(ProcessHeader), noscript]
+    [binaryname(ProcessHeader), noscript, must_use]
     void processHeaderNative(in uint32_t aType,
                              in nsIURI aSourceURI,
                              in ACString aHeader,
@@ -132,7 +134,8 @@ interface nsISiteSecurityService : nsISupports
                              [optional] out boolean aIncludeSubdomains,
                              [optional] out uint32_t aFailureResult);
 
-    [binaryname(ProcessHeaderScriptable), implicit_jscontext, optional_argc]
+    [binaryname(ProcessHeaderScriptable), implicit_jscontext, optional_argc,
+     must_use]
     void processHeader(in uint32_t aType,
                        in nsIURI aSourceURI,
                        in ACString aHeader,
@@ -158,7 +161,7 @@ interface nsISiteSecurityService : nsISupports
      *                          the-middle attacks before trust-on-second-use
      *                          happens).
      */
-    [implicit_jscontext, optional_argc]
+    [implicit_jscontext, optional_argc, must_use]
     void removeState(in uint32_t aType,
                      in nsIURI aURI,
                      in uint32_t aFlags,
@@ -185,13 +188,14 @@ interface nsISiteSecurityService : nsISupports
      * @param aCached true if we have cached information regarding whether or not
      *                  the host is HSTS, false otherwise.
      */
-    [binaryname(IsSecureURI), noscript]
+    [binaryname(IsSecureURI), noscript, must_use]
     boolean isSecureURINative(in uint32_t aType, in nsIURI aURI,
                               in uint32_t aFlags,
                               in const_OriginAttributesRef aOriginAttributes,
                               [optional] out boolean aCached);
 
-    [binaryname(IsSecureURIScriptable), implicit_jscontext, optional_argc]
+    [binaryname(IsSecureURIScriptable), implicit_jscontext, optional_argc,
+     must_use]
     boolean isSecureURI(in uint32_t aType, in nsIURI aURI, in uint32_t aFlags,
                         [optional] in jsval aOriginAttributes,
                         [optional] out boolean aCached);
@@ -200,11 +204,13 @@ interface nsISiteSecurityService : nsISupports
      * Removes all non-preloaded security state by resetting to factory-original
      * settings.
      */
+    [must_use]
     void clearAll();
 
     /**
      * Removes all preloaded security state.
      */
+    [must_use]
     void clearPreloads();
 
     /**
@@ -225,7 +231,7 @@ interface nsISiteSecurityService : nsISupports
      * @param aIncludeSubdomains true if the pins apply to subdomains of the
      *        given domain
      */
-    [noscript] boolean getKeyPinsForHostname(
+    [noscript, must_use] boolean getKeyPinsForHostname(
       in ACString aHostname,
       in mozillaPkixTime evalTime,
       in const_OriginAttributesRef aOriginAttributes,
@@ -250,7 +256,7 @@ interface nsISiteSecurityService : nsISupports
      *                          the-middle attacks before trust-on-second-use
      *                          happens).
      */
-    [implicit_jscontext, optional_argc]
+    [implicit_jscontext, optional_argc, must_use]
     boolean setKeyPins(in ACString aHost, in boolean aIncludeSubdomains,
                        in int64_t aExpires, in unsigned long aPinCount,
                        [array, size_is(aPinCount)] in string aSha256Pins,
@@ -267,6 +273,7 @@ interface nsISiteSecurityService : nsISupports
      * @param aIncludeSubdomains whether this entry also applies to subdomains
      * @param aExpires the time this entry should expire (millis since epoch)
      */
+    [must_use]
     boolean setHSTSPreload(in ACString aHost,
                            in boolean aIncludesSubdomains,
                            in int64_t aExpires);
@@ -283,7 +290,7 @@ interface nsISiteSecurityService : nsISupports
      *                          the-middle attacks before trust-on-second-use
      *                          happens).
      */
-    [noscript] void cacheNegativeHSTSResult(
+    [noscript, must_use] void cacheNegativeHSTSResult(
       in nsIURI aURI, in unsigned long long aMaxAge,
       in const_OriginAttributesRef aOriginAttributes);
 
@@ -296,6 +303,7 @@ interface nsISiteSecurityService : nsISupports
      *
      * @param aType the type of security state in question.
      */
+    [must_use]
     nsISimpleEnumerator enumerate(in uint32_t aType);
 };
 

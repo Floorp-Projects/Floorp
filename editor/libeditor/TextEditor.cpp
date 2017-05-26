@@ -766,6 +766,64 @@ TextEditor::InsertLineBreak()
   return rv;
 }
 
+NS_IMETHODIMP
+TextEditor::SetText(const nsAString& aString)
+{
+  if (NS_WARN_IF(!mRules)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> rules(mRules);
+
+  // delete placeholder txns merge.
+  AutoPlaceHolderBatch batch(this, nullptr);
+  AutoRules beginRulesSniffing(this, EditAction::setText, nsIEditor::eNext);
+
+  // pre-process
+  RefPtr<Selection> selection = GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  TextRulesInfo ruleInfo(EditAction::setText);
+  ruleInfo.inString = &aString;
+  ruleInfo.maxLength = mMaxTextLength;
+
+  bool cancel;
+  bool handled;
+  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (cancel) {
+    return NS_OK;
+  }
+  if (!handled) {
+    // We want to select trailing BR node to remove all nodes to replace all,
+    // but TextEditor::SelectEntireDocument doesn't select that BR node.
+    if (rules->DocumentIsEmpty()) {
+      // if it's empty, don't select entire doc - that would select
+      // the bogus node
+      Element* rootElement = GetRoot();
+      if (NS_WARN_IF(!rootElement)) {
+        return NS_ERROR_FAILURE;
+      }
+      rv = selection->Collapse(rootElement, 0);
+    } else {
+      rv = EditorBase::SelectEntireDocument(selection);
+    }
+    if (NS_SUCCEEDED(rv)) {
+      if (aString.IsEmpty()) {
+        rv = DeleteSelection(eNone, eStrip);
+      } else {
+        rv = InsertText(aString);
+      }
+    }
+  }
+  // post-process
+  return rules->DidDoAction(selection, &ruleInfo, rv);
+}
+
 nsresult
 TextEditor::BeginIMEComposition(WidgetCompositionEvent* aEvent)
 {

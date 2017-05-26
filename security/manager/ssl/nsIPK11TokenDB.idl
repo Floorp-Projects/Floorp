@@ -37,10 +37,12 @@ interface nsIPK11TokenDB : nsISupports
    *                  non-empty.
    * @return a token with the given name
    */
+  [must_use]
   nsIPK11Token findTokenByName(in AUTF8String tokenName);
 
   /*
    * List all tokens
    */
+  [must_use]
   nsISimpleEnumerator listTokens();
 };
