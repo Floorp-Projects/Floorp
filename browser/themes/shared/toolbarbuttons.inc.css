@@ -459,10 +459,7 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   display: -moz-box !important;
 }
 
-.bookmark-item > .toolbarbutton-icon[label]:not([label=""]) {
+.bookmark-item > .toolbarbutton-icon[label]:not([label=""]),
+.bookmark-item > .toolbarbutton-icon[type="menu"] {
   margin-inline-end: 5px;
-}
-
-.bookmark-item > .toolbarbutton-menu-dropmarker {
-  display: none;
 }
