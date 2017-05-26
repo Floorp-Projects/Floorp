@@ -25,8 +25,7 @@ class nsSVGGenericContainerFrame final : public nsSVGDisplayContainerFrame
 
 protected:
   explicit nsSVGGenericContainerFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext, kClassID,
-                                 mozilla::LayoutFrameType::SVGGenericContainer)
+    : nsSVGDisplayContainerFrame(aContext, kClassID)
   {}
 
 public:

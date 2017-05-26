@@ -33,7 +33,7 @@ class nsMathMLContainerFrame : public nsContainerFrame,
   friend class nsMathMLmfencedFrame;
 public:
   nsMathMLContainerFrame(nsStyleContext* aContext, ClassID aID)
-    : nsContainerFrame(aContext, aID, mozilla::LayoutFrameType::None)
+    : nsContainerFrame(aContext, aID)
     , mIntrinsicWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mBlockStartAscent(0)
   {}

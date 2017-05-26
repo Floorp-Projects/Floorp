@@ -21,7 +21,7 @@ class nsScrollbarFrame final : public nsBoxFrame
 {
 public:
   explicit nsScrollbarFrame(nsStyleContext* aContext)
-    : nsBoxFrame(aContext, kClassID, mozilla::LayoutFrameType::Scrollbar)
+    : nsBoxFrame(aContext, kClassID)
     , mIncrement(0)
     , mSmoothScroll(false)
     , mScrollbarMediator(nullptr)

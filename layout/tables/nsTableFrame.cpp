@@ -147,7 +147,7 @@ nsTableFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
 }
 
 nsTableFrame::nsTableFrame(nsStyleContext* aContext, ClassID aID)
-  : nsContainerFrame(aContext, aID, LayoutFrameType::Table)
+  : nsContainerFrame(aContext, aID)
   , mCellMap(nullptr)
   , mTableLayoutStrategy(nullptr)
 {

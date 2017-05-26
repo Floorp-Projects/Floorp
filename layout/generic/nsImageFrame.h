@@ -72,11 +72,6 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsImageFrame)
   NS_DECL_QUERYFRAME
 
-  explicit nsImageFrame(nsStyleContext* aContext, ClassID aID = kClassID)
-    : nsImageFrame(aContext, aID, mozilla::LayoutFrameType::Image)
-  {}
-
-
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 
@@ -181,9 +176,13 @@ public:
   virtual bool ReflowFinished() override;
   virtual void ReflowCallbackCanceled() override;
 
-protected:
-  nsImageFrame(nsStyleContext* aContext, ClassID, mozilla::LayoutFrameType aType);
+private:
+  friend nsIFrame* NS_NewImageFrame(nsIPresShell*, nsStyleContext*);
+  explicit nsImageFrame(nsStyleContext* aContext)
+    : nsImageFrame(aContext, kClassID) {}
 
+protected:
+  nsImageFrame(nsStyleContext* aContext, ClassID aID);
   virtual ~nsImageFrame();
 
   void EnsureIntrinsicSizeAndRatio();

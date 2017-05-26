@@ -118,10 +118,9 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsBoxFrame::nsBoxFrame(nsStyleContext* aContext,
                        ClassID aID,
-                       LayoutFrameType aType,
                        bool aIsRoot,
                        nsBoxLayout* aLayoutManager)
-  : nsContainerFrame(aContext, aID, aType)
+  : nsContainerFrame(aContext, aID)
   , mFlex(0)
   , mAscent(0)
 {

@@ -50,7 +50,7 @@ public:
   void PropagateDebug(nsBoxLayoutState& aState);
 #endif
 
-  nsBox(ClassID aID, mozilla::LayoutFrameType);
+  nsBox(ClassID aID);
   virtual ~nsBox();
 
   /**

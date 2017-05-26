@@ -21,8 +21,7 @@ class nsSVGInnerSVGFrame final
   NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGInnerSVGFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext, kClassID,
-                                 mozilla::LayoutFrameType::SVGInnerSVG)
+    : nsSVGDisplayContainerFrame(aContext, kClassID)
   {
   }
 

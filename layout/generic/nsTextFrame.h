@@ -51,7 +51,11 @@ class nsTextFrame : public nsFrame
 
 public:
   explicit nsTextFrame(nsStyleContext* aContext, ClassID aID = kClassID)
-    : nsTextFrame(aContext, aID, mozilla::LayoutFrameType::Text)
+    : nsFrame(aContext, aID)
+    , mNextContinuation(nullptr)
+    , mContentOffset(0)
+    , mContentLengthHint(0)
+    , mAscent(0)
   {}
 
   NS_DECL_FRAMEARENA_HELPERS(nsTextFrame)
@@ -648,16 +652,6 @@ public:
   uint32_t CountGraphemeClusters() const;
 
 protected:
-  nsTextFrame(nsStyleContext* aContext, ClassID aID, mozilla::LayoutFrameType aType)
-    : nsFrame(aContext, aID, aType)
-    , mNextContinuation(nullptr)
-    , mContentOffset(0)
-    , mContentLengthHint(0)
-    , mAscent(0)
-  {
-    NS_ASSERTION(mContentOffset == 0, "Bogus content offset");
-  }
-
   virtual ~nsTextFrame();
 
   RefPtr<gfxTextRun> mTextRun;
