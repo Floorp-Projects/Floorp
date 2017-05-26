@@ -25,6 +25,7 @@
 #include "nsSMILAnimationController.h"
 #include "nsStyleContext.h"
 #include "nsStyleSet.h"
+#include "gfxUserFontSet.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -43,6 +44,7 @@ ServoStyleSet::ServoStyleSet()
   , mAllowResolveStaleStyles(false)
   , mAuthorStyleDisabled(false)
   , mStylistState(StylistState::NotDirty)
+  , mUserFontSetUpdateGeneration(0)
   , mNeedsRestyleAfterEnsureUniqueInner(false)
 {
 }
@@ -322,7 +324,13 @@ ServoStyleSet::PreTraverseSync()
   mPresContext->Document()->GetDocumentState();
 
   // Ensure that the @font-face data is not stale
-  mPresContext->Document()->GetUserFontSet();
+  if (gfxUserFontSet* userFontSet = mPresContext->Document()->GetUserFontSet()) {
+    uint64_t generation = userFontSet->GetGeneration();
+    if (generation != mUserFontSetUpdateGeneration) {
+      mPresContext->DeviceContext()->UpdateFontCacheUserFonts(userFontSet);
+      mUserFontSetUpdateGeneration = generation;
+    }
+  }
 
   UpdateStylistIfNeeded();
   mPresContext->CacheAllLangs();
