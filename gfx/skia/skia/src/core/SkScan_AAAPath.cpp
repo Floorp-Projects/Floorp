@@ -1682,7 +1682,7 @@ static SK_ALWAYS_INLINE void aaa_fill_path(const SkPath& path, const SkIRect& cl
         rightBound = SkTMin(rightBound, SkIntToFixed(ir.fRight));
     }
 
-    if (!path.isInverseFillType() && path.isConvex()) {
+    if (!path.isInverseFillType() && path.isConvex() && count >= 2) {
         SkASSERT(count >= 2);   // convex walker does not handle missing right edges
         aaa_walk_convex_edges(&headEdge, blitter, start_y, stop_y,
                               leftBound, rightBound, isUsingMask);
