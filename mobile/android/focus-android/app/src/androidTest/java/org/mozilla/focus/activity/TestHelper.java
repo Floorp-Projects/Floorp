@@ -40,8 +40,21 @@ public final class TestHelper {
     static final long waitingTime = DateUtils.SECOND_IN_MILLIS * 4;
 
     /********* First View Locators ***********/
-    static UiObject firstViewBtn = mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/firstrun_exitbutton")
+    static UiObject firstSlide = mDevice.findObject(new UiSelector()
+            .text("Browse like no one’s watching")
+            .enabled(true));
+    static UiObject secondSlide = mDevice.findObject(new UiSelector()
+            .text("Power up your privacy")
+            .enabled(true));
+    static UiObject lastSlide = mDevice.findObject(new UiSelector()
+            .text("A quick fix when\n" +
+                    "blocking = breaking")
+            .enabled(true));
+    static UiObject nextBtn = mDevice.findObject(new UiSelector()
+            .resourceId("org.mozilla.focus.debug:id/next")
+            .enabled(true));
+    static UiObject finishBtn = mDevice.findObject(new UiSelector()
+            .resourceId("org.mozilla.focus.debug:id/finish")
             .enabled(true));
 
     /********* Main View Locators ***********/
@@ -153,20 +166,33 @@ public final class TestHelper {
     static void pressHomeKey() {mDevice.pressHome();}
     static void openNotification() {mDevice.openNotification();}
 
-    static void swipeDownNotificationBar () {
+    static void swipeUpScreen () {
         int dHeight = mDevice.getDisplayHeight();
         int dWidth = mDevice.getDisplayWidth();
         int xScrollPosition = dWidth/2;
-        int yScrollStop = dHeight/4 * 3;
+        int yScrollStart = dHeight/4 * 3;
         mDevice.swipe(
                 xScrollPosition,
-                yScrollStop,
+                yScrollStart,
                 xScrollPosition,
                 0,
                 20
         );
     }
 
+    static void swipedownScreen () {
+        int dHeight = mDevice.getDisplayHeight();
+        int dWidth = mDevice.getDisplayWidth();
+        int xScrollPosition = dWidth/2;
+        int yScrollStart = dHeight/4;
+        mDevice.swipe(
+                xScrollPosition,
+                yScrollStart,
+                xScrollPosition,
+                dHeight,
+                20
+        );
+    }
 
     static Buffer readTestAsset(String filename) throws IOException {
         try (final InputStream stream = InstrumentationRegistry.getContext().getAssets().open(filename)) {

@@ -29,8 +29,8 @@ import okhttp3.mockwebserver.MockWebServer;
 
 import static android.support.test.espresso.action.ViewActions.click;
 import static org.junit.Assert.assertTrue;
+import static org.mozilla.focus.activity.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
-
 
 @RunWith(AndroidJUnit4.class)
 public class ImageSelectTest {
@@ -58,13 +58,10 @@ public class ImageSelectTest {
 
             try {
                 webServer.enqueue(new MockResponse()
-                        .setBody(TestHelper.readTestAsset("test.html"))
+                        .setBody(TestHelper.readTestAsset("image_test.html"))
                         .addHeader("Set-Cookie", "sphere=battery; Expires=Wed, 21 Oct 2035 07:28:00 GMT;"));
                 webServer.enqueue(new MockResponse()
                         .setBody(TestHelper.readTestAsset("rabbit.jpg")));
-                webServer.enqueue(new MockResponse()
-                        .setBody(TestHelper.readTestAsset("service-worker.js"))
-                        .setHeader("Content-Type", "text/javascript"));
 
                 webServer.start();
             } catch (IOException e) {
@@ -77,6 +74,7 @@ public class ImageSelectTest {
             super.afterActivityFinished();
 
             try {
+                webServer.close();
                 webServer.shutdown();
             } catch (IOException e) {
                 throw new AssertionError("Could not stop web server", e);
@@ -91,8 +89,12 @@ public class ImageSelectTest {
             .description("Smiley face")
             .enabled(true));
     private UiObject imageMenuTitle = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/title")
+            .resourceId("org.mozilla.focus.debug:id/topPanel")
             .enabled(true));
+    private UiObject imageMenuTitleText = TestHelper.mDevice.findObject(new UiSelector()
+            .className("android.widget.TextView")
+            .enabled(true)
+            .instance(0));
     private UiObject shareMenu = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/design_menu_item_text")
             .text("Share image")
@@ -105,7 +107,10 @@ public class ImageSelectTest {
             .resourceId("org.mozilla.focus.debug:id/design_menu_item_text")
             .text("Save image")
             .enabled(true));
-    final long waitingTime = TestHelper.waitingTime;
+    private UiObject warning = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId("org.mozilla.focus.debug:id/warning")
+            .text("Saved and shared images will not be deleted when you erase Firefox Focus (Dev) history.")
+            .enabled(true));
 
     @Test
     public void ImageMenuTest() throws InterruptedException, UiObjectNotFoundException, IOException {
@@ -129,10 +134,12 @@ public class ImageSelectTest {
         rabbitImage.dragTo(rabbitImage,5);
         imageMenuTitle.waitForExists(waitingTime);
         Assert.assertTrue(imageMenuTitle.exists());
-        Assert.assertEquals(imageMenuTitle.getText(), webServer.url(TEST_PATH).toString() + "rabbit.jpg");
+        Assert.assertEquals(imageMenuTitleText.getText(),
+                webServer.url(TEST_PATH).toString() + "rabbit.jpg");
         Assert.assertTrue(shareMenu.exists());
         Assert.assertTrue(copyMenu.exists());
         Assert.assertTrue(saveMenu.exists());
+        Assert.assertTrue(warning.exists());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             copyMenu.click();
         }
@@ -176,8 +183,6 @@ public class ImageSelectTest {
         Assert.assertTrue(rabbitImage.exists());
         rabbitImage.dragTo(rabbitImage,5);
         imageMenuTitle.waitForExists(waitingTime);
-        Assert.assertTrue(imageMenuTitle.exists());
-        Assert.assertEquals(imageMenuTitle.getText(), webServer.url(TEST_PATH).toString() + "rabbit.jpg");
         Assert.assertTrue(shareMenu.exists());
         Assert.assertTrue(copyMenu.exists());
         Assert.assertTrue(saveMenu.exists());
@@ -188,6 +193,8 @@ public class ImageSelectTest {
         Assert.assertTrue(TestHelper.shareMenuHeader.exists());
         Assert.assertTrue(TestHelper.shareAppList.exists());
         TestHelper.pressBackKey();
+        TestHelper.floatingEraseButton.perform(click());
+        TestHelper.erasedMsg.waitForExists(waitingTime);
     }
 
     @Test
@@ -225,5 +232,7 @@ public class ImageSelectTest {
         savedNotification.waitForExists(waitingTime);
         Assert.assertTrue(savedNotification.exists());
         TestHelper.pressBackKey();
+        TestHelper.floatingEraseButton.perform(click());
+        TestHelper.erasedMsg.waitForExists(waitingTime);
     }
 }

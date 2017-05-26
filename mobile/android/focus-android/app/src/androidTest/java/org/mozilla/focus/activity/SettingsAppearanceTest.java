@@ -20,6 +20,7 @@ import org.junit.runner.RunWith;
 
 import static android.support.test.espresso.action.ViewActions.click;
 import static junit.framework.Assert.assertTrue;
+import static org.mozilla.focus.activity.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 // This test checks all the headings in the Settings menu are there
@@ -40,15 +41,13 @@ public class SettingsAppearanceTest {
 
             PreferenceManager.getDefaultSharedPreferences(appContext)
                     .edit()
-                    .putBoolean(FIRSTRUN_PREF, false)
+                    .putBoolean(FIRSTRUN_PREF, true)
                     .apply();
         }
     };
 
     @Test
     public void settingsScreenTest() throws InterruptedException, UiObjectNotFoundException {
-
-        final long waitingTime = TestHelper.waitingTime;
 
         UiObject SearchEngineSelection = TestHelper.settingsList.getChild(new UiSelector()
                 .className("android.widget.LinearLayout")
@@ -67,8 +66,6 @@ public class SettingsAppearanceTest {
                 .resourceId("android:id/title"));
 
         /* Go to Settings */
-        TestHelper.firstViewBtn.waitForExists(waitingTime);
-        TestHelper.firstViewBtn.click();
         TestHelper.urlBar.waitForExists(waitingTime);
         TestHelper.menuButton.perform(click());
         TestHelper.settingsMenuItem.click();
@@ -78,8 +75,8 @@ public class SettingsAppearanceTest {
         assertTrue(SearchEngineSelection.isEnabled());
         assertTrue(searchHeading.exists());
         assertTrue(privacyHeading.exists());
+        TestHelper.swipeUpScreen();
         assertTrue(perfHeading.exists());
-        TestHelper.swipeDownNotificationBar();
         mozHeading.waitForExists(waitingTime);
         assertTrue(mozHeading.exists());
     }

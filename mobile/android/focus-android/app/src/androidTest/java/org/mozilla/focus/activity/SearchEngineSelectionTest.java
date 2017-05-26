@@ -21,6 +21,7 @@ import org.junit.runner.RunWith;
 
 import static android.support.test.espresso.action.ViewActions.click;
 import static junit.framework.Assert.assertTrue;
+import static org.mozilla.focus.activity.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 // This test checks the search engine can be changed
@@ -40,15 +41,13 @@ public class SearchEngineSelectionTest {
                     .getApplicationContext();
             PreferenceManager.getDefaultSharedPreferences(appContext)
                     .edit()
-                    .putBoolean(FIRSTRUN_PREF, false)
+                    .putBoolean(FIRSTRUN_PREF, true)
                     .apply();
         }
     };
 
     @Test
     public void SearchTest() throws InterruptedException, UiObjectNotFoundException {
-
-        final long waitingTime = TestHelper.waitingTime;
 
         UiObject SearchEngineSelection = TestHelper.settingsList.getChild(new UiSelector()
                 .className("android.widget.LinearLayout")
@@ -70,10 +69,6 @@ public class SearchEngineSelectionTest {
         UiObject yahooWebView = TestHelper.mDevice.findObject(new UiSelector()
                 .description("mozilla focus - - Yahoo Search Results")
                 .className("android.webkit.WebView"));
-
-        /* Wait for app to load, and take the First View screenshot */
-        TestHelper.firstViewBtn.click();
-        TestHelper.urlBar.waitForExists(waitingTime);
 
         /* Go to Settings and select the Search Engine */
         TestHelper.menuButton.perform(click());

@@ -20,6 +20,7 @@ import org.junit.runner.RunWith;
 
 import static android.support.test.espresso.action.ViewActions.click;
 import static junit.framework.Assert.assertTrue;
+import static org.mozilla.focus.activity.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 @RunWith(AndroidJUnit4.class)
@@ -39,15 +40,13 @@ public class TypicalUseScenarioTest {
 
             PreferenceManager.getDefaultSharedPreferences(appContext)
                     .edit()
-                    .putBoolean(FIRSTRUN_PREF, false)
+                    .putBoolean(FIRSTRUN_PREF, true)
                     .apply();
         }
     };
 
     @Test
     public void TypicalUseTest() throws InterruptedException, UiObjectNotFoundException {
-
-        final long waitingTime = TestHelper.waitingTime;
 
         UiObject blockAdTrackerEntry = TestHelper.settingsList.getChild(new UiSelector()
                 .className("android.widget.LinearLayout")
@@ -64,9 +63,6 @@ public class TypicalUseScenarioTest {
                 .instance(6));
         UiObject blockSocialTrackerValue = blockSocialTrackerEntry.getChild(new UiSelector()
                 .className("android.widget.Switch"));
-
-        TestHelper.firstViewBtn.waitForExists(waitingTime);
-        TestHelper.firstViewBtn.click();
 
         // Let's search for something
         TestHelper.urlBar.waitForExists(waitingTime);
@@ -128,6 +124,9 @@ public class TypicalUseScenarioTest {
         assertTrue(blockAdTrackerValue.getText().equals("OFF"));
         assertTrue(blockAnalyticTrackerValue.getText().equals("OFF"));
         assertTrue(blockSocialTrackerValue.getText().equals("OFF"));
+        blockAdTrackerEntry.click();
+        blockAnalyticTrackerEntry.click();
+        blockSocialTrackerEntry.click();
 
         //Back to the webpage
         TestHelper.navigateUp.click();

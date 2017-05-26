@@ -44,7 +44,7 @@ public class URLMismatchTest {
                     .getApplicationContext();
             PreferenceManager.getDefaultSharedPreferences(appContext)
                     .edit()
-                    .putBoolean(FIRSTRUN_PREF, false)
+                    .putBoolean(FIRSTRUN_PREF, true)
                     .apply();
         }
     };
@@ -58,8 +58,6 @@ public class URLMismatchTest {
                 .description("Internet for people, not profit — Mozilla"));
 
         // Search for mozilla
-        TestHelper.firstViewBtn.waitForExists(waitingTime);
-        TestHelper.firstViewBtn.click();
         TestHelper.urlBar.waitForExists(waitingTime);
         TestHelper.urlBar.click();
 

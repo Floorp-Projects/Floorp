@@ -35,6 +35,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 import static android.support.test.espresso.action.ViewActions.click;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mozilla.focus.activity.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 /**
@@ -111,8 +112,6 @@ public class WebViewDataTest {
                         .setBody(TestHelper.readTestAsset("test.html"))
                         .addHeader("Set-Cookie", "sphere=battery; Expires=Wed, 21 Oct 2035 07:28:00 GMT;"));
                 webServer.enqueue(new MockResponse()
-                        .setBody(TestHelper.readTestAsset("rabbit.jpg")));
-                webServer.enqueue(new MockResponse()
                         .setBody(TestHelper.readTestAsset("service-worker.js"))
                         .setHeader("Content-Type", "text/javascript"));
                 webServer.start();
@@ -126,19 +125,19 @@ public class WebViewDataTest {
             super.afterActivityFinished();
 
             try {
-                webServer.shutdown();
+                 webServer.shutdown();
             } catch (IOException e) {
                 throw new AssertionError("Could not stop web server", e);
             }
         }
     };
 
+
+
     @Test
     public void DeleteWebViewDataTest() throws InterruptedException, UiObjectNotFoundException, IOException {
-        final long waitingTime = TestHelper.waitingTime;
 
         // Load website with service worker
-
         TestHelper.urlBar.waitForExists(waitingTime);
         TestHelper.urlBar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
@@ -163,7 +162,6 @@ public class WebViewDataTest {
                 .enabled(true));
         cookieMsg.waitForExists(waitingTime);
         assertTrue("Cookie is saved", cookieMsg.exists());
-
         final UiObject serviceWorkerMsg = TestHelper.mDevice.findObject(new UiSelector()
                 .description("Service worker installed")
                 .enabled(true));
@@ -171,7 +169,6 @@ public class WebViewDataTest {
         assertTrue("Service worker installed", serviceWorkerMsg.exists());
 
         // Erase browsing session
-
         TestHelper.floatingEraseButton.perform(click());
         TestHelper.erasedMsg.waitForExists(waitingTime);
         Assert.assertTrue(TestHelper.erasedMsg.exists());
@@ -179,10 +176,8 @@ public class WebViewDataTest {
         TestHelper.waitForIdle();
 
         // Make sure all resources have been loaded from the web server
-
         assertPathsHaveBeenRequested(webServer,
                 "/copper/truck/destroy?smoke=violet", // Actual URL
-                "/copper/truck/rabbit.jpg", // Our service worker is installed
                 "/copper/truck/service-worker.js"); // Our service worker is installed
 
         // Now let's assert that there are no surprises in the data directory
@@ -214,7 +209,7 @@ public class WebViewDataTest {
 
         RecordedRequest request;
 
-        while ((request = webServer.takeRequest(TestHelper.waitingTime, TimeUnit.MILLISECONDS)) != null) {
+        while ((request = webServer.takeRequest(waitingTime, TimeUnit.MILLISECONDS)) != null) {
             if (!expectedPaths.remove(request.getPath())) {
                 throw new AssertionError("Unknown path requested: " + request.getPath());
             }

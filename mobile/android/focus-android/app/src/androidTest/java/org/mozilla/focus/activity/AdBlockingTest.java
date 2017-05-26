@@ -20,6 +20,7 @@ import org.junit.Test;
 import static android.support.test.espresso.action.ViewActions.click;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertFalse;
+import static org.mozilla.focus.activity.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 // This test checks basic ad blocking capability
@@ -42,14 +43,13 @@ public class AdBlockingTest {
 
             PreferenceManager.getDefaultSharedPreferences(appContext)
                     .edit()
-                    .putBoolean(FIRSTRUN_PREF, false)
+                    .putBoolean(FIRSTRUN_PREF, true)
                     .apply();
         }
     };
 
     @Test
     public void AdBlockTest() throws InterruptedException, UiObjectNotFoundException {
-        final long waitingTime = TestHelper.waitingTime;
 
         UiObject blockAdTrackerEntry = TestHelper.settingsList.getChild(new UiSelector()
                 .className("android.widget.LinearLayout")
@@ -59,9 +59,6 @@ public class AdBlockingTest {
         UiObject unBlocked = TestHelper.mDevice.findObject(new UiSelector()
                 .className("android.view.View")
                 .resourceId("ad_iframe"));
-
-        TestHelper.firstViewBtn.waitForExists(waitingTime);
-        TestHelper.firstViewBtn.click();
 
         // Let's go to ads-blocker.com/testing/
         TestHelper.urlBar.waitForExists(waitingTime);

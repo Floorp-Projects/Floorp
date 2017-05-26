@@ -12,16 +12,17 @@ import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 
+import junit.framework.Assert;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static junit.framework.Assert.assertTrue;
 import static org.mozilla.focus.activity.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 @RunWith(AndroidJUnit4.class)
-public class URLCompletionTest {
+public class OnBoardingTest {
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule
@@ -34,31 +35,29 @@ public class URLCompletionTest {
             Context appContext = InstrumentationRegistry.getInstrumentation()
                     .getTargetContext()
                     .getApplicationContext();
+
             PreferenceManager.getDefaultSharedPreferences(appContext)
                     .edit()
-                    .putBoolean(FIRSTRUN_PREF, true)
+                    .putBoolean(FIRSTRUN_PREF, false)
                     .apply();
         }
     };
 
     @Test
-    public void CompletionTest() throws InterruptedException, UiObjectNotFoundException {
+    public void OnBoardingTest() throws InterruptedException, UiObjectNotFoundException {
 
-        /* Open website */
+        // Let's search for something
+        TestHelper.firstSlide.waitForExists(waitingTime);
+        Assert.assertTrue(TestHelper.firstSlide.exists());
+        TestHelper.nextBtn.click();
+        TestHelper.secondSlide.waitForExists(waitingTime);
+        Assert.assertTrue(TestHelper.secondSlide.exists());
+        TestHelper.nextBtn.click();
+        TestHelper.lastSlide.waitForExists(waitingTime);
+        Assert.assertTrue(TestHelper.lastSlide.exists());
+        TestHelper.finishBtn.click();
+
         TestHelper.urlBar.waitForExists(waitingTime);
-        TestHelper.urlBar.click();
-
-        /* type a partial url, and check it autocompletes*/
-        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
-        TestHelper.inlineAutocompleteEditText.clearTextField();
-        TestHelper.inlineAutocompleteEditText.setText("mozilla");
-        TestHelper.hint.waitForExists(waitingTime);
-        assertTrue (TestHelper.inlineAutocompleteEditText.getText().equals("mozilla.org"));
-
-        /* type a full url, and check it does not autocomplete */
-        TestHelper.inlineAutocompleteEditText.clearTextField();;
-        TestHelper.inlineAutocompleteEditText.setText("http://www.mozilla.org");
-        TestHelper.hint.waitForExists(waitingTime);
-        assertTrue (TestHelper.inlineAutocompleteEditText.getText().equals("http://www.mozilla.org"));
+        Assert.assertTrue(TestHelper.urlBar.exists());
     }
 }

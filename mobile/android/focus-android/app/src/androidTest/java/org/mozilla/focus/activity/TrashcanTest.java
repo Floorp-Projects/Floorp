@@ -24,6 +24,7 @@ import static android.support.test.espresso.action.ViewActions.click;
 import static junit.framework.Assert.assertTrue;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.mozilla.focus.activity.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 // This test erases URL and checks for message
@@ -44,20 +45,13 @@ public class TrashcanTest {
 
             PreferenceManager.getDefaultSharedPreferences(appContext)
                     .edit()
-                    .putBoolean(FIRSTRUN_PREF, false)
+                    .putBoolean(FIRSTRUN_PREF, true)
                     .apply();
         }
     };
 
     @Test
     public void TrashTest() throws InterruptedException, UiObjectNotFoundException {
-
-        // Initialize UiDevice instance
-        final long waitingTime = TestHelper.waitingTime;
-
-        /* Wait for app to load, and take the First View screenshot */
-        TestHelper.firstViewBtn.waitForExists(waitingTime);
-        TestHelper.firstViewBtn.click();
 
         // Open a webpage
         TestHelper.urlBar.waitForExists(waitingTime);
@@ -78,13 +72,6 @@ public class TrashcanTest {
 
     @Test
     public void systemBarTest() throws InterruptedException, UiObjectNotFoundException {
-
-        // Initialize UiDevice instance
-        final long waitingTime = TestHelper.waitingTime;
-
-        /* Wait for app to load, and take the First View screenshot */
-        TestHelper.firstViewBtn.waitForExists(waitingTime);
-        TestHelper.firstViewBtn.click();
 
         // Open a webpage
         TestHelper.urlBar.waitForExists(waitingTime);
@@ -109,14 +96,8 @@ public class TrashcanTest {
     public void systemBarHomeViewTest() throws InterruptedException, UiObjectNotFoundException, RemoteException {
 
         // Initialize UiDevice instance
-        final long waitingTime = TestHelper.waitingTime;
         final int LAUNCH_TIMEOUT = 5000;
         final String FOCUS_DEBUG_APP = "org.mozilla.focus.debug";
-
-
-        /* Wait for app to load, and take the First View screenshot */
-        TestHelper.firstViewBtn.waitForExists(waitingTime);
-        TestHelper.firstViewBtn.click();
 
         // Open a webpage
         TestHelper.urlBar.waitForExists(waitingTime);
