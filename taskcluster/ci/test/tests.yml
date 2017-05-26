@@ -1308,6 +1308,7 @@ talos-g2:
     run-on-projects:
         by-test-platform:
             linux64-stylo/.*: ['mozilla-central', 'try']
+            linux64-stylo-sequential/.*: ['try']
             default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
     e10s: true
     mozharness:
