@@ -17,7 +17,7 @@
 
 class nsMathMLmactionFrame : public nsMathMLSelectedFrame {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLmactionFrame)
 
   friend nsIFrame* NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 

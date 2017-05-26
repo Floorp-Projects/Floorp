@@ -12,7 +12,7 @@
 class nsTitleBarFrame : public nsBoxFrame  
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsTitleBarFrame)
 
   friend nsIFrame* NS_NewTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);  
 

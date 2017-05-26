@@ -60,9 +60,8 @@ protected:
   {}
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(SVGGeometryFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(SVGGeometryFrame)
 
   // nsIFrame interface:
   virtual void Init(nsIContent*       aContent,

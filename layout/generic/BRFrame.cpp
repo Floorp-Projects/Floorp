@@ -27,7 +27,7 @@ namespace mozilla {
 class BRFrame final : public nsFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(BRFrame)
 
   friend nsIFrame* ::NS_NewBRFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 

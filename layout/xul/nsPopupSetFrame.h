@@ -16,7 +16,7 @@ nsIFrame* NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext
 class nsPopupSetFrame final : public nsBoxFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsPopupSetFrame)
 
   explicit nsPopupSetFrame(nsStyleContext* aContext)
     : nsBoxFrame(aContext, mozilla::LayoutFrameType::PopupSet)

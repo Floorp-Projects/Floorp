@@ -22,7 +22,7 @@ protected:
   }
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(SVGFEUnstyledLeafFrame)
 
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsRect&           aDirtyRect,

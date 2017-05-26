@@ -86,7 +86,7 @@ void nsFramesetDrag::UnSet()
 class nsHTMLFramesetBorderFrame final : public nsLeafFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsHTMLFramesetBorderFrame)
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
@@ -137,9 +137,8 @@ protected:
 class nsHTMLFramesetBlankFrame final : public nsLeafFrame
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsHTMLFramesetBlankFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsHTMLFramesetBlankFrame)
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override

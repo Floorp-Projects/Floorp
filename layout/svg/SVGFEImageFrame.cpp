@@ -35,7 +35,7 @@ protected:
   }
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(SVGFEImageFrame)
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,

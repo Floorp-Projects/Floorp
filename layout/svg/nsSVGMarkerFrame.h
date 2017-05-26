@@ -44,7 +44,7 @@ protected:
   }
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGMarkerFrame)
 
   // nsIFrame interface:
 #ifdef DEBUG
@@ -146,7 +146,7 @@ class nsSVGMarkerAnonChildFrame final : public nsSVGDisplayContainerFrame
   {}
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGMarkerAnonChildFrame)
 
 #ifdef DEBUG
   virtual void Init(nsIContent*       aContent,

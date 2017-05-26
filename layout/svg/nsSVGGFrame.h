@@ -25,7 +25,7 @@ protected:
   {}
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGGFrame)
 
 #ifdef DEBUG
   virtual void Init(nsIContent*       aContent,

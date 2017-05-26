@@ -54,8 +54,7 @@ public:
     : nsTextFrame(aContext, mozilla::LayoutFrameType::Text)
   {}
 
-  NS_DECL_QUERYFRAME_TARGET(nsTextFrame)
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsTextFrame)
 
   friend class nsContinuingTextFrame;
   friend class nsDisplayTextGeometry;

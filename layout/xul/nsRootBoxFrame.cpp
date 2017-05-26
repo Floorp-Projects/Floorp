@@ -50,7 +50,7 @@ public:
   explicit nsRootBoxFrame(nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsRootBoxFrame)
 
   virtual nsPopupSetFrame* GetPopupSetFrame() override;
   virtual void SetPopupSetFrame(nsPopupSetFrame* aPopupSet) override;

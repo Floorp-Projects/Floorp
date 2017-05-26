@@ -21,8 +21,7 @@ nsContainerFrame* NS_NewRubyBaseFrame(nsIPresShell* aPresShell,
 class nsRubyBaseFrame final : public nsRubyContentFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
-  NS_DECL_QUERYFRAME_TARGET(nsRubyBaseFrame)
+  NS_DECL_FRAMEARENA_HELPERS(nsRubyBaseFrame)
   NS_DECL_QUERYFRAME
 
 #ifdef DEBUG_FRAME_DUMP

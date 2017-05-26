@@ -131,7 +131,7 @@ protected:
   {}
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGLinearGradientFrame)
 
   // nsIFrame interface:
 #ifdef DEBUG
@@ -173,7 +173,7 @@ protected:
   {}
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGRadialGradientFrame)
 
   // nsIFrame interface:
 #ifdef DEBUG

@@ -17,7 +17,7 @@ using namespace mozilla;
 class nsAutoRepeatBoxFrame final : public nsButtonBoxFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsAutoRepeatBoxFrame)
 
   friend nsIFrame* NS_NewAutoRepeatBoxFrame(nsIPresShell* aPresShell,
                                             nsStyleContext* aContext);

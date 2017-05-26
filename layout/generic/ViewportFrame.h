@@ -25,9 +25,8 @@ namespace mozilla {
   */
 class ViewportFrame : public nsContainerFrame {
 public:
-  NS_DECL_QUERYFRAME_TARGET(ViewportFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(ViewportFrame)
 
   explicit ViewportFrame(nsStyleContext* aContext)
     : ViewportFrame(aContext, mozilla::LayoutFrameType::Viewport)

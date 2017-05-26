@@ -80,8 +80,7 @@ class nsBlockFrame : public nsContainerFrame
   using BlockReflowInput = mozilla::BlockReflowInput;
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsBlockFrame)
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsBlockFrame)
 
   typedef nsLineList::iterator LineIterator;
   typedef nsLineList::const_iterator ConstLineIterator;

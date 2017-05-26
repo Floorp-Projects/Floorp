@@ -15,7 +15,7 @@
 
 class nsMathMLsemanticsFrame : public nsMathMLSelectedFrame {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLsemanticsFrame)
 
   friend nsIFrame* NS_NewMathMLsemanticsFrame(nsIPresShell* aPresShell,
                                               nsStyleContext* aContext);

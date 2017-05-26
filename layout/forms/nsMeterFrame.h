@@ -19,9 +19,8 @@ class nsMeterFrame : public nsContainerFrame,
   typedef mozilla::dom::Element Element;
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsMeterFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMeterFrame)
 
   explicit nsMeterFrame(nsStyleContext* aContext);
   virtual ~nsMeterFrame();

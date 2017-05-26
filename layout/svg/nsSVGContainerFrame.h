@@ -47,9 +47,8 @@ protected:
   }
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsSVGContainerFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGContainerFrame)
 
   // Returns the transform to our gfxContext (to device pixels, not CSS px)
   virtual gfxMatrix GetCanvasTM() {
@@ -119,9 +118,8 @@ protected:
   }
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsSVGDisplayContainerFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGDisplayContainerFrame)
 
   // nsIFrame:
   virtual void InsertFrames(ChildListID     aListID,

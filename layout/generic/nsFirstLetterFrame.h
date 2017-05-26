@@ -13,9 +13,8 @@
 
 class nsFirstLetterFrame final : public nsContainerFrame {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsFirstLetterFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsFirstLetterFrame)
 
   explicit nsFirstLetterFrame(nsStyleContext* aContext)
     : nsContainerFrame(aContext, mozilla::LayoutFrameType::Letter)

@@ -54,9 +54,8 @@ nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
  */
 class nsPlaceholderFrame final : public nsFrame {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsPlaceholderFrame)
 #ifdef DEBUG
-  NS_DECL_QUERYFRAME_TARGET(nsPlaceholderFrame)
   NS_DECL_QUERYFRAME
 #endif
 
