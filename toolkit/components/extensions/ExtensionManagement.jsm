@@ -44,26 +44,6 @@ function parseScriptOptions(options) {
   };
 }
 
-var APIs = {
-  apis: new Map(),
-
-  register(namespace, schema, script) {
-    if (this.apis.has(namespace)) {
-      throw new Error(`API namespace already exists: ${namespace}`);
-    }
-
-    this.apis.set(namespace, {schema, script});
-  },
-
-  unregister(namespace) {
-    if (!this.apis.has(namespace)) {
-      throw new Error(`API namespace does not exist: ${namespace}`);
-    }
-
-    this.apis.delete(namespace);
-  },
-};
-
 function getURLForExtension(id, path = "") {
   let uuid = UUIDMap.get(id, false);
   if (!uuid) {
@@ -118,12 +98,7 @@ var ExtensionManagement = {
     extension.policy.active = false;
   },
 
-  registerAPI: APIs.register.bind(APIs),
-  unregisterAPI: APIs.unregister.bind(APIs),
-
   getURLForExtension,
-
-  APIs,
 };
 
 XPCOMUtils.defineLazyPreferenceGetter(ExtensionManagement, "useRemoteWebExtensions",
