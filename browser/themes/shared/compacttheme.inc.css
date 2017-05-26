@@ -246,10 +246,9 @@ toolbar:-moz-lwtheme-darktext {
   fill: rgba(255,255,255,.7);
 }
 
-#urlbar {
 %ifndef MOZ_PHOTON_THEME
+#urlbar {
   border-inline-start: none !important;
-%endif
   opacity: 1 !important;
 }
 
@@ -267,7 +266,7 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper > #urlbar:-moz-locale-dir(
      value is set in the previous rule set. o_O */
   margin-inline-start: 0;
 }
-
+%endif
 #urlbar-zoom-button:-moz-lwtheme-brighttext:hover {
   background-color: rgba(255,255,255,.2);
 }
