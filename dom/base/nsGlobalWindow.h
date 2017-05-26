@@ -1282,6 +1282,7 @@ public:
   // ChromeWindow bits.  Do NOT call these unless your window is in
   // fact an nsGlobalChromeWindow.
   uint16_t WindowState();
+  bool IsFullyOccluded();
   nsIBrowserDOMWindow* GetBrowserDOMWindowOuter();
   nsIBrowserDOMWindow* GetBrowserDOMWindow(mozilla::ErrorResult& aError);
   void SetBrowserDOMWindowOuter(nsIBrowserDOMWindow* aBrowserWindow);
