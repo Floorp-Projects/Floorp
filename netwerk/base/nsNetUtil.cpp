@@ -1585,11 +1585,10 @@ NS_GetOriginAttributes(nsIChannel *aChannel,
                        mozilla::OriginAttributes &aAttributes)
 {
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-    if (!loadInfo) {
-        return false;
+    // For some channels, they might not have loadInfo, like ExternalHelperAppParent..
+    if (loadInfo) {
+        loadInfo->GetOriginAttributes(&aAttributes);
     }
-
-    loadInfo->GetOriginAttributes(&aAttributes);
 
     bool isPrivate = false;
     nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(aChannel);
