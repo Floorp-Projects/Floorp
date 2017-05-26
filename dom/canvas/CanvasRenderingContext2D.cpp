@@ -5872,31 +5872,34 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
   IntRect srcRect(0, 0, mWidth, mHeight);
   IntRect destRect(aX, aY, aWidth, aHeight);
   IntRect srcReadRect = srcRect.Intersect(destRect);
+  if (srcReadRect.IsEmpty()) {
+    *aRetval = darray;
+    return NS_OK;
+  }
+
   RefPtr<DataSourceSurface> readback;
   DataSourceSurface::MappedSurface rawData;
-  if (!srcReadRect.IsEmpty()) {
-    RefPtr<SourceSurface> snapshot;
-    if (!mTarget && mBufferProvider) {
-      snapshot = mBufferProvider->BorrowSnapshot();
-    } else {
-      EnsureTarget();
-      if (!IsTargetValid()) {
-        return NS_ERROR_FAILURE;
-      }
-      snapshot = mTarget->Snapshot();
+  RefPtr<SourceSurface> snapshot;
+  if (!mTarget && mBufferProvider) {
+    snapshot = mBufferProvider->BorrowSnapshot();
+  } else {
+    EnsureTarget();
+    if (!IsTargetValid()) {
+      return NS_ERROR_FAILURE;
     }
+    snapshot = mTarget->Snapshot();
+  }
 
-    if (snapshot) {
-      readback = snapshot->GetDataSurface();
-    }
+  if (snapshot) {
+    readback = snapshot->GetDataSurface();
+  }
 
-    if (!mTarget && mBufferProvider) {
-      mBufferProvider->ReturnSnapshot(snapshot.forget());
-    }
+  if (!mTarget && mBufferProvider) {
+    mBufferProvider->ReturnSnapshot(snapshot.forget());
+  }
 
-    if (!readback || !readback->Map(DataSourceSurface::READ, &rawData)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  if (!readback || !readback->Map(DataSourceSurface::READ, &rawData)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   IntRect dstWriteRect = srcReadRect;
@@ -5908,16 +5911,8 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
     uint8_t* data = JS_GetUint8ClampedArrayData(darray, &isShared, nogc);
     MOZ_ASSERT(!isShared);        // Should not happen, data was created above
 
-    uint8_t* src;
-    uint32_t srcStride;
-    if (readback) {
-      srcStride = rawData.mStride;
-      src = rawData.mData + srcReadRect.y * srcStride + srcReadRect.x * 4;
-    } else {
-      src = data;
-      srcStride = aWidth * 4;
-    }
-
+    uint32_t srcStride = rawData.mStride;
+    uint8_t* src = rawData.mData + srcReadRect.y * srcStride + srcReadRect.x * 4;
     uint8_t* dst = data + dstWriteRect.y * (aWidth * 4) + dstWriteRect.x * 4;
 
     if (mOpaque) {
@@ -5931,10 +5926,7 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
     }
   }
 
-  if (readback) {
-    readback->Unmap();
-  }
-
+  readback->Unmap();
   *aRetval = darray;
   return NS_OK;
 }
