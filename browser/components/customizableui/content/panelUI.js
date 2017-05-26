@@ -70,7 +70,6 @@ const PanelUI = {
     }
 
     this._initPhotonPanel();
-    this._updateContextMenuLabels();
     Services.obs.notifyObservers(null, "appMenu-notifications-request", "refresh");
 
     this._initialized = true;
@@ -81,7 +80,6 @@ const PanelUI = {
     // If the Photon pref changes, we need to re-init our element references.
     this._initElements();
     this._initPhotonPanel();
-    this._updateContextMenuLabels();
     delete this._readyPromise;
     this._isReady = false;
   },
@@ -113,32 +111,6 @@ const PanelUI = {
         delete this[getKey];
         return this[getKey] = document.getElementById(id);
       });
-    }
-  },
-
-  _updateContextMenuLabels() {
-    const kContextMenus = [
-      "customizationPanelItemContextMenu",
-      "customizationPaletteItemContextMenu",
-      "toolbar-context-menu",
-    ];
-    for (let menuId of kContextMenus) {
-      let menu = document.getElementById(menuId);
-      if (gPhotonStructure) {
-        let items = menu.querySelectorAll("menuitem[photonlabel]");
-        for (let item of items) {
-          item.setAttribute("nonphotonlabel", item.getAttribute("label"));
-          item.setAttribute("nonphotonaccesskey", item.getAttribute("accesskey"));
-          item.setAttribute("label", item.getAttribute("photonlabel"));
-          item.setAttribute("accesskey", item.getAttribute("photonaccesskey"));
-        }
-      } else {
-        let items = menu.querySelectorAll("menuitem[nonphotonlabel]");
-        for (let item of items) {
-          item.setAttribute("label", item.getAttribute("nonphotonlabel"));
-          item.setAttribute("accesskey", item.getAttribute("nonphotonaccesskey"));
-        }
-      }
     }
   },
 
@@ -569,9 +541,6 @@ const PanelUI = {
       this.navbar.setAttribute("nonemptyoverflow", "true");
       this.overflowPanel.setAttribute("hasfixeditems", "true");
     } else if (!hasKids && this.navbar.hasAttribute("nonemptyoverflow")) {
-      if (this.overflowPanel.state != "closed") {
-        this.overflowPanel.hidePopup();
-      }
       this.overflowPanel.removeAttribute("hasfixeditems");
       this.navbar.removeAttribute("nonemptyoverflow");
     }
