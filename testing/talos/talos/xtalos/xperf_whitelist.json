@@ -33,6 +33,7 @@
  "c:\\programdata\\nvidia corporation\\drs\\nvapptimestamps": {"mincount": 22, "maxcount": 22, "minbytes": 704, "maxbytes": 704},
  "{profile}\\places.sqlite": {"mincount": 8, "maxcount": 8, "minbytes": 196808, "maxbytes": 196808},
  "c:\\windows\\system32\\dwrite.dll": {"mincount": 4, "maxcount": 4, "minbytes": 16384, "maxbytes": 90112},
+ "c:\\windows\\system32\\msctf.dll": {"mincount": 2, "maxcount": 2, "minbytes": 65536, "maxbytes": 65536},
  "c:\\users\\desktop.ini": {"mincount": 2, "maxcount": 2, "minbytes": 352, "maxbytes": 352},
  "{desktop}\\desktop.ini": {"mincount": 6, "maxcount": 6, "minbytes": 1692, "maxbytes": 1692},
  "c:\\windows\\fonts\\staticcache.dat": {"mincount": 2, "maxcount": 2, "minbytes": 120, "maxbytes": 120},
