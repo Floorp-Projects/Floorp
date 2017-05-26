@@ -44,8 +44,7 @@ nsContainerFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
 class nsFlexContainerFrame final : public nsContainerFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
-  NS_DECL_QUERYFRAME_TARGET(nsFlexContainerFrame)
+  NS_DECL_FRAMEARENA_HELPERS(nsFlexContainerFrame)
   NS_DECL_QUERYFRAME
 
   // Factory method:

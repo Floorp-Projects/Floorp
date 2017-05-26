@@ -134,8 +134,7 @@ class nsTableFrame : public nsContainerFrame
   typedef mozilla::TableReflowInput TableReflowInput;
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsTableFrame)
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsTableFrame)
 
   typedef nsTArray<nsIFrame*> FrameTArray;
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(PositionedTablePartArray, FrameTArray)

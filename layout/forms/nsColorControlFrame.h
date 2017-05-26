@@ -28,9 +28,8 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
-  NS_DECL_QUERYFRAME_TARGET(nsColorControlFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsColorControlFrame)
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;

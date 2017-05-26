@@ -22,9 +22,8 @@ class nsLineLayout;
 class nsInlineFrame : public nsContainerFrame
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsInlineFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsInlineFrame)
 
   friend nsInlineFrame* NS_NewInlineFrame(nsIPresShell* aPresShell,
                                           nsStyleContext* aContext);
@@ -212,7 +211,7 @@ protected:
  */
 class nsFirstLineFrame final : public nsInlineFrame {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsFirstLineFrame)
 
   friend nsFirstLineFrame* NS_NewFirstLineFrame(nsIPresShell* aPresShell,
                                                 nsStyleContext* aContext);

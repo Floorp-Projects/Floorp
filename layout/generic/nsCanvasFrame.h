@@ -39,9 +39,8 @@ public:
     , mAddedScrollPositionListener(false)
   {}
 
-  NS_DECL_QUERYFRAME_TARGET(nsCanvasFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsCanvasFrame)
 
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;

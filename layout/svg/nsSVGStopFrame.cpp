@@ -26,7 +26,7 @@ protected:
   }
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGStopFrame)
 
   // nsIFrame interface:
 #ifdef DEBUG

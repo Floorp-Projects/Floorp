@@ -27,7 +27,8 @@ public:
     , mScrollbarMediator(nullptr)
   {}
 
-  NS_DECL_QUERYFRAME_TARGET(nsScrollbarFrame)
+  NS_DECL_QUERYFRAME
+  NS_DECL_FRAMEARENA_HELPERS(nsScrollbarFrame)
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
@@ -39,9 +40,6 @@ public:
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
                                     nsIAtom* aAttribute,
                                     int32_t aModType) override;
-
-  NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
 
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,
                          mozilla::WidgetGUIEvent* aEvent,

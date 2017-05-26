@@ -402,9 +402,8 @@ private:
 // Issues: If/when mathml becomes a pluggable component, the separation will be needed.
 class nsMathMLmathBlockFrame : public nsBlockFrame {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsMathMLmathBlockFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLmathBlockFrame)
 
   friend nsContainerFrame* NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell,
           nsStyleContext* aContext);
@@ -484,9 +483,8 @@ protected:
 class nsMathMLmathInlineFrame : public nsInlineFrame,
                                 public nsMathMLFrame {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsMathMLmathInlineFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLmathInlineFrame)
 
   friend nsContainerFrame* NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell,
                                                        nsStyleContext* aContext);

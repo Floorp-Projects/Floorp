@@ -69,14 +69,13 @@ public:
   typedef mozilla::layers::ImageLayer ImageLayer;
   typedef mozilla::layers::LayerManager LayerManager;
 
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsImageFrame)
+  NS_DECL_QUERYFRAME
 
   explicit nsImageFrame(nsStyleContext* aContext)
     : nsImageFrame(aContext, mozilla::LayoutFrameType::Image)
   {}
 
-  NS_DECL_QUERYFRAME_TARGET(nsImageFrame)
-  NS_DECL_QUERYFRAME
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;

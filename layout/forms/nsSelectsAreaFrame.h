@@ -11,7 +11,7 @@
 class nsSelectsAreaFrame : public nsBlockFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSelectsAreaFrame)
 
   friend nsContainerFrame* NS_NewSelectsAreaFrame(nsIPresShell* aShell,
                                                   nsStyleContext* aContext,

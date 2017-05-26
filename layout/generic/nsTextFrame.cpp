@@ -4390,7 +4390,7 @@ nsTextFrame::DestroyFrom(nsIFrame* aDestructRoot)
 class nsContinuingTextFrame final : public nsTextFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsContinuingTextFrame)
 
   friend nsIFrame* NS_NewContinuingTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 

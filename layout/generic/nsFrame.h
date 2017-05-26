@@ -90,15 +90,16 @@
 // with potentially catastrophic consequences (not enough memory is
 // allocated for a frame object).
 
-#define NS_DECL_FRAMEARENA_HELPERS                                \
-  void* operator new(size_t, nsIPresShell*) MOZ_MUST_OVERRIDE;    \
-  nsQueryFrame::FrameIID GetFrameId() override MOZ_MUST_OVERRIDE;
+#define NS_DECL_FRAMEARENA_HELPERS(class)                           \
+  NS_DECL_QUERYFRAME_TARGET(class)                                  \
+  void* operator new(size_t, nsIPresShell*) MOZ_MUST_OVERRIDE;      \
+  nsQueryFrame::FrameIID GetFrameId() override MOZ_MUST_OVERRIDE {  \
+    return nsQueryFrame::class##_id;                                \
+  }
 
 #define NS_IMPL_FRAMEARENA_HELPERS(class)                         \
   void* class::operator new(size_t sz, nsIPresShell* aShell)      \
   { return aShell->AllocateFrame(nsQueryFrame::class##_id, sz); } \
-  nsQueryFrame::FrameIID class::GetFrameId()                      \
-  { return nsQueryFrame::class##_id; }
 
 #define NS_DECL_ABSTRACT_FRAME(class)                                   \
   void* operator new(size_t, nsIPresShell*) MOZ_MUST_OVERRIDE = delete; \
@@ -147,8 +148,11 @@ public:
 
   // nsQueryFrame
   NS_DECL_QUERYFRAME
+  NS_DECL_QUERYFRAME_TARGET(nsFrame)
+  virtual nsQueryFrame::FrameIID GetFrameId() MOZ_MUST_OVERRIDE {
+    return kFrameIID;
+  }
   void* operator new(size_t, nsIPresShell*) MOZ_MUST_OVERRIDE;
-  virtual nsQueryFrame::FrameIID GetFrameId() MOZ_MUST_OVERRIDE;
 
   // nsIFrame
   void Init(nsIContent*       aContent,

@@ -43,9 +43,8 @@ protected:
   typedef mozilla::LogicalMargin LogicalMargin;
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsTableCellFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsTableCellFrame)
 
   // default constructor supplied by the compiler
 
@@ -305,7 +304,7 @@ class nsBCTableCellFrame final : public nsTableCellFrame
 {
   typedef mozilla::image::DrawResult DrawResult;
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsBCTableCellFrame)
 
   nsBCTableCellFrame(nsStyleContext* aContext, nsTableFrame* aTableFrame);
 

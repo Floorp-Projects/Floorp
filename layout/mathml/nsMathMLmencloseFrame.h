@@ -44,7 +44,7 @@ enum nsMencloseNotation
 
 class nsMathMLmencloseFrame : public nsMathMLContainerFrame {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLmencloseFrame)
 
   friend nsIFrame* NS_NewMathMLmencloseFrame(nsIPresShell*   aPresShell,
                                              nsStyleContext* aContext);

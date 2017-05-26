@@ -28,7 +28,7 @@ public:
                     nsIFrame*         aPrevInFlow) override;
 
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsImageControlFrame)
 
   virtual void Reflow(nsPresContext* aPresContext,
                       ReflowOutput& aDesiredSize,

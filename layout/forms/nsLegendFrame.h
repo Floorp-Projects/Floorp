@@ -12,9 +12,8 @@
 class nsLegendFrame final : public nsBlockFrame
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsLegendFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsLegendFrame)
 
   explicit nsLegendFrame(nsStyleContext* aContext)
     : nsBlockFrame(aContext, mozilla::LayoutFrameType::Legend)
