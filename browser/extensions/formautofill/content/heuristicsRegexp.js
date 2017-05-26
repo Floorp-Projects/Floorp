@@ -202,5 +202,65 @@ var HeuristicsRegExp = {
       "|\\b성(?:[^명]|\\b)",                  // ko-KR
       "iu"
     ),
+
+    // ==== Credit Card Fields ====
+    "cc-name": new RegExp(
+      "card.?(?:holder|owner)|name.*(\\b)?on(\\b)?.*card" +
+      "|(?:card|cc).?name|cc.?full.?name" +
+      "|karteninhaber" +                  // de-DE
+      "|nombre.*tarjeta" +                // es
+      "|nom.*carte" +                     // fr-FR
+      "|nome.*cart" +                     // it-IT
+      "|名前" +                           // ja-JP
+      "|Имя.*карты" +                     // ru
+      "|信用卡开户名|开户名|持卡人姓名" + // zh-CN
+      "|持卡人姓名",                      // zh-TW
+      "iu"
+    ),
+    "cc-number": new RegExp(
+      "(add)?(?:card|cc|acct).?(?:number|#|no|num|field)" +
+      "|nummer" +                // de-DE
+      "|credito|numero|número" + // es
+      "|numéro" +                // fr-FR
+      "|カード番号" +            // ja-JP
+      "|Номер.*карты" +          // ru
+      "|信用卡号|信用卡号码" +   // zh-CN
+      "|信用卡卡號" +            // zh-TW
+      "|카드",                   // ko-KR
+      "iu"
+    ),
+    "cc-exp-month": new RegExp(
+      "expir|exp.*mo|exp.*date|ccmonth|cardmonth|addmonth" +
+      "|gueltig|gültig|monat" + // de-DE
+      "|fecha" +                // es
+      "|date.*exp" +            // fr-FR
+      "|scadenza" +             // it-IT
+      "|有効期限" +             // ja-JP
+      "|validade" +             // pt-BR, pt-PT
+      "|Срок действия карты" +  // ru
+      "|月",                    // zh-CN,
+      "iu"
+    ),
+    "cc-exp-year": new RegExp(
+      "exp|^/|(add)?year" +
+      "|ablaufdatum|gueltig|gültig|jahr" + // de-DE
+      "|fecha" +                           // es
+      "|scadenza" +                        // it-IT
+      "|有効期限" +                        // ja-JP
+      "|validade" +                        // pt-BR, pt-PT
+      "|Срок действия карты" +             // ru
+      "|年|有效期",                        // zh-CN
+      "iu"
+    ),
+    "cc-exp": new RegExp(
+      "expir|exp.*date|^expfield$" +
+      "|gueltig|gültig" +     // de-DE
+      "|fecha" +              // es
+      "|date.*exp" +          // fr-FR
+      "|scadenza" +           // it-IT
+      "|有効期限" +           // ja-JP
+      "|validade" +           // pt-BR, pt-PT
+      "|Срок действия карты", // ru
+    ),
   },
 };
