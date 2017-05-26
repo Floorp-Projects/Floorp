@@ -45,6 +45,8 @@ skip css-values-3/vh-support-transform-translate.html
 
 css-values-3/calc-in-calc.html
 fails-if(stylo) css-values-3/vh-support-atviewport.html
+# bug 1367947
+fails-if(stylo) css-values-3/vh-em-inherit.html
 
 #### CSS Writing Modes 3 #############################################
 
