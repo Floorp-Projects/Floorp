@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Apache License, Version
+ * 2.0. If a copy of the Apache License was not distributed with this file, You
+ * can obtain one at https://www.apache.org/licenses/LICENSE-2.0 */
+
 /*
  * This data was generated base on libphonenumber v8.4.1 via the script in
  * https://github.com/andreasgal/PhoneNumber.js

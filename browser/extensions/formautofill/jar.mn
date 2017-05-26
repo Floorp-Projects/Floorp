@@ -5,6 +5,7 @@
 [features/formautofill@mozilla.org] chrome.jar:
 % resource formautofill %res/
   res/ (*.jsm)
+  res/phonenumberutils/ (phonenumberutils/*.jsm)
 
 % content formautofill %content/
   content/ (content/*)
