@@ -43,10 +43,7 @@ public:
   void PostRestyleEvent(dom::Element* aElement,
                         nsRestyleHint aRestyleHint,
                         nsChangeHint aMinChangeHint);
-  void PostRestyleEventForLazyConstruction();
-  void PostRestyleEventForCSSRuleChanges(dom::Element* aElement,
-                                         nsRestyleHint aRestyleHint,
-                                         nsChangeHint aMinChangeHint);
+  void PostRestyleEventForCSSRuleChanges();
   void RebuildAllStyleData(nsChangeHint aExtraHint,
                            nsRestyleHint aRestyleHint);
   void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
