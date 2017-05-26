@@ -178,8 +178,7 @@ protected:
     virtual mozilla::ipc::IPCResult
     RecvNPN_ReloadPlugins(const bool& aReloadPages) override;
 
-    static BrowserStreamParent* StreamCast(NPP instance, NPStream* s,
-                                           PluginAsyncSurrogate** aSurrogate = nullptr);
+    static BrowserStreamParent* StreamCast(NPP instance, NPStream* s);
 
     virtual mozilla::ipc::IPCResult
     AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(
