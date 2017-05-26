@@ -131,13 +131,7 @@ void
 ServoStyleSet::InvalidateStyleForCSSRuleChanges()
 {
   MOZ_ASSERT(StylistNeedsUpdate());
-  if (Element* root = mPresContext->Document()->GetDocumentElement()) {
-    // FIXME(emilio): Add a nicer API for this.
-    mPresContext->RestyleManager()->PostRestyleEventForCSSRuleChanges(
-      root, nsRestyleHint(0), nsChangeHint(0));
-  }
-  // Do nothing, we've recorded the invalidation, and we'll invalidate stuff
-  // async when styling something.
+  mPresContext->RestyleManager()->AsServo()->PostRestyleEventForCSSRuleChanges();
 }
 
 size_t
@@ -985,13 +979,13 @@ ServoStyleSet::RecordStyleSheetChange(
     case StyleSheet::ChangeType::RuleAdded:
     case StyleSheet::ChangeType::RuleRemoved:
     case StyleSheet::ChangeType::RuleChanged:
-    case StyleSheet::ChangeType::ApplicableStateChanged:
       // FIXME(emilio): We can presumably do better in a bunch of these.
       return ForceAllStyleDirty();
+    case StyleSheet::ChangeType::ApplicableStateChanged:
     case StyleSheet::ChangeType::Added:
     case StyleSheet::ChangeType::Removed:
-      // Do nothing, we've already recorded the change in the AppendFoo methods,
-      // etc, and will act consequently.
+      // Do nothing, we've already recorded the change in the
+      // Append/Remove/Replace methods, etc, and will act consequently.
       return;
   }
 }
