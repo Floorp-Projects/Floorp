@@ -372,9 +372,9 @@ TEST(GeckoProfiler, PseudoStack)
   }
 
 #if defined(MOZ_GECKO_PROFILER)
-  SamplerStackFrameRAII raii1("A", js::ProfileEntry::Category::STORAGE, 888);
-  SamplerStackFrameDynamicRAII raii2("A", js::ProfileEntry::Category::STORAGE,
-                                     888, dynamic.get());
+  ProfilerStackFrameRAII raii1("A", js::ProfileEntry::Category::STORAGE, 888);
+  ProfilerStackFrameDynamicRAII raii2("A", js::ProfileEntry::Category::STORAGE,
+                                      888, dynamic.get());
   void* handle = profiler_call_enter("A", js::ProfileEntry::Category::NETWORK,
                                      this, 999);
   ASSERT_TRUE(profiler_get_backtrace());
