@@ -4038,6 +4038,20 @@ private:
 #undef ABSTRACT_FRAME_ID
   0];
 
+  enum FrameClassBits {
+    eFrameClassBitsNone        = 0x0,
+    eFrameClassBitsLeaf        = 0x1,
+    eFrameClassBitsDynamicLeaf = 0x2,
+  };
+  // Maps mClass to IsLeaf() flags.
+  static const FrameClassBits sFrameClassBits[
+#define FRAME_ID(...) 1 +
+#define ABSTRACT_FRAME_ID(...)
+#include "nsFrameIdList.h"
+#undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
+  0];
+
 #ifdef DEBUG_FRAME_DUMP
 public:
   static void IndentBy(FILE* out, int32_t aIndent) {
