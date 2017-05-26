@@ -33,13 +33,12 @@ stubPreparedMessages.set("new Date(0)", new ConsoleMessage({
     }
   },
   "repeat": 1,
-  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":null,\"type\":\"result\",\"level\":\"log\",\"parameters\":{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj30\",\"class\":\"Date\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":0,\"preview\":{\"timestamp\":0}},\"repeat\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":null,\"groupId\":null,\"userProvidedStyles\":null,\"notes\":null,\"indent\":0}",
+  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":null,\"type\":\"result\",\"level\":\"log\",\"parameters\":{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj30\",\"class\":\"Date\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":0,\"preview\":{\"timestamp\":0}},\"repeat\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":null,\"groupId\":null,\"userProvidedStyles\":null,\"notes\":null}",
   "stacktrace": null,
   "frame": null,
   "groupId": null,
   "userProvidedStyles": null,
-  "notes": null,
-  "indent": 0
+  "notes": null
 }));
 
 stubPreparedMessages.set("asdf()", new ConsoleMessage({
@@ -54,7 +53,7 @@ stubPreparedMessages.set("asdf()", new ConsoleMessage({
     "type": "undefined"
   },
   "repeat": 1,
-  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":null,\"type\":\"result\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":{\"type\":\"undefined\"},\"repeat\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":1},\"groupId\":null,\"exceptionDocURL\":\"https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default\",\"userProvidedStyles\":null,\"notes\":null,\"indent\":0}",
+  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":null,\"type\":\"result\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":{\"type\":\"undefined\"},\"repeat\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":1},\"groupId\":null,\"exceptionDocURL\":\"https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default\",\"userProvidedStyles\":null,\"notes\":null}",
   "stacktrace": null,
   "frame": {
     "source": "debugger eval code",
@@ -64,8 +63,7 @@ stubPreparedMessages.set("asdf()", new ConsoleMessage({
   "groupId": null,
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
   "userProvidedStyles": null,
-  "notes": null,
-  "indent": 0
+  "notes": null
 }));
 
 stubPreparedMessages.set("1 + @", new ConsoleMessage({
@@ -80,7 +78,7 @@ stubPreparedMessages.set("1 + @", new ConsoleMessage({
     "type": "undefined"
   },
   "repeat": 1,
-  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":null,\"type\":\"result\",\"level\":\"error\",\"messageText\":\"SyntaxError: illegal character\",\"parameters\":{\"type\":\"undefined\"},\"repeat\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":4},\"groupId\":null,\"exceptionDocURL\":\"https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Illegal_character?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default\",\"userProvidedStyles\":null,\"notes\":null,\"indent\":0}",
+  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":null,\"type\":\"result\",\"level\":\"error\",\"messageText\":\"SyntaxError: illegal character\",\"parameters\":{\"type\":\"undefined\"},\"repeat\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":4},\"groupId\":null,\"exceptionDocURL\":\"https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Illegal_character?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default\",\"userProvidedStyles\":null,\"notes\":null}",
   "stacktrace": null,
   "frame": {
     "source": "debugger eval code",
@@ -90,8 +88,7 @@ stubPreparedMessages.set("1 + @", new ConsoleMessage({
   "groupId": null,
   "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Illegal_character?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
   "userProvidedStyles": null,
-  "notes": null,
-  "indent": 0
+  "notes": null
 }));
 
 stubPreparedMessages.set("longString message Error", new ConsoleMessage({
@@ -111,13 +108,12 @@ stubPreparedMessages.set("longString message Error", new ConsoleMessage({
     "type": "undefined"
   },
   "repeat": 1,
-  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":null,\"type\":\"result\",\"level\":\"error\",\"messageText\":{\"type\":\"longString\",\"initial\":\"Error: Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Lon\",\"length\":110007,\"actor\":\"server1.conn0.child1/longString37\"},\"parameters\":{\"type\":\"undefined\"},\"repeat\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":null,\"groupId\":null,\"userProvidedStyles\":null,\"notes\":null,\"indent\":0}",
+  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":null,\"type\":\"result\",\"level\":\"error\",\"messageText\":{\"type\":\"longString\",\"initial\":\"Error: Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Lon\",\"length\":110007,\"actor\":\"server1.conn0.child1/longString37\"},\"parameters\":{\"type\":\"undefined\"},\"repeat\":null,\"repeatId\":null,\"stacktrace\":null,\"frame\":null,\"groupId\":null,\"userProvidedStyles\":null,\"notes\":null}",
   "stacktrace": null,
   "frame": null,
   "groupId": null,
   "userProvidedStyles": null,
-  "notes": null,
-  "indent": 0
+  "notes": null
 }));
 
 stubPackets.set("new Date(0)", {

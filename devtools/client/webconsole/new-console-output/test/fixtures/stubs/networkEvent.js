@@ -26,8 +26,7 @@ stubPreparedMessages.set("GET request", new NetworkEventMessage({
   "source": "network",
   "type": "log",
   "groupId": null,
-  "timeStamp": 1487022056850,
-  "indent": 0
+  "timeStamp": 1487022056850
 }));
 
 stubPreparedMessages.set("GET request eventTimings", new NetworkEventMessage({
@@ -52,8 +51,7 @@ stubPreparedMessages.set("GET request eventTimings", new NetworkEventMessage({
   "type": "log",
   "groupId": null,
   "timeStamp": 1486927175277,
-  "totalTime": 23,
-  "indent": 0
+  "totalTime": 23
 }));
 
 stubPreparedMessages.set("XHR GET request", new NetworkEventMessage({
@@ -69,8 +67,7 @@ stubPreparedMessages.set("XHR GET request", new NetworkEventMessage({
   "source": "network",
   "type": "log",
   "groupId": null,
-  "timeStamp": 1487022057746,
-  "indent": 0
+  "timeStamp": 1487022057746
 }));
 
 stubPreparedMessages.set("XHR GET request eventTimings", new NetworkEventMessage({
@@ -95,8 +92,7 @@ stubPreparedMessages.set("XHR GET request eventTimings", new NetworkEventMessage
   "type": "log",
   "groupId": null,
   "timeStamp": 1486927179824,
-  "totalTime": 51,
-  "indent": 0
+  "totalTime": 51
 }));
 
 stubPreparedMessages.set("XHR POST request", new NetworkEventMessage({
@@ -112,8 +108,7 @@ stubPreparedMessages.set("XHR POST request", new NetworkEventMessage({
   "source": "network",
   "type": "log",
   "groupId": null,
-  "timeStamp": 1487022058414,
-  "indent": 0
+  "timeStamp": 1487022058414
 }));
 
 stubPreparedMessages.set("XHR POST request eventTimings", new NetworkEventMessage({
@@ -138,8 +133,7 @@ stubPreparedMessages.set("XHR POST request eventTimings", new NetworkEventMessag
   "type": "log",
   "groupId": null,
   "timeStamp": 1486927183220,
-  "totalTime": 12,
-  "indent": 0
+  "totalTime": 12
 }));
 
 stubPackets.set("GET request", {
