@@ -1805,7 +1805,7 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   info.mOriginAttributes = mInfo->GetOriginAttributes();
 
   // Verify that we don't have any CSP on pristine principal.
-#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   Unused << info.mPrincipal->GetCsp(getter_AddRefs(csp));
   MOZ_DIAGNOSTIC_ASSERT(!csp);

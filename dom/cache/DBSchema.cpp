@@ -2556,7 +2556,7 @@ Migrate(mozIStorageConnection* aConn)
       }
     }
 
-#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     int32_t lastVersion = currentVersion;
 #endif
     rv = aConn->GetSchemaVersion(&currentVersion);
