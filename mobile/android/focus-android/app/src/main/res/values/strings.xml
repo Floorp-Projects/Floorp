@@ -105,10 +105,11 @@
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
-    <string name="preference_privacy_secure_mode">Secure Mode</string>
+    <string name="preference_privacy_secure_mode">Stealth</string>
     <!-- Preference Summary: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
-     and prevents the user from taking screenshots or casting the app to other displays. -->
-    <string name="preference_privacy_secure_mode_summary">Do not show app content in "recent apps" and screenshots</string>
+     and prevents the user from taking screenshots or casting the app to other displays. %1$s will be replaced with the
+     short name of the app (e.g. Focus). -->
+    <string name="preference_privacy_secure_mode_summary">Turn off stealth mode to take screenshots and see sites you’ve visited using %1$s in your Recent Apps list</string>
 
     <string name="preference_category_performance">Performance</string>
     <string name="preference_performance_block_webfonts">Block Web fonts</string>
