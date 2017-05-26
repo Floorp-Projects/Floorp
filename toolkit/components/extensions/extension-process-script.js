@@ -294,9 +294,13 @@ ExtensionManager = {
     }
   },
 
-  initExtension(data) {
-    let policy;
-    if (isContentProcess) {
+  initExtensionPolicy(data, extension) {
+    let policy = WebExtensionPolicy.getByID(data.id);
+    if (!policy) {
+      let localizeCallback = (
+        extension ? extension.localize.bind(extension)
+                  : str => extensions.get(policy).localize(str));
+
       policy = new WebExtensionPolicy({
         id: data.id,
         mozExtensionHostname: data.uuid,
@@ -308,7 +312,7 @@ ExtensionManager = {
 
         contentSecurityPolicy: data.manifest.content_security_policy,
 
-        localizeCallback: str => extensions.get(policy).localize(str),
+        localizeCallback,
 
         backgroundScripts: (data.manifest.background &&
                             data.manifest.background.scripts),
@@ -317,11 +321,13 @@ ExtensionManager = {
       });
 
       policy.active = true;
-    } else {
-      policy = WebExtensionPolicy.getByID(data.id);
+      policy.initData = data;
     }
+    return policy;
+  },
 
-    policy.initData = data;
+  initExtension(data) {
+    let policy = this.initExtensionPolicy(data);
 
     DocumentManager.initExtension(policy);
   },
@@ -375,6 +381,12 @@ ExtensionProcessScript.singleton = null;
 ExtensionProcessScript.prototype = {
   classID: Components.ID("{21f9819e-4cdf-49f9-85a0-850af91a5058}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.mozIExtensionProcessScript]),
+
+  get wrappedJSObject() { return this; },
+
+  initExtension(data, extension) {
+    return ExtensionManager.initExtensionPolicy(data, extension);
+  },
 
   initExtensionDocument(policy, doc) {
     if (DocumentManager.globals.has(getMessageManager(doc.defaultView))) {

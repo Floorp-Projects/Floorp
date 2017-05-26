@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* exported ExtensionManagement */
+
 this.EXPORTED_SYMBOLS = ["ExtensionManagement"];
 
 const Ci = Components.interfaces;
@@ -14,44 +16,10 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
-                                  "resource:///modules/E10SUtils.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "UUIDMap", () => {
-  let {UUIDMap} = Cu.import("resource://gre/modules/Extension.jsm", {});
-  return UUIDMap;
-});
-
 /*
  * This file should be kept short and simple since it's loaded even
  * when no extensions are running.
  */
-
-function parseScriptOptions(options) {
-  return {
-    allFrames: options.all_frames,
-    matchAboutBlank: options.match_about_blank,
-    frameID: options.frame_id,
-    runAt: options.run_at,
-
-    matches: new MatchPatternSet(options.matches),
-    excludeMatches: new MatchPatternSet(options.exclude_matches || []),
-    includeGlobs: options.include_globs && options.include_globs.map(glob => new MatchGlob(glob)),
-    excludeGlobs: options.include_globs && options.exclude_globs.map(glob => new MatchGlob(glob)),
-
-    jsPaths: options.js || [],
-    cssPaths: options.css || [],
-  };
-}
-
-function getURLForExtension(id, path = "") {
-  let uuid = UUIDMap.get(id, false);
-  if (!uuid) {
-    Cu.reportError(`Called getURLForExtension on unmapped extension ${id}`);
-    return null;
-  }
-  return `moz-extension://${uuid}/${path}`;
-}
 
 let cacheInvalidated = 0;
 function onCacheInvalidate() {
@@ -68,38 +36,12 @@ var ExtensionManagement = {
     return WebExtensionPolicy.isExtensionProcess;
   },
 
-  // Called when a new extension is loaded.
-  startupExtension(uuid, uri, extension) {
-    let policy = new WebExtensionPolicy({
-      id: extension.id,
-      mozExtensionHostname: uuid,
-      baseURL: uri.spec,
-
-      permissions: Array.from(extension.permissions),
-      allowedOrigins: extension.whiteListedHosts,
-      webAccessibleResources: extension.webAccessibleResources || [],
-
-      contentSecurityPolicy: extension.manifest.content_security_policy,
-
-      localizeCallback: extension.localize.bind(extension),
-
-      backgroundScripts: (extension.manifest.background &&
-                          extension.manifest.background.scripts),
-
-      contentScripts: (extension.manifest.content_scripts || []).map(parseScriptOptions),
-    });
-
-    extension.policy = policy;
-    policy.active = true;
+  getURLForExtension(id, path = "") {
+    let policy = WebExtensionPolicy.getByID(id);
+    if (!policy) {
+      Cu.reportError(`Called getURLForExtension on unmapped extension ${id}`);
+      return null;
+    }
+    return policy.getURL(path);
   },
-
-  // Called when an extension is unloaded.
-  shutdownExtension(extension) {
-    extension.policy.active = false;
-  },
-
-  getURLForExtension,
 };
-
-XPCOMUtils.defineLazyPreferenceGetter(ExtensionManagement, "useRemoteWebExtensions",
-                                      "extensions.webextensions.remote", false);
