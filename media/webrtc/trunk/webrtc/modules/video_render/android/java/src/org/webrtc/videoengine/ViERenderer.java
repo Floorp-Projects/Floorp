@@ -38,7 +38,6 @@ public class ViERenderer {
             @Override
             public void run() {
                 try {
-                    GeckoAppShell.getGeckoInterface().enableOrientationListener();
                 } catch (Exception e) {
                     Log.e(TAG, "enableOrientationListener exception: "
                           + e.getLocalizedMessage());
@@ -52,7 +51,6 @@ public class ViERenderer {
             @Override
             public void run() {
                 try {
-                    GeckoAppShell.getGeckoInterface().disableOrientationListener();
                 } catch (Exception e) {
                     Log.e(TAG,
                           "disableOrientationListener exception: " +

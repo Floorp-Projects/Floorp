@@ -128,6 +128,13 @@ protected:
                            bool* aHandled, int32_t aMaxLength);
   nsresult DidInsertBreak(Selection* aSelection, nsresult aResult);
 
+  nsresult WillSetText(Selection& aSelection,
+                       bool* aCancel,
+                       bool* aHandled,
+                       const nsAString* inString,
+                       int32_t aMaxLength);
+  nsresult DidSetText(Selection& aSelection, nsresult aResult);
+
   void WillInsert(Selection& aSelection, bool* aCancel);
   nsresult DidInsert(Selection* aSelection, nsresult aResult);
 

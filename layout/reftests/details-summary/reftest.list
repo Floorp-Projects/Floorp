@@ -65,9 +65,9 @@
 == details-writing-mode.html details-writing-mode-ref.html
 == details-in-ol.html details-in-ol-ref.html
 == summary-three-columns.html summary-three-columns-ref.html
-fails-if(stylo) == details-first-line.html details-first-line-ref.html
-fails-if(stylo) == open-details-first-line-1.html open-details-first-line-ref.html
-fails-if(stylo) == open-details-first-line-2.html open-details-first-line-ref.html
+fails-if(styloVsGecko) == details-first-line.html details-first-line-ref.html
+fails-if(styloVsGecko) == open-details-first-line-1.html open-details-first-line-ref.html
+fails-if(styloVsGecko) == open-details-first-line-2.html open-details-first-line-ref.html
 
 # Dispatch mouse click to summary
 == mouse-click-single-summary.html open-single-summary.html

@@ -1,6 +1,4 @@
 "use strict";
-// Cu is defined in xpc_head.js
-/* globals Cu */
 
 Cu.import("resource://shield-recipe-client/lib/Sampling.jsm", this);
 

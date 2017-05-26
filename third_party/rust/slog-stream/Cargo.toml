@@ -1,0 +1,19 @@
+[package]
+name = "slog-stream"
+version = "1.2.1"
+authors = ["Dawid Ciężarkiewicz <dpc@dpc.pw>"]
+description = "`io::Write` streamer for slog-rs"
+keywords = ["log", "logging", "structured", "hierarchical", "stream"]
+license = "MPL-2.0"
+documentation = "https://docs.rs/slog-stream"
+homepage = "https://github.com/slog-rs/slog"
+repository = "https://github.com/slog-rs/stream"
+readme = "README.md"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+slog = "1.2"
+slog-extra = "0.1.1"
+thread_local = "0.3.2"

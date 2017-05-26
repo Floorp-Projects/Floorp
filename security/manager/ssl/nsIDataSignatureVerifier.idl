@@ -24,6 +24,7 @@ interface nsIDataSignatureVerifier : nsISupports
    *                   then base64 encoded.
    * @returns true if the signature matches the data, false if not.
    */
+  [must_use]
   boolean verifyData(in ACString aData, in ACString aSignature, in ACString aPublicKey);
 
    /* Sig Verification Error Codes */
@@ -31,6 +32,7 @@ interface nsIDataSignatureVerifier : nsISupports
   const long VERIFY_ERROR_UNKNOWN_ISSUER = 1;
   const long VERIFY_ERROR_OTHER = 2;
 
+  [must_use]
   nsIX509Cert verifySignature(in ACString signature, in ACString plaintext,
                               out long errorCode);
 

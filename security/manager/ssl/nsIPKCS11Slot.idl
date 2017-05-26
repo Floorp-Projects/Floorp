@@ -10,19 +10,24 @@ interface nsIPK11Token;
 
 [scriptable, uuid(c2d4f296-ee60-11d4-998b-00b0d02354a0)]
 interface nsIPKCS11Slot : nsISupports {
+  [must_use]
   readonly attribute AUTF8String name;
+  [must_use]
   readonly attribute AUTF8String desc;
   /**
    * Manufacturer ID of the slot.
    */
+  [must_use]
   readonly attribute AUTF8String manID;
   /**
    * Hardware version of the slot.
    */
+  [must_use]
   readonly attribute AUTF8String HWVersion;
   /**
    * Firmware version of the slot.
    */
+  [must_use]
   readonly attribute AUTF8String FWVersion;
 
   const unsigned long SLOT_DISABLED      = 0;
@@ -31,14 +36,17 @@ interface nsIPKCS11Slot : nsISupports {
   const unsigned long SLOT_NOT_LOGGED_IN = 3;
   const unsigned long SLOT_LOGGED_IN     = 4;
   const unsigned long SLOT_READY         = 5;
+  [must_use]
   readonly attribute unsigned long status;
 
   /* This is really a workaround for now.  All of the "slot" functions
    * (isTokenPresent(), etc.) are in nsIPK11Token.  For now, return the
    * token and handle those things there.
    */
+  [must_use]
   nsIPK11Token getToken();
 
   /* more fun with workarounds - we're referring to everything by token name */
+  [must_use]
   readonly attribute AUTF8String tokenName;
 };

@@ -1,0 +1,22 @@
+[package]
+name = "language-tags"
+version = "0.2.2"
+authors = ["Pyfisch <pyfisch@gmail.com>"]
+exclude = ["README.md", ".travis.yml", ".gitignore"]
+
+description = "Language tags for Rust"
+license = "MIT"
+repository = "https://github.com/pyfisch/rust-language-tags"
+documentation = "http://pyfisch.github.io/rust-language-tags/language_tags/"
+keywords = ["language", "internationalization", "translation", "http", "html"]
+
+[dependencies.heapsize]
+version = ">=0.2.2, <0.4"
+optional = true
+
+[dependencies.heapsize_plugin]
+version = "0.1.2"
+optional = true
+
+[features]
+heap_size = ["heapsize", "heapsize_plugin"]

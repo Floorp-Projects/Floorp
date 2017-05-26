@@ -15,6 +15,7 @@ interface nsIKeygenThread;
 [scriptable, uuid(11bf5cdc-1dd2-11b2-ba6a-c76afb326fa1)]
 interface nsIGeneratingKeypairInfoDialogs : nsISupports
 {
+  [must_use]
   void displayGeneratingKeypairInfo(in nsIInterfaceRequestor ctx,
                                     in nsIKeygenThread runnable);
 };

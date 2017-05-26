@@ -74,20 +74,22 @@ always_allowed_keys = ['kind', 'description', 'cpp_guard', 'expires_in_version',
                        'bug_numbers', 'record_in_processes']
 
 whitelists = None
-try:
-    whitelist_path = os.path.join(os.path.abspath(os.path.realpath(os.path.dirname(__file__))),
-                                  'histogram-whitelists.json')
-    with open(whitelist_path, 'r') as f:
-        try:
-            whitelists = json.load(f)
-            for name, whitelist in whitelists.iteritems():
-                whitelists[name] = set(whitelist)
-        except ValueError, e:
-            raise ParserError('Error parsing whitelist: %s' % whitelist_path)
-except IOError:
-    whitelists = None
-    print('Unable to parse whitelist: %s.\nAssuming all histograms are acceptable.' %
-          whitelist_path)
+
+
+def load_whitelist():
+    try:
+        whitelist_path = os.path.join(os.path.abspath(os.path.realpath(os.path.dirname(__file__))),
+                                      'histogram-whitelists.json')
+        with open(whitelist_path, 'r') as f:
+            try:
+                whitelists = json.load(f)
+                for name, whitelist in whitelists.iteritems():
+                    whitelists[name] = set(whitelist)
+            except ValueError:
+                raise ParserError('Error parsing whitelist: %s' % whitelist_path)
+    except IOError:
+        whitelists = None
+        raise ParserError('Unable to parse whitelist: %s.' % whitelist_path)
 
 
 class Histogram:
@@ -594,6 +596,9 @@ def from_files(filenames, strict_type_checks=True):
     """Return an iterator that provides a sequence of Histograms for
 the histograms defined in filenames.
     """
+    if strict_type_checks:
+        load_whitelist()
+
     all_histograms = OrderedDict()
     for filename in filenames:
         parser = FILENAME_PARSERS[os.path.basename(filename)]

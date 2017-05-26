@@ -1,0 +1,35 @@
+language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+
+sudo: false
+
+cache:
+  apt: true
+  directories:
+    - target/debug/deps
+    - target/debug/build
+
+script:
+  - cargo build --verbose
+  - cargo test --verbose
+  - cargo build --verbose --no-default-features
+  - cargo test --verbose --no-default-features
+
+notifications:
+  email: false
+
+addons:
+  apt:
+    packages:
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+
+after_success: ./.travis_after.sh
+
+env:
+  global:
+    secure: VhNfac39x05yr7aAwvg973wdaFxFfg0PqApgHIKyilq0aNDacpPi94sSEjSw1Qan9R6SaAH5nXj6xMst18sCw9DCLZzXr7cboun6Zd+O4eB9Kna5veXASpIa9KH/GMZvILfDFTXnIbLDpvzzEuSS5tWIUu7elikmoZhOXXP82B4=

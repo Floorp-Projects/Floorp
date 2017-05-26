@@ -1,0 +1,26 @@
+language: rust
+rust:
+  - stable
+  - 1.12.0
+  - beta
+  - nightly
+
+script:
+  - make all
+  - make travistest
+  - if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then make bench ; fi
+
+env:
+  global:
+    - RUST_BACKTRACE=1
+  matrix:
+    -
+    - RELEASE=true
+
+notifications:
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/6d8e17dd2fa83b143168
+    on_success: change  # options: [always|never|change] default: always
+    on_failure: change  # options: [always|never|change] default: always
+    on_start: false     # default: false

@@ -374,7 +374,8 @@ DEFINES['GL_APICALL'] = ""
 DEFINES['GL_GLEXT_PROTOTYPES'] = ""
 DEFINES['EGLAPI'] = ""
 
-
+# Enable asserts for UNIMPLEMENTED()
+DEFINES['NOASSERT_UNIMPLEMENTED'] = '0'
 
 LOCAL_INCLUDES += [ '../../include', '../../src', '../../src/common/third_party/numerics', '../../src/third_party/khronos' ]
 

@@ -424,8 +424,6 @@ protected:
   void AssertPrivateBrowsingId();
 #endif
 
-  already_AddRefed<nsILoadInfo> CloneLoadInfoForRedirect(nsIURI *newURI, uint32_t redirectFlags);
-
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;
 

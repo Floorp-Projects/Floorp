@@ -1654,18 +1654,7 @@ public class GeckoAppShell
         return sContextGetter.getSharedPreferences();
     }
 
-    public interface AppStateListener {
-        public void onPause();
-        public void onResume();
-        public void onOrientationChanged();
-    }
-
     public interface GeckoInterface {
-        public void enableOrientationListener();
-        public void disableOrientationListener();
-        public void addAppStateListener(AppStateListener listener);
-        public void removeAppStateListener(AppStateListener listener);
-
         public boolean openUriExternal(String targetURI, String mimeType, String packageName, String className, String action, String title);
 
         public String[] getHandlersForMimeType(String mimeType, String action);
@@ -1709,16 +1698,6 @@ public class GeckoAppShell
 
     @WrapForJNI(calledFrom = "gecko")
     private static int[] initCamera(String aContentType, int aCamera, int aWidth, int aHeight) {
-        ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        if (getGeckoInterface() != null)
-                            getGeckoInterface().enableOrientationListener();
-                    } catch (Exception e) { }
-                }
-            });
-
         // [0] = 0|1 (failure/success)
         // [1] = width
         // [2] = height
@@ -1783,15 +1762,6 @@ public class GeckoAppShell
 
     @WrapForJNI(calledFrom = "gecko")
     private static synchronized void closeCamera() {
-        ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        if (getGeckoInterface() != null)
-                            getGeckoInterface().disableOrientationListener();
-                    } catch (Exception e) { }
-                }
-            });
         if (sCamera != null) {
             sCamera.stopPreview();
             sCamera.release();

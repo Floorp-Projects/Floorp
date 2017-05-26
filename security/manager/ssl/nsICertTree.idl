@@ -12,18 +12,25 @@ interface nsIX509CertList;
 
 [scriptable, uuid(d0180863-606e-49e6-8324-cf45ed4dd891)]
 interface nsICertTreeItem : nsISupports {
+  [must_use]
   readonly attribute nsIX509Cert cert;
+  [must_use]
   readonly attribute AString hostPort;
 };
 
 [scriptable, uuid(55d5ad6b-5572-47fe-941c-f01fe723659e)]
 interface nsICertTree : nsITreeView {
+  [must_use]
   void loadCerts(in unsigned long type);
+  [must_use]
   void loadCertsFromCache(in nsIX509CertList cache, in unsigned long type);
 
+  [must_use]
   nsIX509Cert getCert(in unsigned long index);
+  [must_use]
   nsICertTreeItem getTreeItem(in unsigned long index);
 
+  [must_use]
   void deleteEntryObject(in unsigned long index);
 };
 

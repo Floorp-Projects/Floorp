@@ -142,7 +142,7 @@ function synthesizeClick(element) {
 }
 
 function pushPrefs(...aPrefs) {
-  let deferred = promise.defer();
-  SpecialPowers.pushPrefEnv({"set": aPrefs}, deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": aPrefs}, resolve);
+  });
 }
