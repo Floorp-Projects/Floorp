@@ -58,9 +58,14 @@ function parseScriptOptions(options) {
   };
 }
 
+var extensions = new DefaultWeakMap(policy => {
+  let extension = new ExtensionChild.BrowserExtensionContent(policy.initData);
+  extension.policy = policy;
+  return extension;
+});
+
 class ScriptMatcher {
-  constructor(extension, matcher) {
-    this.extension = extension;
+  constructor(matcher) {
     this.matcher = matcher;
 
     this._script = null;
@@ -68,7 +73,7 @@ class ScriptMatcher {
 
   get script() {
     if (!this._script) {
-      this._script = new ExtensionContent.Script(this.extension.realExtension,
+      this._script = new ExtensionContent.Script(extensions.get(this.matcher.extension),
                                                  this.matcher);
     }
     return this._script;
@@ -130,9 +135,9 @@ class ExtensionGlobal {
       case "Extension:DetectLanguage":
         return ExtensionContent.handleDetectLanguage(this.global, target);
       case "Extension:Execute":
-        let extension = ExtensionManager.get(recipient.extensionId);
+        let policy = WebExtensionPolicy.getByID(recipient.extensionId);
 
-        let matcher = new WebExtensionContentScript(extension.policy, parseScriptOptions(data.options));
+        let matcher = new WebExtensionContentScript(policy, parseScriptOptions(data.options));
 
         let options = Object.assign(matcher, {
           wantReturnValue: data.options.wantReturnValue,
@@ -142,7 +147,7 @@ class ExtensionGlobal {
           jsCode: data.options.jsCode,
         });
 
-        let script = new ScriptMatcher(extension, options);
+        let script = new ScriptMatcher(options);
 
         return ExtensionContent.handleExtensionExecute(this.global, target, data.options, script);
       case "WebNavigation:GetFrame":
@@ -153,9 +158,7 @@ class ExtensionGlobal {
   }
 }
 
-let stubExtensions = new WeakMap();
-let scriptMatchers = new DefaultWeakMap(matcher => new ScriptMatcher(stubExtensions.get(matcher.extension),
-                                                                     matcher));
+let scriptMatchers = new DefaultWeakMap(matcher => new ScriptMatcher(matcher));
 
 // Responsible for creating ExtensionContexts and injecting content
 // scripts into them when new documents are created.
@@ -256,7 +259,7 @@ DocumentManager = {
 
   injectExtensionScripts(extension) {
     for (let window of this.enumerateWindows()) {
-      for (let script of extension.policy.contentScripts) {
+      for (let script of extension.contentScripts) {
         if (script.matchesWindow(window)) {
           scriptMatchers.get(script).injectInto(window);
         }
@@ -312,19 +315,20 @@ DocumentManager = {
       return;
     }
 
-    let extension = ExtensionManager.get(addonId);
-    if (!extension) {
+    let policy = WebExtensionPolicy.getByID(addonId);
+    if (!policy) {
       throw new Error(`No registered extension for ID ${addonId}`);
     }
 
+    let extension = extensions.get(policy);
     if (this.checkParentFrames(window, addonId) && ExtensionManagement.isExtensionProcess) {
       // We're in a top-level extension frame, or a sub-frame thereof,
       // in the extension process. Inject the full extension page API.
-      ExtensionPageChild.initExtensionContext(extension.realExtension, window);
+      ExtensionPageChild.initExtensionContext(extension, window);
     } else {
       // We're in a content sub-frame or not in the extension process.
       // Only inject a minimal content script API.
-      ExtensionContent.initExtensionContext(extension.realExtension, window);
+      ExtensionContent.initExtensionContext(extension, window);
     }
   },
 
@@ -346,71 +350,7 @@ DocumentManager = {
   },
 };
 
-/**
- * This class is a minimal stub extension object which loads and instantiates a
- * real extension object when non-basic functionality is needed.
- */
-class StubExtension {
-  constructor(data) {
-    this.data = data;
-    this.id = data.id;
-    this.uuid = data.uuid;
-    this.instanceId = data.instanceId;
-    this.manifest = data.manifest;
-    this.permissions = data.permissions;
-    this.whiteListedHosts = new MatchPatternSet(data.whiteListedHosts);
-    this.webAccessibleResources = data.webAccessibleResources.map(path => new MatchGlob(path));
-
-    this._realExtension = null;
-
-    this.startup();
-
-    this.scripts = this.policy.contentScripts.map(matcher => new ScriptMatcher(this, matcher));
-  }
-
-  startup() {
-    // Extension.jsm takes care of this in the parent.
-    if (isContentProcess) {
-      let uri = Services.io.newURI(this.data.resourceURL);
-      ExtensionManagement.startupExtension(this.uuid, uri, this);
-    } else {
-      this.policy = WebExtensionPolicy.getByID(this.id);
-    }
-
-    stubExtensions.set(this.policy, this);
-  }
-
-  shutdown() {
-    if (isContentProcess) {
-      ExtensionManagement.shutdownExtension(this);
-    }
-    if (this._realExtension) {
-      this._realExtension.shutdown();
-    }
-  }
-
-  // Lazily create the real extension object when needed.
-  get realExtension() {
-    if (!this._realExtension) {
-      this._realExtension = new ExtensionChild.BrowserExtensionContent(this.data);
-      this._realExtension.policy = this.policy;
-    }
-    return this._realExtension;
-  }
-
-  // Forward functions needed by ExtensionManagement.
-  hasPermission(...args) {
-    return this.realExtension.hasPermission(...args);
-  }
-  localize(...args) {
-    return this.realExtension.localize(...args);
-  }
-}
-
 ExtensionManager = {
-  // Map[extensionId -> StubExtension]
-  extensions: new Map(),
-
   init() {
     MessageChannel.setupMessageManagers([Services.cpmm]);
 
@@ -421,9 +361,7 @@ ExtensionManager = {
     let procData = Services.cpmm.initialProcessData || {};
 
     for (let data of procData["Extension:Extensions"] || []) {
-      let extension = new StubExtension(data);
-      this.extensions.set(data.id, extension);
-      DocumentManager.initExtension(extension);
+      this.initExtension(data);
     }
 
     if (isContentProcess) {
@@ -437,31 +375,58 @@ ExtensionManager = {
     }
   },
 
-  get(extensionId) {
-    return this.extensions.get(extensionId);
+  initExtension(data) {
+    let policy;
+    if (isContentProcess) {
+      policy = new WebExtensionPolicy({
+        id: data.id,
+        mozExtensionHostname: data.uuid,
+        baseURL: data.resourceURL,
+
+        permissions: Array.from(data.permissions),
+        allowedOrigins: new MatchPatternSet(data.whiteListedHosts),
+        webAccessibleResources: data.webAccessibleResources.map(host => new MatchGlob(host)),
+
+        contentSecurityPolicy: data.manifest.content_security_policy,
+
+        localizeCallback: str => extensions.get(policy).localize(str),
+
+        backgroundScripts: (data.manifest.background &&
+                            data.manifest.background.scripts),
+
+        contentScripts: (data.manifest.content_scripts || []).map(parseScriptOptions),
+      });
+
+      policy.active = true;
+    } else {
+      policy = WebExtensionPolicy.getByID(data.id);
+    }
+
+    policy.initData = data;
+
+    DocumentManager.initExtension(policy);
   },
 
   receiveMessage({name, data}) {
     switch (name) {
       case "Extension:Startup": {
-        let extension = new StubExtension(data);
-
-        this.extensions.set(data.id, extension);
-
-        DocumentManager.initExtension(extension);
+        this.initExtension(data);
 
         Services.cpmm.sendAsyncMessage("Extension:StartupComplete");
         break;
       }
 
       case "Extension:Shutdown": {
-        let extension = this.extensions.get(data.id);
-        this.extensions.delete(data.id);
+        let policy = WebExtensionPolicy.getByID(data.id);
 
-        if (extension) {
-          extension.shutdown();
+        if (extensions.has(policy)) {
+          extensions.get(policy).shutdown();
+        }
 
-          DocumentManager.uninitExtension(extension);
+        DocumentManager.uninitExtension(policy);
+
+        if (isContentProcess) {
+          policy.active = false;
         }
         break;
       }
