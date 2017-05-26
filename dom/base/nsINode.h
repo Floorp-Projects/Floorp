@@ -57,8 +57,8 @@ namespace mozilla {
 class EventListenerManager;
 namespace dom {
 /**
- * @return true if aChar is what the DOM spec defines as 'space character'.
- * http://dom.spec.whatwg.org/#space-character
+ * @return true if aChar is what the WHATWG defines as a 'ascii whitespace'.
+ * https://infra.spec.whatwg.org/#ascii-whitespace
  */
 inline bool IsSpaceCharacter(char16_t aChar) {
   return aChar == ' ' || aChar == '\t' || aChar == '\n' || aChar == '\r' ||
