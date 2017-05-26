@@ -283,6 +283,7 @@ template <> struct TypeToDataType<LexicalEnvironmentObject*> { static const Data
 template <> struct TypeToDataType<ArrayObject*> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<TypedArrayObject*> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<ArrayIteratorObject*> { static const DataType result = Type_Object; };
+template <> struct TypeToDataType<StringIteratorObject*> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<JSString*> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<JSFlatString*> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<HandleObject> { static const DataType result = Type_Handle; };

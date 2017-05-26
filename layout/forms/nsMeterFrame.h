@@ -19,9 +19,8 @@ class nsMeterFrame : public nsContainerFrame,
   typedef mozilla::dom::Element Element;
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsMeterFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMeterFrame)
 
   explicit nsMeterFrame(nsStyleContext* aContext);
   virtual ~nsMeterFrame();
@@ -38,8 +37,6 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("Meter"), aResult);
   }
 #endif
-
-  virtual bool IsLeaf() const override { return true; }
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;

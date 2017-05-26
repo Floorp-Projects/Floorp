@@ -20,7 +20,7 @@ class nsTableColFrame;
 class nsTableColGroupFrame final : public nsContainerFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsTableColGroupFrame)
 
   /** instantiate a new instance of nsTableRowFrame.
     * @param aPresShell the pres shell for this frame
@@ -221,7 +221,7 @@ protected:
 };
 
 inline nsTableColGroupFrame::nsTableColGroupFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, mozilla::LayoutFrameType::TableColGroup)
+  : nsContainerFrame(aContext, kClassID)
   , mColCount(0)
   , mStartColIndex(0)
 {

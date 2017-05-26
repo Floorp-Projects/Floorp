@@ -41,7 +41,7 @@ NS_QUERYFRAME_HEAD(nsPageFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsPageFrame::nsPageFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, LayoutFrameType::Page)
+  : nsContainerFrame(aContext, kClassID)
 {
 }
 
@@ -682,7 +682,7 @@ NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsPageBreakFrame)
 
 nsPageBreakFrame::nsPageBreakFrame(nsStyleContext* aContext)
-  : nsLeafFrame(aContext, LayoutFrameType::PageBreak)
+  : nsLeafFrame(aContext, kClassID)
   , mHaveReflowed(false)
 {
 }

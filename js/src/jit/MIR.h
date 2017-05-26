@@ -3536,12 +3536,22 @@ class MNewObject
 };
 
 
-class MNewArrayIterator
+class MNewIterator
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
-    explicit MNewArrayIterator(CompilerConstraintList* constraints, MConstant* templateConst)
-      : MUnaryInstruction(templateConst)
+  public:
+    enum Type {
+        ArrayIterator,
+        StringIterator,
+    };
+
+private:
+    Type type_;
+
+    MNewIterator(CompilerConstraintList* constraints, MConstant* templateConst, Type type)
+      : MUnaryInstruction(templateConst),
+        type_(type)
     {
         setResultType(MIRType::Object);
         setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject()));
@@ -3549,8 +3559,12 @@ class MNewArrayIterator
     }
 
   public:
-    INSTRUCTION_HEADER(NewArrayIterator)
+    INSTRUCTION_HEADER(NewIterator)
     TRIVIAL_NEW_WRAPPERS
+
+    Type type() const {
+        return type_;
+    }
 
     JSObject* templateObject() {
         return getOperand(0)->toConstant()->toObjectOrNull();

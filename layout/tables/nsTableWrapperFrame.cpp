@@ -42,8 +42,8 @@ nsTableWrapperFrame::GetLogicalBaseline(WritingMode aWritingMode) const
          kid->BStart(aWritingMode, mRect.Size());
 }
 
-nsTableWrapperFrame::nsTableWrapperFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, LayoutFrameType::TableWrapper)
+nsTableWrapperFrame::nsTableWrapperFrame(nsStyleContext* aContext, ClassID aID)
+  : nsContainerFrame(aContext, aID)
 {
 }
 

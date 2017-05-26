@@ -19,7 +19,7 @@
 using namespace mozilla;
 
 nsGfxButtonControlFrame::nsGfxButtonControlFrame(nsStyleContext* aContext)
-  : nsHTMLButtonControlFrame(aContext, LayoutFrameType::GfxButtonControl)
+  : nsHTMLButtonControlFrame(aContext, kClassID)
 {
 }
 
@@ -174,12 +174,6 @@ nsGfxButtonControlFrame::AttributeChanged(int32_t         aNameSpaceID,
     rv = nsHTMLButtonControlFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
   }
   return rv;
-}
-
-bool
-nsGfxButtonControlFrame::IsLeaf() const
-{
-  return true;
 }
 
 nsContainerFrame*

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Payment Request Testing</title>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+  </head>
+  <body>
+    <script type="text/javascript">
+    const supportedInstruments = [{
+      supportedMethods: [ "MyPay", "TestPay" ]
+    }];
+    const details = {
+      id: "simple details",
+      total: {
+        label: "Donation",
+        amount: { currency: "USD", value: "55.00" }
+      },
+    };
+    const payRequest = new PaymentRequest(supportedInstruments, details);
+    </script>
+  </body>
+</html>

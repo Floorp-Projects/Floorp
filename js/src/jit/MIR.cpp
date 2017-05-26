@@ -4961,8 +4961,8 @@ MObjectState::templateObjectOf(MDefinition* obj)
         return obj->toCreateThisWithTemplate()->templateObject();
     else if (obj->isNewCallObject())
         return obj->toNewCallObject()->templateObject();
-    else if (obj->isNewArrayIterator())
-        return obj->toNewArrayIterator()->templateObject();
+    else if (obj->isNewIterator())
+        return obj->toNewIterator()->templateObject();
 
     MOZ_CRASH("unreachable");
 }

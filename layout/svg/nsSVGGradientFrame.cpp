@@ -26,8 +26,8 @@ using namespace mozilla::gfx;
 // Implementation
 
 nsSVGGradientFrame::nsSVGGradientFrame(nsStyleContext* aContext,
-                                       LayoutFrameType aType)
-  : nsSVGPaintServerFrame(aContext, aType)
+                                       ClassID aID)
+  : nsSVGPaintServerFrame(aContext, aID)
   , mSource(nullptr)
   , mLoopFlag(false)
   , mNoHRefURI(false)
