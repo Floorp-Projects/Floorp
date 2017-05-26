@@ -15,7 +15,7 @@
 
 class nsMathMLTokenFrame : public nsMathMLContainerFrame {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLTokenFrame)
 
   friend nsIFrame* NS_NewMathMLTokenFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
@@ -59,7 +59,8 @@ public:
         ReflowOutput& aDesiredSize) override;
 
 protected:
-  explicit nsMathMLTokenFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
+  explicit nsMathMLTokenFrame(nsStyleContext* aContext, ClassID aID = kClassID)
+    : nsMathMLContainerFrame(aContext, aID) {}
   virtual ~nsMathMLTokenFrame();
 
   void MarkTextFramesAsTokenMathML();

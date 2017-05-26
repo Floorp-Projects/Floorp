@@ -25,12 +25,11 @@ class nsSVGGenericContainerFrame final : public nsSVGDisplayContainerFrame
 
 protected:
   explicit nsSVGGenericContainerFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext,
-                                 mozilla::LayoutFrameType::SVGGenericContainer)
+    : nsSVGDisplayContainerFrame(aContext, kClassID)
   {}
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGGenericContainerFrame)
 
   // nsIFrame:
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,

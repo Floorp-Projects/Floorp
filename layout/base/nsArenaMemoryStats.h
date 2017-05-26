@@ -50,9 +50,11 @@ struct nsArenaMemoryStats {
       #define ZERO_SIZE(kind, mSize) mSize(0),
       FOR_EACH_SIZE(ZERO_SIZE)
       #undef ZERO_SIZE
-      #define FRAME_ID(classname) FRAME_ID_STAT_FIELD(classname)(),
+      #define FRAME_ID(classname, ...) FRAME_ID_STAT_FIELD(classname)(),
+      #define ABSTRACT_FRAME_ID(...)
       #include "nsFrameIdList.h"
       #undef FRAME_ID
+      #undef ABSTRACT_FRAME_ID
       dummy()
   {}
 
@@ -61,10 +63,12 @@ struct nsArenaMemoryStats {
     #define ADD_TO_TAB_SIZES(kind, mSize) sizes->add(nsTabSizes::kind, mSize);
     FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
     #undef ADD_TO_TAB_SIZES
-    #define FRAME_ID(classname) \
+    #define FRAME_ID(classname, ...) \
       sizes->add(nsTabSizes::Other, FRAME_ID_STAT_FIELD(classname));
+    #define ABSTRACT_FRAME_ID(...)
     #include "nsFrameIdList.h"
     #undef FRAME_ID
+    #undef ABSTRACT_FRAME_ID
   }
 
   size_t getTotalSize() const
@@ -73,19 +77,23 @@ struct nsArenaMemoryStats {
     #define ADD_TO_TOTAL_SIZE(kind, mSize) total += mSize;
     FOR_EACH_SIZE(ADD_TO_TOTAL_SIZE)
     #undef ADD_TO_TOTAL_SIZE
-    #define FRAME_ID(classname) \
-    total += FRAME_ID_STAT_FIELD(classname);
+    #define FRAME_ID(classname, ...) \
+      total += FRAME_ID_STAT_FIELD(classname);
+    #define ABSTRACT_FRAME_ID(...)
     #include "nsFrameIdList.h"
     #undef FRAME_ID
+    #undef ABSTRACT_FRAME_ID
     return total;
   }
 
   #define DECL_SIZE(kind, mSize) size_t mSize;
   FOR_EACH_SIZE(DECL_SIZE)
   #undef DECL_SIZE
-  #define FRAME_ID(classname) size_t FRAME_ID_STAT_FIELD(classname);
+  #define FRAME_ID(classname, ...) size_t FRAME_ID_STAT_FIELD(classname);
+  #define ABSTRACT_FRAME_ID(...)
   #include "nsFrameIdList.h"
   #undef FRAME_ID
+  #undef ABSTRACT_FRAME_ID
   int dummy;  // present just to absorb the trailing comma from FRAME_ID in the
               // constructor
 

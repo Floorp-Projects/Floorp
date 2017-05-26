@@ -62,6 +62,7 @@
 #include "nsIXULRuntime.h"
 #include "nsICacheInfoChannel.h"
 #include "nsIDOMWindowUtils.h"
+#include "nsRedirectHistoryEntry.h"
 
 #include <algorithm>
 #include "HttpBaseChannel.h"
@@ -3195,7 +3196,12 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
     bool isInternalRedirect =
       (redirectFlags & (nsIChannelEventSink::REDIRECT_INTERNAL |
                         nsIChannelEventSink::REDIRECT_STS_UPGRADE));
-    newLoadInfo->AppendRedirectedPrincipal(GetURIPrincipal(), isInternalRedirect);
+    nsCString remoteAddress;
+    Unused << GetRemoteAddress(remoteAddress);
+    nsCOMPtr<nsIRedirectHistoryEntry> entry =
+      new nsRedirectHistoryEntry(GetURIPrincipal(), mReferrer, remoteAddress);
+
+    newLoadInfo->AppendRedirectHistoryEntry(entry, isInternalRedirect);
     newChannel->SetLoadInfo(newLoadInfo);
   }
   else {

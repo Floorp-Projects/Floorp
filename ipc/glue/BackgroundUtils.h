@@ -15,6 +15,7 @@
 
 class nsILoadInfo;
 class nsIPrincipal;
+class nsIRedirectHistoryEntry;
 
 namespace IPC {
 
@@ -49,6 +50,7 @@ struct ParamTraits<mozilla::OriginAttributes>
 namespace mozilla {
 namespace net {
 class OptionalLoadInfoArgs;
+class RedirectHistoryEntryInfo;
 } // namespace net
 
 using namespace mozilla::net;
@@ -81,6 +83,21 @@ PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
  */
 bool
 IsPincipalInfoPrivate(const PrincipalInfo& aPrincipalInfo);
+
+/**
+ * Convert an RedirectHistoryEntryInfo to a nsIRedirectHistoryEntry.
+ */
+
+already_AddRefed<nsIRedirectHistoryEntry>
+RHEntryInfoToRHEntry(const RedirectHistoryEntryInfo& aRHEntryInfo);
+
+/**
+ * Convert an nsIRedirectHistoryEntry to a RedirectHistoryEntryInfo.
+ */
+
+nsresult
+RHEntryToRHEntryInfo(nsIRedirectHistoryEntry* aRHEntry,
+                     RedirectHistoryEntryInfo* aRHEntryInfo);
 
 /**
  * Convert a LoadInfo to LoadInfoArgs struct.

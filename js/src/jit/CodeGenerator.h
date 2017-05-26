@@ -198,7 +198,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitOutOfLineNewArray(OutOfLineNewArray* ool);
     void visitNewArrayCopyOnWrite(LNewArrayCopyOnWrite* lir);
     void visitNewArrayDynamicLength(LNewArrayDynamicLength* lir);
-    void visitNewArrayIterator(LNewArrayIterator* lir);
+    void visitNewIterator(LNewIterator* lir);
     void visitNewTypedArray(LNewTypedArray* lir);
     void visitNewTypedArrayDynamicLength(LNewTypedArrayDynamicLength* lir);
     void visitNewObjectVMCall(LNewObject* lir);

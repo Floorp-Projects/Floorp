@@ -40,16 +40,15 @@ class nsSVGContainerFrame : public nsContainerFrame
   friend nsIFrame* NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
 protected:
-  nsSVGContainerFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType)
-    : nsContainerFrame(aContext, aType)
+  nsSVGContainerFrame(nsStyleContext* aContext, ClassID aID)
+    : nsContainerFrame(aContext, aID)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT);
   }
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsSVGContainerFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGContainerFrame)
 
   // Returns the transform to our gfxContext (to device pixels, not CSS px)
   virtual gfxMatrix GetCanvasTM() {
@@ -111,17 +110,16 @@ class nsSVGDisplayContainerFrame : public nsSVGContainerFrame,
                                    public nsSVGDisplayableFrame
 {
 protected:
-  nsSVGDisplayContainerFrame(nsStyleContext* aContext,
-                             mozilla::LayoutFrameType aType)
-    : nsSVGContainerFrame(aContext, aType)
+  nsSVGDisplayContainerFrame(nsStyleContext* aContext, nsIFrame::ClassID aID)
+    : nsSVGContainerFrame(aContext, aID)
   {
      AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
   }
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsSVGDisplayContainerFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_QUERYFRAME_TARGET(nsSVGDisplayContainerFrame)
+  NS_DECL_ABSTRACT_FRAME(nsSVGDisplayContainerFrame)
 
   // nsIFrame:
   virtual void InsertFrames(ChildListID     aListID,

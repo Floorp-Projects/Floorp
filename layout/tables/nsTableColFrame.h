@@ -16,7 +16,7 @@
 class nsTableColFrame final : public nsSplittableFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsTableColFrame)
 
   enum {eWIDTH_SOURCE_NONE          =0,   // no cell has contributed to the width style
         eWIDTH_SOURCE_CELL          =1,   // a cell specified a width

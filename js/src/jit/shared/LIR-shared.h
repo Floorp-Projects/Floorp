@@ -1062,12 +1062,12 @@ class LNewArrayDynamicLength : public LInstructionHelper<1, 1, 1>
     }
 };
 
-class LNewArrayIterator : public LInstructionHelper<1, 0, 1>
+class LNewIterator : public LInstructionHelper<1, 0, 1>
 {
   public:
-    LIR_HEADER(NewArrayIterator)
+    LIR_HEADER(NewIterator)
 
-    explicit LNewArrayIterator(const LDefinition& temp) {
+    explicit LNewIterator(const LDefinition& temp) {
         setTemp(0, temp);
     }
 
@@ -1075,8 +1075,8 @@ class LNewArrayIterator : public LInstructionHelper<1, 0, 1>
         return getTemp(0);
     }
 
-    MNewArrayIterator* mir() const {
-        return mir_->toNewArrayIterator();
+    MNewIterator* mir() const {
+        return mir_->toNewIterator();
     }
 };
 
@@ -4110,17 +4110,29 @@ class LFromCharCode : public LInstructionHelper<1, 1, 0>
 };
 
 // Convert uint32 code point to a string.
-class LFromCodePoint : public LInstructionHelper<1, 1, 0>
+class LFromCodePoint : public LInstructionHelper<1, 1, 2>
 {
   public:
     LIR_HEADER(FromCodePoint)
 
-    explicit LFromCodePoint(const LAllocation& codePoint) {
+    explicit LFromCodePoint(const LAllocation& codePoint, const LDefinition& temp1,
+                            const LDefinition& temp2)
+    {
         setOperand(0, codePoint);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
     }
 
     const LAllocation* codePoint() {
         return this->getOperand(0);
+    }
+
+    const LDefinition* temp1() {
+        return this->getTemp(0);
+    }
+
+    const LDefinition* temp2() {
+        return this->getTemp(1);
     }
 };
 

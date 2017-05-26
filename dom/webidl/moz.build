@@ -721,6 +721,7 @@ WEBIDL_FILES = [
     'PaintWorkletGlobalScope.webidl',
     'PannerNode.webidl',
     'ParentNode.webidl',
+    'PaymentRequest.webidl',
     'Performance.webidl',
     'PerformanceEntry.webidl',
     'PerformanceMark.webidl',

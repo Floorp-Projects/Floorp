@@ -423,8 +423,12 @@ private:
       NS_ENSURE_STATE(target);
       mTimer->SetTarget(target);
     }
-    mTimer->InitWithNamedFuncCallback(TimerCallback, this, mTimerPeriod,
-                                      nsITimer::TYPE_REPEATING_SLACK, mName);
+    mTimer->InitWithNamedFuncCallback(
+      TimerCallback,
+      this,
+      mTimerPeriod,
+      nsITimer::TYPE_REPEATING_SLACK_LOW_PRIORITY,
+      mName);
     return NS_OK;
   }
 };

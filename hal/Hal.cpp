@@ -851,11 +851,11 @@ NotifySwitchChange(const SwitchEvent& aEvent)
 }
 
 void
-SetProcessPriority(int aPid, ProcessPriority aPriority, uint32_t aLRU)
+SetProcessPriority(int aPid, ProcessPriority aPriority)
 {
   // n.b. The sandboxed implementation crashes; SetProcessPriority works only
   // from the main process.
-  PROXY_IF_SANDBOXED(SetProcessPriority(aPid, aPriority, aLRU));
+  PROXY_IF_SANDBOXED(SetProcessPriority(aPid, aPriority));
 }
 
 void
