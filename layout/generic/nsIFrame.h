@@ -607,7 +607,7 @@ public:
 
   NS_DECL_QUERYFRAME_TARGET(nsIFrame)
 
-  explicit nsIFrame(ClassID aID, mozilla::LayoutFrameType aType)
+  explicit nsIFrame(ClassID aID)
     : mRect()
     , mContent(nullptr)
     , mStyleContext(nullptr)

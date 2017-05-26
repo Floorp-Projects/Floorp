@@ -49,7 +49,7 @@ protected:
   friend nsContainerFrame* NS_NewRubyTextFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
   explicit nsRubyTextFrame(nsStyleContext* aContext)
-    : nsRubyContentFrame(aContext, kClassID, mozilla::LayoutFrameType::RubyText)
+    : nsRubyContentFrame(aContext, kClassID)
   {}
 };
 

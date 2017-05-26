@@ -396,8 +396,8 @@ public:
   };
 
 protected:
-  nsBlockFrame(nsStyleContext* aContext, ClassID aID, mozilla::LayoutFrameType aType)
-    : nsContainerFrame(aContext, aID, aType)
+  explicit nsBlockFrame(nsStyleContext* aContext, ClassID aID = kClassID)
+    : nsContainerFrame(aContext, aID)
     , mMinWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mPrefWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
   {
@@ -405,10 +405,6 @@ protected:
   InitDebugFlags();
 #endif
   }
-
-  explicit nsBlockFrame(nsStyleContext* aContext, ClassID aID = kClassID)
-    : nsBlockFrame(aContext, aID, mozilla::LayoutFrameType::Block)
-  {}
 
   virtual ~nsBlockFrame();
 

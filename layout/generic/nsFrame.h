@@ -584,9 +584,9 @@ public:
 
 protected:
   // Protected constructor and destructor
-  nsFrame(nsStyleContext* aContext, ClassID aID, mozilla::LayoutFrameType aType);
+  nsFrame(nsStyleContext* aContext, ClassID aID);
   explicit nsFrame(nsStyleContext* aContext)
-    : nsFrame(aContext, ClassID::nsFrame_id, mozilla::LayoutFrameType::None) {}
+    : nsFrame(aContext, ClassID::nsFrame_id) {}
   virtual ~nsFrame();
 
   /**

@@ -44,7 +44,7 @@ public:
 
 protected:
   explicit nsPageContentFrame(nsStyleContext* aContext)
-    : ViewportFrame(aContext, kClassID, mozilla::LayoutFrameType::PageContent)
+    : ViewportFrame(aContext, kClassID)
   {}
 
   nsSharedPageData*         mPD;

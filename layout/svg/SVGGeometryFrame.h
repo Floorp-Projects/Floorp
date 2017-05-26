@@ -49,14 +49,14 @@ class SVGGeometryFrame : public nsFrame
   friend class ::nsDisplaySVGGeometry;
 
 protected:
-  SVGGeometryFrame(nsStyleContext* aContext, nsIFrame::ClassID aID, mozilla::LayoutFrameType aType)
-    : nsFrame(aContext, aID, aType)
+  SVGGeometryFrame(nsStyleContext* aContext, nsIFrame::ClassID aID)
+    : nsFrame(aContext, aID)
   {
      AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_MAY_BE_TRANSFORMED);
   }
 
   explicit SVGGeometryFrame(nsStyleContext* aContext)
-    : SVGGeometryFrame(aContext, kClassID, mozilla::LayoutFrameType::SVGGeometry)
+    : SVGGeometryFrame(aContext, kClassID)
   {}
 
 public:

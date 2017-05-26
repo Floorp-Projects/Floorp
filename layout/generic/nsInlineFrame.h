@@ -140,13 +140,9 @@ protected:
     }
   };
 
-  nsInlineFrame(nsStyleContext* aContext, ClassID aID, mozilla::LayoutFrameType aType)
-    : nsContainerFrame(aContext, aID, aType)
+  nsInlineFrame(nsStyleContext* aContext, ClassID aID)
+    : nsContainerFrame(aContext, aID)
     , mBaseline(NS_INTRINSIC_WIDTH_UNKNOWN)
-  {}
-
-  explicit nsInlineFrame(nsStyleContext* aContext, ClassID aID = kClassID)
-    : nsInlineFrame(aContext, aID, mozilla::LayoutFrameType::Inline)
   {}
 
   virtual LogicalSides GetLogicalSkipSides(const ReflowInput* aReflowInput = nullptr) const override;
@@ -182,6 +178,10 @@ protected:
                           InlineReflowInput& aState);
 
 private:
+  explicit nsInlineFrame(nsStyleContext* aContext)
+    : nsInlineFrame(aContext, kClassID)
+  {}
+
   // Helper method for DrainSelfOverflowList() to deal with lazy parenting
   // (which we only do for nsInlineFrame, not nsFirstLineFrame).
   enum DrainFlags {
@@ -232,7 +232,7 @@ public:
 
 protected:
   explicit nsFirstLineFrame(nsStyleContext* aContext)
-    : nsInlineFrame(aContext, kClassID, mozilla::LayoutFrameType::Line)
+    : nsInlineFrame(aContext, kClassID)
   {}
 
   virtual nsIFrame* PullOneFrame(nsPresContext* aPresContext,

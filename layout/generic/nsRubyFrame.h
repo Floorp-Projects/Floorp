@@ -48,7 +48,7 @@ protected:
   friend nsContainerFrame* NS_NewRubyFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
   explicit nsRubyFrame(nsStyleContext* aContext)
-    : nsInlineFrame(aContext, kClassID, mozilla::LayoutFrameType::Ruby)
+    : nsInlineFrame(aContext, kClassID)
   {}
 
   void ReflowSegment(nsPresContext* aPresContext,

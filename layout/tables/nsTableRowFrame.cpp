@@ -130,7 +130,7 @@ NS_QUERYFRAME_HEAD(nsTableRowFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsTableRowFrame::nsTableRowFrame(nsStyleContext* aContext, ClassID aID)
-  : nsContainerFrame(aContext, aID, LayoutFrameType::TableRow)
+  : nsContainerFrame(aContext, aID)
   , mContentBSize(0)
   , mStylePctBSize(0)
   , mStyleFixedBSize(0)

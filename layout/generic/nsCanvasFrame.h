@@ -34,7 +34,7 @@ class nsCanvasFrame final : public nsContainerFrame,
 {
 public:
   explicit nsCanvasFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, kClassID, mozilla::LayoutFrameType::Canvas)
+    : nsContainerFrame(aContext, kClassID)
     , mDoPaintFocus(false)
     , mAddedScrollPositionListener(false)
   {}

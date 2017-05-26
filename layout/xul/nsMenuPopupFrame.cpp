@@ -95,7 +95,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 // nsMenuPopupFrame ctor
 //
 nsMenuPopupFrame::nsMenuPopupFrame(nsStyleContext* aContext)
-  : nsBoxFrame(aContext, kClassID, LayoutFrameType::MenuPopup)
+  : nsBoxFrame(aContext, kClassID)
   , mCurrentMenu(nullptr)
   , mView(nullptr)
   , mPrefSize(-1, -1)
