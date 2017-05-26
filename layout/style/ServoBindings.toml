@@ -86,6 +86,7 @@ bitfield-enums = [
 constified-enums = [
     "UpdateAnimationsTasks",
     "ParsingMode",
+    "ThemeWidgetType",
 ]
 constified-enum-variants = [
     { enum = "nsCSSPropertyID", variants = ["eCSSProperty_COUNT.*"] },
@@ -244,6 +245,7 @@ whitelist-types = [
     "StyleGeometryBox",
     "StyleShapeSource",
     "StyleTransition",
+    "ThemeWidgetType",
     "mozilla::UniquePtr",
     "mozilla::DefaultDelete",
     "mozilla::Side",

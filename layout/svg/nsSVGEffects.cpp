@@ -19,6 +19,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "SVGGeometryElement.h"
 #include "SVGUseElement.h"
+#include "mozilla/dom/SVGMaskElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1035,4 +1036,44 @@ nsSVGEffects::GetMaskURI(nsIFrame* aFrame, uint32_t aIndex)
   mozilla::css::URLValueData* data =
     svgReset->mMask.mLayers[aIndex].mImage.GetURLValue();
   return ResolveURLUsingLocalRef(aFrame, data);
+}
+
+bool
+nsSVGEffects::HasUserSpaceOnUseUnitsMaskOrClipPath(nsIFrame* aFrame)
+{
+  nsIFrame* firstFrame =
+    nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
+  nsSVGEffects::EffectProperties effectProperties =
+    nsSVGEffects::GetEffectProperties(firstFrame);
+
+  nsTArray<nsSVGMaskFrame*> maskFrames = effectProperties.GetMaskFrames();
+  for (uint32_t i =  0; i < maskFrames.Length() ; i++) {
+    if (maskFrames[i]) {
+      SVGMaskElement *element =
+        static_cast<SVGMaskElement*>(maskFrames[i]->GetContent());
+
+      RefPtr<SVGAnimatedEnumeration> maskUnits = element->MaskUnits();
+      RefPtr<SVGAnimatedEnumeration> contentUnits = element->MaskContentUnits();
+      if (maskUnits->AnimVal() == dom::SVG_UNIT_TYPE_USERSPACEONUSE ||
+          contentUnits->AnimVal() == dom::SVG_UNIT_TYPE_USERSPACEONUSE){
+        return true;
+      }
+    }
+  }
+
+  nsSVGClipPathFrame* clipPath = effectProperties.GetClipPathFrame();
+  if (clipPath) {
+    const nsStyleSVGReset* style = firstFrame->StyleSVGReset();
+    if (style->mClipPath.GetType() == StyleShapeSourceType::URL) {
+      SVGClipPathElement *element =
+        static_cast<SVGClipPathElement*>(clipPath->GetContent());
+
+      RefPtr<SVGAnimatedEnumeration> clipPathUnits = element->ClipPathUnits();
+      if (clipPathUnits->AnimVal()  == dom::SVG_UNIT_TYPE_USERSPACEONUSE) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }

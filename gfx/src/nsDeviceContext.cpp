@@ -62,6 +62,8 @@ public:
     void Compact();
     void Flush();
 
+    void UpdateUserFonts(gfxUserFontSet* aUserFontSet);
+
 protected:
     ~nsFontCache() {}
 
@@ -147,6 +149,17 @@ nsFontCache::GetMetricsFor(const nsFont& aFont,
 }
 
 void
+nsFontCache::UpdateUserFonts(gfxUserFontSet* aUserFontSet)
+{
+    for (nsFontMetrics* fm : mFontMetrics) {
+        gfxFontGroup* fg = fm->GetThebesFontGroup();
+        if (fg->GetUserFontSet() == aUserFontSet) {
+            fg->UpdateUserFonts();
+        }
+    }
+}
+
+void
 nsFontCache::FontMetricsDeleted(const nsFontMetrics* aFontMetrics)
 {
     mFontMetrics.RemoveElement(aFontMetrics);
@@ -212,6 +225,14 @@ nsDeviceContext::InitFontCache()
     if (!mFontCache) {
         mFontCache = new nsFontCache();
         mFontCache->Init(this);
+    }
+}
+
+void
+nsDeviceContext::UpdateFontCacheUserFonts(gfxUserFontSet* aUserFontSet)
+{
+    if (mFontCache) {
+        mFontCache->UpdateUserFonts(aUserFontSet);
     }
 }
 

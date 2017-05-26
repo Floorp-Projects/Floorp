@@ -33,13 +33,37 @@
     <issue id="Instantiatable" severity="warning" />
     <issue id="LongLogTag" severity="warning" />
     <issue id="MissingPermission" severity="warning" />
-    <issue id="NewApi" severity="warning" />
     <issue id="OnClick" severity="warning" />
     <issue id="ReferenceType" severity="warning" />
     <issue id="ResourceAsColor" severity="warning" />
     <issue id="ResourceType" severity="warning" />
     <issue id="ValidFragment" severity="warning" />
     <issue id="WrongConstant" severity="warning" />
+
+    <!-- Fixes are in progress but we would like to block future candidates.
+         The ** in the path are wildcards. We need these wildcards to not change our code structure.
+         See: http://stackoverflow.com/questions/43994420/what-path-is-the-issue-ignore-path-element-in-lint-xml-relative-to -->
+    <issue id="NewApi" severity="error">
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/activitystream/ActivityStreamPreference.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/dlc/DownloadContentTelemetry.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/preferences/LocaleListPreference.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/media/MediaControlService.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/db/PerProfileDatabaseProvider.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/PrintHelper.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/animation/PropertyAnimator.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/RemotePresentationService.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/db/SharedBrowserDatabaseProvider.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/toolbar/TabCounter.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/tabs/TabPanelBackButton.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/toolbar/ToolbarEditText.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/util/ViewUtil.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/webapps/WebAppActivity.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/IntentHelper.java"/>
+        <ignore path="**/media/webrtc/trunk/webrtc/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioEffects.java"/>
+        <ignore path="**/media/webrtc/trunk/webrtc/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioRecord.java"/>
+        <ignore path="**/mobile/android/base/resources/values/styles.xml"/>
+        <ignore path="**/mobile/android/base/resources/values/themes.xml"/>
+    </issue>
 
     <!-- We fixed all "Registered" lint errors. However the current gradle plugin has a bug where
          it ignores @SuppressLint annotations for this check. See CrashReporter class and
