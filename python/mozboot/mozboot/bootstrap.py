@@ -272,28 +272,6 @@ class Bootstrapper(object):
 
         state_dir_available = os.path.exists(state_dir)
 
-        # Install the clang packages needed for developing stylo.
-        if not self.instance.no_interactive:
-            choice = self.instance.prompt_int(
-                prompt=STYLO_DEVELOPMENT_INFO,
-                low=1,
-                high=2)
-
-            # The best place to install our packages is in the state directory
-            # we have.  If the user doesn't have one, we need them to re-run
-            # bootstrap and create the directory.
-            #
-            # XXX Android bootstrap just assumes the existence of the state
-            # directory and writes the NDK into it.  Should we do the same?
-            if choice == 1:
-                if not state_dir_available:
-                    print(STYLO_DIRECTORY_MESSAGE.format(statedir=state_dir))
-                    sys.exit(1)
-
-                self.instance.stylo = True
-                self.instance.state_dir = state_dir
-                self.instance.ensure_stylo_packages(state_dir)
-
         checkout_type = current_firefox_checkout(check_output=self.instance.check_output,
                                                  hg=self.instance.which('hg'))
 
@@ -326,6 +304,28 @@ class Bootstrapper(object):
 
         if not have_clone:
             print(SOURCE_ADVERTISE)
+
+        # Install the clang packages needed for developing stylo.
+        if not self.instance.no_interactive:
+            choice = self.instance.prompt_int(
+                prompt=STYLO_DEVELOPMENT_INFO,
+                low=1,
+                high=2)
+
+            # The best place to install our packages is in the state directory
+            # we have.  If the user doesn't have one, we need them to re-run
+            # bootstrap and create the directory.
+            #
+            # XXX Android bootstrap just assumes the existence of the state
+            # directory and writes the NDK into it.  Should we do the same?
+            if choice == 1:
+                if not state_dir_available:
+                    print(STYLO_DIRECTORY_MESSAGE.format(statedir=state_dir))
+                    sys.exit(1)
+
+                self.instance.stylo = True
+                self.instance.state_dir = state_dir
+                self.instance.ensure_stylo_packages(state_dir)
 
         print(self.finished % name)
         if not (self.instance.which('rustc') and self.instance._parse_version('rustc') >= MODERN_RUST_VERSION):
