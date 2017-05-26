@@ -1229,12 +1229,6 @@ nsXREDirProvider::DoShutdown()
   PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
 
   if (mProfileNotified) {
-#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
-    if (XRE_IsParentProcess()) {
-      Unused << DeleteDirIfExists(mContentProcessSandboxTempDir);
-    }
-#endif
-
     nsCOMPtr<nsIObserverService> obsSvc =
       mozilla::services::GetObserverService();
     NS_ASSERTION(obsSvc, "No observer service?");
@@ -1257,6 +1251,12 @@ nsXREDirProvider::DoShutdown()
     }
     mProfileNotified = false;
   }
+
+#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
+  if (XRE_IsParentProcess()) {
+    Unused << DeleteDirIfExists(mContentProcessSandboxTempDir);
+  }
+#endif
 }
 
 #ifdef XP_WIN
