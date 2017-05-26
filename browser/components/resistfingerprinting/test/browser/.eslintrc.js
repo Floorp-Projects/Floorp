@@ -5,7 +5,4 @@ module.exports = {
     "plugin:mozilla/browser-test"
   ],
 
-  "rules": {
-    "no-undef": "error"
-  }
 };

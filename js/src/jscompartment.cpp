@@ -681,9 +681,9 @@ JSCompartment::traceOutgoingCrossCompartmentWrappers(JSTracer* trc)
     MOZ_ASSERT(JS::CurrentThreadIsHeapMajorCollecting());
     MOZ_ASSERT(!zone()->isCollectingFromAnyThread() || trc->runtime()->gc.isHeapCompacting());
 
-    for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        Value v = e.front().value().unbarrieredGet();
+    for (NonStringWrapperEnum e(this); !e.empty(); e.popFront()) {
         if (e.front().key().is<JSObject*>()) {
+            Value v = e.front().value().unbarrieredGet();
             ProxyObject* wrapper = &v.toObject().as<ProxyObject>();
 
             /*

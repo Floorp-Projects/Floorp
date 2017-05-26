@@ -137,7 +137,7 @@ nsSHEntryShared::SetContentViewer(nsIContentViewer* aViewer)
   // If we're setting mContentViewer to null, state should already be cleared
   // in the DropPresentationState() call above; If we're setting it to a
   // non-null content viewer, the entry shouldn't have been tracked either.
-  MOZ_DIAGNOSTIC_ASSERT(!GetExpirationState()->IsTracked());
+  MOZ_ASSERT(!GetExpirationState()->IsTracked());
   mContentViewer = aViewer;
 
   if (mContentViewer) {

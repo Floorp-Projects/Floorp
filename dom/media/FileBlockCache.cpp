@@ -20,6 +20,16 @@ LazyLogModule gFileBlockCacheLog("FileBlockCache");
 #define LOG(x, ...) MOZ_LOG(gFileBlockCacheLog, LogLevel::Debug, \
   ("%p " x, this, ##__VA_ARGS__))
 
+static void
+CloseFD(PRFileDesc* aFD)
+{
+  PRStatus prrc;
+  prrc = PR_Close(aFD);
+  if (prrc != PR_SUCCESS) {
+    NS_WARNING("PR_Close() failed.");
+  }
+}
+
 void
 FileBlockCache::SetCacheFile(PRFileDesc* aFD)
 {
@@ -36,17 +46,23 @@ FileBlockCache::SetCacheFile(PRFileDesc* aFD)
   }
   {
     MutexAutoLock lock(mDataMutex);
-    if (!mIsOpen) {
-      // We've been closed while waiting for the file descriptor. Bail out.
-      // Rely on the destructor to close the file descriptor.
+    if (mIsOpen) {
+      // Still open, complete the initialization.
+      mInitialized = true;
+      if (mIsWriteScheduled) {
+        // A write was scheduled while waiting for FD. We need to run/dispatch a
+        // task to service the request.
+        mThread->Dispatch(this, NS_DISPATCH_NORMAL);
+      }
       return;
     }
-    mInitialized = true;
-    if (mIsWriteScheduled) {
-      // A write was scheduled while waiting for FD. We need to run/dispatch a
-      // task to service the request.
-      mThread->Dispatch(this, NS_DISPATCH_NORMAL);
-    }
+  }
+  // We've been closed while waiting for the file descriptor.
+  // Close the file descriptor we've just received, if still there.
+  MutexAutoLock lock(mFileMutex);
+  if (mFD) {
+    CloseFD(mFD);
+    mFD = nullptr;
   }
 }
 
@@ -135,11 +151,7 @@ void FileBlockCache::Close()
   // Also mThread and mFD are empty and therefore can be reused immediately.
   nsresult rv = thread->Dispatch(NS_NewRunnableFunction([thread, fd] {
     if (fd) {
-      PRStatus prrc;
-      prrc = PR_Close(fd);
-      if (prrc != PR_SUCCESS) {
-        NS_WARNING("PR_Close() failed.");
-      }
+      CloseFD(fd);
     }
     // We must shut down the thread in another runnable. This is called
     // while we're shutting down the media cache, and nsIThread::Shutdown()
@@ -289,7 +301,6 @@ nsresult FileBlockCache::Run()
   MutexAutoLock mon(mDataMutex);
   NS_ASSERTION(!mChangeIndexList.empty(), "Only dispatch when there's work to do");
   NS_ASSERTION(mIsWriteScheduled, "Should report write running or scheduled.");
-  MOZ_ASSERT(mFD);
 
   LOG("Run() mFD=%p mIsOpen=%d", mFD, mIsOpen);
 
@@ -318,7 +329,6 @@ nsresult FileBlockCache::Run()
     // overwrites the mBlockChanges entry for this block while we drop
     // mDataMutex to take mFileMutex.
     int32_t blockIndex = mChangeIndexList.front();
-    mChangeIndexList.pop_front();
     RefPtr<BlockChange> change = mBlockChanges[blockIndex];
     MOZ_ASSERT(change,
                "Change index list should only contain entries for blocks "
@@ -326,12 +336,18 @@ nsresult FileBlockCache::Run()
     {
       MutexAutoUnlock unlock(mDataMutex);
       MutexAutoLock lock(mFileMutex);
+      if (!mFD) {
+        // We may be here if mFD has been reset because we're closing, so we
+        // don't care anymore about writes.
+        return NS_OK;
+      }
       if (change->IsWrite()) {
         WriteBlockToFile(blockIndex, change->mData.get());
       } else if (change->IsMove()) {
         MoveBlockInFile(change->mSourceBlockIndex, blockIndex);
       }
     }
+    mChangeIndexList.pop_front();
     // If a new change has not been made to the block while we dropped
     // mDataMutex, clear reference to the old change. Otherwise, the old
     // reference has been cleared already.
@@ -398,6 +414,10 @@ nsresult FileBlockCache::Read(int64_t aOffset,
       {
         MutexAutoUnlock unlock(mDataMutex);
         MutexAutoLock lock(mFileMutex);
+        if (!mFD) {
+          // Not initialized yet, or closed.
+          return NS_ERROR_FAILURE;
+        }
         res = ReadFromFile(BlockIndexToOffset(blockIndex) + start,
                            dst,
                            amount,

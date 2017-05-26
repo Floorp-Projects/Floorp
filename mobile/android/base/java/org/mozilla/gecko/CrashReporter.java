@@ -19,6 +19,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
@@ -410,7 +412,10 @@ public class CrashReporter extends AppCompatActivity
 
         Log.i(LOGTAG, "server url: " + spec);
         try {
-            URI uri = new URI(spec);
+            final URL url = new URL(URLDecoder.decode(spec, "UTF-8"));
+            final URI uri = new URI(url.getProtocol(), url.getUserInfo(),
+                                    url.getHost(), url.getPort(),
+                                    url.getPath(), url.getQuery(), url.getRef());
             HttpURLConnection conn = (HttpURLConnection)ProxySelector.openConnectionWithProxy(uri);
             conn.setRequestMethod("POST");
             String boundary = generateBoundary();

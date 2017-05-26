@@ -79,6 +79,10 @@ ul {
   list-style: disc;
 }
 
+dt {
+  font-weight: bold;
+}
+
 /* Buttons */
 .button-container {
   margin-top: 1.2em;

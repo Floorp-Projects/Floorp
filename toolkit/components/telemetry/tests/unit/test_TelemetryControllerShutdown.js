@@ -42,12 +42,12 @@ add_task(async function test_setup() {
  * CRASH_TIMEOUT_MS to complete.
  */
 add_task(async function test_sendTelemetryShutsDownWithinReasonableTimeout() {
-  const CRASH_TIMEOUT_MS = 5 * 1000;
+  const CRASH_TIMEOUT_MS = 10 * 1000;
   // Enable testing mode for AsyncShutdown, otherwise some testing-only functionality
   // is not available.
   Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
   // Reducing the max delay for waitiing on phases to complete from 1 minute
-  // (standard) to 10 seconds to avoid blocking the tests in case of misbehavior.
+  // (standard) to 20 seconds to avoid blocking the tests in case of misbehavior.
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", CRASH_TIMEOUT_MS);
 
   let httpServer = new HttpServer();

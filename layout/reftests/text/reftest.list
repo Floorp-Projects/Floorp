@@ -18,7 +18,7 @@ random-if(!cocoaWidget) == font-size-adjust-02.html font-size-adjust-02-ref.html
 != justification-2d.html justification-2-ref.html
 == justification-cjk-extension.html justification-cjk-extension-ref.html
 == justification-space-diacritic.html justification-space-diacritic-ref.html
-skip-if(stylo) HTTP(..) load ligature-with-space-1.html
+skip-if(styloVsGecko) HTTP(..) load ligature-with-space-1.html
 == line-editing-1a.html line-editing-1-ref.html
 == line-editing-1b.html line-editing-1-ref.html
 == line-editing-1c.html line-editing-1-ref.html
@@ -119,13 +119,13 @@ skip-if(Android) == wordbreak-4a.html wordbreak-4a-ref.html
 == wordbreak-5.html wordbreak-5-ref.html
 fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == wordbreak-6.html wordbreak-6-ref.html # Bug 1258239
 HTTP(..) == wordbreak-7a.html wordbreak-7a-ref.html
-fails-if(!stylo) HTTP(..) == wordbreak-7b.html wordbreak-7b-ref.html # bug 479829
+fails-if(!styloVsGecko) HTTP(..) == wordbreak-7b.html wordbreak-7b-ref.html # bug 479829
 == wordbreak-8.html wordbreak-8-ref.html
 pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == wordbreak-9.html wordbreak-9-ref.html
 == wordbreak-dynamic-1.html wordbreak-dynamic-1-ref.html
-fails-if(stylo) == wordwrap-01.html wordwrap-01-ref.html
-fails-if(stylo) HTTP(..) == wordwrap-02.html wordwrap-02-ref.html
-fuzzy-if(gtkWidget,1,177) fuzzy-if(skiaContent,1,50) fails-if(stylo) HTTP(..) == wordwrap-03.html wordwrap-03-ref.html # Fuzzy on Linux because the native textbox gradient is painted in a slightly different position depending on the invalid area.
+fails-if(styloVsGecko) == wordwrap-01.html wordwrap-01-ref.html
+fails-if(styloVsGecko) HTTP(..) == wordwrap-02.html wordwrap-02-ref.html
+fuzzy-if(gtkWidget,1,177) fuzzy-if(skiaContent,1,50) fails-if(styloVsGecko) HTTP(..) == wordwrap-03.html wordwrap-03-ref.html # Fuzzy on Linux because the native textbox gradient is painted in a slightly different position depending on the invalid area.
 == wordwrap-04.html wordwrap-04-ref.html
 == overflowwrap-04.html wordwrap-04-ref.html
 == wordwrap-05.html wordwrap-05-ref.html
@@ -134,12 +134,12 @@ fuzzy-if(gtkWidget,1,177) fuzzy-if(skiaContent,1,50) fails-if(stylo) HTTP(..) ==
 == overflowwrap-06.html wordwrap-06-ref.html
 == wordwrap-07.html wordwrap-07-ref.html
 == overflowwrap-07.html wordwrap-07-ref.html
-fails-if(stylo) != wordwrap-08.html wordwrap-01-ref.html
-fails-if(stylo) == wordwrap-08.html wordwrap-08-ref.html
-fails-if(stylo) != wordwrap-09.html wordwrap-01-ref.html
-fails-if(stylo) != overflowwrap-09.html wordwrap-01-ref.html
-fails-if(stylo) == wordwrap-09.html wordwrap-09-ref.html
-fails-if(stylo) == overflowwrap-09.html wordwrap-09-ref.html
+fails-if(styloVsGecko) != wordwrap-08.html wordwrap-01-ref.html
+fails-if(styloVsGecko) == wordwrap-08.html wordwrap-08-ref.html
+fails-if(styloVsGecko) != wordwrap-09.html wordwrap-01-ref.html
+fails-if(styloVsGecko) != overflowwrap-09.html wordwrap-01-ref.html
+fails-if(styloVsGecko) == wordwrap-09.html wordwrap-09-ref.html
+fails-if(styloVsGecko) == overflowwrap-09.html wordwrap-09-ref.html
 == wordwrap-10.html wordwrap-10-ref.html # bug 752459
 == overflowwrap-10.html wordwrap-10-ref.html
 == word-spacing-01.html word-spacing-01-ref.html
@@ -151,7 +151,7 @@ HTTP(..) == zwnj-02.xhtml zwnj-02-ref.xhtml # HTTP(..) for ../filters.svg
 == initial-zwj-1.html initial-zwj-1-ref.html
 == cgj-01.html cgj-01-ref.html
 == 444656.html 444656-ref.html
-fails-if(stylo) == 449555-1.html 449555-1-ref.html
+fails-if(styloVsGecko) == 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
 fuzzy-if(skiaContent,1,600) HTTP(..) == 475092-sub.html 475092-ref.html
 fails-if(Android) fuzzy-if(skiaContent&&!Android,90,3100) HTTP(..) == 475092-pos.html 475092-sub.html # bug 482596
@@ -172,7 +172,7 @@ random-if(!winWidget) == arial-bold-lam-alef-1.html arial-bold-lam-alef-1-ref.ht
 fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-1.html arabic-fallback-1-ref.html
 fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-2.html arabic-fallback-2-ref.html
 fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-3.html arabic-fallback-3-ref.html
-fails-if(!cocoaWidget&&!Android&&!stylo) HTTP(..) != arabic-fallback-4.html arabic-fallback-4-notref.html
+fails-if(!cocoaWidget&&!Android&&!styloVsGecko) HTTP(..) != arabic-fallback-4.html arabic-fallback-4-notref.html
 == arabic-marks-1.html arabic-marks-1-ref.html
 == arabic-final-ligature-spacing.html arabic-final-ligature-spacing-ref.html
 # harfbuzz fallback mark stacking in the absence of GPOS:
@@ -322,17 +322,17 @@ HTTP(..) == graphite-surrogate-selection.html graphite-surrogate-selection-ref.h
 == hyphenation-control-3.html hyphenation-control-3-ref.html
 
 # osx-font-smoothing - with and without subpixel AA, only under OSX
-fails-if(!cocoaWidget&&!stylo) != osx-font-smoothing.html osx-font-smoothing-ref.html
-fails-if(!cocoaWidget&&!stylo) != osx-font-smoothing-2.html osx-font-smoothing-2-notref.html
+fails-if(!cocoaWidget&&!styloVsGecko) != osx-font-smoothing.html osx-font-smoothing-ref.html
+fails-if(!cocoaWidget&&!styloVsGecko) != osx-font-smoothing-2.html osx-font-smoothing-2-notref.html
 == osx-font-smoothing-2.html osx-font-smoothing-2-ref.html
 
-pref(layout.css.text-align-unsafe-value.enabled,true) fails-if(stylo) == text-align-unsafe.html text-align-unsafe-ref.html
+pref(layout.css.text-align-unsafe-value.enabled,true) fails-if(styloVsGecko) == text-align-unsafe.html text-align-unsafe-ref.html
 
 # stray control chars should be visible by default, bug 1099557
-fails-if(stylo) != control-chars-01a.html control-chars-01-notref.html
-fails-if(stylo) != control-chars-01b.html control-chars-01-notref.html
-fails-if(stylo) != control-chars-01c.html control-chars-01-notref.html
-fails-if(stylo) != control-chars-01d.html control-chars-01-notref.html
+fails-if(styloVsGecko) != control-chars-01a.html control-chars-01-notref.html
+fails-if(styloVsGecko) != control-chars-01b.html control-chars-01-notref.html
+fails-if(styloVsGecko) != control-chars-01c.html control-chars-01-notref.html
+fails-if(styloVsGecko) != control-chars-01d.html control-chars-01-notref.html
 != control-chars-02.html control-chars-02-notref.html
 == control-chars-03a.html control-chars-03-ref.html
 == control-chars-03b.html control-chars-03-ref.html

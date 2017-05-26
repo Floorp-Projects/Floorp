@@ -118,6 +118,7 @@ DEFAULTS = dict(
         'privacy.trackingprotection.pbmode.enabled': False,
         'browser.search.isUS': True,
         'browser.search.countryCode': 'US',
+        'browser.urlbar.userMadeSearchSuggestionsChoice': True,
         'extensions.update.url':
             'http://127.0.0.1/extensions-dummy/updateURL',
         'extensions.update.background.url':

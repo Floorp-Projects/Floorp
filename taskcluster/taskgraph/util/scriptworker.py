@@ -246,7 +246,7 @@ PUSH_APK_BREAKPOINT_WORKER_TYPE = {
 }
 
 PUSH_APK_DRY_RUN_OPTION = {
-    'central': True,
+    'central': False,
     'beta': False,
     'release': False,
     'default': True,

@@ -60,7 +60,7 @@ function runUpdateFinished() {
                "the status file state" + MSG_SHOULD_EQUAL);
   Assert.ok(!gUpdateManager.activeUpdate,
             "the active update should not be defined");
-  Assert.equal(gUpdateManager.updateCount, 1,
+  Assert.equal(gUpdateManager.updateCount, 2,
                "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(gUpdateManager.getUpdateAt(0).state, STATE_AFTER_STAGE,
                "the update state" + MSG_SHOULD_EQUAL);

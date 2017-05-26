@@ -63,7 +63,7 @@ fuzzy-if(skiaContent,71,203) == mask-image-3i.html mask-image-3-ref.html
 
 # mask-origin test cases
 == mask-origin-1.html mask-origin-1-ref.html
-fails-if(!stylo) == mask-origin-2.html mask-origin-2-ref.html # bug 1260094
+fails-if(!styloVsGecko) == mask-origin-2.html mask-origin-2-ref.html # bug 1260094
 == mask-origin-3.html mask-origin-3-ref.html
 
 # mask-size test cases

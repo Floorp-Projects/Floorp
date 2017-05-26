@@ -1602,13 +1602,9 @@ UpdateService.prototype = {
     switch (topic) {
       case "post-update-processing":
         if (readStatusFile(getUpdatesDir()) == STATE_SUCCEEDED) {
-          // The active update needs to be copied to the first update in the
-          // updates.xml early during startup to support post update actions
-          // (bug 1301288).
-          let um = Cc["@mozilla.org/updates/update-manager;1"].
-                   getService(Ci.nsIUpdateManager);
-          um.activeUpdate.state = STATE_SUCCEEDED;
-          um.saveUpdates();
+          // After a successful update the post update preference needs to be
+          // set early during startup so applications can perform post update
+          // actions when they are defined in the update's metadata.
           Services.prefs.setBoolPref(PREF_APP_UPDATE_POSTUPDATE, true);
         }
 
@@ -2650,23 +2646,20 @@ UpdateManager.prototype = {
     if (!update)
       return;
     this._ensureUpdates();
-    if (this._updates) {
-      for (var i = 0; i < this._updates.length; ++i) {
-        // Keep all update entries with a state of STATE_FAILED and replace the
-        // first update entry that has the same application version and build ID
-        // if it exists. This allows the update history to only have one success
-        // entry for an update and entries for all failed updates.
-        if (update.state != STATE_FAILED &&
-            this._updates[i] &&
-            this._updates[i].state != STATE_FAILED &&
-            this._updates[i].appVersion == update.appVersion &&
-            this._updates[i].buildID == update.buildID) {
-          // Replace the existing entry with the new value, updating
-          // all metadata.
-          this._updates[i] = update;
-          return;
-        }
-      }
+    // Only the latest update entry is checked so the the latest successful
+    // step for an update is recorded and all failures are kept. This way
+    // mutliple attempts to update for the same update are kept in the update
+    // history.
+    if (this._updates &&
+        update.state != STATE_FAILED &&
+        this._updates[0] &&
+        this._updates[0].state != STATE_FAILED &&
+        this._updates[0].appVersion == update.appVersion &&
+        this._updates[0].buildID == update.buildID) {
+      // Replace the existing entry with the new value, updating
+      // all metadata.
+      this._updates[0] = update;
+      return;
     }
     // Otherwise add it to the front of the list.
     this._updates.unshift(update);
@@ -2722,15 +2715,12 @@ UpdateManager.prototype = {
       this._addUpdate(this._activeUpdate);
 
     this._ensureUpdates();
-    // Don't write updates that have a temporary state to the updates.xml file.
+    // Don't write updates that don't have a state to the updates.xml file.
     if (this._updates) {
       let updates = this._updates.slice();
       for (let i = updates.length - 1; i >= 0; --i) {
         let state = updates[i].state;
-        if (state == STATE_NONE || state == STATE_DOWNLOADING ||
-            state == STATE_APPLIED || state == STATE_APPLIED_SERVICE ||
-            state == STATE_PENDING || state == STATE_PENDING_SERVICE ||
-            state == STATE_PENDING_ELEVATE) {
+        if (state == STATE_NONE) {
           updates.splice(i, 1);
         }
       }

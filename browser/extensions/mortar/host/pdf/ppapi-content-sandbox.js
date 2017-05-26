@@ -222,8 +222,8 @@ mm.addMessageListener("ppapipdf.js:openLink", ({data}) => {
   }
 });
 
-mm.addMessageListener("ppapipdf.js:save", () => {
-  let url = containerWindow.document.location;
+mm.addMessageListener("ppapipdf.js:save", ({ data }) => {
+  let url = new containerWindow.URL(data.url);
   let filename = getFileName(url);
   let originalUri = NetUtil.newURI(url.href);
   let extHelperAppSvc =

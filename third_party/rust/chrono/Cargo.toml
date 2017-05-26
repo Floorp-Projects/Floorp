@@ -1,0 +1,24 @@
+[package]
+name = "chrono"
+version = "0.2.25"
+authors = ["Kang Seonghoon <public+rust@mearie.org>"]
+
+description = "Date and time library for Rust"
+homepage = "https://github.com/lifthrasiir/rust-chrono"
+documentation = "https://lifthrasiir.github.io/rust-chrono/"
+repository = "https://github.com/lifthrasiir/rust-chrono"
+keywords = ["date", "time", "calendar"]
+readme = "README.md"
+license = "MIT/Apache-2.0"
+
+[lib]
+name = "chrono"
+
+[dependencies]
+time = "0.1"
+num = { version = "0.1", default-features = false }
+rustc-serialize = { version = "0.3", optional = true }
+serde = { version = "<0.9", optional = true }
+
+[dev-dependencies]
+serde_json = { version = ">=0.7.0" }

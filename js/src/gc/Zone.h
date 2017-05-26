@@ -373,15 +373,8 @@ struct Zone : public JS::shadow::Zone,
     // that can't be determined by examining this zone by itself.
     js::ZoneGroupData<ZoneSet> gcSweepGroupEdges_;
 
-    // Zones with dead proxies require an extra scan through the wrapper map,
-    // so track whether any dead proxies are known to exist.
-    js::ZoneGroupData<bool> hasDeadProxies_;
-
   public:
     ZoneSet& gcSweepGroupEdges() { return gcSweepGroupEdges_.ref(); }
-
-    bool hasDeadProxies() { return hasDeadProxies_; }
-    void setHasDeadProxies(bool b) { hasDeadProxies_ = b; }
 
     // Keep track of all TypeDescr and related objects in this compartment.
     // This is used by the GC to trace them all first when compacting, since the

@@ -41,28 +41,6 @@ PDFViaEMFPrintHelper::~PDFViaEMFPrintHelper()
   CloseDocument();
 }
 
-bool
-PDFViaEMFPrintHelper::LoadPDFDataToBuffer(nsIFile *aFile)
-{
-  RefPtr<nsFileInputStream> inputStream = new nsFileInputStream();
-  if (NS_FAILED(inputStream->Init(aFile, -1, -1, 0))) {
-    return false;
-  }
-
-  int64_t size = 0;
-  inputStream->GetSize(&size);
-  NS_ENSURE_TRUE(size > 0, false);
-
-  if (!mPDFFileContents.resize(size)) {
-    return false;
-  }
-
-  uint32_t bytesRead = 0;
-  inputStream->Read(mPDFFileContents.begin(), size, &bytesRead);
-  MOZ_ASSERT(bytesRead == size);
-  return true;
-}
-
 nsresult
 PDFViaEMFPrintHelper::OpenDocument(nsIFile *aFile)
 {
@@ -76,16 +54,14 @@ PDFViaEMFPrintHelper::OpenDocument(nsIFile *aFile)
     mPDFiumEngine = MakeUnique<PDFiumEngineShim>(mPDFiumLibrary);
   }
 
-  if (!LoadPDFDataToBuffer(aFile)) {
-    return NS_ERROR_FAILURE;
+  nsAutoCString nativePath;
+  nsresult rv = aFile->GetNativePath(nativePath);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-  // Create Bug 1359713 to implement loading document by path in
-  // PDFiumEngineShim.
-  mPDFDoc = mPDFiumEngine->LoadMemDocument(mPDFFileContents.begin(),
-                                           mPDFFileContents.length(),
-                                           nullptr);
+
+  mPDFDoc = mPDFiumEngine->LoadDocument(nativePath.get(), nullptr);
   if (!mPDFDoc) {
-    mPDFFileContents.clear();
     return NS_ERROR_FAILURE;
   }
 
@@ -183,6 +159,5 @@ PDFViaEMFPrintHelper::CloseDocument()
   if (mPDFDoc) {
     mPDFiumEngine->CloseDocument(mPDFDoc);
     mPDFDoc = nullptr;
-    mPDFFileContents.clear();
   }
 }

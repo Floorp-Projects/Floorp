@@ -158,6 +158,24 @@ add_task(async function() {
                          .createCodebasePrincipalFromOrigin("http://email.bar.com"),
       persisted: false
     },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://s3-us-west-2.amazonaws.com"),
+      persisted: true
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://127.0.0.1"),
+      persisted: false
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://[0:0:0:0:0:0:0:1]"),
+      persisted: true
+    },
   ];
   let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
 

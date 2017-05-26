@@ -157,8 +157,16 @@ gl::Version GetClientVersion(const egl::AttributeMap &attribs)
 
 GLenum GetResetStrategy(const egl::AttributeMap &attribs)
 {
-    EGLAttrib attrib = attribs.get(EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT,
-                                   EGL_NO_RESET_NOTIFICATION_EXT);
+    EGLAttrib attrib = attribs.get(EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR, 0);
+    if (!attrib)
+    {
+        attrib = attribs.get(EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT, 0);
+    }
+    if (!attrib)
+    {
+        attrib = EGL_NO_RESET_NOTIFICATION;
+    }
+
     switch (attrib)
     {
         case EGL_NO_RESET_NOTIFICATION:
@@ -2507,9 +2515,6 @@ void Context::updateCaps()
 
 void Context::initWorkarounds()
 {
-    // Lose the context upon out of memory error if the application is
-    // expecting to watch for those events.
-    mWorkarounds.loseContextOnOutOfMemory = (mResetStrategy == GL_LOSE_CONTEXT_ON_RESET_EXT);
 }
 
 void Context::syncRendererState()

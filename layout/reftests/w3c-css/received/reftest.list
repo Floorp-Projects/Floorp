@@ -45,11 +45,11 @@
 == css-multicol-1/multicol-basic-002.html css-multicol-1/reference/multicol-basic-ref.html
 == css-multicol-1/multicol-basic-003.html css-multicol-1/reference/multicol-basic-ref.html
 == css-multicol-1/multicol-basic-004.html css-multicol-1/reference/multicol-basic-ref.html
-fails-if(!stylo) == css-multicol-1/multicol-block-clip-001.xht css-multicol-1/multicol-block-clip-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-block-clip-002.xht css-multicol-1/multicol-block-clip-002-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-br-inside-avoidcolumn-001.xht css-multicol-1/multicol-br-inside-avoidcolumn-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-break-000.xht css-multicol-1/multicol-break-000-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-break-001.xht css-multicol-1/multicol-break-001-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-block-clip-001.xht css-multicol-1/multicol-block-clip-001-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-block-clip-002.xht css-multicol-1/multicol-block-clip-002-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-br-inside-avoidcolumn-001.xht css-multicol-1/multicol-br-inside-avoidcolumn-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-break-000.xht css-multicol-1/multicol-break-000-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-break-001.xht css-multicol-1/multicol-break-001-ref.xht
 fuzzy(135,1008) == css-multicol-1/multicol-clip-001.xht css-multicol-1/multicol-clip-001-ref.xht
 fuzzy(135,702) == css-multicol-1/multicol-clip-002.xht css-multicol-1/multicol-clip-002-ref.xht
 fuzzy(135,467) == css-multicol-1/multicol-collapsing-001.xht css-multicol-1/multicol-collapsing-001-ref.xht
@@ -66,13 +66,13 @@ fuzzy(204,930) fuzzy-if(skiaContent,208,930) == css-multicol-1/multicol-columns-
 fuzzy(135,530) == css-multicol-1/multicol-containing-001.xht css-multicol-1/multicol-containing-001-ref.xht
 fuzzy(215,241) == css-multicol-1/multicol-containing-002.xht css-multicol-1/multicol-containing-002-ref.xht
 fuzzy(87,180) == css-multicol-1/multicol-count-001.xht css-multicol-1/multicol-columns-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-count-002.xht css-multicol-1/multicol-count-002-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-count-computed-001.xht css-multicol-1/multicol-count-computed-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-count-computed-002.xht css-multicol-1/multicol-count-computed-2-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-count-computed-003.xht css-multicol-1/multicol-count-computed-003-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-count-002.xht css-multicol-1/multicol-count-002-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-count-computed-001.xht css-multicol-1/multicol-count-computed-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-count-computed-002.xht css-multicol-1/multicol-count-computed-2-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-count-computed-003.xht css-multicol-1/multicol-count-computed-003-ref.xht
 fuzzy-if(winWidget||OSX||gtkWidget,112,861) fails-if(Android) == css-multicol-1/multicol-count-computed-004.xht css-multicol-1/multicol-count-computed-004-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-count-computed-005.xht css-multicol-1/multicol-count-computed-003-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-count-large-001.xht css-multicol-1/multicol-count-large-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-count-computed-005.xht css-multicol-1/multicol-count-computed-003-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-count-large-001.xht css-multicol-1/multicol-count-large-ref.xht
 fuzzy(255,132) == css-multicol-1/multicol-count-large-002.xht css-multicol-1/multicol-count-large-2-ref.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) == css-multicol-1/multicol-count-negative-001.xht css-multicol-1/multicol-columns-invalid-001-ref.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) == css-multicol-1/multicol-count-negative-002.xht css-multicol-1/multicol-columns-invalid-001-ref.xht
@@ -84,9 +84,9 @@ fuzzy(204,930) fuzzy-if(skiaContent,208,930) == css-multicol-1/multicol-count-no
 == css-multicol-1/multicol-fill-auto-001.xht css-multicol-1/multicol-fill-auto-001-ref.xht
 fuzzy(135,80) == css-multicol-1/multicol-fill-auto-002.xht css-multicol-1/multicol-fill-auto-002-ref.xht
 fuzzy(135,3270) == css-multicol-1/multicol-fill-auto-003.xht css-multicol-1/multicol-fill-auto-003-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-fill-auto-block-children-001.xht css-multicol-1/multicol-fill-auto-block-children-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-fill-auto-block-children-002.xht css-multicol-1/multicol-fill-auto-block-children-002-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-fill-auto.xht css-multicol-1/multicol-fill-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-fill-auto-block-children-001.xht css-multicol-1/multicol-fill-auto-block-children-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-fill-auto-block-children-002.xht css-multicol-1/multicol-fill-auto-block-children-002-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-fill-auto.xht css-multicol-1/multicol-fill-ref.xht
 fuzzy(135,80) == css-multicol-1/multicol-fill-balance-001.xht css-multicol-1/multicol-fill-balance-001-ref.xht
 fuzzy(135,821) == css-multicol-1/multicol-gap-000.xht css-multicol-1/multicol-gap-000-ref.xht
 fuzzy(255,290) == css-multicol-1/multicol-gap-001.xht css-multicol-1/multicol-gap-001-ref.xht
@@ -97,11 +97,11 @@ fuzzy-if(winWidget||OSX||gtkWidget,204,1048) fuzzy-if(skiaContent,208,1048) fail
 fuzzy(225,920) == css-multicol-1/multicol-gap-large-002.xht css-multicol-1/multicol-gap-large-002-ref.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) == css-multicol-1/multicol-gap-negative-001.xht css-multicol-1/multicol-gap-002-ref.xht
 == css-multicol-1/multicol-height-001.xht css-multicol-1/multicol-height-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-height-block-child-001.xht css-multicol-1/multicol-height-block-child-001-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-height-block-child-001.xht css-multicol-1/multicol-height-block-child-001-ref.xht
 fuzzy(255,3762) == css-multicol-1/multicol-inherit-001.xht css-multicol-1/multicol-inherit-001-ref.xht
 fuzzy(135,1893) == css-multicol-1/multicol-inherit-002.xht css-multicol-1/multicol-inherit-002-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-inherit-003.xht css-multicol-1/multicol-inherit-3-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-inherit-004.xht css-multicol-1/multicol-inherit-4-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-inherit-003.xht css-multicol-1/multicol-inherit-3-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-inherit-004.xht css-multicol-1/multicol-inherit-4-ref.xht
 fuzzy(96,264) == css-multicol-1/multicol-list-item-001.xht css-multicol-1/multicol-list-item-001-ref.xht
 fuzzy(73,1200) == css-multicol-1/multicol-margin-001.xht reference/ref-filled-green-100px-square.xht
 fuzzy(73,1200) == css-multicol-1/multicol-margin-002.xht reference/ref-filled-green-100px-square.xht
@@ -119,7 +119,7 @@ fuzzy(204,1844) fuzzy-if(skiaContent,208,1844) == css-multicol-1/multicol-overfl
 fuzzy-if(OSX,61,2) fuzzy-if(skiaContent,64,2) == css-multicol-1/multicol-reduce-000.xht css-multicol-1/multicol-reduce-000-ref.xht
 fuzzy-if(OSX,8,20) == css-multicol-1/multicol-rule-000.xht css-multicol-1/multicol-rule-000-ref.xht
 fuzzy(135,1584) == css-multicol-1/multicol-rule-001.xht css-multicol-1/multicol-rule-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-rule-002.xht css-multicol-1/multicol-rule-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-rule-002.xht css-multicol-1/multicol-rule-ref.xht
 fails-if(OSX||winWidget) == css-multicol-1/multicol-rule-003.xht css-multicol-1/multicol-rule-003-ref.xht
 == css-multicol-1/multicol-rule-004.xht css-multicol-1/multicol-rule-004-ref.xht
 fails-if(OSX||winWidget) == css-multicol-1/multicol-rule-color-001.xht css-multicol-1/multicol-rule-color-001-ref.xht
@@ -130,7 +130,7 @@ fuzzy(106,354) == css-multicol-1/multicol-rule-dotted-000.xht css-multicol-1/mul
 fuzzy(106,354) == css-multicol-1/multicol-rule-double-000.xht css-multicol-1/multicol-rule-double-000-ref.xht
 fails-if(OSX||winWidget) == css-multicol-1/multicol-rule-fraction-001.xht css-multicol-1/multicol-rule-fraction-001-ref.xht
 fails-if(OSX||winWidget) == css-multicol-1/multicol-rule-fraction-002.xht css-multicol-1/multicol-rule-fraction-002-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-rule-fraction-003.xht css-multicol-1/multicol-rule-fraction-3-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-rule-fraction-003.xht css-multicol-1/multicol-rule-fraction-3-ref.xht
 fuzzy(106,354) == css-multicol-1/multicol-rule-groove-000.xht css-multicol-1/multicol-rule-groove-000-ref.xht
 fuzzy(94,256) == css-multicol-1/multicol-rule-hidden-000.xht css-multicol-1/multicol-rule-hidden-000-ref.xht
 fuzzy(106,354) == css-multicol-1/multicol-rule-inset-000.xht css-multicol-1/multicol-rule-ridge-000-ref.xht
@@ -138,49 +138,49 @@ fuzzy(255,2808) == css-multicol-1/multicol-rule-large-001.xht css-multicol-1/mul
 fuzzy(94,256) == css-multicol-1/multicol-rule-none-000.xht css-multicol-1/multicol-rule-hidden-000-ref.xht
 fuzzy(106,354) == css-multicol-1/multicol-rule-outset-000.xht css-multicol-1/multicol-rule-groove-000-ref.xht
 == css-multicol-1/multicol-rule-percent-001.xht css-multicol-1/multicol-containing-002-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-rule-px-001.xht css-multicol-1/multicol-rule-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-rule-px-001.xht css-multicol-1/multicol-rule-ref.xht
 fuzzy(106,354) == css-multicol-1/multicol-rule-ridge-000.xht css-multicol-1/multicol-rule-ridge-000-ref.xht
 == css-multicol-1/multicol-rule-samelength-001.xht css-multicol-1/multicol-rule-samelength-001-ref.xht
 == css-multicol-1/multicol-rule-shorthand-001.xht css-multicol-1/multicol-rule-samelength-001-ref.xht
 fuzzy(106,354) == css-multicol-1/multicol-rule-solid-000.xht css-multicol-1/multicol-rule-solid-000-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-rule-stacking-001.xht css-multicol-1/multicol-rule-stacking-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-rule-stacking-001.xht css-multicol-1/multicol-rule-stacking-ref.xht
 == css-multicol-1/multicol-rule-style-groove-001.xht css-multicol-1/multicol-rule-style-groove-001-ref.xht
 == css-multicol-1/multicol-rule-style-inset-001.xht css-multicol-1/multicol-rule-style-ridge-001-ref.xht
 == css-multicol-1/multicol-rule-style-outset-001.xht css-multicol-1/multicol-rule-style-groove-001-ref.xht
 == css-multicol-1/multicol-rule-style-ridge-001.xht css-multicol-1/multicol-rule-style-ridge-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-shorthand-001.xht css-multicol-1/multicol-rule-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-span-000.xht css-multicol-1/multicol-span-000-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-span-all-001.xht css-multicol-1/multicol-span-all-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-span-all-002.xht css-multicol-1/multicol-span-all-002-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-span-all-003.xht css-multicol-1/multicol-count-002-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-span-all-block-sibling-003.xht css-multicol-1/multicol-span-all-block-sibling-3-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-span-all-child-001.xht css-multicol-1/multicol-span-all-child-001-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-shorthand-001.xht css-multicol-1/multicol-rule-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-span-000.xht css-multicol-1/multicol-span-000-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-span-all-001.xht css-multicol-1/multicol-span-all-001-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-span-all-002.xht css-multicol-1/multicol-span-all-002-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-span-all-003.xht css-multicol-1/multicol-count-002-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-span-all-block-sibling-003.xht css-multicol-1/multicol-span-all-block-sibling-3-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-span-all-child-001.xht css-multicol-1/multicol-span-all-child-001-ref.xht
 fails-if(OSX||winWidget) == css-multicol-1/multicol-span-all-child-002.xht css-multicol-1/multicol-span-all-child-002-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-span-all-margin-001.xht css-multicol-1/multicol-span-all-margin-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-span-all-margin-002.xht css-multicol-1/multicol-span-all-margin-002-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-span-all-margin-bottom-001.xht css-multicol-1/multicol-span-all-margin-bottom-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-span-all-margin-nested-001.xht css-multicol-1/multicol-span-all-margin-nested-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-span-all-margin-nested-002.xht css-multicol-1/multicol-span-all-margin-nested-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-span-all-margin-nested-003.xht css-multicol-1/multicol-span-all-margin-nested-3-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-span-all-margin-nested-firstchild-001.xht css-multicol-1/multicol-span-all-margin-nested-firstchild-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-span-float-001.xht css-multicol-1/multicol-span-float-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-span-none-001.xht css-multicol-1/multicol-span-none-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-table-cell-001.xht css-multicol-1/multicol-table-cell-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-table-cell-height-001.xht css-multicol-1/multicol-table-cell-height-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-table-cell-height-002.xht css-multicol-1/multicol-table-cell-height-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-table-cell-vertical-align-001.xht css-multicol-1/multicol-table-cell-vertical-align-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-span-all-margin-001.xht css-multicol-1/multicol-span-all-margin-001-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-span-all-margin-002.xht css-multicol-1/multicol-span-all-margin-002-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-span-all-margin-bottom-001.xht css-multicol-1/multicol-span-all-margin-bottom-001-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-span-all-margin-nested-001.xht css-multicol-1/multicol-span-all-margin-nested-001-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-span-all-margin-nested-002.xht css-multicol-1/multicol-span-all-margin-nested-001-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-span-all-margin-nested-003.xht css-multicol-1/multicol-span-all-margin-nested-3-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-span-all-margin-nested-firstchild-001.xht css-multicol-1/multicol-span-all-margin-nested-firstchild-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-span-float-001.xht css-multicol-1/multicol-span-float-001-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-span-none-001.xht css-multicol-1/multicol-span-none-001-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-table-cell-001.xht css-multicol-1/multicol-table-cell-001-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-table-cell-height-001.xht css-multicol-1/multicol-table-cell-height-001-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-table-cell-height-002.xht css-multicol-1/multicol-table-cell-height-001-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-table-cell-vertical-align-001.xht css-multicol-1/multicol-table-cell-vertical-align-ref.xht
 == css-multicol-1/multicol-width-001.xht css-multicol-1/multicol-width-001-ref.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) == css-multicol-1/multicol-width-002.xht css-multicol-1/multicol-width-002-ref.xht
 == css-multicol-1/multicol-width-003.xht css-multicol-1/multicol-width-002-ref.xht
 == css-multicol-1/multicol-width-count-001.xht css-multicol-1/multicol-width-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-width-count-002.xht css-multicol-1/multicol-count-002-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-width-ems-001.xht css-multicol-1/multicol-width-ems-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-width-count-002.xht css-multicol-1/multicol-count-002-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-width-ems-001.xht css-multicol-1/multicol-width-ems-ref.xht
 fuzzy(225,1060) == css-multicol-1/multicol-width-invalid-001.xht css-multicol-1/multicol-width-invalid-001-ref.xht
 fuzzy(225,1060) == css-multicol-1/multicol-width-large-001.xht css-multicol-1/multicol-width-invalid-001-ref.xht
 fuzzy(225,1060) == css-multicol-1/multicol-width-large-002.xht css-multicol-1/multicol-width-invalid-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-width-negative-001.xht css-multicol-1/multicol-count-002-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-width-small-001.xht css-multicol-1/multicol-width-small-001-ref.xht
-fails-if(!stylo) == css-multicol-1/multicol-zero-height-001.xht css-multicol-1/multicol-zero-height-001-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-width-negative-001.xht css-multicol-1/multicol-count-002-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-width-small-001.xht css-multicol-1/multicol-width-small-001-ref.xht
+fails-if(!styloVsGecko) == css-multicol-1/multicol-zero-height-001.xht css-multicol-1/multicol-zero-height-001-ref.xht
 == css-namespaces-3/prefix-001.xml css-namespaces-3/reftest/ref-lime-1.xml
 == css-namespaces-3/prefix-002.xml css-namespaces-3/reftest/ref-lime-1.xml
 == css-namespaces-3/prefix-003.xml css-namespaces-3/reftest/ref-lime-1-generic.xml
@@ -204,20 +204,20 @@ fails-if(!stylo) == css-multicol-1/multicol-zero-height-001.xht css-multicol-1/m
 == css-namespaces-3/syntax-013.xml css-namespaces-3/reftest/ref-lime-5.xml
 == css-namespaces-3/syntax-014.xml css-namespaces-3/reftest/ref-lime-3.xml
 == css-namespaces-3/syntax-015.xml css-namespaces-3/reftest/ref-lime-1.xml
-fails-if(!stylo) == css-values-3/attr-color-invalid-cast.html css-values-3/reference/200-200-green.html
+fails-if(!styloVsGecko) == css-values-3/attr-color-invalid-cast.html css-values-3/reference/200-200-green.html
 == css-values-3/attr-color-invalid-fallback.html css-values-3/reference/200-200-green.html
-fails-if(!stylo) == css-values-3/attr-color-valid.html css-values-3/reference/200-200-green.html
+fails-if(!styloVsGecko) == css-values-3/attr-color-valid.html css-values-3/reference/200-200-green.html
 == css-values-3/attr-invalid-type-001.html css-values-3/reference/200-200-green.html
 == css-values-3/attr-invalid-type-002.html css-values-3/reference/200-200-green.html
 == css-values-3/attr-invalid-type-003.html css-values-3/reference/200-200-green.html
-fails-if(!stylo) == css-values-3/attr-length-invalid-cast.html css-values-3/reference/200-200-green.html
+fails-if(!styloVsGecko) == css-values-3/attr-length-invalid-cast.html css-values-3/reference/200-200-green.html
 == css-values-3/attr-length-invalid-fallback.html css-values-3/reference/200-200-green.html
-fails-if(!stylo) == css-values-3/attr-length-valid-zero-nofallback.html css-values-3/reference/200-200-green.html
-fails-if(!stylo) == css-values-3/attr-length-valid-zero.html css-values-3/reference/200-200-green.html
-fails-if(!stylo) == css-values-3/attr-length-valid.html css-values-3/reference/200-200-green.html
-fails-if(!stylo) == css-values-3/attr-px-invalid-cast.html css-values-3/reference/200-200-green.html
+fails-if(!styloVsGecko) == css-values-3/attr-length-valid-zero-nofallback.html css-values-3/reference/200-200-green.html
+fails-if(!styloVsGecko) == css-values-3/attr-length-valid-zero.html css-values-3/reference/200-200-green.html
+fails-if(!styloVsGecko) == css-values-3/attr-length-valid.html css-values-3/reference/200-200-green.html
+fails-if(!styloVsGecko) == css-values-3/attr-px-invalid-cast.html css-values-3/reference/200-200-green.html
 == css-values-3/attr-px-invalid-fallback.html css-values-3/reference/200-200-green.html
-fails-if(!stylo) == css-values-3/attr-px-valid.html css-values-3/reference/200-200-green.html
+fails-if(!styloVsGecko) == css-values-3/attr-px-valid.html css-values-3/reference/200-200-green.html
 == css-values-3/calc-in-calc.html css-values-3/reference/all-green.html
 fails == css-values-3/calc-in-media-queries-001.html css-values-3/reference/all-green.html
 fails == css-values-3/calc-in-media-queries-002.html css-values-3/reference/all-green.html
@@ -227,12 +227,12 @@ fuzzy-if(OSX,40,6) == css-values-3/ch-unit-001.html css-values-3/reference/ch-un
 == css-values-3/initial-background-color.html css-values-3/reference/all-green.html
 == css-values-3/vh-calc-support-pct.html css-values-3/reference/all-green.html
 == css-values-3/vh-calc-support.html css-values-3/reference/all-green.html
-== css-values-3/vh-em-inherit.html css-values-3/reference/all-green.html
+fails-if(stylo) == css-values-3/vh-em-inherit.html css-values-3/reference/all-green.html
 == css-values-3/vh-inherit.html css-values-3/reference/all-green.html
 == css-values-3/vh-interpolate-pct.html css-values-3/reference/all-green.html
 == css-values-3/vh-interpolate-px.html css-values-3/reference/all-green.html
 == css-values-3/vh-interpolate-vh.html css-values-3/reference/all-green.html
-fails-if(stylo) == css-values-3/vh-support-atviewport.html css-values-3/reference/all-green.html
+fails-if(styloVsGecko) == css-values-3/vh-support-atviewport.html css-values-3/reference/all-green.html
 == css-values-3/vh-support-margin.html css-values-3/reference/all-green.html
 skip == css-values-3/vh-support-transform-origin.html css-values-3/reference/all-green.html
 skip == css-values-3/vh-support-transform-translate.html css-values-3/reference/all-green.html
@@ -599,7 +599,7 @@ fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-sl
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-slr-054.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-slr-055.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-slr-056.xht css-writing-modes-3/block-flow-direction-001-ref.xht
-fails-if(!stylo) == css-writing-modes-3/block-flow-direction-slr-058.xht css-writing-modes-3/block-flow-direction-001-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/block-flow-direction-slr-058.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-slr-060.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-slr-062.xht css-writing-modes-3/block-flow-direction-043-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-slr-063.xht css-writing-modes-3/block-flow-direction-043-ref.xht
@@ -611,7 +611,7 @@ fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-sr
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-srl-051.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-srl-052.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-srl-053.xht css-writing-modes-3/block-flow-direction-001-ref.xht
-fails-if(!stylo) == css-writing-modes-3/block-flow-direction-srl-057.xht css-writing-modes-3/block-flow-direction-001-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/block-flow-direction-srl-057.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-srl-059.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-srl-061.xht css-writing-modes-3/block-flow-direction-002-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-srl-064.xht css-writing-modes-3/block-flow-direction-002-ref.xht
@@ -623,7 +623,7 @@ fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-vl
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-vlr-014.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-vlr-015.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-vlr-016.xht css-writing-modes-3/block-flow-direction-001-ref.xht
-fails-if(!stylo) == css-writing-modes-3/block-flow-direction-vlr-018.xht css-writing-modes-3/block-flow-direction-001-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/block-flow-direction-vlr-018.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-vlr-020.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-vlr-022.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-vlr-023.xht css-writing-modes-3/block-flow-direction-001-ref.xht
@@ -634,7 +634,7 @@ fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-vr
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-vrl-011.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-vrl-012.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-vrl-013.xht css-writing-modes-3/block-flow-direction-001-ref.xht
-fails-if(!stylo) == css-writing-modes-3/block-flow-direction-vrl-017.xht css-writing-modes-3/block-flow-direction-001-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/block-flow-direction-vrl-017.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-vrl-019.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-vrl-021.xht css-writing-modes-3/block-flow-direction-002-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/block-flow-direction-vrl-024.xht css-writing-modes-3/block-flow-direction-002-ref.xht
@@ -700,21 +700,21 @@ fuzzy-if(OSX||winWidget,215,780) == css-writing-modes-3/central-baseline-alignme
 == css-writing-modes-3/clip-rect-vrl-012.xht css-writing-modes-3/clip-rect-vrl-012-ref.xht
 == css-writing-modes-3/clip-rect-vrl-014.xht css-writing-modes-3/clip-rect-vrl-014-ref.xht
 == css-writing-modes-3/clip-rect-vrl-016.xht css-writing-modes-3/clip-rect-vrl-016-ref.xht
-fails-if(!stylo) == css-writing-modes-3/contiguous-floated-table-vlr-003.xht css21/reference/ref-filled-green-100px-square.xht
-fails-if(!stylo) == css-writing-modes-3/contiguous-floated-table-vlr-005.xht css21/reference/ref-filled-green-100px-square.xht
-fails-if(!stylo) == css-writing-modes-3/contiguous-floated-table-vlr-007.xht css21/reference/ref-filled-green-100px-square.xht
-fails-if(!stylo) == css-writing-modes-3/contiguous-floated-table-vlr-009.xht css21/reference/ref-filled-green-100px-square.xht
-fails-if(!stylo) == css-writing-modes-3/contiguous-floated-table-vrl-002.xht css21/reference/ref-filled-green-100px-square.xht
-fails-if(!stylo) == css-writing-modes-3/contiguous-floated-table-vrl-004.xht css21/reference/ref-filled-green-100px-square.xht
-fails-if(!stylo) == css-writing-modes-3/contiguous-floated-table-vrl-006.xht css21/reference/ref-filled-green-100px-square.xht
-fails-if(!stylo) == css-writing-modes-3/contiguous-floated-table-vrl-008.xht css21/reference/ref-filled-green-100px-square.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/contiguous-floated-table-vlr-003.xht css21/reference/ref-filled-green-100px-square.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/contiguous-floated-table-vlr-005.xht css21/reference/ref-filled-green-100px-square.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/contiguous-floated-table-vlr-007.xht css21/reference/ref-filled-green-100px-square.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/contiguous-floated-table-vlr-009.xht css21/reference/ref-filled-green-100px-square.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/contiguous-floated-table-vrl-002.xht css21/reference/ref-filled-green-100px-square.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/contiguous-floated-table-vrl-004.xht css21/reference/ref-filled-green-100px-square.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/contiguous-floated-table-vrl-006.xht css21/reference/ref-filled-green-100px-square.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/contiguous-floated-table-vrl-008.xht css21/reference/ref-filled-green-100px-square.xht
 == css-writing-modes-3/different-block-flow-dir-001.xht css21/reference/ref-filled-green-100px-square.xht
 == css-writing-modes-3/different-block-flow-dir-002.xht css21/reference/ref-filled-green-100px-square.xht
 fuzzy-if(OSX||winWidget,75,404) == css-writing-modes-3/direction-vlr-003.xht css-writing-modes-3/direction-vlr-003-ref.xht
 fuzzy-if(OSX||winWidget,75,404) == css-writing-modes-3/direction-vlr-005.xht css21/reference/ref-filled-green-100px-square.xht
 fuzzy-if(OSX||winWidget,75,404) == css-writing-modes-3/direction-vrl-002.xht css-writing-modes-3/direction-vrl-002-ref.xht
 fuzzy-if(OSX||winWidget,75,404) == css-writing-modes-3/direction-vrl-004.xht css-writing-modes-3/direction-vrl-004-ref.xht
-fails-if(!stylo) == css-writing-modes-3/flexbox_align-items-stretch-writing-modes.html css-writing-modes-3/flexbox_align-items-stretch-writing-modes-ref.html
+fails-if(!styloVsGecko) == css-writing-modes-3/flexbox_align-items-stretch-writing-modes.html css-writing-modes-3/flexbox_align-items-stretch-writing-modes-ref.html
 == css-writing-modes-3/float-clear-vlr-003.xht css21/reference/ref-filled-green-100px-square.xht
 == css-writing-modes-3/float-clear-vlr-005.xht css21/reference/ref-filled-green-100px-square.xht
 == css-writing-modes-3/float-clear-vlr-007.xht css21/reference/ref-filled-green-100px-square.xht
@@ -768,12 +768,12 @@ fuzzy-if(OSX||winWidget,62,404) == css-writing-modes-3/height-width-inline-non-r
 == css-writing-modes-3/horizontal-rule-vlr-005.xht css-writing-modes-3/horizontal-rule-vrl-004-ref.xht
 == css-writing-modes-3/horizontal-rule-vrl-002.xht css-writing-modes-3/horizontal-rule-vrl-002-ref.xht
 == css-writing-modes-3/horizontal-rule-vrl-004.xht css-writing-modes-3/horizontal-rule-vrl-004-ref.xht
-fails-if(!stylo) == css-writing-modes-3/inline-block-alignment-002.xht css-writing-modes-3/inline-block-alignment-002-ref.xht
-fails-if(!stylo) == css-writing-modes-3/inline-block-alignment-003.xht css-writing-modes-3/inline-block-alignment-003-ref.xht
-fails-if(!stylo) == css-writing-modes-3/inline-block-alignment-004.xht css-writing-modes-3/inline-block-alignment-002-ref.xht
-fails-if(!stylo) == css-writing-modes-3/inline-block-alignment-005.xht css-writing-modes-3/inline-block-alignment-003-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/inline-block-alignment-002.xht css-writing-modes-3/inline-block-alignment-002-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/inline-block-alignment-003.xht css-writing-modes-3/inline-block-alignment-003-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/inline-block-alignment-004.xht css-writing-modes-3/inline-block-alignment-002-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/inline-block-alignment-005.xht css-writing-modes-3/inline-block-alignment-003-ref.xht
 fuzzy-if(OSX||winWidget,111,960) == css-writing-modes-3/inline-block-alignment-006.xht css-writing-modes-3/inline-block-alignment-006-ref.xht
-fails-if(!stylo) == css-writing-modes-3/inline-block-alignment-007.xht css-writing-modes-3/inline-block-alignment-006-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/inline-block-alignment-007.xht css-writing-modes-3/inline-block-alignment-006-ref.xht
 fuzzy-if(OSX||winWidget,218,621) == css-writing-modes-3/inline-block-alignment-orthogonal-vlr-003.xht css-writing-modes-3/inline-block-alignment-orthogonal-vrl-002-ref.xht
 fuzzy-if(OSX||winWidget,218,621) == css-writing-modes-3/inline-block-alignment-orthogonal-vlr-005.xht css-writing-modes-3/inline-block-alignment-orthogonal-vrl-002-ref.xht
 fuzzy-if(OSX||winWidget,218,621) == css-writing-modes-3/inline-block-alignment-orthogonal-vrl-002.xht css-writing-modes-3/inline-block-alignment-orthogonal-vrl-002-ref.xht
@@ -784,10 +784,10 @@ fuzzy-if(OSX||winWidget,111,960) == css-writing-modes-3/inline-block-alignment-s
 == css-writing-modes-3/inline-replaced-vlr-005.xht css-writing-modes-3/inline-replaced-vrl-004-ref.xht
 == css-writing-modes-3/inline-replaced-vrl-002.xht css-writing-modes-3/inline-replaced-vrl-002-ref.xht
 == css-writing-modes-3/inline-replaced-vrl-004.xht css-writing-modes-3/inline-replaced-vrl-004-ref.xht
-fails-if(!stylo) == css-writing-modes-3/inline-table-alignment-002.xht css-writing-modes-3/inline-table-alignment-002-ref.xht
-fails-if(!stylo) == css-writing-modes-3/inline-table-alignment-003.xht css-writing-modes-3/inline-table-alignment-003-ref.xht
-fails-if(!stylo) == css-writing-modes-3/inline-table-alignment-004.xht css-writing-modes-3/inline-table-alignment-002-ref.xht
-fails-if(!stylo) == css-writing-modes-3/inline-table-alignment-005.xht css-writing-modes-3/inline-table-alignment-003-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/inline-table-alignment-002.xht css-writing-modes-3/inline-table-alignment-002-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/inline-table-alignment-003.xht css-writing-modes-3/inline-table-alignment-003-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/inline-table-alignment-004.xht css-writing-modes-3/inline-table-alignment-002-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/inline-table-alignment-005.xht css-writing-modes-3/inline-table-alignment-003-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/line-box-direction-htb-001.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/line-box-direction-slr-043.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/line-box-direction-slr-047.xht css-writing-modes-3/block-flow-direction-002-ref.xht
@@ -825,20 +825,20 @@ fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/line-box-direction-vrl-
 random == css-writing-modes-3/line-box-direction-vrl-015.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/line-box-direction-vrl-017.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,213,1540) == css-writing-modes-3/line-box-direction-vrl-019.xht css-writing-modes-3/block-flow-direction-001-ref.xht
-fails-if(!stylo) == css-writing-modes-3/line-box-height-vlr-003.xht css-writing-modes-3/line-box-height-vlr-003-ref.xht
-fails-if(!stylo) == css-writing-modes-3/line-box-height-vlr-005.xht css-writing-modes-3/line-box-height-vlr-003-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/line-box-height-vlr-003.xht css-writing-modes-3/line-box-height-vlr-003-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/line-box-height-vlr-005.xht css-writing-modes-3/line-box-height-vlr-003-ref.xht
 == css-writing-modes-3/line-box-height-vlr-007.xht css-writing-modes-3/line-box-height-vlr-007-ref.xht
 == css-writing-modes-3/line-box-height-vlr-009.xht css-writing-modes-3/line-box-height-vlr-007-ref.xht
-fails-if(!stylo) == css-writing-modes-3/line-box-height-vlr-011.xht css-writing-modes-3/line-box-height-vlr-011-ref.xht
-fails-if(!stylo) == css-writing-modes-3/line-box-height-vlr-013.xht css-writing-modes-3/line-box-height-vlr-011-ref.xht
-fails-if(!stylo) == css-writing-modes-3/line-box-height-vlr-021.xht css-writing-modes-3/line-box-height-vlr-021-ref.xht
-fails-if(!stylo) == css-writing-modes-3/line-box-height-vlr-023.xht css-writing-modes-3/line-box-height-vlr-023-ref.xht
-fails-if(!stylo) == css-writing-modes-3/line-box-height-vrl-002.xht css-writing-modes-3/line-box-height-vrl-002-ref.xht
-fails-if(!stylo) == css-writing-modes-3/line-box-height-vrl-004.xht css-writing-modes-3/line-box-height-vrl-002-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/line-box-height-vlr-011.xht css-writing-modes-3/line-box-height-vlr-011-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/line-box-height-vlr-013.xht css-writing-modes-3/line-box-height-vlr-011-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/line-box-height-vlr-021.xht css-writing-modes-3/line-box-height-vlr-021-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/line-box-height-vlr-023.xht css-writing-modes-3/line-box-height-vlr-023-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/line-box-height-vrl-002.xht css-writing-modes-3/line-box-height-vrl-002-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/line-box-height-vrl-004.xht css-writing-modes-3/line-box-height-vrl-002-ref.xht
 == css-writing-modes-3/line-box-height-vrl-006.xht css-writing-modes-3/line-box-height-vrl-006-ref.xht
 == css-writing-modes-3/line-box-height-vrl-008.xht css-writing-modes-3/line-box-height-vrl-006-ref.xht
-fails-if(!stylo) == css-writing-modes-3/line-box-height-vrl-010.xht css-writing-modes-3/line-box-height-vrl-010-ref.xht
-fails-if(!stylo) == css-writing-modes-3/line-box-height-vrl-012.xht css-writing-modes-3/line-box-height-vrl-010-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/line-box-height-vrl-010.xht css-writing-modes-3/line-box-height-vrl-010-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/line-box-height-vrl-012.xht css-writing-modes-3/line-box-height-vrl-010-ref.xht
 == css-writing-modes-3/margin-collapse-vlr-003.xht css21/reference/ref-filled-green-100px-square.xht
 == css-writing-modes-3/margin-collapse-vlr-009.xht css21/reference/ref-filled-green-100px-square.xht
 == css-writing-modes-3/margin-collapse-vlr-011.xht css21/reference/ref-filled-green-100px-square.xht
@@ -899,17 +899,17 @@ fuzzy-if(OSX||winWidget,110,1200) == css-writing-modes-3/table-column-order-005.
 fuzzy-if(winWidget,110,1200) == css-writing-modes-3/table-column-order-slr-007.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,110,1200) == css-writing-modes-3/table-column-order-srl-006.xht css-writing-modes-3/block-flow-direction-001-ref.xht
 == css-writing-modes-3/table-progression-slr-001.html css-writing-modes-3/table-progression-slr-001-ref.html
-fails-if(!stylo) == css-writing-modes-3/table-progression-slr-002.html css-writing-modes-3/table-progression-002-ref.html
+fails-if(!styloVsGecko) == css-writing-modes-3/table-progression-slr-002.html css-writing-modes-3/table-progression-002-ref.html
 == css-writing-modes-3/table-progression-srl-001.html css-writing-modes-3/table-progression-001-ref.html
-fails-if(!stylo) == css-writing-modes-3/table-progression-srl-002.html css-writing-modes-3/table-progression-002-ref.html
+fails-if(!styloVsGecko) == css-writing-modes-3/table-progression-srl-002.html css-writing-modes-3/table-progression-002-ref.html
 == css-writing-modes-3/table-progression-vlr-001.html css-writing-modes-3/table-progression-001-ref.html
-fails-if(!stylo) == css-writing-modes-3/table-progression-vlr-002.html css-writing-modes-3/table-progression-002-ref.html
-fails-if(!stylo) == css-writing-modes-3/table-progression-vlr-003.html css-writing-modes-3/table-progression-001-ref.html
-fails-if(!stylo) == css-writing-modes-3/table-progression-vlr-004.html css-writing-modes-3/table-progression-002-ref.html
+fails-if(!styloVsGecko) == css-writing-modes-3/table-progression-vlr-002.html css-writing-modes-3/table-progression-002-ref.html
+fails-if(!styloVsGecko) == css-writing-modes-3/table-progression-vlr-003.html css-writing-modes-3/table-progression-001-ref.html
+fails-if(!styloVsGecko) == css-writing-modes-3/table-progression-vlr-004.html css-writing-modes-3/table-progression-002-ref.html
 == css-writing-modes-3/table-progression-vrl-001.html css-writing-modes-3/table-progression-001-ref.html
-fails-if(!stylo) == css-writing-modes-3/table-progression-vrl-002.html css-writing-modes-3/table-progression-002-ref.html
-fails-if(!stylo) == css-writing-modes-3/table-progression-vrl-003.html css-writing-modes-3/table-progression-001-ref.html
-fails-if(!stylo) == css-writing-modes-3/table-progression-vrl-004.html css-writing-modes-3/table-progression-002-ref.html
+fails-if(!styloVsGecko) == css-writing-modes-3/table-progression-vrl-002.html css-writing-modes-3/table-progression-002-ref.html
+fails-if(!styloVsGecko) == css-writing-modes-3/table-progression-vrl-003.html css-writing-modes-3/table-progression-001-ref.html
+fails-if(!styloVsGecko) == css-writing-modes-3/table-progression-vrl-004.html css-writing-modes-3/table-progression-002-ref.html
 fuzzy-if(OSX||winWidget,75,404) == css-writing-modes-3/text-align-vlr-003.xht css21/reference/ref-filled-green-100px-square.xht
 fuzzy-if(OSX||winWidget,75,404) == css-writing-modes-3/text-align-vlr-005.xht css21/reference/ref-filled-green-100px-square.xht
 fuzzy-if(OSX||winWidget,75,404) == css-writing-modes-3/text-align-vlr-007.xht css21/reference/ref-filled-green-100px-square.xht
@@ -1008,17 +1008,17 @@ fuzzy-if(OSX||winWidget,223,720) == css-writing-modes-3/vertical-alignment-srl-0
 fuzzy-if(OSX||winWidget,223,720) == css-writing-modes-3/vertical-alignment-srl-032.xht css-writing-modes-3/vertical-alignment-006-ref.xht
 fuzzy-if(OSX||winWidget,223,720) == css-writing-modes-3/vertical-alignment-srl-034.xht css-writing-modes-3/vertical-alignment-008-ref.xht
 fuzzy-if(OSX||winWidget,223,720) == css-writing-modes-3/vertical-alignment-srl-040.xht css-writing-modes-3/vertical-alignment-vrl-026-ref.xht
-fails-if(!stylo) == css-writing-modes-3/vertical-alignment-vlr-023.xht css-writing-modes-3/vertical-alignment-vrl-022-ref.xht
-fails-if(!stylo) == css-writing-modes-3/vertical-alignment-vlr-025.xht css-writing-modes-3/vertical-alignment-vrl-022-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/vertical-alignment-vlr-023.xht css-writing-modes-3/vertical-alignment-vrl-022-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/vertical-alignment-vlr-025.xht css-writing-modes-3/vertical-alignment-vrl-022-ref.xht
 fuzzy-if(OSX||winWidget,223,720) == css-writing-modes-3/vertical-alignment-vlr-027.xht css-writing-modes-3/vertical-alignment-vrl-026-ref.xht
-fails-if(!stylo) == css-writing-modes-3/vertical-alignment-vrl-022.xht css-writing-modes-3/vertical-alignment-vrl-022-ref.xht
-fails-if(!stylo) == css-writing-modes-3/vertical-alignment-vrl-024.xht css-writing-modes-3/vertical-alignment-vrl-022-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/vertical-alignment-vrl-022.xht css-writing-modes-3/vertical-alignment-vrl-022-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/vertical-alignment-vrl-024.xht css-writing-modes-3/vertical-alignment-vrl-022-ref.xht
 fuzzy-if(OSX||winWidget,223,720) == css-writing-modes-3/vertical-alignment-vrl-026.xht css-writing-modes-3/vertical-alignment-vrl-026-ref.xht
-fails-if(!stylo) == css-writing-modes-3/wm-propagation-body-006.xht css-writing-modes-3/block-flow-direction-025-ref.xht
-fails-if(!stylo) == css-writing-modes-3/wm-propagation-body-008.xht css-writing-modes-3/block-flow-direction-025-ref.xht
-fails-if(!stylo) == css-writing-modes-3/wm-propagation-body-010.xht css-writing-modes-3/wm-propagation-body-003-ref.xht
-fails-if(!stylo) == css-writing-modes-3/wm-propagation-body-011.xht css-writing-modes-3/wm-propagation-body-003-ref.xht
-fails-if(!stylo) == css-writing-modes-3/wm-propagation-body-015.xht css-writing-modes-3/block-flow-direction-025-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/wm-propagation-body-006.xht css-writing-modes-3/block-flow-direction-025-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/wm-propagation-body-008.xht css-writing-modes-3/block-flow-direction-025-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/wm-propagation-body-010.xht css-writing-modes-3/wm-propagation-body-003-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/wm-propagation-body-011.xht css-writing-modes-3/wm-propagation-body-003-ref.xht
+fails-if(!styloVsGecko) == css-writing-modes-3/wm-propagation-body-015.xht css-writing-modes-3/block-flow-direction-025-ref.xht
 == css-writing-modes-3/writing-mode-horizontal-001l.html css-writing-modes-3/reference/writing-mode-horizontal-001l-ref.html
 == css-writing-modes-3/writing-mode-horizontal-001r.html css-writing-modes-3/reference/writing-mode-horizontal-001r-ref.html
 fuzzy-if(OSX||winWidget,153,612) == css-writing-modes-3/writing-mode-vertical-lr-002.xht css-writing-modes-3/reftest/writing-mode-vertical-lr-002-ref.xht
@@ -1031,11 +1031,11 @@ needs-focus == selectors-4/focus-within-003.html selectors-4/focus-within-001-re
 needs-focus == selectors-4/focus-within-004.html selectors-4/focus-within-001-ref.html
 needs-focus == selectors-4/focus-within-005.html selectors-4/focus-within-001-ref.html
 needs-focus == selectors-4/focus-within-006.html selectors-4/focus-within-001-ref.html
-fails-if(!stylo) needs-focus == selectors-4/focus-within-shadow-001.html selectors-4/focus-within-shadow-001-ref.html
-pref(dom.webcomponents.enabled,true) needs-focus skip-if(stylo) == selectors-4/focus-within-shadow-002.html selectors-4/focus-within-shadow-001-ref.html
-pref(dom.webcomponents.enabled,true) needs-focus skip-if(stylo) == selectors-4/focus-within-shadow-003.html selectors-4/focus-within-shadow-001-ref.html
-pref(dom.webcomponents.enabled,true) needs-focus skip-if(stylo) == selectors-4/focus-within-shadow-004.html selectors-4/focus-within-shadow-001-ref.html
-pref(dom.webcomponents.enabled,true) needs-focus skip-if(stylo) == selectors-4/focus-within-shadow-005.html selectors-4/focus-within-shadow-001-ref.html
+fails-if(!styloVsGecko) needs-focus == selectors-4/focus-within-shadow-001.html selectors-4/focus-within-shadow-001-ref.html
+pref(dom.webcomponents.enabled,true) needs-focus skip-if(styloVsGecko) == selectors-4/focus-within-shadow-002.html selectors-4/focus-within-shadow-001-ref.html
+pref(dom.webcomponents.enabled,true) needs-focus skip-if(styloVsGecko) == selectors-4/focus-within-shadow-003.html selectors-4/focus-within-shadow-001-ref.html
+pref(dom.webcomponents.enabled,true) needs-focus skip-if(styloVsGecko) == selectors-4/focus-within-shadow-004.html selectors-4/focus-within-shadow-001-ref.html
+pref(dom.webcomponents.enabled,true) needs-focus skip-if(styloVsGecko) == selectors-4/focus-within-shadow-005.html selectors-4/focus-within-shadow-001-ref.html
 == selectors-4/of-type-selectors.xhtml selectors-4/of-type-selectors-ref.xhtml
 == selectors-4/selector-required.html selectors-4/selector-required-ref.html
 == selectors-4/selectors-dir-selector-ltr-001.html selectors-4/selectors-dir-selector-ref.html

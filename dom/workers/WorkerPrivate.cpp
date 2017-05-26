@@ -1595,6 +1595,12 @@ PRThreadFromThread(nsIThread* aThread)
   return result;
 }
 
+class SimpleWorkerHolder final : public WorkerHolder
+{
+public:
+  virtual bool Notify(Status aStatus) { return true; }
+};
+
 } /* anonymous namespace */
 
 NS_IMPL_ISUPPORTS_INHERITED0(MainThreadReleaseRunnable, Runnable)
@@ -4579,11 +4585,21 @@ WorkerPrivate::Constructor(JSContext* aCx,
                            const nsACString& aServiceWorkerScope,
                            WorkerLoadInfo* aLoadInfo, ErrorResult& aRv)
 {
+  // If this is a sub-worker, we need to keep the parent worker alive until this
+  // one is registered.
+  UniquePtr<SimpleWorkerHolder> holder;
+
   WorkerPrivate* parent = NS_IsMainThread() ?
                           nullptr :
                           GetCurrentThreadWorkerPrivate();
   if (parent) {
     parent->AssertIsOnWorkerThread();
+
+    holder.reset(new SimpleWorkerHolder());
+    if (!holder->HoldWorker(parent, Canceling)) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return nullptr;
+    }
   } else {
     AssertIsOnMainThread();
   }

@@ -30,7 +30,7 @@ module.exports = {
       "requireReturn": false,
       "requireReturnDescription": false,
     }],
-   
+
     // Forbid spaces inside the square brackets of array literals.
     "array-bracket-spacing": ["error", "never"],
 
@@ -39,7 +39,7 @@ module.exports = {
 
     // No space padding in parentheses
     "space-in-parens": ["error", "never"],
-   
+
     // Commas at the end of the line not the start
     "comma-style": "error",
 
@@ -57,7 +57,7 @@ module.exports = {
 
     // Use [] instead of Array()
     "no-array-constructor": "error",
-   
+
     // No expressions where a statement is expected
     "no-unused-expressions": "error",
 
@@ -104,9 +104,6 @@ module.exports = {
     // Disallow control characters in regular expressions.
     "no-control-regex": "error",
 
-    // Disallow use of eval(). We have other APIs to evaluate code in content.
-    "no-eval": "error",
-
     // Disallow fallthrough of case statements, except if there is a comment.
     "no-fallthrough": "error",
 
@@ -144,9 +141,6 @@ module.exports = {
 
     // Disallow Yoda conditions (where literal value comes first).
     "yoda": "error",
-
-    // disallow use of eval()-like methods
-    "no-implied-eval": "error",
 
     // Disallow function or variable declarations in nested blocks
     "no-inner-declarations": "error",

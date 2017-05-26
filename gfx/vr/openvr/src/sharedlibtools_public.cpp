@@ -3,7 +3,7 @@
 #include <string.h>
 
 #if defined(_WIN32)
-#include <Windows.h>
+#include <windows.h>
 #endif
 
 #if defined(POSIX)
@@ -22,7 +22,7 @@ SharedLibHandle SharedLib_Load( const char *pchPath )
 void *SharedLib_GetFunction( SharedLibHandle lib, const char *pchFunctionName)
 {
 #if defined( _WIN32)
-	return GetProcAddress( (HMODULE)lib, pchFunctionName );
+  return (void*)GetProcAddress( (HMODULE)lib, pchFunctionName );
 #elif defined(POSIX)
 	return dlsym( lib, pchFunctionName );
 #endif

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="data:text/css,@counter-style a { system: fixed; symbols: A B C D; suffix: '' }">
+<link rel="stylesheet" href="data:text/css,@counter-style a { system: fixed; symbols: A B C D; suffix: '' }">
+<link rel="stylesheet" href="test-common.css">
+<ol style="list-style-type: a">
+  <li><li><li><li><li>
+</ol>
+<script>
+  onload = function() {
+    var links = document.getElementsByTagName("link");
+    links[0].sheet.cssRules[0].symbols = "\25F0 \25F1 \25F2 \25F3";
+  }
+</script>

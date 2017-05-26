@@ -10,6 +10,20 @@
  * for more information.
  */
 
+/* defined by the harness */
+/* globals _HEAD_FILES, _HEAD_JS_PATH, _JSDEBUGGER_PORT, _JSCOV_DIR,
+    _MOZINFO_JS_PATH, _TEST_FILE, _TEST_NAME, _TESTING_MODULES_DIR,
+    _XPCSHELL_PROCESS:true */
+
+/* defined by XPCShellImpl.cpp */
+/* globals load, sendCommand */
+
+/* must be defined by tests using do_await_remote_message/do_send_remote_message */
+/* globals Cc, Ci */
+
+/* may be defined in test files */
+/* globals run_test */
+
 var _quit = false;
 var _passed = true;
 var _tests_pending = 0;
@@ -38,13 +52,13 @@ var Assert = new AssertCls(function(err, message, stack) {
 });
 
 
-var _add_params = function (params) {
+var _add_params = function(params) {
   if (typeof _XPCSHELL_PROCESS != "undefined") {
     params.xpcshell_process = _XPCSHELL_PROCESS;
   }
 };
 
-var _dumpLog = function (raw_msg) {
+var _dumpLog = function(raw_msg) {
   dump("\n" + JSON.stringify(raw_msg) + "\n");
 }
 
@@ -66,8 +80,7 @@ try {
   runningInParent = Components.classes["@mozilla.org/xre/runtime;1"].
                     getService(Components.interfaces.nsIXULRuntime).processType
                     == Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-}
-catch (e) { }
+} catch (e) { }
 
 // Only if building of places is enabled.
 if (runningInParent &&
@@ -93,8 +106,7 @@ try {
       prefs.setCharPref("network.dns.ipv4OnlyDomains", "localhost");
     }
   }
-}
-catch (e) { }
+} catch (e) { }
 
 // Configure crash reporting, if possible
 // We rely on the Python harness to set MOZ_CRASHREPORTER,
@@ -110,8 +122,7 @@ try {
     crashReporter.UpdateCrashEventsDir();
     crashReporter.minidumpPath = do_get_minidumpdir();
   }
-}
-catch (e) { }
+} catch (e) { }
 
 // Configure a console listener so messages sent to it are logged as part
 // of the test.
@@ -122,14 +133,14 @@ try {
   }
 
   let listener = {
-    QueryInterface : function(iid) {
+    QueryInterface(iid) {
       if (!iid.equals(Components.interfaces.nsISupports) &&
           !iid.equals(Components.interfaces.nsIConsoleListener)) {
         throw Components.results.NS_NOINTERFACE;
       }
       return this;
     },
-    observe : function (msg) {
+    observe(msg) {
       if (typeof do_print === "function")
         do_print("CONSOLE_MESSAGE: (" + levelNames[msg.logLevel] + ") " + msg.toString());
     }
@@ -166,7 +177,7 @@ function _Timer(func, delay) {
   _pendingTimers.push(timer);
 }
 _Timer.prototype = {
-  QueryInterface: function(iid) {
+  QueryInterface(iid) {
     if (iid.equals(Components.interfaces.nsITimerCallback) ||
         iid.equals(Components.interfaces.nsISupports))
       return this;
@@ -174,7 +185,7 @@ _Timer.prototype = {
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
 
-  notify: function(timer) {
+  notify(timer) {
     _pendingTimers.splice(_pendingTimers.indexOf(timer), 1);
 
     // The current nsITimer implementation can undershoot, but even if it
@@ -240,8 +251,7 @@ var _fakeIdleService = {
     return this.registrar.contractIDToCID(this.contractID);
   },
 
-  activate: function FIS_activate()
-  {
+  activate: function FIS_activate() {
     if (!this.originalFactory) {
       // Save original factory.
       this.originalFactory =
@@ -256,8 +266,7 @@ var _fakeIdleService = {
     }
   },
 
-  deactivate: function FIS_deactivate()
-  {
+  deactivate: function FIS_deactivate() {
     if (this.originalFactory) {
       // Unregister the mock.
       this.registrar.unregisterFactory(this.CID, this.factory);
@@ -270,17 +279,16 @@ var _fakeIdleService = {
 
   factory: {
     // nsIFactory
-    createInstance: function (aOuter, aIID)
-    {
+    createInstance(aOuter, aIID) {
       if (aOuter) {
         throw Components.results.NS_ERROR_NO_AGGREGATION;
       }
       return _fakeIdleService.QueryInterface(aIID);
     },
-    lockFactory: function (aLock) {
+    lockFactory(aLock) {
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
-    QueryInterface: function(aIID) {
+    QueryInterface(aIID) {
       if (aIID.equals(Components.interfaces.nsIFactory) ||
           aIID.equals(Components.interfaces.nsISupports)) {
         return this;
@@ -293,10 +301,10 @@ var _fakeIdleService = {
   get idleTime() {
     return 0;
   },
-  addIdleObserver: function () {},
-  removeIdleObserver: function () {},
+  addIdleObserver() {},
+  removeIdleObserver() {},
 
-  QueryInterface: function(aIID) {
+  QueryInterface(aIID) {
     // Useful for testing purposes, see test_get_idle.js.
     if (aIID.equals(Components.interfaces.nsIFactory)) {
       return this.factory;
@@ -448,7 +456,7 @@ function _setupDebuggerServer(breakpointFiles, callback) {
 
 function _initDebugging(port) {
   let initialized = false;
-  let DebuggerServer = _setupDebuggerServer(_TEST_FILE, () => {initialized = true;});
+  let DebuggerServer = _setupDebuggerServer(_TEST_FILE, () => { initialized = true; });
 
   do_print("");
   do_print("*******************************************************************");
@@ -505,7 +513,7 @@ function _execute_test() {
   _PromiseTestUtils.Assert = Assert;
 
   let coverageCollector = null;
-  if (typeof _JSCOV_DIR === 'string') {
+  if (typeof _JSCOV_DIR === "string") {
     let _CoverageCollector = Components.utils.import("resource://testing-common/CoverageUtils.jsm", {}).CoverageCollector;
     coverageCollector = new _CoverageCollector(_JSCOV_DIR);
   }
@@ -522,7 +530,7 @@ function _execute_test() {
   }
 
   if (_gTestHasOnly) {
-    _gTests = _gTests.filter(([props,]) => {
+    _gTests = _gTests.filter(([props, ]) => {
       return ("_only" in props) && props._only;
     });
   }
@@ -605,8 +613,7 @@ function _execute_test() {
       }
     }
     _cleanupFunctions = [];
-  }.bind(this)).catch(reportCleanupError)
-               .then(() => complete = true);
+  }).catch(reportCleanupError).then(() => complete = true);
   let thr = Components.classes["@mozilla.org/thread-manager;1"]
                       .getService().currentThread;
   while (!complete) {
@@ -666,7 +673,7 @@ function _wrap_with_quotes_if_necessary(val) {
   return typeof val == "string" ? '"' + val + '"' : val;
 }
 
-/************** Functions to be used from the tests **************/
+/* ************* Functions to be used from the tests ************* */
 
 /**
  * Prints a message to the output log.
@@ -698,7 +705,7 @@ function do_execute_soon(callback, aName) {
                      .getService(Components.interfaces.nsIThreadManager);
 
   tm.dispatchToMainThread({
-    run: function() {
+    run() {
       try {
         callback();
       } catch (e) {
@@ -711,14 +718,13 @@ function do_execute_soon(callback, aName) {
           let stack = e.stack ? _format_stack(e.stack) : null;
           _testLogger.testStatus(_TEST_NAME,
                                  funcName,
-                                 'FAIL',
-                                 'PASS',
+                                 "FAIL",
+                                 "PASS",
                                  _exception_message(e),
                                  stack);
           _do_quit();
         }
-      }
-      finally {
+      } finally {
         do_test_finished(funcName);
       }
     }
@@ -865,22 +871,20 @@ function do_report_result(passed, text, stack, todo) {
                              "PASS",
                              message);
     }
+  } else if (todo) {
+    _testLogger.testStatus(_TEST_NAME,
+                           name,
+                           "FAIL",
+                           "FAIL",
+                           message);
   } else {
-    if (todo) {
-      _testLogger.testStatus(_TEST_NAME,
-                             name,
-                             "FAIL",
-                             "FAIL",
-                             message);
-    } else {
-      _testLogger.testStatus(_TEST_NAME,
-                             name,
-                             "FAIL",
-                             "PASS",
-                             message,
-                             _format_stack(stack));
-      _abort_failed_test();
-    }
+    _testLogger.testStatus(_TEST_NAME,
+                           name,
+                           "FAIL",
+                           "PASS",
+                           message,
+                           _format_stack(stack));
+    _abort_failed_test();
   }
 }
 
@@ -930,7 +934,7 @@ function do_check_null(condition, stack) {
   Assert.equal(condition, null);
 }
 
-function todo_check_null(condition, stack=Components.stack.caller) {
+function todo_check_null(condition, stack = Components.stack.caller) {
   todo_check_eq(condition, null, stack);
 }
 function do_check_matches(pattern, value) {
@@ -940,10 +944,9 @@ function do_check_matches(pattern, value) {
 // Check that |func| throws an nsIException that has
 // |Components.results[resultName]| as the value of its 'result' property.
 function do_check_throws_nsIException(func, resultName,
-                                      stack=Components.stack.caller, todo=false)
-{
+                                      stack = Components.stack.caller, todo = false) {
   let expected = Components.results[resultName];
-  if (typeof expected !== 'number') {
+  if (typeof expected !== "number") {
     do_throw("do_check_throws_nsIException requires a Components.results" +
              " property name, not " + uneval(resultName), stack);
   }
@@ -972,16 +975,15 @@ function do_check_throws_nsIException(func, resultName,
 
 // Produce a human-readable form of |exception|. This looks up
 // Components.results values, tries toString methods, and so on.
-function legible_exception(exception)
-{
+function legible_exception(exception) {
   switch (typeof exception) {
-    case 'object':
+    case "object":
     if (exception instanceof Components.interfaces.nsIException) {
       return "nsIException instance: " + uneval(exception.toString());
     }
     return exception.toString();
 
-    case 'number':
+    case "number":
     for (let name in Components.results) {
       if (exception === Components.results[name]) {
         return "Components.results." + name;
@@ -995,14 +997,14 @@ function legible_exception(exception)
 }
 
 function do_check_instanceof(value, constructor,
-                             stack=Components.stack.caller, todo=false) {
+                             stack = Components.stack.caller, todo = false) {
   do_report_result(value instanceof constructor,
                    "value should be an instance of " + constructor.name,
                    stack, todo);
 }
 
 function todo_check_instanceof(value, constructor,
-                             stack=Components.stack.caller) {
+                             stack = Components.stack.caller) {
   do_check_instanceof(value, constructor, stack, true);
 }
 
@@ -1047,8 +1049,7 @@ function do_get_file(path, allowNonexistent) {
     }
 
     return lf;
-  }
-  catch (ex) {
+  } catch (ex) {
     do_throw(ex.toString(), Components.stack.caller);
   }
 
@@ -1090,7 +1091,7 @@ function do_parse_document(aPath, aType) {
   }
 
   let file = do_get_file(aPath),
-      ios = Components.classes['@mozilla.org/network/io-service;1']
+      ios = Components.classes["@mozilla.org/network/io-service;1"]
             .getService(Components.interfaces.nsIIOService),
       url = ios.newFileURI(file).spec;
   file = null;
@@ -1113,8 +1114,7 @@ function do_parse_document(aPath, aType) {
  * @param aFunction
  *        The function to be called when the test harness has finished running.
  */
-function do_register_cleanup(aFunction)
-{
+function do_register_cleanup(aFunction) {
   _cleanupFunctions.push(aFunction);
 }
 
@@ -1150,9 +1150,8 @@ function do_get_minidumpdir() {
                          .createInstance(Components.interfaces.nsILocalFile);
     file.initWithPath(path);
     return file;
-  } else {
-    return do_get_tempdir();
   }
+  return do_get_tempdir();
 }
 
 /**
@@ -1179,7 +1178,7 @@ function do_get_profile(notifyProfileAfterChange = false) {
   let dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
                          .getService(Components.interfaces.nsIProperties);
   let provider = {
-    getFile: function(prop, persistent) {
+    getFile(prop, persistent) {
       persistent.value = true;
       if (prop == "ProfD" || prop == "ProfLD" || prop == "ProfDS" ||
           prop == "ProfLDS" || prop == "TmpD") {
@@ -1187,7 +1186,7 @@ function do_get_profile(notifyProfileAfterChange = false) {
       }
       return null;
     },
-    QueryInterface: function(iid) {
+    QueryInterface(iid) {
       if (iid.equals(Components.interfaces.nsIDirectoryServiceProvider) ||
           iid.equals(Components.interfaces.nsISupports)) {
         return this;
@@ -1236,8 +1235,7 @@ function do_get_profile(notifyProfileAfterChange = false) {
  * (Note that you may use sendCommand without calling this function first;  you
  * simply won't have any of the functions in this file available.)
  */
-function do_load_child_test_harness()
-{
+function do_load_child_test_harness() {
   // Make sure this isn't called from child process
   if (!runningInParent) {
     do_throw("run_test_in_child cannot be called from child!");
@@ -1259,7 +1257,7 @@ function do_load_child_test_harness()
       + "const _JSDEBUGGER_PORT=0; "
       + "const _XPCSHELL_PROCESS='child';";
 
-  if (typeof _JSCOV_DIR === 'string') {
+  if (typeof _JSCOV_DIR === "string") {
     command += " const _JSCOV_DIR=" + uneval(_JSCOV_DIR) + ";";
   }
 
@@ -1284,12 +1282,11 @@ function do_load_child_test_harness()
  *        complete.  If provided, the function must call do_test_finished();
  * @return Promise Resolved when the test in the child is complete.
  */
-function run_test_in_child(testFile, optionalCallback)
-{
+function run_test_in_child(testFile, optionalCallback) {
   return new Promise((resolve) => {
     var callback = () => {
       resolve();
-      if (typeof optionalCallback == 'undefined') {
+      if (typeof optionalCallback == "undefined") {
         do_test_finished();
       } else {
         optionalCallback();
@@ -1317,11 +1314,10 @@ function run_test_in_child(testFile, optionalCallback)
  *        the function must call do_test_finished().
  * @return Promise Promise that is resolved when the message is received.
  */
-function do_await_remote_message(name, optionalCallback)
-{
+function do_await_remote_message(name, optionalCallback) {
   return new Promise((resolve) => {
     var listener = {
-      receiveMessage: function(message) {
+      receiveMessage(message) {
         if (message.name == name) {
           mm.removeMessageListener(name, listener);
           resolve();
@@ -1354,10 +1350,10 @@ function do_send_remote_message(name) {
   var sender;
   if (runningInParent) {
     mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIMessageBroadcaster);
-    sender = 'broadcastAsyncMessage';
+    sender = "broadcastAsyncMessage";
   } else {
     mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
-    sender = 'sendAsyncMessage';
+    sender = "sendAsyncMessage";
   }
   mm[sender](name);
 }
@@ -1518,21 +1514,19 @@ var _gRunningTest = null;
 var _gTestIndex = 0; // The index of the currently running test.
 var _gTaskRunning = false;
 var _gTestHasOnly = false;
-function run_next_test()
-{
+function run_next_test() {
   if (_gTaskRunning) {
     throw new Error("run_next_test() called from an add_task() test function. " +
                     "run_next_test() should not be called from inside add_task() " +
                     "under any circumstances!");
   }
 
-  function _run_next_test()
-  {
+  function _run_next_test() {
     if (_gTestIndex < _gTests.length) {
       // Check for uncaught rejections as early and often as possible.
       _PromiseTestUtils.assertNoUncaughtRejections();
       let _properties;
-      [_properties, _gRunningTest,] = _gTests[_gTestIndex++];
+      [_properties, _gRunningTest, ] = _gTests[_gTestIndex++];
       if (typeof(_properties.skip_if) == "function" && _properties.skip_if()) {
         let _condition = _properties.skip_if.toSource().replace(/\(\)\s*=>\s*/, "");
         let _message = _gRunningTest.name

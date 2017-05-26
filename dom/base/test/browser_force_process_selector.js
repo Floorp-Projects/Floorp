@@ -1,11 +1,16 @@
 "use strict";
 
+const CONTENT_CREATED = "ipc:content-created";
+
 // Make sure that BTU.withNewTab({ ..., forceNewProcess: true }) loads
 // new tabs in their own process.
 async function spawnNewAndTest(recur, pids) {
+  let processCreated = TestUtils.topicObserved(CONTENT_CREATED);
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank", forceNewProcess: true },
                                     function* (browser) {
-      // Make sure our new browser is in its own process.
+      // Make sure our new browser is in its own process. The processCreated
+      // promise should have already resolved by this point.
+      yield processCreated;
       let newPid = browser.frameLoader.tabParent.osPid;
       ok(!pids.has(newPid), "new tab is in its own process");
       pids.add(newPid);
@@ -13,14 +18,16 @@ async function spawnNewAndTest(recur, pids) {
       if (recur) {
         yield spawnNewAndTest(recur - 1, pids);
       } else {
+        let observer = () => {
+          ok(false, "shouldn't have created a new process");
+        };
+        Services.obs.addObserver(observer, CONTENT_CREATED);
+
         yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function* (browser) {
-          // This browser should share a PID with one of the existing tabs.
-          // This is a todo because the process we end up using is actually
-          // an extra process that gets started early in startup and not one
-          // of the ones we use for the tabs.
-          todo(pids.has(browser.frameLoader.tabParent.osPid),
-               "we should be reusing processes if not asked to force the " +
-               "tab into its own process");
+          // If this new tab caused us to create a new process, the ok(false)
+          // should have already happened. Therefore, if we get here, we've
+          // passed. Simply remove the observer.
+          Services.obs.removeObserver(observer, CONTENT_CREATED);
         });
       }
   });

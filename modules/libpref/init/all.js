@@ -1683,7 +1683,7 @@ pref("network.http.keep_empty_response_headers_as_empty_string", true);
 pref("network.http.max_response_header_size", 393216);
 
 // If we should attempt to race the cache and network
-pref("network.http.rcwn.enabled", true);
+pref("network.http.rcwn.enabled", false);
 pref("network.http.rcwn.cache_queue_normal_threshold", 8);
 pref("network.http.rcwn.cache_queue_priority_threshold", 2);
 // We might attempt to race the cache with the network only if a resource
@@ -3114,21 +3114,10 @@ pref("dom.ipc.plugins.unloadTimeoutSecs", 30);
 // Asynchronous plugin initialization is on hold.
 pref("dom.ipc.plugins.asyncInit.enabled", false);
 
-#ifdef RELEASE_OR_BETA
-#ifdef _AMD64_
 // Allow Flash async drawing mode in 64-bit release builds
 pref("dom.ipc.plugins.asyncdrawing.enabled", true);
 // Force the accelerated direct path for a subset of Flash wmode values
 pref("dom.ipc.plugins.forcedirect.enabled", true);
-#else
-// Disable async drawing for 32-bit release builds
-pref("dom.ipc.plugins.asyncdrawing.enabled", false);
-#endif // _AMD64_
-#else
-// Enable in dev channels
-pref("dom.ipc.plugins.asyncdrawing.enabled", true);
-pref("dom.ipc.plugins.forcedirect.enabled", true);
-#endif
 
 #ifdef RELEASE_OR_BETA
 pref("dom.ipc.processCount", 1);

@@ -30,7 +30,6 @@ class CSSRuleListImpl;
 class nsCSSRuleProcessor;
 class nsIURI;
 class nsMediaQueryResultCacheKey;
-class nsStyleSet;
 class nsPresContext;
 class nsXMLNameSpaceMap;
 
@@ -59,7 +58,7 @@ struct CSSStyleSheetInner : public StyleSheetInfo
                      CSSStyleSheet* aPrimarySheet);
   ~CSSStyleSheetInner();
 
-  CSSStyleSheetInner* CloneFor(CSSStyleSheet* aPrimarySheet);
+  StyleSheetInfo* CloneFor(StyleSheet* aPrimarySheet) override;
   void RemoveSheet(StyleSheet* aSheet) override;
 
   void RebuildNameSpaces();
@@ -128,8 +127,6 @@ public:
     nsIDocument* aCloneDocument,
     nsINode* aCloneOwningNode) const final;
 
-  bool IsModified() const final { return mDirty; }
-
   void SetModifiedByChildRule() {
     NS_ASSERTION(mDirty,
                  "sheet must be marked dirty before handing out child rules");
@@ -139,17 +136,9 @@ public:
   nsresult AddRuleProcessor(nsCSSRuleProcessor* aProcessor);
   nsresult DropRuleProcessor(nsCSSRuleProcessor* aProcessor);
 
-  void AddStyleSet(nsStyleSet* aStyleSet);
-  void DropStyleSet(nsStyleSet* aStyleSet);
-
   // nsICSSLoaderObserver interface
   NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus) override;
-
-  void EnsureUniqueInner();
-
-  // Append all of this sheet's child sheets to aArray.
-  void AppendAllChildSheets(nsTArray<CSSStyleSheet*>& aArray);
 
   bool UseForPresentation(nsPresContext* aPresContext,
                             nsMediaQueryResultCacheKey& aKey) const;
@@ -174,8 +163,7 @@ public:
   // version.
   css::Rule* GetDOMOwnerRule() const final;
 
-  void WillDirty();
-  void DidDirty();
+  void DidDirty() override;
 
 private:
   CSSStyleSheet(const CSSStyleSheet& aCopy,
@@ -190,7 +178,7 @@ private:
 protected:
   virtual ~CSSStyleSheet();
 
-  void ClearRuleCascades();
+  void ClearRuleCascadesInternal() override;
 
   // Add the namespace mapping from this @namespace rule to our namespace map
   nsresult RegisterNamespaceRule(css::Rule* aRule);
@@ -223,12 +211,10 @@ protected:
   css::ImportRule*      mOwnerRule; // weak ref
 
   RefPtr<CSSRuleListImpl> mRuleCollection;
-  bool                  mDirty; // has been modified 
   bool                  mInRuleProcessorCache;
   RefPtr<dom::Element> mScopeElement;
 
   AutoTArray<nsCSSRuleProcessor*, 8>* mRuleProcessors;
-  nsTArray<nsStyleSet*> mStyleSets;
 
   friend class mozilla::StyleSheet;
   friend class ::nsCSSRuleProcessor;
