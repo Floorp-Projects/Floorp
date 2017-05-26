@@ -502,7 +502,7 @@ ProfileEntry::pcToOffset(JSScript* aScript, jsbytecode* aPc) {
     return aPc ? aScript->pcToOffset(aPc) : NullPCOffset;
 }
 
-JS_FRIEND_API(void)
+void
 ProfileEntry::setPC(jsbytecode* pc) volatile
 {
     MOZ_ASSERT(isJs());
