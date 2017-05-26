@@ -22,9 +22,6 @@ XPCOMUtils.defineLazyGetter(this, "UUIDMap", () => {
   return UUIDMap;
 });
 
-const {appinfo} = Services;
-const isParentProcess = appinfo.processType === appinfo.PROCESS_TYPE_DEFAULT;
-
 /*
  * This file should be kept short and simple since it's loaded even
  * when no extensions are running.
@@ -88,10 +85,7 @@ var ExtensionManagement = {
   },
 
   get isExtensionProcess() {
-    if (this.useRemoteWebExtensions) {
-      return appinfo.remoteType === E10SUtils.EXTENSION_REMOTE_TYPE;
-    }
-    return isParentProcess;
+    return WebExtensionPolicy.isExtensionProcess;
   },
 
   // Called when a new extension is loaded.

@@ -88,3 +88,5 @@ XPCSHELL_TESTS_MANIFESTS += [
     'test/xpcshell/xpcshell-remote.ini',
     'test/xpcshell/xpcshell.ini',
 ]
+
+include('/ipc/chromium/chromium-config.mozbuild')

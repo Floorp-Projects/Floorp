@@ -131,6 +131,9 @@ public:
   GetByURI(dom::GlobalObject& aGlobal, nsIURI* aURI);
 
 
+  static bool IsExtensionProcess(dom::GlobalObject& aGlobal);
+
+
   nsISupports* GetParentObject() const { return mParent; }
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) override;
