@@ -24,6 +24,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "nsIPrompt.h"
 
+using mozilla::dom::ContentChild;
 using namespace mozilla::ipc;
 
 #undef LOG
@@ -153,6 +154,8 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
   LOG(("FTPChannelChild::AsyncOpen [this=%p]\n", this));
 
   NS_ENSURE_TRUE((gNeckoChild), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(!static_cast<ContentChild*>(gNeckoChild->Manager())->
+                   IsShuttingDown(), NS_ERROR_FAILURE);
   NS_ENSURE_ARG_POINTER(listener);
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
@@ -188,7 +191,7 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
 
   mozilla::ipc::AutoIPCStream autoStream;
   autoStream.Serialize(mUploadStream,
-                       static_cast<mozilla::dom::ContentChild*>(gNeckoChild->Manager()));
+                       static_cast<ContentChild*>(gNeckoChild->Manager()));
 
   FTPChannelOpenArgs openArgs;
   SerializeURI(nsBaseChannel::URI(), openArgs.uri());
@@ -873,6 +876,10 @@ FTPChannelChild::Resume()
 NS_IMETHODIMP
 FTPChannelChild::ConnectParent(uint32_t id)
 {
+  NS_ENSURE_TRUE((gNeckoChild), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(!static_cast<ContentChild*>(gNeckoChild->Manager())->
+                   IsShuttingDown(), NS_ERROR_FAILURE);
+
   LOG(("FTPChannelChild::ConnectParent [this=%p]\n", this));
 
   mozilla::dom::TabChild* tabChild = nullptr;
@@ -936,6 +943,8 @@ FTPChannelChild::DivertToParent(ChannelDiverterChild **aChild)
   MOZ_RELEASE_ASSERT(aChild);
   MOZ_RELEASE_ASSERT(gNeckoChild);
   MOZ_RELEASE_ASSERT(!mDivertingToParent);
+  NS_ENSURE_TRUE(!static_cast<ContentChild*>(gNeckoChild->Manager())->
+                   IsShuttingDown(), NS_ERROR_FAILURE);
 
   LOG(("FTPChannelChild::DivertToParent [this=%p]\n", this));
 
