@@ -314,7 +314,6 @@ public:
 
   bool IsExpectingSystemMessage();
 
-  void OnAudioChannelProcessChanged(nsISupports* aSubject);
   void OnRemoteBrowserFrameShown(nsISupports* aSubject);
   void OnTabParentDestroyed(nsISupports* aSubject);
   void OnFrameloaderVisibleChanged(nsISupports* aSubject);
@@ -695,7 +694,6 @@ ParticularProcessPriorityManager::Init()
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    os->AddObserver(this, "audio-channel-process-changed", /* ownsWeak */ true);
     os->AddObserver(this, "remote-browser-shown", /* ownsWeak */ true);
     os->AddObserver(this, "ipc:browser-destroyed", /* ownsWeak */ true);
     os->AddObserver(this, "frameloader-visible-changed", /* ownsWeak */ true);
@@ -768,9 +766,7 @@ ParticularProcessPriorityManager::Observe(nsISupports* aSubject,
 
   nsDependentCString topic(aTopic);
 
-  if (topic.EqualsLiteral("audio-channel-process-changed")) {
-    OnAudioChannelProcessChanged(aSubject);
-  } else if (topic.EqualsLiteral("remote-browser-shown")) {
+  if (topic.EqualsLiteral("remote-browser-shown")) {
     OnRemoteBrowserFrameShown(aSubject);
   } else if (topic.EqualsLiteral("ipc:browser-destroyed")) {
     OnTabParentDestroyed(aSubject);
@@ -820,19 +816,6 @@ ParticularProcessPriorityManager::NameWithComma()
   mNameWithComma = NS_ConvertUTF16toUTF8(name);
   mNameWithComma.AppendLiteral(", ");
   return mNameWithComma;
-}
-
-void
-ParticularProcessPriorityManager::OnAudioChannelProcessChanged(nsISupports* aSubject)
-{
-  nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(aSubject);
-  NS_ENSURE_TRUE_VOID(props);
-
-  uint64_t childID = CONTENT_PROCESS_ID_UNKNOWN;
-  props->GetPropertyAsUint64(NS_LITERAL_STRING("childID"), &childID);
-  if (childID == ChildID()) {
-    ResetPriority();
-  }
 }
 
 void
