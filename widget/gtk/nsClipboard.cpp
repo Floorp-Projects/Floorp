@@ -246,7 +246,8 @@ nsClipboard::SetData(nsITransferable *aTransferable,
     GtkTargetEntry *gtkTargets = gtk_target_table_new_from_list(list, &numTargets);
           
     // Set getcallback and request to store data after an application exit
-    if (gtk_clipboard_set_with_data(gtkClipboard, gtkTargets, numTargets, 
+    if (gtkTargets &&
+        gtk_clipboard_set_with_data(gtkClipboard, gtkTargets, numTargets,
                                     clipboard_get_cb, clipboard_clear_cb, this))
     {
         // We managed to set-up the clipboard so update internal state
