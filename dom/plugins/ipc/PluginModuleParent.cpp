@@ -1783,19 +1783,6 @@ PluginModuleParent::SetPluginFuncs(NPPluginFuncs* aFuncs)
     }
 }
 
-#define RESOLVE_AND_CALL(instance, func)                                       \
-NP_BEGIN_MACRO                                                                 \
-    PluginAsyncSurrogate* surrogate = nullptr;                                 \
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance, &surrogate);\
-    if (surrogate && (!i || i->UseSurrogate())) {                              \
-        return surrogate->func;                                                \
-    }                                                                          \
-    if (!i) {                                                                  \
-        return NPERR_GENERIC_ERROR;                                            \
-    }                                                                          \
-    return i->func;                                                            \
-NP_END_MACRO
-
 NPError
 PluginModuleParent::NPP_Destroy(NPP instance,
                                 NPSavedData** saved)
@@ -1807,20 +1794,14 @@ PluginModuleParent::NPP_Destroy(NPP instance,
     //  (4) free parent
 
     PLUGIN_LOG_DEBUG_FUNCTION;
-    PluginAsyncSurrogate* surrogate = nullptr;
-    PluginInstanceParent* parentInstance =
-        PluginInstanceParent::Cast(instance, &surrogate);
-    if (surrogate && (!parentInstance || parentInstance->UseSurrogate())) {
-        return surrogate->NPP_Destroy(saved);
-    }
-
-    if (!parentInstance)
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    if (!pip)
         return NPERR_NO_ERROR;
 
-    NPError retval = parentInstance->Destroy();
+    NPError retval = pip->Destroy();
     instance->pdata = nullptr;
 
-    Unused << PluginInstanceParent::Call__delete__(parentInstance);
+    Unused << PluginInstanceParent::Call__delete__(pip);
     return retval;
 }
 
@@ -1830,13 +1811,17 @@ PluginModuleParent::NPP_NewStream(NPP instance, NPMIMEType type,
                                   uint16_t* stype)
 {
     AUTO_PROFILER_LABEL("PluginModuleParent::NPP_NewStream", OTHER);
-    RESOLVE_AND_CALL(instance, NPP_NewStream(type, stream, seekable, stype));
+
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->NPP_NewStream(type, stream, seekable, stype)
+               : NPERR_GENERIC_ERROR;
 }
 
 NPError
 PluginModuleParent::NPP_SetWindow(NPP instance, NPWindow* window)
 {
-    RESOLVE_AND_CALL(instance, NPP_SetWindow(window));
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->NPP_SetWindow(window) : NPERR_GENERIC_ERROR;
 }
 
 NPError
@@ -1844,23 +1829,16 @@ PluginModuleParent::NPP_DestroyStream(NPP instance,
                                       NPStream* stream,
                                       NPReason reason)
 {
-    RESOLVE_AND_CALL(instance, NPP_DestroyStream(stream, reason));
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->NPP_DestroyStream(stream, reason) : NPERR_GENERIC_ERROR;
 }
 
 int32_t
 PluginModuleParent::NPP_WriteReady(NPP instance,
                                    NPStream* stream)
 {
-    PluginAsyncSurrogate* surrogate = nullptr;
-    BrowserStreamParent* s = StreamCast(instance, stream, &surrogate);
-    if (!s) {
-        if (surrogate) {
-            return surrogate->NPP_WriteReady(stream);
-        }
-        return -1;
-    }
-
-    return s->WriteReady();
+    BrowserStreamParent* s = StreamCast(instance, stream);
+    return s ? s->WriteReady() : -1;
 }
 
 int32_t
@@ -1893,49 +1871,39 @@ void
 PluginModuleParent::NPP_Print(NPP instance, NPPrint* platformPrint)
 {
 
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    i->NPP_Print(platformPrint);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->NPP_Print(platformPrint) : (void)0;
 }
 
 int16_t
 PluginModuleParent::NPP_HandleEvent(NPP instance, void* event)
 {
-    RESOLVE_AND_CALL(instance, NPP_HandleEvent(event));
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->NPP_HandleEvent(event) : NPERR_GENERIC_ERROR;
 }
 
 void
 PluginModuleParent::NPP_URLNotify(NPP instance, const char* url,
                                   NPReason reason, void* notifyData)
 {
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    if (!i)
-        return;
-
-    i->NPP_URLNotify(url, reason, notifyData);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->NPP_URLNotify(url, reason, notifyData) : (void)0;
 }
 
 NPError
 PluginModuleParent::NPP_GetValue(NPP instance,
                                  NPPVariable variable, void *ret_value)
 {
-    // The rules are slightly different for this function.
-    // If there is a surrogate, we *always* use it.
-    PluginAsyncSurrogate* surrogate = nullptr;
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance, &surrogate);
-    if (surrogate) {
-        return surrogate->NPP_GetValue(variable, ret_value);
-    }
-    if (!i) {
-        return NPERR_GENERIC_ERROR;
-    }
-    return i->NPP_GetValue(variable, ret_value);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->NPP_GetValue(variable, ret_value) : NPERR_GENERIC_ERROR;
 }
 
 NPError
 PluginModuleParent::NPP_SetValue(NPP instance, NPNVariable variable,
                                  void *value)
 {
-    RESOLVE_AND_CALL(instance, NPP_SetValue(variable, value));
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->NPP_SetValue(variable, value) : NPERR_GENERIC_ERROR;
 }
 
 mozilla::ipc::IPCResult
@@ -1978,25 +1946,21 @@ void
 PluginModuleParent::NPP_URLRedirectNotify(NPP instance, const char* url,
                                           int32_t status, void* notifyData)
 {
-  PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-  if (!i)
-    return;
-
-  i->NPP_URLRedirectNotify(url, status, notifyData);
+  PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+  return pip ? pip->NPP_URLRedirectNotify(url, status, notifyData) : (void)0;
 }
 
 BrowserStreamParent*
-PluginModuleParent::StreamCast(NPP instance, NPStream* s,
-                               PluginAsyncSurrogate** aSurrogate)
+PluginModuleParent::StreamCast(NPP instance, NPStream* s)
 {
-    PluginInstanceParent* ip = PluginInstanceParent::Cast(instance, aSurrogate);
-    if (!ip || (aSurrogate && *aSurrogate && ip->UseSurrogate())) {
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    if (!pip) {
         return nullptr;
     }
 
     BrowserStreamParent* sp =
         static_cast<BrowserStreamParent*>(static_cast<AStream*>(s->pdata));
-    if (sp && (sp->mNPP != ip || s != sp->mStream)) {
+    if (sp && (sp->mNPP != pip || s != sp->mStream)) {
         MOZ_CRASH("Corrupted plugin stream data.");
     }
     return sp;
@@ -2011,48 +1975,38 @@ PluginModuleParent::HasRequiredFunctions()
 nsresult
 PluginModuleParent::AsyncSetWindow(NPP instance, NPWindow* window)
 {
-    PluginAsyncSurrogate* surrogate = nullptr;
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance, &surrogate);
-    if (surrogate && (!i || i->UseSurrogate())) {
-        return surrogate->AsyncSetWindow(window);
-    } else if (!i) {
-        return NS_ERROR_FAILURE;
-    }
-    return i->AsyncSetWindow(window);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->AsyncSetWindow(window) : NS_ERROR_FAILURE;
 }
 
 nsresult
 PluginModuleParent::GetImageContainer(NPP instance,
                              mozilla::layers::ImageContainer** aContainer)
 {
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    return !i ? NS_ERROR_FAILURE : i->GetImageContainer(aContainer);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->GetImageContainer(aContainer) : NS_ERROR_FAILURE;
 }
 
 nsresult
 PluginModuleParent::GetImageSize(NPP instance,
                                  nsIntSize* aSize)
 {
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    return !i ? NS_ERROR_FAILURE : i->GetImageSize(aSize);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->GetImageSize(aSize) : NS_ERROR_FAILURE;
 }
 
 void
 PluginModuleParent::DidComposite(NPP aInstance)
 {
-    if (PluginInstanceParent* i = PluginInstanceParent::Cast(aInstance)) {
-        i->DidComposite();
-    }
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(aInstance);
+    return pip ? pip->DidComposite() : (void)0;
 }
 
 nsresult
 PluginModuleParent::SetBackgroundUnknown(NPP instance)
 {
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    if (!i)
-        return NS_ERROR_FAILURE;
-
-    return i->SetBackgroundUnknown();
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->SetBackgroundUnknown() : NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -2060,21 +2014,16 @@ PluginModuleParent::BeginUpdateBackground(NPP instance,
                                           const nsIntRect& aRect,
                                           DrawTarget** aDrawTarget)
 {
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    if (!i)
-        return NS_ERROR_FAILURE;
-
-    return i->BeginUpdateBackground(aRect, aDrawTarget);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->BeginUpdateBackground(aRect, aDrawTarget)
+               : NS_ERROR_FAILURE;
 }
 
 nsresult
 PluginModuleParent::EndUpdateBackground(NPP instance, const nsIntRect& aRect)
 {
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    if (!i)
-        return NS_ERROR_FAILURE;
-
-    return i->EndUpdateBackground(aRect);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->EndUpdateBackground(aRect) : NS_ERROR_FAILURE;
 }
 
 #if defined(XP_WIN)
@@ -2082,8 +2031,8 @@ nsresult
 PluginModuleParent::GetScrollCaptureContainer(NPP aInstance,
                                               mozilla::layers::ImageContainer** aContainer)
 {
-    PluginInstanceParent* inst = PluginInstanceParent::Cast(aInstance);
-    return !inst ? NS_ERROR_FAILURE : inst->GetScrollCaptureContainer(aContainer);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(aInstance);
+    return pip ? pip->GetScrollCaptureContainer(aContainer) : NS_ERROR_FAILURE;
 }
 #endif
 
@@ -2093,11 +2042,9 @@ PluginModuleParent::HandledWindowedPluginKeyEvent(
                         const NativeEventData& aNativeKeyData,
                         bool aIsConsumed)
 {
-    PluginInstanceParent* parent = PluginInstanceParent::Cast(aInstance);
-    if (NS_WARN_IF(!parent)) {
-        return NS_ERROR_FAILURE;
-    }
-    return parent->HandledWindowedPluginKeyEvent(aNativeKeyData, aIsConsumed);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(aInstance);
+    return pip ? pip->HandledWindowedPluginKeyEvent(aNativeKeyData, aIsConsumed)
+               : NS_ERROR_FAILURE;
 }
 
 void
@@ -2748,22 +2695,17 @@ PluginModuleParent::NPP_GetSitesWithData(nsCOMPtr<nsIGetSitesWithDataCallback> c
 nsresult
 PluginModuleParent::IsRemoteDrawingCoreAnimation(NPP instance, bool *aDrawing)
 {
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    if (!i)
-        return NS_ERROR_FAILURE;
-
-    return i->IsRemoteDrawingCoreAnimation(aDrawing);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->IsRemoteDrawingCoreAnimation(aDrawing) : NS_ERROR_FAILURE;
 }
 #endif
 #if defined(XP_MACOSX) || defined(XP_WIN)
 nsresult
 PluginModuleParent::ContentsScaleFactorChanged(NPP instance, double aContentsScaleFactor)
 {
-    PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
-    if (!i)
-        return NS_ERROR_FAILURE;
-
-    return i->ContentsScaleFactorChanged(aContentsScaleFactor);
+    PluginInstanceParent* pip = PluginInstanceParent::Cast(instance);
+    return pip ? pip->ContentsScaleFactorChanged(aContentsScaleFactor)
+               : NS_ERROR_FAILURE;
 }
 #endif // #if defined(XP_MACOSX)
 

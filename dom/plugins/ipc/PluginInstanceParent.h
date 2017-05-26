@@ -288,12 +288,6 @@ public:
       return mNPP;
     }
 
-    bool
-    UseSurrogate() const
-    {
-        return mUseSurrogate;
-    }
-
     void
     GetSrcAttribute(nsACString& aOutput) const
     {
@@ -380,7 +374,6 @@ private:
 private:
     PluginModuleParent* mParent;
     RefPtr<PluginAsyncSurrogate> mSurrogate;
-    bool mUseSurrogate;
     NPP mNPP;
     const NPNetscapeFuncs* mNPNIface;
     nsCString mSrcAttribute;
