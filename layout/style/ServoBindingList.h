@@ -40,7 +40,8 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_ClearAndUpdate,
                    mozilla::ServoStyleSheet* gecko_stylesheet,
                    const nsACString* data,
                    RawGeckoURLExtraData* extra_data,
-                   uint32_t line_number_offset)
+                   uint32_t line_number_offset,
+                   mozilla::css::LoaderReusableStyleSheets* reusable_sheets)
 SERVO_BINDING_FUNC(Servo_StyleSheet_HasRules, bool,
                    RawServoStyleSheetBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSheet_GetRules, ServoCssRulesStrong,

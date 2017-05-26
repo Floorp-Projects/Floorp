@@ -2206,8 +2206,6 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
   NS_PRECONDITION(aURL, "Must have a URI to load");
   NS_PRECONDITION(aParentSheet, "Must have a parent sheet");
 
-  // Servo doesn't support reusable sheets.
-  MOZ_ASSERT_IF(aReusableSheets, aParentSheet->IsGecko());
   MOZ_ASSERT_IF(aParentSheet->IsGecko(), aGeckoParentRule && !aServoChildSheet);
   MOZ_ASSERT_IF(aParentSheet->IsServo(), aServoChildSheet && !aGeckoParentRule);
 

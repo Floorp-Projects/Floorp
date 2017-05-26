@@ -14,6 +14,7 @@
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/MediaList.h"
+#include "Loader.h"
 
 
 #include "mozAutoDocUpdate.h"
@@ -141,7 +142,8 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                             nsIURI* aBaseURI,
                             nsIPrincipal* aSheetPrincipal,
                             uint32_t aLineNumber,
-                            nsCompatibility aCompatMode)
+                            nsCompatibility aCompatMode,
+                            css::LoaderReusableStyleSheets* aReusableSheets)
 {
   MOZ_ASSERT_IF(mMedia, mMedia->IsServo());
   RefPtr<URLExtraData> extraData =
@@ -162,7 +164,8 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
     // now) we should update the mediaList here too, though it's slightly
     // tricky.
     Servo_StyleSheet_ClearAndUpdate(Inner()->mSheet, aLoader,
-                                    this, &input, extraData, aLineNumber);
+                                    this, &input, extraData, aLineNumber,
+                                    aReusableSheets);
   }
 
   Inner()->mURLData = extraData.forget();
