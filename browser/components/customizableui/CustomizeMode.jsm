@@ -776,9 +776,7 @@ CustomizeMode.prototype = {
     if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
       aNode = aNode.firstChild;
     }
-    let panel = gPhotonStructure ? CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
-                                 : CustomizableUI.AREA_PANEL;
-    CustomizableUI.addWidgetToArea(aNode.id, panel);
+    CustomizableUI.addWidgetToArea(aNode.id, CustomizableUI.AREA_PANEL);
     if (!this._customizing) {
       CustomizableUI.dispatchToolboxEvent("customizationchange");
     }
