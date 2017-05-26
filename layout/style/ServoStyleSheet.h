@@ -22,6 +22,7 @@ class ServoCSSRuleList;
 
 namespace css {
 class Loader;
+class LoaderReusableStyleSheets;
 }
 
 // -------------------------------
@@ -84,7 +85,8 @@ public:
                                    nsIURI* aBaseURI,
                                    nsIPrincipal* aSheetPrincipal,
                                    uint32_t aLineNumber,
-                                   nsCompatibility aCompatMode);
+                                   nsCompatibility aCompatMode,
+                                   css::LoaderReusableStyleSheets* aReusableSheets = nullptr);
 
   /**
    * Called instead of ParseSheet to initialize the Servo stylesheet object
