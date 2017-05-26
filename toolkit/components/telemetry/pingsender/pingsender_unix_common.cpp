@@ -41,7 +41,6 @@ public:
   void (*slist_free_all)(curl_slist*);
   const char* (*easy_strerror)(CURLcode);
   void (*easy_cleanup)(CURL*);
-  void (*global_cleanup)(void);
 
 private:
   void* mLib;
@@ -57,7 +56,6 @@ CurlWrapper::CurlWrapper()
   , slist_free_all(nullptr)
   , easy_strerror(nullptr)
   , easy_cleanup(nullptr)
-  , global_cleanup(nullptr)
   , mLib(nullptr)
   , mCurl(nullptr)
 {}
@@ -67,10 +65,6 @@ CurlWrapper::~CurlWrapper()
   if(mLib) {
     if(mCurl && easy_cleanup) {
       easy_cleanup(mCurl);
-    }
-
-    if (global_cleanup) {
-      global_cleanup();
     }
 
     dlclose(mLib);
@@ -122,7 +116,6 @@ CurlWrapper::Init()
   *(void**) (&slist_free_all) = dlsym(mLib, "curl_slist_free_all");
   *(void**) (&easy_strerror) = dlsym(mLib, "curl_easy_strerror");
   *(void**) (&easy_cleanup) = dlsym(mLib, "curl_easy_cleanup");
-  *(void**) (&global_cleanup) = dlsym(mLib, "curl_global_cleanup");
 
   if (!easy_init ||
       !easy_setopt ||
@@ -131,8 +124,7 @@ CurlWrapper::Init()
       !slist_append ||
       !slist_free_all ||
       !easy_strerror ||
-      !easy_cleanup ||
-      !global_cleanup) {
+      !easy_cleanup) {
     PINGSENDER_LOG("ERROR: libcurl is missing one of the required symbols\n");
     return false;
   }

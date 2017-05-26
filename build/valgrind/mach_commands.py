@@ -70,14 +70,6 @@ class MachCommands(MachCommandBase):
             interpolation = { 'server': '%s:%d' % httpd.httpd.server_address,
                               'OOP': 'false'}
             prefs = json.loads(json.dumps(prefs) % interpolation)
-            # Don't spawn the 'pingsender' process on Valgrind tests due to the
-            # 'new-profile' ping. Valgrind marks the process as leaky (bug 1364068)
-            # but does not provide enough information to suppress the leak. Running
-            # locally does not reproduce the issue, so disable this until we rewrite
-            # the pingsender in Rust (bug 1339035).
-            # We can't do this in 'prefs_general.js' as we want to retain test coverage
-            # on the other testing platforms.
-            prefs['toolkit.telemetry.newProfilePing.enabled'] = False
             for pref in prefs:
                 prefs[pref] = Preferences.cast(prefs[pref])
 
