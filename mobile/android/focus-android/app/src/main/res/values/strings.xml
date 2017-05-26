@@ -279,8 +279,8 @@ be temporary, and you can try again later.</li>
 
     <!-- First run tour (page 2): Title -->
     <string name="firstrun_defaultbrowser_title">Power up your privacy</string>
-    <!-- First run tour (page 2): Text -->
-    <string name="firstrun_defaultbrowser_text">Set Focus as your default browser and get the benefits of private browsing when you link to the Web from other Android apps.</string>
+    <!-- First run tour (page 2): Text, %1$s will be replaced with the short name of the app (e.g. Focus). -->
+    <string name="firstrun_defaultbrowser_text">Set %1$s as your default browser and get the benefits of private browsing when you link to the Web from other Android apps.</string>
 
     <!-- First run tour (page 3): Title -->
     <string name="firstrun_breaking_title">A quick fix when\nblocking = breaking</string>

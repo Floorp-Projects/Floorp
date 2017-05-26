@@ -11,6 +11,7 @@ import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import org.mozilla.focus.R;
 
@@ -43,6 +44,13 @@ public class FirstrunPagerAdapter extends PagerAdapter {
         final View finishView = view.findViewById(R.id.finish);
         if (finishView != null) {
             finishView.setOnClickListener(listener);
+        }
+
+        // Special casing page 2 where we need to replace the app name. That's quite shitty and annoying to do
+        if (position == 1) {
+            final TextView textView = (TextView) view.findViewById(R.id.page2_text);
+            textView.setText(
+                    context.getString(R.string.firstrun_defaultbrowser_text, context.getString(R.string.launcher_name)));
         }
 
         return view;
