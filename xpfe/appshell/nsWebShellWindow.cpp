@@ -422,6 +422,18 @@ nsWebShellWindow::FullscreenChanged(bool aInFullscreen)
 }
 
 void
+nsWebShellWindow::OcclusionStateChanged(bool aIsFullyOccluded)
+{
+  nsCOMPtr<nsPIDOMWindowOuter> ourWindow =
+    mDocShell ? mDocShell->GetWindow() : nullptr;
+  if (ourWindow) {
+    MOZ_ASSERT(ourWindow->IsOuterWindow());
+    // And always fire a user-defined occlusionstatechange event on the window
+    ourWindow->DispatchCustomEvent(NS_LITERAL_STRING("occlusionstatechange"));
+  }
+}
+
+void
 nsWebShellWindow::OSToolbarButtonPressed()
 {
   // Keep a reference as setting the chrome flags can fire events.
