@@ -93,29 +93,23 @@ audio > xul|videocontrols {
   background-position: center;
   background-origin: content-box;
   background-clip: content-box;
+  -moz-context-properties: fill;
+  fill: #ffffff;
+}
+
+.playButton:hover {
+  fill: #48a0f7;
+}
+
+.playButton:hover:active {
+  fill: #2d89e6;
 }
 
 .playButton {
   background-image: url(chrome://global/skin/media/pauseButton.svg);
-  -moz-context-properties: fill;
-  fill: #ffffff;
-}
-.playButton:hover {
-  fill: #48a0f7;
-}
-.playButton:hover:active {
-  fill: #2d89e6;
 }
 .playButton[paused] {
   background-image: url(chrome://global/skin/media/playButton.svg);
-  -moz-context-properties: fill;
-  fill: #ffffff;
-}
-.playButton[paused]:hover {
-  fill: #48a0f7;
-}
-.playButton[paused]:hover:active {
-  fill: #2d89e6;
 }
 
 .muteButton {
