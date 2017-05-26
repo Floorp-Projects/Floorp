@@ -22,7 +22,7 @@ public:
 
 protected:
   explicit nsMathMLsemanticsFrame(nsStyleContext* aContext) :
-    nsMathMLSelectedFrame(aContext) {}
+    nsMathMLSelectedFrame(aContext, kClassID) {}
   virtual ~nsMathMLsemanticsFrame();
 
   nsIFrame* GetSelectedFrame() override;

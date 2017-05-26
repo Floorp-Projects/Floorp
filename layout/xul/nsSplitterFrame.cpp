@@ -203,7 +203,7 @@ NS_NewSplitterFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsSplitterFrame)
 
 nsSplitterFrame::nsSplitterFrame(nsStyleContext* aContext)
-: nsBoxFrame(aContext),
+: nsBoxFrame(aContext, kClassID),
   mInner(0)
 {
 }

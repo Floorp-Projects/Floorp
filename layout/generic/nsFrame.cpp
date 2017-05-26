@@ -448,11 +448,11 @@ WeakFrame::Init(nsIFrame* aFrame)
 nsIFrame*
 NS_NewEmptyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsFrame(aContext, LayoutFrameType::None);
+  return new (aPresShell) nsFrame(aContext);
 }
 
-nsFrame::nsFrame(nsStyleContext* aContext, LayoutFrameType aType)
-  : nsBox(aType)
+nsFrame::nsFrame(nsStyleContext* aContext, ClassID aID, LayoutFrameType aType)
+  : nsBox(aID, aType)
 {
   MOZ_COUNT_CTOR(nsFrame);
 
@@ -570,6 +570,7 @@ nsFrame::Init(nsIContent*       aContent,
               nsContainerFrame* aParent,
               nsIFrame*         aPrevInFlow)
 {
+  MOZ_ASSERT(nsQueryFrame::FrameIID(mClass) == GetFrameId());
   NS_PRECONDITION(!mContent, "Double-initing a frame?");
   NS_ASSERTION(IsFrameOfType(eDEBUGAllFrames) &&
                !IsFrameOfType(eDEBUGNoFrames),

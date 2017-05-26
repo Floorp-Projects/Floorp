@@ -89,7 +89,7 @@ public:
   }
 
 protected:
-  explicit nsMathMLmencloseFrame(nsStyleContext* aContext);
+  explicit nsMathMLmencloseFrame(nsStyleContext* aContext, ClassID aID = kClassID);
   virtual ~nsMathMLmencloseFrame();
 
   nsresult PlaceInternal(DrawTarget*          aDrawTarget,

@@ -67,7 +67,7 @@ public:
                                           nsStyleContext* aContext,
                                           nsFrameState aTypeBit);
   nsPlaceholderFrame(nsStyleContext* aContext, nsFrameState aTypeBit)
-    : nsFrame(aContext, mozilla::LayoutFrameType::Placeholder)
+    : nsFrame(aContext, kClassID, mozilla::LayoutFrameType::Placeholder)
     , mOutOfFlowFrame(nullptr)
   {
     NS_PRECONDITION(aTypeBit == PLACEHOLDER_FOR_FLOAT ||

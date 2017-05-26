@@ -49,7 +49,7 @@ public:
 
 protected:
   explicit nsMathMLmtableWrapperFrame(nsStyleContext* aContext)
-    : nsTableWrapperFrame(aContext)
+    : nsTableWrapperFrame(aContext, kClassID)
   {}
 
   virtual ~nsMathMLmtableWrapperFrame();
@@ -157,7 +157,7 @@ public:
 
 protected:
   explicit nsMathMLmtableFrame(nsStyleContext* aContext)
-    : nsTableFrame(aContext)
+    : nsTableFrame(aContext, kClassID)
     , mFrameSpacingX(0)
     , mFrameSpacingY(0)
     , mUseCSSSpacing(false)
@@ -232,7 +232,7 @@ public:
 
 protected:
   explicit nsMathMLmtrFrame(nsStyleContext* aContext)
-    : nsTableRowFrame(aContext)
+    : nsTableRowFrame(aContext, kClassID)
   {}
 
   virtual ~nsMathMLmtrFrame();
@@ -279,7 +279,7 @@ public:
 
 protected:
   nsMathMLmtdFrame(nsStyleContext* aContext, nsTableFrame* aTableFrame)
-    : nsTableCellFrame(aContext, aTableFrame)
+    : nsTableCellFrame(aContext, aTableFrame, kClassID)
   {
   }
 

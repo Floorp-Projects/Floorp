@@ -141,9 +141,10 @@ public:
   virtual ~nsBoxFrame();
 
   explicit nsBoxFrame(nsStyleContext* aContext,
+                      ClassID aID = kClassID,
                       bool aIsRoot = false,
                       nsBoxLayout* aLayoutManager = nullptr)
-    : nsBoxFrame(aContext,
+    : nsBoxFrame(aContext, aID,
                  mozilla::LayoutFrameType::Box,
                  aIsRoot,
                  aLayoutManager)
@@ -184,6 +185,7 @@ public:
 
 protected:
   nsBoxFrame(nsStyleContext* aContext,
+             ClassID aID,
              mozilla::LayoutFrameType aType,
              bool aIsRoot = false,
              nsBoxLayout* aLayoutManager = nullptr);

@@ -16,7 +16,7 @@ public:
 
   friend nsIFrame* NS_NewButtonBoxFrame(nsIPresShell* aPresShell);
 
-  explicit nsButtonBoxFrame(nsStyleContext* aContext);
+  explicit nsButtonBoxFrame(nsStyleContext* aContext, ClassID = kClassID);
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,

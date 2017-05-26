@@ -40,7 +40,7 @@ public:
 
 protected:
   explicit nsXULLabelFrame(nsStyleContext* aContext)
-    : nsBlockFrame(aContext, mozilla::LayoutFrameType::XULLabel)
+    : nsBlockFrame(aContext, kClassID, mozilla::LayoutFrameType::XULLabel)
   {}
 
   nsresult RegUnregAccessKey(bool aDoReg);

@@ -33,7 +33,7 @@ class nsSVGFilterFrame : public nsSVGContainerFrame
   NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGFilterFrame(nsStyleContext* aContext)
-    : nsSVGContainerFrame(aContext, mozilla::LayoutFrameType::SVGFilter)
+    : nsSVGContainerFrame(aContext, kClassID, mozilla::LayoutFrameType::SVGFilter)
     , mLoopFlag(false)
     , mNoHRefURI(false)
   {

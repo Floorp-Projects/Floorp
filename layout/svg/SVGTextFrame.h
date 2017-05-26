@@ -193,7 +193,7 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame
 
 protected:
   explicit SVGTextFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext, mozilla::LayoutFrameType::SVGText)
+    : nsSVGDisplayContainerFrame(aContext, kClassID, mozilla::LayoutFrameType::SVGText)
     , mTrailingUndisplayedCharacters(0)
     , mFontSizeScaleFactor(1.0f)
     , mLastContextScale(1.0f)

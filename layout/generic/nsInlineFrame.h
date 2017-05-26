@@ -140,13 +140,13 @@ protected:
     }
   };
 
-  nsInlineFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType)
-    : nsContainerFrame(aContext, aType)
+  nsInlineFrame(nsStyleContext* aContext, ClassID aID, mozilla::LayoutFrameType aType)
+    : nsContainerFrame(aContext, aID, aType)
     , mBaseline(NS_INTRINSIC_WIDTH_UNKNOWN)
   {}
 
-  explicit nsInlineFrame(nsStyleContext* aContext)
-    : nsInlineFrame(aContext, mozilla::LayoutFrameType::Inline)
+  explicit nsInlineFrame(nsStyleContext* aContext, ClassID aID = kClassID)
+    : nsInlineFrame(aContext, aID, mozilla::LayoutFrameType::Inline)
   {}
 
   virtual LogicalSides GetLogicalSkipSides(const ReflowInput* aReflowInput = nullptr) const override;
@@ -232,7 +232,7 @@ public:
 
 protected:
   explicit nsFirstLineFrame(nsStyleContext* aContext)
-    : nsInlineFrame(aContext, mozilla::LayoutFrameType::Line)
+    : nsInlineFrame(aContext, kClassID, mozilla::LayoutFrameType::Line)
   {}
 
   virtual nsIFrame* PullOneFrame(nsPresContext* aPresContext,

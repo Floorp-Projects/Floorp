@@ -30,7 +30,7 @@ NS_NewStackFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsStackFrame)
 
 nsStackFrame::nsStackFrame(nsStyleContext* aContext):
-  nsBoxFrame(aContext)
+  nsBoxFrame(aContext, kClassID)
 {
   nsCOMPtr<nsBoxLayout> layout;
   NS_NewStackLayout(layout);

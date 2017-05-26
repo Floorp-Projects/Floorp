@@ -45,7 +45,7 @@ NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsStyleContext* aContext
 NS_IMPL_FRAMEARENA_HELPERS(nsSimplePageSequenceFrame)
 
 nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, LayoutFrameType::Sequence)
+  : nsContainerFrame(aContext, kClassID, LayoutFrameType::Sequence)
   , mTotalPages(-1)
   , mSelectionHeight(-1)
   , mYSelOffset(0)

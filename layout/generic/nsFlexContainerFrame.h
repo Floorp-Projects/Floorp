@@ -132,7 +132,7 @@ public:
 protected:
   // Protected constructor & destructor
   explicit nsFlexContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, mozilla::LayoutFrameType::FlexContainer)
+    : nsContainerFrame(aContext, kClassID, mozilla::LayoutFrameType::FlexContainer)
     , mBaselineFromLastReflow(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mLastBaselineFromLastReflow(NS_INTRINSIC_WIDTH_UNKNOWN)
   {}

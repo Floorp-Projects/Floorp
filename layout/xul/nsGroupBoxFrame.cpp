@@ -24,7 +24,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsGroupBoxFrame)
 
   explicit nsGroupBoxFrame(nsStyleContext* aContext):
-    nsBoxFrame(aContext) {}
+    nsBoxFrame(aContext, kClassID) {}
 
   virtual nsresult GetXULBorderAndPadding(nsMargin& aBorderAndPadding) override;
 
