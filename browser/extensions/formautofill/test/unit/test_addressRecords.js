@@ -141,8 +141,8 @@ add_task(async function test_getAll() {
   do_check_eq(addresses[0]["address-line1"], "32 Vassar Street");
   do_check_eq(addresses[0]["address-line2"], "MIT Room 32-G524");
 
-  // Test with noComputedFields set.
-  addresses = profileStorage.addresses.getAll({noComputedFields: true});
+  // Test with rawData set.
+  addresses = profileStorage.addresses.getAll({rawData: true});
   do_check_eq(addresses[0].name, undefined);
   do_check_eq(addresses[0]["address-line1"], undefined);
   do_check_eq(addresses[0]["address-line2"], undefined);
@@ -161,6 +161,12 @@ add_task(async function test_get() {
 
   let address = profileStorage.addresses.get(guid);
   do_check_record_matches(address, TEST_ADDRESS_1);
+
+  // Test with rawData set.
+  address = profileStorage.addresses.get(guid, {rawData: true});
+  do_check_eq(address.name, undefined);
+  do_check_eq(address["address-line1"], undefined);
+  do_check_eq(address["address-line2"], undefined);
 
   // Modifying output shouldn't affect the storage.
   address.organization = "test";

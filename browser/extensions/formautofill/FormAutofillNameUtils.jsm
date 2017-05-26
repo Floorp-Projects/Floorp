@@ -214,13 +214,17 @@ var FormAutofillNameUtils = {
   },
 
   splitName(name) {
-    let nameTokens = name.trim().split(/[ ,\u3000\u30FB\u00B7]+/);
     let nameParts = {
       given: "",
       middle: "",
       family: "",
     };
 
+    if (!name) {
+      return nameParts;
+    }
+
+    let nameTokens = name.trim().split(/[ ,\u3000\u30FB\u00B7]+/);
     nameTokens = this._stripPrefixes(nameTokens);
 
     if (this._isCJKName(name)) {
