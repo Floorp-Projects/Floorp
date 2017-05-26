@@ -17,7 +17,7 @@ class nsFontMetrics;
 
 class nsMathMLmfencedFrame final : public nsMathMLContainerFrame {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLmfencedFrame)
 
   friend nsIFrame* NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
@@ -97,7 +97,7 @@ public:
 
 protected:
   explicit nsMathMLmfencedFrame(nsStyleContext* aContext)
-    : nsMathMLContainerFrame(aContext)
+    : nsMathMLContainerFrame(aContext, kClassID)
     , mOpenChar(nullptr)
     , mCloseChar(nullptr)
     , mSeparatorsChar(nullptr)

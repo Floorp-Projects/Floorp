@@ -1175,6 +1175,16 @@ static const JSFunctionSpec string_iterator_methods[] = {
     JS_FS_END
 };
 
+StringIteratorObject*
+js::NewStringIteratorObject(JSContext* cx, NewObjectKind newKind)
+{
+    RootedObject proto(cx, GlobalObject::getOrCreateStringIteratorPrototype(cx, cx->global()));
+    if (!proto)
+        return nullptr;
+
+    return NewObjectWithGivenProto<StringIteratorObject>(cx, proto, newKind);
+}
+
 JSObject*
 js::ValueToIterator(JSContext* cx, unsigned flags, HandleValue vp)
 {

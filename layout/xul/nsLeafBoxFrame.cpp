@@ -40,11 +40,6 @@ NS_NewLeafBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsLeafBoxFrame)
 
-nsLeafBoxFrame::nsLeafBoxFrame(nsStyleContext* aContext, LayoutFrameType aType)
-  : nsLeafFrame(aContext, aType)
-{
-}
-
 #ifdef DEBUG_LAYOUT
 void
 nsLeafBoxFrame::GetBoxName(nsAutoString& aName)

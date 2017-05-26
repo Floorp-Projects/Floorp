@@ -164,6 +164,256 @@ TEST(Timers, TimerWithStoppedTarget)
   PR_Sleep(400);
 }
 
+// gtest on 32bit Win7 debug build is unstable and somehow this test
+// makes it even worse.
+#if !defined(XP_WIN) || !defined(DEBUG) || defined(HAVE_64BIT_BUILD)
+
+class FindExpirationTimeState final
+{
+public:
+  // We'll offset the timers 10 seconds into the future to assure that they won't fire
+  const uint32_t kTimerOffset = 10 * 1000;
+  // And we'll set the timers spaced by 5 seconds.
+  const uint32_t kTimerInterval = 5 * 1000;
+  // We'll use 20 timers
+  const uint32_t kNumTimers = 20;
+
+  TimeStamp mBefore;
+  TimeStamp mMiddle;
+
+  std::list<nsCOMPtr<nsITimer>> mTimers;
+
+  ~FindExpirationTimeState()
+  {
+    while (!mTimers.empty()) {
+      nsCOMPtr<nsITimer> t = mTimers.front().get();
+      mTimers.pop_front();
+      t->Cancel();
+    }
+  }
+
+  // Create timers, with aNumLowPriority low priority timers first in the queue
+  void InitTimers(uint32_t aNumLowPriority, uint32_t aType)
+  {
+    // aType is just for readability.
+    MOZ_ASSERT(aType == nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY);
+    InitTimers(aNumLowPriority, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, nullptr);
+  }
+
+  // Create timers, with aNumDifferentTarget timers with target aTarget first in the queue
+  void InitTimers(uint32_t aNumDifferentTarget, nsIEventTarget* aTarget)
+  {
+    InitTimers(aNumDifferentTarget, nsITimer::TYPE_ONE_SHOT, aTarget);
+  }
+
+  void InitTimers(uint32_t aNumDifferingTimers, uint32_t aType, nsIEventTarget* aTarget)
+  {
+    do {
+      TimeStamp clearUntil =
+        TimeStamp::Now() +
+        TimeDuration::FromMilliseconds(kTimerOffset +
+                                       kNumTimers * kTimerInterval);
+
+      // NS_GetTimerDeadlineHintOnCurrentThread returns clearUntil if there are
+      // no pending timers before clearUntil.
+      TimeStamp t = NS_GetTimerDeadlineHintOnCurrentThread(clearUntil, 100);
+      if (t >= clearUntil) {
+        break;
+      }
+
+      // Clear whatever random timers there might be pending.
+      uint32_t waitTime = 10;
+      if (t > TimeStamp::Now()) {
+        waitTime = uint32_t((t - TimeStamp::Now()).ToMilliseconds());
+      }
+      PR_Sleep(PR_MillisecondsToInterval(waitTime));
+    } while(true);
+
+    nsresult rv;
+    mBefore = TimeStamp::Now();
+    mMiddle = mBefore + TimeDuration::FromMilliseconds(
+        kTimerOffset + kTimerInterval * kNumTimers / 2);
+    for (uint32_t i = 0; i < kNumTimers; ++i) {
+      nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+      ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+      if (i < aNumDifferingTimers) {
+        if (aTarget) {
+          timer->SetTarget(aTarget);
+        }
+
+        timer->InitWithFuncCallback(&UnusedCallbackFunc,
+                                    nullptr,
+                                    kTimerOffset + kTimerInterval * i,
+                                    aType);
+      } else {
+        timer->InitWithFuncCallback(&UnusedCallbackFunc,
+                                    nullptr,
+                                    kTimerOffset + kTimerInterval * i,
+                                    nsITimer::TYPE_ONE_SHOT);
+      }
+      mTimers.push_front(timer.get());
+    }
+  }
+
+  static void UnusedCallbackFunc(nsITimer* aTimer, void* aClosure)
+  {
+    FAIL() << "Timer shouldn't fire.";
+  }
+};
+
+TEST(Timers, FindExpirationTime)
+{
+  {
+    FindExpirationTimeState state;
+    // 0 low priority timers
+    state.InitTimers(0, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY);
+    TimeStamp before = state.mBefore;
+    TimeStamp middle = state.mMiddle;
+
+    TimeStamp t;
+    t = NS_GetTimerDeadlineHintOnCurrentThread(before, 0);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_EQ(t, before) << "Found time should be equal to default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(before, 20);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_EQ(t, before) << "Found time should be equal to default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 0);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_LT(t, middle) << "Found time should be less than default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 10);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_LT(t, middle) << "Found time should be less than default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 20);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_LT(t, middle) << "Found time should be less than default";
+  }
+
+  {
+    FindExpirationTimeState state;
+    // 5 low priority timers
+    state.InitTimers(5, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY);
+    TimeStamp before = state.mBefore;
+    TimeStamp middle = state.mMiddle;
+
+    TimeStamp t;
+    t = NS_GetTimerDeadlineHintOnCurrentThread(before, 0);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_EQ(t, before) << "Found time should be equal to default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(before, 20);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_EQ(t, before) << "Found time should be equal to default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 0);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_LT(t, middle) << "Found time should be less than default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 10);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_LT(t, middle) << "Found time should be less than default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 20);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_LT(t, middle) << "Found time should be less than default";
+  }
+
+  {
+    FindExpirationTimeState state;
+    // 15 low priority timers
+    state.InitTimers(15, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY);
+    TimeStamp before = state.mBefore;
+    TimeStamp middle = state.mMiddle;
+
+    TimeStamp t;
+    t = NS_GetTimerDeadlineHintOnCurrentThread(before, 0);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_EQ(t, before) << "Found time should be equal to default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(before, 20);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_EQ(t, before) << "Found time should be equal to default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 0);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_EQ(t, middle) << "Found time should be equal to default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 10);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_EQ(t, middle) << "Found time should be equal to default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 20);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_EQ(t, middle) << "Found time should be equal to default";
+  }
+
+  {
+    AutoTestThread testThread;
+    FindExpirationTimeState state;
+    // 5 other targets
+    state.InitTimers(5, static_cast<nsIEventTarget*>(testThread));
+    TimeStamp before = state.mBefore;
+    TimeStamp middle = state.mMiddle;
+
+    TimeStamp t;
+    t = NS_GetTimerDeadlineHintOnCurrentThread(before, 0);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_EQ(t, before) << "Found time should be equal to default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(before, 20);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_EQ(t, before) << "Found time should be equal to default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 0);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_LT(t, middle) << "Found time should be less than default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 10);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_LT(t, middle) << "Found time should be less than default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 20);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_LT(t, middle) << "Found time should be less than default";
+  }
+
+  {
+    AutoTestThread testThread;
+    FindExpirationTimeState state;
+    // 15 other targets
+    state.InitTimers(15, static_cast<nsIEventTarget*>(testThread));
+    TimeStamp before = state.mBefore;
+    TimeStamp middle = state.mMiddle;
+
+    TimeStamp t;
+    t = NS_GetTimerDeadlineHintOnCurrentThread(before, 0);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_EQ(t, before) << "Found time should be equal to default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(before, 20);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_EQ(t, before) << "Found time should be equal to default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 0);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_LT(t, middle) << "Found time should be less than default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 10);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_EQ(t, middle) << "Found time should be equal to default";
+
+    t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 20);
+    EXPECT_TRUE(t) << "We should find a time";
+    EXPECT_EQ(t, middle) << "Found time should be equal to default";
+  }
+}
+
+#endif
+
 #define FUZZ_MAX_TIMEOUT 9
 class FuzzTestThreadState final : public nsITimerCallback {
   public:

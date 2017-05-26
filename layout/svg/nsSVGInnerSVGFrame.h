@@ -21,15 +21,13 @@ class nsSVGInnerSVGFrame final
   NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGInnerSVGFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext,
-                                 mozilla::LayoutFrameType::SVGInnerSVG)
+    : nsSVGDisplayContainerFrame(aContext, kClassID)
   {
   }
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsSVGInnerSVGFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGInnerSVGFrame)
 
 #ifdef DEBUG
   virtual void Init(nsIContent*       aContent,

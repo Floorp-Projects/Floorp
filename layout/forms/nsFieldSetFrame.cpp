@@ -32,7 +32,7 @@ NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsFieldSetFrame)
 
 nsFieldSetFrame::nsFieldSetFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, LayoutFrameType::FieldSet)
+  : nsContainerFrame(aContext, kClassID)
   , mLegendRect(GetWritingMode())
 {
   mLegendSpace  = 0;

@@ -31,7 +31,7 @@ NS_NewDetailsFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 namespace mozilla {
 
 DetailsFrame::DetailsFrame(nsStyleContext* aContext)
-  : nsBlockFrame(aContext, LayoutFrameType::Details)
+  : nsBlockFrame(aContext, kClassID)
 {
 }
 
