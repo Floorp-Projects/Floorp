@@ -88,7 +88,8 @@ def test_click_navigation(session, url):
 
 
 @pytest.mark.parametrize("drag_duration", [0, 300, 800])
-@pytest.mark.parametrize("dx, dy", [(20, 0), (0, 15), (10, 15)])
+@pytest.mark.parametrize("dx, dy",
+    [(20, 0), (0, 15), (10, 15), (-20, 0), (10, -15), (-10, -15)])
 def test_drag_and_drop(session, test_actions_page, mouse_chain, dx, dy, drag_duration):
     drag_target = session.find.css("#dragTarget", all=False)
     initial_rect = drag_target.rect

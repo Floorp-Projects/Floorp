@@ -23,6 +23,3 @@ LOCAL_INCLUDES += [
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
-
-if CONFIG['MOZ_DEVTOOLS'] == 'all':
-    DEFINES['MOZ_DEVTOOLS_ALL'] = True

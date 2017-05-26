@@ -592,3 +592,28 @@
   font: var(--highlighter-font-family);
   font-size: var(--highlighter-font-size);
 }
+
+/* Shapes highlighter */
+
+:-moz-native-anonymous .shapes-shape-container,
+:-moz-native-anonymous .shapes-markers-container {
+  position: absolute;
+}
+
+:-moz-native-anonymous .shapes-markers-container {
+  width: 10px;
+  height: 10px;
+  transform: translate(-5px, -5px);
+  background: transparent;
+  border-radius: 50%;
+  color: var(--highlighter-bubble-background-color);
+}
+
+:-moz-native-anonymous .shapes-polygon,
+:-moz-native-anonymous .shapes-ellipse,
+:-moz-native-anonymous .shapes-rect {
+  fill: transparent;
+  stroke: var(--highlighter-guide-color);
+  shape-rendering: crispEdges;
+  vector-effect: non-scaling-stroke;
+}

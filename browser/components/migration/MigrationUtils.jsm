@@ -1110,6 +1110,7 @@ this.MigrationUtils = Object.freeze({
   MIGRATION_ENTRYPOINT_FXREFRESH: 2,
   MIGRATION_ENTRYPOINT_PLACES: 3,
   MIGRATION_ENTRYPOINT_PASSWORDS: 4,
+  MIGRATION_ENTRYPOINT_NEWTAB: 5,
 
   _sourceNameToIdMapping: {
     "nothing":    1,

@@ -6,4 +6,11 @@
 
 JAR_MANIFESTS += ['jar.mn']
 
+# Register the about:debugging page only for 'addon' and 'all' builds.
+if CONFIG['MOZ_DEVTOOLS'] != 'server':
+    EXTRA_COMPONENTS += [
+        'aboutdebugging-registration.js',
+        'aboutdebugging.manifest',
+    ]
+
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']

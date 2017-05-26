@@ -1,0 +1,42 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+  .wrapper {
+    width: 800px;
+    height: 800px;
+    background: #f06;
+  }
+  #polygon {
+    clip-path: polygon(0 0,
+                       100px 50%,
+                       200px 0,
+                       300px 50%,
+                       400px 0,
+                       500px 50%,
+                       600px 0,
+                       700px 50%,
+                       800px 0,
+                       90% 100%,
+                       50% 60%,
+                       10% 100%);
+  }
+  #circle {
+    clip-path: circle(25% at 30% 40%);
+  }
+  #ellipse {
+    clip-path: ellipse(40% 30% at 25% 75%);
+  }
+  #inset {
+    clip-path: inset(200px 100px 30% 15%);
+  }
+</style>
+<div class="wrapper" id="polygon"></div>
+<div class="wrapper" id="circle"></div>
+<div class="wrapper" id="ellipse"></div>
+<div class="wrapper" id="inset"></div>

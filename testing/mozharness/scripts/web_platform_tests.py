@@ -13,6 +13,7 @@ import sys
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
+from mozharness.base.errors import BaseErrorList
 from mozharness.base.script import PreScriptAction
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
@@ -21,6 +22,7 @@ from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
     code_coverage_config_options
 )
+from mozharness.mozilla.testing.errors import HarnessErrorList
 
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.base.log import INFO
@@ -245,7 +247,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
 
         parser = StructuredOutputParser(config=self.config,
                                         log_obj=self.log_obj,
-                                        log_compact=True)
+                                        log_compact=True,
+                                        error_list=BaseErrorList + HarnessErrorList)
 
         env = {'MINIDUMP_SAVE_PATH': dirs['abs_blob_upload_dir']}
         env['RUST_BACKTRACE'] = '1'

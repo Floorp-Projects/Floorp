@@ -149,7 +149,7 @@ const listeners = {
   },
 
   mm: {
-    "AboutHome:MaybeShowAutoMigrationUndoNotification": ["AboutHome"],
+    "AboutHome:MaybeShowMigrateMessage": ["AboutHome"],
     "AboutHome:RequestUpdate": ["AboutHome"],
     "Content:Click": ["ContentClick"],
     "ContentSearch": ["ContentSearch"],
