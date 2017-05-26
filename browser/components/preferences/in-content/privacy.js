@@ -148,14 +148,14 @@ var gPrivacyPane = {
     function setEventListener(aId, aEventType, aCallback) {
       document.getElementById(aId)
               .addEventListener(aEventType, aCallback.bind(gPrivacyPane));
-    };
+    }
 
     function appendSearchKeywords(aId, keywords) {
       let element = document.getElementById(aId);
       let searchKeywords = element.getAttribute("searchkeywords");
       searchKeywords && keywords.push(searchKeywords);
-      element.setAttribute("searchkeywords", keywords.join(' '));
-    };
+      element.setAttribute("searchkeywords", keywords.join(" "));
+    }
 
     this._updateSanitizeSettingsButton();
     this.initializeHistoryMode();
