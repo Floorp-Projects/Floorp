@@ -131,33 +131,29 @@ nsAppShellService::CreateHiddenWindowHelper(bool aIsPrivate)
   rv = NS_NewURI(getter_AddRefs(url), hiddenWindowURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<nsWebShellWindow> newWindow;
-  if (!aIsPrivate) {
-    rv = JustCreateTopWindow(nullptr, url,
-                             chromeMask, initialWidth, initialHeight,
-                             true, nullptr, nullptr, getter_AddRefs(newWindow));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mHiddenWindow.swap(newWindow);
-  } else {
-    // Create the hidden private window
+  if (aIsPrivate) {
     chromeMask |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
-
-    rv = JustCreateTopWindow(nullptr, url,
-                             chromeMask, initialWidth, initialHeight,
-                             true, nullptr, nullptr, getter_AddRefs(newWindow));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDocShell> docShell;
-    newWindow->GetDocShell(getter_AddRefs(docShell));
-    if (docShell) {
-      docShell->SetAffectPrivateSessionLifetime(false);
-    }
-
-    mHiddenPrivateWindow.swap(newWindow);
   }
 
-  // RegisterTopLevelWindow(newWindow); -- Mac only
+  RefPtr<nsWebShellWindow> newWindow;
+  rv = JustCreateTopWindow(nullptr, url,
+                           chromeMask, initialWidth, initialHeight,
+                           true, nullptr, nullptr, getter_AddRefs(newWindow));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocShell> docShell;
+  newWindow->GetDocShell(getter_AddRefs(docShell));
+  if (docShell) {
+    if (aIsPrivate) {
+      docShell->SetAffectPrivateSessionLifetime(false);
+    }
+  }
+
+  if (aIsPrivate) {
+    mHiddenPrivateWindow.swap(newWindow);
+  } else {
+    mHiddenWindow.swap(newWindow);
+  }
 
   return NS_OK;
 }
