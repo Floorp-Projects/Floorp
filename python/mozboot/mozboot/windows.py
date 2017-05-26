@@ -86,7 +86,7 @@ class WindowsBootstrapper(BaseBootstrapper):
 
     def ensure_stylo_packages(self, state_dir):
         import stylo
-        self.install_tooltool_clang_package(state_dir, **stylo.WINDOWS)
+        self.install_tooltool_clang_package(state_dir, stylo.WINDOWS)
 
     def _update_package_manager(self):
         self.pacman_update()
