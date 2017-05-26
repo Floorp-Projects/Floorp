@@ -75,6 +75,7 @@ interface nsIX509CertDB : nsISupports {
    *  @param aDBkey Database internal key, as obtained using
    *                attribute dbkey in nsIX509Cert.
    */
+  [must_use]
   nsIX509Cert findCertByDBKey(in ACString aDBkey);
 
   /**
@@ -85,6 +86,7 @@ interface nsIX509CertDB : nsISupports {
    *
    *  @return The matching certificate if found.
    */
+  [must_use]
   nsIX509Cert findCertByEmailAddress(in ACString aEmailAddress);
 
   /**
@@ -143,6 +145,7 @@ interface nsIX509CertDB : nsISupports {
    *  @param trust A bitmask. The new trust for the possible usages.
    *               See the trust constants defined within this interface.
    */
+  [must_use]
   void setCertTrust(in nsIX509Cert cert,
                     in unsigned long type,
                     in unsigned long trust);
@@ -153,6 +156,7 @@ interface nsIX509CertDB : nsISupports {
    *                    characters, indicating SSL, Email, and Obj signing
    *                    trust.
    */
+  [must_use]
   void setCertTrustFromString(in nsIX509Cert cert, in ACString trustString);
 
   /**
@@ -165,6 +169,7 @@ interface nsIX509CertDB : nsISupports {
    *
    *  @return Returns true if the certificate is trusted for the given use.
    */
+  [must_use]
   boolean isCertTrusted(in nsIX509Cert cert,
                         in unsigned long certType,
                         in unsigned long trustType);
@@ -177,6 +182,7 @@ interface nsIX509CertDB : nsISupports {
    *  @param aType Describes the type of certificate that is going to
    *               be imported. See type constants in nsIX509Cert.
    */
+  [must_use]
   void importCertsFromFile(in nsIFile aFile,
                            in unsigned long aType);
 
@@ -185,6 +191,7 @@ interface nsIX509CertDB : nsISupports {
    *
    *  @param aFile Identifies a file that contains the data to be imported.
    */
+  [must_use]
   void importPKCS12File(in nsIFile aFile);
 
   /**
@@ -195,6 +202,7 @@ interface nsIX509CertDB : nsISupports {
    *  @param count The number of certificates to be exported.
    *  @param aCerts The array of all certificates to be exported.
    */
+  [must_use]
   void exportPKCS12File(in nsIFile aFile,
                         in unsigned long count,
                         [array, size_is(count)] in nsIX509Cert aCerts);
@@ -206,6 +214,7 @@ interface nsIX509CertDB : nsISupports {
    *                encoded as Base 64.
    *  @return The new certificate object.
    */
+  [must_use]
   nsIX509Cert constructX509FromBase64(in ACString base64);
 
   /*
@@ -215,6 +224,7 @@ interface nsIX509CertDB : nsISupports {
    *                 encoded as raw DER.
    *  @return The new certificate object.
    */
+  [must_use]
   nsIX509Cert constructX509(in ACString certDER);
 
   /**
@@ -250,6 +260,7 @@ interface nsIX509CertDB : nsISupports {
    * "network.http.packaged-apps-developer-trusted-root".
    */
   const AppTrustedRoot DeveloperImportedRoot = 10;
+  [must_use]
   void openSignedAppFileAsync(in AppTrustedRoot trustedRoot,
                               in nsIFile aJarFile,
                               in nsIOpenSignedAppFileCallback callback);
@@ -266,6 +277,7 @@ interface nsIX509CertDB : nsISupports {
    *
    *  On failure, an error code is returned.
    */
+  [must_use]
   void verifySignedDirectoryAsync(in AppTrustedRoot trustedRoot,
                                   in nsIFile aUnpackedDir,
                                   in nsIVerifySignedDirectoryCallback callback);
@@ -280,6 +292,7 @@ interface nsIX509CertDB : nsISupports {
    *              Object signing trust.
    * @return nsIX509Cert the resulting certificate
    */
+  [must_use]
   nsIX509Cert addCert(in ACString certDER, in ACString trust);
 
   // Flags for verifyCertNow (these must match the values in CertVerifier.cpp):
@@ -309,6 +322,7 @@ interface nsIX509CertDB : nsISupports {
    *  @return 0 if success or the value or the error code for the verification
    *          failure
    */
+  [must_use]
   int32_t /*PRErrorCode*/
     verifyCertAtTime(in nsIX509Cert aCert,
                      in int64_t /*SECCertificateUsage*/ aUsage,
@@ -317,6 +331,7 @@ interface nsIX509CertDB : nsISupports {
                      in uint64_t aTime,
                      out nsIX509CertList aVerifiedChain,
                      out bool aHasEVPolicy);
+  [must_use]
   int32_t /*PRErrorCode*/
     verifyCertNow(in nsIX509Cert aCert,
                   in int64_t /*SECCertificateUsage*/ aUsage,
@@ -329,6 +344,7 @@ interface nsIX509CertDB : nsISupports {
    * Similar to the above, but asynchronous. As a result, use of this API is not
    * limited to tests.
    */
+  [must_use]
   void asyncVerifyCertAtTime(in nsIX509Cert aCert,
                              in int64_t /*SECCertificateUsage*/ aUsage,
                              in uint32_t aFlags,
@@ -338,6 +354,7 @@ interface nsIX509CertDB : nsISupports {
 
   // Clears the OCSP cache for the current certificate verification
   // implementation.
+  [must_use]
   void clearOCSPCache();
 
   /*
@@ -350,16 +367,19 @@ interface nsIX509CertDB : nsISupports {
    *              Object signing trust.
    * @return nsIX509Cert the resulting certificate
    */
+  [must_use]
   nsIX509Cert addCertFromBase64(in ACString base64, in ACString trust);
 
   /*
    * Get all the known certs in the database
    */
+  [must_use]
   nsIX509CertList getCerts();
 
   /*
    * Get a list of imported enterprise root certificates (currently only
    * implemented on Windows).
    */
+  [must_use]
   nsIX509CertList getEnterpriseRoots();
 };

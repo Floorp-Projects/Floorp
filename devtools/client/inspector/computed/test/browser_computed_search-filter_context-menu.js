@@ -57,7 +57,7 @@ add_task(function* () {
   yield onContextMenuHidden;
 
   info("Copy text in search field using the context menu");
-  searchField.value = TEST_INPUT;
+  searchField.setUserInput(TEST_INPUT);
   searchField.select();
   EventUtils.synthesizeMouse(searchField, 2, 2,
     {type: "contextmenu", button: 2}, win);
