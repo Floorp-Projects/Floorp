@@ -54,7 +54,7 @@ add_task(function* () {
   yield onContextMenuHidden;
 
   info("Copy text in search field using the context menu");
-  searchBox.value = TEST_INPUT;
+  searchBox.setUserInput(TEST_INPUT);
   searchBox.select();
   searchBox.focus();
   EventUtils.synthesizeMouse(searchBox, 2, 2,
@@ -75,4 +75,8 @@ add_task(function* () {
   is(cmdCut.getAttribute("disabled"), "", "cmdCut is enabled");
   is(cmdCopy.getAttribute("disabled"), "", "cmdCopy is enabled");
   is(cmdPaste.getAttribute("disabled"), "", "cmdPaste is enabled");
+
+  // We have to wait for search query to avoid test failure.
+  info("Waiting for search query to complete and getting the suggestions");
+  yield inspector.searchSuggestions._lastQuery;
 });

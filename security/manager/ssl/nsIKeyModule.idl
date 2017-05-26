@@ -22,16 +22,20 @@ interface nsIKeyObject : nsISupports
 
   // The nsIKeyObject will take ownership of the key and be responsible
   // for freeing the key memory when destroyed.
-  [noscript] void initKey(in short aAlgorithm, in PK11SymKeyPtr aKey);
+  [noscript, must_use]
+  void initKey(in short aAlgorithm, in PK11SymKeyPtr aKey);
 
   // Returns a pointer to the underlying key object.
-  [noscript] PK11SymKeyPtr getKeyObj();
+  [noscript, must_use]
+  PK11SymKeyPtr getKeyObj();
 
+  [must_use]
   short getType();
 };
 
 [scriptable, uuid(838bdbf1-8244-448f-8bcd-cede70227d75)]
 interface nsIKeyObjectFactory : nsISupports
 {
+  [must_use]
   nsIKeyObject keyFromString(in short aAlgorithm, in ACString aKey);
 };

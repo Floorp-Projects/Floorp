@@ -27,6 +27,7 @@ interface nsIClientAuthDialogs : nsISupports
    *                      Ignored if the return value is false.
    * @return true if a certificate was chosen. false if the user canceled.
    */
+  [must_use]
   boolean chooseCertificate(in nsIInterfaceRequestor ctx,
                             in AUTF8String hostname,
                             in long port,

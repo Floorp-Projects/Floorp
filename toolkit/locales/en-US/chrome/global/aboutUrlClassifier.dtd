@@ -22,14 +22,6 @@
 <!ENTITY aboutUrlClassifier.cacheNCacheExpiry           "Negative cache expiry">
 <!ENTITY aboutUrlClassifier.cacheFullhash               "Full hash">
 <!ENTITY aboutUrlClassifier.cachePCacheExpiry           "Positive cache expiry">
-<!ENTITY aboutUrlClassifier.lookupTitle                 "Lookup">
-<!ENTITY aboutUrlClassifier.lookupUrl                   "Url">
-<!ENTITY aboutUrlClassifier.lookupMatch                 "Match">
-<!ENTITY aboutUrlClassifier.lookupMatchBtn              "Check Match Result">
-<!ENTITY aboutUrlClassifier.lookupLookup                "Lookup">
-<!ENTITY aboutUrlClassifier.lookupBtn                   "Check Lookup Result">
-<!ENTITY aboutUrlClassifier.memoryTitle                 "Memory">
-<!ENTITY aboutUrlClassifier.databaseTitle               "Database">
 <!ENTITY aboutUrlClassifier.debugTitle                  "Debug">
 <!ENTITY aboutUrlClassifier.debugModuleBtn              "Set Log Modules">
 <!ENTITY aboutUrlClassifier.debugFileBtn                "Set Log File">

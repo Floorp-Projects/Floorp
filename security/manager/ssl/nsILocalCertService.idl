@@ -22,6 +22,7 @@ interface nsILocalCertService : nsISupports
    * @param nickname Nickname that identifies the cert
    * @param cb       Callback to be notified with the result
    */
+  [must_use]
   void getOrCreateCert(in ACString nickname, in nsILocalCertGetCallback cb);
 
   /**
@@ -30,6 +31,7 @@ interface nsILocalCertService : nsISupports
    * @param nickname Nickname that identifies the cert
    * @param cb       Callback to be notified with the result
    */
+  [must_use]
   void removeCert(in ACString nickname, in nsILocalCertCallback cb);
 
   /**
@@ -37,6 +39,7 @@ interface nsILocalCertService : nsISupports
    * prompt to be displayed.  Generally this happens if the user has set a
    * master password, but has not yet logged in.
    */
+  [must_use]
   readonly attribute boolean loginPromptRequired;
 };
 

@@ -866,6 +866,18 @@ protected:
         } else if (origBytes[nOrigBytes] == 0x05) {
           // syscall
           COPY_CODES(1);
+        } else if (origBytes[nOrigBytes] == 0x10 ||
+                   origBytes[nOrigBytes] == 0x11) {
+          // SSE: movups xmm, xmm/m128
+          //      movups xmm/m128, xmm
+          COPY_CODES(1);
+          int nModRmSibBytes = CountModRmSib(&origBytes[nOrigBytes]);
+          if (nModRmSibBytes < 0) {
+            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
+            return;
+          } else {
+            COPY_CODES(nModRmSibBytes);
+          }
         } else if (origBytes[nOrigBytes] == 0x84) {
           // je rel32
           JumpPatch jump(nTrampBytes - 1,  // overwrite the 0x0f we copied above
