@@ -97,8 +97,6 @@ public class FxAccountPushHandler {
         }
         final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
         if (!fxAccount.getDeviceId().equals(data.getString("id"))) {
-            Log.e(LOG_TAG, "The device ID to disconnect doesn't match with the local device ID.\n"
-                            + "Local: " + fxAccount.getDeviceId() + ", ID to disconnect: " + data.getString("id"));
             return;
         }
         AccountManager.get(context).removeAccount(account, null, null);

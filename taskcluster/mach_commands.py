@@ -149,10 +149,6 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--level',
                      required=True,
                      help='SCM level of this repository')
-    @CommandArgument('--triggered-by',
-                     choices=['nightly', 'push'],
-                     default='push',
-                     help='Source of execution of the decision graph')
     @CommandArgument('--target-tasks-method',
                      help='method for selecting the target tasks to generate')
     def taskgraph_decision(self, **options):
