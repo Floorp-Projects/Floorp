@@ -79,13 +79,20 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
                                   "resource://gre/modules/TelemetryStopwatch.jsm");
 
-Cu.import("resource://gre/modules/ExtensionManagement.jsm");
+XPCOMUtils.defineLazyGetter(
+  this, "processScript",
+  () => Cc["@mozilla.org/webextensions/extension-process-script;1"]
+          .getService().wrappedJSObject);
+
 Cu.import("resource://gre/modules/ExtensionParent.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "useRemoteWebExtensions",
+                                      "extensions.webextensions.remote", false);
 
 var {
   GlobalManager,
@@ -704,7 +711,7 @@ this.Extension = class extends ExtensionData {
       StartupCache.clearAddonData(addonData.id);
     }
 
-    this.remote = ExtensionManagement.useRemoteWebExtensions;
+    this.remote = useRemoteWebExtensions;
 
     if (this.remote && processCount !== 1) {
       throw new Error("Out-of-process WebExtensions are not supported with multiple child processes");
@@ -916,13 +923,6 @@ this.Extension = class extends ExtensionData {
   }
 
   runManifest(manifest) {
-    let resources = [];
-    if (manifest.web_accessible_resources) {
-      resources = manifest.web_accessible_resources.map(path => path.replace(/^\/*/, "/"));
-    }
-
-    this.webAccessibleResources = resources.map(res => new MatchGlob(res));
-
     let promises = [];
     for (let directive in manifest) {
       if (manifest[directive] !== null) {
@@ -983,13 +983,8 @@ this.Extension = class extends ExtensionData {
 
   async _startup() {
     TelemetryStopwatch.start("WEBEXT_EXTENSION_STARTUP_MS", this);
-    this.started = false;
-
     try {
       let [, perms] = await Promise.all([this.loadManifest(), ExtensionPermissions.get(this)]);
-
-      ExtensionManagement.startupExtension(this.uuid, this.addonData.resourceURI, this);
-      this.started = true;
 
       if (!this.hasShutdown) {
         await this.initLocale();
@@ -1016,6 +1011,15 @@ this.Extension = class extends ExtensionData {
                                                     {ignorePath: true});
       }
 
+      // Normalize all patterns to contain a single leading /
+      let resources = (this.manifest.web_accessible_resources || [])
+          .map(path => path.replace(/^\/*/, "/"));
+
+      this.webAccessibleResources = resources.map(res => new MatchGlob(res));
+
+
+      this.policy = processScript.initExtension(this.serialize(), this);
+
       // The "startup" Management event sent on the extension instance itself
       // is emitted just before the Management "startup" event,
       // and it is used to run code that needs to be executed before
@@ -1032,9 +1036,8 @@ this.Extension = class extends ExtensionData {
       dump(`Extension error: ${e.message} ${e.filename || e.fileName}:${e.lineNumber} :: ${e.stack || new Error().stack}\n`);
       Cu.reportError(e);
 
-      if (this.started) {
-        this.started = false;
-        ExtensionManagement.shutdownExtension(this);
+      if (this.policy) {
+        this.policy.active = false;
       }
 
       this.cleanupGeneratedFile();
@@ -1076,7 +1079,7 @@ this.Extension = class extends ExtensionData {
     this.shutdownReason = reason;
     this.hasShutdown = true;
 
-    if (!this.started) {
+    if (!this.policy) {
       return;
     }
 
@@ -1091,7 +1094,7 @@ this.Extension = class extends ExtensionData {
     Services.ppmm.removeMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
     if (!this.manifest) {
-      ExtensionManagement.shutdownExtension(this);
+      this.policy.active = false;
 
       this.cleanupGeneratedFile();
       return;
@@ -1116,7 +1119,7 @@ this.Extension = class extends ExtensionData {
 
     MessageChannel.abortResponses({extensionId: this.id});
 
-    ExtensionManagement.shutdownExtension(this);
+    this.policy.active = false;
 
     return this.cleanupGeneratedFile();
   }
