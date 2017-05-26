@@ -246,7 +246,7 @@ public:
   virtual void SetInitialChildList(ChildListID  aListID,
                                    nsFrameList& aChildList) override;
 
-  virtual bool IsLeaf() const override;
+  virtual bool IsLeafDynamic() const override;
 
   // layout, position and display the popup as needed
   void LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,

@@ -56,8 +56,6 @@ public:
   }
 #endif
 
-  virtual bool IsLeaf() const override { return true; }
-
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;
 #endif

@@ -1102,13 +1102,6 @@ nsHTMLFramesetFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 bool
-nsHTMLFramesetFrame::IsLeaf() const
-{
-  // We handle constructing our kids manually
-  return true;
-}
-
-bool
 nsHTMLFramesetFrame::CanResize(bool aVertical,
                                bool aLeft)
 {

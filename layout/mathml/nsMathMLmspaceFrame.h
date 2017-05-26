@@ -27,8 +27,6 @@ public:
     return NS_OK;
   }
 
-  virtual bool IsLeaf() const override;
-
   virtual void
   Reflow(nsPresContext*          aPresContext,
          ReflowOutput&     aDesiredSize,
