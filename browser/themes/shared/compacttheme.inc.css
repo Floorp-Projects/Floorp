@@ -181,6 +181,7 @@ toolbar:-moz-lwtheme-darktext {
 #TabsToolbar {
   text-shadow: none !important;
 }
+%ifndef MOZ_PHOTON_THEME
 
 /* Back and forward button */
 
@@ -200,11 +201,9 @@ toolbar:-moz-lwtheme-darktext {
   box-shadow: none !important;
 }
 
-%ifndef MOZ_PHOTON_THEME
 #forward-button > .toolbarbutton-icon {
   border-inline-start: none !important;
 }
-%endif
 
 /* Override a box shadow for disabled back button */
 #main-window:not([customizing]) #back-button[disabled] > .toolbarbutton-icon {
@@ -228,6 +227,7 @@ toolbar:-moz-lwtheme-darktext {
   padding-top: 2px;
   padding-bottom: 2px;
 }
+%endif
 
 /* URL bar and search bar*/
 #urlbar,
