@@ -46,8 +46,6 @@ public:
                                     nsIAtom*        aAttribute,
                                     int32_t         aModType) override;
 
-  virtual bool IsLeaf() const override;
-
   virtual nsContainerFrame* GetContentInsertionFrame() override;
 
 protected:

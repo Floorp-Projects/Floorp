@@ -108,8 +108,6 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  virtual bool IsLeaf() const override;
-  
   void StartMouseDrag(nsPresContext* aPresContext,
                       nsHTMLFramesetBorderFrame* aBorder,
                       mozilla::WidgetGUIEvent* aEvent);

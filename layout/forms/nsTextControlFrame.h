@@ -87,8 +87,6 @@ public:
 
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual bool IsXULCollapsed() override;
-
-  virtual bool IsLeaf() const override;
   
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;

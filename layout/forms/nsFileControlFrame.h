@@ -55,10 +55,6 @@ public:
                                     nsIAtom*        aAttribute,
                                     int32_t         aModType) override;
   virtual void ContentStatesChanged(mozilla::EventStates aStates) override;
-  virtual bool IsLeaf() const override
-  {
-    return true;
-  }
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;

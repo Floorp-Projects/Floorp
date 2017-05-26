@@ -2838,7 +2838,15 @@ public:
    * (non-anonymous, XBL-bound, CSS generated content, etc) children should not
    * be constructed.
    */
-  virtual bool IsLeaf() const;
+  bool IsLeaf() const
+  {
+    MOZ_ASSERT(uint8_t(mClass) < mozilla::ArrayLength(sFrameClassBits));
+    FrameClassBits bits = sFrameClassBits[uint8_t(mClass)];
+    if (MOZ_UNLIKELY(bits & eFrameClassBitsDynamicLeaf)) {
+      return IsLeafDynamic();
+    }
+    return bits & eFrameClassBitsLeaf;
+  }
 
   /**
    * Marks all display items created by this frame as needing a repaint,
@@ -3819,6 +3827,13 @@ protected:
   void ReparentFrameViewTo(nsViewManager* aViewManager,
                            nsView*        aNewParentView,
                            nsView*        aOldParentView);
+
+  /**
+   * To be overridden by frame classes that have a varying IsLeaf() state and
+   * is indicating that with DynamicLeaf in nsFrameIdList.h.
+   * @see IsLeaf()
+   */
+  virtual bool IsLeafDynamic() const { return false; }
 
   // Members
   nsRect           mRect;

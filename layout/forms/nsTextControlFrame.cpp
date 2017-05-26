@@ -614,12 +614,6 @@ nsTextControlFrame::IsXULCollapsed()
   return false;
 }
 
-bool
-nsTextControlFrame::IsLeaf() const
-{
-  return true;
-}
-
 NS_IMETHODIMP
 nsTextControlFrame::ScrollOnFocusEvent::Run()
 {

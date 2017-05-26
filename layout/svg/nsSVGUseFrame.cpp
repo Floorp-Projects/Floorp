@@ -40,8 +40,6 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
-  virtual bool IsLeaf() const override;
-
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override
   {
@@ -155,12 +153,6 @@ nsSVGUseFrame::DestroyFrom(nsIFrame* aDestructRoot)
   RefPtr<SVGUseElement> use = static_cast<SVGUseElement*>(mContent);
   nsSVGGFrame::DestroyFrom(aDestructRoot);
   use->DestroyAnonymousContent();
-}
-
-bool
-nsSVGUseFrame::IsLeaf() const
-{
-  return true;
 }
 
 
