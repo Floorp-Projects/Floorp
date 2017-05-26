@@ -2,10 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-                                  "resource://devtools/shared/Loader.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
-                                  "resource://devtools/client/framework/gDevTools.jsm");
+const {DevToolsShim} = Cu.import("chrome://devtools-shim/content/DevToolsShim.jsm", {});
+const {gDevTools} = DevToolsShim;
 
 add_task(async function test_devtools_network_on_navigated() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
@@ -65,7 +63,7 @@ add_task(async function test_devtools_network_on_navigated() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  let target = devtools.TargetFactory.forTab(tab);
+  let target = gDevTools.getTargetForTab(tab);
 
   await gDevTools.showToolbox(target, "webconsole");
   info("Developer toolbox opened.");
