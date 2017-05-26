@@ -53,6 +53,11 @@ public class WebViewDataTest {
             "databases"
     );
 
+    // We expect those folders to exist but they should be empty.
+    private static final List<String> WHITELIST_EMPTY_FOLDERS = Collections.singletonList(
+            "app_textures"
+    );
+
     private static final String TEST_PATH = "/copper/truck/destroy?smoke=violet#bizarre";
 
     /**
@@ -191,6 +196,12 @@ public class WebViewDataTest {
         assertIsEmpty(appContext.getCacheDir());
 
         for (final String name : dataDir.list()) {
+            if (WHITELIST_EMPTY_FOLDERS.contains(name)) {
+                final File folder = new File(dataDir, name);
+                assertTrue(" Check +'" + name + "' is empty folder", folder.isDirectory() && folder.list().length == 0);
+                continue;
+            }
+
             assertTrue("Check '" + name + "' is in whitelist", WHITELIST.contains(name));
         }
 
