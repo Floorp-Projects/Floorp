@@ -160,6 +160,40 @@ add_task(async function testSocksReturnType() {
   await testProxyScript({
     scriptData() {
       function FindProxyForURL(url, host) {
+        return "SOCKS foo.bar:1080";
+      }
+    },
+  }, {
+    proxyInfo: {
+      host: "foo.bar",
+      port: "1080",
+      type: "socks",
+      failoverProxy: null,
+    },
+  });
+});
+
+add_task(async function testSocks4ReturnType() {
+  await testProxyScript({
+    scriptData() {
+      function FindProxyForURL(url, host) {
+        return "SOCKS4 1.2.3.4:1080";
+      }
+    },
+  }, {
+    proxyInfo: {
+      host: "1.2.3.4",
+      port: "1080",
+      type: "socks4",
+      failoverProxy: null,
+    },
+  });
+});
+
+add_task(async function testSocksReturnTypeWithHostCheck() {
+  await testProxyScript({
+    scriptData() {
+      function FindProxyForURL(url, host) {
         if (host === "www.mozilla.org") {
           return "SOCKS 4.4.4.4:9002";
         }
@@ -186,7 +220,7 @@ add_task(async function testProxyReturnType() {
     proxyInfo: {
       host: "1.2.3.4",
       port: "8080",
-      type: "https",
+      type: "http",
       failoverProxy: null,
     },
   });
@@ -203,7 +237,7 @@ add_task(async function testUnusualWhitespaceForFindProxyForURL() {
     proxyInfo: {
       host: "1.2.3.4",
       port: "8080",
-      type: "https",
+      type: "http",
       failoverProxy: null,
     },
   });
@@ -220,7 +254,7 @@ add_task(async function testInvalidProxyScriptIgnoresFailover() {
     proxyInfo: {
       host: "1.2.3.4",
       port: "8080",
-      type: "https",
+      type: "http",
       failoverProxy: null,
     },
   });
@@ -237,7 +271,7 @@ add_task(async function testProxyScriptWithValidFailovers() {
     proxyInfo: {
       host: "1.2.3.4",
       port: "8080",
-      type: "https",
+      type: "http",
       failoverProxy: {
         host: "4.4.4.4",
         port: "9000",
@@ -259,7 +293,7 @@ add_task(async function testProxyScriptWithAnInvalidFailover() {
     proxyInfo: {
       host: "1.2.3.4",
       port: "8080",
-      type: "https",
+      type: "http",
       failoverProxy: null,
     },
   });
@@ -314,7 +348,7 @@ add_task(async function testProxyScriptWithRuntimeUpdate() {
     proxyInfo: {
       host: "1.2.3.4",
       port: "8080",
-      type: "https",
+      type: "http",
       failoverProxy: null,
     },
   });
