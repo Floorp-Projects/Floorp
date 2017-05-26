@@ -17,6 +17,7 @@ interface nsIU2FToken : nsISupports {
    * @param version The offered version to test
    * @return True if the offered version is compatible
    */
+  [must_use]
   void isCompatibleVersion(in AString version, [retval] out boolean result);
 
   /**
@@ -26,6 +27,7 @@ interface nsIU2FToken : nsISupports {
    * @param application The FIDO Application data to associate with the key.
    * @return True if the Key Handle is ours.
    */
+  [must_use]
   void isRegistered([array, size_is(keyHandleLen)] in octet keyHandle,
                     in uint32_t keyHandleLen,
                     [array, size_is(applicationLen)] in octet application,
@@ -42,6 +44,7 @@ interface nsIU2FToken : nsISupports {
    * @param registration An array containing the pubkey, challenge response,
    *                     and key handle.
    */
+  [must_use]
   void register([array, size_is(applicationLen)] in octet application,
                 in uint32_t applicationLen,
                 [array, size_is(challengeLen)] in octet challenge,
@@ -58,6 +61,7 @@ interface nsIU2FToken : nsISupports {
    * @param keyHandle The Key Handle opaque object to use.
    * @param signature The resulting signature.
    */
+  [must_use]
   void sign([array, size_is(applicationLen)] in octet application,
             in uint32_t applicationLen,
             [array, size_is(challengeLen)] in octet challenge,

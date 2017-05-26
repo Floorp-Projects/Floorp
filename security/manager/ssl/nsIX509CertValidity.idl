@@ -17,17 +17,17 @@ interface nsIX509CertValidity : nsISupports {
    *  a certificate is valid.
    */
   readonly attribute PRTime notBefore;
-  
+
   /**
    *  "notBefore" attribute formatted as a time string
    *  according to the environment locale,
    *  according to the environment time zone.
    */
+  [must_use]
   readonly attribute AString notBeforeLocalTime;
 
   /**
-   *  The day portion of "notBefore" 
-   *  formatted as a time string
+   *  The day portion of "notBefore" formatted as a time string
    *  according to the environment locale,
    *  according to the environment time zone.
    */
@@ -38,6 +38,7 @@ interface nsIX509CertValidity : nsISupports {
    *  according to the environment locale,
    *  displayed as GMT / UTC.
    */
+  [must_use]
   readonly attribute AString notBeforeGMT;
 
   /**
@@ -51,11 +52,11 @@ interface nsIX509CertValidity : nsISupports {
    *  according to the environment locale,
    *  according to the environment time zone.
    */
+  [must_use]
   readonly attribute AString notAfterLocalTime;
 
   /**
-   *  The day portion of "notAfter" 
-   *  formatted as a time string
+   *  The day portion of "notAfter" formatted as a time string
    *  according to the environment locale,
    *  according to the environment time zone.
    */
@@ -66,5 +67,6 @@ interface nsIX509CertValidity : nsISupports {
    *  according to the environment locale,
    *  displayed as GMT / UTC.
    */
+  [must_use]
   readonly attribute AString notAfterGMT;
 };

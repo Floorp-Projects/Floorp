@@ -10,6 +10,5 @@
 [scriptable, uuid(114e1142-1dd2-11b2-ac26-b6db19d9184a)]
 interface nsIASN1PrintableItem : nsIASN1Object {
   [noscript] void setData(in charPtr data, in unsigned long len);
-  [noscript] void getData(out charPtr data, out unsigned long len);
+  [noscript, must_use] void getData(out charPtr data, out unsigned long len);
 };
-

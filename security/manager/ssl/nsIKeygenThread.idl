@@ -29,6 +29,7 @@ interface nsIKeygenThread : nsISupports
    *   be called with a topic of "keygen-finished" and null data
    *   and subject.
    */
+  [must_use]
   void startKeyGeneration(in nsIObserver observer);
 
   /**
@@ -37,6 +38,7 @@ interface nsIKeygenThread : nsISupports
    *   close the dialog. However, if the thread already closed
    *   it, we are not allowed to close it.
    */
+  [must_use]
   void userCanceled(out boolean threadAlreadyClosedDialog);
 };
 
