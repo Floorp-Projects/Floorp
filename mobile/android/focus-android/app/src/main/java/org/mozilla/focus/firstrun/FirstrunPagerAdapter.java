@@ -11,16 +11,26 @@ import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.mozilla.focus.R;
 
 public class FirstrunPagerAdapter extends PagerAdapter {
-    private static final int[] PAGE_LAYOUTS = {
-            R.layout.item_firstrun_page1,
-            R.layout.item_firstrun_page2,
-            R.layout.item_firstrun_page3,
-    };
+    private static class FirstrunPage {
+        public final String title;
+        public final String text;
+        public final int imageResource;
+
+        private FirstrunPage(String title, String text, int imageResource) {
+            this.title = title;
+            this.text = text;
+            this.imageResource = imageResource;
+        }
+    }
+
+    private final FirstrunPage[] pages;
 
     private Context context;
     private View.OnClickListener listener;
@@ -28,29 +38,45 @@ public class FirstrunPagerAdapter extends PagerAdapter {
     public FirstrunPagerAdapter(Context context, View.OnClickListener listener) {
         this.context = context;
         this.listener = listener;
+        this.pages = new FirstrunPage[] {
+                new FirstrunPage(
+                        context.getString(R.string.firstrun_tracking_title),
+                        context.getString(R.string.firstrun_tracking_text),
+                        R.drawable.onboarding_img1),
+                new FirstrunPage(
+                        context.getString(R.string.firstrun_defaultbrowser_title),
+                        context.getString(R.string.firstrun_defaultbrowser_text, context.getString(R.string.launcher_name)),
+                        R.drawable.onboarding_img2),
+                new FirstrunPage(
+                        context.getString(R.string.firstrun_breaking_title),
+                        context.getString(R.string.firstrun_breaking_text),
+                        R.drawable.onboarding_img3),
+        };
     }
 
     private View getView(int position, ViewPager pager) {
         final View view = LayoutInflater.from(context).inflate(
-                PAGE_LAYOUTS[position],
-                pager,
-                false);
+                R.layout.firstrun_page, pager, false);
 
-        final View nextView = view.findViewById(R.id.next);
-        if (nextView != null) {
-            nextView.setOnClickListener(listener);
-        }
+        final FirstrunPage page = pages[position];
 
-        final View finishView = view.findViewById(R.id.finish);
-        if (finishView != null) {
-            finishView.setOnClickListener(listener);
-        }
+        final TextView titleView = (TextView) view.findViewById(R.id.title);
+        titleView.setText(page.title);
 
-        // Special casing page 2 where we need to replace the app name. That's quite shitty and annoying to do
-        if (position == 1) {
-            final TextView textView = (TextView) view.findViewById(R.id.page2_text);
-            textView.setText(
-                    context.getString(R.string.firstrun_defaultbrowser_text, context.getString(R.string.launcher_name)));
+        final TextView textView = (TextView) view.findViewById(R.id.text);
+        textView.setText(page.text);
+
+        final ImageView imageView = (ImageView) view.findViewById(R.id.image);
+        imageView.setImageResource(page.imageResource);
+
+        final Button buttonView = (Button) view.findViewById(R.id.button);
+        buttonView.setOnClickListener(listener);
+        if (position == pages.length - 1) {
+            buttonView.setText(R.string.firstrun_close_button);
+            buttonView.setId(R.id.finish);
+        } else {
+            buttonView.setText(R.string.firstrun_next_button);
+            buttonView.setId(R.id.next);
         }
 
         return view;
@@ -63,7 +89,7 @@ public class FirstrunPagerAdapter extends PagerAdapter {
 
     @Override
     public int getCount() {
-        return PAGE_LAYOUTS.length;
+        return pages.length;
     }
 
     @Override

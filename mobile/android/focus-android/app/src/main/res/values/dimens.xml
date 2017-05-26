@@ -18,4 +18,6 @@
     <dimen name="design_navigation_padding_top_default" tools:override="true">0dp</dimen>
     <dimen name="design_navigation_separator_vertical_padding" tools:override="true">0dp</dimen>
     <dimen name="design_navigation_padding_bottom" tools:override="true">0dp</dimen>
+
+    <dimen name="firstun_page_overlap">16dp</dimen>
 </resources>

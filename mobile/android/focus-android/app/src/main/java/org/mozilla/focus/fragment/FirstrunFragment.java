@@ -46,13 +46,17 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_firstrun, container, false);
 
+        view.findViewById(R.id.skip).setOnClickListener(this);
+
         final View background = view.findViewById(R.id.background);
         final FirstrunPagerAdapter adapter = new FirstrunPagerAdapter(container.getContext(), this);
 
         viewPager = (ViewPager) view.findViewById(R.id.pager);
-        // TODO: Those values are only for testing - needs to be adopted to final mock
-        viewPager.setPadding(100, 0, 100, 0);
-        viewPager.setPageMargin(-50);
+
+        final int pageOverlap = container.getContext().getResources().getDimensionPixelSize(R.dimen.firstun_page_overlap);
+        viewPager.setPadding(pageOverlap, 0, pageOverlap, 0);
+        viewPager.setPageMargin(-pageOverlap);
+
         viewPager.setClipToPadding(false);
         viewPager.setAdapter(adapter);
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
@@ -84,6 +88,7 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
                 viewPager.setCurrentItem(viewPager.getCurrentItem() + 1);
                 break;
 
+            case R.id.skip:
             case R.id.finish:
                 PreferenceManager.getDefaultSharedPreferences(getContext())
                         .edit()
