@@ -3,7 +3,7 @@
     "message": "Прави клипове и снимки на уебстраница и ги запазва временно или за постоянно."
   },
   "addonAuthorsList": {
-    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
     "message": "Снимка на екрана"
@@ -77,7 +77,7 @@
     "message": "Уловете само нужното"
   },
   "tourBodyTwo": {
-    "message": "Щракнете с мишката или влачете, за да уловите части от страницата. Посочвайки елементите на страницата те се осветяват."
+    "message": "Щракнете с мишката или влачете, за да уловите части от страницата. Посочвайки елементи от страницата – те се осветяват."
   },
   "tourHeaderThree": {
     "message": "Както ви харесва"
