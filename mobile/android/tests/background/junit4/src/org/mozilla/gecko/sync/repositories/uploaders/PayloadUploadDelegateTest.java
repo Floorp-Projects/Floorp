@@ -112,6 +112,10 @@ public class PayloadUploadDelegateTest {
         }
 
         @Override
+        public void onRecordStoreReconciled(String guid) {
+        }
+
+        @Override
         public RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor) {
             return null;
         }
