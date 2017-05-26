@@ -16,8 +16,6 @@ import slugid
 
 def run_decision_task(job, params):
     arguments = []
-    if 'triggered-by' in job:
-        arguments.append('--triggered-by={}'.format(job['triggered-by']))
     if 'target-tasks-method' in job:
         arguments.append('--target-tasks-method={}'.format(job['target-tasks-method']))
     return [

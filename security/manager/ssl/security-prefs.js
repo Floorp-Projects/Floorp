@@ -47,7 +47,15 @@ pref("security.family_safety.mode", 2);
 
 pref("security.enterprise_roots.enabled", false);
 
+// The supported values of this pref are:
+// 0: do not fetch OCSP
+// 1: fetch OCSP for DV and EV certificates
+// 2: fetch OCSP only for EV certificates
+#ifdef RELEASE_OR_BETA
 pref("security.OCSP.enabled", 1);
+#else
+pref("security.OCSP.enabled", 2);
+#endif
 pref("security.OCSP.require", false);
 pref("security.OCSP.GET.enabled", false);
 #ifdef RELEASE_OR_BETA
