@@ -1572,7 +1572,12 @@ TimeoutManager::StartThrottlingTrackingTimeouts()
 void
 TimeoutManager::OnDocumentLoaded()
 {
-  MaybeStartThrottleTrackingTimout();
+  // The load event may be firing again if we're coming back to the page by
+  // navigating through the session history, so we need to ensure to only call
+  // this when mThrottleTrackingTimeouts hasn't been set yet.
+  if (!mThrottleTrackingTimeouts) {
+    MaybeStartThrottleTrackingTimout();
+  }
 }
 
 void
