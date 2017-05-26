@@ -14,6 +14,7 @@
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/MediaList.h"
+#include "nsIStyleSheetLinkingElement.h"
 #include "Loader.h"
 
 
@@ -177,6 +178,58 @@ ServoStyleSheet::LoadFailed()
 {
   Inner()->mSheet = Servo_StyleSheet_Empty(mParsingMode).Consume();
   Inner()->mURLData = URLExtraData::Dummy();
+}
+
+nsresult
+ServoStyleSheet::ReparseSheet(const nsAString& aInput)
+{
+  // TODO(kuoe0): Bug 1367996 - Need to call document notification
+  // (StyleRuleAdded() and StyleRuleRemoved()) like what we do in
+  // CSSStyleSheet::ReparseSheet().
+
+  if (!mInner->mComplete) {
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  }
+
+  RefPtr<css::Loader> loader;
+  if (mDocument) {
+    loader = mDocument->CSSLoader();
+    NS_ASSERTION(loader, "Document with no CSS loader!");
+  } else {
+    loader = new css::Loader(StyleBackendType::Servo, nullptr);
+  }
+
+  // cache child sheets to reuse
+  css::LoaderReusableStyleSheets reusableSheets;
+  for (StyleSheet* child = GetFirstChild(); child; child = child->mNext) {
+    if (child->GetOriginalURI()) {
+      reusableSheets.AddReusableSheet(child);
+    }
+  }
+
+  // clean up child sheets list
+  for (StyleSheet* child = GetFirstChild(); child; ) {
+    StyleSheet* next = child->mNext;
+    child->mParent = nullptr;
+    child->SetAssociatedDocument(nullptr, NotOwnedByDocument);
+    child->mNext = nullptr;
+    child = next;
+  }
+  Inner()->mFirstChild = nullptr;
+
+  uint32_t lineNumber = 1;
+  if (mOwningNode) {
+    nsCOMPtr<nsIStyleSheetLinkingElement> link = do_QueryInterface(mOwningNode);
+    if (link) {
+      lineNumber = link->GetLineNumber();
+    }
+  }
+
+  nsresult rv = ParseSheet(loader, aInput, mInner->mSheetURI, mInner->mBaseURI,
+                           mInner->mPrincipal, lineNumber,
+                           eCompatibility_FullStandards, &reusableSheets);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
 }
 
 // nsICSSLoaderObserver implementation
