@@ -1,12 +1,18 @@
 {
+  "addonDescription": {
+    "message": "Përftoni copëza dhe bëni foto në Web dhe ruajini ato përkohësisht ose përfundimisht."
+  },
   "addonAuthorsList": {
-    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
     "message": "Bëni një Foto"
   },
   "myShotsLink": {
     "message": "Shkrepjet e Mia"
+  },
+  "screenshotInstructions": {
+    "message": "Tërhiqni kursorin ose klikoni te faqja që të përzgjidhni një zonë. Shtypni ESC që të anulohet."
   },
   "saveScreenshotSelectedArea": {
     "message": "Ruaje"
@@ -26,11 +32,28 @@
   "notificationLinkCopiedTitle": {
     "message": "Lidhja u Kopjua"
   },
+  "notificationLinkCopiedDetails": {
+    "message": "Lidhja për te fotoja juaj u kopjua në të papastër. Shtypni $META_KEY$-V për ta ngjitur diku.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "S’ka gjendje."
+  },
   "requestErrorDetails": {
     "message": "Na ndjeni! S’e ruajtëm dot foton tuaj. Ju lutemi, riprovoni më vonë."
   },
   "connectionErrorTitle": {
     "message": "S’lidhemi dot te fotot tuaja."
+  },
+  "connectionErrorDetails": {
+    "message": "Ju lutemi, kontrolloni lidhjen tuaj Internet. Nëse jeni në gjendje të lidheni në Internet, mund të bëhet fjalë për një problem të përkohshëm me shërbimin Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "S’e ruajtëm dot foton tuaj, ngaqë pati një problem me shërbimin Firefox Screenshots. Ju lutemi, riprovoni më vonë."
   },
   "unshootablePageErrorTitle": {
     "message": "S’bëjmë dot foto të kësaj faqeje."

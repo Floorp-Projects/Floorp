@@ -3,7 +3,7 @@
     "message": "ওয়েব থেকে ক্লিপ এবং স্ক্রিনশট নিন এবং সেগুলো সাময়িকভাবে বা স্থায়ীভাবে সংরক্ষণ করুন।"
   },
   "addonAuthorsList": {
-    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
     "message": "একটি স্ক্রীনশট নিন"
@@ -102,6 +102,17 @@
   },
   "tourDone": {
     "message": "সম্পন্ন"
+  },
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Firefox Screenshots ব্যবহারে, আপনি Firefox Cloud Services এর $TERMSANDPRIVACYNOTICETERMSLINK$ এবং $TERMSANDPRIVACYNOTICEPRIVACYLINK$ নীতিতে সম্মত হয়েছেন।",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
   },
   "termsAndPrivacyNoticeTermsLink": {
     "message": "শর্তাবলী"

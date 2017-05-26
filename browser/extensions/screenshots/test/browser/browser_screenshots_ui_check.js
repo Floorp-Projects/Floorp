@@ -6,14 +6,14 @@ function checkElements(expectPresent, l) {
   }
 }
 
-add_task(async function() {
-  await promiseScreenshotsEnabled();
+add_task(function*() {
+  yield promiseScreenshotsEnabled();
 
-  registerCleanupFunction(async function() {
-    await promiseScreenshotsReset();
+  registerCleanupFunction(function* () {
+    yield promiseScreenshotsReset();
   });
 
-  await BrowserTestUtils.waitForCondition(
+  yield BrowserTestUtils.waitForCondition(
     () => document.getElementById("screenshots_mozilla_org-browser-action"),
     "Screenshots button should be present", 100, 100);
 
