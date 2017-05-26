@@ -1104,6 +1104,15 @@ struct ZoomConstraints {
   }
 };
 
+struct ScrollableLayerGuidHash
+{
+  std::size_t operator()(const ScrollableLayerGuid& Guid) const
+  {
+    return Guid.Hash();
+  }
+};
+
+
 typedef Maybe<ZoomConstraints> MaybeZoomConstraints;
 
 } // namespace layers
