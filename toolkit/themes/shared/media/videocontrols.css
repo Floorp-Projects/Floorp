@@ -97,11 +97,13 @@ audio > xul|videocontrols {
   fill: #ffffff;
 }
 
-.playButton:hover {
+.playButton:hover,
+.muteButton:hover {
   fill: #48a0f7;
 }
 
-.playButton:hover:active {
+.playButton:hover:active,
+.muteButton:hover:active {
   fill: #2d89e6;
 }
 
@@ -113,27 +115,16 @@ audio > xul|videocontrols {
 }
 
 .muteButton {
-  background-image: url(chrome://global/skin/media/muteButton.svg#unmute);
-}
-.muteButton:hover {
-  background-image: url(chrome://global/skin/media/muteButton.svg#unmute-hover);
-}
-.muteButton:hover:active {
-  background-image: url(chrome://global/skin/media/muteButton.svg#unmute-active);
+  background-image: url(chrome://global/skin/media/audioUnmutedButton.svg);
 }
 .muteButton[muted] {
-  background-image: url(chrome://global/skin/media/muteButton.svg#mute);
-}
-.muteButton[muted]:hover {
-  background-image: url(chrome://global/skin/media/muteButton.svg#mute-hover);
-}
-.muteButton[muted]:hover:active {
-  background-image: url(chrome://global/skin/media/muteButton.svg#mute-active);
+  background-image: url(chrome://global/skin/media/audioMutedButton.svg);
 }
 .muteButton[noAudio],
 .muteButton[noAudio]:hover,
 .muteButton[noAudio]:hover:active {
-  background-image: url(chrome://global/skin/media/muteButton.svg#noaudio);
+  background-image: url(chrome://global/skin/media/audioNoAudioButton.svg);
+  fill: white;
 }
 .muteButton[noAudio] + .volumeStack {
   display: none;
