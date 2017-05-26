@@ -21,7 +21,7 @@ class nsGfxButtonControlFrame final
   , public nsIAnonymousContentCreator
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsGfxButtonControlFrame)
 
   explicit nsGfxButtonControlFrame(nsStyleContext* aContext);
 

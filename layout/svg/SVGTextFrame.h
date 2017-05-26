@@ -205,9 +205,8 @@ protected:
   ~SVGTextFrame() {}
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(SVGTextFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(SVGTextFrame)
 
   // nsIFrame:
   virtual void Init(nsIContent*       aContent,

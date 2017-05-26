@@ -31,9 +31,8 @@ class nsTableRowFrame : public nsContainerFrame
   using TableCellReflowInput = mozilla::TableCellReflowInput;
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsTableRowFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsTableRowFrame)
 
   virtual ~nsTableRowFrame();
 

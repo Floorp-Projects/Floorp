@@ -64,9 +64,8 @@ struct nsFramesetDrag {
 class nsHTMLFramesetFrame : public nsContainerFrame
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsHTMLFramesetFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsHTMLFramesetFrame)
 
   explicit nsHTMLFramesetFrame(nsStyleContext* aContext);
 

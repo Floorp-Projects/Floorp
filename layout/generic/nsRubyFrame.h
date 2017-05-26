@@ -22,8 +22,7 @@ nsContainerFrame* NS_NewRubyFrame(nsIPresShell* aPresShell,
 class nsRubyFrame final : public nsInlineFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
-  NS_DECL_QUERYFRAME_TARGET(nsRubyFrame)
+  NS_DECL_FRAMEARENA_HELPERS(nsRubyFrame)
   NS_DECL_QUERYFRAME
 
   // nsIFrame overrides

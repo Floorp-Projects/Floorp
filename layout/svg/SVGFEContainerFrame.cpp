@@ -27,7 +27,7 @@ protected:
   }
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(SVGFEContainerFrame)
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {

@@ -21,7 +21,7 @@ using namespace mozilla::image;
 class nsGroupBoxFrame final : public nsBoxFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsGroupBoxFrame)
 
   explicit nsGroupBoxFrame(nsStyleContext* aContext):
     nsBoxFrame(aContext) {}

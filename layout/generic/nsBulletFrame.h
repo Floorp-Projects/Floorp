@@ -47,9 +47,8 @@ class nsBulletFrame final : public nsFrame {
   typedef mozilla::image::DrawResult DrawResult;
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsBulletFrame)
 #ifdef DEBUG
-  NS_DECL_QUERYFRAME_TARGET(nsBulletFrame)
   NS_DECL_QUERYFRAME
 #endif
 

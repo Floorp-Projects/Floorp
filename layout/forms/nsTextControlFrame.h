@@ -31,7 +31,7 @@ class nsTextControlFrame final : public nsContainerFrame,
                                  public nsIStatefulFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsTextControlFrame)
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(ContentScrollPos, nsPoint)
 

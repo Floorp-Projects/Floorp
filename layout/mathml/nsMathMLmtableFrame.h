@@ -27,7 +27,7 @@ public:
                                nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLmtableWrapperFrame)
 
   // overloaded nsTableWrapperFrame methods
 
@@ -66,9 +66,8 @@ protected:
 class nsMathMLmtableFrame final : public nsTableFrame
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsMathMLmtableFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLmtableFrame)
 
   friend nsContainerFrame*
   NS_NewMathMLmtableFrame(nsIPresShell*   aPresShell,
@@ -179,7 +178,7 @@ private:
 class nsMathMLmtrFrame final : public nsTableRowFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLmtrFrame)
 
   friend nsContainerFrame*
   NS_NewMathMLmtrFrame(nsIPresShell*   aPresShell,
@@ -244,7 +243,7 @@ protected:
 class nsMathMLmtdFrame : public nsTableCellFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLmtdFrame)
 
   friend nsContainerFrame*
   NS_NewMathMLmtdFrame(nsIPresShell*   aPresShell,
@@ -299,7 +298,7 @@ public:
                             nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLmtdInnerFrame)
 
   // Overloaded nsIMathMLFrame methods
 

@@ -23,9 +23,8 @@ class nsProgressFrame final
   typedef mozilla::dom::Element Element;
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsProgressFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsProgressFrame)
 
   explicit nsProgressFrame(nsStyleContext* aContext);
   virtual ~nsProgressFrame();

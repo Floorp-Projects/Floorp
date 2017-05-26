@@ -14,7 +14,7 @@
 class nsBackdropFrame final : public nsFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsBackdropFrame)
 
   explicit nsBackdropFrame(nsStyleContext* aContext)
     : nsFrame(aContext, mozilla::LayoutFrameType::Backdrop)

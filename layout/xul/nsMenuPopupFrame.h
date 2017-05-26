@@ -161,9 +161,8 @@ class nsMenuPopupFrame final : public nsBoxFrame, public nsMenuParent,
                                public nsIReflowCallback
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsMenuPopupFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMenuPopupFrame)
 
   explicit nsMenuPopupFrame(nsStyleContext* aContext);
 
