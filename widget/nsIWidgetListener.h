@@ -102,6 +102,11 @@ public:
   virtual void FullscreenChanged(bool aInFullscreen);
 
   /**
+   * Called when the occlusion state is changed.
+   */
+  virtual void OcclusionStateChanged(bool aIsFullyOccluded);
+
+  /**
    * Called when the window is activated and focused.
    */
   virtual void WindowActivated();
