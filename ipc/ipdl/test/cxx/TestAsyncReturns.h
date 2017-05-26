@@ -23,7 +23,7 @@ public:
   void Main();
 
 protected:
-  mozilla::ipc::IPCResult RecvPong(RefPtr<PongPromise>&& aPromise) override;
+  mozilla::ipc::IPCResult RecvPong(PongResolver&& aResolve) override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override
   {
@@ -43,8 +43,8 @@ public:
   virtual ~TestAsyncReturnsChild();
 
 protected:
-  mozilla::ipc::IPCResult RecvPing(RefPtr<PingPromise>&& aPromise) override;
-  mozilla::ipc::IPCResult RecvNoReturn(RefPtr<NoReturnPromise>&& aPromise) override;
+  mozilla::ipc::IPCResult RecvPing(PingResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvNoReturn(NoReturnResolver&& aResolve) override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override
   {
