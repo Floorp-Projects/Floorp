@@ -33,9 +33,6 @@ cron_yml_schema = Schema({
             # Treeherder symbol for the cron task
             Required('treeherder-symbol'): basestring,
 
-            # --triggered-by './mach taskgraph decision' argument
-            'triggered-by': basestring,
-
             # --target-tasks-method './mach taskgraph decision' argument
             'target-tasks-method': basestring,
         }),

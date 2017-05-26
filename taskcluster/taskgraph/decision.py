@@ -157,7 +157,6 @@ def get_decision_parameters(options):
         'pushdate',
         'owner',
         'level',
-        'triggered_by',
         'target_tasks_method',
     ] if n in options}
 

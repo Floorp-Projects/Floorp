@@ -420,9 +420,14 @@ function runTest(event) {
     case 33:
       is(event.type, "play", "checking event type");
       ok(true, "video resume after mouseup");
-      SimpleTest.finish();
+      synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
       break;
 
+    // Bug 1367194: Always ensure video is paused before calling SimpleTest.finish().
+    case 34:
+      is(event.type, "pause", "checking event type");
+      SimpleTest.finish();
+      break;
 
     default:
       throw "unexpected test #" + testnum + " w/ event " + event.type;

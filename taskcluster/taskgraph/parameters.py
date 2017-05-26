@@ -28,7 +28,6 @@ PARAMETER_NAMES = set([
     'pushdate',
     'pushlog_id',
     'target_tasks_method',
-    'triggered_by',
 ])
 
 
