@@ -78,10 +78,15 @@ ifdef MOZ_INSTALL_TRACKING
         $(NULL)
 endif
 
-
-# MOZ_ANDROID_MMA requires MOZ_ANDROID_GCM and MOZ_INSTALL_TRACKING,
-# so we don't need a separate clause adding to JAVA_CLASSPATH for
-# MMA (Leanplum) support.
+# MOZ_ANDROID_MMA requires MOZ_ANDROID_GCM and MOZ_NATIVE_DEVICES,
+# which take care of the Play Services requirements in JAVA_CLASSPATH.
+# Based on the import of
+# `com.google.android.gms.ads.identifier.AdvertisingIdClient` in
+# `com.leanplum.internal.Util` one would assume that
+# `play-services-ads` is required, by in version 8.4.0 (at least) that
+# class is defined in `play-services-basement`.  Therefore, unlike
+# MOZ_INSTALL_TRACKING, we don't need to depend on
+# `play-services-ads`.
 
 JAVA_CLASSPATH := $(subst $(NULL) ,:,$(strip $(JAVA_CLASSPATH)))
 
@@ -126,9 +131,9 @@ ifdef MOZ_INSTALL_TRACKING
         $(NULL)
 endif
 
-# MOZ_ANDROID_MMA requires MOZ_ANDROID_GCM and MOZ_INSTALL_TRACKING,
-# so we don't need a separate clause adding to java_bundled_libs for
-# MMA (Leanplum) support.
+# MOZ_ANDROID_MMA requires MOZ_ANDROID_GCM and MOZ_NATIVE_DEVICES,
+# which take care of the Play Services requirements in
+# java_bundled_libs.  See the note above.
 
 # uniq purloined from http://stackoverflow.com/a/16151140.
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))

@@ -104,6 +104,9 @@ def _defines():
     if CONFIG['MOZ_INSTALL_TRACKING']:
         DEFINES['MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN'] = CONFIG['MOZ_ADJUST_SDK_KEY']
 
+    if CONFIG['MOZ_ANDROID_MMA']:
+        DEFINES['MOZ_LEANPLUM_SDK_KEY'] = CONFIG['MOZ_LEANPLUM_SDK_KEY']
+
     DEFINES['MOZ_BUILDID'] = open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
 
     # Set the appropriate version code if not set by MOZ_APP_ANDROID_VERSION_CODE.
