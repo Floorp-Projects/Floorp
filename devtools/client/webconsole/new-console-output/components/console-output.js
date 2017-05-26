@@ -87,11 +87,6 @@ const ConsoleOutput = createClass({
     } = this.props;
 
     let messageNodes = messages.map((message) => {
-      const parentGroups = message.groupId ? (
-        (groups.get(message.groupId) || [])
-          .concat([message.groupId])
-      ) : [];
-
       return (
         MessageContainer({
           dispatch,
@@ -101,7 +96,7 @@ const ConsoleOutput = createClass({
           open: messagesUi.includes(message.id),
           tableData: messagesTableData.get(message.id),
           autoscroll,
-          indent: parentGroups.length,
+          indent: message.indent,
           timestampsVisible,
         })
       );
