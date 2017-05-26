@@ -75,7 +75,7 @@ SwapScaleWidthHeightForRotation(IntSize& aSize, VideoInfo::Rotation aDegrees)
 }
 
 nsVideoFrame::nsVideoFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, LayoutFrameType::HTMLVideo)
+  : nsContainerFrame(aContext, kClassID)
 {
   EnableVisibilityTracking();
 }
@@ -180,12 +180,6 @@ nsVideoFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsContentUtils::DestroyAnonymousContent(&mVideoControls);
   nsContentUtils::DestroyAnonymousContent(&mPosterImage);
   nsContainerFrame::DestroyFrom(aDestructRoot);
-}
-
-bool
-nsVideoFrame::IsLeaf() const
-{
-  return true;
 }
 
 already_AddRefed<Layer>

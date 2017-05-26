@@ -194,12 +194,14 @@ nsPresArena::AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
     size_t* p;
 
     switch (entry - mFreeLists) {
-#define FRAME_ID(classname)                               \
+#define FRAME_ID(classname, ...)                          \
       case nsQueryFrame::classname##_id:                  \
         p = &aArenaStats->FRAME_ID_STAT_FIELD(classname); \
         break;
+#define ABSTRACT_FRAME_ID(...)
 #include "nsFrameIdList.h"
 #undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
       case eArenaObjectID_nsLineBox:
         p = &aArenaStats->mLineBoxes;
         break;

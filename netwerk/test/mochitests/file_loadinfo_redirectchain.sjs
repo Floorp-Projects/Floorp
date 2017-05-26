@@ -21,10 +21,10 @@ function createIframeContent(aQuery) {
     var redirectChainIncludingInternalRedirects = loadinfo.redirectChainIncludingInternalRedirects;
     var resultOBJ = { redirectChain : [], redirectChainIncludingInternalRedirects : [] };
     for (var i = 0; i < redirectChain.length; i++) {
-      resultOBJ.redirectChain.push(redirectChain[i].URI.spec);
+      resultOBJ.redirectChain.push(redirectChain[i].principal.URI.spec);
     }
     for (var i = 0; i < redirectChainIncludingInternalRedirects.length; i++) {
-      resultOBJ.redirectChainIncludingInternalRedirects.push(redirectChainIncludingInternalRedirects[i].URI.spec);
+      resultOBJ.redirectChainIncludingInternalRedirects.push(redirectChainIncludingInternalRedirects[i].principal.URI.spec);
     }
     var loadinfoJSON = JSON.stringify(resultOBJ);
     window.parent.postMessage({ loadinfo: loadinfoJSON }, "*");
