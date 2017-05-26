@@ -269,8 +269,8 @@ be temporary, and you can try again later.</li>
     <!-- Label used in the contextmenu shown when long-pressing on an image -->
     <string name="contextmenu_image_save">Save image</string>
 
-    <!-- This is a warning shown in the browser's context menu (when long pressing an image). -->
-    <string name="contextmenu_image_warning"><![CDATA[Saved and shared images <b>will not be deleted</b> when you erase Firefox Focus history.]]></string>
+    <!-- This is a warning shown in the browser's context menu (when long pressing an image). %1$s will be replaced with the long name of the app (e.g. Firefox Focus). -->
+    <string name="contextmenu_image_warning"><![CDATA[Saved and shared images <b>will not be deleted</b> when you erase %1$s history.]]></string>
 
     <!-- First run tour (page 1): Title -->
     <string name="firstrun_tracking_title">Browse like no one’s watching</string>

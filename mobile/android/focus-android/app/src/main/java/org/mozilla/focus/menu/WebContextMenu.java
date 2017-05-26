@@ -74,7 +74,9 @@ public class WebContextMenu {
 
         final TextView warningView = (TextView) view.findViewById(R.id.warning);
         if (hitTarget.isImage) {
-            warningView.setText(Html.fromHtml(context.getString(R.string.contextmenu_image_warning)));
+            //noinspection deprecation -- Mew API is only available on 24+
+            warningView.setText(Html.fromHtml(
+                    context.getString(R.string.contextmenu_image_warning, context.getString(R.string.app_name))));
         } else {
             warningView.setVisibility(View.GONE);
         }
