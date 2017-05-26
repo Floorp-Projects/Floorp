@@ -29,9 +29,8 @@ import org.mozilla.focus.web.IWebView;
 public class WebContextMenu {
 
     private static View createTitleView(final @NonNull Context context, final @NonNull String title) {
-        final View titleView = LayoutInflater.from(context).inflate(R.layout.dialog_title, null);
-        ((TextView) titleView.findViewById(R.id.title)).setText(title);
-
+        final TextView titleView = (TextView) LayoutInflater.from(context).inflate(R.layout.context_menu_title, null);
+        titleView.setText(title);
         return titleView;
     }
 

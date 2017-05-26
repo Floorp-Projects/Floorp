@@ -10,14 +10,18 @@
     <android.support.design.widget.NavigationView
         android:id="@+id/context_menu"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-    </android.support.design.widget.NavigationView>
+        android:layout_height="wrap_content"
+        android:layout_margin="0dp"
+        android:padding="0dp"
+        android:background="@android:color/transparent" />
 
     <TextView
         android:id="@+id/warning"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp" />
+        android:background="#ff262626"
+        android:textColor="#ff8b8b8b"
+        android:textSize="12sp"
+        android:padding="18dp" />
 
 </LinearLayout>

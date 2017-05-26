@@ -2,7 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <dimen name="menu_elevation">8dp</dimen>
 
     <item name="match_parent" type="dimen">-1</item>
@@ -13,4 +13,9 @@
 
     <!-- The custom tabs spec defines a maximum close button size, we need to define this here to enforce that sizing. -->
     <dimen name="customtabs_toolbar_icon_size">24dp</dimen>
+
+    <!-- We are using a NavigationView in our context menu and it adds padding that we do not want. -->
+    <dimen name="design_navigation_padding_top_default" tools:override="true">0dp</dimen>
+    <dimen name="design_navigation_separator_vertical_padding" tools:override="true">0dp</dimen>
+    <dimen name="design_navigation_padding_bottom" tools:override="true">0dp</dimen>
 </resources>
