@@ -615,7 +615,6 @@ public:
     , mNextSibling(nullptr)
     , mPrevSibling(nullptr)
     , mState(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY)
-    , mType(aType)
     , mClass(aID)
   {
     mozilla::PodZero(&mOverflow);
@@ -2704,12 +2703,15 @@ public:
    *
    * @see mozilla::LayoutFrameType
    */
-  mozilla::LayoutFrameType Type() const { return mType; }
+  mozilla::LayoutFrameType Type() const {
+    MOZ_ASSERT(uint8_t(mClass) < mozilla::ArrayLength(sLayoutFrameTypes));
+    return sLayoutFrameTypes[uint8_t(mClass)];
+  }
 
 #define FRAME_TYPE(name_)                                                      \
   bool Is##name_##Frame() const                                                \
   {                                                                            \
-    return mType == mozilla::LayoutFrameType::name_;                           \
+    return Type() == mozilla::LayoutFrameType::name_;                          \
   }
 #include "mozilla/FrameTypeList.h"
 #undef FRAME_TYPE
@@ -3901,9 +3903,6 @@ protected:
   /** @see GetWritingMode() */
   mozilla::WritingMode mWritingMode;
 
-  /** The type of the frame. */
-  mozilla::LayoutFrameType mType;
-
   /** The ClassID of the concrete class of this instance. */
   ClassID mClass; // 1 byte
 
@@ -4029,6 +4028,15 @@ private:
 
   bool HasOpacityInternal(float aThreshold,
                           mozilla::EffectSet* aEffectSet = nullptr) const;
+
+  // Maps mClass to LayoutFrameType.
+  static const mozilla::LayoutFrameType sLayoutFrameTypes[
+#define FRAME_ID(...) 1 +
+#define ABSTRACT_FRAME_ID(...)
+#include "nsFrameIdList.h"
+#undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
+  0];
 
 #ifdef DEBUG_FRAME_DUMP
 public:
