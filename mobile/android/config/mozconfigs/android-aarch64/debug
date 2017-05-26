@@ -1,0 +1,16 @@
+. "$topsrcdir/mobile/android/config/mozconfigs/common"
+
+# Global options
+ac_add_options --enable-debug
+ac_add_options --enable-marionette
+
+# Android
+ac_add_options --with-android-min-sdk=21
+ac_add_options --target=aarch64-linux-android
+
+export MOZILLA_OFFICIAL=1
+export MOZ_TELEMETRY_REPORTING=1
+
+ac_add_options --with-branding=mobile/android/branding/nightly
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"
