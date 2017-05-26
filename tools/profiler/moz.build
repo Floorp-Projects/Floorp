@@ -12,7 +12,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
     EXPORTS += [
         'public/CrossProcessProfilerController.h',
         'public/ProfilerMarkerPayload.h',
-        'public/PseudoStack.h',
         'public/shared-libraries.h',
     ]
     UNIFIED_SOURCES += [

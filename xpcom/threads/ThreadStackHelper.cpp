@@ -13,7 +13,7 @@
 #include "shared-libraries.h"
 #endif
 #ifdef MOZ_THREADSTACKHELPER_PSEUDO
-#include "PseudoStack.h"
+#include "js/ProfilingStack.h"
 #endif
 
 #include "mozilla/Assertions.h"
@@ -492,7 +492,7 @@ ThreadStackHelper::FillStackBuffer()
   intptr_t availableBufferSize = intptr_t(reservedBufferSize);
 
   // Go from front to back
-  const volatile js::ProfileEntry* entry = mPseudoStack->mStack;
+  const volatile js::ProfileEntry* entry = mPseudoStack->entries;
   const volatile js::ProfileEntry* end = entry + mPseudoStack->stackSize();
   // Deduplicate identical, consecutive frames
   const char* prevLabel = nullptr;
