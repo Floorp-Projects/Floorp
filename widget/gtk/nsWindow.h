@@ -308,6 +308,9 @@ public:
 
    virtual void        SetTransparencyMode(nsTransparencyMode aMode) override;
    virtual nsTransparencyMode GetTransparencyMode() override;
+#if (MOZ_WIDGET_GTK >= 3)
+   virtual void        UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) override;
+#endif
    virtual nsresult    ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
    nsresult            UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                             uint8_t* aAlphas, int32_t aStride);
