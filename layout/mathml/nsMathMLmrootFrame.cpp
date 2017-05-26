@@ -29,7 +29,7 @@ NS_NewMathMLmrootFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmrootFrame)
 
 nsMathMLmrootFrame::nsMathMLmrootFrame(nsStyleContext* aContext) :
-  nsMathMLContainerFrame(aContext),
+  nsMathMLContainerFrame(aContext, kClassID),
   mSqrChar(),
   mBarRect()
 {

@@ -152,7 +152,20 @@ public:
         nsITimer::TYPE_REPEATING_PRECISE <
           nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
         "invalid ordering of timer types!");
-    return mType >= nsITimer::TYPE_REPEATING_SLACK;
+    return mType >= nsITimer::TYPE_REPEATING_SLACK &&
+           mType < nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY;
+  }
+
+  bool IsLowPriority() const
+  {
+    return mType == nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY ||
+           mType == nsITimer::TYPE_REPEATING_SLACK_LOW_PRIORITY;
+  }
+
+  bool IsSlack() const
+  {
+    return mType == nsITimer::TYPE_REPEATING_SLACK ||
+           mType == nsITimer::TYPE_REPEATING_SLACK_LOW_PRIORITY;
   }
 
   void GetName(nsACString& aName);

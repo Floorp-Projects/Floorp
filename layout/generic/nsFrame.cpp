@@ -116,6 +116,40 @@ using namespace mozilla::layers;
 using namespace mozilla::layout;
 typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
 
+const mozilla::LayoutFrameType nsIFrame::sLayoutFrameTypes[
+#define FRAME_ID(...) 1 +
+#define ABSTRACT_FRAME_ID(...)
+#include "nsFrameIdList.h"
+#undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
+  0] = {
+#define FRAME_ID(class_, type_, ...) mozilla::LayoutFrameType:: type_,
+#define ABSTRACT_FRAME_ID(...)
+#include "nsFrameIdList.h"
+#undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
+};
+
+const nsIFrame::FrameClassBits nsIFrame::sFrameClassBits[
+#define FRAME_ID(...) 1 +
+#define ABSTRACT_FRAME_ID(...)
+#include "nsFrameIdList.h"
+#undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
+  0] = {
+#define Leaf eFrameClassBitsLeaf
+#define NotLeaf eFrameClassBitsNone
+#define DynamicLeaf eFrameClassBitsDynamicLeaf
+#define FRAME_ID(class_, type_, leaf_, ...) leaf_,
+#define ABSTRACT_FRAME_ID(...)
+#include "nsFrameIdList.h"
+#undef Leaf
+#undef NotLeaf
+#undef DynamicLeaf
+#undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
+};
+
 // Struct containing cached metrics for box-wrapped frames.
 struct nsBoxLayoutMetrics
 {
@@ -448,11 +482,11 @@ WeakFrame::Init(nsIFrame* aFrame)
 nsIFrame*
 NS_NewEmptyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsFrame(aContext, LayoutFrameType::None);
+  return new (aPresShell) nsFrame(aContext);
 }
 
-nsFrame::nsFrame(nsStyleContext* aContext, LayoutFrameType aType)
-  : nsBox(aType)
+nsFrame::nsFrame(nsStyleContext* aContext, ClassID aID)
+  : nsBox(aID)
 {
   MOZ_COUNT_CTOR(nsFrame);
 
@@ -570,6 +604,7 @@ nsFrame::Init(nsIContent*       aContent,
               nsContainerFrame* aParent,
               nsIFrame*         aPrevInFlow)
 {
+  MOZ_ASSERT(nsQueryFrame::FrameIID(mClass) == GetFrameId());
   NS_PRECONDITION(!mContent, "Double-initing a frame?");
   NS_ASSERTION(IsFrameOfType(eDEBUGAllFrames) &&
                !IsFrameOfType(eDEBUGNoFrames),
@@ -6260,12 +6295,6 @@ nsIFrame::GetNearestWidget(nsPoint& aOffset) const
     GetClosestView(&offsetToView)->GetNearestWidget(&offsetToWidget);
   aOffset = offsetToView + offsetToWidget;
   return widget;
-}
-
-bool
-nsIFrame::IsLeaf() const
-{
-  return true;
 }
 
 Matrix4x4

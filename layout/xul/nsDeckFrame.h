@@ -20,9 +20,8 @@
 class nsDeckFrame final : public nsBoxFrame
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsDeckFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsDeckFrame)
 
   friend nsIFrame* NS_NewDeckFrame(nsIPresShell* aPresShell,
                                    nsStyleContext* aContext);

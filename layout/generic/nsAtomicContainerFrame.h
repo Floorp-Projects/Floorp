@@ -24,7 +24,6 @@ public:
 
   // Bypass the nsContainerFrame/nsSplittableFrame impl of the following
   // methods so we behave like a leaf frame.
-  bool IsLeaf() const override { return true; }
   FrameSearchResult PeekOffsetNoAmount(bool aForward, int32_t* aOffset) override
   {
     return nsFrame::PeekOffsetNoAmount(aForward, aOffset);
@@ -40,9 +39,8 @@ public:
   }
 
 protected:
-  nsAtomicContainerFrame(nsStyleContext* aContext,
-                         mozilla::LayoutFrameType aType)
-    : nsContainerFrame(aContext, aType)
+  nsAtomicContainerFrame(nsStyleContext* aContext, ClassID aID)
+    : nsContainerFrame(aContext, aID)
   {}
 };
 

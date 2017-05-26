@@ -65,7 +65,7 @@ NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGOuterSVGFrame)
 
 nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
-  : nsSVGDisplayContainerFrame(aContext, LayoutFrameType::SVGOuterSVG)
+  : nsSVGDisplayContainerFrame(aContext, kClassID)
   , mCallingReflowSVG(false)
   , mFullZoom(aContext->PresContext()->GetFullZoom())
   , mViewportInitialized(false)

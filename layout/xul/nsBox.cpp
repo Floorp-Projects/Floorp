@@ -176,8 +176,8 @@ nsBox::EndXULLayout(nsBoxLayoutState& aState)
 bool nsBox::gGotTheme = false;
 nsITheme* nsBox::gTheme = nullptr;
 
-nsBox::nsBox(LayoutFrameType aType)
-  : nsIFrame(aType)
+nsBox::nsBox(ClassID aID)
+  : nsIFrame(aID)
 {
   MOZ_COUNT_CTOR(nsBox);
   //mX = 0;
