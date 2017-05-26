@@ -28,8 +28,9 @@ public:
 
 protected:
   explicit nsRubyContentFrame(nsStyleContext* aContext,
+                              ClassID aID,
                               mozilla::LayoutFrameType aType)
-    : nsInlineFrame(aContext, aType)
+    : nsInlineFrame(aContext, aID, aType)
   {}
 };
 

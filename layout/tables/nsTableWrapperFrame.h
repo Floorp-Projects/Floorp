@@ -196,7 +196,7 @@ public:
 
 protected:
 
-  explicit nsTableWrapperFrame(nsStyleContext* aContext);
+  explicit nsTableWrapperFrame(nsStyleContext* aContext, ClassID aID = kClassID);
   virtual ~nsTableWrapperFrame();
 
   void InitChildReflowInput(nsPresContext&     aPresContext,

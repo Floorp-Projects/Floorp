@@ -59,7 +59,7 @@ private:
 
 protected:
   explicit nsMathMLmactionFrame(nsStyleContext* aContext) :
-    nsMathMLSelectedFrame(aContext) {}
+    nsMathMLSelectedFrame(aContext, kClassID) {}
   virtual ~nsMathMLmactionFrame();
   
 private:

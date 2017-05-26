@@ -16,12 +16,12 @@ class nsSVGGFrame : public nsSVGDisplayContainerFrame
   friend nsIFrame*
   NS_NewSVGGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  nsSVGGFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType)
-    : nsSVGDisplayContainerFrame(aContext, aType)
+  nsSVGGFrame(nsStyleContext* aContext, nsIFrame::ClassID aID, mozilla::LayoutFrameType aType)
+    : nsSVGDisplayContainerFrame(aContext, aID, aType)
   {}
 
-  explicit nsSVGGFrame(nsStyleContext* aContext)
-    : nsSVGGFrame(aContext, mozilla::LayoutFrameType::SVGG)
+  explicit nsSVGGFrame(nsStyleContext* aContext, nsIFrame::ClassID aID = kClassID)
+    : nsSVGGFrame(aContext, aID, mozilla::LayoutFrameType::SVGG)
   {}
 
 public:

@@ -39,7 +39,7 @@ public:
 
 protected:
   explicit nsProgressMeterFrame(nsStyleContext* aContext) :
-    nsBoxFrame(aContext), mNeedsReflowCallback(true) {}
+    nsBoxFrame(aContext, kClassID), mNeedsReflowCallback(true) {}
   virtual ~nsProgressMeterFrame();
 
   bool mNeedsReflowCallback;

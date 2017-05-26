@@ -114,7 +114,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsLeafBoxFrame)
 
 // Constructor
 nsTreeBodyFrame::nsTreeBodyFrame(nsStyleContext* aContext)
-:nsLeafBoxFrame(aContext),
+:nsLeafBoxFrame(aContext, kClassID),
  mSlots(nullptr),
  mImageCache(),
  mTopRowIndex(0),

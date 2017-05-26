@@ -58,7 +58,7 @@ public:
 };
 
 nsImageControlFrame::nsImageControlFrame(nsStyleContext* aContext)
-  : nsImageFrame(aContext, LayoutFrameType::ImageControl)
+  : nsImageFrame(aContext, kClassID, LayoutFrameType::ImageControl)
 {
 }
 

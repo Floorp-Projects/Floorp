@@ -37,7 +37,7 @@ public:
   
 protected:
   explicit nsMathMLmspaceFrame(nsStyleContext* aContext) :
-    nsMathMLContainerFrame(aContext), mWidth(0), mHeight(0), mDepth(0) {}
+    nsMathMLContainerFrame(aContext, kClassID), mWidth(0), mHeight(0), mDepth(0) {}
   virtual ~nsMathMLmspaceFrame();
 
   virtual nsresult

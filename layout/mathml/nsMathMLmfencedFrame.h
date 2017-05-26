@@ -97,7 +97,7 @@ public:
 
 protected:
   explicit nsMathMLmfencedFrame(nsStyleContext* aContext)
-    : nsMathMLContainerFrame(aContext)
+    : nsMathMLContainerFrame(aContext, kClassID)
     , mOpenChar(nullptr)
     , mCloseChar(nullptr)
     , mSeparatorsChar(nullptr)

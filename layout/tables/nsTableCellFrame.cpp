@@ -43,8 +43,9 @@ using namespace mozilla::image;
 
 nsTableCellFrame::nsTableCellFrame(nsStyleContext* aContext,
                                    nsTableFrame* aTableFrame,
+                                   ClassID aID,
                                    LayoutFrameType aType)
-  : nsContainerFrame(aContext, aType)
+  : nsContainerFrame(aContext, aID, aType)
   , mDesiredSize(aTableFrame->GetWritingMode())
 {
   mColIndex = 0;
@@ -1086,7 +1087,7 @@ nsTableCellFrame::GetFrameName(nsAString& aResult) const
 
 nsBCTableCellFrame::nsBCTableCellFrame(nsStyleContext* aContext,
                                        nsTableFrame* aTableFrame)
-  : nsTableCellFrame(aContext, aTableFrame, LayoutFrameType::BCTableCell)
+  : nsTableCellFrame(aContext, aTableFrame, kClassID, LayoutFrameType::BCTableCell)
 {
   mBStartBorder = mIEndBorder = mBEndBorder = mIStartBorder = 0;
 }

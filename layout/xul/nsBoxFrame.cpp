@@ -98,7 +98,8 @@ nsIFrame* nsBoxFrame::mDebugChild = nullptr;
 nsIFrame*
 NS_NewBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, bool aIsRoot, nsBoxLayout* aLayoutManager)
 {
-  return new (aPresShell) nsBoxFrame(aContext, aIsRoot, aLayoutManager);
+  return new (aPresShell) nsBoxFrame(aContext, nsBoxFrame::kClassID,
+                                     aIsRoot, aLayoutManager);
 }
 
 nsIFrame*
@@ -116,10 +117,11 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 #endif
 
 nsBoxFrame::nsBoxFrame(nsStyleContext* aContext,
+                       ClassID aID,
                        LayoutFrameType aType,
                        bool aIsRoot,
                        nsBoxLayout* aLayoutManager)
-  : nsContainerFrame(aContext, aType)
+  : nsContainerFrame(aContext, aID, aType)
   , mFlex(0)
   , mAscent(0)
 {

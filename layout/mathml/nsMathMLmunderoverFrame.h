@@ -49,7 +49,7 @@ public:
 
 protected:
   explicit nsMathMLmunderoverFrame(nsStyleContext* aContext)
-    : nsMathMLContainerFrame(aContext)
+    : nsMathMLContainerFrame(aContext, kClassID)
     , mIncrementUnder(false)
     , mIncrementOver(false)
   {}
