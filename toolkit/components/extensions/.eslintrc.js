@@ -20,6 +20,7 @@ module.exports = {
     "AppConstants": true,
     "Extension": true,
     "ExtensionAPI": true,
+    "ExtensionCommon": true,
     "ExtensionManagement": true,
     "ExtensionUtils": true,
     "extensions": true,

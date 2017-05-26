@@ -9,10 +9,10 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
                                   "resource://gre/modules/ExtensionParent.jsm");
+
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
-  extensionStylesheets,
   promiseEvent,
 } = ExtensionUtils;
 
@@ -61,7 +61,7 @@ function getBrowser(sidebar) {
         "chrome://extensions/content/ext-browser-content.js", false);
 
       browser.messageManager.sendAsyncMessage("Extension:InitBrowser", {
-        stylesheets: extensionStylesheets,
+        stylesheets: ExtensionParent.extensionStylesheets,
       });
     }
     return browser;

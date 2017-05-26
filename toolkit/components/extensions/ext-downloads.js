@@ -1,5 +1,7 @@
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
@@ -14,10 +16,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
                                   "resource://gre/modules/EventEmitter.jsm");
 
 var {
-  ignoreEvent,
   normalizeTime,
-  PlatformInfo,
 } = ExtensionUtils;
+
+var {
+  ignoreEvent,
+} = ExtensionCommon;
 
 const DOWNLOAD_ITEM_FIELDS = ["id", "url", "referrer", "filename", "incognito",
                               "danger", "mime", "startTime", "endTime",
@@ -392,7 +396,7 @@ this.downloads = class extends ExtensionAPI {
       downloads: {
         download(options) {
           let {filename} = options;
-          if (filename && PlatformInfo.os === "win") {
+          if (filename && AppConstants.platform === "win") {
             // cross platform javascript code uses "/"
             filename = filename.replace(/\//g, "\\");
           }
