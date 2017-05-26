@@ -113,6 +113,12 @@ On this machine, that directory is:
 Please restart bootstrap and create that directory when prompted.
 '''
 
+STYLO_REQUIRES_CLONE = '''
+Installing Stylo packages requires a checkout of mozilla-central. Once you
+have such a checkout, please re-run `./mach bootstrap` from the checkout
+directory.
+'''
+
 FINISHED = '''
 Your system should be ready to build %s!
 '''
@@ -318,14 +324,18 @@ class Bootstrapper(object):
             #
             # XXX Android bootstrap just assumes the existence of the state
             # directory and writes the NDK into it.  Should we do the same?
-            if choice == 1:
-                if not state_dir_available:
-                    print(STYLO_DIRECTORY_MESSAGE.format(statedir=state_dir))
-                    sys.exit(1)
+            wants_stylo = choice == 1
+            if wants_stylo and not state_dir_available:
+                print(STYLO_DIRECTORY_MESSAGE.format(statedir=state_dir))
+                sys.exit(1)
 
-                self.instance.stylo = True
-                self.instance.state_dir = state_dir
-                self.instance.ensure_stylo_packages(state_dir)
+            if wants_stylo and not have_clone:
+                print(STYLO_REQUIRES_CLONE)
+                sys.exit(1)
+
+            self.instance.stylo = True
+            self.instance.state_dir = state_dir
+            self.instance.ensure_stylo_packages(state_dir)
 
         print(self.finished % name)
         if not (self.instance.which('rustc') and self.instance._parse_version('rustc') >= MODERN_RUST_VERSION):
