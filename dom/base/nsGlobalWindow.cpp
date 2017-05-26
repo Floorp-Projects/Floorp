@@ -14126,6 +14126,15 @@ nsGlobalWindow::WindowState()
   return nsIDOMChromeWindow::STATE_NORMAL;
 }
 
+bool
+nsGlobalWindow::IsFullyOccluded()
+{
+  MOZ_ASSERT(IsInnerWindow());
+
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
+  return widget && widget->IsFullyOccluded();
+}
+
 NS_IMETHODIMP
 nsGlobalChromeWindow::Maximize()
 {
