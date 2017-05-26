@@ -48,35 +48,3 @@ this.BindToObject = function BindToObject(fn, self, opt_args) {
 
   return newfn;
 }
-
-/**
- * Inherit the prototype methods from one constructor into another.
- *
- * Usage:
- *
- * function ParentClass(a, b) { }
- * ParentClass.prototype.foo = function(a) { }
- *
- * function ChildClass(a, b, c) {
- *   ParentClass.call(this, a, b);
- * }
- *
- * ChildClass.inherits(ParentClass);
- *
- * var child = new ChildClass("a", "b", "see");
- * child.foo(); // works
- *
- * In addition, a superclass' implementation of a method can be invoked
- * as follows:
- *
- * ChildClass.prototype.foo = function(a) {
- *   ChildClass.superClass_.foo.call(this, a);
- *   // other code
- * };
- */
-Function.prototype.inherits = function(parentCtor) {
-  var tempCtor = function(){};
-  tempCtor.prototype = parentCtor.prototype;
-  this.superClass_ = parentCtor.prototype;
-  this.prototype = new tempCtor();
-}
