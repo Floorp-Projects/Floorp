@@ -381,6 +381,8 @@
 @RESPATH@/browser/components/nsSetDefaultBrowser.js
 @RESPATH@/browser/components/devtools-startup.manifest
 @RESPATH@/browser/components/devtools-startup.js
+@RESPATH@/browser/components/aboutdebugging-registration.js
+@RESPATH@/browser/components/aboutdebugging.manifest
 @RESPATH@/browser/components/webideCli.js
 @RESPATH@/browser/components/webideComponents.manifest
 @RESPATH@/browser/components/Experiments.manifest
