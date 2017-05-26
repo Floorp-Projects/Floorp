@@ -29,13 +29,13 @@
 
   --backbutton-border-color: var(--urlbar-border-color-hover);
   --backbutton-background: rgba(255,255,255,.15);
-%endif
 
   --toolbarbutton-hover-bordercolor: rgba(0,0,0,.2);
   --toolbarbutton-hover-boxshadow: none;
 
   --toolbarbutton-active-bordercolor: rgba(0,0,0,.3);
   --toolbarbutton-active-boxshadow: 0 0 0 1px rgba(0,0,0,.15) inset;
+%endif
 
   --toolbarbutton-checkedhover-backgroundcolor: rgba(0,0,0,.1);
 
