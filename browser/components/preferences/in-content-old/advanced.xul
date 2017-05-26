@@ -34,12 +34,6 @@
   <preference id="general.smoothScroll"
               name="general.smoothScroll"
               type="bool"/>
-#ifdef XP_WIN
-  <preference id="gfx.direct2d.disabled"
-              name="gfx.direct2d.disabled"
-              type="bool"
-              inverted="true"/>
-#endif
   <preference id="layout.spellcheckDefault"
               name="layout.spellcheckDefault"
               type="int"/>
