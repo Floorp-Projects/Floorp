@@ -775,6 +775,8 @@ var _ui_utils = __webpack_require__(0);
 
 var _pdfjs = __webpack_require__(1);
 
+var _pdf_cursor_tools = __webpack_require__(7);
+
 var _pdf_rendering_queue = __webpack_require__(3);
 
 var _pdf_sidebar = __webpack_require__(21);
@@ -782,8 +784,6 @@ var _pdf_sidebar = __webpack_require__(21);
 var _pdf_viewer = __webpack_require__(24);
 
 var _dom_events = __webpack_require__(2);
-
-var _hand_tool = __webpack_require__(12);
 
 var _overlay_manager = __webpack_require__(5);
 
@@ -795,7 +795,7 @@ var _pdf_document_properties = __webpack_require__(15);
 
 var _pdf_find_bar = __webpack_require__(16);
 
-var _pdf_find_controller = __webpack_require__(7);
+var _pdf_find_controller = __webpack_require__(8);
 
 var _pdf_history = __webpack_require__(17);
 
@@ -859,6 +859,7 @@ var PDFViewerApplication = {
   pdfSidebar: null,
   pdfOutlineViewer: null,
   pdfAttachmentViewer: null,
+  pdfCursorTools: null,
   store: null,
   downloadManager: null,
   preferences: null,
@@ -1013,12 +1014,12 @@ var PDFViewerApplication = {
       findBarConfig.eventBus = eventBus;
       this.findBar = new _pdf_find_bar.PDFFindBar(findBarConfig);
       this.overlayManager = _overlay_manager.OverlayManager;
-      this.handTool = new _hand_tool.HandTool({
+      this.pdfDocumentProperties = new _pdf_document_properties.PDFDocumentProperties(appConfig.documentProperties);
+      this.pdfCursorTools = new _pdf_cursor_tools.PDFCursorTools({
         container,
         eventBus,
         preferences: this.preferences
       });
-      this.pdfDocumentProperties = new _pdf_document_properties.PDFDocumentProperties(appConfig.documentProperties);
       this.toolbar = new _toolbar.Toolbar(appConfig.toolbar, container, eventBus);
       this.secondaryToolbar = new _secondary_toolbar.SecondaryToolbar(appConfig.secondaryToolbar, container, eventBus);
       if (this.supportsFullscreen) {
@@ -2197,10 +2198,11 @@ function webViewerKeyDown(evt) {
           ensureViewerFocused = true;
         }
         break;
+      case 83:
+        PDFViewerApplication.pdfCursorTools.switchTool(_pdf_cursor_tools.CursorTool.SELECT);
+        break;
       case 72:
-        if (!isViewerInPresentationMode) {
-          PDFViewerApplication.handTool.toggle();
-        }
+        PDFViewerApplication.pdfCursorTools.switchTool(_pdf_cursor_tools.CursorTool.HAND);
         break;
       case 82:
         PDFViewerApplication.rotatePages(90);
@@ -2377,10 +2379,6 @@ var _dom_events = __webpack_require__(2);
 
 var _ui_utils = __webpack_require__(0);
 
-var PageNumberRegExp = /^\d+$/;
-function isPageNumber(str) {
-  return PageNumberRegExp.test(str);
-}
 var PDFLinkService = function PDFLinkServiceClosure() {
   function PDFLinkService(options) {
     options = options || {};
@@ -2466,12 +2464,12 @@ var PDFLinkService = function PDFLinkServiceClosure() {
         goToDestination(destination[0]);
       });
     },
-    getDestinationHash: function PDFLinkService_getDestinationHash(dest) {
+    getDestinationHash(dest) {
       if (typeof dest === 'string') {
-        return this.getAnchorUrl('#' + (isPageNumber(dest) ? 'nameddest=' : '') + escape(dest));
+        return this.getAnchorUrl('#' + escape(dest));
       }
       if (dest instanceof Array) {
-        var str = JSON.stringify(dest);
+        let str = JSON.stringify(dest);
         return this.getAnchorUrl('#' + escape(str));
       }
       return this.getAnchorUrl('');
@@ -2687,6 +2685,110 @@ exports.SimpleLinkService = SimpleLinkService;
 
 /***/ }),
 /* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.PDFCursorTools = exports.CursorTool = undefined;
+
+var _grab_to_pan = __webpack_require__(12);
+
+const CursorTool = {
+  SELECT: 0,
+  HAND: 1,
+  ZOOM: 2
+};
+class PDFCursorTools {
+  constructor({ container, eventBus, preferences }) {
+    this.container = container;
+    this.eventBus = eventBus;
+    this.active = CursorTool.SELECT;
+    this.activeBeforePresentationMode = null;
+    this.handTool = new _grab_to_pan.GrabToPan({ element: this.container });
+    this._addEventListeners();
+    Promise.all([preferences.get('cursorToolOnLoad'), preferences.get('enableHandToolOnLoad')]).then(([cursorToolPref, handToolPref]) => {
+      if (handToolPref === true) {
+        preferences.set('enableHandToolOnLoad', false);
+        if (cursorToolPref === CursorTool.SELECT) {
+          cursorToolPref = CursorTool.HAND;
+          preferences.set('cursorToolOnLoad', cursorToolPref).catch(() => {});
+        }
+      }
+      this.switchTool(cursorToolPref);
+    }).catch(() => {});
+  }
+  get activeTool() {
+    return this.active;
+  }
+  switchTool(tool) {
+    if (this.activeBeforePresentationMode !== null) {
+      return;
+    }
+    if (tool === this.active) {
+      return;
+    }
+    let disableActiveTool = () => {
+      switch (this.active) {
+        case CursorTool.SELECT:
+          break;
+        case CursorTool.HAND:
+          this.handTool.deactivate();
+          break;
+        case CursorTool.ZOOM:
+      }
+    };
+    switch (tool) {
+      case CursorTool.SELECT:
+        disableActiveTool();
+        break;
+      case CursorTool.HAND:
+        disableActiveTool();
+        this.handTool.activate();
+        break;
+      case CursorTool.ZOOM:
+      default:
+        console.error(`switchTool: "${tool}" is an unsupported value.`);
+        return;
+    }
+    this.active = tool;
+    this._dispatchEvent();
+  }
+  _dispatchEvent() {
+    this.eventBus.dispatch('cursortoolchanged', {
+      source: this,
+      tool: this.active
+    });
+  }
+  _addEventListeners() {
+    this.eventBus.on('switchcursortool', evt => {
+      this.switchTool(evt.tool);
+    });
+    this.eventBus.on('presentationmodechanged', evt => {
+      if (evt.switchInProgress) {
+        return;
+      }
+      let previouslyActive;
+      if (evt.active) {
+        previouslyActive = this.active;
+        this.switchTool(CursorTool.SELECT);
+        this.activeBeforePresentationMode = previouslyActive;
+      } else {
+        previouslyActive = this.activeBeforePresentationMode;
+        this.activeBeforePresentationMode = null;
+        this.switchTool(previouslyActive);
+      }
+    });
+  }
+}
+exports.CursorTool = CursorTool;
+exports.PDFCursorTools = PDFCursorTools;
+
+/***/ }),
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3050,7 +3152,7 @@ exports.FindStates = FindStates;
 exports.PDFFindController = PDFFindController;
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3136,7 +3238,7 @@ _app.PDFPrintServiceFactory.instance = {
 exports.FirefoxPrintService = FirefoxPrintService;
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3360,7 +3462,7 @@ exports.DownloadManager = DownloadManager;
 exports.FirefoxCom = FirefoxCom;
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3435,7 +3537,7 @@ exports.AnnotationLayerBuilder = AnnotationLayerBuilder;
 exports.DefaultAnnotationLayerFactory = DefaultAnnotationLayerFactory;
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3574,72 +3676,6 @@ function isLeftMouseReleased(event) {
   }
 }
 exports.GrabToPan = GrabToPan;
-
-/***/ }),
-/* 12 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.HandTool = undefined;
-
-var _grab_to_pan = __webpack_require__(11);
-
-var _ui_utils = __webpack_require__(0);
-
-class HandTool {
-  constructor({ container, eventBus, preferences }) {
-    this.container = container;
-    this.eventBus = eventBus;
-    this.wasActive = false;
-    this.handTool = new _grab_to_pan.GrabToPan({
-      element: this.container,
-      onActiveChanged: isActive => {
-        this.eventBus.dispatch('handtoolchanged', { isActive });
-      }
-    });
-    this.eventBus.on('togglehandtool', this.toggle.bind(this));
-    let enableOnLoad = preferences.get('enableHandToolOnLoad');
-    Promise.all([_ui_utils.localized, enableOnLoad]).then(values => {
-      if (values[1] === true) {
-        this.handTool.activate();
-      }
-    }).catch(function (reason) {});
-    this.eventBus.on('presentationmodechanged', evt => {
-      if (evt.switchInProgress) {
-        return;
-      }
-      if (evt.active) {
-        this.enterPresentationMode();
-      } else {
-        this.exitPresentationMode();
-      }
-    });
-  }
-  get isActive() {
-    return !!this.handTool.active;
-  }
-  toggle() {
-    this.handTool.toggle();
-  }
-  enterPresentationMode() {
-    if (this.isActive) {
-      this.wasActive = true;
-      this.handTool.deactivate();
-    }
-  }
-  exitPresentationMode() {
-    if (this.wasActive) {
-      this.wasActive = false;
-      this.handTool.activate();
-    }
-  }
-}
-exports.HandTool = HandTool;
 
 /***/ }),
 /* 13 */
@@ -3996,7 +4032,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.PDFFindBar = undefined;
 
-var _pdf_find_controller = __webpack_require__(7);
+var _pdf_find_controller = __webpack_require__(8);
 
 var _ui_utils = __webpack_require__(0);
 
@@ -6130,7 +6166,7 @@ var _ui_utils = __webpack_require__(0);
 
 var _pdf_rendering_queue = __webpack_require__(3);
 
-var _annotation_layer_builder = __webpack_require__(10);
+var _annotation_layer_builder = __webpack_require__(11);
 
 var _dom_events = __webpack_require__(2);
 
@@ -6816,6 +6852,7 @@ function getDefaultPreferences() {
       "defaultZoomValue": "",
       "sidebarViewOnLoad": 0,
       "enableHandToolOnLoad": false,
+      "cursorToolOnLoad": 0,
       "enableWebGL": false,
       "pdfBugEnabled": false,
       "disableRange": false,
@@ -6929,6 +6966,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.SecondaryToolbar = undefined;
 
+var _pdf_cursor_tools = __webpack_require__(7);
+
 var _ui_utils = __webpack_require__(0);
 
 class SecondaryToolbar {
@@ -6973,8 +7012,14 @@ class SecondaryToolbar {
       eventName: 'rotateccw',
       close: false
     }, {
-      element: options.toggleHandToolButton,
-      eventName: 'togglehandtool',
+      element: options.cursorSelectToolButton,
+      eventName: 'switchcursortool',
+      eventDetails: { tool: _pdf_cursor_tools.CursorTool.SELECT },
+      close: true
+    }, {
+      element: options.cursorHandToolButton,
+      eventName: 'switchcursortool',
+      eventDetails: { tool: _pdf_cursor_tools.CursorTool.HAND },
       close: true
     }, {
       element: options.documentPropertiesButton,
@@ -6994,7 +7039,7 @@ class SecondaryToolbar {
     this.previousContainerHeight = null;
     this.reset();
     this._bindClickListeners();
-    this._bindHandToolListener(options.toggleHandToolButton);
+    this._bindCursorToolsListener(options);
     this.eventBus.on('resize', this._setMaxHeight.bind(this));
   }
   get isOpen() {
@@ -7022,10 +7067,14 @@ class SecondaryToolbar {
   _bindClickListeners() {
     this.toggleButton.addEventListener('click', this.toggle.bind(this));
     for (let button in this.buttons) {
-      let { element, eventName, close } = this.buttons[button];
+      let { element, eventName, close, eventDetails } = this.buttons[button];
       element.addEventListener('click', evt => {
         if (eventName !== null) {
-          this.eventBus.dispatch(eventName, { source: this });
+          let details = { source: this };
+          for (let property in eventDetails) {
+            details[property] = eventDetails[property];
+          }
+          this.eventBus.dispatch(eventName, details);
         }
         if (close) {
           this.close();
@@ -7033,19 +7082,17 @@ class SecondaryToolbar {
       });
     }
   }
-  _bindHandToolListener(toggleHandToolButton) {
-    let isHandToolActive = false;
-    this.eventBus.on('handtoolchanged', function (evt) {
-      if (isHandToolActive === evt.isActive) {
-        return;
-      }
-      isHandToolActive = evt.isActive;
-      if (isHandToolActive) {
-        toggleHandToolButton.title = _ui_utils.mozL10n.get('hand_tool_disable.title', null, 'Disable hand tool');
-        toggleHandToolButton.firstElementChild.textContent = _ui_utils.mozL10n.get('hand_tool_disable_label', null, 'Disable hand tool');
-      } else {
-        toggleHandToolButton.title = _ui_utils.mozL10n.get('hand_tool_enable.title', null, 'Enable hand tool');
-        toggleHandToolButton.firstElementChild.textContent = _ui_utils.mozL10n.get('hand_tool_enable_label', null, 'Enable hand tool');
+  _bindCursorToolsListener(buttons) {
+    this.eventBus.on('cursortoolchanged', function (evt) {
+      buttons.cursorSelectToolButton.classList.remove('toggled');
+      buttons.cursorHandToolButton.classList.remove('toggled');
+      switch (evt.tool) {
+        case _pdf_cursor_tools.CursorTool.SELECT:
+          buttons.cursorSelectToolButton.classList.add('toggled');
+          break;
+        case _pdf_cursor_tools.CursorTool.HAND:
+          buttons.cursorHandToolButton.classList.add('toggled');
+          break;
       }
     });
   }
@@ -7635,8 +7682,8 @@ var pdfjsWebApp;
   pdfjsWebApp = __webpack_require__(4);
 }
 {
+  __webpack_require__(10);
   __webpack_require__(9);
-  __webpack_require__(8);
 }
 ;
 ;
@@ -7678,7 +7725,8 @@ function getViewerConfiguration() {
       lastPageButton: document.getElementById('lastPage'),
       pageRotateCwButton: document.getElementById('pageRotateCw'),
       pageRotateCcwButton: document.getElementById('pageRotateCcw'),
-      toggleHandToolButton: document.getElementById('toggleHandTool'),
+      cursorSelectToolButton: document.getElementById('cursorSelectTool'),
+      cursorHandToolButton: document.getElementById('cursorHandTool'),
       documentPropertiesButton: document.getElementById('documentProperties')
     },
     fullscreen: {

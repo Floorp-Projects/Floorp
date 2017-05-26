@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['OS_TARGET'] != 'Android':
-    Program('pingsender')
+    GeckoProgram('pingsender', linkage=None)
 
     UNIFIED_SOURCES += [
         'pingsender.cpp',
@@ -31,6 +31,7 @@ else:
     UNIFIED_SOURCES += [
         'pingsender_unix_common.cpp',
     ]
+
 
 # Don't use the STL wrappers; we don't link with -lmozalloc, and it really
 # doesn't matter here anyway.
