@@ -144,6 +144,7 @@ nsAppShellService::CreateHiddenWindowHelper(bool aIsPrivate)
   nsCOMPtr<nsIDocShell> docShell;
   newWindow->GetDocShell(getter_AddRefs(docShell));
   if (docShell) {
+    docShell->SetIsActive(false);
     if (aIsPrivate) {
       docShell->SetAffectPrivateSessionLifetime(false);
     }
