@@ -44,7 +44,6 @@ public:
   virtual nsresult AttributeChanged(int32_t  aNameSpaceID,
                                     nsIAtom* aAttribute,
                                     int32_t  aModType) override;
-  virtual bool IsLeaf() const override { return true; }
   virtual nsContainerFrame* GetContentInsertionFrame() override;
 
   virtual Element* GetPseudoElement(CSSPseudoElementType aType) override;

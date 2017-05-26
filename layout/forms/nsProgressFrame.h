@@ -46,8 +46,6 @@ public:
   }
 #endif
 
-  virtual bool IsLeaf() const override { return true; }
-
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
   virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,

@@ -6297,12 +6297,6 @@ nsIFrame::GetNearestWidget(nsPoint& aOffset) const
   return widget;
 }
 
-bool
-nsIFrame::IsLeaf() const
-{
-  return true;
-}
-
 Matrix4x4
 nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
                              nsIFrame** aOutAncestor)

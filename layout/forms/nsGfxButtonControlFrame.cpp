@@ -176,12 +176,6 @@ nsGfxButtonControlFrame::AttributeChanged(int32_t         aNameSpaceID,
   return rv;
 }
 
-bool
-nsGfxButtonControlFrame::IsLeaf() const
-{
-  return true;
-}
-
 nsContainerFrame*
 nsGfxButtonControlFrame::GetContentInsertionFrame()
 {

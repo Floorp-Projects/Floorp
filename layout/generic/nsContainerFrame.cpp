@@ -351,12 +351,6 @@ nsContainerFrame::ChildIsDirty(nsIFrame* aChild)
   AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
-bool
-nsContainerFrame::IsLeaf() const
-{
-  return false;
-}
-
 nsIFrame::FrameSearchResult
 nsContainerFrame::PeekOffsetNoAmount(bool aForward, int32_t* aOffset)
 {

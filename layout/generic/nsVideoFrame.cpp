@@ -182,12 +182,6 @@ nsVideoFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
-bool
-nsVideoFrame::IsLeaf() const
-{
-  return true;
-}
-
 already_AddRefed<Layer>
 nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                          LayerManager* aManager,

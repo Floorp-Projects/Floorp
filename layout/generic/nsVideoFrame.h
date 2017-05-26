@@ -69,7 +69,6 @@ public:
   nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
   nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
   void DestroyFrom(nsIFrame* aDestructRoot) override;
-  bool IsLeaf() const override;
 
   void Reflow(nsPresContext*     aPresContext,
               ReflowOutput&      aDesiredSize,

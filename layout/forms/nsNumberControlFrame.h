@@ -48,7 +48,6 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
   virtual void ContentStatesChanged(mozilla::EventStates aStates) override;
-  virtual bool IsLeaf() const override { return true; }
 
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;
