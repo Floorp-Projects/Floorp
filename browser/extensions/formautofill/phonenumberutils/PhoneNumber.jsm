@@ -1,8 +1,9 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
+/* This Source Code Form is subject to the terms of the Apache License, Version
+ * 2.0. If a copy of the Apache License was not distributed with this file, You
+ * can obtain one at https://www.apache.org/licenses/LICENSE-2.0 */
 
-// Don't modify this code. Please use:
-// https://github.com/andreasgal/PhoneNumber.js
+// This library came from https://github.com/andreasgal/PhoneNumber.js but will
+// be further maintained by our own in Form Autofill codebase.
 
 "use strict";
 
@@ -12,9 +13,9 @@ const Cu = Components.utils;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, "PHONE_NUMBER_META_DATA",
-                                  "resource://gre/modules/PhoneNumberMetaData.jsm");
+                                  "resource://formautofill/phonenumberutils/PhoneNumberMetaData.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PhoneNumberNormalizer",
-                                  "resource://gre/modules/PhoneNumberNormalizer.jsm");
+                                  "resource://formautofill/phonenumberutils/PhoneNumberNormalizer.jsm");
 this.PhoneNumber = (function (dataBase) {
   // Use strict in our context only - users might not want it
   'use strict';
@@ -199,7 +200,7 @@ this.PhoneNumber = (function (dataBase) {
   function NationalNumber(regionMetaData, number) {
     this.region = regionMetaData.region;
     this.regionMetaData = regionMetaData;
-    this.nationalNumber = number;
+    this.number = number;
   }
 
   // NationalNumber represents the result of parsing a phone number. We have
@@ -209,13 +210,13 @@ this.PhoneNumber = (function (dataBase) {
   NationalNumber.prototype = {
     // +1 949-726-2896
     get internationalFormat() {
-      var value = FormatNumber(this.regionMetaData, this.nationalNumber, true);
+      var value = FormatNumber(this.regionMetaData, this.number, true);
       Object.defineProperty(this, "internationalFormat", { value: value, enumerable: true });
       return value;
     },
     // (949) 726-2896
     get nationalFormat() {
-      var value = FormatNumber(this.regionMetaData, this.nationalNumber, false);
+      var value = FormatNumber(this.regionMetaData, this.number, false);
       Object.defineProperty(this, "nationalFormat", { value: value, enumerable: true });
       return value;
     },
@@ -226,10 +227,23 @@ this.PhoneNumber = (function (dataBase) {
       Object.defineProperty(this, "internationalNumber", { value: value, enumerable: true });
       return value;
     },
+    // 9497262896
+    get nationalNumber() {
+      var value = this.nationalFormat ? this.nationalFormat.replace(NON_DIALABLE_CHARS, "")
+                                      : null;
+      Object.defineProperty(this, "nationalNumber", { value: value, enumerable: true });
+      return value;
+    },
     // country name 'US'
     get countryName() {
       var value = this.region ? this.region : null;
       Object.defineProperty(this, "countryName", { value: value, enumerable: true });
+      return value;
+    },
+    // country code '+1'
+    get countryCode() {
+      var value = this.regionMetaData.countryCode ? "+" + this.regionMetaData.countryCode : null;
+      Object.defineProperty(this, "countryCode", { value: value, enumerable: true });
       return value;
     }
   };
@@ -258,13 +272,17 @@ this.PhoneNumber = (function (dataBase) {
   // Parse an international number that starts with the country code. Return
   // null if the number is not a valid international number.
   function ParseInternationalNumber(number) {
-    var ret;
-
     // Parse and strip the country code.
     var countryCode = ParseCountryCode(number);
     if (!countryCode)
       return null;
     number = number.substr(countryCode.length);
+
+    return ParseNumberByCountryCode(number, countryCode);
+  }
+
+  function ParseNumberByCountryCode(number, countryCode) {
+    var ret;
 
     // Lookup the meta data for the region (or regions) and if the rest of
     // the number parses for that region, return the parsed number.
@@ -275,7 +293,7 @@ this.PhoneNumber = (function (dataBase) {
           entry[n] = ParseMetaData(countryCode, entry[n]);
         if (n > 0)
           entry[n].formats = entry[0].formats;
-        ret = ParseNationalNumber(number, entry[n])
+        ret = ParseNationalNumberAndCheckNationalPrefix(number, entry[n]);
         if (ret)
           return ret;
       }
@@ -283,7 +301,34 @@ this.PhoneNumber = (function (dataBase) {
     }
     if (typeof entry == "string")
       entry = dataBase[countryCode] = ParseMetaData(countryCode, entry);
-    return ParseNationalNumber(number, entry);
+    return ParseNationalNumberAndCheckNationalPrefix(number, entry);
+  }
+
+  function ParseNationalNumberAndCheckNationalPrefix(number, md) {
+    var ret;
+
+    // This is not an international number. See if its a national one for
+    // the current region. National numbers can start with the national
+    // prefix, or without.
+    if (md.nationalPrefixForParsing) {
+      // Some regions have specific national prefix parse rules. Apply those.
+      var withoutPrefix = number.replace(md.nationalPrefixForParsing,
+                                         md.nationalPrefixTransformRule || '');
+      ret = ParseNationalNumber(withoutPrefix, md)
+      if (ret)
+        return ret;
+    } else {
+      // If there is no specific national prefix rule, just strip off the
+      // national prefix from the beginning of the number (if there is one).
+      var nationalPrefix = md.nationalPrefix;
+      if (nationalPrefix && number.indexOf(nationalPrefix) == 0 &&
+          (ret = ParseNationalNumber(number.substr(nationalPrefix.length), md))) {
+        return ret;
+      }
+    }
+    ret = ParseNationalNumber(number, md)
+    if (ret)
+      return ret;
   }
 
   // Parse a national number for a specific region. Return null if the
@@ -315,6 +360,16 @@ this.PhoneNumber = (function (dataBase) {
     if (number[0] === '+')
       return ParseInternationalNumber(number.replace(LEADING_PLUS_CHARS_PATTERN, ""));
 
+    // If "defaultRegion" is a country code, use it to parse the number directly.
+    var matches = String(defaultRegion).match(/^\+?(\d+)/);
+    if (matches) {
+      var countryCode = ParseCountryCode(matches[1]);
+      if (!countryCode) {
+        return null;
+      }
+      return ParseNumberByCountryCode(number, countryCode);
+    }
+
     // Lookup the meta data for the given region.
     var md = FindMetaDataForRegion(defaultRegion.toUpperCase());
 
@@ -333,26 +388,7 @@ this.PhoneNumber = (function (dataBase) {
         return ret;
     }
 
-    // This is not an international number. See if its a national one for
-    // the current region. National numbers can start with the national
-    // prefix, or without.
-    if (md.nationalPrefixForParsing) {
-      // Some regions have specific national prefix parse rules. Apply those.
-      var withoutPrefix = number.replace(md.nationalPrefixForParsing,
-                                         md.nationalPrefixTransformRule || '');
-      ret = ParseNationalNumber(withoutPrefix, md)
-      if (ret)
-        return ret;
-    } else {
-      // If there is no specific national prefix rule, just strip off the
-      // national prefix from the beginning of the number (if there is one).
-      var nationalPrefix = md.nationalPrefix;
-      if (nationalPrefix && number.indexOf(nationalPrefix) == 0 &&
-          (ret = ParseNationalNumber(number.substr(nationalPrefix.length), md))) {
-        return ret;
-      }
-    }
-    ret = ParseNationalNumber(number, md)
+    ret = ParseNationalNumberAndCheckNationalPrefix(number, md);
     if (ret)
       return ret;
 

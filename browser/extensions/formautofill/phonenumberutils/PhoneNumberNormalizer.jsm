@@ -1,8 +1,9 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
+/* This Source Code Form is subject to the terms of the Apache License, Version
+ * 2.0. If a copy of the Apache License was not distributed with this file, You
+ * can obtain one at https://www.apache.org/licenses/LICENSE-2.0 */
 
-// Don't modify this code. Please use:
-// https://github.com/andreasgal/PhoneNumber.js
+// This library came from https://github.com/andreasgal/PhoneNumber.js but will
+// be further maintained by our own in Form Autofill codebase.
 
 "use strict";
 
