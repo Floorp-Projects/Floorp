@@ -130,6 +130,26 @@ const mozilla::LayoutFrameType nsIFrame::sLayoutFrameTypes[
 #undef ABSTRACT_FRAME_ID
 };
 
+const nsIFrame::FrameClassBits nsIFrame::sFrameClassBits[
+#define FRAME_ID(...) 1 +
+#define ABSTRACT_FRAME_ID(...)
+#include "nsFrameIdList.h"
+#undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
+  0] = {
+#define Leaf eFrameClassBitsLeaf
+#define NotLeaf eFrameClassBitsNone
+#define DynamicLeaf eFrameClassBitsDynamicLeaf
+#define FRAME_ID(class_, type_, leaf_, ...) leaf_,
+#define ABSTRACT_FRAME_ID(...)
+#include "nsFrameIdList.h"
+#undef Leaf
+#undef NotLeaf
+#undef DynamicLeaf
+#undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
+};
+
 // Struct containing cached metrics for box-wrapped frames.
 struct nsBoxLayoutMetrics
 {
