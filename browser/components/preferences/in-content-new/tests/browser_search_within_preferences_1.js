@@ -1,6 +1,7 @@
-/*
-* This file contains tests for the Preferences search bar.
-*/
+"use strict";
+/**
+ * This file contains tests for the Preferences search bar.
+ */
 
 requestLongerTimeout(2);
 
@@ -17,7 +18,9 @@ add_task(async function() {
   await SpecialPowers.popPrefEnv();
 });
 
-// Enabling Searching functionatily. Will display search bar form this testcase forward.
+/**
+ * Enabling searching functionality. Will display search bar from this testcase forward.
+ */
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({"set": [["browser.preferences.search", true]]});
 });
