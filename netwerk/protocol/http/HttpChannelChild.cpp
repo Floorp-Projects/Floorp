@@ -1731,18 +1731,22 @@ HttpChannelChild::ProcessFlushedForDiversion()
   mEventQ->RunOrEnqueue(new HttpFlushedForDiversionEvent(this), true);
 }
 
-mozilla::ipc::IPCResult
-HttpChannelChild::RecvNotifyTrackingProtectionDisabled()
+void
+HttpChannelChild::ProcessNotifyTrackingProtectionDisabled()
 {
+  LOG(("HttpChannelChild::ProcessNotifyTrackingProtectionDisabled [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsChannelClassifier::NotifyTrackingProtectionDisabled(this);
-  return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-HttpChannelChild::RecvNotifyTrackingResource()
+void
+HttpChannelChild::ProcessNotifyTrackingResource()
 {
+  LOG(("HttpChannelChild::ProcessNotifyTrackingResource [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
+
   SetIsTrackingResource();
-  return IPC_OK();
 }
 
 void
@@ -1759,11 +1763,15 @@ HttpChannelChild::FlushedForDiversion()
   SendDivertComplete();
 }
 
-mozilla::ipc::IPCResult
-HttpChannelChild::RecvSetClassifierMatchedInfo(const ClassifierInfo& aInfo)
+void
+HttpChannelChild::ProcessSetClassifierMatchedInfo(const nsCString& aList,
+                                                  const nsCString& aProvider,
+                                                  const nsCString& aPrefix)
 {
-  SetMatchedInfo(aInfo.list(), aInfo.provider(), aInfo.prefix());
-  return IPC_OK();
+  LOG(("HttpChannelChild::ProcessSetClassifierMatchedInfo [this=%p]\n", this));
+  MOZ_ASSERT(NS_IsMainThread());
+
+  SetMatchedInfo(aList, aProvider, aPrefix);
 }
 
 void

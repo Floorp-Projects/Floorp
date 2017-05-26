@@ -304,6 +304,85 @@ HttpBackgroundChannelParent::OnDiversion()
   return true;
 }
 
+bool
+HttpBackgroundChannelParent::OnNotifyTrackingProtectionDisabled()
+{
+  LOG(("HttpBackgroundChannelParent::OnNotifyTrackingProtectionDisabled [this=%p]\n", this));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    nsresult rv = mBackgroundThread->Dispatch(
+      NewRunnableMethod(this, &HttpBackgroundChannelParent::OnNotifyTrackingProtectionDisabled),
+      NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  return SendNotifyTrackingProtectionDisabled();
+}
+
+bool
+HttpBackgroundChannelParent::OnNotifyTrackingResource()
+{
+  LOG(("HttpBackgroundChannelParent::OnNotifyTrackingResource [this=%p]\n", this));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    nsresult rv = mBackgroundThread->Dispatch(
+      NewRunnableMethod(this, &HttpBackgroundChannelParent::OnNotifyTrackingResource),
+      NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  return SendNotifyTrackingResource();
+}
+
+bool
+HttpBackgroundChannelParent::OnSetClassifierMatchedInfo(
+                                                    const nsACString& aList,
+                                                    const nsACString& aProvider,
+                                                    const nsACString& aPrefix)
+{
+  LOG(("HttpBackgroundChannelParent::OnSetClassifierMatchedInfo [this=%p]\n", this));
+  AssertIsInMainProcess();
+
+  if (NS_WARN_IF(!mIPCOpened)) {
+    return false;
+  }
+
+  if (!IsOnBackgroundThread()) {
+    nsresult rv = mBackgroundThread->Dispatch(
+      NewRunnableMethod<const nsCString, const nsCString, const nsCString>
+        (this, &HttpBackgroundChannelParent::OnSetClassifierMatchedInfo,
+         aList, aProvider, aPrefix),
+      NS_DISPATCH_NORMAL);
+
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+
+    return NS_SUCCEEDED(rv);
+  }
+
+  ClassifierInfo info;
+  info.list() = aList;
+  info.prefix() = aPrefix;
+  info.provider() = aProvider;
+
+  return SendSetClassifierMatchedInfo(info);
+}
+
 void
 HttpBackgroundChannelParent::ActorDestroy(ActorDestroyReason aWhy)
 {

@@ -111,10 +111,7 @@ public:
 
   MOZ_MUST_USE bool IsSuspended();
 
-  mozilla::ipc::IPCResult RecvNotifyTrackingProtectionDisabled() override;
-  mozilla::ipc::IPCResult RecvNotifyTrackingResource() override;
   void FlushedForDiversion();
-  mozilla::ipc::IPCResult RecvSetClassifierMatchedInfo(const ClassifierInfo& aInfo) override;
 
   void OnCopyComplete(nsresult aStatus) override;
 
@@ -226,6 +223,12 @@ private:
   void ProcessOnStatus(const nsresult& aStatus);
   void ProcessFlushedForDiversion();
   void ProcessDivertMessages();
+  void ProcessNotifyTrackingProtectionDisabled();
+  void ProcessNotifyTrackingResource();
+  void ProcessSetClassifierMatchedInfo(const nsCString& aList,
+                                       const nsCString& aProvider,
+                                       const nsCString& aPrefix);
+
 
   void DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext);
   void DoOnStatus(nsIRequest* aRequest, nsresult status);
