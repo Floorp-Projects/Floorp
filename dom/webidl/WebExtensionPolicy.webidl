@@ -77,6 +77,9 @@ interface WebExtensionPolicy {
   attribute boolean active;
 
 
+  static readonly attribute boolean isExtensionProcess;
+
+
   /**
    * Returns true if the extension has cross-origin access to the given URI.
    */

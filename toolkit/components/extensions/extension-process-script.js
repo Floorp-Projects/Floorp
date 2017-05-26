@@ -15,8 +15,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
-                                  "resource://gre/modules/ExtensionManagement.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
 
@@ -93,9 +91,6 @@ class ExtensionGlobal {
     MessageChannel.addListener(global, "WebNavigation:GetAllFrames", this);
   }
 
-  uninit() {
-  }
-
   get messageFilterStrict() {
     return {
       innerWindowID: getInnerWindowID(this.global.content),
@@ -143,17 +138,9 @@ DocumentManager = {
     Services.obs.addObserver(this, "tab-content-frameloader-created"); // eslint-disable-line mozilla/balanced-listeners
   },
 
-  // Initialize listeners that we need when any extension is enabled.
-  init() {
-    Services.obs.addObserver(this, "document-element-inserted");
-  },
-  uninit() {
-    Services.obs.removeObserver(this, "document-element-inserted");
-  },
-
   extensionProcessInitialized: false,
   initExtensionProcess() {
-    if (this.extensionProcessInitialized || !ExtensionManagement.isExtensionProcess) {
+    if (this.extensionProcessInitialized || !WebExtensionPolicy.isExtensionProcess) {
       return;
     }
     this.extensionProcessInitialized = true;
@@ -172,8 +159,7 @@ DocumentManager = {
     });
 
     this.globals.set(global, new ExtensionGlobal(global));
-    this.initExtensionProcess();
-    if (this.extensionProcessInitialized && ExtensionManagement.isExtensionProcess) {
+    if (this.extensionProcessInitialized && WebExtensionPolicy.isExtensionProcess) {
       ExtensionPageChild.init(global);
     }
   },
@@ -181,50 +167,21 @@ DocumentManager = {
     if (this.extensionProcessInitialized) {
       ExtensionPageChild.uninit(global);
     }
-    this.globals.get(global).uninit();
     this.globals.delete(global);
   },
 
   initExtension(extension) {
-    if (this.extensionCount === 0) {
-      this.init();
-      this.initExtensionProcess();
-    }
-    this.extensionCount++;
+    this.initExtensionProcess();
 
     this.injectExtensionScripts(extension);
   },
-  uninitExtension(extension) {
-    this.extensionCount--;
-    if (this.extensionCount === 0) {
-      this.uninit();
-    }
-  },
-
-  extensionCount: 0,
 
   // Listeners
 
-  observers: {
-    "document-element-inserted"(document) {
-      let window = document.defaultView;
-      if (!document.location || !window ||
-          // Make sure we only load into frames that belong to tabs, or other
-          // special areas that we want to load content scripts into.
-          !this.globals.has(getMessageManager(window))) {
-        return;
-      }
-
-      this.loadInto(window);
-    },
-
-    "tab-content-frameloader-created"(global) {
-      this.initGlobal(global);
-    },
-  },
-
   observe(subject, topic, data) {
-    this.observers[topic].call(this, subject, topic, data);
+    if (topic == "tab-content-frameloader-created") {
+      this.initGlobal(subject);
+    }
   },
 
   // Script loading
@@ -281,19 +238,9 @@ DocumentManager = {
     return true;
   },
 
-  loadInto(window) {
-    let {addonId} = Cu.getObjectPrincipal(window);
-    if (!addonId) {
-      return;
-    }
-
-    let policy = WebExtensionPolicy.getByID(addonId);
-    if (!policy) {
-      throw new Error(`No registered extension for ID ${addonId}`);
-    }
-
+  loadInto(policy, window) {
     let extension = extensions.get(policy);
-    if (this.checkParentFrames(window, addonId) && ExtensionManagement.isExtensionProcess) {
+    if (WebExtensionPolicy.isExtensionProcess && this.checkParentFrames(window, policy.id)) {
       // We're in a top-level extension frame, or a sub-frame thereof,
       // in the extension process. Inject the full extension page API.
       ExtensionPageChild.initExtensionContext(extension, window);
@@ -395,8 +342,6 @@ ExtensionManager = {
           extensions.get(policy).shutdown();
         }
 
-        DocumentManager.uninitExtension(policy);
-
         if (isContentProcess) {
           policy.active = false;
         }
@@ -430,6 +375,12 @@ ExtensionProcessScript.singleton = null;
 ExtensionProcessScript.prototype = {
   classID: Components.ID("{21f9819e-4cdf-49f9-85a0-850af91a5058}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.mozIExtensionProcessScript]),
+
+  initExtensionDocument(policy, doc) {
+    if (DocumentManager.globals.has(getMessageManager(doc.defaultView))) {
+      DocumentManager.loadInto(policy, doc.defaultView);
+    }
+  },
 
   preloadContentScript(contentScript) {
     contentScripts.get(contentScript).preload();

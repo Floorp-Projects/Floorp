@@ -239,6 +239,12 @@ WebExtensionPolicy::GetURL(const nsAString& aPath) const
   return NS_ConvertUTF8toUTF16(spec);
 }
 
+/* static */ bool
+WebExtensionPolicy::IsExtensionProcess(GlobalObject& aGlobal)
+{
+  return EPS().IsExtensionProcess();
+}
+
 nsCString
 WebExtensionPolicy::BackgroundPageHTML() const
 {
