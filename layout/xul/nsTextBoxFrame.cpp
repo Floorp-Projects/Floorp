@@ -100,7 +100,7 @@ nsTextBoxFrame::AttributeChanged(int32_t         aNameSpaceID,
 }
 
 nsTextBoxFrame::nsTextBoxFrame(nsStyleContext* aContext)
-  : nsLeafBoxFrame(aContext)
+  : nsLeafBoxFrame(aContext, kClassID)
   , mAccessKeyInfo(nullptr)
   , mCropType(CropRight)
   , mAscent(0)

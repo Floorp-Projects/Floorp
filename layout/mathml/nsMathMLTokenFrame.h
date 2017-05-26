@@ -59,7 +59,8 @@ public:
         ReflowOutput& aDesiredSize) override;
 
 protected:
-  explicit nsMathMLTokenFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
+  explicit nsMathMLTokenFrame(nsStyleContext* aContext, ClassID aID = kClassID)
+    : nsMathMLContainerFrame(aContext, aID) {}
   virtual ~nsMathMLTokenFrame();
 
   void MarkTextFramesAsTokenMathML();

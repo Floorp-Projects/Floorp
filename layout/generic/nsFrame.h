@@ -92,6 +92,7 @@
 
 #define NS_DECL_FRAMEARENA_HELPERS(class)                           \
   NS_DECL_QUERYFRAME_TARGET(class)                                  \
+  static constexpr nsIFrame::ClassID kClassID = nsIFrame::ClassID::class##_id;  \
   void* operator new(size_t, nsIPresShell*) MOZ_MUST_OVERRIDE;      \
   nsQueryFrame::FrameIID GetFrameId() override MOZ_MUST_OVERRIDE {  \
     return nsQueryFrame::class##_id;                                \
@@ -583,7 +584,9 @@ public:
 
 protected:
   // Protected constructor and destructor
-  explicit nsFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType);
+  nsFrame(nsStyleContext* aContext, ClassID aID, mozilla::LayoutFrameType aType);
+  explicit nsFrame(nsStyleContext* aContext)
+    : nsFrame(aContext, ClassID::nsFrame_id, mozilla::LayoutFrameType::None) {}
   virtual ~nsFrame();
 
   /**

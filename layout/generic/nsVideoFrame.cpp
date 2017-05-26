@@ -75,7 +75,7 @@ SwapScaleWidthHeightForRotation(IntSize& aSize, VideoInfo::Rotation aDegrees)
 }
 
 nsVideoFrame::nsVideoFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, LayoutFrameType::HTMLVideo)
+  : nsContainerFrame(aContext, kClassID, LayoutFrameType::HTMLVideo)
 {
   EnableVisibilityTracking();
 }

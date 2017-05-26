@@ -32,7 +32,7 @@ protected:
   friend nsContainerFrame* NS_NewRubyBaseFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
   explicit nsRubyBaseFrame(nsStyleContext* aContext)
-    : nsRubyContentFrame(aContext, mozilla::LayoutFrameType::RubyBase)
+    : nsRubyContentFrame(aContext, kClassID, mozilla::LayoutFrameType::RubyBase)
   {}
 };
 

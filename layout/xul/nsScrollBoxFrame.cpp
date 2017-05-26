@@ -42,7 +42,7 @@ public:
 
 protected:
   explicit nsAutoRepeatBoxFrame(nsStyleContext* aContext):
-    nsButtonBoxFrame(aContext) {}
+    nsButtonBoxFrame(aContext, kClassID) {}
   
   void StartRepeat() {
     if (IsActivatedOnHover()) {

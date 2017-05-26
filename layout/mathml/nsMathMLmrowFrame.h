@@ -47,7 +47,8 @@ public:
   }
 
 protected:
-  explicit nsMathMLmrowFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
+  explicit nsMathMLmrowFrame(nsStyleContext* aContext)
+    : nsMathMLContainerFrame(aContext, kClassID) {}
   virtual ~nsMathMLmrowFrame();
 };
 

@@ -96,7 +96,7 @@ public:
 
 protected:
   explicit nsMathMLmfracFrame(nsStyleContext* aContext)
-    : nsMathMLContainerFrame(aContext)
+    : nsMathMLContainerFrame(aContext, kClassID)
     , mLineRect()
     , mSlashChar(nullptr)
     , mLineThickness(0)

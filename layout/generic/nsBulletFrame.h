@@ -53,7 +53,7 @@ public:
 #endif
 
   explicit nsBulletFrame(nsStyleContext* aContext)
-    : nsFrame(aContext, mozilla::LayoutFrameType::Bullet)
+    : nsFrame(aContext, kClassID, mozilla::LayoutFrameType::Bullet)
     , mPadding(GetWritingMode())
     , mIntrinsicSize(GetWritingMode())
     , mOrdinal(0)

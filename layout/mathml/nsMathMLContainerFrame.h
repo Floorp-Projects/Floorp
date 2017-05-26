@@ -32,8 +32,8 @@ class nsMathMLContainerFrame : public nsContainerFrame,
 {
   friend class nsMathMLmfencedFrame;
 public:
-  nsMathMLContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, mozilla::LayoutFrameType::None)
+  nsMathMLContainerFrame(nsStyleContext* aContext, ClassID aID)
+    : nsContainerFrame(aContext, aID, mozilla::LayoutFrameType::None)
     , mIntrinsicWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mBlockStartAscent(0)
   {}
@@ -469,7 +469,9 @@ public:
   }
 
 protected:
-  explicit nsMathMLmathBlockFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {
+  explicit nsMathMLmathBlockFrame(nsStyleContext* aContext)
+    : nsBlockFrame(aContext, kClassID)
+  {
     // We should always have a float manager.  Not that things can really try
     // to float out of us anyway, but we need one for line layout.
     // Bug 1301881: Do we still need to set NS_BLOCK_FLOAT_MGR?
@@ -546,7 +548,7 @@ public:
 
 protected:
   explicit nsMathMLmathInlineFrame(nsStyleContext* aContext)
-    : nsInlineFrame(aContext)
+    : nsInlineFrame(aContext, kClassID)
   {}
 
   virtual ~nsMathMLmathInlineFrame() {}

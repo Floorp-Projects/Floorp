@@ -29,7 +29,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(ViewportFrame)
 
   explicit ViewportFrame(nsStyleContext* aContext)
-    : ViewportFrame(aContext, mozilla::LayoutFrameType::Viewport)
+    : ViewportFrame(aContext, kClassID, mozilla::LayoutFrameType::Viewport)
   {}
 
   virtual ~ViewportFrame() { } // useful for debugging
@@ -77,8 +77,8 @@ public:
 #endif
 
 protected:
-  ViewportFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType)
-    : nsContainerFrame(aContext, aType)
+  ViewportFrame(nsStyleContext* aContext, ClassID aID, mozilla::LayoutFrameType aType)
+    : nsContainerFrame(aContext, aID, aType)
     , mView(nullptr)
   {}
 

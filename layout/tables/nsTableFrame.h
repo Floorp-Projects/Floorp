@@ -603,7 +603,7 @@ protected:
   /** protected constructor.
     * @see NewFrame
     */
-  explicit nsTableFrame(nsStyleContext* aContext);
+  explicit nsTableFrame(nsStyleContext* aContext, ClassID aID = kClassID);
 
   /** destructor, responsible for mColumnLayoutData */
   virtual ~nsTableFrame();

@@ -48,9 +48,9 @@ public:
 
   // default constructor supplied by the compiler
 
-  nsTableCellFrame(nsStyleContext* aContext, nsTableFrame* aTableFrame)
-    : nsTableCellFrame(aContext,
-                       aTableFrame,
+  nsTableCellFrame(nsStyleContext* aContext, nsTableFrame* aTableFrame,
+                   ClassID aID = kClassID)
+    : nsTableCellFrame(aContext, aTableFrame, aID,
                        mozilla::LayoutFrameType::TableCell)
   {}
 
@@ -234,6 +234,7 @@ public:
 protected:
   nsTableCellFrame(nsStyleContext* aContext,
                    nsTableFrame* aTableFrame,
+                   ClassID aID,
                    mozilla::LayoutFrameType aType);
 
   virtual LogicalSides

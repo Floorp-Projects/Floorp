@@ -82,11 +82,11 @@ protected:
 
   virtual nscoord GetIntrinsicISize() override;
 
-  explicit nsLeafBoxFrame(nsStyleContext* aContext)
-    : nsLeafBoxFrame(aContext, mozilla::LayoutFrameType::LeafBox)
+  explicit nsLeafBoxFrame(nsStyleContext* aContext, ClassID aID = kClassID)
+    : nsLeafBoxFrame(aContext, aID, mozilla::LayoutFrameType::LeafBox)
   {}
 
-  nsLeafBoxFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType);
+  nsLeafBoxFrame(nsStyleContext* aContext, ClassID aID, mozilla::LayoutFrameType aType);
 
 private:
 

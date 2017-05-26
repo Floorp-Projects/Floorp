@@ -57,9 +57,9 @@ class nsSVGPaintServerFrame : public nsSVGContainerFrame
 protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
-  explicit nsSVGPaintServerFrame(nsStyleContext* aContext,
+  explicit nsSVGPaintServerFrame(nsStyleContext* aContext, ClassID aID,
                                  mozilla::LayoutFrameType aType)
-    : nsSVGContainerFrame(aContext, aType)
+    : nsSVGContainerFrame(aContext, aID, aType)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }

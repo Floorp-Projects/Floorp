@@ -145,7 +145,7 @@ protected:
 };
 
 nsPluginFrame::nsPluginFrame(nsStyleContext* aContext)
-  : nsFrame(aContext, LayoutFrameType::Object)
+  : nsFrame(aContext, kClassID, LayoutFrameType::Object)
   , mInstanceOwner(nullptr)
   , mOuterView(nullptr)
   , mInnerView(nullptr)

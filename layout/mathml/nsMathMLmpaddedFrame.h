@@ -46,7 +46,7 @@ public:
 
 protected:
   explicit nsMathMLmpaddedFrame(nsStyleContext* aContext)
-    : nsMathMLContainerFrame(aContext)
+    : nsMathMLContainerFrame(aContext, kClassID)
     , mWidthSign(0)
     , mHeightSign(0)
     , mDepthSign(0)

@@ -44,7 +44,8 @@ public:
   ScriptIncrement(nsIFrame* aFrame) override;
 
 protected:
-  explicit nsMathMLmmultiscriptsFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
+  explicit nsMathMLmmultiscriptsFrame(nsStyleContext* aContext)
+    : nsMathMLContainerFrame(aContext, kClassID) {}
   virtual ~nsMathMLmmultiscriptsFrame();
   
 
