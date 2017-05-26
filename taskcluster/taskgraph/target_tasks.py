@@ -207,8 +207,12 @@ def target_tasks_nightly_fennec(full_task_graph, parameters):
     and, eventually, uploading the tasks to balrog."""
     def filter(task):
         platform = task.attributes.get('build_platform')
-        if platform in ('android-api-15-nightly', 'android-x86-nightly', 'android-nightly',
-                        'android-api-15-old-id-nightly', 'android-x86-old-id-nightly'):
+        if platform in ('android-aarch64-nightly',
+                        'android-api-15-nightly',
+                        'android-api-15-old-id-nightly',
+                        'android-nightly',
+                        'android-x86-nightly',
+                        'android-x86-old-id-nightly'):
             if not task.attributes.get('nightly', False):
                 return False
             return filter_for_project(task, parameters)

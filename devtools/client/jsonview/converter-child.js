@@ -258,9 +258,9 @@ Converter.prototype = {
       "<link rel=\"stylesheet\" type=\"text/css\" href=\"css/main.css\">" +
       "<script data-main=\"viewer-config\" src=\"lib/require.js\"></script>" +
       "</head><body>" +
-      "<div id=\"content\"></div>" +
-      "<div id=\"json\">" + this.htmlEncode(json) + "</div>" +
-      "<div id=\"headers\">" + this.htmlEncode(headers) + "</div>" +
+      "<div id=\"content\">" +
+      "<pre id=\"json\">" + this.htmlEncode(json) + "</pre>" +
+      "</div><div id=\"headers\">" + this.htmlEncode(headers) + "</div>" +
       "</body></html>";
   },
 

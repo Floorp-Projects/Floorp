@@ -39,6 +39,7 @@ var DEFAULT_PREFERENCES =
   "defaultZoomValue": "",
   "sidebarViewOnLoad": 0,
   "enableHandToolOnLoad": false,
+  "cursorToolOnLoad": 0,
   "enableWebGL": false,
   "pdfBugEnabled": false,
   "disableRange": false,

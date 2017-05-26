@@ -271,3 +271,55 @@ android-api-15-gradle/opt:
         secrets: true
         custom-build-variant-cfg: api-15-gradle
         tooltool-downloads: internal
+
+android-aarch64/opt:
+    description: "Android 5.0 AArch64 Opt"
+    index:
+        product: mobile
+        job-name: android-aarch64-opt
+    treeherder:
+        platform: android-5-0-aarch64/opt
+        symbol: tc(B)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker:
+        implementation: docker-worker
+        max-run-time: 7200
+    run:
+        using: mozharness
+        actions: [get-secrets build generate-build-stats multi-l10n update]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - disable_signing.py
+            - platform_supports_post_upload_to_latest.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: aarch64
+        tooltool-downloads: internal
+
+android-aarch64-nightly/opt:
+    description: "Android 5.0 AArch64 Nightly"
+    attributes:
+        nightly: true
+    index:
+        product: mobile
+        job-name: android-aarch64-opt
+        type: nightly
+    treeherder:
+        platform: android-5-0-aarch64/opt
+        symbol: tc(N)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker:
+        implementation: docker-worker
+        max-run-time: 7200
+    run:
+        using: mozharness
+        actions: [get-secrets build generate-build-stats multi-l10n update]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - disable_signing.py
+            - platform_supports_post_upload_to_latest.py
+            - taskcluster_nightly.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: aarch64
+        tooltool-downloads: internal
