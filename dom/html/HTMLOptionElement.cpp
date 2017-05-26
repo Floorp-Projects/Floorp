@@ -151,11 +151,6 @@ HTMLOptionElement::Index()
 bool
 HTMLOptionElement::Selected() const
 {
-  // If we haven't been explictly selected or deselected, use our default value
-  if (!mSelectedChanged) {
-    return DefaultSelected();
-  }
-
   return mIsSelected;
 }
 
@@ -193,21 +188,14 @@ HTMLOptionElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
     return NS_OK;
   }
 
-  bool defaultSelected = aValue;
-  // First make sure we actually set our mIsSelected state to reflect our new
-  // defaultSelected state.  If that turns out to be wrong,
-  // SetOptionsSelectedByIndex will fix it up.  But otherwise we can end up in a
-  // situation where mIsSelected is still false, but mSelectedChanged becomes
-  // true (later in this method, when we compare mIsSelected to
-  // defaultSelected), and then we start returning false for Selected() even
-  // though we're actually selected.
-  mIsSelected = defaultSelected;
-
   // We just changed out selected state (since we look at the "selected"
   // attribute when mSelectedChanged is false).  Let's tell our select about
   // it.
   HTMLSelectElement* selectInt = GetSelect();
   if (!selectInt) {
+    // If option is a child of select, SetOptionsSelectedByIndex will set
+    // mIsSelected if needed.
+    mIsSelected = aValue;
     return NS_OK;
   }
 
@@ -218,7 +206,7 @@ HTMLOptionElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
 
   int32_t index = Index();
   uint32_t mask = HTMLSelectElement::SET_DISABLED;
-  if (defaultSelected) {
+  if (aValue) {
     mask |= HTMLSelectElement::IS_SELECTED;
   }
 
@@ -236,8 +224,8 @@ HTMLOptionElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
   // rigt selected state.
   mIsInSetDefaultSelected = inSetDefaultSelected;
   // mIsSelected might have been changed by SetOptionsSelectedByIndex.  Possibly
-  // more than once; make sure our mSelectedChanged state is set correctly.
-  mSelectedChanged = mIsSelected != defaultSelected;
+  // more than once; make sure our mSelectedChanged state is set back correctly.
+  mSelectedChanged = false;
 
   return NS_OK;
 }
@@ -426,12 +414,12 @@ HTMLOptionElement::Option(const GlobalObject& aGlobal,
     }
   }
 
-  if (aSelected) {
-    option->SetSelected(true, aError);
-    if (aError.Failed()) {
-      return nullptr;
-    }
+  option->SetSelected(aSelected, aError);
+  if (aError.Failed()) {
+    return nullptr;
   }
+
+  option->SetSelectedChanged(false);
 
   return option.forget();
 }
