@@ -406,10 +406,6 @@ AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(JSRuntime* rt, const char* label,
     spBefore_ = profiler_->stackPointer();
 
     profiler_->pseudoStack_->pushCppFrame(
-        label, /* dynamicString = */ nullptr, /* sp = */ this, /* line = */ 0,
-        js::ProfileEntry::Category::OTHER, js::ProfileEntry::BEGIN_PSEUDO_JS);
-
-    profiler_->pseudoStack_->pushCppFrame(
         label, /* dynamicString = */ nullptr, /* sp = */ this, /* line = */ 0, category);
 }
 
@@ -418,8 +414,7 @@ AutoGeckoProfilerEntry::~AutoGeckoProfilerEntry()
     if (!profiler_)
         return;
 
-    profiler_->pseudoStack_->pop();   // the C++ frame
-    profiler_->pseudoStack_->pop();   // the BEGIN_PSEUDO_JS frame
+    profiler_->pseudoStack_->pop();
     MOZ_ASSERT(spBefore_ == profiler_->stackPointer());
 }
 
