@@ -1,5 +1,5 @@
 /* globals log, catcher, util, ui, slides */
-/* globals window, document, location, shooter, callBackground, selectorLoader, assertIsTrusted */
+/* globals shooter, callBackground, selectorLoader, assertIsTrusted */
 
 "use strict";
 
@@ -815,10 +815,6 @@ this.uicontrol = (function() {
       return;
     }
     addHandlers();
-    // FIXME: self.options is gone
-    if (self.options && self.options.styleMyShotsButton) {
-      ui.iframe.addClassName = `styleMyShotsButton-${self.options.styleMyShotsButton.value}`;
-    }
     if (shouldOnboard) {
       setState("onboarding");
     } else {

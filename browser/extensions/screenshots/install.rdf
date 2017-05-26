@@ -12,7 +12,7 @@
       </Description>
     </em:targetApplication>
     <em:type>2</em:type>
-    <em:version>6.6.0</em:version>
+    <em:version>8.1.0</em:version>
     <em:bootstrap>true</em:bootstrap>
     <em:homepageURL>https://pageshot.net/</em:homepageURL>
     <em:multiprocessCompatible>true</em:multiprocessCompatible>
