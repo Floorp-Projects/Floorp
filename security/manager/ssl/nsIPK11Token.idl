@@ -16,39 +16,52 @@ interface nsIPK11Token : nsISupports
   /*
    * The name of the token
    */
+  [must_use]
   readonly attribute AUTF8String tokenName;
+  [must_use]
   readonly attribute AUTF8String tokenLabel;
   /**
    * Manufacturer ID of the token.
    */
+  [must_use]
   readonly attribute AUTF8String tokenManID;
   /**
    * Hardware version of the token.
    */
+  [must_use]
   readonly attribute AUTF8String tokenHWVersion;
   /**
    * Firmware version of the token.
    */
+  [must_use]
   readonly attribute AUTF8String tokenFWVersion;
+  [must_use]
   readonly attribute AUTF8String tokenSerialNumber;
 
   /*
    * Login information
    */
+  [must_use]
   boolean isLoggedIn();
+  [must_use]
   void login(in boolean force);
+  [must_use]
   void logoutSimple();
+  [must_use]
   void logoutAndDropAuthenticatedResources();
 
   /*
    * Reset password
    */
+  [must_use]
   void reset();
 
   /*
    * Password information
    */
+  [must_use]
   readonly attribute long minimumPasswordLength;
+  [must_use]
   readonly attribute boolean needsUserInit;
   /**
    * Checks whether the given password is correct. Logs the token out if an
@@ -57,11 +70,17 @@ interface nsIPK11Token : nsISupports
    * @param password The password to check.
    * @return true if the password was correct, false otherwise.
    */
+  [must_use]
   boolean checkPassword(in AUTF8String password);
+  [must_use]
   void initPassword(in AUTF8String initialPassword);
+  [must_use]
   void changePassword(in AUTF8String oldPassword, in AUTF8String newPassword);
+  [must_use]
   long getAskPasswordTimes();
+  [must_use]
   long getAskPasswordTimeout();
+  [must_use]
   void setAskPasswordDefaults([const] in long askTimes, [const] in long timeout);
 
   /*
@@ -70,11 +89,14 @@ interface nsIPK11Token : nsISupports
    * In particular, this can be used to determine if a user has set a master
    * password (if this is the internal key token).
    */
+  [must_use]
   readonly attribute boolean hasPassword;
 
   /*
    * Other attributes
    */
+  [must_use]
   boolean isHardwareToken();
+  [must_use]
   boolean needsLogin();
 };
