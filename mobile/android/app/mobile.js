@@ -598,6 +598,9 @@ pref("media.cache_size", 32768);    // 32MB media cache
 // below 10s of buffered data.
 pref("media.cache_resume_threshold", 10);
 pref("media.cache_readahead_limit", 30);
+// On mobile we'll throttle the download once the readahead_limit is hit,
+// even if the download is slow. This is to preserve battery and data.
+pref("media.throttle-regardless-of-download-rate", true);
 
 // Number of video frames we buffer while decoding video.
 // On Android this is decided by a similar value which varies for
