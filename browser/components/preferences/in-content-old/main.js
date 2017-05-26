@@ -45,16 +45,6 @@ var gMainPane = {
     }
 
     this.buildContentProcessCountMenuList();
-    let processCountPref =
-      document.getElementById("dom.ipc.processCount");
-    processCountPref.addEventListener("change", () => {
-      this.updateDefaultPerformanceSettingsPref();
-    });
-    let accelerationPref =
-      document.getElementById("layers.acceleration.disabled");
-    accelerationPref.addEventListener("change", () => {
-      this.updateDefaultPerformanceSettingsPref();
-    });
     this.updateDefaultPerformanceSettingsPref();
 
     let defaultPerformancePref =
@@ -63,6 +53,10 @@ var gMainPane = {
       this.updatePerformanceSettingsBox();
     });
     this.updatePerformanceSettingsBox();
+
+    let performanceSettingsLink = document.getElementById("performanceSettingsLearnMore");
+    let performanceSettingsUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "performance";
+    performanceSettingsLink.setAttribute("href", performanceSettingsUrl);
 
     // set up the "use current page" label-changing listener
     this._updateUseCurrentButton();

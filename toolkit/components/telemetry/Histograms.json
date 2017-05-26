@@ -753,10 +753,12 @@
   "CYCLE_COLLECTOR_MAX_PAUSE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
+    "bug_numbers": [1364503],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
     "description": "Longest pause for an individual slice of one cycle collection, including preparation (ms)"
   },
   "CYCLE_COLLECTOR_FINISH_IGC": {
@@ -996,10 +998,22 @@
   "GC_MAX_PAUSE_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
-    "expires_in_version": "never",
+    "bug_numbers": [1364503],
+    "expires_in_version": "61",
     "kind": "linear",
     "high": 1000,
     "n_buckets": 50,
+    "description": "Longest GC slice in a GC (ms)"
+  },
+  "GC_MAX_PAUSE_MS_2": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
+    "bug_numbers": [1364503],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
     "description": "Longest GC slice in a GC (ms)"
   },
   "GC_MARK_MS": {
@@ -1062,7 +1076,16 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 75,
-    "description": "The longest phase in any slice that goes over 2x the budget"
+    "description": "The longest phase in any slice that goes over 2x the budget. The phase values are defined in js/src/gc/GenerateStatsPhases.py."
+  },
+  "GC_SLOW_TASK": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org","jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 75,
+    "description": "The longest parallel task in any slice that goes over 2x the budget. The phase values are defined in js/src/gc/GenerateStatsPhases.py.",
+    "bug_numbers": [1309651]
   },
   "GC_MMU_50": {
     "record_in_processes": ["main", "content"],

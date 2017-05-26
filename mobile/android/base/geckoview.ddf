@@ -13,7 +13,6 @@ show allResults
   org.mozilla.gecko.util.* \
   org.mozilla.gecko.AndroidGamepadManager \
   org.mozilla.gecko.AppConstants \
-  org.mozilla.gecko.BaseGeckoInterface \
   org.mozilla.gecko.ContextGetter \
   org.mozilla.gecko.CrashHandler \
   org.mozilla.gecko.EventDispatcher \

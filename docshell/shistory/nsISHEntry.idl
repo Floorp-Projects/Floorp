@@ -335,9 +335,11 @@ interface nsISHEntry : nsISupports
     readonly attribute boolean loadedInThisProcess;
 
     /**
-     * Set the session history it belongs to. It's only set on root entries.
+     * The session history it belongs to. It's usually only set on root entries.
+     * SHEntry is strictly bound to the SHistory it belongs to; it should not be
+     * changed once set to a non-null value.
      */
-    [noscript] void setSHistory(in nsISHistory aSHistory);
+    [noscript] attribute nsISHistory SHistory;
 };
 
 [scriptable, uuid(bb66ac35-253b-471f-a317-3ece940f04c5)]

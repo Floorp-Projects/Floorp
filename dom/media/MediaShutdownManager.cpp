@@ -78,7 +78,7 @@ MediaShutdownManager::InitStatics()
     NS_LITERAL_STRING("MediaShutdownManager shutdown"));
   if (NS_FAILED(rv)) {
     LOGW("Failed to add shutdown blocker! rv=%x", uint32_t(rv));
-    sInstance = nullptr;
+    sInstance->mError = rv;
   }
 }
 
@@ -99,7 +99,7 @@ nsresult
 MediaShutdownManager::Register(MediaDecoder* aDecoder)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!sInstance) {
+  if (NS_FAILED(mError)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
   if (mIsDoingXPCOMShutDown) {

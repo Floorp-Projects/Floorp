@@ -41,7 +41,7 @@ fuzzy-if(Android,4,810) == containing-block-1.html containing-block-1-ref.html
 == inline-2.html inline-2-ref.html
 fuzzy-if(OSX,99,210) == inline-3.html inline-3-ref.html
 skip-if(!asyncPan) == inline-4.html inline-4-ref.html
-fails-if(!stylo) == column-contain-1a.html column-contain-1-ref.html
+fails-if(!styloVsGecko) == column-contain-1a.html column-contain-1-ref.html
 == column-contain-1b.html column-contain-1-ref.html
 == column-contain-2.html column-contain-2-ref.html
 == block-in-inline-1.html block-in-inline-1-ref.html

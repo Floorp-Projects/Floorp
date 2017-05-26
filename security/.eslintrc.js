@@ -60,9 +60,6 @@ module.exports = {
     // Disallow duplicate class members.
     "no-dupe-class-members": "error",
 
-    // Disallow use of eval().
-    "no-eval": "error",
-
     // Disallow extending of native objects.
     "no-extend-native": "error",
 

@@ -7,14 +7,18 @@
 #ifndef js_ProfilingStack_h
 #define js_ProfilingStack_h
 
+#include <algorithm>
+#include <stdint.h>
+
 #include "jsbytecode.h"
 #include "jstypes.h"
 #include "js/TypeDecls.h"
-
 #include "js/Utility.h"
 
 struct JSRuntime;
 class JSTracer;
+
+class PseudoStack;
 
 namespace js {
 
@@ -53,6 +57,8 @@ class ProfileEntry
 
     // General purpose storage describing this frame.
     uint32_t volatile flags_;
+
+    static int32_t pcToOffset(JSScript* aScript, jsbytecode* aPc);
 
   public:
     // These traits are bit masks. Make sure they're powers of 2.
@@ -108,18 +114,27 @@ class ProfileEntry
     void setLabel(const char* aLabel) volatile { label_ = aLabel; }
     const char* label() const volatile { return label_; }
 
-    void setDynamicString(const char* aDynamicString) volatile { dynamicString_ = aDynamicString; }
     const char* dynamicString() const volatile { return dynamicString_; }
 
-    void initJsFrame(JSScript* aScript, jsbytecode* aPc) volatile {
-        flags_ = 0;
-        spOrScript = aScript;
-        setPC(aPc);
-    }
-    void initCppFrame(void* aSp, uint32_t aLine) volatile {
-        flags_ = IS_CPP_ENTRY;
-        spOrScript = aSp;
+    void initCppFrame(const char* aLabel, const char* aDynamicString, void* sp, uint32_t aLine,
+                      js::ProfileEntry::Flags aFlags, js::ProfileEntry::Category aCategory)
+                      volatile
+    {
+        label_ = aLabel;
+        dynamicString_ = aDynamicString;
+        spOrScript = sp;
         lineOrPcOffset = static_cast<int32_t>(aLine);
+        flags_ = aFlags | js::ProfileEntry::IS_CPP_ENTRY | uint32_t(aCategory);
+    }
+
+    void initJsFrame(const char* aLabel, const char* aDynamicString, JSScript* aScript,
+                     jsbytecode* aPc) volatile
+    {
+        label_ = aLabel;
+        dynamicString_ = aDynamicString;
+        spOrScript = aScript;
+        lineOrPcOffset = pcToOffset(aScript, aPc);
+        flags_ = uint32_t(js::ProfileEntry::Category::JS);  // No flags, just the JS category.
     }
 
     void setFlag(uint32_t flag) volatile {
@@ -145,7 +160,7 @@ class ProfileEntry
         MOZ_ASSERT(c >= Category::FIRST);
         MOZ_ASSERT(c <= Category::LAST);
         flags_ &= ~CATEGORY_MASK;
-        setFlag(static_cast<uint32_t>(c));
+        setFlag(uint32_t(c));
     }
 
     void setOSR() volatile {
@@ -180,7 +195,7 @@ class ProfileEntry
     JS_FRIEND_API(jsbytecode*) pc() const volatile;
     JS_FRIEND_API(void) setPC(jsbytecode* pc) volatile;
 
-    void trace(JSTracer* trc);
+    void trace(JSTracer* trc) volatile;
 
     // The offset of a pc into a script's code can actually be 0, so to
     // signify a nullptr pc, use a -1 index. This is checked against in
@@ -194,8 +209,7 @@ class ProfileEntry
 };
 
 JS_FRIEND_API(void)
-SetContextProfilingStack(JSContext* cx, ProfileEntry* stack, mozilla::Atomic<uint32_t>* size,
-                         uint32_t max);
+SetContextProfilingStack(JSContext* cx, PseudoStack* pseudoStack);
 
 JS_FRIEND_API(void)
 EnableContextProfilingStack(JSContext* cx, bool enabled);
@@ -204,5 +218,70 @@ JS_FRIEND_API(void)
 RegisterContextProfilingEventMarker(JSContext* cx, void (*fn)(const char*));
 
 } // namespace js
+
+// The PseudoStack members are accessed in parallel by multiple threads: the
+// profiler's sampler thread reads these members while other threads modify
+// them.
+class PseudoStack
+{
+  public:
+    PseudoStack()
+      : stackPointer(0)
+    {}
+
+    ~PseudoStack() {
+        // The label macros keep a reference to the PseudoStack to avoid a TLS
+        // access. If these are somehow not all cleared we will get a
+        // use-after-free so better to crash now.
+        MOZ_RELEASE_ASSERT(stackPointer == 0);
+    }
+
+    void pushCppFrame(const char* label, const char* dynamicString, void* sp, uint32_t line,
+                      js::ProfileEntry::Category category,
+                      js::ProfileEntry::Flags flags = js::ProfileEntry::Flags(0)) {
+        if (stackPointer < MaxEntries) {
+            entries[stackPointer].initCppFrame(label, dynamicString, sp, line, flags, category);
+        }
+
+        // This must happen at the end! The compiler will not reorder this
+        // update because stackPointer is Atomic.
+        stackPointer++;
+    }
+
+    void pushJsFrame(const char* label, const char* dynamicString, JSScript* script,
+                     jsbytecode* pc) {
+        if (stackPointer < MaxEntries) {
+            entries[stackPointer].initJsFrame(label, dynamicString, script, pc);
+        }
+
+        // This must happen at the end! The compiler will not reorder this
+        // update because stackPointer is Atomic.
+        stackPointer++;
+    }
+
+    void pop() {
+        MOZ_ASSERT(stackPointer > 0);
+        stackPointer--;
+    }
+
+    uint32_t stackSize() const { return std::min(uint32_t(stackPointer), uint32_t(MaxEntries)); }
+
+  private:
+    // No copying.
+    PseudoStack(const PseudoStack&) = delete;
+    void operator=(const PseudoStack&) = delete;
+
+  public:
+    static const uint32_t MaxEntries = 1024;
+
+    // The stack entries.
+    js::ProfileEntry volatile entries[MaxEntries];
+
+    // This may exceed MaxEntries, so instead use the stackSize() method to
+    // determine the number of valid samples in entries. When this is less
+    // than MaxEntries, it refers to the first free entry past the top of the
+    // in-use stack (i.e. entries[stackPointer - 1] is the top stack entry).
+    mozilla::Atomic<uint32_t> stackPointer;
+};
 
 #endif  /* js_ProfilingStack_h */

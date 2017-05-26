@@ -591,8 +591,7 @@ NukeAllWrappersForCompartment(JSContext* cx, JSCompartment* compartment,
     // we need to be sure that we don't have any existing cross-compartment
     // wrappers which may be replaced with dead wrappers during unrelated
     // wrapper recomputation *before* we set that bit.
-    js::NukeCrossCompartmentWrappers(cx, js::AllCompartments(),
-                                     js::SingleCompartment(compartment),
+    js::NukeCrossCompartmentWrappers(cx, js::AllCompartments(), compartment,
                                      nukeReferencesToWindow,
                                      js::NukeAllReferences);
 
@@ -2696,6 +2695,9 @@ AccumulateTelemetryCallback(int id, uint32_t sample, const char* key)
       case JS_TELEMETRY_GC_MAX_PAUSE_MS:
         Telemetry::Accumulate(Telemetry::GC_MAX_PAUSE_MS, sample);
         break;
+      case JS_TELEMETRY_GC_MAX_PAUSE_MS_2:
+        Telemetry::Accumulate(Telemetry::GC_MAX_PAUSE_MS_2, sample);
+        break;
       case JS_TELEMETRY_GC_MARK_MS:
         Telemetry::Accumulate(Telemetry::GC_MARK_MS, sample);
         break;
@@ -2716,6 +2718,9 @@ AccumulateTelemetryCallback(int id, uint32_t sample, const char* key)
         break;
       case JS_TELEMETRY_GC_SLOW_PHASE:
         Telemetry::Accumulate(Telemetry::GC_SLOW_PHASE, sample);
+        break;
+      case JS_TELEMETRY_GC_SLOW_TASK:
+        Telemetry::Accumulate(Telemetry::GC_SLOW_TASK, sample);
         break;
       case JS_TELEMETRY_GC_MMU_50:
         Telemetry::Accumulate(Telemetry::GC_MMU_50, sample);

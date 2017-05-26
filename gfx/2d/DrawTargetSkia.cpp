@@ -804,10 +804,10 @@ DrawTargetSkia::Stroke(const Path *aPath,
   mCanvas->drawPath(skiaPath->GetPath(), paint.mPaint);
 }
 
-static Float
+static Double
 DashPeriodLength(const StrokeOptions& aStrokeOptions)
 {
-  Float length = 0;
+  Double length = 0;
   for (size_t i = 0; i < aStrokeOptions.mDashLength; i++) {
     length += aStrokeOptions.mDashPattern[i];
   }
@@ -820,10 +820,10 @@ DashPeriodLength(const StrokeOptions& aStrokeOptions)
   return length;
 }
 
-static inline Float
-RoundDownToMultiple(Float aValue, Float aFactor)
+static inline Double
+RoundDownToMultiple(Double aValue, Double aFactor)
 {
-  return floorf(aValue / aFactor) * aFactor;
+  return floor(aValue / aFactor) * aFactor;
 }
 
 static Rect
@@ -847,24 +847,32 @@ ShrinkClippedStrokedRect(const Rect &aStrokedRect, const IntRect &aDeviceClip,
 {
   Rect userSpaceStrokeClip =
     UserSpaceStrokeClip(aDeviceClip, aTransform, aStrokeOptions);
-
-  Rect intersection = aStrokedRect.Intersect(userSpaceStrokeClip);
-  Float dashPeriodLength = DashPeriodLength(aStrokeOptions);
+  RectDouble strokedRectDouble(
+    aStrokedRect.x, aStrokedRect.y, aStrokedRect.width, aStrokedRect.height);
+  RectDouble intersection =
+    strokedRectDouble.Intersect(RectDouble(userSpaceStrokeClip.x,
+                                           userSpaceStrokeClip.y,
+                                           userSpaceStrokeClip.width,
+                                           userSpaceStrokeClip.height));
+  Double dashPeriodLength = DashPeriodLength(aStrokeOptions);
   if (intersection.IsEmpty() || dashPeriodLength == 0.0f) {
-    return intersection;
+    return Rect(
+      intersection.x, intersection.y, intersection.width, intersection.height);
   }
 
   // Reduce the rectangle side lengths in multiples of the dash period length
   // so that the visible dashes stay in the same place.
-  Margin insetBy = aStrokedRect - intersection;
+  MarginDouble insetBy = strokedRectDouble - intersection;
   insetBy.top = RoundDownToMultiple(insetBy.top, dashPeriodLength);
   insetBy.right = RoundDownToMultiple(insetBy.right, dashPeriodLength);
   insetBy.bottom = RoundDownToMultiple(insetBy.bottom, dashPeriodLength);
   insetBy.left = RoundDownToMultiple(insetBy.left, dashPeriodLength);
 
-  Rect shrunkRect = aStrokedRect;
-  shrunkRect.Deflate(insetBy);
-  return shrunkRect;
+  strokedRectDouble.Deflate(insetBy);
+  return Rect(strokedRectDouble.x,
+              strokedRectDouble.y,
+              strokedRectDouble.width,
+              strokedRectDouble.height);
 }
 
 void

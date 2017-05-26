@@ -50,7 +50,7 @@ random-if(cocoaWidget) != impact-bold.html impact.html # bug 539418
 == localized-family-names-004.html localized-family-names-004-ref.html
 
 # family names with escaped spaces shouldn't match the names without the spaces
-fails-if(gtkWidget&&!stylo) == familyname-escapedidents.html familyname-escapedidents-ref.html # bug 1309425, bug 1328771
+fails-if(gtkWidget&&!styloVsGecko) == familyname-escapedidents.html familyname-escapedidents-ref.html # bug 1309425, bug 1328771
 
 # weight mapping tests
 HTTP(..) == normalmedium.html normalmedium-ref.html

@@ -9,4 +9,4 @@
 == tab-size-negative.html     tab-size-initial.html
 == tab-size-change-1a.html     tab-size-change-1-ref.html
 == tab-size-change-1b.html     tab-size-change-1-ref.html
-fuzzy-if(winWidget,100,1000) fails-if(stylo) == tab-size-length.html       tab-size-length-ref.html
+fuzzy-if(winWidget,100,1000) fails-if(styloVsGecko) == tab-size-length.html       tab-size-length-ref.html

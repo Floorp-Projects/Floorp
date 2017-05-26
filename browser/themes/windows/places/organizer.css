@@ -184,11 +184,12 @@
     background-color: #EEF3FA;
   }
 
+%ifndef MOZ_PHOTON_THEME
   #placesToolbar {
     background-color: @customToolbarColor@;
     color: black;
   }
-
+%endif
   #detailsDeck {
     border-top-color: #A9B7C9;
   }

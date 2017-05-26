@@ -103,6 +103,14 @@ interface nsIPlaintextEditor : nsISupports
    void insertText(in DOMString aStringToInsert);
 
   /**
+   * Replace existed string with a string.
+   * This is fast path to replace all string when using single line control.
+   *
+   * @ param aString   the string to be set
+   */
+  [noscript] void setText(in DOMString aString);
+
+  /**
    * Insert a line break into the content model.
    * The interpretation of a break is up to the implementation:
    * it may enter a character, split a node in the tree, etc.

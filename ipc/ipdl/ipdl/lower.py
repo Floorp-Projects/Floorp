@@ -2618,16 +2618,20 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmt(typedef)
         for typedef in self.includedActorTypedefs:
             self.cls.addstmt(typedef)
-        for md in p.messageDecls:
-            if self.receivesMessage(md) and md.hasAsyncReturns():
-                self.cls.addstmt(
-                    Typedef(_makePromise(md.returns, self.side, resolver=True),
-                            md.promiseName()))
 
         self.cls.addstmt(Whitespace.NL)
 
         self.cls.addstmts([ Typedef(p.fqStateType(), 'State'), Whitespace.NL ])
 
+        self.cls.addstmt(Label.PUBLIC)
+        for md in p.messageDecls:
+            if self.receivesMessage(md) and md.hasAsyncReturns():
+                self.cls.addstmt(
+                    Typedef(_makePromise(md.returns, self.side, resolver=True),
+                            md.promiseName()))
+        self.cls.addstmt(Whitespace.NL)
+
+        self.cls.addstmt(Label.PROTECTED)
         # interface methods that the concrete subclass has to impl
         for md in p.messageDecls:
             isctor, isdtor = md.decl.type.isCtor(), md.decl.type.isDtor()

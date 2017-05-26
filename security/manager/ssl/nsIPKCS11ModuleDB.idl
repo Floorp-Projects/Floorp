@@ -17,19 +17,27 @@ interface nsISimpleEnumerator;
 [scriptable, uuid(ff9fbcd7-9517-4334-b97a-ceed78909974)]
 interface nsIPKCS11ModuleDB : nsISupports
 {
+  [must_use]
   nsIPKCS11Module getInternal();
 
+  [must_use]
   nsIPKCS11Module getInternalFIPS();
 
+  [must_use]
   nsIPKCS11Module findModuleByName(in AUTF8String name);
 
+  [must_use]
   nsIPKCS11Slot findSlotByName(in AUTF8String name);
 
+  [must_use]
   nsISimpleEnumerator listModules();
 
+  [must_use]
   readonly attribute boolean canToggleFIPS;
 
+  [must_use]
   void toggleFIPSMode();
 
+  [must_use]
   readonly attribute boolean isFIPSEnabled;
 };

@@ -320,8 +320,7 @@ public class GeckoView extends LayerView
     private void init(final Context context, final GeckoViewSettings settings) {
         // Set the GeckoInterface if the context is an activity and the
         // GeckoInterface has not already been set
-        if (context instanceof Activity && getGeckoInterface() == null) {
-            setGeckoInterface(new BaseGeckoInterface(context));
+        if (context instanceof Activity && GeckoAppShell.getGeckoInterface() == null) {
             GeckoAppShell.setContextGetter(this);
         }
 
@@ -1057,14 +1056,6 @@ public class GeckoView extends LayerView
                 break;
             }
         }
-    }
-
-    public static void setGeckoInterface(final BaseGeckoInterface geckoInterface) {
-        GeckoAppShell.setGeckoInterface(geckoInterface);
-    }
-
-    public static GeckoAppShell.GeckoInterface getGeckoInterface() {
-        return GeckoAppShell.getGeckoInterface();
     }
 
     protected String getSharedPreferencesFile() {

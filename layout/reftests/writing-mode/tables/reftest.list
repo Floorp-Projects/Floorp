@@ -7,7 +7,7 @@ fuzzy-if(skiaContent,3,750) == vertical-table-2b.html vertical-table-2-ref.html
 == vertical-table-colspan-1.html vertical-table-colspan-1-ref.html
 == vertical-table-colspan-2.html vertical-table-colspan-2-ref.html
 == vertical-table-specified-width-1.html vertical-table-specified-width-1-ref.html
-asserts(1) asserts-if(stylo,2) == vertical-table-specified-width-2.html vertical-table-specified-width-2-ref.html # bug 1179741
+asserts(1) asserts-if(styloVsGecko,2) == vertical-table-specified-width-2.html vertical-table-specified-width-2-ref.html # bug 1179741
 fuzzy-if(cocoaWidget,141,24) == vertical-border-collapse-1.html vertical-border-collapse-1-ref.html
 fuzzy-if(cocoaWidget,141,24) == vertical-border-collapse-2.html vertical-border-collapse-2-ref.html
 

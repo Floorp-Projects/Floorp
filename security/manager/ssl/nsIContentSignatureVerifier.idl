@@ -40,6 +40,7 @@ interface nsIContentSignatureVerifier : nsISupports
    * @returns true if the signature matches the data and aCertificateChain is
    *          valid within aContext, false if not.
    */
+  [must_use]
   boolean verifyContentSignature(in ACString aData,
                                  in ACString aContentSignatureHeader,
                                  in ACString aCertificateChain,
@@ -57,6 +58,7 @@ interface nsIContentSignatureVerifier : nsISupports
    * @param aName                   The (host)name for which the end entity must
                                     be valid.
    */
+  [must_use]
   void createContext(in ACString aData, in ACString aContentSignatureHeader,
                      in ACString aCertificateChain, in ACString aName);
 
@@ -77,6 +79,7 @@ interface nsIContentSignatureVerifier : nsISupports
    * @param aName                   The (host)name for which the end entity must
                                     be valid.
    */
+  [must_use]
   void createContextWithoutCertChain(in nsIContentSignatureReceiverCallback aCallback,
                                      in ACString aContentSignatureHeader,
                                      in ACString aName);
@@ -86,6 +89,7 @@ interface nsIContentSignatureVerifier : nsISupports
    *
    * @param aData        More data to be tested.
    */
+  [must_use]
   void update(in ACString aData);
 
   /**
@@ -95,6 +99,7 @@ interface nsIContentSignatureVerifier : nsISupports
    * @returns true if the signature matches the data added with createContext
    *          and update, false if not.
    */
+  [must_use]
   boolean end();
 };
 

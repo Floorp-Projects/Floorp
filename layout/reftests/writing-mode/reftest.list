@@ -18,13 +18,13 @@ fuzzy-if(gtkWidget,255,2) fuzzy-if(winWidget||Android,4,8704) HTTP(..) == 108384
 == 1090168-2.html 1090168-2-ref.html
 fuzzy-if(azureSkia,255,2700) == 1090168-3.html 1090168-3-ref.html # bug 1230357 mark fuzzy for skia.
 == 1091058-1.html 1091058-1-ref.html
-fails-if(stylo) == 1094434-1.html 1094434-1-ref.html
-fails-if(stylo) == 1094434-2.html 1094434-2-ref.html
+fails-if(styloVsGecko) == 1094434-1.html 1094434-1-ref.html
+fails-if(styloVsGecko) == 1094434-2.html 1094434-2-ref.html
 == 1094914-1a.html 1094914-1-ref.html
 == 1094914-1b.html 1094914-1-ref.html
 == 1096224-1a.html 1096224-1-ref.html
 == 1096224-1b.html 1096224-1-ref.html
-fails-if(!stylo) == 1102175-1a.html 1102175-1-ref.html
+fails-if(!styloVsGecko) == 1102175-1a.html 1102175-1-ref.html
 == 1102175-1b.html 1102175-1-ref.html
 == 1103613-1.html 1103613-1-ref.html
 == 1105268-1-min-max-dimensions.html 1105268-1-min-max-dimensions-ref.html
@@ -62,9 +62,9 @@ fuzzy(116,94) fuzzy-if(winWidget,135,124) HTTP(..) == 1115916-1-vertical-metrics
 == ua-style-sheet-size-2.html ua-style-sheet-size-2-ref.html
 
 == ua-style-sheet-fieldset-1.html ua-style-sheet-fieldset-1-ref.html
-skip-if(Android||winWidget) fails-if(stylo) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1a-ref.html
-skip-if(!(Android)) fails-if(stylo) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1b-ref.html
-skip-if(!winWidget) fails-if(stylo) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1c-ref.html
+skip-if(Android||winWidget) fails-if(styloVsGecko) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1a-ref.html
+skip-if(!(Android)) fails-if(styloVsGecko) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1b-ref.html
+skip-if(!winWidget) fails-if(styloVsGecko) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1c-ref.html
 fuzzy-if(Android,1,18) == ua-style-sheet-checkbox-radio-1.html ua-style-sheet-checkbox-radio-1-ref.html
 skip-if(Android) fuzzy-if(skiaContent&&!Android,2,6) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html
 skip-if(!(Android)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html
@@ -107,7 +107,7 @@ HTTP(..) == 1127488-align-right-vertical-lr-ltr.html 1127488-align-bottom-left-r
 == 1133945-1-vertical-align.html 1133945-1-vertical-align-ref.html
 skip-if(Android) == 1134744-radio-checkbox-baseline-1.html 1134744-radio-checkbox-baseline-1-ref.html # Disabled on Android until bug 1352238 is fixed.
 == 1134849-orthogonal-inline.html 1134849-orthogonal-inline-ref.html
-fails-if(stylo) == 1135361-ruby-justify-1.html 1135361-ruby-justify-1-ref.html # bug 1136067
+fails-if(styloVsGecko) == 1135361-ruby-justify-1.html 1135361-ruby-justify-1-ref.html # bug 1136067
 fuzzy-if(winWidget,255,163) fuzzy-if(skiaContent,159,111) == 1136557-1-nested-spans.html 1136557-1-nested-spans-ref.html
 fuzzy-if(winWidget,255,221) fuzzy-if(skiaContent,159,111) == 1136557-2-nested-spans.html 1136557-2-nested-spans-ref.html
 fuzzy-if(winWidget,255,236) == 1136557-3-nested-spans.html 1136557-3-nested-spans-ref.html

@@ -105,6 +105,27 @@ public:
   void BeginShutdown();
   void Shutdown();
 
+  void RecordStyleSheetChange(mozilla::ServoStyleSheet*, StyleSheet::ChangeType)
+  {
+    // TODO(emilio): Record which kind of changes have we handled, and act
+    // properly in InvalidateStyleForCSSRuleChanges instead of invalidating the
+    // whole document.
+    NoteStyleSheetsChanged();
+  }
+
+  void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot) {
+    // FIXME(emilio): When we properly support shadow dom we'll need to do
+    // better.
+    NoteStyleSheetsChanged();
+  }
+
+  bool StyleSheetsHaveChanged() const
+  {
+    return StylistNeedsUpdate();
+  }
+
+  void InvalidateStyleForCSSRuleChanges();
+
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   const RawServoStyleSet& RawSet() const { return *mRawSet; }
 
@@ -172,13 +193,17 @@ public:
   already_AddRefed<nsStyleContext>
   ResolveTransientStyle(dom::Element* aElement,
                         nsIAtom* aPseudoTag,
-                        CSSPseudoElementType aPseudoType);
+                        CSSPseudoElementType aPseudoType,
+                        StyleRuleInclusion aRules =
+                          StyleRuleInclusion::All);
 
   // Similar to ResolveTransientStyle() but returns ServoComputedValues.
   // Unlike ResolveServoStyle() this function calls PreTraverseSync().
   already_AddRefed<ServoComputedValues>
   ResolveTransientServoStyle(dom::Element* aElement,
-                             CSSPseudoElementType aPseudoTag);
+                             CSSPseudoElementType aPseudoTag,
+                             StyleRuleInclusion aRules =
+                               StyleRuleInclusion::All);
 
   // Get a style context for an anonymous box.  aPseudoTag is the pseudo-tag to
   // use and must be non-null.  It must be an anon box, and must be one that
@@ -280,6 +305,17 @@ public:
    */
   void NoteStyleSheetsChanged();
 
+  /**
+   * Helper for correctly calling RebuildStylist without paying the cost of an
+   * extra function call in the common no-rebuild-needed case.
+   */
+  void UpdateStylistIfNeeded()
+  {
+    if (StylistNeedsUpdate()) {
+      UpdateStylist();
+    }
+  }
+
 #ifdef DEBUG
   void AssertTreeIsClean();
 #else
@@ -342,6 +378,16 @@ public:
     AssertIsMainThreadOrServoFontMetricsLocked();
 
     mPostTraversalTasks.AppendElement(aTask);
+  }
+
+  // Returns true if a restyle of the document is needed due to cloning
+  // sheet inners.
+  bool EnsureUniqueInnerOnCSSSheets();
+
+  // Called by StyleSheet::EnsureUniqueInner to let us know it cloned
+  // its inner.
+  void SetNeedsRestyleAfterEnsureUniqueInner() {
+    mNeedsRestyleAfterEnsureUniqueInner = true;
   }
 
 private:
@@ -469,19 +515,11 @@ private:
    */
   void UpdateStylist();
 
-  /**
-   * Helper for correctly calling RebuildStylist without paying the cost of an
-   * extra function call in the common no-rebuild-needed case.
-   */
-  void UpdateStylistIfNeeded()
-  {
-    if (StylistNeedsUpdate()) {
-      UpdateStylist();
-    }
-  }
-
   already_AddRefed<ServoComputedValues>
-    ResolveStyleLazily(dom::Element* aElement, CSSPseudoElementType aPseudoType);
+    ResolveStyleLazily(dom::Element* aElement,
+                       CSSPseudoElementType aPseudoType,
+                       StyleRuleInclusion aRules =
+                         StyleRuleInclusion::All);
 
   void RunPostTraversalTasks();
 
@@ -505,6 +543,8 @@ private:
   bool mAllowResolveStaleStyles;
   bool mAuthorStyleDisabled;
   StylistState mStylistState;
+
+  bool mNeedsRestyleAfterEnsureUniqueInner;
 
   // Stores pointers to our cached style contexts for non-inheriting anonymous
   // boxes.

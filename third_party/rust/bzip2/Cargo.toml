@@ -1,0 +1,32 @@
+[package]
+
+name = "bzip2"
+version = "0.3.2"
+authors = ["Alex Crichton <alex@alexcrichton.com>"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+keywords = ["bzip", "encoding"]
+repository = "https://github.com/alexcrichton/bzip2-rs"
+homepage = "https://github.com/alexcrichton/bzip2-rs"
+documentation = "http://alexcrichton.com/bzip2-rs"
+description = """
+Bindings to libbzip2 for bzip2 compression and decompression exposed as
+Reader/Writer streams.
+"""
+categories = ["compression", "api-bindings"]
+
+[workspace]
+
+[dependencies]
+libc = "0.2"
+bzip2-sys = { version = "0.1", path = "bzip2-sys" }
+tokio-io = { version = "0.1", optional = true }
+futures = { version = "0.1", optional = true }
+
+[dev-dependencies]
+rand = "0.3"
+quickcheck = "0.2"
+tokio-core = "0.1"
+
+[features]
+tokio = ["tokio-io", "futures"]

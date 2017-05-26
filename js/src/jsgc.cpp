@@ -4022,9 +4022,7 @@ GCRuntime::markCompartments()
 
     while (!workList.empty()) {
         JSCompartment* comp = workList.popCopy();
-        for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
-            if (e.front().key().is<JSString*>())
-                continue;
+        for (JSCompartment::NonStringWrapperEnum e(comp); !e.empty(); e.popFront()) {
             JSCompartment* dest = e.front().mutableKey().compartment();
             if (dest && !dest->maybeAlive) {
                 dest->maybeAlive = true;
@@ -4419,9 +4417,9 @@ DropStringWrappers(JSRuntime* rt)
      * compartment group.
      */
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
-        for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
-            if (e.front().key().is<JSString*>())
-                e.removeFront();
+        for (JSCompartment::StringWrapperEnum e(c); !e.empty(); e.popFront()) {
+            MOZ_ASSERT(e.front().key().is<JSString*>());
+            e.removeFront();
         }
     }
 }
@@ -4482,31 +4480,6 @@ JSCompartment::findOutgoingEdges(ZoneComponentFinder& finder)
     }
 }
 
-bool
-JSCompartment::findDeadProxyZoneEdges(bool* foundAny)
-{
-    // As an optimization, return whether any dead proxy objects are found in
-    // this compartment so that if a zone has none, its cross compartment
-    // wrappers do not need to be scanned.
-    *foundAny = false;
-    for (js::WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        Value value = e.front().value().get();
-        if (value.isObject()) {
-            if (IsDeadProxyObject(&value.toObject())) {
-                *foundAny = true;
-                CrossCompartmentKey& key = e.front().mutableKey();
-                Zone* wrappedZone = key.as<JSObject*>()->zone();
-                if (!wrappedZone->isGCMarking())
-                    continue;
-                if (!wrappedZone->gcSweepGroupEdges().put(zone()))
-                    return false;
-            }
-        }
-    }
-
-    return true;
-}
-
 void
 Zone::findOutgoingEdges(ZoneComponentFinder& finder)
 {
@@ -4546,20 +4519,6 @@ GCRuntime::findInterZoneEdges()
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
         if (!WeakMapBase::findInterZoneEdges(zone))
             return false;
-    }
-
-    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        if (zone->hasDeadProxies()) {
-            bool foundInZone = false;
-            for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
-                bool foundInCompartment = false;
-                if (!comp->findDeadProxyZoneEdges(&foundInCompartment))
-                    return false;
-                foundInZone = foundInZone || foundInCompartment;
-            }
-            if (!foundInZone)
-                zone->setHasDeadProxies(false);
-        }
     }
 
     return true;
@@ -4704,10 +4663,8 @@ AssertNoWrappersInGrayList(JSRuntime* rt)
 #ifdef DEBUG
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         MOZ_ASSERT(!c->gcIncomingGrayPointers);
-        for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
-            if (!e.front().key().is<JSString*>())
-                AssertNotOnGrayList(&e.front().value().unbarrieredGet().toObject());
-        }
+        for (JSCompartment::NonStringWrapperEnum e(c); !e.empty(); e.popFront())
+            AssertNotOnGrayList(&e.front().value().unbarrieredGet().toObject());
     }
 #endif
 }
@@ -4859,8 +4816,6 @@ js::NotifyGCNukeWrapper(JSObject* obj)
      * remember to mark it.
      */
     RemoveFromGrayList(obj);
-
-    obj->zone()->setHasDeadProxies(true);
 }
 
 enum {
@@ -5075,8 +5030,11 @@ GCRuntime::startTask(GCParallelTask& task, gcstats::PhaseKind phase, AutoLockHel
 void
 GCRuntime::joinTask(GCParallelTask& task, gcstats::PhaseKind phase, AutoLockHelperThreadState& locked)
 {
-    gcstats::AutoPhase ap(stats(), task, phase);
-    task.joinWithLockHeld(locked);
+    {
+        gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::JOIN_PARALLEL_TASKS);
+        task.joinWithLockHeld(locked);
+    }
+    stats().recordParallelPhase(phase, task.duration());
 }
 
 void
@@ -5198,7 +5156,7 @@ class MOZ_RAII js::gc::AutoRunParallelTask : public GCParallelTask
 
   public:
     AutoRunParallelTask(JSRuntime* rt, Func func, gcstats::PhaseKind phase,
-                       AutoLockHelperThreadState& lock)
+                        AutoLockHelperThreadState& lock)
       : GCParallelTask(rt),
         func_(func),
         phase_(phase),
@@ -5225,6 +5183,8 @@ GCRuntime::beginSweepingSweepGroup()
      */
 
     using namespace gcstats;
+
+    AutoSCC scc(stats(), sweepGroupIndex);
 
     bool sweepingAtoms = false;
     for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
@@ -5274,7 +5234,6 @@ GCRuntime::beginSweepingSweepGroup()
             sweepAtoms.emplace(rt, SweepAtoms, PhaseKind::SWEEP_ATOMS, lock);
 
         AutoPhase ap(stats(), PhaseKind::SWEEP_COMPARTMENTS);
-        AutoSCC scc(stats(), sweepGroupIndex);
 
         AutoRunParallelTask sweepCCWrappers(rt, SweepCCWrappers, PhaseKind::SWEEP_CC_WRAPPER, lock);
         AutoRunParallelTask sweepObjectGroups(rt, SweepObjectGroups, PhaseKind::SWEEP_TYPE_OBJECT, lock);
@@ -5301,7 +5260,6 @@ GCRuntime::beginSweepingSweepGroup()
     // or on the background thread.
 
     for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
-        AutoSCC scc(stats(), sweepGroupIndex);
 
         zone->arenas.queueForForegroundSweep(&fop, ForegroundObjectFinalizePhase);
         for (unsigned i = 0; i < ArrayLength(IncrementalFinalizePhases); ++i)

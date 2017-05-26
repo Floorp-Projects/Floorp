@@ -10,11 +10,11 @@
 
 [scriptable, uuid(de142307-7b88-4e0a-b232-250f310e25d8)]
 interface nsIASN1Tree : nsITreeView {
-
+  [must_use]
   void loadASN1Structure(in nsIASN1Object asn1Object);
 
+  [must_use]
   AString getDisplayData(in unsigned long index);
-
 };
 
 %{C++
@@ -22,4 +22,3 @@ interface nsIASN1Tree : nsITreeView {
 #define NS_ASN1TREE_CONTRACTID "@mozilla.org/security/nsASN1Tree;1"
 
 %}
-

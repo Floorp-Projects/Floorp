@@ -4,9 +4,8 @@ Cu.import("resource://shield-recipe-client/lib/Storage.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/SandboxManager.jsm", this);
 
 add_task(async function() {
-  const fakeSandbox = {Promise};
-  const store1 = Storage.makeStorage("prefix1", fakeSandbox);
-  const store2 = Storage.makeStorage("prefix2", fakeSandbox);
+  const store1 = new Storage("prefix1");
+  const store2 = new Storage("prefix2");
 
   // Make sure values return null before being set
   Assert.equal(await store1.getItem("key"), null);
@@ -44,26 +43,4 @@ add_task(async function() {
   await Storage.clearAllStorage();
   Assert.equal(await store1.getItem("removeTest"), null);
   Assert.equal(await store2.getItem("removeTest"), null);
-});
-
-add_task(async function testSandboxValueStorage() {
-  const manager1 = new SandboxManager();
-  const manager2 = new SandboxManager();
-  const store1 = Storage.makeStorage("testSandboxValueStorage", manager1.sandbox);
-  const store2 = Storage.makeStorage("testSandboxValueStorage", manager2.sandbox);
-  manager1.addGlobal("store", store1);
-  manager2.addGlobal("store", store2);
-  manager1.addHold("testing");
-  manager2.addHold("testing");
-
-  await manager1.evalInSandbox("store.setItem('foo', {foo: 'bar'});");
-  manager1.removeHold("testing");
-  await manager1.isNuked();
-
-  const objectMatches = await manager2.evalInSandbox(`
-    store.getItem("foo").then(item => item.foo === "bar");
-  `);
-  ok(objectMatches, "Values persisted in a store survive after their originating sandbox is nuked");
-
-  manager2.removeHold("testing");
 });

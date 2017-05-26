@@ -52,7 +52,6 @@
 #include "nsIContentIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for Event::GetEventPopupControlState()
-#include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/PointerEvent.h"
 #include "nsIDocument.h"
 #include "nsAnimationManager.h"
@@ -784,7 +783,6 @@ nsIPresShell::nsIPresShell()
     , mCanvasBackgroundColor(NS_RGBA(0,0,0,0))
     , mSelectionFlags(0)
     , mRenderFlags(0)
-    , mStylesHaveChanged(false)
     , mDidInitialize(false)
     , mIsDestroying(false)
     , mIsReflowing(false)
@@ -1544,7 +1542,6 @@ PresShell::AddUserSheet(StyleSheet* aSheet)
   }
 
   mStyleSet->EndUpdate();
-
   RestyleForCSSRuleChanges();
 }
 
@@ -2535,8 +2532,9 @@ PresShell::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 
   if (aUpdateType & UPDATE_STYLE) {
     mStyleSet->EndUpdate();
-    if (mStylesHaveChanged || !mChangedScopeStyleRoots.IsEmpty())
+    if (mStyleSet->StyleSheetsHaveChanged()) {
       RestyleForCSSRuleChanges();
+    }
   }
 
   mFrameConstructor->EndUpdate();
@@ -4546,17 +4544,6 @@ PresShell::ReconstructFrames()
 void
 nsIPresShell::RestyleForCSSRuleChanges()
 {
-  AutoTArray<RefPtr<mozilla::dom::Element>,1> scopeRoots;
-  mChangedScopeStyleRoots.SwapElements(scopeRoots);
-
-  if (mStylesHaveChanged) {
-    // If we need to restyle everything, no need to restyle individual
-    // scoped style roots.
-    scopeRoots.Clear();
-  }
-
-  mStylesHaveChanged = false;
-
   if (mIsDestroying) {
     // We don't want to mess with restyles at this point
     return;
@@ -4568,61 +4555,23 @@ nsIPresShell::RestyleForCSSRuleChanges()
     mPresContext->RebuildCounterStyles();
   }
 
-  Element* root = mDocument->GetRootElement();
   if (!mDidInitialize) {
     // Nothing to do here, since we have no frames yet
     return;
   }
 
-  if (!root) {
-    // No content to restyle
-    return;
-  }
-
-  RestyleManager* restyleManager = mPresContext->RestyleManager();
-
-  if (scopeRoots.IsEmpty()) {
-    // If scopeRoots is empty, we know that mStylesHaveChanged was true at
-    // the beginning of this function, and that we need to restyle the whole
-    // document.
-    restyleManager->PostRestyleEventForCSSRuleChanges(root,
-                                                      eRestyle_Subtree,
-                                                      nsChangeHint(0));
-  } else {
-    for (Element* scopeRoot : scopeRoots) {
-      restyleManager->PostRestyleEventForCSSRuleChanges(scopeRoot,
-                                                        eRestyle_Subtree,
-                                                        nsChangeHint(0));
-    }
-  }
+  mStyleSet->InvalidateStyleForCSSRuleChanges();
 }
 
 void
-PresShell::RecordStyleSheetChange(StyleSheet* aStyleSheet)
+PresShell::RecordStyleSheetChange(StyleSheet* aStyleSheet,
+                                  StyleSheet::ChangeType aChangeType)
 {
   // too bad we can't check that the update is UPDATE_STYLE
   NS_ASSERTION(mUpdateCount != 0, "must be in an update");
+  MOZ_ASSERT(aStyleSheet->IsServo() == mStyleSet->IsServo());
 
-  if (mStylesHaveChanged)
-    return;
-
-  // Tell Servo that the contents of style sheets have changed.
-  if (ServoStyleSet* set = mStyleSet->GetAsServo()) {
-    set->NoteStyleSheetsChanged();
-  }
-
-  if (aStyleSheet->IsGecko()) {
-    // XXXheycam ServoStyleSheets don't support <style scoped> yet.
-    Element* scopeElement = aStyleSheet->AsGecko()->GetScopeElement();
-    if (scopeElement) {
-      mChangedScopeStyleRoots.AppendElement(scopeElement);
-      return;
-    }
-  } else {
-    NS_WARNING("stylo: ServoStyleSheets don't support <style scoped>");
-  }
-
-  mStylesHaveChanged = true;
+  mStyleSet->RecordStyleSheetChange(aStyleSheet, aChangeType);
 }
 
 void
@@ -4633,7 +4582,7 @@ PresShell::StyleSheetAdded(StyleSheet* aStyleSheet,
   NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
 
   if (aStyleSheet->IsApplicable() && aStyleSheet->HasRules()) {
-    RecordStyleSheetChange(aStyleSheet);
+    RecordStyleSheetChange(aStyleSheet, StyleSheet::ChangeType::Added);
   }
 }
 
@@ -4645,7 +4594,7 @@ PresShell::StyleSheetRemoved(StyleSheet* aStyleSheet,
   NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
 
   if (aStyleSheet->IsApplicable() && aStyleSheet->HasRules()) {
-    RecordStyleSheetChange(aStyleSheet);
+    RecordStyleSheetChange(aStyleSheet, StyleSheet::ChangeType::Removed);
   }
 }
 
@@ -4653,26 +4602,27 @@ void
 PresShell::StyleSheetApplicableStateChanged(StyleSheet* aStyleSheet)
 {
   if (aStyleSheet->HasRules()) {
-    RecordStyleSheetChange(aStyleSheet);
+    RecordStyleSheetChange(
+        aStyleSheet, StyleSheet::ChangeType::ApplicableStateChanged);
   }
 }
 
 void
 PresShell::StyleRuleChanged(StyleSheet* aStyleSheet)
 {
-  RecordStyleSheetChange(aStyleSheet);
+  RecordStyleSheetChange(aStyleSheet, StyleSheet::ChangeType::RuleChanged);
 }
 
 void
 PresShell::StyleRuleAdded(StyleSheet* aStyleSheet)
 {
-  RecordStyleSheetChange(aStyleSheet);
+  RecordStyleSheetChange(aStyleSheet, StyleSheet::ChangeType::RuleAdded);
 }
 
 void
 PresShell::StyleRuleRemoved(StyleSheet* aStyleSheet)
 {
-  RecordStyleSheetChange(aStyleSheet);
+  RecordStyleSheetChange(aStyleSheet, StyleSheet::ChangeType::RuleRemoved);
 }
 
 nsPlaceholderFrame*
@@ -6352,7 +6302,7 @@ private:
 void
 PresShell::RecordShadowStyleChange(ShadowRoot* aShadowRoot)
 {
-  mChangedScopeStyleRoots.AppendElement(aShadowRoot->GetHost()->AsElement());
+  mStyleSet->RecordShadowStyleChange(aShadowRoot);
 }
 
 void
@@ -7478,7 +7428,12 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       nsPoint eventPoint;
       uint32_t flags = 0;
       if (aEvent->mMessage == eTouchStart) {
-        flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
+        if (gfxPrefs::APZAllowZooming()) {
+          // Setting this flag will skip the scrollbars on the root frame from
+          // participating in hit-testing, and we only want that to happen on
+          // zoomable platforms (for now).
+          flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
+        }
         WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
         // if this is a continuing session, ensure that all these events are
         // in the same document by taking the target of the events already in

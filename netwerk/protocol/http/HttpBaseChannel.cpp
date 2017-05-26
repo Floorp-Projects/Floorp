@@ -2972,72 +2972,6 @@ void HttpBaseChannel::AssertPrivateBrowsingId()
 }
 #endif
 
-already_AddRefed<nsILoadInfo>
-HttpBaseChannel::CloneLoadInfoForRedirect(nsIURI * newURI, uint32_t redirectFlags)
-{
-  // make a copy of the loadinfo, append to the redirectchain
-  // this will be set on the newly created channel for the redirect target.
-  if (!mLoadInfo) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsILoadInfo> newLoadInfo =
-    static_cast<mozilla::LoadInfo*>(mLoadInfo.get())->Clone();
-
-  nsContentPolicyType contentPolicyType = mLoadInfo->GetExternalContentPolicyType();
-  if (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
-      contentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
-    nsCOMPtr<nsIPrincipal> nullPrincipalToInherit = NullPrincipal::Create();
-    newLoadInfo->SetPrincipalToInherit(nullPrincipalToInherit);
-  }
-
-  // re-compute the origin attributes of the loadInfo if it's top-level load.
-  bool isTopLevelDoc =
-    newLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT;
-
-  if (isTopLevelDoc) {
-    nsCOMPtr<nsILoadContext> loadContext;
-    NS_QueryNotificationCallbacks(this, loadContext);
-    OriginAttributes docShellAttrs;
-    if (loadContext) {
-      loadContext->GetOriginAttributes(docShellAttrs);
-    }
-
-    OriginAttributes attrs = newLoadInfo->GetOriginAttributes();
-
-    MOZ_ASSERT(docShellAttrs.mUserContextId == attrs.mUserContextId,
-                "docshell and necko should have the same userContextId attribute.");
-    MOZ_ASSERT(docShellAttrs.mInIsolatedMozBrowser == attrs.mInIsolatedMozBrowser,
-                "docshell and necko should have the same inIsolatedMozBrowser attribute.");
-    MOZ_ASSERT(docShellAttrs.mPrivateBrowsingId == attrs.mPrivateBrowsingId,
-                "docshell and necko should have the same privateBrowsingId attribute.");
-
-    attrs = docShellAttrs;
-    attrs.SetFirstPartyDomain(true, newURI);
-    newLoadInfo->SetOriginAttributes(attrs);
-  }
-
-  // This makes the original URI (the redirect URL) of the target channel become
-  // the resulting principal URI.
-  // After the veto and security checking of this redirect is done, the original
-  // URI of the target channel will be rewriten with the first URI in the redirect
-  // chain (the source URI of this load).  Hance the original URI itself can't be
-  // used for determining the result principal URI.
-  // If the target schema protocol handler wants to express a different URI as
-  // the result principal URI, it's free to rewrite this property.
-  // By not modifying the result principal URI the target protocol handler
-  // expresses that it's OK to use the channel's pre-redirect-veto original URI
-  // (the redirect URL) as the result principal URI.
-  newLoadInfo->SetResultPrincipalURI(newURI);
-
-  bool isInternalRedirect =
-    (redirectFlags & (nsIChannelEventSink::REDIRECT_INTERNAL |
-                      nsIChannelEventSink::REDIRECT_STS_UPGRADE));
-  newLoadInfo->AppendRedirectedPrincipal(GetURIPrincipal(), isInternalRedirect);
-
-  return newLoadInfo.forget();
-}
-
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsITraceableChannel
 //-----------------------------------------------------------------------------
@@ -3217,6 +3151,57 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
     if (newPBChannel) {
       newPBChannel->SetPrivate(mPrivateBrowsing);
     }
+  }
+
+  // make a copy of the loadinfo, append to the redirectchain
+  // and set it on the new channel
+  if (mLoadInfo) {
+    nsCOMPtr<nsILoadInfo> newLoadInfo =
+      static_cast<mozilla::LoadInfo*>(mLoadInfo.get())->Clone();
+
+    nsContentPolicyType contentPolicyType = mLoadInfo->GetExternalContentPolicyType();
+    if (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
+        contentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
+      nsCOMPtr<nsIPrincipal> nullPrincipalToInherit = NullPrincipal::Create();
+      newLoadInfo->SetPrincipalToInherit(nullPrincipalToInherit);
+    }
+
+    // re-compute the origin attributes of the loadInfo if it's top-level load.
+    bool isTopLevelDoc =
+      newLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT;
+
+    if (isTopLevelDoc) {
+      nsCOMPtr<nsILoadContext> loadContext;
+      NS_QueryNotificationCallbacks(this, loadContext);
+      OriginAttributes docShellAttrs;
+      if (loadContext) {
+        loadContext->GetOriginAttributes(docShellAttrs);
+      }
+
+      OriginAttributes attrs = newLoadInfo->GetOriginAttributes();
+
+      MOZ_ASSERT(docShellAttrs.mUserContextId == attrs.mUserContextId,
+                "docshell and necko should have the same userContextId attribute.");
+      MOZ_ASSERT(docShellAttrs.mInIsolatedMozBrowser == attrs.mInIsolatedMozBrowser,
+                "docshell and necko should have the same inIsolatedMozBrowser attribute.");
+      MOZ_ASSERT(docShellAttrs.mPrivateBrowsingId == attrs.mPrivateBrowsingId,
+                 "docshell and necko should have the same privateBrowsingId attribute.");
+
+      attrs = docShellAttrs;
+      attrs.SetFirstPartyDomain(true, newURI);
+      newLoadInfo->SetOriginAttributes(attrs);
+    }
+
+    bool isInternalRedirect =
+      (redirectFlags & (nsIChannelEventSink::REDIRECT_INTERNAL |
+                        nsIChannelEventSink::REDIRECT_STS_UPGRADE));
+    newLoadInfo->AppendRedirectedPrincipal(GetURIPrincipal(), isInternalRedirect);
+    newChannel->SetLoadInfo(newLoadInfo);
+  }
+  else {
+    // the newChannel was created with a dummy loadInfo, we should clear
+    // it in case the original channel does not have a loadInfo
+    newChannel->SetLoadInfo(nullptr);
   }
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);

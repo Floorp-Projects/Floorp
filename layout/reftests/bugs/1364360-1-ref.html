@@ -1,0 +1,15 @@
+<!-- Quirks mode on purpose -->
+<html>
+  <body style="margin: 0; padding: 0; border: none;"></body>
+  <script>
+    var html = document.documentElement;
+    var div = document.createElement("div");
+    div.style.height = "4000px";
+    html.appendChild(div);
+    html.appendChild(document.createTextNode("text"));
+    div = document.createElement("div");
+    div.style.height = "4000px";
+    html.appendChild(div);
+    document.body.scrollTop = 4000;
+  </script>
+</html>
