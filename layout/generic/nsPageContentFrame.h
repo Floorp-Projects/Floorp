@@ -15,7 +15,7 @@ class nsSharedPageData;
 class nsPageContentFrame final : public mozilla::ViewportFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsPageContentFrame)
 
   friend nsPageContentFrame* NS_NewPageContentFrame(nsIPresShell* aPresShell,
                                                     nsStyleContext* aContext);
@@ -44,7 +44,7 @@ public:
 
 protected:
   explicit nsPageContentFrame(nsStyleContext* aContext)
-    : ViewportFrame(aContext, mozilla::LayoutFrameType::PageContent)
+    : ViewportFrame(aContext, kClassID)
   {}
 
   nsSharedPageData*         mPD;

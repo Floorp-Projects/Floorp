@@ -54,7 +54,7 @@ struct TableRowGroupReflowInput {
 } // namespace mozilla
 
 nsTableRowGroupFrame::nsTableRowGroupFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, LayoutFrameType::TableRowGroup)
+  : nsContainerFrame(aContext, kClassID)
 {
   SetRepeatable(false);
 }

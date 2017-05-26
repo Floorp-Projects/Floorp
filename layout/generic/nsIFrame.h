@@ -603,10 +603,11 @@ public:
   typedef mozilla::Sides Sides;
   typedef mozilla::LogicalSides LogicalSides;
   typedef mozilla::SmallPointerArray<mozilla::DisplayItemData> DisplayItemArray;
+  typedef nsQueryFrame::ClassID ClassID;
 
   NS_DECL_QUERYFRAME_TARGET(nsIFrame)
 
-  explicit nsIFrame(mozilla::LayoutFrameType aType)
+  explicit nsIFrame(ClassID aID)
     : mRect()
     , mContent(nullptr)
     , mStyleContext(nullptr)
@@ -614,7 +615,7 @@ public:
     , mNextSibling(nullptr)
     , mPrevSibling(nullptr)
     , mState(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY)
-    , mType(aType)
+    , mClass(aID)
   {
     mozilla::PodZero(&mOverflow);
   }
@@ -2702,12 +2703,15 @@ public:
    *
    * @see mozilla::LayoutFrameType
    */
-  mozilla::LayoutFrameType Type() const { return mType; }
+  mozilla::LayoutFrameType Type() const {
+    MOZ_ASSERT(uint8_t(mClass) < mozilla::ArrayLength(sLayoutFrameTypes));
+    return sLayoutFrameTypes[uint8_t(mClass)];
+  }
 
 #define FRAME_TYPE(name_)                                                      \
   bool Is##name_##Frame() const                                                \
   {                                                                            \
-    return mType == mozilla::LayoutFrameType::name_;                           \
+    return Type() == mozilla::LayoutFrameType::name_;                          \
   }
 #include "mozilla/FrameTypeList.h"
 #undef FRAME_TYPE
@@ -2834,7 +2838,15 @@ public:
    * (non-anonymous, XBL-bound, CSS generated content, etc) children should not
    * be constructed.
    */
-  virtual bool IsLeaf() const;
+  bool IsLeaf() const
+  {
+    MOZ_ASSERT(uint8_t(mClass) < mozilla::ArrayLength(sFrameClassBits));
+    FrameClassBits bits = sFrameClassBits[uint8_t(mClass)];
+    if (MOZ_UNLIKELY(bits & eFrameClassBitsDynamicLeaf)) {
+      return IsLeafDynamic();
+    }
+    return bits & eFrameClassBitsLeaf;
+  }
 
   /**
    * Marks all display items created by this frame as needing a repaint,
@@ -3816,6 +3828,13 @@ protected:
                            nsView*        aNewParentView,
                            nsView*        aOldParentView);
 
+  /**
+   * To be overridden by frame classes that have a varying IsLeaf() state and
+   * is indicating that with DynamicLeaf in nsFrameIdList.h.
+   * @see IsLeaf()
+   */
+  virtual bool IsLeafDynamic() const { return false; }
+
   // Members
   nsRect           mRect;
   nsIContent*      mContent;
@@ -3899,8 +3918,8 @@ protected:
   /** @see GetWritingMode() */
   mozilla::WritingMode mWritingMode;
 
-  /** The type of the frame. */
-  mozilla::LayoutFrameType mType;
+  /** The ClassID of the concrete class of this instance. */
+  ClassID mClass; // 1 byte
 
   // Helpers
   /**
@@ -4024,6 +4043,29 @@ private:
 
   bool HasOpacityInternal(float aThreshold,
                           mozilla::EffectSet* aEffectSet = nullptr) const;
+
+  // Maps mClass to LayoutFrameType.
+  static const mozilla::LayoutFrameType sLayoutFrameTypes[
+#define FRAME_ID(...) 1 +
+#define ABSTRACT_FRAME_ID(...)
+#include "nsFrameIdList.h"
+#undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
+  0];
+
+  enum FrameClassBits {
+    eFrameClassBitsNone        = 0x0,
+    eFrameClassBitsLeaf        = 0x1,
+    eFrameClassBitsDynamicLeaf = 0x2,
+  };
+  // Maps mClass to IsLeaf() flags.
+  static const FrameClassBits sFrameClassBits[
+#define FRAME_ID(...) 1 +
+#define ABSTRACT_FRAME_ID(...)
+#include "nsFrameIdList.h"
+#undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
+  0];
 
 #ifdef DEBUG_FRAME_DUMP
 public:

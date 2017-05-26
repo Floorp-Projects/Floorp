@@ -84,8 +84,7 @@ struct ComputedGridLineInfo
 class nsGridContainerFrame final : public nsContainerFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
-  NS_DECL_QUERYFRAME_TARGET(nsGridContainerFrame)
+  NS_DECL_FRAMEARENA_HELPERS(nsGridContainerFrame)
   NS_DECL_QUERYFRAME
   typedef mozilla::ComputedGridTrackInfo ComputedGridTrackInfo;
   typedef mozilla::ComputedGridLineInfo ComputedGridLineInfo;
@@ -258,7 +257,7 @@ protected:
   friend nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                                     nsStyleContext* aContext);
   explicit nsGridContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, mozilla::LayoutFrameType::GridContainer)
+    : nsContainerFrame(aContext, kClassID)
     , mCachedMinISize(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mCachedPrefISize(NS_INTRINSIC_WIDTH_UNKNOWN)
   {

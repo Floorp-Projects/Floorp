@@ -223,7 +223,7 @@ static int32_t gReflowInx = -1;
 //------------------------------------------------------
 
 nsComboboxControlFrame::nsComboboxControlFrame(nsStyleContext* aContext)
-  : nsBlockFrame(aContext, LayoutFrameType::ComboboxControl)
+  : nsBlockFrame(aContext, kClassID)
   , mDisplayFrame(nullptr)
   , mButtonFrame(nullptr)
   , mDropdownFrame(nullptr)
@@ -1282,11 +1282,11 @@ nsComboboxControlFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElement
 // need to revisit this.
 class nsComboboxDisplayFrame : public nsBlockFrame {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsComboboxDisplayFrame)
 
   nsComboboxDisplayFrame(nsStyleContext* aContext,
                          nsComboboxControlFrame* aComboBox)
-    : nsBlockFrame(aContext, LayoutFrameType::ComboboxDisplay)
+    : nsBlockFrame(aContext, kClassID)
     , mComboBox(aComboBox)
   {}
 

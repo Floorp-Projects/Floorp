@@ -115,6 +115,22 @@ interface nsITimer : nsISupports
   const short TYPE_REPEATING_PRECISE_CAN_SKIP = 3;
 
   /**
+   * Same as TYPE_REPEATING_SLACK with the exception that idle events
+   * won't yield to timers with this type.  Use this when you want an
+   * idle callback to be scheduled to run even though this timer is
+   * about to fire.
+   */
+  const short TYPE_REPEATING_SLACK_LOW_PRIORITY = 4;
+
+  /**
+   * Same as TYPE_ONE_SHOT with the exception that idle events won't
+   * yield to timers with this type.  Use this when you want an idle
+   * callback to be scheduled to run even though this timer is about
+   * to fire.
+   */
+  const short TYPE_ONE_SHOT_LOW_PRIORITY = 5;
+
+  /**
    * Initialize a timer that will fire after the said delay.
    * A user must keep a reference to this timer till it is
    * is no longer needed or has been cancelled.
@@ -244,4 +260,3 @@ interface nsITimer : nsISupports
 #define NS_TIMER_CONTRACTID "@mozilla.org/timer;1"
 #define NS_TIMER_CALLBACK_TOPIC "timer-callback"
 %}
-

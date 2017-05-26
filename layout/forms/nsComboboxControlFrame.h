@@ -54,7 +54,6 @@ class nsComboboxControlFrame final : public nsBlockFrame,
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsComboboxControlFrame)
   friend nsComboboxControlFrame* NS_NewComboboxControlFrame(nsIPresShell* aPresShell,
                                                             nsStyleContext* aContext,
                                                             nsFrameState aFlags);
@@ -64,7 +63,7 @@ public:
   ~nsComboboxControlFrame();
 
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsComboboxControlFrame)
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;

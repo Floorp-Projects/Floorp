@@ -170,7 +170,7 @@ NS_QUERYFRAME_HEAD(nsMenuFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 nsMenuFrame::nsMenuFrame(nsStyleContext* aContext)
-  : nsBoxFrame(aContext, LayoutFrameType::Menu)
+  : nsBoxFrame(aContext, kClassID)
   , mIsMenu(false)
   , mChecked(false)
   , mIgnoreAccelTextChange(false)

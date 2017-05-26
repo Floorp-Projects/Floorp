@@ -81,9 +81,8 @@ class nsMenuFrame final : public nsBoxFrame
 public:
   explicit nsMenuFrame(nsStyleContext* aContext);
 
-  NS_DECL_QUERYFRAME_TARGET(nsMenuFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMenuFrame)
 
   NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;

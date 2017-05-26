@@ -214,9 +214,6 @@ def opt_seta(task, params):
     if task.task.get('provisionerId', '') == 'buildbot-bridge':
         label = task.task.get('payload').get('buildername')
         bbb_task = True
-
-        # never optimize with SETA for BBB- bug 1364421
-        return False
     else:
         label = task.label
 

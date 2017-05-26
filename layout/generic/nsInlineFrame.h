@@ -22,9 +22,8 @@ class nsLineLayout;
 class nsInlineFrame : public nsContainerFrame
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsInlineFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsInlineFrame)
 
   friend nsInlineFrame* NS_NewInlineFrame(nsIPresShell* aPresShell,
                                           nsStyleContext* aContext);
@@ -141,13 +140,9 @@ protected:
     }
   };
 
-  nsInlineFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType)
-    : nsContainerFrame(aContext, aType)
+  nsInlineFrame(nsStyleContext* aContext, ClassID aID)
+    : nsContainerFrame(aContext, aID)
     , mBaseline(NS_INTRINSIC_WIDTH_UNKNOWN)
-  {}
-
-  explicit nsInlineFrame(nsStyleContext* aContext)
-    : nsInlineFrame(aContext, mozilla::LayoutFrameType::Inline)
   {}
 
   virtual LogicalSides GetLogicalSkipSides(const ReflowInput* aReflowInput = nullptr) const override;
@@ -183,6 +178,10 @@ protected:
                           InlineReflowInput& aState);
 
 private:
+  explicit nsInlineFrame(nsStyleContext* aContext)
+    : nsInlineFrame(aContext, kClassID)
+  {}
+
   // Helper method for DrainSelfOverflowList() to deal with lazy parenting
   // (which we only do for nsInlineFrame, not nsFirstLineFrame).
   enum DrainFlags {
@@ -212,7 +211,7 @@ protected:
  */
 class nsFirstLineFrame final : public nsInlineFrame {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsFirstLineFrame)
 
   friend nsFirstLineFrame* NS_NewFirstLineFrame(nsIPresShell* aPresShell,
                                                 nsStyleContext* aContext);
@@ -233,7 +232,7 @@ public:
 
 protected:
   explicit nsFirstLineFrame(nsStyleContext* aContext)
-    : nsInlineFrame(aContext, mozilla::LayoutFrameType::Line)
+    : nsInlineFrame(aContext, kClassID)
   {}
 
   virtual nsIFrame* PullOneFrame(nsPresContext* aPresContext,

@@ -16,13 +16,13 @@ class SVGFEUnstyledLeafFrame : public nsFrame
   NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit SVGFEUnstyledLeafFrame(nsStyleContext* aContext)
-    : nsFrame(aContext, LayoutFrameType::SVGFEUnstyledLeaf)
+    : nsFrame(aContext, kClassID)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(SVGFEUnstyledLeafFrame)
 
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsRect&           aDirtyRect,

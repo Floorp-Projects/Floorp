@@ -38,6 +38,8 @@ LoadInfoArgsToLoadInfo(const mozilla::net::OptionalLoadInfoArgs& aLoadInfoArgs,
 
 namespace net {
 
+typedef nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>> RedirectHistoryArray;
+
 /**
  * Class that provides an nsILoadInfo implementation.
  */
@@ -99,14 +101,17 @@ private:
            bool aInitialSecurityCheckDone,
            bool aIsThirdPartyRequest,
            const OriginAttributes& aOriginAttributes,
-           nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChainIncludingInternalRedirects,
-           nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChain,
+           RedirectHistoryArray& aRedirectChainIncludingInternalRedirects,
+           RedirectHistoryArray& aRedirectChain,
            const nsTArray<nsCString>& aUnsafeHeaders,
            bool aForcePreflight,
            bool aIsPreflight,
            bool aForceHSTSPriming,
            bool aMixedContentWouldBlock);
   LoadInfo(const LoadInfo& rhs);
+
+  NS_IMETHOD GetRedirects(JSContext* aCx, JS::MutableHandle<JS::Value> aRedirects,
+                          const RedirectHistoryArray& aArra);
 
   friend nsresult
   mozilla::ipc::LoadInfoArgsToLoadInfo(
@@ -144,8 +149,8 @@ private:
   bool                             mInitialSecurityCheckDone;
   bool                             mIsThirdPartyContext;
   OriginAttributes                 mOriginAttributes;
-  nsTArray<nsCOMPtr<nsIPrincipal>> mRedirectChainIncludingInternalRedirects;
-  nsTArray<nsCOMPtr<nsIPrincipal>> mRedirectChain;
+  RedirectHistoryArray             mRedirectChainIncludingInternalRedirects;
+  RedirectHistoryArray             mRedirectChain;
   nsTArray<nsCString>              mCorsUnsafeHeaders;
   bool                             mForcePreflight;
   bool                             mIsPreflight;

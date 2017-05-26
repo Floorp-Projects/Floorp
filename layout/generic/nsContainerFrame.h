@@ -65,7 +65,6 @@ public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
   virtual void ChildIsDirty(nsIFrame* aChild) override;
 
-  virtual bool IsLeaf() const override;
   virtual FrameSearchResult PeekOffsetNoAmount(bool aForward, int32_t* aOffset) override;
   virtual FrameSearchResult PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                                      bool aRespectClusters = true) override;
@@ -534,8 +533,8 @@ public:
 #endif
 
 protected:
-  nsContainerFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType)
-    : nsSplittableFrame(aContext, aType)
+  nsContainerFrame(nsStyleContext* aContext, ClassID aID)
+    : nsSplittableFrame(aContext, aID)
   {}
 
   ~nsContainerFrame();
