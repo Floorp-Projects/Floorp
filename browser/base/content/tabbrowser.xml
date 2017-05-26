@@ -4106,7 +4106,7 @@
                 // has just crashed and we haven't started showing the tab crashed
                 // page yet.
                 let fl = requestedBrowser.frameLoader;
-                shouldBeBlank = (!fl.tabParent || !fl.tabParent.hasPresented);
+                shouldBeBlank = !this.minimized && (!fl.tabParent || !fl.tabParent.hasPresented);
               }
 
               this.log("Tab should be blank: " + shouldBeBlank);
