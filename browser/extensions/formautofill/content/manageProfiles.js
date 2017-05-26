@@ -145,7 +145,7 @@ ManageProfileDialog.prototype = {
       "address-level2",  // City/Town
       "organization",    // Company or organization name
       "address-level1",  // Province/State (Standardized code if possible)
-      "country",         // Country
+      "country-name",    // Country name
       "postal-code",     // Postal code
       "tel",             // Phone number
       "email",           // Email address
