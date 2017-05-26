@@ -6,6 +6,7 @@
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
 #include "nsIChannel.h"
@@ -46,6 +47,12 @@ CookieServiceChild::CookieServiceChild()
   , mThirdPartySession(false)
 {
   NS_ASSERTION(IsNeckoChild(), "not a child process");
+
+  mozilla::dom::ContentChild* cc =
+    static_cast<mozilla::dom::ContentChild*>(gNeckoChild->Manager());
+  if (cc->IsShuttingDown()) {
+    return;
+  }
 
   // This corresponds to Release() in DeallocPCookieService.
   NS_ADDREF_THIS();
