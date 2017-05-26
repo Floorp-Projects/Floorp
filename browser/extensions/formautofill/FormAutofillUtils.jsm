@@ -11,6 +11,47 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.FormAutofillUtils = {
+  _fieldNameInfo: {
+    "name": "name",
+    "given-name": "name",
+    "additional-name": "name",
+    "family-name": "name",
+    "organization": "organization",
+    "street-address": "address",
+    "address-line1": "address",
+    "address-line2": "address",
+    "address-line3": "address",
+    "address-level1": "address",
+    "address-level2": "address",
+    "postal-code": "address",
+    "country": "address",
+    "tel": "tel",
+    "email": "email",
+    "cc-name": "creditCard",
+    "cc-number": "creditCard",
+    "cc-exp-month": "creditCard",
+    "cc-exp-year": "creditCard",
+  },
+
+  isAddressField(fieldName) {
+    return !!this._fieldNameInfo[fieldName] && !this.isCreditCardField(fieldName);
+  },
+
+  isCreditCardField(fieldName) {
+    return this._fieldNameInfo[fieldName] == "creditCard";
+  },
+
+  getCategoriesFromFieldNames(fieldNames) {
+    let categories = new Set();
+    for (let fieldName of fieldNames) {
+      let info = this._fieldNameInfo[fieldName];
+      if (info) {
+        categories.add(info);
+      }
+    }
+    return categories;
+  },
+
   defineLazyLogGetter(scope, logPrefix) {
     XPCOMUtils.defineLazyGetter(scope, "log", () => {
       let ConsoleAPI = Cu.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
