@@ -116,6 +116,20 @@ using namespace mozilla::layers;
 using namespace mozilla::layout;
 typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
 
+const mozilla::LayoutFrameType nsIFrame::sLayoutFrameTypes[
+#define FRAME_ID(...) 1 +
+#define ABSTRACT_FRAME_ID(...)
+#include "nsFrameIdList.h"
+#undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
+  0] = {
+#define FRAME_ID(class_, type_, ...) mozilla::LayoutFrameType:: type_,
+#define ABSTRACT_FRAME_ID(...)
+#include "nsFrameIdList.h"
+#undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
+};
+
 // Struct containing cached metrics for box-wrapped frames.
 struct nsBoxLayoutMetrics
 {
