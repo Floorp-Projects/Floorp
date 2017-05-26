@@ -49,9 +49,4 @@ public class MmaLeanplumImp implements MmaInterface {
         Leanplum.track(leanplumEvent, value);
 
     }
-
-    @Override
-    public void stop() {
-        Leanplum.stop();
-    }
 }
