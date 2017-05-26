@@ -99,13 +99,15 @@ audio > xul|videocontrols {
 
 .playButton:hover,
 .muteButton:hover,
-.closedCaptionButton:hover {
+.closedCaptionButton:hover,
+.fullscreenButton:hover {
   fill: #48a0f7;
 }
 
 .playButton:hover:active,
 .muteButton:hover:active,
-.closedCaptionButton:hover:active {
+.closedCaptionButton:hover:active,
+.fullscreenButton:hover:active {
   fill: #2d89e6;
 }
 
@@ -140,22 +142,10 @@ audio > xul|videocontrols {
 }
 
 .fullscreenButton {
-  background-image: url(chrome://global/skin/media/fullscreenButton.svg#fullscreen);
-}
-.fullscreenButton:hover {
-  background-image: url(chrome://global/skin/media/fullscreenButton.svg#fullscreen-hover);
-}
-.fullscreenButton:hover:active {
-  background-image: url(chrome://global/skin/media/fullscreenButton.svg#fullscreen-active);
+  background-image: url(chrome://global/skin/media/fullscreenEnterButton.svg);
 }
 .fullscreenButton[fullscreened] {
-  background-image: url(chrome://global/skin/media/fullscreenButton.svg#unfullscreen);
-}
-.fullscreenButton[fullscreened]:hover {
-  background-image: url(chrome://global/skin/media/fullscreenButton.svg#unfullscreen-hover);
-}
-.fullscreenButton[fullscreened]:hover:active {
-  background-image: url(chrome://global/skin/media/fullscreenButton.svg#unfullscreen-active);
+  background-image: url(chrome://global/skin/media/fullscreenExitButton.svg);
 }
 
 .controlBarSpacer {
