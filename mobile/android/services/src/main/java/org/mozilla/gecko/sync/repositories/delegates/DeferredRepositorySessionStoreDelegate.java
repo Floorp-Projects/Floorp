@@ -64,4 +64,14 @@ public class DeferredRepositorySessionStoreDelegate implements
       }
     });
   }
+
+  @Override
+  public void onRecordStoreReconciled(final String guid) {
+    executor.execute(new Runnable() {
+      @Override
+      public void run() {
+        inner.onRecordStoreReconciled(guid);
+      }
+    });
+  }
 }
