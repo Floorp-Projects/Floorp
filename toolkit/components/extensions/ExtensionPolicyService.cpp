@@ -10,11 +10,14 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozIExtensionProcessScript.h"
 #include "nsEscape.h"
 #include "nsGkAtoms.h"
 #include "nsIChannel.h"
 #include "nsIContentPolicy.h"
+#include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsILoadInfo.h"
 #include "nsNetUtil.h"
@@ -54,6 +57,8 @@ ProcessScript()
  * ExtensionPolicyService
  *****************************************************************************/
 
+/* static */ bool ExtensionPolicyService::sRemoteExtensions;
+
 /* static */ ExtensionPolicyService&
 ExtensionPolicyService::GetSingleton()
 {
@@ -71,7 +76,20 @@ ExtensionPolicyService::ExtensionPolicyService()
   mObs = services::GetObserverService();
   MOZ_RELEASE_ASSERT(mObs);
 
+  Preferences::AddBoolVarCache(&sRemoteExtensions, "extensions.webextensions.remote", false);
+
   RegisterObservers();
+}
+
+
+bool
+ExtensionPolicyService::IsExtensionProcess() const
+{
+  if (sRemoteExtensions && XRE_IsContentProcess()) {
+    auto& remoteType = dom::ContentChild::GetSingleton()->GetRemoteType();
+    return remoteType.EqualsLiteral(EXTENSION_REMOTE_TYPE);
+  }
+  return XRE_IsParentProcess();
 }
 
 
@@ -227,6 +245,17 @@ ExtensionPolicyService::CheckDocument(nsIDocument* aDocument)
   nsCOMPtr<nsPIDOMWindowOuter> win = aDocument->GetWindow();
   if (win) {
     CheckContentScripts(win.get(), false);
+
+    nsIPrincipal* principal = aDocument->NodePrincipal();
+
+    nsAutoString addonId;
+    Unused << principal->GetAddonId(addonId);
+
+    RefPtr<WebExtensionPolicy> policy = GetByID(addonId);
+    if (policy) {
+      nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aDocument);
+      ProcessScript().InitExtensionDocument(policy, doc);
+    }
   }
 }
 

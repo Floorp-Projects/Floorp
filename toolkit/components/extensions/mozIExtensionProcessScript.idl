@@ -5,6 +5,7 @@
 #include "nsISupports.idl"
 
 interface mozIDOMWindowProxy;
+interface nsIDOMDocument;
 
 [scriptable,uuid(6b09dc51-6caa-4ca7-9d6d-30c87258a630)]
 interface mozIExtensionProcessScript : nsISupports
@@ -13,4 +14,5 @@ interface mozIExtensionProcessScript : nsISupports
 
   void loadContentScript(in nsISupports contentScript, in mozIDOMWindowProxy window);
 
+  void initExtensionDocument(in nsISupports extension, in nsIDOMDocument doc);
 };

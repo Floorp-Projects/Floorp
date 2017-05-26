@@ -75,6 +75,8 @@ public:
   void BaseCSP(nsAString& aDefaultCSP) const;
   void DefaultCSP(nsAString& aDefaultCSP) const;
 
+  bool IsExtensionProcess() const;
+
 protected:
   virtual ~ExtensionPolicyService() = default;
 
@@ -94,6 +96,8 @@ private:
   nsRefPtrHashtable<nsCStringHashKey, WebExtensionPolicy> mExtensionHosts;
 
   nsCOMPtr<nsIObserverService> mObs;
+
+  static bool sRemoteExtensions;
 };
 
 } // namespace mozilla
