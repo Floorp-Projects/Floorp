@@ -152,7 +152,7 @@
     "el": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "skroutz", "twitter", "wikipedia-el"
+          "google", "yahoo", "bing", "skroutz", "twitter", "wikipedia-el"
         ]
       }
     },
