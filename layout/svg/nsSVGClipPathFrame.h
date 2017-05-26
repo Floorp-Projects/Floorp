@@ -25,7 +25,7 @@ class nsSVGClipPathFrame final : public nsSVGContainerFrame
 
 protected:
   explicit nsSVGClipPathFrame(nsStyleContext* aContext)
-    : nsSVGContainerFrame(aContext, kClassID, mozilla::LayoutFrameType::SVGClipPath)
+    : nsSVGContainerFrame(aContext, kClassID)
     , mIsBeingProcessed(false)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);

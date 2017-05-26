@@ -21,7 +21,7 @@ class SVGFEContainerFrame : public nsContainerFrame
   NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit SVGFEContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, kClassID, mozilla::LayoutFrameType::SVGFEContainer)
+    : nsContainerFrame(aContext, kClassID)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }

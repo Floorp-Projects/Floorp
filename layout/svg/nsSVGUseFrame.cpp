@@ -21,7 +21,7 @@ class nsSVGUseFrame final
 
 protected:
   explicit nsSVGUseFrame(nsStyleContext* aContext)
-    : nsSVGGFrame(aContext, kClassID, LayoutFrameType::SVGUse)
+    : nsSVGGFrame(aContext, kClassID)
     , mHasValidDimensions(true)
   {}
 

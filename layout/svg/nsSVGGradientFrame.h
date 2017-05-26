@@ -40,7 +40,7 @@ class nsSVGGradientFrame : public nsSVGPaintServerFrame
   typedef mozilla::gfx::ExtendMode ExtendMode;
 
 protected:
-  nsSVGGradientFrame(nsStyleContext* aContext, ClassID aID, mozilla::LayoutFrameType aType);
+  nsSVGGradientFrame(nsStyleContext* aContext, ClassID aID);
 
 public:
   NS_DECL_ABSTRACT_FRAME(nsSVGGradientFrame)
@@ -127,7 +127,7 @@ class nsSVGLinearGradientFrame : public nsSVGGradientFrame
                                                 nsStyleContext* aContext);
 protected:
   explicit nsSVGLinearGradientFrame(nsStyleContext* aContext)
-    : nsSVGGradientFrame(aContext, kClassID, mozilla::LayoutFrameType::SVGLinearGradient)
+    : nsSVGGradientFrame(aContext, kClassID)
   {}
 
 public:
@@ -169,7 +169,7 @@ class nsSVGRadialGradientFrame : public nsSVGGradientFrame
                                                 nsStyleContext* aContext);
 protected:
   explicit nsSVGRadialGradientFrame(nsStyleContext* aContext)
-    : nsSVGGradientFrame(aContext, kClassID, mozilla::LayoutFrameType::SVGRadialGradient)
+    : nsSVGGradientFrame(aContext, kClassID)
   {}
 
 public:

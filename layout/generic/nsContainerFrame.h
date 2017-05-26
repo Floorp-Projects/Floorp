@@ -534,8 +534,8 @@ public:
 #endif
 
 protected:
-  nsContainerFrame(nsStyleContext* aContext, ClassID aID, mozilla::LayoutFrameType aType)
-    : nsSplittableFrame(aContext, aID, aType)
+  nsContainerFrame(nsStyleContext* aContext, ClassID aID)
+    : nsSplittableFrame(aContext, aID)
   {}
 
   ~nsContainerFrame();

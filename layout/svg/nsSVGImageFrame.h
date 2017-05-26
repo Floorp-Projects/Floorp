@@ -59,7 +59,7 @@ class nsSVGImageFrame final
 
 protected:
   explicit nsSVGImageFrame(nsStyleContext* aContext)
-    : SVGGeometryFrame(aContext, kClassID, LayoutFrameType::SVGImage)
+    : SVGGeometryFrame(aContext, kClassID)
     , mReflowCallbackPosted(false)
     , mForceSyncDecoding(false)
   {

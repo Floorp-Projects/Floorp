@@ -138,18 +138,6 @@ public:
 
   virtual bool HonorPrintBackgroundSettings() override;
 
-  virtual ~nsBoxFrame();
-
-  explicit nsBoxFrame(nsStyleContext* aContext,
-                      ClassID aID = kClassID,
-                      bool aIsRoot = false,
-                      nsBoxLayout* aLayoutManager = nullptr)
-    : nsBoxFrame(aContext, aID,
-                 mozilla::LayoutFrameType::Box,
-                 aIsRoot,
-                 aLayoutManager)
-  {}
-
   // virtual so nsStackFrame, nsButtonBoxFrame, nsSliderFrame and nsMenuFrame
   // can override it
   virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
@@ -183,12 +171,13 @@ public:
    */
   virtual bool SupportsOrdinalsInChildren();
 
+private:
+  explicit nsBoxFrame(nsStyleContext* aContext)
+    : nsBoxFrame(aContext, kClassID, false, nullptr) {}
 protected:
-  nsBoxFrame(nsStyleContext* aContext,
-             ClassID aID,
-             mozilla::LayoutFrameType aType,
-             bool aIsRoot = false,
+  nsBoxFrame(nsStyleContext* aContext, ClassID aID, bool aIsRoot = false,
              nsBoxLayout* aLayoutManager = nullptr);
+  virtual ~nsBoxFrame();
 
 #ifdef DEBUG_LAYOUT
     virtual void GetBoxName(nsAutoString& aName) override;

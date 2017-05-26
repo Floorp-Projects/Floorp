@@ -1060,12 +1060,11 @@ public:
 
 protected:
   nsHTMLScrollFrame(nsStyleContext* aContext, bool aIsRoot)
-    : nsHTMLScrollFrame(aContext, kClassID, mozilla::LayoutFrameType::Scroll, aIsRoot)
+    : nsHTMLScrollFrame(aContext, kClassID, aIsRoot)
   {}
 
   nsHTMLScrollFrame(nsStyleContext* aContext,
                     nsIFrame::ClassID aID,
-                    mozilla::LayoutFrameType aType,
                     bool aIsRoot);
   void SetSuppressScrollbarUpdate(bool aSuppress) {
     mHelper.mSupppressScrollbarUpdate = aSuppress;
@@ -1112,7 +1111,7 @@ public:
   typedef mozilla::CSSIntPoint CSSIntPoint;
 
   NS_DECL_QUERYFRAME
-    NS_DECL_FRAMEARENA_HELPERS(nsXULScrollFrame)
+  NS_DECL_FRAMEARENA_HELPERS(nsXULScrollFrame)
 
   friend nsXULScrollFrame* NS_NewXULScrollFrame(nsIPresShell* aPresShell,
                                                 nsStyleContext* aContext,

@@ -56,7 +56,7 @@ protected:
                                  nsStyleContext* aContext);
 
   explicit nsRubyTextContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, kClassID, mozilla::LayoutFrameType::RubyTextContainer)
+    : nsContainerFrame(aContext, kClassID)
     , mISize(0)
   {}
 

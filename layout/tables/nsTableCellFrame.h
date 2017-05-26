@@ -37,6 +37,13 @@ class nsTableCellFrame : public nsContainerFrame,
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::image::DrawResult DrawResult;
 
+  friend nsTableCellFrame* NS_NewTableCellFrame(nsIPresShell*   aPresShell,
+                                                nsStyleContext* aContext,
+                                                nsTableFrame* aTableFrame);
+
+  nsTableCellFrame(nsStyleContext* aContext, nsTableFrame* aTableFrame)
+    : nsTableCellFrame(aContext, aTableFrame, kClassID) {}
+
 protected:
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::LogicalSide LogicalSide;
@@ -45,16 +52,6 @@ protected:
 public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsTableCellFrame)
-
-  // default constructor supplied by the compiler
-
-  nsTableCellFrame(nsStyleContext* aContext, nsTableFrame* aTableFrame,
-                   ClassID aID = kClassID)
-    : nsTableCellFrame(aContext, aTableFrame, aID,
-                       mozilla::LayoutFrameType::TableCell)
-  {}
-
-  ~nsTableCellFrame();
 
   nsTableRowFrame* GetTableRowFrame() const
   {
@@ -232,10 +229,9 @@ public:
   virtual void InvalidateFrameForRemoval() override { InvalidateFrameSubtree(); }
 
 protected:
-  nsTableCellFrame(nsStyleContext* aContext,
-                   nsTableFrame* aTableFrame,
-                   ClassID aID,
-                   mozilla::LayoutFrameType aType);
+  nsTableCellFrame(nsStyleContext* aContext, nsTableFrame* aTableFrame,
+                   ClassID aID);
+  ~nsTableCellFrame();
 
   virtual LogicalSides
   GetLogicalSkipSides(const ReflowInput* aReflowInput = nullptr) const override;
