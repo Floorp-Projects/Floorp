@@ -6,14 +6,13 @@
 
 package org.mozilla.gecko.mma;
 
-import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 
 
 public class MmaStubImp implements MmaInterface {
     @Override
-    public void init(Activity activity) {
+    public void init(Application application) {
 
     }
 
@@ -29,11 +28,6 @@ public class MmaStubImp implements MmaInterface {
 
     @Override
     public void track(String leanplumEvent, double value) {
-
-    }
-
-    @Override
-    public void stop() {
 
     }
 }
