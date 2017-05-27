@@ -220,8 +220,6 @@ static void     theme_changed_cb          (GtkSettings *settings,
                                            nsWindow *data);
 static void     check_resize_cb           (GtkContainer* container,
                                            gpointer user_data);
-static void     composited_changed_cb     (GtkWidget* widget,
-                                           gpointer user_data);
 
 #if (MOZ_WIDGET_GTK == 3)
 static void     scale_changed_cb          (GtkWidget* widget,
@@ -3372,19 +3370,6 @@ nsWindow::OnCheckResize()
 }
 
 void
-nsWindow::OnCompositedChanged()
-{
-  if (mWidgetListener) {
-    nsIPresShell* presShell = mWidgetListener->GetPresShell();
-    if (presShell) {
-      // Update CSD after the change in alpha visibility
-      presShell->ThemeChanged();
-    }
-  }
-  CleanLayerManagerRecursive();
-}
-
-void
 nsWindow::DispatchDragEvent(EventMessage aMsg, const LayoutDeviceIntPoint& aRefPoint,
                             guint aTime)
 {
@@ -3619,31 +3604,6 @@ nsWindow::Create(nsIWidget* aParent,
               GTK_WINDOW_TOPLEVEL : GTK_WINDOW_POPUP;
         mShell = gtk_window_new(type);
 
-        bool useAlphaVisual = (mWindowType == eWindowType_popup &&
-                               aInitData->mSupportTranslucency);
-
-        // mozilla.widget.use-argb-visuals is a hidden pref defaulting to false
-        // to allow experimentation
-        if (Preferences::GetBool("mozilla.widget.use-argb-visuals", false))
-            useAlphaVisual = true;
-
-        // We need to select an ARGB visual here instead of in
-        // SetTransparencyMode() because it has to be done before the
-        // widget is realized.  An ARGB visual is only useful if we
-        // are on a compositing window manager.
-        if (useAlphaVisual) {
-            GdkScreen *screen = gtk_widget_get_screen(mShell);
-            if (gdk_screen_is_composited(screen)) {
-#if (MOZ_WIDGET_GTK == 2)
-                GdkColormap *colormap = gdk_screen_get_rgba_colormap(screen);
-                gtk_widget_set_colormap(mShell, colormap);
-#else
-                GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
-                gtk_widget_set_visual(mShell, visual);
-#endif
-            }
-        }
-
         // We only move a general managed toplevel window if someone has
         // actually placed the window somewhere.  If no placement has taken
         // place, we just let the window manager Do The Right Thing.
@@ -3667,6 +3627,23 @@ nsWindow::Create(nsIWidget* aParent,
             gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup",
                                    gdk_get_program_class());
 
+            if (aInitData->mSupportTranslucency) {
+                // We need to select an ARGB visual here instead of in
+                // SetTransparencyMode() because it has to be done before the
+                // widget is realized.  An ARGB visual is only useful if we
+                // are on a compositing window manager.
+                GdkScreen *screen = gtk_widget_get_screen(mShell);
+                if (gdk_screen_is_composited(screen)) {
+#if (MOZ_WIDGET_GTK == 2)
+                    GdkColormap *colormap =
+                        gdk_screen_get_rgba_colormap(screen);
+                    gtk_widget_set_colormap(mShell, colormap);
+#else
+                    GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
+                    gtk_widget_set_visual(mShell, visual);
+#endif
+                }
+            }
             if (aInitData->mNoAutoHide) {
                 // ... but the window manager does not decorate this window,
                 // nor provide a separate taskbar icon.
@@ -3852,8 +3829,6 @@ nsWindow::Create(nsIWidget* aParent,
                          G_CALLBACK(window_state_event_cb), nullptr);
         g_signal_connect(mShell, "check-resize",
                          G_CALLBACK(check_resize_cb), nullptr);
-        g_signal_connect(mShell, "composited-changed",
-                         G_CALLBACK(composited_changed_cb), nullptr);
 
         GtkSettings* default_settings = gtk_settings_get_default();
         g_signal_connect_after(default_settings,
@@ -4369,33 +4344,6 @@ nsWindow::GetTransparencyMode()
 
     return mIsTransparent ? eTransparencyTransparent : eTransparencyOpaque;
 }
-
-#if (MOZ_WIDGET_GTK >= 3)
-void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion)
-{
-    // Available as of GTK 3.10+
-    static auto sGdkWindowSetOpaqueRegion =
-        (void (*)(GdkWindow*, cairo_region_t*))
-            dlsym(RTLD_DEFAULT, "gdk_window_set_opaque_region");
-
-    if (sGdkWindowSetOpaqueRegion && mGdkWindow &&
-        gdk_window_get_window_type(mGdkWindow) == GDK_WINDOW_TOPLEVEL) {
-        if (aOpaqueRegion.IsEmpty()) {
-            (*sGdkWindowSetOpaqueRegion)(mGdkWindow, nullptr);
-        } else {
-            cairo_region_t *region = cairo_region_create();
-            for (auto iter = aOpaqueRegion.RectIter(); !iter.Done();
-                 iter.Next()) {
-                const LayoutDeviceIntRect &r = iter.Get();
-                cairo_rectangle_int_t rect = { r.x, r.y, r.width, r.height };
-                cairo_region_union_rectangle(region, &rect);
-            }
-            (*sGdkWindowSetOpaqueRegion)(mGdkWindow, region);
-            cairo_region_destroy(region);
-        }
-    }
-}
-#endif
 
 nsresult
 nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
@@ -5888,16 +5836,6 @@ check_resize_cb (GtkContainer* container, gpointer user_data)
     window->OnCheckResize();
 }
 
-static void
-composited_changed_cb (GtkWidget* widget, gpointer user_data)
-{
-    RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
-    if (!window) {
-      return;
-    }
-    window->OnCompositedChanged();
-}
-
 #if (MOZ_WIDGET_GTK == 3)
 static void
 scale_changed_cb (GtkWidget* widget, GParamSpec* aPSpec, gpointer aPointer)
@@ -6498,10 +6436,7 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
       // during shutdown. Just return what we currently have, which is most likely null.
       return mLayerManager;
     }
-
-    if (!mLayerManager && !IsComposited() &&
-        eTransparencyTransparent == GetTransparencyMode())
-    {
+    if (!mLayerManager && eTransparencyTransparent == GetTransparencyMode()) {
         mLayerManager = CreateBasicLayerManager();
     }
 
@@ -6809,18 +6744,4 @@ void nsWindow::GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInit
                                   nsCString(XDisplayString(mXDisplay)),
                                   GetClientSize());
   #endif
-}
-
-bool
-nsWindow::IsComposited() const
-{
-  if (!mGdkWindow) {
-    NS_WARNING("nsWindow::HasARGBVisual called before realization!");
-    return false;
-  }
-
-  GdkScreen* gdkScreen = gdk_screen_get_default();
-  return gdk_screen_is_composited(gdkScreen) &&
-         (gdk_window_get_visual(mGdkWindow)
-            == gdk_screen_get_rgba_visual(gdkScreen));
 }
