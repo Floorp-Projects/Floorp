@@ -104,6 +104,7 @@ class AnonymousCounterStyle final : public CounterStyle
 {
 public:
   explicit AnonymousCounterStyle(const nsSubstring& aContent);
+  AnonymousCounterStyle(uint8_t aSystem, nsTArray<nsString> aSymbols);
   explicit AnonymousCounterStyle(const nsCSSValue::Array* aValue);
 
   virtual void GetStyleName(nsAString& aResult) override;
