@@ -78,9 +78,9 @@ namespace %(namespace)s {
 } // js
 """
 
-def embed(cxx, preprocessorOption, msgs, sources, c_out, js_out, namespace, env):
+def embed(cxx, preprocessorOption, cppflags, msgs, sources, c_out, js_out, namespace, env):
   combinedSources = '\n'.join([msgs] + ['#include "%(s)s"' % { 's': source } for source in sources])
-  args = ['-D%(k)s=%(v)s' % { 'k': k, 'v': env[k] } for k in env]
+  args = cppflags + ['-D%(k)s=%(v)s' % { 'k': k, 'v': env[k] } for k in env]
   preprocessed = preprocess(cxx, preprocessorOption, combinedSources, args)
   processed = '\n'.join([line for line in preprocessed.splitlines() if \
                          (line.strip() and not line.startswith('#'))])
@@ -143,12 +143,14 @@ def process_inputs(namespace, c_out, msg_file, inputs):
   sources = [path for path in inputs if path.endswith(".js") and not path.endswith(".h.js")]
   assert len(deps) + len(sources) == len(inputs)
   cxx = shlex.split(buildconfig.substs['CXX'])
-  cxx_option = buildconfig.substs['PREPROCESS_OPTION']
+  pp_option = buildconfig.substs['PREPROCESS_OPTION']
+  cppflags = shlex.split(buildconfig.substs['OS_CPPFLAGS'])
+  cppflags += shlex.split(buildconfig.substs['WARNINGS_AS_ERRORS'])
   env = get_config_defines(buildconfig)
   js_path = re.sub(r"\.out\.h$", "", c_out.name) + ".js"
   msgs = messages(msg_file)
   with open(js_path, 'w') as js_out:
-    embed(cxx, cxx_option, msgs, sources, c_out, js_out, namespace, env)
+    embed(cxx, pp_option, cppflags, msgs, sources, c_out, js_out, namespace, env)
 
 def generate_selfhosted(c_out, msg_file, *inputs):
   # Called from moz.build to embed selfhosted JS.

@@ -973,8 +973,7 @@ case "$target" in
         CFLAGS="$CFLAGS -W3 -Gy -Zc:inline"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Zc:inline"
         if test -z "$CLANG_CL"; then
-            CFLAGS="$CFLAGS -utf-8"
-            CXXFLAGS="$CXXFLAGS -utf-8"
+            CPPFLAGS="$CPPFLAGS -utf-8"
         fi
         if test "$CPU_ARCH" = "x86"; then
             dnl VS2012+ defaults to -arch:SSE2. We want to target nothing
