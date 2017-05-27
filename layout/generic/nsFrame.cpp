@@ -1013,6 +1013,8 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
   RemoveStateBits(NS_FRAME_SIMPLE_EVENT_REGIONS |
                   NS_FRAME_SIMPLE_DISPLAYLIST);
+
+  mMayHaveRoundedCorners = true;
 }
 
 void
@@ -1587,6 +1589,11 @@ nsIFrame::OutsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets)
 nsIFrame::GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
                          Sides aSkipSides, nscoord aRadii[8]) const
 {
+  if (!mMayHaveRoundedCorners) {
+    memset(aRadii, 0, sizeof(nscoord) * 8);
+    return false;
+  }
+
   if (IsThemed()) {
     // When we're themed, the native theme code draws the border and
     // background, and therefore it doesn't make sense to tell other
@@ -1600,9 +1607,12 @@ nsIFrame::GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
     }
     return false;
   }
-  return ComputeBorderRadii(StyleBorder()->mBorderRadius,
-                            aFrameSize, aBorderArea,
-                            aSkipSides, aRadii);
+
+  const_cast<nsIFrame*>(this)->mMayHaveRoundedCorners =
+    ComputeBorderRadii(StyleBorder()->mBorderRadius,
+                       aFrameSize, aBorderArea,
+                       aSkipSides, aRadii);
+  return mMayHaveRoundedCorners;
 }
 
 bool

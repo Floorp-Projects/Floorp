@@ -616,6 +616,7 @@ public:
     , mPrevSibling(nullptr)
     , mState(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY)
     , mClass(aID)
+    , mMayHaveRoundedCorners(false)
   {
     mozilla::PodZero(&mOverflow);
   }
@@ -3920,6 +3921,9 @@ protected:
 
   /** The ClassID of the concrete class of this instance. */
   ClassID mClass; // 1 byte
+
+  bool mMayHaveRoundedCorners : 1;
+  // There should be a 15-bit gap left here.
 
   // Helpers
   /**
