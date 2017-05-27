@@ -370,11 +370,11 @@ public:
   double LastModifiedTime() { return GetNumber("lastModifiedTime"); }
 
 
-  already_AddRefed<nsIFile> FullPath();
+  Result<nsCOMPtr<nsIFile>, nsresult> FullPath();
 
   NSLocationType LocationType();
 
-  bool UpdateLastModifiedTime();
+  Result<bool, nsresult> UpdateLastModifiedTime();
 
 
 private:
@@ -382,7 +382,7 @@ private:
   InstallLocation& mLocation;
 };
 
-already_AddRefed<nsIFile>
+Result<nsCOMPtr<nsIFile>, nsresult>
 Addon::FullPath()
 {
   nsString path = Path();
@@ -390,15 +390,14 @@ Addon::FullPath()
   // First check for an absolute path, in case we have a proxy file.
   nsCOMPtr<nsIFile> file;
   if (NS_SUCCEEDED(NS_NewLocalFile(path, false, getter_AddRefs(file)))) {
-    return file.forget();
+    return Move(file);
   }
 
   // If not an absolute path, fall back to a relative path from the location.
-  NS_NewLocalFile(mLocation.Path(), false, getter_AddRefs(file));
-  MOZ_RELEASE_ASSERT(file);
+  NS_TRY(NS_NewLocalFile(mLocation.Path(), false, getter_AddRefs(file)));
 
-  file->AppendRelativePath(path);
-  return file.forget();
+  NS_TRY(file->AppendRelativePath(path));
+  return Move(file);
 }
 
 NSLocationType
@@ -411,10 +410,11 @@ Addon::LocationType()
   return NS_EXTENSION_LOCATION;
 }
 
-bool
+Result<bool, nsresult>
 Addon::UpdateLastModifiedTime()
 {
-  nsCOMPtr<nsIFile> file = FullPath();
+  nsCOMPtr<nsIFile> file;
+  MOZ_TRY_VAR(file, FullPath());
 
   bool result;
   if (NS_FAILED(file->Exists(&result)) || !result) {
@@ -482,15 +482,14 @@ EnableShims(const nsAString& addonId)
   Unused << xpc::AllowCPOWsInAddon(id, true);
 }
 
-void
+Result<Ok, nsresult>
 AddonManagerStartup::AddInstallLocation(Addon& addon)
 {
-  nsCOMPtr<nsIFile> file = addon.FullPath();
+  nsCOMPtr<nsIFile> file;
+  MOZ_TRY_VAR(file, addon.FullPath());
 
   nsString path;
-  if (NS_FAILED(file->GetPath(path))) {
-    return;
-  }
+  NS_TRY(file->GetPath(path));
 
   auto type = addon.LocationType();
 
@@ -506,6 +505,7 @@ AddonManagerStartup::AddInstallLocation(Addon& addon)
     nsCOMPtr<nsIFile> manifest = CloneAndAppend(file, "chrome.manifest");
     XRE_AddManifestLocation(type, manifest);
   }
+  return Ok();
 }
 
 nsresult
@@ -540,8 +540,12 @@ AddonManagerStartup::ReadStartupData(JSContext* cx, JS::MutableHandleValue locat
     for (auto e2 : loc.Addons()) {
       Addon addon(e2);
 
-      if (addon.Enabled() && addon.UpdateLastModifiedTime()) {
-        loc.SetChanged(true);
+      if (addon.Enabled()) {
+        bool changed;
+        MOZ_TRY_VAR(changed, addon.UpdateLastModifiedTime());
+        if (changed) {
+          loc.SetChanged(true);
+        }
       }
     }
   }
@@ -571,7 +575,7 @@ AddonManagerStartup::InitializeExtensions(JS::HandleValue locations, JSContext* 
       Addon addon(e2);
 
       if (addon.Enabled() && !addon.Bootstrapped()) {
-        AddInstallLocation(addon);
+        Unused << AddInstallLocation(addon);
 
         if (enableInterpositions && addon.ShimsEnabled()) {
           EnableShims(addon.Id());
