@@ -344,6 +344,7 @@ structs-types = [
     "TraversalRestyleBehavior",
     "TraversalRootBehavior",
     "ComputedTimingFunction_BeforeFlag",
+    "CounterStylePtr",
     "FontFamilyList",
     "FontFamilyType",
     "FontSizePrefs",
