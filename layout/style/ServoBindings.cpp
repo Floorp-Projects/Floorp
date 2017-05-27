@@ -1159,15 +1159,15 @@ Gecko_CopyImageOrientationFrom(nsStyleVisibility* aDst,
 }
 
 void
-Gecko_SetListStyleType(nsStyleList* aList, nsIAtom* aName)
+Gecko_SetCounterStyleToName(CounterStylePtr* aPtr, nsIAtom* aName)
 {
-  aList->SetListStyleType(aName);
+  *aPtr = already_AddRefed<nsIAtom>(aName);
 }
 
 void
-Gecko_CopyListStyleTypeFrom(nsStyleList* aDst, const nsStyleList* aSrc)
+Gecko_CopyCounterStyle(CounterStylePtr* aDst, const CounterStylePtr* aSrc)
 {
-  aDst->CopyListStyleTypeFrom(*aSrc);
+  *aDst = *aSrc;
 }
 
 already_AddRefed<css::URLValue>
