@@ -10,8 +10,8 @@ var Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = [ "AboutHomeUtils", "AboutHome" ];
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
@@ -149,12 +149,8 @@ var AboutHome = {
         this.sendAboutHomeData(aMessage.target);
         break;
 
-      case "AboutHome:MaybeShowMigrateMessage":
-        AutoMigrate.shouldShowMigratePrompt(aMessage.target).then((prompt) => {
-          if (prompt) {
-            AutoMigrate.showUndoNotificationBar(aMessage.target);
-          }
-        });
+      case "AboutHome:MaybeShowAutoMigrationUndoNotification":
+        AutoMigrate.maybeShowUndoNotification(aMessage.target);
         break;
     }
   },
