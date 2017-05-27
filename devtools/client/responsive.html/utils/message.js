@@ -4,23 +4,19 @@
 
 "use strict";
 
-const promise = require("promise");
-
 const REQUEST_DONE_SUFFIX = ":done";
 
 function wait(win, type) {
-  let deferred = promise.defer();
-
-  let onMessage = event => {
-    if (event.data.type !== type) {
-      return;
-    }
-    win.removeEventListener("message", onMessage);
-    deferred.resolve();
-  };
-  win.addEventListener("message", onMessage);
-
-  return deferred.promise;
+  return new Promise(resolve => {
+    let onMessage = event => {
+      if (event.data.type !== type) {
+        return;
+      }
+      win.removeEventListener("message", onMessage);
+      resolve();
+    };
+    win.addEventListener("message", onMessage);
+  });
 }
 
 /**
