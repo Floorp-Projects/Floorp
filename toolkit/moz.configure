@@ -1090,3 +1090,35 @@ def marionette(value):
         return True
 
 set_config('ENABLE_MARIONETTE', marionette)
+
+# geckodriver WebDriver implementation
+# ==============================================================
+option('--enable-geckodriver', help='Enable WebDriver implementation')
+
+@depends('--enable-geckodriver',
+         'MOZ_AUTOMATION',
+         compile_environment,
+         cross_compiling,
+         hazard_analysis,
+         target)
+def geckodriver(enable, automation, compile_env, cross_compile, hazard, target):
+    """
+    geckodriver is implied on supported platforms when MOZ_AUTOMATION
+    is set, but we also provide the --enable-geckodriver option for
+    developers to use.
+
+    At the present time, we want individual developers to be able to
+    opt-in to building geckodriver locally, and for it to be enabled by
+    default on supported CI build platforms.
+    """
+    if enable:
+        return True
+
+    if enable.origin == 'default':
+        linux32 = target.kernel == 'Linux' and target.cpu == 'x86'
+        broken_platforms = cross_compile or linux32 or hazard
+
+        if automation and compile_env and not broken_platforms:
+            return True
+
+set_config('ENABLE_GECKODRIVER', geckodriver)
