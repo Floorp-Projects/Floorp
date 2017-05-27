@@ -888,15 +888,11 @@ var BrowserApp = {
       }
     });
 
-
     NativeWindow.contextmenus.add(stringGetter("contextmenu.saveImage"),
       NativeWindow.contextmenus.imageSaveableContext,
       function(aTarget) {
         UITelemetry.addEvent("action.1", "contextmenu", null, "web_save_image");
         UITelemetry.addEvent("save.1", "contextmenu", null, "image");
-        WindowEventDispatcher.sendRequest({
-          type: "Mma:web_save_image",
-        });
 
         RuntimePermissions.waitForPermissions(RuntimePermissions.WRITE_EXTERNAL_STORAGE).then(function(permissionGranted) {
             if (!permissionGranted) {
@@ -942,9 +938,6 @@ var BrowserApp = {
       function(aTarget) {
         UITelemetry.addEvent("action.1", "contextmenu", null, "web_save_media");
         UITelemetry.addEvent("save.1", "contextmenu", null, "media");
-        WindowEventDispatcher.sendRequest({
-          type: "Mma:web_save_media",
-        });
 
         let url = aTarget.currentSrc || aTarget.src;
 
