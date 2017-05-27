@@ -81,7 +81,7 @@ private:
 
   static nsRect GetPreEffectsVisualOverflowRect(nsIFrame* aFrame,
                                                 bool aInReflow) {
-    nsRect* r = aFrame->Properties().Get(nsIFrame::PreEffectsBBoxProperty());
+    nsRect* r = aFrame->GetProperty(nsIFrame::PreEffectsBBoxProperty());
     if (r) {
       return *r;
     }
@@ -98,7 +98,7 @@ private:
     // continuations are not set correctly while reflowing.
     if (nsSVGIntegrationUtils::UsingEffectsForFrame(aFrame) && !aInReflow) {
       nsOverflowAreas* preTransformOverflows =
-        aFrame->Properties().Get(aFrame->PreTransformOverflowAreasProperty());
+        aFrame->GetProperty(aFrame->PreTransformOverflowAreasProperty());
 
       MOZ_ASSERT(!preTransformOverflows,
                  "GetVisualOverflowRect() won't return the pre-effects rect!");
