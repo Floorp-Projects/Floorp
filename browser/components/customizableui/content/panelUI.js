@@ -541,6 +541,9 @@ const PanelUI = {
       this.navbar.setAttribute("nonemptyoverflow", "true");
       this.overflowPanel.setAttribute("hasfixeditems", "true");
     } else if (!hasKids && this.navbar.hasAttribute("nonemptyoverflow")) {
+      if (this.overflowPanel.state != "closed") {
+        this.overflowPanel.hidePopup();
+      }
       this.overflowPanel.removeAttribute("hasfixeditems");
       this.navbar.removeAttribute("nonemptyoverflow");
     }
