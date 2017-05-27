@@ -17,8 +17,8 @@ To enable Stylo in your builds, paste the lines between the chevrons
 <<<
 ac_add_options --enable-stylo
 
-ac_add_options --with-libclang-path={state_dir}/clang/bin
-ac_add_options --with-clang-path={state_dir}/clang/bin/clang.exe
+ac_add_options --with-libclang-path="{state_dir}/clang/bin"
+ac_add_options --with-clang-path="{state_dir}/clang/bin/clang.exe"
 >>>
 '''
 
