@@ -470,5 +470,5 @@ function getViewsForFolder(aFolderId) {
     case PlacesUtils.unfiledBookmarksFolderId:
       return ["sidebar"]
   }
-  return new Array();
+  return [];
 }
