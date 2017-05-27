@@ -53,9 +53,8 @@ to mochitest command.
   * test_transitions_and_reframes.html `pseudo-element`: bug 1366422 [4]
   * Events:
     * test_animations_event_order.html [2]
-* symbols() function and string value on list-style-type bug 1363596
-  * test_value_storage.html `symbols(` [30]
-  * ... `list-style-type` [8]
+* string value on list-style-type bug 1363596
+  * test_value_storage.html `list-style-type` [8]
   * ... `'list-style'` [18]
 * Unimplemented \@font-face descriptors:
   * test_font_face_parser.html `font-language-override`: bug 1355364 [8]

@@ -1165,6 +1165,18 @@ Gecko_SetCounterStyleToName(CounterStylePtr* aPtr, nsIAtom* aName)
 }
 
 void
+Gecko_SetCounterStyleToSymbols(CounterStylePtr* aPtr, uint8_t aSymbolsType,
+                               nsACString const* const* aSymbols,
+                               uint32_t aSymbolsCount)
+{
+  nsTArray<nsString> symbols(aSymbolsCount);
+  for (uint32_t i = 0; i < aSymbolsCount; i++) {
+    symbols.AppendElement(NS_ConvertUTF8toUTF16(*aSymbols[i]));
+  }
+  *aPtr = new AnonymousCounterStyle(aSymbolsType, Move(symbols));
+}
+
+void
 Gecko_CopyCounterStyle(CounterStylePtr* aDst, const CounterStylePtr* aSrc)
 {
   *aDst = *aSrc;
