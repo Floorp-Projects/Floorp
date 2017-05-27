@@ -1345,7 +1345,7 @@
             return;
           }
 
-          if (!window.fullScreen || isTabEmpty(newTab)) {
+          if (!window.fullScreen || isTabEmpty(this.mCurrentTab)) {
             focusAndSelectUrlBar();
             return;
           }
