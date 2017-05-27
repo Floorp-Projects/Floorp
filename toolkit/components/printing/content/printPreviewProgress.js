@@ -88,7 +88,7 @@ function onLoad() {
   }
 
   dialog         = {};
-  dialog.strings = new Array;
+  dialog.strings = [];
   dialog.title   = document.getElementById("dialog.title");
   dialog.titleLabel = document.getElementById("dialog.titleLabel");
 

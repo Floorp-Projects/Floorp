@@ -333,8 +333,8 @@ var PopupBlocking = {
 
   onPopupBlocked(ev) {
     if (!this.popupData) {
-      this.popupData = new Array();
-      this.popupDataInternal = new Array();
+      this.popupData = [];
+      this.popupDataInternal = [];
     }
 
     let obj = {
@@ -1098,7 +1098,7 @@ var ViewSelectionSource = {
     var p = n.parentNode;
     if (n == ancestor || !p)
       return null;
-    var path = new Array();
+    var path = [];
     if (!path)
       return null;
     do {

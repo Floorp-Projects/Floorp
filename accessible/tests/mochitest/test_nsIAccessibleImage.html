@@ -113,12 +113,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
       testThis("nonLinkedImage", "moz.png", 89, 38);
 
       // Test linked image
-      var actionNamesArray = new Array("jump");
+      var actionNamesArray = ["jump"];
       testThis("linkedImage", "moz.png", 89, 38, 1,
                actionNamesArray);
 
       // Image with long desc
-      var actionNamesArray = new Array("showlongdesc");
+      var actionNamesArray = ["showlongdesc"];
       testThis("longdesc", "moz.png", 89, 38, 1,
                actionNamesArray);
 
@@ -127,25 +127,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
 
       // Image with click and long desc
       actionNamesArray = null;
-      actionNamesArray = new Array("click", "showlongdesc");
+      actionNamesArray = ["click", "showlongdesc"];
       testThis("clickAndLongdesc", "moz.png",
                89, 38, 2, actionNamesArray);
-      
+
       // Image with click
       actionNamesArray = null;
-      actionNamesArray = new Array("click");
+      actionNamesArray = ["click"];
       testThis("click", "moz.png",
                89, 38, 1, actionNamesArray);
-      
+
       // Image with long desc
       actionNamesArray = null;
-      actionNamesArray = new Array("showlongdesc");
+      actionNamesArray = ["showlongdesc"];
       testThis("longdesc2", "moz.png",
                89, 38, 1, actionNamesArray);
 
       // Image described by HTML:a@href with whitespaces
       actionNamesArray = null;
-      actionNamesArray = new Array("showlongdesc");
+      actionNamesArray = ["showlongdesc"];
       testThis("longdesc3", "moz.png",
                89, 38, 1, actionNamesArray);
 
