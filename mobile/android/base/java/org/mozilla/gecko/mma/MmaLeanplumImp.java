@@ -7,16 +7,14 @@
 package org.mozilla.gecko.mma;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.net.Uri;
-import android.text.TextUtils;
 
 import com.leanplum.Leanplum;
 import com.leanplum.LeanplumActivityHelper;
+import com.leanplum.annotations.Parser;
 
+import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.MmaConstants;
 import org.mozilla.gecko.util.ContextUtils;
@@ -24,15 +22,10 @@ import org.mozilla.gecko.util.ContextUtils;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.mozilla.gecko.mma.MmaDelegate.LAUNCH_BUT_NOT_DEFAULT_BROWSER;
-
 
 public class MmaLeanplumImp implements MmaInterface {
     @Override
-    public void init(final Activity activity) {
-        if (activity == null) {
-            return;
-        }
+    public void init(Activity activity) {
         Leanplum.setApplicationContext(activity.getApplicationContext());
 
         LeanplumActivityHelper.enableLifecycleCallbacks(activity.getApplication());
@@ -43,6 +36,7 @@ public class MmaLeanplumImp implements MmaInterface {
             Leanplum.setAppIdForDevelopmentMode(MmaConstants.MOZ_LEANPLUM_SDK_CLIENTID, MmaConstants.MOZ_LEANPLUM_SDK_KEY);
         }
 
+
         Map<String, Object> attributes = new HashMap<>();
         boolean installedFocus = ContextUtils.isPackageInstalled(activity, "org.mozilla.focus");
         boolean installedKlar = ContextUtils.isPackageInstalled(activity, "org.mozilla.klar");
@@ -50,26 +44,10 @@ public class MmaLeanplumImp implements MmaInterface {
             attributes.put("focus", "installed");
         }
         Leanplum.start(activity, attributes);
-        if (!isDefaultBrowser(activity)) {
-            Leanplum.track(LAUNCH_BUT_NOT_DEFAULT_BROWSER);
-        }
-
-
+        Leanplum.track("Launch");
         // this is special to Leanplum. Since we defer LeanplumActivityHelper's onResume call till
-        // switchboard completes loading. We miss the call to LeanplumActivityHelper.onResume.
-        // So I manually call it here.
-        //
-        // There's a risk that if this is called after activity's onPause(Although I've
-        // tested it's seems okay). We  should require their SDK to separate activity call back with
-        // SDK initialization and Activity lifecycle in the future.
-        //
-        // I put it under runOnUiThread because in current Leanplum's SDK design, this should be run in main thread.
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                LeanplumActivityHelper.onResume(activity);
-            }
-        });
+        // switchboard completes loading, we manually call it here.
+        LeanplumActivityHelper.onResume(activity);
     }
 
     @Override
@@ -92,17 +70,5 @@ public class MmaLeanplumImp implements MmaInterface {
     @Override
     public void stop() {
         Leanplum.stop();
-    }
-
-    private boolean isDefaultBrowser(Context context) {
-        final Intent viewIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.mozilla.org"));
-        final ResolveInfo info = context.getPackageManager().resolveActivity(viewIntent, PackageManager.MATCH_DEFAULT_ONLY);
-        if (info == null) {
-            // No default is set
-            return false;
-        }
-
-        final String packageName = info.activityInfo.packageName;
-        return (TextUtils.equals(packageName, context.getPackageName()));
     }
 }
