@@ -91,6 +91,7 @@ function checkOverridableVirtualCall(entry, location, callee)
         "Gecko_AddRefAtom",
         "Gecko_ReleaseAtom",
         /nsPrincipal::Get/,
+        /CounterStylePtr::Reset/,
     ];
     if (entry.matches(whitelist))
         return;
@@ -145,8 +146,8 @@ function treatAsSafeArgument(entry, varName, csuName)
         // to be a way to indicate which params are out parameters, either using
         // an attribute or a naming convention.
         ["Gecko_CopyFontFamilyFrom", "dst", null],
-        ["Gecko_SetListStyleType", "aList", null],
-        ["Gecko_CopyListStyleTypeFrom", "aDst", null],
+        ["Gecko_SetCounterStyleToName", "aPtr", null],
+        ["Gecko_CopyCounterStyle", "aDst", null],
         ["Gecko_SetMozBinding", "aDisplay", null],
         [/ClassOrClassList/, /aClass/, null],
         ["Gecko_GetAtomAsUTF16", "aLength", null],
