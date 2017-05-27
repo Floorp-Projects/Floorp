@@ -6,14 +6,13 @@
 
 package org.mozilla.gecko.mma;
 
-import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 
 
 public class MmaStubImp implements MmaInterface {
     @Override
-    public void init(Activity activity) {
+    public void init(Application application) {
 
     }
 
