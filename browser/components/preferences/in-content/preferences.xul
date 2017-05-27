@@ -20,6 +20,19 @@
 <!ENTITY % globalPreferencesDTD SYSTEM "chrome://global/locale/preferences.dtd">
 <!ENTITY % preferencesDTD SYSTEM
   "chrome://browser/locale/preferences/preferences.dtd">
+<!ENTITY % selectBookmarkDTD SYSTEM
+  "chrome://browser/locale/preferences/selectBookmark.dtd">
+<!ENTITY % languagesDTD SYSTEM "chrome://browser/locale/preferences/languages.dtd">
+<!ENTITY % fontDTD SYSTEM "chrome://browser/locale/preferences/fonts.dtd">
+<!ENTITY % colorsDTD SYSTEM "chrome://browser/locale/preferences/colors.dtd">
+<!ENTITY % permissionsDTD SYSTEM "chrome://browser/locale/preferences/permissions.dtd">
+<!ENTITY % passwordManagerDTD SYSTEM "chrome://passwordmgr/locale/passwordManager.dtd">
+<!ENTITY % historyDTD SYSTEM "chrome://mozapps/locale/update/history.dtd">
+<!ENTITY % certManagerDTD SYSTEM "chrome://pippki/locale/certManager.dtd">
+<!ENTITY % deviceManangerDTD SYSTEM "chrome://pippki/locale/deviceManager.dtd">
+<!ENTITY % connectionDTD SYSTEM "chrome://browser/locale/preferences/connection.dtd">
+<!ENTITY % siteDataSettingsDTD SYSTEM
+  "chrome://browser/locale/preferences/siteDataSettings.dtd" >
 <!ENTITY % privacyDTD SYSTEM "chrome://browser/locale/preferences/privacy.dtd">
 <!ENTITY % tabsDTD SYSTEM "chrome://browser/locale/preferences/tabs.dtd">
 <!ENTITY % searchDTD SYSTEM "chrome://browser/locale/preferences/search.dtd">
@@ -42,6 +55,17 @@
 %brandDTD;
 %globalPreferencesDTD;
 %preferencesDTD;
+%selectBookmarkDTD;
+%languagesDTD;
+%fontDTD;
+%colorsDTD;
+%permissionsDTD;
+%passwordManagerDTD;
+%historyDTD;
+%certManagerDTD;
+%deviceManangerDTD;
+%connectionDTD;
+%siteDataSettingsDTD;
 %privacyDTD;
 %tabsDTD;
 %searchDTD;
@@ -84,6 +108,10 @@
                 src="chrome://branding/locale/brand.properties"/>
   <stringbundle id="bundlePreferences"
                 src="chrome://browser/locale/preferences/preferences.properties"/>
+  <stringbundle id="pkiBundle"
+                src="chrome://pippki/locale/pippki.properties"/>
+  <stringbundle id="browserBundle"
+                src="chrome://browser/locale/browser.properties"/>
 
   <stringbundleset id="appManagerBundleset">
     <stringbundle id="appManagerBundle"

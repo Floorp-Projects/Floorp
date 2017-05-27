@@ -171,6 +171,7 @@
 </preferences>
 
 <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
+<stringbundle id="signonBundle" src="chrome://passwordmgr/locale/passwordmgr.properties"/>
 
 <hbox id="header-privacy"
       class="header"
@@ -317,20 +318,22 @@
               class="accessory-button"
               label="&passwordExceptions.label;"
               accesskey="&passwordExceptions.accesskey;"
-              preference="pref.privacy.disable_button.view_passwords_exceptions"/>
+              preference="pref.privacy.disable_button.view_passwords_exceptions"
+              searchkeywords="&address.label;"/>
     </hbox>
     <hbox id="showPasswordBox" pack="end">
       <button id="showPasswords"
               class="accessory-button"
               label="&savedLogins.label;" accesskey="&savedLogins.accesskey;"
-              preference="pref.privacy.disable_button.view_passwords"/>
+              preference="pref.privacy.disable_button.view_passwords"
+              searchkeywords="&savedLogins.title;"/>
     </hbox>
   </vbox>
   <hbox id="masterPasswordRow">
     <checkbox id="useMasterPassword"
               label="&useMasterPassword.label;"
               accesskey="&useMasterPassword.accesskey;"
-              flex="1" />
+              flex="1"/>
     <button id="changeMasterPassword"
             class="accessory-button"
             label="&changeMasterPassword.label;"
@@ -359,12 +362,17 @@
                 class="accessory-button"
                 label="&trackingProtectionExceptions.label;"
                 accesskey="&trackingProtectionExceptions.accesskey;"
-                preference="pref.privacy.disable_button.tracking_protection_exceptions"/>
+                preference="pref.privacy.disable_button.tracking_protection_exceptions"
+                searchkeywords="&removepermission.label;
+                                &removeallpermissions.label;
+                                &button.cancel.label;
+                                &button.ok.label;"/>
         <button id="changeBlockList"
                 class="accessory-button"
                 label="&changeBlockList.label;"
                 accesskey="&changeBlockList.accesskey;"
-                preference="pref.privacy.disable_button.change_blocklist"/>
+                preference="pref.privacy.disable_button.change_blocklist"
+                searchkeywords="&button.cancel.label; &button.ok.label;"/>
       </vbox>
     </hbox>
     <radiogroup id="trackingProtectionRadioGroup" aria-labelledby="trackingProtectionDesc">
@@ -413,7 +421,8 @@
     <button id="popupPolicyButton"
             class="accessory-button"
             label="&popupExceptions.label;"
-            accesskey="&popupExceptions.accesskey;"/>
+            accesskey="&popupExceptions.accesskey;"
+            searchkeywords="&address.label; &button.cancel.label; &button.ok.label;"/>
   </hbox>
 </groupbox>
 
@@ -436,7 +445,11 @@
           <button id="notificationsPolicyButton"
                   class="accessory-button"
                   label="&notificationsPolicyButton.label;"
-                  accesskey="&notificationsPolicyButton.accesskey;"/>
+                  accesskey="&notificationsPolicyButton.accesskey;"
+                  searchkeywords="&removepermission.label;
+                                  &removeallpermissions.label;
+                                  &button.cancel.label;
+                                  &button.ok.label;"/>
         </hbox>
       </row>
     </rows>
@@ -483,7 +496,13 @@
     <button id="addonExceptions"
             class="accessory-button"
             label="&addonExceptions.label;"
-            accesskey="&addonExceptions.accesskey;"/>
+            accesskey="&addonExceptions.accesskey;"
+            searchkeywords="&address.label;
+                            &allow.label;
+                            &removepermission.label;
+                            &removeallpermissions.label;
+                            &button.cancel.label;
+                            &button.ok.label;"/>
   </hbox>
 
   <separator class="thin"/>
@@ -534,12 +553,36 @@
               class="accessory-button"
               label="&viewCerts.label;"
               accesskey="&viewCerts.accesskey;"
-              preference="security.disable_button.openCertManager"/>
+              preference="security.disable_button.openCertManager"
+              searchkeywords="&certmgr.tab.mine;
+                              &certmgr.tab.others2;
+                              &certmgr.tab.websites3;
+                              &certmgr.tab.ca;
+                              &certmgr.tab.orphan2;
+                              &certmgr.mine;
+                              &certmgr.others;
+                              &certmgr.websites2;
+                              &certmgr.cas;
+                              &certmgr.orphans;
+                              &certmgr.certname;
+                              &certmgr.tokenname;
+                              &certmgr.view2.label;
+                              &certmgr.export.label;
+                              &certmgr.delete2.label;"/>
       <button id="viewSecurityDevicesButton"
               class="accessory-button"
               label="&viewSecurityDevices.label;"
               accesskey="&viewSecurityDevices.accesskey;"
-              preference="security.disable_button.openDeviceManager"/>
+              preference="security.disable_button.openDeviceManager"
+              searchkeywords="&devmgr.title;
+                              &devmgr.devlist.label;
+                              &devmgr.details.title;
+                              &devmgr.details.title2;
+                              &devmgr.button.login.label;
+                              &devmgr.button.logout.label;
+                              &devmgr.button.changepw.label;
+                              &devmgr.button.load.label;
+                              &devmgr.button.unload.label;"/>
     </vbox>
   </hbox>
 </groupbox>
@@ -583,7 +626,10 @@
       <button id="browserContainersSettings"
               class="accessory-button"
               label="&browserContainersSettings.label;"
-              accesskey="&browserContainersSettings.accesskey;"/>
+              accesskey="&browserContainersSettings.accesskey;"
+              searchkeywords="&addButton.label;
+                              &preferencesButton.label;
+                              &removeButton.label;"/>
     </hbox>
   </vbox>
 </groupbox>
@@ -599,7 +645,25 @@
             class="accessory-button"
             icon="network"
             label="&connectionSettings.label;"
-            accesskey="&connectionSettings.accesskey;"/>
+            accesskey="&connectionSettings.accesskey;"
+            searchkeywords="&connectionsDialog.title;
+                            &noProxyTypeRadio.label;
+                            &WPADTypeRadio.label;
+                            &systemTypeRadio.label;
+                            &manualTypeRadio.label;
+                            &http.label;
+                            &ssl.label;
+                            &ftp.label;
+                            &socks.label;
+                            &socks4.label;
+                            &socks5.label;
+                            &noproxy.label;
+                            &noproxyExplain.label;
+                            &shareproxy.label;
+                            &autoTypeRadio.label;
+                            &reload.label;
+                            &autologinproxy.label;
+                            &socksRemoteDNS.label2;"/>
   </hbox>
 </groupbox>
 
@@ -687,7 +751,11 @@
     <button id="siteDataSettings"
             class="accessory-button"
             label="&siteDataSettings.label;"
-            accesskey="&siteDataSettings.accesskey;"/>
+            accesskey="&siteDataSettings.accesskey;"
+            searchkeywords="&window.title;
+                            &hostCol.label;
+                            &statusCol.label;
+                            &usageCol.label;"/>
   </vbox>
 </groupbox>
 
