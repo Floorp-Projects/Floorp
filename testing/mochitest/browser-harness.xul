@@ -132,6 +132,9 @@
       get failCount() {
         return this.results.filter(t => !t.info && !t.pass).length;
       },
+      get allowedFailureCount() {
+        return this.results.filter(t => t.allowedFailure).length;
+      },
 
       addResult: function addResult(result) {
         this.lastOutputTime = Date.now();
