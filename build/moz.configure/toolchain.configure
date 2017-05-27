@@ -140,9 +140,6 @@ def sccache_verbose_stats(using_sccache, verbose_stats):
 
 set_config('SCCACHE_VERBOSE_STATS', sccache_verbose_stats)
 
-option(env='MOZ_HAZARD', help='Build for the GC rooting hazard analysis')
-set_config('MOZ_HAZARD', depends_if('MOZ_HAZARD')(lambda _: True))
-
 @depends('--with-compiler-wrapper', ccache)
 @imports(_from='mozbuild.shellutil', _import='split', _as='shell_split')
 def compiler_wrapper(wrapper, ccache):
@@ -170,6 +167,18 @@ def using_compiler_wrapper(compiler_wrapper):
     return True
 
 set_config('MOZ_USING_COMPILER_WRAPPER', using_compiler_wrapper)
+
+
+# GC rooting and hazard analysis.
+# ==============================================================
+option(env='MOZ_HAZARD', help='Build for the GC rooting hazard analysis')
+
+@depends('MOZ_HAZARD')
+def hazard_analysis(value):
+    if value:
+        return True
+
+set_config('MOZ_HAZARD', hazard_analysis)
 
 
 # Cross-compilation related things.
