@@ -30,9 +30,4 @@ public class MmaStubImp implements MmaInterface {
     public void track(String leanplumEvent, double value) {
 
     }
-
-    @Override
-    public void stop() {
-
-    }
 }
