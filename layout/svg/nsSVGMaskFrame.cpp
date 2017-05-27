@@ -167,30 +167,6 @@ ComputeLinearRGBLuminanceMask(const uint8_t *aSourceData,
   }
 }
 
-static void
-ComputeAlphaMask(const uint8_t *aSourceData,
-                 int32_t aSourceStride,
-                 uint8_t *aDestData,
-                 int32_t aDestStride,
-                 const IntSize &aSize,
-                 float aOpacity)
-{
-  int32_t sourceOffset = aSourceStride - 4 * aSize.width;
-  const uint8_t *sourcePixel = aSourceData;
-  int32_t destOffset = aDestStride - aSize.width;
-  uint8_t *destPixel = aDestData;
-
-  for (int32_t y = 0; y < aSize.height; y++) {
-    for (int32_t x = 0; x < aSize.width; x++) {
-      *destPixel = sourcePixel[GFX_ARGB32_OFFSET_A] * aOpacity;
-      sourcePixel += 4;
-      destPixel++;
-    }
-    sourcePixel += sourceOffset;
-    destPixel += destOffset;
-  }
-}
-
 //----------------------------------------------------------------------
 // Implementation
 
@@ -236,9 +212,22 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
     return nullptr;
   }
 
-  RefPtr<DrawTarget> maskDT =
-    gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-      maskSurfaceSize, SurfaceFormat::B8G8R8A8);
+  uint8_t maskType;
+  if (aParams.maskMode == NS_STYLE_MASK_MODE_MATCH_SOURCE) {
+    maskType = StyleSVGReset()->mMaskType;
+  } else {
+    maskType = aParams.maskMode == NS_STYLE_MASK_MODE_LUMINANCE
+               ? NS_STYLE_MASK_TYPE_LUMINANCE : NS_STYLE_MASK_TYPE_ALPHA;
+  }
+
+  RefPtr<DrawTarget> maskDT;
+  if (maskType == NS_STYLE_MASK_TYPE_LUMINANCE) {
+    maskDT = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
+               maskSurfaceSize, SurfaceFormat::B8G8R8A8);
+  } else {
+    maskDT = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
+               maskSurfaceSize, SurfaceFormat::A8);
+  }
 
   if (!maskDT || !maskDT->IsValid()) {
     return nullptr;
@@ -269,37 +258,30 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
     nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m, aParams.imgParams);
   }
 
-  RefPtr<SourceSurface> maskSnapshot = maskDT->Snapshot();
-  if (!maskSnapshot) {
-    return nullptr;
-  }
-  RefPtr<DataSourceSurface> maskSurface = maskSnapshot->GetDataSurface();
-  DataSourceSurface::MappedSurface map;
-  if (!maskSurface ||
-      !maskSurface->Map(DataSourceSurface::MapType::READ, &map)) {
-    return nullptr;
-  }
-
-  // Create alpha channel mask for output
-  RefPtr<DataSourceSurface> destMaskSurface =
-    Factory::CreateDataSourceSurface(maskSurfaceSize, SurfaceFormat::A8);
-  if (!destMaskSurface) {
-    return nullptr;
-  }
-  DataSourceSurface::MappedSurface destMap;
-  if (!destMaskSurface->Map(DataSourceSurface::MapType::WRITE, &destMap)) {
-    return nullptr;
-  }
-
-  uint8_t maskType;
-  if (aParams.maskMode == NS_STYLE_MASK_MODE_MATCH_SOURCE) {
-    maskType = StyleSVGReset()->mMaskType;
-  } else {
-    maskType = aParams.maskMode == NS_STYLE_MASK_MODE_LUMINANCE
-               ? NS_STYLE_MASK_TYPE_LUMINANCE : NS_STYLE_MASK_TYPE_ALPHA;
-  }
-
+  RefPtr<SourceSurface> surface;
   if (maskType == NS_STYLE_MASK_TYPE_LUMINANCE) {
+    RefPtr<SourceSurface> maskSnapshot = maskDT->Snapshot();
+    if (!maskSnapshot) {
+      return nullptr;
+    }
+
+    RefPtr<DataSourceSurface> maskSurface = maskSnapshot->GetDataSurface();
+    DataSourceSurface::MappedSurface map;
+    if (!maskSurface->Map(DataSourceSurface::MapType::READ, &map)) {
+      return nullptr;
+    }
+
+    // Create alpha channel mask for output
+    RefPtr<DataSourceSurface> destMaskSurface =
+      Factory::CreateDataSourceSurface(maskSurfaceSize, SurfaceFormat::A8);
+    if (!destMaskSurface) {
+      return nullptr;
+    }
+    DataSourceSurface::MappedSurface destMap;
+    if (!destMaskSurface->Map(DataSourceSurface::MapType::WRITE, &destMap)) {
+      return nullptr;
+    }
+
     if (StyleSVG()->mColorInterpolation ==
         NS_STYLE_COLOR_INTERPOLATION_LINEARRGB) {
       ComputeLinearRGBLuminanceMask(map.mData, map.mStride,
@@ -310,14 +292,19 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
                                destMap.mData, destMap.mStride,
                                maskSurfaceSize, aParams.opacity);
     }
-  } else {
-    ComputeAlphaMask(map.mData, map.mStride,
-                     destMap.mData, destMap.mStride,
-                     maskSurfaceSize, aParams.opacity);
-  }
 
-  maskSurface->Unmap();
-  destMaskSurface->Unmap();
+    maskSurface->Unmap();
+    destMaskSurface->Unmap();
+    surface = destMaskSurface.forget();
+  } else {
+    maskDT->SetTransform(Matrix());
+    maskDT->FillRect(Rect(0, 0, maskSurfaceSize.width, maskSurfaceSize.height), ColorPattern(Color(1.0f, 1.0f, 1.0f, aParams.opacity)), DrawOptions(1, CompositionOp::OP_IN));
+    RefPtr<SourceSurface> maskSnapshot = maskDT->Snapshot();
+    if (!maskSnapshot) {
+      return nullptr;
+    }
+    surface = maskSnapshot.forget();
+  }
 
   // Moz2D transforms in the opposite direction to Thebes
   if (!maskSurfaceMatrix.Invert()) {
@@ -325,7 +312,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
   }
 
   *aParams.maskTransform = ToMatrix(maskSurfaceMatrix);
-  return destMaskSurface.forget();
+  return surface.forget();
 }
 
 gfxRect
