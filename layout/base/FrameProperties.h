@@ -3,15 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef FRAMEPROPERTYTABLE_H_
-#define FRAMEPROPERTYTABLE_H_
+#ifndef FRAMEPROPERTIES_H_
+#define FRAMEPROPERTIES_H_
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 #include "nsTArray.h"
-#include "nsTHashtable.h"
-#include "nsHashKeys.h"
 
 class nsIFrame;
 
@@ -131,7 +129,7 @@ struct FramePropertyTypeHelper<SmallValueHolder<T>>
 }
 
 /**
- * The FramePropertyTable is optimized for storing 0 or 1 properties on
+ * The FrameProperties class is optimized for storing 0 or 1 properties on
  * a given frame. Storing very large numbers of properties on a single
  * frame will not be efficient.
  * 
@@ -141,7 +139,8 @@ struct FramePropertyTypeHelper<SmallValueHolder<T>>
  * Of course, the destructor function (if any) must handle such values
  * correctly.
  */
-class FramePropertyTable {
+class FrameProperties
+{
 public:
   template<typename T>
   using Descriptor = const FramePropertyDescriptor<T>*;
@@ -150,32 +149,35 @@ public:
   template<typename T>
   using PropertyType = typename detail::FramePropertyTypeHelper<T>::Type;
 
-  FramePropertyTable() : mLastFrame(nullptr), mLastEntry(nullptr)
+  explicit FrameProperties()
+#ifdef DEBUG
+    : mMaxLength(0)
+#endif
   {
   }
-  ~FramePropertyTable()
+
+  ~FrameProperties()
   {
-    DeleteAll();
+    MOZ_ASSERT(mMaxLength > 0, "redundant FrameProperties!");
+    MOZ_ASSERT(mProperties.Length() == 0, "forgot to delete properties");
   }
 
   /**
-   * Set a property value on a frame. This requires one hashtable
-   * lookup (using the frame as the key) and a linear search through
-   * the properties of that frame. Any existing value for the property
+   * Set a property value. This requires a linear search through
+   * the properties of the frame. Any existing value for the property
    * is destroyed.
    */
   template<typename T>
-  void Set(nsIFrame* aFrame, Descriptor<T> aProperty,
-           PropertyType<T> aValue)
+  void Set(Descriptor<T> aProperty, PropertyType<T> aValue,
+           const nsIFrame* aFrame)
   {
     void* ptr = ReinterpretHelper<T>::ToPointer(aValue);
-    SetInternal(aFrame, aProperty, ptr);
+    SetInternal(aProperty, ptr, aFrame);
   }
 
   /**
-   * @return true if @aProperty is set for @aFrame. This requires one hashtable
-   * lookup (using the frame as the key) and a linear search through the
-   * properties of that frame.
+   * @return true if @aProperty is set. This requires a linear search through the
+   * properties of the frame.
    *
    * In most cases, this shouldn't be used outside of assertions, because if
    * you're doing a lookup anyway it would be far more efficient to call Get()
@@ -195,25 +197,14 @@ public:
    * new frame to have been created and the same property added.
    */
   template<typename T>
-  bool Has(const nsIFrame* aFrame, Descriptor<T> aProperty)
+  bool Has(Descriptor<T> aProperty) const
   {
-    bool foundResult = false;
-    mozilla::Unused << GetInternal(aFrame, aProperty, false, &foundResult);
-    return foundResult;
-  }
-
-  template<typename T>
-  bool HasSkippingBitCheck(const nsIFrame* aFrame, Descriptor<T> aProperty)
-  {
-    bool foundResult = false;
-    mozilla::Unused << GetInternal(aFrame, aProperty, true, &foundResult);
-    return foundResult;
+    return mProperties.IndexOf(aProperty, 0, PropertyComparator()) != nsTArray<PropertyValue>::NoIndex;
   }
 
   /**
-   * Get a property value for a frame. This requires one hashtable
-   * lookup (using the frame as the key) and a linear search through
-   * the properties of that frame. If the frame has no such property,
+   * Get a property value. This requires a linear search through
+   * the properties of the frame. If the frame has no such property,
    * returns zero-filled result, which means null for pointers and
    * zero for integers and floating point types.
    * @param aFoundResult if non-null, receives a value 'true' iff
@@ -222,16 +213,16 @@ public:
    * 'property value is null'.
    */
   template<typename T>
-  PropertyType<T> Get(const nsIFrame* aFrame, Descriptor<T> aProperty,
-                      bool* aFoundResult = nullptr)
+  PropertyType<T> Get(Descriptor<T> aProperty,
+                      bool* aFoundResult = nullptr) const
   {
-    void* ptr = GetInternal(aFrame, aProperty, false, aFoundResult);
+    void* ptr = GetInternal(aProperty, aFoundResult);
     return ReinterpretHelper<T>::FromPointer(ptr);
   }
+
   /**
-   * Remove a property value for a frame. This requires one hashtable
-   * lookup (using the frame as the key) and a linear search through
-   * the properties of that frame. The old property value is returned
+   * Remove a property value. This requires a linear search through
+   * the properties of the frame. The old property value is returned
    * (and not destroyed). If the frame has no such property,
    * returns zero-filled result, which means null for pointers and
    * zero for integers and floating point types.
@@ -241,59 +232,48 @@ public:
    * 'property value is null'.
    */
   template<typename T>
-  PropertyType<T> Remove(nsIFrame* aFrame, Descriptor<T> aProperty,
+  PropertyType<T> Remove(Descriptor<T> aProperty,
                          bool* aFoundResult = nullptr)
   {
-    void* ptr = RemoveInternal(aFrame, aProperty, false, aFoundResult);
+    void* ptr = RemoveInternal(aProperty, aFoundResult);
     return ReinterpretHelper<T>::FromPointer(ptr);
   }
+
   /**
-   * Remove and destroy a property value for a frame. This requires one
-   * hashtable lookup (using the frame as the key) and a linear search
-   * through the properties of that frame. If the frame has no such
+   * Remove and destroy a property value. This requires a linear search
+   * through the properties of the frame. If the frame has no such
    * property, nothing happens.
-   *
-   * The DeleteSkippingBitCheck variant doesn't test
-   * NS_FRAME_HAS_PROPERTIES on aFrame, so it is safe to call after
-   * aFrame has been destroyed as long as, since that destruction
-   * happened, it isn't possible for a new frame to have been created
-   * and the same property added.
    */
   template<typename T>
-  void Delete(nsIFrame* aFrame, Descriptor<T> aProperty)
+  void Delete(Descriptor<T> aProperty, const nsIFrame* aFrame)
   {
-    DeleteInternal(aFrame, aProperty, false);
+    DeleteInternal(aProperty, aFrame);
   }
 
-  template<typename T>
-  void DeleteSkippingBitCheck(nsIFrame* aFrame, Descriptor<T> aProperty)
-  {
-    DeleteInternal(aFrame, aProperty, true);
-  }
   /**
-   * Remove and destroy all property values for a frame. This requires one
-   * hashtable lookup (using the frame as the key).
+   * Remove and destroy all property values for the frame.
    */
-  void DeleteAllFor(nsIFrame* aFrame);
-  /**
-   * Remove and destroy all property values for all frames.
-   */
-  void DeleteAll();
+  void DeleteAll(const nsIFrame* aFrame);
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-protected:
-  void SetInternal(nsIFrame* aFrame, UntypedDescriptor aProperty,
-                   void* aValue);
+private:
+  friend class ::nsIFrame;
 
-  void* GetInternal(const nsIFrame* aFrame, UntypedDescriptor aProperty,
-                    bool aSkipBitCheck, bool* aFoundResult);
+  // Prevent copying of FrameProperties; we should always return/pass around
+  // references to it, not copies!
+  FrameProperties(const FrameProperties&) = delete;
+  FrameProperties& operator=(const FrameProperties&) = delete;
 
-  void* RemoveInternal(nsIFrame* aFrame, UntypedDescriptor aProperty,
-                       bool aSkipBitCheck, bool* aFoundResult);
+  void SetInternal(UntypedDescriptor aProperty, void* aValue,
+                   const nsIFrame* aFrame);
 
-  void DeleteInternal(nsIFrame* aFrame, UntypedDescriptor aProperty,
-                      bool aSkipBitCheck);
+  inline void*
+  GetInternal(UntypedDescriptor aProperty, bool* aFoundResult) const;
+
+  void* RemoveInternal(UntypedDescriptor aProperty, bool* aFoundResult);
+
+  void DeleteInternal(UntypedDescriptor aProperty, const nsIFrame* aFrame);
 
   template<typename T>
   struct ReinterpretHelper
@@ -331,20 +311,12 @@ protected:
   };
 
   /**
-   * Stores a property descriptor/value pair. It can also be used to
-   * store an nsTArray of PropertyValues.
+   * Stores a property descriptor/value pair.
    */
   struct PropertyValue {
     PropertyValue() : mProperty(nullptr), mValue(nullptr) {}
     PropertyValue(UntypedDescriptor aProperty, void* aValue)
       : mProperty(aProperty), mValue(aValue) {}
-
-    bool IsArray() { return !mProperty && mValue; }
-    nsTArray<PropertyValue>* ToArray()
-    {
-      NS_ASSERTION(IsArray(), "Must be array");
-      return reinterpret_cast<nsTArray<PropertyValue>*>(&mValue);
-    }
 
     void DestroyValueFor(const nsIFrame* aFrame) {
       if (mProperty->mDestructor) {
@@ -352,20 +324,6 @@ protected:
       } else if (mProperty->mDestructorWithFrame) {
         mProperty->mDestructorWithFrame(aFrame, mValue);
       }
-    }
-
-    size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) {
-      size_t n = 0;
-      // We don't need to measure mProperty because it always points to static
-      // memory.  As for mValue:  if it's a single value we can't measure it,
-      // because the type is opaque;  if it's an array, we measure the array
-      // storage, but we can't measure the individual values, again because
-      // their types are opaque.
-      if (IsArray()) {
-        nsTArray<PropertyValue>* array = ToArray();
-        n += array->ShallowSizeOfExcludingThis(aMallocSizeOf);
-      }
-      return n;
     }
 
     UntypedDescriptor mProperty;
@@ -389,107 +347,33 @@ protected:
     }
   };
 
-  /**
-   * Our hashtable entry. The key is an nsIFrame*, the value is a
-   * PropertyValue representing one or more property/value pairs.
-   */
-  class Entry : public nsPtrHashKey<const nsIFrame>
-  {
-  public:
-    explicit Entry(KeyTypePointer aKey) : nsPtrHashKey<const nsIFrame>(aKey) {}
-    Entry(const Entry &toCopy) :
-      nsPtrHashKey<const nsIFrame>(toCopy), mProp(toCopy.mProp) {}
+  AutoTArray<PropertyValue,1> mProperties;
+#ifdef DEBUG
+  uint32_t mMaxLength;
+#endif
+};
 
-    size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) {
-      return mProp.SizeOfExcludingThis(aMallocSizeOf);
+inline void*
+FrameProperties::GetInternal(UntypedDescriptor aProperty,
+                             bool* aFoundResult) const
+{
+  MOZ_ASSERT(aProperty, "Null property?");
+
+  nsTArray<PropertyValue>::index_type index =
+    mProperties.IndexOf(aProperty, 0, PropertyComparator());
+  if (index == nsTArray<PropertyValue>::NoIndex) {
+    if (aFoundResult) {
+      *aFoundResult = false;
     }
-
-    PropertyValue mProp;
-  };
-
-  static void DeleteAllForEntry(Entry* aEntry);
-
-  // Note that mLastEntry points into mEntries, so we need to be careful about
-  // not triggering a resize of mEntries, e.g. use RawRemoveEntry() instead of
-  // RemoveEntry() in some places.
-  nsTHashtable<Entry> mEntries;
-  const nsIFrame* mLastFrame;
-  Entry* mLastEntry;
-};
-
-/**
- * The FrameProperties/ConstFrameProperties class encapsulates the
- * properties of a frame.
- *
- * However, since frame properties are like member variables, we have
- * different versions for whether the frame is |const|, sharing a common
- * base class.
- *
- * CVnsIFrame is either |nsIFrame| or |const nsIFrame|.
- */
-template<class CVnsIFrame>
-class FramePropertiesBase {
-public:
-  template<typename T> using Descriptor = FramePropertyTable::Descriptor<T>;
-  template<typename T> using PropertyType = FramePropertyTable::PropertyType<T>;
-
-  template<typename T>
-  bool Has(Descriptor<T> aProperty) const
-  {
-    return mTable->Has(mFrame, aProperty);
+    return nullptr;
   }
 
-  template<typename T>
-  PropertyType<T> Get(Descriptor<T> aProperty,
-                      bool* aFoundResult = nullptr) const
-  {
-    return mTable->Get(mFrame, aProperty, aFoundResult);
+  if (aFoundResult) {
+    *aFoundResult = true;
   }
-
-protected:
-  FramePropertiesBase(FramePropertyTable* aTable, CVnsIFrame* aFrame)
-    : mTable(aTable), mFrame(aFrame) {}
-
-  FramePropertyTable* const mTable;
-  CVnsIFrame* const mFrame;
-};
-
-class ConstFrameProperties : public FramePropertiesBase<const nsIFrame> {
-public:
-  ConstFrameProperties(FramePropertyTable* aTable, const nsIFrame* aFrame)
-    : FramePropertiesBase(aTable, aFrame)
-  {
-  }
-};
-
-class FrameProperties : public FramePropertiesBase<nsIFrame> {
-public:
-  FrameProperties(FramePropertyTable* aTable, nsIFrame* aFrame)
-    : FramePropertiesBase(aTable, aFrame)
-  {
-  }
-
-  template<typename T>
-  void Set(Descriptor<T> aProperty, PropertyType<T> aValue) const
-  {
-    mTable->Set(mFrame, aProperty, aValue);
-  }
-
-  template<typename T>
-  PropertyType<T> Remove(Descriptor<T> aProperty,
-                         bool* aFoundResult = nullptr) const
-  {
-    return mTable->Remove(mFrame, aProperty, aFoundResult);
-  }
-
-  template<typename T>
-  void Delete(Descriptor<T> aProperty) const
-  {
-    mTable->Delete(mFrame, aProperty);
-  }
-
-};
+  return mProperties.ElementAt(index).mValue;
+}
 
 } // namespace mozilla
 
-#endif /* FRAMEPROPERTYTABLE_H_ */
+#endif /* FRAMEPROPERTIES_H_ */

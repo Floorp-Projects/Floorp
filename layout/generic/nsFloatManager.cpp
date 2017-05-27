@@ -319,7 +319,7 @@ nsFloatManager::GetRegionFor(WritingMode aWM, nsIFrame* aFloat,
                              const nsSize& aContainerSize)
 {
   LogicalRect region = aFloat->GetLogicalRect(aWM, aContainerSize);
-  void* storedRegion = aFloat->Properties().Get(FloatRegionProperty());
+  void* storedRegion = aFloat->GetProperty(FloatRegionProperty());
   if (storedRegion) {
     nsMargin margin = *static_cast<nsMargin*>(storedRegion);
     region.Inflate(aWM, LogicalMargin(aWM, margin));
@@ -334,15 +334,14 @@ nsFloatManager::StoreRegionFor(WritingMode aWM, nsIFrame* aFloat,
 {
   nsRect region = aRegion.GetPhysicalRect(aWM, aContainerSize);
   nsRect rect = aFloat->GetRect();
-  FrameProperties props = aFloat->Properties();
   if (region.IsEqualEdges(rect)) {
-    props.Delete(FloatRegionProperty());
+    aFloat->DeleteProperty(FloatRegionProperty());
   }
   else {
-    nsMargin* storedMargin = props.Get(FloatRegionProperty());
+    nsMargin* storedMargin = aFloat->GetProperty(FloatRegionProperty());
     if (!storedMargin) {
       storedMargin = new nsMargin();
-      props.Set(FloatRegionProperty(), storedMargin);
+      aFloat->SetProperty(FloatRegionProperty(), storedMargin);
     }
     *storedMargin = region - rect;
   }
