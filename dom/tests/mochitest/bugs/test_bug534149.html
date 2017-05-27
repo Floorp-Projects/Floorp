@@ -35,24 +35,28 @@ var [i1outer, i1inner] = getIDs(i1);
 
 document.body.appendChild(i2);
 var [i2outer, i2inner] = getIDs(i2);
-  
+
 is(i1inner, i1outer + 1, "For frame 1, inner should come right after outer");
 is(i2inner, i2outer + 1, "For frame 2, inner should come right after outer");
 is(i2outer, i1inner + 1, "Frame 2 comes right after frame 1");
 
-var innerWindowDestroyID;
-var outerWindowDestroyID;
+var innerWindowDestroyID = null;
+var outerWindowDestroyID = null;
 
 var outerObserver = {
   observe: function(id) {
     outerWindowDestroyID =
       SpecialPowers.wrap(id).QueryInterface(SpecialPowers.Ci.nsISupportsPRUint64).data;
+    SpecialPowers.removeObserver(outerObserver, "outer-window-destroyed");
+    maybeContinueTest();
   }
 };
 var innerObserver = {
   observe: function(id) {
-  innerWindowDestroyID =
-   SpecialPowers.wrap(id).QueryInterface(SpecialPowers.Ci.nsISupportsPRUint64).data;
+    innerWindowDestroyID =
+      SpecialPowers.wrap(id).QueryInterface(SpecialPowers.Ci.nsISupportsPRUint64).data;
+    SpecialPowers.removeObserver(innerObserver, "inner-window-destroyed");
+    maybeContinueTest();
   }
 };
 
@@ -63,16 +67,17 @@ function removeFrame(iframe) {
   iframe.remove();
 }
 
+function maybeContinueTest() {
+  if (innerWindowDestroyID != null &&
+      outerWindowDestroyID != null) {
+    is(innerWindowDestroyID, i1inner, "inner window of frame 1 should be destroyed");
+    is(outerWindowDestroyID, i1outer, "outer window of frame 1 should be destroyed");
+    SimpleTest.finish();
+  }
+}
+
 removeFrame(i1);
 SimpleTest.waitForExplicitFinish();
-SimpleTest.executeSoon(function() {
-  is(innerWindowDestroyID, i1inner, "inner window of frame 1 should be destroyed");
-  is(outerWindowDestroyID, i1outer, "outer window of frame 1 should be destroyed");
-  SpecialPowers.removeObserver(outerObserver, "outer-window-destroyed");
-  SpecialPowers.removeObserver(innerObserver, "inner-window-destroyed");
-  SimpleTest.finish();
-});
-  
 
 </script>
 </pre>
