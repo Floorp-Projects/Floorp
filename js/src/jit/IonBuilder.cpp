@@ -273,7 +273,7 @@ IonBuilder::getSingleCallTarget(TemporaryTypeSet* calleeTypes)
 
 AbortReasonOr<Ok>
 IonBuilder::getPolyCallTargets(TemporaryTypeSet* calleeTypes, bool constructing,
-                               ObjectVector& targets, uint32_t maxTargets)
+                               InliningTargets& targets, uint32_t maxTargets)
 {
     MOZ_ASSERT(targets.empty());
 
@@ -292,10 +292,11 @@ IonBuilder::getPolyCallTargets(TemporaryTypeSet* calleeTypes, bool constructing,
         return abort(AbortReason::Alloc);
     for (unsigned i = 0; i < objCount; i++) {
         JSObject* obj = calleeTypes->getSingleton(i);
+        ObjectGroup* group = nullptr;
         if (obj) {
             MOZ_ASSERT(obj->isSingleton());
         } else {
-            ObjectGroup* group = calleeTypes->getGroup(i);
+            group = calleeTypes->getGroup(i);
             if (!group)
                 continue;
 
@@ -316,7 +317,7 @@ IonBuilder::getPolyCallTargets(TemporaryTypeSet* calleeTypes, bool constructing,
             return Ok();
         }
 
-        targets.infallibleAppend(obj);
+        targets.infallibleAppend(InliningTarget(obj, group));
     }
 
     return Ok();
@@ -4011,8 +4012,8 @@ IonBuilder::makeInliningDecision(JSObject* targetArg, CallInfo& callInfo)
 }
 
 AbortReasonOr<Ok>
-IonBuilder::selectInliningTargets(const ObjectVector& targets, CallInfo& callInfo, BoolVector& choiceSet,
-                                  uint32_t* numInlineable)
+IonBuilder::selectInliningTargets(const InliningTargets& targets, CallInfo& callInfo,
+                                  BoolVector& choiceSet, uint32_t* numInlineable)
 {
     *numInlineable = 0;
     uint32_t totalSize = 0;
@@ -4027,7 +4028,7 @@ IonBuilder::selectInliningTargets(const ObjectVector& targets, CallInfo& callInf
         return Ok();
 
     for (size_t i = 0; i < targets.length(); i++) {
-        JSObject* target = targets[i];
+        JSObject* target = targets[i].target;
 
         trackOptimizationAttempt(TrackedStrategy::Call_Inline);
         trackTypeInfo(TrackedTypeSite::Call_Target, target);
@@ -4071,7 +4072,7 @@ IonBuilder::selectInliningTargets(const ObjectVector& targets, CallInfo& callInf
     // depend on the types of the arguments and the return value.
     if (isOptimizationTrackingEnabled()) {
         for (size_t i = 0; i < targets.length(); i++) {
-            if (choiceSet[i] && targets[i]->as<JSFunction>().isNative()) {
+            if (choiceSet[i] && targets[i].target->as<JSFunction>().isNative()) {
                 trackTypeInfo(callInfo);
                 break;
             }
@@ -4223,7 +4224,7 @@ IonBuilder::inlineSingleCall(CallInfo& callInfo, JSObject* targetArg)
 }
 
 IonBuilder::InliningResult
-IonBuilder::inlineCallsite(const ObjectVector& targets, CallInfo& callInfo)
+IonBuilder::inlineCallsite(const InliningTargets& targets, CallInfo& callInfo)
 {
     if (targets.empty()) {
         trackOptimizationAttempt(TrackedStrategy::Call_Inline);
@@ -4240,7 +4241,7 @@ IonBuilder::inlineCallsite(const ObjectVector& targets, CallInfo& callInfo)
     // Inline single targets -- unless they derive from a cache, in which case
     // avoiding the cache and guarding is still faster.
     if (!propCache.get() && targets.length() == 1) {
-        JSObject* target = targets[0];
+        JSObject* target = targets[0].target;
 
         trackOptimizationAttempt(TrackedStrategy::Call_Inline);
         trackTypeInfo(TrackedTypeSite::Call_Target, target);
@@ -4409,7 +4410,7 @@ IonBuilder::inlineObjectGroupFallback(CallInfo& callInfo, MBasicBlock* dispatchB
 }
 
 AbortReasonOr<Ok>
-IonBuilder::inlineCalls(CallInfo& callInfo, const ObjectVector& targets, BoolVector& choiceSet,
+IonBuilder::inlineCalls(CallInfo& callInfo, const InliningTargets& targets, BoolVector& choiceSet,
                         MGetPropertyCache* maybeCache)
 {
     // Only handle polymorphic inlining.
@@ -4482,7 +4483,7 @@ IonBuilder::inlineCalls(CallInfo& callInfo, const ObjectVector& targets, BoolVec
         amendOptimizationAttempt(i);
 
         // Target must be reachable by the MDispatchInstruction.
-        JSFunction* target = &targets[i]->as<JSFunction>();
+        JSFunction* target = &targets[i].target->as<JSFunction>();
         if (maybeCache && !maybeCache->propTable()->hasFunction(target)) {
             choiceSet[i] = false;
             trackOptimizationOutcome(TrackedOutcome::CantInlineNotInDispatch);
@@ -4548,8 +4549,7 @@ IonBuilder::inlineCalls(CallInfo& callInfo, const ObjectVector& targets, BoolVec
         setCurrent(dispatchBlock);
 
         // Connect the inline path to the returnBlock.
-        ObjectGroup* funcGroup = target->isSingleton() ? nullptr : target->group();
-        if (!dispatch->addCase(target, funcGroup, inlineBlock))
+        if (!dispatch->addCase(target, targets[i].group, inlineBlock))
             return abort(AbortReason::Alloc);
 
         MDefinition* retVal = inlineReturnBlock->peek(-1);
@@ -4634,8 +4634,9 @@ IonBuilder::inlineCalls(CallInfo& callInfo, const ObjectVector& targets, BoolVec
                         continue;
 
                     MOZ_ASSERT(!remaining);
-                    if (targets[i]->is<JSFunction>() && targets[i]->as<JSFunction>().isSingleton())
-                        remaining = &targets[i]->as<JSFunction>();
+                    JSObject* target = targets[i].target;
+                    if (target->is<JSFunction>() && target->isSingleton())
+                        remaining = &target->as<JSFunction>();
                     break;
                 }
             }
@@ -5261,7 +5262,7 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing, bool ignoresReturnValue)
     int calleeDepth = -((int)argc + 2 + constructing);
 
     // Acquire known call target if existent.
-    ObjectVector targets(alloc());
+    InliningTargets targets(alloc());
     TemporaryTypeSet* calleeTypes = current->peek(calleeDepth)->resultTypeSet();
     if (calleeTypes)
         MOZ_TRY(getPolyCallTargets(calleeTypes, constructing, targets, 4));
@@ -5281,8 +5282,8 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing, bool ignoresReturnValue)
 
     // No inline, just make the call.
     JSFunction* target = nullptr;
-    if (targets.length() == 1 && targets[0]->is<JSFunction>())
-        target = &targets[0]->as<JSFunction>();
+    if (targets.length() == 1 && targets[0].target->is<JSFunction>())
+        target = &targets[0].target->as<JSFunction>();
 
     if (target && status == InliningStatus_WarmUpCountTooLow) {
         MRecompileCheck* check =
