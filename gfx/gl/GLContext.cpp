@@ -901,6 +901,13 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
             mMaxRenderbufferSize /= 2;
             mNeedsTextureSizeChecks = true;
         }
+        // Bug 1367570. Explicitly set vertex attributes [1,3] to opaque
+        // black because Nvidia doesn't do it for us.
+        if (mVendor == GLVendor::NVIDIA) {
+            for (size_t i = 1; i <= 3; ++i) {
+                mSymbols.fVertexAttrib4f(i, 0, 0, 0, 1);
+            }
+        }
     }
 #endif
     if (mWorkAroundDriverBugs &&

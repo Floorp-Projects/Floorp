@@ -92,6 +92,10 @@ def make_beetmover_checksums_description(config, jobs):
 
 
 def generate_upstream_artifacts(refs, platform, locale=None):
+    # Until bug 1331141 is fixed, if you are adding any new artifacts here that
+    # need to be transfered to S3, please be aware you also need to follow-up
+    # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
+    # See example in bug 1348286
     common_paths = [
         "public/target.checksums",
         "public/target.checksums.asc",

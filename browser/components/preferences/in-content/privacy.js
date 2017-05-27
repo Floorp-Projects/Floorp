@@ -150,6 +150,13 @@ var gPrivacyPane = {
               .addEventListener(aEventType, aCallback.bind(gPrivacyPane));
     }
 
+    function appendSearchKeywords(aId, keywords) {
+      let element = document.getElementById(aId);
+      let searchKeywords = element.getAttribute("searchkeywords");
+      searchKeywords && keywords.push(searchKeywords);
+      element.setAttribute("searchkeywords", keywords.join(" "));
+    }
+
     this._updateSanitizeSettingsButton();
     this.initializeHistoryMode();
     this.updateHistoryModePane();
@@ -319,6 +326,53 @@ var gPrivacyPane = {
       setEventListener("submitHealthReportBox", "command",
                        gPrivacyPane.updateSubmitHealthReport);
     }
+
+    // Append search keywords into the elements could open subdialogs.
+    let bundlePrefs = document.getElementById("bundlePreferences");
+    let signonBundle = document.getElementById("signonBundle");
+    let pkiBundle = document.getElementById("pkiBundle");
+    let browserBundle = document.getElementById("browserBundle");
+    appendSearchKeywords("passwordExceptions", [
+      bundlePrefs.getString("savedLoginsExceptions_title"),
+      bundlePrefs.getString("savedLoginsExceptions_desc"),
+    ]);
+    appendSearchKeywords("showPasswords", [
+      signonBundle.getString("loginsDescriptionAll"),
+    ]);
+    appendSearchKeywords("trackingProtectionExceptions", [
+      bundlePrefs.getString("trackingprotectionpermissionstitle"),
+      bundlePrefs.getString("trackingprotectionpermissionstext"),
+    ]);
+    appendSearchKeywords("changeBlockList", [
+      bundlePrefs.getString("blockliststitle"),
+      bundlePrefs.getString("blockliststext"),
+    ]);
+    appendSearchKeywords("popupPolicyButton", [
+      bundlePrefs.getString("popuppermissionstitle"),
+      bundlePrefs.getString("popuppermissionstext"),
+    ]);
+    appendSearchKeywords("notificationsPolicyButton", [
+      bundlePrefs.getString("notificationspermissionstitle"),
+      bundlePrefs.getString("notificationspermissionstext4"),
+    ]);
+    appendSearchKeywords("addonExceptions", [
+      bundlePrefs.getString("addons_permissions_title"),
+      bundlePrefs.getString("addonspermissionstext"),
+    ]);
+    appendSearchKeywords("viewSecurityDevicesButton", [
+      pkiBundle.getString("enable_fips"),
+    ]);
+    appendSearchKeywords("browserContainersSettings", [
+      browserBundle.getString("userContextPersonal.label"),
+      browserBundle.getString("userContextWork.label"),
+      browserBundle.getString("userContextBanking.label"),
+      browserBundle.getString("userContextShopping.label"),
+    ]);
+    appendSearchKeywords("siteDataSettings", [
+      bundlePrefs.getString("siteDataSettings.description"),
+      bundlePrefs.getString("removeAllCookies.label"),
+      bundlePrefs.getString("removeSelectedCookies.label"),
+    ]);
   },
 
   // TRACKING PROTECTION MODE
