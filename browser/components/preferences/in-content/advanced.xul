@@ -72,7 +72,8 @@
               class="accessory-button"
               label="&updateHistory2.label;"
               accesskey="&updateHistory2.accesskey;"
-              preference="app.update.disable_button.showUpdateHistory"/>
+              preference="app.update.disable_button.showUpdateHistory"
+              searchkeywords="&history.title; &history.intro;"/>
     </vbox>
 #endif
   </hbox>
