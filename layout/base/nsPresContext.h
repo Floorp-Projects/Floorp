@@ -24,7 +24,6 @@
 #include "nsCRT.h"
 #include "nsIWidgetListener.h"
 #include "nsLanguageAtomService.h"
-#include "FramePropertyTable.h"
 #include "nsGkAtoms.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsChangeHint.h"
@@ -126,7 +125,6 @@ class nsRootPresContext;
 class nsPresContext : public nsIObserver,
                       public mozilla::SupportsWeakPtr<nsPresContext> {
 public:
-  typedef mozilla::FramePropertyTable FramePropertyTable;
   typedef mozilla::LangGroupFontPrefs LangGroupFontPrefs;
   typedef mozilla::ScrollbarStyles ScrollbarStyles;
   typedef mozilla::StaticPresData StaticPresData;
@@ -892,9 +890,6 @@ public:
 
   nsIPrintSettings* GetPrintSettings() { return mPrintSettings; }
 
-  /* Accessor for table of frame properties */
-  FramePropertyTable* PropertyTable() { return &mPropertyTable; }
-
   /* Helper function that ensures that this prescontext is shown in its
      docshell if it's the most recent prescontext for the docshell.  Returns
      whether the prescontext is now being shown.
@@ -1118,11 +1113,6 @@ public:
    * if you care about which presshell the primary frame is in.
    */
   nsIFrame* GetPrimaryFrameFor(nsIContent* aContent);
-
-  void NotifyDestroyingFrame(nsIFrame* aFrame)
-  {
-    PropertyTable()->DeleteAllFor(aFrame);
-  }
 
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
@@ -1357,8 +1347,6 @@ protected:
   nsCOMPtr<nsITimer>    mPrefChangedTimer;
 
   mozilla::UniquePtr<nsBidi> mBidiEngine;
-
-  FramePropertyTable    mPropertyTable;
 
   struct TransactionInvalidations {
     uint64_t mTransactionId;

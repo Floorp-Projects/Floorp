@@ -24,7 +24,7 @@
 #include <stdio.h>
 
 #include "CaretAssociationHint.h"
-#include "FramePropertyTable.h"
+#include "FrameProperties.h"
 #include "mozilla/layout/FrameChildList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SmallPointerArray.h"
@@ -590,7 +590,6 @@ public:
   using Visibility = mozilla::Visibility;
 
   typedef mozilla::FrameProperties FrameProperties;
-  typedef mozilla::ConstFrameProperties ConstFrameProperties;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layout::FrameChildList ChildList;
   typedef mozilla::layout::FrameChildListID ChildListID;
@@ -1132,8 +1131,8 @@ public:
 #define NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(prop, type) \
   NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(prop, mozilla::SmallValueHolder<type>)
 
-  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(IBSplitSibling, nsIFrame)
-  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(IBSplitPrevSibling, nsIFrame)
+  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(IBSplitSibling, nsContainerFrame)
+  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(IBSplitPrevSibling, nsContainerFrame)
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(NormalPositionProperty, nsPoint)
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(ComputedOffsetProperty, nsMargin)
@@ -1187,8 +1186,7 @@ public:
   mozilla::FrameBidiData GetBidiData() const
   {
     bool exists;
-    mozilla::FrameBidiData bidiData =
-      Properties().Get(BidiDataProperty(), &exists);
+    mozilla::FrameBidiData bidiData = GetProperty(BidiDataProperty(), &exists);
     if (!exists) {
       bidiData.precedingControl = mozilla::kBidiLevelNone;
     }
@@ -1663,7 +1661,7 @@ public:
 
   bool RefusedAsyncAnimation() const
   {
-    return Properties().Get(RefusedAsyncAnimationProperty());
+    return GetProperty(RefusedAsyncAnimationProperty());
   }
 
   /**
@@ -3379,12 +3377,71 @@ public:
     return mContent == aParentContent;
   }
 
-  FrameProperties Properties() {
-    return FrameProperties(PresContext()->PropertyTable(), this);
+  /**
+   * Support for reading and writing properties on the frame.
+   * These call through to the frame's FrameProperties object, if it
+   * exists, but avoid creating it if no property is ever set.
+   */
+  template<typename T>
+  FrameProperties::PropertyType<T>
+  GetProperty(FrameProperties::Descriptor<T> aProperty,
+              bool* aFoundResult = nullptr) const
+  {
+    if (mProperties) {
+      return mProperties->Get(aProperty, aFoundResult);
+    }
+    if (aFoundResult) {
+      *aFoundResult = false;
+    }
+    return FrameProperties::ReinterpretHelper<T>::FromPointer(nullptr);
   }
 
-  ConstFrameProperties Properties() const {
-    return ConstFrameProperties(PresContext()->PropertyTable(), this);
+  template<typename T>
+  bool HasProperty(FrameProperties::Descriptor<T> aProperty) const
+  {
+    if (mProperties) {
+      return mProperties->Has(aProperty);
+    }
+    return false;
+  }
+
+  template<typename T>
+  void SetProperty(FrameProperties::Descriptor<T> aProperty,
+                   FrameProperties::PropertyType<T> aValue)
+  {
+    if (!mProperties) {
+      mProperties = mozilla::MakeUnique<FrameProperties>();
+    }
+    mProperties->Set(aProperty, aValue, this);
+  }
+
+  template<typename T>
+  FrameProperties::PropertyType<T>
+  RemoveProperty(FrameProperties::Descriptor<T> aProperty,
+                 bool* aFoundResult = nullptr)
+  {
+    if (mProperties) {
+      return mProperties->Remove(aProperty, aFoundResult);
+    }
+    if (aFoundResult) {
+      *aFoundResult = false;
+    }
+    return FrameProperties::ReinterpretHelper<T>::FromPointer(nullptr);
+  }
+
+  template<typename T>
+  void DeleteProperty(FrameProperties::Descriptor<T> aProperty)
+  {
+    if (mProperties) {
+      mProperties->Delete(aProperty, this);
+    }
+  }
+
+  void DeleteAllProperties()
+  {
+    if (mProperties) {
+      mProperties->DeleteAll(this);
+    }
   }
 
   /**
@@ -3743,7 +3800,7 @@ public:
    */
   bool FrameIsNonFirstInIBSplit() const {
     return (GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
-      FirstContinuation()->Properties().Get(nsIFrame::IBSplitPrevSibling());
+      FirstContinuation()->GetProperty(nsIFrame::IBSplitPrevSibling());
   }
 
   /**
@@ -3752,7 +3809,7 @@ public:
    */
   bool FrameIsNonLastInIBSplit() const {
     return (GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
-      FirstContinuation()->Properties().Get(nsIFrame::IBSplitSibling());
+      FirstContinuation()->GetProperty(nsIFrame::IBSplitSibling());
   }
 
   /**
@@ -3861,11 +3918,11 @@ private:
                                       DestroyPaintedPresShellList)
 
   nsTArray<nsWeakPtr>* PaintedPresShellList() {
-    nsTArray<nsWeakPtr>* list = Properties().Get(PaintedPresShellsProperty());
+    nsTArray<nsWeakPtr>* list = GetProperty(PaintedPresShellsProperty());
 
     if (!list) {
       list = new nsTArray<nsWeakPtr>();
-      Properties().Set(PaintedPresShellsProperty(), list);
+      SetProperty(PaintedPresShellsProperty(), list);
     }
 
     return list;
@@ -3886,6 +3943,12 @@ protected:
   }
 
   nsFrameState     mState;
+
+  /**
+   * List of properties attached to the frame, or null if no properties have
+   * been set.
+   */
+  mozilla::UniquePtr<FrameProperties> mProperties;
 
   // When there is an overflow area only slightly larger than mRect,
   // we store a set of four 1-byte deltas from the edges of mRect

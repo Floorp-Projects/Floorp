@@ -213,7 +213,7 @@ public:
     ~AutoLineCursorSetup()
     {
       if (mOrigCursor) {
-        mFrame->Properties().Set(LineCursorProperty(), mOrigCursor);
+        mFrame->SetProperty(LineCursorProperty(), mOrigCursor);
       } else {
         mFrame->ClearLineCursor();
       }
@@ -415,7 +415,7 @@ protected:
   NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(LineCursorProperty, nsLineBox)
   bool HasLineCursor() { return GetStateBits() & NS_BLOCK_HAS_LINE_CURSOR; }
   nsLineBox* GetLineCursor() {
-    return HasLineCursor() ? Properties().Get(LineCursorProperty()) : nullptr;
+    return HasLineCursor() ? GetProperty(LineCursorProperty()) : nullptr;
   }
 
   nsLineBox* NewLineBox(nsIFrame* aFrame, bool aIsBlock) {

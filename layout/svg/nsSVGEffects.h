@@ -7,7 +7,7 @@
 #define NSSVGEFFECTS_H_
 
 #include "mozilla/Attributes.h"
-#include "FramePropertyTable.h"
+#include "FrameProperties.h"
 #include "mozilla/dom/Element.h"
 #include "nsHashKeys.h"
 #include "nsID.h"
