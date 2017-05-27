@@ -19,7 +19,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "SVGGeometryElement.h"
 #include "SVGUseElement.h"
-#include "mozilla/dom/SVGMaskElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
