@@ -280,6 +280,8 @@ void Gecko_SetCounterStyleToSymbols(mozilla::CounterStylePtr* ptr,
                                     uint8_t symbols_type,
                                     nsACString const* const* symbols,
                                     uint32_t symbols_count);
+void Gecko_SetCounterStyleToString(mozilla::CounterStylePtr* ptr,
+                                   const nsACString* symbol);
 void Gecko_CopyCounterStyle(mozilla::CounterStylePtr* dst,
                             const mozilla::CounterStylePtr* src);
 
