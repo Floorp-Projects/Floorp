@@ -70,7 +70,7 @@ class FreeBSDBootstrapper(BaseBootstrapper):
         # TODO: Figure out what not to install for artifact mode
         self.pkg_install(*self.browser_packages)
 
-    def ensure_stylo_packages(self, state_dir):
+    def ensure_stylo_packages(self, state_dir, checkout_root):
         self.pkg_install('llvm40')
 
     def suggest_browser_mozconfig(self):

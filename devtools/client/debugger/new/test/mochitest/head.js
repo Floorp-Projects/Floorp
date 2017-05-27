@@ -645,7 +645,8 @@ const selectors = {
   stepIn: ".stepIn.active",
   toggleBreakpoints: ".breakpoints-toggle",
   prettyPrintButton: ".prettyPrint",
-  sourceFooter: ".source-footer",
+  sourcesFooter: ".sources-panel .source-footer",
+  editorFooter: ".editor-pane .source-footer",
   sourceNode: i => `.sources-list .tree-node:nth-child(${i})`,
   sourceNodes: ".sources-list .tree-node",
   sourceArrow: i => `.sources-list .tree-node:nth-child(${i}) .arrow`
