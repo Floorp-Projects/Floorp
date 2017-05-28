@@ -1,57 +1,57 @@
-fails-if(styloVsGecko) == scoped-style-001.html scoped-style-001-ref.html
-fails-if(styloVsGecko) == scoped-style-002.html scoped-style-002-ref.html
-fails-if(styloVsGecko) == scoped-style-003.html scoped-style-003-ref.html
-fails-if(styloVsGecko) == scoped-style-004.html scoped-style-004-ref.html
-fails-if(styloVsGecko) == scoped-style-005.html scoped-style-005-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-001.html scoped-style-001-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-002.html scoped-style-002-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-003.html scoped-style-003-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-004.html scoped-style-004-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-005.html scoped-style-005-ref.html
 == scoped-style-006.html scoped-style-006-ref.html
 == scoped-style-007.html scoped-style-007-ref.html
-fails-if(styloVsGecko) == scoped-style-008.html scoped-style-008-ref.html
-fails-if(styloVsGecko) == scoped-style-009.html scoped-style-009-ref.html
-fails-if(styloVsGecko) == scoped-style-010.html scoped-style-010-ref.html
-fails-if(styloVsGecko) == scoped-style-011.html scoped-style-011-ref.html
-fails-if(styloVsGecko) == scoped-style-012.html scoped-style-012-ref.html
-fails-if(styloVsGecko) == scoped-style-013.html scoped-style-013-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-008.html scoped-style-008-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-009.html scoped-style-009-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-010.html scoped-style-010-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-011.html scoped-style-011-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-012.html scoped-style-012-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-013.html scoped-style-013-ref.html
 == scoped-style-014.html scoped-style-014-ref.html
-fails-if(styloVsGecko) == scoped-style-015.html scoped-style-015-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-015.html scoped-style-015-ref.html
 == scoped-style-016.html scoped-style-016-ref.html
-fails-if(styloVsGecko) == scoped-style-017.html scoped-style-017-ref.html
-fails-if(styloVsGecko) == scoped-style-018.html scoped-style-018-ref.html
-fails-if(styloVsGecko) == scoped-style-019.svg scoped-style-019-ref.svg
+fails-if(styloVsGecko||stylo) == scoped-style-017.html scoped-style-017-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-018.html scoped-style-018-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-019.svg scoped-style-019-ref.svg
 == scoped-style-020.html scoped-style-020-ref.html
 == scoped-style-021.html scoped-style-021-ref.html
 == scoped-style-022.html scoped-style-022-ref.html
-fails-if(styloVsGecko) == scoped-style-023.html scoped-style-023-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-023.html scoped-style-023-ref.html
 == scoped-style-024.html scoped-style-024-ref.html
 == scoped-style-important-001.html scoped-style-important-001-ref.html
-fails-if(styloVsGecko) == scoped-style-important-002.html scoped-style-important-002-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-important-002.html scoped-style-important-002-ref.html
 == scoped-style-important-003.html scoped-style-important-003-ref.html
 == scoped-style-important-004.html scoped-style-important-004-ref.html
 == scoped-style-important-005.html scoped-style-important-005-ref.html
 == scoped-style-important-006.html scoped-style-important-006-ref.html
 == scoped-style-important-007.html scoped-style-important-007-ref.html
-fails-if(styloVsGecko) == scoped-style-dynamic-001.html scoped-style-dynamic-001-ref.html
-fails-if(styloVsGecko) == scoped-style-dynamic-002.html scoped-style-dynamic-002-ref.html
-fails-if(styloVsGecko) == scoped-style-dynamic-003.html scoped-style-dynamic-003-ref.html
-fails-if(styloVsGecko) == scoped-style-dynamic-004.html scoped-style-dynamic-004-ref.html
-asserts-if(styloVsGecko,1) == scoped-style-dynamic-005.html scoped-style-dynamic-005-ref.html
-skip-if(styloVsGecko) == scoped-style-dynamic-006.html scoped-style-dynamic-006-ref.html
-fails-if(styloVsGecko) == scoped-style-dynamic-007.html scoped-style-dynamic-007-ref.html
-fails-if(styloVsGecko) == scoped-style-dynamic-008.html scoped-style-dynamic-008-ref.html
-skip-if(styloVsGecko) == scoped-style-dynamic-009.html scoped-style-dynamic-009-ref.html
-asserts-if(styloVsGecko,1) == scoped-style-dynamic-010.html scoped-style-dynamic-010-ref.html
-fails-if(styloVsGecko) == scoped-style-dynamic-011.html scoped-style-dynamic-011-ref.html
-asserts-if(styloVsGecko,1) == scoped-style-dynamic-012.svg scoped-style-dynamic-012-ref.svg
-fails-if(styloVsGecko) asserts-if(styloVsGecko,1) == scoped-style-dynamic-013.svg scoped-style-dynamic-013-ref.svg
-asserts-if(styloVsGecko,1) == scoped-style-dynamic-014.svg scoped-style-dynamic-014-ref.svg
-fails-if(styloVsGecko) asserts-if(styloVsGecko,1) == scoped-style-dynamic-015.svg scoped-style-dynamic-015-ref.svg
-fails-if(styloVsGecko) == scoped-style-import.html scoped-style-import-ref.html
-fails-if(styloVsGecko) == scoped-style-media.html scoped-style-media-ref.html
-fails-if(styloVsGecko) == scoped-style-namespace.html scoped-style-namespace-ref.html
-fails-if(styloVsGecko) == scoped-style-charset.html scoped-style-charset-ref.html
-fails-if(styloVsGecko) == scoped-style-document.html scoped-style-document-ref.html
-fails-if(styloVsGecko) HTTP(..) == scoped-style-font-face.html scoped-style-font-face-ref.html
-fails-if(styloVsGecko) == scoped-style-keyframes.html scoped-style-keyframes-ref.html
-fails-if(styloVsGecko) == scoped-style-supports.html scoped-style-supports-ref.html
-pref(layout.css.scope-pseudo.enabled,true) fails-if(styloVsGecko) == scoped-style-pseudo-001.html scoped-style-pseudo-001-ref.html
-pref(layout.css.scope-pseudo.enabled,true) fails-if(styloVsGecko) == scoped-style-pseudo-002.html scoped-style-pseudo-002-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-dynamic-001.html scoped-style-dynamic-001-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-dynamic-002.html scoped-style-dynamic-002-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-dynamic-003.html scoped-style-dynamic-003-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-dynamic-004.html scoped-style-dynamic-004-ref.html
+asserts-if(styloVsGecko,1) asserts-if(stylo,1) == scoped-style-dynamic-005.html scoped-style-dynamic-005-ref.html
+skip-if(styloVsGecko) asserts-if(stylo,1) fails-if(stylo) == scoped-style-dynamic-006.html scoped-style-dynamic-006-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-dynamic-007.html scoped-style-dynamic-007-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-dynamic-008.html scoped-style-dynamic-008-ref.html
+skip-if(styloVsGecko) asserts-if(stylo,1) fails-if(stylo) == scoped-style-dynamic-009.html scoped-style-dynamic-009-ref.html
+asserts-if(styloVsGecko,1) asserts-if(stylo,1) == scoped-style-dynamic-010.html scoped-style-dynamic-010-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-dynamic-011.html scoped-style-dynamic-011-ref.html
+asserts-if(styloVsGecko,1) asserts-if(stylo,1) == scoped-style-dynamic-012.svg scoped-style-dynamic-012-ref.svg
+fails-if(styloVsGecko) asserts-if(styloVsGecko,1) asserts-if(stylo,1) fails-if(stylo) == scoped-style-dynamic-013.svg scoped-style-dynamic-013-ref.svg
+asserts-if(styloVsGecko,1) asserts-if(stylo,1) == scoped-style-dynamic-014.svg scoped-style-dynamic-014-ref.svg
+fails-if(styloVsGecko) asserts-if(styloVsGecko,1) asserts-if(stylo,1) fails-if(stylo) == scoped-style-dynamic-015.svg scoped-style-dynamic-015-ref.svg
+fails-if(styloVsGecko||stylo) == scoped-style-import.html scoped-style-import-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-media.html scoped-style-media-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-namespace.html scoped-style-namespace-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-charset.html scoped-style-charset-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-document.html scoped-style-document-ref.html
+fails-if(styloVsGecko||stylo) HTTP(..) == scoped-style-font-face.html scoped-style-font-face-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-keyframes.html scoped-style-keyframes-ref.html
+fails-if(styloVsGecko||stylo) == scoped-style-supports.html scoped-style-supports-ref.html
+pref(layout.css.scope-pseudo.enabled,true) fails-if(styloVsGecko||stylo) == scoped-style-pseudo-001.html scoped-style-pseudo-001-ref.html
+pref(layout.css.scope-pseudo.enabled,true) fails-if(styloVsGecko||stylo) == scoped-style-pseudo-002.html scoped-style-pseudo-002-ref.html
 pref(layout.css.scope-pseudo.enabled,true) == scoped-style-pseudo-003.html scoped-style-pseudo-003-ref.html

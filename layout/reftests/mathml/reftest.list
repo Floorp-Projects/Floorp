@@ -11,8 +11,8 @@ fails-if(!styloVsGecko) == dir-9.html dir-9-ref.html # Bug 787215
 == dir-10.html dir-10-ref.html
 == dir-11.html dir-11-ref.html
 == css-spacing-1.html css-spacing-1-ref.html
-pref(mathml.disabled,true) fails-if(styloVsGecko) == disabled-scriptlevel-1.html disabled-scriptlevel-1-ref.html
-pref(mathml.disabled,true) fails-if(styloVsGecko) == disabled-scriptlevel-1.xhtml disabled-scriptlevel-1-ref.xhtml
+pref(mathml.disabled,true) fails-if(styloVsGecko||stylo) == disabled-scriptlevel-1.html disabled-scriptlevel-1-ref.html
+pref(mathml.disabled,true) fails-if(styloVsGecko||stylo) == disabled-scriptlevel-1.xhtml disabled-scriptlevel-1-ref.xhtml
 == displaystyle-1.html displaystyle-1-ref.html
 == displaystyle-2.html displaystyle-2-ref.html
 == displaystyle-3.html displaystyle-3-ref.html
@@ -294,8 +294,8 @@ fails-if(Android||OSX) == mathvariant-2.html mathvariant-2-ref.html # Bugs 10106
 == mathvariant-4.html mathvariant-4-ref.html
 == mathvariant-5.html mathvariant-5-ref.html
 == dtls-1.html dtls-1-ref.html
-fails-if(styloVsGecko) == dtls-2.html dtls-2-ref.html # bug 1366206
-fails-if(styloVsGecko) == dtls-3.html dtls-3-ref.html # bug 1366206
+fails-if(styloVsGecko||stylo) == dtls-2.html dtls-2-ref.html # bug 1366206
+fails-if(styloVsGecko||stylo) == dtls-3.html dtls-3-ref.html # bug 1366206
 == ssty-1.html ssty-1-ref.html
 == ssty-2.html ssty-2-ref.html
 == ssty-3.html ssty-3-ref.html
@@ -369,7 +369,7 @@ fuzzy-if(OSX,1,100) fuzzy-if(skiaContent,1,14) == mfrac-D-1.html mfrac-D-1-ref.h
 == mfrac-E-1.html mfrac-E-1-ref.html
 test-pref(dom.webcomponents.enabled,true) == shadow-dom-1.html shadow-dom-1-ref.html
 pref(font.size.inflation.emPerLine,25) == font-inflation-1.html font-inflation-1-ref.html
-test-pref(font.minimum-size.x-math,40) fails-if(styloVsGecko) == default-font.html default-font-ref.html
+test-pref(font.minimum-size.x-math,40) == default-font.html default-font-ref.html
 != radicalbar-1.html about:blank
 != radicalbar-1a.html about:blank
 != radicalbar-1b.html about:blank

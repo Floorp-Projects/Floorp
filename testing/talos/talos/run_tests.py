@@ -15,6 +15,7 @@ import mozhttpd
 
 from mozlog import get_proxy_logger
 
+from talos.mitmproxy import mitmproxy
 from talos.results import TalosResults
 from talos.ttest import TTest
 from talos.utils import TalosError, TalosRegression
@@ -89,7 +90,6 @@ def run_tests(config, browser_config):
     # get the test data
     tests = config['tests']
     tests = useBaseTestDefaults(config.get('basetest', {}), tests)
-
     paths = ['profile_path', 'tpmanifest', 'extensions', 'setup', 'cleanup']
     for test in tests:
 
@@ -191,6 +191,37 @@ def run_tests(config, browser_config):
     if config['gecko_profile']:
         talos_results.add_extra_option('geckoProfile')
 
+    # some tests use mitmproxy to playback pages
+    mitmproxy_recordings_list = config.get('mitmproxy', False)
+    if mitmproxy_recordings_list is not False:
+        # needed so can tell talos ttest to allow external connections
+        browser_config['mitmproxy'] = True
+
+        # start mitmproxy playback; this also generates the CA certificate
+        mitmdump_path = config.get('mitmdumpPath', False)
+        if mitmdump_path is False:
+            # cannot continue, need path for mitmdump playback tool
+            LOG.error('Aborting: mitmdumpPath was not provided on cmd line but is required')
+            sys.exit()
+
+        mitmproxy_recording_path = os.path.join(here, 'mitmproxy')
+        mitmproxy_proc = mitmproxy.start_mitmproxy_playback(mitmdump_path,
+                                                            mitmproxy_recording_path,
+                                                            mitmproxy_recordings_list.split(),
+                                                            browser_config['browser_path'])
+
+        # install the generated CA certificate into Firefox
+        # mitmproxy cert setup needs path to mozharness install; mozharness has set this
+        # value in the SCRIPTSPATH env var for us in mozharness/mozilla/testing/talos.py
+        scripts_path = os.environ.get('SCRIPTSPATH')
+        LOG.info('scripts_path: %s' % str(scripts_path))
+        mitmproxy.install_mitmproxy_cert(mitmproxy_proc,
+                                         browser_config['browser_path'],
+                                         str(scripts_path))
+
+    if config.get('first_non_blank_paint', False):
+        browser_config['firstNonBlankPaint'] = True
+
     testname = None
     # run the tests
     timer = utils.Timer()
@@ -225,6 +256,10 @@ def run_tests(config, browser_config):
         httpd.stop()
 
     LOG.info("Completed test suite (%s)" % timer.elapsed())
+
+    # if mitmproxy was used for page playback, stop it
+    if mitmproxy_recordings_list is not False:
+        mitmproxy.stop_mitmproxy_playback(mitmproxy_proc)
 
     # output results
     if results_urls:

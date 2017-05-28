@@ -50,28 +50,28 @@
 == flex-abspos-staticpos-margin-001.html flex-abspos-staticpos-margin-001-ref.html
 == flex-abspos-staticpos-margin-002.html flex-abspos-staticpos-margin-002-ref.html
 
-fails-if(styloVsGecko) == grid-abspos-staticpos-align-self-001.html grid-abspos-staticpos-align-self-001-ref.html
+fails-if(styloVsGecko||stylo) == grid-abspos-staticpos-align-self-001.html grid-abspos-staticpos-align-self-001-ref.html
 == grid-abspos-staticpos-align-self-002.html grid-abspos-staticpos-align-self-002-ref.html
-fails-if(styloVsGecko) == grid-abspos-staticpos-align-self-img-001.html grid-abspos-staticpos-align-self-img-001-ref.html
+fails-if(styloVsGecko||stylo) == grid-abspos-staticpos-align-self-img-001.html grid-abspos-staticpos-align-self-img-001-ref.html
 == grid-abspos-staticpos-align-self-img-002.html grid-abspos-staticpos-align-self-img-002-ref.html
-fails-if(styloVsGecko) == grid-abspos-staticpos-align-self-rtl-001.html grid-abspos-staticpos-align-self-rtl-001-ref.html
-fails-if(styloVsGecko) == grid-abspos-staticpos-align-self-rtl-002.html grid-abspos-staticpos-align-self-rtl-002-ref.html
+fails-if(styloVsGecko||stylo) == grid-abspos-staticpos-align-self-rtl-001.html grid-abspos-staticpos-align-self-rtl-001-ref.html
+fails-if(styloVsGecko||stylo) == grid-abspos-staticpos-align-self-rtl-002.html grid-abspos-staticpos-align-self-rtl-002-ref.html
 == grid-abspos-staticpos-align-self-rtl-003.html grid-abspos-staticpos-align-self-rtl-003-ref.html
 == grid-abspos-staticpos-align-self-rtl-004.html grid-abspos-staticpos-align-self-rtl-004-ref.html
-fails-if(styloVsGecko) == grid-abspos-staticpos-align-self-vertWM-001.html grid-abspos-staticpos-align-self-vertWM-001-ref.html
-fails-if(styloVsGecko) == grid-abspos-staticpos-align-self-vertWM-002.html grid-abspos-staticpos-align-self-vertWM-002-ref.html
+fails-if(styloVsGecko||stylo) == grid-abspos-staticpos-align-self-vertWM-001.html grid-abspos-staticpos-align-self-vertWM-001-ref.html
+fails-if(styloVsGecko||stylo) == grid-abspos-staticpos-align-self-vertWM-002.html grid-abspos-staticpos-align-self-vertWM-002-ref.html
 == grid-abspos-staticpos-align-self-vertWM-003.html grid-abspos-staticpos-align-self-vertWM-003-ref.html
 == grid-abspos-staticpos-align-self-vertWM-004.html grid-abspos-staticpos-align-self-vertWM-004-ref.html
 
-fails-if(styloVsGecko) == grid-abspos-staticpos-justify-self-001.html grid-abspos-staticpos-justify-self-001-ref.html
+fails-if(styloVsGecko||stylo) == grid-abspos-staticpos-justify-self-001.html grid-abspos-staticpos-justify-self-001-ref.html
 == grid-abspos-staticpos-justify-self-002.html grid-abspos-staticpos-justify-self-002-ref.html
-fails-if(styloVsGecko) == grid-abspos-staticpos-justify-self-img-001.html grid-abspos-staticpos-justify-self-img-001-ref.html
+fails-if(styloVsGecko||stylo) == grid-abspos-staticpos-justify-self-img-001.html grid-abspos-staticpos-justify-self-img-001-ref.html
 == grid-abspos-staticpos-justify-self-img-002.html grid-abspos-staticpos-justify-self-img-002-ref.html
-fails-if(styloVsGecko) == grid-abspos-staticpos-justify-self-rtl-001.html grid-abspos-staticpos-justify-self-rtl-001-ref.html
-fails-if(styloVsGecko) == grid-abspos-staticpos-justify-self-rtl-002.html grid-abspos-staticpos-justify-self-rtl-002-ref.html
+fails-if(styloVsGecko||stylo) == grid-abspos-staticpos-justify-self-rtl-001.html grid-abspos-staticpos-justify-self-rtl-001-ref.html
+fails-if(styloVsGecko||stylo) == grid-abspos-staticpos-justify-self-rtl-002.html grid-abspos-staticpos-justify-self-rtl-002-ref.html
 == grid-abspos-staticpos-justify-self-rtl-003.html grid-abspos-staticpos-justify-self-rtl-003-ref.html
 == grid-abspos-staticpos-justify-self-rtl-004.html grid-abspos-staticpos-justify-self-rtl-004-ref.html
-fails-if(styloVsGecko) == grid-abspos-staticpos-justify-self-vertWM-001.html grid-abspos-staticpos-justify-self-vertWM-001-ref.html
-fails-if(styloVsGecko) == grid-abspos-staticpos-justify-self-vertWM-002.html grid-abspos-staticpos-justify-self-vertWM-002-ref.html
+fails-if(styloVsGecko||stylo) == grid-abspos-staticpos-justify-self-vertWM-001.html grid-abspos-staticpos-justify-self-vertWM-001-ref.html
+fails-if(styloVsGecko||stylo) == grid-abspos-staticpos-justify-self-vertWM-002.html grid-abspos-staticpos-justify-self-vertWM-002-ref.html
 == grid-abspos-staticpos-justify-self-vertWM-003.html grid-abspos-staticpos-justify-self-vertWM-003-ref.html
 == grid-abspos-staticpos-justify-self-vertWM-004.html grid-abspos-staticpos-justify-self-vertWM-004-ref.html

@@ -274,8 +274,16 @@ void Gecko_CopyImageOrientationFrom(nsStyleVisibility* aDst,
                                     const nsStyleVisibility* aSrc);
 
 // Counter style.
-void Gecko_SetListStyleType(nsStyleList* style_struct, nsIAtom* name);
-void Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src);
+// This function takes an already addrefed nsIAtom
+void Gecko_SetCounterStyleToName(mozilla::CounterStylePtr* ptr, nsIAtom* name);
+void Gecko_SetCounterStyleToSymbols(mozilla::CounterStylePtr* ptr,
+                                    uint8_t symbols_type,
+                                    nsACString const* const* symbols,
+                                    uint32_t symbols_count);
+void Gecko_SetCounterStyleToString(mozilla::CounterStylePtr* ptr,
+                                   const nsACString* symbol);
+void Gecko_CopyCounterStyle(mozilla::CounterStylePtr* dst,
+                            const mozilla::CounterStylePtr* src);
 
 // background-image style.
 void Gecko_SetNullImageValue(nsStyleImage* image);
@@ -442,6 +450,8 @@ void Gecko_nsStyleSVGPaint_Reset(nsStyleSVGPaint* paint);
 
 void Gecko_nsStyleSVG_SetDashArrayLength(nsStyleSVG* svg, uint32_t len);
 void Gecko_nsStyleSVG_CopyDashArray(nsStyleSVG* dst, const nsStyleSVG* src);
+void Gecko_nsStyleSVG_SetContextPropertiesLength(nsStyleSVG* svg, uint32_t len);
+void Gecko_nsStyleSVG_CopyContextProperties(nsStyleSVG* dst, const nsStyleSVG* src);
 
 mozilla::css::URLValue* Gecko_NewURLValue(ServoBundledURI uri);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::URLValue, CSSURLValue);
@@ -496,6 +506,8 @@ bool Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id);
 void Gecko_nsStyleFont_SetLang(nsStyleFont* font, nsIAtom* atom);
 void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource);
 void Gecko_nsStyleFont_FixupNoneGeneric(nsStyleFont* font,
+                                        RawGeckoPresContextBorrowed pres_context);
+void Gecko_nsStyleFont_FixupMinFontSize(nsStyleFont* font,
                                         RawGeckoPresContextBorrowed pres_context);
 FontSizePrefs Gecko_GetBaseSize(nsIAtom* lang);
 

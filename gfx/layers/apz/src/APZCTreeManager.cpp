@@ -86,7 +86,7 @@ struct APZCTreeManager::TreeBuildingState {
   // This map is populated as we place APZCs into the new tree. Its purpose is
   // to facilitate re-using the same APZC for different layers that scroll
   // together (and thus have the same ScrollableLayerGuid).
-  std::map<ScrollableLayerGuid, AsyncPanZoomController*> mApzcMap;
+  std::unordered_map<ScrollableLayerGuid, AsyncPanZoomController*, ScrollableLayerGuidHash> mApzcMap;
 };
 
 class APZCTreeManager::CheckerboardFlushObserver : public nsIObserver {
@@ -380,7 +380,7 @@ APZCTreeManager::PushStateToWR(wr::WebRenderAPI* aWrApi,
   // such as the one below to generate scrollbar transforms. Without this, perf
   // could end up being O(n^2) instead of O(n log n) because we'd have to search
   // the tree to find the corresponding APZC every time we hit a thumb node.
-  std::map<ScrollableLayerGuid, HitTestingTreeNode*> httnMap;
+  std::unordered_map<ScrollableLayerGuid, HitTestingTreeNode*, ScrollableLayerGuidHash> httnMap;
 
   bool activeAnimations = false;
   uint64_t lastLayersId = -1;
@@ -537,6 +537,8 @@ GetEventRegions(const ScrollNode& aLayer)
   }
   return aLayer.GetEventRegions();
 }
+
+
 
 already_AddRefed<HitTestingTreeNode>
 APZCTreeManager::RecycleOrCreateNode(TreeBuildingState& aState,

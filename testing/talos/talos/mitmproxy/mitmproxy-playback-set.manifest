@@ -1,0 +1,9 @@
+[
+    {
+        "filename": "mitmproxy-recording-set.zip",
+        "size": 679582,
+        "digest": "035e0729905ea1bb61efa4e720cdbc2a436dfebf364eb0d71a7a9ad04658635ede69aa5ef068e99bd515b0b68e2217a2ffe5961b3e8c7f8ead2c49ddcb9fe879",
+        "algorithm": "sha512",
+        "unpack": false
+    }
+]

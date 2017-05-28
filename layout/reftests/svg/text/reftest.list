@@ -147,8 +147,8 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/
 == ignore-text-align-2.svg ignore-text-align-2-ref.svg
 
 # pseudo-elements
-fails-if(styloVsGecko) == pseudo-first-line.svg pseudo-first-line-ref.svg
-fails-if(styloVsGecko) == pseudo-first-line-2.svg pseudo-first-line-2-ref.svg
+fails-if(styloVsGecko||stylo) == pseudo-first-line.svg pseudo-first-line-ref.svg
+fails-if(styloVsGecko||stylo) == pseudo-first-line-2.svg pseudo-first-line-2-ref.svg
 == pseudo-first-letter.svg pseudo-first-letter-ref.svg
 == pseudo-first-letter-2.svg pseudo-first-letter-2-ref.svg
 == ignore-before-after.svg ignore-prop-ref.svg

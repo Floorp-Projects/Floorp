@@ -326,7 +326,7 @@ fails-if(!cocoaWidget&&!styloVsGecko) != osx-font-smoothing.html osx-font-smooth
 fails-if(!cocoaWidget&&!styloVsGecko) != osx-font-smoothing-2.html osx-font-smoothing-2-notref.html
 == osx-font-smoothing-2.html osx-font-smoothing-2-ref.html
 
-pref(layout.css.text-align-unsafe-value.enabled,true) fails-if(styloVsGecko) == text-align-unsafe.html text-align-unsafe-ref.html
+pref(layout.css.text-align-unsafe-value.enabled,true) fails-if(styloVsGecko||stylo) == text-align-unsafe.html text-align-unsafe-ref.html
 
 # stray control chars should be visible by default, bug 1099557
 fails-if(styloVsGecko) != control-chars-01a.html control-chars-01-notref.html

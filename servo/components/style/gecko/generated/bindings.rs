@@ -32,6 +32,7 @@ use gecko_bindings::structs::CSSPseudoElementType;
 use gecko_bindings::structs::TraversalRestyleBehavior;
 use gecko_bindings::structs::TraversalRootBehavior;
 use gecko_bindings::structs::ComputedTimingFunction_BeforeFlag;
+use gecko_bindings::structs::CounterStylePtr;
 use gecko_bindings::structs::FontFamilyList;
 use gecko_bindings::structs::FontFamilyType;
 use gecko_bindings::structs::FontSizePrefs;
@@ -852,12 +853,22 @@ extern "C" {
                                           aSrc: *const nsStyleVisibility);
 }
 extern "C" {
-    pub fn Gecko_SetListStyleType(style_struct: *mut nsStyleList,
-                                  name: *mut nsIAtom);
+    pub fn Gecko_SetCounterStyleToName(ptr: *mut CounterStylePtr,
+                                       name: *mut nsIAtom);
 }
 extern "C" {
-    pub fn Gecko_CopyListStyleTypeFrom(dst: *mut nsStyleList,
-                                       src: *const nsStyleList);
+    pub fn Gecko_SetCounterStyleToSymbols(ptr: *mut CounterStylePtr,
+                                          symbols_type: u8,
+                                          symbols: *const *const nsACString,
+                                          symbols_count: u32);
+}
+extern "C" {
+    pub fn Gecko_SetCounterStyleToString(ptr: *mut CounterStylePtr,
+                                         symbol: *const nsACString);
+}
+extern "C" {
+    pub fn Gecko_CopyCounterStyle(dst: *mut CounterStylePtr,
+                                  src: *const CounterStylePtr);
 }
 extern "C" {
     pub fn Gecko_SetNullImageValue(image: *mut nsStyleImage);
@@ -1123,6 +1134,14 @@ extern "C" {
                                           src: *const nsStyleSVG);
 }
 extern "C" {
+    pub fn Gecko_nsStyleSVG_SetContextPropertiesLength(svg: *mut nsStyleSVG,
+                                                       len: u32);
+}
+extern "C" {
+    pub fn Gecko_nsStyleSVG_CopyContextProperties(dst: *mut nsStyleSVG,
+                                                  src: *const nsStyleSVG);
+}
+extern "C" {
     pub fn Gecko_NewURLValue(uri: ServoBundledURI) -> *mut URLValue;
 }
 extern "C" {
@@ -1293,6 +1312,11 @@ extern "C" {
 }
 extern "C" {
     pub fn Gecko_nsStyleFont_FixupNoneGeneric(font: *mut nsStyleFont,
+                                              pres_context:
+                                                  RawGeckoPresContextBorrowed);
+}
+extern "C" {
+    pub fn Gecko_nsStyleFont_FixupMinFontSize(font: *mut nsStyleFont,
                                               pres_context:
                                                   RawGeckoPresContextBorrowed);
 }
