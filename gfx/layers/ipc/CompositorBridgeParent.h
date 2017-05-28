@@ -108,7 +108,7 @@ public:
   virtual void LeaveTestMode(LayerTransactionParent* aLayerTree) { }
   virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree) = 0;
   virtual CompositorAnimationStorage* GetAnimationStorage(const uint64_t& aId) { return nullptr; }
-  virtual void FlushApzRepaints(const LayerTransactionParent* aLayerTree) = 0;
+  virtual void FlushApzRepaints(const uint64_t& aLayersId) = 0;
   virtual void GetAPZTestData(const LayerTransactionParent* aLayerTree,
                               APZTestData* aOutData) { }
   virtual void SetConfirmedTargetAPZC(const LayerTransactionParent* aLayerTree,
@@ -231,7 +231,7 @@ public:
   virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
                override;
   virtual CompositorAnimationStorage* GetAnimationStorage(const uint64_t& aId) override;
-  virtual void FlushApzRepaints(const LayerTransactionParent* aLayerTree) override;
+  virtual void FlushApzRepaints(const uint64_t& aLayersId) override;
   virtual void GetAPZTestData(const LayerTransactionParent* aLayerTree,
                               APZTestData* aOutData) override;
   virtual void SetConfirmedTargetAPZC(const LayerTransactionParent* aLayerTree,
