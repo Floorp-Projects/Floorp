@@ -844,7 +844,7 @@ LayerTransactionParent::RecvSetAsyncZoom(const FrameMetrics::ViewID& aScrollID,
 mozilla::ipc::IPCResult
 LayerTransactionParent::RecvFlushApzRepaints()
 {
-  mCompositorBridge->FlushApzRepaints(this);
+  mCompositorBridge->FlushApzRepaints(GetId());
   return IPC_OK();
 }
 

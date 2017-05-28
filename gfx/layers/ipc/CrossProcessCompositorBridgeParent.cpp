@@ -422,18 +422,17 @@ CrossProcessCompositorBridgeParent::GetAnimationStorage(
 }
 
 void
-CrossProcessCompositorBridgeParent::FlushApzRepaints(const LayerTransactionParent* aLayerTree)
+CrossProcessCompositorBridgeParent::FlushApzRepaints(const uint64_t& aLayersId)
 {
-  uint64_t id = aLayerTree->GetId();
-  MOZ_ASSERT(id != 0);
+  MOZ_ASSERT(aLayersId != 0);
   const CompositorBridgeParent::LayerTreeState* state =
-    CompositorBridgeParent::GetIndirectShadowTree(id);
+    CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
   if (!state) {
     return;
   }
 
   MOZ_ASSERT(state->mParent);
-  state->mParent->FlushApzRepaints(aLayerTree);
+  state->mParent->FlushApzRepaints(aLayersId);
 }
 
 void
