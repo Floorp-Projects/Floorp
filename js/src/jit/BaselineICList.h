@@ -18,6 +18,7 @@ namespace jit {
     _(TypeMonitor_SingleObject)                  \
     _(TypeMonitor_ObjectGroup)                   \
     _(TypeMonitor_PrimitiveSet)                  \
+    _(TypeMonitor_AnyValue)                      \
                                                  \
     _(TypeUpdate_Fallback)                       \
     _(TypeUpdate_SingleObject)                   \

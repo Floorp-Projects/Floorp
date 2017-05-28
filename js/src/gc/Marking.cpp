@@ -2607,11 +2607,16 @@ GCMarker::stackContainsCrossZonePointerTo(const Cell* target) const
         if (sourceZone == targetZone)
             continue;
 
-        if ((IsCrossCompartmentWrapper(source) && source->as<ProxyObject>().target() == target) ||
-            Debugger::isDebuggerCrossCompartmentEdge(source, target))
-        {
-            return sourceZone;
+        // The private slot of proxy objects might contain a cross-compartment
+        // pointer.
+        if (source->is<ProxyObject>()) {
+            Value value = source->as<ProxyObject>().private_();
+            if (value.isObject() && &value.toObject() == target)
+                return sourceZone;
         }
+
+        if (Debugger::isDebuggerCrossCompartmentEdge(source, target))
+            return sourceZone;
     }
 
     return nullptr;

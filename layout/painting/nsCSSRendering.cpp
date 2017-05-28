@@ -295,13 +295,13 @@ protected:
     if (!prevCont &&
         (aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
       nsIFrame* block =
-        aFrame->Properties().Get(nsIFrame::IBSplitPrevSibling());
+        aFrame->GetProperty(nsIFrame::IBSplitPrevSibling());
       if (block) {
         // The {ib} properties are only stored on first continuations
         NS_ASSERTION(!block->GetPrevContinuation(),
                      "Incorrect value for IBSplitPrevSibling");
         prevCont =
-          block->Properties().Get(nsIFrame::IBSplitPrevSibling());
+          block->GetProperty(nsIFrame::IBSplitPrevSibling());
         NS_ASSERTION(prevCont, "How did that happen?");
       }
     }
@@ -315,9 +315,9 @@ protected:
         (aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
       // The {ib} properties are only stored on first continuations
       aFrame = aFrame->FirstContinuation();
-      nsIFrame* block = aFrame->Properties().Get(nsIFrame::IBSplitSibling());
+      nsIFrame* block = aFrame->GetProperty(nsIFrame::IBSplitSibling());
       if (block) {
-        nextCont = block->Properties().Get(nsIFrame::IBSplitSibling());
+        nextCont = block->GetProperty(nsIFrame::IBSplitSibling());
         NS_ASSERTION(nextCont, "How did that happen?");
       }
     }
@@ -940,7 +940,7 @@ static nsRect
 GetOutlineInnerRect(nsIFrame* aFrame)
 {
   nsRect* savedOutlineInnerRect =
-    aFrame->Properties().Get(nsIFrame::OutlineInnerRectProperty());
+    aFrame->GetProperty(nsIFrame::OutlineInnerRectProperty());
   if (savedOutlineInnerRect)
     return *savedOutlineInnerRect;
   NS_NOTREACHED("we should have saved a frame property");

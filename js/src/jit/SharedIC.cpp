@@ -2179,16 +2179,44 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx, BaselineFrame* fra
 {
     MOZ_ASSERT(types);
 
-    bool wasDetachedMonitorChain = lastMonitorStubPtrAddr_ == nullptr;
-    MOZ_ASSERT_IF(wasDetachedMonitorChain, numOptimizedMonitorStubs_ == 0);
-
-    if (numOptimizedMonitorStubs_ >= MAX_OPTIMIZED_STUBS) {
-        // TODO: if the TypeSet becomes unknown or has the AnyObject type,
-        // replace stubs with a single stub to handle these.
+    // Don't attach too many SingleObject/ObjectGroup stubs. If the value is a
+    // primitive or if we will attach an any-object stub, we can handle this
+    // with a single PrimitiveSet or AnyValue stub so we always optimize.
+    if (numOptimizedMonitorStubs_ >= MAX_OPTIMIZED_STUBS &&
+        val.isObject() &&
+        !types->unknownObject())
+    {
         return true;
     }
 
-    if (val.isPrimitive()) {
+    bool wasDetachedMonitorChain = lastMonitorStubPtrAddr_ == nullptr;
+    MOZ_ASSERT_IF(wasDetachedMonitorChain, numOptimizedMonitorStubs_ == 0);
+
+    if (types->unknown()) {
+        // The TypeSet got marked as unknown so attach a stub that always
+        // succeeds.
+
+        // Check for existing TypeMonitor_AnyValue stubs.
+        for (ICStubConstIterator iter(firstMonitorStub()); !iter.atEnd(); iter++) {
+            if (iter->isTypeMonitor_AnyValue())
+                return true;
+        }
+
+        // Discard existing stubs.
+        resetMonitorStubChain(cx->zone());
+        wasDetachedMonitorChain = (lastMonitorStubPtrAddr_ == nullptr);
+
+        ICTypeMonitor_AnyValue::Compiler compiler(cx);
+        ICStub* stub = compiler.getStub(compiler.getStubSpace(frame->script()));
+        if (!stub) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+
+        JitSpew(JitSpew_BaselineIC, "  Added TypeMonitor stub %p for any value", stub);
+        addOptimizedMonitorStub(stub);
+
+    } else if (val.isPrimitive() || types->unknownObject()) {
         if (val.isMagic(JS_UNINITIALIZED_LEXICAL))
             return true;
         MOZ_ASSERT(!val.isMagic());
@@ -2201,6 +2229,26 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx, BaselineFrame* fra
                 existingStub = iter->toTypeMonitor_PrimitiveSet();
                 if (existingStub->containsType(type))
                     return true;
+            }
+        }
+
+        if (val.isObject()) {
+            // Check for existing SingleObject/ObjectGroup stubs and discard
+            // stubs if we find one. Ideally we would discard just these stubs,
+            // but unlinking individual type monitor stubs is somewhat
+            // complicated.
+            MOZ_ASSERT(types->unknownObject());
+            bool hasObjectStubs = false;
+            for (ICStubConstIterator iter(firstMonitorStub()); !iter.atEnd(); iter++) {
+                if (iter->isTypeMonitor_SingleObject() || iter->isTypeMonitor_ObjectGroup()) {
+                    hasObjectStubs = true;
+                    break;
+                }
+            }
+            if (hasObjectStubs) {
+                resetMonitorStubChain(cx->zone());
+                wasDetachedMonitorChain = (lastMonitorStubPtrAddr_ == nullptr);
+                existingStub = nullptr;
             }
         }
 
@@ -2400,16 +2448,8 @@ ICTypeMonitor_PrimitiveSet::Compiler::generateStubCode(MacroAssembler& masm)
     if (flags_ & TypeToFlag(JSVAL_TYPE_SYMBOL))
         masm.branchTestSymbol(Assembler::Equal, R0, &success);
 
-    // Currently, we will never generate primitive stub checks for object.  However,
-    // when we do get to the point where we want to collapse our monitor chains of
-    // objects and singletons down (when they get too long) to a generic "any object"
-    // in coordination with the typeset doing the same thing, this will need to
-    // be re-enabled.
-    /*
     if (flags_ & TypeToFlag(JSVAL_TYPE_OBJECT))
         masm.branchTestObject(Assembler::Equal, R0, &success);
-    */
-    MOZ_ASSERT(!(flags_ & TypeToFlag(JSVAL_TYPE_OBJECT)));
 
     if (flags_ & TypeToFlag(JSVAL_TYPE_NULL))
         masm.branchTestNull(Assembler::Equal, R0, &success);
@@ -2477,6 +2517,13 @@ ICTypeMonitor_ObjectGroup::Compiler::generateStubCode(MacroAssembler& masm)
 
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICTypeMonitor_AnyValue::Compiler::generateStubCode(MacroAssembler& masm)
+{
+    EmitReturnFromIC(masm);
     return true;
 }
 
