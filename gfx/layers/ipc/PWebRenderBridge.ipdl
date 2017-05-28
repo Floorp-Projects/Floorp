@@ -14,6 +14,7 @@ include WebRenderMessages;
 include protocol PCompositorBridge;
 include protocol PTexture;
 
+using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
@@ -67,8 +68,10 @@ parent:
   // Schedule a composite if one isn't already scheduled.
   async ForceComposite();
 
-  // Testing APIs. These correspond exactly to the equivalent APIs in
-  // PLayerTransaction - see those for documentation.
+  // These correspond exactly to the equivalent APIs in PLayerTransaction -
+  // see those for documentation.
+  async SetConfirmedTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
+  // More copied from PLayerTransaction, but these are only used for testing.
   sync SetAsyncScrollOffset(ViewID scrollId, float x, float y);
   sync SetAsyncZoom(ViewID scrollId, float zoom);
   async FlushApzRepaints();

@@ -14,6 +14,8 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ShadowLayers.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/TouchEvents.h"
 #include "nsContentUtils.h"
 #include "nsContainerFrame.h"
@@ -700,6 +702,13 @@ SendLayersDependentApzcTargetConfirmation(nsIPresShell* aShell, uint64_t aInputB
 {
   LayerManager* lm = aShell->GetLayerManager();
   if (!lm) {
+    return;
+  }
+
+  if (WebRenderLayerManager* wrlm = lm->AsWebRenderLayerManager()) {
+    if (WebRenderBridgeChild* wrbc = wrlm->WrBridge()) {
+      wrbc->SendSetConfirmedTargetAPZC(aInputBlockId, aTargets);
+    }
     return;
   }
 

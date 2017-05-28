@@ -116,6 +116,8 @@ public:
   mozilla::ipc::IPCResult RecvClearCachedResources() override;
   mozilla::ipc::IPCResult RecvForceComposite() override;
 
+  mozilla::ipc::IPCResult RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,
+                                                     nsTArray<ScrollableLayerGuid>&& aTargets) override;
   mozilla::ipc::IPCResult RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScrollId,
                                                    const float& aX,
                                                    const float& aY) override;
