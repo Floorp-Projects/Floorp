@@ -71,6 +71,10 @@ parent:
   async ReleaseLayer(LayerHandle layer);
   async ReleaseCompositable(CompositableHandle compositable);
 
+  // Tell the compositor to notify APZ that a layer has been confirmed for an
+  // input event.
+  async SetConfirmedTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
+
   // Testing APIs
 
   // Enter test mode, set the sample time to sampleTime, and resample
@@ -121,10 +125,6 @@ parent:
 
   // Return the TextureFactoryIdentifier for this compositor.
   sync GetTextureFactoryIdentifier() returns (TextureFactoryIdentifier aIdentifier);
-
-  // Tell the compositor to notify APZ that a layer has been confirmed for an
-  // input event.
-  async SetConfirmedTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
 
   async RecordPaintTimes(PaintTiming timing);
 
