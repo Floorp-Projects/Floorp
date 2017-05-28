@@ -99,6 +99,37 @@ DrawTargetD2D1::Snapshot()
   return snapshot.forget();
 }
 
+void
+DrawTargetD2D1::EnsureLuminanceEffect()
+{
+  if (mLuminanceEffect.get()) {
+    return;
+  }
+
+  HRESULT hr = mDC->CreateEffect(CLSID_D2D1LuminanceToAlpha,
+                                 getter_AddRefs(mLuminanceEffect));
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to create luminance effect. Code: " << hexa(hr);
+  }
+}
+
+already_AddRefed<SourceSurface>
+DrawTargetD2D1::IntoLuminanceSource(LuminanceType aLuminanceType, float aOpacity)
+{
+  if (aLuminanceType != LuminanceType::LUMINANCE) {
+    return DrawTarget::IntoLuminanceSource(aLuminanceType, aOpacity);
+  }
+
+  // Create the luminance effect
+  EnsureLuminanceEffect();
+  mLuminanceEffect->SetInput(0, mBitmap);
+
+  RefPtr<ID2D1Image> luminanceOutput;
+  mLuminanceEffect->GetOutput(getter_AddRefs(luminanceOutput));
+
+ return MakeAndAddRef<SourceSurfaceD2D1>(luminanceOutput, mDC, SurfaceFormat::A8, mSize);
+}
+
 // Command lists are kept around by device contexts until EndDraw is called,
 // this can cause issues with memory usage (see bug 1238328). EndDraw/BeginDraw
 // are expensive though, especially relatively when little work is done, so
@@ -820,26 +851,27 @@ DrawTargetD2D1::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
     options |= D2D1_LAYER_OPTIONS1_INITIALIZE_FROM_BACKGROUND;
   }
 
-  RefPtr<ID2D1BitmapBrush> mask;
-
+  RefPtr<ID2D1ImageBrush> mask;
   Matrix maskTransform = aMaskTransform;
-
   RefPtr<ID2D1PathGeometry> clip;
+
   if (aMask) {
+    RefPtr<ID2D1Image> image = GetImageForSurface(aMask, maskTransform, ExtendMode::CLAMP);
     mDC->SetTransform(D2D1::IdentityMatrix());
     mTransformDirty = true;
-
-    RefPtr<ID2D1Image> image = GetImageForSurface(aMask, maskTransform, ExtendMode::CLAMP);
 
     // The mask is given in user space. Our layer will apply it in device space.
     maskTransform = maskTransform * mTransform;
 
     if (image) {
-      RefPtr<ID2D1Bitmap> bitmap;
-      image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));
-
-      mDC->CreateBitmapBrush(bitmap, D2D1::BitmapBrushProperties(), D2D1::BrushProperties(1.0f, D2DMatrix(maskTransform)), getter_AddRefs(mask));
-      MOZ_ASSERT(bitmap); // This should always be true since it was created for a surface.
+      IntSize maskSize = aMask->GetSize();
+      HRESULT hr = mDC->CreateImageBrush(image,
+                                         D2D1::ImageBrushProperties(D2D1::RectF(0, 0, maskSize.width, maskSize.height)),
+                                         D2D1::BrushProperties(1.0f, D2DMatrix(maskTransform)),
+                                         getter_AddRefs(mask));
+      if (FAILED(hr)) {
+        gfxWarning() <<"[D2D1.1] Failed to create a ImageBrush, code: " << hexa(hr);
+      }
 
       factory()->CreatePathGeometry(getter_AddRefs(clip));
       RefPtr<ID2D1GeometrySink> sink;
@@ -1869,7 +1901,6 @@ DrawTargetD2D1::GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTrans
                                    bool aUserSpace)
 {
   RefPtr<ID2D1Image> image;
-
   switch (aSurface->GetType()) {
   case SurfaceType::D2D1_1_IMAGE:
     {
