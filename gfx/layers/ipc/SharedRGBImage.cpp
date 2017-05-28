@@ -102,6 +102,14 @@ SharedRGBImage::GetTextureClient(KnowsCompositor* aForwarder)
   return mTextureClient.get();
 }
 
+static void
+ReleaseTextureClient(void* aData)
+{
+  RELEASE_MANUALLY(static_cast<TextureClient*>(aData));
+}
+
+static gfx::UserDataKey sTextureClientKey;
+
 already_AddRefed<gfx::SourceSurface>
 SharedRGBImage::GetAsSourceSurface()
 {
@@ -127,6 +135,18 @@ SharedRGBImage::GetAsSourceSurface()
     }
 
     surface = drawTarget->Snapshot();
+    if (!surface) {
+      return nullptr;
+    }
+
+    // The surface may outlive the owning TextureClient. So, we need to ensure
+    // that the surface keeps the TextureClient alive via a reference held in
+    // user data. The TextureClient's DrawTarget only has a weak reference to the
+    // surface, so we won't create any cycles by just referencing the TextureClient.
+    if (!surface->GetUserData(&sTextureClientKey)) {
+      surface->AddUserData(&sTextureClientKey, mTextureClient, ReleaseTextureClient);
+      ADDREF_MANUALLY(mTextureClient);
+    }
   }
 
   mSourceSurface = surface;
