@@ -7,12 +7,6 @@
  * Tests if requests render correct information in the menu UI.
  */
 
-// The following rejections should not be left uncaught. This test has been
-// whitelisted until the issue is fixed.
-Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.expectUncaughtRejection(/cookies is undefined/);
-PromiseTestUtils.expectUncaughtRejection(/cookies is undefined/);
-
 function test() {
   // Disable tcp fast open, because it is setting a response header indicator
   // (bug 1352274). TCP Fast Open is not present on all platforms therefore the
