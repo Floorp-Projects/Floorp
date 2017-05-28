@@ -6177,7 +6177,7 @@ AddGenConPseudoToFrame(nsIFrame* aOwnerFrame, nsIContent* aContent)
     aOwnerFrame->GetProperty(nsIFrame::GenConProperty());
   if (!value) {
     value = new nsIFrame::ContentArray;
-    aOwnerFrame->AddProperty(nsIFrame::GenConProperty(), value);
+    aOwnerFrame->SetProperty(nsIFrame::GenConProperty(), value);
   }
   value->AppendElement(aContent);
 }
