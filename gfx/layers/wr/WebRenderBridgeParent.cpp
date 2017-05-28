@@ -276,7 +276,7 @@ WebRenderBridgeParent::RecvDeleteCompositorAnimations(InfallibleTArray<uint64_t>
     return IPC_OK();
   }
 
-  uint64_t storageId = mWidget ? 0 : wr::AsUint64(mPipelineId);
+  uint64_t storageId = mWidget ? 0 : GetLayersId();
   CompositorAnimationStorage* storage =
     mCompositorBridge->GetAnimationStorage(storageId);
   MOZ_ASSERT(storage);
@@ -347,9 +347,8 @@ WebRenderBridgeParent::GetRootCompositorBridgeParent() const
   // Otherwise, this WebRenderBridgeParent is attached to a
   // CrossProcessCompositorBridgeParent so we have an extra level of
   // indirection to unravel.
-  uint64_t layersId = wr::AsUint64(mPipelineId);
   CompositorBridgeParent::LayerTreeState* lts =
-      CompositorBridgeParent::GetIndirectShadowTree(layersId);
+      CompositorBridgeParent::GetIndirectShadowTree(GetLayersId());
   MOZ_ASSERT(lts);
   return lts->mParent;
 }
@@ -368,7 +367,7 @@ WebRenderBridgeParent::UpdateAPZ()
   }
   if (RefPtr<APZCTreeManager> apzc = cbp->GetAPZCTreeManager()) {
     apzc->UpdateHitTestingTree(rootLayersId, rootWrbp->GetScrollData(),
-        mScrollData.IsFirstPaint(), wr::AsUint64(mPipelineId),
+        mScrollData.IsFirstPaint(), GetLayersId(),
         /* TODO: propagate paint sequence number */ 0);
   }
 }
@@ -539,7 +538,7 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
         const OpAddCompositorAnimations& op = cmd.get_OpAddCompositorAnimations();
         CompositorAnimations data(Move(op.data()));
         if (data.animations().Length()) {
-          uint64_t id = mWidget ? 0 : wr::AsUint64(mPipelineId);
+          uint64_t id = mWidget ? 0 : GetLayersId();
           CompositorAnimationStorage* storage =
             mCompositorBridge->GetAnimationStorage(id);
           if (storage) {
@@ -575,7 +574,7 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
   DeleteOldImages();
 
   if (ShouldParentObserveEpoch()) {
-    mCompositorBridge->ObserveLayerUpdate(wr::AsUint64(mPipelineId), GetChildLayerObserverEpoch(), true);
+    mCompositorBridge->ObserveLayerUpdate(GetLayersId(), GetChildLayerObserverEpoch(), true);
   }
 }
 
@@ -713,7 +712,7 @@ WebRenderBridgeParent::RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverE
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvClearCachedResources()
 {
-  mCompositorBridge->ObserveLayerUpdate(wr::AsUint64(mPipelineId), GetChildLayerObserverEpoch(), false);
+  mCompositorBridge->ObserveLayerUpdate(GetLayersId(), GetChildLayerObserverEpoch(), false);
   return IPC_OK();
 }
 
@@ -733,7 +732,7 @@ WebRenderBridgeParent::GetTargetAPZC(const FrameMetrics::ViewID& aScrollId)
   RefPtr<AsyncPanZoomController> apzc;
   if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
     if (RefPtr<APZCTreeManager> apzctm = cbp->GetAPZCTreeManager()) {
-      apzc = apzctm->GetTargetAPZC(wr::AsUint64(mPipelineId), aScrollId);
+      apzc = apzctm->GetTargetAPZC(GetLayersId(), aScrollId);
     }
   }
   return apzc.forget();
@@ -743,7 +742,7 @@ mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,
                                                   nsTArray<ScrollableLayerGuid>&& aTargets)
 {
-  mCompositorBridge->SetConfirmedTargetAPZC(wr::AsUint64(mPipelineId), aBlockId, aTargets);
+  mCompositorBridge->SetConfirmedTargetAPZC(GetLayersId(), aBlockId, aTargets);
   return IPC_OK();
 }
 
@@ -775,7 +774,7 @@ WebRenderBridgeParent::RecvSetAsyncZoom(const FrameMetrics::ViewID& aScrollId,
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvFlushApzRepaints()
 {
-  mCompositorBridge->FlushApzRepaints(wr::AsUint64(mPipelineId));
+  mCompositorBridge->FlushApzRepaints(GetLayersId());
   return IPC_OK();
 }
 
@@ -789,7 +788,7 @@ void
 WebRenderBridgeParent::SampleAnimations(nsTArray<WrOpacityProperty>& aOpacityArray,
                                         nsTArray<WrTransformProperty>& aTransformArray)
 {
-  uint64_t id = mWidget ? 0 : wr::AsUint64(mPipelineId);
+  uint64_t id = mWidget ? 0 : GetLayersId();
   CompositorAnimationStorage* storage =
     mCompositorBridge->GetAnimationStorage(id);
 
@@ -913,6 +912,12 @@ WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch)
 
 WebRenderBridgeParent::~WebRenderBridgeParent()
 {
+}
+
+uint64_t
+WebRenderBridgeParent::GetLayersId() const
+{
+  return wr::AsUint64(mPipelineId);
 }
 
 void
