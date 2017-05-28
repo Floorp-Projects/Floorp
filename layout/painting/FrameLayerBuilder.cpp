@@ -50,7 +50,6 @@
 #include "GeckoProfiler.h"
 #include "LayersLogging.h"
 #include "gfxPrefs.h"
-#include "nsSVGEffects.h"
 
 #include <algorithm>
 #include <functional>
