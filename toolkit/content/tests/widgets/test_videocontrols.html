@@ -110,7 +110,7 @@ add_task(async function setup() {
   await new Promise(resolve => {
     video.addEventListener("canplaythrough", resolve, {once: true});
     video.src = "seek_with_sound.ogg";
-  })
+  });
 
   video.addEventListener("play", verifyExpectedEvent);
   video.addEventListener("pause", verifyExpectedEvent);
@@ -142,7 +142,7 @@ add_task(async function click_playbutton() {
 });
 
 add_task(async function click_pausebutton() {
-  synthesizeMouse(video, playButtonCenterX, playButtonCenterY, {})
+  synthesizeMouse(video, playButtonCenterX, playButtonCenterY, {});
   await waitForEvent("pause");
   is(video.paused, true, "checking video play state");
   is(video.muted, false, "checking video mute state");

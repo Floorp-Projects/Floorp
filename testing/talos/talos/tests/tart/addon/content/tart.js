@@ -695,4 +695,4 @@ Tart.prototype = {
 
     return this._startTest();
   }
-}
+};

@@ -37,7 +37,7 @@ add_task(async function testIframeOffset() {
         { x: 93, y: 534 },
         { x: 71, y: 577 },
         { x: 145, y: 577 }
-      ]
+      ];
       for (let i = 1, l = rects.length - 1; i < l; ++i) {
         let rect = rects[i];
         let expected = expectedOffsets[i - 1];

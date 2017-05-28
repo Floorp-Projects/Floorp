@@ -360,7 +360,7 @@ function wrapCallback(cb) {
   return function SpecialPowersCallbackWrapper() {
     var args = Array.prototype.map.call(arguments, wrapIfUnwrapped);
     return cb.apply(this, args);
-  }
+  };
 }
 
 function wrapCallbackObject(obj) {
@@ -1010,7 +1010,7 @@ SpecialPowersAPI.prototype = {
         self._applyingPermissions = false;
         // Now apply any permissions that may have been queued while we were applying
         self._applyPermissions();
-    }
+    };
 
     for (var idx in pendingActions) {
       var perm = pendingActions[idx];
@@ -1552,7 +1552,7 @@ SpecialPowersAPI.prototype = {
         } else if (cb) {
           cb();
         }
-      }
+      };
     }
 
     Cu.schedulePreciseGC(genGCCallback(callback));
@@ -1645,7 +1645,7 @@ SpecialPowersAPI.prototype = {
                  "fireDone", "fireDetailedError"];
     for (var i in props) {
       let prop = props[i];
-      res[prop] = function() { return serv[prop].apply(serv, arguments) };
+      res[prop] = function() { return serv[prop].apply(serv, arguments); };
     }
     return res;
   },
