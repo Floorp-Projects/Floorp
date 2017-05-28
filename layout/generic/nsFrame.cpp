@@ -949,16 +949,16 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     const nsStyleMargin* oldMargin = aOldStyleContext->PeekStyleMargin();
     if (oldMargin && oldMargin->GetMargin(oldValue)) {
       if ((!StyleMargin()->GetMargin(newValue) || oldValue != newValue) &&
-          !GetProperty(UsedMarginProperty())) {
-        SetProperty(UsedMarginProperty(), new nsMargin(oldValue));
+          !HasProperty(UsedMarginProperty())) {
+        AddProperty(UsedMarginProperty(), new nsMargin(oldValue));
       }
     }
 
     const nsStylePadding* oldPadding = aOldStyleContext->PeekStylePadding();
     if (oldPadding && oldPadding->GetPadding(oldValue)) {
       if ((!StylePadding()->GetPadding(newValue) || oldValue != newValue) &&
-          !GetProperty(UsedPaddingProperty())) {
-        SetProperty(UsedPaddingProperty(), new nsMargin(oldValue));
+          !HasProperty(UsedPaddingProperty())) {
+        AddProperty(UsedPaddingProperty(), new nsMargin(oldValue));
       }
     }
 
@@ -967,8 +967,8 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
       oldValue = oldBorder->GetComputedBorder();
       newValue = StyleBorder()->GetComputedBorder();
       if (oldValue != newValue &&
-          !GetProperty(UsedBorderProperty())) {
-        SetProperty(UsedBorderProperty(), new nsMargin(oldValue));
+          !HasProperty(UsedBorderProperty())) {
+        AddProperty(UsedBorderProperty(), new nsMargin(oldValue));
       }
     }
   }
@@ -6569,7 +6569,7 @@ nsIFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
       return;
     }
     rect = new nsRect();
-    SetProperty(InvalidationRect(), rect);
+    AddProperty(InvalidationRect(), rect);
     AddStateBits(NS_FRAME_HAS_INVALID_RECT);
   }
 
@@ -6830,18 +6830,6 @@ nsIFrame::GetNormalRect() const
     return nsRect(*normalPosition, GetSize());
   }
   return GetRect();
-}
-
-nsPoint
-nsIFrame::GetNormalPosition() const
-{
-  // It might be faster to first check
-  // StyleDisplay()->IsRelativelyPositionedStyle().
-  nsPoint* normalPosition = GetProperty(NormalPositionProperty());
-  if (normalPosition) {
-    return *normalPosition;
-  }
-  return GetPosition();
 }
 
 nsPoint
@@ -8725,7 +8713,7 @@ nsIFrame::GetOverflowAreasProperty()
   // The property isn't set yet, so allocate a new rect, set the property,
   // and return the newly allocated rect
   overflow = new nsOverflowAreas;
-  SetProperty(OverflowAreasProperty(), overflow);
+  AddProperty(OverflowAreasProperty(), overflow);
   return overflow;
 }
 
@@ -9022,7 +9010,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       nsOverflowAreas* initial =
         GetProperty(nsIFrame::InitialOverflowProperty());
       if (!initial) {
-        SetProperty(nsIFrame::InitialOverflowProperty(),
+        AddProperty(nsIFrame::InitialOverflowProperty(),
                          new nsOverflowAreas(aOverflowAreas));
       } else if (initial != &aOverflowAreas) {
         *initial = aOverflowAreas;
