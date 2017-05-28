@@ -1034,6 +1034,9 @@ function testScope(aTester, aTest, expected) {
     self.SimpleTest.ignoreAllUncaughtExceptions(aIgnoring);
   };
 
+  this.thisTestLeaksUncaughtRejectionsAndShouldBeFixed = function(...rejections) {
+  };
+
   this.expectAssertions = function test_expectAssertions(aMin, aMax) {
     let min = aMin;
     let max = aMax;
