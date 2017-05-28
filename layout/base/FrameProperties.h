@@ -176,6 +176,17 @@ public:
   }
 
   /**
+   * Add a property value; the descriptor MUST NOT already be present.
+   */
+  template<typename T>
+  void Add(Descriptor<T> aProperty, PropertyType<T> aValue)
+  {
+    MOZ_ASSERT(!Has(aProperty), "duplicate frame property");
+    void* ptr = ReinterpretHelper<T>::ToPointer(aValue);
+    AddInternal(aProperty, ptr);
+  }
+
+  /**
    * @return true if @aProperty is set. This requires a linear search through the
    * properties of the frame.
    *
@@ -199,7 +210,8 @@ public:
   template<typename T>
   bool Has(Descriptor<T> aProperty) const
   {
-    return mProperties.IndexOf(aProperty, 0, PropertyComparator()) != nsTArray<PropertyValue>::NoIndex;
+    return mProperties.IndexOf(aProperty, 0, PropertyComparator())
+           != nsTArray<PropertyValue>::NoIndex;
   }
 
   /**
@@ -267,6 +279,8 @@ private:
 
   void SetInternal(UntypedDescriptor aProperty, void* aValue,
                    const nsIFrame* aFrame);
+
+  void AddInternal(UntypedDescriptor aProperty, void* aValue);
 
   inline void*
   GetInternal(UntypedDescriptor aProperty, bool* aFoundResult) const;

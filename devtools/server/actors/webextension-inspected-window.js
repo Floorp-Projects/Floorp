@@ -290,7 +290,7 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
                 })
                 .catch(err => {
                   delete this.customizedReload;
-                  throw err;
+                  console.error(err);
                 });
           } catch (err) {
             // Cancel the customized reload (if any) on exception during the
