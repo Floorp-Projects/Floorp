@@ -107,7 +107,7 @@ public:
   virtual void FlushApzRepaints(const uint64_t& aLayersId) override;
   virtual void GetAPZTestData(const LayerTransactionParent* aLayerTree,
                               APZTestData* aOutData) override;
-  virtual void SetConfirmedTargetAPZC(const LayerTransactionParent* aLayerTree,
+  virtual void SetConfirmedTargetAPZC(const uint64_t& aLayersId,
                                       const uint64_t& aInputBlockId,
                                       const nsTArray<ScrollableLayerGuid>& aTargets) override;
 
