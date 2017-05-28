@@ -7737,9 +7737,20 @@
             this.removeAttribute("sizelimit");
           }
 
-          this.style.minWidth = this.getAttribute("type") == "status" &&
-                                this.getAttribute("previoustype") == "status"
-                                  ? getComputedStyle(this).width : "";
+          if (this.getAttribute("type") == "status" &&
+              this.getAttribute("previoustype") == "status") {
+            // Before updating the label, set the panel's current width as its
+            // min-width to let the panel grow but not shrink and prevent
+            // unnecessary flicker while loading pages. We only care about the
+            // panel's width once it has been painted, so we can do this
+            // without flushing layout.
+            this.style.minWidth =
+              window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindowUtils)
+                    .getBoundsWithoutFlushing(this).width + "px";
+          } else {
+            this.style.minWidth = "";
+          }
 
           if (val) {
             this.setAttribute("label", val);
