@@ -20,7 +20,6 @@ import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.menu.MenuPanel;
-import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.mozglue.SafeIntent;
@@ -122,8 +121,6 @@ import java.util.concurrent.TimeUnit;
 import static org.mozilla.gecko.Tabs.INTENT_EXTRA_SESSION_UUID;
 import static org.mozilla.gecko.Tabs.INTENT_EXTRA_TAB_ID;
 import static org.mozilla.gecko.Tabs.INVALID_TAB_ID;
-import static org.mozilla.gecko.mma.MmaDelegate.DOWNLOAD_VIDEOS_OR_ANY_OTHER_MEDIA;
-import static org.mozilla.gecko.mma.MmaDelegate.LOADS_ARTICLES;
 
 public abstract class GeckoApp extends GeckoActivity
                                implements AnchoredPopup.OnVisibilityChangeListener,
@@ -873,15 +870,7 @@ public abstract class GeckoApp extends GeckoActivity
             final SharedPreferences prefs = getSharedPreferences();
             int count = prefs.getInt(PREFS_FLASH_USAGE, 0);
             prefs.edit().putInt(PREFS_FLASH_USAGE, ++count).apply();
-
-        } else if ("Mma:reader_available".equals(event)) {
-            MmaDelegate.track(LOADS_ARTICLES);
-
-        } else if ("Mma:web_save_media".equals(event) || "Mma:web_save_image".equals(event)) {
-            MmaDelegate.track(DOWNLOAD_VIDEOS_OR_ANY_OTHER_MEDIA);
-
         }
-
     }
 
     /**
@@ -1407,9 +1396,6 @@ public abstract class GeckoApp extends GeckoActivity
             "DevToolsAuth:Scan",
             "DOMFullScreen:Start",
             "DOMFullScreen:Stop",
-            "Mma:reader_available",
-            "Mma:web_save_image",
-            "Mma:web_save_media",
             "Permissions:Data",
             "PrivateBrowsing:Data",
             "RuntimePermissions:Check",
@@ -2458,9 +2444,6 @@ public abstract class GeckoApp extends GeckoActivity
             "DevToolsAuth:Scan",
             "DOMFullScreen:Start",
             "DOMFullScreen:Stop",
-            "Mma:reader_available",
-            "Mma:web_save_image",
-            "Mma:web_save_media",
             "Permissions:Data",
             "PrivateBrowsing:Data",
             "RuntimePermissions:Check",

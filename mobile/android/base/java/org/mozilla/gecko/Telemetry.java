@@ -11,17 +11,9 @@ import org.mozilla.gecko.TelemetryContract.Event;
 import org.mozilla.gecko.TelemetryContract.Method;
 import org.mozilla.gecko.TelemetryContract.Reason;
 import org.mozilla.gecko.TelemetryContract.Session;
-import org.mozilla.gecko.mma.MmaDelegate;
 
 import android.os.SystemClock;
 import android.util.Log;
-
-import static org.mozilla.gecko.mma.MmaDelegate.INTERACT_WITH_SEARCH_URL_AREA;
-import static org.mozilla.gecko.mma.MmaDelegate.LOAD_BOOKMARK;
-import static org.mozilla.gecko.mma.MmaDelegate.SAVE_BOOKMARK;
-import static org.mozilla.gecko.mma.MmaDelegate.SAVE_PASSWORD;
-import static org.mozilla.gecko.mma.MmaDelegate.WHEN_USER_TAKE_A_SCREENSHOT;
-
 
 /**
  * All telemetry times are relative to one of two clocks:
@@ -215,24 +207,6 @@ public class Telemetry {
             GeckoThread.queueNativeCall(Telemetry.class, "nativeAddUiEvent",
                                         String.class, eventName, String.class, method.toString(),
                                         timestamp, String.class, extras);
-        }
-        mappingMmaTracking(eventName, method, extras);
-    }
-
-    private static void mappingMmaTracking(String eventName, Method method, String extras) {
-        if (eventName == null || method == null || extras == null) {
-            return;
-        }
-        if (eventName.equalsIgnoreCase(Event.SAVE.toString()) && method == Method.MENU && extras.equals("bookmark")) {
-            MmaDelegate.track(SAVE_BOOKMARK);
-        } else if (eventName.equalsIgnoreCase(Event.LOAD_URL.toString()) && method == Method.LIST_ITEM && extras.equals("bookmarks")) {
-            MmaDelegate.track(LOAD_BOOKMARK);
-        } else if (eventName.equalsIgnoreCase(Event.SHOW.toString()) && method == Method.ACTIONBAR && extras.equals("urlbar-url")) {
-            MmaDelegate.track(INTERACT_WITH_SEARCH_URL_AREA);
-        } else if (eventName.equalsIgnoreCase(Event.SHARE.toString()) && method == Method.BUTTON && extras.equals("screenshot")) {
-            MmaDelegate.track(WHEN_USER_TAKE_A_SCREENSHOT);
-        } else if (eventName.equalsIgnoreCase(Event.ACTION.toString()) && method == Method.DOORHANGER && extras.equals("login-positive")) {
-            MmaDelegate.track(SAVE_PASSWORD);
         }
     }
 
