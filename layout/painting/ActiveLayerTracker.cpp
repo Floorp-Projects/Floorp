@@ -197,7 +197,7 @@ GetLayerActivity(nsIFrame* aFrame)
 static LayerActivity*
 GetLayerActivityForUpdate(nsIFrame* aFrame)
 {
-  LayerActivity* layerActivity = aFrame->GetProperty(LayerActivityProperty());
+  LayerActivity* layerActivity = GetLayerActivity(aFrame);
   if (layerActivity) {
     gLayerActivityTracker->MarkUsed(layerActivity);
   } else {
