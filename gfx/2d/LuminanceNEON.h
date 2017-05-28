@@ -3,8 +3,8 @@
  * license, v. 2.0. if a copy of the mpl was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGMASKFRAMENEON_H__
-#define __NS_SVGMASKFRAMENEON_H__
+#ifndef __LUMINANCENEON_H__
+#define __LUMINANCENEON_H__
 
 #include "mozilla/gfx/Point.h"
 
@@ -16,4 +16,4 @@ ComputesRGBLuminanceMask_NEON(const uint8_t *aSourceData,
                               const mozilla::gfx::IntSize &aSize,
                               float aOpacity);
 
-#endif /* __NS_SVGMASKFRAMENEON_H__ */
+#endif /* __LUMINANCENEON_H__ */
