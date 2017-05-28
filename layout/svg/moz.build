@@ -66,6 +66,10 @@ UNIFIED_SOURCES += [
     'SVGViewFrame.cpp',
 ]
 
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
+    SOURCES += ['nsSVGMaskFrameNEON.cpp']
+    SOURCES['nsSVGMaskFrameNEON.cpp'].flags += CONFIG['NEON_FLAGS']
+
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../../widget',
