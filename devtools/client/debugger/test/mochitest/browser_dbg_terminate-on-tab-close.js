@@ -11,6 +11,13 @@ thisTestLeaksUncaughtRejectionsAndShouldBeFixed("[object Object]");
  * Tests that debuggee scripts are terminated on tab closure.
  */
 
+// The following rejection should not be left uncaught. This test has been
+// whitelisted until the issue is fixed.
+if (!gMultiProcessBrowser) {
+  Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
+  PromiseTestUtils.expectUncaughtRejection(/error\.message is undefined/);
+}
+
 const TAB_URL = EXAMPLE_URL + "doc_terminate-on-tab-close.html";
 
 function test() {
