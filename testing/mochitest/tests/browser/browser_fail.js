@@ -1,3 +1,5 @@
+setExpectedFailuresForSelfTest(6);
+
 function test() {
   ok(false, "fail ok");
   is(true, false, "fail is");

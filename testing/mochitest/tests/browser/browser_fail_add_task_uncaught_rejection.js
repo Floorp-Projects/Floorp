@@ -3,10 +3,16 @@
 
 "use strict";
 
-setExpectedFailuresForSelfTest(4);
+setExpectedFailuresForSelfTest(8);
 
-function rejectOnNextTick(error) {
-  return new Promise((resolve, reject) => executeSoon(() => reject(error)));
+// Keep "JSMPromise" separate so "Promise" still refers to native Promises.
+let JSMPromise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+
+async function rejectOnNextTick(error) {
+  await Promise.resolve();
+
+  Promise.reject(error);
+  JSMPromise.reject(error);
 }
 
 add_task(function failWithoutError() {
