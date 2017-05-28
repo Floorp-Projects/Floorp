@@ -104,7 +104,7 @@ public:
                override;
   virtual CompositorAnimationStorage*
     GetAnimationStorage(const uint64_t& aId) override;
-  virtual void FlushApzRepaints(const LayerTransactionParent* aLayerTree) override;
+  virtual void FlushApzRepaints(const uint64_t& aLayersId) override;
   virtual void GetAPZTestData(const LayerTransactionParent* aLayerTree,
                               APZTestData* aOutData) override;
   virtual void SetConfirmedTargetAPZC(const LayerTransactionParent* aLayerTree,
