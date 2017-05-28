@@ -895,7 +895,7 @@ public class BrowserApp extends GeckoApp
                 if (SwitchBoard.isInExperiment(context, Experiments.LEANPLUM) &&
                         GeckoPreferences.getBooleanPref(context, GeckoPreferences.PREFS_HEALTHREPORT_UPLOAD_ENABLED, true)) {
                     // Do LeanPlum start/init here
-                    MmaDelegate.init(BrowserApp.this);
+                    MmaDelegate.init(BrowserApp.this.getApplication());
                 }
                 return null;
             }
