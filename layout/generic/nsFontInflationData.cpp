@@ -6,7 +6,7 @@
 /* Per-block-formatting-context manager of font size inflation for pan and zoom UI. */
 
 #include "nsFontInflationData.h"
-#include "FramePropertyTable.h"
+#include "FrameProperties.h"
 #include "nsTextControlFrame.h"
 #include "nsListControlFrame.h"
 #include "nsComboboxControlFrame.h"
@@ -27,7 +27,7 @@ nsFontInflationData::FindFontInflationDataFor(const nsIFrame *aFrame)
   NS_ASSERTION(bfc->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT,
                "should have found a flow root");
 
-  return bfc->Properties().Get(FontInflationDataProperty());
+  return bfc->GetProperty(FontInflationDataProperty());
 }
 
 /* static */ bool
@@ -36,8 +36,7 @@ nsFontInflationData::UpdateFontInflationDataISizeFor(const ReflowInput& aReflowI
   nsIFrame *bfc = aReflowInput.mFrame;
   NS_ASSERTION(bfc->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT,
                "should have been given a flow root");
-  FrameProperties bfcProps(bfc->Properties());
-  nsFontInflationData *data = bfcProps.Get(FontInflationDataProperty());
+  nsFontInflationData *data = bfc->GetProperty(FontInflationDataProperty());
   bool oldInflationEnabled;
   nscoord oldNCAISize;
   if (data) {
@@ -45,7 +44,7 @@ nsFontInflationData::UpdateFontInflationDataISizeFor(const ReflowInput& aReflowI
     oldInflationEnabled = data->mInflationEnabled;
   } else {
     data = new nsFontInflationData(bfc);
-    bfcProps.Set(FontInflationDataProperty(), data);
+    bfc->SetProperty(FontInflationDataProperty(), data);
     oldNCAISize = -1;
     oldInflationEnabled = true; /* not relevant */
   }
@@ -65,8 +64,7 @@ nsFontInflationData::MarkFontInflationDataTextDirty(nsIFrame *aBFCFrame)
   NS_ASSERTION(aBFCFrame->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT,
                "should have been given a flow root");
 
-  FrameProperties bfcProps(aBFCFrame->Properties());
-  nsFontInflationData *data = bfcProps.Get(FontInflationDataProperty());
+  nsFontInflationData *data = aBFCFrame->GetProperty(FontInflationDataProperty());
   if (data) {
     data->MarkTextDirty();
   }

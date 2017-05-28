@@ -198,7 +198,7 @@ public:
 
   virtual void NotifyRenderingChanged() override
   {
-    mFrame->Properties().Delete(nsIFrame::CachedBackgroundImageDT());
+    mFrame->DeleteProperty(nsIFrame::CachedBackgroundImageDT());
   }
  
   // We still need to paint a background color as well as an image for this item, 

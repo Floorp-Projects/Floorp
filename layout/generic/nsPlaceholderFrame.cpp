@@ -128,7 +128,7 @@ nsPlaceholderFrame::Reflow(nsPresContext*           aPresContext,
     nsIFrame* ancestor = this;
     while ((ancestor = ancestor->GetParent())) {
       if (ancestor->GetPrevContinuation() ||
-          ancestor->Properties().Get(IBSplitPrevSibling())) {
+          ancestor->GetProperty(IBSplitPrevSibling())) {
         isInContinuationOrIBSplit = true;
         break;
       }
