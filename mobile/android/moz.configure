@@ -41,13 +41,6 @@ set_config('MOZ_INSTALL_TRACKING',
 add_old_configure_assignment('MOZ_INSTALL_TRACKING',
                              depends_if('MOZ_INSTALL_TRACKING')(lambda _: True))
 
-option(env='MOZ_ANDROID_MMA',
-       help='Enable mobile marketing automation (currently using the Leanplum SDK).',
-       default=False)
-
-set_config('MOZ_ANDROID_MMA',
-           depends_if('MOZ_ANDROID_MMA')(lambda _: True))
-
 project_flag('MOZ_ANDROID_DOWNLOADS_INTEGRATION',
              help='Enable system download manager on Android',
              default=True)
@@ -132,23 +125,3 @@ def check_install_tracking(install_tracking,
         if not adjust_sdk_keyfile:
             die('You must specify --with-adjust-sdk-keyfile=/path/to/keyfile when'
                 ' building with MOZ_INSTALL_TRACKING=1')
-
-# Must come after the ../../toolkit/moz.configure.
-@depends('MOZ_ANDROID_MMA',
-         'MOZ_NATIVE_DEVICES',
-         'MOZ_ANDROID_GCM',
-         '--with-leanplum-sdk-keyfile')
-def check_android_mma(android_mma,
-                      native_devices,
-                      android_gcm,
-                      leanplum_sdk_keyfile):
-    if android_mma:
-        if not native_devices:
-            die('You must specify MOZ_NATIVE_DEVICES=1 when'
-                ' building with MOZ_ANDROID_MMA=1')
-        if not android_gcm:
-            die('You must specify MOZ_ANDROID_GCM=1 when'
-                ' building with MOZ_ANDROID_MMA=1')
-        if not leanplum_sdk_keyfile:
-            die('You must specify --with-leanplum-sdk-keyfile=/path/to/keyfile when'
-                ' building with MOZ_ANDROID_MMA=1')
