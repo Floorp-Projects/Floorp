@@ -45,6 +45,7 @@ module.exports = {
     "privateNoteIntentionalCrash": false,
     "registerCleanupFunction": false,
     "requestLongerTimeout": false,
+    "thisTestLeaksUncaughtRejectionsAndShouldBeFixed": false,
     "todo": false,
     "todo_is": false,
     "todo_isnot": false,

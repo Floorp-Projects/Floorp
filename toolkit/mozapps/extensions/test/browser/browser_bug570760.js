@@ -2,6 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// As part of bug 1077403, the leaking uncaught rejection should be fixed.
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed("");
+
 // Bug 570760 - Make ctrl-f and / focus the search box in the add-ons manager
 
 var gManagerWindow;

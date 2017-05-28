@@ -3,6 +3,10 @@
 
 "use strict";
 
+// Whitelisting this test.
+// As part of bug 1077403, the leaking uncaught rejections should be fixed.
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed("[object Object]");
+
 // The following "connectionClosed" rejection should not be left uncaught. This
 // test has been whitelisted until the issue is fixed.
 Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
