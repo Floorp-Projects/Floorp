@@ -6560,8 +6560,11 @@ nsIFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
     return;
   }
 
-  nsRect* rect = GetProperty(InvalidationRect());
-  if (!rect) {
+  nsRect* rect;
+  if (HasAnyStateBits(NS_FRAME_HAS_INVALID_RECT)) {
+    rect = GetProperty(InvalidationRect());
+    MOZ_ASSERT(rect);
+  } else {
     if (alreadyInvalid) {
       return;
     }
