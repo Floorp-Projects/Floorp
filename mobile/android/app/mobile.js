@@ -414,6 +414,15 @@ pref("ui.bookmark.mobilefolder.enabled", true);
 pref("ui.bookmark.mobilefolder.enabled", false);
 #endif
 
+#if MOZ_UPDATE_CHANNEL == nightly
+pref("mma.enabled", true);
+#elif MOZ_UPDATE_CHANNEL == beta
+pref("mma.enabled", true);
+#else
+pref("mma.enabled", true);
+#endif
+
+
 pref("ui.touch.radius.enabled", false);
 pref("ui.touch.radius.leftmm", 3);
 pref("ui.touch.radius.topmm", 5);

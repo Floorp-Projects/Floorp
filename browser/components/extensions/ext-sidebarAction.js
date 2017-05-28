@@ -43,6 +43,10 @@ this.sidebarAction = class extends ExtensionAPI {
     this.id = `${widgetId}-sidebar-action`;
     this.menuId = `menu_${this.id}`;
 
+    // We default browser_style to true because this is a new API and
+    // we therefore don't need to worry about breaking existing add-ons.
+    this.browserStyle = options.browser_style || options.browser_style === null;
+
     this.defaults = {
       enabled: true,
       title: options.default_title || extension.name,
@@ -120,10 +124,17 @@ this.sidebarAction = class extends ExtensionAPI {
   }
 
   sidebarUrl(panel) {
+    let url = `${sidebarURL}?panel=${encodeURIComponent(panel)}`;
+
     if (this.extension.remote) {
-      return `${sidebarURL}?remote=1&panel=${encodeURIComponent(panel)}`;
+      url += "&remote=1";
     }
-    return `${sidebarURL}?&panel=${encodeURIComponent(panel)}`;
+
+    if (this.browserStyle) {
+      url += "&browser-style=1";
+    }
+
+    return url;
   }
 
   createMenuItem(window, details) {
@@ -138,6 +149,7 @@ this.sidebarAction = class extends ExtensionAPI {
     broadcaster.setAttribute("group", "sidebar");
     broadcaster.setAttribute("label", details.title);
     broadcaster.setAttribute("sidebarurl", this.sidebarUrl(details.panel));
+
     // oncommand gets attached to menuitem, so we use the observes attribute to
     // get the command id we pass to SidebarUI.
     broadcaster.setAttribute("oncommand", "SidebarUI.toggle(this.getAttribute('observes'))");

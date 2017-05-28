@@ -219,20 +219,20 @@ fails-if(!styloVsGecko) == css-values-3/attr-px-invalid-cast.html css-values-3/r
 == css-values-3/attr-px-invalid-fallback.html css-values-3/reference/200-200-green.html
 fails-if(!styloVsGecko) == css-values-3/attr-px-valid.html css-values-3/reference/200-200-green.html
 == css-values-3/calc-in-calc.html css-values-3/reference/all-green.html
-fails == css-values-3/calc-in-media-queries-001.html css-values-3/reference/all-green.html
-fails == css-values-3/calc-in-media-queries-002.html css-values-3/reference/all-green.html
+fails-if(!stylo) == css-values-3/calc-in-media-queries-001.html css-values-3/reference/all-green.html
+fails-if(!stylo) == css-values-3/calc-in-media-queries-002.html css-values-3/reference/all-green.html
 == css-values-3/calc-invalid-range-clamping.html css-values-3/reference/200-200-green.html
 == css-values-3/calc-parenthesis-stack.html css-values-3/reference/all-green.html
 fuzzy-if(OSX,40,6) == css-values-3/ch-unit-001.html css-values-3/reference/ch-unit-001-ref.html
 == css-values-3/initial-background-color.html css-values-3/reference/all-green.html
 == css-values-3/vh-calc-support-pct.html css-values-3/reference/all-green.html
 == css-values-3/vh-calc-support.html css-values-3/reference/all-green.html
-fails-if(stylo) == css-values-3/vh-em-inherit.html css-values-3/reference/all-green.html
+== css-values-3/vh-em-inherit.html css-values-3/reference/all-green.html
 == css-values-3/vh-inherit.html css-values-3/reference/all-green.html
 == css-values-3/vh-interpolate-pct.html css-values-3/reference/all-green.html
 == css-values-3/vh-interpolate-px.html css-values-3/reference/all-green.html
 == css-values-3/vh-interpolate-vh.html css-values-3/reference/all-green.html
-fails-if(styloVsGecko) == css-values-3/vh-support-atviewport.html css-values-3/reference/all-green.html
+fails-if(styloVsGecko||stylo) == css-values-3/vh-support-atviewport.html css-values-3/reference/all-green.html
 == css-values-3/vh-support-margin.html css-values-3/reference/all-green.html
 skip == css-values-3/vh-support-transform-origin.html css-values-3/reference/all-green.html
 skip == css-values-3/vh-support-transform-translate.html css-values-3/reference/all-green.html
@@ -1032,10 +1032,10 @@ needs-focus == selectors-4/focus-within-004.html selectors-4/focus-within-001-re
 needs-focus == selectors-4/focus-within-005.html selectors-4/focus-within-001-ref.html
 needs-focus == selectors-4/focus-within-006.html selectors-4/focus-within-001-ref.html
 fails-if(!styloVsGecko) needs-focus == selectors-4/focus-within-shadow-001.html selectors-4/focus-within-shadow-001-ref.html
-pref(dom.webcomponents.enabled,true) needs-focus skip-if(styloVsGecko) == selectors-4/focus-within-shadow-002.html selectors-4/focus-within-shadow-001-ref.html
-pref(dom.webcomponents.enabled,true) needs-focus skip-if(styloVsGecko) == selectors-4/focus-within-shadow-003.html selectors-4/focus-within-shadow-001-ref.html
-pref(dom.webcomponents.enabled,true) needs-focus skip-if(styloVsGecko) == selectors-4/focus-within-shadow-004.html selectors-4/focus-within-shadow-001-ref.html
-pref(dom.webcomponents.enabled,true) needs-focus skip-if(styloVsGecko) == selectors-4/focus-within-shadow-005.html selectors-4/focus-within-shadow-001-ref.html
+pref(dom.webcomponents.enabled,true) needs-focus skip-if(styloVsGecko||stylo) == selectors-4/focus-within-shadow-002.html selectors-4/focus-within-shadow-001-ref.html
+pref(dom.webcomponents.enabled,true) needs-focus skip-if(styloVsGecko||stylo) == selectors-4/focus-within-shadow-003.html selectors-4/focus-within-shadow-001-ref.html
+pref(dom.webcomponents.enabled,true) needs-focus skip-if(styloVsGecko||stylo) == selectors-4/focus-within-shadow-004.html selectors-4/focus-within-shadow-001-ref.html
+pref(dom.webcomponents.enabled,true) needs-focus skip-if(styloVsGecko||stylo) == selectors-4/focus-within-shadow-005.html selectors-4/focus-within-shadow-001-ref.html
 == selectors-4/of-type-selectors.xhtml selectors-4/of-type-selectors-ref.xhtml
 == selectors-4/selector-required.html selectors-4/selector-required-ref.html
 == selectors-4/selectors-dir-selector-ltr-001.html selectors-4/selectors-dir-selector-ref.html

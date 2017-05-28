@@ -36,7 +36,7 @@ skip-if(Android) == number-max-height-2.html number-max-height-2-ref.html
 == number-significant-fractional-digits.html number-significant-fractional-digits-ref.html
 
 # focus
-fuzzy-if(skiaContent,2,5) needs-focus skip-if(styloVsGecko) == focus-handling.html focus-handling-ref.html
+fuzzy-if(skiaContent,2,5) needs-focus skip-if(styloVsGecko||stylo) == focus-handling.html focus-handling-ref.html
 
 # select
 fuzzy-if(skiaContent,1,1) skip-if(styloVsGecko) == number-selected.html number-selected-ref.html

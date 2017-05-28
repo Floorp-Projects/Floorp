@@ -583,8 +583,11 @@ public:
    * the language-specific global preference with the per-presentation
    * base minimum font size.
    */
-  int32_t MinFontSize(nsIAtom *aLanguage) const {
-    const LangGroupFontPrefs *prefs = GetFontPrefsForLang(aLanguage);
+  int32_t MinFontSize(nsIAtom *aLanguage, bool* aNeedsToCache = nullptr) const {
+    const LangGroupFontPrefs *prefs = GetFontPrefsForLang(aLanguage, aNeedsToCache);
+    if (aNeedsToCache && *aNeedsToCache) {
+      return 0;
+    }
     return std::max(mBaseMinFontSize, prefs->mMinimumFontSize);
   }
 

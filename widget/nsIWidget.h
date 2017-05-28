@@ -18,6 +18,7 @@
 #include "nsITheme.h"
 #include "nsITimer.h"
 #include "nsRegionFwd.h"
+#include "nsStyleConsts.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/EventForwards.h"
@@ -148,16 +149,6 @@ typedef void* nsNativeWidget;
 { 0x06396bf6, 0x2dd8, 0x45e5, \
   { 0xac, 0x45, 0x75, 0x26, 0x53, 0xb1, 0xc9, 0x80 } }
 
-/*
- * Window shadow styles
- * Also used for the -moz-window-shadow CSS property
- */
-
-#define NS_STYLE_WINDOW_SHADOW_NONE             0
-#define NS_STYLE_WINDOW_SHADOW_DEFAULT          1
-#define NS_STYLE_WINDOW_SHADOW_MENU             2
-#define NS_STYLE_WINDOW_SHADOW_TOOLTIP          3
-#define NS_STYLE_WINDOW_SHADOW_SHEET            4
 
 /**
  * Transparency modes
