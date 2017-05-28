@@ -108,8 +108,6 @@ class BasePopup {
 
     this.destroyed = true;
     this.browserLoadedDeferred.reject(new Error("Popup destroyed"));
-    // Ignore unhandled rejections if the "attach" method is not called.
-    this.browserLoaded.catch(() => {});
 
     BasePopup.instances.get(this.window).delete(this.extension);
 
