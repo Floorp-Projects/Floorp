@@ -76,7 +76,6 @@ module.exports = {
     "padded-blocks": ["error", "never"],
     "quote-props": "off",
     "radix": "error",
-    "semi": ["error", "always"],
     "semi-spacing": ["error", {"before": false, "after": true}],
     "sort-vars": "off",
     "space-in-brackets": "off",

@@ -34,7 +34,7 @@ add_task(async function test_offscreen_text() {
       function waitForFind() {
         return new Promise(resolve => {
           listener.onFindResult = resolve;
-        })
+        });
       }
 
       // Find each of the targets.

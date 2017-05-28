@@ -42,7 +42,7 @@
     let gDialog;
     let gDialogDoc;
     let gRootAcc;
-    let gIframeDoc
+    let gIframeDoc;
 
     function openWndShutdownDoc(aURL) {
       // Get application root accessible.
@@ -95,7 +95,7 @@
           ]
         };
 
-        testAccessibleTree(gRootAcc, accTree)
+        testAccessibleTree(gRootAcc, accTree);
         // After timeout after event hide for iframe was handled the document
         // accessible for iframe's document should no longer be in cache.
         ok(!isAccessibleInCache(gIframeDoc),
@@ -111,7 +111,7 @@
       this.eventSeq = [ new invokerChecker(EVENT_FOCUS, getAccessible(document)) ];
 
       this.invoke = () => {
-        gDialog.close()
+        gDialog.close();
         window.focus();
       };
 

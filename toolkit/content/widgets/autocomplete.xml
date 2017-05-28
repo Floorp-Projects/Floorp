@@ -1632,7 +1632,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               this.getAttribute("title"),
               this.getAttribute("displayurl"),
             ];
-            let label = parts.filter(str => str).join(" ")
+            let label = parts.filter(str => str).join(" ");
 
             // allow consumers that have extended popups to override
             // the label values for the richlistitems
@@ -2396,7 +2396,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             // search components.
             action.params = {
               url: params,
-            }
+            };
           }
 
           return action;

@@ -32,7 +32,7 @@
       video.addEventListener("canplaythrough", video.play);
       video.addEventListener("play", () => SimpleTest.executeSoon(resolve));
       video.src = "seek_with_sound.ogg";
-    })
+    });
 
     is(controlsSpacer.getAttribute("fadeout"), "true", "controlsSpacer should fadeout once video starts playing");
   });

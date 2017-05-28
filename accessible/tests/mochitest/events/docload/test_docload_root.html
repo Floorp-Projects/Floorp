@@ -79,7 +79,7 @@
           ]
         };
 
-        testAccessibleTree(gRootAcc, accTree)
+        testAccessibleTree(gRootAcc, accTree);
 
         gDialogDoc = gDialog.document;
         ok(isAccessibleInCache(gDialogDoc),
@@ -93,7 +93,7 @@
       this.eventSeq = [ new invokerChecker(EVENT_FOCUS, getAccessible(document)) ];
 
       this.invoke = () => {
-        gDialog.close()
+        gDialog.close();
         window.focus();
       };
 
