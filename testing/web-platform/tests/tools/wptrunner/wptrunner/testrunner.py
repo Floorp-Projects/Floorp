@@ -147,8 +147,6 @@ def next_manager_number():
 
 
 class BrowserManager(object):
-    init_lock = threading.Lock()
-
     def __init__(self, logger, browser, command_queue, no_timeout=False):
         self.logger = logger
         self.browser = browser
@@ -180,27 +178,24 @@ class BrowserManager(object):
 
         self.logger.debug("Init called, starting browser and runner")
 
-        with self.init_lock:
-            # Guard against problems initialising the browser or the browser
-            # remote control method
-            if not self.no_timeout:
-                self.init_timer = threading.Timer(self.browser.init_timeout,
-                                                  self.init_timeout)
-            try:
-                if self.init_timer is not None:
-                    self.init_timer.start()
-                self.logger.debug("Starting browser with settings %r" % self.browser_settings)
-                self.browser.start(**self.browser_settings)
-                self.browser_pid = self.browser.pid()
-            except:
-                self.logger.warning("Failure during init %s" % traceback.format_exc())
-                if self.init_timer is not None:
-                    self.init_timer.cancel()
-                self.logger.error(traceback.format_exc())
-                succeeded = False
-            else:
-                succeeded = True
-                self.started = True
+        if not self.no_timeout:
+            self.init_timer = threading.Timer(self.browser.init_timeout,
+                                              self.init_timeout)
+        try:
+            if self.init_timer is not None:
+                self.init_timer.start()
+            self.logger.debug("Starting browser with settings %r" % self.browser_settings)
+            self.browser.start(**self.browser_settings)
+            self.browser_pid = self.browser.pid()
+        except:
+            self.logger.warning("Failure during init %s" % traceback.format_exc())
+            if self.init_timer is not None:
+                self.init_timer.cancel()
+            self.logger.error(traceback.format_exc())
+            succeeded = False
+        else:
+            succeeded = True
+            self.started = True
 
         return succeeded
 
@@ -249,8 +244,6 @@ RunnerManagerState = _RunnerManagerState()
 
 
 class TestRunnerManager(threading.Thread):
-    init_lock = threading.Lock()
-
     def __init__(self, suite_name, tests, test_source_cls, browser_cls, browser_kwargs,
                  executor_cls, executor_kwargs, stop_flag, pause_after_test=False,
                  pause_on_unexpected=False, restart_on_unexpected=True, debug_info=None):
@@ -507,12 +500,10 @@ class TestRunnerManager(threading.Thread):
                 if test_queue is None:
                     self.logger.info("No more tests")
                     return None, None
-            try:
-                # Need to block here just to allow for contention with other processes
-                test = test_queue.get(block=True, timeout=2)
-            except Empty:
-                if test_queue.empty():
+                if len(test_queue) == 0:
                     test_queue = None
+                else:
+                    test = test_queue.popleft()
         return test, test_queue
 
     def run_test(self):
