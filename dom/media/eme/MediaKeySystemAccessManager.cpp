@@ -165,8 +165,12 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
     return;
   }
 
+  bool isPrivateBrowsing =
+    mWindow->GetExtantDoc() &&
+    mWindow->GetExtantDoc()->NodePrincipal()->GetPrivateBrowsingId() > 0;
   MediaKeySystemConfiguration config;
-  if (MediaKeySystemAccess::GetSupportedConfig(aKeySystem, aConfigs, config, &diagnostics)) {
+  if (MediaKeySystemAccess::GetSupportedConfig(
+        aKeySystem, aConfigs, config, &diagnostics, isPrivateBrowsing)) {
     RefPtr<MediaKeySystemAccess> access(
       new MediaKeySystemAccess(mWindow, aKeySystem, config));
     aPromise->MaybeResolve(access);

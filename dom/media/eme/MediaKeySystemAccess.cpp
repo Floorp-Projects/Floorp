@@ -821,7 +821,8 @@ static bool
 GetSupportedConfig(const KeySystemConfig& aKeySystem,
                    const MediaKeySystemConfiguration& aCandidate,
                    MediaKeySystemConfiguration& aOutConfig,
-                   DecoderDoctorDiagnostics* aDiagnostics)
+                   DecoderDoctorDiagnostics* aDiagnostics,
+                   bool aInPrivateBrowsing)
 {
   // Let accumulated configuration be a new MediaKeySystemConfiguration dictionary.
   MediaKeySystemConfiguration config;
@@ -870,6 +871,14 @@ GetSupportedConfig(const KeySystemConfig& aKeySystem,
                         config.mPersistentState)) {
     EME_LOG("MediaKeySystemConfiguration (label='%s') rejected; "
             "persistentState requirement not satisfied.",
+            NS_ConvertUTF16toUTF8(aCandidate.mLabel).get());
+    return false;
+  }
+
+  if (config.mPersistentState == MediaKeysRequirement::Required &&
+      aInPrivateBrowsing) {
+    EME_LOG("MediaKeySystemConfiguration (label='%s') rejected; "
+            "persistentState requested in Private Browsing window.",
             NS_ConvertUTF16toUTF8(aCandidate.mLabel).get());
     return false;
   }
@@ -1044,10 +1053,12 @@ GetSupportedConfig(const KeySystemConfig& aKeySystem,
 
 /* static */
 bool
-MediaKeySystemAccess::GetSupportedConfig(const nsAString& aKeySystem,
-                                         const Sequence<MediaKeySystemConfiguration>& aConfigs,
-                                         MediaKeySystemConfiguration& aOutConfig,
-                                         DecoderDoctorDiagnostics* aDiagnostics)
+MediaKeySystemAccess::GetSupportedConfig(
+  const nsAString& aKeySystem,
+  const Sequence<MediaKeySystemConfiguration>& aConfigs,
+  MediaKeySystemConfiguration& aOutConfig,
+  DecoderDoctorDiagnostics* aDiagnostics,
+  bool aIsPrivateBrowsing)
 {
   KeySystemConfig implementation;
   if (!GetKeySystemConfig(aKeySystem, implementation)) {
@@ -1057,7 +1068,8 @@ MediaKeySystemAccess::GetSupportedConfig(const nsAString& aKeySystem,
     if (mozilla::dom::GetSupportedConfig(implementation,
                                          candidate,
                                          aOutConfig,
-                                         aDiagnostics)) {
+                                         aDiagnostics,
+                                         aIsPrivateBrowsing)) {
       return true;
     }
   }
