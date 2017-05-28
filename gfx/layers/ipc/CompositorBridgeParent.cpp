@@ -1332,10 +1332,11 @@ CompositorBridgeParent::GetAPZTestData(const LayerTransactionParent* aLayerTree,
 }
 
 void
-CompositorBridgeParent::SetConfirmedTargetAPZC(const LayerTransactionParent* aLayerTree,
-                                         const uint64_t& aInputBlockId,
-                                         const nsTArray<ScrollableLayerGuid>& aTargets)
+CompositorBridgeParent::SetConfirmedTargetAPZC(const uint64_t& aLayersId,
+                                               const uint64_t& aInputBlockId,
+                                               const nsTArray<ScrollableLayerGuid>& aTargets)
 {
+  MOZ_ASSERT(aLayersId == 0 || aLayersId == mRootLayerTreeID);
   if (!mApzcTreeManager) {
     return;
   }
@@ -1347,7 +1348,6 @@ CompositorBridgeParent::SetConfirmedTargetAPZC(const LayerTransactionParent* aLa
         <uint64_t, StoreCopyPassByConstLRef<nsTArray<ScrollableLayerGuid>>>
         (mApzcTreeManager.get(), setTargetApzcFunc, aInputBlockId, aTargets);
   APZThreadUtils::RunOnControllerThread(task.forget());
-
 }
 
 void
