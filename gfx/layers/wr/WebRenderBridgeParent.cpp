@@ -740,6 +740,14 @@ WebRenderBridgeParent::GetTargetAPZC(const FrameMetrics::ViewID& aScrollId)
 }
 
 mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,
+                                                  nsTArray<ScrollableLayerGuid>&& aTargets)
+{
+  mCompositorBridge->SetConfirmedTargetAPZC(wr::AsUint64(mPipelineId), aBlockId, aTargets);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScrollId,
                                                 const float& aX,
                                                 const float& aY)
