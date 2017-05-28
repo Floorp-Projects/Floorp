@@ -21,7 +21,7 @@ class TestSecurityNotification(PuppeteerMixin, MarionetteTestCase):
             # Secure page
             'https://ssl-ev.mozqa.com/',
             # Insecure page
-            'http://www.mozqa.com'
+            'http://no-ssl.mozqa.com'
         ]
 
         self.identity_box = self.browser.navbar.locationbar.identity_box
