@@ -30,6 +30,7 @@ import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
 import org.mozilla.gecko.feeds.FeedService;
 import org.mozilla.gecko.feeds.action.CheckForUpdatesAction;
+import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.Restrictions;
@@ -1197,6 +1198,9 @@ public class GeckoPreferences
         } else if (PREFS_HEALTHREPORT_UPLOAD_ENABLED.equals(prefName)) {
             final Boolean newBooleanValue = (Boolean) newValue;
             AdjustConstants.getAdjustHelper().setEnabled(newBooleanValue);
+            if (!newBooleanValue) {
+                MmaDelegate.stop();
+            }
         } else if (PREFS_GEO_REPORTING.equals(prefName)) {
             if ((Boolean) newValue) {
                 enableStumbler((CheckBoxPreference) preference);

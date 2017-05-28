@@ -251,6 +251,10 @@ var gPage = {
 
   onPageVisibleAndLoaded() {
     // Maybe tell the user they can undo an initial automigration
-    sendAsyncMessage("NewTab:MaybeShowMigrateMessage");
+    this.maybeShowAutoMigrationUndoNotification();
+  },
+
+  maybeShowAutoMigrationUndoNotification() {
+    sendAsyncMessage("NewTab:MaybeShowAutoMigrationUndoNotification");
   },
 };

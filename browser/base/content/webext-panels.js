@@ -12,11 +12,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
+  extensionStylesheets,
   promiseEvent,
 } = ExtensionUtils;
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 
 function getBrowser(sidebar) {
   let browser = document.getElementById("webext-panels-browser");
@@ -54,6 +54,15 @@ function getBrowser(sidebar) {
   return readyPromise.then(() => {
     browser.messageManager.loadFrameScript("chrome://browser/content/content.js", false);
     ExtensionParent.apiManager.emit("extension-browser-inserted", browser);
+
+    if (sidebar.browserStyle) {
+      browser.messageManager.loadFrameScript(
+        "chrome://extensions/content/ext-browser-content.js", false);
+
+      browser.messageManager.sendAsyncMessage("Extension:InitBrowser", {
+        stylesheets: extensionStylesheets,
+      });
+    }
     return browser;
   });
 }
@@ -63,6 +72,7 @@ function loadWebPanel() {
   let sidebar = {
     uri: sidebarURI.searchParams.get("panel"),
     remote: sidebarURI.searchParams.get("remote"),
+    browserStyle: sidebarURI.searchParams.get("browser-style"),
   };
   getBrowser(sidebar).then(browser => {
     browser.loadURI(sidebar.uri);

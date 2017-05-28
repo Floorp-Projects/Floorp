@@ -333,6 +333,8 @@
     <menupopup id="toolbar-context-menu"
                onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator'));">
       <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
+                photonaccesskey="&customizeMenu.pinToOverflowMenu.accesskey;"
+                photonlabel="&customizeMenu.pinToOverflowMenu.label;"
                 accesskey="&customizeMenu.moveToPanel.accesskey;"
                 label="&customizeMenu.moveToPanel.label;"
                 contexttype="toolbaritem"

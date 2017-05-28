@@ -715,7 +715,7 @@ function BuildConditionSandbox(aURL) {
 #endif
 
 #ifdef MOZ_STYLO
-    sandbox.stylo = prefs.getBoolPref("layout.css.servo.enabled", false);
+    sandbox.stylo = prefs.getBoolPref("layout.css.servo.enabled", false) && !gCompareStyloToGecko;
     sandbox.styloVsGecko = gCompareStyloToGecko;
 #else
     sandbox.stylo = false;

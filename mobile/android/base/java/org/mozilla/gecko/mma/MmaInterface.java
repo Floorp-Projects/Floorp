@@ -19,4 +19,5 @@ public interface MmaInterface {
 
     void track(String leanplumEvent, double value);
 
+    void stop();
 }

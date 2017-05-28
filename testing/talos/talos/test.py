@@ -792,3 +792,18 @@ class bloom_basic_ref(PageloaderTest):
     unit = 'ms'
     lower_is_better = True
     alert_threshold = 5.0
+
+
+@register_test()
+class Quantum_1(PageloaderTest):
+    """
+    Quantum Pageload Test 1
+    """
+    tpmanifest = '${talos}/tests/quantum_pageload/quantum_1.manifest'
+    tpcycles = 1
+    tppagecycles = 25
+    gecko_profile_interval = 1
+    gecko_profile_entries = 2000000
+    filters = filter.ignore_first.prepare(5) + filter.median.prepare()
+    unit = 'ms'
+    lower_is_better = True

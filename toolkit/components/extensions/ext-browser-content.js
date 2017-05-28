@@ -71,6 +71,9 @@ const BrowserListener = {
     this.maxWidth = maxWidth;
     this.maxHeight = maxHeight;
 
+    this.blockParser = blockParser;
+    this.needsResize = fixedWidth || maxHeight || maxWidth;
+
     this.oldBackground = null;
 
     if (allowScriptsToClose) {
@@ -80,27 +83,30 @@ const BrowserListener = {
     // Force external links to open in tabs.
     docShell.isAppTab = true;
 
-    if (blockParser) {
+    if (this.blockParser) {
       this.blockingPromise = new Promise(resolve => {
         this.unblockParser = resolve;
       });
+      addEventListener("DOMDocElementInserted", this, true);
     }
 
-    addEventListener("DOMWindowCreated", this, true);
     addEventListener("load", this, true);
+    addEventListener("DOMWindowCreated", this, true);
     addEventListener("DOMContentLoaded", this, true);
     addEventListener("DOMWindowClose", this, true);
     addEventListener("MozScrolledAreaChanged", this, true);
-    addEventListener("DOMDocElementInserted", this, true);
   },
 
   destroy() {
-    removeEventListener("DOMWindowCreated", this, true);
+    if (this.blockParser) {
+      removeEventListener("DOMDocElementInserted", this, true);
+    }
+
     removeEventListener("load", this, true);
+    removeEventListener("DOMWindowCreated", this, true);
     removeEventListener("DOMContentLoaded", this, true);
     removeEventListener("DOMWindowClose", this, true);
     removeEventListener("MozScrolledAreaChanged", this, true);
-    removeEventListener("DOMDocElementInserted", this, true);
   },
 
   receiveMessage({name, data}) {
@@ -147,7 +153,10 @@ const BrowserListener = {
       case "DOMContentLoaded":
         if (event.target === content.document) {
           sendAsyncMessage("Extension:BrowserContentLoaded", {url: content.location.href});
-          this.handleDOMChange(true);
+
+          if (this.needsResize) {
+            this.handleDOMChange(true);
+          }
         }
         break;
 
@@ -164,6 +173,10 @@ const BrowserListener = {
           }
           sendAsyncMessage("Extension:BrowserContentLoaded", {url: content.location.href});
         } else if (event.target !== content.document) {
+          break;
+        }
+
+        if (!this.needsResize) {
           break;
         }
 
@@ -187,7 +200,9 @@ const BrowserListener = {
         break;
 
       case "MozScrolledAreaChanged":
-        this.handleDOMChange();
+        if (this.needsResize) {
+          this.handleDOMChange();
+        }
         break;
     }
   },

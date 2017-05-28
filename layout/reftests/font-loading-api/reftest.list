@@ -2,7 +2,7 @@ default-preferences pref(layout.css.font-loading-api.enabled,true)
 
 HTTP(..) == dynamic-insert-1.html dynamic-insert-1-ref.html
 HTTP(..) == dynamic-remove-1.html dynamic-remove-1-ref.html
-fails-if(styloVsGecko) HTTP(..) == ex-unit-1.html ../font-face/ex-unit-1-ref.html
+fails-if(styloVsGecko||stylo) HTTP(..) == ex-unit-1.html ../font-face/ex-unit-1-ref.html
 fuzzy-if(skiaContent,2,10) HTTP(..) == multiple-sets-1.html multiple-sets-1-ref.html
 HTTP(..) == name-collision.html ../font-face/name-collision-ref.html
 HTTP(..) == order-1.html ../font-face/order-1-ref.html

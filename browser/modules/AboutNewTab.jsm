@@ -32,16 +32,8 @@ var AboutNewTab = {
     }
     this.pageListener = new RemotePages("about:newtab");
     this.pageListener.addMessageListener("NewTab:Customize", this.customize.bind(this));
-    this.pageListener.addMessageListener("NewTab:MaybeShowMigrateMessage",
-      this.maybeShowMigrateMessage.bind(this));
-  },
-
-  maybeShowMigrateMessage({ target }) {
-    AutoMigrate.shouldShowMigratePrompt(target.browser).then((prompt) => {
-      if (prompt) {
-        AutoMigrate.showUndoNotificationBar(target.browser);
-      }
-    });
+    this.pageListener.addMessageListener("NewTab:MaybeShowAutoMigrationUndoNotification",
+      (msg) => AutoMigrate.maybeShowUndoNotification(msg.target.browser));
   },
 
   customize(message) {
