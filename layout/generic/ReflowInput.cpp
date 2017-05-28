@@ -1020,7 +1020,7 @@ ReflowInput::ComputeRelativeOffsets(WritingMode aWM,
   if (physicalOffsets) {
     *physicalOffsets = aComputedOffsets;
   } else {
-    aFrame->AddProperty(nsIFrame::ComputedOffsetProperty(),
+    aFrame->SetProperty(nsIFrame::ComputedOffsetProperty(),
                         new nsMargin(aComputedOffsets));
   }
 }
@@ -1045,7 +1045,7 @@ ReflowInput::ApplyRelativePositioning(nsIFrame* aFrame,
   if (normalPosition) {
     *normalPosition = *aPosition;
   } else {
-    aFrame->AddProperty(nsIFrame::NormalPositionProperty(),
+    aFrame->SetProperty(nsIFrame::NormalPositionProperty(),
                         new nsPoint(*aPosition));
   }
 
@@ -2519,7 +2519,7 @@ UpdateProp(nsIFrame* aFrame,
     if (propValue) {
       *propValue = aNewValue;
     } else {
-      aFrame->AddProperty(aProperty, new nsMargin(aNewValue));
+      aFrame->SetProperty(aProperty, new nsMargin(aNewValue));
     }
   } else {
     aFrame->DeleteProperty(aProperty);
