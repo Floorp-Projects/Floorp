@@ -222,9 +222,14 @@ protected:
   friend class nsTextEditorState; // needs access to UpdateValueDisplay
 
   // Temp reference to scriptrunner
-  // We could make these auto-Revoking via the "delete" entry for safety
-  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(TextControlInitializer,
-                                         EditorInitializer)
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(TextControlInitializer,
+                                      EditorInitializer,
+                                      nsTextControlFrame::RevokeInitializer)
+
+  static void
+  RevokeInitializer(EditorInitializer* aInitializer) {
+    aInitializer->Revoke();
+  };
 
   class EditorInitializer : public mozilla::Runnable {
   public:
