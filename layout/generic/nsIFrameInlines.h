@@ -180,20 +180,4 @@ nsIFrame::GetInFlowParent()
   return GetParent();
 }
 
-nsPoint
-nsIFrame::GetNormalPosition(bool* aHasProperty) const
-{
-  nsPoint* normalPosition = GetProperty(NormalPositionProperty());
-  if (normalPosition) {
-    if (aHasProperty) {
-      *aHasProperty = true;
-    }
-    return *normalPosition;
-  }
-  if (aHasProperty) {
-    *aHasProperty = false;
-  }
-  return GetPosition();
-}
-
 #endif

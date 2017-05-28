@@ -803,10 +803,9 @@ RecomputePosition(nsIFrame* aFrame)
         // since we've already checked mPosition and aren't changing the frame's
         // normal position, go ahead and add the offsets directly.
         // First, we need to ensure that the normal position is stored though.
-        bool hasProperty;
-        nsPoint normalPosition = cont->GetNormalPosition(&hasProperty);
-        if (!hasProperty) {
-          cont->AddProperty(nsIFrame::NormalPositionProperty(),
+        nsPoint normalPosition = cont->GetNormalPosition();
+        if (!cont->GetProperty(nsIFrame::NormalPositionProperty())) {
+          cont->SetProperty(nsIFrame::NormalPositionProperty(),
                             new nsPoint(normalPosition));
         }
         cont->SetPosition(normalPosition +
