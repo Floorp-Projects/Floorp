@@ -124,11 +124,7 @@ nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   mScrollEvent.Revoke();
 
-  EditorInitializer* initializer = GetProperty(TextControlInitializer());
-  if (initializer) {
-    initializer->Revoke();
-    DeleteProperty(TextControlInitializer());
-  }
+  DeleteProperty(TextControlInitializer());
 
   // Unbind the text editor state object from the frame.  The editor will live
   // on, but things like controllers will be released.
@@ -394,12 +390,8 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   if (initEagerly) {
     NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                  "Someone forgot a script blocker?");
-    EditorInitializer* initializer = GetProperty(TextControlInitializer());
-    if (initializer) {
-      initializer->Revoke();
-    }
-    initializer = new EditorInitializer(this);
-    SetProperty(TextControlInitializer(),initializer);
+    EditorInitializer* initializer = new EditorInitializer(this);
+    SetProperty(TextControlInitializer(), initializer);
     nsContentUtils::AddScriptRunner(initializer);
   }
 
