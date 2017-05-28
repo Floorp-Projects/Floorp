@@ -1646,8 +1646,8 @@ nsFlexContainerFrame::MeasureAscentAndHeightForFlexItem(
   nsPresContext* aPresContext,
   ReflowInput& aChildReflowInput)
 {
-  const FrameProperties props = aItem.Frame()->Properties();
-  if (const auto* cachedResult = props.Get(CachedFlexMeasuringReflow())) {
+  if (const auto* cachedResult =
+        aItem.Frame()->GetProperty(CachedFlexMeasuringReflow())) {
     if (cachedResult->IsValidFor(aChildReflowInput)) {
       return *cachedResult;
     }
@@ -1677,7 +1677,7 @@ nsFlexContainerFrame::MeasureAscentAndHeightForFlexItem(
   auto result =
     new CachedMeasuringReflowResult(aChildReflowInput, childDesiredSize);
 
-  props.Set(CachedFlexMeasuringReflow(), result);
+  aItem.Frame()->SetProperty(CachedFlexMeasuringReflow(), result);
   return *result;
 }
 
@@ -1685,7 +1685,7 @@ nsFlexContainerFrame::MeasureAscentAndHeightForFlexItem(
 nsFlexContainerFrame::MarkIntrinsicISizesDirty()
 {
   for (nsIFrame* childFrame : mFrames) {
-    childFrame->Properties().Delete(CachedFlexMeasuringReflow());
+    childFrame->DeleteProperty(CachedFlexMeasuringReflow());
   }
   nsContainerFrame::MarkIntrinsicISizesDirty();
 }
@@ -4044,25 +4044,26 @@ class MOZ_RAII AutoFlexItemMainSizeOverride final
 public:
   explicit AutoFlexItemMainSizeOverride(FlexItem& aItem
                                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mItemProps(aItem.Frame()->Properties())
+    : mItemFrame(aItem.Frame())
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
-    MOZ_ASSERT(!mItemProps.Has(nsIFrame::FlexItemMainSizeOverride()),
+    MOZ_ASSERT(!mItemFrame->HasProperty(nsIFrame::FlexItemMainSizeOverride()),
                "FlexItemMainSizeOverride prop shouldn't be set already; "
                "it should only be set temporarily (& not recursively)");
     NS_ASSERTION(aItem.HasIntrinsicRatio(),
                  "This should only be needed for items with an aspect ratio");
 
-    mItemProps.Set(nsIFrame::FlexItemMainSizeOverride(), aItem.GetMainSize());
+    mItemFrame->SetProperty(nsIFrame::FlexItemMainSizeOverride(),
+                            aItem.GetMainSize());
   }
 
   ~AutoFlexItemMainSizeOverride() {
-    mItemProps.Remove(nsIFrame::FlexItemMainSizeOverride());
+    mItemFrame->RemoveProperty(nsIFrame::FlexItemMainSizeOverride());
   }
 
 private:
-  const FrameProperties mItemProps;
+  nsIFrame* mItemFrame;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
@@ -4476,8 +4477,7 @@ nsFlexContainerFrame::MoveFlexItemToFinalPosition(
   // If item is relpos, look up its offsets (cached from prev reflow)
   LogicalMargin logicalOffsets(outerWM);
   if (NS_STYLE_POSITION_RELATIVE == aItem.Frame()->StyleDisplay()->mPosition) {
-    FrameProperties props = aItem.Frame()->Properties();
-    nsMargin* cachedOffsets = props.Get(nsIFrame::ComputedOffsetProperty());
+    nsMargin* cachedOffsets = aItem.Frame()->GetProperty(nsIFrame::ComputedOffsetProperty());
     MOZ_ASSERT(cachedOffsets,
                "relpos previously-reflowed frame should've cached its offsets");
     logicalOffsets = LogicalMargin(outerWM, *cachedOffsets);

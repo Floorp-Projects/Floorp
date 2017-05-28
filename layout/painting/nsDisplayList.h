@@ -1250,7 +1250,7 @@ public:
 
   static OutOfFlowDisplayData* GetOutOfFlowData(nsIFrame* aFrame)
   {
-    return aFrame->Properties().Get(OutOfFlowDisplayDataProperty());
+    return aFrame->GetProperty(OutOfFlowDisplayDataProperty());
   }
 
   nsPresContext* CurrentPresContext() {

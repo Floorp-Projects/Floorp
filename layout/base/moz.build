@@ -34,7 +34,7 @@ XPIDL_MODULE = 'layout_base'
 
 EXPORTS += [
     'CaretAssociationHint.h',
-    'FramePropertyTable.h',
+    'FrameProperties.h',
     'LayoutLogging.h',
     'nsArenaMemoryStats.h',
     'nsBidi.h',
@@ -87,7 +87,7 @@ UNIFIED_SOURCES += [
     'AccessibleCaret.cpp',
     'AccessibleCaretEventHub.cpp',
     'AccessibleCaretManager.cpp',
-    'FramePropertyTable.cpp',
+    'FrameProperties.cpp',
     'GeckoRestyleManager.cpp',
     'GeometryUtils.cpp',
     'LayoutLogging.cpp',
