@@ -3,25 +3,55 @@
 
 "use strict";
 
-setExpectedFailuresForSelfTest(4);
+// This test is designed to fail.
+// It ensures that throwing an asynchronous error from add_task will
+// fail the test.
 
-function rejectOnNextTick(error) {
-  return new Promise((resolve, reject) => executeSoon(() => reject(error)));
+var passedTests = 0;
+
+function rejectWithTimeout(error = undefined) {
+  let deferred = Promise.defer();
+  executeSoon(function() {
+    ok(true, "we get here after a timeout");
+    deferred.reject(error);
+  });
+  return deferred.promise;
 }
 
 add_task(function failWithoutError() {
-  yield rejectOnNextTick(undefined);
+  try {
+    yield rejectWithTimeout();
+  } finally {
+    ++passedTests;
+  }
 });
 
 add_task(function failWithString() {
-  yield rejectOnNextTick("This is a string");
+  try {
+    yield rejectWithTimeout("Meaningless error");
+  } finally {
+    ++passedTests;
+  }
 });
 
-add_task(function failWithInt() {
-  yield rejectOnNextTick(42);
+add_task(function failWithoutInt() {
+  try {
+    yield rejectWithTimeout(42);
+  } finally {
+    ++passedTests;
+  }
 });
+
 
 // This one should display a stack trace
 add_task(function failWithError() {
-  yield rejectOnNextTick(new Error("This is an error"));
+  try {
+    yield rejectWithTimeout(new Error("This is an error"));
+  } finally {
+    ++passedTests;
+  }
+});
+
+add_task(function done() {
+  is(passedTests, 4, "Passed all tests");
 });
