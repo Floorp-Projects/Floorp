@@ -71,6 +71,9 @@ public:
   static bool KeySystemSupportsInitDataType(const nsAString& aKeySystem,
                                             const nsAString& aInitDataType);
 
+  static nsCString ToCString(
+    const Sequence<MediaKeySystemConfiguration>& aConfig);
+
 private:
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   const nsString mKeySystem;
