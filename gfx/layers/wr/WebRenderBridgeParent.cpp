@@ -6,6 +6,7 @@
 
 #include "mozilla/layers/WebRenderBridgeParent.h"
 
+#include "apz/src/AsyncPanZoomController.h"
 #include "CompositableHost.h"
 #include "gfxPrefs.h"
 #include "GLContext.h"
@@ -723,6 +724,50 @@ WebRenderBridgeParent::RecvForceComposite()
     return IPC_OK();
   }
   ScheduleComposition();
+  return IPC_OK();
+}
+
+already_AddRefed<AsyncPanZoomController>
+WebRenderBridgeParent::GetTargetAPZC(const FrameMetrics::ViewID& aScrollId)
+{
+  RefPtr<AsyncPanZoomController> apzc;
+  if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
+    if (RefPtr<APZCTreeManager> apzctm = cbp->GetAPZCTreeManager()) {
+      apzc = apzctm->GetTargetAPZC(wr::AsUint64(mPipelineId), aScrollId);
+    }
+  }
+  return apzc.forget();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScrollId,
+                                                const float& aX,
+                                                const float& aY)
+{
+  RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aScrollId);
+  if (!apzc) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  apzc->SetTestAsyncScrollOffset(CSSPoint(aX, aY));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvSetAsyncZoom(const FrameMetrics::ViewID& aScrollId,
+                                        const float& aZoom)
+{
+  RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aScrollId);
+  if (!apzc) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  apzc->SetTestAsyncZoom(LayerToParentLayerScale(aZoom));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvFlushApzRepaints()
+{
+  mCompositorBridge->FlushApzRepaints(wr::AsUint64(mPipelineId));
   return IPC_OK();
 }
 

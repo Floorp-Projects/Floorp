@@ -67,6 +67,12 @@ parent:
   // Schedule a composite if one isn't already scheduled.
   async ForceComposite();
 
+  // Testing APIs. These correspond exactly to the equivalent APIs in
+  // PLayerTransaction - see those for documentation.
+  sync SetAsyncScrollOffset(ViewID scrollId, float x, float y);
+  sync SetAsyncZoom(ViewID scrollId, float zoom);
+  async FlushApzRepaints();
+
   async Shutdown();
 child:
   async __delete__();
