@@ -60,7 +60,7 @@
           let root =
             document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
 
-          let yearMaxLength = this.mMaxYear.toString().length
+          let yearMaxLength = this.mMaxYear.toString().length;
           this.mYearField = this.createEditField(this.mYearPlaceHolder,
             true, this.mYearLength, yearMaxLength, this.mMinYear, this.mMaxYear,
             this.mYearPageUpDownInterval);

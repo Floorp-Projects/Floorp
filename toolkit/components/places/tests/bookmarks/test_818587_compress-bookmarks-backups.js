@@ -30,7 +30,7 @@ add_task(async function compress_bookmark_backups_test() {
   do_check_eq((await PlacesBackups.getBackupFiles()).length, 1);
 
   // Check if import works from lz4 compressed json
-  let url = "http://www.mozilla.org/en-US/"
+  let url = "http://www.mozilla.org/en-US/";
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "bookmark",

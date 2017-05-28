@@ -152,7 +152,7 @@ function plInit() {
     if (args.fnbpaint) useFNBPaint = true;
     if (args.loadnocache) loadNoCache = true;
     if (args.scrolltest) scrollTest = true;
-    if (args.profilinginfo) profilingInfo = JSON.parse(args.profilinginfo)
+    if (args.profilinginfo) profilingInfo = JSON.parse(args.profilinginfo);
 
     if (profilingInfo) {
       TalosParentProfiler.initFromObject(profilingInfo);
@@ -533,7 +533,7 @@ function forceContentGC() {
 
 function plRecordTime(time) {
   var pageName = pages[pageIndex].url.spec;
-  var i = pageIndex
+  var i = pageIndex;
   if (i < pages.length - 1) {
     i++;
   } else {
@@ -581,13 +581,13 @@ function plLoadHandlerCapturing(evt) {
     gStartTime = startTime;
     recordedName = testName;
     setTimeout(plWaitForPaintingCapturing, 0);
-  }
+  };
 
   content.contentWindow.wrappedJSObject.plGarbageCollect = function() {
     window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
           .getInterface(Components.interfaces.nsIDOMWindowUtils)
           .garbageCollect();
-  }
+  };
 
   content.removeEventListener("load", plLoadHandlerCapturing, true);
   removeLastAddedListener = null;
@@ -990,4 +990,3 @@ function dumpLine(str) {
   dump(str);
   dump("\n");
 }
-

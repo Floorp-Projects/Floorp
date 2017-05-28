@@ -540,7 +540,7 @@ add_task(async function test_sync_why() {
     _(`test_generic_engine_fail: Steam tracker contents: ${
       JSON.stringify(engine._tracker.changedIDs)}`);
     let ping = await wait_for_ping(() => Service.sync({why: "user"}), true, false);
-    _(JSON.stringify(ping))
+    _(JSON.stringify(ping));
     equal(ping.why, "user");
   } finally {
     await cleanAndGo(engine, server);

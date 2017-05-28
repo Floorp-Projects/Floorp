@@ -778,7 +778,7 @@
           if (!aPaneElement.loaded) {
             let OverlayLoadObserver = function(aPane) {
               this._pane = aPane;
-            }
+            };
             OverlayLoadObserver.prototype = {
               _outer: this,
               observe(aSubject, aTopic, aData) {

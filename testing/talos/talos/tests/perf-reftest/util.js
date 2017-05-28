@@ -1,7 +1,7 @@
 var perf_data = {
   start: null,
   end: null,
-}
+};
 
 function build_dom(n, elemName, options) {
   // By default we use different elements in the DOM to defeat the style sharing

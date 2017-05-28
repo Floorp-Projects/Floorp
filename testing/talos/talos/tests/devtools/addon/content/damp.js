@@ -783,4 +783,4 @@ async _consoleOpenWithCachedMessagesTest() {
 
     this._doSequence(sequenceArray, this._doneInternal);
   }
-}
+};
