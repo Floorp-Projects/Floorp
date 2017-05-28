@@ -180,6 +180,7 @@ public:
 private:
   virtual ~WebRenderBridgeParent();
 
+  uint64_t GetLayersId() const;
   void DeleteOldImages();
   void ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                 InfallibleTArray<WebRenderParentCommand>& commands,
