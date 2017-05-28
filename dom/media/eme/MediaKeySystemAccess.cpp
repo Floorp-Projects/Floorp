@@ -50,6 +50,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaKeySystemAccess)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+static nsCString
+ToCString(const MediaKeySystemConfiguration& aConfig);
+
 MediaKeySystemAccess::MediaKeySystemAccess(nsPIDOMWindowInner* aParent,
                                            const nsAString& aKeySystem,
                                            const MediaKeySystemConfiguration& aConfig)
@@ -57,6 +60,8 @@ MediaKeySystemAccess::MediaKeySystemAccess(nsPIDOMWindowInner* aParent,
   , mKeySystem(aKeySystem)
   , mConfig(aConfig)
 {
+  EME_LOG("Created MediaKeySystemAccess for keysystem=%s config=%s",
+          NS_ConvertUTF16toUTF8(mKeySystem).get(), mozilla::dom::ToCString(mConfig).get());
 }
 
 MediaKeySystemAccess::~MediaKeySystemAccess()
