@@ -267,13 +267,12 @@ nsTableFrame::RegisterPositionedTablePart(nsIFrame* aFrame)
   tableFrame = static_cast<nsTableFrame*>(tableFrame->FirstContinuation());
 
   // Retrieve the positioned parts array for this table.
-  FrameProperties props = tableFrame->Properties();
-  FrameTArray* positionedParts = props.Get(PositionedTablePartArray());
+  FrameTArray* positionedParts = tableFrame->GetProperty(PositionedTablePartArray());
 
   // Lazily create the array if it doesn't exist yet.
   if (!positionedParts) {
     positionedParts = new FrameTArray;
-    props.Set(PositionedTablePartArray(), positionedParts);
+    tableFrame->SetProperty(PositionedTablePartArray(), positionedParts);
   }
 
   // Add this frame to the list.
@@ -297,8 +296,7 @@ nsTableFrame::UnregisterPositionedTablePart(nsIFrame* aFrame,
   tableFrame = static_cast<nsTableFrame*>(tableFrame->FirstContinuation());
 
   // Retrieve the positioned parts array for this table.
-  FrameProperties props = tableFrame->Properties();
-  FrameTArray* positionedParts = props.Get(PositionedTablePartArray());
+  FrameTArray* positionedParts = tableFrame->GetProperty(PositionedTablePartArray());
 
   // Remove the frame.
   MOZ_ASSERT(positionedParts && positionedParts->Contains(aFrame),
@@ -2126,7 +2124,7 @@ nsTableFrame::FixupPositionedTableParts(nsPresContext*           aPresContext,
                                         ReflowOutput&     aDesiredSize,
                                         const ReflowInput& aReflowInput)
 {
-  FrameTArray* positionedParts = Properties().Get(PositionedTablePartArray());
+  FrameTArray* positionedParts = GetProperty(PositionedTablePartArray());
   if (!positionedParts) {
     return;
   }
@@ -2789,17 +2787,16 @@ NS_DECLARE_FRAME_PROPERTY_DELETABLE(TableBCProperty, BCPropertyData)
 BCPropertyData*
 nsTableFrame::GetBCProperty() const
 {
-  return Properties().Get(TableBCProperty());
+  return GetProperty(TableBCProperty());
 }
 
 BCPropertyData*
 nsTableFrame::GetOrCreateBCProperty()
 {
-  FrameProperties props = Properties();
-  BCPropertyData* value = props.Get(TableBCProperty());
+  BCPropertyData* value = GetProperty(TableBCProperty());
   if (!value) {
     value = new BCPropertyData();
-    props.Set(TableBCProperty(), value);
+    SetProperty(TableBCProperty(), value);
   }
 
   return value;
@@ -4453,7 +4450,7 @@ BCMapCellInfo::BCMapCellInfo(nsTableFrame* aTableFrame)
   : mTableFrame(aTableFrame)
   , mNumTableRows(aTableFrame->GetRowCount())
   , mNumTableCols(aTableFrame->GetColCount())
-  , mTableBCData(mTableFrame->Properties().Get(TableBCProperty()))
+  , mTableBCData(mTableFrame->GetProperty(TableBCProperty()))
   , mTableWM(aTableFrame->StyleContext())
 {
   ResetCellInfo();

@@ -45,12 +45,12 @@ StickyScrollContainer::GetStickyScrollContainerForFrame(nsIFrame* aFrame)
     // <html style="position: fixed">
     return nullptr;
   }
-  FrameProperties props = static_cast<nsIFrame*>(do_QueryFrame(scrollFrame))->
-    Properties();
-  StickyScrollContainer* s = props.Get(StickyScrollContainerProperty());
+  auto frame = static_cast<nsIFrame*>(do_QueryFrame(scrollFrame));
+  StickyScrollContainer* s =
+    frame->GetProperty(StickyScrollContainerProperty());
   if (!s) {
     s = new StickyScrollContainer(scrollFrame);
-    props.Set(StickyScrollContainerProperty(), s);
+    frame->SetProperty(StickyScrollContainerProperty(), s);
   }
   return s;
 }
@@ -69,9 +69,10 @@ StickyScrollContainer::NotifyReparentedFrameAcrossScrollFrameBoundary(nsIFrame* 
     // we aren't going to handle that.
     return;
   }
-  FrameProperties props = static_cast<nsIFrame*>(do_QueryFrame(oldScrollFrame))->
-    Properties();
-  StickyScrollContainer* oldSSC = props.Get(StickyScrollContainerProperty());
+
+  StickyScrollContainer* oldSSC =
+    static_cast<nsIFrame*>(do_QueryFrame(oldScrollFrame))->
+      GetProperty(StickyScrollContainerProperty());
   if (!oldSSC) {
     // aOldParent had no sticky descendants, so aFrame doesn't have any sticky
     // descendants, and we're done here.
@@ -95,8 +96,7 @@ StickyScrollContainer::NotifyReparentedFrameAcrossScrollFrameBoundary(nsIFrame* 
 StickyScrollContainer*
 StickyScrollContainer::GetStickyScrollContainerForScrollFrame(nsIFrame* aFrame)
 {
-  FrameProperties props = aFrame->Properties();
-  return props.Get(StickyScrollContainerProperty());
+  return aFrame->GetProperty(StickyScrollContainerProperty());
 }
 
 static nscoord
@@ -141,13 +141,12 @@ StickyScrollContainer::ComputeStickyOffsets(nsIFrame* aFrame)
                                                    scrollContainerSize.height);
 
   // Store the offset
-  FrameProperties props = aFrame->Properties();
-  nsMargin* offsets = props.Get(nsIFrame::ComputedOffsetProperty());
+  nsMargin* offsets = aFrame->GetProperty(nsIFrame::ComputedOffsetProperty());
   if (offsets) {
     *offsets = computedOffsets;
   } else {
-    props.Set(nsIFrame::ComputedOffsetProperty(),
-              new nsMargin(computedOffsets));
+    aFrame->SetProperty(nsIFrame::ComputedOffsetProperty(),
+                        new nsMargin(computedOffsets));
   }
 }
 
@@ -162,7 +161,7 @@ StickyScrollContainer::ComputeStickyLimits(nsIFrame* aFrame, nsRect* aStick,
   aContain->SetRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
 
   const nsMargin* computedOffsets = 
-    aFrame->Properties().Get(nsIFrame::ComputedOffsetProperty());
+    aFrame->GetProperty(nsIFrame::ComputedOffsetProperty());
   if (!computedOffsets) {
     // We haven't reflowed the scroll frame yet, so offsets haven't been
     // computed. Bail.

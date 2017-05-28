@@ -1383,19 +1383,6 @@ PresShell::Destroy()
   // Destroy the frame manager. This will destroy the frame hierarchy
   mFrameConstructor->WillDestroyFrameTree();
 
-  // Destroy all frame properties (whose destruction was suppressed
-  // while destroying the frame tree, but which might contain more
-  // frames within the properties.
-  if (mPresContext) {
-    // Clear out the prescontext's property table -- since our frame tree is
-    // now dead, we shouldn't be looking up any more properties in that table.
-    // We want to do this before we call DetachShell() on the prescontext, so
-    // property destructors can usefully call GetPresShell() on the
-    // prescontext.
-    mPresContext->PropertyTable()->DeleteAll();
-  }
-
-
   NS_WARNING_ASSERTION(!mAutoWeakFrames && mWeakFrames.IsEmpty(),
                        "Weak frames alive after destroying FrameManager");
   while (mAutoWeakFrames) {
@@ -2094,7 +2081,7 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
     }
 
     // Remove frame properties
-    mPresContext->NotifyDestroyingFrame(aFrame);
+    aFrame->DeleteAllProperties();
 
     if (aFrame == mCurrentEventFrame) {
       mCurrentEventContent = aFrame->GetContent();
