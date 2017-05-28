@@ -91,7 +91,7 @@ random-if(styloVsGecko) HTTP(..) == media-query-remove-1.html media-query-remove
 HTTP(..) != media-query-add-1-ref.html media-query-remove-1-ref.html
 
 HTTP(..) == ahem-metrics-1.html ahem-metrics-1-ref.html
-skip-if(styloVsGecko) fails-if(stylo) HTTP(..) == ex-unit-1.html ex-unit-1-ref.html
+skip-if(styloVsGecko) HTTP(..) == ex-unit-1.html ex-unit-1-ref.html
 skip-if(styloVsGecko||stylo) HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
 
 == local-1.html local-1-ref.html
