@@ -111,7 +111,7 @@ public:
   virtual void FlushApzRepaints(const uint64_t& aLayersId) = 0;
   virtual void GetAPZTestData(const LayerTransactionParent* aLayerTree,
                               APZTestData* aOutData) { }
-  virtual void SetConfirmedTargetAPZC(const LayerTransactionParent* aLayerTree,
+  virtual void SetConfirmedTargetAPZC(const uint64_t& aLayersId,
                                       const uint64_t& aInputBlockId,
                                       const nsTArray<ScrollableLayerGuid>& aTargets) = 0;
   virtual void UpdatePaintTime(LayerTransactionParent* aLayerTree, const TimeDuration& aPaintTime) {}
@@ -234,7 +234,7 @@ public:
   virtual void FlushApzRepaints(const uint64_t& aLayersId) override;
   virtual void GetAPZTestData(const LayerTransactionParent* aLayerTree,
                               APZTestData* aOutData) override;
-  virtual void SetConfirmedTargetAPZC(const LayerTransactionParent* aLayerTree,
+  virtual void SetConfirmedTargetAPZC(const uint64_t& aLayersId,
                                       const uint64_t& aInputBlockId,
                                       const nsTArray<ScrollableLayerGuid>& aTargets) override;
   virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aLayerTree) override { return mCompositionManager; }
