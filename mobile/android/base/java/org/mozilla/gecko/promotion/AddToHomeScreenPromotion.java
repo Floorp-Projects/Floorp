@@ -36,7 +36,7 @@ import ch.boye.httpclientandroidlib.util.TextUtils;
  * Promote "Add to home screen" if user visits website often.
  */
 public class AddToHomeScreenPromotion extends TabsTrayVisibilityAwareDelegate implements Tabs.OnTabsChangedListener {
-    public static class URLHistory {
+    private static class URLHistory {
         public final long visits;
         public final long lastVisit;
 
@@ -213,7 +213,7 @@ public class AddToHomeScreenPromotion extends TabsTrayVisibilityAwareDelegate im
         return urlAnnotations.hasAcceptedOrDeclinedHomeScreenShortcut(context.getContentResolver(), url);
     }
 
-    public static URLHistory getHistoryForURL(Context context, String url) {
+    protected URLHistory getHistoryForURL(Context context, String url) {
         final GeckoProfile profile = GeckoProfile.get(context);
         final BrowserDB browserDB = BrowserDB.from(profile);
 

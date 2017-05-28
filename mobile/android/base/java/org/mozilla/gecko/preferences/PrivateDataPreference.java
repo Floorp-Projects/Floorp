@@ -8,7 +8,6 @@ package org.mozilla.gecko.preferences;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.util.GeckoBundle;
 
 import org.mozilla.gecko.icons.storage.DiskStorage;
@@ -20,9 +19,6 @@ import java.util.Set;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
-
-import static org.mozilla.gecko.mma.MmaDelegate.CLEAR_PRIVATE_DATA;
-
 
 class PrivateDataPreference extends MultiPrefMultiChoicePreference {
     private static final String LOGTAG = "GeckoPrivateDataPreference";
@@ -62,6 +58,5 @@ class PrivateDataPreference extends MultiPrefMultiChoicePreference {
 
         // clear private data in gecko
         EventDispatcher.getInstance().dispatch("Sanitize:ClearData", data);
-        MmaDelegate.track(CLEAR_PRIVATE_DATA);
     }
 }

@@ -106,7 +106,6 @@ def _defines():
 
     if CONFIG['MOZ_ANDROID_MMA']:
         DEFINES['MOZ_LEANPLUM_SDK_KEY'] = CONFIG['MOZ_LEANPLUM_SDK_KEY']
-        DEFINES['MOZ_LEANPLUM_SDK_CLIENTID'] = CONFIG['MOZ_LEANPLUM_SDK_CLIENTID']
 
     DEFINES['MOZ_BUILDID'] = open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
 
