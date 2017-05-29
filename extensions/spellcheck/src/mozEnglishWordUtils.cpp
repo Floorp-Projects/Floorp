@@ -7,7 +7,6 @@
 #include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsUnicharUtils.h"
-#include "nsUnicharUtilCIID.h"
 #include "nsUnicodeProperties.h"
 #include "nsCRT.h"
 #include "mozilla/Likely.h"
@@ -134,7 +133,7 @@ NS_IMETHODIMP mozEnglishWordUtils::GetRootForm(const char16_t *aWord, uint32_t t
 bool mozEnglishWordUtils::ucIsAlpha(char16_t aChar)
 {
   // XXX we have to fix callers to handle the full Unicode range
-  return nsIUGenCategory::kLetter == mozilla::unicode::GetGenCategory(aChar);
+  return nsUGenCategory::kLetter == mozilla::unicode::GetGenCategory(aChar);
 }
 
 NS_IMETHODIMP mozEnglishWordUtils::FindNextWord(const char16_t *word, uint32_t length, uint32_t offset, int32_t *begin, int32_t *end)

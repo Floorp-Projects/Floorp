@@ -16,13 +16,11 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'unicharutil'
 
 EXPORTS += [
-    'nsIUGenCategory.h',
-    'nsUnicharUtilCIID.h',
+    'nsUGenCategory.h',
     'nsUnicodeNormalizer.h',
 ]
 
 UNIFIED_SOURCES += [
-    'nsCategoryImp.cpp',
     'nsEntityConverter.cpp',
     'nsSaveAsCharset.cpp',
 ]
