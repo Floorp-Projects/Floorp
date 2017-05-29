@@ -45,7 +45,7 @@ function test() {
 
   setFindString(texts[0]);
   // Turn on highlight for testing bug 891638
-  gFindBar.toggleHighlight(true);
+  gFindBar.getElement("highlight").checked = true;
 
   // Make sure the second tab is correct, then set it up
   gBrowser.selectedTab = tabs[1];
@@ -72,7 +72,7 @@ function continueTests1() {
   ok(gFindBar.getElement("highlight").checked,
      "Highlight button state persists!");
 
-  // While we're here, let's test the backout of bug 253793.
+  // While we're here, let's test bug 253793
   gBrowser.reload();
   gBrowser.addEventListener("DOMContentLoaded", continueTests2, true);
 }
@@ -128,7 +128,7 @@ function checkNewWindow() {
     is(newWindow.gFindBar._findField.value, texts[1],
        "New window find bar has correct find value!");
     ok(!newWindow.gFindBar.getElement("find-next").disabled,
-       "New window findbar has disabled buttons!");
+       "New window findbar has enabled buttons!");
   }
   newWindow.close();
   finish();
