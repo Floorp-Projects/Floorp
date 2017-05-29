@@ -353,7 +353,9 @@ private:
                                          int32_t* aSelectionType,
                                          int32_t* aRow,
                                          int32_t* aCol);
-  nsresult     addTableCellRange(nsRange *aRange, bool *aDidAddRange, int32_t *aOutIndex);
+  nsresult AddTableCellRange(nsRange* aRange,
+                             bool* aDidAddRange,
+                             int32_t* aOutIndex);
 
   nsresult FindInsertionPoint(
       nsTArray<RangeData>* aElementArray,
