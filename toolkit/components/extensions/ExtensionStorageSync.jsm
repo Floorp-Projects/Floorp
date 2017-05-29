@@ -73,8 +73,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
                                   "resource://gre/modules/Sqlite.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Svc",
-                                  "resource://services-sync/util.js");
 XPCOMUtils.defineLazyModuleGetter(this, "Utils",
                                   "resource://services-sync/util.js");
 XPCOMUtils.defineLazyPreferenceGetter(this, "prefPermitsStorageSync",
@@ -82,6 +80,11 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "prefPermitsStorageSync",
 XPCOMUtils.defineLazyPreferenceGetter(this, "prefStorageSyncServerURL",
                                       STORAGE_SYNC_SERVER_URL_PREF,
                                       KINTO_DEFAULT_SERVER_URL);
+XPCOMUtils.defineLazyGetter(this, "WeaveCrypto", function() {
+  let {WeaveCrypto} = Cu.import("resource://services-crypto/WeaveCrypto.js", {});
+  return new WeaveCrypto();
+});
+
 const {
   runSafeSyncWithoutClone,
 } = ExtensionUtils;
@@ -180,9 +183,9 @@ class EncryptionRemoteTransformer {
       throw new Error("Record ID is missing or invalid");
     }
 
-    let IV = Svc.Crypto.generateRandomIV();
-    let ciphertext = Svc.Crypto.encrypt(JSON.stringify(record),
-                                        keyBundle.encryptionKeyB64, IV);
+    let IV = WeaveCrypto.generateRandomIV();
+    let ciphertext = WeaveCrypto.encrypt(JSON.stringify(record),
+                                         keyBundle.encryptionKeyB64, IV);
     let hmac = ciphertextHMAC(keyBundle, id, IV, ciphertext);
     const encryptedResult = {ciphertext, IV, hmac, id};
 
@@ -215,8 +218,8 @@ class EncryptionRemoteTransformer {
     }
 
     // Handle invalid data here. Elsewhere we assume that cleartext is an object.
-    let cleartext = Svc.Crypto.decrypt(record.ciphertext,
-                                       keyBundle.encryptionKeyB64, record.IV);
+    let cleartext = WeaveCrypto.decrypt(record.ciphertext,
+                                        keyBundle.encryptionKeyB64, record.IV);
     let jsonResult = JSON.parse(cleartext);
     if (!jsonResult || typeof jsonResult !== "object") {
       throw new Error("Decryption failed: result is <" + jsonResult + ">, not an object.");
