@@ -1336,7 +1336,6 @@ CompositorBridgeParent::SetConfirmedTargetAPZC(const uint64_t& aLayersId,
                                                const uint64_t& aInputBlockId,
                                                const nsTArray<ScrollableLayerGuid>& aTargets)
 {
-  MOZ_ASSERT(aLayersId == 0 || aLayersId == mRootLayerTreeID);
   if (!mApzcTreeManager) {
     return;
   }
