@@ -616,11 +616,11 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
     RefPtr<SharedBuffer> buffer =
       SharedBuffer::Create(aFrames * aChannels * sizeof(T));
     AutoTArray<const T*, 8> channels;
-    channels.SetLength(aChannels);
     if (aChannels == 1) {
       PodCopy(static_cast<T*>(buffer->Data()), aBuffer, aFrames);
       channels.AppendElement(static_cast<T*>(buffer->Data()));
     } else {
+      channels.SetLength(aChannels);
       AutoTArray<T*, 8> write_channels;
       write_channels.SetLength(aChannels);
       T * samples = static_cast<T*>(buffer->Data());
@@ -637,6 +637,7 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
                                    write_channels.Elements());
     }
 
+    MOZ_ASSERT(aChannels == channels.Length());
     segment->AppendFrames(buffer.forget(), channels, aFrames,
                          mPrincipalHandles[i]);
     segment->GetStartTime(insertTime);
@@ -789,12 +790,16 @@ MediaEngineWebRTCMicrophoneSource::AllocChannel()
         }
 #endif // MOZ_B2G
 
-        // Set "codec" to PCM, 32kHz on 1 channel
+        // Set "codec" to PCM, 32kHz on device's channels
         ScopedCustomReleasePtr<webrtc::VoECodec> ptrVoECodec(webrtc::VoECodec::GetInterface(mVoiceEngine));
         if (ptrVoECodec) {
           webrtc::CodecInst codec;
           strcpy(codec.plname, ENCODING);
           codec.channels = CHANNELS;
+          uint32_t channels = 0;
+          if (mAudioInput->GetChannelCount(mCapIndex, channels) == 0) {
+            codec.channels = channels;
+          }
           MOZ_ASSERT(mSampleFrequency == 16000 || mSampleFrequency == 32000);
           codec.rate = SAMPLE_RATE(mSampleFrequency);
           codec.plfreq = mSampleFrequency;
@@ -896,8 +901,8 @@ MediaEngineWebRTCMicrophoneSource::Process(int channel,
   if (mState != kStarted)
     return;
 
-  MOZ_ASSERT(!isStereo);
-  InsertInGraph<int16_t>(audio10ms, length, 1);
+  uint32_t channels = isStereo ? 2 : 1;
+  InsertInGraph<int16_t>(audio10ms, length, channels);
   return;
 }
 
