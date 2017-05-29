@@ -498,6 +498,16 @@ function* clickSelectorIcon(icon, view) {
 }
 
 /**
+ * Make sure window is properly focused before sending a key event.
+ * @param {Window} win
+ * @param {Event} key
+ */
+function focusAndSendKey(win, key) {
+  win.document.documentElement.focus();
+  EventUtils.sendKey(key, win);
+}
+
+/**
  * Toggle one of the checkboxes inside the class-panel. Resolved after the DOM mutation
  * has been recorded.
  * @param {CssRuleView} view The rule-view instance.
