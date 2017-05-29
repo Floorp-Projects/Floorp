@@ -16,6 +16,7 @@ const {
   getAllMessagesUiById,
   getAllMessagesTableDataById,
 } = require("devtools/client/webconsole/new-console-output/selectors/messages");
+const { getScrollSetting } = require("devtools/client/webconsole/new-console-output/selectors/ui");
 const MessageContainer = createFactory(require("devtools/client/webconsole/new-console-output/components/message-container").MessageContainer);
 
 const ConsoleOutput = createClass({
@@ -30,6 +31,7 @@ const ConsoleOutput = createClass({
       openContextMenu: PropTypes.func.isRequired,
       sourceMapService: PropTypes.object,
     }),
+    autoscroll: PropTypes.bool.isRequired,
     dispatch: PropTypes.func.isRequired,
     timestampsVisible: PropTypes.bool,
     messagesTableData: PropTypes.object.isRequired,
@@ -45,16 +47,17 @@ const ConsoleOutput = createClass({
   },
 
   componentWillUpdate(nextProps, nextState) {
-    const outputNode = this.outputNode;
-    if (!outputNode || !outputNode.lastChild) {
-       return;
+    if (!this.outputNode) {
+      return;
     }
+
+    const outputNode = this.outputNode;
 
     // Figure out if we are at the bottom. If so, then any new message should be scrolled
     // into view.
-    const lastChild = outputNode.lastChild;
-    const delta = nextProps.messages.size - this.props.messages.size;
-    this.shouldScrollBottom = delta > 0 && isScrolledToBottom(lastChild, outputNode);
+    if (this.props.autoscroll && outputNode.lastChild) {
+      this.shouldScrollBottom = isScrolledToBottom(outputNode.lastChild, outputNode);
+    }
   },
 
   componentDidUpdate() {
@@ -72,6 +75,7 @@ const ConsoleOutput = createClass({
   render() {
     let {
       dispatch,
+      autoscroll,
       messages,
       messagesUi,
       messagesTableData,
@@ -88,6 +92,7 @@ const ConsoleOutput = createClass({
           serviceContainer,
           open: messagesUi.includes(message.id),
           tableData: messagesTableData.get(message.id),
+          autoscroll,
           indent: message.indent,
           timestampsVisible,
         })
@@ -123,6 +128,7 @@ function mapStateToProps(state, props) {
     messages: getAllMessages(state),
     messagesUi: getAllMessagesUiById(state),
     messagesTableData: getAllMessagesTableDataById(state),
+    autoscroll: getScrollSetting(state),
     timestampsVisible: state.ui.timestampsVisible,
   };
 }
