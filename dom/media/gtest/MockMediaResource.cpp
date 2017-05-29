@@ -104,7 +104,7 @@ MockMediaResource::GetCachedDataEnd(int64_t aOffset)
       return mRanges[i].mEnd;
     }
   }
-  return -1;
+  return aOffset;
 }
 
 nsresult
