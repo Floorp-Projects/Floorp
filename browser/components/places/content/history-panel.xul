@@ -24,9 +24,9 @@
       onload="HistorySidebarInit();"
       onunload="SidebarUtils.setMouseoverURL('');">
 
-  <script type="application/javascript" 
+  <script type="application/javascript"
           src="chrome://browser/content/bookmarks/sidebarUtils.js"/>
-  <script type="application/javascript" 
+  <script type="application/javascript"
           src="chrome://browser/content/places/history-panel.js"/>
 
   <commandset id="editMenuCommands"/>
@@ -45,31 +45,29 @@
   <tooltip id="bhTooltip"/>
 
   <hbox id="sidebar-search-container" align="center">
-    <label id="sidebar-search-label"
-           value="&find.label;" accesskey="&find.accesskey;" 
-           control="search-box"/>
-    <textbox id="search-box" flex="1" type="search" class="compact"
+    <textbox id="search-box" flex="1" type="search"
+             placeholder="&search.placeholder;"
              aria-controls="historyTree"
              oncommand="searchHistory(this.value);"/>
     <button id="viewButton" style="min-width:0px !important;" type="menu"
             label="&view.label;" accesskey="&view.accesskey;" selectedsort="day"
             persist="selectedsort">
       <menupopup>
-        <menuitem id="bydayandsite" label="&byDayAndSite.label;" 
+        <menuitem id="bydayandsite" label="&byDayAndSite.label;"
                   accesskey="&byDayAndSite.accesskey;" type="radio"
                   oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'dayandsite'); GroupBy('dayandsite');"/>
-        <menuitem id="bysite" label="&bySite.label;"  
+        <menuitem id="bysite" label="&bySite.label;"
                   accesskey="&bySite.accesskey;" type="radio"
                   oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'site'); GroupBy('site');"/>
-        <menuitem id="byday" label="&byDate.label;" 
+        <menuitem id="byday" label="&byDate.label;"
                   accesskey="&byDate.accesskey;"
                   type="radio"
                   oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'day'); GroupBy('day');"/>
-        <menuitem id="byvisited" label="&byMostVisited.label;" 
+        <menuitem id="byvisited" label="&byMostVisited.label;"
                   accesskey="&byMostVisited.accesskey;"
                   type="radio"
                   oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'visited'); GroupBy('visited');"/>
-        <menuitem id="bylastvisited" label="&byLastVisited.label;" 
+        <menuitem id="bylastvisited" label="&byLastVisited.label;"
                   accesskey="&byLastVisited.accesskey;"
                   type="radio"
                   oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'lastvisited'); GroupBy('lastvisited');"/>
