@@ -74,14 +74,17 @@ typedef void* EGLImage;
 typedef int EGLint;
 typedef unsigned int EGLBoolean;
 typedef unsigned int EGLenum;
+typedef intptr_t EGLAttrib;
 typedef void* EGLConfig;
 typedef void* EGLContext;
 typedef void* EGLDisplay;
+typedef void* EGLDeviceEXT;
 typedef void* EGLSurface;
 typedef void* EGLClientBuffer;
 typedef void* EGLCastToRelevantPtr;
 typedef void* EGLImage;
 typedef void* EGLSync;
+typedef void* EGLStreamKHR;
 typedef uint64_t EGLTime;
 
 #define EGL_NO_CONTEXT       ((EGLContext)0)

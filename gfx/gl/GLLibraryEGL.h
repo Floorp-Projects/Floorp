@@ -106,6 +106,12 @@ public:
         ANGLE_platform_angle_d3d,
         ANGLE_d3d_share_handle_client_buffer,
         KHR_create_context,
+        KHR_stream,
+        KHR_stream_consumer_gltexture,
+        EXT_device_base,
+        EXT_device_query,
+        NV_stream_consumer_gltexture_yuv,
+        ANGLE_stream_producer_d3d_texture_nv12,
         Extensions_Max
     };
 
@@ -282,6 +288,42 @@ public:
     EGLint    fDupNativeFenceFDANDROID(EGLDisplay dpy, EGLSync sync) const
         WRAP( fDupNativeFenceFDANDROID(dpy, sync) )
 
+    //KHR_stream
+    EGLStreamKHR fCreateStreamKHR(EGLDisplay dpy, const EGLint* attrib_list) const
+        WRAP(    fCreateStreamKHR(dpy, attrib_list) )
+
+    EGLStreamKHR fDestroyStreamKHR(EGLDisplay dpy, EGLStreamKHR stream) const
+        WRAP(    fDestroyStreamKHR(dpy, stream) )
+
+    EGLBoolean  fQueryStreamKHR(EGLDisplay dpy, EGLStreamKHR stream, EGLenum attribute, EGLint* value) const
+        WRAP(   fQueryStreamKHR(dpy, stream, attribute, value) )
+
+    // KHR_stream_consumer_gltexture
+    EGLBoolean  fStreamConsumerAcquireKHR(EGLDisplay dpy, EGLStreamKHR stream) const
+        WRAP(   fStreamConsumerAcquireKHR(dpy, stream) )
+
+    EGLBoolean  fStreamConsumerReleaseKHR(EGLDisplay dpy, EGLStreamKHR stream) const
+        WRAP(   fStreamConsumerReleaseKHR(dpy, stream) )
+
+    // EXT_device_base
+    EGLBoolean  fQueryDisplayAttribEXT(EGLDisplay dpy, EGLint attribute, EGLAttrib* value) const
+        WRAP(   fQueryDisplayAttribEXT(dpy, attribute, value) )
+
+    // EXT_device_query
+    EGLBoolean  fQueryDeviceAttribEXT(EGLDeviceEXT device, EGLint attribute, EGLAttrib* value) const
+        WRAP(   fQueryDeviceAttribEXT(device, attribute, value) )
+
+    // NV_stream_consumer_gltexture_yuv
+    EGLBoolean  fStreamConsumerGLTextureExternalAttribsNV(EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib* attrib_list) const
+        WRAP(   fStreamConsumerGLTextureExternalAttribsNV(dpy, stream, attrib_list) )
+
+    // ANGLE_stream_producer_d3d_texture_nv12
+    EGLBoolean  fCreateStreamProducerD3DTextureNV12ANGLE(EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib* attrib_list) const
+        WRAP(   fCreateStreamProducerD3DTextureNV12ANGLE(dpy, stream, attrib_list) )
+
+    EGLBoolean  fStreamPostD3DTextureNV12ANGLE(EGLDisplay dpy, EGLStreamKHR stream, void* texture, const EGLAttrib* attrib_list) const
+        WRAP(   fStreamPostD3DTextureNV12ANGLE(dpy, stream, texture, attrib_list) )
+
     void           fANGLEPlatformInitialize(angle::Platform* platform) const
         VOID_WRAP( fANGLEPlatformInitialize(platform) )
 
@@ -410,6 +452,38 @@ private:
         EGLBoolean (GLAPIENTRY * fGetSyncAttribKHR)(EGLDisplay dpy, EGLSync sync,
                                                     EGLint attribute, EGLint* value);
         EGLint     (GLAPIENTRY * fDupNativeFenceFDANDROID)(EGLDisplay dpy, EGLSync sync);
+        //KHR_stream
+        EGLStreamKHR (GLAPIENTRY * fCreateStreamKHR)(EGLDisplay dpy, const EGLint* attrib_list);
+        EGLStreamKHR (GLAPIENTRY * fDestroyStreamKHR)(EGLDisplay dpy, EGLStreamKHR stream);
+        EGLBoolean (GLAPIENTRY * fQueryStreamKHR)(EGLDisplay dpy,
+                                                  EGLStreamKHR stream,
+                                                  EGLenum attribute,
+                                                  EGLint* value);
+        // KHR_stream_consumer_gltexture
+        EGLBoolean (GLAPIENTRY * fStreamConsumerAcquireKHR)(EGLDisplay dpy,
+                                                            EGLStreamKHR stream);
+        EGLBoolean (GLAPIENTRY * fStreamConsumerReleaseKHR)(EGLDisplay dpy,
+                                                            EGLStreamKHR stream);
+        // EXT_device_base
+        EGLBoolean (GLAPIENTRY * fQueryDisplayAttribEXT)(EGLDisplay dpy,
+                                                         EGLint attribute,
+                                                         EGLAttrib* value);
+        // EXT_device_query
+        EGLBoolean (GLAPIENTRY * fQueryDeviceAttribEXT)(EGLDeviceEXT device,
+                                                        EGLint attribute,
+                                                        EGLAttrib* value);
+        // NV_stream_consumer_gltexture_yuv
+        EGLBoolean (GLAPIENTRY * fStreamConsumerGLTextureExternalAttribsNV)(EGLDisplay dpy,
+                                                                            EGLStreamKHR stream,
+                                                                            const EGLAttrib* attrib_list);
+        // ANGLE_stream_producer_d3d_texture_nv12
+        EGLBoolean (GLAPIENTRY * fCreateStreamProducerD3DTextureNV12ANGLE)(EGLDisplay dpy,
+                                                                           EGLStreamKHR stream,
+                                                                           const EGLAttrib* attrib_list);
+        EGLBoolean (GLAPIENTRY * fStreamPostD3DTextureNV12ANGLE)(EGLDisplay dpy,
+                                                                 EGLStreamKHR stream,
+                                                                 void* texture,
+                                                                 const EGLAttrib* attrib_list);
         void       (GLAPIENTRY * fANGLEPlatformInitialize)(angle::Platform* platform);
         void       (GLAPIENTRY * fANGLEPlatformShutdown)();
     } mSymbols;
