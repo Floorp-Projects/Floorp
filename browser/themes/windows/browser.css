@@ -475,7 +475,7 @@ menuitem.bookmark-item {
 %include ../shared/toolbarbuttons.inc.css
 %include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css
-
+%ifndef MOZ_PHOTON_THEME
 @media (-moz-os-version: windows-win7) {
   :root {
     --toolbarbutton-hover-background: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
@@ -495,6 +495,7 @@ menuitem.bookmark-item {
     --toolbarbutton-checkedhover-backgroundcolor: rgba(90%,90%,90%,.4);
   }
 }
+%endif
 
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
 .unified-nav-forward[_moz-menuactive]:-moz-locale-dir(rtl) {
