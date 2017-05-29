@@ -6028,34 +6028,52 @@
         ]]></body>
       </method>
 
+      <field name="_closeButtonsUpdatePending">false</field>
       <method name="adjustTabstrip">
         <body><![CDATA[
-          // If we're overflowing, tab widths don't change anymore, so we can
-          // return early to avoid flushing layout.
+          if (this._closeButtonsUpdatePending) {
+            return;
+          }
+          this._closeButtonsUpdatePending = true;
+
+          // If we're overflowing, tabs are at their minimum widths.
           if (this.getAttribute("overflow") == "true") {
-            this.setAttribute("closebuttons", "activetab");
+            window.requestAnimationFrame(() => {
+              this._closeButtonsUpdatePending = false;
+              this.setAttribute("closebuttons", "activetab");
+            });
             return;
           }
 
-          let numTabs = this.childNodes.length -
-                        this.tabbrowser._removingTabs.length;
-          if (numTabs > 2) {
-            // This is an optimization to avoid layout flushes by calling
-            // getBoundingClientRect() when we just opened a second tab. In
-            // this case it's highly unlikely that the tab width is smaller
-            // than mTabClipWidth and the tab close button obscures too much
-            // of the tab's label. In the edge case of the window being too
-            // narrow (or if tabClipWidth has been set to a way higher value),
-            // we'll correct the 'closebuttons' attribute after the tabopen
-            // animation has finished.
+          // Wait until after the next paint to get current layout data from
+          // getBoundsWithoutFlushing.
+          window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => {
+              this._closeButtonsUpdatePending = false;
 
-            let tab = this.tabbrowser.visibleTabs[this.tabbrowser._numPinnedTabs];
-            if (tab && tab.getBoundingClientRect().width <= this.mTabClipWidth) {
-              this.setAttribute("closebuttons", "activetab");
-              return;
-            }
-          }
-          this.removeAttribute("closebuttons");
+              // The scrollbox may have started overflowing since we checked
+              // overflow earlier, so check again.
+              if (this.getAttribute("overflow") == "true") {
+                this.setAttribute("closebuttons", "activetab");
+                return;
+              }
+
+              // Check if tab widths are below the threshold where we want to
+              // remove close buttons from background tabs so that people don't
+              // accidentally close tabs by selecting them.
+              let rect = ele => {
+                return window.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils)
+                             .getBoundsWithoutFlushing(ele);
+              };
+              let tab = this.tabbrowser.visibleTabs[this.tabbrowser._numPinnedTabs];
+              if (tab && rect(tab).width <= this.mTabClipWidth) {
+                this.setAttribute("closebuttons", "activetab");
+              } else {
+                this.removeAttribute("closebuttons");
+              }
+            });
+          });
         ]]></body>
       </method>
 
