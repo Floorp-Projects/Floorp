@@ -349,7 +349,10 @@ private:
   nsresult SelectFrames(nsPresContext* aPresContext,
                         nsRange* aRange,
                         bool aSelect);
-  nsresult     getTableCellLocationFromRange(nsRange *aRange, int32_t *aSelectionType, int32_t *aRow, int32_t *aCol);
+  nsresult GetTableCellLocationFromRange(nsRange* aRange,
+                                         int32_t* aSelectionType,
+                                         int32_t* aRow,
+                                         int32_t* aCol);
   nsresult     addTableCellRange(nsRange *aRange, bool *aDidAddRange, int32_t *aOutIndex);
 
   nsresult FindInsertionPoint(
