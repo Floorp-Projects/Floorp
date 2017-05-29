@@ -14,6 +14,10 @@
 
 class nsITransferable;
 
+@interface UTIHelper : NSObject
++ (NSString*)stringFromPboardType:(NSString*)aType;
+@end
+
 class nsClipboard : public nsIClipboard
 {
 
@@ -30,6 +34,7 @@ public:
 
   // Helper methods, used also by nsDragService
   static NSDictionary* PasteboardDictFromTransferable(nsITransferable *aTransferable);
+  // aPasteboardType is being retained and needs to be released by the caller.
   static bool IsStringType(const nsCString& aMIMEType, NSString** aPasteboardType);
   static NSString* WrapHtmlForSystemPasteboard(NSString* aString);
   static nsresult TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteboard *pboard);
