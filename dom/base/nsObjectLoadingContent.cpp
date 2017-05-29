@@ -556,9 +556,9 @@ nsObjectLoadingContent::MakePluginListener()
   return true;
 }
 
-// Helper to spawn the frameloader and return a pointer to its docshell
-already_AddRefed<nsIDocShell>
-nsObjectLoadingContent::SetupFrameLoader(nsIURI *aRecursionCheckURI)
+// Helper to spawn the frameloader.
+void
+nsObjectLoadingContent::SetupFrameLoader(int32_t aJSPluginId)
 {
   nsCOMPtr<nsIContent> thisContent =
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
@@ -566,9 +566,18 @@ nsObjectLoadingContent::SetupFrameLoader(nsIURI *aRecursionCheckURI)
 
   mFrameLoader = nsFrameLoader::Create(thisContent->AsElement(),
                                        /* aOpener = */ nullptr,
-                                       mNetworkCreated);
+                                       mNetworkCreated, aJSPluginId);
   if (!mFrameLoader) {
     NS_NOTREACHED("nsFrameLoader::Create failed");
+  }
+}
+
+// Helper to spawn the frameloader and return a pointer to its docshell.
+already_AddRefed<nsIDocShell>
+nsObjectLoadingContent::SetupDocShell(nsIURI* aRecursionCheckURI)
+{
+  SetupFrameLoader(nsFakePluginTag::NOT_JSPLUGIN);
+  if (!mFrameLoader) {
     return nullptr;
   }
 
@@ -2378,6 +2387,23 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
       nsCOMPtr<nsIPluginTag> basetag =
         nsContentUtils::PluginTagForType(mContentType, false);
       nsCOMPtr<nsIFakePluginTag> tag = do_QueryInterface(basetag);
+
+      uint32_t id;
+      if (NS_FAILED(tag->GetId(&id))) {
+        rv = NS_ERROR_FAILURE;
+        break;
+      }
+
+      MOZ_ASSERT(id <= PR_INT32_MAX,
+                 "Something went wrong, nsPluginHost::RegisterFakePlugin shouldn't have "
+                 "given out this id.");
+
+      SetupFrameLoader(int32_t(id));
+      if (!mFrameLoader) {
+        rv = NS_ERROR_FAILURE;
+        break;
+      }
+
       nsCOMPtr<nsIURI> handlerURI;
       if (tag) {
         tag->GetHandlerURI(getter_AddRefs(handlerURI));
@@ -2389,35 +2415,11 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
         break;
       }
 
-      nsCOMPtr<nsIDocShell> docShell = SetupFrameLoader(handlerURI);
-      if (!docShell) {
-        rv = NS_ERROR_FAILURE;
-        break;
-      }
-
       nsCString spec;
       handlerURI->GetSpec(spec);
       LOG(("OBJLC [%p]: Loading fake plugin handler (%s)", this, spec.get()));
 
-      // XXX(johns): This and moreso the document case below are
-      //             sidestepping/duplicating nsFrameLoader's LoadURI code,
-      //             which is not great.
-
-      nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-      docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
-      if (loadInfo) {
-        loadInfo->SetTriggeringPrincipal(thisContent->NodePrincipal());
-        nsCOMPtr<nsIURI> referrer;
-        thisContent->NodePrincipal()->GetURI(getter_AddRefs(referrer));
-        loadInfo->SetReferrer(referrer);
-
-        rv = docShell->LoadURI(handlerURI, loadInfo,
-                               nsIWebNavigation::LOAD_FLAGS_NONE, false);
-      } else {
-        NS_NOTREACHED("CreateLoadInfo failed");
-        rv = NS_ERROR_FAILURE;
-      }
-
+      rv = mFrameLoader->LoadURI(handlerURI);
       if (NS_FAILED(rv)) {
         LOG(("OBJLC [%p]: LoadURI() failed for fake handler", this));
         mFrameLoader->Destroy();
@@ -2435,7 +2437,7 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
         break;
       }
 
-      nsCOMPtr<nsIDocShell> docShell = SetupFrameLoader(mURI);
+      nsCOMPtr<nsIDocShell> docShell = SetupDocShell(mURI);
       if (!docShell) {
         rv = NS_ERROR_FAILURE;
         break;
@@ -3122,16 +3124,23 @@ nsObjectLoadingContent::DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner)
   mIsStopping = true;
 
   RefPtr<nsPluginInstanceOwner> kungFuDeathGrip(aInstanceOwner);
-  RefPtr<nsNPAPIPluginInstance> inst;
-  aInstanceOwner->GetInstance(getter_AddRefs(inst));
-  if (inst) {
+  if (mType == eType_FakePlugin) {
+    if (mFrameLoader) {
+      mFrameLoader->Destroy();
+      mFrameLoader = nullptr;
+    }
+  } else {
+    RefPtr<nsNPAPIPluginInstance> inst;
+    aInstanceOwner->GetInstance(getter_AddRefs(inst));
+    if (inst) {
 #if defined(XP_MACOSX)
-    aInstanceOwner->HidePluginWindow();
+      aInstanceOwner->HidePluginWindow();
 #endif
 
-    RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-    NS_ASSERTION(pluginHost, "No plugin host?");
-    pluginHost->StopPluginInstance(inst);
+      RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
+      NS_ASSERTION(pluginHost, "No plugin host?");
+      pluginHost->StopPluginInstance(inst);
+    }
   }
 
   aInstanceOwner->Destroy();

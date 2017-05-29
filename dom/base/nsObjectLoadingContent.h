@@ -531,13 +531,15 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      */
     bool MakePluginListener();
 
+    void SetupFrameLoader(int32_t aJSPluginId);
+
     /**
      * Helper to spawn mFrameLoader and return a pointer to its docshell
      *
      * @param aURI URI we intend to load for the recursive load check (does not
      *             actually load anything)
      */
-    already_AddRefed<nsIDocShell> SetupFrameLoader(nsIURI *aRecursionCheckURI);
+    already_AddRefed<nsIDocShell> SetupDocShell(nsIURI* aRecursionCheckURI);
 
     /**
      * Unloads all content and resets the object to a completely unloaded state
