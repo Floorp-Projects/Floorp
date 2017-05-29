@@ -106,7 +106,7 @@ let gWhitelist = [{
     type: "single-quote"
   }, {
     file: "preferences.properties",
-    key: "searchResults.needHelp",
+    key: "searchResults.needHelp2",
     type: "double-quote"
   }
 ];

@@ -651,7 +651,7 @@
               accesskey="&allowHWAccel.accesskey;"
               preference="layers.acceleration.disabled"/>
     <hbox align="center">
-      <label id="limitContentProcess" accesskey="&limitContentProcess2.accesskey;" control="contentProcessCount">&limitContentProcess2.label;</label>
+      <label id="limitContentProcess" accesskey="&limitContentProcessOption.accesskey;" control="contentProcessCount">&limitContentProcessOption.label;</label>
       <menulist id="contentProcessCount" preference="dom.ipc.processCount">
         <menupopup>
           <menuitem label="1" value="1"/>
@@ -664,6 +664,6 @@
         </menupopup>
       </menulist>
     </hbox>
-    <description>&limitContentProcess2.description;</description>
+    <description>&limitContentProcessOption.description;</description>
   </vbox>
 </groupbox>

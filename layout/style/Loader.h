@@ -155,7 +155,7 @@ public:
    * @param aURL the url to match
    * @param aResult [out] the style sheet which can be reused
    */
-  bool FindReusableStyleSheet(nsIURI* aURL, RefPtr<CSSStyleSheet>& aResult);
+  bool FindReusableStyleSheet(nsIURI* aURL, RefPtr<StyleSheet>& aResult);
 
   /**
    * Indicate that a certain style sheet is available for reuse if its
@@ -164,7 +164,7 @@ public:
    *
    * @param aSheet the sheet which can be reused
    */
-  void AddReusableSheet(CSSStyleSheet* aSheet) {
+  void AddReusableSheet(StyleSheet* aSheet) {
     mReusableSheets.AppendElement(aSheet);
   }
 
@@ -173,7 +173,7 @@ private:
   LoaderReusableStyleSheets& operator=(const LoaderReusableStyleSheets&) = delete;
 
   // The sheets that can be reused.
-  nsTArray<RefPtr<CSSStyleSheet>> mReusableSheets;
+  nsTArray<RefPtr<StyleSheet>> mReusableSheets;
 };
 
 /***********************************************************************
