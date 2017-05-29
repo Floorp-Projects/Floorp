@@ -243,9 +243,10 @@ var gSearchResultsPane = {
         document.getElementById("sorry-message").textContent = AppConstants.platform == "win" ?
           strings.getFormattedString("searchResults.sorryMessageWin", [query]) :
           strings.getFormattedString("searchResults.sorryMessageUnix", [query]);
+        let helpUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "preferences";
         let brandName = document.getElementById("bundleBrand").getString("brandShortName");
         document.getElementById("need-help").innerHTML =
-          strings.getFormattedString("searchResults.needHelp", [brandName]);
+          strings.getFormattedString("searchResults.needHelp2", [helpUrl, brandName]);
       } else {
         // Creating tooltips for all the instances found
         for (let node of this.listSearchTooltips) {

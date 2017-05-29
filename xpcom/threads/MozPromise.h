@@ -38,40 +38,48 @@ extern LazyLogModule gMozPromiseLog;
   MOZ_LOG(gMozPromiseLog, mozilla::LogLevel::Debug, (x, ##__VA_ARGS__))
 
 namespace detail {
-template<typename ThisType, typename Ret, typename ArgType>
-static TrueType TakesArgumentHelper(Ret (ThisType::*)(ArgType));
-template<typename ThisType, typename Ret, typename ArgType>
-static TrueType TakesArgumentHelper(Ret (ThisType::*)(ArgType) const);
-template<typename ThisType, typename Ret>
-static FalseType TakesArgumentHelper(Ret (ThisType::*)());
-template<typename ThisType, typename Ret>
-static FalseType TakesArgumentHelper(Ret (ThisType::*)() const);
-
-template<typename ThisType, typename Ret, typename ArgType>
-static Ret ReturnTypeHelper(Ret (ThisType::*)(ArgType));
-template<typename ThisType, typename Ret, typename ArgType>
-static Ret ReturnTypeHelper(Ret (ThisType::*)(ArgType) const);
-template<typename ThisType, typename Ret>
-static Ret ReturnTypeHelper(Ret (ThisType::*)());
-template<typename ThisType, typename Ret>
-static Ret ReturnTypeHelper(Ret (ThisType::*)() const);
-
-template<typename MethodType>
-struct ReturnType {
-  typedef decltype(detail::ReturnTypeHelper(DeclVal<MethodType>())) Type;
+template <typename F>
+struct MethodTraitsHelper : MethodTraitsHelper<decltype(&F::operator())>
+{
+};
+template <typename ThisType, typename Ret, typename... ArgTypes>
+struct MethodTraitsHelper<Ret(ThisType::*)(ArgTypes...)>
+{
+  using ReturnType = Ret;
+  static const size_t ArgSize = sizeof...(ArgTypes);
+};
+template <typename ThisType, typename Ret, typename... ArgTypes>
+struct MethodTraitsHelper<Ret(ThisType::*)(ArgTypes...) const>
+{
+  using ReturnType = Ret;
+  static const size_t ArgSize = sizeof...(ArgTypes);
+};
+template <typename ThisType, typename Ret, typename... ArgTypes>
+struct MethodTraitsHelper<Ret(ThisType::*)(ArgTypes...) volatile>
+{
+  using ReturnType = Ret;
+  static const size_t ArgSize = sizeof...(ArgTypes);
+};
+template <typename ThisType, typename Ret, typename... ArgTypes>
+struct MethodTraitsHelper<Ret(ThisType::*)(ArgTypes...) const volatile>
+{
+  using ReturnType = Ret;
+  static const size_t ArgSize = sizeof...(ArgTypes);
+};
+template <typename T>
+struct MethodTrait : MethodTraitsHelper<typename RemoveReference<T>::Type>
+{
 };
 
 } // namespace detail
 
 template<typename MethodType>
-struct TakesArgument {
-  static const bool value = decltype(detail::TakesArgumentHelper(DeclVal<MethodType>()))::value;
-};
+using TakesArgument =
+  IntegralConstant<bool, detail::MethodTrait<MethodType>::ArgSize != 0>;
 
 template<typename MethodType, typename TargetType>
-struct ReturnTypeIs {
-  static const bool value = IsConvertible<typename detail::ReturnType<MethodType>::Type, TargetType>::value;
-};
+using ReturnTypeIs =
+  IsConvertible<typename detail::MethodTrait<MethodType>::ReturnType, TargetType>;
 
 /*
  * A promise manages an asynchronous request that may or may not be able to be
