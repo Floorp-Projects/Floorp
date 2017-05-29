@@ -70,6 +70,17 @@ AppendToString(std::stringstream& aStream, const nsRect& r,
 }
 
 void
+AppendToString(std::stringstream& aStream, const WrColor& c,
+               const char* pfx, const char* sfx)
+{
+  aStream << pfx;
+  aStream << nsPrintfCString(
+    "rgba(%d, %d, %d, %f)",
+    uint8_t(c.r*255.f), uint8_t(c.g*255.f), uint8_t(c.b*255.f), c.a).get();
+  aStream << sfx;
+}
+
+void
 AppendToString(std::stringstream& aStream, const WrRect& r,
                const char* pfx, const char* sfx)
 {
@@ -77,6 +88,17 @@ AppendToString(std::stringstream& aStream, const WrRect& r,
   aStream << nsPrintfCString(
     "(x=%f, y=%f, w=%f, h=%f)",
     r.x, r.y, r.width, r.height).get();
+  aStream << sfx;
+}
+
+void
+AppendToString(std::stringstream& aStream, const WrSize& s,
+               const char* pfx, const char* sfx)
+{
+  aStream << pfx;
+  aStream << nsPrintfCString(
+    "(w=%f, h=%f)",
+    s.width, s.height).get();
   aStream << sfx;
 }
 
