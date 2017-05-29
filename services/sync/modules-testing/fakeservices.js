@@ -125,11 +125,6 @@ FakeCryptoService.prototype = {
     return data;
   },
 
-  deriveKeyFromPassphrase: function deriveKeyFromPassphrase(passphrase,
-                                                            salt, keyLength) {
-    return "some derived key string composed of bytes";
-  },
-
   generateRandomBytes: function generateRandomBytes(byteCount) {
     return "not-so-random-now-are-we-HA-HA-HA! >:)".slice(byteCount);
   }
