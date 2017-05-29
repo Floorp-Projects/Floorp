@@ -366,6 +366,8 @@
         this._findStatusIcon = this.getElement("find-status-icon");
         this._findStatusDesc = this.getElement("find-status");
 
+        this._foundURL = null;
+
         let prefsvc = this._prefsvc;
 
         this._quickFindTimeoutLength =
@@ -393,17 +395,17 @@
         this._entireWord = prefsvc.getBoolPref("findbar.entireword");
         this._highlightAll = prefsvc.getBoolPref("findbar.highlightAll");
 
-        // Convenience.
+        // Convenience
         this.nsITypeAheadFind = Components.interfaces.nsITypeAheadFind;
+        this.nsISelectionController = Components.interfaces.nsISelectionController;
+        this._findSelection = this.nsISelectionController.SELECTION_FIND;
 
         this._findResetTimeout = -1;
 
         // Make sure the FAYT keypress listener is attached by initializing the
-        // browser property.
+        // browser property
         if (this.getAttribute("browserid"))
-          setTimeout(() => this.browser = this.browser, 0);
-
-        this._enableFindButtons(false);
+          setTimeout(function(aSelf) { aSelf.browser = aSelf.browser; }, 0, this);
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -998,6 +1000,7 @@
               this._startFindDeferred = null;
             }
 
+            this._enableFindButtons(val);
             this._updateCaseSensitivity(val);
             this._setEntireWord();
 
@@ -1104,6 +1107,7 @@
           return this.dispatchEvent(event);
         ]]></body>
       </method>
+
 
       <!--
         - Opens the findbar, focuses the findfield and selects its contents.
@@ -1269,7 +1273,7 @@
             this._findFailedString = null;
           }
 
-          this.updateControlState(aData.result, aData.findBackwards);
+          this._updateStatusUI(aData.result, aData.findBackwards);
           this._updateStatusUIBar(aData.linkURL);
 
           if (this._findMode != this.FIND_NORMAL)
