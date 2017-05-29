@@ -41,7 +41,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMText.h"
 #include "nsIFrame.h"
 #include "nsIHTMLAbsPosEditor.h"
 #include "nsIHTMLDocument.h"
@@ -5595,10 +5594,9 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
     bool isPRE;
     mHTMLEditor->IsPreformatted(nextNode->AsDOMNode(), &isPRE);
     if (isPRE) {
-      nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(nextNode);
-      if (textNode) {
+      if (EditorBase::IsTextNode(nextNode)) {
         nsAutoString tempString;
-        textNode->GetData(tempString);
+        nextNode->GetAsText()->GetData(tempString);
         int32_t newlinePos = tempString.FindChar(nsCRT::LF);
         if (newlinePos >= 0) {
           if (static_cast<uint32_t>(newlinePos) + 1 == tempString.Length()) {
@@ -6455,11 +6453,6 @@ HTMLEditRules::ReturnInParagraph(Selection* aSelection,
     // we are at the edges of the block, newBRneeded not needed!
     sibling = node->AsContent();
   } else if (EditorBase::IsTextNode(aNode)) {
-    nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(aNode);
-    uint32_t strLength;
-    nsresult rv = textNode->GetLength(&strLength);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // at beginning of text node?
     if (!aOffset) {
       // is there a BR prior to it?
@@ -6470,7 +6463,7 @@ HTMLEditRules::ReturnInParagraph(Selection* aSelection,
         NS_ENSURE_STATE(mHTMLEditor);
         newBRneeded = true;
       }
-    } else if (aOffset == (int32_t)strLength) {
+    } else if (aOffset == static_cast<int32_t>(node->Length())) {
       // we're at the end of text node...
       // is there a BR after to it?
       NS_ENSURE_STATE(mHTMLEditor);
@@ -6487,7 +6480,8 @@ HTMLEditRules::ReturnInParagraph(Selection* aSelection,
         if (NS_WARN_IF(!mHTMLEditor)) {
           return NS_ERROR_UNEXPECTED;
         }
-        rv = mHTMLEditor->SplitNode(aNode, aOffset, getter_AddRefs(tmp));
+        nsresult rv =
+          mHTMLEditor->SplitNode(aNode, aOffset, getter_AddRefs(tmp));
         NS_ENSURE_SUCCESS(rv, rv);
         selNode = tmp;
       }
