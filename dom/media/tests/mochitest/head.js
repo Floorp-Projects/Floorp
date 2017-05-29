@@ -119,27 +119,29 @@ AudioStreamAnalyser.prototype = {
   /**
    * Return a Promise, that will be resolved when the function passed as
    * argument, when called, returns true (meaning the analysis was a
-   * success).
+   * success). The promise is rejected if the cancel promise resolves first.
    *
    * @param {function} analysisFunction
-   *        A fonction that performs an analysis, and returns true if the
+   *        A function that performs an analysis, and resolves with true if the
    *        analysis was a success (i.e. it found what it was looking for)
+   * @param {promise} cancel
+   *        A promise that on resolving will reject the promise we returned.
    */
-  waitForAnalysisSuccess: function(analysisFunction) {
-    var self = this;
-    return new Promise((resolve, reject) => {
-      function analysisLoop() {
-        var success = analysisFunction(self.getByteFrequencyData());
-        if (success) {
-          resolve();
-          return;
-        }
-        // else, we need more time
-        requestAnimationFrame(analysisLoop);
+  waitForAnalysisSuccess: async function(analysisFunction,
+                                         cancel = wait(60000, new Error("Audio analysis timed out"))) {
+    let aborted = false;
+    cancel.then(() => aborted = true);
+
+    // We need to give the Analyser some time to start gathering data.
+    await wait(200);
+
+    do {
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      if (aborted) {
+        throw error;
       }
-      // We need to give the Analyser some time to start gathering data.
-      wait(200).then(analysisLoop);
-    });
+    }
+    while (!analysisFunction(this.getByteFrequencyData()));
   },
 
   /**
