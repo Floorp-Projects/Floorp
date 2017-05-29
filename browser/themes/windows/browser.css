@@ -115,12 +115,13 @@ toolbar[brighttext] {
 }
 
 @media (-moz-windows-default-theme) {
+%ifndef MOZ_PHOTON_THEME
   @media (-moz-os-version: windows-win7) {
     #navigator-toolbox::after {
       border-bottom-color: #aabccf;
     }
   }
-
+%endif
   @media (-moz-os-version: windows-win8),
          (-moz-os-version: windows-win10) {
     #navigator-toolbox::after {
