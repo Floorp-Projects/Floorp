@@ -111,6 +111,9 @@ def log_actions():
 class LoggerState(object):
 
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         self.handlers = []
         self.running_tests = set()
         self.suite_started = False
@@ -153,6 +156,13 @@ class StructuredLogger(object):
     def remove_handler(self, handler):
         """Remove a handler from the current logger"""
         self._state.handlers.remove(handler)
+
+    def reset_state(self):
+        """Resets the logger to a brand new state. This means all handlers
+        are removed, running tests are discarded and components are reset.
+        """
+        self._state.reset()
+        self._component_state = self._state.component_states[self.component] = ComponentState()
 
     def send_message(self, topic, command, *args):
         """Send a message to each handler configured for this logger. This
