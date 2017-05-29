@@ -2246,6 +2246,10 @@
             var t = document.createElementNS(NS_XUL, "tab");
 
             var uriIsAboutBlank = !aURI || aURI == "about:blank";
+            let aURIObject = null;
+            try {
+              aURIObject = Services.io.newURI(aURI || "about:blank");
+            } catch (ex) { /* we'll try to fix up this URL later */ }
 
             if (!aURI || isBlankPageURL(aURI)) {
               t.setAttribute("label", this.mStringBundle.getString("tabs.emptyTabTitle"));
@@ -2369,8 +2373,14 @@
             var evt = new CustomEvent("TabOpen", { bubbles: true, detail });
             t.dispatchEvent(evt);
 
-            if (!usingPreloadedContent && aOriginPrincipal) {
-              b.createAboutBlankContentViewer(aOriginPrincipal);
+            if (!usingPreloadedContent && aOriginPrincipal && aURI) {
+              let {URI_INHERITS_SECURITY_CONTEXT} = Ci.nsIProtocolHandler;
+              // Unless we know for sure we're not inheriting principals,
+              // force the about:blank viewer to have the right principal:
+              if (!aURIObject ||
+                  (Services.io.getProtocolFlags(aURIObject.scheme) & URI_INHERITS_SECURITY_CONTEXT)) {
+                b.createAboutBlankContentViewer(aOriginPrincipal);
+              }
             }
 
             // If we didn't swap docShells with a preloaded browser
