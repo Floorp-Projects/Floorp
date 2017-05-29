@@ -15,5 +15,3 @@ DevToolsModules(
     'grid-inspector.js',
     'types.js',
 )
-
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

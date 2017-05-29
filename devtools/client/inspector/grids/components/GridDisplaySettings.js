@@ -63,7 +63,6 @@ module.exports = createClass({
             {},
             dom.input(
               {
-                id: "grid-setting-extend-grid-lines",
                 type: "checkbox",
                 checked: highlighterSettings.showInfiniteLines,
                 onChange: this.onShowInfiniteLinesCheckboxClick,
@@ -80,7 +79,6 @@ module.exports = createClass({
             {},
             dom.input(
               {
-                id: "grid-setting-show-grid-line-numbers",
                 type: "checkbox",
                 checked: highlighterSettings.showGridLineNumbers,
                 onChange: this.onShowGridLineNumbersCheckboxClick,
