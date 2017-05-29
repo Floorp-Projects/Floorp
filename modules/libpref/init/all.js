@@ -4843,6 +4843,8 @@ pref("extensions.webextensions.themes.enabled", false);
 pref("extensions.webextensions.themes.icons.enabled", false);
 pref("extensions.webextensions.remote", false);
 
+pref("layers.popups.compositing.enabled", false);
+
 // Report Site Issue button
 pref("extensions.webcompat-reporter.newIssueEndpoint", "https://webcompat.com/issues/new");
 #ifdef NIGHTLY_BUILD
