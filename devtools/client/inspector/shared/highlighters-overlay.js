@@ -267,18 +267,26 @@ HighlightersOverlay.prototype = {
    *         The highlighter type. One of this.highlighters.
    * @return {Promise} that resolves to the highlighter
    */
-  _getHighlighter: function (type) {
+  _getHighlighter: Task.async(function* (type) {
     let utils = this.highlighterUtils;
 
     if (this.highlighters[type]) {
-      return promise.resolve(this.highlighters[type]);
+      return this.highlighters[type];
     }
 
-    return utils.getHighlighterByType(type).then(highlighter => {
-      this.highlighters[type] = highlighter;
-      return highlighter;
-    });
-  },
+    let highlighter;
+
+    try {
+      highlighter = yield utils.getHighlighterByType(type);
+    } catch (e) {}
+
+    if (!highlighter) {
+      return;
+    }
+
+    this.highlighters[type] = highlighter;
+    return highlighter;
+  }),
 
   _handleRejection: function (error) {
     if (!this.destroyed) {
