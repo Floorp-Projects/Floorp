@@ -343,10 +343,12 @@ private:
                                             // negative value clears
                                             // mAnchorFocusRange
   void SelectFramesForContent(nsIContent* aContent, bool aSelected);
-  nsresult     SelectAllFramesForContent(nsIContentIterator *aInnerIter,
-                               nsIContent *aContent,
-                               bool aSelected);
-  nsresult     selectFrames(nsPresContext* aPresContext, nsRange *aRange, bool aSelect);
+  nsresult SelectAllFramesForContent(nsIContentIterator* aInnerIter,
+                                     nsIContent *aContent,
+                                     bool aSelected);
+  nsresult SelectFrames(nsPresContext* aPresContext,
+                        nsRange* aRange,
+                        bool aSelect);
   nsresult     getTableCellLocationFromRange(nsRange *aRange, int32_t *aSelectionType, int32_t *aRow, int32_t *aCol);
   nsresult     addTableCellRange(nsRange *aRange, bool *aDidAddRange, int32_t *aOutIndex);
 
