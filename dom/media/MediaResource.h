@@ -814,17 +814,15 @@ public:
   // Unlike MediaResource::ReadAt, ReadAt only returns fewer bytes than
   // requested if end of stream or an error is encountered. There is no need to
   // call it again to get more data.
+  // If the resource has cached data past the end of the request, it will be
+  // used to fill a local cache, which should speed up consecutive ReadAt's
+  // (mostly by avoiding using the resource's IOs and locks.)
   // *aBytes will contain the number of bytes copied, even if an error occurred.
   // ReadAt doesn't have an impact on the offset returned by Tell().
   nsresult ReadAt(int64_t aOffset,
                   char* aBuffer,
                   uint32_t aCount,
                   uint32_t* aBytes);
-
-  nsresult CachedReadAt(int64_t aOffset,
-                        char* aBuffer,
-                        uint32_t aCount,
-                        uint32_t* aBytes);
 
   // Same as ReadAt, but doesn't try to cache around the read.
   // Useful if you know that you will not read again from the same area.
