@@ -121,10 +121,10 @@ function run() {
   }
 
   var utils = SpecialPowers.getDOMWindowUtils(subwin);
-  var elementsRestyled, framesConstructed, framesReflowed;
+  var restyleGeneration, framesConstructed, framesReflowed;
   function reset_change_counters()
   {
-    elementsRestyled = utils.elementsRestyled;
+    restyleGeneration = utils.restyleGeneration;
     framesConstructed = utils.framesConstructed;
     framesReflowed = utils.framesReflowed;
   }
@@ -139,11 +139,11 @@ function run() {
       return;
     }
 
-    var restyles = utils.elementsRestyled - elementsRestyled;
+    var didRestyle = utils.restyleGeneration != restyleGeneration;
     var constructs = utils.framesConstructed - framesConstructed;
     var reflows = utils.framesReflowed - framesReflowed;
 
-    (expected.restyle ? isnot : is)(restyles, 0, "restyle count: " + desc);
+    (expected.restyle ? isnot : is)(didRestyle, false, "restyle: " + desc);
     (expected.construct ? isnot : is)(constructs, 0,
                                       "frame construct count: " + desc);
     (expected.reflow ? isnot : is)(reflows, 0, "reflow count: " + desc);
