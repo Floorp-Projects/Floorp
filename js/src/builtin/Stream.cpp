@@ -6,6 +6,8 @@
 
 #include "builtin/Stream.h"
 
+#include "js/Stream.h"
+
 #include "jscntxt.h"
 
 #include "gc/Heap.h"
@@ -74,8 +76,13 @@ enum ControllerFlags {
     ControllerFlag_CloseRequested = 1 << 3,
     ControllerFlag_TeeBranch      = 1 << 4,
     ControllerFlag_TeeBranch1     = 1 << 5,
-    ControllerFlag_TeeBranch2     = 1 << 6
+    ControllerFlag_TeeBranch2     = 1 << 6,
+    ControllerFlag_ExternalSource = 1 << 7,
+    ControllerFlag_SourceLocked   = 1 << 8,
 };
+
+// Offset at which embedding flags are stored.
+constexpr uint8_t ControllerEmbeddingFlagsOffset = 24;
 
 enum BYOBRequestSlots {
     BYOBRequestSlot_Controller,
@@ -85,7 +92,7 @@ enum BYOBRequestSlots {
 
 template<class T>
 MOZ_ALWAYS_INLINE bool
-Is(HandleValue v)
+Is(const HandleValue v)
 {
     return v.isObject() && v.toObject().is<T>();
 }
@@ -98,13 +105,6 @@ IsReadableStreamController(const JSObject* controller)
            controller->is<ReadableByteStreamController>();
 }
 #endif // DEBUG
-
-static bool
-IsReadableStreamReader(const JSObject* reader)
-{
-    return reader->is<ReadableStreamDefaultReader>() ||
-           reader->is<ReadableStreamBYOBReader>();
-}
 
 static inline uint32_t
 ControllerFlags(const NativeObject* controller)
@@ -143,28 +143,41 @@ SetStreamState(ReadableStream* stream, uint32_t state)
     stream->setFixedSlot(StreamSlot_State, Int32Value(state));
 }
 
-inline bool
+bool
 ReadableStream::readable() const
 {
     return StreamState(this) & Readable;
 }
 
-inline bool
+bool
 ReadableStream::closed() const
 {
     return StreamState(this) & Closed;
 }
 
-inline bool
+bool
 ReadableStream::errored() const
 {
     return StreamState(this) & Errored;
 }
 
-inline bool
+bool
 ReadableStream::disturbed() const
 {
     return StreamState(this) & Disturbed;
+}
+
+inline static bool
+ReaderHasStream(const NativeObject* reader)
+{
+    MOZ_ASSERT(JS::IsReadableStreamReader(reader));
+    return !reader->getFixedSlot(ReaderSlot_Stream).isUndefined();
+}
+
+bool
+js::ReadableStreamReaderIsClosed(const JSObject* reader)
+{
+    return !ReaderHasStream(&reader->as<NativeObject>());
 }
 
 inline static MOZ_MUST_USE ReadableStream*
@@ -175,26 +188,49 @@ StreamFromController(const NativeObject* controller)
 }
 
 inline static MOZ_MUST_USE NativeObject*
-ControllerFromStream(ReadableStream* stream)
+ControllerFromStream(const ReadableStream* stream)
 {
     Value controllerVal = stream->getFixedSlot(StreamSlot_Controller);
     MOZ_ASSERT(IsReadableStreamController(&controllerVal.toObject()));
     return &controllerVal.toObject().as<NativeObject>();
 }
 
+inline static bool
+HasController(const ReadableStream* stream)
+{
+    return !stream->getFixedSlot(StreamSlot_Controller).isUndefined();
+}
+
+JS::ReadableStreamMode
+ReadableStream::mode() const
+{
+    NativeObject* controller = ControllerFromStream(this);
+    if (controller->is<ReadableStreamDefaultController>())
+        return JS::ReadableStreamMode::Default;
+    return controller->as<ReadableByteStreamController>().hasExternalSource()
+           ? JS::ReadableStreamMode::ExternalSource
+           : JS::ReadableStreamMode::Byte;
+}
+
 inline static MOZ_MUST_USE ReadableStream*
 StreamFromReader(const NativeObject* reader)
 {
-    MOZ_ASSERT(IsReadableStreamReader(reader));
+    MOZ_ASSERT(ReaderHasStream(reader));
     return &reader->getFixedSlot(ReaderSlot_Stream).toObject().as<ReadableStream>();
 }
 
 inline static MOZ_MUST_USE NativeObject*
-ReaderFromStream(NativeObject* stream)
+ReaderFromStream(const NativeObject* stream)
 {
     Value readerVal = stream->getFixedSlot(StreamSlot_Reader);
-    MOZ_ASSERT(IsReadableStreamReader(&readerVal.toObject()));
+    MOZ_ASSERT(JS::IsReadableStreamReader(&readerVal.toObject()));
     return &readerVal.toObject().as<NativeObject>();
+}
+
+inline static bool
+HasReader(const ReadableStream* stream)
+{
+    return !stream->getFixedSlot(StreamSlot_Reader).isUndefined();
 }
 
 inline static MOZ_MUST_USE JSFunction*
@@ -576,7 +612,7 @@ const Class TeeState::class_ = {
     JSCLASS_HAS_RESERVED_SLOTS(SlotCount)
 };
 
-#define CLASS_SPEC(cls, nCtorArgs, nSlots, specFlags) \
+#define CLASS_SPEC(cls, nCtorArgs, nSlots, specFlags, classFlags, classOps) \
 const ClassSpec cls::classSpec_ = { \
     GenericCreateConstructor<cls::constructor, nCtorArgs, gc::AllocKind::FUNCTION>, \
     GenericCreatePrototype, \
@@ -591,8 +627,9 @@ const ClassSpec cls::classSpec_ = { \
 const Class cls::class_ = { \
     #cls, \
     JSCLASS_HAS_RESERVED_SLOTS(nSlots) | \
-    JSCLASS_HAS_CACHED_PROTO(JSProto_##cls), \
-    JS_NULL_CLASS_OPS, \
+    JSCLASS_HAS_CACHED_PROTO(JSProto_##cls) | \
+    classFlags, \
+    classOps, \
     &cls::classSpec_ \
 }; \
 \
@@ -605,13 +642,13 @@ const Class cls::protoClass_ = { \
 
 // Streams spec, 3.2.3., steps 1-4.
 ReadableStream*
-ReadableStream::createStream(JSContext* cx)
+ReadableStream::createStream(JSContext* cx, HandleObject proto /* = nullptr */)
 {
-    Rooted<ReadableStream*> stream(cx, NewBuiltinClassInstance<ReadableStream>(cx));
+    Rooted<ReadableStream*> stream(cx, NewObjectWithClassProto<ReadableStream>(cx, proto));
     if (!stream)
         return nullptr;
 
-    // Step 1 (reordered): Set this.[[state]] to "readable".
+    // Step 1: Set this.[[state]] to "readable".
     // Step 2: Set this.[[reader]] and this.[[storedError]] to undefined (implicit).
     // Step 3: Set this.[[disturbed]] to false (implicit).
     // Step 4: Set this.[[readableStreamController]] to undefined (implicit).
@@ -628,17 +665,18 @@ CreateReadableStreamDefaultController(JSContext* cx, Handle<ReadableStream*> str
 // Streams spec, 3.2.3., steps 1-4, 8.
 ReadableStream*
 ReadableStream::createDefaultStream(JSContext* cx, HandleValue underlyingSource,
-                                    HandleValue size, HandleValue highWaterMark)
+                                    HandleValue size, HandleValue highWaterMark,
+                                    HandleObject proto /* = nullptr */)
 {
-
+    // Steps 1-4.
     Rooted<ReadableStream*> stream(cx, createStream(cx));
     if (!stream)
         return nullptr;
 
-    // Step b: Set this.[[readableStreamController]] to
-    //         ? Construct(ReadableStreamDefaultController,
-    //                     « this, underlyingSource, size,
-    //                       highWaterMark »).
+    // Step 8.b: Set this.[[readableStreamController]] to
+    //           ? Construct(ReadableStreamDefaultController,
+    //                       « this, underlyingSource, size,
+    //                         highWaterMark »).
     RootedObject controller(cx, CreateReadableStreamDefaultController(cx, stream,
                                                                       underlyingSource,
                                                                       size,
@@ -659,16 +697,16 @@ CreateReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream
 // Streams spec, 3.2.3., steps 1-4, 7.
 ReadableStream*
 ReadableStream::createByteStream(JSContext* cx, HandleValue underlyingSource,
-                                 HandleValue highWaterMark)
+                                 HandleValue highWaterMark, HandleObject proto /* = nullptr */)
 {
-
-    Rooted<ReadableStream*> stream(cx, createStream(cx));
+    // Steps 1-4.
+    Rooted<ReadableStream*> stream(cx, createStream(cx, proto));
     if (!stream)
         return nullptr;
 
-    // Step b: Set this.[[readableStreamController]] to
-    //         ? Construct(ReadableByteStreamController, « this, underlyingSource,
-    //                     highWaterMark »).
+    // Step 7.b: Set this.[[readableStreamController]] to
+    //           ? Construct(ReadableByteStreamController,
+    //                       « this, underlyingSource, highWaterMark »).
     RootedObject controller(cx, CreateReadableByteStreamController(cx, stream,
                                                                    underlyingSource,
                                                                    highWaterMark));
@@ -676,6 +714,29 @@ ReadableStream::createByteStream(JSContext* cx, HandleValue underlyingSource,
         return nullptr;
 
     stream->setFixedSlot(StreamSlot_Controller, ObjectValue(*controller));
+
+    return stream;
+}
+
+static MOZ_MUST_USE ReadableByteStreamController*
+CreateReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream,
+                                   void* underlyingSource);
+
+ReadableStream*
+ReadableStream::createExternalSourceStream(JSContext* cx, void* underlyingSource,
+                                           uint8_t flags, HandleObject proto /* = nullptr */)
+{
+    Rooted<ReadableStream*> stream(cx, createStream(cx, proto));
+    if (!stream)
+        return nullptr;
+
+    RootedNativeObject controller(cx, CreateReadableByteStreamController(cx, stream,
+                                                                         underlyingSource));
+    if (!controller)
+        return nullptr;
+
+    stream->setFixedSlot(StreamSlot_Controller, ObjectValue(*controller));
+    AddControllerFlags(controller, flags << ControllerEmbeddingFlagsOffset);
 
     return stream;
 }
@@ -725,8 +786,8 @@ ReadableStream::constructor(JSContext* cx, unsigned argc, Value* vp)
     if (!CompareStrings(cx, type, cx->names().bytes, &notByteStream))
         return false;
 
-    // Step 7 & 8.a (reordered): If highWaterMark is undefined, let
-    //                           highWaterMark be 1 (or 0 for byte streams).
+    // Step 7.a & 8.a (reordered): If highWaterMark is undefined, let
+    //                             highWaterMark be 1 (or 0 for byte streams).
     if (highWaterMark.isUndefined())
         highWaterMark = Int32Value(notByteStream ? 1 : 0);
 
@@ -734,9 +795,15 @@ ReadableStream::constructor(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 7: If typeString is "bytes",
     if (!notByteStream) {
+        // Step 7.b: Set this.[[readableStreamController]] to
+        //           ? Construct(ReadableByteStreamController,
+        //                       « this, underlyingSource, highWaterMark »).
         stream = createByteStream(cx, underlyingSource, highWaterMark);
     } else if (typeVal.isUndefined()) {
         // Step 8: Otherwise, if type is undefined,
+        // Step 8.b: Set this.[[readableStreamController]] to
+        //           ? Construct(ReadableStreamDefaultController,
+        //                       « this, underlyingSource, size, highWaterMark »).
         stream = createDefaultStream(cx, underlyingSource, size, highWaterMark);
     } else {
         // Step 9: Otherwise, throw a RangeError exception.
@@ -751,9 +818,6 @@ ReadableStream::constructor(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static MOZ_ALWAYS_INLINE bool
-IsReadableStreamLocked(ReadableStream* stream);
-
 // Streams spec, 3.2.4.1. get locked
 static MOZ_MUST_USE bool
 ReadableStream_locked_impl(JSContext* cx, const CallArgs& args)
@@ -761,7 +825,7 @@ ReadableStream_locked_impl(JSContext* cx, const CallArgs& args)
     Rooted<ReadableStream*> stream(cx, &args.thisv().toObject().as<ReadableStream>());
 
     // Step 2: Return ! IsReadableStreamLocked(this).
-    args.rval().setBoolean(IsReadableStreamLocked(stream));
+    args.rval().setBoolean(stream->locked());
     return true;
 }
 
@@ -772,9 +836,6 @@ ReadableStream_locked(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<Is<ReadableStream>, ReadableStream_locked_impl>(cx, args);
 }
-
-static MOZ_MUST_USE JSObject*
-ReadableStreamCancel(JSContext* cx, Handle<ReadableStream*> stream, HandleValue reason);
 
 // Streams spec, 3.2.4.2. cancel ( reason )
 static MOZ_MUST_USE bool
@@ -793,14 +854,14 @@ ReadableStream_cancel(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 2: If ! IsReadableStreamLocked(this) is true, return a promise
     //         rejected with a TypeError exception.
-    if (IsReadableStreamLocked(stream)) {
+    if (stream->locked()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_READABLESTREAM_NOT_LOCKED, "cancel");
         return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
     // Step 3: Return ! ReadableStreamCancel(this, reason).
-    RootedObject cancelPromise(cx, ReadableStreamCancel(cx, stream, args.get(0)));
+    RootedObject cancelPromise(cx, ReadableStream::cancel(cx, stream, args.get(0)));
     if (!cancelPromise)
         return false;
     args.rval().setObject(*cancelPromise);
@@ -939,7 +1000,7 @@ static const JSPropertySpec ReadableStream_properties[] = {
     JS_PS_END
 };
 
-CLASS_SPEC(ReadableStream, 0, StreamSlotCount, 0);
+CLASS_SPEC(ReadableStream, 0, StreamSlotCount, 0, 0, JS_NULL_CLASS_OPS);
 
 // Streams spec, 3.3.1. AcquireReadableStreamBYOBReader ( stream )
 // Always inlined.
@@ -951,22 +1012,26 @@ CLASS_SPEC(ReadableStream, 0, StreamSlotCount, 0);
 // Using is<T> instead.
 
 // Streams spec, 3.3.4. IsReadableStreamDisturbed ( stream )
-static MOZ_ALWAYS_INLINE bool
-IsReadableStreamDisturbed(ReadableStream* stream)
-{
-    // Step 1: Assert: ! IsReadableStream(stream) is true (implicit).
-    // Step 2: Return stream.[[disturbed]].
-    return stream->disturbed();
-}
+// Using stream->disturbed() instead.
 
 // Streams spec, 3.3.5. IsReadableStreamLocked ( stream )
-static MOZ_ALWAYS_INLINE bool
-IsReadableStreamLocked(ReadableStream* stream)
+bool
+ReadableStream::locked() const
 {
     // Step 1: Assert: ! IsReadableStream(stream) is true (implicit).
     // Step 2: If stream.[[reader]] is undefined, return false.
     // Step 3: Return true.
-    return !stream->getFixedSlot(StreamSlot_Reader).isUndefined();
+    // Special-casing for streams with external sources. Those can be locked
+    // explicitly via JSAPI, which is indicated by a controller flag.
+    // IsReadableStreamLocked is called from the controller's constructor, at
+    // which point we can't yet call ControllerFromStream(stream), but the
+    // source also can't be locked yet.
+    if (HasController(this) &&
+        (ControllerFlags(ControllerFromStream(this)) & ControllerFlag_SourceLocked))
+    {
+        return true;
+    }
+    return HasReader(this);
 }
 
 static MOZ_MUST_USE bool
@@ -1059,9 +1124,6 @@ TeeReaderReadHandler(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static MOZ_MUST_USE JSObject*
-ReadableStreamDefaultReaderRead(JSContext* cx, HandleNativeObject reader);
-
-static MOZ_MUST_USE JSObject*
 ReadableStreamTee_Pull(JSContext* cx, Handle<TeeState*> teeState,
                        Handle<ReadableStream*> branchStream)
 {
@@ -1074,7 +1136,7 @@ ReadableStreamTee_Pull(JSContext* cx, Handle<TeeState*> teeState,
     //         handler which takes the argument result and performs the
     //         following steps:
     Rooted<ReadableStreamDefaultReader*> reader(cx, teeState->reader());
-    RootedObject readPromise(cx, ReadableStreamDefaultReaderRead(cx, reader));
+    RootedObject readPromise(cx, ReadableStreamDefaultReader::read(cx, reader));
     if (!readPromise)
         return nullptr;
 
@@ -1122,7 +1184,7 @@ ReadableStreamTee_Cancel(JSContext* cx, Handle<TeeState*> teeState,
         Rooted<PromiseObject*> promise(cx, teeState->promise());
 
         // Step b: Let cancelResult be ! ReadableStreamCancel(stream, compositeReason).
-        RootedObject cancelResult(cx, ReadableStreamCancel(cx, stream, compositeReasonVal));
+        RootedObject cancelResult(cx, ReadableStream::cancel(cx, stream, compositeReasonVal));
         if (!cancelResult) {
             if (!RejectWithPendingError(cx, promise))
                 return nullptr;
@@ -1317,9 +1379,6 @@ ReadableStreamAddReadRequest(JSContext* cx, Handle<ReadableStream*> stream)
   return promise;
 }
 
-static MOZ_MUST_USE bool
-ReadableStreamClose(JSContext* cx, Handle<ReadableStream*> stream);
-
 static MOZ_MUST_USE JSObject*
 ReadableStreamControllerCancelSteps(JSContext* cx,
                                     HandleNativeObject controller, HandleValue reason);
@@ -1333,9 +1392,12 @@ ReturnUndefined(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+MOZ_MUST_USE bool
+ReadableStreamCloseInternal(JSContext* cx, Handle<ReadableStream*> stream);
+
 // Streams spec, 3.4.3. ReadableStreamCancel ( stream, reason )
-static MOZ_MUST_USE JSObject*
-ReadableStreamCancel(JSContext* cx, Handle<ReadableStream*> stream, HandleValue reason)
+/* static */ MOZ_MUST_USE JSObject*
+ReadableStream::cancel(JSContext* cx, Handle<ReadableStream*> stream, HandleValue reason)
 {
     // Step 1: Set stream.[[disturbed]] to true.
     uint32_t state = StreamState(stream) | ReadableStream::Disturbed;
@@ -1354,7 +1416,7 @@ ReadableStreamCancel(JSContext* cx, Handle<ReadableStream*> stream, HandleValue 
     }
 
     // Step 4: Perform ! ReadableStreamClose(stream).
-    if (!ReadableStreamClose(cx, stream))
+    if (!ReadableStreamCloseInternal(cx, stream))
         return nullptr;
 
     // Step 5: Let sourceCancelPromise be
@@ -1368,16 +1430,15 @@ ReadableStreamCancel(JSContext* cx, Handle<ReadableStream*> stream, HandleValue 
     // Step 6: Return the result of transforming sourceCancelPromise by a
     //         fulfillment handler that returns undefined.
     RootedAtom funName(cx, cx->names().empty);
-    RootedFunction returnUndefined(cx,
-                                   NewNativeFunction(cx, ReturnUndefined, 0, funName));
+    RootedFunction returnUndefined(cx, NewNativeFunction(cx, ReturnUndefined, 0, funName));
     if (!returnUndefined)
         return nullptr;
     return JS::CallOriginalPromiseThen(cx, sourceCancelPromise, returnUndefined, nullptr);
 }
 
 // Streams spec, 3.4.4. ReadableStreamClose ( stream )
-static MOZ_MUST_USE bool
-ReadableStreamClose(JSContext* cx, Handle<ReadableStream*> stream)
+MOZ_MUST_USE bool
+ReadableStreamCloseInternal(JSContext* cx, Handle<ReadableStream*> stream)
 {
   // Step 1: Assert: stream.[[state]] is "readable".
   MOZ_ASSERT(stream->readable());
@@ -1425,12 +1486,23 @@ ReadableStreamClose(JSContext* cx, Handle<ReadableStream*> stream)
   // Step 6: Resolve reader.[[closedPromise]] with undefined.
   // Step 7: Return (implicit).
   RootedObject closedPromise(cx, &reader->getFixedSlot(ReaderSlot_ClosedPromise).toObject());
-  return ResolvePromise(cx, closedPromise, UndefinedHandleValue);
+  if (!ResolvePromise(cx, closedPromise, UndefinedHandleValue))
+      return false;
+
+  if (stream->mode() == JS::ReadableStreamMode::ExternalSource &&
+      cx->runtime()->readableStreamClosedCallback)
+  {
+      NativeObject* controller = ControllerFromStream(stream);
+      void* source = controller->getFixedSlot(ControllerSlot_UnderlyingSource).toPrivate();
+      cx->runtime()->readableStreamClosedCallback(cx, stream, source, stream->embeddingFlags());
+  }
+
+  return true;
 }
 
 // Streams spec, 3.4.5. ReadableStreamError ( stream, e )
-static MOZ_MUST_USE bool
-ReadableStreamError(JSContext* cx, Handle<ReadableStream*> stream, HandleValue e)
+MOZ_MUST_USE bool
+ReadableStreamErrorInternal(JSContext* cx, Handle<ReadableStream*> stream, HandleValue e)
 {
     // Step 1: Assert: ! IsReadableStream(stream) is true (implicit).
 
@@ -1474,7 +1546,19 @@ ReadableStreamError(JSContext* cx, Handle<ReadableStream*> stream, HandleValue e
     // Step 9: Reject reader.[[closedPromise]] with e.
     val = reader->getFixedSlot(ReaderSlot_ClosedPromise);
     Rooted<PromiseObject*> closedPromise(cx, &val.toObject().as<PromiseObject>());
-    return PromiseObject::reject(cx, closedPromise, e);
+    if (!PromiseObject::reject(cx, closedPromise, e))
+        return false;
+
+    if (stream->mode() == JS::ReadableStreamMode::ExternalSource &&
+        cx->runtime()->readableStreamErroredCallback)
+    {
+        NativeObject* controller = ControllerFromStream(stream);
+        void* source = controller->getFixedSlot(ControllerSlot_UnderlyingSource).toPrivate();
+        cx->runtime()->readableStreamErroredCallback(cx, stream, source,
+                                                     stream->embeddingFlags(), e);
+    }
+
+    return true;
 }
 
 // Streams spec, 3.4.6. ReadableStreamFulfillReadIntoRequest( stream, chunk, done )
@@ -1512,16 +1596,13 @@ ReadableStreamFulfillReadOrReadIntoRequest(JSContext* cx, Handle<ReadableStream*
 // Streams spec, 3.4.9. ReadableStreamGetNumReadRequests ( stream )
 // (Identical implementation.)
 static uint32_t
-ReadableStreamGetNumReadRequests(NativeObject* stream)
+ReadableStreamGetNumReadRequests(ReadableStream* stream)
 {
-    MOZ_ASSERT(stream->is<ReadableStream>());
-
     // Step 1: Return the number of elements in
     //         stream.[[reader]].[[readRequests]].
-    Value readerVal = stream->getFixedSlot(StreamSlot_Reader);
-    NativeObject* reader = &readerVal.toObject().as<NativeObject>();
-    MOZ_ASSERT(reader->is<ReadableStreamDefaultReader>() ||
-               reader->is<ReadableStreamBYOBReader>());
+    if (!HasReader(stream))
+        return 0;
+    NativeObject* reader = ReaderFromStream(stream);
     Value readRequests = reader->getFixedSlot(ReaderSlot_Requests);
     return readRequests.toObject().as<NativeObject>().getDenseInitializedLength();
 }
@@ -1567,7 +1648,7 @@ CreateReadableStreamDefaultReader(JSContext* cx, Handle<ReadableStream*> stream)
 
     // Step 2: If ! IsReadableStreamLocked(stream) is true, throw a TypeError
     //         exception.
-    if (IsReadableStreamLocked(stream)) {
+    if (stream->locked()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_READABLESTREAM_LOCKED);
         return nullptr;
@@ -1644,7 +1725,7 @@ ReadableStreamDefaultReader_cancel(JSContext* cx, unsigned argc, Value* vp)
     // Step 2: If this.[[ownerReadableStream]] is undefined, return a promise
     //         rejected with a TypeError exception.
     RootedNativeObject reader(cx, &args.thisv().toObject().as<NativeObject>());
-    if (reader->getFixedSlot(ReaderSlot_Stream).isUndefined()) {
+    if (!ReaderHasStream(reader)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_READABLESTREAMREADER_NOT_OWNED, "cancel");
         return ReturnPromiseRejectedWithPendingError(cx, args);
@@ -1671,15 +1752,16 @@ ReadableStreamDefaultReader_read(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 2: If this.[[ownerReadableStream]] is undefined, return a promise
     //         rejected with a TypeError exception.
-    RootedNativeObject reader(cx, &args.thisv().toObject().as<NativeObject>());
-    if (reader->getFixedSlot(ReaderSlot_Stream).isUndefined()) {
+    Rooted<ReadableStreamDefaultReader*> reader(cx);
+    reader = &args.thisv().toObject().as<ReadableStreamDefaultReader>();
+    if (!ReaderHasStream(reader)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_READABLESTREAMREADER_NOT_OWNED, "read");
         return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
     // Step 3: Return ! ReadableStreamDefaultReaderRead(this).
-    JSObject* readPromise = ReadableStreamDefaultReaderRead(cx, reader);
+    JSObject* readPromise = ReadableStreamDefaultReader::read(cx, reader);
     if (!readPromise)
         return false;
     args.rval().setObject(*readPromise);
@@ -1697,7 +1779,7 @@ ReadableStreamDefaultReader_releaseLock_impl(JSContext* cx, const CallArgs& args
     reader = &args.thisv().toObject().as<ReadableStreamDefaultReader>();
 
     // Step 2: If this.[[ownerReadableStream]] is undefined, return.
-    if (reader->getFixedSlot(ReaderSlot_Stream).isUndefined()) {
+    if (!ReaderHasStream(reader)) {
         args.rval().setUndefined();
         return true;
     }
@@ -1741,7 +1823,8 @@ static const JSPropertySpec ReadableStreamDefaultReader_properties[] = {
     JS_PS_END
 };
 
-CLASS_SPEC(ReadableStreamDefaultReader, 1, ReaderSlotCount, ClassSpec::DontDefineConstructor);
+CLASS_SPEC(ReadableStreamDefaultReader, 1, ReaderSlotCount, ClassSpec::DontDefineConstructor, 0,
+           JS_NULL_CLASS_OPS);
 
 
 // Streams spec, 3.6.3 new ReadableStreamBYOBReader ( stream )
@@ -1753,13 +1836,14 @@ CreateReadableStreamBYOBReader(JSContext* cx, Handle<ReadableStream*> stream)
     //         is false, throw a TypeError exception.
     if (!ControllerFromStream(stream)->is<ReadableByteStreamController>()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_READABLESTREAM_NOT_BYTE_STREAM_CONTROLLER);
+                                  JSMSG_READABLESTREAM_NOT_BYTE_STREAM_CONTROLLER,
+                                  "ReadableStream.getReader('byob')");
         return nullptr;
     }
 
     // Step 3: If ! IsReadableStreamLocked(stream) is true, throw a TypeError
     //         exception.
-    if (IsReadableStreamLocked(stream)) {
+    if (stream->locked()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_READABLESTREAM_LOCKED);
         return nullptr;
     }
@@ -1835,7 +1919,7 @@ ReadableStreamBYOBReader_cancel(JSContext* cx, unsigned argc, Value* vp)
     // Step 2: If this.[[ownerReadableStream]] is undefined, return a promise
     //         rejected with a TypeError exception.
     RootedNativeObject reader(cx, &args.thisv().toObject().as<NativeObject>());
-    if (reader->getFixedSlot(ReaderSlot_Stream).isUndefined()) {
+    if (!ReaderHasStream(reader)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_READABLESTREAMREADER_NOT_OWNED, "cancel");
         return ReturnPromiseRejectedWithPendingError(cx, args);
@@ -1848,10 +1932,6 @@ ReadableStreamBYOBReader_cancel(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setObject(*cancelPromise);
     return true;
 }
-
-static MOZ_MUST_USE JSObject*
-ReadableStreamBYOBReaderRead(JSContext* cx, HandleNativeObject reader,
-                             Handle<TypedArrayObject*> view);
 
 // Streams spec, 3.6.4.3 read ( )
 static MOZ_MUST_USE bool
@@ -1867,8 +1947,9 @@ ReadableStreamBYOBReader_read(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 2: If this.[[ownerReadableStream]] is undefined, return a promise
     //         rejected with a TypeError exception.
-    RootedNativeObject reader(cx, &args.thisv().toObject().as<NativeObject>());
-    if (reader->getFixedSlot(ReaderSlot_Stream).isUndefined()) {
+    Rooted<ReadableStreamBYOBReader*> reader(cx);
+    reader = &args.thisv().toObject().as<ReadableStreamBYOBReader>();
+    if (!ReaderHasStream(reader)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_READABLESTREAMREADER_NOT_OWNED, "read");
         return ReturnPromiseRejectedWithPendingError(cx, args);
@@ -1883,20 +1964,20 @@ ReadableStreamBYOBReader_read(JSContext* cx, unsigned argc, Value* vp)
         return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    Rooted<TypedArrayObject*> view(cx, &viewVal.toObject().as<TypedArrayObject>());
+    Rooted<ArrayBufferViewObject*> view(cx, &viewVal.toObject().as<ArrayBufferViewObject>());
 
     // Step 5: If view.[[ByteLength]] is 0, return a promise rejected with a
     //         TypeError exception.
     // Note: It's ok to use the length in number of elements here because all we
     // want to know is whether it's < 0.
-    if (view->length() == 0) {
+    if (JS_GetArrayBufferViewByteLength(view) == 0) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_READABLESTREAMBYOBREADER_READ_EMPTY_VIEW);
         return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
     // Step 6: Return ! ReadableStreamBYOBReaderRead(this, view).
-    JSObject* readPromise = ReadableStreamBYOBReaderRead(cx, reader, view);
+    JSObject* readPromise = ReadableStreamBYOBReader::read(cx, reader, view);
     if (!readPromise)
         return false;
     args.rval().setObject(*readPromise);
@@ -1914,7 +1995,7 @@ ReadableStreamBYOBReader_releaseLock_impl(JSContext* cx, const CallArgs& args)
     reader = &args.thisv().toObject().as<ReadableStreamBYOBReader>();
 
     // Step 2: If this.[[ownerReadableStream]] is undefined, return.
-    if (reader->getFixedSlot(ReaderSlot_Stream).isUndefined()) {
+    if (!ReaderHasStream(reader)) {
         args.rval().setUndefined();
         return true;
     }
@@ -1957,7 +2038,7 @@ static const JSFunctionSpec ReadableStreamBYOBReader_methods[] = {
     JS_FS_END
 };
 
-CLASS_SPEC(ReadableStreamBYOBReader, 1, 3, ClassSpec::DontDefineConstructor);
+CLASS_SPEC(ReadableStreamBYOBReader, 1, 3, ClassSpec::DontDefineConstructor, 0, JS_NULL_CLASS_OPS);
 
 inline static MOZ_MUST_USE bool
 ReadableStreamControllerCallPullIfNeeded(JSContext* cx, HandleNativeObject controller);
@@ -1978,7 +2059,7 @@ ReadableStreamReaderGenericCancel(JSContext* cx, HandleNativeObject reader, Hand
     // Step 2: Assert: stream is not undefined (implicit).
 
     // Step 3: Return ! ReadableStreamCancel(stream, reason).
-    return ReadableStreamCancel(cx, stream, reason);
+    return &ReadableStreamCancel(cx, stream, reason)->as<PromiseObject>();
 }
 
 // Streams spec, 3.7.4. ReadableStreamReaderGenericInitialize ( reader, stream )
@@ -2067,12 +2148,12 @@ ReadableStreamReaderGenericRelease(JSContext* cx, HandleNativeObject reader)
 static MOZ_MUST_USE JSObject*
 ReadableByteStreamControllerPullInto(JSContext* cx,
                                      Handle<ReadableByteStreamController*> controller,
-                                     HandleNativeObject view);
+                                     Handle<ArrayBufferViewObject*> view);
 
 // Streams spec, 3.7.6. ReadableStreamBYOBReaderRead ( reader, view )
-static MOZ_MUST_USE JSObject*
-ReadableStreamBYOBReaderRead(JSContext* cx, HandleNativeObject reader,
-                             Handle<TypedArrayObject*> view)
+/* static */ MOZ_MUST_USE JSObject*
+ReadableStreamBYOBReader::read(JSContext* cx, Handle<ReadableStreamBYOBReader*> reader,
+                               Handle<ArrayBufferViewObject*> view)
 {
     MOZ_ASSERT(reader->is<ReadableStreamBYOBReader>());
 
@@ -2100,11 +2181,9 @@ static MOZ_MUST_USE JSObject*
 ReadableStreamControllerPullSteps(JSContext* cx, HandleNativeObject controller);
 
 // Streams spec, 3.7.7. ReadableStreamDefaultReaderRead ( reader )
-static MOZ_MUST_USE JSObject*
-ReadableStreamDefaultReaderRead(JSContext* cx, HandleNativeObject reader)
+MOZ_MUST_USE JSObject*
+ReadableStreamDefaultReader::read(JSContext* cx, Handle<ReadableStreamDefaultReader*> reader)
 {
-    MOZ_ASSERT(reader->is<ReadableStreamDefaultReader>());
-
     // Step 1: Let stream be reader.[[ownerReadableStream]].
     // Step 2: Assert: stream is not undefined.
     Rooted<ReadableStream*> stream(cx, StreamFromReader(reader));
@@ -2297,12 +2376,13 @@ ReadableStreamDefaultController::constructor(JSContext* cx, unsigned argc, Value
 
     // Step 2: If stream.[[readableStreamController]] is not undefined, throw a
     //         TypeError exception.
-    if (!stream->getFixedSlot(StreamSlot_Controller).isUndefined()) {
+    if (HasController(stream)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_READABLESTREAM_CONTROLLER_SET);
         return false;
     }
 
+    // Steps 3-11.
     RootedObject controller(cx, CreateReadableStreamDefaultController(cx, stream, args.get(1),
                                                                       args.get(2), args.get(3)));
     if (!controller)
@@ -2360,13 +2440,10 @@ static MOZ_MUST_USE bool
 ReadableStreamDefaultControllerClose(JSContext* cx,
                                      Handle<ReadableStreamDefaultController*> controller);
 
-// Streams spec, 3.8.4.2 close()
+// Unified implementation of steps 2-3 of 3.8.4.2 and 3.10.4.3.
 static MOZ_MUST_USE bool
-ReadableStreamDefaultController_close_impl(JSContext* cx, const CallArgs& args)
+VerifyControllerStateForClosing(JSContext* cx, HandleNativeObject controller)
 {
-    Rooted<ReadableStreamDefaultController*> controller(cx);
-    controller = &args.thisv().toObject().as<ReadableStreamDefaultController>();
-
     // Step 2: If this.[[closeRequested]] is true, throw a TypeError exception.
     if (ControllerFlags(controller) & ControllerFlag_CloseRequested) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -2382,6 +2459,20 @@ ReadableStreamDefaultController_close_impl(JSContext* cx, const CallArgs& args)
                                   JSMSG_READABLESTREAMCONTROLLER_NOT_READABLE, "close");
         return false;
     }
+
+    return true;
+}
+
+// Streams spec, 3.8.4.2 close()
+static MOZ_MUST_USE bool
+ReadableStreamDefaultController_close_impl(JSContext* cx, const CallArgs& args)
+{
+    Rooted<ReadableStreamDefaultController*> controller(cx);
+    controller = &args.thisv().toObject().as<ReadableStreamDefaultController>();
+
+    // Steps 2-3.
+    if (!VerifyControllerStateForClosing(cx, controller))
+        return false;
 
     // Step 4: Perform ! ReadableStreamDefaultControllerClose(this).
     if (!ReadableStreamDefaultControllerClose(cx, controller))
@@ -2455,12 +2546,10 @@ ReadableStreamDefaultController_error_impl(JSContext* cx, const CallArgs& args)
     controller = &args.thisv().toObject().as<ReadableStreamDefaultController>();
 
     // Step 2: Let stream be this.[[controlledReadableStream]].
-    ReadableStream* stream = StreamFromController(controller);
-
     // Step 3: If stream.[[state]] is not "readable", throw a TypeError exception.
-    if (!stream->readable()) {
+    if (!StreamFromController(controller)->readable()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_READABLESTREAMCONTROLLER_NOT_READABLE, "close");
+                                  JSMSG_READABLESTREAMCONTROLLER_NOT_READABLE, "error");
         return false;
     }
 
@@ -2494,7 +2583,8 @@ static const JSFunctionSpec ReadableStreamDefaultController_methods[] = {
     JS_FS_END
 };
 
-CLASS_SPEC(ReadableStreamDefaultController, 4, 7, ClassSpec::DontDefineConstructor);
+CLASS_SPEC(ReadableStreamDefaultController, 4, 7, ClassSpec::DontDefineConstructor, 0,
+           JS_NULL_CLASS_OPS);
 
 /**
  * Unified implementation of ReadableStream controllers' [[CancelSteps]] internal
@@ -2541,6 +2631,15 @@ ReadableStreamControllerCancelSteps(JSContext* cx, HandleNativeObject controller
         return ReadableStreamTee_Cancel(cx, teeState, defaultController, reason);
     }
 
+    if (ControllerFlags(controller) & ControllerFlag_ExternalSource) {
+        void* source = underlyingSource.toPrivate();
+        Rooted<ReadableStream*> stream(cx, StreamFromController(controller));
+        RootedValue rval(cx);
+        rval = cx->runtime()->readableStreamCancelCallback(cx, stream, source,
+                                                           stream->embeddingFlags(), reason);
+        return PromiseObject::unforgeableResolve(cx, rval);
+    }
+
     return PromiseInvokeOrNoop(cx, underlyingSource, cx->names().cancel, reason);
 }
 
@@ -2572,8 +2671,8 @@ ReadableStreamDefaultControllerPullSteps(JSContext* cx, HandleNativeObject contr
         //         perform ! ReadableStreamClose(stream).
         bool closeRequested = ControllerFlags(controller) & ControllerFlag_CloseRequested;
         if (closeRequested && queue->getDenseInitializedLength() == 0) {
-          if (!ReadableStreamClose(cx, stream))
-              return nullptr;
+            if (!ReadableStreamCloseInternal(cx, stream))
+                return nullptr;
         }
 
         // Step c: Otherwise, perform ! ReadableStreamDefaultControllerCallPullIfNeeded(this).
@@ -2650,6 +2749,9 @@ ControllerPullFailedHandler(JSContext* cx, unsigned argc, Value* vp)
 static bool
 ReadableStreamControllerShouldCallPull(NativeObject* controller);
 
+static MOZ_MUST_USE double
+ReadableStreamControllerGetDesiredSizeUnchecked(NativeObject* controller);
+
 // Streams spec, 3.9.2 ReadableStreamDefaultControllerCallPullIfNeeded ( controller )
 // and
 // Streams spec, 3.12.3. ReadableByteStreamControllerCallPullIfNeeded ( controller )
@@ -2690,6 +2792,13 @@ ReadableStreamControllerCallPullIfNeeded(JSContext* cx, HandleNativeObject contr
         Rooted<TeeState*> teeState(cx, &underlyingSource.toObject().as<TeeState>());
         Rooted<ReadableStream*> stream(cx, StreamFromController(controller));
         pullPromise = ReadableStreamTee_Pull(cx, teeState, stream);
+    } else if (ControllerFlags(controller) & ControllerFlag_ExternalSource) {
+        void* source = underlyingSource.toPrivate();
+        Rooted<ReadableStream*> stream(cx, StreamFromController(controller));
+        double desiredSize = ReadableStreamControllerGetDesiredSizeUnchecked(controller);
+        cx->runtime()->readableStreamDataRequestCallback(cx, stream, source,
+                                                         stream->embeddingFlags(), desiredSize);
+        pullPromise = PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
     } else {
         pullPromise = PromiseInvokeOrNoop(cx, underlyingSource, cx->names().pull, controllerVal);
     }
@@ -2737,7 +2846,7 @@ ReadableStreamControllerShouldCallPull(NativeObject* controller)
     // Step 5: If ! IsReadableStreamLocked(stream) is true and
     //         ! ReadableStreamGetNumReadRequests(stream) > 0, return true.
     // Steps 5-6 of 3.12.24 are equivalent in our implementation.
-    if (IsReadableStreamLocked(stream) && ReadableStreamGetNumReadRequests(stream) > 0)
+    if (stream->locked() && ReadableStreamGetNumReadRequests(stream) > 0)
         return true;
 
     // Step 6: Let desiredSize be ReadableStreamDefaultControllerGetDesiredSize(controller).
@@ -2770,14 +2879,10 @@ ReadableStreamDefaultControllerClose(JSContext* cx,
     RootedNativeObject queue(cx);
     queue = &controller->getFixedSlot(QueueContainerSlot_Queue).toObject().as<NativeObject>();
     if (queue->getDenseInitializedLength() == 0)
-        return ReadableStreamClose(cx, stream);
+        return ReadableStreamCloseInternal(cx, stream);
 
     return true;
 }
-
-static MOZ_MUST_USE bool
-ReadableStreamFulfillReadOrReadIntoRequest(JSContext* cx, Handle<ReadableStream*> stream,
-                                           HandleValue chunk, bool done);
 
 static MOZ_MUST_USE bool
 EnqueueValueWithSize(JSContext* cx, HandleNativeObject container, HandleValue value,
@@ -2801,7 +2906,7 @@ ReadableStreamDefaultControllerEnqueue(JSContext* cx,
     // Step 4: If ! IsReadableStreamLocked(stream) is true and
     //         ! ReadableStreamGetNumReadRequests(stream) > 0, perform
     //         ! ReadableStreamFulfillReadRequest(stream, chunk, false).
-    if (IsReadableStreamLocked(stream) && ReadableStreamGetNumReadRequests(stream) > 0) {
+    if (stream->locked() && ReadableStreamGetNumReadRequests(stream) > 0) {
         if (!ReadableStreamFulfillReadOrReadIntoRequest(cx, stream, chunk, false))
             return false;
     } else {
@@ -2851,9 +2956,6 @@ ReadableStreamDefaultControllerEnqueue(JSContext* cx,
 }
 
 static MOZ_MUST_USE bool
-ReadableStreamError(JSContext* cx, Handle<ReadableStream*> stream, HandleValue e);
-
-static MOZ_MUST_USE bool
 ReadableByteStreamControllerClearPendingPullIntos(JSContext* cx, HandleNativeObject controller);
 
 // Streams spec, 3.9.6. ReadableStreamDefaultControllerError ( controller, e )
@@ -2884,7 +2986,7 @@ ReadableStreamControllerError(JSContext* cx, HandleNativeObject controller, Hand
         return false;
 
     // Step 4 (or 5): Perform ! ReadableStreamError(stream, e).
-    return ReadableStreamError(cx, stream, e);
+    return ReadableStreamErrorInternal(cx, stream, e);
 }
 
 // Streams spec, 3.9.7. ReadableStreamDefaultControllerErrorIfNeeded ( controller, e ) nothrow
@@ -3015,6 +3117,11 @@ CreateReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream
     return controller;
 }
 
+bool
+ReadableByteStreamController::hasExternalSource() {
+    return ControllerFlags(this) & ControllerFlag_ExternalSource;
+}
+
 // Streams spec, 3.10.3.
 // new ReadableByteStreamController ( stream, underlyingByteSource,
 //                                    highWaterMark )
@@ -3038,7 +3145,7 @@ ReadableByteStreamController::constructor(JSContext* cx, unsigned argc, Value* v
 
     // Step 2: If stream.[[readableStreamController]] is not undefined, throw a
     //         TypeError exception.
-    if (!stream->getFixedSlot(StreamSlot_Controller).isUndefined()) {
+    if (HasController(stream)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_READABLESTREAM_CONTROLLER_SET);
         return false;
@@ -3051,6 +3158,71 @@ ReadableByteStreamController::constructor(JSContext* cx, unsigned argc, Value* v
 
     args.rval().setObject(*controller);
     return true;
+}
+
+// Version of the ReadableByteStreamConstructor that's specialized for
+// handling external, embedding-provided, underlying sources.
+static MOZ_MUST_USE ReadableByteStreamController*
+CreateReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream,
+                                   void* underlyingSource)
+{
+    Rooted<ReadableByteStreamController*> controller(cx);
+    controller = NewBuiltinClassInstance<ReadableByteStreamController>(cx);
+    if (!controller)
+        return nullptr;
+
+    // Step 3: Set this.[[controlledReadableStream]] to stream.
+    controller->setFixedSlot(ControllerSlot_Stream, ObjectValue(*stream));
+
+    // Step 4: Set this.[[underlyingByteSource]] to underlyingByteSource.
+    controller->setFixedSlot(ControllerSlot_UnderlyingSource, PrivateValue(underlyingSource));
+
+    // Step 5: Set this.[[pullAgain]], and this.[[pulling]] to false.
+    controller->setFixedSlot(ControllerSlot_Flags, Int32Value(ControllerFlag_ExternalSource));
+
+    // Step 6: Perform ! ReadableByteStreamControllerClearPendingPullIntos(this).
+    // Omitted.
+
+    // Step 7: Perform ! ResetQueue(this).
+    controller->setFixedSlot(QueueContainerSlot_TotalSize, Int32Value(0));
+
+    // Step 8: Set this.[[started]] and this.[[closeRequested]] to false.
+    // Step 9: Set this.[[strategyHWM]] to
+    //         ? ValidateAndNormalizeHighWaterMark(highWaterMark).
+    controller->setFixedSlot(ControllerSlot_StrategyHWM, Int32Value(0));
+
+    // Step 10: Let autoAllocateChunkSize be
+    //          ? GetV(underlyingByteSource, "autoAllocateChunkSize").
+    // Step 11: If autoAllocateChunkSize is not undefined,
+    // Step 12: Set this.[[autoAllocateChunkSize]] to autoAllocateChunkSize.
+    // Omitted.
+
+    // Step 13: Set this.[[pendingPullIntos]] to a new empty List.
+    if (!SetNewList(cx, controller, ByteControllerSlot_PendingPullIntos))
+        return nullptr;
+
+    // Step 14: Let controller be this (implicit).
+    // Step 15: Let startResult be
+    //          ? InvokeOrNoop(underlyingSource, "start", « this »).
+    // Omitted.
+
+    // Step 16: Let startPromise be a promise resolved with startResult:
+    RootedObject startPromise(cx, PromiseObject::unforgeableResolve(cx, UndefinedHandleValue));
+    if (!startPromise)
+        return nullptr;
+
+    RootedObject onStartFulfilled(cx, NewHandler(cx, ControllerStartHandler, controller));
+    if (!onStartFulfilled)
+        return nullptr;
+
+    RootedObject onStartRejected(cx, NewHandler(cx, ControllerStartFailedHandler, controller));
+    if (!onStartRejected)
+        return nullptr;
+
+    if (!JS::AddPromiseReactions(cx, startPromise, onStartFulfilled, onStartRejected))
+        return nullptr;
+
+    return controller;
 }
 
 static MOZ_MUST_USE ReadableStreamBYOBRequest*
@@ -3135,20 +3307,9 @@ ReadableByteStreamController_close_impl(JSContext* cx, const CallArgs& args)
     Rooted<ReadableByteStreamController*> controller(cx);
     controller = &args.thisv().toObject().as<ReadableByteStreamController>();
 
-    // Step 2: If this.[[closeRequested]] is true, throw a TypeError exception.
-    if (ControllerFlags(controller) & ControllerFlag_CloseRequested) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_READABLESTREAMCONTROLLER_CLOSED, "close");
+    // Steps 2-3.
+    if (!VerifyControllerStateForClosing(cx, controller))
         return false;
-    }
-
-    // Step 3: If this.[[controlledReadableStream]].[[state]] is not "readable",
-    //         throw a TypeError exception.
-    if (!StreamFromController(controller)->readable()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_READABLESTREAMCONTROLLER_NOT_READABLE, "close");
-        return false;
-    }
 
     // Step 4: Perform ? ReadableByteStreamControllerClose(this).
     if (!ReadableByteStreamControllerClose(cx, controller))
@@ -3200,7 +3361,8 @@ ReadableByteStreamController_enqueue_impl(JSContext* cx, const CallArgs& args)
     //         throw a TypeError exception.
     if (!chunkVal.isObject() || !JS_IsArrayBufferViewObject(&chunkVal.toObject())) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_READABLEBYTESTREAMCONTROLLER_BAD_CHUNK);
+                                  JSMSG_READABLEBYTESTREAMCONTROLLER_BAD_CHUNK,
+                                  "ReadableByteStreamController#enqueue");
         return false;
     }
     RootedObject chunk(cx, &chunkVal.toObject());
@@ -3268,7 +3430,42 @@ static const JSFunctionSpec ReadableByteStreamController_methods[] = {
     JS_FS_END
 };
 
-CLASS_SPEC(ReadableByteStreamController, 3, 9, ClassSpec::DontDefineConstructor);
+static void
+ReadableByteStreamControllerFinalize(FreeOp* fop, JSObject* obj)
+{
+    ReadableByteStreamController& controller = obj->as<ReadableByteStreamController>();
+
+    if (controller.getFixedSlot(ControllerSlot_Flags).isUndefined())
+        return;
+
+    uint32_t flags = ControllerFlags(&controller);
+    if (!(flags & ControllerFlag_ExternalSource))
+        return;
+
+    uint8_t embeddingFlags = flags >> ControllerEmbeddingFlagsOffset;
+
+    void* underlyingSource = controller.getFixedSlot(ControllerSlot_UnderlyingSource).toPrivate();
+    obj->runtimeFromAnyThread()->readableStreamFinalizeCallback(underlyingSource, embeddingFlags);
+}
+
+static const ClassOps ReadableByteStreamControllerClassOps = {
+    nullptr,        /* addProperty */
+    nullptr,        /* delProperty */
+    nullptr,        /* getProperty */
+    nullptr,        /* setProperty */
+    nullptr,        /* enumerate */
+    nullptr,        /* newEnumerate */
+    nullptr,        /* resolve */
+    nullptr,        /* mayResolve */
+    ReadableByteStreamControllerFinalize,
+    nullptr,        /* call        */
+    nullptr,        /* hasInstance */
+    nullptr,        /* construct   */
+    nullptr,        /* trace   */
+};
+
+CLASS_SPEC(ReadableByteStreamController, 3, 9, ClassSpec::DontDefineConstructor,
+           JSCLASS_BACKGROUND_FINALIZE, &ReadableByteStreamControllerClassOps);
 
 // Streams spec, 3.10.5.1. [[PullSteps]] ()
 // Unified with 3.8.5.1 above.
@@ -3293,30 +3490,59 @@ ReadableByteStreamControllerPullSteps(JSContext* cx, HandleNativeObject controll
         // Step 3.a: MOZ_ASSERT: ! ReadableStreamGetNumReadRequests(_stream_) is 0.
         MOZ_ASSERT(ReadableStreamGetNumReadRequests(stream) == 0);
 
-        // Step 3.b: Let entry be the first element of this.[[queue]].
-        // Step 3.c: Remove entry from this.[[queue]], shifting all other elements
-        //           downward (so that the second becomes the first, and so on).
-        val = controller->getFixedSlot(QueueContainerSlot_Queue);
-        RootedNativeObject queue(cx, &val.toObject().as<NativeObject>());
-        Rooted<ByteStreamChunk*> entry(cx, ShiftFromList<ByteStreamChunk>(cx, queue));
-        MOZ_ASSERT(entry);
+        RootedObject view(cx);
 
-        // Step 3.d: Set this.[[queueTotalSize]] to this.[[queueTotalSize]] − entry.[[byteLength]].
-        uint32_t byteLength = entry->byteLength();
-        queueTotalSize = queueTotalSize - byteLength;
-        controller->setFixedSlot(QueueContainerSlot_TotalSize, NumberValue(queueTotalSize));
+        if (stream->mode() == JS::ReadableStreamMode::ExternalSource) {
+            val = controller->getFixedSlot(ControllerSlot_UnderlyingSource);
+            void* underlyingSource = val.toPrivate();
+
+            view = JS_NewUint8Array(cx, queueTotalSize);
+            if (!view)
+                return nullptr;
+
+            size_t bytesWritten;
+            {
+                JS::AutoSuppressGCAnalysis noGC(cx);
+                bool dummy;
+                void* buffer = JS_GetArrayBufferViewData(view, &dummy, noGC);
+                auto cb = cx->runtime()->readableStreamWriteIntoReadRequestCallback;
+                MOZ_ASSERT(cb);
+                // TODO: use bytesWritten to correctly update the request's state.
+                cb(cx, stream, underlyingSource, stream->embeddingFlags(), buffer,
+                   queueTotalSize, &bytesWritten);
+            }
+
+            queueTotalSize = queueTotalSize - bytesWritten;
+        } else {
+            // Step 3.b: Let entry be the first element of this.[[queue]].
+            // Step 3.c: Remove entry from this.[[queue]], shifting all other elements
+            //           downward (so that the second becomes the first, and so on).
+            val = controller->getFixedSlot(QueueContainerSlot_Queue);
+            RootedNativeObject queue(cx, &val.toObject().as<NativeObject>());
+            Rooted<ByteStreamChunk*> entry(cx, ShiftFromList<ByteStreamChunk>(cx, queue));
+            MOZ_ASSERT(entry);
+
+            queueTotalSize = queueTotalSize - entry->byteLength();
+
+            // Step 3.f: Let view be ! Construct(%Uint8Array%, « entry.[[buffer]],
+            //                                   entry.[[byteOffset]], entry.[[byteLength]] »).
+            // (reordered)
+            RootedObject buffer(cx, entry->buffer());
+
+            uint32_t byteOffset = entry->byteOffset();
+            view = JS_NewUint8ArrayWithBuffer(cx, buffer, byteOffset, entry->byteLength());
+            if (!view)
+                return nullptr;
+        }
+
+        // Step 3.d: Set this.[[queueTotalSize]] to
+        //           this.[[queueTotalSize]] − entry.[[byteLength]].
+        // (reordered)
+        controller->setFixedSlot(QueueContainerSlot_TotalSize, Int32Value(queueTotalSize));
 
         // Step 3.e: Perform ! ReadableByteStreamControllerHandleQueueDrain(this).
+        // (reordered)
         if (!ReadableByteStreamControllerHandleQueueDrain(cx, controller))
-            return nullptr;
-
-        // Step 3.f: Let view be ! Construct(%Uint8Array%, « entry.[[buffer]],
-        //                                   entry.[[byteOffset]], entry.[[byteLength]] »).
-        RootedObject buffer(cx, entry->buffer());
-
-        uint32_t byteOffset = entry->byteOffset();
-        RootedObject view(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, byteOffset, byteLength));
-        if (!view)
             return nullptr;
 
         // Step 3.g: Return a promise resolved with ! CreateIterResultObject(view, false).
@@ -3551,7 +3777,8 @@ ReadableStreamBYOBRequest_respondWithNewView_impl(JSContext* cx, const CallArgs&
     //         a TypeError exception.
     if (!viewVal.isObject() || !JS_IsArrayBufferViewObject(&viewVal.toObject())) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_READABLEBYTESTREAMCONTROLLER_BAD_CHUNK);
+                                  JSMSG_READABLEBYTESTREAMCONTROLLER_BAD_CHUNK,
+                                  "ReadableStreamBYOBRequest#respondWithNewView");
         return false;
     }
 
@@ -3590,7 +3817,8 @@ static const JSFunctionSpec ReadableStreamBYOBRequest_methods[] = {
     JS_FS_END
 };
 
-CLASS_SPEC(ReadableStreamBYOBRequest, 3, 2, ClassSpec::DontDefineConstructor);
+CLASS_SPEC(ReadableStreamBYOBRequest, 3, 2, ClassSpec::DontDefineConstructor, 0,
+           JS_NULL_CLASS_OPS);
 
 // Streams spec, 3.12.1. IsReadableStreamBYOBRequest ( x )
 // Implemented via is<ReadableStreamBYOBRequest>()
@@ -3668,7 +3896,7 @@ ReadableByteStreamControllerClose(JSContext* cx, Handle<ReadableByteStreamContro
     }
 
     // Step 6: Perform ! ReadableStreamClose(stream).
-    return ReadableStreamClose(cx, stream);
+    return ReadableStreamCloseInternal(cx, stream);
 }
 
 static MOZ_MUST_USE JSObject*
@@ -3785,17 +4013,35 @@ ReadableByteStreamControllerEnqueue(JSContext* cx,
     // Step 3: Assert: stream.[[state]] is "readable".
     MOZ_ASSERT(stream->readable());
 
-    // Step 4: Let buffer be chunk.[[ViewedArrayBuffer]].
-    bool dummy;
-    RootedObject buffer(cx, JS_GetArrayBufferViewBuffer(cx, chunk, &dummy));
-    if (!buffer)
-        return false;
+    // To make enqueuing chunks via JSAPI nicer, we want to be able to deal
+    // with ArrayBuffer objects in addition to ArrayBuffer views here.
+    // This cannot happen when enqueuing happens via
+    // ReadableByteStreamController_enqueue because that throws if invoked
+    // with anything but an ArrayBuffer view.
 
-    // Step 5: Let byteOffset be chunk.[[ByteOffset]].
-    uint32_t byteOffset = JS_GetArrayBufferViewByteOffset(chunk);
+    Rooted<ArrayBufferObject*> buffer(cx);
+    uint32_t byteOffset;
+    uint32_t byteLength;
 
-    // Step 6: Let byteLength be chunk.[[ByteLength]].
-    uint32_t byteLength = JS_GetArrayBufferViewByteLength(chunk);
+    if (chunk->is<ArrayBufferObject>()) {
+        // Steps 4-6 for ArrayBuffer objects.
+        buffer = &chunk->as<ArrayBufferObject>();
+        byteOffset = 0;
+        byteLength = buffer->byteLength();
+    } else {
+        // Step 4: Let buffer be chunk.[[ViewedArrayBuffer]].
+        bool dummy;
+        JSObject* bufferObj = JS_GetArrayBufferViewBuffer(cx, chunk, &dummy);
+        if (!bufferObj)
+            return false;
+        buffer = &bufferObj->as<ArrayBufferObject>();
+
+        // Step 5: Let byteOffset be chunk.[[ByteOffset]].
+        byteOffset = JS_GetArrayBufferViewByteOffset(chunk);
+
+        // Step 6: Let byteLength be chunk.[[ByteLength]].
+        byteLength = JS_GetArrayBufferViewByteLength(chunk);
+    }
 
     // Step 7: Let transferredBuffer be ! TransferArrayBuffer(buffer).
     RootedArrayBufferObject transferredBuffer(cx, TransferArrayBuffer(cx, buffer));
@@ -3857,7 +4103,7 @@ ReadableByteStreamControllerEnqueue(JSContext* cx,
     } else {
         // Step b: Otherwise,
         // Step i: Assert: ! IsReadableStreamLocked(stream) is false.
-        MOZ_ASSERT(!IsReadableStreamLocked(stream));
+        MOZ_ASSERT(!stream->locked());
 
         // Step ii: Perform
         //          ! ReadableByteStreamControllerEnqueueChunkToQueue(controller,
@@ -3982,6 +4228,39 @@ ReadableByteStreamControllerFillPullIntoDescriptorFromQueue(JSContext* cx,
         *ready = true;
     }
 
+    if (ControllerFlags(controller) & ControllerFlag_ExternalSource) {
+        // TODO: it probably makes sense to eagerly drain the underlying source.
+        // We have a buffer lying around anyway, whereas the source might be
+        // able to free or reuse buffers once their content is copied into
+        // our buffer.
+        if (!ready)
+            return true;
+
+        Value val = controller->getFixedSlot(ControllerSlot_UnderlyingSource);
+        void* underlyingSource = val.toPrivate();
+
+        RootedArrayBufferObject targetBuffer(cx, pullIntoDescriptor->buffer());
+        Rooted<ReadableStream*> stream(cx, StreamFromController(controller));
+
+        size_t bytesWritten;
+        {
+            JS::AutoSuppressGCAnalysis noGC(cx);
+            bool dummy;
+            uint8_t* buffer = JS_GetArrayBufferData(targetBuffer, &dummy, noGC);
+            buffer += bytesFilled;
+            auto cb = cx->runtime()->readableStreamWriteIntoReadRequestCallback;
+            MOZ_ASSERT(cb);
+            cb(cx, stream, underlyingSource, stream->embeddingFlags(), buffer,
+               totalBytesToCopyRemaining, &bytesWritten);
+            pullIntoDescriptor->setBytesFilled(bytesFilled + bytesWritten);
+        }
+
+        queueTotalSize -= bytesWritten;
+        controller->setFixedSlot(QueueContainerSlot_TotalSize, Int32Value(queueTotalSize));
+
+        return true;
+    }
+
     // Step 9: Let queue be controller.[[queue]].
     RootedValue val(cx, controller->getFixedSlot(QueueContainerSlot_Queue));
     RootedNativeObject queue(cx, &val.toObject().as<NativeObject>());
@@ -4085,7 +4364,7 @@ ReadableByteStreamControllerHandleQueueDrain(JSContext* cx, HandleNativeObject c
     bool closeRequested = ControllerFlags(controller) & ControllerFlag_CloseRequested;
     if (totalSize == 0 && closeRequested) {
       // Step a: Perform ! ReadableStreamClose(controller.[[controlledReadableStream]]).
-      return ReadableStreamClose(cx, stream);
+      return ReadableStreamCloseInternal(cx, stream);
     }
 
     // Step 3: Otherwise,
@@ -4175,10 +4454,9 @@ ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(JSContext* cx,
 static MOZ_MUST_USE JSObject*
 ReadableByteStreamControllerPullInto(JSContext* cx,
                                      Handle<ReadableByteStreamController*> controller,
-                                     HandleNativeObject view)
+                                     Handle<ArrayBufferViewObject*> view)
 {
     MOZ_ASSERT(controller->is<ReadableByteStreamController>());
-    MOZ_ASSERT(JS_IsArrayBufferViewObject(view));
 
     // Step 1: Let stream be controller.[[controlledReadableStream]].
     Rooted<ReadableStream*> stream(cx, StreamFromController(controller));
@@ -4672,7 +4950,7 @@ static const JSFunctionSpec ByteLengthQueuingStrategy_methods[] = {
     JS_FS_END
 };
 
-CLASS_SPEC(ByteLengthQueuingStrategy, 1, 0, 0);
+CLASS_SPEC(ByteLengthQueuingStrategy, 1, 0, 0, 0, JS_NULL_CLASS_OPS);
 
 // Streams spec, 6.2.2. new CountQueuingStrategy({ highWaterMark })
 bool
@@ -4719,7 +4997,7 @@ static const JSFunctionSpec CountQueuingStrategy_methods[] = {
     JS_FS_END
 };
 
-CLASS_SPEC(CountQueuingStrategy, 1, 0, 0);
+CLASS_SPEC(CountQueuingStrategy, 1, 0, 0, 0, JS_NULL_CLASS_OPS);
 
 #undef CLASS_SPEC
 
@@ -4957,4 +5235,259 @@ ValidateAndNormalizeQueuingStrategy(JSContext* cx, HandleValue size,
 
     // Step 3: Return Record {[[size]]: size, [[highWaterMark]]: highWaterMark}.
     return true;
+}
+
+MOZ_MUST_USE bool
+js::ReadableStreamReaderCancel(JSContext* cx, HandleObject readerObj, HandleValue reason)
+{
+    MOZ_ASSERT(IsReadableStreamReader(readerObj));
+    RootedNativeObject reader(cx, &readerObj->as<NativeObject>());
+    MOZ_ASSERT(StreamFromReader(reader));
+    return ReadableStreamReaderGenericCancel(cx, reader, reason);
+}
+
+MOZ_MUST_USE bool
+js::ReadableStreamReaderReleaseLock(JSContext* cx, HandleObject readerObj)
+{
+    MOZ_ASSERT(IsReadableStreamReader(readerObj));
+    RootedNativeObject reader(cx, &readerObj->as<NativeObject>());
+    MOZ_ASSERT(ReadableStreamGetNumReadRequests(StreamFromReader(reader)) == 0);
+    return ReadableStreamReaderGenericRelease(cx, reader);
+}
+
+MOZ_MUST_USE bool
+ReadableStream::enqueue(JSContext* cx, Handle<ReadableStream*> stream, HandleValue chunk)
+{
+    Rooted<ReadableStreamDefaultController*> controller(cx);
+    controller = &ControllerFromStream(stream)->as<ReadableStreamDefaultController>();
+
+    MOZ_ASSERT(!(ControllerFlags(controller) & ControllerFlag_CloseRequested));
+    MOZ_ASSERT(stream->readable());
+
+    return ReadableStreamDefaultControllerEnqueue(cx, controller, chunk);
+}
+
+MOZ_MUST_USE bool
+ReadableStream::enqueueBuffer(JSContext* cx, Handle<ReadableStream*> stream,
+                              Handle<ArrayBufferObject*> chunk)
+{
+    Rooted<ReadableByteStreamController*> controller(cx);
+    controller = &ControllerFromStream(stream)->as<ReadableByteStreamController>();
+
+    MOZ_ASSERT(!(ControllerFlags(controller) & ControllerFlag_CloseRequested));
+    MOZ_ASSERT(stream->readable());
+
+    return ReadableByteStreamControllerEnqueue(cx, controller, chunk);
+}
+
+void
+ReadableStream::desiredSize(bool* hasSize, double* size) const
+{
+    if (errored()) {
+        *hasSize = false;
+        return;
+    }
+
+    *hasSize = true;
+
+    if (closed()) {
+        *size = 0;
+        return;
+    }
+
+    NativeObject* controller = ControllerFromStream(this);
+    *size = ReadableStreamControllerGetDesiredSizeUnchecked(controller);
+}
+
+/*static */ bool
+ReadableStream::getExternalSource(JSContext* cx, Handle<ReadableStream*> stream, void** source)
+{
+    MOZ_ASSERT(stream->mode() == JS::ReadableStreamMode::ExternalSource);
+    if (stream->locked()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_READABLESTREAM_LOCKED);
+        return false;
+    }
+    if (!stream->readable()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_READABLESTREAMCONTROLLER_NOT_READABLE,
+                                  "ReadableStreamGetExternalUnderlyingSource");
+        return false;
+    }
+
+    auto controller = &ControllerFromStream(stream)->as<ReadableByteStreamController>();
+    AddControllerFlags(controller, ControllerFlag_SourceLocked);
+    *source = controller->getFixedSlot(ControllerSlot_UnderlyingSource).toPrivate();
+    return true;
+}
+
+void
+ReadableStream::releaseExternalSource()
+{
+    MOZ_ASSERT(mode() == JS::ReadableStreamMode::ExternalSource);
+    MOZ_ASSERT(locked());
+    auto controller = ControllerFromStream(this);
+    MOZ_ASSERT(ControllerFlags(controller) & ControllerFlag_SourceLocked);
+    RemoveControllerFlags(controller, ControllerFlag_SourceLocked);
+}
+
+uint8_t
+ReadableStream::embeddingFlags() const
+{
+    uint8_t flags = ControllerFlags(ControllerFromStream(this)) >> ControllerEmbeddingFlagsOffset;
+    MOZ_ASSERT_IF(flags, mode() == JS::ReadableStreamMode::ExternalSource);
+    return flags;
+}
+
+// Streams spec, 3.10.4.4. steps 1-3
+// and
+// Streams spec, 3.12.8. steps 8-9
+//
+// Adapted to handling updates signaled by the embedding for streams with
+// external underlying sources.
+//
+// The remaining steps of those two functions perform checks and asserts that
+// don't apply to streams with external underlying sources.
+MOZ_MUST_USE bool
+ReadableStream::updateDataAvailableFromSource(JSContext* cx, Handle<ReadableStream*> stream,
+                                              uint32_t availableData)
+{
+    Rooted<ReadableByteStreamController*> controller(cx);
+    controller = &ControllerFromStream(stream)->as<ReadableByteStreamController>();
+
+    // Step 2: If this.[[closeRequested]] is true, throw a TypeError exception.
+    if (ControllerFlags(controller) & ControllerFlag_CloseRequested) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_READABLESTREAMCONTROLLER_CLOSED, "enqueue");
+        return false;
+    }
+
+    // Step 3: If this.[[controlledReadableStream]].[[state]] is not "readable",
+    //         throw a TypeError exception.
+    if (!StreamFromController(controller)->readable()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_READABLESTREAMCONTROLLER_NOT_READABLE, "enqueue");
+        return false;
+    }
+
+    RemoveControllerFlags(controller, ControllerFlag_Pulling | ControllerFlag_PullAgain);
+
+#if DEBUG
+    uint32_t oldAvailableData = controller->getFixedSlot(QueueContainerSlot_TotalSize).toInt32();
+#endif // DEBUG
+    controller->setFixedSlot(QueueContainerSlot_TotalSize, Int32Value(availableData));
+
+    // Step 8.a: If ! ReadableStreamGetNumReadRequests(stream) is 0,
+    // Reordered because for externally-sourced streams it applies regardless
+    // of reader type.
+    if (ReadableStreamGetNumReadRequests(stream) == 0)
+        return true;
+
+    // Step 8: If ! ReadableStreamHasDefaultReader(stream) is true
+    if (ReadableStreamHasDefaultReader(stream)) {
+        // Step b: Otherwise,
+        // Step i: Assert: controller.[[queue]] is empty.
+        MOZ_ASSERT(oldAvailableData == 0);
+
+        // Step ii: Let transferredView be
+        //          ! Construct(%Uint8Array%, transferredBuffer, byteOffset, byteLength).
+        JSObject* viewObj = JS_NewUint8Array(cx, availableData);
+        Rooted<ArrayBufferViewObject*> transferredView(cx, &viewObj->as<ArrayBufferViewObject>());
+        if (!transferredView)
+            return false;
+
+        Value val = controller->getFixedSlot(ControllerSlot_UnderlyingSource);
+        void* underlyingSource = val.toPrivate();
+
+        size_t bytesWritten;
+        {
+            JS::AutoSuppressGCAnalysis noGC(cx);
+            bool dummy;
+            void* buffer = JS_GetArrayBufferViewData(transferredView, &dummy, noGC);
+            auto cb = cx->runtime()->readableStreamWriteIntoReadRequestCallback;
+            MOZ_ASSERT(cb);
+            // TODO: use bytesWritten to correctly update the request's state.
+            cb(cx, stream, underlyingSource, stream->embeddingFlags(), buffer,
+               availableData, &bytesWritten);
+        }
+
+        // Step iii: Perform ! ReadableStreamFulfillReadRequest(stream, transferredView, false).
+        RootedValue chunk(cx, ObjectValue(*transferredView));
+        if (!ReadableStreamFulfillReadOrReadIntoRequest(cx, stream, chunk, false))
+            return false;
+
+        controller->setFixedSlot(QueueContainerSlot_TotalSize,
+                                 Int32Value(availableData - bytesWritten));
+    } else if (ReadableStreamHasBYOBReader(stream)) {
+        // Step 9: Otherwise,
+        // Step a: If ! ReadableStreamHasBYOBReader(stream) is true,
+        // Step i: Perform
+        // (Not needed for external underlying sources.)
+
+        // Step ii: Perform ! ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(controller).
+        if (!ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(cx, controller))
+            return false;
+    } else {
+        // Step b: Otherwise,
+        // Step i: Assert: ! IsReadableStreamLocked(stream) is false.
+        MOZ_ASSERT(!stream->locked());
+
+        // Step ii: Perform
+        //          ! ReadableByteStreamControllerEnqueueChunkToQueue(controller,
+        //                                                            transferredBuffer,
+        //                                                            byteOffset,
+        //                                                            byteLength).
+        // (Not needed for external underlying sources.)
+    }
+
+    return true;
+}
+
+MOZ_MUST_USE bool
+ReadableStream::close(JSContext* cx, Handle<ReadableStream*> stream)
+{
+    RootedNativeObject controllerObj(cx, ControllerFromStream(stream));
+    if (!VerifyControllerStateForClosing(cx, controllerObj))
+        return false;
+
+    if (controllerObj->is<ReadableStreamDefaultController>()) {
+        Rooted<ReadableStreamDefaultController*> controller(cx);
+        controller = &controllerObj->as<ReadableStreamDefaultController>();
+        return ReadableStreamDefaultControllerClose(cx, controller);
+    }
+
+    Rooted<ReadableByteStreamController*> controller(cx);
+    controller = &controllerObj->as<ReadableByteStreamController>();
+    return ReadableByteStreamControllerClose(cx, controller);
+}
+
+MOZ_MUST_USE bool
+ReadableStream::error(JSContext* cx, Handle<ReadableStream*> stream, HandleValue reason)
+{
+    // Step 3: If stream.[[state]] is not "readable", throw a TypeError exception.
+    if (!stream->readable()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_READABLESTREAMCONTROLLER_NOT_READABLE, "error");
+        return false;
+    }
+
+    // Step 4: Perform ! ReadableStreamDefaultControllerError(this, e).
+    RootedNativeObject controller(cx, ControllerFromStream(stream));
+    return ReadableStreamControllerError(cx, controller, reason);
+}
+
+MOZ_MUST_USE bool
+ReadableStream::tee(JSContext* cx, Handle<ReadableStream*> stream, bool cloneForBranch2,
+                    MutableHandle<ReadableStream*> branch1Stream,
+                    MutableHandle<ReadableStream*> branch2Stream)
+{
+    return ReadableStreamTee(cx, stream, false, branch1Stream, branch2Stream);
+}
+
+MOZ_MUST_USE NativeObject*
+ReadableStream::getReader(JSContext* cx, Handle<ReadableStream*> stream,
+                          JS::ReadableStreamReaderMode mode)
+{
+    if (mode == JS::ReadableStreamReaderMode::Default)
+        return CreateReadableStreamDefaultReader(cx, stream);
+    return CreateReadableStreamBYOBReader(cx, stream);
 }

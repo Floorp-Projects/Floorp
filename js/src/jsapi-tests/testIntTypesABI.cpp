@@ -30,6 +30,7 @@
 #include "js/RequiredDefines.h"
 #include "js/RootingAPI.h"
 #include "js/SliceBudget.h"
+#include "js/Stream.h"
 #include "js/StructuredClone.h"
 #include "js/TracingAPI.h"
 #include "js/TrackedOptimizationInfo.h"
