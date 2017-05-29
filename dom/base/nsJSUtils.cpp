@@ -146,6 +146,7 @@ nsJSUtils::ExecutionContext::ExecutionContext(JSContext* aCx,
   , mRv(NS_OK)
   , mSkip(false)
   , mCoerceToString(false)
+  , mEncodeBytecode(false)
 #ifdef DEBUG
   , mWantsReturnValue(false)
   , mExpectScopeChain(false)
@@ -204,7 +205,19 @@ nsJSUtils::ExecutionContext::JoinAndExec(void **aOffThreadToken,
   MOZ_ASSERT(!mExpectScopeChain);
   aScript.set(JS::FinishOffThreadScript(mCx, *aOffThreadToken));
   *aOffThreadToken = nullptr; // Mark the token as having been finished.
-  if (!aScript || !JS_ExecuteScript(mCx, mScopeChain, aScript)) {
+  if (!aScript) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
+  if (mEncodeBytecode && !StartIncrementalEncoding(mCx, aScript)) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
+  if (!JS_ExecuteScript(mCx, mScopeChain, aScript)) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
     return mRv;
@@ -215,7 +228,8 @@ nsJSUtils::ExecutionContext::JoinAndExec(void **aOffThreadToken,
 
 nsresult
 nsJSUtils::ExecutionContext::CompileAndExec(JS::CompileOptions& aCompileOptions,
-                                            JS::SourceBufferHolder& aSrcBuf)
+                                            JS::SourceBufferHolder& aSrcBuf,
+                                            JS::MutableHandle<JSScript*> aScript)
 {
   if (mSkip) {
     return mRv;
@@ -228,8 +242,29 @@ nsJSUtils::ExecutionContext::CompileAndExec(JS::CompileOptions& aCompileOptions,
 #ifdef DEBUG
   mWantsReturnValue = !aCompileOptions.noScriptRval;
 #endif
+
+  bool compiled = true;
+  if (mScopeChain.length() == 0) {
+    compiled = JS::Compile(mCx, aCompileOptions, aSrcBuf, aScript);
+  } else {
+    compiled = JS::CompileForNonSyntacticScope(mCx, aCompileOptions, aSrcBuf, aScript);
+  }
+
+  MOZ_ASSERT_IF(compiled, aScript);
+  if (!compiled) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
+  if (mEncodeBytecode && !StartIncrementalEncoding(mCx, aScript)) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
   MOZ_ASSERT(!mCoerceToString || mWantsReturnValue);
-  if (!JS::Evaluate(mCx, mScopeChain, aCompileOptions, aSrcBuf, &mRetValue)) {
+  if (!JS_ExecuteScript(mCx, mScopeChain, aScript, &mRetValue)) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
     return mRv;
@@ -242,6 +277,7 @@ nsresult
 nsJSUtils::ExecutionContext::CompileAndExec(JS::CompileOptions& aCompileOptions,
                                             const nsAString& aScript)
 {
+  MOZ_ASSERT(!mEncodeBytecode, "A JSScript is needed for calling FinishIncrementalEncoding");
   if (mSkip) {
     return mRv;
   }
@@ -249,7 +285,8 @@ nsJSUtils::ExecutionContext::CompileAndExec(JS::CompileOptions& aCompileOptions,
   const nsPromiseFlatString& flatScript = PromiseFlatString(aScript);
   JS::SourceBufferHolder srcBuf(flatScript.get(), aScript.Length(),
                                 JS::SourceBufferHolder::NoOwnership);
-  return CompileAndExec(aCompileOptions, srcBuf);
+  JS::Rooted<JSScript*> script(mCx);
+  return CompileAndExec(aCompileOptions, srcBuf, &script);
 }
 
 nsresult
@@ -257,6 +294,7 @@ nsJSUtils::ExecutionContext::DecodeAndExec(JS::CompileOptions& aCompileOptions,
                                            mozilla::Vector<uint8_t>& aBytecodeBuf,
                                            size_t aBytecodeIndex)
 {
+  MOZ_ASSERT(!mEncodeBytecode, "A JSScript is needed for calling FinishIncrementalEncoding");
   if (mSkip) {
     return mRv;
   }
@@ -303,34 +341,6 @@ nsJSUtils::ExecutionContext::DecodeJoinAndExec(void **aOffThreadToken)
   }
 
   return NS_OK;
-}
-
-nsresult
-nsJSUtils::ExecutionContext::JoinEncodeAndExec(void **aOffThreadToken,
-                                               JS::MutableHandle<JSScript*> aScript)
-{
-  MOZ_ASSERT_IF(aOffThreadToken, !mWantsReturnValue);
-  aScript.set(JS::FinishOffThreadScript(mCx, *aOffThreadToken));
-  *aOffThreadToken = nullptr; // Mark the token as having been finished.
-  if (!aScript) {
-    mSkip = true;
-    mRv = EvaluationExceptionToNSResult(mCx);
-    return mRv;
-  }
-
-  if (!StartIncrementalEncoding(mCx, aScript)) {
-    mSkip = true;
-    mRv = EvaluationExceptionToNSResult(mCx);
-    return mRv;
-  }
-
-  if (!JS_ExecuteScript(mCx, mScopeChain, aScript)) {
-    mSkip = true;
-    mRv = EvaluationExceptionToNSResult(mCx);
-    return mRv;
-  }
-
-  return mRv;
 }
 
 nsresult
