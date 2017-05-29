@@ -229,6 +229,8 @@ public:
 
   uint32_t Id() const { return mId; }
 
+  static const int32_t NOT_JSPLUGIN = -1;
+
 private:
   nsFakePluginTag();
   virtual ~nsFakePluginTag();
@@ -237,6 +239,7 @@ private:
   // nsPluginHost::RegisterFakePlugin assigns a new id. The id is transferred
   // through IPC when getting the list of JS-implemented plugins from child
   // processes, so it should be consistent across processes.
+  // 0 is a valid id.
   uint32_t      mId;
 
   // The URI of the handler for our fake plugin.

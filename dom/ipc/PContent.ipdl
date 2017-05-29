@@ -846,7 +846,7 @@ parent:
     // Tell the compositor to allocate a layer tree id for nested remote mozbrowsers.
     sync AllocateLayerTreeId(ContentParentId cpId, TabId tabId)
         returns (uint64_t id);
-    async DeallocateLayerTreeId(uint64_t id);
+    async DeallocateLayerTreeId(ContentParentId cpId, uint64_t id);
 
     /**
      * Notifies the parent about a recording device is starting or shutdown.
