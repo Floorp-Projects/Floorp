@@ -84,8 +84,14 @@ public:
   }
   int64_t GetCachedDataEnd(int64_t aOffset) override
   {
-    UNIMPLEMENTED();
-    return -1;
+    MOZ_ASSERT(OnTaskQueue());
+    MOZ_ASSERT(aOffset >= 0);
+    if (uint64_t(aOffset) < mInputBuffer.GetOffset() ||
+        aOffset >= GetLength()) {
+      // aOffset is outside of the buffered range.
+      return aOffset;
+    }
+    return GetLength();
   }
   bool IsDataCachedToEndOfResource(int64_t aOffset) override { return false; }
   bool IsSuspendedByCache() override
