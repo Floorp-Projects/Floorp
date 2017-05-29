@@ -1,0 +1,10 @@
+4.15
+
+# The first line of this file must contain the human readable NSPR
+# version number, which is the minimum required version of NSPR
+# that is supported by this version of NSS.
+#
+# This information is used by release automation,
+# when creating an NSS source archive.
+#
+# All other lines in this file are ignored.
