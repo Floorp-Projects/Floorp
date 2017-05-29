@@ -19,11 +19,6 @@
 #include "ARefBase.h"
 #include "AlternateServices.h"
 
-#ifdef MOZ_WIDGET_GONK
-#include "nsINetworkInterface.h"
-#include "nsProxyRelease.h"
-#endif
-
 //-----------------------------------------------------------------------------
 
 class nsIHttpActivityObserver;

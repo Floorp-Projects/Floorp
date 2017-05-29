@@ -21,11 +21,6 @@
 #include "nsIStringStream.h"
 #include "BaseWebSocketChannel.h"
 
-#ifdef MOZ_WIDGET_GONK
-#include "nsINetworkInterface.h"
-#include "nsProxyRelease.h"
-#endif
-
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsDeque.h"
