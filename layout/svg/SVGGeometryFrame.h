@@ -49,20 +49,19 @@ class SVGGeometryFrame : public nsFrame
   friend class ::nsDisplaySVGGeometry;
 
 protected:
-  SVGGeometryFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType)
-    : nsFrame(aContext, aType)
+  SVGGeometryFrame(nsStyleContext* aContext, nsIFrame::ClassID aID)
+    : nsFrame(aContext, aID)
   {
      AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_MAY_BE_TRANSFORMED);
   }
 
   explicit SVGGeometryFrame(nsStyleContext* aContext)
-    : SVGGeometryFrame(aContext, mozilla::LayoutFrameType::SVGGeometry)
+    : SVGGeometryFrame(aContext, kClassID)
   {}
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(SVGGeometryFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(SVGGeometryFrame)
 
   // nsIFrame interface:
   virtual void Init(nsIContent*       aContent,

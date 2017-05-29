@@ -88,7 +88,7 @@ DoArmIPCTimerMainThread(const StaticMutexAutoLock& lock)
   if (gIPCTimer) {
     gIPCTimer->InitWithNamedFuncCallback(TelemetryIPCAccumulator::IPCTimerFired,
                                          nullptr, kBatchTimeoutMs,
-                                         nsITimer::TYPE_ONE_SHOT,
+                                         nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
                                          "TelemetryIPCAccumulator::IPCTimerFired");
     gIPCTimerArmed = true;
   }

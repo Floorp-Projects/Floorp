@@ -26,7 +26,7 @@
 class nsGridRowGroupFrame final : public nsBoxFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsGridRowGroupFrame)
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override
@@ -37,7 +37,7 @@ public:
 
   nsGridRowGroupFrame(nsStyleContext* aContext,
                       nsBoxLayout* aLayoutManager):
-    nsBoxFrame(aContext, false, aLayoutManager) {}
+    nsBoxFrame(aContext, kClassID, false, aLayoutManager) {}
 
   virtual nscoord GetXULFlex() override;
 

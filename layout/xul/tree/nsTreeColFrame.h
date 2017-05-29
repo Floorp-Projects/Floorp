@@ -14,10 +14,10 @@ nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell,
 class nsTreeColFrame final : public nsBoxFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsTreeColFrame)
 
   explicit nsTreeColFrame(nsStyleContext* aContext):
-    nsBoxFrame(aContext) {}
+    nsBoxFrame(aContext, kClassID) {}
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,

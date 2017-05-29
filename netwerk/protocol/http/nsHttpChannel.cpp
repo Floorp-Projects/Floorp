@@ -8864,10 +8864,10 @@ nsHttpChannel::ReportRcwnStats(nsIRequest* firstResponseRequest)
         kRaceUsedCache = 3
     };
     static const Telemetry::HistogramID kRcwnTelemetry[4] = {
-        Telemetry::NETWORK_RACE_CACHE_BANDWITH_NOT_RACE,
-        Telemetry::NETWORK_RACE_CACHE_BANDWITH_NOT_RACE,
-        Telemetry::NETWORK_RACE_CACHE_BANDWITH_RACE_NETWORK_WIN,
-        Telemetry::NETWORK_RACE_CACHE_BANDWITH_RACE_CACHE_WIN
+        Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_NOT_RACE,
+        Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_NOT_RACE,
+        Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_RACE_NETWORK_WIN,
+        Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_RACE_CACHE_WIN
     };
 
     RaceCacheAndNetStatus rcwnStatus = kDidNotRaceUsedNetwork;

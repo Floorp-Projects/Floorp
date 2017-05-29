@@ -2,6 +2,72 @@
 
 let gPanel = document.getElementById("page-action-panel");
 
+add_task(async function bookmark() {
+  // Open a unique page.
+  let url = "http://example.com/browser_page_action_menu";
+  await BrowserTestUtils.withNewTab(url, async () => {
+    // Open the panel.
+    await promisePanelOpen();
+
+    // The bookmark button should read "Bookmark This Page" and not be starred.
+    let bookmarkButton = document.getElementById("page-action-bookmark-button");
+    Assert.equal(bookmarkButton.label, "Bookmark This Page");
+    Assert.ok(!bookmarkButton.hasAttribute("starred"));
+
+    // Click the button.
+    let hiddenPromise = promisePanelHidden();
+    EventUtils.synthesizeMouseAtCenter(bookmarkButton, {});
+    await hiddenPromise;
+
+    // Make sure the edit-bookmark panel opens, then hide it.
+    await new Promise(resolve => {
+      if (StarUI.panel.state == "open") {
+        resolve();
+        return;
+      }
+      StarUI.panel.addEventListener("popupshown", resolve, { once: true });
+    });
+    StarUI.panel.hidePopup();
+
+    // Open the panel again.
+    await promisePanelOpen();
+
+    // The bookmark button should now read "Edit This Bookmark" and be starred.
+    Assert.equal(bookmarkButton.label, "Edit This Bookmark");
+    Assert.ok(bookmarkButton.hasAttribute("starred"));
+    Assert.equal(bookmarkButton.getAttribute("starred"), "true");
+
+    // Click it again.
+    hiddenPromise = promisePanelHidden();
+    EventUtils.synthesizeMouseAtCenter(bookmarkButton, {});
+    await hiddenPromise;
+
+    // The edit-bookmark panel should open again.
+    await new Promise(resolve => {
+      if (StarUI.panel.state == "open") {
+        resolve();
+        return;
+      }
+      StarUI.panel.addEventListener("popupshown", resolve, { once: true });
+    });
+
+    // Click the remove-bookmark button in the panel.
+    StarUI._element("editBookmarkPanelRemoveButton").click();
+
+    // Open the panel again.
+    await promisePanelOpen();
+
+    // The bookmark button should read "Bookmark This Page" and not be starred.
+    Assert.equal(bookmarkButton.label, "Bookmark This Page");
+    Assert.ok(!bookmarkButton.hasAttribute("starred"));
+
+    // Done.
+    hiddenPromise = promisePanelHidden();
+    gPanel.hidePopup();
+    await hiddenPromise;
+  });
+});
+
 add_task(async function copyURL() {
   // Open the panel.
   await promisePanelOpen();

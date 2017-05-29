@@ -39,12 +39,12 @@ exports.isTypeRegistered = isTypeRegistered;
 
 /**
  * Registers a given constructor as highlighter, for the `typeName` given.
- * If no `typeName` is provided, is looking for a `typeName` property in
- * the prototype's constructor.
+ * If no `typeName` is provided, the `typeName` property on the constructor's prototype
+ * is used, if one is found, otherwise the name of the constructor function is used.
  */
-const register = (constructor, typeName = constructor.prototype.typeName) => {
+const register = (constructor, typeName) => {
   if (!typeName) {
-    throw Error("No type's name found, or provided.");
+    typeName = constructor.prototype.typeName || constructor.name;
   }
 
   if (highlighterTypes.has(typeName)) {
@@ -728,3 +728,7 @@ exports.EyeDropper = EyeDropper;
 const { PausedDebuggerOverlay } = require("./highlighters/paused-debugger");
 register(PausedDebuggerOverlay);
 exports.PausedDebuggerOverlay = PausedDebuggerOverlay;
+
+const { ShapesHighlighter } = require("./highlighters/shapes");
+register(ShapesHighlighter);
+exports.ShapesHighlighter = ShapesHighlighter;

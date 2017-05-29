@@ -120,9 +120,9 @@ UNITTEST_PLATFORM_PRETTY_NAMES = {
     'Ubuntu': ['linux32', 'linux64', 'linux64-asan'],
     'x64': ['linux64', 'linux64-asan'],
     'Android 4.3': ['android-4.3-arm7-api-15'],
+    '10.10': ['macosx64'],
     # other commonly-used substrings for platforms not yet supported with
     # in-tree taskgraphs:
-    # '10.10': [..TODO..],
     # '10.10.5': [..TODO..],
     # '10.6': [..TODO..],
     # '10.8': [..TODO..],

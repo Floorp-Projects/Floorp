@@ -44,7 +44,7 @@ var gSearchResultsPane = {
    */
   stringMatchesFilters(str, filter) {
     if (!filter || !str) {
-      return true;
+      return false;
     }
     let searchStr = str.toLowerCase();
     let filterStrings = filter.toLowerCase().split(/\s+/);
@@ -239,11 +239,14 @@ var gSearchResultsPane = {
         noResultsEl.hidden = false;
 
         let strings = this.strings;
-        document.getElementById("sorry-message").textContent =
-          strings.getFormattedString("searchResults.sorryMessage2", [query]);
+
+        document.getElementById("sorry-message").textContent = AppConstants.platform == "win" ?
+          strings.getFormattedString("searchResults.sorryMessageWin", [query]) :
+          strings.getFormattedString("searchResults.sorryMessageUnix", [query]);
+        let helpUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "preferences";
         let brandName = document.getElementById("bundleBrand").getString("brandShortName");
         document.getElementById("need-help").innerHTML =
-          strings.getFormattedString("searchResults.needHelp", [brandName]);
+          strings.getFormattedString("searchResults.needHelp2", [helpUrl, brandName]);
       } else {
         // Creating tooltips for all the instances found
         for (let node of this.listSearchTooltips) {
@@ -270,7 +273,7 @@ var gSearchResultsPane = {
    */
   searchWithinNode(nodeObject, searchPhrase) {
     let matchesFound = false;
-    if (nodeObject.childElementCount == 0) {
+    if (nodeObject.childElementCount == 0 || nodeObject.tagName == "menulist") {
       let simpleTextNodes = this.textNodeDescendants(nodeObject);
 
       for (let node of simpleTextNodes) {
@@ -282,8 +285,6 @@ var gSearchResultsPane = {
       let nodeSizes = [];
       let allNodeText = "";
       let runningSize = 0;
-      let labelResult = false;
-      let valueResult = false;
       let accessKeyTextNodes = this.textNodeDescendants(nodeObject.boxObject);
 
       for (let node of accessKeyTextNodes) {
@@ -296,9 +297,7 @@ var gSearchResultsPane = {
       let complexTextNodesResult = this.highlightMatches(accessKeyTextNodes, nodeSizes, allNodeText.toLowerCase(), searchPhrase);
 
       // Searching some elements, such as xul:button, have a 'label' attribute that contains the user-visible text.
-      if (nodeObject.getAttribute("label")) {
-        labelResult = this.stringMatchesFilters(nodeObject.getAttribute("label"), searchPhrase);
-      }
+      let labelResult = this.stringMatchesFilters(nodeObject.getAttribute("label"), searchPhrase);
 
       // Creating tooltips for buttons
       if (labelResult && nodeObject.tagName === "button") {
@@ -306,20 +305,26 @@ var gSearchResultsPane = {
       }
 
       // Searching some elements, such as xul:label, store their user-visible text in a "value" attribute.
-      if (nodeObject.getAttribute("value")) {
-        valueResult = this.stringMatchesFilters(nodeObject.getAttribute("value"), searchPhrase);
-      }
-
-      if (nodeObject.tagName == "button" && (labelResult || valueResult)) {
-        nodeObject.setAttribute("highlightable", "true");
-      }
+      let valueResult = this.stringMatchesFilters(nodeObject.getAttribute("value"), searchPhrase);
 
       // Creating tooltips for buttons
       if (valueResult && nodeObject.tagName === "button") {
         this.listSearchTooltips.push(nodeObject);
       }
 
-      matchesFound = matchesFound || complexTextNodesResult || labelResult || valueResult;
+      // Searching some elements, such as xul:button, buttons to open subdialogs.
+      let keywordsResult = this.stringMatchesFilters(nodeObject.getAttribute("searchkeywords"), searchPhrase);
+
+      // Creating tooltips for buttons
+      if (keywordsResult && nodeObject.tagName === "button") {
+        this.listSearchTooltips.push(nodeObject);
+      }
+
+      if (nodeObject.tagName == "button" && (labelResult || valueResult || keywordsResult)) {
+        nodeObject.setAttribute("highlightable", "true");
+      }
+
+      matchesFound = matchesFound || complexTextNodesResult || labelResult || valueResult || keywordsResult;
     }
 
     for (let i = 0; i < nodeObject.childNodes.length; i++) {

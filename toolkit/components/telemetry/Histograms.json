@@ -2442,7 +2442,7 @@
     "n_buckets": 100,
     "description": "Time in milliseconds between onStartRequest from the cache and onCacheEntryCheck. Report only when net wins and OCEC is before onStartRequest from net."
   },
-  "NETWORK_RACE_CACHE_BANDWITH_RACE_NETWORK_WIN": {
+  "NETWORK_RACE_CACHE_BANDWIDTH_RACE_NETWORK_WIN": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "62",
     "kind": "exponential",
@@ -2453,7 +2453,7 @@
     "alert_emails": ["necko@mozilla.com", "bsmedberg@mozilla.com"],
     "bug_numbers": [1354405]
   },
-  "NETWORK_RACE_CACHE_BANDWITH_RACE_CACHE_WIN": {
+  "NETWORK_RACE_CACHE_BANDWIDTH_RACE_CACHE_WIN": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "62",
     "kind": "exponential",
@@ -2464,7 +2464,7 @@
     "alert_emails": ["necko@mozilla.com", "bsmedberg@mozilla.com"],
     "bug_numbers": [1354405]
   },
-  "NETWORK_RACE_CACHE_BANDWITH_NOT_RACE": {
+  "NETWORK_RACE_CACHE_BANDWIDTH_NOT_RACE": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "62",
     "kind": "exponential",
@@ -13233,5 +13233,17 @@
     "n_buckets": 100,
     "bug_numbers": [1366640],
     "description": "Time (ms) VideoFrameContainer::ClearFutureFrames spent holding a lock."
+  },
+  "IPC_SYNC_RECEIVE_MS": {
+    "record_in_processes": ["main", "content", "gpu"],
+    "alert_emails": ["michael@thelayzells.com"],
+    "bug_numbers": [1365719],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "low": 32,
+    "high": 750,
+    "n_buckets": 40,
+    "keyed": true,
+    "description": "Measures the number of milliseconds we spend processing sync IPC messages in the receiving process, keyed by message name. Note: only messages that take over 500 microseconds are included in this probe."
   }
 }

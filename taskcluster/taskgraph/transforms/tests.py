@@ -437,10 +437,12 @@ def set_tier(config, tests):
             if test['test-platform'] in ['linux32/opt',
                                          'linux32/debug',
                                          'linux32-nightly/opt',
+                                         'linux32-devedition/opt',
                                          'linux64/opt',
                                          'linux64-nightly/opt',
                                          'linux64/debug',
                                          'linux64-pgo/opt',
+                                         'linux64-devedition/opt',
                                          'linux64-asan/opt',
                                          'android-4.3-arm7-api-15/opt',
                                          'android-4.3-arm7-api-15/debug',
@@ -512,6 +514,7 @@ def enable_code_coverage(config, tests):
     for test in tests:
         if test['build-platform'] == 'linux64-ccov/opt':
             test['mozharness'].setdefault('extra-options', []).append('--code-coverage')
+            test['when'] = {}
             test['instance-size'] = 'xlarge'
             test['run-on-projects'] = []
         elif test['build-platform'] == 'linux64-jsdcov/opt':

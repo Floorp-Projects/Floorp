@@ -15,7 +15,7 @@ class nsFieldSetFrame final : public nsContainerFrame
   typedef mozilla::image::DrawResult DrawResult;
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsFieldSetFrame)
 
   explicit nsFieldSetFrame(nsStyleContext* aContext);
 

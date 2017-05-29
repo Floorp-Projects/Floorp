@@ -17,7 +17,7 @@
 nsListItemFrame::nsListItemFrame(nsStyleContext* aContext,
                                  bool aIsRoot,
                                  nsBoxLayout* aLayoutManager)
-  : nsGridRowLeafFrame(aContext, aIsRoot, aLayoutManager) 
+  : nsGridRowLeafFrame(aContext, aIsRoot, aLayoutManager, kClassID) 
 {
 }
 

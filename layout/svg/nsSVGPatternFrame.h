@@ -32,7 +32,7 @@ class nsSVGPatternFrame final : public nsSVGPaintServerFrame
   typedef mozilla::gfx::SourceSurface SourceSurface;
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGPatternFrame)
 
   friend nsIFrame* NS_NewSVGPatternFrame(nsIPresShell* aPresShell,
                                          nsStyleContext* aContext);

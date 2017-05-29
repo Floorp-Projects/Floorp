@@ -167,8 +167,7 @@ FindCellProperty(const nsIFrame* aCellFrame,
   nsTArray<int8_t>* propertyData = nullptr;
 
   while (currentFrame) {
-    ConstFrameProperties props = currentFrame->Properties();
-    propertyData = props.Get(aFrameProperty);
+    propertyData = currentFrame->GetProperty(aFrameProperty);
     bool frameIsTable = (currentFrame->IsTableFrame());
 
     if (propertyData || frameIsTable)
@@ -361,8 +360,7 @@ ParseFrameAttribute(nsIFrame* aFrame,
     if (valueList) {
       // The code reading the property assumes that this list is nonempty.
       NS_ASSERTION(valueList->Length() >= 1, "valueList should not be empty!");
-      FrameProperties props = aFrame->Properties();
-      props.Set(AttributeToProperty(aAttribute), valueList);
+      aFrame->SetProperty(AttributeToProperty(aAttribute), valueList);
     } else {
       ReportParseError(aFrame, aAttribute->GetUTF16String(), attrValue.get());
     }
@@ -769,8 +767,7 @@ nsMathMLmtableWrapperFrame::AttributeChanged(int32_t  aNameSpaceID,
              aAttribute == nsGkAtoms::columnalign_ ||
              aAttribute == nsGkAtoms::columnlines_) {
     // clear any cached property list for this table
-    presContext->PropertyTable()->
-      Delete(tableFrame, AttributeToProperty(aAttribute));
+    tableFrame->DeleteProperty(AttributeToProperty(aAttribute));
     // Reparse the new attribute on the table.
     ParseFrameAttribute(tableFrame, aAttribute, true);
   } else {
@@ -1121,7 +1118,7 @@ nsMathMLmtrFrame::AttributeChanged(int32_t  aNameSpaceID,
     return NS_OK;
   }
 
-  presContext->PropertyTable()->Delete(this, AttributeToProperty(aAttribute));
+  DeleteProperty(AttributeToProperty(aAttribute));
 
   bool allowMultiValues = (aAttribute == nsGkAtoms::columnalign_);
 
@@ -1220,8 +1217,7 @@ nsMathMLmtdFrame::AttributeChanged(int32_t  aNameSpaceID,
   if (aAttribute == nsGkAtoms::rowalign_ ||
       aAttribute == nsGkAtoms::columnalign_) {
 
-    nsPresContext* presContext = PresContext();
-    presContext->PropertyTable()->Delete(this, AttributeToProperty(aAttribute));
+    DeleteProperty(AttributeToProperty(aAttribute));
 
     // Reparse the attribute.
     ParseFrameAttribute(this, aAttribute, false);
@@ -1305,7 +1301,7 @@ NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmtdInnerFrame)
 
 nsMathMLmtdInnerFrame::nsMathMLmtdInnerFrame(nsStyleContext* aContext)
-  : nsBlockFrame(aContext)
+  : nsBlockFrame(aContext, kClassID)
 {
   // Make a copy of the parent nsStyleText for later modification.
   mUniqueStyleText = new (PresContext()) nsStyleText(*StyleText());

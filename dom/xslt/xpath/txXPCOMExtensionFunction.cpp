@@ -345,7 +345,9 @@ txParamArrayHolder::~txParamArrayHolder()
                            variant.type.TagPart() == nsXPTType::T_INTERFACE_IS,
                            "We only support cleanup of strings and interfaces "
                            "here, and this looks like neither!");
-                static_cast<nsISupports*>(variant.val.p)->Release();
+                if (variant.val.p != nullptr) {
+                    static_cast<nsISupports*>(variant.val.p)->Release();
+                }
             }
         }
     }

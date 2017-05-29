@@ -1015,13 +1015,13 @@ ReflowInput::ComputeRelativeOffsets(WritingMode aWM,
 
   // Convert the offsets to physical coordinates and store them on the frame
   aComputedOffsets = offsets.GetPhysicalMargin(aWM);
-  FrameProperties props = aFrame->Properties();
-  nsMargin* physicalOffsets = props.Get(nsIFrame::ComputedOffsetProperty());
+  nsMargin* physicalOffsets =
+    aFrame->GetProperty(nsIFrame::ComputedOffsetProperty());
   if (physicalOffsets) {
     *physicalOffsets = aComputedOffsets;
   } else {
-    props.Set(nsIFrame::ComputedOffsetProperty(),
-              new nsMargin(aComputedOffsets));
+    aFrame->AddProperty(nsIFrame::ComputedOffsetProperty(),
+                        new nsMargin(aComputedOffsets));
   }
 }
 
@@ -1031,21 +1031,22 @@ ReflowInput::ApplyRelativePositioning(nsIFrame* aFrame,
                                             nsPoint* aPosition)
 {
   if (!aFrame->IsRelativelyPositioned()) {
-    NS_ASSERTION(!aFrame->Properties().Get(nsIFrame::NormalPositionProperty()),
+    NS_ASSERTION(!aFrame->GetProperty(nsIFrame::NormalPositionProperty()),
                  "We assume that changing the 'position' property causes "
                  "frame reconstruction.  If that ever changes, this code "
                  "should call "
-                 "props.Delete(nsIFrame::NormalPositionProperty())");
+                 "aFrame->DeleteProperty(nsIFrame::NormalPositionProperty())");
     return;
   }
 
   // Store the normal position
-  FrameProperties props = aFrame->Properties();
-  nsPoint* normalPosition = props.Get(nsIFrame::NormalPositionProperty());
+  nsPoint* normalPosition =
+    aFrame->GetProperty(nsIFrame::NormalPositionProperty());
   if (normalPosition) {
     *normalPosition = *aPosition;
   } else {
-    props.Set(nsIFrame::NormalPositionProperty(), new nsPoint(*aPosition));
+    aFrame->AddProperty(nsIFrame::NormalPositionProperty(),
+                        new nsPoint(*aPosition));
   }
 
   const nsStyleDisplay* display = aFrame->StyleDisplay();
@@ -2508,20 +2509,20 @@ ReflowInput::InitConstraints(nsPresContext* aPresContext,
 }
 
 static void
-UpdateProp(FrameProperties& aProps,
+UpdateProp(nsIFrame* aFrame,
            const FramePropertyDescriptor<nsMargin>* aProperty,
            bool aNeeded,
            nsMargin& aNewValue)
 {
   if (aNeeded) {
-    nsMargin* propValue = aProps.Get(aProperty);
+    nsMargin* propValue = aFrame->GetProperty(aProperty);
     if (propValue) {
       *propValue = aNewValue;
     } else {
-      aProps.Set(aProperty, new nsMargin(aNewValue));
+      aFrame->AddProperty(aProperty, new nsMargin(aNewValue));
     }
   } else {
-    aProps.Delete(aProperty);
+    aFrame->DeleteProperty(aProperty);
   }
 }
 
@@ -2539,8 +2540,7 @@ SizeComputationInput::InitOffsets(WritingMode aWM,
   // Since we are in reflow, we don't need to store these properties anymore
   // unless they are dependent on width, in which case we store the new value.
   nsPresContext *presContext = mFrame->PresContext();
-  FrameProperties props(presContext->PropertyTable(), mFrame);
-  props.Delete(nsIFrame::UsedBorderProperty());
+  mFrame->DeleteProperty(nsIFrame::UsedBorderProperty());
 
   // Compute margins from the specified margin style information. These
   // become the default computed values, and may be adjusted below
@@ -2551,7 +2551,7 @@ SizeComputationInput::InitOffsets(WritingMode aWM,
   // ... but if we did that, we'd need to fix nsFrame::GetUsedMargin
   // to use it even when the margins are all zero (since sometimes
   // they get treated as auto)
-  ::UpdateProp(props, nsIFrame::UsedMarginProperty(), needMarginProp,
+  ::UpdateProp(mFrame, nsIFrame::UsedMarginProperty(), needMarginProp,
                ComputedPhysicalMargin());
 
 
@@ -2587,7 +2587,7 @@ SizeComputationInput::InitOffsets(WritingMode aWM,
   auto ApplyBaselinePadding = [this, &needPaddingProp]
          (LogicalAxis aAxis, Prop aProp) {
     bool found;
-    nscoord val = mFrame->Properties().Get(aProp, &found);
+    nscoord val = mFrame->GetProperty(aProp, &found);
     if (found) {
       NS_ASSERTION(val != nscoord(0), "zero in this property is useless");
       WritingMode wm = GetWritingMode();
@@ -2660,7 +2660,7 @@ SizeComputationInput::InitOffsets(WritingMode aWM,
       ComputedPhysicalBorderPadding().SizeTo(0,0,0,0);
     }
   }
-  ::UpdateProp(props, nsIFrame::UsedPaddingProperty(), needPaddingProp,
+  ::UpdateProp(mFrame, nsIFrame::UsedPaddingProperty(), needPaddingProp,
                ComputedPhysicalPadding());
 }
 

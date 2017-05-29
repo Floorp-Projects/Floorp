@@ -20,13 +20,13 @@ class SVGFELeafFrame final : public nsFrame
   NS_NewSVGFELeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit SVGFELeafFrame(nsStyleContext* aContext)
-    : nsFrame(aContext, LayoutFrameType::SVGFELeaf)
+    : nsFrame(aContext, kClassID)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(SVGFELeafFrame)
 
 #ifdef DEBUG
   virtual void Init(nsIContent*       aContent,

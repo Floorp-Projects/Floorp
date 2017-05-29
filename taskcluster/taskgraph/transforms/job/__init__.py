@@ -122,7 +122,8 @@ def rewrite_when_to_optimization(config, jobs):
             files_changed.append('taskcluster/docker/{}/**'.format(
                 job['worker']['docker-image']['in-tree']))
 
-        job.setdefault('optimizations', []).append(['files-changed', files_changed])
+        # "only when files changed" implies "skip if files have not changed"
+        job.setdefault('optimizations', []).append(['skip-unless-changed', files_changed])
 
         assert 'when' not in job
         yield job

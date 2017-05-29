@@ -78,7 +78,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitNewArray(MNewArray* ins);
     void visitNewArrayCopyOnWrite(MNewArrayCopyOnWrite* ins);
     void visitNewArrayDynamicLength(MNewArrayDynamicLength* ins);
-    void visitNewArrayIterator(MNewArrayIterator* ins);
+    void visitNewIterator(MNewIterator* ins);
     void visitNewTypedArray(MNewTypedArray* ins);
     void visitNewTypedArrayDynamicLength(MNewTypedArrayDynamicLength* ins);
     void visitNewObject(MNewObject* ins);

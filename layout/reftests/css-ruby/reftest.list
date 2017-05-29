@@ -5,10 +5,10 @@
 == box-generation-3.html box-generation-3-ref.html
 == box-generation-4.html box-generation-4-ref.html
 == box-generation-5.html box-generation-5-ref.html
-fails-if(styloVsGecko) == box-properties-1.html box-properties-1-ref.html
-fails-if(styloVsGecko) == box-properties-2.html box-properties-2-ref.html
-fails-if(styloVsGecko) == box-properties-3.html box-properties-3-ref.html
-fails-if(styloVsGecko) == box-properties-4.html box-properties-4-ref.html
+fails-if(styloVsGecko||stylo) == box-properties-1.html box-properties-1-ref.html
+fails-if(styloVsGecko||stylo) == box-properties-2.html box-properties-2-ref.html
+fails-if(styloVsGecko||stylo) == box-properties-3.html box-properties-3-ref.html
+fails-if(styloVsGecko||stylo) == box-properties-4.html box-properties-4-ref.html
 == dynamic-insertion-1.html dynamic-insertion-1-ref.html
 == dynamic-insertion-2.html dynamic-insertion-2-ref.html
 fails-if(styloVsGecko) == dynamic-insertion-3.html dynamic-insertion-3-ref.html
@@ -22,29 +22,29 @@ test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLin
 == intra-level-whitespace-3.html intra-level-whitespace-3-ref.html
 == intrinsic-isize-1.html intrinsic-isize-1-ref.html
 == intrinsic-isize-2.html intrinsic-isize-2-ref.html
-fails-if(styloVsGecko) == justification-1.html justification-1-ref.html
+fails-if(styloVsGecko||stylo) == justification-1.html justification-1-ref.html
 fails-if(styloVsGecko) == justification-2.html justification-2-ref.html
 fuzzy-if(winWidget,255,792) == lang-specific-style-1.html lang-specific-style-1-ref.html # bug 1134947
 == line-breaking-1.html line-breaking-1-ref.html
-fails-if(styloVsGecko) == line-breaking-2.html line-breaking-2-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),3,2) skip-if(styloVsGecko) == line-break-suppression-1.html line-break-suppression-1-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),3,2) skip-if(styloVsGecko) == line-break-suppression-2.html line-break-suppression-2-ref.html
-skip-if(styloVsGecko) == line-break-suppression-3.html line-break-suppression-3-ref.html
+fails-if(styloVsGecko||stylo) == line-breaking-2.html line-breaking-2-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),3,2) skip-if(styloVsGecko||stylo) == line-break-suppression-1.html line-break-suppression-1-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),3,2) skip-if(styloVsGecko||stylo) == line-break-suppression-2.html line-break-suppression-2-ref.html
+skip-if(styloVsGecko||stylo) == line-break-suppression-3.html line-break-suppression-3-ref.html
 == line-break-suppression-4.html line-break-suppression-4-ref.html
 == line-break-suppression-5.html line-break-suppression-5-ref.html
 == line-height-1.html line-height-1-ref.html
 == line-height-2.html line-height-2-ref.html
 == line-height-3.html line-height-3-ref.html
 == line-height-4.html line-height-4-ref.html
-test-pref(font.minimum-size.ja,16) fails-if(styloVsGecko) == min-font-size-1.html min-font-size-1-ref.html
+test-pref(font.minimum-size.ja,16) fails-if(styloVsGecko||stylo) == min-font-size-1.html min-font-size-1-ref.html
 skip-if(styloVsGecko) load nested-ruby-1.html
 == no-transform.html no-transform-ref.html
-fails-if(styloVsGecko) == relative-positioning-1.html relative-positioning-1-ref.html
+fails-if(styloVsGecko||stylo) == relative-positioning-1.html relative-positioning-1-ref.html
 == relative-positioning-2.html relative-positioning-2-ref.html
-fails-if(styloVsGecko) == ruby-align-1.html ruby-align-1-ref.html
-fails-if(styloVsGecko) == ruby-align-1a.html ruby-align-1-ref.html
-fails-if(styloVsGecko) == ruby-align-2.html ruby-align-2-ref.html
-fails-if(styloVsGecko) == ruby-align-2a.html ruby-align-2-ref.html
+fails-if(styloVsGecko||stylo) == ruby-align-1.html ruby-align-1-ref.html
+fails-if(styloVsGecko||stylo) == ruby-align-1a.html ruby-align-1-ref.html
+fails-if(styloVsGecko||stylo) == ruby-align-2.html ruby-align-2-ref.html
+fails-if(styloVsGecko||stylo) == ruby-align-2a.html ruby-align-2-ref.html
 == ruby-position-horizontal.html ruby-position-horizontal-ref.html
 == ruby-position-vertical-lr.html ruby-position-vertical-lr-ref.html
 == ruby-position-vertical-rl.html ruby-position-vertical-rl-ref.html

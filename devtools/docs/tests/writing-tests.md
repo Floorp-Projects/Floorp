@@ -113,11 +113,11 @@ It's important to know whether or not the `shared.js` in your test directory alr
 
 If you're planning to work on a lot of new tests, it might be worth the time actually importing `shared-head.js` in your `head.js` if it isn't here already.
 
-## E10S (Electrolysis)
+## Electrolysis
 
 E10S is the codename for Firefox multi-process, and what that means for us is that the process in which the test runs isn't the same as the one in which the test content page runs.
 
-You can learn more about E10S [from this blog post](https://timtaubert.de/blog/2011/08/firefox-electrolysis-101/) and [the Electrolysis wiki page](https://wiki.mozilla.org/Electrolysis).
+You can learn more about E10S [from this blog post](https://timtaubert.de/blog/2011/08/firefox-electrolysis-101/), [the Electrolysis wiki page](https://wiki.mozilla.org/Electrolysis) and the page on [tests and E10s](https://wiki.mozilla.org/Electrolysis/e10s_test_tips).
 
 One of the direct consequences of E10S on tests is that you cannot retrieve and manipulate objects from the content page as you'd do without E10S.
 

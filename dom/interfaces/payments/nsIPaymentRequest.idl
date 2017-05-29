@@ -1,0 +1,84 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIVariant.idl"
+
+interface nsIArray;
+
+[scriptable, builtinclass, uuid(2fe296cc-d917-4820-b492-aa42df23f9b4)]
+interface nsIPaymentMethodData : nsISupports
+{
+  readonly attribute nsIArray supportedMethods;
+  readonly attribute AString data;
+};
+
+[scriptable, builtinclass, uuid(d22a6f5f-767b-4fea-bf92-68b0b8003eba)]
+interface nsIPaymentCurrencyAmount : nsISupports
+{
+  readonly attribute AString currency;
+  readonly attribute AString value;
+};
+
+[scriptable, builtinclass, uuid(4f78a59f-b5ff-4fb5-ab48-3b37d0101b02)]
+interface nsIPaymentItem : nsISupports
+{
+  readonly attribute AString label;
+  readonly attribute nsIPaymentCurrencyAmount amount;
+  readonly attribute boolean pending;
+};
+
+[scriptable, builtinclass, uuid(74259861-c318-40e8-b3d5-518e701bed80)]
+interface nsIPaymentDetailsModifier : nsISupports
+{
+  readonly attribute nsIArray supportedMethods;
+  readonly attribute nsIPaymentItem total;
+  readonly attribute nsIArray additionalDisplayItems;
+  readonly attribute AString data;
+};
+
+[scriptable, builtinclass, uuid(68341551-3605-4381-b936-41e830aa88fb)]
+interface nsIPaymentShippingOption : nsISupports
+{
+  readonly attribute AString id;
+  readonly attribute AString label;
+  readonly attribute nsIPaymentCurrencyAmount amount;
+  attribute boolean selected;
+};
+
+[scriptable, builtinclass, uuid(73a5a3f1-45b9-4605-a6e6-7aa60daa9039)]
+interface nsIPaymentDetails : nsISupports
+{
+  readonly attribute AString id;
+  readonly attribute nsIPaymentItem totalItem;
+  readonly attribute nsIArray displayItems;
+  readonly attribute nsIArray shippingOptions;
+  readonly attribute nsIArray modifiers;
+  readonly attribute AString error;
+
+  void update(in nsIPaymentDetails aDetails);
+};
+
+[scriptable, builtinclass, uuid(d53f9f20-138e-47cc-9fd5-db16a3f6d301)]
+interface nsIPaymentOptions : nsISupports
+{
+  readonly attribute boolean requestPayerName;
+  readonly attribute boolean requestPayerEmail;
+  readonly attribute boolean requestPayerPhone;
+  readonly attribute boolean requestShipping;
+  readonly attribute AString shippingType;
+};
+
+[scriptable, builtinclass, uuid(2fa36783-d684-4487-b7a8-9def6ae3128f)]
+interface nsIPaymentRequest : nsISupports
+{
+  readonly attribute uint64_t tabId;
+  readonly attribute AString requestId;
+  readonly attribute nsIArray paymentMethods;
+  readonly attribute nsIPaymentDetails paymentDetails;
+  readonly attribute nsIPaymentOptions paymentOptions;
+
+  void updatePaymentDetails(in nsIPaymentDetails aDetails);
+};

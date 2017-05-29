@@ -37,9 +37,8 @@ class nsTableRowGroupFrame final
   using TableRowGroupReflowInput = mozilla::TableRowGroupReflowInput;
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsTableRowGroupFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsTableRowGroupFrame)
 
   /** instantiate a new instance of nsTableRowFrame.
     * @param aPresShell the pres shell for this frame

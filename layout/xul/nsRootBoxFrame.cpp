@@ -50,7 +50,7 @@ public:
   explicit nsRootBoxFrame(nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsRootBoxFrame)
 
   virtual nsPopupSetFrame* GetPopupSetFrame() override;
   virtual void SetPopupSetFrame(nsPopupSetFrame* aPopupSet) override;
@@ -108,7 +108,7 @@ NS_NewRootBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsRootBoxFrame)
 
 nsRootBoxFrame::nsRootBoxFrame(nsStyleContext* aContext)
-  : nsBoxFrame(aContext, LayoutFrameType::Root, true)
+  : nsBoxFrame(aContext, kClassID, true)
   , mPopupSetFrame(nullptr)
   , mDefaultTooltip(nullptr)
 {

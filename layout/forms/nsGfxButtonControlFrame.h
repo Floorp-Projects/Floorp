@@ -21,7 +21,7 @@ class nsGfxButtonControlFrame final
   , public nsIAnonymousContentCreator
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsGfxButtonControlFrame)
 
   explicit nsGfxButtonControlFrame(nsStyleContext* aContext);
 
@@ -45,8 +45,6 @@ public:
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
                                     nsIAtom*        aAttribute,
                                     int32_t         aModType) override;
-
-  virtual bool IsLeaf() const override;
 
   virtual nsContainerFrame* GetContentInsertionFrame() override;
 

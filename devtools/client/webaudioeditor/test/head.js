@@ -4,6 +4,22 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
+// There are shutdown issues for which multiple rejections are left uncaught.
+// This bug should be fixed, but for the moment devtools are whitelisted.
+//
+// NOTE: Entire directory whitelisting should be kept to a minimum. Normally you
+//       should use "expectUncaughtRejection" to flag individual failures.
+const { PromiseTestUtils } = Cu.import("resource://testing-common/PromiseTestUtils.jsm", {});
+PromiseTestUtils.whitelistRejectionsGlobally(/Component not initialized/);
+PromiseTestUtils.whitelistRejectionsGlobally(/Connection closed/);
+PromiseTestUtils.whitelistRejectionsGlobally(/destroy/);
+PromiseTestUtils.whitelistRejectionsGlobally(/is no longer, usable/);
+PromiseTestUtils.whitelistRejectionsGlobally(/this\._urls is null/);
+PromiseTestUtils.whitelistRejectionsGlobally(/this\.tabTarget is null/);
+PromiseTestUtils.whitelistRejectionsGlobally(/this\.toolbox is null/);
+PromiseTestUtils.whitelistRejectionsGlobally(/this\.webConsoleClient is null/);
+PromiseTestUtils.whitelistRejectionsGlobally(/this\.worker is null/);
+
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var { Task } = require("devtools/shared/task");
 var Services = require("Services");

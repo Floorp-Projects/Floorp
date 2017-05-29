@@ -140,7 +140,7 @@ task_description_schema = Schema({
         # consult SETA and skip this task if it is low-value
         ['seta'],
         # skip this task if none of the given file patterns match
-        ['files-changed', [basestring]],
+        ['skip-unless-changed', [basestring]],
     )],
 
     # the provisioner-id/worker-type for the task.  The following parameters will

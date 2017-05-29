@@ -17,8 +17,9 @@ using namespace mozilla;
 
 //#define FCF_NOISY
 
-nsFormControlFrame::nsFormControlFrame(nsStyleContext* aContext)
-  : nsAtomicContainerFrame(aContext, LayoutFrameType::FormControl)
+nsFormControlFrame::nsFormControlFrame(nsStyleContext* aContext,
+                                       nsIFrame::ClassID aID)
+  : nsAtomicContainerFrame(aContext, aID)
 {
 }
 

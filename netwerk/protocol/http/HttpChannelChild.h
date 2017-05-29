@@ -147,7 +147,8 @@ protected:
                                              const uint32_t& redirectFlags,
                                              const nsHttpResponseHead& responseHead,
                                              const nsCString& securityInfoSerialization,
-                                             const uint64_t& channelId) override;
+                                             const uint64_t& channelId,
+                                             const NetAddr& oldPeerAddr) override;
   mozilla::ipc::IPCResult RecvRedirect3Complete() override;
   mozilla::ipc::IPCResult RecvAssociateApplicationCache(const nsCString& groupID,
                                                         const nsCString& clientID) override;

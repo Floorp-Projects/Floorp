@@ -104,6 +104,7 @@ class AnonymousCounterStyle final : public CounterStyle
 {
 public:
   explicit AnonymousCounterStyle(const nsSubstring& aContent);
+  AnonymousCounterStyle(uint8_t aSystem, nsTArray<nsString> aSymbols);
   explicit AnonymousCounterStyle(const nsCSSValue::Array* aValue);
 
   virtual void GetStyleName(nsAString& aResult) override;
@@ -150,8 +151,18 @@ public:
   CounterStylePtr(const CounterStylePtr& aOther)
     : mRaw(aOther.mRaw)
   {
-    if (IsAnonymous()) {
-      AsAnonymous()->AddRef();
+    switch (GetType()) {
+      case eCounterStyle:
+        break;
+      case eAnonymousCounterStyle:
+        AsAnonymous()->AddRef();
+        break;
+      case eUnresolvedAtom:
+        AsAtom()->AddRef();
+        break;
+      case eMask:
+        MOZ_ASSERT_UNREACHABLE("Unknown type");
+        break;
     }
   }
   CounterStylePtr(CounterStylePtr&& aOther)
@@ -169,9 +180,27 @@ public:
     }
     return *this;
   }
+  CounterStylePtr& operator=(CounterStylePtr&& aOther)
+  {
+    if (this != &aOther) {
+      Reset();
+      mRaw = aOther.mRaw;
+      aOther.mRaw = 0;
+    }
+    return *this;
+  }
   CounterStylePtr& operator=(decltype(nullptr))
   {
     Reset();
+    return *this;
+  }
+  CounterStylePtr& operator=(already_AddRefed<nsIAtom> aAtom)
+  {
+    Reset();
+    if (nsIAtom* raw = aAtom.take()) {
+      AssertPointerAligned(raw);
+      mRaw = reinterpret_cast<uintptr_t>(raw) | eUnresolvedAtom;
+    }
     return *this;
   }
   CounterStylePtr& operator=(AnonymousCounterStyle* aCounterStyle)
@@ -180,7 +209,7 @@ public:
     if (aCounterStyle) {
       CounterStyle* raw = do_AddRef(aCounterStyle).take();
       AssertPointerAligned(raw);
-      mRaw = reinterpret_cast<uintptr_t>(raw) | kAnonymousFlag;
+      mRaw = reinterpret_cast<uintptr_t>(raw) | eAnonymousCounterStyle;
     }
     return *this;
   }
@@ -190,7 +219,7 @@ public:
     if (aCounterStyle) {
       MOZ_ASSERT(!aCounterStyle->AsAnonymous());
       AssertPointerAligned(aCounterStyle);
-      mRaw = reinterpret_cast<uintptr_t>(aCounterStyle);
+      mRaw = reinterpret_cast<uintptr_t>(aCounterStyle) | eCounterStyle;
     }
     return *this;
   }
@@ -205,42 +234,75 @@ public:
   bool operator!=(const CounterStylePtr& aOther) const
     { return mRaw != aOther.mRaw; }
 
+  bool IsResolved() const { return !IsUnresolved(); }
+  inline void Resolve(CounterStyleManager* aManager);
+
 private:
   CounterStyle* Get() const
   {
-    return reinterpret_cast<CounterStyle*>(mRaw & ~kAnonymousFlag);
+    MOZ_ASSERT(IsResolved());
+    return reinterpret_cast<CounterStyle*>(mRaw & ~eMask);
   }
-  void AssertPointerAligned(CounterStyle* aPointer)
+  template<typename T>
+  void AssertPointerAligned(T* aPointer)
   {
     // This can be checked at compile time via
-    // > static_assert(alignof(CounterStyle) >= 2);
+    // > static_assert(alignof(CounterStyle) >= 4);
+    // > static_assert(alignof(nsIAtom) >= 4);
     // but MSVC2015 doesn't support using alignof on an abstract class.
     // Once we move to MSVC2017, we can replace this runtime check with
     // the compile time check above.
-    MOZ_ASSERT(!(reinterpret_cast<uintptr_t>(aPointer) & kAnonymousFlag));
+    MOZ_ASSERT(!(reinterpret_cast<uintptr_t>(aPointer) & eMask));
   }
 
-  bool IsAnonymous() const { return !!(mRaw & kAnonymousFlag); }
+  enum Type : uintptr_t {
+    eCounterStyle = 0,
+    eAnonymousCounterStyle = 1,
+    eUnresolvedAtom = 2,
+    eMask = 3,
+  };
+
+  Type GetType() const { return static_cast<Type>(mRaw & eMask); }
+  bool IsUnresolved() const { return GetType() == eUnresolvedAtom; }
+  bool IsAnonymous() const { return GetType() == eAnonymousCounterStyle; }
+  nsIAtom* AsAtom()
+  {
+    MOZ_ASSERT(IsUnresolved());
+    return reinterpret_cast<nsIAtom*>(mRaw & ~eMask);
+  }
   AnonymousCounterStyle* AsAnonymous()
   {
     MOZ_ASSERT(IsAnonymous());
     return static_cast<AnonymousCounterStyle*>(
-      reinterpret_cast<CounterStyle*>(mRaw & ~kAnonymousFlag));
+      reinterpret_cast<CounterStyle*>(mRaw & ~eMask));
   }
 
   void Reset()
   {
-    if (IsAnonymous()) {
-      AsAnonymous()->Release();
+    switch (GetType()) {
+      case eCounterStyle:
+        break;
+      case eAnonymousCounterStyle:
+        AsAnonymous()->Release();
+        break;
+      case eUnresolvedAtom:
+        AsAtom()->Release();
+        break;
+      case eMask:
+        MOZ_ASSERT_UNREACHABLE("Unknown type");
+        break;
     }
     mRaw = 0;
   }
 
-  // mRaw contains the pointer, and its last bit is used for the flag.
-  // If the flag is set, this pointer owns an AnonymousCounterStyle,
-  // otherwise, it is a weak pointer referring a named counter style
+  // mRaw contains the pointer, and its last two bits are used for type
+  // of the pointer.
+  // If the type is eUnresolvedAtom, the pointer owns a reference to an
+  // nsIAtom, and it needs to be resolved to a counter style before use.
+  // If the type is eAnonymousCounterStyle, it owns a reference to an
+  // anonymous counter style.
+  // Otherwise it is a weak pointer referring a named counter style
   // managed by CounterStyleManager.
-  static const uintptr_t kAnonymousFlag = 1;
   uintptr_t mRaw;
 };
 
@@ -294,6 +356,14 @@ private:
   nsDataHashtable<nsRefPtrHashKey<nsIAtom>, CounterStyle*> mStyles;
   nsTArray<CounterStyle*> mRetiredStyles;
 };
+
+void
+CounterStylePtr::Resolve(CounterStyleManager* aManager)
+{
+  if (IsUnresolved()) {
+    *this = aManager->BuildCounterStyle(AsAtom());
+  }
+}
 
 } // namespace mozilla
 

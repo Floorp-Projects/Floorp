@@ -92,7 +92,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsListControlFrame)
 
 //---------------------------------------------------------
 nsListControlFrame::nsListControlFrame(nsStyleContext* aContext)
-  : nsHTMLScrollFrame(aContext, LayoutFrameType::ListControl, false)
+  : nsHTMLScrollFrame(aContext, kClassID, false)
   , mView(nullptr)
   , mMightNeedSecondPass(false)
   , mHasPendingInterruptAtStartOfReflow(false)

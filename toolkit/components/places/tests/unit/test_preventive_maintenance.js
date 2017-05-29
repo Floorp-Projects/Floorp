@@ -1312,13 +1312,8 @@ add_task(async function test_preventive_maintenance() {
     dump("\nExecuting test: " + test.name + "\n*** " + test.desc + "\n");
     await test.setup();
 
-    let promiseMaintenanceFinished =
-        promiseTopicObserved(FINISHED_MAINTENANCE_NOTIFICATION_TOPIC);
     Services.prefs.clearUserPref("places.database.lastMaintenance");
-    let callbackInvoked = false;
-    PlacesDBUtils.maintenanceOnIdle(() => callbackInvoked = true);
-    await promiseMaintenanceFinished;
-    do_check_true(callbackInvoked);
+    await PlacesDBUtils.maintenanceOnIdle();
 
     // Check the lastMaintenance time has been saved.
     do_check_neq(Services.prefs.getIntPref("places.database.lastMaintenance"), null);

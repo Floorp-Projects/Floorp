@@ -144,10 +144,9 @@ nsBox::BeginXULLayout(nsBoxLayoutState& aState)
 
   // Another copy-over from ReflowInput.
   // Since we are in reflow, we don't need to store these properties anymore.
-  FrameProperties props = Properties();
-  props.Delete(UsedBorderProperty());
-  props.Delete(UsedPaddingProperty());
-  props.Delete(UsedMarginProperty());
+  DeleteProperty(UsedBorderProperty());
+  DeleteProperty(UsedPaddingProperty());
+  DeleteProperty(UsedMarginProperty());
 
 #ifdef DEBUG_LAYOUT
   PropagateDebug(aState);
@@ -176,8 +175,8 @@ nsBox::EndXULLayout(nsBoxLayoutState& aState)
 bool nsBox::gGotTheme = false;
 nsITheme* nsBox::gTheme = nullptr;
 
-nsBox::nsBox(LayoutFrameType aType)
-  : nsIFrame(aType)
+nsBox::nsBox(ClassID aID)
+  : nsIFrame(aID)
 {
   MOZ_COUNT_CTOR(nsBox);
   //mX = 0;

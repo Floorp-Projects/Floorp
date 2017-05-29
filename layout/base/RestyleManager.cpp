@@ -670,8 +670,6 @@ RestyleManager::DebugVerifyStyleTree(nsIFrame* aFrame)
 
 #endif // DEBUG
 
-NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(ChangeListProperty, bool)
-
 /**
  * Sync views on aFrame and all of aFrame's descendants (following placeholders),
  * if aChange has nsChangeHint_SyncFrameView.
@@ -805,11 +803,11 @@ RecomputePosition(nsIFrame* aFrame)
         // since we've already checked mPosition and aren't changing the frame's
         // normal position, go ahead and add the offsets directly.
         // First, we need to ensure that the normal position is stored though.
-        nsPoint normalPosition = cont->GetNormalPosition();
-        auto props = cont->Properties();
-        const auto& prop = nsIFrame::NormalPositionProperty();
-        if (!props.Get(prop)) {
-          props.Set(prop, new nsPoint(normalPosition));
+        bool hasProperty;
+        nsPoint normalPosition = cont->GetNormalPosition(&hasProperty);
+        if (!hasProperty) {
+          cont->AddProperty(nsIFrame::NormalPositionProperty(),
+                            new nsPoint(normalPosition));
         }
         cont->SetPosition(normalPosition +
                           nsPoint(newOffsets.left, newOffsets.top));
@@ -1024,8 +1022,7 @@ RestyleManager::GetNearestAncestorFrame(nsIContent* aContent)
 }
 
 /* static */ nsIFrame*
-RestyleManager::GetNextBlockInInlineSibling(FramePropertyTable* aPropTable,
-                                            nsIFrame* aFrame)
+RestyleManager::GetNextBlockInInlineSibling(nsIFrame* aFrame)
 {
   NS_ASSERTION(!aFrame->GetPrevContinuation(),
                "must start with the first continuation");
@@ -1035,8 +1032,7 @@ RestyleManager::GetNextBlockInInlineSibling(FramePropertyTable* aPropTable,
     return nullptr;
   }
 
-  return static_cast<nsIFrame*>
-    (aPropTable->Get(aFrame, nsIFrame::IBSplitSibling()));
+  return aFrame->GetProperty(nsIFrame::IBSplitSibling());
 }
 
 static void
@@ -1309,10 +1305,10 @@ RestyleManager::GetNextContinuationWithSameStyle(
     // We're the last continuation, so we have to hop back to the first
     // before getting the frame property
     nextContinuation =
-      aFrame->FirstContinuation()->Properties().Get(nsIFrame::IBSplitSibling());
+      aFrame->FirstContinuation()->GetProperty(nsIFrame::IBSplitSibling());
     if (nextContinuation) {
       nextContinuation =
-        nextContinuation->Properties().Get(nsIFrame::IBSplitSibling());
+        nextContinuation->GetProperty(nsIFrame::IBSplitSibling());
     }
   }
 
@@ -1342,14 +1338,18 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "Someone forgot a script blocker");
-  if (aChangeList.IsEmpty())
+  MOZ_ASSERT(!mDestroyedFrames);
+
+  if (aChangeList.IsEmpty()) {
     return;
+  }
+
+  mDestroyedFrames = MakeUnique<nsTHashtable<nsPtrHashKey<const nsIFrame>>>();
 
   PROFILER_LABEL("RestyleManager", "ProcessRestyledFrames",
                  js::ProfileEntry::Category::CSS);
 
   nsPresContext* presContext = PresContext();
-  FramePropertyTable* propTable = presContext->PropertyTable();
   nsCSSFrameConstructor* frameConstructor = presContext->FrameConstructor();
 
   // Handle nsChangeHint_CSSOverflowChange, by either updating the
@@ -1397,7 +1397,12 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
             // Under these conditions, we're OK to assume that this "overflow"
             // change only impacts the root viewport's scrollframe, which
             // already exists, so we can simply reflow instead of reframing.
-            data.mHint |= nsChangeHint_AllReflowHints;
+            // When requesting this reflow, we send the exact same change hints
+            // that "width" and "height" would send (since conceptually,
+            // adding/removing scrollbars is like changing the available
+            // space).
+            data.mHint |= (nsChangeHint_ReflowHintsForISizeChange |
+                           nsChangeHint_ReflowHintsForBSizeChange);
             doReconstruct = false;
           }
         }
@@ -1411,15 +1416,6 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
   // Make sure to not rebuild quote or counter lists while we're
   // processing restyles
   frameConstructor->BeginUpdate();
-
-  // Mark frames so that we skip frames that die along the way, bug 123049.
-  // A frame can be in the list multiple times with different hints. Further
-  // optmization is possible if nsStyleChangeList::AppendChange could coalesce
-  for (const nsStyleChangeData& data : aChangeList) {
-    if (data.mFrame) {
-      propTable->Set(data.mFrame, ChangeListProperty(), true);
-    }
-  }
 
   bool didUpdateCursor = false;
 
@@ -1470,11 +1466,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
                  "Reflow hint bits set without actually asking for a reflow");
 
     // skip any frame that has been destroyed due to a ripple effect
-    if (frame && !propTable->HasSkippingBitCheck(frame, ChangeListProperty())) {
-      // Null out the pointer since the frame was already destroyed.
-      // This is important so we don't try to delete its
-      // ChangeListProperty() below.
-      mutable_data.mFrame = nullptr;
+    if (frame && mDestroyedFrames->Contains(frame)) {
       continue;
     }
 
@@ -1542,11 +1534,6 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
     }
 
     if (hint & nsChangeHint_ReconstructFrame) {
-      // We're about to destroy data.mFrame, so null out the pointer.
-      // This is important so we don't try to delete its
-      // ChangeListProperty() below.
-      mutable_data.mFrame = nullptr;
-
       // If we ever start passing true here, be careful of restyles
       // that involve a reframe and animations.  In particular, if the
       // restyle we're processing here is an animation restyle, but
@@ -1730,16 +1717,13 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
   }
 
   frameConstructor->EndUpdate();
-
-  // cleanup references and verify the style tree.  Note that the latter needs
-  // to happen once we've processed the whole list, since until then the tree
-  // is not in fact in a consistent state.
-  for (const nsStyleChangeData& data : aChangeList) {
-    if (data.mFrame) {
-      propTable->DeleteSkippingBitCheck(data.mFrame, ChangeListProperty());
-    }
+  mDestroyedFrames.reset(nullptr);
 
 #ifdef DEBUG
+  // Verify the style tree.  Note that this needs to happen once we've
+  // processed the whole list, since until then the tree is not in fact in a
+  // consistent state.
+  for (const nsStyleChangeData& data : aChangeList) {
     // reget frame from content since it may have been regenerated...
     if (data.mContent) {
       nsIFrame* frame = data.mContent->GetPrimaryFrame();
@@ -1750,8 +1734,8 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       NS_WARNING("Unable to test style tree integrity -- no content node "
                  "(and not a viewport frame)");
     }
-#endif
   }
+#endif
 
   aChangeList.Clear();
 }

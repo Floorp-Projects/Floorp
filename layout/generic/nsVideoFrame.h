@@ -41,8 +41,7 @@ public:
   explicit nsVideoFrame(nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
-  NS_DECL_QUERYFRAME_TARGET(nsVideoFrame)
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsVideoFrame)
 
   void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                         const nsRect&           aDirtyRect,
@@ -70,7 +69,6 @@ public:
   nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
   nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
   void DestroyFrom(nsIFrame* aDestructRoot) override;
-  bool IsLeaf() const override;
 
   void Reflow(nsPresContext*     aPresContext,
               ReflowOutput&      aDesiredSize,

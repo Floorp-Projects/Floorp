@@ -214,9 +214,6 @@ def opt_seta(task, params):
     if task.task.get('provisionerId', '') == 'buildbot-bridge':
         label = task.task.get('payload').get('buildername')
         bbb_task = True
-
-        # never optimize with SETA for BBB- bug 1364421
-        return False
     else:
         label = task.label
 
@@ -233,7 +230,7 @@ def opt_seta(task, params):
         return False
 
 
-@optimization('files-changed')
+@optimization('skip-unless-changed')
 def opt_files_changed(task, params, file_patterns):
     # pushlog_id == -1 - this is the case when run from a cron.yml job
     if params.get('pushlog_id') == -1:
@@ -241,7 +238,7 @@ def opt_files_changed(task, params, file_patterns):
 
     changed = files_changed.check(params, file_patterns)
     if not changed:
-        logger.debug('no files found matching a pattern in `when.files-changed` for ' +
+        logger.debug('no files found matching a pattern in `skip-unless-changed` for ' +
                      task.label)
         return True
     return False

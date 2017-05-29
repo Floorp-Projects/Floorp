@@ -1021,7 +1021,7 @@ public class Leanplum {
    * Call this to explicitly end the session. This should not be used in most cases, so we won't
    * make it public for now.
    */
-  static void stop() {
+  public static void stop() {
     if (Constants.isNoop()) {
       return;
     }

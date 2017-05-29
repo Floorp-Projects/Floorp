@@ -1644,7 +1644,7 @@ var BookmarkingUI = {
   _hasBookmarksObserver: false,
   _itemGuids: new Set(),
   uninit: function BUI_uninit() {
-    this._updateBookmarkPageMenuItem(true);
+    this.updateBookmarkPageMenuItem(true);
     CustomizableUI.removeListener(this);
 
     this._uninitView();
@@ -1734,7 +1734,7 @@ var BookmarkingUI = {
    * forceReset is passed when we're destroyed and the label should go back
    * to the default (Bookmark This Page) for OS X.
    */
-  _updateBookmarkPageMenuItem: function BUI__updateBookmarkPageMenuItem(forceReset) {
+  updateBookmarkPageMenuItem: function BUI_updateBookmarkPageMenuItem(forceReset) {
     let isStarred = !forceReset && this._itemGuids.size > 0;
     let label = isStarred ? "editlabel" : "bookmarklabel";
     if (this.broadcaster) {
@@ -1747,7 +1747,7 @@ var BookmarkingUI = {
     if (event.target != event.currentTarget)
       return;
 
-    this._updateBookmarkPageMenuItem();
+    this.updateBookmarkPageMenuItem();
     PlacesCommandHook.updateBookmarkAllTabsCommand();
     this._initMobileBookmarks(document.getElementById("menu_mobileBookmarks"));
     this._initRecentBookmarks(document.getElementById("menu_recentBookmarks"));
@@ -1854,7 +1854,7 @@ var BookmarkingUI = {
   },
 
   onCurrentPageContextPopupShowing() {
-    this._updateBookmarkPageMenuItem();
+    this.updateBookmarkPageMenuItem();
   },
 
   handleEvent: function BUI_handleEvent(aEvent) {
@@ -1869,7 +1869,7 @@ var BookmarkingUI = {
   },
 
   onPanelMenuViewShowing: function BUI_onViewShowing(aEvent) {
-    this._updateBookmarkPageMenuItem();
+    this.updateBookmarkPageMenuItem();
     // Update checked status of the toolbar toggle.
     let viewToolbar = document.getElementById("panelMenu_viewBookmarksToolbar");
     let personalToolbar = document.getElementById("PersonalToolbar");

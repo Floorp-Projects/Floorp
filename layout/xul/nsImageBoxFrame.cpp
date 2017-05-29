@@ -151,7 +151,7 @@ nsImageBoxFrame::AttributeChanged(int32_t aNameSpaceID,
 }
 
 nsImageBoxFrame::nsImageBoxFrame(nsStyleContext* aContext)
-  : nsLeafBoxFrame(aContext, LayoutFrameType::ImageBox)
+  : nsLeafBoxFrame(aContext, kClassID)
   , mIntrinsicSize(0, 0)
   , mLoadFlags(nsIRequest::LOAD_NORMAL)
   , mRequestRegistered(false)

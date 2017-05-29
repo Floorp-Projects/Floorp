@@ -882,10 +882,9 @@ nsTStringRepr_CharT::FindChar(char_type aChar, index_type aOffset) const
 } // namespace mozilla
 
 void
-nsTSubstring_CharT::StripChar(char_type aChar, int32_t aOffset)
+nsTSubstring_CharT::StripChar(char_type aChar)
 {
-  // Note that this implicitly guarantees mLength > 0
-  if (aOffset >= int32_t(mLength)) {
+  if (mLength == 0) {
     return;
   }
 
@@ -895,8 +894,8 @@ nsTSubstring_CharT::StripChar(char_type aChar, int32_t aOffset)
 
   // XXX(darin): this code should defer writing until necessary.
 
-  char_type* to   = mData + aOffset;
-  char_type* from = mData + aOffset;
+  char_type* to   = mData;
+  char_type* from = mData;
   char_type* end  = mData + mLength;
 
   while (from < end) {
@@ -910,10 +909,9 @@ nsTSubstring_CharT::StripChar(char_type aChar, int32_t aOffset)
 }
 
 void
-nsTSubstring_CharT::StripChars(const char_type* aChars, uint32_t aOffset)
+nsTSubstring_CharT::StripChars(const char_type* aChars)
 {
-  // Note that this implicitly guarantees mLength > 0
-  if (aOffset >= uint32_t(mLength)) {
+  if (mLength == 0) {
     return;
   }
 
@@ -923,8 +921,8 @@ nsTSubstring_CharT::StripChars(const char_type* aChars, uint32_t aOffset)
 
   // XXX(darin): this code should defer writing until necessary.
 
-  char_type* to   = mData + aOffset;
-  char_type* from = mData + aOffset;
+  char_type* to   = mData;
+  char_type* from = mData;
   char_type* end  = mData + mLength;
 
   while (from < end) {
@@ -943,11 +941,9 @@ nsTSubstring_CharT::StripChars(const char_type* aChars, uint32_t aOffset)
 }
 
 void
-nsTSubstring_CharT::StripTaggedASCII(const ASCIIMaskArray& aToStrip,
-                                     uint32_t aOffset)
+nsTSubstring_CharT::StripTaggedASCII(const ASCIIMaskArray& aToStrip)
 {
-  // Note that this implicitly guarantees mLength > 0
-  if (aOffset >= uint32_t(mLength)) {
+  if (mLength == 0) {
     return;
   }
 
@@ -955,8 +951,8 @@ nsTSubstring_CharT::StripTaggedASCII(const ASCIIMaskArray& aToStrip,
     AllocFailed(mLength);
   }
 
-  char_type* to   = mData + aOffset;
-  char_type* from = mData + aOffset;
+  char_type* to   = mData;
+  char_type* from = mData;
   char_type* end  = mData + mLength;
 
   while (from < end) {
@@ -973,12 +969,12 @@ nsTSubstring_CharT::StripTaggedASCII(const ASCIIMaskArray& aToStrip,
 }
 
 void
-nsTSubstring_CharT::StripCRLF(uint32_t aOffset)
+nsTSubstring_CharT::StripCRLF()
 {
   // Expanding this call to copy the code from StripTaggedASCII
   // instead of just calling it does somewhat help with performance
   // but it is not worth it given the duplicated code.
-  StripTaggedASCII(mozilla::ASCIIMask::MaskCRLF(), aOffset);
+  StripTaggedASCII(mozilla::ASCIIMask::MaskCRLF());
 }
 
 struct MOZ_STACK_CLASS PrintfAppend_CharT : public mozilla::PrintfTarget

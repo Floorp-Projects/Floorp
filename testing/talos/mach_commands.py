@@ -64,6 +64,7 @@ class TalosRunner(MozbuildObject):
             'default_actions': [
                 'populate-webroot',
                 'create-virtualenv',
+                'setup-mitmproxy',
                 'run-tests',
             ],
             'download_tooltool': True,

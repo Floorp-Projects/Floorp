@@ -21,9 +21,7 @@ class nsTableWrapperFrame : public nsContainerFrame
 {
 public:
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
-
-  NS_DECL_QUERYFRAME_TARGET(nsTableWrapperFrame)
+  NS_DECL_FRAMEARENA_HELPERS(nsTableWrapperFrame)
 
   /** instantiate a new instance of nsTableRowFrame.
     * @param aPresShell the pres shell for this frame
@@ -198,7 +196,7 @@ public:
 
 protected:
 
-  explicit nsTableWrapperFrame(nsStyleContext* aContext);
+  explicit nsTableWrapperFrame(nsStyleContext* aContext, ClassID aID = kClassID);
   virtual ~nsTableWrapperFrame();
 
   void InitChildReflowInput(nsPresContext&     aPresContext,

@@ -40,7 +40,7 @@ NS_NewSVGForeignObjectFrame(nsIPresShell   *aPresShell,
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGForeignObjectFrame)
 
 nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, LayoutFrameType::SVGForeignObject)
+  : nsContainerFrame(aContext, kClassID)
   , mInReflow(false)
 {
   AddStateBits(NS_FRAME_REFLOW_ROOT | NS_FRAME_MAY_BE_TRANSFORMED |

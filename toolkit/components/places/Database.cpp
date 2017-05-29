@@ -376,22 +376,11 @@ SetupDurability(nsCOMPtr<mozIStorageConnection>& aDBConn, int32_t aDBPageSize) {
 }
 
 nsresult
-AttachFaviconsDatabase(nsCOMPtr<mozIStorageConnection>& aDBConn) {
-  // Attach the favicons database to the main connection.
-  nsString path;
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = file->Append(DATABASE_FAVICONS_FILENAME);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = file->GetPath(path);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("ATTACH DATABASE '") +
-    NS_ConvertUTF16toUTF8(path) + NS_LITERAL_CSTRING("' AS favicons"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aDBConn->ExecuteSimpleSQL(CREATE_ICONS_AFTERINSERT_TRIGGER);
+AttachDatabase(nsCOMPtr<mozIStorageConnection>& aDBConn,
+               const nsACString& aPath,
+               const nsACString& aName) {
+  nsresult rv = aDBConn->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("ATTACH DATABASE '") + aPath + NS_LITERAL_CSTRING("' AS ") + aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The journal limit must be set apart for each database.
@@ -530,7 +519,7 @@ Database::Init()
       // If we bail out early here without doing anything else, the Database object
       // will leak due to the cycle between the shutdown blockers and itself, so
       // let's break the cycle first.
-      Shutdown();
+      Shutdown(false);
     }
   });
 
@@ -559,8 +548,8 @@ Database::Init()
     return rv;
   }
 
-  // Initialize the icons database.
-  rv = InitFaviconsDatabaseFile(storage);
+  // Ensure the icons database exists.
+  rv = EnsureFaviconsDatabaseFile(storage);
   if (NS_FAILED(rv)) {
     RefPtr<PlacesEvent> lockedEvent = new PlacesEvent(TOPIC_DATABASE_LOCKED);
     (void)NS_DispatchToMainThread(lockedEvent);
@@ -570,13 +559,26 @@ Database::Init()
   // Initialize the database schema.  In case of failure the existing schema is
   // is corrupt or incoherent, thus the database should be replaced.
   bool databaseMigrated = false;
-  rv = InitSchema(&databaseMigrated);
+  rv = SetupDatabaseConnection(storage);
+  if (NS_SUCCEEDED(rv)) {
+    // Failing to initialize the schema always indicates a corruption.
+    if (NS_FAILED(InitSchema(&databaseMigrated))) {
+      rv = NS_ERROR_FILE_CORRUPTED;
+    }
+  }
   if (NS_FAILED(rv)) {
     mDatabaseStatus = nsINavHistoryService::DATABASE_STATUS_CORRUPT;
-    rv = BackupAndReplaceDatabaseFile(storage);
-    NS_ENSURE_SUCCESS(rv, rv);
-    // Try to initialize the schema again on the new database.
-    rv = InitSchema(&databaseMigrated);
+    // Some errors may not indicate a database corruption, for those cases we
+    // just bail out without throwing away a possibly valid places.sqlite.
+    if (rv == NS_ERROR_FILE_CORRUPTED) {
+      rv = BackupAndReplaceDatabaseFile(storage);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // Try to initialize the new database again.
+      rv = SetupDatabaseConnection(storage);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = InitSchema(&databaseMigrated);
+    }
+    // Bail out if we couldn't fix the database.
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -645,7 +647,7 @@ Database::Init()
 }
 
 nsresult
-Database::InitFaviconsDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage)
+Database::EnsureFaviconsDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -660,68 +662,54 @@ Database::InitFaviconsDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage)
   rv = databaseFile->Exists(&databaseFileExists);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Open the database file.  If it does not exist a new one will be created.
-  // Use an unshared connection, it will consume more memory but avoid shared
-  // cache contentions across threads.
-  // This also checks the database sanity, so we must do it regardless.
+  if (databaseFileExists) {
+    return NS_OK;
+  }
+
+  // Open the database file, this will also create it.
   nsCOMPtr<mozIStorageConnection> conn;
   rv = aStorage->OpenUnsharedDatabase(databaseFile, getter_AddRefs(conn));
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
-    rv = databaseFile->Remove(true);
-    NS_ENSURE_SUCCESS(rv, rv);
-    databaseFileExists = false;
-    rv = aStorage->OpenUnsharedDatabase(databaseFile, getter_AddRefs(conn));
-  }
   NS_ENSURE_SUCCESS(rv, rv);
 
-#define CLOSE_AND_BAILOUT_IF_FAILED(_rv)          \
-  PR_BEGIN_MACRO                                  \
-  if (NS_WARN_IF(NS_FAILED(_rv))) {               \
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(conn->Close())); \
-    return _rv;                                   \
-  }                                               \
-  PR_END_MACRO
+  // Ensure we'll close the connection when done.
+  auto cleanup = MakeScopeExit([&] () {
+    // We cannot use AsyncClose() here, because by the time we try to ATTACH
+    // this database, its transaction could be still be running and that would
+    // cause the ATTACH query to fail.
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(conn->Close()));
+  });
 
-  if (!databaseFileExists) {
-    int32_t defaultPageSize;
-    rv = conn->GetDefaultPageSize(&defaultPageSize);
-    CLOSE_AND_BAILOUT_IF_FAILED(rv);
-    rv = SetupDurability(conn, defaultPageSize);
-    CLOSE_AND_BAILOUT_IF_FAILED(rv);
-
-    // Enable incremental vacuum for this database. Since it will contain even
-    // large blobs and can be cleared with history, it's worth to have it.
-    // Note that it will be necessary to manually use PRAGMA incremental_vacuum.
-    rv = conn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "PRAGMA auto_vacuum = INCREMENTAL"
-    ));
-    CLOSE_AND_BAILOUT_IF_FAILED(rv);
-
-    // We are going to update the database, so everything from now on should be
-    // in a transaction for performances.
-    mozStorageTransaction transaction(conn, false);
-
-    rv = conn->ExecuteSimpleSQL(CREATE_MOZ_ICONS);
-    CLOSE_AND_BAILOUT_IF_FAILED(rv);
-    rv = conn->ExecuteSimpleSQL(CREATE_IDX_MOZ_ICONS_ICONURLHASH);
-    CLOSE_AND_BAILOUT_IF_FAILED(rv);
-
-    rv = conn->ExecuteSimpleSQL(CREATE_MOZ_PAGES_W_ICONS);
-    CLOSE_AND_BAILOUT_IF_FAILED(rv);
-    rv = conn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PAGES_W_ICONS_ICONURLHASH);
-    CLOSE_AND_BAILOUT_IF_FAILED(rv);
-
-    rv = conn->ExecuteSimpleSQL(CREATE_MOZ_ICONS_TO_PAGES);
-    CLOSE_AND_BAILOUT_IF_FAILED(rv);
-
-    rv = transaction.Commit();
-    CLOSE_AND_BAILOUT_IF_FAILED(rv);
-  }
-
-#undef CLOSE_AND_BAILOUT_IF_FAILED
-
-  rv = conn->Close();
+  int32_t defaultPageSize;
+  rv = conn->GetDefaultPageSize(&defaultPageSize);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetupDurability(conn, defaultPageSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Enable incremental vacuum for this database. Since it will contain even
+  // large blobs and can be cleared with history, it's worth to have it.
+  // Note that it will be necessary to manually use PRAGMA incremental_vacuum.
+  rv = conn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "PRAGMA auto_vacuum = INCREMENTAL"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We are going to update the database, so everything from now on should be
+  // in a transaction for performances.
+  mozStorageTransaction transaction(conn, false);
+  rv = conn->ExecuteSimpleSQL(CREATE_MOZ_ICONS);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = conn->ExecuteSimpleSQL(CREATE_IDX_MOZ_ICONS_ICONURLHASH);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = conn->ExecuteSimpleSQL(CREATE_MOZ_PAGES_W_ICONS);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = conn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PAGES_W_ICONS_ICONURLHASH);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = conn->ExecuteSimpleSQL(CREATE_MOZ_ICONS_TO_PAGES);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // The scope exit will take care of closing the connection.
 
   return NS_OK;
 }
@@ -833,10 +821,9 @@ Database::ForceCrashAndReplaceDatabase(const nsCString& aReason)
 }
 
 nsresult
-Database::InitSchema(bool* aDatabaseMigrated)
+Database::SetupDatabaseConnection(nsCOMPtr<mozIStorageService>& aStorage)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  *aDatabaseMigrated = false;
 
   // WARNING: any statement executed before setting the journal mode must be
   // finalized, since SQLite doesn't allow changing the journal mode if there
@@ -852,9 +839,9 @@ Database::InitSchema(bool* aDatabaseMigrated)
     NS_ENSURE_SUCCESS(rv, rv);
     bool hasResult = false;
     rv = statement->ExecuteStep(&hasResult);
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasResult, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasResult, NS_ERROR_FILE_CORRUPTED);
     rv = statement->GetInt32(0, &mDBPageSize);
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && mDBPageSize > 0, NS_ERROR_UNEXPECTED);
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && mDBPageSize > 0, NS_ERROR_FILE_CORRUPTED);
   }
 
   // Ensure that temp tables are held in memory, not on disk.
@@ -870,11 +857,11 @@ Database::InitSchema(bool* aDatabaseMigrated)
   busyTimeoutPragma.AppendInt(DATABASE_BUSY_TIMEOUT_MS);
   (void)mMainConn->ExecuteSimpleSQL(busyTimeoutPragma);
 
-  // Enable FOREIGN KEY support.
+  // Enable FOREIGN KEY support. This is a strict requirement.
   rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA foreign_keys = ON")
   );
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FILE_CORRUPTED);
 #ifdef DEBUG
   {
     // There are a few cases where setting foreign_keys doesn't work:
@@ -892,16 +879,49 @@ Database::InitSchema(bool* aDatabaseMigrated)
   }
 #endif
 
-  rv = AttachFaviconsDatabase(mMainConn);
+  // Attach the favicons database to the main connection.
+  nsCOMPtr<nsIFile> iconsFile;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                              getter_AddRefs(iconsFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = iconsFile->Append(DATABASE_FAVICONS_FILENAME);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsString iconsPath;
+  rv = iconsFile->GetPath(iconsPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = AttachDatabase(mMainConn, NS_ConvertUTF16toUTF8(iconsPath),
+                      NS_LITERAL_CSTRING("favicons"));
+  if (NS_FAILED(rv)) {
+    // The favicons database may be corrupt. Try to replace and reattach it.
+    rv = iconsFile->Remove(true);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = EnsureFaviconsDatabaseFile(aStorage);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = AttachDatabase(mMainConn, NS_ConvertUTF16toUTF8(iconsPath),
+                        NS_LITERAL_CSTRING("favicons"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Create favicons temp entities.
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_ICONS_AFTERINSERT_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We use our functions during migration, so initialize them now.
   rv = InitFunctions();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return NS_OK;
+}
+
+nsresult
+Database::InitSchema(bool* aDatabaseMigrated)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  *aDatabaseMigrated = false;
+
   // Get the database schema version.
   int32_t currentSchemaVersion;
-  rv = mMainConn->GetSchemaVersion(&currentSchemaVersion);
+  nsresult rv = mMainConn->GetSchemaVersion(&currentSchemaVersion);
   NS_ENSURE_SUCCESS(rv, rv);
   bool databaseInitialized = currentSchemaVersion > 0;
 
@@ -2448,7 +2468,7 @@ Database::CreateMobileRoot()
 }
 
 void
-Database::Shutdown()
+Database::Shutdown(bool aInitSucceeded)
 {
   // As the last step in the shutdown path, finalize the database handle.
   MOZ_ASSERT(NS_IsMainThread());
@@ -2466,69 +2486,59 @@ Database::Shutdown()
   }
 
 #ifdef DEBUG
-  { // Sanity check for missing guids.
-    bool haveNullGuids = false;
+  if (aInitSucceeded) {
+    bool hasResult;
     nsCOMPtr<mozIStorageStatement> stmt;
 
+    // Sanity check for missing guids.
     nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT 1 "
       "FROM moz_places "
       "WHERE guid IS NULL "
     ), getter_AddRefs(stmt));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    rv = stmt->ExecuteStep(&haveNullGuids);
+    rv = stmt->ExecuteStep(&hasResult);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    MOZ_ASSERT(!haveNullGuids, "Found a page without a GUID!");
-
+    MOZ_ASSERT(!hasResult, "Found a page without a GUID!");
     rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT 1 "
       "FROM moz_bookmarks "
       "WHERE guid IS NULL "
     ), getter_AddRefs(stmt));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    rv = stmt->ExecuteStep(&haveNullGuids);
+    rv = stmt->ExecuteStep(&hasResult);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    MOZ_ASSERT(!haveNullGuids, "Found a bookmark without a GUID!");
-  }
+    MOZ_ASSERT(!hasResult, "Found a bookmark without a GUID!");
 
-  { // Sanity check for unrounded dateAdded and lastModified values (bug
+    // Sanity check for unrounded dateAdded and lastModified values (bug
     // 1107308).
-    bool hasUnroundedDates = false;
-    nsCOMPtr<mozIStorageStatement> stmt;
-
-    nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
         "SELECT 1 "
         "FROM moz_bookmarks "
         "WHERE dateAdded % 1000 > 0 OR lastModified % 1000 > 0 LIMIT 1"
       ), getter_AddRefs(stmt));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    rv = stmt->ExecuteStep(&hasUnroundedDates);
+    rv = stmt->ExecuteStep(&hasResult);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    MOZ_ASSERT(!hasUnroundedDates, "Found unrounded dates!");
-  }
+    MOZ_ASSERT(!hasResult, "Found unrounded dates!");
 
-  { // Sanity check url_hash
-    bool hasNullHash = false;
-    nsCOMPtr<mozIStorageStatement> stmt;
-    nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    // Sanity check url_hash
+    rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT 1 FROM moz_places WHERE url_hash = 0"
     ), getter_AddRefs(stmt));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    rv = stmt->ExecuteStep(&hasNullHash);
+    rv = stmt->ExecuteStep(&hasResult);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    MOZ_ASSERT(!hasNullHash, "Found a place without a hash!");
-  }
+    MOZ_ASSERT(!hasResult, "Found a place without a hash!");
 
-  { // Sanity check unique urls
-    bool hasDupeUrls = false;
-    nsCOMPtr<mozIStorageStatement> stmt;
-    nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    // Sanity check unique urls
+    rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT 1 FROM moz_places GROUP BY url HAVING count(*) > 1 "
     ), getter_AddRefs(stmt));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    rv = stmt->ExecuteStep(&hasDupeUrls);
+    rv = stmt->ExecuteStep(&hasResult);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    MOZ_ASSERT(!hasDupeUrls, "Found a duplicate url!");
+    MOZ_ASSERT(!hasResult, "Found a duplicate url!");
   }
 #endif
 

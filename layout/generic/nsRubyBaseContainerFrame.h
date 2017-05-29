@@ -22,8 +22,7 @@ nsContainerFrame* NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
 class nsRubyBaseContainerFrame final : public nsContainerFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
-  NS_DECL_QUERYFRAME_TARGET(nsRubyBaseContainerFrame)
+  NS_DECL_FRAMEARENA_HELPERS(nsRubyBaseContainerFrame)
   NS_DECL_QUERYFRAME
 
   // nsIFrame overrides
@@ -67,7 +66,7 @@ protected:
                                  nsStyleContext* aContext);
 
   explicit nsRubyBaseContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, mozilla::LayoutFrameType::RubyBaseContainer)
+    : nsContainerFrame(aContext, kClassID)
   {}
 
   struct RubyReflowInput;

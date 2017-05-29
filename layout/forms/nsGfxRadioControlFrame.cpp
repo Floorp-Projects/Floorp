@@ -25,7 +25,7 @@ NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsGfxRadioControlFrame)
 
 nsGfxRadioControlFrame::nsGfxRadioControlFrame(nsStyleContext* aContext):
-  nsFormControlFrame(aContext)
+  nsFormControlFrame(aContext, kClassID)
 {
 }
 

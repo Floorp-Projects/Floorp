@@ -437,9 +437,7 @@ void NotifySwitchStateFromInputDevice(hal::SwitchDevice aDevice,
  * background processes higher nice values.  On other platforms, we might
  * ignore this call entirely.
  */
-void SetProcessPriority(int aPid,
-                        hal::ProcessPriority aPriority,
-                        uint32_t aLRU = 0);
+void SetProcessPriority(int aPid, hal::ProcessPriority aPriority);
 
 
 /**

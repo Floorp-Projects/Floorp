@@ -3536,12 +3536,22 @@ class MNewObject
 };
 
 
-class MNewArrayIterator
+class MNewIterator
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
-    explicit MNewArrayIterator(CompilerConstraintList* constraints, MConstant* templateConst)
-      : MUnaryInstruction(templateConst)
+  public:
+    enum Type {
+        ArrayIterator,
+        StringIterator,
+    };
+
+private:
+    Type type_;
+
+    MNewIterator(CompilerConstraintList* constraints, MConstant* templateConst, Type type)
+      : MUnaryInstruction(templateConst),
+        type_(type)
     {
         setResultType(MIRType::Object);
         setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject()));
@@ -3549,8 +3559,12 @@ class MNewArrayIterator
     }
 
   public:
-    INSTRUCTION_HEADER(NewArrayIterator)
+    INSTRUCTION_HEADER(NewIterator)
     TRIVIAL_NEW_WRAPPERS
+
+    Type type() const {
+        return type_;
+    }
 
     JSObject* templateObject() {
         return getOperand(0)->toConstant()->toObjectOrNull();
@@ -10722,8 +10736,25 @@ class MStoreFixedSlot
     ALLOW_CLONE(MStoreFixedSlot)
 };
 
-typedef Vector<JSObject*, 4, JitAllocPolicy> ObjectVector;
-typedef Vector<bool, 4, JitAllocPolicy> BoolVector;
+struct InliningTarget
+{
+    JSObject* target;
+
+    // If target is a singleton, group is nullptr. If target is not a singleton,
+    // this is the group we need to guard on when doing a polymorphic inlining
+    // dispatch. Note that this can be different from target->group() due to
+    // proto mutation.
+    ObjectGroup* group;
+
+    InliningTarget(JSObject* target, ObjectGroup* group)
+      : target(target), group(group)
+    {
+        MOZ_ASSERT(target->isSingleton() == !group);
+    }
+};
+
+using InliningTargets = Vector<InliningTarget, 4, JitAllocPolicy>;
+using BoolVector = Vector<bool, 8, JitAllocPolicy>;
 
 class InlinePropertyTable : public TempObject
 {
@@ -10786,10 +10817,10 @@ class InlinePropertyTable : public TempObject
     TemporaryTypeSet* buildTypeSetForFunction(JSFunction* func) const;
 
     // Remove targets that vetoed inlining from the InlinePropertyTable.
-    void trimTo(const ObjectVector& targets, const BoolVector& choiceSet);
+    void trimTo(const InliningTargets& targets, const BoolVector& choiceSet);
 
     // Ensure that the InlinePropertyTable's domain is a subset of |targets|.
-    void trimToTargets(const ObjectVector& targets);
+    void trimToTargets(const InliningTargets& targets);
 
     bool appendRoots(MRootList& roots) const;
 };

@@ -37,7 +37,7 @@ public:
                                 const nsDisplayListSet& aLists) override;
 
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsFileControlFrame)
 
   // nsIFormControlFrame
   virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) override;
@@ -55,10 +55,6 @@ public:
                                     nsIAtom*        aAttribute,
                                     int32_t         aModType) override;
   virtual void ContentStatesChanged(mozilla::EventStates aStates) override;
-  virtual bool IsLeaf() const override
-  {
-    return true;
-  }
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;

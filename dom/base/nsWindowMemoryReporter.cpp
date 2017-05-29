@@ -407,7 +407,7 @@ CollectWindowReports(nsGlobalWindow *aWindow,
     js::MemoryReportingSundriesThreshold();
 
   size_t frameSundriesSize = 0;
-#define FRAME_ID(classname)                                             \
+#define FRAME_ID(classname, ...)                                        \
   {                                                                     \
     size_t frameSize                                                    \
       = windowSizes.mArenaStats.FRAME_ID_STAT_FIELD(classname);         \
@@ -421,8 +421,10 @@ CollectWindowReports(nsGlobalWindow *aWindow,
     aWindowTotalSizes->mArenaStats.FRAME_ID_STAT_FIELD(classname)       \
       += frameSize;                                                     \
   }
+#define ABSTRACT_FRAME_ID(...)
 #include "nsFrameIdList.h"
 #undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
 
   if (frameSundriesSize > 0) {
     REPORT_SIZE("/layout/frames/sundries", frameSundriesSize,
@@ -564,10 +566,12 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
          "This is the sum of all windows' 'layout/pres-contexts' numbers.");
 
   size_t frameTotal = 0;
-#define FRAME_ID(classname)                \
+#define FRAME_ID(classname, ...)                \
   frameTotal += windowTotalSizes.mArenaStats.FRAME_ID_STAT_FIELD(classname);
+#define ABSTRACT_FRAME_ID(...)
 #include "nsFrameIdList.h"
 #undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
 
   REPORT("window-objects/layout/frames", frameTotal,
          "Memory used for layout frames within windows. "

@@ -193,7 +193,7 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame
 
 protected:
   explicit SVGTextFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext, mozilla::LayoutFrameType::SVGText)
+    : nsSVGDisplayContainerFrame(aContext, kClassID)
     , mTrailingUndisplayedCharacters(0)
     , mFontSizeScaleFactor(1.0f)
     , mLastContextScale(1.0f)
@@ -205,9 +205,8 @@ protected:
   ~SVGTextFrame() {}
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(SVGTextFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(SVGTextFrame)
 
   // nsIFrame:
   virtual void Init(nsIContent*       aContent,

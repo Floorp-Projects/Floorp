@@ -842,10 +842,10 @@ TEST(String, parse_string)
   test_parse_string_helper1("  foo", ' ', "foo");
 }
 
-static void test_strip_chars_helper(const char16_t* str, const char16_t* strip, const nsAString& result, uint32_t offset=0)
+static void test_strip_chars_helper(const char16_t* str, const char16_t* strip, const nsAString& result)
 {
   nsAutoString data(str);
-  data.StripChars(strip, offset);
+  data.StripChars(strip);
   EXPECT_TRUE(data.Equals(result));
 }
 
@@ -868,7 +868,7 @@ TEST(String, strip_chars)
                           NS_LITERAL_STRING(""));
   test_strip_chars_helper(u" foo",
                           u" ",
-                          NS_LITERAL_STRING(" foo"), 1);
+                          NS_LITERAL_STRING("foo"));
 }
 
 TEST(Strings, huge_capacity)

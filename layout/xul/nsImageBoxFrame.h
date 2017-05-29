@@ -45,7 +45,7 @@ public:
   typedef mozilla::layers::LayerManager LayerManager;
 
   friend class nsDisplayXULImage;
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsImageBoxFrame)
 
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;

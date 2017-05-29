@@ -553,6 +553,12 @@ public:
   virtual bool
   DeallocPPluginWidgetParent(PPluginWidgetParent* aActor) override;
 
+  virtual PPaymentRequestParent*
+  AllocPPaymentRequestParent() override;
+
+  virtual bool
+  DeallocPPaymentRequestParent(PPaymentRequestParent* aActor) override;
+
   void SetInitedByParent() { mInitedByParent = true; }
 
   bool IsInitedByParent() const { return mInitedByParent; }

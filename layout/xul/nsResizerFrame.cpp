@@ -46,7 +46,7 @@ NS_NewResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsResizerFrame)
 
 nsResizerFrame::nsResizerFrame(nsStyleContext* aContext)
-:nsTitleBarFrame(aContext)
+  : nsTitleBarFrame(aContext, kClassID)
 {
 }
 

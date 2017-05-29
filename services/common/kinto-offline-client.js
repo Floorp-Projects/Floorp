@@ -20,7 +20,7 @@
 this.EXPORTED_SYMBOLS = ["Kinto"];
 
 /*
- * Version 8.0.0 - 57d2836
+ * Version 9.0.2 - b025c7b
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Kinto = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
@@ -177,7 +177,15 @@ class KintoBase {
       throw new Error("No adapter provided");
     }
 
-    const { remote, events, headers, retry, requestMode, timeout, ApiClass } = this._options;
+    const {
+      remote,
+      events,
+      headers,
+      retry,
+      requestMode,
+      timeout,
+      ApiClass
+    } = this._options;
 
     // public properties
 
@@ -185,7 +193,13 @@ class KintoBase {
      * The kinto HTTP client instance.
      * @type {KintoClient}
      */
-    this.api = new ApiClass(remote, { events, headers, retry, requestMode, timeout });
+    this.api = new ApiClass(remote, {
+      events,
+      headers,
+      retry,
+      requestMode,
+      timeout
+    });
     /**
      * The event emitter instance.
      * @type {EventEmitter}
@@ -208,18 +222,8 @@ class KintoBase {
     if (!collName) {
       throw new Error("missing collection name");
     }
-    const {
-      bucket,
-      events,
-      adapter,
-      adapterOptions,
-      dbPrefix
-    } = _extends({}, this._options, options);
-    const {
-      idSchema,
-      remoteTransformers,
-      hooks
-    } = options;
+    const { bucket, events, adapter, adapterOptions, dbPrefix } = _extends({}, this._options, options);
+    const { idSchema, remoteTransformers, hooks } = options;
 
     return new _collection2.default(bucket, collName, this.api, {
       events,
@@ -1235,7 +1239,7 @@ class Collection {
 
     const validatedHooks = {};
 
-    for (let hook in hooks) {
+    for (const hook in hooks) {
       if (AVAILABLE_HOOKS.indexOf(hook) === -1) {
         throw new Error("The hook should be one of " + AVAILABLE_HOOKS.join(", "));
       }
@@ -1332,7 +1336,9 @@ class Collection {
     if (!this.idSchema.validate(newRecord.id)) {
       return reject(`Invalid Id: ${newRecord.id}`);
     }
-    return this.execute(txn => txn.create(newRecord), { preloadIds: [newRecord.id] }).catch(err => {
+    return this.execute(txn => txn.create(newRecord), {
+      preloadIds: [newRecord.id]
+    }).catch(err => {
       if (options.useRecordId) {
         throw new Error("Couldn't create record. It may have been virtually deleted.");
       }
@@ -1366,7 +1372,9 @@ class Collection {
       return Promise.reject(new Error(`Invalid Id: ${record.id}`));
     }
 
-    return this.execute(txn => txn.update(record, options), { preloadIds: [record.id] });
+    return this.execute(txn => txn.update(record, options), {
+      preloadIds: [record.id]
+    });
   }
 
   /**
@@ -1580,7 +1588,8 @@ class Collection {
    *
    * @param  {SyncResultObject} result    The sync result object.
    * @param  {String}           strategy  The {@link Collection.strategy}.
-   * @return {Promise}
+   * @return {Promise<Array<Object>>} The resolved conflicts, as an
+   *    array of {accepted, rejected} objects
    */
   _handleConflicts(transaction, conflicts, strategy) {
     if (strategy === Collection.strategy.MANUAL) {
@@ -1588,9 +1597,29 @@ class Collection {
     }
     return conflicts.map(conflict => {
       const resolution = strategy === Collection.strategy.CLIENT_WINS ? conflict.local : conflict.remote;
-      const updated = this._resolveRaw(conflict, resolution);
-      transaction.update(updated);
-      return updated;
+      const rejected = strategy === Collection.strategy.CLIENT_WINS ? conflict.remote : conflict.local;
+      let accepted, status, id;
+      if (resolution === null) {
+        // We "resolved" with the server-side deletion. Delete locally.
+        // This only happens during SERVER_WINS because the local
+        // version of a record can never be null.
+        // We can get "null" from the remote side if we got a conflict
+        // and there is no remote version available; see kinto-http.js
+        // batch.js:aggregate.
+        transaction.delete(conflict.local.id);
+        accepted = null;
+        // The record was deleted, but that status is "synced" with
+        // the server, so we don't need to push the change.
+        status = "synced";
+        id = conflict.local.id;
+      } else {
+        const updated = this._resolveRaw(conflict, resolution);
+        transaction.update(updated);
+        accepted = updated;
+        status = updated._status;
+        id = updated.id;
+      }
+      return { rejected, accepted, id, _status: status };
     });
   }
 
@@ -1617,7 +1646,7 @@ class Collection {
    *    when the transaction commits.
    */
   execute(doOperations, { preloadIds = [] } = {}) {
-    for (let id of preloadIds) {
+    for (const id of preloadIds) {
       if (!this.idSchema.validate(id)) {
         return Promise.reject(Error(`Invalid Id: ${id}`));
       }
@@ -1677,7 +1706,10 @@ class Collection {
     var _this6 = this;
 
     return _asyncToGenerator(function* () {
-      const unsynced = yield _this6.list({ filters: { _status: ["created", "updated"] }, order: "" });
+      const unsynced = yield _this6.list({
+        filters: { _status: ["created", "updated"] },
+        order: ""
+      });
       const deleted = yield _this6.list({ filters: { _status: "deleted" }, order: "" }, { includeDeleted: true });
 
       return yield Promise.all(unsynced.data.concat(deleted.data).map(_this6._encodeRecord.bind(_this6, "remote")));
@@ -1842,14 +1874,17 @@ class Collection {
 
       // Store outgoing conflicts into sync result object
       const conflicts = [];
-      for (let _ref of synced.conflicts) {
-        let { type, local, remote } = _ref;
+      for (const _ref of synced.conflicts) {
+        const { type, local, remote } = _ref;
 
         // Note: we ensure that local data are actually available, as they may
         // be missing in the case of a published deletion.
         const safeLocal = local && local.data || { id: remote.id };
         const realLocal = yield _this8._decodeRecord("remote", safeLocal);
-        const realRemote = yield _this8._decodeRecord("remote", remote);
+        // We can get "null" from the remote side if we got a conflict
+        // and there is no remote version available; see kinto-http.js
+        // batch.js:aggregate.
+        const realRemote = remote && (yield _this8._decodeRecord("remote", remote));
         const conflict = { type, local: realLocal, remote: realRemote };
         conflicts.push(conflict);
       }
@@ -1919,7 +1954,7 @@ class Collection {
   _resolveRaw(conflict, resolution) {
     const resolved = _extends({}, resolution, {
       // Ensure local record has the latest authoritative timestamp
-      last_modified: conflict.remote.last_modified
+      last_modified: conflict.remote && conflict.remote.last_modified
     });
     // If the resolution object is strictly equal to the
     // remote record, then we can mark it as synced locally.
@@ -1995,14 +2030,23 @@ class Collection {
           return r._status !== "synced";
         });
         if (resolvedUnsynced.length > 0) {
-          const resolvedEncoded = yield Promise.all(resolvedUnsynced.map(_this9._encodeRecord.bind(_this9, "remote")));
+          const resolvedEncoded = yield Promise.all(resolvedUnsynced.map(function (resolution) {
+            let record = resolution.accepted;
+            if (record === null) {
+              record = { id: resolution.id, _status: resolution._status };
+            }
+            return _this9._encodeRecord("remote", record);
+          }));
           yield _this9.pushChanges(client, resolvedEncoded, result, options);
         }
         // Perform a last pull to catch changes that occured after the last pull,
         // while local changes were pushed. Do not do it nothing was pushed.
         if (result.published.length > 0) {
           // Avoid redownloading our own changes during the last pull.
-          const pullOpts = _extends({}, options, { lastModified, exclude: result.published });
+          const pullOpts = _extends({}, options, {
+            lastModified,
+            exclude: result.published
+          });
           yield _this9.pullChanges(client, result, pullOpts);
         }
 
@@ -2040,7 +2084,7 @@ class Collection {
         throw new Error("Records is not an array.");
       }
 
-      for (let record of records) {
+      for (const record of records) {
         if (!record.hasOwnProperty("id") || !_this10.idSchema.validate(record.id)) {
           throw new Error("Record has invalid ID: " + JSON.stringify(record));
         }
@@ -2105,13 +2149,15 @@ class CollectionTransaction {
    * been executed successfully.
    */
   emitEvents() {
-    for (let _ref2 of this._events) {
-      let { action, payload } = _ref2;
+    for (const _ref2 of this._events) {
+      const { action, payload } = _ref2;
 
       this.collection.events.emit(action, payload);
     }
     if (this._events.length > 0) {
-      const targets = this._events.map(({ action, payload }) => _extends({ action }, payload));
+      const targets = this._events.map(({ action, payload }) => _extends({
+        action
+      }, payload));
       this.collection.events.emit("change", { targets });
     }
     this._events = [];

@@ -340,7 +340,6 @@ panelview:not([mainview]) .toolbarbutton-text,
 
 #appMenu-popup > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
-  margin: 0;
   border-radius: 0;
 }
 
@@ -1244,7 +1243,7 @@ panelview:not([mainView]) .subviewbutton.panel-subview-footer > .toolbarbutton-t
 
 .PanelUI-subView .subviewbutton-nav::after {
   -moz-context-properties: fill;
-  content: url(chrome://browser/skin/menu-icons/back-small.svg);
+  content: url(chrome://browser/skin/back-12.svg);
   fill: GrayText;
   float: right;
 }
@@ -1304,7 +1303,7 @@ photonpanelmultiview .subviewbutton {
 
 photonpanelmultiview .subviewbutton[checked="true"] {
   background: none;
-  list-style-image: url(chrome://browser/skin/menu-icons/check.svg);
+  list-style-image: url(chrome://browser/skin/check.svg);
 }
 
 photonpanelmultiview .subviewbutton > .menu-iconic-left {
@@ -2051,7 +2050,7 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 photonpanelmultiview .PanelUI-subView .panel-header > .subviewbutton-back {
   -moz-context-properties: fill;
   fill: var(--arrowpanel-color);
-  list-style-image: url(chrome://browser/skin/menu-icons/back.svg);
+  list-style-image: url(chrome://browser/skin/arrow-left.svg);
   padding: 8px;
 }
 

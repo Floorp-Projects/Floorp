@@ -217,7 +217,8 @@ function suggestionsPresent() {
 function assertVisible(visible, win = window) {
   let style =
     win.getComputedStyle(win.gURLBar.popup.searchSuggestionsNotification);
-  Assert.equal(style.visibility, visible ? "visible" : "collapse");
+  let check = visible ? "notEqual" : "equal";
+  Assert[check](style.display, "none");
 }
 
 function promiseTransition(win = window) {

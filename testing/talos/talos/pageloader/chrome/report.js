@@ -4,8 +4,13 @@
 
 // given an array of strings, finds the longest common prefix
 function findCommonPrefixLength(strs) {
-  if (strs.length < 2)
-    return 0;
+  if (strs.length < 2) {
+    // only one page in the manifest
+    // i.e. http://localhost/tests/perf-reftest/bloom-basic.html
+    var place = strs[0].lastIndexOf("/");
+    if (place < 0) place = 0;
+    return place;
+  }
 
   var len = 0;
   do {

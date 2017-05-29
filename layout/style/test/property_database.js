@@ -4369,7 +4369,7 @@ var gCSSProperties = {
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "none", "context-value" ],
-    other_values: [ "5px,3px,2px", "5px 3px 2px", "  5px ,3px\t, 2px ", "1px", "5%", "3em" ],
+    other_values: [ "5px,3px,2px", "5px 3px 2px", "  5px ,3px\t, 2px ", "1px", "5%", "3em", "0.0002" ],
     invalid_values: [ "-5px,3px,2px", "5px,3px,-2px" ]
   },
   "stroke-dashoffset": {
@@ -4377,7 +4377,7 @@ var gCSSProperties = {
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "0", "-0px", "0em", "context-value" ],
-    other_values: [ "3px", "3%", "1em" ],
+    other_values: [ "3px", "3%", "1em", "0.0002" ],
     invalid_values: []
   },
   "stroke-linecap": {
@@ -4417,7 +4417,7 @@ var gCSSProperties = {
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "1px", "context-value" ],
-    other_values: [ "0", "0px", "-0em", "17px", "0.2em" ],
+    other_values: [ "0", "0px", "-0em", "17px", "0.2em", "0.0002" ],
     invalid_values: [ "-0.1px", "-3px" ]
   },
   "text-anchor": {

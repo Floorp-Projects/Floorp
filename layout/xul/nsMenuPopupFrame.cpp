@@ -95,7 +95,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 // nsMenuPopupFrame ctor
 //
 nsMenuPopupFrame::nsMenuPopupFrame(nsStyleContext* aContext)
-  : nsBoxFrame(aContext, LayoutFrameType::MenuPopup)
+  : nsBoxFrame(aContext, kClassID)
   , mCurrentMenu(nullptr)
   , mView(nullptr)
   , mPrefSize(-1, -1)
@@ -434,7 +434,7 @@ nsMenuPopupFrame::SetInitialChildList(ChildListID  aListID,
 }
 
 bool
-nsMenuPopupFrame::IsLeaf() const
+nsMenuPopupFrame::IsLeafDynamic() const
 {
   if (mGeneratedChildren)
     return false;

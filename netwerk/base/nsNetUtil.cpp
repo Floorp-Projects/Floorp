@@ -69,6 +69,7 @@
 #include "nsISiteSecurityService.h"
 #include "nsHttpHandler.h"
 #include "nsNSSComponent.h"
+#include "nsIRedirectHistoryEntry.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkManager.h"
@@ -1639,7 +1640,13 @@ NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport)
 
   bool aboutBlankInherits = dataInherits && loadInfo->GetAboutBlankInherits();
 
-  for (nsIPrincipal* principal : loadInfo->RedirectChain()) {
+  for (nsIRedirectHistoryEntry* redirectHistoryEntry : loadInfo->RedirectChain()) {
+    nsCOMPtr<nsIPrincipal> principal;
+    redirectHistoryEntry->GetPrincipal(getter_AddRefs(principal));
+    if (!principal) {
+      return true;
+    }
+
     nsCOMPtr<nsIURI> uri;
     principal->GetURI(getter_AddRefs(uri));
     if (!uri) {

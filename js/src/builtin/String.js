@@ -559,12 +559,15 @@ function StringIteratorNext() {
     if (first >= 0xD800 && first <= 0xDBFF && index + 1 < size) {
         var second = callFunction(std_String_charCodeAt, S, index + 1);
         if (second >= 0xDC00 && second <= 0xDFFF) {
+            first = (first - 0xD800) * 0x400 + (second - 0xDC00) + 0x10000;
             charCount = 2;
         }
     }
 
     UnsafeSetReservedSlot(this, ITERATOR_SLOT_NEXT_INDEX, index + charCount);
-    result.value = callFunction(String_substring, S, index, index + charCount);
+
+    // Communicate |first|'s possible range to the compiler.
+    result.value = callFunction(std_String_fromCodePoint, null, first & 0x1fffff);
 
     return result;
 }

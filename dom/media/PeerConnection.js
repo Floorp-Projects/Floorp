@@ -1533,7 +1533,7 @@ class PeerConnectionObserver {
   onAddTrack(track, streams) {
     let pc = this._dompc;
     let receiver = pc._win.RTCRtpReceiver._create(pc._win,
-                                                  new RTCRtpReceiver(this,
+                                                  new RTCRtpReceiver(pc,
                                                                      track));
     pc._receivers.push(receiver);
     let ev = new pc._win.RTCTrackEvent("track", { receiver, track, streams });
@@ -1665,6 +1665,11 @@ class RTCRtpSender {
   getParameters() {
     return this._pc._getParameters(this);
   }
+
+  getStats() {
+    return this._pc._async(
+      async () => this._pc._getStats(this.track));
+  }
 }
 setupPrototype(RTCRtpSender, {
   classID: PC_SENDER_CID,
@@ -1675,6 +1680,11 @@ setupPrototype(RTCRtpSender, {
 class RTCRtpReceiver {
   constructor(pc, track) {
     Object.assign(this, { _pc: pc, track });
+  }
+
+  getStats() {
+    return this._pc._async(
+      async () => this._pc.getStats(this.track));
   }
 }
 setupPrototype(RTCRtpReceiver, {

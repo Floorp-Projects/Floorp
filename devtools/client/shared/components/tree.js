@@ -604,8 +604,6 @@ module.exports = createClass({
         onExpand: this._onExpand,
         onCollapse: this._onCollapse,
         onClick: () => this._focus(begin + i, item),
-        // Focus on the previous node if focused node is unmounted.
-        onFocusedNodeUnmount: () => this._focusPrevNode(),
       }));
     }
 
@@ -707,7 +705,6 @@ const TreeNode = createFactory(createClass({
   propTypes: {
     id: PropTypes.any.isRequired,
     focused: PropTypes.bool.isRequired,
-    onFocusedNodeUnmount: PropTypes.func,
     item: PropTypes.any.isRequired,
     expanded: PropTypes.bool.isRequired,
     hasChildren: PropTypes.bool.isRequired,
@@ -719,14 +716,6 @@ const TreeNode = createFactory(createClass({
     onCollapse: PropTypes.func.isRequired,
     depth: PropTypes.number.isRequired,
     renderItem: PropTypes.func.isRequired,
-  },
-
-  componentWillUnmount() {
-    if (this.props.focused) {
-      if (this.props.onFocusedNodeUnmount) {
-        this.props.onFocusedNodeUnmount();
-      }
-    }
   },
 
   render() {

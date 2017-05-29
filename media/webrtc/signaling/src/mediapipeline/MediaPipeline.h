@@ -8,6 +8,8 @@
 #ifndef mediapipeline_h__
 #define mediapipeline_h__
 
+#include <map>
+
 #include "sigslot.h"
 
 #include "MediaConduitInterface.h"
@@ -36,6 +38,7 @@ class VideoFrameConverter;
 
 namespace dom {
   class MediaStreamTrack;
+  struct RTCRTPContributingSourceStats;
 } // namespace dom
 
 class SourceMediaStream;
@@ -131,6 +134,45 @@ class MediaPipeline : public sigslot::has_slots<> {
   bool IsDoingRtcpMux() const {
     return (rtp_.type_ == MUX);
   }
+
+  class RtpCSRCStats {
+  public:
+    // Gets an expiration time for CRC info given a reference time,
+    //   this reference time would normally be the time of calling.
+    //   This value can then be used to check if a RtpCSRCStats
+    //   has expired via Expired(...)
+    static DOMHighResTimeStamp
+    GetExpiryFromTime(const DOMHighResTimeStamp aTime);
+
+    RtpCSRCStats(const uint32_t aCsrc,
+                 const DOMHighResTimeStamp aTime);
+    ~RtpCSRCStats() {};
+    // Initialize a webidl representation suitable for adding to a report.
+    //   This assumes that the webidl object is empty.
+    // @param aWebidlObj the webidl binding object to popluate
+    // @param aRtpInboundStreamId the associated RTCInboundRTPStreamStats.id
+    void
+    GetWebidlInstance(dom::RTCRTPContributingSourceStats& aWebidlObj,
+                             const nsString &aInboundRtpStreamId) const;
+    void SetTimestamp(const DOMHighResTimeStamp aTime) { mTimestamp = aTime; }
+    // Check if the RtpCSRCStats has expired, checks against a
+    //   given expiration time.
+    bool Expired(const DOMHighResTimeStamp aExpiry) const {
+      return mTimestamp < aExpiry;
+    }
+  private:
+    static const double constexpr EXPIRY_TIME_MILLISECONDS = 10 * 1000;
+    uint32_t mCsrc;
+    DOMHighResTimeStamp mTimestamp;
+  };
+
+  // Gets the gathered contributing source stats for the last expiration period.
+  // @param aId the stream id to use for populating inboundRtpStreamId field
+  // @param aArr the array to append the stats objects to
+  void
+  GetContributingSourceStats(
+      const nsString& aInboundStreamId,
+      FallibleTArray<dom::RTCRTPContributingSourceStats>& aArr) const;
 
   int32_t rtp_packets_sent() const { return rtp_packets_sent_; }
   int64_t rtp_bytes_sent() const { return rtp_bytes_sent_; }
@@ -269,6 +311,9 @@ class MediaPipeline : public sigslot::has_slots<> {
   int64_t rtp_bytes_sent_;
   int64_t rtp_bytes_received_;
 
+  // Only safe to access from STS thread.
+  std::map<uint32_t, RtpCSRCStats> csrc_stats_;
+
   // Written on Init. Read on STS thread.
   std::string pc_;
   std::string description_;
@@ -278,6 +323,8 @@ class MediaPipeline : public sigslot::has_slots<> {
   nsAutoPtr<webrtc::RtpHeaderParser> rtp_parser_;
 
  private:
+  // Gets the current time as a DOMHighResTimeStamp
+  static DOMHighResTimeStamp GetNow();
   nsresult Init_s();
 
   bool IsRtp(const unsigned char *data, size_t len);

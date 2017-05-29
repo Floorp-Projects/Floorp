@@ -801,11 +801,11 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 #endif
 
   if (mCurrentSpan == mRootSpan) {
-    pfd->mFrame->Properties().Remove(nsIFrame::LineBaselineOffset());
+    pfd->mFrame->RemoveProperty(nsIFrame::LineBaselineOffset());
   } else {
 #ifdef DEBUG
     bool hasLineOffset;
-    pfd->mFrame->Properties().Get(nsIFrame::LineBaselineOffset(), &hasLineOffset);
+    pfd->mFrame->GetProperty(nsIFrame::LineBaselineOffset(), &hasLineOffset);
     NS_ASSERTION(!hasLineOffset, "LineBaselineOffset was set but was not expected");
 #endif
   }

@@ -57,7 +57,7 @@ jobs:
           - docker-worker:relengapi-proxy:tooltool.download.internal
           - docker-worker:relengapi-proxy:tooltool.download.public
         optimizations:
-          - - files-changed
+          - - skip-unless-changed
             - - "mobile/android/config/**"
               - "testing/mozharness/configs/builds/releng_sub_android_configs/*gradle_dependencies.py"
               - "**/*.gradle"
@@ -104,7 +104,7 @@ jobs:
           - docker-worker:relengapi-proxy:tooltool.download.internal
           - docker-worker:relengapi-proxy:tooltool.download.public
         optimizations:
-          - - files-changed
+          - - skip-unless-changed
             - - "mobile/android/base/**"
               - "mobile/android/tests/background/junit4/**"
 
@@ -165,7 +165,7 @@ jobs:
           - docker-worker:relengapi-proxy:tooltool.download.internal
           - docker-worker:relengapi-proxy:tooltool.download.public
         optimizations:
-          - - files-changed
+          - - skip-unless-changed
             - - "mobile/android/**/*.java"
               - "mobile/android/**/*.jpeg"
               - "mobile/android/**/*.jpg"
@@ -218,7 +218,7 @@ jobs:
           - docker-worker:relengapi-proxy:tooltool.download.internal
           - docker-worker:relengapi-proxy:tooltool.download.public
         optimizations:
-          - - files-changed
+          - - skip-unless-changed
             - - "mobile/android/**/checkstyle.xml"
               - "mobile/android/**/*.java"
               - "mobile/android/**/*.gradle"
@@ -270,7 +270,7 @@ jobs:
           - docker-worker:relengapi-proxy:tooltool.download.internal
           - docker-worker:relengapi-proxy:tooltool.download.public
         optimizations:
-          - - files-changed
+          - - skip-unless-changed
             - - "mobile/android/**/*.java"
               - "mobile/android/**/*.gradle"
               - "mobile/android/**/Makefile.in"

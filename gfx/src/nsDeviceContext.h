@@ -61,6 +61,8 @@ public:
      */
     void InitFontCache();
 
+    void UpdateFontCacheUserFonts(gfxUserFontSet* aUserFontSet);
+
     /**
      * Initialize the device context from a device context spec
      * @param aDevSpec the specification of the printing device

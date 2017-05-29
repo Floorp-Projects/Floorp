@@ -11,4 +11,5 @@
  JSImplementation="@mozilla.org/dom/rtpreceiver;1"]
 interface RTCRtpReceiver {
   readonly attribute MediaStreamTrack track;
+  Promise<RTCStatsReport> getStats();
 };

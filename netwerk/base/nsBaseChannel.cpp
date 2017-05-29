@@ -23,6 +23,7 @@
 #include "nsContentSecurityManager.h"
 #include "LoadInfo.h"
 #include "nsServiceManagerUtils.h"
+#include "nsRedirectHistoryEntry.h"
 
 // This class is used to suspend a request across a function scope.
 class ScopedRequestSuspender {
@@ -97,7 +98,13 @@ nsBaseChannel::Redirect(nsIChannel *newChannel, uint32_t redirectFlags,
     bool isInternalRedirect =
       (redirectFlags & (nsIChannelEventSink::REDIRECT_INTERNAL |
                         nsIChannelEventSink::REDIRECT_STS_UPGRADE));
-    newLoadInfo->AppendRedirectedPrincipal(uriPrincipal, isInternalRedirect);
+
+    // nsBaseChannel hst no thing to do with HttpBaseChannel, we would not care
+    // about referrer and remote address in this case
+    nsCOMPtr<nsIRedirectHistoryEntry> entry =
+      new nsRedirectHistoryEntry(uriPrincipal, nullptr, EmptyCString());
+
+    newLoadInfo->AppendRedirectHistoryEntry(entry, isInternalRedirect);
     newChannel->SetLoadInfo(newLoadInfo);
   }
   else {

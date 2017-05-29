@@ -34,7 +34,7 @@ using namespace mozilla::image;
 // Implementation
 
 nsSVGPatternFrame::nsSVGPatternFrame(nsStyleContext* aContext)
-  : nsSVGPaintServerFrame(aContext, LayoutFrameType::SVGPattern)
+  : nsSVGPaintServerFrame(aContext, kClassID)
   , mSource(nullptr)
   , mLoopFlag(false)
   , mNoHRefURI(false)
@@ -68,7 +68,7 @@ nsSVGPatternFrame::AttributeChanged(int32_t         aNameSpaceID,
        aNameSpaceID == kNameSpaceID_None) &&
       aAttribute == nsGkAtoms::href) {
     // Blow away our reference, if any
-    Properties().Delete(nsSVGEffects::HrefAsPaintingProperty());
+    DeleteProperty(nsSVGEffects::HrefAsPaintingProperty());
     mNoHRefURI = false;
     // And update whoever references us
     nsSVGEffects::InvalidateDirectRenderingObservers(this);
@@ -577,7 +577,7 @@ nsSVGPatternFrame::GetReferencedPattern()
     return nullptr;
 
   nsSVGPaintingProperty *property =
-    Properties().Get(nsSVGEffects::HrefAsPaintingProperty());
+    GetProperty(nsSVGEffects::HrefAsPaintingProperty());
 
   if (!property) {
     // Fetch our pattern element's href or xlink:href attribute

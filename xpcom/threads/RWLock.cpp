@@ -32,6 +32,14 @@ RWLock::RWLock(const char* aName)
 #endif
 }
 
+#ifdef DEBUG
+bool
+RWLock::LockedForWritingByCurrentThread()
+{
+  return mOwningThread == PR_GetCurrentThread();
+}
+#endif
+
 #ifndef XP_WIN
 RWLock::~RWLock()
 {

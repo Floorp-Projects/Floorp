@@ -181,6 +181,7 @@ toolbar:-moz-lwtheme-darktext {
 #TabsToolbar {
   text-shadow: none !important;
 }
+%ifndef MOZ_PHOTON_THEME
 
 /* Back and forward button */
 
@@ -200,11 +201,9 @@ toolbar:-moz-lwtheme-darktext {
   box-shadow: none !important;
 }
 
-%ifndef MOZ_PHOTON_THEME
 #forward-button > .toolbarbutton-icon {
   border-inline-start: none !important;
 }
-%endif
 
 /* Override a box shadow for disabled back button */
 #main-window:not([customizing]) #back-button[disabled] > .toolbarbutton-icon {
@@ -228,6 +227,7 @@ toolbar:-moz-lwtheme-darktext {
   padding-top: 2px;
   padding-bottom: 2px;
 }
+%endif
 
 /* URL bar and search bar*/
 #urlbar,
@@ -246,10 +246,9 @@ toolbar:-moz-lwtheme-darktext {
   fill: rgba(255,255,255,.7);
 }
 
-#urlbar {
 %ifndef MOZ_PHOTON_THEME
+#urlbar {
   border-inline-start: none !important;
-%endif
   opacity: 1 !important;
 }
 
@@ -267,7 +266,7 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper > #urlbar:-moz-locale-dir(
      value is set in the previous rule set. o_O */
   margin-inline-start: 0;
 }
-
+%endif
 #urlbar-zoom-button:-moz-lwtheme-brighttext:hover {
   background-color: rgba(255,255,255,.2);
 }
