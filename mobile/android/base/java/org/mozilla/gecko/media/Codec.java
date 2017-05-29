@@ -358,7 +358,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
         if (mCodec != null) {
             if (DEBUG) { Log.d(LOGTAG, "release existing codec: " + mCodec); }
-            releaseCodec();
+            mCodec.release();
         }
 
         if (DEBUG) { Log.d(LOGTAG, "configure " + this); }
@@ -403,19 +403,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     @Override
     public synchronized boolean isAdaptivePlaybackSupported() {
         return mIsAdaptivePlaybackSupported;
-    }
-
-    private void releaseCodec() {
-        try {
-            // In case Codec.stop() is not called yet.
-            mInputProcessor.stop();
-            mOutputProcessor.stop();
-
-            mCodec.release();
-        } catch (Exception e) {
-            reportError(Error.FATAL, e);
-        }
-        mCodec = null;
     }
 
     private AsyncCodec createCodecForFormat(MediaFormat format) throws IOException {
@@ -531,7 +518,15 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     @Override
     public synchronized void release() throws RemoteException {
         if (DEBUG) { Log.d(LOGTAG, "release " + this); }
-        releaseCodec();
+        try {
+            // In case Codec.stop() is not called yet.
+            mInputProcessor.stop();
+            mOutputProcessor.stop();
+            mCodec.release();
+        } catch (Exception e) {
+            reportError(Error.FATAL, e);
+        }
+        mCodec = null;
         mSamplePool.reset();
         mSamplePool = null;
         mCallbacks.asBinder().unlinkToDeath(this, 0);
