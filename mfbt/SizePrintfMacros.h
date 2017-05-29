@@ -18,7 +18,7 @@
  * http://msdn.microsoft.com/en-us/library/tcxf1dw6.aspx
  */
 
-#if defined(XP_WIN)
+#if defined(XP_WIN) && !defined(__MINGW32__)
 #  define PRIoSIZE  "Io"
 #  define PRIuSIZE  "Iu"
 #  define PRIxSIZE  "Ix"
