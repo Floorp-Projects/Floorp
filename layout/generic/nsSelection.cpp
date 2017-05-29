@@ -4502,11 +4502,8 @@ Selection::SelectAllFramesForContent(nsIContentIterator* aInnerIter,
 
   for (; !aInnerIter->IsDone(); aInnerIter->Next()) {
     nsINode* node = aInnerIter->GetCurrentNode();
-    // Detect the bug of content iterator, but shouldn't cause a crash in
-    // release builds.
     MOZ_ASSERT(node);
-    nsIContent* innercontent =
-      node && node->IsContent() ? node->AsContent() : nullptr;
+    nsIContent* innercontent = node->IsContent() ? node->AsContent() : nullptr;
     SelectFramesForContent(innercontent, aSelected);
   }
 
@@ -4525,7 +4522,7 @@ Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
     // nothing to do
     return NS_OK;
   }
-  MOZ_ASSERT(aRange);
+  MOZ_ASSERT(aRange && aRange->IsPositioned());
 
   if (mFrameSelection->GetTableCellSelection()) {
     nsINode* node = aRange->GetCommonAncestor();
@@ -4542,9 +4539,12 @@ Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
   // node, call SetSelected on it:
   nsINode* startNode = aRange->GetStartParent();
   nsIContent* startContent =
-    startNode && startNode->IsContent() ? startNode->AsContent() : nullptr;
+    startNode->IsContent() ? startNode->AsContent() : nullptr;
   if (!startContent) {
     // Don't warn, bug 1055722
+    // XXX The range can start from a document node and such range can be
+    //     added to Selection with JS.  Therefore, even in such cases,
+    //     shouldn't we handle selection in the range?
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -4591,18 +4591,18 @@ Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
   nsCOMPtr<nsIContentIterator> inneriter = NS_NewContentIterator();
   for (; !iter->IsDone(); iter->Next()) {
     nsINode* node = iter->GetCurrentNode();
-    // Detect the bug of content iterator, but shouldn't cause a crash in
-    // release builds.
     MOZ_ASSERT(node);
-    nsIContent* content =
-      node && node->IsContent() ? node->AsContent() : nullptr;
+    nsIContent* content = node->IsContent() ? node->AsContent() : nullptr;
     SelectAllFramesForContent(inneriter, content, aSelect);
   }
 
   // We must now do the last one if it is not the same as the first
   if (endNode != startNode) {
     nsIContent* endContent =
-      endNode && endNode->IsContent() ? endNode->AsContent() : nullptr;
+      endNode->IsContent() ? endNode->AsContent() : nullptr;
+    // XXX The range can end at a document node and such range can be
+    //     added to Selection with JS.  Therefore, even in such cases,
+    //     shouldn't we handle selection in the range?
     if (NS_WARN_IF(!endContent)) {
       return NS_ERROR_UNEXPECTED;
     }
