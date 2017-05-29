@@ -27,4 +27,7 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
-XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
+XPCSHELL_TESTS_MANIFESTS += [
+    'test/xpcshell/xpcshell-remote.ini',
+    'test/xpcshell/xpcshell.ini',
+]
