@@ -3265,7 +3265,7 @@ Selection::GetTableCellLocationFromRange(nsRange* aRange,
 }
 
 nsresult
-Selection::addTableCellRange(nsRange* aRange, bool* aDidAddRange,
+Selection::AddTableCellRange(nsRange* aRange, bool* aDidAddRange,
                              int32_t* aOutIndex)
 {  
   if (!aDidAddRange || !aOutIndex)
@@ -5050,7 +5050,7 @@ Selection::AddRangeInternal(nsRange& aRange, nsIDocument* aDocument,
   // and returns NS_OK if range doesn't contain just one table cell
   bool didAddRange;
   int32_t rangeIndex;
-  nsresult result = addTableCellRange(&aRange, &didAddRange, &rangeIndex);
+  nsresult result = AddTableCellRange(&aRange, &didAddRange, &rangeIndex);
   if (NS_FAILED(result)) {
     aRv.Throw(result);
     return;
