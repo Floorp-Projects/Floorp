@@ -230,33 +230,4 @@ WeaveCrypto.prototype = {
         }
         return this.byteCompressInts(input);
     },
-
-    /**
-     * Returns the expanded data string for the derived key.
-     */
-    deriveKeyFromPassphrase(passphrase, saltStr, keyLength = 32) {
-        this.log("deriveKeyFromPassphrase() called.");
-        let keyData = this.makeUint8Array(passphrase, false);
-        let salt = this.makeUint8Array(saltStr, true);
-        let importAlgo = { name: KEY_DERIVATION_ALGO };
-        let deriveAlgo = {
-            name: KEY_DERIVATION_ALGO,
-            salt,
-            iterations: KEY_DERIVATION_ITERATIONS,
-            hash: { name: KEY_DERIVATION_HASHING_ALGO },
-        };
-        let derivedKeyType = {
-            name: DERIVED_KEY_ALGO,
-            length: keyLength * 8,
-        };
-        return Async.promiseSpinningly(
-            crypto.subtle.importKey("raw", keyData, importAlgo, false, ["deriveKey"])
-            .then(key => crypto.subtle.deriveKey(deriveAlgo, key, derivedKeyType, true, []))
-            .then(derivedKey => crypto.subtle.exportKey("raw", derivedKey))
-            .then(keyBytes => {
-                keyBytes = new Uint8Array(keyBytes);
-                return this.expandData(keyBytes);
-            })
-        );
-    },
 };
