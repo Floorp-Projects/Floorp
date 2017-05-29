@@ -214,6 +214,9 @@ def setup_logging(logger, args, defaults=None, formatter_defaults=None,
 
     if not isinstance(logger, StructuredLogger):
         logger = StructuredLogger(logger)
+        # The likely intent when using this function is to get a brand new
+        # logger, so reset state in case it was previously initialized.
+        logger.reset_state()
 
     # Keep track of any options passed for formatters.
     formatter_options = {}

@@ -799,7 +799,6 @@ class MochitestDesktop(object):
     TEST_PATH = "tests"
     NESTED_OOP_TEST_PATH = "nested_oop"
     CHROME_PATH = "redirect.html"
-    log = None
 
     certdbNew = False
     sslTunnel = None
@@ -829,16 +828,10 @@ class MochitestDesktop(object):
         self.start_script_kwargs = {}
         self.urlOpts = []
 
-        if self.log is None:
-            commandline.log_formatters["tbpl"] = (
-                MochitestFormatter,
-                "Mochitest specific tbpl formatter")
-            self.log = commandline.setup_logging("mochitest",
-                                                 logger_options,
-                                                 {
-                                                     "tbpl": sys.stdout
-                                                 })
-            MochitestDesktop.log = self.log
+        commandline.log_formatters["tbpl"] = (
+            MochitestFormatter,
+            "Mochitest specific tbpl formatter")
+        self.log = commandline.setup_logging("mochitest", logger_options, {"tbpl": sys.stdout})
 
         # Jetpack flavors still don't use the structured logger. We need to process their output
         # slightly differently.
