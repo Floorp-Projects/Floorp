@@ -62,6 +62,7 @@ function ensureElementRemoval(aElement) {
   });
 }
 
+SimpleTest.expectAssertions(0, 1); // bug 1332970
 SimpleTest.waitForExplicitFinish();
 
 var omtaEnabled = isOMTAEnabled();
