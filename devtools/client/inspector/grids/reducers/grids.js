@@ -17,7 +17,7 @@ let reducers = {
   [UPDATE_GRID_COLOR](grids, { nodeFront, color }) {
     let newGrids = grids.map(g => {
       if (g.nodeFront == nodeFront) {
-        g = Object.assign({}, g, { color });
+        g.color = color;
       }
 
       return g;
