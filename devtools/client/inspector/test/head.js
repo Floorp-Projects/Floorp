@@ -644,6 +644,19 @@ function synthesizeKeys(input, win) {
 }
 
 /**
+ * Make sure window is properly focused before sending a key event.
+ *
+ * @param {Window} win
+ *        The window containing the panel
+ * @param {String} key
+ *        The string value to input
+ */
+function focusAndSendKey(win, key) {
+  win.document.documentElement.focus();
+  EventUtils.sendKey(key, win);
+}
+
+/**
  * Given a Tooltip instance, fake a mouse event on the `target` DOM Element
  * and assert that the `tooltip` is correctly displayed.
  *
