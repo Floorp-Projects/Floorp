@@ -321,6 +321,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         }
     }
 
+    private String mName;
     private volatile ICodecCallbacks mCallbacks;
     private AsyncCodec mCodec;
     private InputProcessor mInputProcessor;
@@ -362,16 +363,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
         if (DEBUG) { Log.d(LOGTAG, "configure " + this); }
 
-        MediaFormat fmt = format.asFormat();
-        String codecName = getDecoderForFormat(fmt);
-        if (codecName == null) {
-            Log.e(LOGTAG, "FAIL: cannot find codec");
-            return false;
-        }
-
         try {
-            AsyncCodec codec = AsyncCodecFactory.create(codecName);
-
+            MediaFormat fmt = format.asFormat();
+            AsyncCodec codec = createCodecForFormat(fmt);
             MediaCrypto crypto = RemoteMediaDrmBridgeStub.getMediaCrypto(drmStubId);
             if (DEBUG) {
                 boolean hasCrypto = crypto != null;
@@ -397,12 +391,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
             mCodec = codec;
             mInputProcessor = new InputProcessor();
             mOutputProcessor = new OutputProcessor(renderToSurface);
-            mSamplePool = new SamplePool(codecName, renderToSurface);
+            mSamplePool = new SamplePool(mName, renderToSurface);
             if (DEBUG) { Log.d(LOGTAG, codec.toString() + " created. Render to surface?" + renderToSurface); }
             return true;
         } catch (Exception e) {
-            Log.e(LOGTAG, "FAIL: cannot create codec -- " + codecName);
-            e.printStackTrace();
+            Log.e(LOGTAG, "codec creation error", e);
             return false;
         }
     }
@@ -425,11 +418,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         mCodec = null;
     }
 
-    private String getDecoderForFormat(MediaFormat format) {
+    private AsyncCodec createCodecForFormat(MediaFormat format) throws IOException {
         String mime = format.getString(MediaFormat.KEY_MIME);
-        if (mime == null) {
-            return null;
+        if (mime == null || mime.isEmpty()) {
+            throw new IllegalArgumentException("invalid MIME type: " + mime);
         }
+
         int numCodecs = MediaCodecList.getCodecCount();
         for (int i = 0; i < numCodecs; i++) {
             MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
@@ -438,15 +432,19 @@ import java.util.concurrent.ConcurrentLinkedQueue;
             }
             String[] types = info.getSupportedTypes();
             for (String t : types) {
-                if (t.equalsIgnoreCase(mime)) {
-                    return info.getName();
+                if (!t.equalsIgnoreCase(mime)) {
+                    continue;
+                }
+                try {
+                    AsyncCodec codec = AsyncCodecFactory.create(info.getName());
+                    mName = info.getName();
+                    return codec;
+                } catch (IllegalArgumentException e) {
+                    Log.w(LOGTAG, "unable to create " + info.getName() + ". Try next codec.");
                 }
             }
         }
-        return null;
-        // TODO: API 21+ is simpler.
-        //static MediaCodecList sCodecList = new MediaCodecList(MediaCodecList.ALL_CODECS);
-        //return sCodecList.findDecoderForFormat(format);
+        throw new RuntimeException("cannot create codec for " + mime);
     }
 
     @Override
