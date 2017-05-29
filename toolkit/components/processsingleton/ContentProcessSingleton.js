@@ -49,7 +49,6 @@ ContentProcessSingleton.prototype = {
     case "app-startup": {
       Services.obs.addObserver(this, "console-api-log-event");
       Services.obs.addObserver(this, "xpcom-shutdown");
-      cpmm.addMessageListener("DevTools:InitDebuggerServer", this);
       TelemetryController.observe(null, topic, null);
       break;
     }
@@ -103,17 +102,7 @@ ContentProcessSingleton.prototype = {
     case "xpcom-shutdown":
       Services.obs.removeObserver(this, "console-api-log-event");
       Services.obs.removeObserver(this, "xpcom-shutdown");
-      cpmm.removeMessageListener("DevTools:InitDebuggerServer", this);
       break;
-    }
-  },
-
-  receiveMessage(message) {
-    // load devtools component on-demand
-    // Only reply if we are in a real content process
-    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
-      let {init} = Cu.import("resource://devtools/server/content-server.jsm", {});
-      init(message);
     }
   },
 };
