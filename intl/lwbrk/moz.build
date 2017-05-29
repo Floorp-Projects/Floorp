@@ -6,12 +6,6 @@
 
 TEST_DIRS += ['gtest']
 
-XPIDL_SOURCES += [
-    'nsISemanticUnitScanner.idl',
-]
-
-XPIDL_MODULE = 'lwbrk'
-
 EXPORTS += [
     'nsILineBreaker.h',
     'nsIWordBreaker.h',
@@ -21,7 +15,6 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'nsJISx4051LineBreaker.cpp',
     'nsSampleWordBreaker.cpp',
-    'nsSemanticUnitScanner.cpp',
 ]
 
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:

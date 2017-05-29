@@ -10,8 +10,6 @@
 #include "nsJISx4051LineBreaker.h"
 #include "nsSampleWordBreaker.h"
 
-#include "nsSemanticUnitScanner.h"
-
 // unicharutil
 #include "nsCategoryImp.h"
 #include "nsUnicharUtilCIID.h"
@@ -32,8 +30,6 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJISx4051LineBreaker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSampleWordBreaker)
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSemanticUnitScanner)
-
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleTextOverride, Init)
 
@@ -48,7 +44,6 @@ NS_DEFINE_NAMED_CID(MOZ_LOCALESERVICE_CID);
 NS_DEFINE_NAMED_CID(MOZ_OSPREFERENCES_CID);
 NS_DEFINE_NAMED_CID(NS_LBRK_CID);
 NS_DEFINE_NAMED_CID(NS_WBRK_CID);
-NS_DEFINE_NAMED_CID(NS_SEMANTICUNITSCANNER_CID);
 NS_DEFINE_NAMED_CID(NS_UNICHARUTIL_CID);
 NS_DEFINE_NAMED_CID(NS_UNICHARCATEGORY_CID);
 NS_DEFINE_NAMED_CID(NS_ENTITYCONVERTER_CID);
@@ -67,7 +62,6 @@ static const mozilla::Module::CIDEntry kIntlCIDs[] = {
     { &kMOZ_OSPREFERENCES_CID, false, nullptr, mozilla::intl::OSPreferencesConstructor },
     { &kNS_LBRK_CID, false, nullptr, nsJISx4051LineBreakerConstructor },
     { &kNS_WBRK_CID, false, nullptr, nsSampleWordBreakerConstructor },
-    { &kNS_SEMANTICUNITSCANNER_CID, false, nullptr, nsSemanticUnitScannerConstructor },
     { &kNS_UNICHARUTIL_CID, false, nullptr, nsCaseConversionImp2Constructor },
     { &kNS_UNICHARCATEGORY_CID, false, nullptr, nsCategoryImpConstructor },
     { &kNS_ENTITYCONVERTER_CID, false, nullptr, nsEntityConverterConstructor },
@@ -88,7 +82,6 @@ static const mozilla::Module::ContractIDEntry kIntlContracts[] = {
     { MOZ_OSPREFERENCES_CONTRACTID, &kMOZ_OSPREFERENCES_CID },
     { NS_LBRK_CONTRACTID, &kNS_LBRK_CID },
     { NS_WBRK_CONTRACTID, &kNS_WBRK_CID },
-    { NS_SEMANTICUNITSCANNER_CONTRACTID, &kNS_SEMANTICUNITSCANNER_CID },
     { NS_UNICHARUTIL_CONTRACTID, &kNS_UNICHARUTIL_CID },
     { NS_UNICHARCATEGORY_CONTRACTID, &kNS_UNICHARCATEGORY_CID },
     { NS_ENTITYCONVERTER_CONTRACTID, &kNS_ENTITYCONVERTER_CID },
