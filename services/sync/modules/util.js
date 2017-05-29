@@ -641,15 +641,6 @@ this.Svc = {};
 Svc.Prefs = new Preferences(PREFS_BRANCH);
 Svc.Obs = Observers;
 
-Svc.__defineGetter__("Crypto", function() {
-  let cryptoSvc;
-  let ns = {};
-  Cu.import("resource://services-crypto/WeaveCrypto.js", ns);
-  cryptoSvc = new ns.WeaveCrypto();
-  delete Svc.Crypto;
-  return Svc.Crypto = cryptoSvc;
-});
-
 Svc.Obs.add("xpcom-shutdown", function() {
   for (let name in Svc)
     delete Svc[name];
