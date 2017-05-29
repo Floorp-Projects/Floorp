@@ -258,9 +258,12 @@ TEST(MozPromise, PromiseAllReject)
 // chaining upon task queue shutdown.
 TEST(MozPromise, Chaining)
 {
+  // We declare this variable before |atq| to ensure
+  // the destructor is run after |holder.Disconnect()|.
+  MozPromiseRequestHolder<TestPromise> holder;
+
   AutoTaskQueue atq;
   RefPtr<TaskQueue> queue = atq.Queue();
-  MozPromiseRequestHolder<TestPromise> holder;
 
   RunOnTaskQueue(queue, [queue, &holder] () {
     auto p = TestPromise::CreateAndResolve(42, __func__);
