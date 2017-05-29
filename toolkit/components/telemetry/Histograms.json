@@ -13315,6 +13315,17 @@
     "keyed": true,
     "description": "Measures the number of milliseconds we spend processing sync IPC messages in the receiving process, keyed by message name. Note: only messages that take over 500 microseconds are included in this probe."
   },
+  "IDLE_RUNNABLE_BUDGET_OVERUSE_MS": {
+    "record_in_processes": ["main", "content", "gpu"],
+    "alert_emails": ["farre@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "keyed": true,
+    "high": 10000,
+    "n_buckets": 10,
+    "bug_numbers": [1292600],
+    "description": "The time a given runnable exceeds its budget as set in nsIRunnable::SetDeadline (in milliseconds). The key comes from the runnables nsINamed::name value."
+  },
   "WEBEXT_BACKGROUND_PAGE_LOAD_MS": {
     "record_in_processes": ["main"],
     "alert_emails": ["addons-dev-internal@mozilla.com"],
