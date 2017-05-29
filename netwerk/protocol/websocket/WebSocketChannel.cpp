@@ -65,10 +65,6 @@
 #include "zlib.h"
 #include <algorithm>
 
-#ifdef MOZ_WIDGET_GONK
-#include "NetStatistics.h"
-#endif
-
 // rather than slurp up all of nsIWebSocket.idl, which lives outside necko, just
 // dupe one constant we need from it
 #define CLOSE_GOING_AWAY 1001

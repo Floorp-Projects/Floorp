@@ -48,7 +48,6 @@ class nsWifiListener
   bool mHasSentData;
 };
 
-#ifndef MOZ_WIDGET_GONK
 class nsWifiMonitor final : nsIRunnable, nsIWifiMonitor, nsIObserver
 {
  public:
@@ -79,32 +78,5 @@ class nsWifiMonitor final : nsIRunnable, nsIWifiMonitor, nsIObserver
   nsAutoPtr<WinWifiScanner> mWinWifiScanner;
 #endif
 };
-#else
-#include "nsIWifi.h"
-class nsWifiMonitor final : nsIWifiMonitor, nsIWifiScanResultsReady, nsIObserver
-{
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIWIFIMONITOR
-  NS_DECL_NSIOBSERVER
-  NS_DECL_NSIWIFISCANRESULTSREADY
-
-  nsWifiMonitor();
-
- private:
-  ~nsWifiMonitor();
-
-  void ClearTimer() {
-    if (mTimer) {
-      mTimer->Cancel();
-      mTimer = nullptr;
-    }
-  }
-  void StartScan();
-  nsCOMArray<nsWifiAccessPoint> mLastAccessPoints;
-  nsTArray<nsWifiListener> mListeners;
-  nsCOMPtr<nsITimer> mTimer;
-};
-#endif
 
 #endif
