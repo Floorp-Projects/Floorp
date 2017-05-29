@@ -321,6 +321,8 @@
          <observes element="viewTabsSidebar" attribute="checked"/>
        </toolbarbutton>
       <toolbarseparator/>
+      <vbox id="sidebar-extensions"></vbox>
+      <toolbarseparator/>
       <toolbarbutton id="sidebar-reverse-position"
                      class="subviewbutton"
                      oncommand="SidebarUI.reversePosition()"/>
