@@ -31,7 +31,7 @@
       function PC_REMOTE_WAIT_FOR_FRAMES() {
         var vremote = test.pcRemote.remoteMediaElements[0];
         ok(vremote, "Should have remote video element for pcRemote");
-        return addFinallyToPromise(helper.checkVideoPlaying(vremote, 10, 10, 16))
+        return addFinallyToPromise(helper.checkVideoPlaying(vremote))
             .finally(() => emitter.stop());
       }
     ]);
@@ -50,7 +50,7 @@
         var vremote = test.pcRemote.remoteMediaElements[0];
         ok(vremote, "Should have remote video element for pcRemote");
         emitter.start();
-        return addFinallyToPromise(helper.checkVideoPaused(vremote, 10, 10, 16, 5000))
+        return addFinallyToPromise(helper.checkVideoPaused(vremote))
             .finally(() => emitter.stop());
       },
     ]);
@@ -65,7 +65,7 @@
         var vremote = test.pcRemote.remoteMediaElements[0];
         ok(vremote, "Should have remote video element for pcRemote");
         emitter.start();
-        return addFinallyToPromise(helper.checkVideoPlaying(vremote, 10, 10, 16))
+        return addFinallyToPromise(helper.checkVideoPlaying(vremote))
             .finally(() => emitter.stop());
       }
     ]);
