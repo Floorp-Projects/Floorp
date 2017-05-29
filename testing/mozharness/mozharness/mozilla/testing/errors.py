@@ -115,6 +115,7 @@ TestPassed = [
 HarnessErrorList = [
     {'substr': 'TEST-UNEXPECTED', 'level': ERROR, },
     {'substr': 'PROCESS-CRASH', 'level': ERROR, },
+    {'regex': re.compile('''thread '([^']+)' panicked'''), 'level': ERROR, },
 ]
 
 LogcatErrorList = [
