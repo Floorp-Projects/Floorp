@@ -22,6 +22,7 @@ NS_IMPL_ISUPPORTS(ContentBridgeParent,
                   nsIObserver)
 
 ContentBridgeParent::ContentBridgeParent()
+  : mIsForJSPlugin(false)
 {}
 
 ContentBridgeParent::~ContentBridgeParent()

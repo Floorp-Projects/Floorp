@@ -864,6 +864,7 @@ nsresult
 nsFakePluginTag::Create(const FakePluginTagInit& aInitDictionary,
                         nsFakePluginTag** aPluginTag)
 {
+  NS_ENSURE_TRUE(sNextId <= PR_INT32_MAX, NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(!aInitDictionary.mMimeEntries.IsEmpty(), NS_ERROR_INVALID_ARG);
 
   RefPtr<nsFakePluginTag> tag = new nsFakePluginTag();
@@ -1057,5 +1058,12 @@ NS_IMETHODIMP
 nsFakePluginTag::GetLoaded(bool* ret)
 {
   *ret = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFakePluginTag::GetId(uint32_t* aId)
+{
+  *aId = mId;
   return NS_OK;
 }

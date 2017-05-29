@@ -73,4 +73,9 @@ interface nsIFakePluginTag : nsIPluginTag
   // plugin. Note that the original data/src value for the plugin is not loaded
   // and will need to be requested by the handler via XHR or similar if desired.
   readonly attribute nsIURI handlerURI;
+
+  /**
+   * A unique id for this JS-implemented plugin. 0 is a valid id.
+   */
+  readonly attribute unsigned long id;
 };

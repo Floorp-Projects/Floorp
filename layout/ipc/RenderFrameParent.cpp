@@ -245,7 +245,8 @@ RenderFrameParent::ActorDestroy(ActorDestroyReason why)
     if (XRE_IsParentProcess()) {
       GPUProcessManager::Get()->UnmapLayerTreeId(mLayersId, OtherPid());
     } else if (XRE_IsContentProcess()) {
-      ContentChild::GetSingleton()->SendDeallocateLayerTreeId(mLayersId);
+      TabParent* browser = TabParent::GetFrom(mFrameLoader);
+      ContentChild::GetSingleton()->SendDeallocateLayerTreeId(browser->Manager()->ChildID(), mLayersId);
     }
   }
 
