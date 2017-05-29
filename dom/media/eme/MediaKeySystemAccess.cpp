@@ -662,8 +662,21 @@ GetSupportedCapabilities(const CodecType aCodecType,
     if (codecs.IsEmpty()) {
       // If container normatively implies a specific set of codecs and codec constraints:
       // Let parameters be that set.
+      if (isMP4) {
+        if (aCodecType == Audio) {
+          codecs.AppendElement(EME_CODEC_AAC);
+        } else if (aCodecType == Video) {
+          codecs.AppendElement(EME_CODEC_H264);
+        }
+      } else if (isWebM) {
+        if (aCodecType == Audio) {
+          codecs.AppendElement(EME_CODEC_VORBIS);
+        } else if (aCodecType == Video) {
+          codecs.AppendElement(EME_CODEC_VP8);
+        }
+      }
       // Otherwise: Continue to the next iteration.
-      continue;
+      // (Note: all containers we support have implied codecs, so don't continue here.)
     }
 
     // If container type is not strictly a audio/video type, continue to the next iteration.

@@ -103,7 +103,7 @@ add_task(async function test() {
     let access = await content.navigator.requestMediaKeySystemAccess("org.w3.clearkey",
                                                                      [{
                                                                        initDataTypes: [aKeyInfo.initDataType],
-                                                                       videoCapabilities: [{contentType: 'video/webm; codecs="vp9"'}],
+                                                                       videoCapabilities: [{contentType: "video/webm"}],
                                                                        sessionTypes: ["persistent-license"],
                                                                        persistentState: "required",
                                                                      }]);
@@ -156,7 +156,7 @@ add_task(async function test() {
     let access = await content.navigator.requestMediaKeySystemAccess("org.w3.clearkey",
                                                                      [{
                                                                        initDataTypes: [aKeyInfo.initDataType],
-                                                                       videoCapabilities: [{contentType: 'video/webm; codecs="vp9"'}],
+                                                                       videoCapabilities: [{contentType: "video/webm"}],
                                                                        sessionTypes: ["persistent-license"],
                                                                        persistentState: "required",
                                                                      }]);
