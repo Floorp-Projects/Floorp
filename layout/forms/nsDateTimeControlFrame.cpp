@@ -43,7 +43,7 @@ NS_QUERYFRAME_HEAD(nsDateTimeControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsDateTimeControlFrame::nsDateTimeControlFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, LayoutFrameType::DateTimeControl)
+  : nsContainerFrame(aContext, kClassID)
 {
 }
 

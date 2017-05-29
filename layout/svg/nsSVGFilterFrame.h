@@ -33,7 +33,7 @@ class nsSVGFilterFrame : public nsSVGContainerFrame
   NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGFilterFrame(nsStyleContext* aContext)
-    : nsSVGContainerFrame(aContext, mozilla::LayoutFrameType::SVGFilter)
+    : nsSVGContainerFrame(aContext, kClassID)
     , mLoopFlag(false)
     , mNoHRefURI(false)
   {
@@ -41,7 +41,7 @@ protected:
   }
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGFilterFrame)
 
   // nsIFrame methods:
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,

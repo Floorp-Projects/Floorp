@@ -16,9 +16,8 @@ class nsSharedPageData;
 class nsPageFrame final : public nsContainerFrame {
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsPageFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsPageFrame)
 
   friend nsPageFrame* NS_NewPageFrame(nsIPresShell* aPresShell,
                                       nsStyleContext* aContext);
@@ -99,7 +98,7 @@ protected:
 
 class nsPageBreakFrame : public nsLeafFrame
 {
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsPageBreakFrame)
 
   explicit nsPageBreakFrame(nsStyleContext* aContext);
   ~nsPageBreakFrame();

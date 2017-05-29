@@ -375,13 +375,6 @@ toolbar[brighttext] {
 
 /* ::::: bookmark buttons ::::: */
 
-.bookmark-item > .toolbarbutton-menu-dropmarker {
-  list-style-image: url("chrome://browser/skin/places/arrow-down.svg");
-  fill: currentColor;
-  margin-top: 1px;
-  margin-inline-start: 3px;
-}
-
 #bookmarks-toolbar-placeholder {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;
 }

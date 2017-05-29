@@ -159,8 +159,6 @@ var whitelist = new Set([
    platforms: ["linux"]},
   // Bug 1348362
   {file: "chrome://global/skin/icons/warning-64.png", platforms: ["linux", "win"]},
-  // Bug 1348524
-  {file: "chrome://global/skin/notification/close.png", platforms: ["macosx"]},
   // Bug 1348525
   {file: "chrome://global/skin/splitter/grip-bottom.gif", platforms: ["linux"]},
   {file: "chrome://global/skin/splitter/grip-left.gif", platforms: ["linux"]},

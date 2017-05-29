@@ -11,12 +11,19 @@ def test_webdriver_special_key_sends_keydown(session,
                                              key_chain,
                                              name,
                                              expected):
+    if name.startswith("F"):
+        # Prevent default behavior for F1, etc., but only after keydown
+        # bubbles up to body. (Otherwise activated browser menus/functions
+        # may interfere with subsequent tests.)
+        session.execute_script("""
+            document.body.addEventListener("keydown",
+                    (e) => e.preventDefault());
+        """)
     key_chain.key_down(getattr(Keys, name)).perform()
     # only interested in keydown
     first_event = get_events(session)[0]
     # make a copy so we can throw out irrelevant keys and compare to events
     expected = dict(expected)
-
 
     del expected["value"]
     # check and remove keys that aren't in expected

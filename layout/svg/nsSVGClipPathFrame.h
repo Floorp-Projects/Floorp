@@ -25,14 +25,14 @@ class nsSVGClipPathFrame final : public nsSVGContainerFrame
 
 protected:
   explicit nsSVGClipPathFrame(nsStyleContext* aContext)
-    : nsSVGContainerFrame(aContext, mozilla::LayoutFrameType::SVGClipPath)
+    : nsSVGContainerFrame(aContext, kClassID)
     , mIsBeingProcessed(false)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGClipPathFrame)
 
   // nsIFrame methods:
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,

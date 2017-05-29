@@ -11,40 +11,19 @@
 // Include PlacesDBUtils module.
 Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
 
-function run_test() {
-  do_test_pending();
-  PlacesDBUtils.checkAndFixDatabase(function(aLog) {
-    let sections = [];
-    let positives = [];
-    let negatives = [];
-    let infos = [];
-
-    aLog.forEach(function(aMsg) {
-      print(aMsg);
-      switch (aMsg.substr(0, 1)) {
-        case "+":
-          positives.push(aMsg);
-          break;
-        case "-":
-          negatives.push(aMsg);
-          break;
-        case ">":
-          sections.push(aMsg);
-          break;
-        default:
-          infos.push(aMsg);
+add_task(async function() {
+  let tasksStatusMap = await PlacesDBUtils.checkAndFixDatabase();
+  let numberOfTasksRun = tasksStatusMap.size;
+    let successfulTasks = [];
+    let failedTasks = [];
+    tasksStatusMap.forEach(val => {
+      if (val.succeeded) {
+        successfulTasks.push(val);
+      } else {
+        failedTasks.push(val);
       }
     });
-
-    print("Check that we have run all sections.");
-    do_check_eq(sections.length, 5);
-    print("Check that we have no negatives.");
-    do_check_false(!!negatives.length);
-    print("Check that we have positives.");
-    do_check_true(!!positives.length);
-    print("Check that we have info.");
-    do_check_true(!!infos.length);
-
-    do_test_finished();
-  });
-}
+    Assert.equal(numberOfTasksRun, 6, "Check that we have run all tasks.");
+    Assert.equal(successfulTasks.length, 6, "Check that we have run all tasks successfully");
+    Assert.equal(failedTasks.length, 0, "Check that no task is failing");
+});

@@ -1,32 +1,32 @@
 # Tests related to SVG Animation (using SMIL) that use event timing.
 
-fails-if(styloVsGecko) == event-begin-1.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-begin-offset-1.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-begin-offset-2.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-begin-timeevent-1.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-begin-timeevent-2.svg green-box-ref.svg
-random-if(Android) fails-if(styloVsGecko) == event-begin-timeevent-3.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-begin-load-1.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-bubble-1.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-custom-1.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-begin-1.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-begin-offset-1.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-begin-offset-2.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-begin-timeevent-1.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-begin-timeevent-2.svg green-box-ref.svg
+random-if(Android) fails-if(styloVsGecko||stylo) == event-begin-timeevent-3.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-begin-load-1.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-bubble-1.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-custom-1.svg green-box-ref.svg
 == event-end-1.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-end-2.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-end-open-1.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-end-trimmed-1.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-preventDefault-1.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-seek-1.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-target-default-1.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-target-default-2.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-target-id-change-1.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-end-2.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-end-open-1.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-end-trimmed-1.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-preventDefault-1.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-seek-1.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-target-default-1.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-target-default-2.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-target-id-change-1.svg green-box-ref.svg
 == event-target-id-change-2.svg green-box-ref.svg
 == event-target-id-change-3.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-target-xlink-change-1.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-target-xlink-change-1.svg green-box-ref.svg
 == event-target-xlink-change-2.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-target-xlink-change-3.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-target-xlink-change-3.svg green-box-ref.svg
 == event-target-xlink-change-4.svg green-box-ref.svg
 == event-target-surgery-1.svg green-box-ref.svg
 == event-target-surgery-2.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-target-surgery-3.svg green-box-ref.svg
-fails-if(styloVsGecko) == event-target-non-svg-1.xhtml green-box-ref.xhtml
-fails-if(styloVsGecko) == accesskey-entity-1.svg green-box-ref.svg
-fails-if(styloVsGecko) == accesskey-entity-2.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-target-surgery-3.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == event-target-non-svg-1.xhtml green-box-ref.xhtml
+fails-if(styloVsGecko||stylo) == accesskey-entity-1.svg green-box-ref.svg
+fails-if(styloVsGecko||stylo) == accesskey-entity-2.svg green-box-ref.svg

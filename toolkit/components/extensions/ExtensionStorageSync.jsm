@@ -306,28 +306,6 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
   }
 
   async decode(record) {
-    if (record === null) {
-      // XXX: This is a hack that detects a situation that should
-      // never happen by using a technique that shouldn't actually
-      // work. See
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1359879 for
-      // the whole gory story.
-      //
-      // For reasons that aren't clear yet,
-      // sometimes the server-side keyring is deleted. When we try
-      // to sync our copy of the keyring, we get a conflict with the
-      // deleted version. Due to a bug in kinto.js, we are called to
-      // decode the deleted version, which is represented as
-      // null. For now, try to handle this by throwing a specific
-      // kind of exception which we can catch and recover from the
-      // same way we would do with any other kind of undecipherable
-      // keyring -- wiping the bucket and reuploading everything.
-      //
-      // Eventually we will probably fix the bug in kinto.js, and
-      // this will have to move somewhere else, probably in the code
-      // that detects a resolved conflict.
-      throw new ServerKeyringDeleted();
-    }
     try {
       return await super.decode(record);
     } catch (e) {
@@ -818,7 +796,7 @@ class ExtensionStorageSync {
         oldValue: record.data,
       };
     }
-    for (const conflict of syncResults.resolved) {
+    for (const resolution of syncResults.resolved) {
       // FIXME: We can't send a "changed" notification because
       // kinto.js only provides the newly-resolved value. But should
       // we even send a notification? We use CLIENT_WINS so nothing
@@ -829,8 +807,9 @@ class ExtensionStorageSync {
       // might violate client code's assumptions, since from their
       // perspective, we were in state L, but this diff is from R ->
       // L.
-      changes[conflict.key] = {
-        newValue: conflict.data,
+      const accepted = resolution.accepted;
+      changes[accepted.key] = {
+        newValue: accepted.data,
       };
     }
     if (Object.keys(changes).length > 0) {
@@ -872,7 +851,7 @@ class ExtensionStorageSync {
       return await f(fxaToken);
     } catch (e) {
       log.error(`${description}: request failed`, e);
-      if (e && e.data && e.data.code == 401) {
+      if (e && e.response && e.response.status == 401) {
         // Our token might have expired. Refresh and retry.
         log.info("Token might have expired");
         await this._fxaService.removeCachedOAuthToken({token: fxaToken});
@@ -1053,8 +1032,44 @@ class ExtensionStorageSync {
       // everything.
       const result = await this.cryptoCollection.sync(this);
       if (result.resolved.length > 0) {
-        if (result.resolved[0].uuid != cryptoKeyRecord.uuid) {
-          log.info(`Detected a new UUID (${result.resolved[0].uuid}, was ${cryptoKeyRecord.uuid}). Reseting sync status for everything.`);
+        // Automatically-resolved conflict. It should
+        // be for the keys record.
+        const resolutionIds = result.resolved.map(resolution => resolution.id);
+        if (resolutionIds > 1) {
+          // This should never happen -- there is only ever one record
+          // in this collection.
+          log.error(`Too many resolutions for sync-storage-crypto collection: ${JSON.stringify(resolutionIds)}`);
+        }
+        const keyResolution = result.resolved[0];
+        if (keyResolution.id != STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID) {
+          // This should never happen -- there should only ever be the
+          // keyring in this collection.
+          log.error(`Strange conflict in sync-storage-crypto collection: ${JSON.stringify(resolutionIds)}`);
+        }
+
+        // Due to a bug in the server-side code (see
+        // https://github.com/Kinto/kinto/issues/1209), lots of users'
+        // keyrings were deleted. We discover this by trying to push a
+        // new keyring (because the user aded a new extension), and we
+        // get a conflict. We have SERVER_WINS, so the client will
+        // accept this deleted keyring and delete it locally. Discover
+        // this and undo it.
+        if (keyResolution.accepted === null) {
+          log.error("Conflict spotted -- the server keyring was deleted");
+          await this.cryptoCollection.upsert(keyResolution.rejected);
+          // It's possible that the keyring on the server that was
+          // deleted had keys for other extensions, which had already
+          // encrypted data. For this to happen, another client would
+          // have had to upload the keyring and then the delete happened
+          // before this client did a sync (and got the new extension
+          // and tried to sync the keyring again). Just to be safe,
+          // let's signal that something went wrong and we should wipe
+          // the bucket.
+          throw new ServerKeyringDeleted();
+        }
+
+        if (keyResolution.accepted.uuid != cryptoKeyRecord.uuid) {
+          log.info(`Detected a new UUID (${keyResolution.accepted.uuid}, was ${cryptoKeyRecord.uuid}). Reseting sync status for everything.`);
           await this.cryptoCollection.resetSyncStatus();
 
           // Server version is now correct. Return that result.
@@ -1065,7 +1080,10 @@ class ExtensionStorageSync {
       return result;
     } catch (e) {
       if (KeyRingEncryptionRemoteTransformer.isOutdatedKB(e) ||
-          e instanceof ServerKeyringDeleted) {
+          e instanceof ServerKeyringDeleted ||
+          // This is another way that ServerKeyringDeleted can
+          // manifest; see bug 1350088 for more details.
+          e.message == "Server has been flushed.") {
         // Check if our token is still valid, or if we got locked out
         // between starting the sync and talking to Kinto.
         const isSessionValid = await this._fxaService.sessionStatus();

@@ -23,7 +23,7 @@ class SVGFEImageFrame final : public nsFrame
   NS_NewSVGFEImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit SVGFEImageFrame(nsStyleContext* aContext)
-    : nsFrame(aContext, LayoutFrameType::SVGFEImage)
+    : nsFrame(aContext, kClassID)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
 
@@ -35,7 +35,7 @@ protected:
   }
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(SVGFEImageFrame)
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,

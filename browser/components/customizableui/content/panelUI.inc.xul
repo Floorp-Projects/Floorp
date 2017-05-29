@@ -332,42 +332,6 @@
     </panelview>
 
   </panelmultiview>
-  <!-- These menupopups are located here to prevent flickering,
-       see bug 492960 comment 20. -->
-  <menupopup id="customizationPanelItemContextMenu">
-    <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
-              closemenu="single"
-              class="customize-context-moveToToolbar"
-              accesskey="&customizeMenu.moveToToolbar.accesskey;"
-              label="&customizeMenu.moveToToolbar.label;"/>
-    <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode)"
-              closemenu="single"
-              class="customize-context-removeFromPanel"
-              accesskey="&customizeMenu.removeFromMenu.accesskey;"
-              label="&customizeMenu.removeFromMenu.label;"/>
-    <menuseparator/>
-    <menuitem command="cmd_CustomizeToolbars"
-              class="viewCustomizeToolbar"
-              accesskey="&viewCustomizeToolbar.accesskey;"
-              label="&viewCustomizeToolbar.label;"/>
-  </menupopup>
-
-  <menupopup id="customizationPaletteItemContextMenu">
-    <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
-              class="customize-context-addToToolbar"
-              accesskey="&customizeMenu.addToToolbar.accesskey;"
-              label="&customizeMenu.addToToolbar.label;"/>
-    <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
-              class="customize-context-addToPanel"
-              accesskey="&customizeMenu.addToPanel.accesskey;"
-              label="&customizeMenu.addToPanel.label;"/>
-  </menupopup>
-
-  <menupopup id="customizationPanelContextMenu">
-    <menuitem command="cmd_CustomizeToolbars"
-              accesskey="&customizeMenu.addMoreItems.accesskey;"
-              label="&customizeMenu.addMoreItems.label;"/>
-  </menupopup>
 </panel>
 
 <panel id="widget-overflow"
@@ -431,6 +395,7 @@
        type="arrow"
        position="after_start"
        hidden="true"
+       flip="slide"
        orient="vertical"
        noautofocus="true"
        noautohide="true"
@@ -488,6 +453,47 @@
     </popupnotificationcontent>
   </popupnotification>
 </panel>
+
+<menupopup id="customizationPanelItemContextMenu">
+  <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
+            closemenu="single"
+            class="customize-context-moveToToolbar"
+            photonaccesskey="&customizeMenu.unpinFromOverflowMenu.accesskey;"
+            photonlabel="&customizeMenu.unpinFromOverflowMenu.label;"
+            accesskey="&customizeMenu.moveToToolbar.accesskey;"
+            label="&customizeMenu.moveToToolbar.label;"/>
+  <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode)"
+            closemenu="single"
+            class="customize-context-removeFromPanel"
+            photonaccesskey="&customizeMenu.removeFromToolbar.accesskey;"
+            photonlabel="&customizeMenu.removeFromToolbar.label;"
+            accesskey="&customizeMenu.removeFromMenu.accesskey;"
+            label="&customizeMenu.removeFromMenu.label;"/>
+  <menuseparator/>
+  <menuitem command="cmd_CustomizeToolbars"
+            class="viewCustomizeToolbar"
+            accesskey="&viewCustomizeToolbar.accesskey;"
+            label="&viewCustomizeToolbar.label;"/>
+</menupopup>
+
+<menupopup id="customizationPaletteItemContextMenu">
+  <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
+            class="customize-context-addToToolbar"
+            accesskey="&customizeMenu.addToToolbar.accesskey;"
+            label="&customizeMenu.addToToolbar.label;"/>
+  <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
+            class="customize-context-addToPanel"
+            photonaccesskey="&customizeMenu.addToOverflowMenu.accesskey;"
+            photonlabel="&customizeMenu.addToOverflowMenu.label;"
+            accesskey="&customizeMenu.addToPanel.accesskey;"
+            label="&customizeMenu.addToPanel.label;"/>
+</menupopup>
+
+<menupopup id="customizationPanelContextMenu">
+  <menuitem command="cmd_CustomizeToolbars"
+            accesskey="&customizeMenu.addMoreItems.accesskey;"
+            label="&customizeMenu.addMoreItems.label;"/>
+</menupopup>
 
 <panel id="appMenu-popup"
        class="cui-widget-panel"

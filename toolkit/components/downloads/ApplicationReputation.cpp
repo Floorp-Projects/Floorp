@@ -55,6 +55,7 @@
 #include "nsContentUtils.h"
 #include "nsWeakReference.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "nsIRedirectHistoryEntry.h"
 
 using namespace mozilla::downloads;
 using mozilla::ArrayLength;
@@ -1030,7 +1031,11 @@ PendingLookup::AddRedirects(nsIArray* aRedirects)
     rv = iter->GetNext(getter_AddRefs(supports));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(supports, &rv);
+    nsCOMPtr<nsIRedirectHistoryEntry> redirectEntry = do_QueryInterface(supports, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = redirectEntry->GetPrincipal(getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIURI> uri;

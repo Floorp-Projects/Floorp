@@ -7,7 +7,6 @@ jobs:
       job:
           type: decision-task
           treeherder-symbol: Nd
-          triggered-by: nightly
           target-tasks-method: nightly_linux
       run-on-projects:
           - mozilla-central
@@ -25,7 +24,6 @@ jobs:
       job:
           type: decision-task
           treeherder-symbol: Nd-OSX
-          triggered-by: nightly
           target-tasks-method: nightly_macosx
       run-on-projects:
           - date
@@ -35,7 +33,6 @@ jobs:
       job:
           type: decision-task
           treeherder-symbol: Nd-Win64
-          triggered-by: nightly
           target-tasks-method: nightly_win64
       run-on-projects:
           - date
@@ -45,7 +42,6 @@ jobs:
       job:
           type: decision-task
           treeherder-symbol: Na
-          triggered-by: nightly
           target-tasks-method: nightly_fennec
       run-on-projects:
           - mozilla-central

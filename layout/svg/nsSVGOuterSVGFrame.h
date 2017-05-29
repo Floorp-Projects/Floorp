@@ -30,7 +30,7 @@ protected:
 
 public:
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGOuterSVGFrame)
 
 #ifdef DEBUG
   ~nsSVGOuterSVGFrame() {
@@ -233,12 +233,11 @@ class nsSVGOuterSVGAnonChildFrame final : public nsSVGDisplayContainerFrame
                                   nsStyleContext* aContext);
 
   explicit nsSVGOuterSVGAnonChildFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext,
-                                 mozilla::LayoutFrameType::SVGOuterSVGAnonChild)
+    : nsSVGDisplayContainerFrame(aContext, kClassID)
   {}
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGOuterSVGAnonChildFrame)
 
 #ifdef DEBUG
   virtual void Init(nsIContent*       aContent,

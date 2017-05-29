@@ -15,17 +15,16 @@ class nsSVGGFrame : public nsSVGDisplayContainerFrame
 {
   friend nsIFrame*
   NS_NewSVGGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-protected:
-  nsSVGGFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType)
-    : nsSVGDisplayContainerFrame(aContext, aType)
-  {}
-
   explicit nsSVGGFrame(nsStyleContext* aContext)
-    : nsSVGGFrame(aContext, mozilla::LayoutFrameType::SVGG)
+    : nsSVGGFrame(aContext, kClassID) {}
+
+protected:
+  nsSVGGFrame(nsStyleContext* aContext, nsIFrame::ClassID aID)
+    : nsSVGDisplayContainerFrame(aContext, aID)
   {}
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGGFrame)
 
 #ifdef DEBUG
   virtual void Init(nsIContent*       aContent,

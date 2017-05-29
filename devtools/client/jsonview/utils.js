@@ -32,6 +32,8 @@ exports.exportIntoContentScope = function (win, obj, defineAs) {
       Cu.exportFunction(propValue, clone, {
         defineAs: propName
       });
+    } else {
+      clone[propName] = Cu.cloneInto(propValue, win);
     }
   }
 };

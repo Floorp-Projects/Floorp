@@ -154,6 +154,9 @@ class StringIteratorObject : public JSObject
     static const Class class_;
 };
 
+StringIteratorObject*
+NewStringIteratorObject(JSContext* cx, NewObjectKind newKind = GenericObject);
+
 bool
 GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleObject objp);
 

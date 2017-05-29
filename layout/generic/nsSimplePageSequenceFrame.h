@@ -60,7 +60,7 @@ public:
                                                                   nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSimplePageSequenceFrame)
 
   // nsIFrame
   void Reflow(nsPresContext* aPresContext,

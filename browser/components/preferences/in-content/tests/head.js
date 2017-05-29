@@ -218,6 +218,26 @@ function assertSitesListed(doc, hosts) {
   is(removeAllBtn.disabled, false, "Should enable the removeAllBtn button");
 }
 
+function evaluateSearchResults(keyword, searchReults) {
+  searchReults = Array.isArray(searchReults) ? searchReults : [searchReults];
+  searchReults.push("header-searchResults");
+
+  let searchInput = gBrowser.contentDocument.getElementById("searchInput");
+  searchInput.focus();
+  searchInput.value = keyword;
+  searchInput.doCommand();
+
+  let mainPrefTag = gBrowser.contentDocument.getElementById("mainPrefPane");
+  for (let i = 0; i < mainPrefTag.childElementCount; i++) {
+    let child = mainPrefTag.children[i];
+    if (searchReults.includes(child.id)) {
+      is_element_visible(child, "Should be in search results");
+    } else if (child.id) {
+      is_element_hidden(child, "Should not be in search results");
+    }
+  }
+}
+
 const mockSiteDataManager = {
 
   _SiteDataManager: null,

@@ -231,6 +231,14 @@ function setBreakpoint(sourceClient, location) {
   return sourceClient.setBreakpoint(location);
 }
 
+function getPrototypeAndProperties(objClient) {
+  dump("getting prototype and properties.\n");
+
+  return new Promise(resolve => {
+    objClient.getPrototypeAndProperties(response => resolve(response));
+  });
+}
+
 function dumpn(msg) {
   dump("DBG-TEST: " + msg + "\n");
 }
@@ -692,6 +700,16 @@ function executeOnNextTickAndWaitForPause(action, client) {
   const paused = waitForPause(client);
   executeSoon(action);
   return paused;
+}
+
+function evalCallback(debuggeeGlobal, func) {
+  Components.utils.evalInSandbox(
+    "(" + func + ")()",
+    debuggeeGlobal,
+    "1.8",
+    "test.js",
+    1
+  );
 }
 
 /**

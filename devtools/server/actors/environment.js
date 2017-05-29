@@ -28,6 +28,15 @@ let EnvironmentActor = ActorClassWithSpec(environmentSpec, {
   },
 
   /**
+   * When the Environment Actor is destroyed it removes the
+   * Debugger.Environment.actor field so that environment does not
+   * reference a destroyed actor.
+   */
+  destroy: function () {
+    this.obj.actor = null;
+  },
+
+  /**
    * Return an environment form for use in a protocol message.
    */
   form: function () {

@@ -23,9 +23,8 @@ class nsProgressFrame final
   typedef mozilla::dom::Element Element;
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsProgressFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsProgressFrame)
 
   explicit nsProgressFrame(nsStyleContext* aContext);
   virtual ~nsProgressFrame();
@@ -46,8 +45,6 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("Progress"), aResult);
   }
 #endif
-
-  virtual bool IsLeaf() const override { return true; }
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;

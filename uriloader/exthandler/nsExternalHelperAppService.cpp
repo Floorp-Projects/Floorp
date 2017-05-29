@@ -41,6 +41,7 @@
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"
 #include "nsIMutableArray.h"
+#include "nsIRedirectHistoryEntry.h"
 
 // used to access our datastore of user-configured helper applications
 #include "nsIHandlerService.h"
@@ -2053,8 +2054,8 @@ nsExternalAppHandler::OnSaveComplete(nsIBackgroundFileSaver *aSaver,
         NS_ENSURE_SUCCESS(rv, rv);
         LOG(("nsExternalAppHandler: Got %" PRIuSIZE " redirects\n",
              loadInfo->RedirectChain().Length()));
-        for (nsIPrincipal* principal : loadInfo->RedirectChain()) {
-          redirectChain->AppendElement(principal, false);
+        for (nsIRedirectHistoryEntry* entry : loadInfo->RedirectChain()) {
+          redirectChain->AppendElement(entry, false);
         }
         mRedirects = redirectChain;
       }

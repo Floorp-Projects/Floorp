@@ -51,7 +51,7 @@ element.
 
 class nsMathMLmfracFrame : public nsMathMLContainerFrame {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLmfracFrame)
 
   friend nsIFrame* NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
@@ -96,7 +96,7 @@ public:
 
 protected:
   explicit nsMathMLmfracFrame(nsStyleContext* aContext)
-    : nsMathMLContainerFrame(aContext)
+    : nsMathMLContainerFrame(aContext, kClassID)
     , mLineRect()
     , mSlashChar(nullptr)
     , mLineThickness(0)

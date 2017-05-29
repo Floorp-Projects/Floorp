@@ -3,6 +3,7 @@
 "use strict";
 
 var {
+  ExtensionError,
   promiseObserved,
 } = ExtensionUtils;
 
@@ -37,19 +38,18 @@ function getRecentlyClosed(maxResults, extension) {
   return recentlyClosed.slice(0, maxResults);
 }
 
-function createSession(restored, extension, sessionId) {
+async function createSession(restored, extension, sessionId) {
   if (!restored) {
-    return Promise.reject({message: `Could not restore object using sessionId ${sessionId}.`});
+    throw new ExtensionError(`Could not restore object using sessionId ${sessionId}.`);
   }
   let sessionObj = {lastModified: Date.now()};
   if (restored instanceof Ci.nsIDOMChromeWindow) {
-    return promiseObserved("sessionstore-single-window-restored", subject => subject == restored).then(() => {
-      sessionObj.window = extension.windowManager.convert(restored, {populate: true});
-      return Promise.resolve(sessionObj);
-    });
+    await promiseObserved("sessionstore-single-window-restored", subject => subject == restored);
+    sessionObj.window = extension.windowManager.convert(restored, {populate: true});
+    return sessionObj;
   }
   sessionObj.tab = extension.tabManager.convert(restored);
-  return Promise.resolve(sessionObj);
+  return sessionObj;
 }
 
 this.sessions = class extends ExtensionAPI {
@@ -57,12 +57,14 @@ this.sessions = class extends ExtensionAPI {
     let {extension} = context;
     return {
       sessions: {
-        getRecentlyClosed: function(filter) {
+        async getRecentlyClosed(filter) {
+          await SessionStore.promiseInitialized;
           let maxResults = filter.maxResults == undefined ? this.MAX_SESSION_RESULTS : filter.maxResults;
-          return Promise.resolve(getRecentlyClosed(maxResults, extension));
+          return getRecentlyClosed(maxResults, extension);
         },
 
-        forgetClosedTab: function(windowId, sessionId) {
+        async forgetClosedTab(windowId, sessionId) {
+          await SessionStore.promiseInitialized;
           let window = context.extension.windowManager.get(windowId).window;
           let closedTabData = SessionStore.getClosedTabData(window, false);
 
@@ -71,14 +73,14 @@ this.sessions = class extends ExtensionAPI {
           });
 
           if (closedTabIndex < 0) {
-            return Promise.reject({message: `Could not find closed tab using sessionId ${sessionId}.`});
+            throw new ExtensionError(`Could not find closed tab using sessionId ${sessionId}.`);
           }
 
           SessionStore.forgetClosedTab(window, closedTabIndex);
-          return Promise.resolve();
         },
 
-        forgetClosedWindow: function(sessionId) {
+        async forgetClosedWindow(sessionId) {
+          await SessionStore.promiseInitialized;
           let closedWindowData = SessionStore.getClosedWindowData(false);
 
           let closedWindowIndex = closedWindowData.findIndex((closedWindow) => {
@@ -86,14 +88,14 @@ this.sessions = class extends ExtensionAPI {
           });
 
           if (closedWindowIndex < 0) {
-            return Promise.reject({message: `Could not find closed window using sessionId ${sessionId}.`});
+            throw new ExtensionError(`Could not find closed window using sessionId ${sessionId}.`);
           }
 
           SessionStore.forgetClosedWindow(closedWindowIndex);
-          return Promise.resolve();
         },
 
-        restore: function(sessionId) {
+        async restore(sessionId) {
+          await SessionStore.promiseInitialized;
           let session, closedId;
           if (sessionId) {
             closedId = sessionId;

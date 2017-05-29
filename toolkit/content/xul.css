@@ -1224,6 +1224,10 @@ tabmodalprompt {
 }
 
 .button-highlightable-text:not([highlightable="true"]),
-.button-text[highlightable="true"] {
+.button-text[highlightable="true"],
+.menulist-highlightable-label:not([highlightable="true"]),
+.menulist-label[highlightable="true"],
+.menu-iconic-highlightable-text:not([highlightable="true"]),
+.menu-iconic-text[highlightable="true"] {
   display: none;
 }

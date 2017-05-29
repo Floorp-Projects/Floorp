@@ -21,13 +21,13 @@ class nsSVGUseFrame final
 
 protected:
   explicit nsSVGUseFrame(nsStyleContext* aContext)
-    : nsSVGGFrame(aContext, LayoutFrameType::SVGUse)
+    : nsSVGGFrame(aContext, kClassID)
     , mHasValidDimensions(true)
   {}
 
 public:
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGUseFrame)
 
   // nsIFrame interface:
   virtual void Init(nsIContent*       aContent,
@@ -39,8 +39,6 @@ public:
                                      int32_t         aModType) override;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
-
-  virtual bool IsLeaf() const override;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override
@@ -155,12 +153,6 @@ nsSVGUseFrame::DestroyFrom(nsIFrame* aDestructRoot)
   RefPtr<SVGUseElement> use = static_cast<SVGUseElement*>(mContent);
   nsSVGGFrame::DestroyFrom(aDestructRoot);
   use->DestroyAnonymousContent();
-}
-
-bool
-nsSVGUseFrame::IsLeaf() const
-{
-  return true;
 }
 
 

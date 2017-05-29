@@ -66,12 +66,12 @@ toolbar:-moz-lwtheme {
                               rgba(255,255,255,0.1) 50%,
                               rgba(255,255,255,0.2)) repeat-x;
 }
-%endif
 
 #urlbar:-moz-lwtheme:not([focused="true"]),
 .searchbar-textbox:-moz-lwtheme:not([focused="true"]) {
   opacity: .9;
 }
+%endif
 
 #navigator-toolbox::after {
   -moz-box-ordinal-group: 101; /* tabs toolbar is 100 */
@@ -319,13 +319,6 @@ toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
 }
 
 /* ----- BOOKMARK BUTTONS ----- */
-
-.bookmark-item > .toolbarbutton-menu-dropmarker {
-  list-style-image: url("chrome://browser/skin/places/arrow-down.svg");
-  fill: currentColor;
-  margin-top: 1px;
-  margin-inline-start: 3px;
-}
 
 .bookmark-item[container] {
   list-style-image: url("chrome://global/skin/tree/folder.png");

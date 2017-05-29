@@ -24,7 +24,7 @@
 #include <stdio.h>
 
 #include "CaretAssociationHint.h"
-#include "FramePropertyTable.h"
+#include "FrameProperties.h"
 #include "mozilla/layout/FrameChildList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SmallPointerArray.h"
@@ -590,7 +590,6 @@ public:
   using Visibility = mozilla::Visibility;
 
   typedef mozilla::FrameProperties FrameProperties;
-  typedef mozilla::ConstFrameProperties ConstFrameProperties;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layout::FrameChildList ChildList;
   typedef mozilla::layout::FrameChildListID ChildListID;
@@ -603,10 +602,11 @@ public:
   typedef mozilla::Sides Sides;
   typedef mozilla::LogicalSides LogicalSides;
   typedef mozilla::SmallPointerArray<mozilla::DisplayItemData> DisplayItemArray;
+  typedef nsQueryFrame::ClassID ClassID;
 
   NS_DECL_QUERYFRAME_TARGET(nsIFrame)
 
-  explicit nsIFrame(mozilla::LayoutFrameType aType)
+  explicit nsIFrame(ClassID aID)
     : mRect()
     , mContent(nullptr)
     , mStyleContext(nullptr)
@@ -614,7 +614,8 @@ public:
     , mNextSibling(nullptr)
     , mPrevSibling(nullptr)
     , mState(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY)
-    , mType(aType)
+    , mClass(aID)
+    , mMayHaveRoundedCorners(false)
   {
     mozilla::PodZero(&mOverflow);
   }
@@ -1065,9 +1066,12 @@ public:
   nsRect GetNormalRect() const;
 
   /**
-   * Return frame's position without relative positioning
+   * Return frame's position without relative positioning.
+   * If aHasProperty is provided, returns whether the normal position
+   * was stored in a frame property.
    */
-  nsPoint GetNormalPosition() const;
+  inline nsPoint GetNormalPosition(bool* aHasProperty = nullptr) const;
+
   mozilla::LogicalPoint
   GetLogicalNormalPosition(mozilla::WritingMode aWritingMode,
                            const nsSize& aContainerSize) const
@@ -1130,8 +1134,8 @@ public:
 #define NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(prop, type) \
   NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(prop, mozilla::SmallValueHolder<type>)
 
-  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(IBSplitSibling, nsIFrame)
-  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(IBSplitPrevSibling, nsIFrame)
+  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(IBSplitSibling, nsContainerFrame)
+  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(IBSplitPrevSibling, nsContainerFrame)
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(NormalPositionProperty, nsPoint)
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(ComputedOffsetProperty, nsMargin)
@@ -1185,8 +1189,7 @@ public:
   mozilla::FrameBidiData GetBidiData() const
   {
     bool exists;
-    mozilla::FrameBidiData bidiData =
-      Properties().Get(BidiDataProperty(), &exists);
+    mozilla::FrameBidiData bidiData = GetProperty(BidiDataProperty(), &exists);
     if (!exists) {
       bidiData.precedingControl = mozilla::kBidiLevelNone;
     }
@@ -1661,7 +1664,7 @@ public:
 
   bool RefusedAsyncAnimation() const
   {
-    return Properties().Get(RefusedAsyncAnimationProperty());
+    return GetProperty(RefusedAsyncAnimationProperty());
   }
 
   /**
@@ -2702,12 +2705,15 @@ public:
    *
    * @see mozilla::LayoutFrameType
    */
-  mozilla::LayoutFrameType Type() const { return mType; }
+  mozilla::LayoutFrameType Type() const {
+    MOZ_ASSERT(uint8_t(mClass) < mozilla::ArrayLength(sLayoutFrameTypes));
+    return sLayoutFrameTypes[uint8_t(mClass)];
+  }
 
 #define FRAME_TYPE(name_)                                                      \
   bool Is##name_##Frame() const                                                \
   {                                                                            \
-    return mType == mozilla::LayoutFrameType::name_;                           \
+    return Type() == mozilla::LayoutFrameType::name_;                          \
   }
 #include "mozilla/FrameTypeList.h"
 #undef FRAME_TYPE
@@ -2834,7 +2840,15 @@ public:
    * (non-anonymous, XBL-bound, CSS generated content, etc) children should not
    * be constructed.
    */
-  virtual bool IsLeaf() const;
+  bool IsLeaf() const
+  {
+    MOZ_ASSERT(uint8_t(mClass) < mozilla::ArrayLength(sFrameClassBits));
+    FrameClassBits bits = sFrameClassBits[uint8_t(mClass)];
+    if (MOZ_UNLIKELY(bits & eFrameClassBitsDynamicLeaf)) {
+      return IsLeafDynamic();
+    }
+    return bits & eFrameClassBitsLeaf;
+  }
 
   /**
    * Marks all display items created by this frame as needing a repaint,
@@ -3366,12 +3380,84 @@ public:
     return mContent == aParentContent;
   }
 
-  FrameProperties Properties() {
-    return FrameProperties(PresContext()->PropertyTable(), this);
+  /**
+   * Support for reading and writing properties on the frame.
+   * These call through to the frame's FrameProperties object, if it
+   * exists, but avoid creating it if no property is ever set.
+   */
+  template<typename T>
+  FrameProperties::PropertyType<T>
+  GetProperty(FrameProperties::Descriptor<T> aProperty,
+              bool* aFoundResult = nullptr) const
+  {
+    if (mProperties) {
+      return mProperties->Get(aProperty, aFoundResult);
+    }
+    if (aFoundResult) {
+      *aFoundResult = false;
+    }
+    return FrameProperties::ReinterpretHelper<T>::FromPointer(nullptr);
   }
 
-  ConstFrameProperties Properties() const {
-    return ConstFrameProperties(PresContext()->PropertyTable(), this);
+  template<typename T>
+  bool HasProperty(FrameProperties::Descriptor<T> aProperty) const
+  {
+    if (mProperties) {
+      return mProperties->Has(aProperty);
+    }
+    return false;
+  }
+
+  // Add a property, or update an existing property for the given descriptor.
+  template<typename T>
+  void SetProperty(FrameProperties::Descriptor<T> aProperty,
+                   FrameProperties::PropertyType<T> aValue)
+  {
+    if (!mProperties) {
+      mProperties = mozilla::MakeUnique<FrameProperties>();
+    }
+    mProperties->Set(aProperty, aValue, this);
+  }
+
+  // Unconditionally add a property; use ONLY if the descriptor is known
+  // to NOT already be present.
+  template<typename T>
+  void AddProperty(FrameProperties::Descriptor<T> aProperty,
+                   FrameProperties::PropertyType<T> aValue)
+  {
+    if (!mProperties) {
+      mProperties = mozilla::MakeUnique<FrameProperties>();
+    }
+    mProperties->Add(aProperty, aValue);
+  }
+
+  template<typename T>
+  FrameProperties::PropertyType<T>
+  RemoveProperty(FrameProperties::Descriptor<T> aProperty,
+                 bool* aFoundResult = nullptr)
+  {
+    if (mProperties) {
+      return mProperties->Remove(aProperty, aFoundResult);
+    }
+    if (aFoundResult) {
+      *aFoundResult = false;
+    }
+    return FrameProperties::ReinterpretHelper<T>::FromPointer(nullptr);
+  }
+
+  template<typename T>
+  void DeleteProperty(FrameProperties::Descriptor<T> aProperty)
+  {
+    if (mProperties) {
+      mProperties->Delete(aProperty, this);
+    }
+  }
+
+  void DeleteAllProperties()
+  {
+    if (mProperties) {
+      mProperties->DeleteAll(this);
+    }
   }
 
   /**
@@ -3730,7 +3816,7 @@ public:
    */
   bool FrameIsNonFirstInIBSplit() const {
     return (GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
-      FirstContinuation()->Properties().Get(nsIFrame::IBSplitPrevSibling());
+      FirstContinuation()->GetProperty(nsIFrame::IBSplitPrevSibling());
   }
 
   /**
@@ -3739,7 +3825,7 @@ public:
    */
   bool FrameIsNonLastInIBSplit() const {
     return (GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
-      FirstContinuation()->Properties().Get(nsIFrame::IBSplitSibling());
+      FirstContinuation()->GetProperty(nsIFrame::IBSplitSibling());
   }
 
   /**
@@ -3816,6 +3902,13 @@ protected:
                            nsView*        aNewParentView,
                            nsView*        aOldParentView);
 
+  /**
+   * To be overridden by frame classes that have a varying IsLeaf() state and
+   * is indicating that with DynamicLeaf in nsFrameIdList.h.
+   * @see IsLeaf()
+   */
+  virtual bool IsLeafDynamic() const { return false; }
+
   // Members
   nsRect           mRect;
   nsIContent*      mContent;
@@ -3841,11 +3934,11 @@ private:
                                       DestroyPaintedPresShellList)
 
   nsTArray<nsWeakPtr>* PaintedPresShellList() {
-    nsTArray<nsWeakPtr>* list = Properties().Get(PaintedPresShellsProperty());
+    nsTArray<nsWeakPtr>* list = GetProperty(PaintedPresShellsProperty());
 
     if (!list) {
       list = new nsTArray<nsWeakPtr>();
-      Properties().Set(PaintedPresShellsProperty(), list);
+      SetProperty(PaintedPresShellsProperty(), list);
     }
 
     return list;
@@ -3866,6 +3959,12 @@ protected:
   }
 
   nsFrameState     mState;
+
+  /**
+   * List of properties attached to the frame, or null if no properties have
+   * been set.
+   */
+  mozilla::UniquePtr<FrameProperties> mProperties;
 
   // When there is an overflow area only slightly larger than mRect,
   // we store a set of four 1-byte deltas from the edges of mRect
@@ -3899,8 +3998,11 @@ protected:
   /** @see GetWritingMode() */
   mozilla::WritingMode mWritingMode;
 
-  /** The type of the frame. */
-  mozilla::LayoutFrameType mType;
+  /** The ClassID of the concrete class of this instance. */
+  ClassID mClass; // 1 byte
+
+  bool mMayHaveRoundedCorners : 1;
+  // There should be a 15-bit gap left here.
 
   // Helpers
   /**
@@ -4024,6 +4126,29 @@ private:
 
   bool HasOpacityInternal(float aThreshold,
                           mozilla::EffectSet* aEffectSet = nullptr) const;
+
+  // Maps mClass to LayoutFrameType.
+  static const mozilla::LayoutFrameType sLayoutFrameTypes[
+#define FRAME_ID(...) 1 +
+#define ABSTRACT_FRAME_ID(...)
+#include "nsFrameIdList.h"
+#undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
+  0];
+
+  enum FrameClassBits {
+    eFrameClassBitsNone        = 0x0,
+    eFrameClassBitsLeaf        = 0x1,
+    eFrameClassBitsDynamicLeaf = 0x2,
+  };
+  // Maps mClass to IsLeaf() flags.
+  static const FrameClassBits sFrameClassBits[
+#define FRAME_ID(...) 1 +
+#define ABSTRACT_FRAME_ID(...)
+#include "nsFrameIdList.h"
+#undef FRAME_ID
+#undef ABSTRACT_FRAME_ID
+  0];
 
 #ifdef DEBUG_FRAME_DUMP
 public:
@@ -4433,6 +4558,24 @@ nsIFrame::IsFrameListSorted(nsFrameList& aFrameList)
 
   // We made it to the end without returning early, so the list is sorted.
   return true;
+}
+
+// Needs to be defined here rather than nsIFrameInlines.h, because it is used
+// within this header.
+nsPoint
+nsIFrame::GetNormalPosition(bool* aHasProperty) const
+{
+  nsPoint* normalPosition = GetProperty(NormalPositionProperty());
+  if (normalPosition) {
+    if (aHasProperty) {
+      *aHasProperty = true;
+    }
+    return *normalPosition;
+  }
+  if (aHasProperty) {
+    *aHasProperty = false;
+  }
+  return GetPosition();
 }
 
 #endif /* nsIFrame_h___ */

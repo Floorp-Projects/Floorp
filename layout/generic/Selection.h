@@ -342,6 +342,7 @@ private:
   void setAnchorFocusRange(int32_t aIndex); // pass in index into mRanges;
                                             // negative value clears
                                             // mAnchorFocusRange
+  void SelectFramesForContent(nsIContent* aContent, bool aSelected);
   nsresult     SelectAllFramesForContent(nsIContentIterator *aInnerIter,
                                nsIContent *aContent,
                                bool aSelected);

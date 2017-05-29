@@ -24,7 +24,7 @@ using namespace mozilla;
 using namespace mozilla;
 
 nsTableColFrame::nsTableColFrame(nsStyleContext* aContext)
-  : nsSplittableFrame(aContext, LayoutFrameType::TableCol)
+  : nsSplittableFrame(aContext, kClassID)
   , mMinCoord(0)
   , mPrefCoord(0)
   , mSpanMinCoord(0)

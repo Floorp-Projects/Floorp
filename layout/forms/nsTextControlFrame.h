@@ -31,7 +31,7 @@ class nsTextControlFrame final : public nsContainerFrame,
                                  public nsIStatefulFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsTextControlFrame)
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(ContentScrollPos, nsPoint)
 
@@ -87,8 +87,6 @@ public:
 
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual bool IsXULCollapsed() override;
-
-  virtual bool IsLeaf() const override;
   
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;
@@ -224,9 +222,14 @@ protected:
   friend class nsTextEditorState; // needs access to UpdateValueDisplay
 
   // Temp reference to scriptrunner
-  // We could make these auto-Revoking via the "delete" entry for safety
-  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(TextControlInitializer,
-                                         EditorInitializer)
+  NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(TextControlInitializer,
+                                      EditorInitializer,
+                                      nsTextControlFrame::RevokeInitializer)
+
+  static void
+  RevokeInitializer(EditorInitializer* aInitializer) {
+    aInitializer->Revoke();
+  };
 
   class EditorInitializer : public mozilla::Runnable {
   public:
@@ -323,7 +326,7 @@ private:
   nsresult GetRootNodeAndInitializeEditor(nsIDOMElement **aRootElement);
 
   void FinishedInitializer() {
-    Properties().Delete(TextControlInitializer());
+    DeleteProperty(TextControlInitializer());
   }
 
 private:

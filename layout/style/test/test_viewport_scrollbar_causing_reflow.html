@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1367568
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1367568</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug 1367568</a>
+<div id="content">
+  <!-- Some fixed-width divs that we shouldn't have to reflow when the viewport
+       changes: -->
+  <div style="width: 100px">
+    fixed-width
+    <div>(child)</div>
+  </div>
+  <div style="position: absolute; width: 150px">
+    abs-fixed-width
+    <div>(child)</div>
+  </div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+/** Test for Bug 1367568 **/
+
+/**
+ * This test verifies that "overflow" changes on the <body> don't cause
+ * an unnecessarily large amount of reflow.
+ */
+
+// Vars used in setStyleAndMeasure that we really only have to look up once:
+const gUtils = SpecialPowers.getDOMWindowUtils(window);
+
+function setStyleAndMeasure(initialStyle, finalStyle) {
+  is(document.body.style.length, 0,
+     "Bug in test - body should start with empty style");
+  let unusedVal = document.body.offsetHeight; // flush layout
+  let constructCount = gUtils.framesConstructed;
+
+  document.body.style = initialStyle;
+  unusedVal = document.body.offsetHeight; // flush layout
+  let reflowCountBeforeTweak = gUtils.framesReflowed;
+
+  document.body.style = finalStyle;
+  unusedVal = document.body.offsetHeight; // flush layout
+  let reflowCountAfterTweak = gUtils.framesReflowed;
+
+  // Clean up:
+  document.body.style = "";
+
+  is(gUtils.framesConstructed, constructCount,
+     "Style tweak shouldn't have triggered frame construction");
+
+  // ...and return the delta:
+  return reflowCountAfterTweak - reflowCountBeforeTweak;
+}
+
+function main() {
+  // First, we sanity-check that our measurement make sense -- if we leave
+  // styles unchanged, we should measure no frames being reflowed:
+  let count = setStyleAndMeasure("width: 50px; height: 80px",
+                                 "width: 50px; height: 80px");
+  is(count, 0,
+     "Shouldn't reflow anything when we leave 'width' & 'height' unchanged");
+
+  // Now: see how many frames are reflowed when the "width" & "height" change.
+  // We'll use this as the reference when measuring reflow counts for various
+  // changes to "overflow" below.
+  count = setStyleAndMeasure("width: 50px; height: 80px",
+                             "width: 90px; height: 60px");
+  ok(count > 0,
+     "Should reflow some frames when 'width' & 'height' change");
+
+  // Expected maximum number of frames reflowed for "overflow" changes
+  // (+2 is to allow for reflowing scrollbars themselves):
+  const expectedMax = count + 2;
+
+  // Shared ending for messages in all ok() checks below:
+  const messageSuffix =
+    " shouldn't be greater than count for tweaking width/height on body (" +
+    expectedMax + ")";
+
+  // OK, here is where the relevant tests actually begin!!
+  // See how many frames we reflow for various tweaks to "overflow" on
+  // the body -- we expect the count to be no larger than |expectedMax|.
+  count = setStyleAndMeasure("", "overflow: scroll");
+  ok(count <= expectedMax,
+     "Reflow count when setting 'overflow: scroll' on body (" + count + ")" +
+     messageSuffix);
+
+  count = setStyleAndMeasure("", "overflow: hidden");
+  ok(count <= expectedMax,
+     "Reflow count when setting 'overflow: hidden' on body (" + count + ")" +
+     messageSuffix);
+
+  // Test removal of "overflow: scroll":
+  count = setStyleAndMeasure("overflow: scroll", "");
+  ok(count <= expectedMax,
+     "Reflow count when removing 'overflow: scroll' from body (" + count + ")" +
+     messageSuffix);
+
+  count = setStyleAndMeasure("overflow: hidden", "");
+  ok(count <= expectedMax,
+     "Reflow count when removing 'overflow: hidden' from body (" + count + ")" +
+     messageSuffix);
+
+  // Test change between two non-'visible' overflow values:
+  count = setStyleAndMeasure("overflow: scroll", "overflow: hidden");
+  ok(count <= expectedMax,
+     "Reflow count when changing 'overflow' on body (" + count + ")" +
+     messageSuffix);
+}
+
+main();
+
+</script>
+</pre>
+</body>
+</html>

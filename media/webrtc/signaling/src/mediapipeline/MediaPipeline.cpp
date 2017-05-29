@@ -42,6 +42,7 @@
 #include "transportlayerice.h"
 #include "runnable_utils.h"
 #include "libyuv/convert.h"
+#include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/Preferences.h"
@@ -55,6 +56,8 @@
 
 #include "webrtc/common_types.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+
+#include "nsThreadUtils.h"
 
 #include "logging.h"
 
@@ -609,7 +612,7 @@ MediaPipeline::MediaPipeline(const std::string& pc,
     pc_(pc),
     description_(),
     filter_(filter),
-    rtp_parser_(webrtc::RtpHeaderParser::Create()) {
+    rtp_parser_(webrtc::RtpHeaderParser::Create()){
   // To indicate rtcp-mux rtcp_transport should be nullptr.
   // Therefore it's an error to send in the same flow for
   // both rtp and rtcp.
@@ -767,6 +770,22 @@ MediaPipeline::AddRIDFilter_s(const std::string& rid)
 {
   filter_ = new MediaPipelineFilter;
   filter_->AddRemoteRtpStreamId(rid);
+}
+
+void
+MediaPipeline::GetContributingSourceStats(
+    const nsString& aInboundRtpStreamId,
+    FallibleTArray<dom::RTCRTPContributingSourceStats>& aArr) const
+{
+  // Get the expiry from now
+  DOMHighResTimeStamp expiry = RtpCSRCStats::GetExpiryFromTime(GetNow());
+  for (auto info : csrc_stats_) {
+    if (!info.second.Expired(expiry)) {
+      RTCRTPContributingSourceStats stats;
+      info.second.GetWebidlInstance(stats, aInboundRtpStreamId);
+      aArr.AppendElement(stats, fallible);
+    }
+  }
 }
 
 void MediaPipeline::StateChange(TransportFlow *flow, TransportLayer::State state) {
@@ -1061,6 +1080,44 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
 
   if (filter_ && !filter_->Filter(header)) {
     return;
+  }
+
+  // Make sure to only get the time once, and only if we need it by
+  // using getTimestamp() for access
+  DOMHighResTimeStamp now = 0.0;
+  bool hasTime = false;
+
+  // Remove expired RtpCSRCStats
+  if (!csrc_stats_.empty()) {
+    if (!hasTime) {
+      now = GetNow();
+      hasTime = true;
+    }
+    auto expiry = RtpCSRCStats::GetExpiryFromTime(now);
+    for (auto p = csrc_stats_.begin(); p != csrc_stats_.end();) {
+      if (p->second.Expired(expiry)) {
+        p = csrc_stats_.erase(p);
+        continue;
+      }
+      p++;
+    }
+  }
+
+  // Add new RtpCSRCStats
+  if (header.numCSRCs) {
+    for (auto i = 0; i < header.numCSRCs; i++) {
+      if (!hasTime) {
+        now = GetNow();
+        hasTime = true;
+      }
+      auto csrcInfo = csrc_stats_.find(header.arrOfCSRCs[i]);
+      if (csrcInfo == csrc_stats_.end()) {
+        csrc_stats_.insert(std::make_pair(header.arrOfCSRCs[i],
+            RtpCSRCStats(header.arrOfCSRCs[i],now)));
+      } else {
+        csrcInfo->second.SetTimestamp(now);
+      }
+    }
   }
 
   // Make a copy rather than cast away constness
@@ -2320,6 +2377,37 @@ nsresult MediaPipelineReceiveVideo::Init() {
 void MediaPipelineReceiveVideo::SetPrincipalHandle_m(const PrincipalHandle& principal_handle)
 {
   listener_->SetPrincipalHandle_m(principal_handle);
+}
+
+DOMHighResTimeStamp MediaPipeline::GetNow() {
+  return webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
+}
+
+DOMHighResTimeStamp
+MediaPipeline::RtpCSRCStats::GetExpiryFromTime(
+    const DOMHighResTimeStamp aTime) {
+  // DOMHighResTimeStamp is a unit measured in ms
+  return aTime - EXPIRY_TIME_MILLISECONDS;
+}
+
+MediaPipeline::RtpCSRCStats::RtpCSRCStats(const uint32_t aCsrc,
+                                          const DOMHighResTimeStamp aTime)
+  : mCsrc(aCsrc)
+  , mTimestamp(aTime) {}
+
+void
+MediaPipeline::RtpCSRCStats::GetWebidlInstance(
+    dom::RTCRTPContributingSourceStats& aWebidlObj,
+    const nsString &aInboundRtpStreamId) const
+{
+  nsString statId = NS_LITERAL_STRING("csrc_") + aInboundRtpStreamId;
+  statId.AppendLiteral("_");
+  statId.AppendInt(mCsrc);
+  aWebidlObj.mId.Construct(statId);
+  aWebidlObj.mType.Construct(RTCStatsType::Csrc);
+  aWebidlObj.mTimestamp.Construct(mTimestamp);
+  aWebidlObj.mContributorSsrc.Construct(mCsrc);
+  aWebidlObj.mInboundRtpStreamId.Construct(aInboundRtpStreamId);
 }
 
 }  // end namespace

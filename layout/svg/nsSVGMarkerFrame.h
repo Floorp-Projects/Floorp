@@ -35,7 +35,7 @@ class nsSVGMarkerFrame final : public nsSVGContainerFrame
   NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGMarkerFrame(nsStyleContext* aContext)
-    : nsSVGContainerFrame(aContext, mozilla::LayoutFrameType::SVGMarker)
+    : nsSVGContainerFrame(aContext, kClassID)
     , mMarkedFrame(nullptr)
     , mInUse(false)
     , mInUse2(false)
@@ -44,7 +44,7 @@ protected:
   }
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGMarkerFrame)
 
   // nsIFrame interface:
 #ifdef DEBUG
@@ -141,12 +141,11 @@ class nsSVGMarkerAnonChildFrame final : public nsSVGDisplayContainerFrame
                                 nsStyleContext* aContext);
 
   explicit nsSVGMarkerAnonChildFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext,
-                                 mozilla::LayoutFrameType::SVGMarkerAnonChild)
+    : nsSVGDisplayContainerFrame(aContext, kClassID)
   {}
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGMarkerAnonChildFrame)
 
 #ifdef DEBUG
   virtual void Init(nsIContent*       aContent,

@@ -154,7 +154,10 @@ function Tester(aTests, structuredLogger, aCallback) {
   this.TestUtils = Components.utils.import("resource://testing-common/TestUtils.jsm", null).TestUtils;
   this.Task.Debugging.maintainStack = true;
   this.Promise = Components.utils.import("resource://gre/modules/Promise.jsm", null).Promise;
+  this.PromiseTestUtils = Components.utils.import("resource://testing-common/PromiseTestUtils.jsm", null).PromiseTestUtils;
   this.Assert = Components.utils.import("resource://testing-common/Assert.jsm", null).Assert;
+
+  this.PromiseTestUtils.init();
 
   this.SimpleTestOriginal = {};
   SIMPLETEST_OVERRIDES.forEach(m => {
@@ -162,37 +165,6 @@ function Tester(aTests, structuredLogger, aCallback) {
   });
 
   this._coverageCollector = null;
-
-  this._toleratedUncaughtRejections = null;
-  this._uncaughtErrorObserver = ({message, date, fileName, stack, lineNumber}) => {
-    let error = message;
-    if (fileName || lineNumber) {
-      error = {
-        fileName: fileName,
-        lineNumber: lineNumber,
-        message: message,
-        toString: function() {
-          return message;
-        }
-      };
-    }
-
-    // We may have a whitelist of rejections we wish to tolerate.
-    let tolerate = this._toleratedUncaughtRejections &&
-      this._toleratedUncaughtRejections.indexOf(message) != -1;
-    let name = "A promise chain failed to handle a rejection: ";
-    if (tolerate) {
-      name = "WARNING: (PLEASE FIX THIS AS PART OF BUG 1077403) " + name;
-    }
-
-    this.currentTest.addResult(
-      new testResult(
-	      /*success*/tolerate,
-        /*name*/name,
-        /*error*/error,
-        /*known*/tolerate,
-        /*stack*/stack));
-    };
 }
 Tester.prototype = {
   EventUtils: {},
@@ -247,9 +219,6 @@ Tester.prototype = {
       "webConsoleCommandController",
     ];
 
-    this.Promise.Debugging.clearUncaughtErrorObservers();
-    this.Promise.Debugging.addUncaughtErrorObserver(this._uncaughtErrorObserver);
-
     if (this.tests.length)
       this.waitForGraphicsTestWindowToBeGone(this.nextTest.bind(this));
     else
@@ -281,9 +250,11 @@ Tester.prototype = {
     if (this.currentTest && window.gBrowser && gBrowser.tabs.length > 1) {
       while (gBrowser.tabs.length > 1) {
         let lastTab = gBrowser.tabContainer.lastChild;
-        let msg = baseMsg.replace("{elt}", "tab") +
-                  ": " + lastTab.linkedBrowser.currentURI.spec;
-        this.currentTest.addResult(new testResult(false, msg, "", false));
+        this.currentTest.addResult(new testResult({
+          name: baseMsg.replace("{elt}", "tab") + ": " +
+                lastTab.linkedBrowser.currentURI.spec,
+          allowFailure: this.currentTest.allowFailure,
+        }));
         gBrowser.removeTab(lastTab);
       }
     }
@@ -315,7 +286,10 @@ Tester.prototype = {
         }
         let msg = baseMsg.replace("{elt}", type);
         if (this.currentTest) {
-          this.currentTest.addResult(new testResult(false, msg, "", false));
+          this.currentTest.addResult(new testResult({
+            name: msg,
+            allowFailure: this.currentTest.allowFailure,
+          }));
         } else {
           if (!createdFakeTestForLogging) {
             createdFakeTestForLogging = true;
@@ -342,8 +316,6 @@ Tester.prototype = {
   },
 
   finish: function Tester_finish(aSkipSummary) {
-    this.Promise.Debugging.flushUncaughtErrors();
-
     var passCount = this.tests.reduce((a, f) => a + f.passCount, 0);
     var failCount = this.tests.reduce((a, f) => a + f.failCount, 0);
     var todoCount = this.tests.reduce((a, f) => a + f.todoCount, 0);
@@ -358,8 +330,9 @@ Tester.prototype = {
     } else {
       TabDestroyObserver.destroy();
       Services.console.unregisterListener(this);
-      this.Promise.Debugging.clearUncaughtErrorObservers();
-      this._treatUncaughtRejectionsAsFailures = false;
+
+      // It's important to terminate the module to avoid crashes on shutdown.
+      this.PromiseTestUtils.uninit();
 
       // In the main process, we print the ShutdownLeaksCollector message here.
       let pid = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processID;
@@ -420,7 +393,6 @@ Tester.prototype = {
 
   nextTest: Task.async(function*() {
     if (this.currentTest) {
-      this.Promise.Debugging.flushUncaughtErrors();
       if (this._coverageCollector) {
         this._coverageCollector.recordTestCoverage(this.currentTest.path);
       }
@@ -434,32 +406,44 @@ Tester.prototype = {
           yield func.apply(testScope);
         }
         catch (ex) {
-          this.currentTest.addResult(new testResult(false, "Cleanup function threw an exception", ex, false));
+          this.currentTest.addResult(new testResult({
+            name: "Cleanup function threw an exception",
+            ex,
+            allowFailure: this.currentTest.allowFailure,
+          }));
         }
       }
 
       if (this.currentTest.passCount === 0 &&
           this.currentTest.failCount === 0 &&
           this.currentTest.todoCount === 0) {
-        this.currentTest.addResult(new testResult(false, "This test contains no passes, no fails and no todos. Maybe it threw a silent exception? Make sure you use waitForExplicitFinish() if you need it.", "", false));
+        this.currentTest.addResult(new testResult({
+          name: "This test contains no passes, no fails and no todos. Maybe" +
+                " it threw a silent exception? Make sure you use" +
+                " waitForExplicitFinish() if you need it.",
+        }));
       }
-
-      if (testScope.__expected == 'fail' && testScope.__num_failed <= 0) {
-        this.currentTest.addResult(new testResult(false, "We expected at least one assertion to fail because this test file was marked as fail-if in the manifest!", "", true));
-      }
-
-      this.Promise.Debugging.flushUncaughtErrors();
 
       let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
       if (winUtils.isTestControllingRefreshes) {
-        this.currentTest.addResult(new testResult(false, "test left refresh driver under test control", "", false));
+        this.currentTest.addResult(new testResult({
+          name: "test left refresh driver under test control",
+        }));
         winUtils.restoreNormalRefresh();
       }
 
       if (this.SimpleTest.isExpectingUncaughtException()) {
-        this.currentTest.addResult(new testResult(false, "expectUncaughtException was called but no uncaught exception was detected!", "", false));
+        this.currentTest.addResult(new testResult({
+          name: "expectUncaughtException was called but no uncaught" +
+                " exception was detected!",
+          allowFailure: this.currentTest.allowFailure,
+        }));
       }
+
+      this.PromiseTestUtils.ensureDOMPromiseRejectionsProcessed();
+      this.PromiseTestUtils.assertNoUncaughtRejections();
+      this.PromiseTestUtils.assertNoMoreExpectedRejections();
 
       Object.keys(window).forEach(function (prop) {
         if (parseInt(prop) == prop) {
@@ -471,8 +455,12 @@ Tester.prototype = {
         }
         if (this._globalProperties.indexOf(prop) == -1) {
           this._globalProperties.push(prop);
-          if (this._globalPropertyWhitelist.indexOf(prop) == -1)
-            this.currentTest.addResult(new testResult(false, "test left unexpected property on window: " + prop, "", false));
+          if (this._globalPropertyWhitelist.indexOf(prop) == -1) {
+            this.currentTest.addResult(new testResult({
+              name: "test left unexpected property on window: " + prop,
+              allowFailure: this.currentTest.allowFailure,
+            }));
+          }
         }
       }, this);
 
@@ -502,10 +490,11 @@ Tester.prototype = {
 
       // Notify a long running test problem if it didn't end up in a timeout.
       if (this.currentTest.unexpectedTimeouts && !this.currentTest.timedOut) {
-        let msg = "This test exceeded the timeout threshold. It should be " +
-                  "rewritten or split up. If that's not possible, use " +
-                  "requestLongerTimeout(N), but only as a last resort.";
-        this.currentTest.addResult(new testResult(false, msg, "", false));
+        this.currentTest.addResult(new testResult({
+          name: "This test exceeded the timeout threshold. It should be" +
+                " rewritten or split up. If that's not possible, use" +
+                " requestLongerTimeout(N), but only as a last resort.",
+        }));
       }
 
       // If we're in a debug build, check assertion counts.  This code
@@ -520,24 +509,53 @@ Tester.prototype = {
         let max = testScope.__expectedMaxAsserts;
         let min = testScope.__expectedMinAsserts;
         if (numAsserts > max) {
-          let msg = "Assertion count " + numAsserts +
-                    " is greater than expected range " +
-                    min + "-" + max + " assertions.";
-          // TEST-UNEXPECTED-FAIL (TEMPORARILY TEST-KNOWN-FAIL)
-          //this.currentTest.addResult(new testResult(false, msg, "", false));
-          this.currentTest.addResult(new testResult(true, msg, "", true));
+          // TEST-UNEXPECTED-FAIL
+          this.currentTest.addResult(new testResult({
+            name: "Assertion count " + numAsserts +
+                  " is greater than expected range " +
+                  min + "-" + max + " assertions.",
+            pass: true, // TEMPORARILY TEST-KNOWN-FAIL
+            todo: true,
+            allowFailure: this.currentTest.allowFailure,
+          }));
         } else if (numAsserts < min) {
-          let msg = "Assertion count " + numAsserts +
-                    " is less than expected range " +
-                    min + "-" + max + " assertions.";
           // TEST-UNEXPECTED-PASS
-          this.currentTest.addResult(new testResult(false, msg, "", true));
+          this.currentTest.addResult(new testResult({
+            name: "Assertion count " + numAsserts +
+                  " is less than expected range " +
+                  min + "-" + max + " assertions.",
+            todo: true,
+            allowFailure: this.currentTest.allowFailure,
+          }));
         } else if (numAsserts > 0) {
-          let msg = "Assertion count " + numAsserts +
-                    " is within expected range " +
-                    min + "-" + max + " assertions.";
           // TEST-KNOWN-FAIL
-          this.currentTest.addResult(new testResult(true, msg, "", true));
+          this.currentTest.addResult(new testResult({
+            name: "Assertion count " + numAsserts +
+                  " is within expected range " +
+                  min + "-" + max + " assertions.",
+            pass: true,
+            todo: true,
+            allowFailure: this.currentTest.allowFailure,
+          }));
+        }
+      }
+
+      if (this.currentTest.allowFailure) {
+        if (this.currentTest.expectedAllowedFailureCount) {
+          this.currentTest.addResult(new testResult({
+            name: "Expected " +
+                  this.currentTest.expectedAllowedFailureCount +
+                  " failures in this file, got " +
+                  this.currentTest.allowedFailureCount + ".",
+            pass: this.currentTest.expectedAllowedFailureCount ==
+                  this.currentTest.allowedFailureCount,
+          }));
+        } else if (this.currentTest.allowedFailureCount == 0) {
+          this.currentTest.addResult(new testResult({
+            name: "We expect at least one assertion to fail because this" +
+                  " test file is marked as fail-if in the manifest.",
+            todo: true,
+          }));
         }
       }
 
@@ -689,15 +707,20 @@ Tester.prototype = {
     this.currentTest.scope.ExtensionTestUtils = this.ExtensionTestUtils;
     // Pass a custom report function for mochitest style reporting.
     this.currentTest.scope.Assert = new this.Assert(function(err, message, stack) {
-      let res;
-      if (err) {
-        res = new testResult(false, err.message, err.stack, false, err.stack);
-      } else {
-        res = new testResult(true, message, "", false, stack);
-      }
-      currentTest.addResult(res);
+      currentTest.addResult(new testResult(err ? {
+        name: err.message,
+        ex: err.stack,
+        stack: err.stack,
+        allowFailure: currentTest.allowFailure,
+      } : {
+        name: message,
+        pass: true,
+        stack,
+        allowFailure: currentTest.allowFailure,
+      }));
     });
 
+    this.PromiseTestUtils.Assert = this.currentTest.scope.Assert;
     this.ContentTask.setTestScope(currentScope);
 
     // Allow Assert.jsm methods to be tacked to the current scope.
@@ -728,7 +751,10 @@ Tester.prototype = {
       // will also ignore an existing head.js attempting to import a missing
       // module - see bug 755558 for why this strategy is preferred anyway.
       if (!/^Error opening input stream/.test(ex.toString())) {
-       this.currentTest.addResult(new testResult(false, "head.js import threw an exception", ex, false));
+       this.currentTest.addResult(new testResult({
+         name: "head.js import threw an exception",
+         ex,
+       }));
       }
     }
 
@@ -736,7 +762,6 @@ Tester.prototype = {
     try {
       this._scriptLoader.loadSubScript(this.currentTest.path,
                                        this.currentTest.scope);
-      this.Promise.Debugging.flushUncaughtErrors();
       // Run the test
       this.lastStartTime = Date.now();
       if (this.currentTest.scope.__tasks) {
@@ -745,6 +770,7 @@ Tester.prototype = {
           throw "Cannot run both a add_task test and a normal test at the same time.";
         }
         let Promise = this.Promise;
+        let PromiseTestUtils = this.PromiseTestUtils;
         this.Task.spawn(function*() {
           let task;
           while ((task = this.__tasks.shift())) {
@@ -752,13 +778,15 @@ Tester.prototype = {
             try {
               yield task();
             } catch (ex) {
-              let isExpected = !!this.SimpleTest.isExpectingUncaughtException();
-              let stack = (typeof ex == "object" && "stack" in ex)?ex.stack:null;
-              let name = "Uncaught exception";
-              let result = new testResult(isExpected, name, ex, false, stack);
-              currentTest.addResult(result);
+              currentTest.addResult(new testResult({
+                name: "Uncaught exception",
+                pass: this.SimpleTest.isExpectingUncaughtException(),
+                ex,
+                stack: (typeof ex == "object" && "stack" in ex) ? ex.stack : null,
+                allowFailure: currentTest.allowFailure,
+              }));
             }
-            Promise.Debugging.flushUncaughtErrors();
+            PromiseTestUtils.assertNoUncaughtRejections();
             this.SimpleTest.info("Leaving test " + task.name);
           }
           this.finish();
@@ -769,9 +797,13 @@ Tester.prototype = {
         throw "This test didn't call add_task, nor did it define a generatorTest() function, nor did it define a test() function, so we don't know how to run it.";
       }
     } catch (ex) {
-      let isExpected = !!this.SimpleTest.isExpectingUncaughtException();
       if (!this.SimpleTest.isIgnoringAllUncaughtExceptions()) {
-        this.currentTest.addResult(new testResult(isExpected, "Exception thrown", ex, false));
+        this.currentTest.addResult(new testResult({
+          name: "Exception thrown",
+          pass: this.SimpleTest.isExpectingUncaughtException(),
+          ex,
+          allowFailure: this.currentTest.allowFailure,
+        }));
         this.SimpleTest.expectUncaughtException(false);
       } else {
         this.currentTest.addResult(new testMessage("Exception thrown: " + ex));
@@ -824,7 +856,7 @@ Tester.prototype = {
           return;
         }
 
-        self.currentTest.addResult(new testResult(false, "Test timed out", null, false));
+        self.currentTest.addResult(new testResult({ name: "Test timed out" }));
         self.currentTest.timedOut = true;
         self.currentTest.scope.__waitTimer = null;
         self.nextTest();
@@ -841,63 +873,82 @@ Tester.prototype = {
   }
 };
 
-function testResult(aCondition, aName, aDiag, aIsTodo, aStack) {
-  this.name = aName;
+/**
+ * Represents the result of one test assertion. This is described with a string
+ * in traditional logging, and has a "status" and "expected" property used in
+ * structured logging. Normally, results are mapped as follows:
+ *
+ *   pass:    todo:    Added to:    Described as:           Status:  Expected:
+ *     true     false    passCount    TEST-PASS               PASS     PASS
+ *     true     true     todoCount    TEST-KNOWN-FAIL         FAIL     FAIL
+ *     false    false    failCount    TEST-UNEXPECTED-FAIL    FAIL     PASS
+ *     false    true     failCount    TEST-UNEXPECTED-PASS    PASS     FAIL
+ *
+ * The "allowFailure" argument indicates that this is one of the assertions that
+ * should be allowed to fail, for example because "fail-if" is true for the
+ * current test file in the manifest. In this case, results are mapped this way:
+ *
+ *   pass:    todo:    Added to:    Described as:           Status:  Expected:
+ *     true     false    passCount    TEST-PASS               PASS     PASS
+ *     true     true     todoCount    TEST-KNOWN-FAIL         FAIL     FAIL
+ *     false    false    todoCount    TEST-KNOWN-FAIL         FAIL     FAIL
+ *     false    true     todoCount    TEST-KNOWN-FAIL         FAIL     FAIL
+ */
+function testResult({ name, pass, todo, ex, stack, allowFailure }) {
+  this.info = false;
+  this.name = name;
   this.msg = "";
 
-  this.info = false;
-  this.pass = !!aCondition;
-  this.todo = aIsTodo;
+  if (allowFailure && !pass) {
+    this.allowedFailure = true;
+    this.pass = true;
+    this.todo = true;
+  } else {
+    this.pass = !!pass;
+    this.todo = todo;
+  }
+
+  this.expected = this.todo ? "FAIL" : "PASS";
 
   if (this.pass) {
-    if (aIsTodo) {
-      this.status = "FAIL";
-      this.expected = "FAIL";
-    } else {
-      this.status = "PASS";
-      this.expected = "PASS";
-    }
+    this.status = this.expected;
+    return;
+  }
 
-  } else {
-    if (aDiag) {
-      if (typeof aDiag == "object" && "fileName" in aDiag) {
-        // we have an exception - print filename and linenumber information
-        this.msg += "at " + aDiag.fileName + ":" + aDiag.lineNumber + " - ";
-      }
-      this.msg += String(aDiag);
-    }
-    if (aStack) {
-      this.msg += "\nStack trace:\n";
-      let normalized;
-      if (aStack instanceof Components.interfaces.nsIStackFrame) {
-        let frames = [];
-        for (let frame = aStack; frame; frame = frame.caller) {
-          frames.push(frame.filename + ":" + frame.name + ":" + frame.lineNumber);
-        }
-        normalized = frames.join("\n");
-      } else {
-        normalized = "" + aStack;
-      }
-      this.msg += Task.Debugging.generateReadableStack(normalized, "    ");
-    }
-    if (aIsTodo) {
-      this.status = "PASS";
-      this.expected = "FAIL";
-    } else {
-      this.status = "FAIL";
-      this.expected = "PASS";
-    }
+  this.status = this.todo ? "PASS" : "FAIL";
 
-    if (gConfig.debugOnFailure) {
-      // You've hit this line because you requested to break into the
-      // debugger upon a testcase failure on your test run.
-      debugger;
+  if (ex) {
+    if (typeof ex == "object" && "fileName" in ex) {
+      // we have an exception - print filename and linenumber information
+      this.msg += "at " + ex.fileName + ":" + ex.lineNumber + " - ";
     }
+    this.msg += String(ex);
+  }
+
+  if (stack) {
+    this.msg += "\nStack trace:\n";
+    let normalized;
+    if (stack instanceof Components.interfaces.nsIStackFrame) {
+      let frames = [];
+      for (let frame = stack; frame; frame = frame.caller) {
+        frames.push(frame.filename + ":" + frame.name + ":" + frame.lineNumber);
+      }
+      normalized = frames.join("\n");
+    } else {
+      normalized = "" + stack;
+    }
+    this.msg += Task.Debugging.generateReadableStack(normalized, "    ");
+  }
+
+  if (gConfig.debugOnFailure) {
+    // You've hit this line because you requested to break into the
+    // debugger upon a testcase failure on your test run.
+    debugger;
   }
 }
 
-function testMessage(aName) {
-  this.msg = aName || "";
+function testMessage(msg) {
+  this.msg = msg || "";
   this.info = true;
 }
 
@@ -905,20 +956,16 @@ function testMessage(aName) {
 // cannot conflict with global variables used in tests.
 function testScope(aTester, aTest, expected) {
   this.__tester = aTester;
-  this.__expected = expected;
-  this.__num_failed = 0;
+
+  aTest.allowFailure = expected == "fail";
 
   var self = this;
-  this.ok = function test_ok(condition, name, diag, stack) {
-    if (self.__expected == 'fail') {
-        if (!condition) {
-          self.__num_failed++;
-          condition = true;
-        }
-    }
-
-    aTest.addResult(new testResult(condition, name, diag, false,
-                                   stack ? stack : Components.stack.caller));
+  this.ok = function test_ok(condition, name, ex, stack) {
+    aTest.addResult(new testResult({
+      name, pass: condition, ex,
+      stack: stack || Components.stack.caller,
+      allowFailure: aTest.allowFailure,
+    }));
   };
   this.is = function test_is(a, b, name) {
     self.ok(a == b, name, "Got " + a + ", expected " + b, false,
@@ -928,9 +975,12 @@ function testScope(aTester, aTest, expected) {
     self.ok(a != b, name, "Didn't expect " + a + ", but got it", false,
             Components.stack.caller);
   };
-  this.todo = function test_todo(condition, name, diag, stack) {
-    aTest.addResult(new testResult(!condition, name, diag, true,
-                                   stack ? stack : Components.stack.caller));
+  this.todo = function test_todo(condition, name, ex, stack) {
+    aTest.addResult(new testResult({
+      name, pass: !condition, todo: true, ex,
+      stack: stack || Components.stack.caller,
+      allowFailure: aTest.allowFailure,
+    }));
   };
   this.todo_is = function test_todo_is(a, b, name) {
     self.todo(a == b, name, "Got " + a + ", expected " + b,
@@ -984,13 +1034,6 @@ function testScope(aTester, aTest, expected) {
     self.SimpleTest.ignoreAllUncaughtExceptions(aIgnoring);
   };
 
-  this.thisTestLeaksUncaughtRejectionsAndShouldBeFixed = function(...rejections) {
-    if (!aTester._toleratedUncaughtRejections) {
-      aTester._toleratedUncaughtRejections = [];
-    }
-    aTester._toleratedUncaughtRejections.push(...rejections);
-  };
-
   this.expectAssertions = function test_expectAssertions(aMin, aMax) {
     let min = aMin;
     let max = aMax;
@@ -1005,8 +1048,9 @@ function testScope(aTester, aTest, expected) {
     self.__expectedMaxAsserts = max;
   };
 
-  this.setExpected = function test_setExpected() {
-    self.__expected = 'fail';
+  this.setExpectedFailuresForSelfTest = function test_setExpectedFailuresForSelfTest(expectedAllowedFailureCount) {
+    aTest.allowFailure = true;
+    aTest.expectedAllowedFailureCount = expectedAllowedFailureCount;
   };
 
   this.finish = function test_finish() {
@@ -1037,7 +1081,6 @@ testScope.prototype = {
   __timeoutFactor: 1,
   __expectedMinAsserts: 0,
   __expectedMaxAsserts: 0,
-  __expected: 'pass',
 
   EventUtils: {},
   SimpleTest: {},

@@ -34,14 +34,13 @@ class nsCanvasFrame final : public nsContainerFrame,
 {
 public:
   explicit nsCanvasFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, mozilla::LayoutFrameType::Canvas)
+    : nsContainerFrame(aContext, kClassID)
     , mDoPaintFocus(false)
     , mAddedScrollPositionListener(false)
   {}
 
-  NS_DECL_QUERYFRAME_TARGET(nsCanvasFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsCanvasFrame)
 
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
@@ -199,7 +198,7 @@ public:
 
   virtual void NotifyRenderingChanged() override
   {
-    mFrame->Properties().Delete(nsIFrame::CachedBackgroundImageDT());
+    mFrame->DeleteProperty(nsIFrame::CachedBackgroundImageDT());
   }
  
   // We still need to paint a background color as well as an image for this item, 

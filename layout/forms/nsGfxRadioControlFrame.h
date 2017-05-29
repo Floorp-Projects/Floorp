@@ -18,7 +18,7 @@ public:
   explicit nsGfxRadioControlFrame(nsStyleContext* aContext);
   ~nsGfxRadioControlFrame();
 
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsGfxRadioControlFrame)
 
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;

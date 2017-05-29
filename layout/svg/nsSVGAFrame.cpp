@@ -21,11 +21,11 @@ class nsSVGAFrame : public nsSVGDisplayContainerFrame
   NS_NewSVGAFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGAFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext, LayoutFrameType::SVGA)
+    : nsSVGDisplayContainerFrame(aContext, kClassID)
   {}
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGAFrame)
 
 #ifdef DEBUG
   virtual void Init(nsIContent*       aContent,

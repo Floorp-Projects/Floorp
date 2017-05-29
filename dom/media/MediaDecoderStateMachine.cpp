@@ -947,6 +947,7 @@ private:
  *   SEEKING if any new seek request.
  *   SHUTDOWN if seek failed.
  *   COMPLETED if the new playback position is the end of the media resource.
+ *   NextFrameSeekingState if completing a NextFrameSeekingFromDormantState.
  *   DECODING otherwise.
  */
 class MediaDecoderStateMachine::SeekingState
@@ -1025,6 +1026,8 @@ protected:
   SeekJob mSeekJob;
 
   virtual void DoSeek() = 0;
+  // Transition to the next state (defined by the subclass) when seek is completed.
+  virtual void GoToNextState() { SetState<DecodingState>(); }
   void SeekCompleted();
   virtual TimeUnit CalculateNewCurrentTime() const = 0;
 };
@@ -1305,6 +1308,12 @@ private:
                  mMaster->DecodeError(NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA);
                })
         ->Track(mWaitRequest);
+      return;
+    }
+
+    if (aReject.mError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
+      HandleEndOfAudio();
+      HandleEndOfVideo();
       return;
     }
 
@@ -1733,34 +1742,28 @@ public:
   {
     mFutureSeekJob = Move(aFutureSeekJob);
 
-    SeekJob seekJob(Move(aCurrentSeekJob));
-    // Ensure that we don't transition to DecodingState once this seek
-    // completes.
-    seekJob.mTransition = false;
+    AccurateSeekingState::Enter(Move(aCurrentSeekJob),
+                                EventVisibility::Suppressed);
 
-    AccurateSeekingState::Enter(Move(seekJob), EventVisibility::Suppressed)
-      ->Then(OwnerThread(),
-             __func__,
-             [this]() {
-               mAccurateSeekRequest.Complete();
-               SetState<NextFrameSeekingState>(Move(mFutureSeekJob),
-                                               EventVisibility::Observable);
-             },
-             [this]() { mAccurateSeekRequest.Complete(); })
-      ->Track(mAccurateSeekRequest);
     return mFutureSeekJob.mPromise.Ensure(__func__);
   }
 
   void Exit() override
   {
-    mAccurateSeekRequest.DisconnectIfExists();
     mFutureSeekJob.RejectIfExists(__func__);
     AccurateSeekingState::Exit();
   }
 
 private:
-  MozPromiseRequestHolder<MediaDecoder::SeekPromise> mAccurateSeekRequest;
   SeekJob mFutureSeekJob;
+
+  // We don't want to transition to DecodingState once this seek completes,
+  // instead, we transition to NextFrameSeekingState.
+  void GoToNextState() override
+  {
+    SetState<NextFrameSeekingState>(Move(mFutureSeekJob),
+                                    EventVisibility::Observable);
+  }
 };
 
 RefPtr<MediaDecoder::SeekPromise>
@@ -2535,9 +2538,7 @@ SeekingState::SeekCompleted()
     mMaster->mOnPlaybackEvent.Notify(MediaEventType::Invalidate);
   }
 
-  if (mSeekJob.mTransition) {
-    SetState<DecodingState>();
-  }
+  GoToNextState();
 }
 
 void

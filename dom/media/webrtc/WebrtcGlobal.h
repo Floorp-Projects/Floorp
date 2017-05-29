@@ -115,6 +115,7 @@ struct ParamTraits<mozilla::dom::RTCStatsReportInternal>
     WriteParam(aMsg, aParam.mIceRestarts);
     WriteParam(aMsg, aParam.mIceRollbacks);
     WriteParam(aMsg, aParam.mTransportStats);
+    WriteParam(aMsg, aParam.mRtpContributingSourceStats);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
@@ -134,7 +135,8 @@ struct ParamTraits<mozilla::dom::RTCStatsReportInternal>
         !ReadParam(aMsg, aIter, &(aResult->mTimestamp)) ||
         !ReadParam(aMsg, aIter, &(aResult->mIceRestarts)) ||
         !ReadParam(aMsg, aIter, &(aResult->mIceRollbacks)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mTransportStats))) {
+        !ReadParam(aMsg, aIter, &(aResult->mTransportStats)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mRtpContributingSourceStats))) {
       return false;
     }
 
@@ -500,6 +502,29 @@ struct ParamTraits<mozilla::dom::RTCMediaStreamTrackStats>
       return false;
     }
 
+    return true;
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::dom::RTCRTPContributingSourceStats>
+{
+  typedef mozilla::dom::RTCRTPContributingSourceStats paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mContributorSsrc);
+    WriteParam(aMsg, aParam.mInboundRtpStreamId);
+    WriteRTCStats(aMsg, aParam);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &(aResult->mContributorSsrc)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mInboundRtpStreamId)) ||
+        !ReadRTCStats(aMsg, aIter, aResult)) {
+      return false;
+    }
     return true;
   }
 };

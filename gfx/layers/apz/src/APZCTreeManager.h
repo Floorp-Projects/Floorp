@@ -6,7 +6,7 @@
 #ifndef mozilla_layers_APZCTreeManager_h
 #define mozilla_layers_APZCTreeManager_h
 
-#include <map>                          // for std::map
+#include <unordered_map>                          // for std::unordered_map
 
 #include "gfxPoint.h"                   // for gfxPoint
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
@@ -41,6 +41,7 @@ class CompositorBridgeParent;
 class OverscrollHandoffChain;
 struct OverscrollHandoffState;
 struct FlingHandoffState;
+struct ScrollableLayerGuidHash;
 class LayerMetricsWrapper;
 class InputQueue;
 class GeckoContentController;
@@ -548,7 +549,7 @@ private:
   RefPtr<HitTestingTreeNode> mRootNode;
   /* Holds the zoom constraints for scrollable layers, as determined by the
    * the main-thread gecko code. */
-  std::map<ScrollableLayerGuid, ZoomConstraints> mZoomConstraints;
+  std::unordered_map<ScrollableLayerGuid, ZoomConstraints, ScrollableLayerGuidHash> mZoomConstraints;
   /* This tracks the APZC that should receive all inputs for the current input event block.
    * This allows touch points to move outside the thing they started on, but still have the
    * touch events delivered to the same initial APZC. This will only ever be touched on the

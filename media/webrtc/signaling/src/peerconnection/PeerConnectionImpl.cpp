@@ -2090,6 +2090,7 @@ class RTCStatsReportInternalConstruct : public RTCStatsReportInternal {
 public:
   RTCStatsReportInternalConstruct(const nsString &pcid, DOMHighResTimeStamp now) {
     mPcid = pcid;
+    mRtpContributingSourceStats.Construct();
     mInboundRTPStreamStats.Construct();
     mOutboundRTPStreamStats.Construct();
     mMediaStreamTrackStats.Construct();
@@ -3818,6 +3819,9 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
         }
         query->report->mInboundRTPStreamStats.Value().AppendElement(s,
                                                                     fallible);
+        // Fill in Contributing Source statistics
+        mp.GetContributingSourceStats(localId,
+            query->report->mRtpContributingSourceStats.Value());
         break;
       }
     }

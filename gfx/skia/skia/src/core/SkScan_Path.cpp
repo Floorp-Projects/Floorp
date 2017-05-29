@@ -467,7 +467,7 @@ void sk_fill_path(const SkPath& path, const SkIRect& clipRect, SkBlitter* blitte
         proc = PrePostInverseBlitterProc;
     }
 
-    if (path.isConvex() && (nullptr == proc)) {
+    if (path.isConvex() && (nullptr == proc) && count >= 2) {
         SkASSERT(count >= 2);   // convex walker does not handle missing right edges
         walk_convex_edges(&headEdge, path.getFillType(), blitter, start_y, stop_y, nullptr);
     } else {

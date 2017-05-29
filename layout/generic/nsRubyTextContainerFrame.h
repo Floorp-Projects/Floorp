@@ -21,8 +21,7 @@ nsContainerFrame* NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
 class nsRubyTextContainerFrame final : public nsContainerFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
-  NS_DECL_QUERYFRAME_TARGET(nsRubyTextContainerFrame)
+  NS_DECL_FRAMEARENA_HELPERS(nsRubyTextContainerFrame)
   NS_DECL_QUERYFRAME
 
   // nsIFrame overrides
@@ -57,7 +56,7 @@ protected:
                                  nsStyleContext* aContext);
 
   explicit nsRubyTextContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, mozilla::LayoutFrameType::RubyTextContainer)
+    : nsContainerFrame(aContext, kClassID)
     , mISize(0)
   {}
 

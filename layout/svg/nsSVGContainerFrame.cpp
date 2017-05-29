@@ -34,7 +34,7 @@ NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
                         nsStyleContext* aContext)
 {
   nsIFrame* frame =
-    new (aPresShell) nsSVGContainerFrame(aContext, LayoutFrameType::None);
+    new (aPresShell) nsSVGContainerFrame(aContext, nsSVGContainerFrame::kClassID);
   // If we were called directly, then the frame is for a <defs> or
   // an unknown element type. In both cases we prevent the content
   // from displaying directly.
@@ -43,7 +43,6 @@ NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGContainerFrame)
-NS_IMPL_FRAMEARENA_HELPERS(nsSVGDisplayContainerFrame)
 
 void
 nsSVGContainerFrame::AppendFrames(ChildListID  aListID,

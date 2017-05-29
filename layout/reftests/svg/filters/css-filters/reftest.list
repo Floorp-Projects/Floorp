@@ -10,7 +10,7 @@ default-preferences pref(layout.css.filters.enabled,true)
 skip-if(d2d) == blur-cap-large-radius-on-software.html blur-cap-large-radius-on-software-ref.html
 == blur-em-radius.html blur-em-radius-ref.html
 == blur-invalid-radius.html blur-invalid-radius-ref.html
-fails-if(stylo) == blur-rem-radius.html blur-rem-radius-ref.html
+== blur-rem-radius.html blur-rem-radius-ref.html
 == blur-zero-radius.html blur-zero-radius-ref.html
 == blur-zoomed-page.html blur-zoomed-page-ref.html
 == brightness.html brightness-ref.html

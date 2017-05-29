@@ -107,7 +107,7 @@ HTTP(..) == 1127488-align-right-vertical-lr-ltr.html 1127488-align-bottom-left-r
 == 1133945-1-vertical-align.html 1133945-1-vertical-align-ref.html
 skip-if(Android) == 1134744-radio-checkbox-baseline-1.html 1134744-radio-checkbox-baseline-1-ref.html # Disabled on Android until bug 1352238 is fixed.
 == 1134849-orthogonal-inline.html 1134849-orthogonal-inline-ref.html
-fails-if(styloVsGecko) == 1135361-ruby-justify-1.html 1135361-ruby-justify-1-ref.html # bug 1136067
+fails-if(styloVsGecko||stylo) == 1135361-ruby-justify-1.html 1135361-ruby-justify-1-ref.html # bug 1136067
 fuzzy-if(winWidget,255,163) fuzzy-if(skiaContent,159,111) == 1136557-1-nested-spans.html 1136557-1-nested-spans-ref.html
 fuzzy-if(winWidget,255,221) fuzzy-if(skiaContent,159,111) == 1136557-2-nested-spans.html 1136557-2-nested-spans-ref.html
 fuzzy-if(winWidget,255,236) == 1136557-3-nested-spans.html 1136557-3-nested-spans-ref.html

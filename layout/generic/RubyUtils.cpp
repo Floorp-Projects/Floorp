@@ -19,21 +19,21 @@ NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(ReservedISize, nscoord)
 RubyUtils::SetReservedISize(nsIFrame* aFrame, nscoord aISize)
 {
   MOZ_ASSERT(IsExpandableRubyBox(aFrame));
-  aFrame->Properties().Set(ReservedISize(), aISize);
+  aFrame->SetProperty(ReservedISize(), aISize);
 }
 
 /* static */ void
 RubyUtils::ClearReservedISize(nsIFrame* aFrame)
 {
   MOZ_ASSERT(IsExpandableRubyBox(aFrame));
-  aFrame->Properties().Remove(ReservedISize());
+  aFrame->RemoveProperty(ReservedISize());
 }
 
 /* static */ nscoord
 RubyUtils::GetReservedISize(nsIFrame* aFrame)
 {
   MOZ_ASSERT(IsExpandableRubyBox(aFrame));
-  return aFrame->Properties().Get(ReservedISize());
+  return aFrame->GetProperty(ReservedISize());
 }
 
 AutoRubyTextContainerArray::AutoRubyTextContainerArray(

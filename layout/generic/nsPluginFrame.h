@@ -62,12 +62,10 @@ public:
   typedef mozilla::layers::ImageContainer ImageContainer;
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
 
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsPluginFrame)
+  NS_DECL_QUERYFRAME
 
   friend nsIFrame* NS_NewObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-
-  NS_DECL_QUERYFRAME
-  NS_DECL_QUERYFRAME_TARGET(nsPluginFrame)
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,

@@ -814,7 +814,6 @@ SyncEngine.prototype = {
   // How many records to pull at one time when specifying IDs. This is to avoid
   // URI length limitations.
   guidFetchBatchSize: DEFAULT_GUID_FETCH_BATCH_SIZE,
-  mobileGUIDFetchBatchSize: DEFAULT_MOBILE_GUID_FETCH_BATCH_SIZE,
 
   // How many records to process in a single batch.
   applyIncomingBatchSize: DEFAULT_STORE_BATCH_SIZE,
@@ -1056,7 +1055,6 @@ SyncEngine.prototype = {
 
     // Figure out how many total items to fetch this sync; do less on mobile.
     let batchSize = this.downloadLimit || Infinity;
-    let isMobile = (Svc.Prefs.get("client.type") == "mobile");
 
     if (!newitems) {
       newitems = this.itemSource();
@@ -1066,9 +1064,6 @@ SyncEngine.prototype = {
       newitems.sort = this._defaultSort;
     }
 
-    if (isMobile) {
-      batchSize = MOBILE_BATCH_SIZE;
-    }
     newitems.newer = this.lastSync;
     newitems.full  = true;
     newitems.limit = batchSize;
@@ -1281,8 +1276,7 @@ SyncEngine.prototype = {
     // Process any backlog of GUIDs.
     // At this point we impose an upper limit on the number of items to fetch
     // in a single request, even for desktop, to avoid hitting URI limits.
-    batchSize = isMobile ? this.mobileGUIDFetchBatchSize :
-                           this.guidFetchBatchSize;
+    batchSize = this.guidFetchBatchSize;
 
     while (fetchBatch.length && !aborting) {
       // Reuse the original query, but get rid of the restricting params

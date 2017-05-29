@@ -7,10 +7,6 @@
         "android": [ "--apkPath=%(apk_path)s" ]
     },
     "suites": {
-        "chromez": {
-            "tests": ["tresize", "tcanvasmark"],
-            "talos_options": ["--disable-e10s"]
-        },
         "chromez-e10s": {
             "tests": ["tresize", "tcanvasmark"]
         },
@@ -115,6 +111,15 @@
             "talos_options": [
                 "--xperf_path",
                 "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\""
+            ]
+        },
+        "quantum-pageload-e10s": {
+            "tests": ["Quantum_1"],
+            "mitmproxy_recording_set": "mitmproxy-recording-set.zip",
+            "talos_options": [
+                "--mitmproxy",
+                "mitmproxy-recording-1.mp",
+                "--firstNonBlankPaint"
             ]
         }
     },

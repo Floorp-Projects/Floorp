@@ -56,12 +56,6 @@ static const RedirEntry kRedirMap[] = {
     "credits", "https://www.mozilla.org/credits/",
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT
   },
-#ifdef MOZ_DEVTOOLS_ALL
-  {
-    "debugging", "chrome://devtools/content/aboutdebugging/aboutdebugging.xhtml",
-    nsIAboutModule::ALLOW_SCRIPT
-  },
-#endif
   {
     "license", "chrome://global/content/license.html",
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |

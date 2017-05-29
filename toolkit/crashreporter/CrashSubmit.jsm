@@ -57,8 +57,13 @@ function getL10nStrings() {
     path.append("Resources");
     path.append("crashreporter.ini");
     if (!path.exists()) {
-      // very bad, but I don't know how to recover
-      return null;
+      // This happens on Android where everything is in an APK.
+      // Android users can't see the contents of the submitted files
+      // anyway, so just hardcode some fallback strings.
+      return {
+        "crashid": "Crash ID: %s",
+        "reporturl": "You can view details of this crash at %s"
+      };
     }
   }
   let crstrings = parseINIStrings(path);

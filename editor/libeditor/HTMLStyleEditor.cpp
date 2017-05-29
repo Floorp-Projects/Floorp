@@ -637,6 +637,21 @@ HTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode,
                               getter_AddRefs(leftNode),
                               getter_AddRefs(rightNode));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (rightNode) {
+      bool bIsEmptyNode;
+      IsEmptyNode(rightNode, &bIsEmptyNode, false, true);
+      if (bIsEmptyNode) {
+        // delete rightNode if it became empty
+        rv = DeleteNode(rightNode);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+
+    if (!leftNode) {
+      return NS_OK;
+    }
+
     // should be impossible to not get a new leftnode here
     nsCOMPtr<nsINode> newSelParent = GetLeftmostChild(leftNode);
     if (!newSelParent) {
@@ -647,13 +662,6 @@ HTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode,
     // if you happen to click at the end of a line.
     if (savedBR) {
       rv = MoveNode(savedBR, newSelParent, 0);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    bool bIsEmptyNode;
-    IsEmptyNode(rightNode, &bIsEmptyNode, false, true);
-    if (bIsEmptyNode) {
-      // delete rightNode if it became empty
-      rv = DeleteNode(rightNode);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     // remove the style on this new hierarchy
