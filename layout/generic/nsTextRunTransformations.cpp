@@ -307,7 +307,7 @@ nsCaseTransformTextRunFactory::TransformString(
   bool ntPrefix = false; // true immediately after a word-initial 'n' or 't'
                          // when doing Irish lowercasing
   uint32_t sigmaIndex = uint32_t(-1);
-  nsIUGenCategory::nsUGenCategory cat;
+  nsUGenCategory cat;
 
   uint8_t style = aAllUppercase ? NS_STYLE_TEXT_TRANSFORM_UPPERCASE : 0;
   bool forceNonFullWidth = false;
@@ -377,7 +377,7 @@ nsCaseTransformTextRunFactory::TransformString(
       cat = mozilla::unicode::GetGenCategory(ch);
 
       if (languageSpecificCasing == eLSCB_Irish &&
-          cat == nsIUGenCategory::kLetter) {
+          cat == nsUGenCategory::kLetter) {
         // See bug 1018805 for Irish lowercasing requirements
         if (!prevIsLetter && (ch == 'n' || ch == 't')) {
           ntPrefix = true;
@@ -414,7 +414,7 @@ nsCaseTransformTextRunFactory::TransformString(
       // a CAPITAL SIGMA to FINAL SIGMA; if we now find another letter, we
       // need to change it to SMALL SIGMA.
       if (sigmaIndex != uint32_t(-1)) {
-        if (cat == nsIUGenCategory::kLetter) {
+        if (cat == nsUGenCategory::kLetter) {
           aConvertedString.SetCharAt(GREEK_SMALL_LETTER_SIGMA, sigmaIndex);
         }
       }
@@ -439,8 +439,8 @@ nsCaseTransformTextRunFactory::TransformString(
       // ignore diacritics for the purpose of contextual sigma mapping;
       // otherwise, reset prevIsLetter appropriately and clear the
       // sigmaIndex marker
-      if (cat != nsIUGenCategory::kMark) {
-        prevIsLetter = (cat == nsIUGenCategory::kLetter);
+      if (cat != nsUGenCategory::kMark) {
+        prevIsLetter = (cat == nsUGenCategory::kLetter);
         sigmaIndex = uint32_t(-1);
       }
 

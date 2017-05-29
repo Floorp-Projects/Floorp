@@ -98,41 +98,41 @@ to provide the most compact storage, depending on the distribution
 of values.
 */
 
-const nsIUGenCategory::nsUGenCategory sDetailedToGeneralCategory[] = {
+const nsUGenCategory sDetailedToGeneralCategory[] = {
   /*
    * The order here corresponds to the HB_UNICODE_GENERAL_CATEGORY_* constants
    * of the hb_unicode_general_category_t enum in gfx/harfbuzz/src/hb-unicode.h.
    */
-  /* CONTROL */             nsIUGenCategory::kOther,
-  /* FORMAT */              nsIUGenCategory::kOther,
-  /* UNASSIGNED */          nsIUGenCategory::kOther,
-  /* PRIVATE_USE */         nsIUGenCategory::kOther,
-  /* SURROGATE */           nsIUGenCategory::kOther,
-  /* LOWERCASE_LETTER */    nsIUGenCategory::kLetter,
-  /* MODIFIER_LETTER */     nsIUGenCategory::kLetter,
-  /* OTHER_LETTER */        nsIUGenCategory::kLetter,
-  /* TITLECASE_LETTER */    nsIUGenCategory::kLetter,
-  /* UPPERCASE_LETTER */    nsIUGenCategory::kLetter,
-  /* COMBINING_MARK */      nsIUGenCategory::kMark,
-  /* ENCLOSING_MARK */      nsIUGenCategory::kMark,
-  /* NON_SPACING_MARK */    nsIUGenCategory::kMark,
-  /* DECIMAL_NUMBER */      nsIUGenCategory::kNumber,
-  /* LETTER_NUMBER */       nsIUGenCategory::kNumber,
-  /* OTHER_NUMBER */        nsIUGenCategory::kNumber,
-  /* CONNECT_PUNCTUATION */ nsIUGenCategory::kPunctuation,
-  /* DASH_PUNCTUATION */    nsIUGenCategory::kPunctuation,
-  /* CLOSE_PUNCTUATION */   nsIUGenCategory::kPunctuation,
-  /* FINAL_PUNCTUATION */   nsIUGenCategory::kPunctuation,
-  /* INITIAL_PUNCTUATION */ nsIUGenCategory::kPunctuation,
-  /* OTHER_PUNCTUATION */   nsIUGenCategory::kPunctuation,
-  /* OPEN_PUNCTUATION */    nsIUGenCategory::kPunctuation,
-  /* CURRENCY_SYMBOL */     nsIUGenCategory::kSymbol,
-  /* MODIFIER_SYMBOL */     nsIUGenCategory::kSymbol,
-  /* MATH_SYMBOL */         nsIUGenCategory::kSymbol,
-  /* OTHER_SYMBOL */        nsIUGenCategory::kSymbol,
-  /* LINE_SEPARATOR */      nsIUGenCategory::kSeparator,
-  /* PARAGRAPH_SEPARATOR */ nsIUGenCategory::kSeparator,
-  /* SPACE_SEPARATOR */     nsIUGenCategory::kSeparator
+  /* CONTROL */             nsUGenCategory::kOther,
+  /* FORMAT */              nsUGenCategory::kOther,
+  /* UNASSIGNED */          nsUGenCategory::kOther,
+  /* PRIVATE_USE */         nsUGenCategory::kOther,
+  /* SURROGATE */           nsUGenCategory::kOther,
+  /* LOWERCASE_LETTER */    nsUGenCategory::kLetter,
+  /* MODIFIER_LETTER */     nsUGenCategory::kLetter,
+  /* OTHER_LETTER */        nsUGenCategory::kLetter,
+  /* TITLECASE_LETTER */    nsUGenCategory::kLetter,
+  /* UPPERCASE_LETTER */    nsUGenCategory::kLetter,
+  /* COMBINING_MARK */      nsUGenCategory::kMark,
+  /* ENCLOSING_MARK */      nsUGenCategory::kMark,
+  /* NON_SPACING_MARK */    nsUGenCategory::kMark,
+  /* DECIMAL_NUMBER */      nsUGenCategory::kNumber,
+  /* LETTER_NUMBER */       nsUGenCategory::kNumber,
+  /* OTHER_NUMBER */        nsUGenCategory::kNumber,
+  /* CONNECT_PUNCTUATION */ nsUGenCategory::kPunctuation,
+  /* DASH_PUNCTUATION */    nsUGenCategory::kPunctuation,
+  /* CLOSE_PUNCTUATION */   nsUGenCategory::kPunctuation,
+  /* FINAL_PUNCTUATION */   nsUGenCategory::kPunctuation,
+  /* INITIAL_PUNCTUATION */ nsUGenCategory::kPunctuation,
+  /* OTHER_PUNCTUATION */   nsUGenCategory::kPunctuation,
+  /* OPEN_PUNCTUATION */    nsUGenCategory::kPunctuation,
+  /* CURRENCY_SYMBOL */     nsUGenCategory::kSymbol,
+  /* MODIFIER_SYMBOL */     nsUGenCategory::kSymbol,
+  /* MATH_SYMBOL */         nsUGenCategory::kSymbol,
+  /* OTHER_SYMBOL */        nsUGenCategory::kSymbol,
+  /* LINE_SEPARATOR */      nsUGenCategory::kSeparator,
+  /* PARAGRAPH_SEPARATOR */ nsUGenCategory::kSeparator,
+  /* SPACE_SEPARATOR */     nsUGenCategory::kSeparator
 };
 
 #ifdef ENABLE_INTL_API
