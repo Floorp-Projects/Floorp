@@ -32,6 +32,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.activity.InfoActivity;
 import org.mozilla.focus.activity.InstallFirefoxActivity;
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
 import org.mozilla.focus.menu.BrowserMenu;
@@ -564,6 +565,11 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 TelemetryWrapper.closeCustomTabEvent();
                 break;
             }
+
+            case R.id.help:
+                Intent helpIntent = InfoActivity.getHelpIntent(getActivity());
+                startActivity(helpIntent);
+                break;
 
             default:
                 throw new IllegalArgumentException("Unhandled menu item in BrowserFragment");

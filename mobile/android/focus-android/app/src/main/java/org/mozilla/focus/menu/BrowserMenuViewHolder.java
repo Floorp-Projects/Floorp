@@ -10,7 +10,7 @@ import android.view.View;
 
 public abstract class BrowserMenuViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
     private BrowserMenu menu;
-    private View.OnClickListener listener;
+    protected View.OnClickListener listener;
 
     public BrowserMenuViewHolder(View itemView) {
         super(itemView);

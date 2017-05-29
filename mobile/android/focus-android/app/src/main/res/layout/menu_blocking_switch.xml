@@ -29,6 +29,12 @@
             android:textColor="#808080"
             android:textSize="16sp" />
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
         <TextView
             android:id="@+id/trackers_count"
             android:layout_width="wrap_content"
@@ -36,6 +42,17 @@
             android:textColor="#ffffff"
             android:textSize="24sp"
             tools:text="0" />
+
+            <ImageButton
+                android:id="@+id/help"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:padding="4dp"
+                android:src="@drawable/ic_info"
+                android:contentDescription="@string/menu_help"
+                android:background="?android:attr/selectableItemBackgroundBorderless" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
