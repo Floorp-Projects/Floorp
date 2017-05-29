@@ -1,0 +1,157 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder recording a constructed MediaStream</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/dom/canvas/test/captureStream_common.js"></script>
+  <script src="/tests/dom/media/tests/mochitest/head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<div id="content">
+</div>
+<script>
+SimpleTest.waitForExplicitFinish();
+runTestWhenReady(async () => {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 100;
+  document.getElementById("content").appendChild(canvas);
+
+  const helper = new CaptureStreamTestHelper2D(100, 100);
+  helper.drawColor(canvas, helper.red);
+
+  const audioCtx = new AudioContext();
+  const osc = audioCtx.createOscillator();
+  osc.frequency.value = 1000;
+  osc.start();
+  const dest = audioCtx.createMediaStreamDestination();
+  osc.connect(dest);
+
+  const stream = dest.stream;
+  canvas.captureStream(0).getVideoTracks().forEach(t => stream.addTrack(t));
+
+  const blobs = [];
+
+  mediaRecorder = new MediaRecorder(stream);
+  is(mediaRecorder.stream, stream,
+     "Media recorder stream = constructed stream at the start of recording");
+
+
+  mediaRecorder.ondataavailable = evt => {
+    info("ondataavailable fired");
+
+    is(mediaRecorder.state, "inactive", "Blob received after stopping");
+    is(blobs.length, 0, "This is the first and only blob");
+    ok(evt instanceof BlobEvent,
+       "Events fired from ondataavailable should be BlobEvent");
+    is(evt.type, "dataavailable",
+       "Event type should dataavailable");
+    ok(evt.data.size >= 0,
+       "Blob data size received is greater than or equal to zero");
+
+    blobs.push(evt.data);
+  };
+
+  const stopped = haveEvent(mediaRecorder, "stop", wait(5000, new Error("Timeout")));
+  const stoppedNoErrors = Promise.all([
+    stopped,
+    haveNoEvent(mediaRecorder, "warning", stopped),
+    haveNoEvent(mediaRecorder, "error", stopped)
+  ]);
+
+  mediaRecorder.start();
+  is(mediaRecorder.state, "recording", "Media recorder should be recording");
+
+  await haveEvent(mediaRecorder, "start", wait(5000, new Error("Timeout")));
+  info("onstart fired");
+
+  is(mediaRecorder.state, "recording",
+     "Media recorder is recording before being stopped");
+  mediaRecorder.stop();
+  is(mediaRecorder.state, "inactive",
+     "Media recorder is inactive after being stopped");
+  is(mediaRecorder.stream, stream,
+     "Media recorder stream = constructed stream post recording");
+
+  await stoppedNoErrors;
+  info("Got 'stop' event");
+
+  ok(blobs.length == 1, "Should have gotten one data blob");
+
+  // Clean up recording sources
+  osc.stop();
+  stream.getTracks().forEach(t => t.stop());
+
+  // Sanity check the recording
+  const video = document.createElement("video");
+  document.getElementById("content").appendChild(video);
+  video.id = "recorded-video";
+
+  const blob = new Blob(blobs);
+  ok(blob.size > 0, "Recorded blob should contain data");
+
+  video.src = URL.createObjectURL(blob);
+  video.preload = "metadata";
+
+  info("Waiting for metadata to be preloaded");
+
+  await haveEvent(video, "loadedmetadata", wait(5000, new Error("Timeout")));
+  info("Playback of recording loaded metadata");
+
+  const recordingStream = video.mozCaptureStream();
+  is(recordingStream.getVideoTracks().length, 1,
+     "Recording should have one video track");
+  is(recordingStream.getAudioTracks().length, 1,
+     "Recording should have one audio track");
+
+  const ended = haveEvent(video, "ended", wait(5000, new Error("Timeout")));
+  const endedNoError = Promise.all([
+    ended,
+    haveNoEvent(video, "error", ended),
+  ]);
+
+  const analyser = new AudioStreamAnalyser(audioCtx, recordingStream);
+  const audioReady = analyser.waitForAnalysisSuccess(array => {
+    const freq = osc.frequency.value;
+    const lowerFreq = freq / 2;
+    const upperFreq = freq + 1000;
+    const lowerAmp = array[analyser.binIndexForFrequency(lowerFreq)];
+    const freqAmp = array[analyser.binIndexForFrequency(freq)];
+    const upperAmp = array[analyser.binIndexForFrequency(upperFreq)];
+    info("Analysing audio. "
+         + lowerFreq + ": " + lowerAmp + ", "
+         + freq + ": " + freqAmp + ", "
+         + upperFreq + ": " + upperAmp);
+    return lowerAmp < 50 && freqAmp > 200 && upperAmp < 50;
+  }, endedNoError.then(() => new Error("Audio check failed")));
+
+  const videoReady = helper.waitForPixelColor(
+      video, helper.red, 128, "Should become red",
+      endedNoError.then(() => new Error("Video check failed")));
+
+  video.play();
+
+  try {
+    await endedNoError;
+  } finally {
+    analyser.disconnect();
+    let url = video.src;
+    video.src = "";
+    URL.revokeObjectURL(url);
+  }
+
+  info("Playback of recording ended without error");
+
+  await audioReady;
+  info("Audio content ok");
+
+  await videoReady;
+  info("Video content ok");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
