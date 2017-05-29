@@ -12,9 +12,7 @@ const { getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { data } = require('sdk/self');
 const { set } = require('sdk/preferences/service');
 
-const { require: devtoolsRequire } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const { DebuggerServer } = devtoolsRequire("devtools/server/main");
-const { DebuggerClient } = devtoolsRequire("devtools/shared/client/main");
+const { DevToolsShim } = Cu.import("chrome://devtools-shim/content/DevToolsShim.jsm", {});
 
 var gClient;
 var ok;
@@ -36,13 +34,7 @@ exports.testDebugger = function(assert, done) {
   });
   ok(true, 'PageMod was created');
 
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init();
-    DebuggerServer.addBrowserActors();
-  }
-
-  let transport = DebuggerServer.connectPipe();
-  gClient = new DebuggerClient(transport);
+  gClient = DevToolsShim.createDebuggerClient();
   gClient.connect((aType, aTraits) => {
     tabs.open({
       url: TAB_URL,
