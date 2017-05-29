@@ -73,7 +73,6 @@ if test "$MOZ_UPDATE_CHANNEL" = "release" ; then
 elif test "$MOZ_UPDATE_CHANNEL" = "beta" ; then
     ac_add_options --with-leanplum-sdk-keyfile=/builds/leanplum-sdk-beta.token
 elif test "$MOZ_UPDATE_CHANNEL" = "nightly" ; then
-    export MOZ_ANDROID_MMA=1
     ac_add_options --with-leanplum-sdk-keyfile=/builds/leanplum-sdk-nightly.token
 else
     ac_add_options --with-leanplum-sdk-keyfile="$topsrcdir/mobile/android/base/leanplum-sdk-sandbox.token"
