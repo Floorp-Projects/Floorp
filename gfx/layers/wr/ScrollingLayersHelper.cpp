@@ -32,12 +32,21 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
     if (!fm.IsScrollable()) {
       return;
     }
-    LayoutDeviceRect contentRect = fm.GetExpandedScrollableRect()
-        * fm.GetDevPixelsPerCSSPixel();
+    LayerRect contentRect = ViewAs<LayerPixel>(
+        fm.GetExpandedScrollableRect() * fm.GetDevPixelsPerCSSPixel(),
+        PixelCastJustification::WebRenderHasUnitResolution);
     // TODO: check coordinate systems are sane here
     LayerRect clipBounds = ViewAs<LayerPixel>(
         fm.GetCompositionBounds(),
         PixelCastJustification::MovingDownToChildren);
+    // The content rect that we hand to PushScrollLayer should be relative to
+    // the same origin as the clipBounds that we hand to PushScrollLayer - that
+    // is, both of them should be relative to the stacking context `aStackingContext`.
+    // However, when we get the scrollable rect from the FrameMetrics, it has
+    // a nominal top-left of 0,0 (maybe different for RTL pages?) and so to
+    // get it in the same coordinate space we're going to shift it by the
+    // composition bounds top-left.
+    contentRect.MoveBy(clipBounds.TopLeft());
     mBuilder->PushScrollLayer(fm.GetScrollId(),
         aStackingContext.ToRelativeWrRect(contentRect),
         aStackingContext.ToRelativeWrRect(clipBounds));
