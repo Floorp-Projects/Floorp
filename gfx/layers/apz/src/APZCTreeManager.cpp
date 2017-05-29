@@ -979,6 +979,13 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
                                 + ((thumbData.mDirection == ScrollDirection::HORIZONTAL)
                                    ? thumbTransform._41 : thumbTransform._42);
             dragStart -= thumbStart;
+
+            // Content can't prevent scrollbar dragging with preventDefault(),
+            // so we don't need to wait for a content response. It's important
+            // to do this before calling ConfirmDragBlock() since that can
+            // potentially process and consume the block.
+            dragBlock->SetContentResponse(false);
+
             mInputQueue->ConfirmDragBlock(
                 dragBlockId, apzc,
                 AsyncDragMetrics(apzc->GetGuid().mScrollId,
@@ -986,9 +993,6 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
                                  dragBlockId,
                                  dragStart,
                                  thumbData.mDirection));
-            // Content can't prevent scrollbar dragging with preventDefault(),
-            // so we don't need to wait for a content response.
-            dragBlock->SetContentResponse(false);
           }
         }
 
