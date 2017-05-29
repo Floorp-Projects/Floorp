@@ -68,6 +68,7 @@ EXPORTS += [
     'GMPVideoPlaneImpl.h',
     'widevine-adapter/content_decryption_module.h',
     'widevine-adapter/content_decryption_module_export.h',
+    'widevine-adapter/content_decryption_module_ext.h',
 ]
 
 UNIFIED_SOURCES += [
