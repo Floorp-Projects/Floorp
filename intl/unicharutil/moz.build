@@ -16,14 +16,12 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'unicharutil'
 
 EXPORTS += [
-    'nsICaseConversion.h',
     'nsIUGenCategory.h',
     'nsUnicharUtilCIID.h',
     'nsUnicodeNormalizer.h',
 ]
 
 UNIFIED_SOURCES += [
-    'nsCaseConversionImp2.cpp',
     'nsCategoryImp.cpp',
     'nsEntityConverter.cpp',
     'nsSaveAsCharset.cpp',
