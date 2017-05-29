@@ -84,8 +84,8 @@ ChromiumCDMAdapter::GMPGetAPI(const char* aAPIName,
       return GMPGenericErr;
     }
 
-    auto cdm = reinterpret_cast<cdm::ContentDecryptionModule*>(
-      create(cdm::ContentDecryptionModule::kVersion,
+    auto cdm = reinterpret_cast<cdm::ContentDecryptionModule_8*>(
+      create(cdm::ContentDecryptionModule_8::kVersion,
              kEMEKeySystemWidevine.get(),
              kEMEKeySystemWidevine.Length(),
              &ChromiumCdmHost,
@@ -126,7 +126,7 @@ ChromiumCDMAdapter::Supports(int32_t aModuleVersion,
                              int32_t aHostVersion)
 {
   return aModuleVersion == CDM_MODULE_VERSION &&
-         aInterfaceVersion == cdm::ContentDecryptionModule::kVersion &&
+         aInterfaceVersion == cdm::ContentDecryptionModule_8::kVersion &&
          aHostVersion == cdm::Host_8::kVersion;
 }
 
