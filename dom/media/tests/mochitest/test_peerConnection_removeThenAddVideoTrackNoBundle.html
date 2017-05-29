@@ -48,7 +48,7 @@
           const vAdded = test.pcRemote.remoteMediaElements.find(
               elem => elem.id.includes(track.id));
           ok(vOriginal.ended, "Original video element should have ended");
-          return helper.checkVideoPlaying(vAdded, 10, 10, 16);
+          return helper.checkVideoPlaying(vAdded);
         },
       ]
     );
