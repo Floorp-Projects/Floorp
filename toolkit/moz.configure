@@ -795,6 +795,19 @@ set_config('MOZ_BUILD_WEBRENDER', webrender.build)
 set_define('MOZ_BUILD_WEBRENDER', webrender.build)
 set_config('MOZ_ENABLE_WEBRENDER', webrender.enable)
 
+# SIMD acceleration for Rust code (currently just encoding_rs)
+
+option('--enable-rust-simd', env='MOZ_RUST_SIMD',
+       help='Enable explicit SIMD in Rust code.')
+
+@depends('--enable-rust-simd')
+def rust_simd(value):
+    if value:
+        return True
+
+set_config('MOZ_RUST_SIMD', rust_simd)
+set_define('MOZ_RUST_SIMD', rust_simd)
+
 # Printing
 # ==============================================================
 @depends(target)
