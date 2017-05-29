@@ -21,11 +21,11 @@ use gecko_bindings::bindings::Gecko_CopyConstruct_${style_struct.gecko_ffi_name}
 use gecko_bindings::bindings::Gecko_Destroy_${style_struct.gecko_ffi_name};
 % endfor
 use gecko_bindings::bindings::Gecko_Construct_nsStyleVariables;
+use gecko_bindings::bindings::Gecko_CopyCounterStyle;
 use gecko_bindings::bindings::Gecko_CopyCursorArrayFrom;
 use gecko_bindings::bindings::Gecko_CopyFontFamilyFrom;
 use gecko_bindings::bindings::Gecko_CopyImageValueFrom;
 use gecko_bindings::bindings::Gecko_CopyListStyleImageFrom;
-use gecko_bindings::bindings::Gecko_CopyListStyleTypeFrom;
 use gecko_bindings::bindings::Gecko_Destroy_nsStyleVariables;
 use gecko_bindings::bindings::Gecko_EnsureImageLayersLength;
 use gecko_bindings::bindings::Gecko_FontFamilyList_AppendGeneric;
@@ -39,7 +39,6 @@ use gecko_bindings::bindings::Gecko_nsStyleFont_SetLang;
 use gecko_bindings::bindings::Gecko_nsStyleFont_CopyLangFrom;
 use gecko_bindings::bindings::Gecko_SetListStyleImageNone;
 use gecko_bindings::bindings::Gecko_SetListStyleImageImageValue;
-use gecko_bindings::bindings::Gecko_SetListStyleType;
 use gecko_bindings::bindings::Gecko_SetNullImageValue;
 use gecko_bindings::bindings::ServoComputedValuesBorrowedOrNull;
 use gecko_bindings::bindings::{Gecko_ResetFilters, Gecko_CopyFiltersFrom};
@@ -1487,27 +1486,28 @@ fn static_assert() {
                              font-synthesis -x-lang font-variant-alternates
                              font-variant-east-asian font-variant-ligatures
                              font-variant-numeric font-language-override
-                             font-feature-settings"""
+                             font-feature-settings font-variation-settings
+                             -moz-min-font-size-ratio"""
 %>
 <%self:impl_trait style_struct_name="Font"
     skip_longhands="${skip_font_longhands}"
     skip_additionals="*">
 
     pub fn set_font_feature_settings(&mut self, v: longhands::font_feature_settings::computed_value::T) {
-        use properties::longhands::font_feature_settings::computed_value::T;
+        use values::generics::FontSettings;
 
         let current_settings = &mut self.gecko.mFont.fontFeatureSettings;
         current_settings.clear_pod();
 
         match v {
-            T::Normal => unsafe { current_settings.set_len_pod(0) },
+            FontSettings::Normal => (), // do nothing, length is already 0
 
-            T::Tag(feature_settings) => {
+            FontSettings::Tag(feature_settings) => {
                 unsafe { current_settings.set_len_pod(feature_settings.len() as u32) };
 
                 for (current, feature) in current_settings.iter_mut().zip(feature_settings) {
                     current.mTag = feature.tag;
-                    current.mValue = feature.value;
+                    current.mValue = feature.value.0;
                 }
             }
         };
@@ -1516,6 +1516,40 @@ fn static_assert() {
     pub fn copy_font_feature_settings_from(&mut self, other: &Self ) {
         let current_settings = &mut self.gecko.mFont.fontFeatureSettings;
         let feature_settings = &other.gecko.mFont.fontFeatureSettings;
+        let settings_length = feature_settings.len() as u32;
+
+        current_settings.clear_pod();
+        unsafe { current_settings.set_len_pod(settings_length) };
+
+        for (current, feature) in current_settings.iter_mut().zip(feature_settings.iter()) {
+            current.mTag = feature.mTag;
+            current.mValue = feature.mValue;
+        }
+    }
+
+    pub fn set_font_variation_settings(&mut self, v: longhands::font_variation_settings::computed_value::T) {
+        use values::generics::FontSettings;
+
+        let current_settings = &mut self.gecko.mFont.fontVariationSettings;
+        current_settings.clear_pod();
+
+        match v {
+            FontSettings::Normal => (), // do nothing, length is already 0
+
+            FontSettings::Tag(feature_settings) => {
+                unsafe { current_settings.set_len_pod(feature_settings.len() as u32) };
+
+                for (current, feature) in current_settings.iter_mut().zip(feature_settings) {
+                    current.mTag = feature.tag;
+                    current.mValue = feature.value.0;
+                }
+            }
+        };
+    }
+
+    pub fn copy_font_variation_settings_from(&mut self, other: &Self ) {
+        let current_settings = &mut self.gecko.mFont.fontVariationSettings;
+        let feature_settings = &other.gecko.mFont.fontVariationSettings;
         let settings_length = feature_settings.len() as u32;
 
         current_settings.clear_pod();
@@ -1596,7 +1630,6 @@ fn static_assert() {
     // actual computed size, and the other of which (mFont.size) is the 'display
     // size' which takes font zooming into account. We don't handle font zooming yet.
     pub fn set_font_size(&mut self, v: longhands::font_size::computed_value::T) {
-        self.gecko.mFont.size = v.0;
         self.gecko.mSize = v.0;
         self.gecko.mScriptUnconstrainedSize = v.0;
     }
@@ -1604,19 +1637,25 @@ fn static_assert() {
     /// Set font size, taking into account scriptminsize and scriptlevel
     /// Returns Some(size) if we have to recompute the script unconstrained size
     pub fn apply_font_size(&mut self, v: longhands::font_size::computed_value::T,
-                           parent: &Self) -> Option<Au> {
+                           parent: &Self,
+                           device: &Device) -> Option<Au> {
         let (adjusted_size, adjusted_unconstrained_size)
             = self.calculate_script_level_size(parent);
         // In this case, we have been unaffected by scriptminsize, ignore it
         if parent.gecko.mSize == parent.gecko.mScriptUnconstrainedSize &&
            adjusted_size == adjusted_unconstrained_size {
             self.set_font_size(v);
+            self.fixup_font_min_size(device);
             None
         } else {
-            self.gecko.mFont.size = v.0;
             self.gecko.mSize = v.0;
+            self.fixup_font_min_size(device);
             Some(Au(parent.gecko.mScriptUnconstrainedSize))
         }
+    }
+
+    pub fn fixup_font_min_size(&mut self, device: &Device) {
+        unsafe { bindings::Gecko_nsStyleFont_FixupMinFontSize(&mut self.gecko, &*device.pres_context) }
     }
 
     pub fn apply_unconstrained_font_size(&mut self, v: Au) {
@@ -1727,7 +1766,8 @@ fn static_assert() {
     ///
     /// Returns true if the inherited keyword size was actually used
     pub fn inherit_font_size_from(&mut self, parent: &Self,
-                                  kw_inherited_size: Option<Au>) -> bool {
+                                  kw_inherited_size: Option<Au>,
+                                  device: &Device) -> bool {
         let (adjusted_size, adjusted_unconstrained_size)
             = self.calculate_script_level_size(parent);
         if adjusted_size.0 != parent.gecko.mSize ||
@@ -1746,23 +1786,23 @@ fn static_assert() {
 
             // In the case that MathML has given us an adjusted size, apply it.
             // Keep track of the unconstrained adjusted size.
-            self.gecko.mFont.size = adjusted_size.0;
             self.gecko.mSize = adjusted_size.0;
             self.gecko.mScriptUnconstrainedSize = adjusted_unconstrained_size.0;
+            self.fixup_font_min_size(device);
             false
         } else if let Some(size) = kw_inherited_size {
             // Parent element was a keyword-derived size.
-            self.gecko.mFont.size = size.0;
             self.gecko.mSize = size.0;
             // MathML constraints didn't apply here, so we can ignore this.
             self.gecko.mScriptUnconstrainedSize = size.0;
+            self.fixup_font_min_size(device);
             true
         } else {
             // MathML isn't affecting us, and our parent element does not
             // have a keyword-derived size. Set things normally.
-            self.gecko.mFont.size = parent.gecko.mFont.size;
             self.gecko.mSize = parent.gecko.mSize;
             self.gecko.mScriptUnconstrainedSize = parent.gecko.mScriptUnconstrainedSize;
+            self.fixup_font_min_size(device);
             false
         }
     }
@@ -1865,6 +1905,21 @@ fn static_assert() {
     }
 
     ${impl_simple_copy('font_variant_numeric', 'mFont.variantNumeric')}
+
+    #[allow(non_snake_case)]
+    pub fn set__moz_min_font_size_ratio(&mut self, v: longhands::_moz_min_font_size_ratio::computed_value::T) {
+        let percentage = if v.0 > 255. {
+            255.
+        } else if v.0 < 0. {
+            0.
+        } else {
+            v.0
+        };
+
+        self.gecko.mMinFontSizeRatio = percentage as u8;
+    }
+
+    ${impl_simple_copy('_moz_min_font_size_ratio', 'mMinFontSizeRatio')}
 </%self:impl_trait>
 
 <%def name="impl_copy_animation_or_transition_value(type, ident, gecko_ffi_name)">
@@ -2932,29 +2987,37 @@ fn static_assert() {
         use gecko_bindings::structs::nsStyleImageLayers_Size_Dimension;
         use gecko_bindings::structs::nsStyleImageLayers_Size_DimensionType;
         use gecko_bindings::structs::{nsStyleCoord_CalcValue, nsStyleImageLayers_Size};
-        use properties::longhands::background_size::single_value::computed_value::T;
+        use values::generics::background::BackgroundSize;
 
         let mut width = nsStyleCoord_CalcValue::new();
         let mut height = nsStyleCoord_CalcValue::new();
 
         let (w_type, h_type) = match servo {
-            T::Explicit(size) => {
+            BackgroundSize::Explicit { width: explicit_width, height: explicit_height } => {
                 let mut w_type = nsStyleImageLayers_Size_DimensionType::eAuto;
                 let mut h_type = nsStyleImageLayers_Size_DimensionType::eAuto;
-                if let Some(w) = size.width.to_calc_value() {
+                if let Some(w) = explicit_width.to_calc_value() {
                     width = w;
                     w_type = nsStyleImageLayers_Size_DimensionType::eLengthPercentage;
                 }
-                if let Some(h) = size.height.to_calc_value() {
+                if let Some(h) = explicit_height.to_calc_value() {
                     height = h;
                     h_type = nsStyleImageLayers_Size_DimensionType::eLengthPercentage;
                 }
                 (w_type, h_type)
             }
-            T::Cover => (nsStyleImageLayers_Size_DimensionType::eCover,
-                         nsStyleImageLayers_Size_DimensionType::eCover),
-            T::Contain => (nsStyleImageLayers_Size_DimensionType::eContain,
-                         nsStyleImageLayers_Size_DimensionType::eContain),
+            BackgroundSize::Cover => {
+                (
+                    nsStyleImageLayers_Size_DimensionType::eCover,
+                    nsStyleImageLayers_Size_DimensionType::eCover,
+                )
+            },
+            BackgroundSize::Contain => {
+                (
+                    nsStyleImageLayers_Size_DimensionType::eContain,
+                    nsStyleImageLayers_Size_DimensionType::eContain,
+                )
+            },
         };
 
         nsStyleImageLayers_Size {
@@ -2968,8 +3031,8 @@ fn static_assert() {
     pub fn clone_${shorthand}_size(&self) -> longhands::background_size::computed_value::T {
         use gecko_bindings::structs::nsStyleCoord_CalcValue as CalcValue;
         use gecko_bindings::structs::nsStyleImageLayers_Size_DimensionType as DimensionType;
-        use properties::longhands::background_size::single_value::computed_value::{ExplicitSize, T};
         use values::computed::LengthOrPercentageOrAuto;
+        use values::generics::background::BackgroundSize;
 
         fn to_servo(value: CalcValue, ty: u8) -> LengthOrPercentageOrAuto {
             if ty == DimensionType::eAuto as u8 {
@@ -2984,17 +3047,16 @@ fn static_assert() {
             self.gecko.${image_layers_field}.mLayers.iter().map(|ref layer| {
                 if DimensionType::eCover as u8 == layer.mSize.mWidthType {
                     debug_assert!(layer.mSize.mHeightType == DimensionType::eCover as u8);
-                    return T::Cover
+                    return BackgroundSize::Cover
                 }
                 if DimensionType::eContain as u8 == layer.mSize.mWidthType {
                     debug_assert!(layer.mSize.mHeightType == DimensionType::eContain as u8);
-                    return T::Contain
+                    return BackgroundSize::Contain
                 }
-
-                T::Explicit(ExplicitSize {
+                BackgroundSize::Explicit {
                     width: to_servo(layer.mSize.mWidth._base, layer.mSize.mWidthType),
                     height: to_servo(layer.mSize.mHeight._base, layer.mSize.mHeightType),
-                })
+                }
             }).collect()
         )
     }
@@ -3150,18 +3212,21 @@ fn static_assert() {
     }
 
     pub fn set_list_style_type(&mut self, v: longhands::list_style_type::computed_value::T) {
-        use values::generics::CounterStyleOrNone;
-        let name = match v.0 {
-            CounterStyleOrNone::None_ => atom!("none"),
-            CounterStyleOrNone::Name(name) => name.0,
-        };
-        unsafe { Gecko_SetListStyleType(&mut self.gecko, name.as_ptr()); }
+        use gecko_bindings::bindings::Gecko_SetCounterStyleToString;
+        use nsstring::{nsACString, nsCString};
+        use self::longhands::list_style_type::computed_value::T;
+        match v {
+            T::CounterStyle(s) => s.to_gecko_value(&mut self.gecko.mCounterStyle),
+            T::String(s) => unsafe {
+                Gecko_SetCounterStyleToString(&mut self.gecko.mCounterStyle,
+                                              &nsCString::from(s) as &nsACString)
+            }
+        }
     }
-
 
     pub fn copy_list_style_type_from(&mut self, other: &Self) {
         unsafe {
-            Gecko_CopyListStyleTypeFrom(&mut self.gecko, &other.gecko);
+            Gecko_CopyCounterStyle(&mut self.gecko.mCounterStyle, &other.gecko.mCounterStyle);
         }
     }
 
@@ -3888,7 +3953,7 @@ fn static_assert() {
                     }
                 }
                 match servo_shape {
-                    BasicShape::Inset(rect) => {
+                    BasicShape::Inset(inset) => {
                         let mut shape = init_shape(${ident}, StyleBasicShapeType::Inset);
                         unsafe { shape.mCoordinates.set_len(4) };
 
@@ -3900,15 +3965,15 @@ fn static_assert() {
                         // the garbage data without
                         // attempting to clean up.
                         shape.mCoordinates[0].leaky_set_null();
-                        rect.top.to_gecko_style_coord(&mut shape.mCoordinates[0]);
+                        inset.rect.top.to_gecko_style_coord(&mut shape.mCoordinates[0]);
                         shape.mCoordinates[1].leaky_set_null();
-                        rect.right.to_gecko_style_coord(&mut shape.mCoordinates[1]);
+                        inset.rect.right.to_gecko_style_coord(&mut shape.mCoordinates[1]);
                         shape.mCoordinates[2].leaky_set_null();
-                        rect.bottom.to_gecko_style_coord(&mut shape.mCoordinates[2]);
+                        inset.rect.bottom.to_gecko_style_coord(&mut shape.mCoordinates[2]);
                         shape.mCoordinates[3].leaky_set_null();
-                        rect.left.to_gecko_style_coord(&mut shape.mCoordinates[3]);
+                        inset.rect.left.to_gecko_style_coord(&mut shape.mCoordinates[3]);
 
-                        set_corners_from_radius(rect.round, &mut shape.mRadius);
+                        set_corners_from_radius(inset.round, &mut shape.mRadius);
                     }
                     BasicShape::Circle(circ) => {
                         let mut shape = init_shape(${ident}, StyleBasicShapeType::Circle);
@@ -3994,7 +4059,7 @@ clip-path
 </%self:impl_trait>
 
 <%self:impl_trait style_struct_name="InheritedSVG"
-                  skip_longhands="paint-order stroke-dasharray"
+                  skip_longhands="paint-order stroke-dasharray stroke-dashoffset stroke-width -moz-context-properties"
                   skip_additionals="*">
     pub fn set_paint_order(&mut self, v: longhands::paint_order::computed_value::T) {
         use self::longhands::paint_order;
@@ -4061,6 +4126,74 @@ clip-path
             }
         }
         longhands::stroke_dasharray::computed_value::T(vec)
+    }
+
+    pub fn set_stroke_dashoffset(&mut self, v: longhands::stroke_dashoffset::computed_value::T) {
+        match v {
+            Either::First(number) => self.gecko.mStrokeDashoffset.set_value(CoordDataValue::Factor(number)),
+            Either::Second(lop) => self.gecko.mStrokeDashoffset.set(lop),
+        }
+    }
+
+    ${impl_coord_copy('stroke_dashoffset', 'mStrokeDashoffset')}
+
+    pub fn clone_stroke_dashoffset(&self) -> longhands::stroke_dashoffset::computed_value::T {
+        use values::computed::LengthOrPercentage;
+        match self.gecko.mStrokeDashoffset.as_value() {
+            CoordDataValue::Factor(number) => Either::First(number),
+            CoordDataValue::Coord(coord) => Either::Second(LengthOrPercentage::Length(Au(coord))),
+            CoordDataValue::Percent(p) => Either::Second(LengthOrPercentage::Percentage(p)),
+            CoordDataValue::Calc(calc) => Either::Second(LengthOrPercentage::Calc(calc.into())),
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn set_stroke_width(&mut self, v: longhands::stroke_width::computed_value::T) {
+        match v {
+            Either::First(number) => self.gecko.mStrokeWidth.set_value(CoordDataValue::Factor(number)),
+            Either::Second(lop) => self.gecko.mStrokeWidth.set(lop),
+        }
+    }
+
+    ${impl_coord_copy('stroke_width', 'mStrokeWidth')}
+
+    pub fn clone_stroke_width(&self) -> longhands::stroke_width::computed_value::T {
+        use values::computed::LengthOrPercentage;
+        match self.gecko.mStrokeWidth.as_value() {
+            CoordDataValue::Factor(number) => Either::First(number),
+            CoordDataValue::Coord(coord) => Either::Second(LengthOrPercentage::Length(Au(coord))),
+            CoordDataValue::Percent(p) => Either::Second(LengthOrPercentage::Percentage(p)),
+            CoordDataValue::Calc(calc) => Either::Second(LengthOrPercentage::Calc(calc.into())),
+            _ => unreachable!(),
+        }
+    }
+
+    #[allow(non_snake_case)]
+    pub fn set__moz_context_properties<I>(&mut self, v: I)
+        where I: IntoIterator<Item = longhands::_moz_context_properties::computed_value::single_value::T>,
+              I::IntoIter: ExactSizeIterator
+    {
+        let v = v.into_iter();
+        unsafe {
+            bindings::Gecko_nsStyleSVG_SetContextPropertiesLength(&mut self.gecko, v.len() as u32);
+        }
+
+        self.gecko.mContextPropsBits = 0;
+        for (mut gecko, servo) in self.gecko.mContextProps.iter_mut().zip(v) {
+            if servo.0 == atom!("fill") {
+                self.gecko.mContextPropsBits |= structs::NS_STYLE_CONTEXT_PROPERTY_FILL as u8;
+            } else if servo.0 == atom!("stroke") {
+                self.gecko.mContextPropsBits |= structs::NS_STYLE_CONTEXT_PROPERTY_STROKE as u8;
+            }
+            unsafe { gecko.set_raw_from_addrefed::<structs::nsIAtom>(servo.0.into_addrefed()) }
+        }
+    }
+
+    #[allow(non_snake_case)]
+    pub fn copy__moz_context_properties_from(&mut self, other: &Self) {
+        unsafe {
+            bindings::Gecko_nsStyleSVG_CopyContextProperties(&mut self.gecko, &other.gecko);
+        }
     }
 </%self:impl_trait>
 
@@ -4217,7 +4350,6 @@ clip-path
         use properties::longhands::content::computed_value::T;
         use properties::longhands::content::computed_value::ContentItem;
         use values::generics::CounterStyleOrNone;
-        use gecko_bindings::structs::nsIAtom;
         use gecko_bindings::structs::nsStyleContentData;
         use gecko_bindings::structs::nsStyleContentType;
         use gecko_bindings::structs::nsStyleContentType::*;
@@ -4245,11 +4377,7 @@ clip-path
             if content_type == eStyleContentType_Counters {
                 counter_func.mSeparator.assign_utf8(sep);
             }
-            let ptr = match style {
-                CounterStyleOrNone::None_ => atom!("none"),
-                CounterStyleOrNone::Name(name) => name.0,
-            }.into_addrefed();
-            unsafe { counter_func.mCounterStyleName.set_raw_from_addrefed::<nsIAtom>(ptr); }
+            style.to_gecko_value(&mut counter_func.mCounterStyle);
         }
 
         match v {

@@ -23,7 +23,7 @@ example::
 
     task.optimizations = [
         ['seta'],
-        ['files-changed', ['js/**', 'tests/**']],
+        ['skip-unless-changed', ['js/**', 'tests/**']],
     ]
 
 These methods are defined in ``taskcluster/taskgraph/optimize.py``.  They are

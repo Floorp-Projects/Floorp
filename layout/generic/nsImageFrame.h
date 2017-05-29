@@ -69,13 +69,7 @@ public:
   typedef mozilla::layers::ImageLayer ImageLayer;
   typedef mozilla::layers::LayerManager LayerManager;
 
-  NS_DECL_FRAMEARENA_HELPERS
-
-  explicit nsImageFrame(nsStyleContext* aContext)
-    : nsImageFrame(aContext, mozilla::LayoutFrameType::Image)
-  {}
-
-  NS_DECL_QUERYFRAME_TARGET(nsImageFrame)
+  NS_DECL_FRAMEARENA_HELPERS(nsImageFrame)
   NS_DECL_QUERYFRAME
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
@@ -182,9 +176,13 @@ public:
   virtual bool ReflowFinished() override;
   virtual void ReflowCallbackCanceled() override;
 
-protected:
-  nsImageFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType);
+private:
+  friend nsIFrame* NS_NewImageFrame(nsIPresShell*, nsStyleContext*);
+  explicit nsImageFrame(nsStyleContext* aContext)
+    : nsImageFrame(aContext, kClassID) {}
 
+protected:
+  nsImageFrame(nsStyleContext* aContext, ClassID aID);
   virtual ~nsImageFrame();
 
   void EnsureIntrinsicSizeAndRatio();

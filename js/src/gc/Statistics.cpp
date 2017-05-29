@@ -782,6 +782,7 @@ CheckSelfTime(Phase parent,
                 selfTimes[parent].ToMilliseconds(),
                 phases[child].name,
                 childTime.ToMilliseconds());
+        fflush(stderr);
         MOZ_CRASH();
     }
 }

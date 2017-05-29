@@ -103,7 +103,7 @@ private:
 #endif
 
 nsTextControlFrame::nsTextControlFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, LayoutFrameType::TextInput)
+  : nsContainerFrame(aContext, kClassID)
   , mFirstBaseline(NS_INTRINSIC_WIDTH_UNKNOWN)
   , mEditorHasBeenInitialized(false)
   , mIsProcessing(false)
@@ -124,11 +124,7 @@ nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   mScrollEvent.Revoke();
 
-  EditorInitializer* initializer = Properties().Get(TextControlInitializer());
-  if (initializer) {
-    initializer->Revoke();
-    Properties().Delete(TextControlInitializer());
-  }
+  DeleteProperty(TextControlInitializer());
 
   // Unbind the text editor state object from the frame.  The editor will live
   // on, but things like controllers will be released.
@@ -394,12 +390,8 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   if (initEagerly) {
     NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                  "Someone forgot a script blocker?");
-    EditorInitializer* initializer = Properties().Get(TextControlInitializer());
-    if (initializer) {
-      initializer->Revoke();
-    }
-    initializer = new EditorInitializer(this);
-    Properties().Set(TextControlInitializer(),initializer);
+    EditorInitializer* initializer = new EditorInitializer(this);
+    SetProperty(TextControlInitializer(), initializer);
     nsContentUtils::AddScriptRunner(initializer);
   }
 
@@ -612,12 +604,6 @@ nsTextControlFrame::IsXULCollapsed()
 {
   // We're never collapsed in the box sense.
   return false;
-}
-
-bool
-nsTextControlFrame::IsLeaf() const
-{
-  return true;
 }
 
 NS_IMETHODIMP
@@ -1137,7 +1123,7 @@ nsTextControlFrame::SetInitialChildList(ChildListID     aListID,
     NS_ASSERTION(txtCtrl, "Content not a text control element");
     txtCtrl->InitializeKeyboardEventListeners();
 
-    nsPoint* contentScrollPos = Properties().Get(ContentScrollPos());
+    nsPoint* contentScrollPos = GetProperty(ContentScrollPos());
     if (contentScrollPos) {
       // If we have a scroll pos stored to be passed to our anonymous
       // div, do it here!
@@ -1146,7 +1132,7 @@ nsTextControlFrame::SetInitialChildList(ChildListID     aListID,
       nsPresState fakePresState;
       fakePresState.SetScrollState(*contentScrollPos);
       statefulFrame->RestoreState(&fakePresState);
-      Properties().Remove(ContentScrollPos());
+      RemoveProperty(ContentScrollPos());
       delete contentScrollPos;
     }
   }
@@ -1296,7 +1282,7 @@ nsTextControlFrame::RestoreState(nsPresState* aState)
   // Most likely, we don't have our anonymous content constructed yet, which
   // would cause us to end up here.  In this case, we'll just store the scroll
   // pos ourselves, and forward it to the scroll frame later when it's created.
-  Properties().Set(ContentScrollPos(), new nsPoint(aState->GetScrollPosition()));
+  SetProperty(ContentScrollPos(), new nsPoint(aState->GetScrollPosition()));
   return NS_OK;
 }
 

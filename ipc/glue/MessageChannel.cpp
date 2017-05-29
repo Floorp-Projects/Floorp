@@ -138,6 +138,8 @@ static const uint32_t kMinTelemetryIPCWriteLatencyMs = 1;
 
 // Note: we round the time we spend waiting for a response to the nearest
 // millisecond. So a min value of 1 ms actually captures from 500us and above.
+// This is used for both the sending and receiving side telemetry for sync IPC,
+// (IPC_SYNC_MAIN_LATENCY_MS and IPC_SYNC_RECEIVE_MS).
 static const uint32_t kMinTelemetrySyncIPCLatencyMs = 1;
 
 const int32_t MessageChannel::kNoTimeout = INT32_MIN;
@@ -2019,6 +2021,8 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg, Message*& aReply)
 {
     AssertWorkerThread();
 
+    mozilla::TimeStamp start = TimeStamp::Now();
+
     int nestedLevel = aMsg.nested_level();
 
     MOZ_RELEASE_ASSERT(nestedLevel == IPC::Message::NOT_NESTED || NS_IsMainThread());
@@ -2033,6 +2037,13 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg, Message*& aReply)
     {
         AutoSetValue<MessageChannel*> blocked(blockingVar, this);
         rv = mListener->OnMessageReceived(aMsg, aReply);
+    }
+
+    uint32_t latencyMs = round((TimeStamp::Now() - start).ToMilliseconds());
+    if (latencyMs >= kMinTelemetrySyncIPCLatencyMs) {
+        Telemetry::Accumulate(Telemetry::IPC_SYNC_RECEIVE_MS,
+                              nsDependentCString(aMsg.name()),
+                              latencyMs);
     }
 
     if (!MaybeHandleError(rv, aMsg, "DispatchSyncMessage")) {

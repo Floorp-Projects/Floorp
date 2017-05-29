@@ -12,11 +12,11 @@
 class nsButtonBoxFrame : public nsBoxFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsButtonBoxFrame)
 
   friend nsIFrame* NS_NewButtonBoxFrame(nsIPresShell* aPresShell);
 
-  explicit nsButtonBoxFrame(nsStyleContext* aContext);
+  explicit nsButtonBoxFrame(nsStyleContext* aContext, ClassID = kClassID);
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,

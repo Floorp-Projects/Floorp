@@ -39,7 +39,7 @@ NS_NewMeterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsMeterFrame)
 
 nsMeterFrame::nsMeterFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, LayoutFrameType::Meter)
+  : nsContainerFrame(aContext, kClassID)
   , mBarDiv(nullptr)
 {
 }

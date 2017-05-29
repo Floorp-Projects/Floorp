@@ -40,9 +40,8 @@ public:
   void ContentStatesChanged(mozilla::EventStates aStates) override;
   void DestroyFrom(nsIFrame* aDestructRoot) override;
 
-  NS_DECL_QUERYFRAME_TARGET(nsDateTimeControlFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsDateTimeControlFrame)
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override {

@@ -50,7 +50,7 @@ NS_QUERYFRAME_HEAD(nsNumberControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsNumberControlFrame::nsNumberControlFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, LayoutFrameType::NumberControl)
+  : nsContainerFrame(aContext, kClassID)
   , mHandlingInputEvent(false)
 {
 }

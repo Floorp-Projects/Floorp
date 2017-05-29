@@ -25,12 +25,6 @@ nsMathMLmspaceFrame::~nsMathMLmspaceFrame()
 {
 }
 
-bool
-nsMathMLmspaceFrame::IsLeaf() const
-{
-  return true;
-}
-
 void
 nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
 {

@@ -1477,7 +1477,8 @@ HttpChannelParent::StartRedirect(uint32_t registrarId,
                                 responseHead ? *responseHead
                                              : nsHttpResponseHead(),
                                 secInfoSerialization,
-                                channelId);
+                                channelId,
+                                mChannel->GetPeerAddr());
   }
   if (!result) {
     // Bug 621446 investigation

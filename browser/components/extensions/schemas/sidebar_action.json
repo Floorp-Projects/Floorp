@@ -22,6 +22,10 @@
                 "$ref": "IconPath",
                 "optional": true
               },
+              "browser_style": {
+                "type": "boolean",
+                "optional": true
+              },
               "default_panel": {
                 "type": "string",
                 "format": "strictRelativeUrl",

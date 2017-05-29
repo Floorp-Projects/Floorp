@@ -42,14 +42,14 @@ class nsSVGMaskFrame final : public nsSVGContainerFrame
 
 protected:
   explicit nsSVGMaskFrame(nsStyleContext* aContext)
-    : nsSVGContainerFrame(aContext, mozilla::LayoutFrameType::SVGMask)
+    : nsSVGContainerFrame(aContext, kClassID)
     , mInUse(false)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGMaskFrame)
 
   struct MaskParams {
     gfxContext* ctx;

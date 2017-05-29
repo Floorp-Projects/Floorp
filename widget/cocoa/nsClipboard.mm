@@ -689,6 +689,23 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       nsAutoString url;
       urlObject->GetData(url);
 
+      NSString* nativeTitle = nil;
+
+      // A newline embedded in the URL means that the form is actually URL +
+      // title. This embedding occurs in nsDragService::GetData.
+      int32_t newlinePos = url.FindChar(char16_t('\n'));
+      if (newlinePos >= 0) {
+        url.Truncate(newlinePos);
+
+        nsAutoString urlTitle;
+        urlObject->GetData(urlTitle);
+        urlTitle.Mid(urlTitle, newlinePos + 1, len - (newlinePos + 1));
+
+        nativeTitle =
+          [NSString stringWithCharacters:
+            reinterpret_cast<const unichar*>(urlTitle.get())
+                                  length:urlTitle.Length()];
+      }
       // The Finder doesn't like getting random binary data aka
       // Unicode, so change it into an escaped URL containing only
       // ASCII.
@@ -703,18 +720,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       NSString* publicUrl =
         [UTIHelper stringFromPboardType:kPublicUrlPboardType];
       [pasteboardOutputDict setObject:nativeURL forKey:publicUrl];
-
-      // A newline embedded in the URL means that the form is actually URL + title.
-      int32_t newlinePos = url.FindChar(char16_t('\n'));
-      if (newlinePos >= 0) {
-        url.Truncate(newlinePos);
-
-        nsAutoString urlTitle;
-        urlObject->GetData(urlTitle);
-        urlTitle.Mid(urlTitle, newlinePos + 1, len - (newlinePos + 1));
-
-        NSString *nativeTitle = [[NSString alloc] initWithCharacters:reinterpret_cast<const unichar*>(urlTitle.get())
-                                                              length:urlTitle.Length()];
+      if (nativeTitle) {
         NSArray* urlsAndTitles = @[@[nativeURL], @[nativeTitle]];
         NSString* urlName =
           [UTIHelper stringFromPboardType:kPublicUrlNamePboardType];
@@ -724,7 +730,6 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
                                  forKey:urlName];
         [pasteboardOutputDict setObject:urlsAndTitles
                                  forKey:urlsWithTitles];
-        [nativeTitle release];
       }
     }
     [pboardType release];

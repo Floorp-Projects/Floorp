@@ -146,9 +146,9 @@
                                          "U">
 <!ENTITY performanceSettingsLearnMore.label
                                          "Learn more">
-<!ENTITY limitContentProcess2.label       "Content process limit">
-<!ENTITY limitContentProcess2.description
-                                         "Additional content processes can improve &brandShortName; performance when using multiple tabs, but will also use more memory.">
-<!ENTITY limitContentProcess2.accesskey   "L">
+<!ENTITY limitContentProcessOption.label "Content process limit">
+<!ENTITY limitContentProcessOption.description
+                                         "Additional content processes can improve performance when using multiple tabs, but will also use more memory.">
+<!ENTITY limitContentProcessOption.accesskey   "L">
 <!ENTITY allowHWAccel.label              "Use hardware acceleration when available">
 <!ENTITY allowHWAccel.accesskey          "r">

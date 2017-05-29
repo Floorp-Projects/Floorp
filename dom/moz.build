@@ -36,6 +36,7 @@ interfaces = [
     'svg',
     'smil',
     'push',
+    'payments',
 ]
 
 DIRS += ['interfaces/' + i for i in interfaces]
@@ -105,6 +106,7 @@ DIRS += [
     'xhr',
     'worklet',
     'script',
+    'payments',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

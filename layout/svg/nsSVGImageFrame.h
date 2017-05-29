@@ -59,7 +59,7 @@ class nsSVGImageFrame final
 
 protected:
   explicit nsSVGImageFrame(nsStyleContext* aContext)
-    : SVGGeometryFrame(aContext, LayoutFrameType::SVGImage)
+    : SVGGeometryFrame(aContext, kClassID)
     , mReflowCallbackPosted(false)
     , mForceSyncDecoding(false)
   {
@@ -69,9 +69,8 @@ protected:
   virtual ~nsSVGImageFrame();
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsSVGImageFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGImageFrame)
 
   // nsSVGDisplayableFrame interface:
   virtual void PaintSVG(gfxContext& aContext,

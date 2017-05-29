@@ -489,6 +489,8 @@ MarkObjectStateChange(JSContext* cx, JSObject* obj)
 
 /* Interface helpers for JSScript*. */
 extern void TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, TypeSet::Type type);
+extern void TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, StackTypeSet* types,
+                              TypeSet::Type type);
 extern void TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, const Value& rval);
 
 /////////////////////////////////////////////////////////////////////
@@ -587,6 +589,15 @@ TypeScript::Monitor(JSContext* cx, const js::Value& rval)
     jsbytecode* pc;
     RootedScript script(cx, cx->currentScript(&pc));
     Monitor(cx, script, pc, rval);
+}
+
+/* static */ inline void
+TypeScript::Monitor(JSContext* cx, JSScript* script, jsbytecode* pc, StackTypeSet* types,
+                    const js::Value& rval)
+{
+    TypeSet::Type type = TypeSet::GetValueType(rval);
+    if (!types->hasType(type))
+        TypeMonitorResult(cx, script, pc, types, type);
 }
 
 /* static */ inline void

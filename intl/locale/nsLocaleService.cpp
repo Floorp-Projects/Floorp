@@ -25,6 +25,8 @@
 #  include "nsPosixLocale.h"
 #endif
 
+using namespace mozilla;
+
 //
 // implementation constants
 const int LocaleListLength = 6;

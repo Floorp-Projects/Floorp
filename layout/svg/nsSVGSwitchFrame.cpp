@@ -19,11 +19,11 @@ class nsSVGSwitchFrame final : public nsSVGGFrame
   NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   explicit nsSVGSwitchFrame(nsStyleContext* aContext)
-    : nsSVGGFrame(aContext, LayoutFrameType::SVGSwitch)
+    : nsSVGGFrame(aContext, kClassID)
   {}
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsSVGSwitchFrame)
 
 #ifdef DEBUG
   virtual void Init(nsIContent*       aContent,

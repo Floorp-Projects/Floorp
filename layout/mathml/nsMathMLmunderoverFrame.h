@@ -20,7 +20,7 @@ class nsMathMLmunderoverFrame final
 {
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLmunderoverFrame)
 
   friend nsIFrame* NS_NewMathMLmunderoverFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
@@ -49,7 +49,7 @@ public:
 
 protected:
   explicit nsMathMLmunderoverFrame(nsStyleContext* aContext)
-    : nsMathMLContainerFrame(aContext)
+    : nsMathMLContainerFrame(aContext, kClassID)
     , mIncrementUnder(false)
     , mIncrementOver(false)
   {}

@@ -11,6 +11,7 @@
 #include "mozilla/intl/OSPreferences.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/ServoBindings.h"
 
 using namespace mozilla;
 using mozilla::intl::OSPreferences;
@@ -66,15 +67,19 @@ nsLanguageAtomService::GetLocaleLanguage()
 }
 
 nsIAtom*
-nsLanguageAtomService::GetLanguageGroup(nsIAtom *aLanguage)
+nsLanguageAtomService::GetLanguageGroup(nsIAtom *aLanguage, bool* aNeedsToCache)
 {
   nsIAtom *retVal = mLangToGroup.GetWeak(aLanguage);
 
   if (!retVal) {
-    MOZ_ASSERT(NS_IsMainThread(), "Should not append to cache off main thread");
+    if (aNeedsToCache) {
+      *aNeedsToCache = true;
+      return nullptr;
+    }
     nsCOMPtr<nsIAtom> uncached = GetUncachedLanguageGroup(aLanguage);
     retVal = uncached.get();
 
+    AssertIsMainThreadOrServoLangFontPrefsCacheLocked();
     // The hashtable will keep an owning reference to the atom
     mLangToGroup.Put(aLanguage, uncached);
   }

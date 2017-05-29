@@ -10,7 +10,7 @@
 interface nsIDOMDocument;
 interface nsINode;
 interface nsIPrincipal;
-
+interface nsIRedirectHistoryEntry;
 %{C++
 #include "nsTArray.h"
 #include "mozilla/BasePrincipal.h"
@@ -19,7 +19,7 @@ interface nsIPrincipal;
 class nsCString;
 %}
 
-[ref] native const_nsIPrincipalArray(const nsTArray<nsCOMPtr<nsIPrincipal>>);
+[ref] native nsIRedirectHistoryEntryArray(const nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>>);
 native OriginAttributes(mozilla::OriginAttributes);
 [ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
 [ref] native StringArrayRef(const nsTArray<nsCString>);
@@ -585,23 +585,25 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean initialSecurityCheckDone;
 
   /**
-   * Whenever a channel gets redirected, append the principal of the
-   * channel [before the channels got redirected] to the loadinfo,
-   * so that at every point this array lets us reason about all the
-   * redirects this channel went through.
-   * @param aPrincipal, the channelURIPrincipal before the channel
+   * Whenever a channel gets redirected, append the redirect history entry of
+   * the channel which contains principal referrer and remote address [before
+   * the channels got redirected] to the loadinfo, so that at every point this
+   * array provides us information about all the redirects this channel went
+   * through.
+   * @param entry, the nsIRedirectHistoryEntry before the channel
    *         got redirected.
    * @param aIsInternalRedirect should be true if the channel is going
    *        through an internal redirect, otherwise false.
    */
-  void appendRedirectedPrincipal(in nsIPrincipal principal,
-                                 in boolean isInternalRedirect);
+  void appendRedirectHistoryEntry(in nsIRedirectHistoryEntry entry,
+                                  in boolean isInternalRedirect);
 
   /**
-   * An array of nsIPrincipals which stores redirects associated with this
-   * channel. This array is filled whether or not the channel has ever been
-   * opened. The last element of the array is associated with the most recent
-   * redirect. Please note, that this array *includes* internal redirects.
+   * An array of nsIRedirectHistoryEntry which stores redirects associated
+   * with this channel. This array is filled whether or not the channel has
+   * ever been opened. The last element of the array is associated with the
+   * most recent redirect. Please note, that this array *includes* internal
+   * redirects.
    */
   [implicit_jscontext]
   readonly attribute jsval redirectChainIncludingInternalRedirects;
@@ -612,7 +614,7 @@ interface nsILoadInfo : nsISupports
    * loadInfo object - use with caution!
    */
   [noscript, notxpcom, nostdcall, binaryname(RedirectChainIncludingInternalRedirects)]
-  const_nsIPrincipalArray binaryRedirectChainIncludingInternalRedirects();
+  nsIRedirectHistoryEntryArray binaryRedirectChainIncludingInternalRedirects();
 
   /**
    * Same as RedirectChain but does *not* include internal redirects.
@@ -626,7 +628,7 @@ interface nsILoadInfo : nsISupports
    * loadInfo object - use with caution!
    */
   [noscript, notxpcom, nostdcall, binaryname(RedirectChain)]
-  const_nsIPrincipalArray binaryRedirectChain();
+  nsIRedirectHistoryEntryArray binaryRedirectChain();
 
   /**
    * Sets the list of unsafe headers according to CORS spec, as well as

@@ -504,10 +504,18 @@ android.applicationVariants.all configureVariantDebugLevel
 
 
 // Bug 1320310 - Hack up the manifest produced by Gradle to match that produced
-// by moz.build.
+// by moz.build.  Per https://bugzilla.mozilla.org/show_bug.cgi?id=1320310#c14,
+// this breaks launching in Android Studio; therefore, we only do this for
+// official automation builds and not for local developer builds.
 import groovy.xml.XmlUtil
 
 android.applicationVariants.all { variant ->
+    // Like 'local', 'localOld', or 'official'.
+    def audienceDimension = variant.productFlavors[0].name
+    if (!audienceDimension.equals('official')) {
+        return
+    }
+
     variant.outputs.each { output ->
         output.processManifest.doLast {
             [output.processManifest.manifestOutputFile,

@@ -183,39 +183,39 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
 
 
 #appMenu-new-window-button {
-  list-style-image: url(chrome://browser/skin/menu-icons/new-window.svg);
+  list-style-image: url(chrome://browser/skin/new-window.svg);
 }
 
 #appMenu-private-window-button {
-  list-style-image: url(chrome://browser/skin/menu-icons/private-window.svg);
+  list-style-image: url(chrome://browser/skin/privateBrowsing.svg);
 }
 
 #appMenu-print-button {
-  list-style-image: url(chrome://browser/skin/menu-icons/print.svg);
+  list-style-image: url(chrome://browser/skin/print.svg);
 }
 
 #appMenu-library-button {
-  list-style-image: url(chrome://browser/skin/menu-icons/library.svg);
+  list-style-image: url(chrome://browser/skin/library.svg);
 }
 
 #appMenu-addons-button {
-  list-style-image: url(chrome://browser/skin/menu-icons/addons.svg);
+  list-style-image: url(chrome://browser/skin/addons.svg);
 }
 
 #appMenu-preferences-button {
-  list-style-image: url(chrome://browser/skin/menu-icons/settings.svg);
+  list-style-image: url(chrome://browser/skin/settings.svg);
 }
 
 #appMenu-customize-button {
-  list-style-image: url(chrome://browser/skin/menu-icons/customize.svg);
+  list-style-image: url(chrome://browser/skin/customize.svg);
 }
 
 #appMenu-find-button {
-  list-style-image: url(chrome://browser/skin/menu-icons/find.svg);
+  list-style-image: url(chrome://browser/skin/find.svg);
 }
 
 #appMenu-help-button {
-  list-style-image: url(chrome://browser/skin/menu-icons/help.svg);
+  list-style-image: url(chrome://browser/skin/help.svg);
 }
 
 #appMenu-cut-button {

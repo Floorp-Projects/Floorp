@@ -603,7 +603,7 @@ nsStyleList::nsStyleList(const nsPresContext* aContext)
 {
   MOZ_COUNT_CTOR(nsStyleList);
   if (aContext->StyleSet()->IsServo()) {
-    mListStyleType = nsGkAtoms::disc;
+    mCounterStyle = do_AddRef(nsGkAtoms::disc);
   } else {
     mCounterStyle = aContext->
       CounterStyleManager()->BuildCounterStyle(nsGkAtoms::disc);
@@ -619,7 +619,6 @@ nsStyleList::~nsStyleList()
 nsStyleList::nsStyleList(const nsStyleList& aSource)
   : mListStylePosition(aSource.mListStylePosition)
   , mListStyleImage(aSource.mListStyleImage)
-  , mListStyleType(aSource.mListStyleType)
   , mCounterStyle(aSource.mCounterStyle)
   , mQuotes(aSource.mQuotes)
   , mImageRegion(aSource.mImageRegion)
@@ -636,12 +635,7 @@ nsStyleList::FinishStyle(nsPresContext* aPresContext)
   if (mListStyleImage && !mListStyleImage->IsResolved()) {
     mListStyleImage->Resolve(aPresContext);
   }
-  if (mListStyleType) {
-    MOZ_ASSERT(!mCounterStyle);
-    mCounterStyle = aPresContext->
-      CounterStyleManager()->BuildCounterStyle(mListStyleType);
-    mListStyleType = nullptr;
-  }
+  mCounterStyle.Resolve(aPresContext->CounterStyleManager());
 }
 
 void
@@ -709,8 +703,7 @@ nsStyleList::CalcDifference(const nsStyleList& aNewData) const
     return nsChangeHint_ReconstructFrame;
   }
   if (DefinitelyEqualImages(mListStyleImage, aNewData.mListStyleImage) &&
-      (mCounterStyle == aNewData.mCounterStyle ||
-       mListStyleType != aNewData.mListStyleType)) {
+      mCounterStyle == aNewData.mCounterStyle) {
     if (mImageRegion.IsEqualInterior(aNewData.mImageRegion)) {
       return nsChangeHint(0);
     }
@@ -1643,28 +1636,11 @@ nsStylePosition::CalcDifference(const nsStylePosition& aNewData,
   if (aOldStyleVisibility) {
     bool isVertical = WritingMode(aOldStyleVisibility).IsVertical();
     if (isVertical ? widthChanged : heightChanged) {
-      // Block-size changes can affect descendant intrinsic sizes due to
-      // replaced elements with percentage bsizes in descendants which
-      // also have percentage bsizes. This is handled via
-      // nsChangeHint_UpdateComputedBSize which clears intrinsic sizes
-      // for frames that have such replaced elements.
-      //
-      // We need to use nsChangeHint_ClearAncestorIntrinsics for
-      // block-size changes so we clear results of cached CSS Flex
-      // measuring reflows.
-      hint |= nsChangeHint_NeedReflow |
-              nsChangeHint_UpdateComputedBSize |
-              nsChangeHint_ReflowChangesSizeOrPosition |
-              nsChangeHint_ClearAncestorIntrinsics;
+      hint |= nsChangeHint_ReflowHintsForBSizeChange;
     }
 
     if (isVertical ? heightChanged : widthChanged) {
-      // None of our inline-size differences can affect descendant
-      // intrinsic sizes and none of them need to force children to
-      // reflow.
-      hint |= nsChangeHint_AllReflowHints &
-              ~(nsChangeHint_ClearDescendantIntrinsics |
-                nsChangeHint_NeedDirtyReflow);
+      hint |= nsChangeHint_ReflowHintsForISizeChange;
     }
   } else {
     if (widthChanged || heightChanged) {
@@ -3814,8 +3790,7 @@ CounterFunction::operator==(const CounterFunction& aOther) const
 {
   return mIdent == aOther.mIdent &&
     mSeparator == aOther.mSeparator &&
-    mCounterStyle == aOther.mCounterStyle &&
-    mCounterStyleName == aOther.mCounterStyleName;
+    mCounterStyle == aOther.mCounterStyle;
 }
 
 nsStyleContentData&
@@ -3857,13 +3832,8 @@ nsStyleContentData::Resolve(nsPresContext* aPresContext)
       break;
     case eStyleContentType_Counter:
     case eStyleContentType_Counters: {
-      CounterFunction* counters = mContent.mCounters;
-      if (counters->mCounterStyleName) {
-        MOZ_ASSERT(!counters->mCounterStyle);
-        counters->mCounterStyle = aPresContext->CounterStyleManager()->
-          BuildCounterStyle(counters->mCounterStyleName);
-        counters->mCounterStyleName = nullptr;
-      }
+      mContent.mCounters->
+        mCounterStyle.Resolve(aPresContext->CounterStyleManager());
       break;
     }
     default:

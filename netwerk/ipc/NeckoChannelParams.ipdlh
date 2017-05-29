@@ -28,34 +28,41 @@ namespace net {
 // LoadInfo IPDL structs
 //-----------------------------------------------------------------------------
 
+struct RedirectHistoryEntryInfo
+{
+  PrincipalInfo       principalInfo;
+  OptionalURIParams   referrerUri;
+  nsCString           remoteAddress;
+};
+
 struct LoadInfoArgs
 {
-  OptionalPrincipalInfo requestingPrincipalInfo;
-  PrincipalInfo         triggeringPrincipalInfo;
-  OptionalPrincipalInfo principalToInheritInfo;
-  OptionalPrincipalInfo sandboxedLoadingPrincipalInfo;
-  uint32_t              securityFlags;
-  uint32_t              contentPolicyType;
-  uint32_t              tainting;
-  bool                  upgradeInsecureRequests;
-  bool                  verifySignedContent;
-  bool                  enforceSRI;
-  bool                  forceInheritPrincipalDropped;
-  uint64_t              innerWindowID;
-  uint64_t              outerWindowID;
-  uint64_t              parentOuterWindowID;
-  uint64_t              frameOuterWindowID;
-  bool                  enforceSecurity;
-  bool                  initialSecurityCheckDone;
-  bool                  isInThirdPartyContext;
-  OriginAttributes      originAttributes;
-  PrincipalInfo[]       redirectChainIncludingInternalRedirects;
-  PrincipalInfo[]       redirectChain;
-  nsCString[]           corsUnsafeHeaders;
-  bool                  forcePreflight;
-  bool                  isPreflight;
-  bool                  forceHSTSPriming;
-  bool                  mixedContentWouldBlock;
+  OptionalPrincipalInfo       requestingPrincipalInfo;
+  PrincipalInfo               triggeringPrincipalInfo;
+  OptionalPrincipalInfo       principalToInheritInfo;
+  OptionalPrincipalInfo       sandboxedLoadingPrincipalInfo;
+  uint32_t                    securityFlags;
+  uint32_t                    contentPolicyType;
+  uint32_t                    tainting;
+  bool                        upgradeInsecureRequests;
+  bool                        verifySignedContent;
+  bool                        enforceSRI;
+  bool                        forceInheritPrincipalDropped;
+  uint64_t                    innerWindowID;
+  uint64_t                    outerWindowID;
+  uint64_t                    parentOuterWindowID;
+  uint64_t                    frameOuterWindowID;
+  bool                        enforceSecurity;
+  bool                        initialSecurityCheckDone;
+  bool                        isInThirdPartyContext;
+  OriginAttributes            originAttributes;
+  RedirectHistoryEntryInfo[]  redirectChainIncludingInternalRedirects;
+  RedirectHistoryEntryInfo[]  redirectChain;
+  nsCString[]                 corsUnsafeHeaders;
+  bool                        forcePreflight;
+  bool                        isPreflight;
+  bool                        forceHSTSPriming;
+  bool                        mixedContentWouldBlock;
 };
 
 /**

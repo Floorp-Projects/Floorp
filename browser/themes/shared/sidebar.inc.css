@@ -104,19 +104,19 @@
 #sidebar-box #sidebar-icon {
   -moz-context-properties: fill;
   fill: var(--icon-fill);
-  list-style-image: url(chrome://browser/skin/sidebar/bookmark-filled.svg);
+  list-style-image: url(chrome://browser/skin/bookmark.svg);
 }
 
 #sidebar-switcher-history > .toolbarbutton-icon,
 #sidebar-box[sidebarcommand="viewHistorySidebar"] #sidebar-icon {
   -moz-context-properties: fill;
   fill: var(--icon-fill);
-  list-style-image: url(chrome://browser/skin/sidebar/history.svg);
+  list-style-image: url(chrome://browser/skin/history.svg);
 }
 
 #sidebar-switcher-tabs > .toolbarbutton-icon,
 #sidebar-box[sidebarcommand="viewTabsSidebar"] #sidebar-icon {
   -moz-context-properties: fill;
   fill: var(--icon-fill);
-  list-style-image: url(chrome://browser/skin/sidebar/sync.svg);
+  list-style-image: url(chrome://browser/skin/sync.svg);
 }

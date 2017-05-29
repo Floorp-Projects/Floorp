@@ -89,7 +89,11 @@ add_task(async function() {
 
   for (let i = 0; i < mainPrefTag.childElementCount; i++) {
     let child = mainPrefTag.children[i]
-    if (child.id == "passwordsGroup" || child.id == "weavePrefsDeck" || child.id == "header-searchResults") {
+    if (child.id == "passwordsGroup" ||
+        child.id == "weavePrefsDeck" ||
+        child.id == "header-searchResults" ||
+        child.id == "certSelection" ||
+        child.id == "connectionGroup") {
       is_element_visible(child, "Should be in search results");
     } else if (child.id) {
       is_element_hidden(child, "Should not be in search results");

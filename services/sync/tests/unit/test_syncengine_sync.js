@@ -593,139 +593,6 @@ add_task(async function test_processIncoming_reconcile_changed_dupe_new() {
   await cleanAndGo(engine, server);
 });
 
-add_task(async function test_processIncoming_mobile_batchSize() {
-  _("SyncEngine._processIncoming doesn't fetch everything at once on mobile clients");
-
-  Svc.Prefs.set("client.type", "mobile");
-
-  // A collection that logs each GET
-  let collection = new ServerCollection();
-  collection.get_log = [];
-  collection._get = collection.get;
-  collection.get = function(options) {
-    this.get_log.push(options);
-    return this._get(options);
-  };
-
-  // Let's create some 234 server side records. They're all at least
-  // 10 minutes old.
-  for (let i = 0; i < 234; i++) {
-    let id = "record-no-" + i;
-    let payload = encryptPayload({id, denomination: "Record No. " + i});
-    let wbo = new ServerWBO(id, payload);
-    wbo.modified = Date.now() / 1000 - 60 * (i + 10);
-    collection.insertWBO(wbo);
-  }
-
-  let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
-  });
-
-  await SyncTestingInfrastructure(server);
-
-  let engine = makeRotaryEngine();
-  let meta_global = Service.recordManager.set(engine.metaURL,
-                                              new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version,
-                                         syncID: engine.syncID}};
-
-  try {
-
-    _("On a mobile client, we get new records from the server in batches of 50.");
-    engine._syncStartup();
-    engine._processIncoming();
-    do_check_attribute_count(engine._store.items, 234);
-    do_check_true("record-no-0" in engine._store.items);
-    do_check_true("record-no-49" in engine._store.items);
-    do_check_true("record-no-50" in engine._store.items);
-    do_check_true("record-no-233" in engine._store.items);
-
-    // Verify that the right number of GET requests with the right
-    // kind of parameters were made.
-    do_check_eq(collection.get_log.length,
-                Math.ceil(234 / MOBILE_BATCH_SIZE) + 1);
-    do_check_eq(collection.get_log[0].full, 1);
-    do_check_eq(collection.get_log[0].limit, MOBILE_BATCH_SIZE);
-    do_check_eq(collection.get_log[1].full, undefined);
-    do_check_eq(collection.get_log[1].limit, undefined);
-    for (let i = 1; i <= Math.floor(234 / MOBILE_BATCH_SIZE); i++) {
-      do_check_eq(collection.get_log[i + 1].full, 1);
-      do_check_eq(collection.get_log[i + 1].limit, undefined);
-      if (i < Math.floor(234 / MOBILE_BATCH_SIZE))
-        do_check_eq(collection.get_log[i + 1].ids.length, MOBILE_BATCH_SIZE);
-      else
-        do_check_eq(collection.get_log[i + 1].ids.length, 234 % MOBILE_BATCH_SIZE);
-    }
-
-  } finally {
-    await cleanAndGo(engine, server);
-  }
-});
-
-
-add_task(async function test_processIncoming_store_toFetch() {
-  _("If processIncoming fails in the middle of a batch on mobile, state is saved in toFetch and lastSync.");
-  Svc.Prefs.set("client.type", "mobile");
-
-  // A collection that throws at the fourth get.
-  let collection = new ServerCollection();
-  collection._get_calls = 0;
-  collection._get = collection.get;
-  collection.get = function() {
-    this._get_calls += 1;
-    if (this._get_calls > 3) {
-      throw "Abort on fourth call!";
-    }
-    return this._get.apply(this, arguments);
-  };
-
-  // Let's create three batches worth of server side records.
-  for (var i = 0; i < MOBILE_BATCH_SIZE * 3; i++) {
-    let id = "record-no-" + i;
-    let payload = encryptPayload({id, denomination: "Record No. " + id});
-    let wbo = new ServerWBO(id, payload);
-    wbo.modified = Date.now() / 1000 + 60 * (i - MOBILE_BATCH_SIZE * 3);
-    collection.insertWBO(wbo);
-  }
-
-  let engine = makeRotaryEngine();
-  engine.enabled = true;
-
-  let server = sync_httpd_setup({
-      "/1.1/foo/storage/rotary": collection.handler()
-  });
-
-  await SyncTestingInfrastructure(server);
-
-  let meta_global = Service.recordManager.set(engine.metaURL,
-                                              new WBORecord(engine.metaURL));
-  meta_global.payload.engines = {rotary: {version: engine.version,
-                                         syncID: engine.syncID}};
-  try {
-
-    // Confirm initial environment
-    do_check_eq(engine.lastSync, 0);
-    do_check_empty(engine._store.items);
-
-    try {
-      await sync_engine_and_validate_telem(engine, true);
-    } catch (ex) {
-    }
-
-    // Only the first two batches have been applied.
-    do_check_eq(Object.keys(engine._store.items).length,
-                MOBILE_BATCH_SIZE * 2);
-
-    // The third batch is stuck in toFetch. lastSync has been moved forward to
-    // the last successful item's timestamp.
-    do_check_eq(engine.toFetch.length, MOBILE_BATCH_SIZE);
-    do_check_eq(engine.lastSync, collection.wbo("record-no-99").modified);
-
-  } finally {
-    await promiseClean(engine, server);
-  }
-});
-
 
 add_task(async function test_processIncoming_resume_toFetch() {
   _("toFetch and previousFailed items left over from previous syncs are fetched on the next sync, along with new items.");
@@ -1078,13 +945,14 @@ add_task(async function test_processIncoming_failed_records() {
   _("Ensure that failed records from _reconcile and applyIncomingBatch are refetched.");
 
   // Let's create three and a bit batches worth of server side records.
+  let APPLY_BATCH_SIZE = 50;
   let collection = new ServerCollection();
-  const NUMBER_OF_RECORDS = MOBILE_BATCH_SIZE * 3 + 5;
+  const NUMBER_OF_RECORDS = APPLY_BATCH_SIZE * 3 + 5;
   for (let i = 0; i < NUMBER_OF_RECORDS; i++) {
     let id = "record-no-" + i;
     let payload = encryptPayload({id, denomination: "Record No. " + id});
     let wbo = new ServerWBO(id, payload);
-    wbo.modified = Date.now() / 1000 + 60 * (i - MOBILE_BATCH_SIZE * 3);
+    wbo.modified = Date.now() / 1000 + 60 * (i - APPLY_BATCH_SIZE * 3);
     collection.insertWBO(wbo);
   }
 
@@ -1093,14 +961,14 @@ add_task(async function test_processIncoming_failed_records() {
   // in applyIncoming.
   const BOGUS_RECORDS = ["record-no-" + 42,
                          "record-no-" + 23,
-                         "record-no-" + (42 + MOBILE_BATCH_SIZE),
-                         "record-no-" + (23 + MOBILE_BATCH_SIZE),
-                         "record-no-" + (42 + MOBILE_BATCH_SIZE * 2),
-                         "record-no-" + (23 + MOBILE_BATCH_SIZE * 2),
-                         "record-no-" + (2 + MOBILE_BATCH_SIZE * 3),
-                         "record-no-" + (1 + MOBILE_BATCH_SIZE * 3)];
+                         "record-no-" + (42 + APPLY_BATCH_SIZE),
+                         "record-no-" + (23 + APPLY_BATCH_SIZE),
+                         "record-no-" + (42 + APPLY_BATCH_SIZE * 2),
+                         "record-no-" + (23 + APPLY_BATCH_SIZE * 2),
+                         "record-no-" + (2 + APPLY_BATCH_SIZE * 3),
+                         "record-no-" + (1 + APPLY_BATCH_SIZE * 3)];
   let engine = makeRotaryEngine();
-  engine.applyIncomingBatchSize = MOBILE_BATCH_SIZE;
+  engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
 
   engine.__reconcile = engine._reconcile;
   engine._reconcile = function _reconcile(record) {
@@ -1194,12 +1062,6 @@ add_task(async function test_processIncoming_failed_records() {
     // Now see with a more realistic limit.
     _("Test batching with sufficient ID batch size.");
     do_check_eq(batchDownload(BOGUS_RECORDS.length), 1);
-
-    // If we're on mobile, that limit is used by default.
-    _("Test batching with tiny mobile batch size.");
-    Svc.Prefs.set("client.type", "mobile");
-    engine.mobileGUIDFetchBatchSize = 2;
-    do_check_eq(batchDownload(BOGUS_RECORDS.length), 4);
 
   } finally {
     await cleanAndGo(engine, server);

@@ -86,6 +86,7 @@ bitfield-enums = [
 constified-enums = [
     "UpdateAnimationsTasks",
     "ParsingMode",
+    "ThemeWidgetType",
 ]
 constified-enum-variants = [
     { enum = "nsCSSPropertyID", variants = ["eCSSProperty_COUNT.*"] },
@@ -128,6 +129,7 @@ whitelist-types = [
     "mozilla::StyleGrid.*",
     "mozilla::UpdateAnimationsTasks",
     "mozilla::LookAndFeel",
+    "mozilla::gfx::FontVariation",
     ".*ThreadSafe.*Holder",
     "AnonymousContent",
     "AudioContext",
@@ -244,6 +246,7 @@ whitelist-types = [
     "StyleGeometryBox",
     "StyleShapeSource",
     "StyleTransition",
+    "ThemeWidgetType",
     "mozilla::UniquePtr",
     "mozilla::DefaultDelete",
     "mozilla::Side",
@@ -257,7 +260,8 @@ opaque-types = [
     "std::namespace::atomic___base", "std::atomic__My_base",
     "std::atomic",
     "std::atomic___base",
-    "mozilla::gfx::.*",
+    # We want everything but FontVariation to be opaque but we don't have negative regexes ;_;
+    "mozilla::gfx::(.{0,12}|.{14,}|([^F][^o][^n][^t][^V][^a][^r][^i][^a][^t][^i][^o][^n]))",
     "FallibleTArray",
     "mozilla::dom::Sequence",
     "mozilla::dom::Optional",
@@ -342,6 +346,7 @@ structs-types = [
     "TraversalRestyleBehavior",
     "TraversalRootBehavior",
     "ComputedTimingFunction_BeforeFlag",
+    "CounterStylePtr",
     "FontFamilyList",
     "FontFamilyType",
     "FontSizePrefs",

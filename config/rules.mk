@@ -975,8 +975,8 @@ env $(environment_cleaner) $(rustflags_override) \
 	RUSTC=$(RUSTC) \
 	MOZ_SRC=$(topsrcdir) \
 	MOZ_DIST=$(ABS_DIST) \
-	LIBCLANG_PATH=$(MOZ_LIBCLANG_PATH) \
-	CLANG_PATH=$(MOZ_CLANG_PATH) \
+	LIBCLANG_PATH="$(MOZ_LIBCLANG_PATH)" \
+	CLANG_PATH="$(MOZ_CLANG_PATH)" \
 	PKG_CONFIG_ALLOW_CROSS=1 \
 	RUST_BACKTRACE=1 \
 	MOZ_TOPOBJDIR=$(topobjdir) \
@@ -997,8 +997,11 @@ ifneq (WINNT,$(OS_ARCH))
 # some crates's build scripts (!), so disable it for now.
 ifndef MOZ_ASAN
 ifndef MOZ_TSAN
+# Cargo needs the same linker flags as the C/C++ compiler,
+# but not the final libraries. Filter those out because they
+# cause problems on macOS 10.7; see bug 1365993 for details.
 target_cargo_env_vars := \
-	MOZ_CARGO_WRAP_LDFLAGS="$(LDFLAGS)" \
+	MOZ_CARGO_WRAP_LDFLAGS="$(filter-out -framework Cocoa -lobjc AudioToolbox ExceptionHandling,$(LDFLAGS))" \
 	MOZ_CARGO_WRAP_LD="$(CC)" \
 	$(cargo_linker_env_var)=$(topsrcdir)/build/cargo-linker
 endif # MOZ_TSAN

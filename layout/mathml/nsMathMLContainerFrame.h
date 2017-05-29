@@ -32,8 +32,8 @@ class nsMathMLContainerFrame : public nsContainerFrame,
 {
   friend class nsMathMLmfencedFrame;
 public:
-  nsMathMLContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, mozilla::LayoutFrameType::None)
+  nsMathMLContainerFrame(nsStyleContext* aContext, ClassID aID)
+    : nsContainerFrame(aContext, aID)
     , mIntrinsicWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mBlockStartAscent(0)
   {}
@@ -402,9 +402,8 @@ private:
 // Issues: If/when mathml becomes a pluggable component, the separation will be needed.
 class nsMathMLmathBlockFrame : public nsBlockFrame {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsMathMLmathBlockFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLmathBlockFrame)
 
   friend nsContainerFrame* NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell,
           nsStyleContext* aContext);
@@ -470,7 +469,9 @@ public:
   }
 
 protected:
-  explicit nsMathMLmathBlockFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {
+  explicit nsMathMLmathBlockFrame(nsStyleContext* aContext)
+    : nsBlockFrame(aContext, kClassID)
+  {
     // We should always have a float manager.  Not that things can really try
     // to float out of us anyway, but we need one for line layout.
     // Bug 1301881: Do we still need to set NS_BLOCK_FLOAT_MGR?
@@ -484,9 +485,8 @@ protected:
 class nsMathMLmathInlineFrame : public nsInlineFrame,
                                 public nsMathMLFrame {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsMathMLmathInlineFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLmathInlineFrame)
 
   friend nsContainerFrame* NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell,
                                                        nsStyleContext* aContext);
@@ -548,7 +548,7 @@ public:
 
 protected:
   explicit nsMathMLmathInlineFrame(nsStyleContext* aContext)
-    : nsInlineFrame(aContext)
+    : nsInlineFrame(aContext, kClassID)
   {}
 
   virtual ~nsMathMLmathInlineFrame() {}

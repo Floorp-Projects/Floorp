@@ -50,12 +50,15 @@ class nsTextFrame : public nsFrame
   typedef gfxTextRun::Range Range;
 
 public:
-  explicit nsTextFrame(nsStyleContext* aContext)
-    : nsTextFrame(aContext, mozilla::LayoutFrameType::Text)
+  explicit nsTextFrame(nsStyleContext* aContext, ClassID aID = kClassID)
+    : nsFrame(aContext, aID)
+    , mNextContinuation(nullptr)
+    , mContentOffset(0)
+    , mContentLengthHint(0)
+    , mAscent(0)
   {}
 
-  NS_DECL_QUERYFRAME_TARGET(nsTextFrame)
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsTextFrame)
 
   friend class nsContinuingTextFrame;
   friend class nsDisplayTextGeometry;
@@ -649,16 +652,6 @@ public:
   uint32_t CountGraphemeClusters() const;
 
 protected:
-  nsTextFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType)
-    : nsFrame(aContext, aType)
-    , mNextContinuation(nullptr)
-    , mContentOffset(0)
-    , mContentLengthHint(0)
-    , mAscent(0)
-  {
-    NS_ASSERTION(mContentOffset == 0, "Bogus content offset");
-  }
-
   virtual ~nsTextFrame();
 
   RefPtr<gfxTextRun> mTextRun;

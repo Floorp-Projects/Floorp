@@ -29,9 +29,8 @@ class nsListBoxBodyFrame final : public nsBoxFrame,
   virtual ~nsListBoxBodyFrame();
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsListBoxBodyFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsListBoxBodyFrame)
 
   // non-virtual ListBoxObject
   int32_t GetNumberOfVisibleRows();

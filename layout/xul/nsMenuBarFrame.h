@@ -25,9 +25,8 @@ nsIFrame* NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 class nsMenuBarFrame final : public nsBoxFrame, public nsMenuParent
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsMenuBarFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMenuBarFrame)
 
   explicit nsMenuBarFrame(nsStyleContext* aContext);
 

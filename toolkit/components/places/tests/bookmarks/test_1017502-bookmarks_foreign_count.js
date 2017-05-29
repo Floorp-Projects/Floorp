@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -83,10 +83,7 @@ add_task(async function maintenance_foreign_count_test() {
 
   // Run maintenance
   Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
-  let promiseMaintenanceFinished =
-    promiseTopicObserved("places-maintenance-finished");
-  PlacesDBUtils.maintenanceOnIdle();
-  await promiseMaintenanceFinished;
+  await PlacesDBUtils.maintenanceOnIdle();
 
   // Check if the foreign_count has been adjusted to the correct value
   Assert.equal((await getForeignCountForURL(conn, T_URI)), 0);

@@ -1035,8 +1035,8 @@ function setupEventListeners() {
     }
   });
   $("verify-place-integrity-button").addEventListener("click", function(event) {
-    PlacesDBUtils.checkAndFixDatabase(function(aLog) {
-      let msg = aLog.join("\n");
+    PlacesDBUtils.checkAndFixDatabase().then((tasksStatusMap) => {
+      let msg = PlacesDBUtils.getLegacyLog(tasksStatusMap).join("\n");
       $("verify-place-result").style.display = "block";
       $("verify-place-result").classList.remove("no-copy");
       $("verify-place-result").textContent = msg;

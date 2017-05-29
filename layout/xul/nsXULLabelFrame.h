@@ -18,7 +18,7 @@
 class nsXULLabelFrame final : public nsBlockFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsXULLabelFrame)
 
   friend nsIFrame* NS_NewXULLabelFrame(nsIPresShell* aPresShell,
                                        nsStyleContext *aContext);
@@ -40,7 +40,7 @@ public:
 
 protected:
   explicit nsXULLabelFrame(nsStyleContext* aContext)
-    : nsBlockFrame(aContext, mozilla::LayoutFrameType::XULLabel)
+    : nsBlockFrame(aContext, kClassID)
   {}
 
   nsresult RegUnregAccessKey(bool aDoReg);

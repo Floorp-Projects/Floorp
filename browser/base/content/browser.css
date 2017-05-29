@@ -611,12 +611,12 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
 }
 
 #PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] {
-  visibility: collapse;
+  display: none;
   transition: margin-top 100ms;
 }
 
 #PopupAutoCompleteRichResult.showSearchSuggestionsNotification > deck[anonid="search-suggestions-notification"] {
-  visibility: visible;
+  display: -moz-deck;
 }
 
 #PopupAutoCompleteRichResult > richlistbox {

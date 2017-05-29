@@ -16,7 +16,7 @@
 
 class nsMathMLmoFrame : public nsMathMLTokenFrame {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLmoFrame)
 
   friend nsIFrame* NS_NewMathMLmoFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
@@ -81,7 +81,7 @@ public:
 
 protected:
   explicit nsMathMLmoFrame(nsStyleContext* aContext) :
-    nsMathMLTokenFrame(aContext), mFlags(0), mMinSize(0), mMaxSize(0) {}
+    nsMathMLTokenFrame(aContext, kClassID), mFlags(0), mMinSize(0), mMaxSize(0) {}
   virtual ~nsMathMLmoFrame();
   
   nsMathMLChar     mMathMLChar; // Here is the MathMLChar that will deal with the operator.

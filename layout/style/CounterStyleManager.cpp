@@ -1701,16 +1701,31 @@ AnonymousCounterStyle::AnonymousCounterStyle(const nsSubstring& aContent)
   mSymbols.AppendElement(aContent);
 }
 
+static nsTArray<nsString>
+CollectSymbolsFromCSSValueList(const nsCSSValueList* aList)
+{
+  nsTArray<nsString> symbols;
+  for (const nsCSSValueList* item = aList; item; item = item->mNext) {
+    item->mValue.GetStringValue(*symbols.AppendElement());
+  }
+  symbols.Compact();
+  return symbols;
+}
+
 AnonymousCounterStyle::AnonymousCounterStyle(const nsCSSValue::Array* aParams)
+  : AnonymousCounterStyle(
+      aParams->Item(0).GetIntValue(),
+      CollectSymbolsFromCSSValueList(aParams->Item(1).GetListValue()))
+{
+}
+
+AnonymousCounterStyle::AnonymousCounterStyle(uint8_t aSystem,
+                                             nsTArray<nsString> aSymbols)
   : CounterStyle(NS_STYLE_LIST_STYLE_CUSTOM)
   , mSingleString(false)
-  , mSystem(aParams->Item(0).GetIntValue())
+  , mSystem(aSystem)
+  , mSymbols(Move(aSymbols))
 {
-  for (const nsCSSValueList* item = aParams->Item(1).GetListValue();
-       item; item = item->mNext) {
-    item->mValue.GetStringValue(*mSymbols.AppendElement());
-  }
-  mSymbols.Compact();
 }
 
 /* virtual */ void

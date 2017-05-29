@@ -783,6 +783,8 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
 
     RootedScript script(cx, frame->script());
     jsbytecode* pc = stub->icEntry()->pc(frame->script());
+    StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
+
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "GetElem(%s)", CodeName[op]);
 
@@ -797,7 +799,7 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
         if (!GetElemOptimizedArguments(cx, frame, &lhsCopy, rhs, res, &isOptimizedArgs))
             return false;
         if (isOptimizedArgs)
-            TypeScript::Monitor(cx, frame->script(), pc, res);
+            TypeScript::Monitor(cx, script, pc, types, res);
     }
 
     bool attached = false;
@@ -828,7 +830,7 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
     if (!isOptimizedArgs) {
         if (!GetElementOperation(cx, op, lhsCopy, rhs, res))
             return false;
-        TypeScript::Monitor(cx, frame->script(), pc, res);
+        TypeScript::Monitor(cx, script, pc, types, res);
     }
 
     // Check if debug mode toggling made the stub invalid.
@@ -836,7 +838,7 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
         return true;
 
     // Add a type monitor stub for the resulting value.
-    if (!stub->addMonitorStubForValue(cx, frame, res))
+    if (!stub->addMonitorStubForValue(cx, frame, types, res))
         return false;
 
     if (attached)
@@ -1372,14 +1374,15 @@ DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub_
             return false;
     }
 
-    TypeScript::Monitor(cx, script, pc, res);
+    StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
+    TypeScript::Monitor(cx, script, pc, types, res);
 
     // Check if debug mode toggling made the stub invalid.
     if (stub.invalid())
         return true;
 
     // Add a type monitor stub for the resulting value.
-    if (!stub->addMonitorStubForValue(cx, frame, res))
+    if (!stub->addMonitorStubForValue(cx, frame, types, res))
         return false;
 
     if (!attached)
@@ -2015,6 +2018,11 @@ GetTemplateObjectForNative(JSContext* cx, HandleFunction target, const CallArgs&
         return !!res;
     }
 
+    if (native == js::intrinsic_NewStringIterator) {
+        res.set(NewStringIteratorObject(cx, TenuredObject));
+        return !!res;
+    }
+
     if (JitSupportsSimd() && GetTemplateObjectForSimd(cx, target, res))
        return !!res;
 
@@ -2450,14 +2458,15 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
         res.set(callArgs.rval());
     }
 
-    TypeScript::Monitor(cx, script, pc, res);
+    StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
+    TypeScript::Monitor(cx, script, pc, types, res);
 
     // Check if debug mode toggling made the stub invalid.
     if (stub.invalid())
         return true;
 
     // Add a type monitor stub for the resulting value.
-    if (!stub->addMonitorStubForValue(cx, frame, res))
+    if (!stub->addMonitorStubForValue(cx, frame, types, res))
         return false;
 
     // If 'callee' is a potential Call_StringSplit, try to attach an
@@ -2509,7 +2518,8 @@ DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_
         return true;
 
     // Add a type monitor stub for the resulting value.
-    if (!stub->addMonitorStubForValue(cx, frame, res))
+    StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
+    if (!stub->addMonitorStubForValue(cx, frame, types, res))
         return false;
 
     if (!handled)

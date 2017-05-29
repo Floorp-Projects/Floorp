@@ -255,7 +255,8 @@ this.PreferenceExperiments = {
       preferenceName,
       observer(newValue) {
         if (newValue !== preferenceValue) {
-          PreferenceExperiments.stop(experimentName, false);
+          PreferenceExperiments.stop(experimentName, false)
+                               .catch(Cu.reportError);
         }
       },
     };

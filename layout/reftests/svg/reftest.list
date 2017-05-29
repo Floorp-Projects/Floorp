@@ -95,9 +95,9 @@ default-preferences
 fuzzy-if(skiaContent,1,320) == conditions-08.svg conditions-08-ref.svg
 == conditions-09.svg conditions-09-ref.svg
 
-fails-if(styloVsGecko) == currentColor-01.svg pass.svg
-fails-if(styloVsGecko) == currentColor-02.svg pass.svg
-fails-if(styloVsGecko) == currentColor-03.svg pass.svg
+fails-if(styloVsGecko||stylo) == currentColor-01.svg pass.svg
+fails-if(styloVsGecko||stylo) == currentColor-02.svg pass.svg
+fails-if(styloVsGecko||stylo) == currentColor-03.svg pass.svg
 
 == data-uri-with-filter-01.xhtml data-uri-with-filter-01-ref.svg
 == data-uri-with-gradient-01.xhtml data-uri-with-gradient-01-ref.svg
@@ -289,7 +289,7 @@ fuzzy(1,5000) == mask-opacity-01.svg mask-opacity-01-ref.svg
 fuzzy-if(d2d||skiaContent,1,6400) == mask-type-01.svg mask-type-01-ref.svg
 fuzzy-if(d2d||skiaContent,1,6400) == mask-type-02.svg mask-type-01-ref.svg
 fuzzy-if(d2d||skiaContent,1,6400) == mask-type-03.svg mask-type-01-ref.svg
-fuzzy-if(d2d||skiaContent,1,6400) fails-if(styloVsGecko) == mask-type-04.svg mask-type-01-ref.svg
+fuzzy-if(d2d||skiaContent,1,6400) fails-if(styloVsGecko||stylo) == mask-type-04.svg mask-type-01-ref.svg
 == mask-use-element-01.svg pass.svg
 
 != nested-mask-mode.svg about:blank
@@ -392,7 +392,7 @@ fuzzy-if(skiaContent,1,3600) == rect-01.svg pass.svg
 == selector-01.svg pass.svg
 
 == stroke-dasharray-01.svg stroke-dasharray-01-ref.svg
-fuzzy-if(skiaContent,1,340) fails-if(styloVsGecko) == stroke-dasharray-02.svg pass.svg
+fuzzy-if(skiaContent,1,340) == stroke-dasharray-02.svg pass.svg
 fuzzy-if(skiaContent,1,340) == stroke-dasharray-03.svg pass.svg
 == stroke-dasharray-and-pathLength-01.svg pass.svg
 == stroke-dasharray-and-text-01.svg stroke-dasharray-and-text-01-ref.svg

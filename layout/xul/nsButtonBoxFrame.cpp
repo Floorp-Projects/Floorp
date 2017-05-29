@@ -59,8 +59,8 @@ NS_NewButtonBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsButtonBoxFrame)
 
-nsButtonBoxFrame::nsButtonBoxFrame(nsStyleContext* aContext) :
-  nsBoxFrame(aContext, false),
+nsButtonBoxFrame::nsButtonBoxFrame(nsStyleContext* aContext, ClassID aID) :
+  nsBoxFrame(aContext, aID, false),
   mButtonBoxListener(nullptr),
   mIsHandlingKeyEvent(false)
 {

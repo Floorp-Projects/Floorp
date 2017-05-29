@@ -12,7 +12,7 @@
 class nsLeafBoxFrame : public nsLeafFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsLeafBoxFrame)
 
   friend nsIFrame* NS_NewLeafBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
@@ -82,11 +82,9 @@ protected:
 
   virtual nscoord GetIntrinsicISize() override;
 
-  explicit nsLeafBoxFrame(nsStyleContext* aContext)
-    : nsLeafBoxFrame(aContext, mozilla::LayoutFrameType::LeafBox)
+  explicit nsLeafBoxFrame(nsStyleContext* aContext, ClassID aID = kClassID)
+    : nsLeafFrame(aContext, aID)
   {}
-
-  nsLeafBoxFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType);
 
 private:
 

@@ -77,8 +77,8 @@ public:
   }
 
 protected:
-  nsLeafFrame(nsStyleContext* aContext, mozilla::LayoutFrameType aType)
-    : nsFrame(aContext, aType)
+  nsLeafFrame(nsStyleContext* aContext, ClassID aID)
+    : nsFrame(aContext, aID)
   {}
 
   virtual ~nsLeafFrame();

@@ -264,7 +264,7 @@ class BaseBootstrapper(object):
             '%s does not yet implement suggest_mobile_android_artifact_mode_mozconfig()'
             % __name__)
 
-    def ensure_stylo_packages(self, state_dir):
+    def ensure_stylo_packages(self, state_dir, checkout_root):
         '''
         Install any necessary packages needed for Stylo development.
         '''
@@ -272,52 +272,24 @@ class BaseBootstrapper(object):
             '%s does not yet implement ensure_stylo_packages()'
             % __name__)
 
-    def install_tooltool_clang_package(self, state_dir,
-                                       package_filename, package_sha512sum):
-        TOOLTOOL_API = 'https://api.pub.build.mozilla.org/tooltool/sha512/'
+    def install_tooltool_clang_package(self, state_dir, checkout_root, manifest_file):
+        abs_manifest_file = os.path.join(checkout_root, manifest_file)
 
-        # XXX this is similar to the Android NDK download.  We should unify them.
-        download_path = os.path.join(state_dir, 'mozboot')
-        try:
-            os.makedirs(download_path)
-        except OSError as e:
-            if e.errno == errno.EEXIST and os.path.isdir(download_path):
-                pass
-            else:
-                raise
+        mach_binary = os.path.join(checkout_root, 'mach')
+        if not os.path.exists(mach_binary):
+            raise ValueError("mach not found at %s" % mach_binary)
 
-        try:
-            package_url = TOOLTOOL_API + package_sha512sum
-            downloaded_filename = os.path.join(download_path, package_sha512sum)
-            print('Downloading clang package from', package_url)
-            self.http_download_and_save(package_url, downloaded_filename,
-                                        package_sha512sum, 'sha512')
+        # If Python can't figure out what its own executable is, there's little
+        # chance we're going to be able to execute mach on its own, particularly
+        # on Windows.
+        if not sys.executable:
+            raise ValueError("cannot determine path to Python executable")
 
-            # We don't have to handle a great variety of archive types here.
-            if package_filename.endswith('tar.gz'):
-                cmd = ['tar', 'zxf', downloaded_filename]
-            elif package_filename.endswith('.tar.bz2'):
-                cmd = ['tar', 'jxf', downloaded_filename]
-            elif package_filename.endswith('.tar.xz'):
-                cmd = ['tar', 'Jxf', downloaded_filename]
-            else:
-                raise NotImplementedError("Don't know how to unpack file: %s"
-                                          % package_filename)
+        cmd = [sys.executable, mach_binary, 'artifact', 'toolchain',
+               '--tooltool-manifest', abs_manifest_file,
+               'clang']
 
-            print('Download complete!')
-            print('Unpacking %s...' % downloaded_filename)
-
-            with open(os.devnull, 'w') as stdout:
-                subprocess.check_call(cmd, stdout=stdout, cwd=state_dir)
-
-            print('Unpacking %s...DONE' % downloaded_filename)
-
-        finally:
-            try:
-                os.remove(downloaded_filename)
-            except OSError as e:
-                if e.errno != errno.ENOENT:
-                    raise
+        subprocess.check_call(cmd, cwd=state_dir)
 
     def which(self, name):
         """Python implementation of which.

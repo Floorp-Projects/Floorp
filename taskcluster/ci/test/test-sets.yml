@@ -79,6 +79,7 @@ headless:
 stylo-tests:
     - cppunit
     - crashtest
+    - reftest
     - reftest-stylo
     - mochitest-style
     - mochitest-chrome-style

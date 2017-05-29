@@ -389,6 +389,37 @@ static_assert(!(nsChangeHint_Hints_AlwaysHandledForDescendants &
                nsChangeHint_ClearAncestorIntrinsics |   \
                nsChangeHint_ClearDescendantIntrinsics | \
                nsChangeHint_NeedDirtyReflow)
+
+// Below are the change hints that we send for ISize & BSize changes.
+// Each is similar to nsChangeHint_AllReflowHints with a few changes.
+
+// * For an ISize change, we send nsChangeHint_AllReflowHints, with two bits
+// excluded: nsChangeHint_ClearDescendantIntrinsics (because an ancestor's
+// inline-size change can't affect descendant intrinsic sizes), and
+// nsChangeHint_NeedDirtyReflow (because ISize changes don't need to *force*
+// all descendants to reflow).
+#define nsChangeHint_ReflowHintsForISizeChange            \
+  nsChangeHint(nsChangeHint_AllReflowHints &              \
+               ~(nsChangeHint_ClearDescendantIntrinsics | \
+                 nsChangeHint_NeedDirtyReflow))
+
+// * For a BSize change, we send almost the same hints as for ISize changes,
+// with one extra: nsChangeHint_UpdateComputedBSize.  We need this hint because
+// BSize changes CAN affect descendant intrinsic sizes, due to replaced
+// elements with percentage BSizes in descendants which also have percentage
+// BSizes. nsChangeHint_UpdateComputedBSize clears intrinsic sizes for frames
+// that have such replaced elements. (We could instead send
+// nsChangeHint_ClearDescendantIntrinsics, but that's broader than we need.)
+//
+// NOTE: You might think that BSize changes could exclude
+// nsChangeHint_ClearAncestorIntrinsics (which is inline-axis specific), but we
+// do need to send it, to clear cached results from CSS Flex measuring reflows.
+#define nsChangeHint_ReflowHintsForBSizeChange            \
+  nsChangeHint((nsChangeHint_AllReflowHints |             \
+                nsChangeHint_UpdateComputedBSize) &       \
+               ~(nsChangeHint_ClearDescendantIntrinsics | \
+                 nsChangeHint_NeedDirtyReflow))
+
 #define NS_STYLE_HINT_REFLOW \
   nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_AllReflowHints)
 

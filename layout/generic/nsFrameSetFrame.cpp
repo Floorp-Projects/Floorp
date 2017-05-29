@@ -86,7 +86,7 @@ void nsFramesetDrag::UnSet()
 class nsHTMLFramesetBorderFrame final : public nsLeafFrame
 {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsHTMLFramesetBorderFrame)
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
@@ -137,9 +137,8 @@ protected:
 class nsHTMLFramesetBlankFrame final : public nsLeafFrame
 {
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsHTMLFramesetBlankFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsHTMLFramesetBlankFrame)
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override
@@ -159,7 +158,7 @@ public:
 
 protected:
   explicit nsHTMLFramesetBlankFrame(nsStyleContext* aContext)
-    : nsLeafFrame(aContext, LayoutFrameType::None)
+    : nsLeafFrame(aContext, kClassID)
   {}
 
   virtual ~nsHTMLFramesetBlankFrame();
@@ -177,7 +176,7 @@ bool    nsHTMLFramesetFrame::gDragInProgress = false;
 #define DEFAULT_BORDER_WIDTH_PX 6
 
 nsHTMLFramesetFrame::nsHTMLFramesetFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, LayoutFrameType::FrameSet)
+  : nsContainerFrame(aContext, kClassID)
 {
   mNumRows             = 0;
   mNumCols             = 0;
@@ -1103,13 +1102,6 @@ nsHTMLFramesetFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 bool
-nsHTMLFramesetFrame::IsLeaf() const
-{
-  // We handle constructing our kids manually
-  return true;
-}
-
-bool
 nsHTMLFramesetFrame::CanResize(bool aVertical,
                                bool aLeft)
 {
@@ -1337,7 +1329,7 @@ nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(nsStyleContext* aContext,
                                                      int32_t aWidth,
                                                      bool aVertical,
                                                      bool aVisibility)
-  : nsLeafFrame(aContext, LayoutFrameType::None)
+  : nsLeafFrame(aContext, kClassID)
   , mWidth(aWidth)
   , mVertical(aVertical)
   , mVisibility(aVisibility)

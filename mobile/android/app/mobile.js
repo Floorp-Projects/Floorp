@@ -414,6 +414,15 @@ pref("ui.bookmark.mobilefolder.enabled", true);
 pref("ui.bookmark.mobilefolder.enabled", false);
 #endif
 
+#if MOZ_UPDATE_CHANNEL == nightly
+pref("mma.enabled", true);
+#elif MOZ_UPDATE_CHANNEL == beta
+pref("mma.enabled", true);
+#else
+pref("mma.enabled", true);
+#endif
+
+
 pref("ui.touch.radius.enabled", false);
 pref("ui.touch.radius.leftmm", 3);
 pref("ui.touch.radius.topmm", 5);
@@ -589,6 +598,9 @@ pref("media.cache_size", 32768);    // 32MB media cache
 // below 10s of buffered data.
 pref("media.cache_resume_threshold", 10);
 pref("media.cache_readahead_limit", 30);
+// On mobile we'll throttle the download once the readahead_limit is hit,
+// even if the download is slow. This is to preserve battery and data.
+pref("media.throttle-regardless-of-download-rate", true);
 
 // Number of video frames we buffer while decoding video.
 // On Android this is decided by a similar value which varies for

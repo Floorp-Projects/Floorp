@@ -330,9 +330,25 @@ add_test(function test_redirect_on_blocklist() {
   let secman = Services.scriptSecurityManager;
   let badRedirects = Cc["@mozilla.org/array;1"]
                        .createInstance(Ci.nsIMutableArray);
-  badRedirects.appendElement(secman.createCodebasePrincipal(exampleURI, {}));
-  badRedirects.appendElement(secman.createCodebasePrincipal(blocklistedURI, {}));
-  badRedirects.appendElement(secman.createCodebasePrincipal(whitelistedURI, {}));
+
+  let redirect1 = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
+    principal: secman.createCodebasePrincipal(exampleURI, {}),
+  };
+  badRedirects.appendElement(redirect1);
+
+  let redirect2 = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
+    principal: secman.createCodebasePrincipal(blocklistedURI, {}),
+  };
+  badRedirects.appendElement(redirect2);
+
+  let redirect3 = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIRedirectHistoryEntry]),
+    principal: secman.createCodebasePrincipal(whitelistedURI, {}),
+  };
+  badRedirects.appendElement(redirect3);
+
   gAppRep.queryReputation({
     sourceURI: whitelistedURI,
     referrerURI: exampleURI,

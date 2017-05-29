@@ -33,8 +33,8 @@ NS_NewTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTitleBarFrame)
 
-nsTitleBarFrame::nsTitleBarFrame(nsStyleContext* aContext)
-:nsBoxFrame(aContext, false)
+nsTitleBarFrame::nsTitleBarFrame(nsStyleContext* aContext, ClassID aID)
+  : nsBoxFrame(aContext, aID, false)
 {
   mTrackingMouseMove = false;
   UpdateMouseThrough();

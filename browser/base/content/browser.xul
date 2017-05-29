@@ -333,6 +333,8 @@
     <menupopup id="toolbar-context-menu"
                onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator'));">
       <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
+                photonaccesskey="&customizeMenu.pinToOverflowMenu.accesskey;"
+                photonlabel="&customizeMenu.pinToOverflowMenu.label;"
                 accesskey="&customizeMenu.moveToPanel.accesskey;"
                 label="&customizeMenu.moveToPanel.label;"
                 contexttype="toolbaritem"
@@ -457,6 +459,12 @@
         <panelview id="page-action-mainView"
                    class="PanelUI-subView">
           <vbox class="panel-subview-body">
+            <toolbarbutton id="page-action-bookmark-button"
+                           class="subviewbutton subviewbutton-iconic"
+                           observes="bookmarkThisPageBroadcaster"
+                           command="Browser:AddBookmarkAs"
+                           onclick="gPageActionButton.panel.hidePopup();"/>
+            <toolbarseparator/>
             <toolbarbutton id="page-action-copy-url-button"
                            class="subviewbutton subviewbutton-iconic"
                            label="&copyURLCmd.label;"

@@ -5653,16 +5653,32 @@ typedef ArrayIteratorObject* (*NewArrayIteratorObjectFn)(JSContext*, NewObjectKi
 static const VMFunction NewArrayIteratorObjectInfo =
     FunctionInfo<NewArrayIteratorObjectFn>(NewArrayIteratorObject, "NewArrayIteratorObject");
 
+typedef StringIteratorObject* (*NewStringIteratorObjectFn)(JSContext*, NewObjectKind);
+static const VMFunction NewStringIteratorObjectInfo =
+    FunctionInfo<NewStringIteratorObjectFn>(NewStringIteratorObject, "NewStringIteratorObject");
+
 void
-CodeGenerator::visitNewArrayIterator(LNewArrayIterator* lir)
+CodeGenerator::visitNewIterator(LNewIterator* lir)
 {
     Register objReg = ToRegister(lir->output());
     Register tempReg = ToRegister(lir->temp());
     JSObject* templateObject = lir->mir()->templateObject();
 
-    OutOfLineCode* ool = oolCallVM(NewArrayIteratorObjectInfo, lir,
-                                   ArgList(Imm32(GenericObject)),
-                                   StoreRegisterTo(objReg));
+    OutOfLineCode* ool;
+    switch (lir->mir()->type()) {
+      case MNewIterator::ArrayIterator:
+        ool = oolCallVM(NewArrayIteratorObjectInfo, lir,
+                        ArgList(Imm32(GenericObject)),
+                        StoreRegisterTo(objReg));
+        break;
+      case MNewIterator::StringIterator:
+        ool = oolCallVM(NewStringIteratorObjectInfo, lir,
+                        ArgList(Imm32(GenericObject)),
+                        StoreRegisterTo(objReg));
+        break;
+      default:
+          MOZ_CRASH("unexpected iterator type");
+    }
 
     masm.createGCObject(objReg, tempReg, templateObject, gc::DefaultHeap, ool->entry());
 
@@ -8043,24 +8059,90 @@ CodeGenerator::visitFromCodePoint(LFromCodePoint* lir)
 {
     Register codePoint = ToRegister(lir->codePoint());
     Register output = ToRegister(lir->output());
+    Register temp1 = ToRegister(lir->temp1());
+    Register temp2 = ToRegister(lir->temp2());
     LSnapshot* snapshot = lir->snapshot();
 
+    // The OOL path is only taken when we can't allocate the inline string.
     OutOfLineCode* ool = oolCallVM(StringFromCodePointInfo, lir, ArgList(codePoint),
                                    StoreRegisterTo(output));
 
-    // Use a bailout if the input is not a valid code point, because
-    // MFromCodePoint is movable and it'd be observable when a moved
-    // fromCodePoint throws an exception before its actual call site.
-    bailoutCmp32(Assembler::Above, codePoint, Imm32(unicode::NonBMPMax), snapshot);
+    Label isTwoByte;
+    Label* done = ool->rejoin();
 
-    // OOL path if code point >= UNIT_STATIC_LIMIT.
+    static_assert(StaticStrings::UNIT_STATIC_LIMIT -1 == JSString::MAX_LATIN1_CHAR,
+                  "Latin-1 strings can be loaded from static strings");
     masm.branch32(Assembler::AboveOrEqual, codePoint, Imm32(StaticStrings::UNIT_STATIC_LIMIT),
-                  ool->entry());
+                  &isTwoByte);
+    {
+        masm.movePtr(ImmPtr(&GetJitContext()->runtime->staticStrings().unitStaticTable), output);
+        masm.loadPtr(BaseIndex(output, codePoint, ScalePointer), output);
+        masm.jump(done);
+    }
+    masm.bind(&isTwoByte);
+    {
+        // Use a bailout if the input is not a valid code point, because
+        // MFromCodePoint is movable and it'd be observable when a moved
+        // fromCodePoint throws an exception before its actual call site.
+        bailoutCmp32(Assembler::Above, codePoint, Imm32(unicode::NonBMPMax), snapshot);
 
-    masm.movePtr(ImmPtr(&GetJitContext()->runtime->staticStrings().unitStaticTable), output);
-    masm.loadPtr(BaseIndex(output, codePoint, ScalePointer), output);
+        // Allocate a JSThinInlineString.
+        {
+            static_assert(JSThinInlineString::MAX_LENGTH_TWO_BYTE >= 2,
+                          "JSThinInlineString can hold a supplementary code point");
 
-    masm.bind(ool->rejoin());
+            uint32_t flags = JSString::INIT_THIN_INLINE_FLAGS;
+            masm.newGCString(output, temp1, ool->entry());
+            masm.store32(Imm32(flags), Address(output, JSString::offsetOfFlags()));
+        }
+
+        Label isSupplementary;
+        masm.branch32(Assembler::AboveOrEqual, codePoint, Imm32(unicode::NonBMPMin),
+                      &isSupplementary);
+        {
+            // Store length.
+            masm.store32(Imm32(1), Address(output, JSString::offsetOfLength()));
+
+            // Load chars pointer in temp1.
+            masm.computeEffectiveAddress(Address(output, JSInlineString::offsetOfInlineStorage()),
+                                         temp1);
+
+            masm.store16(codePoint, Address(temp1, 0));
+
+            // Null-terminate.
+            masm.store16(Imm32(0), Address(temp1, sizeof(char16_t)));
+
+            masm.jump(done);
+        }
+        masm.bind(&isSupplementary);
+        {
+            // Store length.
+            masm.store32(Imm32(2), Address(output, JSString::offsetOfLength()));
+
+            // Load chars pointer in temp1.
+            masm.computeEffectiveAddress(Address(output, JSInlineString::offsetOfInlineStorage()),
+                                         temp1);
+
+            // Inlined unicode::LeadSurrogate(uint32_t).
+            masm.move32(codePoint, temp2);
+            masm.rshift32(Imm32(10), temp2);
+            masm.add32(Imm32(unicode::LeadSurrogateMin - (unicode::NonBMPMin >> 10)), temp2);
+
+            masm.store16(temp2, Address(temp1, 0));
+
+            // Inlined unicode::TrailSurrogate(uint32_t).
+            masm.move32(codePoint, temp2);
+            masm.and32(Imm32(0x3FF), temp2);
+            masm.or32(Imm32(unicode::TrailSurrogateMin), temp2);
+
+            masm.store16(temp2, Address(temp1, sizeof(char16_t)));
+
+            // Null-terminate.
+            masm.store16(Imm32(0), Address(temp1, 2 * sizeof(char16_t)));
+        }
+    }
+
+    masm.bind(done);
 }
 
 void

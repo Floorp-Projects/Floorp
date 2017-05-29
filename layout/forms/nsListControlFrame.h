@@ -55,7 +55,7 @@ public:
                                                   nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsListControlFrame)
 
     // nsIFrame
   virtual nsresult HandleEvent(nsPresContext* aPresContext,

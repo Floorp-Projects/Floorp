@@ -17,7 +17,7 @@
 
 class nsMathMLmrowFrame : public nsMathMLContainerFrame {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsMathMLmrowFrame)
 
   friend nsIFrame* NS_NewMathMLmrowFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
@@ -47,7 +47,8 @@ public:
   }
 
 protected:
-  explicit nsMathMLmrowFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
+  explicit nsMathMLmrowFrame(nsStyleContext* aContext)
+    : nsMathMLContainerFrame(aContext, kClassID) {}
   virtual ~nsMathMLmrowFrame();
 };
 

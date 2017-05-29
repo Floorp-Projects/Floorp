@@ -43,13 +43,11 @@ class nsNumberControlFrame final : public nsContainerFrame
   explicit nsNumberControlFrame(nsStyleContext* aContext);
 
 public:
-  NS_DECL_QUERYFRAME_TARGET(nsNumberControlFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_FRAMEARENA_HELPERS(nsNumberControlFrame)
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
   virtual void ContentStatesChanged(mozilla::EventStates aStates) override;
-  virtual bool IsLeaf() const override { return true; }
 
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;

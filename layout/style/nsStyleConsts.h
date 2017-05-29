@@ -1061,6 +1061,17 @@ enum class StyleGridTrackBreadth : uint8_t {
 #define NS_STYLE_CONTEXT_PROPERTY_FILL          (1 << 0)
 #define NS_STYLE_CONTEXT_PROPERTY_STROKE        (1 << 1)
 
+/*
+ * -moz-window-shadow
+ * Also used in widget code
+ */
+
+#define NS_STYLE_WINDOW_SHADOW_NONE             0
+#define NS_STYLE_WINDOW_SHADOW_DEFAULT          1
+#define NS_STYLE_WINDOW_SHADOW_MENU             2
+#define NS_STYLE_WINDOW_SHADOW_TOOLTIP          3
+#define NS_STYLE_WINDOW_SHADOW_SHEET            4
+
 // dominant-baseline
 #define NS_STYLE_DOMINANT_BASELINE_AUTO              0
 #define NS_STYLE_DOMINANT_BASELINE_USE_SCRIPT        1

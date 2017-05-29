@@ -42,8 +42,8 @@ nsTableWrapperFrame::GetLogicalBaseline(WritingMode aWritingMode) const
          kid->BStart(aWritingMode, mRect.Size());
 }
 
-nsTableWrapperFrame::nsTableWrapperFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, LayoutFrameType::TableWrapper)
+nsTableWrapperFrame::nsTableWrapperFrame(nsStyleContext* aContext, ClassID aID)
+  : nsContainerFrame(aContext, aID)
 {
 }
 
@@ -250,7 +250,7 @@ nsTableWrapperFrame::InitChildReflowInput(nsPresContext& aPresContext,
     }
     // Propagate our stored CB size if present, minus any margins.
     if (!HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
-      LogicalSize* cb = Properties().Get(GridItemCBSizeProperty());
+      LogicalSize* cb = GetProperty(GridItemCBSizeProperty());
       if (cb) {
         cbSize.emplace(*cb);
         *cbSize -= aReflowInput.ComputedLogicalMargin().Size(wm);
@@ -956,7 +956,7 @@ nsTableWrapperFrame::Reflow(nsPresContext*           aPresContext,
     // for the table frame if we are bsize constrained and the caption is above
     // or below the inner table.  Also reduce the CB size that we store for
     // our children in case we're a grid item, by the same amount.
-    LogicalSize* cbSize = Properties().Get(GridItemCBSizeProperty());
+    LogicalSize* cbSize = GetProperty(GridItemCBSizeProperty());
     if (NS_UNCONSTRAINEDSIZE != aOuterRI.AvailableBSize() || cbSize) {
       nscoord captionBSize = 0;
       nscoord captionISize = 0;

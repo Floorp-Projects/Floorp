@@ -27,8 +27,8 @@ NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLButtonControlFrame)
 
 nsHTMLButtonControlFrame::nsHTMLButtonControlFrame(nsStyleContext* aContext,
-                                                   LayoutFrameType aType)
-  : nsContainerFrame(aContext, aType)
+                                                   nsIFrame::ClassID aID)
+  : nsContainerFrame(aContext, aID)
 {
 }
 

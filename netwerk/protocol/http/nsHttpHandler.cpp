@@ -1245,8 +1245,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             mSpoofReferrerSource = cVar;
     }
 
-    if (PREF_CHANGED(HTTP_PREF("referer.spoofOnionSource"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("referer.spoofOnionSource"), &cVar);
+    if (PREF_CHANGED(HTTP_PREF("referer.hideOnionSource"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("referer.hideOnionSource"), &cVar);
         if (NS_SUCCEEDED(rv))
             mHideOnionReferrerSource = cVar;
     }

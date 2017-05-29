@@ -218,8 +218,12 @@ this.PanelMultiView = class {
     return this.__keyNavigationMap;
   }
 
-  constructor(xulNode) {
+  constructor(xulNode, testMode = false) {
     this.node = xulNode;
+    // If `testMode` is `true`, the consumer is only interested in accessing the
+    // methods of this instance. (E.g. in unit tests.)
+    if (testMode)
+      return;
 
     this._currentSubView = this._anchorElement = this._subViewObserver = null;
     this._mainViewHeight = 0;
@@ -572,6 +576,9 @@ this.PanelMultiView = class {
                 aAnchor.removeAttribute("open");
 
               this._viewContainer.removeAttribute("transition-reverse");
+
+              evt = new window.CustomEvent("ViewShown", { bubbles: true, cancelable: false });
+              viewNode.dispatchEvent(evt);
             }, { once: true });
           });
         }, { once: true });
@@ -823,15 +830,15 @@ this.PanelMultiView = class {
         let maxIdx = buttons.length - 1;
         let buttonIndex = isDown ? 0 : maxIdx;
         if (typeof navMap.selected == "number") {
-          if (isDown) {
-            buttonIndex = ++navMap.selected;
-            if (buttonIndex > maxIdx)
-              buttonIndex = 0;
-          } else {
-            buttonIndex = --navMap.selected;
-            if (buttonIndex < 0)
-              buttonIndex = maxIdx;
-          }
+          // Buttons may get selected whilst the panel is shown, so add an extra
+          // check here.
+          do {
+            buttonIndex = navMap.selected = (navMap.selected + (isDown ? 1 : -1));
+          } while (buttons[buttonIndex] && buttons[buttonIndex].disabled)
+          if (isDown && buttonIndex > maxIdx)
+            buttonIndex = 0;
+          else if (!isDown && buttonIndex < 0)
+            buttonIndex = maxIdx;
         }
         let button = buttons[buttonIndex];
         button.focus();
@@ -899,7 +906,11 @@ this.PanelMultiView = class {
     let buttons = Array.from(view.querySelectorAll(".subviewbutton:not([disabled])"));
     if (this._canGoBack(view))
       buttons.unshift(view.backButton);
-    return buttons;
+    let dwu = this._dwu;
+    return buttons.filter(button => {
+      let bounds = dwu.getBoundsWithoutFlushing(button);
+      return bounds.width > 0 && bounds.height > 0;
+    });
   }
 
   /**

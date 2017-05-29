@@ -21,6 +21,7 @@ exports.ConsoleCommand = Immutable.Record({
   type: MESSAGE_TYPE.COMMAND,
   level: MESSAGE_LEVEL.LOG,
   groupId: null,
+  indent: 0,
 });
 
 exports.ConsoleMessage = Immutable.Record({
@@ -40,6 +41,7 @@ exports.ConsoleMessage = Immutable.Record({
   exceptionDocURL: null,
   userProvidedStyles: null,
   notes: null,
+  indent: 0,
 });
 
 exports.NetworkEventMessage = Immutable.Record({
@@ -54,4 +56,5 @@ exports.NetworkEventMessage = Immutable.Record({
   groupId: null,
   timeStamp: null,
   totalTime: null,
+  indent: 0,
 });

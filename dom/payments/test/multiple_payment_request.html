@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Payment Request Testing</title>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+  </head>
+  <body>
+    <script type="text/javascript">
+    const supportedInstruments = [{
+      supportedMethods: [ "MyPay", "TestPay" ]
+    }];
+    const complexDetails = {
+      id: "complex details",
+      total: {
+        label: "Donation",
+        amount: { currency: "USD", value: "55.00" }
+      },
+      displayItems: [
+        {
+          label: "Original donation amount",
+          amount: { currency: "USD", value: "-65.00", }
+        },
+        {
+          label: "Friends and family discount",
+          amount: { currency: "USD", value: "10.00", }
+        }
+      ],
+      modifiers: [
+        {
+          supportedMethods: ["MyPay"],
+          total: {
+            label: "Discounted donation",
+            amount: { currency: "USD", value: "45.00", }
+          },
+          additionalDisplayItems: [
+            {
+              label: "MyPay discount",
+              amount: { currency: "USD", value: "-10.00", }
+            }
+          ],
+          data: { discountProgramParticipantId: "86328764873265", }
+        },
+      ],
+      shippingOptions: [
+        {
+          id: "NormalShipping",
+          label: "NormalShipping",
+          amount: { currency: "USD", value: "10.00", },
+          selected: true,
+        },
+        {
+          id: "FastShipping",
+          label: "FastShipping",
+          amount: { currency: "USD", value: "30.00", },
+          selected: false,
+        },
+      ],
+    };
+
+    const simpleDetails = {
+      id: "simple details",
+      total: {
+        label: "Donation",
+        amount: { currency: "USD", value: "55.00" }
+      },
+    };
+
+    const options = {
+      requestPayerName: true,
+      requestPayerEmail: true,
+      requestPayerPhone: true,
+      requestShipping: true,
+      shippingType: "shipping",
+    };
+
+    const paymentRequest1 = new PaymentRequest(supportedInstruments,
+                                               complexDetails,
+                                               options);
+    const paymentRequest2 = new PaymentRequest(supportedInstruments,
+                                               simpleDetails);
+    </script>
+  </body>
+</html>
