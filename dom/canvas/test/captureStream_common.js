@@ -62,12 +62,7 @@ CaptureStreamTestHelper.prototype = {
    * optional scaling of the drawImage() call (so that a 1x1 black image
    * won't just draw 1 pixel in the corner)
    */
-  getPixel: function (video, offsetX, offsetY, width, height) {
-    offsetX = offsetX || 0; // Set to 0 if not passed in.
-    offsetY = offsetY || 0; // Set to 0 if not passed in.
-    width = width || 0; // Set to 0 if not passed in.
-    height = height || 0; // Set to 0 if not passed in.
-
+  getPixel: function (video, offsetX = 0, offsetY = 0, width = 0, height = 0) {
     // Avoids old values in case of a transparent image.
     CaptureStreamTestHelper2D.prototype.clear.call(this, this.cout);
 
@@ -84,9 +79,10 @@ CaptureStreamTestHelper.prototype = {
    * Returns true if px lies within the per-channel |threshold| of the
    * referenced color for all channels. px is on the form of an array of color
    * channels, [R,G,B,A]. Each channel is in the range [0, 255].
+   *
+   * Threshold defaults to 0 which is an exact match.
    */
-  isPixel: function (px, refColor, threshold) {
-    threshold = threshold || 0; // Default to 0 (exact match) if not passed in.
+  isPixel: function (px, refColor, threshold = 0) {
     return px.every((ch, i) => Math.abs(ch - refColor.data[i]) <= threshold);
   },
 
@@ -94,12 +90,10 @@ CaptureStreamTestHelper.prototype = {
    * Returns true if px lies further away than |threshold| of the
    * referenced color for any channel. px is on the form of an array of color
    * channels, [R,G,B,A]. Each channel is in the range [0, 255].
+   *
+   * Threshold defaults to 127 which should be far enough for most cases.
    */
-  isPixelNot: function (px, refColor, threshold) {
-    if (threshold === undefined) {
-      // Default to 127 (should be sufficiently far away) if not passed in.
-      threshold = 127;
-    }
+  isPixelNot: function (px, refColor, threshold = 127) {
     return px.some((ch, i) => Math.abs(ch - refColor.data[i]) > threshold);
   },
 
@@ -113,65 +107,84 @@ CaptureStreamTestHelper.prototype = {
 
   /*
    * Returns a promise that resolves when the provided function |test|
-   * returns true.
+   * returns true, or rejects when the optional `cancel` promise resolves.
    */
-  waitForPixel: function (video, offsetX, offsetY, test, timeout, width, height) {
-    return new Promise(resolve => {
-      const startTime = video.currentTime;
-      var ontimeupdate = () => {
-        var pixelMatch = false;
-        try {
-            pixelMatch = test(this.getPixel(video, offsetX, offsetY, width, height));
-        } catch (e) {
-          info("Waiting for pixel but no video available: " + e + "\n" + e.stack);
-        }
-        if (!pixelMatch &&
-            (!timeout || video.currentTime < startTime + (timeout / 1000.0))) {
-          // No match yet and,
-          // No timeout (waiting indefinitely) or |timeout| has not passed yet.
+  waitForPixel: async function (video, test, {
+                                  offsetX = 0, offsetY = 0,
+                                  width = 0, height = 0,
+                                  cancel = new Promise(() => {}),
+                                } = {}) {
+    let aborted = false;
+    cancel.then(e => aborted = true);
+
+    while (true) {
+      await Promise.race([
+        new Promise(resolve => video.addEventListener("timeupdate", resolve, { once: true })),
+        cancel,
+      ]);
+      if (aborted) {
+        throw await cancel;
+      }
+      try {
+        if (test(this.getPixel(video, offsetX, offsetY, width, height))) {
           return;
         }
-        video.removeEventListener("timeupdate", ontimeupdate);
-        resolve(pixelMatch);
-      };
-      video.addEventListener("timeupdate", ontimeupdate);
-    });
+      } catch (e) {
+        info("Waiting for pixel but no video available: " + e + "\n" + e.stack);
+      }
+    }
   },
 
   /*
    * Returns a promise that resolves when the top left pixel of |video| matches
    * on all channels. Use |threshold| for fuzzy matching the color on each
-   * channel, in the range [0,255].
+   * channel, in the range [0,255]. 0 means exact match, 255 accepts anything.
    */
-  waitForPixelColor: function (video, refColor, threshold, infoString) {
+  pixelMustBecome: async function (video, refColor, {
+                                     threshold = 0, infoString = "n/a",
+                                     cancel = new Promise(() => {}),
+                                   } = {}) {
     info("Waiting for video " + video.id + " to match [" +
          refColor.data.join(',') + "] - " + refColor.name +
          " (" + infoString + ")");
     var paintedFrames = video.mozPaintedFrames-1;
-    return this.waitForPixel(video, 0, 0,
-                             px => { if (paintedFrames != video.mozPaintedFrames) {
-				       info("Frame: " + video.mozPaintedFrames +
-					    " IsPixel ref=" + refColor.data +
-					    " threshold=" + threshold +
-					    " value=" + px);
-				       paintedFrames = video.mozPaintedFrames;
-				     }
-				     return this.isPixel(px, refColor, threshold); })
-      .then(() => ok(true, video.id + " " + infoString));
+    await this.waitForPixel(video, px => {
+        if (paintedFrames != video.mozPaintedFrames) {
+         info("Frame: " + video.mozPaintedFrames +
+             " IsPixel ref=" + refColor.data +
+             " threshold=" + threshold +
+             " value=" + px);
+         paintedFrames = video.mozPaintedFrames;
+        }
+        return this.isPixel(px, refColor, threshold);
+      }, {
+        offsetX: 0, offsetY: 0,
+        width: 0, height: 0,
+        cancel,
+      });
+    ok(true, video.id + " " + infoString);
   },
 
   /*
-   * Returns a promise that resolves after |timeout| ms of playback or when the
+   * Returns a promise that resolves after |time| ms of playback or when the
    * top left pixel of |video| becomes |refColor|. The test is failed if the
-   * timeout is not reached.
+   * time is not reached, or if the cancel promise resolves.
    */
-  waitForPixelColorTimeout: function (video, refColor, threshold, timeout, infoString) {
-    info("Waiting for " + video.id + " to time out after " + timeout +
+  pixelMustNotBecome: async function (video, refColor, {
+                                        threshold = 0, time = 5000,
+                                        infoString = "n/a",
+                                      } = {}) {
+    info("Waiting for " + video.id + " to time out after " + time +
          "ms against [" + refColor.data.join(',') + "] - " + refColor.name);
-    return this.waitForPixel(video, 0, 0,
-                             px => this.isPixel(px, refColor, threshold),
-                             timeout)
-      .then(result => ok(!result, video.id + " " + infoString));
+    let timeout = new Promise(resolve => setTimeout(resolve, time));
+    let analysis = async () => {
+      await this.waitForPixel(video, px => this.isPixel(px, refColor, threshold), {
+          offsetX: 0, offsetY: 0, width: 0, height: 0,
+        });
+      throw new Error("Got color " + refColor.name + ". " + infoString);
+    };
+    await Promise.race([timeout, analysis()]);
+    ok(true, video.id + " " + infoString);
   },
 
   /* Create an element of type |type| with id |id| and append it to the body. */

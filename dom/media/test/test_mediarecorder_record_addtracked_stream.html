@@ -126,9 +126,12 @@ runTestWhenReady(async () => {
     return lowerAmp < 50 && freqAmp > 200 && upperAmp < 50;
   }, endedNoError.then(() => new Error("Audio check failed")));
 
-  const videoReady = helper.waitForPixelColor(
-      video, helper.red, 128, "Should become red",
-      endedNoError.then(() => new Error("Video check failed")));
+  const videoReady = helper.pixelMustBecome(
+      video, helper.red, {
+        threshold: 128,
+        infoString: "Should become red",
+        cancelPromise: endedNoError.then(() => new Error("Video check failed")),
+      });
 
   video.play();
 
