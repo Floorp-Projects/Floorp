@@ -88,6 +88,15 @@
               '-lcrypto',
             ],
           }],
+          # For test builds we have to set MPI defines.
+          [ 'target_arch=="ia32"', {
+            'defines': [
+              'MP_USE_UINT_DIGIT',
+              'MP_ASSEMBLY_MULTIPLY',
+              'MP_ASSEMBLY_SQUARE',
+              'MP_ASSEMBLY_DIV_2DX1D',
+            ],
+          }],
         ],
       },
     },
