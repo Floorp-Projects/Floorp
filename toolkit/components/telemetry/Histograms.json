@@ -13347,5 +13347,17 @@
     "high": 50000,
     "n_buckets": 100,
     "description": "The amount of time it takes for a WebExtension to start up, from when the startup function is called to when the startup promise resolves."
+  },
+  "NOTIFY_OBSERVERS_LATENCY_MS": {
+    "record_in_processes": ["main", "content", "gpu"],
+    "alert_emails": ["michael@thelayzells.com"],
+    "bug_numbers": [1368524],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "low": 3,
+    "high": 512,
+    "n_buckets": 20,
+    "keyed": true,
+    "description": "Measures the number of milliseconds we spend synchronously notifying observers, keyed by topic. Note: only NotifyObservers calls which take over 500 microseconds are included in this probe."
   }
 }

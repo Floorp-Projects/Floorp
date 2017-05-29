@@ -18,8 +18,13 @@
 #include "xpcpublic.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/Services.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TimeStamp.h"
+#include "nsString.h"
 
 #define NOTIFY_GLOBAL_OBSERVERS
+
+static const uint32_t kMinTelemetryNotifyObserversLatencyMs = 1;
 
 // Log module for nsObserverService logging...
 //
@@ -276,6 +281,8 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports* aSubject,
     return NS_ERROR_INVALID_ARG;
   }
 
+  mozilla::TimeStamp start = TimeStamp::Now();
+
   nsObserverList* observerList = mObserverTopicTable.GetEntry(aTopic);
   if (observerList) {
     observerList->NotifyObservers(aSubject, aTopic, aSomeData);
@@ -287,6 +294,13 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports* aSubject,
     observerList->NotifyObservers(aSubject, aTopic, aSomeData);
   }
 #endif
+
+  uint32_t latencyMs = round((TimeStamp::Now() - start).ToMilliseconds());
+  if (latencyMs >= kMinTelemetryNotifyObserversLatencyMs) {
+    Telemetry::Accumulate(Telemetry::NOTIFY_OBSERVERS_LATENCY_MS,
+                          nsDependentCString(aTopic),
+                          latencyMs);
+  }
 
   return NS_OK;
 }
