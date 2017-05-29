@@ -69,6 +69,9 @@ if (isWorker) {
     Services.prefs.getBoolPref(VERBOSE_PREF);
 }
 
+const CONTENT_PROCESS_DBG_SERVER_SCRIPT =
+  "resource://devtools/server/content-process-debugger-server.js";
+
 function loadSubScript(url) {
   try {
     let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
@@ -149,6 +152,8 @@ function ModuleAPI() {
 var DebuggerServer = {
   _listeners: [],
   _initialized: false,
+  // Flag to check if the content process debugger server script was already loaded.
+  _contentProcessScriptLoaded: false,
   // Map of global actor names to actor constructors provided by extensions.
   globalActorFactories: {},
   // Map of tab actor names to actor constructors provided by extensions.
@@ -755,7 +760,16 @@ var DebuggerServer = {
       deferred.resolve(actor);
     });
 
-    mm.sendAsyncMessage("DevTools:InitDebuggerServer", {
+    // Load the content process debugger server script only once.
+    if (!this._contentProcessScriptLoaded) {
+      // Load the process script that will receive the debug:init-content-server message
+      Services.ppmm.loadProcessScript(CONTENT_PROCESS_DBG_SERVER_SCRIPT, true);
+      this._contentProcessScriptLoaded = true;
+    }
+
+    // Send a message to the content process debugger server script to forward it the
+    // prefix.
+    mm.sendAsyncMessage("debug:init-content-server", {
       prefix: prefix
     });
 
@@ -1365,6 +1379,20 @@ var DebuggerServer = {
           this._connections[connID].rootActor.removeActorByName(name);
         }
       }
+    }
+  },
+
+  /**
+   * Called when DevTools are unloaded to remove the contend process server script for the
+   * list of scripts loaded for each new content process. Will also remove message
+   * listeners from already loaded scripts.
+   */
+  removeContentServerScript() {
+    Services.ppmm.removeDelayedProcessScript(CONTENT_PROCESS_DBG_SERVER_SCRIPT);
+    try {
+      Services.ppmm.broadcastAsyncMessage("debug:close-content-server");
+    } catch (e) {
+      // Nothing to do
     }
   },
 
