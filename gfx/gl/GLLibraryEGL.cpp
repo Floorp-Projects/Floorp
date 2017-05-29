@@ -55,6 +55,12 @@ static const char* sEGLExtensionNames[] = {
     "EGL_ANGLE_platform_angle_d3d",
     "EGL_ANGLE_d3d_share_handle_client_buffer",
     "EGL_KHR_create_context",
+    "EGL_KHR_stream",
+    "EGL_KHR_stream_consumer_gltexture",
+    "EGL_EXT_device_base",
+    "EGL_EXT_device_query",
+    "EGL_NV_stream_consumer_gltexture_yuv",
+    "EGL_ANGLE_stream_producer_d3d_texture_nv12",
 };
 
 #if defined(ANDROID)
@@ -593,6 +599,76 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
         if (!fnLoadSymbols(nativeFenceSymbols)) {
             NS_ERROR("EGL supports ANDROID_native_fence_sync without exposing its functions!");
             MarkExtensionUnsupported(ANDROID_native_fence_sync);
+        }
+    }
+
+    if (IsExtensionSupported(KHR_stream)) {
+        const GLLibraryLoader::SymLoadStruct streamSymbols[] = {
+            SYMBOL(CreateStreamKHR),
+            SYMBOL(DestroyStreamKHR),
+            SYMBOL(QueryStreamKHR),
+            END_OF_SYMBOLS
+        };
+        if (!fnLoadSymbols(streamSymbols)) {
+            NS_ERROR("EGL supports KHR_stream without exposing its functions!");
+            MarkExtensionUnsupported(KHR_stream);
+        }
+    }
+
+    if (IsExtensionSupported(KHR_stream_consumer_gltexture)) {
+        const GLLibraryLoader::SymLoadStruct streamConsumerSymbols[] = {
+            SYMBOL(StreamConsumerAcquireKHR),
+            SYMBOL(StreamConsumerReleaseKHR),
+            END_OF_SYMBOLS
+        };
+        if (!fnLoadSymbols(streamConsumerSymbols)) {
+            NS_ERROR("EGL supports KHR_stream_consumer_gltexture without exposing its functions!");
+            MarkExtensionUnsupported(KHR_stream_consumer_gltexture);
+        }
+    }
+
+    if (IsExtensionSupported(EXT_device_base)) {
+        const GLLibraryLoader::SymLoadStruct deviceBaseSymbols[] = {
+            SYMBOL(QueryDisplayAttribEXT),
+            END_OF_SYMBOLS
+        };
+        if (!fnLoadSymbols(deviceBaseSymbols)) {
+            NS_ERROR("EGL supports EXT_device_base without exposing its functions!");
+            MarkExtensionUnsupported(EXT_device_base);
+        }
+    }
+
+    if (IsExtensionSupported(EXT_device_query)) {
+        const GLLibraryLoader::SymLoadStruct queryDisplaySymbols[] = {
+            SYMBOL(QueryDeviceAttribEXT),
+            END_OF_SYMBOLS
+        };
+        if (!fnLoadSymbols(queryDisplaySymbols)) {
+            NS_ERROR("EGL supports EXT_device_query without exposing its functions!");
+            MarkExtensionUnsupported(EXT_device_query);
+        }
+    }
+
+    if (IsExtensionSupported(NV_stream_consumer_gltexture_yuv)) {
+        const GLLibraryLoader::SymLoadStruct nvStreamSymbols[] = {
+            SYMBOL(StreamConsumerGLTextureExternalAttribsNV),
+            END_OF_SYMBOLS
+        };
+        if (!fnLoadSymbols(nvStreamSymbols)) {
+            NS_ERROR("EGL supports NV_stream_consumer_gltexture_yuv without exposing its functions!");
+            MarkExtensionUnsupported(NV_stream_consumer_gltexture_yuv);
+        }
+    }
+
+    if (IsExtensionSupported(ANGLE_stream_producer_d3d_texture_nv12)) {
+        const GLLibraryLoader::SymLoadStruct nvStreamSymbols[] = {
+            SYMBOL(CreateStreamProducerD3DTextureNV12ANGLE),
+            SYMBOL(StreamPostD3DTextureNV12ANGLE),
+            END_OF_SYMBOLS
+        };
+        if (!fnLoadSymbols(nvStreamSymbols)) {
+            NS_ERROR("EGL supports ANGLE_stream_producer_d3d_texture_nv12 without exposing its functions!");
+            MarkExtensionUnsupported(ANGLE_stream_producer_d3d_texture_nv12);
         }
     }
 
