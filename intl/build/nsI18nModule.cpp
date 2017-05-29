@@ -11,8 +11,6 @@
 #include "nsSampleWordBreaker.h"
 
 // unicharutil
-#include "nsCategoryImp.h"
-#include "nsUnicharUtilCIID.h"
 #include "nsEntityConverter.h"
 #include "nsSaveAsCharset.h"
 #include "nsUnicodeNormalizer.h"
@@ -32,8 +30,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSampleWordBreaker)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleTextOverride, Init)
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCategoryImp,
-                                         nsCategoryImp::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEntityConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSaveAsCharset)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeNormalizer)
@@ -42,7 +38,6 @@ NS_DEFINE_NAMED_CID(MOZ_LOCALESERVICE_CID);
 NS_DEFINE_NAMED_CID(MOZ_OSPREFERENCES_CID);
 NS_DEFINE_NAMED_CID(NS_LBRK_CID);
 NS_DEFINE_NAMED_CID(NS_WBRK_CID);
-NS_DEFINE_NAMED_CID(NS_UNICHARCATEGORY_CID);
 NS_DEFINE_NAMED_CID(NS_ENTITYCONVERTER_CID);
 NS_DEFINE_NAMED_CID(NS_SAVEASCHARSET_CID);
 NS_DEFINE_NAMED_CID(NS_UNICODE_NORMALIZER_CID);
@@ -59,7 +54,6 @@ static const mozilla::Module::CIDEntry kIntlCIDs[] = {
     { &kMOZ_OSPREFERENCES_CID, false, nullptr, mozilla::intl::OSPreferencesConstructor },
     { &kNS_LBRK_CID, false, nullptr, nsJISx4051LineBreakerConstructor },
     { &kNS_WBRK_CID, false, nullptr, nsSampleWordBreakerConstructor },
-    { &kNS_UNICHARCATEGORY_CID, false, nullptr, nsCategoryImpConstructor },
     { &kNS_ENTITYCONVERTER_CID, false, nullptr, nsEntityConverterConstructor },
     { &kNS_SAVEASCHARSET_CID, false, nullptr, nsSaveAsCharsetConstructor },
     { &kNS_UNICODE_NORMALIZER_CID, false, nullptr, nsUnicodeNormalizerConstructor },
@@ -78,7 +72,6 @@ static const mozilla::Module::ContractIDEntry kIntlContracts[] = {
     { MOZ_OSPREFERENCES_CONTRACTID, &kMOZ_OSPREFERENCES_CID },
     { NS_LBRK_CONTRACTID, &kNS_LBRK_CID },
     { NS_WBRK_CONTRACTID, &kNS_WBRK_CID },
-    { NS_UNICHARCATEGORY_CONTRACTID, &kNS_UNICHARCATEGORY_CID },
     { NS_ENTITYCONVERTER_CONTRACTID, &kNS_ENTITYCONVERTER_CID },
     { NS_SAVEASCHARSET_CONTRACTID, &kNS_SAVEASCHARSET_CID },
     { NS_UNICODE_NORMALIZER_CONTRACTID, &kNS_UNICODE_NORMALIZER_CID },
