@@ -1,4 +1,4 @@
-<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- --> 
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
@@ -17,9 +17,9 @@
       onload="init();"
       onunload="SidebarUtils.setMouseoverURL('');">
 
-  <script type="application/javascript" 
+  <script type="application/javascript"
           src="chrome://browser/content/bookmarks/sidebarUtils.js"/>
-  <script type="application/javascript" 
+  <script type="application/javascript"
           src="chrome://browser/content/bookmarks/bookmarksPanel.js"/>
 
   <commandset id="placesCommands"/>
@@ -30,9 +30,8 @@
   <tooltip id="bhTooltip"/>
 
   <hbox id="sidebar-search-container" align="center">
-    <label id="sidebar-search-label"
-           value="&search.label;" accesskey="&search.accesskey;" control="search-box"/>
-    <textbox id="search-box" flex="1" type="search" class="compact"
+    <textbox id="search-box" flex="1" type="search"
+             placeholder="&search.placeholder;"
              aria-controls="bookmarks-view"
              oncommand="searchBookmarks(this.value);"/>
   </hbox>
