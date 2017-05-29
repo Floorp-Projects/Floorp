@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e # Exit (and fail) immediately if any command in this scriptfails
 
+# Check that our APK files are not bigger than they should be
+tools/metrics/apk_size.sh
+
 # buddybuild modifies our buildscripts and sources (this is partly to enable
 # their SDK, and partly to allow selecting flavours in the BuddyBuild UI).
 # We don't know where the Buddybuild SDK lives, which causes gradle builds
