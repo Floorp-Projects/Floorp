@@ -120,9 +120,11 @@ function runHeuristicsTest(patterns, fixturePathPrefix) {
 
 add_task(function* head_initialize() {
   Services.prefs.setBoolPref("extensions.formautofill.experimental", true);
+  Services.prefs.setBoolPref("extensions.formautofill.heuristics.enabled", true);
 
   // Clean up after every test.
   do_register_cleanup(function head_cleanup() {
     Services.prefs.clearUserPref("extensions.formautofill.experimental");
+    Services.prefs.clearUserPref("extensions.formautofill.heuristics.enabled");
   });
 });
