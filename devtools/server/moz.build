@@ -18,6 +18,7 @@ XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 DevToolsModules(
     'child.js',
+    'content-process-debugger-server.js',
     'content-server.jsm',
     'css-logic.js',
     'event-parsers.js',
