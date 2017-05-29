@@ -1377,6 +1377,14 @@ treechildren.searchbar-treebody::-moz-tree-row(selected) {
   background-color: Window;
 }
 
+#sidebar-header {
+  border-bottom: 1px solid ThreeDLightShadow;
+}
+
+.sidebar-splitter {
+  border-color: ThreeDLightShadow;
+}
+
 .browserContainer > findbar {
   background-color: -moz-dialog;
   color: -moz-DialogText;
