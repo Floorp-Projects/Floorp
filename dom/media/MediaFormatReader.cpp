@@ -2020,7 +2020,8 @@ MediaFormatReader::HandleDemuxedSamples(
                         && decoder.mDecoder->SupportDecoderRecycling();
       if (!recyclable
           && (decoder.mNextStreamSourceID.isNothing()
-              || decoder.mNextStreamSourceID.ref() != info->GetID())) {
+              || decoder.mNextStreamSourceID.ref() != info->GetID())
+          && !decoder.HasWaitingPromise()) {
         LOG("%s stream id has changed from:%d to:%d, draining decoder.",
           TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
           info->GetID());
@@ -2192,16 +2193,6 @@ MediaFormatReader::Update(TrackType aTrack)
   if (aTrack == TrackType::kVideoTrack && mSkipRequest.Exists()) {
     LOGV("Skipping in progress, nothing more to do");
     return;
-  }
-
-  if (decoder.HasWaitingPromise() && decoder.HasCompletedDrain()) {
-    // This situation will occur when a change of stream ID occurred during
-    // internal seeking following a gap encountered in the data, a drain was
-    // requested and has now completed. We need to complete the draining process
-    // so that the new data can be processed.
-    // We can complete the draining operation now as we have no pending
-    // operation when a waiting promise is pending.
-    decoder.mDrainState = DrainState::None;
   }
 
   if (UpdateReceivedNewData(aTrack)) {
