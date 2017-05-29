@@ -188,7 +188,7 @@ bool
 GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind)
 {
     if (allowGC) {
-        if (!gcIfNeededPerAllocation(cx))
+        if (!gcIfNeededAtAllocation(cx))
             return false;
     }
 
@@ -223,7 +223,7 @@ GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind)
 }
 
 bool
-GCRuntime::gcIfNeededPerAllocation(JSContext* cx)
+GCRuntime::gcIfNeededAtAllocation(JSContext* cx)
 {
 #ifdef JS_GC_ZEAL
     if (needZealousGC())
