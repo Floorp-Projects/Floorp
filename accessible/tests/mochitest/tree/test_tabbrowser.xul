@@ -35,7 +35,11 @@
       this.invoke = function testTabHierarchy_invoke()
       {
         var docURIs = ["about:", "about:mozilla"];
-        tabBrowser().loadTabs(docURIs, false, true);
+        tabBrowser().loadTabs(docURIs, {
+          inBackground: false,
+          replace: true,
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        });
       }
 
       this.finalCheck = function testTabHierarchy_finalCheck(aEvent)
