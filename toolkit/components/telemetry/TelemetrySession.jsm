@@ -674,9 +674,6 @@ var Impl = {
   _logger: null,
   _prevValues: {},
   _slowSQLStartup: {},
-  _hasWindowRestoredObserver: false,
-  _hasXulWindowVisibleObserver: false,
-  _hasActiveTicksObservers: false,
   // The activity state for the user. If false, don't count the next
   // active tick. Otherwise, increment the active ticks as usual.
   _isUserActive: true,
@@ -739,6 +736,18 @@ var Impl = {
   // We save whether the "new-profile" ping was sent yet, to
   // survive profile refresh and migrations.
   _newProfilePingSent: false,
+  // Keep track of the active observers
+  _observedTopics: new Set(),
+
+  addObserver(aTopic) {
+    Services.obs.addObserver(this, aTopic)
+    this._observedTopics.add(aTopic)
+  },
+
+  removeObserver(aTopic) {
+    Services.obs.removeObserver(this, aTopic)
+    this._observedTopics.delete(aTopic)
+  },
 
   get _log() {
     if (!this._logger) {
@@ -1448,41 +1457,26 @@ var Impl = {
    * chrome process.
    */
   attachEarlyObservers() {
-    Services.obs.addObserver(this, "sessionstore-windows-restored");
+    this.addObserver("sessionstore-windows-restored");
     if (AppConstants.platform === "android") {
-      Services.obs.addObserver(this, "application-background");
+      this.addObserver("application-background");
     }
-    Services.obs.addObserver(this, "xul-window-visible");
-    this._hasWindowRestoredObserver = true;
-    this._hasXulWindowVisibleObserver = true;
+    this.addObserver("xul-window-visible");
 
     // Attach the active-ticks related observers.
-    Services.obs.addObserver(this, "user-interaction-active");
-    Services.obs.addObserver(this, "user-interaction-inactive");
-    this._hasActiveTicksObservers = true;
+    this.addObserver("user-interaction-active");
+    this.addObserver("user-interaction-inactive");
   },
 
   attachObservers: function attachObservers() {
     if (!this._initialized)
       return;
-    Services.obs.addObserver(this, "idle-daily");
+    this.addObserver("idle-daily");
     if (Telemetry.canRecordExtended) {
-      Services.obs.addObserver(this, TOPIC_CYCLE_COLLECTOR_BEGIN);
+      this.addObserver(TOPIC_CYCLE_COLLECTOR_BEGIN);
     }
   },
 
-  detachObservers: function detachObservers() {
-    if (!this._initialized)
-      return;
-    Services.obs.removeObserver(this, "idle-daily");
-    try {
-      // Tests may flip Telemetry.canRecordExtended on and off. Just try to remove this
-      // observer and catch if it fails because the observer was not added.
-      Services.obs.removeObserver(this, TOPIC_CYCLE_COLLECTOR_BEGIN);
-    } catch (e) {
-      this._log.warn("detachObservers - Failed to remove " + TOPIC_CYCLE_COLLECTOR_BEGIN, e);
-    }
-  },
 
   /**
    * Lightweight init function, called as soon as Firefox starts.
@@ -1616,7 +1610,7 @@ var Impl = {
       return;
     }
 
-    Services.obs.addObserver(this, "content-child-shutdown");
+    this.addObserver("content-child-shutdown");
     cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_THREAD_HANGS, this);
     cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_USS, this);
 
@@ -1856,24 +1850,17 @@ var Impl = {
   /**
    * Do some shutdown work that is common to all process types.
    */
-  uninstall: function uninstall() {
-    this.detachObservers();
-    if (this._hasWindowRestoredObserver) {
-      Services.obs.removeObserver(this, "sessionstore-windows-restored");
-      this._hasWindowRestoredObserver = false;
+  uninstall() {
+    for (let topic of this._observedTopics) {
+      try {
+        // Tests may flip Telemetry.canRecordExtended on and off. It can be the case
+        // that the observer TOPIC_CYCLE_COLLECTOR_BEGIN was not added.
+        this.removeObserver(topic);
+      } catch (e) {
+        this._log.warn("uninstall - Failed to remove " + topic, e);
+      }
     }
-    if (this._hasXulWindowVisibleObserver) {
-      Services.obs.removeObserver(this, "xul-window-visible");
-      this._hasXulWindowVisibleObserver = false;
-    }
-    if (AppConstants.platform === "android") {
-      Services.obs.removeObserver(this, "application-background");
-    }
-    if (this._hasActiveTicksObservers) {
-      Services.obs.removeObserver(this, "user-interaction-active");
-      Services.obs.removeObserver(this, "user-interaction-inactive");
-      this._hasActiveTicksObservers = false;
-    }
+
     GCTelemetry.shutdown();
   },
 
@@ -1977,7 +1964,6 @@ var Impl = {
     switch (aTopic) {
     case "content-child-shutdown":
       // content-child-shutdown is only registered for content processes.
-      Services.obs.removeObserver(this, "content-child-shutdown");
       this.uninstall();
       Telemetry.flushBatchedChildTelemetry();
       this.sendContentProcessPing(REASON_SAVED_SESSION);
@@ -1991,8 +1977,7 @@ var Impl = {
       }
       break;
     case "xul-window-visible":
-      Services.obs.removeObserver(this, "xul-window-visible");
-      this._hasXulWindowVisibleObserver = false;
+      this.removeObserver("xul-window-visible");
       var counters = processInfo.getCounters();
       if (counters) {
         [this._startupIO.startupWindowVisibleReadBytes,
@@ -2000,8 +1985,7 @@ var Impl = {
       }
       break;
     case "sessionstore-windows-restored":
-      Services.obs.removeObserver(this, "sessionstore-windows-restored");
-      this._hasWindowRestoredObserver = false;
+      this.removeObserver("sessionstore-windows-restored");
       // Check whether debugger was attached during startup
       let debugService = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
       gWasDebuggerAttached = debugService.isDebuggerAttached;
