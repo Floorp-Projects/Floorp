@@ -8,6 +8,7 @@
 
 interface nsIContentFrameMessageManager;
 interface nsIWebBrowserChrome3;
+interface nsIPrincipal;
 
 native CommandsArray(nsTArray<nsCString>);
 [ref] native CommandsArrayRef(nsTArray<nsCString>);
@@ -31,7 +32,8 @@ interface nsITabChild : nsISupports
                                     in int32_t shellItemWidth, in int32_t shellItemHeight);
 
   [noscript] void remoteDropLinks(in unsigned long linksCount,
-                                  [array, size_is(linksCount)] in nsIDroppedLinkItem links);
+                                  [array, size_is(linksCount)] in nsIDroppedLinkItem links,
+                                  in nsIPrincipal triggeringPrincipal);
 
   readonly attribute uint64_t tabId;
 
