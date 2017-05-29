@@ -39,6 +39,7 @@
           "script",
           "image",
           "object",
+          "object_subrequest",
           "xmlhttprequest",
           "xbl",
           "xslt",
