@@ -125,6 +125,11 @@ if CONFIG['ENABLE_ION']:
         'testJitRValueAlloc.cpp',
     ]
 
+if CONFIG['ENABLE_STREAMS']:
+    UNIFIED_SOURCES += [
+        'testReadableStream.cpp',
+    ]
+
 DEFINES['EXPORT_JS_API'] = True
 
 LOCAL_INCLUDES += [
