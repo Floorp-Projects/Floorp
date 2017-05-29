@@ -140,6 +140,13 @@ this.TelemetryController = Object.freeze({
   /**
    * Used only for testing purposes.
    */
+  testAssemblePing(aType, aPayload, aOptions) {
+    return Impl.assemblePing(aType, aPayload, aOptions);
+  },
+
+  /**
+   * Used only for testing purposes.
+   */
   testInitLogging() {
     configureLogging();
   },
