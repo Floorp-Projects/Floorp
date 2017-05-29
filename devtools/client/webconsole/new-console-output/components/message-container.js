@@ -34,6 +34,7 @@ const MessageContainer = createClass({
     message: PropTypes.object.isRequired,
     open: PropTypes.bool.isRequired,
     serviceContainer: PropTypes.object.isRequired,
+    autoscroll: PropTypes.bool.isRequired,
     indent: PropTypes.number.isRequired,
     tableData: PropTypes.object,
     timestampsVisible: PropTypes.bool.isRequired,

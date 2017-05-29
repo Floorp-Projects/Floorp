@@ -10,6 +10,11 @@ function getAllUi(state) {
   return state.ui;
 }
 
+function getScrollSetting(state) {
+  return getAllUi(state).autoscroll;
+}
+
 module.exports = {
   getAllUi,
+  getScrollSetting,
 };
