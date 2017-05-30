@@ -35,10 +35,7 @@ function run_test() {
   var gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
 
   // We can't do anything if we can't spoof the stuff we need.
-  if (!(gfxInfo instanceof Ci.nsIGfxInfoDebug)) {
-    do_test_finished();
-    return;
-  }
+  do_check_true(gfxInfo instanceof Ci.nsIGfxInfoDebug);
 
   gfxInfo.QueryInterface(Ci.nsIGfxInfoDebug);
 
@@ -51,19 +48,16 @@ function run_test() {
       // Windows 7
       gfxInfo.spoofOSVersion(0x60001);
       break;
-    case "Linux":
-      // We don't support driver versions on Linux.
-      do_test_finished();
-      return;
-    case "Darwin":
-      // We don't support driver versions on Darwin.
-      do_test_finished();
-      return;
     case "Android":
       gfxInfo.spoofVendorID("abab");
       gfxInfo.spoofDeviceID("ghjk");
       gfxInfo.spoofDriverVersion("6");
       break;
+    default:
+      // We don't support driver versions on Linux.
+      // We don't support driver versions on Darwin.
+      do_check_true(false);
+      return;
   }
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
