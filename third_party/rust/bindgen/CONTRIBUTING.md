@@ -14,7 +14,9 @@ out to us in a GitHub issue, or stop by
 - [Testing](#testing)
   - [Overview](#overview)
   - [Running All Tests](#running-all-tests)
+  - [Running a Single Test](#running-a-single-test)
   - [Authoring New Tests](#authoring-new-tests)
+  - [Test Expectations and `libclang` Versions](#test-expectations-and-libclang-versions)
 - [Automatic code formatting](#automatic-code-formatting)
 - [Generating Graphviz Dot Files](#generating-graphviz-dot-files)
 - [Debug Logging](#debug-logging)
@@ -91,8 +93,16 @@ Run `cargo test` to compare generated Rust bindings to the expectations.
 ### Running All Tests
 
 ```
-$ cargo test [--all-features]
+$ cargo test --features testing_only_libclang_$VERSION
 ```
+
+Where `$VERSION` is one of:
+
+* `4`
+* `3_9`
+* `3_8`
+
+depending on which version of `libclang` you have installed.
 
 ### Running a Single Test
 
@@ -123,6 +133,25 @@ Then verify the new Rust bindings compile and pass some basic tests:
 ```
 $ cargo test -p tests_expectations
 ```
+
+### Test Expectations and `libclang` Versions
+
+If a test generates different bindings across different `libclang` versions (for
+example, because we take advantage of better/newer APIs when possible), then you
+can add multiple test expectations, one for each supported `libclang`
+version. Instead of having a single `tests/expectations/tests/my_test.rs` file,
+add each of:
+
+* `tests/expectations/tests/libclang-4/my_test.rs`
+* `tests/expectations/tests/libclang-3.9/my_test.rs`
+* `tests/expectations/tests/libclang-3.8/my_test.rs`
+
+If you need to update the test expectations for a test file that generates
+different bindings for different `libclang` versions, you *don't* need to have
+many version of `libclang` installed locally. Just make a work-in-progress pull
+request, and then when Travis CI fails, it will log a diff of the
+expectations. Use the diff to patch the appropriate expectation file locally and
+then update your pull request.
 
 ## Automatic code formatting
 
