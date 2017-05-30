@@ -22,6 +22,8 @@
 #include "md/_openbsd.cfg"
 #elif defined(__linux__)
 #include "md/_linux.cfg"
+#elif defined(__sun__)
+#include "md/_solaris.cfg"
 #else
 #error "Unsupported platform!"
 #endif
