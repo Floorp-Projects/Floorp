@@ -135,6 +135,9 @@ function run_test() {
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DX_INTEROP2, failureId);
     do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
+    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_COMPONENT_ALPHA, failureId);
+    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+
     gTestserver.stop(do_test_finished);
   }
 

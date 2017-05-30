@@ -170,6 +170,9 @@ GetPrefNameForFeature(int32_t aFeature)
     case nsIGfxInfo::FEATURE_WEBGL2:
       name = BLACKLIST_PREF_BRANCH "webgl2";
       break;
+    case nsIGfxInfo::FEATURE_COMPONENT_ALPHA:
+      name = BLACKLIST_PREF_BRANCH "layers.componentalpha";
+      break;
     case nsIGfxInfo::FEATURE_VP8_HW_DECODE:
     case nsIGfxInfo::FEATURE_VP9_HW_DECODE:
     case nsIGfxInfo::FEATURE_DX_INTEROP2:
@@ -350,6 +353,8 @@ BlacklistFeatureToGfxFeature(const nsAString& aFeature)
       return nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION;
   else if (aFeature.EqualsLiteral("WEBGL2"))
     return nsIGfxInfo::FEATURE_WEBGL2;
+  else if (aFeature.EqualsLiteral("COMPONENT_ALPHA"))
+    return nsIGfxInfo::FEATURE_COMPONENT_ALPHA;
 
   // If we don't recognize the feature, it may be new, and something
   // this version doesn't understand.  So, nothing to do.  This is
@@ -980,6 +985,7 @@ GfxInfoBase::EvaluateDownloadedBlacklist(nsTArray<GfxDriverInfo>& aDriverInfo)
     nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION,
     nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION,
     nsIGfxInfo::FEATURE_WEBGL2,
+    nsIGfxInfo::FEATURE_COMPONENT_ALPHA,
     0
   };
 

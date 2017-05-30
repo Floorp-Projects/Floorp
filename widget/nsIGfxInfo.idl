@@ -124,8 +124,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_GPU_PROCESS = 20;
   /* Whether the WebGL2 is supported, starting in 54 */
   const long FEATURE_WEBGL2 = 21;
+  /* Whether per-color-component alpha (for sub-pixel-AA) is supported, starting in 56. */
+  const long FEATURE_COMPONENT_ALPHA = 22;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_WEBGL2;
+  const long FEATURE_MAX_VALUE = FEATURE_COMPONENT_ALPHA;
 
   /*
    * A set of return values from GetFeatureStatus

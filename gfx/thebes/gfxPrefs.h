@@ -517,15 +517,7 @@ private:
   DECL_GFX_PREF(Live, "layers.bench.enabled",                  LayersBenchEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.bufferrotation.enabled",         BufferRotationEnabled, bool, true);
   DECL_GFX_PREF(Live, "layers.child-process-shutdown",         ChildProcessShutdown, bool, true);
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-  // If MOZ_GFX_OPTIMIZE_MOBILE is defined, we force component alpha off
-  // and ignore the preference.
-  DECL_GFX_PREF(Skip, "layers.componentalpha.enabled",         ComponentAlphaEnabled, bool, false);
-#else
-  // If MOZ_GFX_OPTIMIZE_MOBILE is not defined, we actually take the
-  // preference value, defaulting to true.
-  DECL_GFX_PREF(Once, "layers.componentalpha.enabled",         ComponentAlphaEnabled, bool, true);
-#endif
+  DECL_GFX_PREF(Once, "layers.componentalpha.enabled",         ComponentAlphaEnabledDoNotUseDirectly, bool, true);
   DECL_GFX_PREF(Live, "layers.composer2d.enabled",             Composer2DCompositionEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.d3d11.force-warp",               LayersD3D11ForceWARP, bool, false);
   DECL_GFX_PREF(Live, "layers.deaa.enabled",                   LayersDEAAEnabled, bool, false);
