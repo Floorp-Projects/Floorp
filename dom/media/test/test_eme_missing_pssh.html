@@ -35,8 +35,8 @@
 
       function LoadEME() {
         var options = [{
-          initDataTypes: ['cenc'],
-          audioCapabilities: [{ contentType: 'audio/mp4; codecs="mp4a.40.2"' }],
+          initDataType: 'cenc',
+          audioType: 'audio/mp4; codecs="mp4a.40.2"',
         }];
         navigator.requestMediaKeySystemAccess("org.w3.clearkey", options)
           .then((keySystemAccess) => {

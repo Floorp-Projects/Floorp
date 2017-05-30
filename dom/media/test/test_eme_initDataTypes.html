@@ -94,7 +94,11 @@ function PrepareInitData(initDataType, initData)
 
 function Test(test) {
   return new Promise(function(resolve, reject) {
-    navigator.requestMediaKeySystemAccess('org.w3.clearkey', gCencMediaKeySystemConfig)
+    var configs = [{
+      initDataTypes: [test.initDataType],
+      videoCapabilities: [{contentType: 'video/mp4' }],
+    }];
+    navigator.requestMediaKeySystemAccess('org.w3.clearkey', configs)
       .then((access) => access.createMediaKeys())
       .then((mediaKeys) => {
           var session = mediaKeys.createSession(test.sessionType);

@@ -7,6 +7,7 @@
 #include "FileChannelChild.h"
 
 #include "mozilla/Unused.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/NeckoChild.h"
 
 namespace mozilla {
@@ -23,6 +24,12 @@ FileChannelChild::FileChannelChild(nsIURI *uri)
 NS_IMETHODIMP
 FileChannelChild::ConnectParent(uint32_t id)
 {
+  mozilla::dom::ContentChild* cc =
+    static_cast<mozilla::dom::ContentChild*>(gNeckoChild->Manager());
+  if (cc->IsShuttingDown()) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (!gNeckoChild->SendPFileChannelConstructor(this, id)) {
     return NS_ERROR_FAILURE;
   }

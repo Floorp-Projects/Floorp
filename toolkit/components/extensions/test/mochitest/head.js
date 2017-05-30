@@ -11,6 +11,7 @@ var {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstant
 if (location.pathname.includes("test-oop-extensions")) {
   SpecialPowers.pushPrefEnv({set: [
     ["extensions.webextensions.remote", true],
+    ["layers.popups.compositing.enabled", true],
   ]});
   // We don't want to reset this at the end of the test, so that we don't have
   // to spawn a new extension child process for each test unit.

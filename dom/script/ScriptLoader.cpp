@@ -1879,13 +1879,6 @@ ScriptLoader::FillCompileOptionsForRequest(const AutoJSAPI&jsapi,
     aOptions->setElement(&elementVal.toObject());
   }
 
-  // At the moment, the bytecode cache is only triggered if a script is large
-  // enough to be parsed out of the main thread.  Thus, for testing purposes, we
-  // force parsing any script out of the main thread.
-  if (IsEagerBytecodeCache()) {
-    aOptions->forceAsync = true;
-  }
-
   return NS_OK;
 }
 
@@ -1993,49 +1986,46 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
           MOZ_ASSERT(!aRequest->mCacheInfo);
         } else {
           MOZ_ASSERT(aRequest->IsSource());
-          if (aRequest->mOffThreadToken) {
-            // Off-main-thread parsing.
-            LOG(("ScriptLoadRequest (%p): Join (off-thread parsing) and Execute",
-                 aRequest));
-            {
-              nsJSUtils::ExecutionContext exec(aes.cx(), global);
-              JS::Rooted<JSScript*> script(aes.cx());
-              if (!aRequest->mCacheInfo) {
-                TRACE_FOR_TEST(aRequest->mElement, "scriptloader_execute");
-                rv = exec.JoinAndExec(&aRequest->mOffThreadToken, &script);
-                LOG(("ScriptLoadRequest (%p): Cannot cache anything (cacheInfo = nullptr)",
-                     aRequest));
-              } else {
-                TRACE_FOR_TEST(aRequest->mElement, "scriptloader_encode_and_execute");
-                MOZ_ASSERT(aRequest->mBytecodeOffset ==
-                           aRequest->mScriptBytecode.length());
-                rv = exec.JoinEncodeAndExec(&aRequest->mOffThreadToken,
-                                            &script);
-                // Queue the current script load request to later save the bytecode.
-                if (NS_SUCCEEDED(rv)) {
-                  aRequest->mScript = script;
-                  HoldJSObjects(aRequest);
-                  RegisterForBytecodeEncoding(aRequest);
-                } else {
-                  LOG(("ScriptLoadRequest (%p): Cannot cache anything (rv = %X, script = %p, cacheInfo = %p)",
-                       aRequest, unsigned(rv), script.get(), aRequest->mCacheInfo.get()));
-                  TRACE_FOR_TEST_NONE(aRequest->mElement, "scriptloader_bytecode_failed");
-                  aRequest->mCacheInfo = nullptr;
-                }
-              }
-            }
-          } else {
-            // Main thread parsing (inline and small scripts)
-            LOG(("ScriptLoadRequest (%p): Compile And Exec", aRequest));
+          JS::Rooted<JSScript*> script(aes.cx());
+
+          bool encodeBytecode = false;
+          if (aRequest->mCacheInfo) {
+            MOZ_ASSERT(aRequest->mBytecodeOffset ==
+                       aRequest->mScriptBytecode.length());
+            encodeBytecode = IsEagerBytecodeCache(); // Heuristic!
+          }
+
+          {
             nsJSUtils::ExecutionContext exec(aes.cx(), global);
-            nsAutoString inlineData;
-            SourceBufferHolder srcBuf = GetScriptSource(aRequest, inlineData);
+            exec.SetEncodeBytecode(encodeBytecode);
             TRACE_FOR_TEST(aRequest->mElement, "scriptloader_execute");
-            rv = exec.CompileAndExec(options, srcBuf);
+            if (aRequest->mOffThreadToken) {
+              // Off-main-thread parsing.
+              LOG(("ScriptLoadRequest (%p): Join (off-thread parsing) and Execute",
+                   aRequest));
+              rv = exec.JoinAndExec(&aRequest->mOffThreadToken, &script);
+            } else {
+              // Main thread parsing (inline and small scripts)
+              LOG(("ScriptLoadRequest (%p): Compile And Exec", aRequest));
+              nsAutoString inlineData;
+              SourceBufferHolder srcBuf = GetScriptSource(aRequest, inlineData);
+              rv = exec.CompileAndExec(options, srcBuf, &script);
+            }
+          }
+
+          // Queue the current script load request to later save the bytecode.
+          if (NS_SUCCEEDED(rv) && encodeBytecode) {
+            aRequest->mScript = script;
+            HoldJSObjects(aRequest);
+            TRACE_FOR_TEST(aRequest->mElement, "scriptloader_encode");
+            RegisterForBytecodeEncoding(aRequest);
+          } else {
+            LOG(("ScriptLoadRequest (%p): Cannot cache anything (rv = %X, script = %p, cacheInfo = %p)",
+                 aRequest, unsigned(rv), script.get(), aRequest->mCacheInfo.get()));
+            TRACE_FOR_TEST_NONE(aRequest->mElement, "scriptloader_no_encode");
             aRequest->mCacheInfo = nullptr;
           }
         }
-
       }
     }
 
