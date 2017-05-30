@@ -666,17 +666,6 @@ CSSStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
   return mRuleCollection;
 }
 
-static bool
-RuleHasPendingChildSheet(css::Rule *cssRule)
-{
-  nsCOMPtr<nsIDOMCSSImportRule> importRule(do_QueryInterface(cssRule));
-  NS_ASSERTION(importRule, "Rule which has type IMPORT_RULE and does not implement nsIDOMCSSImportRule!");
-  nsCOMPtr<nsIDOMCSSStyleSheet> childSheet;
-  importRule->GetStyleSheet(getter_AddRefs(childSheet));
-  RefPtr<CSSStyleSheet> cssSheet = do_QueryObject(childSheet);
-  return cssSheet != nullptr && !cssSheet->IsComplete();
-}
-
 uint32_t
 CSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
                                   uint32_t aIndex,
