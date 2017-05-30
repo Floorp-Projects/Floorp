@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test animations of all properties that have -moz prefix</title>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+  <script src="../testcommon.js"></script>
+  <script src="../property_database.js"></script>
+</head>
+<body>
+<div id="log"></div>
+<script>
+"use strict";
+
+const testcases = [
+  {
+    property: "-moz-box-align"
+  },
+  {
+    property: "-moz-box-direction"
+  },
+  {
+    property: "-moz-box-orient",
+    expectedValueMap: {
+      "block-axis": "vertical",
+      "inline-axis": "horizontal",
+    }
+  },
+  {
+    property: "-moz-box-pack"
+  },
+  {
+    property: "-moz-float-edge"
+  },
+  {
+    property: "-moz-orient"
+  },
+  {
+    property: "-moz-osx-font-smoothing",
+    pref: "layout.css.osx-font-smoothing.enabled"
+  },
+  {
+    property: "-moz-user-focus"
+  },
+  {
+    property: "-moz-user-input"
+  },
+  {
+    property: "-moz-user-modify"
+  },
+  {
+    property: "-moz-window-dragging"
+  },
+];
+
+testcases.forEach(testcase => {
+  if (testcase.pref && !IsCSSPropertyPrefEnabled(testcase.pref)) {
+    return;
+  }
+
+  const property = gCSSProperties[testcase.property];
+  const values = property.initial_values.concat(property.other_values);
+  values.forEach(value => {
+    test(function(t) {
+      const container = addDiv(t);
+      const target = document.createElement("div");
+      container.appendChild(target);
+
+      container.style[property.domProp] = value;
+
+      const animation =
+        target.animate({ [property.domProp]: [value, "inherit"] },
+                       { duration: 1000, delay: -500 } );
+
+      const expectedValue =
+        testcase.expectedValueMap && testcase.expectedValueMap[value]
+        ? testcase.expectedValueMap[value] : value;
+      assert_equals(getComputedStyle(target)[property.domProp], expectedValue,
+                    `Computed style shoud be "${ expectedValue }"`);
+    }, `Test inherit value for "${ testcase.property }" `
+       + `(Parent element style is "${ value }")`);
+  });
+});
+</script>
+</pre>
+</body>
+</html>
