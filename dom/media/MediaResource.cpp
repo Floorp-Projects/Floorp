@@ -1730,6 +1730,10 @@ MediaResourceIndex::CachedReadAt(int64_t aOffset,
                                  uint32_t aCount,
                                  uint32_t* aBytes)
 {
+  if (mCacheBlockSize == 0) {
+    return UncachedReadAt(aOffset, aBuffer, aCount, aBytes);
+  }
+
   const int oOffset = int(aOffset);
   const unsigned oCount = unsigned(aCount);
   *aBytes = 0;
@@ -1830,7 +1834,7 @@ MediaResourceIndex::CachedReadAt(int64_t aOffset,
       // We were already reading cached data from the last block, we need more
       // from it -> try to top-up, read what we can, and we'll be done.
       MOZ_ASSERT(aOffset == mCachedOffset + mCachedBytes);
-      MOZ_ASSERT(endOffset <= lastBlockOffset + BLOCK_SIZE);
+      MOZ_ASSERT(endOffset <= lastBlockOffset + mCacheBlockSize);
       return CacheOrReadAt(
         oOffset, oCount, "top-up cache", aOffset, aBuffer, aCount, aBytes);
     }
@@ -1902,7 +1906,7 @@ MediaResourceIndex::CachedReadAt(int64_t aOffset,
 
   // We should just have reached the start of the last block.
   MOZ_ASSERT(aOffset == lastBlockOffset);
-  MOZ_ASSERT(aCount <= BLOCK_SIZE);
+  MOZ_ASSERT(aCount <= mCacheBlockSize);
   // Make sure to invalidate the cache first.
   mCachedBytes = 0;
   return CacheOrReadAt(
@@ -1921,7 +1925,7 @@ MediaResourceIndex::CacheOrReadAt(int oOffset,
   // We should be here because there is more data to read.
   MOZ_ASSERT(aCount > 0);
   // We should be in the last block, so we shouldn't try to read past it.
-  MOZ_ASSERT(IndexInCache(aOffset) + aCount <= BLOCK_SIZE);
+  MOZ_ASSERT(IndexInCache(aOffset) + aCount <= mCacheBlockSize);
 
   const int64_t length = GetLength();
   // If length is unknown (-1), look at resource-cached data.
@@ -1936,8 +1940,9 @@ MediaResourceIndex::CacheOrReadAt(int oOffset,
     if (cachedDataEnd >= aOffset + aCount) {
       // Try to read as much resource-cached data as can fill our local cache.
       const uint32_t cacheIndex = IndexInCache(aOffset);
-      const uint32_t toRead = uint32_t(
-        std::min(cachedDataEnd - aOffset, int64_t(BLOCK_SIZE - cacheIndex)));
+      const uint32_t toRead =
+        uint32_t(std::min(cachedDataEnd - aOffset,
+                          int64_t(mCacheBlockSize - cacheIndex)));
       MOZ_ASSERT(toRead >= aCount);
       nsresult rv =
         mResource->ReadFromCache(&mCachedBlock[cacheIndex], aOffset, toRead);
