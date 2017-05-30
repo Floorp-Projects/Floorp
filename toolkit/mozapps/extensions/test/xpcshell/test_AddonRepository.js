@@ -523,7 +523,8 @@ function run_test_getAddonsByID_succeeds() {
     searchSucceeded(aAddonsList, aAddonCount, aTotalResults) {
       do_check_eq(aTotalResults, -1);
       check_results(aAddonsList, GET_RESULTS, aAddonCount, true);
-      run_test_retrieveRecommended_fails();
+      run_test_searchAddons_fails();
+      //run_test_retrieveRecommended_fails();
     },
 
     searchFailed() {
@@ -534,47 +535,6 @@ function run_test_getAddonsByID_succeeds() {
 
   complete_search(function complete_search_succeed_callback(aCallback) {
     AddonRepository.getAddonsByIDs(GET_TEST.successfulIDs, aCallback);
-  }, callback);
-}
-
-// Tests failure of AddonRepository.retrieveRecommendedAddons()
-function run_test_retrieveRecommended_fails() {
-  Services.prefs.setCharPref(RECOMMENDED_TEST.preference,
-                             RECOMMENDED_TEST.preferenceValue);
-  var callback = {
-    searchSucceeded(aAddonsList, aAddonCount, aTotalResults) {
-      do_throw("retrieveRecommendedAddons should not have succeeded");
-      end_test();
-    },
-
-    searchFailed() {
-      do_check_false(AddonRepository.isSearching);
-      run_test_retrieveRecommended_succeed();
-    }
-  };
-
-  complete_search(function retrieveRecommended_failing_callback(aCallback) {
-    AddonRepository.retrieveRecommendedAddons(FAILED_MAX_RESULTS, aCallback);
-  }, callback);
-}
-
-// Tests success of AddonRepository.retrieveRecommendedAddons()
-function run_test_retrieveRecommended_succeed() {
-  var callback = {
-    searchSucceeded(aAddonsList, aAddonCount, aTotalResults) {
-      do_check_eq(aTotalResults, -1);
-      check_results(aAddonsList, SEARCH_RESULTS, aAddonCount);
-      run_test_searchAddons_fails();
-    },
-
-    searchFailed() {
-      do_throw("retrieveRecommendedAddons should not have failed");
-      end_test();
-    }
-  };
-
-  complete_search(function retrieveRecommended_succeed_callback(aCallback) {
-    AddonRepository.retrieveRecommendedAddons(MAX_RESULTS, aCallback);
   }, callback);
 }
 
@@ -619,4 +579,3 @@ function run_test_searchAddons_succeeds() {
     AddonRepository.searchAddons(searchTerms, MAX_RESULTS, aCallback);
   }, callback);
 }
-
