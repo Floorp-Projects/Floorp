@@ -16,6 +16,7 @@ public class TelemetryContract {
   public final static String KEY_LOCAL_DEVICE_ID = "deviceID";
   public final static String KEY_DEVICES = "devices";
   public final static String KEY_TOOK = "took";
+  public final static String KEY_RESTARTED = "restarted";
 
   public static final String KEY_TYPE = "type";
   public static final String KEY_TYPE_SYNC = "sync";

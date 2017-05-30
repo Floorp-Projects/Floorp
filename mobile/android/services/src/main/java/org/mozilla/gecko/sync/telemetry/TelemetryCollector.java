@@ -64,6 +64,10 @@ public class TelemetryCollector {
         return collector;
     }
 
+    public void setRestarted() {
+        this.didRestart = true;
+    }
+
     public void setIDs(@NonNull String uid, @NonNull String deviceID) {
         // We use hashed_fxa_uid from the token server as our UID.
         this.hashedUID = uid;
@@ -133,6 +137,9 @@ public class TelemetryCollector {
         telemetry.putLong(TelemetryContract.KEY_TOOK, took);
         telemetry.putSerializable(TelemetryContract.KEY_ERROR, (Serializable) this.error);
         telemetry.putSerializable(TelemetryContract.KEY_STAGES, this.stageCollectors);
+        if (this.didRestart) {
+            telemetry.putBoolean(TelemetryContract.KEY_RESTARTED, true);
+        }
         return telemetry;
     }
 
