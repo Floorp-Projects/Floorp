@@ -345,6 +345,7 @@ public class GlobalSession implements HttpResponseObserver {
    * @throws AlreadySyncingException
    */
   protected void restart() throws AlreadySyncingException {
+    telemetryCollector.setRestarted();
     this.currentState = GlobalSyncStage.Stage.idle;
     if (callback.shouldBackOffStorage()) {
       this.callback.handleAborted(this, "Told to back off.");
