@@ -272,7 +272,6 @@ android-aarch64/opt:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        implementation: docker-worker
         max-run-time: 7200
     run:
         using: mozharness
@@ -299,7 +298,6 @@ android-aarch64-nightly/opt:
         symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        implementation: docker-worker
         max-run-time: 7200
     run:
         using: mozharness
