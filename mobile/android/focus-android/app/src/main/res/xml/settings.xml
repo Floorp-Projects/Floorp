@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Empty default: we use an empty string to indicate "system default" language being selected -->
+    <!--suppress AndroidDomInspection -->
     <org.mozilla.focus.widget.LocaleListPreference
         android:layout="@layout/focus_preference"
         android:key="@string/pref_key_locale"
-        android:title="@string/preference_language"/>
+        android:title="@string/preference_language"
+        android:defaultValue=""/>
 
     <PreferenceCategory
         android:title="@string/preference_category_search">
