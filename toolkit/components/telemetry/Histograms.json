@@ -24,14 +24,6 @@
     "kind": "flag",
     "description": "has the IAccessibleTable accessibility interface been used"
   },
-  "A11Y_UPDATE_TIME": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "default",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "description": "time spent updating accessibility (ms)"
-  },
   "ADDON_CONTENT_POLICY_SHIM_BLOCKING_LOADING_MS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "58",

@@ -2153,7 +2153,7 @@ PostToPluginThread(PluginThreadTaskData* aTaskData)
     }
 
     RefPtr<PluginThreadTask> task = new PluginThreadTask(aTaskData, semaphore);
-    ProcessChild::message_loop()->PostTask(task.forget());
+    ProcessChild::message_loop()->PostTask(do_AddRef(task));
     DWORD err = WaitForSingleObject(semaphore, INFINITE);
     if (err != WAIT_FAILED) {
         return task->Success();
