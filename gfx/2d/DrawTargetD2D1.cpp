@@ -820,26 +820,27 @@ DrawTargetD2D1::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
     options |= D2D1_LAYER_OPTIONS1_INITIALIZE_FROM_BACKGROUND;
   }
 
-  RefPtr<ID2D1BitmapBrush> mask;
-
+  RefPtr<ID2D1ImageBrush> mask;
   Matrix maskTransform = aMaskTransform;
-
   RefPtr<ID2D1PathGeometry> clip;
+
   if (aMask) {
+    RefPtr<ID2D1Image> image = GetImageForSurface(aMask, maskTransform, ExtendMode::CLAMP);
     mDC->SetTransform(D2D1::IdentityMatrix());
     mTransformDirty = true;
-
-    RefPtr<ID2D1Image> image = GetImageForSurface(aMask, maskTransform, ExtendMode::CLAMP);
 
     // The mask is given in user space. Our layer will apply it in device space.
     maskTransform = maskTransform * mTransform;
 
     if (image) {
-      RefPtr<ID2D1Bitmap> bitmap;
-      image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));
-
-      mDC->CreateBitmapBrush(bitmap, D2D1::BitmapBrushProperties(), D2D1::BrushProperties(1.0f, D2DMatrix(maskTransform)), getter_AddRefs(mask));
-      MOZ_ASSERT(bitmap); // This should always be true since it was created for a surface.
+      IntSize maskSize = aMask->GetSize();
+      HRESULT hr = mDC->CreateImageBrush(image,
+                                         D2D1::ImageBrushProperties(D2D1::RectF(0, 0, maskSize.width, maskSize.height)),
+                                         D2D1::BrushProperties(1.0f, D2DMatrix(maskTransform)),
+                                         getter_AddRefs(mask));
+      if (FAILED(hr)) {
+        gfxWarning() <<"[D2D1.1] Failed to create a ImageBrush, code: " << hexa(hr);
+      }
 
       factory()->CreatePathGeometry(getter_AddRefs(clip));
       RefPtr<ID2D1GeometrySink> sink;
