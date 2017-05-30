@@ -1,0 +1,8 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg width="12" height="12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" fill="none" stroke="white">
+  <path stroke="black" stroke-width="3.6" stroke-opacity=".75" d="M2,4 l 6,0 l 0,6 l -6,0z M2.5,1.5 l 8,0 l 0,8"/>
+  <rect stroke-width="1.9" x="2" y="4" width="6" height="6"/>
+  <polyline stroke-width=".9" points="3.5,1.5 10.5,1.5 10.5,8.5"/>
+</svg>

@@ -28,7 +28,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeFilter.h"
-#include "nsIDOMText.h"
 #include "nsNameSpaceManager.h"
 #include "nsINode.h"
 #include "nsIPlaintextEditor.h"
@@ -445,42 +444,42 @@ TextEditRules::CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection)
   // if we are at the end of the textarea, we need to set the
   // selection to stick to the mozBR at the end of the textarea.
   int32_t selOffset;
-  nsCOMPtr<nsIDOMNode> selNode;
+  nsCOMPtr<nsINode> selNode;
   nsresult rv =
     EditorBase::GetStartNodeAndOffset(aSelection,
                                       getter_AddRefs(selNode), &selOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  nsCOMPtr<nsIDOMText> nodeAsText = do_QueryInterface(selNode);
-  if (!nodeAsText) {
+  if (!EditorBase::IsTextNode(selNode)) {
     return NS_OK; // Nothing to do if we're not at a text node.
   }
 
-  uint32_t length;
-  rv = nodeAsText->GetLength(&length);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // nothing to do if we're not at the end of the text node
-  if (selOffset != int32_t(length)) {
+  if (selOffset != static_cast<int32_t>(selNode->Length())) {
     return NS_OK;
   }
 
   int32_t parentOffset;
-  nsCOMPtr<nsIDOMNode> parentNode =
+  nsINode* parentNode =
     EditorBase::GetNodeLocation(selNode, &parentOffset);
 
   NS_ENSURE_STATE(mTextEditor);
-  nsCOMPtr<nsIDOMNode> root = do_QueryInterface(mTextEditor->GetRoot());
-  NS_ENSURE_TRUE(root, NS_ERROR_NULL_POINTER);
+  nsINode* root = mTextEditor->GetRoot();
+  if (NS_WARN_IF(!root)) {
+    return NS_ERROR_NULL_POINTER;
+  }
   if (parentNode != root) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNode> nextNode = mTextEditor->GetChildAt(parentNode,
-                                                          parentOffset + 1);
+  nsINode* nextNode = parentNode->GetChildAt(parentOffset + 1);
   if (nextNode && TextEditUtils::IsMozBR(nextNode)) {
     rv = aSelection->Collapse(parentNode, parentOffset + 1);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
   return NS_OK;
 }
@@ -1045,26 +1044,27 @@ TextEditRules::DidDeleteSelection(Selection* aSelection,
                                   nsIEditor::EDirection aCollapsedAction,
                                   nsresult aResult)
 {
-  nsCOMPtr<nsIDOMNode> startNode;
+  nsCOMPtr<nsINode> startNode;
   int32_t startOffset;
   nsresult rv =
     EditorBase::GetStartNodeAndOffset(aSelection,
                                       getter_AddRefs(startNode), &startOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (NS_WARN_IF(!startNode)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // delete empty text nodes at selection
   if (EditorBase::IsTextNode(startNode)) {
-    nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(startNode);
-    uint32_t strLength;
-    rv = textNode->GetLength(&strLength);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // are we in an empty text node?
-    if (!strLength) {
+    if (!startNode->Length()) {
       NS_ENSURE_STATE(mTextEditor);
       rv = mTextEditor->DeleteNode(startNode);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
   }
   if (mDidExplicitlySetInterline) {

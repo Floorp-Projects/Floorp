@@ -1740,10 +1740,6 @@ extern "C" {
      -> RawServoStyleSheetStrong;
 }
 extern "C" {
-    pub fn Servo_ImportRule_GetSheet(import_rule: RawServoImportRuleBorrowed)
-     -> RawServoStyleSheetStrong;
-}
-extern "C" {
     pub fn Servo_StyleSheet_ClearAndUpdate(stylesheet:
                                                RawServoStyleSheetBorrowed,
                                            loader: *mut Loader,
@@ -1804,7 +1800,9 @@ extern "C" {
                                                  before_unique_id: u64);
 }
 extern "C" {
-    pub fn Servo_StyleSet_FlushStyleSheets(set: RawServoStyleSetBorrowed);
+    pub fn Servo_StyleSet_FlushStyleSheets(set: RawServoStyleSetBorrowed,
+                                           doc_elem:
+                                               RawGeckoElementBorrowedOrNull);
 }
 extern "C" {
     pub fn Servo_StyleSet_NoteStyleSheetsChanged(set:
@@ -1870,6 +1868,20 @@ extern "C" {
 extern "C" {
     pub fn Servo_StyleRule_GetCssText(rule: RawServoStyleRuleBorrowed,
                                       result: *mut nsAString);
+}
+extern "C" {
+    pub fn Servo_CssRules_GetImportRuleAt(rules: ServoCssRulesBorrowed,
+                                          index: u32, line: *mut u32,
+                                          column: *mut u32)
+     -> RawServoImportRuleStrong;
+}
+extern "C" {
+    pub fn Servo_ImportRule_Debug(rule: RawServoImportRuleBorrowed,
+                                  result: *mut nsACString);
+}
+extern "C" {
+    pub fn Servo_ImportRule_GetCssText(rule: RawServoImportRuleBorrowed,
+                                       result: *mut nsAString);
 }
 extern "C" {
     pub fn Servo_Keyframe_Debug(rule: RawServoKeyframeBorrowed,
@@ -1997,6 +2009,14 @@ extern "C" {
 extern "C" {
     pub fn Servo_StyleRule_GetSelectorText(rule: RawServoStyleRuleBorrowed,
                                            result: *mut nsAString);
+}
+extern "C" {
+    pub fn Servo_ImportRule_GetHref(rule: RawServoImportRuleBorrowed,
+                                    result: *mut nsAString);
+}
+extern "C" {
+    pub fn Servo_ImportRule_GetSheet(rule: RawServoImportRuleBorrowed)
+     -> *const RawServoStyleSheet;
 }
 extern "C" {
     pub fn Servo_Keyframe_GetKeyText(keyframe: RawServoKeyframeBorrowed,

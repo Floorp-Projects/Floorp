@@ -113,17 +113,12 @@ public:
   int32_t StyleRuleCount() const;
   css::Rule* GetStyleRuleAt(int32_t aIndex) const;
 
-  void SetOwnerRule(css::ImportRule* aOwnerRule) { mOwnerRule = aOwnerRule; /* Not ref counted */ }
-  css::ImportRule* GetOwnerRule() const { return mOwnerRule; }
-  // Workaround overloaded-virtual warning in GCC.
-  using StyleSheet::GetOwnerRule;
-
   nsXMLNameSpaceMap* GetNameSpaceMap() const {
     return Inner()->mNameSpaceMap;
   }
 
-  virtual already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
-    css::ImportRule* aCloneOwnerRule,
+  already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
+    dom::CSSImportRule* aCloneOwnerRule,
     nsIDocument* aCloneDocument,
     nsINode* aCloneOwningNode) const final;
 
@@ -157,18 +152,12 @@ public:
   dom::Element* GetScopeElement() const { return mScopeElement; }
   void SetScopeElement(dom::Element* aScopeElement);
 
-  // WebIDL CSSStyleSheet API
-  // Can't be inline because we can't include ImportRule here.  And can't be
-  // called GetOwnerRule because that would be ambiguous with the ImportRule
-  // version.
-  css::Rule* GetDOMOwnerRule() const final;
-
   void DidDirty() override;
 
 private:
   CSSStyleSheet(const CSSStyleSheet& aCopy,
                 CSSStyleSheet* aParentToUse,
-                css::ImportRule* aOwnerRuleToUse,
+                dom::CSSImportRule* aOwnerRuleToUse,
                 nsIDocument* aDocumentToUse,
                 nsINode* aOwningNodeToUse);
 
@@ -178,7 +167,7 @@ private:
 protected:
   virtual ~CSSStyleSheet();
 
-  void ClearRuleCascadesInternal() override;
+  void ClearRuleCascades();
 
   // Add the namespace mapping from this @namespace rule to our namespace map
   nsresult RegisterNamespaceRule(css::Rule* aRule);
@@ -207,8 +196,6 @@ protected:
                                        uint32_t aIndex);
 
   void EnabledStateChangedInternal();
-
-  css::ImportRule*      mOwnerRule; // weak ref
 
   RefPtr<CSSRuleListImpl> mRuleCollection;
   bool                  mInRuleProcessorCache;

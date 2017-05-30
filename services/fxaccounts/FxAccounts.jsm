@@ -1204,6 +1204,9 @@ FxAccountsInternal.prototype = {
               }
               // Tell FxAccountsManager to clear its cache
               this.notifyObservers(ON_FXA_UPDATE_NOTIFICATION, ONVERIFIED_NOTIFICATION);
+              // Record how we determined the account was verified
+              Services.telemetry.scalarSet("services.sync.fxa_verification_method",
+                                           why == "push" ? "push" : "poll");
             });
         } else {
           // Poll email status again after a short delay.

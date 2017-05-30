@@ -872,6 +872,31 @@ class TestChecksConfigure(unittest.TestCase):
                 'MOZ_MOZILLA_API_KEY': 'fake-key',
             })
 
+        with MockedOpen({'default': 'default-key\n'}):
+            config, output, status = self.get_result(
+                "simple_keyfile('Mozilla API', default='default')",
+                includes=includes)
+            self.assertEqual(status, 0)
+            self.assertEqual(output, textwrap.dedent('''\
+                checking for the Mozilla API key... yes
+            '''))
+            self.assertEqual(config, {
+                'MOZ_MOZILLA_API_KEY': 'default-key',
+            })
+
+        with MockedOpen({'default': 'default-key\n',
+                         'key': 'fake-key\n'}):
+            config, output, status = self.get_result(
+                "simple_keyfile('Mozilla API', default='key')",
+                includes=includes)
+            self.assertEqual(status, 0)
+            self.assertEqual(output, textwrap.dedent('''\
+                checking for the Mozilla API key... yes
+            '''))
+            self.assertEqual(config, {
+                'MOZ_MOZILLA_API_KEY': 'fake-key',
+            })
+
     def test_id_and_secret_keyfile(self):
         includes = ('util.configure', 'checks.configure', 'keyfiles.configure')
 
@@ -934,6 +959,34 @@ class TestChecksConfigure(unittest.TestCase):
                 ERROR: Bing API key file has an invalid format.
             '''))
             self.assertEqual(config, {})
+
+        with MockedOpen({'default-key': 'default-id default-key\n'}):
+            config, output, status = self.get_result(
+                "id_and_secret_keyfile('Bing API', default='default-key')",
+                includes=includes)
+            self.assertEqual(status, 0)
+            self.assertEqual(output, textwrap.dedent('''\
+                checking for the Bing API key... yes
+            '''))
+            self.assertEqual(config, {
+                'MOZ_BING_API_CLIENTID': 'default-id',
+                'MOZ_BING_API_KEY': 'default-key',
+            })
+
+        with MockedOpen({'default-key': 'default-id default-key\n',
+                         'key': 'fake-id fake-key\n'}):
+            config, output, status = self.get_result(
+                "id_and_secret_keyfile('Bing API', default='default-key')",
+                args=['--with-bing-api-keyfile=key'],
+                includes=includes)
+            self.assertEqual(status, 0)
+            self.assertEqual(output, textwrap.dedent('''\
+                checking for the Bing API key... yes
+            '''))
+            self.assertEqual(config, {
+                'MOZ_BING_API_CLIENTID': 'fake-id',
+                'MOZ_BING_API_KEY': 'fake-key',
+            })
 
 
 if __name__ == '__main__':

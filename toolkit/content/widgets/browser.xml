@@ -757,9 +757,12 @@
                 readonly="true"/>
 
       <method name="mute">
+        <parameter name="transientState"/>
         <body>
           <![CDATA[
-            this._audioMuted = true;
+            if (!transientState) {
+              this._audioMuted = true;
+            }
             this.messageManager.sendAsyncMessage("AudioPlayback",
                                                  {type: "mute"});
           ]]>

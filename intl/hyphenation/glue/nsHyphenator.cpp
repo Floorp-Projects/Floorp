@@ -7,7 +7,6 @@
 #include "nsIFile.h"
 #include "nsUTF8Utils.h"
 #include "nsUnicodeProperties.h"
-#include "nsUnicharUtilCIID.h"
 #include "nsIURI.h"
 
 #include "hyphen.h"
@@ -66,8 +65,8 @@ nsHyphenator::Hyphenate(const nsAString& aString, nsTArray<bool>& aHyphens)
       }
     }
 
-    nsIUGenCategory::nsUGenCategory cat = mozilla::unicode::GetGenCategory(ch);
-    if (cat == nsIUGenCategory::kLetter || cat == nsIUGenCategory::kMark) {
+    nsUGenCategory cat = mozilla::unicode::GetGenCategory(ch);
+    if (cat == nsUGenCategory::kLetter || cat == nsUGenCategory::kMark) {
       if (!inWord) {
         inWord = true;
         wordStart = i;

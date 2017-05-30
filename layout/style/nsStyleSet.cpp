@@ -2409,7 +2409,7 @@ nsStyleSet::InvalidateStyleForCSSRuleChanges()
   mStylesHaveChanged = false;
 
   nsPresContext* presContext = PresContext();
-  RestyleManager* restyleManager = presContext->RestyleManager();
+  RestyleManager* restyleManager = presContext->RestyleManager()->AsGecko();
   Element* root = presContext->Document()->GetRootElement();
   if (!root) {
     // No content to restyle
@@ -2420,14 +2420,14 @@ nsStyleSet::InvalidateStyleForCSSRuleChanges()
     // If scopeRoots is empty, we know that mStylesHaveChanged was true at
     // the beginning of this function, and that we need to restyle the whole
     // document.
-    restyleManager->PostRestyleEventForCSSRuleChanges(root,
-                                                      eRestyle_Subtree,
-                                                      nsChangeHint(0));
+    restyleManager->PostRestyleEvent(root,
+                                     eRestyle_Subtree,
+                                     nsChangeHint(0));
   } else {
     for (Element* scopeRoot : scopeRoots) {
-      restyleManager->PostRestyleEventForCSSRuleChanges(scopeRoot,
-                                                        eRestyle_Subtree,
-                                                        nsChangeHint(0));
+      restyleManager->PostRestyleEvent(scopeRoot,
+                                       eRestyle_Subtree,
+                                       nsChangeHint(0));
     }
   }
 }

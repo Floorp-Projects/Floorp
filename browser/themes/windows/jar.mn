@@ -10,7 +10,6 @@ browser.jar:
 * skin/classic/browser/syncedtabs/sidebar.css     (syncedtabs/sidebar.css)
 * skin/classic/browser/browser.css
 * skin/classic/browser/compacttheme.css
-  skin/classic/browser/caption-buttons.svg
   skin/classic/browser/Info.png
   skin/classic/browser/livemark-folder.png
   skin/classic/browser/menu-back.png
@@ -37,6 +36,16 @@ browser.jar:
   skin/classic/browser/searchbar.css
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/slowStartup-16.png
+  skin/classic/browser/sync-desktopIcon.svg  (../shared/sync-desktopIcon.svg)
+  skin/classic/browser/sync-horizontalbar.png
+  skin/classic/browser/sync-horizontalbar@2x.png
+  skin/classic/browser/sync-horizontalbar-win7.png
+  skin/classic/browser/sync-horizontalbar-win7@2x.png
+  skin/classic/browser/sync-mobileIcon.svg  (../shared/sync-mobileIcon.svg)
+  skin/classic/browser/syncProgress-horizontalbar.png
+  skin/classic/browser/syncProgress-horizontalbar@2x.png
+  skin/classic/browser/syncProgress-horizontalbar-win7.png
+  skin/classic/browser/syncProgress-horizontalbar-win7@2x.png
   skin/classic/browser/toolbarbutton-dropdown-arrow-win7.png
   skin/classic/browser/urlbar-popup-blocked.png
   skin/classic/browser/urlbar-history-dropmarker.png
@@ -122,16 +131,18 @@ browser.jar:
   skin/classic/browser/tabbrowser/tab-stroke-start.png         (tabbrowser/tab-stroke-start.png)
   skin/classic/browser/tabbrowser/tab-stroke-start@2x.png      (tabbrowser/tab-stroke-start@2x.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png         (tabbrowser/tabDragIndicator.png)
-  skin/classic/browser/sync-desktopIcon.svg  (../shared/sync-desktopIcon.svg)
-  skin/classic/browser/sync-horizontalbar.png
-  skin/classic/browser/sync-horizontalbar@2x.png
-  skin/classic/browser/sync-horizontalbar-win7.png
-  skin/classic/browser/sync-horizontalbar-win7@2x.png
-  skin/classic/browser/sync-mobileIcon.svg  (../shared/sync-mobileIcon.svg)
-  skin/classic/browser/syncProgress-horizontalbar.png
-  skin/classic/browser/syncProgress-horizontalbar@2x.png
-  skin/classic/browser/syncProgress-horizontalbar-win7.png
-  skin/classic/browser/syncProgress-horizontalbar-win7@2x.png
+  skin/classic/browser/window-controls/close.svg                 (window-controls/close.svg)
+  skin/classic/browser/window-controls/close-highcontrast.svg    (window-controls/close-highcontrast.svg)
+  skin/classic/browser/window-controls/close-themes.svg          (window-controls/close-themes.svg)
+  skin/classic/browser/window-controls/maximize.svg              (window-controls/maximize.svg)
+  skin/classic/browser/window-controls/maximize-highcontrast.svg (window-controls/maximize-highcontrast.svg)
+  skin/classic/browser/window-controls/maximize-themes.svg       (window-controls/maximize-themes.svg)
+  skin/classic/browser/window-controls/minimize.svg              (window-controls/minimize.svg)
+  skin/classic/browser/window-controls/minimize-highcontrast.svg (window-controls/minimize-highcontrast.svg)
+  skin/classic/browser/window-controls/minimize-themes.svg       (window-controls/minimize-themes.svg)
+  skin/classic/browser/window-controls/restore.svg               (window-controls/restore.svg)
+  skin/classic/browser/window-controls/restore-highcontrast.svg  (window-controls/restore-highcontrast.svg)
+  skin/classic/browser/window-controls/restore-themes.svg        (window-controls/restore-themes.svg)
 
 #ifdef E10S_TESTING_ONLY
   skin/classic/browser/e10s-64@2x.png (../shared/e10s-64@2x.png)

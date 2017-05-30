@@ -145,14 +145,12 @@
   /* Use proper menu text styling in Win7 classic mode (copied from browser.css) */
   @media (-moz-windows-compositor: 0),
          (-moz-windows-default-theme: 0) {
-    #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar,
-    #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar {
-      color: CaptionText;
+    :root[tabsintitlebar]:not([inFullscreen]) {
+      --titlebar-text-color: CaptionText;
     }
 
-    #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar:-moz-window-inactive,
-    #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar:-moz-window-inactive {
-      color: InactiveCaptionText;
+    :root[tabsintitlebar]:not([inFullscreen]):-moz-window-inactive {
+      --titlebar-text-color: InactiveCaptionText;
     }
 
     #main-window[tabsintitlebar] #main-menubar > menu {
@@ -224,35 +222,21 @@
     padding-right: 15px;
   }
 
-  /* Force white caption buttons for the dark theme on Windows 10 */
-  #titlebar-min:-moz-lwtheme-brighttext {
-    list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize-white);
+  .titlebar-button:-moz-lwtheme {
+    -moz-context-properties: stroke;
+    stroke: currentColor;
   }
-  #titlebar-max:-moz-lwtheme-brighttext {
-    list-style-image: url(chrome://browser/skin/caption-buttons.svg#maximize-white);
+  #titlebar-min:-moz-lwtheme {
+    list-style-image: url(chrome://browser/skin/window-controls/minimize.svg);
   }
-  #main-window[sizemode="maximized"] #titlebar-max:-moz-lwtheme-brighttext {
-    list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore-white);
+  #titlebar-max:-moz-lwtheme {
+    list-style-image: url(chrome://browser/skin/window-controls/maximize.svg);
   }
-  #titlebar-close:-moz-lwtheme-brighttext {
-    list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-white);
+  :root[sizemode="maximized"] #titlebar-max:-moz-lwtheme {
+    list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
   }
-
-  /* ... and normal ones for the light theme on Windows 10 */
-  #titlebar-min:-moz-lwtheme-darktext {
-    list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize);
-  }
-  #titlebar-max:-moz-lwtheme-darktext {
-    list-style-image: url(chrome://browser/skin/caption-buttons.svg#maximize);
-  }
-  #main-window[sizemode="maximized"] #titlebar-max:-moz-lwtheme-darktext {
-    list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore);
-  }
-  #titlebar-close:-moz-lwtheme-darktext {
-    list-style-image: url(chrome://browser/skin/caption-buttons.svg#close);
-  }
-  #titlebar-close:-moz-lwtheme-darktext:hover {
-    list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-white);
+  #titlebar-close:-moz-lwtheme {
+    list-style-image: url(chrome://browser/skin/window-controls/close.svg);
   }
 }
 

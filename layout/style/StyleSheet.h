@@ -32,6 +32,7 @@ struct StyleSheetInfo;
 struct CSSStyleSheetInner;
 
 namespace dom {
+class CSSImportRule;
 class CSSRuleList;
 class MediaList;
 class SRIMetadata;
@@ -39,7 +40,6 @@ class SRIMetadata;
 
 namespace css {
 class GroupRule;
-class ImportRule;
 class Rule;
 }
 
@@ -53,6 +53,7 @@ class StyleSheet : public nsIDOMCSSStyleSheet
 protected:
   StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMode);
   StyleSheet(const StyleSheet& aCopy,
+             dom::CSSImportRule* aOwnerRuleToUse,
              nsIDocument* aDocumentToUse,
              nsINode* aOwningNodeToUse);
   virtual ~StyleSheet();
@@ -130,7 +131,7 @@ public:
   inline bool HasRules() const;
 
   virtual already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
-                                             css::ImportRule* aCloneOwnerRule,
+                                             dom::CSSImportRule* aCloneOwnerRule,
                                              nsIDocument* aCloneDocument,
                                              nsINode* aCloneOwningNode) const = 0;
 
@@ -161,9 +162,19 @@ public:
   nsINode* GetOwnerNode() const { return mOwningNode; }
   inline StyleSheet* GetParentSheet() const { return mParent; }
 
-  void AppendStyleSheet(StyleSheet* aSheet);
+  void SetOwnerRule(dom::CSSImportRule* aOwnerRule) {
+    mOwnerRule = aOwnerRule; /* Not ref counted */
+  }
+  dom::CSSImportRule* GetOwnerRule() const { return mOwnerRule; }
+
+  void PrependStyleSheet(StyleSheet* aSheet);
 
   StyleSheet* GetFirstChild() const;
+  StyleSheet* GetMostRecentlyAddedChildSheet() const {
+    // New child sheet can only be prepended into the linked list of
+    // child sheets, so the most recently added one is always the first.
+    return GetFirstChild();
+  }
 
   // Principal() never returns a null pointer.
   inline nsIPrincipal* Principal() const;
@@ -200,7 +211,10 @@ public:
   // The XPCOM SetDisabled is fine for WebIDL.
 
   // WebIDL CSSStyleSheet API
-  virtual css::Rule* GetDOMOwnerRule() const = 0;
+  // Can't be inline because we can't include ImportRule here.  And can't be
+  // called GetOwnerRule because that would be ambiguous with the ImportRule
+  // version.
+  css::Rule* GetDOMOwnerRule() const;
   dom::CSSRuleList* GetCssRules(nsIPrincipal& aSubjectPrincipal,
                                 ErrorResult& aRv);
   uint32_t InsertRule(const nsAString& aRule, uint32_t aIndex,
@@ -243,6 +257,13 @@ public:
   nsresult DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex);
   nsresult InsertRuleIntoGroup(const nsAString& aRule,
                                css::GroupRule* aGroup, uint32_t aIndex);
+
+  template<typename Func>
+  void EnumerateChildSheets(Func aCallback) {
+    for (StyleSheet* child = GetFirstChild(); child; child = child->mNext) {
+      aCallback(child);
+    }
+  }
 
 private:
   // Get a handle to the various stylesheet bits which live on the 'inner' for
@@ -288,14 +309,15 @@ protected:
   // Traverse our inner, if needed, for cycle collection
   virtual void TraverseInner(nsCycleCollectionTraversalCallback &);
 
-  void ClearRuleCascades();
-  virtual void ClearRuleCascadesInternal() {}
+  // Return whether the given @import rule has pending child sheet.
+  static bool RuleHasPendingChildSheet(css::Rule* aRule);
 
   StyleSheet*           mParent;    // weak ref
 
   nsString              mTitle;
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children
   nsINode*              mOwningNode; // weak ref
+  dom::CSSImportRule*   mOwnerRule; // weak ref
 
   RefPtr<dom::MediaList> mMedia;
 

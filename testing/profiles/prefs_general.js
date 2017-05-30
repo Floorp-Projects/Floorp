@@ -246,6 +246,9 @@ user_pref('browser.contentHandlers.types.5.uri', 'http://test1.example.org/rss?u
 
 // We want to collect telemetry, but we don't want to send in the results.
 user_pref('toolkit.telemetry.server', 'https://%(server)s/telemetry-dummy/');
+// Don't new-profile' ping on new profiles during tests, otherwise the testing framework
+// might wait on the pingsender to finish and slow down tests.
+user_pref("toolkit.telemetry.newProfilePing.enabled", false);
 
 // A couple of preferences with default values to test that telemetry preference
 // watching is working.

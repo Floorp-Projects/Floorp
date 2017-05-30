@@ -1455,6 +1455,8 @@ pref("browser.translation.engine", "bing");
 pref("toolkit.telemetry.archive.enabled", true);
 // Enables sending the shutdown ping when Firefox shuts down.
 pref("toolkit.telemetry.shutdownPingSender.enabled", true);
+// Enables sending the 'new-profile' ping on new profiles.
+pref("toolkit.telemetry.newProfilePing.enabled", true);
 
 // Telemetry experiments settings.
 pref("experiments.enabled", true);
