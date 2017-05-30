@@ -133,6 +133,7 @@ class CompileTask
 {
     const ModuleEnvironment&   env_;
     Tier                       tier_;
+    CompileMode                mode_;
     LifoAlloc                  lifo_;
     Maybe<jit::TempAllocator>  alloc_;
     Maybe<jit::MacroAssembler> masm_;
@@ -149,9 +150,10 @@ class CompileTask
     }
 
   public:
-    CompileTask(const ModuleEnvironment& env, Tier tier, size_t defaultChunkSize)
+    CompileTask(const ModuleEnvironment& env, Tier tier, CompileMode mode, size_t defaultChunkSize)
       : env_(env),
         tier_(tier),
+        mode_(mode),
         lifo_(defaultChunkSize)
     {
         init();
@@ -173,6 +175,9 @@ class CompileTask
     }
     Tier tier() const {
         return tier_;
+    }
+    CompileMode mode() const {
+        return mode_;
     }
     bool debugEnabled() const {
         return debugEnabled_;
