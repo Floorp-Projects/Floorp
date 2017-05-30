@@ -100,7 +100,8 @@ menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
 /* START photon adjustments */
 
 photonpanelmultiview .subviewbutton > .toolbarbutton-text,
-photonpanelmultiview .subviewbutton > .toolbarbutton-icon {
+photonpanelmultiview .subviewbutton > .toolbarbutton-icon,
+photonpanelmultiview .panel-banner-item > .toolbarbutton-multiline-text {
   padding: 0;
   margin: 0;
 }
