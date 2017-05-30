@@ -12,6 +12,8 @@ MOZ_PKG_REMOVALS = $(srcdir)/removed-files.in
 MOZ_PKG_MANIFEST = $(srcdir)/package-manifest.in
 MOZ_PKG_DUPEFLAGS = -f $(srcdir)/allowed-dupes.mn
 
+DEFINES += -DPKG_LOCALE_MANIFEST=$(topobjdir)/toolkit/locales/locale-manifest.in
+
 # Some files have been already bundled with xulrunner
 ifndef MOZ_MULET
 MOZ_PKG_FATAL_WARNINGS = 1

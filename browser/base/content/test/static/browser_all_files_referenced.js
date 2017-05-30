@@ -99,6 +99,9 @@ var whitelist = [
   {file: "resource://gre/modules/ClusterLib.js"},
   {file: "resource://gre/modules/ColorConversion.js"},
 
+  // List of built-in locales. See bug 1362617 for details.
+  {file: "resource://gre/res/multilocale.json"},
+
   // The l10n build system can't package string files only for some platforms.
   {file: "resource://gre/chrome/en-US/locale/en-US/global-platform/mac/accessible.properties",
    platforms: ["linux", "win"]},
