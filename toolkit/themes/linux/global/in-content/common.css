@@ -71,8 +71,8 @@ xul|*.radio-check {
 }
 
 xul|*.radio-check[selected] {
-  list-style-image: url("chrome://global/skin/in-content/radio.svg#radio-native");
   background-color: -moz-dialog;
+  fill: -moz-dialogText;
 }
 
 xul|*.radio-label-box {

@@ -1,22 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 21 21">
-  <style>
-    use:not(:target) {
-      display: none;
-    }
-    use {
-      fill: #2292d0;
-    }
-    use[id$="-native"] {
-      fill: -moz-dialogText;
-    }
-  </style>
-  <defs>
-    <circle id="radio-shape" cx="10.5" cy="10.5" r="6"/>
-  </defs>
-  <use id="radio" xlink:href="#radio-shape"/>
-  <use id="radio-native" xlink:href="#radio-shape"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21 21">
+  <circle fill="context-fill" cx="10.5" cy="10.5" r="6"/>
 </svg>
+
