@@ -2,6 +2,8 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
                                   "resource://gre/modules/ContextualIdentityService.jsm");
+XPCOMUtils.defineLazyPreferenceGetter(this, "containersEnabled",
+                                      "privacy.userContext.enabled");
 
 function convert(identity) {
   let result = {
@@ -19,6 +21,10 @@ this.contextualIdentities = class extends ExtensionAPI {
     let self = {
       contextualIdentities: {
         get(cookieStoreId) {
+          if (!containersEnabled) {
+            return Promise.resolve(false);
+          }
+
           let containerId = getContainerForCookieStoreId(cookieStoreId);
           if (!containerId) {
             return Promise.resolve(null);
@@ -29,6 +35,10 @@ this.contextualIdentities = class extends ExtensionAPI {
         },
 
         query(details) {
+          if (!containersEnabled) {
+            return Promise.resolve(false);
+          }
+
           let identities = [];
           ContextualIdentityService.getPublicIdentities().forEach(identity => {
             if (details.name &&
@@ -43,6 +53,10 @@ this.contextualIdentities = class extends ExtensionAPI {
         },
 
         create(details) {
+          if (!containersEnabled) {
+            return Promise.resolve(false);
+          }
+
           let identity = ContextualIdentityService.create(details.name,
                                                           details.icon,
                                                           details.color);
@@ -50,6 +64,10 @@ this.contextualIdentities = class extends ExtensionAPI {
         },
 
         update(cookieStoreId, details) {
+          if (!containersEnabled) {
+            return Promise.resolve(false);
+          }
+
           let containerId = getContainerForCookieStoreId(cookieStoreId);
           if (!containerId) {
             return Promise.resolve(null);
@@ -82,6 +100,10 @@ this.contextualIdentities = class extends ExtensionAPI {
         },
 
         remove(cookieStoreId) {
+          if (!containersEnabled) {
+            return Promise.resolve(false);
+          }
+
           let containerId = getContainerForCookieStoreId(cookieStoreId);
           if (!containerId) {
             return Promise.resolve(null);
