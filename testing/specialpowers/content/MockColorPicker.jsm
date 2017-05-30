@@ -23,12 +23,12 @@ var oldClassID = "", oldFactory = null;
 var newClassID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID();
 var newFactory = function(window) {
   return {
-    createInstance: function(aOuter, aIID) {
+    createInstance(aOuter, aIID) {
       if (aOuter)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
       return new MockColorPickerInstance(window).QueryInterface(aIID);
     },
-    lockFactory: function(aLock) {
+    lockFactory(aLock) {
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
@@ -36,7 +36,7 @@ var newFactory = function(window) {
 }
 
 this.MockColorPicker = {
-  init: function(window) {
+  init(window) {
     this.reset();
     this.factory = newFactory(window);
     if (!registrar.isCIDRegistered(newClassID)) {
@@ -56,14 +56,14 @@ this.MockColorPicker = {
     }
   },
 
-  reset: function() {
+  reset() {
     this.returnColor = "";
     this.showCallback = null;
     this.shown = false;
     this.showing = false;
   },
 
-  cleanup: function() {
+  cleanup() {
     var previousFactory = this.factory;
     this.reset();
     this.factory = null;
@@ -80,13 +80,13 @@ function MockColorPickerInstance(window) {
 }
 MockColorPickerInstance.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIColorPicker]),
-  init: function(aParent, aTitle, aInitialColor) {
+  init(aParent, aTitle, aInitialColor) {
     this.parent = aParent;
     this.initialColor = aInitialColor;
   },
   initialColor: "",
   parent: null,
-  open: function(aColorPickerShownCallback) {
+  open(aColorPickerShownCallback) {
     MockColorPicker.showing = true;
     MockColorPicker.shown = true;
 

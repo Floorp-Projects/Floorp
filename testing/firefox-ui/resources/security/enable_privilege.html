@@ -6,6 +6,7 @@
       function init() {
         var result = document.getElementById("result");
         try {
+          /* globals netscape */
           netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
           result.textContent = "FAIL";
         } catch (ex) {

@@ -8,6 +8,8 @@
 // https://developer.mozilla.org/en/XPCOM/XPCOM_changes_in_Gecko_1.9.3
 // https://developer.mozilla.org/en/how_to_build_an_xpcom_component_in_javascript
 
+/* import-globals-from SpecialPowersObserverAPI.js */
+
 var EXPORTED_SYMBOLS = ["SpecialPowersObserver", "SpecialPowersObserverFactory"];
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -53,7 +55,7 @@ SpecialPowersObserver.prototype.observe = function(aSubject, aTopic, aData) {
     case "http-on-modify-request":
       if (aSubject instanceof Ci.nsIChannel) {
         let uri = aSubject.URI.spec;
-        this._sendAsyncMessage("specialpowers-http-notify-request", { uri: uri });
+        this._sendAsyncMessage("specialpowers-http-notify-request", { uri });
       }
       break;
 
@@ -190,14 +192,14 @@ SpecialPowersObserver.prototype._removeProcessCrashObservers = function() {
 SpecialPowersObserver.prototype._registerObservers = {
   _self: null,
   _topics: [],
-  _add: function(topic) {
+  _add(topic) {
     if (this._topics.indexOf(topic) < 0) {
       this._topics.push(topic);
       Services.obs.addObserver(this, topic);
     }
   },
-  observe: function(aSubject, aTopic, aData) {
-    var msg = { aData: aData };
+  observe(aSubject, aTopic, aData) {
+    var msg = { aData };
     switch (aTopic) {
       case "perm-changed":
         var permission = aSubject.QueryInterface(Ci.nsIPermission);
@@ -242,15 +244,15 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
       aMessage.target.focus();
       break;
     case "SpecialPowers.CreateFiles":
-      let filePaths = new Array;
+      let filePaths = [];
       if (!this._createdFiles) {
-        this._createdFiles = new Array;
+        this._createdFiles = [];
       }
       let createdFiles = this._createdFiles;
       try {
         let promises = [];
         aMessage.data.forEach(function(request) {
-          const filePerms = 0666;
+          const filePerms = 0666; // eslint-disable-line no-octal
           let testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
           if (request.name) {
             testFile.appendRelativePath(request.name);
@@ -305,14 +307,15 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
     default:
       return this._receiveMessage(aMessage);
   }
+  return undefined;
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SpecialPowersObserver]);
 this.SpecialPowersObserverFactory = Object.freeze({
-  createInstance: function(outer, id) {
+  createInstance(outer, id) {
     if (outer) { throw Components.results.NS_ERROR_NO_AGGREGATION }
     return new SpecialPowersObserver();
   },
-  loadFactory: function(lock) {},
+  loadFactory(lock) {},
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
 });
