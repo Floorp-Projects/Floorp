@@ -29,7 +29,6 @@
 #include "sandboxPermissions.h"
 #endif
 #endif
-#include "ProfilerControllingProcess.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -38,11 +37,6 @@
 class nsPluginTag;
 
 namespace mozilla {
-
-#ifdef MOZ_GECKO_PROFILER
-class CrossProcessProfilerController;
-#endif
-
 
 namespace ipc {
 class CrashReporterHost;
@@ -85,7 +79,6 @@ class FinishInjectorInitTask;
 class PluginModuleParent
     : public PPluginModuleParent
     , public PluginLibrary
-    , public mozilla::ProfilerControllingProcess
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     , public CrashReporter::InjectorCrashCallback
 #endif
@@ -146,23 +139,6 @@ public:
     }
 
     int GetQuirks() { return mQuirks; }
-
-    void SendStartProfiler(const ProfilerInitParams& aParams) override
-    {
-        Unused << PPluginModuleParent::SendStartProfiler(aParams);
-    }
-    void SendStopProfiler() override
-    {
-        Unused << PPluginModuleParent::SendStopProfiler();
-    }
-    void SendPauseProfiler(const bool& aPause) override
-    {
-        Unused << PPluginModuleParent::SendPauseProfiler(aPause);
-    }
-    void SendGatherProfile() override
-    {
-        Unused << PPluginModuleParent::SendGatherProfile();
-    }
 
 protected:
     virtual mozilla::ipc::RacyInterruptPolicy
@@ -238,8 +214,6 @@ protected:
     virtual void UpdatePluginTimeout() {}
 
     virtual mozilla::ipc::IPCResult RecvNotifyContentModuleDestroyed() override { return IPC_OK(); }
-
-    virtual mozilla::ipc::IPCResult RecvProfile(const nsCString& aProfile, const bool& aIsExitProfile) override { return IPC_OK(); }
 
     virtual mozilla::ipc::IPCResult AnswerGetKeyState(const int32_t& aVirtKey, int16_t* aRet) override;
 
@@ -533,9 +507,6 @@ class PluginModuleChromeParent
     void CachedSettingChanged();
 
     virtual mozilla::ipc::IPCResult
-    RecvProfile(const nsCString& aProfile, const bool& aIsExitProfile) override;
-
-    virtual mozilla::ipc::IPCResult
     AnswerGetKeyState(const int32_t& aVirtKey, int16_t* aRet) override;
 
     // Proxy GetOpenFileName/GetSaveFileName on Windows.
@@ -690,9 +661,6 @@ private:
     // processes in existence!
     dom::ContentParent* mContentParent;
     nsCOMPtr<nsIObserver> mPluginOfflineObserver;
-#ifdef MOZ_GECKO_PROFILER
-    UniquePtr<CrossProcessProfilerController> mProfilerController;
-#endif
     bool mIsBlocklisted;
     static bool sInstantiated;
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
