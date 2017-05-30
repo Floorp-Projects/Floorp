@@ -866,33 +866,6 @@ this.AddonRepository = {
   },
 
   /**
-   * Begins a search for recommended add-ons in this repository. Results will
-   * be passed to the given callback.
-   *
-   * @param  aMaxResults
-   *         The maximum number of results to return
-   * @param  aCallback
-   *         The callback to pass results to
-   */
-  retrieveRecommendedAddons(aMaxResults, aCallback) {
-    let url = this._formatURLPref(PREF_GETADDONS_GETRECOMMENDED, {
-      API_VERSION,
-
-      // Get twice as many results to account for potential filtering
-      MAX_RESULTS: 2 * aMaxResults
-    });
-
-    let handleResults = (aElements, aTotalResults) => {
-      this._getLocalAddonIds(aLocalAddonIds => {
-        // aTotalResults irrelevant
-        this._parseAddons(aElements, -1, aLocalAddonIds);
-      });
-    }
-
-    this._beginSearch(url, aMaxResults, aCallback, handleResults);
-  },
-
-  /**
    * Begins a search for add-ons in this repository. Results will be passed to
    * the given callback.
    *
