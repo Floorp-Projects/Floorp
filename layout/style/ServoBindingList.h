@@ -33,9 +33,6 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetStrong,
                    RawGeckoURLExtraData* extra_data,
                    uint32_t line_number_offset,
                    nsCompatibility quirks_mode)
-SERVO_BINDING_FUNC(Servo_ImportRule_GetSheet,
-                   RawServoStyleSheetStrong,
-                   const RawServoImportRuleBorrowed import_rule)
 SERVO_BINDING_FUNC(Servo_StyleSheet_ClearAndUpdate,
                    void,
                    RawServoStyleSheetBorrowed stylesheet,
