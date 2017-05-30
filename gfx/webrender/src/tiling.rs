@@ -314,16 +314,14 @@ impl AlphaRenderItem {
                 let amount = (amount * 65535.0).round() as i32;
                 let batch = batch_list.get_suitable_batch(&key, &stacking_context.screen_bounds);
 
-                batch.add_instance(PrimitiveInstance {
-                    global_prim_id: -1,
-                    prim_address: GpuStoreAddress(0),
-                    task_index: task_index.0 as i32,
-                    clip_task_index: -1,
-                    layer_index: -1,
-                    sub_index: filter_mode,
-                    user_data: [src_task_index.0 as i32, amount],
-                    z_sort_index: z,
-                });
+                let instance = CompositePrimitiveInstance::new(task_index,
+                                                               src_task_index,
+                                                               RenderTaskIndex(0),
+                                                               filter_mode,
+                                                               amount,
+                                                               z);
+
+                batch.add_instance(PrimitiveInstance::from(instance));
             }
             AlphaRenderItem::HardwareComposite(stacking_context_index, src_id, composite_op, z) => {
                 let stacking_context = &ctx.stacking_context_store[stacking_context_index.0];
@@ -333,16 +331,15 @@ impl AlphaRenderItem {
                                              composite_op.to_blend_mode(),
                                              BatchTextures::no_texture());
                 let batch = batch_list.get_suitable_batch(&key, &stacking_context.screen_bounds);
-                batch.add_instance(PrimitiveInstance {
-                    global_prim_id: -1,
-                    prim_address: GpuStoreAddress(0),
-                    task_index: task_index.0 as i32,
-                    clip_task_index: -1,
-                    layer_index: -1,
-                    sub_index: -1,
-                    user_data: [src_task_index.0 as i32, 0],
-                    z_sort_index: z,
-                });
+
+                let instance = CompositePrimitiveInstance::new(task_index,
+                                                               src_task_index,
+                                                               RenderTaskIndex(0),
+                                                               0,
+                                                               0,
+                                                               z);
+
+                batch.add_instance(PrimitiveInstance::from(instance));
             }
             AlphaRenderItem::Composite(stacking_context_index,
                                        backdrop_id,
@@ -357,17 +354,15 @@ impl AlphaRenderItem {
                 let batch = batch_list.get_suitable_batch(&key, &stacking_context.screen_bounds);
                 let backdrop_task = render_tasks.get_task_index(&backdrop_id, child_pass_index);
                 let src_task_index = render_tasks.get_static_task_index(&src_id);
-                batch.add_instance(PrimitiveInstance {
-                    global_prim_id: -1,
-                    prim_address: GpuStoreAddress(0),
-                    task_index: task_index.0 as i32,
-                    clip_task_index: -1,
-                    layer_index: -1,
-                    sub_index: mode as u32 as i32,
-                    user_data: [ backdrop_task.0 as i32,
-                                 src_task_index.0 as i32 ],
-                    z_sort_index: z,
-                });
+
+                let instance = CompositePrimitiveInstance::new(task_index,
+                                                               src_task_index,
+                                                               backdrop_task,
+                                                               mode as u32 as i32,
+                                                               0,
+                                                               z);
+
+                batch.add_instance(PrimitiveInstance::from(instance));
             }
             AlphaRenderItem::Primitive(clip_scroll_group_index_opt, prim_index, z) => {
                 let prim_metadata = ctx.prim_store.get_metadata(prim_index);
@@ -375,9 +370,9 @@ impl AlphaRenderItem {
                     Some(group_index) => {
                         let group = &ctx.clip_scroll_group_store[group_index.0];
                         let bounding_rect = group.screen_bounding_rect.as_ref().unwrap();
-                        (bounding_rect.0, group.packed_layer_index.0 as i32)
+                        (bounding_rect.0, group.packed_layer_index)
                     },
-                    None => (TransformedRectKind::AxisAligned, 0),
+                    None => (TransformedRectKind::AxisAligned, PackedLayerIndex(0)),
                 };
                 let needs_clipping = prim_metadata.needs_clipping();
                 let mut flags = AlphaBatchKeyFlags::empty();
@@ -398,24 +393,18 @@ impl AlphaRenderItem {
                     None => {
                         OPAQUE_TASK_INDEX
                     }
-                }.0 as i32;
-                let global_prim_id = prim_index.0 as i32;
-                let prim_address = prim_metadata.gpu_prim_index;
-                let task_index = task_index.0 as i32;
+                };
                 let needs_blending = !prim_metadata.is_opaque ||
                                      needs_clipping ||
                                      transform_kind == TransformedRectKind::Complex;
                 let blend_mode = ctx.prim_store.get_blend_mode(needs_blending, prim_metadata);
-                let base_instance = PrimitiveInstance {
-                    task_index: task_index,
-                    clip_task_index: clip_task_index,
-                    layer_index: packed_layer_index,
-                    global_prim_id: global_prim_id,
-                    prim_address: prim_address,
-                    sub_index: 0,
-                    user_data: [0, 0],
-                    z_sort_index: z,
-                };
+
+                let base_instance = SimplePrimitiveInstance::new(prim_index,
+                                                                 prim_metadata.gpu_prim_index,
+                                                                 task_index,
+                                                                 clip_task_index,
+                                                                 packed_layer_index,
+                                                                 z);
 
                 match prim_metadata.prim_kind {
                     PrimitiveKind::Border => {
@@ -430,16 +419,13 @@ impl AlphaRenderItem {
                                 match *instance_kind {
                                     BorderCornerInstance::Single => {
                                         batch.add_instance(base_instance.build(sub_index,
-                                                                               BorderCornerSide::Both as i32,
-                                                                               0));
+                                                                               BorderCornerSide::Both as i32,));
                                     }
                                     BorderCornerInstance::Double => {
                                         batch.add_instance(base_instance.build(sub_index,
-                                                                               BorderCornerSide::First as i32,
-                                                                               0));
+                                                                               BorderCornerSide::First as i32));
                                         batch.add_instance(base_instance.build(sub_index,
-                                                                               BorderCornerSide::Second as i32,
-                                                                               0));
+                                                                               BorderCornerSide::Second as i32));
                                     }
                                 }
                             }
@@ -447,14 +433,14 @@ impl AlphaRenderItem {
 
                         batch_list.with_suitable_batch(&edge_key, item_bounding_rect, |batch| {
                             for border_segment in 0..4 {
-                                batch.add_instance(base_instance.build(border_segment, 0, 0));
+                                batch.add_instance(base_instance.build(border_segment, 0));
                             }
                         });
                     }
                     PrimitiveKind::Rectangle => {
                         let key = AlphaBatchKey::new(AlphaBatchKind::Rectangle, flags, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
-                        batch.add_instance(base_instance);
+                        batch.add_instance(base_instance.build(0, 0));
                     }
                     PrimitiveKind::Image => {
                         let image_cpu = &ctx.prim_store.cpu_images[prim_metadata.cpu_prim_index.0];
@@ -479,7 +465,7 @@ impl AlphaRenderItem {
 
                         let key = AlphaBatchKey::new(batch_kind, flags, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
-                        batch.add_instance(base_instance.build(0, image_cpu.resource_address.0, 0));
+                        batch.add_instance(base_instance.build(image_cpu.resource_address.0, 0));
                     }
                     PrimitiveKind::TextRun => {
                         let text_cpu = &ctx.prim_store.cpu_text_runs[prim_metadata.cpu_prim_index.0];
@@ -504,36 +490,33 @@ impl AlphaRenderItem {
                         };
 
                         for glyph_index in 0..prim_metadata.gpu_data_count {
-                            let user_data0 = match batch_kind {
+                            let user_data1 = match batch_kind {
                                 AlphaBatchKind::TextRun => text_cpu.resource_address.0 + glyph_index,
                                 AlphaBatchKind::CacheImage => cache_task_index,
                                 _ => unreachable!(),
                             };
 
                             batch.add_instance(base_instance.build(prim_metadata.gpu_data_address.0 + glyph_index,
-                                                                   user_data0,
-                                                                   0));
+                                                                   user_data1));
                         }
                     }
                     PrimitiveKind::AlignedGradient => {
                         let key = AlphaBatchKey::new(AlphaBatchKind::AlignedGradient, flags, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
                         for part_index in 0..(prim_metadata.gpu_data_count - 1) {
-                            batch.add_instance(base_instance.build(prim_metadata.gpu_data_address.0 + part_index, 0, 0));
+                            batch.add_instance(base_instance.build(prim_metadata.gpu_data_address.0 + part_index, 0));
                         }
                     }
                     PrimitiveKind::AngleGradient => {
                         let key = AlphaBatchKey::new(AlphaBatchKind::AngleGradient, flags, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
                         batch.add_instance(base_instance.build(prim_metadata.gpu_data_address.0,
-                                                               prim_metadata.gpu_data_count,
                                                                0));
                     }
                     PrimitiveKind::RadialGradient => {
                         let key = AlphaBatchKey::new(AlphaBatchKind::RadialGradient, flags, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
                         batch.add_instance(base_instance.build(prim_metadata.gpu_data_address.0,
-                                                               prim_metadata.gpu_data_count,
                                                                0));
                     }
                     PrimitiveKind::YuvImage => {
@@ -571,8 +554,7 @@ impl AlphaRenderItem {
                                                      textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
 
-                        batch.add_instance(base_instance.build(0,
-                                                               image_yuv_cpu.yuv_resource_address.0,
+                        batch.add_instance(base_instance.build(image_yuv_cpu.yuv_resource_address.0,
                                                                0));
                     }
                     PrimitiveKind::BoxShadow => {
@@ -585,8 +567,7 @@ impl AlphaRenderItem {
 
                         for rect_index in 0..prim_metadata.gpu_data_count {
                             batch.add_instance(base_instance.build(prim_metadata.gpu_data_address.0 + rect_index,
-                                                                   cache_task_index.0 as i32,
-                                                                   0));
+                                                                   cache_task_index.0 as i32));
                         }
                     }
                 }
@@ -599,16 +580,15 @@ impl AlphaRenderItem {
                 let stacking_context = &ctx.stacking_context_store[sc_index.0];
                 let batch = batch_list.get_suitable_batch(&key, &stacking_context.screen_bounds);
                 let source_task = render_tasks.get_task_index(&task_id, child_pass_index);
-                batch.add_instance(PrimitiveInstance {
-                    global_prim_id: -1,
-                    prim_address: gpu_address,
-                    task_index: task_index.0 as i32,
-                    clip_task_index: -1,
-                    layer_index: -1, // not be used
-                    sub_index: 0,
-                    user_data: [ source_task.0 as i32, 0 ],
-                    z_sort_index: z,
-                });
+
+                let instance = CompositePrimitiveInstance::new(task_index,
+                                                               source_task,
+                                                               RenderTaskIndex(0),
+                                                               gpu_address.0,
+                                                               0,
+                                                               z);
+
+                batch.add_instance(PrimitiveInstance::from(instance));
             }
         }
     }
@@ -970,16 +950,13 @@ impl RenderTarget for ColorRenderTarget {
 
                 match prim_metadata.prim_kind {
                     PrimitiveKind::BoxShadow => {
-                        self.box_shadow_cache_prims.push(PrimitiveInstance {
-                            global_prim_id: prim_index.0 as i32,
-                            prim_address: prim_metadata.gpu_prim_index,
-                            task_index: render_tasks.get_task_index(&task.id, pass_index).0 as i32,
-                            clip_task_index: 0,
-                            layer_index: 0,
-                            sub_index: 0,
-                            user_data: [0; 2],
-                            z_sort_index: 0,        // z is disabled for rendering cache primitives
-                        });
+                        let instance = SimplePrimitiveInstance::new(prim_index,
+                                                                    prim_metadata.gpu_prim_index,
+                                                                    render_tasks.get_task_index(&task.id, pass_index),
+                                                                    RenderTaskIndex(0),
+                                                                    PackedLayerIndex(0),
+                                                                    0);     // z is disabled for rendering cache primitives
+                        self.box_shadow_cache_prims.push(instance.build(0, 0));
                     }
                     PrimitiveKind::TextRun => {
                         let text = &ctx.prim_store.cpu_text_runs[prim_metadata.cpu_prim_index.0];
@@ -998,17 +975,16 @@ impl RenderTarget for ColorRenderTarget {
                                       self.text_run_textures.colors[0] == textures.colors[0]);
                         self.text_run_textures = textures;
 
+                        let instance = SimplePrimitiveInstance::new(prim_index,
+                                                                    prim_metadata.gpu_prim_index,
+                                                                    render_tasks.get_task_index(&task.id, pass_index),
+                                                                    RenderTaskIndex(0),
+                                                                    PackedLayerIndex(0),
+                                                                    0);     // z is disabled for rendering cache primitives
+
                         for glyph_index in 0..prim_metadata.gpu_data_count {
-                            self.text_run_cache_prims.push(PrimitiveInstance {
-                                global_prim_id: prim_index.0 as i32,
-                                prim_address: prim_metadata.gpu_prim_index,
-                                task_index: render_tasks.get_task_index(&task.id, pass_index).0 as i32,
-                                clip_task_index: 0,
-                                layer_index: 0,
-                                sub_index: prim_metadata.gpu_data_address.0 + glyph_index,
-                                user_data: [ text.resource_address.0 + glyph_index, 0],
-                                z_sort_index: 0,        // z is disabled for rendering cache primitives
-                            });
+                            self.text_run_cache_prims.push(instance.build(prim_metadata.gpu_data_address.0 + glyph_index,
+                                                                          text.resource_address.0 + glyph_index));
                         }
                     }
                     _ => {
@@ -1289,27 +1265,107 @@ pub struct CacheClipInstance {
     segment: i32,
 }
 
+// 32 bytes per instance should be enough for anyone!
 #[derive(Debug, Clone)]
 pub struct PrimitiveInstance {
-    global_prim_id: i32,
-    prim_address: GpuStoreAddress,
-    pub task_index: i32,
-    clip_task_index: i32,
-    layer_index: i32,
-    sub_index: i32,
-    z_sort_index: i32,
-    pub user_data: [i32; 2],
+    data: [i32; 8],
 }
 
-impl PrimitiveInstance {
-    pub fn build(&self,
-                 sub_index: i32,
-                 user_data0: i32,
-                 user_data1: i32) -> PrimitiveInstance {
+struct SimplePrimitiveInstance {
+    pub global_prim_index: i32,
+    pub specific_prim_address: i32,
+    pub task_index: i32,
+    pub clip_task_index: i32,
+    pub layer_index: i32,
+    pub z_sort_index: i32,
+}
+
+impl SimplePrimitiveInstance {
+    fn new(prim_index: PrimitiveIndex,
+           specific_prim_address: GpuStoreAddress,
+           task_index: RenderTaskIndex,
+           clip_task_index: RenderTaskIndex,
+           layer_index: PackedLayerIndex,
+           z_sort_index: i32) -> SimplePrimitiveInstance {
+        SimplePrimitiveInstance {
+            global_prim_index: prim_index.0 as i32,
+            specific_prim_address: specific_prim_address.0 as i32,
+            task_index: task_index.0 as i32,
+            clip_task_index: clip_task_index.0 as i32,
+            layer_index: layer_index.0 as i32,
+            z_sort_index: z_sort_index,
+        }
+    }
+
+    fn build(&self, data0: i32, data1: i32) -> PrimitiveInstance {
         PrimitiveInstance {
-            sub_index: sub_index,
-            user_data: [user_data0, user_data1],
-            ..*self
+            data: [
+                self.global_prim_index,
+                self.specific_prim_address,
+                self.task_index,
+                self.clip_task_index,
+                self.layer_index,
+                self.z_sort_index,
+                data0,
+                data1,
+            ]
+        }
+    }
+}
+
+pub struct CompositePrimitiveInstance {
+    pub task_index: RenderTaskIndex,
+    pub src_task_index: RenderTaskIndex,
+    pub backdrop_task_index: RenderTaskIndex,
+    pub data0: i32,
+    pub data1: i32,
+    pub z: i32,
+}
+
+impl CompositePrimitiveInstance {
+    fn new(task_index: RenderTaskIndex,
+           src_task_index: RenderTaskIndex,
+           backdrop_task_index: RenderTaskIndex,
+           data0: i32,
+           data1: i32,
+           z: i32) -> CompositePrimitiveInstance {
+        CompositePrimitiveInstance {
+            task_index: task_index,
+            src_task_index: src_task_index,
+            backdrop_task_index: backdrop_task_index,
+            data0: data0,
+            data1: data1,
+            z: z,
+        }
+    }
+}
+
+impl From<CompositePrimitiveInstance> for PrimitiveInstance {
+    fn from(instance: CompositePrimitiveInstance) -> PrimitiveInstance {
+        PrimitiveInstance {
+            data: [
+                instance.task_index.0 as i32,
+                instance.src_task_index.0 as i32,
+                instance.backdrop_task_index.0 as i32,
+                instance.z,
+                instance.data0,
+                instance.data1,
+                0,
+                0,
+            ]
+        }
+    }
+}
+
+impl<'a> From<&'a PrimitiveInstance> for CompositePrimitiveInstance {
+    fn from(instance: &'a PrimitiveInstance) -> CompositePrimitiveInstance {
+        CompositePrimitiveInstance {
+            task_index: RenderTaskIndex(instance.data[0] as usize),
+            src_task_index: RenderTaskIndex(instance.data[1] as usize),
+            backdrop_task_index: RenderTaskIndex(instance.data[2] as usize),
+            z: instance.data[3],
+            data0: instance.data[4],
+            data1: instance.data[5],
         }
     }
 }
@@ -1457,7 +1513,6 @@ pub struct PackedLayer {
     pub transform: LayerToWorldTransform,
     pub inv_transform: WorldToLayerTransform,
     pub local_clip_rect: LayerRect,
-    pub screen_vertices: [WorldPoint4D; 4],
 }
 
 impl Default for PackedLayer {
@@ -1466,7 +1521,6 @@ impl Default for PackedLayer {
             transform: LayerToWorldTransform::identity(),
             inv_transform: WorldToLayerTransform::identity(),
             local_clip_rect: LayerRect::zero(),
-            screen_vertices: [WorldPoint4D::zero(); 4],
         }
     }
 }
@@ -1488,7 +1542,6 @@ impl PackedLayer {
                     -> Option<(TransformedRectKind, DeviceIntRect)> {
         let xf_rect = TransformedRect::new(&local_rect, &self.transform, device_pixel_ratio);
         xf_rect.bounding_rect.intersection(screen_rect).map(|rect| {
-            self.screen_vertices = xf_rect.vertices.clone();
             self.local_clip_rect = *local_rect;
             (xf_rect.kind, rect)
         })

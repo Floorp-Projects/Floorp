@@ -34,6 +34,7 @@ plane-split = "0.3"
 
 [dev-dependencies]
 angle = {git = "https://github.com/servo/angle", branch = "servo"}
+rand = "0.3"                # for the benchmarks
 servo-glutin = "0.10.1"     # for the example apps
 
 [target.'cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))'.dependencies]
