@@ -136,6 +136,7 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     'CSS.h',
+    'CSSImportRule.h',
     'CSSKeyframeRule.h',
     'CSSKeyframesRule.h',
     'CSSLexer.h',
@@ -172,6 +173,7 @@ UNIFIED_SOURCES += [
     'BindingStyleRule.cpp',
     'CounterStyleManager.cpp',
     'CSS.cpp',
+    'CSSImportRule.cpp',
     'CSSKeyframeRule.cpp',
     'CSSKeyframesRule.cpp',
     'CSSLexer.cpp',
