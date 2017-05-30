@@ -90,11 +90,11 @@ js::SetFakeCPUCount(size_t count)
 }
 
 bool
-js::StartOffThreadWasmCompile(wasm::CompileTask* task)
+js::StartOffThreadWasmCompile(wasm::CompileTask* task, wasm::CompileMode mode)
 {
     AutoLockHelperThreadState lock;
 
-    if (!HelperThreadState().wasmWorklist(lock).append(task))
+    if (!HelperThreadState().wasmWorklist(lock, mode).append(task))
         return false;
 
     HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
@@ -865,8 +865,10 @@ GlobalHelperThreadState::GlobalHelperThreadState()
  : cpuCount(0),
    threadCount(0),
    threads(nullptr),
-   wasmCompilationInProgress(false),
-   numWasmFailedJobs(0),
+   wasmCompilationInProgress_tier1(false),
+   wasmCompilationInProgress_tier2(false),
+   numWasmFailedJobs_tier1(0),
+   numWasmFailedJobs_tier2(0),
    helperLock(mutexid::GlobalHelperThreadState)
 {
     cpuCount = GetCPUCount();
@@ -1100,10 +1102,11 @@ GlobalHelperThreadState::maxGCParallelThreads() const
 }
 
 bool
-GlobalHelperThreadState::canStartWasmCompile(const AutoLockHelperThreadState& lock)
+GlobalHelperThreadState::canStartWasmCompile(const AutoLockHelperThreadState& lock,
+                                             wasm::CompileMode mode)
 {
-    // Don't execute an wasm job if an earlier one failed.
-    if (wasmWorklist(lock).empty() || numWasmFailedJobs)
+    // Don't execute a wasm job if an earlier one failed.
+    if (wasmWorklist(lock, mode).empty() || wasmFailed(lock, mode))
         return false;
 
     // Honor the maximum allowed threads to compile wasm jobs at once,
@@ -1725,12 +1728,12 @@ HelperThread::ThreadMain(void* arg)
 }
 
 void
-HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked)
+HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked, wasm::CompileMode mode)
 {
-    MOZ_ASSERT(HelperThreadState().canStartWasmCompile(locked));
+    MOZ_ASSERT(HelperThreadState().canStartWasmCompile(locked, mode));
     MOZ_ASSERT(idle());
 
-    currentTask.emplace(HelperThreadState().wasmWorklist(locked).popCopy());
+    currentTask.emplace(HelperThreadState().wasmWorklist(locked, mode).popCopy());
     bool success = false;
     UniqueChars error;
 
@@ -1742,12 +1745,12 @@ HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked)
 
     // On success, try to move work to the finished list.
     if (success)
-        success = HelperThreadState().wasmFinishedList(locked).append(task);
+        success = HelperThreadState().wasmFinishedList(locked, mode).append(task);
 
     // On failure, note the failure for harvesting by the parent.
     if (!success) {
-        HelperThreadState().noteWasmFailure(locked);
-        HelperThreadState().setWasmError(locked, Move(error));
+        HelperThreadState().noteWasmFailure(locked, mode);
+        HelperThreadState().setWasmError(locked, mode, Move(error));
     }
 
     // Notify the active thread in case it's waiting.
@@ -2167,6 +2170,7 @@ HelperThread::threadLoop()
     while (true) {
         MOZ_ASSERT(idle());
 
+        wasm::CompileMode tier;
         js::ThreadType task;
         while (true) {
             if (terminate)
@@ -2181,24 +2185,29 @@ HelperThread::threadLoop()
             // lists).  Unlocking the HelperThreadState between task selection
             // and execution is not well-defined.
 
-            if (HelperThreadState().canStartGCParallelTask(lock))
+            if (HelperThreadState().canStartGCParallelTask(lock)) {
                 task = js::THREAD_TYPE_GCPARALLEL;
-            else if (HelperThreadState().canStartGCHelperTask(lock))
+            } else if (HelperThreadState().canStartGCHelperTask(lock)) {
                 task = js::THREAD_TYPE_GCHELPER;
-            else if (HelperThreadState().pendingIonCompileHasSufficientPriority(lock))
+            } else if (HelperThreadState().pendingIonCompileHasSufficientPriority(lock)) {
                 task = js::THREAD_TYPE_ION;
-            else if (HelperThreadState().canStartWasmCompile(lock))
+            } else if (HelperThreadState().canStartWasmCompile(lock, wasm::CompileMode::Tier1)) {
                 task = js::THREAD_TYPE_WASM;
-            else if (HelperThreadState().canStartPromiseHelperTask(lock))
+                tier = wasm::CompileMode::Tier1;
+            } else if (HelperThreadState().canStartPromiseHelperTask(lock)) {
                 task = js::THREAD_TYPE_PROMISE_TASK;
-            else if (HelperThreadState().canStartParseTask(lock))
+            } else if (HelperThreadState().canStartParseTask(lock)) {
                 task = js::THREAD_TYPE_PARSE;
-            else if (HelperThreadState().canStartCompressionTask(lock))
+            } else if (HelperThreadState().canStartCompressionTask(lock)) {
                 task = js::THREAD_TYPE_COMPRESS;
-            else if (HelperThreadState().canStartIonFreeTask(lock))
+            } else if (HelperThreadState().canStartIonFreeTask(lock)) {
                 task = js::THREAD_TYPE_ION_FREE;
-            else
+            } else if (HelperThreadState().canStartWasmCompile(lock, wasm::CompileMode::Tier2)) {
+                task = js::THREAD_TYPE_WASM;
+                tier = wasm::CompileMode::Tier2;
+            } else {
                 task = js::THREAD_TYPE_NONE;
+            }
 
             if (task != js::THREAD_TYPE_NONE)
                 break;
@@ -2218,7 +2227,7 @@ HelperThread::threadLoop()
             handleIonWorkload(lock);
             break;
           case js::THREAD_TYPE_WASM:
-            handleWasmWorkload(lock);
+            handleWasmWorkload(lock, tier);
             break;
           case js::THREAD_TYPE_PROMISE_TASK:
             handlePromiseHelperTaskWorkload(lock);
