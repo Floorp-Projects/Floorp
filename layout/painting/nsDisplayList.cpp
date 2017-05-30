@@ -5362,18 +5362,6 @@ nsDisplayBoxShadowInner::CanCreateWebRenderCommands(nsDisplayListBuilder* aBuild
     return true;
   }
 
-  for (uint32_t i = shadows->Length(); i > 0; --i) {
-    nsCSSShadowItem *shadowItem = shadows->ShadowAt(i - 1);
-    if (!shadowItem->mInset) {
-      continue;
-    }
-
-    if (shadowItem->mXOffset <= 0 || shadowItem->mYOffset <= 0) {
-      // Need to wait for WR to support clip out.
-      return false;
-    }
-  }
-
   return true;
 }
 

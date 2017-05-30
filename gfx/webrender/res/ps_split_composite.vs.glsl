@@ -31,14 +31,14 @@ vec3 bilerp(vec3 a, vec3 b, vec3 c, vec3 d, float s, float t) {
 }
 
 void main(void) {
-    PrimitiveInstance pi = fetch_prim_instance();
-    SplitGeometry geometry = fetch_split_geometry(pi.specific_prim_index);
-    AlphaBatchTask src_task = fetch_alpha_batch_task(pi.user_data.x);
+    CompositeInstance ci = fetch_composite_instance();
+    SplitGeometry geometry = fetch_split_geometry(ci.user_data0);
+    AlphaBatchTask src_task = fetch_alpha_batch_task(ci.src_task_index);
 
     vec3 world_pos = bilerp(geometry.points[0], geometry.points[1],
                             geometry.points[3], geometry.points[2],
                             aPosition.y, aPosition.x);
-    vec4 final_pos = vec4(world_pos.xy * uDevicePixelRatio, pi.z, 1.0);
+    vec4 final_pos = vec4(world_pos.xy * uDevicePixelRatio, ci.z, 1.0);
 
     gl_Position = uTransform * final_pos;
 

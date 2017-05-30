@@ -92,7 +92,12 @@ this.Tabs = {
           "about:home",
           DEFAULT_FAVICON_TAB,
           "about:newtab",
-        ], true, true);
+         ],
+         {
+           inBackground: true,
+           replace: true,
+           triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal()
+        });
         browserWindow.gBrowser.pinTab(browserWindow.gBrowser.tabs[1]);
         browserWindow.gBrowser.pinTab(browserWindow.gBrowser.tabs[2]);
         browserWindow.gBrowser.selectTabAtIndex(3);
@@ -119,7 +124,12 @@ function fiveTabsHelper() {
     DEFAULT_FAVICON_TAB,
     "about:newtab",
     CUST_TAB,
-  ], true, true);
+  ],
+  {
+    inBackground: true,
+    replace: true,
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal()
+  });
   browserWindow.gBrowser.selectTabAtIndex(1);
 }
 

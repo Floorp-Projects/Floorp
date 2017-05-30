@@ -460,6 +460,8 @@ public:
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint,
                                                          HitTestResult* aOutHitResult,
                                                          HitTestingTreeNode** aOutScrollbarNode = nullptr);
+  already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const uint64_t& aLayersId,
+                                                         const FrameMetrics::ViewID& aScrollId);
   ScreenToParentLayerMatrix4x4 GetScreenToApzcTransform(const AsyncPanZoomController *aApzc) const;
   ParentLayerToScreenMatrix4x4 GetApzcToGeckoTransform(const AsyncPanZoomController *aApzc) const;
 

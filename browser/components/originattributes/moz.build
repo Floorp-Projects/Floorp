@@ -13,4 +13,4 @@ MOCHITEST_MANIFESTS += [
 ]
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'OriginAttributes')
+    BUG_COMPONENT = ('Core', 'DOM: Security')
