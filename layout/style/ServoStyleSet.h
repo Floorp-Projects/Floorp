@@ -47,6 +47,26 @@ struct TreeMatchContext;
 namespace mozilla {
 
 /**
+ * A few flags used to track which kind of stylist state we may need to
+ * update.
+ */
+enum class StylistState : uint8_t {
+  /** The stylist is not dirty, we should do nothing */
+  NotDirty = 0,
+
+  /** The style sheets have changed, so we need to update the style data. */
+  StyleSheetsDirty = 1 << 0,
+
+  /**
+   * All style data is dirty and both style sheet data and default computed
+   * values need to be recomputed.
+   */
+  FullyDirty = 1 << 1,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StylistState)
+
+/**
  * The set of style sheets that apply to a document, backed by a Servo
  * Stylist.  A ServoStyleSet contains ServoStyleSheets.
  */
@@ -472,29 +492,11 @@ private:
   void PreTraverseSync();
 
   /**
-   * A tri-state used to track which kind of stylist state we may need to
-   * update.
-   */
-  enum class StylistState : uint8_t {
-    /** The stylist is not dirty, we should do nothing */
-    NotDirty,
-    /** The style sheets have changed, so we need to update the style data. */
-    StyleSheetsDirty,
-    /**
-     * All style data is dirty and both style sheet data and default computed
-     * values need to be recomputed.
-     */
-    FullyDirty,
-  };
-
-  /**
    * Note that the stylist needs a style flush due to style sheet changes.
    */
   void SetStylistStyleSheetsDirty()
   {
-    if (mStylistState == StylistState::NotDirty) {
-      mStylistState = StylistState::StyleSheetsDirty;
-    }
+    mStylistState |= StylistState::StyleSheetsDirty;
   }
 
   bool StylistNeedsUpdate() const
