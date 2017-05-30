@@ -2348,15 +2348,6 @@ GeckoDriver.prototype.sendKeysToElement = function* (cmd, resp) {
   }
 };
 
-/** Sets the test name.  The test name is used for logging purposes. */
-GeckoDriver.prototype.setTestName = function*(cmd, resp) {
-  assert.window(this.getCurrentWindow());
-
-  let val = cmd.parameters.value;
-  this.testName = val;
-  yield this.listener.setTestName({value: val});
-};
-
 /**
  * Clear the text of an element.
  *
