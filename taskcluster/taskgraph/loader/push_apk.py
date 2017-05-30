@@ -33,4 +33,10 @@ def get_dependent_loaded_tasks(config, loaded_tasks):
         and 'old-id' not in task.attributes.get('build_platform', '')
     ]
 
-    return android_tasks
+    # TODO Bug 1368484: Activate aarch64 once ready
+    non_aarch64_tasks = [
+        task for task in android_tasks
+        if 'aarch64' not in task.attributes.get('build_platform', '')
+    ]
+
+    return non_aarch64_tasks

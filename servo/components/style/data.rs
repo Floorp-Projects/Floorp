@@ -367,6 +367,11 @@ impl StoredRestyleHint {
         StoredRestyleHint(RestyleHint::subtree_and_later_siblings())
     }
 
+    /// Creates a restyle hint that indicates the element must be recascaded.
+    pub fn recascade_self() -> Self {
+        StoredRestyleHint(RestyleHint::recascade_self())
+    }
+
     /// Returns true if the hint indicates that our style may be invalidated.
     pub fn has_self_invalidations(&self) -> bool {
         self.0.affects_self()
@@ -388,6 +393,11 @@ impl StoredRestyleHint {
         self.0.insert(other.0)
     }
 
+    /// Contains whether the whole subtree is invalid.
+    pub fn contains_subtree(&self) -> bool {
+        self.0.contains(&RestyleHint::subtree())
+    }
+
     /// Insert another restyle hint, effectively resulting in the union of both.
     pub fn insert_from(&mut self, other: &Self) {
         self.0.insert_from(&other.0)
@@ -396,6 +406,12 @@ impl StoredRestyleHint {
     /// Returns true if the hint has animation-only restyle.
     pub fn has_animation_hint(&self) -> bool {
         self.0.has_animation_hint()
+    }
+
+    /// Returns true if the hint indicates the current element must be
+    /// recascaded.
+    pub fn has_recascade_self(&self) -> bool {
+        self.0.has_recascade_self()
     }
 }
 
@@ -420,10 +436,6 @@ pub struct RestyleData {
     /// for this element, its children, and its descendants.
     pub hint: StoredRestyleHint,
 
-    /// Whether we need to recascade.
-    /// FIXME(bholley): This should eventually become more fine-grained.
-    pub recascade: bool,
-
     /// The restyle damage, indicating what kind of layout changes are required
     /// afte restyling.
     pub damage: RestyleDamage,
@@ -442,7 +454,7 @@ pub struct RestyleData {
 impl RestyleData {
     /// Returns true if this RestyleData might invalidate the current style.
     pub fn has_invalidations(&self) -> bool {
-        self.hint.has_self_invalidations() || self.recascade
+        self.hint.has_self_invalidations()
     }
 
     /// Returns true if this RestyleData might invalidate sibling styles.
@@ -593,12 +605,11 @@ impl ElementData {
             return RestyleKind::MatchAndCascade;
         }
 
-        if !hint.is_empty() {
+        if hint.has_replacements() {
             return RestyleKind::CascadeWithReplacements(hint.replacements);
         }
 
-        debug_assert!(restyle_data.recascade,
-                      "We definitely need to do something!");
+        debug_assert!(hint.has_recascade_self(), "We definitely need to do something!");
         return RestyleKind::CascadeOnly;
     }
 

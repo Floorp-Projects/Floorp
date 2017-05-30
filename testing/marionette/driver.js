@@ -1022,7 +1022,12 @@ GeckoDriver.prototype.getCurrentUrl = function (cmd) {
       return win.location.href;
 
     case Context.CONTENT:
-      return this.listener.getCurrentUrl();
+      if (this.curBrowser.contentBrowser) {
+        return this.curBrowser.contentBrowser.currentURI.spec;
+      } else {
+        throw new NoSuchWindowError(
+          "Not a browser window, or no tab currently selected");
+      }
   }
 };
 
@@ -1112,7 +1117,7 @@ GeckoDriver.prototype.goBack = function* (cmd, resp) {
     return;
   }
 
-  let currentURL = yield this.listener.getCurrentUrl();
+  let currentURL = this.getCurrentUrl();
   let goBack = this.listener.goBack({pageTimeout: this.timeouts.pageLoad});
 
   // If a remoteness update interrupts our page load, this will never return
@@ -1159,7 +1164,7 @@ GeckoDriver.prototype.goForward = function* (cmd, resp) {
     return;
   }
 
-  let currentURL = yield this.listener.getCurrentUrl();
+  let currentURL = this.getCurrentUrl();
   let goForward = this.listener.goForward({pageTimeout: this.timeouts.pageLoad});
 
   // If a remoteness update interrupts our page load, this will never return

@@ -67,14 +67,10 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
 }
 
 void
-ServoRestyleManager::PostRestyleEventForCSSRuleChanges(
-  Element* aElement,
-  nsRestyleHint aRestyleHint,
-  nsChangeHint aMinChangeHint)
+ServoRestyleManager::PostRestyleEventForCSSRuleChanges()
 {
   mRestyleForCSSRuleChanges = true;
-
-  PostRestyleEvent(aElement, aRestyleHint, aMinChangeHint);
+  mPresContext->PresShell()->EnsureStyleFlush();
 }
 
 /* static */ void

@@ -6,13 +6,13 @@
 
 
 @template
-def keyfile(desc, help=None, callback=lambda x: x):
+def keyfile(desc, default=None, help=None, callback=lambda x: x):
     help = help or ('Use the secret key contained in the given keyfile '
                     'for %s requests' % desc)
     name = desc.lower().replace(' ', '-')
     no_key = callback('no-%s-key' % name)
 
-    option('--with-%s-keyfile' % name, nargs=1, help=help)
+    option('--with-%s-keyfile' % name, nargs=1, default=default, help=help)
 
     @depends('--with-%s-keyfile' % name)
     @checking('for the %s key' % desc, lambda x: x and x is not no_key)
@@ -34,13 +34,13 @@ def keyfile(desc, help=None, callback=lambda x: x):
 
 
 @template
-def simple_keyfile(desc):
-    value = keyfile(desc)
+def simple_keyfile(desc, default=None):
+    value = keyfile(desc, default=default)
     set_config('MOZ_%s_KEY' % desc.upper().replace(' ', '_'), value)
 
 
 @template
-def id_and_secret_keyfile(desc):
+def id_and_secret_keyfile(desc, default=None):
     def id_and_secret(value):
         if value.startswith('no-') and value.endswith('-key'):
             id = value[:-3] + 'clientid'
@@ -56,6 +56,7 @@ def id_and_secret_keyfile(desc):
 
     content = keyfile(desc, help='Use the client id and secret key contained '
                                  'in the given keyfile for %s requests' % desc,
+                      default=default,
                       callback=id_and_secret)
 
 

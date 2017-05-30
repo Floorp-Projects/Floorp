@@ -153,6 +153,30 @@ this.DevToolsShim = {
     }
   },
 
+  /**
+   * Called from SessionStore.jsm in mozilla-central when saving the current state.
+   *
+   * @return {Array} array of currently opened scratchpad windows. Empty array if devtools
+   *         are not installed
+   */
+  getOpenedScratchpads: function () {
+    if (!this.isInstalled()) {
+      return [];
+    }
+    return this.gDevTools.getOpenedScratchpads();
+  },
+
+  /**
+   * Called from SessionStore.jsm in mozilla-central when restoring a state that contained
+   * opened scratchpad windows.
+   */
+  restoreScratchpadSession: function (scratchpads) {
+    if (!this.isInstalled()) {
+      return;
+    }
+    this.gDevTools.restoreScratchpadSession(scratchpads);
+  },
+
   _onDevToolsRegistered: function () {
     // Register all pending event listeners on the real gDevTools object.
     for (let [event, listener] of this.listeners) {

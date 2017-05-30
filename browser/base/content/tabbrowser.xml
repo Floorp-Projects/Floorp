@@ -2851,6 +2851,13 @@
               newTab = true;
             }
 
+            // Mute audio immediately to improve perceived speed of tab closure.
+            if (aTab.hasAttribute("soundplaying")) {
+              // Don't persist the muted state as this wasn't a user action.
+              // This lets undo-close-tab return it to an unmuted state.
+              aTab.linkedBrowser.mute(true);
+            }
+
             aTab.closing = true;
             this._removingTabs.push(aTab);
             this._visibleTabs = null; // invalidate cache
@@ -6021,34 +6028,52 @@
         ]]></body>
       </method>
 
+      <field name="_closeButtonsUpdatePending">false</field>
       <method name="adjustTabstrip">
         <body><![CDATA[
-          // If we're overflowing, tab widths don't change anymore, so we can
-          // return early to avoid flushing layout.
+          if (this._closeButtonsUpdatePending) {
+            return;
+          }
+          this._closeButtonsUpdatePending = true;
+
+          // If we're overflowing, tabs are at their minimum widths.
           if (this.getAttribute("overflow") == "true") {
-            this.setAttribute("closebuttons", "activetab");
+            window.requestAnimationFrame(() => {
+              this._closeButtonsUpdatePending = false;
+              this.setAttribute("closebuttons", "activetab");
+            });
             return;
           }
 
-          let numTabs = this.childNodes.length -
-                        this.tabbrowser._removingTabs.length;
-          if (numTabs > 2) {
-            // This is an optimization to avoid layout flushes by calling
-            // getBoundingClientRect() when we just opened a second tab. In
-            // this case it's highly unlikely that the tab width is smaller
-            // than mTabClipWidth and the tab close button obscures too much
-            // of the tab's label. In the edge case of the window being too
-            // narrow (or if tabClipWidth has been set to a way higher value),
-            // we'll correct the 'closebuttons' attribute after the tabopen
-            // animation has finished.
+          // Wait until after the next paint to get current layout data from
+          // getBoundsWithoutFlushing.
+          window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => {
+              this._closeButtonsUpdatePending = false;
 
-            let tab = this.tabbrowser.visibleTabs[this.tabbrowser._numPinnedTabs];
-            if (tab && tab.getBoundingClientRect().width <= this.mTabClipWidth) {
-              this.setAttribute("closebuttons", "activetab");
-              return;
-            }
-          }
-          this.removeAttribute("closebuttons");
+              // The scrollbox may have started overflowing since we checked
+              // overflow earlier, so check again.
+              if (this.getAttribute("overflow") == "true") {
+                this.setAttribute("closebuttons", "activetab");
+                return;
+              }
+
+              // Check if tab widths are below the threshold where we want to
+              // remove close buttons from background tabs so that people don't
+              // accidentally close tabs by selecting them.
+              let rect = ele => {
+                return window.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils)
+                             .getBoundsWithoutFlushing(ele);
+              };
+              let tab = this.tabbrowser.visibleTabs[this.tabbrowser._numPinnedTabs];
+              if (tab && rect(tab).width <= this.mTabClipWidth) {
+                this.setAttribute("closebuttons", "activetab");
+              } else {
+                this.removeAttribute("closebuttons");
+              }
+            });
+          });
         ]]></body>
       </method>
 
@@ -7527,9 +7552,6 @@
             case "TabClose":
               this._tabOnTabClose(aEvent);
               break;
-            case "scroll":
-              this._updateTabsVisibilityStatus();
-              break;
           }
         ]]></body>
       </method>
@@ -7538,20 +7560,26 @@
         <body><![CDATA[
           var tabContainer = gBrowser.tabContainer;
           // We don't want menu item decoration unless there is overflow.
-          if (tabContainer.getAttribute("overflow") != "true")
+          if (tabContainer.getAttribute("overflow") != "true") {
             return;
+          }
 
-          var tabstripBO = tabContainer.mTabstrip.scrollBoxObject;
-          for (var i = 0; i < this.childNodes.length; i++) {
-            let curTab = this.childNodes[i].tab;
-            if (!curTab) // "Undo close tab", menuseparator, or entries put here by addons.
+          let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                  .getInterface(Ci.nsIDOMWindowUtils);
+          let tabstripRect = windowUtils.getBoundsWithoutFlushing(tabContainer.mTabstrip);
+          for (let menuitem of this.childNodes) {
+            let curTab = menuitem.tab;
+            if (!curTab) {
+              // "Undo close tab", menuseparator, or entries put here by addons.
               continue;
-            let curTabBO = curTab.boxObject;
-            if (curTabBO.screenX >= tabstripBO.screenX &&
-                curTabBO.screenX + curTabBO.width <= tabstripBO.screenX + tabstripBO.width)
-              this.childNodes[i].setAttribute("tabIsVisible", "true");
-            else
-              this.childNodes[i].removeAttribute("tabIsVisible");
+            }
+            let curTabRect = windowUtils.getBoundsWithoutFlushing(curTab);
+            if (curTabRect.left >= tabstripRect.left &&
+                curTabRect.right <= tabstripRect.right) {
+              menuitem.setAttribute("tabIsVisible", "true");
+            } else {
+              menuitem.removeAttribute("tabIsVisible");
+            }
           }
         ]]></body>
       </method>
@@ -7650,7 +7678,6 @@
           // Listen for changes in the tab bar.
           tabcontainer.addEventListener("TabAttrModified", this);
           tabcontainer.addEventListener("TabClose", this);
-          tabcontainer.mTabstrip.addEventListener("scroll", this);
 
           let tabs = gBrowser.visibleTabs;
           for (var i = 0; i < tabs.length; i++) {
@@ -7679,7 +7706,6 @@
           }
         }
         var tabcontainer = gBrowser.tabContainer;
-        tabcontainer.mTabstrip.removeEventListener("scroll", this);
         tabcontainer.removeEventListener("TabAttrModified", this);
         tabcontainer.removeEventListener("TabClose", this);
       ]]></handler>
@@ -7737,9 +7763,20 @@
             this.removeAttribute("sizelimit");
           }
 
-          this.style.minWidth = this.getAttribute("type") == "status" &&
-                                this.getAttribute("previoustype") == "status"
-                                  ? getComputedStyle(this).width : "";
+          if (this.getAttribute("type") == "status" &&
+              this.getAttribute("previoustype") == "status") {
+            // Before updating the label, set the panel's current width as its
+            // min-width to let the panel grow but not shrink and prevent
+            // unnecessary flicker while loading pages. We only care about the
+            // panel's width once it has been painted, so we can do this
+            // without flushing layout.
+            this.style.minWidth =
+              window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindowUtils)
+                    .getBoundsWithoutFlushing(this).width + "px";
+          } else {
+            this.style.minWidth = "";
+          }
 
           if (val) {
             this.setAttribute("label", val);

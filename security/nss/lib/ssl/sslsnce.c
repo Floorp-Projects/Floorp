@@ -1808,6 +1808,7 @@ ssl_GetSessionTicketKeys(sslSocket *ss, unsigned char *keyName,
     }
 
     if (!ssl_session_ticket_keys.encKey || !ssl_session_ticket_keys.macKey) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
 

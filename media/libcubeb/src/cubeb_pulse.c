@@ -1148,7 +1148,7 @@ typedef struct {
   char * default_sink_name;
   char * default_source_name;
 
-  cubeb_device_info ** devinfo;
+  cubeb_device_info * devinfo;
   uint32_t max;
   uint32_t count;
   cubeb * context;
@@ -1177,7 +1177,7 @@ pulse_ensure_dev_list_data_list_size (pulse_dev_list_data * list_data)
   if (list_data->count == list_data->max) {
     list_data->max += 8;
     list_data->devinfo = realloc(list_data->devinfo,
-        sizeof(cubeb_device_info *) * list_data->max);
+        sizeof(cubeb_device_info) * list_data->max);
   }
 }
 
@@ -1209,7 +1209,9 @@ pulse_sink_info_cb(pa_context * context, const pa_sink_info * info,
   if (eol || info == NULL)
     return;
 
-  devinfo = calloc(1, sizeof(cubeb_device_info));
+  pulse_ensure_dev_list_data_list_size(list_data);
+  devinfo = &list_data->devinfo[list_data->count];
+  memset(devinfo, 0, sizeof(cubeb_device_info));
 
   devinfo->device_id = strdup(info->name);
   devinfo->devid = (cubeb_devid) devinfo->device_id;
@@ -1224,7 +1226,7 @@ pulse_sink_info_cb(pa_context * context, const pa_sink_info * info,
   devinfo->type = CUBEB_DEVICE_TYPE_OUTPUT;
   devinfo->state = pulse_get_state_from_sink_port(info->active_port);
   devinfo->preferred = (strcmp(info->name, list_data->default_sink_name) == 0) ?
-				 CUBEB_DEVICE_PREF_ALL : CUBEB_DEVICE_PREF_NONE;
+    CUBEB_DEVICE_PREF_ALL : CUBEB_DEVICE_PREF_NONE;
 
   devinfo->format = CUBEB_DEVICE_FMT_ALL;
   devinfo->default_format = pulse_format_to_cubeb_format(info->sample_spec.format);
@@ -1236,8 +1238,7 @@ pulse_sink_info_cb(pa_context * context, const pa_sink_info * info,
   devinfo->latency_lo = 0;
   devinfo->latency_hi = 0;
 
-  pulse_ensure_dev_list_data_list_size (list_data);
-  list_data->devinfo[list_data->count++] = devinfo;
+  list_data->count += 1;
 
   WRAP(pa_threaded_mainloop_signal)(list_data->context->mainloop, 0);
 }
@@ -1270,7 +1271,9 @@ pulse_source_info_cb(pa_context * context, const pa_source_info * info,
   if (eol)
     return;
 
-  devinfo = calloc(1, sizeof(cubeb_device_info));
+  pulse_ensure_dev_list_data_list_size(list_data);
+  devinfo = &list_data->devinfo[list_data->count];
+  memset(devinfo, 0, sizeof(cubeb_device_info));
 
   devinfo->device_id = strdup(info->name);
   devinfo->devid = (cubeb_devid) devinfo->device_id;
@@ -1285,7 +1288,7 @@ pulse_source_info_cb(pa_context * context, const pa_source_info * info,
   devinfo->type = CUBEB_DEVICE_TYPE_INPUT;
   devinfo->state = pulse_get_state_from_source_port(info->active_port);
   devinfo->preferred = (strcmp(info->name, list_data->default_source_name) == 0) ?
-				   CUBEB_DEVICE_PREF_ALL : CUBEB_DEVICE_PREF_NONE;
+    CUBEB_DEVICE_PREF_ALL : CUBEB_DEVICE_PREF_NONE;
 
   devinfo->format = CUBEB_DEVICE_FMT_ALL;
   devinfo->default_format = pulse_format_to_cubeb_format(info->sample_spec.format);
@@ -1297,9 +1300,7 @@ pulse_source_info_cb(pa_context * context, const pa_source_info * info,
   devinfo->latency_lo = 0;
   devinfo->latency_hi = 0;
 
-  pulse_ensure_dev_list_data_list_size (list_data);
-  list_data->devinfo[list_data->count++] = devinfo;
-
+  list_data->count += 1;
   WRAP(pa_threaded_mainloop_signal)(list_data->context->mainloop, 0);
 }
 
@@ -1320,11 +1321,10 @@ pulse_server_info_cb(pa_context * c, const pa_server_info * i, void * userdata)
 
 static int
 pulse_enumerate_devices(cubeb * context, cubeb_device_type type,
-                        cubeb_device_collection ** collection)
+                        cubeb_device_collection * collection)
 {
   pulse_dev_list_data user_data = { NULL, NULL, NULL, 0, 0, context };
   pa_operation * o;
-  uint32_t i;
 
   WRAP(pa_threaded_mainloop_lock)(context->mainloop);
 
@@ -1355,15 +1355,11 @@ pulse_enumerate_devices(cubeb * context, cubeb_device_type type,
 
   WRAP(pa_threaded_mainloop_unlock)(context->mainloop);
 
-  *collection = malloc(sizeof(cubeb_device_collection) +
-      sizeof(cubeb_device_info *) * (user_data.count > 0 ? user_data.count - 1 : 0));
-  (*collection)->count = user_data.count;
-  for (i = 0; i < user_data.count; i++)
-    (*collection)->device[i] = user_data.devinfo[i];
+  collection->device = user_data.devinfo;
+  collection->count = user_data.count;
 
   free(user_data.default_sink_name);
   free(user_data.default_source_name);
-  free(user_data.devinfo);
   return CUBEB_OK;
 }
 

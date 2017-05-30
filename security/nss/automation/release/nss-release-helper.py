@@ -171,11 +171,13 @@ def set_4_digit_release_number():
     set_all_lib_versions(version, major, minor, patch, build)
 
 def create_nss_release_archive():
-    ensure_arguments_after_action(4, "nss_release_version  nss_hg_release_tag  nspr_release_version  path_to_stage_directory")
+    ensure_arguments_after_action(3, "nss_release_version  nss_hg_release_tag  path_to_stage_directory")
     nssrel = args[1].strip() #e.g. 3.19.3
     nssreltag = args[2].strip() #e.g. NSS_3_19_3_RTM
-    nsprrel = args[3].strip() #e.g. 4.10.8
-    stagedir = args[4].strip() #e.g. ../stage
+    stagedir = args[3].strip() #e.g. ../stage
+
+    with open('automation/release/nspr-version.txt') as nspr_version_file:
+        nsprrel = next(nspr_version_file).strip()
 
     nspr_tar = "nspr-" + nsprrel + ".tar.gz"
     nsprtar_with_path= stagedir + "/v" + nsprrel + "/src/" + nspr_tar

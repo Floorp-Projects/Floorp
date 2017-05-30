@@ -29,20 +29,20 @@ struct cubeb {
 
 struct cubeb_stream {
   cubeb * context;
-  pthread_t th;			  /* to run real-time audio i/o */
-  pthread_mutex_t mtx;		  /* protects hdl and pos */
-  struct sio_hdl *hdl;		  /* link us to sndio */
-  int active;			  /* cubec_start() called */
-  int conv;			  /* need float->s16 conversion */
-  unsigned char *buf;		  /* data is prepared here */
-  unsigned int nfr;		  /* number of frames in buf */
-  unsigned int bpf;		  /* bytes per frame */
-  unsigned int pchan;		  /* number of play channels */
-  uint64_t rdpos;		  /* frame number Joe hears right now */
-  uint64_t wrpos;		  /* number of written frames */
+  pthread_t th;                   /* to run real-time audio i/o */
+  pthread_mutex_t mtx;            /* protects hdl and pos */
+  struct sio_hdl *hdl;            /* link us to sndio */
+  int active;                     /* cubec_start() called */
+  int conv;                       /* need float->s16 conversion */
+  unsigned char *buf;             /* data is prepared here */
+  unsigned int nfr;               /* number of frames in buf */
+  unsigned int bpf;               /* bytes per frame */
+  unsigned int pchan;             /* number of play channels */
+  uint64_t rdpos;                 /* frame number Joe hears right now */
+  uint64_t wrpos;                 /* number of written frames */
   cubeb_data_callback data_cb;    /* cb to preapare data */
   cubeb_state_callback state_cb;  /* cb to notify about state changes */
-  void *arg;			  /* user arg to {data,state}_cb */
+  void *arg;                      /* user arg to {data,state}_cb */
 };
 
 static void

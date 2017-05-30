@@ -38,7 +38,9 @@ add_task(async function sidebar_windows() {
   ok(!document.getElementById("sidebar-box").hidden, "sidebar box is visible in first window");
   // Check that the menuitem has our image styling.
   let elements = document.getElementsByClassName("webextension-menuitem");
-  is(elements.length, 1, "have one menuitem");
+  // ui is in flux, at time of writing we potentially have 3 menuitems, later
+  // it may be two or one, just make sure one is there.
+  ok(elements.length > 0, "have a menuitem");
   let style = elements[0].getAttribute("style");
   ok(style.includes("webextension-menuitem-image"), "this menu has style");
 
@@ -52,7 +54,7 @@ add_task(async function sidebar_windows() {
   ok(!win.document.getElementById("sidebar-box").hidden, "sidebar box is visible in second window");
   // Check that the menuitem has our image styling.
   elements = win.document.getElementsByClassName("webextension-menuitem");
-  is(elements.length, 1, "have one menuitem");
+  ok(elements.length > 0, "have a menuitem");
   style = elements[0].getAttribute("style");
   ok(style.includes("webextension-menuitem-image"), "this menu has style");
 
