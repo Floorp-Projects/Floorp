@@ -54,6 +54,7 @@ class GlobalOverrider {
     } else {
       this._override(key, value);
     }
+    return value;
   }
 
   /**

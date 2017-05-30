@@ -18,30 +18,27 @@ const tsArgs = {prefInitHook};
 describe("TelemetrySender", () => {
   let globals;
   let tSender;
+  let sandbox;
   let fetchStub;
   const fakeEndpointUrl = "http://127.0.0.1/stuff";
   const fakePingJSON = JSON.stringify({action: "fake_action", monkey: 1});
   const fakeFetchHttpErrorResponse = {ok: false, status: 400};
   const fakeFetchSuccessResponse = {ok: true, status: 200};
 
-  before(() => {
+  beforeEach(() => {
     globals = new GlobalOverrider();
-
-    fetchStub = globals.sandbox.stub();
+    sandbox = globals.sandbox;
+    fetchStub = sandbox.stub();
 
     globals.set("Preferences", FakePrefs);
     globals.set("fetch", fetchStub);
-  });
-
-  beforeEach(() => {
+    sandbox.spy(global.Components.utils, "reportError");
   });
 
   afterEach(() => {
-    globals.reset();
+    globals.restore();
     FakePrefs.prototype.prefs = {};
   });
-
-  after(() => globals.restore());
 
   it("should construct the Prefs object", () => {
     globals.sandbox.spy(global, "Preferences");
