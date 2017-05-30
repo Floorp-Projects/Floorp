@@ -7,6 +7,7 @@
 #include "DataChannelChild.h"
 
 #include "mozilla/Unused.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/NeckoChild.h"
 
 namespace mozilla {
@@ -27,6 +28,12 @@ DataChannelChild::~DataChannelChild()
 NS_IMETHODIMP
 DataChannelChild::ConnectParent(uint32_t aId)
 {
+    mozilla::dom::ContentChild* cc =
+        static_cast<mozilla::dom::ContentChild*>(gNeckoChild->Manager());
+    if (cc->IsShuttingDown()) {
+        return NS_ERROR_FAILURE;
+    }
+
     if (!gNeckoChild->SendPDataChannelConstructor(this, aId)) {
         return NS_ERROR_FAILURE;
     }

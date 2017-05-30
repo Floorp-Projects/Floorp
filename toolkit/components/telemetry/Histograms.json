@@ -1650,38 +1650,6 @@
     "n_buckets": 20,
     "description": "Maximum retention time for the gradient cache. (ms)"
   },
-  "WORD_CACHE_HITS_CONTENT": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 256,
-    "n_buckets": 30,
-    "description": "Word cache hits, content text (chars)"
-  },
-  "WORD_CACHE_HITS_CHROME": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 256,
-    "n_buckets": 30,
-    "description": "Word cache hits, chrome text (chars)"
-  },
-  "WORD_CACHE_MISSES_CONTENT": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 256,
-    "n_buckets": 30,
-    "description": "Word cache misses, content text (chars)"
-  },
-  "WORD_CACHE_MISSES_CHROME": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 256,
-    "n_buckets": 30,
-    "description": "Word cache misses, chrome text (chars)"
-  },
   "FONT_CACHE_HIT": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",

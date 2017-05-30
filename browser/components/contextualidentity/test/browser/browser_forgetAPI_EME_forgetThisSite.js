@@ -98,7 +98,7 @@ async function setupEMEKey(browser) {
     let access = await content.navigator.requestMediaKeySystemAccess("org.w3.clearkey",
                                                                      [{
                                                                        initDataTypes: [aKeyInfo.initDataType],
-                                                                       videoCapabilities: [{contentType: 'video/webm; codecs="vp9"'}],
+                                                                       videoCapabilities: [{contentType: "video/webm"}],
                                                                        sessionTypes: ["persistent-license"],
                                                                        persistentState: "required",
                                                                      }]);
@@ -153,7 +153,7 @@ async function checkEMEKey(browser, emeSessionId) {
     let access = await content.navigator.requestMediaKeySystemAccess("org.w3.clearkey",
                                                                      [{
                                                                        initDataTypes: [aKeyInfo.initDataType],
-                                                                       videoCapabilities: [{contentType: 'video/webm; codecs="vp9"'}],
+                                                                       videoCapabilities: [{contentType: "video/webm"}],
                                                                        sessionTypes: ["persistent-license"],
                                                                        persistentState: "required",
                                                                      }]);

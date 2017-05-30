@@ -22,6 +22,10 @@ apt_packages+=('ninja-build')
 apt_packages+=('pkg-config')
 apt_packages+=('zlib1g-dev')
 
+# 32-bit builds
+apt_packages+=('gcc-multilib')
+apt_packages+=('g++-multilib')
+
 # Latest Mercurial.
 apt_packages+=('mercurial')
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 41BD8711B1F0EC2B0D85B91CF59CE3A8323293EE
@@ -30,6 +34,11 @@ echo "deb http://ppa.launchpad.net/mercurial-ppa/releases/ubuntu xenial main" > 
 # Install packages.
 apt-get -y update
 apt-get install -y --no-install-recommends ${apt_packages[@]}
+
+# 32-bit builds
+dpkg --add-architecture i386
+apt-get -y update
+apt-get install -y --no-install-recommends libssl-dev:i386
 
 # Install LLVM/clang-4.0.
 mkdir clang-tmp

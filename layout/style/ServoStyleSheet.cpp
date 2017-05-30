@@ -59,13 +59,13 @@ ServoStyleSheetInner::CloneFor(StyleSheet* aPrimarySheet)
                                   static_cast<ServoStyleSheet*>(aPrimarySheet));
 }
 
+MOZ_DEFINE_MALLOC_SIZE_OF(ServoStyleSheetMallocSizeOf)
+
 size_t
 ServoStyleSheetInner::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
-
-  // XXX: need to measure mSheet
-
+  n += Servo_StyleSheet_SizeOfIncludingThis(ServoStyleSheetMallocSizeOf, mSheet);
   return n;
 }
 
