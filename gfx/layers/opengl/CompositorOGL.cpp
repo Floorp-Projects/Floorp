@@ -16,6 +16,7 @@
 #include "gfxEnv.h"                     // for gfxEnv
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxPrefs.h"                   // for gfxPrefs
+#include "gfxConfig.h"
 #include "gfxRect.h"                    // for gfxRect
 #include "gfxUtils.h"                   // for gfxUtils, etc
 #include "mozilla/ArrayUtils.h"         // for ArrayLength
@@ -1414,7 +1415,7 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
     }
     break;
   case EffectTypes::COMPONENT_ALPHA: {
-      MOZ_ASSERT(gfxPrefs::ComponentAlphaEnabled());
+      MOZ_ASSERT(gfxConfig::IsEnabled(Feature::COMPONENT_ALPHA));
       MOZ_ASSERT(blendMode == gfx::CompositionOp::OP_OVER, "Can't support blend modes with component alpha!");
       EffectComponentAlpha* effectComponentAlpha =
         static_cast<EffectComponentAlpha*>(aEffectChain.mPrimaryEffect.get());
