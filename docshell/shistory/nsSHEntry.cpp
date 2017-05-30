@@ -138,6 +138,21 @@ nsSHEntry::SetOriginalURI(nsIURI* aOriginalURI)
 }
 
 NS_IMETHODIMP
+nsSHEntry::GetResultPrincipalURI(nsIURI** aResultPrincipalURI)
+{
+  *aResultPrincipalURI = mResultPrincipalURI;
+  NS_IF_ADDREF(*aResultPrincipalURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::SetResultPrincipalURI(nsIURI* aResultPrincipalURI)
+{
+  mResultPrincipalURI = aResultPrincipalURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSHEntry::GetLoadReplace(bool* aLoadReplace)
 {
   *aLoadReplace = mLoadReplace;
