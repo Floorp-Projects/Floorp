@@ -50,15 +50,6 @@ function do_seeked(e) {
   });
 }
 
-function do_loaded(e) {
-  var v = e.target;
-  v.removeEventListener("loadeddata", do_loaded);
-  v.currentTime = v.duration / 2;
-  is(v.currentTime, v.duration / 2, "current time was updated");
-  ok(v.seeking, "seeking is true");
-  v.addEventListener("seeked", do_seeked);
-}
-
 runWithMSE(function (ms, v) {
   ms.addEventListener("sourceopen", function () {
     var sb = ms.addSourceBuffer("video/webm");
@@ -67,7 +58,12 @@ runWithMSE(function (ms, v) {
 
     fetchWithXHR("seek.webm", function (arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer));
-      v.addEventListener("loadeddata", do_loaded);
+      once(sb, "updateend", function() {
+        v.currentTime = v.duration / 2;
+        is(v.currentTime, v.duration / 2, "current time was updated");
+        ok(v.seeking, "seeking is true");
+        v.addEventListener("seeked", do_seeked);
+      });
     });
   });
 });

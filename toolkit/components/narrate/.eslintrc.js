@@ -23,7 +23,6 @@ module.exports = {
     "max-nested-callbacks": ["error", 3],
     "new-cap": ["error", {"capIsNew": false}],
     "new-parens": "error",
-    "no-array-constructor": "error",
     "no-control-regex": "error",
     "no-extend-native": "error",
     "no-fallthrough": "error",

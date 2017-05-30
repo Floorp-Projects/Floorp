@@ -13,6 +13,7 @@
 ${helpers.predefined_type("outline-color", "CSSColor", "computed::CSSColor::CurrentColor",
                           initial_specified_value="specified::CSSColor::currentcolor()",
                           animation_value_type="IntermediateColor", complex_color=True, need_clone=True,
+                          ignored_when_colors_disabled=True,
                           spec="https://drafts.csswg.org/css-ui/#propdef-outline-color")}
 
 <%helpers:longhand name="outline-style" need_clone="True" animation_value_type="none"
@@ -108,9 +109,9 @@ ${helpers.predefined_type("outline-color", "CSSColor", "computed::CSSColor::Curr
 // The -moz-outline-radius-* properties are non-standard and not on a standards track.
 // TODO: Should they animate?
 % for corner in ["topleft", "topright", "bottomright", "bottomleft"]:
-    ${helpers.predefined_type("-moz-outline-radius-" + corner, "BorderRadiusSize",
-        "computed::BorderRadiusSize::zero()",
-        "parse", products="gecko",
+    ${helpers.predefined_type("-moz-outline-radius-" + corner, "BorderCornerRadius",
+        "computed::LengthOrPercentage::zero().into()",
+        products="gecko",
         boxed=True,
         animation_value_type="none",
         spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/-moz-outline-radius)")}

@@ -1445,16 +1445,15 @@ HTMLEditRules::WillInsertText(EditAction aAction,
     if (!mDocChangeRange) {
       mDocChangeRange = new nsRange(selNode);
     }
-    rv = mDocChangeRange->SetStart(selNode, selOffset);
-    NS_ENSURE_SUCCESS(rv, rv);
 
     if (curNode) {
-      rv = mDocChangeRange->SetEnd(curNode, curOffset);
+      rv = mDocChangeRange->SetStartAndEnd(selNode, selOffset,
+                                           curNode, curOffset);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     } else {
-      rv = mDocChangeRange->SetEnd(selNode, selOffset);
+      rv = mDocChangeRange->CollapseTo(selNode, selOffset);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -5250,10 +5249,11 @@ HTMLEditRules::ExpandSelectionForDeletion(Selection& aSelection)
 
     // Create a range that represents expanded selection
     RefPtr<nsRange> range = new nsRange(selStartNode);
-    nsresult rv = range->SetStart(selStartNode, selStartOffset);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = range->SetEnd(selEndNode, selEndOffset);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = range->SetStartAndEnd(selStartNode, selStartOffset,
+                                        selEndNode, selEndOffset);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     // Check if block is entirely inside range
     if (brBlock) {
@@ -5714,26 +5714,27 @@ HTMLEditRules::PromoteRange(nsRange& aRange,
   // This is tricky.  The basic idea is to push out the range endpoints to
   // truly enclose the blocks that we will affect.
 
-  nsCOMPtr<nsIDOMNode> opStartNode;
-  nsCOMPtr<nsIDOMNode> opEndNode;
+  nsCOMPtr<nsIDOMNode> opDOMStartNode;
+  nsCOMPtr<nsIDOMNode> opDOMEndNode;
   int32_t opStartOffset, opEndOffset;
 
   GetPromotedPoint(kStart, GetAsDOMNode(startNode), startOffset,
-                   aOperationType, address_of(opStartNode), &opStartOffset);
+                   aOperationType, address_of(opDOMStartNode), &opStartOffset);
   GetPromotedPoint(kEnd, GetAsDOMNode(endNode), endOffset, aOperationType,
-                   address_of(opEndNode), &opEndOffset);
+                   address_of(opDOMEndNode), &opEndOffset);
 
   // Make sure that the new range ends up to be in the editable section.
   if (!htmlEditor->IsDescendantOfEditorRoot(
-        EditorBase::GetNodeAtRangeOffsetPoint(opStartNode, opStartOffset)) ||
+        EditorBase::GetNodeAtRangeOffsetPoint(opDOMStartNode, opStartOffset)) ||
       !htmlEditor->IsDescendantOfEditorRoot(
-        EditorBase::GetNodeAtRangeOffsetPoint(opEndNode, opEndOffset - 1))) {
+        EditorBase::GetNodeAtRangeOffsetPoint(opDOMEndNode, opEndOffset - 1))) {
     return;
   }
 
-  DebugOnly<nsresult> rv = aRange.SetStart(opStartNode, opStartOffset);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  rv = aRange.SetEnd(opEndNode, opEndOffset);
+  nsCOMPtr<nsINode> opStartNode = do_QueryInterface(opDOMStartNode);
+  nsCOMPtr<nsINode> opEndNode = do_QueryInterface(opDOMEndNode);
+  DebugOnly<nsresult> rv =
+    aRange.SetStartAndEnd(opStartNode, opStartOffset, opEndNode, opEndOffset);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
@@ -7400,10 +7401,10 @@ HTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
   nsCOMPtr<nsINode> node = do_QueryInterface(selNode);
   NS_ENSURE_STATE(node);
   RefPtr<nsRange> range = new nsRange(node);
-  rv = range->SetStart(selNode, selOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = range->SetEnd(selNode, selOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  rv = range->CollapseTo(node, selOffset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   bool nodeBefore, nodeAfter;
   rv = nsRange::CompareNodeToRange(mNewBlock, range, &nodeBefore, &nodeAfter);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -8298,10 +8299,13 @@ HTMLEditRules::DidSplitNode(nsIDOMNode* aExistingRightNode,
   if (!mListenerEnabled) {
     return NS_OK;
   }
-  nsresult rv = mUtilRange->SetStart(aNewLeftNode, 0);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mUtilRange->SetEnd(aExistingRightNode, 0);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> newLeftNode = do_QueryInterface(aNewLeftNode);
+  nsCOMPtr<nsINode> existingRightNode = do_QueryInterface(aExistingRightNode);
+  nsresult rv = mUtilRange->SetStartAndEnd(newLeftNode, 0,
+                                           existingRightNode, 0);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   return UpdateDocChangeRange(mUtilRange);
 }
 
@@ -8326,11 +8330,12 @@ HTMLEditRules::DidJoinNodes(nsIDOMNode* aLeftNode,
   if (!mListenerEnabled) {
     return NS_OK;
   }
+  nsCOMPtr<nsINode> rightNode = do_QueryInterface(aRightNode);
   // assumption that Join keeps the righthand node
-  nsresult rv = mUtilRange->SetStart(aRightNode, mJoinOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mUtilRange->SetEnd(aRightNode, mJoinOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = mUtilRange->CollapseTo(rightNode, mJoinOffset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   return UpdateDocChangeRange(mUtilRange);
 }
 
@@ -8352,11 +8357,12 @@ HTMLEditRules::DidInsertText(nsIDOMCharacterData* aTextNode,
     return NS_OK;
   }
   int32_t length = aString.Length();
-  nsCOMPtr<nsIDOMNode> theNode = do_QueryInterface(aTextNode);
-  nsresult rv = mUtilRange->SetStart(theNode, aOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mUtilRange->SetEnd(theNode, aOffset+length);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> theNode = do_QueryInterface(aTextNode);
+  nsresult rv = mUtilRange->SetStartAndEnd(theNode, aOffset,
+                                           theNode, aOffset + length);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   return UpdateDocChangeRange(mUtilRange);
 }
 
@@ -8377,11 +8383,11 @@ HTMLEditRules::DidDeleteText(nsIDOMCharacterData* aTextNode,
   if (!mListenerEnabled) {
     return NS_OK;
   }
-  nsCOMPtr<nsIDOMNode> theNode = do_QueryInterface(aTextNode);
-  nsresult rv = mUtilRange->SetStart(theNode, aOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mUtilRange->SetEnd(theNode, aOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> theNode = do_QueryInterface(aTextNode);
+  nsresult rv = mUtilRange->CollapseTo(theNode, aOffset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   return UpdateDocChangeRange(mUtilRange);
 }
 
@@ -8396,20 +8402,25 @@ HTMLEditRules::WillDeleteSelection(nsISelection* aSelection)
   }
   RefPtr<Selection> selection = aSelection->AsSelection();
   // get the (collapsed) selection location
-  nsCOMPtr<nsIDOMNode> selNode;
-  int32_t selOffset;
-
+  nsCOMPtr<nsINode> startNode;
+  int32_t startOffset;
   nsresult rv =
     EditorBase::GetStartNodeAndOffset(selection,
-                                      getter_AddRefs(selNode), &selOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mUtilRange->SetStart(selNode, selOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+                                      getter_AddRefs(startNode), &startOffset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  nsCOMPtr<nsINode> endNode;
+  int32_t endOffset;
   rv = EditorBase::GetEndNodeAndOffset(selection,
-                                       getter_AddRefs(selNode), &selOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mUtilRange->SetEnd(selNode, selOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+                                       getter_AddRefs(endNode), &endOffset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  rv = mUtilRange->SetStartAndEnd(startNode, startOffset, endNode, endOffset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   return UpdateDocChangeRange(mUtilRange);
 }
 

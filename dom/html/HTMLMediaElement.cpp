@@ -1658,6 +1658,9 @@ void HTMLMediaElement::ShutdownDecoder()
   RemoveMediaElementFromURITable();
   NS_ASSERTION(mDecoder, "Must have decoder to shut down");
   mWaitingForKeyListener.DisconnectIfExists();
+  if (mMediaSource) {
+    mMediaSource->CompletePendingTransactions();
+  }
   mDecoder->Shutdown();
   mDecoder = nullptr;
 }
@@ -5581,6 +5584,12 @@ HTMLMediaElement::UpdateReadyStateInternal()
       mediaInfo.EnableVideo();
     }
     MetadataLoaded(&mediaInfo, nsAutoPtr<const MetadataTags>(nullptr));
+  }
+
+  if (mMediaSource) {
+    // readyState has changed, assuming it's following the pending mediasource
+    // operations. Notify the Mediasource that the operations have completed.
+    mMediaSource->CompletePendingTransactions();
   }
 
   enum NextFrameStatus nextFrameStatus = NextFrameStatus();

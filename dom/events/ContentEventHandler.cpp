@@ -985,11 +985,7 @@ ContentEventHandler::SetRangeFromFlatTextOffset(nsRange* aRange,
 
   // Special case like <br contenteditable>
   if (!mRootContent->HasChildren()) {
-    nsresult rv = aRange->SetStart(mRootContent, 0);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    rv = aRange->SetEnd(mRootContent, 0);
+    nsresult rv = aRange->CollapseTo(mRootContent, 0);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2883,8 +2879,7 @@ ContentEventHandler::AdjustCollapsedRangeMaybeIntoTextNode(nsRange* aRange)
     return NS_OK;
   }
 
-  nsresult rv = aRange->Set(childNode, offsetInChildNode,
-                            childNode, offsetInChildNode);
+  nsresult rv = aRange->CollapseTo(childNode, offsetInChildNode);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

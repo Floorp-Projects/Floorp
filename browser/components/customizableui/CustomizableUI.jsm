@@ -227,7 +227,7 @@ var CustomizableUIInternal = {
       panelPlacements.push("characterencoding-button");
     }
 
-    if (AppConstants.NIGHTLY_BUILD) {
+    if (!AppConstants.RELEASE_OR_BETA) {
       if (Services.prefs.getBoolPref("extensions.webcompat-reporter.enabled")) {
         panelPlacements.push("webcompat-reporter-button");
       }
