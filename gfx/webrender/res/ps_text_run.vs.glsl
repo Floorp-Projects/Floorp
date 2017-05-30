@@ -6,8 +6,8 @@
 void main(void) {
     Primitive prim = load_primitive();
     TextRun text = fetch_text_run(prim.prim_index);
-    Glyph glyph = fetch_glyph(prim.sub_index);
-    ResourceRect res = fetch_resource_rect(prim.user_data.x);
+    Glyph glyph = fetch_glyph(prim.user_data0);
+    ResourceRect res = fetch_resource_rect(prim.user_data1);
 
     RectWithSize local_rect = RectWithSize(glyph.offset.xy,
                                            (res.uv_rect.zw - res.uv_rect.xy) / uDevicePixelRatio);

@@ -7,8 +7,6 @@
 
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TextureClient.h"
@@ -491,25 +489,6 @@ void
 WebRenderLayerManager::Composite()
 {
   WrBridge()->SendForceComposite();
-}
-
-RefPtr<PipelineIdPromise>
-WebRenderLayerManager::AllocPipelineId()
-{
-  if (XRE_IsParentProcess()) {
-    GPUProcessManager* pm = GPUProcessManager::Get();
-    if (!pm) {
-      return PipelineIdPromise::CreateAndReject(ipc::PromiseRejectReason::HandlerRejected, __func__);
-    }
-    return PipelineIdPromise::CreateAndResolve(wr::AsPipelineId(pm->AllocateLayerTreeId()), __func__);;
-  }
-
-  MOZ_ASSERT(XRE_IsContentProcess());
-  RefPtr<dom::ContentChild> contentChild = dom::ContentChild::GetSingleton();
-  if (!contentChild) {
-    return PipelineIdPromise::CreateAndReject(ipc::PromiseRejectReason::HandlerRejected, __func__);
-  }
-  return contentChild->SendAllocPipelineId();
 }
 
 void

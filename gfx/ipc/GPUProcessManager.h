@@ -244,8 +244,9 @@ private:
   RefPtr<Observer> mObserver;
   ipc::TaskFactory<GPUProcessManager> mTaskFactory;
   RefPtr<VsyncIOThreadHolder> mVsyncIOThread;
-  uint64_t mNextLayerTreeId;
   uint32_t mNextNamespace;
+  uint32_t mIdNamespace;
+  uint32_t mResourceId;
   uint32_t mNumProcessAttempts;
 
   nsTArray<RefPtr<RemoteCompositorSession>> mRemoteSessions;
