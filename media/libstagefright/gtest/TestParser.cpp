@@ -221,7 +221,7 @@ static const TestFileData rustTestFiles[] = {
   { "test_case_1181213.mp4",        1, 416666,
                                            320, 240, 1, 477460,
                                                              true,   0, false, false, 2 },
-  { "test_case_1181215.mp4",        E, -1,   0,   0, E, -1, false,   0, false, false, 0 },
+  { "test_case_1181215.mp4",        1, 4966666,   190,   240, 0, -1, false,   0, false, false, 0 },
   { "test_case_1181220.mp4",        E, -1,   0,   0, E, -1, false,   0, false, false, 0 },
   { "test_case_1181223.mp4",        1, 416666,
                                            320, 240, 0, -1, false,   0, false, false, 0 },

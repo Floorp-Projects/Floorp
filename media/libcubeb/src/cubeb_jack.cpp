@@ -93,7 +93,7 @@ static int cbjack_stream_device_destroy(cubeb_stream * stream,
                                         cubeb_device * device);
 static int cbjack_stream_get_current_device(cubeb_stream * stm, cubeb_device ** const device);
 static int cbjack_enumerate_devices(cubeb * context, cubeb_device_type type,
-                                    cubeb_device_collection ** collection);
+                                    cubeb_device_collection * collection);
 static int cbjack_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_name,
                               cubeb_devid input_device,
                               cubeb_stream_params * input_stream_params,
@@ -180,7 +180,6 @@ struct cubeb {
   cubeb_stream streams[MAX_STREAMS];
   unsigned int active_streams;
 
-  cubeb_device_info * devinfo[2];
   cubeb_device_collection_changed_callback collection_changed_callback;
 
   bool active;
@@ -974,68 +973,63 @@ cbjack_stream_device_destroy(cubeb_stream * /*stream*/,
 
 static int
 cbjack_enumerate_devices(cubeb * context, cubeb_device_type type,
-                         cubeb_device_collection ** collection)
+                         cubeb_device_collection * collection)
 {
   if (!context)
     return CUBEB_ERROR;
 
   uint32_t rate;
-  uint8_t i = 0;
-  uint8_t j;
   cbjack_get_preferred_sample_rate(context, &rate);
   const char * j_in = "JACK capture";
   const char * j_out = "JACK playback";
 
+  cubeb_device_info * devices = new cubeb_device_info[2];
+    reinterpret_cast<cubeb_device_info *>(calloc(2, sizeof(cubeb_device_info)));
+  collection->count = 0;
+
   if (type & CUBEB_DEVICE_TYPE_OUTPUT) {
-    context->devinfo[i] = (cubeb_device_info *) malloc(sizeof(cubeb_device_info));
-    context->devinfo[i]->device_id = strdup(j_out);
-    context->devinfo[i]->devid = (cubeb_devid) context->devinfo[i]->device_id;
-    context->devinfo[i]->friendly_name = strdup(j_out);
-    context->devinfo[i]->group_id = strdup(j_out);
-    context->devinfo[i]->vendor_name = strdup(j_out);
-    context->devinfo[i]->type = CUBEB_DEVICE_TYPE_OUTPUT;
-    context->devinfo[i]->state = CUBEB_DEVICE_STATE_ENABLED;
-    context->devinfo[i]->preferred = CUBEB_DEVICE_PREF_ALL;
-    context->devinfo[i]->format = CUBEB_DEVICE_FMT_F32NE;
-    context->devinfo[i]->default_format = CUBEB_DEVICE_FMT_F32NE;
-    context->devinfo[i]->max_channels = MAX_CHANNELS;
-    context->devinfo[i]->min_rate = rate;
-    context->devinfo[i]->max_rate = rate;
-    context->devinfo[i]->default_rate = rate;
-    context->devinfo[i]->latency_lo = 0;
-    context->devinfo[i]->latency_hi = 0;
-    i++;
+    cubeb_device_info * cur = &devices[collection->count];
+    cur->device_id = strdup(j_out);
+    cur->devid = (cubeb_devid) cur->device_id;
+    cur->friendly_name = strdup(j_out);
+    cur->group_id = strdup(j_out);
+    cur->vendor_name = strdup(j_out);
+    cur->type = CUBEB_DEVICE_TYPE_OUTPUT;
+    cur->state = CUBEB_DEVICE_STATE_ENABLED;
+    cur->preferred = CUBEB_DEVICE_PREF_ALL;
+    cur->format = CUBEB_DEVICE_FMT_F32NE;
+    cur->default_format = CUBEB_DEVICE_FMT_F32NE;
+    cur->max_channels = MAX_CHANNELS;
+    cur->min_rate = rate;
+    cur->max_rate = rate;
+    cur->default_rate = rate;
+    cur->latency_lo = 0;
+    cur->latency_hi = 0;
+    collection->count +=1 ;
   }
 
   if (type & CUBEB_DEVICE_TYPE_INPUT) {
-    context->devinfo[i] = (cubeb_device_info *) malloc(sizeof(cubeb_device_info));
-    context->devinfo[i]->device_id = strdup(j_in);
-    context->devinfo[i]->devid = (cubeb_devid) context->devinfo[i]->device_id;
-    context->devinfo[i]->friendly_name = strdup(j_in);
-    context->devinfo[i]->group_id = strdup(j_in);
-    context->devinfo[i]->vendor_name = strdup(j_in);
-    context->devinfo[i]->type = CUBEB_DEVICE_TYPE_INPUT;
-    context->devinfo[i]->state = CUBEB_DEVICE_STATE_ENABLED;
-    context->devinfo[i]->preferred = CUBEB_DEVICE_PREF_ALL;
-    context->devinfo[i]->format = CUBEB_DEVICE_FMT_F32NE;
-    context->devinfo[i]->default_format = CUBEB_DEVICE_FMT_F32NE;
-    context->devinfo[i]->max_channels = MAX_CHANNELS;
-    context->devinfo[i]->min_rate = rate;
-    context->devinfo[i]->max_rate = rate;
-    context->devinfo[i]->default_rate = rate;
-    context->devinfo[i]->latency_lo = 0;
-    context->devinfo[i]->latency_hi = 0;
-    i++;
+    cubeb_device_info * cur = &devices[collection->count];
+    cur->device_id = strdup(j_in);
+    cur->devid = (cubeb_devid) cur->device_id;
+    cur->friendly_name = strdup(j_in);
+    cur->group_id = strdup(j_in);
+    cur->vendor_name = strdup(j_in);
+    cur->type = CUBEB_DEVICE_TYPE_INPUT;
+    cur->state = CUBEB_DEVICE_STATE_ENABLED;
+    cur->preferred = CUBEB_DEVICE_PREF_ALL;
+    cur->format = CUBEB_DEVICE_FMT_F32NE;
+    cur->default_format = CUBEB_DEVICE_FMT_F32NE;
+    cur->max_channels = MAX_CHANNELS;
+    cur->min_rate = rate;
+    cur->max_rate = rate;
+    cur->default_rate = rate;
+    cur->latency_lo = 0;
+    cur->latency_hi = 0;
+    collection->count += 1;
   }
 
-  *collection = (cubeb_device_collection *)
-                 malloc(sizeof(cubeb_device_collection) +
-                        i * sizeof(cubeb_device_info *));
+  collection->device = devices;
 
-  (*collection)->count = i;
-
-  for (j = 0; j < i; j++) {
-    (*collection)->device[j] = context->devinfo[j];
-  }
   return CUBEB_OK;
 }

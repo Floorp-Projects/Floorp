@@ -15,6 +15,8 @@
 %include ../shared/browser.inc.css
 
 :root {
+  --titlebar-text-color: inherit;
+
   --space-above-tabbar: 15px;
 
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) - 1px);
@@ -29,13 +31,13 @@
 
   --backbutton-border-color: var(--urlbar-border-color-hover);
   --backbutton-background: rgba(255,255,255,.15);
-%endif
 
   --toolbarbutton-hover-bordercolor: rgba(0,0,0,.2);
   --toolbarbutton-hover-boxshadow: none;
 
   --toolbarbutton-active-bordercolor: rgba(0,0,0,.3);
   --toolbarbutton-active-boxshadow: 0 0 0 1px rgba(0,0,0,.15) inset;
+%endif
 
   --toolbarbutton-checkedhover-backgroundcolor: rgba(0,0,0,.1);
 
@@ -113,12 +115,13 @@ toolbar[brighttext] {
 }
 
 @media (-moz-windows-default-theme) {
+%ifndef MOZ_PHOTON_THEME
   @media (-moz-os-version: windows-win7) {
     #navigator-toolbox::after {
       border-bottom-color: #aabccf;
     }
   }
-
+%endif
   @media (-moz-os-version: windows-win8),
          (-moz-os-version: windows-win10) {
     #navigator-toolbox::after {
@@ -163,19 +166,22 @@ toolbar[brighttext] {
   transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
 }
 
+#toolbar-menubar,
+#TabsToolbar {
+  color: var(--titlebar-text-color);
+}
+
 @media (-moz-windows-compositor: 0),
        (-moz-windows-default-theme: 0) {
   /* Please keep the menu text colors in this media block in sync with
    * compacttheme.css, minus the :not(:-moz-lwtheme) condition - see Bug 1165718.
    */
-  #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar:not(:-moz-lwtheme),
-  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme) {
-    color: CaptionText;
+  :root[tabsintitlebar]:not([inFullscreen]):not(:-moz-lwtheme) {
+    --titlebar-text-color: CaptionText;
   }
 
-  #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive,
-  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme):-moz-window-inactive {
-    color: InactiveCaptionText;
+  :root[tabsintitlebar]:not([inFullscreen]):not(:-moz-lwtheme):-moz-window-inactive {
+    --titlebar-text-color: InactiveCaptionText;
   }
 }
 
@@ -470,7 +476,7 @@ menuitem.bookmark-item {
 %include ../shared/toolbarbuttons.inc.css
 %include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css
-
+%ifndef MOZ_PHOTON_THEME
 @media (-moz-os-version: windows-win7) {
   :root {
     --toolbarbutton-hover-background: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
@@ -490,6 +496,7 @@ menuitem.bookmark-item {
     --toolbarbutton-checkedhover-backgroundcolor: rgba(90%,90%,90%,.4);
   }
 }
+%endif
 
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
 .unified-nav-forward[_moz-menuactive]:-moz-locale-dir(rtl) {
@@ -510,65 +517,71 @@ menuitem.bookmark-item {
   border: none;
   margin: 0 !important;
   padding: 6px 12px;
+  -moz-context-properties: stroke;
+  stroke: currentColor;
+  color: inherit;
 }
 
 #minimize-button {
-  list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize);
+  list-style-image: url(chrome://browser/skin/window-controls/minimize.svg);
 }
 
 #restore-button {
-  list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore);
+  list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
 }
 
 #minimize-button:hover,
 #restore-button:hover {
-  background-color: hsla(0, 0%, 0%, .12);
+  background-color: hsla(0,0%,0%,.12);
 }
 
 #minimize-button:hover:active,
 #restore-button:hover:active {
-  background-color: hsla(0, 0%, 0%, .22);
+  background-color: hsla(0,0%,0%,.22);
+}
+
+#TabsToolbar[brighttext] > #window-controls > #minimize-button:hover,
+#TabsToolbar[brighttext] > #window-controls > #restore-button:hover {
+  background-color: hsla(0,0%,100%,.12);
+}
+
+#TabsToolbar[brighttext] > #window-controls > #minimize-button:hover:active,
+#TabsToolbar[brighttext] > #window-controls > #restore-button:hover:active {
+  background-color: hsla(0,0%,100%,.22);
 }
 
 #close-button {
-  list-style-image: url(chrome://browser/skin/caption-buttons.svg#close);
+  list-style-image: url(chrome://browser/skin/window-controls/close.svg);
 }
 
 #close-button:hover {
   background-color: hsl(355, 86%, 49%);
-  list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-white);
+  stroke: white;
 }
 
 #close-button:hover:active {
   background-color: hsl(355, 82%, 69%);
 }
 
-toolbar[brighttext] #minimize-button {
-  list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize-white);
-}
-
-toolbar[brighttext] #restore-button {
-  list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore-white);
-}
-
-toolbar[brighttext] #close-button {
-  list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-white);
-}
-
 @media (-moz-os-version: windows-win7) {
   #window-controls {
+    -moz-box-align: start;
     margin-inline-start: 4px;
   }
 
   #minimize-button,
   #restore-button,
   #close-button {
+    -moz-appearance: none;
+    border-style: none;
+    margin: 0;
     /* Important to ensure this applies even on toolbar[brighttext] */
     list-style-image: url("chrome://global/skin/icons/windowControls.png") !important;
     /* Also override background color to a avoid hover background styling
      * leaking through around the image. */
     background-color: transparent !important;
     padding: 0;
+    -moz-context-properties: unset;
   }
 
   #minimize-button {
@@ -608,20 +621,6 @@ toolbar[brighttext] #close-button {
 
   #close-button:hover:active {
     -moz-image-region: rect(32px, 48px, 48px, 32px);
-  }
-}
-
-@media (-moz-os-version: windows-win7) {
-  #window-controls {
-    -moz-box-align: start;
-  }
-
-  #minimize-button,
-  #restore-button,
-  #close-button {
-    -moz-appearance: none;
-    border-style: none;
-    margin: 0;
   }
 
   #close-button {

@@ -166,9 +166,6 @@ public:
   inline void PostRestyleEvent(dom::Element* aElement,
                                nsRestyleHint aRestyleHint,
                                nsChangeHint aMinChangeHint);
-  inline void PostRestyleEventForCSSRuleChanges(dom::Element* aElement,
-                                                 nsRestyleHint aRestyleHint,
-                                                 nsChangeHint aMinChangeHint);
   inline void RebuildAllStyleData(nsChangeHint aExtraHint,
                                   nsRestyleHint aRestyleHint);
   inline void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,

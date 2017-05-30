@@ -469,7 +469,6 @@ var getElementTextFn = dispatch(getElementText);
 var getElementTagNameFn = dispatch(getElementTagName);
 var getElementRectFn = dispatch(getElementRect);
 var isElementEnabledFn = dispatch(isElementEnabled);
-var getCurrentUrlFn = dispatch(getCurrentUrl);
 var findElementContentFn = dispatch(findElementContent);
 var findElementsContentFn = dispatch(findElementsContent);
 var isElementSelectedFn = dispatch(isElementSelected);
@@ -508,7 +507,6 @@ function startListeners() {
   addMessageListenerId("Marionette:get", get);
   addMessageListenerId("Marionette:waitForPageLoaded", waitForPageLoaded);
   addMessageListenerId("Marionette:cancelRequest", cancelRequest);
-  addMessageListenerId("Marionette:getCurrentUrl", getCurrentUrlFn);
   addMessageListenerId("Marionette:getTitle", getTitleFn);
   addMessageListenerId("Marionette:getPageSource", getPageSourceFn);
   addMessageListenerId("Marionette:goBack", goBack);
@@ -587,7 +585,6 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:cancelRequest", cancelRequest);
   removeMessageListenerId("Marionette:getTitle", getTitleFn);
   removeMessageListenerId("Marionette:getPageSource", getPageSourceFn);
-  removeMessageListenerId("Marionette:getCurrentUrl", getCurrentUrlFn);
   removeMessageListenerId("Marionette:goBack", goBack);
   removeMessageListenerId("Marionette:goForward", goForward);
   removeMessageListenerId("Marionette:refresh", refresh);
@@ -1220,13 +1217,6 @@ function refresh(msg) {
   } catch (e) {
     sendError(e, command_id);
   }
-}
-
-/**
- * Get URL of the top-level browsing context.
- */
-function getCurrentUrl() {
-  return content.location.href;
 }
 
 /**

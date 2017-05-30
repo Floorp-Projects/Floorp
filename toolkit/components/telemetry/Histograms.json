@@ -13245,5 +13245,16 @@
     "n_buckets": 40,
     "keyed": true,
     "description": "Measures the number of milliseconds we spend processing sync IPC messages in the receiving process, keyed by message name. Note: only messages that take over 500 microseconds are included in this probe."
+  },
+  "WEBEXT_BACKGROUND_PAGE_LOAD_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["addons-dev-internal@mozilla.com"],
+    "bug_numbers": [1353172],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes to load a WebExtensions background page, from when the build function is called to when the page has finished processing the onload event."
   }
 }

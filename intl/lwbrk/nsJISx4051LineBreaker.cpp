@@ -665,7 +665,7 @@ public:
     // characters, etc) then we want a shorter "conservative" range
     uint32_t conservativeRangeStart, conservativeRangeEnd;
     if (index < mLength &&
-        nsIUGenCategory::kLetter ==
+        nsUGenCategory::kLetter ==
           (mText ? GetGenCategory(mText[index])
                  : GetGenCategory(GetUnicodeCharAt(index)))) {
       // Primarily for hyphenated word prefixes/suffixes; we add 1 to Start

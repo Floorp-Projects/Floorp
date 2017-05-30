@@ -179,11 +179,7 @@ public:
 
   static void CleanupGlobalData()
   {
-    if (mDevices) {
-      // This doesn't require anything more than support for free()
-      cubeb_device_collection_destroy(CubebUtils::GetCubebContext(), mDevices);
-      mDevices = nullptr;
-    }
+    cubeb_device_collection_destroy(CubebUtils::GetCubebContext(), &mDevices);
     delete mDeviceIndexes;
     mDeviceIndexes = nullptr;
     delete mDeviceNames;
@@ -234,7 +230,7 @@ public:
 #else
     int dev_index = DeviceIndex(aDeviceIndex);
     if (dev_index != -1) {
-      aID = mDevices->device[dev_index]->devid;
+      aID = mDevices.device[dev_index].devid;
       return true;
     }
     return false;
@@ -249,11 +245,11 @@ public:
     aStrGuidUTF8[0] = '\0';
 #else
     int32_t devindex = DeviceIndex(aIndex);
-    if (!mDevices || devindex < 0) {
+    if (mDevices.count == 0 || devindex < 0) {
       return 1;
     }
     SprintfLiteral(aStrNameUTF8, "%s%s", aIndex == -1 ? "default: " : "",
-		   mDevices->device[devindex]->friendly_name);
+                   mDevices.device[devindex].friendly_name);
     aStrGuidUTF8[0] = '\0';
 #endif
     return 0;
@@ -271,9 +267,9 @@ public:
   {
 #ifdef MOZ_WIDGET_ANDROID
     // OpenSL ES does not support enumerating devices.
-    MOZ_ASSERT(!mDevices);
+    MOZ_ASSERT(mDevices.count == 0);
 #else
-    MOZ_ASSERT(mDevices);
+    MOZ_ASSERT(mDevices.count > 0);
 #endif
 
     if (mInUseCount == 0) {
@@ -325,7 +321,7 @@ private:
   static nsTArray<int>* mDeviceIndexes;
   static int mDefaultDevice; // -1 == not set
   static nsTArray<nsCString>* mDeviceNames;
-  static cubeb_device_collection *mDevices;
+  static cubeb_device_collection mDevices;
   static bool mAnyInUse;
   static StaticMutex sMutex;
 };

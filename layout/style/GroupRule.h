@@ -79,7 +79,7 @@ struct GeckoGroupRuleRules
 struct ServoGroupRuleRules
 {
   explicit ServoGroupRuleRules(already_AddRefed<ServoCssRules> aRawRules)
-    : mRuleList(new ServoCSSRuleList(Move(aRawRules))) {}
+    : mRuleList(new ServoCSSRuleList(Move(aRawRules), nullptr)) {}
   ServoGroupRuleRules(ServoGroupRuleRules&& aOther)
     : mRuleList(Move(aOther.mRuleList)) {}
   ServoGroupRuleRules(const ServoGroupRuleRules& aCopy) {
