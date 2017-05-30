@@ -1,3 +1,0 @@
-. "$topsrcdir/browser/config/mozconfigs/win32/debug"
-
-ac_add_options --enable-webrender
