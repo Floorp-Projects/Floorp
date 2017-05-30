@@ -56,7 +56,8 @@ xul|*.checkbox-check {
 }
 
 xul|*.checkbox-check[checked] {
-  list-style-image: url("chrome://global/skin/in-content/check.svg#check-native");
+  fill: -moz-dialogText;
+  stroke: none;
   background-color: -moz-dialog;
 }
 
