@@ -4,6 +4,7 @@ let { SyncedTabs } = Cu.import("resource://services-sync/SyncedTabs.jsm", {});
 let { TabListComponent } = Cu.import("resource:///modules/syncedtabs/TabListComponent.js", {});
 let { SyncedTabsListStore } = Cu.import("resource:///modules/syncedtabs/SyncedTabsListStore.js", {});
 let { View } = Cu.import("resource:///modules/syncedtabs/TabListView.js", {});
+let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const ACTION_METHODS = [
   "onSelectRow",
@@ -139,9 +140,17 @@ add_task(function* testActions() {
   let tabsToOpen = ["uri1", "uri2"];
   component.onOpenTabs(tabsToOpen, "where");
   Assert.ok(getChromeWindowMock.calledWith(windowMock));
-  Assert.ok(chromeWindowMock.gBrowser.loadTabs.calledWith(tabsToOpen, false, false));
+  Assert.ok(chromeWindowMock.gBrowser.loadTabs.calledWith(tabsToOpen, {
+    inBackground: false,
+    replace: false,
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+  }));
   component.onOpenTabs(tabsToOpen, "tabshifted");
-  Assert.ok(chromeWindowMock.gBrowser.loadTabs.calledWith(tabsToOpen, true, false));
+  Assert.ok(chromeWindowMock.gBrowser.loadTabs.calledWith(tabsToOpen, {
+    inBackground: true,
+    replace: false,
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+  }));
 
   sinon.spy(clipboardHelperMock, "copyString");
   component.onCopyTabLocation("uri");

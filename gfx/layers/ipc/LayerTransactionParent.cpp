@@ -844,7 +844,7 @@ LayerTransactionParent::RecvSetAsyncZoom(const FrameMetrics::ViewID& aScrollID,
 mozilla::ipc::IPCResult
 LayerTransactionParent::RecvFlushApzRepaints()
 {
-  mCompositorBridge->FlushApzRepaints(this);
+  mCompositorBridge->FlushApzRepaints(GetId());
   return IPC_OK();
 }
 
@@ -866,7 +866,7 @@ mozilla::ipc::IPCResult
 LayerTransactionParent::RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,
                                                    nsTArray<ScrollableLayerGuid>&& aTargets)
 {
-  mCompositorBridge->SetConfirmedTargetAPZC(this, aBlockId, aTargets);
+  mCompositorBridge->SetConfirmedTargetAPZC(GetId(), aBlockId, aTargets);
   return IPC_OK();
 }
 

@@ -1429,7 +1429,11 @@ var gBrowserInit = {
         // This function throws for certain malformed URIs, so use exception handling
         // so that we don't disrupt startup
         try {
-          gBrowser.loadTabs(specs, false, true);
+          gBrowser.loadTabs(specs, {
+            inBackground: false,
+            replace: true,
+            // Bug 1365232, provide correct triggeringPrincipal
+          });
         } catch (e) {}
       } else if (uriToLoad instanceof XULElement) {
         // swap the given tab with the default about:blank tab and then close
@@ -2167,7 +2171,10 @@ function BrowserGoHome(aEvent) {
   case "tab":
     urls = homePage.split("|");
     var loadInBackground = getBoolPref("browser.tabs.loadBookmarksInBackground", false);
-    gBrowser.loadTabs(urls, loadInBackground);
+    gBrowser.loadTabs(urls, {
+      inBackground: loadInBackground,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
     break;
   case "window":
     OpenBrowserWindow();
@@ -2185,7 +2192,11 @@ function loadOneOrMoreURIs(aURIString) {
   // This function throws for certain malformed URIs, so use exception handling
   // so that we don't disrupt startup
   try {
-    gBrowser.loadTabs(aURIString.split("|"), false, true);
+    gBrowser.loadTabs(aURIString.split("|"), {
+      inBackground: false,
+      replace: true,
+      // Bug 1365232, provide correct triggeringPrincipal
+    });
   } catch (e) {
   }
 }
@@ -5857,14 +5868,15 @@ function stripUnsafeProtocolOnPaste(pasteData) {
 }
 
 // handleDroppedLink has the following 2 overloads:
-//   handleDroppedLink(event, url, name)
-//   handleDroppedLink(event, links)
-function handleDroppedLink(event, urlOrLinks, name) {
+//   handleDroppedLink(event, url, name, triggeringPrincipal)
+//   handleDroppedLink(event, links, triggeringPrincipal)
+function handleDroppedLink(event, urlOrLinks, nameOrTriggeringPrincipal, triggeringPrincipal) {
   let links;
   if (Array.isArray(urlOrLinks)) {
     links = urlOrLinks;
+    triggeringPrincipal = nameOrTriggeringPrincipal;
   } else {
-    links = [{ url: urlOrLinks, name, type: "" }];
+    links = [{ url: urlOrLinks, nameOrTriggeringPrincipal, type: "" }];
   }
 
   let lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
@@ -5895,6 +5907,7 @@ function handleDroppedLink(event, urlOrLinks, name) {
         allowThirdPartyFixup: false,
         postDatas,
         userContextId,
+        triggeringPrincipal,
       });
     }
   })();
