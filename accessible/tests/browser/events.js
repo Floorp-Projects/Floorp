@@ -6,7 +6,8 @@
 
 // This is loaded by head.js, so has the same globals, hence we import the
 // globals from there.
-/* import-globals-from head.js */
+/* import-globals-from shared-head.js */
+/* import-globals-from ../mochitest/common.js */
 
 /* exported EVENT_REORDER, EVENT_SHOW, EVENT_TEXT_INSERTED, EVENT_TEXT_REMOVED,
             EVENT_DOCUMENT_LOAD_COMPLETE, EVENT_HIDE, EVENT_TEXT_CARET_MOVED,

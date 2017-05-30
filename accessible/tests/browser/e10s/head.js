@@ -12,6 +12,4 @@ Services.scriptloader.loadSubScript(
 
 // Loading and common.js from accessible/tests/mochitest/ for all tests, as
 // well as events.js.
-/* import-globals-from ../../mochitest/common.js */
-/* import-globals-from events.js */
 loadScripts({ name: 'common.js', dir: MOCHITESTS_DIR }, 'events.js');

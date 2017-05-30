@@ -4,6 +4,9 @@
 
 'use strict';
 
+/* import-globals-from ../mochitest/common.js */
+/* import-globals-from events.js */
+
 /* exported Logger, MOCHITESTS_DIR, invokeSetAttribute, invokeFocus,
             invokeSetStyle, getAccessibleDOMNodeID,
             addAccessibleTask, findAccessibleChildByID, isDefunct,
