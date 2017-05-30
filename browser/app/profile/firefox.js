@@ -232,6 +232,10 @@ pref("general.autoScroll", false);
 pref("general.autoScroll", true);
 #endif
 
+// UI density of the browser chrome. This mostly affects toolbarbutton
+// and urlbar spacing. The possible values are 0=normal, 1=compact, 2=touch.
+pref("browser.uidensity", 0);
+
 // At startup, check if we're the default browser and prompt user if not.
 pref("browser.shell.checkDefaultBrowser", true);
 pref("browser.shell.shortcutFavicons",true);

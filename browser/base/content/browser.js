@@ -1314,6 +1314,9 @@ var gBrowserInit = {
     // have been initialized.
     Services.obs.notifyObservers(window, "browser-window-before-show");
 
+    gUIDensity.update();
+    gPrefService.addObserver(gUIDensity.prefDomain, gUIDensity);
+
     let isResistFingerprintingEnabled = gPrefService.getBoolPref("privacy.resistFingerprinting");
 
     // Set a sane starting width/height for all resolutions on new profiles.
@@ -1765,6 +1768,8 @@ var gBrowserInit = {
     gExtensionsNotifications.uninit();
 
     Services.obs.removeObserver(gPluginHandler.NPAPIPluginCrashed, "plugin-crashed");
+
+    gPrefService.removeObserver(gUIDensity.prefDomain, gUIDensity);
 
     try {
       gBrowser.removeProgressListener(window.XULBrowserWindow);
@@ -5410,6 +5415,31 @@ function displaySecurityInfo() {
   BrowserPageInfo(null, "securityTab");
 }
 
+// Updates the UI density (for touch and compact mode) based on the uidensity pref.
+var gUIDensity = {
+  prefDomain: "browser.uidensity",
+  observe(aSubject, aTopic, aPrefName) {
+    if (aTopic != "nsPref:changed" || aPrefName != this.prefDomain)
+      return;
+
+    this.update();
+  },
+
+  update() {
+    let doc = document.documentElement;
+    switch (gPrefService.getIntPref(this.prefDomain)) {
+    case 1:
+      doc.setAttribute("uidensity", "compact");
+      break;
+    case 2:
+      doc.setAttribute("uidensity", "touch");
+      break;
+    default:
+      doc.removeAttribute("uidensity");
+      break;
+    }
+  },
+};
 
 var gHomeButton = {
   prefDomain: "browser.startup.homepage",
