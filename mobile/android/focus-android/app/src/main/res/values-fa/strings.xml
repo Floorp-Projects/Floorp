@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">مسدود کردن ردیاب‌های شبکه‌های اجتماعی</string>
   <string name="preference_privacy_block_content">مسدود کردن سایر ردیاب‌های محتوا</string>
   <string name="preference_privacy_block_content_summary">ممکن است بعضی از ویدئوها یا صفحات وب را دچار مشکل کند</string>
+  <string name="preference_privacy_secure_mode">حالت پنهان</string>
+  <string name="preference_privacy_secure_mode_summary">برای گرفتن تصویر از صفحه و دیدن سایت‌ها در فهرست برنامه‌های اخیرتان که با استفاده از %1$s بازدید کرده‌اید، «حالت پنهان» را خاموش کنید</string>
   <string name="preference_category_performance">کارایی</string>
   <string name="preference_performance_block_webfonts">مسدود کردن قلم‌های وب</string>
   <string name="preference_performance_block_webfonts_summary">ممکن است باعث بارگیری نشدن برخی از شمایل‌ها و تصاویر بشود</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">بازگشت به عقب</string>
   <string name="content_description_stop">توقف بارگیری وب‌سایت</string>
   <string name="content_description_customtab_exit">بازگشت به برنامهٔ قبل</string>
+  <string name="content_description_blocking_switch">مسدود کردن ردیاب‌ها</string>
   <string name="context_menu_paste_go">جایگذاری و ارسال</string>
   <string name="your_rights">حقوق شما</string>
   <string name="external_app_prompt_title">باز کردن پیوند در برنامه‌ای دیگر</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">اشتراک‌گذاری تصویر</string>
   <string name="contextmenu_image_copy">رونوشت از آدرس تصویر</string>
   <string name="contextmenu_image_save">ذخیره تصویر</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1662;&#1575;&#1705; &#1606;&#1582;&#1608;&#1575;&#1607;&#1606;&#1583; &#1588;&#1583;</b>.]]></string>
+  <string name="firstrun_tracking_title">بدون دغدغه نگاه‌ها مرور کنید</string>
+  <string name="firstrun_tracking_text">هنگام مرور به صورت خودکار ردیاب‌های آنلاین را مسدود کنید. سپس صفحه‌های بازدید شده و کوکی‌ها را با لمس آیکن سطل زباله در برنامه یا در اعلان‌هایتان، حذف کنید.</string>
+  <string name="firstrun_defaultbrowser_title">قدرت حریم‌شخصی خود را افزایش دهید</string>
+  <string name="firstrun_defaultbrowser_text">%1$s را به‌عنوان مرورگر پیش‌فرض خود تنظیم کنید و از مزایای مرور خصوصی وقتی از اپ‌های دیگر اندروید به وب متصل می‌شوید بهره‌مند شوید.</string>
+  <string name="firstrun_breaking_title">یک اصلاح سریع هنگامی که\nمسدود کردن = خراب شدن</string>
+  <string name="firstrun_breaking_text">هنگامی که مسدود کردن ردیاب‌های آنلاین باعث خراب شدن یک سایت می‌شود، با لمس «منو ابزار» مسدود کردنِ ردیاب‌ها را متوقف کنید.</string>
+  <string name="firstrun_close_button">باشه، گرفتم!</string>
+  <string name="firstrun_skip_button">رد کردن</string>
+  <string name="firstrun_next_button">بعدی</string>
 </resources>

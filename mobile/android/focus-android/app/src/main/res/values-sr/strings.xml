@@ -18,7 +18,7 @@
   <string name="notification_erase_text">Обришите историју прегледања</string>
   <string name="shortcut_erase_short_label">Обриши</string>
   <string name="shortcut_erase_long_label">Обриши историју прегледања</string>
-  <string name="text_selection_search_action">Приватно претраживање</string>
+  <string name="text_selection_search_action">Претражујте приватно</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1074;&#1072;&#1084; &#1076;&#1072;&#1112;&#1077; &#1082;&#1086;&#1085;&#1090;&#1088;&#1086;&#1083;&#1091;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1050;&#1086;&#1088;&#1080;&#1089;&#1090;&#1080;&#1090;&#1077; &#1075;&#1072; &#1082;&#1072;&#1086; &#1087;&#1088;&#1080;&#1074;&#1072;&#1090;&#1085;&#1080; &#1087;&#1088;&#1077;&#1075;&#1083;&#1077;&#1076;&#1072;&#1095;:\n  "<ul>"\n    "<li>&#1055;&#1088;&#1077;&#1090;&#1088;&#1072;&#1078;&#1091;&#1112;&#1090;&#1077; &#1080; &#1089;&#1091;&#1088;&#1092;&#1091;&#1112;&#1090;&#1077; &#1076;&#1080;&#1088;&#1077;&#1082;&#1090;&#1085;&#1086; &#1091; &#1072;&#1087;&#1083;&#1080;&#1082;&#1072;&#1094;&#1080;&#1112;&#1080;</li>"\n    "<li>&#1041;&#1083;&#1086;&#1082;&#1080;&#1088;&#1072;&#1112;&#1090;&#1077; &#1087;&#1088;&#1072;&#1090;&#1080;&#1086;&#1094;&#1077; (&#1080;&#1083;&#1080; &#1080;&#1093; &#1086;&#1084;&#1086;&#1075;&#1091;&#1115;&#1080;&#1090;&#1077; &#1091; &#1087;&#1086;&#1089;&#1090;&#1072;&#1074;&#1082;&#1072;&#1084;&#1072;)</li>"\n    "<li>&#1048;&#1079;&#1073;&#1088;&#1080;&#1096;&#1080;&#1090;&#1077; &#1089;&#1074;&#1077; &#1082;&#1086;&#1083;&#1072;&#1095;&#1080;&#1115;&#1077; &#1082;&#1072;&#1086; &#1080; &#1080;&#1089;&#1090;&#1086;&#1088;&#1080;&#1112;&#1072;&#1090; &#1087;&#1088;&#1077;&#1075;&#1083;&#1077;&#1076;&#1072;&#1114;&#1072; &#1080; &#1087;&#1088;&#1077;&#1090;&#1088;&#1072;&#1075;&#1077;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1112;&#1077; &#1089;&#1090;&#1074;&#1086;&#1088;&#1080;&#1083;&#1072; Mozilla. &#1053;&#1072;&#1096;&#1072; &#1084;&#1080;&#1089;&#1080;&#1112;&#1072; &#1112;&#1077; &#1085;&#1077;&#1075;&#1086;&#1074;&#1072;&#1114;&#1077; &#1079;&#1076;&#1088;&#1072;&#1074;&#1086;&#1075; &#1080; &#1086;&#1090;&#1074;&#1086;&#1088;&#1077;&#1085;&#1086;&#1075; &#1080;&#1085;&#1090;&#1077;&#1088;&#1085;&#1077;&#1090;&#1072;.<br/>\n<a href="%2$s">&#1057;&#1072;&#1079;&#1085;&#1072;&#1112;&#1090;&#1077; &#1074;&#1080;&#1096;&#1077;</a></p>]]></string>
   <string name="preference_category_search">Претражи</string>
   <string name="preference_search_engine_default">Подразумевано</string>
@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Блокирај друштвене трагаче</string>
   <string name="preference_privacy_block_content">Блокирај трагаче осталог садржаја</string>
   <string name="preference_privacy_block_content_summary">Може пореметити неке видео клипове и веб странице</string>
+  <string name="preference_privacy_secure_mode">Потајни</string>
+  <string name="preference_privacy_secure_mode_summary">Искључите потајни режим да снимите екране и видите сајтове у вашој скорашњој листи апликација које сте посетили користећи %1$s</string>
   <string name="preference_category_performance">Перформансе</string>
   <string name="preference_performance_block_webfonts">Блокирај веб фонтове</string>
   <string name="preference_performance_block_webfonts_summary">Иконице и слике се можда неће приказивати</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Иди назад</string>
   <string name="content_description_stop">Престани са учитавањем веб сајта</string>
   <string name="content_description_customtab_exit">Повратак на претходну</string>
+  <string name="content_description_blocking_switch">Блокирај трагаче</string>
   <string name="context_menu_paste_go">Налепи и иди</string>
   <string name="your_rights">Ваша права</string>
   <string name="external_app_prompt_title">Отворите везу у другој апликацији</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Подели слику</string>
   <string name="contextmenu_image_copy">Копирај адресу слике</string>
   <string name="contextmenu_image_save">Сачувај слику</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1077;&#1115;&#1077; &#1073;&#1080;&#1090;&#1080; &#1086;&#1073;&#1088;&#1080;&#1089;&#1072;&#1085;&#1077;</b>" &#1082;&#1072;&#1076;&#1072; &#1086;&#1073;&#1088;&#1080;&#1096;&#1077;&#1090;&#1077; %1$s &#1080;&#1089;&#1090;&#1086;&#1088;&#1080;&#1112;&#1072;&#1090;."]]></string>
+  <string name="firstrun_tracking_title">Сурфујте као да нико не гледа</string>
+  <string name="firstrun_tracking_text">Аутоматски блокирајте трагаче док сурфујете интернетом. Затим обришите посећене странице и колачиће притиском на иконицу канте у апликацији или у вашим нотификацијама.</string>
+  <string name="firstrun_defaultbrowser_title">Ојачајте вашу приватност</string>
+  <string name="firstrun_defaultbrowser_text">Поставите %1$s као подразумевани прегледач и искусите погодности приватног прегледања када се повежете на веб са неке Android апликације.</string>
+  <string name="firstrun_breaking_title">Брзо решење када је\nблокирање = рушење</string>
+  <string name="firstrun_breaking_text">Када се сајт сруши или не ради лепо због блокирања трагача, искључите га у поставкама.</string>
+  <string name="firstrun_close_button">У реду, разумем!</string>
+  <string name="firstrun_skip_button">Прескочи</string>
+  <string name="firstrun_next_button">Следеће</string>
 </resources>

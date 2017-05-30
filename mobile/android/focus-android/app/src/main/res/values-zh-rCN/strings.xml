@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">拦截社交跟踪器</string>
   <string name="preference_privacy_block_content">拦截其他内容跟踪器</string>
   <string name="preference_privacy_block_content_summary">可能对某些网页与视频有影响</string>
+  <string name="preference_privacy_secure_mode">隐形</string>
+  <string name="preference_privacy_secure_mode_summary">关闭隐形模式以允许屏幕截取，以及在您的最近应用列表中查看使用 %1$s 访问的网站</string>
   <string name="preference_category_performance">性能</string>
   <string name="preference_performance_block_webfonts">拦截网络字体</string>
   <string name="preference_performance_block_webfonts_summary">可能导致图标或图像缺失</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">导航回退</string>
   <string name="content_description_stop">停止加载</string>
   <string name="content_description_customtab_exit">返回之前的应用</string>
+  <string name="content_description_blocking_switch">屏蔽跟踪器</string>
   <string name="context_menu_paste_go">粘贴并转到</string>
   <string name="your_rights">您的权利</string>
   <string name="external_app_prompt_title">在另一个应用中打开链接</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">分享图片</string>
   <string name="contextmenu_image_copy">复制图片地址</string>
   <string name="contextmenu_image_save">保存图片</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#19981;&#20250;&#34987;&#21024;&#38500;</b>&#12290;]]></string>
+  <string name="firstrun_tracking_title">避开监视，浏览网络</string>
+  <string name="firstrun_tracking_text">浏览器时自动屏蔽网络跟踪器。之后可以点按应用程序或通知中的垃圾桶图标，删除访问过的页面和 Cookie。</string>
+  <string name="firstrun_defaultbrowser_title">强化您的隐私</string>
+  <string name="firstrun_defaultbrowser_text">将 %1$s 设为您的默认浏览器，便于从其他 Android 应用访问网站时使用隐私浏览。</string>
+  <string name="firstrun_breaking_title">快速解决\n拦截导致的故障</string>
+  <string name="firstrun_breaking_text">当拦截网上跟踪器的功能意外致使网站故障时，使用菜单可以关闭拦截功能。</string>
+  <string name="firstrun_close_button">明白了！</string>
+  <string name="firstrun_skip_button">跳过</string>
+  <string name="firstrun_next_button">下一步</string>
 </resources>

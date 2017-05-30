@@ -18,7 +18,7 @@
   <string name="notification_erase_text">Səyahət keçmişini poz</string>
   <string name="shortcut_erase_short_label">Poz</string>
   <string name="shortcut_erase_long_label">Səyahət keçmişini poz</string>
-  <string name="text_selection_search_action">Məxfi Axtarış</string>
+  <string name="text_selection_search_action">Məxfi Axtar</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s sizi idar&#601;nin ba&#351;&#305;na qoyur</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Bunu m&#601;xfi s&#601;yyah olaraq i&#351;l&#601;din:\n  "<ul>"\n    "<li>Birba&#351;a t&#601;tbiqd&#601; axtar&#305;n v&#601; g&#601;zin</li>"\n    "<li>&#304;zl&#601;yicil&#601;ri &#601;ng&#601;ll&#601;yin (v&#601; ya t&#601;nziml&#601;m&#601;d&#601;n icaz&#601; verin)</li>"\n    "<li>&#199;&#601;r&#601;zl&#601;ri, axtar&#305;&#351; v&#601; g&#601;zm&#601; tarix&#231;&#601;sini silm&#601;k &#252;&#231;&#252;n pozun</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s q&#252;rurla Mozilla t&#601;r&#601;find&#601;n. Missiyam&#305;z sa&#287;lam v&#601; a&#231;&#305;q interneti t&#601;min etm&#601;kdir.<br/>\n<a href="%2$s">&#399;trafl&#305; &#246;yr&#601;n</a></p>]]></string>
   <string name="preference_category_search">Axtar</string>
   <string name="preference_search_engine_default">İlkin hal</string>
@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Sosial izləyiciləri əngəllə</string>
   <string name="preference_privacy_block_content">Digər məzmun izləyicilərini əngəllə</string>
   <string name="preference_privacy_block_content_summary">Bəzi video və saytları işlənməz hala gətirə bilər</string>
+  <string name="preference_privacy_secure_mode">Görünməzlik</string>
+  <string name="preference_privacy_secure_mode_summary">Ekran görüntülərini almaq və %1$s ilə gəzilən saytları Son Tətbiqlər siyahısında görmək üçün Görünməzlik rejimini söndürün</string>
   <string name="preference_category_performance">Məhsuldarlıq</string>
   <string name="preference_performance_block_webfonts">Web şriftlərini əngəllə</string>
   <string name="preference_performance_block_webfonts_summary">Əksik icon və şəkillərə səbəb ola bilər</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Geri get</string>
   <string name="content_description_stop">Səhifəni yükləməyi dayandır</string>
   <string name="content_description_customtab_exit">Əvvəlki tətbiqə qayıt</string>
+  <string name="content_description_blocking_switch">İzləyiciləri əngəllə</string>
   <string name="context_menu_paste_go">Yapışdır və get</string>
   <string name="your_rights">Hüquqlarınız</string>
   <string name="external_app_prompt_title">Keçidi başqa tətbiqdə aç</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Şəkli paylaş</string>
   <string name="contextmenu_image_copy">Şəkil ünvanını köçür</string>
   <string name="contextmenu_image_save">Şəkli saxla</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">silinm&#601;y&#601;c&#601;kl&#601;r</b>.]]></string>
+  <string name="firstrun_tracking_title">Başqalarınız izləməsindən narahat olmadan internetdə gəzin</string>
+  <string name="firstrun_tracking_text">Gəzərkən avtomatik olaraq onlayn izləyiciləri əngəlləyin. Daha sonra daxil olunan saytları və çərəzləri zibil qutusu ikonuna və ya bildirişə toxunaraq silin.</string>
+  <string name="firstrun_defaultbrowser_title">Məxfiliyinizi gücləndirin</string>
+  <string name="firstrun_defaultbrowser_text">%1$s tətbiqini əsas səyyahınız olaraq seçin və digər Android tətbiqlərinizdən internetə keçidlərdə məxfi səyahətin üstünlüklərini görün.</string>
+  <string name="firstrun_breaking_title">Əngəlləmək = qırmaq\nhalları üçün cəld həll</string>
+  <string name="firstrun_breaking_text">Onlayn izləyiciləri əngəlləmənin pis tərəfi olaraq hər hansı bir sayt sınmış göründüyündə alət menyusuna toxunuşla əngəlləməni söndürün.</string>
+  <string name="firstrun_close_button">Tamam, başa düşdüm!</string>
+  <string name="firstrun_skip_button">Keç</string>
+  <string name="firstrun_next_button">Sonrakı</string>
 </resources>

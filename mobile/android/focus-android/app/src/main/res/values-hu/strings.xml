@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Közösségi oldalak követőinek blokkolása</string>
   <string name="preference_privacy_block_content">Más tartalomkövetők blokkolása</string>
   <string name="preference_privacy_block_content_summary">Néhány videó és weblap eltörhet</string>
+  <string name="preference_privacy_secure_mode">Rejtőzködés</string>
+  <string name="preference_privacy_secure_mode_summary">Kapcsolja ki a rejtőzködés módot, hogy képernyőképeket készítsen, és lássa a %1$sban megtekintett oldalakat az Előző alkalmazások listájában</string>
   <string name="preference_category_performance">Teljesítmény</string>
   <string name="preference_performance_block_webfonts">Webes betűkészletek blokkolása</string>
   <string name="preference_performance_block_webfonts_summary">Hiányzó ikonokat és képeket eredményezhet</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Navigálás visszafelé</string>
   <string name="content_description_stop">Webhely betöltésének leállítása</string>
   <string name="content_description_customtab_exit">Vissza az előző apphoz</string>
+  <string name="content_description_blocking_switch">Követők blokkolása</string>
   <string name="context_menu_paste_go">Beillesztés és ugrás</string>
   <string name="your_rights">Az Ön jogai</string>
   <string name="external_app_prompt_title">Hivatkozás megnyitása egy másik appban</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Kép megosztása</string>
   <string name="contextmenu_image_copy">Kép címének másolása</string>
   <string name="contextmenu_image_save">Kép mentése</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nem ker&#252;lnek t&#246;rl&#233;sre</b>, ha t&#246;rli a %1$s el&#337;zm&#233;nyeit.]]></string>
+  <string name="firstrun_tracking_title">Böngésszen úgy, mintha senki sem figyelné</string>
+  <string name="firstrun_tracking_text">Automatikusan blokkolja az online követést böngészés közben. Aztán eltávolítja a felkeresett oldalakat és a sütiket, egyetlen érintéssel az appban vagy az értesítésekben lévő kuka ikonon.</string>
+  <string name="firstrun_defaultbrowser_title">Tuningolja fel az adatvédelmét</string>
+  <string name="firstrun_defaultbrowser_text">Állítsa be a %1$st alapértelmezett böngészőként, és kapja meg a privát böngészés előnyeit, amikor a webre vált a többi Androidos appból.</string>
+  <string name="firstrun_breaking_title">Gyorsjavítás, ha a\nblokkolás hibát okoz</string>
+  <string name="firstrun_breaking_text">Ha az online követők blokkolása az oldal szétesését okozza, akkor kapcsolja ki a blokkolást egy érintéssel az eszközök menüben.</string>
+  <string name="firstrun_close_button">Rendben, értem!</string>
+  <string name="firstrun_skip_button">Kihagyás</string>
+  <string name="firstrun_next_button">Következő</string>
 </resources>

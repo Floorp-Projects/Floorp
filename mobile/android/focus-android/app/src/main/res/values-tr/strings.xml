@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Sosyal takipçileri engelle</string>
   <string name="preference_privacy_block_content">Diğer içerik takipçilerini engelle</string>
   <string name="preference_privacy_block_content_summary">Bazı videolar ve web sayfaları bozulabilir</string>
+  <string name="preference_privacy_secure_mode">Görünmezlik</string>
+  <string name="preference_privacy_secure_mode_summary">Ekran görüntüsü almak ve %1$s ile ziyaret ettiğiniz siteleri Son Uygulamalar listenizde görmek isterseniz görünmezlik modunu kapatın</string>
   <string name="preference_category_performance">Performans</string>
   <string name="preference_performance_block_webfonts">Web fontlarını engelle</string>
   <string name="preference_performance_block_webfonts_summary">Simge ve resimlerin görünmemesine yol açabilir</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Geri git</string>
   <string name="content_description_stop">Siteyi yüklemeyi durdur</string>
   <string name="content_description_customtab_exit">Önceki uygulamaya dön</string>
+  <string name="content_description_blocking_switch">Takipçileri engelle</string>
   <string name="context_menu_paste_go">Yapıştır ve git</string>
   <string name="your_rights">Haklarınız</string>
   <string name="external_app_prompt_title">Bağlantıyı farklı uygulamada aç</string>
@@ -81,4 +84,13 @@
   <string name="contextmenu_image_share">Resmi paylaş</string>
   <string name="contextmenu_image_copy">Resmin adresini kopyala</string>
   <string name="contextmenu_image_save">Resmi kaydet</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">silinmeyecektir</b>.]]></string>
+  <string name="firstrun_tracking_title">Hiç kimse izlemiyormuş gibi gez</string>
+  <string name="firstrun_tracking_text">Siz internette gezinirken çevrimiçi takipçiler otomatik olarak engellenir. Sonra da uygulamadaki veya bildirimlerinizdeki çöp kutusuna tek bir dokunuşla gezdiğiniz sayfaları ve çerezleri silebilirsiniz.</string>
+  <string name="firstrun_defaultbrowser_title">Gizliliğini güçlendir</string>
+  <string name="firstrun_defaultbrowser_text">%1$s tarayıcınızı ön tanımlı tarayıcı yapın, diğer Android uygulamalarından web sayfalarına geçtiğinizde de gizli gezintiden yararlanın.</string>
+  <string name="firstrun_breaking_title">Engelleme yüzünden \nsayfalar bozulursa</string>
+  <string name="firstrun_breaking_text">Çevrimiçi takipleri engellediğinizde bazı web sayfaları bozuk görünebilir. Bu durumda araçlar menüsünden engellemeyi kapatabilirsiniz.</string>
+  <string name="firstrun_close_button">Anladım!</string>
+  <string name="firstrun_skip_button">Geç</string>
 </resources>

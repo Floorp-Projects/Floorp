@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Bloquear rastreadores sociales</string>
   <string name="preference_privacy_block_content">Bloquear otros rastreadores de contenidos</string>
   <string name="preference_privacy_block_content_summary">Algunos videos y páginas web pueden fallar</string>
+  <string name="preference_privacy_secure_mode">Cautela</string>
+  <string name="preference_privacy_secure_mode_summary">Deshabilita el modo Cautela para tomar capturas de pantalla y ver los sitios que visitaste en %1$s en la lista de Aplicaciones Recientes</string>
   <string name="preference_category_performance">Rendimiento</string>
   <string name="preference_performance_block_webfonts">Bloquear tipografía web</string>
   <string name="preference_performance_block_webfonts_summary">Puede resultar en que falten iconos o imágenes</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Navegar hacia atrás</string>
   <string name="content_description_stop">Dejar de cargar el sitio web</string>
   <string name="content_description_customtab_exit">Volver a la aplicación anterior</string>
+  <string name="content_description_blocking_switch">Bloquear rastreadores</string>
   <string name="context_menu_paste_go">Pegar e ir</string>
   <string name="your_rights">Tus derechos</string>
   <string name="external_app_prompt_title">Abrir enlace en otra aplicación</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Compartir imagen</string>
   <string name="contextmenu_image_copy">Copiar dirección de la imagen</string>
   <string name="contextmenu_image_save">Guardar imagen</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no ser&#225;n borradas</b>" cuando borres el historial de %1$s."]]></string>
+  <string name="firstrun_tracking_title">Navegá como si nadie mirara</string>
+  <string name="firstrun_tracking_text">Bloqueá a los rastreadores automáticamente mientras navegás. Después borrá las páginas visitadas y las cookies con sólo tocar el ícono del tacho de basura o en las notificaciones.</string>
+  <string name="firstrun_defaultbrowser_title">Potenciá tu privacidad</string>
+  <string name="firstrun_defaultbrowser_text">Elegí %1$s como tu navegador predeterminado y obtené los beneficios de navegar privadamente cuando sigas un enlace a la Web desde otras aplicaciones.</string>
+  <string name="firstrun_breaking_title">Una rápida solución cuando\nbloquear = romper</string>
+  <string name="firstrun_breaking_text">Cuando el lado negativo de bloquear a los rastreadores sea un sitio que parece roto, deshabilitá el bloqueo con un toque en el menú de herramientas.</string>
+  <string name="firstrun_close_button">Genial, ¡lo tengo!</string>
+  <string name="firstrun_skip_button">Saltar</string>
+  <string name="firstrun_next_button">Siguiente</string>
 </resources>

@@ -31,6 +31,7 @@
   <string name="preference_privacy_block_social">Φραγή κοινωνικών trackers</string>
   <string name="preference_privacy_block_content">Φραγή trackers άλλου περιεχομένου</string>
   <string name="preference_privacy_block_content_summary">Ίσως χαλάσει μερικά βίντεο και ιστοσελίδες</string>
+  <string name="preference_privacy_secure_mode">Αορατότητα</string>
   <string name="preference_category_performance">Απόδοση</string>
   <string name="preference_performance_block_webfonts">Φραγή γραμματοσειρών ιστού</string>
   <string name="preference_performance_block_webfonts_summary">Ενδέχεται να οδηγήσει σε απώλεια εικονιδίων ή εικόνων</string>
@@ -52,6 +53,7 @@
   <string name="content_description_back">Πλοήγηση προς τα πίσω</string>
   <string name="content_description_stop">Διακοπή φόρτωσης ιστοσελίδας</string>
   <string name="content_description_customtab_exit">Επιστροφή στην προηγούμενη εφαρμογή</string>
+  <string name="content_description_blocking_switch">Φραγή trackers</string>
   <string name="context_menu_paste_go">Επικόλληση &amp; μετάβαση</string>
   <string name="your_rights">Τα δικαιώματά σας</string>
   <string name="external_app_prompt_title">Άνοιγμα συνδέσμου σε άλλη εφαρμογή</string>
@@ -81,4 +83,7 @@
   <string name="contextmenu_image_share">Κοινή χρήση εικόνας</string>
   <string name="contextmenu_image_copy">Αντιγραφή διεύθυνσης εικόνας</string>
   <string name="contextmenu_image_save">Αποθήκευση εικόνας</string>
+  <string name="firstrun_close_button">OK, το \'πιασα!</string>
+  <string name="firstrun_skip_button">Παράκαμψη</string>
+  <string name="firstrun_next_button">Επόμενο</string>
 </resources>

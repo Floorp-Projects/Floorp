@@ -31,6 +31,7 @@
   <string name="preference_privacy_block_social">Cuir cosc ar lorgairí sóisialta</string>
   <string name="preference_privacy_block_content">Cuir cosc ar lorgairí ábhair eile</string>
   <string name="preference_privacy_block_content_summary">Seans go mbrisfidh seo físeáin agus leathanaigh Ghréasáin áirithe</string>
+  <string name="preference_privacy_secure_mode">Mód Rúnda</string>
   <string name="preference_category_performance">Feidhmíocht</string>
   <string name="preference_performance_block_webfonts">Cuir cosc ar chlónna Gréasáin</string>
   <string name="preference_performance_block_webfonts_summary">D\'fhéadfadh go mbeadh deilbhíní nó íomhánna ar iarraidh</string>
@@ -52,6 +53,7 @@
   <string name="content_description_back">Téigh ar gcúl</string>
   <string name="content_description_stop">Stop ag luchtú an tsuímh</string>
   <string name="content_description_customtab_exit">Fill ar an aip roimhe seo</string>
+  <string name="content_description_blocking_switch">Cuir cosc ar lorgairí</string>
   <string name="context_menu_paste_go">Greamaigh agus Téigh</string>
   <string name="your_rights">Cearta an úsáideora</string>
   <string name="external_app_prompt_title">Oscail an nasc in aip eile</string>
@@ -81,4 +83,8 @@
   <string name="contextmenu_image_share">Comhroinn an íomhá</string>
   <string name="contextmenu_image_copy">Cóipeáil seoladh na híomhá</string>
   <string name="contextmenu_image_save">Sábháil an íomhá</string>
+  <string name="firstrun_tracking_title">Brabhsáil i leith is nach bhfuil éinne ag cúlchoimhéad ort</string>
+  <string name="firstrun_close_button">OK, tuigim!</string>
+  <string name="firstrun_skip_button">Ná bac leis</string>
+  <string name="firstrun_next_button">Ar Aghaidh</string>
 </resources>

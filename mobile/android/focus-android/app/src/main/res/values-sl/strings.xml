@@ -18,7 +18,7 @@
   <string name="notification_erase_text">Počisti zgodovino brskanja</string>
   <string name="shortcut_erase_short_label">Izbriši</string>
   <string name="shortcut_erase_long_label">Počisti zgodovino brskanja</string>
-  <string name="text_selection_search_action">Zasebno iskanje</string>
+  <string name="text_selection_search_action">Iščite zasebno</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s daje nadzor v va&#353;e roke.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Uporabljajte ga kot zaseben brskalnik:\n  "<ul>"\n    "<li>I&#353;&#269;ite in brskajte naravnost iz aplikacije</li>"\n    "<li>Zavra&#269;ajte sledilce (ali spremenite nastavitve zavra&#269;anja sledilcev)</li>"\n    "<li>Bri&#353;ite pi&#353;kotke ter zgodovino strani in iskanja</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s razvija Mozilla. Na&#353;e poslanstvo je spodbujati zdrav in odprt internet.<br/>\n<a href="%2$s">Ve&#269; o tem</a></p>]]></string>
   <string name="preference_category_search">Išči</string>
   <string name="preference_search_engine_default">Privzet</string>
@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Zavračaj sledilce družbenih omrežij</string>
   <string name="preference_privacy_block_content">Zavračaj druge vsebinske sledilce</string>
   <string name="preference_privacy_block_content_summary">Lahko pokvari nekatere videoposnetke in strani</string>
+  <string name="preference_privacy_secure_mode">Skrivni način</string>
+  <string name="preference_privacy_secure_mode_summary">Izklopite skrivni način za zajemanje zaslona in prikaz strani, obiskanih v %1$su, na seznamu nedavnih aplikacij</string>
   <string name="preference_category_performance">Učinkovitost</string>
   <string name="preference_performance_block_webfonts">Zavračaj spletne pisave</string>
   <string name="preference_performance_block_webfonts_summary">Lahko povzroči izginotje ikon ali slik</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Krmari nazaj</string>
   <string name="content_description_stop">Prekini nalaganje strani</string>
   <string name="content_description_customtab_exit">Nazaj na prejšnjo aplikacijo</string>
+  <string name="content_description_blocking_switch">Zavračaj sledilce</string>
   <string name="context_menu_paste_go">Prilepi in odpri</string>
   <string name="your_rights">Vaše pravice</string>
   <string name="external_app_prompt_title">Odpri povezavo v drugi aplikaciji</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Deli sliko</string>
   <string name="contextmenu_image_copy">Kopiraj naslov slike</string>
   <string name="contextmenu_image_save">Shrani sliko</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne bodo izbrisane</b>.]]></string>
+  <string name="firstrun_tracking_title">Brskajte, kot da vas nihče ne gleda</string>
+  <string name="firstrun_tracking_text">Samodejno zavračajte spletne sledilce, medtem ko brskate. Nato odstranite zgodovino strani in piškotke z dotikom ikone koša v aplikaciji ali med obvestili.</string>
+  <string name="firstrun_defaultbrowser_title">Okrepite svojo zasebnost</string>
+  <string name="firstrun_defaultbrowser_text">Nastavite %1$s kot privzet brskalnik in uživajte prednosti zasebnega brskanja, ko odprete povezave v drugih aplikacijah Androida.</string>
+  <string name="firstrun_breaking_title">Hitra rešitev, kadar\nzavračanje kaj pokvari</string>
+  <string name="firstrun_breaking_text">Kadar zavračanje spletnih sledilcev pokvari prikaz spletne strani, izklopite zavračanje v meniju z orodji.</string>
+  <string name="firstrun_close_button">V redu, razumem!</string>
+  <string name="firstrun_skip_button">Preskoči</string>
+  <string name="firstrun_next_button">Naprej</string>
 </resources>

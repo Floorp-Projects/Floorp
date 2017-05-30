@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Sewḥel ineḍfaṛen n tmetti</string>
   <string name="preference_privacy_block_content">Sewḥel ineḍfaṛen-nniḍen n ugbur</string>
   <string name="preference_privacy_block_content_summary">Yezmer ad isewḥel kra n tvidyutin akked kra n isebtar Web ad d-banen akken iwata</string>
+  <string name="preference_privacy_secure_mode">Tusligt</string>
+  <string name="preference_privacy_secure_mode_summary">Kkes askar uslig akken ad teṭfeḍ agdil u ad twaliḍ ismal i γer terziḍ s useqdec n %1$s deg tebdart-ik taneggarut n isnasen</string>
   <string name="preference_category_performance">Tamellit</string>
   <string name="preference_performance_block_webfonts">Sewḥel tisefsiyin Web</string>
   <string name="preference_performance_block_webfonts_summary">Ahat yekka-d seg tigitin neɣ tugniwin yettwattun</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Inig ar deffir</string>
   <string name="content_description_stop">Seḥbes asali n usmel</string>
   <string name="content_description_customtab_exit">Uɣal ar usnas izrin</string>
+  <string name="content_description_blocking_switch">Sewḥel inedfaṛen</string>
   <string name="context_menu_paste_go">Senteḍ &amp; kemmel</string>
   <string name="your_rights">Izerfan-ik</string>
   <string name="external_app_prompt_title">Ldi aseγwen deg usnas-nniḍen</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Bḍu tugna</string>
   <string name="contextmenu_image_copy">Nɣel tansa n tugna</string>
   <string name="contextmenu_image_save">Sekles tugna</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"ur ttwaksent ara "</b>" m\'ara ad tekse&#7693; %1$samazray."]]></string>
+  <string name="firstrun_tracking_title">Inig am akken ulac win i k-id-ittmuqqulen</string>
+  <string name="firstrun_tracking_text">Sewḥel asfuγel s wudem awurman ma tettinigeḍ. Sakin kkes isebtar i γer terziḍ akked inagan n tuqna s usenned γef tignit deg usnas neγ deg ilγa inek.</string>
+  <string name="firstrun_defaultbrowser_title">Rmed tabaḍnit inek</string>
+  <string name="firstrun_defaultbrowser_text">Sbadu %1$s d iminig inek amezwar u sakin fareṣ timinigin tusligt m\'ara ad teqneḍ γer Web seg isnasen nniḍen n Android.</string>
+  <string name="firstrun_breaking_title">Aseγti arurad ma\nasewḥel= azgu</string>
+  <string name="firstrun_breaking_text">M\'ara ad k-d-iban d akken asmel i twaḥleḍ d asmel ittwarẓen, sens asewḥel s usened γef umuγ n ifecka.</string>
+  <string name="firstrun_close_button">IH, Awi-t-id!</string>
+  <string name="firstrun_skip_button">Suref</string>
+  <string name="firstrun_next_button">Γer zdat</string>
 </resources>

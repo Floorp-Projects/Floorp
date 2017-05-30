@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Blokovať sledovacie prvky sociálnych sietí</string>
   <string name="preference_privacy_block_content">Blokovať ostatné sledovacie prvky</string>
   <string name="preference_privacy_block_content_summary">Toto môže rozbiť niektoré videá a webové stránky</string>
+  <string name="preference_privacy_secure_mode">Nenápadnosť</string>
+  <string name="preference_privacy_secure_mode_summary">Ak chcete vytvárať snímky obrazovky a vidieť stránky, ktoré ste navštívili prostredníctvom aplikácie %1$s v zozname nedávno použitých aplikácii, vypnite režim nenápadnosti</string>
   <string name="preference_category_performance">Výkon</string>
   <string name="preference_performance_block_webfonts">Blokovať webové písma</string>
   <string name="preference_performance_block_webfonts_summary">Niektoré ikony alebo obrázky sa nemusia zobrazovať</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Prejsť dozadu</string>
   <string name="content_description_stop">Zastaviť načítavanie webovej stránky</string>
   <string name="content_description_customtab_exit">Návrat do predchádzajúcej aplikácie</string>
+  <string name="content_description_blocking_switch">Blokovať sledovacie prvky</string>
   <string name="context_menu_paste_go">Prilepiť a prejsť</string>
   <string name="your_rights">Vaše práva</string>
   <string name="external_app_prompt_title">Otvoriť odkaz v inej aplikácii</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Zdieľať obrázok</string>
   <string name="contextmenu_image_copy">Kopírovať adresu obrázku</string>
   <string name="contextmenu_image_save">Uložiť obrázok</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebud&#250; vymazan&#233;</b>" pri vymazan&#237; hist&#243;rie aplik&#225;cie %1$s."]]></string>
+  <string name="firstrun_tracking_title">Prehliadajte, akoby sa nikto nepozeral</string>
+  <string name="firstrun_tracking_text">Automaticky pri prehliadaní blokujte online sledovacie prvky. Potom odstráňte zoznam navštívených stránok a cookies jedným ťuknutím na ikonu koša v aplikácii alebo vo vašich upozorneniach.</string>
+  <string name="firstrun_defaultbrowser_title">Posuňte svoje súkromie na vyššiu úroveň</string>
+  <string name="firstrun_defaultbrowser_text">Nastavte si %1$s ako svoj predvolený prehliadač a získajte výhody súkromného prehliadania vždy, keď vás ostatné aplikácie presmerujú na web.</string>
+  <string name="firstrun_breaking_title">Oprava stránky rozbitej blokovaním\nsledovacích prvkov nie je žiadny problém</string>
+  <string name="firstrun_breaking_text">Keď sa z blokovania sledovacích prvkov stane príťaž a rozbije stránku, môžete ho vypnúť jednoduchým ťuknutím v ponuke nástrojov.</string>
+  <string name="firstrun_close_button">Ok, rozumiem!</string>
+  <string name="firstrun_skip_button">Preskočiť</string>
+  <string name="firstrun_next_button">Ďalej</string>
 </resources>

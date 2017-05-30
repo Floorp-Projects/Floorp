@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Blocca traccianti social</string>
   <string name="preference_privacy_block_content">Blocca altri contenuti traccianti</string>
   <string name="preference_privacy_block_content_summary">Alcuni video e pagine web potrebbero non funzionare</string>
+  <string name="preference_privacy_secure_mode">Invisibile</string>
+  <string name="preference_privacy_secure_mode_summary">Disattiva la modalità invisibile per poter salvare screenshot e visualizzare i siti visitati con %1$s nell’elenco delle app recenti.</string>
   <string name="preference_category_performance">Prestazioni</string>
   <string name="preference_performance_block_webfonts">Blocca web font</string>
   <string name="preference_performance_block_webfonts_summary">Alcune immagini e icone potrebbero non essere visualizzate</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Torna indietro</string>
   <string name="content_description_stop">Interrompi il caricamento del sito</string>
   <string name="content_description_customtab_exit">Torna all’applicazione precedente</string>
+  <string name="content_description_blocking_switch">Blocca elementi traccianti</string>
   <string name="context_menu_paste_go">Incolla e vai</string>
   <string name="your_rights">I tuoi diritti</string>
   <string name="external_app_prompt_title">Apri link in un’altra app</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Condividi immagine</string>
   <string name="contextmenu_image_copy">Copia indirizzo immagine</string>
   <string name="contextmenu_image_save">Salva immagine</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">non verranno eliminate</b>" quando si elimina la cronologia di %1$s."]]></string>
+  <string name="firstrun_tracking_title">Naviga come se nessuno ti stesse guardando</string>
+  <string name="firstrun_tracking_text">Blocca automaticamente il tracciamento durante la navigazione. Poi rimuovi le pagine visitate e i cookie toccando l’icona del cestino nell’app o nelle notifiche.</string>
+  <string name="firstrun_defaultbrowser_title">Potenzia la tua privacy</string>
+  <string name="firstrun_defaultbrowser_text">Imposta %1$ come browser predefinito e godi i vantaggi di una navigazione anonima quando apri link da altre app Android.</string>
+  <string name="firstrun_breaking_title">Una soluzione veloce quando\nil blocco “rompe” una pagina</string>
+  <string name="firstrun_breaking_text">Se una pagina sembra non funzionare correttamente con il blocco degli elementi traccianti, disattivalo con un semplice tocco nel menu strumenti.</string>
+  <string name="firstrun_close_button">Ho capito!</string>
+  <string name="firstrun_skip_button">Ignora</string>
+  <string name="firstrun_next_button">Avanti</string>
 </resources>

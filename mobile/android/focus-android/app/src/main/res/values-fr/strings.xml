@@ -18,7 +18,7 @@
   <string name="notification_erase_text">Effacer l’historique de navigation</string>
   <string name="shortcut_erase_short_label">Effacer</string>
   <string name="shortcut_erase_long_label">Effacer l’historique de navigation</string>
-  <string name="text_selection_search_action">Recherche privée</string>
+  <string name="text_selection_search_action">Faire une recherche privée</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vous aide &#224; rester aux commandes.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Utilisez-le comme un navigateur priv&#233;&#160;:\n<ul>\n<li>Effectuez des recherches et naviguez depuis l&#8217;application</li>\n<li>Bloquez les traqueurs (ou modifiez les param&#232;tres pour les autoriser)</li>\n<li>Effacez les cookies, ainsi que les historiques de navigation et de recherche</li>\n</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s est r&#233;alis&#233; par Mozilla. Notre mission est de d&#233;fendre l&#8217;ouverture et la bonne sant&#233; d&#8217;Internet.<br/>\n<a href="%2$s">En savoir plus</a></p>]]></string>
   <string name="preference_category_search">Recherche</string>
   <string name="preference_search_engine_default">Par défaut</string>
@@ -31,6 +31,7 @@
   <string name="preference_privacy_block_social">Bloquer les traqueurs de réseaux sociaux</string>
   <string name="preference_privacy_block_content">Bloquer les autres traqueurs de contenu</string>
   <string name="preference_privacy_block_content_summary">Peut empêcher certaines vidéos et pages web de s’afficher correctement</string>
+  <string name="preference_privacy_secure_mode">Furtif</string>
   <string name="preference_category_performance">Performances</string>
   <string name="preference_performance_block_webfonts">Bloquer les polices web</string>
   <string name="preference_performance_block_webfonts_summary">Peut empêcher certaines icônes ou images de s’afficher</string>
@@ -52,6 +53,7 @@
   <string name="content_description_back">Précédent</string>
   <string name="content_description_stop">Arrêter le chargement du site web</string>
   <string name="content_description_customtab_exit">Revenir à l’application précédente</string>
+  <string name="content_description_blocking_switch">Bloquer les traqueurs</string>
   <string name="context_menu_paste_go">Coller et aller</string>
   <string name="your_rights">Droits de l’utilisateur</string>
   <string name="external_app_prompt_title">Ouvrir le lien dans une autre application</string>
@@ -81,4 +83,8 @@
   <string name="contextmenu_image_share">Partager l’image</string>
   <string name="contextmenu_image_copy">Copier l’adresse de l’image</string>
   <string name="contextmenu_image_save">Enregistrer l’image</string>
+  <string name="firstrun_tracking_title">Naviguez comme si personne ne vous regardait</string>
+  <string name="firstrun_close_button">OK</string>
+  <string name="firstrun_skip_button">Ignorer</string>
+  <string name="firstrun_next_button">Suivant</string>
 </resources>

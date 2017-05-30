@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Արգելափակել սոցիալական հետագծումները</string>
   <string name="preference_privacy_block_content">Արգելափակել այլ բովանդակության հետագծումները</string>
   <string name="preference_privacy_block_content_summary">Կարող է ընդհատել որոշ տեսանյութեր և վեբ էջեր</string>
+  <string name="preference_privacy_secure_mode">Թաքնված</string>
+  <string name="preference_privacy_secure_mode_summary">Անջատեք թաքնված կերպը՝ էկրանի հանույթը ստանալու և %1$s-ով ձեր այցելած կայքերը տեսնելու համար ձեր Վերջին հավելվածները ցանկում</string>
   <string name="preference_category_performance">Արդյունավետություն</string>
   <string name="preference_performance_block_webfonts">Արգելափակել վեբ տառատեսակները</string>
   <string name="preference_performance_block_webfonts_summary">Կարող է հանգեցնել պատկերակների և պատկերների բացակայության</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Ուղղորդել հետ</string>
   <string name="content_description_stop">Կանգնեցնել էջի բեռնումը</string>
   <string name="content_description_customtab_exit">Վերադառնալ նախորդ հավելվածին</string>
+  <string name="content_description_blocking_switch">Արգելափակել հետագծումները</string>
   <string name="context_menu_paste_go">Տեղադրել և Առաջ</string>
   <string name="your_rights">Ձեր իրավունքները</string>
   <string name="external_app_prompt_title">Բացել հղումը այլ հավելվածում</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Համօգտագործել պատկերը</string>
   <string name="contextmenu_image_copy">Պատճենել պատկերի հասցեն</string>
   <string name="contextmenu_image_save">Պահպանել պատկերը</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1401;&#1381;&#1398; &#1403;&#1398;&#1403;&#1406;&#1387;</b>, &#1381;&#1408;&#1378; &#1380;&#1400;&#1410;&#1412; &#1403;&#1398;&#1403;&#1381;&#1412; %1$s-&#1384;]]></string>
+  <string name="firstrun_tracking_title">Դիտարկեք այնպես, կարծես ոչ ոք չի նայում ձեզ</string>
+  <string name="firstrun_tracking_text">Ինքնաբար արգելափակել առցանց հետագծումները դիտարկումների ընթացքում: Ապա հեռացրեք այցելած էջերը և cookie-ները՝ հպելով հավելվածի ջնջելու պատկերակին կամ ծանուցումներին:</string>
+  <string name="firstrun_defaultbrowser_title">Հզորացրեք ձեր գաղտնիությունը</string>
+  <string name="firstrun_defaultbrowser_text">Կայեք %1$s-ը որպես հիմնական դիտարկիչ և ստացեք գաղտնի դիտարկիչի բոլոր առավելությունները, երբ սավառնում եք ցանցում ձեր Android-ի այլ հավելվածներից:</string>
+  <string name="firstrun_breaking_title">Արագ ուղղումը արգելափակելիս = ընդհատում</string>
+  <string name="firstrun_breaking_text">Երբ առցանց հետագծիչների պատճառով կայքը վնասվում է՝ անջատեք արգելափակումը ցանկի հպելիս:</string>
+  <string name="firstrun_close_button">Լավ, հասկացա:</string>
+  <string name="firstrun_skip_button">Բաց թողնել</string>
+  <string name="firstrun_next_button">Հաջորդը</string>
 </resources>

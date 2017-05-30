@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Bloquear rastreadores de mídias sociais</string>
   <string name="preference_privacy_block_content">Bloquear outros rastreadores de conteúdo</string>
   <string name="preference_privacy_block_content_summary">Pode quebrar alguns vídeos e páginas Web</string>
+  <string name="preference_privacy_secure_mode">Furtividade</string>
+  <string name="preference_privacy_secure_mode_summary">Desativar o modo furtivo para capturar imagens e ver os sites que visitou usando o %1$s na sua lista de aplicativos recentes</string>
   <string name="preference_category_performance">Desempenho</string>
   <string name="preference_performance_block_webfonts">Bloquear fontes Web</string>
   <string name="preference_performance_block_webfonts_summary">Pode resultar em falta de ícones ou imagens</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Navegar de volta</string>
   <string name="content_description_stop">Parar de carregar o site</string>
   <string name="content_description_customtab_exit">Retornar ao aplicativo anterior</string>
+  <string name="content_description_blocking_switch">Bloquear rastreadores</string>
   <string name="context_menu_paste_go">Colar e ir</string>
   <string name="your_rights">Seus direitos</string>
   <string name="external_app_prompt_title">Abrir link em um outro app</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Compartilhar imagem</string>
   <string name="contextmenu_image_copy">Copiar endereço da imagem</string>
   <string name="contextmenu_image_save">Salvar imagem</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">n&#227;o ser&#227;o exclu&#237;das</b>" ao apagar o hist&#243;rico do %1$s."]]></string>
+  <string name="firstrun_tracking_title">Navegue como se ninguém estivesse olhando</string>
+  <string name="firstrun_tracking_text">Bloqueie automaticamente o acompanhamento online enquanto navega. Em seguida, remova as páginas visitadas e os cookies com um toque no ícone da lixeira no aplicativo ou em suas notificações.</string>
+  <string name="firstrun_defaultbrowser_title">Potencialize sua privacidade</string>
+  <string name="firstrun_defaultbrowser_text">Defina o %1$s como seu navegador padrão e obtenha os benefícios da navegação privativa quando se conecta à Web a partir de outros aplicativos Android.</string>
+  <string name="firstrun_breaking_title">Uma correção rápida quando \nbloqueio = quebra</string>
+  <string name="firstrun_breaking_text">Quando a desvantagem de bloquear rastreadores on-line é um site que parece quebrado, desligue o bloqueio com um toque no menu de ferramentas.</string>
+  <string name="firstrun_close_button">Ok, entendi!</string>
+  <string name="firstrun_skip_button">Pular</string>
+  <string name="firstrun_next_button">Próximo</string>
 </resources>

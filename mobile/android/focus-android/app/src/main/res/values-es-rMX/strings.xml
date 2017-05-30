@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Bloquear rastreadores sociales</string>
   <string name="preference_privacy_block_content">Bloquear rastreadores de otros contenidos</string>
   <string name="preference_privacy_block_content_summary">Puede ser que algunos videos y páginas web no funcionen correctamente</string>
+  <string name="preference_privacy_secure_mode">Invisible</string>
+  <string name="preference_privacy_secure_mode_summary">Desactiva el modo invisible para tomar capturas de pantalla y ver los sitios que has visitado con %1$s en la lista de las aplicaciones recientes</string>
   <string name="preference_category_performance">Rendimiento</string>
   <string name="preference_performance_block_webfonts">Bloquear fuentes web</string>
   <string name="preference_performance_block_webfonts_summary">Puede resultar en pérdida de íconos o imágenes</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Regresar a la navegación</string>
   <string name="content_description_stop">Dejar cargando el sitio web</string>
   <string name="content_description_customtab_exit">Regresar a la aplicación anterior</string>
+  <string name="content_description_blocking_switch">Bloquear rastreadores</string>
   <string name="context_menu_paste_go">Pegar e ir</string>
   <string name="your_rights">Tus derechos</string>
   <string name="external_app_prompt_title">Abrir enlace en otra aplicación</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Compartir imagen</string>
   <string name="contextmenu_image_copy">Copiar la dirección de la imagen</string>
   <string name="contextmenu_image_save">Guardar imagen</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no se borrar&#225;n</b>" cuando elimines el historial %1$s."]]></string>
+  <string name="firstrun_tracking_title">Navega como si nadie te estuviera viendo</string>
+  <string name="firstrun_tracking_text">Bloquea automáticamente los rastreadores mientras navegas. Luego, elimina las páginas visitadas y las cookies tocando el ícono del cesto en la aplicación o en tus notificaciones.</string>
+  <string name="firstrun_defaultbrowser_title">Potencia tu privacidad</string>
+  <string name="firstrun_defaultbrowser_text">Define %1$s como tu navegador predeterminado y disfruta de los beneficios de la navegación privada cuando abres un enlace Web desde otras aplicaciones Android.</string>
+  <string name="firstrun_breaking_title">Una solución rápida cuando\nel bloqueo causa una ruptura</string>
+  <string name="firstrun_breaking_text">Para evitar que una página parezca no funcionar al activar el bloqueo de rastreadores, desactívalo tocando el menú de herramientas.</string>
+  <string name="firstrun_close_button">¡Entendido!</string>
+  <string name="firstrun_skip_button">Ignorar</string>
+  <string name="firstrun_next_button">Siguiente</string>
 </resources>

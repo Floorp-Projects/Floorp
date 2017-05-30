@@ -18,7 +18,7 @@
   <string name="notification_erase_text">Browser-Chronik löschen</string>
   <string name="shortcut_erase_short_label">Löschen</string>
   <string name="shortcut_erase_long_label">Browser-Chronik löschen</string>
-  <string name="text_selection_search_action">Private Suche</string>
+  <string name="text_selection_search_action">Privat Suchen</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gibt Ihnen die Kontrolle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Verwenden Sie es als privaten Browser:\n  "<ul>"\n    "<li>Suchen und bl&#228;ttern Sie in der App</li>"\n    "<li>Blockieren Sie Tracker (oder aktualisieren Sie die Einstellungen, um Tracker zu erlauben)</li>"\n    "<li>Entfernen Sie Cookies, um Such- und Browserverlauf zu l&#246;schen</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wird von Mozilla entwickelt. Unsere Mission ist es, ein gesundes, offenes Internet zu f&#246;rdern.<br/>\n<a href="%2$s">Erfahren Sie mehr</a></p>]]></string>
   <string name="preference_category_search">Suche</string>
   <string name="preference_search_engine_default">Standard</string>
@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Verfolgung sozialer Netzwerke blockieren</string>
   <string name="preference_privacy_block_content">Andere Inhaltsverfolgung blockieren</string>
   <string name="preference_privacy_block_content_summary">Kann einige Videos und Webseiten stören</string>
+  <string name="preference_privacy_secure_mode">Tarnung</string>
+  <string name="preference_privacy_secure_mode_summary">Deaktivieren Sie den Tarnmodus, um Bildschirmfotos aufzunehmen und mit %1$s besuchte Websites in Ihrer Recent-Apps-Liste anzuzeigen</string>
   <string name="preference_category_performance">Leistung</string>
   <string name="preference_performance_block_webfonts">Web-Schriftarten blockieren</string>
   <string name="preference_performance_block_webfonts_summary">Kann zu fehlenden Symbolen oder Grafiken führen</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Rückwärts navigieren</string>
   <string name="content_description_stop">Laden der Website stoppen</string>
   <string name="content_description_customtab_exit">Zurück zur vorherigen App</string>
+  <string name="content_description_blocking_switch">Verfolger blockieren</string>
   <string name="context_menu_paste_go">Einfügen &amp; Los</string>
   <string name="your_rights">Ihre Rechte</string>
   <string name="external_app_prompt_title">Link in anderer App öffnen</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Grafik teilen</string>
   <string name="contextmenu_image_copy">Grafikadresse kopieren</string>
   <string name="contextmenu_image_save">Grafik speichern</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">werden nicht gel&#246;scht</b>, wenn Sie die Chronik von %1$s l&#246;schen.]]></string>
+  <string name="firstrun_tracking_title">Surfen Sie, als würde niemand zusehen</string>
+  <string name="firstrun_tracking_text">Blockieren Sie während des Surfens automatisch Online-Verfolger. Entfernen Sie dann mit einem Tippen auf das Müll-Symbol in der App oder Ihren Benachrichtigungen besuchte Seiten und Cookies.</string>
+  <string name="firstrun_defaultbrowser_title">Stärken Sie Ihre Privatsphäre</string>
+  <string name="firstrun_defaultbrowser_text">Verwenden Sie %1$s als Standardbrowser und nutzen Sie die Vorteile des privaten Surfens, wenn Sie von anderen Android-Apps das Internet nutzen.</string>
+  <string name="firstrun_breaking_title">Eine schnelle Korrektur wenn\nBlockieren Störungen verursacht</string>
+  <string name="firstrun_breaking_text">Wenn das Blockieren von Online-Verfolgern eine Website stört, deaktivieren Sie es durch ein Tippen im Werkzeugmenü.</string>
+  <string name="firstrun_close_button">Ok, verstanden!</string>
+  <string name="firstrun_skip_button">Überspringen</string>
+  <string name="firstrun_next_button">Weiter</string>
 </resources>

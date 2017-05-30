@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Sociale trackers blokkeren</string>
   <string name="preference_privacy_block_content">Andere inhoudstrackers blokkeren</string>
   <string name="preference_privacy_block_content_summary">Kan sommige video’s en webpagina’s verstoren</string>
+  <string name="preference_privacy_secure_mode">Stealth</string>
+  <string name="preference_privacy_secure_mode_summary">Zet stealthmodus uit om schermafbeeldingen te maken en websites te zien die u met %1$s in uw lijst Recente apps hebt bezocht</string>
   <string name="preference_category_performance">Prestaties</string>
   <string name="preference_performance_block_webfonts">Weblettertypen blokkeren</string>
   <string name="preference_performance_block_webfonts_summary">Kan tot ontbrekende pictogrammen of afbeeldingen leiden</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Terug bladeren</string>
   <string name="content_description_stop">Laden van website stoppen</string>
   <string name="content_description_customtab_exit">Terug naar vorige app</string>
+  <string name="content_description_blocking_switch">Trackers blokkeren</string>
   <string name="context_menu_paste_go">Plakken &amp; Gaan</string>
   <string name="your_rights">Uw rechten</string>
   <string name="external_app_prompt_title">Koppeling openen in andere app</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Afbeelding delen</string>
   <string name="contextmenu_image_copy">Afbeeldingsadres kopiëren</string>
   <string name="contextmenu_image_save">Afbeelding opslaan</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">worden niet verwijderd</b>" als u geschiedenis van %1$s wist."]]></string>
+  <string name="firstrun_tracking_title">Surf alsof niemand meekijkt</string>
+  <string name="firstrun_tracking_text">Blokkeer automatisch onlinetrackers terwijl u surft. Verwijder daarna bezochte pagina’s en cookies met één tik naar het prullenbakpictogram in de app of in uw meldingen.</string>
+  <string name="firstrun_defaultbrowser_title">Vergroot uw privacy</string>
+  <string name="firstrun_defaultbrowser_text">Stel %1$s in als uw standaardbrowser en geniet van de voordelen van privénavigatie wanneer u vanuit andere Android-apps naar het web verwijst.</string>
+  <string name="firstrun_breaking_title">Een snelle oplossing als\nblokkeren verstoring geeft</string>
+  <string name="firstrun_breaking_text">Gezien het nadeel van het blokkeren van onlinetrackers waarbij een website defect kan lijken, kunt u blokkering met één tik in het hulpmiddelenmenu uitzetten.</string>
+  <string name="firstrun_close_button">OK, begrepen!</string>
+  <string name="firstrun_skip_button">Overslaan</string>
+  <string name="firstrun_next_button">Volgende</string>
 </resources>

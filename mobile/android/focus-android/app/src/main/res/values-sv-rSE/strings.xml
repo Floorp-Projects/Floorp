@@ -18,7 +18,7 @@
   <string name="notification_erase_text">Radera webbhistorik</string>
   <string name="shortcut_erase_short_label">Radera</string>
   <string name="shortcut_erase_long_label">Radera webbhistorik</string>
-  <string name="text_selection_search_action">Privat sökning</string>
+  <string name="text_selection_search_action">Sök privat</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ger dig full kontroll.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Anv&#228;nd den som en privat webbl&#228;sare:\n  "<ul>"\n    "<li>S&#246;k och surfa direkt i appen</li>"\n    "<li>Blockera trackers (eller uppdatera inst&#228;llningar att till&#229;ta trackers)</li>"\n    "<li>Radera f&#246;r att ta bort kakor samt s&#246;k- och webbhistorik</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.<br/>\n<a href="%2$s">Learn more</a></p>]]></string>
   <string name="preference_category_search">Sök</string>
   <string name="preference_search_engine_default">Standard</string>
@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Blockera sociala trackers</string>
   <string name="preference_privacy_block_content">Blockera andra innehållstrackers</string>
   <string name="preference_privacy_block_content_summary">Kan få vissa videor och webbsidor att sluta fungera</string>
+  <string name="preference_privacy_secure_mode">Dolt läge</string>
+  <string name="preference_privacy_secure_mode_summary">Stäng av dolt läge för att ta skärmdumpar och se webbplatser du har besökt med hjälp av %1$s i listan över senaste appar</string>
   <string name="preference_category_performance">Prestanda</string>
   <string name="preference_performance_block_webfonts">Blockera webbtypsnitt</string>
   <string name="preference_performance_block_webfonts_summary">Kan resultera i att ikoner eller bilder saknas</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Navigera bakåt</string>
   <string name="content_description_stop">Sluta ladda webbplats</string>
   <string name="content_description_customtab_exit">Återgå till föregående app</string>
+  <string name="content_description_blocking_switch">Blockera trackers</string>
   <string name="context_menu_paste_go">Klistra in och kör</string>
   <string name="your_rights">Dina rättigheter</string>
   <string name="external_app_prompt_title">Öppna länk i en annan app</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Dela bild</string>
   <string name="contextmenu_image_copy">Kopiera bildadress</string>
   <string name="contextmenu_image_save">Spara bild</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">kommer inte att raderas</b>" n&#228;r du raderar %1$s historik."]]></string>
+  <string name="firstrun_tracking_title">Surfa utan att känna dig övervakad</string>
+  <string name="firstrun_tracking_text">Blockera automatiskt spårning online medan du surfar. Ta sedan bort besökta sidor och kakor med ett tryck på papperskorgen i appen eller i dina aviseringar.</string>
+  <string name="firstrun_defaultbrowser_title">Stärk din integritet</string>
+  <string name="firstrun_defaultbrowser_text">Ange %1$s som standardwebbläsare och dra nytta av privat surfning när du länkar till webben från andra Android-appar.</string>
+  <string name="firstrun_breaking_title">En snabb lösning när \nblockering = avbrott</string>
+  <string name="firstrun_breaking_text">Nackdelen med att blockera online-trackers är att en webbplats kan verka trasig, stäng av blockering med ett tryck på verktygsmenyn.</string>
+  <string name="firstrun_close_button">OK, jag förstår!</string>
+  <string name="firstrun_skip_button">Hoppa över</string>
+  <string name="firstrun_next_button">Nästa</string>
 </resources>

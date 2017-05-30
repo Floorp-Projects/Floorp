@@ -18,7 +18,7 @@
   <string name="notification_erase_text">清除瀏覽紀錄</string>
   <string name="shortcut_erase_short_label">清除</string>
   <string name="shortcut_erase_long_label">清除瀏覽紀錄</string>
-  <string name="text_selection_search_action">隱私瀏覽</string>
+  <string name="text_selection_search_action">隱私搜尋</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#35731;&#24744;&#21487;&#33258;&#34892;&#25511;&#21046;&#32218;&#19978;&#29983;&#27963;&#12290;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#21487;&#30070;&#20316;&#31169;&#23494;&#28687;&#35261;&#22120;&#20351;&#29992;:\n  "<ul>"\n    "<li>&#30452;&#25509;&#22312;&#31243;&#24335;&#20013;&#25628;&#23563;&#12289;&#28687;&#35261;</li>"\n    "<li>&#23553;&#37782;&#36861;&#36452;&#22120;&#65288;&#20063;&#21487;&#35519;&#25972;&#35373;&#23450;&#65292;&#20801;&#35377;&#36861;&#36452;&#22120;&#65289;</li>"\n    "<li>&#28165;&#38500; Cookie&#12289;&#25628;&#23563;&#32000;&#37636;&#12289;&#19978;&#32178;&#32000;&#37636;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#26159;&#30001; Mozilla &#25152;&#25171;&#36896;&#65292;&#25105;&#20497;&#30340;&#20351;&#21629;&#26159;&#22521;&#39178;&#19968;&#20491;&#20581;&#24247;&#12289;&#38283;&#25918;&#30340;&#32178;&#38555;&#32178;&#36335;&#12290;<br/>\n<a href="%2$s">&#20102;&#35299;&#26356;&#22810;</a></p>]]></string>
   <string name="preference_category_search">搜尋</string>
   <string name="preference_search_engine_default">預設</string>
@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">封鎖社交追蹤器</string>
   <string name="preference_privacy_block_content">封鎖其他內容追蹤器</string>
   <string name="preference_privacy_block_content_summary">可能會影響網頁與影片載入</string>
+  <string name="preference_privacy_secure_mode">秘密行動</string>
+  <string name="preference_privacy_secure_mode_summary">關閉秘密模式，您就可以拍攝畫面擷圖，並在「應用程式切換清單」中，看到您曾使用 %1$s 造訪過的網站。</string>
   <string name="preference_category_performance">效能</string>
   <string name="preference_performance_block_webfonts">封鎖網路字型</string>
   <string name="preference_performance_block_webfonts_summary">可能會造成網頁當中的圖示或圖片消失</string>
@@ -52,10 +54,11 @@
   <string name="content_description_back">瀏覽上一頁</string>
   <string name="content_description_stop">停止載入網站</string>
   <string name="content_description_customtab_exit">回到先前的應用程式</string>
+  <string name="content_description_blocking_switch">封鎖追蹤器</string>
   <string name="context_menu_paste_go">貼上並瀏覽</string>
   <string name="your_rights">您的權利</string>
   <string name="external_app_prompt_title">用其他應用程式開啟鏈結</string>
-  <string name="external_app_prompt">您可離開 %1$s，到 %2$s 安裝一套應用程式開啟此鏈結。</string>
+  <string name="external_app_prompt">您可離開 %1$s，到 %2$s 安裝應用程式來開啟此鏈結。</string>
   <string name="external_app_prompt_no_app_title">尋找可開啟此鏈結的應用程式</string>
   <string name="external_app_prompt_no_app">您裝置中並未安裝可開啟此鏈結的應用程式。您可離開 %1$s，到 %2$s 安裝一套。</string>
   <string name="external_multiple_apps_matched_exit">要結束隱私瀏覽嗎？</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">分享圖片</string>
   <string name="contextmenu_image_copy">複製圖片網址</string>
   <string name="contextmenu_image_save">儲存圖片</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#19981;&#26371;&#34987;&#21034;&#38500;</b>&#12290;]]></string>
+  <string name="firstrun_tracking_title">上網時，彷彿沒有人看著你。</string>
+  <string name="firstrun_tracking_text">上網時自動封鎖網路追蹤器。然後只要點擊程式或通知列中的垃圾桶圖示，即可移除造訪過的網站記錄和 Cookie。</string>
+  <string name="firstrun_defaultbrowser_title">加強您的隱私</string>
+  <string name="firstrun_defaultbrowser_text">將 %1$s 設為您的預設瀏覽器，讓您在其他 Android 程式開啟網頁時，也能受隱私瀏覽功能的保護。</string>
+  <string name="firstrun_breaking_title">快速修正\n封鎖時的問題</string>
+  <string name="firstrun_breaking_text">若封鎖線上追蹤器，造成某些網站無法正常使用，您可以點擊工具選單暫時關閉封鎖功能。</string>
+  <string name="firstrun_close_button">好，知道了！</string>
+  <string name="firstrun_skip_button">略過</string>
+  <string name="firstrun_next_button">下一步</string>
 </resources>

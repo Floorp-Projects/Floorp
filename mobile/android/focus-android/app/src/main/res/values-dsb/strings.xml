@@ -18,7 +18,7 @@
   <string name="notification_erase_text">Pśeglědowańsku historiju lašowaś</string>
   <string name="shortcut_erase_short_label">Lašowaś</string>
   <string name="shortcut_erase_long_label">Pśeglědowańsku historiju lašowaś</string>
-  <string name="text_selection_search_action">Priwatne pytanje</string>
+  <string name="text_selection_search_action">Priwatnje pytaś</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s dajo was kontrolu wobchowa&#347;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Wu&#382;ywaj&#347;o jen ako priwatny wobgl&#283;dowak:\n  "<ul>"\n    "<li>Pytaj&#347;o a p&#347;egl&#283;duj&#347;o direktnje w na&#322;o&#382;enju</li>"\n    "<li>Blok&#283;ruj&#347;o p&#347;esl&#283;dowaki (abo aktualiz&#283;ruj&#347;o nastajenja, aby p&#347;esl&#283;dowaki dow&#243;li&#322;)</li>"\n    "<li>La&#353;uj&#347;o cookieje a pyta&#324;sku a p&#347;egl&#283;dowa&#324;sku historiju</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s se w&#243;t Mozilla wuwija. Na&#353;a misija jo sp&#283;chowanje strowego, w&#243;tw&#243;rjonego interneta.<br/>\n<a href="%2$s">Dal&#353;ne informacije</a></p>]]></string>
   <string name="preference_category_search">Pytaś</string>
   <string name="preference_search_engine_default">Standard</string>
@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Socialne pśeslědowaki blokěrowaś</string>
   <string name="preference_privacy_block_content">Druge wopśimjeśowe pśeslědowaki blokěrowaś</string>
   <string name="preference_privacy_block_content_summary">Kazy snaź někotare wideo a webboki</string>
+  <string name="preference_privacy_secure_mode">Tarnowanje</string>
+  <string name="preference_privacy_secure_mode_summary">Wušaltujśo tarnowański modus, aby wobrazowku fotografěrował a se sedła woglědował, ku kótarymž sćo se z %1$s w swójej lisćinje aktualnych nałoženjow woglědał</string>
   <string name="preference_category_performance">Wugbaśe</string>
   <string name="preference_performance_block_webfonts">Webpisma blokěrowaś</string>
   <string name="preference_performance_block_webfonts_summary">Móžo k tomu wjasć, až symbole abo wobraze feluju</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Slědk</string>
   <string name="content_description_stop">Cytanje websedła zastajiś</string>
   <string name="content_description_customtab_exit">Slědk k pjerwjejšnemu nałoženjeju</string>
+  <string name="content_description_blocking_switch">Pśeslědowaki blokěrowaś</string>
   <string name="context_menu_paste_go">Zasajźiś a zachopiś</string>
   <string name="your_rights">Waše pšawa</string>
   <string name="external_app_prompt_title">Wótkaz w drugem nałoženju wócyniś</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Wobraz śěliś</string>
   <string name="contextmenu_image_copy">Wobrazowu adresu kopěrowaś</string>
   <string name="contextmenu_image_save">Wobraz składowaś</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">se njewula&#353;uju</b>, ga&#382; historiju %1$s la&#353;ujo&#347;o.]]></string>
+  <string name="firstrun_tracking_title">Pśeglědujśo mimo aby něchten wobglědował</string>
+  <string name="firstrun_tracking_text">Blokěrujśo awtomatiski slědowanje online, mjaztym až pśeglědujośo. Wótwónoźćo pótom woglědane boki a cookieje z jadnym dotyknjenim na cajkowy symbol w nałoženju abo w swójich powěźeńkach.</string>
+  <string name="firstrun_defaultbrowser_title">Zmocniśo swóju priwatnosć</string>
+  <string name="firstrun_defaultbrowser_text">Nastajśo %1$s ako swój standardny wobglědowak a mějśo wužytk z priwatnego modusa, gaž se z webom z drugich nałoženjow Android zwězujośo.</string>
+  <string name="firstrun_breaking_title">Spěšne rozwězanje, gaž\nblokěrowanje = łamanje</string>
+  <string name="firstrun_breaking_text">Jolic blokěrowanje pśeslědowakow online ma njelěpšynu, až se sedło zda skóńcowane byś, znjemóžniśo blokěrowanje z pótusnjenim na meni Rědy.</string>
+  <string name="firstrun_close_button">W pórěźe, som zrozměł!</string>
+  <string name="firstrun_skip_button">Pśeskócyś</string>
+  <string name="firstrun_next_button">Dalej</string>
 </resources>

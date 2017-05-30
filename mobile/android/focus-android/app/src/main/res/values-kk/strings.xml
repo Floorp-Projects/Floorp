@@ -18,7 +18,7 @@
   <string name="notification_erase_text">Шолу тарихын өшіру</string>
   <string name="shortcut_erase_short_label">Өшіру</string>
   <string name="shortcut_erase_long_label">Шолу тарихын өшіру</string>
-  <string name="text_selection_search_action">Жекелік шолу</string>
+  <string name="text_selection_search_action">Жеке шолыңыз</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1073;&#1072;&#1089;&#1179;&#1072;&#1088;&#1091;&#1076;&#1099; &#1179;&#1086;&#1083;&#1099;&#1187;&#1099;&#1079;&#1171;&#1072; &#1073;&#1077;&#1088;&#1077;&#1076;&#1110;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1054;&#1085;&#1099; &#1078;&#1077;&#1082;&#1077;&#1083;&#1110;&#1082; &#1073;&#1088;&#1072;&#1091;&#1079;&#1077;&#1088;&#1110; &#1088;&#1077;&#1090;&#1110;&#1085;&#1076;&#1077; &#1179;&#1086;&#1083;&#1076;&#1072;&#1085;&#1099;&#1187;&#1099;&#1079;:\n  "<ul>"\n    "<li>&#1178;&#1086;&#1083;&#1076;&#1072;&#1085;&#1073;&#1072; &#1110;&#1096;&#1110;&#1085;&#1077;&#1085; &#1090;&#1110;&#1082;&#1077;&#1083;&#1077;&#1081; &#1110;&#1079;&#1076;&#1077;&#1091; &#1078;&#1241;&#1085;&#1077; &#1096;&#1086;&#1083;&#1091;</li>"\n    "<li>&#1058;&#1088;&#1077;&#1082;&#1077;&#1088;&#1083;&#1077;&#1088;&#1076;&#1110; &#1073;&#1083;&#1086;&#1082;&#1090;&#1072;&#1187;&#1099;&#1079; (&#1085;&#1077;&#1084;&#1077;&#1089;&#1077;, &#1086;&#1083;&#1072;&#1088;&#1076;&#1099; &#1088;&#1201;&#1179;&#1089;&#1072;&#1090; &#1077;&#1090;&#1091; &#1199;&#1096;&#1110;&#1085;, &#1073;&#1072;&#1087;&#1090;&#1072;&#1091;&#1083;&#1072;&#1088;&#1076;&#1099; &#1078;&#1072;&#1187;&#1072;&#1088;&#1090;&#1099;&#1187;&#1099;&#1079;)</li>"\n    "<li>Cookies &#1078;&#1241;&#1085;&#1077; &#1110;&#1079;&#1076;&#1077;&#1091; &#1084;&#1077;&#1085; &#1096;&#1086;&#1083;&#1091; &#1090;&#1072;&#1088;&#1080;&#1093;&#1099;&#1085; &#1082;&#1077;&#1090;&#1110;&#1088;&#1091; &#1199;&#1096;&#1110;&#1085; &#1257;&#1096;&#1110;&#1088;&#1110;&#1187;&#1110;&#1079;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1078;&#1072;&#1089;&#1072;&#1171;&#1072;&#1085; Mozilla. &#1052;&#1072;&#1179;&#1089;&#1072;&#1090;&#1099;&#1084;&#1099;&#1079; - &#1080;&#1085;&#1090;&#1077;&#1088;&#1085;&#1077;&#1090; &#1076;&#1077;&#1085;&#1089;&#1072;&#1091;&#1083;&#1099;&#1171;&#1099;&#1085; &#1078;&#1241;&#1085;&#1077; &#1072;&#1096;&#1099;&#1179;&#1090;&#1099;&#1171;&#1099;&#1085; &#1089;&#1072;&#1179;&#1090;&#1072;&#1091;.<br/>\n<a href="%2$s">&#1050;&#1257;&#1073;&#1110;&#1088;&#1077;&#1082; &#1073;&#1110;&#1083;&#1091;</a></p>]]></string>
   <string name="preference_category_search">Іздеу</string>
   <string name="preference_search_engine_default">Бастапқы</string>
@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Әлеуметтік желілер трекерлерін блоктау</string>
   <string name="preference_privacy_block_content">Басқа құрама трекерлерін блоктау</string>
   <string name="preference_privacy_block_content_summary">Кейбір видео және веб парақтарының жұмысына кері әсерін тигізуі мүмкін</string>
+  <string name="preference_privacy_secure_mode">Жасырын</string>
+  <string name="preference_privacy_secure_mode_summary">Скриншоттарды түсіру және %1$s көмегімен шолған сайттарды жуырдағы қолданбалар тізімінен көру үшін жасырын режимін сөндіріңіз</string>
   <string name="preference_category_performance">Өнімділік</string>
   <string name="preference_performance_block_webfonts">Веб қаріптерін блоктау</string>
   <string name="preference_performance_block_webfonts_summary">Жоқ болып тұрған таңбашалар немесе суреттерге әкеп соғуы мүмкін</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Артқа өту</string>
   <string name="content_description_stop">Вебсайтты жүктеуді тоқтату</string>
   <string name="content_description_customtab_exit">Алдыңғы қолданбаға оралу</string>
+  <string name="content_description_blocking_switch">Трекерлерді блоктау</string>
   <string name="context_menu_paste_go">Кірістіру және өту</string>
   <string name="your_rights">Құқықтарыңыз</string>
   <string name="external_app_prompt_title">Сілтемені басқа қолданбада ашу</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Суретпен бөлісу</string>
   <string name="contextmenu_image_copy">Сурет адресін көшіріп алу</string>
   <string name="contextmenu_image_save">Суретті сақтау</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1257;&#1096;&#1110;&#1088;&#1110;&#1083;&#1084;&#1077;&#1081;&#1076;&#1110;</b>.]]></string>
+  <string name="firstrun_tracking_title">Бақылаудан қорықпай-ақ интернетті шолыңыз</string>
+  <string name="firstrun_tracking_text">Шолу кезінде онлайн трекерлерді автоблоктаңыз. Одан кейін, қолданбадағы немесе хабарламалардағы қоқыс шелегі таңбашасына шерту арқылы қаралған беттер және cookies өшіріңіз.</string>
+  <string name="firstrun_defaultbrowser_title">Жекелігіңізді күшейтіңіз</string>
+  <string name="firstrun_defaultbrowser_text">%1$s негізгі браузер ретінде орнатып, басқа Android қолданбаларынан интернетке сілтеу кезінде жекелік шолудың артықшылықтарын алыңыз.</string>
+  <string name="firstrun_breaking_title">Блоктау = сындыру\nкезіндегі жылдам жөндеу</string>
+  <string name="firstrun_breaking_text">Онлайн трекерлерді блоктау нәтижесінде сайт сынған болса, саймандар мәзіріне шерту арқылы блоктауды сөндіріңіз.</string>
+  <string name="firstrun_close_button">Жақсы, түсіндім!</string>
+  <string name="firstrun_skip_button">Аттап кету</string>
+  <string name="firstrun_next_button">Келесі</string>
 </resources>

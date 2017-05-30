@@ -7,13 +7,13 @@
   <string name="feedback_erase">S\'ha esborrat l\'historial de navegació.</string>
   <string name="search_hint">Cerca %1$s</string>
   <string name="menu_share">Comparteix…</string>
-  <string name="menu_open_with_default_browser">Obre amb %1$s</string>
+  <string name="menu_open_with_default_browser">Obre amb el %1$s</string>
   <string name="menu_open_with_a_browser">Obre amb…</string>
   <string name="menu_settings">Paràmetres</string>
   <string name="menu_about">Quant a</string>
   <string name="menu_help">Ajuda</string>
   <string name="menu_rights">Els vostres drets</string>
-  <string name="menu_trackers_blocked_title">Elements de seguiment blocats</string>
+  <string name="menu_trackers_blocked_title">Elements blocats</string>
   <string name="share_dialog_title">Comparteix mitjançant</string>
   <string name="notification_erase_text">Esborra l\'historial de navegació</string>
   <string name="shortcut_erase_short_label">Esborra</string>
@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Bloca els elements de seguiment social</string>
   <string name="preference_privacy_block_content">Bloca altres elements de seguiment de contingut</string>
   <string name="preference_privacy_block_content_summary">Pot causar problemes amb alguns vídeos i pàgines web</string>
+  <string name="preference_privacy_secure_mode">Invisible</string>
+  <string name="preference_privacy_secure_mode_summary">Desactiveu el mode invisible per fer captures de pantalla i veure els llocs que heu visitat amb el %1$s a la llista d\'aplicacions recents</string>
   <string name="preference_category_performance">Rendiment</string>
   <string name="preference_performance_block_webfonts">Bloca tipus de lletra web</string>
   <string name="preference_performance_block_webfonts_summary">Pot fer que no es vegin algunes icones o imatges</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Vés enrere</string>
   <string name="content_description_stop">Atura la càrrega del lloc web</string>
   <string name="content_description_customtab_exit">Torna a l\'aplicació anterior</string>
+  <string name="content_description_blocking_switch">Bloca els elements de seguiment</string>
   <string name="context_menu_paste_go">Enganxa i vés-hi</string>
   <string name="your_rights">Els vostres drets</string>
   <string name="external_app_prompt_title">Obre l\'enllaç en una altra aplicació</string>
@@ -63,7 +66,7 @@
   <string name="errorpage_refresh">Torna-ho a provar</string>
   <string name="error_connectionfailure_title">No s\'ha pogut connectar</string>
   <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>El lloc web podria estar temporalment no disponible o massa ocupat. Torneu-ho a provar d\'aqu&#237; uns moments.</li>"\n        "<li>Si no podeu carregar cap p&#224;gina, comproveu la connexi&#243; de dades o Wi-Fi del vostre dispositiu m&#242;bil.</li>"\n      "</ul>]]></string>
-  <string name="error_timeout_title">La connexió ha esgotat el temps d\'espera</string>
+  <string name="error_timeout_title">S\'ha esgotat el temps d\'espera de la connexió</string>
   <string name="error_hostLookup_title">No s\'ha trobat el servidor</string>
   <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Comproveu que no s\'hagin introdu&#239;t errors en teclejar l\'adre&#231;a, p. ex.\n          "<strong>ww</strong>".example.com en comptes de\n          "<strong>www</strong>.example.com</li>"\n        "<li>Si no podeu carregar cap p&#224;gina, comproveu la connexi&#243; de dades o Wi-Fi del vostre dispositiu.</li>"\n      "</ul>]]></string>
   <string name="error_malformedURI_title">L\'adreça no és vàlida</string>
@@ -73,7 +76,7 @@
   <string name="error_unsupportedprotocol_title">No s\'ha entès l\'adreça</string>
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Pot ser que calgui que instal&#183;leu altre programari per obrir l\'adre&#231;a.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Ha fallat la connexió segura</string>
-  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Aix&#242; podria ser un problema amb la configuraci&#243; del servidor, o b&#233; podria ser que alg&#250; estigu&#233;s intentant fer-se passar pel servidor.</li>"\n  "<li>Si us hi heu connectat sense cap problema alguna altra vegada, l\'error podria ser temporal, i podeu tornar-ho a provar m&#233;s tard.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Aix&#242; podria ser un problema amb la configuraci&#243; del servidor, o b&#233; podria ser que alg&#250; estigu&#233;s intentant fer-se passar pel servidor.</li>"\n  "<li>Si us hi heu connectat sense cap problema alguna altra vegada, l\'error podria ser temporal i podeu tornar-ho a provar m&#233;s tard.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups.</string>
   <string name="error_generic_message">No s\'ha pogut carregar aquesta pàgina per algun motiu.</string>
   <string name="contextmenu_link_share">Comparteix l\'enllaç</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Comparteix la imatge</string>
   <string name="contextmenu_image_copy">Copia l\'adreça de la imatge</string>
   <string name="contextmenu_image_save">Desa la imatge</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no s\'eliminaran</b>" quan esborreu l\'historial del %1$s."]]></string>
+  <string name="firstrun_tracking_title">Navegueu sense sentir-vos observat</string>
+  <string name="firstrun_tracking_text">Bloqueu automàticament els elements que us fan el seguiment mentre navegueu. Elimineu les pàgines visitades i les galetes tocant la icona de paperera a l\'aplicació o a les notificacions.</string>
+  <string name="firstrun_defaultbrowser_title">Potencieu la privadesa</string>
+  <string name="firstrun_defaultbrowser_text">Definiu el %1$s com a navegador per defecte i gaudiu d\'una navegació privada quan obriu enllaços web des d\'altres aplicacions de l\'Android.</string>
+  <string name="firstrun_breaking_title">Una solució ràpida si el\nbloqueig causa problemes</string>
+  <string name="firstrun_breaking_text">Si us sembla que un lloc no funciona bé per haver blocat els elements de seguiment, desactiveu el bloqueig amb un sol toc al menú d\'eines.</string>
+  <string name="firstrun_close_button">Entesos</string>
+  <string name="firstrun_skip_button">Omet</string>
+  <string name="firstrun_next_button">Següent</string>
 </resources>

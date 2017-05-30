@@ -13,7 +13,7 @@
   <string name="menu_about">O programie</string>
   <string name="menu_help">Pomoc</string>
   <string name="menu_rights">O prawach użytkownika</string>
-  <string name="menu_trackers_blocked_title">Zablokowane elementy śledzące</string>
+  <string name="menu_trackers_blocked_title">Zablokowano:</string>
   <string name="share_dialog_title">Udostępnij przez</string>
   <string name="notification_erase_text">Usuń historię przeglądania</string>
   <string name="shortcut_erase_short_label">Usuń historię</string>
@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Blokowanie śledzących społecznościowych</string>
   <string name="preference_privacy_block_content">Blokowanie pozostałych śledzących</string>
   <string name="preference_privacy_block_content_summary">Może uniemożliwiać oglądanie niektórych filmów i stron WWW</string>
+  <string name="preference_privacy_secure_mode">Tryb ukryty</string>
+  <string name="preference_privacy_secure_mode_summary">Wyłączenie trybu ukrytego umożliwia wykonywanie zrzutów ekranu i wyświetlanie stron odwiedzonych w programie %1$s na liście ostatnio używanych aplikacji</string>
   <string name="preference_category_performance">Wydajność</string>
   <string name="preference_performance_block_webfonts">Blokowanie czcionek sieciowych</string>
   <string name="preference_performance_block_webfonts_summary">Może spowodować, że niektóre ikony lub obrazy będą niewidoczne</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Przejdź wstecz</string>
   <string name="content_description_stop">Zatrzymaj wczytywanie strony</string>
   <string name="content_description_customtab_exit">Wróć do poprzedniej aplikacji</string>
+  <string name="content_description_blocking_switch">Blokowanie elementów śledzących</string>
   <string name="context_menu_paste_go">Wklej i przejdź</string>
   <string name="your_rights">O prawach użytkownika</string>
   <string name="external_app_prompt_title">Otwieranie odnośnika w innej aplikacji</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Udostępnij obraz</string>
   <string name="contextmenu_image_copy">Kopiuj adres obrazu</string>
   <string name="contextmenu_image_save">Zapisz obraz</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nie zostan&#261; usuni&#281;te</b>" po wyczyszczeniu historii programu %1$s."]]></string>
+  <string name="firstrun_tracking_title">Przeglądaj, jak gdyby nikt nie patrzył</string>
+  <string name="firstrun_tracking_text">Automatycznie blokuj śledzące elementy podczas przeglądania stron. Usuwaj odwiedzone strony i ciasteczka jednym dotknięciem ikony kosza w aplikacji lub w powiadomieniu.</string>
+  <string name="firstrun_defaultbrowser_title">Nowy poziom prywatności</string>
+  <string name="firstrun_defaultbrowser_text">Ustaw %1$s jako domyślną przeglądarkę i korzystaj z zalet przeglądania prywatnego podczas łączenia się z Internetem z innych aplikacji na Androida.</string>
+  <string name="firstrun_breaking_title">Jeśli blokowanie coś psuje</string>
+  <string name="firstrun_breaking_text">Kiedy blokowanie elementów śledzących powoduje błędne wyświetlanie strony, wyłącz blokowanie w menu narzędziowym.</string>
+  <string name="firstrun_close_button">OK!</string>
+  <string name="firstrun_skip_button">Pomiń</string>
+  <string name="firstrun_next_button">Dalej</string>
 </resources>

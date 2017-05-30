@@ -18,7 +18,7 @@
   <string name="notification_erase_text">Slett nettleserhistorikk</string>
   <string name="shortcut_erase_short_label">Slett</string>
   <string name="shortcut_erase_long_label">Slett nettleserhistorikk</string>
-  <string name="text_selection_search_action">Privat søk</string>
+  <string name="text_selection_search_action">Søk privat</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gir deg kontroll.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Bruk den som en privat nettleser:\n  "<ul>"\n    "<li>S&#248;k og surf rett i appen</li>"\n    "<li>Blokker sporere (eller oppdater innstillingene for &#229; tillate sporere)</li>"\n    "<li>Slett for &#229; fjerne infokapsler samt s&#248;k- og nettleserhistorikk</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s er produsert av Mozilla. V&#229;r misjon er &#229; fremme et sunt, &#229;pent Internett.<br/>\n<a href="%2$s">Les mer</a></p>]]></string>
   <string name="preference_category_search">Søk</string>
   <string name="preference_search_engine_default">Standard</string>
@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Blokker sosiale media-sporere</string>
   <string name="preference_privacy_block_content">Blokker andre innholdssporere</string>
   <string name="preference_privacy_block_content_summary">Kan ødelegge noen videoer og nettsider</string>
+  <string name="preference_privacy_secure_mode">Usynlig</string>
+  <string name="preference_privacy_secure_mode_summary">Slå av usynlig modus for å ta skjermbilder og se nettsteder du har besøkt ved hjelp av %1$s i siste apper-listen</string>
   <string name="preference_category_performance">Ytelse</string>
   <string name="preference_performance_block_webfonts">Blokker nettfonter</string>
   <string name="preference_performance_block_webfonts_summary">Kan resultere i at ikon eller bilder mangler</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Naviger tilbake</string>
   <string name="content_description_stop">Stopp lasting av nettside</string>
   <string name="content_description_customtab_exit">Gå tilbake til forrige app</string>
+  <string name="content_description_blocking_switch">Blokker sporere</string>
   <string name="context_menu_paste_go">Lim inn og åpne</string>
   <string name="your_rights">Dine rettigheter</string>
   <string name="external_app_prompt_title">Åpne lenke i en annen app</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Del bilde</string>
   <string name="contextmenu_image_copy">Kopier bildeadresse</string>
   <string name="contextmenu_image_save">Lagre bilde</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">vil ikke bli fjernet</b>" n&#229;r du sletter %1$s-historikken."]]></string>
+  <string name="firstrun_tracking_title">Surf uten å føle deg overvåket</string>
+  <string name="firstrun_tracking_text">Blokker automatisk sporing når du surfer. Deretter fjerner du besøkte sider og infokapsler med et trykk på søppelikonet i appen eller i varslene dine.</string>
+  <string name="firstrun_defaultbrowser_title">Styrk personvernet ditt</string>
+  <string name="firstrun_defaultbrowser_text">Velg %1$s som standardnettleser, og få fordelene med privat nettlesing når du linker til nettet fra andre Android-apper.</string>
+  <string name="firstrun_breaking_title">En rask løsning når\nblokkering = ødelegging</string>
+  <string name="firstrun_breaking_text">Når ulempen med å blokkere sporere på nettet er et nettsted som virker ødelagt, slår du av med et trykk på verktøylinjen.</string>
+  <string name="firstrun_close_button">OK, jeg forstår det!</string>
+  <string name="firstrun_skip_button">Hopp over</string>
+  <string name="firstrun_next_button">Neste</string>
 </resources>

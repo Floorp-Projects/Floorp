@@ -18,7 +18,7 @@
   <string name="notification_erase_text">Vymazat historii prohlížení</string>
   <string name="shortcut_erase_short_label">Vymazat</string>
   <string name="shortcut_erase_long_label">Vymazat historii prohlížení</string>
-  <string name="text_selection_search_action">Soukromé vyhledávání</string>
+  <string name="text_selection_search_action">Vyhledávejte soukromě</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s v&#225;m d&#225;v&#225; kontrolu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Pou&#382;&#237;vejte ho jako soukrom&#253; prohl&#237;&#382;e&#269;:\n  "<ul>"\n    "<li>Vyhled&#225;vejte a prohl&#237;&#382;ejte p&#345;&#237;mo v aplikaci</li>"\n    "<li>Blokujte sledovac&#237; prvky (nebo aktualizujte nastaven&#237; pro povolen&#237; sledovac&#237;ch prvk&#367;)</li>"\n    "<li>Tla&#269;&#237;tkem sma&#382;te cookies a historii vyhled&#225;v&#225;n&#237; a prohl&#237;&#382;en&#237;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s je vyv&#237;jen Mozillou. Na&#353;&#237; mis&#237; je podporovat zdrav&#253; a otev&#345;en&#253; internet.<br/>\n<a href="%2$s">Zjist&#283;te v&#237;ce</a></p>]]></string>
   <string name="preference_category_search">Hledat</string>
   <string name="preference_search_engine_default">Výchozí</string>
@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Blokovat sledující prvky sociálních sítí</string>
   <string name="preference_privacy_block_content">Blokovat ostatní sledující prvky</string>
   <string name="preference_privacy_block_content_summary">Může rozbít některá videa a webové stránky</string>
+  <string name="preference_privacy_secure_mode">Nenápadnost</string>
+  <string name="preference_privacy_secure_mode_summary">Vypněte režim nenápadnosti pro vytváření snímků obrazovky a zobrazení stránek, které navštěvujete v aplikaci %1$s v seznamu nedávno použitých aplikacích</string>
   <string name="preference_category_performance">Výkon</string>
   <string name="preference_performance_block_webfonts">Blokovat webové fonty</string>
   <string name="preference_performance_block_webfonts_summary">Některé ikony nebo obrázky se nemusí zobrazovat</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Návrat zpět</string>
   <string name="content_description_stop">Zastavit načítání stránky</string>
   <string name="content_description_customtab_exit">Návrat do předchozí aplikace</string>
+  <string name="content_description_blocking_switch">Blokovat sledující prvky</string>
   <string name="context_menu_paste_go">Vložit a přejít</string>
   <string name="your_rights">Vaše práva</string>
   <string name="external_app_prompt_title">Otevřít odkaz v jiné aplikaci</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Sdílet obrázek</string>
   <string name="contextmenu_image_copy">Kopírovat adresu obrázku</string>
   <string name="contextmenu_image_save">Uložit obrázek</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebudou smaz&#225;ny</b>" kdy&#382; sma&#382;ete historii aplikace %1$s."]]></string>
+  <string name="firstrun_tracking_title">Procházejte, jako když se nikdo nedívá</string>
+  <string name="firstrun_tracking_text">Automaticky blokuje online sledování, zatímco prohlížíte. Potom můžete smazat zobrazené stránky a cookies dotykem na ikonu koše v aplikaci nebo ve vašich notifikacích.</string>
+  <string name="firstrun_defaultbrowser_title">Posuňte své soukromí na vyšší úroveň</string>
+  <string name="firstrun_defaultbrowser_text">Nastavte si %1$s jako svůj výchozí prohlížeč a získejte výhody soukromého prohlížení když vás ostatní Android aplikace odkážou na web.</string>
+  <string name="firstrun_breaking_title">Rychlé řešení, když\nblokování rozbije stránku</string>
+  <string name="firstrun_breaking_text">Když se blokování sledovacích prvků stane přítěží a rozbije stránku, vypněte jej klepnutím v nabídce nástrojů.</string>
+  <string name="firstrun_close_button">OK, rozumím!</string>
+  <string name="firstrun_skip_button">Přeskočit</string>
+  <string name="firstrun_next_button">Další</string>
 </resources>

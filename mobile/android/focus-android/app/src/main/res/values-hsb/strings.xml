@@ -18,7 +18,7 @@
   <string name="notification_erase_text">Přehladowansku historiju zhašeć</string>
   <string name="shortcut_erase_short_label">Zhašeć</string>
   <string name="shortcut_erase_long_label">Přehladowansku historiju zhašeć</string>
-  <string name="text_selection_search_action">Priwatne pytanje</string>
+  <string name="text_selection_search_action">Priwatnje pytać</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s da was kontrolu wobchowa&#263;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Wu&#382;iwaj&#263;e j&#243;n jako priwatny wobhladowak:\n  "<ul>"\n    "<li>Pytaj&#263;e a p&#345;ehladuj&#263;e direktnje w na&#322;o&#382;enju</li>"\n    "<li>Blokuj&#263;e p&#345;es&#263;&#283;howaki (abo aktualizuj&#263;e nastajenja, zo by&#353;&#263;e p&#345;es&#263;&#283;howaki dowoli&#322;)</li>"\n    "<li>Zha&#353;ej&#263;e placki a pytansku a p&#345;ehladowansku historiju</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s so wot Mozilla wuwiwa. Na&#353;a misija je sp&#283;chowanje stroweho, wotewrjeneho interneta.<br/>\n<a href="%2$s">Dal&#353;e informacije</a></p>]]></string>
   <string name="preference_category_search">Pytać</string>
   <string name="preference_search_engine_default">Standard</string>
@@ -31,6 +31,8 @@
   <string name="preference_privacy_block_social">Socialne přesćěhowaki blokować</string>
   <string name="preference_privacy_block_content">Druhe wobsahowe přesćěhowaki blokować</string>
   <string name="preference_privacy_block_content_summary">Haći snano někotrym widejam a webstronam</string>
+  <string name="preference_privacy_secure_mode">Tarnowanje</string>
+  <string name="preference_privacy_secure_mode_summary">Wupińće tarnowanski modus, zo byšće wobrazowku fotografował a sej sydła wobhladował, kotrež sće z %1$s w swojej lisćinje aktualnych nałoženjow wopytał</string>
   <string name="preference_category_performance">Wukon</string>
   <string name="preference_performance_block_webfonts">Webpisma blokować</string>
   <string name="preference_performance_block_webfonts_summary">Móže k tomu wjesć, zo symbole abo wobrazy faluja</string>
@@ -52,6 +54,7 @@
   <string name="content_description_back">Wróćo</string>
   <string name="content_description_stop">Čitanje websydła zastajić</string>
   <string name="content_description_customtab_exit">Wróćo k předchadnemu nałoženju</string>
+  <string name="content_description_blocking_switch">Přesćěhowaki blokować</string>
   <string name="context_menu_paste_go">Zasadźić a započeć</string>
   <string name="your_rights">Waše prawa</string>
   <string name="external_app_prompt_title">Wotkaz w druhim nałoženju wočinić</string>
@@ -81,4 +84,14 @@
   <string name="contextmenu_image_share">Wobraz dźělić</string>
   <string name="contextmenu_image_copy">Wobrazowu adresu kopěrować</string>
   <string name="contextmenu_image_save">Wobraz składować</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">so njezha&#353;eja</b>, hdy&#382; historiju %1$s zha&#353;e&#263;e.]]></string>
+  <string name="firstrun_tracking_title">Přehladujće bjez toho, zo njeby nichtó wobkedźbował</string>
+  <string name="firstrun_tracking_text">"Blokujće awtomatisce slědowanje online, mjeztym zo přehladujeće. Wotstrońće potom wopytane strony a placki z jednym dótkom na čaporowy symbol w nałoženju abo w swojich zdźělenkach. "</string>
+  <string name="firstrun_defaultbrowser_title">Zesylńće swoju priwatnosć</string>
+  <string name="firstrun_defaultbrowser_text">Nastajće %1$s jako swój standardny wobhladowak a zwužitkujće priwatny modus, hdyž so z webom z druhich nałoženjow Android zwjazujeće.</string>
+  <string name="firstrun_breaking_title">Spěšne rozrisanje, hdyž\nblokowanje = łamanje</string>
+  <string name="firstrun_breaking_text">Jeli blokowanje přesćěhowakow online ma njelěpšinu, zo so sydło zda skóncowane być, znjemóžńće blokowanje z podótkom na meni Nastroje.</string>
+  <string name="firstrun_close_button">W porjadku, sym zrozumił!</string>
+  <string name="firstrun_skip_button">Přeskočić</string>
+  <string name="firstrun_next_button">Dale</string>
 </resources>
