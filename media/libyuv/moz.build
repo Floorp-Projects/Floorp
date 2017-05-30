@@ -9,6 +9,15 @@ with Files("**"):
 
 include('/build/gyp.mozbuild')
 
+# Set gyp vars that libyuv needs when building under various analysis tools.
+gyp_vars_copy = gyp_vars.copy()
+if CONFIG['MOZ_VALGRIND']:
+    gyp_vars_copy.update(build_for_tool="memcheck")
+elif CONFIG['MOZ_ASAN']:
+    gyp_vars_copy.update(build_for_tool="asan")
+elif CONFIG['MOZ_TSAN']:
+    gyp_vars_copy.update(build_for_tool="tsan")
+
 libyuv_non_unified_sources = [
     'libyuv/source/convert.cc',
     'libyuv/source/convert_from.cc',
@@ -21,7 +30,7 @@ libyuv_non_unified_sources = [
 
 GYP_DIRS += ['libyuv']
 GYP_DIRS['libyuv'].input = 'libyuv/libyuv.gyp'
-GYP_DIRS['libyuv'].variables = gyp_vars
+GYP_DIRS['libyuv'].variables = gyp_vars_copy
 GYP_DIRS['libyuv'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
 GYP_DIRS['libyuv'].non_unified_sources += libyuv_non_unified_sources
 
