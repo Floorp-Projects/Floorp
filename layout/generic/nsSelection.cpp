@@ -3511,7 +3511,7 @@ Selection::Selection(nsFrameSelection* aList)
 
 Selection::~Selection()
 {
-  setAnchorFocusRange(-1);
+  SetAnchorFocusRange(-1);
 
   uint32_t count = mRanges.Length();
   for (uint32_t i = 0; i < count; ++i) {
@@ -3644,7 +3644,7 @@ Selection::GetFocusOffset(int32_t* aFocusOffset)
 }
 
 void
-Selection::setAnchorFocusRange(int32_t indx)
+Selection::SetAnchorFocusRange(int32_t indx)
 {
   if (indx >= (int32_t)mRanges.Length())
     return;
@@ -4103,7 +4103,7 @@ Selection::RemoveCollapsedRanges()
 nsresult
 Selection::Clear(nsPresContext* aPresContext)
 {
-  setAnchorFocusRange(-1);
+  SetAnchorFocusRange(-1);
 
   for (uint32_t i = 0; i < mRanges.Length(); ++i) {
     mRanges[i].mRange->SetSelection(nullptr);
@@ -5068,7 +5068,7 @@ Selection::AddRangeInternal(nsRange& aRange, nsIDocument* aDocument,
     return;
   }
 
-  setAnchorFocusRange(rangeIndex);
+  SetAnchorFocusRange(rangeIndex);
   
   // Make sure the caret appears on the next line, if at a newline
   if (mSelectionType == SelectionType::eNormal) {
@@ -5165,7 +5165,7 @@ Selection::RemoveRange(nsRange& aRange, ErrorResult& aRv)
   int32_t cnt = mRanges.Length();
   if (&aRange == mAnchorFocusRange) {
     // Reset anchor to LAST range or clear it if there are no ranges.
-    setAnchorFocusRange(cnt - 1);
+    SetAnchorFocusRange(cnt - 1);
 
     // When the selection is user-created it makes sense to scroll the range
     // into view. The spell-check selection, however, is created and destroyed
@@ -5303,7 +5303,7 @@ Selection::Collapse(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
     aRv.Throw(result);
     return;
   }
-  setAnchorFocusRange(0);
+  SetAnchorFocusRange(0);
   SelectFrames(presContext, range, true);
 
   // Be aware, this instance may be destroyed after this call.
@@ -5500,7 +5500,7 @@ Selection::SetAnchorFocusToRange(nsRange* aRange)
   res = AddItem(aRange, &aOutIndex, !collapsed);
   if (NS_FAILED(res))
     return res;
-  setAnchorFocusRange(aOutIndex);
+  SetAnchorFocusRange(aOutIndex);
 
   return NS_OK;
 }
@@ -5535,11 +5535,11 @@ Selection::AdjustAnchorFocusForMultiRange(nsDirection aDirection)
   if (mDirection == eDirPrevious) {
     firstRange->SetIsGenerated(false);
     lastRange->SetIsGenerated(true);
-    setAnchorFocusRange(0);
+    SetAnchorFocusRange(0);
   } else { // aDir == eDirNext
     firstRange->SetIsGenerated(true);
     lastRange->SetIsGenerated(false);
-    setAnchorFocusRange(RangeCount() - 1);
+    SetAnchorFocusRange(RangeCount() - 1);
   }
 }
 
