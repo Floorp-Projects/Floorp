@@ -2127,7 +2127,7 @@ JSStructuredCloneReader::startRead(MutableHandleValue vp)
             return false;
 
         RegExpObject* reobj = RegExpObject::create(context(), atom, flags, nullptr, nullptr,
-                                                   context()->tempLifoAlloc());
+                                                   context()->tempLifoAlloc(), GenericObject);
         if (!reobj)
             return false;
         vp.setObject(*reobj);
