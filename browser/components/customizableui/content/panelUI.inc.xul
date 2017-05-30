@@ -9,7 +9,8 @@
        flip="slide"
        position="bottomcenter topright"
        noautofocus="true">
-  <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView">
+  <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView"
+                  viewCacheId="appMenu-viewCache">
     <panelview id="PanelUI-mainView" context="customizationPanelContextMenu">
       <vbox id="PanelUI-contents-scroller">
         <vbox id="PanelUI-contents" class="panelUI-grid"/>
@@ -503,7 +504,9 @@
        flip="slide"
        position="bottomcenter topright"
        noautofocus="true">
-  <photonpanelmultiview id="appMenu-multiView" mainViewId="appMenu-mainView" descriptionheightworkaround="true">
+  <photonpanelmultiview id="appMenu-multiView" mainViewId="appMenu-mainView"
+                        descriptionheightworkaround="true"
+                        viewCacheId="appMenu-viewCache">
     <panelview id="appMenu-mainView" class="PanelUI-subView">
       <vbox class="panel-subview-body">
         <vbox id="appMenu-addon-banners"/>
@@ -637,12 +640,12 @@
                        class="subviewbutton subviewbutton-nav"
                        label="&webDeveloperMenu.label;"
                        closemenu="none"
-                       oncommand="PanelUI.showSubView('PanelUI-developer', this, null, true)"/>
+                       oncommand="PanelUI.showSubView('PanelUI-developer', this)"/>
         <toolbarbutton id="appMenu-help-button"
                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
                        label="&appMenuHelp.label;"
                        closemenu="none"
-                       oncommand="PanelUI.showSubView('PanelUI-helpView', this, null, true)"/>
+                       oncommand="PanelUI.showSubView('PanelUI-helpView', this)"/>
 #ifndef XP_MACOSX
         <toolbarseparator/>
         <toolbarbutton id="appMenu-quit-button"
@@ -664,7 +667,7 @@
                        class="subviewbutton subviewbutton-nav"
                        label="&charsetMenu2.label;"
                        closemenu="none"
-                       oncommand="PanelUI.showSubView('PanelUI-characterEncodingView', this, null, true)"/>
+                       oncommand="PanelUI.showSubView('PanelUI-characterEncodingView', this)"/>
         <toolbarbutton id="appMenu-workoffline-button"
                        class="subviewbutton"
                        label="&goOfflineCmd.label;"

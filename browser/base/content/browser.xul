@@ -611,6 +611,7 @@
                 id="syncedTabsRefreshFilter"/>
     </menupopup>
   </popupset>
+  <box id="appMenu-viewCache" hidden="true"/>
 
 #ifdef CAN_DRAW_IN_TITLEBAR
 <vbox id="titlebar">
