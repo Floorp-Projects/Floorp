@@ -31,7 +31,6 @@ WebRenderImageLayer::WebRenderImageLayer(WebRenderLayerManager* aLayerManager)
 WebRenderImageLayer::~WebRenderImageLayer()
 {
   MOZ_COUNT_DTOR(WebRenderImageLayer);
-  mPipelineIdRequest.DisconnectIfExists();
 
   for (auto key : mVideoKeys) {
     WrManager()->AddImageKeyForDiscard(key);
@@ -115,24 +114,6 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   }
 
   MOZ_ASSERT(GetImageClientType() != CompositableType::UNKNOWN);
-
-  // Allocate PipelineId if necessary
-  if (GetImageClientType() == CompositableType::IMAGE_BRIDGE &&
-      mPipelineId.isNothing() && !mPipelineIdRequest.Exists()) {
-    // Use Holder to pass this pointer to lambda.
-    // Static anaysis tool does not permit to pass refcounted variable to lambda.
-    // And we do not want to use RefPtr<WebRenderImageLayer> here.
-    Holder holder(this);
-    WrManager()->AllocPipelineId()
-      ->Then(AbstractThread::MainThread(), __func__,
-      [holder] (const wr::PipelineId& aPipelineId) {
-        holder->mPipelineIdRequest.Complete();
-        holder->mPipelineId = Some(aPipelineId);
-      },
-      [holder] (const ipc::PromiseRejectReason &aReason) {
-        holder->mPipelineIdRequest.Complete();
-      })->Track(mPipelineIdRequest);
-  }
 
   if (GetImageClientType() == CompositableType::IMAGE && !mImageClient) {
     mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
