@@ -782,9 +782,14 @@
 </groupbox>
 
 <!-- Data Choices -->
-#ifdef MOZ_TELEMETRY_REPORTING
-<groupbox id="historyGroup" data-category="panePrivacy" data-subcategory="reports" hidden="true">
+#ifdef MOZ_DATA_REPORTING
+
+<groupbox id="telemetryGroup" data-category="panePrivacy" data-subcategory="reports" hidden="true">
 <caption><label>&reports.label;</label></caption>
+#ifndef MOZ_TELEMETRY_REPORTING
+  <description id="TelemetryDisabledDesc" control="telemetryGroup">&healthReportingDisabled.label;</description>
+#endif
+
   <hbox align="center">
     <checkbox id="submitHealthReportBox" label="&enableHealthReport.label;"
               accesskey="&enableHealthReport.accesskey;"/>
@@ -804,14 +809,9 @@
                  class="indent">&telemetryDesc.label;</description>
   </vbox>
 </groupbox>
-#endif
 
-#ifdef MOZ_DATA_REPORTING
 #ifdef MOZ_CRASHREPORTER
 <groupbox id="crashReporterGroup" data-category="panePrivacy" data-subcategory="reports" hidden="true">
-#ifndef MOZ_TELEMETRY_REPORTING
-<caption><label>&reports.label;</label></caption>
-#endif
   <hbox align="center">
     <checkbox id="automaticallySubmitCrashesBox"
               preference="browser.crashReports.unsubmittedCheck.autoSubmit"
