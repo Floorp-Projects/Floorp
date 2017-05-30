@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title> Bug 1368490 : Crash if media recorder source stream reduces number of channels. </title>
+</head>
+<meta charset="utf-8">
+<script type="text/javascript">
+
+function boom() {
+  let audioContext = new window.AudioContext();
+  let oscillator  = audioContext.createOscillator();
+  let dst = audioContext.createMediaStreamDestination();
+  oscillator.channelCount = 4;
+  dst.channelCount = 4;
+  oscillator.connect(dst, 0, 0);
+  oscillator.start();
+  mediaRec = new MediaRecorder(dst.stream);
+
+  mediaRec.start(100);
+  setTimeout(() => {
+    dst.channelCount = 1;
+    setTimeout(() => {
+      mediaRec.stop();
+      document.documentElement.removeAttribute("class");
+    }, 100);
+  }, 100);
+}
+</script>
+<body onload="boom();"></body>
+</html>
