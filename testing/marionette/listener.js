@@ -532,7 +532,6 @@ function startListeners() {
   addMessageListenerId("Marionette:deleteSession", deleteSession);
   addMessageListenerId("Marionette:sleepSession", sleepSession);
   addMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
-  addMessageListenerId("Marionette:setTestName", setTestName);
   addMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
   addMessageListenerId("Marionette:addCookie", addCookieFn);
   addMessageListenerId("Marionette:getCookies", getCookiesFn);
@@ -607,7 +606,6 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:deleteSession", deleteSession);
   removeMessageListenerId("Marionette:sleepSession", sleepSession);
   removeMessageListenerId("Marionette:getAppCacheStatus", getAppCacheStatus);
-  removeMessageListenerId("Marionette:setTestName", setTestName);
   removeMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
   removeMessageListenerId("Marionette:addCookie", addCookieFn);
   removeMessageListenerId("Marionette:getCookies", getCookiesFn);
@@ -757,14 +755,6 @@ function* executeInSandbox(script, args, timeout, opts) {
       "Marionette:shareData",
       {log: evaluate.toJSON(contentLog.get(), seenEls)});
   return evaluate.toJSON(res, seenEls);
-}
-
-/**
- * Sets the test name, used in logging messages.
- */
-function setTestName(msg) {
-  marionetteTestName = msg.json.value;
-  sendOk(msg.json.command_id);
 }
 
 /**
