@@ -96,9 +96,6 @@ class ThrottledEventQueue::Inner final : public nsIObserver
   // any thread, protected by mutex
   nsCOMPtr<nsIRunnable> mExecutor;
 
-  // any thread, atomic
-  Atomic<uint32_t> mExecutionDepth;
-
   // any thread, protected by mutex
   bool mShutdownStarted;
 
@@ -108,7 +105,6 @@ class ThrottledEventQueue::Inner final : public nsIObserver
     , mEventsAvailable(mMutex, "[ThrottledEventQueue::Inner.mEventsAvailable]")
     , mEventQueue(mEventsAvailable, nsEventQueue::eNormalQueue)
     , mBaseTarget(aBaseTarget)
-    , mExecutionDepth(0)
     , mShutdownStarted(false)
   {
   }
@@ -139,12 +135,7 @@ class ThrottledEventQueue::Inner final : public nsIObserver
     }
 
     if (nsCOMPtr<nsINamed> named = do_QueryInterface(event)) {
-      // Increase mExecutionDepth here so that GetName is allowed to call
-      // IsOnCurrentThread on us and have it be true (in the case when we are on
-      // the right thread).
-      mExecutionDepth++;
       nsresult rv = named->GetName(aName);
-      mExecutionDepth--;
       return rv;
     }
 
@@ -196,9 +187,7 @@ class ThrottledEventQueue::Inner final : public nsIObserver
     }
 
     // Execute the event now that we have unlocked.
-    ++mExecutionDepth;
     Unused << event->Run();
-    --mExecutionDepth;
 
     // If shutdown was started and the queue is now empty we can now
     // finalize the shutdown.  This is performed separately at the end
@@ -377,27 +366,7 @@ public:
   nsresult
   IsOnCurrentThread(bool* aResult)
   {
-    // Any thread
-
-    bool shutdownAndIdle = false;
-    {
-      MutexAutoLock lock(mMutex);
-      shutdownAndIdle = mShutdownStarted && mEventQueue.Count(lock) == 0;
-    }
-
-    bool onBaseTarget = false;
-    nsresult rv = mBaseTarget->IsOnCurrentThread(&onBaseTarget);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // We consider the current stack on this event target if are on
-    // the base target and one of the following is true
-    //  1) We are currently running an event OR
-    //  2) We are both shutting down and the queue is idle
-    *aResult = onBaseTarget && (mExecutionDepth || shutdownAndIdle);
-
-    return NS_OK;
+    return mBaseTarget->IsOnCurrentThread(aResult);
   }
 
   NS_DECL_THREADSAFE_ISUPPORTS

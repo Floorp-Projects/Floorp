@@ -31,7 +31,18 @@
     'include_dirs': [
       '<(DEPTH)/lib/freebl/mpi',
       '<(DEPTH)/lib/util',
-    ]
+    ],
+    # This uses test builds and has to set defines for MPI.
+    'conditions': [
+      [ 'target_arch=="ia32"', {
+        'defines': [
+          'MP_USE_UINT_DIGIT',
+          'MP_ASSEMBLY_MULTIPLY',
+          'MP_ASSEMBLY_SQUARE',
+          'MP_ASSEMBLY_DIV_2DX1D',
+        ],
+      }],
+    ],
   },
   'variables': {
     'module': 'nss'

@@ -24,7 +24,10 @@ if [ "$fuzz_oss" = 1 ]; then
   gyp_params+=(-Dno_zdefs=1 -Dfuzz_oss=1)
 else
   enable_sanitizer asan
-  enable_ubsan
+  # Ubsan doesn't build on 32-bit at the moment. Disable it.
+  if [ "$build_64" = 1 ]; then
+    enable_ubsan
+  fi
   enable_sancov
 fi
 

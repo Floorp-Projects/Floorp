@@ -253,13 +253,27 @@ GridInspector.prototype = {
 
     // Get all the GridFront from the server if no gridFronts were provided.
     if (!gridFronts) {
-      gridFronts = yield this.layoutInspector.getAllGrids(this.walker.rootNode);
+      try {
+        gridFronts = yield this.layoutInspector.getAllGrids(this.walker.rootNode);
+      } catch (e) {
+        // This call might fail if called asynchrously after the toolbox is finished
+        // closing.
+        return;
+      }
     }
 
     let grids = [];
     for (let i = 0; i < gridFronts.length; i++) {
       let grid = gridFronts[i];
-      let nodeFront = yield this.walker.getNodeFromActor(grid.actorID, ["containerEl"]);
+
+      let nodeFront;
+      try {
+        nodeFront = yield this.walker.getNodeFromActor(grid.actorID, ["containerEl"]);
+      } catch (e) {
+        // This call might fail if called asynchrously after the toolbox is finished
+        // closing.
+        return;
+      }
 
       let fallbackColor = GRID_COLORS[i % GRID_COLORS.length];
       let color = this.getInitialGridColor(nodeFront, fallbackColor);
@@ -300,7 +314,7 @@ GridInspector.prototype = {
    * @param  {Object} options
    *         The highlighter options used for the highlighter being shown/hidden.
    */
-  onHighlighterChange(event, nodeFront, options) {
+  onHighlighterChange(event, nodeFront, options = {}) {
     let highlighted = event === "grid-highlighter-shown";
     let { color } = options;
 
