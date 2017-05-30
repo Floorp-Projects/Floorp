@@ -27,11 +27,11 @@ var resultObserver = {
   newTime: 0,
   nodeChangedByHistoryDetails: null,
   nodeHistoryDetailsChanged(node,
-                                         updatedVisitDate,
-                                         updatedVisitCount) {
-    this.nodeChangedByHistoryDetails = node
-    this.newTime = updatedVisitDate;
-    this.newAccessCount = updatedVisitCount;
+                            oldVisitDate,
+                            oldVisitCount) {
+    this.nodeChangedByHistoryDetails = node;
+    this.newTime = node.time;
+    this.newAccessCount = node.accessCount;
   },
 
   movedNode: null,
@@ -124,7 +124,7 @@ add_test(function check_history_query() {
         do_check_eq(resultObserver.invalidatedContainer, result.root);
 
         // nsINavHistoryResultObserver.invalidateContainer
-        PlacesTestUtils.clearHistoryEnabled().then(() => {
+        PlacesTestUtils.clearHistory().then(() => {
           do_check_eq(root.uri, resultObserver.invalidatedContainer.uri);
 
           // nsINavHistoryResultObserver.batching
