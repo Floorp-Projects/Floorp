@@ -18,6 +18,9 @@
 #include "nsCocoaFeatures.h"
 #endif
 #include "nsPrintfCString.h"
+#include "nsContentUtils.h"
+#include "nsIScriptError.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 namespace dom {
@@ -165,12 +168,30 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
     return;
   }
 
+  nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
+  std::function<void(const char*)> deprecationWarningLogFn =
+    [doc](const char* aMsgName) {
+      EME_LOG("Logging deprecation warning '%s' to WebConsole.", aMsgName);
+      nsString uri;
+      if (doc) {
+        Unused << doc->GetDocumentURI(uri);
+      }
+      const char16_t* params[] = { uri.get() };
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                      NS_LITERAL_CSTRING("Media"),
+                                      doc,
+                                      nsContentUtils::eDOM_PROPERTIES,
+                                      aMsgName,
+                                      params,
+                                      ArrayLength(params));
+    };
+
   bool isPrivateBrowsing =
     mWindow->GetExtantDoc() &&
     mWindow->GetExtantDoc()->NodePrincipal()->GetPrivateBrowsingId() > 0;
   MediaKeySystemConfiguration config;
   if (MediaKeySystemAccess::GetSupportedConfig(
-        aKeySystem, aConfigs, config, &diagnostics, isPrivateBrowsing)) {
+        aKeySystem, aConfigs, config, &diagnostics, isPrivateBrowsing, deprecationWarningLogFn)) {
     RefPtr<MediaKeySystemAccess> access(
       new MediaKeySystemAccess(mWindow, aKeySystem, config));
     aPromise->MaybeResolve(access);
