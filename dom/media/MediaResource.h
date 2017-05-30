@@ -858,10 +858,7 @@ private:
   // If there is no cached data, or attempting to read it fails, fallback on
   // a (potentially-blocking) read of just what was requested, so that we don't
   // get unexpected side-effects by trying to read more than intended.
-  nsresult CacheOrReadAt(int oOffset,
-                         unsigned oCount,
-                         const char* oContext,
-                         int64_t aOffset,
+  nsresult CacheOrReadAt(int64_t aOffset,
                          char* aBuffer,
                          uint32_t aCount,
                          uint32_t* aBytes);
