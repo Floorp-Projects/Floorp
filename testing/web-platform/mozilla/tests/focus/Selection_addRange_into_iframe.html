@@ -46,8 +46,8 @@ function doTest() {
         range.selectNodeContents(childDocument.getElementById("non-editor"));
         childSelection.addRange(range);
         assert_equals(document.activeElement, document.body);
-        assert_equals(childDocument.activeElement, childDocument.body);
-    }, "Active element should be the <body> in the <iframe> after Selection.addRange() to non-editable <div> and parent's active document should be the <body>");
+        assert_equals(childDocument.activeElement, childDocument.getElementById("editor2"));
+    }, "Active element should be 'editor2' in the <iframe> after Selection.addRange() to non-editable <div> and parent's active document should be the <body>");
 
     done();
 }

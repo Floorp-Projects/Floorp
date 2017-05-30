@@ -6471,6 +6471,8 @@ Selection::NotifySelectionListeners()
         fm->GetFocusedDescendant(window, false, getter_AddRefs(focusedWindow));
       nsCOMPtr<Element> focusedElement = do_QueryInterface(focusedContent);
       // When all selected ranges are in an editing host, it should take focus.
+      // But otherwise, we shouldn't move focus since Chromium doesn't move
+      // focus but only selection range is updated.
       if (newEditingHost && newEditingHost != focusedElement) {
         MOZ_ASSERT(!newEditingHost->IsInNativeAnonymousSubtree());
         nsCOMPtr<nsIDOMElement> domElementToFocus =
@@ -6478,15 +6480,6 @@ Selection::NotifySelectionListeners()
         // Note that don't steal focus from focused window if the window doesn't
         // have focus.
         fm->SetFocus(domElementToFocus, nsIFocusManager::FLAG_NOSWITCHFRAME);
-      }
-      // Otherwise, if current focused element is an editing host, it should
-      // be blurred if there is no common editing host of the selected ranges.
-      else if (!newEditingHost && focusedElement &&
-               focusedElement == focusedElement->GetEditingHost()) {
-        IgnoredErrorResult err;
-        focusedElement->Blur(err);
-        NS_WARNING_ASSERTION(!err.Failed(),
-                             "Failed to blur focused element");
       }
     }
   }
