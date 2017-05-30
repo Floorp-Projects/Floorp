@@ -312,6 +312,10 @@ pref("media.cache_resume_threshold", 30);
 // amounts of network bandwidth prefetching huge videos.
 pref("media.cache_readahead_limit", 60);
 
+// Cache size hint (in bytes) for each MediaResourceIndex.
+// 0 -> no cache. Will use next power of 2, clamped to 32B-128KB.
+pref("media.cache.resource-index", 8192);
+
 // We'll throttle the download if the download rate is throttle-factor times
 // the estimated playback rate, AND we satisfy the cache readahead_limit
 // above. The estimated playback rate is time_duration/length_in_bytes.
