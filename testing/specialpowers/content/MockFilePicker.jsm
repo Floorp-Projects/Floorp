@@ -22,7 +22,7 @@ Cu.forcePermissiveCOWs();
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 var oldClassID, oldFactory;
 var newClassID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID();
-var newFactory = function (window) {
+var newFactory = function(window) {
   return {
     createInstance: function(aOuter, aIID) {
       if (aOuter)
@@ -120,7 +120,7 @@ this.MockFilePicker = {
 
   useBlobFile: function() {
     var blob = new this.window.Blob([]);
-    var file = new this.window.File([blob], 'helloworld.txt', { type: 'plain/text' });
+    var file = new this.window.File([blob], "helloworld.txt", { type: "plain/text" });
     this.returnData = [this.internalFileData({ domFile: file })];
     this.pendingPromises = [];
   },
@@ -159,7 +159,7 @@ this.MockFilePicker = {
 
 function MockFilePickerInstance(window) {
   this.window = window;
-};
+}
 MockFilePickerInstance.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFilePicker]),
   init: function(aParent, aTitle, aMode) {
@@ -190,7 +190,7 @@ MockFilePickerInstance.prototype = {
   },
 
   // We don't support directories here.
-  get domFileOrDirectory()  {
+  get domFileOrDirectory() {
     if (MockFilePicker.returnData.length < 1) {
       return null;
     }
@@ -228,7 +228,7 @@ MockFilePickerInstance.prototype = {
       }
     };
   },
-  get domFileOrDirectoryEnumerator()  {
+  get domFileOrDirectoryEnumerator() {
     let utils = this.parent.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
     return {
@@ -279,7 +279,7 @@ MockFilePickerInstance.prototype = {
             if (typeof returnValue != "undefined") {
               return returnValue;
             }
-          } catch(ex) {
+          } catch (ex) {
             return Ci.nsIFilePicker.returnCancel;
           }
         }

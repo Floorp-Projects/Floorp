@@ -237,38 +237,38 @@ user_pref("dom.presentation.testing.simulate-receiver", false);
 
 // Don't connect to Yahoo! for RSS feed tests.
 // en-US only uses .types.0.uri, but set all of them just to be sure.
-user_pref('browser.contentHandlers.types.0.uri', 'http://test1.example.org/rss?url=%%s')
-user_pref('browser.contentHandlers.types.1.uri', 'http://test1.example.org/rss?url=%%s')
-user_pref('browser.contentHandlers.types.2.uri', 'http://test1.example.org/rss?url=%%s')
-user_pref('browser.contentHandlers.types.3.uri', 'http://test1.example.org/rss?url=%%s')
-user_pref('browser.contentHandlers.types.4.uri', 'http://test1.example.org/rss?url=%%s')
-user_pref('browser.contentHandlers.types.5.uri', 'http://test1.example.org/rss?url=%%s')
+user_pref("browser.contentHandlers.types.0.uri", "http://test1.example.org/rss?url=%%s")
+user_pref("browser.contentHandlers.types.1.uri", "http://test1.example.org/rss?url=%%s")
+user_pref("browser.contentHandlers.types.2.uri", "http://test1.example.org/rss?url=%%s")
+user_pref("browser.contentHandlers.types.3.uri", "http://test1.example.org/rss?url=%%s")
+user_pref("browser.contentHandlers.types.4.uri", "http://test1.example.org/rss?url=%%s")
+user_pref("browser.contentHandlers.types.5.uri", "http://test1.example.org/rss?url=%%s")
 
 // We want to collect telemetry, but we don't want to send in the results.
-user_pref('toolkit.telemetry.server', 'https://%(server)s/telemetry-dummy/');
+user_pref("toolkit.telemetry.server", "https://%(server)s/telemetry-dummy/");
 // Don't new-profile' ping on new profiles during tests, otherwise the testing framework
 // might wait on the pingsender to finish and slow down tests.
 user_pref("toolkit.telemetry.newProfilePing.enabled", false);
 
 // A couple of preferences with default values to test that telemetry preference
 // watching is working.
-user_pref('toolkit.telemetry.test.pref1', true);
-user_pref('toolkit.telemetry.test.pref2', false);
+user_pref("toolkit.telemetry.test.pref1", true);
+user_pref("toolkit.telemetry.test.pref2", false);
 
 // We don't want to hit the real Firefox Accounts server for tests.  We don't
 // actually need a functioning FxA server, so just set it to something that
 // resolves and accepts requests, even if they all fail.
-user_pref('identity.fxaccounts.auth.uri', 'https://%(server)s/fxa-dummy/');
+user_pref("identity.fxaccounts.auth.uri", "https://%(server)s/fxa-dummy/");
 
 // Ditto for all the other Firefox accounts URIs used for about:accounts et al.:
 user_pref("identity.fxaccounts.remote.signup.uri", "https://%(server)s/fxa-signup");
 user_pref("identity.fxaccounts.remote.force_auth.uri", "https://%(server)s/fxa-force-auth");
 user_pref("identity.fxaccounts.remote.signin.uri", "https://%(server)s/fxa-signin");
 user_pref("identity.fxaccounts.settings.uri", "https://%(server)s/fxa-settings");
-user_pref('identity.fxaccounts.remote.webchannel.uri', 'https://%(server)s/');
+user_pref("identity.fxaccounts.remote.webchannel.uri", "https://%(server)s/");
 
 // We don't want browser tests to perform FxA device registration.
-user_pref('identity.fxaccounts.skipDeviceRegistration', true);
+user_pref("identity.fxaccounts.skipDeviceRegistration", true);
 
 // Increase the APZ content response timeout in tests to 1 minute.
 // This is to accommodate the fact that test environments tends to be slower
