@@ -828,6 +828,7 @@ private:
     void InitGPUProcessPrefs();
     void InitWebRenderConfig();
     void InitOMTPConfig();
+    void InitComponentAlphaPrefs();
 
     static bool IsDXInterop2Blocked();
 

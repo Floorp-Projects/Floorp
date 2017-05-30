@@ -28,5 +28,18 @@
       <driverVersion> 8.52.322.2202 </driverVersion>
       <driverVersionComparator> LESS_THAN </driverVersionComparator>
     </gfxBlacklistEntry>
+    <gfxBlacklistEntry>
+      <os>Darwin 13</os>
+      <vendor>0xabcd</vendor>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> COMPONENT_ALPHA </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+      <driverVersion> 8.52.322.2202 </driverVersion>
+      <driverVersionComparator> LESS_THAN </driverVersionComparator>
+    </gfxBlacklistEntry>
   </gfxItems>
 </blocklist>
