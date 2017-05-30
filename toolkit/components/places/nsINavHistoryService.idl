@@ -376,10 +376,10 @@ interface nsINavHistoryResultObserver : nsISupports
    * @param aNode
    *        a result node
    * @param aNewURI
-   *        the new uri
+   *        the old uri
    */
   void nodeURIChanged(in nsINavHistoryResultNode aNode,
-                      in AUTF8String aNewURI);
+                      in AUTF8String aOldURI);
 
   /**
    * Called right after aNode's icon property has changed.
@@ -397,14 +397,14 @@ interface nsINavHistoryResultObserver : nsISupports
    *
    * @param aNode
    *        a uri result node
-   * @param aNewVisitDate
-   *        the new visit date
-   * @param aNewAccessCount
-   *        the new access-count
+   * @param aOldVisitDate
+   *        the old visit date
+   * @param aOldAccessCount
+   *        the old access-count
    */
   void nodeHistoryDetailsChanged(in nsINavHistoryResultNode aNode,
-                                 in PRTime aNewVisitDate,
-                                 in unsigned long aNewAccessCount);
+                                 in PRTime aOldVisitDate,
+                                 in unsigned long aOldAccessCount);
 
   /**
    * Called when the tags set on the uri represented by aNode have changed.
