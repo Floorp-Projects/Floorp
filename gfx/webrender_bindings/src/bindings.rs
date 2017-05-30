@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use gleam::gl;
 
 use webrender_traits::*;
-use webrender::renderer::{Renderer, RendererOptions};
+use webrender::renderer::{ReadPixelsFormat, Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
 use app_units::Au;
@@ -67,16 +67,6 @@ impl Into<ExternalImageId> for WrExternalImageId {
 impl Into<WrExternalImageId> for ExternalImageId {
     fn into(self) -> WrExternalImageId {
         WrExternalImageId(self.0)
-    }
-}
-
-const GL_FORMAT_BGRA_GL: gl::GLuint = gl::BGRA;
-const GL_FORMAT_BGRA_GLES: gl::GLuint = gl::BGRA_EXT;
-
-fn get_gl_format_bgra(gl: &gl::Gl) -> gl::GLuint {
-    match gl.get_type() {
-        gl::GlType::Gl => GL_FORMAT_BGRA_GL,
-        gl::GlType::Gles => GL_FORMAT_BGRA_GLES,
     }
 }
 
@@ -790,17 +780,12 @@ pub unsafe extern "C" fn wr_renderer_readback(renderer: &mut WrRenderer,
                                               buffer_size: usize) {
     assert!(is_in_render_thread());
 
-    renderer.gl().flush();
-
     let mut slice = make_slice_mut(dst_buffer, buffer_size);
-    renderer.gl()
-            .read_pixels_into_buffer(0,
-                                     0,
-                                     width as gl::GLsizei,
-                                     height as gl::GLsizei,
-                                     get_gl_format_bgra(renderer.gl()),
-                                     gl::UNSIGNED_BYTE,
-                                     slice);
+    renderer.read_pixels_into(DeviceUintRect::new(
+                                DeviceUintPoint::new(0, 0),
+                                DeviceUintSize::new(width, height)),
+                              ReadPixelsFormat::Bgra8,
+                              &mut slice);
 }
 
 #[no_mangle]

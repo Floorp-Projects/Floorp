@@ -16,7 +16,7 @@ void main(void) {
                                  prim.task,
                                  prim.local_rect.p0);
 
-    RenderTaskData child_task = fetch_render_task(prim.user_data.x);
+    RenderTaskData child_task = fetch_render_task(prim.user_data1);
     vUv.z = child_task.data1.x;
 
     vec2 texture_size = vec2(textureSize(sCacheRGBA8, 0));
