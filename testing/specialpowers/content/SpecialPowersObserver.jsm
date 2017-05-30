@@ -12,7 +12,7 @@ var EXPORTED_SYMBOLS = ["SpecialPowersObserver", "SpecialPowersObserverFactory"]
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.importGlobalProperties(['File']);
+Components.utils.importGlobalProperties(["File"]);
 
 if (typeof(Cc) == "undefined") {
   const Cc = Components.classes;
@@ -44,8 +44,7 @@ SpecialPowersObserver.prototype.classID = Components.ID("{59a52458-13e0-4d93-9d8
 SpecialPowersObserver.prototype.contractID = "@mozilla.org/special-powers-observer;1";
 SpecialPowersObserver.prototype.QueryInterface = XPCOMUtils.generateQI([Components.interfaces.nsIObserver]);
 
-SpecialPowersObserver.prototype.observe = function(aSubject, aTopic, aData)
-{
+SpecialPowersObserver.prototype.observe = function(aSubject, aTopic, aData) {
   switch (aTopic) {
     case "chrome-document-global-created":
       this._loadFrameScript();
@@ -64,8 +63,7 @@ SpecialPowersObserver.prototype.observe = function(aSubject, aTopic, aData)
   }
 };
 
-SpecialPowersObserver.prototype._loadFrameScript = function()
-{
+SpecialPowersObserver.prototype._loadFrameScript = function() {
   if (!this._isFrameScriptLoaded) {
     // Register for any messages our API needs us to handle
     this._messageManager.addMessageListener("SPPrefService", this);
@@ -96,8 +94,7 @@ SpecialPowersObserver.prototype._loadFrameScript = function()
   }
 };
 
-SpecialPowersObserver.prototype._sendAsyncMessage = function(msgname, msg)
-{
+SpecialPowersObserver.prototype._sendAsyncMessage = function(msgname, msg) {
   this._messageManager.broadcastAsyncMessage(msgname, msg);
 };
 
@@ -105,8 +102,7 @@ SpecialPowersObserver.prototype._receiveMessage = function(aMessage) {
   return this._receiveMessageAPI(aMessage);
 };
 
-SpecialPowersObserver.prototype.init = function()
-{
+SpecialPowersObserver.prototype.init = function() {
   var obs = Services.obs;
   obs.addObserver(this, "chrome-document-global-created");
 
@@ -128,8 +124,7 @@ SpecialPowersObserver.prototype.init = function()
   this._loadFrameScript();
 };
 
-SpecialPowersObserver.prototype.uninit = function()
-{
+SpecialPowersObserver.prototype.uninit = function() {
   var obs = Services.obs;
   obs.removeObserver(this, "chrome-document-global-created");
   obs.removeObserver(this, "http-on-modify-request");
@@ -201,7 +196,7 @@ SpecialPowersObserver.prototype._registerObservers = {
       Services.obs.addObserver(this, topic);
     }
   },
-  observe: function (aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     var msg = { aData: aData };
     switch (aTopic) {
       case "perm-changed":
@@ -229,7 +224,7 @@ SpecialPowersObserver.prototype._registerObservers = {
  * This will get requests from our API in the window and process them in chrome for it
  **/
 SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
-  switch(aMessage.name) {
+  switch (aMessage.name) {
     case "SPPingService":
       if (aMessage.json.op == "ping") {
         aMessage.target
@@ -299,7 +294,7 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
       break;
     case "SpecialPowers.RemoveFiles":
       if (this._createdFiles) {
-        this._createdFiles.forEach(function (testFile) {
+        this._createdFiles.forEach(function(testFile) {
           try {
             testFile.remove(false);
           } catch (e) {}
@@ -315,9 +310,9 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SpecialPowersObserver]);
 this.SpecialPowersObserverFactory = Object.freeze({
   createInstance: function(outer, id) {
-    if (outer) { throw Components.results.NS_ERROR_NO_AGGREGATION };
+    if (outer) { throw Components.results.NS_ERROR_NO_AGGREGATION }
     return new SpecialPowersObserver();
   },
-  loadFactory: function(lock){},
+  loadFactory: function(lock) {},
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
 });

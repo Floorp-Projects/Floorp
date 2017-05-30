@@ -21,7 +21,7 @@ Cu.forcePermissiveCOWs();
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 var oldClassID = "", oldFactory = null;
 var newClassID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID();
-var newFactory = function (window) {
+var newFactory = function(window) {
   return {
     createInstance: function(aOuter, aIID) {
       if (aOuter)
@@ -43,7 +43,7 @@ this.MockColorPicker = {
       try {
         oldClassID = registrar.contractIDToCID(CONTRACT_ID);
         oldFactory = Cm.getClassObject(Cc[CONTRACT_ID], Ci.nsIFactory);
-      } catch(ex) {
+      } catch (ex) {
         oldClassID = "";
         oldFactory = null;
         dump("TEST-INFO | can't get colorpicker registered component, " +
@@ -77,7 +77,7 @@ this.MockColorPicker = {
 
 function MockColorPickerInstance(window) {
   this.window = window;
-};
+}
 MockColorPickerInstance.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIColorPicker]),
   init: function(aParent, aTitle, aInitialColor) {
@@ -105,7 +105,7 @@ MockColorPickerInstance.prototype = {
         } else if (typeof MockColorPicker.returnColor === "string") {
           result = MockColorPicker.returnColor;
         }
-      } catch(ex) {
+      } catch (ex) {
         dump("TEST-UNEXPECTED-FAIL | Exception in MockColorPicker.jsm open() " +
              "method: " + ex + "\n");
       }

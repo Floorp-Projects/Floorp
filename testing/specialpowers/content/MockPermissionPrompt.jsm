@@ -49,10 +49,10 @@ this.MockPermissionPrompt = {
       registrar.registerFactory(newClassID, "", CONTRACT_ID, newFactory);
     }
   },
-  
+
   reset: function() {
   },
-  
+
   cleanup: function() {
     this.reset();
     if (oldFactory) {
@@ -62,7 +62,7 @@ this.MockPermissionPrompt = {
   },
 };
 
-function MockPermissionPromptInstance() { };
+function MockPermissionPromptInstance() { }
 MockPermissionPromptInstance.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionPrompt]),
 
@@ -90,7 +90,7 @@ MockPermissionPrompt.reset();
 function exposeAll(obj) {
   var props = {};
   for (var prop in obj)
-    props[prop] = 'rw';
+    props[prop] = "rw";
   obj.__exposedProps__ = props;
 }
 exposeAll(MockPermissionPrompt);

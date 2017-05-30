@@ -8,8 +8,7 @@
         try {
           netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
           result.textContent = "FAIL";
-        }
-        catch (ex) {
+        } catch (ex) {
           result.textContent = "PASS";
         }
       }
