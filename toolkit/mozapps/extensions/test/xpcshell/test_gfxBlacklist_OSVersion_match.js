@@ -79,6 +79,9 @@ function run_test() {
     } else if (get_platform() == "Darwin") {
       status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_OPENGL_LAYERS);
       do_check_eq(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
+
+      status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_COMPONENT_ALPHA);
+      do_check_eq(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
     }
 
     gTestserver.stop(do_test_finished);

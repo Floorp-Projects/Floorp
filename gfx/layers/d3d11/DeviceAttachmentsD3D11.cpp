@@ -8,6 +8,7 @@
 #include "mozilla/layers/Compositor.h"
 #include "CompositorD3D11Shaders.h"
 #include "gfxPrefs.h"
+#include "gfxConfig.h"
 #include "ShaderDefinitionsD3D11.h"
 
 namespace mozilla {
@@ -176,7 +177,7 @@ DeviceAttachmentsD3D11::Initialize()
     return false;
   }
 
-  if (gfxPrefs::ComponentAlphaEnabled()) {
+  if (gfxConfig::IsEnabled(Feature::COMPONENT_ALPHA)) {
     D3D11_RENDER_TARGET_BLEND_DESC rtBlendComponent = {
       TRUE,
       D3D11_BLEND_ONE,
@@ -294,7 +295,7 @@ DeviceAttachmentsD3D11::CreateShaders()
   InitPixelShader(sYCbCrShaderMask, mYCbCrShader, MaskType::Mask);
   InitPixelShader(sNV12Shader, mNV12Shader, MaskType::MaskNone);
   InitPixelShader(sNV12ShaderMask, mNV12Shader, MaskType::Mask);
-  if (gfxPrefs::ComponentAlphaEnabled()) {
+  if (gfxConfig::IsEnabled(Feature::COMPONENT_ALPHA)) {
     InitPixelShader(sComponentAlphaShader, mComponentAlphaShader, MaskType::MaskNone);
     InitPixelShader(sComponentAlphaShaderMask, mComponentAlphaShader, MaskType::Mask);
   }

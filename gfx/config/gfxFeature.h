@@ -26,6 +26,7 @@ namespace gfx {
   _(GPU_PROCESS,                  Feature,      "GPU Process")                    \
   _(WEBRENDER,                    Feature,      "WebRender")                      \
   _(OMTP,                         Feature,      "Off Main Thread Painting")       \
+  _(COMPONENT_ALPHA,              Feature,      "Component Alpha")                \
   /* Add new entries above this comment */
 
 enum class Feature : uint32_t {
