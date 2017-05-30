@@ -50,7 +50,7 @@ interface nsIContentPermissionRequest;
 interface nsIObserver;
 interface nsIDOMStorage;
 
-[scriptable, uuid(c471d440-004b-4c50-a6f2-747db5f443b6)]
+[scriptable, uuid(4d6732ca-9da7-4176-b8a1-8dde15cd0bf9)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1874,17 +1874,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * e10s support properly.
    */
   void askPermission(in nsIContentPermissionRequest aRequest);
-
-  /**
-   * Number of elements restyled for the curent document.
-   *
-   * Note that during a restyle operation we may restyle an element more
-   * than once (e.g., for an inline that contains blocks).  This also
-   * counts restyling of pseudo-elements and anonymous boxes.
-   *
-   * May throw NS_ERROR_NOT_AVAILABLE.
-   */
-  readonly attribute unsigned long long elementsRestyled;
 
   /**
    * Restyle generation for the current document.
