@@ -799,4 +799,15 @@ StyleSheet::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return dom::CSSStyleSheetBinding::Wrap(aCx, this, aGivenProto);
 }
 
+/* static */ bool
+StyleSheet::RuleHasPendingChildSheet(css::Rule* aRule)
+{
+  MOZ_ASSERT(aRule->GetType() == css::Rule::IMPORT_RULE);
+  auto rule = static_cast<dom::CSSImportRule*>(aRule);
+  if (StyleSheet* childSheet = rule->GetStyleSheet()) {
+    return !childSheet->IsComplete();
+  }
+  return false;
+}
+
 } // namespace mozilla

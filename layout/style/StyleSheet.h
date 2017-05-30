@@ -297,6 +297,9 @@ protected:
   // Traverse our inner, if needed, for cycle collection
   virtual void TraverseInner(nsCycleCollectionTraversalCallback &);
 
+  // Return whether the given @import rule has pending child sheet.
+  static bool RuleHasPendingChildSheet(css::Rule* aRule);
+
   StyleSheet*           mParent;    // weak ref
 
   nsString              mTitle;
