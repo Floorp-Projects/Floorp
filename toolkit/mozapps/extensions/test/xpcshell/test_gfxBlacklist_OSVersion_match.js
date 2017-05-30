@@ -34,10 +34,7 @@ function run_test() {
   var gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
 
   // We can't do anything if we can't spoof the stuff we need.
-  if (!(gfxInfo instanceof Ci.nsIGfxInfoDebug)) {
-    do_test_finished();
-    return;
-  }
+  do_check_true(gfxInfo instanceof Ci.nsIGfxInfoDebug);
 
   gfxInfo.QueryInterface(Ci.nsIGfxInfoDebug);
 
@@ -52,18 +49,16 @@ function run_test() {
       // Windows 8
       gfxInfo.spoofOSVersion(0x60002);
       break;
-    case "Linux":
-      // We don't have any OS versions on Linux, just "Linux".
-      do_test_finished();
-      return;
     case "Darwin":
       // Mountain Lion
       gfxInfo.spoofOSVersion(0x1090);
       break;
-    case "Android":
+    default:
+      // We don't have any OS versions on Linux, just "Linux".
+      //
       // On Android, the driver version is used as the OS version (because
       // there's so many of them).
-      do_test_finished();
+      do_check_true(false);
       return;
   }
 
