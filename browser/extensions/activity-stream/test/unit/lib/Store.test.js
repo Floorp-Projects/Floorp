@@ -1,35 +1,29 @@
 const injector = require("inject!lib/Store.jsm");
 const {createStore} = require("redux");
 const {addNumberReducer} = require("test/unit/utils");
-const {GlobalOverrider} = require("test/unit/utils");
+const {FakePrefs} = require("test/unit/utils");
 describe("Store", () => {
   let Store;
-  let Preferences;
   let sandbox;
   let store;
-  let globals;
-  let PREF_PREFIX;
   beforeEach(() => {
-    globals = new GlobalOverrider();
-    sandbox = globals.sandbox;
-    Preferences = new Map();
-    Preferences.observe = sandbox.spy();
-    Preferences.ignore = sandbox.spy();
-    globals.set("Preferences", Preferences);
+    sandbox = sinon.sandbox.create();
     function ActivityStreamMessageChannel(options) {
       this.dispatch = options.dispatch;
       this.createChannel = sandbox.spy();
       this.destroyChannel = sandbox.spy();
       this.middleware = sandbox.spy(s => next => action => next(action));
     }
-    ({Store, PREF_PREFIX} = injector({"lib/ActivityStreamMessageChannel.jsm": {ActivityStreamMessageChannel}}));
+    ({Store} = injector({
+      "lib/ActivityStreamMessageChannel.jsm": {ActivityStreamMessageChannel},
+      "lib/ActivityStreamPrefs.jsm": {Prefs: FakePrefs}
+    }));
     store = new Store();
   });
   afterEach(() => {
-    Preferences.clear();
-    globals.restore();
+    sandbox.restore();
   });
-  it("should have an .feeds property that is a Map", () => {
+  it("should have a .feeds property that is a Map", () => {
     assert.instanceOf(store.feeds, Map);
     assert.equal(store.feeds.size, 0, ".feeds.size");
   });
@@ -49,7 +43,7 @@ describe("Store", () => {
   describe("#initFeed", () => {
     it("should add an instance of the feed to .feeds", () => {
       class Foo {}
-      Preferences.set(`${PREF_PREFIX}foo`, false);
+      store._prefs.set("foo", false);
       store.init({foo: () => new Foo()});
       store.initFeed("foo");
 
@@ -98,34 +92,26 @@ describe("Store", () => {
       sinon.stub(store, "initFeed");
       sinon.stub(store, "uninitFeed");
     });
-    it("should set the new pref in Preferences to true, if it was never defined", () => {
-      store.maybeStartFeedAndListenForPrefChanges("foo");
-      assert.isTrue(Preferences.get(`${PREF_PREFIX}foo`));
-    });
-    it("should not override the pref if it was already set", () => {
-      Preferences.set(`${PREF_PREFIX}foo`, false);
-      store.maybeStartFeedAndListenForPrefChanges("foo");
-      assert.isFalse(Preferences.get(`${PREF_PREFIX}foo`));
-    });
     it("should initialize the feed if the Pref is set to true", () => {
-      Preferences.set(`${PREF_PREFIX}foo`, true);
+      store._prefs.set("foo", true);
       store.maybeStartFeedAndListenForPrefChanges("foo");
       assert.calledWith(store.initFeed, "foo");
     });
     it("should not initialize the feed if the Pref is set to false", () => {
-      Preferences.set(`${PREF_PREFIX}foo`, false);
+      store._prefs.set("foo", false);
       store.maybeStartFeedAndListenForPrefChanges("foo");
       assert.notCalled(store.initFeed);
     });
     it("should observe the pref", () => {
+      sinon.stub(store._prefs, "observe");
       store.maybeStartFeedAndListenForPrefChanges("foo");
-      assert.calledWith(Preferences.observe, `${PREF_PREFIX}foo`, store._prefHandlers.get(`${PREF_PREFIX}foo`));
+      assert.calledWith(store._prefs.observe, "foo", store._prefHandlers.get("foo"));
     });
     describe("handler", () => {
       let handler;
       beforeEach(() => {
         store.maybeStartFeedAndListenForPrefChanges("foo");
-        handler = store._prefHandlers.get(`${PREF_PREFIX}foo`);
+        handler = store._prefHandlers.get("foo");
       });
       it("should initialize the feed if called with true", () => {
         handler(true);
@@ -151,6 +137,9 @@ describe("Store", () => {
   });
   describe("#uninit", () => {
     it("should clear .feeds, ._prefHandlers, and ._feedFactories", () => {
+      store._prefs.set("a", true);
+      store._prefs.set("b", true);
+      store._prefs.set("c", true);
       store.init({
         a: () => ({}),
         b: () => ({}),
@@ -181,6 +170,7 @@ describe("Store", () => {
       const sub = {onAction: sinon.spy()};
       const action = {type: "FOO"};
 
+      store._prefs.set("sub", true);
       store.init({sub: () => sub});
 
       dispatch(action);
