@@ -35,11 +35,19 @@
 using mozilla::media::TimeUnit;
 
 #undef LOG
+#undef ILOG
 
 mozilla::LazyLogModule gMediaResourceLog("MediaResource");
 // Debug logging macro with object pointer and class name.
 #define LOG(msg, ...) MOZ_LOG(gMediaResourceLog, mozilla::LogLevel::Debug, \
   ("%p " msg, this, ##__VA_ARGS__))
+
+mozilla::LazyLogModule gMediaResourceIndexLog("MediaResourceIndex");
+// Debug logging macro with object pointer and class name.
+#define ILOG(msg, ...)                                                         \
+  MOZ_LOG(gMediaResourceIndexLog,                                              \
+          mozilla::LogLevel::Debug,                                            \
+          ("%p " msg, this, ##__VA_ARGS__))
 
 static const uint32_t HTTP_OK_CODE = 200;
 static const uint32_t HTTP_PARTIAL_RESPONSE_CODE = 206;
@@ -1643,7 +1651,7 @@ MediaResourceIndex::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
   return NS_OK;
 }
 
-nsCString
+static nsCString
 ResultName(nsresult aResult)
 {
   nsCString name;
@@ -1661,15 +1669,9 @@ MediaResourceIndex::ReadAt(int64_t aOffset,
     return UncachedReadAt(aOffset, aBuffer, aCount, aBytes);
   }
 
-  const int oOffset = int(aOffset);
-  const unsigned oCount = unsigned(aCount);
   *aBytes = 0;
 
   if (aCount == 0) {
-    printf("**** [%p]ReadAt(%u@%d) - aCount==0 -> NS_OK, 0\n",
-           this,
-           oCount,
-           oOffset);
     return NS_OK;
   }
 
@@ -1688,35 +1690,35 @@ MediaResourceIndex::ReadAt(int64_t aOffset,
       uint32_t read = 0;
       nsresult rv = UncachedReadAt(aOffset, aBuffer, toRead, &read);
       if (NS_FAILED(rv)) {
-        printf("**** [%p]ReadAt(%u@%d) uncached read before cache -> %s\n",
-               this,
-               oCount,
-               oOffset,
-               ResultName(rv).get());
+        ILOG("ReadAt(%" PRIu32 "@%" PRId64
+             ") uncached read before cache -> %s, %" PRIu32,
+             aCount,
+             aOffset,
+             ResultName(rv).get(),
+             *aBytes);
         return rv;
       }
       *aBytes = read;
       if (read < toRead) {
         // Could not read everything we wanted, we're done.
-        printf("**** [%p]ReadAt(%u@%d) uncached read before cache, incomplete "
-               "-> OK, %u\n",
-               this,
-               oCount,
-               oOffset,
-               unsigned(*aBytes));
+        ILOG("ReadAt(%" PRIu32 "@%" PRId64
+             ") uncached read before cache, incomplete -> OK, %" PRIu32,
+             aCount,
+             aOffset,
+             *aBytes);
         return NS_OK;
       }
+      ILOG("ReadAt(%" PRIu32 "@%" PRId64
+           ") uncached read before cache: %" PRIu32 ", remaining: %" PRIu32
+           "@%" PRId64 "...",
+           aCount,
+           aOffset,
+           read,
+           aCount - read,
+           aOffset + read);
       aOffset += read;
       aBuffer += read;
       aCount -= read;
-      printf("**** [%p]ReadAt(%u@%d) uncached read before cache: %u, "
-             "remaining: %u@%d\n",
-             this,
-             oCount,
-             oOffset,
-             unsigned(read),
-             unsigned(aCount),
-             int(aOffset));
       // We should have reached the cache.
       MOZ_ASSERT(aOffset == mCachedOffset);
     }
@@ -1733,28 +1735,28 @@ MediaResourceIndex::ReadAt(int64_t aOffset,
       aCount -= toCopy;
       if (aCount == 0) {
         // All done!
-        printf("**** [%p]ReadAt(%u@%d) copied from cache(%u@%d) and done :-) "
-               "-> OK, %u\n",
-               this,
-               oCount,
-               oOffset,
-               unsigned(mCachedBytes),
-               int(mCachedOffset),
-               unsigned(*aBytes));
+        ILOG("ReadAt(%" PRIu32 "@%" PRId64 ") copied everything (%" PRIu32
+             ") from cache(%" PRIu32 "@%" PRId64 ") :-D -> OK, %" PRIu32,
+             aCount,
+             aOffset,
+             toCopy,
+             mCachedBytes,
+             mCachedOffset,
+             *aBytes);
         return NS_OK;
       }
       aOffset += toCopy;
       aBuffer += toCopy;
-      printf("**** [%p]ReadAt(%u@%d) copied %u from cache(%u@%d) :-), "
-             "remaining: %u@%d\n",
-             this,
-             oCount,
-             oOffset,
-             unsigned(toCopy),
-             unsigned(mCachedBytes),
-             int(mCachedOffset),
-             unsigned(aCount),
-             int(aOffset));
+      ILOG("ReadAt(%" PRIu32 "@%" PRId64 ") copied %" PRIu32
+           " from cache(%" PRIu32 "@%" PRId64 ") :-), remaining: %" PRIu32
+           "@%" PRId64 "...",
+           aCount + toCopy,
+           aOffset - toCopy,
+           toCopy,
+           mCachedBytes,
+           mCachedOffset,
+           aCount,
+           aOffset);
     }
 
     if (aOffset - 1 >= lastBlockOffset) {
@@ -1762,8 +1764,7 @@ MediaResourceIndex::ReadAt(int64_t aOffset,
       // from it -> try to top-up, read what we can, and we'll be done.
       MOZ_ASSERT(aOffset == mCachedOffset + mCachedBytes);
       MOZ_ASSERT(endOffset <= lastBlockOffset + mCacheBlockSize);
-      return CacheOrReadAt(
-        oOffset, oCount, "top-up cache", aOffset, aBuffer, aCount, aBytes);
+      return CacheOrReadAt(aOffset, aBuffer, aCount, aBytes);
     }
 
     // We were not in the last block (but we may just have crossed the line now)
@@ -1774,8 +1775,7 @@ MediaResourceIndex::ReadAt(int64_t aOffset,
     // But we're already in the last block -> Cache or read what we can.
     // Make sure to invalidate the cache first.
     mCachedBytes = 0;
-    return CacheOrReadAt(
-      oOffset, oCount, "nothing in cache", aOffset, aBuffer, aCount, aBytes);
+    return CacheOrReadAt(aOffset, aBuffer, aCount, aBytes);
   }
 
   // If we're here, either there was nothing usable in the cache, or we've just
@@ -1790,45 +1790,42 @@ MediaResourceIndex::ReadAt(int64_t aOffset,
     uint32_t read = 0;
     nsresult rv = UncachedReadAt(aOffset, aBuffer, toRead, &read);
     if (NS_FAILED(rv)) {
-      printf(
-        "**** [%p]ReadAt(%u@%d) uncached read before last block failed -> %s\n",
-        this,
-        oCount,
-        oOffset,
-        ResultName(rv).get());
+      ILOG("ReadAt(%" PRIu32 "@%" PRId64
+           ") uncached read before last block failed -> %s, %" PRIu32,
+           aCount,
+           aOffset,
+           ResultName(rv).get(),
+           *aBytes);
       return rv;
     }
     if (read == 0) {
-      printf(
-        "**** [%p]ReadAt(%u@%d) uncached read 0 before last block -> OK, %u\n",
-        this,
-        oCount,
-        oOffset,
-        unsigned(*aBytes));
+      ILOG("ReadAt(%" PRIu32 "@%" PRId64
+           ") uncached read 0 before last block -> OK, %" PRIu32,
+           aCount,
+           aOffset,
+           *aBytes);
       return NS_OK;
     }
     *aBytes += read;
     if (read < toRead) {
       // Could not read everything we wanted, we're done.
-      printf("**** [%p]ReadAt(%u@%d) uncached read before last block, "
-             "incomplete -> OK, %u\n",
-             this,
-             oCount,
-             oOffset,
-             unsigned(*aBytes));
+      ILOG("ReadAt(%" PRIu32 "@%" PRId64
+           ") uncached read before last block, incomplete -> OK, %" PRIu32,
+           aCount,
+           aOffset,
+           *aBytes);
       return NS_OK;
     }
+    ILOG("ReadAt(%" PRIu32 "@%" PRId64 ") read %" PRIu32
+         " before last block, remaining: %" PRIu32 "@%" PRId64 "...",
+         aCount,
+         aOffset,
+         read,
+         aCount - read,
+         aOffset + read);
     aOffset += read;
     aBuffer += read;
     aCount -= read;
-    printf(
-      "**** [%p]ReadAt(%u@%d) read %u before last block, remaining: %u@%d\n",
-      this,
-      oCount,
-      oOffset,
-      unsigned(read),
-      unsigned(aCount),
-      int(aOffset));
   }
 
   // We should just have reached the start of the last block.
@@ -1836,15 +1833,11 @@ MediaResourceIndex::ReadAt(int64_t aOffset,
   MOZ_ASSERT(aCount <= mCacheBlockSize);
   // Make sure to invalidate the cache first.
   mCachedBytes = 0;
-  return CacheOrReadAt(
-    oOffset, oCount, "last block", aOffset, aBuffer, aCount, aBytes);
+  return CacheOrReadAt(aOffset, aBuffer, aCount, aBytes);
 }
 
 nsresult
-MediaResourceIndex::CacheOrReadAt(int oOffset,
-                                  unsigned oCount,
-                                  const char* oContext,
-                                  int64_t aOffset,
+MediaResourceIndex::CacheOrReadAt(int64_t aOffset,
                                   char* aBuffer,
                                   uint32_t aCount,
                                   uint32_t* aBytes)
@@ -1875,48 +1868,47 @@ MediaResourceIndex::CacheOrReadAt(int oOffset,
         mResource->ReadFromCache(&mCachedBlock[cacheIndex], aOffset, toRead);
       if (NS_SUCCEEDED(rv)) {
         // Success means we have read the full `toRead` amount.
-        printf("**** [%p]ReadAt(%u@%d) - %s - ReadFromCache(%u@%d) succeeded\n",
-               this,
-               oCount,
-               oOffset,
-               oContext,
-               unsigned(toRead),
-               int(aOffset));
         if (mCachedOffset + mCachedBytes == aOffset) {
           // We were topping-up the cache, just update its size.
+          ILOG("ReadAt(%" PRIu32 "@%" PRId64 ") - ReadFromCache(%" PRIu32
+               "@%" PRId64 ") to top-up succeeded...",
+               aCount,
+               aOffset,
+               toRead,
+               aOffset);
           mCachedBytes += toRead;
         } else {
           // We were filling the cache from scratch, save new cache information.
+          ILOG("ReadAt(%" PRIu32 "@%" PRId64 ") - ReadFromCache(%" PRIu32
+               "@%" PRId64 ") to fill cache succeeded...",
+               aCount,
+               aOffset,
+               toRead,
+               aOffset);
           mCachedOffset = aOffset;
           mCachedBytes = toRead;
         }
         // Copy relevant part into output.
         memcpy(aBuffer, &mCachedBlock[cacheIndex], aCount);
         *aBytes += aCount;
-        printf("**** [%p]ReadAt(%u@%d) - %s - copied %u@%d, remaining: %u@%d "
-               "-> OK, %u\n",
-               this,
-               oCount,
-               oOffset,
-               oContext,
-               unsigned(aCount),
-               int(aOffset),
-               unsigned(aCount),
-               int(aOffset),
-               unsigned(*aBytes));
+        ILOG("ReadAt(%" PRIu32 "@%" PRId64 ") - copied %" PRIu32 "@%" PRId64
+             " -> OK, %" PRIu32,
+             aCount,
+             aOffset,
+             aCount,
+             aOffset,
+             *aBytes);
         // We may not have read all that was requested, but we got everything
         // we could get, so we're done.
         return NS_OK;
       }
-      printf("**** [%p]ReadAt(%u@%d) - %s - ReadFromCache(%u@%d) failed: %s, "
-             "will fallback to blocking read\n",
-             this,
-             oCount,
-             oOffset,
-             oContext,
-             unsigned(toRead),
-             int(aOffset),
-             ResultName(rv).get());
+      ILOG("ReadAt(%" PRIu32 "@%" PRId64 ") - ReadFromCache(%" PRIu32
+           "@%" PRId64 ") failed: %s, will fallback to blocking read...",
+           aCount,
+           aOffset,
+           toRead,
+           aOffset,
+           ResultName(rv).get());
       // Failure during reading. Note that this may be due to the cache
       // changing between `GetCachedDataEnd` and `ReadFromCache`, so it's not
       // totally unexpected, just hopefully rare; but we do need to handle it.
@@ -1930,39 +1922,37 @@ MediaResourceIndex::CacheOrReadAt(int oOffset,
         mCachedBytes = 0;
       }
     } else {
-      printf("**** [%p]ReadAt(%u@%d) - %s - no cached data, will fallback to "
-             "blocking read\n",
-             this,
-             oCount,
-             oOffset,
-             oContext);
+      ILOG("ReadAt(%" PRIu32 "@%" PRId64
+           ") - no cached data, will fallback to blocking read...",
+           aCount,
+           aOffset);
     }
   } else {
-    printf("**** [%p]ReadAt(%u@%d) - %s - length is known and too short(!), "
-           "will fallback to blocking read as the caller requested\n",
-           this,
-           oCount,
-           oOffset,
-           oContext);
+    ILOG("ReadAt(%" PRIu32 "@%" PRId64 ") - length is %" PRId64
+         " (%s), will fallback to blocking read as the caller requested...",
+         aCount,
+         aOffset,
+         length,
+         length < 0 ? "unknown" : "too short!");
   }
   uint32_t read = 0;
   nsresult rv = UncachedReadAt(aOffset, aBuffer, aCount, &read);
   if (NS_SUCCEEDED(rv)) {
-    printf("**** [%p]ReadAt(%u@%d) - %s - fallback uncached read -> %s, %u\n",
-           this,
-           oCount,
-           oOffset,
-           oContext,
-           ResultName(rv).get(),
-           unsigned(read));
     *aBytes += read;
+    ILOG("ReadAt(%" PRIu32 "@%" PRId64 ") - fallback uncached read got %" PRIu32
+         " bytes -> %s, %" PRIu32,
+         aCount,
+         aOffset,
+         read,
+         ResultName(rv).get(),
+         *aBytes);
   } else {
-    printf("**** [%p]ReadAt(%u@%d) - %s - fallback uncached read -> %s\n",
-           this,
-           oCount,
-           oOffset,
-           oContext,
-           ResultName(rv).get());
+    ILOG("ReadAt(%" PRIu32 "@%" PRId64
+         ") - fallback uncached read failed -> %s, %" PRIu32,
+         aCount,
+         aOffset,
+         ResultName(rv).get(),
+         *aBytes);
   }
   return rv;
 }
@@ -2027,3 +2017,4 @@ MediaResourceIndex::Seek(int32_t aWhence, int64_t aOffset)
 
 // avoid redefined macro in unified build
 #undef LOG
+#undef ILOG
