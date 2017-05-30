@@ -2,8 +2,8 @@ const CLEARKEY_KEYSYSTEM = "org.w3.clearkey";
 
 const gCencMediaKeySystemConfig = [{
   initDataTypes: ['cenc'],
-  videoCapabilities: [{ contentType: 'video/mp4; codecs="avc1.42E01E"' }],
-  audioCapabilities: [{ contentType: 'audio/mp4; codecs="mp4a.40.2"' }],
+  videoCapabilities: [{ contentType: 'video/mp4' }],
+  audioCapabilities: [{ contentType: 'audio/mp4' }],
 }];
 
 function IsMacOSSnowLeopardOrEarlier() {

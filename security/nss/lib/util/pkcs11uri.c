@@ -681,7 +681,7 @@ PK11URI_ParseURI(const char *string)
 
     result = pk11uri_AllocURI();
     if (result == NULL) {
-        goto fail;
+        return NULL;
     }
 
     /* Parse the path component and its attributes. */

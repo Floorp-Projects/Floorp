@@ -867,7 +867,11 @@ nsGlobalWindow::ExecuteIdleRequest(TimeStamp aDeadline)
   mIdleRequestExecutor->MaybeUpdateIdlePeriodLimit();
   nsresult result = RunIdleRequest(request, deadline, false);
 
-  mIdleRequestExecutor->MaybeDispatch();
+  // Running the idle callback could've suspended the window, in which
+  // case mIdleRequestExecutor will be null.
+  if (mIdleRequestExecutor) {
+    mIdleRequestExecutor->MaybeDispatch();
+  }
   return result;
 }
 

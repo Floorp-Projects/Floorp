@@ -1,0 +1,14 @@
+Functions changes summary: 0 Removed, 1 Changed, 0 Added function
+Variables changes summary: 0 Removed, 0 Changed, 0 Added variable
+
+1 function with some indirect sub-type change:
+
+  [C]'function SECStatus SSL_GetPreliminaryChannelInfo(SSLPreliminaryChannelInfo*, PRUintn)' at sslinfo.c:115:1 has some indirect sub-type changes:
+    parameter 1 of type 'SSLPreliminaryChannelInfo*' has sub-type changes:
+      in pointed to type 'typedef SSLPreliminaryChannelInfo' at sslt.h:318:1:
+        underlying type 'struct SSLPreliminaryChannelInfoStr' at sslt.h:287:1 changed:
+          type size changed from 128 to 160 bits
+          1 data member insertion:
+            'PRUint32 SSLPreliminaryChannelInfoStr::maxEarlyDataSize', at offset 128 (in bits) at sslt.h:314:1
+
+
