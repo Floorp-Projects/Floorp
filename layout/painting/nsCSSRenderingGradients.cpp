@@ -1013,11 +1013,10 @@ nsCSSGradientRenderer::BuildWebRenderParameters(float aOpacity,
 
   aStops.SetLength(mStops.Length());
   for(uint32_t i = 0; i < mStops.Length(); i++) {
-    Float alpha = mStops[i].mColor.a * aOpacity;
-    aStops[i].color.r = mStops[i].mColor.r * alpha;
-    aStops[i].color.g = mStops[i].mColor.g * alpha;
-    aStops[i].color.b = mStops[i].mColor.b * alpha;
-    aStops[i].color.a = alpha;
+    aStops[i].color.r = mStops[i].mColor.r;
+    aStops[i].color.g = mStops[i].mColor.g;
+    aStops[i].color.b = mStops[i].mColor.b;
+    aStops[i].color.a = mStops[i].mColor.a * aOpacity;
     aStops[i].offset = mStops[i].mPosition;
   }
 

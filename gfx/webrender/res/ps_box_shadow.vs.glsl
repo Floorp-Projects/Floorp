@@ -6,7 +6,7 @@
 void main(void) {
     Primitive prim = load_primitive();
     BoxShadow bs = fetch_boxshadow(prim.prim_index);
-    RectWithSize segment_rect = fetch_instance_geometry(prim.sub_index);
+    RectWithSize segment_rect = fetch_instance_geometry(prim.user_data0);
 
     VertexInfo vi = write_vertex(segment_rect,
                                  prim.local_clip_rect,
@@ -15,7 +15,7 @@ void main(void) {
                                  prim.task,
                                  prim.local_rect.p0);
 
-    RenderTaskData child_task = fetch_render_task(prim.user_data.x);
+    RenderTaskData child_task = fetch_render_task(prim.user_data1);
     vUv.z = child_task.data1.x;
 
     // Constant offsets to inset from bilinear filtering border.

@@ -6,7 +6,7 @@
 void main(void) {
     Primitive prim = load_primitive();
     Image image = fetch_image(prim.prim_index);
-    ResourceRect res = fetch_resource_rect(prim.user_data.x);
+    ResourceRect res = fetch_resource_rect(prim.user_data0);
 
 #ifdef WR_FEATURE_TRANSFORM
     TransformVertexInfo vi = write_transform_vertex(prim.local_rect,
