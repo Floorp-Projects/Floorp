@@ -64,6 +64,20 @@ elif test "$MOZ_UPDATE_CHANNEL" = "beta" ; then
 else
     ac_add_options --with-adjust-sdk-keyfile="$topsrcdir/mobile/android/base/adjust-sdk-sandbox.token"
 fi
+
+# MOZ_ANDROID_MMA depends on --with-leanplum-sdk-keyfile, and there's no default
+# keyfile set, so if we misconfigure beta or release, the builds will fail (at
+# configure time).
+if test "$MOZ_UPDATE_CHANNEL" = "release" ; then
+    ac_add_options --with-leanplum-sdk-keyfile=/builds/leanplum-sdk-release.token
+elif test "$MOZ_UPDATE_CHANNEL" = "beta" ; then
+    ac_add_options --with-leanplum-sdk-keyfile=/builds/leanplum-sdk-beta.token
+elif test "$MOZ_UPDATE_CHANNEL" = "nightly" ; then
+    ac_add_options --with-leanplum-sdk-keyfile=/builds/leanplum-sdk-nightly.token
+else
+    ac_add_options --with-leanplum-sdk-keyfile="$topsrcdir/mobile/android/base/leanplum-sdk-sandbox.token"
+fi
+
 export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=/builds/crash-stats-api.token
 
 # Package js shell.

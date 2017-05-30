@@ -89,6 +89,10 @@
   min-width: 190px;
 }
 
+#sidebar-extensions:empty + toolbarseparator {
+  display: none;
+}
+
 %ifndef XP_MACOSX
 /* Allow room for the checkbox drawn as a background image at the start of the toolbarbutton */
 #sidebarMenu-popup .subviewbutton-iconic > .toolbarbutton-icon {

@@ -28,7 +28,6 @@ Structure:
       ... common ping data
       clientId: <UUID>,
       environment: { ... },
-      processType: <type>, // Type of process that crashed, see below for a list of types
       payload: {
         crashDate: "YYYY-MM-DD",
         crashTime: <ISO Date>, // per-hour resolution
@@ -38,6 +37,7 @@ Structure:
                            // intention of uplifting to Firefox 46
         crashId: <UUID>, // Optional, ID of the associated crash
         minidumpSha256Hash: <hash>, // SHA256 hash of the minidump file
+        processType: <type>, // Type of process that crashed, see below for a list of types
         stackTraces: { ... }, // Optional, see below
         metadata: { // Annotations saved while Firefox was running. See nsExceptionHandler.cpp for more information
           ProductID: "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",

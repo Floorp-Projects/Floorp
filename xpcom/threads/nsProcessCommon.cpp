@@ -72,6 +72,7 @@ nsProcess::nsProcess()
   , mLock("nsProcess.mLock")
   , mShutdown(false)
   , mBlocking(false)
+  , mStartHidden(false)
   , mPid(-1)
   , mObserver(nullptr)
   , mWeakObserver(nullptr)
@@ -487,7 +488,7 @@ nsProcess::RunProcess(bool aBlocking, char** aMyArgv, nsIObserver* aObserver,
   sinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
   sinfo.hwnd   = nullptr;
   sinfo.lpFile = wideFile.get();
-  sinfo.nShow  = SW_SHOWNORMAL;
+  sinfo.nShow  = mStartHidden ? SW_HIDE : SW_SHOWNORMAL;
   sinfo.fMask  = SEE_MASK_FLAG_DDEWAIT |
                  SEE_MASK_NO_CONSOLE |
                  SEE_MASK_NOCLOSEPROCESS;
@@ -585,6 +586,20 @@ nsProcess::GetIsRunning(bool* aIsRunning)
     *aIsRunning = false;
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProcess::GetStartHidden(bool* aStartHidden)
+{
+  *aStartHidden = mStartHidden;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProcess::SetStartHidden(bool aStartHidden)
+{
+  mStartHidden = aStartHidden;
   return NS_OK;
 }
 

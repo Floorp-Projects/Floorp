@@ -70,7 +70,7 @@ layout_info const layout_infos[CUBEB_LAYOUT_MAX] = {
 
 int has_available_input_device(cubeb * ctx)
 {
-  cubeb_device_collection * devices;
+  cubeb_device_collection devices;
   int input_device_available = 0;
   int r;
   /* Bail out early if the host does not have input devices. */
@@ -80,14 +80,14 @@ int has_available_input_device(cubeb * ctx)
     return 0;
   }
 
-  if (devices->count == 0) {
+  if (devices.count == 0) {
     fprintf(stderr, "no input device available, skipping test.\n");
-    cubeb_device_collection_destroy(ctx, devices);
+    cubeb_device_collection_destroy(ctx, &devices);
     return 0;
   }
 
-  for (uint32_t i = 0; i < devices->count; i++) {
-    input_device_available |= (devices->device[i]->state ==
+  for (uint32_t i = 0; i < devices.count; i++) {
+    input_device_available |= (devices.device[i].state ==
                                CUBEB_DEVICE_STATE_ENABLED);
   }
 
@@ -96,7 +96,7 @@ int has_available_input_device(cubeb * ctx)
         "available, skipping\n");
   }
 
-  cubeb_device_collection_destroy(ctx, devices);
+  cubeb_device_collection_destroy(ctx, &devices);
   return !!input_device_available;
 }
 
@@ -106,6 +106,28 @@ void print_log(const char * msg, ...)
   va_start(args, msg);
   vprintf(msg, args);
   va_end(args);
+}
+
+/** Initialize cubeb with backend override.
+ *  Create call cubeb_init passing value for CUBEB_BACKEND env var as
+ *  override. */
+int common_init(cubeb ** ctx, char const * ctx_name)
+{
+  int r;
+  char const * backend;
+  char const * ctx_backend;
+
+  backend = getenv("CUBEB_BACKEND");
+  r = cubeb_init(ctx, ctx_name, backend);
+  if (r == CUBEB_OK && backend) {
+    ctx_backend = cubeb_get_backend_id(*ctx);
+    if (strcmp(backend, ctx_backend) != 0) {
+      fprintf(stderr, "Requested backend `%s', got `%s'\n",
+              backend, ctx_backend);
+    }
+  }
+
+  return r;
 }
 
 #endif /* TEST_COMMON */

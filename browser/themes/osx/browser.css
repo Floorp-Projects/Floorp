@@ -31,7 +31,6 @@
   --backbutton-border-color: rgba(0,0,0,0.2);
   --backbutton-background: linear-gradient(rgba(255,255,255,0.9),
                                            rgba(255,255,255,0.7)) repeat-x;
-%endif
 
   --toolbarbutton-hover-bordercolor: hsla(0,0%,0%,.2);
   --toolbarbutton-hover-boxshadow: 0 1px 0 hsla(0,0%,100%,.5),
@@ -41,6 +40,7 @@
   --toolbarbutton-active-boxshadow: 0 1px 0 hsla(0,0%,100%,.5),
                                     0 1px 0 hsla(0,0%,0%,.05) inset,
                                     0 1px 1px hsla(0,0%,0%,.2) inset;
+%endif
 
   --toolbarbutton-checkedhover-backgroundcolor: hsla(0,0%,0%,.09);
 
