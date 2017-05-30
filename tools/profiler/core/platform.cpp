@@ -531,19 +531,6 @@ MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
 // The name of the main thread.
 static const char* const kMainThreadName = "GeckoMain";
 
-static bool
-CanNotifyObservers()
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-#if defined(GP_OS_android)
-  // Android ANR reporter uses the profiler off the main thread.
-  return NS_IsMainThread();
-#else
-  return true;
-#endif
-}
-
 ////////////////////////////////////////////////////////////////////////
 // BEGIN tick/unwinding code
 
@@ -1991,18 +1978,32 @@ locked_register_thread(PSLockRef aLock, const char* aName, void* stackTop)
 }
 
 static void
+NotifyObservers(const char* aTopic, nsISupports* aSubject = nullptr)
+{
+  if (!NS_IsMainThread()) {
+    // Dispatch a task to the main thread that notifies observers.
+    // If NotifyObservers is called both on and off the main thread within a
+    // short time, the order of the notifications can be different from the
+    // order of the calls to NotifyObservers.
+    // Getting the order 100% right isn't that important at the moment, because
+    // these notifications are only observed in the parent process, where the
+    // profiler_* functions are currently only called on the main thread.
+    nsCOMPtr<nsISupports> subject = aSubject;
+    NS_DispatchToMainThread(NS_NewRunnableFunction([=] {
+      NotifyObservers(aTopic, subject);
+    }));
+    return;
+  }
+
+  if (nsCOMPtr<nsIObserverService> os = services::GetObserverService()) {
+    os->NotifyObservers(aSubject, aTopic, nullptr);
+  }
+}
+
+static void
 NotifyProfilerStarted(const int aEntries, double aInterval, uint32_t aFeatures,
                       const char** aFilters, uint32_t aFilterCount)
 {
-  if (!CanNotifyObservers()) {
-    return;
-  }
-
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (!os) {
-    return;
-  }
-
   nsTArray<nsCString> filtersArray;
   for (size_t i = 0; i < aFilterCount; ++i) {
     filtersArray.AppendElement(aFilters[i]);
@@ -2011,22 +2012,7 @@ NotifyProfilerStarted(const int aEntries, double aInterval, uint32_t aFeatures,
   nsCOMPtr<nsIProfilerStartParams> params =
     new nsProfilerStartParams(aEntries, aInterval, aFeatures, filtersArray);
 
-  os->NotifyObservers(params, "profiler-started", nullptr);
-}
-
-static void
-NotifyObservers(const char* aTopic)
-{
-  if (!CanNotifyObservers()) {
-    return;
-  }
-
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (!os) {
-    return;
-  }
-
-  os->NotifyObservers(nullptr, aTopic, nullptr);
+  NotifyObservers("profiler-started", params);
 }
 
 static void
@@ -2508,8 +2494,10 @@ profiler_stop()
   }
 
   // We notify observers with gPSMutex unlocked. Otherwise we might get a
-  // deadlock, if code run by the observer calls a profiler function that locks
-  // gPSMutex. (This has been seen in practise in bug 1346356.)
+  // deadlock, if code run by these functions calls a profiler function that
+  // locks gPSMutex, for example when it wants to insert a marker.
+  // (This has been seen in practise in bug 1346356, when we were still firing
+  // these notifications synchronously.)
   NotifyObservers("profiler-stopped");
 
   // We delete with gPSMutex unlocked. Otherwise we would get a deadlock: we
