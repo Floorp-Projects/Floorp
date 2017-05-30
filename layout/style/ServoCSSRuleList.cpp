@@ -10,6 +10,7 @@
 
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoDocumentRule.h"
+#include "mozilla/ServoImportRule.h"
 #include "mozilla/ServoKeyframesRule.h"
 #include "mozilla/ServoMediaRule.h"
 #include "mozilla/ServoNamespaceRule.h"
@@ -98,6 +99,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
         break;                                                              \
       }
       CASE_RULE(STYLE, Style)
+      CASE_RULE(IMPORT, Import)
       CASE_RULE(KEYFRAMES, Keyframes)
       CASE_RULE(MEDIA, Media)
       CASE_RULE(NAMESPACE, Namespace)
