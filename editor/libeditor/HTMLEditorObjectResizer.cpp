@@ -28,7 +28,6 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMText.h"
 #include "nsIDocument.h"
 #include "nsIEditor.h"
 #include "nsIHTMLObjectResizer.h"
@@ -626,8 +625,6 @@ HTMLEditor::SetResizingInfoPosition(int32_t aX,
                                     int32_t aW,
                                     int32_t aH)
 {
-  nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
-
   // Determine the position of the resizing info box based upon the new
   // position and size of the element (aX, aY, aW, aH), and which
   // resizer is the "activated handle".  For example, place the resizing
@@ -696,12 +693,15 @@ HTMLEditor::SetResizingInfoPosition(int32_t aX,
                     NS_LITERAL_STRING(", ") + diffHeightStr +
                     NS_LITERAL_STRING(")"));
 
-  nsCOMPtr<nsIDOMText> nodeAsText;
-  nsresult rv = domdoc->CreateTextNode(info, getter_AddRefs(nodeAsText));
-  NS_ENSURE_SUCCESS(rv, rv);
-  textInfo = do_QueryInterface(nodeAsText);
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  textInfo = doc->CreateTextNode(info);
+  if (NS_WARN_IF(!textInfo)) {
+    return NS_ERROR_FAILURE;
+  }
   mResizingInfo->AppendChild(*textInfo, erv);
-  NS_ENSURE_TRUE(!erv.Failed(), erv.StealNSResult());
+  if (NS_WARN_IF(erv.Failed())) {
+    return erv.StealNSResult();
+  }
 
   return mResizingInfo->UnsetAttr(kNameSpaceID_None, nsGkAtoms::_class, true);
 }

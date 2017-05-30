@@ -327,7 +327,6 @@ CSSStyleSheetInner::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
                              CORSMode aCORSMode, ReferrerPolicy aReferrerPolicy)
   : StyleSheet(StyleBackendType::Gecko, aParsingMode),
-    mOwnerRule(nullptr),
     mInRuleProcessorCache(false),
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
@@ -342,7 +341,6 @@ CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
                              ReferrerPolicy aReferrerPolicy,
                              const SRIMetadata& aIntegrity)
   : StyleSheet(StyleBackendType::Gecko, aParsingMode),
-    mOwnerRule(nullptr),
     mInRuleProcessorCache(false),
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
@@ -354,11 +352,10 @@ CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
 
 CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
                              CSSStyleSheet* aParentToUse,
-                             css::ImportRule* aOwnerRuleToUse,
+                             dom::CSSImportRule* aOwnerRuleToUse,
                              nsIDocument* aDocumentToUse,
                              nsINode* aOwningNodeToUse)
-  : StyleSheet(aCopy, aDocumentToUse, aOwningNodeToUse),
-    mOwnerRule(aOwnerRuleToUse),
+  : StyleSheet(aCopy, aOwnerRuleToUse, aDocumentToUse, aOwningNodeToUse),
     mInRuleProcessorCache(false),
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
@@ -570,7 +567,7 @@ CSSStyleSheet::GetStyleRuleAt(int32_t aIndex) const
 
 already_AddRefed<StyleSheet>
 CSSStyleSheet::Clone(StyleSheet* aCloneParent,
-                     css::ImportRule* aCloneOwnerRule,
+                     dom::CSSImportRule* aCloneOwnerRule,
                      nsIDocument* aCloneDocument,
                      nsINode* aCloneOwningNode) const
 {
@@ -601,8 +598,8 @@ CSSStyleSheet::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-void 
-CSSStyleSheet::ClearRuleCascadesInternal()
+void
+CSSStyleSheet::ClearRuleCascades()
 {
   // We might be in ClearRuleCascadesInternal because we had a modification
   // to the sheet that resulted in an nsCSSSelector being destroyed.
@@ -627,6 +624,10 @@ CSSStyleSheet::ClearRuleCascadesInternal()
       }
       (*iter)->ClearRuleCascades();
     }
+  }
+
+  if (mParent) {
+    static_cast<CSSStyleSheet*>(mParent)->ClearRuleCascades();
   }
 }
 
@@ -656,12 +657,6 @@ CSSStyleSheet::SetScopeElement(dom::Element* aScopeElement)
   mScopeElement = aScopeElement;
 }
 
-css::Rule*
-CSSStyleSheet::GetDOMOwnerRule() const
-{
-  return mOwnerRule;
-}
-
 CSSRuleList*
 CSSStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
 {
@@ -669,17 +664,6 @@ CSSStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
     mRuleCollection = new CSSRuleListImpl(this);
   }
   return mRuleCollection;
-}
-
-static bool
-RuleHasPendingChildSheet(css::Rule *cssRule)
-{
-  nsCOMPtr<nsIDOMCSSImportRule> importRule(do_QueryInterface(cssRule));
-  NS_ASSERTION(importRule, "Rule which has type IMPORT_RULE and does not implement nsIDOMCSSImportRule!");
-  nsCOMPtr<nsIDOMCSSStyleSheet> childSheet;
-  importRule->GetStyleSheet(getter_AddRefs(childSheet));
-  RefPtr<CSSStyleSheet> cssSheet = do_QueryObject(childSheet);
-  return cssSheet != nullptr && !cssSheet->IsComplete();
 }
 
 uint32_t

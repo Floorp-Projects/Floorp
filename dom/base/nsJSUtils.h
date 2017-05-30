@@ -95,6 +95,9 @@ public:
     // Should the result be serialized before being returned.
     bool mCoerceToString;
 
+    // Encode the bytecode before it is being executed.
+    bool mEncodeBytecode;
+
 #ifdef DEBUG
     // Should we set the return value.
     bool mWantsReturnValue;
@@ -124,6 +127,15 @@ public:
       return *this;
     }
 
+    // When set, this flag records and encodes the bytecode as soon as it is
+    // being compiled, and before it is being executed. The bytecode can then be
+    // requested by using |JS::FinishIncrementalEncoding| with the mutable
+    // handle |aScript| argument of |CompileAndExec| or |JoinAndExec|.
+    ExecutionContext& SetEncodeBytecode(bool aEncodeBytecode) {
+      mEncodeBytecode = aEncodeBytecode;
+      return *this;
+    }
+
     // Set the scope chain in which the code should be executed.
     void SetScopeChain(const JS::AutoObjectVector& aScopeChain);
 
@@ -149,7 +161,8 @@ public:
 
     // Compile a script contained in a SourceBuffer, and execute it.
     nsresult CompileAndExec(JS::CompileOptions& aCompileOptions,
-                            JS::SourceBufferHolder& aSrcBuf);
+                            JS::SourceBufferHolder& aSrcBuf,
+                            JS::MutableHandle<JSScript*> aScript);
 
     // Compile a script contained in a string, and execute it.
     nsresult CompileAndExec(JS::CompileOptions& aCompileOptions,
@@ -164,11 +177,6 @@ public:
     // function will get the result of the decoder by moving it to the main
     // thread before starting the execution of the script.
     MOZ_MUST_USE nsresult DecodeJoinAndExec(void **aOffThreadToken);
-
-    // Similar to JoinAndExec, except that in addition to fecthing the source,
-    // we register the fact that we plan to encode its bytecode later.
-    MOZ_MUST_USE nsresult JoinEncodeAndExec(void **aOffThreadToken,
-                                            JS::MutableHandle<JSScript*> aScript);
   };
 
   static nsresult CompileModule(JSContext* aCx,

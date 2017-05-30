@@ -1,0 +1,55 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>
+  Test for bug 1273303: Stylesheet additions and removals known to not
+  affect the document don't trigger restyles
+</title>
+<link rel="author" href="mailto:emilio@crisal.io" title="Emilio Cobos Álvarez">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<div class="classScope">
+  <div></div>
+</div>
+<div id="idScope">
+  <div></div>
+</div>
+<!--
+  We do it this way, using `disabled`, because appending stylesheets to the
+  document marks a restyle as needed, so we can't accurately measure whether
+  we've restyled or not.
+-->
+<style id="target" disabled></style>
+<script>
+SimpleTest.waitForExplicitFinish();
+const utils = SpecialPowers.getDOMWindowUtils(window);
+const TESTS = [
+  { selector: ".nonexistentClassScope", restyle: false },
+  { selector: ".nonexistentClassScope + div", restyle: true },
+  { selector: ".nonexistentClassScope div + div", restyle: false },
+  { selector: ".classScope", restyle: true },
+  { selector: ".classScope div", restyle: true },
+  { selector: "#idScope", restyle: true },
+  { selector: "#nonexistentIdScope", restyle: false },
+  { selector: "#nonexistentIdScope div + bar", restyle: false },
+];
+
+for (const test of TESTS) {
+  // TODO(emilio): We don't as of right now, but we could also scan the
+  // stylesheet when removed if needed and test this too.
+  target.innerHTML = test.selector + " { color: green; }";
+  target.disabled = true;
+  document.body.offsetWidth;
+  const prevGeneration = utils.restyleGeneration;
+  target.disabled = false; // Make the stylesheet effective.
+  let element = document.querySelector(test.selector);
+  if (element) {
+    is(test.restyle, true, "How could we not expect a restyle?");
+    is(getComputedStyle(element).color, "rgb(0, 128, 0)",
+       "Element style should've changed appropriately");
+  }
+  document.body.offsetWidth;
+  is(test.restyle, utils.restyleGeneration != prevGeneration,
+     `Stylesheet addition with ${test.selector} should ${test.restyle ? "have" : "not have"} caused a restyle`);
+}
+
+SimpleTest.finish();
+</script>

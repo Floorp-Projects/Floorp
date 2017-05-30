@@ -19,8 +19,6 @@ device_info_destroy(cubeb_device_info * info)
   free((void *) info->friendly_name);
   free((void *) info->group_id);
   free((void *) info->vendor_name);
-
-  free(info);
 }
 
 int
@@ -33,8 +31,8 @@ cubeb_utils_default_device_collection_destroy(cubeb * context,
   (void) context;
 
   for (i = 0; i < collection->count; i++)
-    device_info_destroy(collection->device[i]);
+    device_info_destroy(&collection->device[i]);
 
-  free(collection);
+  free(collection->device);
   return CUBEB_OK;
 }

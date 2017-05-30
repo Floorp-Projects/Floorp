@@ -26,9 +26,9 @@
 #include "gfxGraphiteShaper.h"
 #include "gfxHarfBuzzShaper.h"
 #include "gfxUserFontSet.h"
-#include "nsIUGenCategory.h"
 #include "nsSpecialCasingData.h"
 #include "nsTextRunTransformations.h"
+#include "nsUGenCategory.h"
 #include "nsUnicodeProperties.h"
 #include "nsStyleConsts.h"
 #include "mozilla/AppUnits.h"
@@ -699,7 +699,7 @@ gfxShapedText::FilterIfIgnorable(uint32_t aIndex, uint32_t aCh)
         // if they're followed by additional characters in the same cluster.
         // Some fonts use them to carry the width of a whole cluster of
         // combining jamos; see bug 1238243.
-        if (GetGenCategory(aCh) == nsIUGenCategory::kLetter &&
+        if (GetGenCategory(aCh) == nsUGenCategory::kLetter &&
             aIndex + 1 < GetLength() &&
             !GetCharacterGlyphs()[aIndex + 1].IsClusterStart()) {
             return false;
@@ -2604,13 +2604,8 @@ gfxFont::GetShapedWord(DrawTarget *aDrawTarget,
     }
     gfxShapedWord* sw = entry->mShapedWord.get();
 
-    bool isContent = !mStyle.systemFont;
-
     if (sw) {
         sw->ResetAge();
-        Telemetry::Accumulate((isContent ? Telemetry::WORD_CACHE_HITS_CONTENT :
-                                   Telemetry::WORD_CACHE_HITS_CHROME),
-                              aLength);
 #ifndef RELEASE_OR_BETA
         if (aTextPerf) {
             aTextPerf->current.wordCacheHit++;
@@ -2619,9 +2614,6 @@ gfxFont::GetShapedWord(DrawTarget *aDrawTarget,
         return sw;
     }
 
-    Telemetry::Accumulate((isContent ? Telemetry::WORD_CACHE_MISSES_CONTENT :
-                               Telemetry::WORD_CACHE_MISSES_CHROME),
-                          aLength);
 #ifndef RELEASE_OR_BETA
     if (aTextPerf) {
         aTextPerf->current.wordCacheMiss++;

@@ -88,6 +88,7 @@ audio_input audio_inputs[CUBEB_LAYOUT_MAX] = {
   { CUBEB_LAYOUT_3F4_LFE,       { L, R, C, LFE, RLS, RRS, LS, RS } }
 };
 
+// The test cases must be aligned with cubeb_downmix.
 void
 downmix_test(float const * data, cubeb_channel_layout in_layout, cubeb_channel_layout out_layout)
 {
@@ -126,7 +127,14 @@ downmix_test(float const * data, cubeb_channel_layout in_layout, cubeb_channel_l
 
   unsigned int const inframes = 10;
   vector<float> in(in_params.channels * inframes);
+#if defined(__APPLE__)
+  // The mixed buffer size doesn't be changed based on the channel layout set on OSX.
+  // Please see the comment above downmix_3f2 in cubeb_mixer.cpp.
+  vector<float> out(in_params.channels * inframes);
+#else
+  // In normal case, the mixed buffer size is based on the mixing channel layout.
   vector<float> out(out_params.channels * inframes);
+#endif
 
   for (unsigned int offset = 0 ; offset < inframes * in_params.channels ; offset += in_params.channels) {
     for (unsigned int i = 0 ; i < in_params.channels ; ++i) {
@@ -138,7 +146,7 @@ downmix_test(float const * data, cubeb_channel_layout in_layout, cubeb_channel_l
   std::unique_ptr<cubeb_mixer, decltype(&cubeb_mixer_destroy)>
     mixer(cubeb_mixer_create(in_params.format, CUBEB_MIXER_DIRECTION_DOWNMIX), cubeb_mixer_destroy);
 
-  cubeb_mixer_mix(mixer.get(), in.data(), inframes, out.data(), &in_params, &out_params);
+  cubeb_mixer_mix(mixer.get(), inframes, in.data(), in.size(), out.data(), out.size(), &in_params, &out_params);
 
   uint32_t in_layout_mask = 0;
   for (unsigned int i = 0 ; i < in_params.channels; ++i) {
@@ -157,22 +165,27 @@ downmix_test(float const * data, cubeb_channel_layout in_layout, cubeb_channel_l
     if ((in_layout == CUBEB_LAYOUT_3F2 || in_layout == CUBEB_LAYOUT_3F2_LFE) &&
         out_layout >= CUBEB_LAYOUT_MONO && out_layout <= CUBEB_LAYOUT_2F2_LFE) {
       auto & downmix_results = DOWNMIX_3F2_RESULTS[in_layout - CUBEB_LAYOUT_3F2][out_layout - CUBEB_LAYOUT_MONO];
-      fprintf(stderr, "[3f2] Expect: %lf, Get: %lf\n", downmix_results[index], out[index]);
-      ASSERT_EQ(downmix_results[index], out[index]);
+      fprintf(stderr, "[3f2] Expect: %lf, Get: %lf\n", downmix_results[index], out[i]);
+      ASSERT_EQ(downmix_results[index], out[i]);
       continue;
     }
+
+#if defined(__APPLE__)
+    // We only support downmix for audio 5.1 on OS X currently.
+    return;
+#endif
 
     // mix_remap
     if (out_layout_mask & in_layout_mask) {
       uint32_t mask = 1 << CHANNEL_INDEX_TO_ORDER[out_layout][index];
-      fprintf(stderr, "[map channels] Expect: %lf, Get: %lf\n", (mask & in_layout_mask) ? audio_inputs[out_layout].data[index] : 0, out[index]);
-      ASSERT_EQ((mask & in_layout_mask) ? audio_inputs[out_layout].data[index] : 0, out[index]);
+      fprintf(stderr, "[map channels] Expect: %lf, Get: %lf\n", (mask & in_layout_mask) ? audio_inputs[out_layout].data[index] : 0, out[i]);
+      ASSERT_EQ((mask & in_layout_mask) ? audio_inputs[out_layout].data[index] : 0, out[i]);
       continue;
     }
 
     // downmix_fallback
-    fprintf(stderr, "[fallback] Expect: %lf, Get: %lf\n", audio_inputs[in_layout].data[index], out[index]);
-    ASSERT_EQ(audio_inputs[in_layout].data[index], out[index]);
+    fprintf(stderr, "[fallback] Expect: %lf, Get: %lf\n", audio_inputs[in_layout].data[index], out[i]);
+    ASSERT_EQ(audio_inputs[in_layout].data[index], out[i]);
   }
 }
 

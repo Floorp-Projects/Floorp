@@ -26,7 +26,7 @@ class ServiceWorkerRegistrarTest : public ServiceWorkerRegistrar
 public:
   ServiceWorkerRegistrarTest()
   {
-#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                        getter_AddRefs(mProfileDir));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));

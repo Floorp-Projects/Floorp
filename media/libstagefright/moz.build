@@ -10,7 +10,7 @@ with Files("**"):
 DEFINES['ANDROID_SMP'] = 0
 DEFINES['LOG_NDEBUG'] = 1
 
-if CONFIG['OS_TARGET'] != 'WINNT':
+if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['OS_TARGET'] != 'SunOS':
    DEFINES['_GLIBCXX_OS_DEFINES'] = True
 
 if CONFIG['OS_TARGET'] == 'WINNT':
