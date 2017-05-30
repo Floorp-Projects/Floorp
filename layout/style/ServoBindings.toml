@@ -321,6 +321,7 @@ structs-types = [
     "mozilla::css::GridTemplateAreasValue",
     "mozilla::css::ImageValue",
     "mozilla::css::URLValue",
+    "mozilla::MallocSizeOf",
     "mozilla::Side",
     "RawGeckoAnimationPropertySegment",
     "RawGeckoComputedTiming",

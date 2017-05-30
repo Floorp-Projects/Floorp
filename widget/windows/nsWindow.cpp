@@ -369,6 +369,9 @@ static const int32_t kResizableBorderMinSize = 3;
 // Cached pointer events enabler value, True if pointer events are enabled.
 static bool gIsPointerEventsEnabled = false;
 
+// True if we should use compositing for popup widgets.
+static bool gIsPopupCompositingEnabled = false;
+
 // We should never really try to accelerate windows bigger than this. In some
 // cases this might lead to no D3D9 acceleration where we could have had it
 // but D3D9 does not reliably report when it supports bigger windows. 8192
@@ -671,6 +674,10 @@ nsWindow::nsWindow()
     Preferences::AddBoolVarCache(&gIsPointerEventsEnabled,
                                  "dom.w3c_pointer_events.enabled",
                                  gIsPointerEventsEnabled);
+
+    Preferences::AddBoolVarCache(&gIsPopupCompositingEnabled,
+                                 "layers.popups.compositing.enabled",
+                                 gIsPopupCompositingEnabled);
   } // !sInstanceCount
 
   mIdleService = nullptr;
@@ -7169,7 +7176,7 @@ nsWindow::ShouldUseOffMainThreadCompositing()
   // We don't currently support using an accelerated layer manager with
   // transparent windows so don't even try. I'm also not sure if we even
   // want to support this case. See bug 593471
-  if (mTransparencyMode == eTransparencyTransparent) {
+  if (!(HasRemoteContent() && gIsPopupCompositingEnabled) && mTransparencyMode == eTransparencyTransparent) {
     return false;
   }
 

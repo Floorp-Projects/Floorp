@@ -38,13 +38,6 @@
 #include "zlib.h"
 #endif
 
-#ifndef PK11_SETATTRS
-#define PK11_SETATTRS(x, id, v, l) \
-    (x)->type = (id);              \
-    (x)->pValue = (v);             \
-    (x)->ulValueLen = (l);
-#endif
-
 static PK11SymKey *ssl3_GenerateRSAPMS(sslSocket *ss, ssl3CipherSpec *spec,
                                        PK11SlotInfo *serverKeySlot);
 static SECStatus ssl3_DeriveMasterSecret(sslSocket *ss, PK11SymKey *pms);

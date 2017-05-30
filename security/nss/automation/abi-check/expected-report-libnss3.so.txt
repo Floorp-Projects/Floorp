@@ -1,0 +1,12 @@
+Functions changes summary: 0 Removed, 0 Changed, 6 Added functions
+Variables changes summary: 0 Removed, 0 Changed, 0 Added variable
+
+6 Added functions:
+
+  'function SECStatus CERT_GetCertIsPerm(const CERTCertificate*, PRBool*)'    {CERT_GetCertIsPerm@@NSS_3.31}
+  'function SECStatus CERT_GetCertIsTemp(const CERTCertificate*, PRBool*)'    {CERT_GetCertIsTemp@@NSS_3.31}
+  'function CERTCertificate* PK11_FindCertFromURI(const char*, void*)'    {PK11_FindCertFromURI@@NSS_3.31}
+  'function CERTCertList* PK11_FindCertsFromURI(const char*, void*)'    {PK11_FindCertsFromURI@@NSS_3.31}
+  'function char* PK11_GetModuleURI(SECMODModule*)'    {PK11_GetModuleURI@@NSS_3.31}
+  'function char* PK11_GetTokenURI()'    {PK11_GetTokenURI@@NSS_3.31}
+

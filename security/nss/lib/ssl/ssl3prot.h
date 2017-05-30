@@ -305,13 +305,6 @@ typedef enum {
     CLIENT_AUTH_CERTIFICATE = 1
 } ClientAuthenticationType;
 
-typedef struct {
-    ClientAuthenticationType client_auth_type;
-    union {
-        SSL3Opaque *certificate_list;
-    } identity;
-} ClientIdentity;
-
 #define SESS_TICKET_KEY_NAME_LEN 16
 #define SESS_TICKET_KEY_NAME_PREFIX "NSS!"
 #define SESS_TICKET_KEY_NAME_PREFIX_LEN 4
@@ -323,9 +316,5 @@ typedef struct {
     SECItem encrypted_state;
     unsigned char *mac;
 } EncryptedSessionTicket;
-
-#define TLS_EX_SESS_TICKET_MAC_LENGTH 32
-
-#define TLS_STE_NO_SERVER_NAME -1
 
 #endif /* __ssl3proto_h_ */
