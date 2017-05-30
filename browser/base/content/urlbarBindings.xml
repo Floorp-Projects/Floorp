@@ -1063,6 +1063,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 this._formattingEnabled = this._prefs.getBoolPref(aData);
                 break;
               case "suggest.searches":
+              case "userMadeSearchSuggestionsChoice":
                 // Mirror the value for future use, see the comment in the
                 // binding's constructor.
                 this._prefs.setBoolPref("searchSuggestionsChoice",
