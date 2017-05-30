@@ -21,6 +21,10 @@
 #include "cutils/properties.h"
 #endif
 
+#ifdef MOZ_WIDGET_GTK
+#include <glib.h>
+#endif
+
 namespace mozilla {
 
 /* static */ bool
@@ -148,6 +152,15 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
 #ifdef MOZ_ALSA
   // Bug 1309098: ALSA support
   policy->AddDir(rdwr, "/dev/snd");
+#endif
+
+#ifdef MOZ_WIDGET_GTK
+  // Bug 1321134: DConf's single bit of shared memory
+  if (const auto userDir = g_get_user_runtime_dir()) {
+    // The leaf filename is "user" by default, but is configurable.
+    nsPrintfCString shmPath("%s/dconf/", userDir);
+    policy->AddPrefix(rdwrcr, shmPath.get());
+  }
 #endif
 
   mCommonContentPolicy.reset(policy);
