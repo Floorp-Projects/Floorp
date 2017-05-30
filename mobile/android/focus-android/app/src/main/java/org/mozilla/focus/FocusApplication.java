@@ -31,20 +31,25 @@ public class FocusApplication extends LocaleAwareApplication {
     }
 
     private void enableStrictMode() {
+        // Android/WebView sometimes commit strict mode violations, see e.g.
+        // https://github.com/mozilla-mobile/focus-android/issues/660
         if (AppConstants.isReleaseBuild()) {
             return;
         }
 
-        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
-                .detectAll()
-                .penaltyLog()
-                .penaltyDeath()
-                .build());
+        final StrictMode.ThreadPolicy.Builder threadPolicyBuilder = new StrictMode.ThreadPolicy.Builder().detectAll();
+        final StrictMode.VmPolicy.Builder vmPolicyBuilder = new StrictMode.VmPolicy.Builder().detectAll();
 
-        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-                .detectAll()
-                .penaltyLog()
-                .penaltyDeath()
-                .build());
+        if (AppConstants.isBetaBuild()) {
+            threadPolicyBuilder.penaltyDialog();
+            vmPolicyBuilder.penaltyLog();
+        } else { // Dev/debug build
+            threadPolicyBuilder.penaltyDialog();
+            // We want only penaltyDeath(), but penaltLog() is needed print a stacktrace when a violation happens
+            vmPolicyBuilder.penaltyLog().penaltyDeath();
+        }
+
+        StrictMode.setThreadPolicy(threadPolicyBuilder.build());
+        StrictMode.setVmPolicy(vmPolicyBuilder.build());
     }
 }
