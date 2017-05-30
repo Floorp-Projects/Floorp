@@ -1422,7 +1422,7 @@ Loader::InsertChildSheet(StyleSheet* aSheet,
       aSheet->AsServo()->SetSheetForImport(aServoChildSheet);
     }
   }
-  aParentSheet->AppendStyleSheet(aSheet);
+  aParentSheet->PrependStyleSheet(aSheet);
 
   LOG(("  Inserting into parent sheet"));
   return NS_OK;

@@ -1710,8 +1710,6 @@ var gBrowserInit = {
       }
     });
 
-    gPageActionButton.init();
-
     this.delayedStartupFinished = true;
 
     _resolveDelayedStartup();
@@ -7740,12 +7738,6 @@ var gPageActionButton = {
   get sendToDeviceBody() {
     delete this.sendToDeviceBody;
     return this.sendToDeviceBody = document.getElementById("page-action-sendToDeviceView-body");
-  },
-
-  init() {
-    if (getBoolPref("browser.photon.structure.enabled")) {
-      this.button.hidden = false;
-    }
   },
 
   onEvent(event) {

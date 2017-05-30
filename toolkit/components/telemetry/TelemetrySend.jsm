@@ -1294,6 +1294,7 @@ var TelemetrySendImpl = {
     let process = Cc["@mozilla.org/process/util;1"]
                   .createInstance(Ci.nsIProcess);
     process.init(exe);
+    process.startHidden = true;
     process.run(/* blocking */ false, [url, pingPath], 2);
   },
 };

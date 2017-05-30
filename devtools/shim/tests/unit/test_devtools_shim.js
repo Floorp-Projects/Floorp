@@ -22,6 +22,8 @@ function createMockDevTools() {
     "unregisterTool",
     "unregisterTheme",
     "emit",
+    "getOpenedScratchpads",
+    "restoreScratchpadSession",
   ];
 
   let mock = {
@@ -188,6 +190,30 @@ function test_events() {
   checkCalls(mock, "emit", 2, ["devtools-unregistered"]);
 }
 
+function test_scratchpad_apis() {
+  ok(!DevToolsShim.isInstalled(), "DevTools are not installed");
+
+  // Check that restoreScratchpadSession doesn't crash.
+  DevToolsShim.restoreScratchpadSession([{}]);
+
+  let scratchpads = DevToolsShim.getOpenedScratchpads();
+  equal(scratchpads.length, 0,
+      "getOpenedScratchpads returns [] when DevTools are not installed");
+
+  let mock = createMockDevTools();
+  DevToolsShim.register(mock);
+
+  // Check that calls to restoreScratchpadSession are not held.
+  checkCalls(mock, "restoreScratchpadSession", 0);
+
+  DevToolsShim.getOpenedScratchpads();
+  checkCalls(mock, "getOpenedScratchpads", 1, []);
+
+  let scratchpadSessions = [{}];
+  DevToolsShim.restoreScratchpadSession(scratchpadSessions);
+  checkCalls(mock, "restoreScratchpadSession", 1, [scratchpadSessions]);
+}
+
 function run_test() {
   test_register_unregister();
   DevToolsShim.unregister();
@@ -205,6 +231,9 @@ function run_test() {
   DevToolsShim.unregister();
 
   test_registering_theme();
+  DevToolsShim.unregister();
+
+  test_scratchpad_apis();
   DevToolsShim.unregister();
 
   test_events();

@@ -75,6 +75,13 @@ interface nsIProcess : nsISupports
 		 [optional] in nsIObserver observer, [optional] in boolean holdWeak);
 
   /**
+   * When set to true the process will not open a new window when started and
+   * will run hidden from the user. This currently affects only the Windows
+   * platform.
+   */
+  attribute boolean startHidden;
+
+  /**
    * The process identifier of the currently running process. This will only
    * be available after the process has started and may not be available on
    * some platforms.

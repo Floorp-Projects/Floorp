@@ -62,6 +62,7 @@ private:
   mozilla::Mutex mLock;
   bool mShutdown;
   bool mBlocking;
+  bool mStartHidden;
 
   nsCOMPtr<nsIFile> mExecutable;
   nsString mTargetPath;

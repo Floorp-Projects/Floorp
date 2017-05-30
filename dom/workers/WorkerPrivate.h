@@ -662,7 +662,7 @@ public:
   nsresult
   SetPrincipalFromChannel(nsIChannel* aChannel);
 
-#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool
   FinalChannelPrincipalIsValid(nsIChannel* aChannel);
 
@@ -913,7 +913,7 @@ public:
   { }
 #endif
 
-#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool
   PrincipalIsValid() const;
 #endif

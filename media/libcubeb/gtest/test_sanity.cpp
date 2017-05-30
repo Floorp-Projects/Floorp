@@ -77,7 +77,7 @@ TEST(cubeb, init_destroy_context)
   cubeb * ctx;
   char const* backend_id;
 
-  r = cubeb_init(&ctx, "test_sanity", NULL);
+  r = common_init(&ctx, "test_sanity");
   ASSERT_EQ(r, CUBEB_OK);
   ASSERT_NE(ctx, nullptr);
 
@@ -98,7 +98,7 @@ TEST(cubeb, init_destroy_multiple_contexts)
   ASSERT_EQ(ARRAY_LENGTH(ctx), ARRAY_LENGTH(order));
 
   for (i = 0; i < ARRAY_LENGTH(ctx); ++i) {
-    r = cubeb_init(&ctx[i], NULL, NULL);
+    r = common_init(&ctx[i], NULL);
     ASSERT_EQ(r, CUBEB_OK);
     ASSERT_NE(ctx[i], nullptr);
   }
@@ -114,9 +114,10 @@ TEST(cubeb, context_variables)
   int r;
   cubeb * ctx;
   uint32_t value;
+  cubeb_channel_layout layout;
   cubeb_stream_params params;
 
-  r = cubeb_init(&ctx, "test_context_variables", NULL);
+  r = common_init(&ctx, "test_context_variables");
   ASSERT_EQ(r, CUBEB_OK);
   ASSERT_NE(ctx, nullptr);
 
@@ -139,6 +140,11 @@ TEST(cubeb, context_variables)
     ASSERT_TRUE(value > 0);
   }
 
+  r = cubeb_get_preferred_channel_layout(ctx, &layout);
+  ASSERT_TRUE(r == CUBEB_ERROR_NOT_SUPPORTED ||
+              (r == CUBEB_OK && layout != CUBEB_LAYOUT_UNDEFINED) ||
+              (r == CUBEB_ERROR && layout == CUBEB_LAYOUT_UNDEFINED));
+
   cubeb_destroy(ctx);
 }
 
@@ -149,7 +155,7 @@ TEST(cubeb, init_destroy_stream)
   cubeb_stream * stream;
   cubeb_stream_params params;
 
-  r = cubeb_init(&ctx, "test_sanity", NULL);
+  r = common_init(&ctx, "test_sanity");
   ASSERT_EQ(r, CUBEB_OK);
   ASSERT_NE(ctx, nullptr);
 
@@ -178,7 +184,7 @@ TEST(cubeb, init_destroy_multiple_streams)
   cubeb_stream * stream[8];
   cubeb_stream_params params;
 
-  r = cubeb_init(&ctx, "test_sanity", NULL);
+  r = common_init(&ctx, "test_sanity");
   ASSERT_EQ(r, CUBEB_OK);
   ASSERT_NE(ctx, nullptr);
 
@@ -211,7 +217,7 @@ TEST(cubeb, configure_stream)
   cubeb_stream * stream;
   cubeb_stream_params params;
 
-  r = cubeb_init(&ctx, "test_sanity", NULL);
+  r = common_init(&ctx, "test_sanity");
   ASSERT_EQ(r, CUBEB_OK);
   ASSERT_NE(ctx, nullptr);
 
@@ -247,7 +253,7 @@ test_init_start_stop_destroy_multiple_streams(int early, int delay_ms)
   cubeb_stream * stream[8];
   cubeb_stream_params params;
 
-  r = cubeb_init(&ctx, "test_sanity", NULL);
+  r = common_init(&ctx, "test_sanity");
   ASSERT_EQ(r, CUBEB_OK);
   ASSERT_NE(ctx, nullptr);
 
@@ -347,7 +353,7 @@ TEST(cubeb, init_destroy_multiple_contexts_and_streams)
 #endif
 
   for (i = 0; i < ARRAY_LENGTH(ctx); ++i) {
-    r = cubeb_init(&ctx[i], "test_sanity", NULL);
+    r = common_init(&ctx[i], "test_sanity");
     ASSERT_EQ(r, CUBEB_OK);
     ASSERT_NE(ctx[i], nullptr);
 
@@ -375,7 +381,7 @@ TEST(cubeb, basic_stream_operations)
   cubeb_stream_params params;
   uint64_t position;
 
-  r = cubeb_init(&ctx, "test_sanity", NULL);
+  r = common_init(&ctx, "test_sanity");
   ASSERT_EQ(r, CUBEB_OK);
   ASSERT_NE(ctx, nullptr);
 
@@ -426,7 +432,7 @@ TEST(cubeb, stream_position)
 
   total_frames_written = 0;
 
-  r = cubeb_init(&ctx, "test_sanity", NULL);
+  r = common_init(&ctx, "test_sanity");
   ASSERT_EQ(r, CUBEB_OK);
   ASSERT_NE(ctx, nullptr);
 
@@ -562,7 +568,7 @@ TEST(cubeb, drain)
   delay_callback = 0;
   total_frames_written = 0;
 
-  r = cubeb_init(&ctx, "test_sanity", NULL);
+  r = common_init(&ctx, "test_sanity");
   ASSERT_EQ(r, CUBEB_OK);
   ASSERT_NE(ctx, nullptr);
 

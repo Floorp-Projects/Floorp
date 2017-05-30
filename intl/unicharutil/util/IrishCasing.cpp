@@ -216,7 +216,7 @@ IrishCasing::GetClass(uint32_t aCh)
     return sLcClasses[aCh - 'a'];
   } else if (aCh >= 'A' && aCh <= 'Z') {
     return sUcClasses[aCh - 'A'];
-  } else if (GetGenCategory(aCh) == nsIUGenCategory::kLetter) {
+  } else if (GetGenCategory(aCh) == nsUGenCategory::kLetter) {
     if (aCh == a_ACUTE || aCh == e_ACUTE || aCh == i_ACUTE ||
         aCh == o_ACUTE || aCh == u_ACUTE) {
       return kClass_vowel;

@@ -81,10 +81,10 @@ ServoStyleSheet::ServoStyleSheet(css::SheetParsingMode aParsingMode,
 
 ServoStyleSheet::ServoStyleSheet(const ServoStyleSheet& aCopy,
                                  ServoStyleSheet* aParentToUse,
-                                 css::ImportRule* aOwnerRuleToUse,
+                                 dom::CSSImportRule* aOwnerRuleToUse,
                                  nsIDocument* aDocumentToUse,
                                  nsINode* aOwningNodeToUse)
-  : StyleSheet(aCopy, aDocumentToUse, aOwningNodeToUse)
+  : StyleSheet(aCopy, aOwnerRuleToUse, aDocumentToUse, aOwningNodeToUse)
 {
   mParent = aParentToUse;
 }
@@ -198,16 +198,9 @@ ServoStyleSheet::DropRuleList()
   }
 }
 
-css::Rule*
-ServoStyleSheet::GetDOMOwnerRule() const
-{
-  NS_ERROR("stylo: Don't know how to get DOM owner rule for ServoStyleSheet");
-  return nullptr;
-}
-
 already_AddRefed<StyleSheet>
 ServoStyleSheet::Clone(StyleSheet* aCloneParent,
-                       css::ImportRule* aCloneOwnerRule,
+                       dom::CSSImportRule* aCloneOwnerRule,
                        nsIDocument* aCloneDocument,
                        nsINode* aCloneOwningNode) const
 {
@@ -219,15 +212,6 @@ ServoStyleSheet::Clone(StyleSheet* aCloneParent,
   return clone.forget();
 }
 
-void
-ServoStyleSheet::ClearRuleCascadesInternal()
-{
-  for (StyleSetHandle& setHandle : mStyleSets) {
-    setHandle->AsServo()->NoteStyleSheetsChanged();
-    setHandle->AsServo()->UpdateStylistIfNeeded();
-  }
-}
-
 CSSRuleList*
 ServoStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
 {
@@ -237,8 +221,7 @@ ServoStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
     RefPtr<ServoCssRules> rawRules =
       Servo_StyleSheet_GetRules(Inner()->mSheet).Consume();
     MOZ_ASSERT(rawRules);
-    mRuleList = new ServoCSSRuleList(rawRules.forget());
-    mRuleList->SetStyleSheet(this);
+    mRuleList = new ServoCSSRuleList(rawRules.forget(), this);
   }
   return mRuleList;
 }
@@ -255,12 +238,13 @@ ServoStyleSheet::InsertRuleInternal(const nsAString& aRule,
   if (aRv.Failed()) {
     return 0;
   }
-  // XXX If the inserted rule is an import rule, we should only notify
-  // the document if its associated child stylesheet has been loaded.
   if (mDocument) {
-    // XXX We may not want to get the rule when stylesheet change event
-    // is not enabled.
-    mDocument->StyleRuleAdded(this, mRuleList->GetRule(aIndex));
+    if (mRuleList->GetRuleType(aIndex) != css::Rule::IMPORT_RULE ||
+        !RuleHasPendingChildSheet(mRuleList->GetRule(aIndex))) {
+      // XXX We may not want to get the rule when stylesheet change event
+      // is not enabled.
+      mDocument->StyleRuleAdded(this, mRuleList->GetRule(aIndex));
+    }
   }
   return aIndex;
 }

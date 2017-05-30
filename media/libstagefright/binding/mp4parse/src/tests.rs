@@ -371,7 +371,7 @@ fn read_mvhd_unknown_duration() {
 }
 
 #[test]
-fn read_vpcc() {
+fn read_vpcc_version_0() {
     let data_length = 12u16;
     let mut stream = make_fullbox(BoxSize::Auto, b"vpcC", 0, |s| {
         s.B8(2)
@@ -386,6 +386,36 @@ fn read_vpcc() {
     assert_eq!(stream.head.name, BoxType::VPCodecConfigurationBox);
     let r = super::read_vpcc(&mut stream);
     assert!(r.is_ok());
+}
+
+// TODO: it'd be better to find a real sample here.
+#[test]
+fn read_vpcc_version_1() {
+    let data_length = 12u16;
+    let mut stream = make_fullbox(BoxSize::Auto, b"vpcC", 1, |s| {
+        s.B8(2)     // profile
+         .B8(0)     // level
+         .B8(0b1000_011_0)  // bitdepth (4 bits), chroma (3 bits), video full range (1 bit)
+         .B8(1)     // color primaries
+         .B8(1)     // transfer characteristics
+         .B8(1)     // matrix
+         .B16(data_length)
+         .append_repeated(42, data_length as usize)
+    });
+
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+    assert_eq!(stream.head.name, BoxType::VPCodecConfigurationBox);
+    let r = super::read_vpcc(&mut stream);
+    match r {
+        Ok(vpcc) => {
+            assert_eq!(vpcc.bit_depth, 8);
+            assert_eq!(vpcc.chroma_subsampling, 3);
+            assert_eq!(vpcc.video_full_range, false);
+            assert_eq!(vpcc.matrix.unwrap(), 1);
+        },
+        _ => panic!("vpcc parsing error"),
+    }
 }
 
 #[test]
@@ -868,6 +898,55 @@ fn read_esds() {
     assert_eq!(es.audio_channel_count, Some(6));
     assert_eq!(es.codec_esds, aac_esds);
     assert_eq!(es.decoder_specific_data, aac_dc_descriptor);
+}
+
+#[test]
+fn read_stsd_mp4v() {
+    let mp4v =
+        vec![
+                                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xd0, 0x01, 0xe0, 0x00, 0x48,
+            0x00, 0x00, 0x00, 0x48, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+            0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+            0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+            0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x00, 0x18, 0xff, 0xff,
+            0x00, 0x00, 0x00, 0x4c, 0x65, 0x73, 0x64, 0x73, 0x00, 0x00, 0x00, 0x00,
+            0x03, 0x3e, 0x00, 0x00, 0x1f, 0x04, 0x36, 0x20, 0x11, 0x01, 0x77, 0x00,
+            0x00, 0x03, 0xe8, 0x00, 0x00, 0x03, 0xe8, 0x00, 0x05, 0x27, 0x00, 0x00,
+            0x01, 0xb0, 0x05, 0x00, 0x00, 0x01, 0xb5, 0x0e, 0xcf, 0x00, 0x00, 0x01,
+            0x00, 0x00, 0x00, 0x01, 0x20, 0x00, 0x86, 0xe0, 0x00, 0x2e, 0xa6, 0x60,
+            0x16, 0xf4, 0x01, 0xf4, 0x24, 0xc8, 0x01, 0xe5, 0x16, 0x84, 0x3c, 0x14,
+            0x63, 0x06, 0x01, 0x02,
+        ];
+
+    let esds_specific_data = &mp4v[90 ..];
+    println!("esds_specific_data {:?}", esds_specific_data);
+
+    let mut stream = make_box(BoxSize::Auto, b"mp4v", |s| {
+        s.append_bytes(mp4v.as_slice())
+    });
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+
+    let (codec_type, sample_entry) = super::read_video_sample_entry(&mut stream).unwrap();
+
+    assert_eq!(codec_type, super::CodecType::MP4V);
+
+    match sample_entry {
+        super::SampleEntry::Video(v) => {
+            assert_eq!(v.width, 720);
+            assert_eq!(v.height, 480);
+            match v.codec_specific {
+                super::VideoCodecSpecific::ESDSConfig(esds_data) => {
+                    assert_eq!(esds_data, esds_specific_data.to_vec());
+                },
+                _ => panic!("it should be ESDSConfig!"),
+            }
+        },
+        _ => panic!("it should be a video sample entry!"),
+    }
+
 }
 
 #[test]
