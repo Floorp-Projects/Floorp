@@ -77,17 +77,17 @@ ModuleGenerator::~ModuleGenerator()
         if (outstanding_) {
             AutoLockHelperThreadState lock;
             while (true) {
-                CompileTaskPtrVector& worklist = HelperThreadState().wasmWorklist(lock);
+                CompileTaskPtrVector& worklist = HelperThreadState().wasmWorklist(lock, compileMode_);
                 MOZ_ASSERT(outstanding_ >= worklist.length());
                 outstanding_ -= worklist.length();
                 worklist.clear();
 
-                CompileTaskPtrVector& finished = HelperThreadState().wasmFinishedList(lock);
+                CompileTaskPtrVector& finished = HelperThreadState().wasmFinishedList(lock, compileMode_);
                 MOZ_ASSERT(outstanding_ >= finished.length());
                 outstanding_ -= finished.length();
                 finished.clear();
 
-                uint32_t numFailed = HelperThreadState().harvestFailedWasmJobs(lock);
+                uint32_t numFailed = HelperThreadState().harvestFailedWasmJobs(lock, compileMode_);
                 MOZ_ASSERT(outstanding_ >= numFailed);
                 outstanding_ -= numFailed;
 
@@ -98,8 +98,8 @@ ModuleGenerator::~ModuleGenerator()
             }
         }
 
-        MOZ_ASSERT(HelperThreadState().wasmCompilationInProgress);
-        HelperThreadState().wasmCompilationInProgress = false;
+        MOZ_ASSERT(HelperThreadState().wasmCompilationInProgress(compileMode_));
+        HelperThreadState().wasmCompilationInProgress(compileMode_) = false;
     } else {
         MOZ_ASSERT(!outstanding_);
     }
@@ -281,17 +281,17 @@ ModuleGenerator::finishOutstandingTask()
         while (true) {
             MOZ_ASSERT(outstanding_ > 0);
 
-            if (HelperThreadState().wasmFailed(lock)) {
+            if (HelperThreadState().wasmFailed(lock, compileMode_)) {
                 if (error_) {
                     MOZ_ASSERT(!*error_, "Should have stopped earlier");
-                    *error_ = Move(HelperThreadState().harvestWasmError(lock));
+                    *error_ = Move(HelperThreadState().harvestWasmError(lock, compileMode_));
                 }
                 return false;
             }
 
-            if (!HelperThreadState().wasmFinishedList(lock).empty()) {
+            if (!HelperThreadState().wasmFinishedList(lock, compileMode_).empty()) {
                 outstanding_--;
-                task = HelperThreadState().wasmFinishedList(lock).popCopy();
+                task = HelperThreadState().wasmFinishedList(lock, compileMode_).popCopy();
                 break;
             }
 
@@ -886,14 +886,14 @@ ModuleGenerator::startFuncDefs()
     uint32_t numTasks;
     if (CanUseExtraThreads() &&
         threads.cpuCount > 1 &&
-        threads.wasmCompilationInProgress.compareExchange(false, true))
+        threads.wasmCompilationInProgress(compileMode_).compareExchange(false, true))
     {
 #ifdef DEBUG
         {
             AutoLockHelperThreadState lock;
-            MOZ_ASSERT(!HelperThreadState().wasmFailed(lock));
-            MOZ_ASSERT(HelperThreadState().wasmWorklist(lock).empty());
-            MOZ_ASSERT(HelperThreadState().wasmFinishedList(lock).empty());
+            MOZ_ASSERT(!HelperThreadState().wasmFailed(lock, compileMode_));
+            MOZ_ASSERT(HelperThreadState().wasmWorklist(lock, compileMode_).empty());
+            MOZ_ASSERT(HelperThreadState().wasmFinishedList(lock, compileMode_).empty());
         }
 #endif
         parallel_ = true;
@@ -904,8 +904,12 @@ ModuleGenerator::startFuncDefs()
 
     if (!tasks_.initCapacity(numTasks))
         return false;
-    for (size_t i = 0; i < numTasks; i++)
-        tasks_.infallibleEmplaceBack(*env_, tier_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
+    for (size_t i = 0; i < numTasks; i++) {
+        tasks_.infallibleEmplaceBack(*env_,
+                                     tier_,
+                                     compileMode_,
+                                     COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
+    }
 
     if (!freeTasks_.reserve(numTasks))
         return false;
@@ -956,7 +960,7 @@ ModuleGenerator::launchBatchCompile()
     MOZ_ASSERT(numBatchedFuncs);
 
     if (parallel_) {
-        if (!StartOffThreadWasmCompile(currentTask_))
+        if (!StartOffThreadWasmCompile(currentTask_, compileMode_))
             return false;
         outstanding_++;
     } else {
