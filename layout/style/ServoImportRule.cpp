@@ -14,10 +14,11 @@
 namespace mozilla {
 
 ServoImportRule::ServoImportRule(RefPtr<RawServoImportRule> aRawRule,
+                                 ServoStyleSheet* aSheet,
                                  uint32_t aLine, uint32_t aColumn)
   : CSSImportRule(aLine, aColumn)
   , mRawRule(Move(aRawRule))
-  , mChildSheet(nullptr)
+  , mChildSheet(aSheet)
 {
 }
 

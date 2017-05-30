@@ -21,6 +21,7 @@ class ServoImportRule final : public dom::CSSImportRule
 {
 public:
   ServoImportRule(RefPtr<RawServoImportRule> aRawRule,
+                  ServoStyleSheet* aSheet,
                   uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
