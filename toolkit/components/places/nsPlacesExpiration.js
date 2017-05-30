@@ -114,10 +114,6 @@ const IDLE_TIMEOUT_SECONDS = 5 * 60;
 // clearHistory to decide to skip expiration at shutdown.
 const SHUTDOWN_WITH_RECENT_CLEARHISTORY_TIMEOUT_SECONDS = 10;
 
-// If the pages delta from the last ANALYZE is over this threashold, the tables
-// should be analyzed again.
-const ANALYZE_PAGES_THRESHOLD = 100;
-
 // If the number of pages over history limit is greater than this threshold,
 // expiration will be more aggressive, to bring back history to a saner size.
 const OVERLIMIT_PAGES_THRESHOLD = 1000;
@@ -158,12 +154,11 @@ const STATUS = {
 const ACTION = {
   TIMED:           1 << 0, // happens every this._interval
   TIMED_OVERLIMIT: 1 << 1, // like TIMED but only when history is over limits
-  TIMED_ANALYZE:   1 << 2, // happens when ANALYZE statistics should be updated
-  CLEAR_HISTORY:   1 << 3, // happens when history is cleared
-  SHUTDOWN_DIRTY:  1 << 4, // happens at shutdown for DIRTY state
-  IDLE_DIRTY:      1 << 5, // happens on idle for DIRTY state
-  IDLE_DAILY:      1 << 6, // happens once a day on idle
-  DEBUG:           1 << 7, // happens on TOPIC_DEBUG_START_EXPIRATION
+  CLEAR_HISTORY:   1 << 2, // happens when history is cleared
+  SHUTDOWN_DIRTY:  1 << 3, // happens at shutdown for DIRTY state
+  IDLE_DIRTY:      1 << 4, // happens on idle for DIRTY state
+  IDLE_DAILY:      1 << 5, // happens once a day on idle
+  DEBUG:           1 << 6, // happens on TOPIC_DEBUG_START_EXPIRATION
 };
 
 // The queries we use to expire.
@@ -414,32 +409,6 @@ const EXPIRATION_QUERIES = {
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
              ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG
   },
-
-  // The following queries are used to adjust the sqlite_stat1 table to help the
-  // query planner create better queries.  These should always be run LAST, and
-  // are therefore at the end of the object.
-  // Since also nsNavHistory.cpp executes ANALYZE, the analyzed tables
-  // must be the same in both components.  So ensure they are in sync.
-
-  QUERY_ANALYZE_MOZ_PLACES: {
-    sql: "ANALYZE moz_places",
-    actions: ACTION.TIMED_OVERLIMIT | ACTION.TIMED_ANALYZE |
-             ACTION.CLEAR_HISTORY | ACTION.IDLE_DAILY | ACTION.DEBUG
-  },
-  QUERY_ANALYZE_MOZ_BOOKMARKS: {
-    sql: "ANALYZE moz_bookmarks",
-    actions: ACTION.TIMED_ANALYZE | ACTION.IDLE_DAILY | ACTION.DEBUG
-  },
-  QUERY_ANALYZE_MOZ_HISTORYVISITS: {
-    sql: "ANALYZE moz_historyvisits",
-    actions: ACTION.TIMED_OVERLIMIT | ACTION.TIMED_ANALYZE |
-             ACTION.CLEAR_HISTORY | ACTION.IDLE_DAILY | ACTION.DEBUG
-  },
-  QUERY_ANALYZE_MOZ_INPUTHISTORY: {
-    sql: "ANALYZE moz_inputhistory",
-    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.TIMED_ANALYZE |
-             ACTION.CLEAR_HISTORY | ACTION.IDLE_DAILY | ACTION.DEBUG
-  },
 };
 
 /**
@@ -626,17 +595,10 @@ nsPlacesExpiration.prototype = {
 
   notify: function PEX_timerCallback() {
     // Check if we are over history capacity, if so visits must be expired.
-    this._getPagesStats((aPagesCount, aStatsCount) => {
+    this._getPagesStats((aPagesCount) => {
       let overLimitPages = aPagesCount - this._urisLimit;
       this._overLimit = overLimitPages > 0;
-
       let action = this._overLimit ? ACTION.TIMED_OVERLIMIT : ACTION.TIMED;
-      // If the number of pages changed significantly from the last ANALYZE
-      // update SQLite statistics.
-      if (Math.abs(aPagesCount - aStatsCount) >= ANALYZE_PAGES_THRESHOLD) {
-        action = action | ACTION.TIMED_ANALYZE;
-      }
-
       // Adapt expiration aggressivity to the number of pages over the limit.
       let limit = overLimitPages > OVERLIMIT_PAGES_THRESHOLD ? LIMIT.LARGE
                                                              : LIMIT.SMALL;
@@ -885,27 +847,23 @@ nsPlacesExpiration.prototype = {
    * used by the SQLite query planner.
    *
    * @param aCallback
-   *        invoked on success, function (aPagesCount, aStatsCount).
+   *        invoked on success, function (aPagesCount).
    */
   _getPagesStats: function PEX__getPagesStats(aCallback) {
     if (!this._cachedStatements["LIMIT_COUNT"]) {
       this._cachedStatements["LIMIT_COUNT"] = this._db.createAsyncStatement(
-        `SELECT (SELECT COUNT(*) FROM moz_places),
-                (SELECT SUBSTR(stat,1,LENGTH(stat)-2) FROM sqlite_stat1
-                 WHERE idx = 'moz_places_url_uniqueindex')`
+        `SELECT COUNT(*) FROM moz_places`
       );
     }
     this._cachedStatements["LIMIT_COUNT"].executeAsync({
       _pagesCount: 0,
-      _statsCount: 0,
       handleResult(aResults) {
         let row = aResults.getNextRow();
         this._pagesCount = row.getResultByIndex(0);
-        this._statsCount = row.getResultByIndex(1);
       },
       handleCompletion(aReason) {
         if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-          aCallback(this._pagesCount, this._statsCount);
+          aCallback(this._pagesCount);
         }
       },
       handleError(aError) {
