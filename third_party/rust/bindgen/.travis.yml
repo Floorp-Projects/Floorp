@@ -17,16 +17,15 @@ env:
   global:
     - CARGO_TARGET_DIR=/tmp/bindgen
   matrix:
-    - LLVM_VERSION=3.7.1 BINDGEN_FEATURES=testing_only_llvm_stable
-    - LLVM_VERSION=3.8.1 BINDGEN_FEATURES=testing_only_llvm_stable
-    - LLVM_VERSION=3.9.0 BINDGEN_FEATURES=
-    - LLVM_VERSION=4.0.0 BINDGEN_FEATURES=
+    - LLVM_VERSION=3.7.1 BINDGEN_FEATURES=testing_only_libclang_3_8
+    - LLVM_VERSION=3.8.1 BINDGEN_FEATURES=testing_only_libclang_3_8
+    - LLVM_VERSION=3.9.0 BINDGEN_FEATURES=testing_only_libclang_3_9
+    - LLVM_VERSION=4.0.0 BINDGEN_FEATURES=testing_only_libclang_4
 
 matrix:
   fast_finish: true
   allow_failures:
-    - env: LLVM_VERSION=4.0.0 BINDGEN_FEATURES=
-    - env: LLVM_VERSION=3.7.1 BINDGEN_FEATURES=testing_only_llvm_stable
+    - env: LLVM_VERSION=3.7.1 BINDGEN_FEATURES=testing_only_libclang_3_8
 
 cache:
   directories:
