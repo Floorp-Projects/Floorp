@@ -126,6 +126,18 @@ public:
     explicit WebGLExtensionCompressedTextureS3TC(WebGLContext*);
     virtual ~WebGLExtensionCompressedTextureS3TC();
 
+    static bool IsSupported(const WebGLContext*);
+
+    DECL_WEBGL_EXTENSION_GOOP
+};
+
+class WebGLExtensionCompressedTextureS3TC_SRGB
+    : public WebGLExtensionBase
+{
+public:
+    explicit WebGLExtensionCompressedTextureS3TC_SRGB(WebGLContext*);
+    virtual ~WebGLExtensionCompressedTextureS3TC_SRGB();
+
     DECL_WEBGL_EXTENSION_GOOP
 };
 
