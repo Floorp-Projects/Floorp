@@ -29,6 +29,4 @@ include $(topsrcdir)/config/config.mk
 # process from getting killed
 EXPAND_LIBS_EXEC := $(PYTHON) $(topsrcdir)/config/link.py
 
-LINK_PDBFILE = xul-gtest.pdb
-
 endif
