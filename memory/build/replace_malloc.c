@@ -129,6 +129,12 @@ replace_malloc_init_funcs()
   replace_malloc_table.name = REPLACE_MALLOC_GET_FUNC(handle, name);
 #include "malloc_decls.h"
   }
+
+#define MALLOC_DECL(name, ...) \
+  if (!replace_malloc_table.name) { \
+    replace_malloc_table.name = je_ ## name; \
+  }
+#include "malloc_decls.h"
 }
 
 /*
@@ -174,11 +180,7 @@ init()
   { \
     if (MOZ_UNLIKELY(!replace_malloc_initialized)) \
       init(); \
-    if (MOZ_LIKELY(!replace_malloc_table.name)) { \
-      return je_ ## name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
-    } else { \
-      return replace_malloc_table.name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
-    } \
+    return replace_malloc_table.name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
   }
 
 #define GENERIC_MALLOC_DECL(name, return_type, ...) \
