@@ -8,6 +8,7 @@
 #define CUBEB_c2f983e9_c96f_e71c_72c3_bbf62992a382
 
 #include <stdint.h>
+#include <stdlib.h>
 #include "cubeb_export.h"
 
 #if defined(__cplusplus)
@@ -352,16 +353,16 @@ typedef struct {
   unsigned int max_rate;      /**< Maximum sample rate supported. */
   unsigned int min_rate;      /**< Minimum sample rate supported. */
 
-  unsigned int latency_lo; /**< Lowest possible latency in frames. */
-  unsigned int latency_hi; /**< Higest possible latency in frames. */
+  unsigned int latency_lo;    /**< Lowest possible latency in frames. */
+  unsigned int latency_hi;    /**< Higest possible latency in frames. */
 } cubeb_device_info;
 
 /** Device collection.
  *  Returned by `cubeb_enumerate_devices` and destroyed by
  *  `cubeb_device_collection_destroy`. */
 typedef struct {
-  uint32_t count;                 /**< Device count in collection. */
-  cubeb_device_info * device[1];  /**< Array of pointers to device info. */
+  cubeb_device_info * device; /**< Array of pointers to device info. */
+  size_t count;               /**< Device count in collection. */
 } cubeb_device_collection;
 
 /** User supplied data callback.
@@ -612,7 +613,7 @@ CUBEB_EXPORT int cubeb_stream_register_device_changed_callback(cubeb_stream * st
     @retval CUBEB_ERROR_NOT_SUPPORTED */
 CUBEB_EXPORT int cubeb_enumerate_devices(cubeb * context,
                                          cubeb_device_type devtype,
-                                         cubeb_device_collection ** collection);
+                                         cubeb_device_collection * collection);
 
 /** Destroy a cubeb_device_collection, and its `cubeb_device_info`.
     @param context

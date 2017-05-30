@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/ChildDNSService.h"
 #include "mozilla/net/DNSRequestChild.h"
 #include "mozilla/net/NeckoChild.h"
@@ -222,6 +223,12 @@ DNSRequestChild::StartRequest()
     = SystemGroup::EventTargetFor(TaskCategory::Other);
 
   gNeckoChild->SetEventTargetForActor(this, systemGroupEventTarget);
+
+  mozilla::dom::ContentChild* cc =
+    static_cast<mozilla::dom::ContentChild*>(gNeckoChild->Manager());
+  if (cc->IsShuttingDown()) {
+    return;
+  }
 
   // Send request to Parent process.
   gNeckoChild->SendPDNSRequestConstructor(this, mHost, mOriginAttributes,

@@ -11,8 +11,7 @@
 #include "mozilla/Attributes.h"
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/css/Rule.h"
-#include "nsIDOMCSSImportRule.h"
+#include "mozilla/dom/CSSImportRule.h"
 
 class nsMediaList;
 class nsString;
@@ -28,8 +27,7 @@ class MediaList;
 
 namespace css {
 
-class ImportRule final : public Rule,
-                         public nsIDOMCSSImportRule
+class ImportRule final : public dom::CSSImportRule
 {
 public:
   ImportRule(nsMediaList* aMedia, const nsString& aURLSpec,
@@ -41,34 +39,27 @@ private:
 public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ImportRule, Rule)
   NS_DECL_ISUPPORTS_INHERITED
-  virtual bool IsCCLeaf() const override;
 
-  using Rule::GetStyleSheet; // unhide since nsIDOMCSSImportRule has its own GetStyleSheet
+  // unhide since nsIDOMCSSImportRule has its own GetStyleSheet
+  using dom::CSSImportRule::GetStyleSheet;
 
   // Rule methods
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
-  virtual int32_t GetType() const override;
-  using Rule::GetType;
   virtual already_AddRefed<Rule> Clone() const override;
 
   void SetSheet(CSSStyleSheet*);
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
-
   // nsIDOMCSSImportRule interface
-  NS_DECL_NSIDOMCSSIMPORTRULE
+  NS_IMETHOD GetHref(nsAString& aHref) final;
 
   // WebIDL interface
-  uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
-  // The XPCOM GetHref is fine, since it never fails.
-  dom::MediaList* Media() const;
-  StyleSheet* GetStyleSheet() const;
+  dom::MediaList* Media() const final;
+  StyleSheet* GetStyleSheet() const final;
 
 private:
   nsString  mURLSpec;

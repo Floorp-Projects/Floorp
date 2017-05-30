@@ -18,22 +18,26 @@
     // code path, such that we can assert each code path with a single word.
     var scriptLoaderStateMachine = {
       "scriptloader_load_source": {
-        "scriptloader_encode_and_execute": {
-          "scriptloader_bytecode_saved": "bytecode_saved",
-          "scriptloader_bytecode_failed": "bytecode_failed"
-        },
-        "scriptloader_execute": "source_exec"
+        "scriptloader_execute": {
+          "scriptloader_encode": {
+            "scriptloader_bytecode_saved": "bytecode_saved",
+            "scriptloader_bytecode_failed": "bytecode_failed"
+          },
+          "scriptloader_no_encode": "source_exec"
+        }
       },
       "scriptloader_load_bytecode": {
         "scriptloader_fallback": {
           // Replicate the top-level state machine without
           // "scriptloader_load_bytecode" transition.
           "scriptloader_load_source": {
-            "scriptloader_encode_and_execute": {
-              "scriptloader_bytecode_saved": "fallback_bytecode_saved",
-              "scriptloader_bytecode_failed": "fallback_bytecode_failed"
-            },
-            "scriptloader_execute": "fallback_source_exec"
+            "scriptloader_execute": {
+              "scriptloader_encode": {
+                "scriptloader_bytecode_saved": "fallback_bytecode_saved",
+                "scriptloader_bytecode_failed": "fallback_bytecode_failed"
+              },
+              "scriptloader_no_encode": "fallback_source_exec"
+            }
           }
         },
         "scriptloader_execute": "bytecode_exec"
@@ -93,7 +97,8 @@
       iwin.addEventListener("scriptloader_load_bytecode", log_event);
       iwin.addEventListener("scriptloader_generate_bytecode", log_event);
       iwin.addEventListener("scriptloader_execute", log_event);
-      iwin.addEventListener("scriptloader_encode_and_execute", log_event);
+      iwin.addEventListener("scriptloader_encode", log_event);
+      iwin.addEventListener("scriptloader_no_encode", log_event);
       iwin.addEventListener("scriptloader_bytecode_saved", log_event);
       iwin.addEventListener("scriptloader_bytecode_failed", log_event);
       iwin.addEventListener("scriptloader_fallback", log_event);

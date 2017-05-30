@@ -53,13 +53,39 @@ class MPITest : public ::testing::Test {
     mp_clear(&a);
     mp_clear(&b);
   }
+
+  void TestDiv(const std::string a_string, const std::string b_string,
+               const std::string result) {
+    mp_int a, b, c;
+    MP_DIGITS(&a) = 0;
+    MP_DIGITS(&b) = 0;
+    MP_DIGITS(&c) = 0;
+    ASSERT_EQ(MP_OKAY, mp_init(&a));
+    ASSERT_EQ(MP_OKAY, mp_init(&b));
+    ASSERT_EQ(MP_OKAY, mp_init(&c));
+
+    mp_read_radix(&a, a_string.c_str(), 16);
+    mp_read_radix(&b, b_string.c_str(), 16);
+    mp_read_radix(&c, result.c_str(), 16);
+    EXPECT_EQ(MP_OKAY, mp_div(&a, &b, &a, &b));
+    EXPECT_EQ(0, mp_cmp(&a, &c));
+
+    mp_clear(&a);
+    mp_clear(&b);
+    mp_clear(&c);
+  }
 };
 
 TEST_F(MPITest, MpiCmp01Test) { TestCmp("0", "1", -1); }
 TEST_F(MPITest, MpiCmp10Test) { TestCmp("1", "0", 1); }
 TEST_F(MPITest, MpiCmp00Test) { TestCmp("0", "0", 0); }
 TEST_F(MPITest, MpiCmp11Test) { TestCmp("1", "1", 0); }
+TEST_F(MPITest, MpiDiv32ErrorTest) {
+  TestDiv("FFFF00FFFFFFFF000000000000", "FFFF00FFFFFFFFFF", "FFFFFFFFFF");
+}
 
+#ifdef NSS_X64
+// This tests assumes 64-bit mp_digits.
 TEST_F(MPITest, MpiCmpUnalignedTest) {
   mp_int a, b, c;
   MP_DIGITS(&a) = 0;
@@ -90,6 +116,7 @@ TEST_F(MPITest, MpiCmpUnalignedTest) {
   mp_clear(&b);
   mp_clear(&c);
 }
+#endif
 
 // This test is slow. Disable it by default so we can run these tests on CI.
 class DISABLED_MPITest : public ::testing::Test {};

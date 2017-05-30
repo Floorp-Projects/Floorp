@@ -21,9 +21,11 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.distribution.PartnerBrowserCustomizationsClient;
 import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.notifications.WhatsNewReceiver;
 import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.promotion.AddToHomeScreenPromotion;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -49,6 +51,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import static org.mozilla.gecko.Tab.TabType;
+import static org.mozilla.gecko.mma.MmaDelegate.VISITING_A_WEBSITE_WITH_MATCH_TO_PAST_HISTORY;
 
 public class Tabs implements BundleEventListener {
     private static final String LOGTAG = "GeckoTabs";
@@ -1088,6 +1091,7 @@ public class Tabs implements BundleEventListener {
 
         if (!delayLoad && !background) {
             selectTab(tabToSelect.getId());
+            tracking(url);
         }
 
         // Load favicon instantly for about:home page because it's already cached
@@ -1095,7 +1099,15 @@ public class Tabs implements BundleEventListener {
             tabToSelect.loadFavicon();
         }
 
+
         return tabToSelect;
+    }
+
+    private void tracking(String url) {
+        AddToHomeScreenPromotion.URLHistory history = AddToHomeScreenPromotion.getHistoryForURL(mAppContext, url);
+        if (history != null && history.visits > 0) {
+            MmaDelegate.track(VISITING_A_WEBSITE_WITH_MATCH_TO_PAST_HISTORY, history.visits);
+        }
     }
 
     /**

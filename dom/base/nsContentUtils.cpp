@@ -199,7 +199,6 @@
 #include "nsTextFragment.h"
 #include "nsTextNode.h"
 #include "nsThreadUtils.h"
-#include "nsUnicharUtilCIID.h"
 #include "nsUnicodeProperties.h"
 #include "nsViewManager.h"
 #include "nsViewportInfo.h"
@@ -1759,9 +1758,9 @@ nsContentUtils::IsFirstLetterPunctuationAt(const nsTextFragment* aFrag, uint32_t
 // static
 bool nsContentUtils::IsAlphanumeric(uint32_t aChar)
 {
-  nsIUGenCategory::nsUGenCategory cat = mozilla::unicode::GetGenCategory(aChar);
+  nsUGenCategory cat = mozilla::unicode::GetGenCategory(aChar);
 
-  return (cat == nsIUGenCategory::kLetter || cat == nsIUGenCategory::kNumber);
+  return (cat == nsUGenCategory::kLetter || cat == nsUGenCategory::kNumber);
 }
 
 // static

@@ -63,11 +63,6 @@ queue.filter(task => {
     if (task.collection == "make") {
       return false;
     }
-
-    // Disable mpi tests for now on 32-bit builds (bug 1362392)
-    if (task.platform == "linux32") {
-      return false;
-    }
   }
 
 
@@ -168,6 +163,7 @@ export default async function main() {
   });
 
   await scheduleFuzzing();
+  await scheduleFuzzing32();
 
   await scheduleTools();
 
@@ -361,6 +357,110 @@ async function scheduleFuzzing() {
       "-c",
       "bin/checkout.sh && " +
       "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz=tls"
+    ],
+  }));
+
+  // Schedule tests.
+  queue.scheduleTask(merge(base, {
+    parent: task_build_tls,
+    name: "Gtests",
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/run_tests.sh"
+    ],
+    env: {GTESTFILTER: "*Fuzz*"},
+    tests: "ssl_gtests gtests",
+    cycle: "standard",
+    symbol: "Gtest",
+    kind: "test"
+  }));
+
+  // Schedule fuzzing runs.
+  let run_base = merge(base, {parent: task_build, kind: "test"});
+  scheduleFuzzingRun(run_base, "CertDN", "certDN", 4096);
+  scheduleFuzzingRun(run_base, "QuickDER", "quickder", 10000);
+
+  // Schedule MPI fuzzing runs.
+  let mpi_base = merge(run_base, {group: "MPI"});
+  let mpi_names = ["add", "addmod", "div", "expmod", "mod", "mulmod", "sqr",
+                   "sqrmod", "sub", "submod"];
+  for (let name of mpi_names) {
+    scheduleFuzzingRun(mpi_base, `MPI (${name})`, `mpi-${name}`, 4096, name);
+  }
+  scheduleFuzzingRun(mpi_base, `MPI (invmod)`, `mpi-invmod`, 256, "invmod");
+
+  // Schedule TLS fuzzing runs (non-fuzzing mode).
+  let tls_base = merge(run_base, {group: "TLS"});
+  scheduleFuzzingRun(tls_base, "TLS Client", "tls-client", 20000, "client-nfm",
+                     "tls-client-no_fuzzer_mode");
+  scheduleFuzzingRun(tls_base, "TLS Server", "tls-server", 20000, "server-nfm",
+                     "tls-server-no_fuzzer_mode");
+  scheduleFuzzingRun(tls_base, "DTLS Client", "dtls-client", 20000,
+                     "dtls-client-nfm", "dtls-client-no_fuzzer_mode");
+  scheduleFuzzingRun(tls_base, "DTLS Server", "dtls-server", 20000,
+                     "dtls-server-nfm", "dtls-server-no_fuzzer_mode");
+
+  // Schedule TLS fuzzing runs (fuzzing mode).
+  let tls_fm_base = merge(tls_base, {parent: task_build_tls});
+  scheduleFuzzingRun(tls_fm_base, "TLS Client", "tls-client", 20000, "client");
+  scheduleFuzzingRun(tls_fm_base, "TLS Server", "tls-server", 20000, "server");
+  scheduleFuzzingRun(tls_fm_base, "DTLS Client", "dtls-client", 20000, "dtls-client");
+  scheduleFuzzingRun(tls_fm_base, "DTLS Server", "dtls-server", 20000, "dtls-server");
+
+  return queue.submit();
+}
+
+async function scheduleFuzzing32() {
+  let base = {
+    env: {
+      ASAN_OPTIONS: "allocator_may_return_null=1:detect_stack_use_after_return=1",
+      UBSAN_OPTIONS: "print_stacktrace=1",
+      NSS_DISABLE_ARENA_FREE_LIST: "1",
+      NSS_DISABLE_UNLOAD: "1",
+      CC: "clang",
+      CCC: "clang++"
+    },
+    features: ["allowPtrace"],
+    platform: "linux32",
+    collection: "fuzz",
+    image: FUZZ_IMAGE
+  };
+
+  // Build base definition.
+  let build_base = merge({
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && " +
+      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz -m32"
+    ],
+    artifacts: {
+      public: {
+        expires: 24 * 7,
+        type: "directory",
+        path: "/home/worker/artifacts"
+      }
+    },
+    kind: "build",
+    symbol: "B"
+  }, base);
+
+  // The task that builds NSPR+NSS.
+  let task_build = queue.scheduleTask(merge(build_base, {
+    name: "Linux 32 (debug, fuzz)"
+  }));
+
+  // The task that builds NSPR+NSS (TLS fuzzing mode).
+  let task_build_tls = queue.scheduleTask(merge(build_base, {
+    name: "Linux 32 (debug, TLS fuzz)",
+    symbol: "B",
+    group: "TLS",
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && " +
+      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz=tls -m32"
     ],
   }));
 

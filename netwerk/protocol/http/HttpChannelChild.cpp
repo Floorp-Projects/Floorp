@@ -1823,6 +1823,11 @@ HttpChannelChild::ConnectParent(uint32_t registrarId)
     return NS_ERROR_FAILURE;
   }
 
+  ContentChild* cc = static_cast<ContentChild*>(gNeckoChild->Manager());
+  if (cc->IsShuttingDown()) {
+    return NS_ERROR_FAILURE;
+  }
+
   HttpBaseChannel::SetDocshellUserAgentOverride();
 
   // The socket transport in the chrome process now holds a logical ref to us
@@ -2665,6 +2670,9 @@ HttpChannelChild::OpenAlternativeOutputStream(const nsACString & aType, nsIOutpu
   if (!mIPCOpen) {
     return NS_ERROR_NOT_AVAILABLE;
   }
+  if (static_cast<ContentChild*>(gNeckoChild->Manager())->IsShuttingDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   RefPtr<AltDataOutputStreamChild> stream =
     static_cast<AltDataOutputStreamChild*>(gNeckoChild->SendPAltDataOutputStreamConstructor(nsCString(aType), this));
@@ -2995,6 +3003,9 @@ HttpChannelChild::DivertToParent(ChannelDiverterChild **aChild)
   rv = Suspend();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+  if (static_cast<ContentChild*>(gNeckoChild->Manager())->IsShuttingDown()) {
+    return NS_ERROR_FAILURE;
   }
 
   HttpChannelDiverterArgs args;

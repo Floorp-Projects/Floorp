@@ -28,5 +28,6 @@ mk_add_options AUTOCLOBBER=
 # This overrides the settings in the common android mozconfig
 ac_add_options --without-mozilla-api-keyfile
 ac_add_options --without-adjust-sdk-keyfile
+ac_add_options --without-leanplum-sdk-keyfile
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"

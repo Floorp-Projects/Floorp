@@ -4981,10 +4981,11 @@ TSFTextStore::OnFocusChange(bool aGotFocus,
   }
 
   RefPtr<ITfDocumentMgr> prevFocusedDocumentMgr;
+  bool hasFocus = ThinksHavingFocus();
   RefPtr<TSFTextStore> oldTextStore = sEnabledTextStore.forget();
 
-  // If currently sEnableTextStore has focus, notifies TSF of losing focus.
-  if (ThinksHavingFocus()) {
+  // If currently oldTextStore still has focus, notifies TSF of losing focus.
+  if (hasFocus) {
     RefPtr<ITfThreadMgr> threadMgr = sThreadMgr;
     DebugOnly<HRESULT> hr =
       threadMgr->AssociateFocus(
@@ -4995,8 +4996,8 @@ TSFTextStore::OnFocusChange(bool aGotFocus,
                  "different documentMgr has been associated with the window");
   }
 
-  // If there is sEnabledTextStore, we don't use it in the new focused editor.
-  // Release it now.
+  // Even if there was a focused TextStore, we won't use it with new focused
+  // editor.  So, release it now.
   if (oldTextStore) {
     oldTextStore->Destroy();
   }

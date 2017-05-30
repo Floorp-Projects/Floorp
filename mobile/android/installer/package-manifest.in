@@ -173,7 +173,6 @@
 @BINPATH@/components/layout_xul_tree.xpt
 @BINPATH@/components/layout_xul.xpt
 @BINPATH@/components/locale.xpt
-@BINPATH@/components/lwbrk.xpt
 #ifdef MOZ_GECKO_PROFILER
 @BINPATH@/components/memory_profiler.xpt
 #endif
