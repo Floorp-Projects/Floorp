@@ -81,10 +81,10 @@ ServoStyleSheet::ServoStyleSheet(css::SheetParsingMode aParsingMode,
 
 ServoStyleSheet::ServoStyleSheet(const ServoStyleSheet& aCopy,
                                  ServoStyleSheet* aParentToUse,
-                                 css::ImportRule* aOwnerRuleToUse,
+                                 dom::CSSImportRule* aOwnerRuleToUse,
                                  nsIDocument* aDocumentToUse,
                                  nsINode* aOwningNodeToUse)
-  : StyleSheet(aCopy, aDocumentToUse, aOwningNodeToUse)
+  : StyleSheet(aCopy, aOwnerRuleToUse, aDocumentToUse, aOwningNodeToUse)
 {
   mParent = aParentToUse;
 }
@@ -198,16 +198,9 @@ ServoStyleSheet::DropRuleList()
   }
 }
 
-css::Rule*
-ServoStyleSheet::GetDOMOwnerRule() const
-{
-  NS_ERROR("stylo: Don't know how to get DOM owner rule for ServoStyleSheet");
-  return nullptr;
-}
-
 already_AddRefed<StyleSheet>
 ServoStyleSheet::Clone(StyleSheet* aCloneParent,
-                       css::ImportRule* aCloneOwnerRule,
+                       dom::CSSImportRule* aCloneOwnerRule,
                        nsIDocument* aCloneDocument,
                        nsINode* aCloneOwningNode) const
 {

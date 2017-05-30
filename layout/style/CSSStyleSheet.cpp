@@ -327,7 +327,6 @@ CSSStyleSheetInner::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
                              CORSMode aCORSMode, ReferrerPolicy aReferrerPolicy)
   : StyleSheet(StyleBackendType::Gecko, aParsingMode),
-    mOwnerRule(nullptr),
     mInRuleProcessorCache(false),
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
@@ -342,7 +341,6 @@ CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
                              ReferrerPolicy aReferrerPolicy,
                              const SRIMetadata& aIntegrity)
   : StyleSheet(StyleBackendType::Gecko, aParsingMode),
-    mOwnerRule(nullptr),
     mInRuleProcessorCache(false),
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
@@ -354,11 +352,10 @@ CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
 
 CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
                              CSSStyleSheet* aParentToUse,
-                             css::ImportRule* aOwnerRuleToUse,
+                             dom::CSSImportRule* aOwnerRuleToUse,
                              nsIDocument* aDocumentToUse,
                              nsINode* aOwningNodeToUse)
-  : StyleSheet(aCopy, aDocumentToUse, aOwningNodeToUse),
-    mOwnerRule(aOwnerRuleToUse),
+  : StyleSheet(aCopy, aOwnerRuleToUse, aDocumentToUse, aOwningNodeToUse),
     mInRuleProcessorCache(false),
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
@@ -570,7 +567,7 @@ CSSStyleSheet::GetStyleRuleAt(int32_t aIndex) const
 
 already_AddRefed<StyleSheet>
 CSSStyleSheet::Clone(StyleSheet* aCloneParent,
-                     css::ImportRule* aCloneOwnerRule,
+                     dom::CSSImportRule* aCloneOwnerRule,
                      nsIDocument* aCloneDocument,
                      nsINode* aCloneOwningNode) const
 {
@@ -658,12 +655,6 @@ void
 CSSStyleSheet::SetScopeElement(dom::Element* aScopeElement)
 {
   mScopeElement = aScopeElement;
-}
-
-css::Rule*
-CSSStyleSheet::GetDOMOwnerRule() const
-{
-  return mOwnerRule;
 }
 
 CSSRuleList*
