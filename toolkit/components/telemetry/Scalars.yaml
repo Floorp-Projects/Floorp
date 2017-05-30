@@ -267,6 +267,22 @@ storage.sync.api.usage:
     record_in_processes:
       - main
 
+services.sync:
+  fxa_verification_method:
+    bug_numbers:
+      - 1353645
+    description: >
+      The method we used ("push" or "poll") to determine the verification of a
+      Firefox Account email.
+    expires: "60"
+    kind: string
+    keyed: false
+    notification_emails:
+      - sync-staff@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+
 # The following section contains WebRTC nICEr scalars
 # For more info on ICE, see https://tools.ietf.org/html/rfc5245
 # For more info on STUN, see https://tools.ietf.org/html/rfc5389

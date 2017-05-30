@@ -29,7 +29,6 @@
 #endif
 #include "cubeb_resampler.h"
 #include "cubeb_ring_array.h"
-#include "cubeb_utils.h"
 #include <algorithm>
 #include <atomic>
 #include <vector>
@@ -388,8 +387,9 @@ is_extra_input_needed(cubeb_stream * stm)
 
 static void
 audiounit_mix_output_buffer(cubeb_stream * stm,
+                            long output_frames,
                             void * output_buffer,
-                            long output_frames)
+                            unsigned long output_buffer_length)
 {
   cubeb_stream_params output_mixer_params = {
     stm->output_stream_params.format,
@@ -400,7 +400,9 @@ audiounit_mix_output_buffer(cubeb_stream * stm,
 
   // The downmixing(from 5.1) supports in-place conversion, so we can use
   // the same buffer for both input and output of the mixer.
-  cubeb_mixer_mix(stm->mixer.get(), output_buffer, output_frames, output_buffer,
+  cubeb_mixer_mix(stm->mixer.get(), output_frames,
+                  output_buffer, output_buffer_length,
+                  output_buffer, output_buffer_length,
                   &stm->output_stream_params, &output_mixer_params);
 }
 
@@ -522,7 +524,8 @@ audiounit_output_callback(void * user_ptr,
   }
 
   /* Mixing */
-  audiounit_mix_output_buffer(stm, output_buffer, output_frames);
+  unsigned long output_buffer_length = outBufferList->mBuffers[0].mDataByteSize;
+  audiounit_mix_output_buffer(stm, output_frames, output_buffer, output_buffer_length);
 
   return noErr;
 }
@@ -2918,11 +2921,12 @@ audiounit_strref_to_cstr_utf8(CFStringRef strref)
   }
 
   len = CFStringGetLength(strref);
-  size = CFStringGetMaximumSizeForEncoding(len, kCFStringEncodingUTF8);
-  ret = static_cast<char *>(malloc(size));
+  // Add 1 to size to allow for '\0' termination character.
+  size = CFStringGetMaximumSizeForEncoding(len, kCFStringEncodingUTF8) + 1;
+  ret = new char[size];
 
   if (!CFStringGetCString(strref, ret, size, kCFStringEncodingUTF8)) {
-    free(ret);
+    delete [] ret;
     ret = NULL;
   }
 
@@ -3019,12 +3023,11 @@ audiounit_get_device_presentation_latency(AudioObjectID devid, AudioObjectProper
   return dev + stream + offset;
 }
 
-static cubeb_device_info *
-audiounit_create_device_from_hwdev(AudioObjectID devid, cubeb_device_type type)
+static int
+audiounit_create_device_from_hwdev(cubeb_device_info * ret, AudioObjectID devid, cubeb_device_type type)
 {
   AudioObjectPropertyAddress adr = { 0, 0, kAudioObjectPropertyElementMaster };
   UInt32 size, ch, latency;
-  cubeb_device_info * ret;
   CFStringRef str = NULL;
   AudioValueRange range;
 
@@ -3033,15 +3036,14 @@ audiounit_create_device_from_hwdev(AudioObjectID devid, cubeb_device_type type)
   } else if (type == CUBEB_DEVICE_TYPE_INPUT) {
     adr.mScope = kAudioDevicePropertyScopeInput;
   } else {
-    return NULL;
+    return CUBEB_ERROR;
   }
 
   ch = audiounit_get_channel_count(devid, adr.mScope);
   if (ch == 0) {
-    return NULL;
+    return CUBEB_ERROR;
   }
 
-  ret = new cubeb_device_info;
   PodZero(ret, 1);
 
   size = sizeof(CFStringRef);
@@ -3050,7 +3052,7 @@ audiounit_create_device_from_hwdev(AudioObjectID devid, cubeb_device_type type)
     ret->device_id = audiounit_strref_to_cstr_utf8(str);
     static_assert(sizeof(cubeb_devid) >= sizeof(decltype(devid)), "cubeb_devid can't represent devid");
     ret->devid = reinterpret_cast<cubeb_devid>(devid);
-    ret->group_id = strdup(ret->device_id);
+    ret->group_id = ret->device_id;
     CFRelease(str);
   }
 
@@ -3108,12 +3110,12 @@ audiounit_create_device_from_hwdev(AudioObjectID devid, cubeb_device_type type)
     ret->latency_hi = 100 * ret->default_rate / 1000; /* Default to 100ms */
   }
 
-  return ret;
+  return CUBEB_OK;
 }
 
 static int
 audiounit_enumerate_devices(cubeb * /* context */, cubeb_device_type type,
-                            cubeb_device_collection ** collection)
+                            cubeb_device_collection * collection)
 {
   std::vector<AudioObjectID> hwdevs;
   uint32_t i;
@@ -3124,25 +3126,51 @@ audiounit_enumerate_devices(cubeb * /* context */, cubeb_device_type type,
     return CUBEB_ERROR;
   }
 
-  *collection = static_cast<cubeb_device_collection *>(malloc(sizeof(cubeb_device_collection) +
-							      sizeof(cubeb_device_info*) * (hwdevs.size() > 0 ? hwdevs.size() - 1 : 0)));
-  (*collection)->count = 0;
+  auto devices = new cubeb_device_info[hwdevs.size()];
+  collection->count = 0;
 
   if (type & CUBEB_DEVICE_TYPE_OUTPUT) {
     for (i = 0; i < hwdevs.size(); i++) {
-      cubeb_device_info * cur = audiounit_create_device_from_hwdev(hwdevs[i], CUBEB_DEVICE_TYPE_OUTPUT);
-      if (cur != nullptr)
-	(*collection)->device[(*collection)->count++] = cur;
+      auto device = &devices[collection->count];
+      auto err = audiounit_create_device_from_hwdev(device, hwdevs[i], CUBEB_DEVICE_TYPE_OUTPUT);
+      if (err != CUBEB_OK) {
+        continue;
+      }
+      collection->count += 1;
     }
   }
 
   if (type & CUBEB_DEVICE_TYPE_INPUT) {
     for (i = 0; i < hwdevs.size(); i++) {
-      cubeb_device_info * cur = audiounit_create_device_from_hwdev(hwdevs[i], CUBEB_DEVICE_TYPE_INPUT);
-      if (cur != nullptr)
-	(*collection)->device[(*collection)->count++] = cur;
+      auto device = &devices[collection->count];
+      auto err = audiounit_create_device_from_hwdev(device, hwdevs[i], CUBEB_DEVICE_TYPE_INPUT);
+      if (err != CUBEB_OK) {
+        continue;
+      }
+      collection->count += 1;
     }
   }
+
+  if (collection->count > 0) {
+    collection->device = devices;
+  } else {
+    delete [] devices;
+    collection->device = NULL;
+  }
+
+  return CUBEB_OK;
+}
+
+static int
+audiounit_device_collection_destroy(cubeb * /* context */,
+                                    cubeb_device_collection * collection)
+{
+  for (size_t i = 0; i < collection->count; i++) {
+    delete [] collection->device[i].device_id;
+    delete [] collection->device[i].friendly_name;
+    delete [] collection->device[i].vendor_name;
+  }
+  delete [] collection->device;
 
   return CUBEB_OK;
 }
@@ -3305,7 +3333,7 @@ cubeb_ops const audiounit_ops = {
   /*.get_preferred_sample_rate =*/ audiounit_get_preferred_sample_rate,
   /*.get_preferred_channel_layout =*/ audiounit_get_preferred_channel_layout,
   /*.enumerate_devices =*/ audiounit_enumerate_devices,
-  /*.device_collection_destroy =*/ cubeb_utils_default_device_collection_destroy,
+  /*.device_collection_destroy =*/ audiounit_device_collection_destroy,
   /*.destroy =*/ audiounit_destroy,
   /*.stream_init =*/ audiounit_stream_init,
   /*.stream_destroy =*/ audiounit_stream_destroy,

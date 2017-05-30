@@ -25,15 +25,6 @@ RestyleManager::PostRestyleEvent(dom::Element* aElement,
 }
 
 void
-RestyleManager::PostRestyleEventForCSSRuleChanges(dom::Element* aElement,
-                                                   nsRestyleHint aRestyleHint,
-                                                   nsChangeHint aMinChangeHint)
-{
-  MOZ_STYLO_FORWARD(PostRestyleEventForCSSRuleChanges,
-                    (aElement, aRestyleHint, aMinChangeHint));
-}
-
-void
 RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                                     nsRestyleHint aRestyleHint)
 {

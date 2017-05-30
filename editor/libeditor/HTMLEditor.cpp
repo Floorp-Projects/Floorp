@@ -21,7 +21,6 @@
 #include "TextEditUtils.h"
 #include "TypeInState.h"
 
-#include "nsIDOMText.h"
 #include "nsIDOMMozNamedAttrMap.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMAttr.h"

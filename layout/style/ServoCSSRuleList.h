@@ -25,7 +25,12 @@ class Rule;
 class ServoCSSRuleList final : public dom::CSSRuleList
 {
 public:
-  explicit ServoCSSRuleList(already_AddRefed<ServoCssRules> aRawRules);
+  // @param aDirectOwnerStyleSheet should be set to the owner stylesheet
+  // if this rule list is owned directly by a stylesheet, which means it
+  // is a top level CSSRuleList. If it's owned by a group rule, nullptr.
+  // If this param is set, the caller doesn't need to call SetStyleSheet.
+  ServoCSSRuleList(already_AddRefed<ServoCssRules> aRawRules,
+                   ServoStyleSheet* aDirectOwnerStyleSheet);
   css::GroupRule* GetParentRule() const { return mParentRule; }
   void SetParentRule(css::GroupRule* aParentRule);
   void SetStyleSheet(StyleSheet* aSheet);
@@ -69,6 +74,9 @@ private:
   void EnumerateInstantiatedRules(Func aCallback);
 
   void DropAllRules();
+
+  template<typename ChildSheetGetter>
+  inline void ConstructImportRule(uint32_t aIndex, ChildSheetGetter aGetter);
 
   // mStyleSheet may be nullptr when it drops the reference to us.
   ServoStyleSheet* mStyleSheet = nullptr;

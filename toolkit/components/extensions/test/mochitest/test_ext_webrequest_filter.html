@@ -172,7 +172,7 @@ add_task(async function test_webRequest_filter_background() {
       status: 404,
       events: ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived", "onResponseStarted"],
       optional_events: ["onCompleted", "onErrorOccurred"],
-      type: "other",
+      type: "xmlhttprequest",
       origin: SimpleTest.getTestFileURL("webrequest_worker.js?test2"),
     },
   };

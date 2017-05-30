@@ -24,6 +24,8 @@ var WebRequestCommon = {
       case Ci.nsIContentPolicy.TYPE_OBJECT: return "object";
       case Ci.nsIContentPolicy.TYPE_OBJECT_SUBREQUEST: return "object_subrequest";
       case Ci.nsIContentPolicy.TYPE_XMLHTTPREQUEST: return "xmlhttprequest";
+      // TYPE_FETCH returns xmlhttprequest for cross-browser compatibility.
+      case Ci.nsIContentPolicy.TYPE_FETCH: return "xmlhttprequest";
       case Ci.nsIContentPolicy.TYPE_XBL: return "xbl";
       case Ci.nsIContentPolicy.TYPE_XSLT: return "xslt";
       case Ci.nsIContentPolicy.TYPE_PING: return "ping";

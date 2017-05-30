@@ -289,7 +289,7 @@ fuzzy(1,5000) == mask-opacity-01.svg mask-opacity-01-ref.svg
 fuzzy-if(d2d||skiaContent,1,6400) == mask-type-01.svg mask-type-01-ref.svg
 fuzzy-if(d2d||skiaContent,1,6400) == mask-type-02.svg mask-type-01-ref.svg
 fuzzy-if(d2d||skiaContent,1,6400) == mask-type-03.svg mask-type-01-ref.svg
-fuzzy-if(d2d||skiaContent,1,6400) fails-if(styloVsGecko||stylo) == mask-type-04.svg mask-type-01-ref.svg
+fuzzy-if(d2d||skiaContent,1,6400) == mask-type-04.svg mask-type-01-ref.svg
 == mask-use-element-01.svg pass.svg
 
 != nested-mask-mode.svg about:blank
