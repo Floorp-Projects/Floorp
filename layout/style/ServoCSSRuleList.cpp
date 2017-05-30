@@ -22,8 +22,10 @@
 
 namespace mozilla {
 
-ServoCSSRuleList::ServoCSSRuleList(already_AddRefed<ServoCssRules> aRawRules)
-  : mRawRules(aRawRules)
+ServoCSSRuleList::ServoCSSRuleList(already_AddRefed<ServoCssRules> aRawRules,
+                                   ServoStyleSheet* aDirectOwnerStyleSheet)
+  : mStyleSheet(aDirectOwnerStyleSheet)
+  , mRawRules(aRawRules)
 {
   Servo_CssRules_ListTypes(mRawRules, &mRules);
   // XXX We may want to eagerly create object for import rule, so that
