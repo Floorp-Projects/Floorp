@@ -170,6 +170,11 @@ public:
   void PrependStyleSheet(StyleSheet* aSheet);
 
   StyleSheet* GetFirstChild() const;
+  StyleSheet* GetMostRecentlyAddedChildSheet() const {
+    // New child sheet can only be prepended into the linked list of
+    // child sheets, so the most recently added one is always the first.
+    return GetFirstChild();
+  }
 
   // Principal() never returns a null pointer.
   inline nsIPrincipal* Principal() const;
@@ -252,6 +257,13 @@ public:
   nsresult DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex);
   nsresult InsertRuleIntoGroup(const nsAString& aRule,
                                css::GroupRule* aGroup, uint32_t aIndex);
+
+  template<typename Func>
+  void EnumerateChildSheets(Func aCallback) {
+    for (StyleSheet* child = GetFirstChild(); child; child = child->mNext) {
+      aCallback(child);
+    }
+  }
 
 private:
   // Get a handle to the various stylesheet bits which live on the 'inner' for
