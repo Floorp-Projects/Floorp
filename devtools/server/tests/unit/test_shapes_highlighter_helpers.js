@@ -11,7 +11,8 @@ const {
   splitCoords,
   coordToPercent,
   evalCalcExpression,
-  shapeModeToCssPropertyName
+  shapeModeToCssPropertyName,
+  getCirclePath
 } = require("devtools/server/actors/highlighters/shapes");
 
 function run_test() {
@@ -19,6 +20,7 @@ function run_test() {
   test_coord_to_percent();
   test_eval_calc_expression();
   test_shape_mode_to_css_property_name();
+  test_get_circle_path();
   run_next_test();
 }
 
@@ -97,5 +99,29 @@ function test_shape_mode_to_css_property_name() {
 
   for (let { desc, expr, expected } of tests) {
     equal(shapeModeToCssPropertyName(expr), expected, desc);
+  }
+}
+
+function test_get_circle_path() {
+  const tests = [{
+    desc: "getCirclePath with no resizing, no zoom, 1:1 ratio",
+    cx: 0, cy: 0, width: 100, height: 100, zoom: 1,
+    expected: "M-10,0a10,10 0 1,0 20,0a10,10 0 1,0 -20,0"
+  }, {
+    desc: "getCirclePath with resizing, no zoom, 1:1 ratio",
+    cx: 0, cy: 0, width: 200, height: 200, zoom: 1,
+    expected: "M-5,0a5,5 0 1,0 10,0a5,5 0 1,0 -10,0"
+  }, {
+    desc: "getCirclePath with resizing, zoom, 1:1 ratio",
+    cx: 0, cy: 0, width: 200, height: 200, zoom: 2,
+    expected: "M-2.5,0a2.5,2.5 0 1,0 5,0a2.5,2.5 0 1,0 -5,0"
+  }, {
+    desc: "getCirclePath with resizing, zoom, non-square ratio",
+    cx: 0, cy: 0, width: 100, height: 200, zoom: 2,
+    expected: "M-5,0a5,2.5 0 1,0 10,0a5,2.5 0 1,0 -10,0"
+  }];
+
+  for (let { desc, cx, cy, width, height, zoom, expected } of tests) {
+    equal(getCirclePath(cx, cy, width, height, zoom), expected, desc);
   }
 }
