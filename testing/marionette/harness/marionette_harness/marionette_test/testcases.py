@@ -60,13 +60,6 @@ class MetaParameterized(type):
         return type.__new__(cls, name, bases, attrs)
 
 
-class JSTest:
-    head_js_re = re.compile(r"MARIONETTE_HEAD_JS(\s*)=(\s*)['|\"](.*?)['|\"];")
-    context_re = re.compile(r"MARIONETTE_CONTEXT(\s*)=(\s*)['|\"](.*?)['|\"];")
-    timeout_re = re.compile(r"MARIONETTE_TIMEOUT(\s*)=(\s*)(\d+);")
-    inactivity_timeout_re = re.compile(r"MARIONETTE_INACTIVITY_TIMEOUT(\s*)=(\s*)(\d+);")
-
-
 class CommonTestCase(unittest.TestCase):
 
     __metaclass__ = MetaParameterized
@@ -235,12 +228,9 @@ class CommonTestCase(unittest.TestCase):
 
     @property
     def test_name(self):
-        if hasattr(self, 'jsFile'):
-            return os.path.basename(self.jsFile)
-        else:
-            return '{0}.py {1}.{2}'.format(self.__class__.__module__,
-                                           self.__class__.__name__,
-                                           self._testMethodName)
+        return '{0}.py {1}.{2}'.format(self.__class__.__module__,
+                                       self.__class__.__name__,
+                                       self._testMethodName)
 
     def id(self):
         # TBPL starring requires that the "test name" field of a failure message
@@ -297,127 +287,6 @@ if (!testUtils.hasOwnProperty("specialPowersObserver")) {
   testUtils.specialPowersObserver.init();
 }
 """)
-
-    def run_js_test(self, filename, marionette=None):
-        """Run a JavaScript test file.
-
-        It collects its set of assertions into the current test's results.
-
-        :param filename: The path to the JavaScript test file to execute.
-                         May be relative to the current script.
-        :param marionette: The Marionette object in which to execute the test.
-                           Defaults to self.marionette.
-        """
-        marionette = marionette or self.marionette
-        if not os.path.isabs(filename):
-            # Find the caller's filename and make the path relative to that.
-            caller_file = sys._getframe(1).f_globals.get('__file__', '')
-            caller_file = os.path.abspath(caller_file)
-            filename = os.path.join(os.path.dirname(caller_file), filename)
-        self.assert_(os.path.exists(filename),
-                     'Script "{}" must exist' .format(filename))
-        original_test_name = self.marionette.test_name
-        self.marionette.test_name = os.path.basename(filename)
-        f = open(filename, 'r')
-        js = f.read()
-        args = []
-
-        head_js = JSTest.head_js_re.search(js)
-        if head_js:
-            head_js = head_js.group(3)
-            head = open(os.path.join(os.path.dirname(filename), head_js), 'r')
-            js = head.read() + js
-
-        context = JSTest.context_re.search(js)
-        if context:
-            context = context.group(3)
-        else:
-            context = 'content'
-
-        if 'SpecialPowers' in js:
-            self.setup_SpecialPowers_observer()
-
-            if context == 'content':
-                js = "var SpecialPowers = window.wrappedJSObject.SpecialPowers;\n" + js
-            else:
-                marionette.execute_script("""
-                if (typeof(SpecialPowers) == 'undefined') {
-                  let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-                    .getService(Components.interfaces.mozIJSSubScriptLoader);
-                  loader.loadSubScript("chrome://specialpowers/content/specialpowersAPI.js");
-                  loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserverAPI.js");
-                  loader.loadSubScript("chrome://specialpowers/content/ChromePowers.js");
-                }
-                """)
-
-        marionette.set_context(context)
-
-        if context != 'chrome':
-            marionette.navigate('data:text/html,<html>test page</html>')
-
-        timeout = JSTest.timeout_re.search(js)
-        if timeout:
-            ms = timeout.group(3)
-            marionette.timeout.script = int(ms) / 1000.0
-
-        inactivity_timeout = JSTest.inactivity_timeout_re.search(js)
-        if inactivity_timeout:
-            inactivity_timeout = int(inactivity_timeout.group(3))
-
-        try:
-            results = marionette.execute_js_script(
-                js,
-                args,
-                inactivity_timeout=inactivity_timeout,
-                filename=os.path.basename(filename)
-            )
-
-            self.assertTrue('timeout' not in filename,
-                            'expected timeout not triggered')
-
-            if 'fail' in filename:
-                self.assertTrue(len(results['failures']) > 0,
-                                "expected test failures didn't occur")
-            else:
-                for failure in results['failures']:
-                    diag = "" if failure.get('diag') is None else failure['diag']
-                    name = ("got false, expected true" if failure.get('name') is None else
-                            failure['name'])
-                    self.logger.test_status(self.test_name, name, 'FAIL',
-                                            message=diag)
-                for failure in results['expectedFailures']:
-                    diag = "" if failure.get('diag') is None else failure['diag']
-                    name = ("got false, expected false" if failure.get('name') is None else
-                            failure['name'])
-                    self.logger.test_status(self.test_name, name, 'FAIL',
-                                            expected='FAIL', message=diag)
-                for failure in results['unexpectedSuccesses']:
-                    diag = "" if failure.get('diag') is None else failure['diag']
-                    name = ("got true, expected false" if failure.get('name') is None else
-                            failure['name'])
-                    self.logger.test_status(self.test_name, name, 'PASS',
-                                            expected='FAIL', message=diag)
-                self.assertEqual(0, len(results['failures']),
-                                 '{} tests failed' .format(len(results['failures'])))
-                if len(results['unexpectedSuccesses']) > 0:
-                    raise _UnexpectedSuccess('')
-                if len(results['expectedFailures']) > 0:
-                    raise _ExpectedFailure((AssertionError, AssertionError(''), None))
-
-            self.assertTrue(results['passed'] +
-                            len(results['failures']) +
-                            len(results['expectedFailures']) +
-                            len(results['unexpectedSuccesses']) > 0,
-                            'no tests run')
-
-        except ScriptTimeoutException:
-            if 'timeout' in filename:
-                # expected exception
-                pass
-            else:
-                self.loglines = marionette.get_logs()
-                raise
-        self.marionette.test_name = original_test_name
 
 
 class MarionetteTestCase(CommonTestCase):
