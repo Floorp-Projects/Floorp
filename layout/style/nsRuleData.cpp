@@ -5,6 +5,7 @@
 
 #include "nsRuleData.h"
 
+#include "nsAttrValueInlines.h"
 #include "nsCSSParser.h"
 #include "mozilla/Poison.h"
 #include <stdint.h>

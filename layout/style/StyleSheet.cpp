@@ -6,6 +6,7 @@
 
 #include "mozilla/StyleSheet.h"
 
+#include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/ShadowRoot.h"
@@ -22,6 +23,7 @@ StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMod
   : mParent(nullptr)
   , mDocument(nullptr)
   , mOwningNode(nullptr)
+  , mOwnerRule(nullptr)
   , mParsingMode(aParsingMode)
   , mType(aType)
   , mDisabled(false)
@@ -32,12 +34,14 @@ StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMod
 }
 
 StyleSheet::StyleSheet(const StyleSheet& aCopy,
+                       dom::CSSImportRule* aOwnerRuleToUse,
                        nsIDocument* aDocumentToUse,
                        nsINode* aOwningNodeToUse)
   : mParent(nullptr)
   , mTitle(aCopy.mTitle)
   , mDocument(aDocumentToUse)
   , mOwningNode(aOwningNodeToUse)
+  , mOwnerRule(aOwnerRuleToUse)
   , mParsingMode(aCopy.mParsingMode)
   , mType(aCopy.mType)
   , mDisabled(aCopy.mDisabled)
@@ -124,15 +128,6 @@ StyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "child sheet");
     cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, childSheet));
     childSheet = childSheet->mNext;
-  }
-}
-
-void
-StyleSheet::ClearRuleCascades()
-{
-  ClearRuleCascadesInternal();
-  if (mParent) {
-    mParent->ClearRuleCascades();
   }
 }
 
@@ -448,7 +443,14 @@ StyleSheet::EnsureUniqueInner()
   mInner = clone;
 
   // Ensure we're using the new rules.
-  ClearRuleCascades();
+  //
+  // NOTE: In Servo, all kind of changes that change the set of selectors or
+  // rules we match are covered by the PresShell notifications. In Gecko that's
+  // true too, but this is probably needed because selectors are not refcounted
+  // and can become stale.
+  if (CSSStyleSheet* geckoSheet = GetAsGecko()) {
+    geckoSheet->ClearRuleCascades();
+  }
 
   // let our containing style sets know that if we call
   // nsPresContext::EnsureSafeToHandOutCSSRules we will need to restyle the
@@ -482,6 +484,12 @@ StyleSheet::GetCssRules(nsIPrincipal& aSubjectPrincipal,
     return nullptr;
   }
   FORWARD_INTERNAL(GetCssRulesInternal, (aRv))
+}
+
+css::Rule*
+StyleSheet::GetDOMOwnerRule() const
+{
+  return mOwnerRule;
 }
 
 uint32_t
@@ -687,16 +695,13 @@ StyleSheet::ClearAssociatedDocument()
 }
 
 void
-StyleSheet::AppendStyleSheet(StyleSheet* aSheet)
+StyleSheet::PrependStyleSheet(StyleSheet* aSheet)
 {
   NS_PRECONDITION(nullptr != aSheet, "null arg");
 
   WillDirty();
-  RefPtr<StyleSheet>* tail = &SheetInfo().mFirstChild;
-  while (*tail) {
-    tail = &(*tail)->mNext;
-  }
-  *tail = aSheet;
+  aSheet->mNext = SheetInfo().mFirstChild;
+  SheetInfo().mFirstChild = aSheet;
 
   // This is not reference counted. Our parent tells us when
   // it's going away.
@@ -792,6 +797,17 @@ JSObject*
 StyleSheet::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return dom::CSSStyleSheetBinding::Wrap(aCx, this, aGivenProto);
+}
+
+/* static */ bool
+StyleSheet::RuleHasPendingChildSheet(css::Rule* aRule)
+{
+  MOZ_ASSERT(aRule->GetType() == css::Rule::IMPORT_RULE);
+  auto rule = static_cast<dom::CSSImportRule*>(aRule);
+  if (StyleSheet* childSheet = rule->GetStyleSheet()) {
+    return !childSheet->IsComplete();
+  }
+  return false;
 }
 
 } // namespace mozilla

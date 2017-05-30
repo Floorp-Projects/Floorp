@@ -77,7 +77,7 @@ TEST(cubeb, record)
   int r;
   user_state_record stream_state = { false };
 
-  r = cubeb_init(&ctx, "Cubeb record example", NULL);
+  r = common_init(&ctx, "Cubeb record example");
   ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb library";
 
   std::unique_ptr<cubeb, decltype(&cubeb_destroy)>

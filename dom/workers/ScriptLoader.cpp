@@ -1239,7 +1239,7 @@ private:
         mWorkerPrivate->SetBaseURI(finalURI);
       }
 
-#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
       MOZ_DIAGNOSTIC_ASSERT(principal);
 

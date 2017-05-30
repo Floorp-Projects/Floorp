@@ -13,18 +13,10 @@ add_task(async function() {
      Services.prefs.getBoolPref("layers.acceleration.disabled"),
      "checkbox should represent inverted pref value before clicking on checkbox");
 
-  if (AppConstants.platform == "win") {
-    is(Services.prefs.getBoolPref("gfx.direct2d.disabled"), false, "direct2d pref should be set to false");
-  }
-
   checkbox.click();
 
   is(!checkbox.checked,
      Services.prefs.getBoolPref("layers.acceleration.disabled"),
      "checkbox should represent inverted pref value after clicking on checkbox");
-  if (AppConstants.platform == "win") {
-    is(Services.prefs.getBoolPref("gfx.direct2d.disabled"), true, "direct2d pref should be set to true");
-  }
-
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
