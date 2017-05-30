@@ -6,6 +6,7 @@
 
 #include "mozilla/StyleSheet.h"
 
+#include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/ShadowRoot.h"
@@ -22,6 +23,7 @@ StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMod
   : mParent(nullptr)
   , mDocument(nullptr)
   , mOwningNode(nullptr)
+  , mOwnerRule(nullptr)
   , mParsingMode(aParsingMode)
   , mType(aType)
   , mDisabled(false)
@@ -32,12 +34,14 @@ StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMod
 }
 
 StyleSheet::StyleSheet(const StyleSheet& aCopy,
+                       dom::CSSImportRule* aOwnerRuleToUse,
                        nsIDocument* aDocumentToUse,
                        nsINode* aOwningNodeToUse)
   : mParent(nullptr)
   , mTitle(aCopy.mTitle)
   , mDocument(aDocumentToUse)
   , mOwningNode(aOwningNodeToUse)
+  , mOwnerRule(aOwnerRuleToUse)
   , mParsingMode(aCopy.mParsingMode)
   , mType(aCopy.mType)
   , mDisabled(aCopy.mDisabled)
@@ -480,6 +484,12 @@ StyleSheet::GetCssRules(nsIPrincipal& aSubjectPrincipal,
     return nullptr;
   }
   FORWARD_INTERNAL(GetCssRulesInternal, (aRv))
+}
+
+css::Rule*
+StyleSheet::GetDOMOwnerRule() const
+{
+  return mOwnerRule;
 }
 
 uint32_t
