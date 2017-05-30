@@ -75,6 +75,9 @@ private:
 
   void DropAllRules();
 
+  template<typename ChildSheetGetter>
+  inline void ConstructImportRule(uint32_t aIndex, ChildSheetGetter aGetter);
+
   // mStyleSheet may be nullptr when it drops the reference to us.
   ServoStyleSheet* mStyleSheet = nullptr;
   // mParentRule is nullptr if it isn't a nested rule list.
