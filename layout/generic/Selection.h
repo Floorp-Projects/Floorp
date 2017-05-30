@@ -339,9 +339,13 @@ private:
     int32_t mFlags;
   };
 
-  void setAnchorFocusRange(int32_t aIndex); // pass in index into mRanges;
-                                            // negative value clears
-                                            // mAnchorFocusRange
+  /**
+   * Set mAnchorFocusRange to mRanges[aIndex] if aIndex is a valid index.
+   * Set mAnchorFocusRange to nullptr if aIndex is negative.
+   * Otherwise, i.e., if aIndex is positive but out of bounds of mRanges, do
+   * nothing.
+   */
+  void SetAnchorFocusRange(int32_t aIndex);
   void SelectFramesForContent(nsIContent* aContent, bool aSelected);
   nsresult SelectAllFramesForContent(nsIContentIterator* aInnerIter,
                                      nsIContent *aContent,
