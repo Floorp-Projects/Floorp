@@ -336,9 +336,8 @@ class MarionetteTestCase(CommonTestCase):
     def setUp(self):
         super(MarionetteTestCase, self).setUp()
         self.marionette.test_name = self.test_name
-        self.marionette.execute_script("log('TEST-START: {0}:{1}')"
-                                       .format(self.filepath.replace('\\', '\\\\'),
-                                               self.methodName),
+        self.marionette.execute_script("log('TEST-START: {0}')"
+                                       .format(self.test_name),
                                        sandbox="simpletest")
 
     def tearDown(self):
@@ -350,9 +349,8 @@ class MarionetteTestCase(CommonTestCase):
         if not self.marionette.crashed:
             try:
                 self.marionette.clear_imported_scripts()
-                self.marionette.execute_script("log('TEST-END: {0}:{1}')"
-                                               .format(self.filepath.replace('\\', '\\\\'),
-                                                       self.methodName),
+                self.marionette.execute_script("log('TEST-END: {0}')"
+                                               .format(self.test_name),
                                                sandbox="simpletest")
                 self.marionette.test_name = None
             except (MarionetteException, IOError):
