@@ -123,6 +123,7 @@ SERVO_BINDING_FUNC(Servo_CssRules_DeleteRule, nsresult,
   SERVO_BINDING_FUNC(Servo_##type_##Rule_GetRules, ServoCssRulesStrong, \
                      RawServo##type_##RuleBorrowed rule)
 BASIC_RULE_FUNCS(Style)
+BASIC_RULE_FUNCS(Import)
 BASIC_RULE_FUNCS_WITHOUT_GETTER(Keyframe)
 BASIC_RULE_FUNCS(Keyframes)
 GROUP_RULE_FUNCS(Media)
@@ -144,6 +145,8 @@ SERVO_BINDING_FUNC(Servo_StyleRule_SetStyle, void,
                    RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_StyleRule_GetSelectorText, void,
                    RawServoStyleRuleBorrowed rule, nsAString* result)
+SERVO_BINDING_FUNC(Servo_ImportRule_GetHref, void,
+                   RawServoImportRuleBorrowed rule, nsAString* result)
 SERVO_BINDING_FUNC(Servo_Keyframe_GetKeyText, void,
                    RawServoKeyframeBorrowed keyframe, nsAString* result)
 // Returns whether it successfully changes the key text.
