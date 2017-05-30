@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Preferences.h"
+#include "AOMDecoder.h"
 #include "MediaContainerType.h"
 #include "MediaDecoderStateMachine.h"
 #include "WebMDemuxer.h"
@@ -51,6 +52,11 @@ WebMDecoder::IsSupportedType(const MediaContainerType& aContainerType)
          codec.EqualsLiteral("vp9") || codec.EqualsLiteral("vp9.0"))) {
       continue;
     }
+#ifdef MOZ_AV1
+    if (isVideo && AOMDecoder::IsSupportedCodec(codec)) {
+      continue;
+    }
+#endif
     // Some unsupported codec.
     return false;
   }
