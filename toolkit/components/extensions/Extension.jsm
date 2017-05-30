@@ -1100,11 +1100,6 @@ this.Extension = class extends ExtensionData {
 
     Services.ppmm.broadcastAsyncMessage("Extension:Shutdown", {id: this.id});
 
-    if (this.rootURI instanceof Ci.nsIJARURI) {
-      let file = this.rootURI.JARFile.QueryInterface(Ci.nsIFileURL).file;
-      Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache", {path: file.path});
-    }
-
     MessageChannel.abortResponses({extensionId: this.id});
 
     ExtensionManagement.shutdownExtension(this.uuid);
