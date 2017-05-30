@@ -27,7 +27,6 @@ Cu.import("chrome://marionette/content/logging.js");
 Cu.import("chrome://marionette/content/navigate.js");
 Cu.import("chrome://marionette/content/proxy.js");
 Cu.import("chrome://marionette/content/session.js");
-Cu.import("chrome://marionette/content/simpletest.js");
 
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
@@ -490,7 +489,6 @@ var deleteCookieFn = dispatch(deleteCookie);
 var deleteAllCookiesFn = dispatch(deleteAllCookies);
 var executeFn = dispatch(execute);
 var executeInSandboxFn = dispatch(executeInSandbox);
-var executeSimpleTestFn = dispatch(executeSimpleTest);
 var sendKeysToElementFn = dispatch(sendKeysToElement);
 
 /**
@@ -500,7 +498,6 @@ function startListeners() {
   addMessageListenerId("Marionette:newSession", newSession);
   addMessageListenerId("Marionette:execute", executeFn);
   addMessageListenerId("Marionette:executeInSandbox", executeInSandboxFn);
-  addMessageListenerId("Marionette:executeSimpleTest", executeSimpleTestFn);
   addMessageListenerId("Marionette:singleTap", singleTapFn);
   addMessageListenerId("Marionette:performActions", performActionsFn);
   addMessageListenerId("Marionette:releaseActions", releaseActionsFn);
@@ -576,7 +573,6 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:newSession", newSession);
   removeMessageListenerId("Marionette:execute", executeFn);
   removeMessageListenerId("Marionette:executeInSandbox", executeInSandboxFn);
-  removeMessageListenerId("Marionette:executeSimpleTest", executeSimpleTestFn);
   removeMessageListenerId("Marionette:singleTap", singleTapFn);
   removeMessageListenerId("Marionette:performActions", performActionsFn);
   removeMessageListenerId("Marionette:releaseActions", releaseActionsFn);
@@ -751,31 +747,6 @@ function* executeInSandbox(script, args, timeout, opts) {
     sb = sandbox.augment(sb, {global: sb});
     sb = sandbox.augment(sb, new logging.Adapter(contentLog));
   }
-
-  let wargs = evaluate.fromJSON(
-      args, seenEls, curContainer.frame, curContainer.shadowRoot);
-  let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
-
-  let res = yield evaluatePromise;
-  sendSyncMessage(
-      "Marionette:shareData",
-      {log: evaluate.toJSON(contentLog.get(), seenEls)});
-  return evaluate.toJSON(res, seenEls);
-}
-
-function* executeSimpleTest(script, args, timeout, opts) {
-  opts.timeout = timeout;
-  let win = curContainer.frame;
-
-  let harness = new simpletest.Harness(
-      win,
-      "content",
-      contentLog,
-      timeout,
-      marionetteTestName);
-  let sb = sandbox.createSimpleTest(curContainer.frame, harness);
-  // TODO(ato): Not sure this is needed:
-  sb = sandbox.augment(sb, new logging.Adapter(contentLog));
 
   let wargs = evaluate.fromJSON(
       args, seenEls, curContainer.frame, curContainer.shadowRoot);
