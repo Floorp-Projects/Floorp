@@ -502,46 +502,20 @@ var GeneralData = {
    */
   render(aPing) {
     setHasData("general-data-section", true);
-    let table = document.createElement("table");
+    let generalDataSection = document.getElementById("general-data");
+    removeAllChildNodes(generalDataSection);
 
-    let caption = document.createElement("caption");
-    let captionString = bundle.GetStringFromName("generalDataTitle");
-    caption.appendChild(document.createTextNode(captionString + "\n"));
-    table.appendChild(caption);
-
-    let headings = document.createElement("tr");
-    this.appendColumn(headings, "th", bundle.GetStringFromName("generalDataHeadingName") + "\t");
-    this.appendColumn(headings, "th", bundle.GetStringFromName("generalDataHeadingValue") + "\t");
-    table.appendChild(headings);
+    const headings = [
+      "generalDataHeadingName",
+      "generalDataHeadingValue",
+    ].map(h => bundle.GetStringFromName(h));
 
     // The payload & environment parts are handled by other renderers.
     let ignoreSections = ["payload", "environment"];
     let data = explodeObject(filterObject(aPing, ignoreSections));
 
-    for (let [path, value] of data) {
-        let row = document.createElement("tr");
-        this.appendColumn(row, "td", path + "\t");
-        this.appendColumn(row, "td", value + "\t");
-        table.appendChild(row);
-    }
-
-    let dataDiv = document.getElementById("general-data");
-    removeAllChildNodes(dataDiv);
-    dataDiv.appendChild(table);
-  },
-
-  /**
-   * Helper function for appending a column to the data table.
-   *
-   * @param aRowElement Parent row element
-   * @param aColType Column's tag name
-   * @param aColText Column contents
-   */
-  appendColumn(aRowElement, aColType, aColText) {
-    let colElement = document.createElement(aColType);
-    let colTextElement = document.createTextNode(aColText);
-    colElement.appendChild(colTextElement);
-    aRowElement.appendChild(colElement);
+    const table = GenericTable.render(data, headings);
+    generalDataSection.appendChild(table);
   },
 };
 
