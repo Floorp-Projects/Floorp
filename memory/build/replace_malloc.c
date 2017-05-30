@@ -47,15 +47,18 @@ static const malloc_table_t malloc_table = {
 #include "malloc_decls.h"
 };
 
+static malloc_table_t replace_malloc_table;
+
 #ifdef MOZ_NO_REPLACE_FUNC_DECL
 #  define MALLOC_DECL(name, return_type, ...) \
-    typedef return_type (replace_ ## name ## _impl_t)(__VA_ARGS__); \
-    replace_ ## name ## _impl_t *replace_ ## name = NULL;
-#  define MALLOC_FUNCS MALLOC_FUNCS_ALL
+    typedef return_type (name ## _impl_t)(__VA_ARGS__); \
+    name ## _impl_t* replace_ ## name = NULL;
+#  define MALLOC_FUNCS (MALLOC_FUNCS_INIT | MALLOC_FUNCS_BRIDGE)
 #  include "malloc_decls.h"
+#endif
 
-#  ifdef XP_WIN
-#    include <windows.h>
+#ifdef XP_WIN
+#  include <windows.h>
 
 typedef HMODULE replace_malloc_handle_t;
 
@@ -71,11 +74,11 @@ replace_malloc_handle()
 }
 
 #    define REPLACE_MALLOC_GET_FUNC(handle, name) \
-      (replace_ ## name ## _impl_t*) GetProcAddress(handle, "replace_" # name)
+      (name ## _impl_t*) GetProcAddress(handle, "replace_" # name)
 
-#  elif defined(MOZ_WIDGET_ANDROID)
-#    include <dlfcn.h>
-#    include <stdlib.h>
+#elif defined(MOZ_WIDGET_ANDROID)
+#  include <dlfcn.h>
+#  include <stdlib.h>
 
 typedef void* replace_malloc_handle_t;
 
@@ -89,26 +92,44 @@ replace_malloc_handle()
   return NULL;
 }
 
-#    define REPLACE_MALLOC_GET_FUNC(handle, name) \
-      (replace_ ## name ## _impl_t*) dlsym(handle, "replace_" # name)
+#  define REPLACE_MALLOC_GET_FUNC(handle, name) \
+    (name ## _impl_t*) dlsym(handle, "replace_" # name)
 
-#  else
-#    error No implementation for replace_malloc_handle()
-#  endif
+#else
+
+#  include <stdbool.h>
+
+typedef bool replace_malloc_handle_t;
+
+static replace_malloc_handle_t
+replace_malloc_handle()
+{
+  return true;
+}
+
+#  define REPLACE_MALLOC_GET_FUNC(handle, name) \
+    replace_ ## name
+
+#endif
 
 static void
 replace_malloc_init_funcs()
 {
   replace_malloc_handle_t handle = replace_malloc_handle();
   if (handle) {
+#ifdef MOZ_NO_REPLACE_FUNC_DECL
 #  define MALLOC_DECL(name, ...) \
     replace_ ## name = REPLACE_MALLOC_GET_FUNC(handle, name);
 
-#  define MALLOC_FUNCS MALLOC_FUNCS_ALL
+#  define MALLOC_FUNCS (MALLOC_FUNCS_INIT | MALLOC_FUNCS_BRIDGE)
 #  include "malloc_decls.h"
+#endif
+
+#define MALLOC_DECL(name, ...) \
+  replace_malloc_table.name = REPLACE_MALLOC_GET_FUNC(handle, name);
+#include "malloc_decls.h"
   }
 }
-#endif /* MOZ_NO_REPLACE_FUNC_DECL */
 
 /*
  * Below is the malloc implementation overriding jemalloc and calling the
@@ -119,9 +140,7 @@ static int replace_malloc_initialized = 0;
 static void
 init()
 {
-#ifdef MOZ_NO_REPLACE_FUNC_DECL
   replace_malloc_init_funcs();
-#endif
   // Set this *before* calling replace_init, otherwise if replace_init calls
   // malloc() we'll get an infinite loop.
   replace_malloc_initialized = 1;
@@ -155,10 +174,10 @@ init()
   { \
     if (MOZ_UNLIKELY(!replace_malloc_initialized)) \
       init(); \
-    if (MOZ_LIKELY(!replace_ ## name)) { \
+    if (MOZ_LIKELY(!replace_malloc_table.name)) { \
       return je_ ## name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
     } else { \
-      return replace_ ## name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
+      return replace_malloc_table.name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
     } \
   }
 
