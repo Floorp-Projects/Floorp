@@ -17,7 +17,7 @@ if (typeof(Cc) == "undefined") {
 
 this.SpecialPowersError = function(aMsg) {
   Error.call(this);
-  let {stack} = new Error();
+  // let {stack} = new Error();
   this.message = aMsg;
   this.name = "SpecialPowersError";
 }
@@ -86,16 +86,16 @@ function getTestPlugin(pluginName) {
 
 SpecialPowersObserverAPI.prototype = {
 
-  _observe: function(aSubject, aTopic, aData) {
+  _observe(aSubject, aTopic, aData) {
     function addDumpIDToMessage(propertyName) {
       try {
         var id = aSubject.getPropertyAsAString(propertyName);
       } catch (ex) {
-        var id = null;
+        id = null;
       }
       if (id) {
-        message.dumpIDs.push({id: id, extension: "dmp"});
-        message.dumpIDs.push({id: id, extension: "extra"});
+        message.dumpIDs.push({id, extension: "dmp"});
+        message.dumpIDs.push({id, extension: "extra"});
       }
     }
 
@@ -124,7 +124,7 @@ SpecialPowersObserverAPI.prototype = {
     }
   },
 
-  _getCrashDumpDir: function() {
+  _getCrashDumpDir() {
     if (!this._crashDumpDir) {
       this._crashDumpDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
       this._crashDumpDir.append("minidumps");
@@ -132,7 +132,7 @@ SpecialPowersObserverAPI.prototype = {
     return this._crashDumpDir;
   },
 
-  _getPendingCrashDumpDir: function() {
+  _getPendingCrashDumpDir() {
     if (!this._pendingCrashDumpDir) {
       this._pendingCrashDumpDir = Services.dirsvc.get("UAppData", Ci.nsIFile);
       this._pendingCrashDumpDir.append("Crash Reports");
@@ -141,7 +141,7 @@ SpecialPowersObserverAPI.prototype = {
     return this._pendingCrashDumpDir;
   },
 
-  _getExtraData: function(dumpId) {
+  _getExtraData(dumpId) {
     let extraFile = this._getCrashDumpDir().clone();
     extraFile.append(dumpId + ".extra");
     if (!extraFile.exists()) {
@@ -150,7 +150,7 @@ SpecialPowersObserverAPI.prototype = {
     return parseKeyValuePairsFromFile(extraFile);
   },
 
-  _deleteCrashDumpFiles: function(aFilenames) {
+  _deleteCrashDumpFiles(aFilenames) {
     var crashDumpDir = this._getCrashDumpDir();
     if (!crashDumpDir.exists()) {
       return false;
@@ -169,7 +169,7 @@ SpecialPowersObserverAPI.prototype = {
     return success;
   },
 
-  _findCrashDumpFiles: function(aToIgnore) {
+  _findCrashDumpFiles(aToIgnore) {
     var crashDumpDir = this._getCrashDumpDir();
     var entries = crashDumpDir.exists() && crashDumpDir.directoryEntries;
     if (!entries) {
@@ -187,7 +187,7 @@ SpecialPowersObserverAPI.prototype = {
     return crashDumpFiles.concat();
   },
 
-  _deletePendingCrashDumpFiles: function() {
+  _deletePendingCrashDumpFiles() {
     var crashDumpDir = this._getPendingCrashDumpDir();
     var removed = false;
     if (crashDumpDir.exists()) {
@@ -203,11 +203,11 @@ SpecialPowersObserverAPI.prototype = {
     return removed;
   },
 
-  _getURI: function(url) {
+  _getURI(url) {
     return Services.io.newURI(url);
   },
 
-  _readUrlAsString: function(aUrl) {
+  _readUrlAsString(aUrl) {
     // Fetch script content as we can't use scriptloader's loadSubScript
     // to evaluate http:// urls...
     var scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"]
@@ -247,7 +247,7 @@ SpecialPowersObserverAPI.prototype = {
     return output;
   },
 
-  _sendReply: function(aMessage, aReplyName, aReplyMsg) {
+  _sendReply(aMessage, aReplyName, aReplyMsg) {
     let mm = aMessage.target
                      .QueryInterface(Ci.nsIFrameLoaderOwner)
                      .frameLoader
@@ -255,7 +255,7 @@ SpecialPowersObserverAPI.prototype = {
     mm.sendAsyncMessage(aReplyName, aReplyMsg);
   },
 
-  _notifyCategoryAndObservers: function(subject, topic, data) {
+  _notifyCategoryAndObservers(subject, topic, data) {
     const serviceMarker = "service,";
 
     // First create observers from the category manager.
@@ -309,7 +309,7 @@ SpecialPowersObserverAPI.prototype = {
    * messageManager callback function
    * This will get requests from our API in the window and process them in chrome for it
    **/
-  _receiveMessageAPI: function(aMessage) {
+  _receiveMessageAPI(aMessage) { // eslint-disable-line complexity
     // We explicitly return values in the below code so that this function
     // doesn't trigger a flurry of warnings about "does not always return
     // a value".
@@ -342,23 +342,19 @@ SpecialPowersObserverAPI.prototype = {
           case "BOOL":
             if (aMessage.json.op == "get")
               return (prefs.getBoolPref(prefName));
-            else
-              return (prefs.setBoolPref(prefName, prefValue));
+            return (prefs.setBoolPref(prefName, prefValue));
           case "INT":
             if (aMessage.json.op == "get")
               return (prefs.getIntPref(prefName));
-            else
-              return (prefs.setIntPref(prefName, prefValue));
+            return (prefs.setIntPref(prefName, prefValue));
           case "CHAR":
             if (aMessage.json.op == "get")
               return (prefs.getCharPref(prefName));
-            else
-              return (prefs.setCharPref(prefName, prefValue));
+            return (prefs.setCharPref(prefName, prefValue));
           case "COMPLEX":
             if (aMessage.json.op == "get")
               return (prefs.getComplexValue(prefName, prefValue[0]));
-            else
-              return (prefs.setComplexValue(prefName, prefValue[0], prefValue[1]));
+            return (prefs.setComplexValue(prefName, prefValue[0], prefValue[1]));
           case "":
             if (aMessage.json.op == "clear") {
               prefs.clearUserPref(prefName);
@@ -466,10 +462,10 @@ SpecialPowersObserverAPI.prototype = {
                          .messageManager;
         sb.sendAsyncMessage = (name, message) => {
           mm.sendAsyncMessage("SPChromeScriptMessage",
-                              { id: id, name: name, message: message });
+                              { id, name, message });
         };
         sb.addMessageListener = (name, listener) => {
-          this._chromeScriptListeners.push({ id: id, name: name, listener: listener });
+          this._chromeScriptListeners.push({ id, name, listener });
         };
         sb.browserElement = aMessage.target;
 
@@ -481,7 +477,7 @@ SpecialPowersObserverAPI.prototype = {
                                 stack });
         };
         Object.defineProperty(sb, "assert", {
-          get: function() {
+          get() {
             let scope = Components.utils.createObjectIn(sb);
             Services.scriptloader.loadSubScript("chrome://specialpowers/content/Assert.jsm",
                                                 scope);
@@ -582,6 +578,7 @@ SpecialPowersObserverAPI.prototype = {
               if (extensionData.errors.length) {
                 return Promise.reject("Extension contains packaging errors");
               }
+              return undefined;
             });
           },
           () => {
@@ -622,7 +619,7 @@ SpecialPowersObserverAPI.prototype = {
 
     // We throw an exception before reaching this explicit return because
     // we should never be arriving here anyway.
-    throw new SpecialPowersError("Unreached code");
+    throw new SpecialPowersError("Unreached code"); // eslint-disable-line no-unreachable
     return undefined;
   }
 };
