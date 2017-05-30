@@ -543,17 +543,27 @@ protected:
     return nullptr;
   }
 
-  template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
-  class MethodThenValue : public ThenValueBase
+  template<typename...>
+  class ThenValue;
+
+  template<typename ThisType,
+           typename ResolveMethodType,
+           typename RejectMethodType>
+  class ThenValue<ThisType*, ResolveMethodType, RejectMethodType>
+    : public ThenValueBase
   {
   public:
-    MethodThenValue(AbstractThread* aResponseTarget, ThisType* aThisVal,
-                    ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod,
-                    const char* aCallSite)
+    ThenValue(AbstractThread* aResponseTarget,
+              ThisType* aThisVal,
+              ResolveMethodType aResolveMethod,
+              RejectMethodType aRejectMethod,
+              const char* aCallSite)
       : ThenValueBase(aResponseTarget, aCallSite)
       , mThisVal(aThisVal)
       , mResolveMethod(aResolveMethod)
-      , mRejectMethod(aRejectMethod) {}
+      , mRejectMethod(aRejectMethod)
+    {
+    }
 
     void Disconnect() override
     {
@@ -592,15 +602,14 @@ protected:
     RejectMethodType mRejectMethod;
   };
 
-  // Specialization of MethodThenValue (with 3rd template arg being 'void')
-  // that only takes one method, to be called with a ResolveOrRejectValue.
   template<typename ThisType, typename ResolveRejectMethodType>
-  class MethodThenValue<ThisType, ResolveRejectMethodType, void> : public ThenValueBase
+  class ThenValue<ThisType*, ResolveRejectMethodType> : public ThenValueBase
   {
   public:
-    MethodThenValue(AbstractThread* aResponseTarget, ThisType* aThisVal,
-                    ResolveRejectMethodType aResolveRejectMethod,
-                    const char* aCallSite)
+    ThenValue(AbstractThread* aResponseTarget,
+              ThisType* aThisVal,
+              ResolveRejectMethodType aResolveRejectMethod,
+              const char* aCallSite)
       : ThenValueBase(aResponseTarget, aCallSite)
       , mThisVal(aThisVal)
       , mResolveRejectMethod(aResolveRejectMethod)
@@ -638,13 +647,13 @@ protected:
 
   // NB: We could use std::function here instead of a template if it were supported. :-(
   template<typename ResolveFunction, typename RejectFunction>
-  class FunctionThenValue : public ThenValueBase
+  class ThenValue<ResolveFunction, RejectFunction> : public ThenValueBase
   {
   public:
-    FunctionThenValue(AbstractThread* aResponseTarget,
-                      ResolveFunction&& aResolveFunction,
-                      RejectFunction&& aRejectFunction,
-                      const char* aCallSite)
+    ThenValue(AbstractThread* aResponseTarget,
+              ResolveFunction&& aResolveFunction,
+              RejectFunction&& aRejectFunction,
+              const char* aCallSite)
       : ThenValueBase(aResponseTarget, aCallSite)
     {
       mResolveFunction.emplace(Move(aResolveFunction));
@@ -695,15 +704,13 @@ protected:
     Maybe<RejectFunction> mRejectFunction; // Only accessed and deleted on dispatch thread.
   };
 
-  // Specialization of FunctionThenValue (with 2nd template arg being 'void')
-  // that only takes one function, to be called with a ResolveOrRejectValue.
   template<typename ResolveRejectFunction>
-  class FunctionThenValue<ResolveRejectFunction, void> : public ThenValueBase
+  class ThenValue<ResolveRejectFunction> : public ThenValueBase
   {
   public:
-    FunctionThenValue(AbstractThread* aResponseTarget,
-                      ResolveRejectFunction&& aResolveRejectFunction,
-                      const char* aCallSite)
+    ThenValue(AbstractThread* aResponseTarget,
+              ResolveRejectFunction&& aResolveRejectFunction,
+              const char* aCallSite)
       : ThenValueBase(aResponseTarget, aCallSite)
     {
       mResolveRejectFunction.emplace(Move(aResolveRejectFunction));
@@ -895,7 +902,7 @@ public:
   Then(AbstractThread* aResponseThread, const char* aCallSite,
     ThisType* aThisVal, ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
   {
-    using ThenType = MethodThenValue<ThisType, ResolveMethodType, RejectMethodType>;
+    using ThenType = ThenValue<ThisType*, ResolveMethodType, RejectMethodType>;
     RefPtr<ThenValueBase> thenValue = new ThenType(aResponseThread,
        aThisVal, aResolveMethod, aRejectMethod, aCallSite);
     return typename MethodThenCommand<ResolveMethodType, RejectMethodType>::type(
@@ -907,7 +914,7 @@ public:
   Then(AbstractThread* aResponseThread, const char* aCallSite,
     ThisType* aThisVal, ResolveRejectMethodType aResolveRejectMethod)
   {
-    using ThenType = MethodThenValue<ThisType, ResolveRejectMethodType, void>;
+    using ThenType = ThenValue<ThisType*, ResolveRejectMethodType>;
     RefPtr<ThenValueBase> thenValue = new ThenType(aResponseThread,
        aThisVal, aResolveRejectMethod, aCallSite);
     return typename MethodThenCommand<ResolveRejectMethodType>::type(
@@ -919,7 +926,7 @@ public:
   Then(AbstractThread* aResponseThread, const char* aCallSite,
     ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction)
   {
-    using ThenType = FunctionThenValue<ResolveFunction, RejectFunction>;
+    using ThenType = ThenValue<ResolveFunction, RejectFunction>;
     RefPtr<ThenValueBase> thenValue = new ThenType(aResponseThread,
       Move(aResolveFunction), Move(aRejectFunction), aCallSite);
     return typename FunctionThenCommand<ResolveFunction, RejectFunction>::type(
@@ -931,7 +938,7 @@ public:
   Then(AbstractThread* aResponseThread, const char* aCallSite,
                    ResolveRejectFunction&& aResolveRejectFunction)
   {
-    using ThenType = FunctionThenValue<ResolveRejectFunction, void>;
+    using ThenType = ThenValue<ResolveRejectFunction>;
     RefPtr<ThenValueBase> thenValue = new ThenType(aResponseThread,
       Move(aResolveRejectFunction), aCallSite);
     return typename FunctionThenCommand<ResolveRejectFunction>::type(
