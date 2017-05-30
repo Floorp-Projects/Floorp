@@ -55,7 +55,6 @@ to mochitest command.
   * test_font_loading_api.html `weight` [1]
 * @namespace support:
   * test_namespace_rule.html: bug 1355715 [6]
-* test_dont_use_document_colors.html: support of disabling document color bug 1355716 [21]
 * test_font_feature_values_parsing.html: \@font-feature-values support bug 1355721 [107]
 * Grid support bug 1341802
   * test_grid_computed_values.html [4]
