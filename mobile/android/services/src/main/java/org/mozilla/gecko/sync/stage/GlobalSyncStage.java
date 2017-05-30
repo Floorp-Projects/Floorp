@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.sync.stage;
 
+import android.support.annotation.Nullable;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -68,7 +70,7 @@ public interface GlobalSyncStage {
 
     // Each Stage tracks its repositoryName.
     private final String repositoryName;
-    public String getRepositoryName() {
+    @Nullable public String getRepositoryName() {
       return repositoryName;
     }
 
