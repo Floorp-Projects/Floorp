@@ -1066,7 +1066,7 @@ public:
   InterceptFailedOnStop(nsIStreamListener *arg, HttpBaseChannel *chan)
   : mNext(arg)
   , mChannel(chan) {}
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_IMETHOD OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) override
   {
