@@ -389,11 +389,13 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
 static bool
 HasValidOffsets(const nsTArray<Keyframe>& aKeyframes);
 
+#ifdef DEBUG
 static void
 MarkAsComputeValuesFailureKey(PropertyValuePair& aPair);
 
 static bool
 IsComputeValuesFailureKey(const PropertyValuePair& aPair);
+#endif
 
 static void
 BuildSegmentsFromValueEntries(nsTArray<KeyframeValueEntry>& aEntries,
@@ -640,10 +642,15 @@ KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
         nsCSSValueTokenStream* tokenStream = pair.mValue.GetTokenStreamValue();
         if (!StyleAnimationValue::ComputeValues(pair.mProperty,
               CSSEnabledState::eForAllContent, aElement, aStyleContext,
-              tokenStream->mTokenStream, /* aUseSVGMode */ false, values) ||
-            IsComputeValuesFailureKey(pair)) {
+              tokenStream->mTokenStream, /* aUseSVGMode */ false, values)) {
           continue;
         }
+
+#ifdef DEBUG
+        if (IsComputeValuesFailureKey(pair)) {
+          continue;
+        }
+#endif
       } else if (pair.mValue.GetUnit() == eCSSUnit_Null) {
         // An uninitialized nsCSSValue represents the underlying value which
         // we represent as an uninitialized AnimationValue so we just leave
@@ -873,6 +880,7 @@ ConvertKeyframeSequence(JSContext* aCx,
         MakePropertyValuePair(pair.mProperty, pair.mValues[0], parser,
                               aDocument));
 
+#ifdef DEBUG
       // When we go to convert keyframes into arrays of property values we
       // call StyleAnimation::ComputeValues. This should normally return true
       // but in order to test the case where it does not, BaseKeyframeDict
@@ -883,6 +891,7 @@ ConvertKeyframeSequence(JSContext* aCx,
           keyframeDict.mSimulateComputeValuesFailure) {
         MarkAsComputeValuesFailureKey(keyframe->mPropertyValues.LastElement());
       }
+#endif
     }
   }
 
@@ -1033,6 +1042,10 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
 
   result.mProperty = aProperty;
 
+#ifdef DEBUG
+  result.mSimulateComputeValuesFailure = false;
+#endif
+
   if (aDocument->GetStyleBackendType() == StyleBackendType::Servo) {
     RefPtr<RawServoDeclarationBlock> servoDeclarationBlock =
       KeyframeUtils::ParseProperty(aProperty, aStringValue, aDocument);
@@ -1105,6 +1118,7 @@ HasValidOffsets(const nsTArray<Keyframe>& aKeyframes)
   return true;
 }
 
+#ifdef DEBUG
 /**
  * Takes a property-value pair for a shorthand property and modifies the
  * value to indicate that when we call StyleAnimationValue::ComputeValues on
@@ -1119,18 +1133,7 @@ MarkAsComputeValuesFailureKey(PropertyValuePair& aPair)
   MOZ_ASSERT(nsCSSProps::IsShorthand(aPair.mProperty),
              "Only shorthand property values can be marked as failure values");
 
-  // We store shorthand values as nsCSSValueTokenStream objects whose mProperty
-  // and mShorthandPropertyID are eCSSProperty_UNKNOWN and whose mTokenStream
-  // member contains the shorthand property's value as a string.
-  //
-  // We need to leave mShorthandPropertyID as eCSSProperty_UNKNOWN so that
-  // nsCSSValue::AppendToString returns the mTokenStream value, but we can
-  // update mPropertyID to a special value to indicate that this is
-  // a special failure sentinel.
-  nsCSSValueTokenStream* tokenStream = aPair.mValue.GetTokenStreamValue();
-  MOZ_ASSERT(tokenStream->mPropertyID == eCSSProperty_UNKNOWN,
-             "Shorthand value should initially have an unknown property ID");
-  tokenStream->mPropertyID = eCSSPropertyExtra_no_properties;
+  aPair.mSimulateComputeValuesFailure = true;
 }
 
 /**
@@ -1146,9 +1149,9 @@ static bool
 IsComputeValuesFailureKey(const PropertyValuePair& aPair)
 {
   return nsCSSProps::IsShorthand(aPair.mProperty) &&
-         aPair.mValue.GetTokenStreamValue()->mPropertyID ==
-           eCSSPropertyExtra_no_properties;
+         aPair.mSimulateComputeValuesFailure;
 }
+#endif
 
 static void
 AppendInitialSegment(AnimationProperty* aAnimationProperty,
