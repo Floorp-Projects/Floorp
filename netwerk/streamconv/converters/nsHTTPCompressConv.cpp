@@ -34,7 +34,8 @@ NS_IMPL_ISUPPORTS(nsHTTPCompressConv,
                   nsIStreamConverter,
                   nsIStreamListener,
                   nsIRequestObserver,
-                  nsICompressConvStats)
+                  nsICompressConvStats,
+                  nsIThreadRetargetableStreamListener)
 
 // nsFTPDirListingConv methods
 nsHTTPCompressConv::nsHTTPCompressConv()
@@ -51,6 +52,7 @@ nsHTTPCompressConv::nsHTTPCompressConv()
   , mSkipCount(0)
   , mFlags(0)
   , mDecodedDataLength(0)
+  , mMutex("nsHTTPCompressConv")
 {
   LOG(("nsHttpCompresssConv %p ctor\n", this));
   if (NS_IsMainThread()) {
@@ -104,12 +106,12 @@ nsHTTPCompressConv::AsyncConvertData(const char *aFromType,
     mMode = HTTP_COMPRESS_BROTLI;
   }
   LOG(("nsHttpCompresssConv %p AsyncConvertData %s %s mode %d\n",
-       this, aFromType, aToType, mMode));
+       this, aFromType, aToType, (CompressMode)mMode));
 
+  MutexAutoLock lock(mMutex);
   // hook ourself up with the receiving listener.
   mListener = aListener;
 
-  mAsyncConvContext = aCtxt;
   return NS_OK;
 }
 
@@ -117,7 +119,12 @@ NS_IMETHODIMP
 nsHTTPCompressConv::OnStartRequest(nsIRequest* request, nsISupports *aContext)
 {
   LOG(("nsHttpCompresssConv %p onstart\n", this));
-  return mListener->OnStartRequest(request, aContext);
+  nsCOMPtr<nsIStreamListener> listener;
+  {
+    MutexAutoLock lock(mMutex);
+    listener = mListener;
+  }
+  return listener->OnStartRequest(request, aContext);
 }
 
 NS_IMETHODIMP
@@ -145,7 +152,7 @@ nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
     if (fpChannel && !isPending) {
       fpChannel->ForcePending(true);
     }
-    if (mBrotli && (mBrotli->mTotalOut == 0) && !BrotliStateIsStreamEnd(&mBrotli->mState)) {
+    if (mBrotli && (mBrotli->mTotalOut == 0) && !mBrotli->mBrotliStateIsStreamEnd) {
       status = NS_ERROR_INVALID_CONTENT_ENCODING;
     }
     LOG(("nsHttpCompresssConv %p onstop brotlihandler rv %" PRIx32 "\n",
@@ -154,7 +161,13 @@ nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
       fpChannel->ForcePending(false);
     }
   }
-  return mListener->OnStopRequest(request, aContext, status);
+
+  nsCOMPtr<nsIStreamListener> listener;
+  {
+    MutexAutoLock lock(mMutex);
+    listener = mListener;
+  }
+  return listener->OnStopRequest(request, aContext, status);
 }
 
 
@@ -189,10 +202,13 @@ nsHTTPCompressConv::BrotliHandler(nsIInputStream *stream, void *closure, const c
 
     // brotli api is documented in brotli/dec/decode.h and brotli/dec/decode.c
     LOG(("nsHttpCompresssConv %p brotlihandler decompress %" PRIuSIZE "\n", self, avail));
+    size_t totalOut = self->mBrotli->mTotalOut;
     res = ::BrotliDecompressStream(
       &avail, reinterpret_cast<const unsigned char **>(&dataIn),
-      &outSize, &outPtr, &self->mBrotli->mTotalOut, &self->mBrotli->mState);
+      &outSize, &outPtr, &totalOut, &self->mBrotli->mState);
     outSize = kOutSize - outSize;
+    self->mBrotli->mTotalOut = totalOut;
+    self->mBrotli->mBrotliStateIsStreamEnd = BrotliStateIsStreamEnd(&self->mBrotli->mState);
     LOG(("nsHttpCompresssConv %p brotlihandler decompress rv=%" PRIx32 " out=%" PRIuSIZE "\n",
          self, static_cast<uint32_t>(res), outSize));
 
@@ -458,7 +474,12 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
     break;
 
   default:
-    rv = mListener->OnDataAvailable(request, aContext, iStr, aSourceOffset, aCount);
+    nsCOMPtr<nsIStreamListener> listener;
+    {
+      MutexAutoLock lock(mMutex);
+      listener = mListener;
+    }
+    rv = listener->OnDataAvailable(request, aContext, iStr, aSourceOffset, aCount);
     if (NS_FAILED (rv)) {
       return rv;
     }
@@ -491,8 +512,13 @@ nsHTTPCompressConv::do_OnDataAvailable(nsIRequest* request,
 
   mStream->ShareData(buffer, count);
 
-  nsresult rv = mListener->OnDataAvailable(request, context, mStream,
-                                           offset, count);
+  nsCOMPtr<nsIStreamListener> listener;
+  {
+    MutexAutoLock lock(mMutex);
+    listener = mListener;
+  }
+  nsresult rv = listener->OnDataAvailable(request, context, mStream,
+                                          offset, count);
 
   // Make sure the stream no longer references |buffer| in case our listener
   // is crazy enough to try to read from |mStream| after ODA.
@@ -638,6 +664,22 @@ nsHTTPCompressConv::check_header(nsIInputStream *iStr, uint32_t streamLen, nsres
     }
   }
   return streamLen;
+}
+
+NS_IMETHODIMP
+nsHTTPCompressConv::CheckListenerChain()
+{
+  nsCOMPtr<nsIThreadRetargetableStreamListener> listener;
+  {
+    MutexAutoLock lock(mMutex);
+    listener = do_QueryInterface(mListener);
+  }
+
+  if (!listener) {
+    return NS_ERROR_NO_INTERFACE;
+  }
+
+  return listener->CheckListenerChain();
 }
 
 } // namespace net

@@ -74,7 +74,7 @@ button {
 .nav > button {
   width: 3rem;
   height: var(--date-picker-item-height);
-  filter: url("chrome://global/skin/filters.svg#fill");
+  -moz-context-properties: fill;
   fill: var(--button-font-color);
 }
 
@@ -88,12 +88,12 @@ button {
 
 .nav > button.prev,
 .nav > button.next:dir(rtl) {
-  background: url("chrome://global/skin/icons/calendar-arrows.svg#left") no-repeat 50% 50%;
+  background: url("chrome://global/skin/icons/calendar-arrow-left.svg") no-repeat 50% 50%;
 }
 
 .nav > button.next,
 .nav > button.prev:dir(rtl) {
-  background: url("chrome://global/skin/icons/calendar-arrows.svg#right") no-repeat 50% 50%;
+  background: url("chrome://global/skin/icons/calendar-arrow-right.svg") no-repeat 50% 50%;
 }
 
 .month-year-container {
@@ -133,13 +133,13 @@ button.month-year::after {
   content: "";
   width: 2.6rem;
   height: 1.6rem;
-  background: url("chrome://global/skin/icons/spinner-arrows.svg#down") no-repeat 50% 50%;
-  filter: url("chrome://global/skin/filters.svg#fill");
+  background: url("chrome://global/skin/icons/spinner-arrow-down.svg") no-repeat 50% 50%;
+  -moz-context-properties: fill;
   fill: var(--button-font-color);
 }
 
 button.month-year.active::after {
-  background: url("chrome://global/skin/icons/spinner-arrows.svg#up") no-repeat 50% 50%;
+  background: url("chrome://global/skin/icons/spinner-arrow-up.svg") no-repeat 50% 50%;
 }
 
 .month-year-view {
@@ -287,7 +287,7 @@ button.month-year.active::after {
 
 .spinner-container > button {
   height: var(--spinner-button-height);
-  filter: url("chrome://global/skin/filters.svg#fill");
+  -moz-context-properties: fill;
   fill: var(--button-font-color);
 }
 
@@ -300,11 +300,11 @@ button.month-year.active::after {
 }
 
 .spinner-container > button.up {
-  background: url("chrome://global/skin/icons/spinner-arrows.svg#up") no-repeat 50% 50%;
+  background: url("chrome://global/skin/icons/spinner-arrow-up.svg") no-repeat 50% 50%;
 }
 
 .spinner-container > button.down {
-  background: url("chrome://global/skin/icons/spinner-arrows.svg#down") no-repeat 50% 50%;
+  background: url("chrome://global/skin/icons/spinner-arrow-down.svg") no-repeat 50% 50%;
 }
 
 .spinner-container.hide-buttons > button {
