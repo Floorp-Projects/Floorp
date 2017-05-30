@@ -66,6 +66,9 @@ void NeckoChild::InitNeckoChild()
     mozilla::dom::ContentChild * cpc = 
       mozilla::dom::ContentChild::GetSingleton();
     NS_ASSERTION(cpc, "Content Protocol is NULL!");
+    if (NS_WARN_IF(cpc->IsShuttingDown())) {
+      return;
+    }
     gNeckoChild = cpc->SendPNeckoConstructor(); 
     NS_ASSERTION(gNeckoChild, "PNecko Protocol init failed!");
   }
