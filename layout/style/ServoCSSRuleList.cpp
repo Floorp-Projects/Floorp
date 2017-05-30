@@ -237,7 +237,7 @@ ServoCSSRuleList::FillStyleRuleHashtable(StyleRuleHashtable& aTable)
     } else if (type == nsIDOMCSSRule::MEDIA_RULE ||
                type == nsIDOMCSSRule::SUPPORTS_RULE ||
                type == nsIDOMCSSRule::DOCUMENT_RULE) {
-      css::GroupRule* castedRule = static_cast<css::GroupRule*>(GetRule(i));
+      auto castedRule = static_cast<css::GroupRule*>(GetRule(i));
 
       // Call this method recursively on the ServoCSSRuleList in the rule.
       ServoCSSRuleList* castedRuleList = static_cast<ServoCSSRuleList*>(
