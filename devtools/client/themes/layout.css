@@ -59,6 +59,15 @@
 }
 
 /**
+ * Grid Outline
+ */
+
+.grid-outline {
+  margin-top: 10px;
+  overflow: visible;
+}
+
+/**
  * Grid Content
  */
 
@@ -66,7 +75,7 @@
   display: flex;
   flex-wrap: wrap;
   flex: 1;
-  margin: 5px 0;
+  margin-top: 10px;
 }
 
 .grid-container:first-child {
@@ -77,12 +86,8 @@
  * Grid Outline
  */
 
-.grid-outline {
-  margin: 5px 0;
-}
-
-.grid-outline svg {
-  overflow: visible;
+#grid-outline {
+  margin: 5px auto;
 }
 
 .grid-outline-border {
@@ -107,20 +112,6 @@
 .grid-outline-line {
   opacity: 0;
   stroke-width: 10;
-}
-
-.grid-outline-text {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--theme-graphs-full-red);
-}
-
-.grid-outline-text-icon {
-  background: url("chrome://devtools/skin/images/sad-face.svg");
-  margin-inline-end: 5px;
-  width: 16px;
-  height: 16px;
 }
 
 /**
