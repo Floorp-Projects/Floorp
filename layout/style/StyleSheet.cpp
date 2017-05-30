@@ -695,16 +695,13 @@ StyleSheet::ClearAssociatedDocument()
 }
 
 void
-StyleSheet::AppendStyleSheet(StyleSheet* aSheet)
+StyleSheet::PrependStyleSheet(StyleSheet* aSheet)
 {
   NS_PRECONDITION(nullptr != aSheet, "null arg");
 
   WillDirty();
-  RefPtr<StyleSheet>* tail = &SheetInfo().mFirstChild;
-  while (*tail) {
-    tail = &(*tail)->mNext;
-  }
-  *tail = aSheet;
+  aSheet->mNext = SheetInfo().mFirstChild;
+  SheetInfo().mFirstChild = aSheet;
 
   // This is not reference counted. Our parent tells us when
   // it's going away.

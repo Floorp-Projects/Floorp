@@ -167,7 +167,7 @@ public:
   }
   dom::CSSImportRule* GetOwnerRule() const { return mOwnerRule; }
 
-  void AppendStyleSheet(StyleSheet* aSheet);
+  void PrependStyleSheet(StyleSheet* aSheet);
 
   StyleSheet* GetFirstChild() const;
 
