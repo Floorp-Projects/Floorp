@@ -56,6 +56,19 @@ elif CONFIG['OS_TARGET'] == 'Darwin':
     ]
     if not CONFIG['MOZ_IOS']:
         DEFINES['HAVE_CRT_EXTERNS_H'] = True
+elif CONFIG['OS_TARGET'] == 'SunOS':
+    DEFINES.update(
+        HAVE_FCNTL_FILE_LOCKING=True,
+        HAVE_SOCKLEN_T=True,
+        _PR_HAVE_OFF64_T=True,
+        _PR_INET6=True,
+    )
+    DEFINES['SOLARIS'] = True
+    SOURCES += ['/nsprpub/pr/src/md/unix/solaris.c']
+    if CONFIG['CPU_ARCH'] == 'x86_64':
+        SOURCES += ['/nsprpub/pr/src/md/unix/os_SunOS_x86_64.s']
+    elif CONFIG['CPU_ARCH'] == 'x86':
+        SOURCES += ['/nsprpub/pr/src/md/unix/os_SunOS_x86.s']
 elif CONFIG['OS_TARGET'] == 'WINNT':
     OS_LIBS += [
         'advapi32',
@@ -229,6 +242,7 @@ EXPORTS.nspr.md += [
     '/nsprpub/pr/include/md/_linux.cfg',
     '/nsprpub/pr/include/md/_netbsd.cfg',
     '/nsprpub/pr/include/md/_openbsd.cfg',
+    '/nsprpub/pr/include/md/_solaris.cfg',
     '/nsprpub/pr/include/md/_win95.cfg',
 ]
 
