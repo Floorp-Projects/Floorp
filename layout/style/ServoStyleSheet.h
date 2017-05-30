@@ -103,16 +103,10 @@ public:
 
   URLExtraData* URLData() const { return Inner()->mURLData; }
 
-  // WebIDL CSSStyleSheet API
-  // Can't be inline because we can't include ImportRule here.  And can't be
-  // called GetOwnerRule because that would be ambiguous with the ImportRule
-  // version.
-  css::Rule* GetDOMOwnerRule() const final;
-
   void DidDirty() override {}
 
-  virtual already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
-    css::ImportRule* aCloneOwnerRule,
+  already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
+    dom::CSSImportRule* aCloneOwnerRule,
     nsIDocument* aCloneDocument,
     nsINode* aCloneOwningNode) const final;
 
@@ -144,7 +138,7 @@ protected:
 private:
   ServoStyleSheet(const ServoStyleSheet& aCopy,
                   ServoStyleSheet* aParentToUse,
-                  css::ImportRule* aOwnerRuleToUse,
+                  dom::CSSImportRule* aOwnerRuleToUse,
                   nsIDocument* aDocumentToUse,
                   nsINode* aOwningNodeToUse);
 
