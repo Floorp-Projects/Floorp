@@ -2,8 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-devtools.jar:
+[features/devtools@mozilla.org] chrome.jar:
 %   content devtools %content/
+    content/preferences/debugger.js (preferences/debugger.js)
+    content/preferences/devtools.js (preferences/devtools.js)
+    content/webide/webide-prefs.js (webide/webide-prefs.js)
     content/shared/vendor/d3.js (shared/vendor/d3.js)
     content/shared/vendor/dagre-d3.js (shared/vendor/dagre-d3.js)
     content/shared/widgets/widgets.css (shared/widgets/widgets.css)
@@ -313,3 +316,6 @@ devtools.jar:
     skin/images/firebug/command-measure.svg (themes/images/firebug/command-measure.svg)
     skin/images/firebug/command-rulers.svg (themes/images/firebug/command-rulers.svg)
     skin/images/firebug/command-noautohide.svg (themes/images/firebug/command-noautohide.svg)
+
+% manifest devtools-startup.manifest
+% manifest webideComponents.manifest

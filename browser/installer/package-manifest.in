@@ -627,20 +627,9 @@
 #endif
 @RESPATH@/browser/features/*
 
-; [Webide Files]
-@RESPATH@/browser/chrome/webide@JAREXT@
-@RESPATH@/browser/chrome/webide.manifest
-@RESPATH@/browser/@PREF_DIR@/webide-prefs.js
-
 ; [DevTools Shim Files]
 @RESPATH@/browser/chrome/devtools-shim@JAREXT@
 @RESPATH@/browser/chrome/devtools-shim.manifest
-
-; DevTools
-@RESPATH@/browser/chrome/devtools@JAREXT@
-@RESPATH@/browser/chrome/devtools.manifest
-@RESPATH@/browser/@PREF_DIR@/devtools.js
-@RESPATH@/browser/@PREF_DIR@/debugger.js
 
 ; shell icons
 #ifdef XP_UNIX
