@@ -917,7 +917,7 @@ CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
     break;
   case EffectTypes::COMPONENT_ALPHA:
     {
-      MOZ_ASSERT(gfxPrefs::ComponentAlphaEnabled());
+      MOZ_ASSERT(gfxConfig::IsEnabled(Feature::COMPONENT_ALPHA));
       MOZ_ASSERT(mAttachments->mComponentBlendState);
       EffectComponentAlpha* effectComponentAlpha =
         static_cast<EffectComponentAlpha*>(aEffectChain.mPrimaryEffect.get());
