@@ -34,6 +34,7 @@
 #include "nsMemoryReporterManager.h"
 #include "nsXULAppAPI.h"
 #include "nsProfilerStartParams.h"
+#include "ProfilerParent.h"
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 #include "ProfilerMarkerPayload.h"
@@ -2030,6 +2031,7 @@ NotifyProfilerStarted(const int aEntries, double aInterval, uint32_t aFeatures,
   nsCOMPtr<nsIProfilerStartParams> params =
     new nsProfilerStartParams(aEntries, aInterval, aFeatures, filtersArray);
 
+  ProfilerParent::ProfilerStarted(params);
   NotifyObservers("profiler-started", params);
 }
 
@@ -2175,6 +2177,7 @@ profiler_shutdown()
   // We do these operations with gPSMutex unlocked. The comments in
   // profiler_stop() explain why.
   if (samplerThread) {
+    ProfilerParent::ProfilerStopped();
     NotifyObservers("profiler-stopped");
     delete samplerThread;
   }
@@ -2429,6 +2432,7 @@ profiler_start(int aEntries, double aInterval, uint32_t aFeatures,
   // We do these operations with gPSMutex unlocked. The comments in
   // profiler_stop() explain why.
   if (samplerThread) {
+    ProfilerParent::ProfilerStopped();
     NotifyObservers("profiler-stopped");
     delete samplerThread;
   }
@@ -2506,6 +2510,7 @@ profiler_stop()
   // locks gPSMutex, for example when it wants to insert a marker.
   // (This has been seen in practise in bug 1346356, when we were still firing
   // these notifications synchronously.)
+  ProfilerParent::ProfilerStopped();
   NotifyObservers("profiler-stopped");
 
   // We delete with gPSMutex unlocked. Otherwise we would get a deadlock: we
@@ -2552,6 +2557,7 @@ profiler_pause()
   }
 
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
+  ProfilerParent::ProfilerPaused();
   NotifyObservers("profiler-paused");
 }
 
@@ -2573,6 +2579,7 @@ profiler_resume()
   }
 
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
+  ProfilerParent::ProfilerResumed();
   NotifyObservers("profiler-resumed");
 }
 
