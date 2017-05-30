@@ -54,8 +54,10 @@ JS_STATIC_ASSERT(UnicodeFlag == JSREG_UNICODE);
 RegExpObject*
 js::RegExpAlloc(JSContext* cx, HandleObject proto /* = nullptr */)
 {
-    // Note: RegExp objects are always allocated in the tenured heap. This is
-    // not strictly required, but simplifies embedding them in jitcode.
+    // Note: RegExp objects allocated here are always in the tenured heap. This
+    // is required for RegExp objects allocated by the parser and it also
+    // simplifies embedding them in jitcode. Cloned RegExp objects can be
+    // nursery-allocated though, see CloneRegExpObject.
     Rooted<RegExpObject*> regexp(cx);
 
     regexp = NewObjectWithClassProto<RegExpObject>(cx, proto, TenuredObject);
@@ -1342,10 +1344,9 @@ js::CloneRegExpObject(JSContext* cx, JSObject* obj_)
 {
     Rooted<RegExpObject*> regex(cx, &obj_->as<RegExpObject>());
 
-    // Unlike RegExpAlloc, all clones must use |regex|'s group.  Allocate
-    // in the tenured heap to simplify embedding them in JIT code.
+    // Unlike RegExpAlloc, all clones must use |regex|'s group.
     RootedObjectGroup group(cx, regex->group());
-    Rooted<RegExpObject*> clone(cx, NewObjectWithGroup<RegExpObject>(cx, group, TenuredObject));
+    Rooted<RegExpObject*> clone(cx, NewObjectWithGroup<RegExpObject>(cx, group, GenericObject));
     if (!clone)
         return nullptr;
     clone->initPrivate(nullptr);
