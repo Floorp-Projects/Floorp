@@ -55,7 +55,7 @@ const CANVAS_USE_RATIO = 0.75;
 const FRAME_INTERVAL_MS = 50;
 const VECTOR_NORMALIZED_MAGNITUDE = 30.0;
 
-var renderData = new Array();
+var renderData = [];
 var currentFrame = 0;
 var playing = false;
 var timerId = 0;
@@ -82,7 +82,7 @@ function getFlag(flag) {
 //   <junk> RENDERTRACE <timestamp> rect <color> <x> <y> <width> <height> [extraInfo]
 function loadData() {
     stopPlay();
-    renderData = new Array();
+    renderData = [];
     currentFrame = 0;
     minX = undefined;
     minY = undefined;

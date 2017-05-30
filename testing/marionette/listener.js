@@ -83,7 +83,6 @@ var asyncChrome = proxy.toChromeAsync({
 });
 var syncChrome = proxy.toChrome(sendSyncMessage.bind(this));
 var cookies = new Cookies(() => curContainer.frame.document, syncChrome);
-var importedScripts = new evaluate.ScriptStorageServiceClient(syncChrome);
 
 Cu.import("resource://gre/modules/Log.jsm");
 var logger = Log.repository.getLogger("Marionette");
@@ -732,7 +731,6 @@ function checkForInterrupted() {
 
 function* execute(script, args, timeout, opts) {
   opts.timeout = timeout;
-  script = importedScripts.for("content").concat(script);
 
   let sb = sandbox.createMutable(curContainer.frame);
   let wargs = evaluate.fromJSON(
@@ -744,7 +742,6 @@ function* execute(script, args, timeout, opts) {
 
 function* executeInSandbox(script, args, timeout, opts) {
   opts.timeout = timeout;
-  script = importedScripts.for("content").concat(script);
 
   let sb = sandboxes.get(opts.sandboxName, opts.newSandbox);
   if (opts.sandboxName) {
@@ -766,7 +763,6 @@ function* executeInSandbox(script, args, timeout, opts) {
 function* executeSimpleTest(script, args, timeout, opts) {
   opts.timeout = timeout;
   let win = curContainer.frame;
-  script = importedScripts.for("content").concat(script);
 
   let harness = new simpletest.Harness(
       win,

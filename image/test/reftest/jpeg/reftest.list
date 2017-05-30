@@ -51,4 +51,4 @@ random-if(Android) == jpg-srgb-icc.jpg jpg-srgb-icc.png
 # won't be in the text of the contents themselves. --$(boundary)\r\n means
 # "Here is the beginning of a boundary," and --$(boundary)-- means "All done
 # sending you parts.")
-random-if(stylo||styloVsGecko) HTTP == webcam-simulacrum.mjpg blue.jpg # bug 1368589 for stylo
+HTTP == webcam-simulacrum.mjpg blue.jpg

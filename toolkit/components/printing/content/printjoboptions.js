@@ -117,7 +117,7 @@ function createPaperArrayFromDefaults() {
   var paperHeights = [11.0, 14.0, 10.50, 210.0, 297.0, 420.0, 594.0, 841.0, 1189.0];
   var paperInches  = [true, true, true,  false, false, false, false, false, false];
 
-  gPaperArray = new Array();
+  gPaperArray = [];
 
   for (var i = 0;i < paperNames.length;i++) {
     var obj    = {};
@@ -145,7 +145,7 @@ function createPaperArrayFromPrinterFeatures() {
     dump("createPaperArrayFromPrinterFeatures for " + printername + ".\n");
   }
 
-  gPaperArray = new Array();
+  gPaperArray = [];
 
   var numPapers = gPrefs.getIntPref("print.tmp.printerfeatures." + printername + ".paper.count");
 

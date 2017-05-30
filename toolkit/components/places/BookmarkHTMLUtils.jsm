@@ -317,7 +317,7 @@ function BookmarkImporter(aInitialImport) {
   // counter.
   this._source = aInitialImport ? PlacesUtils.bookmarks.SOURCE_IMPORT_REPLACE :
                                   PlacesUtils.bookmarks.SOURCE_IMPORT;
-  this._frames = new Array();
+  this._frames = [];
   this._frames.push(new Frame(PlacesUtils.bookmarksMenuFolderId));
 }
 

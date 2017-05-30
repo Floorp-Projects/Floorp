@@ -4,7 +4,7 @@
 
 import types
 
-from marionette_driver import By, errors
+from marionette_driver import By, errors, Wait
 
 from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
@@ -79,7 +79,9 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         self.assert_window_handles()
         self.assertEqual(self.marionette.current_chrome_window_handle, new_win)
         with self.marionette.using_context("content"):
-            self.assertEqual(self.marionette.get_url(), self.empty_page)
+            Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+                lambda mn: mn.get_url() == self.empty_page,
+                message="{} did not load after opening a new tab".format(self.empty_page))
 
         # Ensure navigate works in our current window
         other_page = self.marionette.absolute_url("test.html")
@@ -113,7 +115,9 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         self.assert_window_handles()
         self.assertEqual(self.marionette.current_window_handle, new_tab)
         with self.marionette.using_context("content"):
-            self.assertEqual(self.marionette.get_url(), self.empty_page)
+            Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+                lambda mn: mn.get_url() == self.empty_page,
+                message="{} did not load after opening a new tab".format(self.empty_page))
 
         # Ensure navigate works in our current tab
         other_page = self.marionette.absolute_url("test.html")
@@ -152,7 +156,9 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         self.assert_window_handles()
         self.assertEqual(self.marionette.current_window_handle, new_tab)
         with self.marionette.using_context("content"):
-            self.assertEqual(self.marionette.get_url(), self.empty_page)
+            Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+                lambda mn: mn.get_url() == self.empty_page,
+                message="{} did not load after opening a new tab".format(self.empty_page))
 
         # Ensure navigate works in our current window
         other_page = self.marionette.absolute_url("test.html")
@@ -190,7 +196,9 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         self.assert_window_handles()
         self.assertEqual(self.marionette.current_window_handle, new_tab)
         with self.marionette.using_context("content"):
-            self.assertEqual(self.marionette.get_url(), self.empty_page)
+            Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+                lambda mn: mn.get_url() == self.empty_page,
+                message="{} did not load after opening a new tab".format(self.empty_page))
 
     def test_window_handles_no_switch(self):
         """Regression test for bug 1294456.

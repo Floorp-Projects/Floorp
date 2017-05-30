@@ -60,6 +60,11 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsRange, nsIDOMRange)
 
+  nsrefcnt GetRefCount() const
+  {
+    return mRefCnt;
+  }
+
   /**
    * The DOM Range spec requires that when a node is removed from its parent,
    * and the node's subtree contains the start or end point of a range, that
@@ -149,19 +154,61 @@ public:
 
   nsINode* GetCommonAncestor() const;
   void Reset();
+
+  /**
+   * SetStart() and SetEnd() sets start point or end point separately.
+   * However, this is expensive especially when it's a range of Selection.
+   * When you set both start and end of a range, you should use
+   * SetStartAndEnd() instead.
+   */
   nsresult SetStart(nsINode* aParent, int32_t aOffset);
   nsresult SetEnd(nsINode* aParent, int32_t aOffset);
+
   already_AddRefed<nsRange> CloneRange() const;
 
-  nsresult Set(nsINode* aStartParent, int32_t aStartOffset,
-               nsINode* aEndParent, int32_t aEndOffset)
-  {
-    // If this starts being hot, we may be able to optimize this a bit,
-    // but for now just set start and end separately.
-    nsresult rv = SetStart(aStartParent, aStartOffset);
-    NS_ENSURE_SUCCESS(rv, rv);
+  /**
+   * SetStartAndEnd() works similar to call both SetStart() and SetEnd().
+   * Different from calls them separately, this does nothing if either
+   * the start point or the end point is invalid point.
+   * If the specified start point is after the end point, the range will be
+   * collapsed at the end point.  Similarly, if they are in different root,
+   * the range will be collapsed at the end point.
+   */
+  nsresult SetStartAndEnd(nsINode* aStartParent, int32_t aStartOffset,
+                          nsINode* aEndParent, int32_t aEndOffset);
 
-    return SetEnd(aEndParent, aEndOffset);
+  /**
+   * CollapseTo() works similar to call both SetStart() and SetEnd() with
+   * same node and offset.  This just calls SetStartAndParent() to set
+   * collapsed range at aParent and aOffset.
+   */
+  nsresult CollapseTo(nsINode* aParent, int32_t aOffset)
+  {
+    return SetStartAndEnd(aParent, aOffset, aParent, aOffset);
+  }
+
+  /**
+   * Retrieves node and offset for setting start or end of a range to
+   * before or after aNode.
+   */
+  static nsINode* GetParentAndOffsetAfter(nsINode* aNode, int32_t* aOffset)
+  {
+    MOZ_ASSERT(aNode);
+    MOZ_ASSERT(aOffset);
+    nsINode* parentNode = aNode->GetParentNode();
+    *aOffset = parentNode ? parentNode->IndexOf(aNode) : -1;
+    if (*aOffset >= 0) {
+      (*aOffset)++;
+    }
+    return parentNode;
+  }
+  static nsINode* GetParentAndOffsetBefore(nsINode* aNode, int32_t* aOffset)
+  {
+    MOZ_ASSERT(aNode);
+    MOZ_ASSERT(aOffset);
+    nsINode* parentNode = aNode->GetParentNode();
+    *aOffset = parentNode ? parentNode->IndexOf(aNode) : -1;
+    return parentNode;
   }
 
   NS_IMETHOD GetUsedFontFaces(nsIDOMFontFaceList** aResult);
@@ -314,6 +361,7 @@ protected:
   void RegisterCommonAncestor(nsINode* aNode);
   void UnregisterCommonAncestor(nsINode* aNode);
   nsINode* IsValidBoundary(nsINode* aNode);
+  static bool IsValidOffset(nsINode* aNode, int32_t aOffset);
 
   // CharacterDataChanged set aNotInsertedYet to true to disable an assertion
   // and suppress re-registering a range common ancestor node since

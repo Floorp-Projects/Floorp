@@ -49,21 +49,6 @@ function do_seeked(e) {
   });
 }
 
-function do_loaded(e) {
-  var v = e.target;
-  v.removeEventListener("loadeddata", do_loaded);
-  // mp4 metadata states 10s when we only have 1.6s worth of video.
-  v._sb.remove(v._sb.buffered.end(0), Infinity);
-  once(v._sb, "updateend", function() {
-    v._ms.duration = v._sb.buffered.end(0);
-    is(v.duration, v._ms.duration, "current time updated with mediasource duration");
-    v.currentTime = v.duration / 2;
-    is(v.currentTime, v.duration / 2, "current time was updated");
-    ok(v.seeking, "seeking is true");
-    v.addEventListener("seeked", do_seeked);
-  });
-}
-
 runWithMSE(function (ms, v) {
   ms.addEventListener("sourceopen", function () {
     var sb = ms.addSourceBuffer("video/mp4");
@@ -72,7 +57,18 @@ runWithMSE(function (ms, v) {
 
     fetchWithXHR("bipbop/bipbop2s.mp4", function (arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer));
-      v.addEventListener("loadeddata", do_loaded);
+      once(sb, "updateend", function() {
+        // mp4 metadata states 10s when we only have 1.6s worth of video.
+        sb.remove(sb.buffered.end(0), Infinity);
+        once(sb, "updateend", function() {
+          ms.duration = sb.buffered.end(0);
+          is(v.duration, ms.duration, "current time updated with mediasource duration");
+          v.currentTime = v.duration / 2;
+          is(v.currentTime, v.duration / 2, "current time was updated");
+          ok(v.seeking, "seeking is true");
+          v.addEventListener("seeked", do_seeked);
+        });
+      });
     });
   });
 });

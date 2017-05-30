@@ -74,6 +74,16 @@ Post(const string& url, const string& payload)
     return false;
   }
 
+  DWORD timeout = static_cast<DWORD>(kConnectionTimeoutMs);
+  bool rv = InternetSetOption(internet.get(),
+                              INTERNET_OPTION_CONNECT_TIMEOUT,
+                              &timeout,
+                              sizeof(timeout));
+  if (!rv) {
+    PINGSENDER_LOG("ERROR: Could not set the connection timeout\n");
+    return false;
+  }
+
   ScopedHInternet connection(InternetConnect(internet.get(),
                                              host, components.nPort,
                                              /* lpszUsername */ NULL,
@@ -107,11 +117,11 @@ Post(const string& url, const string& payload)
   headers += "\r\n";
   headers += kContentEncodingHeader;
 
-  bool rv = HttpSendRequest(request.get(),
-                            headers.c_str(),
-                            -1L,
-                            (LPVOID)payload.c_str(),
-                            payload.size());
+  rv = HttpSendRequest(request.get(),
+                       headers.c_str(),
+                       -1L,
+                       (LPVOID)payload.c_str(),
+                       payload.size());
   if (!rv) {
     PINGSENDER_LOG("ERROR: Could not execute HTTP POST request\n");
     return false;

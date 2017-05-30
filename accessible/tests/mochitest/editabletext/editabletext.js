@@ -14,7 +14,7 @@ function editableTextTestRun()
   }
 
   this.index = 0;
-  this.seq = new Array();
+  this.seq = [];
 
   this.iterate = function iterate()
   {
