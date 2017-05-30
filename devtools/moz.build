@@ -26,6 +26,10 @@ if CONFIG['MOZ_DEVTOOLS'] != 'addon':
         'server',
         'shared',
     ]
+    FINAL_TARGET_FILES.features['devtools@mozilla.org'] += [
+        'bootstrap.js',
+        'install.rdf',
+    ]
 
 # /browser uses DIST_SUBDIR.  We opt-in to this treatment when building
 # DevTools for the browser to keep the root omni.ja slim for use by external XUL
