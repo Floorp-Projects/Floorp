@@ -134,8 +134,6 @@ to mochitest command.
 ## Need Gecko change
 
 * Servo is correct but Gecko is wrong
-  * flex-basis should be 0px when omitted in flex shorthand bug 1331530
-    * test_flexbox_flex_shorthand.html `flex-basis` [10]
   * Gecko rejects calc() in -webkit-gradient bug 1363349
     * test_property_syntax_errors.html `-webkit-gradient` [20]
 * test_property_syntax_errors.html `linear-gradient(0,`: unitless zero as degree bug 1363292 [10]
