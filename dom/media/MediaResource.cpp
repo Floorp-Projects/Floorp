@@ -1643,22 +1643,423 @@ MediaResourceIndex::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
   return NS_OK;
 }
 
+nsCString
+ResultName(nsresult aResult)
+{
+  nsCString name;
+  GetErrorName(aResult, name);
+  return name;
+}
+
 nsresult
-MediaResourceIndex::ReadAt(int64_t aOffset, char* aBuffer,
-                           uint32_t aCount, uint32_t* aBytes) const
+MediaResourceIndex::ReadAt(int64_t aOffset,
+                           char* aBuffer,
+                           uint32_t aCount,
+                           uint32_t* aBytes)
+{
+  const int oOffset = int(aOffset);
+  const unsigned oCount = unsigned(aCount);
+  nsresult rvu = UncachedReadAt(aOffset, aBuffer, aCount, aBytes);
+  printf("**** [%p]CompareReadAt(%u@%d) UncachedReadAt -> %s, %u\n",
+         this,
+         oCount,
+         oOffset,
+         ResultName(rvu).get(),
+         *aBytes);
+
+  printf("**** [%p]CompareReadAt(%u@%d) CachedReadAt: ----------------\n",
+         this,
+         oCount,
+         oOffset);
+  char* buf = new char[aCount];
+  uint32_t bytes = 0;
+  nsresult rvc = CachedReadAt(aOffset, buf, aCount, &bytes);
+
+  printf("**** [%p]CompareReadAt(%u@%d) ---------------- Comparing...\n",
+         this,
+         oCount,
+         oOffset);
+
+  if (rvu != rvc) {
+    printf("*** read(aOffset=%d, aCount=%u) - rvu=%s != rvc=%s\n",
+           int(aOffset),
+           unsigned(aCount),
+           ResultName(rvu).get(),
+           ResultName(rvc).get());
+    MOZ_ASSERT(rvu == rvc || rvc == NS_OK);
+    if (rvc == NS_OK) {
+      // Cached read wins!
+      *aBytes = bytes;
+      memcpy(aBuffer, buf, bytes);
+    }
+  } else if (NS_SUCCEEDED(rvu)) {
+    if (*aBytes != bytes) {
+      printf("*** read(aOffset=%d, aCount=%u) - bu=%u != bc=%u\n",
+             int(aOffset),
+             unsigned(aCount),
+             unsigned(*aBytes),
+             unsigned(bytes));
+      MOZ_ASSERT(*aBytes == bytes);
+    } else {
+      for (uint32_t i = 0; i < bytes; ++i) {
+        uint8_t bu = uint8_t(aBuffer[i]);
+        uint8_t bc = uint8_t(buf[i]);
+        if (bu != bc) {
+          printf("*** read(aOffset=%d, aCount=%u) - u[%u]=%u != c[%u]=%u\n",
+                 int(aOffset),
+                 unsigned(aCount),
+                 unsigned(i),
+                 unsigned(bu),
+                 unsigned(i),
+                 unsigned(bc));
+          MOZ_ASSERT(bu == bc);
+          break;
+        }
+      }
+    }
+  }
+
+  delete[] buf;
+
+  return rvc;
+}
+
+nsresult
+MediaResourceIndex::CachedReadAt(int64_t aOffset,
+                                 char* aBuffer,
+                                 uint32_t aCount,
+                                 uint32_t* aBytes)
+{
+  const int oOffset = int(aOffset);
+  const unsigned oCount = unsigned(aCount);
+  *aBytes = 0;
+
+  if (aCount == 0) {
+    printf("**** [%p]ReadAt(%u@%d) - aCount==0 -> NS_OK, 0\n",
+           this,
+           oCount,
+           oOffset);
+    return NS_OK;
+  }
+
+  const int64_t endOffset = aOffset + aCount;
+  const int64_t lastBlockOffset = CacheOffsetContaining(endOffset - 1);
+
+  if (mCachedBytes != 0 && mCachedOffset + mCachedBytes >= aOffset &&
+      mCachedOffset < endOffset) {
+    // There is data in the cache that is not completely before aOffset and not
+    // completely after endOffset, so it could be usable (with potential top-up).
+    if (aOffset < mCachedOffset) {
+      // We need to read before the cached data.
+      const uint32_t toRead = uint32_t(mCachedOffset - aOffset);
+      MOZ_ASSERT(toRead > 0);
+      MOZ_ASSERT(toRead < aCount);
+      uint32_t read = 0;
+      nsresult rv = UncachedReadAt(aOffset, aBuffer, toRead, &read);
+      if (NS_FAILED(rv)) {
+        printf("**** [%p]ReadAt(%u@%d) uncached read before cache -> %s\n",
+               this,
+               oCount,
+               oOffset,
+               ResultName(rv).get());
+        return rv;
+      }
+      *aBytes = read;
+      if (read < toRead) {
+        // Could not read everything we wanted, we're done.
+        printf("**** [%p]ReadAt(%u@%d) uncached read before cache, incomplete "
+               "-> OK, %u\n",
+               this,
+               oCount,
+               oOffset,
+               unsigned(*aBytes));
+        return NS_OK;
+      }
+      aOffset += read;
+      aBuffer += read;
+      aCount -= read;
+      printf("**** [%p]ReadAt(%u@%d) uncached read before cache: %u, "
+             "remaining: %u@%d\n",
+             this,
+             oCount,
+             oOffset,
+             unsigned(read),
+             unsigned(aCount),
+             int(aOffset));
+      // We should have reached the cache.
+      MOZ_ASSERT(aOffset == mCachedOffset);
+    }
+    MOZ_ASSERT(aOffset >= mCachedOffset);
+
+    // We've reached our cache.
+    const uint32_t toCopy =
+      std::min(aCount, uint32_t(mCachedOffset + mCachedBytes - aOffset));
+    // Note that we could in fact be just after the last byte of the cache, in
+    // which case we can't actually read from it! (But we will top-up next.)
+    if (toCopy != 0) {
+      memcpy(aBuffer, &mCachedBlock[IndexInCache(aOffset)], toCopy);
+      *aBytes += toCopy;
+      aCount -= toCopy;
+      if (aCount == 0) {
+        // All done!
+        printf("**** [%p]ReadAt(%u@%d) copied from cache(%u@%d) and done :-) "
+               "-> OK, %u\n",
+               this,
+               oCount,
+               oOffset,
+               unsigned(mCachedBytes),
+               int(mCachedOffset),
+               unsigned(*aBytes));
+        return NS_OK;
+      }
+      aOffset += toCopy;
+      aBuffer += toCopy;
+      printf("**** [%p]ReadAt(%u@%d) copied %u from cache(%u@%d) :-), "
+             "remaining: %u@%d\n",
+             this,
+             oCount,
+             oOffset,
+             unsigned(toCopy),
+             unsigned(mCachedBytes),
+             int(mCachedOffset),
+             unsigned(aCount),
+             int(aOffset));
+    }
+
+    if (aOffset - 1 >= lastBlockOffset) {
+      // We were already reading cached data from the last block, we need more
+      // from it -> try to top-up, read what we can, and we'll be done.
+      MOZ_ASSERT(aOffset == mCachedOffset + mCachedBytes);
+      MOZ_ASSERT(endOffset <= lastBlockOffset + BLOCK_SIZE);
+      return CacheOrReadAt(
+        oOffset, oCount, "top-up cache", aOffset, aBuffer, aCount, aBytes);
+    }
+
+    // We were not in the last block (but we may just have crossed the line now)
+    MOZ_ASSERT(aOffset <= lastBlockOffset);
+    // Continue below...
+  } else if (aOffset >= lastBlockOffset) {
+    // There was nothing we could get from the cache.
+    // But we're already in the last block -> Cache or read what we can.
+    // Make sure to invalidate the cache first.
+    mCachedBytes = 0;
+    return CacheOrReadAt(
+      oOffset, oCount, "nothing in cache", aOffset, aBuffer, aCount, aBytes);
+  }
+
+  // If we're here, either there was nothing usable in the cache, or we've just
+  // read what was in the cache but there's still more to read.
+
+  if (aOffset < lastBlockOffset) {
+    // We need to read before the last block.
+    // Start with an uncached read up to the last block.
+    const uint32_t toRead = uint32_t(lastBlockOffset - aOffset);
+    MOZ_ASSERT(toRead > 0);
+    MOZ_ASSERT(toRead < aCount);
+    uint32_t read = 0;
+    nsresult rv = UncachedReadAt(aOffset, aBuffer, toRead, &read);
+    if (NS_FAILED(rv)) {
+      printf(
+        "**** [%p]ReadAt(%u@%d) uncached read before last block failed -> %s\n",
+        this,
+        oCount,
+        oOffset,
+        ResultName(rv).get());
+      return rv;
+    }
+    if (read == 0) {
+      printf(
+        "**** [%p]ReadAt(%u@%d) uncached read 0 before last block -> OK, %u\n",
+        this,
+        oCount,
+        oOffset,
+        unsigned(*aBytes));
+      return NS_OK;
+    }
+    *aBytes += read;
+    if (read < toRead) {
+      // Could not read everything we wanted, we're done.
+      printf("**** [%p]ReadAt(%u@%d) uncached read before last block, "
+             "incomplete -> OK, %u\n",
+             this,
+             oCount,
+             oOffset,
+             unsigned(*aBytes));
+      return NS_OK;
+    }
+    aOffset += read;
+    aBuffer += read;
+    aCount -= read;
+    printf(
+      "**** [%p]ReadAt(%u@%d) read %u before last block, remaining: %u@%d\n",
+      this,
+      oCount,
+      oOffset,
+      unsigned(read),
+      unsigned(aCount),
+      int(aOffset));
+  }
+
+  // We should just have reached the start of the last block.
+  MOZ_ASSERT(aOffset == lastBlockOffset);
+  MOZ_ASSERT(aCount <= BLOCK_SIZE);
+  // Make sure to invalidate the cache first.
+  mCachedBytes = 0;
+  return CacheOrReadAt(
+    oOffset, oCount, "last block", aOffset, aBuffer, aCount, aBytes);
+}
+
+nsresult
+MediaResourceIndex::CacheOrReadAt(int oOffset,
+                                  unsigned oCount,
+                                  const char* oContext,
+                                  int64_t aOffset,
+                                  char* aBuffer,
+                                  uint32_t aCount,
+                                  uint32_t* aBytes)
+{
+  // We should be here because there is more data to read.
+  MOZ_ASSERT(aCount > 0);
+  // We should be in the last block, so we shouldn't try to read past it.
+  MOZ_ASSERT(IndexInCache(aOffset) + aCount <= BLOCK_SIZE);
+
+  const int64_t length = GetLength();
+  // If length is unknown (-1), look at resource-cached data.
+  // If length is known and equal or greater than requested, also look at
+  // resource-cached data.
+  // Otherwise, if length is known but same, or less than(!?), requested, don't
+  // attempt to access resource-cached data, as we're not expecting it to ever
+  // be greater than the length.
+  if (length < 0 || length >= aOffset + aCount) {
+    // Is there cached data covering at least the requested range?
+    const int64_t cachedDataEnd = mResource->GetCachedDataEnd(aOffset);
+    if (cachedDataEnd >= aOffset + aCount) {
+      // Try to read as much resource-cached data as can fill our local cache.
+      const uint32_t cacheIndex = IndexInCache(aOffset);
+      const uint32_t toRead = uint32_t(
+        std::min(cachedDataEnd - aOffset, int64_t(BLOCK_SIZE - cacheIndex)));
+      MOZ_ASSERT(toRead >= aCount);
+      nsresult rv =
+        mResource->ReadFromCache(&mCachedBlock[cacheIndex], aOffset, toRead);
+      if (NS_SUCCEEDED(rv)) {
+        // Success means we have read the full `toRead` amount.
+        printf("**** [%p]ReadAt(%u@%d) - %s - ReadFromCache(%u@%d) succeeded\n",
+               this,
+               oCount,
+               oOffset,
+               oContext,
+               unsigned(toRead),
+               int(aOffset));
+        if (mCachedOffset + mCachedBytes == aOffset) {
+          // We were topping-up the cache, just update its size.
+          mCachedBytes += toRead;
+        } else {
+          // We were filling the cache from scratch, save new cache information.
+          mCachedOffset = aOffset;
+          mCachedBytes = toRead;
+        }
+        // Copy relevant part into output.
+        memcpy(aBuffer, &mCachedBlock[cacheIndex], aCount);
+        *aBytes += aCount;
+        printf("**** [%p]ReadAt(%u@%d) - %s - copied %u@%d, remaining: %u@%d "
+               "-> OK, %u\n",
+               this,
+               oCount,
+               oOffset,
+               oContext,
+               unsigned(aCount),
+               int(aOffset),
+               unsigned(aCount),
+               int(aOffset),
+               unsigned(*aBytes));
+        // We may not have read all that was requested, but we got everything
+        // we could get, so we're done.
+        return NS_OK;
+      }
+      printf("**** [%p]ReadAt(%u@%d) - %s - ReadFromCache(%u@%d) failed: %s, "
+             "will fallback to blocking read\n",
+             this,
+             oCount,
+             oOffset,
+             oContext,
+             unsigned(toRead),
+             int(aOffset),
+             ResultName(rv).get());
+      // Failure during reading. Note that this may be due to the cache
+      // changing between `GetCachedDataEnd` and `ReadFromCache`, so it's not
+      // totally unexpected, just hopefully rare; but we do need to handle it.
+
+      // Invalidate part of cache that may have been partially overridden.
+      if (mCachedOffset + mCachedBytes == aOffset) {
+        // We were topping-up the cache, just keep the old untouched data.
+        // (i.e., nothing to do here.)
+      } else {
+        // We were filling the cache from scratch, invalidate cache.
+        mCachedBytes = 0;
+      }
+    } else {
+      printf("**** [%p]ReadAt(%u@%d) - %s - no cached data, will fallback to "
+             "blocking read\n",
+             this,
+             oCount,
+             oOffset,
+             oContext);
+    }
+  } else {
+    printf("**** [%p]ReadAt(%u@%d) - %s - length is known and too short(!), "
+           "will fallback to blocking read as the caller requested\n",
+           this,
+           oCount,
+           oOffset,
+           oContext);
+  }
+  uint32_t read = 0;
+  nsresult rv = UncachedReadAt(aOffset, aBuffer, aCount, &read);
+  if (NS_SUCCEEDED(rv)) {
+    printf("**** [%p]ReadAt(%u@%d) - %s - fallback uncached read -> %s, %u\n",
+           this,
+           oCount,
+           oOffset,
+           oContext,
+           ResultName(rv).get(),
+           unsigned(read));
+    *aBytes += read;
+  } else {
+    printf("**** [%p]ReadAt(%u@%d) - %s - fallback uncached read -> %s\n",
+           this,
+           oCount,
+           oOffset,
+           oContext,
+           ResultName(rv).get());
+  }
+  return rv;
+}
+
+nsresult
+MediaResourceIndex::UncachedReadAt(int64_t aOffset,
+                                   char* aBuffer,
+                                   uint32_t aCount,
+                                   uint32_t* aBytes) const
 {
   *aBytes = 0;
-  while (aCount > 0) {
-    uint32_t bytesRead = 0;
-    nsresult rv = mResource->ReadAt(aOffset, aBuffer, aCount, &bytesRead);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!bytesRead) {
-      break;
+  if (aCount != 0) {
+    for (;;) {
+      uint32_t bytesRead = 0;
+      nsresult rv = mResource->ReadAt(aOffset, aBuffer, aCount, &bytesRead);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      if (bytesRead == 0) {
+        break;
+      }
+      *aBytes += bytesRead;
+      aCount -= bytesRead;
+      if (aCount == 0) {
+        break;
+      }
+      aOffset += bytesRead;
+      aBuffer += bytesRead;
     }
-    *aBytes += bytesRead;
-    aOffset += bytesRead;
-    aBuffer += bytesRead;
-    aCount -= bytesRead;
   }
   return NS_OK;
 }
