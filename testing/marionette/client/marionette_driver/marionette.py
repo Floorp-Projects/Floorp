@@ -1336,7 +1336,6 @@ class Marionette(object):
 
     @test_name.setter
     def test_name(self, test_name):
-        self._send_message("setTestName", {"value": test_name})
         self._test_name = test_name
 
     def delete_session(self, send_request=True, reset_session_id=False):
