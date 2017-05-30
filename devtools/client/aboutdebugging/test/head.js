@@ -213,7 +213,8 @@ function* installAddon({document, path, name, isWebExtension}) {
 
 function* uninstallAddon({document, id, name}) {
   let addonList = getAddonListWithAddon(document, id);
-  let addonListMutation = waitForMutation(addonList, { childList: true });
+  let addonListMutation = waitForMutation(addonList.parentNode,
+                                          { childList: true, subtree: true });
 
   // Now uninstall this addon
   yield new Promise(done => {
@@ -233,13 +234,18 @@ function* uninstallAddon({document, id, name}) {
     });
   });
 
-  // Ensure that the UI removes the addon from the list
   yield addonListMutation;
-  let names = [...addonList.querySelectorAll(".target-name")];
-  names = names.map(element => element.textContent);
-  ok(!names.includes(name),
-    "After uninstall, the addon name disappears from the list of addons: "
-    + names);
+
+  // If parentNode is none, that means the entire addonList was removed from the
+  // document. This happens when the addon we are removing is the last one.
+  if (addonList.parentNode !== null) {
+    // Ensure that the UI removes the addon from the list
+    let names = [...addonList.querySelectorAll(".target-name")];
+    names = names.map(element => element.textContent);
+    ok(!names.includes(name),
+      "After uninstall, the addon name disappears from the list of addons: "
+      + names);
+  }
 }
 
 /**
