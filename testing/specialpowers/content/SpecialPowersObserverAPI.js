@@ -7,11 +7,11 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
-if (typeof(Ci) == 'undefined') {
+if (typeof(Ci) == "undefined") {
   var Ci = Components.interfaces;
 }
 
-if (typeof(Cc) == 'undefined') {
+if (typeof(Cc) == "undefined") {
   var Cc = Components.classes;
 }
 
@@ -35,14 +35,14 @@ this.SpecialPowersObserverAPI = function SpecialPowersObserverAPI() {
 }
 
 function parseKeyValuePairs(text) {
-  var lines = text.split('\n');
+  var lines = text.split("\n");
   var data = {};
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i] == '')
+    if (lines[i] == "")
       continue;
 
     // can't just .split() because the value might contain = characters
-    let eq = lines[i].indexOf('=');
+    let eq = lines[i].indexOf("=");
     if (eq != -1) {
       let [key, value] = [lines[i].substring(0, eq),
                           lines[i].substring(eq + 1)];
@@ -61,7 +61,7 @@ function parseKeyValuePairsFromFile(file) {
            createInstance(Ci.nsIConverterInputStream);
   is.init(fstream, "UTF-8", 1024, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
   var str = {};
-  var contents = '';
+  var contents = "";
   while (is.readString(4096, str) != 0) {
     contents += str.value;
   }
@@ -90,7 +90,7 @@ SpecialPowersObserverAPI.prototype = {
     function addDumpIDToMessage(propertyName) {
       try {
         var id = aSubject.getPropertyAsAString(propertyName);
-      } catch(ex) {
+      } catch (ex) {
         var id = null;
       }
       if (id) {
@@ -99,7 +99,7 @@ SpecialPowersObserverAPI.prototype = {
       }
     }
 
-    switch(aTopic) {
+    switch (aTopic) {
       case "plugin-crashed":
       case "ipc:content-shutdown":
         var message = { type: "crash-observed", dumpIDs: [] };
@@ -111,7 +111,7 @@ SpecialPowersObserverAPI.prototype = {
           let pluginID = aSubject.getPropertyAsAString("pluginDumpID");
           let extra = this._getExtraData(pluginID);
           if (extra && ("additional_minidumps" in extra)) {
-            let dumpNames = extra.additional_minidumps.split(',');
+            let dumpNames = extra.additional_minidumps.split(",");
             for (let name of dumpNames) {
               message.dumpIDs.push({id: pluginID + "-" + name, extension: "dmp"});
             }
@@ -203,7 +203,7 @@ SpecialPowersObserverAPI.prototype = {
     return removed;
   },
 
-  _getURI: function (url) {
+  _getURI: function(url) {
     return Services.io.newURI(url);
   },
 
@@ -274,8 +274,7 @@ SpecialPowersObserverAPI.prototype = {
       if (contractID.substring(0, serviceMarker.length) == serviceMarker) {
         contractID = contractID.substring(serviceMarker.length);
         factoryFunction = "getService";
-      }
-      else {
+      } else {
         factoryFunction = "createInstance";
       }
 
@@ -285,7 +284,7 @@ SpecialPowersObserverAPI.prototype = {
           let observer = handler.QueryInterface(Ci.nsIObserver);
           observers.push(observer);
         }
-      } catch(e) { }
+      } catch (e) { }
     }
 
     // Next enumerate the registered observers.
@@ -299,10 +298,10 @@ SpecialPowersObserverAPI.prototype = {
       } catch (e) { }
     }
 
-    observers.forEach(function (observer) {
+    observers.forEach(function(observer) {
       try {
         observer.observe(subject, topic, data);
-      } catch(e) { }
+      } catch (e) { }
     });
   },
 
@@ -314,7 +313,7 @@ SpecialPowersObserverAPI.prototype = {
     // We explicitly return values in the below code so that this function
     // doesn't trigger a flurry of warnings about "does not always return
     // a value".
-    switch(aMessage.name) {
+    switch (aMessage.name) {
       case "SPPrefService": {
         let prefs = Services.prefs;
         let prefType = aMessage.json.prefType.toUpperCase();
@@ -329,7 +328,7 @@ SpecialPowersObserverAPI.prototype = {
           if (prefs.getPrefType(prefName) == prefs.PREF_INVALID)
             return null;
         } else if (aMessage.json.op == "set") {
-          if (!prefName || !prefType  || prefValue === null)
+          if (!prefName || !prefType || prefValue === null)
             throw new SpecialPowersError("Invalid parameters for set in SPPrefService");
         } else if (aMessage.json.op == "clear") {
           if (!prefName)
@@ -339,27 +338,27 @@ SpecialPowersObserverAPI.prototype = {
         }
 
         // Now we make the call
-        switch(prefType) {
+        switch (prefType) {
           case "BOOL":
             if (aMessage.json.op == "get")
-              return(prefs.getBoolPref(prefName));
+              return (prefs.getBoolPref(prefName));
             else
-              return(prefs.setBoolPref(prefName, prefValue));
+              return (prefs.setBoolPref(prefName, prefValue));
           case "INT":
             if (aMessage.json.op == "get")
-              return(prefs.getIntPref(prefName));
+              return (prefs.getIntPref(prefName));
             else
-              return(prefs.setIntPref(prefName, prefValue));
+              return (prefs.setIntPref(prefName, prefValue));
           case "CHAR":
             if (aMessage.json.op == "get")
-              return(prefs.getCharPref(prefName));
+              return (prefs.getCharPref(prefName));
             else
-              return(prefs.setCharPref(prefName, prefValue));
+              return (prefs.setCharPref(prefName, prefValue));
           case "COMPLEX":
             if (aMessage.json.op == "get")
-              return(prefs.getComplexValue(prefName, prefValue[0]));
+              return (prefs.getComplexValue(prefName, prefValue[0]));
             else
-              return(prefs.setComplexValue(prefName, prefValue[0], prefValue[1]));
+              return (prefs.setComplexValue(prefName, prefValue[0], prefValue[1]));
           case "":
             if (aMessage.json.op == "clear") {
               prefs.clearUserPref(prefName);
@@ -475,14 +474,14 @@ SpecialPowersObserverAPI.prototype = {
         sb.browserElement = aMessage.target;
 
         // Also expose assertion functions
-        let reporter = function (err, message, stack) {
+        let reporter = function(err, message, stack) {
           // Pipe assertions back to parent process
           mm.sendAsyncMessage("SPChromeScriptAssert",
                               { id, name: scriptName, err, message,
                                 stack });
         };
         Object.defineProperty(sb, "assert", {
-          get: function () {
+          get: function() {
             let scope = Components.utils.createObjectIn(sb);
             Services.scriptloader.loadSubScript("chrome://specialpowers/content/Assert.jsm",
                                                 scope);
@@ -497,7 +496,7 @@ SpecialPowersObserverAPI.prototype = {
         // Evaluate the chrome script
         try {
           Components.utils.evalInSandbox(jsScript, sb, "1.8", scriptName, 1);
-        } catch(e) {
+        } catch (e) {
           throw new SpecialPowersError(
             "Error while executing chrome script '" + scriptName + "':\n" +
             e + "\n" +
