@@ -270,7 +270,9 @@ xul|button[type="menu"] > xul|*.button-box > xul|*.button-menu-dropmarker {
   height: 16px;
   border: none;
   background-color: transparent;
-  list-style-image: url("chrome://global/skin/in-content/dropdown.svg#dropdown");
+  list-style-image: url("chrome://global/skin/in-content/dropdown.svg");
+  -moz-context-properties: fill;
+  fill: -moz-DialogText;
 }
 
 xul|*.help-button {
@@ -375,7 +377,9 @@ xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker {
   padding: 0;
   border: none;
   background-color: transparent;
-  list-style-image: url("chrome://global/skin/in-content/dropdown.svg#dropdown");
+  list-style-image: url("chrome://global/skin/in-content/dropdown.svg");
+  -moz-context-properties: fill;
+  fill: -moz-DialogText;
 }
 
 xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker > xul|*.dropmarker-icon {
@@ -384,7 +388,7 @@ xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker > xul|*.dropmark
 }
 
 xul|menulist[disabled="true"]:not([editable="true"]) > xul|*.menulist-dropmarker {
-  list-style-image: url("chrome://global/skin/in-content/dropdown.svg#dropdown-disabled")
+  fill: GrayText;
 }
 
 xul|menulist > xul|menupopup,
@@ -825,7 +829,9 @@ xul|treecolpicker {
 }
 
 xul|treecol:not([hideheader="true"]) > xul|*.treecol-sortdirection[sortDirection] {
-  list-style-image: url("chrome://global/skin/in-content/dropdown.svg#dropdown");
+  list-style-image: url("chrome://global/skin/in-content/dropdown.svg");
+  -moz-context-properties: fill;
+  fill: -moz-DialogText;
   width: 18px;
   height: 18px;
 }
