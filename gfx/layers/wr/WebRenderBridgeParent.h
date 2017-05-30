@@ -116,6 +116,15 @@ public:
   mozilla::ipc::IPCResult RecvClearCachedResources() override;
   mozilla::ipc::IPCResult RecvForceComposite() override;
 
+  mozilla::ipc::IPCResult RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,
+                                                     nsTArray<ScrollableLayerGuid>&& aTargets) override;
+  mozilla::ipc::IPCResult RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScrollId,
+                                                   const float& aX,
+                                                   const float& aY) override;
+  mozilla::ipc::IPCResult RecvSetAsyncZoom(const FrameMetrics::ViewID& aScrollId,
+                                           const float& aZoom) override;
+  mozilla::ipc::IPCResult RecvFlushApzRepaints() override;
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void SetWebRenderProfilerEnabled(bool aEnabled);
 
@@ -171,6 +180,7 @@ public:
 private:
   virtual ~WebRenderBridgeParent();
 
+  uint64_t GetLayersId() const;
   void DeleteOldImages();
   void ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                 InfallibleTArray<WebRenderParentCommand>& commands,
@@ -202,6 +212,10 @@ private:
   // If scrollbars need their transforms updated, the provided aTransformArray
   // is populated with the property update details.
   bool PushAPZStateToWR(nsTArray<WrTransformProperty>& aTransformArray);
+
+  // Helper method to get an APZC reference from a scroll id. Uses the layers
+  // id of this bridge, and may return null if the APZC wasn't found.
+  already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const FrameMetrics::ViewID& aId);
 
 private:
   struct PendingTransactionId {

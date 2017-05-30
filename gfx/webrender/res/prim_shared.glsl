@@ -117,7 +117,7 @@ varying vec3 vClipMaskUv;
 
 #ifdef WR_VERTEX_SHADER
 
-#define VECS_PER_LAYER             13
+#define VECS_PER_LAYER              9
 #define VECS_PER_RENDER_TASK        3
 #define VECS_PER_PRIM_GEOM          2
 #define VECS_PER_SPLIT_GEOM         3
@@ -133,14 +133,8 @@ uniform sampler2D sData128;
 uniform sampler2D sResourceRects;
 
 // Instanced attributes
-in int aGlobalPrimId;
-in int aPrimitiveAddress;
-in int aTaskIndex;
-in int aClipTaskIndex;
-in int aLayerIndex;
-in int aElementIndex;
-in ivec2 aUserData;
-in int aZIndex;
+in ivec4 aData0;
+in ivec4 aData1;
 
 // get_fetch_uv is a macro to work around a macOS Intel driver parsing bug.
 // TODO: convert back to a function once the driver issues are resolved, if ever.
@@ -190,7 +184,6 @@ struct Layer {
     mat4 transform;
     mat4 inv_transform;
     RectWithSize local_clip_rect;
-    vec4 screen_vertices[4];
 };
 
 Layer fetch_layer(int index) {
@@ -216,11 +209,6 @@ Layer fetch_layer(int index) {
 
     vec4 clip_rect = texelFetchOffset(sLayers, uv1, 0, ivec2(0, 0));
     layer.local_clip_rect = RectWithSize(clip_rect.xy, clip_rect.zw);
-
-    layer.screen_vertices[0] = texelFetchOffset(sLayers, uv1, 0, ivec2(1, 0));
-    layer.screen_vertices[1] = texelFetchOffset(sLayers, uv1, 0, ivec2(2, 0));
-    layer.screen_vertices[2] = texelFetchOffset(sLayers, uv1, 0, ivec2(3, 0));
-    layer.screen_vertices[3] = texelFetchOffset(sLayers, uv1, 0, ivec2(4, 0));
 
     return layer;
 }
@@ -447,50 +435,51 @@ PrimitiveGeometry fetch_prim_geometry(int index) {
 
 struct PrimitiveInstance {
     int global_prim_index;
-    int specific_prim_index;
+    int specific_prim_address;
     int render_task_index;
     int clip_task_index;
     int layer_index;
-    int sub_index;
     int z;
-    ivec2 user_data;
+    int user_data0;
+    int user_data1;
 };
 
 PrimitiveInstance fetch_prim_instance() {
     PrimitiveInstance pi;
 
-    pi.global_prim_index = aGlobalPrimId;
-    pi.specific_prim_index = aPrimitiveAddress;
-    pi.render_task_index = aTaskIndex;
-    pi.clip_task_index = aClipTaskIndex;
-    pi.layer_index = aLayerIndex;
-    pi.sub_index = aElementIndex;
-    pi.user_data = aUserData;
-    pi.z = aZIndex;
+    pi.global_prim_index = aData0.x;
+    pi.specific_prim_address = aData0.y;
+    pi.render_task_index = aData0.z;
+    pi.clip_task_index = aData0.w;
+    pi.layer_index = aData1.x;
+    pi.z = aData1.y;
+    pi.user_data0 = aData1.z;
+    pi.user_data1 = aData1.w;
 
     return pi;
 }
 
-struct CachePrimitiveInstance {
-    int global_prim_index;
-    int specific_prim_index;
+struct CompositeInstance {
     int render_task_index;
-    int sub_index;
-    ivec2 user_data;
+    int src_task_index;
+    int backdrop_task_index;
+    int user_data0;
+    int user_data1;
+    float z;
 };
 
-CachePrimitiveInstance fetch_cache_instance() {
-    CachePrimitiveInstance cpi;
+CompositeInstance fetch_composite_instance() {
+    CompositeInstance ci;
 
-    PrimitiveInstance pi = fetch_prim_instance();
+    ci.render_task_index = aData0.x;
+    ci.src_task_index = aData0.y;
+    ci.backdrop_task_index = aData0.z;
+    ci.z = float(aData0.w);
 
-    cpi.global_prim_index = pi.global_prim_index;
-    cpi.specific_prim_index = pi.specific_prim_index;
-    cpi.render_task_index = pi.render_task_index;
-    cpi.sub_index = pi.sub_index;
-    cpi.user_data = pi.user_data;
+    ci.user_data0 = aData1.x;
+    ci.user_data1 = aData1.y;
 
-    return cpi;
+    return ci;
 }
 
 struct Primitive {
@@ -500,10 +489,8 @@ struct Primitive {
     RectWithSize local_rect;
     RectWithSize local_clip_rect;
     int prim_index;
-    // when sending multiple primitives of the same type (e.g. border segments)
-    // this index allows the vertex shader to recognize the difference
-    int sub_index;
-    ivec2 user_data;
+    int user_data0;
+    int user_data1;
     float z;
 };
 
@@ -518,9 +505,9 @@ Primitive load_primitive_custom(PrimitiveInstance pi) {
     prim.local_rect = pg.local_rect;
     prim.local_clip_rect = pg.local_clip_rect;
 
-    prim.prim_index = pi.specific_prim_index;
-    prim.sub_index = pi.sub_index;
-    prim.user_data = pi.user_data;
+    prim.prim_index = pi.specific_prim_address;
+    prim.user_data0 = pi.user_data0;
+    prim.user_data1 = pi.user_data1;
     prim.z = float(pi.z);
 
     return prim;
@@ -539,7 +526,7 @@ Primitive load_primitive() {
 bool ray_plane(vec3 normal, vec3 point, vec3 ray_origin, vec3 ray_dir, out float t)
 {
     float denom = dot(normal, ray_dir);
-    if (denom > 1e-6) {
+    if (abs(denom) > 1e-6) {
         vec3 d = point - ray_origin;
         t = dot(d, normal) / denom;
         return t >= 0.0;
@@ -568,12 +555,11 @@ vec4 untransform(vec2 ref, vec3 n, vec3 a, mat4 inv_transform) {
 
 // Given a CSS space position, transform it back into the layer space.
 vec4 get_layer_pos(vec2 pos, Layer layer) {
-    // get 3 of the layer corners in CSS space
-    vec3 a = layer.screen_vertices[0].xyz / layer.screen_vertices[0].w;
-    vec3 b = layer.screen_vertices[3].xyz / layer.screen_vertices[3].w;
-    vec3 c = layer.screen_vertices[2].xyz / layer.screen_vertices[2].w;
+    // get a point on the layer plane
+    vec4 ah = layer.transform * vec4(0.0, 0.0, 0.0, 1.0);
+    vec3 a = ah.xyz / ah.w;
     // get the normal to the layer plane
-    vec3 n = normalize(cross(b-a, c-a));
+    vec3 n = transpose(mat3(layer.inv_transform)) * vec3(0.0, 0.0, 1.0);
     return untransform(pos, n, a, layer.inv_transform);
 }
 
