@@ -105,6 +105,8 @@ nsChromeProtocolHandler::NewChannel2(nsIURI* aURI,
     nsresult rv;
 
     NS_ENSURE_ARG_POINTER(aURI);
+    NS_ENSURE_ARG_POINTER(aLoadInfo);
+
     NS_PRECONDITION(aResult, "Null out param");
 
 #ifdef DEBUG
@@ -145,6 +147,12 @@ nsChromeProtocolHandler::NewChannel2(nsIURI* aURI,
         return rv;
     }
 
+    // We don't want to allow the inner protocol handler modify the result principal URI
+    // since we want either |aURI| or anything pre-set by upper layers to prevail.
+    nsCOMPtr<nsIURI> savedResultPrincipalURI;
+    rv = aLoadInfo->GetResultPrincipalURI(getter_AddRefs(savedResultPrincipalURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     rv = NS_NewChannelInternal(getter_AddRefs(result),
                                resolvedURI,
                                aLoadInfo);
@@ -168,9 +176,8 @@ nsChromeProtocolHandler::NewChannel2(nsIURI* aURI,
 
     // Make sure that the channel remembers where it was
     // originally loaded from.
-    nsLoadFlags loadFlags = 0;
-    result->GetLoadFlags(&loadFlags);
-    result->SetLoadFlags(loadFlags & ~nsIChannel::LOAD_REPLACE);
+    rv = aLoadInfo->SetResultPrincipalURI(savedResultPrincipalURI);
+    NS_ENSURE_SUCCESS(rv, rv);
     rv = result->SetOriginalURI(aURI);
     if (NS_FAILED(rv)) return rv;
 
