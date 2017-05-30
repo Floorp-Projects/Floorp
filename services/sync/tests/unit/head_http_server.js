@@ -296,7 +296,7 @@ ServerCollection.prototype = {
     return c;
   },
 
-  get(options) {
+  get(options, request) {
     let result;
     if (options.full) {
       let data = [];
@@ -317,8 +317,13 @@ ServerCollection.prototype = {
       } else if (start) {
         data = data.slice(start);
       }
-      // Our implementation of application/newlines.
-      result = data.join("\n") + "\n";
+
+      if (request && request.getHeader("accept") == "application/newlines") {
+        this._log.error("Error: client requesting application/newlines content");
+        throw new Error("This server should not serve application/newlines content");
+      } else {
+        result = JSON.stringify(data);
+      }
 
       // Use options as a backchannel to report count.
       options.recordCount = data.length;
