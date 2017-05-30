@@ -472,7 +472,10 @@ public:
         sSurfaceMemoryUsed[size_t(aType)] = sSurfaceMemoryUsed[size_t(aType)] + aBytes;
     };
 
-    NS_DECL_ISUPPORTS
+    // This memory reporter is sometimes allocated on the compositor thread,
+    // but always released on the main thread, so its refcounting needs to be
+    // threadsafe.
+    NS_DECL_THREADSAFE_ISUPPORTS
 
     NS_IMETHOD CollectReports(nsIHandleReportCallback *aHandleReport,
                               nsISupports *aData, bool aAnonymize) override
