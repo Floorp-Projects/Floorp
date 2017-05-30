@@ -40,11 +40,6 @@ to mochitest command.
     * test_animations_omta.html: bug 1361938, bug 1340005 [*]
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
-* CSSOM support:
-  * \@import bug 1352968
-    * test_bug221428.html [1]
-    * test_css_eof_handling.html [1]
-* test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [1]
 * console support bug 1352669
   * test_bug413958.html `monitorConsole` [3]
   * test_parser_diagnostics_unprintables.html [550]
