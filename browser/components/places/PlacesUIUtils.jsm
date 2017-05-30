@@ -953,11 +953,7 @@ this.PlacesUIUtils = {
     // For consistency, we want all the bookmarks to open in new tabs, instead
     // of having one of them replace the currently focused tab.  Hence we call
     // loadTabs with aReplace set to false.
-    browserWindow.gBrowser.loadTabs(urls, {
-      inBackground: loadInBackground,
-      replace: false,
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
+    browserWindow.gBrowser.loadTabs(urls, loadInBackground, false);
   },
 
   openLiveMarkNodesInTabs:

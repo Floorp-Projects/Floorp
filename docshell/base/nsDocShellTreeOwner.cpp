@@ -994,20 +994,7 @@ nsDocShellTreeOwner::HandleEvent(nsIDOMEvent* aEvent)
           if (webBrowserChrome) {
             nsCOMPtr<nsITabChild> tabChild = do_QueryInterface(webBrowserChrome);
             if (tabChild) {
-              nsCOMPtr<nsIDOMDataTransfer> domDataTransfer;
-              dragEvent->GetDataTransfer(getter_AddRefs(domDataTransfer));
-              NS_ENSURE_TRUE(domDataTransfer, NS_ERROR_UNEXPECTED);
-              nsCOMPtr<nsIDOMNode> domSourceNode;
-              domDataTransfer->GetMozSourceNode(getter_AddRefs(domSourceNode));
-              nsCOMPtr<nsINode> sourceNode = do_QueryInterface(domSourceNode);
-              nsCOMPtr<nsIPrincipal> triggeringPrincipal;
-              if (sourceNode) {
-                triggeringPrincipal = sourceNode->NodePrincipal();
-              } else {
-                triggeringPrincipal = NullPrincipal::Create();
-              }
-              nsresult rv = tabChild->RemoteDropLinks(linksCount, links,
-                                                      triggeringPrincipal);
+              nsresult rv = tabChild->RemoteDropLinks(linksCount, links);
               for (uint32_t i = 0; i < linksCount; i++) {
                 NS_RELEASE(links[i]);
               }
