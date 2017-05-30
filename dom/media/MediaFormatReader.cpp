@@ -2019,9 +2019,9 @@ MediaFormatReader::HandleDemuxedSamples(
       bool recyclable = MediaPrefs::MediaDecoderCheckRecycling()
                         && decoder.mDecoder->SupportDecoderRecycling();
       if (!recyclable
+          && decoder.mTimeThreshold.isNothing()
           && (decoder.mNextStreamSourceID.isNothing()
-              || decoder.mNextStreamSourceID.ref() != info->GetID())
-          && !decoder.HasWaitingPromise()) {
+              || decoder.mNextStreamSourceID.ref() != info->GetID())) {
         LOG("%s stream id has changed from:%d to:%d, draining decoder.",
           TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
           info->GetID());
