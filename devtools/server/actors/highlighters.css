@@ -36,6 +36,7 @@
   --highlighter-bubble-arrow-size: 8px;
   --highlighter-font-family: message-box;
   --highlighter-font-size: 11px;
+  --highlighter-marker-color: #000;
 }
 
 /**
@@ -595,18 +596,9 @@
 
 /* Shapes highlighter */
 
-:-moz-native-anonymous .shapes-shape-container,
-:-moz-native-anonymous .shapes-markers-container {
+:-moz-native-anonymous .shapes-shape-container {
   position: absolute;
-}
-
-:-moz-native-anonymous .shapes-markers-container {
-  width: 10px;
-  height: 10px;
-  transform: translate(-5px, -5px);
-  background: transparent;
-  border-radius: 50%;
-  color: var(--highlighter-bubble-background-color);
+  overflow: visible;
 }
 
 :-moz-native-anonymous .shapes-polygon,
@@ -614,6 +606,10 @@
 :-moz-native-anonymous .shapes-rect {
   fill: transparent;
   stroke: var(--highlighter-guide-color);
-  shape-rendering: crispEdges;
+  shape-rendering: geometricPrecision;
   vector-effect: non-scaling-stroke;
+}
+
+:-moz-native-anonymous .shapes-markers {
+  fill: var(--highlighter-marker-color);
 }
