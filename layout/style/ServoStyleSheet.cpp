@@ -221,8 +221,7 @@ ServoStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
     RefPtr<ServoCssRules> rawRules =
       Servo_StyleSheet_GetRules(Inner()->mSheet).Consume();
     MOZ_ASSERT(rawRules);
-    mRuleList = new ServoCSSRuleList(rawRules.forget());
-    mRuleList->SetStyleSheet(this);
+    mRuleList = new ServoCSSRuleList(rawRules.forget(), this);
   }
   return mRuleList;
 }
