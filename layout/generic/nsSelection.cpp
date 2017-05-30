@@ -1795,8 +1795,7 @@ nsFrameSelection::TakeFocus(nsIContent*        aNewFocus,
 
       RefPtr<nsRange> newRange = new nsRange(aNewFocus);
 
-      newRange->SetStart(aNewFocus, aContentOffset);
-      newRange->SetEnd(aNewFocus, aContentOffset);
+      newRange->CollapseTo(aNewFocus, aContentOffset);
       mDomSelections[index]->AddRange(newRange);
       mBatching = batching;
       mChangesDuringBatching = changes;
@@ -3368,11 +3367,12 @@ nsFrameSelection::CreateAndAddRange(nsINode *aParentNode, int32_t aOffset)
   RefPtr<nsRange> range = new nsRange(aParentNode);
 
   // Set range around child at given offset
-  nsresult result = range->SetStart(aParentNode, aOffset);
-  if (NS_FAILED(result)) return result;
-  result = range->SetEnd(aParentNode, aOffset+1);
-  if (NS_FAILED(result)) return result;
-  
+  nsresult rv = range->SetStartAndEnd(aParentNode, aOffset,
+                                      aParentNode, aOffset + 1);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
@@ -3800,13 +3800,12 @@ Selection::SubtractRange(RangeData* aRange, nsRange* aSubtract,
     // We need to add a new RangeData to the output, running from
     // the end of aSubtract to the end of range
     RefPtr<nsRange> postOverlap = new nsRange(aSubtract->GetEndParent());
-
-    rv =
-      postOverlap->SetStart(aSubtract->GetEndParent(), aSubtract->EndOffset());
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv =
-     postOverlap->SetEnd(range->GetEndParent(), range->EndOffset());
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = postOverlap->SetStartAndEnd(
+                        aSubtract->GetEndParent(), aSubtract->EndOffset(),
+                        range->GetEndParent(), range->EndOffset());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
     if (!postOverlap->Collapsed()) {
       if (!aOutput->InsertElementAt(0, RangeData(postOverlap)))
         return NS_ERROR_OUT_OF_MEMORY;
@@ -3818,14 +3817,12 @@ Selection::SubtractRange(RangeData* aRange, nsRange* aSubtract,
     // We need to add a new RangeData to the output, running from
     // the start of the range to the start of aSubtract
     RefPtr<nsRange> preOverlap = new nsRange(range->GetStartParent());
-
-    nsresult rv =
-     preOverlap->SetStart(range->GetStartParent(), range->StartOffset());
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv =
-     preOverlap->SetEnd(aSubtract->GetStartParent(), aSubtract->StartOffset());
-    NS_ENSURE_SUCCESS(rv, rv);
-    
+    rv = preOverlap->SetStartAndEnd(
+                       range->GetStartParent(), range->StartOffset(),
+                       aSubtract->GetStartParent(), aSubtract->StartOffset());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
     if (!preOverlap->Collapsed()) {
       if (!aOutput->InsertElementAt(0, RangeData(preOverlap)))
         return NS_ERROR_OUT_OF_MEMORY;
@@ -5277,12 +5274,7 @@ Selection::Collapse(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   }
 
   RefPtr<nsRange> range = new nsRange(parentNode);
-  result = range->SetEnd(parentNode, aOffset);
-  if (NS_FAILED(result)) {
-    aRv.Throw(result);
-    return;
-  }
-  result = range->SetStart(parentNode, aOffset);
+  result = range->CollapseTo(parentNode, aOffset);
   if (NS_FAILED(result)) {
     aRv.Throw(result);
     return;
@@ -5685,11 +5677,8 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
       return;
     }
     SetDirection(eDirNext);
-    res = difRange->SetEnd(range->GetEndParent(), range->EndOffset());
-    nsresult tmp = difRange->SetStart(focusNode, focusOffset);
-    if (NS_FAILED(tmp)) {
-      res = tmp;
-    }
+    res = difRange->SetStartAndEnd(focusNode, focusOffset,
+                                   range->GetEndParent(), range->EndOffset());
     if (NS_FAILED(res)) {
       aRv.Throw(res);
       return;
@@ -5717,11 +5706,8 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   }
   else if (result3 <= 0 && result2 >= 0) {//a,2,1 or a2,1 or a,21 or a21
     //deselect from 2 to 1
-    res = difRange->SetEnd(focusNode, focusOffset);
-    difRange->SetStart(aParentNode, aOffset, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+    res = difRange->SetStartAndEnd(&aParentNode, aOffset,
+                                   focusNode, focusOffset);
     if (NS_FAILED(res)) {
       aRv.Throw(res);
       return;
@@ -5785,11 +5771,8 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
   }
   else if (result2 <= 0 && result3 >= 0) {//1,2,a or 12,a or 1,2a or 12a
     //deselect from 1 to 2
-    difRange->SetEnd(aParentNode, aOffset, aRv);
-    res = difRange->SetStart(focusNode, focusOffset);
-    if (aRv.Failed()) {
-      return;
-    }
+    res = difRange->SetStartAndEnd(focusNode, focusOffset,
+                                   &aParentNode, aOffset);
     if (NS_FAILED(res)) {
       aRv.Throw(res);
       return;
@@ -5820,12 +5803,9 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
     }
     //deselect from a to 1
     if (focusNode != anchorNode || focusOffset!= anchorOffset) {//if collapsed diff dont do anything
-      res = difRange->SetStart(anchorNode, anchorOffset);
-      nsresult tmp = difRange->SetEnd(focusNode, focusOffset);
-      if (NS_FAILED(tmp)) {
-        res = tmp;
-      }
-      tmp = SetAnchorFocusToRange(range);
+      res = difRange->SetStartAndEnd(anchorNode, anchorOffset,
+                                     focusNode, focusOffset);
+      nsresult tmp = SetAnchorFocusToRange(range);
       if (NS_FAILED(tmp)) {
         res = tmp;
       }
@@ -5853,11 +5833,9 @@ Selection::Extend(nsINode& aParentNode, uint32_t aOffset, ErrorResult& aRv)
       return;
     }
     SetDirection(eDirPrevious);
-    res = difRange->SetEnd(focusNode, focusOffset);
-    nsresult tmp = difRange->SetStart(range->GetStartParent(), range->StartOffset());
-    if (NS_FAILED(tmp)) {
-      res = tmp;
-    }
+    res = difRange->SetStartAndEnd(
+                      range->GetStartParent(), range->StartOffset(),
+                      focusNode, focusOffset);
     if (NS_FAILED(res)) {
       aRv.Throw(res);
       return;
