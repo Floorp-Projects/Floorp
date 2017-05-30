@@ -8352,6 +8352,15 @@
     "n_values": 50,
     "description": "Counts of the maximum number of shared memory buffers used for transferring video frames between the CDM and Gecko processes during playback of DRM'd video. Reported once per CDMVideoDecoder instance, i.e., once per JavaScript SourceBuffer during playback of video using EME."
   },
+  "MEDIA_EME_REQUEST_DEPRECATED_WARNINGS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["cpearce@mozilla.com"],
+    "bug_numbers": [1368596],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Counts types of deprecation warnings logged on every successful call to navigator.requestMediaKeySystemAccess(). 0=No warnings logged, 1=MediaEMENoCapabilitiesDeprecatedWarning, 2=MediaEMENoCodecsDeprecatedWarning."
+  },
   "MEDIACACHE_WATERMARK_KB": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["gsquelart@mozilla.com"],
