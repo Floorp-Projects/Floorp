@@ -8,6 +8,7 @@
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageClient.h"
 #include "mozilla/layers/ScrollingLayersHelper.h"
 #include "mozilla/layers/StackingContextHelper.h"
@@ -129,6 +130,8 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     if (GetImageClientType() == CompositableType::IMAGE_BRIDGE) {
       MOZ_ASSERT(!mImageClient);
       mExternalImageId = Some(WrBridge()->AllocExternalImageId(mContainer->GetAsyncContainerHandle()));
+      // Alloc async image pipeline id.
+      mPipelineId = Some(WrBridge()->GetCompositorBridgeChild()->GetNextPipelineId());
     } else {
       // Handle CompositableType::IMAGE case
       MOZ_ASSERT(mImageClient);
