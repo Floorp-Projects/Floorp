@@ -9,7 +9,7 @@ describe("ActivityStreamMessageChannel", () => {
   let globals;
   let dispatch;
   let mm;
-  before(() => {
+  beforeEach(() => {
     function RP(url) {
       this.url = url;
       this.messagePorts = [];
@@ -24,13 +24,10 @@ describe("ActivityStreamMessageChannel", () => {
     });
     globals.set("RemotePages", RP);
     dispatch = globals.sandbox.spy();
-  });
-  beforeEach(() => {
     mm = new ActivityStreamMessageChannel({dispatch});
   });
 
-  afterEach(() => globals.reset());
-  after(() => globals.restore());
+  afterEach(() => globals.restore());
 
   it("should exist", () => {
     assert.ok(ActivityStreamMessageChannel);
@@ -131,6 +128,12 @@ describe("ActivityStreamMessageChannel", () => {
       });
     });
     describe("#onMessage", () => {
+      let sandbox;
+      beforeEach(() => {
+        sandbox = sinon.sandbox.create();
+        sandbox.spy(global.Components.utils, "reportError");
+      });
+      afterEach(() => sandbox.restore());
       it("should report an error if the msg.data is missing", () => {
         mm.onMessage({target: {portID: "foo"}});
         assert.calledOnce(global.Components.utils.reportError);
