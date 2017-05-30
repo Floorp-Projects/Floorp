@@ -26,6 +26,7 @@
 using namespace js;
 
 using mozilla::ArrayLength;
+using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::PodCopy;
 
@@ -1701,7 +1702,20 @@ WasmActivation::finishInterrupt()
 bool
 WasmActivation::interrupted() const
 {
-    return !!cx_->runtime()->wasmResumePC();
+    void* pc = cx_->runtime()->wasmResumePC();
+    if (!pc)
+        return false;
+
+    Activation* act = cx_->activation();
+    while (act && !act->isWasm())
+        act = act->prev();
+
+    if (act->asWasm() != this)
+        return false;
+
+    DebugOnly<wasm::Frame*> fp = act->asWasm()->exitFP();
+    MOZ_ASSERT(fp && fp->instance()->code().containsFunctionPC(pc));
+    return true;
 }
 
 void*
