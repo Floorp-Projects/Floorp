@@ -619,7 +619,9 @@ xul|radio:not([disabled="true"]):hover > xul|*.radio-check {
 }
 
 xul|*.radio-check[selected] {
-  list-style-image: url("chrome://global/skin/in-content/radio.svg#radio");
+  list-style-image: url("chrome://global/skin/in-content/radio.svg");
+  -moz-context-properties: fill;
+  fill: #2292d0;
 }
 
 xul|radio[disabled="true"] > xul|*.radio-check {
