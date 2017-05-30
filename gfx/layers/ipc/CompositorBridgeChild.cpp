@@ -79,14 +79,15 @@ Atomic<int32_t> KnowsCompositor::sSerialCounter(0);
 
 CompositorBridgeChild::CompositorBridgeChild(LayerManager *aLayerManager, uint32_t aNamespace)
   : mLayerManager(aLayerManager)
-  , mNamespace(aNamespace)
+  , mIdNamespace(aNamespace)
+  , mResourceId(0)
   , mCanSend(false)
   , mFwdTransactionId(0)
   , mDeviceResetSequenceNumber(0)
   , mMessageLoop(MessageLoop::current())
   , mSectionAllocator(nullptr)
 {
-  MOZ_ASSERT(mNamespace);
+  MOZ_ASSERT(mIdNamespace);
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -1169,16 +1170,28 @@ CompositorBridgeChild::DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActo
   return true;
 }
 
+uint64_t
+CompositorBridgeChild::GetNextResourceId()
+{
+  ++mResourceId;
+  MOZ_RELEASE_ASSERT(mResourceId != UINT32_MAX);
+
+  uint64_t id = mIdNamespace;
+  id = (id << 32) | mResourceId;
+
+  return id;
+}
+
 wr::MaybeExternalImageId
 CompositorBridgeChild::GetNextExternalImageId()
 {
-  static uint32_t sNextID = 1;
-  ++sNextID;
-  MOZ_RELEASE_ASSERT(sNextID != UINT32_MAX);
+  return Some(wr::ToExternalImageId(GetNextResourceId()));
+}
 
-  uint64_t imageId = mNamespace;
-  imageId = (imageId << 32) | sNextID;
-  return Some(wr::ToExternalImageId(imageId));
+wr::PipelineId
+CompositorBridgeChild::GetNextPipelineId()
+{
+  return wr::AsPipelineId(GetNextResourceId());
 }
 
 } // namespace layers

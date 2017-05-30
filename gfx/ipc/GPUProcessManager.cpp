@@ -81,8 +81,9 @@ GPUProcessManager::Shutdown()
 
 GPUProcessManager::GPUProcessManager()
  : mTaskFactory(this),
-   mNextLayerTreeId(0),
    mNextNamespace(0),
+   mIdNamespace(0),
+   mResourceId(0),
    mNumProcessAttempts(0),
    mDeviceResetCount(0),
    mProcess(nullptr),
@@ -90,6 +91,7 @@ GPUProcessManager::GPUProcessManager()
 {
   MOZ_COUNT_CTOR(GPUProcessManager);
 
+  mIdNamespace = AllocateNamespace();
   mObserver = new Observer(this);
   nsContentUtils::RegisterShutdownObserver(mObserver);
 
@@ -888,8 +890,20 @@ GPUProcessManager::IsLayerTreeIdMapped(uint64_t aLayersId, base::ProcessId aRequ
 uint64_t
 GPUProcessManager::AllocateLayerTreeId()
 {
+  // Allocate tree id by using id namespace.
+  // By it, tree id does not conflict with external image id and
+  // async image pipeline id.
   MOZ_ASSERT(NS_IsMainThread());
-  return ++mNextLayerTreeId;
+  ++mResourceId;
+  if (mResourceId == UINT32_MAX) {
+    // Move to next id namespace.
+    mIdNamespace = AllocateNamespace();
+    mResourceId = 1;
+  }
+
+  uint64_t layerTreeId = mIdNamespace;
+  layerTreeId = (layerTreeId << 32) | mResourceId;
+  return layerTreeId;
 }
 
 uint32_t
