@@ -26,9 +26,16 @@ add_task(function* () {
      timeline.animations.length,
      "The number of animations displayed matches the number of animations");
 
+  const animationEls = el.querySelectorAll(".animations .animation");
+  const evenColor =
+    el.ownerDocument.defaultView.getComputedStyle(animationEls[0]).backgroundColor;
+  const oddColor =
+    el.ownerDocument.defaultView.getComputedStyle(animationEls[1]).backgroundColor;
+  isnot(evenColor, oddColor,
+        "Background color of an even animation should be different from odd");
   for (let i = 0; i < timeline.animations.length; i++) {
     let animation = timeline.animations[i];
-    let animationEl = el.querySelectorAll(".animations .animation")[i];
+    let animationEl = animationEls[i];
 
     ok(animationEl.querySelector(".target"),
        "The animated node target element is in the DOM");
@@ -42,10 +49,9 @@ add_task(function* () {
     ok(animationEl.querySelector("svg g path"),
        "The timeline has svg and path element as summary graph");
 
-    const expectedBackgroundColor =
-      i % 2 === 0 ? "rgba(128, 128, 128, 0.03)" : "rgba(0, 0, 0, 0)";
+    const expectedBackgroundColor = i % 2 === 0 ? evenColor : oddColor;
     const backgroundColor =
-      animationEl.ownerDocument.defaultView.getComputedStyle(animationEl).backgroundColor;
+      el.ownerDocument.defaultView.getComputedStyle(animationEl).backgroundColor;
     is(backgroundColor, expectedBackgroundColor,
        "The background-color shoud be changed to alternate");
   }
