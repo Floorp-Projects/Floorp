@@ -347,7 +347,6 @@ Instance::Instance(JSContext* cx,
 #ifndef WASM_HUGE_MEMORY
     tlsData()->boundsCheckLimit = memory ? memory->buffer().wasmBoundsCheckLimit() : 0;
 #endif
-    tlsData()->globalData = globals_->globalData();
     tlsData()->instance = this;
     tlsData()->addressOfContext = (JSContext**)object->zone()->group()->addressOfOwnerContext();
 
