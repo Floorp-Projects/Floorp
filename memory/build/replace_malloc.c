@@ -56,44 +56,58 @@ static const malloc_table_t malloc_table = {
 
 #  ifdef XP_WIN
 #    include <windows.h>
-static void
-replace_malloc_init_funcs()
+
+typedef HMODULE replace_malloc_handle_t;
+
+static replace_malloc_handle_t
+replace_malloc_handle()
 {
   char replace_malloc_lib[1024];
   if (GetEnvironmentVariableA("MOZ_REPLACE_MALLOC_LIB", (LPSTR)&replace_malloc_lib,
                               sizeof(replace_malloc_lib)) > 0) {
-    HMODULE handle = LoadLibraryA(replace_malloc_lib);
-    if (handle) {
-#define MALLOC_DECL(name, ...) \
-  replace_ ## name = (replace_ ## name ## _impl_t *) GetProcAddress(handle, "replace_" # name);
-
-#  define MALLOC_FUNCS MALLOC_FUNCS_ALL
-#include "malloc_decls.h"
-    }
+    return LoadLibraryA(replace_malloc_lib);
   }
+  return NULL;
 }
+
+#    define REPLACE_MALLOC_GET_FUNC(handle, name) \
+      (replace_ ## name ## _impl_t*) GetProcAddress(handle, "replace_" # name)
+
 #  elif defined(MOZ_WIDGET_ANDROID)
 #    include <dlfcn.h>
 #    include <stdlib.h>
-static void
-replace_malloc_init_funcs()
+
+typedef void* replace_malloc_handle_t;
+
+static replace_malloc_handle_t
+replace_malloc_handle()
 {
   const char *replace_malloc_lib = getenv("MOZ_REPLACE_MALLOC_LIB");
   if (replace_malloc_lib && *replace_malloc_lib) {
-    void *handle = dlopen(replace_malloc_lib, RTLD_LAZY);
-    if (handle) {
-#define MALLOC_DECL(name, ...) \
-  replace_ ## name = (replace_ ## name ## _impl_t *) dlsym(handle, "replace_" # name);
-
-#  define MALLOC_FUNCS MALLOC_FUNCS_ALL
-#include "malloc_decls.h"
-    }
+    return dlopen(replace_malloc_lib, RTLD_LAZY);
   }
+  return NULL;
 }
+
+#    define REPLACE_MALLOC_GET_FUNC(handle, name) \
+      (replace_ ## name ## _impl_t*) dlsym(handle, "replace_" # name)
+
 #  else
-#    error No implementation for replace_malloc_init_funcs()
+#    error No implementation for replace_malloc_handle()
 #  endif
 
+static void
+replace_malloc_init_funcs()
+{
+  replace_malloc_handle_t handle = replace_malloc_handle();
+  if (handle) {
+#  define MALLOC_DECL(name, ...) \
+    replace_ ## name = REPLACE_MALLOC_GET_FUNC(handle, name);
+
+#  define MALLOC_FUNCS MALLOC_FUNCS_ALL
+#  include "malloc_decls.h"
+  }
+}
 #endif /* MOZ_NO_REPLACE_FUNC_DECL */
 
 /*
