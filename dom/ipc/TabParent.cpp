@@ -526,8 +526,7 @@ TabParent::RecvSizeShellTo(const uint32_t& aFlags, const int32_t& aWidth, const 
 }
 
 mozilla::ipc::IPCResult
-TabParent::RecvDropLinks(nsTArray<nsString>&& aLinks,
-                         const PrincipalInfo& aTriggeringPrincipalInfo)
+TabParent::RecvDropLinks(nsTArray<nsString>&& aLinks)
 {
   nsCOMPtr<nsIBrowser> browser = do_QueryInterface(mFrameElement);
   if (browser) {
@@ -536,12 +535,7 @@ TabParent::RecvDropLinks(nsTArray<nsString>&& aLinks,
     for (uint32_t i = 0; i < aLinks.Length(); i++) {
       links[i] = aLinks[i].get();
     }
-    nsCOMPtr<nsIPrincipal> triggeringPrincipal =
-      PrincipalInfoToPrincipal(aTriggeringPrincipalInfo);
-    if (nsContentUtils::IsSystemPrincipal(triggeringPrincipal)) {
-      return IPC_FAIL(this, "Invalid triggeringPrincipal");
-    }
-    browser->DropLinks(aLinks.Length(), links.get(), triggeringPrincipal);
+    browser->DropLinks(aLinks.Length(), links.get());
   }
   return IPC_OK();
 }
