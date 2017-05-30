@@ -6,6 +6,7 @@
 #ifndef mozilla_CounterStyleManager_h_
 #define mozilla_CounterStyleManager_h_
 
+#include "nsIAtom.h"
 #include "nsStringFwd.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
