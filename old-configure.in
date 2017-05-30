@@ -888,7 +888,11 @@ case "$target" in
 *-*linux*)
     if test "$GNU_CC" -o "$GNU_CXX"; then
         MOZ_PGO_OPTIMIZE_FLAGS="-O3"
-        MOZ_OPTIMIZE_FLAGS="-Os"
+        if test -n "$MOZ_DEBUG"; then
+            MOZ_OPTIMIZE_FLAGS="-Os"
+        else
+            MOZ_OPTIMIZE_FLAGS="-O2"
+        fi
         if test -z "$CLANG_CC"; then
            MOZ_OPTIMIZE_FLAGS="-freorder-blocks $MOZ_OPTIMIZE_FLAGS"
         fi
