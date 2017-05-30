@@ -1272,6 +1272,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
 
   nsCOMPtr<nsIURI> referrer;
   nsCOMPtr<nsIURI> originalURI;
+  Maybe<nsCOMPtr<nsIURI>> resultPrincipalURI;
   bool loadReplace = false;
   nsCOMPtr<nsIInputStream> postStream;
   nsCOMPtr<nsIInputStream> headersStream;
@@ -1300,6 +1301,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
   if (aLoadInfo) {
     aLoadInfo->GetReferrer(getter_AddRefs(referrer));
     aLoadInfo->GetOriginalURI(getter_AddRefs(originalURI));
+    GetMaybeResultPrincipalURI(aLoadInfo, resultPrincipalURI);
     aLoadInfo->GetLoadReplace(&loadReplace);
     nsDocShellInfoLoadType lt = nsIDocShellLoadInfo::loadNormal;
     aLoadInfo->GetLoadType(&lt);
@@ -1570,6 +1572,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
 
   return InternalLoad(aURI,
                       originalURI,
+                      resultPrincipalURI,
                       loadReplace,
                       referrer,
                       referrerPolicy,
@@ -5418,7 +5421,7 @@ nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
   nsresult rv = NS_NewURI(getter_AddRefs(errorPageURI), errorPageUrl);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return InternalLoad(errorPageURI, nullptr, false, nullptr,
+  return InternalLoad(errorPageURI, nullptr, Nothing(), false, nullptr,
                       mozilla::net::RP_Unset,
                       nsContentUtils::GetSystemPrincipal(), nullptr,
                       INTERNAL_LOAD_FLAGS_NONE, EmptyString(),
@@ -5473,6 +5476,7 @@ nsDocShell::Reload(uint32_t aReloadFlags)
     nsAutoString srcdoc;
     nsCOMPtr<nsIURI> baseURI;
     nsCOMPtr<nsIURI> originalURI;
+    nsCOMPtr<nsIURI> resultPrincipalURI;
     bool loadReplace = false;
 
     nsIPrincipal* triggeringPrincipal = doc->NodePrincipal();
@@ -5493,6 +5497,11 @@ nsDocShell::Reload(uint32_t aReloadFlags)
       if (httpChan) {
         httpChan->GetOriginalURI(getter_AddRefs(originalURI));
       }
+
+      nsCOMPtr<nsILoadInfo> loadInfo = chan->GetLoadInfo();
+      if (loadInfo) {
+        loadInfo->GetResultPrincipalURI(getter_AddRefs(resultPrincipalURI));
+      }
     }
 
     MOZ_ASSERT(triggeringPrincipal, "Need a valid triggeringPrincipal");
@@ -5502,8 +5511,13 @@ nsDocShell::Reload(uint32_t aReloadFlags)
     nsCOMPtr<nsIURI> currentURI = mCurrentURI;
     nsCOMPtr<nsIURI> referrerURI = mReferrerURI;
     uint32_t referrerPolicy = mReferrerPolicy;
+
+    // Reload always rewrites result principal URI.
+    Maybe<nsCOMPtr<nsIURI>> emplacedResultPrincipalURI;
+    emplacedResultPrincipalURI.emplace(Move(resultPrincipalURI));
     rv = InternalLoad(currentURI,
                       originalURI,
+                      emplacedResultPrincipalURI,
                       loadReplace,
                       referrerURI,
                       referrerPolicy,
@@ -9622,8 +9636,11 @@ nsDocShell::CopyFavicon(nsIURI* aOldURI,
 class InternalLoadEvent : public Runnable
 {
 public:
-  InternalLoadEvent(nsDocShell* aDocShell, nsIURI* aURI,
-                    nsIURI* aOriginalURI, bool aLoadReplace,
+  InternalLoadEvent(nsDocShell* aDocShell,
+                    nsIURI* aURI,
+                    nsIURI* aOriginalURI,
+                    Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
+                    bool aLoadReplace,
                     nsIURI* aReferrer, uint32_t aReferrerPolicy,
                     nsIPrincipal* aTriggeringPrincipal,
                     nsIPrincipal* aPrincipalToInherit, uint32_t aFlags,
@@ -9636,6 +9653,7 @@ public:
     , mDocShell(aDocShell)
     , mURI(aURI)
     , mOriginalURI(aOriginalURI)
+    , mResultPrincipalURI(aResultPrincipalURI)
     , mLoadReplace(aLoadReplace)
     , mReferrer(aReferrer)
     , mReferrerPolicy(aReferrerPolicy)
@@ -9660,7 +9678,7 @@ public:
   NS_IMETHOD
   Run() override
   {
-    return mDocShell->InternalLoad(mURI, mOriginalURI,
+    return mDocShell->InternalLoad(mURI, mOriginalURI, mResultPrincipalURI,
                                    mLoadReplace,
                                    mReferrer,
                                    mReferrerPolicy,
@@ -9681,6 +9699,7 @@ private:
   RefPtr<nsDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIURI> mOriginalURI;
+  Maybe<nsCOMPtr<nsIURI>> mResultPrincipalURI;
   bool mLoadReplace;
   nsCOMPtr<nsIURI> mReferrer;
   uint32_t mReferrerPolicy;
@@ -9727,6 +9746,7 @@ nsDocShell::CreatePrincipalFromReferrer(nsIURI* aReferrer,
 NS_IMETHODIMP
 nsDocShell::InternalLoad(nsIURI* aURI,
                          nsIURI* aOriginalURI,
+                         Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
                          bool aLoadReplace,
                          nsIURI* aReferrer,
                          uint32_t aReferrerPolicy,
@@ -10062,6 +10082,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
         loadInfo->SetSendReferrer(!(aFlags &
                                     INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER));
         loadInfo->SetOriginalURI(aOriginalURI);
+        SetMaybeResultPrincipalURI(loadInfo, aResultPrincipalURI);
         loadInfo->SetLoadReplace(aLoadReplace);
         loadInfo->SetTriggeringPrincipal(aTriggeringPrincipal);
         loadInfo->SetInheritPrincipal(
@@ -10109,6 +10130,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     if (NS_SUCCEEDED(rv) && targetDocShell) {
       rv = targetDocShell->InternalLoad(aURI,
                                         aOriginalURI,
+                                        aResultPrincipalURI,
                                         aLoadReplace,
                                         aReferrer,
                                         aReferrerPolicy,
@@ -10205,8 +10227,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
 
       // Do this asynchronously
       nsCOMPtr<nsIRunnable> ev =
-        new InternalLoadEvent(this, aURI, aOriginalURI, aLoadReplace,
-                              aReferrer, aReferrerPolicy,
+        new InternalLoadEvent(this, aURI, aOriginalURI, aResultPrincipalURI,
+                              aLoadReplace, aReferrer, aReferrerPolicy,
                               aTriggeringPrincipal, principalToInherit,
                               aFlags, aTypeHint, aPostData, aHeadersData,
                               aLoadType, aSHEntry, aFirstParty, aSrcdoc,
@@ -10589,8 +10611,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
 
   if (browserChrome3 && aCheckForPrerender) {
     nsCOMPtr<nsIRunnable> ev =
-      new InternalLoadEvent(this, aURI, aOriginalURI, aLoadReplace,
-                            aReferrer, aReferrerPolicy,
+      new InternalLoadEvent(this, aURI, aOriginalURI, aResultPrincipalURI,
+                            aLoadReplace, aReferrer, aReferrerPolicy,
                             aTriggeringPrincipal, principalToInherit,
                             aFlags, aTypeHint, aPostData, aHeadersData,
                             aLoadType, aSHEntry, aFirstParty, aSrcdoc,
@@ -10739,7 +10761,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                         nsINetworkPredictor::PREDICT_LOAD, attrs, nullptr);
 
   nsCOMPtr<nsIRequest> req;
-  rv = DoURILoad(aURI, aOriginalURI, aLoadReplace, aReferrer,
+  rv = DoURILoad(aURI, aOriginalURI, aResultPrincipalURI, aLoadReplace, aReferrer,
                  !(aFlags & INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER),
                  aReferrerPolicy,
                  aTriggeringPrincipal, principalToInherit, aTypeHint,
@@ -10818,6 +10840,7 @@ nsDocShell::GetInheritedPrincipal(bool aConsiderCurrentDocument)
 nsresult
 nsDocShell::DoURILoad(nsIURI* aURI,
                       nsIURI* aOriginalURI,
+                      Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
                       bool aLoadReplace,
                       nsIURI* aReferrerURI,
                       bool aSendReferrer,
@@ -11133,6 +11156,12 @@ nsDocShell::DoURILoad(nsIURI* aURI,
 
   if (aOriginalURI) {
     channel->SetOriginalURI(aOriginalURI);
+    // The LOAD_REPLACE flag and its handling here will be removed as part
+    // of bug 1319110.  For now preserve its restoration here to not break
+    // any code expecting it being set specially on redirected channels.
+    // If the flag has originally been set to change result of
+    // NS_GetFinalChannelURI it won't have any effect and also won't cause
+    // any harm.
     if (aLoadReplace) {
       uint32_t loadFlags;
       channel->GetLoadFlags(&loadFlags);
@@ -11141,6 +11170,12 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     }
   } else {
     channel->SetOriginalURI(aURI);
+  }
+
+  if (aResultPrincipalURI) {
+    // Unconditionally override, we want the replay to be equal to what has
+    // been captured.
+    loadInfo->SetResultPrincipalURI(aResultPrincipalURI.ref());
   }
 
   if (aTypeHint && *aTypeHint) {
@@ -12363,6 +12398,7 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
   // Get the post data & referrer
   nsCOMPtr<nsIInputStream> inputStream;
   nsCOMPtr<nsIURI> originalURI;
+  nsCOMPtr<nsIURI> resultPrincipalURI;
   bool loadReplace = false;
   nsCOMPtr<nsIURI> referrerURI;
   uint32_t referrerPolicy = mozilla::net::RP_Unset;
@@ -12410,6 +12446,8 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
         triggeringPrincipal = loadInfo->TriggeringPrincipal();
       }
 
+      loadInfo->GetResultPrincipalURI(getter_AddRefs(resultPrincipalURI));
+
       // For now keep storing just the principal in the SHEntry.
       if (!principalToInherit) {
         if (loadInfo->GetLoadingSandboxed()) {
@@ -12442,6 +12480,7 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
                 mDynamicallyCreated);
 
   entry->SetOriginalURI(originalURI);
+  entry->SetResultPrincipalURI(resultPrincipalURI);
   entry->SetLoadReplace(loadReplace);
   entry->SetReferrerURI(referrerURI);
   entry->SetReferrerPolicy(referrerPolicy);
@@ -12555,6 +12594,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
 
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIURI> originalURI;
+  nsCOMPtr<nsIURI> resultPrincipalURI;
   bool loadReplace = false;
   nsCOMPtr<nsIInputStream> postData;
   nsCOMPtr<nsIURI> referrerURI;
@@ -12567,6 +12607,8 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
 
   NS_ENSURE_SUCCESS(aEntry->GetURI(getter_AddRefs(uri)), NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(aEntry->GetOriginalURI(getter_AddRefs(originalURI)),
+                    NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(aEntry->GetResultPrincipalURI(getter_AddRefs(resultPrincipalURI)),
                     NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(aEntry->GetLoadReplace(&loadReplace),
                     NS_ERROR_FAILURE);
@@ -12655,8 +12697,11 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
   // aSourceDocShell was introduced. According to spec we should be passing
   // the source browsing context that was used when the history entry was
   // first created. bug 947716 has been created to address this issue.
+  Maybe<nsCOMPtr<nsIURI>> emplacedResultPrincipalURI;
+  emplacedResultPrincipalURI.emplace(Move(resultPrincipalURI));
   rv = InternalLoad(uri,
                     originalURI,
+                    emplacedResultPrincipalURI,
                     loadReplace,
                     referrerURI,
                     referrerPolicy,
@@ -14209,6 +14254,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
 
   nsresult rv = InternalLoad(clonedURI,                 // New URI
                              nullptr,                   // Original URI
+                             Nothing(),                 // Let the protocol handler assign it
                              false,                     // LoadReplace
                              referer,                   // Referer URI
                              refererPolicy,             // Referer policy

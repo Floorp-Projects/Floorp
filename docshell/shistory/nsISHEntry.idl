@@ -50,6 +50,12 @@ interface nsISHEntry : nsISupports
     attribute nsIURI originalURI;
 
     /**
+     * URL as stored from nsILoadInfo.resultPrincipalURI.  See nsILoadInfo
+     * for more details.
+     */
+    attribute nsIURI resultPrincipalURI;
+
+    /**
      *  This flag remembers whether channel has LOAD_REPLACE set.
      */
     attribute boolean loadReplace;
