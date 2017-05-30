@@ -99,8 +99,8 @@ test(function() {
 test(function() {
     resetFocusAndSelectionRange(editor);
     document.getSelection().selectAllChildren(staticBefore.element);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.selectAllChildren() to select the children of 'staticBefore' when active element is 'editor'");
+    assert_equals(document.activeElement, editor.element);
+}, "Active element should be 'editor' after Selection.selectAllChildren() to select the children of 'staticBefore' when active element is 'editor'");
 test(function() {
     resetFocusAndSelectionRange(editor);
     document.getSelection().selectAllChildren(editor.element);
@@ -114,8 +114,8 @@ test(function() {
 test(function() {
     resetFocusAndSelectionRange(editor);
     document.getSelection().selectAllChildren(staticInEditor.element);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.selectAllChildren() to select the children of 'staticInEditor' when active element is 'editor'");
+    assert_equals(document.activeElement, editor.element);
+}, "Active element should be 'editor' after Selection.selectAllChildren() to select the children of 'staticInEditor' when active element is 'editor'");
 test(function() {
     resetFocusAndSelectionRange(editor);
     document.getSelection().selectAllChildren(innerEditor.element);
@@ -124,14 +124,14 @@ test(function() {
 test(function() {
     resetFocusAndSelectionRange(editor);
     document.getSelection().selectAllChildren(anchor.element);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.selectAllChildren() to select the children of 'anchor' when active element is 'editor'");
+    assert_equals(document.activeElement, editor.element);
+}, "Active element should be 'editor' after Selection.selectAllChildren() to select the children of 'anchor' when active element is 'editor'");
 
 test(function() {
     resetFocusAndSelectionRange(outerEditor);
     document.getSelection().selectAllChildren(staticBefore.element);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.selectAllChildren() to select the children of 'staticBefore' when active element is 'outerEditor'");
+    assert_equals(document.activeElement, outerEditor.element);
+}, "Active element should be 'outerEditor' after Selection.selectAllChildren() to select the children of 'staticBefore' when active element is 'outerEditor'");
 test(function() {
     resetFocusAndSelectionRange(outerEditor);
     document.getSelection().selectAllChildren(editor.element);
@@ -145,8 +145,8 @@ test(function() {
 test(function() {
     resetFocusAndSelectionRange(outerEditor);
     document.getSelection().selectAllChildren(staticInEditor.element);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.selectAllChildren() to select the children of 'staticInEditor' when active element is 'outerEditor'");
+    assert_equals(document.activeElement, outerEditor.element);
+}, "Active element should be 'ouerEditor' after Selection.selectAllChildren() to select the children of 'staticInEditor' when active element is 'outerEditor'");
 test(function() {
     resetFocusAndSelectionRange(outerEditor);
     document.getSelection().selectAllChildren(innerEditor.element);
@@ -155,14 +155,14 @@ test(function() {
 test(function() {
     resetFocusAndSelectionRange(outerEditor);
     document.getSelection().selectAllChildren(anchor.element);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.selectAllChildren() to select the children of 'anchor' when active element is 'outerEditor'");
+    assert_equals(document.activeElement, outerEditor.element);
+}, "Active element should be 'outerEditor' after Selection.selectAllChildren() to select the children of 'anchor' when active element is 'outerEditor'");
 
 test(function() {
     resetFocusAndSelectionRange(innerEditor);
     document.getSelection().selectAllChildren(staticBefore.element);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.selectAllChildren() to select the children of 'staticBefore' when active element is 'innerEditor'");
+    assert_equals(document.activeElement, innerEditor.element);
+}, "Active element should be 'innerEditor' after Selection.selectAllChildren() to select the children of 'staticBefore' when active element is 'innerEditor'");
 test(function() {
     resetFocusAndSelectionRange(innerEditor);
     document.getSelection().selectAllChildren(editor.element);
@@ -176,8 +176,8 @@ test(function() {
 test(function() {
     resetFocusAndSelectionRange(innerEditor);
     document.getSelection().selectAllChildren(staticInEditor.element);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.selectAllChildren() to select the children of 'staticInEditor' when active element is 'innerEditor'");
+    assert_equals(document.activeElement, innerEditor.element);
+}, "Active element should be 'innerEditor' after Selection.selectAllChildren() to select the children of 'staticInEditor' when active element is 'innerEditor'");
 test(function() {
     resetFocusAndSelectionRange(innerEditor);
     document.getSelection().selectAllChildren(innerEditor.element);
@@ -186,8 +186,8 @@ test(function() {
 test(function() {
     resetFocusAndSelectionRange(innerEditor);
     document.getSelection().selectAllChildren(anchor.element);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.selectAllChildren() to select the children of 'anchor' when active element is 'innerEditor'");
+    assert_equals(document.activeElement, innerEditor.element);
+}, "Active element should be 'innerEditor' after Selection.selectAllChildren() to select the children of 'anchor' when active element is 'innerEditor'");
 
 test(function() {
     resetFocusAndSelectionRange(anchor);

@@ -850,27 +850,27 @@
    "testharness"
   ],
   "focus/Range_collapse.html": [
-   "95c795db4cec3ccb1e2632c547e34292364d9c92",
+   "da353916d6a5bf248e11e2a1be7ea7dfbb7cf358",
    "testharness"
   ],
   "focus/Range_selectNode.html": [
-   "699bb01144327600e57c715c84cc72ac2d7439d7",
+   "347dd6d965f5308de501a5cc34d2f30c8639fb74",
    "testharness"
   ],
   "focus/Range_setEnd.html": [
-   "481cecc11bb7a79bdfa171529bd8519dc69e33d4",
+   "57e5870e212eb7a28b1ce8b7f08fd7ea4719661a",
    "testharness"
   ],
   "focus/Range_setStart.html": [
-   "2e23bd20e25da1b4c10c0f8e78162a91ab05a798",
+   "ab6633c08a3a501d3766d9ee38da69e26dc8a9e4",
    "testharness"
   ],
   "focus/Selection_addRange.html": [
-   "03b60c8294d4421810d883255ba49784f390fea5",
+   "e733930483c74e73210c5a127db1d04f82c966cf",
    "testharness"
   ],
   "focus/Selection_addRange_into_iframe.html": [
-   "8d914033edb0bf1a517cf886f7f9c95dd41ec116",
+   "65143dd5377acc88b180460a46dd4bbb79cbf68e",
    "testharness"
   ],
   "focus/Selection_addRange_into_iframe_iframe.html": [
@@ -878,7 +878,7 @@
    "support"
   ],
   "focus/Selection_collapse.html": [
-   "1110ffe713c8effbf2b557faec5e367c00e8b5a9",
+   "15f83b9e158ff63fd3428c4d681ce4777b74198c",
    "testharness"
   ],
   "focus/Selection_collapseToEnd.html": [
@@ -890,7 +890,7 @@
    "testharness"
   ],
   "focus/Selection_extend.html": [
-   "385c583117378f34b301a61391178aac6e3d784b",
+   "7773c09999b94d1f5c3ecf9a0c2fb00f466985e3",
    "testharness"
   ],
   "focus/Selection_removeAllRanges.html": [
@@ -902,11 +902,11 @@
    "testharness"
   ],
   "focus/Selection_selectAllChildren.html": [
-   "6cd254447dea53268ce9ec8ce8a075c7803b5393",
+   "149d62e15b07519c155a1812bf343ef8e7f4fe6c",
    "testharness"
   ],
   "focus/Selection_setBaseAndExtent.html": [
-   "cd25aacffbaabbeafa443140f9b08ff75a838116",
+   "e66e79687e4188d82fb24ac692c36a294021d1a2",
    "testharness"
   ],
   "html/semantics/forms/textfieldselection/selection-value-interactions.html": [

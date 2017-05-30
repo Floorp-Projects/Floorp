@@ -103,13 +103,13 @@ test(function() {
 test(function() {
     resetFocusAndSelectionRange(outerEditor);
     document.getSelection().collapse(staticInEditor.textNode, 0);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.collapse() moving selection from first text node in 'outerEditor' to start of the first text node of 'staticInEditor'");
+    assert_equals(document.activeElement, outerEditor.element);
+}, "Active element should be 'outerEditor' after Selection.collapse() moving selection from first text node in 'outerEditor' to start of the first text node of 'staticInEditor'");
 test(function() {
     resetFocusAndSelectionRange(innerEditor);
     document.getSelection().collapse(staticBefore.textNode, 0);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.collapse() moving selection from first text node in 'innerEditor' to start of the first text node of the <body>");
+    assert_equals(document.activeElement, innerEditor.element);
+}, "Active element should be 'innerEditor' after Selection.collapse() moving selection from first text node in 'innerEditor' to start of the first text node of the <body>");
 test(function() {
     resetFocusAndSelectionRange(innerEditor);
     document.getSelection().collapse(editor.textNode, 0);
@@ -123,11 +123,11 @@ test(function() {
 test(function() {
     resetFocusAndSelectionRange(innerEditor);
     document.getSelection().collapse(staticInEditor.textNode, 0);
-    assert_equals(document.activeElement, staticInEditor.element);
-}, "Active element should be the <body> after Selection.collapse() moving selection from first text node in 'innerEditor' to start of the first text node of 'staticInEditor'");
+    assert_equals(document.activeElement, innerEditor.element);
+}, "Active element should be 'innerEditor' after Selection.collapse() moving selection from first text node in 'innerEditor' to start of the first text node of 'staticInEditor'");
 test(function() {
     resetFocusAndSelectionRange(innerEditor);
     document.getSelection().collapse(anchor.textNode, 0);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.collapse() moving selection from first text node in 'innerEditor' to start of the first text node of 'anchor'");
+    assert_equals(document.activeElement, innerEditor.element);
+}, "Active element should be 'innerEditor' after Selection.collapse() moving selection from first text node in 'innerEditor' to start of the first text node of 'anchor'");
 </script>
