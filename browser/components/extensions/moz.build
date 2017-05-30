@@ -27,12 +27,4 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
-
-if CONFIG['OS_ARCH'] != 'Darwin':
-    XPCSHELL_TESTS_MANIFESTS += [
-        'test/xpcshell/xpcshell-remote.ini',
-    ]
-
-XPCSHELL_TESTS_MANIFESTS += [
-    'test/xpcshell/xpcshell.ini',
-]
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']

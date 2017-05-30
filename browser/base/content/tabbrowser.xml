@@ -7026,6 +7026,13 @@
           let replace = !!targetTab;
           let newIndex = this._getDropIndex(event, true);
           let urls = links.map(link => link.url);
+
+
+          // Bug 1367038: mozSourceNode is null if the drag event originated
+          // in an external application - needs better fallback!
+          let triggeringPrincipal = dt.mozSourceNode
+            ? dt.mozSourceNode.nodePrincipal
+            : Services.scriptSecurityManager.getSystemPrincipal();
           this.tabbrowser.loadTabs(urls, {
             inBackground,
             replace,
@@ -7033,6 +7040,7 @@
             targetTab,
             newIndex,
             userContextId,
+            triggeringPrincipal,
           });
         }
 

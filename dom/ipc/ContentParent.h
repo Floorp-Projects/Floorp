@@ -643,9 +643,6 @@ public:
                     nsresult* aRv,
                     nsTArray<nsCString>* aResults) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvAllocPipelineId(RefPtr<AllocPipelineIdPromise>&& aPromise) override;
-
   // Use the PHangMonitor channel to ask the child to repaint a tab.
   void ForceTabPaint(TabParent* aTabParent, uint64_t aLayerObserverEpoch);
 

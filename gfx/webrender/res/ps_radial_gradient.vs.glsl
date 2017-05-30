@@ -35,7 +35,7 @@ void main(void) {
     vTileRepeat.y *= ratio_xy;
 
     // V coordinate of gradient row in lookup texture.
-    vGradientIndex = float(prim.sub_index);
+    vGradientIndex = float(prim.user_data0);
 
     // The texture size of the lookup texture
     vGradientTextureSize = vec2(textureSize(sGradients, 0));

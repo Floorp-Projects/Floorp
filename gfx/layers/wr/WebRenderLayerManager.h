@@ -7,7 +7,6 @@
 #define GFX_WEBRENDERLAYERMANAGER_H
 
 #include "Layers.h"
-#include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -21,8 +20,6 @@ class CompositorBridgeChild;
 class KnowsCompositor;
 class PCompositorBridgeChild;
 class WebRenderBridgeChild;
-
-typedef MozPromise<mozilla::wr::PipelineId, mozilla::ipc::PromiseRejectReason, false> PipelineIdPromise;
 
 class WebRenderLayerManager final : public LayerManager
 {
@@ -128,8 +125,6 @@ public:
   void Hold(Layer* aLayer);
   void SetTransactionIncomplete() { mTransactionIncomplete = true; }
   bool IsMutatedLayer(Layer* aLayer);
-
-  RefPtr<PipelineIdPromise> AllocPipelineId();
 
 private:
   /**

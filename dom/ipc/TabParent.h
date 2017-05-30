@@ -161,7 +161,8 @@ public:
                                                   const int32_t& aShellItemWidth,
                                                   const int32_t& aShellItemHeight) override;
 
-  virtual mozilla::ipc::IPCResult RecvDropLinks(nsTArray<nsString>&& aLinks) override;
+  virtual mozilla::ipc::IPCResult RecvDropLinks(nsTArray<nsString>&& aLinks,
+                                                const PrincipalInfo& aTriggeringPrincipalInfo) override;
 
   virtual mozilla::ipc::IPCResult RecvEvent(const RemoteDOMEvent& aEvent) override;
 
