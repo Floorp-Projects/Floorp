@@ -28,8 +28,8 @@ add_task(function* removeLegacyExtension() {
 
   // Click the remove button and wait for the DOM to change.
   const addonListMutation = waitForMutation(
-    getTemporaryAddonList(document),
-    { childList: true });
+    getTemporaryAddonList(document).parentNode,
+    { childList: true, subtree: true });
   getRemoveButton(document, addonID).click();
   yield addonListMutation;
 
@@ -57,8 +57,8 @@ add_task(function* removeWebextension() {
 
   // Click the remove button and wait for the DOM to change.
   const addonListMutation = waitForMutation(
-    getTemporaryAddonList(document),
-    { childList: true });
+    getTemporaryAddonList(document).parentNode,
+    { childList: true, subtree: true });
   getRemoveButton(document, addonID).click();
   yield addonListMutation;
 
