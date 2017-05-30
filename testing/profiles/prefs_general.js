@@ -1,5 +1,5 @@
 // Base preferences file used by most test harnesses
-
+/* globals user_pref */
 user_pref("browser.console.showInPanel", true);
 user_pref("browser.dom.window.dump.enabled", true);
 user_pref("browser.firstrun.show.localepicker", false);
