@@ -238,12 +238,13 @@ ServoStyleSheet::InsertRuleInternal(const nsAString& aRule,
   if (aRv.Failed()) {
     return 0;
   }
-  // XXX If the inserted rule is an import rule, we should only notify
-  // the document if its associated child stylesheet has been loaded.
   if (mDocument) {
-    // XXX We may not want to get the rule when stylesheet change event
-    // is not enabled.
-    mDocument->StyleRuleAdded(this, mRuleList->GetRule(aIndex));
+    if (mRuleList->GetRuleType(aIndex) != css::Rule::IMPORT_RULE ||
+        !RuleHasPendingChildSheet(mRuleList->GetRule(aIndex))) {
+      // XXX We may not want to get the rule when stylesheet change event
+      // is not enabled.
+      mDocument->StyleRuleAdded(this, mRuleList->GetRule(aIndex));
+    }
   }
   return aIndex;
 }
