@@ -40,10 +40,7 @@ function run_test() {
   }
 
   // We can't do anything if we can't spoof the stuff we need.
-  if (!(gfxInfo instanceof Ci.nsIGfxInfoDebug)) {
-    do_test_finished();
-    return;
-  }
+  do_check_true(gfxInfo instanceof Ci.nsIGfxInfoDebug);
 
   gfxInfo.QueryInterface(Ci.nsIGfxInfoDebug);
 
@@ -70,6 +67,9 @@ function run_test() {
       gfxInfo.spoofDeviceID("asdf");
       gfxInfo.spoofDriverVersion("5");
       break;
+    default:
+      do_check_true(false);
+      return;
   }
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
