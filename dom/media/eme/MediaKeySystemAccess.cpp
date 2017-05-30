@@ -37,6 +37,7 @@
 #ifdef MOZ_WIDGET_ANDROID
 #include "FennecJNIWrappers.h"
 #endif
+#include <functional>
 
 namespace mozilla {
 namespace dom {
@@ -548,11 +549,13 @@ IsParameterUnrecognized(const nsAString& aContentType)
 
 // 3.1.2.3 Get Supported Capabilities for Audio/Video Type
 static Sequence<MediaKeySystemMediaCapability>
-GetSupportedCapabilities(const CodecType aCodecType,
-                         const nsTArray<MediaKeySystemMediaCapability>& aRequestedCapabilities,
-                         const MediaKeySystemConfiguration& aPartialConfig,
-                         const KeySystemConfig& aKeySystem,
-                         DecoderDoctorDiagnostics* aDiagnostics)
+GetSupportedCapabilities(
+  const CodecType aCodecType,
+  const nsTArray<MediaKeySystemMediaCapability>& aRequestedCapabilities,
+  const MediaKeySystemConfiguration& aPartialConfig,
+  const KeySystemConfig& aKeySystem,
+  DecoderDoctorDiagnostics* aDiagnostics,
+  const std::function<void(const char*)>& aDeprecationLogFn)
 {
   // Let local accumulated configuration be a local copy of partial configuration.
   // (Note: It's not necessary for us to maintain a local copy, as we don't need
@@ -665,6 +668,9 @@ GetSupportedCapabilities(const CodecType aCodecType,
 
     // If media types is empty:
     if (codecs.IsEmpty()) {
+      // Log deprecation warning to encourage authors to not do this!
+      aDeprecationLogFn("MediaEMENoCodecsDeprecatedWarning");
+      // TODO: Remove this once we're sure it doesn't break the web.
       // If container normatively implies a specific set of codecs and codec constraints:
       // Let parameters be that set.
       if (isMP4) {
@@ -840,7 +846,8 @@ GetSupportedConfig(const KeySystemConfig& aKeySystem,
                    const MediaKeySystemConfiguration& aCandidate,
                    MediaKeySystemConfiguration& aOutConfig,
                    DecoderDoctorDiagnostics* aDiagnostics,
-                   bool aInPrivateBrowsing)
+                   bool aInPrivateBrowsing,
+                   const std::function<void(const char*)>& aDeprecationLogFn)
 {
   // Let accumulated configuration be a new MediaKeySystemConfiguration dictionary.
   MediaKeySystemConfiguration config;
@@ -953,8 +960,13 @@ GetSupportedConfig(const KeySystemConfig& aKeySystem,
 
   // If the videoCapabilities and audioCapabilities members in candidate
   // configuration are both empty, return NotSupported.
-  // TODO: Most sites using EME still don't pass capabilities, so we
-  // can't reject on it yet without breaking them. So add this later.
+  if (aCandidate.mAudioCapabilities.IsEmpty() &&
+      aCandidate.mVideoCapabilities.IsEmpty()) {
+    // TODO: Most sites using EME still don't pass capabilities, so we
+    // can't reject on it yet without breaking them. So add this later.
+    // Log deprecation warning to encourage authors to not do this!
+    aDeprecationLogFn("MediaEMENoCapabilitiesDeprecatedWarning");
+  }
 
   // If the videoCapabilities member in candidate configuration is non-empty:
   if (!aCandidate.mVideoCapabilities.IsEmpty()) {
@@ -967,7 +979,8 @@ GetSupportedConfig(const KeySystemConfig& aKeySystem,
                                aCandidate.mVideoCapabilities,
                                config,
                                aKeySystem,
-                               aDiagnostics);
+                               aDiagnostics,
+                               aDeprecationLogFn);
     // If video capabilities is null, return NotSupported.
     if (caps.IsEmpty()) {
       EME_LOG("MediaKeySystemConfiguration (label='%s') rejected; "
@@ -992,7 +1005,8 @@ GetSupportedConfig(const KeySystemConfig& aKeySystem,
                                aCandidate.mAudioCapabilities,
                                config,
                                aKeySystem,
-                               aDiagnostics);
+                               aDiagnostics,
+                               aDeprecationLogFn);
     // If audio capabilities is null, return NotSupported.
     if (caps.IsEmpty()) {
       EME_LOG("MediaKeySystemConfiguration (label='%s') rejected; "
@@ -1071,7 +1085,8 @@ MediaKeySystemAccess::GetSupportedConfig(
   const Sequence<MediaKeySystemConfiguration>& aConfigs,
   MediaKeySystemConfiguration& aOutConfig,
   DecoderDoctorDiagnostics* aDiagnostics,
-  bool aIsPrivateBrowsing)
+  bool aIsPrivateBrowsing,
+  const std::function<void(const char*)>& aDeprecationLogFn)
 {
   KeySystemConfig implementation;
   if (!GetKeySystemConfig(aKeySystem, implementation)) {
@@ -1082,7 +1097,8 @@ MediaKeySystemAccess::GetSupportedConfig(
                                          candidate,
                                          aOutConfig,
                                          aDiagnostics,
-                                         aIsPrivateBrowsing)) {
+                                         aIsPrivateBrowsing,
+                                         aDeprecationLogFn)) {
       return true;
     }
   }
