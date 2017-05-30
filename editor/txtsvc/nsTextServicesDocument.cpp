@@ -406,11 +406,13 @@ nsTextServicesDocument::ExpandRangeToWordBoundaries(nsIDOMRange *aRange)
 
   // Now adjust the range so that it uses our new
   // end points.
-
-  rv = range->SetEnd(rngEndNode, rngEndOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return range->SetStart(rngStartNode, rngStartOffset);
+  nsCOMPtr<nsINode> startNode = do_QueryInterface(rngStartNode);
+  nsCOMPtr<nsINode> endNode = do_QueryInterface(rngEndNode);
+  rv = range->SetStartAndEnd(startNode, rngStartOffset, endNode, rngEndOffset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

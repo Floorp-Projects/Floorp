@@ -335,9 +335,11 @@ mozInlineSpellWordUtil::MakeRange(NodeOffset aBegin, NodeOffset aEnd,
     return NS_ERROR_NOT_INITIALIZED;
 
   RefPtr<nsRange> range = new nsRange(aBegin.mNode);
-  nsresult rv = range->Set(aBegin.mNode, aBegin.mOffset,
-                           aEnd.mNode, aEnd.mOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = range->SetStartAndEnd(aBegin.mNode, aBegin.mOffset,
+                                      aEnd.mNode, aEnd.mOffset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   range.forget(aRange);
 
   return NS_OK;
