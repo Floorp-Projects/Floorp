@@ -3047,7 +3047,8 @@ CloneObject(JSContext* cx, HandleNativeObject selfHostedObject)
         RootedAtom source(cx, reobj.getSource());
         MOZ_ASSERT(source->isPermanentAtom());
         clone = RegExpObject::create(cx, source, reobj.getFlags(),
-                                     nullptr, nullptr, cx->tempLifoAlloc());
+                                     nullptr, nullptr, cx->tempLifoAlloc(),
+                                     TenuredObject);
     } else if (selfHostedObject->is<DateObject>()) {
         clone = JS::NewDateObject(cx, selfHostedObject->as<DateObject>().clippedTime());
     } else if (selfHostedObject->is<BooleanObject>()) {

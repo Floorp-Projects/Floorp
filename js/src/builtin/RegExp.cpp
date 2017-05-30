@@ -260,7 +260,7 @@ js::RegExpCreate(JSContext* cx, HandleValue patternValue, HandleValue flagsValue
                  MutableHandleValue rval)
 {
     /* Step 1. */
-    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx));
+    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, GenericObject));
     if (!regexp)
          return false;
 
@@ -450,7 +450,7 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
         if (!GetPrototypeFromCallableConstructor(cx, args, &proto))
             return false;
 
-        Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, proto));
+        Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, GenericObject, proto));
         if (!regexp)
             return false;
 
@@ -509,7 +509,7 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
     if (!GetPrototypeFromCallableConstructor(cx, args, &proto))
         return false;
 
-    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, proto));
+    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, GenericObject, proto));
     if (!regexp)
         return false;
 
@@ -542,7 +542,7 @@ js::regexp_construct_raw_flags(JSContext* cx, unsigned argc, Value* vp)
     int32_t flags = int32_t(args[1].toNumber());
 
     // Step 7.
-    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx));
+    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, GenericObject));
     if (!regexp)
         return false;
 

@@ -1478,6 +1478,7 @@
       <method name="dropLinks">
         <parameter name="aLinksCount"/>
         <parameter name="aLinks"/>
+        <parameter name="aTriggeringPrincipal"/>
         <body><![CDATA[
           if (!this.droppedLinkHandler) {
             return false;
@@ -1490,7 +1491,7 @@
               type: aLinks[i + 2],
             });
           }
-          this.droppedLinkHandler(null, links);
+          this.droppedLinkHandler(null, links, aTriggeringPrincipal);
           return true;
         ]]></body>
       </method>
@@ -1592,7 +1593,18 @@
         }
 
         if (links.length) {
-          this.droppedLinkHandler(event, links);
+          // Bug 1368481: mozSourceNode is null if the drag event originated
+          // in an external application - needs better fallback!
+          let triggeringPrincipal;
+          let sourceNode = event.dataTransfer.mozSourceNode;
+          if (sourceNode) {
+            triggeringPrincipal = sourceNode.nodePrincipal;
+          } else {
+            var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].
+              getService(Components.interfaces.nsIScriptSecurityManager);
+            triggeringPrincipal = secMan.getSystemPrincipal();
+          }
+          this.droppedLinkHandler(event, links, triggeringPrincipal);
         }
       ]]>
       </handler>

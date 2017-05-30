@@ -7145,6 +7145,26 @@
     "n_buckets": 20,
     "description": "Time (ms) it takes for checking if the pending pings are over-quota"
   },
+  "TELEMETRY_PENDING_LOAD_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 20,
+    "bug_numbers": [1033860],
+    "description": "Time (ms) it takes for loading pending pings from disk"
+  },
+  "TELEMETRY_ARCHIVE_LOAD_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 20,
+    "bug_numbers": [1033860],
+    "description": "Time (ms) it takes for loading archived pings from disk"
+  },
   "TELEMETRY_PING_SIZE_EXCEEDED_SEND": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
@@ -8107,7 +8127,7 @@
     "alert_emails": ["bsmedberg@mozilla.com"]
   },
   "PLUGINS_INFOBAR_SHOWN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "60",
     "kind": "boolean",
@@ -8116,7 +8136,7 @@
     "alert_emails": ["bsmedberg@mozilla.com"]
   },
   "PLUGINS_INFOBAR_BLOCK": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "60",
     "kind": "boolean",
@@ -8125,12 +8145,21 @@
     "alert_emails": ["bsmedberg@mozilla.com"]
   },
   "PLUGINS_INFOBAR_ALLOW": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "60",
     "kind": "boolean",
     "description": "Count the number of times the user clicked 'allow' on the hidden-plugin infobar.",
     "bug_numbers": [902075, 1345894],
+    "alert_emails": ["bsmedberg@mozilla.com"]
+  },
+  "PLUGINS_INFOBAR_DISMISSED": {
+    "record_in_processes": ["main"],
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "60",
+    "kind": "boolean",
+    "description": "Count the number of times the user explicitly dismisses the hidden-plugin infobar without choosing allow or continue-blocking.",
+    "bug_numbers": [1368060],
     "alert_emails": ["bsmedberg@mozilla.com"]
   },
   "POPUP_NOTIFICATION_STATS": {
