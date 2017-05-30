@@ -4450,18 +4450,38 @@ nsComputedDOMStyle::DoGetBorderImageSource()
   return val.forget();
 }
 
+void
+nsComputedDOMStyle::AppendFourSideCoordValues(nsDOMCSSValueList* aList,
+                                              const nsStyleSides& aValues)
+{
+  const nsStyleCoord& top = aValues.Get(eSideTop);
+  const nsStyleCoord& right = aValues.Get(eSideRight);
+  const nsStyleCoord& bottom = aValues.Get(eSideBottom);
+  const nsStyleCoord& left = aValues.Get(eSideLeft);
+
+  auto appendValue = [this, aList](const nsStyleCoord& value) {
+    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+    SetValueToCoord(val, value, true);
+    aList->AppendCSSValue(val.forget());
+  };
+  appendValue(top);
+  if (top != right || top != bottom || top != left) {
+    appendValue(right);
+    if (top != bottom || right != left) {
+      appendValue(bottom);
+      if (right != left) {
+        appendValue(left);
+      }
+    }
+  }
+}
+
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetBorderImageSlice()
 {
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-
   const nsStyleBorder* border = StyleBorder();
-  // Four slice numbers.
-  NS_FOR_CSS_SIDES (side) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    SetValueToCoord(val, border->mBorderImageSlice.Get(side), true, nullptr);
-    valueList->AppendCSSValue(val.forget());
-  }
+  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
+  AppendFourSideCoordValues(valueList, border->mBorderImageSlice);
 
   // Fill keyword.
   if (NS_STYLE_BORDER_IMAGE_SLICE_FILL == border->mBorderImageFill) {
@@ -4478,30 +4498,16 @@ nsComputedDOMStyle::DoGetBorderImageWidth()
 {
   const nsStyleBorder* border = StyleBorder();
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-  NS_FOR_CSS_SIDES (side) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    SetValueToCoord(val, border->mBorderImageWidth.Get(side),
-                    true, nullptr);
-    valueList->AppendCSSValue(val.forget());
-  }
-
+  AppendFourSideCoordValues(valueList, border->mBorderImageWidth);
   return valueList.forget();
 }
 
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetBorderImageOutset()
 {
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-
   const nsStyleBorder* border = StyleBorder();
-  // four slice numbers
-  NS_FOR_CSS_SIDES (side) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    SetValueToCoord(val, border->mBorderImageOutset.Get(side),
-                    true, nullptr);
-    valueList->AppendCSSValue(val.forget());
-  }
-
+  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
+  AppendFourSideCoordValues(valueList, border->mBorderImageOutset);
   return valueList.forget();
 }
 
