@@ -52,8 +52,8 @@ function nsFilePicker() {
   /* attributes */
   this.mDefaultString = "";
   this.mFilterIndex = 0;
-  this.mFilterTitles = new Array();
-  this.mFilters = new Array();
+  this.mFilterTitles = [];
+  this.mFilters = [];
   this.mDisplayDirectory = null;
   this.mDisplaySpecialDirectory = null;
   if (lastDirectory) {

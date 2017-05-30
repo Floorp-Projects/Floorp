@@ -104,13 +104,13 @@ test(function() {
 test(function() {
     resetFocusAndSelectionRange(editor);
     document.getSelection().extend(outerEditor.textNode, 0);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.extend() from selection at start of the first text node of 'editor' to start of the first text node of 'outerEditor'");
+    assert_equals(document.activeElement, editor.element);
+}, "Active element should be 'editor' after Selection.extend() from selection at start of the first text node of 'editor' to start of the first text node of 'outerEditor'");
 test(function() {
     resetFocusAndSelectionRange(editor);
     document.getSelection().extend(innerEditor.textNode, 0);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.extend() from selection at start of the first text node of 'editor' to start of the first text node of 'innerEditor'");
+    assert_equals(document.activeElement, editor.element);
+}, "Active element should be 'editor' after Selection.extend() from selection at start of the first text node of 'editor' to start of the first text node of 'innerEditor'");
 
 test(function() {
     resetFocusAndSelectionRange(outerEditor);
@@ -130,8 +130,8 @@ test(function() {
 test(function() {
     resetFocusAndSelectionRange(outerEditor);
     document.getSelection().extend(editor.textNode, 0);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.extend() from selection at start of the first text node of 'outerEditor' to start of the first text node of 'editor'");
+    assert_equals(document.activeElement, outerEditor.element);
+}, "Active element should be 'outerEditor' after Selection.extend() from selection at start of the first text node of 'outerEditor' to start of the first text node of 'editor'");
 
 test(function() {
     resetFocusAndSelectionRange(innerEditor);
@@ -151,8 +151,8 @@ test(function() {
 test(function() {
     resetFocusAndSelectionRange(innerEditor);
     document.getSelection().extend(anchor.textNode, 0);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.extend() from selection at start of the first text node of 'innerEditor' to start of the first text node of 'anchor'");
+    assert_equals(document.activeElement, innerEditor.element);
+}, "Active element should be 'innerEditor' after Selection.extend() from selection at start of the first text node of 'innerEditor' to start of the first text node of 'anchor'");
 
 test(function() {
     resetFocusAndSelectionRange(anchor);

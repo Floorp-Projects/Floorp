@@ -314,7 +314,8 @@ task_description_schema = Schema({
 
         # Tells the worker whether machine should reboot
         # after the task is finished.
-        Optional('reboot'): bool,
+        Optional('reboot'):
+            Any('always', 'on-exception', 'on-failure'),
 
         # the command to run
         Optional('command'): [taskref_or_string],
@@ -754,9 +755,10 @@ def build_macosx_engine_payload(config, task, task_def):
         'context': worker['context'],
         'command': worker['command'],
         'env': worker['env'],
-        'reboot': worker.get('reboot', False),
         'artifacts': artifacts,
     }
+    if worker.get('reboot'):
+        task_def['payload'] = worker['reboot']
 
     if task.get('needs-sccache'):
         raise Exception('needs-sccache not supported in native-engine')

@@ -81,7 +81,7 @@ XPCOMUtils.defineLazyGetter(this, "DEFAULT_AREA_PLACEMENTS", function() {
     result["PanelUI-contents"].push("characterencoding-button");
   }
 
-  if (AppConstants.NIGHTLY_BUILD) {
+  if (!AppConstants.RELEASE_OR_BETA) {
     if (Services.prefs.getBoolPref("extensions.webcompat-reporter.enabled")) {
       result["PanelUI-contents"].push("webcompat-reporter-button");
     }

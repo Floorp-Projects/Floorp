@@ -61,7 +61,7 @@ function testActions(aArray)
     var accOrElmOrIDOfTarget = actionObj.targetID ?
       actionObj.targetID : accOrElmOrID;
 
-    var eventSeq = new Array();
+    var eventSeq = [];
     if (events) {
       var elm = getNode(accOrElmOrIDOfTarget);
       if (events & MOUSEDOWN_EVENT)

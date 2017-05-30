@@ -55,9 +55,6 @@ module.exports = {
     // Always require parenthesis for new calls
     "new-parens": "error",
 
-    // Use [] instead of Array()
-    "no-array-constructor": "error",
-
     // No expressions where a statement is expected
     "no-unused-expressions": "error",
 

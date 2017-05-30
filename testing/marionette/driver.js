@@ -121,8 +121,6 @@ this.GeckoDriver = function (appName, server) {
   // content space.
   this.context = Context.CONTENT;
 
-  this.importedScripts = new evaluate.ScriptStorageService(
-      [Context.CHROME, Context.CONTENT]);
   this.sandboxes = new Sandboxes(() => this.getCurrentWindow());
   this.legacyactions = new legacyaction.Chain();
 
@@ -889,7 +887,6 @@ GeckoDriver.prototype.execute_ = function (script, args, timeout, opts = {}) {
       }
 
       opts.timeout = timeout;
-      script = this.importedScripts.for(Context.CHROME).concat(script);
       let wargs = evaluate.fromJSON(args, this.curBrowser.seenEls, sb.window);
       let evaluatePromise = evaluate.sandbox(sb, script, wargs, opts);
       return evaluatePromise.then(res => evaluate.toJSON(res, this.curBrowser.seenEls));
@@ -2728,33 +2725,6 @@ GeckoDriver.prototype.getAppCacheStatus = function* (cmd, resp) {
 };
 
 /**
- * Import script to the JS evaluation runtime.
- *
- * Imported scripts are exposed in the contexts of all subsequent
- * calls to {@code executeScript}, {@code executeAsyncScript}, and
- * {@code executeJSScript} by prepending them to the evaluated script.
- *
- * Scripts can be cleared with the {@code clearImportedScripts} command.
- *
- * @param {string} script
- *     Script to include.  If the script is byte-by-byte equal to an
- *     existing imported script, it is not imported.
- */
-GeckoDriver.prototype.importScript = function*(cmd, resp) {
-  let script = cmd.parameters.script;
-  this.importedScripts.for(this.context).add(script);
-};
-
-/**
- * Clear all scripts that are imported into the JS evaluation runtime.
- *
- * Scripts can be imported using the {@code importScript} command.
- */
-GeckoDriver.prototype.clearImportedScripts = function*(cmd, resp) {
-  this.importedScripts.for(this.context).clear();
-};
-
-/**
  * Takes a screenshot of a web element, current frame, or viewport.
  *
  * The screen capture is returned as a lossless PNG image encoded as
@@ -3376,8 +3346,6 @@ GeckoDriver.prototype.commands = {
   "switchToWindow": GeckoDriver.prototype.switchToWindow,
   "switchToShadowRoot": GeckoDriver.prototype.switchToShadowRoot,
   "deleteSession": GeckoDriver.prototype.deleteSession,
-  "importScript": GeckoDriver.prototype.importScript,
-  "clearImportedScripts": GeckoDriver.prototype.clearImportedScripts,
   "getAppCacheStatus": GeckoDriver.prototype.getAppCacheStatus,
   "close": GeckoDriver.prototype.close,
   "closeChromeWindow": GeckoDriver.prototype.closeChromeWindow,
