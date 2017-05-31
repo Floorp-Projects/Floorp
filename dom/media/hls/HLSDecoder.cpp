@@ -47,7 +47,8 @@ HLSDecoder::IsEnabled()
 bool
 HLSDecoder::IsSupportedType(const MediaContainerType& aContainerType)
 {
-  return false;
+  return IsEnabled() &&
+         DecoderTraits::IsHttpLiveStreamingType(aContainerType);
 }
 
 } // namespace mozilla

@@ -22,6 +22,9 @@
 #include "AndroidMediaReader.h"
 #include "AndroidMediaPluginHost.h"
 #endif
+#ifdef MOZ_ANDROID_HLS_SUPPORT
+#include "HLSDecoder.h"
+#endif
 #ifdef MOZ_FMP4
 #include "MP4Decoder.h"
 #include "MP4Demuxer.h"
@@ -165,6 +168,12 @@ CanHandleMediaType(const MediaContainerType& aType,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+#ifdef MOZ_ANDROID_HLS_SUPPORT
+  if (HLSDecoder::IsSupportedType(aType)) {
+    return CANPLAY_MAYBE;
+  }
+#endif
+
   if (DecoderTraits::IsHttpLiveStreamingType(aType)) {
     Telemetry::Accumulate(Telemetry::MEDIA_HLS_CANPLAY_REQUESTED, true);
   }
@@ -263,6 +272,12 @@ InstantiateDecoder(const MediaContainerType& aType,
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<MediaDecoder> decoder;
 
+#ifdef MOZ_ANDROID_HLS_SUPPORT
+  if (HLSDecoder::IsSupportedType(aType)) {
+    decoder = new HLSDecoder(aInit);
+    return decoder.forget();
+  }
+#endif
 #ifdef MOZ_FMP4
   if (MP4Decoder::IsSupportedType(aType, aDiagnostics)) {
     decoder = new MP4Decoder(aInit);
