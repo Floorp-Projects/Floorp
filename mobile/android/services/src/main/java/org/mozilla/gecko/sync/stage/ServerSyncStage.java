@@ -42,6 +42,7 @@ import org.mozilla.gecko.sync.synchronizer.ServerLocalSynchronizer;
 import org.mozilla.gecko.sync.synchronizer.Synchronizer;
 import org.mozilla.gecko.sync.synchronizer.SynchronizerDelegate;
 import org.mozilla.gecko.sync.synchronizer.SynchronizerSession;
+import org.mozilla.gecko.sync.telemetry.TelemetryCollector;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -649,10 +650,29 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
 
     final SynchronizerSession synchronizerSession = synchronizer.getSynchronizerSession();
     int inboundCount = synchronizerSession.getInboundCount();
+    int inboundCountStored = synchronizerSession.getInboundCountStored();
+    int inboundCountFailed = synchronizerSession.getInboundCountFailed();
+    int inboundCountReconciled = synchronizerSession.getInboundCountReconciled();
     int outboundCount = synchronizerSession.getOutboundCount();
-    Logger.info(LOG_TAG, "Stage " + getEngineName() +
-        " received " + inboundCount + " and sent " + outboundCount +
-        " records in " + getStageDurationString() + ".");
+    int outboundCountStored = synchronizerSession.getOutboundCountStored();
+    int outboundCountFailed = synchronizerSession.getOutboundCountFailed();
+
+    telemetryStageCollector.finished = stageCompleteTimestamp;
+    telemetryStageCollector.inbound = inboundCount;
+    telemetryStageCollector.inboundStored = inboundCountStored;
+    telemetryStageCollector.inboundFailed = inboundCountFailed;
+    telemetryStageCollector.reconciled = inboundCountReconciled;
+    telemetryStageCollector.outbound = outboundCount;
+    telemetryStageCollector.outboundStored = outboundCountStored;
+    telemetryStageCollector.outboundFailed = outboundCountFailed;
+
+    Logger.info(LOG_TAG, "Stage " + getEngineName()
+            + " received " + inboundCount
+            + "; stored " + inboundCountStored + ", reconciling " + inboundCountReconciled
+            + " and failed to store " + inboundCountFailed
+            + ". Sent " + outboundCount
+            + "; server accepted " + outboundCountStored + " and rejected " + outboundCountFailed
+            + ". Duration: " + getStageDurationString() + ".");
     Logger.info(LOG_TAG, "Advancing session.");
     session.advance();
   }
@@ -669,6 +689,16 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
                                   Exception lastException, String reason) {
     stageCompleteTimestamp = SystemClock.elapsedRealtime();
     Logger.warn(LOG_TAG, "Synchronize failed: " + reason, lastException);
+
+    final SynchronizerSession synchronizerSession = synchronizer.getSynchronizerSession();
+
+    telemetryStageCollector.error = new TelemetryCollector.StageErrorBuilder()
+            .setLastException(lastException)
+            .setFetchException(synchronizerSession.getFetchFailedCauseException())
+            .setStoreException(synchronizerSession.getStoreFailedCauseException())
+            .build();
+
+    telemetryStageCollector.finished = stageCompleteTimestamp;
 
     // This failure could be due to a 503 or a 401 and it could have headers.
     // Interrogate the headers but only abort the global session if Retry-After header is set.
