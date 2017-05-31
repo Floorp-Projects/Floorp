@@ -136,11 +136,6 @@ public:
                                         const nsACString& aData = EmptyCString());
 
   /**
-   * Does one of the child processes have priority FOREGROUND_HIGH?
-   */
-  bool ChildProcessHasHighPriority();
-
-  /**
    * This must be called by a ParticularProcessPriorityManager when it changes
    * its priority.
    */
@@ -207,7 +202,6 @@ public:
   NS_DECL_NSIOBSERVER
 
   bool CurrentProcessIsForeground();
-  bool CurrentProcessIsHighPriority();
 
 private:
   static StaticRefPtr<ProcessPriorityManagerChild> sSingleton;
@@ -256,8 +250,6 @@ public:
    * destroyed, whichever comes first.
    */
   const nsAutoCString& NameWithComma();
-
-  bool IsExpectingSystemMessage();
 
   void OnRemoteBrowserFrameShown(nsISupports* aSubject);
   void OnTabParentDestroyed(nsISupports* aSubject);
@@ -513,12 +505,6 @@ ProcessPriorityManagerImpl::ObserveContentParentDestroyed(nsISupports* aSubject)
 
     mHighPriorityChildIDs.RemoveEntry(childID);
   }
-}
-
-bool
-ProcessPriorityManagerImpl::ChildProcessHasHighPriority( void )
-{
-  return mHighPriorityChildIDs.Count() > 0;
 }
 
 void
@@ -838,22 +824,6 @@ ParticularProcessPriorityManager::Notify(nsITimer* aTimer)
   return NS_OK;
 }
 
-bool
-ParticularProcessPriorityManager::IsExpectingSystemMessage()
-{
-  const ManagedContainer<PBrowserParent>& browsers =
-    mContentParent->ManagedPBrowserParent();
-  for (auto iter = browsers.ConstIter(); !iter.Done(); iter.Next()) {
-    TabParent* tp = TabParent::GetFrom(iter.Get()->GetKey());
-    nsCOMPtr<nsIMozBrowserFrame> bf = do_QueryInterface(tp->GetOwnerElement());
-    if (!bf) {
-      continue;
-    }
-  }
-
-  return false;
-}
-
 ProcessPriority
 ParticularProcessPriorityManager::CurrentPriority()
 {
@@ -866,8 +836,7 @@ ParticularProcessPriorityManager::ComputePriority()
   // TODO...
   return PROCESS_PRIORITY_FOREGROUND;
 
-  if ((mHoldsCPUWakeLock || mHoldsHighPriorityWakeLock) &&
-      IsExpectingSystemMessage()) {
+  if (mHoldsCPUWakeLock || mHoldsHighPriorityWakeLock) {
     return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
   }
 
@@ -1008,8 +977,7 @@ ProcessPriorityManagerChild::Singleton()
   return sSingleton;
 }
 
-NS_IMPL_ISUPPORTS(ProcessPriorityManagerChild,
-                  nsIObserver)
+NS_IMPL_ISUPPORTS(ProcessPriorityManagerChild, nsIObserver)
 
 ProcessPriorityManagerChild::ProcessPriorityManagerChild()
 {
@@ -1033,10 +1001,9 @@ ProcessPriorityManagerChild::Init()
 }
 
 NS_IMETHODIMP
-ProcessPriorityManagerChild::Observe(
-  nsISupports* aSubject,
-  const char* aTopic,
-  const char16_t* aData)
+ProcessPriorityManagerChild::Observe(nsISupports* aSubject,
+                                     const char* aTopic,
+                                     const char16_t* aData)
 {
   MOZ_ASSERT(!strcmp(aTopic, "ipc:process-priority-changed"));
 
@@ -1057,13 +1024,6 @@ ProcessPriorityManagerChild::CurrentProcessIsForeground()
 {
   return mCachedPriority == PROCESS_PRIORITY_UNKNOWN ||
          mCachedPriority >= PROCESS_PRIORITY_FOREGROUND;
-}
-
-bool
-ProcessPriorityManagerChild::CurrentProcessIsHighPriority()
-{
-  return mCachedPriority == PROCESS_PRIORITY_UNKNOWN ||
-         mCachedPriority >= PROCESS_PRIORITY_FOREGROUND_HIGH;
 }
 
 } // namespace
@@ -1096,20 +1056,6 @@ ProcessPriorityManager::CurrentProcessIsForeground()
 {
   return ProcessPriorityManagerChild::Singleton()->
     CurrentProcessIsForeground();
-}
-
-/* static */ bool
-ProcessPriorityManager::AnyProcessHasHighPriority()
-{
-  ProcessPriorityManagerImpl* singleton =
-    ProcessPriorityManagerImpl::GetSingleton();
-
-  if (singleton) {
-    return singleton->ChildProcessHasHighPriority();
-  } else {
-    return ProcessPriorityManagerChild::Singleton()->
-      CurrentProcessIsHighPriority();
-  }
 }
 
 } // namespace mozilla
