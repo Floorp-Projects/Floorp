@@ -333,7 +333,7 @@ class ChildImpl final : public BackgroundChildImpl
   static bool sShutdownHasStarted;
 
 #if defined(DEBUG) || !defined(RELEASE_OR_BETA)
-  nsIThread* mBoundThread;
+  nsISerialEventTarget* mBoundEventTarget;
 #endif
 
 #ifdef DEBUG
@@ -350,7 +350,7 @@ public:
   void
   AssertIsOnBoundThread()
   {
-    THREADSAFETY_ASSERT(mBoundThread);
+    THREADSAFETY_ASSERT(mBoundEventTarget);
 
 #ifdef RELEASE_OR_BETA
     DebugOnly<bool> current;
@@ -358,7 +358,7 @@ public:
     bool current;
 #endif
     THREADSAFETY_ASSERT(
-      NS_SUCCEEDED(mBoundThread->IsOnCurrentThread(&current)));
+      NS_SUCCEEDED(mBoundEventTarget->IsOnCurrentThread(&current)));
     THREADSAFETY_ASSERT(current);
   }
 
@@ -370,7 +370,7 @@ public:
 
   ChildImpl()
 #if defined(DEBUG) || !defined(RELEASE_OR_BETA)
-  : mBoundThread(nullptr)
+  : mBoundEventTarget(nullptr)
 #endif
 #ifdef DEBUG
   , mActorDestroyed(false)
@@ -447,13 +447,13 @@ private:
   void
   SetBoundThread()
   {
-    THREADSAFETY_ASSERT(!mBoundThread);
+    THREADSAFETY_ASSERT(!mBoundEventTarget);
 
 #if defined(DEBUG) || !defined(RELEASE_OR_BETA)
-    mBoundThread = NS_GetCurrentThread();
+    mBoundEventTarget = GetCurrentThreadSerialEventTarget();
 #endif
 
-    THREADSAFETY_ASSERT(mBoundThread);
+    THREADSAFETY_ASSERT(mBoundEventTarget);
   }
 
   // Only called by IPDL.
