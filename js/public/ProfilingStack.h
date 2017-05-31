@@ -55,8 +55,8 @@ class ProfileEntry
     // Line number for non-JS entries, the bytecode offset otherwise.
     int32_t volatile lineOrPcOffset;
 
-    // General purpose storage describing this frame.
-    uint32_t volatile flags_;
+    // Flags are in the low bits. The category is in the high bits.
+    uint32_t volatile flagsAndCategory_;
 
     static int32_t pcToOffset(JSScript* aScript, jsbytecode* aPc);
 
@@ -67,15 +67,15 @@ class ProfileEntry
         // a JS frame is assumed by default. You're not allowed to publicly
         // change the frame type. Instead, initialize the ProfileEntry as either
         // a JS or CPP frame with `initJsFrame` or `initCppFrame` respectively.
-        IS_CPP_ENTRY = 1 << 0,
+        IS_CPP_ENTRY = 1u << 0,
 
         // This ProfileEntry is a dummy entry indicating the start of a run
         // of JS pseudostack entries.
-        BEGIN_PSEUDO_JS = 1 << 1,
+        BEGIN_PSEUDO_JS = 1u << 1,
 
         // This flag is used to indicate that an interpreter JS entry has OSR-ed
         // into baseline.
-        OSR = 1 << 2,
+        OSR = 1u << 2,
 
         // Union of all flags.
         ALL = IS_CPP_ENTRY|BEGIN_PSEUDO_JS|OSR,
@@ -86,15 +86,15 @@ class ProfileEntry
 
     // Keep these in sync with devtools/client/performance/modules/categories.js
     enum class Category : uint32_t {
-        OTHER    = 0x10,
-        CSS      = 0x20,
-        JS       = 0x40,
-        GC       = 0x80,
-        CC       = 0x100,
-        NETWORK  = 0x200,
-        GRAPHICS = 0x400,
-        STORAGE  = 0x800,
-        EVENTS   = 0x1000,
+        OTHER    = 1u << 4,
+        CSS      = 1u << 5,
+        JS       = 1u << 6,
+        GC       = 1u << 7,
+        CC       = 1u << 8,
+        NETWORK  = 1u << 9,
+        GRAPHICS = 1u << 10,
+        STORAGE  = 1u << 11,
+        EVENTS   = 1u << 12,
 
         FIRST    = OTHER,
         LAST     = EVENTS
@@ -124,7 +124,7 @@ class ProfileEntry
         dynamicString_ = aDynamicString;
         spOrScript = sp;
         lineOrPcOffset = static_cast<int32_t>(aLine);
-        flags_ = aFlags | js::ProfileEntry::IS_CPP_ENTRY | uint32_t(aCategory);
+        flagsAndCategory_ = aFlags | js::ProfileEntry::IS_CPP_ENTRY | uint32_t(aCategory);
     }
 
     void initJsFrame(const char* aLabel, const char* aDynamicString, JSScript* aScript,
@@ -134,33 +134,23 @@ class ProfileEntry
         dynamicString_ = aDynamicString;
         spOrScript = aScript;
         lineOrPcOffset = pcToOffset(aScript, aPc);
-        flags_ = uint32_t(js::ProfileEntry::Category::JS);  // No flags, just the JS category.
+        flagsAndCategory_ = uint32_t(js::ProfileEntry::Category::JS);  // No flags needed.
     }
 
     void setFlag(uint32_t flag) volatile {
         MOZ_ASSERT(flag != IS_CPP_ENTRY);
-        flags_ |= flag;
+        flagsAndCategory_ |= flag;
     }
     void unsetFlag(uint32_t flag) volatile {
         MOZ_ASSERT(flag != IS_CPP_ENTRY);
-        flags_ &= ~flag;
+        flagsAndCategory_ &= ~flag;
     }
     bool hasFlag(uint32_t flag) const volatile {
-        return bool(flags_ & flag);
-    }
-
-    uint32_t flags() const volatile {
-        return flags_;
+        return bool(flagsAndCategory_ & flag);
     }
 
     uint32_t category() const volatile {
-        return flags_ & CATEGORY_MASK;
-    }
-    void setCategory(Category c) volatile {
-        MOZ_ASSERT(c >= Category::FIRST);
-        MOZ_ASSERT(c <= Category::LAST);
-        flags_ &= ~CATEGORY_MASK;
-        setFlag(uint32_t(c));
+        return flagsAndCategory_ & CATEGORY_MASK;
     }
 
     void setOSR() volatile {
@@ -179,7 +169,9 @@ class ProfileEntry
         MOZ_ASSERT(!isJs());
         return spOrScript;
     }
+
     JS_PUBLIC_API(JSScript*) script() const volatile;
+
     uint32_t line() const volatile {
         MOZ_ASSERT(!isJs());
         return static_cast<uint32_t>(lineOrPcOffset);
@@ -193,7 +185,7 @@ class ProfileEntry
 
     // We can't know the layout of JSScript, so look in vm/GeckoProfiler.cpp.
     JS_FRIEND_API(jsbytecode*) pc() const volatile;
-    JS_FRIEND_API(void) setPC(jsbytecode* pc) volatile;
+    void setPC(jsbytecode* pc) volatile;
 
     void trace(JSTracer* trc) volatile;
 
@@ -201,11 +193,6 @@ class ProfileEntry
     // signify a nullptr pc, use a -1 index. This is checked against in
     // pc() and setPC() to set/get the right pc.
     static const int32_t NullPCOffset = -1;
-
-    static size_t offsetOfLabel() { return offsetof(ProfileEntry, label_); }
-    static size_t offsetOfSpOrScript() { return offsetof(ProfileEntry, spOrScript); }
-    static size_t offsetOfLineOrPcOffset() { return offsetof(ProfileEntry, lineOrPcOffset); }
-    static size_t offsetOfFlags() { return offsetof(ProfileEntry, flags_); }
 };
 
 JS_FRIEND_API(void)
