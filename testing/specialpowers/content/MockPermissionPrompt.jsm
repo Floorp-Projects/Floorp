@@ -19,19 +19,19 @@ var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 var oldClassID, oldFactory;
 var newClassID = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID();
 var newFactory = {
-  createInstance: function(aOuter, aIID) {
+  createInstance(aOuter, aIID) {
     if (aOuter)
       throw Components.results.NS_ERROR_NO_AGGREGATION;
     return new MockPermissionPromptInstance().QueryInterface(aIID);
   },
-  lockFactory: function(aLock) {
+  lockFactory(aLock) {
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
 };
 
 this.MockPermissionPrompt = {
-  init: function() {
+  init() {
     this.reset();
     if (!registrar.isCIDRegistered(newClassID)) {
       try {
@@ -49,11 +49,11 @@ this.MockPermissionPrompt = {
       registrar.registerFactory(newClassID, "", CONTRACT_ID, newFactory);
     }
   },
-  
-  reset: function() {
+
+  reset() {
   },
-  
-  cleanup: function() {
+
+  cleanup() {
     this.reset();
     if (oldFactory) {
       registrar.unregisterFactory(newClassID, newFactory);
@@ -62,13 +62,13 @@ this.MockPermissionPrompt = {
   },
 };
 
-function MockPermissionPromptInstance() { };
+function MockPermissionPromptInstance() { }
 MockPermissionPromptInstance.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionPrompt]),
 
   promptResult: Ci.nsIPermissionManager.UNKNOWN_ACTION,
 
-  prompt: function(request) {
+  prompt(request) {
 
     let perms = request.types.QueryInterface(Ci.nsIArray);
     for (let idx = 0; idx < perms.length; idx++) {
@@ -90,7 +90,7 @@ MockPermissionPrompt.reset();
 function exposeAll(obj) {
   var props = {};
   for (var prop in obj)
-    props[prop] = 'rw';
+    props[prop] = "rw";
   obj.__exposedProps__ = props;
 }
 exposeAll(MockPermissionPrompt);

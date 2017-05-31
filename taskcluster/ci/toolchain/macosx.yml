@@ -11,7 +11,6 @@ macosx64-clang:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
-        implementation: docker-worker
         docker-image: {in-tree: desktop-build}
         max-run-time: 36000
     run:
@@ -34,7 +33,6 @@ macosx64-clang-tidy:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
-        implementation: docker-worker
         docker-image: {in-tree: desktop-build}
         max-run-time: 36000
     run:
@@ -55,7 +53,6 @@ macosx64-cctools-port:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
-        implementation: docker-worker
         docker-image: {in-tree: desktop-build}
         max-run-time: 36000
     run:

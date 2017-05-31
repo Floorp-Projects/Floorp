@@ -7,7 +7,6 @@ taskgraph-tests:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
     worker:
-        implementation: docker-worker
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
     run:
@@ -35,7 +34,6 @@ marionette-harness:
     worker:
         by-platform:
             linux64.*:
-                implementation: docker-worker
                 docker-image: {in-tree: "lint"}
                 max-run-time: 3600
     run:
@@ -66,7 +64,6 @@ mozbase:
     worker:
         by-platform:
             linux64.*:
-                implementation: docker-worker
                 docker-image: {in-tree: "lint"}
                 max-run-time: 3600
     run:
@@ -90,7 +87,6 @@ mozharness:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
     worker:
-        implementation: docker-worker
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
     run:
@@ -119,7 +115,6 @@ mozlint:
     worker:
         by-platform:
             linux64.*:
-                implementation: docker-worker
                 docker-image: {in-tree: "lint"}
                 max-run-time: 3600
     run:

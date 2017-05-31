@@ -37,6 +37,7 @@ job-template:
    worker-type: aws-provisioner-v1/gecko-symbol-upload
    worker:
        implementation: docker-worker
+       os: linux
        max-run-time: 600
        command: ["/bin/bash", "bin/upload.sh"]
        docker-image: taskclusterprivate/upload_symbols:0.0.4
