@@ -6,6 +6,7 @@
 
 %include shared.inc
 %define toolbarButtonPressed :hover:active:not([disabled="true"]):not([cui-areatype="menu-panel"])
+%define windowButtonMarginTop 11px
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
@@ -14,6 +15,7 @@
 %include ../shared/browser.inc.css
 
 :root {
+  --space-above-tabbar: 9px;
   --tabs-toolbar-color: #333;
 
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) + 1px);
@@ -21,8 +23,6 @@
 %ifdef MOZ_PHOTON_THEME
   --toolbarbutton-border-radius: 4px;
 %else
-  --space-above-tabbar: 9px;
-
   --toolbarbutton-border-radius: 3px;
 
   --toolbarbutton-hover-background: hsla(0,0%,100%,.1) linear-gradient(hsla(0,0%,100%,.3), hsla(0,0%,100%,.1)) padding-box;
@@ -134,11 +134,7 @@ toolbar:-moz-lwtheme {
  * tabstrip can overlap it.
  */
 #main-window[tabsintitlebar] > #titlebar {
-%ifndef MOZ_PHOTON_THEME
   min-height: calc(var(--tab-min-height) + var(--space-above-tabbar) - var(--tab-toolbar-navbar-overlap));
-%else
-  min-height: calc(var(--tab-min-height) - var(--tab-toolbar-navbar-overlap));
-%endif
 }
 
 /**
@@ -150,11 +146,7 @@ toolbar:-moz-lwtheme {
 
 #main-window[tabsintitlebar] > #titlebar > #titlebar-content > #titlebar-buttonbox-container,
 #main-window[tabsintitlebar] > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > #titlebar-fullscreen-button {
-%ifdef MOZ_PHOTON_THEME
-  margin-top: 6px;
-%else
-  margin-top: 11px;
-%endif
+  margin-top: @windowButtonMarginTop@;
 }
 
 #main-window:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-buttonbox-container,
@@ -1543,11 +1535,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   text-shadow: @loweredShadow@;
 }
 
-%ifndef MOZ_PHOTON_THEME
 #navigator-toolbox[inFullscreen] > #TabsToolbar {
   padding-top: var(--space-above-tabbar);
 }
-%endif
+
 #tabbrowser-tabs {
   -moz-box-align: stretch;
 }
@@ -2219,9 +2210,7 @@ html|*.addon-webext-perm-list {
 }
 
 #TabsToolbar > .private-browsing-indicator {
-%ifndef MOZ_PHOTON_THEME
   transform: translateY(calc(-1 * var(--space-above-tabbar)));
-%endif
   /* We offset by 38px for mask graphic, plus 4px to account for the
    * margin-left, which sums to 42px.
    */

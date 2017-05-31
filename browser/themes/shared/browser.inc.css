@@ -3,19 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %ifdef MOZ_PHOTON_THEME
-%ifdef CAN_DRAW_IN_TITLEBAR
-/* Add space for dragging the window */
-%ifdef MENUBAR_CAN_AUTOHIDE
-:root[tabsintitlebar] #toolbar-menubar[autohide=true] ~ #TabsToolbar {
-  padding-inline-start: 40px;
-}
-%else
-:root[tabsintitlebar] #TabsToolbar {
-  padding-inline-start: 40px;
-}
-%endif
-%endif
-
 /* Go button */
 .urlbar-go-button {
   padding: 0 3px;
