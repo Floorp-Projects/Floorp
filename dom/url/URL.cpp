@@ -62,10 +62,6 @@ class URLMainThread final : public URL
 public:
   static already_AddRefed<URLMainThread>
   Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
-              URL& aBase, ErrorResult& aRv);
-
-  static already_AddRefed<URLMainThread>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
               const Optional<nsAString>& aBase, ErrorResult& aRv);
 
   static already_AddRefed<URLMainThread>
@@ -191,15 +187,6 @@ private:
 
   nsCOMPtr<nsIURI> mURI;
 };
-
-/* static */ already_AddRefed<URLMainThread>
-URLMainThread::Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
-                           URL& aBase, ErrorResult& aRv)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  URLMainThread& base = static_cast<URLMainThread&>(aBase);
-  return Constructor(aGlobal.GetAsSupports(), aURL, base.GetURI(), aRv);
-}
 
 /* static */ already_AddRefed<URLMainThread>
 URLMainThread::Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
@@ -633,10 +620,6 @@ class URLWorker final : public URL
 public:
   static already_AddRefed<URLWorker>
   Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
-              URL& aBase, ErrorResult& aRv);
-
-  static already_AddRefed<URLWorker>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
               const Optional<nsAString>& aBase, ErrorResult& aRv);
 
   static already_AddRefed<URLWorker>
@@ -900,7 +883,6 @@ private:
   const nsString mURL;
 
   nsString mBase; // IsVoid() if we have no base URI string.
-  RefPtr<URLProxy> mBaseProxy;
 
   RefPtr<URLProxy> mRetval;
 
@@ -919,17 +901,6 @@ public:
     mWorkerPrivate->AssertIsOnWorkerThread();
   }
 
-  ConstructorRunnable(WorkerPrivate* aWorkerPrivate,
-                      const nsAString& aURL, URLProxy* aBaseProxy)
-  : WorkerMainThreadRunnable(aWorkerPrivate,
-                             NS_LITERAL_CSTRING("URL :: Constructor with BaseURL"))
-  , mURL(aURL)
-  , mBaseProxy(aBaseProxy)
-  {
-    mBase.SetIsVoid(true);
-    mWorkerPrivate->AssertIsOnWorkerThread();
-  }
-
   bool
   MainThreadRun()
   {
@@ -937,9 +908,7 @@ public:
 
     ErrorResult rv;
     RefPtr<URLMainThread> url;
-    if (mBaseProxy) {
-      url = URLMainThread::Constructor(nullptr, mURL, mBaseProxy->URI(), rv);
-    } else if (!mBase.IsVoid()) {
+    if (!mBase.IsVoid()) {
       url = URLMainThread::Constructor(nullptr, mURL, mBase, rv);
     } else {
       url = URLMainThread::Constructor(nullptr, mURL, nullptr, rv);
@@ -1213,22 +1182,6 @@ FinishConstructor(JSContext* aCx, WorkerPrivate* aPrivate,
 
   RefPtr<URLWorker> url = new URLWorker(aPrivate, proxy);
   return url.forget();
-}
-
-/* static */ already_AddRefed<URLWorker>
-URLWorker::Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
-                       URL& aBase, ErrorResult& aRv)
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  JSContext* cx = aGlobal.Context();
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
-
-  URLWorker& base = static_cast<URLWorker&>(aBase);
-  RefPtr<ConstructorRunnable> runnable =
-    new ConstructorRunnable(workerPrivate, aURL, base.GetURLProxy());
-
-  return FinishConstructor(cx, workerPrivate, runnable, aRv);
 }
 
 /* static */ already_AddRefed<URLWorker>
@@ -1651,17 +1604,6 @@ JSObject*
 URL::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return URLBinding::Wrap(aCx, this, aGivenProto);
-}
-
-/* static */ already_AddRefed<URL>
-URL::Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
-                 URL& aBase, ErrorResult& aRv)
-{
-  if (NS_IsMainThread()) {
-    return URLMainThread::Constructor(aGlobal, aURL, aBase, aRv);
-  }
-
-  return URLWorker::Constructor(aGlobal, aURL, aBase, aRv);
 }
 
 /* static */ already_AddRefed<URL>
