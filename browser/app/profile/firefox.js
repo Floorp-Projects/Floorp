@@ -1043,7 +1043,7 @@ pref("security.sandbox.gpu.level", 0);
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)
 // This pref is discussed in bug 1083344, the naming is inspired from its
 // Windows counterpart, but on Mac it's an integer which means:
-// 0 -> "no sandbox" (nightly only)
+// 0 -> "no sandbox"
 // 1 -> "preliminary content sandboxing enabled: write access to
 //       home directory is prevented"
 // 2 -> "preliminary content sandboxing enabled with profile protection:

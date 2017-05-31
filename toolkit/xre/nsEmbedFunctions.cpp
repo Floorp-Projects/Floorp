@@ -59,7 +59,6 @@
 #endif //  defined(MOZ_WIDGET_ANDROID)
 
 #include "mozilla/AbstractThread.h"
-#include "mozilla/SandboxSettings.h"
 
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
@@ -312,7 +311,7 @@ void
 AddContentSandboxLevelAnnotation()
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    int level = GetEffectiveContentSandboxLevel();
+    int level = Preferences::GetInt("security.sandbox.content.level");
     nsAutoCString levelString;
     levelString.AppendInt(level);
     CrashReporter::AnnotateCrashReport(
