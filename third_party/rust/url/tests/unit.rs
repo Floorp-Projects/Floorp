@@ -8,6 +8,7 @@
 
 //! Unit tests
 
+#[macro_use]
 extern crate url;
 
 use std::borrow::Cow;
@@ -163,12 +164,12 @@ fn test_equality() {
     // Different scheme
     let a: Url = url("http://example.com/");
     let b: Url = url("https://example.com/");
-    assert!(a != b);
+    assert_ne!(a, b);
 
     // Different host
     let a: Url = url("http://foo.com/");
     let b: Url = url("http://bar.com/");
-    assert!(a != b);
+    assert_ne!(a, b);
 
     // Missing path, automatically substituted. Semantically the same.
     let a: Url = url("http://foo.com");
@@ -341,4 +342,33 @@ fn test_set_host() {
     let mut url = Url::parse("foobar://example.net/hello").unwrap();
     url.set_host(None).unwrap();
     assert_eq!(url.as_str(), "foobar:/hello");
+}
+
+// This is testing that the macro produces buildable code when invoked
+// inside both a module and a function
+#[test]
+fn define_encode_set_scopes() {
+    use url::percent_encoding::{utf8_percent_encode, SIMPLE_ENCODE_SET};
+
+    define_encode_set! {
+        /// This encode set is used in the URL parser for query strings.
+        pub QUERY_ENCODE_SET = [SIMPLE_ENCODE_SET] | {' ', '"', '#', '<', '>'}
+    }
+
+    assert_eq!(utf8_percent_encode("foo bar", QUERY_ENCODE_SET).collect::<String>(), "foo%20bar");
+
+    mod m {
+        use url::percent_encoding::{utf8_percent_encode, SIMPLE_ENCODE_SET};
+
+        define_encode_set! {
+            /// This encode set is used in the URL parser for query strings.
+            pub QUERY_ENCODE_SET = [SIMPLE_ENCODE_SET] | {' ', '"', '#', '<', '>'}
+        }
+
+        pub fn test() {
+            assert_eq!(utf8_percent_encode("foo bar", QUERY_ENCODE_SET).collect::<String>(), "foo%20bar");
+        }
+    }
+
+    m::test();
 }
