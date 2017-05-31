@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE window>
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" title="RTL overflow test" width="640px" height="480px" style="direction: rtl" onload="load()" class="reftest-wait">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" title="RTL overflow test" width="640px" height="480px" style="direction: rtl">
 
 <hbox style="max-width: 200px; border: 1px solid red;">
 <scrollbox align="start" pack="start" orient="horizontal" flex="1">
@@ -19,19 +19,5 @@
   <button label="test1"/><button label="test2"/><button label="test3"/><button label="test4"/><button label="test5"/>
 </hbox>
 </hbox>
-
-<script type="text/javascript">
-  <![CDATA[
-    function load() {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            document.documentElement.removeAttribute("class");
-          });
-        });
-      });
-    }
-  ]]>
-</script>
 
 </window>
