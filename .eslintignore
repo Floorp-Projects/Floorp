@@ -165,6 +165,7 @@ devtools/server/actors/utils/automation-timeline.js
 
 # Ignore devtools files testing sourcemaps / code style
 devtools/client/debugger/test/mochitest/code_binary_search.js
+devtools/client/debugger/test/mochitest/code_binary_search_absolute.js
 devtools/client/debugger/test/mochitest/code_math.min.js
 devtools/client/debugger/test/mochitest/code_math_bogus_map.js
 devtools/client/debugger/test/mochitest/code_ugly*

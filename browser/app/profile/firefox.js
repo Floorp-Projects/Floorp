@@ -701,6 +701,13 @@ pref("browser.preferences.instantApply", true);
 // Toggling Search bar on and off in about:preferences
 pref("browser.preferences.search", false);
 
+// Use the new in-content about:preferences in Nightly only for now
+#if defined(NIGHTLY_BUILD)
+pref("browser.preferences.useOldOrganization", false);
+#else
+pref("browser.preferences.useOldOrganization", true);
+#endif
+
 // Once the Storage Management is completed.
 // (The Storage Management-related prefs are browser.storageManager.* )
 // The Offline(Appcache) Group section in about:preferences will be hidden.
@@ -1651,6 +1658,7 @@ pref("extensions.formautofill.experimental", true);
 pref("extensions.formautofill.experimental", false);
 #endif
 pref("extensions.formautofill.addresses.enabled", true);
+pref("extensions.formautofill.heuristics.enabled", false);
 pref("extensions.formautofill.loglevel", "Warn");
 
 // Whether or not to restore a session with lazy-browser tabs.

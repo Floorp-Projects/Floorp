@@ -334,7 +334,7 @@ var testRunner = {
         Services.prefs.clearUserPref("privacy.history.custom");
       });
 
-      openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true}).then(function() {
+      openPreferencesViaOpenPreferencesAPI("panePrivacy", null, {leaveOpen: true}).then(function() {
         let doc = gBrowser.contentDocument;
         let historyMode = doc.getElementById("historyMode");
         historyMode.value = "custom";

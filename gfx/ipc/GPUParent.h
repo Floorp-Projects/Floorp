@@ -12,6 +12,7 @@
 namespace mozilla {
 
 class TimeStamp;
+class ChildProfilerController;
 
 namespace gfx {
 
@@ -38,6 +39,7 @@ public:
   mozilla::ipc::IPCResult RecvInitImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint) override;
   mozilla::ipc::IPCResult RecvInitVRManager(Endpoint<PVRManagerParent>&& aEndpoint) override;
   mozilla::ipc::IPCResult RecvInitUiCompositorController(const uint64_t& aRootLayerTreeId, Endpoint<PUiCompositorControllerParent>&& aEndpoint) override;
+  mozilla::ipc::IPCResult RecvInitProfiler(Endpoint<PProfilerChild>&& aEndpoint) override;
   mozilla::ipc::IPCResult RecvUpdatePref(const GfxPrefSetting& pref) override;
   mozilla::ipc::IPCResult RecvUpdateVar(const GfxVarUpdate& pref) override;
   mozilla::ipc::IPCResult RecvNewWidgetCompositor(
@@ -55,10 +57,6 @@ public:
   mozilla::ipc::IPCResult RecvAddLayerTreeIdMapping(const LayerTreeIdMapping& aMapping) override;
   mozilla::ipc::IPCResult RecvRemoveLayerTreeIdMapping(const LayerTreeIdMapping& aMapping) override;
   mozilla::ipc::IPCResult RecvNotifyGpuObservers(const nsCString& aTopic) override;
-  mozilla::ipc::IPCResult RecvStartProfiler(const ProfilerInitParams& params) override;
-  mozilla::ipc::IPCResult RecvPauseProfiler(const bool& aPause) override;
-  mozilla::ipc::IPCResult RecvStopProfiler() override;
-  mozilla::ipc::IPCResult RecvGatherProfile() override;
   mozilla::ipc::IPCResult RecvRequestMemoryReport(
     const uint32_t& generation,
     const bool& anonymize,
@@ -70,6 +68,9 @@ public:
 private:
   const TimeStamp mLaunchTime;
   RefPtr<VsyncBridgeParent> mVsyncBridge;
+#ifdef MOZ_GECKO_PROFILER
+  RefPtr<ChildProfilerController> mProfilerController;
+#endif
 };
 
 } // namespace gfx

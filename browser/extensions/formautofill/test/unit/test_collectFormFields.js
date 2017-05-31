@@ -10,10 +10,18 @@ const TESTCASES = [
   {
     description: "Form without autocomplete property",
     document: `<form><input id="given-name"><input id="family-name">
-               <input id="street-addr"><input id="city"><input id="country">
+               <input id="street-addr"><input id="city"><select id="country"></select>
                <input id='email'><input id="tel"></form>`,
-    returnedFormat: [],
-    fieldDetails: [],
+    fieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
+    ],
+    ids: ["given-name", "family-name", "street-addr", "city", "country", "email", "tel"],
   },
   {
     description: "Form with autocomplete properties and 1 token",
@@ -21,7 +29,7 @@ const TESTCASES = [
                <input id="family-name" autocomplete="family-name">
                <input id="street-addr" autocomplete="street-address">
                <input id="city" autocomplete="address-level2">
-               <input id="country" autocomplete="country">
+               <select id="country" autocomplete="country"></select>
                <input id="email" autocomplete="email">
                <input id="tel" autocomplete="tel"></form>`,
     fieldDetails: [
@@ -58,8 +66,8 @@ const TESTCASES = [
     document: `<form><input id="given-name" autocomplete="shipping given-name">
                <input id="family-name" autocomplete="shipping family-name">
                <input id="street-addr" autocomplete="shipping street-address">
-               <input id="city" autocomplete="shipping address-level2">
-               <input id="country" autocomplete="shipping country">
+               <input autocomplete="shipping address-level2">
+               <select autocomplete="shipping country"></select>
                <input id='email' autocomplete="shipping email">
                <input id="tel" autocomplete="shipping tel"></form>`,
     fieldDetails: [
@@ -84,9 +92,14 @@ for (let tc of TESTCASES) {
                                                 testcase.document);
       let form = doc.querySelector("form");
 
-      testcase.fieldDetails.forEach((detail) => {
-        detail.elementWeakRef = Cu.getWeakReference(doc.querySelector(
-          "input[autocomplete*='" + detail.fieldName + "']"));
+      testcase.fieldDetails.forEach((detail, index) => {
+        let elementRef;
+        if (testcase.ids && testcase.ids[index]) {
+          elementRef = doc.getElementById(testcase.ids[index]);
+        } else {
+          elementRef = doc.querySelector("*[autocomplete*='" + detail.fieldName + "']");
+        }
+        detail.elementWeakRef = Cu.getWeakReference(elementRef);
       });
       let handler = new FormAutofillHandler(form);
 
