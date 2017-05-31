@@ -19,6 +19,10 @@
 
 #include "mozilla/Likely.h"
 #include "mozilla/MacroArgs.h"
+#include <errno.h>
+#ifndef XP_WIN
+#include <unistd.h>
+#endif
 
 /*
  * Windows doesn't come with weak imports as they are possible with
@@ -210,6 +214,50 @@ MOZ_MEMORY_API __memalign_hook_type __memalign_hook = memalign_impl;
 
 #endif
 
+/*
+ * posix_memalign, aligned_alloc, memalign and valloc all implement some kind
+ * of aligned memory allocation. For convenience, a replace-malloc library can
+ * skip defining replace_posix_memalign, replace_aligned_alloc and
+ * replace_valloc, and default implementations will be automatically derived
+ * from replace_memalign.
+ */
+static int
+default_posix_memalign(void** ptr, size_t alignment, size_t size)
+{
+  if (size == 0) {
+    *ptr = NULL;
+    return 0;
+  }
+  /* alignment must be a power of two and a multiple of sizeof(void *) */
+  if (((alignment - 1) & alignment) != 0 || (alignment % sizeof(void *)))
+    return EINVAL;
+  *ptr = replace_malloc_table.memalign(alignment, size);
+  return *ptr ? 0 : ENOMEM;
+}
+
+static void*
+default_aligned_alloc(size_t alignment, size_t size)
+{
+  /* size should be a multiple of alignment */
+  if (size % alignment)
+    return NULL;
+  return replace_malloc_table.memalign(alignment, size);
+}
+
+// Nb: sysconf() is expensive, but valloc is obsolete and rarely used.
+static void*
+default_valloc(size_t size)
+{
+#ifdef XP_WIN
+  SYSTEM_INFO si;
+  GetSystemInfo(&si);
+  size_t page_size = si.dwPageSize;
+#else
+  size_t page_size = sysconf(_SC_PAGE_SIZE);
+#endif
+  return replace_malloc_table.memalign(page_size, size);
+}
+
 static void
 replace_malloc_init_funcs()
 {
@@ -227,6 +275,15 @@ replace_malloc_init_funcs()
   replace_malloc_table.name = REPLACE_MALLOC_GET_FUNC(handle, name);
 #include "malloc_decls.h"
   }
+
+  if (!replace_malloc_table.posix_memalign && replace_malloc_table.memalign)
+    replace_malloc_table.posix_memalign = default_posix_memalign;
+
+  if (!replace_malloc_table.aligned_alloc && replace_malloc_table.memalign)
+    replace_malloc_table.aligned_alloc = default_aligned_alloc;
+
+  if (!replace_malloc_table.valloc && replace_malloc_table.memalign)
+    replace_malloc_table.valloc = default_valloc;
 
 #define MALLOC_DECL(name, ...) \
   if (!replace_malloc_table.name) { \
