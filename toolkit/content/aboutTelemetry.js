@@ -506,8 +506,8 @@ var GeneralData = {
     removeAllChildNodes(generalDataSection);
 
     const headings = [
-      "generalDataHeadingName",
-      "generalDataHeadingValue",
+      "namesHeader",
+      "valuesHeader",
     ].map(h => bundle.GetStringFromName(h));
 
     // The payload & environment parts are handled by other renderers.
@@ -663,8 +663,8 @@ var EnvironmentData = {
 
   appendHeading(table) {
     let headings = document.createElement("tr");
-    this.appendColumn(headings, "th", bundle.GetStringFromName("environmentDataHeadingName"));
-    this.appendColumn(headings, "th", bundle.GetStringFromName("environmentDataHeadingValue"));
+    this.appendColumn(headings, "th", bundle.GetStringFromName("namesHeader"));
+    this.appendColumn(headings, "th", bundle.GetStringFromName("valuesHeader"));
     table.appendChild(headings);
   },
 
@@ -1625,9 +1625,11 @@ var AddonDetails = {
       let titleText = bundle.formatStringFromName("addonProvider", [provider], 1);
       providerSection.appendChild(document.createTextNode(titleText));
       addonSection.appendChild(providerSection);
-      addonSection.appendChild(
-        KeyValueTable.render(addonDetails[provider],
-                             this.tableIDTitle, this.tableDetailsTitle));
+
+      let headingStrings = [this.tableIDTitle, this.tableDetailsTitle ]
+      let table = GenericTable.render(explodeObject(addonDetails[provider]),
+                                      headingStrings);
+      addonSection.appendChild(table);
     }
   },
 };
@@ -1657,9 +1659,11 @@ var Scalars = {
       return;
     }
 
-    const headingName = bundle.GetStringFromName("namesHeader");
-    const headingValue = bundle.GetStringFromName("valuesHeader");
-    const table = KeyValueTable.render(scalars, headingName, headingValue);
+    const headings = [
+      "namesHeader",
+      "valuesHeader",
+    ].map(h => bundle.GetStringFromName(h));
+    const table = GenericTable.render(explodeObject(scalars), headings);
     scalarsSection.appendChild(table);
   },
 };
@@ -1689,15 +1693,17 @@ var KeyedScalars = {
       return;
     }
 
-    const headingName = bundle.GetStringFromName("namesHeader");
-    const headingValue = bundle.GetStringFromName("valuesHeader");
+    const headings = [
+      "namesHeader",
+      "valuesHeader",
+    ].map(h => bundle.GetStringFromName(h));
     for (let scalar in keyedScalars) {
       // Add the name of the scalar.
       let scalarNameSection = document.createElement("h2");
       scalarNameSection.appendChild(document.createTextNode(scalar));
       scalarsSection.appendChild(scalarNameSection);
       // Populate the section with the key-value pairs from the scalar.
-      const table = KeyValueTable.render(keyedScalars[scalar], headingName, headingValue);
+      const table = GenericTable.render(explodeObject(keyedScalars[scalar]), headings);
       scalarsSection.appendChild(table);
     }
   },
