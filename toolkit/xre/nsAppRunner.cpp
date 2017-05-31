@@ -16,7 +16,6 @@
 #include "mozilla/Poison.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Printf.h"
-#include "mozilla/SandboxSettings.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
@@ -4194,7 +4193,7 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
 void AddSandboxAnnotations()
 {
   // Include the sandbox content level, regardless of platform
-  int level = GetEffectiveContentSandboxLevel();
+  int level = Preferences::GetInt("security.sandbox.content.level");
 
   nsAutoCString levelString;
   levelString.AppendInt(level);
