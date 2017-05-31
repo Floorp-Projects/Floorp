@@ -3,7 +3,7 @@
     "message": "ຖ່າຍຄຣິບ ແລະ ພາບຫນ້າຈໍຈາກຫນ້າເວັບ ແລ້ວບັນທຶກໄວ້ຊົ່ວຄາວ ຫລື ຖາວອນ."
   },
   "addonAuthorsList": {
-    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
     "message": "ຖ່າຍພາບຫນ້າຈໍ"
@@ -24,7 +24,7 @@
     "message": "ບັນທຶກຫມົດຫນ້າ"
   },
   "cancelScreenshot": {
-    "message": ""
+    "message": "ຍົກເລີກ"
   },
   "downloadScreenshot": {
     "message": "ດາວໂຫລດ"

@@ -8,11 +8,13 @@
 // https://developer.mozilla.org/en/XPCOM/XPCOM_changes_in_Gecko_1.9.3
 // https://developer.mozilla.org/en/how_to_build_an_xpcom_component_in_javascript
 
+/* import-globals-from SpecialPowersObserverAPI.js */
+
 var EXPORTED_SYMBOLS = ["SpecialPowersObserver", "SpecialPowersObserverFactory"];
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.importGlobalProperties(['File']);
+Components.utils.importGlobalProperties(["File"]);
 
 if (typeof(Cc) == "undefined") {
   const Cc = Components.classes;
@@ -44,8 +46,7 @@ SpecialPowersObserver.prototype.classID = Components.ID("{59a52458-13e0-4d93-9d8
 SpecialPowersObserver.prototype.contractID = "@mozilla.org/special-powers-observer;1";
 SpecialPowersObserver.prototype.QueryInterface = XPCOMUtils.generateQI([Components.interfaces.nsIObserver]);
 
-SpecialPowersObserver.prototype.observe = function(aSubject, aTopic, aData)
-{
+SpecialPowersObserver.prototype.observe = function(aSubject, aTopic, aData) {
   switch (aTopic) {
     case "chrome-document-global-created":
       this._loadFrameScript();
@@ -54,7 +55,7 @@ SpecialPowersObserver.prototype.observe = function(aSubject, aTopic, aData)
     case "http-on-modify-request":
       if (aSubject instanceof Ci.nsIChannel) {
         let uri = aSubject.URI.spec;
-        this._sendAsyncMessage("specialpowers-http-notify-request", { uri: uri });
+        this._sendAsyncMessage("specialpowers-http-notify-request", { uri });
       }
       break;
 
@@ -64,8 +65,7 @@ SpecialPowersObserver.prototype.observe = function(aSubject, aTopic, aData)
   }
 };
 
-SpecialPowersObserver.prototype._loadFrameScript = function()
-{
+SpecialPowersObserver.prototype._loadFrameScript = function() {
   if (!this._isFrameScriptLoaded) {
     // Register for any messages our API needs us to handle
     this._messageManager.addMessageListener("SPPrefService", this);
@@ -96,8 +96,7 @@ SpecialPowersObserver.prototype._loadFrameScript = function()
   }
 };
 
-SpecialPowersObserver.prototype._sendAsyncMessage = function(msgname, msg)
-{
+SpecialPowersObserver.prototype._sendAsyncMessage = function(msgname, msg) {
   this._messageManager.broadcastAsyncMessage(msgname, msg);
 };
 
@@ -105,8 +104,7 @@ SpecialPowersObserver.prototype._receiveMessage = function(aMessage) {
   return this._receiveMessageAPI(aMessage);
 };
 
-SpecialPowersObserver.prototype.init = function()
-{
+SpecialPowersObserver.prototype.init = function() {
   var obs = Services.obs;
   obs.addObserver(this, "chrome-document-global-created");
 
@@ -128,8 +126,7 @@ SpecialPowersObserver.prototype.init = function()
   this._loadFrameScript();
 };
 
-SpecialPowersObserver.prototype.uninit = function()
-{
+SpecialPowersObserver.prototype.uninit = function() {
   var obs = Services.obs;
   obs.removeObserver(this, "chrome-document-global-created");
   obs.removeObserver(this, "http-on-modify-request");
@@ -195,14 +192,14 @@ SpecialPowersObserver.prototype._removeProcessCrashObservers = function() {
 SpecialPowersObserver.prototype._registerObservers = {
   _self: null,
   _topics: [],
-  _add: function(topic) {
+  _add(topic) {
     if (this._topics.indexOf(topic) < 0) {
       this._topics.push(topic);
       Services.obs.addObserver(this, topic);
     }
   },
-  observe: function (aSubject, aTopic, aData) {
-    var msg = { aData: aData };
+  observe(aSubject, aTopic, aData) {
+    var msg = { aData };
     switch (aTopic) {
       case "perm-changed":
         var permission = aSubject.QueryInterface(Ci.nsIPermission);
@@ -229,7 +226,7 @@ SpecialPowersObserver.prototype._registerObservers = {
  * This will get requests from our API in the window and process them in chrome for it
  **/
 SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
-  switch(aMessage.name) {
+  switch (aMessage.name) {
     case "SPPingService":
       if (aMessage.json.op == "ping") {
         aMessage.target
@@ -247,15 +244,15 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
       aMessage.target.focus();
       break;
     case "SpecialPowers.CreateFiles":
-      let filePaths = new Array;
+      let filePaths = [];
       if (!this._createdFiles) {
-        this._createdFiles = new Array;
+        this._createdFiles = [];
       }
       let createdFiles = this._createdFiles;
       try {
         let promises = [];
         aMessage.data.forEach(function(request) {
-          const filePerms = 0666;
+          const filePerms = 0666; // eslint-disable-line no-octal
           let testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
           if (request.name) {
             testFile.appendRelativePath(request.name);
@@ -299,7 +296,7 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
       break;
     case "SpecialPowers.RemoveFiles":
       if (this._createdFiles) {
-        this._createdFiles.forEach(function (testFile) {
+        this._createdFiles.forEach(function(testFile) {
           try {
             testFile.remove(false);
           } catch (e) {}
@@ -310,14 +307,15 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
     default:
       return this._receiveMessage(aMessage);
   }
+  return undefined;
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SpecialPowersObserver]);
 this.SpecialPowersObserverFactory = Object.freeze({
-  createInstance: function(outer, id) {
-    if (outer) { throw Components.results.NS_ERROR_NO_AGGREGATION };
+  createInstance(outer, id) {
+    if (outer) { throw Components.results.NS_ERROR_NO_AGGREGATION }
     return new SpecialPowersObserver();
   },
-  loadFactory: function(lock){},
+  loadFactory(lock) {},
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
 });

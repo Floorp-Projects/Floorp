@@ -95,8 +95,6 @@ SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
     , mIntervalMicroseconds(
         std::max(1, int(floor(aIntervalMilliseconds * 1000 + 0.5))))
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
   // By default we'll not adjust the timer resolution which tends to be
   // around 16ms. However, if the requested interval is sufficiently low
   // we'll try to adjust the resolution to match.
@@ -132,8 +130,6 @@ SamplerThread::~SamplerThread()
 void
 SamplerThread::Stop(PSLockRef aLock)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
   // Disable any timer resolution changes we've made. Do it now while
   // gPSMutex is locked, i.e. before any other SamplerThread can be created
   // and call ::timeBeginPeriod().

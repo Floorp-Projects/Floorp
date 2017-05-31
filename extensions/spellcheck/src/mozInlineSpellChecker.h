@@ -85,7 +85,7 @@ public:
   // (such as for the intial check of everything).
   //
   // For mOp == eOpNavigation, this is the NEW position of the cursor
-  nsCOMPtr<nsIDOMRange> mAnchorRange;
+  RefPtr<nsRange> mAnchorRange;
 
   // -----
   // The following members are only for navigation events and are only
@@ -93,7 +93,7 @@ public:
   // -----
 
   // this is the OLD position of the cursor
-  nsCOMPtr<nsIDOMRange> mOldNavigationAnchorRange;
+  RefPtr<nsRange> mOldNavigationAnchorRange;
 
   // Set when we should force checking the current word. See
   // mozInlineSpellChecker::HandleNavigationEvent for a description of why we
@@ -111,7 +111,7 @@ protected:
   nsresult GetDocument(nsIDOMDocument** aDocument);
   nsresult PositionToCollapsedRange(nsIDOMDocument* aDocument,
                                     nsIDOMNode* aNode, int32_t aOffset,
-                                    nsIDOMRange** aRange);
+                                    nsRange** aRange);
 };
 
 class mozInlineSpellChecker final : public nsIInlineSpellChecker,

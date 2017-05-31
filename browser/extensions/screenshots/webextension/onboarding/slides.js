@@ -1,4 +1,4 @@
-/* globals log, catcher, onboardingHtml, onboardingCss, browser, util, shooter, callBackground, assertIsTrusted */
+/* globals log, catcher, onboardingHtml, onboardingCss, util, shooter, callBackground, assertIsTrusted */
 
 "use strict";
 

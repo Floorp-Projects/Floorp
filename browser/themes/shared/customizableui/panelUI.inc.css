@@ -1284,7 +1284,8 @@ photonpanelmultiview .subviewbutton:focus {
 }
 
 photonpanelmultiview .subviewbutton-iconic:not(.subviewbutton-back) > .toolbarbutton-text,
-photonpanelmultiview .subviewbutton[checked="true"] > .toolbarbutton-text {
+photonpanelmultiview .subviewbutton[checked="true"] > .toolbarbutton-text,
+photonpanelmultiview .panel-banner-item > .toolbarbutton-multiline-text {
   padding-inline-start: 8px; /* See '.subviewbutton-iconic > .toolbarbutton-text' rule above. */
 }
 
@@ -1335,6 +1336,11 @@ photonpanelmultiview .PanelUI-subView .toolbaritem-combined-buttons > .subviewbu
 
 photonpanelmultiview .PanelUI-subView .toolbaritem-combined-buttons > .subviewbutton > .toolbarbutton-text {
   display: none;
+}
+
+photonpanelmultiview .panel-banner-item::after {
+  margin-inline-end: 14px;
+  margin-inline-start: 10px;
 }
 
 /* END photon adjustments */

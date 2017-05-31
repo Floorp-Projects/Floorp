@@ -119,29 +119,29 @@ function isInDevEdition() {
 }
 
 function isInNightly() {
-  return AppConstants.NIGHTLY_BUILD;
+  return AppConstants.NIGHTLY_BUILD && !AppConstants.MOZ_DEV_EDITION;
+}
+
+function isNotReleaseOrBeta() {
+  return !AppConstants.RELEASE_OR_BETA;
 }
 
 function removeNonReleaseButtons(areaPanelPlacements) {
   if (isInDevEdition() && areaPanelPlacements.includes("developer-button")) {
     areaPanelPlacements.splice(areaPanelPlacements.indexOf("developer-button"), 1);
   }
-
-  if (!isInNightly() && areaPanelPlacements.includes("webcompat-reporter-button")) {
-    areaPanelPlacements.splice(areaPanelPlacements.indexOf("webcompat-reporter-button"), 1);
-  }
 }
 
 function removeNonOriginalButtons() {
   CustomizableUI.removeWidgetFromArea("sync-button");
-  if (isInNightly()) {
+  if (isNotReleaseOrBeta()) {
     CustomizableUI.removeWidgetFromArea("webcompat-reporter-button");
   }
 }
 
 function restoreNonOriginalButtons() {
   CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_PANEL);
-  if (isInNightly()) {
+  if (isNotReleaseOrBeta()) {
     CustomizableUI.addWidgetToArea("webcompat-reporter-button", CustomizableUI.AREA_PANEL);
   }
 }

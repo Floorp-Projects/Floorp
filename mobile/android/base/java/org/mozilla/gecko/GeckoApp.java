@@ -1279,8 +1279,6 @@ public abstract class GeckoApp extends GeckoActivity
             Class.forName("android.os.AsyncTask");
         } catch (ClassNotFoundException e) { }
 
-        MemoryMonitor.getInstance().init(getApplicationContext());
-
         // GeckoAppShell is tightly coupled to us, rather than
         // the app context, because various parts of Fennec (e.g.,
         // GeckoScreenOrientation) use GAS to access the Activity in

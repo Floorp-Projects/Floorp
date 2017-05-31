@@ -1098,9 +1098,9 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
                                      VideoFrameContainer* aVideoFrameContainer)
   : MediaDecoderReader(aDecoder)
   , mAudio(this, MediaData::AUDIO_DATA,
-           Preferences::GetUint("media.audio-max-decode-error", 3))
+           MediaPrefs::MaxAudioDecodeError())
   , mVideo(this, MediaData::VIDEO_DATA,
-           Preferences::GetUint("media.video-max-decode-error", 2))
+           MediaPrefs::MaxVideoDecodeError())
   , mDemuxer(new DemuxerProxy(aDemuxer))
   , mDemuxerInitDone(false)
   , mPendingNotifyDataArrived(false)
@@ -2019,6 +2019,7 @@ MediaFormatReader::HandleDemuxedSamples(
       bool recyclable = MediaPrefs::MediaDecoderCheckRecycling()
                         && decoder.mDecoder->SupportDecoderRecycling();
       if (!recyclable
+          && decoder.mTimeThreshold.isNothing()
           && (decoder.mNextStreamSourceID.isNothing()
               || decoder.mNextStreamSourceID.ref() != info->GetID())) {
         LOG("%s stream id has changed from:%d to:%d, draining decoder.",
@@ -2192,16 +2193,6 @@ MediaFormatReader::Update(TrackType aTrack)
   if (aTrack == TrackType::kVideoTrack && mSkipRequest.Exists()) {
     LOGV("Skipping in progress, nothing more to do");
     return;
-  }
-
-  if (decoder.HasWaitingPromise() && decoder.HasCompletedDrain()) {
-    // This situation will occur when a change of stream ID occurred during
-    // internal seeking following a gap encountered in the data, a drain was
-    // requested and has now completed. We need to complete the draining process
-    // so that the new data can be processed.
-    // We can complete the draining operation now as we have no pending
-    // operation when a waiting promise is pending.
-    decoder.mDrainState = DrainState::None;
   }
 
   if (UpdateReceivedNewData(aTrack)) {
@@ -2389,21 +2380,23 @@ MediaFormatReader::Update(TrackType aTrack)
 
   bool needInput = NeedInput(decoder);
 
-  LOGV(
-    "Update(%s) ni=%d no=%d in:%" PRIu64 " out:%" PRIu64
-    " qs=%u decoding:%d flushing:%d desc:%s pending:%u waiting:%d sid:%u",
-    TrackTypeToStr(aTrack),
-    needInput,
-    needOutput,
-    decoder.mNumSamplesInput,
-    decoder.mNumSamplesOutput,
-    uint32_t(size_t(decoder.mSizeOfQueue)),
-    decoder.mDecodeRequest.Exists(),
-    decoder.mFlushing,
-    decoder.mDescription,
-    uint32_t(decoder.mOutput.Length()),
-    decoder.mWaitingForData,
-    decoder.mLastStreamSourceID);
+  LOGV("Update(%s) ni=%d no=%d in:%" PRIu64 " out:%" PRIu64
+       " qs=%u decoding:%d flushing:%d desc:%s pending:%u waiting:%d eos:%d "
+       "ds:%d sid:%u",
+       TrackTypeToStr(aTrack),
+       needInput,
+       needOutput,
+       decoder.mNumSamplesInput,
+       decoder.mNumSamplesOutput,
+       uint32_t(size_t(decoder.mSizeOfQueue)),
+       decoder.mDecodeRequest.Exists(),
+       decoder.mFlushing,
+       decoder.mDescription,
+       uint32_t(decoder.mOutput.Length()),
+       decoder.mWaitingForData,
+       decoder.mDemuxEOS,
+       int32_t(decoder.mDrainState),
+       decoder.mLastStreamSourceID);
 
   if ((decoder.mWaitingForData
        && (!decoder.mTimeThreshold || decoder.mTimeThreshold.ref().mWaiting))
@@ -3073,7 +3066,7 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
     result += nsPrintfCString(
       "Audio State: ni=%d no=%d wp=%d demuxr=%d demuxq=%u decoder=%d tt=%.1f "
       "tths=%d in=%" PRIu64 " out=%" PRIu64
-      " qs=%u pending=%u wfd=%d wfk=%d sid=%u\n",
+      " qs=%u pending=%u wfd=%d eos=%d ds=%d wfk=%d sid=%u\n",
       NeedInput(mAudio),
       mAudio.HasPromise(),
       !mAudio.mWaitingPromise.IsEmpty(),
@@ -3088,6 +3081,8 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
       unsigned(size_t(mAudio.mSizeOfQueue)),
       unsigned(mAudio.mOutput.Length()),
       mAudio.mWaitingForData,
+      mAudio.mDemuxEOS,
+      int32_t(mAudio.mDrainState),
       mAudio.mWaitingForKey,
       mAudio.mLastStreamSourceID);
   }
@@ -3103,7 +3098,7 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
     result += nsPrintfCString(
       "Video State: ni=%d no=%d wp=%d demuxr=%d demuxq=%u decoder=%d tt=%.1f "
       "tths=%d in=%" PRIu64 " out=%" PRIu64
-      " qs=%u pending:%u wfd=%d wfk=%d sid=%u\n",
+      " qs=%u pending:%u wfd=%d eos=%d ds=%d wfk=%d sid=%u\n",
       NeedInput(mVideo),
       mVideo.HasPromise(),
       !mVideo.mWaitingPromise.IsEmpty(),
@@ -3118,6 +3113,8 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
       unsigned(size_t(mVideo.mSizeOfQueue)),
       unsigned(mVideo.mOutput.Length()),
       mVideo.mWaitingForData,
+      mVideo.mDemuxEOS,
+      int32_t(mVideo.mDrainState),
       mVideo.mWaitingForKey,
       mVideo.mLastStreamSourceID);
   }

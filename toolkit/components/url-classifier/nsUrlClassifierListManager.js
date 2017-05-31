@@ -14,12 +14,6 @@ function Init() {
   // Pull the library in.
   var jslib = Cc["@mozilla.org/url-classifier/jslib;1"]
               .getService().wrappedJSObject;
-  Function.prototype.inherits = function(parentCtor) {
-    var tempCtor = function(){};
-    tempCtor.prototype = parentCtor.prototype;
-    this.superClass_ = parentCtor.prototype;
-    this.prototype = new tempCtor();
-  },
   modScope.G_Preferences = jslib.G_Preferences;
   modScope.G_PreferenceObserver = jslib.G_PreferenceObserver;
   modScope.G_ObserverServiceObserver = jslib.G_ObserverServiceObserver;

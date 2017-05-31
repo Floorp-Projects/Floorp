@@ -173,6 +173,60 @@
   p.remove();
 })();
 
+(function test_bug_1367028() {
+  const borderImageSubprops = [
+    "border-image-slice",
+    "border-image-outset",
+    "border-image-width"
+  ];
+  const rectValues = [
+    {
+      values: ["5 5 5 5", "5 5 5", "5 5", "5"],
+      expected: "5",
+      desc: "identical four sides",
+    },
+    {
+      values: ["5 6 5 6", "5 6 5", "5 6"],
+      expected: "5 6",
+      desc: "identical values on each axis",
+    },
+    {
+      values: ["5 6 7 6", "5 6 7"],
+      expected: "5 6 7",
+      desc: "identical values on left and right",
+    },
+    {
+      values: ["5 6 5 7"],
+      desc: "identical values on top and bottom",
+    },
+    {
+      values: ["5 5 6 6", "5 6 6 5"],
+      desc: "identical values on unrelated sides",
+    },
+    {
+      values: ["5 6 7 8"],
+      desc: "different values on all sides",
+    },
+  ];
+
+  let frameContainer = document.getElementById("display");
+  let p = document.createElement("p");
+  frameContainer.appendChild(p);
+
+  for (let prop of borderImageSubprops) {
+    for (let {values, expected, desc} of rectValues) {
+      for (let value of values) {
+        p.style.setProperty(prop, value);
+        is(p.style.getPropertyValue(prop),
+           expected ? expected : value, `${desc} for ${prop}`);
+        p.style.removeProperty(prop);
+      }
+    }
+  }
+
+  p.remove();
+})();
+
 </script>
 </pre>
 </body>

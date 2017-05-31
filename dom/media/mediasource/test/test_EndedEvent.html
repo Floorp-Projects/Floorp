@@ -20,7 +20,7 @@ runWithMSE(function(ms, el) {
 
     // Test 'ended' is fired when seeking to the end of the media
     // once the duration is known.
-    el.onloadedmetadata = () => {
+    ms.onsourceended = () => {
       el.currentTime = el.duration;
     };
     el.addEventListener("ended", SimpleTest.finish.bind(null));

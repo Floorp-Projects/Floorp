@@ -19,11 +19,13 @@ runWithMSE(function(ms, el) {
     var videosb = ms.addSourceBuffer("video/mp4");
 
     fetchAndLoad(videosb, 'avc3/init', [''], '.mp4')
-    .then(fetchAndLoad.bind(null, videosb, 'avc3/segment', range(1, 2), '.m4s'))
     .then(function() {
-      is(videosb.buffered.length, 1, "continuous buffered range");
-      return once(el, "loadeddata");
+      var promises = [];
+      promises.push(fetchAndLoad(videosb, 'avc3/segment', range(1, 2), '.m4s'));
+      promises.push(once(el, "loadeddata"));
+      return Promise.all(promises);
     }).then(function() {
+      is(videosb.buffered.length, 1, "continuous buffered range");
       ok(true, "got loadeddata");
       ms.endOfStream();
       return once(ms, "sourceended");

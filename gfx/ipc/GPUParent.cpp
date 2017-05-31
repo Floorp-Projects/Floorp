@@ -7,7 +7,6 @@
 #include "WMF.h"
 #endif
 #include "GPUParent.h"
-#include "GeckoProfiler.h"
 #include "gfxConfig.h"
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
@@ -44,6 +43,9 @@
 #endif
 #ifdef MOZ_WIDGET_GTK
 # include <gtk/gtk.h>
+#endif
+#ifdef MOZ_GECKO_PROFILER
+#include "ChildProfilerController.h"
 #endif
 
 namespace mozilla {
@@ -241,6 +243,15 @@ GPUParent::RecvInitUiCompositorController(const uint64_t& aRootLayerTreeId, Endp
 }
 
 mozilla::ipc::IPCResult
+GPUParent::RecvInitProfiler(Endpoint<PProfilerChild>&& aEndpoint)
+{
+#ifdef MOZ_GECKO_PROFILER
+  mProfilerController = ChildProfilerController::Create(Move(aEndpoint));
+#endif
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 GPUParent::RecvUpdatePref(const GfxPrefSetting& setting)
 {
   gfxPrefs::Pref* pref = gfxPrefs::all()[setting.index()];
@@ -383,51 +394,6 @@ GPUParent::RecvNotifyGpuObservers(const nsCString& aTopic)
 }
 
 mozilla::ipc::IPCResult
-GPUParent::RecvStartProfiler(const ProfilerInitParams& params)
-{
-  nsTArray<const char*> filterArray;
-  for (size_t i = 0; i < params.filters().Length(); ++i) {
-    filterArray.AppendElement(params.filters()[i].get());
-  }
-  profiler_start(params.entries(), params.interval(), params.features(),
-                 filterArray.Elements(), filterArray.Length());
-
- return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-GPUParent::RecvStopProfiler()
-{
-  profiler_stop();
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-GPUParent::RecvPauseProfiler(const bool& aPause)
-{
-  if (aPause) {
-    profiler_pause();
-  } else {
-    profiler_resume();
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-GPUParent::RecvGatherProfile()
-{
-  nsCString profileCString;
-  UniquePtr<char[]> profile = profiler_get_profile();
-  if (profile) {
-    profileCString = nsDependentCString(profile.get());
-  }
-
-  Unused << SendProfile(profileCString, false /* aIsExitProfile */);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 GPUParent::RecvRequestMemoryReport(const uint32_t& aGeneration,
                                    const bool& aAnonymize,
                                    const bool& aMinimizeMemoryUsage,
@@ -456,6 +422,13 @@ GPUParent::ActorDestroy(ActorDestroyReason aWhy)
   // No point in going through XPCOM shutdown because we don't keep persistent
   // state.
   ProcessChild::QuickExit();
+#endif
+
+#ifdef MOZ_GECKO_PROFILER
+  if (mProfilerController) {
+    mProfilerController->Shutdown();
+    mProfilerController = nullptr;
+  }
 #endif
 
   if (mVsyncBridge) {

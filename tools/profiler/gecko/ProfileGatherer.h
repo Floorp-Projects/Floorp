@@ -20,7 +20,6 @@ public:
   typedef MozPromise<nsCString, nsresult, false> ProfileGatherPromise;
 
   explicit ProfileGatherer();
-  void WillGatherOOPProfile();
   void GatheredOOPProfile(const nsACString& aProfile);
   RefPtr<ProfileGatherPromise> Start(double aSinceTime);
   void OOPExitProfile(const nsACString& aProfile);

@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { defer } = require("promise");
-
 // The prefix used for RDM messages in content.
 // see: devtools/client/responsivedesign/responsivedesign-child.js
 const MESSAGE_PREFIX = "ResponsiveMode:";
@@ -52,14 +50,12 @@ exports.off = off;
  *    A promise that is resolved when the given message is emitted.
  */
 function once(mm, message) {
-  let { resolve, promise } = defer();
-
-  on(mm, message, function onMessage({data}) {
-    off(mm, message, onMessage);
-    resolve(data);
+  return new Promise(resolve => {
+    on(mm, message, function onMessage({data}) {
+      off(mm, message, onMessage);
+      resolve(data);
+    });
   });
-
-  return promise;
 }
 exports.once = once;
 

@@ -2357,10 +2357,14 @@
             var t = document.createElementNS(NS_XUL, "tab");
 
             aURI = aURI || "about:blank";
+            let aURIObject = null;
+            try {
+              aURIObject = Services.io.newURI(aURI);
+            } catch (ex) { /* we'll try to fix up this URL later */ }
 
             let lazyBrowserURI;
             if (aCreateLazyBrowser && aURI != "about:blank") {
-              lazyBrowserURI = Services.io.newURI(aURI);
+              lazyBrowserURI = aURIObject;
               aURI = "about:blank";
             }
 
@@ -2506,8 +2510,14 @@
             var evt = new CustomEvent("TabOpen", { bubbles: true, detail });
             t.dispatchEvent(evt);
 
-            if (!usingPreloadedContent && aOriginPrincipal) {
-              b.createAboutBlankContentViewer(aOriginPrincipal);
+            if (!usingPreloadedContent && aOriginPrincipal && aURI) {
+              let {URI_INHERITS_SECURITY_CONTEXT} = Ci.nsIProtocolHandler;
+              // Unless we know for sure we're not inheriting principals,
+              // force the about:blank viewer to have the right principal:
+              if (!aURIObject ||
+                  (Services.io.getProtocolFlags(aURIObject.scheme) & URI_INHERITS_SECURITY_CONTEXT)) {
+                b.createAboutBlankContentViewer(aOriginPrincipal);
+              }
             }
 
             // If we didn't swap docShells with a preloaded browser
@@ -7016,6 +7026,13 @@
           let replace = !!targetTab;
           let newIndex = this._getDropIndex(event, true);
           let urls = links.map(link => link.url);
+
+
+          // Bug 1367038: mozSourceNode is null if the drag event originated
+          // in an external application - needs better fallback!
+          let triggeringPrincipal = dt.mozSourceNode
+            ? dt.mozSourceNode.nodePrincipal
+            : Services.scriptSecurityManager.getSystemPrincipal();
           this.tabbrowser.loadTabs(urls, {
             inBackground,
             replace,
@@ -7023,6 +7040,7 @@
             targetTab,
             newIndex,
             userContextId,
+            triggeringPrincipal,
           });
         }
 

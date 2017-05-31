@@ -195,6 +195,206 @@
               "pocket": {
                 "$ref": "ExtensionURL",
                 "optional": true
+              },
+              "getmsg": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "newmsg": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "address": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "reply": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "replyall": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "replylist": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "forwarding": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "delete": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "junk": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "file": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "nextUnread": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "prevUnread": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "mark": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "tag": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "compact": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "archive": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "chat": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "nextMsg": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "prevMsg": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "QFB": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "conversation": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "newcard": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "newlist": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "editcard": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "newim": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "send": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "spelling": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "attach": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "security": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "save": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "quote": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "buddy": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "join_chat": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "chat_accounts": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "calendar": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "tasks": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "synchronize": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "newevent": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "newtask": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "editevent": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "today": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "category": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "complete": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "priority": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "saveandclose": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "attendees": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "privacy": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "status": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "freebusy": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "timezones": {
+                "$ref": "ExtensionURL",
+                "optional": true
               }
             },
             "additionalProperties": { "$ref": "UnrecognizedProperty" }

@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include GraphicsMessages;
-include ProfilerTypes;
 include MemoryReportTypes;
 include protocol PCompositorBridge;
 include protocol PImageBridge;
+include protocol PProfiler;
 include protocol PVRManager;
 include protocol PVsyncBridge;
 include protocol PUiCompositorController;
@@ -59,6 +59,7 @@ parent:
   async InitImageBridge(Endpoint<PImageBridgeParent> endpoint);
   async InitVRManager(Endpoint<PVRManagerParent> endpoint);
   async InitUiCompositorController(uint64_t rootLayerTreeId, Endpoint<PUiCompositorControllerParent> endpoint);
+  async InitProfiler(Endpoint<PProfilerChild> endpoint);
 
   // Called to update a gfx preference or variable.
   async UpdatePref(GfxPrefSetting pref);
@@ -89,12 +90,6 @@ parent:
   // Have a message be broadcasted to the GPU process by the GPU process
   // observer service.
   async NotifyGpuObservers(nsCString aTopic);
-
-  // Control the Gecko Profiler in the GPU process.
-  async StartProfiler(ProfilerInitParams params);
-  async StopProfiler();
-  async PauseProfiler(bool aPause);
-  async GatherProfile();
 
   async RequestMemoryReport(uint32_t generation,
                             bool anonymize,
@@ -127,8 +122,6 @@ child:
 
   async NotifyDeviceReset(GPUDeviceData status);
 
-  // Called in response to GatherProfile.
-  async Profile(nsCString aProfile, bool aIsExitProfile);
   async AddMemoryReport(MemoryReport aReport);
   async FinishMemoryReport(uint32_t aGeneration);
 };

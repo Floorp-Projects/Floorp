@@ -1056,31 +1056,33 @@ option('--enable-mortar', help='Enable mortar extension')
 
 set_config('MOZ_MORTAR', True, when='--enable-mortar')
 
-# Marionette is a Web Driver / Selenium comamnd server and client automation
-# driver for Mozilla's Gecko engine.  For more, see
-# https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette.
+# Marionette remote protocol
+# ==============================================================
 #
-# Marionette isn't really a toolkit feature, it's a Gecko engine feature, but
-# it's enabled based on the toolkit (and target), so here it lives.
+# Marionette is the Gecko remote protocol used for various remote control,
+# automation, and testing purposes throughout Gecko, Firefox, and Fennec.
+# Marionette lives in ../testing/marionette.
+#
+# Marionette is not really a toolkit feature, as much as a Gecko engine
+# feature.  But it is enabled based on the toolkit (and target), so here
+# it lives.
+#
+# It also backs ../testing/geckodriver, which is Mozilla's WebDriver
+# implementation.
+#
+# For more information, see
+# https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette.
 
 @depends(target)
-def marionette_default(target):
-    # By default, enable Marionette if not Android.
-    #
-    # None means "don't set anything", which allows to override with
-    # --enable-marionette.  False means --disable-marionette, which
-    # cannot be overridden with --enable-marionette.  We want to allow
-    # overrides.
-    if target.os == 'Android':
-        return None
+def marionette(target):
+    """Enable Marionette by default, except on Android."""
+    if target.os != 'Android':
+        return True
 
-    return True
-
-imply_option('--enable-marionette', marionette_default,
-             reason='not Android')
+imply_option('--enable-marionette', marionette, reason='Not Android')
 
 option('--enable-marionette',
-       help='Enable internal Marionette command server')
+       help='Enable Marionette remote protocol')
 
 @depends('--enable-marionette')
 def marionette(value):
@@ -1088,3 +1090,35 @@ def marionette(value):
         return True
 
 set_config('ENABLE_MARIONETTE', marionette)
+
+# geckodriver WebDriver implementation
+# ==============================================================
+option('--enable-geckodriver', help='Enable WebDriver implementation')
+
+@depends('--enable-geckodriver',
+         'MOZ_AUTOMATION',
+         compile_environment,
+         cross_compiling,
+         hazard_analysis,
+         target)
+def geckodriver(enable, automation, compile_env, cross_compile, hazard, target):
+    """
+    geckodriver is implied on supported platforms when MOZ_AUTOMATION
+    is set, but we also provide the --enable-geckodriver option for
+    developers to use.
+
+    At the present time, we want individual developers to be able to
+    opt-in to building geckodriver locally, and for it to be enabled by
+    default on supported CI build platforms.
+    """
+    if enable:
+        return True
+
+    if enable.origin == 'default':
+        linux32 = target.kernel == 'Linux' and target.cpu == 'x86'
+        broken_platforms = cross_compile or linux32 or hazard
+
+        if automation and compile_env and not broken_platforms:
+            return True
+
+set_config('ENABLE_GECKODRIVER', geckodriver)

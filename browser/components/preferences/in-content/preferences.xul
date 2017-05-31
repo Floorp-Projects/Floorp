@@ -19,53 +19,27 @@
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 <!ENTITY % globalPreferencesDTD SYSTEM "chrome://global/locale/preferences.dtd">
 <!ENTITY % preferencesDTD SYSTEM
-  "chrome://browser/locale/preferences/preferences.dtd">
-<!ENTITY % selectBookmarkDTD SYSTEM
-  "chrome://browser/locale/preferences/selectBookmark.dtd">
-<!ENTITY % languagesDTD SYSTEM "chrome://browser/locale/preferences/languages.dtd">
-<!ENTITY % fontDTD SYSTEM "chrome://browser/locale/preferences/fonts.dtd">
-<!ENTITY % colorsDTD SYSTEM "chrome://browser/locale/preferences/colors.dtd">
-<!ENTITY % permissionsDTD SYSTEM "chrome://browser/locale/preferences/permissions.dtd">
-<!ENTITY % passwordManagerDTD SYSTEM "chrome://passwordmgr/locale/passwordManager.dtd">
-<!ENTITY % historyDTD SYSTEM "chrome://mozapps/locale/update/history.dtd">
-<!ENTITY % certManagerDTD SYSTEM "chrome://pippki/locale/certManager.dtd">
-<!ENTITY % deviceManangerDTD SYSTEM "chrome://pippki/locale/deviceManager.dtd">
-<!ENTITY % connectionDTD SYSTEM "chrome://browser/locale/preferences/connection.dtd">
-<!ENTITY % siteDataSettingsDTD SYSTEM
-  "chrome://browser/locale/preferences/siteDataSettings.dtd" >
-<!ENTITY % privacyDTD SYSTEM "chrome://browser/locale/preferences/privacy.dtd">
-<!ENTITY % tabsDTD SYSTEM "chrome://browser/locale/preferences/tabs.dtd">
-<!ENTITY % searchDTD SYSTEM "chrome://browser/locale/preferences/search.dtd">
+  "chrome://browser/locale/preferences-old/preferences.dtd">
+<!ENTITY % privacyDTD SYSTEM "chrome://browser/locale/preferences-old/privacy.dtd">
+<!ENTITY % tabsDTD SYSTEM "chrome://browser/locale/preferences-old/tabs.dtd">
+<!ENTITY % searchDTD SYSTEM "chrome://browser/locale/preferences-old/search.dtd">
 <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
-<!ENTITY % syncDTD SYSTEM "chrome://browser/locale/preferences/sync.dtd">
+<!ENTITY % syncDTD SYSTEM "chrome://browser/locale/preferences-old/sync.dtd">
 <!ENTITY % securityDTD SYSTEM
-  "chrome://browser/locale/preferences/security.dtd">
+  "chrome://browser/locale/preferences-old/security.dtd">
 <!ENTITY % containersDTD SYSTEM
-  "chrome://browser/locale/preferences/containers.dtd">
+  "chrome://browser/locale/preferences-old/containers.dtd">
 <!ENTITY % sanitizeDTD SYSTEM "chrome://browser/locale/sanitize.dtd">
-<!ENTITY % mainDTD SYSTEM "chrome://browser/locale/preferences/main.dtd">
+<!ENTITY % mainDTD SYSTEM "chrome://browser/locale/preferences-old/main.dtd">
 <!ENTITY % aboutHomeDTD SYSTEM "chrome://browser/locale/aboutHome.dtd">
-<!ENTITY % contentDTD SYSTEM "chrome://browser/locale/preferences/content.dtd">
+<!ENTITY % contentDTD SYSTEM "chrome://browser/locale/preferences-old/content.dtd">
 <!ENTITY % applicationsDTD SYSTEM
-  "chrome://browser/locale/preferences/applications.dtd">
+  "chrome://browser/locale/preferences-old/applications.dtd">
 <!ENTITY % advancedDTD SYSTEM
-  "chrome://browser/locale/preferences/advanced.dtd">
-<!ENTITY % aboutDialogDTD SYSTEM "chrome://browser/locale/aboutDialog.dtd" >
-%aboutDialogDTD;
+  "chrome://browser/locale/preferences-old/advanced.dtd">
 %brandDTD;
 %globalPreferencesDTD;
 %preferencesDTD;
-%selectBookmarkDTD;
-%languagesDTD;
-%fontDTD;
-%colorsDTD;
-%permissionsDTD;
-%passwordManagerDTD;
-%historyDTD;
-%certManagerDTD;
-%deviceManangerDTD;
-%connectionDTD;
-%siteDataSettingsDTD;
 %privacyDTD;
 %tabsDTD;
 %searchDTD;
@@ -101,17 +75,12 @@
           src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/preferences/in-content/preferences.js"/>
-  <script src="chrome://browser/content/preferences/in-content/findInPage.js"/>
   <script src="chrome://browser/content/preferences/in-content/subdialogs.js"/>
 
   <stringbundle id="bundleBrand"
                 src="chrome://branding/locale/brand.properties"/>
   <stringbundle id="bundlePreferences"
-                src="chrome://browser/locale/preferences/preferences.properties"/>
-  <stringbundle id="pkiBundle"
-                src="chrome://pippki/locale/pippki.properties"/>
-  <stringbundle id="browserBundle"
-                src="chrome://browser/locale/browser.properties"/>
+                src="chrome://browser/locale/preferences-old/preferences.properties"/>
 
   <stringbundleset id="appManagerBundleset">
     <stringbundle id="appManagerBundle"
@@ -123,17 +92,6 @@
 
     <!-- category list -->
     <richlistbox id="categories">
-      <richlistitem id="category-search-results"
-                    class="category"
-                    value="paneSearchResults"
-                    helpTopic="prefs-main"
-                    tooltiptext="&paneSearchResults.title;"
-                    align="center"
-                    hidden="true">
-        <image class="category-icon"/>
-        <label class="category-name" flex="1">&paneSearchResults.title;</label>
-      </richlistitem>
-
       <richlistitem id="category-general"
                     class="category"
                     value="paneGeneral"
@@ -144,14 +102,44 @@
         <label class="category-name" flex="1">&paneGeneral.title;</label>
       </richlistitem>
 
+      <richlistitem id="category-search"
+                    class="category"
+                    value="paneSearch"
+                    helpTopic="prefs-search"
+                    tooltiptext="&paneSearch.title;"
+                    align="center">
+        <image class="category-icon"/>
+        <label class="category-name" flex="1">&paneSearch.title;</label>
+      </richlistitem>
+
+      <richlistitem id="category-content"
+                    class="category"
+                    value="paneContent"
+                    helpTopic="prefs-content"
+                    tooltiptext="&paneContent.title;"
+                    align="center">
+        <image class="category-icon"/>
+        <label class="category-name" flex="1">&paneContent.title;</label>
+      </richlistitem>
+
       <richlistitem id="category-application"
                     class="category"
                     value="paneApplications"
                     helpTopic="prefs-applications"
-                    tooltiptext="&paneFilesApplications.title;"
+                    tooltiptext="&paneApplications.title;"
                     align="center">
         <image class="category-icon"/>
-        <label class="category-name" flex="1">&paneFilesApplications.title;</label>
+        <label class="category-name" flex="1">&paneApplications.title;</label>
+      </richlistitem>
+
+      <richlistitem id="category-privacy"
+                    class="category"
+                    value="panePrivacy"
+                    helpTopic="prefs-privacy"
+                    tooltiptext="&panePrivacy.title;"
+                    align="center">
+        <image class="category-icon"/>
+        <label class="category-name" flex="1">&panePrivacy.title;</label>
       </richlistitem>
 
       <richlistitem id="category-containers"
@@ -160,34 +148,34 @@
                     helpTopic="prefs-containers"
                     hidden="true"/>
 
+      <richlistitem id="category-security"
+                    class="category"
+                    value="paneSecurity"
+                    helpTopic="prefs-security"
+                    tooltiptext="&paneSecurity.title;"
+                    align="center">
+        <image class="category-icon"/>
+        <label class="category-name" flex="1">&paneSecurity.title;</label>
+      </richlistitem>
+
       <richlistitem id="category-sync"
                     class="category"
                     value="paneSync"
                     helpTopic="prefs-weave"
-                    tooltiptext="&paneSync1.title;"
+                    tooltiptext="&paneSync.title;"
                     align="center">
         <image class="category-icon"/>
-        <label class="category-name" flex="1">&paneSync1.title;</label>
-      </richlistitem>
-
-      <richlistitem id="category-privacy"
-                    class="category"
-                    value="panePrivacy"
-                    helpTopic="prefs-privacy"
-                    tooltiptext="&panePrivacySecurity.title;"
-                    align="center">
-        <image class="category-icon"/>
-        <label class="category-name" flex="1">&panePrivacySecurity.title;</label>
+        <label class="category-name" flex="1">&paneSync.title;</label>
       </richlistitem>
 
       <richlistitem id="category-advanced"
                     class="category"
                     value="paneAdvanced"
                     helpTopic="prefs-advanced-general"
-                    tooltiptext="&paneUpdates.title;"
+                    tooltiptext="&paneAdvanced.title;"
                     align="center">
         <image class="category-icon"/>
-        <label class="category-name" flex="1">&paneUpdates.title;</label>
+        <label class="category-name" flex="1">&paneAdvanced.title;</label>
       </richlistitem>
     </richlistbox>
 
@@ -198,23 +186,20 @@
       <key key="&focusSearch1.key;" modifiers="accel" id="focusSearch1" oncommand=";"/>
     </keyset>
 
-    <html:a class="help-button" target="_blank" aria-label="&helpButton2.label;">&helpButton2.label;</html:a>
-
     <vbox class="main-content" flex="1">
-      <hbox pack="end">
-        <textbox type="search" id="searchInput" placeholder="&searchInput.label;" hidden="true"
-                 clickSelectsAll="true"/>
-      </hbox>
       <prefpane id="mainPrefPane">
-#include searchResults.xul
 #include main.xul
+#include search.xul
 #include privacy.xul
 #include containers.xul
 #include advanced.xul
 #include applications.xul
+#include content.xul
+#include security.xul
 #include sync.xul
       </prefpane>
     </vbox>
+
   </hbox>
 
     <vbox id="dialogOverlay" align="center" pack="center">

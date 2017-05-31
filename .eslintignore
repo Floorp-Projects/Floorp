@@ -165,6 +165,7 @@ devtools/server/actors/utils/automation-timeline.js
 
 # Ignore devtools files testing sourcemaps / code style
 devtools/client/debugger/test/mochitest/code_binary_search.js
+devtools/client/debugger/test/mochitest/code_binary_search_absolute.js
 devtools/client/debugger/test/mochitest/code_math.min.js
 devtools/client/debugger/test/mochitest/code_math_bogus_map.js
 devtools/client/debugger/test/mochitest/code_ugly*
@@ -295,13 +296,11 @@ services/sync/modules/constants.js
 services/sync/services-sync.js
 
 # testing/ exclusions
-testing/firefox-ui/**
 testing/marionette/**
 testing/mochitest/**
 testing/modules/**
-testing/mozbase/**
-testing/profiles/**
-testing/specialpowers/**
+# octothorpe used for pref file comment causes parsing error
+testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
 testing/talos/**
 testing/web-platform/**
 testing/xpcshell/moz-http2/**

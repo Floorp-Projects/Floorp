@@ -1,18 +1,18 @@
 {
   "addonDescription": {
-    "message": "剪辑和拍摄 Web 截图，临时或永久保存它们。"
+    "message": "临时或永久保存网页截图。"
   },
   "addonAuthorsList": {
-    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
-    "message": "拍摄截图"
+    "message": "截图"
   },
   "myShotsLink": {
     "message": "我的截图"
   },
   "screenshotInstructions": {
-    "message": "在页面上拖动或点击以选择范围。按 ESC 取消。"
+    "message": "在页面上拖动或单击以选择范围。按 ESC 键取消。"
   },
   "saveScreenshotSelectedArea": {
     "message": "保存"
@@ -62,7 +62,7 @@
     "message": "这不是一个标准的网页，所以无法截图。"
   },
   "selfScreenshotErrorTitle": {
-    "message": "您不能拍摄 Firefox Screenshots 的页面！"
+    "message": "您不能截取 Firefox Screenshots 的页面！"
   },
   "genericErrorTitle": {
     "message": "哎呀，Firefox Screenshots 遇到问题。"
@@ -71,25 +71,25 @@
     "message": "我们不确定发生了什么。您可以再试一次或者试试另一个页面。"
   },
   "tourBodyOne": {
-    "message": "拍摄、保存和分享屏幕截图，无需 Firefox 以外的工具。"
+    "message": "截取、保存和分享屏幕截图，无需 Firefox 以外的工具。"
   },
   "tourHeaderTwo": {
-    "message": "只拍摄想要的部分"
+    "message": "只截取想要的部分"
   },
   "tourBodyTwo": {
-    "message": "单击并拖动以只拍摄页面某个区域。您也可以悬停以高亮您的选择范围。"
+    "message": "单击并拖动以截取页面某个区域。您也可以悬停以高亮您的选择范围。"
   },
   "tourHeaderThree": {
-    "message": "做你所想"
+    "message": "做您所想"
   },
   "tourBodyThree": {
-    "message": "将您裁剪后的截图保存到网上以便共享，或者下载到您的计算机。您也可以点击“我的截图”按钮找到您拍摄的所有截图。"
+    "message": "将您裁剪后的截图保存到网上以便共享，或者下载到您的计算机。您也可以点击“我的截图”按钮找到您截取的所有截图。"
   },
   "tourHeaderFour": {
-    "message": "拍摄窗口或整个页面"
+    "message": "截取窗口或整个页面"
   },
   "tourBodyFour": {
-    "message": "选择右上角的按钮可以拍摄窗口中的可见区域或者整个页面。"
+    "message": "选择右上角的按钮可以截取窗口中的可见区域或者整个页面。"
   },
   "tourSkip": {
     "message": "跳过"

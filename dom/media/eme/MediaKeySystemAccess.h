@@ -66,7 +66,8 @@ public:
     const Sequence<MediaKeySystemConfiguration>& aConfigs,
     MediaKeySystemConfiguration& aOutConfig,
     DecoderDoctorDiagnostics* aDiagnostics,
-    bool aIsPrivateBrowsing);
+    bool aIsPrivateBrowsing,
+    const std::function<void(const char*)>& aDeprecationLogFn);
 
   static bool KeySystemSupportsInitDataType(const nsAString& aKeySystem,
                                             const nsAString& aInitDataType);

@@ -1,4 +1,4 @@
-/* globals browser, log */
+/* globals log */
 
 "use strict";
 

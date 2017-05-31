@@ -30,7 +30,6 @@
 #include "nsIDOMGeoPositionErrorCallback.h"
 #include "nsRefPtrHashtable.h"
 #include "PermissionMessageUtils.h"
-#include "ProfilerControllingProcess.h"
 #include "DriverCrashGuard.h"
 
 #define CHILD_PROCESS_SHUTDOWN_MESSAGE NS_LITERAL_STRING("child-process-shutdown")
@@ -56,9 +55,6 @@ class nsIWidget;
 
 namespace mozilla {
 class PRemoteSpellcheckEngineParent;
-#ifdef MOZ_GECKO_PROFILER
-class CrossProcessProfilerController;
-#endif
 
 #if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
 class SandboxBroker;
@@ -114,7 +110,6 @@ class ContentParent final : public PContentParent
                           , public mozilla::LinkedListElement<ContentParent>
                           , public gfx::GPUProcessListener
                           , public mozilla::MemoryReportingProcess
-                          , public mozilla::ProfilerControllingProcess
 {
   typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
   typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
@@ -311,11 +306,6 @@ public:
   virtual mozilla::ipc::IPCResult RecvRemovePermission(const IPC::Principal& aPrincipal,
                                                        const nsCString& aPermissionType,
                                                        nsresult* aRv) override;
-
-  void SendStartProfiler(const ProfilerInitParams& aParams) override;
-  void SendStopProfiler() override;
-  void SendPauseProfiler(const bool& aPause) override;
-  void SendGatherProfile() override;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ContentParent, nsIObserver)
 
@@ -1109,8 +1099,7 @@ private:
   virtual mozilla::ipc::IPCResult RecvUpdateDropEffect(const uint32_t& aDragAction,
                                                        const uint32_t& aDropEffect) override;
 
-  virtual mozilla::ipc::IPCResult RecvProfile(const nsCString& aProfile,
-                                              const bool& aIsExitProfile) override;
+  virtual mozilla::ipc::IPCResult RecvShutdownProfile(const nsCString& aProfile) override;
 
   virtual mozilla::ipc::IPCResult RecvGetGraphicsDeviceInitData(ContentDeviceData* aOut) override;
 
@@ -1226,10 +1215,6 @@ private:
 #endif
 
   PProcessHangMonitorParent* mHangMonitorActor;
-
-#ifdef MOZ_GECKO_PROFILER
-  UniquePtr<mozilla::CrossProcessProfilerController> mProfilerController;
-#endif
 
   UniquePtr<gfx::DriverCrashGuard> mDriverCrashGuard;
   UniquePtr<MemoryReportRequestHost> mMemoryReportRequest;

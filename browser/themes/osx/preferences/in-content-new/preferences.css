@@ -1,0 +1,53 @@
+/* - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../../shared/incontentprefs/preferences.inc.css
+
+prefpane .groupbox-title {
+  background: none;
+  margin-bottom: 0;
+}
+
+.actionsMenu > .menulist-label-box > .menulist-icon {
+  margin-top: 2px;
+  margin-inline-start: 2px;
+  margin-inline-end: 8px !important;
+}
+
+#downloadFolder > .fileFieldContentBox {
+  padding-inline-start: 3px;
+}
+
+#fxaProfileImage {
+  -moz-user-focus: normal;
+}
+
+textbox + button {
+  margin-inline-start: -4px;
+}
+
+filefield + button {
+  margin-inline-start: -8px;
+}
+
+#popupPolicyRow {
+  /* Override styles from
+     browser/themes/osx/preferences/preferences.css */
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  border-bottom: none;
+}
+
+#advancedPrefs {
+  margin-right: 0; /*override margin from normal preferences.css */
+  margin-left: 0;
+}
+
+/**
+ * Dialog
+ */
+
+#dialogTitle {
+  font-size: 1.1em;
+}

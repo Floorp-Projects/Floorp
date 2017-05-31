@@ -536,9 +536,11 @@ HTMLEditor::SplitStyleAboveRange(nsRange* inRange,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // reset the range
-  rv = inRange->SetStart(startNode, startOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return inRange->SetEnd(endNode, endOffset);
+  rv = inRange->SetStartAndEnd(startNode, startOffset, endNode, endOffset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -883,10 +885,11 @@ HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange)
     endOffset = endNode ? endNode->IndexOf(parent) + 1 : 0;
   }
 
-  nsresult rv = aRange.SetStart(startNode, startOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aRange.SetEnd(endNode, endOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = aRange.SetStartAndEnd(startNode, startOffset,
+                                      endNode, endOffset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   return NS_OK;
 }
@@ -916,10 +919,11 @@ HTMLEditor::PromoteInlineRange(nsRange& aRange)
     endNode = parent;
   }
 
-  nsresult rv = aRange.SetStart(startNode, startOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aRange.SetEnd(endNode, endOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = aRange.SetStartAndEnd(startNode, startOffset,
+                                      endNode, endOffset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   return NS_OK;
 }

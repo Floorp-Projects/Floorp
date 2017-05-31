@@ -366,14 +366,14 @@ add_task(async function editControlsToPanelEmptySpace() {
                              "sync-button",
                             ];
   removeNonReleaseButtons(placementsAfterMove);
-  if (isInNightly()) {
+  if (isNotReleaseOrBeta()) {
     CustomizableUI.removeWidgetFromArea("webcompat-reporter-button");
   }
   simulateItemDrag(editControls, panel);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
   let zoomControls = document.getElementById("zoom-controls");
   simulateItemDrag(editControls, zoomControls);
-  if (isInNightly()) {
+  if (isNotReleaseOrBeta()) {
     CustomizableUI.addWidgetToArea("webcompat-reporter-button", CustomizableUI.AREA_PANEL);
   }
   ok(CustomizableUI.inDefaultState, "Should still be in default state.");

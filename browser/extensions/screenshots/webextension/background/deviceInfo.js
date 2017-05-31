@@ -1,4 +1,4 @@
-/* globals browser, catcher */
+/* globals catcher */
 
 "use strict";
 

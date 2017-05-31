@@ -1,6 +1,18 @@
 {
+  "addonDescription": {
+    "message": "Ota leikkeitä ja kuvakaappauksia verkosta ja tallenna ne tilapäisesti tai pysyvästi."
+  },
   "addonAuthorsList": {
-    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Ota kuvakaappaus"
+  },
+  "myShotsLink": {
+    "message": "Omat kaappaukset"
+  },
+  "screenshotInstructions": {
+    "message": "Valitse alue vetämällä tai napsauttamalla sivua. Peruuta painamalla ESC."
   },
   "saveScreenshotSelectedArea": {
     "message": "Tallenna"
@@ -19,5 +31,93 @@
   },
   "notificationLinkCopiedTitle": {
     "message": "Linkki kopioitu"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Linkki kuvaasi on kopioitu leikepöydälle. Voit liittää sen painamalla $META_KEY$-V.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Epäkunnossa."
+  },
+  "requestErrorDetails": {
+    "message": "Kuvan tallentaminen epäonnistui. Yritä myöhemmin uudestaan."
+  },
+  "connectionErrorTitle": {
+    "message": "Emme saa yhteyttä kuvakaappauksiisi."
+  },
+  "connectionErrorDetails": {
+    "message": "Tarkista internetyhteytesi. Jos olet yhteydessä internetiin, Firefox Screenshots -palvelussa voi olla tilapäinen häiriö."
+  },
+  "loginErrorDetails": {
+    "message": "Emme pystyneet tallentamaan kuvaasi, koska Firefox Screenshots -palvelussa on ongelma. Yritä myöhemmin uudestaan."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Tästä sivusta ei voi ottaa kuvaa."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Tämä ei ole tavallinen verkkosivu, joten et voi ottaa kuvaa siitä."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Et voi ottaa kuvaa Firefox Screenshots -sivusta!"
+  },
+  "genericErrorTitle": {
+    "message": "Oho! Firefox Screenshots meni päin prinkkalaa."
+  },
+  "genericErrorDetails": {
+    "message": "Emme oikein tiedä, mitä tapahtui. Haluatko yrittää uudestaan tai ottaa kuvan eri sivusta?"
+  },
+  "tourBodyOne": {
+    "message": "Ota, tallenna ja jaa kuvakaappaus poistumatta Firefoxista."
+  },
+  "tourHeaderTwo": {
+    "message": "Kaappaa mitä haluat"
+  },
+  "tourBodyTwo": {
+    "message": "Kaappaa vain osa sivusta napsauttamalla ja vetämällä. Voit myös korostaa valinnan pitämällä hiirtä sen päällä."
+  },
+  "tourHeaderThree": {
+    "message": "Haluamallasi tavalla"
+  },
+  "tourBodyThree": {
+    "message": "Tallenna rajaamasi kuvat verkkoon helpompaa jakamista varten tai lataa ne tietokoneellesi. Voit myös napsauttaa Omat kaappaukset -painiketta ja nähdä kaikki ottamasi kuvat."
+  },
+  "tourHeaderFour": {
+    "message": "Kaappaa ikkunoita tai kokonaisia sivuja"
+  },
+  "tourBodyFour": {
+    "message": "Valitse oikean yläkulman painikkeista joko ikkunassa näkyvän alueen kaappaus tai koko sivun kaappaus."
+  },
+  "tourSkip": {
+    "message": "OHITA"
+  },
+  "tourNext": {
+    "message": "Seuraava sivu"
+  },
+  "tourPrevious": {
+    "message": "Edellinen sivu"
+  },
+  "tourDone": {
+    "message": "Valmis"
+  },
+  "termsAndPrivacyNoticeCloudServices": {
+    "message": "Käyttämällä Firefox Screenshots –ominaisuutta hyväksyt Firefoxin pilvipalveluiden $TERMSANDPRIVACYNOTICETERMSLINK$ ja $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "käyttöehdot"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "tietosuojakäytännön"
   }
 }

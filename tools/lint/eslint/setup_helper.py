@@ -250,23 +250,21 @@ def which_path(filename):
     """
     Return the nodejs or npm path.
     """
-    path = None
-
     if platform.system() == "Windows":
         for ext in [".cmd", ".exe", ""]:
             try:
-                path = which.which(filename + ext, path=get_possible_node_paths_win())
+                return which.which(filename + ext, path=get_possible_node_paths_win())
             except which.WhichError:
                 pass
     else:
         try:
-            path = which.which(filename)
+            return which.which(filename)
         except which.WhichError:
             if filename == "node":
                 # Retry it with "nodejs" as Linux tends to prefer nodejs rather than node.
                 return which_path("nodejs")
 
-    return path
+    return None
 
 
 def get_node_or_npm_path(filename, minversion=None):

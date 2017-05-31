@@ -265,8 +265,6 @@ SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
   // mSamplerTid to a dummy value and fill it in for real in ThreadEntry().
   , mSamplerTid(-1)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
 #if defined(USE_EHABI_STACKWALK)
   mozilla::EHABIStackWalkInit();
 #elif defined(USE_LUL_STACKWALK)
@@ -321,8 +319,6 @@ SamplerThread::~SamplerThread()
 void
 SamplerThread::Stop(PSLockRef aLock)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
   // Restore old signal handler. This is global state so it's important that
   // we do it now, while gPSMutex is locked. It's safe to do this now even
   // though this SamplerThread is still alive, because the next time the main
@@ -463,8 +459,6 @@ SamplerThread::SuspendAndSampleAndResumeThread(PSLockRef aLock,
 static void
 paf_prepare()
 {
-  // This function can run off the main thread.
-
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
@@ -479,8 +473,6 @@ paf_prepare()
 static void
 paf_parent()
 {
-  // This function can run off the main thread.
-
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);

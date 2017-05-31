@@ -636,9 +636,9 @@ var SpecialPowers = {
   // Based on SpecialPowersObserver.prototype.receiveMessage
   createFiles(requests, callback) {
     let dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    let filePaths = new Array;
+    let filePaths = [];
     if (!this._createdFiles) {
-      this._createdFiles = new Array;
+      this._createdFiles = [];
     }
     let createdFiles = this._createdFiles;
     let promises = [];

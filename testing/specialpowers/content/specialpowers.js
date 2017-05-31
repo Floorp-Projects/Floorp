@@ -5,6 +5,9 @@
  * order to be used as a replacement for UniversalXPConnect
  */
 
+/* import-globals-from specialpowersAPI.js */
+/* globals addMessageListener, removeMessageListener, sendSyncMessage, sendAsyncMessage */
+
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 function SpecialPowers(window) {
@@ -16,8 +19,8 @@ function SpecialPowers(window) {
   this._unexpectedCrashDumpFiles = { };
   this._crashDumpDir = null;
   this.DOMWindowUtils = bindDOMWindowUtils(window);
-  Object.defineProperty(this, 'Components', {
-      configurable: true, enumerable: true, get: function() {
+  Object.defineProperty(this, "Components", {
+      configurable: true, enumerable: true, get() {
           var win = this.window.get();
           if (!win)
               return null;
@@ -59,9 +62,11 @@ function SpecialPowers(window) {
         removeMessageListener("SPPingService", self._messageListener);
         removeMessageListener("SpecialPowers.FilesCreated", self._messageListener);
         removeMessageListener("SpecialPowers.FilesError", self._messageListener);
-      } catch (e if e.result == Components.results.NS_ERROR_ILLEGAL_VALUE) {
+      } catch (e) {
         // Ignore the exception which the message manager has been destroyed.
-        ;
+        if (e.result != Components.results.NS_ERROR_ILLEGAL_VALUE) {
+          throw e;
+        }
       }
     }
   }, "inner-window-destroyed");
@@ -133,20 +138,20 @@ SpecialPowers.prototype._messageReceived = function(aMessage) {
       break;
 
     case "SpecialPowers.FilesCreated":
-      var handler = this._createFilesOnSuccess;
+      var createdHandler = this._createFilesOnSuccess;
       this._createFilesOnSuccess = null;
       this._createFilesOnError = null;
-      if (handler) {
-        handler(aMessage.data);
+      if (createdHandler) {
+        createdHandler(aMessage.data);
       }
       break;
 
     case "SpecialPowers.FilesError":
-      var handler = this._createFilesOnError;
+      var errorHandler = this._createFilesOnError;
       this._createFilesOnSuccess = null;
       this._createFilesOnError = null;
-      if (handler) {
-        handler(aMessage.data);
+      if (errorHandler) {
+        errorHandler(aMessage.data);
       }
       break;
   }
@@ -191,20 +196,20 @@ SpecialPowers.prototype.nestedFrameSetup = function() {
     // get a ref to the app <iframe>
     frameLoader.QueryInterface(Components.interfaces.nsIFrameLoader);
     let frame = frameLoader.ownerElement;
-    let frameId = frame.getAttribute('id');
+    let frameId = frame.getAttribute("id");
     if (frameId === "nested-parent-frame") {
       Services.obs.removeObserver(onRemoteBrowserShown, "remote-browser-shown");
 
       let mm = frame.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.messageManager;
       self._grandChildFrameMM = mm;
 
-      self.SP_SYNC_MESSAGES.forEach(function (msgname) {
-        mm.addMessageListener(msgname, function (msg) {
+      self.SP_SYNC_MESSAGES.forEach(function(msgname) {
+        mm.addMessageListener(msgname, function(msg) {
           return self._sendSyncMessage(msgname, msg.data)[0];
         });
       });
-      self.SP_ASYNC_MESSAGES.forEach(function (msgname) {
-        mm.addMessageListener(msgname, function (msg) {
+      self.SP_ASYNC_MESSAGES.forEach(function(msgname) {
+        mm.addMessageListener(msgname, function(msg) {
           self._sendAsyncMessage(msgname, msg.data);
         });
       });
@@ -243,7 +248,7 @@ function attachSpecialPowersToWindow(aWindow) {
         sp.addPermission("allowXULXBL", true, aWindow.document);
       }
     }
-  } catch(ex) {
+  } catch (ex) {
     dump("TEST-INFO | specialpowers.js |  Failed to attach specialpowers to window exception: " + ex + "\n");
   }
 }
@@ -272,7 +277,7 @@ this.attachSpecialPowersToWindow = attachSpecialPowersToWindow;
 
 // In the case of Chrome mochitests that inject specialpowers.js as
 // a regular content script
-if (typeof window != 'undefined') {
+if (typeof window != "undefined") {
   window.addMessageListener = function() {}
   window.removeMessageListener = function() {}
   window.wrappedJSObject.SpecialPowers = new SpecialPowers(window);

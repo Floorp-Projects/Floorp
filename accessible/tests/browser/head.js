@@ -110,7 +110,7 @@ function shutdownPromise(contentBrowser) {
 
 /**
  * Simpler verions of waitForEvent defined in
- * accessible/tests/browser/e10s/events.js
+ * accessible/tests/browser/events.js
  */
 function waitForEvent(eventType, expectedId) {
   return new Promise(resolve => {

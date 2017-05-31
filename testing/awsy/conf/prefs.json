@@ -1,12 +1,11 @@
 {
+    "browser.urlbar.userMadeSearchSuggestionsChoice": true,
+    "image.mem.surfacecache.min_expiration_ms": 10000,
     "network.proxy.socks": "localhost",
     "network.proxy.socks_port": 90000,
     "network.proxy.socks_remote_dns": true,
     "network.proxy.type": 1,
-    "startup.homepage_welcome_url": "",
-    "startup.homepage_override_url": "",
-    "browser.newtab.url": "about:blank",
-    "browser.displayedE10SNotice": 1000,
     "plugin.disable": true,
-    "image.mem.surfacecache.min_expiration_ms": 10000
+    "startup.homepage_override_url": "",
+    "startup.homepage_welcome_url": ""
 }

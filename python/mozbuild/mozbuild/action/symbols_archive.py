@@ -25,7 +25,7 @@ def make_archive(archive_name, base, exclude, include, compress):
                 for p, f in finder.find(pat):
                     print('  Adding to "%s":\n\t"%s"' % (archive_basename, p))
                     should_compress = any(mozpath.match(p, pat) for pat in compress)
-                    writer.add(p.encode('utf-8'), f.read(), mode=f.mode,
+                    writer.add(p.encode('utf-8'), f, mode=f.mode,
                                compress=should_compress, skip_duplicates=True)
 
 def main(argv):

@@ -3,7 +3,7 @@
     "message": "Effectuez des captures d’écran sur le Web et sauvegardez-les de manière temporaire ou permanente."
   },
   "addonAuthorsList": {
-    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
     "message": "Effectuer une capture d’écran"
@@ -56,7 +56,7 @@
     "message": "Nous n’avons pas pu enregistrer votre capture d’écran, car le service de Firefox Screenshot rencontre des difficultés. Veuillez réessayer plus tard."
   },
   "unshootablePageErrorTitle": {
-    "message": "Impossible d’effectuer une capture d’écran de cette page."
+    "message": "Impossible d’effectuer une capture de cette page."
   },
   "unshootablePageErrorDetails": {
     "message": "Impossible d’effectuer une capture d’écran, car cette page web n’est pas standard."

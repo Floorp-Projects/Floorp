@@ -4,28 +4,30 @@
 
 "use strict";
 
+/* import-globals-from specialpowers.js */
+
 function MozillaLogger(aPath) {
 }
 
 function formatLogMessage(msg) {
-    return msg.info.join(' ') + "\n";
+    return msg.info.join(" ") + "\n";
 }
 
 MozillaLogger.prototype = {
-  init : function(path) {},
+  init(path) {},
 
-  getLogCallback : function() {
-    return function (msg) {
+  getLogCallback() {
+    return function(msg) {
       var data = formatLogMessage(msg);
       dump(data);
     };
   },
 
-  log : function(msg) {
+  log(msg) {
     dump(msg);
   },
 
-  close : function() {}
+  close() {}
 };
 
 
@@ -41,12 +43,12 @@ function SpecialPowersLogger(aPath) {
 }
 
 SpecialPowersLogger.prototype = {
-  init : function (path) {
+  init(path) {
     SpecialPowers.setLogFile(path);
   },
 
-  getLogCallback : function () {
-    return function (msg) {
+  getLogCallback() {
+    return function(msg) {
       var data = formatLogMessage(msg);
       SpecialPowers.log(data);
 
@@ -56,11 +58,11 @@ SpecialPowersLogger.prototype = {
     };
   },
 
-  log : function (msg) {
+  log(msg) {
     SpecialPowers.log(msg);
   },
 
-  close : function () {
+  close() {
     SpecialPowers.closeLogFile();
   }
 };
@@ -82,7 +84,7 @@ function MozillaFileLogger(aPath) {
 
 MozillaFileLogger.prototype = {
 
-  init : function (path) {
+  init(path) {
     var PR_WRITE_ONLY   = 0x02; // Open for writing only.
     var PR_CREATE_FILE  = 0x08;
     var PR_APPEND       = 0x10;
@@ -99,8 +101,8 @@ MozillaFileLogger.prototype = {
     this._converter.init(this._foStream, "UTF-8", 0, 0);
   },
 
-  getLogCallback : function() {
-    return function (msg) {
+  getLogCallback() {
+    return function(msg) {
       var data = formatLogMessage(msg);
       if (MozillaFileLogger._converter) {
         this._converter.writeString(data);
@@ -112,12 +114,12 @@ MozillaFileLogger.prototype = {
     };
   },
 
-  log : function(msg) {
+  log(msg) {
     if (this._converter) {
       this._converter.writeString(msg);
     }
   },
-  close : function() {
+  close() {
     if (this._converter) {
       this._converter.flush();
       this._converter.close();

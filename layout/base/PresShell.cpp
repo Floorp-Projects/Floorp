@@ -9648,12 +9648,8 @@ PresShell::Observe(nsISupports* aSubject,
           nsAutoScriptBlocker scriptBlocker;
           ++mChangeNestCount;
           RestyleManager* restyleManager = mPresContext->RestyleManager();
-          if (restyleManager->IsServo()) {
-            MOZ_CRASH("stylo: PresShell::Observe(\"chrome-flush-skin-caches\") "
-                      "not implemented for Servo-backed style system");
-          }
-          restyleManager->AsGecko()->ProcessRestyledFrames(changeList);
-          restyleManager->AsGecko()->FlushOverflowChangedTracker();
+          restyleManager->ProcessRestyledFrames(changeList);
+          restyleManager->FlushOverflowChangedTracker();
           --mChangeNestCount;
         }
       }

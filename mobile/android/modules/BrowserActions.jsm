@@ -33,7 +33,7 @@ var BrowserActions = {
    * Unregisters the listeners if they are already initizliaed and
    * all of the browser actions have been removed.
    */
-  _maybeUnregisterListeners: function() {
+  _maybeUnregisterListeners() {
     if (this._initialized && !Object.keys(this._browserActions).length) {
       this._initialized = false;
       EventDispatcher.instance.unregisterListener(this, "Menu:BrowserActionClicked");
@@ -73,15 +73,41 @@ var BrowserActions = {
     });
 
     this._browserActions[browserAction.uuid] = browserAction;
+
     this._maybeRegisterListeners();
+  },
+
+  /**
+   * Updates the browser action with the specified UUID.
+   * @param {string} uuid The UUID of the browser action.
+   * @param {Object} options The properties to update.
+   */
+  update(uuid, options) {
+    if (options.name) {
+      EventDispatcher.instance.sendRequest({
+        type: "Menu:UpdateBrowserAction",
+        uuid,
+        options,
+      });
+    }
+  },
+
+  /**
+   * Retrieves the name currently used for the browser action with the
+   * specified UUID. Used for testing only.
+   * @param {string} uuid The UUID of the browser action.
+   * @returns {string} the name currently used for the browser action.
+   */
+  getNameForActiveTab(uuid) {
+    return this._browserActions[uuid].activeName;
   },
 
   /**
    * Checks to see if the browser action is shown. Used for testing only.
    * @param {string} uuid The UUID of the browser action.
-   * @returns True if the browser action is shown; false otherwise.
+   * @returns {boolean} true if the browser action is shown; false otherwise.
    */
-  isShown: function(uuid) {
+  isShown(uuid) {
     return !!this._browserActions[uuid];
   },
 
@@ -89,7 +115,7 @@ var BrowserActions = {
    * Synthesizes a click on the browser action. Used for testing only.
    * @param {string} uuid The UUID of the browser action.
    */
-  synthesizeClick: function(uuid) {
+  synthesizeClick(uuid) {
     let browserAction = this._browserActions[uuid];
     if (!browserAction) {
       throw new Error(`No BrowserAction with UUID ${uuid} was found`);
