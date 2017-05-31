@@ -521,9 +521,12 @@ protected:
     return (aThisVal->*aMethod)();
   }
 
-  template<typename ThisType, typename MethodType, typename ValueType>
-  static typename EnableIf<ReturnTypeIs<MethodType, RefPtr<MozPromise>>::value,
-                           already_AddRefed<MozPromise>>::Type
+  // Called when promise chaining is supported.
+  template<bool SupportChaining,
+           typename ThisType,
+           typename MethodType,
+           typename ValueType>
+  static typename EnableIf<SupportChaining, already_AddRefed<MozPromise>>::Type
   InvokeCallbackMethod(ThisType* aThisVal,
                        MethodType aMethod,
                        ValueType&& aValue)
@@ -531,9 +534,12 @@ protected:
     return InvokeMethod(aThisVal, aMethod, Forward<ValueType>(aValue)).forget();
   }
 
-  template<typename ThisType, typename MethodType, typename ValueType>
-  static typename EnableIf<ReturnTypeIs<MethodType, void>::value,
-                           already_AddRefed<MozPromise>>::Type
+  // Called when promise chaining is not supported.
+  template<bool SupportChaining,
+           typename ThisType,
+           typename MethodType,
+           typename ValueType>
+  static typename EnableIf<!SupportChaining, already_AddRefed<MozPromise>>::Type
   InvokeCallbackMethod(ThisType* aThisVal,
                        MethodType aMethod,
                        ValueType&& aValue)
@@ -593,10 +599,10 @@ protected:
     {
       RefPtr<MozPromise> result;
       if (aValue.IsResolve()) {
-        result = InvokeCallbackMethod(
+        result = InvokeCallbackMethod<SupportChaining::value>(
           mThisVal.get(), mResolveMethod, MaybeMove(aValue.ResolveValue()));
       } else {
-        result = InvokeCallbackMethod(
+        result = InvokeCallbackMethod<SupportChaining::value>(
           mThisVal.get(), mRejectMethod, MaybeMove(aValue.RejectValue()));
       }
 
@@ -658,7 +664,7 @@ protected:
 
     void DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override
     {
-      RefPtr<MozPromise> result = InvokeCallbackMethod(
+      RefPtr<MozPromise> result = InvokeCallbackMethod<SupportChaining::value>(
         mThisVal.get(), mResolveRejectMethod, MaybeMove(aValue));
 
       // Null out mThisVal after invoking the callback so that any references are
@@ -731,13 +737,15 @@ protected:
       // just capturing something.
       RefPtr<MozPromise> result;
       if (aValue.IsResolve()) {
-        result = InvokeCallbackMethod(mResolveFunction.ptr(),
-                                      &ResolveFunction::operator(),
-                                      MaybeMove(aValue.ResolveValue()));
+        result = InvokeCallbackMethod<SupportChaining::value>(
+          mResolveFunction.ptr(),
+          &ResolveFunction::operator(),
+          MaybeMove(aValue.ResolveValue()));
       } else {
-        result = InvokeCallbackMethod(mRejectFunction.ptr(),
-                                      &RejectFunction::operator(),
-                                      MaybeMove(aValue.RejectValue()));
+        result = InvokeCallbackMethod<SupportChaining::value>(
+          mRejectFunction.ptr(),
+          &RejectFunction::operator(),
+          MaybeMove(aValue.RejectValue()));
       }
 
       // Destroy callbacks after invocation so that any references in closures are
@@ -803,10 +811,10 @@ protected:
       // classes with ::operator()), since it allows us to share code more easily.
       // We could fix this if need be, though it's quite easy to work around by
       // just capturing something.
-      RefPtr<MozPromise> result =
-        InvokeCallbackMethod(mResolveRejectFunction.ptr(),
-                             &ResolveRejectFunction::operator(),
-                             MaybeMove(aValue));
+      RefPtr<MozPromise> result = InvokeCallbackMethod<SupportChaining::value>(
+        mResolveRejectFunction.ptr(),
+        &ResolveRejectFunction::operator(),
+        MaybeMove(aValue));
 
       // Destroy callbacks after invocation so that any references in closures are
       // released predictably on the dispatch thread. Otherwise, they would be
