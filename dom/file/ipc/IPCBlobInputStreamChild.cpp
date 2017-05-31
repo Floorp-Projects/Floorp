@@ -8,8 +8,9 @@
 #include "IPCBlobInputStreamThread.h"
 
 #include "mozilla/ipc/IPCStreamUtils.h"
-#include "WorkerPrivate.h"
 #include "WorkerHolder.h"
+#include "WorkerPrivate.h"
+#include "WorkerRunnable.h"
 
 namespace mozilla {
 namespace dom {
@@ -91,21 +92,35 @@ private:
 class IPCBlobInputStreamWorkerHolder final : public WorkerHolder
 {
 public:
-  explicit IPCBlobInputStreamWorkerHolder(IPCBlobInputStreamChild* aActor)
-    : mActor(aActor)
-  {}
-
   bool Notify(Status aStatus) override
   {
-    if (aStatus > Running) {
-      mActor->Shutdown();
-      // After this the WorkerHolder is gone.
-    }
+    // We must keep the worker alive until the migration is completed.
     return true;
+  }
+};
+
+class ReleaseWorkerHolderRunnable final : public CancelableRunnable
+{
+public:
+  explicit ReleaseWorkerHolderRunnable(UniquePtr<workers::WorkerHolder>&& aWorkerHolder)
+    : mWorkerHolder(Move(aWorkerHolder))
+  {}
+
+  NS_IMETHOD
+  Run() override
+  {
+    mWorkerHolder = nullptr;
+    return NS_OK;
+  }
+
+  nsresult
+  Cancel() override
+  {
+    return Run();
   }
 
 private:
-  RefPtr<IPCBlobInputStreamChild> mActor;
+  UniquePtr<workers::WorkerHolder> mWorkerHolder;
 };
 
 } // anonymous
@@ -124,7 +139,7 @@ IPCBlobInputStreamChild::IPCBlobInputStreamChild(const nsID& aID,
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     if (workerPrivate) {
       UniquePtr<WorkerHolder> workerHolder(
-        new IPCBlobInputStreamWorkerHolder(this));
+        new IPCBlobInputStreamWorkerHolder());
       if (workerHolder->HoldWorker(workerPrivate, Canceling)) {
         mWorkerHolder.swap(workerHolder);
       }
@@ -306,6 +321,12 @@ IPCBlobInputStreamChild::Migrated()
 {
   MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mState == eInactiveMigrating);
+
+  if (mWorkerHolder) {
+    RefPtr<ReleaseWorkerHolderRunnable> runnable =
+      new ReleaseWorkerHolderRunnable(Move(mWorkerHolder));
+    mOwningThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  }
 
   mOwningThread = NS_GetCurrentThread();
   MOZ_ASSERT(IPCBlobInputStreamThread::IsOnFileThread(mOwningThread));
