@@ -18,7 +18,6 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessHangMonitorIPC.h"
-#include "mozilla/SandboxSettings.h"
 #include "mozilla/Unused.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperChild.h"
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"
@@ -1343,7 +1342,7 @@ GetDirectoryPath(const char *aPath) {
 static bool
 StartMacOSContentSandbox()
 {
-  int sandboxLevel = GetEffectiveContentSandboxLevel();
+  int sandboxLevel = Preferences::GetInt("security.sandbox.content.level");
   if (sandboxLevel < 1) {
     return false;
   }
