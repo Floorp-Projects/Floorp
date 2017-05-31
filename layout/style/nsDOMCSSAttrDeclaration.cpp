@@ -73,6 +73,7 @@ nsresult
 nsDOMCSSAttributeDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl)
 {
   NS_ASSERTION(mElement, "Must have Element to set the declaration!");
+  aDecl->SetDirty();
   return mIsSMILOverride
     ? mElement->SetSMILOverrideStyleDeclaration(aDecl, true)
     : mElement->SetInlineStyleDeclaration(aDecl, nullptr, true);

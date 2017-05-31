@@ -74,27 +74,27 @@ treecol {
 }
 
 #category-general > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#general");
+  list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#general");
 }
 
 #category-application > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#content");
+  list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#content");
 }
 
 #category-privacy > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#security");
+  list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#security");
 }
 
 #category-sync > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#sync");
+  list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#sync");
 }
 
 #category-advanced > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#advanced");
+  list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#advanced");
 }
 
 #category-search-results > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#searchResults");
+  list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#searchResults");
 }
 
 @media (max-width: 800px) {

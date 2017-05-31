@@ -1,0 +1,56 @@
+/* - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../../shared/incontentprefs/preferences.inc.css
+
+@media (-moz-windows-default-theme: 0) {
+  #category-general > .category-icon {
+    list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#general-native");
+  }
+
+  #category-application > .category-icon {
+    list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#applications-native");
+  }
+
+  #category-privacy > .category-icon {
+    list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#privacy-native");
+  }
+
+  #category-sync > .category-icon {
+    list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#sync-native");
+  }
+
+  #category-advanced > .category-icon {
+    list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#advanced-native");
+  }
+
+  #category-search-results > .category-icon {
+    list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#searchResults-native");
+  }
+}
+
+.actionsMenu > .menulist-label-box > .menulist-icon {
+  margin-inline-end: 9px;
+}
+
+textbox + button,
+filefield + button {
+  margin-inline-start: -4px;
+}
+
+#advancedPrefs {
+  padding-bottom: 0; /* override padding from normal preferences.css */
+}
+
+#fxaProfileImage {
+  -moz-user-focus: normal;
+}
+
+/**
+ * Dialog
+ */
+
+#dialogTitle {
+  font-size: 1em;
+}

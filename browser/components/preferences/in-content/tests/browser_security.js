@@ -20,7 +20,7 @@ registerCleanupFunction(function() {
 // only use one tab (instead of opening/closing for each test) for all
 // to help improve test times on debug builds.
 add_task(async function setup() {
-  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await openPreferencesViaOpenPreferencesAPI("security", undefined, { leaveOpen: true });
   registerCleanupFunction(async function() {
     await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
@@ -45,8 +45,7 @@ add_task(async function() {
     is(blockDownloads.hasAttribute("disabled"), !checked, "block downloads checkbox is set correctly");
     is(blockUncommon.hasAttribute("disabled"), !checked, "block uncommon checkbox is set correctly");
 
-    // scroll the checkbox into the viewport and click checkbox
-    checkbox.scrollIntoView();
+    // click the checkbox
     EventUtils.synthesizeMouseAtCenter(checkbox, {}, gBrowser.selectedBrowser.contentWindow);
 
     // check that both settings are now turned on or off
@@ -83,8 +82,7 @@ add_task(async function() {
     // should be disabled when val is false (= pref is turned off)
     is(blockUncommon.hasAttribute("disabled"), !val, "block uncommon checkbox is set correctly");
 
-    // scroll the checkbox into view, otherwise the synthesizeMouseAtCenter will be ignored, and click it
-    checkbox.scrollIntoView();
+    // click the checkbox
     EventUtils.synthesizeMouseAtCenter(checkbox, {}, gBrowser.selectedBrowser.contentWindow);
 
     // check that setting is now turned on or off
@@ -93,7 +91,6 @@ add_task(async function() {
 
     // check if the uncommon warning checkbox has updated
     is(blockUncommon.hasAttribute("disabled"), val, "block uncommon checkbox is set correctly");
-
   }
 
   await checkPrefSwitch(true);
@@ -114,8 +111,7 @@ add_task(async function() {
     let checked = checkbox.checked;
     is(checked, val1 && val2, "unwanted/uncommon preference is initialized correctly");
 
-    // scroll the checkbox into view, otherwise the synthesizeMouseAtCenter will be ignored, and click it
-    checkbox.scrollIntoView();
+    // click the checkbox
     EventUtils.synthesizeMouseAtCenter(checkbox, {}, gBrowser.selectedBrowser.contentWindow);
 
     // check that both settings are now turned on or off
@@ -133,7 +129,6 @@ add_task(async function() {
     let sortedMalware = malwareTable.slice(0);
     sortedMalware.sort();
     Assert.deepEqual(malwareTable, sortedMalware, "malware table has been sorted");
-
   }
 
   await checkPrefSwitch(true, true);

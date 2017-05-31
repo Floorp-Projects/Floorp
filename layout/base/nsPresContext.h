@@ -904,9 +904,6 @@ public:
                                 nsIFrame * aFrame);
 #endif
 
-  void RestyledElement() {
-    ++mElementsRestyled;
-  }
   void ConstructedFrame() {
     ++mFramesConstructed;
   }
@@ -914,9 +911,6 @@ public:
     ++mFramesReflowed;
   }
 
-  uint64_t ElementsRestyledCount() {
-    return mElementsRestyled;
-  }
   uint64_t FramesConstructedCount() {
     return mFramesConstructed;
   }

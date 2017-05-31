@@ -10249,7 +10249,8 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue,
     UngetToken();
 
     // <angle> ,
-    if (ParseSingleTokenVariant(cssGradient->mAngle, VARIANT_ANGLE, nullptr) &&
+    if (ParseSingleTokenVariant(cssGradient->mAngle,
+                                VARIANT_ANGLE_OR_ZERO, nullptr) &&
         !ExpectSymbol(',', true)) {
       SkipUntil(')');
       return false;
