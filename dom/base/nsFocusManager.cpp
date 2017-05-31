@@ -1569,7 +1569,7 @@ nsFocusManager::CheckIfFocusable(nsIContent* aContent, uint32_t aFlags)
 
   // Make sure that our frames are up to date
   mEventHandlingNeedsFlush = false;
-  doc->FlushPendingNotifications(FlushType::Layout);
+  doc->FlushPendingNotifications(FlushType::Frames);
 
   nsIPresShell *shell = doc->GetShell();
   if (!shell)
