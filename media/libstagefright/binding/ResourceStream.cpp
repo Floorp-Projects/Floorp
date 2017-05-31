@@ -30,7 +30,7 @@ ResourceStream::ReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
     uint64_t offset = aOffset + sum;
     char* buffer = reinterpret_cast<char*>(aBuffer) + sum;
     uint32_t toRead = aCount - sum;
-    nsresult rv = mResource->ReadAt(offset, buffer, toRead, &bytesRead);
+    nsresult rv = mResource.ReadAt(offset, buffer, toRead, &bytesRead);
     if (NS_FAILED(rv)) {
       return false;
     }
@@ -45,8 +45,8 @@ bool
 ResourceStream::CachedReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
                         size_t* aBytesRead)
 {
-  nsresult rv = mResource->ReadFromCache(reinterpret_cast<char*>(aBuffer),
-                                         aOffset, aCount);
+  nsresult rv = mResource.GetResource()->ReadFromCache(
+    reinterpret_cast<char*>(aBuffer), aOffset, aCount);
   if (NS_FAILED(rv)) {
     *aBytesRead = 0;
     return false;
@@ -58,9 +58,9 @@ ResourceStream::CachedReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
 bool
 ResourceStream::Length(int64_t* aSize)
 {
-  if (mResource->GetLength() < 0)
+  if (mResource.GetLength() < 0)
     return false;
-  *aSize = mResource->GetLength();
+  *aSize = mResource.GetLength();
   return true;
 }
 
