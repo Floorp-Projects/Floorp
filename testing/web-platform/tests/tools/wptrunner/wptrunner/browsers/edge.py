@@ -51,7 +51,7 @@ class EdgeBrowser(Browser):
         self.webdriver_host = "localhost"
         self.webdriver_port = self.server.port
 
-    def start(self, **kwargs):
+    def start(self):
         print self.server.url
         self.server.start()
 
