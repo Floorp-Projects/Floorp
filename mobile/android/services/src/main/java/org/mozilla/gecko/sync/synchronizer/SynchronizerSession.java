@@ -122,6 +122,18 @@ implements RecordsChannelDelegate,
     return numInboundRecords.get();
   }
 
+  public int getInboundCountStored() {
+    return numInboundRecordsStored.get();
+  }
+
+  public int getInboundCountFailed() {
+    return numInboundRecordsFailed.get();
+  }
+
+  public int getInboundCountReconciled() {
+    return numInboundRecordsReconciled.get();
+  }
+
   /**
    * Get the number of records fetched from the second repository (usually the
    * local store, hence outbound).
@@ -160,7 +172,12 @@ implements RecordsChannelDelegate,
    */
   public synchronized void synchronize() {
     numInboundRecords.set(-1);
+    numInboundRecordsStored.set(-1);
+    numInboundRecordsFailed.set(-1);
+    numInboundRecordsReconciled.set(-1);
     numOutboundRecords.set(-1);
+    numOutboundRecordsStored.set(-1);
+    numOutboundRecordsFailed.set(-1);
 
     // First thing: decide whether we should.
     if (sessionA.shouldSkip() ||
@@ -240,6 +257,9 @@ implements RecordsChannelDelegate,
     pendingATimestamp = fetchEnd;
     storeEndBTimestamp = storeEnd;
     numInboundRecords.set(recordsChannel.getFetchCount());
+    numInboundRecordsStored.set(recordsChannel.getStoreAcceptedCount());
+    numInboundRecordsFailed.set(recordsChannel.getStoreFailureCount());
+    numInboundRecordsReconciled.set(recordsChannel.getStoreReconciledCount());
     flowAToBCompleted = true;
     channelBToA.flow();
   }
@@ -259,6 +279,8 @@ implements RecordsChannelDelegate,
     pendingBTimestamp = fetchEnd;
     storeEndATimestamp = storeEnd;
     numOutboundRecords.set(recordsChannel.getFetchCount());
+    numOutboundRecordsStored.set(recordsChannel.getStoreAcceptedCount());
+    numOutboundRecordsFailed.set(recordsChannel.getStoreFailureCount());
     flowBToACompleted = true;
 
     // Finish the two sessions.

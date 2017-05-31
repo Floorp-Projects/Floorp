@@ -15,6 +15,7 @@ import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
+import org.mozilla.gecko.sync.telemetry.TelemetryCollector;
 
 import java.io.IOException;
 
@@ -30,7 +31,7 @@ public class MockPrefsGlobalSession extends GlobalSession {
       ClientsDataDelegate clientsDelegate)
       throws SyncConfigurationException, IllegalArgumentException, IOException,
       NonObjectJSONException {
-    super(config, callback, context, clientsDelegate);
+    super(config, callback, context, clientsDelegate, new TelemetryCollector());
   }
 
   public static MockPrefsGlobalSession getSession(

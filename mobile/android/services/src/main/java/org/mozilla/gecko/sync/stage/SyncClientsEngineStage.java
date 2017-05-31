@@ -276,6 +276,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
           // Only need to store record if it isn't our local one.
           wipeAndStore(r);
           addCommands(r);
+          telemetryStageCollector.getSyncCollector().addDevice(r);
         }
         RepoUtils.logClient(r);
       } catch (Exception e) {

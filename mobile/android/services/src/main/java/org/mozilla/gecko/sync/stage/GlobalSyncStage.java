@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.mozilla.gecko.sync.GlobalSession;
+import org.mozilla.gecko.sync.telemetry.TelemetryStageCollector;
 
 
 public interface GlobalSyncStage {
@@ -80,7 +81,7 @@ public interface GlobalSyncStage {
     }
   }
 
-  public void execute(GlobalSession session) throws NoSuchStageException;
+  void execute(GlobalSession session, TelemetryStageCollector telemetryStageCollector) throws NoSuchStageException;
   public void resetLocal(GlobalSession session);
   public void wipeLocal(GlobalSession session) throws Exception;
 
