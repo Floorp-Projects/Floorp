@@ -99,7 +99,7 @@ public:
 
   nsresult CopyInnerTo(Element* aDest, bool aPreallocateChildren);
 
-  void MaybeLoadImage();
+  void MaybeLoadImage(bool aAlwaysForceLoad);
 
   bool IsMap()
   {

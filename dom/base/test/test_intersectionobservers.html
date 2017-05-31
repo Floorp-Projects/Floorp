@@ -779,7 +779,7 @@ limitations under the License.
             spy.waitForNotification(function() {
               var records = sortRecords(spy.lastCall.args[0]);
               expect(records.length).to.be(1);
-              expect(records[0].intersectionRatio).to.be(0);
+              expect(records[0].intersectionRatio).to.be(1);
               expect(records[0].isIntersecting).to.be.ok();
               done();
             });
