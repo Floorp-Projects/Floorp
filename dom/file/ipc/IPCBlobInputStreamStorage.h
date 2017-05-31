@@ -8,7 +8,7 @@
 #define mozilla_dom_ipc_IPCBlobInputStreamStorage_h
 
 #include "mozilla/RefPtr.h"
-#include "nsInterfaceHashtable.h"
+#include "nsClassHashtable.h"
 #include "nsISupportsImpl.h"
 
 class nsIInputStream;
@@ -16,6 +16,8 @@ struct nsID;
 
 namespace mozilla {
 namespace dom {
+
+class IPCBlobInputStreamParentCallback;
 
 class IPCBlobInputStreamStorage final
 {
@@ -38,10 +40,23 @@ public:
   void
   GetStream(const nsID& aID, nsIInputStream** aInputStream);
 
+  void
+  StoreCallback(const nsID& aID, IPCBlobInputStreamParentCallback* aCallback);
+
+  already_AddRefed<IPCBlobInputStreamParentCallback>
+  TakeCallback(const nsID& aID);
+
 private:
+  IPCBlobInputStreamStorage();
   ~IPCBlobInputStreamStorage();
 
-  nsInterfaceHashtable<nsIDHashKey, nsIInputStream> mStorage;
+  struct StreamData
+  {
+    nsCOMPtr<nsIInputStream> mInputStream;
+    RefPtr<IPCBlobInputStreamParentCallback> mCallback;
+  };
+
+  nsClassHashtable<nsIDHashKey, StreamData> mStorage;
 };
 
 } // namespace dom
