@@ -37,16 +37,23 @@ SourceBufferResource::Close()
 }
 
 nsresult
-SourceBufferResource::ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes)
+SourceBufferResource::ReadAt(int64_t aOffset,
+                             char* aBuffer,
+                             uint32_t aCount,
+                             uint32_t* aBytes)
 {
   SBR_DEBUG("ReadAt(aOffset=%" PRId64 ", aBuffer=%p, aCount=%u, aBytes=%p)",
             aOffset, aBytes, aCount, aBytes);
   ReentrantMonitorAutoEnter mon(mMonitor);
-  return ReadAtInternal(aOffset, aBuffer, aCount, aBytes, /* aMayBlock = */ true);
+  return ReadAtInternal(
+    aOffset, aBuffer, aCount, aBytes, /* aMayBlock = */ true);
 }
 
 nsresult
-SourceBufferResource::ReadAtInternal(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes,
+SourceBufferResource::ReadAtInternal(int64_t aOffset,
+                                     char* aBuffer,
+                                     uint32_t aCount,
+                                     uint32_t* aBytes,
                                      bool aMayBlock)
 {
   mMonitor.AssertCurrentThreadIn();
@@ -79,8 +86,13 @@ SourceBufferResource::ReadAtInternal(int64_t aOffset, char* aBuffer, uint32_t aC
   // the position we're up to in the stream.
   mOffset = aOffset + count;
 
-  SBR_DEBUGV("offset=%" PRId64 " GetLength()=%" PRId64 " available=%u count=%u mEnded=%d",
-             aOffset, GetLength(), available, count, mEnded);
+  SBR_DEBUGV("offset=%" PRId64 " GetLength()=%" PRId64
+             " available=%u count=%u mEnded=%d",
+             aOffset,
+             GetLength(),
+             available,
+             count,
+             mEnded);
   if (available == 0) {
     SBR_DEBUGV("reached EOF");
     *aBytes = 0;
@@ -94,13 +106,16 @@ SourceBufferResource::ReadAtInternal(int64_t aOffset, char* aBuffer, uint32_t aC
 }
 
 nsresult
-SourceBufferResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount)
+SourceBufferResource::ReadFromCache(char* aBuffer,
+                                    int64_t aOffset,
+                                    uint32_t aCount)
 {
   SBR_DEBUG("ReadFromCache(aBuffer=%p, aOffset=%" PRId64 ", aCount=%u)",
             aBuffer, aOffset, aCount);
   ReentrantMonitorAutoEnter mon(mMonitor);
   uint32_t bytesRead;
-  nsresult rv = ReadAtInternal(aOffset, aBuffer, aCount, &bytesRead, /* aMayBlock = */ false);
+  nsresult rv = ReadAtInternal(
+    aOffset, aBuffer, aCount, &bytesRead, /* aMayBlock = */ false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // ReadFromCache return failure if not all the data is cached.
@@ -108,7 +123,8 @@ SourceBufferResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCo
 }
 
 uint32_t
-SourceBufferResource::EvictData(uint64_t aPlaybackOffset, int64_t aThreshold,
+SourceBufferResource::EvictData(uint64_t aPlaybackOffset,
+                                int64_t aThreshold,
                                 ErrorResult& aRv)
 {
   SBR_DEBUG("EvictData(aPlaybackOffset=%" PRIu64 ","
