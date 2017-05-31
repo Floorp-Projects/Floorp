@@ -191,9 +191,20 @@ struct MOZ_STACK_CLASS BytecodeEmitter
         BytecodeVector code;        /* bytecode */
         SrcNotesVector notes;       /* source notes, see below */
         ptrdiff_t   lastNoteOffset; /* code offset for last source note */
-        uint32_t    currentLine;    /* line number for tree-based srcnote gen */
-        uint32_t    lastColumn;     /* zero-based column index on currentLine of
-                                       last SRC_COLSPAN-annotated opcode */
+
+        // Line number for srcnotes.
+        //
+        // WARNING: If this becomes out of sync with already-emitted srcnotes,
+        // we can get undefined behavior.
+        uint32_t    currentLine;
+
+        // Zero-based column index on currentLine of last SRC_COLSPAN-annotated
+        // opcode.
+        //
+        // WARNING: If this becomes out of sync with already-emitted srcnotes,
+        // we can get undefined behavior.
+        uint32_t    lastColumn;
+
         JumpTarget lastTarget;      // Last jump target emitted.
 
         EmitSection(JSContext* cx, uint32_t lineNum)
