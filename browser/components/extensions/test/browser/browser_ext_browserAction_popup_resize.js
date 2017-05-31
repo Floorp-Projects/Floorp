@@ -148,11 +148,11 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
 
   // Test the PanelUI panel for a menu panel button.
   let widget = getBrowserActionWidget(extension);
-  CustomizableUI.addWidgetToArea(widget.id, CustomizableUI.AREA_PANEL);
+  CustomizableUI.addWidgetToArea(widget.id, getCustomizableUIPanelID());
 
   let browser = await openPanel(extension, browserWin);
 
-  let {panel} = browserWin.PanelUI;
+  let panel = gPhotonStructure ? browserWin.PanelUI.overflowPanel : browserWin.PanelUI.panel;
   let origPanelRect = panel.getBoundingClientRect();
 
   // Check that the panel is still positioned as expected.
@@ -276,7 +276,7 @@ add_task(async function testBrowserActionMenuResizeQuirks() {
 // rather than below, its button.
 add_task(async function testBrowserActionMenuResizeBottomArrow() {
   const WIDTH = 800;
-  const HEIGHT = 300;
+  const HEIGHT = 80;
 
   let left = screen.availLeft + screen.availWidth - WIDTH;
   let top = screen.availTop + screen.availHeight - HEIGHT;
