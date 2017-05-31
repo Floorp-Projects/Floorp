@@ -15,6 +15,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://formautofill/FormAutofillContent.jsm");
+Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
 /**
  * Handles content's interactions for the frame.
@@ -40,7 +41,7 @@ var FormAutofillFrameScript = {
     switch (evt.type) {
       case "focusin": {
         let element = evt.target;
-        if (!(element instanceof Ci.nsIDOMHTMLInputElement)) {
+        if (!FormAutofillUtils.isFieldEligibleForAutofill(element)) {
           return;
         }
         FormAutofillContent.identifyAutofillFields(element.ownerDocument);

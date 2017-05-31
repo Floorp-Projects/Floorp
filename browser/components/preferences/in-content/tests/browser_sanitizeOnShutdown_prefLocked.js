@@ -28,12 +28,12 @@ add_task(function setup() {
 });
 
 add_task(async function test_preference_enabled_when_unlocked() {
-  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("panePrivacy", undefined, {leaveOpen: true});
   testPrefStateMatchesLockedState();
 });
 
 add_task(async function test_preference_disabled_when_locked() {
   Services.prefs.lockPref("privacy.sanitize.sanitizeOnShutdown");
-  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("panePrivacy", undefined, {leaveOpen: true});
   testPrefStateMatchesLockedState();
 });

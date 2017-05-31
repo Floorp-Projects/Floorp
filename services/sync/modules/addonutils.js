@@ -395,105 +395,21 @@ AddonUtilsInternal.prototype = {
   /**
    * Update the user disabled flag for an add-on.
    *
-   * The supplied callback will be called when the operation is
-   * complete. If the new flag matches the existing or if the add-on
-   * isn't currently active, the function will fire the callback
-   * immediately. Else, the callback is invoked when the AddonManager
-   * reports the change has taken effect or has been registered.
-   *
-   * The callback receives as arguments:
-   *
-   *   (Error) Encountered error during operation or null on success.
-   *   (Addon) The add-on instance being operated on.
+   * If the new flag matches the existing or if the add-on
+   * isn't currently active, the function will return immediately.
    *
    * @param addon
    *        (Addon) Add-on instance to operate on.
    * @param value
    *        (bool) New value for add-on's userDisabled property.
-   * @param cb
-   *        (function) Callback to be invoked on completion.
    */
-  updateUserDisabled: function updateUserDisabled(addon, value, cb) {
+  updateUserDisabled(addon, value) {
     if (addon.userDisabled == value) {
-      cb(null, addon);
       return;
-    }
-
-    let listener = {
-      onEnabling: (wrapper, needsRestart) => {
-        this._log.debug("onEnabling: " + wrapper.id);
-        if (wrapper.id != addon.id) {
-          return;
-        }
-
-        // We ignore the restartless case because we'll get onEnabled shortly.
-        if (!needsRestart) {
-          return;
-        }
-
-        AddonManager.removeAddonListener(listener);
-        cb(null, wrapper);
-      },
-
-      onEnabled: wrapper => {
-        this._log.debug("onEnabled: " + wrapper.id);
-        if (wrapper.id != addon.id) {
-          return;
-        }
-
-        AddonManager.removeAddonListener(listener);
-        cb(null, wrapper);
-      },
-
-      onDisabling: (wrapper, needsRestart) => {
-        this._log.debug("onDisabling: " + wrapper.id);
-        if (wrapper.id != addon.id) {
-          return;
-        }
-
-        if (!needsRestart) {
-          return;
-        }
-
-        AddonManager.removeAddonListener(listener);
-        cb(null, wrapper);
-      },
-
-      onDisabled: wrapper => {
-        this._log.debug("onDisabled: " + wrapper.id);
-        if (wrapper.id != addon.id) {
-          return;
-        }
-
-        AddonManager.removeAddonListener(listener);
-        cb(null, wrapper);
-      },
-
-      onOperationCancelled: wrapper => {
-        this._log.debug("onOperationCancelled: " + wrapper.id);
-        if (wrapper.id != addon.id) {
-          return;
-        }
-
-        AddonManager.removeAddonListener(listener);
-        cb(new Error("Operation cancelled"), wrapper);
-      }
-    };
-
-    // The add-on listeners are only fired if the add-on is active. If not, the
-    // change is silently updated and made active when/if the add-on is active.
-
-    if (!addon.appDisabled) {
-      AddonManager.addAddonListener(listener);
     }
 
     this._log.info("Updating userDisabled flag: " + addon.id + " -> " + value);
     addon.userDisabled = !!value;
-
-    if (!addon.appDisabled) {
-      cb(null, addon);
-    }
-    // Else the listener will handle invoking the callback.
   },
 
 };

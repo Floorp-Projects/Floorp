@@ -43,6 +43,7 @@ include protocol PURLClassifierLocal;
 include protocol PVRManager;
 include protocol PVideoDecoderManager;
 include protocol PFlyWebPublishedServer;
+include protocol PProfiler;
 include protocol PScriptCache;
 include DOMTypes;
 include JavaScriptTypes;
@@ -56,7 +57,6 @@ include PBackgroundSharedTypes;
 include PContentPermission;
 include ServiceWorkerConfiguration;
 include GraphicsMessages;
-include ProfilerTypes;
 include MemoryReportTypes;
 
 // Workaround to prevent error if PContentChild.cpp & PContentBridgeParent.cpp
@@ -348,6 +348,7 @@ child:
     async InitGMPService(Endpoint<PGMPServiceChild> service);
     async InitProcessHangMonitor(Endpoint<PProcessHangMonitorChild> hangMonitor);
     async InitContentBridgeChild(Endpoint<PContentBridgeChild> endpoint);
+    async InitProfiler(Endpoint<PProfilerChild> aEndpoint);
 
     // Give the content process its endpoints to the compositor.
     async InitRendering(
@@ -502,15 +503,6 @@ child:
      * init has completed.
      */
     async LoadPluginResult(uint32_t aPluginId, bool aResult);
-
-    /**
-     * Control the Gecko Profiler in the child process.
-     */
-    async StartProfiler(ProfilerInitParams params);
-    async StopProfiler();
-    async PauseProfiler(bool aPause);
-
-    async GatherProfile();
 
     async InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action);
 
@@ -982,7 +974,7 @@ parent:
     async PContentPermissionRequest(PermissionRequest[] aRequests, Principal aPrincipal,
                                     TabId tabId);
 
-    async Profile(nsCString aProfile, bool aIsExitProfile);
+    async ShutdownProfile(nsCString aProfile);
 
     /**
      * Request graphics initialization information from the parent.

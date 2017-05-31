@@ -449,10 +449,8 @@ var FormAutofillContent = {
     let forms = [];
 
     // Collects root forms from inputs.
-    for (let field of doc.getElementsByTagName("input")) {
-      // We only consider text-like fields for now until we support radio and
-      // checkbox buttons in the future.
-      if (!field.mozIsTextField(true)) {
+    for (let field of FormAutofillUtils.autofillFieldSelector(doc)) {
+      if (!FormAutofillUtils.isFieldEligibleForAutofill(field)) {
         continue;
       }
 
@@ -491,7 +489,9 @@ var FormAutofillContent = {
   },
 
   _markAsAutofillField(field) {
-    if (!field) {
+    // Since Form Autofill popup is only for input element, any non-Input
+    // element should be excluded here.
+    if (!field || !(field instanceof Ci.nsIDOMHTMLInputElement)) {
       return;
     }
 

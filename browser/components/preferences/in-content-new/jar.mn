@@ -1,0 +1,16 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+   content/browser/preferences/in-content-new/preferences.js
+*  content/browser/preferences/in-content-new/preferences.xul
+   content/browser/preferences/in-content-new/subdialogs.js
+
+   content/browser/preferences/in-content-new/main.js
+   content/browser/preferences/in-content-new/privacy.js
+   content/browser/preferences/in-content-new/containers.js
+   content/browser/preferences/in-content-new/advanced.js
+   content/browser/preferences/in-content-new/applications.js
+   content/browser/preferences/in-content-new/sync.js
+   content/browser/preferences/in-content-new/findInPage.js

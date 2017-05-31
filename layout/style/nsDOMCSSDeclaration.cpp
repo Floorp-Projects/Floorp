@@ -317,7 +317,17 @@ nsDOMCSSDeclaration::ModifyDeclaration(GeckoFunc aGeckoFunc,
   // between when we mutate the declaration and when we set the new
   // rule (see stack in bug 209575).
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
-  RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
+  RefPtr<DeclarationBlock> decl;
+  if (olddecl->IsServo() && !olddecl->IsDirty()) {
+    // In stylo, the old DeclarationBlock is stored in element's rule node tree
+    // directly, to avoid new values replacing the DeclarationBlock in the tree
+    // directly, we need to copy the old one here if we haven't yet copied.
+    // As a result the new value does not replace rule node tree until traversal
+    // happens.
+    decl = olddecl->Clone();
+  } else {
+    decl = olddecl->EnsureMutable();
+  }
 
   bool changed;
   if (decl->IsGecko()) {

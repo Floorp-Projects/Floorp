@@ -8,12 +8,12 @@ registerCleanupFunction(function() {
 });
 
 add_task(async function() {
-  let prefs = await openPreferencesViaOpenPreferencesAPI("panePrivacy", {leaveOpen: true});
-  is(prefs.selectedPane, "panePrivacy", "Privacy pane was selected");
+  let prefs = await openPreferencesViaOpenPreferencesAPI("paneContent", undefined, {leaveOpen: true});
+  is(prefs.selectedPane, "paneContent", "Content pane was selected");
 
   let doc = gBrowser.contentDocument;
-  let notificationsDoNotDisturbBox = doc.getElementById("notificationsDoNotDisturbBox");
-  if (notificationsDoNotDisturbBox.hidden) {
+  let notificationsDoNotDisturbRow = doc.getElementById("notificationsDoNotDisturbRow");
+  if (notificationsDoNotDisturbRow.hidden) {
     todo(false, "Do not disturb is not available on this platform");
     return;
   }

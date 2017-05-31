@@ -18,7 +18,7 @@
 <hbox hidden="true"
       class="container-header-links"
       data-category="paneContainers">
-  <label class="text-link" id="backContainersLink">&backLink.label;</label>
+  <label class="text-link" id="backContainersLink" value="&backLink.label;" />
 </hbox>
 
 <hbox id="header-containers"
@@ -26,6 +26,8 @@
       hidden="true"
       data-category="paneContainers">
   <label class="header-name" flex="1">&paneContainers.title;</label>
+  <button class="help-button"
+          aria-label="&helpButton.label;"/>
 </hbox>
 
 <!-- Containers -->

@@ -1,0 +1,29 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include ProfilerTypes;
+
+namespace mozilla {
+
+// PProfiler is a top-level protocol. It is used to let the main process
+// control the Gecko Profiler in other processes, and request profiles from
+// those processes.
+// It is a top-level protocol so that its child endpoint can be on a
+// background thread, so that profiles can be gathered even if the main thread
+// is unresponsive.
+async protocol PProfiler
+{
+child:
+  async Start(ProfilerInitParams params);
+  async Stop();
+  async Pause();
+  async Resume();
+
+  async GatherProfile() returns (nsCString profile);
+};
+
+} // namespace mozilla
+

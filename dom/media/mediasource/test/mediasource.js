@@ -1,7 +1,9 @@
 // Helpers for Media Source Extensions tests
 
 var gMSETestPrefs = [
-  [ "media.mediasource.enabled", true ]
+  [ "media.mediasource.enabled", true ],
+  ['media.audio-max-decode-error', 0],
+  ['media.video-max-decode-error', 0],
 ];
 
 // Called before runWithMSE() to set the prefs before running MSE tests.

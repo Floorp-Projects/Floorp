@@ -14,7 +14,7 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line2"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // TODO: select, state
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // state
 
         // TODO: telphone relative fields should be fixed:
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
@@ -40,7 +40,7 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line2"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // TODO: select, state
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // state
 
         // TODO: telphone relative fields should be fixed:
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
