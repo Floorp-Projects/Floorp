@@ -1385,30 +1385,6 @@ RemoteWindowContext::OpenURI(nsIURI* aURI)
 
 } // namespace
 
-bool
-ContentParent::SetPriorityAndCheckIsAlive(ProcessPriority aPriority)
-{
-  ProcessPriorityManager::SetProcessPriority(this, aPriority);
-
-  // Now that we've set this process's priority, check whether the process is
-  // still alive.  Hopefully we've set the priority to FOREGROUND*, so the
-  // process won't unexpectedly crash after this point!
-  //
-  // Bug 943174: use waitid() with WNOWAIT so that, if the process
-  // did exit, we won't consume its zombie and confuse the
-  // GeckoChildProcessHost dtor.
-#ifdef MOZ_WIDGET_GONK
-  siginfo_t info;
-  info.si_pid = 0;
-  if (waitid(P_PID, Pid(), &info, WNOWAIT | WNOHANG | WEXITED) == 0
-    && info.si_pid != 0) {
-    return false;
-  }
-#endif
-
-  return true;
-}
-
 void
 ContentParent::ShutDownProcess(ShutDownMethod aMethod)
 {
