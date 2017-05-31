@@ -56,13 +56,7 @@
     {
       this.invoke = function loadOneTab_invoke()
       {
-        tabBrowser().loadOneTab(aURI, {
-          referrerURI: null,
-          charset: null,
-          postData: null,
-          inBackground: false,
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-        });
+        tabBrowser().loadOneTab(aURI, null, null, null, false);
       }
 
       this.eventSeq = [
