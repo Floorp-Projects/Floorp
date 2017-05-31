@@ -3145,7 +3145,7 @@ nsIDocument::PrerenderHref(nsIURI* aHref)
   tabChild->GetWebBrowserChrome(getter_AddRefs(wbc3));
   NS_ENSURE_TRUE(wbc3, false);
 
-  rv = wbc3->StartPrerenderingDocument(aHref, referrer);
+  rv = wbc3->StartPrerenderingDocument(aHref, referrer, NodePrincipal());
   NS_ENSURE_SUCCESS(rv, false);
 
   return true;
