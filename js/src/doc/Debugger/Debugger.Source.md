@@ -122,11 +122,16 @@ from its prototype:
 
     This property is writable, so you can change the source map URL by
     setting it. All Debugger.Source objects referencing the same
-    source will see the change. Setting an empty string has no affect
+    source will see the change. Setting an empty string has no effect
     and will not change existing value.
 
     **If the instance refers to WebAssembly code**, `null`. Attempts to write
     to this property throw a `TypeError`.
+
+`displayURL`
+:   If the script had a special `//# sourceURL` comment, as described in
+    the source maps specification, then this property's value holds
+    the string that was given.  Otherwise, this is `null`.
 
 `element`
 :   The [`Debugger.Object`][object] instance referring to the DOM element to which
