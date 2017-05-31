@@ -28,9 +28,6 @@ FrameProperties::SetInternal(UntypedDescriptor aProperty, void* aValue,
   }
 
   mProperties.AppendElement(PropertyValue(aProperty, aValue));
-#ifdef DEBUG
-  mMaxLength = std::max<uint32_t>(mMaxLength, mProperties.Length());
-#endif
 }
 
 void
@@ -40,9 +37,6 @@ FrameProperties::AddInternal(UntypedDescriptor aProperty, void* aValue)
   MOZ_ASSERT(aProperty, "Null property?");
 
   mProperties.AppendElement(PropertyValue(aProperty, aValue));
-#ifdef DEBUG
-  mMaxLength = std::max<uint32_t>(mMaxLength, mProperties.Length());
-#endif
 }
 
 void*
