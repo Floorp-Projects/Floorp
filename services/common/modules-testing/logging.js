@@ -45,6 +45,10 @@ this.initTestLogging = function initTestLogging(level) {
   log.ownAppenders = [appender];
   log.updateAppenders();
 
+  // SQLite logging is noisy in these tests - we make it quiet by default
+  // (although individual tests are free to bump it later)
+  Log.repository.getLogger("Sqlite").level = Log.Level.Info;
+
   return logStats;
 }
 
