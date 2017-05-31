@@ -2,7 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from .structuredlog import get_default_logger
+from multiprocessing import Queue
+from threading import Thread
+
+from .structuredlog import get_default_logger, StructuredLogger
 
 
 class ProxyLogger(object):
@@ -33,3 +36,43 @@ def get_proxy_logger(component=None):
     Returns a :class:`ProxyLogger` for the given component.
     """
     return ProxyLogger(component)
+
+
+class QueuedProxyLogger(StructuredLogger):
+    """Logger that logs via a queue.
+
+    This is intended for multiprocessing use cases where there are
+    some subprocesses which want to share a log handler with the main thread,
+    without the overhead of having a multiprocessing lock for all logger
+    access."""
+
+    threads = {}
+
+    def __init__(self, logger):
+        StructuredLogger.__init__(self, logger.name)
+        if logger.name not in self.threads:
+            self.threads[logger.name] = LogQueueThread(Queue(), logger)
+            self.threads[logger.name].start()
+        self.queue = self.threads[logger.name].queue
+
+    def _handle_log(self, data):
+        self.queue.put(data)
+
+
+class LogQueueThread(Thread):
+    def __init__(self, queue, logger):
+        self.queue = queue
+        self.logger = logger
+        Thread.__init__(self, name="Thread-Log")
+        self.daemon = True
+
+    def run(self):
+        while True:
+            try:
+                msg = self.queue.get()
+            except (EOFError, IOError):
+                break
+            if msg is None:
+                break
+            else:
+                self.logger._handle_log(msg)

@@ -6,11 +6,13 @@
 /* import-globals-from subdialogs.js */
 /* import-globals-from advanced.js */
 /* import-globals-from main.js */
+/* import-globals-from search.js */
 /* import-globals-from containers.js */
+/* import-globals-from content.js */
 /* import-globals-from privacy.js */
 /* import-globals-from applications.js */
+/* import-globals-from security.js */
 /* import-globals-from sync.js */
-/* import-globals-from findInPage.js */
 /* import-globals-from ../../../base/content/utilityOverlay.js */
 
 "use strict";
@@ -55,13 +57,14 @@ function init_all() {
 
   gSubDialog.init();
   register_module("paneGeneral", gMainPane);
+  register_module("paneSearch", gSearchPane);
   register_module("panePrivacy", gPrivacyPane);
   register_module("paneContainers", gContainersPane);
   register_module("paneAdvanced", gAdvancedPane);
   register_module("paneApplications", gApplicationsPane);
+  register_module("paneContent", gContentPane);
   register_module("paneSync", gSyncPane);
-  register_module("paneSearchResults", gSearchResultsPane);
-  gSearchResultsPane.init();
+  register_module("paneSecurity", gSecurityPane);
 
   let categories = document.getElementById("categories");
   categories.addEventListener("select", event => gotoPref(event.target.value));
@@ -86,9 +89,13 @@ function init_all() {
   });
   document.dispatchEvent(initFinished);
 
-  let helpButton = document.querySelector(".help-button");
-  let helpUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "preferences";
-  helpButton.setAttribute("href", helpUrl);
+  categories = categories.querySelectorAll("richlistitem.category");
+  for (let category of categories) {
+    let name = internalPrefCategoryNameToFriendlyName(category.value);
+    let helpSelector = `#header-${name} > .help-button`;
+    let helpButton = document.querySelector(helpSelector);
+    helpButton.setAttribute("href", getHelpLinkURL(category.getAttribute("helpTopic")));
+  }
 
   // Wait until initialization of all preferences are complete before
   // notifying observers that the UI is now ready.
@@ -100,25 +107,11 @@ function init_dynamic_padding() {
   let categories = document.getElementById("categories");
   let catPadding = Number.parseInt(getComputedStyle(categories)
                                      .getPropertyValue("padding-top"));
-  let helpButton = document.querySelector(".help-button");
-  let helpButtonCS = getComputedStyle(helpButton);
-  let helpHeight = Number.parseInt(helpButtonCS.height);
-  let helpBottom = Number.parseInt(helpButtonCS.bottom);
-  // Reduce the padding to account for less space, but due
-  // to bug 1357841, the status panel will overlap the link.
-  const reducedHelpButtonBottomFactor = .75;
-  let reducedHelpButtonBottom = helpBottom * reducedHelpButtonBottomFactor;
-  let fullHelpHeight = helpHeight + reducedHelpButtonBottom;
-  let fullHeight = categories.lastElementChild.getBoundingClientRect().bottom +
-                   fullHelpHeight;
+  let fullHeight = categories.lastElementChild.getBoundingClientRect().bottom;
   let mediaRule = `
   @media (max-height: ${fullHeight}px) {
     #categories {
       padding-top: calc(100vh - ${fullHeight - catPadding}px);
-      padding-bottom: ${fullHelpHeight}px;
-    }
-    .help-button {
-      bottom: ${reducedHelpButtonBottom / 2}px;
     }
   }
   `;
@@ -129,16 +122,30 @@ function init_dynamic_padding() {
 }
 
 function telemetryBucketForCategory(category) {
-  category = category.toLowerCase();
   switch (category) {
-    case "applications":
-    case "advanced":
-    case "containers":
     case "general":
+    case "search":
+    case "content":
+    case "applications":
     case "privacy":
+    case "security":
     case "sync":
-    case "searchresults":
       return category;
+    case "advanced":
+      let advancedPaneTabs = document.getElementById("advancedPrefs");
+      switch (advancedPaneTabs.selectedTab.id) {
+        case "generalTab":
+          return "advancedGeneral";
+        case "dataChoicesTab":
+          return "advancedDataChoices";
+        case "networkTab":
+          return "advancedNetwork";
+        case "updateTab":
+          return "advancedUpdates";
+        case "encryptionTab":
+          return "advancedCerts";
+      }
+      // fall-through for unknown.
     default:
       return "unknown";
   }
@@ -150,27 +157,14 @@ function onHashChange() {
 
 function gotoPref(aCategory) {
   let categories = document.getElementById("categories");
-  const kDefaultCategoryInternalName = "paneGeneral";
+  const kDefaultCategoryInternalName = categories.firstElementChild.value;
   let hash = document.location.hash;
-
   let category = aCategory || hash.substr(1) || kDefaultCategoryInternalName;
-  let breakIndex = category.indexOf("-");
-  // Subcategories allow for selecting smaller sections of the preferences
-  // until proper search support is enabled (bug 1353954).
-  let subcategory = breakIndex != -1 && category.substring(breakIndex + 1);
-  if (subcategory) {
-    category = category.substring(0, breakIndex);
-  }
   category = friendlyPrefCategoryNameToInternalName(category);
-  if (category != "paneSearchResults") {
-    gSearchResultsPane.searchInput.value = "";
-    gSearchResultsPane.searchResultsCategory.hidden = true;
-    gSearchResultsPane.findSelection.removeAllRanges();
-  }
 
   // Updating the hash (below) or changing the selected category
   // will re-enter gotoPref.
-  if (gLastHash == category && !subcategory)
+  if (gLastHash == category)
     return;
   let item = categories.querySelector(".category[value=" + category + "]");
   if (!item) {
@@ -186,7 +180,7 @@ function gotoPref(aCategory) {
   }
 
   let friendlyName = internalPrefCategoryNameToFriendlyName(category);
-  if (gLastHash || category != kDefaultCategoryInternalName || subcategory) {
+  if (gLastHash || category != kDefaultCategoryInternalName) {
     document.location.hash = friendlyName;
   }
   // Need to set the gLastHash before setting categories.selectedItem since
@@ -194,38 +188,21 @@ function gotoPref(aCategory) {
   gLastHash = category;
   categories.selectedItem = item;
   window.history.replaceState(category, document.title);
-  search(category, "data-category", subcategory, "data-subcategory");
-
+  search(category, "data-category");
   let mainContent = document.querySelector(".main-content");
   mainContent.scrollTop = 0;
 
   Services.telemetry
-          .getHistogramById("FX_PREFERENCES_CATEGORY_OPENED_V2")
+          .getHistogramById("FX_PREFERENCES_CATEGORY_OPENED")
           .add(telemetryBucketForCategory(friendlyName));
 }
 
-function search(aQuery, aAttribute, aSubquery, aSubAttribute) {
+function search(aQuery, aAttribute) {
   let mainPrefPane = document.getElementById("mainPrefPane");
   let elements = mainPrefPane.children;
   for (let element of elements) {
-    // If the "data-hidden-from-search" is "true", the
-    // element will not get considered during search. This
-    // should only be used when an element is still under
-    // development and should not be shown for any reason.
-    if (element.getAttribute("data-hidden-from-search") != "true") {
-      let attributeValue = element.getAttribute(aAttribute);
-      if (attributeValue == aQuery) {
-        if (!element.classList.contains("header") &&
-             aSubquery && aSubAttribute) {
-          let subAttributeValue = element.getAttribute(aSubAttribute);
-          element.hidden = subAttributeValue != aSubquery;
-        } else {
-          element.hidden = false;
-        }
-      } else {
-        element.hidden = true;
-      }
-    }
+    let attributeValue = element.getAttribute(aAttribute);
+    element.hidden = (attributeValue != aQuery);
   }
 
   let keysets = mainPrefPane.getElementsByTagName("keyset");

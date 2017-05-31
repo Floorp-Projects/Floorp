@@ -22,7 +22,6 @@ jobs:
             tier: 2
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
         worker:
-            implementation: docker-worker
             docker-image: {in-tree: desktop-build}
             max-run-time: 36000
         run:

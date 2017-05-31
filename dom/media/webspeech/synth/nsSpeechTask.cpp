@@ -783,7 +783,7 @@ nsSpeechTask::SetAudioOutputVolume(float aVolume)
   if (mStream && !mStream->IsDestroyed()) {
     mStream->SetAudioOutputVolume(this, aVolume);
   }
-  if (mIndirectAudio) {
+  if (mIndirectAudio && mCallback) {
     mCallback->OnVolumeChanged(aVolume);
   }
 }

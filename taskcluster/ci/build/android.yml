@@ -8,7 +8,6 @@ android-api-15/debug:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        implementation: docker-worker
         max-run-time: 7200
     run:
         using: mozharness
@@ -32,7 +31,6 @@ android-x86/opt:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        implementation: docker-worker
         max-run-time: 7200
     run:
         using: mozharness
@@ -59,7 +57,6 @@ android-x86-nightly/opt:
         symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        implementation: docker-worker
         max-run-time: 7200
     run:
         using: mozharness
@@ -84,7 +81,6 @@ android-api-15/opt:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        implementation: docker-worker
         max-run-time: 7200
     run:
         using: mozharness
@@ -111,7 +107,6 @@ android-api-15-nightly/opt:
         symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        implementation: docker-worker
         max-run-time: 7200
     run:
         using: mozharness
@@ -136,7 +131,6 @@ android-x86-old-id/opt:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        implementation: docker-worker
         max-run-time: 7200
     run:
         using: mozharness
@@ -164,7 +158,6 @@ android-x86-old-id-nightly/opt:
         symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        implementation: docker-worker
         max-run-time: 7200
     run:
         using: mozharness
@@ -190,7 +183,6 @@ android-api-15-old-id/opt:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        implementation: docker-worker
         max-run-time: 7200
     run:
         using: mozharness
@@ -218,7 +210,6 @@ android-api-15-old-id-nightly/opt:
         symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        implementation: docker-worker
         max-run-time: 7200
     run:
         using: mozharness
@@ -245,7 +236,6 @@ android-api-15-gradle/opt:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        implementation: docker-worker
         max-run-time: 7200
         env:
             # Bug 1292762 - Set GRADLE_USER_HOME to avoid sdk-manager-plugin intermittent
@@ -282,7 +272,6 @@ android-aarch64/opt:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        implementation: docker-worker
         max-run-time: 7200
     run:
         using: mozharness
@@ -309,7 +298,6 @@ android-aarch64-nightly/opt:
         symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
-        implementation: docker-worker
         max-run-time: 7200
     run:
         using: mozharness

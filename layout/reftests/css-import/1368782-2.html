@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<style>
+@import "data:text/css,*{background:green}";
+</style>
+<script>
+document.styleSheets[0].insertRule("@import \"data:text/css,*{background:red}\";", 0);
+</script>

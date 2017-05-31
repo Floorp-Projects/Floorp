@@ -36,8 +36,10 @@ runWithMSE(function(ms, el) {
       SimpleTest.finish();
     });
     is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
-    fetchAndLoad(audiosb, 'aac20-48000-64000-', ['init'], '.mp4')
-    .then(once.bind(null, el, 'loadedmetadata'))
+    var promises = [];
+    promises.push(fetchAndLoad(audiosb, 'aac20-48000-64000-', ['init'], '.mp4'));
+    promises.push(once(el, 'loadedmetadata'));
+    Promise.all(promises)
     .then(function() {
       ok(true, "got loadedmetadata event");
       var promises = [];

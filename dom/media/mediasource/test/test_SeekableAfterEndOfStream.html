@@ -12,37 +12,29 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var updateCount = 0;
-
 runWithMSE(function (ms, v) {
   ms.addEventListener("sourceopen", function () {
     var sb = ms.addSourceBuffer("video/webm");
 
     fetchWithXHR("seek.webm", function (arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer));
-      sb.addEventListener("updateend", function () {
-        updateCount++;
-        /* Ensure that we endOfStream on the first update event only as endOfStream can
-           raise more if the duration of the last buffered range and the intial duration
-           differ. See bug 1065207 */
-        if (updateCount == 1) {
-          ms.endOfStream();
-        };
+      var promises = [];
+      promises.push(once(sb, "updateend"));
+      promises.push(once(v, "loadedmetadata"));
+      Promise.all(promises).then(function () {
+        ms.endOfStream();
+        once(ms, "sourceended").then(function() {
+          var target = 2;
+          ok(v.seekable.length, "Resource is seekable");
+          ok(v.seekable.length &&
+             target >= v.seekable.start(0) &&
+             target < v.seekable.end(0), "Target is within seekable range");
+          SimpleTest.finish();
+        });
       });
-    });
-
-    var target = 2;
-
-    v.addEventListener("loadedmetadata", function () {
-      ok(v.seekable.length, "Resource is seekable");
-      ok(v.seekable.length &&
-          target >= v.seekable.start(0) &&
-          target < v.seekable.end(0), "Target is within seekable range");
-      SimpleTest.finish();
     });
   });
 });
-
 </script>
 </pre>
 </body>

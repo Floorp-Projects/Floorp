@@ -52,13 +52,9 @@ JS_STATIC_ASSERT(StickyFlag == JSREG_STICKY);
 JS_STATIC_ASSERT(UnicodeFlag == JSREG_UNICODE);
 
 RegExpObject*
-js::RegExpAlloc(JSContext* cx, HandleObject proto /* = nullptr */)
+js::RegExpAlloc(JSContext* cx, NewObjectKind newKind, HandleObject proto /* = nullptr */)
 {
-    // Note: RegExp objects are always allocated in the tenured heap. This is
-    // not strictly required, but simplifies embedding them in jitcode.
-    Rooted<RegExpObject*> regexp(cx);
-
-    regexp = NewObjectWithClassProto<RegExpObject>(cx, proto, TenuredObject);
+    Rooted<RegExpObject*> regexp(cx, NewObjectWithClassProto<RegExpObject>(cx, proto, newKind));
     if (!regexp)
         return nullptr;
 
@@ -239,19 +235,19 @@ const Class RegExpObject::protoClass_ = {
 RegExpObject*
 RegExpObject::create(JSContext* cx, const char16_t* chars, size_t length, RegExpFlag flags,
                      const ReadOnlyCompileOptions* options, TokenStream* tokenStream,
-                     LifoAlloc& alloc)
+                     LifoAlloc& alloc, NewObjectKind newKind)
 {
     RootedAtom source(cx, AtomizeChars(cx, chars, length));
     if (!source)
         return nullptr;
 
-    return create(cx, source, flags, options, tokenStream, alloc);
+    return create(cx, source, flags, options, tokenStream, alloc, newKind);
 }
 
 RegExpObject*
 RegExpObject::create(JSContext* cx, HandleAtom source, RegExpFlag flags,
                      const ReadOnlyCompileOptions* options, TokenStream* tokenStream,
-                     LifoAlloc& alloc)
+                     LifoAlloc& alloc, NewObjectKind newKind)
 {
     Maybe<CompileOptions> dummyOptions;
     if (!tokenStream && !options) {
@@ -269,7 +265,7 @@ RegExpObject::create(JSContext* cx, HandleAtom source, RegExpFlag flags,
     if (!irregexp::ParsePatternSyntax(*tokenStream, alloc, source, flags & UnicodeFlag))
         return nullptr;
 
-    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx));
+    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, newKind));
     if (!regexp)
         return nullptr;
 
@@ -1342,10 +1338,9 @@ js::CloneRegExpObject(JSContext* cx, JSObject* obj_)
 {
     Rooted<RegExpObject*> regex(cx, &obj_->as<RegExpObject>());
 
-    // Unlike RegExpAlloc, all clones must use |regex|'s group.  Allocate
-    // in the tenured heap to simplify embedding them in JIT code.
+    // Unlike RegExpAlloc, all clones must use |regex|'s group.
     RootedObjectGroup group(cx, regex->group());
-    Rooted<RegExpObject*> clone(cx, NewObjectWithGroup<RegExpObject>(cx, group, TenuredObject));
+    Rooted<RegExpObject*> clone(cx, NewObjectWithGroup<RegExpObject>(cx, group, GenericObject));
     if (!clone)
         return nullptr;
     clone->initPrivate(nullptr);
@@ -1466,7 +1461,8 @@ js::XDRScriptRegExpObject(XDRState<mode>* xdr, MutableHandle<RegExpObject*> objp
         if (xdr->hasOptions())
             options = &xdr->options();
         RegExpObject* reobj = RegExpObject::create(xdr->cx(), source, flags,
-                                                   options, nullptr, xdr->lifoAlloc());
+                                                   options, nullptr, xdr->lifoAlloc(),
+                                                   TenuredObject);
         if (!reobj)
             return false;
 
@@ -1490,7 +1486,8 @@ js::CloneScriptRegExpObject(JSContext* cx, RegExpObject& reobj)
     cx->markAtom(source);
 
     return RegExpObject::create(cx, source, reobj.getFlags(),
-                                nullptr, nullptr, cx->tempLifoAlloc());
+                                nullptr, nullptr, cx->tempLifoAlloc(),
+                                TenuredObject);
 }
 
 JS_FRIEND_API(bool)

@@ -7,13 +7,13 @@
 fails-if(styloVsGecko||stylo) == anim-css-color-1-by-ident-hex.svg         anim-css-fill-1-ref.svg
 fails-if(styloVsGecko||stylo) == anim-css-color-1-from-by-hex-hex.svg      anim-css-fill-1-ref.svg
 fuzzy-if(skiaContent,1,550) fails-if(styloVsGecko||stylo) == anim-css-color-1-from-by-ident-hex.svg    anim-css-fill-1-ref.svg
-fuzzy-if(skiaContent,1,550) fails-if(styloVsGecko||stylo) == anim-css-color-1-from-to-hex-hex.svg      anim-css-fill-1-ref.svg
-fuzzy-if(skiaContent,1,550) fails-if(styloVsGecko||stylo) == anim-css-color-1-from-to-ident-ident.svg  anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-color-1-from-to-hex-hex.svg      anim-css-fill-1-ref.svg
+fuzzy-if(skiaContent,1,550) == anim-css-color-1-from-to-ident-ident.svg  anim-css-fill-1-ref.svg
 fuzzy-if(skiaContent,1,550) fails-if(styloVsGecko||stylo) == anim-css-color-1-to-ident-hex.svg         anim-css-fill-1-ref.svg
 fuzzy-if(skiaContent,1,550) fails-if(styloVsGecko||stylo) == anim-css-color-1-to-ident-ident.svg       anim-css-fill-1-ref.svg
 
 # 'color' property, paced calcMode
-fails-if(styloVsGecko||stylo) == anim-css-color-2-paced-rgb.svg            anim-css-fill-2-ref.svg
+== anim-css-color-2-paced-rgb.svg            anim-css-fill-2-ref.svg
 
 # 'color' property, animating *by* a named color
 fuzzy-if(skiaContent,1,580) fails-if(styloVsGecko||stylo) == anim-css-color-3-by-ident-ident.svg       anim-css-fill-3-ref.svg

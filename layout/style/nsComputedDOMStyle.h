@@ -670,6 +670,12 @@ private:
                               nscoord aDefaultValue,
                               bool aClampNegativeCalc);
 
+  /**
+   * Append coord values from four sides. It omits values when possible.
+   */
+  void AppendFourSideCoordValues(nsDOMCSSValueList* aList,
+                                 const nsStyleSides& aValues);
+
   bool GetCBContentWidth(nscoord& aWidth);
   bool GetCBContentHeight(nscoord& aWidth);
   bool GetScrollFrameContentWidth(nscoord& aWidth);

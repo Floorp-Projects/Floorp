@@ -1,4 +1,4 @@
-/* globals analytics, browser, communication, makeUuid, Raven, catcher, auth, log */
+/* globals analytics, communication, makeUuid, Raven, catcher, auth, log */
 
 "use strict";
 

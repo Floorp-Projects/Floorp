@@ -11979,6 +11979,8 @@ IonBuilder::jsop_delelem()
 AbortReasonOr<Ok>
 IonBuilder::jsop_regexp(RegExpObject* reobj)
 {
+    MOZ_ASSERT(!IsInsideNursery(reobj));
+
     MRegExp* regexp = MRegExp::New(alloc(), constraints(), reobj);
     current->add(regexp);
     current->push(regexp);

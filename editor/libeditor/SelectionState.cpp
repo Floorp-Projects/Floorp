@@ -686,7 +686,8 @@ already_AddRefed<nsRange>
 RangeItem::GetRange()
 {
   RefPtr<nsRange> range = new nsRange(startNode);
-  if (NS_FAILED(range->Set(startNode, startOffset, endNode, endOffset))) {
+  if (NS_FAILED(range->SetStartAndEnd(startNode, startOffset,
+                                      endNode, endOffset))) {
     return nullptr;
   }
   return range.forget();

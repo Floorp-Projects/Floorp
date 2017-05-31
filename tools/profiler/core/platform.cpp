@@ -34,6 +34,7 @@
 #include "nsMemoryReporterManager.h"
 #include "nsXULAppAPI.h"
 #include "nsProfilerStartParams.h"
+#include "ProfilerParent.h"
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 #include "ProfilerMarkerPayload.h"
@@ -115,6 +116,9 @@ typedef const PSAutoLock& PSLockRef;
   PS_GET(type_, name_) \
   static void Set##name_(PSLockRef, type_ a##name_) \
     { sInstance->m##name_ = a##name_; }
+
+// All functions in this file can run on multiple threads unless they have an
+// NS_IsMainThread() assertion.
 
 // This class contains the profiler's core global state, i.e. that which is
 // valid even when the profiler is not active. Most profile operations can't do
@@ -297,23 +301,37 @@ private:
     }
 
     if (mInterposeObserver) {
-      mozilla::IOInterposer::Register(mozilla::IOInterposeObserver::OpAll,
-                                      mInterposeObserver.get());
+      // We need to register the observer on the main thread, because we want
+      // to observe IO that happens on the main thread.
+      if (NS_IsMainThread()) {
+        IOInterposer::Register(IOInterposeObserver::OpAll, mInterposeObserver);
+      } else {
+        RefPtr<ProfilerIOInterposeObserver> observer = mInterposeObserver;
+        NS_DispatchToMainThread(NS_NewRunnableFunction([=]() {
+          IOInterposer::Register(IOInterposeObserver::OpAll, observer);
+        }));
+      }
     }
   }
 
   ~ActivePS()
   {
     if (mInterposeObserver) {
-      mozilla::IOInterposer::Unregister(mozilla::IOInterposeObserver::OpAll,
-                                        mInterposeObserver.get());
+      // We need to unregister the observer on the main thread, because that's
+      // where we've registered it.
+      if (NS_IsMainThread()) {
+        IOInterposer::Unregister(IOInterposeObserver::OpAll, mInterposeObserver);
+      } else {
+        RefPtr<ProfilerIOInterposeObserver> observer = mInterposeObserver;
+        NS_DispatchToMainThread(NS_NewRunnableFunction([=]() {
+          IOInterposer::Unregister(IOInterposeObserver::OpAll, observer);
+        }));
+      }
     }
   }
 
   bool ThreadSelected(const char* aThreadName)
   {
-    // This function runs both on and off the main thread.
-
     MOZ_RELEASE_ASSERT(sInstance);
 
     if (mFilters.empty()) {
@@ -367,8 +385,6 @@ public:
 
   static bool ShouldProfileThread(PSLockRef aLock, ThreadInfo* aInfo)
   {
-    // This function runs both on and off the main thread.
-
     MOZ_RELEASE_ASSERT(sInstance);
 
     return ((aInfo->IsMainThread() || FeatureThreads(aLock)) &&
@@ -449,7 +465,7 @@ private:
   SamplerThread* const mSamplerThread;
 
   // The interposer that records main thread I/O.
-  const UniquePtr<mozilla::ProfilerIOInterposeObserver> mInterposeObserver;
+  const RefPtr<mozilla::ProfilerIOInterposeObserver> mInterposeObserver;
 
   // Is the profiler paused?
   bool mIsPaused;
@@ -530,19 +546,6 @@ MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
 
 // The name of the main thread.
 static const char* const kMainThreadName = "GeckoMain";
-
-static bool
-CanNotifyObservers()
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-#if defined(GP_OS_android)
-  // Android ANR reporter uses the profiler off the main thread.
-  return NS_IsMainThread();
-#else
-  return true;
-#endif
-}
 
 ////////////////////////////////////////////////////////////////////////
 // BEGIN tick/unwinding code
@@ -1379,7 +1382,6 @@ static void
 StreamTaskTracer(PSLockRef aLock, SpliceableJSONWriter& aWriter)
 {
 #ifdef MOZ_TASK_TRACER
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
   aWriter.StartArrayProperty("data");
@@ -1416,10 +1418,28 @@ StreamTaskTracer(PSLockRef aLock, SpliceableJSONWriter& aWriter)
 static void
 StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
   aWriter.IntProperty("version", 6);
+
+  // The "startTime" field holds the number of milliseconds since midnight
+  // January 1, 1970 GMT. This grotty code computes (Now - (Now -
+  // ProcessStartTime)) to convert CorePS::ProcessStartTime() into that form.
+  mozilla::TimeDuration delta =
+    mozilla::TimeStamp::Now() - CorePS::ProcessStartTime(aLock);
+  aWriter.DoubleProperty(
+    "startTime", static_cast<double>(PR_Now()/1000.0 - delta.ToMilliseconds()));
+
+  if (!NS_IsMainThread()) {
+    // Leave the rest of the properties out if we're not on the main thread.
+    // At the moment, the only case in which this function is called on a
+    // background thread is if we're in a content process and are going to
+    // send this profile to the parent process. In that case, the parent
+    // process profile's "meta" object already has the rest of the properties,
+    // and the parent process profile is dumped on that process's main thread.
+    return;
+  }
+
   aWriter.DoubleProperty("interval", ActivePS::Interval(aLock));
   aWriter.IntProperty("stackwalk", ActivePS::FeatureStackWalk(aLock));
 
@@ -1433,14 +1453,6 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter)
 
   bool asyncStacks = Preferences::GetBool("javascript.options.asyncstack");
   aWriter.IntProperty("asyncstack", asyncStacks);
-
-  // The "startTime" field holds the number of milliseconds since midnight
-  // January 1, 1970 GMT. This grotty code computes (Now - (Now -
-  // ProcessStartTime)) to convert CorePS::ProcessStartTime() into that form.
-  mozilla::TimeDuration delta =
-    mozilla::TimeStamp::Now() - CorePS::ProcessStartTime(aLock);
-  aWriter.DoubleProperty(
-    "startTime", static_cast<double>(PR_Now()/1000.0 - delta.ToMilliseconds()));
 
   aWriter.IntProperty("processType", XRE_GetProcessType());
 
@@ -1553,7 +1565,6 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
 {
   LOG("locked_profiler_stream_json_for_this_process");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
   // Put shared library info
@@ -1618,7 +1629,6 @@ profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter, double aSin
 {
   LOG("profiler_stream_json_for_this_process");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
@@ -1941,8 +1951,6 @@ NS_IMPL_ISUPPORTS(GeckoProfilerReporter, nsIMemoryReporter)
 static ThreadInfo*
 FindLiveThreadInfo(PSLockRef aLock, int* aIndexOut = nullptr)
 {
-  // This function runs both on and off the main thread.
-
   ThreadInfo* ret = nullptr;
   Thread::tid_t id = Thread::GetCurrentId();
   const CorePS::ThreadVector& liveThreads = CorePS::LiveThreads(aLock);
@@ -1963,8 +1971,6 @@ FindLiveThreadInfo(PSLockRef aLock, int* aIndexOut = nullptr)
 static void
 locked_register_thread(PSLockRef aLock, const char* aName, void* stackTop)
 {
-  // This function runs both on and off the main thread.
-
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   MOZ_RELEASE_ASSERT(!FindLiveThreadInfo(aLock));
@@ -1991,18 +1997,32 @@ locked_register_thread(PSLockRef aLock, const char* aName, void* stackTop)
 }
 
 static void
+NotifyObservers(const char* aTopic, nsISupports* aSubject = nullptr)
+{
+  if (!NS_IsMainThread()) {
+    // Dispatch a task to the main thread that notifies observers.
+    // If NotifyObservers is called both on and off the main thread within a
+    // short time, the order of the notifications can be different from the
+    // order of the calls to NotifyObservers.
+    // Getting the order 100% right isn't that important at the moment, because
+    // these notifications are only observed in the parent process, where the
+    // profiler_* functions are currently only called on the main thread.
+    nsCOMPtr<nsISupports> subject = aSubject;
+    NS_DispatchToMainThread(NS_NewRunnableFunction([=] {
+      NotifyObservers(aTopic, subject);
+    }));
+    return;
+  }
+
+  if (nsCOMPtr<nsIObserverService> os = services::GetObserverService()) {
+    os->NotifyObservers(aSubject, aTopic, nullptr);
+  }
+}
+
+static void
 NotifyProfilerStarted(const int aEntries, double aInterval, uint32_t aFeatures,
                       const char** aFilters, uint32_t aFilterCount)
 {
-  if (!CanNotifyObservers()) {
-    return;
-  }
-
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (!os) {
-    return;
-  }
-
   nsTArray<nsCString> filtersArray;
   for (size_t i = 0; i < aFilterCount; ++i) {
     filtersArray.AppendElement(aFilters[i]);
@@ -2011,22 +2031,8 @@ NotifyProfilerStarted(const int aEntries, double aInterval, uint32_t aFeatures,
   nsCOMPtr<nsIProfilerStartParams> params =
     new nsProfilerStartParams(aEntries, aInterval, aFeatures, filtersArray);
 
-  os->NotifyObservers(params, "profiler-started", nullptr);
-}
-
-static void
-NotifyObservers(const char* aTopic)
-{
-  if (!CanNotifyObservers()) {
-    return;
-  }
-
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (!os) {
-    return;
-  }
-
-  os->NotifyObservers(nullptr, aTopic, nullptr);
+  ProfilerParent::ProfilerStarted(params);
+  NotifyObservers("profiler-started", params);
 }
 
 static void
@@ -2171,6 +2177,7 @@ profiler_shutdown()
   // We do these operations with gPSMutex unlocked. The comments in
   // profiler_stop() explain why.
   if (samplerThread) {
+    ProfilerParent::ProfilerStopped();
     NotifyObservers("profiler-stopped");
     delete samplerThread;
   }
@@ -2181,7 +2188,6 @@ profiler_get_profile(double aSinceTime)
 {
   LOG("profiler_get_profile");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   SpliceableChunkedJSONWriter b;
@@ -2205,7 +2211,6 @@ void
 profiler_get_start_params(int* aEntries, double* aInterval, uint32_t* aFeatures,
                           mozilla::Vector<const char*>* aFilters)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   if (NS_WARN_IF(!aEntries) || NS_WARN_IF(!aInterval) ||
@@ -2239,7 +2244,6 @@ locked_profiler_save_profile_to_file(PSLockRef aLock, const char* aFilename)
 {
   LOG("locked_profiler_save_profile_to_file(%s)", aFilename);
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
   std::ofstream stream;
@@ -2266,7 +2270,6 @@ profiler_save_profile_to_file(const char* aFilename)
 {
   LOG("profiler_save_profile_to_file(%s)", aFilename);
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
@@ -2281,7 +2284,6 @@ profiler_save_profile_to_file(const char* aFilename)
 uint32_t
 profiler_get_available_features()
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   uint32_t features = 0;
@@ -2315,7 +2317,6 @@ profiler_get_buffer_info_helper(uint32_t* aCurrentPosition,
   // This function is called by profiler_get_buffer_info(), which has already
   // zeroed the outparams.
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
@@ -2353,7 +2354,6 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
     }
   }
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists() && !ActivePS::Exists(aLock));
 
   // Fall back to the default values if the passed-in values are unreasonable.
@@ -2410,7 +2410,6 @@ profiler_start(int aEntries, double aInterval, uint32_t aFeatures,
 {
   LOG("profiler_start");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   SamplerThread* samplerThread = nullptr;
   {
@@ -2433,6 +2432,7 @@ profiler_start(int aEntries, double aInterval, uint32_t aFeatures,
   // We do these operations with gPSMutex unlocked. The comments in
   // profiler_stop() explain why.
   if (samplerThread) {
+    ProfilerParent::ProfilerStopped();
     NotifyObservers("profiler-stopped");
     delete samplerThread;
   }
@@ -2445,7 +2445,6 @@ locked_profiler_stop(PSLockRef aLock)
 {
   LOG("locked_profiler_stop");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
 #ifdef MOZ_TASK_TRACER
@@ -2493,7 +2492,6 @@ profiler_stop()
 {
   LOG("profiler_stop");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   SamplerThread* samplerThread;
@@ -2508,8 +2506,11 @@ profiler_stop()
   }
 
   // We notify observers with gPSMutex unlocked. Otherwise we might get a
-  // deadlock, if code run by the observer calls a profiler function that locks
-  // gPSMutex. (This has been seen in practise in bug 1346356.)
+  // deadlock, if code run by these functions calls a profiler function that
+  // locks gPSMutex, for example when it wants to insert a marker.
+  // (This has been seen in practise in bug 1346356, when we were still firing
+  // these notifications synchronously.)
+  ProfilerParent::ProfilerStopped();
   NotifyObservers("profiler-stopped");
 
   // We delete with gPSMutex unlocked. Otherwise we would get a deadlock: we
@@ -2527,7 +2528,6 @@ profiler_stop()
 bool
 profiler_is_paused()
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
@@ -2544,7 +2544,6 @@ profiler_pause()
 {
   LOG("profiler_pause");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   {
@@ -2558,6 +2557,7 @@ profiler_pause()
   }
 
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
+  ProfilerParent::ProfilerPaused();
   NotifyObservers("profiler-paused");
 }
 
@@ -2566,7 +2566,6 @@ profiler_resume()
 {
   LOG("profiler_resume");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   {
@@ -2580,6 +2579,7 @@ profiler_resume()
   }
 
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
+  ProfilerParent::ProfilerResumed();
   NotifyObservers("profiler-resumed");
 }
 
@@ -2712,8 +2712,7 @@ profiler_thread_is_sleeping()
 void
 profiler_js_interrupt_callback()
 {
-  // This function runs both on and off the main thread, on JS threads being
-  // sampled.
+  // This function runs on JS threads being sampled.
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
@@ -2730,8 +2729,6 @@ profiler_js_interrupt_callback()
 double
 profiler_time()
 {
-  // This function runs both on and off the main thread.
-
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
@@ -2744,7 +2741,6 @@ profiler_time()
 UniqueProfilerBacktrace
 profiler_get_backtrace()
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
@@ -2794,7 +2790,6 @@ ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace)
 void
 profiler_get_backtrace_noalloc(char *output, size_t outputSize)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   MOZ_ASSERT(outputSize >= 2);
@@ -2853,8 +2848,6 @@ static void
 locked_profiler_add_marker(PSLockRef aLock, const char* aMarker,
                            ProfilerMarkerPayload* aPayload)
 {
-  // This function runs both on and off the main thread.
-
   MOZ_RELEASE_ASSERT(CorePS::Exists());
   MOZ_RELEASE_ASSERT(ActivePS::Exists(aLock) &&
                      !ActivePS::FeaturePrivacy(aLock));
@@ -2878,8 +2871,6 @@ locked_profiler_add_marker(PSLockRef aLock, const char* aMarker,
 void
 profiler_add_marker(const char* aMarker, ProfilerMarkerPayload* aPayload)
 {
-  // This function runs both on and off the main thread.
-
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
@@ -2897,8 +2888,6 @@ profiler_add_marker(const char* aMarker, ProfilerMarkerPayload* aPayload)
 void
 profiler_tracing(const char* aCategory, const char* aInfo, TracingKind aKind)
 {
-  // This function runs both on and off the main thread.
-
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
@@ -2915,8 +2904,6 @@ void
 profiler_tracing(const char* aCategory, const char* aInfo,
                  UniqueProfilerBacktrace aCause, TracingKind aKind)
 {
-  // This function runs both on and off the main thread.
-
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
@@ -2933,24 +2920,18 @@ profiler_tracing(const char* aCategory, const char* aInfo,
 void
 profiler_log(const char* aStr)
 {
-  // This function runs both on and off the main thread.
-
   profiler_tracing("log", aStr);
 }
 
 PseudoStack*
 profiler_get_pseudo_stack()
 {
-  // This function runs both on and off the main thread.
-
   return TLSInfo::Stack();
 }
 
 void
 profiler_set_js_context(JSContext* aCx)
 {
-  // This function runs both on and off the main thread.
-
   MOZ_ASSERT(aCx);
 
   PSAutoLock lock(gPSMutex);
@@ -2966,8 +2947,6 @@ profiler_set_js_context(JSContext* aCx)
 void
 profiler_clear_js_context()
 {
-  // This function runs both on and off the main thread.
-
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);

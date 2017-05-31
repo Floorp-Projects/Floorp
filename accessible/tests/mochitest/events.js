@@ -834,7 +834,7 @@ function eventQueue(aEventType)
 
   this.mDefEventType = aEventType;
 
-  this.mInvokers = new Array();
+  this.mInvokers = [];
   this.mIndex = -1;
   this.mScenarios = null;
 
@@ -1025,7 +1025,7 @@ function sequence()
     this.items[this.idx].startProcess();
   }
 
-  this.items = new Array();
+  this.items = [];
   this.idx = -1;
 }
 
@@ -1040,7 +1040,7 @@ function sequence()
 function defineScenario(aInvoker, aEventSeq, aUnexpectedEventSeq)
 {
   if (!("scenarios" in aInvoker))
-    aInvoker.scenarios = new Array();
+    aInvoker.scenarios = [];
 
   // Create unified event sequence concatenating expected and unexpected
   // events.
@@ -2132,7 +2132,7 @@ function listenA11yEvents(aStartToListen)
 function addA11yEventListener(aEventType, aEventHandler)
 {
   if (!(aEventType in gA11yEventListeners))
-    gA11yEventListeners[aEventType] = new Array();
+    gA11yEventListeners[aEventType] = [];
 
   var listenersArray = gA11yEventListeners[aEventType];
   var index = listenersArray.indexOf(aEventHandler);

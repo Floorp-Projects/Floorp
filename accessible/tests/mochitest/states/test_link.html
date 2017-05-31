@@ -21,45 +21,6 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    //gA11yEventDumpToConsole = true; // debug stuff
-
-    var gLinkWindow = null;
-    function closeDocChecker()
-    {
-      this.__proto__ = new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE);
-
-      this.check = function closeDocChecker_check(aEvent)
-      {
-        gLinkWindow = aEvent.accessible.rootDocument.window;
-      }
-
-      this.match = function closeDocChecker_match(aEvent)
-      {
-        // A temporary about:blank document gets loaded before 'example.com'
-        // document.
-        return aEvent.DOMNode.URL == "http://www.example.com/";
-      }
-    }
-
-    function clickLink(aID)
-    {
-      this.eventSeq = [
-        new stateChangeChecker(STATE_TRAVERSED, false, true, "link_traversed"),
-        new closeDocChecker()
-      ];
-
-      this.invoke = function clickLink_invoke()
-      {
-        synthesizeMouse(getNode("link_traversed"), 1, 1, { shiftKey: true });
-      }
-
-      this.getID = function clickLink_getID()
-      {
-        return "link + '" + aID + "' clicked.";
-      }
-    }
-
-    var gQueue = null;
     function doTest()
     {
       // a@href and its text node
@@ -84,22 +45,7 @@
       // a (no @href, no click event listener)
       testStates("link_notlink", 0, 0, STATE_LINKED);
 
-      // a: no traversed state
-      testStates("link_traversed", 0, 0, STATE_TRAVERSED);
-
-      // a: traversed state
-      //enableLogging("docload"); // debug stuff
-
-      gQueue = new eventQueue();
-      gQueue.push(new clickLink("link_traversed"));
-      gQueue.onFinish =
-        function()
-        {
-          gLinkWindow.close();
-          //disableLogging(); // debug stuff
-        }
-
-      gQueue.invoke(); // will call SimpleTest.finsih();
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -137,8 +83,6 @@
   <a id="link_arialink" role="link">aria link</a>
   <a id="link_ariabutton" role="button">aria button</a>
   <a id="link_notlink">not link</a>
-
-  <a id="link_traversed" href="http://www.example.com" target="_top">example.com</a>
 
 </body>
 </html>

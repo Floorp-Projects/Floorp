@@ -28,20 +28,20 @@ add_task(async function test_toolbar_element_restyles_on_activation() {
   Services.focus.clearFocus(win2);
 
   let utils1 = SpecialPowers.getDOMWindowUtils(win1);
-  restyles.win1.initial = utils1.elementsRestyled;
+  restyles.win1.initial = utils1.restyleGeneration;
 
   let utils2 = SpecialPowers.getDOMWindowUtils(win2);
-  restyles.win2.initial = utils2.elementsRestyled;
+  restyles.win2.initial = utils2.restyleGeneration;
 
   // switch back to 1st window, and snapshot elementsStyled
   Services.focus.activeWindow = win1;
-  restyles.win1.activate = utils1.elementsRestyled;
-  restyles.win2.deactivate = utils2.elementsRestyled;
+  restyles.win1.activate = utils1.restyleGeneration;
+  restyles.win2.deactivate = utils2.restyleGeneration;
 
   // switch back to 2nd window, and snapshot elementsStyled
   Services.focus.activeWindow = win2;
-  restyles.win2.activate = utils2.elementsRestyled;
-  restyles.win1.deactivate = utils1.elementsRestyled;
+  restyles.win2.activate = utils2.restyleGeneration;
+  restyles.win1.deactivate = utils1.restyleGeneration;
 
   is(restyles.win1.activate - restyles.win1.deactivate, 0,
       "No elements restyled when re-activating/deactivating a window");

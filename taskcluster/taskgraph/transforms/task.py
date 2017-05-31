@@ -154,6 +154,7 @@ task_description_schema = Schema({
     # information specific to the worker implementation that will run this task
     'worker': Any({
         Required('implementation'): Any('docker-worker', 'docker-engine'),
+        Required('os'): 'linux',
 
         # For tasks that will run in docker-worker or docker-engine, this is the
         # name of the docker image or in-tree docker image to run the task in.  If
@@ -215,9 +216,10 @@ task_description_schema = Schema({
         Optional('retry-exit-status'): int,
 
     }, {
+        Required('implementation'): 'generic-worker',
+        Required('os'): Any('windows', 'macosx'),
         # see http://schemas.taskcluster.net/generic-worker/v1/payload.json
         # and https://docs.taskcluster.net/reference/workers/generic-worker/payload
-        Required('implementation'): 'generic-worker',
 
         # command is a list of commands to run, sequentially
         # on Windows, each command is a string, on OS X and Linux, each command is
@@ -308,13 +310,15 @@ task_description_schema = Schema({
         },
     }, {
         Required('implementation'): 'native-engine',
+        Required('os'): Any('macosx', 'linux'),
 
         # A link for an executable to download
         Optional('context'): basestring,
 
         # Tells the worker whether machine should reboot
         # after the task is finished.
-        Optional('reboot'): bool,
+        Optional('reboot'):
+            Any('always', 'on-exception', 'on-failure'),
 
         # the command to run
         Optional('command'): [taskref_or_string],
@@ -394,6 +398,12 @@ task_description_schema = Schema({
     }, {
         Required('implementation'): 'push-apk-breakpoint',
         Required('payload'): object,
+
+    }, {
+        Required('implementation'): 'invalid',
+        # an invalid task is one which should never actually be created; this is used in
+        # release automation on branches where the task just doesn't make sense
+        Extra: object,
 
     }, {
         Required('implementation'): 'push-apk',
@@ -740,6 +750,11 @@ def build_push_apk_breakpoint_payload(config, task, task_def):
     task_def['payload'] = task['worker']['payload']
 
 
+@payload_builder('invalid')
+def build_invalid_payload(config, task, task_def):
+    task_def['payload'] = 'invalid task - should never be created'
+
+
 @payload_builder('native-engine')
 def build_macosx_engine_payload(config, task, task_def):
     worker = task['worker']
@@ -754,9 +769,10 @@ def build_macosx_engine_payload(config, task, task_def):
         'context': worker['context'],
         'command': worker['command'],
         'env': worker['env'],
-        'reboot': worker.get('reboot', False),
         'artifacts': artifacts,
     }
+    if worker.get('reboot'):
+        task_def['payload'] = worker['reboot']
 
     if task.get('needs-sccache'):
         raise Exception('needs-sccache not supported in native-engine')

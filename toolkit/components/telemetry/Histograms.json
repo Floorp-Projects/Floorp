@@ -24,14 +24,6 @@
     "kind": "flag",
     "description": "has the IAccessibleTable accessibility interface been used"
   },
-  "A11Y_UPDATE_TIME": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "default",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "description": "time spent updating accessibility (ms)"
-  },
   "ADDON_CONTENT_POLICY_SHIM_BLOCKING_LOADING_MS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "58",
@@ -5820,6 +5812,16 @@
     "description": "Update: the application update doorhanger type that was displayed.",
     "labels": ["restart", "available", "manual"]
   },
+  "UPDATE_NOTIFICATION_BADGE_SHOWN": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "bug_numbers": [893505, 1365204],
+    "releaseChannelCollection": "opt-out",
+    "description": "Update: the application update badge type that was displayed.",
+    "labels": ["restart", "available", "manual"]
+  },
   "UPDATE_NOTIFICATION_DISMISSED": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
@@ -7145,6 +7147,26 @@
     "n_buckets": 20,
     "description": "Time (ms) it takes for checking if the pending pings are over-quota"
   },
+  "TELEMETRY_PENDING_LOAD_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 20,
+    "bug_numbers": [1033860],
+    "description": "Time (ms) it takes for loading pending pings from disk"
+  },
+  "TELEMETRY_ARCHIVE_LOAD_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 20,
+    "bug_numbers": [1033860],
+    "description": "Time (ms) it takes for loading archived pings from disk"
+  },
   "TELEMETRY_PING_SIZE_EXCEEDED_SEND": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
@@ -8107,7 +8129,7 @@
     "alert_emails": ["bsmedberg@mozilla.com"]
   },
   "PLUGINS_INFOBAR_SHOWN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "60",
     "kind": "boolean",
@@ -8116,7 +8138,7 @@
     "alert_emails": ["bsmedberg@mozilla.com"]
   },
   "PLUGINS_INFOBAR_BLOCK": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "60",
     "kind": "boolean",
@@ -8125,12 +8147,21 @@
     "alert_emails": ["bsmedberg@mozilla.com"]
   },
   "PLUGINS_INFOBAR_ALLOW": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "releaseChannelCollection": "opt-out",
     "expires_in_version": "60",
     "kind": "boolean",
     "description": "Count the number of times the user clicked 'allow' on the hidden-plugin infobar.",
     "bug_numbers": [902075, 1345894],
+    "alert_emails": ["bsmedberg@mozilla.com"]
+  },
+  "PLUGINS_INFOBAR_DISMISSED": {
+    "record_in_processes": ["main"],
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "60",
+    "kind": "boolean",
+    "description": "Count the number of times the user explicitly dismisses the hidden-plugin infobar without choosing allow or continue-blocking.",
+    "bug_numbers": [1368060],
     "alert_emails": ["bsmedberg@mozilla.com"]
   },
   "POPUP_NOTIFICATION_STATS": {
@@ -8320,6 +8351,15 @@
     "kind": "enumerated",
     "n_values": 50,
     "description": "Counts of the maximum number of shared memory buffers used for transferring video frames between the CDM and Gecko processes during playback of DRM'd video. Reported once per CDMVideoDecoder instance, i.e., once per JavaScript SourceBuffer during playback of video using EME."
+  },
+  "MEDIA_EME_REQUEST_DEPRECATED_WARNINGS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["cpearce@mozilla.com"],
+    "bug_numbers": [1368596],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Counts types of deprecation warnings logged on every successful call to navigator.requestMediaKeySystemAccess(). 0=No warnings logged, 1=MediaEMENoCapabilitiesDeprecatedWarning, 2=MediaEMENoCodecsDeprecatedWarning."
   },
   "MEDIACACHE_WATERMARK_KB": {
     "record_in_processes": ["main", "content"],
@@ -13224,5 +13264,16 @@
     "high": 60000,
     "n_buckets": 100,
     "description": "The amount of time it takes to load a WebExtensions background page, from when the build function is called to when the page has finished processing the onload event."
+  },
+  "WEBEXT_EXTENSION_STARTUP_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["addons-dev-internal@mozilla.com"],
+    "bug_numbers": [1353171],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "The amount of time it takes for a WebExtension to start up, from when the startup function is called to when the startup promise resolves."
   }
 }

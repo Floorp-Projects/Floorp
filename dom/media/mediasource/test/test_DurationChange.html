@@ -18,7 +18,10 @@ runWithMSE(function (ms, v) {
 
     fetchWithXHR("seek.webm", function (arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 318));
-      once(v, "loadedmetadata")
+      var promises = [];
+      promises.push(once(v, "loadedmetadata"));
+      promises.push(once(sb, "updateend"));
+      Promise.all(promises)
       .then(function() {
         is(v.duration, ms.duration, "video duration is mediasource one");
         try {

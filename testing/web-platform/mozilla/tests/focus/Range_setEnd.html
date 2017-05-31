@@ -87,8 +87,8 @@ function setEndAfter(aNode, aOffset)
         resetFocusAndSelectionRange(editor);
         document.getSelection().selectAllChildren(editor.textNode);
         aTest.func(staticBefore.textNode, 0);
-        assert_equals(document.activeElement, document.body);
-    }, "Active element should be the <body> after " + aTest.doingDescription + " with start of the first text node of 'staticBefore' (before the selection) when active element is 'editor'");
+        assert_equals(document.activeElement, editor.element);
+    }, "Active element should be 'editor' after " + aTest.doingDescription + " with start of the first text node of 'staticBefore' (before the selection) when active element is 'editor'");
     test(function() {
         resetFocusAndSelectionRange(outerEditor);
         document.getSelection().selectAllChildren(outerEditor.textNode);
@@ -124,8 +124,8 @@ function setEndAfter(aNode, aOffset)
         resetFocusAndSelectionRange(editor);
         document.getSelection().collapse(editor.textNode, editor.textLength);
         aTest.func(staticBefore.textNode, 0);
-        assert_equals(document.activeElement, document.body);
-    }, "Active element should be the <body> after " + aTest.doingDescription + " with start of the first text node of 'staticBefore' (before the collapsed selection) when active element is 'editor'");
+        assert_equals(document.activeElement, editor.element);
+    }, "Active element should be 'editor' after " + aTest.doingDescription + " with start of the first text node of 'staticBefore' (before the collapsed selection) when active element is 'editor'");
     test(function() {
         resetFocusAndSelectionRange(outerEditor);
         document.getSelection().collapse(outerEditor.textNode, outerEditor.textLength);
@@ -197,8 +197,8 @@ test(function() {
     resetFocusAndSelectionRange(innerEditor);
     document.getSelection().selectAllChildren(innerEditor.textNode);
     setEndAfter(staticInEditor.textNode);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.setEndAfter() with the first text node of 'staticInEditor' (before the selection) when active element is 'innerEditor'");
+    assert_equals(document.activeElement, innerEditor.element);
+}, "Active element should be 'innerEditor' after Selection.setEndAfter() with the first text node of 'staticInEditor' (before the selection) when active element is 'innerEditor'");
 test(function() {
     resetFocusAndSelectionRange();
     document.getSelection().selectAllChildren(staticInEditor.textNode);
@@ -221,8 +221,8 @@ test(function() {
     resetFocusAndSelectionRange(editor);
     document.getSelection().selectAllChildren(editor.textNode);
     setEndAfter(staticBefore.textNode);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Selection.setEndAfter() with the first text node of 'staticBefore' (before the selection) when active element is 'editor'");
+    assert_equals(document.activeElement, editor.element);
+}, "Active element should be 'editor' after Selection.setEndAfter() with the first text node of 'staticBefore' (before the selection) when active element is 'editor'");
 test(function() {
     resetFocusAndSelectionRange(anchor);
     document.getSelection().selectAllChildren(anchor.textNode);
@@ -238,8 +238,8 @@ test(function() {
         resetFocusAndSelectionRange(editor);
         document.getSelection().collapse(editor.textNode, 0);
         aTest.func(outerEditor.textNode, 0);
-        assert_equals(document.activeElement, document.body);
-    }, "Active element should be the <body> after " + aTest.doingDescription + " with start of the first text node of 'outerEditor' (after end of the collapsed selection) when active element is 'editor'");
+        assert_equals(document.activeElement, editor.element);
+    }, "Active element should be 'editor' after " + aTest.doingDescription + " with start of the first text node of 'outerEditor' (after end of the collapsed selection) when active element is 'editor'");
     test(function() {
         resetFocusAndSelectionRange(outerEditor);
         document.getSelection().collapse(outerEditor.textNode, 0);
@@ -256,14 +256,14 @@ test(function() {
         resetFocusAndSelectionRange(outerEditor);
         document.getSelection().collapse(outerEditor.textNode, 0);
         aTest.func(staticAfter.textNode, 0);
-        assert_equals(document.activeElement, document.body);
-    }, "Active element should be the <body> after " + aTest.doingDescription + " with start of the first text node of 'staticAfter' (after end of the collapsed selection) when active element is 'outerEditor'");
+        assert_equals(document.activeElement, outerEditor.element);
+    }, "Active element should be 'outerEditor' after " + aTest.doingDescription + " with start of the first text node of 'staticAfter' (after end of the collapsed selection) when active element is 'outerEditor'");
     test(function() {
         resetFocusAndSelectionRange(editor);
         document.getSelection().selectAllChildren(editor.textNode);
         aTest.func(outerEditor.textNode, 0);
-        assert_equals(document.activeElement, document.body);
-    }, "Active element should be the <body> after " + aTest.doingDescription + " with start of the first text node of 'outerEditor' (after end of the selection) when active element is 'editor'");
+        assert_equals(document.activeElement, editor.element);
+    }, "Active element should be 'editor' after " + aTest.doingDescription + " with start of the first text node of 'outerEditor' (after end of the selection) when active element is 'editor'");
     test(function() {
         resetFocusAndSelectionRange(outerEditor);
         document.getSelection().selectAllChildren(outerEditor.textNode);
@@ -280,8 +280,8 @@ test(function() {
         resetFocusAndSelectionRange(outerEditor);
         document.getSelection().selectAllChildren(outerEditor.textNode);
         aTest.func(staticAfter.textNode, 0);
-        assert_equals(document.activeElement, document.body);
-    }, "Active element should be the <body> after " + aTest.doingDescription + " with start of the first text node of 'staticAfter' (after end of the selection) when active element is 'outerEditor'");
+        assert_equals(document.activeElement, outerEditor.element);
+    }, "Active element should be 'outerEditor' after " + aTest.doingDescription + " with start of the first text node of 'staticAfter' (after end of the selection) when active element is 'outerEditor'");
 });
 
 // Range.setEnd*() should move focus to an editing host when the range is shrunken into it.

@@ -92,6 +92,17 @@ function createAndStartHTTPServer(port) {
   return null; /* not hit, but keeps eslint happy! */
 }
 
+// A helper function to ensure that the reconciler's current view of the addon
+// is the same as the addon itself. If it's not, then the reconciler missed a
+// change, and is likely to re-upload the addon next sync because of the change
+// it missed.
+function checkReconcilerUpToDate(addon) {
+  let stateBefore = Object.assign({}, store.reconciler.addons[addon.id]);
+  store.reconciler.rectifyStateFromAddon(addon);
+  let stateAfter = store.reconciler.addons[addon.id];
+  deepEqual(stateBefore, stateAfter);
+}
+
 function run_test() {
   initTestLogging("Trace");
   Log.repository.getLogger("Sync.Engine.Addons").level = Log.Level.Trace;
@@ -137,6 +148,7 @@ add_test(function test_apply_enabled() {
   do_check_eq(0, failed.length);
   addon = getAddonFromAddonManagerByID(addon.id);
   do_check_true(addon.userDisabled);
+  checkReconcilerUpToDate(addon);
   records = [];
 
   _("Ensure enable record works as expected.");
@@ -145,6 +157,7 @@ add_test(function test_apply_enabled() {
   do_check_eq(0, failed.length);
   addon = getAddonFromAddonManagerByID(addon.id);
   do_check_false(addon.userDisabled);
+  checkReconcilerUpToDate(addon);
   records = [];
 
   _("Ensure enabled state updates don't apply if the ignore pref is set.");
@@ -158,6 +171,39 @@ add_test(function test_apply_enabled() {
 
   uninstallAddon(addon);
   Svc.Prefs.reset("addons.ignoreUserEnabledChanges");
+  run_next_test();
+});
+
+add_test(function test_apply_enabled_appDisabled() {
+  _("Ensures that changes to the userEnabled flag apply when the addon is appDisabled.");
+
+  let addon = installAddon("test_install3"); // this addon is appDisabled by default.
+  do_check_true(addon.appDisabled);
+  do_check_false(addon.isActive);
+  do_check_false(addon.userDisabled);
+
+  _("Ensure application of a disable record works as expected.");
+  store.reconciler.pruneChangesBeforeDate(Date.now() + 10);
+  store.reconciler._changes = [];
+  let records = [];
+  records.push(createRecordForThisApp(addon.syncGUID, addon.id, false, false));
+  let failed = store.applyIncomingBatch(records);
+  do_check_eq(0, failed.length);
+  addon = getAddonFromAddonManagerByID(addon.id);
+  do_check_true(addon.userDisabled);
+  checkReconcilerUpToDate(addon);
+  records = [];
+
+  _("Ensure enable record works as expected.");
+  records.push(createRecordForThisApp(addon.syncGUID, addon.id, true, false));
+  failed = store.applyIncomingBatch(records);
+  do_check_eq(0, failed.length);
+  addon = getAddonFromAddonManagerByID(addon.id);
+  do_check_false(addon.userDisabled);
+  checkReconcilerUpToDate(addon);
+  records = [];
+
+  uninstallAddon(addon);
   run_next_test();
 });
 
@@ -338,22 +384,32 @@ add_test(function test_get_all_ids() {
   _("Ensures that getAllIDs() returns an appropriate set.");
 
   _("Installing two addons.");
+  // XXX - this test seems broken - at this point, before we've installed the
+  // addons below, store.getAllIDs() returns all addons installed by previous
+  // tests, even though those tests uninstalled the addon.
+  // So if any tests above ever add a new addon ID, they are going to need to
+  // be added here too.
+  // do_check_eq(0, Object.keys(store.getAllIDs()).length);
   let addon1 = installAddon("test_install1");
   let addon2 = installAddon("test_bootstrap1_1");
+  let addon3 = installAddon("test_install3");
 
   _("Ensure they're syncable.");
   do_check_true(store.isAddonSyncable(addon1));
   do_check_true(store.isAddonSyncable(addon2));
+  do_check_true(store.isAddonSyncable(addon3));
 
   let ids = store.getAllIDs();
 
   do_check_eq("object", typeof(ids));
-  do_check_eq(2, Object.keys(ids).length);
+  do_check_eq(3, Object.keys(ids).length);
   do_check_true(addon1.syncGUID in ids);
   do_check_true(addon2.syncGUID in ids);
+  do_check_true(addon3.syncGUID in ids);
 
   addon1.install.cancel();
   uninstallAddon(addon2);
+  uninstallAddon(addon3);
 
   run_next_test();
 });

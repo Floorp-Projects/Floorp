@@ -271,14 +271,17 @@ nsRange::CreateRange(nsINode* aStartParent, int32_t aStartOffset,
                      nsINode* aEndParent, int32_t aEndOffset,
                      nsRange** aRange)
 {
-  nsCOMPtr<nsIDOMNode> startDomNode = do_QueryInterface(aStartParent);
-  nsCOMPtr<nsIDOMNode> endDomNode = do_QueryInterface(aEndParent);
+  MOZ_ASSERT(aRange);
+  *aRange = nullptr;
 
-  nsresult rv = CreateRange(startDomNode, aStartOffset, endDomNode, aEndOffset,
-                            aRange);
-
-  return rv;
-
+  RefPtr<nsRange> range = new nsRange(aStartParent);
+  nsresult rv = range->SetStartAndEnd(aStartParent, aStartOffset,
+                                      aEndParent, aEndOffset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  range.forget(aRange);
+  return NS_OK;
 }
 
 /* static */
@@ -287,24 +290,9 @@ nsRange::CreateRange(nsIDOMNode* aStartParent, int32_t aStartOffset,
                      nsIDOMNode* aEndParent, int32_t aEndOffset,
                      nsRange** aRange)
 {
-  MOZ_ASSERT(aRange);
-  *aRange = nullptr;
-
   nsCOMPtr<nsINode> startParent = do_QueryInterface(aStartParent);
-  NS_ENSURE_ARG_POINTER(startParent);
-
-  RefPtr<nsRange> range = new nsRange(startParent);
-
-  // XXX this can be optimized by inlining SetStart/End and calling
-  // DoSetRange *once*.
-  nsresult rv = range->SetStart(startParent, aStartOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = range->SetEnd(aEndParent, aEndOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  range.forget(aRange);
-  return NS_OK;
+  nsCOMPtr<nsINode> endParent = do_QueryInterface(aEndParent);
+  return CreateRange(startParent, aStartOffset, endParent, aEndOffset, aRange);
 }
 
 /* static */
@@ -1149,6 +1137,15 @@ nsRange::GetCommonAncestorContainer(nsIDOMNode** aCommonParent)
   return rv.StealNSResult();
 }
 
+/* static */
+bool
+nsRange::IsValidOffset(nsINode* aNode, int32_t aOffset)
+{
+  return aNode &&
+         aOffset >= 0 &&
+         static_cast<size_t>(aOffset) <= aNode->Length();
+}
+
 nsINode*
 nsRange::IsValidBoundary(nsINode* aNode)
 {
@@ -1237,7 +1234,7 @@ nsRange::SetStart(nsINode* aParent, int32_t aOffset)
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
 
-  if (aOffset < 0 || uint32_t(aOffset) > aParent->Length()) {
+  if (!IsValidOffset(aParent, aOffset)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
@@ -1274,7 +1271,9 @@ nsRange::SetStartBefore(nsINode& aNode, ErrorResult& aRv)
   }
 
   AutoInvalidateSelection atEndOfBlock(this);
-  aRv = SetStart(aNode.GetParentNode(), IndexOf(&aNode));
+  int32_t offset = -1;
+  nsINode* parent = GetParentAndOffsetBefore(&aNode, &offset);
+  aRv = SetStart(parent, offset);
 }
 
 NS_IMETHODIMP
@@ -1308,7 +1307,9 @@ nsRange::SetStartAfter(nsINode& aNode, ErrorResult& aRv)
   }
 
   AutoInvalidateSelection atEndOfBlock(this);
-  aRv = SetStart(aNode.GetParentNode(), IndexOf(&aNode) + 1);
+  int32_t offset = -1;
+  nsINode* parent = GetParentAndOffsetAfter(&aNode, &offset);
+  aRv = SetStart(parent, offset);
 }
 
 NS_IMETHODIMP
@@ -1365,7 +1366,7 @@ nsRange::SetEnd(nsINode* aParent, int32_t aOffset)
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
 
-  if (aOffset < 0 || uint32_t(aOffset) > aParent->Length()) {
+  if (!IsValidOffset(aParent, aOffset)) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
@@ -1381,6 +1382,64 @@ nsRange::SetEnd(nsINode* aParent, int32_t aOffset)
 
   DoSetRange(mStartParent, mStartOffset, aParent, aOffset, mRoot);
 
+  return NS_OK;
+}
+
+nsresult
+nsRange::SetStartAndEnd(nsINode* aStartParent, int32_t aStartOffset,
+                        nsINode* aEndParent, int32_t aEndOffset)
+{
+  if (NS_WARN_IF(!aStartParent) || NS_WARN_IF(!aEndParent)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsINode* newStartRoot = IsValidBoundary(aStartParent);
+  if (!newStartRoot) {
+    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
+  }
+  if (!IsValidOffset(aStartParent, aStartOffset)) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  if (aStartParent == aEndParent) {
+    if (!IsValidOffset(aEndParent, aEndOffset)) {
+      return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    }
+    // If the end offset is less than the start offset, this should be
+    // collapsed at the end offset.
+    if (aStartOffset > aEndOffset) {
+      DoSetRange(aEndParent, aEndOffset, aEndParent, aEndOffset, newStartRoot);
+    } else {
+      DoSetRange(aStartParent, aStartOffset,
+                 aEndParent, aEndOffset, newStartRoot);
+    }
+    return NS_OK;
+  }
+
+  nsINode* newEndRoot = IsValidBoundary(aEndParent);
+  if (!newEndRoot) {
+    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
+  }
+  if (!IsValidOffset(aEndParent, aEndOffset)) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  // If they have different root, this should be collapsed at the end point.
+  if (newStartRoot != newEndRoot) {
+    DoSetRange(aEndParent, aEndOffset, aEndParent, aEndOffset, newEndRoot);
+    return NS_OK;
+  }
+
+  // If the end point is before the start point, this should be collapsed at
+  // the end point.
+  if (nsContentUtils::ComparePoints(aStartParent, aStartOffset,
+                                    aEndParent, aEndOffset) == 1) {
+    DoSetRange(aEndParent, aEndOffset, aEndParent, aEndOffset, newEndRoot);
+    return NS_OK;
+  }
+
+  // Otherwise, set the range as specified.
+  DoSetRange(aStartParent, aStartOffset, aEndParent, aEndOffset, newStartRoot);
   return NS_OK;
 }
 
@@ -1402,7 +1461,9 @@ nsRange::SetEndBefore(nsINode& aNode, ErrorResult& aRv)
   }
 
   AutoInvalidateSelection atEndOfBlock(this);
-  aRv = SetEnd(aNode.GetParentNode(), IndexOf(&aNode));
+  int32_t offset = -1;
+  nsINode* parent = GetParentAndOffsetBefore(&aNode, &offset);
+  aRv = SetEnd(parent, offset);
 }
 
 NS_IMETHODIMP
@@ -1436,7 +1497,9 @@ nsRange::SetEndAfter(nsINode& aNode, ErrorResult& aRv)
   }
 
   AutoInvalidateSelection atEndOfBlock(this);
-  aRv = SetEnd(aNode.GetParentNode(), IndexOf(&aNode) + 1);
+  int32_t offset = -1;
+  nsINode* parent = GetParentAndOffsetAfter(&aNode, &offset);
+  aRv = SetEnd(parent, offset);
 }
 
 NS_IMETHODIMP

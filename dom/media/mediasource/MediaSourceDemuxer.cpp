@@ -202,11 +202,14 @@ MediaSourceDemuxer::DoDetachSourceBuffer(TrackBuffersManager* aSourceBuffer)
       mSourceBuffers.RemoveElementAt(i);
     }
   }
-  if (aSourceBuffer == mAudioTrack) {
-    mAudioTrack = nullptr;
-  }
-  if (aSourceBuffer == mVideoTrack) {
-    mVideoTrack = nullptr;
+  {
+    MonitorAutoLock mon(mMonitor);
+    if (aSourceBuffer == mAudioTrack) {
+      mAudioTrack = nullptr;
+    }
+    if (aSourceBuffer == mVideoTrack) {
+      mVideoTrack = nullptr;
+    }
   }
   ScanSourceBuffersForContent();
 }

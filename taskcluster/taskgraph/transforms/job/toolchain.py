@@ -91,6 +91,7 @@ def docker_worker_toolchain(config, job, taskdesc):
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
         'TOOLS_DISABLE': 'true',
+        'MOZ_AUTOMATION': '1',
     })
 
     # tooltool downloads.  By default we download using the API endpoint, but
@@ -158,6 +159,7 @@ def windows_toolchain(config, job, taskdesc):
     env.update({
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
+        'MOZ_AUTOMATION': '1',
     })
 
     hg = r'c:\Program Files\Mercurial\hg.exe'

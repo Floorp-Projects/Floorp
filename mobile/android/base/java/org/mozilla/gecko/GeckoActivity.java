@@ -35,16 +35,4 @@ public abstract class GeckoActivity extends AppCompatActivity {
     public boolean isApplicationInBackground() {
         return ((GeckoApplication) getApplication()).isApplicationInBackground();
     }
-
-    @Override
-    public void onLowMemory() {
-        MemoryMonitor.getInstance().onLowMemory();
-        super.onLowMemory();
-    }
-
-    @Override
-    public void onTrimMemory(int level) {
-        MemoryMonitor.getInstance().onTrimMemory(level);
-        super.onTrimMemory(level);
-    }
 }

@@ -133,6 +133,20 @@
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
+/* Bug 1360238 - getSelection displays an extra "\n" on multiple sibling block elements.
+   We rely on this behavior to add an extra "\n" between matched selectors (Bug 1222737).
+   Therefore we use <div> elements around matched selectors and need this class
+   to keep them inline. We do that to avoid doing any formatting logic in JS.
+   Once Bug 1360238 will be fixed, we'll probably have to change the behavior
+   and remove this class. */
+.fix-get-selection {
+  display: inline;
+}
+
+.visually-hidden {
+  opacity: 0;
+}
+
 /* From skin */
 .expander {
   visibility: hidden;

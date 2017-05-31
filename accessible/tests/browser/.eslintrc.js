@@ -31,7 +31,6 @@ module.exports = {
     "max-statements": "off",
     "new-cap": ["error", {"capIsNew": false}],
     "new-parens": "error",
-    "no-array-constructor": "error",
     "no-bitwise": "off",
     "no-caller": "error",
     "no-catch-shadow": "error",

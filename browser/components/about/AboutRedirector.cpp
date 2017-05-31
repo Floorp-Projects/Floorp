@@ -158,8 +158,8 @@ AboutRedirector::NewChannel(nsIURI* aURI,
         NS_ENSURE_SUCCESS(rv, rv);
         rv = aboutNewTabService->GetDefaultURL(url);
         NS_ENSURE_SUCCESS(rv, rv);
-      } else if (path.EqualsLiteral("preferences") && sUseOldPreferences) {
-        url.AssignASCII("chrome://browser/content/preferences/in-content-old/preferences.xul");
+      } else if (path.EqualsLiteral("preferences") && !sUseOldPreferences) {
+        url.AssignASCII("chrome://browser/content/preferences/in-content-new/preferences.xul");
       }
       // fall back to the specified url in the map
       if (url.IsEmpty()) {

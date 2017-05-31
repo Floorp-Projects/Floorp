@@ -9,7 +9,6 @@ macosx64/debug:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -32,8 +31,6 @@ macosx64/opt:
         symbol: tc(B)
         tier: 2
     worker-type: buildbot-bridge/buildbot-bridge
-    worker:
-        implementation: buildbot-bridge
     run:
         using: mozharness
         actions: [get-secrets build generate-build-stats update]
@@ -43,56 +40,6 @@ macosx64/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: internal
-
-macosx64-qr/debug:
-    description: "MacOS X x64 QuantumRender"
-    index:
-        product: firefox
-        job-name: macosx64-qr-debug
-    treeherder:
-        platform: osx-10-7-qr/debug
-        symbol: tc(B)
-        tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
-    worker:
-        implementation: docker-worker
-        max-run-time: 36000
-    run:
-        using: mozharness
-        actions: [get-secrets build generate-build-stats update]
-        config:
-            - builds/releng_base_mac_64_cross_builds.py
-            - balrog/production.py
-        script: "mozharness/scripts/fx_desktop_build.py"
-        secrets: true
-        custom-build-variant-cfg: cross-qr-debug
-        tooltool-downloads: internal
-    run-on-projects: [ 'graphics' ]
-
-macosx64-qr/opt:
-    description: "MacOS X x64 QuantumRender"
-    index:
-        product: firefox
-        job-name: macosx64-qr-opt
-    treeherder:
-        platform: osx-10-7-qr/opt
-        symbol: tc(B)
-        tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
-    worker:
-        implementation: docker-worker
-        max-run-time: 36000
-    run:
-        using: mozharness
-        actions: [get-secrets build generate-build-stats update]
-        config:
-            - builds/releng_base_mac_64_cross_builds.py
-            - balrog/production.py
-        script: "mozharness/scripts/fx_desktop_build.py"
-        secrets: true
-        custom-build-variant-cfg: cross-qr-opt
-        tooltool-downloads: internal
-    run-on-projects: [ 'graphics' ]
 
 macosx64-add-on-devel/opt:
     description: "MacOS X x64 add-on-devel"
@@ -105,7 +52,6 @@ macosx64-add-on-devel/opt:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
        using: mozharness
@@ -133,7 +79,6 @@ macosx64-nightly/opt:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness

@@ -12,5 +12,7 @@ browser.jar:
    content/browser/preferences/in-content/containers.js
    content/browser/preferences/in-content/advanced.js
    content/browser/preferences/in-content/applications.js
+   content/browser/preferences/in-content/content.js
    content/browser/preferences/in-content/sync.js
-   content/browser/preferences/in-content/findInPage.js
+   content/browser/preferences/in-content/security.js
+   content/browser/preferences/in-content/search.js

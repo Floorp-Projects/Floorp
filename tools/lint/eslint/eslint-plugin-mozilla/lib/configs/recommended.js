@@ -141,7 +141,7 @@ module.exports = {
     // "new-parens": "error",
 
     // Use [] instead of Array()
-    // "no-array-constructor": "error",
+    "no-array-constructor": "error",
 
     // Disallow assignment operators in conditional statements
     "no-cond-assign": "error",

@@ -165,7 +165,7 @@ var gTests = [
               synthesizeDragWithDirection(element, expectedData, dragDirections.UP,
                 function() {
                   info("Dragging down");
-                  synthesizeDragWithDirection(element, new Array(), dragDirections.DOWN,
+                  synthesizeDragWithDirection(element, [], dragDirections.DOWN,
                     function() {
                       // Cleanup.
                       PlacesUtils.bookmarks.removeItem(folderId);
@@ -245,4 +245,3 @@ function test() {
     nextTest();
   }
 }
-

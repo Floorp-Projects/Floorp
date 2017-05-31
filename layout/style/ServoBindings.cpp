@@ -411,6 +411,22 @@ Gecko_GetStyleAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
   return decl->AsServo()->RefRawStrong();
 }
 
+void
+Gecko_UnsetDirtyStyleAttr(RawGeckoElementBorrowed aElement)
+{
+  DeclarationBlock* decl = aElement->GetInlineStyleDeclaration();
+  if (!decl) {
+    return;
+  }
+  if (decl->IsGecko()) {
+    // XXX This can happen when nodes are adopted from a Gecko-style-backend
+    //     document into a Servo-style-backend document.  See bug 1330051.
+    NS_WARNING("stylo: requesting a Gecko declaration block?");
+    return;
+  }
+  decl->UnsetDirty();
+}
+
 RawServoDeclarationBlockStrongBorrowedOrNull
 Gecko_GetSMILOverrideDeclarationBlock(RawGeckoElementBorrowed aElement)
 {

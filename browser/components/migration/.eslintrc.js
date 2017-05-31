@@ -14,7 +14,6 @@ module.exports = {
     "indent": ["error", 2, {"SwitchCase": 1, "ArrayExpression": "first", "ObjectExpression": "first"}],
     "max-nested-callbacks": ["error", 3],
     "new-parens": "error",
-    "no-array-constructor": "error",
     "no-control-regex": "error",
     "no-extend-native": "error",
     "no-fallthrough": ["error", { "commentPattern": ".*[Ii]ntentional(?:ly)?\\s+fall(?:ing)?[\\s-]*through.*" }],

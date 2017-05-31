@@ -203,8 +203,8 @@ function getComputedViewProperty(view, name) {
     let nameSpan = property.querySelector(".property-name");
     let valueSpan = property.querySelector(".property-value");
 
-    if (nameSpan.textContent === name) {
-      prop = {nameSpan: nameSpan, valueSpan: valueSpan};
+    if (nameSpan.firstChild.textContent === name) {
+      prop = {nameSpan, valueSpan};
       break;
     }
   }
@@ -222,6 +222,5 @@ function getComputedViewProperty(view, name) {
  * @return {String} The property value
  */
 function getComputedViewPropertyValue(view, name, propertyName) {
-  return getComputedViewProperty(view, name, propertyName)
-    .valueSpan.textContent;
+  return getComputedViewProperty(view, name, propertyName).valueSpan.textContent;
 }

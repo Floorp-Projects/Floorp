@@ -169,8 +169,8 @@ test(function() {
     document.getSelection().setBaseAndExtent(outerEditor.textNode, 0,
                                              staticInEditor.textNode, staticInEditor.textLength);
     document.getSelection().getRangeAt(0).collapse(false);
-    assert_equals(document.activeElement, document.body);
-}, "Active element should be the <body> after Range.collapse(false) of selection between start of the first text node of 'outerEditor' and end of the first text node of 'staticInEditor' when active element is 'outerEditor'");
+    assert_equals(document.activeElement, outerEditor.element);
+}, "Active element should be 'outerEditor' after Range.collapse(false) of selection between start of the first text node of 'outerEditor' and end of the first text node of 'staticInEditor' when active element is 'outerEditor'");
 test(function() {
     resetFocusAndSelectionRange(outerEditor);
     document.getSelection().setBaseAndExtent(outerEditor.textNode, 0,

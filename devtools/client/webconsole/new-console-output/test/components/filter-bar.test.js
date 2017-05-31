@@ -4,12 +4,12 @@
 
 const expect = require("expect");
 const sinon = require("sinon");
-const { render, mount } = require("enzyme");
+const { render, mount, shallow } = require("enzyme");
 
 const { createFactory, DOM } = require("devtools/client/shared/vendor/react");
 const Provider = createFactory(require("react-redux").Provider);
 
-const FilterButton = createFactory(require("devtools/client/webconsole/new-console-output/components/filter-button"));
+const FilterButton = require("devtools/client/webconsole/new-console-output/components/filter-button");
 const FilterBar = createFactory(require("devtools/client/webconsole/new-console-output/components/filter-bar"));
 const { getAllUi } = require("devtools/client/webconsole/new-console-output/selectors/ui");
 const {
@@ -57,6 +57,9 @@ describe("FilterBar component:", () => {
 
     expect(getAllUi(store.getState()).filterBarVisible).toBe(true);
 
+    const secondaryBar = wrapper.find(".webconsole-filterbar-secondary");
+    expect(secondaryBar.length).toBe(1);
+
     // Buttons are displayed
     const filterBtn = props => FilterButton(
       Object.assign({}, {
@@ -79,7 +82,9 @@ describe("FilterBar component:", () => {
       filterBtn({ label: "Requests", filterKey: "net", active: false }),
     ];
 
-    expect(wrapper.containsAllMatchingElements(buttons)).toBe(true);
+    secondaryBar.children().forEach((child, index) => {
+      expect(child.html()).toEqual(shallow(buttons[index]).html());
+    });
   });
 
   it("fires MESSAGES_CLEAR action when clear button is clicked", () => {

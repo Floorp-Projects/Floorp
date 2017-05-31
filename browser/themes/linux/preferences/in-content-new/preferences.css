@@ -1,0 +1,48 @@
+/* - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../../shared/incontentprefs/preferences.inc.css
+
+.treecol-sortdirection {
+  /* override the Linux only toolkit rule */
+  -moz-appearance: none;
+}
+
+.actionsMenu {
+  font-family: "Clear Sans", sans-serif;
+  font-size: 1.25rem;
+  line-height: 22px;
+}
+
+.actionsMenu > .menulist-label-box > .menulist-icon {
+  margin-top: 1px;
+  margin-inline-start: 1px;
+  margin-inline-end: 6px;
+}
+
+.actionsMenu > .menulist-label-box > .menulist-label {
+  margin-top: 2px !important;
+}
+
+#fxaProfileImage {
+  -moz-user-focus: normal;
+}
+
+menulist.actionsMenu > .menulist-dropmarker {
+  margin-top: 11px;
+  margin-bottom: 11px;
+}
+
+textbox + button,
+filefield + button {
+  margin-inline-start: -4px;
+}
+
+/**
+ * Dialog
+ */
+
+#dialogTitle {
+  font-size: 1em;
+}

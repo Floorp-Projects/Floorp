@@ -39,8 +39,10 @@ runWithMSE(function(ms, el) {
     ok(true, "Receive a sourceopen event");
     var videosb = ms.addSourceBuffer("video/mp4");
     is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
-    fetchAndLoad(videosb, 'bipbop/bipbop_video', ['init'], '.mp4')
-    .then(once.bind(null, el, "loadedmetadata"))
+    var promises = [];
+    promises.push(fetchAndLoad(videosb, 'bipbop/bipbop_video', ['init'], '.mp4'));
+    promises.push(once(el, "loadedmetadata"));
+    Promise.all(promises)
     .then(function() {
       el.play();
       videosb.timestampOffset = 2;
@@ -55,7 +57,8 @@ runWithMSE(function(ms, el) {
       return fetchAndLoad(videosb, 'bipbop/bipbop_video', ['2'], '.m4s');
     })
     .then(function() {
-      is(el.readyState, el.HAVE_METADATA, "readyState is HAVE_METADATA");
+      // TODO: readyState should be at least HAVE_CURRENTDATA, see bug 1367993.
+      ok(el.readyState >= el.HAVE_METADATA, "readyState is HAVE_METADATA");
       el.currentTime = 2;
       var promises = [];
       promises.push(once(el, "seeked"));

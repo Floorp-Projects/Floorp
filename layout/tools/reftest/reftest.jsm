@@ -1727,7 +1727,7 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
                     throw "Inconsistent result from compareCanvases.";
                 }
                 equal = expected == EXPECTED_FUZZY;
-                logger.info("REFTEST fuzzy match");
+                logger.info(`REFTEST fuzzy match (${maxDifference.value}, ${differences}) <= (${gURLs[0].fuzzyMaxDelta}, ${gURLs[0].fuzzyMaxPixels})`);
             }
 
             var failedExtraCheck = gFailedNoPaint || gFailedOpaqueLayer || gFailedAssignedLayer;

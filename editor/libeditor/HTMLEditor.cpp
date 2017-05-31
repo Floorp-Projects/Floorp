@@ -3287,8 +3287,8 @@ HTMLEditor::DoContentInserted(nsIDocument* aDocument,
           sibling = sibling->GetNextSibling();
         }
       }
-      nsresult rv = range->Set(aContainer, aIndexInContainer,
-                               aContainer, endIndex);
+      nsresult rv = range->SetStartAndEnd(aContainer, aIndexInContainer,
+                                          aContainer, endIndex);
       if (NS_SUCCEEDED(rv)) {
         mInlineSpellChecker->SpellCheckRange(range);
       }

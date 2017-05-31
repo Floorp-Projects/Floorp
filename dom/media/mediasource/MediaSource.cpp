@@ -12,6 +12,7 @@
 #include "DecoderDoctorDiagnostics.h"
 #include "MediaContainerType.h"
 #include "MediaResult.h"
+#include "MediaSourceDemuxer.h"
 #include "MediaSourceUtils.h"
 #include "SourceBuffer.h"
 #include "SourceBufferList.h"
@@ -255,11 +256,12 @@ MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
   return sourceBuffer.forget();
 }
 
-void
+RefPtr<MediaSource::ActiveCompletionPromise>
 MediaSource::SourceBufferIsActive(SourceBuffer* aSourceBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mActiveSourceBuffers->ClearSimple();
+  bool initMissing = false;
   bool found = false;
   for (uint32_t i = 0; i < mSourceBuffers->Length(); i++) {
     SourceBuffer* sourceBuffer = mSourceBuffers->IndexedGetter(i, found);
@@ -268,8 +270,35 @@ MediaSource::SourceBufferIsActive(SourceBuffer* aSourceBuffer)
       mActiveSourceBuffers->Append(aSourceBuffer);
     } else if (sourceBuffer->IsActive()) {
       mActiveSourceBuffers->AppendSimple(sourceBuffer);
+    } else {
+      // Some source buffers haven't yet received an init segment.
+      // There's nothing more we can do at this stage.
+      initMissing = true;
     }
   }
+  if (initMissing || !mDecoder) {
+    return ActiveCompletionPromise::CreateAndResolve(true, __func__);
+  }
+
+  mDecoder->NotifyInitDataArrived();
+
+  // Add our promise to the queue.
+  // It will be resolved once the HTMLMediaElement modifies its readyState.
+  MozPromiseHolder<ActiveCompletionPromise> holder;
+  RefPtr<ActiveCompletionPromise> promise = holder.Ensure(__func__);
+  mCompletionPromises.AppendElement(Move(holder));
+  return promise;
+}
+
+void
+MediaSource::CompletePendingTransactions()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_DEBUG("Resolving %u promises", unsigned(mCompletionPromises.Length()));
+  for (auto& promise : mCompletionPromises) {
+    promise.Resolve(true, __func__);
+  }
+  mCompletionPromises.Clear();
 }
 
 void
@@ -433,6 +462,7 @@ void
 MediaSource::Detach()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(mCompletionPromises.IsEmpty());
   MSE_DEBUG("mDecoder=%p owner=%p",
             mDecoder.get(), mDecoder ? mDecoder->GetOwner() : nullptr);
   if (!mDecoder) {
