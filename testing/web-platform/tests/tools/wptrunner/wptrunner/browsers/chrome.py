@@ -20,7 +20,7 @@ def check_args(**kwargs):
     require_arg(kwargs, "webdriver_binary")
 
 
-def browser_kwargs(test_type, run_info_data, **kwargs):
+def browser_kwargs(**kwargs):
     return {"binary": kwargs["binary"],
             "webdriver_binary": kwargs["webdriver_binary"],
             "webdriver_args": kwargs.get("webdriver_args")}
@@ -72,7 +72,7 @@ class ChromeBrowser(Browser):
                                          binary=webdriver_binary,
                                          args=webdriver_args)
 
-    def start(self, **kwargs):
+    def start(self):
         self.server.start(block=False)
 
     def stop(self, force=False):

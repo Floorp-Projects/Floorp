@@ -1,6 +1,4 @@
-import fnmatch
 import os
-import re
 import shutil
 import sys
 import uuid
@@ -44,7 +42,7 @@ POSSIBILITY OF SUCH DAMAGE.
 """
 
 
-def copy_wpt_tree(tree, dest, excludes=None, includes=None):
+def copy_wpt_tree(tree, dest):
     """Copy the working copy of a Tree to a destination directory.
 
     :param tree: The Tree to copy.
@@ -53,24 +51,9 @@ def copy_wpt_tree(tree, dest, excludes=None, includes=None):
         assert os.path.isdir(dest)
 
     shutil.rmtree(dest)
-
     os.mkdir(dest)
 
-    if excludes is None:
-        excludes = []
-
-    excludes = [re.compile(fnmatch.translate(item)) for item in excludes]
-
-    if includes is None:
-        includes = []
-
-    includes = [re.compile(fnmatch.translate(item)) for item in includes]
-
     for tree_path in tree.paths():
-        if (any(item.match(tree_path) for item in excludes) and
-            not any(item.match(tree_path) for item in includes)):
-            continue
-
         source_path = os.path.join(tree.root, tree_path)
         dest_path = os.path.join(dest, tree_path)
 
@@ -95,7 +78,6 @@ def add_license(dest):
     :param dest: Directory in which to place the LICENSE file."""
     with open(os.path.join(dest, "LICENSE"), "w") as f:
         f.write(bsd_license)
-
 
 class UpdateCheckout(Step):
     """Pull changes from upstream into the local sync tree."""
@@ -160,9 +142,7 @@ class CopyWorkTree(Step):
 
     def create(self, state):
         copy_wpt_tree(state.sync_tree,
-                      state.tests_path,
-                      excludes=state.path_excludes,
-                      includes=state.path_includes)
+                      state.tests_path)
 
 
 class CreateSyncPatch(Step):
