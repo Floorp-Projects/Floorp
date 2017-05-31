@@ -92,16 +92,6 @@ const SEND_MAXIMUM_BACKOFF_DELAY_MS = 120 * MS_IN_A_MINUTE;
 // The age of a pending ping to be considered overdue (in milliseconds).
 const OVERDUE_PING_FILE_AGE = 7 * 24 * 60 * MS_IN_A_MINUTE; // 1 week
 
-// Strings to map from XHR.errorCode to TELEMETRY_SEND_FAILURE_TYPE.
-// Echoes XMLHttpRequestMainThread's ErrorType enum.
-const XHR_ERROR_TYPE = [
-  'eOK',
-  'eRequest',
-  'eUnreachable',
-  'eChannelOpen',
-  'eRedirect',
-];
-
 function monotonicNow() {
   try {
     return Telemetry.msSinceProcessStart();
@@ -1117,13 +1107,7 @@ var TelemetrySendImpl = {
     };
 
     let errorhandler = (event) => {
-      let failure = event.type;
-      if (failure === 'error') {
-        failure = XHR_ERROR_TYPE[request.errorCode];
-      }
-      Telemetry.getHistogramById("TELEMETRY_SEND_FAILURE_TYPE").add(failure);
-
-      this._log.error("_doPing - error making request to " + url + ": " + failure);
+      this._log.error("_doPing - error making request to " + url + ": " + event.type);
       onRequestFinished(false, event);
     };
     request.onerror = errorhandler;
