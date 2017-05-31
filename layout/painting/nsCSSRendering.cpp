@@ -1969,32 +1969,23 @@ nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(LayerManager* aM
     }
   }
 
-  // We only support painting gradients and image for a single style image layer
   const nsStyleImage* styleImage = &aBackgroundStyle->mImage.mLayers[aLayer].mImage;
-  if (styleImage->GetType() == eStyleImageType_Image) {
-    if (styleImage->GetCropRect()) {
-      return false;
-    }
 
+  // We only support image with image container.
+  if (!styleImage->IsEmpty() && styleImage->GetType() == eStyleImageType_Image) {
     imgRequestProxy* requestProxy = styleImage->GetImageData();
-    if (!requestProxy) {
-      return false;
+    if (requestProxy) {
+      nsCOMPtr<imgIContainer> srcImage;
+      requestProxy->GetImage(getter_AddRefs(srcImage));
+      if (srcImage && !srcImage->IsImageContainerAvailable(aManager, imgIContainer::FLAG_NONE)) {
+        return false;
+      }
     }
-
-    nsCOMPtr<imgIContainer> srcImage;
-    requestProxy->GetImage(getter_AddRefs(srcImage));
-    if (!srcImage || !srcImage->IsImageContainerAvailable(aManager, imgIContainer::FLAG_NONE)) {
-      return false;
-    }
-
-    return true;
   }
 
-  if (styleImage->GetType() == eStyleImageType_Gradient) {
-    return true;
-  }
-
-  return false;
+  // We only support painting gradients and image for a single style image layer
+  return styleImage->GetType() == eStyleImageType_Gradient ||
+         styleImage->GetType() == eStyleImageType_Image;
 }
 
 DrawResult
