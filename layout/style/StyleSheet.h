@@ -53,6 +53,7 @@ class StyleSheet : public nsIDOMCSSStyleSheet
 protected:
   StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMode);
   StyleSheet(const StyleSheet& aCopy,
+             StyleSheet* aParentToUse,
              dom::CSSImportRule* aOwnerRuleToUse,
              nsIDocument* aDocumentToUse,
              nsINode* aOwningNodeToUse);
