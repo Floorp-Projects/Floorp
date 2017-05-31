@@ -9,6 +9,5 @@ DIRS += ['communicator']
 JAR_MANIFESTS += ['jar.mn']
 
 DEFINES['CAN_DRAW_IN_TITLEBAR'] = 1
-DEFINES['MENUBAR_CAN_AUTOHIDE'] = 1
 
 include('../tab-svgs.mozbuild')
