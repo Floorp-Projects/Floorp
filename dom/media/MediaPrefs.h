@@ -165,6 +165,15 @@ private:
   DECL_MEDIA_PREF("media.num-decode-threads",                 MediaThreadPoolDefaultCount, uint32_t, 4);
   DECL_MEDIA_PREF("media.decoder.limit",                      MediaDecoderLimit, int32_t, MediaDecoderLimitDefault());
 
+#if defined(RELEASE_OR_BETA)
+  DECL_MEDIA_PREF("media.audio-max-decode-error",             MaxAudioDecodeError, uint32_t, 3);
+  DECL_MEDIA_PREF("media.video-max-decode-error",             MaxVideoDecodeError, uint32_t, 2);
+#else
+  // Take zero tolerance of decoding error in debug for any decoder regression.
+  DECL_MEDIA_PREF("media.audio-max-decode-error",             MaxAudioDecodeError, uint32_t, 0);
+  DECL_MEDIA_PREF("media.video-max-decode-error",             MaxVideoDecodeError, uint32_t, 0);
+#endif
+
   // Ogg
   DECL_MEDIA_PREF("media.ogg.enabled",                        OggEnabled, bool, true);
   // Flac

@@ -33,11 +33,9 @@ to mochitest command.
   * "layout.css.prefixes.device-pixel-ratio-webkit" support bug 1366956
     * test_media_queries.html `-device-pixel-ratio` [27]
     * test_webkit_device_pixel_ratio.html [3]
-  * test_media_queries_dynamic.html `restyle count`: support elementsRestyled [6]
+  * test_media_queries_dynamic.html `restyle`: bug 1357461 [4]
   * test_media_queries_dynamic_xbl.html: xbl support bug 1290276 [2]
 * Animation support:
-  * OMTA
-    * test_animations_omta.html: bug 1361938, bug 1340005 [*]
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
 * console support bug 1352669
@@ -135,7 +133,6 @@ to mochitest command.
 * Servo is correct but Gecko is wrong
   * Gecko rejects calc() in -webkit-gradient bug 1363349
     * test_property_syntax_errors.html `-webkit-gradient` [20]
-* test_property_syntax_errors.html `linear-gradient(0,`: unitless zero as degree bug 1363292 [10]
 * test_specified_value_serialization.html `-webkit-radial-gradient`: bug 1367299 [1]
 * test_variables.html `var(--var6)`: irrelevant test for stylo bug 1367306 [1]
 

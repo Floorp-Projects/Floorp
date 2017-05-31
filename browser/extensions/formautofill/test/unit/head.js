@@ -82,9 +82,8 @@ function getTempFile(leafName) {
 function runHeuristicsTest(patterns, fixturePathPrefix) {
   Cu.import("resource://gre/modules/FormLikeFactory.jsm");
   Cu.import("resource://formautofill/FormAutofillHeuristics.jsm");
+  Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
-  // TODO: "select" and "textarea" will be included eventually.
-  const QUERY_STRING = ["input"];
   patterns.forEach(testPattern => {
     add_task(function* () {
       do_print("Starting test fixture: " + testPattern.fixturePath);
@@ -93,12 +92,10 @@ function runHeuristicsTest(patterns, fixturePathPrefix) {
 
       let forms = [];
 
-      for (let query of QUERY_STRING) {
-        for (let field of doc.querySelectorAll(query)) {
-          let formLike = FormLikeFactory.createFromField(field);
-          if (!forms.some(form => form.rootElement === formLike.rootElement)) {
-            forms.push(formLike);
-          }
+      for (let field of FormAutofillUtils.autofillFieldSelector(doc)) {
+        let formLike = FormLikeFactory.createFromField(field);
+        if (!forms.some(form => form.rootElement === formLike.rootElement)) {
+          forms.push(formLike);
         }
       }
 
@@ -106,8 +103,8 @@ function runHeuristicsTest(patterns, fixturePathPrefix) {
 
       forms.forEach((form, formIndex) => {
         let formInfo = FormAutofillHeuristics.getFormInfo(form);
-        // TODO: This line should be uncommented to make sure every field are verified.
-        // Assert.equal(formInfo.length, testPattern.expectedResult[formIndex].length, "Expected field count.");
+        do_print("FieldName Prediction Results: " + formInfo.map(i => i.fieldName));
+        Assert.equal(formInfo.length, testPattern.expectedResult[formIndex].length, "Expected field count.");
         formInfo.forEach((field, fieldIndex) => {
           let expectedField = testPattern.expectedResult[formIndex][fieldIndex];
           expectedField.elementWeakRef = field.elementWeakRef;
@@ -120,9 +117,13 @@ function runHeuristicsTest(patterns, fixturePathPrefix) {
 
 add_task(function* head_initialize() {
   Services.prefs.setBoolPref("extensions.formautofill.experimental", true);
+  Services.prefs.setBoolPref("extensions.formautofill.heuristics.enabled", true);
+  Services.prefs.setBoolPref("dom.forms.autocomplete.experimental", true);
 
   // Clean up after every test.
   do_register_cleanup(function head_cleanup() {
     Services.prefs.clearUserPref("extensions.formautofill.experimental");
+    Services.prefs.clearUserPref("extensions.formautofill.heuristics.enabled");
+    Services.prefs.clearUserPref("dom.forms.autocomplete.experimental");
   });
 });

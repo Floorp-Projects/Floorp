@@ -12,7 +12,7 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"}, // city
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // TODO:select,state
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // state
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
       ],
       [ // Sign up
@@ -35,7 +35,7 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"}, // city
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // TODO:select,state
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // state
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
       ],
       [

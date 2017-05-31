@@ -22,7 +22,7 @@ function test() {
               getService(Ci.nsIHandlerService);
   hserv.store(info);
 
-  openPreferencesViaOpenPreferencesAPI("applications", {leaveOpen: true}).then(
+  openPreferencesViaOpenPreferencesAPI("applications", null, {leaveOpen: true}).then(
       () => runTest(gBrowser.selectedBrowser.contentWindow)
   );
 }

@@ -10,7 +10,7 @@ const TESTCASES = [
   {
     description: "Form without autocomplete property",
     document: `<form><input id="given-name"><input id="family-name">
-               <input id="street-addr"><input id="city"><input id="country">
+               <input id="street-addr"><input id="city"><select id="country"></select>
                <input id='email'><input id="tel"></form>`,
     fieldDetails: [],
     profileData: {},
@@ -28,7 +28,7 @@ const TESTCASES = [
                <input id="family-name" autocomplete="family-name">
                <input id="street-addr" autocomplete="street-address">
                <input id="city" autocomplete="address-level2">
-               <input id="country" autocomplete="country">
+               <select id="country" autocomplete="country"></select>
                <input id="email" autocomplete="email">
                <input id="tel" autocomplete="tel"></form>`,
     fieldDetails: [
@@ -62,7 +62,7 @@ const TESTCASES = [
                <input id="family-name" autocomplete="shipping family-name">
                <input id="street-addr" autocomplete="shipping street-address">
                <input id="city" autocomplete="shipping address-level2">
-               <input id="country" autocomplete="shipping country">
+               <select id="country" autocomplete="shipping country"></select>
                <input id='email' autocomplete="shipping email">
                <input id="tel" autocomplete="shipping tel"></form>`,
     fieldDetails: [
@@ -175,8 +175,13 @@ for (let tc of TESTCASES) {
 
       handler.fieldDetails = testcase.fieldDetails;
       handler.fieldDetails.forEach((field, index) => {
-        let element = doc.querySelectorAll("input")[index];
+        let element = doc.querySelectorAll("input, select")[index];
         field.elementWeakRef = Cu.getWeakReference(element);
+        if (element instanceof Ci.nsIDOMHTMLSelectElement) {
+          // TODO: Bug 1364823 should remove the condition and handle filling
+          // value in <select>
+          return;
+        }
         if (!testcase.profileData[field.fieldName]) {
           // Avoid waiting for `change` event of a input with a blank value to
           // be filled.
