@@ -6,35 +6,35 @@
 
 @media (-moz-windows-default-theme: 0) {
   #category-general > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content-old/icons.svg#general-native");
+    list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#general-native");
   }
 
   #category-search > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content-old/icons.svg#search-native");
+    list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#search-native");
   }
 
   #category-content > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content-old/icons.svg#content-native");
+    list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#content-native");
   }
 
   #category-application > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content-old/icons.svg#applications-native");
+    list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#applications-native");
   }
 
   #category-privacy > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content-old/icons.svg#privacy-native");
+    list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#privacy-native");
   }
 
   #category-security > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content-old/icons.svg#security-native");
+    list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#security-native");
   }
 
   #category-sync > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content-old/icons.svg#sync-native");
+    list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#sync-native");
   }
 
   #category-advanced > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content-old/icons.svg#advanced-native");
+    list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#advanced-native");
   }
 }
 

@@ -5,7 +5,7 @@
 <!-- General panel -->
 
 <script type="application/javascript"
-        src="chrome://browser/content/preferences/in-content-old/main.js"/>
+        src="chrome://browser/content/preferences/in-content/main.js"/>
 
 <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences.properties"/>
 

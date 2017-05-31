@@ -91,7 +91,7 @@ static const RedirEntry kRedirMap[] = {
   // the newtab's actual URL will be determined when the channel is created
   { "newtab", "about:blank",
     nsIAboutModule::ALLOW_SCRIPT },
-  { "preferences", "chrome://browser/content/preferences/in-content-new/preferences.xul",
+  { "preferences", "chrome://browser/content/preferences/in-content/preferences.xul",
     nsIAboutModule::ALLOW_SCRIPT },
   { "downloads", "chrome://browser/content/downloads/contentAreaDownloadsView.xul",
     nsIAboutModule::ALLOW_SCRIPT },
@@ -158,8 +158,8 @@ AboutRedirector::NewChannel(nsIURI* aURI,
         NS_ENSURE_SUCCESS(rv, rv);
         rv = aboutNewTabService->GetDefaultURL(url);
         NS_ENSURE_SUCCESS(rv, rv);
-      } else if (path.EqualsLiteral("preferences") && sUseOldPreferences) {
-        url.AssignASCII("chrome://browser/content/preferences/in-content-old/preferences.xul");
+      } else if (path.EqualsLiteral("preferences") && !sUseOldPreferences) {
+        url.AssignASCII("chrome://browser/content/preferences/in-content-new/preferences.xul");
       }
       // fall back to the specified url in the map
       if (url.IsEmpty()) {
