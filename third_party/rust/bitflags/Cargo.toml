@@ -1,7 +1,7 @@
 [package]
 
 name = "bitflags"
-version = "0.7.0"
+version = "0.8.2"
 authors = ["The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -11,3 +11,7 @@ documentation = "https://doc.rust-lang.org/bitflags"
 description = """
 A macro to generate structures which behave like bitflags.
 """
+
+[features]
+i128 = []
+unstable = ["i128"]

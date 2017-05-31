@@ -14,10 +14,11 @@
 //! are O(highest integer key).
 
 // optional serde support
-#![cfg_attr(feature = "eders", feature(const_fn, custom_derive, plugin))]
-#![cfg_attr(feature = "eders", plugin(serde_macros))]
 #[cfg(feature = "eders")]
 extern crate serde;
+#[cfg(feature = "eders")]
+#[macro_use]
+extern crate serde_derive;
 
 use self::Entry::*;
 
@@ -62,9 +63,9 @@ use std::vec;
 /// months.clear();
 /// assert!(months.is_empty());
 /// ```
-#[derive(Clone)]
 #[cfg_attr(feature = "eders", derive(Serialize, Deserialize))]
 pub struct VecMap<V> {
+    n: usize,
     v: Vec<Option<V>>,
 }
 
@@ -116,7 +117,7 @@ impl<V> VecMap<V> {
     /// use vec_map::VecMap;
     /// let mut map: VecMap<&str> = VecMap::new();
     /// ```
-    pub fn new() -> Self { VecMap { v: vec![] } }
+    pub fn new() -> Self { VecMap { n: 0, v: vec![] } }
 
     /// Creates an empty `VecMap` with space for at least `capacity`
     /// elements before resizing.
@@ -128,7 +129,7 @@ impl<V> VecMap<V> {
     /// let mut map: VecMap<&str> = VecMap::with_capacity(10);
     /// ```
     pub fn with_capacity(capacity: usize) -> Self {
-        VecMap { v: Vec::with_capacity(capacity) }
+        VecMap { n: 0, v: Vec::with_capacity(capacity) }
     }
 
     /// Returns the number of elements the `VecMap` can hold without
@@ -224,6 +225,8 @@ impl<V> VecMap<V> {
         Iter {
             front: 0,
             back: self.v.len(),
+            n: self.n,
+            yielded: 0,
             iter: self.v.iter()
         }
     }
@@ -254,6 +257,8 @@ impl<V> VecMap<V> {
         IterMut {
             front: 0,
             back: self.v.len(),
+            n: self.n,
+            yielded: 0,
             iter: self.v.iter_mut()
         }
     }
@@ -317,6 +322,7 @@ impl<V> VecMap<V> {
 
         if at == 0 {
             // Move all elements to other
+            // The swap will also fix .n
             swap(self, &mut other);
             return other
         } else if at >= self.v.len() {
@@ -338,7 +344,16 @@ impl<V> VecMap<V> {
         other.v.extend((0..start_index).map(|_| None));
 
         // Move elements beginning with `start_index` from `self` into `other`
-        other.v.extend(self.v[start_index..].iter_mut().map(|el| el.take()));
+        let mut taken = 0;
+        other.v.extend(self.v[start_index..].iter_mut().map(|el| {
+            let el = el.take();
+            if el.is_some() {
+                taken += 1;
+            }
+            el
+        }));
+        other.n = taken;
+        self.n -= taken;
 
         other
     }
@@ -367,6 +382,7 @@ impl<V> VecMap<V> {
         }
         let filter: fn((usize, Option<V>)) -> Option<(usize, V)> = filter; // coerce to fn ptr
 
+        self.n = 0;
         Drain { iter: self.v.drain(..).enumerate().filter_map(filter) }
     }
 
@@ -383,7 +399,7 @@ impl<V> VecMap<V> {
     /// assert_eq!(a.len(), 1);
     /// ```
     pub fn len(&self) -> usize {
-        self.v.iter().filter(|elt| elt.is_some()).count()
+        self.n
     }
 
     /// Returns true if the map contains no elements.
@@ -399,7 +415,7 @@ impl<V> VecMap<V> {
     /// assert!(!a.is_empty());
     /// ```
     pub fn is_empty(&self) -> bool {
-        self.v.iter().all(|elt| elt.is_none())
+        self.n == 0
     }
 
     /// Clears the map, removing all key-value pairs.
@@ -414,7 +430,7 @@ impl<V> VecMap<V> {
     /// a.clear();
     /// assert!(a.is_empty());
     /// ```
-    pub fn clear(&mut self) { self.v.clear() }
+    pub fn clear(&mut self) { self.n = 0; self.v.clear() }
 
     /// Returns a reference to the value corresponding to the key.
     ///
@@ -502,7 +518,11 @@ impl<V> VecMap<V> {
         if len <= key {
             self.v.extend((0..key - len + 1).map(|_| None));
         }
-        replace(&mut self.v[key], Some(value))
+        let was = replace(&mut self.v[key], Some(value));
+        if was.is_none() {
+            self.n += 1;
+        }
+        was
     }
 
     /// Removes a key from the map, returning the value at the key if the key
@@ -523,7 +543,11 @@ impl<V> VecMap<V> {
             return None;
         }
         let result = &mut self.v[key];
-        result.take()
+        let was = result.take();
+        if was.is_some() {
+            self.n -= 1;
+        }
+        was
     }
 
     /// Gets the given key's corresponding entry in the map for in-place manipulation.
@@ -625,9 +649,22 @@ impl<'a, V> OccupiedEntry<'a, V> {
     }
 }
 
+impl<V: Clone> Clone for VecMap<V> {
+    #[inline]
+    fn clone(&self) -> Self {
+        VecMap { n: self.n, v: self.v.clone() }
+    }
+
+    #[inline]
+    fn clone_from(&mut self, source: &Self) {
+        self.v.clone_from(&source.v);
+        self.n = source.n;
+    }
+}
+
 impl<V: PartialEq> PartialEq for VecMap<V> {
     fn eq(&self, other: &Self) -> bool {
-        self.iter().eq(other.iter())
+        self.n == other.n && self.iter().eq(other.iter())
     }
 }
 
@@ -684,7 +721,11 @@ impl<T> IntoIterator for VecMap<T> {
     /// assert_eq!(vec, [(1, "a"), (2, "b"), (3, "c")]);
     /// ```
     fn into_iter(self) -> IntoIter<T> {
-        IntoIter { iter: self.v.into_iter().enumerate() }
+        IntoIter {
+            n: self.n,
+            yielded: 0,
+            iter: self.v.into_iter().enumerate()
+        }
     }
 }
 
@@ -766,6 +807,7 @@ macro_rules! iterator {
                                 Some(x) => {
                                     let index = self.front;
                                     self.front += 1;
+                                    self.yielded += 1;
                                     return Some((index, x));
                                 },
                                 None => {},
@@ -780,7 +822,7 @@ macro_rules! iterator {
 
             #[inline]
             fn size_hint(&self) -> (usize, Option<usize>) {
-                (0, Some(self.back - self.front))
+                (self.n - self.yielded, Some(self.n - self.yielded))
             }
         }
     }
@@ -816,6 +858,8 @@ macro_rules! double_ended_iterator {
 pub struct Iter<'a, V: 'a> {
     front: usize,
     back: usize,
+    n: usize,
+    yielded: usize,
     iter: slice::Iter<'a, Option<V>>
 }
 
@@ -825,12 +869,15 @@ impl<'a, V> Clone for Iter<'a, V> {
         Iter {
             front: self.front,
             back: self.back,
+            n: self.n,
+            yielded: self.yielded,
             iter: self.iter.clone()
         }
     }
 }
 
 iterator! { impl Iter -> (usize, &'a V), as_ref }
+impl<'a, V> ExactSizeIterator for Iter<'a, V> {}
 double_ended_iterator! { impl Iter -> (usize, &'a V), as_ref }
 
 /// An iterator over the key-value pairs of a map, with the
@@ -838,10 +885,13 @@ double_ended_iterator! { impl Iter -> (usize, &'a V), as_ref }
 pub struct IterMut<'a, V: 'a> {
     front: usize,
     back: usize,
+    n: usize,
+    yielded: usize,
     iter: slice::IterMut<'a, Option<V>>
 }
 
 iterator! { impl IterMut -> (usize, &'a mut V), as_mut }
+impl<'a, V> ExactSizeIterator for IterMut<'a, V> {}
 double_ended_iterator! { impl IterMut -> (usize, &'a mut V), as_mut }
 
 /// An iterator over the keys of a map.
@@ -874,6 +924,8 @@ impl<'a, V> Clone for Values<'a, V> {
 
 /// A consuming iterator over the key-value pairs of a map.
 pub struct IntoIter<V> {
+    n: usize,
+    yielded: usize,
     iter: Enumerate<vec::IntoIter<Option<V>>>,
 }
 
@@ -891,6 +943,8 @@ impl<'a, V> Iterator for Drain<'a, V> {
     fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
 }
 
+impl<'a, V> ExactSizeIterator for Drain<'a, V> {}
+
 impl<'a, V> DoubleEndedIterator for Drain<'a, V> {
     fn next_back(&mut self) -> Option<(usize, V)> { self.iter.next_back() }
 }
@@ -901,6 +955,8 @@ impl<'a, V> Iterator for Keys<'a, V> {
     fn next(&mut self) -> Option<usize> { self.iter.next().map(|e| e.0) }
     fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
 }
+
+impl<'a, V> ExactSizeIterator for Keys<'a, V> {}
 
 impl<'a, V> DoubleEndedIterator for Keys<'a, V> {
     fn next_back(&mut self) -> Option<usize> { self.iter.next_back().map(|e| e.0) }
@@ -913,6 +969,8 @@ impl<'a, V> Iterator for Values<'a, V> {
     fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
 }
 
+impl<'a, V> ExactSizeIterator for Values<'a, V> {}
+
 impl<'a, V> DoubleEndedIterator for Values<'a, V> {
     fn next_back(&mut self) -> Option<(&'a V)> { self.iter.next_back().map(|e| e.1) }
 }
@@ -924,14 +982,21 @@ impl<V> Iterator for IntoIter<V> {
         loop {
             match self.iter.next() {
                 None => return None,
-                Some((i, Some(value))) => return Some((i, value)),
+                Some((i, Some(value))) => {
+                    self.yielded += 1;
+                    return Some((i, value))
+                },
                 _ => {}
             }
         }
     }
 
-    fn size_hint(&self) -> (usize, Option<usize>) { self.iter.size_hint() }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.n - self.yielded, Some(self.n - self.yielded))
+    }
 }
+
+impl<V> ExactSizeIterator for IntoIter<V> {}
 
 impl<V> DoubleEndedIterator for IntoIter<V> {
     fn next_back(&mut self) -> Option<(usize, V)> {
@@ -1059,15 +1124,15 @@ mod test {
         assert!(m.insert(10, 11).is_none());
 
         let mut it = m.iter();
-        assert_eq!(it.size_hint(), (0, Some(11)));
+        assert_eq!(it.size_hint(), (5, Some(5)));
         assert_eq!(it.next().unwrap(), (0, &1));
-        assert_eq!(it.size_hint(), (0, Some(10)));
+        assert_eq!(it.size_hint(), (4, Some(4)));
         assert_eq!(it.next().unwrap(), (1, &2));
-        assert_eq!(it.size_hint(), (0, Some(9)));
+        assert_eq!(it.size_hint(), (3, Some(3)));
         assert_eq!(it.next().unwrap(), (3, &5));
-        assert_eq!(it.size_hint(), (0, Some(7)));
+        assert_eq!(it.size_hint(), (2, Some(2)));
         assert_eq!(it.next().unwrap(), (6, &10));
-        assert_eq!(it.size_hint(), (0, Some(4)));
+        assert_eq!(it.size_hint(), (1, Some(1)));
         assert_eq!(it.next().unwrap(), (10, &11));
         assert_eq!(it.size_hint(), (0, Some(0)));
         assert!(it.next().is_none());
@@ -1083,10 +1148,10 @@ mod test {
         assert!(m.insert(6, 10).is_none());
         assert!(m.insert(10, 11).is_none());
 
-        assert_eq!(m.iter().size_hint(), (0, Some(11)));
-        assert_eq!(m.iter().rev().size_hint(), (0, Some(11)));
-        assert_eq!(m.iter_mut().size_hint(), (0, Some(11)));
-        assert_eq!(m.iter_mut().rev().size_hint(), (0, Some(11)));
+        assert_eq!(m.iter().size_hint(), (5, Some(5)));
+        assert_eq!(m.iter().rev().size_hint(), (5, Some(5)));
+        assert_eq!(m.iter_mut().size_hint(), (5, Some(5)));
+        assert_eq!(m.iter_mut().rev().size_hint(), (5, Some(5)));
     }
 
     #[test]
@@ -1473,7 +1538,7 @@ mod test {
     #[cfg(feature = "eders")]
     fn test_serde() {
         use serde::{Serialize, Deserialize};
-        fn impls_serde_traits<S: Serialize + Deserialize>() {}
+        fn impls_serde_traits<'de, S: Serialize + Deserialize<'de>>() {}
 
         impls_serde_traits::<VecMap<u32>>();
     }

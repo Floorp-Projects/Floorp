@@ -11,6 +11,7 @@ use app::parser::Parser;
 use args::{AnyArg, ArgSettings, DispOrder};
 use errors::{Error, Result as ClapResult};
 use fmt::{Format, Colorizer};
+use app::usage;
 
 // Third Party
 use unicode_width::UnicodeWidthStr;
@@ -88,6 +89,7 @@ pub struct Help<'a> {
     cizer: Colorizer,
     longest: usize,
     force_next_line: bool,
+    use_long: bool,
 }
 
 // Public Functions
@@ -99,7 +101,8 @@ impl<'a> Help<'a> {
                color: bool,
                cizer: Colorizer,
                term_w: Option<usize>,
-               max_w: Option<usize>)
+               max_w: Option<usize>,
+               use_long: bool)
                -> Self {
         debugln!("Help::new;");
         Help {
@@ -120,21 +123,22 @@ impl<'a> Help<'a> {
             cizer: cizer,
             longest: 0,
             force_next_line: false,
+            use_long: use_long,
         }
     }
 
     /// Reads help settings from an App
     /// and write its help to the wrapped stream.
-    pub fn write_app_help(w: &'a mut Write, app: &App) -> ClapResult<()> {
+    pub fn write_app_help(w: &'a mut Write, app: &App, use_long: bool) -> ClapResult<()> {
         debugln!("Help::write_app_help;");
-        Self::write_parser_help(w, &app.p)
+        Self::write_parser_help(w, &app.p, use_long)
     }
 
     /// Reads help settings from a Parser
     /// and write its help to the wrapped stream.
-    pub fn write_parser_help(w: &'a mut Write, parser: &Parser) -> ClapResult<()> {
+    pub fn write_parser_help(w: &'a mut Write, parser: &Parser, use_long: bool) -> ClapResult<()> {
         debugln!("Help::write_parser_help;");
-        Self::_write_parser_help(w, parser, false)
+        Self::_write_parser_help(w, parser, false, use_long)
     }
 
     /// Reads help settings from a Parser
@@ -142,11 +146,11 @@ impl<'a> Help<'a> {
     /// formatting when required.
     pub fn write_parser_help_to_stderr(w: &'a mut Write, parser: &Parser) -> ClapResult<()> {
         debugln!("Help::write_parser_help;");
-        Self::_write_parser_help(w, parser, true)
+        Self::_write_parser_help(w, parser, true, false)
     }
 
     #[doc(hidden)]
-    pub fn _write_parser_help(w: &'a mut Write, parser: &Parser, stderr: bool) -> ClapResult<()> {
+    pub fn _write_parser_help(w: &'a mut Write, parser: &Parser, stderr: bool, use_long: bool) -> ClapResult<()> {
         debugln!("Help::write_parser_help;");
         let nlh = parser.is_set(AppSettings::NextLineHelp);
         let hide_v = parser.is_set(AppSettings::HidePossibleValuesInHelp);
@@ -161,8 +165,9 @@ impl<'a> Help<'a> {
                   color,
                   cizer,
                   parser.meta.term_w,
-                  parser.meta.max_w)
-            .write_help(parser)
+                  parser.meta.max_w,
+                  use_long)
+                .write_help(parser)
     }
 
     /// Writes the parser help to the wrapped stream.
@@ -190,14 +195,13 @@ impl<'a> Help<'a> {
         self.longest = 2;
         let mut arg_v = Vec::with_capacity(10);
         for arg in args.filter(|arg| {
-            !(arg.is_set(ArgSettings::Hidden)) || arg.is_set(ArgSettings::NextLineHelp)
-        }) {
+                                   !(arg.is_set(ArgSettings::Hidden)) ||
+                                   arg.is_set(ArgSettings::NextLineHelp)
+                               }) {
             if arg.longest_filter() {
                 self.longest = cmp::max(self.longest, arg.to_string().len());
             }
-            if !arg.is_set(ArgSettings::Hidden) {
-                arg_v.push(arg)
-            }
+            arg_v.push(arg)
         }
         let mut first = true;
         for arg in arg_v {
@@ -284,7 +288,13 @@ impl<'a> Help<'a> {
                 }
                 try!(color!(self, "--{}", l, good))
             }
-            try!(write!(self.writer, " "));
+
+            let sep = if arg.is_set(ArgSettings::RequireEquals) {
+                "="
+            } else {
+                " "
+            };
+            try!(write!(self.writer, "{}", sep));
         } else if let Some(l) = arg.long() {
             if arg.short().is_some() {
                 try!(write!(self.writer, ", "));
@@ -384,7 +394,8 @@ impl<'a> Help<'a> {
         debugln!("Help::write_before_after_help;");
         let mut help = String::new();
         // determine if our help fits or needs to wrap
-        debugln!("Help::write_before_after_help: Term width...{}", self.term_w);
+        debugln!("Help::write_before_after_help: Term width...{}",
+                 self.term_w);
         let too_long = str_width(h) >= self.term_w;
 
         debug!("Help::write_before_after_help: Too long...");
@@ -392,10 +403,12 @@ impl<'a> Help<'a> {
             sdebugln!("Yes");
             help.push_str(h);
             debugln!("Help::write_before_after_help: help: {}", help);
-            debugln!("Help::write_before_after_help: help width: {}", str_width(&*help));
+            debugln!("Help::write_before_after_help: help width: {}",
+                     str_width(&*help));
             // Determine how many newlines we need to insert
-            debugln!("Help::write_before_after_help: Usable space: {}", self.term_w);
-            let longest_w = find_longest!(help);            
+            debugln!("Help::write_before_after_help: Usable space: {}",
+                     self.term_w);
+            let longest_w = find_longest!(help);
             help = help.replace("{n}", "\n");
             wrap_help(&mut help, longest_w, self.term_w);
         } else {
@@ -424,8 +437,12 @@ impl<'a> Help<'a> {
     fn help<'b, 'c>(&mut self, arg: &ArgWithDisplay<'b, 'c>, spec_vals: &str) -> io::Result<()> {
         debugln!("Help::help;");
         let mut help = String::new();
-        let h = arg.help().unwrap_or("");
-        let nlh = self.next_line_help || arg.is_set(ArgSettings::NextLineHelp);
+        let h = if self.use_long {
+            arg.long_help().unwrap_or(arg.help().unwrap_or(""))
+        } else {
+            arg.help().unwrap_or(arg.long_help().unwrap_or(""))
+        };
+        let nlh = self.next_line_help || arg.is_set(ArgSettings::NextLineHelp) || self.use_long;
         debugln!("Help::help: Next Line...{:?}", nlh);
 
         let spcs = if nlh || self.force_next_line {
@@ -451,7 +468,7 @@ impl<'a> Help<'a> {
             // Determine how many newlines we need to insert
             let avail_chars = self.term_w - spcs;
             debugln!("Help::help: Usable space...{}", avail_chars);
-            let longest_w = find_longest!(help);            
+            let longest_w = find_longest!(help);
             help = help.replace("{n}", "\n");
             wrap_help(&mut help, longest_w, avail_chars);
         } else {
@@ -481,6 +498,9 @@ impl<'a> Help<'a> {
                 }
                 try!(write!(self.writer, "{}", part));
             }
+        } else if nlh || self.force_next_line {
+            try!(write!(self.writer, "{}", help));
+            try!(write!(self.writer, "\n"));
         } else {
             try!(write!(self.writer, "{}", help));
         }
@@ -490,20 +510,23 @@ impl<'a> Help<'a> {
     fn spec_vals(&self, a: &ArgWithDisplay) -> String {
         debugln!("Help::spec_vals: a={}", a);
         let mut spec_vals = vec![];
-        if let Some(pv) = a.default_val() {
-            debugln!("Help::spec_vals: Found default value...[{}]", pv);
-            spec_vals.push(format!(" [default: {}]",
-                                   if self.color {
-                                       self.cizer.good(pv)
-                                   } else {
-                                       Format::None(pv)
-                                   }));
+        if !a.is_set(ArgSettings::HideDefaultValue) {
+            if let Some(pv) = a.default_val() {
+                debugln!("Help::spec_vals: Found default value...[{:?}]", pv);
+                spec_vals.push(format!(" [default: {}]",
+                                       if self.color {
+                                           self.cizer.good(pv.to_string_lossy())
+                                       } else {
+                                           Format::None(pv.to_string_lossy())
+                                       }));
+            }
         }
         if let Some(ref aliases) = a.aliases() {
             debugln!("Help::spec_vals: Found aliases...{:?}", aliases);
             spec_vals.push(format!(" [aliases: {}]",
                                    if self.color {
-                                       aliases.iter()
+                                       aliases
+                                           .iter()
                                            .map(|v| format!("{}", self.cizer.good(v)))
                                            .collect::<Vec<_>>()
                                            .join(", ")
@@ -515,14 +538,14 @@ impl<'a> Help<'a> {
             if let Some(pv) = a.possible_vals() {
                 debugln!("Help::spec_vals: Found possible vals...{:?}", pv);
                 spec_vals.push(if self.color {
-                    format!(" [values: {}]",
-                            pv.iter()
-                                .map(|v| format!("{}", self.cizer.good(v)))
-                                .collect::<Vec<_>>()
-                                .join(", "))
-                } else {
-                    format!(" [values: {}]", pv.join(", "))
-                });
+                                   format!(" [values: {}]",
+                                           pv.iter()
+                                               .map(|v| format!("{}", self.cizer.good(v)))
+                                               .collect::<Vec<_>>()
+                                               .join(", "))
+                               } else {
+                                   format!(" [values: {}]", pv.join(", "))
+                               });
             }
         }
         spec_vals.join(" ")
@@ -538,7 +561,10 @@ impl<'a> Help<'a> {
     pub fn write_all_args(&mut self, parser: &Parser) -> ClapResult<()> {
         debugln!("Help::write_all_args;");
         let flags = parser.has_flags();
-        let pos = parser.has_positionals();
+        let pos = parser
+            .positionals()
+            .filter(|arg| !arg.is_set(ArgSettings::Hidden))
+            .count() > 0;
         let opts = parser.has_opts();
         let subcmds = parser.has_subcommands();
 
@@ -547,7 +573,8 @@ impl<'a> Help<'a> {
         let mut first = true;
 
         if unified_help && (flags || opts) {
-            let opts_flags = parser.flags()
+            let opts_flags = parser
+                .flags()
                 .map(as_arg_trait)
                 .chain(parser.opts().map(as_arg_trait));
             try!(color!(self, "OPTIONS:\n", warning));
@@ -556,8 +583,7 @@ impl<'a> Help<'a> {
         } else {
             if flags {
                 try!(color!(self, "FLAGS:\n", warning));
-                try!(self.write_args(parser.flags()
-                    .map(as_arg_trait)));
+                try!(self.write_args(parser.flags().map(as_arg_trait)));
                 first = false;
             }
             if opts {
@@ -596,8 +622,13 @@ impl<'a> Help<'a> {
         // The shortest an arg can legally be is 2 (i.e. '-x')
         self.longest = 2;
         let mut ord_m = VecMap::new();
-        for sc in parser.subcommands.iter().filter(|s| !s.p.is_set(AppSettings::Hidden)) {
-            let btm = ord_m.entry(sc.p.meta.disp_ord).or_insert(BTreeMap::new());
+        for sc in parser
+                .subcommands
+                .iter()
+                .filter(|s| !s.p.is_set(AppSettings::Hidden)) {
+            let btm = ord_m
+                .entry(sc.p.meta.disp_ord)
+                .or_insert(BTreeMap::new());
             self.longest = cmp::max(self.longest, sc.p.meta.name.len());
             btm.insert(sc.p.meta.name.clone(), sc.clone());
         }
@@ -681,7 +712,7 @@ impl<'a> Help<'a> {
         try!(write!(self.writer,
                     "\n{}{}\n\n",
                     TAB,
-                    parser.create_usage_no_title(&[])));
+                    usage::create_usage_no_title(parser, &[])));
 
         let flags = parser.has_flags();
         let pos = parser.has_positionals();
@@ -851,9 +882,9 @@ impl<'a> Help<'a> {
 
             debugln!("Help::write_template_help:iter: tag_buf={};", unsafe {
                 String::from_utf8_unchecked(tag_buf.get_ref()[0..tag_length]
-                    .iter()
-                    .map(|&i| i)
-                    .collect::<Vec<_>>())
+                                                .iter()
+                                                .map(|&i| i)
+                                                .collect::<Vec<_>>())
             });
             match &tag_buf.get_ref()[0..tag_length] {
                 b"?" => {
@@ -878,28 +909,26 @@ impl<'a> Help<'a> {
                                 parser.meta.about.unwrap_or("unknown about")));
                 }
                 b"usage" => {
-                    try!(write!(self.writer, "{}", parser.create_usage_no_title(&[])));
+                    try!(write!(self.writer, "{}", usage::create_usage_no_title(parser, &[])));
                 }
                 b"all-args" => {
                     try!(self.write_all_args(&parser));
                 }
                 b"unified" => {
-                    let opts_flags = parser.flags()
+                    let opts_flags = parser
+                        .flags()
                         .map(as_arg_trait)
                         .chain(parser.opts().map(as_arg_trait));
                     try!(self.write_args(opts_flags));
                 }
                 b"flags" => {
-                    try!(self.write_args(parser.flags()
-                        .map(as_arg_trait)));
+                    try!(self.write_args(parser.flags().map(as_arg_trait)));
                 }
                 b"options" => {
-                    try!(self.write_args(parser.opts()
-                        .map(as_arg_trait)));
+                    try!(self.write_args(parser.opts().map(as_arg_trait)));
                 }
                 b"positionals" => {
-                    try!(self.write_args(parser.positionals()
-                        .map(as_arg_trait)));
+                    try!(self.write_args(parser.positionals().map(as_arg_trait)));
                 }
                 b"subcommands" => {
                     try!(self.write_subcommands(&parser));
@@ -938,7 +967,8 @@ fn wrap_help(help: &mut String, longest_w: usize, avail_chars: usize) {
             debugln!("Help::wrap_help:iter: idx={}, g={}", idx, g);
             if g == "\n" {
                 debugln!("Help::wrap_help:iter: Newline found...");
-                debugln!("Help::wrap_help:iter: Still space...{:?}", str_width(&help[j..idx]) < avail_chars);
+                debugln!("Help::wrap_help:iter: Still space...{:?}",
+                         str_width(&help[j..idx]) < avail_chars);
                 if str_width(&help[j..idx]) < avail_chars {
                     j = idx;
                     continue;
@@ -957,7 +987,7 @@ fn wrap_help(help: &mut String, longest_w: usize, avail_chars: usize) {
             j = prev_space;
             debugln!("Help::wrap_help:iter: prev_space={}, j={}", prev_space, j);
             debugln!("Help::wrap_help:iter: Removing...{}", j);
-            debugln!("Help::wrap_help:iter: Char at {}: {:?}", j, &help[j..j+1]);
+            debugln!("Help::wrap_help:iter: Char at {}: {:?}", j, &help[j..j + 1]);
             help.remove(j);
             help.insert(j, '\n');
             prev_space = idx;
