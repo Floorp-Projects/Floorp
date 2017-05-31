@@ -3460,6 +3460,9 @@ public:
     }
   }
 
+  // Reports size of the FrameProperties for this frame and its descendants
+  size_t SizeOfFramePropertiesForTree(mozilla::MallocSizeOf aMallocSizeOf) const;
+
   /**
    * Return true if and only if this frame obeys visibility:hidden.
    * if it does not, then nsContainerFrame will hide its view even though
