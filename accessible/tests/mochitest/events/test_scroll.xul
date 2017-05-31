@@ -64,7 +64,13 @@
 
       this.invoke = function loadTabInBackground_invoke()
       {
-        tabBrowser().loadOneTab(aURL, null, "", null, true);
+        tabBrowser().loadOneTab(aURL, {
+          referrerURI: null,
+          charset: "",
+          postData: null,
+          inBackground: true,
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        });
       }
 
       this.getID = function loadTabInBackground_getID()
