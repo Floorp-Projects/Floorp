@@ -2850,7 +2850,7 @@ profiler_get_backtrace_noalloc(char *output, size_t outputSize)
 }
 
 static void
-locked_profiler_add_marker(PSLockRef aLock, const char* aMarkerName,
+locked_profiler_add_marker(PSLockRef aLock, const char* aMarker,
                            ProfilerMarkerPayload* aPayload)
 {
   // This function runs both on and off the main thread.
@@ -2871,12 +2871,12 @@ locked_profiler_add_marker(PSLockRef aLock, const char* aMarkerName,
                             ? payload->GetStartTime()
                             : mozilla::TimeStamp::Now();
   mozilla::TimeDuration delta = origin - CorePS::ProcessStartTime(aLock);
-  racyInfo->AddPendingMarker(aMarkerName, payload.release(),
+  racyInfo->AddPendingMarker(aMarker, payload.release(),
                              delta.ToMilliseconds());
 }
 
 void
-profiler_add_marker(const char* aMarkerName, ProfilerMarkerPayload* aPayload)
+profiler_add_marker(const char* aMarker, ProfilerMarkerPayload* aPayload)
 {
   // This function runs both on and off the main thread.
 
@@ -2891,12 +2891,11 @@ profiler_add_marker(const char* aMarkerName, ProfilerMarkerPayload* aPayload)
     return;
   }
 
-  locked_profiler_add_marker(lock, aMarkerName, payload.release());
+  locked_profiler_add_marker(lock, aMarker, payload.release());
 }
 
 void
-profiler_tracing(const char* aCategory, const char* aMarkerName,
-                 TracingKind aKind)
+profiler_tracing(const char* aCategory, const char* aInfo, TracingKind aKind)
 {
   // This function runs both on and off the main thread.
 
@@ -2908,12 +2907,12 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
     return;
   }
 
-  auto payload = new ProfilerMarkerTracing(aCategory, aKind);
-  locked_profiler_add_marker(lock, aMarkerName, payload);
+  auto marker = new ProfilerMarkerTracing(aCategory, aKind);
+  locked_profiler_add_marker(lock, aInfo, marker);
 }
 
 void
-profiler_tracing(const char* aCategory, const char* aMarkerName,
+profiler_tracing(const char* aCategory, const char* aInfo,
                  UniqueProfilerBacktrace aCause, TracingKind aKind)
 {
   // This function runs both on and off the main thread.
@@ -2926,9 +2925,9 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
     return;
   }
 
-  auto payload =
+  auto marker =
     new ProfilerMarkerTracing(aCategory, aKind, mozilla::Move(aCause));
-  locked_profiler_add_marker(lock, aMarkerName, payload);
+  locked_profiler_add_marker(lock, aInfo, marker);
 }
 
 void
