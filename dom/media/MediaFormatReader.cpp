@@ -1098,9 +1098,9 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
                                      VideoFrameContainer* aVideoFrameContainer)
   : MediaDecoderReader(aDecoder)
   , mAudio(this, MediaData::AUDIO_DATA,
-           Preferences::GetUint("media.audio-max-decode-error", 3))
+           MediaPrefs::MaxAudioDecodeError())
   , mVideo(this, MediaData::VIDEO_DATA,
-           Preferences::GetUint("media.video-max-decode-error", 2))
+           MediaPrefs::MaxVideoDecodeError())
   , mDemuxer(new DemuxerProxy(aDemuxer))
   , mDemuxerInitDone(false)
   , mPendingNotifyDataArrived(false)

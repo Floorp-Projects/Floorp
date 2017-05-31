@@ -769,6 +769,7 @@ public class BrowserApp extends GeckoApp
             "Menu:Remove",
             "Menu:AddBrowserAction",
             "Menu:RemoveBrowserAction",
+            "Menu:UpdateBrowserAction",
             "LightweightTheme:Update",
             "Tab:Added",
             "Video:Play",
@@ -1578,6 +1579,7 @@ public class BrowserApp extends GeckoApp
             "Menu:Remove",
             "Menu:AddBrowserAction",
             "Menu:RemoveBrowserAction",
+            "Menu:UpdateBrowserAction",
             "LightweightTheme:Update",
             "Tab:Added",
             "Video:Play",
@@ -1897,6 +1899,11 @@ public class BrowserApp extends GeckoApp
 
             case "Menu:RemoveBrowserAction":
                 removeBrowserActionMenuItem(message.getString("uuid"));
+                break;
+
+            case "Menu:UpdateBrowserAction":
+                updateBrowserActionMenuItem(message.getString("uuid"),
+                                            message.getBundle("options"));
                 break;
 
             case "LightweightTheme:Update":
@@ -3335,6 +3342,33 @@ public class BrowserApp extends GeckoApp
         final MenuItem menuItem = mMenu.findItem(id);
         if (menuItem != null) {
             mMenu.removeItem(id);
+        }
+    }
+
+    /**
+     * Updates the WebExtension browser action with the specified UUID.
+     */
+    private void updateBrowserActionMenuItem(String uuid, final GeckoBundle options) {
+        int id = -1;
+
+        // Set attribute for the menu item in cache, if available
+        if (mBrowserActionItemsCache != null && !mBrowserActionItemsCache.isEmpty()) {
+            for (BrowserActionItemInfo item : mBrowserActionItemsCache) {
+                if (item.uuid.equals(uuid)) {
+                    id = item.id;
+                    item.label = options.getString("name", item.label);
+                    break;
+                }
+            }
+        }
+
+        if (mMenu == null || id == -1) {
+            return;
+        }
+
+        final MenuItem menuItem = mMenu.findItem(id);
+        if (menuItem != null) {
+            menuItem.setTitle(options.getString("name", menuItem.getTitle().toString()));
         }
     }
 

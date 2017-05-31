@@ -1593,6 +1593,8 @@ var PARALLEL_TESTS = 2;
 // conditions that might not otherwise be encountered on the test data.
 var gTestPrefs = [
   ['media.recorder.max_memory', 1024],
+  ['media.audio-max-decode-error', 0],
+  ['media.video-max-decode-error', 0],
 ];
 
 // When true, we'll loop forever on whatever test we run. Use this to debug

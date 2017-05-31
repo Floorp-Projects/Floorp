@@ -68,7 +68,7 @@ var gDataNotificationInfoBar = {
         this._actionTaken = true;
         // The advanced subpanes are only supported in the old organization, which will
         // be removed by bug 1349689.
-        if (Preferences.get("browser.preferences.useOldOrganization", false)) {
+        if (Preferences.get("browser.preferences.useOldOrganization")) {
           window.openAdvancedPreferences("dataChoicesTab", {origin: "dataReporting"});
         } else {
           window.openPreferences("privacy-reports", {origin: "dataReporting"});
