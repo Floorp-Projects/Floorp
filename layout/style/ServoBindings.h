@@ -192,6 +192,7 @@ SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_Snapshot,
 // Style attributes.
 RawServoDeclarationBlockStrongBorrowedOrNull
 Gecko_GetStyleAttrDeclarationBlock(RawGeckoElementBorrowed element);
+void Gecko_UnsetDirtyStyleAttr(RawGeckoElementBorrowed element);
 RawServoDeclarationBlockStrongBorrowedOrNull
 Gecko_GetHTMLPresentationAttrDeclarationBlock(RawGeckoElementBorrowed element);
 RawServoDeclarationBlockStrongBorrowedOrNull
