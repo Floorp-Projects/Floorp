@@ -213,8 +213,22 @@ public final class TelemetryWrapper {
     /**
      * Sends a list of the custom tab options that a custom-tab intent made use of.
      */
-    public static void customTabsIntentEvent(final String options) {
-        TelemetryEvent.create(Category.ACTION, Method.INTENT_CUSTOM_TAB, Object.APP, options).queue();
+    public static void customTabsIntentEvent(final List<String> options) {
+        final TelemetryEvent event = TelemetryEvent.create(Category.ACTION, Method.INTENT_CUSTOM_TAB, Object.APP);
+
+        // We can send at most 10 extras per event - we just ignore the rest if there are too many
+        final int extrasCount;
+        if (options.size() > 10) {
+            extrasCount = 10;
+        } else {
+            extrasCount = options.size();
+        }
+
+        for (final String option : options.subList(0, extrasCount)) {
+            event.extra(option, "true");
+        }
+
+        event.queue();
     }
 
     public static void closeCustomTabEvent() {
