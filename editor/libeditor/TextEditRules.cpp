@@ -186,12 +186,24 @@ TextEditRules::BeforeEdit(EditAction action,
   mActionNesting++;
 
   // get the selection and cache the position before editing
-  NS_ENSURE_STATE(mTextEditor);
-  RefPtr<Selection> selection = mTextEditor->GetSelection();
+  if (NS_WARN_IF(!mTextEditor)) {
+    return NS_ERROR_FAILURE;
+  }
+  RefPtr<TextEditor> textEditor = mTextEditor;
+  RefPtr<Selection> selection = textEditor->GetSelection();
   NS_ENSURE_STATE(selection);
 
-  mCachedSelectionNode = selection->GetAnchorNode();
-  selection->GetAnchorOffset(&mCachedSelectionOffset);
+  if (action == EditAction::setText) {
+    // setText replaces all text, so mCachedSelectionNode might be invalid on
+    // AfterEdit.
+    // Since this will be used as start position of spellchecker, we should
+    // use root instead.
+    mCachedSelectionNode = textEditor->GetRoot();
+    mCachedSelectionOffset = 0;
+  } else {
+    mCachedSelectionNode = selection->GetAnchorNode();
+    selection->GetAnchorOffset(&mCachedSelectionOffset);
+  }
 
   return NS_OK;
 }
@@ -219,6 +231,9 @@ TextEditRules::AfterEdit(EditAction action,
                                           mCachedSelectionOffset,
                                           nullptr, 0, nullptr, 0);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // no longer uses mCachedSelectionNode, so release it.
+    mCachedSelectionNode = nullptr;
 
     // if only trailing <br> remaining remove it
     rv = RemoveRedundantTrailingBR();
