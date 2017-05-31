@@ -228,11 +228,12 @@ add_task(async function test_disabled_install_semantics() {
   // are sane.
   restartManager();
 
+  let collection = server.getCollection(USER, "addons");
+  engine.lastModified = collection.timestamp;
   await engine._sync();
 
   // The client should not upload a new record. The old record should be
   // retained and unmodified.
-  let collection = server.getCollection(USER, "addons");
   do_check_eq(1, collection.count());
 
   let payload = collection.payloads()[0];
