@@ -8,6 +8,7 @@
 
 #include "nsTArray.h"
 #include "nsIScreen.h"
+#include "nsIThread.h"
 #include "nsCOMPtr.h"
 #include "mozilla/RefPtr.h"
 

@@ -17,9 +17,9 @@
 #include "gfxVR.h"
 #if defined(XP_WIN)
 #include "gfxVROculus.h"
-#include "gfxVROpenVR.h"
 #endif
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
+#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
+#include "gfxVROpenVR.h"
 #include "gfxVROSVR.h"
 #endif
 #include "gfxVRPuppet.h"
@@ -75,14 +75,15 @@ VRManager::VRManager()
   if (mgr) {
     mManagers.AppendElement(mgr);
   }
-  // OpenVR is cross platform compatible, but supported only on Windows for now
+#endif
+
+#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
+  // OpenVR is cross platform compatible
   mgr = VRSystemManagerOpenVR::Create();
   if (mgr) {
     mManagers.AppendElement(mgr);
   }
-#endif
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
   // OSVR is cross platform compatible
   mgr = VRSystemManagerOSVR::Create();
   if (mgr) {
