@@ -35,13 +35,18 @@ UNIFIED_SOURCES += [
     'VRManager.cpp',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+# Build OpenVR on Windows, Linux, and macOS desktop targets
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit', 'windows', 'gtk2', 'gtk3'):
     DIRS += [
         'openvr',
     ]
     SOURCES += [
-        'gfxVROculus.cpp',
         'gfxVROpenVR.cpp',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    SOURCES += [
+        'gfxVROculus.cpp',
     ]
 
 IPDL_SOURCES = [

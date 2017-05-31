@@ -52,6 +52,8 @@ inline int strnicmp( const char *pStr1, const char *pStr2, size_t unBufferLen ) 
 #if defined( OSX )
 // behaviors ensure NULL-termination at least as well as _TRUNCATE does, but
 // wcsncpy_s/strncpy_s can non-NULL-terminate, wcslcpy/strlcpy can not.
+/*
+// Commented out by Mozilla, please see README.mozilla
 inline errno_t wcsncpy_s(wchar_t *strDest, size_t numberOfElements, const wchar_t *strSource, size_t count)
 {
 	return wcslcpy(strDest, strSource, numberOfElements);
@@ -61,7 +63,7 @@ inline errno_t strncpy_s(char *strDest, size_t numberOfElements, const char *str
 {
 	return strlcpy(strDest, strSource, numberOfElements);
 }
-
+*/
 #endif
 
 #if defined( LINUX )
