@@ -35,7 +35,12 @@ IPCBlobInputStreamParent::Create(nsIInputStream* aInputStream, uint64_t aSize,
 IPCBlobInputStreamParent::Create(const nsID& aID, uint64_t aSize,
                                  PBackgroundParent* aManager)
 {
-  return new IPCBlobInputStreamParent(aID, aSize, aManager);
+  IPCBlobInputStreamParent* actor =
+    new IPCBlobInputStreamParent(aID, aSize, aManager);
+
+  actor->mCallback = IPCBlobInputStreamStorage::Get()->TakeCallback(aID);
+
+  return actor;
 }
 
 IPCBlobInputStreamParent::IPCBlobInputStreamParent(const nsID& aID,
@@ -66,16 +71,25 @@ IPCBlobInputStreamParent::ActorDestroy(IProtocol::ActorDestroyReason aReason)
   mContentManager = nullptr;
   mPBackgroundManager = nullptr;
 
-  if (!mMigrating) {
-    IPCBlobInputStreamStorage::Get()->ForgetStream(mID);
+  RefPtr<IPCBlobInputStreamParentCallback> callback;
+  mCallback.swap(callback);
 
-    // TODO, this calllback must be migrated as well!
-    RefPtr<IPCBlobInputStreamParentCallback> callback;
-    mCallback.swap(callback);
+  RefPtr<IPCBlobInputStreamStorage> storage = IPCBlobInputStreamStorage::Get();
 
-    if (callback) {
-      callback->ActorDestroyed(mID);
+  if (mMigrating) {
+    if (callback && storage) {
+      // We need to assign this callback to the next parent.
+      IPCBlobInputStreamStorage::Get()->StoreCallback(mID, callback);
     }
+    return;
+  }
+
+  if (storage) {
+    storage->ForgetStream(mID);
+  }
+
+  if (callback) {
+    callback->ActorDestroyed(mID);
   }
 }
 

@@ -19,6 +19,9 @@ StaticMutex gMutex;
 StaticRefPtr<IPCBlobInputStreamStorage> gStorage;
 }
 
+IPCBlobInputStreamStorage::IPCBlobInputStreamStorage()
+{}
+
 IPCBlobInputStreamStorage::~IPCBlobInputStreamStorage()
 {}
 
@@ -43,8 +46,11 @@ IPCBlobInputStreamStorage::AddStream(nsIInputStream* aInputStream,
 {
   MOZ_ASSERT(aInputStream);
 
+  StreamData* data = new StreamData();
+  data->mInputStream = aInputStream;
+
   mozilla::StaticMutexAutoLock lock(gMutex);
-  mStorage.Put(aID, aInputStream);
+  mStorage.Put(aID, data);
 }
 
 void
@@ -59,8 +65,8 @@ IPCBlobInputStreamStorage::GetStream(const nsID& aID,
                                      nsIInputStream** aInputStream)
 {
   mozilla::StaticMutexAutoLock lock(gMutex);
-  nsCOMPtr<nsIInputStream> stream = mStorage.Get(aID);
-  if (!stream) {
+  StreamData* data = mStorage.Get(aID);
+  if (!data) {
     *aInputStream = nullptr;
     return;
   }
@@ -72,17 +78,45 @@ IPCBlobInputStreamStorage::GetStream(const nsID& aID,
   nsCOMPtr<nsIInputStream> replacementStream;
 
   nsresult rv =
-    NS_CloneInputStream(stream, getter_AddRefs(clonedStream),
+    NS_CloneInputStream(data->mInputStream, getter_AddRefs(clonedStream),
                         getter_AddRefs(replacementStream));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
   if (replacementStream) {
-    mStorage.Put(aID, replacementStream);
+    data->mInputStream = replacementStream;
   }
 
   clonedStream.forget(aInputStream);
+}
+
+void
+IPCBlobInputStreamStorage::StoreCallback(const nsID& aID,
+                                         IPCBlobInputStreamParentCallback* aCallback)
+{
+  MOZ_ASSERT(aCallback);
+
+  mozilla::StaticMutexAutoLock lock(gMutex);
+  StreamData* data = mStorage.Get(aID);
+  if (data) {
+    MOZ_ASSERT(!data->mCallback);
+    data->mCallback = aCallback;
+  }
+}
+
+already_AddRefed<IPCBlobInputStreamParentCallback>
+IPCBlobInputStreamStorage::TakeCallback(const nsID& aID)
+{
+  mozilla::StaticMutexAutoLock lock(gMutex);
+  StreamData* data = mStorage.Get(aID);
+  if (!data) {
+    return nullptr;
+  }
+
+  RefPtr<IPCBlobInputStreamParentCallback> callback;
+  data->mCallback.swap(callback);
+  return callback.forget();
 }
 
 } // namespace dom
