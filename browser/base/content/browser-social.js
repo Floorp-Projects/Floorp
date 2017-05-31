@@ -13,6 +13,9 @@ var SocialUI,
 (function() {
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+  "resource://gre/modules/sessionstore/Utils.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "OpenGraphBuilder", function() {
   let tmp = {};
   Cu.import("resource:///modules/Social.jsm", tmp);
@@ -203,7 +206,11 @@ SocialActivationListener = {
         if (provider.postActivationURL) {
           // if activated from an open share panel, we load the landing page in
           // a background tab
-          gBrowser.loadOneTab(provider.postActivationURL, {inBackground: SocialShare.panel.state == "open"});
+          let triggeringPrincipal = Utils.deserializePrincipal(aMessage.data.triggeringPrincipal);
+          gBrowser.loadOneTab(provider.postActivationURL, {
+            inBackground: SocialShare.panel.state == "open",
+            triggeringPrincipal,
+          });
         }
       });
     }, options);
