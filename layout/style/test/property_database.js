@@ -241,6 +241,8 @@ var invalidGradientAndElementValues = [
   "radial-gradient(at 10% bottom, ffffff, black) scroll no-repeat",
   /* no quirks mode lengths */
   "linear-gradient(red -99, yellow, green, blue 120%)",
+  /* Unitless nonzero numbers are valid as an <angle> */
+  "linear-gradient(30, red, blue)",
   /* There must be a comma between gradient-line (e.g. <angle>) and colors */
   "linear-gradient(30deg red, blue)",
   "linear-gradient(to top left red, blue)",
