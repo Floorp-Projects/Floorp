@@ -110,6 +110,10 @@ nsPlaceholderFrame::Reflow(nsPresContext*           aPresContext,
                            const ReflowInput& aReflowInput,
                            nsReflowStatus&          aStatus)
 {
+  // NOTE that the ReflowInput passed to this method is not fully initialized,
+  // on the grounds that reflowing a placeholder is a rather trivial operation.
+  // (See bug 1367711.)
+
 #ifdef DEBUG
   // We should be getting reflowed before our out-of-flow.
   // If this is our first reflow, and our out-of-flow has already received its
