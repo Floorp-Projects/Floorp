@@ -39,6 +39,14 @@ sdnAccessible::QueryInterface(REFIID aREFIID, void** aInstancePtr)
     return E_FAIL;
   *aInstancePtr = nullptr;
 
+  if (aREFIID == IID_IClientSecurity) {
+    // Some code might QI(IID_IClientSecurity) to detect whether or not we are
+    // a proxy. Right now that can potentially happen off the main thread, so we
+    // look for this condition immediately so that we don't trigger other code
+    // that might not be thread-safe.
+    return E_NOINTERFACE;
+  }
+
   if (aREFIID == IID_ISimpleDOMNode) {
     *aInstancePtr = static_cast<ISimpleDOMNode*>(this);
     AddRef();
