@@ -84,12 +84,15 @@ ServoStyleSheet::ServoStyleSheet(const ServoStyleSheet& aCopy,
                                  dom::CSSImportRule* aOwnerRuleToUse,
                                  nsIDocument* aDocumentToUse,
                                  nsINode* aOwningNodeToUse)
-  : StyleSheet(aCopy, aOwnerRuleToUse, aDocumentToUse, aOwningNodeToUse)
+  : StyleSheet(aCopy,
+               aParentToUse,
+               aOwnerRuleToUse,
+               aDocumentToUse,
+               aOwningNodeToUse)
 {
-  mParent = aParentToUse;
-
   if (mDirty) { // CSSOM's been there, force full copy now
-    NS_ASSERTION(mInner->mComplete, "Why have rules been accessed on an incomplete sheet?");
+    NS_ASSERTION(mInner->mComplete,
+                 "Why have rules been accessed on an incomplete sheet?");
     // FIXME: handle failure?
     //
     // NOTE: It's important to call this from the subclass, since this could
