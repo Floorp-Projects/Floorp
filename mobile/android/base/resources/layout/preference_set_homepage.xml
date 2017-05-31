@@ -17,13 +17,6 @@
                  android:text="@string/home_homepage_radio_default"
                  android:textColor="@color/text_and_tabs_tray_grey"/>
 
-    <RadioButton android:id="@+id/radio_distribution"
-                 android:layout_width="wrap_content"
-                 android:layout_height="wrap_content"
-                 android:layout_marginTop="8dp"
-                 tools:text="Distribution Homepage"
-                 android:textColor="@color/text_and_tabs_tray_grey"/>
-
     <RadioButton android:id="@+id/radio_user_address"
                  android:layout_width="wrap_content"
                  android:layout_height="wrap_content"
