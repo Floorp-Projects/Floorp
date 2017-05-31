@@ -74,6 +74,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     }
 
     private Download pendingDownload;
+    private View backgroundView;
     private TransitionDrawable backgroundTransition;
     private TextView urlView;
     private AnimatedProgressBar progressView;
@@ -120,7 +121,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         urlView = (TextView) view.findViewById(R.id.display_url);
         updateURL(getInitialUrl());
 
-        backgroundTransition = (TransitionDrawable) view.findViewById(R.id.background).getBackground();
+        backgroundView = view.findViewById(R.id.background);
+        backgroundTransition = (TransitionDrawable) backgroundView.getBackground();
 
         if ((refreshButton = view.findViewById(R.id.refresh)) != null) {
             refreshButton.setOnClickListener(this);
@@ -270,6 +272,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                 progressView.announceForAccessibility(getString(R.string.accessibility_announcement_loading));
 
+
                 backgroundTransition.resetTransition();
 
                 progressView.setProgress(0);
@@ -282,10 +285,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             public void onPageFinished(boolean isSecure) {
                 updateIsLoading(false);
 
-                if (isBlockingEnabled()) {
-                    // We only show the colorful background gradient when content blocking is enabled.
-                    backgroundTransition.startTransition(ANIMATION_DURATION);
-                }
+                backgroundTransition.startTransition(ANIMATION_DURATION);
 
                 progressView.announceForAccessibility(getString(R.string.accessibility_announcement_loading_finished));
 
@@ -647,6 +647,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         if (webView != null) {
             webView.setBlockingEnabled(enabled);
         }
+
+        backgroundView.setBackgroundResource(enabled ? R.drawable.animated_background : R.drawable.animated_background_disabled);
+        backgroundTransition = (TransitionDrawable) backgroundView.getBackground();
     }
 
     public boolean isBlockingEnabled() {
