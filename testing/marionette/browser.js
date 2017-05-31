@@ -146,6 +146,21 @@ browser.Context = class {
   }
 
   /**
+   * Returns the current URL of the content browser.
+   * If no browser is available, null will be returned.
+   */
+  get currentURL() {
+    // Bug 1363368 - contentBrowser could be null until we wait for its
+    // initialization been finished
+    if (this.contentBrowser) {
+      return this.contentBrowser.currentURI.spec;
+
+    } else {
+      throw new NoSuchWindowError("Current window does not have a content browser");
+    }
+  }
+
+  /**
    * Retrieves the current tabmodal UI object.  According to the browser
    * associated with the currently selected tab.
    */
