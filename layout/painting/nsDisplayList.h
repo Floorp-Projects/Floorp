@@ -4435,9 +4435,10 @@ public:
                     LayerManager* aManager);
 
   /*
-   * Paint mask onto aMaskContext in mFrame's coordinate space.
+   * Paint mask onto aMaskContext in mFrame's coordinate space and
+   * return if the draw result is successful.
    */
-  void PaintMask(nsDisplayListBuilder* aBuilder, gfxContext* aMaskContext);
+  bool PaintMask(nsDisplayListBuilder* aBuilder, gfxContext* aMaskContext);
 
   const nsTArray<nsRect>& GetDestRects()
   {
