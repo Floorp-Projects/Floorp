@@ -379,16 +379,13 @@ nsAbsoluteContainingBlock::DoMarkFramesDirty(bool aMarkAllDirty)
   }
 }
 
-// Given an out-of-flow frame, this method returns the parent frame of
-// its placeholder frame, if that parent is a nsContainerFrame.
+// Given an out-of-flow frame, this method returns the parent frame of its
+// placeholder frame or null if it doesn't have a placeholder for some reason.
 static nsContainerFrame*
 GetPlaceholderContainer(nsIFrame* aPositionedFrame)
 {
   nsIFrame* placeholder = aPositionedFrame->GetPlaceholderFrame();
-  if (!placeholder) {
-    return nullptr;
-  }
-  return do_QueryFrame(placeholder->GetParent());
+  return placeholder ? placeholder->GetParent() : nullptr;
 }
 
 /**
