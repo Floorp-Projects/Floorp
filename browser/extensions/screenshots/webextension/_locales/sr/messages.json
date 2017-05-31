@@ -3,7 +3,7 @@
     "message": "Бележите снимке екрана са веба и сачувајте их привремено или трајно."
   },
   "addonAuthorsList": {
-    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
     "message": "Усликајте екран"
@@ -12,7 +12,7 @@
     "message": "Моји снимци"
   },
   "screenshotInstructions": {
-    "message": "Превуците или кликните на страници да изаберете област. Притисните ESC да прекинете."
+    "message": "Превуците или кликните на страницу да изаберете област. Притисните ESC да прекинете."
   },
   "saveScreenshotSelectedArea": {
     "message": "Сачувај"
@@ -115,9 +115,9 @@
     }
   },
   "termsAndPrivacyNoticeTermsLink": {
-    "message": "условима"
+    "message": "услове"
   },
   "termsAndPrivacyNoticyPrivacyLink": {
-    "message": "обавештењем о приватности"
+    "message": "обавештење о приватности"
   }
 }

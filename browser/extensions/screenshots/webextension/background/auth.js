@@ -1,4 +1,4 @@
-/* globals browser, log */
+/* globals log */
 /* globals main, makeUuid, deviceInfo, analytics, catcher, buildSettings, communication */
 
 "use strict";

@@ -624,7 +624,7 @@
     "sk": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "azet-sk", "atlas-sk", "ddg", "dunaj-sk", "slovnik-sk", "wikipedia-sk", "zoznam-sk"
+          "google", "azet-sk", "atlas-sk", "ddg", "slovnik-sk", "wikipedia-sk", "zoznam-sk"
         ]
       }
     },

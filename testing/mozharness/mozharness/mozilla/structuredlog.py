@@ -49,7 +49,7 @@ class StructuredOutputParser(OutputParser):
 
     def _handle_unstructured_output(self, line, log_output=True):
         self.log_output = log_output
-        super(StructuredOutputParser, self).parse_single_line(line)
+        return super(StructuredOutputParser, self).parse_single_line(line)
 
     def parse_single_line(self, line):
         """Parses a line of log output from the child process and passes
@@ -80,13 +80,19 @@ class StructuredOutputParser(OutputParser):
         self.handler(data)
 
         action = data["action"]
-        if action == "process_output":
-            # Run process output through the error lists, but make sure the super parser
-            # doesn't print them to stdout (they should go through the log formatter).
-            self._handle_unstructured_output(data['data'], log_output=False)
+        if action in ('log', 'process_output'):
+            if action == 'log':
+                message = data['message']
+                level = getattr(log, data['level'].upper())
+            else:
+                message = data['data']
 
-        if action == "log":
-            level = getattr(log, data["level"].upper())
+            # Run log and process_output actions through the error lists, but make sure
+            # the super parser doesn't print them to stdout (they should go through the
+            # log formatter).
+            error_level = self._handle_unstructured_output(message, log_output=False)
+            if error_level is not None:
+                level = self.worst_level(error_level, level)
 
         log_data = self.formatter(data)
         if log_data is not None:

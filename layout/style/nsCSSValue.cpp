@@ -2561,9 +2561,13 @@ nsCSSRect::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
 
   if (eCSSProperty_border_image_slice == aProperty ||
       eCSSProperty_border_image_width == aProperty ||
-      eCSSProperty_border_image_outset == aProperty ||
-      eCSSProperty_DOM == aProperty) {
-    NS_NAMED_LITERAL_STRING(space, " ");
+      eCSSProperty_border_image_outset == aProperty) {
+    nsCSSPropertyID props[] = { aProperty, aProperty, aProperty, aProperty };
+    const nsCSSValue* values[] = { &mTop, &mRight, &mBottom, &mLeft };
+    nsCSSValue::AppendSidesShorthandToString(props, values,
+                                             aResult, aSerialization);
+  } else if (eCSSProperty_DOM == aProperty) {
+     NS_NAMED_LITERAL_STRING(space, " ");
 
     mTop.AppendToString(aProperty, aResult, aSerialization);
     aResult.Append(space);

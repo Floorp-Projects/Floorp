@@ -1,12 +1,21 @@
 {
   "addonAuthorsList": {
-    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "contextMenuLabel": {
+    "message": "Ekran görüntüsü al"
+  },
+  "myShotsLink": {
+    "message": "Ekran Görüntülərim"
   },
   "saveScreenshotSelectedArea": {
     "message": "Saxla"
   },
   "saveScreenshotVisibleArea": {
     "message": "Görünən ərazini saxla"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Tam səhifəni saxla"
   },
   "cancelScreenshot": {
     "message": "Ləğv et"
@@ -16,5 +25,23 @@
   },
   "notificationLinkCopiedTitle": {
     "message": "Keçid köçürüldü"
+  },
+  "tourSkip": {
+    "message": "Ötür"
+  },
+  "tourNext": {
+    "message": "Növbəti Slayd"
+  },
+  "tourPrevious": {
+    "message": "Əvvəlki Slayd"
+  },
+  "tourDone": {
+    "message": "Tamamlandı"
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Şərtlər"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Məxfilik Bildirişi"
   }
 }
