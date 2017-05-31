@@ -42,11 +42,6 @@ interface nsIBrowserElementAPI : nsISupports
 
   void setFrameLoader(in nsIFrameLoader frameLoader);
 
-  void setVisible(in boolean visible);
-  nsIDOMDOMRequest getVisible();
-  void setActive(in boolean active);
-  boolean getActive();
-
   void sendMouseEvent(in DOMString type,
                       in uint32_t x,
                       in uint32_t y,
