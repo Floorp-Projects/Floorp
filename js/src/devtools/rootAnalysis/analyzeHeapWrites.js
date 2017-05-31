@@ -403,6 +403,7 @@ function ignoreContents(entry)
         /LookAndFeel::GetColor/,
         "Gecko_CopyStyleContentsFrom",
         "Gecko_CSSValue_SetAbsoluteLength",
+        "Gecko_UnsetDirtyStyleAttr",
         /nsCSSPropertyIDSet::AddProperty/,
     ];
     if (entry.matches(whitelist))
