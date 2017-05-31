@@ -325,8 +325,8 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
   if (!mp4_demuxer::AnnexB::HasSPS(extra_data)
       || mp4_demuxer::AnnexB::CompareExtraData(extra_data,
                                                mCurrentConfig.mExtraData)) {
-        return NS_OK;
-      }
+    return NS_OK;
+  }
 
   RefPtr<MediaRawData> sample = aSample;
 
