@@ -3635,6 +3635,8 @@ CascadeRuleEnumFunc(css::Rule* aRule, void* aData)
 {
   CascadeEnumData* data = (CascadeEnumData*)aData;
   int32_t type = aRule->GetType();
+  MOZ_ASSERT(type != css::Rule::IMPORT_RULE,
+             "@import rule must not be handled here");
 
   if (css::Rule::STYLE_RULE == type) {
     css::StyleRule* styleRule = static_cast<css::StyleRule*>(aRule);
@@ -3735,16 +3737,40 @@ nsCSSRuleProcessor::CascadeSheet(CSSStyleSheet* aSheet, CascadeEnumData* aData)
   if (aSheet->IsApplicable() &&
       aSheet->UseForPresentation(aData->mPresContext, aData->mCacheKey) &&
       aSheet->mInner) {
-
-    StyleSheet* child = aSheet->GetFirstChild();
-    while (child) {
-      CascadeSheet(child->AsGecko(), aData);
-
-      child = child->mNext;
+    auto& rules = aSheet->Inner()->mOrderedRules;
+    uint32_t i = 0, len = rules.Length();
+    for (; i < len; i++) {
+      if (rules[i]->GetType() != css::Rule::IMPORT_RULE) {
+        break;
+      }
     }
 
-    for (css::Rule* rule : aSheet->Inner()->mOrderedRules) {
-      if (!CascadeRuleEnumFunc(rule, aData)) {
+    if (i > 0) {
+      // Collect stylesheets from @import rules. It is done in reverse
+      // order so that we can avoid cascading duplicate sheets.
+      nsTArray<StyleSheet*> childSheets(i);
+      nsTHashtable<nsPtrHashKey<StyleSheet>> childSheetSet(i);
+      for (uint32_t j = i; j > 0; j--) {
+        auto importRule = static_cast<css::ImportRule*>(rules[j - 1]);
+        StyleSheet* sheet = importRule->GetStyleSheet();
+        // There are two cases we want to ignore an import rule:
+        // 1. the import rule does not have stylesheet connected because
+        //    it fails in security check or there is a loop involved.
+        // 2. the sheet has been referenced by another import rule at a
+        //    later position.
+        if (sheet && !childSheetSet.Contains(sheet)) {
+          childSheets.AppendElement(sheet);
+          childSheetSet.PutEntry(sheet);
+        }
+      }
+      // Now cascade all sheets listed.
+      for (StyleSheet* child : Reversed(childSheets)) {
+        CascadeSheet(child->AsGecko(), aData);
+      }
+    }
+
+    for (; i < len; i++) {
+      if (!CascadeRuleEnumFunc(rules[i], aData)) {
         return false;
       }
     }
