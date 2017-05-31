@@ -8382,7 +8382,7 @@ nsDisplayMask::BuildLayer(nsDisplayListBuilder* aBuilder,
   return container.forget();
 }
 
-void
+bool
 nsDisplayMask::PaintMask(nsDisplayListBuilder* aBuilder,
                          gfxContext* aMaskContext)
 {
@@ -8401,6 +8401,8 @@ nsDisplayMask::PaintMask(nsDisplayListBuilder* aBuilder,
   nsSVGIntegrationUtils::PaintMask(params);
 
   nsDisplayMaskGeometry::UpdateDrawResult(this, imgParmas.result);
+
+  return imgParmas.result == mozilla::image::DrawResult::SUCCESS;
 }
 
 LayerState
