@@ -11,10 +11,10 @@ Services.scriptloader.loadSubScript("resource://testing-common/sinon-1.16.1.js")
 
 const TEST_QUOTA_USAGE_HOST = "example.com";
 const TEST_QUOTA_USAGE_ORIGIN = "https://" + TEST_QUOTA_USAGE_HOST;
-const TEST_QUOTA_USAGE_URL = TEST_QUOTA_USAGE_ORIGIN + "/browser/browser/components/preferences/in-content-old/tests/site_data_test.html";
+const TEST_QUOTA_USAGE_URL = TEST_QUOTA_USAGE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/site_data_test.html";
 const TEST_OFFLINE_HOST = "example.org";
 const TEST_OFFLINE_ORIGIN = "https://" + TEST_OFFLINE_HOST;
-const TEST_OFFLINE_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/preferences/in-content-old/tests/offline/offline.html";
+const TEST_OFFLINE_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/offline/offline.html";
 const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
 
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
