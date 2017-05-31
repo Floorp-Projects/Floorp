@@ -49,33 +49,7 @@
 
 // replace_malloc.h needs to be included before replace_malloc_bridge.h,
 // which DMD.h includes, so DMD.h needs to be included after replace_malloc.h.
-// MOZ_REPLACE_ONLY_MEMALIGN saves us from having to define
-// replace_{posix_memalign,aligned_alloc,valloc}.  It requires defining
-// PAGE_SIZE.  Nb: sysconf() is expensive, but it's only used for (the obsolete
-// and rarely used) valloc.
-#define MOZ_REPLACE_ONLY_MEMALIGN 1
-
-#ifndef PAGE_SIZE
-#define DMD_DEFINED_PAGE_SIZE
-#ifdef XP_WIN
-#define PAGE_SIZE GetPageSize()
-static long GetPageSize()
-{
-  SYSTEM_INFO si;
-  GetSystemInfo(&si);
-  return si.dwPageSize;
-}
-#else // XP_WIN
-#define PAGE_SIZE sysconf(_SC_PAGESIZE)
-#endif // XP_WIN
-#endif // PAGE_SIZE
 #include "replace_malloc.h"
-#undef MOZ_REPLACE_ONLY_MEMALIGN
-#ifdef DMD_DEFINED_PAGE_SIZE
-#undef DMD_DEFINED_PAGE_SIZE
-#undef PAGE_SIZE
-#endif // DMD_DEFINED_PAGE_SIZE
-
 #include "DMD.h"
 
 namespace mozilla {
