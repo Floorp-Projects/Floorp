@@ -2,6 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+requestLongerTimeout(2);
+
 async function testOptionsBrowserStyle(optionsUI, assertMessage) {
   function optionsScript() {
     browser.test.onMessage.addListener((msgName, optionsUI, assertMessage) => {
@@ -52,9 +54,9 @@ async function testOptionsBrowserStyle(optionsUI, assertMessage) {
   extension.sendMessage("check-style", optionsUI, assertMessage);
   await extension.awaitFinish("options-ui-browser_style");
 
-  await extension.unload();
-
   await BrowserTestUtils.removeTab(tab);
+
+  await extension.unload();
 }
 
 add_task(async function test_options_without_setting_browser_style() {
