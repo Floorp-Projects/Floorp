@@ -36,8 +36,12 @@ public:
   // case the stream is a nsFileStream.
   template<typename M>
   static IPCBlobInputStreamParent*
-  Create(nsIInputStream* aInputStream, uint64_t aSize, nsresult* aRv,
-         M* aManager);
+  Create(nsIInputStream* aInputStream, uint64_t aSize,
+         uint64_t aChildID, nsresult* aRv, M* aManager);
+
+  static IPCBlobInputStreamParent*
+  Create(const nsID& aID, uint64_t aSize,
+         mozilla::ipc::PBackgroundParent* aManager);
 
   void
   ActorDestroy(IProtocol::ActorDestroyReason aReason) override;
@@ -63,6 +67,12 @@ public:
   mozilla::ipc::IPCResult
   RecvClose() override;
 
+  mozilla::ipc::IPCResult
+  Recv__delete__() override;
+
+  bool
+  HasValidStream() const;
+
 private:
   IPCBlobInputStreamParent(const nsID& aID, uint64_t aSize,
                            nsIContentParent* aManager);
@@ -79,6 +89,8 @@ private:
   mozilla::ipc::PBackgroundParent* mPBackgroundManager;
 
   RefPtr<IPCBlobInputStreamParentCallback> mCallback;
+
+  bool mMigrating;
 };
 
 } // namespace dom
