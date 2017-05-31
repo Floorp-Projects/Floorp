@@ -206,7 +206,7 @@ SocialActivationListener = {
         if (provider.postActivationURL) {
           // if activated from an open share panel, we load the landing page in
           // a background tab
-          let triggeringPrincipal = Utils.deserializePrincipal(aMessage.data.triggeringPrincipal); // eslint-disable-line no-undef
+          let triggeringPrincipal = Utils.deserializePrincipal(aMessage.data.triggeringPrincipal);
           gBrowser.loadOneTab(provider.postActivationURL, {
             inBackground: SocialShare.panel.state == "open",
             triggeringPrincipal,
