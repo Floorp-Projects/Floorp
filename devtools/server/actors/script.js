@@ -1961,11 +1961,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         this.unsafeSynchronize(sourceActorsCreated);
       }
 
-      for (let _actor of bpActors) {
-        // XXX bug 1142115: We do async work in here, so we need to create a fresh
-        // binding because for/of does not yet do that in SpiderMonkey.
-        let actor = _actor;
-
+      for (const actor of bpActors) {
         if (actor.isPending) {
           promises.push(actor.originalLocation.originalSourceActor._setBreakpoint(actor));
         } else {
