@@ -1,7 +1,7 @@
 specialpowers.jar:
 % content specialpowers %content/ contentaccessible=true
   content/specialpowers.js (content/specialpowers.js)
-* content/specialpowersAPI.js (content/specialpowersAPI.js)
+  content/specialpowersAPI.js (content/specialpowersAPI.js)
   content/SpecialPowersObserverAPI.js (content/SpecialPowersObserverAPI.js)
   content/SpecialPowersObserver.jsm (content/SpecialPowersObserver.jsm)
   content/MozillaLogger.js (content/MozillaLogger.js)
