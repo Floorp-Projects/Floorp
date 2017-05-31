@@ -9,7 +9,6 @@ macosx64/debug:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -32,8 +31,6 @@ macosx64/opt:
         symbol: tc(B)
         tier: 2
     worker-type: buildbot-bridge/buildbot-bridge
-    worker:
-        implementation: buildbot-bridge
     run:
         using: mozharness
         actions: [get-secrets build generate-build-stats update]
@@ -55,7 +52,6 @@ macosx64-add-on-devel/opt:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
        using: mozharness
@@ -83,7 +79,6 @@ macosx64-nightly/opt:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness

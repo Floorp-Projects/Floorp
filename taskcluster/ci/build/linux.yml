@@ -8,7 +8,6 @@ linux64/opt:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -31,7 +30,6 @@ linux64/pgo:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     coalesce-name: linux64-pgo
     run:
@@ -56,7 +54,6 @@ linux64/debug:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -83,7 +80,6 @@ linux64-devedition-nightly/opt:
         symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -109,7 +105,6 @@ linux/opt:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     coalesce-name: opt_linux32
     run:
@@ -133,7 +128,6 @@ linux/debug:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     coalesce-name: dbg_linux32
     run:
@@ -158,7 +152,6 @@ linux/pgo:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     coalesce-name: linux32-pgo
     run:
@@ -186,7 +179,6 @@ linux-devedition-nightly/opt:
         symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -215,7 +207,6 @@ linux-nightly/opt:
         symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -240,7 +231,6 @@ linux64-asan/opt:
         symbol: tc(Bo)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -265,7 +255,6 @@ linux64-asan-fuzzing/opt:
         symbol: tc(Bof)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -289,7 +278,6 @@ linux64-asan/debug:
         symbol: tc(Bd)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -316,7 +304,6 @@ linux64-nightly/opt:
         symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -341,7 +328,6 @@ linux64-stylo/opt:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 3600
     run:
         using: mozharness
@@ -367,7 +353,6 @@ linux64-stylo/debug:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 3600
     run:
         using: mozharness
@@ -394,7 +379,6 @@ linux64-jsdcov/opt:
     run-on-projects: [ ]
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -420,7 +404,6 @@ linux64-ccov/opt:
     run-on-projects: [ ]
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -445,7 +428,6 @@ linux64-add-on-devel/opt:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
