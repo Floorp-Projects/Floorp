@@ -10549,6 +10549,26 @@ nsFrame::HasCSSTransitions()
   return collection && collection->mAnimations.Length() > 0;
 }
 
+size_t
+nsIFrame::SizeOfFramePropertiesForTree(MallocSizeOf aMallocSizeOf) const
+{
+  size_t result = 0;
+
+  if (mProperties) {
+    result += mProperties->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  FrameChildListIterator iter(this);
+  while (!iter.IsDone()) {
+    for (const nsIFrame* f : iter.CurrentList()) {
+      result += f->SizeOfFramePropertiesForTree(aMallocSizeOf);
+    }
+    iter.Next();
+  }
+
+  return result;
+}
+
 // Box layout debugging
 #ifdef DEBUG_REFLOW
 int32_t gIndent2 = 0;

@@ -10957,11 +10957,12 @@ PresShell::GetRootPresShell()
 
 void
 PresShell::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
-                                  nsArenaMemoryStats *aArenaObjectsSize,
-                                  size_t *aPresShellSize,
-                                  size_t *aStyleSetsSize,
-                                  size_t *aTextRunsSize,
-                                  size_t *aPresContextSize)
+                                  nsArenaMemoryStats* aArenaObjectsSize,
+                                  size_t* aPresShellSize,
+                                  size_t* aStyleSetsSize,
+                                  size_t* aTextRunsSize,
+                                  size_t* aPresContextSize,
+                                  size_t* aFramePropertiesSize)
 {
   mFrameArena.AddSizeOfExcludingThis(aMallocSizeOf, aArenaObjectsSize);
   *aPresShellSize += aMallocSizeOf(this);
@@ -10983,6 +10984,12 @@ PresShell::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
   *aTextRunsSize += SizeOfTextRuns(aMallocSizeOf);
 
   *aPresContextSize += mPresContext->SizeOfIncludingThis(aMallocSizeOf);
+
+  nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
+  if (rootFrame) {
+    *aFramePropertiesSize +=
+      rootFrame->SizeOfFramePropertiesForTree(aMallocSizeOf);
+  }
 }
 
 size_t

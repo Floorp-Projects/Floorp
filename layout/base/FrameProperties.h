@@ -268,6 +268,9 @@ public:
   void DeleteAll(const nsIFrame* aFrame);
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
 
 private:
   friend class ::nsIFrame;
