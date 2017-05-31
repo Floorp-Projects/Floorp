@@ -503,7 +503,7 @@
        flip="slide"
        position="bottomcenter topright"
        noautofocus="true">
-  <photonpanelmultiview id="appMenu-multiView" mainViewId="appMenu-mainView">
+  <photonpanelmultiview id="appMenu-multiView" mainViewId="appMenu-mainView" descriptionheightworkaround="true">
     <panelview id="appMenu-mainView" class="PanelUI-subView">
       <vbox class="panel-subview-body">
         <vbox id="appMenu-addon-banners"/>

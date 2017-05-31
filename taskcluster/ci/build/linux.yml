@@ -8,7 +8,6 @@ linux64/opt:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -31,7 +30,6 @@ linux64/pgo:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     coalesce-name: linux64-pgo
     run:
@@ -56,7 +54,6 @@ linux64/debug:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -83,7 +80,6 @@ linux64-devedition-nightly/opt:
         symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -109,7 +105,6 @@ linux/opt:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     coalesce-name: opt_linux32
     run:
@@ -133,7 +128,6 @@ linux/debug:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     coalesce-name: dbg_linux32
     run:
@@ -158,7 +152,6 @@ linux/pgo:
         symbol: tc(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     coalesce-name: linux32-pgo
     run:
@@ -186,7 +179,6 @@ linux-devedition-nightly/opt:
         symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -215,7 +207,6 @@ linux-nightly/opt:
         symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -240,7 +231,6 @@ linux64-asan/opt:
         symbol: tc(Bo)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -254,6 +244,30 @@ linux64-asan/opt:
         tooltool-downloads: public
         need-xvfb: true
 
+
+linux64-asan-fuzzing/opt:
+    description: "Linux64 Fuzzing Opt ASAN"
+    index:
+        product: firefox
+        job-name: linux64-fuzzing-asan-opt
+    treeherder:
+        platform: linux64/asan
+        symbol: tc(Bof)
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 36000
+    run:
+        using: mozharness
+        actions: [get-secrets build generate-build-stats check-test update]
+        config:
+            - builds/releng_base_linux_64_builds.py
+            - balrog/production.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: fuzzing-asan-tc
+        tooltool-downloads: public
+        need-xvfb: true
+
 linux64-asan/debug:
     description: "Linux64 Debug ASAN"
     index:
@@ -264,7 +278,6 @@ linux64-asan/debug:
         symbol: tc(Bd)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -291,7 +304,6 @@ linux64-nightly/opt:
         symbol: tc(N)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -316,7 +328,6 @@ linux64-stylo/opt:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 3600
     run:
         using: mozharness
@@ -342,7 +353,6 @@ linux64-stylo/debug:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 3600
     run:
         using: mozharness
@@ -369,7 +379,6 @@ linux64-jsdcov/opt:
     run-on-projects: [ ]
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -395,7 +404,6 @@ linux64-ccov/opt:
     run-on-projects: [ ]
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -420,7 +428,6 @@ linux64-add-on-devel/opt:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
     run:
         using: mozharness
@@ -434,56 +441,3 @@ linux64-add-on-devel/opt:
         tooltool-downloads: public
         need-xvfb: true
     run-on-projects: [ 'mozilla-beta', 'mozilla-release', 'mozilla-esr45' ]
-
-linux-qr/opt:
-    description: "Linux32 Opt QuantumRender"
-    index:
-        product: firefox
-        job-name: linux-qr-opt
-    treeherder:
-        platform: linux32-qr/opt
-        symbol: tc(B)
-        tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        implementation: docker-worker
-        max-run-time: 36000
-    run:
-        using: mozharness
-        actions: [get-secrets build generate-build-stats check-test update]
-        config:
-            - builds/releng_base_linux_32_builds.py
-            - balrog/production.py
-        script: "mozharness/scripts/fx_desktop_build.py"
-        secrets: true
-        custom-build-variant-cfg: qr-opt
-        tooltool-downloads: public
-        need-xvfb: true
-    run-on-projects: [ 'graphics' ]
-
-linux-qr/debug:
-    description: "Linux32 Debug QuantumRender"
-    index:
-        product: firefox
-        job-name: linux-qr-debug
-    treeherder:
-        platform: linux32-qr/debug
-        symbol: tc(B)
-        tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        implementation: docker-worker
-        max-run-time: 36000
-    coalesce-name: dbg_linux32
-    run:
-        using: mozharness
-        actions: [get-secrets build generate-build-stats check-test update]
-        config:
-            - builds/releng_base_linux_32_builds.py
-            - balrog/production.py
-        script: "mozharness/scripts/fx_desktop_build.py"
-        secrets: true
-        custom-build-variant-cfg: qr-debug
-        tooltool-downloads: public
-        need-xvfb: true
-    run-on-projects: [ 'graphics' ]

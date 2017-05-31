@@ -296,6 +296,10 @@ class OutputParser(LogMixin):
 
         Args:
             line (str): command line output to parse.
+
+        Returns:
+            If the line hits a match in the error_list, the new log level the line was
+            (or should be) logged at is returned. Otherwise, returns None.
         """
         for error_check in self.error_list:
             # TODO buffer for context_lines.
@@ -325,10 +329,10 @@ class OutputParser(LogMixin):
                     self.num_warnings += 1
                 self.worst_log_level = self.worst_level(log_level,
                                                         self.worst_log_level)
-                break
-        else:
-            if self.log_output:
-                self.info(' %s' % line)
+                return log_level
+
+        if self.log_output:
+            self.info(' %s' % line)
 
     def add_lines(self, output):
         """ process a string or list of strings, decode them to utf-8,strip

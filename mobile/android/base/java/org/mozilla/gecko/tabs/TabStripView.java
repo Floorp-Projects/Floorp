@@ -31,12 +31,15 @@ import android.view.animation.DecelerateInterpolator;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mozilla.gecko.Tab.TabType;
+
 public class TabStripView extends RecyclerView
                           implements TabsTouchHelperCallback.DragListener {
     private static final int ANIM_TIME_MS = 200;
     private static final DecelerateInterpolator ANIM_INTERPOLATOR = new DecelerateInterpolator();
 
     private final TabStripAdapter adapter;
+    private final TabType type;
     private boolean isPrivate;
 
     private final TabAnimatorListener animatorListener;
@@ -46,6 +49,8 @@ public class TabStripView extends RecyclerView
 
     public TabStripView(Context context, AttributeSet attrs) {
         super(context, attrs);
+
+        type = TabType.BROWSING;
 
         fadingEdgePaint = new Paint();
         final Resources resources = getResources();
@@ -80,7 +85,7 @@ public class TabStripView extends RecyclerView
         final List<Tab> tabs = new ArrayList<>();
 
         for (final Tab tab : Tabs.getInstance().getTabsInOrder()) {
-            if (tab.isPrivate() == isPrivate) {
+            if (tab.isPrivate() == isPrivate && tab.getType() == type) {
                 tabs.add(tab);
             }
         }
@@ -99,7 +104,7 @@ public class TabStripView extends RecyclerView
     }
 
     /* package */ void addTab(Tab tab, int position) {
-        if (tab.isPrivate() != isPrivate) {
+        if (tab.isPrivate() != isPrivate || tab.getType() != type) {
             return;
         }
 

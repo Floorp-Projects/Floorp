@@ -1,4 +1,4 @@
-/* globals communication, shot, main, auth, catcher, analytics, browser */
+/* globals communication, shot, main, auth, catcher, analytics */
 
 "use strict";
 
@@ -47,7 +47,18 @@ this.takeshot = (function() {
       openedTab = tab;
       return uploadShot(shot);
     }).then(() => {
-      return browser.tabs.update(openedTab.id, {url: shot.viewUrl});
+      return browser.tabs.update(openedTab.id, {url: shot.viewUrl}).then(
+        null,
+        (error) => {
+          // FIXME: If https://bugzilla.mozilla.org/show_bug.cgi?id=1365718 is resolved,
+          // use the errorCode added as an additional check:
+          if ((/invalid tab id/i).test(error)) {
+            // This happens if the tab was closed before the upload completed
+            return browser.tabs.create({url: shot.viewUrl});
+          }
+          throw error;
+        }
+      );
     }).then(() => {
       return shot.viewUrl;
     }).catch((error) => {

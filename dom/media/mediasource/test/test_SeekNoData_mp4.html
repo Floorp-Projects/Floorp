@@ -34,9 +34,11 @@ runWithMSE(function(ms, el) {
     }
     is(el.currentTime, 3, "currentTime is default playback start position");
     is(el.seeking, false, "seek not started with HAVE_NOTHING");
-    fetchAndLoad(audiosb, 'bipbop/bipbop_audio', ['init'], '.mp4')
-    .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_video', ['init'], '.mp4'))
-    .then(once.bind(null, el, 'loadedmetadata'))
+    var promises = [];
+    promises.push(fetchAndLoad(audiosb, 'bipbop/bipbop_audio', ['init'], '.mp4'));
+    promises.push(fetchAndLoad(videosb, 'bipbop/bipbop_video', ['init'], '.mp4'));
+    promises.push(once(el, 'loadedmetadata'))
+    Promise.all(promises)
     .then(function() {
       var p = once(el, 'seeking');
       el.play();

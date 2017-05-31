@@ -221,6 +221,8 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["network.proxy.ssl", {what: RECORD_PREF_STATE}],
   ["pdfjs.disabled", {what: RECORD_PREF_VALUE}],
   ["places.history.enabled", {what: RECORD_PREF_VALUE}],
+  ["plugins.remember_infobar_dismissal", {what: RECORD_PREF_VALUE}],
+  ["plugins.show_infobar", {what: RECORD_PREF_VALUE}],
   ["privacy.trackingprotection.enabled", {what: RECORD_PREF_VALUE}],
   ["privacy.donottrackheader.enabled", {what: RECORD_PREF_VALUE}],
   ["security.mixed_content.block_active_content", {what: RECORD_PREF_VALUE}],

@@ -127,21 +127,21 @@ using UniqueProfilerBacktrace =
 
 #define PROFILER_LABEL(name_space, info, category) \
   PROFILER_PLATFORM_TRACING(name_space "::" info) \
-  mozilla::SamplerStackFrameRAII \
-  PROFILER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, \
-                                            __LINE__)
+  mozilla::ProfilerStackFrameRAII \
+  PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, category, \
+                                             __LINE__)
 
 #define PROFILER_LABEL_FUNC(category) \
   PROFILER_PLATFORM_TRACING(PROFILER_FUNCTION_NAME) \
-  mozilla::SamplerStackFrameRAII \
-  PROFILER_APPEND_LINE_NUMBER(sampler_raii)(PROFILER_FUNCTION_NAME, category, \
-                                            __LINE__)
+  mozilla::ProfilerStackFrameRAII \
+  PROFILER_APPEND_LINE_NUMBER(profiler_raii)(PROFILER_FUNCTION_NAME, category, \
+                                             __LINE__)
 
 #define PROFILER_LABEL_DYNAMIC(name_space, info, category, str) \
   PROFILER_PLATFORM_TRACING(name_space "::" info) \
-  mozilla::SamplerStackFrameDynamicRAII \
-  PROFILER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, \
-                                            __LINE__, str)
+  mozilla::ProfilerStackFrameDynamicRAII \
+  PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, category, \
+                                             __LINE__, str)
 
 #define PROFILER_MARKER(info) profiler_add_marker(info)
 #define PROFILER_MARKER_PAYLOAD(info, payload) \
@@ -410,7 +410,7 @@ extern MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
 //
 // A short-lived, non-owning PseudoStack reference is created between each
 // profiler_call_enter() / profiler_call_exit() call pair. RAII objects (e.g.
-// SamplerStackFrameRAII) ensure that these calls are balanced. Furthermore,
+// ProfilerStackFrameRAII) ensure that these calls are balanced. Furthermore,
 // the RAII objects exist within the thread itself, which means they are
 // necessarily bounded by the lifetime of the thread, which ensures that the
 // references held can't be used after the PseudoStack is destroyed.
@@ -502,18 +502,18 @@ void profiler_add_marker(const char *aMarker,
 
 namespace mozilla {
 
-class MOZ_RAII SamplerStackFrameRAII {
+class MOZ_RAII ProfilerStackFrameRAII {
 public:
   // We only copy the strings at save time, so to take multiple parameters we'd
   // need to copy them then.
-  SamplerStackFrameRAII(const char *aInfo,
+  ProfilerStackFrameRAII(const char *aInfo,
     js::ProfileEntry::Category aCategory, uint32_t line
     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     mHandle = profiler_call_enter(aInfo, aCategory, this, line);
   }
-  ~SamplerStackFrameRAII() {
+  ~ProfilerStackFrameRAII() {
     profiler_call_exit(mHandle);
   }
 private:
@@ -521,9 +521,9 @@ private:
   void* mHandle;
 };
 
-class MOZ_RAII SamplerStackFrameDynamicRAII {
+class MOZ_RAII ProfilerStackFrameDynamicRAII {
 public:
-  SamplerStackFrameDynamicRAII(const char* aInfo,
+  ProfilerStackFrameDynamicRAII(const char* aInfo,
     js::ProfileEntry::Category aCategory, uint32_t aLine,
     const char* aDynamicString)
   {
@@ -531,7 +531,7 @@ public:
                                   aDynamicString);
   }
 
-  ~SamplerStackFrameDynamicRAII() {
+  ~ProfilerStackFrameDynamicRAII() {
     profiler_call_exit(mHandle);
   }
 

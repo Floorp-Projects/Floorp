@@ -60,12 +60,6 @@ ProfileGatherer::GatheredOOPProfile(const nsACString& aProfile)
   }
 }
 
-void
-ProfileGatherer::WillGatherOOPProfile()
-{
-  mPendingProfiles++;
-}
-
 RefPtr<ProfileGatherer::ProfileGatherPromise>
 ProfileGatherer::Start(double aSinceTime)
 {
@@ -78,20 +72,15 @@ ProfileGatherer::Start(double aSinceTime)
   }
 
   mGathering = true;
-  mPendingProfiles = 0;
 
-  // Send a notification to request profiles from other processes. The
-  // observers of this notification will call WillGatherOOPProfile() which
-  // increments mPendingProfiles.
+  // Request profiles from the other processes. This will trigger
+  // asynchronous calls to ProfileGatherer::GatheredOOPProfile as the
+  // profiles arrive.
   // Do this before the call to profiler_stream_json_for_this_process because
   // that call is slow and we want to let the other processes grab their
   // profiles as soon as possible.
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os) {
-    DebugOnly<nsresult> rv =
-      os->NotifyObservers(this, "profiler-subprocess-gather", nullptr);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NotifyObservers failed");
-  }
+  nsTArray<RefPtr<ProfilerParent::SingleProcessProfilePromise>> profiles =
+    ProfilerParent::GatherProfiles();
 
   mWriter.emplace();
 
@@ -124,6 +113,17 @@ ProfileGatherer::Start(double aSinceTime)
   // they will be inserted and end up in the right spot. Finish() will close
   // the array and the root object.
 
+  mPendingProfiles = profiles.Length();
+  RefPtr<ProfileGatherer> self = this;
+  for (auto profile : profiles) {
+    profile->Then(AbstractThread::MainThread(), __func__,
+      [self](const nsCString& aResult) {
+        self->GatheredOOPProfile(aResult);
+      },
+      [self](PromiseRejectReason aReason) {
+        self->GatheredOOPProfile(NS_LITERAL_CSTRING(""));
+      });
+  }
   if (!mPendingProfiles) {
     Finish();
   }

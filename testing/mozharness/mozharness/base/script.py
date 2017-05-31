@@ -369,10 +369,11 @@ class ScriptMixin(PlatformMixin):
         parsed_url = urlparse.urlparse(url)
 
         if parsed_url.scheme in ('', 'file'):
-            if not os.path.isfile(url):
+            path = parsed_url.path
+            if not os.path.isfile(path):
                 raise IOError('Could not find file to extract: {}'.format(url))
 
-            content_length = os.stat(url.replace('file://', '')).st_size
+            content_length = os.stat(path).st_size
 
             # In case we're referrencing a file without file://
             if parsed_url.scheme == '':

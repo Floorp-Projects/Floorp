@@ -84,9 +84,6 @@ module.exports = {
     // Always require parenthesis for new calls
     "new-parens": "error",
 
-    // Use [] instead of Array()
-    "no-array-constructor": "error",
-
     // Disallow empty statements. This will report an error for:
     // try { something(); } catch (e) {}
     // but will not report it for:

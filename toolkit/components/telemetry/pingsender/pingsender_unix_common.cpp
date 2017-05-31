@@ -190,6 +190,9 @@ CurlWrapper::Post(const string& url, const string& payload)
   // Fail if the server returns a 4xx code
   easy_setopt(mCurl, CURLOPT_FAILONERROR, 1);
 
+  // Override the default connection timeout, which is 5 minutes.
+  easy_setopt(mCurl, CURLOPT_CONNECTTIMEOUT_MS, kConnectionTimeoutMs);
+
   // Block until the operation is performend. Ignore the response, if the POST
   // fails we can't do anything about it.
   err = easy_perform(mCurl);

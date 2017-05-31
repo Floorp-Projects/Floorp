@@ -154,27 +154,8 @@ if CONFIG['ENABLE_MARIONETTE']:
         '/testing/marionette',
     ]
 
-    """
-    Temporarily disable building ../testing/geckodriver
-    until https://bugzilla.mozilla.org/show_bug.cgi?id=1368035,
-    letting local developer builds opt in with --enable-geckodriver is fixed.
-
-    # Disable building of geckodriver for artifact builds and in
-    # environments where cross compiling occurs (macOS and Android),
-    # on hazard builds, and on Linux x86 (linking problems).
-    #
-    # https://bugzilla.mozilla.org/show_bug.cgi?id=1341041
-    # https://bugzilla.mozilla.org/show_bug.cgi?id=1329737
-    # https://bugzilla.mozilla.org/show_bug.cgi?id=1367519
-    # https://bugzilla.mozilla.org/show_bug.cgi?id=1367736
-    if (not CONFIG['COMPILE_ENVIRONMENT'] or
-            CONFIG['CROSS_COMPILE'] or
-            (CONFIG['OS_TARGET'] == 'Linux' and CONFIG['TARGET_CPU'] == 'i686') or
-            CONFIG['MOZ_HAZARD']):
-        pass
-    else:
-        DIRS += ['/testing/geckodriver']
-    """
+if CONFIG['ENABLE_GECKODRIVER']:
+    DIRS += ['/testing/geckodriver']
 
 DIRS += [
     '/tools/quitter',

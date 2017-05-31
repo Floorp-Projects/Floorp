@@ -164,16 +164,23 @@ mozInlineSpellStatus::InitForEditorChange(
   NS_ENSURE_SUCCESS(rv, rv);
   if (cmpResult < 0) {
     // previous anchor node is before the current anchor
-    rv = mRange->SetStart(aPreviousNode, aPreviousOffset);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mRange->SetEnd(aAnchorNode, aAnchorOffset);
+    nsCOMPtr<nsINode> previousNode = do_QueryInterface(aPreviousNode);
+    nsCOMPtr<nsINode> anchorNode = do_QueryInterface(aAnchorNode);
+    rv = mRange->SetStartAndEnd(previousNode, aPreviousOffset,
+                                anchorNode, aAnchorOffset);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   } else {
     // previous anchor node is after (or the same as) the current anchor
-    rv = mRange->SetStart(aAnchorNode, aAnchorOffset);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mRange->SetEnd(aPreviousNode, aPreviousOffset);
+    nsCOMPtr<nsINode> previousNode = do_QueryInterface(aPreviousNode);
+    nsCOMPtr<nsINode> anchorNode = do_QueryInterface(aAnchorNode);
+    rv = mRange->SetStartAndEnd(anchorNode, aAnchorOffset,
+                                previousNode, aPreviousOffset);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // On insert save this range: DoSpellCheck optimizes things in this range.
   // Otherwise, just leave this nullptr.
@@ -454,17 +461,19 @@ mozInlineSpellStatus::GetDocument(nsIDOMDocument** aDocument)
 
 nsresult
 mozInlineSpellStatus::PositionToCollapsedRange(nsIDOMDocument* aDocument,
-    nsIDOMNode* aNode, int32_t aOffset, nsIDOMRange** aRange)
+                                               nsIDOMNode* aNode,
+                                               int32_t aOffset,
+                                               nsRange** aRange)
 {
   *aRange = nullptr;
-  nsCOMPtr<nsIDOMRange> range;
-  nsresult rv = aDocument->CreateRange(getter_AddRefs(range));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> documentNode = do_QueryInterface(aDocument);
+  RefPtr<nsRange> range = new nsRange(documentNode);
 
-  rv = range->SetStart(aNode, aOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = range->SetEnd(aNode, aOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  nsresult rv = range->CollapseTo(node, aOffset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   range.swap(*aRange);
   return NS_OK;
@@ -1167,9 +1176,8 @@ mozInlineSpellChecker::MakeSpellCheckRange(
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMRange> range;
-  rv = doc->CreateRange(getter_AddRefs(range));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> documentNode = do_QueryInterface(doc);
+  RefPtr<nsRange> range = new nsRange(documentNode);
 
   // possibly use full range of the editor
   nsCOMPtr<nsIDOMElement> rootElem;
@@ -1201,15 +1209,23 @@ mozInlineSpellChecker::MakeSpellCheckRange(
   if (aStartNode == aEndNode && aStartOffset == aEndOffset)
     return NS_OK;
 
-  rv = range->SetStart(aStartNode, aStartOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (aEndOffset)
-    rv = range->SetEnd(aEndNode, aEndOffset);
-  else
-    rv = range->SetEndAfter(aEndNode);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> startNode = do_QueryInterface(aStartNode);
+  nsCOMPtr<nsINode> endNode = do_QueryInterface(aEndNode);
+  if (aEndOffset) {
+    rv = range->SetStartAndEnd(startNode, aStartOffset, endNode, aEndOffset);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    int32_t endOffset = -1;
+    endNode = nsRange::GetParentAndOffsetAfter(endNode, &endOffset);
+    rv = range->SetStartAndEnd(startNode, aStartOffset, endNode, endOffset);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
 
-  *aRange = static_cast<nsRange*>(range.forget().take());
+  range.swap(*aRange);
   return NS_OK;
 }
 

@@ -9134,8 +9134,6 @@ BytecodeEmitter::emitStatement(ParseNode* pn)
                     return false;
             }
         } else {
-            current->currentLine = parser.tokenStream().srcCoords.lineNum(pn2->pn_pos.begin);
-            current->lastColumn = 0;
             if (!reportExtraWarning(pn2, JSMSG_USELESS_EXPR))
                 return false;
         }

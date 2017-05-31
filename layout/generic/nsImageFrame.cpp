@@ -1632,6 +1632,12 @@ nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_NONE;
   }
 
+  // Image layer doesn't support draw focus ring for image map.
+  nsImageFrame* f = static_cast<nsImageFrame*>(mFrame);
+  if (f->HasImageMap()) {
+    return LAYER_NONE;
+  }
+
   return LAYER_ACTIVE;
 }
 

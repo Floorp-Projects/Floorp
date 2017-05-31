@@ -17,7 +17,6 @@ ConsoleCommand.displayName = "ConsoleCommand";
 
 ConsoleCommand.propTypes = {
   message: PropTypes.object.isRequired,
-  autoscroll: PropTypes.bool.isRequired,
   indent: PropTypes.number.isRequired,
   timestampsVisible: PropTypes.bool.isRequired,
   serviceContainer: PropTypes.object,
@@ -32,7 +31,6 @@ ConsoleCommand.defaultProps = {
  */
 function ConsoleCommand(props) {
   const {
-    autoscroll,
     indent,
     message,
     timestampsVisible,
@@ -52,7 +50,6 @@ function ConsoleCommand(props) {
     level,
     topLevelClasses: [],
     messageBody,
-    scrollToMessage: autoscroll,
     serviceContainer,
     indent,
     timestampsVisible,

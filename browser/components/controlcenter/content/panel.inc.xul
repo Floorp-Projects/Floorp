@@ -57,16 +57,16 @@
             class="identity-popup-section"
             when-connection="not-secure secure secure-ev secure-cert-user-overridden file">
         <vbox id="tracking-protection-content" flex="1">
-          <description class="identity-popup-headline"
-                       crop="end"
-                       value="&trackingProtection.title;" />
+          <label class="identity-popup-headline"
+                 crop="end"
+                 value="&trackingProtection.title;" />
 
-          <label id="tracking-blocked"
-                 crop="end">&trackingProtection.detectedBlocked3;</label>
-          <label id="tracking-loaded"
-                 crop="end">&trackingProtection.detectedNotBlocked3;</label>
-          <label id="tracking-not-detected"
-                 crop="end">&trackingProtection.notDetected3;</label>
+          <description id="tracking-blocked"
+                       crop="end">&trackingProtection.detectedBlocked3;</description>
+          <description id="tracking-loaded"
+                       crop="end">&trackingProtection.detectedNotBlocked3;</description>
+          <description id="tracking-not-detected"
+                       crop="end">&trackingProtection.notDetected3;</description>
 
           <button id="tracking-action-unblock"
                   label="&trackingProtection.unblock.label;"

@@ -13,20 +13,22 @@ import org.mozilla.gecko.home.ImageLoader;
 import org.mozilla.gecko.icons.storage.MemoryStorage;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.ComponentCallbacks2;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Configuration;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 /**
-  * This is a utility class to keep track of how much memory and disk-space pressure
-  * the system is under. It receives input from GeckoActivity via the onLowMemory() and
-  * onTrimMemory() functions, and also listens for some system intents related to
-  * disk-space notifications. Internally it will track how much memory and disk pressure
+  * This is a utility class to keep track of how much memory and disk-space pressure the
+  * system is under. It registers itself as a ComponentCallbacks to receive all onLowMemory()/
+  * onTrimMemory() notifications for our app, and also listens for some system intents related
+  * to disk-space notifications. Internally it will track how much memory and disk pressure
   * the system is under, and perform various actions to help alleviate the pressure.
   *
   * Note that since there is no notification for when the system has lots of free memory
@@ -39,7 +41,7 @@ import android.util.Log;
   * be thread-safe. In terms of lock ordering, code holding the PressureDecrementer lock
   * is allowed to pick up the MemoryMonitor lock, but not vice-versa.
   */
-class MemoryMonitor extends BroadcastReceiver {
+class MemoryMonitor extends BroadcastReceiver implements ComponentCallbacks2 {
     private static final String LOGTAG = "GeckoMemoryMonitor";
     private static final String ACTION_MEMORY_DUMP = "org.mozilla.gecko.MEMORY_DUMP";
     private static final String ACTION_FORCE_PRESSURE = "org.mozilla.gecko.FORCE_MEMORY_PRESSURE";
@@ -51,6 +53,8 @@ class MemoryMonitor extends BroadcastReceiver {
     private static final int MEMORY_PRESSURE_MEDIUM = 3;
     private static final int MEMORY_PRESSURE_HIGH = 4;
 
+    // We're living as long as the application, so keeping a static reference to it is okay.
+    @SuppressLint("StaticFieldLeak")
     private static final MemoryMonitor sInstance = new MemoryMonitor();
 
     static MemoryMonitor getInstance() {
@@ -80,9 +84,11 @@ class MemoryMonitor extends BroadcastReceiver {
         filter.addAction(ACTION_MEMORY_DUMP);
         filter.addAction(ACTION_FORCE_PRESSURE);
         mAppContext.registerReceiver(this, filter);
+        mAppContext.registerComponentCallbacks(this);
         mInited = true;
     }
 
+    @Override
     public void onLowMemory() {
         Log.d(LOGTAG, "onLowMemory() notification received");
         if (increaseMemoryPressure(MEMORY_PRESSURE_HIGH)) {
@@ -94,6 +100,7 @@ class MemoryMonitor extends BroadcastReceiver {
         }
     }
 
+    @Override
     public void onTrimMemory(int level) {
         Log.d(LOGTAG, "onTrimMemory() notification received with level " + level);
         if (level == ComponentCallbacks2.TRIM_MEMORY_COMPLETE) {
@@ -276,4 +283,9 @@ class MemoryMonitor extends BroadcastReceiver {
             // TODO: drop or shrink disk caches
         }
     }
+
+    // Needed to implement the ComponentCallbacks2 interface - we're only really interested in the
+    // memory-related calls, though.
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) { }
 }

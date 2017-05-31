@@ -1,7 +1,7 @@
 add_task(async function() {
   is(gBrowser.currentURI.spec, "about:blank", "Test starts with about:blank open");
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home");
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", null, {leaveOpen: true});
   let doc = gBrowser.contentDocument;
   is(gBrowser.currentURI.spec, "about:preferences#general",
      "#general should be in the URI for about:preferences");

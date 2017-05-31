@@ -21,6 +21,7 @@ include protocol PFileDescriptorSet;
 include protocol PIPCBlobInputStream;
 include protocol PPaymentRequest;
 
+include PBackgroundSharedTypes;
 include DOMTypes;
 include IPCBlob;
 include IPCStream;
@@ -195,7 +196,7 @@ parent:
      *
      * aLinks A flat array of url, name, and type for each link
      */
-    async DropLinks(nsString[] aLinks);
+    async DropLinks(nsString[] aLinks, PrincipalInfo aTriggeringPrincipalInfo);
 
     async Event(RemoteDOMEvent aEvent);
 

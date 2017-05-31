@@ -1,0 +1,805 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<!-- Privacy panel -->
+
+<script type="application/javascript"
+        src="chrome://browser/content/preferences/in-content-new/privacy.js"/>
+
+<preferences id="privacyPreferences" hidden="true" data-category="panePrivacy">
+
+  <!-- Tracking -->
+  <preference id="privacy.trackingprotection.enabled"
+              name="privacy.trackingprotection.enabled"
+              type="bool"/>
+  <preference id="privacy.trackingprotection.pbmode.enabled"
+              name="privacy.trackingprotection.pbmode.enabled"
+              type="bool"/>
+
+  <!-- XXX button prefs -->
+  <preference id="pref.privacy.disable_button.cookie_exceptions"
+              name="pref.privacy.disable_button.cookie_exceptions"
+              type="bool"/>
+  <preference id="pref.privacy.disable_button.view_cookies"
+              name="pref.privacy.disable_button.view_cookies"
+              type="bool"/>
+  <preference id="pref.privacy.disable_button.change_blocklist"
+              name="pref.privacy.disable_button.change_blocklist"
+              type="bool"/>
+  <preference id="pref.privacy.disable_button.tracking_protection_exceptions"
+              name="pref.privacy.disable_button.tracking_protection_exceptions"
+              type="bool"/>
+
+  <!-- Location Bar -->
+  <preference id="browser.urlbar.autocomplete.enabled"
+              name="browser.urlbar.autocomplete.enabled"
+              type="bool"/>
+  <preference id="browser.urlbar.suggest.bookmark"
+              name="browser.urlbar.suggest.bookmark"
+              type="bool"/>
+  <preference id="browser.urlbar.suggest.history"
+              name="browser.urlbar.suggest.history"
+              type="bool"/>
+  <preference id="browser.urlbar.suggest.openpage"
+              name="browser.urlbar.suggest.openpage"
+              type="bool"/>
+
+  <!-- History -->
+  <preference id="places.history.enabled"
+              name="places.history.enabled"
+              type="bool"/>
+  <preference id="browser.formfill.enable"
+              name="browser.formfill.enable"
+              type="bool"/>
+  <preference id="privacy.history.custom"
+              name="privacy.history.custom"
+              type="bool"/>
+  <!-- Cookies -->
+  <preference id="network.cookie.cookieBehavior"
+              name="network.cookie.cookieBehavior"
+              type="int"/>
+  <preference id="network.cookie.lifetimePolicy"
+              name="network.cookie.lifetimePolicy"
+              type="int"/>
+  <preference id="network.cookie.blockFutureCookies"
+              name="network.cookie.blockFutureCookies"
+              type="bool"/>
+  <!-- Clear Private Data -->
+  <preference id="privacy.sanitize.sanitizeOnShutdown"
+              name="privacy.sanitize.sanitizeOnShutdown"
+              type="bool"/>
+  <preference id="privacy.sanitize.timeSpan"
+              name="privacy.sanitize.timeSpan"
+              type="int"/>
+  <!-- Private Browsing -->
+  <preference id="browser.privatebrowsing.autostart"
+              name="browser.privatebrowsing.autostart"
+              type="bool"/>
+
+  <!-- DRM content -->
+  <preference id="media.eme.enabled"
+              name="media.eme.enabled"
+              type="bool"/>
+
+  <!-- Popups -->
+  <preference id="dom.disable_open_during_load"
+              name="dom.disable_open_during_load"
+              type="bool"/>
+  <!-- Passwords -->
+  <preference id="signon.rememberSignons" name="signon.rememberSignons" type="bool"/>
+
+  <!-- XXX buttons -->
+  <preference id="pref.privacy.disable_button.view_passwords"
+              name="pref.privacy.disable_button.view_passwords"
+              type="bool"/>
+  <preference id="pref.privacy.disable_button.view_passwords_exceptions"
+              name="pref.privacy.disable_button.view_passwords_exceptions"
+              type="bool"/>
+
+  <!-- Certificates tab
+   * security.default_personal_cert
+     - a string:
+         "Select Automatically"   select a certificate automatically when a site
+                                  requests one
+         "Ask Every Time"         present a dialog to the user so he can select
+                                  the certificate to use on a site which
+                                  requests one -->
+  <preference id="security.default_personal_cert"
+              name="security.default_personal_cert"
+              type="string"/>
+
+  <preference id="security.disable_button.openCertManager"
+              name="security.disable_button.openCertManager"
+              type="bool"/>
+
+  <preference id="security.disable_button.openDeviceManager"
+              name="security.disable_button.openDeviceManager"
+              type="bool"/>
+
+  <preference id="security.OCSP.enabled"
+              name="security.OCSP.enabled"
+              type="int"/>
+
+  <!-- Add-ons, malware, phishing -->
+  <preference id="xpinstall.whitelist.required"
+              name="xpinstall.whitelist.required"
+              type="bool"/>
+
+  <preference id="browser.safebrowsing.malware.enabled"
+              name="browser.safebrowsing.malware.enabled"
+              type="bool"/>
+  <preference id="browser.safebrowsing.phishing.enabled"
+              name="browser.safebrowsing.phishing.enabled"
+              type="bool"/>
+
+  <preference id="browser.safebrowsing.downloads.enabled"
+              name="browser.safebrowsing.downloads.enabled"
+              type="bool"/>
+
+  <preference id="urlclassifier.malwareTable"
+              name="urlclassifier.malwareTable"
+              type="string"/>
+
+  <preference id="browser.safebrowsing.downloads.remote.block_potentially_unwanted"
+              name="browser.safebrowsing.downloads.remote.block_potentially_unwanted"
+              type="bool"/>
+  <preference id="browser.safebrowsing.downloads.remote.block_uncommon"
+              name="browser.safebrowsing.downloads.remote.block_uncommon"
+              type="bool"/>
+
+  <!-- Network tab -->
+  <preference id="browser.cache.disk.capacity"
+              name="browser.cache.disk.capacity"
+              type="int"/>
+  <preference id="browser.offline-apps.notify"
+              name="browser.offline-apps.notify"
+              type="bool"/>
+
+  <preference id="browser.cache.disk.smart_size.enabled"
+              name="browser.cache.disk.smart_size.enabled"
+              inverted="true"
+              type="bool"/>
+
+  <!-- Data Choices tab -->
+#ifdef MOZ_CRASHREPORTER
+  <preference id="browser.crashReports.unsubmittedCheck.autoSubmit"
+              name="browser.crashReports.unsubmittedCheck.autoSubmit"
+              type="bool"/>
+#endif
+
+</preferences>
+
+<stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
+<stringbundle id="signonBundle" src="chrome://passwordmgr/locale/passwordmgr.properties"/>
+
+<hbox id="header-privacy"
+      class="header"
+      hidden="true"
+      data-category="panePrivacy">
+  <label class="header-name" flex="1">&panePrivacySecurity.title;</label>
+</hbox>
+
+
+<!-- History -->
+<groupbox id="historyGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&history.label;</label></caption>
+  <hbox align="center">
+    <label id="historyModeLabel"
+           control="historyMode"
+           accesskey="&historyHeader2.pre.accesskey;">&historyHeader2.pre.label;
+    </label>
+    <menulist id="historyMode">
+      <menupopup>
+        <menuitem label="&historyHeader.remember.label;" value="remember"/>
+        <menuitem label="&historyHeader.dontremember.label;" value="dontremember"/>
+        <menuitem label="&historyHeader.custom.label;" value="custom"/>
+      </menupopup>
+    </menulist>
+    <label>&historyHeader.post.label;</label>
+  </hbox>
+  <deck id="historyPane">
+    <vbox id="historyRememberPane">
+      <hbox align="center" flex="1">
+        <vbox flex="1">
+          <description>&rememberDescription.label;</description>
+          <separator class="thin"/>
+          <description>&rememberActions.pre.label;<label
+          class="text-link" id="historyRememberClear"
+          >&rememberActions.clearHistory.label;</label>&rememberActions.middle.label;<label
+          class="text-link" id="historyRememberCookies"
+          >&rememberActions.removeCookies.label;</label>&rememberActions.post.label;</description>
+        </vbox>
+      </hbox>
+    </vbox>
+    <vbox id="historyDontRememberPane">
+      <hbox align="center" flex="1">
+        <vbox flex="1">
+          <description>&dontrememberDescription.label;</description>
+          <separator class="thin"/>
+          <description>&dontrememberActions.pre.label;<label
+          class="text-link" id="historyDontRememberClear"
+          >&dontrememberActions.clearHistory.label;</label>&dontrememberActions.post.label;</description>
+        </vbox>
+      </hbox>
+    </vbox>
+    <vbox id="historyCustomPane">
+      <separator class="thin"/>
+      <vbox>
+        <checkbox id="privateBrowsingAutoStart"
+                  label="&privateBrowsingPermanent2.label;"
+                  accesskey="&privateBrowsingPermanent2.accesskey;"
+                  preference="browser.privatebrowsing.autostart"/>
+        <vbox class="indent">
+          <checkbox id="rememberHistory"
+                    label="&rememberHistory2.label;"
+                    accesskey="&rememberHistory2.accesskey;"
+                    preference="places.history.enabled"/>
+          <checkbox id="rememberForms"
+                    label="&rememberSearchForm.label;"
+                    accesskey="&rememberSearchForm.accesskey;"
+                    preference="browser.formfill.enable"/>
+          <hbox id="cookiesBox">
+            <checkbox id="acceptCookies" label="&acceptCookies.label;"
+                      preference="network.cookie.cookieBehavior"
+                      accesskey="&acceptCookies.accesskey;"
+                      onsyncfrompreference="return gPrivacyPane.readAcceptCookies();"
+                      onsynctopreference="return gPrivacyPane.writeAcceptCookies();"
+                      flex="1" />
+            <button id="cookieExceptions"
+                    class="accessory-button"
+                    label="&cookieExceptions.label;" accesskey="&cookieExceptions.accesskey;"
+                    preference="pref.privacy.disable_button.cookie_exceptions"/>
+          </hbox>
+          <hbox id="acceptThirdPartyRow"
+                class="indent"
+                align="center">
+            <label id="acceptThirdPartyLabel" control="acceptThirdPartyMenu"
+                   accesskey="&acceptThirdParty.pre.accesskey;">&acceptThirdParty.pre.label;</label>
+            <menulist id="acceptThirdPartyMenu" preference="network.cookie.cookieBehavior"
+            onsyncfrompreference="return gPrivacyPane.readAcceptThirdPartyCookies();"
+            onsynctopreference="return gPrivacyPane.writeAcceptThirdPartyCookies();">
+              <menupopup>
+                <menuitem label="&acceptThirdParty.always.label;" value="always"/>
+                <menuitem label="&acceptThirdParty.visited.label;" value="visited"/>
+                <menuitem label="&acceptThirdParty.never.label;" value="never"/>
+              </menupopup>
+            </menulist>
+          </hbox>
+          <hbox id="keepRow"
+                class="indent"
+                align="center">
+            <label id="keepUntil"
+                   control="keepCookiesUntil"
+                   accesskey="&keepUntil.accesskey;">&keepUntil.label;</label>
+            <menulist id="keepCookiesUntil"
+                      preference="network.cookie.lifetimePolicy">
+              <menupopup>
+                <menuitem label="&expire.label;" value="0"/>
+                <menuitem label="&close.label;" value="2"/>
+              </menupopup>
+            </menulist>
+            <spacer flex="1"/>
+            <button id="showCookiesButton"
+                    class="accessory-button"
+                    label="&showCookies.label;" accesskey="&showCookies.accesskey;"
+                    preference="pref.privacy.disable_button.view_cookies"/>
+          </hbox>
+          <hbox id="clearDataBox"
+                align="center">
+            <checkbox id="alwaysClear"
+                      preference="privacy.sanitize.sanitizeOnShutdown"
+                      label="&clearOnClose.label;"
+                      accesskey="&clearOnClose.accesskey;"
+                      flex="1" />
+            <button id="clearDataSettings"
+                    class="accessory-button"
+                    label="&clearOnCloseSettings.label;"
+                    accesskey="&clearOnCloseSettings.accesskey;"/>
+          </hbox>
+        </vbox>
+      </vbox>
+    </vbox>
+  </deck>
+</groupbox>
+
+<!-- Passwords -->
+<groupbox id="passwordsGroup" orient="vertical" data-category="panePrivacy" hidden="true">
+  <caption><label>&formsAndPasswords.label;</label></caption>
+
+  <vbox id="passwordSettings">
+    <hbox id="savePasswordsBox">
+      <checkbox id="savePasswords"
+                label="&rememberLogins1.label;" accesskey="&rememberLogins1.accesskey;"
+                preference="signon.rememberSignons"
+                onsyncfrompreference="return gPrivacyPane.readSavePasswords();"
+                flex="1" />
+      <button id="passwordExceptions"
+              class="accessory-button"
+              label="&passwordExceptions.label;"
+              accesskey="&passwordExceptions.accesskey;"
+              preference="pref.privacy.disable_button.view_passwords_exceptions"
+              searchkeywords="&address.label;"/>
+    </hbox>
+    <hbox id="showPasswordBox" pack="end">
+      <button id="showPasswords"
+              class="accessory-button"
+              label="&savedLogins.label;" accesskey="&savedLogins.accesskey;"
+              preference="pref.privacy.disable_button.view_passwords"
+              searchkeywords="&savedLogins.title;"/>
+    </hbox>
+  </vbox>
+  <hbox id="masterPasswordRow">
+    <checkbox id="useMasterPassword"
+              label="&useMasterPassword.label;"
+              accesskey="&useMasterPassword.accesskey;"
+              flex="1"/>
+    <button id="changeMasterPassword"
+            class="accessory-button"
+            label="&changeMasterPassword.label;"
+            accesskey="&changeMasterPassword.accesskey;"/>
+  </hbox>
+</groupbox>
+
+<!-- Tracking -->
+<groupbox id="trackingGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&trackingProtectionHeader2.label;</label></caption>
+  <vbox id="trackingprotectionbox" hidden="true">
+    <hbox align="start">
+      <vbox flex="1">
+        <description>
+          &trackingProtection.description;
+          <label id="trackingProtectionLearnMore" class="learnMore text-link">&trackingProtectionLearnMore.label;</label>
+        </description>
+        <description id="trackingProtectionDesc"
+                     control="trackingProtectionRadioGroup">
+          &trackingProtection.radioGroupLabel;
+        </description>
+      </vbox>
+      <spacer flex="1"/>
+      <vbox id="trackingProtectionAdvancedSettings">
+        <button id="trackingProtectionExceptions"
+                class="accessory-button"
+                label="&trackingProtectionExceptions.label;"
+                accesskey="&trackingProtectionExceptions.accesskey;"
+                preference="pref.privacy.disable_button.tracking_protection_exceptions"
+                searchkeywords="&removepermission.label;
+                                &removeallpermissions.label;
+                                &button.cancel.label;
+                                &button.ok.label;"/>
+        <button id="changeBlockList"
+                class="accessory-button"
+                label="&changeBlockList.label;"
+                accesskey="&changeBlockList.accesskey;"
+                preference="pref.privacy.disable_button.change_blocklist"
+                searchkeywords="&button.cancel.label; &button.ok.label;"/>
+      </vbox>
+    </hbox>
+    <radiogroup id="trackingProtectionRadioGroup" aria-labelledby="trackingProtectionDesc">
+      <radio value="always"
+             label="&trackingProtectionAlways.label;"
+             accesskey="&trackingProtectionAlways.accesskey;"/>
+      <radio value="private"
+             label="&trackingProtectionPrivate.label;"
+             accesskey="&trackingProtectionPrivate.accesskey;"/>
+      <radio value="never"
+             label="&trackingProtectionNever.label;"
+             accesskey="&trackingProtectionNever.accesskey;"/>
+    </radiogroup>
+  </vbox>
+  <vbox id="trackingprotectionpbmbox">
+    <caption><label>&tracking.label;</label></caption>
+    <hbox align="center">
+      <checkbox id="trackingProtectionPBM"
+                preference="privacy.trackingprotection.pbmode.enabled"
+                accesskey="&trackingProtectionPBM5.accesskey;"
+                label="&trackingProtectionPBM5.label;" />
+      <label id="trackingProtectionPBMLearnMore"
+             class="learnMore text-link">&trackingProtectionPBMLearnMore.label;</label>
+      <spacer flex="1" />
+      <button id="changeBlockListPBM"
+              label="&changeBlockList.label;" accesskey="&changeBlockList.accesskey;"
+              preference="pref.privacy.disable_button.change_blocklist"/>
+    </hbox>
+  </vbox>
+  <vbox>
+    <description>&doNotTrack.pre.label;<label
+    class="text-link" id="doNotTrackSettings"
+    >&doNotTrack.settings.label;</label>&doNotTrack.post.label;</description>
+  </vbox>
+</groupbox>
+
+<!-- Pop-ups -->
+<groupbox id="miscGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&popups.label;</label></caption>
+  <hbox align="start">
+    <checkbox id="popupPolicy" preference="dom.disable_open_during_load"
+              label="&blockPopups.label;" accesskey="&blockPopups.accesskey;"
+              onsyncfrompreference="return gPrivacyPane.updateButtons('popupPolicyButton',
+                                         'dom.disable_open_during_load');"
+              flex="1" />
+    <button id="popupPolicyButton"
+            class="accessory-button"
+            label="&popupExceptions.label;"
+            accesskey="&popupExceptions.accesskey;"
+            searchkeywords="&address.label; &button.cancel.label; &button.ok.label;"/>
+  </hbox>
+</groupbox>
+
+<!-- Notifications -->
+<groupbox id="notificationsGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&notificationsPolicy.label;</label></caption>
+  <grid>
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows>
+      <row id="notificationsPolicyRow" align="center">
+        <hbox flex="1">
+          <label id="notificationsPolicy">&notificationsPolicyDesc3.label;</label>
+          <label id="notificationsPolicyLearnMore"
+                 class="learnMore text-link">&notificationsPolicyLearnMore.label;</label>
+        </hbox>
+        <hbox pack="end">
+          <button id="notificationsPolicyButton"
+                  class="accessory-button"
+                  label="&notificationsPolicyButton.label;"
+                  accesskey="&notificationsPolicyButton.accesskey;"
+                  searchkeywords="&removepermission.label;
+                                  &removeallpermissions.label;
+                                  &button.cancel.label;
+                                  &button.ok.label;"/>
+        </hbox>
+      </row>
+    </rows>
+  </grid>
+  <vbox id="notificationsDoNotDisturbBox" hidden="true">
+    <checkbox id="notificationsDoNotDisturb" label="&notificationsDoNotDisturb.label;"
+              accesskey="&notificationsDoNotDisturb.accesskey;"/>
+    <label id="notificationsDoNotDisturbDetails"
+           class="indent">&notificationsDoNotDisturbDetails.value;</label>
+  </vbox>
+</groupbox>
+
+<!-- Location Bar -->
+<groupbox id="locationBarGroup"
+          data-category="panePrivacy"
+          hidden="true">
+  <caption><label>&locationBar.label;</label></caption>
+  <label id="locationBarSuggestionLabel">&locbar.suggest2.label;</label>
+  <checkbox id="historySuggestion" label="&locbar.history.label;"
+            accesskey="&locbar.history.accesskey;"
+            preference="browser.urlbar.suggest.history"/>
+  <checkbox id="bookmarkSuggestion" label="&locbar.bookmarks.label;"
+            accesskey="&locbar.bookmarks.accesskey;"
+            preference="browser.urlbar.suggest.bookmark"/>
+  <checkbox id="openpageSuggestion" label="&locbar.openpage.label;"
+            accesskey="&locbar.openpage.accesskey;"
+            preference="browser.urlbar.suggest.openpage"/>
+  <label class="text-link" onclick="gotoPref('general')">
+    &suggestionSettings2.label;
+  </label>
+</groupbox>
+
+<!-- addons, forgery (phishing) UI Security -->
+<groupbox id="addonsPhishingGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&security.label;</label></caption>
+
+  <hbox id="addonInstallBox">
+    <checkbox id="warnAddonInstall"
+              label="&warnOnAddonInstall.label;"
+              accesskey="&warnOnAddonInstall.accesskey;"
+              preference="xpinstall.whitelist.required"
+              onsyncfrompreference="return gPrivacyPane.readWarnAddonInstall();"
+              flex="1" />
+    <button id="addonExceptions"
+            class="accessory-button"
+            label="&addonExceptions.label;"
+            accesskey="&addonExceptions.accesskey;"
+            searchkeywords="&address.label;
+                            &allow.label;
+                            &removepermission.label;
+                            &removeallpermissions.label;
+                            &button.cancel.label;
+                            &button.ok.label;"/>
+  </hbox>
+
+  <separator class="thin"/>
+  <checkbox id="enableSafeBrowsing"
+            label="&enableSafeBrowsing.label;"
+            accesskey="&enableSafeBrowsing.accesskey;" />
+  <vbox class="indent">
+    <checkbox id="blockDownloads"
+              label="&blockDownloads.label;"
+              accesskey="&blockDownloads.accesskey;" />
+    <checkbox id="blockUncommonUnwanted"
+              label="&blockUncommonAndUnwanted.label;"
+              accesskey="&blockUncommonAndUnwanted.accesskey;" />
+  </vbox>
+</groupbox>
+
+<!-- Certificates -->
+<groupbox id="certSelection" data-category="panePrivacy" hidden="true">
+  <caption><label>&certificateTab.label;</label></caption>
+  <description id="CertSelectionDesc" control="certSelection">&certPersonal2.description;</description>
+
+  <!--
+    The values on these radio buttons may look like l10n issues, but
+    they're not - this preference uses *those strings* as its values.
+    I KID YOU NOT.
+  -->
+  <radiogroup id="certSelection"
+              preftype="string"
+              preference="security.default_personal_cert"
+              aria-labelledby="CertSelectionDesc">
+    <radio label="&selectCerts.auto;"
+           accesskey="&selectCerts.auto.accesskey;"
+           value="Select Automatically"/>
+    <radio label="&selectCerts.ask;"
+           accesskey="&selectCerts.ask.accesskey;"
+           value="Ask Every Time"/>
+  </radiogroup>
+  <hbox align="start">
+    <checkbox id="enableOCSP"
+              label="&enableOCSP.label;"
+              accesskey="&enableOCSP.accesskey;"
+              onsyncfrompreference="return gPrivacyPane.readEnableOCSP();"
+              onsynctopreference="return gPrivacyPane.writeEnableOCSP();"
+              preference="security.OCSP.enabled"
+              flex="1" />
+    <vbox>
+      <button id="viewCertificatesButton"
+              class="accessory-button"
+              label="&viewCerts.label;"
+              accesskey="&viewCerts.accesskey;"
+              preference="security.disable_button.openCertManager"
+              searchkeywords="&certmgr.tab.mine;
+                              &certmgr.tab.others2;
+                              &certmgr.tab.websites3;
+                              &certmgr.tab.ca;
+                              &certmgr.tab.orphan2;
+                              &certmgr.mine;
+                              &certmgr.others;
+                              &certmgr.websites2;
+                              &certmgr.cas;
+                              &certmgr.orphans;
+                              &certmgr.certname;
+                              &certmgr.tokenname;
+                              &certmgr.view2.label;
+                              &certmgr.export.label;
+                              &certmgr.delete2.label;"/>
+      <button id="viewSecurityDevicesButton"
+              class="accessory-button"
+              label="&viewSecurityDevices.label;"
+              accesskey="&viewSecurityDevices.accesskey;"
+              preference="security.disable_button.openDeviceManager"
+              searchkeywords="&devmgr.title;
+                              &devmgr.devlist.label;
+                              &devmgr.details.title;
+                              &devmgr.details.title2;
+                              &devmgr.button.login.label;
+                              &devmgr.button.logout.label;
+                              &devmgr.button.changepw.label;
+                              &devmgr.button.load.label;
+                              &devmgr.button.unload.label;"/>
+    </vbox>
+  </hbox>
+</groupbox>
+
+<!-- DRM Content -->
+<groupbox id="drmGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&drmContent.label;</label></caption>
+  <grid id="contentGrid2">
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows id="contentRows-2">
+      <row id="playDRMContentRow">
+        <hbox align="center">
+          <checkbox id="playDRMContent" preference="media.eme.enabled"
+                    label="&playDRMContent.label;" accesskey="&playDRMContent.accesskey;"/>
+          <label id="playDRMContentLink" class="learnMore text-link">
+            &playDRMContent.learnMore.label;
+          </label>
+        </hbox>
+      </row>
+    </rows>
+  </grid>
+</groupbox>
+
+<!-- Containers -->
+<groupbox id="browserContainersGroup" data-category="panePrivacy" hidden="true">
+  <vbox id="browserContainersbox" hidden="true">
+    <caption><label>&browserContainersHeader.label;</label></caption>
+    <hbox align="center">
+      <checkbox id="browserContainersCheckbox"
+                label="&browserContainersEnabled.label;"
+                accesskey="&browserContainersEnabled.accesskey;"
+                preference="privacy.userContext.enabled"
+                onsyncfrompreference="return gPrivacyPane.readBrowserContainersCheckbox();"/>
+      <label id="browserContainersLearnMore" class="learnMore text-link">
+        &browserContainersLearnMore.label;
+      </label>
+      <spacer flex="1"/>
+      <button id="browserContainersSettings"
+              class="accessory-button"
+              label="&browserContainersSettings.label;"
+              accesskey="&browserContainersSettings.accesskey;"
+              searchkeywords="&addButton.label;
+                              &preferencesButton.label;
+                              &removeButton.label;"/>
+    </hbox>
+  </vbox>
+</groupbox>
+
+<!-- Network -->
+<!-- Connection -->
+<groupbox id="connectionGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&connection.label;</label></caption>
+
+  <hbox align="center">
+    <description flex="1" control="connectionSettings">&connectionDesc.label;</description>
+    <button id="connectionSettings"
+            class="accessory-button"
+            icon="network"
+            label="&connectionSettings.label;"
+            accesskey="&connectionSettings.accesskey;"
+            searchkeywords="&connectionsDialog.title;
+                            &noProxyTypeRadio.label;
+                            &WPADTypeRadio.label;
+                            &systemTypeRadio.label;
+                            &manualTypeRadio.label;
+                            &http.label;
+                            &ssl.label;
+                            &ftp.label;
+                            &socks.label;
+                            &socks4.label;
+                            &socks5.label;
+                            &noproxy.label;
+                            &noproxyExplain.label;
+                            &shareproxy.label;
+                            &autoTypeRadio.label;
+                            &reload.label;
+                            &autologinproxy.label;
+                            &socksRemoteDNS.label2;"/>
+  </hbox>
+</groupbox>
+
+<!-- Cache -->
+<groupbox id="cacheGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&httpCache.label;</label></caption>
+
+  <hbox align="center">
+    <label id="actualDiskCacheSize" flex="1"/>
+    <button id="clearCacheButton"
+            class="accessory-button"
+            icon="clear"
+            label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"/>
+  </hbox>
+  <checkbox preference="browser.cache.disk.smart_size.enabled"
+            id="allowSmartSize"
+            onsyncfrompreference="return gPrivacyPane.readSmartSizeEnabled();"
+            label="&overrideSmartCacheSize.label;"
+            accesskey="&overrideSmartCacheSize.accesskey;"/>
+  <hbox align="center" class="indent">
+    <label id="useCacheBefore" control="cacheSize"
+            accesskey="&limitCacheSizeBefore.accesskey;">
+      &limitCacheSizeBefore.label;
+    </label>
+    <textbox id="cacheSize" type="number" size="4" max="1024"
+              aria-labelledby="useCacheBefore cacheSize useCacheAfter"/>
+    <label id="useCacheAfter" flex="1">&limitCacheSizeAfter.label;</label>
+  </hbox>
+</groupbox>
+
+<!-- Offline apps -->
+<groupbox id="offlineGroup" data-category="panePrivacy" hidden="true" data-hidden-from-search="true">
+  <caption><label>&offlineStorage2.label;</label></caption>
+
+  <hbox align="center">
+    <label id="actualAppCacheSize" flex="1"/>
+    <button id="clearOfflineAppCacheButton"
+            class="accessory-button"
+            icon="clear"
+            label="&clearOfflineAppCacheNow.label;" accesskey="&clearOfflineAppCacheNow.accesskey;"/>
+  </hbox>
+  <hbox align="center">
+    <checkbox id="offlineNotify"
+              label="&offlineStorageNotify.label;" accesskey="&offlineStorageNotify.accesskey;"
+              preference="browser.offline-apps.notify"
+              onsyncfrompreference="return gPrivacyPane.readOfflineNotify();"
+              flex="1" />
+    <button id="offlineNotifyExceptions"
+            class="accessory-button"
+            label="&offlineStorageNotifyExceptions.label;"
+            accesskey="&offlineStorageNotifyExceptions.accesskey;"/>
+  </hbox>
+  <hbox>
+    <vbox flex="1">
+      <label id="offlineAppsListLabel">&offlineAppsList2.label;</label>
+      <listbox id="offlineAppsList"
+              flex="1"
+              aria-labelledby="offlineAppsListLabel">
+      </listbox>
+    </vbox>
+    <vbox pack="end">
+      <button id="offlineAppsListRemove"
+              class="accessory-button"
+              disabled="true"
+              label="&offlineAppsListRemove.label;"
+              accesskey="&offlineAppsListRemove.accesskey;"/>
+    </vbox>
+  </hbox>
+</groupbox>
+
+<!-- Site Data -->
+<groupbox id="siteDataGroup" hidden="true" data-category="panePrivacy" data-hidden-from-search="true">
+  <caption><label>&siteData.label;</label></caption>
+
+  <hbox align="baseline">
+    <label id="totalSiteDataSize"></label>
+    <label id="siteDataLearnMoreLink" class="learnMore text-link" value="&siteDataLearnMoreLink.label;"></label>
+    <spacer flex="1" />
+    <button id="clearSiteDataButton"
+            class="accessory-button"
+            icon="clear"
+            label="&clearSiteData.label;" accesskey="&clearSiteData.accesskey;"/>
+  </hbox>
+  <vbox align="end">
+    <button id="siteDataSettings"
+            class="accessory-button"
+            label="&siteDataSettings.label;"
+            accesskey="&siteDataSettings.accesskey;"
+            searchkeywords="&window.title;
+                            &hostCol.label;
+                            &statusCol.label;
+                            &usageCol.label;"/>
+  </vbox>
+</groupbox>
+
+<!-- Data Choices -->
+#ifdef MOZ_TELEMETRY_REPORTING
+<groupbox id="historyGroup" data-category="panePrivacy" data-subcategory="reports" hidden="true">
+<caption><label>&reports.label;</label></caption>
+  <hbox align="center">
+    <checkbox id="submitHealthReportBox" label="&enableHealthReport.label;"
+              accesskey="&enableHealthReport.accesskey;"/>
+    <label id="FHRLearnMore"
+           class="learnMore text-link">&healthReportLearnMore.label;</label>
+  </hbox>
+  <description class="indent">&healthReportDesc.label;</description>
+  <vbox class="indent">
+    <hbox align="center">
+      <checkbox id="submitTelemetryBox" preference="toolkit.telemetry.enabled"
+                label="&enableTelemetryData.label;"
+                accesskey="&enableTelemetryData.accesskey;"/>
+      <label id="telemetryLearnMore"
+             class="learnMore text-link">&telemetryLearnMore.label;</label>
+    </hbox>
+    <description id="telemetryDataDesc"
+                 class="indent">&telemetryDesc.label;</description>
+  </vbox>
+</groupbox>
+#endif
+
+#ifdef MOZ_DATA_REPORTING
+#ifdef MOZ_CRASHREPORTER
+<groupbox id="crashReporterGroup" data-category="panePrivacy" data-subcategory="reports" hidden="true">
+#ifndef MOZ_TELEMETRY_REPORTING
+<caption><label>&reports.label;</label></caption>
+#endif
+  <hbox align="center">
+    <checkbox id="automaticallySubmitCrashesBox"
+              preference="browser.crashReports.unsubmittedCheck.autoSubmit"
+              label="&alwaysSubmitCrashReports.label;"
+              accesskey="&alwaysSubmitCrashReports.accesskey;"/>
+    <label id="crashReporterLearnMore"
+           class="learnMore text-link">&crashReporterLearnMore.label;</label>
+  </hbox>
+  <description class="indent">&crashReporterDesc2.label;</description>
+</groupbox>
+
+#endif
+#endif

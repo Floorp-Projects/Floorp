@@ -7,7 +7,6 @@ mozlint-eslint:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
     worker:
-        implementation: docker-worker
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
     run:
@@ -51,7 +50,6 @@ mozlint-flake8:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
     worker:
-        implementation: docker-worker
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
     run:
@@ -76,7 +74,6 @@ wptlint-gecko:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
     worker:
-        implementation: docker-worker
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
     run:

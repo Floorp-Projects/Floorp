@@ -36,12 +36,13 @@ import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_PREFERENCES_SEARC
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_SAVE_AS_PDF;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_SIGN_UP;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.SUMO_DEFAULT_BROWSER;
+import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_FXA_SIGNIN;
+import org.mozilla.gecko.deeplink.DeepLinkContract;
 
 /**
  * Activity that receives incoming Intents and dispatches them to the appropriate activities (e.g. browser, custom tabs, web app).
  */
 public class LauncherActivity extends Activity {
-
     private static final String TAG = LauncherActivity.class.getSimpleName();
 
     @Override
@@ -220,10 +221,51 @@ public class LauncherActivity extends Activity {
                 GeckoPreferences.setResourceToOpen(settingsIntent, host);
                 startActivityForResult(settingsIntent, ACTIVITY_REQUEST_PREFERENCES);
                 break;
+            case LINK_FXA_SIGNIN:
+                dispatchAccountsDeepLink(intent);
+                break;
             default:
-                Log.w(TAG, "unrecognized deep links");
+                Log.w(TAG, "Unrecognized deep link");
+        }
+    }
+
+    private void dispatchAccountsDeepLink(final SafeIntent safeIntent) {
+        final Intent intent = new Intent(Intent.ACTION_VIEW);
+
+        final Uri intentUri = safeIntent.getData();
+
+        final String accountsToken = intentUri.getQueryParameter(DeepLinkContract.ACCOUNTS_TOKEN_PARAM);
+        final String entryPoint = intentUri.getQueryParameter(DeepLinkContract.ACCOUNTS_ENTRYPOINT_PARAM);
+
+        String dispatchUri = AboutPages.ACCOUNTS + "?";
+
+        // If token is missing from the deep-link, we'll still open the accounts page.
+        if (accountsToken != null) {
+            dispatchUri = dispatchUri.concat(DeepLinkContract.ACCOUNTS_TOKEN_PARAM + "=" + accountsToken + "&");
         }
 
+        // Pass through the entrypoint.
+        if (entryPoint != null) {
+            dispatchUri = dispatchUri.concat(DeepLinkContract.ACCOUNTS_ENTRYPOINT_PARAM + "=" + entryPoint + "&");
+        }
+
+        // Pass through any utm_* parameters.
+        for (String queryParam : intentUri.getQueryParameterNames()) {
+            if (queryParam.startsWith("utm_")) {
+                dispatchUri = dispatchUri.concat(queryParam + "=" + intentUri.getQueryParameter(queryParam) + "&");
+            }
+        }
+
+        try {
+            intent.setData(Uri.parse(dispatchUri));
+        } catch (Exception e) {
+            Log.w(TAG, "Could not parse accounts deep link.");
+        }
+
+        intent.setClassName(getApplicationContext(), AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+
+        filterFlags(intent);
+        startActivity(intent);
     }
 
 }

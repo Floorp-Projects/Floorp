@@ -3,6 +3,15 @@
 
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
+// Tests within /browser/components/preferences/in-content/tests/
+// test the "old" preferences organization, before it was reorganized.
+// Thus, all of these tests should revert back to the "oldOrganization"
+// before running.
+Services.prefs.setBoolPref("browser.preferences.useOldOrganization", true);
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("browser.preferences.useOldOrganization");
+});
+
 const kDefaultWait = 2000;
 
 function is_hidden(aElement) {
@@ -119,19 +128,21 @@ function waitForEvent(aSubject, aEventName, aTimeoutMs, aTarget) {
   return eventDeferred.promise.then(cleanup, cleanup);
 }
 
-function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
+function openPreferencesViaOpenPreferencesAPI(aPane, aAdvancedTab, aOptions) {
   return new Promise(resolve => {
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
-    openPreferences(aPane);
+    openPreferences(aPane, aAdvancedTab ? {advancedTab: aAdvancedTab} : undefined);
     let newTabBrowser = gBrowser.selectedBrowser;
 
     newTabBrowser.addEventListener("Initialized", function() {
       newTabBrowser.contentWindow.addEventListener("load", function() {
         let win = gBrowser.contentWindow;
         let selectedPane = win.history.state;
+        let doc = win.document;
+        let selectedAdvancedTab = aAdvancedTab && doc.getElementById("advancedPrefs").selectedTab.id;
         if (!aOptions || !aOptions.leaveOpen)
           gBrowser.removeCurrentTab();
-        resolve({selectedPane});
+        resolve({selectedPane, selectedAdvancedTab});
       }, {once: true});
     }, {capture: true, once: true});
 
@@ -179,102 +190,3 @@ function promiseWindowDialogOpen(buttonAction, url) {
 function promiseAlertDialogOpen(buttonAction) {
   return promiseWindowDialogOpen(buttonAction, "chrome://global/content/commonDialog.xul");
 }
-
-function addPersistentStoragePerm(origin) {
-  let uri = NetUtil.newURI(origin);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
-  Services.perms.addFromPrincipal(principal, "persistent-storage", Ci.nsIPermissionManager.ALLOW_ACTION);
-}
-
-function promiseSiteDataManagerSitesUpdated() {
-  return TestUtils.topicObserved("sitedatamanager:sites-updated", () => true);
-}
-
-function openSiteDataSettingsDialog() {
-  let doc = gBrowser.selectedBrowser.contentDocument;
-  let settingsBtn = doc.getElementById("siteDataSettings");
-  let dialogOverlay = doc.getElementById("dialogOverlay");
-  let dialogLoadPromise = promiseLoadSubDialog("chrome://browser/content/preferences/siteDataSettings.xul");
-  let dialogInitPromise = TestUtils.topicObserved("sitedata-settings-init", () => true);
-  let fullyLoadPromise = Promise.all([ dialogLoadPromise, dialogInitPromise ]).then(() => {
-    is(dialogOverlay.style.visibility, "visible", "The Settings dialog should be visible");
-  });
-  settingsBtn.doCommand();
-  return fullyLoadPromise;
-}
-
-function assertSitesListed(doc, hosts) {
-  let frameDoc = doc.getElementById("dialogFrame").contentDocument;
-  let removeBtn = frameDoc.getElementById("removeSelected");
-  let removeAllBtn = frameDoc.getElementById("removeAll");
-  let sitesList = frameDoc.getElementById("sitesList");
-  let totalSitesNumber = sitesList.getElementsByTagName("richlistitem").length;
-  is(totalSitesNumber, hosts.length, "Should list the right sites number");
-  hosts.forEach(host => {
-    let site = sitesList.querySelector(`richlistitem[host="${host}"]`);
-    ok(site, `Should list the site of ${host}`);
-  });
-  is(removeBtn.disabled, false, "Should enable the removeSelected button");
-  is(removeAllBtn.disabled, false, "Should enable the removeAllBtn button");
-}
-
-function evaluateSearchResults(keyword, searchReults) {
-  searchReults = Array.isArray(searchReults) ? searchReults : [searchReults];
-  searchReults.push("header-searchResults");
-
-  let searchInput = gBrowser.contentDocument.getElementById("searchInput");
-  searchInput.focus();
-  searchInput.value = keyword;
-  searchInput.doCommand();
-
-  let mainPrefTag = gBrowser.contentDocument.getElementById("mainPrefPane");
-  for (let i = 0; i < mainPrefTag.childElementCount; i++) {
-    let child = mainPrefTag.children[i];
-    if (searchReults.includes(child.id)) {
-      is_element_visible(child, "Should be in search results");
-    } else if (child.id) {
-      is_element_hidden(child, "Should not be in search results");
-    }
-  }
-}
-
-const mockSiteDataManager = {
-
-  _SiteDataManager: null,
-  _originalGetQuotaUsage: null,
-  _originalRemoveQuotaUsage: null,
-
-  _getQuotaUsage() {
-    let results = [];
-    this.fakeSites.forEach(site => {
-      results.push({
-        origin: site.principal.origin,
-        usage: site.usage,
-        persisted: site.persisted
-      });
-    });
-    this._SiteDataManager._getQuotaUsagePromise = Promise.resolve(results);
-    return this._SiteDataManager._getQuotaUsagePromise;
-  },
-
-  _removeQuotaUsage(site) {
-    var target = site.principals[0].URI.host;
-    this.fakeSites = this.fakeSites.filter(fakeSite => {
-      return fakeSite.principal.URI.host != target;
-    });
-  },
-
-  register(SiteDataManager) {
-    this._SiteDataManager = SiteDataManager;
-    this._originalGetQuotaUsage = this._SiteDataManager._getQuotaUsage;
-    this._SiteDataManager._getQuotaUsage = this._getQuotaUsage.bind(this);
-    this._originalRemoveQuotaUsage = this._SiteDataManager._removeQuotaUsage;
-    this._SiteDataManager._removeQuotaUsage = this._removeQuotaUsage.bind(this);
-    this.fakeSites = null;
-  },
-
-  unregister() {
-    this._SiteDataManager._getQuotaUsage = this._originalGetQuotaUsage;
-    this._SiteDataManager._removeQuotaUsage = this._originalRemoveQuotaUsage;
-  }
-};

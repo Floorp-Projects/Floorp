@@ -91,7 +91,8 @@ FormAutofillHandler.prototype = {
       }
 
       let value = profile[fieldDetail.fieldName];
-      if (value) {
+      // TODO: Bug 1364823 is implemeting the value filling of select element.
+      if (element instanceof Ci.nsIDOMHTMLInputElement && value) {
         element.setUserInput(value);
       }
     }

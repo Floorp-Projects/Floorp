@@ -7,7 +7,7 @@
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
 Components.utils.import("resource://gre/modules/ContextualIdentityService.jsm");
 
-const containersBundle = Services.strings.createBundle("chrome://browser/locale/preferences/containers.properties");
+const containersBundle = Services.strings.createBundle("chrome://browser/locale/preferences-old/containers.properties");
 
 const defaultContainerIcon = "fingerprint";
 const defaultContainerColor = "blue";

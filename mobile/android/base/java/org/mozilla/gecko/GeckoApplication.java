@@ -235,6 +235,7 @@ public class GeckoApplication extends Application
         sSessionUUID = UUID.randomUUID().toString();
 
         GeckoActivityMonitor.getInstance().initialize(this);
+        MemoryMonitor.getInstance().init(this);
 
         final Context context = getApplicationContext();
         GeckoAppShell.setApplicationContext(context);

@@ -532,7 +532,7 @@ const gStoragePressureObserver = {
           // The advanced subpanes are only supported in the old organization, which will
           // be removed by bug 1349689.
           let win = gBrowser.ownerGlobal;
-          if (Preferences.get("browser.preferences.useOldOrganization", false)) {
+          if (Preferences.get("browser.preferences.useOldOrganization")) {
             win.openAdvancedPreferences("networkTab", {origin: "storagePressure"});
           } else {
             win.openPreferences("panePrivacy", {origin: "storagePressure"});
@@ -1314,6 +1314,9 @@ var gBrowserInit = {
     // have been initialized.
     Services.obs.notifyObservers(window, "browser-window-before-show");
 
+    gUIDensity.update();
+    gPrefService.addObserver(gUIDensity.prefDomain, gUIDensity);
+
     let isResistFingerprintingEnabled = gPrefService.getBoolPref("privacy.resistFingerprinting");
 
     // Set a sane starting width/height for all resolutions on new profiles.
@@ -1426,7 +1429,11 @@ var gBrowserInit = {
         // This function throws for certain malformed URIs, so use exception handling
         // so that we don't disrupt startup
         try {
-          gBrowser.loadTabs(specs, false, true);
+          gBrowser.loadTabs(specs, {
+            inBackground: false,
+            replace: true,
+            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          });
         } catch (e) {}
       } else if (uriToLoad instanceof XULElement) {
         // swap the given tab with the default about:blank tab and then close
@@ -1490,7 +1497,7 @@ var gBrowserInit = {
       } else {
         // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
         // Such callers expect that window.arguments[0] is handled as a single URI.
-        loadOneOrMoreURIs(uriToLoad);
+        loadOneOrMoreURIs(uriToLoad, Services.scriptSecurityManager.getSystemPrincipal());
       }
     }
 
@@ -1765,6 +1772,8 @@ var gBrowserInit = {
     gExtensionsNotifications.uninit();
 
     Services.obs.removeObserver(gPluginHandler.NPAPIPluginCrashed, "plugin-crashed");
+
+    gPrefService.removeObserver(gUIDensity.prefDomain, gUIDensity);
 
     try {
       gBrowser.removeProgressListener(window.XULBrowserWindow);
@@ -2156,13 +2165,16 @@ function BrowserGoHome(aEvent) {
   // openUILinkIn in utilityOverlay.js doesn't handle loading multiple pages
   switch (where) {
   case "current":
-    loadOneOrMoreURIs(homePage);
+    loadOneOrMoreURIs(homePage, Services.scriptSecurityManager.getSystemPrincipal());
     break;
   case "tabshifted":
   case "tab":
     urls = homePage.split("|");
     var loadInBackground = getBoolPref("browser.tabs.loadBookmarksInBackground", false);
-    gBrowser.loadTabs(urls, loadInBackground);
+    gBrowser.loadTabs(urls, {
+      inBackground: loadInBackground,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
     break;
   case "window":
     OpenBrowserWindow();
@@ -2170,7 +2182,7 @@ function BrowserGoHome(aEvent) {
   }
 }
 
-function loadOneOrMoreURIs(aURIString) {
+function loadOneOrMoreURIs(aURIString, aTriggeringPrincipal) {
   // we're not a browser window, pass the URI string to a new browser window
   if (window.location.href != getBrowserURL()) {
     window.openDialog(getBrowserURL(), "_blank", "all,dialog=no", aURIString);
@@ -2180,7 +2192,11 @@ function loadOneOrMoreURIs(aURIString) {
   // This function throws for certain malformed URIs, so use exception handling
   // so that we don't disrupt startup
   try {
-    gBrowser.loadTabs(aURIString.split("|"), false, true);
+    gBrowser.loadTabs(aURIString.split("|"), {
+      inBackground: false,
+      replace: true,
+      triggeringPrincipal: aTriggeringPrincipal,
+    });
   } catch (e) {
   }
 }
@@ -2229,6 +2245,13 @@ function openLocation() {
 }
 
 function BrowserOpenTab(event) {
+  // A notification intended to be useful for modular peformance tracking
+  // starting as close as is reasonably possible to the time when the user
+  // expressed the intent to open a new tab.  Since there are a lot of
+  // entry points, this won't catch every single tab created, but most
+  // initiated by the user should go through here.
+  Services.obs.notifyObservers(null, "browser-open-newtab-start");
+
   let where = "tab";
   let relatedToCurrent = false;
 
@@ -5410,6 +5433,31 @@ function displaySecurityInfo() {
   BrowserPageInfo(null, "securityTab");
 }
 
+// Updates the UI density (for touch and compact mode) based on the uidensity pref.
+var gUIDensity = {
+  prefDomain: "browser.uidensity",
+  observe(aSubject, aTopic, aPrefName) {
+    if (aTopic != "nsPref:changed" || aPrefName != this.prefDomain)
+      return;
+
+    this.update();
+  },
+
+  update() {
+    let doc = document.documentElement;
+    switch (gPrefService.getIntPref(this.prefDomain)) {
+    case 1:
+      doc.setAttribute("uidensity", "compact");
+      break;
+    case 2:
+      doc.setAttribute("uidensity", "touch");
+      break;
+    default:
+      doc.removeAttribute("uidensity");
+      break;
+    }
+  },
+};
 
 var gHomeButton = {
   prefDomain: "browser.startup.homepage",
@@ -5827,14 +5875,15 @@ function stripUnsafeProtocolOnPaste(pasteData) {
 }
 
 // handleDroppedLink has the following 2 overloads:
-//   handleDroppedLink(event, url, name)
-//   handleDroppedLink(event, links)
-function handleDroppedLink(event, urlOrLinks, name) {
+//   handleDroppedLink(event, url, name, triggeringPrincipal)
+//   handleDroppedLink(event, links, triggeringPrincipal)
+function handleDroppedLink(event, urlOrLinks, nameOrTriggeringPrincipal, triggeringPrincipal) {
   let links;
   if (Array.isArray(urlOrLinks)) {
     links = urlOrLinks;
+    triggeringPrincipal = nameOrTriggeringPrincipal;
   } else {
-    links = [{ url: urlOrLinks, name, type: "" }];
+    links = [{ url: urlOrLinks, nameOrTriggeringPrincipal, type: "" }];
   }
 
   let lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
@@ -5865,6 +5914,7 @@ function handleDroppedLink(event, urlOrLinks, name) {
         allowThirdPartyFixup: false,
         postDatas,
         userContextId,
+        triggeringPrincipal,
       });
     }
   })();
@@ -6255,7 +6305,7 @@ var OfflineApps = {
   manage() {
     // The advanced subpanes are only supported in the old organization, which will
     // be removed by bug 1349689.
-    if (Preferences.get("browser.preferences.useOldOrganization", false)) {
+    if (Preferences.get("browser.preferences.useOldOrganization")) {
       openAdvancedPreferences("networkTab", {origin: "offlineApps"});
     } else {
       openPreferences("panePrivacy", {origin: "offlineApps"});

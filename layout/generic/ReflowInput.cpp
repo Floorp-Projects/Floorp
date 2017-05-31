@@ -391,6 +391,12 @@ ReflowInput::Init(nsPresContext*     aPresContext,
   mStyleText = mFrame->StyleText();
 
   LayoutFrameType type = mFrame->Type();
+  if (type == mozilla::LayoutFrameType::Placeholder) {
+    // Placeholders have a no-op Reflow method that doesn't need the rest of
+    // this initialization, so we bail out early.
+    ComputedBSize() = ComputedISize() = 0;
+    return;
+  }
 
   InitFrameType(type);
   InitCBReflowInput();

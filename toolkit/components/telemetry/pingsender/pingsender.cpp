@@ -21,6 +21,9 @@ namespace PingSender {
 const char* kUserAgent = "pingsender/1.0";
 const char* kCustomVersionHeader = "X-PingSender-Version: 1.0";
 const char* kContentEncodingHeader = "Content-Encoding: gzip";
+// The maximum time, in milliseconds, we allow for the connection phase
+// to the server.
+const uint32_t kConnectionTimeoutMs = 30 * 1000;
 
 /**
  * This shared function returns a Date header string for use in HTTP requests.

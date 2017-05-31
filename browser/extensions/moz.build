@@ -20,6 +20,7 @@ if not CONFIG['RELEASE_OR_BETA']:
         'formautofill',
         'presentation',
         'shield-recipe-client',
+        'webcompat-reporter',
     ]
 
 # Only include mortar system add-ons if we locally enable it
@@ -32,5 +33,4 @@ if CONFIG['MOZ_MORTAR']:
 if CONFIG['NIGHTLY_BUILD']:
     DIRS += [
         'activity-stream',
-        'webcompat-reporter',
     ]

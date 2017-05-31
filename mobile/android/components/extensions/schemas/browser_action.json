@@ -77,7 +77,6 @@
     "functions": [
       {
         "name": "setTitle",
-        "unsupported": true,
         "type": "function",
         "description": "Sets the title of the browser action. This shows up in the tooltip.",
         "async": "callback",
@@ -107,7 +106,6 @@
       },
       {
         "name": "getTitle",
-        "unsupported": true,
         "type": "function",
         "description": "Gets the title of the browser action.",
         "async": "callback",

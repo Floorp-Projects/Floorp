@@ -512,7 +512,7 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
         // set to the legacy invalid, uninitialized value. We'll just broadly
         // assume that anything outside of a million DPI is invalid.
         if (GETINTPREF(kPrintResolution, &iVal) &&
-            (iVal < 0 || iVal > 1000000)) {
+            (iVal <= 0 || iVal > 1000000)) {
           height = -1L;
           width = -1L;
         }

@@ -1296,7 +1296,7 @@ WSRunObject::DeleteChars(nsINode* aStartNode,
       if (!range) {
         range = new nsRange(aStartNode);
         nsresult rv =
-          range->Set(aStartNode, aStartOffset, aEndNode, aEndOffset);
+          range->SetStartAndEnd(aStartNode, aStartOffset, aEndNode, aEndOffset);
         NS_ENSURE_SUCCESS(rv, rv);
       }
       bool nodeBefore, nodeAfter;

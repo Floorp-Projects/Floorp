@@ -212,6 +212,7 @@ void
 SourceBuffer::AbortBufferAppend()
 {
   if (mUpdating) {
+    mCompletionPromise.DisconnectIfExists();
     if (mPendingAppend.Exists()) {
       mPendingAppend.Disconnect();
       mTrackBuffersManager->AbortAppendData();
@@ -433,8 +434,16 @@ SourceBuffer::AppendDataCompletedWithSuccess(const SourceBufferTask::AppendBuffe
   if (aResult.first()) {
     if (!mActive) {
       mActive = true;
-      mMediaSource->SourceBufferIsActive(this);
-      mMediaSource->GetDecoder()->NotifyInitDataArrived();
+      MSE_DEBUG("Init segment received");
+      RefPtr<SourceBuffer> self = this;
+      mMediaSource->SourceBufferIsActive(this)
+        ->Then(mAbstractMainThread, __func__,
+               [self, this]() {
+                 MSE_DEBUG("Complete AppendBuffer operation");
+                 mCompletionPromise.Complete();
+                 StopUpdating();
+               })
+        ->Track(mCompletionPromise);
     }
   }
   if (mActive) {
@@ -448,7 +457,9 @@ SourceBuffer::AppendDataCompletedWithSuccess(const SourceBufferTask::AppendBuffe
 
   CheckEndTime();
 
-  StopUpdating();
+  if (!mCompletionPromise.Exists()) {
+    StopUpdating();
+  }
 }
 
 void

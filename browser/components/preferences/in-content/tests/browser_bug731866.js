@@ -6,7 +6,6 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 const storageManagerDisabled = !SpecialPowers.getBoolPref("browser.storageManager.enabled");
 const offlineGroupDisabled = !SpecialPowers.getBoolPref("browser.preferences.offlineGroup.enabled");
-const browserContainersGroupDisabled = !SpecialPowers.getBoolPref("privacy.userContext.ui.enabled");
 
 function test() {
   waitForExplicitFinish();
@@ -39,11 +38,6 @@ function checkElements(expectedPane) {
       is_element_hidden(element, "Disabled offlineGroup should be hidden");
       continue;
     }
-    // The browserContainersGroup is still only pref-on on Nightly
-    if (element.id == "browserContainersGroup" && browserContainersGroupDisabled) {
-      is_element_hidden(element, "Disabled browserContainersGroup should be hidden");
-      continue;
-    }
 
     let attributeValue = element.getAttribute("data-category");
     let suffix = " (id=" + element.id + ")";
@@ -62,8 +56,8 @@ function runTest(win) {
   gElements = tab.getElementById("mainPrefPane").children;
 
   let panes = [
-    "General", "Applications",
-    "Privacy", "Sync", "Advanced",
+    "General", "Search", "Content", "Applications",
+    "Privacy", "Security", "Sync", "Advanced",
   ];
 
   for (let pane of panes) {

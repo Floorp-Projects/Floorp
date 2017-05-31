@@ -53,7 +53,9 @@
 #include "mozilla/ipc/CrashReporterClient.h"
 #endif
 
-#include "GeckoProfiler.h"
+#ifdef MOZ_GECKO_PROFILER
+#include "ChildProfilerController.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::ipc;
@@ -208,6 +210,15 @@ PluginModuleChild::InitForContent(Endpoint<PPluginModuleChild>&& aEndpoint)
     mFunctions = GetChrome()->mFunctions;
 
     return true;
+}
+
+mozilla::ipc::IPCResult
+PluginModuleChild::RecvInitProfiler(Endpoint<mozilla::PProfilerChild>&& aEndpoint)
+{
+#ifdef MOZ_GECKO_PROFILER
+    mProfilerController = ChildProfilerController::Create(Move(aEndpoint));
+#endif
+    return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
@@ -750,6 +761,13 @@ PluginModuleChild::AnswerInitCrashReporter(Shmem&& aShmem, mozilla::dom::NativeT
 void
 PluginModuleChild::ActorDestroy(ActorDestroyReason why)
 {
+#ifdef MOZ_GECKO_PROFILER
+    if (mProfilerController) {
+        mProfilerController->Shutdown();
+        mProfilerController = nullptr;
+    }
+#endif
+
     if (!mIsChrome) {
         PluginModuleChild* chromeInstance = PluginModuleChild::GetChrome();
         if (chromeInstance) {
@@ -2153,7 +2171,7 @@ PostToPluginThread(PluginThreadTaskData* aTaskData)
     }
 
     RefPtr<PluginThreadTask> task = new PluginThreadTask(aTaskData, semaphore);
-    ProcessChild::message_loop()->PostTask(task.forget());
+    ProcessChild::message_loop()->PostTask(do_AddRef(task));
     DWORD err = WaitForSingleObject(semaphore, INFINITE);
     if (err != WAIT_FAILED) {
         return task->Success();
@@ -2723,54 +2741,6 @@ PluginModuleChild::ProcessNativeEvents() {
     CallProcessSomeEvents();    
 }
 #endif
-
-mozilla::ipc::IPCResult
-PluginModuleChild::RecvStartProfiler(const ProfilerInitParams& params)
-{
-    nsTArray<const char*> filterArray;
-    for (size_t i = 0; i < params.filters().Length(); ++i) {
-        filterArray.AppendElement(params.filters()[i].get());
-    }
-
-    profiler_start(params.entries(), params.interval(), params.features(),
-                   filterArray.Elements(), filterArray.Length());
-
-    return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-PluginModuleChild::RecvStopProfiler()
-{
-    profiler_stop();
-    return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-PluginModuleChild::RecvPauseProfiler(const bool& aPause)
-{
-    if (aPause) {
-        profiler_pause();
-    } else {
-        profiler_resume();
-    }
-
-    return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-PluginModuleChild::RecvGatherProfile()
-{
-    nsCString profileCString;
-    UniquePtr<char[]> profile = profiler_get_profile();
-    if (profile != nullptr) {
-        profileCString = nsCString(profile.get(), strlen(profile.get()));
-    } else {
-        profileCString = nsCString("", 0);
-    }
-
-    Unused << SendProfile(profileCString, false);
-    return IPC_OK();
-}
 
 NPError
 PluginModuleChild::PluginRequiresAudioDeviceChanges(

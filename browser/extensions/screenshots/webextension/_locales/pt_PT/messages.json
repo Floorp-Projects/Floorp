@@ -3,7 +3,7 @@
     "message": "Tire clipes e capturas de ecrã da Web e guarde-as temporariamente ou permanentemente."
   },
   "addonAuthorsList": {
-    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
     "message": "Tirar uma captura de ecrã"
@@ -33,7 +33,7 @@
     "message": "Ligação copiada"
   },
   "notificationLinkCopiedDetails": {
-    "message": "A ligação à sua captura foi copiada para a área de transferência. Pressione $META_KEY$-V para colar.",
+    "message": "A ligação para a sua captura foi copiada para a área de transferência. Pressione $META_KEY$-V para colar.",
     "placeholders": {
       "meta_key": {
         "content": "$1"
@@ -50,25 +50,25 @@
     "message": "Não conseguimos ligar às suas capturas de ecrã."
   },
   "connectionErrorDetails": {
-    "message": "Por favor verifique a sua ligação à Internet. Se consegue ligar-se à Internet, pode existir um problema temporário com o serviço Capturas de ecrã Firefox."
+    "message": "Por favor verifique a sua ligação à Internet. Se consegue ligar-se à Internet, pode existir um problema temporário com o serviço Firefox Screenshots."
   },
   "loginErrorDetails": {
-    "message": "Não conseguimos guardar a sua captura porque existe um problema com o serviço Capturas de ecrã Firefox. Por favor tente novamente mais tarde."
+    "message": "Não conseguimos guardar a sua captura porque existe um problema com o serviço Firefox Screenshots. Por favor tente novamente mais tarde."
   },
   "unshootablePageErrorTitle": {
     "message": "Não conseguimos capturar o ecrã nesta página."
   },
   "unshootablePageErrorDetails": {
-    "message": "Esta não é uma página web padrão, por isso não podemos tirar uma captura de ecrã da mesma."
+    "message": "Esta não é uma página Web padrão, por isso não podemos tirar uma captura de ecrã da mesma."
   },
   "selfScreenshotErrorTitle": {
-    "message": "Não pode tirar uma captura duma página Capturas de ecrã Firefox!"
+    "message": "Não pode tirar uma captura de uma página Firefox Screenshots!"
   },
   "genericErrorTitle": {
-    "message": "Uau! Algo correu mal com o Capturas de ecrã Firefox."
+    "message": "Uau! Algo correu mal com o Firefox Screenshots."
   },
   "genericErrorDetails": {
-    "message": "Não temos a certeza do que acabou de acontecer. Tentar novamente ou tirar uma captura de uma página diferente?"
+    "message": "Não temos a certeza do que acabou de acontecer. Importa-se de tentar novamente ou tirar uma captura de uma página diferente?"
   },
   "tourBodyOne": {
     "message": "Tire, guarde, e partilhe capturas de ecrã sem sair do Firefox."
@@ -89,10 +89,10 @@
     "message": "Capture janelas ou páginas inteiras"
   },
   "tourBodyFour": {
-    "message": "Selecione os botões no canto superior direito para capturar a área visível na janela ou capturar uma página inteira."
+    "message": "Selecione os botões no canto superior direito para capturar a área visível na janela ou para capturar uma página inteira."
   },
   "tourSkip": {
-    "message": "Saltar"
+    "message": "SALTAR"
   },
   "tourNext": {
     "message": "Diapositivo seguinte"
@@ -104,7 +104,7 @@
     "message": "Feito"
   },
   "termsAndPrivacyNoticeCloudServices": {
-    "message": "Ao utilizar as Capturas de ecrã Firefox, você concorda com os $TERMSANDPRIVACYNOTICETERMSLINK$ e a $TERMSANDPRIVACYNOTICEPRIVACYLINK$ do Firefox Cloud Services.",
+    "message": "Ao utilizar o Firefox Screenshots, você concorda com os $TERMSANDPRIVACYNOTICETERMSLINK$ e com o $TERMSANDPRIVACYNOTICEPRIVACYLINK$ do Firefox Cloud Services.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -118,6 +118,6 @@
     "message": "Termos"
   },
   "termsAndPrivacyNoticyPrivacyLink": {
-    "message": "Nota de privacidade"
+    "message": "Aviso de privacidade"
   }
 }

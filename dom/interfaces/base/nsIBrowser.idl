@@ -4,6 +4,7 @@
 #include "nsISupports.idl"
 
 interface nsIFrameLoader;
+interface nsIPrincipal;
 
 [scriptable, uuid(14e5a0cb-e223-4202-95e8-fe53275193ea)]
 interface nsIBrowser : nsISupports
@@ -23,9 +24,12 @@ interface nsIBrowser : nsISupports
    *
    * @param linksCount length of links
    * @param links a flat array of url, name, and type for each link
+   * @param triggeringPrincipal a principal that initiated loading
+   *                            of the dropped links
    */
   void dropLinks(in unsigned long linksCount,
-                 [array, size_is(linksCount)] in wstring links);
+                 [array, size_is(linksCount)] in wstring links,
+                 in nsIPrincipal aTriggeringPrincipal);
 
   /**
    * Flags for controlling the behavior of swapBrowsers

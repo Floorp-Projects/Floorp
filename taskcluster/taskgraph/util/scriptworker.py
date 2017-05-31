@@ -232,7 +232,7 @@ PUSH_APK_SCOPES = {
 
 # See https://github.com/mozilla-releng/pushapkscript#aurora-beta-release-vs-alpha-beta-production
 PUSH_APK_GOOGLE_PLAY_TRACT = {
-    'central': 'alpha',
+    'central': 'beta',
     'beta': 'rollout',
     'release': 'rollout',
     'default': 'invalid',

@@ -1,4 +1,3 @@
-/* globals browser, XMLHttpRequest, Image, document, setTimeout, navigator */
 /* globals selectorLoader, analytics, communication, catcher, log, makeUuid, auth, senderror */
 
 "use strict";

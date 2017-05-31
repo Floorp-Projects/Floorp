@@ -28,8 +28,8 @@ RUN bash /setup/system-setup.sh
 # %include taskcluster/docker/recipes/run-task
 ADD topsrcdir/taskcluster/docker/recipes/run-task /home/worker/bin/run-task
 
-# %include taskcluster/scripts/tester/test-ubuntu.sh
-ADD topsrcdir/taskcluster/scripts/tester/test-ubuntu.sh /home/worker/bin/test-linux.sh
+# %include taskcluster/scripts/tester/test-linux.sh
+ADD topsrcdir/taskcluster/scripts/tester/test-linux.sh /home/worker/bin/test-linux.sh
 
 # This will create a host mounted filesystem when the cache is stripped
 # on Try. This cancels out some of the performance losses of aufs. See

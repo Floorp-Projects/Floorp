@@ -8,11 +8,11 @@ const TESTCASES = [
     document: `<form id="form1">
                  <input id="street-addr" autocomplete="street-address">
                  <input id="city" autocomplete="address-level2">
-                 <input id="country" autocomplete="country">
+                 <select id="country" autocomplete="country"></select>
                  <input id="email" autocomplete="email">
                  <input id="tel" autocomplete="tel">
                </form>`,
-    targetInput: ["street-addr", "country"],
+    targetInput: ["street-addr", "email"],
     expectedResult: [{
       input: {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
       formId: "form1",
@@ -25,7 +25,7 @@ const TESTCASES = [
       ],
     },
     {
-      input: {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
+      input: {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
       formId: "form1",
       form: [
         {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
@@ -41,7 +41,7 @@ const TESTCASES = [
     document: `<form id="form2">
                  <input id="home-addr" autocomplete="street-address">
                  <input id="city" autocomplete="address-level2">
-                 <input id="country" autocomplete="country">
+                 <select id="country" autocomplete="country"></select>
                </form>
                <form id="form3">
                  <input id="office-addr" autocomplete="street-address">
@@ -98,9 +98,9 @@ TESTCASES.forEach(testcase => {
 
       let formDetails = testcase.expectedResult[i].form;
       for (let formDetail of formDetails) {
-        // Compose a query string to get the exact reference of the input
-        // element, e.g. #form1 > input[autocomplete="street-address"]
-        let queryString = "#" + testcase.expectedResult[i].formId + " > input[autocomplete=" + formDetail.fieldName + "]";
+        // Compose a query string to get the exact reference of <input>/<select>
+        // element, e.g. #form1 > *[autocomplete="street-address"]
+        let queryString = "#" + testcase.expectedResult[i].formId + " > *[autocomplete=" + formDetail.fieldName + "]";
         formDetail.elementWeakRef = Cu.getWeakReference(doc.querySelector(queryString));
       }
 
