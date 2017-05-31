@@ -767,6 +767,14 @@ DXGITextureHostD3D11::SetTextureSourceProvider(TextureSourceProvider* aProvider)
     return;
   }
 
+  if (mDevice && (aProvider->GetD3D11Device() != mDevice)) {
+    if (mTextureSource) {
+      mTextureSource->Reset();
+    }
+    mTextureSource = nullptr;
+    return;
+  }
+
   mProvider = aProvider;
   mDevice = aProvider->GetD3D11Device();
 
@@ -1179,23 +1187,6 @@ DataTextureSourceD3D11::GetTileRect()
 {
   IntRect rect = GetTileRect(mCurrentTile);
   return IntRect(rect.x, rect.y, rect.width, rect.height);
-}
-
-void
-DataTextureSourceD3D11::SetTextureSourceProvider(TextureSourceProvider* aProvider)
-{
-  ID3D11Device* newDevice = aProvider ? aProvider->GetD3D11Device() : nullptr;
-  if (!mDevice) {
-    mDevice = newDevice;
-  } else if (mDevice != newDevice) {
-    // We do not support switching devices.
-    Reset();
-    mDevice = nullptr;
-  }
-
-  if (mNextSibling) {
-    mNextSibling->SetTextureSourceProvider(aProvider);
-  }
 }
 
 CompositingRenderTargetD3D11::CompositingRenderTargetD3D11(ID3D11Texture2D* aTexture,
