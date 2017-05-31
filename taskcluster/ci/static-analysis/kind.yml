@@ -26,7 +26,6 @@ jobs:
             platform: osx-10-7/debug
         worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
         worker:
-            implementation: docker-worker
             docker-image: {in-tree: desktop-build}
             max-run-time: 36000
         run:
@@ -49,7 +48,6 @@ jobs:
             platform: osx-10-7/opt
         worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
         worker:
-            implementation: docker-worker
             docker-image: {in-tree: desktop-build}
             max-run-time: 36000
         run:
@@ -72,7 +70,6 @@ jobs:
             platform: linux64/debug
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
         worker:
-            implementation: docker-worker
             docker-image: {in-tree: desktop-build}
             max-run-time: 36000
         run:
@@ -93,7 +90,6 @@ jobs:
             platform: linux64/opt
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
         worker:
-            implementation: docker-worker
             docker-image: {in-tree: desktop-build}
             max-run-time: 36000
         run:
@@ -117,7 +113,6 @@ jobs:
             tier: 1
         worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
         worker:
-            implementation: generic-worker
             max-run-time: 7200
         run:
             using: mozharness
@@ -136,7 +131,6 @@ jobs:
             tier: 1
         worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
         worker:
-            implementation: generic-worker
             max-run-time: 7200
         run:
             using: mozharness
@@ -155,7 +149,6 @@ jobs:
             tier: 1
         worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
         worker:
-            implementation: generic-worker
             max-run-time: 7200
         run:
             using: mozharness
@@ -174,7 +167,6 @@ jobs:
             tier: 1
         worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
         worker:
-            implementation: generic-worker
             max-run-time: 7200
         run:
             using: mozharness

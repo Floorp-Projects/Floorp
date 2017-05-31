@@ -527,10 +527,6 @@ this.ExtensionData = class {
 
     let whitelist = [];
     for (let perm of this.manifest.permissions) {
-      if (perm == "contextualIdentities" && !Preferences.get("privacy.userContext.enabled")) {
-        continue;
-      }
-
       if (perm === "geckoProfiler") {
         const acceptedExtensions = Preferences.get("extensions.geckoProfiler.acceptedExtensionIds");
         if (!acceptedExtensions.split(",").includes(this.id)) {

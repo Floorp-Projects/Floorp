@@ -10,9 +10,6 @@ const { addons, createClass, DOM: dom, PropTypes } =
 const Types = require("../types");
 const { getStr } = require("../utils/l10n");
 
-const COLUMNS = "cols";
-const ROWS = "rows";
-
 // The delay prior to executing the grid cell highlighting.
 const GRID_HIGHLIGHTING_DEBOUNCE = 50;
 
@@ -38,7 +35,6 @@ module.exports = createClass({
     grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
     onShowGridAreaHighlight: PropTypes.func.isRequired,
     onShowGridCellHighlight: PropTypes.func.isRequired,
-    onShowGridLineNamesHighlight: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],
@@ -317,104 +313,6 @@ module.exports = createClass({
     );
   },
 
-  /**
- * Renders the grid line of a grid fragment.
-   *
-   * @param  {Number} id
-   *         The grid id stored on the grid fragment
-   * @param  {Number} gridFragmentIndex
-   *         The index of the grid fragment rendered to the document.
-   * @param  {String} color
-   *         The color of the grid.
-   * @param  {Number} x1
-   *         The starting x-coordinate of the grid line.
-   * @param  {Number} y1
-   *         The starting y-coordinate of the grid line.
-   * @param  {Number} x2
-   *         The ending x-coordinate of the grid line.
-   * @param  {Number} y2
-   *         The ending y-coordinate of the grid line.
-   * @param  {Number} gridLineNumber
-   *         The grid line number of the line being rendered.
-   * @param  {String} lineType
-   *         The grid line name(s) of the line being rendered.
-   */
-  renderGridLine(id, gridFragmentIndex, color, x1, y1, x2, y2,
-    gridLineNumber, lineType) {
-    return dom.line(
-      {
-        key: `${id}-${lineType}-${gridLineNumber}`,
-        className: "grid-outline-line",
-        "data-grid-fragment-index": gridFragmentIndex,
-        "data-grid-id": id,
-        "data-grid-line-color": color,
-        "data-grid-line-number": gridLineNumber,
-        "data-grid-line-type": lineType,
-        x1,
-        y1,
-        x2,
-        y2,
-        onMouseOver: this.onMouseOverLine,
-        onMouseOut: this.onMouseLeaveLine,
-        stroke: "#000000",
-      }
-    );
-  },
-
-  renderGridLines(grid) {
-    return dom.g(
-      {
-        className: "grid-outline-lines",
-      },
-      this.renderLines(grid)
-    );
-  },
-
-  renderLines(grid) {
-    const { id, color, gridFragments } = grid;
-    const { width, height } = this.state;
-    let gridFragmentIndex = 0;
-    const { rows, cols } = gridFragments[gridFragmentIndex];
-    const numberOfColumns = cols.lines.length - 1;
-    const numberOfRows = rows.lines.length - 1;
-    const lines = [];
-
-    let x = 1;
-    let y = 1;
-    let rowBreadth = 0;
-    let colBreadth = 0;
-
-    if (width > 0 && height > 0) {
-      for (let row = 0; row <= numberOfRows; row++) {
-        if (row < numberOfRows) {
-          rowBreadth = GRID_CELL_SCALE_FACTOR * (rows.tracks[row].breadth / 100);
-        }
-        const { number } = rows.lines[row];
-        const rowLine = this.renderGridLine(id, gridFragmentIndex, color,
-          x, y, width - 20, y, number, ROWS);
-
-        lines.push(rowLine);
-        y += rowBreadth;
-      }
-
-      y = 1;
-
-      for (let col = 0; col <= numberOfColumns; col++) {
-        if (col < numberOfColumns) {
-          colBreadth = GRID_CELL_SCALE_FACTOR * (cols.tracks[col].breadth / 100);
-        }
-        const { number } = cols.lines[col];
-        const colLine = this.renderGridLine(id, gridFragmentIndex, color,
-          x, y, x, height - 20, number, COLUMNS);
-
-        lines.push(colLine);
-        x += colBreadth;
-      }
-    }
-
-    return lines;
-  },
-
   onMouseLeaveCell({ target }) {
     const {
       grids,
@@ -433,27 +331,6 @@ module.exports = createClass({
     this.highlightCell(event);
   },
 
-  onMouseLeaveLine({ target }) {
-    const { grids, onShowGridLineNamesHighlight } = this.props;
-    const fragmentIndex = target.dataset.gridFragmentIndex;
-    const id = target.dataset.gridId;
-    const color = target.closest(".grid-cell-group").dataset.gridLineColor;
-
-    onShowGridLineNamesHighlight(grids[id].nodeFront, fragmentIndex, color);
-  },
-
-  onMouseOverLine({ target }) {
-    const { grids, onShowGridLineNamesHighlight } = this.props;
-    const fragmentIndex = target.dataset.gridFragmentIndex;
-    const id = target.dataset.gridId;
-    const lineNumber = target.dataset.gridLineNumber;
-    const type = target.dataset.gridLineType;
-    const color = target.closest(".grid-cell-group").dataset.gridLineColor;
-
-    onShowGridLineNamesHighlight(grids[id].nodeFront, fragmentIndex, color,
-      lineNumber, type);
-  },
-
   renderOutline() {
     const {
       height,
@@ -469,8 +346,7 @@ module.exports = createClass({
           height: this.getHeight(),
           viewBox: `${TRANSLATE_X} ${TRANSLATE_Y} ${width} ${height}`,
         },
-        this.renderGridOutline(selectedGrid),
-        this.renderGridLines(selectedGrid)
+        this.renderGridOutline(selectedGrid)
       )
       :
       this.renderCannotShowOutlineText();

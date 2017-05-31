@@ -18,7 +18,6 @@ job-defaults:
         product: firefox
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        implementation: docker-worker
         max-run-time: 36000
         docker-image: {in-tree: desktop-build}
     run:

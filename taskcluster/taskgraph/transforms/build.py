@@ -9,6 +9,7 @@ kind.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.workertypes import worker_type_implementation
 
 transforms = TransformSequence()
 
@@ -20,16 +21,19 @@ def set_defaults(config, jobs):
         job['treeherder'].setdefault('kind', 'build')
         job['treeherder'].setdefault('tier', 1)
         job.setdefault('needs-sccache', True)
-        if job['worker']['implementation'] in ('docker-worker', 'docker-engine'):
-            job['worker'].setdefault('docker-image', {'in-tree': 'desktop-build'})
-            job['worker']['chain-of-trust'] = True
-            job.setdefault('extra', {})
-            job['extra'].setdefault('chainOfTrust', {})
-            job['extra']['chainOfTrust'].setdefault('inputs', {})
-            job['extra']['chainOfTrust']['inputs']['docker-image'] = {
+        _, worker_os = worker_type_implementation(job['worker-type'])
+        if worker_os == "linux":
+            worker = job.setdefault('worker')
+            worker.setdefault('docker-image', {'in-tree': 'desktop-build'})
+            worker['chain-of-trust'] = True
+            extra = job.setdefault('extra', {})
+            extra.setdefault('chainOfTrust', {})
+            extra['chainOfTrust'].setdefault('inputs', {})
+            extra['chainOfTrust']['inputs']['docker-image'] = {
                 "task-reference": "<docker-image>"
             }
-        job['worker'].setdefault('env', {})
+        elif worker_os in set(["macosx", "windows"]):
+            job['worker'].setdefault('env', {})
         yield job
 
 
