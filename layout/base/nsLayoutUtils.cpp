@@ -4495,8 +4495,7 @@ nsLayoutUtils::GetParentOrPlaceholderFor(nsIFrame* aFrame)
 {
   if ((aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
       && !aFrame->GetPrevInFlow()) {
-    return aFrame->PresContext()->PresShell()->FrameManager()->
-      GetPlaceholderFrameFor(aFrame);
+    return aFrame->GetProperty(nsIFrame::PlaceholderFrameProperty());
   }
   return aFrame->GetParent();
 }

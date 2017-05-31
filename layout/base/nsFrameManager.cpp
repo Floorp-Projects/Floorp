@@ -117,9 +117,6 @@ nsFrameManager::Destroy()
   // Destroy the frame hierarchy.
   mPresShell->SetIgnoreFrameDestruction(true);
 
-  // Unregister all placeholders before tearing down the frame tree
-  nsFrameManager::ClearPlaceholderFrameMap();
-
   if (mRootFrame) {
     mRootFrame->Destroy();
     mRootFrame = nullptr;
@@ -131,38 +128,6 @@ nsFrameManager::Destroy()
   mDisplayContentsMap = nullptr;
 
   mPresShell = nullptr;
-}
-
-//----------------------------------------------------------------------
-
-// Placeholder frame functions
-nsPlaceholderFrame*
-nsFrameManager::GetPlaceholderFrameFor(const nsIFrame* aFrame)
-{
-  MOZ_ASSERT(aFrame);
-  MOZ_ASSERT(aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW));
-  return aFrame->GetProperty(nsIFrame::PlaceholderFrameProperty());
-}
-
-void
-nsFrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
-{
-  MOZ_ASSERT(aPlaceholderFrame);
-  MOZ_ASSERT(!GetPlaceholderFrameFor(aPlaceholderFrame->GetOutOfFlowFrame()),
-             "Registering a placeholder for a frame that already has a placeholder!");
-  aPlaceholderFrame->GetOutOfFlowFrame()->SetProperty(nsIFrame::PlaceholderFrameProperty(), aPlaceholderFrame);
-}
-
-void
-nsFrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
-{
-  MOZ_ASSERT(aPlaceholderFrame);
-  aPlaceholderFrame->GetOutOfFlowFrame()->DeleteProperty(nsIFrame::PlaceholderFrameProperty());
-}
-
-void
-nsFrameManager::ClearPlaceholderFrameMap()
-{
 }
 
 //----------------------------------------------------------------------
@@ -474,7 +439,7 @@ nsFrameManager::RemoveFrame(ChildListID     aListID,
                aOldFrame->IsTextFrame(),
                "Must remove first continuation.");
   NS_ASSERTION(!(aOldFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW &&
-                 GetPlaceholderFrameFor(aOldFrame)),
+                 aOldFrame->GetPlaceholderFrame()),
                "Must call RemoveFrame on placeholder for out-of-flows.");
   nsContainerFrame* parentFrame = aOldFrame->GetParent();
   if (parentFrame->IsAbsoluteContainer() &&

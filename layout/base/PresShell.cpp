@@ -4612,12 +4612,6 @@ PresShell::StyleRuleRemoved(StyleSheet* aStyleSheet)
   RecordStyleSheetChange(aStyleSheet, StyleSheet::ChangeType::RuleRemoved);
 }
 
-nsPlaceholderFrame*
-PresShell::GetPlaceholderFrameFor(nsIFrame* aFrame) const
-{
-  return mFrameConstructor->GetPlaceholderFrameFor(aFrame);
-}
-
 nsresult
 PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
                           nscolor aBackgroundColor,
