@@ -98,7 +98,12 @@ FrameProperties::DeleteAll(const nsIFrame* aFrame)
 size_t
 FrameProperties::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  return mProperties.Length() * sizeof(PropertyValue);
+  // We currently report only the shallow size of the mProperties array.
+  // As for the PropertyValue entries: we don't need to measure the mProperty
+  // field of because it always points to static memory, and we can't measure
+  // mValue because the type is opaque.
+  // XXX Can we do better, e.g. with a method on the descriptor?
+  return mProperties.ShallowSizeOfExcludingThis(aMallocSizeOf);
 }
 
 } // namespace mozilla
