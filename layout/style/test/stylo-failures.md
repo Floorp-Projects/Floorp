@@ -36,8 +36,6 @@ to mochitest command.
   * test_media_queries_dynamic.html `restyle`: bug 1357461 [4]
   * test_media_queries_dynamic_xbl.html: xbl support bug 1290276 [2]
 * Animation support:
-  * OMTA
-    * test_animations_omta.html: bug 1361938, bug 1340005 [*]
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
 * console support bug 1352669
