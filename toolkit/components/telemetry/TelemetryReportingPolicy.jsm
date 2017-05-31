@@ -482,8 +482,10 @@ var TelemetryReportingPolicyImpl = {
     win.addEventListener("unload", removeListeners);
     win.gBrowser.addTabsProgressListener(progressListener);
 
-    tab = win.gBrowser.loadOneTab(firstRunPolicyURL, { inBackground: true });
-
+    tab = win.gBrowser.loadOneTab(firstRunPolicyURL, {
+      inBackground: true,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
     return true;
   },
 
