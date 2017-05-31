@@ -27,27 +27,30 @@ XPCOMUtils.defineLazyGetter(this, "Timer", function() {
   return timer;
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure", "browser.photon.structure.enabled");
+
 const MS_SECOND = 1000;
 const MS_MINUTE = MS_SECOND * 60;
 const MS_HOUR = MS_MINUTE * 60;
 
+const LEGACY_PANEL_PLACEMENTS = [
+  "edit-controls",
+  "zoom-controls",
+  "new-window-button",
+  "privatebrowsing-button",
+  "save-page-button",
+  "print-button",
+  "history-panelmenu",
+  "fullscreen-button",
+  "find-button",
+  "preferences-button",
+  "add-ons-button",
+  "sync-button",
+  "developer-button"
+];
+
 XPCOMUtils.defineLazyGetter(this, "DEFAULT_AREA_PLACEMENTS", function() {
   let result = {
-    "PanelUI-contents": [
-      "edit-controls",
-      "zoom-controls",
-      "new-window-button",
-      "privatebrowsing-button",
-      "save-page-button",
-      "print-button",
-      "history-panelmenu",
-      "fullscreen-button",
-      "find-button",
-      "preferences-button",
-      "add-ons-button",
-      "sync-button",
-      "developer-button",
-    ],
     "nav-bar": [
       "urlbar-container",
       "search-container",
@@ -73,17 +76,22 @@ XPCOMUtils.defineLazyGetter(this, "DEFAULT_AREA_PLACEMENTS", function() {
     ],
   };
 
-  let showCharacterEncoding = Services.prefs.getComplexValue(
-    "browser.menu.showCharacterEncoding",
-    Ci.nsIPrefLocalizedString
-  ).data;
-  if (showCharacterEncoding == "true") {
-    result["PanelUI-contents"].push("characterencoding-button");
-  }
+  if (gPhotonStructure) {
+    result["widget-overflow-fixed-list"] = [];
+  } else {
+    result["PanelUI-contents"] = LEGACY_PANEL_PLACEMENTS;
+    let showCharacterEncoding = Services.prefs.getComplexValue(
+      "browser.menu.showCharacterEncoding",
+      Ci.nsIPrefLocalizedString
+    ).data;
+    if (showCharacterEncoding == "true") {
+      result["PanelUI-contents"].push("characterencoding-button");
+    }
 
-  if (!AppConstants.RELEASE_OR_BETA) {
-    if (Services.prefs.getBoolPref("extensions.webcompat-reporter.enabled")) {
-      result["PanelUI-contents"].push("webcompat-reporter-button");
+    if (!AppConstants.RELEASE_OR_BETA) {
+      if (Services.prefs.getBoolPref("extensions.webcompat-reporter.enabled")) {
+        result["PanelUI-contents"].push("webcompat-reporter-button");
+      }
     }
   }
 
@@ -104,7 +112,10 @@ XPCOMUtils.defineLazyGetter(this, "PALETTE_ITEMS", function() {
   ];
 
   let panelPlacements = DEFAULT_AREA_PLACEMENTS["PanelUI-contents"];
-  if (panelPlacements.indexOf("characterencoding-button") == -1) {
+  if (!panelPlacements) {
+    result.push(... LEGACY_PANEL_PLACEMENTS);
+  }
+  if (!panelPlacements || !panelPlacements.includes("characterencoding-button")) {
     result.push("characterencoding-button");
   }
 
@@ -468,7 +479,7 @@ this.BrowserUITelemetry = {
 
     // Perhaps we're seeing one of the default toolbar items
     // being clicked.
-    if (ALL_BUILTIN_ITEMS.indexOf(item.id) != -1) {
+    if (ALL_BUILTIN_ITEMS.includes(item.id)) {
       // Base case - we clicked directly on one of our built-in items,
       // and we can go ahead and register that click.
       this._countMouseUpEvent("click-builtin-item", item.id, aEvent.button);
@@ -477,7 +488,7 @@ this.BrowserUITelemetry = {
 
     // If not, we need to check if the item's anonid is in our list
     // of built-in items to check.
-    if (ALL_BUILTIN_ITEMS.indexOf(item.getAttribute("anonid")) != -1) {
+    if (ALL_BUILTIN_ITEMS.includes(item.getAttribute("anonid"))) {
       this._countMouseUpEvent("click-builtin-item", item.getAttribute("anonid"), aEvent.button);
       return;
     }
@@ -485,7 +496,7 @@ this.BrowserUITelemetry = {
     // If not, we need to check if one of the ancestors of the clicked
     // item is in our list of built-in items to check.
     let candidate = getIDBasedOnFirstIDedAncestor(item);
-    if (ALL_BUILTIN_ITEMS.indexOf(candidate) != -1) {
+    if (ALL_BUILTIN_ITEMS.includes(candidate)) {
       this._countMouseUpEvent("click-builtin-item", candidate, aEvent.button);
     }
   },
