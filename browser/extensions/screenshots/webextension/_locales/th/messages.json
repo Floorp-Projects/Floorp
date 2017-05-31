@@ -3,7 +3,7 @@
     "message": "จับภาพหน้าจอจากเว็บและบันทึกไว้ชั่วคราวหรือถาวร"
   },
   "addonAuthorsList": {
-    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
     "message": "จับภาพหน้าจอ"
@@ -12,13 +12,13 @@
     "message": "ภาพของฉัน"
   },
   "screenshotInstructions": {
-    "message": "ลากหรือคลิกหน้าเว็บเพื่อเลือกบริเวณ กด ESC เพื่อยกเลิก"
+    "message": "ลากหรือคลิกที่หน้าเพื่อเลือกบริเวณ กด ESC เพื่อยกเลิก"
   },
   "saveScreenshotSelectedArea": {
     "message": "บันทึก"
   },
   "saveScreenshotVisibleArea": {
-    "message": "บันทึกส่วนที่เห็น"
+    "message": "บันทึกส่วนที่มองเห็น"
   },
   "saveScreenshotFullPage": {
     "message": "บันทึกเต็มหน้า"
@@ -33,7 +33,7 @@
     "message": "คัดลอกลิงก์แล้ว"
   },
   "notificationLinkCopiedDetails": {
-    "message": "คัดลอกลิงก์ภาพของไว้ในคลิปบอร์ดแล้ว กด $META_KEY$-V เพื่อวาง",
+    "message": "คัดลอกลิงก์ไปยังภาพของคุณไปยังคลิปบอร์ดแล้ว กด $META_KEY$-V เพื่อวาง",
     "placeholders": {
       "meta_key": {
         "content": "$1"
@@ -44,52 +44,52 @@
     "message": "ใช้งานไม่ได้"
   },
   "requestErrorDetails": {
-    "message": "ขออภัย! เราไม่สามารถบันทึกภาพของคุณได้ โปรดลองอีกครั้งหลังจากนี้"
+    "message": "ขออภัย! เราไม่สามารถบันทึกภาพของคุณ โปรดลองอีกครั้งในภายหลัง"
   },
   "connectionErrorTitle": {
-    "message": "เราเชื่อมต่อภาพหน้าจอของคุณไม่ได้"
+    "message": "เราไม่สามารถเชื่อมต่อกับภาพหน้าจอของคุณ"
   },
   "connectionErrorDetails": {
-    "message": "กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต หากคุณสามารถเชื่อมต่อกับอินเทอร์เน็ต บริการ Firefox Screenshots อาจมีปัญหาชั่วคราว "
+    "message": "โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ตของคุณ หากคุณสามารถเชื่อมต่ออินเทอร์เน็ต บริการ Firefox Screenshots อาจมีปัญหาชั่วคราว"
   },
   "loginErrorDetails": {
-    "message": "เราไม่สามารถบันทึกภาพได้เพราะมีปัญหากับบริการ Firefox Screenshots โปรดลองใหม่ภายหลัง"
+    "message": "เราไม่สามารถบันทึกภาพของคุณเนื่องจากบริการ Firefox Screenshots มีปัญหา โปรดลองอีกครั้งในภายหลัง"
   },
   "unshootablePageErrorTitle": {
     "message": "เราไม่สามารถจับภาพหน้าจอหน้านี้"
   },
   "unshootablePageErrorDetails": {
-    "message": "นี่ไม่ใช่หน้าเว็บมาตรฐานดังนั้นคุณไม่สามารถจับภาพได้"
+    "message": "นี่ไม่ใช่หน้าเว็บมาตรฐาน คุณจึงไม่สามารถจับภาพหน้าจอได้"
   },
   "selfScreenshotErrorTitle": {
-    "message": "คุณไม่สามารถจับภาพหน้าจอของหน้า Firefox Screenshots"
+    "message": "คุณไม่สามารถจับภาพของหน้า Firefox Screenshots!"
   },
   "genericErrorTitle": {
     "message": "โอ๊ย! Firefox Screenshots รวน"
   },
   "genericErrorDetails": {
-    "message": "เราไม่แน่ใจว่าเกิดอะไรขึ้น โปรดลองอีกครั้งหรือจับภาพของหน้าอื่น"
+    "message": "เราไม่แน่ใจว่าเกิดอะไรขึ้น ต้องการลองอีกครั้งหรือจับภาพของหน้าอื่น?"
   },
   "tourBodyOne": {
-    "message": "จับ บันทึกและแบ่งปันภาพหน้าจอโดยที่ไม่ต้องออกจาก Firefox"
+    "message": "จับ บันทึก และแบ่งปันภาพหน้าจอโดยไม่ต้องออกจาก Firefox"
   },
   "tourHeaderTwo": {
-    "message": "จับภาพตามที่คุณต้องการ"
+    "message": "จับภาพแค่สิ่งที่คุณต้องการ"
   },
   "tourBodyTwo": {
-    "message": "คลิกหรือลากเพื่อจับภาพเฉพาะบางส่วนของหน้าเว็บ คุณสามารถเลื่อนมาชี้เพื่อเน้นภาพส่วนที่คุณเลือก"
+    "message": "คลิกแล้วลากเพื่อจับภาพแค่บางส่วนของหน้า คุณยังสามารถวางเมาส์เพื่อเน้นการเลือกของคุณ"
   },
   "tourHeaderThree": {
-    "message": "ตามที่คุณโปรด"
+    "message": "ตามใจชอบ"
   },
   "tourBodyThree": {
-    "message": "บันทึกและครอปภาพลงในเว็บเพื่อให้แบ่งปันได้ง่าย หรือดาวน์โหลดลงคอมพิวเตอร์ของคุณ คุณยังสามารถคลิกที่ปุ่มภาพของฉันเพื่อที่จะหาภาพที่คุณจับไว้"
+    "message": "บันทึกภาพที่ครอบตัดของคุณไปยังเว็บเพื่อการแบ่งปันที่ง่ายขึ้น หรือดาวน์โหลดไปยังคอมพิวเตอร์ของคุณ คุณยังสามารถคลิกที่ปุ่ม ภาพของฉัน เพื่อค้นหาภาพทั้งหมดที่คุณจับไว้"
   },
   "tourHeaderFour": {
     "message": "จับภาพหน้าต่างหรือทั้งหน้า"
   },
   "tourBodyFour": {
-    "message": "กดปุ่มด้านบนขวาเพื่อจับภาพบริเวณที่มองเห็นในหน้าต่างหรือทั้งหน้าเว็บ"
+    "message": "คลิกที่ปุ่มด้านบนขวาเพื่อจับภาพพื้นที่ที่มองเห็นในหน้าต่างหรือเพื่อจับภาพทั้งหน้า"
   },
   "tourSkip": {
     "message": "ข้าม"
@@ -104,7 +104,7 @@
     "message": "เสร็จสิ้น"
   },
   "termsAndPrivacyNoticeCloudServices": {
-    "message": "สำหรับการใช้งาน Firefox Screenshots คุณยอมรับใน Firefox Cloud Services $TERMSANDPRIVACYNOTICETERMSLINK$ และ $TERMSANDPRIVACYNOTICEPRIVACYLINK$",
+    "message": "เพื่อใช้ Firefox Screenshots คุณยอมรับ $TERMSANDPRIVACYNOTICETERMSLINK$ และ $TERMSANDPRIVACYNOTICEPRIVACYLINK$ ของบริการกลุ่มเมฆ Firefox",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

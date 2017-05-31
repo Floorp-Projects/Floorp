@@ -103,12 +103,5 @@ def handle_platform(config, jobs):
         if 'treeherder' in job:
             job['treeherder']['platform'] = platform
 
-        build_platform, build_type = platform.split('/')
-
-        job['attributes'].update({
-            'build_platform': build_platform,
-            'build_type': build_type,
-        })
-
         del job['platform']
         yield job

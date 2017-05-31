@@ -3,7 +3,7 @@
     "message": "יצירת צילומי מסך של דפי אינטרנט ושמירה שלהם באופן זמני או קבוע."
   },
   "addonAuthorsList": {
-    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
     "message": "צילום מסך"
@@ -89,7 +89,7 @@
     "message": "לצלם חלונות או דפים שלמים"
   },
   "tourBodyFour": {
-    "message": "נא לבחור בכפתורים שבחלק העליון כדי לצלם את האזור הגלוי בחלון או לצלם את הדף כולו."
+    "message": "בחרו בכפתורים שבחלק העליון כדי לצלם את האזור הגלוי בחלון או כדי לצלם את הדף כולו."
   },
   "tourSkip": {
     "message": "דילוג"
