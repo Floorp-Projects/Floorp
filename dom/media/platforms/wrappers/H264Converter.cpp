@@ -79,6 +79,15 @@ H264Converter::Decode(MediaRawData* aSample)
       return DecodePromise::CreateAndResolve(DecodedData(), __func__);
     }
   } else {
+    // Initialize the members that we couldn't if the extradata was given during
+    // H264Converter's construction.
+    if (!mNeedAVCC) {
+      mNeedAVCC =
+        Some(mDecoder->NeedsConversion() == ConversionRequired::kNeedAVCC);
+    }
+    if (!mCanRecycleDecoder) {
+      mCanRecycleDecoder = Some(CanRecycleDecoder());
+    }
     rv = CheckForSPSChange(aSample);
   }
 
@@ -97,11 +106,6 @@ H264Converter::Decode(MediaRawData* aSample)
 
   if (mNeedKeyframe && !aSample->mKeyframe) {
     return DecodePromise::CreateAndResolve(DecodedData(), __func__);
-  }
-
-  if (!mNeedAVCC) {
-    mNeedAVCC =
-      Some(mDecoder->NeedsConversion() == ConversionRequired::kNeedAVCC);
   }
 
   if (!*mNeedAVCC
@@ -260,6 +264,11 @@ H264Converter::OnDecoderInitDone(const TrackType aTrackType)
 {
   mInitPromiseRequest.Complete();
   RefPtr<MediaRawData> sample = mPendingSample.forget();
+
+  mNeedAVCC =
+    Some(mDecoder->NeedsConversion() == ConversionRequired::kNeedAVCC);
+  mCanRecycleDecoder = Some(CanRecycleDecoder());
+
   DecodeFirstSample(sample);
 }
 
@@ -288,9 +297,6 @@ H264Converter::DecodeFirstSample(MediaRawData* aSample)
     mDecodePromise.Resolve(DecodedData(), __func__);
     return;
   }
-
-  mNeedAVCC =
-    Some(mDecoder->NeedsConversion() == ConversionRequired::kNeedAVCC);
 
   if (!*mNeedAVCC
       && !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe)) {
@@ -329,8 +335,8 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
   }
 
   RefPtr<MediaRawData> sample = aSample;
-
-  if (CanRecycleDecoder()) {
+  MOZ_ASSERT(mCanRecycleDecoder.isSome());
+  if (*mCanRecycleDecoder) {
     // Do not recreate the decoder, reuse it.
     UpdateConfigFromExtraData(extra_data);
     if (!sample->mTrackInfo) {
