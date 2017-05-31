@@ -40,7 +40,7 @@ pub fn href(url: &Url) -> &str {
 
 /// Setter for https://url.spec.whatwg.org/#dom-url-href
 pub fn set_href(url: &mut Url, value: &str) -> Result<(), ParseError> {
-    *url = try!(Url::parse(value));
+    *url = Url::parse(value)?;
     Ok(())
 }
 
