@@ -74,7 +74,6 @@ FrameIterator::FrameIterator(WasmActivation* activation, Unwind unwind)
 
     code_ = activation_->compartment()->wasm.lookupCode(activation->resumePC());
     MOZ_ASSERT(code_);
-    MOZ_ASSERT(&fp_->tls->instance->code() == code_);
 
     codeRange_ = code_->lookupRange(activation->resumePC());
     MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
