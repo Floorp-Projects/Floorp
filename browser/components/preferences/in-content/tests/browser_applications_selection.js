@@ -5,7 +5,7 @@ var container;
 SimpleTest.requestCompleteLog();
 
 add_task(async function setup() {
-  await openPreferencesViaOpenPreferencesAPI("applications", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("applications", null, {leaveOpen: true});
   info("Preferences page opened on the applications pane.");
 
   registerCleanupFunction(() => {

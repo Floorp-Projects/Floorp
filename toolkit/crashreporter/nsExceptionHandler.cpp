@@ -2333,6 +2333,18 @@ EnqueueDelayedNote(DelayedNote* aNote)
   gDelayedAnnotations->AppendElement(aNote);
 }
 
+static void
+RunAndCleanUpDelayedNotes()
+{
+  if (gDelayedAnnotations) {
+    for (nsAutoPtr<DelayedNote>& note : *gDelayedAnnotations) {
+      note->Run();
+    }
+    delete gDelayedAnnotations;
+    gDelayedAnnotations = nullptr;
+  }
+}
+
 nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
 {
   if (!GetEnabled())
@@ -3812,6 +3824,7 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
                      NS_ConvertASCIItoUTF16(crashPipe).get(),
                      nullptr);
   gExceptionHandler->set_handle_debug_exceptions(true);
+  RunAndCleanUpDelayedNotes();
 
 #ifdef _WIN64
   SetJitExceptionHandler();
@@ -3862,13 +3875,7 @@ SetRemoteExceptionHandler()
                      nullptr,    // no callback context
                      true,       // install signal handlers
                      gMagicChildCrashReportFd);
-
-  if (gDelayedAnnotations) {
-    for (uint32_t i = 0; i < gDelayedAnnotations->Length(); i++) {
-      gDelayedAnnotations->ElementAt(i)->Run();
-    }
-    delete gDelayedAnnotations;
-  }
+  RunAndCleanUpDelayedNotes();
 
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
 
@@ -3897,6 +3904,7 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
                      nullptr,    // no callback context
                      true,       // install signal handlers
                      crashPipe.BeginReading());
+  RunAndCleanUpDelayedNotes();
 
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
 

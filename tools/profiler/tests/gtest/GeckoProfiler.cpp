@@ -17,6 +17,8 @@
 #include "js/Initialization.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "ProfileJSONWriter.h"
+#include "nsIThread.h"
+#include "nsThreadUtils.h"
 
 #include <string.h>
 
@@ -166,6 +168,69 @@ TEST(GeckoProfiler, FeaturesAndParams)
 
     InactiveFeaturesAndParamsCheck();
   }
+}
+
+TEST(GeckoProfiler, DifferentThreads)
+{
+  InactiveFeaturesAndParamsCheck();
+
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_NewNamedThread("GeckoProfGTest", getter_AddRefs(thread));
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  // Control the profiler on a background thread and verify flags on the
+  // main thread.
+  {
+    uint32_t features = ProfilerFeature::JS | ProfilerFeature::Threads;
+    const char* filters[] = { "GeckoMain", "Compositor" };
+
+    thread->Dispatch(NS_NewRunnableFunction([&]() {
+      profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                    features, filters, MOZ_ARRAY_LENGTH(filters));
+    }), NS_DISPATCH_SYNC);
+
+    ASSERT_TRUE(profiler_is_active());
+    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::GPU));
+    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
+    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Restyle));
+
+    ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                      features, filters, MOZ_ARRAY_LENGTH(filters));
+
+    thread->Dispatch(NS_NewRunnableFunction([&]() {
+      profiler_stop();
+    }), NS_DISPATCH_SYNC);
+
+    InactiveFeaturesAndParamsCheck();
+  }
+
+  // Control the profiler on the main thread and verify flags on a
+  // background thread.
+  {
+    uint32_t features = ProfilerFeature::JS | ProfilerFeature::Threads;
+    const char* filters[] = { "GeckoMain", "Compositor" };
+
+    profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                  features, filters, MOZ_ARRAY_LENGTH(filters));
+
+    thread->Dispatch(NS_NewRunnableFunction([&]() {
+      ASSERT_TRUE(profiler_is_active());
+      ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::GPU));
+      ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
+      ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Restyle));
+
+      ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                        features, filters, MOZ_ARRAY_LENGTH(filters));
+    }), NS_DISPATCH_SYNC);
+
+    profiler_stop();
+
+    thread->Dispatch(NS_NewRunnableFunction([&]() {
+      InactiveFeaturesAndParamsCheck();
+    }), NS_DISPATCH_SYNC);
+  }
+
+  thread->Shutdown();
 }
 
 TEST(GeckoProfiler, GetBacktrace)
@@ -349,6 +414,45 @@ TEST(GeckoProfiler, StreamJSONForThisProcess)
 
   profiler_stop();
 
+  ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
+}
+
+TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
+{
+  // Same as the previous test, but calling some things on background threads.
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_NewNamedThread("GeckoProfGTest", getter_AddRefs(thread));
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  uint32_t features = ProfilerFeature::StackWalk;
+  const char* filters[] = { "GeckoMain" };
+
+  SpliceableChunkedJSONWriter w;
+  ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
+
+  // Start the profiler on the main thread.
+  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                features, filters, MOZ_ARRAY_LENGTH(filters));
+
+  // Call profiler_stream_json_for_this_process on a background thread.
+  thread->Dispatch(NS_NewRunnableFunction([&]() {
+    w.Start(SpliceableJSONWriter::SingleLineStyle);
+    ASSERT_TRUE(profiler_stream_json_for_this_process(w));
+    w.End();
+  }), NS_DISPATCH_SYNC);
+
+  UniquePtr<char[]> profile = w.WriteFunc()->CopyData();
+  ASSERT_TRUE(profile && profile[0] == '{');
+
+  // Stop the profiler and call profiler_stream_json_for_this_process on a
+  // background thread.
+  thread->Dispatch(NS_NewRunnableFunction([&]() {
+    profiler_stop();
+    ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
+  }), NS_DISPATCH_SYNC);
+  thread->Shutdown();
+
+  // Call profiler_stream_json_for_this_process on the main thread.
   ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
 }
 

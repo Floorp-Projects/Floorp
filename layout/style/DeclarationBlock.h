@@ -32,7 +32,12 @@ class DeclarationBlock
 {
 protected:
   explicit DeclarationBlock(StyleBackendType aType)
-    : mImmutable(false), mType(aType) { mContainer.mRaw = 0; }
+    : mImmutable(false)
+    , mIsDirty(false)
+    , mType(aType)
+  {
+    mContainer.mRaw = 0;
+  }
 
   DeclarationBlock(const DeclarationBlock& aCopy)
     : DeclarationBlock(aCopy.mType) {}
@@ -64,6 +69,21 @@ public:
    * be called from ToString.
    */
   void SetImmutable() { mImmutable = true; }
+
+  /**
+   * Return whether |this| has been restyled after modified.
+   */
+  bool IsDirty() const { return mIsDirty; }
+
+  /**
+   * Mark this declaration as dirty.
+   */
+  void SetDirty() { mIsDirty = true; }
+
+  /**
+   * Mark this declaration as not dirty.
+   */
+  void UnsetDirty() { mIsDirty = false; }
 
   /**
    * Copy |this|, if necessary to ensure that it can be modified.
@@ -136,6 +156,8 @@ private:
 
   // set when declaration put in the rule tree;
   bool mImmutable;
+  // True if this declaration has not been restyled after modified.
+  bool mIsDirty;
 
   const StyleBackendType mType;
 };

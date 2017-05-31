@@ -63,69 +63,33 @@
       class="header"
       hidden="true"
       data-category="paneApplications">
-  <label class="header-name" flex="1">&paneFilesApplications.title;</label>
+  <label class="header-name" flex="1">&paneApplications.title;</label>
+  <html:a class="help-button" target="_blank" aria-label="&helpButton.label;"></html:a>
 </hbox>
 
 <vbox id="applicationsContent"
       data-category="paneApplications"
       hidden="true"
       flex="1">
-
-  <!--Downloads-->
-  <groupbox id="downloadsGroup">
-    <caption><label>&downloads.label;</label></caption>
-
-    <radiogroup id="saveWhere"
-                preference="browser.download.useDownloadDir"
-                onsyncfrompreference="return gApplicationsPane.readUseDownloadDir();">
-      <hbox id="saveToRow">
-        <radio id="saveTo"
-              value="true"
-              label="&saveTo.label;"
-              accesskey="&saveTo.accesskey;"
-              aria-labelledby="saveTo downloadFolder"/>
-        <filefield id="downloadFolder"
-                  flex="1"
-                  preference="browser.download.folderList"
-                  preference-editable="true"
-                  aria-labelledby="saveTo"
-                  onsyncfrompreference="return gApplicationsPane.displayDownloadDirPref();"/>
-        <button id="chooseFolder"
-#ifdef XP_MACOSX
-                accesskey="&chooseFolderMac.accesskey;"
-                label="&chooseFolderMac.label;"
-#else
-                accesskey="&chooseFolderWin.accesskey;"
-                label="&chooseFolderWin.label;"
-#endif
-        />
-      </hbox>
-      <radio id="alwaysAsk"
-            value="false"
-            label="&alwaysAskWhere.label;"
-            accesskey="&alwaysAskWhere.accesskey;"/>
-    </radiogroup>
-  </groupbox>
-
-  <groupbox id="applicationsGroup">
-    <caption><label>&applications.label;</label></caption>
-    <description>&applications.description;</description>
+  <hbox>
     <textbox id="filter" flex="1"
              type="search"
-             placeholder="&filter2.emptytext;"
+             placeholder="&filter.emptytext;"
              aria-controls="handlersView"/>
+  </hbox>
 
-    <richlistbox id="handlersView" orient="vertical" persist="lastSelectedType"
-                 preference="pref.downloads.disable_button.edit_actions"
-                 flex="1">
-      <listheader equalsize="always">
-          <treecol id="typeColumn" label="&typeColumn.label;" value="type"
-                   accesskey="&typeColumn.accesskey;" persist="sortDirection"
-                   flex="1" sortDirection="ascending"/>
-          <treecol id="actionColumn" label="&actionColumn2.label;" value="action"
-                   accesskey="&actionColumn2.accesskey;" persist="sortDirection"
-                   flex="1"/>
-      </listheader>
-    </richlistbox>
-  </groupbox>
+  <separator class="thin"/>
+
+  <richlistbox id="handlersView" orient="vertical" persist="lastSelectedType"
+               preference="pref.downloads.disable_button.edit_actions"
+               flex="1">
+    <listheader equalsize="always">
+        <treecol id="typeColumn" label="&typeColumn.label;" value="type"
+                 accesskey="&typeColumn.accesskey;" persist="sortDirection"
+                 flex="1" sortDirection="ascending"/>
+        <treecol id="actionColumn" label="&actionColumn2.label;" value="action"
+                 accesskey="&actionColumn2.accesskey;" persist="sortDirection"
+                 flex="1"/>
+    </listheader>
+  </richlistbox>
 </vbox>

@@ -1,0 +1,225 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<!-- Sync panel -->
+
+<preferences id="syncEnginePrefs" hidden="true" data-category="paneSync">
+  <preference id="engine.addons"
+              name="services.sync.engine.addons"
+              type="bool"/>
+  <preference id="engine.bookmarks"
+              name="services.sync.engine.bookmarks"
+              type="bool"/>
+  <preference id="engine.history"
+              name="services.sync.engine.history"
+              type="bool"/>
+  <preference id="engine.tabs"
+              name="services.sync.engine.tabs"
+              type="bool"/>
+  <preference id="engine.prefs"
+              name="services.sync.engine.prefs"
+              type="bool"/>
+  <preference id="engine.passwords"
+              name="services.sync.engine.passwords"
+              type="bool"/>
+</preferences>
+
+<script type="application/javascript"
+        src="chrome://browser/content/preferences/in-content-new/sync.js"/>
+
+<hbox id="header-sync"
+      class="header"
+      hidden="true"
+      data-category="paneSync">
+  <label class="header-name" flex="1">&paneSync1.title;</label>
+</hbox>
+
+<deck id="weavePrefsDeck" data-category="paneSync" hidden="true">
+  <vbox id="noFxaAccount">
+    <hbox>
+      <vbox id="fxaContentWrapper">
+        <groupbox id="noFxaGroup">
+          <vbox>
+            <label id="noFxaCaption">&signedOut.caption;</label>
+            <description id="noFxaDescription" flex="1">&signedOut.description;</description>
+            <hbox class="fxaAccountBox">
+              <vbox>
+                <image class="fxaFirefoxLogo"/>
+              </vbox>
+              <vbox flex="1">
+                <label id="signedOutAccountBoxTitle">&signedOut.accountBox.title;</label>
+                <hbox class="fxaAccountBoxButtons">
+                  <button id="noFxaSignUp" label="&signedOut.accountBox.create;" accesskey="&signedOut.accountBox.create.accesskey;"></button>
+                  <button id="noFxaSignIn" label="&signedOut.accountBox.signin;" accesskey="&signedOut.accountBox.signin.accesskey;"></button>
+                </hbox>
+              </vbox>
+            </hbox>
+          </vbox>
+        </groupbox>
+      </vbox>
+      <vbox>
+        <html:img class="fxaSyncIllustration" src="chrome://browser/skin/fxa/sync-illustration.svg"/>
+      </vbox>
+    </hbox>
+    <label class="fxaMobilePromo">
+        &mobilePromo3.start;<!-- We put these comments to avoid inserting white spaces
+        --><label id="fxaMobilePromo-android"
+                  class="androidLink text-link"><!--
+        -->&mobilePromo3.androidLink;</label><!--
+        -->&mobilePromo3.iOSBefore;<!--
+        --><label id="fxaMobilePromo-ios"
+                  class="iOSLink text-link"><!--
+        -->&mobilePromo3.iOSLink;</label><!--
+        -->&mobilePromo3.end;
+    </label>
+  </vbox>
+
+  <vbox id="hasFxaAccount">
+    <hbox>
+      <vbox id="fxaContentWrapper">
+        <groupbox id="fxaGroup">
+          <caption><label>&syncBrand.fxAccount.label;</label></caption>
+          <deck id="fxaLoginStatus">
+
+            <!-- logged in and verified and all is good -->
+            <hbox id="fxaLoginVerified" class="fxaAccountBox">
+              <vbox align="center" pack="center">
+                <image id="fxaProfileImage" class="actionable"
+                    role="button"
+                    onclick="gSyncPane.openChangeProfileImage(event);"
+                    onkeypress="gSyncPane.openChangeProfileImage(event);"
+                    tooltiptext="&profilePicture.tooltip;"/>
+              </vbox>
+              <vbox flex="1" pack="center">
+                <label id="fxaDisplayName" hidden="true"/>
+                <label id="fxaEmailAddress1"/>
+                <hbox class="fxaAccountBoxButtons">
+                  <button id="fxaUnlinkButton" label="&disconnect3.label;" accesskey="&disconnect3.accesskey;"/>
+                  <html:a id="verifiedManage" target="_blank"
+                         accesskey="&verifiedManage.accesskey;"
+                         onkeypress="gSyncPane.openManageFirefoxAccount(event);"><!--
+                  -->&verifiedManage.label;</html:a>
+                </hbox>
+              </vbox>
+            </hbox>
+
+            <!-- logged in to an unverified account -->
+            <hbox id="fxaLoginUnverified" class="fxaAccountBox">
+              <vbox>
+                <image id="fxaProfileImage"/>
+              </vbox>
+              <vbox flex="1">
+                <hbox>
+                  <vbox><image id="fxaLoginRejectedWarning"/></vbox>
+                  <description flex="1">
+                    &signedInUnverified.beforename.label;
+                    <label id="fxaEmailAddress2"/>
+                    &signedInUnverified.aftername.label;
+                  </description>
+                </hbox>
+                <hbox class="fxaAccountBoxButtons">
+                  <button id="verifyFxaAccount" label="&verify.label;" accesskey="&verify.accesskey;"></button>
+                  <button id="unverifiedUnlinkFxaAccount" label="&forget.label;" accesskey="&forget.accesskey;"></button>
+                </hbox>
+              </vbox>
+            </hbox>
+
+            <!-- logged in locally but server rejected credentials -->
+            <hbox id="fxaLoginRejected" class="fxaAccountBox">
+              <vbox>
+                <image id="fxaProfileImage"/>
+              </vbox>
+              <vbox flex="1">
+                <hbox>
+                  <vbox><image id="fxaLoginRejectedWarning"/></vbox>
+                  <description flex="1">
+                    &signedInLoginFailure.beforename.label;
+                    <label id="fxaEmailAddress3"/>
+                    &signedInLoginFailure.aftername.label;
+                  </description>
+                </hbox>
+                <hbox class="fxaAccountBoxButtons">
+                  <button id="rejectReSignIn" label="&signIn.label;" accesskey="&signIn.accesskey;"></button>
+                  <button id="rejectUnlinkFxaAccount" label="&forget.label;" accesskey="&forget.accesskey;"></button>
+                </hbox>
+              </vbox>
+            </hbox>
+          </deck>
+        </groupbox>
+        <groupbox id="syncOptions">
+          <caption><label>&signedIn.settings.label;</label></caption>
+          <description>&signedIn.settings.description;</description>
+          <hbox id="fxaSyncEngines">
+            <vbox align="start" flex="1">
+              <checkbox label="&engine.tabs.label2;"
+                        accesskey="&engine.tabs.accesskey;"
+                        preference="engine.tabs"/>
+              <checkbox label="&engine.bookmarks.label;"
+                        accesskey="&engine.bookmarks.accesskey;"
+                        preference="engine.bookmarks"/>
+              <checkbox label="&engine.logins.label;"
+                        accesskey="&engine.logins.accesskey;"
+                        preference="engine.passwords"/>
+            </vbox>
+            <vbox align="start" flex="1">
+              <checkbox label="&engine.history.label;"
+                        accesskey="&engine.history.accesskey;"
+                        preference="engine.history"/>
+              <checkbox label="&engine.addons.label;"
+                        accesskey="&engine.addons.accesskey;"
+                        preference="engine.addons"/>
+              <checkbox label="&engine.prefs.label;"
+                        accesskey="&engine.prefs.accesskey;"
+                        preference="engine.prefs"/>
+            </vbox>
+            <spacer/>
+          </hbox>
+        </groupbox>
+      </vbox>
+      <vbox>
+        <html:img  class="fxaSyncIllustration" src="chrome://browser/skin/fxa/sync-illustration.svg"/>
+      </vbox>
+    </hbox>
+    <groupbox>
+      <caption>
+        <label control="fxaSyncComputerName">
+          &fxaSyncDeviceName.label;
+        </label>
+      </caption>
+      <hbox id="fxaDeviceName">
+        <textbox id="fxaSyncComputerName" disabled="true"/>
+        <hbox>
+          <button id="fxaChangeDeviceName"
+                  label="&changeSyncDeviceName2.label;"
+                  accesskey="&changeSyncDeviceName2.accesskey;"/>
+          <button id="fxaCancelChangeDeviceName"
+                  label="&cancelChangeSyncDeviceName.label;"
+                  accesskey="&cancelChangeSyncDeviceName.accesskey;"
+                  hidden="true"/>
+          <button id="fxaSaveChangeDeviceName"
+                  label="&saveChangeSyncDeviceName.label;"
+                  accesskey="&saveChangeSyncDeviceName.accesskey;"
+                  hidden="true"/>
+        </hbox>
+      </hbox>
+    </groupbox>
+    <label class="fxaMobilePromo">
+        &mobilePromo3.start;<!-- We put these comments to avoid inserting white spaces
+        --><label class="androidLink text-link" id="fxaMobilePromo-android-hasFxaAccount"><!--
+        -->&mobilePromo3.androidLink;</label><!--
+        -->&mobilePromo3.iOSBefore;<!--
+        --><label class="iOSLink text-link" id="fxaMobilePromo-ios-hasFxaAccount"><!--
+        -->&mobilePromo3.iOSLink;</label><!--
+        -->&mobilePromo3.end;
+    </label>
+    <vbox id="tosPP-small" align="start">
+      <label id="tosPP-small-ToS" class="text-link">
+        &prefs.tosLink.label;
+      </label>
+      <label id="tosPP-small-PP" class="text-link">
+        &fxaPrivacyNotice.link.label;
+      </label>
+    </vbox>
+  </vbox>
+</deck>

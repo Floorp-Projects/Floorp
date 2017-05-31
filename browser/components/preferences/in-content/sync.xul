@@ -32,7 +32,8 @@
       class="header"
       hidden="true"
       data-category="paneSync">
-  <label class="header-name" flex="1">&paneSync1.title;</label>
+  <label class="header-name" flex="1">&paneSync.title;</label>
+  <html:a class="help-button text-link" target="_blank" aria-label="&helpButton.label;"></html:a>
 </hbox>
 
 <deck id="weavePrefsDeck" data-category="paneSync" hidden="true">
@@ -95,7 +96,7 @@
                 <label id="fxaDisplayName" hidden="true"/>
                 <label id="fxaEmailAddress1"/>
                 <hbox class="fxaAccountBoxButtons">
-                  <button id="fxaUnlinkButton" label="&disconnect3.label;" accesskey="&disconnect3.accesskey;"/>
+                  <button id="fxaUnlinkButton" label="&disconnect.label;" accesskey="&disconnect.accesskey;"/>
                   <html:a id="verifiedManage" target="_blank"
                          accesskey="&verifiedManage.accesskey;"
                          onkeypress="gSyncPane.openManageFirefoxAccount(event);"><!--
@@ -148,8 +149,7 @@
           </deck>
         </groupbox>
         <groupbox id="syncOptions">
-          <caption><label>&signedIn.settings.label;</label></caption>
-          <description>&signedIn.settings.description;</description>
+          <caption><label>&signedIn.engines.label;</label></caption>
           <hbox id="fxaSyncEngines">
             <vbox align="start" flex="1">
               <checkbox label="&engine.tabs.label2;"
@@ -191,8 +191,8 @@
         <textbox id="fxaSyncComputerName" disabled="true"/>
         <hbox>
           <button id="fxaChangeDeviceName"
-                  label="&changeSyncDeviceName2.label;"
-                  accesskey="&changeSyncDeviceName2.accesskey;"/>
+                  label="&changeSyncDeviceName.label;"
+                  accesskey="&changeSyncDeviceName.accesskey;"/>
           <button id="fxaCancelChangeDeviceName"
                   label="&cancelChangeSyncDeviceName.label;"
                   accesskey="&cancelChangeSyncDeviceName.accesskey;"
