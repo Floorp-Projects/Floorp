@@ -6041,19 +6041,16 @@
       <field name="_closeButtonsUpdatePending">false</field>
       <method name="adjustTabstrip">
         <body><![CDATA[
+          // If we're overflowing, tabs are at their minimum widths.
+          if (this.getAttribute("overflow") == "true") {
+            this.setAttribute("closebuttons", "activetab");
+            return;
+          }
+
           if (this._closeButtonsUpdatePending) {
             return;
           }
           this._closeButtonsUpdatePending = true;
-
-          // If we're overflowing, tabs are at their minimum widths.
-          if (this.getAttribute("overflow") == "true") {
-            window.requestAnimationFrame(() => {
-              this._closeButtonsUpdatePending = false;
-              this.setAttribute("closebuttons", "activetab");
-            });
-            return;
-          }
 
           // Wait until after the next paint to get current layout data from
           // getBoundsWithoutFlushing.
