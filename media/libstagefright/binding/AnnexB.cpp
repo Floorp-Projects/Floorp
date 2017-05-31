@@ -277,11 +277,6 @@ AnnexB::ExtractExtraData(const mozilla::MediaRawData* aSample)
   MOZ_ASSERT(IsAVCC(aSample));
 
   RefPtr<mozilla::MediaByteBuffer> extradata = new mozilla::MediaByteBuffer;
-  if (HasSPS(aSample->mExtraData)) {
-    // We already have an explicit extradata, re-use it.
-    extradata = aSample->mExtraData;
-    return extradata.forget();
-  }
 
   // SPS content
   mozilla::Vector<uint8_t> sps;
