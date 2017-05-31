@@ -29,9 +29,8 @@ public:
   // Parse an AVCC extradata and construct the Annex B sample header.
   static already_AddRefed<mozilla::MediaByteBuffer> ConvertExtraDataToAnnexB(
     const mozilla::MediaByteBuffer* aExtraData);
-  // Extract SPS and PPS NALs from aSample, aSample must be in AVCC format.
-  // If aSample already contains an extradata with an SPS, it will be returned
-  // otherwise the SPS/PPS NALs are searched in-band.
+  // Extract SPS and PPS NALs from aSample by looking into each NALs.
+  // aSample must be in AVCC format.
   static already_AddRefed<mozilla::MediaByteBuffer> ExtractExtraData(
     const mozilla::MediaRawData* aSample);
   static bool HasSPS(const mozilla::MediaRawData* aSample);
