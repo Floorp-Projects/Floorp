@@ -3390,22 +3390,13 @@ public:
   GetProperty(FrameProperties::Descriptor<T> aProperty,
               bool* aFoundResult = nullptr) const
   {
-    if (mProperties) {
-      return mProperties->Get(aProperty, aFoundResult);
-    }
-    if (aFoundResult) {
-      *aFoundResult = false;
-    }
-    return FrameProperties::ReinterpretHelper<T>::FromPointer(nullptr);
+    return mProperties.Get(aProperty, aFoundResult);
   }
 
   template<typename T>
   bool HasProperty(FrameProperties::Descriptor<T> aProperty) const
   {
-    if (mProperties) {
-      return mProperties->Has(aProperty);
-    }
-    return false;
+    return mProperties.Has(aProperty);
   }
 
   // Add a property, or update an existing property for the given descriptor.
@@ -3413,10 +3404,7 @@ public:
   void SetProperty(FrameProperties::Descriptor<T> aProperty,
                    FrameProperties::PropertyType<T> aValue)
   {
-    if (!mProperties) {
-      mProperties = mozilla::MakeUnique<FrameProperties>();
-    }
-    mProperties->Set(aProperty, aValue, this);
+    mProperties.Set(aProperty, aValue, this);
   }
 
   // Unconditionally add a property; use ONLY if the descriptor is known
@@ -3425,10 +3413,7 @@ public:
   void AddProperty(FrameProperties::Descriptor<T> aProperty,
                    FrameProperties::PropertyType<T> aValue)
   {
-    if (!mProperties) {
-      mProperties = mozilla::MakeUnique<FrameProperties>();
-    }
-    mProperties->Add(aProperty, aValue);
+    mProperties.Add(aProperty, aValue);
   }
 
   template<typename T>
@@ -3436,28 +3421,18 @@ public:
   RemoveProperty(FrameProperties::Descriptor<T> aProperty,
                  bool* aFoundResult = nullptr)
   {
-    if (mProperties) {
-      return mProperties->Remove(aProperty, aFoundResult);
-    }
-    if (aFoundResult) {
-      *aFoundResult = false;
-    }
-    return FrameProperties::ReinterpretHelper<T>::FromPointer(nullptr);
+    return mProperties.Remove(aProperty, aFoundResult);
   }
 
   template<typename T>
   void DeleteProperty(FrameProperties::Descriptor<T> aProperty)
   {
-    if (mProperties) {
-      mProperties->Delete(aProperty, this);
-    }
+    mProperties.Delete(aProperty, this);
   }
 
   void DeleteAllProperties()
   {
-    if (mProperties) {
-      mProperties->DeleteAll(this);
-    }
+    mProperties.DeleteAll(this);
   }
 
   // Reports size of the FrameProperties for this frame and its descendants
@@ -3964,10 +3939,9 @@ protected:
   nsFrameState     mState;
 
   /**
-   * List of properties attached to the frame, or null if no properties have
-   * been set.
+   * List of properties attached to the frame.
    */
-  mozilla::UniquePtr<FrameProperties> mProperties;
+  FrameProperties  mProperties;
 
   // When there is an overflow area only slightly larger than mRect,
   // we store a set of four 1-byte deltas from the edges of mRect
