@@ -52,7 +52,6 @@ module.exports = createClass({
       onToggleShowInfiniteLines,
       onShowGridAreaHighlight,
       onShowGridCellHighlight,
-      onShowGridLineNamesHighlight,
     } = this.props;
 
     return grids.length ?
@@ -84,7 +83,6 @@ module.exports = createClass({
             grids,
             onShowGridAreaHighlight,
             onShowGridCellHighlight,
-            onShowGridLineNamesHighlight,
           })
           :
           null

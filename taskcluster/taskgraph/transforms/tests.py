@@ -38,13 +38,16 @@ import logging
 import requests
 from collections import defaultdict
 
-WORKER_TYPE = {
-    # default worker types keyed by instance-size
+# default worker types keyed by instance-size
+LINUX_WORKER_TYPES = {
     'large': 'aws-provisioner-v1/gecko-t-linux-large',
     'xlarge': 'aws-provisioner-v1/gecko-t-linux-xlarge',
     'legacy': 'aws-provisioner-v1/gecko-t-linux-medium',
     'default': 'aws-provisioner-v1/gecko-t-linux-large',
-    # windows / os x worker types keyed by test-platform
+}
+
+# windows / os x worker types keyed by test-platform
+WINDOWS_WORKER_TYPES = {
     'windows7-32-vm': 'aws-provisioner-v1/gecko-t-win7-32',
     'windows7-32': 'aws-provisioner-v1/gecko-t-win7-32-gpu',
     'windows10-64-vm': 'aws-provisioner-v1/gecko-t-win10-64',
@@ -150,23 +153,12 @@ test_description_schema = Schema({
     # unit tests on linux platforms and false otherwise
     Optional('allow-software-gl-layers'): bool,
 
-    # The worker implementation for this test, as dictated by policy and by the
-    # test platform.
-    Optional('worker-implementation'): Any(
-        'docker-worker',
-        'native-engine',
-        'generic-worker',
-        # coming soon:
-        'docker-engine',
-        'buildbot-bridge',
-    ),
-
     # For tasks that will run in docker-worker or docker-engine, this is the
     # name of the docker image or in-tree docker image to run the task in.  If
     # in-tree, then a dependency will be created automatically.  This is
     # generally `desktop-test`, or an image that acts an awful lot like it.
     Required('docker-image', default={'in-tree': 'desktop-test'}): optionally_keyed_by(
-        'test-platform', 'test-platform-phylum',
+        'test-platform',
         Any(
             # a raw Docker image path (repo/image:tag)
             basestring,
@@ -193,7 +185,7 @@ test_description_schema = Schema({
 
     # What to run
     Required('mozharness'): optionally_keyed_by(
-        'test-platform', 'test-platform-phylum', {
+        'test-platform', {
             # the mozharness script used to run this task
             Required('script'): basestring,
 
@@ -428,29 +420,6 @@ def set_treeherder_machine_platform(config, tests):
 
 
 @transforms.add
-def set_worker_implementation(config, tests):
-    """Set the worker implementation based on the test platform."""
-    for test in tests:
-        test_platform = test['test-platform']
-        if test_platform.startswith('macosx'):
-            if config.config['args'].taskcluster_worker:
-                test['worker-implementation'] = 'native-engine'
-            else:
-                test['worker-implementation'] = 'generic-worker'
-        elif test.get('suite', '') == 'talos':
-            if config.config['args'].taskcluster_worker:
-                test['worker-implementation'] = 'native-engine'
-            else:
-                test['worker-implementation'] = 'buildbot-bridge'
-        elif test_platform.startswith('win'):
-            test['worker-implementation'] = 'generic-worker'
-        else:
-            test['worker-implementation'] = 'docker-worker'
-
-        yield test
-
-
-@transforms.add
 def set_tier(config, tests):
     """Set the tier based on policy for all test descriptions that do not
     specify a tier otherwise."""
@@ -474,8 +443,6 @@ def set_tier(config, tests):
                                          'android-4.3-arm7-api-15/debug',
                                          'android-4.2-x86/opt']:
                 test['tier'] = 1
-            elif test['worker-implementation'] == 'native-engine':
-                test['tier'] = 3
             else:
                 test['tier'] = 2
         yield test
@@ -723,6 +690,35 @@ def parallel_stylo_tests(config, tests):
 
 
 @transforms.add
+def set_worker_type(config, tests):
+    """Set the worker type based on the test platform."""
+    for test in tests:
+        # during the taskcluuster migration, this is a bit tortured, but it
+        # will get simpler eventually!
+        test_platform = test['test-platform']
+        if test_platform.startswith('macosx'):
+            # note that some portion of these will be allocated to BBB below
+            test['worker-type'] = 'tc-worker-provisioner/gecko-t-osx-10-10'
+        elif test_platform.startswith('win'):
+            if test.get('suite', '') == 'talos':
+                test['worker-type'] = 'buildbot-bridge/buildbot-bridge'
+            else:
+                test['worker-type'] = WINDOWS_WORKER_TYPES[test_platform.split('/')[0]]
+        elif test_platform.startswith('linux') or test_platform.startswith('android'):
+            if test.get('suite', '') == 'talos':
+                if config.config['args'].taskcluster_worker:
+                    test['worker-type'] = 'releng-hardware/gecko-t-linux-talos'
+                else:
+                    test['worker-type'] = 'buildbot-bridge/buildbot-bridge'
+            else:
+                test['worker-type'] = LINUX_WORKER_TYPES[test['instance-size']]
+        else:
+            raise Exception("unknown test_platform {}".format(test_platform))
+
+        yield test
+
+
+@transforms.add
 def allocate_to_bbb(config, tests):
     """Make the load balancing between taskcluster and buildbot"""
     j = get_load_balacing_settings()
@@ -743,7 +739,7 @@ def allocate_to_bbb(config, tests):
         if not (test_platform.startswith('mac')
                 and config.config['args'].taskcluster_worker):
             for i in range(int(n * len(t)), len(t)):
-                t[i]['worker-implementation'] = 'buildbot-bridge'
+                t[i]['worker-type'] = 'buildbot-bridge/buildbot-bridge'
 
         for y in t:
             yield y
@@ -824,29 +820,9 @@ def make_job_description(config, tests):
         run = jobdesc['run'] = {}
         run['using'] = 'mozharness-test'
         run['test'] = test
-        worker = jobdesc['worker'] = {}
-        implementation = worker['implementation'] = test['worker-implementation']
 
-        # TODO: need some better way to express this...
-        if implementation == 'buildbot-bridge':
-            jobdesc['worker-type'] = 'buildbot-bridge/buildbot-bridge'
-        elif implementation == 'native-engine':
-            if test['test-platform'].startswith('linux'):
-                jobdesc['worker-type'] = 'releng-hardware/gecko-t-linux-talos'
-            else:
-                jobdesc['worker-type'] = 'tc-worker-provisioner/gecko-t-osx-10-10'
-        elif implementation == 'generic-worker':
-            test_platform = test['test-platform'].split('/')[0]
-            jobdesc['worker-type'] = WORKER_TYPE[test_platform]
-        elif implementation == 'docker-worker' or implementation == 'docker-engine':
-            jobdesc['worker-type'] = WORKER_TYPE[test['instance-size']]
-            worker = jobdesc['worker']
-            worker['docker-image'] = test['docker-image']
-            worker['allow-ptrace'] = True  # required for all tests, for crashreporter
-            worker['loopback-video'] = test['loopback-video']
-            worker['loopback-audio'] = test['loopback-audio']
-            worker['max-run-time'] = test['max-run-time']
-            worker['retry-exit-status'] = test['retry-exit-status']
+        jobdesc['worker-type'] = test.pop('worker-type')
+
         yield jobdesc
 
 

@@ -1134,8 +1134,8 @@ GetShellFolderPath(KNOWNFOLDERID folder, nsAString& _retval)
 
   LPITEMIDLIST pItemIDList = nullptr;
 
-  if (SUCCEEDED(SHGetKnownFolderIDList(folder, KF_FLAG_SIMPLE_IDLIST | KF_FLAG_DONT_VERIFY,
-                                       NULL, &pItemIDList)) &&
+  DWORD flags = KF_FLAG_SIMPLE_IDLIST | KF_FLAG_DONT_VERIFY | KF_FLAG_NO_ALIAS;
+  if (SUCCEEDED(SHGetKnownFolderIDList(folder, flags, NULL, &pItemIDList)) &&
       SHGetPathFromIDListW(pItemIDList, buf)) {
     // We're going to use wcslen (wcsnlen not available in msvc7.1) so make
     // sure to null terminate.

@@ -348,7 +348,6 @@ def make_job_description(config, jobs):
         job_description = {
             'name': job['name'],
             'worker': {
-                'implementation': 'docker-worker',
                 'docker-image': {'in-tree': 'desktop-build'},
                 'max-run-time': job['run-time'],
                 'chain-of-trust': True,
