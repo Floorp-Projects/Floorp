@@ -212,9 +212,10 @@ public class ImageSelectTest {
 
         // Find image and long tap it
         UiObject webImage = TestHelper.mDevice.findObject(new UiSelector()
-                .className("android.widget.Image")
+                .className("android.view.View")
+                .instance(2)
                 .enabled(true));
-
+        webImage.waitForExists(waitingTime);
         Assert.assertTrue(webImage.exists());
         webImage.dragTo(webImage,5);
         imageMenuTitle.waitForExists(waitingTime);

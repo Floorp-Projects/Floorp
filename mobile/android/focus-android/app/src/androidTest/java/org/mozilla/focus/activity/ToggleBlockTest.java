@@ -73,7 +73,7 @@ public class ToggleBlockTest {
         // check that it blocked 0 tracker
         TestHelper.menuButton.perform(click());
         TestHelper.blockCounterItem.waitForExists(waitingTime);
-        assertTrue(Objects.equals(TestHelper.blockCounterItem.getText(), "0"));
+        assertTrue(Objects.equals(TestHelper.blockCounterItem.getText(), "-"));
         assertTrue(!TestHelper.blockToggleSwitch.isChecked());
         TestHelper.blockToggleSwitch.click();
         TestHelper.webView.waitForExists(waitingTime);
