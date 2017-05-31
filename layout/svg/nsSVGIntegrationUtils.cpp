@@ -1244,13 +1244,6 @@ nsSVGIntegrationUtils::DrawableFromPaintServer(nsIFrame*         aFrame,
     return drawable.forget();
   }
 
-  if (aFrame->IsFrameOfType(nsIFrame::eSVG) &&
-      !static_cast<nsSVGDisplayableFrame*>(do_QueryFrame(aFrame))) {
-    MOZ_ASSERT_UNREACHABLE("We should prevent painting of unpaintable SVG "
-                           "before we get here");
-    return nullptr;
-  }
-
   // We don't want to paint into a surface as long as we don't need to, so we
   // set up a drawing callback.
   RefPtr<gfxDrawingCallback> cb =
