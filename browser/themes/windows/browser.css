@@ -17,13 +17,13 @@
 :root {
   --titlebar-text-color: inherit;
 
+  --space-above-tabbar: 15px;
+
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) - 1px);
 
 %ifdef MOZ_PHOTON_THEME
   --toolbarbutton-border-radius: 2px;
 %else
-  --space-above-tabbar: 15px;
-
   --toolbarbutton-border-radius: 1px;
 
   --toolbarbutton-hover-background: rgba(0,0,0,.1);
@@ -89,7 +89,6 @@ toolbar[brighttext] {
   display: none;
 }
 
-%ifndef MOZ_PHOTON_THEME
 /* We want a 4px gap between the TabsToolbar and the toolbar-menubar when the
    toolbar-menu is displayed, and a 16px gap when it is not. 1px is taken care
    of by the (light) outer shadow of the tab, the remaining 3/15 are these margins. */
@@ -102,7 +101,7 @@ toolbar[brighttext] {
 #main-window[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar {
   margin-top: var(--space-above-tabbar);
 }
-%endif
+
 #navigator-toolbox,
 #navigator-toolbox > toolbar {
   -moz-appearance: none;
