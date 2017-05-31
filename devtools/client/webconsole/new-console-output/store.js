@@ -8,7 +8,6 @@ const {PrefState} = require("devtools/client/webconsole/new-console-output/reduc
 const {UiState} = require("devtools/client/webconsole/new-console-output/reducers/ui");
 const {
   applyMiddleware,
-  combineReducers,
   compose,
   createStore
 } = require("devtools/client/shared/vendor/redux");
@@ -44,10 +43,27 @@ function configureStore(hud) {
   };
 
   return createStore(
-    combineReducers(reducers),
+    createRootReducer(),
     initialState,
     compose(applyMiddleware(thunk), enableActorReleaser(hud), enableBatching())
   );
+}
+
+function createRootReducer() {
+  return function rootReducer(state, action) {
+    const newFiltersState = reducers.filters(state.filters, action);
+    return Object.assign({}, {
+      filters: newFiltersState,
+      prefs: reducers.prefs(state.prefs, action),
+      ui: reducers.ui(state.ui, action),
+      // specifically pass the updated filters state as an additional argument.
+      messages: reducers.messages(
+        state.messages,
+        action,
+        newFiltersState
+      ),
+    });
+  };
 }
 
 /**
