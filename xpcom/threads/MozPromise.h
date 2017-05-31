@@ -884,62 +884,28 @@ protected:
 
 public:
   template<typename ThisType,
-           typename ResolveMethodType,
-           typename RejectMethodType,
-           typename ThenValueType =
-             ThenValue<ThisType*, ResolveMethodType, RejectMethodType>,
+           typename... Methods,
+           typename ThenValueType = ThenValue<ThisType*, Methods...>,
            typename ReturnType = ThenCommand<ThenValueType>>
   ReturnType Then(AbstractThread* aResponseThread,
                   const char* aCallSite,
                   ThisType* aThisVal,
-                  ResolveMethodType aResolveMethod,
-                  RejectMethodType aRejectMethod)
+                  Methods... aMethods)
   {
-    RefPtr<ThenValueType> thenValue = new ThenValueType(
-      aResponseThread, aThisVal, aResolveMethod, aRejectMethod, aCallSite);
+    RefPtr<ThenValueType> thenValue =
+      new ThenValueType(aResponseThread, aThisVal, aMethods..., aCallSite);
     return ReturnType(aResponseThread, aCallSite, thenValue.forget(), this);
   }
 
-  template<
-    typename ThisType,
-    typename ResolveRejectMethodType,
-    typename ThenValueType = ThenValue<ThisType*, ResolveRejectMethodType>,
-    typename ReturnType = ThenCommand<ThenValueType>>
-  ReturnType Then(AbstractThread* aResponseThread,
-                  const char* aCallSite,
-                  ThisType* aThisVal,
-                  ResolveRejectMethodType aResolveRejectMethod)
-  {
-    RefPtr<ThenValueType> thenValue = new ThenValueType(
-      aResponseThread, aThisVal, aResolveRejectMethod, aCallSite);
-    return ReturnType(aResponseThread, aCallSite, thenValue.forget(), this);
-  }
-
-  template<typename ResolveFunction,
-           typename RejectFunction,
-           typename ThenValueType = ThenValue<ResolveFunction, RejectFunction>,
+  template<typename... Functions,
+           typename ThenValueType = ThenValue<Functions...>,
            typename ReturnType = ThenCommand<ThenValueType>>
   ReturnType Then(AbstractThread* aResponseThread,
                   const char* aCallSite,
-                  ResolveFunction&& aResolveFunction,
-                  RejectFunction&& aRejectFunction)
+                  Functions&&... aFunctions)
   {
-    RefPtr<ThenValueType> thenValue = new ThenValueType(aResponseThread,
-                                                        Move(aResolveFunction),
-                                                        Move(aRejectFunction),
-                                                        aCallSite);
-    return ReturnType(aResponseThread, aCallSite, thenValue.forget(), this);
-  }
-
-  template<typename ResolveRejectFunction,
-           typename ThenValueType = ThenValue<ResolveRejectFunction>,
-           typename ReturnType = ThenCommand<ThenValueType>>
-  ReturnType Then(AbstractThread* aResponseThread,
-                  const char* aCallSite,
-                  ResolveRejectFunction&& aResolveRejectFunction)
-  {
-    RefPtr<ThenValueType> thenValue = new ThenValueType(
-      aResponseThread, Move(aResolveRejectFunction), aCallSite);
+    RefPtr<ThenValueType> thenValue =
+      new ThenValueType(aResponseThread, Move(aFunctions)..., aCallSite);
     return ReturnType(aResponseThread, aCallSite, thenValue.forget(), this);
   }
 
