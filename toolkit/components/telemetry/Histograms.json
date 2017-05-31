@@ -13173,6 +13173,15 @@
     "bug_numbers": [1351021],
     "description": "Every time we run an unlabeled runnable, this histogram records the time (in ms) since the last unlabeled runnable ran."
   },
+  "DOCUMENT_DATA_URI_LOADS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1357386],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "Whether a toplevel document uses data: URI? (0=data-navigated, 1=data-typed, 2=nodata)"
+  },
   "VFC_INVALIDATE_LOCK_WAIT_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["jwwang@mozilla.com"],

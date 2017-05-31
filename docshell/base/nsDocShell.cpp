@@ -11018,6 +11018,28 @@ nsDocShell::DoURILoad(nsIURI* aURI,
       new LoadInfo(loadingPrincipal, aTriggeringPrincipal, loadingNode,
                    securityFlags, aContentPolicyType);
 
+  if (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) {
+    enum TopLevelDataState {
+      DATA_NAVIGATED = 0,
+      DATA_TYPED = 1,
+      NO_DATA = 2,
+    };
+    bool isDataURI = (NS_SUCCEEDED(aURI->SchemeIs("data", &isDataURI)) && isDataURI);
+    if (isDataURI) {
+      // In all cases where the toplevel document is navigated to a data: URI
+      // the triggeringPrincipal is a CodeBasePrincipal. In all other cases
+      // e.g. typing a data: URL into the URL-Bar or also clicking a bookmark 
+      // uses a SystemPrincipal as the triggeringPrincipal.
+      if (aTriggeringPrincipal->GetIsCodebasePrincipal()) {
+        Telemetry::Accumulate(Telemetry::DOCUMENT_DATA_URI_LOADS, DATA_NAVIGATED);
+      } else {
+        Telemetry::Accumulate(Telemetry::DOCUMENT_DATA_URI_LOADS, DATA_TYPED);
+      }
+    } else {
+      Telemetry::Accumulate(Telemetry::DOCUMENT_DATA_URI_LOADS, NO_DATA);
+    }
+  }
+
   if (aPrincipalToInherit) {
     loadInfo->SetPrincipalToInherit(aPrincipalToInherit);
   }
