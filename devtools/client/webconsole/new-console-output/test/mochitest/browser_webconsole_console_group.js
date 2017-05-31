@@ -16,19 +16,19 @@ add_task(function* () {
   let hud = toolbox.getCurrentPanel().hud;
 
   const store = hud.ui.newConsoleOutput.getStore();
-  // Adding loggin each time the store is modified in order to check
+  // Adding logging each time the store is modified in order to check
   // the store state in case of failure.
   store.subscribe(() => {
-    const messages = store.getState().messages.messagesById.toJS()
-      .map(message => {
-        return {
+    const messages = store.getState().messages.messagesById
+      .reduce(function (res, message) {
+        res.push({
           id: message.id,
           type: message.type,
           parameters: message.parameters,
           messageText: message.messageText
-        };
-      }
-    );
+        });
+        return res;
+      }, []);
     info("messages : " + JSON.stringify(messages));
   });
 
