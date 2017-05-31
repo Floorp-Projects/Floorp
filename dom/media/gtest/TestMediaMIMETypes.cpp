@@ -184,7 +184,9 @@ TEST(MediaMIMETypes, MediaExtendedMIMEType)
     { "video/mp4; codecs=0", "video/mp4",     false, false, true,  true,  true  },
     { "VIDEO/MP4",           "video/mp4",     false, false, true,  true,  false },
     { "audio/mp4",           "audio/mp4",     false, true,  false, false, false },
-    { "application/x",       "application/x", true, false,  false, false, false }
+    { "video/webm",          "video/webm",    false, false, true,  false, false },
+    { "audio/webm",          "audio/webm",    false, true,  false, false, false },
+    { "application/x",       "application/x", true,  false, false, false, false }
   };
 
   for (const auto& test : tests) {
