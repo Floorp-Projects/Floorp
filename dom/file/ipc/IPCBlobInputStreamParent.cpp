@@ -15,7 +15,7 @@ namespace dom {
 template<typename M>
 /* static */ IPCBlobInputStreamParent*
 IPCBlobInputStreamParent::Create(nsIInputStream* aInputStream, uint64_t aSize,
-                                 nsresult* aRv, M* aManager)
+                                 uint64_t aChildID, nsresult* aRv, M* aManager)
 {
   MOZ_ASSERT(aInputStream);
   MOZ_ASSERT(aRv);
@@ -26,7 +26,7 @@ IPCBlobInputStreamParent::Create(nsIInputStream* aInputStream, uint64_t aSize,
     return nullptr;
   }
 
-  IPCBlobInputStreamStorage::Get()->AddStream(aInputStream, id);
+  IPCBlobInputStreamStorage::Get()->AddStream(aInputStream, id, aChildID);
 
   return new IPCBlobInputStreamParent(id, aSize, aManager);
 }
