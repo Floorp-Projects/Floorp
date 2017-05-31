@@ -4,7 +4,6 @@
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/engines/tabs.js");
 Cu.import("resource://services-sync/engines/history.js");
 Cu.import("resource://services-sync/record.js");
@@ -46,8 +45,8 @@ add_task(async function test_locally_changed_keys() {
     Service.engineManager.unregister("addons");
 
     function corrupt_local_keys() {
-      Service.collectionKeys._default.keyPair = [Weave.Crypto.generateRandomKey(),
-                                                 Weave.Crypto.generateRandomKey()];
+      Service.collectionKeys._default.keyPair = [Svc.Crypto.generateRandomKey(),
+                                                 Svc.Crypto.generateRandomKey()];
     }
 
     _("Setting meta.");

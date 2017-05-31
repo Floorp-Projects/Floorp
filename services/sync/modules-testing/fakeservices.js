@@ -13,7 +13,6 @@ this.EXPORTED_SYMBOLS = [
 
 var {utils: Cu} = Components;
 
-Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 
@@ -96,8 +95,8 @@ this.FakeGUIDService = function FakeGUIDService() {
 this.FakeCryptoService = function FakeCryptoService() {
   this.counter = 0;
 
-  delete Weave.Crypto;  // get rid of the getter first
-  Weave.Crypto = this;
+  delete Svc.Crypto;  // get rid of the getter first
+  Svc.Crypto = this;
 
   CryptoWrapper.prototype.ciphertextHMAC = function ciphertextHMAC(keyBundle) {
     return fakeSHA256HMAC(this.ciphertext);
