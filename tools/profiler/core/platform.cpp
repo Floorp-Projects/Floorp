@@ -479,52 +479,6 @@ uint32_t ActivePS::sNextGeneration = 0;
 // The mutex that guards accesses to CorePS and ActivePS.
 static PSMutex gPSMutex;
 
-// The preferred way to check profiler activeness and features is via
-// ActivePS(). However, that requires locking gPSMutex. There are some hot
-// operations where absolute precision isn't required, so we duplicate the
-// activeness/feature state in a lock-free manner in this class.
-class RacyFeatures
-{
-public:
-  static void SetActive(uint32_t aFeatures)
-  {
-    sActiveAndFeatures = Active | aFeatures;
-  }
-
-  static void SetInactive() { sActiveAndFeatures = 0; }
-
-  static bool IsActive() { return uint32_t(sActiveAndFeatures) & Active; }
-
-  static bool IsActiveWithFeature(uint32_t aFeature)
-  {
-    uint32_t af = sActiveAndFeatures;  // copy it first
-    return (af & Active) && (af & aFeature);
-  }
-
-  static bool IsActiveWithoutPrivacy()
-  {
-    uint32_t af = sActiveAndFeatures;  // copy it first
-    return (af & Active) && !(af & ProfilerFeature::Privacy);
-  }
-
-private:
-  static const uint32_t Active = 1u << 31;
-
-  // Ensure Active doesn't overlap with any of the feature bits.
-  #define NO_OVERLAP(n_, str_, Name_) \
-    static_assert(ProfilerFeature::Name_ != Active, "bad Active value");
-
-  PROFILER_FOR_EACH_FEATURE(NO_OVERLAP);
-
-  #undef NO_OVERLAP
-
-  // We combine the active bit with the feature bits so they can be read or
-  // written in a single atomic operation.
-  static Atomic<uint32_t> sActiveAndFeatures;
-};
-
-Atomic<uint32_t> RacyFeatures::sActiveAndFeatures(0);
-
 // Each live thread has a ThreadInfo, and we store a reference to it in TLS.
 // This class encapsulates that TLS.
 class TLSInfo
@@ -2457,9 +2411,6 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
     mozilla::java::GeckoJavaSampler::Start(javaInterval, 1000);
   }
 #endif
-
-  // At the very end, set up RacyFeatures.
-  RacyFeatures::SetActive(ActivePS::Features(aLock));
 }
 
 void
@@ -2505,9 +2456,6 @@ locked_profiler_stop(PSLockRef aLock)
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
-
-  // At the very start, clear RacyFeatures.
-  RacyFeatures::SetInactive();
 
 #ifdef MOZ_TASK_TRACER
   if (ActivePS::FeatureTaskTracer(aLock)) {
@@ -2651,8 +2599,13 @@ profiler_feature_active(uint32_t aFeature)
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  // This function is hot enough that we use RacyFeatures, not ActivePS.
-  return RacyFeatures::IsActiveWithFeature(aFeature);
+  PSAutoLock lock(gPSMutex);
+
+  if (!ActivePS::Exists(lock)) {
+    return false;
+  }
+
+  return !!(ActivePS::Features(lock) & aFeature);
 }
 
 bool
@@ -2662,8 +2615,9 @@ profiler_is_active()
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  // This function is hot enough that we use RacyFeatures, notActivePS.
-  return RacyFeatures::IsActive();
+  PSAutoLock lock(gPSMutex);
+
+  return ActivePS::Exists(lock);
 }
 
 void
@@ -2903,19 +2857,14 @@ profiler_get_backtrace_noalloc(char *output, size_t outputSize)
 }
 
 static void
-racy_profiler_add_marker(const char* aMarkerName,
-                         ProfilerMarkerPayload* aPayload)
+locked_profiler_add_marker(PSLockRef aLock, const char* aMarkerName,
+                           ProfilerMarkerPayload* aPayload)
 {
   // This function runs both on and off the main thread.
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  // We don't assert that RacyFeatures::IsActiveWithoutPrivacy() is true here,
-  // because it's possible that the result has changed since we tested it in
-  // the caller.
-  //
-  // Because of this imprecision it's possible to miss a marker or record one
-  // we shouldn't. Either way is not a big deal.
+  MOZ_RELEASE_ASSERT(ActivePS::Exists(aLock) &&
+                     !ActivePS::FeaturePrivacy(aLock));
 
   // aPayload must be freed if we return early.
   mozilla::UniquePtr<ProfilerMarkerPayload> payload(aPayload);
@@ -2940,15 +2889,16 @@ profiler_add_marker(const char* aMarkerName, ProfilerMarkerPayload* aPayload)
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
+  PSAutoLock lock(gPSMutex);
+
   // aPayload must be freed if we return early.
   mozilla::UniquePtr<ProfilerMarkerPayload> payload(aPayload);
 
-  // This function is hot enough that we use RacyFeatures, notActivePS.
-  if (RacyFeatures::IsActiveWithoutPrivacy()) {
+  if (!ActivePS::Exists(lock) || ActivePS::FeaturePrivacy(lock)) {
     return;
   }
 
-  racy_profiler_add_marker(aMarkerName, payload.release());
+  locked_profiler_add_marker(lock, aMarkerName, payload.release());
 }
 
 void
@@ -2959,13 +2909,14 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  // This function is hot enough that we use RacyFeatures, notActivePS.
-  if (RacyFeatures::IsActiveWithoutPrivacy()) {
+  PSAutoLock lock(gPSMutex);
+
+  if (!ActivePS::Exists(lock) || ActivePS::FeaturePrivacy(lock)) {
     return;
   }
 
   auto payload = new ProfilerMarkerTracing(aCategory, aKind);
-  racy_profiler_add_marker(aMarkerName, payload);
+  locked_profiler_add_marker(lock, aMarkerName, payload);
 }
 
 void
@@ -2976,14 +2927,15 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  // This function is hot enough that we use RacyFeatures, notActivePS.
-  if (RacyFeatures::IsActiveWithoutPrivacy()) {
+  PSAutoLock lock(gPSMutex);
+
+  if (!ActivePS::Exists(lock) || ActivePS::FeaturePrivacy(lock)) {
     return;
   }
 
   auto payload =
     new ProfilerMarkerTracing(aCategory, aKind, mozilla::Move(aCause));
-  racy_profiler_add_marker(aMarkerName, payload);
+  locked_profiler_add_marker(lock, aMarkerName, payload);
 }
 
 void
