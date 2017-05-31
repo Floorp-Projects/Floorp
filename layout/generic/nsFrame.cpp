@@ -712,6 +712,8 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
                "Frames should be removed before destruction.");
   NS_ASSERTION(aDestructRoot, "Must specify destruct root");
   MOZ_ASSERT(!HasAbsolutelyPositionedChildren());
+  MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT),
+             "NS_FRAME_PART_OF_IBSPLIT set on non-nsContainerFrame?");
 
   nsSVGEffects::InvalidateDirectRenderingObservers(this);
 
@@ -735,28 +737,6 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
                  "this might mean we have a stray placeholder in the tree.");
     if (placeholder) {
       placeholder->SetOutOfFlowFrame(nullptr);
-    }
-  }
-
-  // If we have any IB split siblings, clear their references to us.
-  // (Note: This has to happen before we clear our Properties() table.)
-  if (mState & NS_FRAME_PART_OF_IBSPLIT) {
-    // Delete previous sibling's reference to me.
-    nsIFrame* prevSib = GetProperty(nsIFrame::IBSplitPrevSibling());
-    if (prevSib) {
-      NS_WARNING_ASSERTION(
-        this == prevSib->GetProperty(nsIFrame::IBSplitSibling()),
-        "IB sibling chain is inconsistent");
-      prevSib->DeleteProperty(nsIFrame::IBSplitSibling());
-    }
-
-    // Delete next sibling's reference to me.
-    nsIFrame* nextSib = GetProperty(nsIFrame::IBSplitSibling());
-    if (nextSib) {
-      NS_WARNING_ASSERTION(
-        this == nextSib->GetProperty(nsIFrame::IBSplitPrevSibling()),
-        "IB sibling chain is inconsistent");
-      nextSib->DeleteProperty(nsIFrame::IBSplitPrevSibling());
     }
   }
 
