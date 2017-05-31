@@ -1,9 +1,10 @@
-# IdnaMappingTable-8.0.0.txt
-# Date: 2015-05-02 12:42:14 GMT [MD]
+# IdnaMappingTable-9.0.0.txt
+# Date: 2016-06-16, 13:35:01 GMT
+# © 2016 Unicode®, Inc.
+# Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+# For terms of use, see http://www.unicode.org/terms_of_use.html
 #
 # Unicode IDNA Compatible Preprocessing (UTS #46)
-# Copyright (c) 1991-2015 Unicode, Inc.
-# For terms of use, see http://www.unicode.org/terms_of_use.html
 # For documentation, see http://www.unicode.org/reports/tr46/
 
 0000..002C    ; disallowed_STD3_valid                  # 1.1  <control-0000>..COMMA
@@ -969,7 +970,11 @@
 08A2..08AC    ; valid                                  # 6.1  ARABIC LETTER JEEM WITH TWO DOTS ABOVE..ARABIC LETTER ROHINGYA YEH
 08AD..08B2    ; valid                                  # 7.0  ARABIC LETTER LOW ALEF..ARABIC LETTER ZAIN WITH INVERTED V ABOVE
 08B3..08B4    ; valid                                  # 8.0  ARABIC LETTER AIN WITH THREE DOTS BELOW..ARABIC LETTER KAF WITH DOT BELOW
-08B5..08E2    ; disallowed                             # NA   <reserved-08B5>..<reserved-08E2>
+08B5          ; disallowed                             # NA   <reserved-08B5>
+08B6..08BD    ; valid                                  # 9.0  ARABIC LETTER BEH WITH SMALL MEEM ABOVE..ARABIC LETTER AFRICAN NOON
+08BE..08D3    ; disallowed                             # NA   <reserved-08BE>..<reserved-08D3>
+08D4..08E1    ; valid                                  # 9.0  ARABIC SMALL HIGH WORD AR-RUB..ARABIC SMALL HIGH SIGN SAFHA
+08E2          ; disallowed                             # 9.0  ARABIC DISPUTED END OF AYAH
 08E3          ; valid                                  # 8.0  ARABIC TURNED DAMMA BELOW
 08E4..08FE    ; valid                                  # 6.1  ARABIC CURLY FATHA..ARABIC DAMMA WITH DOT
 08FF          ; valid                                  # 7.0  ARABIC MARK SIDEWAYS NOON GHUNNA
@@ -1215,7 +1220,7 @@
 0C66..0C6F    ; valid                                  # 1.1  TELUGU DIGIT ZERO..TELUGU DIGIT NINE
 0C70..0C77    ; disallowed                             # NA   <reserved-0C70>..<reserved-0C77>
 0C78..0C7F    ; valid                  ;      ; NV8    # 5.1  TELUGU FRACTION DIGIT ZERO FOR ODD POWERS OF FOUR..TELUGU SIGN TUUMU
-0C80          ; disallowed                             # NA   <reserved-0C80>
+0C80          ; valid                                  # 9.0  KANNADA SIGN SPACING CANDRABINDU
 0C81          ; valid                                  # 7.0  KANNADA SIGN CANDRABINDU
 0C82..0C83    ; valid                                  # 1.1  KANNADA SIGN ANUSVARA..KANNADA SIGN VISARGA
 0C84          ; disallowed                             # NA   <reserved-0C84>
@@ -1267,16 +1272,18 @@
 0D49          ; disallowed                             # NA   <reserved-0D49>
 0D4A..0D4D    ; valid                                  # 1.1  MALAYALAM VOWEL SIGN O..MALAYALAM SIGN VIRAMA
 0D4E          ; valid                                  # 6.0  MALAYALAM LETTER DOT REPH
-0D4F..0D56    ; disallowed                             # NA   <reserved-0D4F>..<reserved-0D56>
+0D4F          ; valid                  ;      ; NV8    # 9.0  MALAYALAM SIGN PARA
+0D50..0D53    ; disallowed                             # NA   <reserved-0D50>..<reserved-0D53>
+0D54..0D56    ; valid                                  # 9.0  MALAYALAM LETTER CHILLU M..MALAYALAM LETTER CHILLU LLL
 0D57          ; valid                                  # 1.1  MALAYALAM AU LENGTH MARK
-0D58..0D5E    ; disallowed                             # NA   <reserved-0D58>..<reserved-0D5E>
+0D58..0D5E    ; valid                  ;      ; NV8    # 9.0  MALAYALAM FRACTION ONE ONE-HUNDRED-AND-SIXTIETH..MALAYALAM FRACTION ONE FIFTH
 0D5F          ; valid                                  # 8.0  MALAYALAM LETTER ARCHAIC II
 0D60..0D61    ; valid                                  # 1.1  MALAYALAM LETTER VOCALIC RR..MALAYALAM LETTER VOCALIC LL
 0D62..0D63    ; valid                                  # 5.1  MALAYALAM VOWEL SIGN VOCALIC L..MALAYALAM VOWEL SIGN VOCALIC LL
 0D64..0D65    ; disallowed                             # NA   <reserved-0D64>..<reserved-0D65>
 0D66..0D6F    ; valid                                  # 1.1  MALAYALAM DIGIT ZERO..MALAYALAM DIGIT NINE
 0D70..0D75    ; valid                  ;      ; NV8    # 5.1  MALAYALAM NUMBER TEN..MALAYALAM FRACTION THREE QUARTERS
-0D76..0D78    ; disallowed                             # NA   <reserved-0D76>..<reserved-0D78>
+0D76..0D78    ; valid                  ;      ; NV8    # 9.0  MALAYALAM FRACTION ONE SIXTEENTH..MALAYALAM FRACTION THREE SIXTEENTHS
 0D79          ; valid                  ;      ; NV8    # 5.1  MALAYALAM DATE MARK
 0D7A..0D7F    ; valid                                  # 5.1  MALAYALAM LETTER CHILLU NN..MALAYALAM LETTER CHILLU K
 0D80..0D81    ; disallowed                             # NA   <reserved-0D80>..<reserved-0D81>
@@ -1655,7 +1662,15 @@
 1C4A..1C4C    ; disallowed                             # NA   <reserved-1C4A>..<reserved-1C4C>
 1C4D..1C7D    ; valid                                  # 5.1  LEPCHA LETTER TTA..OL CHIKI AHAD
 1C7E..1C7F    ; valid                  ;      ; NV8    # 5.1  OL CHIKI PUNCTUATION MUCAAD..OL CHIKI PUNCTUATION DOUBLE MUCAAD
-1C80..1CBF    ; disallowed                             # NA   <reserved-1C80>..<reserved-1CBF>
+1C80          ; mapped                 ; 0432          # 9.0  CYRILLIC SMALL LETTER ROUNDED VE
+1C81          ; mapped                 ; 0434          # 9.0  CYRILLIC SMALL LETTER LONG-LEGGED DE
+1C82          ; mapped                 ; 043E          # 9.0  CYRILLIC SMALL LETTER NARROW O
+1C83          ; mapped                 ; 0441          # 9.0  CYRILLIC SMALL LETTER WIDE ES
+1C84..1C85    ; mapped                 ; 0442          # 9.0  CYRILLIC SMALL LETTER TALL TE..CYRILLIC SMALL LETTER THREE-LEGGED TE
+1C86          ; mapped                 ; 044A          # 9.0  CYRILLIC SMALL LETTER TALL HARD SIGN
+1C87          ; mapped                 ; 0463          # 9.0  CYRILLIC SMALL LETTER TALL YAT
+1C88          ; mapped                 ; A64B          # 9.0  CYRILLIC SMALL LETTER UNBLENDED UK
+1C89..1CBF    ; disallowed                             # NA   <reserved-1C89>..<reserved-1CBF>
 1CC0..1CC7    ; valid                  ;      ; NV8    # 6.1  SUNDANESE PUNCTUATION BINDU SURYA..SUNDANESE PUNCTUATION BINDU BA SATANGA
 1CC8..1CCF    ; disallowed                             # NA   <reserved-1CC8>..<reserved-1CCF>
 1CD0..1CD2    ; valid                                  # 5.2  VEDIC TONE KARSHANA..VEDIC TONE PRENKHA
@@ -1774,7 +1789,8 @@
 1DC4..1DCA    ; valid                                  # 5.0  COMBINING MACRON-ACUTE..COMBINING LATIN SMALL LETTER R BELOW
 1DCB..1DE6    ; valid                                  # 5.1  COMBINING BREVE-MACRON..COMBINING LATIN SMALL LETTER Z
 1DE7..1DF5    ; valid                                  # 7.0  COMBINING LATIN SMALL LETTER ALPHA..COMBINING UP TACK ABOVE
-1DF6..1DFB    ; disallowed                             # NA   <reserved-1DF6>..<reserved-1DFB>
+1DF6..1DFA    ; disallowed                             # NA   <reserved-1DF6>..<reserved-1DFA>
+1DFB          ; valid                                  # 9.0  COMBINING DELETION MARK
 1DFC          ; valid                                  # 6.0  COMBINING DOUBLE INVERTED BREVE BELOW
 1DFD          ; valid                                  # 5.2  COMBINING ALMOST EQUAL TO BELOW
 1DFE..1DFF    ; valid                                  # 5.0  COMBINING LEFT ARROWHEAD ABOVE..COMBINING RIGHT ARROWHEAD AND DOWN ARROWHEAD BELOW
@@ -2480,7 +2496,8 @@
 23E8          ; valid                  ;      ; NV8    # 5.2  DECIMAL EXPONENT SYMBOL
 23E9..23F3    ; valid                  ;      ; NV8    # 6.0  BLACK RIGHT-POINTING DOUBLE TRIANGLE..HOURGLASS WITH FLOWING SAND
 23F4..23FA    ; valid                  ;      ; NV8    # 7.0  BLACK MEDIUM LEFT-POINTING TRIANGLE..BLACK CIRCLE FOR RECORD
-23FB..23FF    ; disallowed                             # NA   <reserved-23FB>..<reserved-23FF>
+23FB..23FE    ; valid                  ;      ; NV8    # 9.0  POWER SYMBOL..POWER SLEEP SYMBOL
+23FF          ; disallowed                             # NA   <reserved-23FF>
 2400..2424    ; valid                  ;      ; NV8    # 1.1  SYMBOL FOR NULL..SYMBOL FOR NEWLINE
 2425..2426    ; valid                  ;      ; NV8    # 3.0  SYMBOL FOR DELETE FORM TWO..SYMBOL FOR SUBSTITUTE FORM TWO
 2427..243F    ; disallowed                             # NA   <reserved-2427>..<reserved-243F>
@@ -2932,7 +2949,8 @@
 2E31          ; valid                  ;      ; NV8    # 5.2  WORD SEPARATOR MIDDLE DOT
 2E32..2E3B    ; valid                  ;      ; NV8    # 6.1  TURNED COMMA..THREE-EM DASH
 2E3C..2E42    ; valid                  ;      ; NV8    # 7.0  STENOGRAPHIC FULL STOP..DOUBLE LOW-REVERSED-9 QUOTATION MARK
-2E43..2E7F    ; disallowed                             # NA   <reserved-2E43>..<reserved-2E7F>
+2E43..2E44    ; valid                  ;      ; NV8    # 9.0  DASH WITH LEFT UPTURN..DOUBLE SUSPENSION MARK
+2E45..2E7F    ; disallowed                             # NA   <reserved-2E45>..<reserved-2E7F>
 2E80..2E99    ; valid                  ;      ; NV8    # 3.0  CJK RADICAL REPEAT..CJK RADICAL RAP
 2E9A          ; disallowed                             # NA   <reserved-2E9A>
 2E9B..2E9E    ; valid                  ;      ; NV8    # 3.0  CJK RADICAL CHOKE..CJK RADICAL DEATH
@@ -4061,7 +4079,8 @@ A7AA          ; mapped                 ; 0266          # 6.1  LATIN CAPITAL LETT
 A7AB          ; mapped                 ; 025C          # 7.0  LATIN CAPITAL LETTER REVERSED OPEN E
 A7AC          ; mapped                 ; 0261          # 7.0  LATIN CAPITAL LETTER SCRIPT G
 A7AD          ; mapped                 ; 026C          # 7.0  LATIN CAPITAL LETTER L WITH BELT
-A7AE..A7AF    ; disallowed                             # NA   <reserved-A7AE>..<reserved-A7AF>
+A7AE          ; mapped                 ; 026A          # 9.0  LATIN CAPITAL LETTER SMALL CAPITAL I
+A7AF          ; disallowed                             # NA   <reserved-A7AF>
 A7B0          ; mapped                 ; 029E          # 7.0  LATIN CAPITAL LETTER TURNED K
 A7B1          ; mapped                 ; 0287          # 7.0  LATIN CAPITAL LETTER TURNED T
 A7B2          ; mapped                 ; 029D          # 8.0  LATIN CAPITAL LETTER J WITH CROSSED-TAIL
@@ -4085,7 +4104,8 @@ A840..A873    ; valid                                  # 5.0  PHAGS-PA LETTER KA
 A874..A877    ; valid                  ;      ; NV8    # 5.0  PHAGS-PA SINGLE HEAD MARK..PHAGS-PA MARK DOUBLE SHAD
 A878..A87F    ; disallowed                             # NA   <reserved-A878>..<reserved-A87F>
 A880..A8C4    ; valid                                  # 5.1  SAURASHTRA SIGN ANUSVARA..SAURASHTRA SIGN VIRAMA
-A8C5..A8CD    ; disallowed                             # NA   <reserved-A8C5>..<reserved-A8CD>
+A8C5          ; valid                                  # 9.0  SAURASHTRA SIGN CANDRABINDU
+A8C6..A8CD    ; disallowed                             # NA   <reserved-A8C6>..<reserved-A8CD>
 A8CE..A8CF    ; valid                  ;      ; NV8    # 5.1  SAURASHTRA DANDA..SAURASHTRA DOUBLE DANDA
 A8D0..A8D9    ; valid                                  # 5.1  SAURASHTRA DIGIT ZERO..SAURASHTRA DIGIT NINE
 A8DA..A8DF    ; disallowed                             # NA   <reserved-A8DA>..<reserved-A8DF>
@@ -5648,7 +5668,8 @@ FFFE..FFFF    ; disallowed                             # 1.1  <noncharacter-FFFE
 10137..1013F  ; valid                  ;      ; NV8    # 4.0  AEGEAN WEIGHT BASE UNIT..AEGEAN MEASURE THIRD SUBUNIT
 10140..1018A  ; valid                  ;      ; NV8    # 4.1  GREEK ACROPHONIC ATTIC ONE QUARTER..GREEK ZERO SIGN
 1018B..1018C  ; valid                  ;      ; NV8    # 7.0  GREEK ONE QUARTER SIGN..GREEK SINUSOID SIGN
-1018D..1018F  ; disallowed                             # NA   <reserved-1018D>..<reserved-1018F>
+1018D..1018E  ; valid                  ;      ; NV8    # 9.0  GREEK INDICTION SIGN..NOMISMA SIGN
+1018F         ; disallowed                             # NA   <reserved-1018F>
 10190..1019B  ; valid                  ;      ; NV8    # 5.1  ROMAN SEXTANS SIGN..ROMAN CENTURIAL SIGN
 1019C..1019F  ; disallowed                             # NA   <reserved-1019C>..<reserved-1019F>
 101A0         ; valid                  ;      ; NV8    # 7.0  GREEK SYMBOL TAU RHO
@@ -5726,7 +5747,46 @@ FFFE..FFFF    ; disallowed                             # 1.1  <noncharacter-FFFE
 1044E..1049D  ; valid                                  # 4.0  DESERET SMALL LETTER OI..OSMANYA LETTER OO
 1049E..1049F  ; disallowed                             # NA   <reserved-1049E>..<reserved-1049F>
 104A0..104A9  ; valid                                  # 4.0  OSMANYA DIGIT ZERO..OSMANYA DIGIT NINE
-104AA..104FF  ; disallowed                             # NA   <reserved-104AA>..<reserved-104FF>
+104AA..104AF  ; disallowed                             # NA   <reserved-104AA>..<reserved-104AF>
+104B0         ; mapped                 ; 104D8         # 9.0  OSAGE CAPITAL LETTER A
+104B1         ; mapped                 ; 104D9         # 9.0  OSAGE CAPITAL LETTER AI
+104B2         ; mapped                 ; 104DA         # 9.0  OSAGE CAPITAL LETTER AIN
+104B3         ; mapped                 ; 104DB         # 9.0  OSAGE CAPITAL LETTER AH
+104B4         ; mapped                 ; 104DC         # 9.0  OSAGE CAPITAL LETTER BRA
+104B5         ; mapped                 ; 104DD         # 9.0  OSAGE CAPITAL LETTER CHA
+104B6         ; mapped                 ; 104DE         # 9.0  OSAGE CAPITAL LETTER EHCHA
+104B7         ; mapped                 ; 104DF         # 9.0  OSAGE CAPITAL LETTER E
+104B8         ; mapped                 ; 104E0         # 9.0  OSAGE CAPITAL LETTER EIN
+104B9         ; mapped                 ; 104E1         # 9.0  OSAGE CAPITAL LETTER HA
+104BA         ; mapped                 ; 104E2         # 9.0  OSAGE CAPITAL LETTER HYA
+104BB         ; mapped                 ; 104E3         # 9.0  OSAGE CAPITAL LETTER I
+104BC         ; mapped                 ; 104E4         # 9.0  OSAGE CAPITAL LETTER KA
+104BD         ; mapped                 ; 104E5         # 9.0  OSAGE CAPITAL LETTER EHKA
+104BE         ; mapped                 ; 104E6         # 9.0  OSAGE CAPITAL LETTER KYA
+104BF         ; mapped                 ; 104E7         # 9.0  OSAGE CAPITAL LETTER LA
+104C0         ; mapped                 ; 104E8         # 9.0  OSAGE CAPITAL LETTER MA
+104C1         ; mapped                 ; 104E9         # 9.0  OSAGE CAPITAL LETTER NA
+104C2         ; mapped                 ; 104EA         # 9.0  OSAGE CAPITAL LETTER O
+104C3         ; mapped                 ; 104EB         # 9.0  OSAGE CAPITAL LETTER OIN
+104C4         ; mapped                 ; 104EC         # 9.0  OSAGE CAPITAL LETTER PA
+104C5         ; mapped                 ; 104ED         # 9.0  OSAGE CAPITAL LETTER EHPA
+104C6         ; mapped                 ; 104EE         # 9.0  OSAGE CAPITAL LETTER SA
+104C7         ; mapped                 ; 104EF         # 9.0  OSAGE CAPITAL LETTER SHA
+104C8         ; mapped                 ; 104F0         # 9.0  OSAGE CAPITAL LETTER TA
+104C9         ; mapped                 ; 104F1         # 9.0  OSAGE CAPITAL LETTER EHTA
+104CA         ; mapped                 ; 104F2         # 9.0  OSAGE CAPITAL LETTER TSA
+104CB         ; mapped                 ; 104F3         # 9.0  OSAGE CAPITAL LETTER EHTSA
+104CC         ; mapped                 ; 104F4         # 9.0  OSAGE CAPITAL LETTER TSHA
+104CD         ; mapped                 ; 104F5         # 9.0  OSAGE CAPITAL LETTER DHA
+104CE         ; mapped                 ; 104F6         # 9.0  OSAGE CAPITAL LETTER U
+104CF         ; mapped                 ; 104F7         # 9.0  OSAGE CAPITAL LETTER WA
+104D0         ; mapped                 ; 104F8         # 9.0  OSAGE CAPITAL LETTER KHA
+104D1         ; mapped                 ; 104F9         # 9.0  OSAGE CAPITAL LETTER GHA
+104D2         ; mapped                 ; 104FA         # 9.0  OSAGE CAPITAL LETTER ZA
+104D3         ; mapped                 ; 104FB         # 9.0  OSAGE CAPITAL LETTER ZHA
+104D4..104D7  ; disallowed                             # NA   <reserved-104D4>..<reserved-104D7>
+104D8..104FB  ; valid                                  # 9.0  OSAGE SMALL LETTER A..OSAGE SMALL LETTER ZHA
+104FC..104FF  ; disallowed                             # NA   <reserved-104FC>..<reserved-104FF>
 10500..10527  ; valid                                  # 7.0  ELBASAN LETTER A..ELBASAN LETTER KHE
 10528..1052F  ; disallowed                             # NA   <reserved-10528>..<reserved-1052F>
 10530..10563  ; valid                                  # 7.0  CAUCASIAN ALBANIAN LETTER ALT..CAUCASIAN ALBANIAN LETTER KIW
@@ -5926,7 +5986,8 @@ FFFE..FFFF    ; disallowed                             # 1.1  <noncharacter-FFFE
 11212         ; disallowed                             # NA   <reserved-11212>
 11213..11237  ; valid                                  # 7.0  KHOJKI LETTER NYA..KHOJKI SIGN SHADDA
 11238..1123D  ; valid                  ;      ; NV8    # 7.0  KHOJKI DANDA..KHOJKI ABBREVIATION SIGN
-1123E..1127F  ; disallowed                             # NA   <reserved-1123E>..<reserved-1127F>
+1123E         ; valid                                  # 9.0  KHOJKI SIGN SUKUN
+1123F..1127F  ; disallowed                             # NA   <reserved-1123F>..<reserved-1127F>
 11280..11286  ; valid                                  # 8.0  MULTANI LETTER A..MULTANI LETTER GA
 11287         ; disallowed                             # NA   <reserved-11287>
 11288         ; valid                                  # 8.0  MULTANI LETTER GHA
@@ -5972,7 +6033,15 @@ FFFE..FFFF    ; disallowed                             # 1.1  <noncharacter-FFFE
 11366..1136C  ; valid                                  # 7.0  COMBINING GRANTHA DIGIT ZERO..COMBINING GRANTHA DIGIT SIX
 1136D..1136F  ; disallowed                             # NA   <reserved-1136D>..<reserved-1136F>
 11370..11374  ; valid                                  # 7.0  COMBINING GRANTHA LETTER A..COMBINING GRANTHA LETTER PA
-11375..1147F  ; disallowed                             # NA   <reserved-11375>..<reserved-1147F>
+11375..113FF  ; disallowed                             # NA   <reserved-11375>..<reserved-113FF>
+11400..1144A  ; valid                                  # 9.0  NEWA LETTER A..NEWA SIDDHI
+1144B..1144F  ; valid                  ;      ; NV8    # 9.0  NEWA DANDA..NEWA ABBREVIATION SIGN
+11450..11459  ; valid                                  # 9.0  NEWA DIGIT ZERO..NEWA DIGIT NINE
+1145A         ; disallowed                             # NA   <reserved-1145A>
+1145B         ; valid                  ;      ; NV8    # 9.0  NEWA PLACEHOLDER MARK
+1145C         ; disallowed                             # NA   <reserved-1145C>
+1145D         ; valid                  ;      ; NV8    # 9.0  NEWA INSERTION SIGN
+1145E..1147F  ; disallowed                             # NA   <reserved-1145E>..<reserved-1147F>
 11480..114C5  ; valid                                  # 7.0  TIRHUTA ANJI..TIRHUTA GVANG
 114C6         ; valid                  ;      ; NV8    # 7.0  TIRHUTA ABBREVIATION SIGN
 114C7         ; valid                                  # 7.0  TIRHUTA OM
@@ -5991,7 +6060,9 @@ FFFE..FFFF    ; disallowed                             # 1.1  <noncharacter-FFFE
 11644         ; valid                                  # 7.0  MODI SIGN HUVA
 11645..1164F  ; disallowed                             # NA   <reserved-11645>..<reserved-1164F>
 11650..11659  ; valid                                  # 7.0  MODI DIGIT ZERO..MODI DIGIT NINE
-1165A..1167F  ; disallowed                             # NA   <reserved-1165A>..<reserved-1167F>
+1165A..1165F  ; disallowed                             # NA   <reserved-1165A>..<reserved-1165F>
+11660..1166C  ; valid                  ;      ; NV8    # 9.0  MONGOLIAN BIRGA WITH ORNAMENT..MONGOLIAN TURNED SWIRL BIRGA WITH DOUBLE ORNAMENT
+1166D..1167F  ; disallowed                             # NA   <reserved-1166D>..<reserved-1167F>
 11680..116B7  ; valid                                  # 6.1  TAKRI LETTER A..TAKRI SIGN NUKTA
 116B8..116BF  ; disallowed                             # NA   <reserved-116B8>..<reserved-116BF>
 116C0..116C9  ; valid                                  # 6.1  TAKRI DIGIT ZERO..TAKRI DIGIT NINE
@@ -6041,7 +6112,24 @@ FFFE..FFFF    ; disallowed                             # 1.1  <noncharacter-FFFE
 118FF         ; valid                                  # 7.0  WARANG CITI OM
 11900..11ABF  ; disallowed                             # NA   <reserved-11900>..<reserved-11ABF>
 11AC0..11AF8  ; valid                                  # 7.0  PAU CIN HAU LETTER PA..PAU CIN HAU GLOTTAL STOP FINAL
-11AF9..11FFF  ; disallowed                             # NA   <reserved-11AF9>..<reserved-11FFF>
+11AF9..11BFF  ; disallowed                             # NA   <reserved-11AF9>..<reserved-11BFF>
+11C00..11C08  ; valid                                  # 9.0  BHAIKSUKI LETTER A..BHAIKSUKI LETTER VOCALIC L
+11C09         ; disallowed                             # NA   <reserved-11C09>
+11C0A..11C36  ; valid                                  # 9.0  BHAIKSUKI LETTER E..BHAIKSUKI VOWEL SIGN VOCALIC L
+11C37         ; disallowed                             # NA   <reserved-11C37>
+11C38..11C40  ; valid                                  # 9.0  BHAIKSUKI VOWEL SIGN E..BHAIKSUKI SIGN AVAGRAHA
+11C41..11C45  ; valid                  ;      ; NV8    # 9.0  BHAIKSUKI DANDA..BHAIKSUKI GAP FILLER-2
+11C46..11C4F  ; disallowed                             # NA   <reserved-11C46>..<reserved-11C4F>
+11C50..11C59  ; valid                                  # 9.0  BHAIKSUKI DIGIT ZERO..BHAIKSUKI DIGIT NINE
+11C5A..11C6C  ; valid                  ;      ; NV8    # 9.0  BHAIKSUKI NUMBER ONE..BHAIKSUKI HUNDREDS UNIT MARK
+11C6D..11C6F  ; disallowed                             # NA   <reserved-11C6D>..<reserved-11C6F>
+11C70..11C71  ; valid                  ;      ; NV8    # 9.0  MARCHEN HEAD MARK..MARCHEN MARK SHAD
+11C72..11C8F  ; valid                                  # 9.0  MARCHEN LETTER KA..MARCHEN LETTER A
+11C90..11C91  ; disallowed                             # NA   <reserved-11C90>..<reserved-11C91>
+11C92..11CA7  ; valid                                  # 9.0  MARCHEN SUBJOINED LETTER KA..MARCHEN SUBJOINED LETTER ZA
+11CA8         ; disallowed                             # NA   <reserved-11CA8>
+11CA9..11CB6  ; valid                                  # 9.0  MARCHEN SUBJOINED LETTER YA..MARCHEN SIGN CANDRABINDU
+11CB7..11FFF  ; disallowed                             # NA   <reserved-11CB7>..<reserved-11FFF>
 12000..1236E  ; valid                                  # 5.0  CUNEIFORM SIGN A..CUNEIFORM SIGN ZUM
 1236F..12398  ; valid                                  # 7.0  CUNEIFORM SIGN KAP ELAMITE..CUNEIFORM SIGN UM TIMES ME
 12399         ; valid                                  # 8.0  CUNEIFORM SIGN U U
@@ -6089,7 +6177,13 @@ FFFE..FFFF    ; disallowed                             # 1.1  <noncharacter-FFFE
 16F50..16F7E  ; valid                                  # 6.1  MIAO LETTER NASALIZATION..MIAO VOWEL SIGN NG
 16F7F..16F8E  ; disallowed                             # NA   <reserved-16F7F>..<reserved-16F8E>
 16F8F..16F9F  ; valid                                  # 6.1  MIAO TONE RIGHT..MIAO LETTER REFORMED TONE-8
-16FA0..1AFFF  ; disallowed                             # NA   <reserved-16FA0>..<reserved-1AFFF>
+16FA0..16FDF  ; disallowed                             # NA   <reserved-16FA0>..<reserved-16FDF>
+16FE0         ; valid                                  # 9.0  TANGUT ITERATION MARK
+16FE1..16FFF  ; disallowed                             # NA   <reserved-16FE1>..<reserved-16FFF>
+17000..187EC  ; valid                                  # 9.0  TANGUT IDEOGRAPH-17000..TANGUT IDEOGRAPH-187EC
+187ED..187FF  ; disallowed                             # NA   <reserved-187ED>..<reserved-187FF>
+18800..18AF2  ; valid                                  # 9.0  TANGUT COMPONENT-001..TANGUT COMPONENT-755
+18AF3..1AFFF  ; disallowed                             # NA   <reserved-18AF3>..<reserved-1AFFF>
 1B000..1B001  ; valid                                  # 6.0  KATAKANA LETTER ARCHAIC E..HIRAGANA LETTER ARCHAIC YE
 1B002..1BBFF  ; disallowed                             # NA   <reserved-1B002>..<reserved-1BBFF>
 1BC00..1BC6A  ; valid                                  # 7.0  DUPLOYAN LETTER H..DUPLOYAN LETTER VOCALIC M
@@ -7159,12 +7253,62 @@ FFFE..FFFF    ; disallowed                             # 1.1  <noncharacter-FFFE
 1DA9B..1DA9F  ; valid                                  # 8.0  SIGNWRITING FILL MODIFIER-2..SIGNWRITING FILL MODIFIER-6
 1DAA0         ; disallowed                             # NA   <reserved-1DAA0>
 1DAA1..1DAAF  ; valid                                  # 8.0  SIGNWRITING ROTATION MODIFIER-2..SIGNWRITING ROTATION MODIFIER-16
-1DAB0..1E7FF  ; disallowed                             # NA   <reserved-1DAB0>..<reserved-1E7FF>
+1DAB0..1DFFF  ; disallowed                             # NA   <reserved-1DAB0>..<reserved-1DFFF>
+1E000..1E006  ; valid                                  # 9.0  COMBINING GLAGOLITIC LETTER AZU..COMBINING GLAGOLITIC LETTER ZHIVETE
+1E007         ; disallowed                             # NA   <reserved-1E007>
+1E008..1E018  ; valid                                  # 9.0  COMBINING GLAGOLITIC LETTER ZEMLJA..COMBINING GLAGOLITIC LETTER HERU
+1E019..1E01A  ; disallowed                             # NA   <reserved-1E019>..<reserved-1E01A>
+1E01B..1E021  ; valid                                  # 9.0  COMBINING GLAGOLITIC LETTER SHTA..COMBINING GLAGOLITIC LETTER YATI
+1E022         ; disallowed                             # NA   <reserved-1E022>
+1E023..1E024  ; valid                                  # 9.0  COMBINING GLAGOLITIC LETTER YU..COMBINING GLAGOLITIC LETTER SMALL YUS
+1E025         ; disallowed                             # NA   <reserved-1E025>
+1E026..1E02A  ; valid                                  # 9.0  COMBINING GLAGOLITIC LETTER YO..COMBINING GLAGOLITIC LETTER FITA
+1E02B..1E7FF  ; disallowed                             # NA   <reserved-1E02B>..<reserved-1E7FF>
 1E800..1E8C4  ; valid                                  # 7.0  MENDE KIKAKUI SYLLABLE M001 KI..MENDE KIKAKUI SYLLABLE M060 NYON
 1E8C5..1E8C6  ; disallowed                             # NA   <reserved-1E8C5>..<reserved-1E8C6>
 1E8C7..1E8CF  ; valid                  ;      ; NV8    # 7.0  MENDE KIKAKUI DIGIT ONE..MENDE KIKAKUI DIGIT NINE
 1E8D0..1E8D6  ; valid                                  # 7.0  MENDE KIKAKUI COMBINING NUMBER TEENS..MENDE KIKAKUI COMBINING NUMBER MILLIONS
-1E8D7..1EDFF  ; disallowed                             # NA   <reserved-1E8D7>..<reserved-1EDFF>
+1E8D7..1E8FF  ; disallowed                             # NA   <reserved-1E8D7>..<reserved-1E8FF>
+1E900         ; mapped                 ; 1E922         # 9.0  ADLAM CAPITAL LETTER ALIF
+1E901         ; mapped                 ; 1E923         # 9.0  ADLAM CAPITAL LETTER DAALI
+1E902         ; mapped                 ; 1E924         # 9.0  ADLAM CAPITAL LETTER LAAM
+1E903         ; mapped                 ; 1E925         # 9.0  ADLAM CAPITAL LETTER MIIM
+1E904         ; mapped                 ; 1E926         # 9.0  ADLAM CAPITAL LETTER BA
+1E905         ; mapped                 ; 1E927         # 9.0  ADLAM CAPITAL LETTER SINNYIIYHE
+1E906         ; mapped                 ; 1E928         # 9.0  ADLAM CAPITAL LETTER PE
+1E907         ; mapped                 ; 1E929         # 9.0  ADLAM CAPITAL LETTER BHE
+1E908         ; mapped                 ; 1E92A         # 9.0  ADLAM CAPITAL LETTER RA
+1E909         ; mapped                 ; 1E92B         # 9.0  ADLAM CAPITAL LETTER E
+1E90A         ; mapped                 ; 1E92C         # 9.0  ADLAM CAPITAL LETTER FA
+1E90B         ; mapped                 ; 1E92D         # 9.0  ADLAM CAPITAL LETTER I
+1E90C         ; mapped                 ; 1E92E         # 9.0  ADLAM CAPITAL LETTER O
+1E90D         ; mapped                 ; 1E92F         # 9.0  ADLAM CAPITAL LETTER DHA
+1E90E         ; mapped                 ; 1E930         # 9.0  ADLAM CAPITAL LETTER YHE
+1E90F         ; mapped                 ; 1E931         # 9.0  ADLAM CAPITAL LETTER WAW
+1E910         ; mapped                 ; 1E932         # 9.0  ADLAM CAPITAL LETTER NUN
+1E911         ; mapped                 ; 1E933         # 9.0  ADLAM CAPITAL LETTER KAF
+1E912         ; mapped                 ; 1E934         # 9.0  ADLAM CAPITAL LETTER YA
+1E913         ; mapped                 ; 1E935         # 9.0  ADLAM CAPITAL LETTER U
+1E914         ; mapped                 ; 1E936         # 9.0  ADLAM CAPITAL LETTER JIIM
+1E915         ; mapped                 ; 1E937         # 9.0  ADLAM CAPITAL LETTER CHI
+1E916         ; mapped                 ; 1E938         # 9.0  ADLAM CAPITAL LETTER HA
+1E917         ; mapped                 ; 1E939         # 9.0  ADLAM CAPITAL LETTER QAAF
+1E918         ; mapped                 ; 1E93A         # 9.0  ADLAM CAPITAL LETTER GA
+1E919         ; mapped                 ; 1E93B         # 9.0  ADLAM CAPITAL LETTER NYA
+1E91A         ; mapped                 ; 1E93C         # 9.0  ADLAM CAPITAL LETTER TU
+1E91B         ; mapped                 ; 1E93D         # 9.0  ADLAM CAPITAL LETTER NHA
+1E91C         ; mapped                 ; 1E93E         # 9.0  ADLAM CAPITAL LETTER VA
+1E91D         ; mapped                 ; 1E93F         # 9.0  ADLAM CAPITAL LETTER KHA
+1E91E         ; mapped                 ; 1E940         # 9.0  ADLAM CAPITAL LETTER GBE
+1E91F         ; mapped                 ; 1E941         # 9.0  ADLAM CAPITAL LETTER ZAL
+1E920         ; mapped                 ; 1E942         # 9.0  ADLAM CAPITAL LETTER KPO
+1E921         ; mapped                 ; 1E943         # 9.0  ADLAM CAPITAL LETTER SHA
+1E922..1E94A  ; valid                                  # 9.0  ADLAM SMALL LETTER ALIF..ADLAM NUKTA
+1E94B..1E94F  ; disallowed                             # NA   <reserved-1E94B>..<reserved-1E94F>
+1E950..1E959  ; valid                                  # 9.0  ADLAM DIGIT ZERO..ADLAM DIGIT NINE
+1E95A..1E95D  ; disallowed                             # NA   <reserved-1E95A>..<reserved-1E95D>
+1E95E..1E95F  ; valid                  ;      ; NV8    # 9.0  ADLAM INITIAL EXCLAMATION MARK..ADLAM INITIAL QUESTION MARK
+1E960..1EDFF  ; disallowed                             # NA   <reserved-1E960>..<reserved-1EDFF>
 1EE00         ; mapped                 ; 0627          # 6.1  ARABIC MATHEMATICAL ALEF
 1EE01         ; mapped                 ; 0628          # 6.1  ARABIC MATHEMATICAL BEH
 1EE02         ; mapped                 ; 062C          # 6.1  ARABIC MATHEMATICAL JEEM
@@ -7451,7 +7595,8 @@ FFFE..FFFF    ; disallowed                             # 1.1  <noncharacter-FFFE
 1F18E..1F18F  ; valid                  ;      ; NV8    # 6.0  NEGATIVE SQUARED AB..NEGATIVE SQUARED WC
 1F190         ; mapped                 ; 0064 006A     # 5.2  SQUARE DJ
 1F191..1F19A  ; valid                  ;      ; NV8    # 6.0  SQUARED CL..SQUARED VS
-1F19B..1F1E5  ; disallowed                             # NA   <reserved-1F19B>..<reserved-1F1E5>
+1F19B..1F1AC  ; valid                  ;      ; NV8    # 9.0  SQUARED THREE D..SQUARED VOD
+1F1AD..1F1E5  ; disallowed                             # NA   <reserved-1F1AD>..<reserved-1F1E5>
 1F1E6..1F1FF  ; valid                  ;      ; NV8    # 6.0  REGIONAL INDICATOR SYMBOL LETTER A..REGIONAL INDICATOR SYMBOL LETTER Z
 1F200         ; mapped                 ; 307B 304B     # 5.2  SQUARE HIRAGANA HOKA
 1F201         ; mapped                 ; 30B3 30B3     # 6.0  SQUARED KATAKANA KOKO
@@ -7500,7 +7645,8 @@ FFFE..FFFF    ; disallowed                             # 1.1  <noncharacter-FFFE
 1F238         ; mapped                 ; 7533          # 6.0  SQUARED CJK UNIFIED IDEOGRAPH-7533
 1F239         ; mapped                 ; 5272          # 6.0  SQUARED CJK UNIFIED IDEOGRAPH-5272
 1F23A         ; mapped                 ; 55B6          # 6.0  SQUARED CJK UNIFIED IDEOGRAPH-55B6
-1F23B..1F23F  ; disallowed                             # NA   <reserved-1F23B>..<reserved-1F23F>
+1F23B         ; mapped                 ; 914D          # 9.0  SQUARED CJK UNIFIED IDEOGRAPH-914D
+1F23C..1F23F  ; disallowed                             # NA   <reserved-1F23C>..<reserved-1F23F>
 1F240         ; mapped                 ; 3014 672C 3015 #5.2  TORTOISE SHELL BRACKETED CJK UNIFIED IDEOGRAPH-672C
 1F241         ; mapped                 ; 3014 4E09 3015 #5.2  TORTOISE SHELL BRACKETED CJK UNIFIED IDEOGRAPH-4E09
 1F242         ; mapped                 ; 3014 4E8C 3015 #5.2  TORTOISE SHELL BRACKETED CJK UNIFIED IDEOGRAPH-4E8C
@@ -7549,9 +7695,9 @@ FFFE..FFFF    ; disallowed                             # 1.1  <noncharacter-FFFE
 1F54B..1F54F  ; valid                  ;      ; NV8    # 8.0  KAABA..BOWL OF HYGIEIA
 1F550..1F567  ; valid                  ;      ; NV8    # 6.0  CLOCK FACE ONE OCLOCK..CLOCK FACE TWELVE-THIRTY
 1F568..1F579  ; valid                  ;      ; NV8    # 7.0  RIGHT SPEAKER..JOYSTICK
-1F57A         ; disallowed                             # NA   <reserved-1F57A>
+1F57A         ; valid                  ;      ; NV8    # 9.0  MAN DANCING
 1F57B..1F5A3  ; valid                  ;      ; NV8    # 7.0  LEFT HAND TELEPHONE RECEIVER..BLACK DOWN POINTING BACKHAND INDEX
-1F5A4         ; disallowed                             # NA   <reserved-1F5A4>
+1F5A4         ; valid                  ;      ; NV8    # 9.0  BLACK HEART
 1F5A5..1F5FA  ; valid                  ;      ; NV8    # 7.0  DESKTOP COMPUTER..WORLD MAP
 1F5FB..1F5FF  ; valid                  ;      ; NV8    # 6.0  MOUNT FUJI..MOYAI
 1F600         ; valid                  ;      ; NV8    # 6.1  GRINNING FACE
@@ -7583,11 +7729,13 @@ FFFE..FFFF    ; disallowed                             # 1.1  <noncharacter-FFFE
 1F680..1F6C5  ; valid                  ;      ; NV8    # 6.0  ROCKET..LEFT LUGGAGE
 1F6C6..1F6CF  ; valid                  ;      ; NV8    # 7.0  TRIANGLE WITH ROUNDED CORNERS..BED
 1F6D0         ; valid                  ;      ; NV8    # 8.0  PLACE OF WORSHIP
-1F6D1..1F6DF  ; disallowed                             # NA   <reserved-1F6D1>..<reserved-1F6DF>
+1F6D1..1F6D2  ; valid                  ;      ; NV8    # 9.0  OCTAGONAL SIGN..SHOPPING TROLLEY
+1F6D3..1F6DF  ; disallowed                             # NA   <reserved-1F6D3>..<reserved-1F6DF>
 1F6E0..1F6EC  ; valid                  ;      ; NV8    # 7.0  HAMMER AND WRENCH..AIRPLANE ARRIVING
 1F6ED..1F6EF  ; disallowed                             # NA   <reserved-1F6ED>..<reserved-1F6EF>
 1F6F0..1F6F3  ; valid                  ;      ; NV8    # 7.0  SATELLITE..PASSENGER SHIP
-1F6F4..1F6FF  ; disallowed                             # NA   <reserved-1F6F4>..<reserved-1F6FF>
+1F6F4..1F6F6  ; valid                  ;      ; NV8    # 9.0  SCOOTER..CANOE
+1F6F7..1F6FF  ; disallowed                             # NA   <reserved-1F6F7>..<reserved-1F6FF>
 1F700..1F773  ; valid                  ;      ; NV8    # 6.0  ALCHEMICAL SYMBOL FOR QUINTESSENCE..ALCHEMICAL SYMBOL FOR HALF OUNCE
 1F774..1F77F  ; disallowed                             # NA   <reserved-1F774>..<reserved-1F77F>
 1F780..1F7D4  ; valid                  ;      ; NV8    # 7.0  BLACK LEFT-POINTING ISOSCELES RIGHT TRIANGLE..HEAVY TWELVE POINTED PINWHEEL STAR
@@ -7603,9 +7751,21 @@ FFFE..FFFF    ; disallowed                             # 1.1  <noncharacter-FFFE
 1F890..1F8AD  ; valid                  ;      ; NV8    # 7.0  LEFTWARDS TRIANGLE ARROWHEAD..WHITE ARROW SHAFT WIDTH TWO THIRDS
 1F8AE..1F90F  ; disallowed                             # NA   <reserved-1F8AE>..<reserved-1F90F>
 1F910..1F918  ; valid                  ;      ; NV8    # 8.0  ZIPPER-MOUTH FACE..SIGN OF THE HORNS
-1F919..1F97F  ; disallowed                             # NA   <reserved-1F919>..<reserved-1F97F>
+1F919..1F91E  ; valid                  ;      ; NV8    # 9.0  CALL ME HAND..HAND WITH INDEX AND MIDDLE FINGERS CROSSED
+1F91F         ; disallowed                             # NA   <reserved-1F91F>
+1F920..1F927  ; valid                  ;      ; NV8    # 9.0  FACE WITH COWBOY HAT..SNEEZING FACE
+1F928..1F92F  ; disallowed                             # NA   <reserved-1F928>..<reserved-1F92F>
+1F930         ; valid                  ;      ; NV8    # 9.0  PREGNANT WOMAN
+1F931..1F932  ; disallowed                             # NA   <reserved-1F931>..<reserved-1F932>
+1F933..1F93E  ; valid                  ;      ; NV8    # 9.0  SELFIE..HANDBALL
+1F93F         ; disallowed                             # NA   <reserved-1F93F>
+1F940..1F94B  ; valid                  ;      ; NV8    # 9.0  WILTED FLOWER..MARTIAL ARTS UNIFORM
+1F94C..1F94F  ; disallowed                             # NA   <reserved-1F94C>..<reserved-1F94F>
+1F950..1F95E  ; valid                  ;      ; NV8    # 9.0  CROISSANT..PANCAKES
+1F95F..1F97F  ; disallowed                             # NA   <reserved-1F95F>..<reserved-1F97F>
 1F980..1F984  ; valid                  ;      ; NV8    # 8.0  CRAB..UNICORN FACE
-1F985..1F9BF  ; disallowed                             # NA   <reserved-1F985>..<reserved-1F9BF>
+1F985..1F991  ; valid                  ;      ; NV8    # 9.0  EAGLE..SQUID
+1F992..1F9BF  ; disallowed                             # NA   <reserved-1F992>..<reserved-1F9BF>
 1F9C0         ; valid                  ;      ; NV8    # 8.0  CHEESE WEDGE
 1F9C1..1FFFD  ; disallowed                             # NA   <reserved-1F9C1>..<reserved-1FFFD>
 1FFFE..1FFFF  ; disallowed                             # 2.0  <noncharacter-1FFFE>..<noncharacter-1FFFF>

@@ -1,4 +1,4 @@
-// Copyright 2013 Simon Sapin.
+// Copyright 2013 The rust-url developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -185,11 +185,11 @@ pub fn encode(input: &[char]) -> Option<String> {
                         break
                     }
                     let value = t + ((q - t) % (BASE - t));
-                    value_to_digit(value, &mut output);
+                    output.push(value_to_digit(value));
                     q = (q - t) / (BASE - t);
                     k += BASE;
                 }
-                value_to_digit(q, &mut output);
+                output.push(value_to_digit(q));
                 bias = adapt(delta, processed + 1, processed == basic_length);
                 delta = 0;
                 processed += 1;
@@ -203,11 +203,10 @@ pub fn encode(input: &[char]) -> Option<String> {
 
 
 #[inline]
-fn value_to_digit(value: u32, output: &mut String) {
-    let code_point = match value {
-        0 ... 25 => value + 0x61,  // a..z
-        26 ... 35 => value - 26 + 0x30,  // 0..9
+fn value_to_digit(value: u32) -> char {
+    match value {
+        0 ... 25 => (value as u8 + 'a' as u8) as char,  // a..z
+        26 ... 35 => (value as u8 - 26 + '0' as u8) as char,  // 0..9
         _ => panic!()
-    };
-    unsafe { output.as_mut_vec().push(code_point as u8) }
+    }
 }
