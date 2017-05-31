@@ -290,8 +290,8 @@ public:
   // Returns the offset of the first byte of cached data at or after aOffset,
   // or -1 if there is no such cached data.
   virtual int64_t GetNextCachedData(int64_t aOffset) = 0;
-  // Returns the end of the bytes starting at the given offset
-  // which are in cache.
+  // Returns the end of the bytes starting at the given offset which are in
+  // cache. Returns aOffset itself if there are zero bytes available there.
   virtual int64_t GetCachedDataEnd(int64_t aOffset) = 0;
   // Returns true if all the data from aOffset to the end of the stream
   // is in cache. If the end of the stream is not known, we return false.
