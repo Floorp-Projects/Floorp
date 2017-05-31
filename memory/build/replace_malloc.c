@@ -112,30 +112,7 @@ replace_malloc_handle()
 
 #endif
 
-static void
-replace_malloc_init_funcs()
-{
-  replace_malloc_handle_t handle = replace_malloc_handle();
-  if (handle) {
-#ifdef MOZ_NO_REPLACE_FUNC_DECL
-#  define MALLOC_DECL(name, ...) \
-    replace_ ## name = REPLACE_MALLOC_GET_FUNC(handle, name);
-
-#  define MALLOC_FUNCS (MALLOC_FUNCS_INIT | MALLOC_FUNCS_BRIDGE)
-#  include "malloc_decls.h"
-#endif
-
-#define MALLOC_DECL(name, ...) \
-  replace_malloc_table.name = REPLACE_MALLOC_GET_FUNC(handle, name);
-#include "malloc_decls.h"
-  }
-
-#define MALLOC_DECL(name, ...) \
-  if (!replace_malloc_table.name) { \
-    replace_malloc_table.name = je_ ## name; \
-  }
-#include "malloc_decls.h"
-}
+static void replace_malloc_init_funcs();
 
 /*
  * Below is the malloc implementation overriding jemalloc and calling the
@@ -232,3 +209,28 @@ MOZ_MEMORY_API __realloc_hook_type __realloc_hook = realloc_impl;
 MOZ_MEMORY_API __memalign_hook_type __memalign_hook = memalign_impl;
 
 #endif
+
+static void
+replace_malloc_init_funcs()
+{
+  replace_malloc_handle_t handle = replace_malloc_handle();
+  if (handle) {
+#ifdef MOZ_NO_REPLACE_FUNC_DECL
+#  define MALLOC_DECL(name, ...) \
+    replace_ ## name = REPLACE_MALLOC_GET_FUNC(handle, name);
+
+#  define MALLOC_FUNCS (MALLOC_FUNCS_INIT | MALLOC_FUNCS_BRIDGE)
+#  include "malloc_decls.h"
+#endif
+
+#define MALLOC_DECL(name, ...) \
+  replace_malloc_table.name = REPLACE_MALLOC_GET_FUNC(handle, name);
+#include "malloc_decls.h"
+  }
+
+#define MALLOC_DECL(name, ...) \
+  if (!replace_malloc_table.name) { \
+    replace_malloc_table.name = je_ ## name; \
+  }
+#include "malloc_decls.h"
+}
