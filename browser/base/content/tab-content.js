@@ -16,8 +16,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
   "resource:///modules/E10SUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Utils",
-  "resource://gre/modules/sessionstore/Utils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AboutReader",
@@ -659,7 +657,7 @@ let PrerenderContentHandler = {
     }
   },
 
-  startPrerenderingDocument(aHref, aReferrer, aTriggeringPrincipal) {
+  startPrerenderingDocument(aHref, aReferrer) {
     // XXX: Make this constant a pref
     if (this._pending.length >= 2) {
       return;
@@ -670,7 +668,6 @@ let PrerenderContentHandler = {
       href: aHref.spec,
       referrer: aReferrer ? aReferrer.spec : null,
       id,
-      triggeringPrincipal: Utils.serializePrincipal(aTriggeringPrincipal),
     });
 
     this._pending.push({
@@ -732,9 +729,9 @@ var WebBrowserChrome = {
     return true;
   },
 
-  startPrerenderingDocument(aHref, aReferrer, aTriggeringPrincipal) {
+  startPrerenderingDocument(aHref, aReferrer) {
     if (PrerenderContentHandler.initialized) {
-      PrerenderContentHandler.startPrerenderingDocument(aHref, aReferrer, aTriggeringPrincipal);
+      PrerenderContentHandler.startPrerenderingDocument(aHref, aReferrer);
     }
   },
 
