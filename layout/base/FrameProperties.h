@@ -150,15 +150,11 @@ public:
   using PropertyType = typename detail::FramePropertyTypeHelper<T>::Type;
 
   explicit FrameProperties()
-#ifdef DEBUG
-    : mMaxLength(0)
-#endif
   {
   }
 
   ~FrameProperties()
   {
-    MOZ_ASSERT(mMaxLength > 0, "redundant FrameProperties!");
     MOZ_ASSERT(mProperties.Length() == 0, "forgot to delete properties");
   }
 
@@ -364,10 +360,7 @@ private:
     }
   };
 
-  AutoTArray<PropertyValue,1> mProperties;
-#ifdef DEBUG
-  uint32_t mMaxLength;
-#endif
+  nsTArray<PropertyValue> mProperties;
 };
 
 inline void*

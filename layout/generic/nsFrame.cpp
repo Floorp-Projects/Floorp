@@ -10554,9 +10554,7 @@ nsIFrame::SizeOfFramePropertiesForTree(MallocSizeOf aMallocSizeOf) const
 {
   size_t result = 0;
 
-  if (mProperties) {
-    result += mProperties->SizeOfIncludingThis(aMallocSizeOf);
-  }
+  result += mProperties.SizeOfExcludingThis(aMallocSizeOf);
 
   FrameChildListIterator iter(this);
   while (!iter.IsDone()) {
