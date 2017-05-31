@@ -36,8 +36,8 @@ public:
   // case the stream is a nsFileStream.
   template<typename M>
   static IPCBlobInputStreamParent*
-  Create(nsIInputStream* aInputStream, uint64_t aSize, nsresult* aRv,
-         M* aManager);
+  Create(nsIInputStream* aInputStream, uint64_t aSize,
+         uint64_t aChildID, nsresult* aRv, M* aManager);
 
   static IPCBlobInputStreamParent*
   Create(const nsID& aID, uint64_t aSize,
