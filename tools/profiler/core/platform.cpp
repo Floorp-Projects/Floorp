@@ -797,12 +797,7 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
     aBuffer->addTag(ProfileBufferEntry::LineNumber(lineno));
   }
 
-  uint32_t category = entry.category();
-  MOZ_ASSERT(!(category & js::ProfileEntry::IS_CPP_ENTRY));
-
-  if (category) {
-    aBuffer->addTag(ProfileBufferEntry::Category((int)category));
-  }
+  aBuffer->addTag(ProfileBufferEntry::Category(entry.category()));
 }
 
 struct NativeStack
