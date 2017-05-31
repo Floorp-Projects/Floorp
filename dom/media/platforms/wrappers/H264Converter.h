@@ -100,6 +100,7 @@ private:
   const TrackInfo::TrackType mType;
   MediaEventProducer<TrackInfo::TrackType>* const mOnWaitingForKeyEvent;
   const CreateDecoderParams::OptionSet mDecoderOptions;
+  Maybe<bool> mCanRecycleDecoder;
 };
 
 } // namespace mozilla
