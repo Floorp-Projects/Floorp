@@ -204,6 +204,7 @@ protected:
     friend class IToplevelProtocol;
 
     void SetId(int32_t aId) { mId = aId; }
+    void ResetManager() { mManager = nullptr; }
     void SetManager(IProtocol* aManager);
     void SetIPCChannel(MessageChannel* aChannel) { mChannel = aChannel; }
 
