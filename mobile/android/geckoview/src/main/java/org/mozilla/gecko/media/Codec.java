@@ -473,6 +473,8 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         }
         try {
             mCallbacks.onError(error == Error.FATAL);
+        } catch (NullPointerException ne) {
+            // mCallbacks has been disposed by release().
         } catch (RemoteException re) {
             re.printStackTrace();
         }
