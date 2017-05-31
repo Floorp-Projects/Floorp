@@ -663,7 +663,7 @@ HTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     if (LoadingEnabled() &&
         OwnerDoc()->IsCurrentActiveDocument()) {
       nsContentUtils::AddScriptRunner(
-          NewRunnableMethod(this, &HTMLImageElement::MaybeLoadImage));
+        NewRunnableMethod<bool>(this, &HTMLImageElement::MaybeLoadImage, false));
     }
   }
 
@@ -689,8 +689,6 @@ HTMLImageElement::UnbindFromTree(bool aDeep, bool aNullParent)
       mInDocResponsiveContent = false;
     }
   }
-
-  mLastSelectedSource = nullptr;
 
   nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
@@ -724,7 +722,7 @@ HTMLImageElement::UpdateFormOwner()
 }
 
 void
-HTMLImageElement::MaybeLoadImage()
+HTMLImageElement::MaybeLoadImage(bool aAlwaysForceLoad)
 {
   // Our base URI may have changed, or we may have had responsive parameters
   // change while not bound to the tree. Re-parse src/srcset and call LoadImage,
@@ -732,7 +730,7 @@ HTMLImageElement::MaybeLoadImage()
 
   // Note, check LoadingEnabled() after LoadImage call.
 
-  LoadSelectedImage(false, true, false);
+  LoadSelectedImage(aAlwaysForceLoad, /* aNotify */ true, aAlwaysForceLoad);
 
   if (!LoadingEnabled()) {
     CancelImageRequests(true);
@@ -750,8 +748,18 @@ void
 HTMLImageElement::NodeInfoChanged(nsIDocument* aOldDoc)
 {
   nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
-  // Resetting the last selected source if adoption steps are run.
-  mLastSelectedSource = nullptr;
+  // Force reload image if adoption steps are run.
+  // If loading is temporarily disabled, don't even launch script runner.
+  // Otherwise script runner may run later when someone has reenabled loading.
+  if (LoadingEnabled()) {
+    // Use script runner for the case the adopt is from appendChild.
+    // Bug 1076583 - We still behave synchronously in the non-responsive case
+    nsContentUtils::AddScriptRunner(
+      (InResponsiveMode())
+        ? NewRunnableMethod<bool>(this, &HTMLImageElement::QueueImageLoadTask, true)
+        : NewRunnableMethod<bool>(this, &HTMLImageElement::MaybeLoadImage, true)
+    );
+  }
 }
 
 // static
@@ -873,7 +881,7 @@ HTMLImageElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
       mUseUrgentStartForChannel = EventStateManager::IsHandlingUserInput();
 
       nsContentUtils::AddScriptRunner(
-        NewRunnableMethod(dest, &HTMLImageElement::MaybeLoadImage));
+        NewRunnableMethod<bool>(dest, &HTMLImageElement::MaybeLoadImage, false));
     }
   }
 

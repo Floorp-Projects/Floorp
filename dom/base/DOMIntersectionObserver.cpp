@@ -422,7 +422,13 @@ DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time
     double targetArea = targetRect.width * targetRect.height;
     double intersectionArea = !intersectionRect ?
       0 : intersectionRect->width * intersectionRect->height;
-    double intersectionRatio = targetArea > 0.0 ? intersectionArea / targetArea : 0.0;
+    
+    double intersectionRatio;
+    if (targetArea > 0.0) {
+      intersectionRatio = intersectionArea / targetArea;
+    } else {
+      intersectionRatio = intersectionRect.isSome() ? 1.0 : 0.0;
+    }
 
     size_t threshold = -1;
     if (intersectionRatio > 0.0) {

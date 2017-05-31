@@ -18,6 +18,10 @@
 #include "nsCocoaFeatures.h"
 #endif
 #include "nsPrintfCString.h"
+#include "nsContentUtils.h"
+#include "nsIScriptError.h"
+#include "mozilla/Unused.h"
+#include "nsDataHashtable.h"
 
 namespace mozilla {
 namespace dom {
@@ -165,17 +169,54 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
     return;
   }
 
+  nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
+  nsDataHashtable<nsCharPtrHashKey, bool> warnings;
+  std::function<void(const char*)> deprecationWarningLogFn =
+    [&](const char* aMsgName) {
+      EME_LOG("Logging deprecation warning '%s' to WebConsole.", aMsgName);
+      warnings.Put(aMsgName, true);
+      nsString uri;
+      if (doc) {
+        Unused << doc->GetDocumentURI(uri);
+      }
+      const char16_t* params[] = { uri.get() };
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                      NS_LITERAL_CSTRING("Media"),
+                                      doc,
+                                      nsContentUtils::eDOM_PROPERTIES,
+                                      aMsgName,
+                                      params,
+                                      ArrayLength(params));
+    };
+
   bool isPrivateBrowsing =
     mWindow->GetExtantDoc() &&
     mWindow->GetExtantDoc()->NodePrincipal()->GetPrivateBrowsingId() > 0;
   MediaKeySystemConfiguration config;
   if (MediaKeySystemAccess::GetSupportedConfig(
-        aKeySystem, aConfigs, config, &diagnostics, isPrivateBrowsing)) {
+        aKeySystem, aConfigs, config, &diagnostics, isPrivateBrowsing, deprecationWarningLogFn)) {
     RefPtr<MediaKeySystemAccess> access(
       new MediaKeySystemAccess(mWindow, aKeySystem, config));
     aPromise->MaybeResolve(access);
     diagnostics.StoreMediaKeySystemAccess(mWindow->GetExtantDoc(),
                                           aKeySystem, true, __func__);
+
+    // Accumulate telemetry to report whether we hit deprecation warnings.
+    if (warnings.Get("MediaEMENoCapabilitiesDeprecatedWarning")) {
+      Telemetry::Accumulate(
+        Telemetry::HistogramID::MEDIA_EME_REQUEST_DEPRECATED_WARNINGS, 1);
+      EME_LOG("MEDIA_EME_REQUEST_DEPRECATED_WARNINGS "
+              "MediaEMENoCapabilitiesDeprecatedWarning");
+    } else if (warnings.Get("MediaEMENoCodecsDeprecatedWarning")) {
+      Telemetry::Accumulate(
+        Telemetry::HistogramID::MEDIA_EME_REQUEST_DEPRECATED_WARNINGS, 2);
+      EME_LOG("MEDIA_EME_REQUEST_DEPRECATED_WARNINGS "
+              "MediaEMENoCodecsDeprecatedWarning");
+    } else {
+      Telemetry::Accumulate(
+        Telemetry::HistogramID::MEDIA_EME_REQUEST_DEPRECATED_WARNINGS, 0);
+      EME_LOG("MEDIA_EME_REQUEST_DEPRECATED_WARNINGS No warnings");
+    }
     return;
   }
   // Not to inform user, because nothing to do if the corresponding keySystem
