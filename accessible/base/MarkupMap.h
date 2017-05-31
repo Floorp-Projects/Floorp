@@ -95,6 +95,10 @@ MARKUPMAP(h6,
           New_HyperText,
           roles::HEADING)
 
+MARKUPMAP(input,
+          New_HTMLInput,
+          0)
+
 MARKUPMAP(label,
           New_HTMLLabel,
           roles::LABEL)
