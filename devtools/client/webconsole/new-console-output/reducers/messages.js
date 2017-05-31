@@ -241,36 +241,88 @@ function getParentGroups(currentGroup, groupsById) {
 
 /**
  * Remove all top level messages that exceeds message limit.
- * Also release all backend actors associated with these
- * messages.
+ * Also populate an array of all backend actors associated with these
+ * messages so they can be released.
  */
 function limitTopLevelMessageCount(state, record) {
-  let tempRecord = {
-    messagesById: record.messagesById,
-    messagesUiById: record.messagesUiById,
-    messagesTableDataById: record.messagesTableDataById,
-    groupsById: record.groupsById,
-  };
+  let topLevelCount = record.groupsById.size === 0
+    ? record.messagesById.size
+    : getToplevelMessageCount(record);
 
-  let removedMessages = state.removedMessages;
-
-  // Remove top level messages logged over the limit.
-  let topLevelCount = getToplevelMessageCount(tempRecord);
-  while (topLevelCount > logLimit) {
-    removedMessages.push(...removeFirstMessage(tempRecord));
-    topLevelCount--;
+  if (topLevelCount <= logLimit) {
+    return record;
   }
 
-  // Filter out messages with no arguments. Only actual arguments
-  // can be associated with backend actors.
-  removedMessages = state.removedMessages.filter(msg => msg.parameters);
+  const removedMessagesId = [];
+  const removedMessages = [];
+  let visibleMessages = [...record.visibleMessages];
 
-  // Update original record object
-  record.set("messagesById", tempRecord.messagesById);
-  record.set("messagesUiById", tempRecord.messagesUiById);
-  record.set("messagesTableDataById", tempRecord.messagesTableDataById);
-  record.set("groupsById", tempRecord.groupsById);
-  record.set("removedMessages", removedMessages);
+  let cleaningGroup = false;
+  record.messagesById.forEach((message, id) => {
+    // If we were cleaning a group and the current message does not have
+    // a groupId, we're done cleaning.
+    if (cleaningGroup === true && !message.groupId) {
+      cleaningGroup = false;
+    }
+
+    // If we're not cleaning a group and the message count is below the logLimit,
+    // we exit the forEach iteration.
+    if (cleaningGroup === false && topLevelCount <= logLimit) {
+      return false;
+    }
+
+    // If we're not currently cleaning a group, and the current message is identified
+    // as a group, set the cleaning flag to true.
+    if (cleaningGroup === false && record.groupsById.has(id)) {
+      cleaningGroup = true;
+    }
+
+    if (!message.groupId) {
+      topLevelCount--;
+    }
+
+    removedMessagesId.push(id);
+
+    // Filter out messages with no arguments. Only actual arguments
+    // can be associated with backend actors.
+    if (message && message.parameters) {
+      removedMessages.push(message);
+    }
+
+    const index = visibleMessages.indexOf(id);
+    if (index > -1) {
+      visibleMessages.splice(index, 1);
+    }
+
+    return true;
+  });
+
+  if (removedMessages.length > 0) {
+    record.set("removedMessages", record.removedMessages.concat(removedMessages));
+  }
+
+  if (record.visibleMessages.length > visibleMessages.length) {
+    record.set("visibleMessages", visibleMessages);
+  }
+
+  const isInRemovedId = id => removedMessagesId.includes(id);
+  const mapHasRemovedIdKey = map => map.findKey((value, id) => isInRemovedId(id));
+  const cleanUpCollection = map => removedMessagesId.forEach(id => map.remove(id));
+
+  record.set("messagesById", record.messagesById.withMutations(cleanUpCollection));
+
+  if (record.messagesUiById.find(isInRemovedId)) {
+    record.set("messagesUiById", record.messagesUiById.withMutations(cleanUpCollection));
+  }
+  if (mapHasRemovedIdKey(record.messagesTableDataById)) {
+    record.set("messagesTableDataById",
+      record.messagesTableDataById.withMutations(cleanUpCollection));
+  }
+  if (mapHasRemovedIdKey(record.groupsById)) {
+    record.set("groupsById", record.groupsById.withMutations(cleanUpCollection));
+  }
+
+  return record;
 }
 
 /**
@@ -278,48 +330,7 @@ function limitTopLevelMessageCount(state, record) {
  * within a group).
  */
 function getToplevelMessageCount(record) {
-  return [...record.messagesById].filter(message => !message.groupId).length;
-}
-
-/**
- * Remove first (the oldest) message from the store. The methods removes
- * also all its references and children from the store.
- *
- * @return {Array} Flat array of removed messages.
- */
-function removeFirstMessage(record) {
-  let firstMessage = record.messagesById.first();
-  record.messagesById = record.messagesById.shift();
-
-  // Remove from list of opened groups.
-  let uiIndex = record.messagesUiById.indexOf(firstMessage);
-  if (uiIndex >= 0) {
-    record.messagesUiById = record.messagesUiById.delete(uiIndex);
-  }
-
-  // Remove from list of tables.
-  if (record.messagesTableDataById.has(firstMessage.id)) {
-    record.messagesTableDataById = record.messagesTableDataById.delete(firstMessage.id);
-  }
-
-  // Remove from list of parent groups.
-  if (record.groupsById.has(firstMessage.id)) {
-    record.groupsById = record.groupsById.delete(firstMessage.id);
-  }
-
-  let removedMessages = [firstMessage];
-
-  // Remove all children. This loop assumes that children of removed
-  // group immediately follows the group. We use recursion since
-  // there might be inner groups.
-  let message = record.messagesById.first();
-  while (message.groupId == firstMessage.id) {
-    removedMessages.push(...removeFirstMessage(record));
-    message = record.messagesById.first();
-  }
-
-  // Return array with all removed messages.
-  return removedMessages;
+  return record.messagesById.count(message => !message.groupId);
 }
 
 function shouldMessageBeVisible(message, messagesState, filtersState, checkGroup = true) {
