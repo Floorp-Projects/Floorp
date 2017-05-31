@@ -8,6 +8,7 @@ NS_IMPL_ISUPPORTS(nsUrlClassifierPositiveCacheEntry,
                   nsIUrlClassifierPositiveCacheEntry)
 
 nsUrlClassifierPositiveCacheEntry::nsUrlClassifierPositiveCacheEntry()
+  : expirySec(-1)
 {
 }
 
@@ -33,6 +34,7 @@ NS_IMPL_ISUPPORTS(nsUrlClassifierCacheEntry,
                   nsIUrlClassifierCacheEntry)
 
 nsUrlClassifierCacheEntry::nsUrlClassifierCacheEntry()
+  : expirySec(-1)
 {
 }
 
