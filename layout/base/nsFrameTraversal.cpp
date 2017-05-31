@@ -491,8 +491,7 @@ nsFrameIterator::GetPlaceholderFrame(nsIFrame* aFrame)
   if (MOZ_LIKELY(!aFrame || !aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW))) {
     return aFrame;
   }
-  nsIFrame* placeholder =
-    aFrame->PresContext()->PresShell()->GetPlaceholderFrameFor(aFrame);
+  nsIFrame* placeholder = aFrame->GetPlaceholderFrame();
   return placeholder ? placeholder : aFrame;
 }
 
