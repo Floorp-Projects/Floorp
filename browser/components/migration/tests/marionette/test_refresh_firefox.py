@@ -377,15 +377,13 @@ class TestFirefoxRefresh(MarionetteTestCase):
 
           // Now add the reset parameters:
           let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-          let allMarionettePrefs = Services.prefs.getChildList("marionette.");
+          let prefsToKeep = Array.from(Services.prefs.getChildList("marionette."));
+          prefsToKeep.push("datareporting.policy.dataSubmissionPolicyBypassNotification");
           let prefObj = {};
-          for (let pref of allMarionettePrefs) {
-            let prefSuffix = pref.substr("marionette.".length);
-            let prefVal = global.Preferences.get(pref);
-            prefObj[prefSuffix] = prefVal;
+          for (let pref of prefsToKeep) {
+            prefObj[pref] = global.Preferences.get(pref);
           }
-          let marionetteInfo = JSON.stringify(prefObj);
-          env.set("MOZ_MARIONETTE_PREF_STATE_ACROSS_RESTARTS", marionetteInfo);
+          env.set("MOZ_MARIONETTE_PREF_STATE_ACROSS_RESTARTS", JSON.stringify(prefObj));
           env.set("MOZ_RESET_PROFILE_RESTART", "1");
           env.set("XRE_PROFILE_PATH", arguments[0]);
           env.set("XRE_PROFILE_NAME", profileName);
