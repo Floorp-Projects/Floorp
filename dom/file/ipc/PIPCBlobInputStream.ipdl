@@ -20,10 +20,23 @@ protocol PIPCBlobInputStream
 
 parent:
   async StreamNeeded();
+
+  // When this is called, the parent releases the inputStream and sends a
+  // __delete__.
   async Close();
 
 child:
   async StreamReady(OptionalIPCStream aStream);
+
+both:
+  // __delete__ can be called by parent and by child for 2 reasons:
+  // - parent->child: This happens after a Close(). The child wants to inform
+  //                  the parent that no other messages will be dispatched and
+  //                  that the channel can be interrupted.
+  // - child->parent: before any operation, the child could start a migration
+  //                  from the current thread to a dedicated DOM-File one. The
+  //                  reason why a __delete__ is sent from child to parent is
+  //                  because it doesn't require any additional runnables.
   async __delete__();
 };
 
