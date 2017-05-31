@@ -116,15 +116,6 @@ function BrowserElementChild() {
   // Maps outer window id --> weak ref to window.  Used by modal dialog code.
   this._windowIDDict = {};
 
-  // _forcedVisible corresponds to the visibility state our owner has set on us
-  // (via iframe.setVisible).  ownerVisible corresponds to whether the docShell
-  // whose window owns this element is visible.
-  //
-  // Our docShell is visible iff _forcedVisible and _ownerVisible are both
-  // true.
-  this._forcedVisible = true;
-  this._ownerVisible = true;
-
   this._nextPaintHandler = null;
 
   this._isContentWindowCreated = false;
@@ -286,8 +277,6 @@ BrowserElementChild.prototype = {
       "purge-history": this._recvPurgeHistory,
       "get-screenshot": this._recvGetScreenshot,
       "get-contentdimensions": this._recvGetContentDimensions,
-      "set-visible": this._recvSetVisible,
-      "get-visible": this._recvVisible,
       "send-mouse-event": this._recvSendMouseEvent,
       "send-touch-event": this._recvSendTouchEvent,
       "get-can-go-back": this._recvCanGoBack,
@@ -1231,35 +1220,13 @@ BrowserElementChild.prototype = {
     return menuObj;
   },
 
-  _recvSetVisible: function(data) {
-    debug("Received setVisible message: (" + data.json.visible + ")");
-    if (this._forcedVisible == data.json.visible) {
-      return;
-    }
-
-    this._forcedVisible = data.json.visible;
-    this._updateVisibility();
-  },
-
-  _recvVisible: function(data) {
-    sendAsyncMsg('got-visible', {
-      id: data.json.id,
-      successRv: docShell.isActive
-    });
-  },
-
   /**
    * Called when the window which contains this iframe becomes hidden or
    * visible.
    */
   _recvOwnerVisibilityChange: function(data) {
     debug("Received ownerVisibilityChange: (" + data.json.visible + ")");
-    this._ownerVisible = data.json.visible;
-    this._updateVisibility();
-  },
-
-  _updateVisibility: function() {
-    var visible = this._forcedVisible && this._ownerVisible;
+    var visible = data.json.visible;
     if (docShell && docShell.isActive !== visible) {
       docShell.isActive = visible;
       sendAsyncMsg('visibilitychange', {visible: visible});

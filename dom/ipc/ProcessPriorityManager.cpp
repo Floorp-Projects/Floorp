@@ -261,7 +261,6 @@ public:
 
   void OnRemoteBrowserFrameShown(nsISupports* aSubject);
   void OnTabParentDestroyed(nsISupports* aSubject);
-  void OnFrameloaderVisibleChanged(nsISupports* aSubject);
   void OnActivityOpened(const char16_t* aData);
   void OnActivityClosed(const char16_t* aData);
 
@@ -592,7 +591,6 @@ ParticularProcessPriorityManager::Init()
   if (os) {
     os->AddObserver(this, "remote-browser-shown", /* ownsWeak */ true);
     os->AddObserver(this, "ipc:browser-destroyed", /* ownsWeak */ true);
-    os->AddObserver(this, "frameloader-visible-changed", /* ownsWeak */ true);
     os->AddObserver(this, "activity-opened", /* ownsWeak */ true);
     os->AddObserver(this, "activity-closed", /* ownsWeak */ true);
   }
@@ -666,8 +664,6 @@ ParticularProcessPriorityManager::Observe(nsISupports* aSubject,
     OnRemoteBrowserFrameShown(aSubject);
   } else if (topic.EqualsLiteral("ipc:browser-destroyed")) {
     OnTabParentDestroyed(aSubject);
-  } else if (topic.EqualsLiteral("frameloader-visible-changed")) {
-    OnFrameloaderVisibleChanged(aSubject);
   } else if (topic.EqualsLiteral("activity-opened")) {
     OnActivityOpened(aData);
   } else if (topic.EqualsLiteral("activity-closed")) {
@@ -753,38 +749,6 @@ ParticularProcessPriorityManager::OnTabParentDestroyed(nsISupports* aSubject)
   }
 
   ResetPriority();
-}
-
-void
-ParticularProcessPriorityManager::OnFrameloaderVisibleChanged(nsISupports* aSubject)
-{
-  nsCOMPtr<nsIFrameLoader> fl = do_QueryInterface(aSubject);
-  NS_ENSURE_TRUE_VOID(fl);
-
-  TabParent* tp = TabParent::GetFrom(fl);
-  if (!tp) {
-    return;
-  }
-
-  MOZ_ASSERT(XRE_IsParentProcess());
-  if (tp->Manager() != mContentParent) {
-    return;
-  }
-
-  // Most of the time when something changes in a process we call
-  // ResetPriority(), giving a grace period before downgrading its priority.
-  // But notice that here don't give a grace period: We call ResetPriorityNow()
-  // instead.
-  //
-  // We do this because we're reacting here to a setVisibility() call, which is
-  // an explicit signal from the process embedder that we should re-prioritize
-  // a process.  If we gave a grace period in response to setVisibility()
-  // calls, it would be impossible for the embedder to explicitly prioritize
-  // processes and prevent e.g. the case where we switch which process is in
-  // the foreground and, during the old fg processs's grace period, it OOMs the
-  // new fg process.
-
-  ResetPriorityNow();
 }
 
 void
@@ -899,19 +863,8 @@ ParticularProcessPriorityManager::CurrentPriority()
 ProcessPriority
 ParticularProcessPriorityManager::ComputePriority()
 {
-  bool isVisible = false;
-  const ManagedContainer<PBrowserParent>& browsers =
-    mContentParent->ManagedPBrowserParent();
-  for (auto iter = browsers.ConstIter(); !iter.Done(); iter.Next()) {
-    if (TabParent::GetFrom(iter.Get()->GetKey())->IsVisible()) {
-      isVisible = true;
-      break;
-    }
-  }
-
-  if (isVisible) {
-    return PROCESS_PRIORITY_FOREGROUND;
-  }
+  // TODO...
+  return PROCESS_PRIORITY_FOREGROUND;
 
   if ((mHoldsCPUWakeLock || mHoldsHighPriorityWakeLock) &&
       IsExpectingSystemMessage()) {
