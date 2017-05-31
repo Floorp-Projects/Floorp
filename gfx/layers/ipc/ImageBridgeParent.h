@@ -50,6 +50,11 @@ protected:
 public:
   ~ImageBridgeParent();
 
+  /**
+   * Creates the globals of ImageBridgeParent.
+   */
+  static void Setup();
+
   static ImageBridgeParent* CreateSameProcess();
   static bool CreateForGPUProcess(Endpoint<PImageBridgeParent>&& aEndpoint);
   static bool CreateForContent(Endpoint<PImageBridgeParent>&& aEndpoint);
@@ -107,13 +112,7 @@ public:
 
   virtual bool IsSameProcess() const override;
 
-  using CompositableParentManager::SetAboutToSendAsyncMessages;
-  static void SetAboutToSendAsyncMessages(base::ProcessId aChildProcessId);
-
-  using CompositableParentManager::SendPendingAsyncMessages;
-  static void SendPendingAsyncMessages(base::ProcessId aChildProcessId);
-
-  static ImageBridgeParent* GetInstance(ProcessId aId);
+  static RefPtr<ImageBridgeParent> GetInstance(ProcessId aId);
 
   static bool NotifyImageComposites(nsTArray<ImageCompositeNotificationInfo>& aNotifications);
 
@@ -140,8 +139,6 @@ private:
    * Map of all living ImageBridgeParent instances
    */
   static std::map<base::ProcessId, ImageBridgeParent*> sImageBridges;
-
-  static MessageLoop* sMainLoop;
 
   RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
 };
