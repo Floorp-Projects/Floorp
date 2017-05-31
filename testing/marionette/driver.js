@@ -976,12 +976,8 @@ GeckoDriver.prototype.getCurrentUrl = function (cmd) {
       return win.location.href;
 
     case Context.CONTENT:
-      if (this.curBrowser.contentBrowser) {
-        return this.curBrowser.contentBrowser.currentURI.spec;
-      } else {
-        throw new NoSuchWindowError(
-          "Not a browser window, or no tab currently selected");
-      }
+      assert.contentBrowser(this.curBrowser);
+      return this.curBrowser.contentBrowser.currentURI.spec;
   }
 };
 

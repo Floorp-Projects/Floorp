@@ -115,6 +115,24 @@ assert.window = function (win, msg = "") {
 };
 
 /**
+ * Asserts that |context| is a valid browsing context.
+ *
+ * @param {browser.Context} context
+ *     Browsing context to test.
+ * @param {string=} msg
+ *     Custom error message.
+ *
+ * @throws {NoSuchWindowError}
+ *     If |context| is invalid.
+ */
+assert.contentBrowser = function (context, msg = "") {
+  msg = msg || "Current window does not have a content browser";
+  assert.that(c => c && c.contentBrowser,
+      msg,
+      NoSuchWindowError)(context);
+};
+
+/**
  * Asserts that there is no current user prompt.
  *
  * @param {modal.Dialog} dialog
