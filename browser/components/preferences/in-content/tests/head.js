@@ -3,7 +3,7 @@
 
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
-// Tests within /browser/components/preferences/in-content-old/tests/
+// Tests within /browser/components/preferences/in-content/tests/
 // test the "old" preferences organization, before it was reorganized.
 // Thus, all of these tests should revert back to the "oldOrganization"
 // before running.
