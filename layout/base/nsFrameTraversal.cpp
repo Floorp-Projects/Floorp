@@ -82,6 +82,10 @@ protected:
   virtual nsIFrame* GetNextSiblingInner(nsIFrame* aFrame);
   virtual nsIFrame* GetPrevSiblingInner(nsIFrame* aFrame);
 
+  /**
+   * Return the placeholder frame for aFrame if it has one, otherwise return
+   * aFrame itself.
+   */
   nsIFrame* GetPlaceholderFrame(nsIFrame* aFrame);
   bool      IsPopupFrame(nsIFrame* aFrame);
 
@@ -484,18 +488,12 @@ nsFrameIterator::GetPrevSiblingInner(nsIFrame* aFrame) {
 nsIFrame*
 nsFrameIterator::GetPlaceholderFrame(nsIFrame* aFrame)
 {
-  nsIFrame* result = aFrame;
-  nsIPresShell *presShell = mPresContext->GetPresShell();
-  if (presShell) {
-    nsIFrame* placeholder = presShell->GetPlaceholderFrameFor(aFrame);
-    if (placeholder)
-      result = placeholder;
+  if (MOZ_LIKELY(!aFrame || !aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW))) {
+    return aFrame;
   }
-
-  if (result != aFrame)
-    result = GetPlaceholderFrame(result);
-
-  return result;
+  nsIFrame* placeholder =
+    aFrame->PresContext()->PresShell()->GetPlaceholderFrameFor(aFrame);
+  return placeholder ? placeholder : aFrame;
 }
 
 bool
