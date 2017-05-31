@@ -3,7 +3,6 @@
 
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/keys.js");
-Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/browserid_identity.js");
@@ -184,10 +183,10 @@ add_task(async function test_ensureLoggedIn() {
 
   log.info("Building storage keys...");
   let storage_keys = new CryptoWrapper("crypto", "keys");
-  let default_key64 = Weave.Crypto.generateRandomKey();
-  let default_hmac64 = Weave.Crypto.generateRandomKey();
-  let bookmarks_key64 = Weave.Crypto.generateRandomKey();
-  let bookmarks_hmac64 = Weave.Crypto.generateRandomKey();
+  let default_key64 = Svc.Crypto.generateRandomKey();
+  let default_hmac64 = Svc.Crypto.generateRandomKey();
+  let bookmarks_key64 = Svc.Crypto.generateRandomKey();
+  let bookmarks_hmac64 = Svc.Crypto.generateRandomKey();
 
   storage_keys.cleartext = {
     "default": [default_key64, default_hmac64],
