@@ -46,34 +46,9 @@ using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 
-struct PlaceholderMapEntry : public PLDHashEntryHdr {
-  // key (the out of flow frame) can be obtained through placeholder frame
-  nsPlaceholderFrame *placeholderFrame;
-};
-
-static bool
-PlaceholderMapMatchEntry(const PLDHashEntryHdr *hdr, const void *key)
-{
-  const PlaceholderMapEntry *entry =
-    static_cast<const PlaceholderMapEntry*>(hdr);
-  NS_ASSERTION(entry->placeholderFrame->GetOutOfFlowFrame() !=
-               (void*)0xdddddddd,
-               "Dead placeholder in placeholder map");
-  return entry->placeholderFrame->GetOutOfFlowFrame() == key;
-}
-
-static const PLDHashTableOps PlaceholderMapOps = {
-  PLDHashTable::HashVoidPtrKeyStub,
-  PlaceholderMapMatchEntry,
-  PLDHashTable::MoveEntryStub,
-  PLDHashTable::ClearEntryStub,
-  nullptr
-};
-
 nsFrameManagerBase::nsFrameManagerBase()
   : mPresShell(nullptr)
   , mRootFrame(nullptr)
-  , mPlaceholderMap(&PlaceholderMapOps, sizeof(PlaceholderMapEntry))
   , mUndisplayedMap(nullptr)
   , mDisplayContentsMap(nullptr)
   , mIsDestroyingFrames(false)
@@ -164,47 +139,30 @@ nsFrameManager::Destroy()
 nsPlaceholderFrame*
 nsFrameManager::GetPlaceholderFrameFor(const nsIFrame* aFrame)
 {
-  NS_PRECONDITION(aFrame, "null param unexpected");
-
-  auto entry = static_cast<PlaceholderMapEntry*>
-    (const_cast<PLDHashTable*>(&mPlaceholderMap)->Search(aFrame));
-  if (entry) {
-    return entry->placeholderFrame;
-  }
-
-  return nullptr;
+  MOZ_ASSERT(aFrame);
+  MOZ_ASSERT(aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW));
+  return aFrame->GetProperty(nsIFrame::PlaceholderFrameProperty());
 }
 
 void
 nsFrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
 {
-  MOZ_ASSERT(aPlaceholderFrame, "null param unexpected");
-  MOZ_ASSERT(aPlaceholderFrame->IsPlaceholderFrame(), "unexpected frame type");
-  auto entry = static_cast<PlaceholderMapEntry*>
-    (mPlaceholderMap.Add(aPlaceholderFrame->GetOutOfFlowFrame()));
-  MOZ_ASSERT(!entry->placeholderFrame,
+  MOZ_ASSERT(aPlaceholderFrame);
+  MOZ_ASSERT(!GetPlaceholderFrameFor(aPlaceholderFrame->GetOutOfFlowFrame()),
              "Registering a placeholder for a frame that already has a placeholder!");
-  entry->placeholderFrame = aPlaceholderFrame;
+  aPlaceholderFrame->GetOutOfFlowFrame()->SetProperty(nsIFrame::PlaceholderFrameProperty(), aPlaceholderFrame);
 }
 
 void
 nsFrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
 {
-  NS_PRECONDITION(aPlaceholderFrame, "null param unexpected");
-  NS_PRECONDITION(aPlaceholderFrame->IsPlaceholderFrame(),
-                  "unexpected frame type");
-
-  mPlaceholderMap.Remove(aPlaceholderFrame->GetOutOfFlowFrame());
+  MOZ_ASSERT(aPlaceholderFrame);
+  aPlaceholderFrame->GetOutOfFlowFrame()->DeleteProperty(nsIFrame::PlaceholderFrameProperty());
 }
 
 void
 nsFrameManager::ClearPlaceholderFrameMap()
 {
-  for (auto iter = mPlaceholderMap.Iter(); !iter.Done(); iter.Next()) {
-    auto entry = static_cast<PlaceholderMapEntry*>(iter.Get());
-    entry->placeholderFrame->SetOutOfFlowFrame(nullptr);
-  }
-  mPlaceholderMap.Clear();
 }
 
 //----------------------------------------------------------------------
