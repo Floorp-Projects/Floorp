@@ -14,7 +14,9 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     'URL.cpp',
+    'URLMainThread.cpp',
     'URLSearchParams.cpp',
+    'URLWorker.cpp',
 ]
 
 LOCAL_INCLUDES += [
