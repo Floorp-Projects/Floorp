@@ -44,7 +44,13 @@
       }
       sb.scrollLeft += amountToScroll;
 
-      document.documentElement.removeAttribute("class");
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            document.documentElement.removeAttribute("class");
+          });
+        });
+      });
     }
   ]]>
 </script>
