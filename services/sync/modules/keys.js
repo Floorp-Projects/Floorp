@@ -13,7 +13,6 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/util.js");
 
 /**
@@ -108,8 +107,8 @@ KeyBundle.prototype = {
    * Populate this key pair with 2 new, randomly generated keys.
    */
   generateRandom: function generateRandom() {
-    let generatedHMAC = Weave.Crypto.generateRandomKey();
-    let generatedEncr = Weave.Crypto.generateRandomKey();
+    let generatedHMAC = Svc.Crypto.generateRandomKey();
+    let generatedEncr = Svc.Crypto.generateRandomKey();
     this.keyPairB64 = [generatedEncr, generatedHMAC];
   },
 

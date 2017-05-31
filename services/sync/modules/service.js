@@ -25,7 +25,6 @@ Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
-Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
@@ -154,7 +153,7 @@ Sync11Service.prototype = {
     let ok = false;
 
     try {
-      let iv = Weave.Crypto.generateRandomIV();
+      let iv = Svc.Crypto.generateRandomIV();
       if (iv.length == 24)
         ok = true;
 
