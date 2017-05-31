@@ -73,9 +73,9 @@ CollectProfileOrEmptyString()
 }
 
 mozilla::ipc::IPCResult
-ProfilerChild::RecvGatherProfile(RefPtr<GatherProfilePromise>&& aPromise)
+ProfilerChild::RecvGatherProfile(GatherProfileResolver&& aResolve)
 {
-  aPromise->Resolve(CollectProfileOrEmptyString(), __func__);
+  aResolve(CollectProfileOrEmptyString());
   return IPC_OK();
 }
 
