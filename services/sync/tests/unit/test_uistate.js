@@ -169,8 +169,9 @@ add_task(async function test_observer_refreshState() {
   let refreshState = sinon.spy(UIStateInternal, "refreshState");
 
   let shouldRefresh = ["weave:service:login:change", "weave:service:login:error",
-                       "weave:service:ready", "fxaccounts:onlogin",
-                       "fxaccounts:onlogout", "fxaccounts:profilechange"];
+                       "weave:service:ready", "fxaccounts:onverified",
+                       "fxaccounts:onlogin", "fxaccounts:onlogout",
+                       "fxaccounts:profilechange"];
 
   for (let topic of shouldRefresh) {
     let uiUpdateObserved = observeUIUpdate();
