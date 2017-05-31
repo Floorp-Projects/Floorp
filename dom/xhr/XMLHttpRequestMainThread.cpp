@@ -189,7 +189,7 @@ XMLHttpRequestMainThread::XMLHttpRequestMainThread()
     mUploadTransferred(0), mUploadTotal(0), mUploadComplete(true),
     mProgressSinceLastProgressEvent(false),
     mRequestSentTime(0), mTimeoutMilliseconds(0),
-    mErrorLoad(ErrorType::eOK), mErrorParsingXML(false),
+    mErrorLoad(false), mErrorParsingXML(false),
     mWaitingForOnStopRequest(false),
     mProgressTimerIsActive(false),
     mIsHtml(false),
@@ -942,7 +942,7 @@ XMLHttpRequestMainThread::GetStatus(ErrorResult& aRv)
     return 0;
   }
 
-  if (mErrorLoad != ErrorType::eOK) {
+  if (mErrorLoad) {
     // Let's simulate the http protocol for jar/app requests:
     nsCOMPtr<nsIJARChannel> jarChannel = GetCurrentJARChannel();
     if (jarChannel) {
@@ -1004,7 +1004,7 @@ XMLHttpRequestMainThread::GetStatusText(nsACString& aStatusText,
     return;
   }
 
-  if (mErrorLoad != ErrorType::eOK) {
+  if (mErrorLoad) {
     return;
   }
 
@@ -1221,7 +1221,7 @@ XMLHttpRequestMainThread::GetAllResponseHeaders(nsACString& aResponseHeaders,
     return;
   }
 
-  if (mErrorLoad != ErrorType::eOK) {
+  if (mErrorLoad) {
     return;
   }
 
@@ -1943,13 +1943,11 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
   nsresult status;
   request->GetStatus(&status);
-  if (mErrorLoad == ErrorType::eOK && NS_FAILED(status)) {
-    mErrorLoad = ErrorType::eRequest;
-  }
+  mErrorLoad = mErrorLoad || NS_FAILED(status);
 
   // Upload phase is now over. If we were uploading anything,
   // stop the timer and fire any final progress events.
-  if (mUpload && !mUploadComplete && mErrorLoad == ErrorType::eOK && !mFlagSynchronous) {
+  if (mUpload && !mUploadComplete && !mErrorLoad && !mFlagSynchronous) {
     StopProgressEventTimer();
 
     mUploadTransferred = mUploadTotal;
@@ -2327,7 +2325,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
     // This can happen if the server is unreachable. Other possible
     // reasons are that the user leaves the page or hits the ESC key.
 
-    mErrorLoad = ErrorType::eUnreachable;
+    mErrorLoad = true;
     mResponseXML = nullptr;
   }
 
@@ -2432,14 +2430,13 @@ XMLHttpRequestMainThread::ChangeStateToDone()
 
   // Per spec, fire download's load/error and loadend events after
   // readystatechange=4/done (and of course all upload events).
-  if (mErrorLoad != ErrorType::eOK) {
-    DispatchProgressEvent(this, ProgressEventType::error, 0, -1);
-  } else {
-    DispatchProgressEvent(this, ProgressEventType::load,
-                          mLoadTransferred, mLoadTotal);
-  }
+  DispatchProgressEvent(this,
+                        mErrorLoad ? ProgressEventType::error :
+                                     ProgressEventType::load,
+                        mErrorLoad ? 0 : mLoadTransferred,
+                        mErrorLoad ? -1 : mLoadTotal);
 
-  if (mErrorLoad != ErrorType::eOK) {
+  if (mErrorLoad) {
     // By nulling out channel here we make it so that Send() can test
     // for that and throw. Also calling the various status
     // methods/members will not throw.
@@ -2788,7 +2785,7 @@ XMLHttpRequestMainThread::InitiateFetch(nsIInputStream* aUploadStream,
     mChannel->SetNotificationCallbacks(mNotificationCallbacks);
     mChannel = nullptr;
 
-    mErrorLoad = ErrorType::eChannelOpen;
+    mErrorLoad = true;
 
     // Per spec, we throw on sync errors, but not async.
     if (mFlagSynchronous) {
@@ -2936,7 +2933,7 @@ XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
   mUploadTotal = 0;
   // By default we don't have any upload, so mark upload complete.
   mUploadComplete = true;
-  mErrorLoad = ErrorType::eOK;
+  mErrorLoad = false;
   mLoadTotal = -1;
   nsCOMPtr<nsIInputStream> uploadStream;
   nsAutoCString uploadContentType;
@@ -3448,7 +3445,7 @@ XMLHttpRequestMainThread::OnRedirectVerifyCallback(nsresult result)
       mAuthorRequestHeaders.ApplyToChannel(httpChannel);
     }
   } else {
-    mErrorLoad = ErrorType::eRedirect;
+    mErrorLoad = true;
   }
 
   mNewRedirectChannel = nullptr;
@@ -3693,7 +3690,7 @@ XMLHttpRequestMainThread::HandleProgressTimerCallback()
 
   mProgressTimerIsActive = false;
 
-  if (!mProgressSinceLastProgressEvent || mErrorLoad != ErrorType::eOK) {
+  if (!mProgressSinceLastProgressEvent || mErrorLoad) {
     return;
   }
 
