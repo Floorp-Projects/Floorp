@@ -54,6 +54,7 @@ this.Utils = {
   makeHMACHasher: CryptoUtils.makeHMACHasher,
   hkdfExpand: CryptoUtils.hkdfExpand,
   pbkdf2Generate: CryptoUtils.pbkdf2Generate,
+  deriveKeyFromPassphrase: CryptoUtils.deriveKeyFromPassphrase,
   getHTTPMACSHA1Header: CryptoUtils.getHTTPMACSHA1Header,
 
   /**
@@ -287,6 +288,39 @@ this.Utils = {
            .slice(0, SYNC_KEY_DECODED_LENGTH);
   },
 
+  base64Key: function base64Key(keyData) {
+    return btoa(keyData);
+  },
+
+  /**
+   * N.B., salt should be base64 encoded, even though we have to decode
+   * it later!
+   */
+  derivePresentableKeyFromPassphrase: function derivePresentableKeyFromPassphrase(passphrase, salt, keyLength, forceJS) {
+    let k = CryptoUtils.deriveKeyFromPassphrase(passphrase, salt, keyLength,
+                                                forceJS);
+    return Utils.encodeKeyBase32(k);
+  },
+
+  /**
+   * N.B., salt should be base64 encoded, even though we have to decode
+   * it later!
+   */
+  deriveEncodedKeyFromPassphrase: function deriveEncodedKeyFromPassphrase(passphrase, salt, keyLength, forceJS) {
+    let k = CryptoUtils.deriveKeyFromPassphrase(passphrase, salt, keyLength,
+                                                forceJS);
+    return Utils.base64Key(k);
+  },
+
+  /**
+   * Take a base64-encoded 128-bit AES key, returning it as five groups of five
+   * uppercase alphanumeric characters, separated by hyphens.
+   * A.K.A. base64-to-base32 encoding.
+   */
+  presentEncodedKeyAsSyncKey: function presentEncodedKeyAsSyncKey(encodedKey) {
+    return Utils.encodeKeyBase32(atob(encodedKey));
+  },
+
   jsonFilePath(filePath) {
     return OS.Path.normalize(OS.Path.join(OS.Constants.Path.profileDir, "weave", filePath + ".json"));
   },
@@ -418,11 +452,26 @@ this.Utils = {
   },
 
   /**
+   * Generate 26 characters.
+   */
+  generatePassphrase: function generatePassphrase() {
+    // Note that this is a different base32 alphabet to the one we use for
+    // other tasks. It's lowercase, uses different letters, and needs to be
+    // decoded with decodeKeyBase32, not just decodeBase32.
+    return Utils.encodeKeyBase32(CryptoUtils.generateRandomBytes(16));
+  },
+
+  /**
    * The following are the methods supported for UI use:
    *
    * * isPassphrase:
    *     determines whether a string is either a normalized or presentable
    *     passphrase.
+   * * hyphenatePassphrase:
+   *     present a normalized passphrase for display. This might actually
+   *     perform work beyond just hyphenation; sorry.
+   * * hyphenatePartialPassphrase:
+   *     present a fragment of a normalized passphrase for display.
    * * normalizePassphrase:
    *     take a presentable passphrase and reduce it to a normalized
    *     representation for storage. normalizePassphrase can safely be called
@@ -434,6 +483,40 @@ this.Utils = {
       return /^[abcdefghijkmnpqrstuvwxyz23456789]{26}$/.test(Utils.normalizePassphrase(s));
     }
     return false;
+  },
+
+  /**
+   * Hyphenate a passphrase (26 characters) into groups.
+   * abbbbccccddddeeeeffffggggh
+   * =>
+   * a-bbbbc-cccdd-ddeee-effff-ggggh
+   */
+  hyphenatePassphrase: function hyphenatePassphrase(passphrase) {
+    // For now, these are the same.
+    return Utils.hyphenatePartialPassphrase(passphrase, true);
+  },
+
+  hyphenatePartialPassphrase: function hyphenatePartialPassphrase(passphrase, omitTrailingDash) {
+    if (!passphrase)
+      return null;
+
+    // Get the raw data input. Just base32.
+    let data = passphrase.toLowerCase().replace(/[^abcdefghijkmnpqrstuvwxyz23456789]/g, "");
+
+    // This is the neatest way to do this.
+    if ((data.length == 1) && !omitTrailingDash)
+      return data + "-";
+
+    // Hyphenate it.
+    let y = data.substr(0, 1);
+    let z = data.substr(1).replace(/(.{1,5})/g, "-$1");
+
+    // Correct length? We're done.
+    if ((z.length == 30) || omitTrailingDash)
+      return y + z;
+
+    // Add a trailing dash if appropriate.
+    return (y + z.replace(/([^-]{5})$/, "$1-")).substr(0, SYNC_KEY_HYPHENATED_LENGTH);
   },
 
   normalizePassphrase: function normalizePassphrase(pp) {
