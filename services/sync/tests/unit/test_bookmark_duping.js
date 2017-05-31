@@ -290,7 +290,8 @@ add_task(async function test_dupe_reparented_locally_changed_bookmark() {
     };
 
     let deltaSeconds = 500;
-    collection.insert(newGUID, encryptPayload(to_apply), Date.now() / 1000 + deltaSeconds);
+    let newWBO = collection.insert(newGUID, encryptPayload(to_apply), Date.now() / 1000 + deltaSeconds);
+    do_print(`new duplicate of ${bmk1_guid} is ${newGUID}`);
 
     // Make a change to the bookmark that's a dupe, and set the modification
     // time further in the future than the incoming record. This will cause
@@ -303,7 +304,10 @@ add_task(async function test_dupe_reparented_locally_changed_bookmark() {
     });
 
     _("Syncing so new dupe record is processed");
-    engine.lastSync = engine.lastSync - 5;
+    // We need to take care to only sync the one new record - if we also see
+    // our local item as incoming the test fails - bug 1368608.
+    engine.lastSync = newWBO.modified - 0.000001;
+    engine.lastModified = null;
     await engine.sync();
 
     // We should have logically deleted the dupe record.
@@ -311,7 +315,7 @@ add_task(async function test_dupe_reparented_locally_changed_bookmark() {
     ok(getServerRecord(collection, bmk1_guid).deleted);
     // and physically removed from the local store.
     await promiseNoLocalItem(bmk1_guid);
-    // The original folder still longer has the item
+    // The original folder still has the item
     equal((await getFolderChildrenIDs(folder1_id)).length, 1);
     // The second folder does not.
     equal((await getFolderChildrenIDs(folder2_id)).length, 0);
