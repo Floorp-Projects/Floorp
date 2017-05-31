@@ -23,6 +23,7 @@
 #include "mozilla/dom/workers/bindings/WorkerHolder.h"
 
 class nsIGlobalObject;
+class nsIEventTarget;
 
 namespace mozilla {
 namespace dom {
@@ -169,7 +170,9 @@ public:
   nsAutoPtr<workers::WorkerHolder> mWorkerHolder;
 
 protected:
-  FetchBody();
+  nsCOMPtr<nsIGlobalObject> mOwner;
+
+  explicit FetchBody(nsIGlobalObject* aOwner);
 
   virtual ~FetchBody();
 
@@ -233,6 +236,9 @@ private:
 #endif
 
   nsMainThreadPtrHandle<nsIInputStreamPump> mConsumeBodyPump;
+
+  // The main-thread event target for runnable dispatching.
+  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 };
 
 } // namespace dom

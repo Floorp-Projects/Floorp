@@ -123,11 +123,13 @@ child:
 
   async PParentToChildStream();
 
-  async PIPCBlobInputStream(nsID aID, uint64_t aSize);
-
   async PPendingIPCBlob(IPCBlob blob);
 
 both:
+  // PIPCBlobInputStream is created on the parent side only if the child starts
+  // a migration.
+  async PIPCBlobInputStream(nsID aID, uint64_t aSize);
+
   async PFileDescriptorSet(FileDescriptor fd);
 };
 

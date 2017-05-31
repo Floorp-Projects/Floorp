@@ -15,7 +15,7 @@ namespace dom {
 template<typename M>
 /* static */ IPCBlobInputStreamParent*
 IPCBlobInputStreamParent::Create(nsIInputStream* aInputStream, uint64_t aSize,
-                                 nsresult* aRv, M* aManager)
+                                 uint64_t aChildID, nsresult* aRv, M* aManager)
 {
   MOZ_ASSERT(aInputStream);
   MOZ_ASSERT(aRv);
@@ -26,9 +26,21 @@ IPCBlobInputStreamParent::Create(nsIInputStream* aInputStream, uint64_t aSize,
     return nullptr;
   }
 
-  IPCBlobInputStreamStorage::Get()->AddStream(aInputStream, id);
+  IPCBlobInputStreamStorage::Get()->AddStream(aInputStream, id, aChildID);
 
   return new IPCBlobInputStreamParent(id, aSize, aManager);
+}
+
+/* static */ IPCBlobInputStreamParent*
+IPCBlobInputStreamParent::Create(const nsID& aID, uint64_t aSize,
+                                 PBackgroundParent* aManager)
+{
+  IPCBlobInputStreamParent* actor =
+    new IPCBlobInputStreamParent(aID, aSize, aManager);
+
+  actor->mCallback = IPCBlobInputStreamStorage::Get()->TakeCallback(aID);
+
+  return actor;
 }
 
 IPCBlobInputStreamParent::IPCBlobInputStreamParent(const nsID& aID,
@@ -38,6 +50,7 @@ IPCBlobInputStreamParent::IPCBlobInputStreamParent(const nsID& aID,
   , mSize(aSize)
   , mContentManager(aManager)
   , mPBackgroundManager(nullptr)
+  , mMigrating(false)
 {}
 
 IPCBlobInputStreamParent::IPCBlobInputStreamParent(const nsID& aID,
@@ -47,6 +60,7 @@ IPCBlobInputStreamParent::IPCBlobInputStreamParent(const nsID& aID,
   , mSize(aSize)
   , mContentManager(nullptr)
   , mPBackgroundManager(aManager)
+  , mMigrating(false)
 {}
 
 void
@@ -57,10 +71,22 @@ IPCBlobInputStreamParent::ActorDestroy(IProtocol::ActorDestroyReason aReason)
   mContentManager = nullptr;
   mPBackgroundManager = nullptr;
 
-  IPCBlobInputStreamStorage::Get()->ForgetStream(mID);
-
   RefPtr<IPCBlobInputStreamParentCallback> callback;
   mCallback.swap(callback);
+
+  RefPtr<IPCBlobInputStreamStorage> storage = IPCBlobInputStreamStorage::Get();
+
+  if (mMigrating) {
+    if (callback && storage) {
+      // We need to assign this callback to the next parent.
+      IPCBlobInputStreamStorage::Get()->StoreCallback(mID, callback);
+    }
+    return;
+  }
+
+  if (storage) {
+    storage->ForgetStream(mID);
+  }
 
   if (callback) {
     callback->ActorDestroyed(mID);
@@ -121,6 +147,22 @@ IPCBlobInputStreamParent::RecvClose()
 
   Unused << Send__delete__(this);
   return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+IPCBlobInputStreamParent::Recv__delete__()
+{
+  MOZ_ASSERT(mContentManager || mPBackgroundManager);
+  mMigrating = true;
+  return IPC_OK();
+}
+
+bool
+IPCBlobInputStreamParent::HasValidStream() const
+{
+  nsCOMPtr<nsIInputStream> stream;
+  IPCBlobInputStreamStorage::Get()->GetStream(mID, getter_AddRefs(stream));
+  return !!stream;
 }
 
 } // namespace dom
