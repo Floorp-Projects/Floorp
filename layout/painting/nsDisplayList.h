@@ -4436,7 +4436,7 @@ public:
 
   /*
    * Paint mask onto aMaskContext in mFrame's coordinate space and
-   * return if the draw result is successful.
+   * return whether the mask layer was painted successfully.
    */
   bool PaintMask(nsDisplayListBuilder* aBuilder, gfxContext* aMaskContext);
 
