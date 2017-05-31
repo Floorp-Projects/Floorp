@@ -118,6 +118,16 @@ add_test(function test_window() {
   run_next_test();
 });
 
+add_test(function test_contentBrowser() {
+  assert.contentBrowser({contentBrowser: 42});
+
+  for (let typ of [null, undefined, {contentBrowser: null}]) {
+    Assert.throws(() => assert.contentBrowser(typ), NoSuchWindowError);
+  }
+
+  run_next_test();
+});
+
 add_test(function test_object() {
   assert.object({});
   assert.object(new Object());
