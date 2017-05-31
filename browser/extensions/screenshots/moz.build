@@ -14,7 +14,6 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org'] += [
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"] += [
   'webextension/assertIsTrusted.js',
   'webextension/blank.html',
-  'webextension/buildSettings.js.template',
   'webextension/catcher.js',
   'webextension/clipboard.js',
   'webextension/domainFromUrl.js',
@@ -51,6 +50,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["cy"] += [
   'webextension/_locales/cy/messages.json'
+]
+
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["da"] += [
+  'webextension/_locales/da/messages.json'
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["de"] += [
@@ -304,16 +307,8 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["icons"] 
   'webextension/icons/copy.png',
   'webextension/icons/done.svg',
   'webextension/icons/download.svg',
-  'webextension/icons/icon-128.png',
-  'webextension/icons/icon-16.png',
   'webextension/icons/icon-16.svg',
-  'webextension/icons/icon-19.png',
-  'webextension/icons/icon-256.png',
-  'webextension/icons/icon-32.png',
   'webextension/icons/icon-32.svg',
-  'webextension/icons/icon-38.png',
-  'webextension/icons/icon-48.png',
-  'webextension/icons/icon-64.png',
   'webextension/icons/icon-highlight-32.svg',
   'webextension/icons/icon-starred-32.svg',
   'webextension/icons/icon-welcome-face-without-eyes.svg',

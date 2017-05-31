@@ -3,7 +3,7 @@
     "message": "Ստացեք հոլովակներ և էկրանի հանույթներ վեբից և պահպանեք դանք ժամանակավոր կամ մշտապես:"
   },
   "addonAuthorsList": {
-    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
     "message": "Ստանալ էկրանի պատկերը"
@@ -71,7 +71,7 @@
     "message": "Մենք վստահ չենք, թե ինչ է տեղի ունեցնել: Կրկին փորձեք կամ փորձեք ստանալ մեկ այլ էջի պատկերը:"
   },
   "tourBodyOne": {
-    "message": "Ստացեք, պահպանեք և համօգտագործեք էկրանի հանույթները՝ առանց Firefox-ը լքելու: "
+    "message": "Ստացեք, պահպանեք և համօգտագործեք էկրանի հանույթները՝ առանց Firefox-ը լքելու:"
   },
   "tourHeaderTwo": {
     "message": "Ստացեք միայն այն, ինչ Ձեզ պետք է:"

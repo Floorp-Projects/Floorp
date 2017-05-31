@@ -5,7 +5,6 @@
 "use strict";
 
 const { Ci } = require("chrome");
-const promise = require("promise");
 const { Task } = require("devtools/shared/task");
 const { tunnelToInnerBrowser } = require("./tunnel");
 
@@ -329,19 +328,18 @@ function addXULBrowserDecorations(browser) {
 }
 
 function tabLoaded(tab) {
-  let deferred = promise.defer();
-
-  function handle(event) {
-    if (event.originalTarget != tab.linkedBrowser.contentDocument ||
-        event.target.location.href == "about:blank") {
-      return;
+  return new Promise(resolve => {
+    function handle(event) {
+      if (event.originalTarget != tab.linkedBrowser.contentDocument ||
+          event.target.location.href == "about:blank") {
+        return;
+      }
+      tab.linkedBrowser.removeEventListener("load", handle, true);
+      resolve(event);
     }
-    tab.linkedBrowser.removeEventListener("load", handle, true);
-    deferred.resolve(event);
-  }
 
-  tab.linkedBrowser.addEventListener("load", handle, true);
-  return deferred.promise;
+    tab.linkedBrowser.addEventListener("load", handle, true);
+  });
 }
 
 exports.swapToInnerBrowser = swapToInnerBrowser;

@@ -1,4 +1,3 @@
-/* globals window, document, browser */
 /* globals log, util, catcher, inlineSelectionCss, callBackground, assertIsTrusted */
 
 "use strict";

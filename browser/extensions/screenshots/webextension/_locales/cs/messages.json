@@ -3,7 +3,7 @@
     "message": "Pořizujte snímky webových stránek a ukládejte je dočasně nebo natrvalo."
   },
   "addonAuthorsList": {
-    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
     "message": "Pořídit snímek obrazovky"
@@ -12,7 +12,7 @@
     "message": "Mé snímky"
   },
   "screenshotInstructions": {
-    "message": "Stiskněte tlačítko myši a tahem označte oblast snímku. Pro zrušení výběru stiskněte klávesu ESC."
+    "message": "Oblast vyberete kliknutím nebo tahem myší. Pro zrušení stiskněte ESC."
   },
   "saveScreenshotSelectedArea": {
     "message": "Uložit"

@@ -33,8 +33,6 @@ window.inlineSelectionCss = `
     .button.tiny:active, .tiny.highlight-button-cancel:active, .tiny.highlight-button-save:active, .tiny.highlight-button-download:active {
       background: #dedede;
       border-color: #989898; }
-  .button.set-width--medium, .set-width--medium.highlight-button-cancel, .set-width--medium.highlight-button-save, .set-width--medium.highlight-button-download {
-    max-width: 200px; }
   .button.block-button, .block-button.highlight-button-cancel, .block-button.highlight-button-save, .block-button.highlight-button-download {
     display: flex;
     align-items: center;
@@ -47,15 +45,15 @@ window.inlineSelectionCss = `
     flex-shrink: 0;
     font-size: 20px;
     height: 100px;
-    line-height: 100%; }
+    line-height: 100%;
+    overflow: hidden; }
     @media (max-width: 719px) {
       .button.block-button, .block-button.highlight-button-cancel, .block-button.highlight-button-save, .block-button.highlight-button-download {
         justify-content: flex-start;
-        padding: 10px;
         font-size: 16px;
         height: 72px;
-        flex: 1 0;
-        margin-right: 10px; } }
+        margin-right: 10px;
+        padding: 0 5px; } }
     .button.block-button:hover, .block-button.highlight-button-cancel:hover, .block-button.highlight-button-save:hover, .block-button.highlight-button-download:hover {
       background: #ebebeb; }
     .button.block-button:active, .block-button.highlight-button-cancel:active, .block-button.highlight-button-save:active, .block-button.highlight-button-download:active {
@@ -80,6 +78,15 @@ window.inlineSelectionCss = `
     color: #fff;
     text-decoration: underline; }
 
+.alt-color-scheme {
+  background: #31365A;
+  color: #f5f5f7; }
+  .alt-color-scheme h1 {
+    color: #6F7FB6; }
+  .alt-color-scheme a {
+    color: #e1e1e6;
+    text-decoration: underline; }
+
 .button.primary, .primary.highlight-button-cancel, .highlight-button-save, .primary.highlight-button-download {
   background-color: #009ec0;
   color: #fff; }
@@ -95,6 +102,12 @@ window.inlineSelectionCss = `
     background-color: #ebebeb; }
   .button.secondary:hover, .highlight-button-cancel:hover, .secondary.highlight-button-save:hover, .highlight-button-download:hover {
     background-color: #dedede; }
+
+.button.transparent, .transparent.highlight-button-cancel, .transparent.highlight-button-save, .transparent.highlight-button-download {
+  background-color: transparent;
+  color: #3e3d40; }
+  .button.transparent:hover, .transparent.highlight-button-cancel:hover, .transparent.highlight-button-save:hover, .transparent.highlight-button-download:hover, .button.transparent:focus, .transparent.highlight-button-cancel:focus, .transparent.highlight-button-save:focus, .transparent.highlight-button-download:focus, .button.transparent:active, .transparent.highlight-button-cancel:active, .transparent.highlight-button-save:active, .transparent.highlight-button-download:active {
+    background-color: rgba(0, 0, 0, 0.05); }
 
 .button.warning, .warning.highlight-button-cancel, .warning.highlight-button-save, .warning.highlight-button-download {
   color: #fff;
@@ -336,26 +349,27 @@ window.inlineSelectionCss = `
 .fixed-container {
   align-items: center;
   display: flex;
-  height: 100%;
+  flex-direction: column;
+  height: 100vh;
   justify-content: center;
   left: 0;
   margin: 0;
   padding: 0;
   pointer-events: none;
-  position: absolute;
+  position: fixed;
   top: 0;
   width: 100%; }
 
 .face-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  margin: auto;
+  position: relative;
   width: 64px;
-  height: 64px;
-  transform: translateY(-45px); }
+  height: 64px; }
+
+.face {
+  width: 62.4px;
+  height: 62.4px;
+  display: block;
+  background-image: url("MOZ_EXTENSION/icons/icon-welcome-face-without-eyes.svg"); }
 
 .eye {
   background-color: #fff;
@@ -383,12 +397,6 @@ window.inlineSelectionCss = `
 .right {
   margin-left: 20px; }
 
-.face {
-  width: 62.4px;
-  height: 62.4px;
-  display: block;
-  background-image: url("MOZ_EXTENSION/icons/icon-welcome-face-without-eyes.svg"); }
-
 .preview-instructions {
   display: flex;
   align-items: center;
@@ -399,8 +407,8 @@ window.inlineSelectionCss = `
   font-size: 24px;
   line-height: 32px;
   text-align: center;
-  width: 400px;
-  margin-top: 45px; }
+  padding-top: 20px;
+  width: 400px; }
 
 .myshots-all-buttons-container {
   display: flex;
@@ -455,16 +463,6 @@ window.inlineSelectionCss = `
   align-items: center;
   justify-content: center; }
 
-/* styleMyShotsButton test: */
-.styleMyShotsButton-bright .myshots-button {
-  color: #fff;
-  background: #009ec0; }
-
-.styleMyShotsButton-bright .myshots-text-pre,
-.styleMyShotsButton-bright .myshots-text-post {
-  filter: brightness(20); }
-
-/* end styleMyShotsButton test */
 @keyframes pulse {
   0% {
     transform: scale(1); }

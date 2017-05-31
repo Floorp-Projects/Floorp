@@ -31,9 +31,12 @@ pub fn main() {
     let bind_args: Vec<_> = env::args().collect();
 
     let version = clang_version();
-    let expected_version = if cfg!(feature = "testing_only_llvm_stable") {
+    let expected_version = if cfg!(feature = "testing_only_libclang_4") {
+        (4, 0)
+    } else if cfg!(feature = "testing_only_libclang_3_8") {
         (3, 8)
     } else {
+        // Default to 3.9.
         (3, 9)
     };
 

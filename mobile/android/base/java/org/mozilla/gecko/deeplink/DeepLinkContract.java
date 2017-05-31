@@ -12,6 +12,8 @@ public class DeepLinkContract {
     public static final String SUMO_DEFAULT_BROWSER = "https://support.mozilla.org/kb/make-firefox-default-browser-android?utm_source=inproduct&amp;utm_medium=settings&amp;utm_campaign=mobileandroid";
     public static final String DEEP_LINK_SCHEME = "firefox";
 
+    public static final String LINK_FXA_SIGNIN = "fxa-signin";
+
     public static final String LINK_DEFAULT_BROWSER = "default_browser";
     public static final String LINK_SAVE_AS_PDF = "save_as_pdf";
     public static final String LINK_BOOKMARK_LIST = "bookmark_list";
@@ -23,4 +25,7 @@ public class DeepLinkContract {
     public static final String LINK_PREFERENCES_NOTIFICATIONS = "preferences_notifications";
     public static final String LINK_PREFERENCES_ACCESSIBILITY = "preferences_accessibility";
 
+    public static final String ACCOUNTS_TOKEN_PARAM = "signin";
+    public static final String ACCOUNTS_ENTRYPOINT_PARAM = "entrypoint";
+    public static final String ACCOUNTS_UTM_PREFIX = "utm_";
 }
