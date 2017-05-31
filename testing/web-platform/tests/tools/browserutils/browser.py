@@ -1,17 +1,16 @@
 import logging
 import os
-import platform
 import re
 import stat
 from abc import ABCMeta, abstractmethod
-from ConfigParser import RawConfigParser
+from configparser import RawConfigParser
 from distutils.spawn import find_executable
 
 from utils import call, get, untar, unzip
 
 logger = logging.getLogger(__name__)
 
-uname = platform.uname()
+uname = os.uname()
 
 def path(path, exe):
     path = path.replace("/", os.path.sep)
@@ -118,10 +117,7 @@ class Firefox(Browser):
         return find_executable("firefox")
 
     def find_certutil(self):
-        path = find_executable("certutil")
-        if os.path.splitdrive(path)[1].split(os.path.sep) == ["", "Windows", "system32", "certutil.exe"]:
-            return None
-        return path
+        return find_executable("certutil")
 
     def find_webdriver(self):
         return find_executable("geckodriver")
@@ -181,14 +177,10 @@ class Firefox(Browser):
             dest = os.pwd
 
         version = self._latest_geckodriver_version()
-        format = "zip" if uname[0] == "Windows" else "tar.gz"
         logger.debug("Latest geckodriver release %s" % version)
-        url = ("https://github.com/mozilla/geckodriver/releases/download/%s/geckodriver-%s-%s.%s" %
-               (version, version, self.platform_string_geckodriver(), format))
-        if format == "zip":
-            unzip(get(url).raw, dest=dest)
-        else:
-            untar(get(url).raw, dest=dest)
+        url = ("https://github.com/mozilla/geckodriver/releases/download/%s/geckodriver-%s-%s.tar.gz" %
+               (version, version, self.platform_string_geckodriver()))
+        untar(get(url).raw, dest=dest)
         return find_executable(os.path.join(dest, "geckodriver"))
 
     def version(self, root):
@@ -245,7 +237,7 @@ class Chrome(Browser):
         url = "http://chromedriver.storage.googleapis.com/%s/chromedriver_%s.zip" % (latest,
                                                                                      self.platform_string())
         unzip(get(url).raw, dest)
-        path = find_executable("chromedriver", dest)
+        path = os.path.join(dest, "chromedriver")
         st = os.stat(path)
         os.chmod(path, st.st_mode | stat.S_IEXEC)
         return path
@@ -274,52 +266,3 @@ class Chrome(Browser):
             else:
                 logger.critical("dbus not running and can't be started")
                 sys.exit(1)
-
-
-class Edge(Browser):
-    """Edge-specific interface.
-
-    Includes installation, webdriver installation, and wptrunner setup methods.
-    """
-
-    product = "edge"
-    requirements = "requirements_edge.txt"
-
-    def install(self):
-        return None
-
-    def find_webdriver(self):
-        return find_executable("MicrosoftWebDriver")
-
-    def install_webdriver(self, dest=None):
-        """Install latest Webdriver."""
-        raise NotImplementedError
-
-    def version(self):
-        raise NotImplementedError
-
-
-class Servo(Browser):
-    """Firefox-specific interface.
-
-    Includes installation, webdriver installation, and wptrunner setup methods.
-    """
-
-    product = "servo"
-    requirements = "requirements_servo.txt"
-
-    def install(self, platform, dest=None):
-        """Install Servo."""
-        raise NotImplementedError
-
-    def find_binary(self):
-        return find_executable("servo")
-
-    def find_webdriver(self):
-        return None
-
-    def install_webdriver(self):
-        raise NotImplementedError
-
-    def version(self, root):
-        return None
