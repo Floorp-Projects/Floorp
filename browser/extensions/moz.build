@@ -33,5 +33,4 @@ if CONFIG['MOZ_MORTAR']:
 if CONFIG['NIGHTLY_BUILD']:
     DIRS += [
         'activity-stream',
-        'onboarding',
     ]
