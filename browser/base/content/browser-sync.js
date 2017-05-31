@@ -304,6 +304,7 @@ var gSync = {
         this.remoteClients.map(client => client.id);
 
       clients.forEach(clientId => this.sendTabToDevice(url, clientId, title));
+      gPageActionButton.panel.hidePopup();
     }
 
     function addTargetDevice(clientId, name, clientType) {
