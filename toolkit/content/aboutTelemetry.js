@@ -532,71 +532,14 @@ var EnvironmentData = {
       return;
     }
 
-    let data = sectionalizeObject(ping.environment);
-
-    for (let [section, sectionData] of data) {
-      if (section == "addons") {
-        break;
-      }
-
-      let table = document.createElement("table");
-      this.appendHeading(table);
-
-      for (let [path, value] of sectionData) {
-        let row = document.createElement("tr");
-        this.appendColumn(row, "td", path);
-        this.appendColumn(row, "td", value);
-        table.appendChild(row);
-      }
-
-      let hasData = sectionData.size > 0;
-      this.createSubsection(section, hasData, table, dataDiv);
-    }
+    let ignore = ["addons"];
+    let env = filterObject(ping.environment, ignore);
+    let sections = sectionalizeObject(env);
+    GenericSubsection.render(sections, dataDiv);
 
     // We use specialized rendering here to make the addon and plugin listings
     // more readable.
     this.createAddonSection(dataDiv, ping);
-  },
-
-  createSubsection(title, hasSubdata, subSectionData, dataDiv) {
-    let dataSection = document.createElement("section");
-    dataSection.classList.add("data-subsection");
-
-    if (hasSubdata) {
-      dataSection.classList.add("has-subdata");
-    }
-
-    // Create section heading
-    let sectionName = document.createElement("h2");
-    sectionName.setAttribute("class", "section-name");
-    sectionName.appendChild(document.createTextNode(title));
-    sectionName.addEventListener("click", toggleSection);
-
-    // Create caption for toggling the subsection visibility.
-    let toggleCaption = document.createElement("span");
-    toggleCaption.setAttribute("class", "toggle-caption");
-    let toggleText = bundle.GetStringFromName("environmentDataSubsectionToggle");
-    toggleCaption.appendChild(document.createTextNode(" " + toggleText));
-    toggleCaption.addEventListener("click", toggleSection);
-
-    // Create caption for empty subsections.
-    let emptyCaption = document.createElement("span");
-    emptyCaption.setAttribute("class", "empty-caption");
-    let emptyText = bundle.GetStringFromName("environmentDataSubsectionEmpty");
-    emptyCaption.appendChild(document.createTextNode(" " + emptyText));
-
-    // Create data container
-    let data = document.createElement("div");
-    data.setAttribute("class", "subsection-data subdata");
-    data.appendChild(subSectionData);
-
-    // Append elements
-    dataSection.appendChild(sectionName);
-    dataSection.appendChild(toggleCaption);
-    dataSection.appendChild(emptyCaption);
-    dataSection.appendChild(data);
-
-    dataDiv.appendChild(dataSection);
   },
 
   renderPersona(addonObj, addonSection, sectionTitle) {
@@ -645,27 +588,14 @@ var EnvironmentData = {
 
   renderKeyValueObject(addonObj, addonSection, sectionTitle) {
     let data = explodeObject(addonObj);
-    let table = document.createElement("table");
+    let table = GenericTable.render(data);
     table.setAttribute("class", sectionTitle);
     this.appendAddonSubsectionTitle(sectionTitle, table);
-    this.appendHeading(table);
-
-    for (let [key, value] of data) {
-      this.appendRow(table, key, value);
-    }
-
     addonSection.appendChild(table);
   },
 
   appendAddonID(table, addonID) {
     this.appendRow(table, "id", addonID);
-  },
-
-  appendHeading(table) {
-    let headings = document.createElement("tr");
-    this.appendColumn(headings, "th", bundle.GetStringFromName("namesHeader"));
-    this.appendColumn(headings, "th", bundle.GetStringFromName("valuesHeader"));
-    table.appendChild(headings);
   },
 
   appendHeadingName(table, name) {
@@ -684,6 +614,7 @@ var EnvironmentData = {
 
   createAddonSection(dataDiv, ping) {
     let addonSection = document.createElement("div");
+    addonSection.setAttribute("class", "subsection-data subdata");
     let addons = ping.environment.addons;
     this.renderAddonsObject(addons.activeAddons, addonSection, "activeAddons");
     this.renderActivePlugins(addons.activePlugins, addonSection, "activePlugins");
@@ -693,7 +624,9 @@ var EnvironmentData = {
     this.renderPersona(addons, addonSection, "persona");
 
     let hasAddonData = Object.keys(ping.environment.addons).length > 0;
-    this.createSubsection("addons", hasAddonData, addonSection, dataDiv);
+    let s = GenericSubsection.renderSubsectionHeader("addons", hasAddonData);
+    s.appendChild(addonSection);
+    dataDiv.appendChild(s);
   },
 
   appendRow(table, id, value) {
@@ -1442,6 +1375,64 @@ function RenderObject(aObject) {
     output += ", \"" + keys[i] + "\":\u00A0" + JSON.stringify(aObject[keys[i]]);
   }
   return output + "}";
+}
+
+var GenericSubsection = {
+
+  render(data, dataDiv) {
+    for (let [title, sectionData] of data) {
+      let hasData = sectionData.size > 0;
+      let s = this.renderSubsectionHeader(title, hasData);
+      s.appendChild(this.renderSubsectionData(sectionData));
+      dataDiv.appendChild(s);
+    }
+  },
+
+  renderSubsectionHeader(title, hasData) {
+    let section = document.createElement("section");
+    section.classList.add("data-subsection");
+    if (hasData) {
+      section.classList.add("has-subdata");
+    }
+
+    // Create section heading
+    let sectionName = document.createElement("h2");
+    sectionName.setAttribute("class", "section-name");
+    sectionName.appendChild(document.createTextNode(title));
+    sectionName.addEventListener("click", toggleSection);
+
+    // Create caption for toggling the subsection visibility.
+    let toggleCaption = document.createElement("span");
+    toggleCaption.setAttribute("class", "toggle-caption");
+    let toggleText = bundle.GetStringFromName("environmentDataSubsectionToggle");
+    toggleCaption.appendChild(document.createTextNode(" " + toggleText));
+    toggleCaption.addEventListener("click", toggleSection);
+
+    // Create caption for empty subsections.
+    let emptyCaption = document.createElement("span");
+    emptyCaption.setAttribute("class", "empty-caption");
+    let emptyText = bundle.GetStringFromName("environmentDataSubsectionEmpty");
+    emptyCaption.appendChild(document.createTextNode(" " + emptyText));
+
+    // Append elements
+    section.appendChild(sectionName);
+    section.appendChild(toggleCaption);
+    section.appendChild(emptyCaption);
+
+    return section;
+  },
+
+  renderSubsectionData(data) {
+    // Create data container
+    let dataDiv = document.createElement("div");
+    dataDiv.setAttribute("class", "subsection-data subdata");
+    // Instanciate the data
+    let table = GenericTable.render(data);
+    dataDiv.appendChild(table);
+
+    return dataDiv;
+  },
+
 }
 
 var GenericTable = {
