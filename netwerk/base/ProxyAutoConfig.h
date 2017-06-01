@@ -31,7 +31,8 @@ public:
 
   nsresult Init(const nsCString &aPACURI,
                 const nsCString &aPACScript,
-                bool aIncludePath);
+                bool aIncludePath,
+                uint32_t aExtraHeapSize);
   void     SetThreadLocalIndex(uint32_t index);
   void     Shutdown();
   void     GC();
@@ -94,6 +95,7 @@ private:
   nsCString         mPACScript;
   nsCString         mPACURI;
   bool              mIncludePath;
+  uint32_t          mExtraHeapSize;
   nsCString         mRunningHost;
   nsCOMPtr<nsITimer> mTimer;
 };

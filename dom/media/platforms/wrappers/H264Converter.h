@@ -81,6 +81,8 @@ private:
   RefPtr<PlatformDecoderModule> mPDM;
   const VideoInfo mOriginalConfig;
   VideoInfo mCurrentConfig;
+  // Current out of band extra data (as found in metadata's VideoInfo).
+  RefPtr<MediaByteBuffer> mOriginalExtraData;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   RefPtr<layers::ImageContainer> mImageContainer;
   const RefPtr<TaskQueue> mTaskQueue;
@@ -100,6 +102,7 @@ private:
   const TrackInfo::TrackType mType;
   MediaEventProducer<TrackInfo::TrackType>* const mOnWaitingForKeyEvent;
   const CreateDecoderParams::OptionSet mDecoderOptions;
+  Maybe<bool> mCanRecycleDecoder;
 };
 
 } // namespace mozilla

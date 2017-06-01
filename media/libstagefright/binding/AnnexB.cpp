@@ -277,11 +277,6 @@ AnnexB::ExtractExtraData(const mozilla::MediaRawData* aSample)
   MOZ_ASSERT(IsAVCC(aSample));
 
   RefPtr<mozilla::MediaByteBuffer> extradata = new mozilla::MediaByteBuffer;
-  if (HasSPS(aSample->mExtraData)) {
-    // We already have an explicit extradata, re-use it.
-    extradata = aSample->mExtraData;
-    return extradata.forget();
-  }
 
   // SPS content
   mozilla::Vector<uint8_t> sps;
@@ -293,7 +288,20 @@ AnnexB::ExtractExtraData(const mozilla::MediaRawData* aSample)
   int numPps = 0;
 
   int nalLenSize = ((*aSample->mExtraData)[4] & 3) + 1;
-  ByteReader reader(aSample->Data(), aSample->Size());
+
+  size_t sampleSize = aSample->Size();
+  if (aSample->mCrypto.mValid) {
+    // The content is encrypted, we can only parse the non-encrypted data.
+    MOZ_ASSERT(aSample->mCrypto.mPlainSizes.Length() > 0);
+    if (aSample->mCrypto.mPlainSizes.Length() == 0 ||
+        aSample->mCrypto.mPlainSizes[0] > sampleSize) {
+      // This is invalid content.
+      return nullptr;
+    }
+    sampleSize = aSample->mCrypto.mPlainSizes[0];
+  }
+
+  ByteReader reader(aSample->Data(), sampleSize);
 
   // Find SPS and PPS NALUs in AVCC data
   while (reader.Remaining() > nalLenSize) {
@@ -363,47 +371,6 @@ AnnexB::HasSPS(const mozilla::MediaByteBuffer* aExtraData)
   uint8_t numSps = reader.ReadU8() & 0x1f;
 
   return numSps > 0;
-}
-
-bool
-AnnexB::HasPPS(const mozilla::MediaRawData* aSample)
-{
-  return HasPPS(aSample->mExtraData);
-}
-
-bool
-AnnexB::HasPPS(const mozilla::MediaByteBuffer* aExtraData)
-{
-  if (!aExtraData) {
-    return false;
-  }
-
-  ByteReader reader(aExtraData);
-  const uint8_t* ptr = reader.Read(5);
-  if (!ptr || !reader.CanRead8()) {
-    return false;
-  }
-  uint8_t numSps = reader.ReadU8() & 0x1f;
-  // Skip over the included SPS.
-  for (uint8_t i = 0; i < numSps; i++) {
-    if (reader.Remaining() < 3) {
-      return false;
-    }
-    uint16_t length = reader.ReadU16();
-    if ((reader.PeekU8() & 0x1f) != 7) {
-      // Not an SPS NAL type.
-      return false;
-    }
-    if (!reader.Read(length)) {
-      return false;
-    }
-  }
-  if (!reader.CanRead8()) {
-    return false;
-  }
-  uint8_t numPps = reader.ReadU8();
-
-  return numPps > 0;
 }
 
 bool

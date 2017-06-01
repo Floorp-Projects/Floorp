@@ -41,6 +41,16 @@ add_UITour_task(async function test_block_target() {
 async function checkToggleTarget(targetID) {
   let popup = document.getElementById("UITourTooltip");
 
+  let trackerOpened = new Promise(function(resolve, reject) {
+    Services.obs.addObserver(function onopen(subject) {
+      let asciiSpec = subject.QueryInterface(Ci.nsIHttpChannel).URI.asciiSpec;
+      if (asciiSpec === "https://tracking.example.com/") {
+        Services.obs.removeObserver(onopen, "http-on-opening-request");
+        resolve();
+      }
+    }, "http-on-opening-request");
+  });
+
   await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     let doc = content.document;
     let iframe = doc.createElement("iframe");
@@ -48,6 +58,8 @@ async function checkToggleTarget(targetID) {
     iframe.setAttribute("src", "https://tracking.example.com/");
     doc.body.insertBefore(iframe, doc.body.firstChild);
   });
+
+  await trackerOpened;
 
   let testTargetAvailability = async function(expectedAvailable) {
     let data = await getConfigurationPromise("availableTargets");

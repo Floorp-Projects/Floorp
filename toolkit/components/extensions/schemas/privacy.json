@@ -38,6 +38,10 @@
         "$ref": "types.Setting",
         "description": "If enabled, the browser attempts to speed up your web browsing experience by pre-resolving DNS entries, prerendering sites (<code>&lt;link rel='prefetch' ...&gt;</code>), and preemptively opening TCP and SSL connections to servers.  This preference's value is a boolean, defaulting to <code>true</code>."
       },
+      "peerConnectionEnabled": {
+        "$ref": "types.Setting",
+        "description": "Allow users to enable and disable RTCPeerConnections (aka WebRTC)."
+      },
       "webRTCIPHandlingPolicy": {
         "$ref": "types.Setting",
         "description": "Allow users to specify the media performance/privacy tradeoffs which impacts how WebRTC traffic will be routed and how much local address information is exposed. This preference's value is of type IPHandlingPolicy, defaulting to <code>default</code>."
