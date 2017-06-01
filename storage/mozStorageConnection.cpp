@@ -456,8 +456,7 @@ public:
   }
 
   NS_IMETHOD Run() override {
-    MOZ_ASSERT (NS_GetCurrentThread() == mConnection->getAsyncExecutionTarget());
-
+    MOZ_ASSERT(!NS_IsMainThread());
     nsresult rv = mConnection->initializeClone(mClone, mReadOnly);
     if (NS_FAILED(rv)) {
       return Dispatch(rv, nullptr);
@@ -582,7 +581,7 @@ Connection::getSqliteRuntimeStatus(int32_t aStatusOption, int32_t* aMaxValue)
 nsIEventTarget *
 Connection::getAsyncExecutionTarget()
 {
-  MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
+  NS_ENSURE_TRUE(NS_IsMainThread(), nullptr);
 
   // If we are shutting down the asynchronous thread, don't hand out any more
   // references to the thread.
@@ -941,6 +940,13 @@ Connection::isClosed()
   return mConnectionClosed;
 }
 
+bool
+Connection::isAsyncExecutionThreadAvailable()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return !!mAsyncExecutionThread;
+}
+
 void
 Connection::shutdownAsyncThread(nsIThread *aThread) {
   MOZ_ASSERT(!mAsyncExecutionThread);
@@ -1216,14 +1222,21 @@ Connection::Close()
   if (!mDBConn)
     return NS_ERROR_NOT_INITIALIZED;
 
-  { // Make sure we have not executed any asynchronous statements.
-    // If this fails, the mDBConn will be left open, resulting in a leak.
-    // Ideally we'd schedule some code to destroy the mDBConn once all its
-    // async statements have finished executing;  see bug 704030.
-    MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
-    bool asyncCloseWasCalled = !mAsyncExecutionThread;
-    NS_ENSURE_TRUE(asyncCloseWasCalled, NS_ERROR_UNEXPECTED);
-  }
+#ifdef DEBUG
+  // Since we're accessing mAsyncExecutionThread, we need to be on the opener thread.
+  // We make this check outside of debug code below in setClosedState, but this is
+  // here to be explicit.
+  bool onOpenerThread = false;
+  (void)threadOpenedOn->IsOnCurrentThread(&onOpenerThread);
+  MOZ_ASSERT(onOpenerThread);
+#endif // DEBUG
+
+  // Make sure we have not executed any asynchronous statements.
+  // If this fails, the mDBConn will be left open, resulting in a leak.
+  // Ideally we'd schedule some code to destroy the mDBConn once all its
+  // async statements have finished executing;  see bug 704030.
+  bool asyncCloseWasCalled = !mAsyncExecutionThread;
+  NS_ENSURE_TRUE(asyncCloseWasCalled, NS_ERROR_UNEXPECTED);
 
   // setClosedState nullifies our connection pointer, so we take a raw pointer
   // off it, to pass it through the close procedure.
@@ -1237,9 +1250,7 @@ Connection::Close()
 NS_IMETHODIMP
 Connection::AsyncClose(mozIStorageCompletionCallback *aCallback)
 {
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
+  NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_NOT_SAME_THREAD);
 
   // The two relevant factors at this point are whether we have a database
   // connection and whether we have an async execution thread.  Here's what the
@@ -1321,15 +1332,10 @@ Connection::AsyncClose(mozIStorageCompletionCallback *aCallback)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create and dispatch our close event to the background thread.
-  nsCOMPtr<nsIRunnable> closeEvent;
-  {
-    // We need to lock because we're modifying mAsyncExecutionThread
-    MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
-    closeEvent = new AsyncCloseConnection(this,
-                                          nativeConn,
-                                          completeEvent,
-                                          mAsyncExecutionThread.forget());
-  }
+  nsCOMPtr<nsIRunnable> closeEvent = new AsyncCloseConnection(this,
+                                                              nativeConn,
+                                                              completeEvent,
+                                                              mAsyncExecutionThread.forget());
 
   rv = asyncThread->Dispatch(closeEvent, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1344,9 +1350,7 @@ Connection::AsyncClone(bool aReadOnly,
   PROFILER_LABEL("mozStorageConnection", "AsyncClone",
     js::ProfileEntry::Category::STORAGE);
 
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
+  NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_NOT_SAME_THREAD);
   if (!mDBConn)
     return NS_ERROR_NOT_INITIALIZED;
   if (!mDatabaseFile)
@@ -1679,9 +1683,7 @@ Connection::ExecuteSimpleSQLAsync(const nsACString &aSQLStatement,
                                   mozIStorageStatementCallback *aCallback,
                                   mozIStoragePendingStatement **_handle)
 {
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
+  NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_NOT_SAME_THREAD);
 
   nsCOMPtr<mozIStorageAsyncStatement> stmt;
   nsresult rv = CreateAsyncStatement(aSQLStatement, getter_AddRefs(stmt));

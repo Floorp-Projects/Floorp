@@ -78,19 +78,6 @@ public:
   inline void reset()
   {
     NS_PRECONDITION(mStatementOwner, "Must have a statement owner!");
-#ifdef DEBUG
-    {
-      nsCOMPtr<nsIEventTarget> asyncThread =
-        mStatementOwner->getOwner()->getAsyncExecutionTarget();
-      // It's possible that we are shutting down the async thread, and this
-      // method would return nullptr as a result.
-      if (asyncThread) {
-        bool onAsyncThread;
-        NS_ASSERTION(NS_SUCCEEDED(asyncThread->IsOnCurrentThread(&onAsyncThread)) && onAsyncThread,
-                     "This should only be running on the async thread!");
-      }
-    }
-#endif
     // In the AsyncStatement case we may never have populated mStatement if the
     // AsyncExecuteStatements got canceled or a failure occurred in constructing
     // the statement.
