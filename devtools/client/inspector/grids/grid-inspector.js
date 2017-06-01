@@ -15,10 +15,12 @@ const {
   updateGrids,
 } = require("./actions/grids");
 const {
+  updateShowGridAreas,
   updateShowGridLineNumbers,
   updateShowInfiniteLines,
 } = require("./actions/highlighter-settings");
 
+const SHOW_GRID_AREAS = "devtools.gridinspector.showGridAreas";
 const SHOW_GRID_LINE_NUMBERS = "devtools.gridinspector.showGridLineNumbers";
 const SHOW_INFINITE_LINES_PREF = "devtools.gridinspector.showInfiniteLines";
 
@@ -54,6 +56,7 @@ function GridInspector(inspector, window) {
   this.onShowGridLineNamesHighlight = this.onShowGridLineNamesHighlight.bind(this);
   this.onSidebarSelect = this.onSidebarSelect.bind(this);
   this.onToggleGridHighlighter = this.onToggleGridHighlighter.bind(this);
+  this.onToggleShowGridAreas = this.onToggleShowGridAreas.bind(this);
   this.onToggleShowGridLineNumbers = this.onToggleShowGridLineNumbers.bind(this);
   this.onToggleShowInfiniteLines = this.onToggleShowInfiniteLines.bind(this);
 
@@ -124,6 +127,7 @@ GridInspector.prototype = {
       onShowGridCellHighlight: this.onShowGridCellHighlight,
       onShowGridLineNamesHighlight: this.onShowGridLineNamesHighlight,
       onToggleGridHighlighter: this.onToggleGridHighlighter,
+      onToggleShowGridAreas: this.onToggleShowGridAreas,
       onToggleShowGridLineNumbers: this.onToggleShowGridLineNumbers,
       onToggleShowInfiniteLines: this.onToggleShowInfiniteLines,
     };
@@ -215,9 +219,11 @@ GridInspector.prototype = {
   loadHighlighterSettings() {
     let { dispatch } = this.store;
 
+    let showGridAreas = Services.prefs.getBoolPref(SHOW_GRID_AREAS);
     let showGridLineNumbers = Services.prefs.getBoolPref(SHOW_GRID_LINE_NUMBERS);
     let showInfinteLines = Services.prefs.getBoolPref(SHOW_INFINITE_LINES_PREF);
 
+    dispatch(updateShowGridAreas(showGridAreas));
     dispatch(updateShowGridLineNumbers(showGridLineNumbers));
     dispatch(updateShowInfiniteLines(showInfinteLines));
   },
@@ -493,6 +499,28 @@ GridInspector.prototype = {
 
     this.store.dispatch(updateGridHighlighted(node,
       node !== this.highlighters.gridHighlighterShown));
+  },
+
+  /**
+    * Handler for a change in the show grid areas checkbox in the GridDisplaySettings
+    * component. Toggles on/off the option to show the grid areas in the grid highlighter.
+    * Refreshes the shown grid highlighter for the grids currently highlighted.
+    *
+    * @param  {Boolean} enabled
+    *         Whether or not the grid highlighter should show the grid areas.
+    */
+  onToggleShowGridAreas(enabled) {
+    this.store.dispatch(updateShowGridAreas(enabled));
+    Services.prefs.setBoolPref(SHOW_GRID_AREAS, enabled);
+
+    let { grids } = this.store.getState();
+
+    for (let grid of grids) {
+      if (grid.highlighted) {
+        let highlighterSettings = this.getGridHighlighterSettings(grid.nodeFront);
+        this.highlighters.showGridHighlighter(grid.nodeFront, highlighterSettings);
+      }
+    }
   },
 
   /**
