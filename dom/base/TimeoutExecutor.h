@@ -22,6 +22,12 @@ class TimeoutExecutor final : public nsIRunnable
   nsCOMPtr<nsITimer> mTimer;
   TimeStamp mDeadline;
 
+  // Limits how far we allow timers to fire into the future from their
+  // deadline.  Starts off at zero, but is then adjusted when we start
+  // using nsITimer.  The nsITimer implementation may sometimes fire
+  // early and we should allow that to minimize additional wakeups.
+  TimeDuration mAllowedEarlyFiringTime;
+
   // The TimeoutExecutor is repeatedly scheduled by the TimeoutManager
   // to fire for the next soonest Timeout.  Since the executor is re-used
   // it needs to handle switching between a few states.

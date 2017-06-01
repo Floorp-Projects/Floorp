@@ -26,7 +26,7 @@ TimeoutExecutor::ScheduleImmediate(const TimeStamp& aDeadline,
 {
   MOZ_DIAGNOSTIC_ASSERT(mDeadline.IsNull());
   MOZ_DIAGNOSTIC_ASSERT(mMode == Mode::None);
-  MOZ_DIAGNOSTIC_ASSERT(aDeadline <= aNow);
+  MOZ_DIAGNOSTIC_ASSERT(aDeadline <= (aNow + mAllowedEarlyFiringTime));
 
   nsresult rv =
     mOwner->EventTarget()->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
@@ -44,13 +44,17 @@ TimeoutExecutor::ScheduleDelayed(const TimeStamp& aDeadline,
 {
   MOZ_DIAGNOSTIC_ASSERT(mDeadline.IsNull());
   MOZ_DIAGNOSTIC_ASSERT(mMode == Mode::None);
-  MOZ_DIAGNOSTIC_ASSERT(aDeadline > aNow);
+  MOZ_DIAGNOSTIC_ASSERT(aDeadline > (aNow + mAllowedEarlyFiringTime));
 
   nsresult rv = NS_OK;
 
   if (!mTimer) {
     mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    uint32_t earlyMicros = 0;
+    MOZ_ALWAYS_SUCCEEDS(mTimer->GetAllowedEarlyFiringMicroseconds(&earlyMicros));
+    mAllowedEarlyFiringTime = TimeDuration::FromMicroseconds(earlyMicros);
   }
 
   // Always call Cancel() in case we are re-using a timer.  Otherwise
@@ -97,7 +101,7 @@ TimeoutExecutor::Schedule(const TimeStamp& aDeadline)
   // Schedule an immediate runnable if the desired deadline has passed
   // or is slightly in the future.  This is similar to how nsITimer will
   // fire timers early based on the interval resolution.
-  if (aDeadline <= now) {
+  if (aDeadline <= (now + mAllowedEarlyFiringTime)) {
     return ScheduleImmediate(aDeadline, now);
   }
 
@@ -140,8 +144,9 @@ TimeoutExecutor::MaybeExecute()
   // and proceed.  If there are no timers ready we will get rescheduled
   // by TimeoutManager.
   TimeStamp now(TimeStamp::Now());
-  if (deadline > now) {
-    deadline = now;
+  TimeStamp limit = now + mAllowedEarlyFiringTime;
+  if (deadline > limit) {
+    deadline = limit;
   }
 
   Cancel();
