@@ -199,7 +199,7 @@ private:
     friend class OrderedTimeoutIterator;
 
   private:
-    typedef mozilla::LinkedList<mozilla::dom::Timeout> TimeoutList;
+    typedef mozilla::LinkedList<RefPtr<Timeout>> TimeoutList;
 
     // mTimeoutList is generally sorted by mWhen, unless mTimeoutInsertionPoint is
     // non-null.  In that case, the dummy timeout pointed to by
