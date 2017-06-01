@@ -39,7 +39,7 @@
                accesskey="&searchFilter.accesskey;"/>
     </hbox>
     <separator class="thin"/>
-    <label control="cookiesList" id="cookiesIntro" value="&cookiesonsystem.label;"/>
+    <label control="cookiesList" id="cookiesIntro">&cookiesonsystem.label;</label>
     <separator class="thin"/>
     <tree id="cookiesList" flex="1" style="height: 10em;"
           onkeypress="gCookiesWindow.onCookieKeyPress(event)"
@@ -63,31 +63,31 @@
         </columns>
         <rows>
           <row align="center">
-            <hbox pack="end"><label id="nameLabel" control="name" value="&props.name.label;"/></hbox>
+            <hbox pack="end"><label id="nameLabel" control="name">&props.name.label;</label></hbox>
             <textbox id="name" readonly="true" class="plain"/>
           </row>
           <row align="center">
-            <hbox pack="end"><label id="valueLabel" control="value" value="&props.value.label;"/></hbox>
+            <hbox pack="end"><label id="valueLabel" control="value">&props.value.label;</label></hbox>
             <textbox id="value" readonly="true" class="plain"/>
           </row>
           <row align="center">
-            <hbox pack="end"><label id="isDomain" control="host" value="&props.domain.label;"/></hbox>
+            <hbox pack="end"><label id="isDomain" control="host">&props.domain.label;</label></hbox>
             <textbox id="host" readonly="true" class="plain"/>
           </row>
           <row align="center">
-            <hbox pack="end"><label id="pathLabel" control="path" value="&props.path.label;"/></hbox>
+            <hbox pack="end"><label id="pathLabel" control="path">&props.path.label;</label></hbox>
             <textbox id="path" readonly="true" class="plain"/>
           </row>
           <row align="center">
-            <hbox pack="end"><label id="isSecureLabel" control="isSecure" value="&props.secure.label;"/></hbox>
+            <hbox pack="end"><label id="isSecureLabel" control="isSecure">&props.secure.label;</label></hbox>
             <textbox id="isSecure" readonly="true" class="plain"/>
           </row>
           <row align="center">
-            <hbox pack="end"><label id="expiresLabel" control="expires" value="&props.expires.label;"/></hbox>
+            <hbox pack="end"><label id="expiresLabel" control="expires">&props.expires.label;</label></hbox>
             <textbox id="expires" readonly="true" class="plain"/>
           </row>
           <row align="center" id="userContextRow">
-            <hbox pack="end"><label id="userContextLabel" control="userContext" value="&props.container.label;"/></hbox>
+            <hbox pack="end"><label id="userContextLabel" control="userContext">&props.container.label;</label></hbox>
             <textbox id="userContext" readonly="true" class="plain"/>
           </row>
         </rows>
