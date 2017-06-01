@@ -107,25 +107,23 @@ public:
   static RawRef Void() { return nullptr; }
   void Release(RawRef aRawRef)
   {
-    MOZ_ASSERT(mOwningThread);
-    bool current;
-    mOwningThread->IsOnCurrentThread(&current);
-    if (current) {
+    MOZ_ASSERT(mOwningEventTarget);
+    if (mOwningEventTarget->IsOnCurrentThread()) {
       aRawRef->Release();
       return;
     }
     nsCOMPtr<nsIRunnable> runnable = new SurfaceReleaser(aRawRef);
-    mOwningThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
+    mOwningEventTarget->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
   }
   void AddRef(RawRef aRawRef)
   {
-    MOZ_ASSERT(!mOwningThread);
-    NS_GetCurrentThread(getter_AddRefs(mOwningThread));
+    MOZ_ASSERT(!mOwningEventTarget);
+    mOwningEventTarget = mozilla::GetCurrentThreadSerialEventTarget();
     aRawRef->AddRef();
   }
 
 private:
-  nsCOMPtr<nsIThread> mOwningThread;
+  nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
 };
 
 #endif
