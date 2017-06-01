@@ -137,6 +137,7 @@ CreateMetadataNode(StringTable& strings)
     "ProductID",
     "ProductName",
     "ReleaseChannel",
+    "RemoteType",
     "SecondsSinceLastCrash",
     "StartupCrash",
     "SystemMemoryUsePercentage",

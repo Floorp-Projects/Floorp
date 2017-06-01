@@ -482,8 +482,10 @@ add_task(async function test_child_process_crash_ping() {
   // Add a child-process crash for each allowed process type.
   for (let p of EXPECTED_PROCESSES) {
     // Generate a ping.
+    const remoteType = (p === m.PROCESS_TYPE_CONTENT) ? "web" : undefined;
     let id = await m.createDummyDump();
     await m.addCrash(p, m.CRASH_TYPE_CRASH, id, DUMMY_DATE, {
+      RemoteType: remoteType,
       StackTraces: stackTraces,
       MinidumpSha256Hash: sha256Hash,
       ThisShouldNot: "end-up-in-the-ping"
@@ -505,6 +507,8 @@ add_task(async function test_child_process_crash_ping() {
 
     Assert.equal(found.payload.metadata.ThisShouldNot, undefined,
                  "Non-whitelisted fields should be filtered out");
+    Assert.equal(found.payload.metadata.RemoteType, remoteType,
+                 "RemoteType should be whitelisted for content crashes");
   }
 
   // Check that we don't generate a crash ping for invalid/unexpected process

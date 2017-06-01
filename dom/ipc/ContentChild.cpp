@@ -1505,6 +1505,8 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
   CrashReporter::AnnotateCrashReport(
     NS_LITERAL_CSTRING("ContentSandboxCapabilities"), flagsString);
 #endif /* XP_LINUX && !OS_ANDROID */
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("RemoteType"),
+                                     NS_ConvertUTF16toUTF8(GetRemoteType()));
 #endif /* MOZ_CRASHREPORTER */
 #endif /* MOZ_CONTENT_SANDBOX */
 
