@@ -116,7 +116,7 @@ fuzzy-if(Android,24,1) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!laye
 == 613157-1.html 613157-1-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,255,6) == 613157-2.html 613157-2-ref.html
 == 662288-1.html 662288-1-ref.html
-fails-if(styloVsGecko||stylo) == 670226-1.html 670226-1-ref.html
+== 670226-1.html 670226-1-ref.html
 == 676245-1.html 676245-1-ref.html
 fuzzy-if(skiaContent,1,3) fails-if(styloVsGecko) == 698291-1.html 698291-1-ref.html
 == 698706-1.html 698706-1-ref.html
