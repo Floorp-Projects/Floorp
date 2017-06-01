@@ -26,8 +26,8 @@ extern LogModule* GetGMPLog();
 
 namespace gmp {
 
-GMPTimerParent::GMPTimerParent(nsIThread* aGMPThread)
-  : mGMPThread(aGMPThread)
+GMPTimerParent::GMPTimerParent(nsISerialEventTarget* aGMPEventTarget)
+  : mGMPEventTarget(aGMPEventTarget)
   , mIsOpen(true)
 {
 }
@@ -38,7 +38,7 @@ GMPTimerParent::RecvSetTimer(const uint32_t& aTimerId,
 {
   LOGD(("%s::%s: %p mIsOpen=%d", __CLASS__, __FUNCTION__, this, mIsOpen));
 
-  MOZ_ASSERT(mGMPThread == NS_GetCurrentThread());
+  MOZ_ASSERT(mGMPEventTarget->IsOnCurrentThread());
 
   if (!mIsOpen) {
     return IPC_OK();
@@ -50,7 +50,7 @@ GMPTimerParent::RecvSetTimer(const uint32_t& aTimerId,
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   ctx->mId = aTimerId;
-  rv = ctx->mTimer->SetTarget(mGMPThread);
+  rv = ctx->mTimer->SetTarget(mGMPEventTarget);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
   ctx->mParent = this;
 
@@ -70,7 +70,7 @@ GMPTimerParent::Shutdown()
 {
   LOGD(("%s::%s: %p mIsOpen=%d", __CLASS__, __FUNCTION__, this, mIsOpen));
 
-  MOZ_ASSERT(mGMPThread == NS_GetCurrentThread());
+  MOZ_ASSERT(mGMPEventTarget->IsOnCurrentThread());
 
   for (auto iter = mTimers.Iter(); !iter.Done(); iter.Next()) {
     Context* context = iter.Get()->GetKey();
@@ -106,7 +106,7 @@ void
 GMPTimerParent::TimerExpired(Context* aContext)
 {
   LOGD(("%s::%s: %p mIsOpen=%d", __CLASS__, __FUNCTION__, this, mIsOpen));
-  MOZ_ASSERT(mGMPThread == NS_GetCurrentThread());
+  MOZ_ASSERT(mGMPEventTarget->IsOnCurrentThread());
 
   if (!mIsOpen) {
     return;

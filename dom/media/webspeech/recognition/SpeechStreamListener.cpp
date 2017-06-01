@@ -19,10 +19,7 @@ SpeechStreamListener::SpeechStreamListener(SpeechRecognition* aRecognition)
 
 SpeechStreamListener::~SpeechStreamListener()
 {
-  nsCOMPtr<nsIThread> mainThread;
-  NS_GetMainThread(getter_AddRefs(mainThread));
-
-  NS_ProxyRelease(mainThread, mRecognition.forget());
+  NS_ReleaseOnMainThread(mRecognition.forget());
 }
 
 void
