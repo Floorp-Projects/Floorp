@@ -363,7 +363,9 @@ ResponsiveUI.prototype = {
     // Wait for resize message before stopping in the child when testing,
     // but only if we should expect to still get a message.
     if (flags.testing && this.tab.linkedBrowser.messageManager) {
+      debug("CLOSE: WAIT ON CONTENT RESIZE");
       yield this.waitForMessage("ResponsiveMode:OnContentResize");
+      debug("CLOSE: CONTENT RESIZE DONE");
     }
 
     if (this.isResizing) {
@@ -405,7 +407,9 @@ ResponsiveUI.prototype = {
       this.touchEventSimulator.stop();
     }
 
+    debug("CLOSE: WAIT ON CLIENT CLOSE");
     yield this.client.close();
+    debug("CLOSE: CLIENT CLOSE DONE");
     this.client = this.emulationFront = null;
 
     this._telemetry.toolClosed("responsive");
@@ -413,11 +417,14 @@ ResponsiveUI.prototype = {
     if (this.tab.linkedBrowser && this.tab.linkedBrowser.messageManager) {
       let stopped = this.waitForMessage("ResponsiveMode:Stop:Done");
       this.tab.linkedBrowser.messageManager.sendAsyncMessage("ResponsiveMode:Stop");
+      debug("CLOSE: WAIT ON STOP");
       yield stopped;
+      debug("CLOSE: STOP DONE");
     }
 
     this.hideNewUINotification();
 
+    debug("CLOSE: DONE, EMIT OFF");
     this.inited = null;
     ResponsiveUIManager.emit("off", { tab: this.tab });
   }),
@@ -1129,6 +1136,10 @@ ResponsiveUI.prototype = {
    */
   setViewportSize({ width, height }) {
     debug(`SET SIZE TO ${width} x ${height}`);
+    if (this.closing) {
+      debug(`ABORT SET SIZE, CLOSING`);
+      return;
+    }
     if (width) {
       this.setWidth(width);
     }
