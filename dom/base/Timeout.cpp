@@ -58,7 +58,7 @@ void
 TimerCallback(nsITimer*, void* aClosure)
 {
   RefPtr<Timeout> timeout = (Timeout*)aClosure;
-  timeout->mWindow->AsInner()->TimeoutManager().RunTimeout(timeout->When());
+  timeout->mWindow->AsInner()->TimeoutManager().RunTimeout(TimeStamp::Now(), timeout->When());
   timeout->mClosureSelfRef = nullptr;
 }
 
