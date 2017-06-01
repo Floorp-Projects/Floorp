@@ -257,11 +257,4 @@ void AddQuarantineMetadataToFile(const CFStringRef filePath,
   ::CFRelease(mutQuarantineProps);
 }
 
-CFURLRef GetTemporaryFolderCFURLRef()
-{
-  NSString* tempDir = ::NSTemporaryDirectory();
-  return tempDir == nil ? NULL : (CFURLRef)[NSURL fileURLWithPath:tempDir
-                                                      isDirectory:YES];
-}
-
 } // namespace CocoaFileUtils

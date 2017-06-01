@@ -27,9 +27,6 @@
 #include <stdlib.h>
 #include <sys/param.h>
 #include "prenv.h"
-#if defined(MOZ_WIDGET_COCOA)
-#include "CocoaFileUtils.h"
-#endif
 
 #endif
 
@@ -769,20 +766,10 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 nsresult
 GetOSXFolderType(short aDomain, OSType aFolderType, nsIFile** aLocalFile)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-
-  if (aFolderType == kTemporaryFolderType) {
-    NS_NewLocalFile(EmptyString(), true, aLocalFile);
-    nsCOMPtr<nsILocalFileMac> localMacFile(do_QueryInterface(*aLocalFile));
-    if (localMacFile) {
-      rv = localMacFile->InitWithCFURL(
-             CocoaFileUtils::GetTemporaryFolderCFURLRef());
-    }
-    return rv;
-  }
-
   OSErr err;
   FSRef fsRef;
+  nsresult rv = NS_ERROR_FAILURE;
+
   err = ::FSFindFolder(aDomain, aFolderType, kCreateFolder, &fsRef);
   if (err == noErr) {
     NS_NewLocalFile(EmptyString(), true, aLocalFile);
