@@ -83,15 +83,17 @@ interface MozObjectLoadingContent {
   // make sure to update this list if nsIObjectLoadingContent changes.  Also,
   // make sure everything on here is [ChromeOnly].
   [ChromeOnly]
-  const unsigned long TYPE_LOADING  = 0;
+  const unsigned long TYPE_LOADING     = 0;
   [ChromeOnly]
-  const unsigned long TYPE_IMAGE    = 1;
+  const unsigned long TYPE_IMAGE       = 1;
   [ChromeOnly]
-  const unsigned long TYPE_PLUGIN   = 2;
+  const unsigned long TYPE_PLUGIN      = 2;
   [ChromeOnly]
-  const unsigned long TYPE_DOCUMENT = 3;
+  const unsigned long TYPE_FAKE_PLUGIN = 3;
   [ChromeOnly]
-  const unsigned long TYPE_NULL     = 4;
+  const unsigned long TYPE_DOCUMENT    = 4;
+  [ChromeOnly]
+  const unsigned long TYPE_NULL        = 5;
 
   // The content type is not supported (e.g. plugin not installed)
   [ChromeOnly]
@@ -203,6 +205,12 @@ interface MozObjectLoadingContent {
    */
   [ChromeOnly]
   readonly attribute boolean hasRunningPlugin;
+
+  /**
+   * Disable the use of fake plugins and reload the tag if necessary
+   */
+  [ChromeOnly, Throws]
+  void skipFakePlugins();
 
   [ChromeOnly, Throws, NeedsCallerType]
   readonly attribute unsigned long runID;

@@ -342,6 +342,13 @@ def _makePromise(returns, side, resolver=False):
                     _PromiseRejectReason.Type(),
                     ExprLiteral.FALSE, resolver=resolver)
 
+def _makeResolver(returns, side):
+    if len(returns) > 1:
+        resolvetype = _tuple([d.bareType(side) for d in returns])
+    else:
+        resolvetype = returns[0].bareType(side)
+    return TypeFunction([Decl(resolvetype, '')])
+
 def _cxxArrayType(basetype, const=0, ref=0):
     return Type('nsTArray', T=basetype, const=const, ref=ref, hasimplicitcopyctor=False)
 
@@ -978,6 +985,9 @@ class MessageDecl(ipdl.ast.MessageDecl):
         name += 'Promise'
         return name
 
+    def resolverName(self):
+        return self.baseName() + 'Resolver'
+
     def actorDecl(self):
         return self.params[0]
 
@@ -996,8 +1006,7 @@ class MessageDecl(ipdl.ast.MessageDecl):
             else: assert 0
 
         def makeResolverDecl(returns):
-            return Decl(_refptr(Type(self.promiseName()), ref=2),
-                        'aPromise')
+            return Decl(Type(self.resolverName(), ref=2), 'aResolve')
 
         cxxparams = [ ]
         if paramsems is not None:
@@ -1043,7 +1052,7 @@ class MessageDecl(ipdl.ast.MessageDecl):
             elif retsems is 'resolver':
                 pass
         if retsems is 'resolver':
-            cxxargs.append(ExprMove(ExprVar('promise')))
+            cxxargs.append(ExprMove(ExprVar('resolver')))
 
         if not implicit:
             assert self.decl.type.hasImplicitActorParam()
@@ -2575,12 +2584,23 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             CppDirective('include', '"'+ p.channelHeaderFile() +'"'),
             Whitespace.NL ])
 
+        hasAsyncReturns = False
+        for md in p.messageDecls:
+            if md.hasAsyncReturns():
+                hasAsyncReturns = True
+                break
+
         inherits = []
         if ptype.isToplevel():
             inherits.append(Inherit(p.openedProtocolInterfaceType(),
                                     viz='public'))
         else:
             inherits.append(Inherit(p.managerInterfaceType(), viz='public'))
+
+        if hasAsyncReturns:
+            inherits.append(Inherit(Type('SupportsWeakPtr', T=ExprVar(self.clsname)),
+                                    viz='public'))
+            self.hdrfile.addthing(CppDirective('include', '"mozilla/WeakPtr.h"'))
 
         if ptype.isToplevel() and self.side is 'parent':
             self.hdrfile.addthings([
@@ -2593,6 +2613,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             inherits=inherits,
             abstract=True)
 
+        if hasAsyncReturns:
+            self.cls.addstmts([
+                Label.PUBLIC,
+                Whitespace('', indent=1),
+                ExprCall(ExprVar('MOZ_DECLARE_WEAKREFERENCE_TYPENAME'),
+                         [ ExprVar(self.clsname) ]),
+                Whitespace.NL
+            ])
+
+        self.cls.addstmt(Label.PRIVATE)
         friends = _FindFriends().findFriends(ptype)
         if ptype.isManaged():
             friends.update(ptype.managers)
@@ -2608,10 +2638,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 _makeForwardDeclForActor(friend, self.prettyside),
                 Whitespace.NL
             ])
-            self.cls.addstmts([
-                FriendClassDecl(_actorName(friend.fullname(),
-                                           self.prettyside)),
-                Whitespace.NL ])
+            self.cls.addstmt(FriendClassDecl(_actorName(friend.fullname(),
+                                                        self.prettyside)))
 
         self.cls.addstmt(Label.PROTECTED)
         for typedef in p.cxxTypedefs():
@@ -2623,13 +2651,18 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         self.cls.addstmts([ Typedef(p.fqStateType(), 'State'), Whitespace.NL ])
 
-        self.cls.addstmt(Label.PUBLIC)
-        for md in p.messageDecls:
-            if self.receivesMessage(md) and md.hasAsyncReturns():
-                self.cls.addstmt(
-                    Typedef(_makePromise(md.returns, self.side, resolver=True),
-                            md.promiseName()))
-        self.cls.addstmt(Whitespace.NL)
+        if hasAsyncReturns:
+            self.cls.addstmt(Label.PUBLIC)
+            for md in p.messageDecls:
+                if self.sendsMessage(md) and md.hasAsyncReturns():
+                    self.cls.addstmt(
+                        Typedef(_makePromise(md.returns, self.side),
+                                md.promiseName()))
+                if self.receivesMessage(md) and md.hasAsyncReturns():
+                    self.cls.addstmt(
+                        Typedef(_makeResolver(md.returns, self.side),
+                                md.resolverName()))
+            self.cls.addstmt(Whitespace.NL)
 
         self.cls.addstmt(Label.PROTECTED)
         # interface methods that the concrete subclass has to impl
@@ -4177,7 +4210,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         declstmts = [ StmtDecl(Decl(r.bareType(self.side), r.var().name))
                       for r in md.returns ]
         if md.decl.type.isAsync() and md.returns:
-            declstmts = self.makePromise(md, errfnRecv, routingId=idvar)
+            declstmts = self.makeResolver(md, errfnRecv, routingId=idvar)
         case.addstmts(
             stmts
             + self.transition(md)
@@ -4223,7 +4256,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return msgvar, stmts
 
 
-    def makePromise(self, md, errfn, routingId):
+    def makeResolver(self, md, errfn, routingId):
         if routingId is None:
             routingId = self.protocol.routingId()
         if not md.decl.type.isAsync() or not md.hasReply():
@@ -4233,7 +4266,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         seqno = ExprVar('seqno__')
         resolve = ExprVar('resolve__')
         reason = ExprVar('reason__')
-        promise = Type(md.promiseName())
+        resolvertype = Type(md.resolverName())
         failifsendok = StmtIf(ExprNot(sendok))
         failifsendok.addifstmt(_printWarningMessage('Error sending reply'))
         sendmsg = (self.setMessageFlags(md, self.replyvar, reply=1, seqno=seqno)
@@ -4253,58 +4286,42 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         else:
             resolvedecl = Decl(md.returns[0].bareType(self.side), 'aParam')
             destructexpr = md.returns[0].var()
-        promisethen = ExprLambda([ExprVar.THIS, routingId, seqno],
+        selfvar = ExprVar('self__')
+        ifactorisdead = StmtIf(ExprNot(selfvar))
+        ifactorisdead.addifstmts([_printWarningMessage("Not resolving promise because actor is dead."),
+                                  StmtReturn()])
+        ifactorisdestroyed = StmtIf(ExprBinary(self.protocol.stateVar(), '==',
+                                               self.protocol.deadState()))
+        ifactorisdestroyed.addifstmts([_printWarningMessage("Not resolving promise because actor is destroyed."),
+                                  StmtReturn()])
+        returnifactorisdead = [ ifactorisdead,
+                                ifactorisdestroyed ]
+        resolverfn = ExprLambda([ExprVar.THIS, selfvar, routingId, seqno],
                                  [resolvedecl])
-        promisethen.addstmts([ StmtDecl(Decl(Type.BOOL, resolve.name),
-                                        init=ExprLiteral.TRUE) ]
-                             + [ StmtDecl(Decl(p.bareType(self.side), p.var().name))
+        resolverfn.addstmts(returnifactorisdead
+                            + [ StmtDecl(Decl(Type.BOOL, resolve.name),
+                                         init=ExprLiteral.TRUE) ]
+                            + [ StmtDecl(Decl(p.bareType(self.side), p.var().name))
                                for p in md.returns ]
-                             + [ StmtExpr(ExprAssn(destructexpr, ExprVar('aParam'))),
-                                 StmtDecl(Decl(Type('IPC::Message', ptr=1), self.replyvar.name),
-                                          init=ExprCall(ExprVar(md.pqReplyCtorFunc()),
-                                                        args=[ routingId ])) ]
-                             + [ self.checkedWrite(None, resolve, self.replyvar,
-                                                   sentinelKey=resolve.name) ]
-                             + [ self.checkedWrite(r.ipdltype, r.var(), self.replyvar,
-                                                   sentinelKey=r.name)
+                            + [ StmtExpr(ExprAssn(destructexpr, ExprVar('aParam'))),
+                                StmtDecl(Decl(Type('IPC::Message', ptr=1), self.replyvar.name),
+                                         init=ExprCall(ExprVar(md.pqReplyCtorFunc()),
+                                                       args=[ routingId ])) ]
+                            + [ self.checkedWrite(None, resolve, self.replyvar,
+                                                  sentinelKey=resolve.name) ]
+                            + [ self.checkedWrite(r.ipdltype, r.var(), self.replyvar,
+                                                  sentinelKey=r.name)
                                  for r in md.returns ])
-        promisethen.addstmts(sendmsg)
-        promiserej = ExprLambda([ExprVar.THIS, routingId, seqno],
-                                [Decl(_PromiseRejectReason.Type(), reason.name)])
-
-        # If-statement for silently cancelling the promise due to ActorDestroyed.
-        returnifactordestroyed = StmtIf(ExprBinary(reason, '==',
-                                                   _PromiseRejectReason.ActorDestroyed))
-        returnifactordestroyed.addifstmts([_printWarningMessage("Reject due to ActorDestroyed"),
-                                           StmtReturn()])
-
-        promiserej.addstmts([ returnifactordestroyed,
-                              StmtExpr(ExprCall(ExprVar('MOZ_ASSERT'),
-                                                args=[ ExprBinary(reason, '==',
-                                                                  _PromiseRejectReason.HandlerRejected) ])),
-                              StmtExpr(ExprAssn(reason, _PromiseRejectReason.HandlerRejected)),
-                              StmtDecl(Decl(Type.BOOL, resolve.name),
-                                       init=ExprLiteral.FALSE),
-                              StmtDecl(Decl(Type('IPC::Message', ptr=1), self.replyvar.name),
-                                          init=ExprCall(ExprVar(md.pqReplyCtorFunc()),
-                                                        args=[ routingId ])),
-                              self.checkedWrite(None, resolve, self.replyvar,
-                                                  sentinelKey=resolve.name),
-                              self.checkedWrite(None, reason, self.replyvar,
-                                                sentinelKey=reason.name) ])
-        promiserej.addstmts(sendmsg)
+        resolverfn.addstmts(sendmsg)
 
         makepromise = [ Whitespace.NL,
                         StmtDecl(Decl(Type.INT32, seqno.name),
                                  init=ExprCall(ExprSelect(self.msgvar, '.', 'seqno'))),
-                        StmtDecl(Decl(_refptr(promise), 'promise'),
-                                 init=ExprNew(promise, args=[ExprVar('__func__')])),
-                        StmtExpr(ExprCall(
-                            ExprSelect(ExprVar('promise'), '->', 'Then'),
-                            args=[ ExprCall(ExprVar('AbstractThread::GetCurrent')),
-                                   ExprVar('__func__'),
-                                   promisethen,
-                                   promiserej ])) ]
+                        StmtDecl(Decl(Type('WeakPtr', T=ExprVar(self.clsname)),
+                                      selfvar.name),
+                                 init=ExprVar.THIS),
+                        StmtDecl(Decl(resolvertype, 'resolver'),
+                                 init=resolverfn) ]
         return makepromise
 
     def makeReply(self, md, errfn, routingId):
@@ -4633,7 +4650,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         implicit = md.decl.type.hasImplicitActorParam()
         if md.decl.type.isAsync() and md.returns:
             returnsems = 'promise'
-            rettype = _refptr(_makePromise(md.returns, self.side))
+            rettype = _refptr(Type(md.promiseName()))
         else:
             returnsems = 'out'
             rettype = Type.BOOL

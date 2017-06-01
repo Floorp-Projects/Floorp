@@ -61,6 +61,7 @@ public:
 
   virtual ContentParentId ChildID() const = 0;
   virtual bool IsForBrowser() const = 0;
+  virtual bool IsForJSPlugin() const = 0;
 
   virtual mozilla::ipc::PIPCBlobInputStreamParent*
   SendPIPCBlobInputStreamConstructor(mozilla::ipc::PIPCBlobInputStreamParent* aActor,

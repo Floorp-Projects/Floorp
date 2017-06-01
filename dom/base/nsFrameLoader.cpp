@@ -156,12 +156,14 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameLoader)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersistable)
 NS_INTERFACE_MAP_END
 
-nsFrameLoader::nsFrameLoader(Element* aOwner, nsPIDOMWindowOuter* aOpener, bool aNetworkCreated)
+nsFrameLoader::nsFrameLoader(Element* aOwner, nsPIDOMWindowOuter* aOpener,
+                             bool aNetworkCreated, int32_t aJSPluginID)
   : mOwnerContent(aOwner)
   , mDetachedSubdocFrame(nullptr)
   , mOpener(aOpener)
   , mRemoteBrowser(nullptr)
   , mChildID(0)
+  , mJSPluginID(aJSPluginID)
   , mEventMode(EVENT_MODE_NORMAL_DISPATCH)
   , mBrowserChangingProcessBlockers(nullptr)
   , mIsPrerendered(false)
@@ -193,7 +195,8 @@ nsFrameLoader::~nsFrameLoader()
 }
 
 nsFrameLoader*
-nsFrameLoader::Create(Element* aOwner, nsPIDOMWindowOuter* aOpener, bool aNetworkCreated)
+nsFrameLoader::Create(Element* aOwner, nsPIDOMWindowOuter* aOpener, bool aNetworkCreated,
+                      int32_t aJSPluginId)
 {
   NS_ENSURE_TRUE(aOwner, nullptr);
   nsIDocument* doc = aOwner->OwnerDoc();
@@ -223,7 +226,7 @@ nsFrameLoader::Create(Element* aOwner, nsPIDOMWindowOuter* aOpener, bool aNetwor
                   doc->IsStaticDocument()),
                  nullptr);
 
-  return new nsFrameLoader(aOwner, aOpener, aNetworkCreated);
+  return new nsFrameLoader(aOwner, aOpener, aNetworkCreated, aJSPluginId);
 }
 
 NS_IMETHODIMP
@@ -314,8 +317,15 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
 
   nsCOMPtr<nsIDocument> doc = mOwnerContent->OwnerDoc();
 
-  nsresult rv = CheckURILoad(aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv;
+  // If IsForJSPlugin() returns true then we want to allow the load. We're just
+  // loading the source for the implementation of the JS plugin from a URI
+  // that's under our control. We will already have done the security checks for
+  // loading the plugin content itself in the object/embed loading code.
+  if (!IsForJSPlugin()) {
+    rv = CheckURILoad(aURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   mURIToLoad = aURI;
   rv = doc->InitializeFrameLoader(this);
@@ -2246,6 +2256,10 @@ nsFrameLoader::OwnerIsIsolatedMozBrowserFrame()
 bool
 nsFrameLoader::ShouldUseRemoteProcess()
 {
+  if (IsForJSPlugin()) {
+    return true;
+  }
+
   if (PR_GetEnv("MOZ_DISABLE_OOP_TABS") ||
       Preferences::GetBool("dom.ipc.tabs.disabled", false)) {
     return false;
@@ -2910,7 +2924,9 @@ nsFrameLoader::TryRemoteBrowser()
   }
 
   // <iframe mozbrowser> gets to skip these checks.
-  if (!OwnerIsMozBrowserFrame()) {
+  // iframes for JS plugins also get to skip these checks. We control the URL that gets
+  // loaded, but the load is triggered from the document containing the plugin.
+  if (!OwnerIsMozBrowserFrame() && !IsForJSPlugin()) {
     if (parentDocShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
       // Allow about:addon an exception to this rule so it can load remote
       // extension options pages.
@@ -3624,6 +3640,11 @@ nsresult
 nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
                                 nsIURI* aURI)
 {
+  if (IsForJSPlugin()) {
+    return aTabContext->SetTabContextForJSPluginFrame(mJSPluginID) ? NS_OK :
+           NS_ERROR_FAILURE;
+  }
+
   OriginAttributes attrs;
   attrs.mInIsolatedMozBrowser = OwnerIsIsolatedMozBrowserFrame();
   nsresult rv;

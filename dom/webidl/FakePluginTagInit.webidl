@@ -26,6 +26,15 @@ dictionary FakePluginTagInit {
   DOMString description = "";
   DOMString fileName = "";
   DOMString version = "";
+
+  /**
+   * Optional script to run in a sandbox when instantiating a plugin. The script
+   * runs in a sandbox with system principal in the process that contains the
+   * element that instantiates the plugin (ie the EMBED or OBJECT element). The
+   * sandbox global has a 'pluginElement' property that the script can use to
+   * access the element that instantiates the plugin.
+   */
+  DOMString sandboxScript = "";
 };
 
 /**

@@ -94,6 +94,12 @@ class CxxCodeGen(CodePrinter, Visitor):
 
         self.printdent('}')
 
+    def visitTypeFunction(self, fn):
+        self.write('std::function<')
+        fn.ret.accept(self)
+        self.write('(')
+        self.writeDeclList(fn.params)
+        self.write(')>')
 
     def visitTypedef(self, td):
         if td.templateargs:

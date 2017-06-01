@@ -55,6 +55,8 @@ public:
   virtual mozilla::ipc::IPCResult RecvParentActivated(PBrowserChild* aTab,
                                                       const bool& aActivated) override;
 
+  virtual already_AddRefed<nsIEventTarget> GetEventTargetFor(TabChild* aTabChild) override;
+
   FORWARD_SHMEM_ALLOCATOR_TO(PContentBridgeChild)
 
 protected:
@@ -103,6 +105,10 @@ protected:
   DeallocPFileDescriptorSetChild(mozilla::ipc::PFileDescriptorSetChild* aActor) override;
 
   DISALLOW_EVIL_CONSTRUCTORS(ContentBridgeChild);
+
+private:
+  virtual already_AddRefed<nsIEventTarget>
+  GetConstructedEventTarget(const Message& aMsg) override;
 
 protected: // members
   RefPtr<ContentBridgeChild> mSelfRef;

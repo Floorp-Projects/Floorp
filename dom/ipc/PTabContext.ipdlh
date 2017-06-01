@@ -56,6 +56,11 @@ struct FrameIPCTabContext
   UIStateChangeType showFocusRings;
 };
 
+struct JSPluginFrameIPCTabContext
+{
+  uint32_t jsPluginId;
+};
+
 // XXXcatalinb: This is only used by ServiceWorkerClients::OpenWindow.
 // Because service workers don't have an associated TabChild
 // we can't satisfy the security constraints on b2g. As such, the parent
@@ -74,6 +79,7 @@ union IPCTabContext
 {
   PopupIPCTabContext;
   FrameIPCTabContext;
+  JSPluginFrameIPCTabContext;
   UnsafeIPCTabContext;
 };
 
