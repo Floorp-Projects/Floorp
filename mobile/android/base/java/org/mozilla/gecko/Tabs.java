@@ -101,7 +101,6 @@ public class Tabs implements BundleEventListener {
     private volatile boolean mInitialTabsAdded;
 
     private Context mAppContext;
-    private EventDispatcher mEventDispatcher;
     private LayerView mLayerView;
     private ContentObserver mBookmarksContentObserver;
     private PersistTabsRunnable mPersistTabsRunnable;
@@ -166,11 +165,18 @@ public class Tabs implements BundleEventListener {
         mPrivateClearColor = Color.RED;
     }
 
-    public synchronized void attachToContext(Context context, LayerView layerView, EventDispatcher eventDispatcher) {
+    public synchronized void attachToContext(Context context, LayerView layerView) {
         final Context appContext = context.getApplicationContext();
+        if (mAppContext == appContext) {
+            return;
+        }
+
+        if (mAppContext != null) {
+            // This should never happen.
+            Log.w(LOGTAG, "The application context has changed!");
+        }
 
         mAppContext = appContext;
-        mEventDispatcher = eventDispatcher;
         mLayerView = layerView;
         mPrivateClearColor = ContextCompat.getColor(context, R.color.tabs_tray_grey_pressed);
         mAccountManager = AccountManager.get(appContext);
@@ -190,10 +196,6 @@ public class Tabs implements BundleEventListener {
             final GeckoProfile profile = GeckoProfile.get(context);
             BrowserDB.from(profile).registerBookmarkObserver(getContentResolver(), mBookmarksContentObserver);
         }
-    }
-
-    public void detachFromContext() {
-        mLayerView = null;
     }
 
     /**
@@ -330,7 +332,6 @@ public class Tabs implements BundleEventListener {
         // Pass a message to Gecko to update tab state in BrowserApp.
         final GeckoBundle data = new GeckoBundle(1);
         data.putInt("id", tab.getId());
-        mEventDispatcher.dispatch("Tab:Selected", data);
         EventDispatcher.getInstance().dispatch("Tab:Selected", data);
         return tab;
     }
@@ -472,7 +473,7 @@ public class Tabs implements BundleEventListener {
         final GeckoBundle data = new GeckoBundle(2);
         data.putInt("tabId", tabId);
         data.putBoolean("showUndoToast", showUndoToast);
-        mEventDispatcher.dispatch("Tab:Closed", data);
+        EventDispatcher.getInstance().dispatch("Tab:Closed", data);
     }
 
     /** Return the tab that will be selected by default after this one is closed */
@@ -1082,7 +1083,7 @@ public class Tabs implements BundleEventListener {
             }
         }
 
-        mEventDispatcher.dispatch("Tab:Load", data);
+        EventDispatcher.getInstance().dispatch("Tab:Load", data);
 
         if (tabToSelect == null) {
             return null;
@@ -1276,7 +1277,7 @@ public class Tabs implements BundleEventListener {
         data.putInt("fromPosition", fromPosition);
         data.putInt("toTabId", toTabId);
         data.putInt("toPosition", toPosition);
-        mEventDispatcher.dispatch("Tab:Move", data);
+        EventDispatcher.getInstance().dispatch("Tab:Move", data);
     }
 
     /**

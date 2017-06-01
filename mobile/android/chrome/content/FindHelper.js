@@ -87,7 +87,7 @@ var FindHelper = {
     this._initialViewport = JSON.stringify(this._targetTab.getViewport());
     this._viewportChanged = false;
 
-    WindowEventDispatcher.registerListener(this, [
+    GlobalEventDispatcher.registerListener(this, [
       "Tab:Selected",
     ]);
   },
@@ -109,7 +109,7 @@ var FindHelper = {
     this._initialViewport = null;
     this._viewportChanged = false;
 
-    WindowEventDispatcher.unregisterListener(this, [
+    GlobalEventDispatcher.unregisterListener(this, [
       "Tab:Selected",
     ]);
   },
