@@ -504,7 +504,7 @@ HTMLTextAreaElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::wrap);
       if (value && value->Type() == nsAttrValue::eString &&
           value->Equals(nsGkAtoms::OFF, eIgnoreCase)) {
-        aData->SetKeywordValue(eCSSProperty_white_space, NS_STYLE_WHITESPACE_PRE);
+        aData->SetKeywordValue(eCSSProperty_white_space, StyleWhiteSpace::Pre);
       }
     }
   }
