@@ -73,7 +73,7 @@ protected:
     nsCOMPtr<nsIChannel> mNewChan;
     uint32_t mFlags;
     bool mWaitingForRedirectCallback;
-    nsCOMPtr<nsIThread>      mCallbackThread;
+    nsCOMPtr<nsIEventTarget> mCallbackEventTarget;
     bool                     mCallbackInitiated;
     int32_t                  mExpectedCallbacks;
     nsresult                 mResult; // value passed to callback

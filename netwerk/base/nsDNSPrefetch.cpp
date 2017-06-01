@@ -59,10 +59,10 @@ nsDNSPrefetch::Prefetch(uint16_t flags)
     // then our timing will be useless. However, in such a case,
     // mEndTimestamp will be a null timestamp and callers should check
     // TimingsValid() before using the timing.
-    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    nsCOMPtr<nsIEventTarget> main = mozilla::GetMainThreadEventTarget();
     return sDNSService->AsyncResolveNative(mHostname,
                                            flags | nsIDNSService::RESOLVE_SPECULATE,
-                                           this, mainThread, mOriginAttributes,
+                                           this, main, mOriginAttributes,
                                            getter_AddRefs(tmpOutstanding));
 }
 
