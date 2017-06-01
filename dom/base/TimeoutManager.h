@@ -118,6 +118,9 @@ public:
   void BeginSyncOperation();
   void EndSyncOperation();
 
+  nsIEventTarget*
+  EventTarget();
+
   static const uint32_t InvalidFiringId;
 
 private:

@@ -1527,3 +1527,9 @@ TimeoutManager::EndSyncOperation()
     TimeoutTelemetry::Get().StartRecording(TimeStamp::Now());
   }
 }
+
+nsIEventTarget*
+TimeoutManager::EventTarget()
+{
+  return mWindow.EventTargetFor(TaskCategory::Timer);
+}
