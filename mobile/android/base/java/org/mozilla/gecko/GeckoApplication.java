@@ -44,13 +44,13 @@ import org.mozilla.gecko.notifications.NotificationClient;
 import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
 import org.mozilla.gecko.util.ActivityUtils;
+import org.mozilla.gecko.telemetry.TelemetryBackgroundReceiver;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.PRNGFixes;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.UUIDUtil;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -277,6 +277,8 @@ public class GeckoApplication extends Application
         HomePanelsManager.getInstance().init(context);
 
         GlobalPageMetadata.getInstance().init();
+
+        TelemetryBackgroundReceiver.getInstance().init(context);
 
         // We need to set the notification client before launching Gecko, since Gecko could start
         // sending notifications immediately after startup, which we don't want to lose/crash on.

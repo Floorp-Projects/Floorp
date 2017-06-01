@@ -39,7 +39,8 @@ public class TestTelemetryUploadAllPingsImmediatelyScheduler {
 
     @Test
     public void testReadyToUpload() {
-        assertTrue("Scheduler is always ready to upload", testScheduler.isReadyToUpload(testStore));
+        assertTrue("Scheduler is always ready to upload", testScheduler.isReadyToUpload(
+                mock(Context.class), testStore));
     }
 
     @Test
