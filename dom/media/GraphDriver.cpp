@@ -662,19 +662,10 @@ AudioCallbackDriver::Init()
     latency_frames = std::max((uint32_t) 512, latency_frames);
   }
 
-  input = output;
-  input.channels = mInputChannels;
-  input.layout = CUBEB_LAYOUT_UNDEFINED;
 
-#ifdef MOZ_WEBRTC
-  if (mGraphImpl->mInputWanted) {
-    StaticMutexAutoLock lock(AudioInputCubeb::Mutex());
-    uint32_t maxInputChannels = 0;
-    if (AudioInputCubeb::GetDeviceMaxChannels(mGraphImpl->mInputDeviceID, maxInputChannels) == 0) {
-      input.channels = mInputChannels = maxInputChannels;
-    }
-  }
-#endif
+  input = output;
+  input.channels = mInputChannels; // change to support optional stereo capture
+  input.layout = CUBEB_LAYOUT_MONO;
 
   cubeb_stream* stream = nullptr;
   CubebUtils::AudioDeviceID input_id = nullptr, output_id = nullptr;
