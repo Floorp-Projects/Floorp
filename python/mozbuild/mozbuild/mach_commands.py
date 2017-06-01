@@ -144,7 +144,7 @@ class BuildProgressFooter(object):
     def clear(self):
         """Removes the footer from the current terminal."""
         self._fh.write(self._t.move_x(0))
-        self._fh.write(self._t.clear_eos())
+        self._fh.write(self._t.clear_eol())
 
     def draw(self):
         """Draws this footer in the terminal."""
