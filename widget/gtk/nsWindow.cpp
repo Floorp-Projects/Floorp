@@ -220,6 +220,8 @@ static void     theme_changed_cb          (GtkSettings *settings,
                                            nsWindow *data);
 static void     check_resize_cb           (GtkContainer* container,
                                            gpointer user_data);
+static void     composited_changed_cb     (GtkWidget* widget,
+                                           gpointer user_data);
 
 #if (MOZ_WIDGET_GTK == 3)
 static void     scale_changed_cb          (GtkWidget* widget,
@@ -3370,6 +3372,19 @@ nsWindow::OnCheckResize()
 }
 
 void
+nsWindow::OnCompositedChanged()
+{
+  if (mWidgetListener) {
+    nsIPresShell* presShell = mWidgetListener->GetPresShell();
+    if (presShell) {
+      // Update CSD after the change in alpha visibility
+      presShell->ThemeChanged();
+    }
+  }
+  CleanLayerManagerRecursive();
+}
+
+void
 nsWindow::DispatchDragEvent(EventMessage aMsg, const LayoutDeviceIntPoint& aRefPoint,
                             guint aTime)
 {
@@ -3837,6 +3852,8 @@ nsWindow::Create(nsIWidget* aParent,
                          G_CALLBACK(window_state_event_cb), nullptr);
         g_signal_connect(mShell, "check-resize",
                          G_CALLBACK(check_resize_cb), nullptr);
+        g_signal_connect(mShell, "composited-changed",
+                         G_CALLBACK(composited_changed_cb), nullptr);
 
         GtkSettings* default_settings = gtk_settings_get_default();
         g_signal_connect_after(default_settings,
@@ -5844,6 +5861,16 @@ check_resize_cb (GtkContainer* container, gpointer user_data)
     window->OnCheckResize();
 }
 
+static void
+composited_changed_cb (GtkWidget* widget, gpointer user_data)
+{
+    RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
+    if (!window) {
+      return;
+    }
+    window->OnCompositedChanged();
+}
+
 #if (MOZ_WIDGET_GTK == 3)
 static void
 scale_changed_cb (GtkWidget* widget, GParamSpec* aPSpec, gpointer aPointer)
@@ -6444,7 +6471,10 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
       // during shutdown. Just return what we currently have, which is most likely null.
       return mLayerManager;
     }
-    if (!mLayerManager && eTransparencyTransparent == GetTransparencyMode()) {
+
+    if (!mLayerManager &&
+        eTransparencyTransparent == GetTransparencyMode())
+    {
         mLayerManager = CreateBasicLayerManager();
     }
 
@@ -6752,4 +6782,18 @@ void nsWindow::GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInit
                                   nsCString(XDisplayString(mXDisplay)),
                                   GetClientSize());
   #endif
+}
+
+bool
+nsWindow::IsComposited() const
+{
+  if (!mGdkWindow) {
+    NS_WARNING("nsWindow::HasARGBVisual called before realization!");
+    return false;
+  }
+
+  GdkScreen* gdkScreen = gdk_screen_get_default();
+  return gdk_screen_is_composited(gdkScreen) &&
+         (gdk_window_get_visual(mGdkWindow)
+            == gdk_screen_get_rgba_visual(gdkScreen));
 }

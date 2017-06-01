@@ -251,6 +251,7 @@ public:
     void               ThemeChanged(void);
     void               OnDPIChanged(void);
     void               OnCheckResize(void);
+    void               OnCompositedChanged(void);
 
 #ifdef MOZ_X11
     Window             mOldFocusWindow;
@@ -430,6 +431,8 @@ private:
                                    gint* aRootX, gint* aRootY);
     void               ClearCachedResources();
     nsIWidgetListener* GetListener();
+    bool               IsComposited() const;
+
 
     GtkWidget          *mShell;
     MozContainer       *mContainer;
