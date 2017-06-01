@@ -17,19 +17,16 @@ const EXPECTED_REFLOWS = [
   // by IME and that will cause reflow.
   [
     "select@chrome://global/content/bindings/textbox.xml",
-    "focusAndSelectUrlBar@chrome://browser/content/browser.js",
   ],
 
   // selection change notification may cause querying the focused editor content
   // by IME and that will cause reflow.
   [
     "select@chrome://global/content/bindings/textbox.xml",
-    "focusAndSelectUrlBar@chrome://browser/content/browser.js",
   ],
 
   [
     "select@chrome://global/content/bindings/textbox.xml",
-    "focusAndSelectUrlBar@chrome://browser/content/browser.js",
   ],
 ];
 
