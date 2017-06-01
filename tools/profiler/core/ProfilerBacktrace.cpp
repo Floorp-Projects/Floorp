@@ -26,7 +26,7 @@ ProfilerBacktrace::~ProfilerBacktrace()
 
 void
 ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
-                              const TimeStamp& aStartTime,
+                              const TimeStamp& aProcessStartTime,
                               UniqueStacks& aUniqueStacks)
 {
   // This call to StreamSamplesAndMarkers() can safely pass in a non-null
@@ -34,7 +34,7 @@ ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
   // JSContext when streaming JitReturnAddress entries, and such entries
   // never appear in synchronous samples.
   StreamSamplesAndMarkers(mName.get(), mThreadId,
-                          mBuffer, aWriter, aStartTime,
+                          mBuffer, aWriter, aProcessStartTime,
                           /* aSinceTime */ 0, /* aContext */ nullptr,
                           /* aSavedStreamedSamples */ nullptr,
                           /* aSavedStreamedMarkers */ nullptr,

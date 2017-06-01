@@ -54,7 +54,7 @@ public:
    * Called from the main thread
    */
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
-                             const mozilla::TimeStamp& aStartTime,
+                             const mozilla::TimeStamp& aProcessStartTime,
                              UniqueStacks& aUniqueStacks) = 0;
 
   mozilla::TimeStamp GetStartTime() const { return mStartTime; }
@@ -65,7 +65,7 @@ protected:
    */
   void streamCommonProps(const char* aMarkerType,
                          SpliceableJSONWriter& aWriter,
-                         const mozilla::TimeStamp& aStartTime,
+                         const mozilla::TimeStamp& aProcessStartTime,
                          UniqueStacks& aUniqueStacks);
 
   void SetStack(UniqueProfilerBacktrace aStack) { mStack = mozilla::Move(aStack); }
@@ -87,7 +87,7 @@ public:
   TracingKind GetKind() const { return mKind; }
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
-                             const mozilla::TimeStamp& aStartTime,
+                             const mozilla::TimeStamp& aProcessStartTime,
                              UniqueStacks& aUniqueStacks) override;
 
 private:
@@ -101,7 +101,7 @@ public:
   explicit ProfilerMarkerImagePayload(gfxASurface *aImg);
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
-                             const mozilla::TimeStamp& aStartTime,
+                             const mozilla::TimeStamp& aProcessStartTime,
                              UniqueStacks& aUniqueStacks) override;
 
 private:
@@ -111,13 +111,14 @@ private:
 class IOMarkerPayload : public ProfilerMarkerPayload
 {
 public:
-  IOMarkerPayload(const char* aSource, const char* aFilename, const mozilla::TimeStamp& aStartTime,
+  IOMarkerPayload(const char* aSource, const char* aFilename,
+                  const mozilla::TimeStamp& aStartTime,
                   const mozilla::TimeStamp& aEndTime,
                   UniqueProfilerBacktrace aStack);
   ~IOMarkerPayload();
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
-                             const mozilla::TimeStamp& aStartTime,
+                             const mozilla::TimeStamp& aProcessStartTime,
                              UniqueStacks& aUniqueStacks) override;
 
 private:
@@ -134,7 +135,7 @@ public:
   ~DOMEventMarkerPayload();
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
-                             const mozilla::TimeStamp& aStartTime,
+                             const mozilla::TimeStamp& aProcessStartTime,
                              UniqueStacks& aUniqueStacks) override;
 
 private:
@@ -153,7 +154,7 @@ public:
   ~UserTimingMarkerPayload();
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
-                             const mozilla::TimeStamp& aStartTime,
+                             const mozilla::TimeStamp& aProcessStartTime,
                              UniqueStacks& aUniqueStacks) override;
 
 private:
@@ -173,7 +174,7 @@ public:
                           mozilla::gfx::Point aPoint);
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
-                             const mozilla::TimeStamp& aStartTime,
+                             const mozilla::TimeStamp& aProcessStartTime,
                              UniqueStacks& aUniqueStacks) override;
 
 private:
@@ -194,7 +195,7 @@ public:
   virtual ~TouchDataPayload() {}
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
-                             const mozilla::TimeStamp& aStartTime,
+                             const mozilla::TimeStamp& aProcessStartTime,
                              UniqueStacks& aUniqueStacks) override;
 
 private:
@@ -211,7 +212,7 @@ public:
   virtual ~VsyncPayload() {}
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
-                             const mozilla::TimeStamp& aStartTime,
+                             const mozilla::TimeStamp& aProcessStartTime,
                              UniqueStacks& aUniqueStacks) override;
 
 private:
@@ -228,7 +229,7 @@ public:
   ~GPUMarkerPayload() {}
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
-                             const mozilla::TimeStamp& aStartTime,
+                             const mozilla::TimeStamp& aProcessStartTime,
                              UniqueStacks& aUniqueStacks) override;
 
 private:
@@ -251,7 +252,7 @@ public:
   virtual ~GCSliceMarkerPayload() {}
 
   void StreamPayload(SpliceableJSONWriter& aWriter,
-                     const mozilla::TimeStamp& aStartTime,
+                     const mozilla::TimeStamp& aProcessStartTime,
                      UniqueStacks& aUniqueStacks) override;
 
 private:
@@ -271,7 +272,7 @@ public:
   virtual ~GCMajorMarkerPayload() {}
 
   void StreamPayload(SpliceableJSONWriter& aWriter,
-                     const mozilla::TimeStamp& aStartTime,
+                     const mozilla::TimeStamp& aProcessStartTime,
                      UniqueStacks& aUniqueStacks) override;
 
 private:
@@ -291,7 +292,7 @@ public:
   virtual ~GCMinorMarkerPayload() {};
 
   void StreamPayload(SpliceableJSONWriter& aWriter,
-                     const mozilla::TimeStamp& aStartTime,
+                     const mozilla::TimeStamp& aProcessStartTime,
                      UniqueStacks& aUniqueStacks) override;
 
 private:
