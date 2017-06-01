@@ -34,6 +34,22 @@ pub fn url_origin(url: &Url) -> Origin {
 }
 
 /// The origin of an URL
+///
+/// Two URLs with the same origin are considered
+/// to originate from the same entity and can therefore trust
+/// each other.
+///
+/// The origin is determined based on the scheme as follows:
+///
+/// - If the scheme is "blob" the origin is the origin of the
+///   URL contained in the path component. If parsing fails,
+///   it is an opaque origin.
+/// - If the scheme is "ftp", "gopher", "http", "https", "ws", or "wss",
+///   then the origin is a tuple of the scheme, host, and port.
+/// - If the scheme is anything else, the origin is opaque, meaning
+///   the URL does not have the same origin as any other URL.
+///
+/// For more information see https://url.spec.whatwg.org/#origin
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum Origin {
     /// A globally unique identifier

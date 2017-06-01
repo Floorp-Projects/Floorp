@@ -39,7 +39,7 @@ fn bsearch_range_value_table(c: char, r: &'static [(char, char, BidiClass)]) -> 
             Less
         } else {
             Greater
-        },
+        }
     ) {
         Ok(idx) => {
             let (_, _, cat) = r[idx];

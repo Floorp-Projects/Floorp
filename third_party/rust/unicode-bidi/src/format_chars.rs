@@ -34,9 +34,9 @@ pub const PDI: char = '\u{2069}';
 pub const LRE: char = '\u{202A}';
 /// RIGHT-TO-LEFT EMBEDDING
 pub const RLE: char = '\u{202B}';
+/// POP DIRECTIONAL FORMATTING
+pub const PDF: char = '\u{202C}';
 /// LEFT-TO-RIGHT OVERRIDE
 pub const LRO: char = '\u{202D}';
 /// RIGHT-TO-LEFT OVERRIDE
 pub const RLO: char = '\u{202E}';
-/// POP DIRECTIONAL FORMATTING
-pub const PDF: char = '\u{202C}';
