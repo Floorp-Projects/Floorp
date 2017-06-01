@@ -1156,6 +1156,8 @@ public:
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(PreTransformOverflowAreasProperty,
                                       nsOverflowAreas)
 
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(OverflowAreasProperty, nsOverflowAreas)
+
   // The initial overflow area passed to FinishAndStoreOverflow. This is only set
   // on frames that Preserve3D() or HasPerspective() or IsTransformed(), and
   // when at least one of the overflow areas differs from the frame bound rect.
@@ -4088,7 +4090,14 @@ protected:
   nsresult PeekOffsetParagraph(nsPeekOffsetStruct *aPos);
 
 private:
-  nsOverflowAreas* GetOverflowAreasProperty();
+  // Get a pointer to the overflow areas property attached to the frame.
+  nsOverflowAreas* GetOverflowAreasProperty() const {
+    MOZ_ASSERT(mOverflow.mType == NS_FRAME_OVERFLOW_LARGE);
+    nsOverflowAreas* overflow = GetProperty(OverflowAreasProperty());
+    MOZ_ASSERT(overflow);
+    return overflow;
+  }
+
   nsRect GetVisualOverflowFromDeltas() const {
     MOZ_ASSERT(mOverflow.mType != NS_FRAME_OVERFLOW_LARGE,
                "should not be called when overflow is in a property");
