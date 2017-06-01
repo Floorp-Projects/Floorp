@@ -138,7 +138,7 @@ TimeoutExecutor::MaybeExecute()
 
   Cancel();
 
-  mOwner->RunTimeout(deadline);
+  mOwner->RunTimeout(now, deadline);
 }
 
 TimeoutExecutor::TimeoutExecutor(TimeoutManager* aOwner)

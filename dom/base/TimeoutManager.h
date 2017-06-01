@@ -18,6 +18,7 @@ namespace mozilla {
 namespace dom {
 
 class OrderedTimeoutIterator;
+class TimeoutExecutor;
 
 // This class manages the timeouts in a Window's setTimeout/setInterval pool.
 class TimeoutManager final
@@ -47,7 +48,7 @@ public:
                     mozilla::dom::Timeout::Reason aReason);
 
   // The timeout implementation functions.
-  void RunTimeout(const TimeStamp& aTargetDeadline);
+  void RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadline);
   // Return true if |aTimeout| needs to be reinserted into the timeout list.
   bool RescheduleTimeout(mozilla::dom::Timeout* aTimeout, const TimeStamp& now);
 
@@ -155,8 +156,7 @@ private:
     void Insert(mozilla::dom::Timeout* aTimeout, SortBy aSortBy);
     nsresult ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS,
                                              const TimeoutManager& aTimeoutManager,
-                                             SortBy aSortBy,
-                                             nsIEventTarget* aQueue);
+                                             SortBy aSortBy);
 
     const Timeout* GetFirst() const { return mTimeoutList.getFirst(); }
     Timeout* GetFirst() { return mTimeoutList.getFirst(); }
@@ -220,6 +220,10 @@ private:
   // Each nsGlobalWindow object has a TimeoutManager member.  This reference
   // points to that holder object.
   nsGlobalWindow&             mWindow;
+  // The executor is specific to the nsGlobalWindow/TimeoutManager, but it
+  // can live past the destruction of the window if its scheduled.  Therefore
+  // it must be a separate ref-counted object.
+  RefPtr<TimeoutExecutor>     mExecutor;
   // The list of timeouts coming from non-tracking scripts.
   Timeouts                    mNormalTimeouts;
   // The list of timeouts coming from scripts on the tracking protection list.
