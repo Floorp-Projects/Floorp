@@ -5,6 +5,7 @@
 
 package org.mozilla.focus.locale;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -65,10 +66,6 @@ public class LocaleManager {
         } else {
             return instance.get();
         }
-    }
-
-    public Locale getSystemLocale() {
-        return inited.get() ? systemLocale : Locale.getDefault();
     }
 
     /**
