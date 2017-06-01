@@ -155,7 +155,9 @@ public:
   virtual void
   AddSsrc(uint32_t ssrc)
   {
-    mSsrcs.push_back(ssrc);
+    if (mType != SdpMediaSection::kApplication) {
+      mSsrcs.push_back(ssrc);
+    }
   }
 
   bool
