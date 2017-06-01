@@ -643,6 +643,19 @@
                        label="&appMenuHelp.label;"
                        closemenu="none"
                        oncommand="PanelUI.showSubView('PanelUI-helpView', this, null, true)"/>
+#ifndef XP_MACOSX
+        <toolbarseparator/>
+        <toolbarbutton id="appMenu-quit-button"
+                       class="subviewbutton subviewbutton-iconic"
+#ifdef XP_WIN
+                       label="&quitApplicationCmdWin2.label;"
+                       tooltiptext="&quitApplicationCmdWin2.tooltip;"
+#else
+                       label="&quitApplicationCmd.label;"
+#endif
+                       key="key_quitApplication"
+                       command="cmd_quitApplication"/>
+#endif
       </vbox>
     </panelview>
     <panelview id="appMenu-moreView" title="&moreMenu.label;" class="PanelUI-subView">

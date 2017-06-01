@@ -1,44 +1,59 @@
-const {GlobalOverrider} = require("test/unit/utils");
+const {GlobalOverrider, FakePrefs} = require("test/unit/utils");
+const {chaiAssertions} = require("test/schemas/pings");
 
-const req = require.context(".", true, /\.test\.js$/);
+const req = require.context(".", true, /\.test\.jsx?$/);
 const files = req.keys();
 
 // This exposes sinon assertions to chai.assert
 sinon.assert.expose(assert, {prefix: ""});
+
+chai.use(chaiAssertions);
 
 let overrider = new GlobalOverrider();
 overrider.set({
   Components: {
     interfaces: {},
     utils: {
-      import: overrider.sandbox.spy(),
-      importGlobalProperties: overrider.sandbox.spy(),
-      reportError: overrider.sandbox.spy(),
+      import() {},
+      importGlobalProperties() {},
+      reportError() {},
       now: () => window.performance.now()
     }
   },
-  XPCOMUtils: {
-    defineLazyModuleGetter: overrider.sandbox.spy(),
-    defineLazyServiceGetter: overrider.sandbox.spy(),
-    generateQI: overrider.sandbox.stub().returns(() => {})
-  },
-  dump: overrider.sandbox.spy(),
-  fetch: overrider.sandbox.stub(),
+  // eslint-disable-next-line object-shorthand
+  ContentSearchUIController: function() {}, // NB: This is a function/constructor
+  dump() {},
+  fetch() {},
+  Preferences: FakePrefs,
   Services: {
-    locale: {getRequestedLocale: overrider.sandbox.stub()},
+    locale: {getRequestedLocale() {}},
     mm: {
-      addMessageListener: overrider.sandbox.spy((msg, cb) => cb()),
-      removeMessageListener: overrider.sandbox.spy()
+      addMessageListener: (msg, cb) => cb(),
+      removeMessageListener() {}
     },
     obs: {
-      addObserver: overrider.sandbox.spy(),
-      removeObserver: overrider.sandbox.spy()
+      addObserver() {},
+      removeObserver() {}
+    },
+    prefs: {
+      getDefaultBranch() {
+        return {
+          setBoolPref() {},
+          setIntPref() {},
+          setStringPref() {},
+          clearUserPref() {}
+        };
+      }
     }
+  },
+  XPCOMUtils: {
+    defineLazyModuleGetter() {},
+    defineLazyServiceGetter() {},
+    generateQI() { return {}; }
   }
 });
 
 describe("activity-stream", () => {
-  afterEach(() => overrider.reset());
   after(() => overrider.restore());
   files.forEach(file => req(file));
 });

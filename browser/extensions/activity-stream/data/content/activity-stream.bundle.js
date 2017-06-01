@@ -97,7 +97,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 // Export for tests
 
 
-const actionTypes = ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "INIT", "LOCALE_UPDATED", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_UNLOAD", "NEW_TAB_VISIBLE", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PERFORM_SEARCH", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "SCREENSHOT_UPDATED", "SEARCH_STATE_UPDATED", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_UPDATED", "UNINIT"
+const actionTypes = ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "INIT", "LOCALE_UPDATED", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_UNLOAD", "NEW_TAB_VISIBLE", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "SCREENSHOT_UPDATED", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_UPDATED", "UNINIT"
 // The line below creates an object like this:
 // {
 //   INIT: "INIT",
@@ -440,7 +440,7 @@ module.exports = class DetectUserSessionStart {
 "use strict";
 
 
-/* globals sendAsyncMessage, addMessageListener */
+/* eslint-env mozilla/frame-script */
 
 var _require = __webpack_require__(14);
 
@@ -544,15 +544,6 @@ const INITIAL_STATE = {
     initialized: false,
     // The history (and possibly default) links
     rows: []
-  },
-  Search: {
-    // The search engine currently set by the browser
-    currentEngine: {
-      name: "",
-      icon: ""
-    },
-    // All possible search engines
-    engines: []
   }
 };
 
@@ -637,30 +628,7 @@ function TopSites() {
   }
 }
 
-function Search() {
-  let prevState = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : INITIAL_STATE.Search;
-  let action = arguments[1];
-
-  switch (action.type) {
-    case at.SEARCH_STATE_UPDATED:
-      {
-        if (!action.data) {
-          return prevState;
-        }
-        var _action$data3 = action.data;
-        let currentEngine = _action$data3.currentEngine,
-            engines = _action$data3.engines;
-
-        return Object.assign({}, prevState, {
-          currentEngine,
-          engines
-        });
-      }
-    default:
-      return prevState;
-  }
-}
-var reducers = { TopSites, App, Search };
+var reducers = { TopSites, App };
 module.exports = {
   reducers,
   INITIAL_STATE
@@ -773,7 +741,7 @@ const ContextMenu = __webpack_require__(9);
 var _require2 = __webpack_require__(1);
 
 const actionTypes = _require2.actionTypes,
-      actionCreators = _require2.actionCreators;
+      ac = _require2.actionCreators;
 
 
 class LinkMenu extends React.Component {
@@ -782,12 +750,14 @@ class LinkMenu extends React.Component {
       id: "menu_action_remove_bookmark",
       icon: "bookmark-remove",
       action: "DELETE_BOOKMARK_BY_ID",
-      data: site.bookmarkGuid
+      data: site.bookmarkGuid,
+      userEvent: "BOOKMARK_DELETE"
     } : {
       id: "menu_action_bookmark",
       icon: "bookmark",
       action: "BOOKMARK_URL",
-      data: site.url
+      data: site.url,
+      userEvent: "BOOKMARK_ADD"
     };
   }
   getDefaultContextMenu(site) {
@@ -795,18 +765,22 @@ class LinkMenu extends React.Component {
       id: "menu_action_open_new_window",
       icon: "new-window",
       action: "OPEN_NEW_WINDOW",
-      data: { url: site.url }
+      data: { url: site.url },
+      userEvent: "OPEN_NEW_WINDOW"
     }, {
       id: "menu_action_open_private_window",
       icon: "new-window-private",
       action: "OPEN_PRIVATE_WINDOW",
-      data: { url: site.url }
+      data: { url: site.url },
+      userEvent: "OPEN_PRIVATE_WINDOW"
     }];
   }
   getOptions() {
     var _props = this.props;
     const dispatch = _props.dispatch,
-          site = _props.site;
+          site = _props.site,
+          index = _props.index,
+          source = _props.source;
 
     // default top sites have a limited set of context menu options
 
@@ -818,24 +792,34 @@ class LinkMenu extends React.Component {
         id: "menu_action_dismiss",
         icon: "dismiss",
         action: "BLOCK_URL",
-        data: site.url
+        data: site.url,
+        userEvent: "BLOCK"
       }, {
         id: "menu_action_delete",
         icon: "delete",
         action: "DELETE_HISTORY_URL",
-        data: site.url
+        data: site.url,
+        userEvent: "DELETE"
       }];
     }
     options.forEach(option => {
-      let action = option.action,
-          data = option.data,
-          id = option.id,
-          type = option.type;
+      const action = option.action,
+            data = option.data,
+            id = option.id,
+            type = option.type,
+            userEvent = option.userEvent;
       // Convert message ids to localized labels and add onClick function
 
       if (!type && id) {
         option.label = this.props.intl.formatMessage(option);
-        option.onClick = () => dispatch(actionCreators.SendToMain({ type: actionTypes[action], data }));
+        option.onClick = () => {
+          dispatch(ac.SendToMain({ type: actionTypes[action], data }));
+          dispatch(ac.UserEvent({
+            event: userEvent,
+            source,
+            action_position: index
+          }));
+        };
       }
     });
 
@@ -861,6 +845,7 @@ module.exports._unconnected = LinkMenu;
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+/* globals ContentSearchUIController */
 
 
 const React = __webpack_require__(0);
@@ -876,41 +861,35 @@ const FormattedMessage = _require2.FormattedMessage,
 
 var _require3 = __webpack_require__(1);
 
-const actionTypes = _require3.actionTypes,
-      actionCreators = _require3.actionCreators;
+const ac = _require3.actionCreators;
 
 
 class Search extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { searchString: "" };
     this.onClick = this.onClick.bind(this);
-    this.onChange = this.onChange.bind(this);
+    this.onInputMount = this.onInputMount.bind(this);
   }
 
-  componentWillMount() {
-    // Trigger initialization of ContentSearch in case it hasn't happened yet
-    dispatchEvent(new CustomEvent("ContentSearchClient", { detail: {} }));
-  }
-
-  performSearch(options) {
-    let searchData = {
-      engineName: options.engineName,
-      searchString: options.searchString,
-      searchPurpose: "newtab",
-      healthReportKey: "newtab"
-    };
-    this.props.dispatch(actionCreators.SendToMain({ type: actionTypes.PERFORM_SEARCH, data: searchData }));
+  handleEvent(event) {
+    // Also track search events with our own telemetry
+    if (event.detail.type === "Search") {
+      this.props.dispatch(ac.UserEvent({ event: "SEARCH" }));
+    }
   }
   onClick(event) {
-    const currentEngine = this.props.Search.currentEngine;
+    this.controller.search(event);
+  }
+  onInputMount(input) {
+    if (input) {
+      this.controller = new ContentSearchUIController(input, input.parentNode, "newtab", "activity");
+      addEventListener("ContentSearchClient", this);
+    } else {
+      this.controller = null;
+      removeEventListener("ContentSearchClient", this);
+    }
+  }
 
-    event.preventDefault();
-    this.performSearch({ engineName: currentEngine.name, searchString: this.state.searchString });
-  }
-  onChange(event) {
-    this.setState({ searchString: event.target.value });
-  }
   render() {
     return React.createElement(
       "form",
@@ -927,11 +906,10 @@ class Search extends React.Component {
       React.createElement("input", {
         id: "search-input",
         maxLength: "256",
-        onChange: this.onChange,
         placeholder: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
+        ref: this.onInputMount,
         title: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
-        type: "search",
-        value: this.state.searchString }),
+        type: "search" }),
       React.createElement(
         "button",
         {
@@ -948,7 +926,7 @@ class Search extends React.Component {
   }
 }
 
-module.exports = connect(state => ({ Search: state.Search }))(injectIntl(Search));
+module.exports = connect()(injectIntl(Search));
 module.exports._unconnected = Search;
 
 /***/ }),
@@ -971,6 +949,12 @@ const FormattedMessage = _require2.FormattedMessage;
 const shortURL = __webpack_require__(13);
 const LinkMenu = __webpack_require__(10);
 
+var _require3 = __webpack_require__(1);
+
+const ac = _require3.actionCreators;
+
+const TOP_SITES_SOURCE = "TOP_SITES";
+
 class TopSite extends React.Component {
   constructor(props) {
     super(props);
@@ -978,6 +962,13 @@ class TopSite extends React.Component {
   }
   toggleContextMenu(event, index) {
     this.setState({ showContextMenu: true, activeTile: index });
+  }
+  trackClick() {
+    this.props.dispatch(ac.UserEvent({
+      event: "CLICK",
+      source: TOP_SITES_SOURCE,
+      action_position: this.props.index
+    }));
   }
   render() {
     var _props = this.props;
@@ -995,7 +986,7 @@ class TopSite extends React.Component {
       { className: topSiteOuterClassName, key: link.url },
       React.createElement(
         "a",
-        { href: link.url },
+        { onClick: () => this.trackClick(), href: link.url },
         React.createElement(
           "div",
           { className: "tile", "aria-hidden": true },
@@ -1030,7 +1021,8 @@ class TopSite extends React.Component {
         visible: isContextMenuOpen,
         onUpdate: val => this.setState({ showContextMenu: val }),
         site: link,
-        index: index })
+        index: index,
+        source: TOP_SITES_SOURCE })
     );
   }
 }
@@ -1046,7 +1038,11 @@ const TopSites = props => React.createElement(
   React.createElement(
     "ul",
     { className: "top-sites-list" },
-    props.TopSites.rows.map((link, index) => React.createElement(TopSite, { dispatch: props.dispatch, key: link.url, link: link, index: index }))
+    props.TopSites.rows.map((link, index) => React.createElement(TopSite, {
+      key: link.url,
+      dispatch: props.dispatch,
+      link: link,
+      index: index }))
   )
 );
 

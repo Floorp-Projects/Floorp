@@ -435,10 +435,9 @@ nsPluginTag::InitSandboxLevel()
 
 #if defined(_AMD64_)
   // As level 2 is now the default NPAPI sandbox level for 64-bit flash, we
-  // don't want to allow a lower setting unless this environment variable is
-  // set. This should be changed if the firefox.js pref file is changed.
-  if (mIsFlashPlugin &&
-      !PR_GetEnv("MOZ_ALLOW_WEAKER_SANDBOX") && mSandboxLevel < 2) {
+  // don't want to allow a lower setting. This should be changed if the
+  // firefox.js pref file is changed.
+  if (mIsFlashPlugin && mSandboxLevel < 2) {
     mSandboxLevel = 2;
   }
 #endif
@@ -487,7 +486,7 @@ nsresult nsPluginTag::EnsureMembersAreUTF8()
     ConvertToUTF8(decoder, mFileName);
     ConvertToUTF8(decoder, mFullPath);
   }
-  
+
   // The description of the plug-in and the various MIME type descriptions
   // should be encoded in the standard plain text file encoding for this system.
   // XXX should we add kPlatformCharsetSel_PluginResource?
