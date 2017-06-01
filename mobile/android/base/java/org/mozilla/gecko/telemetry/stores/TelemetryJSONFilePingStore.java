@@ -8,6 +8,7 @@ package org.mozilla.gecko.telemetry.stores;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.support.annotation.WorkerThread;
 import android.util.Log;
@@ -15,6 +16,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.NonObjectJSONException;
+import org.mozilla.gecko.telemetry.TelemetryLocalPing;
+import org.mozilla.gecko.telemetry.TelemetryOutgoingPing;
 import org.mozilla.gecko.telemetry.TelemetryPing;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.FileUtils.FileLastModifiedComparator;
@@ -33,11 +36,10 @@ import java.nio.channels.FileLock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 /**
  * An implementation of TelemetryPingStore that is backed by JSON files.
@@ -100,19 +102,24 @@ public class TelemetryJSONFilePingStore extends TelemetryPingStore {
 
     @Override
     public void storePing(final TelemetryPing ping) throws IOException {
-        final String output;
+        storePing(ping.getPayload(), ping.getDocID(), ping.getURLPath());
+    }
+
+    public void storePing(final ExtendedJSONObject payload, String docID, @Nullable String urlPath) throws IOException {
+        final JSONObject output;
         try {
-            output = new JSONObject()
-                    .put(KEY_PAYLOAD, ping.getPayload())
-                    .put(KEY_URL_PATH, ping.getURLPath())
-                    .toString();
+            output = new JSONObject().put(KEY_PAYLOAD, payload);
+
+            if (urlPath != null) {
+                output.put(KEY_URL_PATH, urlPath);
+            }
         } catch (final JSONException e) {
             // Do not log the exception to avoid leaking personal data.
             throw new IOException("Unable to create JSON to store to disk");
         }
 
-        final FileOutputStream outputStream = new FileOutputStream(getPingFile(ping.getDocID()), false);
-        blockForLockAndWriteFileAndCloseStream(outputStream, output);
+        final FileOutputStream outputStream = new FileOutputStream(getPingFile(docID), false);
+        blockForLockAndWriteFileAndCloseStream(outputStream, output.toString());
     }
 
     @Override
@@ -167,16 +174,47 @@ public class TelemetryJSONFilePingStore extends TelemetryPingStore {
                 continue;
             }
 
+            final ExtendedJSONObject payload;
             try {
-                final String url = obj.getString(KEY_URL_PATH);
-                final ExtendedJSONObject payload = new ExtendedJSONObject(obj.getString(KEY_PAYLOAD));
-                out.add(new TelemetryPing(url, payload, file.getName()));
-            } catch (final IOException | JSONException | NonObjectJSONException e) {
+                payload = new ExtendedJSONObject(obj.getString(KEY_PAYLOAD));
+            } catch (IOException | JSONException | NonObjectJSONException e) {
                 Log.w(LOGTAG, "Bad json in ping. Ignoring.");
                 continue;
             }
+
+            try {
+                final String url = obj.getString(KEY_URL_PATH);
+                out.add(new TelemetryOutgoingPing(url, payload, file.getName()));
+            } catch (JSONException e) {
+                out.add(new TelemetryLocalPing(payload, file.getName()));
+            }
         }
         return out;
+    }
+
+    @Override
+    public int getCount() {
+        final File[] fileArray = storeDir.listFiles(uuidFilenameFilter);
+        if (fileArray == null) {
+            Log.w(LOGTAG, "listFiles unexpectedly returned null - unable to retrieve pings. Assuming 0. " +
+                    "Debug: exists? " + storeDir.exists() + "; directory? " + storeDir.isDirectory());
+            return 0;
+        }
+        return fileArray.length;
+    }
+
+    @Override
+    public Set<String> getStoredIDs() {
+        final Set<String> ids = new HashSet<>();
+        final File[] fileArray = storeDir.listFiles(uuidFilenameFilter);
+        if (fileArray == null) {
+            return ids;
+        }
+        // Map list of files to a set of IDs.
+        for (File file : fileArray) {
+            ids.add(file.getName());
+        }
+        return ids;
     }
 
     /**
