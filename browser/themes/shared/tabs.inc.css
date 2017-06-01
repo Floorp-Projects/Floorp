@@ -207,29 +207,29 @@
 .tab-icon-sound[soundplaying],
 .tab-icon-sound[muted],
 .tab-icon-sound[blocked] {
-  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio);
-  filter: url(chrome://global/skin/filters.svg#fill);
+  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-playing.svg);
+  -moz-context-properties: fill;
   fill: currentColor;
 }
 
 .tab-icon-sound[muted] {
-  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-muted);
+  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-muted.svg);
 }
 
 .tab-icon-sound[blocked] {
-  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-blocked);
+  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-blocked.svg);
 }
 
 .tab-icon-sound:-moz-lwtheme-darktext[soundplaying],
 .tab-icon-sound:-moz-lwtheme-darktext[muted],
 .tab-icon-sound:-moz-lwtheme-darktext[blocked] {
-  filter: url(chrome://global/skin/filters.svg#fill) drop-shadow(1px 1px 1px white);
+  filter: drop-shadow(1px 1px 1px white);
 }
 
 .tab-icon-sound:-moz-lwtheme-brighttext[soundplaying],
 .tab-icon-sound:-moz-lwtheme-brighttext[muted],
 .tab-icon-sound:-moz-lwtheme-brighttext[blocked] {
-  filter: url(chrome://global/skin/filters.svg#fill) drop-shadow(1px 1px 1px black);
+  filter: drop-shadow(1px 1px 1px black);
 }
 
 .tab-icon-sound[soundplaying]:not(:hover),
@@ -581,15 +581,15 @@
 .alltabs-endimage[soundplaying],
 .alltabs-endimage[muted],
 .alltabs-endimage[blocked] {
-  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio);
-  filter: url(chrome://global/skin/filters.svg#fill);
+  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-playing.svg);
+  -moz-context-properties: fill;
   fill: currentColor;
 }
 
 .alltabs-endimage[muted] {
-  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-muted);
+  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-muted.svg);
 }
 
 .alltabs-endimage[blocked] {
-  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio-blocked);
+  list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-blocked.svg);
 }
