@@ -1009,6 +1009,7 @@ pub extern "C" fn wr_api_set_window_parameters(api: &mut WrAPI,
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut WrAPI,
+                                                      color: WrColor,
                                                       epoch: WrEpoch,
                                                       viewport_width: f32,
                                                       viewport_height: f32,
@@ -1017,7 +1018,11 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut WrAPI,
                                                       dl_descriptor: WrBuiltDisplayListDescriptor,
                                                       dl_data: *mut u8,
                                                       dl_size: usize) {
-    let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
+    let color = if color.a == 0.0 {
+        None
+    } else {
+        Some(color.into())
+    };
     // See the documentation of set_display_list in api.rs. I don't think
     // it makes a difference in gecko at the moment(until APZ is figured out)
     // but I suppose it is a good default.
@@ -1029,7 +1034,7 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut WrAPI,
     dl_vec.extend_from_slice(dl_slice);
     let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
 
-    api.set_display_list(Some(root_background_color),
+    api.set_display_list(color,
                          epoch,
                          LayoutSize::new(viewport_width, viewport_height),
                          (pipeline_id, content_size.into(), dl),
@@ -1040,11 +1045,10 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut WrAPI,
 pub unsafe extern "C" fn wr_api_clear_root_display_list(api: &mut WrAPI,
                                                         epoch: WrEpoch,
                                                         pipeline_id: WrPipelineId) {
-    let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
     let preserve_frame_state = true;
     let frame_builder = WebRenderFrameBuilder::new(pipeline_id, WrSize::zero());
 
-    api.set_display_list(Some(root_background_color),
+    api.set_display_list(None,
                          epoch,
                          LayoutSize::new(0.0, 0.0),
                          frame_builder.dl_builder.finalize(),
