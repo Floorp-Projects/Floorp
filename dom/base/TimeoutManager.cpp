@@ -480,16 +480,11 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
       return rv;
     }
 
-    RefPtr<Timeout> copy = timeout;
-
     rv = timeout->InitTimer(mWindow.EventTargetFor(TaskCategory::Timer),
                             realInterval);
     if (NS_FAILED(rv)) {
       return rv;
     }
-
-    // The timeout is now also held in the timer's closure.
-    Unused << copy.forget();
   }
 
   if (!aIsInterval) {
@@ -565,14 +560,8 @@ TimeoutManager::ClearTimeout(int32_t aTimerId, Timeout::Reason aReason)
       }
       else {
         /* Delete the aTimeout from the pending aTimeout list */
+        aTimeout->MaybeCancelTimer();
         aTimeout->remove();
-
-        if (aTimeout->mTimer) {
-          aTimeout->mTimer->Cancel();
-          aTimeout->mTimer = nullptr;
-          aTimeout->Release();
-        }
-        aTimeout->Release();
       }
       return true; // abort!
     }
@@ -717,9 +706,6 @@ TimeoutManager::RunTimeout(const TimeStamp& aTargetDeadline)
     last_expired_tracking_timeout->setNext(dummy_tracking_timeout);
   }
 
-  RefPtr<Timeout> timeoutExtraRef1(dummy_normal_timeout);
-  RefPtr<Timeout> timeoutExtraRef2(dummy_tracking_timeout);
-
   // Now we need to search the normal and tracking timer list at the same
   // time to run the timers in the scheduled order.
 
@@ -755,7 +741,7 @@ TimeoutManager::RunTimeout(const TimeStamp& aTargetDeadline)
                                      last_expired_tracking_timeout->getNext() :
                                      nullptr);
     while (true) {
-      Timeout* timeout = runIter.Next();
+      RefPtr<Timeout> timeout = runIter.Next();
       MOZ_ASSERT(timeout != dummy_normal_timeout &&
                  timeout != dummy_tracking_timeout,
                  "We should have stopped iterating before getting to the dummy timeout");
@@ -788,7 +774,6 @@ TimeoutManager::RunTimeout(const TimeStamp& aTargetDeadline)
         // initialized for this language.  This timer will never fire
         // so just remove it.
         timeout->remove();
-        timeout->Release();
         continue;
       }
 
@@ -796,31 +781,13 @@ TimeoutManager::RunTimeout(const TimeStamp& aTargetDeadline)
       bool timeout_was_cleared = mWindow.RunTimeoutHandler(timeout, scx);
       MOZ_LOG(gLog, LogLevel::Debug,
               ("Run%s(TimeoutManager=%p, timeout=%p, tracking=%d) returned %d\n", timeout->mIsInterval ? "Interval" : "Timeout",
-               this, timeout,
+               this, timeout.get(),
                int(timeout->mIsTracking),
                !!timeout_was_cleared));
 
       if (timeout_was_cleared) {
         // Make sure the iterator isn't holding any Timeout objects alive.
         runIter.Clear();
-
-        // The running timeout's window was cleared, this means that
-        // ClearAllTimeouts() was called from a *nested* call, possibly
-        // through a timeout that fired while a modal (to this window)
-        // dialog was open or through other non-obvious paths.
-        // Note that if the last expired timeout corresponding to each list
-        // is null, then we should expect a refcount of two, since the
-        // dummy timeout for this queue was never injected into it, and the
-        // corresponding timeoutExtraRef variable hasn't been cleared yet.
-        if (last_expired_timeout_is_normal) {
-          MOZ_ASSERT(dummy_normal_timeout->HasRefCnt(1), "dummy_normal_timeout may leak");
-          MOZ_ASSERT(dummy_tracking_timeout->HasRefCnt(2), "dummy_tracking_timeout may leak");
-          Unused << timeoutExtraRef1.forget().take();
-        } else {
-          MOZ_ASSERT(dummy_normal_timeout->HasRefCnt(2), "dummy_normal_timeout may leak");
-          MOZ_ASSERT(dummy_tracking_timeout->HasRefCnt(1), "dummy_tracking_timeout may leak");
-          Unused << timeoutExtraRef2.forget().take();
-        }
 
         mNormalTimeouts.SetInsertionPoint(last_normal_insertion_point);
         mTrackingTimeouts.SetInsertionPoint(last_tracking_insertion_point);
@@ -855,9 +822,6 @@ TimeoutManager::RunTimeout(const TimeStamp& aTargetDeadline)
         }
       }
 
-      // Release the timeout struct since it's possibly out of the list
-      timeout->Release();
-
       // Check to see if we have run out of time to execute timeout handlers.
       // If we've exceeded our time budget then terminate the loop immediately.
       TimeDuration elapsed = TimeStamp::Now() - start;
@@ -871,13 +835,9 @@ TimeoutManager::RunTimeout(const TimeStamp& aTargetDeadline)
   if (dummy_normal_timeout->isInList()) {
     dummy_normal_timeout->remove();
   }
-  timeoutExtraRef1 = nullptr;
-  MOZ_ASSERT(dummy_normal_timeout->HasRefCnt(1), "dummy_normal_timeout may leak");
   if (dummy_tracking_timeout->isInList()) {
     dummy_tracking_timeout->remove();
   }
-  timeoutExtraRef2 = nullptr;
-  MOZ_ASSERT(dummy_tracking_timeout->HasRefCnt(1), "dummy_tracking_timeout may leak");
 
   mNormalTimeouts.SetInsertionPoint(last_normal_insertion_point);
   mTrackingTimeouts.SetInsertionPoint(last_tracking_insertion_point);
@@ -1000,14 +960,10 @@ bool
 TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now)
 {
   if (!aTimeout->mIsInterval) {
-    if (aTimeout->mTimer) {
-      // The timeout still has an OS timer, and it's not an interval,
-      // that means that the OS timer could still fire; cancel the OS
-      // timer and release its reference to the timeout.
-      aTimeout->mTimer->Cancel();
-      aTimeout->mTimer = nullptr;
-      aTimeout->Release();
-    }
+    // The timeout still has an OS timer, and it's not an interval,
+    // that means that the OS timer could still fire; cancel the OS
+    // timer and release its reference to the timeout.
+    aTimeout->MaybeCancelTimer();
     return false;
   }
 
@@ -1051,12 +1007,7 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now)
     // OS timer. As we continue executing the code below we'll end
     // up deleting the timeout since it's not an interval timeout
     // any more (since timeout->mTimer == nullptr).
-    aTimeout->mTimer->Cancel();
-    aTimeout->mTimer = nullptr;
-
-    // Now that the OS timer no longer has a reference to the
-    // timeout we need to drop that reference.
-    aTimeout->Release();
+    aTimeout->MaybeCancelTimer();
 
     return false;
   }
@@ -1112,7 +1063,7 @@ TimeoutManager::Timeouts::ResetTimersForThrottleReduction(int32_t aPreviousThrot
   // point or anything before it, so should start at the timer after insertion
   // point, if there is one.
   // Otherwise, start at the beginning of the list.
-  for (Timeout* timeout = InsertionPoint() ?
+  for (RefPtr<Timeout> timeout = InsertionPoint() ?
          InsertionPoint()->getNext() : GetFirst();
        timeout; ) {
     // It's important that this check be <= so that we guarantee that
@@ -1176,12 +1127,10 @@ TimeoutManager::Timeouts::ResetTimersForThrottleReduction(int32_t aPreviousThrot
         NS_ASSERTION(!nextTimeout ||
                      timeout->When() < nextTimeout->When(), "How did that happen?");
         timeout->remove();
-        // Insert() will addref |timeout| and reset mFiringId.  Make sure to
-        // undo that after calling it.
+        // Insert() will reset mFiringId. Make sure to undo that.
         uint32_t firingId = timeout->mFiringId;
         Insert(timeout, aSortBy);
         timeout->mFiringId = firingId;
-        timeout->Release();
       }
 
       nsresult rv = timeout->InitTimer(aQueue, delay.ToMilliseconds());
@@ -1223,21 +1172,11 @@ TimeoutManager::ClearAllTimeouts()
       seenRunningTimeout = true;
     }
 
-    if (aTimeout->mTimer) {
-      aTimeout->mTimer->Cancel();
-      aTimeout->mTimer = nullptr;
-
-      // Drop the count since the timer isn't going to hold on
-      // anymore.
-      aTimeout->Release();
-    }
+    aTimeout->MaybeCancelTimer();
 
     // Set timeout->mCleared to true to indicate that the timeout was
     // cleared and taken out of the list of timeouts
     aTimeout->mCleared = true;
-
-    // Drop the count since we're removing it from the list.
-    aTimeout->Release();
   });
 
   if (seenRunningTimeout) {
@@ -1253,6 +1192,7 @@ TimeoutManager::ClearAllTimeouts()
 void
 TimeoutManager::Timeouts::Insert(Timeout* aTimeout, SortBy aSortBy)
 {
+
   // Start at mLastTimeout and go backwards.  Don't go further than insertion
   // point, though.  This optimizes for the common case of insertion at the end.
   Timeout* prevSibling;
@@ -1275,10 +1215,6 @@ TimeoutManager::Timeouts::Insert(Timeout* aTimeout, SortBy aSortBy)
   }
 
   aTimeout->mFiringId = InvalidFiringId;
-
-  // Increment the timeout's reference count since it's now held on to
-  // by the list
-  aTimeout->AddRef();
 }
 
 Timeout*
@@ -1351,14 +1287,7 @@ TimeoutManager::Suspend()
     // Resume()'d.  Time effectively passes while suspended.
 
     // Drop the XPCOM timer; we'll reschedule when restoring the state.
-    if (aTimeout->mTimer) {
-      aTimeout->mTimer->Cancel();
-      aTimeout->mTimer = nullptr;
-
-      // Drop the reference that the timer's closure had on this timeout, we'll
-      // add it back in Resume().
-      aTimeout->Release();
-    }
+    aTimeout->MaybeCancelTimer();
   });
 }
 
@@ -1415,9 +1344,6 @@ TimeoutManager::Resume()
       aTimeout->remove();
       return;
     }
-
-    // Add a reference for the new timer's closure.
-    aTimeout->AddRef();
   });
 }
 

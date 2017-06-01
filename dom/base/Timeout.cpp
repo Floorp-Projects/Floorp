@@ -26,7 +26,6 @@ Timeout::Timeout()
     mNestingLevel(0),
     mPopupState(openAllowed)
 {
-  MOZ_COUNT_CTOR(Timeout);
 }
 
 Timeout::~Timeout()
@@ -35,8 +34,6 @@ Timeout::~Timeout()
     mTimer->Cancel();
     mTimer = nullptr;
   }
-
-  MOZ_COUNT_DTOR(Timeout);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Timeout)
@@ -44,6 +41,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Timeout)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Timeout)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mScriptHandler)
+  tmp->remove();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Timeout)
@@ -61,6 +59,7 @@ TimerCallback(nsITimer*, void* aClosure)
 {
   RefPtr<Timeout> timeout = (Timeout*)aClosure;
   timeout->mWindow->AsInner()->TimeoutManager().RunTimeout(timeout->When());
+  timeout->mClosureSelfRef = nullptr;
 }
 
 void
@@ -105,19 +104,29 @@ Timeout::InitTimer(nsIEventTarget* aTarget, uint32_t aDelay)
     MOZ_ALWAYS_SUCCEEDS(mTimer->SetTarget(aTarget));
   }
 
-  return mTimer->InitWithNameableFuncCallback(
+  nsresult rv = mTimer->InitWithNameableFuncCallback(
     TimerCallback, this, aDelay, nsITimer::TYPE_ONE_SHOT, TimerNameCallback);
+
+  // Add a reference for the new timer's closure.
+  if (NS_SUCCEEDED(rv)) {
+    mClosureSelfRef = this;
+  }
+
+  return rv;
 }
 
-// Return true if this timeout has a refcount of aCount. This is used to check
-// that dummy_timeout doesn't leak from nsGlobalWindow::RunTimeout.
-#ifdef DEBUG
-bool
-Timeout::HasRefCnt(uint32_t aCount) const
+void
+Timeout::MaybeCancelTimer()
 {
-  return mRefCnt.get() == aCount;
+  if (!mTimer) {
+    return;
+  }
+
+  mTimer->Cancel();
+  mTimer = nullptr;
+
+  mClosureSelfRef = nullptr;
 }
-#endif // DEBUG
 
 void
 Timeout::SetWhenOrTimeRemaining(const TimeStamp& aBaseTime,
