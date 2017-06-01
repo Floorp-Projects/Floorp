@@ -6,8 +6,6 @@
 package org.mozilla.gecko.prompts;
 
 import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -19,17 +17,19 @@ import android.util.Log;
 public class PromptService implements BundleEventListener {
     private static final String LOGTAG = "GeckoPromptService";
 
-    private final GeckoApp mGeckoApp;
+    private final Context mContext;
+    private final EventDispatcher mDispatcher;
 
-    public PromptService(GeckoApp geckoApp) {
-        mGeckoApp = geckoApp;
-        mGeckoApp.getAppEventDispatcher().registerUiThreadListener(this,
+    public PromptService(final Context context, final EventDispatcher dispatcher) {
+        mContext = context;
+        mDispatcher = dispatcher;
+        mDispatcher.registerUiThreadListener(this,
             "Prompt:Show",
             "Prompt:ShowTop");
     }
 
     public void destroy() {
-        mGeckoApp.getAppEventDispatcher().unregisterUiThreadListener(this,
+        mDispatcher.unregisterUiThreadListener(this,
             "Prompt:Show",
             "Prompt:ShowTop");
     }
@@ -39,7 +39,7 @@ public class PromptService implements BundleEventListener {
     public void handleMessage(final String event, final GeckoBundle message,
                               final EventCallback callback) {
         Prompt p;
-        p = new Prompt(mGeckoApp, new Prompt.PromptCallback() {
+        p = new Prompt(mContext, new Prompt.PromptCallback() {
             @Override
             public void onPromptFinished(final GeckoBundle result) {
                 callback.sendSuccess(result);
