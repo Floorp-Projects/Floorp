@@ -22,6 +22,7 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
     private boolean mIsSingleBuffer;
     private int mTexName;
     private GeckoSurfaceTexture.Callbacks mListener;
+    private volatile int mUseCount = 1;
 
     @WrapForJNI(dispatchTo = "current")
     private static native int nativeAcquireTexture();
@@ -86,6 +87,30 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
         return Versions.feature19Plus;
     }
 
+    @WrapForJNI
+    public void incrementUse() {
+        mUseCount++;
+    }
+
+    @WrapForJNI
+    public void decrementUse() {
+        mUseCount--;
+
+        if (mUseCount == 0) {
+            synchronized (sSurfaceTextures) {
+                sSurfaceTextures.remove(mHandle);
+            }
+
+            setListener(null);
+
+            if (Versions.feature16Plus) {
+                detachFromGLContext();
+            }
+
+            release();
+        }
+    }
+
     public static GeckoSurfaceTexture acquire(boolean singleBufferMode) {
         if (singleBufferMode && !isSingleBufferSupported()) {
             throw new IllegalArgumentException("single buffer mode not supported on API version < 19");
@@ -112,18 +137,6 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
 
 
         return gst;
-    }
-
-    public static void dispose(int handle) {
-        final GeckoSurfaceTexture gst;
-        synchronized (sSurfaceTextures) {
-            gst = sSurfaceTextures.remove(handle);
-        }
-
-        if (gst != null) {
-            gst.setListener(null);
-            gst.release();
-        }
     }
 
     @WrapForJNI
