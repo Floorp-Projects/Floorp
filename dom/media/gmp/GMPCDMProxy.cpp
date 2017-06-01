@@ -10,7 +10,6 @@
 
 #include "mozilla/dom/MediaKeys.h"
 #include "mozilla/dom/MediaKeySession.h"
-
 #include "mozIGeckoMediaPluginService.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
@@ -96,14 +95,14 @@ GMPCDMProxy::Init(PromiseId aPromiseId,
     NewRunnableMethod<UniquePtr<InitData>&&>(this,
                                              &GMPCDMProxy::gmp_Init,
                                              Move(data)));
-  mOwnerThread->Dispatch(task, NS_DISPATCH_NORMAL);
+  mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
 }
 
 #ifdef DEBUG
 bool
 GMPCDMProxy::IsOnOwnerThread()
 {
-  return NS_GetCurrentThread() == mOwnerThread;
+  return mOwnerThread->IsOnCurrentThread();
 }
 #endif
 
@@ -298,7 +297,7 @@ GMPCDMProxy::CreateSession(uint32_t aCreateSessionToken,
     NewRunnableMethod<UniquePtr<CreateSessionData>&&>(this,
                                                       &GMPCDMProxy::gmp_CreateSession,
                                                       Move(data)));
-  mOwnerThread->Dispatch(task, NS_DISPATCH_NORMAL);
+  mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
 }
 
 GMPSessionType
@@ -341,7 +340,7 @@ GMPCDMProxy::LoadSession(PromiseId aPromiseId,
     NewRunnableMethod<UniquePtr<SessionOpData>&&>(this,
                                                   &GMPCDMProxy::gmp_LoadSession,
                                                   Move(data)));
-  mOwnerThread->Dispatch(task, NS_DISPATCH_NORMAL);
+  mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
 }
 
 void
@@ -371,7 +370,7 @@ GMPCDMProxy::SetServerCertificate(PromiseId aPromiseId,
     NewRunnableMethod<UniquePtr<SetServerCertificateData>&&>(this,
                                                              &GMPCDMProxy::gmp_SetServerCertificate,
                                                              Move(data)));
-  mOwnerThread->Dispatch(task, NS_DISPATCH_NORMAL);
+  mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
 }
 
 void
@@ -403,7 +402,7 @@ GMPCDMProxy::UpdateSession(const nsAString& aSessionId,
     NewRunnableMethod<UniquePtr<UpdateSessionData>&&>(this,
                                                       &GMPCDMProxy::gmp_UpdateSession,
                                                       Move(data)));
-  mOwnerThread->Dispatch(task, NS_DISPATCH_NORMAL);
+  mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
 }
 
 void
@@ -434,7 +433,7 @@ GMPCDMProxy::CloseSession(const nsAString& aSessionId,
     NewRunnableMethod<UniquePtr<SessionOpData>&&>(this,
                                                   &GMPCDMProxy::gmp_CloseSession,
                                                   Move(data)));
-  mOwnerThread->Dispatch(task, NS_DISPATCH_NORMAL);
+  mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
 }
 
 void
@@ -463,7 +462,7 @@ GMPCDMProxy::RemoveSession(const nsAString& aSessionId,
     NewRunnableMethod<UniquePtr<SessionOpData>&&>(this,
                                                   &GMPCDMProxy::gmp_RemoveSession,
                                                   Move(data)));
-  mOwnerThread->Dispatch(task, NS_DISPATCH_NORMAL);
+  mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
 }
 
 void
@@ -486,7 +485,7 @@ GMPCDMProxy::Shutdown()
   // Note: This may end up being the last owning reference to the GMPCDMProxy.
   nsCOMPtr<nsIRunnable> task(NewRunnableMethod(this, &GMPCDMProxy::gmp_Shutdown));
   if (mOwnerThread) {
-    mOwnerThread->Dispatch(task, NS_DISPATCH_NORMAL);
+    mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
   }
 }
 
@@ -686,7 +685,7 @@ GMPCDMProxy::Decrypt(MediaRawData* aSample)
 
   nsCOMPtr<nsIRunnable> task(
     NewRunnableMethod<RefPtr<DecryptJob>>(this, &GMPCDMProxy::gmp_Decrypt, job));
-  mOwnerThread->Dispatch(task, NS_DISPATCH_NORMAL);
+  mOwnerThread->EventTarget()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
   return promise;
 }
 
