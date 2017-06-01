@@ -93,7 +93,7 @@
   width: 16px;
   height: 16px;
   margin: 0;
-  -moz-context-properties: fill;
+  filter: url("chrome://global/skin/filters.svg#fill");
   fill: currentColor;
 }
 
@@ -123,19 +123,19 @@
 /*** Button icons ***/
 
 .downloadIconCancel > .button-box > .button-icon {
-  list-style-image: url("chrome://browser/skin/panel-icon-cancel.svg");
+  list-style-image: url("chrome://browser/skin/panel-icons.svg#cancel");
 }
 
 .downloadIconShow > .button-box > .button-icon {
 %ifdef XP_MACOSX
-  list-style-image: url("chrome://browser/skin/panel-icon-magnifier.svg");
+  list-style-image: url("chrome://browser/skin/panel-icons.svg#magnifier");
 %else
-  list-style-image: url("chrome://browser/skin/panel-icon-folder.svg");
+  list-style-image: url("chrome://browser/skin/panel-icons.svg#folder");
 %endif
 }
 
 .downloadIconRetry > .button-box > .button-icon {
-  list-style-image: url("chrome://browser/skin/panel-icons-retry.svg");
+  list-style-image: url("chrome://browser/skin/panel-icons.svg#retry");
 }
 
 /*** Progressmeter ***/
