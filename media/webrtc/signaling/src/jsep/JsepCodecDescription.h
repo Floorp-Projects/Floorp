@@ -9,6 +9,7 @@
 #include "signaling/src/sdp/SdpMediaSection.h"
 #include "signaling/src/sdp/SdpHelper.h"
 #include "nsCRT.h"
+#include "mozilla/net/DataChannelProtocol.h"
 
 namespace mozilla {
 
@@ -755,11 +756,14 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
   JsepApplicationCodecDescription(const std::string& name,
                                   uint16_t channels,
                                   uint16_t localPort,
+                                  uint32_t localMaxMessageSize,
                                   bool enabled = true)
       : JsepCodecDescription(mozilla::SdpMediaSection::kApplication, "",
                              name, 0, channels, enabled),
         mLocalPort(localPort),
-        mRemotePort(0)
+        mLocalMaxMessageSize(localMaxMessageSize),
+        mRemotePort(0),
+        mRemoteMaxMessageSize(0)
   {
   }
 
@@ -797,7 +801,8 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
   {
     if (mEnabled && msection.GetMediaType() == mType) {
       if (msection.GetFormats().empty()) {
-        msection.AddDataChannel(mName, mLocalPort, mChannels);
+        msection.AddDataChannel(mName, mLocalPort, mChannels,
+                                mLocalMaxMessageSize);
       }
 
       AddParametersToMSection(msection);
@@ -809,9 +814,17 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
   {
     JsepCodecDescription::Negotiate(pt, remoteMsection);
 
+    uint32_t message_size = remoteMsection.GetMaxMessageSize();
+    if (message_size) {
+      mRemoteMaxMessageSize = message_size;
+    }
+
     int sctp_port = remoteMsection.GetSctpPort();
     if (sctp_port) {
       mRemotePort = sctp_port;
+      if (!message_size) {
+        mRemoteMaxMessageSize = WEBRTC_DATACHANELL_MAX_MESSAGE_SIZE_DEFAULT;
+      }
       return true;
     }
 
@@ -827,7 +840,9 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
 
 
   uint16_t mLocalPort;
+  uint32_t mLocalMaxMessageSize;
   uint16_t mRemotePort;
+  uint32_t mRemoteMaxMessageSize;
 };
 
 } // namespace mozilla

@@ -646,7 +646,8 @@ private:
                                 std::vector<uint8_t>* fingerprint) const;
   nsresult ConfigureJsepSessionCodecs();
 
-  NS_IMETHODIMP EnsureDataConnection(uint16_t aNumstreams);
+  NS_IMETHODIMP EnsureDataConnection(uint16_t aLocalPort, uint16_t aNumstreams,
+                                     uint32_t aMaxMessageSize);
 
   nsresult CloseInt();
   nsresult CheckApiState(bool assert_ice_ready) const;
@@ -679,6 +680,7 @@ private:
       uint32_t* channels,
       uint16_t* localport,
       uint16_t* remoteport,
+      uint32_t* maxmessagesize,
       uint16_t* level) const;
 
   static void DeferredAddTrackToJsepSession(const std::string& pcHandle,
