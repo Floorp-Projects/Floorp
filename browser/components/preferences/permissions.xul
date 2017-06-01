@@ -32,7 +32,7 @@
   <vbox class="contentPane largeDialogContainer" flex="1">
     <description id="permissionsText" control="url"/>
     <separator class="thin"/>
-    <label id="urlLabel" control="url" value="&address.label;" accesskey="&address.accesskey;"/>
+    <label id="urlLabel" control="url" accesskey="&address.accesskey;">&address.label;</label>
     <hbox align="start">
       <textbox id="url" flex="1"
                oninput="gPermissionManager.onHostInput(event.target);"
