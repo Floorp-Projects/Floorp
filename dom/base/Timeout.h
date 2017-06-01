@@ -11,12 +11,11 @@
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsGlobalWindow.h"
+#include "nsITimeoutHandler.h"
 
-class nsGlobalWindow;
 class nsIEventTarget;
 class nsIPrincipal;
-class nsITimeoutHandler;
-class nsITimer;
 class nsIEventTarget;
 
 namespace mozilla {
@@ -35,13 +34,6 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(Timeout)
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(Timeout)
-
-  // The target may be specified to use a particular event queue for the
-  // resulting timer runnable.  A nullptr target will result in the
-  // default main thread being used.
-  nsresult InitTimer(nsIEventTarget* aTarget, uint32_t aDelay);
-
-  void MaybeCancelTimer();
 
   enum class Reason
   {
@@ -65,9 +57,6 @@ public:
 
   // Window for which this timeout fires
   RefPtr<nsGlobalWindow> mWindow;
-
-  // The actual timer object
-  nsCOMPtr<nsITimer> mTimer;
 
   // True if the timeout was cleared
   bool mCleared;
@@ -104,8 +93,6 @@ public:
   // The language-specific information about the callback.
   nsCOMPtr<nsITimeoutHandler> mScriptHandler;
 
-  RefPtr<Timeout> mClosureSelfRef;
-
 private:
   // mWhen and mTimeRemaining can't be in a union, sadly, because they
   // have constructors.
@@ -120,7 +107,7 @@ private:
   // a longer delay than mInterval for a number of reasons.
   TimeDuration mScheduledDelay;
 
-  ~Timeout();
+  ~Timeout() = default;
 };
 
 } // namespace dom
