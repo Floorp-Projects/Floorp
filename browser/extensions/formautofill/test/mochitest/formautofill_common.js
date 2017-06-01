@@ -43,10 +43,12 @@ async function onAddressChanged(type) {
   });
 }
 
-function checkMenuEntries(expectedValues) {
+function checkMenuEntries(expectedValues, isFormAutofillResult = true) {
   let actualValues = getMenuEntries();
+  // Expect one more item would appear at the bottom as the footer if the result is from form autofill.
+  let expectedLength = isFormAutofillResult ? expectedValues.length + 1 : expectedValues.length;
 
-  is(actualValues.length, expectedValues.length, " Checking length of expected menu");
+  is(actualValues.length, expectedLength, " Checking length of expected menu");
   for (let i = 0; i < expectedValues.length; i++) {
     is(actualValues[i], expectedValues[i], " Checking menu entry #" + i);
   }

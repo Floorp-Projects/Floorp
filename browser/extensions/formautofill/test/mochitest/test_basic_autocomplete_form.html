@@ -107,7 +107,7 @@ add_task(async function history_only_menu_checking() {
   await setInput("#tel", "");
   doKey("down");
   await expectPopup();
-  checkMenuEntries(["1-234-567-890"]);
+  checkMenuEntries(["1-234-567-890"], false);
 });
 
 // Form with both history and address storage.
@@ -141,7 +141,7 @@ add_task(async function check_fallback_for_mismatched_field() {
   await setInput("#email", "");
   doKey("down");
   await expectPopup();
-  checkMenuEntries(["foo@mozilla.com"]);
+  checkMenuEntries(["foo@mozilla.com"], false);
 });
 
 // Autofill the address from dropdown menu.
@@ -161,7 +161,7 @@ add_task(async function check_fallback_after_form_autofill() {
   await setInput("#tel", "");
   doKey("down");
   await expectPopup();
-  checkMenuEntries(["1-234-567-890"]);
+  checkMenuEntries(["1-234-567-890"], false);
 });
 
 registerPopupShownListener(popupShownListener);
