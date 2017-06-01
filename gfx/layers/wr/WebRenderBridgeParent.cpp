@@ -566,7 +566,8 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
     LayoutDeviceIntSize size = mWidget->GetClientSize();
     mApi->SetWindowParameters(size);
   }
-  mApi->SetRootDisplayList(gfx::Color(0.3f, 0.f, 0.f, 1.f), aEpoch, LayerSize(aSize.width, aSize.height),
+  gfx::Color color = mWidget ? gfx::Color(0.3f, 0.f, 0.f, 1.f) : gfx::Color(0.f, 0.f, 0.f, 0.f);
+  mApi->SetRootDisplayList(color, aEpoch, LayerSize(aSize.width, aSize.height),
                            mPipelineId, aContentSize,
                            dlDesc, dl.mData, dl.mLength);
 
