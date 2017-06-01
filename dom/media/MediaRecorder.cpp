@@ -271,7 +271,7 @@ class MediaRecorder::Session: public nsIObserver,
 
     NS_IMETHOD Run() override
     {
-      MOZ_ASSERT(NS_GetCurrentThread() == mSession->mReadThread);
+      MOZ_ASSERT(mSession->mReadThread->EventTarget()->IsOnCurrentThread());
 
       LOG(LogLevel::Debug, ("Session.ExtractRunnable shutdown = %d", mSession->mEncoder->IsShutdown()));
       if (!mSession->mEncoder->IsShutdown()) {
@@ -609,7 +609,7 @@ private:
   // PushBlobRunnable to main thread.
   void Extract(bool aForceFlush)
   {
-    MOZ_ASSERT(NS_GetCurrentThread() == mReadThread);
+    MOZ_ASSERT(mReadThread->EventTarget()->IsOnCurrentThread());
     LOG(LogLevel::Debug, ("Session.Extract %p", this));
 
     PROFILER_LABEL("MediaRecorder", "Session Extract",
@@ -781,7 +781,7 @@ private:
     nsContentUtils::RegisterShutdownObserver(this);
 
     nsCOMPtr<nsIRunnable> event = new ExtractRunnable(this);
-    if (NS_FAILED(mReadThread->Dispatch(event, NS_DISPATCH_NORMAL))) {
+    if (NS_FAILED(mReadThread->EventTarget()->Dispatch(event.forget(), NS_DISPATCH_NORMAL))) {
       NS_WARNING("Failed to dispatch ExtractRunnable at beginning");
       LOG(LogLevel::Debug, ("Session.InitEncoder !ReadThread->Dispatch %p", this));
       DoSessionEndTask(NS_ERROR_ABORT);

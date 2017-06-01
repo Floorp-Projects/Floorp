@@ -278,7 +278,7 @@ public:
     return MEDIA_GRAPH_TARGET_PERIOD_MS;
   }
 
-  bool OnThread() override { return !mThread || NS_GetCurrentThread() == mThread; }
+  bool OnThread() override { return !mThread || mThread->EventTarget()->IsOnCurrentThread(); }
 
   /* When the graph wakes up to do an iteration, implementations return the
    * range of time that will be processed.  This is called only once per

@@ -20,7 +20,7 @@ namespace gmp {
 class GMPTimerParent : public PGMPTimerParent {
 public:
   NS_INLINE_DECL_REFCOUNTING(GMPTimerParent)
-  explicit GMPTimerParent(nsIThread* aGMPThread);
+  explicit GMPTimerParent(nsISerialEventTarget* aGMPEventTarget);
 
   void Shutdown();
 
@@ -50,7 +50,7 @@ private:
 
   nsTHashtable<nsPtrHashKey<Context>> mTimers;
 
-  nsCOMPtr<nsIThread> mGMPThread;
+  nsCOMPtr<nsISerialEventTarget> mGMPEventTarget;
 
   bool mIsOpen;
 };

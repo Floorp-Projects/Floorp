@@ -287,14 +287,14 @@ public:
   // on thread aTarget. If aTarget is null, task is run on the main thread.
   static already_AddRefed<SimpleTimer> Create(nsIRunnable* aTask,
                                               uint32_t aTimeoutMs,
-                                              nsIThread* aTarget = nullptr);
+                                              nsIEventTarget* aTarget = nullptr);
   void Cancel();
 
   NS_IMETHOD Notify(nsITimer *timer) override;
 
 private:
   virtual ~SimpleTimer() {}
-  nsresult Init(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIThread* aTarget);
+  nsresult Init(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIEventTarget* aTarget);
 
   RefPtr<nsIRunnable> mTask;
   nsCOMPtr<nsITimer> mTimer;
