@@ -104,13 +104,11 @@ public:
     , mActorsToDestroy(aDestroyActors)
   {
     mLayerTransaction->SetAboutToSendAsyncMessages();
-    ImageBridgeParent::SetAboutToSendAsyncMessages(mLayerTransaction->GetChildProcessId());
   }
 
   ~AutoLayerTransactionParentAsyncMessageSender()
   {
     mLayerTransaction->SendPendingAsyncMessages();
-    ImageBridgeParent::SendPendingAsyncMessages(mLayerTransaction->GetChildProcessId());
     if (mActorsToDestroy) {
       // Destroy the actors after sending the async messages because the latter may contain
       // references to some actors.
@@ -414,7 +412,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
         // content cannot handle errors.
         return IPC_OK();
       }
-      ImageBridgeParent* imageBridge = ImageBridgeParent::GetInstance(OtherPid());
+      RefPtr<ImageBridgeParent> imageBridge = ImageBridgeParent::GetInstance(OtherPid());
       if (!imageBridge) {
         return IPC_FAIL_NO_REASON(this);
       }
