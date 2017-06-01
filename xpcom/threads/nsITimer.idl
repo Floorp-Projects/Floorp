@@ -10,6 +10,7 @@ interface nsIEventTarget;
 
 %{C++
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/TimeStamp.h"
 
 /**
  * The signature of the timer callback function passed to initWithFuncCallback.
@@ -42,6 +43,7 @@ typedef void (*nsTimerNameCallbackFunc) (nsITimer *aTimer,
 
 native nsTimerCallbackFunc(nsTimerCallbackFunc);
 native nsTimerNameCallbackFunc(nsTimerNameCallbackFunc);
+[ref] native TimeDuration(mozilla::TimeDuration);
 
 /**
  * The callback interface for timers.
@@ -167,7 +169,7 @@ interface nsITimer : nsISupports
 
   /**
    * Initialize a timer to fire after the given millisecond interval.
-   * This version takes a function to call.
+   * This version takes a callback object.
    *
    * @param aFunc      nsITimerCallback interface to call when timer expires
    * @param aDelay     The millisecond interval
@@ -176,6 +178,18 @@ interface nsITimer : nsISupports
   void initWithCallback(in nsITimerCallback aCallback,
                         in unsigned long aDelay,
                         in unsigned long aType);
+
+  /**
+   * Initialize a timer to fire after the high resolution TimeDuration.
+   * This version takes a callback object.
+   *
+   * @param aFunc      nsITimerCallback interface to call when timer expires
+   * @param aDelay     The high resolution interval
+   * @param aType      Timer type per TYPE* consts defined above
+   */
+  [noscript] void InitHighResolutionWithCallback(in nsITimerCallback aCallback,
+                                                 [const] in TimeDuration aDelay,
+                                                 in unsigned long aType);
 
   /**
    * Cancel the timer.  This method works on all types, not just on repeating
@@ -250,6 +264,12 @@ interface nsITimer : nsISupports
    * By default the target is the thread that created the timer.
    */
   attribute nsIEventTarget target;
+
+  /**
+   * The number of microseconds this nsITimer implementation can possibly
+   * fire early.
+   */
+  [noscript] readonly attribute unsigned long allowedEarlyFiringMicroseconds;
 
 %{C++
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;

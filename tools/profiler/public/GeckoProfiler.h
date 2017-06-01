@@ -104,8 +104,8 @@ using UniqueProfilerBacktrace =
 // important happening such as the first paint. Unlike profiler_label that are
 // only recorded if a sample is collected while it is active, marker will always
 // be collected.
-#define PROFILER_MARKER(info) do {} while (0)
-#define PROFILER_MARKER_PAYLOAD(info, payload) \
+#define PROFILER_MARKER(marker_name) do {} while (0)
+#define PROFILER_MARKER_PAYLOAD(marker_name, payload) \
   do { \
     mozilla::UniquePtr<ProfilerMarkerPayload> payloadDeletor(payload); \
   } while (0)
@@ -143,9 +143,9 @@ using UniqueProfilerBacktrace =
   PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, category, \
                                              __LINE__, str)
 
-#define PROFILER_MARKER(info) profiler_add_marker(info)
-#define PROFILER_MARKER_PAYLOAD(info, payload) \
-  profiler_add_marker(info, payload)
+#define PROFILER_MARKER(marker_name) profiler_add_marker(marker_name)
+#define PROFILER_MARKER_PAYLOAD(marker_name, payload) \
+  profiler_add_marker(marker_name, payload)
 
 #endif  // defined(MOZ_GECKO_PROFILER)
 
@@ -211,9 +211,11 @@ struct ProfilerFeature
 
 // Adds a tracing marker to the PseudoStack. A no-op if the profiler is
 // inactive or in privacy mode.
-PROFILER_FUNC_VOID(profiler_tracing(const char* aCategory, const char* aInfo,
+PROFILER_FUNC_VOID(profiler_tracing(const char* aCategory,
+                                    const char* aMarkerName,
                                     TracingKind aKind = TRACING_EVENT))
-PROFILER_FUNC_VOID(profiler_tracing(const char* aCategory, const char* aInfo,
+PROFILER_FUNC_VOID(profiler_tracing(const char* aCategory,
+                                    const char* aMarkerName,
                                     UniqueProfilerBacktrace aCause,
                                     TracingKind aKind = TRACING_EVENT))
 
@@ -259,8 +261,8 @@ PROFILER_FUNC(bool profiler_is_paused(), false)
 // if the profiler is inactive or in privacy mode.
 PROFILER_FUNC(UniqueProfilerBacktrace profiler_get_backtrace(), nullptr)
 
-PROFILER_FUNC_VOID(profiler_get_backtrace_noalloc(char *output,
-                                                  size_t outputSize))
+PROFILER_FUNC_VOID(profiler_get_backtrace_noalloc(char* aOutput,
+                                                  size_t aOutputSize))
 
 // Free a ProfilerBacktrace returned by profiler_get_backtrace().
 #if !defined(MOZ_GECKO_PROFILER)
@@ -374,7 +376,7 @@ PROFILER_FUNC_VOID(profiler_js_interrupt_callback())
 // whether the profiler is active or inactive.
 PROFILER_FUNC(double profiler_time(), 0)
 
-PROFILER_FUNC_VOID(profiler_log(const char *str))
+PROFILER_FUNC_VOID(profiler_log(const char* aStr))
 
 // Gets the stack top of the current thread.
 //
@@ -447,8 +449,8 @@ profiler_call_exit(void* aHandle)
 
 // Adds a marker to the PseudoStack. A no-op if the profiler is inactive or in
 // privacy mode.
-void profiler_add_marker(const char *aMarker,
-                         ProfilerMarkerPayload *aPayload = nullptr);
+void profiler_add_marker(const char* aMarkerName,
+                         ProfilerMarkerPayload* aPayload = nullptr);
 
 #define PROFILER_APPEND_LINE_NUMBER_PASTE(id, line) id ## line
 #define PROFILER_APPEND_LINE_NUMBER_EXPAND(id, line) \
@@ -506,12 +508,12 @@ class MOZ_RAII ProfilerStackFrameRAII {
 public:
   // We only copy the strings at save time, so to take multiple parameters we'd
   // need to copy them then.
-  ProfilerStackFrameRAII(const char *aInfo,
-    js::ProfileEntry::Category aCategory, uint32_t line
+  ProfilerStackFrameRAII(const char* aLabel,
+    js::ProfileEntry::Category aCategory, uint32_t aLine
     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    mHandle = profiler_call_enter(aInfo, aCategory, this, line);
+    mHandle = profiler_call_enter(aLabel, aCategory, this, aLine);
   }
   ~ProfilerStackFrameRAII() {
     profiler_call_exit(mHandle);
@@ -523,11 +525,11 @@ private:
 
 class MOZ_RAII ProfilerStackFrameDynamicRAII {
 public:
-  ProfilerStackFrameDynamicRAII(const char* aInfo,
+  ProfilerStackFrameDynamicRAII(const char* aLabel,
     js::ProfileEntry::Category aCategory, uint32_t aLine,
     const char* aDynamicString)
   {
-    mHandle = profiler_call_enter(aInfo, aCategory, this, aLine,
+    mHandle = profiler_call_enter(aLabel, aCategory, this, aLine,
                                   aDynamicString);
   }
 
@@ -593,33 +595,34 @@ private:
 
 class MOZ_RAII GeckoProfilerTracingRAII {
 public:
-  GeckoProfilerTracingRAII(const char* aCategory, const char* aInfo,
+  GeckoProfilerTracingRAII(const char* aCategory, const char* aMarkerName,
                            UniqueProfilerBacktrace aBacktrace
                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mCategory(aCategory)
-    , mInfo(aInfo)
+    , mMarkerName(aMarkerName)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    profiler_tracing(mCategory, mInfo, Move(aBacktrace), TRACING_INTERVAL_START);
+    profiler_tracing(mCategory, mMarkerName, Move(aBacktrace),
+                     TRACING_INTERVAL_START);
   }
 
-  GeckoProfilerTracingRAII(const char* aCategory, const char* aInfo
+  GeckoProfilerTracingRAII(const char* aCategory, const char* aMarkerName
                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mCategory(aCategory)
-    , mInfo(aInfo)
+    , mMarkerName(aMarkerName)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    profiler_tracing(mCategory, mInfo, TRACING_INTERVAL_START);
+    profiler_tracing(mCategory, mMarkerName, TRACING_INTERVAL_START);
   }
 
   ~GeckoProfilerTracingRAII() {
-    profiler_tracing(mCategory, mInfo, TRACING_INTERVAL_END);
+    profiler_tracing(mCategory, mMarkerName, TRACING_INTERVAL_END);
   }
 
 protected:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   const char* mCategory;
-  const char* mInfo;
+  const char* mMarkerName;
 };
 
 // Convenience class to register and unregister a thread with the profiler.

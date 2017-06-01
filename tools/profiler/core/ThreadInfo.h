@@ -54,10 +54,10 @@ public:
     return n;
   }
 
-  void AddPendingMarker(const char* aMarkerStr, ProfilerMarkerPayload* aPayload,
-                        double aTime)
+  void AddPendingMarker(const char* aMarkerName,
+                        ProfilerMarkerPayload* aPayload, double aTime)
   {
-    ProfilerMarker* marker = new ProfilerMarker(aMarkerStr, aPayload, aTime);
+    ProfilerMarker* marker = new ProfilerMarker(aMarkerName, aPayload, aTime);
     mPendingMarkers.insert(marker);
   }
 

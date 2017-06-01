@@ -150,6 +150,9 @@ HeadlessWidget::Resize(double aX,
 void
 HeadlessWidget::SetSizeMode(nsSizeMode aMode)
 {
+  if (aMode == mSizeMode) {
+    return;
+  }
   if (mSizeMode == nsSizeMode_Normal) {
     // Store the last normal size bounds so it can be restored when entering
     // normal mode again.
@@ -168,8 +171,7 @@ HeadlessWidget::SetSizeMode(nsSizeMode aMode)
   }
   case nsSizeMode_Minimized:
     break;
-  case nsSizeMode_Maximized:
-  case nsSizeMode_Fullscreen: {
+  case nsSizeMode_Maximized: {
     nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
     if (screen) {
       int32_t left, top, width, height;
@@ -179,9 +181,37 @@ HeadlessWidget::SetSizeMode(nsSizeMode aMode)
     }
     break;
   }
+  case nsSizeMode_Fullscreen:
+    // This will take care of resizing the window.
+    nsBaseWidget::InfallibleMakeFullScreen(true);
+    break;
   default:
     break;
   }
+}
+
+nsresult
+HeadlessWidget::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
+{
+  // Directly update the size mode here so a later call SetSizeMode does
+  // nothing.
+  if (aFullScreen) {
+    if (mSizeMode != nsSizeMode_Fullscreen) {
+      mLastSizeMode = mSizeMode;
+    }
+    mSizeMode = nsSizeMode_Fullscreen;
+  } else {
+    mSizeMode = mLastSizeMode;
+  }
+
+  nsBaseWidget::InfallibleMakeFullScreen(aFullScreen, aTargetScreen);
+
+  if (mWidgetListener) {
+    mWidgetListener->SizeModeChanged(mSizeMode);
+    mWidgetListener->FullscreenChanged(aFullScreen);
+  }
+
+  return NS_OK;
 }
 
 nsresult

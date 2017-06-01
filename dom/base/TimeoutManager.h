@@ -18,6 +18,7 @@ namespace mozilla {
 namespace dom {
 
 class OrderedTimeoutIterator;
+class TimeoutExecutor;
 
 // This class manages the timeouts in a Window's setTimeout/setInterval pool.
 class TimeoutManager final
@@ -47,22 +48,12 @@ public:
                     mozilla::dom::Timeout::Reason aReason);
 
   // The timeout implementation functions.
-  void RunTimeout(mozilla::dom::Timeout* aTimeout);
+  void RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadline);
   // Return true if |aTimeout| needs to be reinserted into the timeout list.
-  bool RescheduleTimeout(mozilla::dom::Timeout* aTimeout, const TimeStamp& now,
-                         bool aRunningPendingTimeouts);
+  bool RescheduleTimeout(mozilla::dom::Timeout* aTimeout, const TimeStamp& now);
 
   void ClearAllTimeouts();
   uint32_t GetTimeoutId(mozilla::dom::Timeout::Reason aReason);
-
-  // Apply back pressure to the window if the TabGroup ThrottledEventQueue
-  // exists and has too many runnables waiting to run.  For example, increase
-  // the minimum timer delay, etc.
-  void MaybeApplyBackPressure();
-
-  // Check the current ThrottledEventQueue depth and update the back pressure
-  // state.  If the queue has drained back pressure may be canceled.
-  void CancelOrUpdateBackPressure(nsGlobalWindow* aWindow);
 
   // When timers are being throttled and we reduce the thottle delay we must
   // reschedule.  The amount of the old throttle delay must be provided in
@@ -119,6 +110,9 @@ public:
   void BeginSyncOperation();
   void EndSyncOperation();
 
+  nsIEventTarget*
+  EventTarget();
+
   static const uint32_t InvalidFiringId;
 
 private:
@@ -153,8 +147,7 @@ private:
     void Insert(mozilla::dom::Timeout* aTimeout, SortBy aSortBy);
     nsresult ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS,
                                              const TimeoutManager& aTimeoutManager,
-                                             SortBy aSortBy,
-                                             nsIEventTarget* aQueue);
+                                             SortBy aSortBy);
 
     const Timeout* GetFirst() const { return mTimeoutList.getFirst(); }
     Timeout* GetFirst() { return mTimeoutList.getFirst(); }
@@ -200,7 +193,7 @@ private:
     friend class OrderedTimeoutIterator;
 
   private:
-    typedef mozilla::LinkedList<mozilla::dom::Timeout> TimeoutList;
+    typedef mozilla::LinkedList<RefPtr<Timeout>> TimeoutList;
 
     // mTimeoutList is generally sorted by mWhen, unless mTimeoutInsertionPoint is
     // non-null.  In that case, the dummy timeout pointed to by
@@ -218,6 +211,10 @@ private:
   // Each nsGlobalWindow object has a TimeoutManager member.  This reference
   // points to that holder object.
   nsGlobalWindow&             mWindow;
+  // The executor is specific to the nsGlobalWindow/TimeoutManager, but it
+  // can live past the destruction of the window if its scheduled.  Therefore
+  // it must be a separate ref-counted object.
+  RefPtr<TimeoutExecutor>     mExecutor;
   // The list of timeouts coming from non-tracking scripts.
   Timeouts                    mNormalTimeouts;
   // The list of timeouts coming from scripts on the tracking protection list.
@@ -229,8 +226,6 @@ private:
 
    // The current idle request callback timeout handle
   uint32_t                    mIdleCallbackTimeoutCounter;
-
-  int32_t                     mBackPressureDelayMS;
 
   nsCOMPtr<nsITimer>          mThrottleTrackingTimeoutsTimer;
   bool                        mThrottleTrackingTimeouts;
