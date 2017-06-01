@@ -28,7 +28,7 @@ struct Fail {
 }
 
 #[test]
-#[should_panic(expected = "12827 test cases failed! (243920 passed)")]
+#[should_panic(expected = "314 test cases failed! (256433 passed)")]
 fn test_basic_conformance() {
     let test_data = include_str!("data/BidiTest.txt");
 
@@ -84,7 +84,8 @@ fn test_basic_conformance() {
 
                 // Check levels
                 let exp_levels: Vec<String> = exp_levels.iter().map(|x| x.to_owned()).collect();
-                let levels = gen_levels_list_from_bidi_info(&input_string, &bidi_info);
+                let para = &bidi_info.paragraphs[0];
+                let levels = bidi_info.reordered_levels_per_char(para, para.range.clone());
                 if levels != exp_levels {
                     fails.push(
                         Fail {
@@ -130,6 +131,19 @@ fn test_basic_conformance() {
     }
 }
 
+// TODO: Support auto-RTL
+fn gen_base_levels_for_base_tests(bitset: u8) -> Vec<Option<Level>> {
+    /// Values: auto-LTR, LTR, RTL
+    const VALUES: &'static [Option<Level>] =
+        &[None, Some(level::LTR_LEVEL), Some(level::RTL_LEVEL)];
+    assert!(bitset < (1 << VALUES.len()));
+    (0..VALUES.len())
+        .filter(|bit| bitset & (1u8 << bit) == 1)
+        .map(|idx| VALUES[idx])
+        .collect()
+}
+
+
 #[test]
 #[should_panic(expected = "14558 test cases failed! (77141 passed)")]
 fn test_character_conformance() {
@@ -168,7 +182,8 @@ fn test_character_conformance() {
             let bidi_info = BidiInfo::new(&input_string, input_base_level);
 
             // Check levels
-            let levels = gen_levels_list_from_bidi_info(&input_string, &bidi_info);
+            let para = &bidi_info.paragraphs[0];
+            let levels = bidi_info.reordered_levels_per_char(para, para.range.clone());
             if levels != exp_levels {
                 fails.push(
                     Fail {
@@ -214,31 +229,14 @@ fn test_character_conformance() {
 }
 
 // TODO: Support auto-RTL
-fn gen_base_levels_for_base_tests(bitset: u8) -> Vec<Option<Level>> {
-    /// Values: auto-LTR, LTR, RTL
-    const VALUES: &'static [Option<Level>] = &[None, Some(level::LTR_LEVEL), Some(level::RTL_LEVEL)];
-    assert!(bitset < (1 << VALUES.len()));
-    (0..VALUES.len())
-        .filter(|bit| bitset & (1u8 << bit) == 1)
-        .map(|idx| VALUES[idx])
-        .collect()
-}
-
-// TODO: Support auto-RTL
 fn gen_base_level_for_characters_tests(idx: usize) -> Option<Level> {
     /// Values: LTR, RTL, auto-LTR
-    const VALUES: &'static [Option<Level>] = &[Some(level::LTR_LEVEL), Some(level::RTL_LEVEL), None];
+    const VALUES: &'static [Option<Level>] =
+        &[Some(level::LTR_LEVEL), Some(level::RTL_LEVEL), None];
     assert!(idx < VALUES.len());
     VALUES[idx]
 }
 
-/// We need to collaps levels to one-per-character from one-per-byte format.
-fn gen_levels_list_from_bidi_info(input_str: &str, bidi_info: &BidiInfo) -> Vec<Level> {
-    let para = &bidi_info.paragraphs[0];
-    let levels = bidi_info.reordered_levels(para, para.range.clone());
-    // TODO: Move to impl BidiInfo as pub api
-    input_str.char_indices().map(|(i, _)| levels[i]).collect()
-}
 
 fn get_sample_string_from_bidi_classes(class_names: &[&str]) -> String {
     class_names
@@ -247,32 +245,31 @@ fn get_sample_string_from_bidi_classes(class_names: &[&str]) -> String {
         .collect()
 }
 
-/// TODO: Auto-gen in tables.rs ?
 fn gen_char_from_bidi_class(class_name: &str) -> char {
     match class_name {
-        "AL" => '\u{060b}',
+        "AL" => '\u{060B}',
         "AN" => '\u{0605}',
-        "B" => '\u{000a}',
-        "BN" => '\u{0000}',
-        "CS" => '\u{002c}',
-        "EN" => '\u{0039}',
-        "ES" => '\u{002b}',
-        "ET" => '\u{0023}',
+        "B" => '\u{000A}',
+        "BN" => '\u{2060}',
+        "CS" => '\u{2044}',
+        "EN" => '\u{06F9}',
+        "ES" => '\u{208B}',
+        "ET" => '\u{20CF}',
         "FSI" => format_chars::FSI,
-        "L" => '\u{0041}',
+        "L" => '\u{02B8}',
         "LRE" => format_chars::LRE,
         "LRI" => format_chars::LRI,
         "LRO" => format_chars::LRO,
         "NSM" => '\u{0300}',
-        "ON" => '\u{0021}',
+        "ON" => '\u{03F6}',
         "PDF" => format_chars::PDF,
         "PDI" => format_chars::PDI,
         "R" => '\u{0590}',
         "RLE" => format_chars::RLE,
         "RLI" => format_chars::RLI,
         "RLO" => format_chars::RLO,
-        "S" => '\u{0009}',
-        "WS" => '\u{000c}',
+        "S" => '\u{001F}',
+        "WS" => '\u{200A}',
         &_ => panic!("Invalid Bidi_Class name: {}", class_name),
     }
 }

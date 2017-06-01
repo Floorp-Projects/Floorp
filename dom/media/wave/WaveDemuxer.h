@@ -184,7 +184,7 @@ private:
 class WAVTrackDemuxer : public MediaTrackDemuxer
 {
 public:
-  explicit WAVTrackDemuxer(MediaResourceIndex aSource);
+  explicit WAVTrackDemuxer(MediaResource* aSource);
 
   bool Init();
 
