@@ -350,6 +350,7 @@ pub enum ImageRendering {
 pub struct YuvImageDisplayItem {
     pub yuv_data: YuvData,
     pub color_space: YuvColorSpace,
+    pub image_rendering: ImageRendering
 }
 
 #[repr(u32)]
@@ -427,7 +428,7 @@ pub struct ClipRegion {
     pub complex_clips: ItemRange<ComplexClipRegion>,
     #[serde(default, skip_serializing, skip_deserializing)]
     pub complex_clip_count: usize,
-} 
+}
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ComplexClipRegion {

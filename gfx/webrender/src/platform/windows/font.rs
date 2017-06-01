@@ -24,6 +24,10 @@ pub struct FontContext {
     gdi_gamma_lut: GammaLut,
 }
 
+// DirectWrite is safe to use on multiple threads and non-shareable resources are
+// all hidden inside their font context.
+unsafe impl Send for FontContext {}
+
 pub struct RasterizedGlyph {
     pub width: u32,
     pub height: u32,
@@ -115,6 +119,10 @@ impl FontContext {
             gamma_lut: GammaLut::new(contrast, gamma, gamma),
             gdi_gamma_lut: GammaLut::new(contrast, gdi_gamma, gdi_gamma),
         }
+    }
+
+    pub fn has_font(&self, font_key: &FontKey) -> bool {
+        self.fonts.contains_key(font_key)
     }
 
     pub fn add_raw_font(&mut self, font_key: &FontKey, data: &[u8], index: u32) {
@@ -271,9 +279,11 @@ impl FontContext {
         let width = (bounds.right - bounds.left) as usize;
         let height = (bounds.bottom - bounds.top) as usize;
 
-        // We should not get here since glyph_dimensions would return
-        // None for empty glyphs.
-        assert!(width > 0 && height > 0);
+        // Alpha texture bounds can sometimes return an empty rect
+        // Such as for spaces
+        if width == 0 || height == 0 {
+            return None;
+        }
 
         let mut pixels = analysis.create_alpha_texture(texture_type, bounds);
 

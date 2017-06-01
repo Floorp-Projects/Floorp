@@ -19,11 +19,11 @@ impl<T, U> Plane for Polygon<T, U> where
 
         match self.intersect(&plane) {
             Intersection::Coplanar if dist.approx_eq(&T::zero()) => {
-                debug!("\t\tcoplanar and matching");
+                debug!("\t\tCoplanar and matching");
                 PlaneCut::Sibling(plane)
             }
             Intersection::Coplanar | Intersection::Outside => {
-                debug!("\t\tcoplanar at {:?}", dist);
+                debug!("\t\tCoplanar at {:?}", dist);
                 if dist > T::zero() {
                     PlaneCut::Cut {
                         front: vec![plane],
@@ -48,7 +48,7 @@ impl<T, U> Plane for Polygon<T, U> where
                         back.push(sub)
                     }
                 }
-                debug!("\t\tcut across {:?} by {} in front and {} in back",
+                debug!("\t\tCut across {:?} by {} in front and {} in back",
                     line, front.len(), back.len());
 
                 PlaneCut::Cut {

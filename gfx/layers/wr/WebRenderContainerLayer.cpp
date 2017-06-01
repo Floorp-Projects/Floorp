@@ -107,6 +107,13 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     transformForSC = nullptr;
   }
 
+  if (transformForSC && transform.IsIdentity()) {
+    // If the transform is an identity transform, strip it out so that WR
+    // doesn't turn this stacking context into a reference frame, as it
+    // affects positioning. Bug 1345577 tracks a better fix.
+    transformForSC = nullptr;
+  }
+
   ScrollingLayersHelper scroller(this, aBuilder, aSc);
   StackingContextHelper sc(aSc, aBuilder, this, animationsId, opacityForSC, transformForSC);
 

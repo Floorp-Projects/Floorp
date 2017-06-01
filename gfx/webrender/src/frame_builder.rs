@@ -104,19 +104,7 @@ pub struct FrameBuilderConfig {
     pub enable_scrollbars: bool,
     pub default_font_render_mode: FontRenderMode,
     pub debug: bool,
-}
-
-impl FrameBuilderConfig {
-    pub fn new(enable_scrollbars: bool,
-               default_font_render_mode: FontRenderMode,
-               debug: bool)
-               -> FrameBuilderConfig {
-        FrameBuilderConfig {
-            enable_scrollbars: enable_scrollbars,
-            default_font_render_mode: default_font_render_mode,
-            debug: debug,
-        }
-    }
+    pub cache_expiry_frames: u32,
 }
 
 pub struct FrameBuilder {
@@ -1075,7 +1063,8 @@ impl FrameBuilder {
                          rect: LayerRect,
                          clip_region: &ClipRegion,
                          yuv_data: YuvData,
-                         color_space: YuvColorSpace) {
+                         color_space: YuvColorSpace,
+                         image_rendering: ImageRendering) {
         let format = yuv_data.get_format();
         let yuv_key = match yuv_data {
             YuvData::NV12(plane_0, plane_1) => [plane_0, plane_1, ImageKey::new(0, 0)],
@@ -1091,6 +1080,7 @@ impl FrameBuilder {
             yuv_resource_address: GpuStoreAddress(0),
             format: format,
             color_space: color_space,
+            image_rendering: image_rendering,
         };
 
         let prim_gpu = YuvImagePrimitiveGpu::new(rect.size);

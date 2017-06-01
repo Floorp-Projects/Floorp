@@ -204,7 +204,7 @@ impl<T: NumCast + Copy, Unit> TypedSize2D<T, Unit> {
     /// When casting from floating point sizes, it is worth considering whether
     /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
     /// the desired conversion behavior.
-    pub fn to_uint(&self) -> TypedSize2D<usize, Unit> {
+    pub fn to_usize(&self) -> TypedSize2D<usize, Unit> {
         self.cast().unwrap()
     }
 

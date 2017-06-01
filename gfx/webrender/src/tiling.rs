@@ -29,8 +29,7 @@ use webrender_traits::{BuiltDisplayList, ClipAndScrollInfo, ClipId, ColorF, Devi
 use webrender_traits::{DeviceIntRect, DeviceIntSize, DeviceUintPoint, DeviceUintSize};
 use webrender_traits::{ExternalImageType, FontRenderMode, ImageRendering, LayerPoint, LayerRect};
 use webrender_traits::{LayerToWorldTransform, MixBlendMode, PipelineId, TransformStyle};
-use webrender_traits::{WorldPoint4D, WorldToLayerTransform};
-use webrender_traits::{YuvColorSpace, YuvFormat};
+use webrender_traits::{WorldToLayerTransform, YuvColorSpace, YuvFormat};
 
 // Special sentinel value recognized by the shader. It is considered to be
 // a dummy task that doesn't mask out anything.

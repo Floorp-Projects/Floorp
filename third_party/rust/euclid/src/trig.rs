@@ -15,36 +15,18 @@ pub trait Trig {
     fn tan(self) -> Self;
 }
 
-impl Trig for f32 {
-    #[inline]
-    fn sin(self) -> f32 {
-        self.sin()
-    }
-
-    #[inline]
-    fn cos(self) -> f32 {
-       self.cos()
-    }
-
-    #[inline]
-    fn tan(self) -> f32 {
-       self.tan()
-    }
+macro_rules! trig {
+    ($ty:ty) => (
+        impl Trig for $ty {
+            #[inline]
+            fn sin(self) -> $ty { self.sin() }
+            #[inline]
+            fn cos(self) -> $ty { self.cos() }
+            #[inline]
+            fn tan(self) -> $ty { self.tan() }
+        }
+    )
 }
 
-impl Trig for f64 {
-    #[inline]
-    fn sin(self) -> f64 {
-        self.sin()
-    }
-
-    #[inline]
-    fn cos(self) -> f64 {
-       self.cos()
-    }
-
-    #[inline]
-    fn tan(self) -> f64 {
-       self.tan()
-    }
-}
+trig!(f32);
+trig!(f64);
