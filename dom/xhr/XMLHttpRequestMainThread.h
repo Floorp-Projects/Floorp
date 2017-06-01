@@ -184,6 +184,15 @@ public:
     ENUM_MAX
   };
 
+  enum class ErrorType : uint16_t {
+    eOK,
+    eRequest,
+    eUnreachable,
+    eChannelOpen,
+    eRedirect,
+    ENUM_MAX
+  };
+
   XMLHttpRequestMainThread();
 
   void Construct(nsIPrincipal* aPrincipal,
@@ -469,6 +478,12 @@ public:
 
   virtual void
   SetMozBackgroundRequest(bool aMozBackgroundRequest, ErrorResult& aRv) override;
+
+  virtual uint16_t
+  ErrorCode() const override
+  {
+    return static_cast<uint16_t>(mErrorLoad);
+  }
 
   virtual bool
   MozAnon() const override;
@@ -759,7 +774,7 @@ protected:
   void HandleSyncTimeoutTimer();
   void CancelSyncTimeoutTimer();
 
-  bool mErrorLoad;
+  ErrorType mErrorLoad;
   bool mErrorParsingXML;
   bool mWaitingForOnStopRequest;
   bool mProgressTimerIsActive;

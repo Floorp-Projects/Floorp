@@ -21,6 +21,7 @@
 
 class nsIConsoleReportCollector;
 class nsIDocument;
+class nsIEventTarget;
 class nsIOutputStream;
 class nsILoadGroup;
 class nsIPrincipal;
@@ -97,6 +98,7 @@ public:
   FetchDriver(InternalRequest* aRequest,
               nsIPrincipal* aPrincipal,
               nsILoadGroup* aLoadGroup,
+              nsIEventTarget* aMainThreadEventTarget,
               bool aIsTrackingFetch);
 
   nsresult Fetch(FetchSignal* aSignal,
@@ -127,6 +129,7 @@ private:
   nsCOMPtr<nsIDocument> mDocument;
   nsCOMPtr<nsIChannel> mChannel;
   nsAutoPtr<SRICheckDataVerifier> mSRIDataVerifier;
+  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
   SRIMetadata mSRIMetadata;
   nsCString mWorkerScript;
   bool mIsTrackingFetch;

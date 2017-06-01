@@ -20,6 +20,7 @@ const {
 } = require("devtools/client/netmonitor/src/utils/format-utils");
 const {
   decodeUnicodeUrl,
+  getFormattedProtocol,
   getUrlBaseName,
   getUrlHost,
   getUrlQuery,
@@ -100,6 +101,7 @@ registerCleanupFunction(() => {
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
   Services.prefs.setCharPref("devtools.netmonitor.filters", gDefaultFilters);
   Services.prefs.clearUserPref("devtools.cache.disabled");
+  Services.cookies.removeAll();
 });
 
 function waitForNavigation(target) {
@@ -386,7 +388,6 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
   let host = getUrlHost(url);
   let scheme = getUrlScheme(url);
   let {
-    httpVersion = "",
     remoteAddress,
     remotePort,
     totalTime,
@@ -396,6 +397,7 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
   let remoteIP = remoteAddress ? `${formattedIPPort}` : "unknown";
   let duration = getFormattedTime(totalTime);
   let latency = getFormattedTime(eventTimings.timings.wait);
+  let protocol = getFormattedProtocol(requestItem);
 
   if (fuzzyUrl) {
     ok(requestItem.method.startsWith(method), "The attached method is correct.");
@@ -423,10 +425,10 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
   }
 
   is(target.querySelector(".requests-list-protocol").textContent,
-    httpVersion, "The displayed protocol is correct.");
+    protocol, "The displayed protocol is correct.");
 
   is(target.querySelector(".requests-list-protocol").getAttribute("title"),
-    httpVersion, "The tooltip protocol is correct.");
+    protocol, "The tooltip protocol is correct.");
 
   is(target.querySelector(".requests-list-domain").textContent,
     host, "The displayed domain is correct.");

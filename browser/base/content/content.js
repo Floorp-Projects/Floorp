@@ -41,6 +41,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageMetadata",
   "resource://gre/modules/PageMetadata.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUIUtils",
   "resource:///modules/PlacesUIUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+  "resource://gre/modules/sessionstore/Utils.jsm");
 XPCOMUtils.defineLazyGetter(this, "PageMenuChild", function() {
   let tmp = {};
   Cu.import("resource://gre/modules/PageMenu.jsm", tmp);
@@ -808,7 +810,8 @@ addEventListener("ActivateSocialFeature", function(aEvent) {
   sendAsyncMessage("Social:Activation", {
     url: ownerDocument.location.href,
     origin: ownerDocument.nodePrincipal.origin,
-    manifest: data
+    manifest: data,
+    triggeringPrincipal: Utils.serializePrincipal(ownerDocument.nodePrincipal),
   });
 }, true, true);
 

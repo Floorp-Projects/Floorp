@@ -40,12 +40,14 @@ pub fn parse(input: &[u8]) -> Parse {
 ///
 /// Use `parse(input.as_bytes())` to parse a `&str` string.
 ///
-/// This function is only available if the `query_encoding` Cargo feature is enabled.
+/// This function is only available if the `query_encoding`
+/// [feature](http://doc.crates.io/manifest.html#the-features-section]) is enabled.
 ///
 /// Arguments:
 ///
 /// * `encoding_override`: The character encoding each name and values is decoded as
 ///    after percent-decoding. Defaults to UTF-8.
+///    `EncodingRef` is defined in [rust-encoding](https://github.com/lifthrasiir/rust-encoding).
 /// * `use_charset`: The *use _charset_ flag*. If in doubt, set to `false`.
 #[cfg(feature = "query_encoding")]
 pub fn parse_with_encoding<'a>(input: &'a [u8],
@@ -119,7 +121,7 @@ fn decode(input: &[u8], encoding: EncodingOverride) -> Cow<str> {
 }
 
 /// Replace b'+' with b' '
-fn replace_plus<'a>(input: &'a [u8]) -> Cow<'a, [u8]> {
+fn replace_plus(input: &[u8]) -> Cow<[u8]> {
     match input.iter().position(|&b| b == b'+') {
         None => Cow::Borrowed(input),
         Some(first_position) => {

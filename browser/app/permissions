@@ -12,6 +12,7 @@ origin	uitour	1	https://support.mozilla.org
 origin	uitour	1	https://addons.mozilla.org
 origin	uitour	1	https://discovery.addons.mozilla.org
 origin	uitour	1	about:home
+origin	uitour	1	about:newtab
 
 # XPInstall
 origin	install	1	https://addons.mozilla.org

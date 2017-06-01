@@ -119,7 +119,10 @@ public:
                                       ErrorResult& aRv);
 
 private:
+  void RecordTelemetryOnce();
+
   nsCOMPtr<nsIGlobalObject> mParent;
+  bool mRecordedTelemetry;
 };
 
 } // namespace dom

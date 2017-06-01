@@ -40,7 +40,6 @@ void ReleaseVRManagerParentSingleton() {
 VRManagerChild::VRManagerChild()
   : TextureForwarder()
   , mDisplaysInitialized(false)
-  , mInputFrameID(-1)
   , mMessageLoop(MessageLoop::current())
   , mFrameRequestCallbackCounter(0)
   , mBackend(layers::LayersBackend::LAYERS_NONE)
@@ -190,7 +189,8 @@ VRManagerChild::AllocPVRLayerChild(const uint32_t& aDisplayID,
                                    const float& aRightEyeX,
                                    const float& aRightEyeY,
                                    const float& aRightEyeWidth,
-                                   const float& aRightEyeHeight)
+                                   const float& aRightEyeHeight,
+                                   const uint32_t& aGroup)
 {
   RefPtr<VRLayerChild> layer = new VRLayerChild(aDisplayID, this);
   return layer.forget().take();
@@ -322,12 +322,6 @@ VRManagerChild::CreateVRServiceTestController(const nsCString& aID, dom::Promise
   ++mPromiseID;
 }
 
-int
-VRManagerChild::GetInputFrameID()
-{
-  return mInputFrameID;
-}
-
 mozilla::ipc::IPCResult
 VRManagerChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages)
 {
@@ -405,13 +399,15 @@ PVRLayerChild*
 VRManagerChild::CreateVRLayer(uint32_t aDisplayID,
                               const Rect& aLeftEyeRect,
                               const Rect& aRightEyeRect,
-                              nsIEventTarget* aTarget)
+                              nsIEventTarget* aTarget,
+                              uint32_t aGroup)
 {
   PVRLayerChild* vrLayerChild = AllocPVRLayerChild(aDisplayID, aLeftEyeRect.x,
                                                    aLeftEyeRect.y, aLeftEyeRect.width,
                                                    aLeftEyeRect.height, aRightEyeRect.x,
                                                    aRightEyeRect.y, aRightEyeRect.width,
-                                                   aRightEyeRect.height);
+                                                   aRightEyeRect.height,
+                                                   aGroup);
   // Do the DOM labeling.
   if (aTarget) {
     SetEventTargetForActor(vrLayerChild, aTarget);
@@ -421,7 +417,8 @@ VRManagerChild::CreateVRLayer(uint32_t aDisplayID,
                                  aLeftEyeRect.y, aLeftEyeRect.width,
                                  aLeftEyeRect.height, aRightEyeRect.x,
                                  aRightEyeRect.y, aRightEyeRect.width,
-                                 aRightEyeRect.height);
+                                 aRightEyeRect.height,
+                                 aGroup);
 }
 
 
@@ -476,28 +473,6 @@ VRManagerChild::CancelFrameRequestCallback(int32_t aHandle)
 {
   // mFrameRequestCallbacks is stored sorted by handle
   mFrameRequestCallbacks.RemoveElementSorted(aHandle);
-}
-
-mozilla::ipc::IPCResult
-VRManagerChild::RecvNotifyVSync()
-{
-  for (auto& display : mDisplays) {
-    display->NotifyVsync();
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-VRManagerChild::RecvNotifyVRVSync(const uint32_t& aDisplayID)
-{
-  for (auto& display : mDisplays) {
-    if (display->GetDisplayInfo().GetDisplayID() == aDisplayID) {
-      display->NotifyVRVsync();
-    }
-  }
-
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult

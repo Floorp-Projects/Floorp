@@ -1111,7 +1111,7 @@ WebMTrackDemuxer::Seek(const TimeUnit& aTime)
 nsresult
 WebMTrackDemuxer::NextSample(RefPtr<MediaRawData>& aData)
 {
-  nsresult rv;
+  nsresult rv = NS_ERROR_DOM_MEDIA_END_OF_STREAM;;
   while (mSamples.GetSize() < 1 &&
          NS_SUCCEEDED((rv = mParent->GetNextPacket(mType, &mSamples)))) {
   }

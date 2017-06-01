@@ -59,6 +59,9 @@ class FetchSignalProxy final : public FetchSignal::Follower
   // This is created and released on the main-thread.
   RefPtr<FetchSignal> mSignalMainThread;
 
+  // The main-thread event target for runnable dispatching.
+  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
+
   // This value is used only for the creation of FetchSignal on the
   // main-thread. They are not updated.
   const bool mAborted;
@@ -87,9 +90,11 @@ class FetchSignalProxy final : public FetchSignal::Follower
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchSignalProxy)
 
-  explicit FetchSignalProxy(FetchSignal* aSignal)
-    : mAborted(aSignal->Aborted())
+  FetchSignalProxy(FetchSignal* aSignal, nsIEventTarget* aMainThreadEventTarget)
+    : mMainThreadEventTarget(aMainThreadEventTarget)
+    , mAborted(aSignal->Aborted())
   {
+    MOZ_ASSERT(mMainThreadEventTarget);
     Follow(aSignal);
   }
 
@@ -98,7 +103,7 @@ public:
   {
     RefPtr<FetchSignalProxyRunnable> runnable =
       new FetchSignalProxyRunnable(this);
-    NS_DispatchToMainThread(runnable);
+    mMainThreadEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
   }
 
   FetchSignal*
@@ -120,7 +125,7 @@ public:
 private:
   ~FetchSignalProxy()
   {
-    NS_ReleaseOnMainThread(mSignalMainThread.forget());
+    NS_ProxyRelease(mMainThreadEventTarget, mSignalMainThread.forget());
   }
 };
 
@@ -152,7 +157,8 @@ public:
 
     RefPtr<FetchSignalProxy> signalProxy;
     if (aSignal) {
-      signalProxy = new FetchSignalProxy(aSignal);
+      signalProxy =
+        new FetchSignalProxy(aSignal, aWorkerPrivate->MainThreadEventTarget());
     }
 
     RefPtr<WorkerFetchResolver> r =
@@ -276,14 +282,16 @@ public:
         return NS_OK;
       }
 
-      nsCOMPtr<nsIPrincipal> principal = proxy->GetWorkerPrivate()->GetPrincipal();
+      WorkerPrivate* workerPrivate = proxy->GetWorkerPrivate();
+      MOZ_ASSERT(workerPrivate);
+      nsCOMPtr<nsIPrincipal> principal = workerPrivate->GetPrincipal();
       MOZ_ASSERT(principal);
-      nsCOMPtr<nsILoadGroup> loadGroup = proxy->GetWorkerPrivate()->GetLoadGroup();
+      nsCOMPtr<nsILoadGroup> loadGroup = workerPrivate->GetLoadGroup();
       MOZ_ASSERT(loadGroup);
-
       // We don't track if a worker is spawned from a tracking script for now,
       // so pass false as the last argument to FetchDriver().
-      fetch = new FetchDriver(mRequest, principal, loadGroup, false);
+      fetch = new FetchDriver(mRequest, principal, loadGroup,
+                              workerPrivate->MainThreadEventTarget(), false);
       nsAutoCString spec;
       if (proxy->GetWorkerPrivate()->GetBaseURI()) {
         proxy->GetWorkerPrivate()->GetBaseURI()->GetAsciiSpec(spec);
@@ -307,6 +315,8 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
+
+  MOZ_ASSERT(aGlobal);
 
   // Double check that we have chrome privileges if the Request's content
   // policy type has been overridden.
@@ -380,7 +390,8 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
     RefPtr<MainThreadFetchResolver> resolver =
       new MainThreadFetchResolver(p, observer);
     RefPtr<FetchDriver> fetch =
-      new FetchDriver(r, principal, loadGroup, isTrackingFetch);
+      new FetchDriver(r, principal, loadGroup,
+                      aGlobal->EventTargetFor(TaskCategory::Other), isTrackingFetch);
     fetch->SetDocument(doc);
     resolver->SetLoadGroup(loadGroup);
     aRv = fetch->Fetch(signal, resolver);
@@ -1119,26 +1130,33 @@ public:
 };
 
 template <class Derived>
-FetchBody<Derived>::FetchBody()
+FetchBody<Derived>::FetchBody(nsIGlobalObject* aOwner)
   : mWorkerHolder(nullptr)
+  , mOwner(aOwner)
   , mBodyUsed(false)
 #ifdef DEBUG
   , mReadDone(false)
 #endif
 {
+  MOZ_ASSERT(aOwner);
+
   if (!NS_IsMainThread()) {
     mWorkerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(mWorkerPrivate);
+    mMainThreadEventTarget = mWorkerPrivate->MainThreadEventTarget();
   } else {
     mWorkerPrivate = nullptr;
+    mMainThreadEventTarget = aOwner->EventTargetFor(TaskCategory::Other);
   }
+
+  MOZ_ASSERT(mMainThreadEventTarget);
 }
 
 template
-FetchBody<Request>::FetchBody();
+FetchBody<Request>::FetchBody(nsIGlobalObject* aOwner);
 
 template
-FetchBody<Response>::FetchBody();
+FetchBody<Response>::FetchBody(nsIGlobalObject* aOwner);
 
 template <class Derived>
 FetchBody<Derived>::~FetchBody()
@@ -1235,11 +1253,7 @@ FetchBody<Derived>::BeginConsumeBody()
 
   nsCOMPtr<nsIRunnable> r = new BeginConsumeBodyRunnable<Derived>(this);
   nsresult rv = NS_OK;
-  if (mWorkerPrivate) {
-    rv = mWorkerPrivate->DispatchToMainThread(r.forget());
-  } else {
-    rv = NS_DispatchToMainThread(r.forget());
-  }
+  mMainThreadEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ReleaseObject();
     return rv;
@@ -1270,7 +1284,8 @@ FetchBody<Derived>::BeginConsumeBodyMainThread()
 
   nsCOMPtr<nsIInputStreamPump> pump;
   rv = NS_NewInputStreamPump(getter_AddRefs(pump),
-                             stream);
+                             stream, -1, -1, 0, 0, false,
+                             mMainThreadEventTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -1293,7 +1308,8 @@ FetchBody<Derived>::BeginConsumeBodyMainThread()
       type = MutableBlobStorage::eCouldBeInTemporaryFile;
     }
 
-    listener = new MutableBlobStreamListener(type, nullptr, mMimeType, p);
+    listener = new MutableBlobStreamListener(type, nullptr, mMimeType, p,
+                                             mMainThreadEventTarget);
   } else {
     nsCOMPtr<nsIStreamLoader> loader;
     rv = NS_NewStreamLoader(getter_AddRefs(loader), p);
@@ -1311,7 +1327,8 @@ FetchBody<Derived>::BeginConsumeBodyMainThread()
 
   // Now that everything succeeded, we can assign the pump to a pointer that
   // stays alive for the lifetime of the FetchBody.
-  mConsumeBodyPump = new nsMainThreadPtrHolder<nsIInputStreamPump>(pump);
+  mConsumeBodyPump =
+    new nsMainThreadPtrHolder<nsIInputStreamPump>(pump, mMainThreadEventTarget);
   // It is ok for retargeting to fail and reads to happen on the main thread.
   autoReject.DontFail();
 

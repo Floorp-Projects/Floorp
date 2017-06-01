@@ -1,3 +1,4 @@
+
 use Arg;
 
 #[derive(Debug)]
@@ -22,15 +23,7 @@ impl<'e> Default for Switched<'e> {
 }
 
 impl<'n, 'e, 'z> From<&'z Arg<'n, 'e>> for Switched<'e> {
-    fn from(a: &'z Arg<'n, 'e>) -> Self {
-        Switched {
-            short: a.short,
-            long: a.long,
-            aliases: a.aliases.clone(),
-            disp_ord: a.disp_ord,
-            ..Default::default()
-        }
-    }
+    fn from(a: &'z Arg<'n, 'e>) -> Self { a.s.clone() }
 }
 
 impl<'e> Clone for Switched<'e> {

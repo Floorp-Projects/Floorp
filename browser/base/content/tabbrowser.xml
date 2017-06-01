@@ -4110,7 +4110,7 @@
               let requestedTabState = this.getTabState(this.requestedTab);
               let requestedBrowser = this.requestedTab.linkedBrowser;
 
-              // It is more desirable to show a blank tab when appropriate than
+              // It is often more desirable to show a blank tab when appropriate than
               // the tab switch spinner - especially since the spinner is usually
               // preceded by a perceived lag of TAB_SWITCH_TIMEOUT ms in the
               // tab switch. We can hide this lag, and hide the time being spent
@@ -4118,12 +4118,24 @@
               // tab instead and focusing it immediately.
               let shouldBeBlank = false;
               if (requestedBrowser.isRemoteBrowser) {
-                // If a tab is remote, we can show a blank tab instead of a
-                // spinner if we know it has never presented before, or if it
-                // has just crashed and we haven't started showing the tab crashed
-                // page yet.
+                // If a tab is remote and the window is not minimized, we can show a
+                // blank tab instead of a spinner in the following cases:
+                //
+                // 1. The tab has just crashed, and we haven't started showing the
+                //    tab crashed page yet (in this case, the TabParent is null)
+                // 2. The tab has never presented, and has not finished loading
+                //    a non-blank page.
+                //
+                // For (2), "finished loading a non-blank page" is determined by
+                // looking at the loaded URI and the busy state on the tab element.
+                let hasSufficientlyLoaded =
+                  !this.requestedTab.hasAttribute("busy") &&
+                  requestedBrowser.currentURI.spec != "about:blank";
+
                 let fl = requestedBrowser.frameLoader;
-                shouldBeBlank = !this.minimized && (!fl.tabParent || !fl.tabParent.hasPresented);
+                shouldBeBlank = !this.minimized &&
+                                (!fl.tabParent ||
+                                 (!hasSufficientlyLoaded && !fl.tabParent.hasPresented));
               }
 
               this.log("Tab should be blank: " + shouldBeBlank);
@@ -4628,7 +4640,6 @@
               this.assert(!this.spinnerTab);
               let browser = this.requestedTab.linkedBrowser;
               this.assert(browser.isRemoteBrowser);
-              this.assert(browser.frameLoader.tabParent.hasPresented);
               TelemetryStopwatch.start("FX_TAB_SWITCH_SPINNER_VISIBLE_MS", window);
               // We have a second, similar probe for capturing recordings of
               // when the spinner is displayed for very long periods.
@@ -5211,6 +5222,7 @@
                 allowThirdPartyFixup: true,
                 relatedToCurrent: true,
                 isPrerendered: true,
+                triggeringPrincipal: Utils.deserializePrincipal(data.triggeringPrincipal),
               });
               let partialSHistory = newTab.linkedBrowser.frameLoader.partialSHistory;
               groupedSHistory.addPrerenderingPartialSHistory(partialSHistory, data.id);
@@ -6041,19 +6053,16 @@
       <field name="_closeButtonsUpdatePending">false</field>
       <method name="adjustTabstrip">
         <body><![CDATA[
+          // If we're overflowing, tabs are at their minimum widths.
+          if (this.getAttribute("overflow") == "true") {
+            this.setAttribute("closebuttons", "activetab");
+            return;
+          }
+
           if (this._closeButtonsUpdatePending) {
             return;
           }
           this._closeButtonsUpdatePending = true;
-
-          // If we're overflowing, tabs are at their minimum widths.
-          if (this.getAttribute("overflow") == "true") {
-            window.requestAnimationFrame(() => {
-              this._closeButtonsUpdatePending = false;
-              this.setAttribute("closebuttons", "activetab");
-            });
-            return;
-          }
 
           // Wait until after the next paint to get current layout data from
           // getBoundsWithoutFlushing.

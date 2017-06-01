@@ -45,10 +45,6 @@
 #include "nsIAuthPrompt2.h"
 #include "nsIFTPChannelParentInternal.h"
 
-#ifdef MOZ_WIDGET_GONK
-#include "NetStatistics.h"
-#endif
-
 using namespace mozilla;
 using namespace mozilla::net;
 
@@ -1615,13 +1611,6 @@ nsFtpState::Init(nsFtpChannel *channel)
     NS_ASSERTION(channel, "FTP: needs a channel");
 
     mChannel = channel; // a straight ref ptr to the channel
-
-#ifdef MOZ_WIDGET_GONK
-    nsCOMPtr<nsINetworkInfo> activeNetworkInfo;
-    GetActiveNetworkInfo(activeNetworkInfo);
-    mActiveNetworkInfo =
-        new nsMainThreadPtrHolder<nsINetworkInfo>(activeNetworkInfo);
-#endif
 
     mKeepRunning = true;
     mSuppliedEntityID = channel->EntityID();

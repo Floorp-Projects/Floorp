@@ -28,7 +28,7 @@ class InvalidTestPathError(Exception):
 class WebPlatformTestsRunner(MozbuildObject):
     """Run web platform tests."""
 
-    def setup_kwargs(self, kwargs):
+    def setup_kwargs_firefox(self, kwargs):
         from wptrunner import wptcommandline
 
         build_path = os.path.join(self.topobjdir, 'build')
@@ -67,10 +67,50 @@ class WebPlatformTestsRunner(MozbuildObject):
 
         kwargs = wptcommandline.check_args(kwargs)
 
+    def setup_kwargs_wptrun(self, kwargs):
+        from wptrunner import wptcommandline
+        here = os.path.join(self.topsrcdir, 'testing', 'web-platform')
+
+        sys.path.insert(0, os.path.join(here, "tests", "tools"))
+
+        import wptrun
+
+        setup_func = {
+            "chrome": wptrun.setup_chrome,
+            "edge": wptrun.setup_edge,
+            "servo": wptrun.setup_servo,
+        }[kwargs["product"]]
+
+        setup_func(wptrun.virtualenv.Virtualenv(self.virtualenv_manager.virtualenv_root),
+                   kwargs,
+                   True)
+
+        kwargs["tests_root"] = os.path.join(here, "tests")
+
+        if kwargs["metadata_root"] is None:
+            metadir = os.path.join(here, "products", kwargs["product"])
+            if not os.path.exists(metadir):
+                os.makedirs(metadir)
+            kwargs["metadata_root"] = metadir
+
+        src_manifest = os.path.join(here, "meta", "MANIFEST.json")
+        dest_manifest = os.path.join(kwargs["metadata_root"], "MANIFEST.json")
+
+        if not os.path.exists(dest_manifest) and os.path.exists(src_manifest):
+            with open(src_manifest) as src, open(dest_manifest, "w") as dest:
+                dest.write(src.read())
+
+        kwargs = wptcommandline.check_args(kwargs)
+
     def run_tests(self, **kwargs):
         from wptrunner import wptrunner
 
-        self.setup_kwargs(kwargs)
+        if kwargs["product"] in ["firefox", None]:
+            self.setup_kwargs_firefox(kwargs)
+        elif kwargs["product"] in ("chrome", "edge", "servo"):
+            self.setup_kwargs_wptrun(kwargs)
+        else:
+            raise ValueError("Unknown product %s" % kwargs["product"])
 
         logger = wptrunner.setup_logging(kwargs, {"mach": sys.stdout})
         result = wptrunner.run_tests(**kwargs)
@@ -258,7 +298,7 @@ class WPTManifestUpdater(MozbuildObject):
 
 def create_parser_wpt():
     from wptrunner import wptcommandline
-    return wptcommandline.create_parser(["firefox"])
+    return wptcommandline.create_parser(["firefox", "chrome", "edge", "servo"])
 
 def create_parser_update():
     from update import updatecommandline

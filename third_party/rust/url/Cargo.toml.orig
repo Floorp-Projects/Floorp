@@ -1,0 +1,48 @@
+[package]
+
+name = "url"
+# When updating version, also modify html_root_url in the lib.rs
+version = "1.4.1"
+authors = ["The rust-url developers"]
+
+description = "URL library for Rust, based on the WHATWG URL Standard"
+documentation = "https://docs.rs/url"
+repository = "https://github.com/servo/rust-url"
+readme = "README.md"
+keywords = ["url", "parser"]
+categories = ["parser-implementations", "web-programming", "encoding"]
+license = "MIT/Apache-2.0"
+
+[badges]
+travis-ci = { repository = "servo/rust-url" }
+appveyor = { repository = "servo/rust-url" }
+
+[workspace]
+members = [".", "idna", "url_serde"]
+
+[[test]]
+name = "unit"
+
+[[test]]
+name = "data"
+harness = false
+
+[lib]
+test = false
+
+[dev-dependencies]
+rustc-test = "0.1"
+rustc-serialize = "0.3"
+serde_json = ">=0.6.1, <0.9"
+
+[features]
+query_encoding = ["encoding"]
+heap_size = ["heapsize"]
+
+[dependencies]
+encoding = {version = "0.2", optional = true}
+heapsize = {version = ">=0.1.1, <0.5", optional = true}
+idna = { version = "0.1.0", path = "./idna" }
+matches = "0.1"
+rustc-serialize = {version = "0.3", optional = true}
+serde = {version = ">=0.6.1, <0.9", optional = true}

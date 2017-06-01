@@ -9,6 +9,8 @@ BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 with Files('**'):
     BUG_COMPONENT = ('Core', 'Security: Process Sandboxing')
 
+DIRS += ['common']
+
 if CONFIG['OS_ARCH'] == 'Linux':
     DIRS += ['linux']
 elif CONFIG['OS_ARCH'] == 'Darwin':

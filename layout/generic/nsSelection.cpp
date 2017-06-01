@@ -4582,7 +4582,8 @@ Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
 
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
   iter->Init(aRange);
-  if (isFirstContentTextNode && !iter->IsDone()) {
+  if (isFirstContentTextNode && !iter->IsDone() &&
+      iter->GetCurrentNode() == startNode) {
     iter->Next(); // first content has already been handled.
   }
   nsCOMPtr<nsIContentIterator> inneriter = NS_NewContentIterator();

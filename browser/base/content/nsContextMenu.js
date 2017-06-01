@@ -1179,7 +1179,8 @@ nsContextMenu.prototype = {
       }
       let tab = tabBrowser.loadOneTab("about:blank", {
         relatedToCurrent: true,
-        inBackground: false
+        inBackground: false,
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       });
       return tabBrowser.getBrowserForTab(tab);
     }

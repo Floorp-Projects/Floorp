@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi=id=1368544
+-->
+<html>
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1368544">Mozilla Bug 1368544</a>
+<div id="display"></div>
+<textarea id=textarea></textarea>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  let textarea = document.getElementById("textarea");
+  let editor = SpecialPowers.wrap(textarea).editor;
+
+  let spellChecker =
+    SpecialPowers.Cc['@mozilla.org/editor/editorspellchecker;1']
+    .createInstance(SpecialPowers.Ci.nsIEditorSpellCheck);
+  spellChecker.InitSpellChecker(editor, false);
+
+  textarea.focus();
+
+  SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
+  .onSpellCheck(textarea, () => {
+
+    spellChecker.UpdateCurrentDictionary(() => {
+      textarea.value = "ABC";
+      ok(editor.rootElement.hasChildNodes(),
+         "editor of textarea has child nodes");
+      synthesizeKey("D", {});
+      is(textarea.value, "ABCD", "D is last character");
+      ok(editor.rootElement.hasChildNodes(),
+         "editor of textarea has child nodes");
+      textarea.value = "";
+      ok(editor.rootElement.hasChildNodes(),
+         "editor of textarea has child node even if value is empty");
+
+      synthesizeKey("A", {});
+      synthesizeKey("A", {});
+      synthesizeKey("A", {});
+      synthesizeKey("VK_BACK_SPACE", {});
+      synthesizeKey("VK_BACK_SPACE", {});
+      synthesizeKey("VK_BACK_SPACE", {});
+      is(textarea.value, "", "value is empty");
+      ok(editor.rootElement.hasChildNodes(),
+         "editor of textarea has child node even if value is empty");
+
+      textarea.value = "ABC";
+      SpecialPowers.wrap(textarea).setUserInput("");
+      ok(editor.rootElement.hasChildNodes(),
+         "editor of textarea has child node even if value is empty");
+
+      textarea.value = "ABC";
+      synthesizeKey("VK_RETURN", {});
+      synthesizeKey("VK_RETURN", {});
+      textarea.value = "";
+      ok(editor.rootElement.hasChildNodes(),
+         "editor of textarea has child node even if value is empty");
+
+      synthesizeKey("A", {});
+      synthesizeKey("A", {});
+      synthesizeKey("A", {});
+      is(textarea.value, "AAA", "value is AAA");
+      textarea.addEventListener("keyup", (e) => {
+        if (e.key == "Enter") {
+          textarea.value = "";
+          ok(editor.rootElement.hasChildNodes(),
+             "editor of textarea has child node even if value is empty");
+          SimpleTest.finish();
+        }
+      });
+
+      synthesizeKey("VK_RETURN", {});
+    });
+ });
+});
+</script>
+</body>
+</html>

@@ -86,6 +86,9 @@ private:
 
   // This is where DECL_MEDIA_PREF for each of the preferences should go.
 
+  // Cache sizes.
+  DECL_MEDIA_PREF("media.cache.resource-index",               MediaResourceIndexCache, uint32_t, 8192);
+
   // AudioSink
   DECL_MEDIA_PREF("accessibility.monoaudio.enable",           MonoAudio, bool, false);
   DECL_MEDIA_PREF("media.resampling.enabled",                 AudioSinkResampling, bool, false);

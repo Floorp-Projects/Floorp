@@ -471,7 +471,9 @@ public abstract class HomeFragment extends Fragment {
             final boolean isReaderViewPage = rch.isURLCached(info.url);
 
             final String extra;
-            if (isReaderViewPage) {
+            if (info.isFolder) {
+                extra = "bookmark_folder";
+            } else if (isReaderViewPage) {
                 extra = "bookmark_reader";
             } else {
                 extra = "bookmark";

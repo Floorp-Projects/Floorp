@@ -64,6 +64,9 @@ public:
   static intptr_t
   GetRawContentParentForComparison(PBackgroundParent* aBackgroundActor);
 
+  static uint64_t
+  GetChildID(PBackgroundParent* aBackgroundActor);
+
 private:
   // Only called by ContentParent for cross-process actors.
   static bool

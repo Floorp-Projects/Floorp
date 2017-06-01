@@ -26,6 +26,23 @@ class IPCBlobInputStreamChild final
   : public mozilla::ipc::PIPCBlobInputStreamChild
 {
 public:
+  enum ActorState
+  {
+    // The actor is connected via IPDL to the parent.
+    eActive,
+
+    // The actor is disconnected.
+    eInactive,
+
+    // The actor is waiting to be disconnected. Once it has been disconnected,
+    // it will be reactivated on the DOM-File thread.
+    eActiveMigrating,
+
+    // The actor has been disconnected and it's waiting to be connected on the
+    // DOM-File thread.
+    eInactiveMigrating,
+  };
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IPCBlobInputStreamChild)
 
   IPCBlobInputStreamChild(const nsID& aID, uint64_t aSize);
@@ -33,8 +50,8 @@ public:
   void
   ActorDestroy(IProtocol::ActorDestroyReason aReason) override;
 
-  bool
-  IsAlive();
+  ActorState
+  State();
 
   already_AddRefed<nsIInputStream>
   CreateStream();
@@ -64,6 +81,9 @@ public:
   void
   Shutdown();
 
+  void
+  Migrated();
+
 private:
   ~IPCBlobInputStreamChild();
 
@@ -78,8 +98,7 @@ private:
   const nsID mID;
   const uint64_t mSize;
 
-  // false when ActorDestroy() is called.
-  bool mActorAlive;
+  ActorState  mState;
 
   // This struct and the array are used for creating streams when needed.
   struct PendingOperation

@@ -202,6 +202,7 @@ TrackBuffersManager::ProcessTasks()
       CompleteResetParserState();
       break;
     case Type::Detach:
+      mCurrentInputBuffer = nullptr;
       mTaskQueue = nullptr;
       MOZ_DIAGNOSTIC_ASSERT(mQueue.Length() == 0,
                             "Detach task must be the last");

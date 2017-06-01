@@ -12,9 +12,7 @@
  * liability, trademark and document use rules apply.
  */
 
-// [Constructor(DOMString url, optional (URL or DOMString) base = "about:blank")]
-[Constructor(DOMString url, URL base),
- Constructor(DOMString url, optional DOMString base),
+[Constructor(USVString url, optional USVString base),
  Exposed=(Window,Worker,WorkerDebugger)]
 interface URL {
   // Bug 824857: no support for stringifier attributes yet.

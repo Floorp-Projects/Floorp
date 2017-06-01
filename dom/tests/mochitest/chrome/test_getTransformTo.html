@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Test Element::getTransformToViewport</title>
+<script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+<style>
+body {
+  margin: 0px;
+}
+.box {
+  background-color: red;
+  height: 20px;
+  width: 80px;
+}
+.a {
+  margin: 10px;
+}
+.b {
+  margin: 20px;
+}
+.c {
+  transform: translate(11px, -11px);
+}
+.d {
+  transform: skewx(-45deg);
+}
+
+</style>
+<script>
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+
+function testTransformToParent() {
+  let expectedData = [
+    ["boxA", "1,0,0,0,0,1,0,0,0,0,1,0,10,0,0,1"],
+    ["boxB", "1,0,0,0,0,1,0,0,0,0,1,0,20,0,0,1"],
+    ["boxC", "1,0,0,0,0,1,0,0,0,0,1,0,11,-11,0,1"],
+    ["boxD", "1,0,0,0,-1,1,0,0,0,0,1,0,10,0,0,1"],
+  ];
+
+  // Test transform to parent.
+  for (let i = 0; i < expectedData.length; ++i) {
+    let expected = expectedData[i];
+    let element = document.getElementById(expected[0]);
+
+    let transform = element.getTransformToParent();
+    let transformFloats = transform.toFloat32Array();
+    let transformString = transformFloats.toString();
+    is(transformString, expected[1], "Element " + expected[0] + " has expected transform to parent.");
+  }
+}
+
+function testTransformToAncestorAndViewport() {
+  let expectedData = [
+    ["boxA", "1,0,0,0,0,1,0,0,0,0,1,0,10,10,0,1"],
+    ["boxB", "1,0,0,0,0,1,0,0,0,0,1,0,20,50,0,1"],
+    ["boxC", "1,0,0,0,0,1,0,0,0,0,1,0,11,79,0,1"],
+  ];
+
+  // Test transform to document (an actual ancestor unchanged by embedding within the mochitest framework).
+  for (let i = 0; i < expectedData.length; ++i) {
+    let expected = expectedData[i];
+    let element = document.getElementById(expected[0]);
+
+    let transform = element.getTransformToAncestor(document.documentElement);
+    let transformFloats = transform.toFloat32Array();
+    let transformString = transformFloats.toString();
+    is(transformString, expected[1], "Element " + expected[0] + " has expected transform to ancestor.");
+  }
+
+  // Test transform to a non-ancestor is equivalent to transform to viewport.
+  let nonAncestorElement = document.getElementById("nonAncestor");
+  for (let i = 0; i < expectedData.length; ++i) {
+    let expected = expectedData[i];
+    let element = document.getElementById(expected[0]);
+
+    let transform = element.getTransformToAncestor(nonAncestorElement);
+    let transformFloats = transform.toFloat32Array();
+    let transformString = transformFloats.toString();
+
+    let transformToViewport = element.getTransformToViewport();
+    let transformToViewportFloats = transformToViewport.toFloat32Array();
+    let transformToViewportString = transformToViewportFloats.toString();
+    is(transformString, transformToViewportString, "Element " + expected[0] + " transform to non-ancestor is equivalent to transform to viewport.");
+  }
+}
+
+function runTests() {
+  testTransformToParent();
+  testTransformToAncestorAndViewport();
+
+  SimpleTest.finish();
+}
+</script>
+</head>
+<body onLoad="runTests();">
+
+<div id="boxAParent">
+  <div id="boxA" class="box a">boxA</div>
+</div>
+<div id="boxBParent">
+  <div id="boxB" class="box b">boxB</div>
+</div>
+<div id="boxCParent">
+  <div id="boxC" class="box c">boxC</div>
+</div>
+<div id="boxDParent">
+  <div id="boxD" class="box d">boxD</div>
+</div>
+
+<div id="nonAncestor">This div is not an ancestor of any of the boxes.</div>
+
+</body>
+</html>

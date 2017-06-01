@@ -976,8 +976,7 @@ HashStore::WriteFile()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIOutputStream> out;
-  rv = NS_NewCheckSummedOutputStream(getter_AddRefs(out), storeFile,
-                                     PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE);
+  rv = NS_NewCheckSummedOutputStream(getter_AddRefs(out), storeFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t written;

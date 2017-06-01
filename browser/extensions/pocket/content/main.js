@@ -551,7 +551,7 @@ var pktUI = (function() {
 
     function getSubview() {
         var view = document.getElementById("PanelUI-pocketView");
-        if (view && view.getAttribute("current") == "true")
+        if (view && view.getAttribute("current") == "true" && !view.getAttribute("mainview"))
             return view;
         return null;
     }

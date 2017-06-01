@@ -40,12 +40,17 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
     WriteParam(aMsg, aParam.mEyeResolution);
     WriteParam(aMsg, aParam.mIsConnected);
     WriteParam(aMsg, aParam.mIsMounted);
-    WriteParam(aMsg, aParam.mIsPresenting);
+    WriteParam(aMsg, aParam.mPresentingGroups);
+    WriteParam(aMsg, aParam.mGroupMask);
     WriteParam(aMsg, aParam.mStageSize);
     WriteParam(aMsg, aParam.mSittingToStandingTransform);
+    WriteParam(aMsg, aParam.mFrameId);
     for (int i = 0; i < mozilla::gfx::VRDisplayInfo::NumEyes; i++) {
       WriteParam(aMsg, aParam.mEyeFOV[i]);
       WriteParam(aMsg, aParam.mEyeTranslation[i]);
+    }
+    for (int i = 0; i < mozilla::gfx::kVRMaxLatencyFrames; i++) {
+      WriteParam(aMsg, aParam.mLastSensorState[i]);
     }
   }
 
@@ -58,14 +63,21 @@ struct ParamTraits<mozilla::gfx::VRDisplayInfo>
         !ReadParam(aMsg, aIter, &(aResult->mEyeResolution)) ||
         !ReadParam(aMsg, aIter, &(aResult->mIsConnected)) ||
         !ReadParam(aMsg, aIter, &(aResult->mIsMounted)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mIsPresenting)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mPresentingGroups)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mGroupMask)) ||
         !ReadParam(aMsg, aIter, &(aResult->mStageSize)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mSittingToStandingTransform))) {
+        !ReadParam(aMsg, aIter, &(aResult->mSittingToStandingTransform)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mFrameId))) {
       return false;
     }
     for (int i = 0; i < mozilla::gfx::VRDisplayInfo::NumEyes; i++) {
       if (!ReadParam(aMsg, aIter, &(aResult->mEyeFOV[i])) ||
           !ReadParam(aMsg, aIter, &(aResult->mEyeTranslation[i]))) {
+        return false;
+      }
+    }
+    for (int i = 0; i < mozilla::gfx::kVRMaxLatencyFrames; i++) {
+      if (!ReadParam(aMsg, aIter, &(aResult->mLastSensorState[i]))) {
         return false;
       }
     }

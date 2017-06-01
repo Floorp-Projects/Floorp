@@ -262,7 +262,22 @@ PIPCBlobInputStreamParent*
 BackgroundParentImpl::AllocPIPCBlobInputStreamParent(const nsID& aID,
                                                      const uint64_t& aSize)
 {
-  MOZ_CRASH("PIPCBlobInputStreamParent actors should be manually constructed!");
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return mozilla::dom::IPCBlobInputStreamParent::Create(aID, aSize, this);
+}
+
+mozilla::ipc::IPCResult
+BackgroundParentImpl::RecvPIPCBlobInputStreamConstructor(PIPCBlobInputStreamParent* aActor,
+                                                         const nsID& aID,
+                                                         const uint64_t& aSize)
+{
+  if (!static_cast<mozilla::dom::IPCBlobInputStreamParent*>(aActor)->HasValidStream()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  return IPC_OK();
 }
 
 bool

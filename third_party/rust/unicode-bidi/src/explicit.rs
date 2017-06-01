@@ -23,11 +23,11 @@ use BidiClass::*;
 pub fn compute(
     text: &str,
     para_level: Level,
-    initial_classes: &[BidiClass],
+    original_classes: &[BidiClass],
     levels: &mut [Level],
     processing_classes: &mut [BidiClass],
 ) {
-    assert!(text.len() == initial_classes.len());
+    assert!(text.len() == original_classes.len());
 
     // http://www.unicode.org/reports/tr9/#X1
     let mut stack = DirectionalStatusStack::new();
@@ -38,14 +38,14 @@ pub fn compute(
     let mut valid_isolate_count = 0u32;
 
     for (i, c) in text.char_indices() {
-        match initial_classes[i] {
+        match original_classes[i] {
 
             // Rules X2-X5c
             RLE | LRE | RLO | LRO | RLI | LRI | FSI => {
                 let last_level = stack.last().level;
 
                 // X5a-X5c: Isolate initiators get the level of the last entry on the stack.
-                let is_isolate = matches!(initial_classes[i], RLI | LRI | FSI);
+                let is_isolate = matches!(original_classes[i], RLI | LRI | FSI);
                 if is_isolate {
                     levels[i] = last_level;
                     match stack.last().status {
@@ -55,7 +55,7 @@ pub fn compute(
                     }
                 }
 
-                let new_level = if is_rtl(initial_classes[i]) {
+                let new_level = if is_rtl(original_classes[i]) {
                     last_level.new_explicit_next_rtl()
                 } else {
                     last_level.new_explicit_next_ltr()
@@ -64,13 +64,12 @@ pub fn compute(
                    overflow_embedding_count == 0 {
                     let new_level = new_level.unwrap();
                     stack.push(
-                        new_level,
-                        match initial_classes[i] {
+                        new_level, match original_classes[i] {
                             RLO => OverrideStatus::RTL,
                             LRO => OverrideStatus::LTR,
                             RLI | LRI | FSI => OverrideStatus::Isolate,
                             _ => OverrideStatus::Neutral,
-                        },
+                        }
                     );
                     if is_isolate {
                         valid_isolate_count += 1;
@@ -180,7 +179,7 @@ impl DirectionalStatusStack {
                 Status {
                     level: level,
                     status: status,
-                },
+                }
             );
     }
 

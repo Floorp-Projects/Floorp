@@ -22,6 +22,7 @@ UNIFIED_SOURCES += [
     'IPCBlobInputStreamChild.cpp',
     'IPCBlobInputStreamParent.cpp',
     'IPCBlobInputStreamStorage.cpp',
+    'IPCBlobInputStreamThread.cpp',
     'IPCBlobUtils.cpp',
     'PendingIPCBlobChild.cpp',
     'PendingIPCBlobParent.cpp',
@@ -38,6 +39,7 @@ LOCAL_INCLUDES += [
     '/dom/file',
     '/dom/ipc',
     '/dom/workers',
+    '/xpcom/build',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

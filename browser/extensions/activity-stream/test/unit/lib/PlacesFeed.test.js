@@ -28,6 +28,9 @@ describe("PlacesFeed", () => {
       history: {addObserver: sandbox.spy(), removeObserver: sandbox.spy()},
       bookmarks: {TYPE_BOOKMARK, addObserver: sandbox.spy(), removeObserver: sandbox.spy()}
     });
+    sandbox.spy(global.Services.obs, "addObserver");
+    sandbox.spy(global.Services.obs, "removeObserver");
+    sandbox.spy(global.Components.utils, "reportError");
 
     feed = new PlacesFeed();
     feed.store = {dispatch: sinon.spy()};

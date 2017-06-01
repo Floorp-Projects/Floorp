@@ -18,10 +18,12 @@
 #include "MediaCache.h"
 #include "MediaContainerType.h"
 #include "MediaData.h"
+#include "MediaPrefs.h"
 #include "MediaResourceCallback.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 #include "nsThreadUtils.h"
 #include <algorithm>
 
@@ -290,8 +292,8 @@ public:
   // Returns the offset of the first byte of cached data at or after aOffset,
   // or -1 if there is no such cached data.
   virtual int64_t GetNextCachedData(int64_t aOffset) = 0;
-  // Returns the end of the bytes starting at the given offset
-  // which are in cache.
+  // Returns the end of the bytes starting at the given offset which are in
+  // cache. Returns aOffset itself if there are zero bytes available there.
   virtual int64_t GetCachedDataEnd(int64_t aOffset) = 0;
   // Returns true if all the data from aOffset to the end of the stream
   // is in cache. If the end of the stream is not known, we return false.
@@ -760,6 +762,10 @@ public:
   explicit MediaResourceIndex(MediaResource* aResource)
     : mResource(aResource)
     , mOffset(0)
+    , mCacheBlockSize(SelectCacheSize(MediaPrefs::MediaResourceIndexCache()))
+    , mCachedOffset(0)
+    , mCachedBytes(0)
+    , mCachedBlock(MakeUnique<char[]>(mCacheBlockSize))
   {}
 
   // Read up to aCount bytes from the stream. The buffer must have
@@ -808,10 +814,22 @@ public:
   // Unlike MediaResource::ReadAt, ReadAt only returns fewer bytes than
   // requested if end of stream or an error is encountered. There is no need to
   // call it again to get more data.
+  // If the resource has cached data past the end of the request, it will be
+  // used to fill a local cache, which should speed up consecutive ReadAt's
+  // (mostly by avoiding using the resource's IOs and locks.)
   // *aBytes will contain the number of bytes copied, even if an error occurred.
   // ReadAt doesn't have an impact on the offset returned by Tell().
-  nsresult ReadAt(int64_t aOffset, char* aBuffer,
-                  uint32_t aCount, uint32_t* aBytes) const;
+  nsresult ReadAt(int64_t aOffset,
+                  char* aBuffer,
+                  uint32_t aCount,
+                  uint32_t* aBytes);
+
+  // Same as ReadAt, but doesn't try to cache around the read.
+  // Useful if you know that you will not read again from the same area.
+  nsresult UncachedReadAt(int64_t aOffset,
+                          char* aBuffer,
+                          uint32_t aCount,
+                          uint32_t* aBytes) const;
 
   // Convenience methods, directly calling the MediaResource method of the same
   // name.
@@ -835,8 +853,75 @@ public:
   int64_t GetLength() const { return mResource->GetLength(); }
 
 private:
+  // If the resource has cached data past the requested range, try to grab it
+  // into our local cache.
+  // If there is no cached data, or attempting to read it fails, fallback on
+  // a (potentially-blocking) read of just what was requested, so that we don't
+  // get unexpected side-effects by trying to read more than intended.
+  nsresult CacheOrReadAt(int64_t aOffset,
+                         char* aBuffer,
+                         uint32_t aCount,
+                         uint32_t* aBytes);
+
+  // Select the next power of 2 (in range 32B-128KB, or 0 -> no cache)
+  static uint32_t SelectCacheSize(uint32_t aHint)
+  {
+    if (aHint == 0) {
+      return 0;
+    }
+    if (aHint <= 32) {
+      return 32;
+    }
+    if (aHint > 64*1024) {
+      return 128*1024;
+    }
+    // 32-bit next power of 2, from:
+    // http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+    aHint--;
+    aHint |= aHint >> 1;
+    aHint |= aHint >> 2;
+    aHint |= aHint >> 4;
+    aHint |= aHint >> 8;
+    aHint |= aHint >> 16;
+    aHint++;
+    return aHint;
+  }
+
+  // Maps a file offset to a mCachedBlock index.
+  uint32_t IndexInCache(int64_t aOffsetInFile) const
+  {
+    const uint32_t index = uint32_t(aOffsetInFile) & (mCacheBlockSize - 1);
+    MOZ_ASSERT(index == aOffsetInFile % mCacheBlockSize);
+    return index;
+  }
+
+  // Starting file offset of the cache block that contains a given file offset.
+  int64_t CacheOffsetContaining(int64_t aOffsetInFile) const
+  {
+    const int64_t offset = aOffsetInFile & ~(int64_t(mCacheBlockSize) - 1);
+    MOZ_ASSERT(offset == aOffsetInFile - IndexInCache(aOffsetInFile));
+    return offset;
+  }
+
   RefPtr<MediaResource> mResource;
   int64_t mOffset;
+
+  // Local cache used by ReadAt().
+  // mCachedBlock is valid when mCachedBytes != 0, in which case it contains
+  // data of length mCachedBytes, starting at offset `mCachedOffset` in the
+  // resource, located at index `IndexInCache(mCachedOffset)` in mCachedBlock.
+  //
+  // resource: |------------------------------------------------------|
+  //                                          <----------> mCacheBlockSize
+  //           <---------------------------------> mCachedOffset
+  //                                             <--> mCachedBytes
+  // mCachedBlock:                            |..----....|
+  //  CacheOffsetContaining(mCachedOffset)    <--> IndexInCache(mCachedOffset)
+  //           <------------------------------>
+  const uint32_t mCacheBlockSize;
+  int64_t mCachedOffset;
+  uint32_t mCachedBytes;
+  UniquePtr<char[]> mCachedBlock;
 };
 
 } // namespace mozilla

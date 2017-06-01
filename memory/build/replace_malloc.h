@@ -91,43 +91,6 @@ MOZ_BEGIN_EXTERN_C
 
 #endif /* MOZ_NO_REPLACE_FUNC_DECL */
 
-/*
- * posix_memalign, aligned_alloc, memalign and valloc all implement some
- * kind of aligned memory allocation. For convenience, replace_posix_memalign,
- * replace_aligned_alloc and replace_valloc can be automatically derived from
- * memalign when MOZ_REPLACE_ONLY_MEMALIGN is defined before including this
- * header. PAGE_SIZE also needs to be defined to the appropriate expression.
- */
-#ifdef MOZ_REPLACE_ONLY_MEMALIGN
-#include <errno.h>
-
-int replace_posix_memalign(void **ptr, size_t alignment, size_t size)
-{
-  if (size == 0) {
-    *ptr = NULL;
-    return 0;
-  }
-  /* alignment must be a power of two and a multiple of sizeof(void *) */
-  if (((alignment - 1) & alignment) != 0 || (alignment % sizeof(void *)))
-    return EINVAL;
-  *ptr = replace_memalign(alignment, size);
-  return *ptr ? 0 : ENOMEM;
-}
-
-void *replace_aligned_alloc(size_t alignment, size_t size)
-{
-  /* size should be a multiple of alignment */
-  if (size % alignment)
-    return NULL;
-  return replace_memalign(alignment, size);
-}
-
-void *replace_valloc(size_t size)
-{
-  return replace_memalign(PAGE_SIZE, size);
-}
-#endif
-
 MOZ_END_EXTERN_C
 
 #endif /* replace_malloc_h */

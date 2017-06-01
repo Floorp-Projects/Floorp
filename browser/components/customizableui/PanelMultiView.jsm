@@ -247,6 +247,11 @@ this.PanelMultiView = class {
     this._viewStack =
       document.getAnonymousElementByAttribute(this.node, "anonid", "viewStack");
 
+    XPCOMUtils.defineLazyGetter(this, "_panelViewCache", () => {
+      let viewCacheId = this.node.getAttribute("viewCacheId");
+      return viewCacheId ? document.getElementById(viewCacheId) : null;
+    });
+
     this._panel.addEventListener("popupshowing", this);
     this._panel.addEventListener("popuphidden", this);
     this._panel.addEventListener("popupshown", this);
@@ -288,10 +293,21 @@ this.PanelMultiView = class {
   }
 
   destructor() {
+    // Guard against re-entrancy.
+    if (!this.node)
+      return;
+
     if (this._mainView) {
-      this._mainView.removeAttribute("mainview");
+      let mainView = this._mainView;
+      if (this._panelViewCache)
+        this._panelViewCache.appendChild(mainView);
+      mainView.removeAttribute("mainview");
     }
+    if (this._subViews)
+      this._moveOutKids(this._subViews);
+
     if (this.panelViews) {
+      this._moveOutKids(this._viewStack);
       this.panelViews.clear();
     } else {
       this._clickCapturer.removeEventListener("click", this);
@@ -300,7 +316,27 @@ this.PanelMultiView = class {
     this._panel.removeEventListener("popupshown", this);
     this._panel.removeEventListener("popuphidden", this);
     this.node = this._clickCapturer = this._viewContainer = this._mainViewContainer =
-      this._subViews = this._viewStack = this.__dwu = null;
+      this._subViews = this._viewStack = this.__dwu = this._panelViewCache = null;
+  }
+
+  /**
+   * Remove any child subviews into the panelViewCache, to ensure
+   * they remain usable even if this panelmultiview instance is removed
+   * from the DOM.
+   * @param viewNodeContainer the container from which to remove subviews
+   */
+  _moveOutKids(viewNodeContainer) {
+    if (!this._panelViewCache)
+      return;
+
+    // Node.children and Node.childNodes is live to DOM changes like the
+    // ones we're about to do, so iterate over a static copy:
+    let subviews = Array.from(viewNodeContainer.childNodes);
+    for (let subview of subviews) {
+      // XBL lists the 'children' XBL element explicitly. :-(
+      if (subview.nodeName != "children")
+        this._panelViewCache.appendChild(subview);
+    }
   }
 
   goBack(target) {
@@ -309,16 +345,14 @@ this.PanelMultiView = class {
   }
 
   /**
-   * Checks whether it is possible to navigate backwards currently.
-   * Since the visibility of the back button is dependent - right now - on the
-   * fact that there's a view title set, we use that heuristic to determine this
-   * capability.
+   * Checks whether it is possible to navigate backwards currently. Returns
+   * false if this is the panelmultiview's mainview, true otherwise.
    *
    * @param  {panelview} view View to check, defaults to the currently active view.
    * @return {Boolean}
    */
   _canGoBack(view = this._currentSubView) {
-    return !!view.getAttribute("title");
+    return view != this._mainView;
   }
 
   setMainView(aNewMainView) {
@@ -360,7 +394,7 @@ this.PanelMultiView = class {
     }
   }
 
-  showSubView(aViewId, aAnchor, aPreviousView, aAdopted = false) {
+  showSubView(aViewId, aAnchor, aPreviousView) {
     const {document, window} = this;
     return (async () => {
       // Support passing in the node directly.
@@ -415,7 +449,7 @@ this.PanelMultiView = class {
       };
 
       // Make sure that new panels always have a title set.
-      if (this.panelViews && aAdopted && aAnchor) {
+      if (this.panelViews && aAnchor) {
         if (aAnchor && !viewNode.hasAttribute("title"))
           viewNode.setAttribute("title", aAnchor.getAttribute("label"));
         viewNode.classList.add("PanelUI-subView");

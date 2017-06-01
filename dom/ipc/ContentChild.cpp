@@ -78,6 +78,7 @@
 #endif
 
 #if defined(MOZ_CONTENT_SANDBOX)
+#include "mozilla/SandboxSettings.h"
 #if defined(XP_WIN)
 #define TARGET_SANDBOX_EXPORTS
 #include "mozilla/sandboxTarget.h"
@@ -1342,7 +1343,7 @@ GetDirectoryPath(const char *aPath) {
 static bool
 StartMacOSContentSandbox()
 {
-  int sandboxLevel = Preferences::GetInt("security.sandbox.content.level");
+  int sandboxLevel = GetEffectiveContentSandboxLevel();
   if (sandboxLevel < 1) {
     return false;
   }

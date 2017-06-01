@@ -222,6 +222,32 @@ nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot)
   // Destroy frames on the principal child list.
   mFrames.DestroyFramesFrom(aDestructRoot);
 
+  // If we have any IB split siblings, clear their references to us.
+  if (HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT)) {
+    // Delete previous sibling's reference to me.
+    nsIFrame* prevSib = GetProperty(nsIFrame::IBSplitPrevSibling());
+    if (prevSib) {
+      NS_WARNING_ASSERTION(
+        this == prevSib->GetProperty(nsIFrame::IBSplitSibling()),
+        "IB sibling chain is inconsistent");
+      prevSib->DeleteProperty(nsIFrame::IBSplitSibling());
+    }
+
+    // Delete next sibling's reference to me.
+    nsIFrame* nextSib = GetProperty(nsIFrame::IBSplitSibling());
+    if (nextSib) {
+      NS_WARNING_ASSERTION(
+        this == nextSib->GetProperty(nsIFrame::IBSplitPrevSibling()),
+        "IB sibling chain is inconsistent");
+      nextSib->DeleteProperty(nsIFrame::IBSplitPrevSibling());
+    }
+
+#ifdef DEBUG
+    // This is just so we can assert it's not set in nsFrame::DestroyFrom.
+    RemoveStateBits(NS_FRAME_PART_OF_IBSPLIT);
+#endif
+  }
+
   // Destroy frames on the auxiliary frame lists and delete the lists.
   nsPresContext* pc = PresContext();
   nsIPresShell* shell = pc->PresShell();
