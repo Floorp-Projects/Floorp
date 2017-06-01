@@ -83,10 +83,10 @@
 
 using namespace mozilla;
 
-mozilla::LazyLogModule gProfilerLog("prof");
+LazyLogModule gProfilerLog("prof");
 
 #if defined(GP_OS_android)
-class GeckoJavaSampler : public mozilla::java::GeckoJavaSampler::Natives<GeckoJavaSampler>
+class GeckoJavaSampler : public java::GeckoJavaSampler::Natives<GeckoJavaSampler>
 {
 private:
   GeckoJavaSampler();
@@ -101,9 +101,9 @@ public:
 };
 #endif
 
-class PSMutex : public mozilla::StaticMutex {};
+class PSMutex : public StaticMutex {};
 
-typedef mozilla::BaseAutoLock<PSMutex> PSAutoLock;
+typedef BaseAutoLock<PSMutex> PSAutoLock;
 
 // Only functions that take a PSLockRef arg can access CorePS's and ActivePS's
 // fields.
@@ -145,7 +145,7 @@ class CorePS
 {
 private:
   CorePS()
-    : mProcessStartTime(mozilla::TimeStamp::ProcessCreation())
+    : mProcessStartTime(TimeStamp::ProcessCreation())
 #ifdef USE_LUL_STACKWALK
     , mLul(nullptr)
 #endif
@@ -228,7 +228,7 @@ private:
   static CorePS* sInstance;
 
   // The time that the process started.
-  const mozilla::TimeStamp mProcessStartTime;
+  const TimeStamp mProcessStartTime;
 
   // Info on all the registered threads, both live and dead. ThreadIds in
   // mLiveThreads are unique. ThreadIds in mDeadThreads may not be, because
@@ -266,7 +266,7 @@ private:
     aFeatures &= profiler_get_available_features();
 
 #if defined(GP_OS_android)
-    if (!mozilla::jni::IsFennec()) {
+    if (!jni::IsFennec()) {
       aFeatures &= ~ProfilerFeature::Java;
     }
 #endif
@@ -293,7 +293,7 @@ private:
       // gPSMutex.
     , mSamplerThread(NewSamplerThread(aLock, mGeneration, aInterval))
     , mInterposeObserver(ProfilerFeature::HasMainThreadIO(aFeatures)
-                         ? new mozilla::ProfilerIOInterposeObserver()
+                         ? new ProfilerIOInterposeObserver()
                          : nullptr)
 #undef HAS_FEATURE
     , mIsPaused(false)
@@ -472,7 +472,7 @@ private:
   SamplerThread* const mSamplerThread;
 
   // The interposer that records main thread I/O.
-  const RefPtr<mozilla::ProfilerIOInterposeObserver> mInterposeObserver;
+  const RefPtr<ProfilerIOInterposeObserver> mInterposeObserver;
 
   // Is the profiler paused?
   bool mIsPaused;
@@ -614,7 +614,7 @@ public:
   // SamplerThread samples the thread in question.
   TickSample(ThreadInfo* aThreadInfo, int64_t aRSSMemory, int64_t aUSSMemory)
     : mIsSynchronous(false)
-    , mTimeStamp(mozilla::TimeStamp::Now())
+    , mTimeStamp(TimeStamp::Now())
     , mThreadId(aThreadInfo->ThreadId())
     , mRacyInfo(aThreadInfo->RacyInfo())
     , mJSContext(aThreadInfo->mContext)
@@ -639,7 +639,7 @@ public:
   TickSample(NotNull<RacyThreadInfo*> aRacyInfo, JSContext* aJSContext,
              PlatformData* aPlatformData)
     : mIsSynchronous(true)
-    , mTimeStamp(mozilla::TimeStamp::Now())
+    , mTimeStamp(TimeStamp::Now())
     , mThreadId(Thread::GetCurrentId())
     , mRacyInfo(aRacyInfo)
     , mJSContext(aJSContext)
@@ -668,7 +668,7 @@ public:
   // False for periodic samples, true for synchronous samples.
   const bool mIsSynchronous;
 
-  const mozilla::TimeStamp mTimeStamp;
+  const TimeStamp mTimeStamp;
 
   const int mThreadId;
 
@@ -804,7 +804,7 @@ struct NativeStack
   size_t count;
 };
 
-mozilla::Atomic<bool> WALKING_JS_STACK(false);
+Atomic<bool> WALKING_JS_STACK(false);
 
 struct AutoWalkJSStack
 {
@@ -848,7 +848,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
   // Only walk jit stack if profiling frame iterator is turned on.
   if (context && JS::IsProfilingEnabledForContext(context)) {
     AutoWalkJSStack autoWalkJSStack;
-    const uint32_t maxFrames = mozilla::ArrayLength(jsFrames);
+    const uint32_t maxFrames = ArrayLength(jsFrames);
 
     if (autoWalkJSStack.walkAllowed) {
       JS::ProfilingFrameIterator::RegisterState registerState;
@@ -869,7 +869,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
             break;
           }
         } else {
-          mozilla::Maybe<JS::ProfilingFrameIterator::Frame> frame =
+          Maybe<JS::ProfilingFrameIterator::Frame> frame =
             jsIter.getPhysicalFrameWithoutLabel();
           if (frame.isSome()) {
             jsFrames[jsCount++] = frame.value();
@@ -1042,7 +1042,7 @@ DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
   NativeStack nativeStack = {
     pc_array,
     sp_array,
-    mozilla::ArrayLength(pc_array),
+    ArrayLength(pc_array),
     0
   };
 
@@ -1084,7 +1084,7 @@ DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
   NativeStack nativeStack = {
     pc_array,
     sp_array,
-    mozilla::ArrayLength(pc_array),
+    ArrayLength(pc_array),
     0
   };
 
@@ -1278,7 +1278,7 @@ DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
 
   uintptr_t framePCs[MAX_NATIVE_FRAMES];
   uintptr_t frameSPs[MAX_NATIVE_FRAMES];
-  size_t framesAvail = mozilla::ArrayLength(framePCs);
+  size_t framesAvail = ArrayLength(framePCs);
   size_t framesUsed  = 0;
   size_t scannedFramesAcquired = 0, framePointerFramesAcquired = 0;
   lul::LUL* lul = CorePS::Lul(aLock);
@@ -1290,7 +1290,7 @@ DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
   NativeStack nativeStack = {
     reinterpret_cast<void**>(framePCs),
     reinterpret_cast<void**>(frameSPs),
-    mozilla::ArrayLength(framePCs),
+    ArrayLength(framePCs),
     framesUsed
   };
 
@@ -1326,8 +1326,7 @@ Tick(PSLockRef aLock, ProfileBuffer* aBuffer, const TickSample& aSample)
 {
   aBuffer->addTagThreadId(aSample.mThreadId, aSample.mLastSample);
 
-  mozilla::TimeDuration delta =
-    aSample.mTimeStamp - CorePS::ProcessStartTime();
+  TimeDuration delta = aSample.mTimeStamp - CorePS::ProcessStartTime();
   aBuffer->addTag(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
 #if defined(HAVE_NATIVE_UNWIND)
@@ -1352,7 +1351,7 @@ Tick(PSLockRef aLock, ProfileBuffer* aBuffer, const TickSample& aSample)
   }
 
   if (aSample.mResponsiveness && aSample.mResponsiveness->HasData()) {
-    mozilla::TimeDuration delta =
+    TimeDuration delta =
       aSample.mResponsiveness->GetUnresponsiveDuration(aSample.mTimeStamp);
     aBuffer->addTag(ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
   }
@@ -1436,7 +1435,7 @@ StreamTaskTracer(PSLockRef aLock, SpliceableJSONWriter& aWriter)
   aWriter.StartArrayProperty("data");
   {
     UniquePtr<nsTArray<nsCString>> data =
-      mozilla::tasktracer::GetLoggedData(CorePS::ProcessStartTime());
+      tasktracer::GetLoggedData(CorePS::ProcessStartTime());
     for (uint32_t i = 0; i < data->Length(); ++i) {
       aWriter.StringElement((data->ElementAt(i)).get());
     }
@@ -1460,7 +1459,7 @@ StreamTaskTracer(PSLockRef aLock, SpliceableJSONWriter& aWriter)
   aWriter.EndArray();
 
   aWriter.DoubleProperty(
-    "start", static_cast<double>(mozilla::tasktracer::GetStartTime()));
+    "start", static_cast<double>(tasktracer::GetStartTime()));
 #endif
 }
 
@@ -1474,8 +1473,7 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter)
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -
   // ProcessStartTime)) to convert CorePS::ProcessStartTime() into that form.
-  mozilla::TimeDuration delta =
-    mozilla::TimeStamp::Now() - CorePS::ProcessStartTime();
+  TimeDuration delta = TimeStamp::Now() - CorePS::ProcessStartTime();
   aWriter.DoubleProperty(
     "startTime", static_cast<double>(PR_Now()/1000.0 - delta.ToMilliseconds()));
 
@@ -2127,11 +2125,11 @@ profiler_init(void* aStackTop)
     PlatformInit(lock);
 
 #ifdef MOZ_TASK_TRACER
-    mozilla::tasktracer::InitTaskTracer();
+    tasktracer::InitTaskTracer();
 #endif
 
 #if defined(GP_OS_android)
-    if (mozilla::jni::IsFennec()) {
+    if (jni::IsFennec()) {
       GeckoJavaSampler::Init();
     }
 #endif
@@ -2219,7 +2217,7 @@ profiler_shutdown()
     TLSInfo::SetInfo(lock, nullptr);
 
 #ifdef MOZ_TASK_TRACER
-    mozilla::tasktracer::ShutdownTaskTracer();
+    tasktracer::ShutdownTaskTracer();
 #endif
   }
 
@@ -2258,7 +2256,7 @@ profiler_get_profile(double aSinceTime)
 
 void
 profiler_get_start_params(int* aEntries, double* aInterval, uint32_t* aFeatures,
-                          mozilla::Vector<const char*>* aFilters)
+                          Vector<const char*>* aFilters)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
@@ -2298,7 +2296,7 @@ locked_profiler_save_profile_to_file(PSLockRef aLock, const char* aFilename)
   std::ofstream stream;
   stream.open(aFilename);
   if (stream.is_open()) {
-    SpliceableJSONWriter w(mozilla::MakeUnique<OStreamJSONWriteFunc>(stream));
+    SpliceableJSONWriter w(MakeUnique<OStreamJSONWriteFunc>(stream));
     w.Start(SpliceableJSONWriter::SingleLineStyle);
     {
       locked_profiler_stream_json_for_this_process(aLock, w, /* sinceTime */ 0);
@@ -2437,7 +2435,7 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
 
 #ifdef MOZ_TASK_TRACER
   if (ActivePS::FeatureTaskTracer(aLock)) {
-    mozilla::tasktracer::StartLogging();
+    tasktracer::StartLogging();
   }
 #endif
 
@@ -2448,7 +2446,7 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
     if (javaInterval < 10) {
       javaInterval = 10;
     }
-    mozilla::java::GeckoJavaSampler::Start(javaInterval, 1000);
+    java::GeckoJavaSampler::Start(javaInterval, 1000);
   }
 #endif
 
@@ -2504,7 +2502,7 @@ locked_profiler_stop(PSLockRef aLock)
 
 #ifdef MOZ_TASK_TRACER
   if (ActivePS::FeatureTaskTracer(aLock)) {
-    mozilla::tasktracer::StopLogging();
+    tasktracer::StopLogging();
   }
 #endif
 
@@ -2780,8 +2778,7 @@ profiler_time()
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  mozilla::TimeDuration delta =
-    mozilla::TimeStamp::Now() - CorePS::ProcessStartTime();
+  TimeDuration delta = TimeStamp::Now() - CorePS::ProcessStartTime();
   return delta.ToMilliseconds();
 }
 
@@ -2898,7 +2895,7 @@ racy_profiler_add_marker(const char* aMarkerName,
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   // aPayload must be freed if we return early.
-  mozilla::UniquePtr<ProfilerMarkerPayload> payload(aPayload);
+  UniquePtr<ProfilerMarkerPayload> payload(aPayload);
 
   // We don't assert that RacyFeatures::IsActiveWithoutPrivacy() is true here,
   // because it's possible that the result has changed since we tested it in
@@ -2912,10 +2909,10 @@ racy_profiler_add_marker(const char* aMarkerName,
     return;
   }
 
-  mozilla::TimeStamp origin = (payload && !payload->GetStartTime().IsNull())
-                            ? payload->GetStartTime()
-                            : mozilla::TimeStamp::Now();
-  mozilla::TimeDuration delta = origin - CorePS::ProcessStartTime();
+  TimeStamp origin = (payload && !payload->GetStartTime().IsNull())
+                   ? payload->GetStartTime()
+                   : TimeStamp::Now();
+  TimeDuration delta = origin - CorePS::ProcessStartTime();
   racyInfo->AddPendingMarker(aMarkerName, payload.release(),
                              delta.ToMilliseconds());
 }
@@ -2926,7 +2923,7 @@ profiler_add_marker(const char* aMarkerName, ProfilerMarkerPayload* aPayload)
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   // aPayload must be freed if we return early.
-  mozilla::UniquePtr<ProfilerMarkerPayload> payload(aPayload);
+  UniquePtr<ProfilerMarkerPayload> payload(aPayload);
 
   // This function is hot enough that we use RacyFeatures, notActivePS.
   if (!RacyFeatures::IsActiveWithoutPrivacy()) {
@@ -2962,8 +2959,7 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
     return;
   }
 
-  auto payload =
-    new ProfilerMarkerTracing(aCategory, aKind, mozilla::Move(aCause));
+  auto payload = new ProfilerMarkerTracing(aCategory, aKind, Move(aCause));
   racy_profiler_add_marker(aMarkerName, payload);
 }
 
