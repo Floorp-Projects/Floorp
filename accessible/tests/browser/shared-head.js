@@ -285,16 +285,34 @@ function isDefunct(accessible) {
  * looks for an accessible that matches based on its DOMNode id.
  * @param  {nsIAccessible}  accessible root accessible
  * @param  {String}         id         id to look up accessible for
+ * @param  {Array?}         interfaces the interface or an array interfaces
+ *                                     to query it/them from obtained accessible
  * @return {nsIAccessible?}            found accessible if any
  */
-function findAccessibleChildByID(accessible, id) {
+function findAccessibleChildByID(accessible, id, interfaces) {
   if (getAccessibleDOMNodeID(accessible) === id) {
-    return accessible;
+    return queryInterfaces(accessible, interfaces);
   }
   for (let i = 0; i < accessible.children.length; ++i) {
     let found = findAccessibleChildByID(accessible.getChildAt(i), id);
     if (found) {
-      return found;
+      return queryInterfaces(found, interfaces);
     }
   }
+}
+
+function queryInterfaces(accessible, interfaces) {
+  if (!interfaces) {
+    return accessible;
+  }
+
+  for (let iface of interfaces.filter(i => !(accessible instanceof i))) {
+    try {
+      accessible.QueryInterface(iface);
+    } catch (e) {
+      ok(false, "Can't query " + iface);
+    }
+  }
+
+  return accessible;
 }
