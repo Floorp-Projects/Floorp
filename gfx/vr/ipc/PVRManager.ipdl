@@ -40,7 +40,10 @@ parent:
   async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend,
                  TextureFlags aTextureFlags, uint64_t aSerial);
 
-  async PVRLayer(uint32_t aDisplayID, float aLeftEyeX, float aLeftEyeY, float aLeftEyeWidth, float aLeftEyeHeight, float aRightEyeX, float aRightEyeY, float aRightEyeWidth, float aRightEyeHeight);
+  async PVRLayer(uint32_t aDisplayID, float aLeftEyeX, float aLeftEyeY,
+                 float aLeftEyeWidth, float aLeftEyeHeight, float aRightEyeX,
+                 float aRightEyeY, float aRightEyeWidth, float aRightEyeHeight,
+                 uint32_t aGroup);
 
   // (Re)Enumerate VR Displays.  An updated list of VR displays will be returned
   // asynchronously to children via UpdateDisplayInfo.
@@ -50,7 +53,7 @@ parent:
   // sensor state is the "Zero" position.
   async ResetSensor(uint32_t aDisplayID);
 
-  sync GetSensorState(uint32_t aDisplayID) returns(VRHMDSensorState aState);
+  async SetGroupMask(uint32_t aDisplayID, uint32_t aGroupMask);
   async SetHaveEventListener(bool aHaveEventListener);
 
   async ControllerListenerAdded();
@@ -81,8 +84,6 @@ child:
   // through DOM calls are always resolved.
   async UpdateDisplayInfo(VRDisplayInfo[] aDisplayUpdates);
 
-  async NotifyVSync();
-  async NotifyVRVSync(uint32_t aDisplayID);
   async DispatchSubmitFrameResult(uint32_t aDisplayID, VRSubmitFrameResultInfo aResult);
   async GamepadUpdate(GamepadChangeEvent aGamepadEvent);
   async ReplyGamepadVibrateHaptic(uint32_t aPromiseID);

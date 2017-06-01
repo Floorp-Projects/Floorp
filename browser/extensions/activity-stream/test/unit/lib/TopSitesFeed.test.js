@@ -12,11 +12,10 @@ describe("Top Sites Feed", () => {
   let sandbox;
   let links;
   let clock;
-  before(() => {
+
+  beforeEach(() => {
     globals = new GlobalOverrider();
     sandbox = globals.sandbox;
-  });
-  beforeEach(() => {
     globals.set("NewTabUtils", {activityStreamLinks: {getTopSites: sandbox.spy(() => Promise.resolve(links))}});
     globals.set("PreviewProvider", {getThumbnail: sandbox.spy(() => Promise.resolve(FAKE_SCREENSHOT))});
     feed = new TopSitesFeed();

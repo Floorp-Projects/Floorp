@@ -122,6 +122,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         }
 
         this._enableOrDisableOneOffSearches();
+
+        // The autocomplete controller uses heuristic on some internal caches
+        // to handle cases like backspace, autofill or repeated searches.
+        // Ensure to clear those internal caches when switching tabs.
+        gBrowser.tabContainer.addEventListener("TabSelect", this);
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -1147,6 +1152,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             case "underflow":
               this.removeAttribute("textoverflow");
               this._hideURLTooltip();
+              break;
+            case "TabSelect":
+              this.detachController();
+              this.attachController();
               break;
           }
         ]]></body>

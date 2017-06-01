@@ -137,6 +137,10 @@ public class GeckoPopupMenu implements GeckoMenu.Callback,
      * Show the inflated menu.
      */
     public void show() {
+        if (mAnchor == null) {
+            throw new IllegalStateException("GeckoPopupMenu.show() called without preceeding call to setAnchor()");
+        }
+
         if (!mMenuPopup.isShowing())
             mMenuPopup.showAsDropDown(mAnchor);
     }

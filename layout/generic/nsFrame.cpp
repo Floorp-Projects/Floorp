@@ -6280,7 +6280,8 @@ nsIFrame::GetNearestWidget(nsPoint& aOffset) const
 
 Matrix4x4
 nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
-                             nsIFrame** aOutAncestor)
+                             nsIFrame** aOutAncestor,
+                             bool aInCSSUnits)
 {
   NS_PRECONDITION(aOutAncestor, "Need a place to put the ancestor!");
 
@@ -6294,7 +6295,8 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
      */
     NS_ASSERTION(nsLayoutUtils::GetCrossDocParentFrame(this),
                  "Cannot transform the viewport frame!");
-    int32_t scaleFactor = PresContext()->AppUnitsPerDevPixel();
+    int32_t scaleFactor = (aInCSSUnits ? PresContext()->AppUnitsPerCSSPixel()
+                                       : PresContext()->AppUnitsPerDevPixel());
 
     Matrix4x4 result = nsDisplayTransform::GetResultingTransformMatrix(this,
                          nsPoint(0,0), scaleFactor,
@@ -6379,7 +6381,8 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
    * entire transform, so we're done.
    */
   nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
-  int32_t scaleFactor = PresContext()->AppUnitsPerDevPixel();
+  int32_t scaleFactor = (aInCSSUnits ? PresContext()->AppUnitsPerCSSPixel()
+                                     : PresContext()->AppUnitsPerDevPixel());
   return Matrix4x4::Translation(NSAppUnitsToFloatPixels(delta.x, scaleFactor),
                                 NSAppUnitsToFloatPixels(delta.y, scaleFactor),
                                 0.0f);
