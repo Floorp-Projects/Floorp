@@ -40,6 +40,7 @@ const ROWS = "rows";
 
 const GRID_FONT_SIZE = 10;
 const GRID_FONT_FAMILY = "sans-serif";
+const GRID_AREA_NAME_FONT_SIZE = "20";
 
 const GRID_LINES_PROPERTIES = {
   "edge": {
@@ -53,6 +54,11 @@ const GRID_LINES_PROPERTIES = {
   "implicit": {
     lineDash: [2, 2],
     alpha: 0.5,
+  },
+  "areaEdge": {
+    lineDash: [0, 0],
+    alpha: 1,
+    lineWidth: 3,
   }
 };
 
@@ -197,6 +203,10 @@ function drawRoundedRect(ctx, x, y, width, height, radius) {
  * - showGridArea(areaName)
  *     @param  {String} areaName
  *     Shows the grid area highlight for the given area name.
+ * - showGridAreasOverlay(isShown)
+ *     @param  {Boolean} isShown
+ *     Displays an overlay of all the grid areas for the current grid container if
+ *     isShown is true.
  * - showGridCell({ gridFragmentIndex: Number, rowNumber: Number, columnNumber: Number })
  *     @param  {Object} { gridFragmentIndex: Number, rowNumber: Number,
  *                        columnNumber: Number }
@@ -951,7 +961,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   },
 
   /**
-   *  Updates the <canvas> element's style in accordance with the current window's
+   * Updates the <canvas> element's style in accordance with the current window's
    * devicePixelRatio, and the position calculated in `calculateCanvasPosition`; it also
    * clears the drawing context.
    */
@@ -1066,6 +1076,10 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
                      this.getFirstColLinePos(fragment),
                      this.getLastColLinePos(fragment));
 
+    if (this.options.showGridAreasOverlay) {
+      this.renderGridAreaOverlay();
+    }
+
     // Line numbers are rendered in a 2nd step to avoid overlapping with existing lines.
     if (this.options.showGridLineNumbers) {
       this.renderLineNumbers(fragment.cols, COLUMNS, "left", "top",
@@ -1073,6 +1087,101 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       this.renderLineNumbers(fragment.rows, ROWS, "top", "left",
                        this.getFirstColLinePos(fragment));
     }
+  },
+
+  /**
+   * Renders the grid area overlay on the css grid highlighter canvas.
+   */
+  renderGridAreaOverlay() {
+    let padding = 1;
+
+    for (let i = 0; i < this.gridData.length; i++) {
+      let fragment = this.gridData[i];
+
+      for (let area of fragment.areas) {
+        let { rowStart, rowEnd, columnStart, columnEnd } = area;
+
+        // Draw the line edges for the grid area
+        const areaColStart = fragment.cols.lines[columnStart - 1];
+        const areaColEnd = fragment.cols.lines[columnEnd - 1];
+
+        const areaRowStart = fragment.rows.lines[rowStart - 1];
+        const areaRowEnd = fragment.rows.lines[rowEnd - 1];
+
+        const areaColStartLinePos = areaColStart.start + areaColStart.breadth;
+        const areaRowStartLinePos = areaRowStart.start + areaRowStart.breadth;
+
+        this.renderLine(areaColStartLinePos + padding,
+                        areaRowStartLinePos, areaRowEnd.start,
+                        COLUMNS, "areaEdge");
+        this.renderLine(areaColEnd.start - padding,
+                        areaRowStartLinePos, areaRowEnd.start,
+                        COLUMNS, "areaEdge");
+
+        this.renderLine(areaRowStartLinePos + padding,
+                        areaColStartLinePos, areaColEnd.start,
+                        ROWS, "areaEdge");
+        this.renderLine(areaRowEnd.start - padding,
+                        areaColStartLinePos, areaColEnd.start,
+                        ROWS, "areaEdge");
+
+        this.renderGridAreaName(fragment, area);
+      }
+    }
+
+    this.ctx.restore();
+  },
+
+  /**
+   * Render grid area name on the containing grid area cell.
+   *
+   * @param  {Object} fragment
+   *         The grid fragment of the grid container.
+   * @param  {Object} area
+   *         The area overlay to render on the CSS highlighter canvas.
+   */
+  renderGridAreaName(fragment, area) {
+    let { rowStart, rowEnd, columnStart, columnEnd } = area;
+    let { devicePixelRatio } = this.win;
+    let displayPixelRatio = getDisplayPixelRatio(this.win);
+    let currentZoom = getCurrentZoom(this.win);
+    let offset = (displayPixelRatio / 2) % 1;
+    let fontSize = (GRID_AREA_NAME_FONT_SIZE * displayPixelRatio);
+
+    this.ctx.save();
+
+    let canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
+    let canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
+    this.ctx.translate(offset - canvasX, offset - canvasY);
+
+    this.ctx.font = (fontSize * currentZoom) + "px " + GRID_FONT_FAMILY;
+    this.ctx.strokeStyle = this.color;
+    this.ctx.fillStyle = this.color;
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "middle";
+
+    // Draw the text for the grid area name.
+    for (let rowNumber = rowStart; rowNumber < rowEnd; rowNumber++) {
+      for (let columnNumber = columnStart; columnNumber < columnEnd; columnNumber++) {
+        let row = fragment.rows.tracks[rowNumber - 1];
+        let column = fragment.cols.tracks[columnNumber - 1];
+
+        // Check if the font size is exceeds the bounds of the containing grid cell.
+        if (fontSize > column.breadth || fontSize > row.breadth) {
+          fontSize = (column.breadth + row.breadth) / 2;
+          this.ctx.font = (fontSize * currentZoom) + "px " + GRID_FONT_FAMILY;
+        }
+
+        let x = column.start + column.breadth / 2;
+        let y = row.start + row.breadth / 2;
+
+        [x, y] = apply(this.currentMatrix, [x, y]);
+
+        this.ctx.fillText(area.name, x, y);
+      }
+    }
+
+    this.ctx.restore();
   },
 
   /**
@@ -1180,7 +1289,6 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     this.ctx.setLineDash(GRID_LINES_PROPERTIES[lineType].lineDash);
     this.ctx.beginPath();
     this.ctx.translate(offset - x, offset - y);
-    this.ctx.lineWidth = lineWidth;
 
     if (dimensionType === COLUMNS) {
       if (isFinite(endPos)) {
@@ -1202,6 +1310,12 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
 
     this.ctx.strokeStyle = this.color;
     this.ctx.globalAlpha = GRID_LINES_PROPERTIES[lineType].alpha;
+
+    if (GRID_LINES_PROPERTIES[lineType].lineWidth) {
+      this.ctx.lineWidth = GRID_LINES_PROPERTIES[lineType].lineWidth * devicePixelRatio;
+    } else {
+      this.ctx.lineWidth = lineWidth;
+    }
 
     this.ctx.stroke();
     this.ctx.restore();

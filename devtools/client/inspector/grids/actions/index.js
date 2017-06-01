@@ -17,6 +17,9 @@ createEnum([
   // Update the entire grids state with the new list of grids.
   "UPDATE_GRIDS",
 
+  // Update the grid highlighter's show grid areas state.
+  "UPDATE_SHOW_GRID_AREAS",
+
   // Update the grid highlighter's show grid line numbers state.
   "UPDATE_SHOW_GRID_LINE_NUMBERS",
 
