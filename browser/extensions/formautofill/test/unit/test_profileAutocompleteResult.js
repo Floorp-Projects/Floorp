@@ -170,9 +170,16 @@ add_task(function* test_all_patterns() {
                                                testCase.matchingProfiles,
                                                testCase.options);
     let expectedValue = testCase.expected;
+    let expectedItemLength = expectedValue.items.length;
+    // If the last item shows up as a footer, we expect one more item
+    // than expected.
+    if (actual.getStyleAt(actual.matchCount - 1) == "autofill-footer") {
+      expectedItemLength++;
+    }
+
     equal(actual.searchResult, expectedValue.searchResult);
     equal(actual.defaultIndex, expectedValue.defaultIndex);
-    equal(actual.matchCount, expectedValue.items.length);
+    equal(actual.matchCount, expectedItemLength);
     expectedValue.items.forEach((item, index) => {
       equal(actual.getValueAt(index), item.value);
       equal(actual.getCommentAt(index), item.comment);
@@ -182,13 +189,13 @@ add_task(function* test_all_patterns() {
     });
 
     if (expectedValue.items.length != 0) {
-      Assert.throws(() => actual.getValueAt(expectedValue.items.length),
+      Assert.throws(() => actual.getValueAt(expectedItemLength),
         /Index out of range\./);
 
-      Assert.throws(() => actual.getLabelAt(expectedValue.items.length),
+      Assert.throws(() => actual.getLabelAt(expectedItemLength),
         /Index out of range\./);
 
-      Assert.throws(() => actual.getCommentAt(expectedValue.items.length),
+      Assert.throws(() => actual.getCommentAt(expectedItemLength),
         /Index out of range\./);
     }
   });
