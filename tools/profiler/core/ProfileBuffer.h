@@ -42,16 +42,18 @@ public:
   // record the resulting generation and index in |aLS| if it's non-null.
   void addTagThreadId(int aThreadId, LastSample* aLS);
 
-  void StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId, double aSinceTime,
-                           JSContext* cx, UniqueStacks& aUniqueStacks);
+  void StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
+                           double aSinceTime, JSContext* cx,
+                           UniqueStacks& aUniqueStacks);
   void StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
-                           const mozilla::TimeStamp& aStartTime,
+                           const mozilla::TimeStamp& aProcessStartTime,
                            double aSinceTime,
                            UniqueStacks& aUniqueStacks);
 
   // Find (via |aLS|) the most recent sample for the thread denoted by
-  // |aThreadId| and clone it, patching in |aStartTime| as appropriate.
-  bool DuplicateLastSample(int aThreadId, const mozilla::TimeStamp& aStartTime,
+  // |aThreadId| and clone it, patching in |aProcessStartTime| as appropriate.
+  bool DuplicateLastSample(int aThreadId,
+                           const mozilla::TimeStamp& aProcessStartTime,
                            LastSample& aLS);
 
   void addStoredMarker(ProfilerMarker* aStoredMarker);
