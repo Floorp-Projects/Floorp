@@ -101,6 +101,7 @@ registerCleanupFunction(() => {
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
   Services.prefs.setCharPref("devtools.netmonitor.filters", gDefaultFilters);
   Services.prefs.clearUserPref("devtools.cache.disabled");
+  Services.cookies.removeAll();
 });
 
 function waitForNavigation(target) {

@@ -346,6 +346,7 @@ UNIFIED_SOURCES += [
     'TextInputProcessor.cpp',
     'ThirdPartyUtil.cpp',
     'Timeout.cpp',
+    'TimeoutExecutor.cpp',
     'TimeoutHandler.cpp',
     'TimeoutManager.cpp',
     'TreeWalker.cpp',

@@ -112,6 +112,9 @@ typedef const PSAutoLock& PSLockRef;
 #define PS_GET(type_, name_) \
   static type_ name_(PSLockRef) { return sInstance->m##name_; } \
 
+#define PS_GET_LOCKLESS(type_, name_) \
+  static type_ name_() { return sInstance->m##name_; } \
+
 #define PS_GET_AND_SET(type_, name_) \
   PS_GET(type_, name_) \
   static void Set##name_(PSLockRef, type_ a##name_) \
@@ -125,16 +128,19 @@ typedef const PSAutoLock& PSLockRef;
 // anything useful when this class is not instantiated, so we release-assert
 // its non-nullness in all such operations.
 //
-// Accesses to CorePS are guarded by gPSMutex. Every getter and setter takes a
+// Accesses to CorePS are guarded by gPSMutex. Getters and setters take a
 // PSAutoLock reference as an argument as proof that the gPSMutex is currently
 // locked. This makes it clear when gPSMutex is locked and helps avoid
 // accidental unlocked accesses to global state. There are ways to circumvent
 // this mechanism, but please don't do so without *very* good reason and a
 // detailed explanation.
 //
-// The exception to this rule is each thread's RacyThreadInfo object, which is
-// accessible without locking via TLSInfo::RacyThreadInfo().
+// The exceptions to this rule:
 //
+// - mProcessStartTime, because it's immutable;
+//
+// - each thread's RacyThreadInfo object is accessible without locking via
+//   TLSInfo::RacyThreadInfo().
 class CorePS
 {
 private:
@@ -207,7 +213,8 @@ public:
 #endif
   }
 
-  PS_GET(TimeStamp, ProcessStartTime)
+  // No PSLockRef is needed for this field because it's immutable.
+  PS_GET_LOCKLESS(TimeStamp, ProcessStartTime)
 
   PS_GET(ThreadVector&, LiveThreads)
   PS_GET(ThreadVector&, DeadThreads)
@@ -481,6 +488,7 @@ ActivePS* ActivePS::sInstance = nullptr;
 uint32_t ActivePS::sNextGeneration = 0;
 
 #undef PS_GET
+#undef PS_GET_LOCKLESS
 #undef PS_GET_AND_SET
 
 // The mutex that guards accesses to CorePS and ActivePS.
@@ -1278,7 +1286,7 @@ Tick(PSLockRef aLock, ProfileBuffer* aBuffer, const TickSample& aSample)
   aBuffer->addTagThreadId(aSample.mThreadId, aSample.mLastSample);
 
   mozilla::TimeDuration delta =
-    aSample.mTimeStamp - CorePS::ProcessStartTime(aLock);
+    aSample.mTimeStamp - CorePS::ProcessStartTime();
   aBuffer->addTag(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
 #if defined(HAVE_NATIVE_UNWIND)
@@ -1387,7 +1395,7 @@ StreamTaskTracer(PSLockRef aLock, SpliceableJSONWriter& aWriter)
   aWriter.StartArrayProperty("data");
   {
     UniquePtr<nsTArray<nsCString>> data =
-      mozilla::tasktracer::GetLoggedData(CorePS::ProcessStartTime(aLock));
+      mozilla::tasktracer::GetLoggedData(CorePS::ProcessStartTime());
     for (uint32_t i = 0; i < data->Length(); ++i) {
       aWriter.StringElement((data->ElementAt(i)).get());
     }
@@ -1426,7 +1434,7 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter)
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -
   // ProcessStartTime)) to convert CorePS::ProcessStartTime() into that form.
   mozilla::TimeDuration delta =
-    mozilla::TimeStamp::Now() - CorePS::ProcessStartTime(aLock);
+    mozilla::TimeStamp::Now() - CorePS::ProcessStartTime();
   aWriter.DoubleProperty(
     "startTime", static_cast<double>(PR_Now()/1000.0 - delta.ToMilliseconds()));
 
@@ -1596,7 +1604,7 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
         continue;
       }
       info->StreamJSON(ActivePS::Buffer(aLock), aWriter,
-                       CorePS::ProcessStartTime(aLock), aSinceTime);
+                       CorePS::ProcessStartTime(), aSinceTime);
     }
 
     const CorePS::ThreadVector& deadThreads = CorePS::DeadThreads(aLock);
@@ -1604,7 +1612,7 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
       ThreadInfo* info = deadThreads.at(i);
       MOZ_ASSERT(info->IsBeingProfiled());
       info->StreamJSON(ActivePS::Buffer(aLock), aWriter,
-                       CorePS::ProcessStartTime(aLock), aSinceTime);
+                       CorePS::ProcessStartTime(), aSinceTime);
     }
 
 #if defined(GP_OS_android)
@@ -1818,7 +1826,7 @@ SamplerThread::Run()
           if (info->RacyInfo()->CanDuplicateLastSampleDueToSleep()) {
             bool dup_ok =
               ActivePS::Buffer(lock)->DuplicateLastSample(
-                info->ThreadId(), CorePS::ProcessStartTime(lock),
+                info->ThreadId(), CorePS::ProcessStartTime(),
                 info->LastSample());
             if (dup_ok) {
               continue;
@@ -2731,10 +2739,8 @@ profiler_time()
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock(gPSMutex);
-
   mozilla::TimeDuration delta =
-    mozilla::TimeStamp::Now() - CorePS::ProcessStartTime(lock);
+    mozilla::TimeStamp::Now() - CorePS::ProcessStartTime();
   return delta.ToMilliseconds();
 }
 
@@ -2845,7 +2851,7 @@ profiler_get_backtrace_noalloc(char *output, size_t outputSize)
 }
 
 static void
-locked_profiler_add_marker(PSLockRef aLock, const char* aMarker,
+locked_profiler_add_marker(PSLockRef aLock, const char* aMarkerName,
                            ProfilerMarkerPayload* aPayload)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
@@ -2863,13 +2869,13 @@ locked_profiler_add_marker(PSLockRef aLock, const char* aMarker,
   mozilla::TimeStamp origin = (payload && !payload->GetStartTime().IsNull())
                             ? payload->GetStartTime()
                             : mozilla::TimeStamp::Now();
-  mozilla::TimeDuration delta = origin - CorePS::ProcessStartTime(aLock);
-  racyInfo->AddPendingMarker(aMarker, payload.release(),
+  mozilla::TimeDuration delta = origin - CorePS::ProcessStartTime();
+  racyInfo->AddPendingMarker(aMarkerName, payload.release(),
                              delta.ToMilliseconds());
 }
 
 void
-profiler_add_marker(const char* aMarker, ProfilerMarkerPayload* aPayload)
+profiler_add_marker(const char* aMarkerName, ProfilerMarkerPayload* aPayload)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
@@ -2882,11 +2888,12 @@ profiler_add_marker(const char* aMarker, ProfilerMarkerPayload* aPayload)
     return;
   }
 
-  locked_profiler_add_marker(lock, aMarker, payload.release());
+  locked_profiler_add_marker(lock, aMarkerName, payload.release());
 }
 
 void
-profiler_tracing(const char* aCategory, const char* aInfo, TracingKind aKind)
+profiler_tracing(const char* aCategory, const char* aMarkerName,
+                 TracingKind aKind)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
@@ -2896,12 +2903,12 @@ profiler_tracing(const char* aCategory, const char* aInfo, TracingKind aKind)
     return;
   }
 
-  auto marker = new ProfilerMarkerTracing(aCategory, aKind);
-  locked_profiler_add_marker(lock, aInfo, marker);
+  auto payload = new ProfilerMarkerTracing(aCategory, aKind);
+  locked_profiler_add_marker(lock, aMarkerName, payload);
 }
 
 void
-profiler_tracing(const char* aCategory, const char* aInfo,
+profiler_tracing(const char* aCategory, const char* aMarkerName,
                  UniqueProfilerBacktrace aCause, TracingKind aKind)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
@@ -2912,9 +2919,9 @@ profiler_tracing(const char* aCategory, const char* aInfo,
     return;
   }
 
-  auto marker =
+  auto payload =
     new ProfilerMarkerTracing(aCategory, aKind, mozilla::Move(aCause));
-  locked_profiler_add_marker(lock, aInfo, marker);
+  locked_profiler_add_marker(lock, aMarkerName, payload);
 }
 
 void
@@ -2963,7 +2970,7 @@ profiler_clear_js_context()
     // Flush this thread's ThreadInfo, if it is being profiled.
     if (info->IsBeingProfiled()) {
       info->FlushSamplesAndMarkers(ActivePS::Buffer(lock),
-                                   CorePS::ProcessStartTime(lock));
+                                   CorePS::ProcessStartTime());
     }
   }
 
