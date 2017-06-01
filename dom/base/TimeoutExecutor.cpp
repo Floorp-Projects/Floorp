@@ -61,18 +61,26 @@ TimeoutExecutor::ScheduleDelayed(const TimeStamp& aDeadline,
   rv = mTimer->SetTarget(mOwner->EventTarget());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Convert the precise delay to integral milliseconds for nsITimer.  We
-  // favor rounding down here.  If we fire early we will simply be rescheduled
-  // for an immediate runnable or a 0-ms timer.  This ends up giving us the
-  // most accurate firing time at the cost of a few more runnables.  This cost
-  // is only incurred when the browser is idle, though.  When the busy main
-  // thread is busy there will be a delay and we won't actually be early.
-  // TODO: In the future we could pass a precision argument in and round
-  //       up here for low-precision background timers.  We don't really care
-  //       if those timers fire late.
-  TimeDuration delay(aDeadline - aNow - TimeDuration::FromMilliseconds(0.1));
-  rv = mTimer->InitWithCallback(this, delay.ToMilliseconds(),
-                                nsITimer::TYPE_ONE_SHOT);
+  // Note, we cannot use the normal nsITimer init methods that take
+  // integer milliseconds.  We need higher precision.  Consider this
+  // situation:
+  //
+  // 1. setTimeout(f, 1);
+  // 2. do some work for 500us
+  // 3. setTimeout(g, 1);
+  //
+  // This should fire f() and g() 500us apart.
+  //
+  // In the past worked because each setTimeout() got its own nsITimer.  The 1ms
+  // was preserved and passed through to nsITimer which converted it to a
+  // TimeStamp, etc.
+  //
+  // Now, however, there is only one nsITimer.  We fire f() and then try to
+  // schedule a new nsITimer for g().  Its only 500us in the future, though.  We
+  // must be able to pass this fractional value to nsITimer in order to get an
+  // accurate wakeup time.
+  rv = mTimer->InitHighResolutionWithCallback(this, aDeadline - aNow,
+                                              nsITimer::TYPE_ONE_SHOT);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mMode = Mode::Delayed;
