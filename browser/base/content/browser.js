@@ -1274,6 +1274,7 @@ var gBrowserInit = {
     AboutPrivateBrowsingListener.init();
     TrackingProtection.init();
     RefreshBlocker.init();
+    CaptivePortalWatcher.init();
     FullZoomUI.init(window);
 
     let mm = window.getGroupMessageManager("browsers");
@@ -1715,8 +1716,6 @@ var gBrowserInit = {
         }
       }
     });
-
-    CaptivePortalWatcher.init();
 
     this.delayedStartupFinished = true;
 
