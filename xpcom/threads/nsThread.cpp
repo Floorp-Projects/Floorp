@@ -1046,8 +1046,7 @@ nsThread::HasPendingEvents(bool* aResult)
 
   {
     MutexAutoLock lock(mLock);
-    *aResult = mEvents->HasPendingEvent(lock) ||
-               mIdleEvents.HasPendingEvent(lock);
+    *aResult = mEvents->HasPendingEvent(lock);
   }
   return NS_OK;
 }
