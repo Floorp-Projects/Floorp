@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static android.support.test.espresso.action.ViewActions.click;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -82,6 +83,8 @@ public class TrashcanTest {
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
         TestHelper.webView.waitForExists(waitingTime);
+        TestHelper.menuButton.perform(click());
+        TestHelper.blockCounterItem.waitForExists(waitingTime);
 
         // Pull down system bar and select delete browsing history
         TestHelper.openNotification();
@@ -90,6 +93,7 @@ public class TrashcanTest {
         TestHelper.erasedMsg.waitForExists(waitingTime);
         assertTrue(TestHelper.erasedMsg.exists());
         assertTrue(TestHelper.urlBar.exists());
+        assertFalse(TestHelper.menulist.exists());
     }
 
     @Test

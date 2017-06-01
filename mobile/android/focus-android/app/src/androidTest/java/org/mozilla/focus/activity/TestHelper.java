@@ -128,6 +128,9 @@ public final class TestHelper {
             .resourceId("org.mozilla.focus.debug:id/trackers_count"));
     static UiObject blockToggleSwitch = mDevice.findObject(new UiSelector()
             .resourceId("org.mozilla.focus.debug:id/blocking_switch"));
+    static UiObject menulist = mDevice.findObject(new UiSelector()
+            .resourceId("org.mozilla.focus.debug:id/list")
+            .enabled(true));
 
     /********** Share Menu Dialog ********************/
     static UiObject shareMenuHeader = TestHelper.mDevice.findObject(new UiSelector()
