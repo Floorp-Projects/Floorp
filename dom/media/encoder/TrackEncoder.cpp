@@ -143,12 +143,10 @@ AudioTrackEncoder::InterleaveTrackData(AudioChunk& aChunk,
                                        uint32_t aOutputChannels,
                                        AudioDataValue* aOutput)
 {
-  uint32_t numChannelsToCopy = std::min(aOutputChannels,
-                                        aChunk.mChannelData.Length());
   switch(aChunk.mBufferFormat) {
     case AUDIO_FORMAT_S16: {
       AutoTArray<const int16_t*, 2> array;
-      array.SetLength(numChannelsToCopy);
+      array.SetLength(aOutputChannels);
       for (uint32_t i = 0; i < array.Length(); i++) {
         array[i] = static_cast<const int16_t*>(aChunk.mChannelData[i]);
       }
@@ -157,7 +155,7 @@ AudioTrackEncoder::InterleaveTrackData(AudioChunk& aChunk,
     }
     case AUDIO_FORMAT_FLOAT32: {
       AutoTArray<const float*, 2> array;
-      array.SetLength(numChannelsToCopy);
+      array.SetLength(aOutputChannels);
       for (uint32_t i = 0; i < array.Length(); i++) {
         array[i] = static_cast<const float*>(aChunk.mChannelData[i]);
       }
