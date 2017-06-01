@@ -26,9 +26,8 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
   WrRect scBounds = aParentSC.ToRelativeWrRect(aLayer->BoundsForStackingContext());
   Layer* layer = aLayer->GetLayer();
   mTransform = aTransform.valueOr(layer->GetTransform());
-  mBuilder->PushStackingContext(scBounds,
-                                1.0f,
-                                mTransform,
+  float opacity = 1.0f;
+  mBuilder->PushStackingContext(scBounds, 0, &opacity, &mTransform,
                                 wr::ToWrMixBlendMode(layer->GetMixBlendMode()));
   mOrigin = aLayer->Bounds().TopLeft();
 }
