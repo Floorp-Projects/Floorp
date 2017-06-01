@@ -86,7 +86,7 @@ OffscreenCanvas::ClearResources()
     mCanvasClient->Clear();
 
     if (mCanvasRenderer) {
-      nsCOMPtr<nsISerialEventTarget> activeTarget = mCanvasRenderer->GetActiveThread();
+      nsCOMPtr<nsISerialEventTarget> activeTarget = mCanvasRenderer->GetActiveEventTarget();
       MOZ_RELEASE_ASSERT(activeTarget, "GFX: failed to get active event target.");
       bool current;
       activeTarget->IsOnCurrentThread(&current);
@@ -94,7 +94,7 @@ OffscreenCanvas::ClearResources()
       mCanvasRenderer->SetCanvasClient(nullptr);
       mCanvasRenderer->mContext = nullptr;
       mCanvasRenderer->mGLContext = nullptr;
-      mCanvasRenderer->ResetActiveThread();
+      mCanvasRenderer->ResetActiveEventTarget();
     }
 
     mCanvasClient = nullptr;
@@ -143,7 +143,7 @@ OffscreenCanvas::GetContext(JSContext* aCx,
       WebGLContext* webGL = static_cast<WebGLContext*>(mCurrentContext.get());
       gl::GLContext* gl = webGL->GL();
       mCanvasRenderer->mContext = mCurrentContext;
-      mCanvasRenderer->SetActiveThread();
+      mCanvasRenderer->SetActiveEventTarget();
       mCanvasRenderer->mGLContext = gl;
       mCanvasRenderer->SetIsAlphaPremultiplied(webGL->IsPremultAlpha() || !gl->Caps().alpha);
 

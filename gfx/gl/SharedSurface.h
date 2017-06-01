@@ -67,9 +67,6 @@ public:
 protected:
     bool mIsLocked;
     bool mIsProducerAcquired;
-#ifdef DEBUG
-    nsIThread* const mOwningThread;
-#endif
 
     SharedSurface(SharedSurfaceType type,
                   AttachmentType attachType,
