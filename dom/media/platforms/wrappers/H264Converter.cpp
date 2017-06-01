@@ -34,6 +34,11 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
   , mDecoderOptions(aParams.mOptions)
 {
   CreateDecoder(mOriginalConfig, aParams.mDiagnostics);
+  if (mDecoder) {
+    MOZ_ASSERT(mp4_demuxer::AnnexB::HasSPS(mOriginalConfig.mExtraData));
+    // The video metadata contains out of band SPS/PPS (AVC1) store it.
+    mOriginalExtraData = mOriginalConfig.mExtraData;
+  }
 }
 
 H264Converter::~H264Converter()
@@ -79,6 +84,15 @@ H264Converter::Decode(MediaRawData* aSample)
       return DecodePromise::CreateAndResolve(DecodedData(), __func__);
     }
   } else {
+    // Initialize the members that we couldn't if the extradata was given during
+    // H264Converter's construction.
+    if (!mNeedAVCC) {
+      mNeedAVCC =
+        Some(mDecoder->NeedsConversion() == ConversionRequired::kNeedAVCC);
+    }
+    if (!mCanRecycleDecoder) {
+      mCanRecycleDecoder = Some(CanRecycleDecoder());
+    }
     rv = CheckForSPSChange(aSample);
   }
 
@@ -97,11 +111,6 @@ H264Converter::Decode(MediaRawData* aSample)
 
   if (mNeedKeyframe && !aSample->mKeyframe) {
     return DecodePromise::CreateAndResolve(DecodedData(), __func__);
-  }
-
-  if (!mNeedAVCC) {
-    mNeedAVCC =
-      Some(mDecoder->NeedsConversion() == ConversionRequired::kNeedAVCC);
   }
 
   if (!*mNeedAVCC
@@ -260,6 +269,11 @@ H264Converter::OnDecoderInitDone(const TrackType aTrackType)
 {
   mInitPromiseRequest.Complete();
   RefPtr<MediaRawData> sample = mPendingSample.forget();
+
+  mNeedAVCC =
+    Some(mDecoder->NeedsConversion() == ConversionRequired::kNeedAVCC);
+  mCanRecycleDecoder = Some(CanRecycleDecoder());
+
   DecodeFirstSample(sample);
 }
 
@@ -288,9 +302,6 @@ H264Converter::DecodeFirstSample(MediaRawData* aSample)
     mDecodePromise.Resolve(DecodedData(), __func__);
     return;
   }
-
-  mNeedAVCC =
-    Some(mDecoder->NeedsConversion() == ConversionRequired::kNeedAVCC);
 
   if (!*mNeedAVCC
       && !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe)) {
@@ -322,15 +333,30 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
 {
   RefPtr<MediaByteBuffer> extra_data =
     mp4_demuxer::AnnexB::ExtractExtraData(aSample);
-  if (!mp4_demuxer::AnnexB::HasSPS(extra_data)
-      || mp4_demuxer::AnnexB::CompareExtraData(extra_data,
-                                               mCurrentConfig.mExtraData)) {
-        return NS_OK;
-      }
+  if (!mp4_demuxer::AnnexB::HasSPS(extra_data)) {
+    MOZ_ASSERT(mCanRecycleDecoder.isSome());
+    if (!*mCanRecycleDecoder) {
+      // If the decoder can't be recycled, the out of band extradata will never
+      // change as the H264Converter will be recreated by the MediaFormatReader
+      // instead. So there's no point in testing for changes.
+      return NS_OK;
+    }
+    // This sample doesn't contain inband SPS/PPS
+    // We now check if the out of band one has changed.
+    if (mp4_demuxer::AnnexB::HasSPS(aSample->mExtraData) &&
+        !mp4_demuxer::AnnexB::CompareExtraData(aSample->mExtraData,
+                                               mOriginalExtraData)) {
+      extra_data = mOriginalExtraData = aSample->mExtraData;
+    }
+  }
+  if (mp4_demuxer::AnnexB::CompareExtraData(extra_data,
+                                            mCurrentConfig.mExtraData)) {
+    return NS_OK;
+  }
 
   RefPtr<MediaRawData> sample = aSample;
-
-  if (CanRecycleDecoder()) {
+  MOZ_ASSERT(mCanRecycleDecoder.isSome());
+  if (*mCanRecycleDecoder) {
     // Do not recreate the decoder, reuse it.
     UpdateConfigFromExtraData(extra_data);
     if (!sample->mTrackInfo) {

@@ -67,10 +67,7 @@ struct MOZ_MUST_USE_TYPE MOZ_NON_AUTOABLE already_AddRefed
    */
   already_AddRefed() : mRawPtr(nullptr) {}
 
-  // The return and argument types here are arbitrarily selected so no
-  // corresponding member function exists.
-  typedef void (already_AddRefed::* MatchNullptr)(double, float);
-  MOZ_IMPLICIT already_AddRefed(MatchNullptr aRawPtr) : mRawPtr(nullptr) {}
+  MOZ_IMPLICIT already_AddRefed(decltype(nullptr)) : mRawPtr(nullptr) {}
 
   explicit already_AddRefed(T* aRawPtr) : mRawPtr(aRawPtr) {}
 

@@ -857,6 +857,9 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       gDevToolsBrowser._forgetBrowserWindow(win);
     }
 
+    // Remove scripts loaded in content process to support the Browser Content Toolbox.
+    DebuggerServer.removeContentServerScript();
+
     gDevTools.destroy({ shuttingDown });
   },
 };

@@ -28,12 +28,13 @@
   background: var(--chrome-background-color);
 }
 
+%ifndef MOZ_PHOTON_THEME
 /* Resize things so that the native titlebar is in line with the tabs */
 #main-window[tabsintitlebar] > #titlebar > #titlebar-content > #titlebar-buttonbox-container,
 #main-window[tabsintitlebar] > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > #titlebar-fullscreen-button {
   margin-top: 6px;
 }
-
+%endif
 /* Prevent the hover styling from on the identity icon from overlapping the
    urlbar border. */
 #identity-box {

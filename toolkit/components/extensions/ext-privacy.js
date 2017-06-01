@@ -60,6 +60,16 @@ ExtensionPreferencesManager.addSetting("network.networkPredictionEnabled", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("network.peerConnectionEnabled", {
+  prefNames: [
+    "media.peerconnection.enabled",
+  ],
+
+  setCallback(value) {
+    return {[this.prefNames[0]]: value};
+  },
+});
+
 ExtensionPreferencesManager.addSetting("network.webRTCIPHandlingPolicy", {
   prefNames: [
     "media.peerconnection.ice.default_address_only",
@@ -118,6 +128,11 @@ this.privacy = class extends ExtensionAPI {
                 Preferences.get("network.prefetch-next") &&
                 Preferences.get("network.http.speculative-parallel-limit") > 0 &&
                 !Preferences.get("network.dns.disablePrefetch");
+            }),
+          peerConnectionEnabled: getAPI(extension,
+            "network.peerConnectionEnabled",
+            () => {
+              return Preferences.get("media.peerconnection.enabled");
             }),
           webRTCIPHandlingPolicy: getAPI(extension,
             "network.webRTCIPHandlingPolicy",

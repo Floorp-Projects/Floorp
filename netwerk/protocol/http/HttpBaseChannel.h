@@ -364,6 +364,11 @@ public: /* Necko internal use only... */
       mIsTrackingResource = true;
     }
 
+    const uint64_t& ChannelId() const
+    {
+      return mChannelId;
+    }
+
 protected:
   // Handle notifying listener, removing from loadgroup if request failed.
   void     DoNotifyListener();

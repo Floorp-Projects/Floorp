@@ -391,6 +391,7 @@ ProxyAutoConfig::ProxyAutoConfig()
   , mJSNeedsSetup(false)
   , mShutdown(false)
   , mIncludePath(false)
+  , mExtraHeapSize(0)
 {
   MOZ_COUNT_CTOR(ProxyAutoConfig);
 }
@@ -551,9 +552,9 @@ static const JSFunctionSpec PACGlobalFunctions[] = {
 class JSContextWrapper
 {
  public:
-  static JSContextWrapper *Create()
+  static JSContextWrapper *Create(uint32_t aExtraHeapSize)
   {
-    JSContext* cx = JS_NewContext(sContextHeapSize);
+    JSContext* cx = JS_NewContext(sContextHeapSize + aExtraHeapSize);
     if (NS_WARN_IF(!cx))
       return nullptr;
 
@@ -598,7 +599,7 @@ class JSContextWrapper
   }
 
 private:
-  static const unsigned sContextHeapSize = 4 << 20; // 4 MB
+  static const uint32_t sContextHeapSize = 4 << 20; // 4 MB
 
   JSContext *mContext;
   JS::PersistentRooted<JSObject*> mGlobal;
@@ -676,12 +677,14 @@ ProxyAutoConfig::SetThreadLocalIndex(uint32_t index)
 nsresult
 ProxyAutoConfig::Init(const nsCString &aPACURI,
                       const nsCString &aPACScript,
-                      bool aIncludePath)
+                      bool aIncludePath,
+                      uint32_t aExtraHeapSize)
 {
   mPACURI = aPACURI;
   mPACScript = sPacUtils;
   mPACScript.Append(aPACScript);
   mIncludePath = aIncludePath;
+  mExtraHeapSize = aExtraHeapSize;
 
   if (!GetRunning())
     return SetupJS();
@@ -704,7 +707,7 @@ ProxyAutoConfig::SetupJS()
 
   NS_GetCurrentThread()->SetCanInvokeJS(true);
 
-  mJSContext = JSContextWrapper::Create();
+  mJSContext = JSContextWrapper::Create(mExtraHeapSize);
   if (!mJSContext)
     return NS_ERROR_FAILURE;
 

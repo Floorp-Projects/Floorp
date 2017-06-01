@@ -50,6 +50,32 @@ HttpRequestSucceeded(nsIStreamLoader *loader)
   return result;
 }
 
+// Read preference setting of extra JavaScript context heap size.
+// PrefService tends to be run on main thread, where ProxyAutoConfig runs on
+// ProxyResolution thread, so it's read here and passed to ProxyAutoConfig.
+static uint32_t
+GetExtraJSContextHeapSize()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  static int32_t extraSize = -1;
+
+  if (extraSize < 0) {
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    int32_t value;
+
+    if (prefs && NS_SUCCEEDED(prefs->GetIntPref(
+        "network.proxy.autoconfig_extra_jscontext_heap_size", &value))) {
+      LOG(("autoconfig_extra_jscontext_heap_size: %d\n", value));
+
+      extraSize = value;
+    }
+  }
+
+  return extraSize < 0 ? 0 : extraSize;
+}
+
+
 //-----------------------------------------------------------------------------
 
 // The ExecuteCallback runnable is triggered by
@@ -180,6 +206,7 @@ public:
     , mCancel(false)
     , mCancelStatus(NS_OK)
     , mSetupPAC(false)
+    , mExtraHeapSize(0)
   { }
 
   void CancelQueue (nsresult status)
@@ -188,11 +215,15 @@ public:
     mCancelStatus = status;
   }
 
-  void SetupPAC (const char *text, uint32_t datalen, nsCString &pacURI)
+  void SetupPAC (const char *text,
+                 uint32_t datalen,
+                 nsCString &pacURI,
+                 uint32_t extraHeapSize)
   {
     mSetupPAC = true;
     mSetupPACData.Assign(text, datalen);
     mSetupPACURI = pacURI;
+    mExtraHeapSize = extraHeapSize;
   }
 
   NS_IMETHOD Run() override
@@ -209,7 +240,8 @@ public:
 
       mPACMan->mPAC.Init(mSetupPACURI,
                          mSetupPACData,
-                         mPACMan->mIncludePath);
+                         mPACMan->mIncludePath,
+                         mExtraHeapSize);
 
       RefPtr<PACLoadComplete> runnable = new PACLoadComplete(mPACMan);
       NS_DispatchToMainThread(runnable);
@@ -227,6 +259,7 @@ private:
   nsresult  mCancelStatus;
 
   bool                 mSetupPAC;
+  uint32_t             mExtraHeapSize;
   nsCString            mSetupPACData;
   nsCString            mSetupPACURI;
 };
@@ -671,7 +704,7 @@ nsPACMan::OnStreamComplete(nsIStreamLoader *loader,
 
     RefPtr<ExecutePACThreadAction> pending =
       new ExecutePACThreadAction(this);
-    pending->SetupPAC(text, dataLen, pacURI);
+    pending->SetupPAC(text, dataLen, pacURI, GetExtraJSContextHeapSize());
     if (mPACThread)
       mPACThread->Dispatch(pending, nsIEventTarget::DISPATCH_NORMAL);
 
