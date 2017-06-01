@@ -6835,8 +6835,7 @@ nsIFrame::GetOverflowRect(nsOverflowType aType) const
   if (mOverflow.mType == NS_FRAME_OVERFLOW_LARGE) {
     // there is an overflow rect, and it's not stored as deltas but as
     // a separately-allocated rect
-    return static_cast<nsOverflowAreas*>(const_cast<nsIFrame*>(this)->
-             GetOverflowAreasProperty())->Overflow(aType);
+    return GetOverflowAreasProperty()->Overflow(aType);
   }
 
   if (aType == eVisualOverflow &&
@@ -6853,7 +6852,7 @@ nsIFrame::GetOverflowAreas() const
   if (mOverflow.mType == NS_FRAME_OVERFLOW_LARGE) {
     // there is an overflow rect, and it's not stored as deltas but as
     // a separately-allocated rect
-    return *const_cast<nsIFrame*>(this)->GetOverflowAreasProperty();
+    return *GetOverflowAreasProperty();
   }
 
   return nsOverflowAreas(GetVisualOverflowFromDeltas(),
@@ -8662,8 +8661,6 @@ nsFrame::AccessibleType()
 }
 #endif
 
-NS_DECLARE_FRAME_PROPERTY_DELETABLE(OverflowAreasProperty, nsOverflowAreas)
-
 bool
 nsIFrame::ClearOverflowRects()
 {
@@ -8677,26 +8674,6 @@ nsIFrame::ClearOverflowRects()
   return true;
 }
 
-/** Create or retrieve the previously stored overflow area, if the frame does 
- * not overflow and no creation is required return nullptr.
- * @return pointer to the overflow area rectangle 
- */
-nsOverflowAreas*
-nsIFrame::GetOverflowAreasProperty()
-{
-  nsOverflowAreas* overflow = GetProperty(OverflowAreasProperty());
-
-  if (overflow) {
-    return overflow; // the property already exists
-  }
-
-  // The property isn't set yet, so allocate a new rect, set the property,
-  // and return the newly allocated rect
-  overflow = new nsOverflowAreas;
-  AddProperty(OverflowAreasProperty(), overflow);
-  return overflow;
-}
-
 /** Set the overflowArea rect, storing it as deltas or a separate rect
  * depending on its size in relation to the primary frame rect.
  */
@@ -8704,7 +8681,7 @@ bool
 nsIFrame::SetOverflowAreas(const nsOverflowAreas& aOverflowAreas)
 {
   if (mOverflow.mType == NS_FRAME_OVERFLOW_LARGE) {
-    nsOverflowAreas* overflow = GetProperty(OverflowAreasProperty());
+    nsOverflowAreas* overflow = GetOverflowAreasProperty();
     bool changed = *overflow != aOverflowAreas;
     *overflow = aOverflowAreas;
 
@@ -8749,9 +8726,7 @@ nsIFrame::SetOverflowAreas(const nsOverflowAreas& aOverflowAreas)
 
     // it's a large overflow area that we need to store as a property
     mOverflow.mType = NS_FRAME_OVERFLOW_LARGE;
-    nsOverflowAreas* overflow = GetOverflowAreasProperty();
-    NS_ASSERTION(overflow, "should have created areas");
-    *overflow = aOverflowAreas;
+    AddProperty(OverflowAreasProperty(), new nsOverflowAreas(aOverflowAreas));
     return changed;
   }
 }

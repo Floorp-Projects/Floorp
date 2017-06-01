@@ -13,14 +13,6 @@
  * for tips on how to do that.
  */
 const EXPECTED_REFLOWS = [
-  // Selecting the address bar causes two reflows, unfortunately.
-  [
-    "select@chrome://global/content/bindings/textbox.xml",
-    "focusAndSelectUrlBar@chrome://browser/content/browser.js",
-    "_delayedStartup@chrome://browser/content/browser.js",
-  ],
-
-  // Selecting the address bar causes two reflows, unfortunately.
   [
     "select@chrome://global/content/bindings/textbox.xml",
     "focusAndSelectUrlBar@chrome://browser/content/browser.js",

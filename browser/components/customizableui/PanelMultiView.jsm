@@ -202,6 +202,12 @@ this.PanelMultiView = class {
     return this.__dwu = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
                                    .getInterface(Ci.nsIDOMWindowUtils);
   }
+  get _screenManager() {
+    if (this.__screenManager)
+      return this.__screenManager;
+    return this.__screenManager = Cc["@mozilla.org/gfx/screenmanager;1"]
+                                    .getService(Ci.nsIScreenManager);
+  }
   get _currentSubView() {
     return this.panelViews ? this.panelViews.currentView : this.__currentSubView;
   }
@@ -774,40 +780,47 @@ this.PanelMultiView = class {
           this.window.addEventListener("keydown", this);
           this._panel.addEventListener("mousemove", this);
         }
+
+        // Before opening the panel, we have to limit the maximum height of any
+        // view based on the space that will be available. We cannot just use
+        // window.screen.availTop and availHeight because these may return an
+        // incorrect value when the window spans multiple screens.
+        let anchorBox = this._panel.anchorNode.boxObject;
+        let screen = this._screenManager.screenForRect(anchorBox.screenX,
+                                                       anchorBox.screenY,
+                                                       anchorBox.width,
+                                                       anchorBox.height);
+        let availTop = {}, availHeight = {};
+        screen.GetAvailRect({}, availTop, {}, availHeight);
+        let cssAvailTop = availTop.value / screen.defaultCSSScaleFactor;
+
+        // The distance from the anchor to the available margin of the screen is
+        // based on whether the panel will open towards the top or the bottom.
+        let maxHeight;
+        if (this._panel.alignmentPosition.startsWith("before_")) {
+          maxHeight = anchorBox.screenY - cssAvailTop;
+        } else {
+          let anchorScreenBottom = anchorBox.screenY + anchorBox.height;
+          let cssAvailHeight = availHeight.value / screen.defaultCSSScaleFactor;
+          maxHeight = cssAvailTop + cssAvailHeight - anchorScreenBottom;
+        }
+
+        // To go from the maximum height of the panel to the maximum height of
+        // the view stack, we need to subtract the height of the arrow and the
+        // height of the opposite margin, but we cannot get their actual values
+        // because the panel is not visible yet. However, we know that this is
+        // currently 11px on Mac, 13px on Windows, and 13px on Linux. We also
+        // want an extra margin, both for visual reasons and to prevent glitches
+        // due to small rounding errors. So, we just use a value that makes
+        // sense for all platforms. If the arrow visuals change significantly,
+        // this value will be easy to adjust.
+        const EXTRA_MARGIN_PX = 20;
+        this._viewStack.style.maxHeight = (maxHeight - EXTRA_MARGIN_PX) + "px";
         break;
       case "popupshown":
         // Now that the main view is visible, we can check the height of the
         // description elements it contains.
         this.descriptionHeightWorkaround();
-
-        if (!this.panelViews) {
-          // Now that the panel has opened, we can compute the distance from its
-          // anchor to the available margin of the screen, based on whether the
-          // panel actually opened towards the top or the bottom. We use this to
-          // limit its maximum height, which is relevant when opening a subview.
-          let maxHeight;
-          if (this._panel.alignmentPosition.startsWith("before_")) {
-            maxHeight = this._panel.getOuterScreenRect().bottom -
-                        this.window.screen.availTop;
-          } else {
-            maxHeight = this.window.screen.availTop +
-                        this.window.screen.availHeight -
-                        this._panel.getOuterScreenRect().top;
-          }
-          // To go from the maximum height of the panel to the maximum height of
-          // the view stack, we start by subtracting the height of the arrow box.
-          // We don't need to trigger a new layout because this does not change.
-          let arrowBox = this.document.getAnonymousElementByAttribute(
-                                          this._panel, "anonid", "arrowbox");
-          maxHeight -= this._dwu.getBoundsWithoutFlushing(arrowBox).height;
-          // We subtract a fixed margin to account for variable borders. We don't
-          // try to measure this accurately so it's faster, we don't depend on
-          // the arrowpanel structure, and we don't hit rounding errors. Instead,
-          // we use a value that is much greater than the typical borders and
-          // makes sense visually.
-          const EXTRA_MARGIN_PX = 8;
-          this._viewStack.style.maxHeight = (maxHeight - EXTRA_MARGIN_PX) + "px";
-        }
         break;
       case "popuphidden":
         this.node.removeAttribute("panelopen");

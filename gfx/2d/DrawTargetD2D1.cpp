@@ -168,13 +168,14 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
   }
 
   RefPtr<ID2D1Bitmap> bitmap;
+  HRESULT hr;
   if (aSurface->GetType() == SurfaceType::D2D1_1_IMAGE) {
     // If this is called with a DataSourceSurface it might do a partial upload
     // that our DrawBitmap call doesn't support.
-    image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));
+    hr = image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));
   }
 
-  if (bitmap && aSurfOptions.mSamplingBounds == SamplingBounds::UNBOUNDED) {
+  if (SUCCEEDED(hr) && bitmap && aSurfOptions.mSamplingBounds == SamplingBounds::UNBOUNDED) {
     mDC->DrawBitmap(bitmap, D2DRect(aDest), aOptions.mAlpha,
                     D2DFilter(aSurfOptions.mSamplingFilter), D2DRect(aSource));
   } else {
@@ -401,9 +402,9 @@ DrawTargetD2D1::CopySurface(SourceSurface *aSurface,
   sourceRect.height -= (aDestination.y - aSourceRect.y) - mat._32;
 
   RefPtr<ID2D1Bitmap> bitmap;
-  image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));
+  HRESULT hr = image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));
 
-  if (bitmap && mFormat == SurfaceFormat::A8) {
+  if (SUCCEEDED(hr) && bitmap && mFormat == SurfaceFormat::A8) {
     RefPtr<ID2D1SolidColorBrush> brush;
     mDC->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White),
                                D2D1::BrushProperties(), getter_AddRefs(brush));
@@ -421,7 +422,7 @@ DrawTargetD2D1::CopySurface(SourceSurface *aSurface,
   Rect dstRect(Float(aDestination.x), Float(aDestination.y),
                Float(aSourceRect.width), Float(aSourceRect.height));
 
-  if (bitmap) {
+  if (SUCCEEDED(hr) && bitmap) {
     mDC->SetPrimitiveBlend(D2D1_PRIMITIVE_BLEND_COPY);
     mDC->DrawBitmap(bitmap, D2DRect(dstRect), 1.0f,
                     D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR,
@@ -1782,8 +1783,8 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
       // with source format A8. This creates a BGRA surface with the same alpha values that
       // the A8 surface has.
       RefPtr<ID2D1Bitmap> bitmap;
-      image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));
-      if (bitmap) {
+      HRESULT hr = image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));
+      if (SUCCEEDED(hr) && bitmap) {
         RefPtr<ID2D1Image> oldTarget;
         RefPtr<ID2D1Bitmap1> tmpBitmap;
         mDC->CreateBitmap(D2D1::SizeU(pat->mSurface->GetSize().width, pat->mSurface->GetSize().height), nullptr, 0,
@@ -1806,8 +1807,8 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 
     if (pat->mSamplingRect.IsEmpty()) {
       RefPtr<ID2D1Bitmap> bitmap;
-      image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));
-      if (bitmap) {
+      HRESULT hr = image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));
+      if (SUCCEEDED(hr) && bitmap) {
         /**
          * Create the brush with the proper repeat modes.
          */
