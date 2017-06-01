@@ -42,16 +42,18 @@ public:
   /**
    * Call this whenever a decode completes, a decode starts, or the image is
    * discarded. It will update the internal state. Specifically mDiscarded,
-   * mCompositedFrameInvalid, and mIsCurrentlyDecoded. Returns a rect to
-   * invalidate.
+   * mCompositedFrameInvalid, and mIsCurrentlyDecoded. If aAllowInvalidation
+   * is true then returns a rect to invalidate.
    */
   const gfx::IntRect UpdateState(bool aAnimationFinished,
                             RasterImage *aImage,
-                            const gfx::IntSize& aSize);
+                            const gfx::IntSize& aSize,
+                            bool aAllowInvalidation = true);
 private:
   const gfx::IntRect UpdateStateInternal(LookupResult& aResult,
                                     bool aAnimationFinished,
-                                    const gfx::IntSize& aSize);
+                                    const gfx::IntSize& aSize,
+                                    bool aAllowInvalidation = true);
 
 public:
   /**

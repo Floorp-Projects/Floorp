@@ -30,7 +30,8 @@ namespace image {
 const gfx::IntRect
 AnimationState::UpdateState(bool aAnimationFinished,
                             RasterImage *aImage,
-                            const gfx::IntSize& aSize)
+                            const gfx::IntSize& aSize,
+                            bool aAllowInvalidation /* = true */)
 {
   LookupResult result =
     SurfaceCache::Lookup(ImageKey(aImage),
@@ -44,7 +45,8 @@ AnimationState::UpdateState(bool aAnimationFinished,
 const gfx::IntRect
 AnimationState::UpdateStateInternal(LookupResult& aResult,
                                     bool aAnimationFinished,
-                                    const gfx::IntSize& aSize)
+                                    const gfx::IntSize& aSize,
+                                    bool aAllowInvalidation /* = true */)
 {
   // Update mDiscarded and mIsCurrentlyDecoded.
   if (aResult.Type() == MatchType::NOT_FOUND) {
@@ -78,31 +80,33 @@ AnimationState::UpdateStateInternal(LookupResult& aResult,
 
   gfx::IntRect ret;
 
-  // Update the value of mCompositedFrameInvalid.
-  if (mIsCurrentlyDecoded || aAnimationFinished) {
-    // Animated images that have finished their animation (ie because it is a
-    // finite length animation) don't have RequestRefresh called on them, and so
-    // mCompositedFrameInvalid would never get cleared. We clear it here (and
-    // also in RasterImage::Decode when we create a decoder for an image that
-    // has finished animated so it can display sooner than waiting until the
-    // decode completes). We also do it if we are fully decoded. This is safe
-    // to do for images that aren't finished animating because before we paint
-    // the refresh driver will call into us to advance to the correct frame,
-    // and that will succeed because we have all the frames.
-    if (mCompositedFrameInvalid) {
-      // Invalidate if we are marking the composited frame valid.
-      ret.SizeTo(aSize);
+  if (aAllowInvalidation) {
+    // Update the value of mCompositedFrameInvalid.
+    if (mIsCurrentlyDecoded || aAnimationFinished) {
+      // Animated images that have finished their animation (ie because it is a
+      // finite length animation) don't have RequestRefresh called on them, and so
+      // mCompositedFrameInvalid would never get cleared. We clear it here (and
+      // also in RasterImage::Decode when we create a decoder for an image that
+      // has finished animated so it can display sooner than waiting until the
+      // decode completes). We also do it if we are fully decoded. This is safe
+      // to do for images that aren't finished animating because before we paint
+      // the refresh driver will call into us to advance to the correct frame,
+      // and that will succeed because we have all the frames.
+      if (mCompositedFrameInvalid) {
+        // Invalidate if we are marking the composited frame valid.
+        ret.SizeTo(aSize);
+      }
+      mCompositedFrameInvalid = false;
+    } else if (aResult.Type() == MatchType::NOT_FOUND ||
+               aResult.Type() == MatchType::PENDING) {
+      if (mHasBeenDecoded) {
+        MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
+        mCompositedFrameInvalid = true;
+      }
     }
-    mCompositedFrameInvalid = false;
-  } else if (aResult.Type() == MatchType::NOT_FOUND ||
-             aResult.Type() == MatchType::PENDING) {
-    if (mHasBeenDecoded) {
-      MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
-      mCompositedFrameInvalid = true;
-    }
+    // Otherwise don't change the value of mCompositedFrameInvalid, it will be
+    // updated by RequestRefresh.
   }
-  // Otherwise don't change the value of mCompositedFrameInvalid, it will be
-  // updated by RequestRefresh.
 
   return ret;
 }

@@ -8,6 +8,7 @@
 
   <script>
   SimpleTest.waitForExplicitFinish();
+  SimpleTest.expectChildProcessCrash();
 
   var w = window.open('process_error.xul', '_blank', 'chrome,resizable=yes,width=400,height=600');
 
