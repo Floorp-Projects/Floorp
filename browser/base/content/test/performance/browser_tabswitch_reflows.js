@@ -13,19 +13,24 @@
  * for tips on how to do that.
  */
 const EXPECTED_REFLOWS = [
-  // selection change notification may cause querying the focused editor content
-  // by IME and that will cause reflow.
-  [
-    "select@chrome://global/content/bindings/textbox.xml",
-  ],
+  /**
+   * Nothing here! Please don't add anything new!
+   */
 ];
 
 /*
  * This test ensures that there are no unexpected
- * uninterruptible reflows when opening new tabs.
+ * uninterruptible reflows when switching between two
+ * tabs that are both fully visible.
  */
 add_task(async function() {
   await ensureNoPreloadedBrowser();
+
+  // At the time of writing, there are no reflows on simple tab switching.
+  // Mochitest will fail if we have no assertions, so we add one here
+  // to make sure nobody adds any new ones.
+  Assert.equal(EXPECTED_REFLOWS.length, 0,
+    "We shouldn't have added any new expected reflows.");
 
   // Because the tab strip is a scrollable frame, we can't use the
   // default dirtying function from withReflowObserver and reliably
@@ -34,16 +39,15 @@ add_task(async function() {
   // original tab.
   let origTab = gBrowser.selectedTab;
 
-  // Add a reflow observer and open a new tab.
+  let firstSwitchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
+  let otherTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  await firstSwitchDone;
+
   await withReflowObserver(async function() {
     let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
-    BrowserOpenTab();
-    await BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "transitionend",
-        false, e => e.propertyName === "max-width");
+    gBrowser.selectedTab = origTab;
     await switchDone;
   }, EXPECTED_REFLOWS, window, origTab);
 
-  let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  await switchDone;
+  await BrowserTestUtils.removeTab(otherTab);
 });
