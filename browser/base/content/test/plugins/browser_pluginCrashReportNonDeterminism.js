@@ -93,20 +93,22 @@ add_task(async function setup() {
     let propBag = subject.QueryInterface(Ci.nsIPropertyBag2);
     let minidumpID = propBag.getPropertyAsAString("pluginDumpID");
 
-    let minidumpDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
-    minidumpDir.append("minidumps");
+    Services.crashmanager.ensureCrashIsPresent(minidumpID).then(() => {
+      let minidumpDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+      minidumpDir.append("minidumps");
 
-    let pluginDumpFile = minidumpDir.clone();
-    pluginDumpFile.append(minidumpID + ".dmp");
+      let pluginDumpFile = minidumpDir.clone();
+      pluginDumpFile.append(minidumpID + ".dmp");
 
-    let extraFile = minidumpDir.clone();
-    extraFile.append(minidumpID + ".extra");
+      let extraFile = minidumpDir.clone();
+      extraFile.append(minidumpID + ".extra");
 
-    ok(pluginDumpFile.exists(), "Found minidump");
-    ok(extraFile.exists(), "Found extra file");
+      ok(pluginDumpFile.exists(), "Found minidump");
+      ok(extraFile.exists(), "Found extra file");
 
-    pluginDumpFile.remove(false);
-    extraFile.remove(false);
+      pluginDumpFile.remove(false);
+      extraFile.remove(false);
+    });
   };
 
   Services.obs.addObserver(crashObserver, "plugin-crashed");

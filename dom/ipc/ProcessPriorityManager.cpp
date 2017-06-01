@@ -253,8 +253,6 @@ public:
 
   void OnRemoteBrowserFrameShown(nsISupports* aSubject);
   void OnTabParentDestroyed(nsISupports* aSubject);
-  void OnActivityOpened(const char16_t* aData);
-  void OnActivityClosed(const char16_t* aData);
 
   ProcessPriority CurrentPriority();
   ProcessPriority ComputePriority();
@@ -288,7 +286,6 @@ private:
   ProcessPriority mPriority;
   bool mHoldsCPUWakeLock;
   bool mHoldsHighPriorityWakeLock;
-  bool mIsActivityOpener;
 
   /**
    * Used to implement NameWithComma().
@@ -553,7 +550,6 @@ ParticularProcessPriorityManager::ParticularProcessPriorityManager(
   , mPriority(PROCESS_PRIORITY_UNKNOWN)
   , mHoldsCPUWakeLock(false)
   , mHoldsHighPriorityWakeLock(false)
-  , mIsActivityOpener(false)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
   LOGP("Creating ParticularProcessPriorityManager.");
@@ -577,8 +573,6 @@ ParticularProcessPriorityManager::Init()
   if (os) {
     os->AddObserver(this, "remote-browser-shown", /* ownsWeak */ true);
     os->AddObserver(this, "ipc:browser-destroyed", /* ownsWeak */ true);
-    os->AddObserver(this, "activity-opened", /* ownsWeak */ true);
-    os->AddObserver(this, "activity-closed", /* ownsWeak */ true);
   }
 
   // This process may already hold the CPU lock; for example, our parent may
@@ -650,10 +644,6 @@ ParticularProcessPriorityManager::Observe(nsISupports* aSubject,
     OnRemoteBrowserFrameShown(aSubject);
   } else if (topic.EqualsLiteral("ipc:browser-destroyed")) {
     OnTabParentDestroyed(aSubject);
-  } else if (topic.EqualsLiteral("activity-opened")) {
-    OnActivityOpened(aData);
-  } else if (topic.EqualsLiteral("activity-closed")) {
-    OnActivityClosed(aData);
   } else {
     MOZ_ASSERT(false);
   }
@@ -738,30 +728,6 @@ ParticularProcessPriorityManager::OnTabParentDestroyed(nsISupports* aSubject)
 }
 
 void
-ParticularProcessPriorityManager::OnActivityOpened(const char16_t* aData)
-{
-  uint64_t childID = nsCRT::atoll(NS_ConvertUTF16toUTF8(aData).get());
-
-  if (ChildID() == childID) {
-    LOGP("Marking as activity opener");
-    mIsActivityOpener = true;
-    ResetPriority();
-  }
-}
-
-void
-ParticularProcessPriorityManager::OnActivityClosed(const char16_t* aData)
-{
-  uint64_t childID = nsCRT::atoll(NS_ConvertUTF16toUTF8(aData).get());
-
-  if (ChildID() == childID) {
-    LOGP("Unmarking as activity opener");
-    mIsActivityOpener = false;
-    ResetPriority();
-  }
-}
-
-void
 ParticularProcessPriorityManager::ResetPriority()
 {
   ProcessPriority processPriority = ComputePriority();
@@ -840,8 +806,7 @@ ParticularProcessPriorityManager::ComputePriority()
     return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
   }
 
-  return mIsActivityOpener ? PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE
-                           : PROCESS_PRIORITY_BACKGROUND;
+  return PROCESS_PRIORITY_BACKGROUND;
 }
 
 void

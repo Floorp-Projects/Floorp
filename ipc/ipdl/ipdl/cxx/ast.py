@@ -36,6 +36,9 @@ class Visitor:
     def visitTypeEnum(self, enum):
         pass
 
+    def visitTypeFunction(self, fn):
+        pass
+
     def visitTypeUnion(self, union):
         for t, name in union.components:
             t.accept(self)
@@ -374,6 +377,12 @@ class TypeUnion(Node):
 
     def addComponent(self, type, name):
         self.components.append(Decl(type, name))
+
+class TypeFunction(Node):
+    def __init__(self, params=[ ], ret=Type('void')):
+        '''Anonymous function type std::function<>'''
+        self.params = params
+        self.ret = ret
 
 class Typedef(Node):
     def __init__(self, fromtype, totypename, templateargs=[]):

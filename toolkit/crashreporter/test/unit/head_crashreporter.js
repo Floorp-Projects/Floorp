@@ -169,11 +169,8 @@ function do_content_crash(setup, callback) {
   }
 
   let handleCrash = function() {
-    do_get_profile();
-    makeFakeAppDir().then(() => {
-      let id = getMinidump().leafName.slice(0, -4);
-      return Services.crashmanager.ensureCrashIsPresent(id);
-    }).then(() => {
+    let id = getMinidump().leafName.slice(0, -4);
+    Services.crashmanager.ensureCrashIsPresent(id).then(() => {
       try {
         handleMinidump(callback);
       } catch (x) {
@@ -183,13 +180,16 @@ function do_content_crash(setup, callback) {
     });
   };
 
-  sendCommand("load(\"" + headfile.path.replace(/\\/g, "/") + "\");", () =>
-    sendCommand(setup, () =>
-      sendCommand("load(\"" + tailfile.path.replace(/\\/g, "/") + "\");", () =>
-        do_execute_soon(handleCrash)
+  do_get_profile();
+  makeFakeAppDir().then(() => {
+    sendCommand("load(\"" + headfile.path.replace(/\\/g, "/") + "\");", () =>
+      sendCommand(setup, () =>
+        sendCommand("load(\"" + tailfile.path.replace(/\\/g, "/") + "\");", () =>
+          do_execute_soon(handleCrash)
+        )
       )
-    )
-  );
+    );
+  });
 }
 
 // Import binary APIs via js-ctypes.

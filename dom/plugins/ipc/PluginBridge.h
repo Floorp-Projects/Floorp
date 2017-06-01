@@ -32,6 +32,7 @@ SetupBridge(uint32_t aPluginId, dom::ContentParent* aContentParent,
 nsresult
 FindPluginsForContent(uint32_t aPluginEpoch,
                       nsTArray<PluginTag>* aPlugins,
+                      nsTArray<FakePluginTag>* aFakePlugins,
                       uint32_t* aNewPluginEpoch);
 
 void

@@ -76,6 +76,30 @@ const SELECTED_PROPERTY_SUPPORTED_XUL = new Set([
   "TAB",
 ]);
 
+/**
+ * Common form controls that user can change the value property interactively.
+ */
+const COMMON_FORM_CONTROLS = new Set([
+  "input",
+  "textarea",
+  "select",
+]);
+
+/**
+ * Input elements that do not fire "input" and "change" events when value
+ * property changes.
+ */
+const INPUT_TYPES_NO_EVENT = new Set([
+  "checkbox",
+  "radio",
+  "file",
+  "hidden",
+  "image",
+  "reset",
+  "button",
+  "submit",
+]);
+
 this.interaction = {};
 
 /**
@@ -341,6 +365,32 @@ interaction.uploadFile = function* (el, path) {
 
   el.mozSetFileArray(fs);
 
+  event.change(el);
+};
+
+/**
+ * Sets a form element's value.
+ *
+ * @param {DOMElement} el
+ *     An form element, e.g. input, textarea, etc.
+ * @param {string} value
+ *     The value to be set.
+ *
+ * @throws TypeError
+ *     If |el| is not an supported form element.
+ */
+interaction.setFormControlValue = function* (el, value) {
+  if (!COMMON_FORM_CONTROLS.has(el.localName)) {
+    throw new TypeError("This function is for form elements only");
+  }
+
+  el.value = value;
+
+  if (INPUT_TYPES_NO_EVENT.has(el.type)) {
+    return;
+  }
+
+  event.input(el);
   event.change(el);
 };
 

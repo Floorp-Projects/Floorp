@@ -15,6 +15,8 @@
 </body>
 <script class="testbody" type="application/javascript">
 <![CDATA[
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 SimpleTest.waitForExplicitFinish();
 
 var success = false;
@@ -40,15 +42,17 @@ var testObserver = {
                                         Components.interfaces.nsIFile);
     pendingD.append("Crash Reports");
     pendingD.append("pending");
-    let dumpFile = pendingD.clone();    
+    let dumpFile = pendingD.clone();
     dumpFile.append(id + ".dmp");
     ok(dumpFile.exists(), "minidump exists");
     let extraFile = pendingD.clone();
     extraFile.append(id + ".extra");
     ok(extraFile.exists(), "extra file exists");
-    // cleanup, to be nice
-    dumpFile.remove(false);
-    extraFile.remove(false);
+    Services.crashmanager.ensureCrashIsPresent(id).then(() => {
+      // cleanup, to be nice, this will execute before SimpleTest.finish()
+      dumpFile.remove(false);
+      extraFile.remove(false);
+    });
   },
 
   QueryInterface: function(iid) {
@@ -87,7 +91,9 @@ function onPluginCrashed(aEvent) {
   let env = Components.classes["@mozilla.org/process/environment;1"]
                       .getService(Components.interfaces.nsIEnvironment);
   env.set("MOZ_CRASHREPORTER_NO_REPORT", "1");
-  SimpleTest.finish();
+  Services.crashmanager.ensureCrashIsPresent(aEvent.pluginDumpID).then(() => {
+    SimpleTest.finish();
+  });
 }
 
 function runTests() {
