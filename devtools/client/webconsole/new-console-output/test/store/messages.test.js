@@ -168,9 +168,8 @@ describe("Message reducer:", () => {
     });
 
     it("properly limits number of groups", () => {
-      const { dispatch, getState } = setupStore([]);
-
-      const logLimit = 1000;
+      const logLimit = 100;
+      const { dispatch, getState } = setupStore([], null, {logLimit});
 
       const packet = clonePacket(stubPackets.get("console.log(undefined)"));
       const packetGroup = clonePacket(stubPackets.get("console.group('bar')"));
@@ -196,12 +195,11 @@ describe("Message reducer:", () => {
 
       expect(visibleMessages[1].parameters[0]).toBe(`message-2-a`);
       expect(messages.last().parameters[0]).toBe(`message-${logLimit + 1}-b`);
-    }).timeout(5000);
+    });
 
     it("properly limits number of collapsed groups", () => {
-      const { dispatch, getState } = setupStore([]);
-
-      const logLimit = 1000;
+      const logLimit = 100;
+      const { dispatch, getState } = setupStore([], null, {logLimit});
 
       const packet = clonePacket(stubPackets.get("console.log(undefined)"));
       const packetGroupCollapsed = clonePacket(
@@ -233,7 +231,7 @@ describe("Message reducer:", () => {
       expect(visibleMessages.length).toBe(logLimit);
       const lastVisibleMessage = visibleMessages[visibleMessages.length - 1];
       expect(lastVisibleMessage.parameters[0]).toBe(`group-${logLimit + 1}`);
-    }).timeout(5000);
+    });
 
     it("does not add null messages to the store", () => {
       const { dispatch, getState } = setupStore([]);

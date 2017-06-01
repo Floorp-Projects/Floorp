@@ -22,11 +22,12 @@ const {
 const { reducers } = require("./reducers/index");
 const Services = require("Services");
 
-function configureStore(hud) {
+function configureStore(hud, options = {}) {
+  const logLimit = options.logLimit
+    || Math.max(Services.prefs.getIntPref("devtools.hud.loglimit"), 1);
+
   const initialState = {
-    prefs: new PrefState({
-      logLimit: Math.max(Services.prefs.getIntPref("devtools.hud.loglimit"), 1),
-    }),
+    prefs: new PrefState({ logLimit }),
     filters: new FilterState({
       error: Services.prefs.getBoolPref(PREFS.FILTER.ERROR),
       warn: Services.prefs.getBoolPref(PREFS.FILTER.WARN),
@@ -51,16 +52,21 @@ function configureStore(hud) {
 
 function createRootReducer() {
   return function rootReducer(state, action) {
-    const newFiltersState = reducers.filters(state.filters, action);
-    return Object.assign({}, {
-      filters: newFiltersState,
-      prefs: reducers.prefs(state.prefs, action),
-      ui: reducers.ui(state.ui, action),
-      // specifically pass the updated filters state as an additional argument.
+    // We want to compute the new state for all properties except "messages".
+    const newState = [...Object.entries(reducers)].reduce((res, [key, reducer]) => {
+      if (key !== "messages") {
+        res[key] = reducer(state[key], action);
+      }
+      return res;
+    }, {});
+
+    return Object.assign(newState, {
+      // specifically pass the updated filters and prefs state as additional arguments.
       messages: reducers.messages(
         state.messages,
         action,
-        newFiltersState
+        newState.filters,
+        newState.prefs,
       ),
     });
   };
