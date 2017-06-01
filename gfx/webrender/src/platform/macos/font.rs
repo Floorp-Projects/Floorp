@@ -26,6 +26,10 @@ pub struct FontContext {
     gamma_lut: GammaLut,
 }
 
+// core text is safe to use on multiple threads and non-shareable resources are
+// all hidden inside their font context.
+unsafe impl Send for FontContext {}
+
 pub struct RasterizedGlyph {
     pub width: u32,
     pub height: u32,
@@ -76,6 +80,22 @@ fn get_glyph_metrics(ct_font: &CTFont,
                      subpixel_point: &SubpixelPoint) -> GlyphMetrics {
     let bounds = ct_font.get_bounding_rects_for_glyphs(kCTFontDefaultOrientation, &[glyph]);
 
+    if bounds.origin.x.is_nan() || bounds.origin.y.is_nan() ||
+       bounds.size.width.is_nan() || bounds.size.height.is_nan() {
+        // If an unexpected glyph index is requested, core text will return NaN values
+        // which causes us to do bad thing as the value is cast into an integer and
+        // overflow when expanding the bounds a few lines below.
+        // Instead we are better off returning zero-sized metrics because this special
+        // case is handled by the callers of this method.
+        return GlyphMetrics {
+            rasterized_left: 0,
+            rasterized_width: 0,
+            rasterized_height: 0,
+            rasterized_ascent: 0,
+            rasterized_descent: 0,
+        };
+    }
+
     let (x_offset, y_offset) = subpixel_point.to_f64();
 
     // First round out to pixel boundaries
@@ -125,6 +145,10 @@ impl FontContext {
             ct_fonts: HashMap::new(),
             gamma_lut: GammaLut::new(contrast, gamma, gamma),
         }
+    }
+
+    pub fn has_font(&self, font_key: &FontKey) -> bool {
+        self.cg_fonts.contains_key(font_key)
     }
 
     pub fn add_raw_font(&mut self, font_key: &FontKey, bytes: &[u8], index: u32) {
