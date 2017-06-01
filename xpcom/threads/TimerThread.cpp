@@ -34,7 +34,8 @@ TimerThread::TimerThread() :
   mShutdown(false),
   mWaiting(false),
   mNotified(false),
-  mSleeping(false)
+  mSleeping(false),
+  mAllowedEarlyFiringMicroseconds(0)
 {
 }
 
@@ -407,7 +408,7 @@ TimerThread::Run()
 
   // Half of the amount of microseconds needed to get positive PRIntervalTime.
   // We use this to decide how to round our wait times later
-  int32_t halfMicrosecondsIntervalResolution = usIntervalResolution / 2;
+  mAllowedEarlyFiringMicroseconds = usIntervalResolution / 2;
   bool forceRunNextTimer = false;
 
   while (!mShutdown) {
@@ -490,7 +491,7 @@ TimerThread::Run()
         // is due now or overdue.
         //
         // Note that we can only sleep for integer values of a certain
-        // resolution. We use halfMicrosecondsIntervalResolution, calculated
+        // resolution. We use mAllowedEarlyFiringMicroseconds, calculated
         // before, to do the optimal rounding (i.e., of how to decide what
         // interval is so small we should not wait at all).
         double microseconds = (timeout - now).ToMilliseconds() * 1000;
@@ -507,7 +508,7 @@ TimerThread::Run()
           forceRunNextTimer = true;
         }
 
-        if (microseconds < halfMicrosecondsIntervalResolution) {
+        if (microseconds < mAllowedEarlyFiringMicroseconds) {
           forceRunNextTimer = false;
           goto next; // round down; execute event now
         }
@@ -804,4 +805,10 @@ TimerThread::Observe(nsISupports* /* aSubject */, const char* aTopic,
   }
 
   return NS_OK;
+}
+
+uint32_t
+TimerThread::AllowedEarlyFiringMicroseconds() const
+{
+  return mAllowedEarlyFiringMicroseconds;
 }
