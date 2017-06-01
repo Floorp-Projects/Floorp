@@ -881,6 +881,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         enable_profiler: enable_profiler,
         recorder: recorder,
         blob_image_renderer: Some(Box::new(Moz2dImageRenderer::new())),
+        cache_expiry_frames: 60, // see https://github.com/servo/webrender/pull/1294#issuecomment-304318800
         ..Default::default()
     };
 
@@ -1009,6 +1010,7 @@ pub extern "C" fn wr_api_set_window_parameters(api: &mut WrAPI,
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut WrAPI,
+                                                      color: WrColor,
                                                       epoch: WrEpoch,
                                                       viewport_width: f32,
                                                       viewport_height: f32,
@@ -1017,7 +1019,11 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut WrAPI,
                                                       dl_descriptor: WrBuiltDisplayListDescriptor,
                                                       dl_data: *mut u8,
                                                       dl_size: usize) {
-    let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
+    let color = if color.a == 0.0 {
+        None
+    } else {
+        Some(color.into())
+    };
     // See the documentation of set_display_list in api.rs. I don't think
     // it makes a difference in gecko at the moment(until APZ is figured out)
     // but I suppose it is a good default.
@@ -1029,7 +1035,7 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut WrAPI,
     dl_vec.extend_from_slice(dl_slice);
     let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
 
-    api.set_display_list(Some(root_background_color),
+    api.set_display_list(color,
                          epoch,
                          LayoutSize::new(viewport_width, viewport_height),
                          (pipeline_id, content_size.into(), dl),
@@ -1040,11 +1046,10 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut WrAPI,
 pub unsafe extern "C" fn wr_api_clear_root_display_list(api: &mut WrAPI,
                                                         epoch: WrEpoch,
                                                         pipeline_id: WrPipelineId) {
-    let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
     let preserve_frame_state = true;
     let frame_builder = WebRenderFrameBuilder::new(pipeline_id, WrSize::zero());
 
-    api.set_display_list(Some(root_background_color),
+    api.set_display_list(None,
                          epoch,
                          LayoutSize::new(0.0, 0.0),
                          frame_builder.dl_builder.finalize(),
@@ -1256,16 +1261,19 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     }
 
     let transform = unsafe { transform.as_ref() };
-    let transform_binding = match transform {
-        Some(transform) => PropertyBinding::Value(transform.into()),
-        None => PropertyBinding::Binding(PropertyBindingKey::new(animation_id)),
+    let transform_binding = match animation_id {
+        0 => match transform {
+            Some(transform) => Some(PropertyBinding::Value(transform.into())),
+            None => None,
+        },
+        _ => Some(PropertyBinding::Binding(PropertyBindingKey::new(animation_id))),
     };
 
     state.frame_builder
          .dl_builder
          .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                 bounds,
-                                Some(transform_binding),
+                                transform_binding,
                                 TransformStyle::Flat,
                                 None,
                                 mix_blend_mode,
@@ -1378,7 +1386,8 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
                                               image_key_0: WrImageKey,
                                               image_key_1: WrImageKey,
                                               image_key_2: WrImageKey,
-                                              color_space: WrYuvColorSpace) {
+                                              color_space: WrYuvColorSpace,
+                                              image_rendering: WrImageRendering) {
     assert!(unsafe { is_in_main_thread() });
 
     state.frame_builder
@@ -1386,7 +1395,8 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
          .push_yuv_image(bounds.into(),
                          clip.into(),
                          YuvData::PlanarYCbCr(image_key_0, image_key_1, image_key_2),
-                         color_space);
+                         color_space,
+                         image_rendering);
 }
 
 /// Push a 2 planar NV12 image.
@@ -1396,7 +1406,8 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
                                             clip: WrClipRegionToken,
                                             image_key_0: WrImageKey,
                                             image_key_1: WrImageKey,
-                                            color_space: WrYuvColorSpace) {
+                                            color_space: WrYuvColorSpace,
+                                            image_rendering: WrImageRendering) {
     assert!(unsafe { is_in_main_thread() });
 
     state.frame_builder
@@ -1404,7 +1415,8 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
          .push_yuv_image(bounds.into(),
                          clip.into(),
                          YuvData::NV12(image_key_0, image_key_1),
-                         color_space);
+                         color_space,
+                         image_rendering);
 }
 
 /// Push a yuv interleaved image.
@@ -1413,7 +1425,8 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
                                                    bounds: WrRect,
                                                    clip: WrClipRegionToken,
                                                    image_key_0: WrImageKey,
-                                                   color_space: WrYuvColorSpace) {
+                                                   color_space: WrYuvColorSpace,
+                                                   image_rendering: WrImageRendering) {
     assert!(unsafe { is_in_main_thread() });
 
     state.frame_builder
@@ -1421,7 +1434,8 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
          .push_yuv_image(bounds.into(),
                          clip.into(),
                          YuvData::InterleavedYCbCr(image_key_0),
-                         color_space);
+                         color_space,
+                         image_rendering);
 }
 
 #[no_mangle]

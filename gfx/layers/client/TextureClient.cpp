@@ -134,8 +134,7 @@ private:
     AddRef();
   }
   void ReleaseIPDLReference() {
-    MOZ_ASSERT(mIPCOpen == true);
-    mIPCOpen = false;
+    MOZ_ASSERT(mIPCOpen == false);
     Release();
   }
 
@@ -253,6 +252,8 @@ void
 TextureChild::ActorDestroy(ActorDestroyReason why)
 {
   PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS);
+  MOZ_ASSERT(mIPCOpen);
+  mIPCOpen = false;
 
   if (mTextureData) {
     DestroyTextureData(mTextureData, GetAllocator(), mOwnsTextureData, mMainThreadOnly);

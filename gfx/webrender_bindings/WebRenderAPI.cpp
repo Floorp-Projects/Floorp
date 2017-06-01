@@ -216,6 +216,7 @@ WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
                                  size_t dl_size)
 {
     wr_api_set_root_display_list(mWrApi,
+                                 ToWrColor(aBgColor),
                                  aEpoch,
                                  aViewportSize.width, aViewportSize.height,
                                  pipeline_id,
@@ -569,16 +570,6 @@ DisplayListBuilder::PushStackingContext(const WrRect& aBounds,
 }
 
 void
-DisplayListBuilder::PushStackingContext(const WrRect& aBounds,
-                                        const float aOpacity,
-                                        const gfx::Matrix4x4& aTransform,
-                                        const WrMixBlendMode& aMixBlendMode)
-{
-  PushStackingContext(aBounds, 0, &aOpacity,
-                      &aTransform, aMixBlendMode);
-}
-
-void
 DisplayListBuilder::PopStackingContext()
 {
   WRDL_LOG("PopStackingContext\n");
@@ -703,7 +694,8 @@ DisplayListBuilder::PushYCbCrPlanarImage(const WrRect& aBounds,
                                          wr::ImageKey aImageChannel0,
                                          wr::ImageKey aImageChannel1,
                                          wr::ImageKey aImageChannel2,
-                                         WrYuvColorSpace aColorSpace)
+                                         WrYuvColorSpace aColorSpace,
+                                         wr::ImageRendering aRendering)
 {
   wr_dp_push_yuv_planar_image(mWrState,
                               aBounds,
@@ -711,7 +703,8 @@ DisplayListBuilder::PushYCbCrPlanarImage(const WrRect& aBounds,
                               aImageChannel0,
                               aImageChannel1,
                               aImageChannel2,
-                              aColorSpace);
+                              aColorSpace,
+                              aRendering);
 }
 
 void
@@ -719,27 +712,31 @@ DisplayListBuilder::PushNV12Image(const WrRect& aBounds,
                                   const WrClipRegionToken aClip,
                                   wr::ImageKey aImageChannel0,
                                   wr::ImageKey aImageChannel1,
-                                  WrYuvColorSpace aColorSpace)
+                                  WrYuvColorSpace aColorSpace,
+                                  wr::ImageRendering aRendering)
 {
   wr_dp_push_yuv_NV12_image(mWrState,
                             aBounds,
                             aClip,
                             aImageChannel0,
                             aImageChannel1,
-                            aColorSpace);
+                            aColorSpace,
+                            aRendering);
 }
 
 void
 DisplayListBuilder::PushYCbCrInterleavedImage(const WrRect& aBounds,
                                               const WrClipRegionToken aClip,
                                               wr::ImageKey aImageChannel0,
-                                              WrYuvColorSpace aColorSpace)
+                                              WrYuvColorSpace aColorSpace,
+                                              wr::ImageRendering aRendering)
 {
   wr_dp_push_yuv_interleaved_image(mWrState,
                                    aBounds,
                                    aClip,
                                    aImageChannel0,
-                                   aColorSpace);
+                                   aColorSpace,
+                                   aRendering);
 }
 
 void

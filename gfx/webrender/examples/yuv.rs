@@ -16,7 +16,7 @@ use std::env;
 use std::path::PathBuf;
 use webrender_traits::{ColorF, Epoch};
 use webrender_traits::{DeviceIntPoint, DeviceUintSize, LayoutPoint, LayoutRect, LayoutSize};
-use webrender_traits::{ImageData, ImageDescriptor, ImageFormat};
+use webrender_traits::{ImageData, ImageDescriptor, ImageFormat, ImageRendering};
 use webrender_traits::{PipelineId, TransformStyle};
 use webrender_traits::{YuvColorSpace, YuvData};
 
@@ -282,6 +282,7 @@ fn main() {
         clip,
         YuvData::NV12(yuv_chanel1, yuv_chanel2),
         YuvColorSpace::Rec601,
+        ImageRendering::Auto,
     );
 
     let clip = builder.push_clip_region(&bounds, vec![], None);
@@ -290,6 +291,7 @@ fn main() {
         clip,
         YuvData::PlanarYCbCr(yuv_chanel1, yuv_chanel2_1, yuv_chanel3),
         YuvColorSpace::Rec601,
+        ImageRendering::Auto,
     );
 
     builder.pop_stacking_context();
