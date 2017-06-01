@@ -55,15 +55,6 @@ public:
   void ClearAllTimeouts();
   uint32_t GetTimeoutId(mozilla::dom::Timeout::Reason aReason);
 
-  // Apply back pressure to the window if the TabGroup ThrottledEventQueue
-  // exists and has too many runnables waiting to run.  For example, increase
-  // the minimum timer delay, etc.
-  void MaybeApplyBackPressure();
-
-  // Check the current ThrottledEventQueue depth and update the back pressure
-  // state.  If the queue has drained back pressure may be canceled.
-  void CancelOrUpdateBackPressure(nsGlobalWindow* aWindow);
-
   // When timers are being throttled and we reduce the thottle delay we must
   // reschedule.  The amount of the old throttle delay must be provided in
   // order to bound how many timers must be examined.
@@ -235,8 +226,6 @@ private:
 
    // The current idle request callback timeout handle
   uint32_t                    mIdleCallbackTimeoutCounter;
-
-  int32_t                     mBackPressureDelayMS;
 
   nsCOMPtr<nsITimer>          mThrottleTrackingTimeoutsTimer;
   bool                        mThrottleTrackingTimeouts;
