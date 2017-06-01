@@ -238,12 +238,46 @@ function testWebSocket5() {
 
     gTestElement.textContent += "\ntestWebSocket5() completed";
 
-    SimpleTest.executeSoon(SimpleTest.finish);
+    SimpleTest.executeSoon(testWebSocket6);
   };
   ws.onerror = function(e) {
     ok(false, "[5] onerror() should not have been called!");
     gTestElement.textContent += "\nonerror() should not have been called!";
     SimpleTest.executeSoon(SimpleTest.finish);
+  };
+}
+
+function testWebSocket6() {
+  gTestElement.textContent = "Running testWebSocket6()";
+
+  var msgReceived = false;
+  ws = new WebSocket(kUrl, "test");
+  ws.onopen = function(e) {
+    gTestElement.textContent += "\nSending ©";
+    ws.send("©");
+    gTestElement.textContent += " end";
+    ws.send("end");
+  };
+  ws.onclose = function(e) {
+    ok(msgReceived, "[6] Number of received messages");
+    ok(e.wasClean, "[6] Connection closed cleanly");
+
+    SimpleTest.executeSoon(SimpleTest.finish);
+  };
+  ws.onerror = function(e) {
+    ok(false, "[6] onerror() should not have been called!");
+    gTestElement.textContent += "\nonerror() should not have been called!";
+    SimpleTest.executeSoon(SimpleTest.finish);
+  };
+
+  ws.onmessage = function(e) {
+    if (msgReceived) {
+      is(e.data, "end", "[6] Received message");
+    } else {
+      gTestElement.textContent += "\nReceived: " + e.data;
+      is(e.data, "©", "[6] Received message");
+      msgReceived = true;
+    }
   };
 }
 

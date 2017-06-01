@@ -51,7 +51,6 @@ protected:
   // weak link, because the pres shell owns us
   nsIPresShell* MOZ_NON_OWNING_REF mPresShell;
   nsIFrame*                       mRootFrame;
-  PLDHashTable                    mPlaceholderMap;
   UndisplayedMap*                 mUndisplayedMap;
   UndisplayedMap*                 mDisplayContentsMap;
   bool                            mIsDestroyingFrames;  // The frame manager is destroying some frame(s).

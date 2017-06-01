@@ -310,17 +310,13 @@ private:
   }
 
   /**
-   * Dispatch the specified memory pressure event unless a high-priority
-   * process is present. If a high-priority process is present then it's likely
-   * responding to an urgent event (an incoming call or message for example) so
-   * avoid wasting CPU time responding to low-memory events.
+   * Dispatch the specified memory pressure event. If a high-priority process is
+   * present then it's likely responding to an urgent event (an incoming call or
+   * message for example) so avoid wasting CPU time responding to low-memory
+   * events.
    */
   nsresult DispatchMemoryPressure(MemoryPressureState state)
   {
-    if (ProcessPriorityManager::AnyProcessHasHighPriority()) {
-      return NS_OK;
-    }
-
     return NS_DispatchMemoryPressure(state);
   }
 
