@@ -10,18 +10,10 @@
  * for tips on how to do that.
  */
 const EXPECTED_REFLOWS = [
-  [
-    "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml",
-  ],
+  /**
+   * Nothing here! Please don't add anything new!
+   */
 ];
-
-if (gMultiProcessBrowser) {
-  EXPECTED_REFLOWS.push(
-    [
-      "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml",
-    ],
-  );
-}
 
 /*
  * This test ensures that there are no unexpected
@@ -68,4 +60,5 @@ add_task(async function() {
         false, e => e.propertyName === "max-width");
     await switchDone;
   }, EXPECTED_REFLOWS, window, origTab);
+  is(EXPECTED_REFLOWS.length, 0, "No reflows are expected when closing a tab");
 });
