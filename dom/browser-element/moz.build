@@ -47,10 +47,8 @@ LOCAL_INCLUDES += [
 MOCHITEST_MANIFESTS += [
     'mochitest/mochitest-oop.ini',
     'mochitest/mochitest.ini',
-    'mochitest/priority/mochitest.ini',
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [
     'mochitest/chrome.ini',
-    'mochitest/priority/chrome.ini',
 ]

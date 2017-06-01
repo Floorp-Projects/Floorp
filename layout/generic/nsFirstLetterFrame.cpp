@@ -315,8 +315,7 @@ nsFirstLetterFrame::CreateContinuationForFloatingParent(nsPresContext* aPresCont
   *aContinuation = nullptr;
 
   nsIPresShell* presShell = aPresContext->PresShell();
-  nsPlaceholderFrame* placeholderFrame =
-    presShell->FrameManager()->GetPlaceholderFrameFor(this);
+  nsPlaceholderFrame* placeholderFrame = GetPlaceholderFrame();
   nsContainerFrame* parent = placeholderFrame->GetParent();
 
   nsIFrame* continuation = presShell->FrameConstructor()->

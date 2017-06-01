@@ -66,6 +66,8 @@ EXTRA_PP_COMPONENTS += [
 EXTRA_COMPONENTS += [
     'nsBrowserContentHandler.js',
     'nsBrowserGlue.js',
+    'tests/startupRecorder.js',
+    'tests/testComponents.manifest',
 ]
 
 EXTRA_JS_MODULES += [
