@@ -981,7 +981,7 @@ fuzzy-if(Android,11,17) == 413361-1.html 413361-1-ref.html # bug 1128229
 == 414123.xhtml 414123-ref.xhtml
 == 414638.html 414638-ref.html
 == 414851-1.html 414851-1-ref.html
-fails-if(styloVsGecko||stylo) == 416106-1.xhtml 416106-1-ref.xhtml
+== 416106-1.xhtml 416106-1-ref.xhtml
 == 416752-1.html 416752-1-ref.html
 == 417178-1.html 417178-1-ref.html
 == 417246-1.html 417246-1-ref.html
