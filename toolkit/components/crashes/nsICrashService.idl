@@ -19,7 +19,7 @@ interface nsICrashService : nsISupports
    *
    * @return {Promise} A promise that resolves after the crash has been stored
    */
-  void addCrash(in long processType, in long crashType, in AString id);
+  nsISupports addCrash(in long processType, in long crashType, in AString id);
 
   const long PROCESS_TYPE_MAIN = 0;
   const long PROCESS_TYPE_CONTENT = 1;

@@ -3809,6 +3809,9 @@ nsCSSFrameConstructor::FindObjectData(Element* aElement,
     SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_IMAGE,
                       NS_NewImageFrame),
     SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_DOCUMENT,
+                      NS_NewSubDocumentFrame),
+    // Fake plugin handlers load as documents
+    SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_FAKE_PLUGIN,
                       NS_NewSubDocumentFrame)
     // Nothing for TYPE_NULL so we'll construct frames by display there
   };

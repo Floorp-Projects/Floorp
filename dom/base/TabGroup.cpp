@@ -100,8 +100,7 @@ TabGroup::GetFromActor(TabChild* aTabChild)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  ContentChild* cc = ContentChild::GetSingleton();
-  nsCOMPtr<nsIEventTarget> target = cc->GetActorEventTarget(aTabChild);
+  nsCOMPtr<nsIEventTarget> target = aTabChild->Manager()->GetEventTargetFor(aTabChild);
   if (!target) {
     return nullptr;
   }

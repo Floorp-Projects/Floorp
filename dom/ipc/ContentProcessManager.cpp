@@ -47,10 +47,14 @@ ContentProcessManager::AddContentProcess(ContentParent* aChildCp,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aChildCp);
 
-  ContentProcessInfo info;
-  info.mCp = aChildCp;
+  ContentProcessInfo& info = mContentParentMap[aChildCp->ChildID()];
+  if (!info.mCp) {
+    info.mCp = aChildCp;
+  } else {
+    MOZ_ASSERT(info.mCp == aChildCp);
+    MOZ_ASSERT_IF(!!info.mParentCpId, info.mParentCpId == aParentCpId);
+  }
   info.mParentCpId = aParentCpId;
-  mContentParentMap[aChildCp->ChildID()] = info;
 }
 
 void
@@ -135,6 +139,7 @@ ContentProcessManager::GetAllChildProcessById(const ContentParentId& aParentCpId
 
 bool
 ContentProcessManager::RegisterRemoteFrame(const TabId& aTabId,
+                                           const ContentParentId& aOpenerCpId,
                                            const TabId& aOpenerTabId,
                                            const IPCTabContext& aContext,
                                            const ContentParentId& aChildCpId)
@@ -158,6 +163,7 @@ ContentProcessManager::RegisterRemoteFrame(const TabId& aTabId,
       return false;
     }
 
+    info.mOpenerCpId = remoteFrameIter->second.mOpenerCpId;
     info.mOpenerTabId = remoteFrameIter->second.mOpenerTabId;
     info.mContext = remoteFrameIter->second.mContext;
   }
@@ -169,6 +175,7 @@ ContentProcessManager::RegisterRemoteFrame(const TabId& aTabId,
                                tc.GetInvalidReason()).get());
       return false;
     }
+    info.mOpenerCpId = aOpenerCpId;
     info.mOpenerTabId = aOpenerTabId;
     info.mContext = tc.GetTabContext();
   }
@@ -244,6 +251,7 @@ ContentProcessManager::GetTabContextByContentProcess(const ContentParentId& aChi
 bool
 ContentProcessManager::GetRemoteFrameOpenerTabId(const ContentParentId& aChildCpId,
                                                  const TabId& aChildTabId,
+                                                 /*out*/ContentParentId* aOpenerCpId,
                                                  /*out*/TabId* aOpenerTabId)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -259,6 +267,7 @@ ContentProcessManager::GetRemoteFrameOpenerTabId(const ContentParentId& aChildCp
     return false;
   }
 
+  *aOpenerCpId = remoteFrameIter->second.mOpenerCpId;
   *aOpenerTabId = remoteFrameIter->second.mOpenerTabId;
 
   return true;
@@ -310,8 +319,7 @@ ContentProcessManager::GetTopLevelTabParentByProcessAndTabId(const ContentParent
     currentTabId = openerTabId;
 
     // Get the ContentParentId and TabId on upper level
-    if (!GetParentProcessId(currentCpId, &parentCpId) ||
-        !GetRemoteFrameOpenerTabId(currentCpId, currentTabId, &openerTabId)) {
+    if (!GetRemoteFrameOpenerTabId(currentCpId, currentTabId, &parentCpId, &openerTabId)) {
       return nullptr;
     }
   } while (parentCpId);

@@ -8,17 +8,6 @@
 
 #include "nsIWordBreaker.h"
 
-typedef enum {
-  kWbClassSpace = 0,
-  kWbClassAlphaLetter,
-  kWbClassPunct,
-  kWbClassHanLetter,
-  kWbClassKatakanaLetter,
-  kWbClassHiraganaLetter,
-  kWbClassHWKatakanaLetter,
-  kWbClassThaiLetter
-} wb_class;
-
 class nsSampleWordBreaker : public nsIWordBreaker
 {
   NS_DECL_ISUPPORTS
@@ -34,8 +23,6 @@ public:
   int32_t NextWord(const char16_t* aText, uint32_t aLen, uint32_t aPos) override;
 
 protected:
-  uint8_t  GetClass(char16_t aChar);
-
   virtual ~nsSampleWordBreaker();
 };
 
