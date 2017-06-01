@@ -196,7 +196,7 @@ NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
   nsresult rv;
   nsCOMPtr<nsIRunnable> event(aEvent);
 #ifdef MOZILLA_INTERNAL_API
-  nsIThread* thread = NS_GetCurrentThread();
+  nsIEventTarget* thread = GetCurrentThreadEventTarget();
   if (!thread) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -262,7 +262,7 @@ NS_DelayedDispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent, uint32
 {
   nsCOMPtr<nsIRunnable> event(aEvent);
 #ifdef MOZILLA_INTERNAL_API
-  nsIThread* thread = NS_GetCurrentThread();
+  nsIEventTarget* thread = GetCurrentThreadEventTarget();
   if (!thread) {
     return NS_ERROR_UNEXPECTED;
   }

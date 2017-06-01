@@ -26,7 +26,7 @@ public:
     , mConsumerTarget(aConsumerTarget)
   {
     if (!mConsumerTarget) {
-      mConsumerTarget = NS_GetCurrentThread();
+      mConsumerTarget = GetCurrentThreadEventTarget();
     }
   }
 

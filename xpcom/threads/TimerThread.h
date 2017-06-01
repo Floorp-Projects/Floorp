@@ -53,7 +53,7 @@ public:
 
   bool IsOnTimerThread() const
   {
-    return mThread == NS_GetCurrentThread();
+    return mThread->SerialEventTarget()->IsOnCurrentThread();
   }
 
   uint32_t
