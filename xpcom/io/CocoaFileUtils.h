@@ -28,7 +28,6 @@ void     AddQuarantineMetadataToFile(const CFStringRef filePath,
                                      const CFURLRef sourceURL,
                                      const CFURLRef referrerURL,
                                      const bool isFromWeb);
-CFURLRef GetTemporaryFolderCFURLRef();
 
 } // namespace CocoaFileUtils
 
