@@ -16,28 +16,6 @@ add_task(async function test() {
   is(document.getElementById("context_closeTab").disabled, false, "Close Tab is enabled");
   is(document.getElementById("context_reloadAllTabs").disabled, false, "Reload All Tabs is enabled");
 
-
-  if (gSync.sendTabToDeviceEnabled) {
-    const origIsSendableURI = gSync.isSendableURI;
-    gSync.isSendableURI = () => true;
-    // Check the send tab to device menu item
-    await ensureSyncReady();
-    const oldGetter = setupRemoteClientsFixture(remoteClientsFixture);
-    await updateTabContextMenu(origTab, async function() {
-      await openMenuItemSubmenu("context_sendTabToDevice");
-    });
-    is(document.getElementById("context_sendTabToDevice").hidden, false, "Send tab to device is shown");
-    let targets = document.getElementById("context_sendTabToDevicePopupMenu").childNodes;
-    is(targets[0].getAttribute("label"), "Foo", "Foo target is present");
-    is(targets[1].getAttribute("label"), "Bar", "Bar target is present");
-    is(targets[3].getAttribute("label"), "All Devices", "All Devices target is present");
-    gSync.isSendableURI = () => false;
-    updateTabContextMenu(origTab);
-    is(document.getElementById("context_sendTabToDevice").hidden, true, "Send tab to device is hidden");
-    restoreRemoteClients(oldGetter);
-    gSync.isSendableURI = origIsSendableURI;
-  }
-
   // Hide the original tab.
   gBrowser.selectedTab = testTab;
   gBrowser.showOnlyTheseTabs([testTab]);
@@ -76,11 +54,4 @@ add_task(async function test() {
   gBrowser.removeTab(testTab);
   gBrowser.removeTab(pinned);
 });
-
-function ensureSyncReady() {
-  let service = Cc["@mozilla.org/weave/service;1"]
-                  .getService(Components.interfaces.nsISupports)
-                  .wrappedJSObject;
-  return service.whenLoaded();
-}
 
