@@ -15,7 +15,7 @@ function test() {
   tab2 = BrowserTestUtils.addTab(gBrowser, "about:blank", {skipAnimation: true});
 
   EventUtils.synthesizeMouseAtCenter(tab1, {});
-  executeSoon(step2);
+  setTimeout(step2, 0);
 }
 
 function step2() {
@@ -23,7 +23,7 @@ function step2() {
   isnot(document.activeElement, tab1, "1st click on tab1 does not activate tab");
 
   EventUtils.synthesizeMouseAtCenter(tab1, {});
-  executeSoon(step3);
+  setTimeout(step3, 0);
 }
 
 function step3() {
@@ -37,7 +37,7 @@ function step3() {
   is(document.activeElement, tab1, "tab key to selected tab1 activates tab");
 
   EventUtils.synthesizeMouseAtCenter(tab1, {});
-  executeSoon(step4);
+  setTimeout(step4, 0);
 }
 
 function step4() {
@@ -60,7 +60,7 @@ function step5() {
   gBrowser.selectedBrowser.focus();
 
   EventUtils.synthesizeMouseAtCenter(tab2, {button: 1, type: "mousedown"});
-  executeSoon(step6);
+  setTimeout(step6, 0);
 }
 
 function step6() {
