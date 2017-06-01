@@ -86,7 +86,7 @@ public:
     , mActor(aActor)
     , mTask(aTask)
     , mPath(aPath)
-    , mBackgroundEventTarget(NS_GetCurrentThread())
+    , mBackgroundEventTarget(GetCurrentThreadEventTarget())
   {
     AssertIsInMainProcess();
     AssertIsOnBackgroundThread();

@@ -649,9 +649,9 @@ private:
     MOZ_DIAGNOSTIC_ASSERT(!mDBDir);
     MOZ_DIAGNOSTIC_ASSERT(!mConn);
 
-    MOZ_DIAGNOSTIC_ASSERT(!mTargetThread);
-    mTargetThread = NS_GetCurrentThread();
-    MOZ_DIAGNOSTIC_ASSERT(mTargetThread);
+    MOZ_DIAGNOSTIC_ASSERT(!mTarget);
+    mTarget = GetCurrentThreadSerialEventTarget();
+    MOZ_DIAGNOSTIC_ASSERT(mTarget);
 
     // We should be pre-initialized to expect one async completion.  This is
     // the "manual" completion we call at the end of this method in all
@@ -694,7 +694,7 @@ private:
   void
   OnAsyncCopyComplete(nsresult aRv)
   {
-    MOZ_ASSERT(mTargetThread == NS_GetCurrentThread());
+    MOZ_ASSERT(mTarget->IsOnCurrentThread());
     MOZ_DIAGNOSTIC_ASSERT(mConn);
     MOZ_DIAGNOSTIC_ASSERT(mResolver);
     MOZ_DIAGNOSTIC_ASSERT(mExpectedAsyncCopyCompletions > 0);
@@ -841,7 +841,7 @@ private:
   StartStreamCopy(const QuotaInfo& aQuotaInfo, Entry& aEntry,
                   StreamId aStreamId, uint32_t* aCopyCountOut)
   {
-    MOZ_ASSERT(mTargetThread == NS_GetCurrentThread());
+    MOZ_ASSERT(mTarget->IsOnCurrentThread());
     MOZ_DIAGNOSTIC_ASSERT(aCopyCountOut);
 
     if (IsCanceled()) {
@@ -914,13 +914,13 @@ private:
     nsCOMPtr<nsIRunnable> runnable = NewNonOwningRunnableMethod<nsresult>(
       this, &CachePutAllAction::OnAsyncCopyComplete, aRv);
     MOZ_ALWAYS_SUCCEEDS(
-      mTargetThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL));
+      mTarget->Dispatch(runnable.forget(), nsIThread::DISPATCH_NORMAL));
   }
 
   void
   DoResolve(nsresult aRv)
   {
-    MOZ_ASSERT(mTargetThread == NS_GetCurrentThread());
+    MOZ_ASSERT(mTarget->IsOnCurrentThread());
 
     // DoResolve() must not be called until all async copying has completed.
 #ifdef DEBUG
@@ -941,7 +941,7 @@ private:
     // Drop our ref to the target thread as we are done with this thread.
     // Also makes our thread assertions catch any incorrect method calls
     // after resolve.
-    mTargetThread = nullptr;
+    mTarget = nullptr;
 
     // Make sure to de-ref the resolver per the Action API contract.
     RefPtr<Action::Resolver> resolver;
@@ -963,7 +963,7 @@ private:
   RefPtr<Resolver> mResolver;
   nsCOMPtr<nsIFile> mDBDir;
   nsCOMPtr<mozIStorageConnection> mConn;
-  nsCOMPtr<nsIThread> mTargetThread;
+  nsCOMPtr<nsISerialEventTarget> mTarget;
   nsresult mAsyncResult;
   nsTArray<nsID> mBodyIdWrittenList;
 
@@ -1783,8 +1783,8 @@ Manager::Init(Manager* aOldManager)
   // per Manager now, this lets us cleanly call Factory::Remove() once the
   // Context goes away.
   RefPtr<Action> setupAction = new SetupAction();
-  RefPtr<Context> ref = Context::Create(this, mIOThread, setupAction,
-                                          oldContext);
+  RefPtr<Context> ref = Context::Create(this, mIOThread->SerialEventTarget(), setupAction,
+                                        oldContext);
   mContext = ref;
 }
 

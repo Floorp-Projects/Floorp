@@ -54,7 +54,7 @@ using mozilla::dom::quota::PersistenceType;
 class Context::Data final : public Action::Data
 {
 public:
-  explicit Data(nsIThread* aTarget)
+  explicit Data(nsISerialEventTarget* aTarget)
     : mTarget(aTarget)
   {
     MOZ_DIAGNOSTIC_ASSERT(mTarget);
@@ -63,14 +63,14 @@ public:
   virtual mozIStorageConnection*
   GetConnection() const override
   {
-    MOZ_ASSERT(mTarget == NS_GetCurrentThread());
+    MOZ_ASSERT(mTarget->IsOnCurrentThread());
     return mConnection;
   }
 
   virtual void
   SetConnection(mozIStorageConnection* aConn) override
   {
-    MOZ_ASSERT(mTarget == NS_GetCurrentThread());
+    MOZ_ASSERT(mTarget->IsOnCurrentThread());
     MOZ_DIAGNOSTIC_ASSERT(!mConnection);
     mConnection = aConn;
     MOZ_DIAGNOSTIC_ASSERT(mConnection);
@@ -83,10 +83,10 @@ private:
     // Context code should guarantee that we are destroyed on the target
     // thread once the connection is initialized.  If we're not, then
     // QuotaManager might race and try to clear the origin out from under us.
-    MOZ_ASSERT_IF(mConnection, mTarget == NS_GetCurrentThread());
+    MOZ_ASSERT_IF(mConnection, mTarget->IsOnCurrentThread());
   }
 
-  nsCOMPtr<nsIThread> mTarget;
+  nsCOMPtr<nsISerialEventTarget> mTarget;
   nsCOMPtr<mozIStorageConnection> mConnection;
 
   // Threadsafe counting because we're created on the PBackground thread
@@ -104,7 +104,7 @@ public:
   QuotaInitRunnable(Context* aContext,
                     Manager* aManager,
                     Data* aData,
-                    nsIThread* aTarget,
+                    nsISerialEventTarget* aTarget,
                     Action* aInitAction)
     : mContext(aContext)
     , mThreadsafeHandle(aContext->CreateThreadsafeHandle())
@@ -112,7 +112,7 @@ public:
     , mData(aData)
     , mTarget(aTarget)
     , mInitAction(aInitAction)
-    , mInitiatingThread(NS_GetCurrentThread())
+    , mInitiatingEventTarget(GetCurrentThreadEventTarget())
     , mResult(NS_OK)
     , mState(STATE_INIT)
     , mCanceled(false)
@@ -121,7 +121,7 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(mManager);
     MOZ_DIAGNOSTIC_ASSERT(mData);
     MOZ_DIAGNOSTIC_ASSERT(mTarget);
-    MOZ_DIAGNOSTIC_ASSERT(mInitiatingThread);
+    MOZ_DIAGNOSTIC_ASSERT(mInitiatingEventTarget);
     MOZ_DIAGNOSTIC_ASSERT(mInitAction);
   }
 
@@ -215,7 +215,7 @@ private:
 
     mState = STATE_COMPLETING;
     MOZ_ALWAYS_SUCCEEDS(
-      mInitiatingThread->Dispatch(this, nsIThread::DISPATCH_NORMAL));
+      mInitiatingEventTarget->Dispatch(this, nsIThread::DISPATCH_NORMAL));
   }
 
   void Clear()
@@ -231,9 +231,9 @@ private:
   RefPtr<ThreadsafeHandle> mThreadsafeHandle;
   RefPtr<Manager> mManager;
   RefPtr<Data> mData;
-  nsCOMPtr<nsIThread> mTarget;
+  nsCOMPtr<nsISerialEventTarget> mTarget;
   RefPtr<Action> mInitAction;
-  nsCOMPtr<nsIThread> mInitiatingThread;
+  nsCOMPtr<nsIEventTarget> mInitiatingEventTarget;
   nsresult mResult;
   QuotaInfo mQuotaInfo;
   RefPtr<DirectoryLock> mDirectoryLock;
@@ -384,7 +384,7 @@ Context::QuotaInitRunnable::Run()
 
       mState = STATE_CREATE_QUOTA_MANAGER;
       MOZ_ALWAYS_SUCCEEDS(
-        mInitiatingThread->Dispatch(this, nsIThread::DISPATCH_NORMAL));
+        mInitiatingEventTarget->Dispatch(this, nsIThread::DISPATCH_NORMAL));
       break;
     }
     // ----------------------------------
@@ -450,7 +450,7 @@ Context::QuotaInitRunnable::Run()
     // -------------------
     case STATE_RUN_ON_TARGET:
     {
-      MOZ_ASSERT(NS_GetCurrentThread() == mTarget);
+      MOZ_ASSERT(mTarget->IsOnCurrentThread());
 
       mState = STATE_RUNNING;
 
@@ -506,14 +506,14 @@ class Context::ActionRunnable final : public nsIRunnable
                                     , public Context::Activity
 {
 public:
-  ActionRunnable(Context* aContext, Data* aData, nsIEventTarget* aTarget,
+  ActionRunnable(Context* aContext, Data* aData, nsISerialEventTarget* aTarget,
                  Action* aAction, const QuotaInfo& aQuotaInfo)
     : mContext(aContext)
     , mData(aData)
     , mTarget(aTarget)
     , mAction(aAction)
     , mQuotaInfo(aQuotaInfo)
-    , mInitiatingThread(NS_GetCurrentThread())
+    , mInitiatingThread(GetCurrentThreadEventTarget())
     , mState(STATE_INIT)
     , mResult(NS_OK)
     , mExecutingRunOnTarget(false)
@@ -556,7 +556,7 @@ public:
 
   virtual void Resolve(nsresult aRv) override
   {
-    MOZ_ASSERT(mTarget == NS_GetCurrentThread());
+    MOZ_ASSERT(mTarget->IsOnCurrentThread());
     MOZ_DIAGNOSTIC_ASSERT(mState == STATE_RUNNING);
 
     mResult = aRv;
@@ -610,10 +610,10 @@ private:
 
   RefPtr<Context> mContext;
   RefPtr<Data> mData;
-  nsCOMPtr<nsIEventTarget> mTarget;
+  nsCOMPtr<nsISerialEventTarget> mTarget;
   RefPtr<Action> mAction;
   const QuotaInfo mQuotaInfo;
-  nsCOMPtr<nsIThread> mInitiatingThread;
+  nsCOMPtr<nsIEventTarget> mInitiatingThread;
   State mState;
   nsresult mResult;
 
@@ -667,7 +667,7 @@ Context::ActionRunnable::Run()
     // ----------------------
     case STATE_RUN_ON_TARGET:
     {
-      MOZ_ASSERT(NS_GetCurrentThread() == mTarget);
+      MOZ_ASSERT(mTarget->IsOnCurrentThread());
       MOZ_DIAGNOSTIC_ASSERT(!mExecutingRunOnTarget);
 
       // Note that we are calling RunOnTarget().  This lets us detect
@@ -694,7 +694,7 @@ Context::ActionRunnable::Run()
     // -----------------
     case STATE_RESOLVING:
     {
-      MOZ_ASSERT(NS_GetCurrentThread() == mTarget);
+      MOZ_ASSERT(mTarget->IsOnCurrentThread());
       // The call to Action::RunOnTarget() must have returned now if we
       // are running on the target thread again.  We may now proceed
       // with completion.
@@ -729,7 +729,7 @@ Context::ActionRunnable::Run()
 void
 Context::ThreadsafeHandle::AllowToClose()
 {
-  if (mOwningThread == NS_GetCurrentThread()) {
+  if (mOwningEventTarget->IsOnCurrentThread()) {
     AllowToCloseOnOwningThread();
     return;
   }
@@ -739,13 +739,13 @@ Context::ThreadsafeHandle::AllowToClose()
   nsCOMPtr<nsIRunnable> runnable =
     NewRunnableMethod(this, &ThreadsafeHandle::AllowToCloseOnOwningThread);
   MOZ_ALWAYS_SUCCEEDS(
-    mOwningThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL));
+    mOwningEventTarget->Dispatch(runnable.forget(), nsIThread::DISPATCH_NORMAL));
 }
 
 void
 Context::ThreadsafeHandle::InvalidateAndAllowToClose()
 {
-  if (mOwningThread == NS_GetCurrentThread()) {
+  if (mOwningEventTarget->IsOnCurrentThread()) {
     InvalidateAndAllowToCloseOnOwningThread();
     return;
   }
@@ -755,13 +755,13 @@ Context::ThreadsafeHandle::InvalidateAndAllowToClose()
   nsCOMPtr<nsIRunnable> runnable =
     NewRunnableMethod(this, &ThreadsafeHandle::InvalidateAndAllowToCloseOnOwningThread);
   MOZ_ALWAYS_SUCCEEDS(
-    mOwningThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL));
+    mOwningEventTarget->Dispatch(runnable.forget(), nsIThread::DISPATCH_NORMAL));
 }
 
 Context::ThreadsafeHandle::ThreadsafeHandle(Context* aContext)
   : mStrongRef(aContext)
   , mWeakRef(aContext)
-  , mOwningThread(NS_GetCurrentThread())
+  , mOwningEventTarget(GetCurrentThreadSerialEventTarget())
 {
 }
 
@@ -771,19 +771,19 @@ Context::ThreadsafeHandle::~ThreadsafeHandle()
   // however, because when we do use mStrongRef on the owning thread we are
   // always holding a strong ref to the ThreadsafeHandle via the owning
   // runnable.  So we cannot run the ThreadsafeHandle destructor simultaneously.
-  if (!mStrongRef || mOwningThread == NS_GetCurrentThread()) {
+  if (!mStrongRef || mOwningEventTarget->IsOnCurrentThread()) {
     return;
   }
 
   // Dispatch is guaranteed to succeed here because we block shutdown until
   // all Contexts have been destroyed.
-  NS_ProxyRelease(mOwningThread, mStrongRef.forget());
+  NS_ProxyRelease(mOwningEventTarget, mStrongRef.forget());
 }
 
 void
 Context::ThreadsafeHandle::AllowToCloseOnOwningThread()
 {
-  MOZ_ASSERT(mOwningThread == NS_GetCurrentThread());
+  MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
 
   // A Context "closes" when its ref count drops to zero.  Dropping this
   // strong ref is necessary, but not sufficient for the close to occur.
@@ -806,7 +806,7 @@ Context::ThreadsafeHandle::AllowToCloseOnOwningThread()
 void
 Context::ThreadsafeHandle::InvalidateAndAllowToCloseOnOwningThread()
 {
-  MOZ_ASSERT(mOwningThread == NS_GetCurrentThread());
+  MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
   // Cancel the Context through the weak reference.  This means we can
   // allow the Context to close by dropping the strong ref, but then
   // still cancel ongoing IO if necessary.
@@ -821,7 +821,7 @@ Context::ThreadsafeHandle::InvalidateAndAllowToCloseOnOwningThread()
 void
 Context::ThreadsafeHandle::ContextDestroyed(Context* aContext)
 {
-  MOZ_ASSERT(mOwningThread == NS_GetCurrentThread());
+  MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
   MOZ_DIAGNOSTIC_ASSERT(!mStrongRef);
   MOZ_DIAGNOSTIC_ASSERT(mWeakRef);
   MOZ_DIAGNOSTIC_ASSERT(mWeakRef == aContext);
@@ -830,7 +830,7 @@ Context::ThreadsafeHandle::ContextDestroyed(Context* aContext)
 
 // static
 already_AddRefed<Context>
-Context::Create(Manager* aManager, nsIThread* aTarget,
+Context::Create(Manager* aManager, nsISerialEventTarget* aTarget,
                 Action* aInitAction, Context* aOldContext)
 {
   RefPtr<Context> context = new Context(aManager, aTarget, aInitAction);
@@ -838,7 +838,7 @@ Context::Create(Manager* aManager, nsIThread* aTarget,
   return context.forget();
 }
 
-Context::Context(Manager* aManager, nsIThread* aTarget, Action* aInitAction)
+Context::Context(Manager* aManager, nsISerialEventTarget* aTarget, Action* aInitAction)
   : mManager(aManager)
   , mTarget(aTarget)
   , mData(new Data(aTarget))
