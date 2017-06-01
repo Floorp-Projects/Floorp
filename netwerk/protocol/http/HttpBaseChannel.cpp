@@ -62,6 +62,7 @@
 #include "nsIXULRuntime.h"
 #include "nsICacheInfoChannel.h"
 #include "nsIDOMWindowUtils.h"
+#include "nsHttpChannel.h"
 #include "nsRedirectHistoryEntry.h"
 
 #include <algorithm>

@@ -8,6 +8,20 @@ interface nsITabParent;
 interface nsIChannel;
 interface nsIAsyncVerifyRedirectCallback;
 
+[builtinclass, uuid(01987690-48cf-45de-bae3-e143c2adc2a8)]
+interface nsIAsyncVerifyRedirectReadyCallback : nsISupports
+{
+  /**
+   * Asynchronous callback when redirected channel finishes the preparation for
+   * completing the verification procedure.
+   *
+   * @param result
+   *    SUCCEEDED if preparation for redirection verification succceed.
+   *    If FAILED the redirection must be aborted.
+   */
+  void readyToVerify(in nsresult result);
+};
+
 /**
  * Implemented by chrome side of IPC protocols that support redirect responses.
  */
@@ -32,6 +46,17 @@ interface nsIParentRedirectingChannel : nsIParentChannel
                      in nsIChannel newChannel,
                      in uint32_t redirectFlags,
                      in nsIAsyncVerifyRedirectCallback callback);
+
+  /**
+   * Called to new channel when the original channel got Redirect2Verify
+   * response from child. Callback will be invoked when the new channel
+   * finishes the preparation for Redirect2Verify and can be called immediately.
+   *
+   * @param callback
+   *    redirect ready callback, will be called when redirect verification
+   *    procedure can proceed.
+   */
+  void continueVerification(in nsIAsyncVerifyRedirectReadyCallback callback);
 
   /**
    * Called after we are done with redirecting process and we know if to

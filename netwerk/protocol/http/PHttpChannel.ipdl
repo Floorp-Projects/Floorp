@@ -10,7 +10,6 @@ include InputStreamParams;
 include URIParams;
 include PBackgroundSharedTypes;
 include NeckoChannelParams;
-include PURLClassifierInfo;
 
 include "mozilla/net/NeckoMessageUtils.h";
 
@@ -109,20 +108,6 @@ child:
                        nsCString           altDataType,
                        int64_t             altDataLength);
 
-  // Combines a single OnDataAvailable and its associated OnProgress &
-  // OnStatus calls into one IPDL message
-  async OnTransportAndData(nsresult  channelStatus,
-                           nsresult  transportStatus,
-                           uint64_t  offset,
-                           uint32_t  count,
-                           nsCString data);
-
-  async OnStopRequest(nsresult channelStatus, ResourceTimingStruct timing);
-
-  async OnProgress(int64_t progress, int64_t progressMax);
-
-  async OnStatus(nsresult status);
-
   // Used to cancel child channel if we hit errors during creating and
   // AsyncOpen of nsHttpChannel on the parent.
   async FailedAsyncOpen(nsresult status);
@@ -144,20 +129,6 @@ child:
   async AssociateApplicationCache(nsCString groupID,
                                   nsCString clientID);
 
-  // Tell the child that tracking protection was disabled for this load.
-  async NotifyTrackingProtectionDisabled();
-
-  // Tell the child that the resource being loaded is on the tracking
-  // protection list.
-  async NotifyTrackingResource();
-
-  // Parent has been suspended for diversion; no more events to be enqueued.
-  async FlushedForDiversion();
-
-  // Child should resume processing the ChannelEventQueue, i.e. diverting any
-  // OnDataAvailable and OnStopRequest messages in the queue back to the parent.
-  async DivertMessages();
-
   // Report a security message to the console associated with this
   // channel.
   async ReportSecurityMessage(nsString messageTag, nsString messageCategory);
@@ -168,9 +139,6 @@ child:
 
   // Tell the child to issue a deprecation warning.
   async IssueDeprecationWarning(uint32_t warning, bool asError);
-
-  // Tell the child information of matched URL againts SafeBrowsing list
-  async SetClassifierMatchedInfo(ClassifierInfo info);
 
 both:
   // After receiving this message, the parent also calls

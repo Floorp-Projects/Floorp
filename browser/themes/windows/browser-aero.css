@@ -338,11 +338,12 @@
     }
   }
 
+%ifndef MOZ_PHOTON_THEME
   #main-window[sizemode=normal] #TabsToolbar {
     padding-left: 1px;
     padding-right: 1px;
   }
-
+%endif
   #appcontent:not(:-moz-lwtheme) {
     background-color: -moz-dialog;
   }

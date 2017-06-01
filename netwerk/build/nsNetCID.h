@@ -637,6 +637,18 @@
     {0x97, 0xa7, 0x06, 0xaf, 0x5e, 0x6d, 0x84, 0xc4}    \
 }
 
+// Background channel registrar used for pairing HttpChannelParent
+// and its background channel
+#define NS_BACKGROUNDCHANNELREGISTRAR_CONTRACTID \
+    "@mozilla.org/network/background-channel-registrar;1"
+#define NS_BACKGROUNDCHANNELREGISTRAR_CID \
+{ /* 6907788a-17cc-4c2a-a7c5-59ad2d9cc079 */          \
+    0x6907788a,                                       \
+    0x17cc,                                           \
+    0x4c2a,                                           \
+    { 0xa7, 0xc5, 0x59, 0xad, 0x2d, 0x9c, 0xc0, 0x79} \
+}
+
 /******************************************************************************
  * netwerk/protocol/ftp/ classes
  */

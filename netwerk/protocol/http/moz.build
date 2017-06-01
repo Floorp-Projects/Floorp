@@ -8,6 +8,7 @@ with Files('**'):
     BUG_COMPONENT = ('Core', 'Networking: HTTP')
 
 XPIDL_SOURCES += [
+    'nsIBackgroundChannelRegistrar.idl',
     'nsIHstsPrimingCallback.idl',
     'nsIHttpActivityObserver.idl',
     'nsIHttpAuthenticableChannel.idl',
@@ -39,6 +40,8 @@ EXPORTS.mozilla.net += [
     'AltDataOutputStreamChild.h',
     'AltDataOutputStreamParent.h',
     'HttpAuthUtils.h',
+    'HttpBackgroundChannelChild.h',
+    'HttpBackgroundChannelParent.h',
     'HttpBaseChannel.h',
     'HttpChannelChild.h',
     'HttpChannelParent.h',
@@ -58,6 +61,7 @@ UNIFIED_SOURCES += [
     'AltDataOutputStreamParent.cpp',
     'AlternateServices.cpp',
     'ASpdySession.cpp',
+    'BackgroundChannelRegistrar.cpp',
     'CacheControlParser.cpp',
     'ConnectionDiagnostics.cpp',
     'HSTSPrimerListener.cpp',
@@ -66,6 +70,8 @@ UNIFIED_SOURCES += [
     'Http2Session.cpp',
     'Http2Stream.cpp',
     'HttpAuthUtils.cpp',
+    'HttpBackgroundChannelChild.cpp',
+    'HttpBackgroundChannelParent.cpp',
     'HttpBaseChannel.cpp',
     'HttpChannelChild.cpp',
     'HttpChannelParent.cpp',
@@ -101,6 +107,7 @@ SOURCES += [
 
 IPDL_SOURCES += [
     'PAltDataOutputStream.ipdl',
+    'PHttpBackgroundChannel.ipdl',
     'PHttpChannel.ipdl',
 ]
 
