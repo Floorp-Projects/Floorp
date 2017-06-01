@@ -153,7 +153,6 @@ public:
   virtual int GetRecordingDeviceName(int aIndex, char (&aStrNameUTF8)[128],
                                      char aStrGuidUTF8[128]) = 0;
   virtual int GetRecordingDeviceStatus(bool& aIsAvailable) = 0;
-  virtual int GetChannelCount(int aDeviceIndex, uint32_t& aChannels) = 0;
   virtual void StartRecording(SourceMediaStream *aStream, AudioDataListener *aListener) = 0;
   virtual void StopRecording(SourceMediaStream *aStream) = 0;
   virtual int SetRecordingDevice(int aIndex) = 0;
@@ -263,11 +262,6 @@ public:
     // so unless it was removed, say it's available
     aIsAvailable = true;
     return 0;
-  }
-
-  int GetChannelCount(int aDeviceIndex, uint32_t& aChannels)
-  {
-    return GetDeviceMaxChannels(aDeviceIndex, aChannels);
   }
 
   static int GetDeviceMaxChannels(int aDeviceIndex, uint32_t& aChannels)
@@ -382,12 +376,6 @@ public:
       return 1;
     }
     ptrVoEHw->GetRecordingDeviceStatus(aIsAvailable);
-    return 0;
-  }
-
-  int GetChannelCount(int aDeviceIndex, uint32_t& aChannels)
-  {
-    aChannels = 1; // default to mono
     return 0;
   }
 
