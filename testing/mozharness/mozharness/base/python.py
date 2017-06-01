@@ -427,6 +427,7 @@ class VirtualenvMixin(object):
             self.run_command(virtualenv + virtualenv_options + [venv_path],
                              cwd=dirs['abs_work_dir'],
                              error_list=VirtualenvErrorList,
+                             partial_env={'VIRTUALENV_NO_DOWNLOAD': "1"},
                              halt_on_failure=True)
 
         # Resolve the pip version so we can conditionally do things if we have
