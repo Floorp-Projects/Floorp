@@ -197,6 +197,8 @@ pub struct YuvImagePrimitiveCpu {
     // The first address of yuv resource_address. Use "yuv_resource_address + N-th" to get the N-th channel data.
     // e.g. yuv_resource_address + 0 => y channel resource_address
     pub yuv_resource_address: GpuStoreAddress,
+
+    pub image_rendering: ImageRendering,
 }
 
 #[derive(Debug, Clone)]
@@ -1092,7 +1094,7 @@ impl PrimitiveStore {
                                                           &mut deferred_resolves,
                                                           image_cpu.yuv_key[channel],
                                                           resource_address,
-                                                          ImageRendering::Auto,
+                                                          image_cpu.image_rendering,
                                                           None);
                         // texture_id
                         image_cpu.yuv_texture_id[channel] = texture_id;
@@ -1330,7 +1332,7 @@ impl PrimitiveStore {
                 let channel_num = image_cpu.format.get_plane_num();
                 debug_assert!(channel_num <= 3);
                 for channel in 0..channel_num {
-                    resource_cache.request_image(image_cpu.yuv_key[channel], ImageRendering::Auto, None);
+                    resource_cache.request_image(image_cpu.yuv_key[channel], image_cpu.image_rendering, None);
                 }
 
                 // TODO(nical): Currently assuming no tile_spacing for yuv images.
