@@ -21,6 +21,17 @@ typedef struct {
   uint32_t mEnd;
 } nsWordRange;
 
+enum nsWordBreakClass : uint8_t {
+  kWbClassSpace = 0,
+  kWbClassAlphaLetter,
+  kWbClassPunct,
+  kWbClassHanLetter,
+  kWbClassKatakanaLetter,
+  kWbClassHiraganaLetter,
+  kWbClassHWKatakanaLetter,
+  kWbClassThaiLetter
+};
+
 class nsIWordBreaker : public nsISupports
 {
 public:
@@ -34,6 +45,7 @@ public:
   virtual int32_t NextWord(const char16_t* aText, uint32_t aLen, 
                            uint32_t aPos) = 0;
                            
+  static nsWordBreakClass GetClass(char16_t aChar);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIWordBreaker, NS_IWORDBREAKER_IID)
