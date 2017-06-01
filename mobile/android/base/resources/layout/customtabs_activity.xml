@@ -12,6 +12,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!--
+        This layout is quite complex because GeckoApp accesses all view groups
+        in this tree. In a perfect world this should just include a GeckoView.
+    -->
+
     <android.support.v7.widget.Toolbar
         android:id="@id/actionbar"
         android:layout_width="match_parent"
@@ -20,18 +25,48 @@
         android:background="@color/text_and_tabs_tray_grey"
         app:layout_scrollFlags="scroll|enterAlways"/>
 
-    <org.mozilla.gecko.GeckoView
-        android:id="@+id/gecko_view"
-        android:layout_width="fill_parent"
+    <view class="org.mozilla.gecko.GeckoApp$MainLayout"
+        android:id="@+id/main_layout"
+        android:layout_width="match_parent"
         android:layout_below="@id/actionbar"
         android:layout_height="match_parent"
-        android:scrollbars="none"/>
+        android:background="@android:color/transparent">
+
+        <RelativeLayout android:id="@+id/gecko_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/tablet_tab_strip"
+            android:layout_above="@+id/find_in_page">
+
+            <fragment class="org.mozilla.gecko.GeckoViewFragment"
+                android:id="@+id/layer_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scrollbars="none"/>
+
+            <org.mozilla.gecko.FormAssistPopup android:id="@+id/form_assist_popup"
+                                               android:layout_width="match_parent"
+                                               android:layout_height="match_parent"
+                                               android:visibility="gone"/>
+
+        </RelativeLayout>
+
+    </view>
+
+    <ProgressBar
+        android:id="@id/page_progress"
+        style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_alignTop="@id/main_layout"
+        android:background="@drawable/url_bar_bg"
+        android:progressDrawable="@drawable/progressbar"
+        tools:progress="70"/>
 
     <View android:id="@+id/custom_tabs_doorhanger_overlay"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/dark_transparent_overlay"
-        android:alpha="0"
-        android:layerType="hardware"/>
-
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:background="@color/dark_transparent_overlay"
+          android:alpha="0"
+          android:layerType="hardware"/>
 </RelativeLayout>
