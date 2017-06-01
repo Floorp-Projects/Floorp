@@ -18,16 +18,6 @@ const EXPECTED_REFLOWS = [
   [
     "select@chrome://global/content/bindings/textbox.xml",
   ],
-
-  // selection change notification may cause querying the focused editor content
-  // by IME and that will cause reflow.
-  [
-    "select@chrome://global/content/bindings/textbox.xml",
-  ],
-
-  [
-    "select@chrome://global/content/bindings/textbox.xml",
-  ],
 ];
 
 /*
