@@ -36,11 +36,6 @@ public:
   nsBrowserElement() {}
   virtual ~nsBrowserElement() {}
 
-  void SetVisible(bool aVisible, ErrorResult& aRv);
-  already_AddRefed<dom::DOMRequest> GetVisible(ErrorResult& aRv);
-  void SetActive(bool aActive, ErrorResult& aRv);
-  bool GetActive(ErrorResult& aRv);
-
   void SendMouseEvent(const nsAString& aType,
                       uint32_t aX,
                       uint32_t aY,

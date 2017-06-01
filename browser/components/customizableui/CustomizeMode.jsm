@@ -218,10 +218,12 @@ CustomizeMode.prototype = {
     }
 
     if (!gTab) {
-      this.setTab(this.browser.loadOneTab("about:blank",
-                                          { inBackground: false,
-                                            forceNotRemote: true,
-                                            skipAnimation: true }));
+      this.setTab(this.browser.loadOneTab("about:blank", {
+        inBackground: false,
+        forceNotRemote: true,
+        skipAnimation: true,
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      }));
       return;
     }
     if (!gTab.selected) {

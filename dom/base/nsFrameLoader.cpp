@@ -178,7 +178,6 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, nsPIDOMWindowOuter* aOpener, bool 
   , mClipSubdocument(true)
   , mClampScrollPosition(true)
   , mObservingOwnerContent(false)
-  , mVisible(true)
 {
   mRemoteFrame = ShouldUseRemoteProcess();
   MOZ_ASSERT(!mRemoteFrame || !aOpener,
@@ -3492,29 +3491,6 @@ nsFrameLoader::Print(uint64_t aOuterWindowID,
 
   return webBrowserPrint->Print(aPrintSettings, aProgressListener);
 #endif
-  return NS_OK;
-}
-
-/* [infallible] */ NS_IMETHODIMP
-nsFrameLoader::SetVisible(bool aVisible)
-{
-  if (mVisible == aVisible) {
-    return NS_OK;
-  }
-
-  mVisible = aVisible;
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (os) {
-    os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
-                        "frameloader-visible-changed", nullptr);
-  }
-  return NS_OK;
-}
-
-/* [infallible] */ NS_IMETHODIMP
-nsFrameLoader::GetVisible(bool* aVisible)
-{
-  *aVisible = mVisible;
   return NS_OK;
 }
 

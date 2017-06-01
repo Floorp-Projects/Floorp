@@ -712,6 +712,8 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
                "Frames should be removed before destruction.");
   NS_ASSERTION(aDestructRoot, "Must specify destruct root");
   MOZ_ASSERT(!HasAbsolutelyPositionedChildren());
+  MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT),
+             "NS_FRAME_PART_OF_IBSPLIT set on non-nsContainerFrame?");
 
   nsSVGEffects::InvalidateDirectRenderingObservers(this);
 
@@ -726,8 +728,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsPresContext* presContext = PresContext();
   nsIPresShell* shell = presContext->GetPresShell();
   if (mState & NS_FRAME_OUT_OF_FLOW) {
-    nsPlaceholderFrame* placeholder =
-      shell->FrameManager()->GetPlaceholderFrameFor(this);
+    nsPlaceholderFrame* placeholder = GetPlaceholderFrame();
     NS_ASSERTION(!placeholder || (aDestructRoot != this),
                  "Don't call Destroy() on OOFs, call Destroy() on the placeholder.");
     NS_ASSERTION(!placeholder ||
@@ -735,30 +736,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
                  "Placeholder relationship should have been torn down already; "
                  "this might mean we have a stray placeholder in the tree.");
     if (placeholder) {
-      shell->FrameManager()->UnregisterPlaceholderFrame(placeholder);
       placeholder->SetOutOfFlowFrame(nullptr);
-    }
-  }
-
-  // If we have any IB split siblings, clear their references to us.
-  // (Note: This has to happen before we clear our Properties() table.)
-  if (mState & NS_FRAME_PART_OF_IBSPLIT) {
-    // Delete previous sibling's reference to me.
-    nsIFrame* prevSib = GetProperty(nsIFrame::IBSplitPrevSibling());
-    if (prevSib) {
-      NS_WARNING_ASSERTION(
-        this == prevSib->GetProperty(nsIFrame::IBSplitSibling()),
-        "IB sibling chain is inconsistent");
-      prevSib->DeleteProperty(nsIFrame::IBSplitSibling());
-    }
-
-    // Delete next sibling's reference to me.
-    nsIFrame* nextSib = GetProperty(nsIFrame::IBSplitSibling());
-    if (nextSib) {
-      NS_WARNING_ASSERTION(
-        this == nextSib->GetProperty(nsIFrame::IBSplitPrevSibling()),
-        "IB sibling chain is inconsistent");
-      nextSib->DeleteProperty(nsIFrame::IBSplitPrevSibling());
     }
   }
 
@@ -8472,9 +8450,8 @@ int32_t
 nsFrame::GetLineNumber(nsIFrame *aFrame, bool aLockScroll, nsIFrame** aContainingBlock)
 {
   NS_ASSERTION(aFrame, "null aFrame");
-  nsFrameManager* frameManager = aFrame->PresContext()->FrameManager();
-  nsIFrame *blockFrame = aFrame;
-  nsIFrame *thisBlock;
+  nsIFrame* blockFrame = aFrame;
+  nsIFrame* thisBlock;
   nsAutoLineIterator it;
   nsresult result = NS_ERROR_FAILURE;
   while (NS_FAILED(result) && blockFrame)
@@ -8487,7 +8464,7 @@ nsFrame::GetLineNumber(nsIFrame *aFrame, bool aLockScroll, nsIFrame** aContainin
         // abspos continuations don't have placeholders, get the fif
         thisBlock = thisBlock->FirstInFlow();
       }
-      thisBlock = frameManager->GetPlaceholderFrameFor(thisBlock);
+      thisBlock = thisBlock->GetPlaceholderFrame();
       if (!thisBlock)
         return -1;
     }  
@@ -9432,7 +9409,6 @@ nsStyleContext*
 nsFrame::DoGetParentStyleContext(nsIFrame** aProviderFrame) const
 {
   *aProviderFrame = nullptr;
-  nsFrameManager* fm = PresContext()->FrameManager();
 
   // Handle display:contents and the root frame, when there's no parent frame
   // to inherit from.
@@ -9449,6 +9425,7 @@ nsFrame::DoGetParentStyleContext(nsIFrame** aProviderFrame) const
           /* if next is true then it's really a request for the table frame's
              parent context, see nsTable[Outer]Frame::GetParentStyleContext. */
           pseudo == nsCSSAnonBoxes::tableWrapper) {
+        nsFrameManager* fm = PresContext()->FrameManager();
         nsStyleContext* sc = fm->GetDisplayContentsStyleFor(parentContent);
         if (MOZ_UNLIKELY(sc)) {
           return sc;
@@ -9485,7 +9462,7 @@ nsFrame::DoGetParentStyleContext(nsIFrame** aProviderFrame) const
   // We're an out-of-flow frame.  For out-of-flow frames, we must
   // resolve underneath the placeholder's parent.  The placeholder is
   // reached from the first-in-flow.
-  nsPlaceholderFrame* placeholder = fm->GetPlaceholderFrameFor(FirstInFlow());
+  nsPlaceholderFrame* placeholder = FirstInFlow()->GetPlaceholderFrame();
   if (!placeholder) {
     NS_NOTREACHED("no placeholder frame for out-of-flow frame");
     *aProviderFrame = GetCorrectedParent(this);
@@ -10550,6 +10527,24 @@ nsFrame::HasCSSTransitions()
   auto collection =
     AnimationCollection<CSSTransition>::GetAnimationCollection(this);
   return collection && collection->mAnimations.Length() > 0;
+}
+
+size_t
+nsIFrame::SizeOfFramePropertiesForTree(MallocSizeOf aMallocSizeOf) const
+{
+  size_t result = 0;
+
+  result += mProperties.SizeOfExcludingThis(aMallocSizeOf);
+
+  FrameChildListIterator iter(this);
+  while (!iter.IsDone()) {
+    for (const nsIFrame* f : iter.CurrentList()) {
+      result += f->SizeOfFramePropertiesForTree(aMallocSizeOf);
+    }
+    iter.Next();
+  }
+
+  return result;
 }
 
 // Box layout debugging

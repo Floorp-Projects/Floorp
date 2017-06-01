@@ -924,6 +924,36 @@ mozJSComponentLoader::IsModuleLoaded(const nsACString& aLocation,
     return NS_OK;
 }
 
+NS_IMETHODIMP mozJSComponentLoader::LoadedModules(uint32_t* length,
+                                                  char*** aModules)
+{
+    char** modules = new char*[mImports.Count()];
+    *length = mImports.Count();
+    *aModules = modules;
+
+    for (auto iter = mImports.Iter(); !iter.Done(); iter.Next()) {
+        *modules = NS_strdup(iter.Data()->location);
+        modules++;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP mozJSComponentLoader::LoadedComponents(uint32_t* length,
+                                                     char*** aComponents)
+{
+    char** comp = new char*[mModules.Count()];
+    *length = mModules.Count();
+    *aComponents = comp;
+
+    for (auto iter = mModules.Iter(); !iter.Done(); iter.Next()) {
+        *comp = NS_strdup(iter.Data()->location);
+        comp++;
+    }
+
+    return NS_OK;
+}
+
 static JSObject*
 ResolveModuleObjectPropertyById(JSContext* aCx, HandleObject aModObj, HandleId id)
 {

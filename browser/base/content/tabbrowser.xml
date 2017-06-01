@@ -5211,6 +5211,7 @@
                 allowThirdPartyFixup: true,
                 relatedToCurrent: true,
                 isPrerendered: true,
+                triggeringPrincipal: Utils.deserializePrincipal(data.triggeringPrincipal),
               });
               let partialSHistory = newTab.linkedBrowser.frameLoader.partialSHistory;
               groupedSHistory.addPrerenderingPartialSHistory(partialSHistory, data.id);

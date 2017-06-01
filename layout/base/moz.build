@@ -87,7 +87,6 @@ UNIFIED_SOURCES += [
     'AccessibleCaret.cpp',
     'AccessibleCaretEventHub.cpp',
     'AccessibleCaretManager.cpp',
-    'FrameProperties.cpp',
     'GeckoRestyleManager.cpp',
     'GeometryUtils.cpp',
     'LayoutLogging.cpp',
