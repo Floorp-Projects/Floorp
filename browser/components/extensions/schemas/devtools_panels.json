@@ -17,7 +17,7 @@
         "events": [
           {
             "name": "onSelectionChanged",
-            "unsupported": true,
+            "type": "function",
             "description": "Fired when an object is selected in the panel."
           }
         ],
