@@ -65,7 +65,8 @@ public:
   virtual const SdpRtcpFbAttributeList& GetRtcpFb() const override;
   virtual const SdpRtpmapAttributeList& GetRtpmap() const override;
   virtual const SdpSctpmapAttributeList& GetSctpmap() const override;
-  virtual unsigned int GetSctpPort() const override;
+  virtual uint32_t GetSctpPort() const override;
+  virtual uint32_t GetMaxMessageSize() const override;
 
   // These attributes are effectively simple types, so we'll make life
   // easy by just returning their value.
