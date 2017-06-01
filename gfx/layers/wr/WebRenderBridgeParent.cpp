@@ -123,7 +123,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mIdNameSpace(AllocIdNameSpace())
   , mPaused(false)
   , mDestroyed(false)
-  , mIsSnapshotting(false)
+  , mForceRendering(false)
 {
   MOZ_ASSERT(mCompositableHolder);
   mCompositableHolder->AddPipeline(mPipelineId);
@@ -618,7 +618,7 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture)
   // Assert the stride of the buffer is what webrender expects
   MOZ_ASSERT((uint32_t)(size.width * 4) == stride);
 
-  mIsSnapshotting = true;
+  mForceRendering = true;
 
   if (mCompositorScheduler->NeedsComposite()) {
     mCompositorScheduler->CancelCurrentCompositeTask();
@@ -627,7 +627,7 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture)
 
   mApi->Readback(size, buffer, buffer_size);
 
-  mIsSnapshotting = false;
+  mForceRendering = false;
 
   return IPC_OK();
 }
@@ -822,7 +822,7 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 
   const uint32_t maxPendingFrameCount = 2;
 
-  if (!mIsSnapshotting &&
+  if (!mForceRendering &&
       wr::RenderThread::Get()->GetPendingFrameCount(mApi->GetId()) > maxPendingFrameCount) {
     // Render thread is busy, try next time.
     ScheduleComposition();
@@ -936,6 +936,26 @@ WebRenderBridgeParent::ScheduleComposition()
   if (mCompositorScheduler) {
     mCompositorScheduler->ScheduleComposition();
   }
+}
+
+void
+WebRenderBridgeParent::FlushRendering(bool aIsSync)
+{
+  if (mDestroyed) {
+    return;
+  }
+
+  if (!mCompositorScheduler->NeedsComposite()) {
+    return;
+  }
+
+  mForceRendering = true;
+  mCompositorScheduler->CancelCurrentCompositeTask();
+  mCompositorScheduler->ForceComposeToTarget(nullptr, nullptr);
+  if (aIsSync) {
+    mApi->WaitFlushed();
+  }
+  mForceRendering = false;
 }
 
 void
