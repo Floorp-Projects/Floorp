@@ -429,7 +429,8 @@ NS_IMETHODIMP nsContentTreeOwner::ReloadInFreshProcess(nsIDocShell* aDocShell,
 }
 
 NS_IMETHODIMP nsContentTreeOwner::StartPrerenderingDocument(nsIURI* aHref,
-                                                            nsIURI* aReferrer)
+                                                            nsIURI* aReferrer,
+                                                            nsIPrincipal* aTriggeringPrincipal)
 {
   NS_WARNING("Cannot prerender a document in the parent process");
   return NS_ERROR_FAILURE;

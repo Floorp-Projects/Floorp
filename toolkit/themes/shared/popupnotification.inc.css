@@ -124,6 +124,6 @@
   width: 16px;
   height: 16px;
   list-style-image: url(chrome://global/skin/icons/menubutton-dropmarker.svg);
-  filter: url(chrome://global/skin/filters.svg#fill);
+  -moz-context-properties: fill;
   fill: currentColor;
 }

@@ -321,6 +321,7 @@ ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
   RefPtr<ScaledFontFontconfig> scaledFont =
     new ScaledFontFontconfig(cairoScaledFont, pattern, aUnscaledFont, aSize);
 
+  cairo_scaled_font_destroy(cairoScaledFont);
   FcPatternDestroy(pattern);
 
   return scaledFont.forget();

@@ -39,23 +39,23 @@
 }
 
 [data-identity-icon="fingerprint"] {
-  --identity-icon: url("chrome://browser/content/usercontext.svg#fingerprint");
+  --identity-icon: url("chrome://browser/content/usercontext-fingerprint.svg");
 }
 
 [data-identity-icon="briefcase"] {
-  --identity-icon: url("chrome://browser/content/usercontext.svg#briefcase");
+  --identity-icon: url("chrome://browser/content/usercontext-briefcase.svg");
 }
 
 [data-identity-icon="dollar"] {
-  --identity-icon: url("chrome://browser/content/usercontext.svg#dollar");
+  --identity-icon: url("chrome://browser/content/usercontext-dollar.svg");
 }
 
 [data-identity-icon="cart"] {
-  --identity-icon: url("chrome://browser/content/usercontext.svg#cart");
+  --identity-icon: url("chrome://browser/content/usercontext-cart.svg");
 }
 
 [data-identity-icon="circle"] {
-  --identity-icon: url("chrome://browser/content/usercontext.svg#circle");
+  --identity-icon: url("chrome://browser/content/usercontext-circle.svg");
 }
 
 #userContext-indicator {
@@ -83,7 +83,7 @@
 .subviewbutton[usercontextid] > .toolbarbutton-icon,
 #userContext-indicator {
   background-image: var(--identity-icon);
-  filter: url(chrome://global/skin/filters.svg#fill);
+  -moz-context-properties: fill;
   fill: var(--identity-icon-color);
   background-size: contain;
   background-repeat: no-repeat;
