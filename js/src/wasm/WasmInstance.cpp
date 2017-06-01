@@ -353,6 +353,7 @@ Instance::Instance(JSContext* cx,
 #endif
     tlsData()->instance = this;
     tlsData()->addressOfContext = (JSContext**)object->zone()->group()->addressOfOwnerContext();
+    tlsData()->jumpTable = code_->jumpTable();
 
     Tier callerTier = code_->bestTier();
 

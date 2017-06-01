@@ -588,6 +588,7 @@ class BaseCompiler
     NonAssertingLabel           returnLabel_;
     NonAssertingLabel           stackOverflowLabel_;
     CodeOffset                  stackAddOffset_;
+    CompileMode                 mode_;
 
     LatentOp                    latentOp_;       // Latent operation for branch (seen next)
     ValType                     latentType_;     // Operand type, if latentOp_ is true
@@ -647,7 +648,8 @@ class BaseCompiler
                  const ValTypeVector& locals,
                  bool debugEnabled,
                  TempAllocator* alloc,
-                 MacroAssembler* masm);
+                 MacroAssembler* masm,
+                 CompileMode mode);
 
     MOZ_MUST_USE bool init();
 
@@ -2202,7 +2204,10 @@ class BaseCompiler
         JitSpew(JitSpew_Codegen, "# Emitting wasm baseline code");
 
         SigIdDesc sigId = env_.funcSigs[func_.index()]->id;
-        GenerateFunctionPrologue(masm, localSize_, sigId, &offsets_);
+        if (mode_ == CompileMode::Tier1)
+            GenerateFunctionPrologue(masm, localSize_, sigId, &offsets_, mode_, func_.index());
+        else
+            GenerateFunctionPrologue(masm, localSize_, sigId, &offsets_);
 
         MOZ_ASSERT(masm.framePushed() == uint32_t(localSize_));
 
@@ -7405,7 +7410,8 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
                            const ValTypeVector& locals,
                            bool debugEnabled,
                            TempAllocator* alloc,
-                           MacroAssembler* masm)
+                           MacroAssembler* masm,
+                           CompileMode mode)
     : env_(env),
       iter_(env, decoder),
       func_(func),
@@ -7420,6 +7426,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
       debugEnabled_(debugEnabled),
       bceSafe_(0),
       stackAddOffset_(0),
+      mode_(mode),
       latentOp_(LatentOp::None),
       latentType_(ValType::I32),
       latentIntCmp_(Assembler::Equal),
@@ -7580,7 +7587,8 @@ js::wasm::BaselineCompileFunction(CompileTask* task, FuncCompileUnit* unit, Uniq
 
     // One-pass baseline compilation.
 
-    BaseCompiler f(task->env(), d, func, locals, task->debugEnabled(), &task->alloc(), &task->masm());
+    BaseCompiler f(task->env(), d, func, locals, task->debugEnabled(), &task->alloc(),
+                   &task->masm(), task->mode());
     if (!f.init())
         return false;
 

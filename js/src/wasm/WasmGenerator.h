@@ -228,6 +228,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     LinkData                        linkData_;
     MetadataTier*                   metadataTier_; // Owned by metadata_
     MutableMetadata                 metadata_;
+    UniqueJumpTable                 jumpTable_;
 
     // Data scoped to the ModuleGenerator's lifetime
     UniqueModuleEnvironment         env_;
@@ -331,6 +332,9 @@ class MOZ_STACK_CLASS ModuleGenerator
     void bumpMinMemoryLength(uint32_t newMinMemoryLength);
     MOZ_MUST_USE bool addGlobal(ValType type, bool isConst, uint32_t* index);
     MOZ_MUST_USE bool addExport(CacheableChars&& fieldChars, uint32_t funcIndex);
+
+    // Create the patch table.
+    UniqueJumpTable createJumpTable(const CodeSegment& codeSegment);
 
     // Finish compilation of the given bytecode.
     SharedModule finishModule(const ShareableBytes& bytecode);
