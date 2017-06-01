@@ -13,6 +13,7 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
@@ -22,10 +23,11 @@ import org.mozilla.focus.locale.Locales;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.widget.DefaultBrowserPreference;
 
-import java.util.Arrays;
 import java.util.Locale;
 
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
+    private boolean localeUpdated;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,14 +79,19 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         TelemetryWrapper.settingsEvent(key, String.valueOf(sharedPreferences.getAll().get(key)));
 
-        if (key.equals(getString(R.string.pref_key_locale))) {
+        if (!localeUpdated && key.equals(getString(R.string.pref_key_locale))) {
+            // Updating the locale leads to onSharedPreferenceChanged being triggered again in some
+            // cases. To avoid an infinite loop we won't update the preference a second time. This
+            // fragment gets replaced at the end of this method anyways.
+            localeUpdated = true;
+
             final ListPreference languagePreference = (ListPreference) findPreference(getString(R.string.pref_key_locale));
             final String value = languagePreference.getValue();
 
             final LocaleManager localeManager = LocaleManager.getInstance();
 
             final Locale locale;
-            if (value.equals("system")) {
+            if (TextUtils.isEmpty(value)) {
                 localeManager.resetToSystemLocale(getActivity());
                 locale = localeManager.getCurrentLocale(getActivity());
             } else {

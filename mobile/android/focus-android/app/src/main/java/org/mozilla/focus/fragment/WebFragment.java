@@ -8,18 +8,19 @@ package org.mozilla.focus.fragment;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.locale.LocaleAwareFragment;
 import org.mozilla.focus.web.IWebView;
 
 /**
  * Base implementation for fragments that use an IWebView instance. Based on Android's WebViewFragment.
  */
-public abstract class WebFragment extends Fragment {
+public abstract class WebFragment extends LocaleAwareFragment {
     private IWebView webView;
     private boolean isWebViewAvailable;
 
@@ -56,6 +57,14 @@ public abstract class WebFragment extends Fragment {
         }
 
         return view;
+    }
+
+    @Override
+    public void applyLocale() {
+        // We create and destroy a new WebView here to force the internal state of WebView to know
+        // about the new language. See issue #666.
+        final WebView unneeded = new WebView(getContext());
+        unneeded.destroy();
     }
 
     @Override
