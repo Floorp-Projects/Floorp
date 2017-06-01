@@ -122,24 +122,24 @@ AsyncCanvasRenderer::SetCanvasClient(CanvasClient* aClient)
 }
 
 void
-AsyncCanvasRenderer::SetActiveThread()
+AsyncCanvasRenderer::SetActiveEventTarget()
 {
   MutexAutoLock lock(mMutex);
-  mActiveThread = NS_GetCurrentThread();
+  mActiveEventTarget = GetCurrentThreadSerialEventTarget();
 }
 
 void
-AsyncCanvasRenderer::ResetActiveThread()
+AsyncCanvasRenderer::ResetActiveEventTarget()
 {
   MutexAutoLock lock(mMutex);
-  mActiveThread = nullptr;
+  mActiveEventTarget = nullptr;
 }
 
-already_AddRefed<nsIThread>
-AsyncCanvasRenderer::GetActiveThread()
+already_AddRefed<nsISerialEventTarget>
+AsyncCanvasRenderer::GetActiveEventTarget()
 {
   MutexAutoLock lock(mMutex);
-  nsCOMPtr<nsIThread> result = mActiveThread;
+  nsCOMPtr<nsISerialEventTarget> result = mActiveEventTarget;
   return result.forget();
 }
 
