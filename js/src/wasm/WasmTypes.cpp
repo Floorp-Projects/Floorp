@@ -675,6 +675,7 @@ CodeRange::CodeRange(Kind kind, Offsets offsets)
     funcIndex_(0),
     funcLineOrBytecode_(0),
     funcBeginToNormalEntry_(0),
+    funcBeginToTierEntry_(0),
     kind_(kind)
 {
     MOZ_ASSERT(begin_ <= end_);
@@ -704,6 +705,7 @@ CodeRange::CodeRange(Kind kind, CallableOffsets offsets)
     funcIndex_(0),
     funcLineOrBytecode_(0),
     funcBeginToNormalEntry_(0),
+    funcBeginToTierEntry_(0),
     kind_(kind)
 {
     MOZ_ASSERT(begin_ < ret_);
@@ -734,11 +736,13 @@ CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffset
     funcIndex_(funcIndex),
     funcLineOrBytecode_(funcLineOrBytecode),
     funcBeginToNormalEntry_(offsets.normalEntry - begin_),
+    funcBeginToTierEntry_(offsets.tierEntry - begin_),
     kind_(Function)
 {
     MOZ_ASSERT(begin_ < ret_);
     MOZ_ASSERT(ret_ < end_);
     MOZ_ASSERT(offsets.normalEntry - begin_ <= UINT8_MAX);
+    MOZ_ASSERT(offsets.tierEntry - begin_ <= UINT8_MAX);
 }
 
 const CodeRange*

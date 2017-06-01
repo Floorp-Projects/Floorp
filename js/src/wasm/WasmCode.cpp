@@ -669,10 +669,11 @@ Metadata::getFuncName(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes*
            name->append(afterFuncIndex, strlen(afterFuncIndex));
 }
 
-Code::Code(UniqueConstCodeSegment tier, const Metadata& metadata)
+Code::Code(UniqueConstCodeSegment tier, const Metadata& metadata, UniqueJumpTable maybeJumpTable)
   : segment1_(Move(tier)),
     metadata_(&metadata),
-    profilingLabels_(mutexid::WasmCodeProfilingLabels, CacheableCharsVector())
+    profilingLabels_(mutexid::WasmCodeProfilingLabels, CacheableCharsVector()),
+    jumpTable_(Move(maybeJumpTable))
 {
 }
 

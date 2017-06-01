@@ -20,6 +20,7 @@
 #define wasm_frame_iter_h
 
 #include "js/ProfilingFrameIterator.h"
+#include "wasm/WasmTypes.h"
 
 class JSAtom;
 
@@ -185,7 +186,8 @@ GenerateExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed, ExitReason
                      CallableOffsets* offsets);
 void
 GenerateFunctionPrologue(jit::MacroAssembler& masm, unsigned framePushed, const SigIdDesc& sigId,
-                         FuncOffsets* offsets);
+                         FuncOffsets* offsets, CompileMode mode = CompileMode::Once,
+                         uint32_t funcIndex = 0);
 void
 GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed, FuncOffsets* offsets);
 
