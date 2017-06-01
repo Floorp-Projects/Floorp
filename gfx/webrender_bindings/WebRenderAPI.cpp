@@ -216,6 +216,7 @@ WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
                                  size_t dl_size)
 {
     wr_api_set_root_display_list(mWrApi,
+                                 ToWrColor(aBgColor),
                                  aEpoch,
                                  aViewportSize.width, aViewportSize.height,
                                  pipeline_id,
