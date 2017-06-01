@@ -3,7 +3,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* globals JsonViewUtils*/
 
 "use strict";
 
@@ -12,14 +11,9 @@ const Services = require("Services");
 
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
-XPCOMUtils.defineLazyGetter(this, "chrome", function () {
+XPCOMUtils.defineLazyGetter(this, "WindowMediator", function () {
   return Cc["@mozilla.org/appshell/window-mediator;1"]
-    .getService(Ci.nsIWindowMediator)
-    .getMostRecentWindow("navigator:browser");
-});
-
-XPCOMUtils.defineLazyGetter(this, "JsonViewUtils", function () {
-  return require("devtools/client/jsonview/utils");
+    .getService(Ci.nsIWindowMediator);
 });
 
 /**
@@ -37,16 +31,14 @@ var JsonView = {
       "resource://devtools/client/jsonview/converter-observer.js",
       true);
 
-    this.onSaveListener = this.onSave.bind(this);
-
     // Register for messages coming from the child process.
     Services.ppmm.addMessageListener(
-      "devtools:jsonview:save", this.onSaveListener);
+      "devtools:jsonview:save", this.onSave);
   },
 
   destroy: function () {
     Services.ppmm.removeMessageListener(
-      "devtools:jsonview:save", this.onSaveListener);
+      "devtools:jsonview:save", this.onSave);
   },
 
   // Message handlers for events from child processes
@@ -56,6 +48,7 @@ var JsonView = {
    * in the parent process.
    */
   onSave: function (message) {
+    let chrome = WindowMediator.getMostRecentWindow("navigator:browser");
     let browser = chrome.gBrowser.selectedBrowser;
     if (message.data.url === null) {
       // Save original contents
