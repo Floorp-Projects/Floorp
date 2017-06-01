@@ -570,16 +570,6 @@ DisplayListBuilder::PushStackingContext(const WrRect& aBounds,
 }
 
 void
-DisplayListBuilder::PushStackingContext(const WrRect& aBounds,
-                                        const float aOpacity,
-                                        const gfx::Matrix4x4& aTransform,
-                                        const WrMixBlendMode& aMixBlendMode)
-{
-  PushStackingContext(aBounds, 0, &aOpacity,
-                      &aTransform, aMixBlendMode);
-}
-
-void
 DisplayListBuilder::PopStackingContext()
 {
   WRDL_LOG("PopStackingContext\n");
