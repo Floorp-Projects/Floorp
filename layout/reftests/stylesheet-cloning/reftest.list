@@ -3,4 +3,4 @@ fuzzy-if(webrender,212,342) == counter-style-rule-clone.html glyphs-ref.html # p
 == document-rule-clone.html shouldbegreen-ref.html
 == media-rule-clone.html shouldbegreen-ref.html
 == style-rule-clone.html shouldbegreen-ref.html
-skip-if(stylo) == supports-rule-clone.html shouldbegreen-ref.html # bug 1367610
+== supports-rule-clone.html shouldbegreen-ref.html

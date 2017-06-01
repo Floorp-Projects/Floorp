@@ -169,6 +169,8 @@ public class GeckoPreferences
     public static final String PREFS_DEFAULT_BROWSER = NON_PREF_PREFIX + "default_browser.link";
     public static final String PREFS_SYSTEM_FONT_SIZE = NON_PREF_PREFIX + "font.size.use_system_font_size";
     public static final String PREFS_SET_AS_HOMEPAGE = NON_PREF_PREFIX + "distribution.set_as_homepage";
+    public static final String PREFS_DIST_HOMEPAGE = NON_PREF_PREFIX + "distribution.homepage";
+    public static final String PREFS_DIST_HOMEPAGE_NAME = NON_PREF_PREFIX + "distribution.homepage.name";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = "STUMBLER_PREF";
 

@@ -6,6 +6,7 @@ module.exports = {
   },
   "globals": {
     "assert": true,
-    "sinon": true
+    "sinon": true,
+    "chai": true
   }
 };

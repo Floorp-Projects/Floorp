@@ -535,24 +535,32 @@ VRDisplay::RequestPresent(const nsTArray<VRLayer>& aLayers,
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
+  bool isChromePresentation = aCallerType == CallerType::System;
+  uint32_t presentationGroup = isChromePresentation ? gfx::kVRGroupChrome : gfx::kVRGroupContent;
+
   if (!EventStateManager::IsHandlingUserInput() &&
-      aCallerType != CallerType::System &&
+      !isChromePresentation &&
       !IsHandlingVRNavigationEvent() &&
       gfxPrefs::VRRequireGesture()) {
     // The WebVR API states that if called outside of a user gesture, the
     // promise must be rejected.  We allow VR presentations to start within
     // trusted events such as vrdisplayactivate, which triggers in response to
     // HMD proximity sensors and when navigating within a VR presentation.
+    // This user gesture requirement is not enforced for chrome/system code.
     promise->MaybeRejectWithUndefined();
-  } else if (!IsPresenting() && IsAnyPresenting()) {
-    // Only one presentation allowed per VRDisplay
-    // on a first-come-first-serve basis.
+  } else if (!IsPresenting() && IsAnyPresenting(presentationGroup)) {
+    // Only one presentation allowed per VRDisplay on a
+    // first-come-first-serve basis.
     // If this Javascript context is presenting, then we can replace our
     // presentation with a new one containing new layers but we should never
     // replace the presentation of another context.
+    // Simultaneous presentations in other groups are allowed in separate
+    // Javascript contexts to enable browser UI from chrome/system contexts.
+    // Eventually, this restriction will be loosened to enable multitasking
+    // use cases.
     promise->MaybeRejectWithUndefined();
   } else {
-    mPresentation = mClient->BeginPresentation(aLayers);
+    mPresentation = mClient->BeginPresentation(aLayers, presentationGroup);
     mFrameInfo.Clear();
     promise->MaybeResolve(JS::UndefinedHandleValue);
   }
@@ -677,17 +685,42 @@ VRDisplay::IsPresenting() const
 }
 
 bool
-VRDisplay::IsAnyPresenting() const
+VRDisplay::IsAnyPresenting(uint32_t aGroupMask) const
 {
-  // IsAnyPresenting returns true if any Javascript context is presenting
-  // even if this context is not presenting.
-  return IsPresenting() || mClient->GetIsPresenting();
+  // IsAnyPresenting returns true if either this VRDisplay object or any other
+  // from anther Javascript context is presenting with a group matching
+  // aGroupMask.
+  if (mPresentation && (mPresentation->GetGroup() & aGroupMask)) {
+    return true;
+  }
+  if (mClient->GetDisplayInfo().GetPresentingGroups() & aGroupMask) {
+    return true;
+  }
+  return false;
 }
 
 bool
 VRDisplay::IsConnected() const
 {
   return mClient->GetIsConnected();
+}
+
+uint32_t
+VRDisplay::PresentingGroups() const
+{
+  return mClient->GetDisplayInfo().GetPresentingGroups();
+}
+
+uint32_t
+VRDisplay::GroupMask() const
+{
+  return mClient->GetDisplayInfo().GetGroupMask();
+}
+
+void
+VRDisplay::SetGroupMask(const uint32_t& aGroupMask)
+{
+  mClient->SetGroupMask(aGroupMask);
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(VRDisplay, DOMEventTargetHelper, mCapabilities, mStageParameters)

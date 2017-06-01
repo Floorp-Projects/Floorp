@@ -220,15 +220,16 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
 
 #appMenu-cut-button {
   list-style-image: url(chrome://browser/skin/edit-cut.svg);
-  -moz-context-properties: fill;
 }
 
 #appMenu-copy-button {
   list-style-image: url(chrome://browser/skin/edit-copy.svg);
-  -moz-context-properties: fill;
 }
 
 #appMenu-paste-button {
   list-style-image: url(chrome://browser/skin/edit-paste.svg);
-  -moz-context-properties: fill;
+}
+
+#appMenu-quit-button {
+  list-style-image: url(chrome://browser/skin/quit.svg);
 }

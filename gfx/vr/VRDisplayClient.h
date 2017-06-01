@@ -34,28 +34,27 @@ public:
 
   virtual void ZeroSensor();
 
-  already_AddRefed<VRDisplayPresentation> BeginPresentation(const nsTArray<dom::VRLayer>& aLayers);
+  already_AddRefed<VRDisplayPresentation> BeginPresentation(const nsTArray<dom::VRLayer>& aLayers,
+                                                            uint32_t aGroup);
   void PresentationDestroyed();
 
-  void NotifyVsync();
-  void NotifyVRVsync();
-
   bool GetIsConnected() const;
-  bool GetIsPresenting() const;
 
   void NotifyDisconnected();
+  void SetGroupMask(uint32_t aGroupMask);
 
 protected:
   virtual ~VRDisplayClient();
+
+  void FireEvents();
 
   VRDisplayInfo mDisplayInfo;
 
   bool bLastEventWasMounted;
   bool bLastEventWasPresenting;
 
-  TimeStamp mLastVSyncTime;
   int mPresentationCount;
-
+  uint32_t mLastEventFrameId;
 private:
   VRSubmitFrameResultInfo mSubmitFrameResult;
 };

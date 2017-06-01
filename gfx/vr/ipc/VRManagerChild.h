@@ -48,7 +48,6 @@ public:
   // Indicate that an observer should no longer receive VR events.
   void RemoveListener(dom::VREventObserver* aObserver);
 
-  int GetInputFrameID();
   bool GetVRDisplays(nsTArray<RefPtr<VRDisplayClient> >& aDisplays);
   bool RefreshVRDisplaysWithCallback(uint64_t aWindowId);
   void AddPromise(const uint32_t& aID, dom::Promise* aPromise);
@@ -76,7 +75,8 @@ public:
   PVRLayerChild* CreateVRLayer(uint32_t aDisplayID,
                                const Rect& aLeftEyeRect,
                                const Rect& aRightEyeRect,
-                               nsIEventTarget* aTarget);
+                               nsIEventTarget* aTarget,
+                               uint32_t aGroup);
 
   static void IdentifyTextureHost(const layers::TextureFactoryIdentifier& aIdentifier);
   layers::LayersBackend GetBackendType() const;
@@ -119,15 +119,14 @@ protected:
                                             const float& aRightEyeX,
                                             const float& aRightEyeY,
                                             const float& aRightEyeWidth,
-                                            const float& aRightEyeHeight) override;
+                                            const float& aRightEyeHeight,
+                                            const uint32_t& aGroup) override;
   virtual bool DeallocPVRLayerChild(PVRLayerChild* actor) override;
 
   virtual mozilla::ipc::IPCResult RecvUpdateDisplayInfo(nsTArray<VRDisplayInfo>&& aDisplayUpdates) override;
 
   virtual mozilla::ipc::IPCResult RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages) override;
 
-  virtual mozilla::ipc::IPCResult RecvNotifyVSync() override;
-  virtual mozilla::ipc::IPCResult RecvNotifyVRVSync(const uint32_t& aDisplayID) override;
   virtual mozilla::ipc::IPCResult RecvDispatchSubmitFrameResult(const uint32_t& aDisplayID, const VRSubmitFrameResultInfo& aResult) override;
   virtual mozilla::ipc::IPCResult RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent) override;
   virtual mozilla::ipc::IPCResult RecvReplyGamepadVibrateHaptic(const uint32_t& aPromiseID) override;
@@ -174,8 +173,6 @@ private:
   nsTArray<RefPtr<VRDisplayClient> > mDisplays;
   bool mDisplaysInitialized;
   nsTArray<uint64_t> mNavigatorCallbacks;
-
-  int32_t mInputFrameID;
 
   MessageLoop* mMessageLoop;
 

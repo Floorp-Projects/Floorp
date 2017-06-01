@@ -457,6 +457,8 @@ public:
   virtual void SetHasGamepadEventListener(bool aHasGamepad = true) override;
   void NotifyVREventListenerAdded();
   bool HasUsedVR() const;
+  bool IsVRContentDetected() const;
+  bool IsVRContentPresenting() const;
 
   using EventTarget::EventListenerAdded;
   virtual void EventListenerAdded(nsIAtom* aType) override;
@@ -1907,6 +1909,10 @@ protected:
   // Inner windows only.
   // Indicates whether this window wants VR events
   bool                   mHasVREvents : 1;
+
+  // Inner windows only.
+  // Indicates whether this window wants VRDisplayActivate events
+  bool                   mHasVRDisplayActivateEvents : 1;
   nsCheapSet<nsUint32HashKey> mGamepadIndexSet;
   nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Gamepad> mGamepads;
   bool mHasSeenGamepadInput;

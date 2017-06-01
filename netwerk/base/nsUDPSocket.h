@@ -12,11 +12,6 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 
-#ifdef MOZ_WIDGET_GONK
-#include "nsINetworkInterface.h"
-#include "nsProxyRelease.h"
-#endif
-
 //-----------------------------------------------------------------------------
 
 namespace mozilla {

@@ -34,6 +34,12 @@ struct PropertyValuePair
   // The specified value when using the Servo backend.
   RefPtr<RawServoDeclarationBlock> mServoDeclarationBlock;
 
+#ifdef DEBUG
+  // Flag to indicate that when we call StyleAnimationValue::ComputeValues on
+  // this value we should behave as if that function had failed.
+  bool mSimulateComputeValuesFailure;
+#endif
+
   bool operator==(const PropertyValuePair&) const;
 };
 

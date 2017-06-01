@@ -33,10 +33,6 @@
 #include "nsICancelable.h"
 #include "nsWrapperCacheInlines.h"
 
-#ifdef MOZ_WIDGET_GONK
-#include "NetStatistics.h"
-#endif
-
 namespace mozilla {
 namespace net {
 

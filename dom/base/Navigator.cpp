@@ -46,6 +46,7 @@
 #include "mozilla/dom/TCPSocket.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/VRDisplay.h"
+#include "mozilla/dom/VRDisplayEvent.h"
 #include "mozilla/dom/VRServiceTest.h"
 #include "mozilla/dom/WebAuthentication.h"
 #include "mozilla/dom/workers/RuntimeService.h"
@@ -1565,6 +1566,27 @@ Navigator::RequestVRServiceTest()
     mVRServiceTest = VRServiceTest::CreateTestService(mWindow);
   }
   return mVRServiceTest;
+}
+
+bool
+Navigator::IsWebVRContentDetected() const
+{
+  nsGlobalWindow* win = nsGlobalWindow::Cast(mWindow);
+  return win->IsVRContentDetected();
+}
+
+bool
+Navigator::IsWebVRContentPresenting() const
+{
+  nsGlobalWindow* win = nsGlobalWindow::Cast(mWindow);
+  return win->IsVRContentPresenting();
+}
+
+void
+Navigator::RequestVRPresentation(VRDisplay& aDisplay)
+{
+  nsGlobalWindow* win = nsGlobalWindow::Cast(mWindow);
+  win->DispatchVRDisplayActivate(aDisplay.DisplayId(), VRDisplayEventReason::Requested);
 }
 
 //*****************************************************************************

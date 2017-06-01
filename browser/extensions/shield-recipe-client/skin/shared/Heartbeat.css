@@ -1,0 +1,130 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Notification overrides for Heartbeat UI */
+
+notification.heartbeat {
+  background-color: #F1F1F1;
+  border-bottom: 1px solid #C1C1C1;
+  height: 40px;
+}
+
+/* In themes/osx/global/notification.css the close icon is inverted because notifications
+   on OSX are usually dark. Heartbeat is light, so override that behaviour. */
+
+@keyframes pulse-onshow {
+  0% {
+    opacity: 0;
+    transform: scale(1);
+  }
+
+  25% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  50% {
+    transform: scale(1);
+  }
+
+  75% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-twice {
+  0% {
+    transform: scale(1.1);
+  }
+
+  50% {
+    transform: scale(0.8);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.messageText.heartbeat {
+  color: #333;
+  margin-inline-end: 12px !important; /* The !important is required to override OSX default style. */
+  margin-inline-start: 0;
+  text-shadow: none;
+}
+
+.messageImage.heartbeat {
+  height: 24px;
+  margin-inline-end: 8px;
+  margin-inline-start: 8px;
+  width: 24px;
+}
+
+.messageImage.heartbeat.pulse-onshow {
+  animation-duration: 1.5s;
+  animation-iteration-count: 1;
+  animation-name: pulse-onshow;
+  animation-timing-function: cubic-bezier(0.7, 1.8, 0.9, 1.1);
+}
+
+.messageImage.heartbeat.pulse-twice {
+  animation-duration: 1s;
+  animation-iteration-count: 2;
+  animation-name: pulse-twice;
+  animation-timing-function: linear;
+}
+
+/* Learn More link styles */
+.heartbeat > .text-link {
+  color: #0095DD;
+  margin-inline-start: 0;
+}
+
+.heartbeat > .text-link:hover {
+  color: #008ACB;
+  text-decoration: none;
+}
+
+.heartbeat > .text-link:hover:active {
+  color: #006B9D;
+}
+
+/* Heartbeat UI Rating Star Classes */
+.heartbeat > #star-rating-container {
+  display: -moz-box;
+  margin-bottom: 4px;
+}
+
+.heartbeat > #star-rating-container > #star5 {
+  -moz-box-ordinal-group: 5;
+}
+
+.heartbeat > #star-rating-container > #star4 {
+  -moz-box-ordinal-group: 4;
+}
+
+.heartbeat > #star-rating-container > #star3 {
+  -moz-box-ordinal-group: 3;
+}
+
+.heartbeat > #star-rating-container > #star2 {
+  -moz-box-ordinal-group: 2;
+}
+
+.heartbeat > #star-rating-container > .star-x {
+  background: url("resource://shield-recipe-client/skin/shared/heartbeat-star-off.svg");
+  cursor: pointer;
+  height: 16px;
+  margin-inline-end: 4px !important; /* Overrides the margin-inline-end for all platforms defined in the .plain class */
+  width: 16px;
+}
+
+.heartbeat > #star-rating-container > .star-x:hover,
+.heartbeat > #star-rating-container > .star-x:hover ~ .star-x {
+  background: url("resource://shield-recipe-client/skin/shared/heartbeat-star-lit.svg");
+}

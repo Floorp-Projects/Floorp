@@ -132,6 +132,57 @@ struct VRFieldOfView {
   double leftDegrees;
 };
 
+struct VRHMDSensorState {
+  VRHMDSensorState()
+  {
+    Clear();
+  }
+  int32_t inputFrameID;
+  double timestamp;
+  VRDisplayCapabilityFlags flags;
+
+  // These members will only change with inputFrameID:
+  float orientation[4];
+  float position[3];
+  float angularVelocity[3];
+  float angularAcceleration[3];
+  float linearVelocity[3];
+  float linearAcceleration[3];
+
+  void Clear() {
+    memset(this, 0, sizeof(VRHMDSensorState));
+  }
+
+  bool operator==(const VRHMDSensorState& other) const {
+    return inputFrameID == other.inputFrameID &&
+           timestamp == other.timestamp;
+  }
+
+  bool operator!=(const VRHMDSensorState& other) const {
+    return !(*this == other);
+  }
+};
+
+// The maximum number of frames of latency that we would expect before we
+// should give up applying pose prediction.
+// If latency is greater than one second, then the experience is not likely
+// to be corrected by pose prediction.  Setting this value too
+// high may result in unnecessary memory allocation.
+// As the current fastest refresh rate is 90hz, 100 is selected as a
+// conservative value.
+static const int kVRMaxLatencyFrames = 100;
+
+// We assign VR presentations to groups with a bitmask.
+// Currently, we will only display either content or chrome.
+// Later, we will have more groups to support VR home spaces and
+// multitasking environments.
+// These values are not exposed to regular content and only affect
+// chrome-only API's.  They may be changed at any time.
+static const uint32_t kVRGroupNone = 0;
+static const uint32_t kVRGroupContent = 1 << 0;
+static const uint32_t kVRGroupChrome = 1 << 1;
+static const uint32_t kVRGroupAll = 0xffffffff;
+
 struct VRDisplayInfo
 {
   VRDeviceType GetType() const { return mType; }
@@ -144,9 +195,11 @@ struct VRDisplayInfo
   const VRFieldOfView& GetEyeFOV(uint32_t whichEye) const { return mEyeFOV[whichEye]; }
   bool GetIsConnected() const { return mIsConnected; }
   bool GetIsMounted() const { return mIsMounted; }
-  bool GetIsPresenting() const { return mIsPresenting; }
+  uint32_t GetPresentingGroups() const { return mPresentingGroups; }
+  uint32_t GetGroupMask() const { return mGroupMask; }
   const Size& GetStageSize() const { return mStageSize; }
   const Matrix4x4& GetSittingToStandingTransform() const { return mSittingToStandingTransform; }
+  uint32_t GetFrameId() const { return mFrameId; }
 
   enum Eye {
     Eye_Left,
@@ -163,11 +216,19 @@ struct VRDisplayInfo
   IntSize mEyeResolution;
   bool mIsConnected;
   bool mIsMounted;
-  bool mIsPresenting;
+  uint32_t mPresentingGroups;
+  uint32_t mGroupMask;
   Size mStageSize;
   Matrix4x4 mSittingToStandingTransform;
+  uint32_t mFrameId;
+  VRHMDSensorState mLastSensorState[kVRMaxLatencyFrames];
 
   bool operator==(const VRDisplayInfo& other) const {
+    for (size_t i = 0; i < kVRMaxLatencyFrames; i++) {
+      if (mLastSensorState[i] != other.mLastSensorState[i]) {
+        return false;
+      }
+    }
     return mType == other.mType &&
            mDisplayID == other.mDisplayID &&
            mDisplayName == other.mDisplayName &&
@@ -175,37 +236,24 @@ struct VRDisplayInfo
            mEyeResolution == other.mEyeResolution &&
            mIsConnected == other.mIsConnected &&
            mIsMounted == other.mIsMounted &&
-           mIsPresenting == other.mIsPresenting &&
+           mPresentingGroups == other.mPresentingGroups &&
+           mGroupMask == other.mGroupMask &&
            mEyeFOV[0] == other.mEyeFOV[0] &&
            mEyeFOV[1] == other.mEyeFOV[1] &&
            mEyeTranslation[0] == other.mEyeTranslation[0] &&
            mEyeTranslation[1] == other.mEyeTranslation[1] &&
            mStageSize == other.mStageSize &&
-           mSittingToStandingTransform == other.mSittingToStandingTransform;
+           mSittingToStandingTransform == other.mSittingToStandingTransform &&
+           mFrameId == other.mFrameId;
   }
 
   bool operator!=(const VRDisplayInfo& other) const {
     return !(*this == other);
   }
-};
 
-struct VRHMDSensorState {
-  VRHMDSensorState()
+  const VRHMDSensorState& GetSensorState() const
   {
-    Clear();
-  }
-  double timestamp;
-  int32_t inputFrameID;
-  VRDisplayCapabilityFlags flags;
-  float orientation[4];
-  float position[3];
-  float angularVelocity[3];
-  float angularAcceleration[3];
-  float linearVelocity[3];
-  float linearAcceleration[3];
-
-  void Clear() {
-    memset(this, 0, sizeof(VRHMDSensorState));
+    return mLastSensorState[mFrameId % kVRMaxLatencyFrames];
   }
 };
 

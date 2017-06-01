@@ -667,13 +667,8 @@ pref("apz.axis_lock.breakout_threshold", "0.03125");  // 1/32 inches
 pref("apz.axis_lock.breakout_angle", "0.3926991");    // PI / 8 (22.5 degrees)
 pref("apz.axis_lock.direct_pan_angle", "1.047197");   // PI / 3 (60 degrees)
 pref("apz.content_response_timeout", 400);
-#ifdef NIGHTLY_BUILD
 pref("apz.drag.enabled", true);
 pref("apz.drag.initial.enabled", true);
-#else
-pref("apz.drag.enabled", false);
-pref("apz.drag.initial.enabled", false);
-#endif
 pref("apz.danger_zone_x", 50);
 pref("apz.danger_zone_y", 100);
 pref("apz.disable_for_scroll_linked_effects", false);

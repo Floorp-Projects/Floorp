@@ -80,7 +80,8 @@ protected:
                                               const float& aRightEyeX,
                                               const float& aRightEyeY,
                                               const float& aRightEyeWidth,
-                                              const float& aRightEyeHeight) override;
+                                              const float& aRightEyeHeight,
+                                              const uint32_t& aGroup) override;
   virtual bool DeallocPVRLayerParent(PVRLayerParent* actor) override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
@@ -88,14 +89,13 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvRefreshDisplays() override;
   virtual mozilla::ipc::IPCResult RecvResetSensor(const uint32_t& aDisplayID) override;
-  virtual mozilla::ipc::IPCResult RecvGetSensorState(const uint32_t& aDisplayID, VRHMDSensorState* aState) override;
+  virtual mozilla::ipc::IPCResult RecvSetGroupMask(const uint32_t& aDisplayID, const uint32_t& aGroupMask) override;
   virtual mozilla::ipc::IPCResult RecvSetHaveEventListener(const bool& aHaveEventListener) override;
   virtual mozilla::ipc::IPCResult RecvControllerListenerAdded() override;
   virtual mozilla::ipc::IPCResult RecvControllerListenerRemoved() override;
   virtual mozilla::ipc::IPCResult RecvVibrateHaptic(const uint32_t& aControllerIdx, const uint32_t& aHapticIndex,
                                                     const double& aIntensity, const double& aDuration, const uint32_t& aPromiseID) override;
   virtual mozilla::ipc::IPCResult RecvStopVibrateHaptic(const uint32_t& aControllerIdx) override;
-  
   virtual mozilla::ipc::IPCResult RecvCreateVRTestSystem() override;
   virtual mozilla::ipc::IPCResult RecvCreateVRServiceTestDisplay(const nsCString& aID, const uint32_t& aPromiseID) override;
   virtual mozilla::ipc::IPCResult RecvCreateVRServiceTestController(const nsCString& aID, const uint32_t& aPromiseID) override;

@@ -168,15 +168,17 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
 
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
     VRManagerParent *vmp = iter.Get()->GetKey();
-    if (mVRDisplays.Count()) {
-      Unused << vmp->SendNotifyVSync();
-    }
     bHaveEventListener |= vmp->HaveEventListener();
     bHaveControllerListener |= vmp->HaveControllerListener();
   }
 
+  // VRDisplayHost::NotifyVSync may modify mVRDisplays, so we iterate
+  // through a local copy here.
+  nsTArray<RefPtr<VRDisplayHost>> displays;
   for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
-    gfx::VRDisplayHost* display = iter.UserData();
+    displays.AppendElement(iter.UserData());
+  }
+  for (const auto& display: displays) {
     display->NotifyVSync();
   }
 
@@ -239,9 +241,12 @@ VRManager::NotifyVRVsync(const uint32_t& aDisplayID)
     }
   }
 
-  for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
-    Unused << iter.Get()->GetKey()->SendNotifyVRVSync(aDisplayID);
+  RefPtr<VRDisplayHost> display = GetDisplay(aDisplayID);
+  if (display) {
+    display->StartFrame();
   }
+
+  RefreshVRDisplays();
 }
 
 void
@@ -339,7 +344,7 @@ VRManager::SubmitFrame(VRLayerParent* aLayer, layers::PTextureParent* aTexture,
   mLastFrame = th;
   RefPtr<VRDisplayHost> display = GetDisplay(aLayer->GetDisplayID());
   if (display) {
-    display->SubmitFrame(aLayer, 0, aTexture, aLeftEyeRect, aRightEyeRect);
+    display->SubmitFrame(aLayer, aTexture, aLeftEyeRect, aRightEyeRect);
   }
 }
 

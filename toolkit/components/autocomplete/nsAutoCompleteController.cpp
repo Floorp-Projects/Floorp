@@ -664,7 +664,7 @@ nsAutoCompleteController::HandleDelete(bool *_retval)
   nsCOMPtr<nsIAutoCompleteInput> input(mInput);
   bool isOpen = false;
   input->GetPopupOpen(&isOpen);
-  if (!isOpen || mRowCount <= 0) {
+  if (!isOpen || mRowCount == 0) {
     // Nothing left to delete, proceed as normal
     bool unused = false;
     HandleText(&unused);
@@ -707,7 +707,8 @@ nsAutoCompleteController::HandleDelete(bool *_retval)
     mTree->RowCountChanged(mRowCount, -1);
 
   // Adjust index, if needed.
-  if (index >= (int32_t)mRowCount)
+  MOZ_ASSERT(index >= 0); // We verified this above, after RowIndexToSearch.
+  if (static_cast<uint32_t>(index) >= mRowCount)
     index = mRowCount - 1;
 
   if (mRowCount > 0) {
@@ -1979,7 +1980,7 @@ nsAutoCompleteController::GetResultValueLabelAt(int32_t aIndex,
                                                 bool aGetValue,
                                                 nsAString & _retval)
 {
-  NS_ENSURE_TRUE(aIndex >= 0 && (uint32_t) aIndex < mRowCount, NS_ERROR_ILLEGAL_VALUE);
+  NS_ENSURE_TRUE(aIndex >= 0 && static_cast<uint32_t>(aIndex) < mRowCount, NS_ERROR_ILLEGAL_VALUE);
 
   int32_t rowIndex;
   nsIAutoCompleteResult *result;

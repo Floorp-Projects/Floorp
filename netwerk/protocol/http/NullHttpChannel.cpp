@@ -552,7 +552,8 @@ NullHttpChannel::GetIsDocument(bool *aIsDocument)
 NS_IMETHODIMP
 NullHttpChannel::GetTimingEnabled(bool *aTimingEnabled)
 {
-  *aTimingEnabled = true;
+  // We don't want to report timing for null channels.
+  *aTimingEnabled = false;
   return NS_OK;
 }
 

@@ -380,6 +380,16 @@ function* testFileAccess() {
         minLevel: 0,
       });
     }
+
+    // Test that we cannot read from /Volumes at level 3
+    let volumes = GetDir("/Volumes");
+    tests.push({
+      desc:     "/Volumes",
+      ok:       false,
+      browser:  webBrowser,
+      file:     volumes,
+      minLevel: minHomeReadSandboxLevel(),
+    });
   }
 
   let extensionsDir = GetProfileEntry("extensions");

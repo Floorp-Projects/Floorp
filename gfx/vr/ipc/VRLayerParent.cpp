@@ -10,11 +10,12 @@
 namespace mozilla {
 namespace gfx {
 
-VRLayerParent::VRLayerParent(uint32_t aVRDisplayID, const Rect& aLeftEyeRect, const Rect& aRightEyeRect)
+VRLayerParent::VRLayerParent(uint32_t aVRDisplayID, const Rect& aLeftEyeRect, const Rect& aRightEyeRect, const uint32_t aGroup)
   : mIPCOpen(true)
   , mVRDisplayID(aVRDisplayID)
   , mLeftEyeRect(aLeftEyeRect)
   , mRightEyeRect(aRightEyeRect)
+  , mGroup(aGroup)
 {
 }
 

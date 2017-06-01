@@ -1832,7 +1832,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: Page start -> subitem open() (ms)"
+    "description": "HTTP subitem channel: Page start -> subitem open() (ms)"
   },
   "HTTP_SUBITEM_FIRST_BYTE_LATENCY_TIME": {
     "record_in_processes": ["main", "content"],
@@ -1840,7 +1840,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: Page start -> first byte received for subitem reply (ms)"
+    "description": "HTTP subitem channel: Page start -> first byte received for subitem reply (ms)"
   },
   "HTTP_REQUEST_PER_PAGE": {
     "record_in_processes": ["main", "content"],
@@ -1879,7 +1879,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: open() -> DNS request issued (ms)"
+    "description": "HTTP page channel: open() -> DNS request issued (ms)"
   },
   "HTTP_PAGE_DNS_LOOKUP_TIME": {
     "record_in_processes": ["main", "content"],
@@ -1887,7 +1887,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: DNS lookup time (ms)"
+    "description": "HTTP page channel: DNS lookup time (ms)"
   },
   "HTTP_PAGE_TCP_CONNECTION": {
     "record_in_processes": ["main", "content"],
@@ -1895,7 +1895,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: TCP connection setup (ms)"
+    "description": "HTTP page channel: TCP connection setup (ms)"
   },
   "HTTP_PAGE_OPEN_TO_FIRST_SENT": {
     "record_in_processes": ["main", "content"],
@@ -1903,7 +1903,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: Open -> first byte of request sent (ms)"
+    "description": "HTTP page channel: Open -> first byte of request sent (ms)"
   },
   "HTTP_PAGE_FIRST_SENT_TO_LAST_RECEIVED": {
     "record_in_processes": ["main", "content"],
@@ -1911,7 +1911,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: First byte of request sent -> last byte of response received (ms)"
+    "description": "HTTP page channel: First byte of request sent -> last byte of response received (ms)"
   },
   "HTTP_PAGE_OPEN_TO_FIRST_RECEIVED": {
     "record_in_processes": ["main", "content"],
@@ -1919,7 +1919,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: Open -> first byte of reply received (ms)"
+    "description": "HTTP page channel: Open -> first byte of reply received (ms)"
   },
   "HTTP_PAGE_OPEN_TO_FIRST_FROM_CACHE": {
     "record_in_processes": ["main", "content"],
@@ -1927,7 +1927,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: Open -> cache read start (ms)"
+    "description": "HTTP page channel: Open -> cache read start (ms)"
   },
   "HTTP_PAGE_OPEN_TO_FIRST_FROM_CACHE_V2": {
     "record_in_processes": ["main", "content"],
@@ -1935,7 +1935,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: Open -> cache read start (ms), [cache2]"
+    "description": "HTTP page channel: Open -> cache read start (ms), [cache2]"
   },
   "HTTP_PAGE_CACHE_READ_TIME": {
     "record_in_processes": ["main", "content"],
@@ -1943,7 +1943,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: Cache read time (ms)"
+    "description": "HTTP page channel: Cache read time (ms)"
   },
   "HTTP_PAGE_CACHE_READ_TIME_V2": {
     "record_in_processes": ["main", "content"],
@@ -1951,7 +1951,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: Cache read time (ms) [cache2]"
+    "description": "HTTP page channel: Cache read time (ms) [cache2]"
   },
   "HTTP_PAGE_REVALIDATION": {
     "record_in_processes": ["main", "content"],
@@ -1959,7 +1959,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: Positive cache validation time (ms)"
+    "description": "HTTP page channel: Positive cache validation time (ms)"
   },
   "HTTP_PAGE_COMPLETE_LOAD": {
     "record_in_processes": ["main", "content"],
@@ -1967,7 +1967,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: Overall load time - all (ms)"
+    "description": "HTTP page channel: Overall load time - all (ms)"
   },
   "HTTP_PAGE_COMPLETE_LOAD_V2": {
     "record_in_processes": ["main", "content"],
@@ -1975,7 +1975,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: Overall load time - all (ms) [cache2]"
+    "description": "HTTP page channel: Overall load time - all (ms) [cache2]"
   },
   "HTTP_PAGE_COMPLETE_LOAD_CACHED": {
     "record_in_processes": ["main", "content"],
@@ -1983,7 +1983,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: Overall load time - cache hits (ms)"
+    "description": "HTTP page channel: Overall load time - cache hits (ms)"
   },
   "HTTP_PAGE_COMPLETE_LOAD_CACHED_V2": {
     "record_in_processes": ["main", "content"],
@@ -1991,7 +1991,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: Overall load time - cache hits (ms) [cache2]"
+    "description": "HTTP page channel: Overall load time - cache hits (ms) [cache2]"
   },
   "HTTP_PAGE_COMPLETE_LOAD_NET": {
     "record_in_processes": ["main", "content"],
@@ -1999,7 +1999,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: Overall load time - network (ms)"
+    "description": "HTTP page channel: Overall load time - network (ms)"
   },
   "HTTP_PAGE_COMPLETE_LOAD_NET_V2": {
     "record_in_processes": ["main", "content"],
@@ -2007,7 +2007,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP page: Overall load time - network (ms) [cache2]"
+    "description": "HTTP page channel: Overall load time - network (ms) [cache2]"
   },
   "HTTP_SUB_DNS_ISSUE_TIME": {
     "record_in_processes": ["main", "content"],
@@ -2015,7 +2015,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: open() -> DNS request issued (ms)"
+    "description": "HTTP subitem channel: open() -> DNS request issued (ms)"
   },
   "HTTP_SUB_DNS_LOOKUP_TIME": {
     "record_in_processes": ["main", "content"],
@@ -2023,7 +2023,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: DNS lookup time (ms)"
+    "description": "HTTP subitem channel: DNS lookup time (ms)"
   },
   "HTTP_SUB_TCP_CONNECTION": {
     "record_in_processes": ["main", "content"],
@@ -2031,7 +2031,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: TCP connection setup (ms)"
+    "description": "HTTP subitem channel: TCP connection setup (ms)"
   },
   "HTTP_SUB_OPEN_TO_FIRST_SENT": {
     "record_in_processes": ["main", "content"],
@@ -2039,7 +2039,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: Open -> first byte of request sent (ms)"
+    "description": "HTTP subitem channel: Open -> first byte of request sent (ms)"
   },
   "HTTP_SUB_FIRST_SENT_TO_LAST_RECEIVED": {
     "record_in_processes": ["main", "content"],
@@ -2047,7 +2047,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: First byte of request sent -> last byte of response received (ms)"
+    "description": "HTTP subitem channel: First byte of request sent -> last byte of response received (ms)"
   },
   "HTTP_SUB_OPEN_TO_FIRST_RECEIVED": {
     "record_in_processes": ["main", "content"],
@@ -2055,7 +2055,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: Open -> first byte of reply received (ms)"
+    "description": "HTTP subitem channel: Open -> first byte of reply received (ms)"
   },
   "HTTP_SUB_OPEN_TO_FIRST_FROM_CACHE": {
     "record_in_processes": ["main", "content"],
@@ -2063,7 +2063,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: Open -> cache read start (ms)"
+    "description": "HTTP subitem channel: Open -> cache read start (ms)"
   },
   "HTTP_SUB_OPEN_TO_FIRST_FROM_CACHE_V2": {
     "record_in_processes": ["main", "content"],
@@ -2071,7 +2071,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: Open -> cache read start (ms) [cache2]"
+    "description": "HTTP subitem channel: Open -> cache read start (ms) [cache2]"
   },
   "HTTP_SUB_CACHE_READ_TIME": {
     "record_in_processes": ["main", "content"],
@@ -2079,7 +2079,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: Cache read time (ms)"
+    "description": "HTTP subitem channel: Cache read time (ms)"
   },
   "HTTP_SUB_CACHE_READ_TIME_V2": {
     "record_in_processes": ["main", "content"],
@@ -2087,7 +2087,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: Cache read time (ms) [cache2]"
+    "description": "HTTP subitem channel: Cache read time (ms) [cache2]"
   },
   "HTTP_SUB_REVALIDATION": {
     "record_in_processes": ["main", "content"],
@@ -2095,7 +2095,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: Positive cache validation time (ms)"
+    "description": "HTTP subitem channel: Positive cache validation time (ms)"
   },
   "HTTP_SUB_COMPLETE_LOAD": {
     "record_in_processes": ["main", "content"],
@@ -2103,7 +2103,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: Overall load time - all (ms)"
+    "description": "HTTP subitem channel: Overall load time - all (ms)"
   },
   "HTTP_SUB_COMPLETE_LOAD_V2": {
     "record_in_processes": ["main", "content"],
@@ -2111,7 +2111,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: Overall load time - all (ms) [cache2]"
+    "description": "HTTP subitem channel: Overall load time - all (ms) [cache2]"
   },
   "HTTP_SUB_COMPLETE_LOAD_CACHED": {
     "record_in_processes": ["main", "content"],
@@ -2119,7 +2119,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: Overall load time - cache hits (ms)"
+    "description": "HTTP subitem channel: Overall load time - cache hits (ms)"
   },
   "HTTP_SUB_COMPLETE_LOAD_CACHED_V2": {
     "record_in_processes": ["main", "content"],
@@ -2127,7 +2127,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: Overall load time - cache hits (ms) [cache2]"
+    "description": "HTTP subitem channel: Overall load time - cache hits (ms) [cache2]"
   },
   "HTTP_SUB_COMPLETE_LOAD_NET": {
     "record_in_processes": ["main", "content"],
@@ -2135,7 +2135,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: Overall load time - network (ms)"
+    "description": "HTTP subitem channel: Overall load time - network (ms)"
   },
   "HTTP_SUB_COMPLETE_LOAD_NET_V2": {
     "record_in_processes": ["main", "content"],
@@ -2143,7 +2143,7 @@
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
-    "description": "HTTP subitem: Overall load time - network (ms) [cache2]"
+    "description": "HTTP subitem channel: Overall load time - network (ms) [cache2]"
   },
   "HTTP_PROXY_TYPE": {
     "record_in_processes": ["main", "content"],
@@ -7259,6 +7259,23 @@
     "high": 120000,
     "n_buckets": 20,
     "description": "Time needed (in ms) for a failed send of a Telemetry ping to the servers and getting a reply back."
+  },
+  "TELEMETRY_SEND_FAILURE_TYPE" : {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "bug_numbers": [1367110],
+    "expires_in_version": "61",
+    "kind": "categorical",
+    "labels": [
+      "eOK",
+      "eRequest",
+      "eUnreachable",
+      "eChannelOpen",
+      "eRedirect",
+      "abort",
+      "timeout"
+    ],
+    "description": "Counts of the different ways sending a Telemetry ping can fail."
   },
   "TELEMETRY_STRINGIFY" : {
     "record_in_processes": ["main", "content"],
