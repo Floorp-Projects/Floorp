@@ -1623,7 +1623,7 @@ nsNSSComponent::setEnabledTLSVersions()
   // keep these values in sync with security-prefs.js
   // 1 means TLS 1.0, 2 means TLS 1.1, etc.
   static const uint32_t PSM_DEFAULT_MIN_TLS_VERSION = 1;
-  static const uint32_t PSM_DEFAULT_MAX_TLS_VERSION = 4;
+  static const uint32_t PSM_DEFAULT_MAX_TLS_VERSION = 3;
 
   uint32_t minFromPrefs = Preferences::GetUint("security.tls.version.min",
                                                PSM_DEFAULT_MIN_TLS_VERSION);
