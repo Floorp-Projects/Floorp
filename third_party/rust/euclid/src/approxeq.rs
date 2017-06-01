@@ -15,33 +15,22 @@ pub trait ApproxEq<Eps> {
     fn approx_eq_eps(&self, other: &Self, approx_epsilon: &Eps) -> bool;
 }
 
-impl ApproxEq<f32> for f32 {
-    #[inline]
-    fn approx_epsilon() -> f32 { 1.0e-6 }
-
-    #[inline]
-    fn approx_eq(&self, other: &f32) -> bool {
-       self.approx_eq_eps(other, &1.0e-6)
-    }
-
-    #[inline]
-    fn approx_eq_eps(&self, other: &f32, approx_epsilon: &f32) -> bool {
-       (*self - *other).abs() < *approx_epsilon
-    }
+macro_rules! approx_eq {
+    ($ty:ty, $eps:expr) => (
+        impl ApproxEq<$ty> for $ty {
+            #[inline]
+            fn approx_epsilon() -> $ty { $eps }
+            #[inline]
+            fn approx_eq(&self, other: &$ty) -> bool {
+                self.approx_eq_eps(other, &$eps)
+            }
+            #[inline]
+            fn approx_eq_eps(&self, other: &$ty, approx_epsilon: &$ty) -> bool {
+                (*self - *other).abs() < *approx_epsilon
+            }
+        }
+    )
 }
 
-
-impl ApproxEq<f64> for f64 {
-    #[inline]
-    fn approx_epsilon() -> f64 { 1.0e-6 }
-
-    #[inline]
-    fn approx_eq(&self, other: &f64) -> bool {
-        self.approx_eq_eps(other, &1.0e-6)
-    }
-
-    #[inline]
-    fn approx_eq_eps(&self, other: &f64, approx_epsilon: &f64) -> bool {
-        (*self - *other).abs() < *approx_epsilon
-    }
-}
+approx_eq!(f32, 1.0e-6);
+approx_eq!(f64, 1.0e-6);

@@ -13,7 +13,7 @@ void main(void) {
                                  prim.z,
                                  prim.layer,
                                  prim.task,
-                                 prim.local_rect.p0);
+                                 prim.local_rect);
 
     RenderTaskData child_task = fetch_render_task(prim.user_data1);
     vUv.z = child_task.data1.x;

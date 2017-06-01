@@ -207,18 +207,21 @@ public:
                             wr::ImageKey aImageChannel0,
                             wr::ImageKey aImageChannel1,
                             wr::ImageKey aImageChannel2,
-                            WrYuvColorSpace aColorSpace);
+                            WrYuvColorSpace aColorSpace,
+                            wr::ImageRendering aFilter);
 
   void PushNV12Image(const WrRect& aBounds,
                      const WrClipRegionToken aClip,
                      wr::ImageKey aImageChannel0,
                      wr::ImageKey aImageChannel1,
-                     WrYuvColorSpace aColorSpace);
+                     WrYuvColorSpace aColorSpace,
+                     wr::ImageRendering aFilter);
 
   void PushYCbCrInterleavedImage(const WrRect& aBounds,
                                  const WrClipRegionToken aClip,
                                  wr::ImageKey aImageChannel0,
-                                 WrYuvColorSpace aColorSpace);
+                                 WrYuvColorSpace aColorSpace,
+                                 wr::ImageRendering aFilter);
 
   void PushIFrame(const WrRect& aBounds,
                   const WrClipRegionToken aClip,

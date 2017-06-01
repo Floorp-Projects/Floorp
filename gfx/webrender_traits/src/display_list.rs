@@ -535,10 +535,12 @@ impl DisplayListBuilder {
                           rect: LayoutRect,
                           _token: ClipRegionToken,
                           yuv_data: YuvData,
-                          color_space: YuvColorSpace) {
+                          color_space: YuvColorSpace,
+                          image_rendering: ImageRendering) {
         let item = SpecificDisplayItem::YuvImage(YuvImageDisplayItem {
             yuv_data: yuv_data,
             color_space: color_space,
+            image_rendering: image_rendering,
         });
         self.push_item(item, rect);
     }
