@@ -33,7 +33,7 @@ random-if(d2d) == dynamic-2.html dynamic-2-ref.html
 == 23605-5.html 23605-5-ref.html
 == 23605-6.html 23605-6-ref.html
 != 229764-1.html 229764-ref.html
-fails-if(styloVsGecko||stylo) == 229764-2.html 229764-ref.html
+== 229764-2.html 229764-ref.html
 == 329069-1.html 329069-1-ref.html
 fails-if(Android) == 329069-2.html 329069-2-ref.html # Bug 999139
 == 329069-3.html 329069-3-ref.html
