@@ -317,7 +317,7 @@ LoadActivation(MacroAssembler& masm, Register dest)
 
 static void
 GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
-                         uint32_t* entry)
+                         uint32_t* entry, uint32_t* tierEntry, CompileMode mode, uint32_t funcIndex)
 {
     // ProfilingFrameIterator needs to know the offsets of several key
     // instructions from entry. To save space, we make these offsets static
@@ -340,6 +340,30 @@ GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason 
         MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
         masm.moveStackPtrTo(FramePointer);
         MOZ_ASSERT_IF(!masm.oom(), SetFP == masm.currentOffset() - *entry);
+    }
+
+    // Tiering works as follows.  The Code owns a jumpTable, which has one
+    // pointer-sized element for each function up to the largest funcIndex in
+    // the module.  Each table element is an address into the Tier-1 or the
+    // Tier-2 function at that index; the elements are updated when Tier-2 code
+    // becomes available.  The Tier-1 function will unconditionally jump to this
+    // address.  The table elements are written racily but without tearing when
+    // Tier-2 compilation is finished.
+    //
+    // The address in the table is either to the instruction following the jump
+    // in Tier-1 code, or into the function prologue after the standard setup in
+    // Tier-2 code.  Effectively, Tier-1 code performs standard frame setup on
+    // behalf of whatever code it jumps to, and the target code allocates its
+    // own frame in whatever way it wants.
+
+    if (reason.isNone()) {
+        if (mode == CompileMode::Tier1) {
+            Register scratch = ABINonArgReg0;
+            masm.loadPtr(Address(WasmTlsReg, offsetof(TlsData, jumpTable)), scratch);
+            masm.jump(Address(scratch, funcIndex*sizeof(uintptr_t)));
+        }
+        if (tierEntry)
+            *tierEntry = masm.currentOffset();
     }
 
     if (!reason.isNone()) {
@@ -427,7 +451,7 @@ GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason 
 
 void
 wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const SigIdDesc& sigId,
-                               FuncOffsets* offsets)
+                               FuncOffsets* offsets, CompileMode mode, uint32_t funcIndex)
 {
     // Flush pending pools so they do not get dumped between the 'begin' and
     // 'normalEntry' offsets since the difference must be less than UINT8_MAX
@@ -460,7 +484,8 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
 
     // Generate normal entry:
     masm.nopAlign(CodeAlignment);
-    GenerateCallablePrologue(masm, framePushed, ExitReason::None(), &offsets->normalEntry);
+    GenerateCallablePrologue(masm, framePushed, ExitReason::None(), &offsets->normalEntry,
+                             &offsets->tierEntry, mode, funcIndex);
 
     masm.setFramePushed(framePushed);
 }
@@ -478,7 +503,8 @@ wasm::GenerateExitPrologue(MacroAssembler& masm, unsigned framePushed, ExitReaso
                            CallableOffsets* offsets)
 {
     masm.haltingAlign(CodeAlignment);
-    GenerateCallablePrologue(masm, framePushed, reason, &offsets->begin);
+    GenerateCallablePrologue(masm, framePushed, reason, &offsets->begin, nullptr,
+                             CompileMode::Once, 0);
     masm.setFramePushed(framePushed);
 }
 

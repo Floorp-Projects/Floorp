@@ -1220,6 +1220,28 @@ ModuleGenerator::finishCommon(const ShareableBytes& bytecode)
     return true;
 }
 
+UniqueJumpTable
+ModuleGenerator::createJumpTable(const CodeSegment& codeSegment)
+{
+    MOZ_ASSERT(compileMode_ == CompileMode::Tier1);
+    MOZ_ASSERT(!isAsmJS());
+
+    uint32_t tableSize = env_->numFuncImports() + env_->numFuncDefs();
+    uintptr_t* jumpTable = reinterpret_cast<uintptr_t*>(js_calloc(tableSize, sizeof(uintptr_t)));
+    if (!jumpTable)
+        return nullptr;
+
+    UniqueJumpTable jumpTable_ = UniqueJumpTable(jumpTable, JS::FreePolicy());
+
+    uintptr_t codeBase = reinterpret_cast<uintptr_t>(codeSegment.base());
+    for (const CodeRange& codeRange : metadataTier_->codeRanges) {
+        if (codeRange.isFunction())
+            jumpTable[codeRange.funcIndex()] = codeBase + codeRange.funcTierEntry();
+    }
+
+    return jumpTable_;
+}
+
 SharedModule
 ModuleGenerator::finishModule(const ShareableBytes& bytecode)
 {
@@ -1236,8 +1258,16 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
     if (!codeSegment)
         return nullptr;
 
+    UniqueJumpTable maybeJumpTable;
+    if (compileMode_ == CompileMode::Tier1) {
+        maybeJumpTable = createJumpTable(*codeSegment);
+        if (!maybeJumpTable)
+            return nullptr;
+    }
+
     UniqueConstBytes maybeDebuggingBytes;
     if (metadata_->debugEnabled) {
+        MOZ_ASSERT(compileMode_ == CompileMode::Once);
         Bytes bytes;
         if (!bytes.resize(masm_.bytesNeeded()))
             return nullptr;
@@ -1247,7 +1277,7 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
             return nullptr;
     }
 
-    SharedCode code = js_new<Code>(Move(codeSegment), *metadata_);
+    SharedCode code = js_new<Code>(Move(codeSegment), *metadata_, Move(maybeJumpTable));
     if (!code)
         return nullptr;
 
@@ -1267,6 +1297,7 @@ bool
 ModuleGenerator::finishTier2(const ShareableBytes& bytecode, SharedModule module)
 {
     MOZ_ASSERT(compileMode_ == CompileMode::Tier2);
+    MOZ_ASSERT(tier_ == Tier::Ion);
 
     if (cancelled_ && *cancelled_)
         return false;

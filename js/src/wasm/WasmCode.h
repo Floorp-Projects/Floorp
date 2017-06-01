@@ -444,6 +444,8 @@ class Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod
 typedef RefPtr<Metadata> MutableMetadata;
 typedef RefPtr<const Metadata> SharedMetadata;
 
+typedef UniquePtr<uintptr_t, JS::FreePolicy> UniqueJumpTable;
+
 // Code objects own executable code and the metadata that describe it. A single
 // Code object is normally shared between a module and all its instances.
 //
@@ -455,11 +457,13 @@ class Code : public ShareableBase<Code>
     mutable UniqueConstCodeSegment      segment2_; // Access only when hasTier2() is true
     SharedMetadata                      metadata_;
     ExclusiveData<CacheableCharsVector> profilingLabels_;
+    UniqueJumpTable                     jumpTable_;
 
   public:
     Code();
+    Code(UniqueConstCodeSegment tier, const Metadata& metadata, UniqueJumpTable maybeJumpTable);
 
-    Code(UniqueConstCodeSegment tier, const Metadata& metadata);
+    uintptr_t* jumpTable() const { return jumpTable_.get(); }
 
     bool hasTier2() const { return metadata_->hasTier2(); }
     void setTier2(UniqueConstCodeSegment segment) const;
