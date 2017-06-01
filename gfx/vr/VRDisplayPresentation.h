@@ -19,9 +19,12 @@ class VRDisplayPresentation final
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRDisplayPresentation)
 
 public:
-  VRDisplayPresentation(VRDisplayClient *aDisplayClient, const nsTArray<dom::VRLayer>& aLayers);
+  VRDisplayPresentation(VRDisplayClient *aDisplayClient,
+                        const nsTArray<dom::VRLayer>& aLayers,
+                        uint32_t aGroup);
   void SubmitFrame();
   void GetDOMLayers(nsTArray<dom::VRLayer>& result);
+  uint32_t GetGroup() const;
 
 private:
   ~VRDisplayPresentation();
@@ -31,6 +34,7 @@ private:
   RefPtr<VRDisplayClient> mDisplayClient;
   nsTArray<dom::VRLayer> mDOMLayers;
   nsTArray<RefPtr<VRLayerChild>> mLayers;
+  uint32_t mGroup;
 };
 
 } // namespace gfx

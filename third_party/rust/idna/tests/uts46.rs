@@ -1,4 +1,4 @@
-// Copyright 2013-2014 Valentin Gosu.
+// Copyright 2013-2014 The rust-url developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -54,6 +54,13 @@ pub fn collect_tests<F: FnMut(String, TestFn)>(add_test: &mut F) {
                     // http://unicode.org/reports/tr46/#Deviations
                     // applications that perform IDNA2008 lookup are not required to check
                     // for these contexts
+                    return;
+                }
+                if to_ascii == "[V2]" {
+                    // Everybody ignores V2
+                    // https://github.com/servo/rust-url/pull/240
+                    // https://github.com/whatwg/url/issues/53#issuecomment-181528158
+                    // http://www.unicode.org/review/pri317/
                     return;
                 }
                 let res = result.ok();

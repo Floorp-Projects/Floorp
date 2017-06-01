@@ -1,0 +1,88 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#onboarding-overlay * {
+  box-sizing: border-box;
+}
+
+#onboarding-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* Ensuring we can put the overlay over elements using
+     z-index on original page */
+  z-index: 999;
+  color: #4d4d4d;
+  background: rgb(54, 57, 89, 0.8); /* #363959, 0.8 opacity */
+  display: none;
+}
+
+#onboarding-overlay.opened {
+  display: block;
+}
+
+#onboarding-overlay-icon {
+  width: 52px;
+  height: 40px;
+  position: absolute;
+  cursor: pointer;
+  top: 30px;
+  offset-inline-start: 30px;
+  background: url("img/overlay-icon.svg") no-repeat;
+}
+
+#onboarding-overlay-dialog {
+  display: none;
+}
+
+#onboarding-tour-close-btn {
+  position: absolute;
+  top: 15px;
+  offset-inline-end: 15px;
+}
+
+#onboarding-overlay.opened > #onboarding-overlay-dialog {
+  width: 1200px;
+  height: 550px;
+  background: #f5f5f7;
+  border: 1px solid rgba(9, 6, 13, 0.1); /* #09060D, 0.1 opacity */
+  position: relative;
+  margin: 0 calc(50% - 600px);
+  top: calc(50% - 275px);
+  display: grid;
+  grid-template-rows: [dialog-start] 76px [page-start] 1fr [footer-start] 40px [dialog-end];
+  grid-template-columns: [dialog-start] 240px [page-start] 1fr [dialog-end];
+}
+
+@media (max-height: 550px) {
+  #onboarding-overlay.opened > #onboarding-overlay-dialog {
+    top: 0;
+  }
+}
+
+#onboarding-overlay-dialog > header {
+  grid-row: dialog-start / page-start;
+  grid-column: dialog-start / tour-end;
+  margin-top: 36px;
+  margin-bottom: 0;
+  margin-inline-end: 0;
+  margin-inline-start: 36px;
+  font-size: 22px;
+}
+
+#onboarding-overlay-dialog > nav {
+  grid-row: dialog-start / footer-start;
+  grid-column-start: dialog-start;
+  margin-top: 40px;
+  margin-bottom: 0;
+  margin-inline-end: 0;
+  margin-inline-start: 0;
+  padding: 0;
+}
+
+#onboarding-overlay-dialog > footer {
+  grid-row: footer-start;
+  grid-column: dialog-start / tour-end;
+}

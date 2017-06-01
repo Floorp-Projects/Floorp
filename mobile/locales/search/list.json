@@ -75,7 +75,7 @@
     "be": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "wikipedia-be", "bing", "yahoo", "yandex.by"
+          "google", "bing", "yahoo", "duckduckgo", "wikipedia-be", "yandex.by"
         ]
       }
     },

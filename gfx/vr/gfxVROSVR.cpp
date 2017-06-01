@@ -299,6 +299,7 @@ VRDisplayOSVR::GetSensorState()
     osvr_GetOrientationState(*m_iface, &timestamp, &orientation);
 
   result.timestamp = timestamp.seconds;
+  result.inputFrameID = mDisplayInfo.mFrameId;
 
   if (ret == OSVR_RETURN_SUCCESS) {
     result.flags |= VRDisplayCapabilityFlags::Cap_Orientation;
@@ -322,14 +323,14 @@ VRDisplayOSVR::GetSensorState()
 
 #if defined(XP_WIN)
 
-void
+bool
 VRDisplayOSVR::SubmitFrame(TextureSourceD3D11* aSource,
   const IntSize& aSize,
-  const VRHMDSensorState& aSensorState,
   const gfx::Rect& aLeftEyeRect,
   const gfx::Rect& aRightEyeRect)
 {
   // XXX Add code to submit frame
+  return false;
 }
 
 #endif
@@ -536,7 +537,7 @@ VRSystemManagerOSVR::GetIsPresenting()
 {
   if (mHMDInfo) {
     VRDisplayInfo displayInfo(mHMDInfo->GetDisplayInfo());
-    return displayInfo.GetIsPresenting();
+    return displayInfo.GetPresentingGroups() != kVRGroupNone;
   }
 
   return false;

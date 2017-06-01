@@ -246,8 +246,6 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
 
-  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
-
   // BigImageIterator
 
   virtual BigImageIterator* AsBigImageIterator() override { return mIsTiled ? this : nullptr; }
@@ -266,10 +264,9 @@ public:
     mCurrentTile = 0;
   }
 
+  void Reset();
 protected:
   gfx::IntRect GetTileRect(uint32_t aIndex) const;
-
-  void Reset();
 
   std::vector< RefPtr<ID3D11Texture2D> > mTileTextures;
   std::vector< RefPtr<ID3D11ShaderResourceView> > mTileSRVs;

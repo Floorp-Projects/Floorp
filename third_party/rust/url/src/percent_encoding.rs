@@ -210,7 +210,7 @@ impl<'a, E: EncodeSet> Iterator for PercentEncode<'a, E> {
 impl<'a, E: EncodeSet> fmt::Display for PercentEncode<'a, E> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         for c in (*self).clone() {
-            try!(formatter.write_str(c))
+            formatter.write_str(c)?
         }
         Ok(())
     }
@@ -242,7 +242,7 @@ impl<'a, E: EncodeSet> From<PercentEncode<'a, E>> for Cow<'a, str> {
 /// (which returns `Cow::Borrowed` when `input` contains no percent-encoded sequence)
 /// and has `decode_utf8()` and `decode_utf8_lossy()` methods.
 #[inline]
-pub fn percent_decode<'a>(input: &'a [u8]) -> PercentDecode<'a> {
+pub fn percent_decode(input: &[u8]) -> PercentDecode {
     PercentDecode {
         bytes: input.iter()
     }
@@ -298,7 +298,7 @@ impl<'a> PercentDecode<'a> {
     /// If the percent-decoding is different from the input, return it as a new bytes vector.
     pub fn if_any(&self) -> Option<Vec<u8>> {
         let mut bytes_iter = self.bytes.clone();
-        while bytes_iter.find(|&&b| b == b'%').is_some() {
+        while bytes_iter.any(|&b| b == b'%') {
             if let Some(decoded_byte) = after_percent_sign(&mut bytes_iter) {
                 let initial_bytes = self.bytes.as_slice();
                 let unchanged_bytes_len = initial_bytes.len() - bytes_iter.len() - 3;

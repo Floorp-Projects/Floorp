@@ -24,12 +24,15 @@ use BidiClass::*;
 /// Represented as a range of byte indices.
 pub type LevelRun = Range<usize>;
 
+
 /// Output of `isolating_run_sequences` (steps X9-X10)
+#[derive(Debug, PartialEq)]
 pub struct IsolatingRunSequence {
     pub runs: Vec<LevelRun>,
     pub sos: BidiClass, // Start-of-sequence type.
     pub eos: BidiClass, // End-of-sequence type.
 }
+
 
 /// Compute the set of isolating run sequences.
 ///
@@ -40,14 +43,13 @@ pub struct IsolatingRunSequence {
 /// Note: This function does *not* return the sequences in order by their first characters.
 pub fn isolating_run_sequences(
     para_level: Level,
-    initial_classes: &[BidiClass],
+    original_classes: &[BidiClass],
     levels: &[Level],
 ) -> Vec<IsolatingRunSequence> {
-    let runs = level_runs(levels, initial_classes);
+    let runs = level_runs(levels, original_classes);
 
     // Compute the set of isolating run sequences.
     // http://www.unicode.org/reports/tr9/#BD13
-
     let mut sequences = Vec::with_capacity(runs.len());
 
     // When we encounter an isolate initiator, we push the current sequence onto the
@@ -58,8 +60,8 @@ pub fn isolating_run_sequences(
         assert!(run.len() > 0);
         assert!(stack.len() > 0);
 
-        let start_class = initial_classes[run.start];
-        let end_class = initial_classes[run.end - 1];
+        let start_class = original_classes[run.start];
+        let end_class = original_classes[run.end - 1];
 
         let mut sequence = if start_class == PDI && stack.len() > 1 {
             // Continue a previous sequence interrupted by an isolate.
@@ -84,43 +86,53 @@ pub fn isolating_run_sequences(
 
     // Determine the `sos` and `eos` class for each sequence.
     // http://www.unicode.org/reports/tr9/#X10
-    return sequences
-               .into_iter()
-               .map(
-        |sequence| {
-            assert!(!sequence.len() > 0);
-            let start = sequence[0].start;
-            let end = sequence[sequence.len() - 1].end;
+    sequences
+        .into_iter()
+        .map(
+            |sequence: Vec<LevelRun>| {
+                assert!(!sequence.is_empty());
 
-            // Get the level inside these level runs.
-            let level = levels[start];
+                let start_of_seq = sequence[0].start;
+                let end_of_seq = sequence[sequence.len() - 1].end;
+                let seq_level = levels[start_of_seq];
 
-            // Get the level of the last non-removed char before the runs.
-            let pred_level = match initial_classes[..start]
-                      .iter()
-                      .rposition(not_removed_by_x9) {
-                Some(idx) => levels[idx],
-                None => para_level,
-            };
+                #[cfg(test)]
+                for run in sequence.clone() {
+                    for idx in run {
+                        if not_removed_by_x9(&original_classes[idx]) {
+                            assert_eq!(seq_level, levels[idx]);
+                        }
+                    }
+                }
 
-            // Get the level of the next non-removed char after the runs.
-            let succ_level = if matches!(initial_classes[end - 1], RLI | LRI | FSI) {
-                para_level
-            } else {
-                match initial_classes[end..].iter().position(not_removed_by_x9) {
+                // Get the level of the last non-removed char before the runs.
+                let pred_level = match original_classes[..start_of_seq]
+                          .iter()
+                          .rposition(not_removed_by_x9) {
                     Some(idx) => levels[idx],
                     None => para_level,
-                }
-            };
+                };
 
-            IsolatingRunSequence {
-                runs: sequence,
-                sos: max(level, pred_level).bidi_class(),
-                eos: max(level, succ_level).bidi_class(),
+                // Get the level of the next non-removed char after the runs.
+                let succ_level = if matches!(original_classes[end_of_seq - 1], RLI | LRI | FSI) {
+                    para_level
+                } else {
+                    match original_classes[end_of_seq..]
+                              .iter()
+                              .position(not_removed_by_x9) {
+                        Some(idx) => levels[end_of_seq + idx],
+                        None => para_level,
+                    }
+                };
+
+                IsolatingRunSequence {
+                    runs: sequence,
+                    sos: max(seq_level, pred_level).bidi_class(),
+                    eos: max(seq_level, succ_level).bidi_class(),
+                }
             }
-        },
-    )
-               .collect();
+        )
+        .collect()
 }
 
 /// Finds the level runs in a paragraph.
@@ -136,7 +148,6 @@ fn level_runs(levels: &[Level], original_classes: &[BidiClass]) -> Vec<LevelRun>
 
     let mut current_run_level = levels[0];
     let mut current_run_start = 0;
-
     for i in 1..levels.len() {
         if !removed_by_x9(original_classes[i]) {
             if levels[i] != current_run_level {
@@ -148,6 +159,7 @@ fn level_runs(levels: &[Level], original_classes: &[BidiClass]) -> Vec<LevelRun>
         }
     }
     runs.push(current_run_start..levels.len());
+
     runs
 }
 
@@ -169,27 +181,169 @@ mod tests {
 
     #[test]
     fn test_level_runs() {
-        let levels = &[0, 0, 0, 1, 1, 2, 0, 0];
+        assert_eq!(level_runs(&Level::vec(&[]), &[]), &[]);
         assert_eq!(
-            level_runs(&Level::vec(levels), &[L; 8]),
+            level_runs(&Level::vec(&[0, 0, 0, 1, 1, 2, 0, 0]), &[L; 8]),
             &[0..3, 3..5, 5..6, 6..8]
         );
     }
 
-    /// Example 3 from http://www.unicode.org/reports/tr9/#BD13:
+    // From http://www.unicode.org/reports/tr9/#BD13
     #[cfg_attr(rustfmt, rustfmt_skip)]
     #[test]
     fn test_isolating_run_sequences() {
-        //  char index  0  1    2   3    4  5  6  7    8   9   10
-        let classes = &[L, RLI, AL, LRI, L, R, L, PDI, AL, PDI, L];
-        let levels =  &[0, 0,   1,  1,   2, 3, 2, 1,   1,  0,   0];
-        let para_level = Level::ltr();
 
-        let sequences = isolating_run_sequences(para_level, classes, &Level::vec(levels));
-        let runs: Vec<Vec<LevelRun>> = sequences.iter().map(|s| s.runs.clone()).collect();
+        // == Example 1 ==
+        // text1·RLE·text2·PDF·RLE·text3·PDF·text4
+        // index        0    1  2    3    4  5    6  7
+        let classes = &[L, RLE, L, PDF, RLE, L, PDF, L];
+        let levels =  &[0,   1, 1,   1,   1, 1,   1, 0];
+        let para_level = Level::ltr();
+        let mut sequences = isolating_run_sequences(para_level, classes, &Level::vec(levels));
+        sequences.sort_by(|a, b| a.runs[0].clone().cmp(b.runs[0].clone()));
         assert_eq!(
-            runs,
-            vec![vec![4..5], vec![5..6], vec![6..7], vec![2..4, 7..9], vec![0..2, 9..11]]
+            sequences.iter().map(|s| s.runs.clone()).collect::<Vec<_>>(),
+            vec![vec![0..2], vec![2..7], vec![7..8]]
+        );
+
+        // == Example 2 ==
+        // text1·RLI·text2·PDI·RLI·text3·PDI·text4
+        // index        0    1  2    3    4  5    6  7
+        let classes = &[L, RLI, L, PDI, RLI, L, PDI, L];
+        let levels =  &[0,   0, 1,   0,   0, 1,   0, 0];
+        let para_level = Level::ltr();
+        let mut sequences = isolating_run_sequences(para_level, classes, &Level::vec(levels));
+        sequences.sort_by(|a, b| a.runs[0].clone().cmp(b.runs[0].clone()));
+        assert_eq!(
+            sequences.iter().map(|s| s.runs.clone()).collect::<Vec<_>>(),
+            vec![vec![0..2, 3..5, 6..8], vec![2..3], vec![5..6]]
+        );
+
+        // == Example 3 ==
+        // text1·RLI·text2·LRI·text3·RLE·text4·PDF·text5·PDI·text6·PDI·text7
+        // index        0    1  2    3  4    5  6    7  8    9  10  11  12
+        let classes = &[L, RLI, L, LRI, L, RLE, L, PDF, L, PDI, L, PDI,  L];
+        let levels =  &[0,   0, 1,   1, 2,   3, 3,   3, 2,   1, 1,   0,  0];
+        let para_level = Level::ltr();
+        let mut sequences = isolating_run_sequences(para_level, classes, &Level::vec(levels));
+        sequences.sort_by(|a, b| a.runs[0].clone().cmp(b.runs[0].clone()));
+        assert_eq!(
+            sequences.iter().map(|s| s.runs.clone()).collect::<Vec<_>>(),
+            vec![vec![0..2, 11..13], vec![2..4, 9..11], vec![4..6], vec![6..8], vec![8..9]]
+        );
+    }
+
+    // From http://www.unicode.org/reports/tr9/#X10
+    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[test]
+    fn test_isolating_run_sequences_sos_and_eos() {
+
+        // == Example 1 ==
+        // text1·RLE·text2·LRE·text3·PDF·text4·PDF·RLE·text5·PDF·text6
+        // index        0    1  2    3  4    5  6    7    8  9   10  11
+        let classes = &[L, RLE, L, LRE, L, PDF, L, PDF, RLE, L, PDF,  L];
+        let levels =  &[0,   1, 1,   2, 2,   2, 1,   1,   1, 1,   1,  0];
+        let para_level = Level::ltr();
+        let mut sequences = isolating_run_sequences(para_level, classes, &Level::vec(levels));
+        sequences.sort_by(|a, b| a.runs[0].clone().cmp(b.runs[0].clone()));
+
+        // text1
+        assert_eq!(
+            &sequences[0],
+            &IsolatingRunSequence {
+                runs: vec![0..2],
+                sos: L,
+                eos: R,
+            }
+        );
+
+        // text2
+        assert_eq!(
+            &sequences[1],
+            &IsolatingRunSequence {
+                runs: vec![2..4],
+                sos: R,
+                eos: L,
+            }
+        );
+
+        // text3
+        assert_eq!(
+            &sequences[2],
+            &IsolatingRunSequence {
+                runs: vec![4..6],
+                sos: L,
+                eos: L,
+            }
+        );
+
+        // text4 text5
+        assert_eq!(
+            &sequences[3],
+            &IsolatingRunSequence {
+                runs: vec![6..11],
+                sos: L,
+                eos: R,
+            }
+        );
+
+        // text6
+        assert_eq!(
+            &sequences[4],
+            &IsolatingRunSequence {
+                runs: vec![11..12],
+                sos: R,
+                eos: L,
+            }
+        );
+
+        // == Example 2 ==
+        // text1·RLI·text2·LRI·text3·PDI·text4·PDI·RLI·text5·PDI·text6
+        // index        0    1  2    3  4    5  6    7    8  9   10  11
+        let classes = &[L, RLI, L, LRI, L, PDI, L, PDI, RLI, L, PDI,  L];
+        let levels =  &[0,   0, 1,   1, 2,   1, 1,   0,   0, 1,   0,  0];
+        let para_level = Level::ltr();
+        let mut sequences = isolating_run_sequences(para_level, classes, &Level::vec(levels));
+        sequences.sort_by(|a, b| a.runs[0].clone().cmp(b.runs[0].clone()));
+
+        // text1·RLI·PDI·RLI·PDI·text6
+        assert_eq!(
+            &sequences[0],
+            &IsolatingRunSequence {
+                runs: vec![0..2, 7..9, 10..12],
+                sos: L,
+                eos: L,
+            }
+        );
+
+        // text2·LRI·PDI·text4
+        assert_eq!(
+            &sequences[1],
+            &IsolatingRunSequence {
+                runs: vec![2..4, 5..7],
+                sos: R,
+                eos: R,
+            }
+        );
+
+        // text3
+        assert_eq!(
+            &sequences[2],
+            &IsolatingRunSequence {
+                runs: vec![4..5],
+                sos: L,
+                eos: L,
+            }
+        );
+
+        // text5
+        assert_eq!(
+            &sequences[3],
+            &IsolatingRunSequence {
+                runs: vec![9..10],
+                sos: R,
+                eos: R,
+            }
         );
     }
 

@@ -26,6 +26,9 @@ pub fn resolve_weak(sequence: &IsolatingRunSequence, processing_classes: &mut [B
     // by an "earlier" rule.  We should either split this into separate passes, or preserve
     // extra state so each rule can see the correct previous class.
 
+    // FIXME: Also, this could be the cause of increased failure for using longer-UTF-8 chars in
+    // conformance tests, like BidiTest:69635 (AL ET EN)
+
     let mut prev_class = sequence.sos;
     let mut last_strong_is_al = false;
     let mut et_run_indices = Vec::new(); // for W5
@@ -139,14 +142,9 @@ pub fn resolve_neutral(
     levels: &[Level],
     processing_classes: &mut [BidiClass],
 ) {
+    let e: BidiClass = levels[sequence.runs[0].start].bidi_class();
     let mut indices = sequence.runs.iter().flat_map(Clone::clone);
     let mut prev_class = sequence.sos;
-
-    // Neutral or Isolate formatting characters (NI).
-    // http://www.unicode.org/reports/tr9/#NI
-    fn ni(class: BidiClass) -> bool {
-        matches!(class, B | S | WS | ON | FSI | LRI | RLI | PDI)
-    }
 
     while let Some(mut i) = indices.next() {
         // N0. Process bracket pairs.
@@ -154,7 +152,7 @@ pub fn resolve_neutral(
 
         // Process sequences of NI characters.
         let mut ni_run = Vec::new();
-        if ni(processing_classes[i]) {
+        if is_NI(processing_classes[i]) {
             // Consume a run of consecutive NI characters.
             ni_run.push(i);
             let mut next_class;
@@ -166,7 +164,7 @@ pub fn resolve_neutral(
                             continue;
                         }
                         next_class = processing_classes[j];
-                        if ni(next_class) {
+                        if is_NI(next_class) {
                             ni_run.push(i);
                         } else {
                             break;
@@ -180,11 +178,14 @@ pub fn resolve_neutral(
             }
 
             // N1-N2.
+            //
+            // http://www.unicode.org/reports/tr9/#N1
+            // http://www.unicode.org/reports/tr9/#N2
             let new_class = match (prev_class, next_class) {
                 (L, L) => L,
                 (R, R) | (R, AN) | (R, EN) | (AN, R) | (AN, AN) | (AN, EN) | (EN, R) |
                 (EN, AN) | (EN, EN) => R,
-                (_, _) => levels[i].bidi_class(),
+                (_, _) => e,
             };
             for j in &ni_run {
                 processing_classes[*j] = new_class;
@@ -217,4 +218,12 @@ pub fn resolve_levels(original_classes: &[BidiClass], levels: &mut [Level]) -> L
     }
 
     max_level
+}
+
+/// Neutral or Isolate formatting character (B, S, WS, ON, FSI, LRI, RLI, PDI)
+///
+/// http://www.unicode.org/reports/tr9/#NI
+#[allow(non_snake_case)]
+fn is_NI(class: BidiClass) -> bool {
+    matches!(class, B | S | WS | ON | FSI | LRI | RLI | PDI)
 }

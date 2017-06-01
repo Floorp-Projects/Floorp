@@ -116,6 +116,7 @@ function runTests() {
   }
 
   function processScript() {
+    Components.utils.import("resource://gre/modules/Services.jsm");
     let listener = function () {
       Services.obs.removeObserver(listener, "sdk:loader:destroy");
       sendAsyncMessage("test:getProcess-destroy", null);

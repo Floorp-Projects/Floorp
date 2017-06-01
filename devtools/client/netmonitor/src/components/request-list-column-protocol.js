@@ -9,6 +9,7 @@ const {
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
+const { getFormattedProtocol } = require("../utils/request-utils");
 
 const { div } = DOM;
 
@@ -20,17 +21,19 @@ const RequestListColumnProtocol = createClass({
   },
 
   shouldComponentUpdate(nextProps) {
-    return this.props.item.httpVersion !== nextProps.item.httpVersion;
+    return getFormattedProtocol(this.props.item) !==
+      getFormattedProtocol(nextProps.item);
   },
 
   render() {
-    let { httpVersion = "" } = this.props.item;
+    let protocol = getFormattedProtocol(this.props.item);
+
     return (
       div({
         className: "requests-list-column requests-list-protocol",
-        title: httpVersion,
+        title: protocol,
       },
-        httpVersion
+        protocol
       )
     );
   }

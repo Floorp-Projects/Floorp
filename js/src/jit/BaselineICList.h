@@ -24,6 +24,7 @@ namespace jit {
     _(TypeUpdate_SingleObject)                   \
     _(TypeUpdate_ObjectGroup)                    \
     _(TypeUpdate_PrimitiveSet)                   \
+    _(TypeUpdate_AnyValue)                       \
                                                  \
     _(NewArray_Fallback)                         \
     _(NewObject_Fallback)                        \

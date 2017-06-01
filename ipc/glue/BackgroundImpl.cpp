@@ -213,6 +213,10 @@ private:
   GetRawContentParentForComparison(PBackgroundParent* aBackgroundActor);
 
   // Forwarded from BackgroundParent.
+  static uint64_t
+  GetChildID(PBackgroundParent* aBackgroundActor);
+
+  // Forwarded from BackgroundParent.
   static bool
   Alloc(ContentParent* aContent,
         Endpoint<PBackgroundParent>&& aEndpoint);
@@ -817,6 +821,13 @@ BackgroundParent::GetRawContentParentForComparison(
 }
 
 // static
+uint64_t
+BackgroundParent::GetChildID(PBackgroundParent* aBackgroundActor)
+{
+  return ParentImpl::GetChildID(aBackgroundActor);
+}
+
+// static
 bool
 BackgroundParent::Alloc(ContentParent* aContent,
                         Endpoint<PBackgroundParent>&& aEndpoint)
@@ -966,6 +977,26 @@ ParentImpl::GetRawContentParentForComparison(
   }
 
   return intptr_t(static_cast<nsIContentParent*>(actor->mContent.get()));
+}
+
+// static
+uint64_t
+ParentImpl::GetChildID(PBackgroundParent* aBackgroundActor)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aBackgroundActor);
+
+  auto actor = static_cast<ParentImpl*>(aBackgroundActor);
+  if (actor->mActorDestroyed) {
+    MOZ_ASSERT(false, "GetContentParent called after ActorDestroy was called!");
+    return 0;
+  }
+
+  if (actor->mContent) {
+    return actor->mContent->ChildID();
+  }
+
+  return 0;
 }
 
 // static

@@ -11,6 +11,16 @@ GYP_DIRS += [
     'nrappkit',
 ]
 
+# Set gyp vars that webrtc needs when building under various analysis tools.
+# Primarily this prevents webrtc from setting NVALGRIND and breaking builds.
+gyp_vars_copy = gyp_vars.copy()
+if CONFIG['MOZ_VALGRIND']:
+    gyp_vars_copy.update(build_for_tool="memcheck")
+elif CONFIG['MOZ_ASAN']:
+    gyp_vars_copy.update(build_for_tool="asan")
+elif CONFIG['MOZ_TSAN']:
+    gyp_vars_copy.update(build_for_tool="tsan")
+
 # These files cannot be built in unified mode because of name clashes on RCSSTRING
 nICEr_non_unified_sources = [
     'nICEr/src/crypto/nr_crypto.c',
@@ -62,14 +72,14 @@ nrappkit_non_unified_sources = [
 ]
 
 GYP_DIRS['nICEr'].input = 'nICEr/nicer.gyp'
-GYP_DIRS['nICEr'].variables = gyp_vars
+GYP_DIRS['nICEr'].variables = gyp_vars_copy
 # We allow warnings for third-party code that can be updated from upstream.
 GYP_DIRS['nICEr'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
 GYP_DIRS['nICEr'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
 GYP_DIRS['nICEr'].non_unified_sources += nICEr_non_unified_sources
 
 GYP_DIRS['nrappkit'].input = 'nrappkit/nrappkit.gyp'
-GYP_DIRS['nrappkit'].variables = gyp_vars
+GYP_DIRS['nrappkit'].variables = gyp_vars_copy
 # We allow warnings for third-party code that can be updated from upstream.
 GYP_DIRS['nrappkit'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
 GYP_DIRS['nrappkit'].sandbox_vars['FINAL_LIBRARY'] = 'xul'

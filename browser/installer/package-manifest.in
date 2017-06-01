@@ -568,6 +568,11 @@
 @RESPATH@/components/TestInterfaceJSMaplike.js
 #endif
 
+#if defined(MOZ_DEBUG) || defined(NIGHTLY_BUILD)
+@RESPATH@/browser/components/testComponents.manifest
+@RESPATH@/browser/components/startupRecorder.js
+#endif
+
 ; [Extensions]
 @RESPATH@/components/extensions-toolkit.manifest
 @RESPATH@/browser/components/extensions-browser.manifest
@@ -746,8 +751,8 @@
 #if defined(MOZ_SANDBOX)
 #if defined(XP_LINUX)
 @BINPATH@/@DLL_PREFIX@mozsandbox@DLL_SUFFIX@
-@RESPATH@/components/sandbox.xpt
 #endif
+@RESPATH@/components/sandbox.xpt
 #endif
 
 ; for Solaris SPARC

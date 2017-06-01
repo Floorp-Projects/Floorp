@@ -11,7 +11,6 @@ var Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/TelemetryTimestamps.jsm");
 Cu.import("resource://gre/modules/TelemetryController.jsm");
-Cu.import("resource://gre/modules/TelemetrySession.jsm");
 Cu.import("resource://gre/modules/TelemetryArchive.jsm");
 Cu.import("resource://gre/modules/TelemetryUtils.jsm");
 Cu.import("resource://gre/modules/TelemetryLog.jsm");

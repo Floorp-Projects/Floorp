@@ -5,12 +5,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
-
-function promiseEvent(target, event) {
-  return new Promise(resolve => {
-    target.addEventListener(event, resolve, {capture: true, once: true});
-  });
-}
+Cu.import("resource://testing-common/TestUtils.jsm");
 
 let aps = Cc["@mozilla.org/addons/policy-service;1"].getService(Ci.nsIAddonPolicyService).wrappedJSObject;
 
@@ -63,8 +58,8 @@ add_task(function*() {
 
   webnavB.close();
 
-  // Wrappers are nuked asynchronously, so wait a tick.
-  yield new Promise(resolve => setTimeout(resolve, 0));
+  // Wrappers are destroyed asynchronously, so wait for that to happen.
+  yield TestUtils.topicObserved("inner-window-destroyed");
 
   // Check that it can't be accessed after he window has been closed.
   let result = getThing();

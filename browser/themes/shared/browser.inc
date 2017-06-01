@@ -5,7 +5,7 @@
 %define primaryToolbarButtons #back-button, #forward-button, #home-button, #print-button, #downloads-button, #bookmarks-menu-button, #new-tab-button, #new-window-button, #fullscreen-button, #sync-button, #feed-button, #social-share-button, #open-file-button, #find-button, #developer-button, #preferences-button, #privatebrowsing-button, #save-page-button, #add-ons-button, #history-panelmenu, #nav-bar-overflow-button, #PanelUI-menu-button, #characterencoding-button, #email-link-button, #sidebar-button, @nestedButtons@, #e10s-button, #panic-button, #webide-button, #containers-panelmenu
 
 %ifdef MOZ_PHOTON_THEME
-%define primaryToolbarButtons @primaryToolbarButtons@, #reload-button, #stop-button
+%define primaryToolbarButtons @primaryToolbarButtons@, #reload-button, #stop-button, #library-button
 %endif
 
 %ifdef XP_MACOSX

@@ -34,8 +34,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Response)
 NS_INTERFACE_MAP_END
 
 Response::Response(nsIGlobalObject* aGlobal, InternalResponse* aInternalResponse)
-  : FetchBody<Response>()
-  , mOwner(aGlobal)
+  : FetchBody<Response>(aGlobal)
   , mInternalResponse(aInternalResponse)
 {
   MOZ_ASSERT(aInternalResponse->Headers()->Guard() == HeadersGuardEnum::Immutable ||

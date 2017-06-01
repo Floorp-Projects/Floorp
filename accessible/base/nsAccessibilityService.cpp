@@ -195,6 +195,19 @@ New_HTMLDefinition(nsIContent* aContent, Accessible* aContext)
 static Accessible* New_HTMLLabel(nsIContent* aContent, Accessible* aContext)
   { return new HTMLLabelAccessible(aContent, aContext->Document()); }
 
+static Accessible* New_HTMLInput(nsIContent* aContent, Accessible* aContext)
+{
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::checkbox, eIgnoreCase)) {
+    return new HTMLCheckboxAccessible(aContent, aContext->Document());
+  }
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::radio, eIgnoreCase)) {
+    return new HTMLRadioButtonAccessible(aContent, aContext->Document());
+  }
+  return nullptr;
+}
+
 static Accessible* New_HTMLOutput(nsIContent* aContent, Accessible* aContext)
   { return new HTMLOutputAccessible(aContent, aContext->Document()); }
 

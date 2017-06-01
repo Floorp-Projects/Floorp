@@ -309,13 +309,6 @@ public class AppConstants {
     false;
 //#endif
 
-    public static final boolean MOZ_ANDROID_CUSTOM_TABS =
-//#ifdef MOZ_ANDROID_CUSTOM_TABS
-    true;
-//#else
-    false;
-//#endif
-
     // (bug 1266820) Temporarily disabled since no one is working on it.
     public static final boolean SCREENSHOTS_IN_BOOKMARKS_ENABLED = false;
 

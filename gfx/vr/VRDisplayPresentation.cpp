@@ -14,11 +14,19 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 
 VRDisplayPresentation::VRDisplayPresentation(VRDisplayClient *aDisplayClient,
-                                             const nsTArray<mozilla::dom::VRLayer>& aLayers)
+                                             const nsTArray<mozilla::dom::VRLayer>& aLayers,
+                                             uint32_t aGroup)
   : mDisplayClient(aDisplayClient)
   , mDOMLayers(aLayers)
+  , mGroup(aGroup)
 {
   CreateLayers();
+}
+
+uint32_t
+VRDisplayPresentation::GetGroup() const
+{
+  return mGroup;
 }
 
 void
@@ -80,7 +88,8 @@ VRDisplayPresentation::CreateLayers()
 
     RefPtr<VRLayerChild> vrLayer =
       static_cast<VRLayerChild*>(manager->CreateVRLayer(mDisplayClient->GetDisplayInfo().GetDisplayID(),
-                                                        leftBounds, rightBounds, target));
+                                                        leftBounds, rightBounds, target,
+                                                        mGroup));
     if (!vrLayer) {
       NS_WARNING("CreateVRLayer returned null!");
       continue;

@@ -285,6 +285,11 @@ public:
     mStateData.mResponse.setNull();
   }
 
+  virtual uint16_t ErrorCode() const override
+  {
+    return 0; // eOK
+  }
+
   virtual bool MozAnon() const override
   {
     return mMozAnon;

@@ -13,6 +13,8 @@ import android.support.design.widget.Snackbar;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SnackbarBuilder;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -41,15 +43,30 @@ public class EditBookmarkTask extends UIAsyncTask.WithoutParams<Void> {
         final String url = bundle.getString(BrowserContract.Bookmarks.URL);
         final String title = bundle.getString(BrowserContract.Bookmarks.TITLE);
         final String keyword = bundle.getString(BrowserContract.Bookmarks.KEYWORD);
+        final int type = bundle.getInt(BrowserContract.Bookmarks.TYPE);
 
+        boolean parentChanged = false;
         if (bundle.containsKey(BrowserContract.Bookmarks.PARENT) &&
             bundle.containsKey(BrowserContract.PARAM_OLD_BOOKMARK_PARENT)) {
             final long newParentId = bundle.getLong(BrowserContract.Bookmarks.PARENT);
             final long oldParentId = bundle.getLong(BrowserContract.PARAM_OLD_BOOKMARK_PARENT);
             db.updateBookmark(contentResolver, bookmarkId, url, title, keyword, newParentId, oldParentId);
+            parentChanged = true;
         } else {
             db.updateBookmark(contentResolver, bookmarkId, url, title, keyword);
         }
+
+        String extras;
+        if (type == BrowserContract.Bookmarks.TYPE_FOLDER) {
+            extras = "bookmark_folder";
+        } else {
+            extras = "bookmark";
+        }
+        if (parentChanged) {
+            extras += "_parent_changed";
+        }
+        Telemetry.sendUIEvent(TelemetryContract.Event.EDIT, TelemetryContract.Method.DIALOG, extras);
+
         return null;
     }
 

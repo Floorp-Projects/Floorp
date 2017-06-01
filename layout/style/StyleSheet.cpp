@@ -54,12 +54,6 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
   MOZ_ASSERT(mInner, "Should only copy StyleSheets with an mInner.");
   mInner->AddSheet(this);
 
-  if (mDirty) { // CSSOM's been there, force full copy now
-    NS_ASSERTION(mInner->mComplete, "Why have rules been accessed on an incomplete sheet?");
-    // FIXME: handle failure?
-    EnsureUniqueInner();
-  }
-
   if (aCopy.mMedia) {
     // XXX This is wrong; we should be keeping @import rules and
     // sheets in sync!

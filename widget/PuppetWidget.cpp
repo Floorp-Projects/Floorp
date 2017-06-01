@@ -1425,7 +1425,6 @@ PuppetWidget::HasPendingInputEvent()
           == mozilla::dom::PBrowser::PBrowserStart) {
         switch (aMsg.type()) {
           case mozilla::dom::PBrowser::Msg_RealMouseMoveEvent__ID:
-          case mozilla::dom::PBrowser::Msg_SynthMouseMoveEvent__ID:
           case mozilla::dom::PBrowser::Msg_RealMouseButtonEvent__ID:
           case mozilla::dom::PBrowser::Msg_RealKeyEvent__ID:
           case mozilla::dom::PBrowser::Msg_MouseWheelEvent__ID:

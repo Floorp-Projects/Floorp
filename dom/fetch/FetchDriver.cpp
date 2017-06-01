@@ -48,10 +48,12 @@ NS_IMPL_ISUPPORTS(FetchDriver,
                   nsIThreadRetargetableStreamListener)
 
 FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
-                         nsILoadGroup* aLoadGroup, bool aIsTrackingFetch)
+                         nsILoadGroup* aLoadGroup, nsIEventTarget* aMainThreadEventTarget,
+                         bool aIsTrackingFetch)
   : mPrincipal(aPrincipal)
   , mLoadGroup(aLoadGroup)
   , mRequest(aRequest)
+  , mMainThreadEventTarget(aMainThreadEventTarget)
   , mIsTrackingFetch(aIsTrackingFetch)
 #ifdef DEBUG
   , mResponseAvailableCalled(false)
@@ -60,6 +62,7 @@ FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
 {
   MOZ_ASSERT(aRequest);
   MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aMainThreadEventTarget);
 }
 
 FetchDriver::~FetchDriver()
@@ -672,7 +675,8 @@ FetchDriver::OnDataAvailable(nsIRequest* aRequest,
       mObserver->OnDataAvailable();
     } else {
       RefPtr<Runnable> runnable = new DataAvailableRunnable(mObserver);
-      nsresult rv = NS_DispatchToMainThread(runnable);
+      nsresult rv =
+        mMainThreadEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }

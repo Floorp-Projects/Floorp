@@ -2756,6 +2756,7 @@ struct GlobalProperties {
     bool fetch : 1;
     bool caches : 1;
     bool fileReader: 1;
+    bool messageChannel: 1;
 private:
     bool Define(JSContext* cx, JS::HandleObject obj);
 };

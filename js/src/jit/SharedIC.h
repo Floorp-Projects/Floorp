@@ -962,6 +962,8 @@ class ICUpdatedStub : public ICStub
         return firstUpdateStub_;
     }
 
+    void resetUpdateStubChain(Zone* zone);
+
     bool hasTypeUpdateStub(ICStub::Kind kind) {
         ICStub* stub = firstUpdateStub_;
         do {

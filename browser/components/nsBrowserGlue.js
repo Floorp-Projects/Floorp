@@ -149,7 +149,7 @@ const listeners = {
   },
 
   mm: {
-    "AboutHome:MaybeShowAutoMigrationUndoNotification": ["AboutHome"],
+    "AboutHome:MaybeShowMigrateMessage": ["AboutHome"],
     "AboutHome:RequestUpdate": ["AboutHome"],
     "Content:Click": ["ContentClick"],
     "ContentSearch": ["ContentSearch"],
@@ -1709,7 +1709,7 @@ BrowserGlue.prototype = {
 
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 46;
+    const UI_VERSION = 47;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2012,19 +2012,30 @@ BrowserGlue.prototype = {
       }
     }
 
-    if (currentUIVersion < 46) {
+    // Version 46 has been replaced by 47
+    if (currentUIVersion < 47) {
       // Search suggestions are now on by default.
       // For privacy reasons, we want to respect previously made user's choice
       // regarding the feature, so if it's known reflect that choice into the
       // current pref.
       // Note that in case of downgrade/upgrade we won't guarantee anything.
       try {
-        Services.prefs.setBoolPref(
-          "browser.urlbar.suggest.searches",
-          Services.prefs.getBoolPref("browser.urlbar.searchSuggestionsChoice")
-        );
+        if (Services.prefs.prefHasUserValue("browser.urlbar.searchSuggestionsChoice")) {
+          Services.prefs.setBoolPref(
+            "browser.urlbar.suggest.searches",
+            Services.prefs.getBoolPref("browser.urlbar.searchSuggestionsChoice")
+          );
+        } else if (Services.prefs.getBoolPref("browser.urlbar.userMadeSearchSuggestionsChoice")) {
+          // If the user made a choice but searchSuggestionsChoice is not set,
+          // something went wrong in the upgrade path. For example, due to a
+          // now fixed bug, some profilespicking "no" at the opt-in bar and
+          // upgrading in the same session wouldn't mirror the pref.
+          // Users could also lack the mirrored pref due to skipping one version.
+          // In this case just fallback to the safest side and disable suggestions.
+          Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
+        }
       } catch (ex) {
-        // The pref is not set, nothing to do.
+        // A missing pref is not a fatal error.
       }
     }
 

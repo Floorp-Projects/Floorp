@@ -191,6 +191,30 @@ class ICTypeUpdate_ObjectGroup : public ICStub
     };
 };
 
+class ICTypeUpdate_AnyValue : public ICStub
+{
+    friend class ICStubSpace;
+
+    explicit ICTypeUpdate_AnyValue(JitCode* stubCode)
+      : ICStub(TypeUpdate_AnyValue, stubCode)
+    {}
+
+  public:
+    class Compiler : public ICStubCompiler {
+      protected:
+        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
+
+      public:
+        explicit Compiler(JSContext* cx)
+          : ICStubCompiler(cx, TypeUpdate_AnyValue, Engine::Baseline)
+        {}
+
+        ICTypeUpdate_AnyValue* getStub(ICStubSpace* space) {
+            return newStub<ICTypeUpdate_AnyValue>(space, getStubCode());
+        }
+    };
+};
+
 // ToBool
 //      JSOP_IFNE
 

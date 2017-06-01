@@ -235,45 +235,14 @@ Running Tests In Other Browsers
 
 web-platform-tests is cross browser, and the runner is compatible with
 multiple browsers. Therefore it's possible to check the behaviour of
-tests in other browsers. This is somewhat more involved than running
-them in Firefox since extra dependencies may be required. For example
-to test in Chrome:
+tests in other browsers. By default Chrome, Edge and Servo are
+supported. In order to run the tests in these browsers use the
+`--product` argument to wptrunner:
 
-1. Download the chromedriver binary and place it somewhere sensible
-   e.g. `~/bin`
+    mach wpt --product chrome dom/historical.html
 
-2. In your gecko source tree activate the virtualenv created by mach,
-   since this has most dependencies already installed. This is typically
-   in objdir/_virtualenv and is activated via e.g.
-
-        source objdir/_virtualenv/bin/activate
-
-3. Install the extra requirements:
-
-        cd testing/web-platform/harness
-        pip install -r requirements_chrome.txt
-
-4. Edit the config file `testing/web-platform/wptrunner.ini` so that
-   Chrome support is enabled by changing the section that reads:
-
-        [products]
-        firefox =
-
-   to read
-
-        [products]
-        firefox =
-        chrome =
-
-   (alternatively create a new config file elsewhere and use the
-   `--config` option to `runtests.py` to point wptrunner at this config
-   file).
-
-5. Run `runtests.py` using the location of chromedriver as
-   the binary:
-
-        cd testing/web-platform
-        python runtests.py --product=chrome --binary=~/bin/chromedriver --log-mach=-
-
-By default this will use the same test checkout and metadata as are in
-the Gecko tree, so it's easy to compare behaviour relative to Firefox.
+By default these browsers run without expectation metadata, but it can
+be added in the `testing/web-platform/products/<product>`
+directory. To run with the same metadata as for Firefox (so that
+differences are reported as unexpected results), pass `--meta
+testing/web-platform/meta` to the mach command.

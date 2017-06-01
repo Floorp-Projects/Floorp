@@ -50,7 +50,7 @@ impl ::serde::Serialize for HostInternal {
 impl ::serde::Deserialize for HostInternal {
     fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error> where D: ::serde::Deserializer {
         use std::net::IpAddr;
-        Ok(match try!(::serde::Deserialize::deserialize(deserializer)) {
+        Ok(match ::serde::Deserialize::deserialize(deserializer)? {
             None => HostInternal::None,
             Some(None) => HostInternal::Domain,
             Some(Some(IpAddr::V4(addr))) => HostInternal::Ipv4(addr),
@@ -105,7 +105,7 @@ impl<S: ::serde::Serialize>  ::serde::Serialize for Host<S> {
 impl<S: ::serde::Deserialize> ::serde::Deserialize for Host<S> {
     fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error> where D: ::serde::Deserializer {
         use std::net::IpAddr;
-        Ok(match try!(::serde::Deserialize::deserialize(deserializer)) {
+        Ok(match ::serde::Deserialize::deserialize(deserializer)? {
             Ok(s) => Host::Domain(s),
             Err(IpAddr::V4(addr)) => Host::Ipv4(addr),
             Err(IpAddr::V6(addr)) => Host::Ipv6(addr),
@@ -139,20 +139,20 @@ impl Host<String> {
     ///
     /// https://url.spec.whatwg.org/#host-parsing
     pub fn parse(input: &str) -> Result<Self, ParseError> {
-        if input.starts_with("[") {
-            if !input.ends_with("]") {
+        if input.starts_with('[') {
+            if !input.ends_with(']') {
                 return Err(ParseError::InvalidIpv6Address)
             }
             return parse_ipv6addr(&input[1..input.len() - 1]).map(Host::Ipv6)
         }
         let domain = percent_decode(input.as_bytes()).decode_utf8_lossy();
-        let domain = try!(idna::domain_to_ascii(&domain));
+        let domain = idna::domain_to_ascii(&domain)?;
         if domain.find(|c| matches!(c,
             '\0' | '\t' | '\n' | '\r' | ' ' | '#' | '%' | '/' | ':' | '?' | '@' | '[' | '\\' | ']'
         )).is_some() {
             return Err(ParseError::InvalidDomainCharacter)
         }
-        if let Some(address) = try!(parse_ipv4addr(&domain)) {
+        if let Some(address) = parse_ipv4addr(&domain)? {
             Ok(Host::Ipv4(address))
         } else {
             Ok(Host::Domain(domain.into()))
@@ -166,8 +166,8 @@ impl<S: AsRef<str>> fmt::Display for Host<S> {
             Host::Domain(ref domain) => domain.as_ref().fmt(f),
             Host::Ipv4(ref addr) => addr.fmt(f),
             Host::Ipv6(ref addr) => {
-                try!(f.write_str("["));
-                try!(write_ipv6(addr, f));
+                f.write_str("[")?;
+                write_ipv6(addr, f)?;
                 f.write_str("]")
             }
         }
@@ -200,7 +200,7 @@ impl<S: AsRef<str>> ToSocketAddrs for HostAndPort<S> {
         match self.host {
             Host::Domain(ref domain) => Ok(SocketAddrs {
                 // FIXME: use std::net::lookup_host when it’s stable.
-                state: SocketAddrsState::Domain(try!((domain.as_ref(), port).to_socket_addrs()))
+                state: SocketAddrsState::Domain((domain.as_ref(), port).to_socket_addrs()?)
             }),
             Host::Ipv4(address) => Ok(SocketAddrs {
                 state: SocketAddrsState::One(SocketAddr::V4(SocketAddrV4::new(address, port)))
@@ -243,9 +243,9 @@ fn write_ipv6(addr: &Ipv6Addr, f: &mut Formatter) -> fmt::Result {
     let mut i = 0;
     while i < 8 {
         if i == compress_start {
-            try!(f.write_str(":"));
+            f.write_str(":")?;
             if i == 0 {
-                try!(f.write_str(":"));
+                f.write_str(":")?;
             }
             if compress_end < 8 {
                 i = compress_end;
@@ -253,9 +253,9 @@ fn write_ipv6(addr: &Ipv6Addr, f: &mut Formatter) -> fmt::Result {
                 break;
             }
         }
-        try!(write!(f, "{:x}", segments[i as usize]));
+        write!(f, "{:x}", segments[i as usize])?;
         if i < 7 {
-            try!(f.write_str(":"));
+            f.write_str(":")?;
         }
         i += 1;
     }
@@ -304,17 +304,17 @@ fn parse_ipv4number(mut input: &str) -> Result<u32, ()> {
     if input.starts_with("0x") || input.starts_with("0X") {
         input = &input[2..];
         r = 16;
-    } else if input.len() >= 2 && input.starts_with("0") {
+    } else if input.len() >= 2 && input.starts_with('0') {
         input = &input[1..];
         r = 8;
     }
     if input.is_empty() {
         return Ok(0);
     }
-    if input.starts_with("+") {
+    if input.starts_with('+') {
         return Err(())
     }
-    match u32::from_str_radix(&input, r) {
+    match u32::from_str_radix(input, r) {
         Ok(number) => Ok(number),
         Err(_) => Err(()),
     }
@@ -477,9 +477,7 @@ fn parse_ipv6addr(input: &str) -> ParseResult<Ipv6Addr> {
             let mut swaps = piece_pointer - compress_pointer;
             piece_pointer = 7;
             while swaps > 0 {
-                let tmp = pieces[piece_pointer];
-                pieces[piece_pointer] = pieces[compress_pointer + swaps - 1];
-                pieces[compress_pointer + swaps - 1] = tmp;
+                pieces.swap(piece_pointer, compress_pointer + swaps - 1);
                 swaps -= 1;
                 piece_pointer -= 1;
             }

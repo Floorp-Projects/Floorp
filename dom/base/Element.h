@@ -67,6 +67,7 @@ namespace dom {
   struct ScrollIntoViewOptions;
   struct ScrollToOptions;
   class DOMIntersectionObserver;
+  class DOMMatrixReadOnly;
   class ElementOrCSSPseudoElement;
   class UnrestrictedDoubleOrKeyframeAnimationOptions;
   enum class CallerType : uint32_t;
@@ -1065,6 +1066,10 @@ public:
   }
 
   void GetGridFragments(nsTArray<RefPtr<Grid>>& aResult);
+
+  already_AddRefed<DOMMatrixReadOnly> GetTransformToAncestor(Element& aAncestor);
+  already_AddRefed<DOMMatrixReadOnly> GetTransformToParent();
+  already_AddRefed<DOMMatrixReadOnly> GetTransformToViewport();
 
   already_AddRefed<Animation>
   Animate(JSContext* aContext,

@@ -3920,7 +3920,7 @@ ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
   maskCtx->SetMatrix(gfxMatrix::Translation(-itemRect.TopLeft()));
   maskCtx->Multiply(gfxMatrix::Scaling(mParameters.mXScale, mParameters.mYScale));
 
-  aMaskItem->PaintMask(mBuilder, maskCtx);
+  bool isPaintFinished = aMaskItem->PaintMask(mBuilder, maskCtx);
 
   RefPtr<ImageContainer> imgContainer =
     imageData.CreateImageAndImageContainer();
@@ -3929,7 +3929,9 @@ ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
   }
   maskLayer->SetContainer(imgContainer);
 
-  *oldUserData = Move(newUserData);
+  if (isPaintFinished) {
+    *oldUserData = Move(newUserData);
+  }
   aLayer->SetMaskLayer(maskLayer);
 }
 

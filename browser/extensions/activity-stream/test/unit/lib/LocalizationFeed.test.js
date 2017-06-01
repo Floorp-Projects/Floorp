@@ -19,19 +19,22 @@ const TEST_STRINGS = {
 describe("Localization Feed", () => {
   let feed;
   let globals;
-  before(() => {
-    globals = new GlobalOverrider();
-  });
+  let sandbox;
   beforeEach(() => {
+    globals = new GlobalOverrider();
+    sandbox = globals.sandbox;
     feed = new LocalizationFeed();
     feed.store = {dispatch: sinon.spy()};
+
+    sandbox.stub(global.Services.locale, "getRequestedLocale");
   });
   afterEach(() => {
     globals.restore();
   });
 
   it("should fetch strings on init", async () => {
-    sinon.stub(feed, "updateLocale");
+    sandbox.stub(feed, "updateLocale");
+    sandbox.stub(global, "fetch");
     fetch.returns(Promise.resolve({json() { return Promise.resolve(TEST_STRINGS); }}));
 
     await feed.init();
@@ -115,14 +118,18 @@ describe("Localization Feed", () => {
 
   describe("#onAction", () => {
     it("should addObserver on INIT", () => {
+      const stub = sandbox.stub(global.Services.obs, "addObserver");
+
       feed.onAction({type: at.INIT});
 
-      assert.calledOnce(global.Services.obs.addObserver);
+      assert.calledOnce(stub);
     });
     it("should removeObserver on UNINIT", () => {
+      const stub = sandbox.stub(global.Services.obs, "removeObserver");
+
       feed.onAction({type: at.UNINIT});
 
-      assert.calledOnce(global.Services.obs.removeObserver);
+      assert.calledOnce(stub);
     });
   });
 });

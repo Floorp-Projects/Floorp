@@ -1,13 +1,13 @@
 [package]
 name = "term_size"
-version = "0.2.3"
+version = "0.3.0"
 authors = ["Kevin K. <kbknapp@gmail.com>", "Benjamin Sago <ogham@bsago.me>"]
 exclude = []
 description = "functions for determining terminal sizes and dimensions"
 repository = "https://github.com/kbknapp/term_size-rs.git"
 documentation = "https://kbknapp.github.io/term_size-rs"
 readme = "README.md"
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 keywords = ["term", "terminal", "size", "width", "dimension"]
 
 [dependencies]

@@ -438,8 +438,6 @@ VRDisplayOculus::ZeroSensor()
 VRHMDSensorState
 VRDisplayOculus::GetSensorState()
 {
-  mInputFrameID++;
-
   VRHMDSensorState result;
   double frameDelta = 0.0f;
   if (gfxPrefs::VRPosePredictionEnabled()) {
@@ -449,9 +447,9 @@ VRDisplayOculus::GetSensorState()
     frameDelta = predictedFrameTime - ovr_GetTimeInSeconds();
   }
   result = GetSensorState(frameDelta);
-  result.inputFrameID = mInputFrameID;
-  mLastSensorState[result.inputFrameID % kMaxLatencyFrames] = result;
+  result.inputFrameID = mDisplayInfo.mFrameId;
   result.position[1] -= mEyeHeight;
+  mDisplayInfo.mLastSensorState[result.inputFrameID % kVRMaxLatencyFrames] = result;
   return result;
 }
 
@@ -695,15 +693,14 @@ VRDisplayOculus::UpdateConstantBuffers()
   return true;
 }
 
-void
+bool
 VRDisplayOculus::SubmitFrame(TextureSourceD3D11* aSource,
   const IntSize& aSize,
-  const VRHMDSensorState& aSensorState,
   const gfx::Rect& aLeftEyeRect,
   const gfx::Rect& aRightEyeRect)
 {
   if (!mIsPresenting) {
-    return;
+    return false;
   }
   if (mRenderTargets.IsEmpty()) {
     /**
@@ -714,7 +711,7 @@ VRDisplayOculus::SubmitFrame(TextureSourceD3D11* aSource,
      *       that frames are not being presented.
      *       See Bug 1299309.
      **/
-    return;
+    return false;
   }
   MOZ_ASSERT(mDevice);
   MOZ_ASSERT(mContext);
@@ -775,7 +772,7 @@ VRDisplayOculus::SubmitFrame(TextureSourceD3D11* aSource,
 
   if (!UpdateConstantBuffers()) {
     NS_WARNING("Failed to update constant buffers for Oculus");
-    return;
+    return false;
   }
 
   mContext->Draw(4, 0);
@@ -783,7 +780,7 @@ VRDisplayOculus::SubmitFrame(TextureSourceD3D11* aSource,
   ovrResult orv = ovr_CommitTextureSwapChain(mSession, mTextureSet);
   if (orv != ovrSuccess) {
     NS_WARNING("ovr_CommitTextureSwapChain failed.\n");
-    return;
+    return false;
   }
 
   ovrLayerEyeFov layer;
@@ -808,33 +805,42 @@ VRDisplayOculus::SubmitFrame(TextureSourceD3D11* aSource,
   const ovrVector3f hmdToEyeViewOffset[2] = { { l.x, l.y, l.z },
                                               { r.x, r.y, r.z } };
 
+  const VRHMDSensorState& sensorState = mDisplayInfo.GetSensorState();
+
   for (uint32_t i = 0; i < 2; ++i) {
-    Quaternion o(aSensorState.orientation[0],
-      aSensorState.orientation[1],
-      aSensorState.orientation[2],
-      aSensorState.orientation[3]);
+    Quaternion o(sensorState.orientation[0],
+      sensorState.orientation[1],
+      sensorState.orientation[2],
+      sensorState.orientation[3]);
     Point3D vo(hmdToEyeViewOffset[i].x, hmdToEyeViewOffset[i].y, hmdToEyeViewOffset[i].z);
     Point3D p = o.RotatePoint(vo);
     layer.RenderPose[i].Orientation.x = o.x;
     layer.RenderPose[i].Orientation.y = o.y;
     layer.RenderPose[i].Orientation.z = o.z;
     layer.RenderPose[i].Orientation.w = o.w;
-    layer.RenderPose[i].Position.x = p.x + aSensorState.position[0];
-    layer.RenderPose[i].Position.y = p.y + aSensorState.position[1];
-    layer.RenderPose[i].Position.z = p.z + aSensorState.position[2];
+    layer.RenderPose[i].Position.x = p.x + sensorState.position[0];
+    layer.RenderPose[i].Position.y = p.y + sensorState.position[1];
+    layer.RenderPose[i].Position.z = p.z + sensorState.position[2];
   }
 
   ovrLayerHeader *layers = &layer.Header;
-  orv = ovr_SubmitFrame(mSession, aSensorState.inputFrameID, nullptr, &layers, 1);
+  orv = ovr_SubmitFrame(mSession, mDisplayInfo.mFrameId, nullptr, &layers, 1);
+  // ovr_SubmitFrame will fail during the Oculus health and safety warning.
+  // and will start succeeding once the warning has been dismissed by the user.
 
-  if (orv != ovrSuccess) {
-    printf_stderr("ovr_SubmitFrame failed.\n");
+  if (!OVR_UNQUALIFIED_SUCCESS(orv)) {
+    /**
+     * We wish to throttle the framerate for any case that the rendered
+     * result is not visible.  In some cases, such as during the Oculus
+     * "health and safety warning", orv will be > 0 (OVR_SUCCESS but not
+     * OVR_UNQUALIFIED_SUCCESS) and ovr_SubmitFrame will not block.
+     * In this case, returning true would have resulted in an unthrottled
+     * render loop hiting excessive frame rates and consuming resources.
+     */
+    return false;
   }
 
-  // Trigger the next VSync immediately
-  VRManager *vm = VRManager::Get();
-  MOZ_ASSERT(vm);
-  vm->NotifyVRVsync(mDisplayInfo.mDisplayID);
+  return true;
 }
 
 void
@@ -843,6 +849,8 @@ VRDisplayOculus::NotifyVSync()
   ovrSessionStatus sessionStatus;
   ovrResult ovr = ovr_GetSessionStatus(mSession, &sessionStatus);
   mDisplayInfo.mIsConnected = (ovr == ovrSuccess && sessionStatus.HmdPresent);
+
+  VRDisplayHost::NotifyVSync();
 }
 
 VRControllerOculus::VRControllerOculus(dom::GamepadHand aHand)
@@ -1167,7 +1175,7 @@ VRSystemManagerOculus::GetIsPresenting()
 {
   if (mHMDInfo) {
     VRDisplayInfo displayInfo(mHMDInfo->GetDisplayInfo());
-    return displayInfo.GetIsPresenting();
+    return displayInfo.GetPresentingGroups() != 0;
   }
 
   return false;

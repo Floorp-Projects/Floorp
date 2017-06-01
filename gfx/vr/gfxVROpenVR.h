@@ -26,16 +26,15 @@ class VRDisplayOpenVR : public VRDisplayHost
 {
 public:
   virtual void NotifyVSync() override;
-  virtual VRHMDSensorState GetSensorState() override;
   void ZeroSensor() override;
 
 protected:
+  virtual VRHMDSensorState GetSensorState() override;
   virtual void StartPresentation() override;
   virtual void StopPresentation() override;
 #if defined(XP_WIN)
-  virtual void SubmitFrame(mozilla::layers::TextureSourceD3D11* aSource,
+  virtual bool SubmitFrame(mozilla::layers::TextureSourceD3D11* aSource,
                            const IntSize& aSize,
-                           const VRHMDSensorState& aSensorState,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect) override;
 #endif
@@ -48,8 +47,6 @@ public:
 protected:
   virtual ~VRDisplayOpenVR();
   void Destroy();
-
-  VRHMDSensorState GetSensorState(double timeOffset);
 
   // not owned by us; global from OpenVR
   ::vr::IVRSystem *mVRSystem;

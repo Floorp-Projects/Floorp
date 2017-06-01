@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* global Preferences */
 "use strict";
 
 const {utils: Cu} = Components;
@@ -9,9 +8,10 @@ const {utils: Cu} = Components;
 const {redux} = Cu.import("resource://activity-stream/vendor/Redux.jsm", {});
 const {reducers} = Cu.import("resource://activity-stream/common/Reducers.jsm", {});
 const {ActivityStreamMessageChannel} = Cu.import("resource://activity-stream/lib/ActivityStreamMessageChannel.jsm", {});
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const PREF_PREFIX = "browser.newtabpage.activity-stream.";
-Cu.import("resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Prefs",
+  "resource://activity-stream/lib/ActivityStreamPrefs.jsm");
 
 /**
  * Store - This has a similar structure to a redux store, but includes some extra
@@ -37,6 +37,7 @@ this.Store = class Store {
     });
     this.feeds = new Map();
     this._feedFactories = null;
+    this._prefs = new Prefs();
     this._prefHandlers = new Map();
     this._messageChannel = new ActivityStreamMessageChannel({dispatch: this.dispatch});
     this._store = redux.createStore(
@@ -94,37 +95,32 @@ this.Store = class Store {
    * @param  {string} name The name of a feed, as defined in the object passed
    *                       to Store.init
    */
-  maybeStartFeedAndListenForPrefChanges(name) {
-    const prefName = PREF_PREFIX + name;
-
-    // If the pref was never set, set it to true by default.
-    if (!Preferences.has(prefName)) {
-      Preferences.set(prefName, true);
-    }
-
+  maybeStartFeedAndListenForPrefChanges(prefName) {
     // Create a listener that turns the feed off/on based on changes
     // to the pref, and cache it so we can unlisten on shut-down.
-    const onPrefChanged = isEnabled => (isEnabled ? this.initFeed(name) : this.uninitFeed(name));
+    const onPrefChanged = isEnabled => (isEnabled ? this.initFeed(prefName) : this.uninitFeed(prefName));
     this._prefHandlers.set(prefName, onPrefChanged);
-    Preferences.observe(prefName, onPrefChanged);
+    this._prefs.observe(prefName, onPrefChanged);
 
     // TODO: This should propbably be done in a generic pref manager for Activity Stream.
     // If the pref is true, start the feed immediately.
-    if (Preferences.get(prefName)) {
-      this.initFeed(name);
+    if (this._prefs.get(prefName)) {
+      this.initFeed(prefName);
     }
   }
 
   /**
    * init - Initializes the ActivityStreamMessageChannel channel, and adds feeds.
    *
-   * @param  {array} feeds An array of objects with an optional .onAction method
+   * @param  {array} feedConstructors An array of configuration objects for feeds
+   *                 each with .name (the name of the pref for the feed) and .init,
+   *                 a function that returns an instance of the feed
    */
   init(feedConstructors) {
     if (feedConstructors) {
       this._feedFactories = feedConstructors;
-      for (const name of Object.keys(feedConstructors)) {
-        this.maybeStartFeedAndListenForPrefChanges(name);
+      for (const pref of Object.keys(feedConstructors)) {
+        this.maybeStartFeedAndListenForPrefChanges(pref);
       }
     }
     this._messageChannel.createChannel();
@@ -138,7 +134,7 @@ this.Store = class Store {
    */
   uninit() {
     this.feeds.forEach(feed => this.uninitFeed(feed));
-    this._prefHandlers.forEach((handler, pref) => Preferences.ignore(pref, handler));
+    this._prefHandlers.forEach((handler, pref) => this._prefs.ignore(pref, handler));
     this._prefHandlers.clear();
     this._feedFactories = null;
     this.feeds.clear();
@@ -146,5 +142,4 @@ this.Store = class Store {
   }
 };
 
-this.PREF_PREFIX = PREF_PREFIX;
-this.EXPORTED_SYMBOLS = ["Store", "PREF_PREFIX"];
+this.EXPORTED_SYMBOLS = ["Store"];

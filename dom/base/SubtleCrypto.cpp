@@ -9,6 +9,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/SubtleCryptoBinding.h"
 #include "mozilla/dom/WebCryptoTask.h"
+#include "mozilla/Telemetry.h"
 
 namespace mozilla {
 namespace dom {
@@ -25,6 +26,7 @@ NS_INTERFACE_MAP_END
 
 SubtleCrypto::SubtleCrypto(nsIGlobalObject* aParent)
   : mParent(aParent)
+  , mRecordedTelemetry(false)
 {
 }
 
@@ -34,14 +36,28 @@ SubtleCrypto::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return SubtleCryptoBinding::Wrap(aCx, this, aGivenProto);
 }
 
+void
+SubtleCrypto::RecordTelemetryOnce() {
+  if (mRecordedTelemetry) {
+    return;
+  }
+
+  mRecordedTelemetry = true;
+  JSObject* global = mParent->GetGlobalJSObject();
+  bool isSecure = JS_GetIsSecureContext(js::GetObjectCompartment(global));
+  Telemetry::Accumulate(Telemetry::WEBCRYPTO_METHOD_SECURE, isSecure);
+}
+
 #define SUBTLECRYPTO_METHOD_BODY(Operation, aRv, ...)                   \
   MOZ_ASSERT(mParent);                                                  \
-  RefPtr<Promise> p = Promise::Create(mParent, aRv);                  \
+  RefPtr<Promise> p = Promise::Create(mParent, aRv);                    \
   if (aRv.Failed()) {                                                   \
     return nullptr;                                                     \
   }                                                                     \
-  RefPtr<WebCryptoTask> task = WebCryptoTask::Create ## Operation ## Task(__VA_ARGS__); \
-  task->DispatchWithPromise(p); \
+  RecordTelemetryOnce();                                                \
+  RefPtr<WebCryptoTask> task =                                          \
+    WebCryptoTask::Create ## Operation ## Task(__VA_ARGS__);            \
+  task->DispatchWithPromise(p);                                         \
   return p.forget();
 
 already_AddRefed<Promise>

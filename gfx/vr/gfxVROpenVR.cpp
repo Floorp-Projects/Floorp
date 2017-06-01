@@ -173,12 +173,6 @@ VRDisplayOpenVR::ZeroSensor()
   UpdateStageParameters();
 }
 
-VRHMDSensorState
-VRDisplayOpenVR::GetSensorState()
-{
-  return GetSensorState(0.0f);
-}
-
 void
 VRDisplayOpenVR::PollEvents()
 {
@@ -201,7 +195,7 @@ VRDisplayOpenVR::PollEvents()
 }
 
 VRHMDSensorState
-VRDisplayOpenVR::GetSensorState(double timeOffset)
+VRDisplayOpenVR::GetSensorState()
 {
   PollEvents();
 
@@ -256,6 +250,7 @@ VRDisplayOpenVR::GetSensorState(double timeOffset)
     result.linearVelocity[2] = pose.vVelocity.v[2];
   }
 
+  result.inputFrameID = mDisplayInfo.mFrameId;
   return result;
 }
 
@@ -283,15 +278,14 @@ VRDisplayOpenVR::StopPresentation()
 
 #if defined(XP_WIN)
 
-void
+bool
 VRDisplayOpenVR::SubmitFrame(TextureSourceD3D11* aSource,
   const IntSize& aSize,
-  const VRHMDSensorState& aSensorState,
   const gfx::Rect& aLeftEyeRect,
   const gfx::Rect& aRightEyeRect)
 {
   if (!mIsPresenting) {
-    return;
+    return false;
   }
 
   ::vr::Texture_t tex;
@@ -323,10 +317,7 @@ VRDisplayOpenVR::SubmitFrame(TextureSourceD3D11* aSource,
 
   mVRCompositor->PostPresentHandoff();
 
-  // Trigger the next VSync immediately
-  VRManager *vm = VRManager::Get();
-  MOZ_ASSERT(vm);
-  vm->NotifyVRVsync(mDisplayInfo.mDisplayID);
+  return true;
 }
 
 #endif
@@ -339,6 +330,8 @@ VRDisplayOpenVR::NotifyVSync()
 
   // Make sure we respond to OpenVR events even when not presenting
   PollEvents();
+
+  VRDisplayHost::NotifyVSync();
 }
 
 VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aNumButtons,
@@ -595,7 +588,7 @@ VRSystemManagerOpenVR::GetIsPresenting()
 {
   if (mOpenVRHMD) {
     VRDisplayInfo displayInfo(mOpenVRHMD->GetDisplayInfo());
-    return displayInfo.GetIsPresenting();
+    return displayInfo.GetPresentingGroups() != kVRGroupNone;
   }
 
   return false;

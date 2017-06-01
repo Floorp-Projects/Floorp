@@ -183,6 +183,10 @@ END_TEST(testGCHeapPostBarriers)
 
 BEGIN_TEST(testUnbarrieredEquality)
 {
+#ifdef JS_GC_ZEAL
+    AutoLeaveZeal nozeal(cx);
+#endif /* JS_GC_ZEAL */
+
     // Use ArrayBuffers because they have finalizers, which allows using them
     // in ObjectPtr without awkward conversations about nursery allocatability.
     JS::RootedObject robj(cx, JS_NewArrayBuffer(cx, 20));

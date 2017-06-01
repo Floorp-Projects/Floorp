@@ -20,6 +20,7 @@ import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
+
 public class SetHomepagePreference extends DialogPreference {
     private static final String DEFAULT_HOMEPAGE = AboutPages.HOME;
 
@@ -27,6 +28,7 @@ public class SetHomepagePreference extends DialogPreference {
 
     private RadioGroup homepageLayout;
     private RadioButton defaultRadio;
+    private RadioButton distributionRadio;
     private RadioButton userAddressRadio;
     private EditText homepageEditText;
 
@@ -51,6 +53,7 @@ public class SetHomepagePreference extends DialogPreference {
 
         homepageLayout = (RadioGroup) view.findViewById(R.id.homepage_layout);
         defaultRadio = (RadioButton) view.findViewById(R.id.radio_default);
+        distributionRadio = (RadioButton) view.findViewById(R.id.radio_distribution);
         userAddressRadio = (RadioButton) view.findViewById(R.id.radio_user_address);
         homepageEditText = (EditText) view.findViewById(R.id.edittext_user_address);
 
@@ -71,8 +74,17 @@ public class SetHomepagePreference extends DialogPreference {
     }
 
     private void setUIState(final String url) {
+        if (prefs.contains(GeckoPreferences.PREFS_DIST_HOMEPAGE_NAME) &&
+            prefs.contains(GeckoPreferences.PREFS_DIST_HOMEPAGE)) {
+            distributionRadio.setText(prefs.getString(GeckoPreferences.PREFS_DIST_HOMEPAGE_NAME, ""));
+        } else {
+            distributionRadio.setVisibility(View.GONE);
+        }
         if (isUrlDefaultHomepage(url)) {
             defaultRadio.setChecked(true);
+        } else if (distributionRadio.getVisibility() == View.VISIBLE &&
+                   isUrlDistributionHomepage(url)) {
+            distributionRadio.setChecked(true);
         } else {
             userAddressRadio.setChecked(true);
             homepageEditText.setText(url);
@@ -81,6 +93,11 @@ public class SetHomepagePreference extends DialogPreference {
 
     private boolean isUrlDefaultHomepage(final String url) {
         return TextUtils.isEmpty(url) || DEFAULT_HOMEPAGE.equals(url);
+    }
+
+    private boolean isUrlDistributionHomepage(final String url) {
+        String distributionHomepage = prefs.getString(GeckoPreferences.PREFS_DIST_HOMEPAGE, "");
+        return distributionHomepage.equals(url);
     }
 
     private static void openKeyboardAndSelectAll(final Context context, final View viewToFocus) {
@@ -106,8 +123,11 @@ public class SetHomepagePreference extends DialogPreference {
             final SharedPreferences.Editor editor = prefs.edit();
             final String homePageEditTextValue = homepageEditText.getText().toString();
             final String newPrefValue;
-            if (homepageLayout.getCheckedRadioButtonId() == R.id.radio_default ||
-                    isUrlDefaultHomepage(homePageEditTextValue)) {
+            if (homepageLayout.getCheckedRadioButtonId() == R.id.radio_distribution) {
+                newPrefValue = prefs.getString(GeckoPreferences.PREFS_DIST_HOMEPAGE, "");
+                editor.putString(GeckoPreferences.PREFS_HOMEPAGE, newPrefValue);
+            } else if (homepageLayout.getCheckedRadioButtonId() == R.id.radio_default ||
+                       isUrlDefaultHomepage(homePageEditTextValue)) {
                 newPrefValue = "";
                 editor.remove(GeckoPreferences.PREFS_HOMEPAGE);
             } else {

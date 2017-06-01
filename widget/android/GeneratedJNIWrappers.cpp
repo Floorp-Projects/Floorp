@@ -2023,6 +2023,50 @@ constexpr char GeckoHlsDemuxerWrapper::HlsDemuxerCallbacks::OnError_t::signature
 constexpr char GeckoHlsDemuxerWrapper::HlsDemuxerCallbacks::OnInitialized_t::name[];
 constexpr char GeckoHlsDemuxerWrapper::HlsDemuxerCallbacks::OnInitialized_t::signature[];
 
+const char GeckoHlsResourceWrapper::name[] =
+        "org/mozilla/gecko/media/GeckoHlsResourceWrapper";
+
+constexpr char GeckoHlsResourceWrapper::GetPlayer_t::name[];
+constexpr char GeckoHlsResourceWrapper::GetPlayer_t::signature[];
+
+auto GeckoHlsResourceWrapper::GetPlayer() const -> mozilla::jni::Object::LocalRef
+{
+    return mozilla::jni::Method<GetPlayer_t>::Call(GeckoHlsResourceWrapper::mCtx, nullptr);
+}
+
+constexpr char GeckoHlsResourceWrapper::Create_t::name[];
+constexpr char GeckoHlsResourceWrapper::Create_t::signature[];
+
+auto GeckoHlsResourceWrapper::Create(mozilla::jni::String::Param a0, mozilla::jni::Object::Param a1) -> GeckoHlsResourceWrapper::LocalRef
+{
+    return mozilla::jni::Method<Create_t>::Call(GeckoHlsResourceWrapper::Context(), nullptr, a0, a1);
+}
+
+constexpr char GeckoHlsResourceWrapper::Destroy_t::name[];
+constexpr char GeckoHlsResourceWrapper::Destroy_t::signature[];
+
+auto GeckoHlsResourceWrapper::Destroy() const -> void
+{
+    return mozilla::jni::Method<Destroy_t>::Call(GeckoHlsResourceWrapper::mCtx, nullptr);
+}
+
+const char GeckoHlsResourceWrapper::HlsResourceCallbacks::name[] =
+        "org/mozilla/gecko/media/GeckoHlsResourceWrapper$HlsResourceCallbacks";
+
+constexpr char GeckoHlsResourceWrapper::HlsResourceCallbacks::New_t::name[];
+constexpr char GeckoHlsResourceWrapper::HlsResourceCallbacks::New_t::signature[];
+
+auto GeckoHlsResourceWrapper::HlsResourceCallbacks::New() -> HlsResourceCallbacks::LocalRef
+{
+    return mozilla::jni::Constructor<New_t>::Call(HlsResourceCallbacks::Context(), nullptr);
+}
+
+constexpr char GeckoHlsResourceWrapper::HlsResourceCallbacks::OnDataArrived_t::name[];
+constexpr char GeckoHlsResourceWrapper::HlsResourceCallbacks::OnDataArrived_t::signature[];
+
+constexpr char GeckoHlsResourceWrapper::HlsResourceCallbacks::OnError_t::name[];
+constexpr char GeckoHlsResourceWrapper::HlsResourceCallbacks::OnError_t::signature[];
+
 const char GeckoHlsSample::name[] =
         "org/mozilla/gecko/media/GeckoHlsSample";
 

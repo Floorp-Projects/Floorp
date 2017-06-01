@@ -33,7 +33,7 @@ bool
 WAVDemuxer::InitInternal()
 {
   if (!mTrackDemuxer) {
-    mTrackDemuxer = new WAVTrackDemuxer(mSource);
+    mTrackDemuxer = new WAVTrackDemuxer(mSource.GetResource());
   }
   return mTrackDemuxer->Init();
 }
@@ -77,7 +77,7 @@ WAVDemuxer::IsSeekable() const
 
 // WAVTrackDemuxer
 
-WAVTrackDemuxer::WAVTrackDemuxer(MediaResourceIndex aSource)
+WAVTrackDemuxer::WAVTrackDemuxer(MediaResource* aSource)
   : mSource(aSource)
   , mOffset(0)
   , mFirstChunkOffset(0)

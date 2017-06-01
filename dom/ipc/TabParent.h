@@ -118,14 +118,6 @@ public:
 
   void CacheFrameLoader(nsFrameLoader* aFrameLoader);
 
-  /**
-   * Returns true iff this TabParent's nsIFrameLoader is visible.
-   *
-   * The frameloader's visibility can be independent of e.g. its docshell's
-   * visibility.
-   */
-  bool IsVisible() const;
-
   nsIBrowserDOMWindow *GetBrowserDOMWindow() const { return mBrowserDOMWindow; }
 
   void SetBrowserDOMWindow(nsIBrowserDOMWindow* aBrowserDOMWindow)

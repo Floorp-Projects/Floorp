@@ -20,6 +20,7 @@ from ..frontend.data import (
     FinalTargetPreprocessedFiles,
     GeneratedFile,
     HostDefines,
+    JARManifest,
     ObjdirFiles,
 )
 from ..util import (
@@ -27,7 +28,6 @@ from ..util import (
 )
 from ..frontend.context import (
     AbsolutePath,
-    RenamedSourcePath,
     ObjDirPath,
 )
 
@@ -86,8 +86,8 @@ class BackendTupfile(object):
             'extra_outputs': ' | ' + ' '.join(extra_outputs) if extra_outputs else '',
         })
 
-    def symlink_rule(self, source, output_group=None):
-        outputs = [mozpath.basename(source)]
+    def symlink_rule(self, source, output=None, output_group=None):
+        outputs = [output] if output else [mozpath.basename(source)]
         if output_group:
             outputs.append(output_group)
 
@@ -187,6 +187,8 @@ class TupOnly(CommonBackend, PartialBackend):
             self._process_final_target_files(obj)
         elif isinstance(obj, FinalTargetPreprocessedFiles):
             self._process_final_target_pp_files(obj, backend_file)
+        elif isinstance(obj, JARManifest):
+            self._consume_jar_manifest(obj)
 
         return True
 
@@ -207,6 +209,14 @@ class TupOnly(CommonBackend, PartialBackend):
                 for name in sorted(acdefines)])
             # TODO: AB_CD only exists in Makefiles at the moment.
             acdefines_flags += ' -DAB_CD=en-US'
+
+            # TODO: BOOKMARKS_INCLUDE_DIR is used by bookmarks.html.in, and is
+            # only defined in browser/locales/Makefile.in
+            acdefines_flags += ' -DBOOKMARKS_INCLUDE_DIR=%s/browser/locales/en-US/profile' % self.environment.topsrcdir
+
+            # Use BUILD_FASTER to avoid CXXFLAGS/CPPFLAGS in
+            # toolkit/content/buildconfig.html
+            acdefines_flags += ' -DBUILD_FASTER=1'
 
             fh.write('MOZ_OBJ_ROOT = $(TUP_CWD)\n')
             fh.write('DIST = $(MOZ_OBJ_ROOT)/dist\n')
@@ -281,7 +291,6 @@ class TupOnly(CommonBackend, PartialBackend):
         for path, files in obj.files.walk():
             backend_file = self._get_backend_file(mozpath.join(target, path))
             for f in files:
-                assert not isinstance(f, RenamedSourcePath)
                 if not isinstance(f, ObjDirPath):
                     if '*' in f:
                         if f.startswith('/') or isinstance(f, AbsolutePath):
@@ -297,7 +306,7 @@ class TupOnly(CommonBackend, PartialBackend):
                             # TODO: This is needed for tests
                             pass
                     else:
-                        backend_file.symlink_rule(f.full_path, output_group=self._installed_files)
+                        backend_file.symlink_rule(f.full_path, output=f.target_basename, output_group=self._installed_files)
                 else:
                     # TODO: Support installing generated files
                     pass
@@ -346,9 +355,13 @@ class TupOnly(CommonBackend, PartialBackend):
             )
 
     def _preprocess(self, backend_file, input_file, destdir=None):
+        # .css files use '%' as the preprocessor marker, which must be scaped as
+        # '%%' in the Tupfile.
+        marker = '%%' if input_file.endswith('.css') else '#'
+
         cmd = self._py_action('preprocessor')
-        cmd.extend(backend_file.defines)
-        cmd.extend(['$(ACDEFINES)', '%f', '-o', '%o'])
+        cmd.extend([shell_quote(d) for d in backend_file.defines])
+        cmd.extend(['$(ACDEFINES)', '%f', '-o', '%o', '--marker=%s' % marker])
 
         base_input = mozpath.basename(input_file)
         if base_input.endswith('.in'):

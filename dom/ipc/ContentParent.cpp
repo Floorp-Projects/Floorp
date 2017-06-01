@@ -229,10 +229,13 @@
 #include "mozilla/dom/SpeechSynthesisParent.h"
 #endif
 
-#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_LINUX)
+#if defined(MOZ_CONTENT_SANDBOX)
+#include "mozilla/SandboxSettings.h"
+#if defined(XP_LINUX)
 #include "mozilla/SandboxInfo.h"
 #include "mozilla/SandboxBroker.h"
 #include "mozilla/SandboxBrokerPolicyFactory.h"
+#endif
 #endif
 
 #ifdef MOZ_TOOLKIT_SEARCH
@@ -1385,30 +1388,6 @@ RemoteWindowContext::OpenURI(nsIURI* aURI)
 
 } // namespace
 
-bool
-ContentParent::SetPriorityAndCheckIsAlive(ProcessPriority aPriority)
-{
-  ProcessPriorityManager::SetProcessPriority(this, aPriority);
-
-  // Now that we've set this process's priority, check whether the process is
-  // still alive.  Hopefully we've set the priority to FOREGROUND*, so the
-  // process won't unexpectedly crash after this point!
-  //
-  // Bug 943174: use waitid() with WNOWAIT so that, if the process
-  // did exit, we won't consume its zombie and confuse the
-  // GeckoChildProcessHost dtor.
-#ifdef MOZ_WIDGET_GONK
-  siginfo_t info;
-  info.si_pid = 0;
-  if (waitid(P_PID, Pid(), &info, WNOWAIT | WNOHANG | WEXITED) == 0
-    && info.si_pid != 0) {
-    return false;
-  }
-#endif
-
-  return true;
-}
-
 void
 ContentParent::ShutDownProcess(ShutDownMethod aMethod)
 {
@@ -2339,7 +2318,7 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
   // purpose. If the decision is made to permanently rely on the pref, this
   // should be changed so that it is required to restart firefox for the change
   // of value to take effect.
-  shouldSandbox = (Preferences::GetInt("security.sandbox.content.level") > 0) &&
+  shouldSandbox = (GetEffectiveContentSandboxLevel() > 0) &&
     !PR_GetEnv("MOZ_DISABLE_CONTENT_SANDBOX");
 
   if (shouldSandbox) {
