@@ -146,7 +146,7 @@ protected:
   // The thread can't die while we're running in it, and we only use it for
   // pointer-comparison with the current thread anyway - so we make it atomic
   // and don't refcount it.
-  Atomic<nsIThread*> mRunningThread;
+  Atomic<PRThread*> mRunningThread;
 
   // RAII class that gets instantiated for each dispatched task.
   class AutoTaskGuard : public AutoTaskDispatcher
@@ -165,14 +165,14 @@ protected:
       sCurrentThreadTLS.set(aQueue);
 
       MOZ_ASSERT(mQueue->mRunningThread == nullptr);
-      mQueue->mRunningThread = NS_GetCurrentThread();
+      mQueue->mRunningThread = GetCurrentPhysicalThread();
     }
 
     ~AutoTaskGuard()
     {
       DrainDirectTasks();
 
-      MOZ_ASSERT(mQueue->mRunningThread == NS_GetCurrentThread());
+      MOZ_ASSERT(mQueue->mRunningThread == GetCurrentPhysicalThread());
       mQueue->mRunningThread = nullptr;
 
       sCurrentThreadTLS.set(mLastCurrentThread);

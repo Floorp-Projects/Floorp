@@ -209,7 +209,7 @@ TaskQueue::ImpreciseLengthForHeuristics()
 bool
 TaskQueue::IsCurrentThreadIn()
 {
-  bool in = NS_GetCurrentThread() == mRunningThread;
+  bool in = mRunningThread == GetCurrentPhysicalThread();
   return in;
 }
 

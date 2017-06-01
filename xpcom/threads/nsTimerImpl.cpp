@@ -153,7 +153,7 @@ nsTimerImpl::nsTimerImpl(nsITimer* aTimer) :
   mMutex("nsTimerImpl::mMutex")
 {
   // XXXbsmedberg: shouldn't this be in Init()?
-  mEventTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
+  mEventTarget = GetCurrentThreadEventTarget();
 }
 
 //static
@@ -453,7 +453,7 @@ nsTimerImpl::SetTarget(nsIEventTarget* aTarget)
   if (aTarget) {
     mEventTarget = aTarget;
   } else {
-    mEventTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
+    mEventTarget = GetCurrentThreadEventTarget();
   }
   return NS_OK;
 }
