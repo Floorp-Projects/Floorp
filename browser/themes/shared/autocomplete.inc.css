@@ -31,10 +31,12 @@
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon {
   display: initial;
   list-style-image: url(chrome://browser/skin/notification-icons.svg#login);
+  -moz-context-properties: fill;
+  fill: GrayText;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon[selected] {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#login-highlighted);
+  fill: HighlightText;
 }
 
 
