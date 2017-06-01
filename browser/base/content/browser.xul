@@ -494,6 +494,10 @@
                            class="subviewbutton"
                            label="&sendToDevice.noDevices.label;"
                            disabled="true"/>
+            <toolbarbutton id="page-action-sync-not-ready-button"
+                           class="subviewbutton"
+                           label="&sendToDevice.syncNotReady.label;"
+                           disabled="true"/>
           </vbox>
         </panelview>
       </photonpanelmultiview>
