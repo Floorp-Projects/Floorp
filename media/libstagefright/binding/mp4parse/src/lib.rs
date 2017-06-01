@@ -28,6 +28,10 @@ mod tests;
 // Arbitrary buffer size limit used for raw read_bufs on a box.
 const BUF_SIZE_LIMIT: usize = 1024 * 1024;
 
+// Max table length. Calculating in worth case for one week long video, one
+// frame per table entry in 30 fps.
+const TABLE_SIZE_LIMIT: u32 = 30 * 60 * 60 * 24 * 7;
+
 static DEBUG_MODE: std::sync::atomic::AtomicBool = std::sync::atomic::ATOMIC_BOOL_INIT;
 
 pub fn set_debug_mode(mode: bool) {
@@ -1020,7 +1024,7 @@ fn read_tkhd<T: Read>(src: &mut BMFFBox<T>) -> Result<TrackHeaderBox> {
 /// Parse a elst box.
 fn read_elst<T: Read>(src: &mut BMFFBox<T>) -> Result<EditListBox> {
     let (version, _) = read_fullbox_extra(src)?;
-    let edit_count = be_u32(src)?;
+    let edit_count = be_u32_with_limit(src)?;
     if edit_count == 0 {
         return Err(Error::InvalidData("invalid edit count"));
     }
@@ -1097,7 +1101,7 @@ fn read_mdhd<T: Read>(src: &mut BMFFBox<T>) -> Result<MediaHeaderBox> {
 /// Parse a stco box.
 fn read_stco<T: Read>(src: &mut BMFFBox<T>) -> Result<ChunkOffsetBox> {
     let (_, _) = read_fullbox_extra(src)?;
-    let offset_count = be_u32(src)?;
+    let offset_count = be_u32_with_limit(src)?;
     let mut offsets = Vec::new();
     for _ in 0..offset_count {
         offsets.push(be_u32(src)? as u64);
@@ -1114,7 +1118,7 @@ fn read_stco<T: Read>(src: &mut BMFFBox<T>) -> Result<ChunkOffsetBox> {
 /// Parse a co64 box.
 fn read_co64<T: Read>(src: &mut BMFFBox<T>) -> Result<ChunkOffsetBox> {
     let (_, _) = read_fullbox_extra(src)?;
-    let offset_count = be_u32(src)?;
+    let offset_count = be_u32_with_limit(src)?;
     let mut offsets = Vec::new();
     for _ in 0..offset_count {
         offsets.push(be_u64(src)?);
@@ -1131,7 +1135,7 @@ fn read_co64<T: Read>(src: &mut BMFFBox<T>) -> Result<ChunkOffsetBox> {
 /// Parse a stss box.
 fn read_stss<T: Read>(src: &mut BMFFBox<T>) -> Result<SyncSampleBox> {
     let (_, _) = read_fullbox_extra(src)?;
-    let sample_count = be_u32(src)?;
+    let sample_count = be_u32_with_limit(src)?;
     let mut samples = Vec::new();
     for _ in 0..sample_count {
         samples.push(be_u32(src)?);
@@ -1148,7 +1152,7 @@ fn read_stss<T: Read>(src: &mut BMFFBox<T>) -> Result<SyncSampleBox> {
 /// Parse a stsc box.
 fn read_stsc<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleToChunkBox> {
     let (_, _) = read_fullbox_extra(src)?;
-    let sample_count = be_u32(src)?;
+    let sample_count = be_u32_with_limit(src)?;
     let mut samples = Vec::new();
     for _ in 0..sample_count {
         let first_chunk = be_u32(src)?;
@@ -1172,7 +1176,7 @@ fn read_stsc<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleToChunkBox> {
 fn read_ctts<T: Read>(src: &mut BMFFBox<T>) -> Result<CompositionOffsetBox> {
     let (version, _) = read_fullbox_extra(src)?;
 
-    let counts = be_u32(src)?;
+    let counts = be_u32_with_limit(src)?;
 
     if src.bytes_left() < (counts as usize * 8) {
         return Err(Error::InvalidData("insufficient data in 'ctts' box"));
@@ -1210,7 +1214,7 @@ fn read_ctts<T: Read>(src: &mut BMFFBox<T>) -> Result<CompositionOffsetBox> {
 fn read_stsz<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleSizeBox> {
     let (_, _) = read_fullbox_extra(src)?;
     let sample_size = be_u32(src)?;
-    let sample_count = be_u32(src)?;
+    let sample_count = be_u32_with_limit(src)?;
     let mut sample_sizes = Vec::new();
     if sample_size == 0 {
         for _ in 0..sample_count {
@@ -1230,7 +1234,7 @@ fn read_stsz<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleSizeBox> {
 /// Parse a stts box.
 fn read_stts<T: Read>(src: &mut BMFFBox<T>) -> Result<TimeToSampleBox> {
     let (_, _) = read_fullbox_extra(src)?;
-    let sample_count = be_u32(src)?;
+    let sample_count = be_u32_with_limit(src)?;
     let mut samples = Vec::new();
     for _ in 0..sample_count {
         let sample_count = be_u32(src)?;
@@ -2029,6 +2033,16 @@ fn be_u24<T: ReadBytesExt>(src: &mut T) -> Result<u32> {
 
 fn be_u32<T: ReadBytesExt>(src: &mut T) -> Result<u32> {
     src.read_u32::<byteorder::BigEndian>().map_err(From::from)
+}
+
+/// Using in reading table size and return error if it exceeds limitation.
+fn be_u32_with_limit<T: ReadBytesExt>(src: &mut T) -> Result<u32> {
+    be_u32(src).and_then(|v| {
+        if v > TABLE_SIZE_LIMIT {
+            return Err(Error::Unsupported("Over limited value"));
+        }
+        Ok(v)
+    })
 }
 
 fn be_u64<T: ReadBytesExt>(src: &mut T) -> Result<u64> {
