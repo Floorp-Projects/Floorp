@@ -583,6 +583,8 @@ TimeoutManager::ClearTimeout(int32_t aTimerId, Timeout::Reason aReason)
 void
 TimeoutManager::RunTimeout(Timeout* aTimeout)
 {
+  MOZ_DIAGNOSTIC_ASSERT(aTimeout);
+
   if (mWindow.IsSuspended()) {
     return;
   }
@@ -630,7 +632,7 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
   TimeStamp now = TimeStamp::Now();
   TimeStamp deadline;
 
-  if (aTimeout && aTimeout->When() > now) {
+  if (aTimeout->When() > now) {
     // The OS timer fired early (which can happen due to the timers
     // having lower precision than TimeStamp does).  Set |deadline| to
     // be the time when the OS timer *should* have fired so that any
@@ -850,7 +852,7 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
 
       // If we have a regular interval timer, we re-schedule the
       // timeout, accounting for clock drift.
-      bool needsReinsertion = RescheduleTimeout(timeout, now, !aTimeout);
+      bool needsReinsertion = RescheduleTimeout(timeout, now);
 
       // Running a timeout can cause another timeout to be deleted, so
       // we need to reset the pointer to the following timeout.
@@ -1019,8 +1021,7 @@ TimeoutManager::CancelOrUpdateBackPressure(nsGlobalWindow* aWindow)
 }
 
 bool
-TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now,
-                                  bool aRunningPendingTimeouts)
+TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now)
 {
   if (!aTimeout->mIsInterval) {
     if (aTimeout->mTimer) {
@@ -1041,15 +1042,7 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now,
         std::max(aTimeout->mInterval,
                  uint32_t(DOMMinTimeoutValue(aTimeout->mIsTracking))));
 
-  // If we're running pending timeouts, set the next interval to be
-  // relative to "now", and not to when the timeout that was pending
-  // should have fired.
-  TimeStamp firingTime;
-  if (aRunningPendingTimeouts) {
-    firingTime = now + nextInterval;
-  } else {
-    firingTime = aTimeout->When() + nextInterval;
-  }
+  TimeStamp firingTime = now + nextInterval;
 
   TimeStamp currentNow = TimeStamp::Now();
   TimeDuration delay = firingTime - currentNow;

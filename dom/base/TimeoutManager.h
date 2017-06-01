@@ -49,8 +49,7 @@ public:
   // The timeout implementation functions.
   void RunTimeout(mozilla::dom::Timeout* aTimeout);
   // Return true if |aTimeout| needs to be reinserted into the timeout list.
-  bool RescheduleTimeout(mozilla::dom::Timeout* aTimeout, const TimeStamp& now,
-                         bool aRunningPendingTimeouts);
+  bool RescheduleTimeout(mozilla::dom::Timeout* aTimeout, const TimeStamp& now);
 
   void ClearAllTimeouts();
   uint32_t GetTimeoutId(mozilla::dom::Timeout::Reason aReason);
