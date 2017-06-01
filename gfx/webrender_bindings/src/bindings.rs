@@ -1382,7 +1382,8 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
                                               image_key_0: WrImageKey,
                                               image_key_1: WrImageKey,
                                               image_key_2: WrImageKey,
-                                              color_space: WrYuvColorSpace) {
+                                              color_space: WrYuvColorSpace,
+                                              image_rendering: WrImageRendering) {
     assert!(unsafe { is_in_main_thread() });
 
     state.frame_builder
@@ -1390,7 +1391,8 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
          .push_yuv_image(bounds.into(),
                          clip.into(),
                          YuvData::PlanarYCbCr(image_key_0, image_key_1, image_key_2),
-                         color_space);
+                         color_space,
+                         image_rendering);
 }
 
 /// Push a 2 planar NV12 image.
@@ -1400,7 +1402,8 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
                                             clip: WrClipRegionToken,
                                             image_key_0: WrImageKey,
                                             image_key_1: WrImageKey,
-                                            color_space: WrYuvColorSpace) {
+                                            color_space: WrYuvColorSpace,
+                                            image_rendering: WrImageRendering) {
     assert!(unsafe { is_in_main_thread() });
 
     state.frame_builder
@@ -1408,7 +1411,8 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
          .push_yuv_image(bounds.into(),
                          clip.into(),
                          YuvData::NV12(image_key_0, image_key_1),
-                         color_space);
+                         color_space,
+                         image_rendering);
 }
 
 /// Push a yuv interleaved image.
@@ -1417,7 +1421,8 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
                                                    bounds: WrRect,
                                                    clip: WrClipRegionToken,
                                                    image_key_0: WrImageKey,
-                                                   color_space: WrYuvColorSpace) {
+                                                   color_space: WrYuvColorSpace,
+                                                   image_rendering: WrImageRendering) {
     assert!(unsafe { is_in_main_thread() });
 
     state.frame_builder
@@ -1425,7 +1430,8 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
          .push_yuv_image(bounds.into(),
                          clip.into(),
                          YuvData::InterleavedYCbCr(image_key_0),
-                         color_space);
+                         color_space,
+                         image_rendering);
 }
 
 #[no_mangle]

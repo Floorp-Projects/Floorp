@@ -254,7 +254,7 @@ impl<T: NumCast + Copy, U> TypedPoint2D<T, U> {
     /// When casting from floating point points, it is worth considering whether
     /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
     /// the desired conversion behavior.
-    pub fn to_uint(&self) -> TypedPoint2D<usize, U> {
+    pub fn to_usize(&self) -> TypedPoint2D<usize, U> {
         self.cast().unwrap()
     }
 
@@ -517,7 +517,7 @@ impl<T: NumCast + Copy, U> TypedPoint3D<T, U> {
     /// When casting from floating point points, it is worth considering whether
     /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
     /// the desired conversion behavior.
-    pub fn to_uint(&self) -> TypedPoint3D<usize, U> {
+    pub fn to_usize(&self) -> TypedPoint3D<usize, U> {
         self.cast().unwrap()
     }
 
@@ -756,7 +756,7 @@ impl<T: NumCast + Copy, U> TypedPoint4D<T, U> {
     /// When casting from floating point points, it is worth considering whether
     /// to `round()`, `ceil()` or `floor()` before the cast in order to obtain
     /// the desired conversion behavior.
-    pub fn to_uint(&self) -> TypedPoint4D<usize, U> {
+    pub fn to_usize(&self) -> TypedPoint4D<usize, U> {
         self.cast().unwrap()
     }
 

@@ -804,7 +804,8 @@ void wr_dp_push_yuv_NV12_image(WrState *aState,
                                WrClipRegionToken aClip,
                                WrImageKey aImageKey0,
                                WrImageKey aImageKey1,
-                               WrYuvColorSpace aColorSpace)
+                               WrYuvColorSpace aColorSpace,
+                               WrImageRendering aImageRendering)
 WR_FUNC;
 
 WR_INLINE
@@ -812,7 +813,8 @@ void wr_dp_push_yuv_interleaved_image(WrState *aState,
                                       WrRect aBounds,
                                       WrClipRegionToken aClip,
                                       WrImageKey aImageKey0,
-                                      WrYuvColorSpace aColorSpace)
+                                      WrYuvColorSpace aColorSpace,
+                                      WrImageRendering aImageRendering)
 WR_FUNC;
 
 WR_INLINE
@@ -822,7 +824,8 @@ void wr_dp_push_yuv_planar_image(WrState *aState,
                                  WrImageKey aImageKey0,
                                  WrImageKey aImageKey1,
                                  WrImageKey aImageKey2,
-                                 WrYuvColorSpace aColorSpace)
+                                 WrYuvColorSpace aColorSpace,
+                                 WrImageRendering aImageRendering)
 WR_FUNC;
 
 WR_INLINE

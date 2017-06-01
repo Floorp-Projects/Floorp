@@ -704,7 +704,8 @@ DisplayListBuilder::PushYCbCrPlanarImage(const WrRect& aBounds,
                                          wr::ImageKey aImageChannel0,
                                          wr::ImageKey aImageChannel1,
                                          wr::ImageKey aImageChannel2,
-                                         WrYuvColorSpace aColorSpace)
+                                         WrYuvColorSpace aColorSpace,
+                                         wr::ImageRendering aRendering)
 {
   wr_dp_push_yuv_planar_image(mWrState,
                               aBounds,
@@ -712,7 +713,8 @@ DisplayListBuilder::PushYCbCrPlanarImage(const WrRect& aBounds,
                               aImageChannel0,
                               aImageChannel1,
                               aImageChannel2,
-                              aColorSpace);
+                              aColorSpace,
+                              aRendering);
 }
 
 void
@@ -720,27 +722,31 @@ DisplayListBuilder::PushNV12Image(const WrRect& aBounds,
                                   const WrClipRegionToken aClip,
                                   wr::ImageKey aImageChannel0,
                                   wr::ImageKey aImageChannel1,
-                                  WrYuvColorSpace aColorSpace)
+                                  WrYuvColorSpace aColorSpace,
+                                  wr::ImageRendering aRendering)
 {
   wr_dp_push_yuv_NV12_image(mWrState,
                             aBounds,
                             aClip,
                             aImageChannel0,
                             aImageChannel1,
-                            aColorSpace);
+                            aColorSpace,
+                            aRendering);
 }
 
 void
 DisplayListBuilder::PushYCbCrInterleavedImage(const WrRect& aBounds,
                                               const WrClipRegionToken aClip,
                                               wr::ImageKey aImageChannel0,
-                                              WrYuvColorSpace aColorSpace)
+                                              WrYuvColorSpace aColorSpace,
+                                              wr::ImageRendering aRendering)
 {
   wr_dp_push_yuv_interleaved_image(mWrState,
                                    aBounds,
                                    aClip,
                                    aImageChannel0,
-                                   aColorSpace);
+                                   aColorSpace,
+                                   aRendering);
 }
 
 void

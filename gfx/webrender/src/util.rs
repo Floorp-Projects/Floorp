@@ -150,6 +150,15 @@ pub fn subtract_rect<U>(rect: &TypedRect<f32, U>,
         }
     }
 }
+
+pub fn get_normal(x: f32) -> Option<f32> {
+    if x.is_normal() {
+        Some(x)
+    } else {
+        None
+    }
+}
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[repr(u8)]
 pub enum TransformedRectKind {
@@ -234,8 +243,8 @@ impl TransformedRect {
 
                 for (vertex, (x, y)) in vertices.iter().zip(xs.iter_mut().zip(ys.iter_mut())) {
                     let inv_w = 1.0 / vertex.w;
-                    *x = vertex.x * inv_w;
-                    *y = vertex.y * inv_w;
+                    *x = get_normal(vertex.x * inv_w).unwrap_or(0.0);
+                    *y = get_normal(vertex.y * inv_w).unwrap_or(0.0);
                 }
 
                 xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -254,11 +263,11 @@ impl TransformedRect {
                     local_rect: *rect,
                     vertices: vertices,
                     bounding_rect: DeviceIntRect::new(outer_min_dp,
-                                                      DeviceIntSize::new(outer_max_dp.x - outer_min_dp.x,
-                                                                         outer_max_dp.y - outer_min_dp.y)),
+                                                      DeviceIntSize::new(outer_max_dp.x.saturating_sub(outer_min_dp.x),
+                                                                         outer_max_dp.y.saturating_sub(outer_min_dp.y))),
                     inner_rect: DeviceIntRect::new(inner_min_dp,
-                                                   DeviceIntSize::new(inner_max_dp.x - inner_min_dp.x,
-                                                                      inner_max_dp.y - inner_min_dp.y)),
+                                                   DeviceIntSize::new(inner_max_dp.x.saturating_sub(inner_min_dp.x),
+                                                                      inner_max_dp.y.saturating_sub(inner_min_dp.y))),
                     kind: kind,
                 }
                 /*
