@@ -58,7 +58,7 @@
           0, 0, 0, 0,
           false, false, false, false, 0, null);
         TestWindow.getDocument().getElementById("link1").dispatchEvent(event);
-        setTimeout(nextTest, 0);
+        waitForNextPaint(nextTest);
         yield undefined;
 
         // Store the fragment url for later comparison.
