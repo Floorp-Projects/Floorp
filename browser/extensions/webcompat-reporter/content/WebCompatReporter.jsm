@@ -121,7 +121,7 @@ let WebCompatReporter = {
 
     let tab = gBrowser.loadOneTab(
       `${WebCompatReporter.endpoint}?url=${encodeURIComponent(tabData.url)}&src=desktop-reporter`,
-      {inBackground: false});
+      {inBackground: false, triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal()});
 
     // If we successfully got a screenshot blob, add a listener to know when
     // the new tab is loaded before sending it over.

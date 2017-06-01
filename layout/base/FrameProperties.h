@@ -6,10 +6,12 @@
 #ifndef FRAMEPROPERTIES_H_
 #define FRAMEPROPERTIES_H_
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 #include "nsTArray.h"
+#include "nsThreadUtils.h"
 
 class nsIFrame;
 
@@ -150,15 +152,11 @@ public:
   using PropertyType = typename detail::FramePropertyTypeHelper<T>::Type;
 
   explicit FrameProperties()
-#ifdef DEBUG
-    : mMaxLength(0)
-#endif
   {
   }
 
   ~FrameProperties()
   {
-    MOZ_ASSERT(mMaxLength > 0, "redundant FrameProperties!");
     MOZ_ASSERT(mProperties.Length() == 0, "forgot to delete properties");
   }
 
@@ -265,9 +263,23 @@ public:
   /**
    * Remove and destroy all property values for the frame.
    */
-  void DeleteAll(const nsIFrame* aFrame);
+  void DeleteAll(const nsIFrame* aFrame) {
+    mozilla::DebugOnly<size_t> len = mProperties.Length();
+    for (auto& prop : mProperties) {
+      prop.DestroyValueFor(aFrame);
+      MOZ_ASSERT(mProperties.Length() == len);
+    }
+    mProperties.Clear();
+  }
 
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+    // We currently report only the shallow size of the mProperties array.
+    // As for the PropertyValue entries: we don't need to measure the mProperty
+    // field of because it always points to static memory, and we can't measure
+    // mValue because the type is opaque.
+    // XXX Can we do better, e.g. with a method on the descriptor?
+    return mProperties.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  }
 
 private:
   friend class ::nsIFrame;
@@ -277,17 +289,21 @@ private:
   FrameProperties(const FrameProperties&) = delete;
   FrameProperties& operator=(const FrameProperties&) = delete;
 
-  void SetInternal(UntypedDescriptor aProperty, void* aValue,
-                   const nsIFrame* aFrame);
+  inline void
+  SetInternal(UntypedDescriptor aProperty, void* aValue,
+              const nsIFrame* aFrame);
 
-  void AddInternal(UntypedDescriptor aProperty, void* aValue);
+  inline void
+  AddInternal(UntypedDescriptor aProperty, void* aValue);
 
   inline void*
   GetInternal(UntypedDescriptor aProperty, bool* aFoundResult) const;
 
-  void* RemoveInternal(UntypedDescriptor aProperty, bool* aFoundResult);
+  inline void*
+  RemoveInternal(UntypedDescriptor aProperty, bool* aFoundResult);
 
-  void DeleteInternal(UntypedDescriptor aProperty, const nsIFrame* aFrame);
+  inline void
+  DeleteInternal(UntypedDescriptor aProperty, const nsIFrame* aFrame);
 
   template<typename T>
   struct ReinterpretHelper
@@ -361,11 +377,9 @@ private:
     }
   };
 
-  AutoTArray<PropertyValue,1> mProperties;
-#ifdef DEBUG
-  uint32_t mMaxLength;
-#endif
+  nsTArray<PropertyValue> mProperties;
 };
+
 
 inline void*
 FrameProperties::GetInternal(UntypedDescriptor aProperty,
@@ -373,8 +387,7 @@ FrameProperties::GetInternal(UntypedDescriptor aProperty,
 {
   MOZ_ASSERT(aProperty, "Null property?");
 
-  nsTArray<PropertyValue>::index_type index =
-    mProperties.IndexOf(aProperty, 0, PropertyComparator());
+  auto index = mProperties.IndexOf(aProperty, 0, PropertyComparator());
   if (index == nsTArray<PropertyValue>::NoIndex) {
     if (aFoundResult) {
       *aFoundResult = false;
@@ -386,6 +399,71 @@ FrameProperties::GetInternal(UntypedDescriptor aProperty,
     *aFoundResult = true;
   }
   return mProperties.ElementAt(index).mValue;
+}
+
+inline void
+FrameProperties::SetInternal(UntypedDescriptor aProperty, void* aValue,
+                             const nsIFrame* aFrame)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aProperty, "Null property?");
+
+  auto index = mProperties.IndexOf(aProperty, 0, PropertyComparator());
+  if (index != nsTArray<PropertyValue>::NoIndex) {
+    PropertyValue* pv = &mProperties.ElementAt(index);
+    pv->DestroyValueFor(aFrame);
+    pv->mValue = aValue;
+    return;
+  }
+
+  mProperties.AppendElement(PropertyValue(aProperty, aValue));
+}
+
+inline void
+FrameProperties::AddInternal(UntypedDescriptor aProperty, void* aValue)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aProperty, "Null property?");
+
+  mProperties.AppendElement(PropertyValue(aProperty, aValue));
+}
+
+inline void*
+FrameProperties::RemoveInternal(UntypedDescriptor aProperty, bool* aFoundResult)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aProperty, "Null property?");
+
+  auto index = mProperties.IndexOf(aProperty, 0, PropertyComparator());
+  if (index == nsTArray<PropertyValue>::NoIndex) {
+    if (aFoundResult) {
+      *aFoundResult = false;
+    }
+    return nullptr;
+  }
+
+  if (aFoundResult) {
+    *aFoundResult = true;
+  }
+
+  void* result = mProperties.ElementAt(index).mValue;
+  mProperties.RemoveElementAt(index);
+
+  return result;
+}
+
+inline void
+FrameProperties::DeleteInternal(UntypedDescriptor aProperty,
+                                const nsIFrame* aFrame)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aProperty, "Null property?");
+
+  auto index = mProperties.IndexOf(aProperty, 0, PropertyComparator());
+  if (index != nsTArray<PropertyValue>::NoIndex) {
+    mProperties.ElementAt(index).DestroyValueFor(aFrame);
+    mProperties.RemoveElementAt(index);
+  }
 }
 
 } // namespace mozilla

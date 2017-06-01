@@ -136,11 +136,6 @@ public:
                                         const nsACString& aData = EmptyCString());
 
   /**
-   * Does one of the child processes have priority FOREGROUND_HIGH?
-   */
-  bool ChildProcessHasHighPriority();
-
-  /**
    * This must be called by a ParticularProcessPriorityManager when it changes
    * its priority.
    */
@@ -207,7 +202,6 @@ public:
   NS_DECL_NSIOBSERVER
 
   bool CurrentProcessIsForeground();
-  bool CurrentProcessIsHighPriority();
 
 private:
   static StaticRefPtr<ProcessPriorityManagerChild> sSingleton;
@@ -257,11 +251,8 @@ public:
    */
   const nsAutoCString& NameWithComma();
 
-  bool IsExpectingSystemMessage();
-
   void OnRemoteBrowserFrameShown(nsISupports* aSubject);
   void OnTabParentDestroyed(nsISupports* aSubject);
-  void OnFrameloaderVisibleChanged(nsISupports* aSubject);
   void OnActivityOpened(const char16_t* aData);
   void OnActivityClosed(const char16_t* aData);
 
@@ -516,12 +507,6 @@ ProcessPriorityManagerImpl::ObserveContentParentDestroyed(nsISupports* aSubject)
   }
 }
 
-bool
-ProcessPriorityManagerImpl::ChildProcessHasHighPriority( void )
-{
-  return mHighPriorityChildIDs.Count() > 0;
-}
-
 void
 ProcessPriorityManagerImpl::NotifyProcessPriorityChanged(
   ParticularProcessPriorityManager* aParticularManager,
@@ -592,7 +577,6 @@ ParticularProcessPriorityManager::Init()
   if (os) {
     os->AddObserver(this, "remote-browser-shown", /* ownsWeak */ true);
     os->AddObserver(this, "ipc:browser-destroyed", /* ownsWeak */ true);
-    os->AddObserver(this, "frameloader-visible-changed", /* ownsWeak */ true);
     os->AddObserver(this, "activity-opened", /* ownsWeak */ true);
     os->AddObserver(this, "activity-closed", /* ownsWeak */ true);
   }
@@ -666,8 +650,6 @@ ParticularProcessPriorityManager::Observe(nsISupports* aSubject,
     OnRemoteBrowserFrameShown(aSubject);
   } else if (topic.EqualsLiteral("ipc:browser-destroyed")) {
     OnTabParentDestroyed(aSubject);
-  } else if (topic.EqualsLiteral("frameloader-visible-changed")) {
-    OnFrameloaderVisibleChanged(aSubject);
   } else if (topic.EqualsLiteral("activity-opened")) {
     OnActivityOpened(aData);
   } else if (topic.EqualsLiteral("activity-closed")) {
@@ -753,38 +735,6 @@ ParticularProcessPriorityManager::OnTabParentDestroyed(nsISupports* aSubject)
   }
 
   ResetPriority();
-}
-
-void
-ParticularProcessPriorityManager::OnFrameloaderVisibleChanged(nsISupports* aSubject)
-{
-  nsCOMPtr<nsIFrameLoader> fl = do_QueryInterface(aSubject);
-  NS_ENSURE_TRUE_VOID(fl);
-
-  TabParent* tp = TabParent::GetFrom(fl);
-  if (!tp) {
-    return;
-  }
-
-  MOZ_ASSERT(XRE_IsParentProcess());
-  if (tp->Manager() != mContentParent) {
-    return;
-  }
-
-  // Most of the time when something changes in a process we call
-  // ResetPriority(), giving a grace period before downgrading its priority.
-  // But notice that here don't give a grace period: We call ResetPriorityNow()
-  // instead.
-  //
-  // We do this because we're reacting here to a setVisibility() call, which is
-  // an explicit signal from the process embedder that we should re-prioritize
-  // a process.  If we gave a grace period in response to setVisibility()
-  // calls, it would be impossible for the embedder to explicitly prioritize
-  // processes and prevent e.g. the case where we switch which process is in
-  // the foreground and, during the old fg processs's grace period, it OOMs the
-  // new fg process.
-
-  ResetPriorityNow();
 }
 
 void
@@ -874,22 +824,6 @@ ParticularProcessPriorityManager::Notify(nsITimer* aTimer)
   return NS_OK;
 }
 
-bool
-ParticularProcessPriorityManager::IsExpectingSystemMessage()
-{
-  const ManagedContainer<PBrowserParent>& browsers =
-    mContentParent->ManagedPBrowserParent();
-  for (auto iter = browsers.ConstIter(); !iter.Done(); iter.Next()) {
-    TabParent* tp = TabParent::GetFrom(iter.Get()->GetKey());
-    nsCOMPtr<nsIMozBrowserFrame> bf = do_QueryInterface(tp->GetOwnerElement());
-    if (!bf) {
-      continue;
-    }
-  }
-
-  return false;
-}
-
 ProcessPriority
 ParticularProcessPriorityManager::CurrentPriority()
 {
@@ -899,22 +833,10 @@ ParticularProcessPriorityManager::CurrentPriority()
 ProcessPriority
 ParticularProcessPriorityManager::ComputePriority()
 {
-  bool isVisible = false;
-  const ManagedContainer<PBrowserParent>& browsers =
-    mContentParent->ManagedPBrowserParent();
-  for (auto iter = browsers.ConstIter(); !iter.Done(); iter.Next()) {
-    if (TabParent::GetFrom(iter.Get()->GetKey())->IsVisible()) {
-      isVisible = true;
-      break;
-    }
-  }
+  // TODO...
+  return PROCESS_PRIORITY_FOREGROUND;
 
-  if (isVisible) {
-    return PROCESS_PRIORITY_FOREGROUND;
-  }
-
-  if ((mHoldsCPUWakeLock || mHoldsHighPriorityWakeLock) &&
-      IsExpectingSystemMessage()) {
+  if (mHoldsCPUWakeLock || mHoldsHighPriorityWakeLock) {
     return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
   }
 
@@ -1055,8 +977,7 @@ ProcessPriorityManagerChild::Singleton()
   return sSingleton;
 }
 
-NS_IMPL_ISUPPORTS(ProcessPriorityManagerChild,
-                  nsIObserver)
+NS_IMPL_ISUPPORTS(ProcessPriorityManagerChild, nsIObserver)
 
 ProcessPriorityManagerChild::ProcessPriorityManagerChild()
 {
@@ -1080,10 +1001,9 @@ ProcessPriorityManagerChild::Init()
 }
 
 NS_IMETHODIMP
-ProcessPriorityManagerChild::Observe(
-  nsISupports* aSubject,
-  const char* aTopic,
-  const char16_t* aData)
+ProcessPriorityManagerChild::Observe(nsISupports* aSubject,
+                                     const char* aTopic,
+                                     const char16_t* aData)
 {
   MOZ_ASSERT(!strcmp(aTopic, "ipc:process-priority-changed"));
 
@@ -1104,13 +1024,6 @@ ProcessPriorityManagerChild::CurrentProcessIsForeground()
 {
   return mCachedPriority == PROCESS_PRIORITY_UNKNOWN ||
          mCachedPriority >= PROCESS_PRIORITY_FOREGROUND;
-}
-
-bool
-ProcessPriorityManagerChild::CurrentProcessIsHighPriority()
-{
-  return mCachedPriority == PROCESS_PRIORITY_UNKNOWN ||
-         mCachedPriority >= PROCESS_PRIORITY_FOREGROUND_HIGH;
 }
 
 } // namespace
@@ -1143,20 +1056,6 @@ ProcessPriorityManager::CurrentProcessIsForeground()
 {
   return ProcessPriorityManagerChild::Singleton()->
     CurrentProcessIsForeground();
-}
-
-/* static */ bool
-ProcessPriorityManager::AnyProcessHasHighPriority()
-{
-  ProcessPriorityManagerImpl* singleton =
-    ProcessPriorityManagerImpl::GetSingleton();
-
-  if (singleton) {
-    return singleton->ChildProcessHasHighPriority();
-  } else {
-    return ProcessPriorityManagerChild::Singleton()->
-      CurrentProcessIsHighPriority();
-  }
 }
 
 } // namespace mozilla

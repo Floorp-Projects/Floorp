@@ -67,62 +67,6 @@ nsBrowserElement::DestroyBrowserElementFrameScripts()
 }
 
 void
-nsBrowserElement::SetVisible(bool aVisible, ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-
-  nsresult rv = mBrowserElementAPI->SetVisible(aVisible);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
-}
-
-already_AddRefed<DOMRequest>
-nsBrowserElement::GetVisible(ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
-
-  nsCOMPtr<nsIDOMDOMRequest> req;
-  nsresult rv = mBrowserElementAPI->GetVisible(getter_AddRefs(req));
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  return req.forget().downcast<DOMRequest>();
-}
-
-void
-nsBrowserElement::SetActive(bool aVisible, ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-
-  nsresult rv = mBrowserElementAPI->SetActive(aVisible);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
-}
-
-bool
-nsBrowserElement::GetActive(ErrorResult& aRv)
-{
-  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), false);
-
-  bool isActive;
-  nsresult rv = mBrowserElementAPI->GetActive(&isActive);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return false;
-  }
-
-  return isActive;
-}
-
-void
 nsBrowserElement::SendMouseEvent(const nsAString& aType,
                                  uint32_t aX,
                                  uint32_t aY,

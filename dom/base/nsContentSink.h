@@ -73,9 +73,6 @@ extern mozilla::LazyLogModule gContentSinkLogModuleInfo;
 
 //----------------------------------------------------------------------
 
-// 1/2 second fudge factor for window creation
-#define NS_DELAY_FOR_WINDOW_CREATION  500000
-
 class nsContentSink : public nsICSSLoaderObserver,
                       public nsSupportsWeakReference,
                       public nsStubDocumentObserver,

@@ -186,7 +186,7 @@ function checkInvalidWhenValueMissing(element)
 
   // Setting defaultSelected to true should not make the option selected
   select.add(new Option("", "", true), null);
-  checkSufferingFromBeingMissing(select, true);
+  checkSufferingFromBeingMissing(select);
   select.remove(0);
 
   select.add(new Option("", "", true, true), null);
@@ -210,13 +210,13 @@ function checkInvalidWhenValueMissing(element)
   checkSufferingFromBeingMissing(select);
 
   select.add(new Option("", "", true), null);
-  checkSufferingFromBeingMissing(select, true);
+  checkSufferingFromBeingMissing(select);
 
   select.add(new Option("", "", true), null);
-  checkSufferingFromBeingMissing(select, true);
+  checkSufferingFromBeingMissing(select);
 
   select.add(new Option("foo"), null);
-  checkSufferingFromBeingMissing(select, true);
+  checkSufferingFromBeingMissing(select);
 
   select.options[2].selected = true;
   checkNotSufferingFromBeingMissing(select);

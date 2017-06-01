@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint-env mozilla/browser-window */
-/* global OpenGraphBuilder:false, DynamicResizeWatcher:false */
+/* global OpenGraphBuilder:false, DynamicResizeWatcher:false, Utils:false*/
 
 // the "exported" symbols
 var SocialUI,
@@ -23,6 +23,12 @@ XPCOMUtils.defineLazyGetter(this, "DynamicResizeWatcher", function() {
   let tmp = {};
   Cu.import("resource:///modules/Social.jsm", tmp);
   return tmp.DynamicResizeWatcher;
+});
+
+XPCOMUtils.defineLazyGetter(this, "Utils", function() {
+  let tmp = {};
+  Cu.import("resource://gre/modules/sessionstore/Utils.jsm", tmp);
+  return tmp.Utils;
 });
 
 let messageManager = window.messageManager;
@@ -203,7 +209,11 @@ SocialActivationListener = {
         if (provider.postActivationURL) {
           // if activated from an open share panel, we load the landing page in
           // a background tab
-          gBrowser.loadOneTab(provider.postActivationURL, {inBackground: SocialShare.panel.state == "open"});
+          let triggeringPrincipal = Utils.deserializePrincipal(aMessage.data.triggeringPrincipal);
+          gBrowser.loadOneTab(provider.postActivationURL, {
+            inBackground: SocialShare.panel.state == "open",
+            triggeringPrincipal,
+          });
         }
       });
     }, options);

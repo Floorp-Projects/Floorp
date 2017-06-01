@@ -4413,8 +4413,7 @@ CheckPlaceholderInLine(nsIFrame* aBlock, nsLineBox* aLine, nsFloatCache* aFC)
                "float in a line should never be a continuation");
   NS_ASSERTION(!(aFC->mFloat->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT),
                "float in a line should never be a pushed float");
-  nsIFrame* ph = aBlock->PresContext()->FrameManager()->
-                   GetPlaceholderFrameFor(aFC->mFloat->FirstInFlow());
+  nsIFrame* ph = aFC->mFloat->FirstInFlow()->GetPlaceholderFrame();
   for (nsIFrame* f = ph; f; f = f->GetParent()) {
     if (f->GetParent() == aBlock)
       return aLine->Contains(f);
@@ -5016,9 +5015,8 @@ nsBlockFrame::DrainSelfPushedFloats()
       if (f->GetPrevContinuation()) {
         // FIXME
       } else {
-        nsPlaceholderFrame *placeholder =
-          presContext->FrameManager()->GetPlaceholderFrameFor(f);
-        nsIFrame *floatOriginalParent = presContext->PresShell()->
+        nsPlaceholderFrame* placeholder = f->GetPlaceholderFrame();
+        nsIFrame* floatOriginalParent = presContext->PresShell()->
           FrameConstructor()->GetFloatContainingBlock(placeholder);
         if (floatOriginalParent != this) {
           // This is a first continuation that was pushed from one of our
@@ -5641,7 +5639,7 @@ FindChildContaining(nsBlockFrame* aFrame, nsIFrame* aFindFrame)
       return nullptr;
     if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW))
       break;
-    aFindFrame = aFrame->PresContext()->FrameManager()->GetPlaceholderFrameFor(child);
+    aFindFrame = child->GetPlaceholderFrame();
   }
 
   return child;
@@ -6931,9 +6929,8 @@ nsBlockFrame::ChildIsDirty(nsIFrame* aChild)
       AddStateBits(NS_BLOCK_LOOK_FOR_DIRTY_FRAMES);
     } else {
       NS_ASSERTION(aChild->IsFloating(), "should be a float");
-      nsIFrame *thisFC = FirstContinuation();
-      nsIFrame *placeholderPath =
-        PresContext()->FrameManager()->GetPlaceholderFrameFor(aChild);
+      nsIFrame* thisFC = FirstContinuation();
+      nsIFrame* placeholderPath = aChild->GetPlaceholderFrame();
       // SVG code sometimes sends FrameNeedsReflow notifications during
       // frame destruction, leading to null placeholders, but we're safe
       // ignoring those.

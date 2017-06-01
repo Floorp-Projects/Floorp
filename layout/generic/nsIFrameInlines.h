@@ -173,8 +173,8 @@ nsContainerFrame*
 nsIFrame::GetInFlowParent()
 {
   if (GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
-    nsFrameManager* fm = PresContext()->FrameManager();
-    return fm->GetPlaceholderFrameFor(FirstContinuation())->GetParent();
+    nsIFrame* ph = FirstContinuation()->GetProperty(nsIFrame::PlaceholderFrameProperty());
+    return ph->GetParent();
   }
 
   return GetParent();
