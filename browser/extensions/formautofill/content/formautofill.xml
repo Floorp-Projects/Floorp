@@ -9,14 +9,78 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="autocomplete-profile-listitem" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+  <binding id="autocomplete-profile-listitem-base" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
     <resources>
       <stylesheet src="chrome://formautofill-shared/skin/autocomplete-item.css"/>
       <stylesheet src="chrome://formautofill/skin/autocomplete-item.css"/>
     </resources>
 
+    <implementation implements="nsIDOMXULSelectControlItemElement">
+      <constructor>
+      </constructor>
+      <!-- For form autofill, we want to unify the selection no matter by
+      keyboard navigation or mouseover in order not to confuse user which
+      profile preview is being shown. This field is set to true to indicate
+      that selectedIndex of popup should be changed while mouseover item -->
+      <field name="selectedByMouseOver">true</field>
+
+      <property name="_stringBundle">
+        <getter><![CDATA[
+          /* global Services */
+          if (!this.__stringBundle) {
+            this.__stringBundle = Services.strings.createBundle("chrome://formautofill/locale/formautofill.properties");
+          }
+          return this.__stringBundle;
+        ]]></getter>
+      </property>
+
+      <method name="_cleanup">
+        <body>
+        <![CDATA[
+          this.removeAttribute("formautofillattached");
+          if (this._itemBox) {
+            this._itemBox.removeAttribute("size");
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="_onChanged">
+        <body>
+        </body>
+      </method>
+
+      <method name="_onOverflow">
+        <body></body>
+      </method>
+
+      <method name="_onUnderflow">
+        <body></body>
+      </method>
+
+      <method name="_adjustProfileItemLayout">
+        <body>
+        <![CDATA[
+          let outerBoxRect = this.parentNode.getBoundingClientRect();
+
+          // Make item fit in popup as XUL box could not constrain
+          // item's width
+          this._itemBox.style.width = outerBoxRect.width + "px";
+          // Use two-lines layout when width is smaller than 150px
+          if (outerBoxRect.width <= 150) {
+            this._itemBox.setAttribute("size", "small");
+          } else {
+            this._itemBox.removeAttribute("size");
+          }
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="autocomplete-profile-listitem" extends="chrome://formautofill/content/formautofill.xml#autocomplete-profile-listitem-base">
     <xbl:content xmlns="http://www.w3.org/1999/xhtml">
-      <div anonid="profile-item-box" class="profile-item-box">
+      <div anonid="autofill-item-box" class="autofill-item-box">
         <div class="profile-label-col profile-item-col">
           <span anonid="profile-label" class="profile-label"></span>
         </div>
@@ -27,16 +91,10 @@
     </xbl:content>
 
     <implementation implements="nsIDOMXULSelectControlItemElement">
-      <!-- For form autofill, we want to unify the selection no matter by
-      keyboard navigation or mouseover in order not to confuse user which
-      profile preview is being shown. This field is set to true to indicate
-      that selectedIndex of popup should be changed while mouseover item -->
-      <field name="selectedByMouseOver">true</field>
-
       <constructor>
         <![CDATA[
           this._itemBox = document.getAnonymousElementByAttribute(
-            this, "anonid", "profile-item-box"
+            this, "anonid", "autofill-item-box"
           );
           this._label = document.getAnonymousElementByAttribute(
             this, "anonid", "profile-label"
@@ -66,44 +124,63 @@
         ]]></setter>
       </property>
 
-      <method name="_cleanup">
-        <body>
-        <![CDATA[
-            this._itemBox.removeAttribute("size");
-        ]]>
-        </body>
-      </method>
-
-      <method name="_onChanged">
-        <body></body>
-      </method>
-
-      <method name="_onOverflow">
-        <body></body>
-      </method>
-
-      <method name="_onUnderflow">
-        <body></body>
-      </method>
 
       <method name="_adjustAcItem">
         <body>
         <![CDATA[
-          let outerBoxRect = this.parentNode.getBoundingClientRect();
+          this._adjustProfileItemLayout();
+          this.setAttribute("formautofillattached", "true");
+
           let {primary, secondary} = JSON.parse(this.getAttribute("ac-value"));
 
           this._label.textContent = primary;
           this._comment.textContent = secondary;
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
 
-          // Make item fit in popup as XUL box could not constrain
-          // item's width
-          this._itemBox.style.width =  outerBoxRect.width + "px";
-          // Use two-lines layout when width is smaller than 150px
-          if (outerBoxRect.width <= 150) {
-            this._itemBox.setAttribute("size", "small");
-          } else {
-            this._itemBox.removeAttribute("size");
+  <binding id="autocomplete-profile-listitem-footer" extends="chrome://formautofill/content/formautofill.xml#autocomplete-profile-listitem-base">
+    <xbl:content xmlns="http://www.w3.org/1999/xhtml">
+      <div anonid="autofill-footer" class="autofill-item-box autofill-footer">
+      </div>
+    </xbl:content>
+
+    <handlers>
+      <handler event="click" button="0"><![CDATA[
+        window.openPreferences("panePrivacy", {origin: "autofillFooter"});
+      ]]></handler>
+    </handlers>
+
+    <implementation implements="nsIDOMXULSelectControlItemElement">
+      <constructor>
+        <![CDATA[
+          this._itemBox = document.getAnonymousElementByAttribute(
+            this, "anonid", "autofill-footer"
+          );
+
+          this._adjustAcItem();
+        ]]>
+      </constructor>
+
+      <method name="_adjustAcItem">
+        <body>
+        <![CDATA[
+          /* global Cu */
+          this._adjustProfileItemLayout();
+          this.setAttribute("formautofillattached", "true");
+
+          let {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm", {});
+          let footerTextBundleKey = AppConstants.platform == "macosx" ?
+            "autocompleteFooterOptionOSX" : "autocompleteFooterOption";
+          // If the popup shows up with small layout, we should use short string to
+          // have a better fit in the box.
+          if (this._itemBox.getAttribute("size") == "small") {
+            footerTextBundleKey += "Short";
           }
+          let footerText = this._stringBundle.GetStringFromName(footerTextBundleKey);
+          this._itemBox.textContent = footerText;
         ]]>
         </body>
       </method>
