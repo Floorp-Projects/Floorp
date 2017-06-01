@@ -490,6 +490,8 @@ function promiseNextTick() {
 // Avoid an issue where `client.name2` containing unicode characters causes
 // a number of tests to fail, due to them assuming that we do not need to utf-8
 // encode or decode data sent through the mocked server (see bug 1268912).
+// We stash away the original implementation so test_utils_misc.js can test it.
+Utils._orig_getDefaultDeviceName = Utils.getDefaultDeviceName;
 Utils.getDefaultDeviceName = function() {
   return "Test device name";
 };
