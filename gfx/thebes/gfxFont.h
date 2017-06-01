@@ -1707,8 +1707,8 @@ public:
     gfxGlyphExtents *GetOrCreateGlyphExtents(int32_t aAppUnitsPerDevUnit);
 
     // You need to call SetupCairoFont on aDrawTarget just before calling this.
-    virtual void SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
-                                   bool aNeedTight, gfxGlyphExtents *aExtents);
+    void SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
+                           bool aNeedTight, gfxGlyphExtents *aExtents);
 
     // This is called by the default Draw() implementation above.
     virtual bool SetupCairoFont(DrawTarget* aDrawTarget) = 0;
@@ -1889,7 +1889,7 @@ public:
     }
 
     // return a cloned font resized and offset to simulate sub/superscript glyphs
-    virtual already_AddRefed<gfxFont>
+    already_AddRefed<gfxFont>
     GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel);
 
     /**
@@ -1930,10 +1930,7 @@ protected:
 
     // Return a font that is a "clone" of this one, but reduced to 80% size
     // (and with variantCaps set to normal).
-    // Default implementation relies on gfxFontEntry::CreateFontInstance;
-    // backends that don't implement that will need to override this and use
-    // an alternative technique. (gfxFontconfigFonts, I'm looking at you...)
-    virtual already_AddRefed<gfxFont> GetSmallCapsFont();
+    already_AddRefed<gfxFont> GetSmallCapsFont();
 
     // subclasses may provide (possibly hinted) glyph widths (in font units);
     // if they do not override this, harfbuzz will use unhinted widths

@@ -389,15 +389,11 @@ var BrowserApp = {
 
     Services.androidBridge.browserApp = this;
 
-    WindowEventDispatcher.registerListener(this, [
-      "Session:Restore",
+    GlobalEventDispatcher.registerListener(this, [
       "Tab:Load",
       "Tab:Selected",
       "Tab:Closed",
       "Tab:Move",
-    ]);
-
-    GlobalEventDispatcher.registerListener(this, [
       "Browser:LoadManifest",
       "Browser:Quit",
       "Fonts:Reload",
@@ -1854,10 +1850,6 @@ var BrowserApp = {
         webNav.reload(flags);
         break;
       }
-
-      case "Session:Restore":
-        GlobalEventDispatcher.dispatch("Session:Restore", data);
-        break;
 
       case "Session:Stop":
         browser.stop();
