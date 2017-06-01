@@ -136,24 +136,26 @@ StorageBaseStatementInternal::destructorAsyncFinalize()
   if (!mAsyncStatement)
     return;
 
-  // If we reach this point, our owner has not finalized this
-  // statement, yet we are being destructed. If possible, we want to
-  // auto-finalize it early, to release the resources early.
-  nsIEventTarget *target = mDBConnection->getAsyncExecutionTarget();
-  if (target) {
-    // If we can get the async execution target, we can indeed finalize
-    // the statement, as the connection is still open.
-    bool isAsyncThread = false;
-    (void)target->IsOnCurrentThread(&isAsyncThread);
-
-    nsCOMPtr<nsIRunnable> event =
-      new LastDitchSqliteStatementFinalizer(mDBConnection, mAsyncStatement);
-    if (isAsyncThread) {
-      (void)event->Run();
-    } else {
+  bool isOwningThread = false;
+  (void)mDBConnection->threadOpenedOn->IsOnCurrentThread(&isOwningThread);
+  if (isOwningThread) {
+    // If we are the owning thread (currently that means we're also the
+    // main thread), then we can get the async target and just dispatch
+    // to it.
+    nsIEventTarget *target = mDBConnection->getAsyncExecutionTarget();
+    if (target) {
+      nsCOMPtr<nsIRunnable> event =
+        new LastDitchSqliteStatementFinalizer(mDBConnection, mAsyncStatement);
       (void)target->Dispatch(event, NS_DISPATCH_NORMAL);
     }
+  } else {
+    // If we're not the owning thread, assume we're the async thread, and
+    // just run the statement.
+    nsCOMPtr<nsIRunnable> event =
+      new LastDitchSqliteStatementFinalizer(mDBConnection, mAsyncStatement);
+    (void)event->Run();
   }
+
 
   // We might not be able to dispatch to the background thread,
   // presumably because it is being shutdown. Since said shutdown will
