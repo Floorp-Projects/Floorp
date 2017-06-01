@@ -15,5 +15,5 @@ notifications:
 script:
  - cargo test
  - "[ $TRAVIS_RUST_VERSION != nightly ] || cargo test --features unstable"
- - "[ $TRAVIS_RUST_VERSION != nightly ] || cargo test --manifest-path derive/Cargo.toml"
+ - "[[ $TRAVIS_RUST_VERSION != nightly && $TRAVIS_RUST_VERSION != beta ]] || cargo test --manifest-path derive/Cargo.toml"
 

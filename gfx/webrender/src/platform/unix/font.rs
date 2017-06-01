@@ -27,6 +27,11 @@ pub struct FontContext {
     faces: HashMap<FontKey, Face>,
 }
 
+// FreeType resources are safe to move between threads as long as they
+// are not concurrently accessed. In our case, everything is hidden inside
+// a given FontContext so it is safe to move the latter between threads.
+unsafe impl Send for FontContext {}
+
 pub struct RasterizedGlyph {
     pub width: u32,
     pub height: u32,
@@ -61,6 +66,10 @@ impl FontContext {
             lib: lib,
             faces: HashMap::new(),
         }
+    }
+
+    pub fn has_font(&self, font_key: &FontKey) -> bool {
+        self.faces.contains_key(font_key)
     }
 
     pub fn add_raw_font(&mut self, font_key: &FontKey, bytes: &[u8], index: u32) {
@@ -171,7 +180,11 @@ impl FontContext {
             return None;
         }
 
-        let dimensions = Self::get_glyph_dimensions_impl(slot).unwrap();
+        let dimensions = match Self::get_glyph_dimensions_impl(slot) {
+            Some(val) => val,
+            None => return None,
+        };
+
         let bitmap = unsafe { &(*slot).bitmap };
         let pixel_mode = unsafe { mem::transmute(bitmap.pixel_mode as u32) };
         info!("Rasterizing {:?} as {:?} with dimensions {:?}", key, render_mode, dimensions);

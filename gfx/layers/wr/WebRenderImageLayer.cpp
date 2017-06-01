@@ -223,7 +223,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     if (gfx::gfxVars::CanUseHardwareVideoDecoding()) {
       // Use the hardware MacIOSurface with YCbCr interleaved format.
       MOZ_ASSERT(mVideoKeys.Length() == 1);
-      aBuilder.PushYCbCrInterleavedImage(sc.ToRelativeWrRect(rect), clip, mVideoKeys[0], WrYuvColorSpace::Rec601);
+      aBuilder.PushYCbCrInterleavedImage(sc.ToRelativeWrRect(rect), clip, mVideoKeys[0], WrYuvColorSpace::Rec601, filter);
     } else {
       // Use libyuv to convert the buffer to rgba format.
       MOZ_ASSERT(mVideoKeys.Length() == 1);
