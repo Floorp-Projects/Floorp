@@ -1090,9 +1090,7 @@ TimeoutManager::Timeouts::ResetTimersForThrottleReduction(int32_t aPreviousThrot
           std::max(timeout->mInterval,
                    uint32_t(aTimeoutManager.
                                 DOMMinTimeoutValue(timeout->mIsTracking))));
-    uint32_t oldIntervalMillisecs = 0;
-    timeout->mTimer->GetDelay(&oldIntervalMillisecs);
-    TimeDuration oldInterval = TimeDuration::FromMilliseconds(oldIntervalMillisecs);
+    const TimeDuration& oldInterval = timeout->ScheduledDelay();
     if (oldInterval > interval) {
       // unclamp
       TimeStamp firingTime =
