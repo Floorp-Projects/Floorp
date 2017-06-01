@@ -44,6 +44,10 @@ var gSync = {
     return Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject.ready;
   },
 
+  get isSignedIn() {
+    return UIState.get().status == UIState.STATUS_SIGNED_IN;
+  },
+
   get remoteClients() {
     return Weave.Service.clientsEngine.remoteClients
            .sort((a, b) => a.name.localeCompare(b.name));
@@ -297,40 +301,40 @@ var gSync = {
     }
 
     const fragment = document.createDocumentFragment();
+    if (this.syncReady) {
+      const onTargetDeviceCommand = (event) => {
+        let clients = event.target.getAttribute("clientId") ?
+          [event.target.getAttribute("clientId")] :
+          this.remoteClients.map(client => client.id);
 
-    const onTargetDeviceCommand = (event) => {
-      let clients = event.target.getAttribute("clientId") ?
-        [event.target.getAttribute("clientId")] :
-        this.remoteClients.map(client => client.id);
+        clients.forEach(clientId => this.sendTabToDevice(url, clientId, title));
+        gPageActionButton.panel.hidePopup();
+      }
 
-      clients.forEach(clientId => this.sendTabToDevice(url, clientId, title));
-      gPageActionButton.panel.hidePopup();
+      function addTargetDevice(clientId, name, clientType) {
+        const targetDevice = createDeviceNodeFn(clientId, name, clientType);
+        targetDevice.addEventListener("command", onTargetDeviceCommand, true);
+        targetDevice.classList.add("sync-menuitem", "sendtab-target");
+        targetDevice.setAttribute("clientId", clientId);
+        targetDevice.setAttribute("clientType", clientType);
+        targetDevice.setAttribute("label", name);
+        fragment.appendChild(targetDevice);
+      }
+
+      const clients = this.remoteClients;
+      for (let client of clients) {
+        addTargetDevice(client.id, client.name, client.type);
+      }
+
+      // "All devices" menu item
+      if (clients.length > 1) {
+        const separator = createDeviceNodeFn();
+        separator.classList.add("sync-menuitem");
+        fragment.appendChild(separator);
+        const allDevicesLabel = this.fxaStrings.GetStringFromName("sendTabToAllDevices.menuitem");
+        addTargetDevice("", allDevicesLabel, "");
+      }
     }
-
-    function addTargetDevice(clientId, name, clientType) {
-      const targetDevice = createDeviceNodeFn(clientId, name, clientType);
-      targetDevice.addEventListener("command", onTargetDeviceCommand, true);
-      targetDevice.classList.add("sync-menuitem", "sendtab-target");
-      targetDevice.setAttribute("clientId", clientId);
-      targetDevice.setAttribute("clientType", clientType);
-      targetDevice.setAttribute("label", name);
-      fragment.appendChild(targetDevice);
-    }
-
-    const clients = this.remoteClients;
-    for (let client of clients) {
-      addTargetDevice(client.id, client.name, client.type);
-    }
-
-    // "All devices" menu item
-    if (clients.length > 1) {
-      const separator = createDeviceNodeFn();
-      separator.classList.add("sync-menuitem");
-      fragment.appendChild(separator);
-      const allDevicesLabel = this.fxaStrings.GetStringFromName("sendTabToAllDevices.menuitem");
-      addTargetDevice("", allDevicesLabel, "");
-    }
-
     devicesPopup.appendChild(fragment);
   },
 
