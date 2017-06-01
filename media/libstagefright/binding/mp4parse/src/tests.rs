@@ -993,3 +993,21 @@ fn read_f4v_stsd() {
           .expect("failed to read f4v stsd atom");
     assert_eq!(codec_type, super::CodecType::MP3);
 }
+
+#[test]
+fn max_table_limit() {
+    let elst = make_fullbox(BoxSize::Auto, b"elst", 1, |s| {
+        s.B32(super::TABLE_SIZE_LIMIT + 1)
+    }).into_inner();
+    let mut stream = make_box(BoxSize::Auto, b"edts", |s| {
+        s.append_bytes(elst.as_slice())
+    });
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+    let mut track = super::Track::new(0);
+    match super::read_edts(&mut stream, &mut track) {
+        Err(Error::Unsupported(s)) => assert_eq!(s, "Over limited value"),
+        Ok(_) => panic!("expected an error result"),
+        _ => panic!("expected a different error result"),
+    }
+}
