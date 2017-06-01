@@ -223,15 +223,6 @@ interface nsIFrameLoader : nsISupports
   readonly attribute unsigned long long childID;
 
   /**
-   * Get or set this frame loader's visibility.
-   *
-   * The notion of "visibility" here is separate from the notion of a
-   * window/docshell's visibility.  This field is mostly here so that we can
-   * have a notion of visibility in the parent process when frames are OOP.
-   */
-  [infallible] attribute boolean visible;
-
-  /**
    * Find out whether the owner content really is a mozbrowser. <xul:browser>
    * is not considered to be a mozbrowser frame.
    */

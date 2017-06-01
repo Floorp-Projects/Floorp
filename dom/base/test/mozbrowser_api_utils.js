@@ -1,10 +1,6 @@
 const FRAME_URL = "http://example.org/";
 
 const METHODS = {
-  setVisible: {},
-  getVisible: {},
-  setActive: {},
-  getActive: {},
   addNextPaintListener: {},
   removeNextPaintListener: {},
   sendMouseEvent: {},

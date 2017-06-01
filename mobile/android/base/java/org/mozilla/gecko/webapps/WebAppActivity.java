@@ -7,15 +7,17 @@ package org.mozilla.gecko.webapps;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import android.app.ActivityManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.Toolbar;
-import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -30,6 +32,8 @@ import org.json.JSONException;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoView;
+import org.mozilla.gecko.GeckoViewSettings;
 import org.mozilla.gecko.SingleTabActivity;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -48,20 +52,22 @@ import org.mozilla.gecko.widget.AnchoredPopup;
 
 import static org.mozilla.gecko.Tabs.TabEvents;
 
-public class WebAppActivity extends SingleTabActivity {
+public class WebAppActivity extends AppCompatActivity
+                            implements GeckoView.NavigationListener {
     private static final String LOGTAG = "WebAppActivity";
 
     public static final String MANIFEST_PATH = "MANIFEST_PATH";
     private static final String SAVED_INTENT = "savedIntent";
 
     private TextView mUrlView;
-    private View doorhangerOverlay;
+    private GeckoView mGeckoView;
 
+    private Uri mScope;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         if ((getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0 &&
-        savedInstanceState != null) {
+            savedInstanceState != null) {
             // Even though we're a single task activity, Android's task switcher has the
             // annoying habit of never updating its stored intent after our initial creation,
             // even if we've been subsequently started with a new intent.
@@ -75,11 +81,10 @@ public class WebAppActivity extends SingleTabActivity {
 
         super.onCreate(savedInstanceState);
 
+        setContentView(R.layout.customtabs_activity);
+
         final Toolbar toolbar = (Toolbar) findViewById(R.id.actionbar);
         setSupportActionBar(toolbar);
-
-        final ProgressBar progressBar = (ProgressBar) findViewById(R.id.page_progress);
-        progressBar.setVisibility(View.GONE);
 
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setCustomView(R.layout.webapps_action_bar_custom_view);
@@ -87,61 +92,22 @@ public class WebAppActivity extends SingleTabActivity {
         actionBar.setDisplayShowTitleEnabled(false);
         actionBar.hide();
 
-        doorhangerOverlay = findViewById(R.id.custom_tabs_doorhanger_overlay);
-
         final View customView = actionBar.getCustomView();
         mUrlView = (TextView) customView.findViewById(R.id.webapps_action_bar_url);
 
-        EventDispatcher.getInstance().registerUiThreadListener(this,
-                "Website:AppEntered",
-                "Website:AppLeft",
-                null);
-    }
+        mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
 
-    @Override
-    public View getDoorhangerOverlay() {
-        return doorhangerOverlay;
-    }
+        mGeckoView.setNavigationListener(this);
 
-    @Override
-    public int getLayout() {
-        return R.layout.customtabs_activity;
-    }
+        final GeckoViewSettings settings = mGeckoView.getSettings();
+        settings.setBoolean(GeckoViewSettings.USE_MULTIPROCESS, false);
 
-    @Override
-    public void handleMessage(final String event, final GeckoBundle message,
-                              final EventCallback callback) {
-        super.handleMessage(event, message, callback);
-
-        if (message == null ||
-                !message.containsKey("tabId") || message.getInt("tabId") != mLastSelectedTabId) {
-            return;
+        final Uri u = getIntent().getData();
+        if (u != null) {
+            mGeckoView.loadUri(u.toString());
         }
 
-        switch (event) {
-            case "Website:AppEntered":
-                getSupportActionBar().hide();
-                break;
-
-            case "Website:AppLeft":
-                getSupportActionBar().show();
-                break;
-        }
-    }
-
-    @Override
-    public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
-        super.onTabChanged(tab, msg, data);
-
-        if (tab == null || !Tabs.getInstance().isSelectedTab(tab) ||
-                tab.getType() != Tab.TabType.WEBAPP) {
-            return;
-        }
-
-        if (msg == TabEvents.LOCATION_CHANGE ||
-                msg == TabEvents.SELECTED) {
-            mUrlView.setText(tab.getURL());
-        }
+        loadManifest(getIntent().getStringExtra(MANIFEST_PATH));
     }
 
     @Override
@@ -149,75 +115,6 @@ public class WebAppActivity extends SingleTabActivity {
         super.onSaveInstanceState(outState);
 
         outState.putParcelable(SAVED_INTENT, getIntent());
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        EventDispatcher.getInstance().unregisterUiThreadListener(this,
-                "Website:AppEntered",
-                "Website:AppLeft",
-                null);
-    }
-
-    @Override
-    protected int getNewTabFlags() {
-        return Tabs.LOADURL_WEBAPP | super.getNewTabFlags();
-    }
-
-    @Override
-    protected void onTabOpenFromIntent(Tab tab) {
-        super.onTabOpenFromIntent(tab);
-        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "webapp");
-        loadManifest(tab.getManifestPath());
-    }
-
-    /**
-     * In case this activity and its tab are reused (the user has opened
-     *  > 10 current web apps), we check that app launched is still within
-     * the same host as the intent has set.
-     * If it isn't, we reload the intent URL.
-     */
-    @Override
-    protected void onTabSelectFromIntent(Tab tab) {
-        super.onTabSelectFromIntent(tab);
-
-        SafeIntent intent = new SafeIntent(getIntent());
-
-        final String launchUrl = intent.getDataString();
-        final String currentUrl = tab.getURL();
-        final boolean isSameDomain = Uri.parse(currentUrl).getHost()
-                .equals(Uri.parse(launchUrl).getHost());
-
-        final String manifestPath;
-        if (!isSameDomain) {
-            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "webapp");
-            manifestPath = intent.getStringExtra(MANIFEST_PATH);
-            tab.setManifestUrl(manifestPath);
-            Tabs.getInstance().loadUrl(launchUrl);
-        } else {
-            manifestPath = tab.getManifestPath();
-        }
-        loadManifest(manifestPath);
-    }
-
-    @Override
-    protected ActionModePresenter getTextSelectPresenter() {
-        return new ActionModePresenter() {
-            private ActionMode mMode;
-
-            @Override
-            public void startActionMode(ActionMode.Callback callback) {
-                mMode = startSupportActionMode(callback);
-            }
-
-            @Override
-            public void endActionMode() {
-                if (mMode != null) {
-                    mMode.finish();
-                }
-            }
-        };
     }
 
     private void loadManifest(String manifestPath) {
@@ -237,6 +134,7 @@ public class WebAppActivity extends SingleTabActivity {
             final Integer color = readColorFromManifest(manifestField);
             final String name = readNameFromManifest(manifestField);
             final Bitmap icon = readIconFromManifest(manifest);
+            mScope = readScopeFromManifest(manifest, manifestPath);
             final ActivityManager.TaskDescription taskDescription = (color == null)
                     ? new ActivityManager.TaskDescription(name, icon)
                     : new ActivityManager.TaskDescription(name, icon, color);
@@ -282,10 +180,76 @@ public class WebAppActivity extends SingleTabActivity {
             return null;
         }
         final LoadFaviconResult loadIconResult = FaviconDecoder
-            .decodeDataURI(getContext(), iconStr);
+            .decodeDataURI(this, iconStr);
         if (loadIconResult == null) {
             return null;
         }
         return loadIconResult.getBestBitmap(GeckoAppShell.getPreferredIconSize());
+    }
+
+    private Uri readScopeFromManifest(JSONObject manifest, String manifestPath) {
+        final String scopeStr = manifest.optString("scope", null);
+        if (scopeStr == null) {
+            return null;
+        }
+
+        Uri res = Uri.parse(scopeStr);
+        if (res.isRelative()) {
+            // TODO: Handle this more correctly.
+            return null;
+        }
+
+        return res;
+    }
+
+    private boolean isInScope(String url) {
+        if (mScope == null) {
+            return true;
+        }
+
+        final Uri uri = Uri.parse(url);
+
+        if (!uri.getScheme().equals(mScope.getScheme())) {
+            return false;
+        }
+
+        if (!uri.getHost().equals(mScope.getHost())) {
+            return false;
+        }
+
+        final List<String> scopeSegments = mScope.getPathSegments();
+        final List<String> urlSegments = uri.getPathSegments();
+
+        if (scopeSegments.size() > urlSegments.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < scopeSegments.size(); i++) {
+            if (!scopeSegments.get(i).equals(urlSegments.get(i))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /* GeckoView.NavigationListener */
+    @Override
+    public void onLocationChange(GeckoView view, String url) {
+        if (isInScope(url)) {
+            getSupportActionBar().hide();
+        } else {
+            getSupportActionBar().show();
+        }
+
+        mUrlView.setText(url);
+    }
+
+    @Override
+    public void onCanGoBack(GeckoView view, boolean canGoBack) {
+    }
+
+    @Override
+    public void onCanGoForward(GeckoView view, boolean canGoForward) {
     }
 }

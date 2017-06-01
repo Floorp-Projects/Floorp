@@ -68,12 +68,6 @@ public:
    */
   static bool CurrentProcessIsForeground();
 
-  /**
-   * Returns true if one or more processes with FOREGROUND_HIGH priority are
-   * present, false otherwise.
-   */
-  static bool AnyProcessHasHighPriority();
-
 private:
   ProcessPriorityManager();
   DISALLOW_EVIL_CONSTRUCTORS(ProcessPriorityManager);

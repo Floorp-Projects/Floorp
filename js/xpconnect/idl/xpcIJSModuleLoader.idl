@@ -79,4 +79,12 @@ interface xpcIJSModuleLoader : nsISupports
    *          otherwise
    */
   boolean isModuleLoaded(in AUTF8String aResourceURI);
+
+  // These 2 functions are for startup testing purposes. They are not expected
+  // to be used for production code.
+  void loadedModules([optional] out unsigned long length,
+                     [retval, array, size_is(length)] out string aModules);
+
+  void loadedComponents([optional] out unsigned long length,
+                        [retval, array, size_is(length)] out string aComponents);
 };
