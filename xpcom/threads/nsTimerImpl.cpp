@@ -458,6 +458,12 @@ nsTimerImpl::SetTarget(nsIEventTarget* aTarget)
   return NS_OK;
 }
 
+nsresult
+nsTimerImpl::GetAllowedEarlyFiringMicroseconds(uint32_t* aValueOut)
+{
+  *aValueOut = gThread ? gThread->AllowedEarlyFiringMicroseconds() : 0;
+  return NS_OK;
+}
 
 void
 nsTimerImpl::Fire(int32_t aGeneration)
