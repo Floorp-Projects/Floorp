@@ -91,12 +91,12 @@ NS_IMPL_ISUPPORTS_INHERITED(MigrateActorRunnable, Runnable,
 NS_IMPL_ISUPPORTS(IPCBlobInputStreamThread, nsIObserver)
 
 /* static */ bool
-IPCBlobInputStreamThread::IsOnFileThread(nsIThread* aThread)
+IPCBlobInputStreamThread::IsOnFileEventTarget(nsIEventTarget* aEventTarget)
 {
-  MOZ_ASSERT(aThread);
+  MOZ_ASSERT(aEventTarget);
 
   mozilla::StaticMutexAutoLock lock(gIPCBlobThreadMutex);
-  return gIPCBlobThread && aThread == gIPCBlobThread->mThread;
+  return gIPCBlobThread && aEventTarget == gIPCBlobThread->mThread;
 }
 
 /* static */ IPCBlobInputStreamThread*

@@ -241,13 +241,13 @@ static void CheckSTSThread()
 mozilla::ipc::IPCResult
 UDPSocketParent::RecvConnect(const UDPAddressInfo& aAddressInfo)
 {
-  nsCOMPtr<nsIEventTarget> thread(NS_GetCurrentThread());
+  nsCOMPtr<nsIEventTarget> target = GetCurrentThreadEventTarget();
   Unused <<
     NS_WARN_IF(NS_FAILED(GetSTSThread()->Dispatch(WrapRunnable(
                                                     RefPtr<UDPSocketParent>(this),
                                                     &UDPSocketParent::DoConnect,
                                                     mSocket,
-                                                    thread,
+                                                    target,
                                                     aAddressInfo),
                                                   NS_DISPATCH_NORMAL)));
   return IPC_OK();

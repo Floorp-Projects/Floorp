@@ -23,7 +23,7 @@ public:
   NS_DECL_NSIOBSERVER
 
   static bool
-  IsOnFileThread(nsIThread* aThread);
+  IsOnFileEventTarget(nsIEventTarget* aEventTarget);
 
   static IPCBlobInputStreamThread*
   GetOrCreate();

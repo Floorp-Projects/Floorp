@@ -1491,7 +1491,7 @@ class BackgroundRequestChild::PreprocessHelper final
   typedef std::pair<nsCOMPtr<nsIInputStream>,
                     nsCOMPtr<nsIInputStream>> StreamPair;
 
-  nsCOMPtr<nsIEventTarget> mOwningThread;
+  nsCOMPtr<nsIEventTarget> mOwningEventTarget;
   nsTArray<StreamPair> mStreamPairs;
   nsTArray<RefPtr<JS::WasmModule>> mModuleSet;
   BackgroundRequestChild* mActor;
@@ -1509,7 +1509,7 @@ class BackgroundRequestChild::PreprocessHelper final
 public:
   PreprocessHelper(uint32_t aModuleSetIndex, BackgroundRequestChild* aActor)
     : CancelableRunnable("indexedDB::BackgroundRequestChild::PreprocessHelper")
-    , mOwningThread(aActor->GetActorEventTarget())
+    , mOwningEventTarget(aActor->GetActorEventTarget())
     , mActor(aActor)
     , mCurrentBytecodeFileDesc(nullptr)
     , mCurrentCompiledFileDesc(nullptr)
@@ -1524,10 +1524,10 @@ public:
   bool
   IsOnOwningThread() const
   {
-    MOZ_ASSERT(mOwningThread);
+    MOZ_ASSERT(mOwningEventTarget);
 
     bool current;
-    return NS_SUCCEEDED(mOwningThread->IsOnCurrentThread(&current)) && current;
+    return NS_SUCCEEDED(mOwningEventTarget->IsOnCurrentThread(&current)) && current;
   }
 
   void
@@ -3569,11 +3569,11 @@ PreprocessHelper::ContinueWithStatus(nsresult aStatus)
     MOZ_ASSERT(mResultCode == NS_OK);
     mResultCode = aStatus;
 
-    eventTarget = mOwningThread;
+    eventTarget = mOwningEventTarget;
   } else if (mStreamPairs.IsEmpty()) {
     // If all the streams have been processed, we can go back to the owning
     // thread.
-    eventTarget = mOwningThread;
+    eventTarget = mOwningEventTarget;
   } else {
     // Continue the processing.
     eventTarget = mTaskQueueEventTarget;

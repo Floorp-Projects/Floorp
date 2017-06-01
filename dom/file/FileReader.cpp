@@ -120,7 +120,7 @@ FileReader::FileReader(nsIGlobalObject* aGlobal,
   if (NS_IsMainThread()) {
     mTarget = aGlobal->EventTargetFor(TaskCategory::Other);
   } else {
-    mTarget = do_GetCurrentThread();
+    mTarget = GetCurrentThreadSerialEventTarget();
   }
 
   SetDOMStringToNull(mResult);

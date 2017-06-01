@@ -108,7 +108,7 @@ private:
   };
   nsTArray<PendingOperation> mPendingOperations;
 
-  nsCOMPtr<nsIThread> mOwningThread;
+  nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
 
   UniquePtr<workers::WorkerHolder> mWorkerHolder;
 };
