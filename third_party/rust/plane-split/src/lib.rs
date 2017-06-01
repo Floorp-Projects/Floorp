@@ -298,20 +298,20 @@ impl<T, U> Polygon<T, U> where
     pub fn intersect(&self, other: &Self) -> Intersection<Line<T, U>> {
         if self.are_outside(&other.points) || other.are_outside(&self.points) {
             // one is completely outside the other
-            debug!("\t\toutside");
+            debug!("\t\tOutside");
             return Intersection::Outside
         }
         let cross_dir = self.normal.cross(other.normal);
         if cross_dir.dot(cross_dir) < T::approx_epsilon() {
             // polygons are co-planar
-            debug!("\t\tcoplanar");
+            debug!("\t\tCoplanar");
             return Intersection::Coplanar
         }
         let self_proj = self.project_on(&cross_dir);
         let other_proj = other.project_on(&cross_dir);
         if !self_proj.intersect(&other_proj) {
             // projections on the line don't intersect
-            debug!("\t\tprojection outside");
+            debug!("\t\tProjection outside");
             return Intersection::Outside
         }
         // compute any point on the intersection between planes

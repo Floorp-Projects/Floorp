@@ -13,6 +13,7 @@ use clip_scroll_tree::{ClipScrollTree, ScrollStates};
 use profiler::TextureCacheProfileCounters;
 use resource_cache::ResourceCache;
 use scene::{Scene, SceneProperties};
+use std::cmp;
 use std::collections::HashMap;
 use std::hash::BuildHasherDefault;
 use tiling::{CompositeOps, DisplayListMap, PrimitiveFlags};
@@ -466,7 +467,8 @@ impl Frame {
                                               item.rect(),
                                               item.clip_region(),
                                               info.yuv_data,
-                                              info.color_space);
+                                              info.color_space,
+                                              info.image_rendering);
             }
             SpecificDisplayItem::Text(ref text_info) => {
                 context.builder.add_text(clip_and_scroll,
@@ -976,7 +978,10 @@ impl Frame {
                                      display_lists,
                                      device_pixel_ratio,
                                      texture_cache_profile);
-        resource_cache.expire_old_resources(self.id);
+        // Expire any resources that haven't been used for `cache_expiry_frames`.
+        let num_frames_back = self.frame_builder_config.cache_expiry_frames;
+        let expiry_frame = FrameId(cmp::max(num_frames_back, self.id.0) - num_frames_back);
+        resource_cache.expire_old_resources(expiry_frame);
         frame
     }
 
