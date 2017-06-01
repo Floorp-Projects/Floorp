@@ -37,7 +37,7 @@ menuitem[appHandlerIcon="ask"] {
 
 richlistitem[appHandlerIcon="save"],
 menuitem[appHandlerIcon="save"] {
-  list-style-image: url("chrome://browser/skin/preferences/application.png");
+  list-style-image: url("chrome://browser/skin/preferences/saveFile.png");
 }
 
 richlistitem[appHandlerIcon="feed"],
