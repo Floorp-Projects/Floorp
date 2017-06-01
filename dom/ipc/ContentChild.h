@@ -659,6 +659,8 @@ public:
   typedef std::function<void(PRFileDesc*)> AnonymousTemporaryFileCallback;
   nsresult AsyncOpenAnonymousTemporaryFile(const AnonymousTemporaryFileCallback& aCallback);
 
+  virtual already_AddRefed<nsIEventTarget> GetEventTargetFor(TabChild* aTabChild) override;
+
 private:
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
   void StartForceKillTimer();

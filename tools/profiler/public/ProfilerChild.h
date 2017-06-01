@@ -39,7 +39,7 @@ private:
   mozilla::ipc::IPCResult RecvStop() override;
   mozilla::ipc::IPCResult RecvPause() override;
   mozilla::ipc::IPCResult RecvResume() override;
-  mozilla::ipc::IPCResult RecvGatherProfile(RefPtr<GatherProfilePromise>&& aPromise) override;
+  mozilla::ipc::IPCResult RecvGatherProfile(GatherProfileResolver&& aResolve) override;
 
   void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
 

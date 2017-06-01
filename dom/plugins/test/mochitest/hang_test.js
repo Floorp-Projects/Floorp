@@ -65,13 +65,6 @@ var testObserver = {
     // check processor count field
     ok("NumberOfProcessors" in extraData, "got extra field for processor count");
     ok(parseInt(extraData["NumberOfProcessors"]) > 0, "number of processors is >0");
-
-    // cleanup, to be nice
-    pluginDumpFile.remove(false);
-    pluginExtraFile.remove(false);
-    for (let file of additionalDumpFiles) {
-      file.remove(false);
-    }
   },
 
   QueryInterface: function(iid) {
@@ -110,5 +103,7 @@ function onPluginCrashed(aEvent) {
            getService(Ci.nsIObserverService);
   os.removeObserver(testObserver, "plugin-crashed");
 
-  SimpleTest.finish();
+  Services.crashmanager.ensureCrashIsPresent(aEvent.pluginDumpID).then(() => {
+    SimpleTest.finish();
+  });
 }

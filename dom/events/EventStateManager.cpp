@@ -95,6 +95,7 @@
 #include "GeckoProfiler.h"
 #include "Units.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "nsIObjectLoadingContent.h"
 
 #ifdef XP_MACOSX
 #import <ApplicationServices/ApplicationServices.h>
@@ -1282,25 +1283,9 @@ EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
 }
 
 bool
-EventStateManager::IsRemoteTarget(nsIContent* target) {
-  if (!target) {
-    return false;
-  }
-
-  // <browser/iframe remote=true> from XUL
-  if (target->IsAnyOfXULElements(nsGkAtoms::browser, nsGkAtoms::iframe) &&
-      target->AttrValueIs(kNameSpaceID_None, nsGkAtoms::Remote,
-                          nsGkAtoms::_true, eIgnoreCase)) {
-    return true;
-  }
-
-  // <frame/iframe mozbrowser>
-  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(target);
-  if (browserFrame && browserFrame->GetReallyIsBrowser()) {
-    return !!TabParent::GetFrom(target);
-  }
-
-  return false;
+EventStateManager::IsRemoteTarget(nsIContent* target)
+{
+  return !!TabParent::GetFrom(target);
 }
 
 bool

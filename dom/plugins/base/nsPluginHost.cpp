@@ -57,6 +57,7 @@
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/plugins/PluginTypes.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ipc/URIUtils.h"
 
 #include "nsEnumeratorUtils.h"
 #include "nsXPCOM.h"
@@ -116,9 +117,11 @@
 
 using namespace mozilla;
 using mozilla::TimeStamp;
+using mozilla::plugins::FakePluginTag;
 using mozilla::plugins::PluginTag;
 using mozilla::plugins::PluginAsyncSurrogate;
 using mozilla::dom::FakePluginTagInit;
+using mozilla::dom::FakePluginMimeEntry;
 
 // Null out a strong ref to a linked list iteratively to avoid
 // exhausting the stack (bug 486349).
@@ -1469,6 +1472,31 @@ nsPluginHost::EnumerateSiteData(const nsACString& domain,
   return NS_OK;
 }
 
+static bool
+MimeTypeIsAllowedForFakePlugin(const nsString& aMimeType)
+{
+  static const char* const allowedFakePlugins[] = {
+    // Flash
+    "application/x-shockwave-flash",
+    // PDF
+    "application/pdf",
+    "application/vnd.adobe.pdf",
+    "application/vnd.adobe.pdfxml",
+    "application/vnd.adobe.x-mars",
+    "application/vnd.adobe.xdp+xml",
+    "application/vnd.adobe.xfdf",
+    "application/vnd.adobe.xfd+xml",
+    "application/vnd.fdf",
+  };
+
+  for (const auto allowed : allowedFakePlugins) {
+    if (aMimeType.EqualsASCII(allowed)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 NS_IMETHODIMP
 nsPluginHost::RegisterFakePlugin(JS::Handle<JS::Value> aInitDictionary,
                                  JSContext* aCx,
@@ -1477,6 +1505,12 @@ nsPluginHost::RegisterFakePlugin(JS::Handle<JS::Value> aInitDictionary,
   FakePluginTagInit initDictionary;
   if (!initDictionary.Init(aCx, aInitDictionary)) {
     return NS_ERROR_FAILURE;
+  }
+
+  for (const FakePluginMimeEntry& mimeEntry : initDictionary.mMimeEntries) {
+    if (!MimeTypeIsAllowedForFakePlugin(mimeEntry.mType)) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   RefPtr<nsFakePluginTag> newTag;
@@ -1490,8 +1524,16 @@ nsPluginHost::RegisterFakePlugin(JS::Handle<JS::Value> aInitDictionary,
   }
 
   mFakePlugins.AppendElement(newTag);
-  // FIXME-jsplugins do we need to register with the category manager here?  For
-  // shumway, for now, probably not.
+
+  nsAdoptingCString disableFullPage =
+    Preferences::GetCString(kPrefDisableFullPage);
+  for (uint32_t i = 0; i < newTag->MimeTypes().Length(); i++) {
+    if (!IsTypeInList(newTag->MimeTypes()[i], disableFullPage)) {
+      RegisterWithCategoryManager(newTag->MimeTypes()[i],
+                                  ePluginRegister);
+    }
+  }
+
   newTag.forget(aResult);
   return NS_OK;
 }
@@ -2280,8 +2322,9 @@ nsPluginHost::FindPluginsInContent(bool aCreatePluginList, bool* aPluginsChanged
   dom::ContentChild* cp = dom::ContentChild::GetSingleton();
   nsresult rv;
   nsTArray<PluginTag> plugins;
+  nsTArray<FakePluginTag> fakePlugins;
   uint32_t parentEpoch;
-  if (!cp->SendFindPlugins(ChromeEpochForContent(), &rv, &plugins, &parentEpoch) ||
+  if (!cp->SendFindPlugins(ChromeEpochForContent(), &rv, &plugins, &fakePlugins, &parentEpoch) ||
       NS_FAILED(rv)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -2322,6 +2365,34 @@ nsPluginHost::FindPluginsInContent(bool aCreatePluginList, bool* aPluginsChanged
                                                tag.isFromExtension(),
                                                tag.sandboxLevel());
       AddPluginTag(pluginTag);
+    }
+
+    for (const auto& tag : fakePlugins) {
+      // Don't add the same plugin again.
+      for (const auto& existingTag : mFakePlugins) {
+        if (existingTag->Id() == tag.id()) {
+          continue;
+        }
+      }
+
+      RefPtr<nsFakePluginTag> pluginTag =
+      *mFakePlugins.AppendElement(new nsFakePluginTag(tag.id(),
+                                                      mozilla::ipc::DeserializeURI(tag.handlerURI()),
+                                                      tag.name().get(),
+                                                      tag.description().get(),
+                                                      tag.mimeTypes(),
+                                                      tag.mimeDescriptions(),
+                                                      tag.extensions(),
+                                                      tag.niceName(),
+                                                      tag.sandboxScript()));
+      nsAdoptingCString disableFullPage =
+        Preferences::GetCString(kPrefDisableFullPage);
+      for (uint32_t i = 0; i < pluginTag->MimeTypes().Length(); i++) {
+        if (!IsTypeInList(pluginTag->MimeTypes()[i], disableFullPage)) {
+          RegisterWithCategoryManager(pluginTag->MimeTypes()[i],
+                                      ePluginRegister);
+        }
+      }
     }
   }
 
@@ -2472,17 +2543,19 @@ nsresult nsPluginHost::FindPlugins(bool aCreatePluginList, bool * aPluginsChange
 nsresult
 mozilla::plugins::FindPluginsForContent(uint32_t aPluginEpoch,
                                         nsTArray<PluginTag>* aPlugins,
+                                        nsTArray<FakePluginTag>* aFakePlugins,
                                         uint32_t* aNewPluginEpoch)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
-  return host->FindPluginsForContent(aPluginEpoch, aPlugins, aNewPluginEpoch);
+  return host->FindPluginsForContent(aPluginEpoch, aPlugins, aFakePlugins, aNewPluginEpoch);
 }
 
 nsresult
 nsPluginHost::FindPluginsForContent(uint32_t aPluginEpoch,
                                     nsTArray<PluginTag>* aPlugins,
+                                    nsTArray<FakePluginTag>* aFakePlugins,
                                     uint32_t* aNewPluginEpoch)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -2506,9 +2579,20 @@ nsPluginHost::FindPluginsForContent(uint32_t aPluginEpoch,
 
     nsCOMPtr<nsIFakePluginTag> faketag = do_QueryInterface(basetag);
     if (faketag) {
-      /// FIXME-jsplugins - We need to make content processes properly
-      /// aware of jsplugins (and add a nsIInternalPluginTag->AsNative() to
-      /// avoid this hacky static cast)
+      /// FIXME-jsplugins - We need to add a nsIInternalPluginTag->AsNative() to
+      /// avoid this hacky static cast
+      nsFakePluginTag* tag = static_cast<nsFakePluginTag*>(basetag.get());
+      mozilla::ipc::URIParams handlerURI;
+      SerializeURI(tag->HandlerURI(), handlerURI);
+      aFakePlugins->AppendElement(FakePluginTag(tag->Id(),
+                                                handlerURI,
+                                                tag->Name(),
+                                                tag->Description(),
+                                                tag->MimeTypes(),
+                                                tag->MimeDescriptions(),
+                                                tag->Extensions(),
+                                                tag->GetNiceFileName(),
+                                                tag->SandboxScript()));
       continue;
     }
 
@@ -3836,6 +3920,7 @@ nsPluginHost::CanUsePluginForMIMEType(const nsACString& aMIMEType)
   //
   // XXX: Remove test/java cases when bug 1351885 lands.
   if (nsPluginHost::GetSpecialType(aMIMEType) == nsPluginHost::eSpecialType_Flash ||
+      MimeTypeIsAllowedForFakePlugin(NS_ConvertUTF8toUTF16(aMIMEType)) ||
       aMIMEType.LowerCaseEqualsLiteral("application/x-test") ||
       aMIMEType.LowerCaseEqualsLiteral("application/x-second-test") ||
       aMIMEType.LowerCaseEqualsLiteral("application/x-third-test") ||
