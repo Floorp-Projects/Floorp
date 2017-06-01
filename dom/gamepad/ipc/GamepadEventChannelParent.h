@@ -6,8 +6,8 @@
 #ifndef mozilla_dom_GamepadEventChannelParent_h_
 #define mozilla_dom_GamepadEventChannelParent_h_
 
-namespace mozilla{
-namespace dom{
+namespace mozilla {
+namespace dom {
 
 class GamepadEventChannelParent final : public PGamepadEventChannelParent
 {
@@ -29,10 +29,10 @@ class GamepadEventChannelParent final : public PGamepadEventChannelParent
  private:
   ~GamepadEventChannelParent() {}
   bool mHasGamepadListener;
-  nsCOMPtr<nsIThread> mBackgroundThread;
+  nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
 };
 
-}// namespace dom
-}// namespace mozilla
+} // namespace dom
+} // namespace mozilla
 
 #endif

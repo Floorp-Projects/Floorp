@@ -64,7 +64,7 @@ private:
   RefPtr<ContentParent> mActor;
 
   const mozilla::ipc::PrincipalInfo mPrincipalInfo;
-  nsCOMPtr<nsIThread> mInitiatingThread;
+  nsCOMPtr<nsIEventTarget> mInitiatingEventTarget;
   nsresult mResult;
   RefPtr<ManagerId> mManagerId;
 
