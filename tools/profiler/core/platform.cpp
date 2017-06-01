@@ -796,9 +796,12 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
   aBuffer->addTag(ProfileBufferEntry::Category(uint32_t(entry.category())));
 }
 
-// The maximum number of native frames obtained. Setting it too high risks the
-// unwinder wasting a lot of time looping on corrupted stacks.
+// Setting MAX_NATIVE_FRAMES too high risks the unwinder wasting a lot of time
+// looping on corrupted stacks.
+//
+// The PseudoStack frame size is found in PseudoStack::MaxEntries.
 static const size_t MAX_NATIVE_FRAMES = 1024;
+static const size_t MAX_JS_FRAMES     = 1024;
 
 struct NativeStack
 {
@@ -850,7 +853,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
                  ? UINT32_MAX
                  : aBuffer->mGeneration;
   uint32_t jsCount = 0;
-  JS::ProfilingFrameIterator::Frame jsFrames[1000];
+  JS::ProfilingFrameIterator::Frame jsFrames[MAX_JS_FRAMES];
 
   // Only walk jit stack if profiling frame iterator is turned on.
   if (context && JS::IsProfilingEnabledForContext(context)) {
