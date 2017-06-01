@@ -32,6 +32,7 @@
   <string name="preference_privacy_block_content">Cuir cosc ar lorgairí ábhair eile</string>
   <string name="preference_privacy_block_content_summary">Seans go mbrisfidh seo físeáin agus leathanaigh Ghréasáin áirithe</string>
   <string name="preference_privacy_secure_mode">Mód Rúnda</string>
+  <string name="preference_privacy_secure_mode_summary">Múch an mód rúnda chun pictiúir a thógáil de na suímh a thugann tú cuairt orthu in %1$s sna hAipeanna is déanaí</string>
   <string name="preference_category_performance">Feidhmíocht</string>
   <string name="preference_performance_block_webfonts">Cuir cosc ar chlónna Gréasáin</string>
   <string name="preference_performance_block_webfonts_summary">D\'fhéadfadh go mbeadh deilbhíní nó íomhánna ar iarraidh</string>
@@ -83,7 +84,13 @@
   <string name="contextmenu_image_share">Comhroinn an íomhá</string>
   <string name="contextmenu_image_copy">Cóipeáil seoladh na híomhá</string>
   <string name="contextmenu_image_save">Sábháil an íomhá</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">N&#237; scriosfar</b>" &#237;omh&#225;nna s&#225;bh&#225;ilte n&#243; comhroinnte nuair a scriosann t&#250; stair %1$s."]]></string>
   <string name="firstrun_tracking_title">Brabhsáil i leith is nach bhfuil éinne ag cúlchoimhéad ort</string>
+  <string name="firstrun_tracking_text">Blocáil lorgairí go huathoibríoch le linn brabhsála. Ansin tapáil an deilbhín bruscair san aip nó i do chuid fógraí chun fianáin agus na leathanaigh ar thug tú cuairt orthu a scriosadh.</string>
+  <string name="firstrun_defaultbrowser_title">Príobháideachas praiticiúil proifisiúnta</string>
+  <string name="firstrun_defaultbrowser_text">Socraigh %1$s mar do bhrabhsálaí réamhshocraithe agus bain tairbhe as brabhsáil phríobháideach nuair a théann tú ar an nGréasán ó aipeanna eile Android.</string>
+  <string name="firstrun_breaking_title">Réiteach tapa nuair is ionann\nblocáilte agus briste</string>
+  <string name="firstrun_breaking_text">Uaireanta, ní fheidhmíonn suímh mar is ceart mar gheall ar lorgairí ar líne a bhlocáil. Is féidir leat blocáil a mhúchadh le tap amháin ar roghchlár na n-uirlisí.</string>
   <string name="firstrun_close_button">OK, tuigim!</string>
   <string name="firstrun_skip_button">Ná bac leis</string>
   <string name="firstrun_next_button">Ar Aghaidh</string>

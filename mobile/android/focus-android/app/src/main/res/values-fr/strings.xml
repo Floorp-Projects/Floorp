@@ -31,7 +31,8 @@
   <string name="preference_privacy_block_social">Bloquer les traqueurs de réseaux sociaux</string>
   <string name="preference_privacy_block_content">Bloquer les autres traqueurs de contenu</string>
   <string name="preference_privacy_block_content_summary">Peut empêcher certaines vidéos et pages web de s’afficher correctement</string>
-  <string name="preference_privacy_secure_mode">Furtif</string>
+  <string name="preference_privacy_secure_mode">Mode furtif</string>
+  <string name="preference_privacy_secure_mode_summary">Désactivez le mode furtif pour effectuer des captures d’écran et afficher les sites récemment visités avec %1$s dans l’écran Applications récentes.</string>
   <string name="preference_category_performance">Performances</string>
   <string name="preference_performance_block_webfonts">Bloquer les polices web</string>
   <string name="preference_performance_block_webfonts_summary">Peut empêcher certaines icônes ou images de s’afficher</string>
@@ -57,7 +58,7 @@
   <string name="context_menu_paste_go">Coller et aller</string>
   <string name="your_rights">Droits de l’utilisateur</string>
   <string name="external_app_prompt_title">Ouvrir le lien dans une autre application</string>
-  <string name="external_app_prompt">Vous pouvez quitter %1$s pour ouvrir ce lien dans %2$s.</string>
+  <string name="external_app_prompt">Vous allez quitter %1$s pour ouvrir ce lien dans %2$s.</string>
   <string name="external_app_prompt_no_app_title">Trouver une application capable d’ouvrir ce lien</string>
   <string name="external_app_prompt_no_app">Aucune des applications de votre appareil n’est capable d’ouvrir ce lien. Vous pouvez quitter %1$s pour rechercher dans %2$s une application qui en est capable.</string>
   <string name="external_multiple_apps_matched_exit">Quitter la navigation privée ?</string>
@@ -83,7 +84,13 @@
   <string name="contextmenu_image_share">Partager l’image</string>
   <string name="contextmenu_image_copy">Copier l’adresse de l’image</string>
   <string name="contextmenu_image_save">Enregistrer l’image</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne seront pas supprim&#233;es</b>" lorsque vous effacez l&#8217;historique de %1$s."]]></string>
   <string name="firstrun_tracking_title">Naviguez comme si personne ne vous regardait</string>
+  <string name="firstrun_tracking_text">Bloquez automatiquement les traqueurs lorsque vous naviguez. Supprimez ensuite les pages visitées et les cookies en appuyant sur l’icône de corbeille dans l’application ou depuis les notifications.</string>
+  <string name="firstrun_defaultbrowser_title">Renforcez votre vie privée</string>
+  <string name="firstrun_defaultbrowser_text">Définissez %1$s en tant que navigateur par défaut et bénéficiez des avantages de la navigation privée lorsque vous ouvrez des liens depuis d’autres applications Android.</string>
+  <string name="firstrun_breaking_title">Une solution rapide lorsque\nle blocage « casse » une page</string>
+  <string name="firstrun_breaking_text">Si une page ne vous semble pas fonctionner correctement lorsque le blocage de traqueurs est activé, désactivez le blocage d’un simple appui depuis le menu outils.</string>
   <string name="firstrun_close_button">OK</string>
   <string name="firstrun_skip_button">Ignorer</string>
   <string name="firstrun_next_button">Suivant</string>

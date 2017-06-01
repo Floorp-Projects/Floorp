@@ -31,6 +31,7 @@
   <string name="preference_privacy_block_social">חסימת רכיבי מעקב חברתיים</string>
   <string name="preference_privacy_block_content">חסימת כלי מעקב אחרים</string>
   <string name="preference_privacy_block_content_summary">עלולה לשבש את פעילותם של דפי אינטרנט ומספר סרטונים</string>
+  <string name="preference_privacy_secure_mode">חשאיות</string>
   <string name="preference_category_performance">ביצועים</string>
   <string name="preference_performance_block_webfonts">חסימת גופני רשת</string>
   <string name="preference_performance_block_webfonts_summary">עשוי לגרום לסמלים או תמונות חסרים</string>
@@ -52,6 +53,7 @@
   <string name="content_description_back">ניווט אחורה</string>
   <string name="content_description_stop">עצירת טעינת האתר</string>
   <string name="content_description_customtab_exit">חזרה ליישום קודם</string>
+  <string name="content_description_blocking_switch">חסימת רכיבי מעקב</string>
   <string name="context_menu_paste_go">להדביק ולהמשיך</string>
   <string name="your_rights">הזכויות שלך</string>
   <string name="external_app_prompt_title">פתיחת קישור ביישומון אחר</string>
@@ -81,4 +83,14 @@
   <string name="contextmenu_image_share">שיתוף תמונה</string>
   <string name="contextmenu_image_copy">העתקת כתובת תמונה</string>
   <string name="contextmenu_image_save">שמירת תמונה</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1500;&#1488; &#1497;&#1497;&#1502;&#1495;&#1511;&#1493;</b>" &#1489;&#1506;&#1514; &#1502;&#1495;&#1497;&#1511;&#1514; &#1492;&#1492;&#1497;&#1505;&#1496;&#1493;&#1512;&#1497;&#1492; &#1513;&#1500; %1$s."]]></string>
+  <string name="firstrun_tracking_title">גילשו כאילו אף אחד לא מסתכל</string>
+  <string name="firstrun_tracking_text">חסימה אוטומטית של רכיבי מעקב מקוונים בעת הגלישה. לאחר מכן ניתן להסיר את העמודים שביקרת בהם לרבות העוגיות על ידי נגיעה בסמל האשפה ביישומון או בהתרעות שלך.</string>
+  <string name="firstrun_defaultbrowser_title">חיזוק הפרטיות שלך</string>
+  <string name="firstrun_defaultbrowser_text">ניתן להגדיר את %1$s כדפדפן בררת המחדל שלך כדי לקבל את כל ההטבות של גלישה פרטית בעת קישור לאתרי אינטרנט מיישומוני Android אחרים.</string>
+  <string name="firstrun_breaking_title">תיקון מהיר למצב שבו\nחסימה = שיבוש</string>
+  <string name="firstrun_breaking_text">כאשר חסימת רכיבי מעקב מקוונים מהווה מטרד בצורת שיבוש אתרים, ניתן לכבות את החסימה בנגיעה אחת בסרגל הכלים.</string>
+  <string name="firstrun_close_button">בסדר, הבנתי!</string>
+  <string name="firstrun_skip_button">דילוג</string>
+  <string name="firstrun_next_button">הבא</string>
 </resources>

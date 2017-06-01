@@ -88,7 +88,7 @@
   <string name="firstrun_tracking_title">Naviga come se nessuno ti stesse guardando</string>
   <string name="firstrun_tracking_text">Blocca automaticamente il tracciamento durante la navigazione. Poi rimuovi le pagine visitate e i cookie toccando l’icona del cestino nell’app o nelle notifiche.</string>
   <string name="firstrun_defaultbrowser_title">Potenzia la tua privacy</string>
-  <string name="firstrun_defaultbrowser_text">Imposta %1$ come browser predefinito e godi i vantaggi di una navigazione anonima quando apri link da altre app Android.</string>
+  <string name="firstrun_defaultbrowser_text">Imposta %1$s come browser predefinito e godi i vantaggi di una navigazione anonima quando apri link da altre app Android.</string>
   <string name="firstrun_breaking_title">Una soluzione veloce quando\nil blocco “rompe” una pagina</string>
   <string name="firstrun_breaking_text">Se una pagina sembra non funzionare correttamente con il blocco degli elementi traccianti, disattivalo con un semplice tocco nel menu strumenti.</string>
   <string name="firstrun_close_button">Ho capito!</string>
