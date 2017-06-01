@@ -40,8 +40,8 @@ var gSync = {
     );
   },
 
-  get sendTabToDeviceEnabled() {
-    return Services.prefs.getBoolPref("services.sync.sendTabToDevice.enabled");
+  get syncReady() {
+    return Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject.ready;
   },
 
   get remoteClients() {
@@ -356,44 +356,42 @@ var gSync = {
     }
   },
 
+  // "Send Tab to Device" menu item
   updateTabContextMenu(aPopupMenu, aTargetTab) {
-    if (!this.sendTabToDeviceEnabled || !this.weaveService.ready) {
-      return;
-    }
-
-    const targetURI = aTargetTab.linkedBrowser.currentURI.spec;
-    const showSendTab = this.remoteClients.length > 0 && this.isSendableURI(targetURI);
-
-    ["context_sendTabToDevice", "context_sendTabToDevice_separator"]
-    .forEach(id => { document.getElementById(id).hidden = !showSendTab });
+    const enabled = this.syncReady &&
+                    this.remoteClients.length > 0 &&
+                    this.isSendableURI(aTargetTab.linkedBrowser.currentURI.spec);
+    document.getElementById("context_sendTabToDevice").disabled = !enabled;
   },
 
+  // "Send Page to Device" and "Send Link to Device" menu items
   initPageContextMenu(contextMenu) {
-    if (!this.sendTabToDeviceEnabled || !this.weaveService.ready) {
-      return;
-    }
-
-    const remoteClientPresent = this.remoteClients.length > 0;
     // showSendLink and showSendPage are mutually exclusive
-    let showSendLink = remoteClientPresent
-                       && (contextMenu.onSaveableLink || contextMenu.onPlainTextLink);
-    const showSendPage = !showSendLink && remoteClientPresent
+    const showSendLink = contextMenu.onSaveableLink || contextMenu.onPlainTextLink;
+    const showSendPage = !showSendLink
                          && !(contextMenu.isContentSelected ||
                               contextMenu.onImage || contextMenu.onCanvas ||
                               contextMenu.onVideo || contextMenu.onAudio ||
-                              contextMenu.onLink || contextMenu.onTextInput)
-                         && this.isSendableURI(contextMenu.browser.currentURI.spec);
-
-    if (showSendLink) {
-      // This isn't part of the condition above since we don't want to try and
-      // send the page if a link is clicked on or selected but is not sendable.
-      showSendLink = this.isSendableURI(contextMenu.linkURL);
-    }
+                              contextMenu.onLink ||
+                              (contextMenu.target &&
+                               ["input", "textarea"].includes(contextMenu.target.tagName.toLowerCase())));
 
     ["context-sendpagetodevice", "context-sep-sendpagetodevice"]
     .forEach(id => contextMenu.showItem(id, showSendPage));
     ["context-sendlinktodevice", "context-sep-sendlinktodevice"]
     .forEach(id => contextMenu.showItem(id, showSendLink));
+
+    if (!showSendLink && !showSendPage) {
+      return;
+    }
+
+    const targetURI = showSendLink ? contextMenu.linkURL :
+                                     contextMenu.browser.currentURI.spec;
+    const enabled = this.syncReady && this.remoteClients.length > 0 &&
+                    this.isSendableURI(targetURI);
+    contextMenu.setItemAttr(showSendPage ? "context-sendpagetodevice" :
+                                           "context-sendlinktodevice",
+                            "disabled", !enabled || null);
   },
 
   // Functions called by observers
@@ -567,9 +565,3 @@ var gSync = {
     Ci.nsISupportsWeakReference
   ])
 };
-
-XPCOMUtils.defineLazyGetter(gSync, "weaveService", function() {
-  return Components.classes["@mozilla.org/weave/service;1"]
-                   .getService(Components.interfaces.nsISupports)
-                   .wrappedJSObject;
-});
