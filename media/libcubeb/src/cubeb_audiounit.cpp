@@ -114,6 +114,7 @@ struct cubeb_stream {
   cubeb_data_callback data_callback = nullptr;
   cubeb_state_callback state_callback = nullptr;
   cubeb_device_changed_callback device_changed_callback = nullptr;
+  owned_critical_section device_changed_callback_lock;
   /* Stream creation parameters */
   cubeb_stream_params input_stream_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED };
   cubeb_stream_params output_stream_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED };
@@ -704,7 +705,7 @@ audiounit_property_listener_callback(AudioObjectID /* id */, UInt32 address_coun
     case kAudioDevicePropertyDeviceIsAlive:
       /* fall through */
     case kAudioDevicePropertyDataSource: {
-        auto_lock lock(stm->mutex);
+        auto_lock dev_cb_lock(stm->device_changed_callback_lock);
         if (stm->device_changed_callback) {
           stm->device_changed_callback(stm->user_ptr);
         }
@@ -2640,8 +2641,7 @@ audiounit_stream_stop(cubeb_stream * stm)
 static int
 audiounit_stream_get_position(cubeb_stream * stm, uint64_t * position)
 {
-  auto_lock lock(stm->mutex);
-
+  assert(stm);
   *position = stm->frames_played;
   return CUBEB_OK;
 }
@@ -2871,14 +2871,11 @@ int audiounit_stream_device_destroy(cubeb_stream * /* stream */,
 int audiounit_stream_register_device_changed_callback(cubeb_stream * stream,
                                                       cubeb_device_changed_callback device_changed_callback)
 {
+  auto_lock dev_cb_lock(stream->device_changed_callback_lock);
   /* Note: second register without unregister first causes 'nope' error.
    * Current implementation requires unregister before register a new cb. */
   assert(!stream->device_changed_callback);
-
-  auto_lock lock(stream->mutex);
-
   stream->device_changed_callback = device_changed_callback;
-
   return CUBEB_OK;
 }
 

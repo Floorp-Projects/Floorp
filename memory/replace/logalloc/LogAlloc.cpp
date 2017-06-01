@@ -186,6 +186,7 @@ replace_malloc(size_t aSize)
   return ptr;
 }
 
+#ifndef LOGALLOC_MINIMAL
 int
 replace_posix_memalign(void** aPtr, size_t aAlignment, size_t aSize)
 {
@@ -209,6 +210,7 @@ replace_aligned_alloc(size_t aAlignment, size_t aSize)
   }
   return ptr;
 }
+#endif
 
 void*
 replace_calloc(size_t aNum, size_t aSize)
@@ -256,6 +258,7 @@ replace_memalign(size_t aAlignment, size_t aSize)
   return ptr;
 }
 
+#ifndef LOGALLOC_MINIMAL
 void*
 replace_valloc(size_t aSize)
 {
@@ -266,6 +269,7 @@ replace_valloc(size_t aSize)
   }
   return ptr;
 }
+#endif
 
 void
 replace_jemalloc_stats(jemalloc_stats_t* aStats)

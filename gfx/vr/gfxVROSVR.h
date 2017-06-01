@@ -25,17 +25,16 @@ namespace impl {
 class VRDisplayOSVR : public VRDisplayHost
 {
 public:
-  VRHMDSensorState GetSensorState() override;
   void ZeroSensor() override;
 
 protected:
+  VRHMDSensorState GetSensorState() override;
   virtual void StartPresentation() override;
   virtual void StopPresentation() override;
 
 #if defined(XP_WIN)
-  virtual void SubmitFrame(TextureSourceD3D11* aSource,
+  virtual bool SubmitFrame(TextureSourceD3D11* aSource,
     const IntSize& aSize,
-    const VRHMDSensorState& aSensorState,
     const gfx::Rect& aLeftEyeRect,
     const gfx::Rect& aRightEyeRect) override;
 #endif

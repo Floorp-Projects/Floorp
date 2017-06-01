@@ -161,7 +161,6 @@ public class GeckoPreferences
     public static final String PREFS_APP_UPDATE_LAST_BUILD_ID = "app.update.last_build_id";
     public static final String PREFS_READ_PARTNER_CUSTOMIZATIONS_PROVIDER = NON_PREF_PREFIX + "distribution.read_partner_customizations_provider";
     public static final String PREFS_READ_PARTNER_BOOKMARKS_PROVIDER = NON_PREF_PREFIX + "distribution.read_partner_bookmarks_provider";
-    public static final String PREFS_CUSTOM_TABS = NON_PREF_PREFIX + "customtabs";
     public static final String PREFS_ACTIVITY_STREAM = NON_PREF_PREFIX + "experiments.activitystream";
     public static final String PREFS_CATEGORY_EXPERIMENTAL_FEATURES = NON_PREF_PREFIX + "category_experimental";
     public static final String PREFS_COMPACT_TABS = NON_PREF_PREFIX + "compact_tabs";
@@ -170,6 +169,8 @@ public class GeckoPreferences
     public static final String PREFS_DEFAULT_BROWSER = NON_PREF_PREFIX + "default_browser.link";
     public static final String PREFS_SYSTEM_FONT_SIZE = NON_PREF_PREFIX + "font.size.use_system_font_size";
     public static final String PREFS_SET_AS_HOMEPAGE = NON_PREF_PREFIX + "distribution.set_as_homepage";
+    public static final String PREFS_DIST_HOMEPAGE = NON_PREF_PREFIX + "distribution.homepage";
+    public static final String PREFS_DIST_HOMEPAGE_NAME = NON_PREF_PREFIX + "distribution.homepage.name";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = "STUMBLER_PREF";
 
@@ -694,7 +695,6 @@ public class GeckoPreferences
                     i--;
                     continue;
                 } else if (PREFS_CATEGORY_EXPERIMENTAL_FEATURES.equals(key)
-                        && !AppConstants.MOZ_ANDROID_CUSTOM_TABS
                         && !ActivityStream.isUserSwitchable(this)) {
                     preferences.removePreference(pref);
                     i--;
@@ -885,10 +885,6 @@ public class GeckoPreferences
                         i--;
                         continue;
                     }
-                } else if (PREFS_CUSTOM_TABS.equals(key) && !AppConstants.MOZ_ANDROID_CUSTOM_TABS) {
-                    preferences.removePreference(pref);
-                    i--;
-                    continue;
                 } else if (PREFS_ACTIVITY_STREAM.equals(key)
                         && !ActivityStream.isUserSwitchable(this)) {
                     preferences.removePreference(pref);

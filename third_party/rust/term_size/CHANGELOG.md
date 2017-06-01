@@ -1,3 +1,13 @@
+<a name="v0.3.0"></a>
+## v0.3.0 (2017-04-09)
+
+
+#### Features
+
+*   allows getting the terminal size of all standard streams, or just particular ones ([c7095c95](https://github.com/kbknapp/term_size-rs/commit/c7095c95d633e0a36ea78434bc83349a9711a187))
+
+
+
 <a name="v0.2.3"></a>
 ### v0.2.3 (2017-02-21)
 

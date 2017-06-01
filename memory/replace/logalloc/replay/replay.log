@@ -7,7 +7,7 @@
 1 1 calloc(4,42)=#3
 1 1 free(#2)
 1 1 realloc(#3,84)=#2
-1 1 aligned_alloc(512,1024)=#3
+1 1 aligned_alloc(256,1024)=#3
 1 1 memalign(512,1024)=#4
 1 1 valloc(1024)=#5
 1 1 jemalloc_stats()

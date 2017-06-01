@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<body>
+<p id="first">f<span>o</span>o</p>
+<p id="second">bar</p>
+<script>
+document.body.offsetTop;
+var p1 = document.getElementById("first");
+var p2 = document.getElementById("second");
+var selection = window.getSelection();
+selection.setBaseAndExtent(p1.firstChild, 0, p1.firstChild, 1);
+
+function doTest() {
+  selection.extend(p2.firstChild, 2);
+  document.documentElement.removeAttribute('class');
+}
+document.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>

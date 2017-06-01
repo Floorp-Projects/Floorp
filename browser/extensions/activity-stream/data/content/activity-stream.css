@@ -243,98 +243,6 @@ main {
   margin: 0 0 48px;
   width: 100%;
   height: 36px; }
-  .search-wrapper .search-container {
-    z-index: 1001;
-    background: #FFF;
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 100%;
-    margin-top: -2px;
-    border: 1px solid #BFBFBF;
-    font-size: 12px;
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-    overflow: hidden; }
-    .search-wrapper .search-container .search-title {
-      color: #666;
-      padding: 5px 10px;
-      background-color: #F7F7F7;
-      display: flex;
-      align-items: center;
-      word-break: break-all; }
-      .search-wrapper .search-container .search-title p {
-        margin: 0; }
-      .search-wrapper .search-container .search-title #current-engine-icon {
-        margin-inline-end: 8px; }
-    .search-wrapper .search-container section {
-      border-bottom: 1px solid #EAEAEA;
-      margin-bottom: 0; }
-    .search-wrapper .search-container .search-suggestions ul {
-      padding: 0;
-      margin: 0;
-      list-style: none; }
-      .search-wrapper .search-container .search-suggestions ul li a {
-        cursor: default;
-        color: #000;
-        display: block;
-        padding: 4px 36px; }
-        .search-wrapper .search-container .search-suggestions ul li a:hover, .search-wrapper .search-container .search-suggestions ul li a.active {
-          background: #0996F8;
-          color: #FFF; }
-    .search-wrapper .search-container .history-search-suggestions {
-      border-bottom: 0; }
-      .search-wrapper .search-container .history-search-suggestions ul {
-        padding: 0;
-        margin: 0;
-        list-style: none; }
-        .search-wrapper .search-container .history-search-suggestions ul li a {
-          cursor: default;
-          color: #000;
-          display: block;
-          padding: 4px 10px; }
-          .search-wrapper .search-container .history-search-suggestions ul li a:hover, .search-wrapper .search-container .history-search-suggestions ul li a.active {
-            background: #0996F8;
-            color: #FFF; }
-          .search-wrapper .search-container .history-search-suggestions ul li a:hover > #historyIcon,
-          .search-wrapper .search-container .history-search-suggestions ul li a.active > #historyIcon {
-            background-image: url("assets/glyph-search-history.svg#search-history-active"); }
-    .search-wrapper .search-container .history-search-suggestions #historyIcon {
-      width: 16px;
-      height: 16px;
-      display: inline-block;
-      margin-inline-end: 10px;
-      margin-bottom: -3px;
-      background-image: url("assets/glyph-search-history.svg#search-history"); }
-    .search-wrapper .search-container .search-partners ul {
-      padding: 0;
-      margin: 0;
-      list-style: none; }
-      .search-wrapper .search-container .search-partners ul li {
-        display: inline-block;
-        padding: 5px 0; }
-        .search-wrapper .search-container .search-partners ul li a {
-          display: block;
-          padding: 3px 16px;
-          border-right: 1px solid #BFBFBF; }
-        .search-wrapper .search-container .search-partners ul li:hover, .search-wrapper .search-container .search-partners ul li.active {
-          background: #0996F8;
-          color: #FFF; }
-          .search-wrapper .search-container .search-partners ul li:hover a, .search-wrapper .search-container .search-partners ul li.active a {
-            border-color: transparent; }
-    .search-wrapper .search-container .search-settings button {
-      color: #666;
-      margin: 0;
-      padding: 0;
-      height: 32px;
-      text-align: center;
-      width: 100%;
-      border-style: solid none none;
-      border-radius: 0;
-      background: #F7F7F7;
-      border-top: 0; }
-      .search-wrapper .search-container .search-settings button:hover, .search-wrapper .search-container .search-settings button.active {
-        background: #EBEBEB;
-        box-shadow: none; }
   .search-wrapper input {
     border: 0;
     box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1);
@@ -343,21 +251,24 @@ main {
     outline: none;
     padding: 0 12px 0 35px;
     height: 100%;
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
+    border-radius: 4px 0 0 4px;
     padding-inline-start: 35px; }
     .search-wrapper input:focus {
       border-color: #0996F8;
       box-shadow: 0 0 0 2px #0996F8;
       z-index: 1; }
-    .search-wrapper input:focus + button {
+    .search-wrapper input:focus + .search-button {
       z-index: 1;
       box-shadow: 0 0 0 2px #0996F8;
       background-color: #0996F8;
       background-image: url("assets/glyph-forward-16-white.svg");
       color: #FFF; }
-  .search-wrapper input:dir(rtl) {
-    border-radius: 0 4px 4px 0; }
+    .search-wrapper input[aria-expanded="true"] {
+      border-radius: 4px 0 0 0; }
+    .search-wrapper input:dir(rtl) {
+      border-radius: 0 4px 4px 0; }
+      .search-wrapper input:dir(rtl)[aria-expanded="true"] {
+        border-radius: 0 4px 0 0; }
   .search-wrapper .search-label {
     background: url("assets/glyph-search-16.svg") no-repeat center center/20px;
     position: absolute;
@@ -369,7 +280,7 @@ main {
     align-items: center;
     justify-content: center;
     z-index: 2; }
-  .search-wrapper button {
+  .search-wrapper .search-button {
     border-radius: 0 3px 3px 0;
     margin-inline-start: -1px;
     border: 0;
@@ -378,14 +289,19 @@ main {
     box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1);
     background: #FFF url("assets/glyph-forward-16.svg") no-repeat center center;
     background-size: 16px 16px; }
-    .search-wrapper button:hover {
+    .search-wrapper .search-button:hover {
       z-index: 1;
       box-shadow: 0 1px 0 0 rgba(0, 0, 1, 0.5);
       background-color: #0996F8;
       background-image: url("assets/glyph-forward-16-white.svg");
-      color: #FFF; }
-  .search-wrapper button:dir(rtl) {
-    transform: scaleX(-1); }
+      color: #FFF;
+      cursor: pointer; }
+    .search-wrapper .search-button:dir(rtl) {
+      transform: scaleX(-1); }
+  .search-wrapper .contentSearchSuggestionTable {
+    transform: translate(-2px, 2px); }
+    .search-wrapper .contentSearchSuggestionTable:dir(rtl) {
+      transform: translate(2px, 2px); }
 
 .context-menu {
   display: block;

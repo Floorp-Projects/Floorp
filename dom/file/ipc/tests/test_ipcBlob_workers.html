@@ -9,32 +9,111 @@
 <body>
 <script type="text/javascript">
 
-function workerScript() {
-  onmessage = e => {
-    e.ports[0].onmessage = event => {
-      let reader = new FileReader();
-      reader.readAsText(event.data);
-      reader.onloadend = () => {
-        let status = reader.result == 'hello world';
-        postMessage(status);
+function test_workerOwner() {
+  info("test_workerOwner");
+
+  function workerScript() {
+    onmessage = e => {
+      e.ports[0].onmessage = event => {
+        let reader = new FileReader();
+        reader.readAsText(event.data);
+        reader.onloadend = () => {
+          let status = reader.result == 'hello world';
+          postMessage(status);
+        }
       }
+    }
+  }
+
+  let mc = new MessageChannel();
+  mc.port1.postMessage(new Blob(['hello world']));
+
+  let workerUrl = URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
+  let worker = new Worker(workerUrl);
+
+  worker.postMessage("", [mc.port2]);
+  worker.onmessage = event => {
+    ok(event.data, "All is done!");
+    next();
+  }
+}
+
+function test_workerToMainThread() {
+  info("test_workerToMainThread");
+  function workerScript() {
+    onmessage = e => {
+      e.ports[0].onmessage = event => {
+        postMessage(event.data);
+      }
+    }
+  }
+
+  let mc = new MessageChannel();
+  mc.port1.postMessage(new Blob(['hello world']));
+
+  let workerUrl = URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
+  let worker = new Worker(workerUrl);
+
+  worker.postMessage("", [mc.port2]);
+  worker.onmessage = event => {
+    info("Blob received back, terminate the worker and force GC");
+    worker.terminate();
+    worker = null;
+    SpecialPowers.forceGC();
+
+    var fr = new FileReader();
+    fr.readAsText(event.data);
+    fr.onloadend = () => {
+      is(fr.result, "hello world", "Data matches");
+      next();
     }
   }
 }
 
-let mc = new MessageChannel();
-mc.port1.postMessage(new Blob(['hello world']));
+function test_workerOwnerPlusFileReaderSync() {
+  info("test_workerOwnerPlusFileReaderSync");
 
-let workerUrl = URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
-let worker = new Worker(workerUrl);
+  function workerScript() {
+    onmessage = e => {
+      e.ports[0].onmessage = event => {
+        let reader = new FileReaderSync();
+        let status = reader.readAsText(event.data) == 'hello world';
+         postMessage(status);
+      }
+    }
+  }
 
-worker.postMessage("", [mc.port2]);
-worker.onmessage = event => {
-  ok(event.data, "All is done!");
-  SimpleTest.finish();
+  let mc = new MessageChannel();
+  mc.port1.postMessage(new Blob(['hello world']));
+
+  let workerUrl = URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
+  let worker = new Worker(workerUrl);
+
+  worker.postMessage("", [mc.port2]);
+  worker.onmessage = event => {
+    ok(event.data, "All is done!");
+    next();
+  }
+}
+
+var tests = [
+  test_workerOwner,
+  test_workerToMainThread,
+  test_workerOwnerPlusFileReaderSync,
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
 }
 
 SimpleTest.waitForExplicitFinish();
+next();
 
 </script>
 </pre>

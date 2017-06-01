@@ -56,7 +56,7 @@ ordered-float = "0.4"
 parking_lot = "0.3.3"
 pdqsort = "0.1.0"
 precomputed-hash = "0.1"
-rayon = "0.7"
+rayon = "0.7.1"
 selectors = { path = "../selectors" }
 serde = {version = "0.9", optional = true}
 serde_derive = {version = "0.9", optional = true}
@@ -67,7 +67,7 @@ style_derive = {path = "../style_derive"}
 style_traits = {path = "../style_traits"}
 servo_url = {path = "../url", optional = true}
 time = "0.1"
-unicode-bidi = {version = "0.3", features = ["with_serde"]}
+unicode-bidi = "0.3"
 unicode-segmentation = "1.0"
 
 [target.'cfg(windows)'.dependencies]

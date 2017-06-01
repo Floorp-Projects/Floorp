@@ -42,7 +42,7 @@ packages.txt:testing/mozbase/packages.txt
 mozilla.pth:testing/taskcluster
 mozilla.pth:testing/tools/autotry
 mozilla.pth:testing/web-platform
-mozilla.pth:testing/web-platform/harness
+mozilla.pth:testing/web-platform/tests/tools/wptrunner
 mozilla.pth:testing/web-platform/tests/tools/wptserve
 mozilla.pth:testing/web-platform/tests/tools/six
 mozilla.pth:testing/xpcshell

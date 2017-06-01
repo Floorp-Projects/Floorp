@@ -9,7 +9,8 @@
        flip="slide"
        position="bottomcenter topright"
        noautofocus="true">
-  <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView">
+  <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView"
+                  viewCacheId="appMenu-viewCache">
     <panelview id="PanelUI-mainView" context="customizationPanelContextMenu">
       <vbox id="PanelUI-contents-scroller">
         <vbox id="PanelUI-contents" class="panelUI-grid"/>
@@ -503,7 +504,9 @@
        flip="slide"
        position="bottomcenter topright"
        noautofocus="true">
-  <photonpanelmultiview id="appMenu-multiView" mainViewId="appMenu-mainView" descriptionheightworkaround="true">
+  <photonpanelmultiview id="appMenu-multiView" mainViewId="appMenu-mainView"
+                        descriptionheightworkaround="true"
+                        viewCacheId="appMenu-viewCache">
     <panelview id="appMenu-mainView" class="PanelUI-subView">
       <vbox class="panel-subview-body">
         <vbox id="appMenu-addon-banners"/>
@@ -566,6 +569,35 @@
                          tooltip="dynamic-shortcut-tooltip"/>
         </toolbaritem>
         <toolbarseparator/>
+        <toolbarbutton id="appMenu-library-button"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       label="&places.library.title;"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('appMenu-libraryView', this)"/>
+        <toolbarbutton id="appMenu-addons-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&addons.label;"
+                       key="key_openAddons"
+                       command="Tools:Addons"
+                       />
+        <toolbarbutton id="appMenu-preferences-button"
+                       class="subviewbutton subviewbutton-iconic"
+#ifdef XP_WIN
+                       label="&preferencesCmd2.label;"
+#else
+                       label="&preferencesCmdUnix.label;"
+#ifdef XP_MACOSX
+                       key="key_preferencesCmdMac"
+#endif
+#endif
+                       oncommand="openPreferences()"
+                       />
+        <toolbarbutton id="appMenu-customize-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&viewCustomizeToolbar.label;"
+                       command="cmd_CustomizeToolbars"
+                       />
+        <toolbarseparator/>
         <toolbarbutton id="appMenu-open-file-button"
                        class="subviewbutton"
                        label="&openFileCmd.label;"
@@ -594,35 +626,6 @@
 #endif
                        />
         <toolbarseparator/>
-        <toolbarbutton id="appMenu-library-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       label="&places.library.title;"
-                       command="Browser:ShowAllBookmarks"
-                       />
-        <toolbarbutton id="appMenu-addons-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       label="&addons.label;"
-                       key="key_openAddons"
-                       command="Tools:Addons"
-                       />
-        <toolbarbutton id="appMenu-preferences-button"
-                       class="subviewbutton subviewbutton-iconic"
-#ifdef XP_WIN
-                       label="&preferencesCmd2.label;"
-#else
-                       label="&preferencesCmdUnix.label;"
-#ifdef XP_MACOSX
-                       key="key_preferencesCmdMac"
-#endif
-#endif
-                       oncommand="openPreferences()"
-                       />
-        <toolbarbutton id="appMenu-customize-button"
-                       class="subviewbutton subviewbutton-iconic"
-                       label="&viewCustomizeToolbar.label;"
-                       command="cmd_CustomizeToolbars"
-                       />
-        <toolbarseparator/>
         <toolbarbutton id="appMenu-find-button"
                        class="subviewbutton subviewbutton-iconic"
                        label="&findOnCmd.label;"
@@ -637,12 +640,25 @@
                        class="subviewbutton subviewbutton-nav"
                        label="&webDeveloperMenu.label;"
                        closemenu="none"
-                       oncommand="PanelUI.showSubView('PanelUI-developer', this, null, true)"/>
+                       oncommand="PanelUI.showSubView('PanelUI-developer', this)"/>
         <toolbarbutton id="appMenu-help-button"
                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
                        label="&appMenuHelp.label;"
                        closemenu="none"
-                       oncommand="PanelUI.showSubView('PanelUI-helpView', this, null, true)"/>
+                       oncommand="PanelUI.showSubView('PanelUI-helpView', this)"/>
+#ifndef XP_MACOSX
+        <toolbarseparator/>
+        <toolbarbutton id="appMenu-quit-button"
+                       class="subviewbutton subviewbutton-iconic"
+#ifdef XP_WIN
+                       label="&quitApplicationCmdWin2.label;"
+                       tooltiptext="&quitApplicationCmdWin2.tooltip;"
+#else
+                       label="&quitApplicationCmd.label;"
+#endif
+                       key="key_quitApplication"
+                       command="cmd_quitApplication"/>
+#endif
       </vbox>
     </panelview>
     <panelview id="appMenu-moreView" title="&moreMenu.label;" class="PanelUI-subView">
@@ -651,13 +667,27 @@
                        class="subviewbutton subviewbutton-nav"
                        label="&charsetMenu2.label;"
                        closemenu="none"
-                       oncommand="PanelUI.showSubView('PanelUI-characterEncodingView', this, null, true)"/>
+                       oncommand="PanelUI.showSubView('PanelUI-characterEncodingView', this)"/>
         <toolbarbutton id="appMenu-workoffline-button"
                        class="subviewbutton"
                        label="&goOfflineCmd.label;"
                        type="checkbox"
                        observes="workOfflineMenuitemState"
                        oncommand="BrowserOffline.toggleOfflineStatus();"/>
+      </vbox>
+    </panelview>
+    <panelview id="appMenu-libraryView" class="PanelUI-subView">
+      <vbox class="panel-subview-body">
+        <toolbarbutton id="appMenu-library-history-button"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       label="&historyMenu.label;"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('PanelUI-history', this)"/>
+        <toolbarbutton id="appMenu-library-remotetabs-button"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       label="&appMenuRemoteTabs.label;"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('PanelUI-remotetabs', this)"/>
       </vbox>
     </panelview>
   </photonpanelmultiview>

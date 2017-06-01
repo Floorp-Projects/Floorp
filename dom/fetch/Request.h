@@ -156,7 +156,6 @@ public:
 private:
   ~Request();
 
-  nsCOMPtr<nsIGlobalObject> mOwner;
   RefPtr<InternalRequest> mRequest;
   // Lazily created.
   RefPtr<Headers> mHeaders;

@@ -83,6 +83,7 @@ class nsLineList_iterator;
 class nsAbsoluteContainingBlock;
 class nsIContent;
 class nsContainerFrame;
+class nsPlaceholderFrame;
 class nsStyleChangeList;
 
 struct nsPeekOffsetStruct;
@@ -836,6 +837,16 @@ public:
   inline nsContainerFrame* GetInFlowParent();
 
   /**
+   * Return the placeholder for this frame (which must be out-of-flow).
+   * @note this will only return non-null if |this| is the first-in-flow
+   * although we don't assert that here for legacy reasons.
+   */
+  inline nsPlaceholderFrame* GetPlaceholderFrame() const {
+    MOZ_ASSERT(HasAnyStateBits(NS_FRAME_OUT_OF_FLOW));
+    return GetProperty(PlaceholderFrameProperty());
+  }
+
+  /**
    * Set this frame's parent to aParent.
    * If the frame may have moved into or out of a scrollframe's
    * frame subtree, StickyScrollContainer::NotifyReparentedFrameAcrossScrollFrameBoundary
@@ -1185,6 +1196,8 @@ public:
                                       DestroyContentArray)
 
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(BidiDataProperty, mozilla::FrameBidiData)
+
+  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(PlaceholderFrameProperty, nsPlaceholderFrame)
 
   mozilla::FrameBidiData GetBidiData() const
   {
@@ -2736,7 +2749,8 @@ public:
    *   into points in aOutAncestor's coordinate space.
    */
   Matrix4x4 GetTransformMatrix(const nsIFrame* aStopAtAncestor,
-                               nsIFrame **aOutAncestor);
+                               nsIFrame **aOutAncestor,
+                               bool aInCSSUnits = false);
 
   /**
    * Bit-flags to pass to IsFrameOfType()
@@ -3390,22 +3404,13 @@ public:
   GetProperty(FrameProperties::Descriptor<T> aProperty,
               bool* aFoundResult = nullptr) const
   {
-    if (mProperties) {
-      return mProperties->Get(aProperty, aFoundResult);
-    }
-    if (aFoundResult) {
-      *aFoundResult = false;
-    }
-    return FrameProperties::ReinterpretHelper<T>::FromPointer(nullptr);
+    return mProperties.Get(aProperty, aFoundResult);
   }
 
   template<typename T>
   bool HasProperty(FrameProperties::Descriptor<T> aProperty) const
   {
-    if (mProperties) {
-      return mProperties->Has(aProperty);
-    }
-    return false;
+    return mProperties.Has(aProperty);
   }
 
   // Add a property, or update an existing property for the given descriptor.
@@ -3413,10 +3418,7 @@ public:
   void SetProperty(FrameProperties::Descriptor<T> aProperty,
                    FrameProperties::PropertyType<T> aValue)
   {
-    if (!mProperties) {
-      mProperties = mozilla::MakeUnique<FrameProperties>();
-    }
-    mProperties->Set(aProperty, aValue, this);
+    mProperties.Set(aProperty, aValue, this);
   }
 
   // Unconditionally add a property; use ONLY if the descriptor is known
@@ -3425,10 +3427,7 @@ public:
   void AddProperty(FrameProperties::Descriptor<T> aProperty,
                    FrameProperties::PropertyType<T> aValue)
   {
-    if (!mProperties) {
-      mProperties = mozilla::MakeUnique<FrameProperties>();
-    }
-    mProperties->Add(aProperty, aValue);
+    mProperties.Add(aProperty, aValue);
   }
 
   template<typename T>
@@ -3436,29 +3435,22 @@ public:
   RemoveProperty(FrameProperties::Descriptor<T> aProperty,
                  bool* aFoundResult = nullptr)
   {
-    if (mProperties) {
-      return mProperties->Remove(aProperty, aFoundResult);
-    }
-    if (aFoundResult) {
-      *aFoundResult = false;
-    }
-    return FrameProperties::ReinterpretHelper<T>::FromPointer(nullptr);
+    return mProperties.Remove(aProperty, aFoundResult);
   }
 
   template<typename T>
   void DeleteProperty(FrameProperties::Descriptor<T> aProperty)
   {
-    if (mProperties) {
-      mProperties->Delete(aProperty, this);
-    }
+    mProperties.Delete(aProperty, this);
   }
 
   void DeleteAllProperties()
   {
-    if (mProperties) {
-      mProperties->DeleteAll(this);
-    }
+    mProperties.DeleteAll(this);
   }
+
+  // Reports size of the FrameProperties for this frame and its descendants
+  size_t SizeOfFramePropertiesForTree(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   /**
    * Return true if and only if this frame obeys visibility:hidden.
@@ -3961,10 +3953,9 @@ protected:
   nsFrameState     mState;
 
   /**
-   * List of properties attached to the frame, or null if no properties have
-   * been set.
+   * List of properties attached to the frame.
    */
-  mozilla::UniquePtr<FrameProperties> mProperties;
+  FrameProperties  mProperties;
 
   // When there is an overflow area only slightly larger than mRect,
   // we store a set of four 1-byte deltas from the edges of mRect

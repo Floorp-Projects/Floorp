@@ -227,7 +227,6 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["privacy.donottrackheader.enabled", {what: RECORD_PREF_VALUE}],
   ["security.mixed_content.block_active_content", {what: RECORD_PREF_VALUE}],
   ["security.mixed_content.block_display_content", {what: RECORD_PREF_VALUE}],
-  ["security.sandbox.content.level", {what: RECORD_PREF_VALUE}],
   ["xpinstall.signatures.required", {what: RECORD_PREF_VALUE}],
 ]);
 
@@ -1267,6 +1266,7 @@ EnvironmentCache.prototype = {
         autoDownload: Preferences.get(PREF_UPDATE_AUTODOWNLOAD, true),
       },
       userPrefs: this._getPrefData(),
+      sandbox: this._getSandboxData(),
     };
 
     this._currentEnvironment.settings.addonCompatibilityCheckEnabled =
@@ -1278,6 +1278,19 @@ EnvironmentCache.prototype = {
     }
 
     this._updateSearchEngine();
+  },
+
+  _getSandboxData() {
+    let effectiveContentProcessLevel = null;
+    try {
+      let sandboxSettings = Cc["@mozilla.org/sandbox/sandbox-settings;1"].
+                            getService(Ci.mozISandboxSettings);
+      effectiveContentProcessLevel =
+        sandboxSettings.effectiveContentSandboxLevel;
+    } catch (e) {}
+    return {
+      effectiveContentProcessLevel,
+    };
   },
 
   /**

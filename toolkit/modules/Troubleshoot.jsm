@@ -622,8 +622,12 @@ if (AppConstants.MOZ_SANDBOX) {
     }
 
     if (AppConstants.MOZ_CONTENT_SANDBOX) {
+      let sandboxSettings = Cc["@mozilla.org/sandbox/sandbox-settings;1"].
+                            getService(Ci.mozISandboxSettings);
       data.contentSandboxLevel =
         Services.prefs.getIntPref("security.sandbox.content.level");
+      data.effectiveContentSandboxLevel =
+        sandboxSettings.effectiveContentSandboxLevel;
     }
 
     done(data);

@@ -196,3 +196,7 @@ toolbar:not([brighttext]) #bookmarks-menu-button[cui-areatype="toolbar"][starred
 #webide-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/webIDE.svg");
 }
+
+#library-button {
+  list-style-image: url("chrome://browser/skin/library.svg");
+}

@@ -5,40 +5,46 @@ use std::ops::BitOr;
 
 bitflags! {
     flags Flags: u64 {
-        const SC_NEGATE_REQS       = 0b0000000000000000000000000000000001,
-        const SC_REQUIRED          = 0b0000000000000000000000000000000010,
-        const A_REQUIRED_ELSE_HELP = 0b0000000000000000000000000000000100,
-        const GLOBAL_VERSION       = 0b0000000000000000000000000000001000,
-        const VERSIONLESS_SC       = 0b0000000000000000000000000000010000,
-        const UNIFIED_HELP         = 0b0000000000000000000000000000100000,
-        const WAIT_ON_ERROR        = 0b0000000000000000000000000001000000,
-        const SC_REQUIRED_ELSE_HELP= 0b0000000000000000000000000010000000,
-        const NEEDS_LONG_HELP      = 0b0000000000000000000000000100000000,
-        const NEEDS_LONG_VERSION   = 0b0000000000000000000000001000000000,
-        const NEEDS_SC_HELP        = 0b0000000000000000000000010000000000,
-        const DISABLE_VERSION      = 0b0000000000000000000000100000000000,
-        const HIDDEN               = 0b0000000000000000000001000000000000,
-        const TRAILING_VARARG      = 0b0000000000000000000010000000000000,
-        const NO_BIN_NAME          = 0b0000000000000000000100000000000000,
-        const ALLOW_UNK_SC         = 0b0000000000000000001000000000000000,
-        const UTF8_STRICT          = 0b0000000000000000010000000000000000,
-        const UTF8_NONE            = 0b0000000000000000100000000000000000,
-        const LEADING_HYPHEN       = 0b0000000000000001000000000000000000,
-        const NO_POS_VALUES        = 0b0000000000000010000000000000000000,
-        const NEXT_LINE_HELP       = 0b0000000000000100000000000000000000,
-        const DERIVE_DISP_ORDER    = 0b0000000000001000000000000000000000,
-        const COLORED_HELP         = 0b0000000000010000000000000000000000,
-        const COLOR_ALWAYS         = 0b0000000000100000000000000000000000,
-        const COLOR_AUTO           = 0b0000000001000000000000000000000000,
-        const COLOR_NEVER          = 0b0000000010000000000000000000000000,
-        const DONT_DELIM_TRAIL     = 0b0000000100000000000000000000000000,
-        const ALLOW_NEG_NUMS       = 0b0000001000000000000000000000000000,
-        const LOW_INDEX_MUL_POS    = 0b0000010000000000000000000000000000,
-        const DISABLE_HELP_SC      = 0b0000100000000000000000000000000000,
-        const DONT_COLLAPSE_ARGS   = 0b0001000000000000000000000000000000,
-        const ARGS_NEGATE_SCS      = 0b0010000000000000000000000000000000,
-        const PROPAGATE_VALS_DOWN  = 0b0100000000000000000000000000000000,
-        const ALLOW_MISSING_POS    = 0b1000000000000000000000000000000000,
+        const SC_NEGATE_REQS       = 1 << 0,
+        const SC_REQUIRED          = 1 << 1,
+        const A_REQUIRED_ELSE_HELP = 1 << 2,
+        const GLOBAL_VERSION       = 1 << 3,
+        const VERSIONLESS_SC       = 1 << 4,
+        const UNIFIED_HELP         = 1 << 5,
+        const WAIT_ON_ERROR        = 1 << 6,
+        const SC_REQUIRED_ELSE_HELP= 1 << 7,
+        const NEEDS_LONG_HELP      = 1 << 8,
+        const NEEDS_LONG_VERSION   = 1 << 9,
+        const NEEDS_SC_HELP        = 1 << 10,
+        const DISABLE_VERSION      = 1 << 11,
+        const HIDDEN               = 1 << 12,
+        const TRAILING_VARARG      = 1 << 13,
+        const NO_BIN_NAME          = 1 << 14,
+        const ALLOW_UNK_SC         = 1 << 15,
+        const UTF8_STRICT          = 1 << 16,
+        const UTF8_NONE            = 1 << 17,
+        const LEADING_HYPHEN       = 1 << 18,
+        const NO_POS_VALUES        = 1 << 19,
+        const NEXT_LINE_HELP       = 1 << 20,
+        const DERIVE_DISP_ORDER    = 1 << 21,
+        const COLORED_HELP         = 1 << 22,
+        const COLOR_ALWAYS         = 1 << 23,
+        const COLOR_AUTO           = 1 << 24,
+        const COLOR_NEVER          = 1 << 25,
+        const DONT_DELIM_TRAIL     = 1 << 26,
+        const ALLOW_NEG_NUMS       = 1 << 27,
+        const LOW_INDEX_MUL_POS    = 1 << 28,
+        const DISABLE_HELP_SC      = 1 << 29,
+        const DONT_COLLAPSE_ARGS   = 1 << 30,
+        const ARGS_NEGATE_SCS      = 1 << 31, 
+        const PROPAGATE_VALS_DOWN  = 1 << 32,
+        const ALLOW_MISSING_POS    = 1 << 33,
+        const TRAILING_VALUES      = 1 << 34,
+        const VALID_NEG_NUM_FOUND  = 1 << 35,
+        const PROPOGATED           = 1 << 36,
+        const VALID_ARG_FOUND      = 1 << 37,
+        const INFER_SUBCOMMANDS    = 1 << 38,
+        const CONTAINS_LAST        = 1 << 39,
     }
 }
 
@@ -48,9 +54,7 @@ pub struct AppFlags(Flags);
 
 impl BitOr for AppFlags {
     type Output = Self;
-    fn bitor(self, rhs: Self) -> Self {
-        AppFlags(self.0 | rhs.0)
-    }
+    fn bitor(self, rhs: Self) -> Self { AppFlags(self.0 | rhs.0) }
 }
 
 impl Default for AppFlags {
@@ -96,7 +100,13 @@ impl AppFlags {
         UnifiedHelpMessage => UNIFIED_HELP,
         NextLineHelp => NEXT_LINE_HELP,
         VersionlessSubcommands => VERSIONLESS_SC,
-        WaitOnError => WAIT_ON_ERROR
+        WaitOnError => WAIT_ON_ERROR,
+        TrailingValues => TRAILING_VALUES,
+        ValidNegNumFound => VALID_NEG_NUM_FOUND,
+        Propogated => PROPOGATED,
+        ValidArgFound => VALID_ARG_FOUND,
+        InferSubcommands => INFER_SUBCOMMANDS,
+        ContainsLast => CONTAINS_LAST
     }
 }
 
@@ -152,11 +162,9 @@ pub enum AppSettings {
     /// Specifies that leading hyphens are allowed in argument *values*, such as negative numbers
     /// like `-10`. (which would otherwise be parsed as another flag or option)
     ///
-    /// **NOTE:** This can only be set application wide and not on a per argument basis.
-    ///
     /// **NOTE:** Use this setting with caution as it silences certain circumstances which would
     /// otherwise be an error (such as accidentally forgetting to specify a value for leading
-    /// option)
+    /// option). It is preferred to set this on a per argument basis, via [`Arg::allow_hyphen_values`]
     ///
     /// # Examples
     ///
@@ -173,6 +181,7 @@ pub enum AppSettings {
     /// assert_eq!(m.value_of("neg"), Some("-20"));
     /// # ;
     /// ```
+    /// [`Arg::allow_hyphen_values`]: ./struct.Arg.html#method.allow_hyphen_values
     AllowLeadingHyphen,
 
     /// Allows negative numbers to pass as values. This is similar to
@@ -206,7 +215,7 @@ pub enum AppSettings {
     ///
     /// This would otherwise not be allowed. This is useful when `[optional]` has a default value.
     ///
-    /// **Note:** In addition to using this setting, the second positional argument *must* be 
+    /// **Note:** In addition to using this setting, the second positional argument *must* be
     /// [required]
     ///
     /// # Examples
@@ -267,9 +276,9 @@ pub enum AppSettings {
     AllowExternalSubcommands,
 
     /// Specifies that use of a valid [argument] negates [subcomands] being used after. By default
-    /// `clap` allows arguments between subcommands such as 
-    /// `<cmd> [cmd_args] <cmd2> [cmd2_args] <cmd3> [cmd3_args]`. This setting disables that 
-    /// functionality and says that arguments can only follow the *final* subcommand. For instance 
+    /// `clap` allows arguments between subcommands such as
+    /// `<cmd> [cmd_args] <cmd2> [cmd2_args] <cmd3> [cmd3_args]`. This setting disables that
+    /// functionality and says that arguments can only follow the *final* subcommand. For instance
     /// using this setting makes only the following invocations possible:
     ///
     /// * `<cmd> <cmd2> <cmd3> [cmd3_args]`
@@ -294,7 +303,7 @@ pub enum AppSettings {
     /// **NOTE:** [`SubCommand`]s count as arguments
     ///
     /// **NOTE:** Setting [`Arg::default_value`] effectively disables this option as it will
-    /// ensure that some argument is always present. 
+    /// ensure that some argument is always present.
     ///
     /// # Examples
     ///
@@ -413,7 +422,7 @@ pub enum AppSettings {
     /// [`Arg::use_delimiter(false)`]: ./struct.Arg.html#method.use_delimiter
     DontDelimitTrailingValues,
 
-    /// Disables the `help` subcommand 
+    /// Disables the `help` subcommand
     ///
     /// # Examples
     ///
@@ -424,7 +433,7 @@ pub enum AppSettings {
     ///     .setting(AppSettings::DisableHelpSubcommand)
     ///     // Normally, creating a subcommand causes a `help` subcommand to automaticaly
     ///     // be generated as well
-    ///     .subcommand(SubCommand::with_name("test")) 
+    ///     .subcommand(SubCommand::with_name("test"))
     ///     .get_matches_from_safe(vec![
     ///         "myprog", "help"
     ///     ]);
@@ -519,6 +528,36 @@ pub enum AppSettings {
     /// This can be useful if there are many values, or they are explained elsewhere.
     HidePossibleValuesInHelp,
 
+    /// Tries to match unknown args to partial [`subcommands`] or their [aliases]. For example to 
+    /// match a subcommand named `test`, one could use `t`, `te`, `tes`, and `test`.
+    ///
+    /// **NOTE:** The match *must not* be ambiguous at all in order to succeed. i.e. to match `te`
+    /// to `test` there could not also be a subcommand or alias `temp` because both start with `te`
+    ///
+    /// **CAUTION:** This setting can interfere with [positional/free arguments], take care when
+    /// designing CLIs which allow inferred subcommands and have potential positional/free
+    /// arguments who's values could start with the same characters as subcommands. If this is the
+    /// case, it's recommended to use settings such as [`AppSeettings::ArgsNegateSubcommands`] in
+    /// conjuction with this setting.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use clap::{App, Arg, SubCommand, AppSettings};
+    /// let m = App::new("prog")
+    ///     .setting(AppSettings::InferSubcommands)
+    ///     .subcommand(SubCommand::with_name("test"))
+    ///     .get_matches_from(vec![
+    ///         "prog", "te"
+    ///     ]);
+    /// assert_eq!(m.subcommand_name(), Some("test"));
+    /// ```
+    /// [`subcommands`]: ./struct.SubCommand.html
+    /// [positional/free arguments]: ./struct.Arg.html#method.index
+    /// [aliases]: ./struct.App.html#method.alias
+    /// [`AppSeettings::ArgsNegateSubcommands`]: ./enum.AppSettings.html#variant.ArgsNegateSubcommands
+    InferSubcommands,
+
     /// Specifies that the parser should not assume the first argument passed is the binary name.
     /// This is normally the case when using a "daemon" style mode, or an interactive CLI where one
     /// one would not normally type the binary or program name for each command.
@@ -573,11 +612,13 @@ pub enum AppSettings {
     /// ```
     /// Now doing the same thing, but *not* using any subcommands will result in the value not being
     /// propagated down.
+    ///
     /// ```rust
-    /// # use clap::{App, Arg, AppSettings};
+    /// # use clap::{App, Arg, AppSettings, SubCommand};
     /// let m = App::new("myprog")
     ///     .setting(AppSettings::PropagateGlobalValuesDown)
-    ///     .global_arg(Arg::from_usage("<cmd> 'command to run'"))
+    ///     .arg(Arg::from_usage("[cmd] 'command to run'")
+    ///         .global(true))
     ///     .subcommand(SubCommand::with_name("foo"))
     ///     .get_matches_from(vec!["myprog", "set"]);
     ///
@@ -807,6 +848,21 @@ pub enum AppSettings {
 
     #[doc(hidden)]
     LowIndexMultiplePositional,
+
+    #[doc(hidden)]
+    TrailingValues,
+
+    #[doc(hidden)]
+    ValidNegNumFound,
+
+    #[doc(hidden)]
+    Propogated,
+
+    #[doc(hidden)]
+    ValidArgFound,
+
+    #[doc(hidden)]
+    ContainsLast,
 }
 
 impl FromStr for AppSettings {
@@ -831,6 +887,7 @@ impl FromStr for AppSettings {
             "globalversion" => Ok(AppSettings::GlobalVersion),
             "hidden" => Ok(AppSettings::Hidden),
             "hidepossiblevaluesinhelp" => Ok(AppSettings::HidePossibleValuesInHelp),
+            "infersubcommands" => Ok(AppSettings::InferSubcommands),
             "lowindexmultiplepositional" => Ok(AppSettings::LowIndexMultiplePositional),
             "nobinaryname" => Ok(AppSettings::NoBinaryName),
             "nextlinehelp" => Ok(AppSettings::NextLineHelp),
@@ -842,6 +899,10 @@ impl FromStr for AppSettings {
             "unifiedhelpmessage" => Ok(AppSettings::UnifiedHelpMessage),
             "versionlesssubcommands" => Ok(AppSettings::VersionlessSubcommands),
             "waitonerror" => Ok(AppSettings::WaitOnError),
+            "validnegnumfound" => Ok(AppSettings::ValidNegNumFound),
+            "validargfound" => Ok(AppSettings::ValidArgFound),
+            "propogated" => Ok(AppSettings::Propogated),
+            "trailingvalues" => Ok(AppSettings::TrailingValues),
             _ => Err("unknown AppSetting, cannot convert from str".to_owned()),
         }
     }
@@ -911,6 +972,16 @@ mod test {
                    AppSettings::VersionlessSubcommands);
         assert_eq!("waitonerror".parse::<AppSettings>().unwrap(),
                    AppSettings::WaitOnError);
+        assert_eq!("validnegnumfound".parse::<AppSettings>().unwrap(),
+                   AppSettings::ValidNegNumFound);
+        assert_eq!("validargfound".parse::<AppSettings>().unwrap(),
+                   AppSettings::ValidArgFound);
+        assert_eq!("propogated".parse::<AppSettings>().unwrap(),
+                   AppSettings::Propogated);
+        assert_eq!("trailingvalues".parse::<AppSettings>().unwrap(),
+                   AppSettings::TrailingValues);
+        assert_eq!("infersubcommands".parse::<AppSettings>().unwrap(),
+                   AppSettings::InferSubcommands);
         assert!("hahahaha".parse::<AppSettings>().is_err());
     }
 }

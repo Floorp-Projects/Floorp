@@ -53,7 +53,13 @@
 
       this.invoke = function addTabInvoker_invoke()
       {
-        tabBrowser().loadOneTab(aURL, null, "", null, false);
+        tabBrowser().loadOneTab(aURL, {
+          referrerURI: null,
+          charset: "",
+          postData: null,
+          inBackground: false,
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        });
       }
 
       this.finalCheck = function addTabInvoker_finalCheck()

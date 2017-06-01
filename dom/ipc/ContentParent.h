@@ -731,12 +731,6 @@ private:
   // called after the process has been transformed to browser.
   void ForwardKnownInfo();
 
-  // Set the child process's priority and then check whether the child is
-  // still alive.  Returns true if the process is still alive, and false
-  // otherwise.  If you pass a FOREGROUND* priority here, it's (hopefully)
-  // unlikely that the process will be killed after this point.
-  bool SetPriorityAndCheckIsAlive(hal::ProcessPriority aPriority);
-
   /**
    * Decide whether the process should be kept alive even when it would normally
    * be shut down, for example when all its tabs are closed.

@@ -144,6 +144,7 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
                                 bundle.putLong(Bookmarks.PARENT, bookmark.parentId);
                                 bundle.putLong(BrowserContract.PARAM_OLD_BOOKMARK_PARENT, bookmark.originalParentId);
                             }
+                            bundle.putInt(Bookmarks.TYPE, bookmark.type);
 
                             callbacks.onEditBookmark(bundle);
                         }

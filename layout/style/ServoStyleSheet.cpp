@@ -87,6 +87,15 @@ ServoStyleSheet::ServoStyleSheet(const ServoStyleSheet& aCopy,
   : StyleSheet(aCopy, aOwnerRuleToUse, aDocumentToUse, aOwningNodeToUse)
 {
   mParent = aParentToUse;
+
+  if (mDirty) { // CSSOM's been there, force full copy now
+    NS_ASSERTION(mInner->mComplete, "Why have rules been accessed on an incomplete sheet?");
+    // FIXME: handle failure?
+    //
+    // NOTE: It's important to call this from the subclass, since this could
+    // access uninitialized members otherwise.
+    EnsureUniqueInner();
+  }
 }
 
 ServoStyleSheet::~ServoStyleSheet()

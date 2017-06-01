@@ -232,18 +232,22 @@ public:
   // off-main-thread. But some consumers need to use the same pointer for
   // multiple classes, some of which are main-thread-only and some of which
   // aren't. So we allow them to explicitly disable this strict checking.
-  explicit nsMainThreadPtrHolder(T* aPtr, bool aStrict = true)
+  explicit nsMainThreadPtrHolder(T* aPtr, bool aStrict = true,
+                                 nsIEventTarget* aMainThreadEventTarget = nullptr)
     : mRawPtr(nullptr)
     , mStrict(aStrict)
+    , mMainThreadEventTarget(aMainThreadEventTarget)
   {
     // We can only AddRef our pointer on the main thread, which means that the
     // holder must be constructed on the main thread.
     MOZ_ASSERT(!mStrict || NS_IsMainThread());
     NS_IF_ADDREF(mRawPtr = aPtr);
   }
-  explicit nsMainThreadPtrHolder(already_AddRefed<T> aPtr, bool aString = true)
+  explicit nsMainThreadPtrHolder(already_AddRefed<T> aPtr, bool aString = true,
+                                 nsIEventTarget* aMainThreadEventTarget = nullptr)
     : mRawPtr(aPtr.take())
     , mStrict(aString)
+    , mMainThreadEventTarget(aMainThreadEventTarget)
   {
     // Since we don't need to AddRef the pointer, this constructor is safe to
     // call on any thread.
@@ -256,7 +260,11 @@ private:
     if (NS_IsMainThread()) {
       NS_IF_RELEASE(mRawPtr);
     } else if (mRawPtr) {
-      NS_ReleaseOnMainThread(dont_AddRef(mRawPtr));
+      if (!mMainThreadEventTarget) {
+        mMainThreadEventTarget = do_GetMainThread();
+      }
+      MOZ_ASSERT(mMainThreadEventTarget);
+      NS_ProxyRelease(mMainThreadEventTarget, dont_AddRef(mRawPtr));
     }
   }
 
@@ -288,6 +296,8 @@ private:
 
   // Whether to strictly enforce thread invariants in this class.
   bool mStrict;
+
+  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 
   // Copy constructor and operator= not implemented. Once constructed, the
   // holder is immutable.

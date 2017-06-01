@@ -301,7 +301,7 @@ Tools.memory = {
 Tools.netMonitor = {
   id: "netmonitor",
   accesskey: l10n("netmonitor.accesskey"),
-  key: l10n("netmonitor.commandkey"),
+  key: l10n("netmonitor.commandkey2"),
   ordinal: 9,
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   visibilityswitch: "devtools.netmonitor.enabled",

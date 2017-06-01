@@ -33,6 +33,7 @@ class nsWindowSizes {
   macro(Style, mLayoutStyleSetsSize) \
   macro(Other, mLayoutTextRunsSize) \
   macro(Other, mLayoutPresContextSize) \
+  macro(Other, mLayoutFramePropertiesSize) \
   macro(Other, mPropertyTablesSize) \
 
 public:

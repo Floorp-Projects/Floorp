@@ -8,8 +8,8 @@
 #define mozilla_dom_ipc_IPCBlobInputStreamStorage_h
 
 #include "mozilla/RefPtr.h"
-#include "nsInterfaceHashtable.h"
-#include "nsISupportsImpl.h"
+#include "nsClassHashtable.h"
+#include "nsIObserver.h"
 
 class nsIInputStream;
 struct nsID;
@@ -17,10 +17,13 @@ struct nsID;
 namespace mozilla {
 namespace dom {
 
-class IPCBlobInputStreamStorage final
+class IPCBlobInputStreamParentCallback;
+
+class IPCBlobInputStreamStorage final : public nsIObserver
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IPCBlobInputStreamStorage);
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
   // This initializes the singleton and it must be called on the main-thread.
   static void
@@ -30,7 +33,7 @@ public:
   Get();
 
   void
-  AddStream(nsIInputStream* aInputStream, const nsID& aID);
+  AddStream(nsIInputStream* aInputStream, const nsID& aID, uint64_t aChildID);
 
   void
   ForgetStream(const nsID& aID);
@@ -38,10 +41,27 @@ public:
   void
   GetStream(const nsID& aID, nsIInputStream** aInputStream);
 
+  void
+  StoreCallback(const nsID& aID, IPCBlobInputStreamParentCallback* aCallback);
+
+  already_AddRefed<IPCBlobInputStreamParentCallback>
+  TakeCallback(const nsID& aID);
+
 private:
+  IPCBlobInputStreamStorage();
   ~IPCBlobInputStreamStorage();
 
-  nsInterfaceHashtable<nsIDHashKey, nsIInputStream> mStorage;
+  struct StreamData
+  {
+    nsCOMPtr<nsIInputStream> mInputStream;
+    RefPtr<IPCBlobInputStreamParentCallback> mCallback;
+
+    // This is the Process ID connected with this inputStream. We need to store
+    // this information in order to delete it if the child crashes/shutdowns.
+    uint64_t mChildID;
+  };
+
+  nsClassHashtable<nsIDHashKey, StreamData> mStorage;
 };
 
 } // namespace dom

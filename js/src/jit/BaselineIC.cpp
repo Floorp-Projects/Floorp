@@ -277,61 +277,58 @@ DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame, ICUpdatedStub* stub, H
     FallbackICSpew(cx, stub->getChainFallback(), "TypeUpdate(%s)",
                    ICStub::KindString(stub->kind()));
 
+    MOZ_ASSERT(stub->isCacheIR_Updated());
+
     RootedScript script(cx, frame->script());
     RootedObject obj(cx, &objval.toObject());
-    RootedId id(cx);
 
-    switch (stub->kind()) {
-      case ICStub::CacheIR_Updated: {
-        id = stub->toCacheIR_Updated()->updateStubId();
-        MOZ_ASSERT(id != JSID_EMPTY);
+    RootedId id(cx, stub->toCacheIR_Updated()->updateStubId());
+    MOZ_ASSERT(id != JSID_EMPTY);
 
-        // The group should match the object's group, except when the object is
-        // an unboxed expando object: in that case, the group is the group of
-        // the unboxed object.
-        RootedObjectGroup group(cx, stub->toCacheIR_Updated()->updateStubGroup());
+    // The group should match the object's group, except when the object is
+    // an unboxed expando object: in that case, the group is the group of
+    // the unboxed object.
+    RootedObjectGroup group(cx, stub->toCacheIR_Updated()->updateStubGroup());
 #ifdef DEBUG
-        if (obj->is<UnboxedExpandoObject>())
-            MOZ_ASSERT(group->clasp() == &UnboxedPlainObject::class_);
-        else
-            MOZ_ASSERT(obj->group() == group);
+    if (obj->is<UnboxedExpandoObject>())
+        MOZ_ASSERT(group->clasp() == &UnboxedPlainObject::class_);
+    else
+        MOZ_ASSERT(obj->group() == group);
 #endif
 
-        // If we're storing null/undefined to a typed object property, check if
-        // we want to include it in this property's type information.
-        if (MOZ_UNLIKELY(obj->is<TypedObject>()) && value.isNullOrUndefined()) {
-            StructTypeDescr* structDescr = &obj->as<TypedObject>().typeDescr().as<StructTypeDescr>();
-            size_t fieldIndex;
-            MOZ_ALWAYS_TRUE(structDescr->fieldIndex(id, &fieldIndex));
+    // If we're storing null/undefined to a typed object property, check if
+    // we want to include it in this property's type information.
+    bool addType = true;
+    if (MOZ_UNLIKELY(obj->is<TypedObject>()) && value.isNullOrUndefined()) {
+        StructTypeDescr* structDescr = &obj->as<TypedObject>().typeDescr().as<StructTypeDescr>();
+        size_t fieldIndex;
+        MOZ_ALWAYS_TRUE(structDescr->fieldIndex(id, &fieldIndex));
 
-            TypeDescr* fieldDescr = &structDescr->fieldDescr(fieldIndex);
-            ReferenceTypeDescr::Type type = fieldDescr->as<ReferenceTypeDescr>().type();
-            if (type == ReferenceTypeDescr::TYPE_ANY) {
-                // Ignore undefined values, which are included implicitly in type
-                // information for this property.
-                if (value.isUndefined())
-                    break;
-            } else {
-                MOZ_ASSERT(type == ReferenceTypeDescr::TYPE_OBJECT);
+        TypeDescr* fieldDescr = &structDescr->fieldDescr(fieldIndex);
+        ReferenceTypeDescr::Type type = fieldDescr->as<ReferenceTypeDescr>().type();
+        if (type == ReferenceTypeDescr::TYPE_ANY) {
+            // Ignore undefined values, which are included implicitly in type
+            // information for this property.
+            if (value.isUndefined())
+                addType = false;
+        } else {
+            MOZ_ASSERT(type == ReferenceTypeDescr::TYPE_OBJECT);
 
-                // Ignore null values being written here. Null is included
-                // implicitly in type information for this property. Note that
-                // non-object, non-null values are not possible here, these
-                // should have been filtered out by the IR emitter.
-                if (value.isNull())
-                    break;
-            }
+            // Ignore null values being written here. Null is included
+            // implicitly in type information for this property. Note that
+            // non-object, non-null values are not possible here, these
+            // should have been filtered out by the IR emitter.
+            if (value.isNull())
+                addType = false;
         }
-
-        JSObject* maybeSingleton = obj->isSingleton() ? obj.get() : nullptr;
-        AddTypePropertyId(cx, group, maybeSingleton, id, value);
-        break;
-      }
-      default:
-        MOZ_CRASH("Invalid stub");
     }
 
-    if (!stub->addUpdateStubForValue(cx, script /* = outerScript */, obj, id, value)) {
+    if (MOZ_LIKELY(addType)) {
+        JSObject* maybeSingleton = obj->isSingleton() ? obj.get() : nullptr;
+        AddTypePropertyId(cx, group, maybeSingleton, id, value);
+    }
+
+    if (MOZ_UNLIKELY(!stub->addUpdateStubForValue(cx, script, obj, id, value))) {
         // The calling JIT code assumes this function is infallible (for
         // instance we may reallocate dynamic slots before calling this),
         // so ignore OOMs if we failed to attach a stub.
@@ -381,16 +378,8 @@ ICTypeUpdate_PrimitiveSet::Compiler::generateStubCode(MacroAssembler& masm)
     if (flags_ & TypeToFlag(JSVAL_TYPE_SYMBOL))
         masm.branchTestSymbol(Assembler::Equal, R0, &success);
 
-    // Currently, we will never generate primitive stub checks for object.  However,
-    // when we do get to the point where we want to collapse our monitor chains of
-    // objects and singletons down (when they get too long) to a generic "any object"
-    // in coordination with the typeset doing the same thing, this will need to
-    // be re-enabled.
-    /*
     if (flags_ & TypeToFlag(JSVAL_TYPE_OBJECT))
         masm.branchTestObject(Assembler::Equal, R0, &success);
-    */
-    MOZ_ASSERT(!(flags_ & TypeToFlag(JSVAL_TYPE_OBJECT)));
 
     if (flags_ & TypeToFlag(JSVAL_TYPE_NULL))
         masm.branchTestNull(Assembler::Equal, R0, &success);
@@ -448,6 +437,15 @@ ICTypeUpdate_ObjectGroup::Compiler::generateStubCode(MacroAssembler& masm)
 
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICTypeUpdate_AnyValue::Compiler::generateStubCode(MacroAssembler& masm)
+{
+    // AnyValue always matches so return true.
+    masm.mov(ImmWord(1), R1.scratchReg());
+    EmitReturnFromIC(masm);
     return true;
 }
 

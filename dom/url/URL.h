@@ -49,10 +49,6 @@ public:
 
   static already_AddRefed<URL>
   Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
-              URL& aBase, ErrorResult& aRv);
-
-  static already_AddRefed<URL>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aURL,
               const Optional<nsAString>& aBase, ErrorResult& aRv);
 
   // Helper for Fetch API

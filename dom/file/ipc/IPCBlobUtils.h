@@ -129,6 +129,55 @@
  * callback will be executed and, from that moment, any IPCBlobInputStream
  * method will be forwarded to the 'real' stream ones. This means that the
  * reading will be available.
+ *
+ * DOM-File Thread
+ * ~~~~~~~~~~~~~~~
+ *
+ * IPCBlobInputStreamChild actor can be created in any thread (sort of) and
+ * their top-level IPDL protocol is PBackground. These actors are wrapped by 1
+ * or more IPCBlobInputStream objects in order to expose nsIInputStream
+ * interface and be thread-safe.
+ *
+ * But IPDL actors are not thread-safe and any SendFoo() method must be executed
+ * on the owning thread. This means that this thread must be kept alive for the
+ * life-time of the IPCBlobInputStream.
+ *
+ * In doing this, there are 2 main issues:
+ * a. if a remote Blob is created on a worker (because of a
+ *    BroadcastChannel/MessagePort for instance) and it sent to the main-thread
+ *    via PostMessage(), we have to keep that worker alive.
+ * b. if the remote Blob is created on the main-thread, any SendFoo() has to be
+ *    executed on the main-thread. This is true also when the inputStream is
+ *    used on another thread (note that nsIInputStream could do I/O and usually
+ *    they are used on special I/O threads).
+ *
+ * In order to avoid this, IPCBlobInputStreamChild are 'migrated' to a DOM-File
+ * thread. This is done in this way:
+ *
+ * 1. If IPCBlobInputStreamChild actor is not already owned by DOM-File thread,
+ *    it calls Send__delete__ in order to inform the parent side that we don't
+ *    need this IPC channel on the current thread.
+ * 3. IPCBlobInputStreamParent::Recv__delete__ is called on the parent side and
+ *    the parent actor is deleted. Doing this we don't remove the UUID from
+ *    IPCBlobInputStreamStorage.
+ * 4. When IPCBlobInputStreamChild::ActorDestroy() is called, we are sure that
+ *    the IPC channel is completely released. IPCBlobInputStreamThread is be
+ *    used to assign IPCBlobInputStreamChild actor to the DOM-File thread.
+ *    IPCBlobInputStreamThread::GetOrCreate() creates the DOM-File thread if it
+ *    doesn't exist yet and it initializes PBackground on it if needed.
+ * 5. IPCBlobInputStreamChild is reused on the DOM-File thread for the creation
+ *    of a new IPCBlobInputStreamParent actor on the parent side. Doing this,
+ *    IPCBlobInputStreamChild will now be owned by the DOM-File thread.
+ * 6. When the new IPCBlobInputStreamParent actor is created, it will receive
+ *    the same UUID of the previous parent actor. The nsIInputStream will be
+ *    retrieved from IPCBlobInputStreamStorage.
+ * 7. In order to avoid leaks, IPCBlobInputStreamStorage will monitor child
+ *    processes and in case one of them dies, it will release the
+ *    nsIInputStream objects belonging to that process.
+ *
+ * If any API wants to retrieve a 'real inputStream when the migration is in
+ * progress, that operation is stored in a pending queue and processed at the
+ * end of the migration.
  */ 
 
 namespace mozilla {

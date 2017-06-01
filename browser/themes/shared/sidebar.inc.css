@@ -5,7 +5,6 @@
 %endif
 
 #sidebar-box {
-  --icon-fill: rgba(12, 12, 13, 0.8);
   --header-background-color: #F2F2F2;
   --header-background-color-hover: rgba(204, 204, 204, 0.6);
 }
@@ -14,6 +13,7 @@
 #sidebar-header {
   padding: 4px;
   background-color: var(--header-background-color);
+  color: -moz-dialogText;
   text-shadow: none;
 }
 
@@ -53,12 +53,17 @@
   padding: 0;
   padding-inline-start: 8px;
   padding-inline-end: 4px;
-  color: -moz-DialogText;
+}
+
+#sidebar-icon,
+#sidebar-switcher-arrow,
+#sidebar-close > .toolbarbutton-icon {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  opacity: 0.8;
 }
 
 #sidebar-switcher-arrow {
-  -moz-context-properties: fill;
-  fill: var(--icon-fill);
   list-style-image: url(chrome://browser/skin/arrow-dropdown.svg);
   width: 12px;
   height: 12px;
@@ -66,8 +71,6 @@
 
 #sidebar-close {
   -moz-appearance: none;
-  -moz-context-properties: fill;
-  fill: var(--icon-fill);
   list-style-image: url(chrome://browser/skin/sidebar/close.svg);
   margin: 0;
   padding: 4px;
@@ -76,7 +79,7 @@
 #sidebar-switcher-target {
   -moz-appearance: none;
   padding: 4px;
-  margin-inline-end: 4px;
+  color: inherit;
 }
 
 #sidebar-box #sidebar-switcher-target:hover,
@@ -105,22 +108,17 @@
 
 /* Use bookmarks star as default icon for the sidebar box (including when opening a web page) */
 #sidebar-switcher-bookmarks > .toolbarbutton-icon,
-#sidebar-box #sidebar-icon {
-  -moz-context-properties: fill;
-  fill: var(--icon-fill);
+#sidebar-box[sidebarcommand="viewWebPanelsSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon,
+#sidebar-box[sidebarcommand="viewBookmarksSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
   list-style-image: url(chrome://browser/skin/bookmark.svg);
 }
 
 #sidebar-switcher-history > .toolbarbutton-icon,
-#sidebar-box[sidebarcommand="viewHistorySidebar"] #sidebar-icon {
-  -moz-context-properties: fill;
-  fill: var(--icon-fill);
+#sidebar-box[sidebarcommand="viewHistorySidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
   list-style-image: url(chrome://browser/skin/history.svg);
 }
 
 #sidebar-switcher-tabs > .toolbarbutton-icon,
-#sidebar-box[sidebarcommand="viewTabsSidebar"] #sidebar-icon {
-  -moz-context-properties: fill;
-  fill: var(--icon-fill);
+#sidebar-box[sidebarcommand="viewTabsSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
   list-style-image: url(chrome://browser/skin/sync.svg);
 }

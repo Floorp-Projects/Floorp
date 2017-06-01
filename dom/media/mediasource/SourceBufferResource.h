@@ -11,7 +11,6 @@
 #include "MediaResource.h"
 #include "ResourceQueue.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ReentrantMonitor.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsIPrincipal.h"
@@ -27,6 +26,7 @@ namespace mozilla {
 
 class MediaDecoder;
 class MediaByteBuffer;
+class TaskQueue;
 
 namespace dom {
 
@@ -34,6 +34,7 @@ class SourceBuffer;
 
 } // namespace dom
 
+// SourceBufferResource is not thread safe.
 class SourceBufferResource final : public MediaResource
 {
 public:
@@ -41,18 +42,38 @@ public:
   nsresult Close() override;
   void Suspend(bool aCloseImmediately) override { UNIMPLEMENTED(); }
   void Resume() override { UNIMPLEMENTED(); }
-  already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override { UNIMPLEMENTED(); return nullptr; }
-  already_AddRefed<MediaResource> CloneData(MediaResourceCallback*) override { UNIMPLEMENTED(); return nullptr; }
-  void SetReadMode(MediaCacheStream::ReadMode aMode) override { UNIMPLEMENTED(); }
+  already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override
+  {
+    UNIMPLEMENTED();
+    return nullptr;
+  }
+  already_AddRefed<MediaResource> CloneData(MediaResourceCallback*) override
+  {
+    UNIMPLEMENTED();
+    return nullptr;
+  }
+  void SetReadMode(MediaCacheStream::ReadMode aMode) override
+  {
+    UNIMPLEMENTED();
+  }
   void SetPlaybackRate(uint32_t aBytesPerSecond) override { UNIMPLEMENTED(); }
-  nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes) override;
+  nsresult ReadAt(int64_t aOffset,
+                  char* aBuffer,
+                  uint32_t aCount,
+                  uint32_t* aBytes) override;
   int64_t Tell() override { return mOffset; }
   void Pin() override { UNIMPLEMENTED(); }
   void Unpin() override { UNIMPLEMENTED(); }
-  double GetDownloadRate(bool* aIsReliable) override { UNIMPLEMENTED(); *aIsReliable = false; return 0; }
+  double GetDownloadRate(bool* aIsReliable) override
+  {
+    UNIMPLEMENTED();
+    *aIsReliable = false;
+    return 0;
+  }
   int64_t GetLength() override { return mInputBuffer.GetLength(); }
-  int64_t GetNextCachedData(int64_t aOffset) override {
-    ReentrantMonitorAutoEnter mon(mMonitor);
+  int64_t GetNextCachedData(int64_t aOffset) override
+  {
+    MOZ_ASSERT(OnTaskQueue());
     MOZ_ASSERT(aOffset >= 0);
     if (uint64_t(aOffset) < mInputBuffer.GetOffset()) {
       return mInputBuffer.GetOffset();
@@ -61,17 +82,45 @@ public:
     }
     return aOffset;
   }
-  int64_t GetCachedDataEnd(int64_t aOffset) override { UNIMPLEMENTED(); return -1; }
+  int64_t GetCachedDataEnd(int64_t aOffset) override
+  {
+    MOZ_ASSERT(OnTaskQueue());
+    MOZ_ASSERT(aOffset >= 0);
+    if (uint64_t(aOffset) < mInputBuffer.GetOffset() ||
+        aOffset >= GetLength()) {
+      // aOffset is outside of the buffered range.
+      return aOffset;
+    }
+    return GetLength();
+  }
   bool IsDataCachedToEndOfResource(int64_t aOffset) override { return false; }
-  bool IsSuspendedByCache() override { UNIMPLEMENTED(); return false; }
-  bool IsSuspended() override { UNIMPLEMENTED(); return false; }
-  nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override;
-  bool IsTransportSeekable() override { UNIMPLEMENTED(); return true; }
-  nsresult Open(nsIStreamListener** aStreamListener) override { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
+  bool IsSuspendedByCache() override
+  {
+    UNIMPLEMENTED();
+    return false;
+  }
+  bool IsSuspended() override
+  {
+    UNIMPLEMENTED();
+    return false;
+  }
+  nsresult ReadFromCache(char* aBuffer,
+                         int64_t aOffset,
+                         uint32_t aCount) override;
+  bool IsTransportSeekable() override
+  {
+    UNIMPLEMENTED();
+    return true;
+  }
+  nsresult Open(nsIStreamListener** aStreamListener) override
+  {
+    UNIMPLEMENTED();
+    return NS_ERROR_FAILURE;
+  }
 
   nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override
   {
-    ReentrantMonitorAutoEnter mon(mMonitor);
+    MOZ_ASSERT(OnTaskQueue());
     if (mInputBuffer.GetLength()) {
       aRanges += MediaByteRange(mInputBuffer.GetOffset(),
                                 mInputBuffer.GetLength());
@@ -83,7 +132,7 @@ public:
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
-    ReentrantMonitorAutoEnter mon(mMonitor);
+    MOZ_ASSERT(OnTaskQueue());
 
     size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
     size += mType.SizeOfExcludingThis(aMallocSizeOf);
@@ -107,7 +156,7 @@ public:
   void Ended();
   bool IsEnded()
   {
-    ReentrantMonitorAutoEnter mon(mMonitor);
+    MOZ_ASSERT(OnTaskQueue());
     return mEnded;
   }
   // Remove data from resource if it holds more than the threshold reduced by
@@ -122,28 +171,33 @@ public:
   uint32_t EvictAll();
 
   // Returns the amount of data currently retained by this resource.
-  int64_t GetSize() {
-    ReentrantMonitorAutoEnter mon(mMonitor);
+  int64_t GetSize()
+  {
+    MOZ_ASSERT(OnTaskQueue());
     return mInputBuffer.GetLength() - mInputBuffer.GetOffset();
   }
 
 #if defined(DEBUG)
-  void Dump(const char* aPath) {
+  void Dump(const char* aPath)
+  {
     mInputBuffer.Dump(aPath);
   }
 #endif
 
 private:
   virtual ~SourceBufferResource();
-  nsresult ReadAtInternal(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes, bool aMayBlock);
-
+  nsresult ReadAtInternal(int64_t aOffset,
+                          char* aBuffer,
+                          uint32_t aCount,
+                          uint32_t* aBytes);
   const MediaContainerType mType;
 
-  // Provides synchronization between SourceBuffers and InputAdapters.
-  // Protects all of the member variables below.  Read() will await a
-  // Notify() (from Seek, AppendData, Ended, or Close) when insufficient
-  // data is available in mData.
-  mutable ReentrantMonitor mMonitor;
+#if defined(DEBUG)
+  const RefPtr<TaskQueue> mTaskQueue;
+  // TaskQueue methods and objects.
+  AbstractThread* GetTaskQueue() const;
+  bool OnTaskQueue() const;
+#endif
 
   // The buffer holding resource data.
   ResourceQueue mInputBuffer;

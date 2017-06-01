@@ -1043,7 +1043,7 @@ pref("security.sandbox.gpu.level", 0);
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)
 // This pref is discussed in bug 1083344, the naming is inspired from its
 // Windows counterpart, but on Mac it's an integer which means:
-// 0 -> "no sandbox"
+// 0 -> "no sandbox" (nightly only)
 // 1 -> "preliminary content sandboxing enabled: write access to
 //       home directory is prevented"
 // 2 -> "preliminary content sandboxing enabled with profile protection:
@@ -1604,6 +1604,7 @@ pref("browser.migrate.automigrate.enabled", false);
 // hidden the 4th day, so it will actually be shown on 3 different days.
 pref("browser.migrate.automigrate.daysToOfferUndo", 4);
 pref("browser.migrate.automigrate.ui.enabled", true);
+pref("browser.migrate.automigrate.inpage.ui.enabled", false);
 
 // See comments in bug 1340115 on how we got to these numbers.
 pref("browser.migrate.chrome.history.limit", 2000);
@@ -1671,3 +1672,6 @@ pref("urlclassifier.phishTable", "goog-phish-shavar,goog-phish-proto,test-phish-
 #endif
 
 pref("browser.suppress_first_window_animation", true);
+
+// Preferences for Photon onboarding system extension
+pref("browser.onboarding.disabled", false);

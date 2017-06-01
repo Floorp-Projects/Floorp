@@ -825,7 +825,13 @@ nsLoadGroup::SetUserAgentOverrideCache(const nsACString & aUserAgentOverrideCach
 void
 nsLoadGroup::TelemetryReport()
 {
-    if (mDefaultLoadIsTimed) {
+    nsresult defaultStatus = NS_ERROR_INVALID_ARG;
+    // We should only report HTTP_PAGE_* telemetry if the defaultRequest was
+    // actually successful.
+    if (mDefaultLoadRequest) {
+        mDefaultLoadRequest->GetStatus(&defaultStatus);
+    }
+    if (mDefaultLoadIsTimed && NS_SUCCEEDED(defaultStatus)) {
         Telemetry::Accumulate(Telemetry::HTTP_REQUEST_PER_PAGE, mTimedRequests);
         if (mTimedRequests) {
             Telemetry::Accumulate(Telemetry::HTTP_REQUEST_PER_PAGE_FROM_CACHE,

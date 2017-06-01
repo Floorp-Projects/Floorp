@@ -2046,6 +2046,8 @@ MediaFormatReader::HandleDemuxedSamples(
         if (sample->mKeyframe) {
           decoder.mQueuedSamples.AppendElements(Move(samples));
         }
+      } else if (decoder.HasWaitingPromise()) {
+        decoder.Flush();
       }
 
       decoder.mInfo = info;

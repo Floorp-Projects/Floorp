@@ -442,7 +442,6 @@ DowncastCCParticipant(void* aPtr)
   ImplCycleCollectionUnlink(tmp->_field);
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK(...)                                   \
-  MOZ_STATIC_ASSERT_VALID_ARG_COUNT(__VA_ARGS__);                              \
   MOZ_FOR_EACH(NS_IMPL_CYCLE_COLLECTION_UNLINK_HELPER, (), (__VA_ARGS__))
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_END                                    \
@@ -494,7 +493,6 @@ DowncastCCParticipant(void* aPtr)
   ImplCycleCollectionTraverse(cb, tmp->_field, #_field, 0);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE(...)                                 \
-  MOZ_STATIC_ASSERT_VALID_ARG_COUNT(__VA_ARGS__);                              \
   MOZ_FOR_EACH(NS_IMPL_CYCLE_COLLECTION_TRAVERSE_HELPER, (), (__VA_ARGS__))
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(_field)                       \

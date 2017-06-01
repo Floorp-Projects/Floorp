@@ -34,7 +34,7 @@ cppunit:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
             windows10-64-asan/opt: []  # as an exception to windows.*
-            linux64-qr/.*: ['graphics']  # not on mozilla-central, even though it's built there
+            linux64-qr/.*: ['mozilla-central', 'try']
             default: built-projects
     mozharness:
         by-test-platform:
@@ -246,7 +246,7 @@ gtest:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
-            linux64-qr/.*: ['graphics']
+            linux64-qr/.*: ['mozilla-central', 'try']
             default: built-projects
     mozharness:
         script: desktop_unittest.py
@@ -272,7 +272,7 @@ jittest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            linux64-qr/.*: ['graphics']
+            linux64-qr/.*: ['mozilla-central', 'try']
             default: built-projects
     chunks:
         by-test-platform:
@@ -534,7 +534,7 @@ mochitest-a11y:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
-            linux64-qr/.*: ['graphics']
+            linux64-qr/.*: ['mozilla-central', 'try']
             default: built-projects
     mozharness:
         script: desktop_unittest.py
@@ -1131,7 +1131,7 @@ reftest-no-accel:
     run-on-projects:
         by-test-platform:
             windows10.*: []
-            linux64-qr/.*: ['graphics']
+            linux64-qr/.*: ['mozilla-central', 'try']
             default: built-projects
     chunks:
         by-test-platform:
@@ -1589,7 +1589,7 @@ xpcshell:
     run-on-projects:
         by-test-platform:
             windows.*: []
-            linux64-qr/.*: ['graphics']
+            linux64-qr/.*: ['mozilla-central', 'try']
             default: built-projects
     docker-image: {"in-tree": "desktop1604-test"}
     chunks:

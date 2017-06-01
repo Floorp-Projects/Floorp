@@ -849,9 +849,12 @@ public:
 
   /**
    * Gets the transform for aFrame relative to aAncestor. Pass null for
-   * aAncestor to go up to the root frame.
+   * aAncestor to go up to the root frame. aInCSSUnits set to true will
+   * return CSS units, set to false (the default) will return App units.
    */
-  static Matrix4x4 GetTransformToAncestor(nsIFrame *aFrame, const nsIFrame *aAncestor);
+  static Matrix4x4 GetTransformToAncestor(nsIFrame *aFrame,
+                                          const nsIFrame *aAncestor,
+                                          bool aInCSSUnits = false);
 
   /**
    * Gets the scale factors of the transform for aFrame relative to the root

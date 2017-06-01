@@ -11,6 +11,8 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const kAutoMigrateEnabledPref = "browser.migrate.automigrate.enabled";
 const kUndoUIEnabledPref = "browser.migrate.automigrate.ui.enabled";
 
+const kInPageUIEnabledPref = "browser.migrate.automigrate.inpage.ui.enabled";
+
 const kAutoMigrateBrowserPref = "browser.migrate.automigrate.browser";
 const kAutoMigrateImportedItemIds = "browser.migrate.automigrate.imported-items";
 
@@ -26,6 +28,7 @@ Cu.import("resource:///modules/MigrationUtils.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
@@ -314,54 +317,75 @@ const AutoMigrate = {
   },
 
   /**
-   * Show the user a notification bar indicating we automatically imported
-   * their data and offering them the possibility of removing it.
+   * Decide if we need to show [the user] a prompt indicating we automatically
+   * imported their data.
    * @param target (xul:browser)
    *        The browser in which we should show the notification.
+   * @returns {Boolean} return true when need to show the prompt.
    */
-  async maybeShowUndoNotification(target) {
+  async shouldShowMigratePrompt(target) {
     if (!(await this.canUndo())) {
-      return;
+      return false;
     }
 
     // The tab might have navigated since we requested the undo state:
     let canUndoFromThisPage = ["about:home", "about:newtab"].includes(target.currentURI.spec);
     if (!canUndoFromThisPage ||
         !Preferences.get(kUndoUIEnabledPref, false)) {
-      return;
-    }
-
-    let win = target.ownerGlobal;
-    let notificationBox = win.gBrowser.getNotificationBox(target);
-    if (!notificationBox || notificationBox.getNotificationWithValue(kNotificationId)) {
-      return;
+      return false;
     }
 
     // At this stage we're committed to show the prompt - unless we shouldn't,
     // in which case we remove the undo prefs (which will cause canUndo() to
     // return false from now on.):
-    if (!this.shouldStillShowUndoPrompt()) {
+    if (this.isMigratePromptExpired()) {
       this._purgeUndoState(this.UNDO_REMOVED_REASON_OFFER_EXPIRED);
       this._removeNotificationBars();
-      return;
+      return false;
     }
 
+    let remainingDays = Preferences.get(kAutoMigrateDaysToOfferUndoPref, 0);
+    Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_UNDO_OFFERED").add(4 - remainingDays);
+
+    return true;
+  },
+
+  /**
+   * Return the message that denotes the user data is migrated from the other browser.
+   * @returns {String} imported message with the brand and the browser name
+   */
+  getUndoMigrationMessage() {
     let browserName = this.getBrowserUsedForMigration();
     if (!browserName) {
       browserName = MigrationUtils.getLocalizedString("automigration.undo.unknownbrowser");
     }
-    const kMessageId = "automigration.undo.message." +
+    const kMessageId = "automigration.undo.message2." +
                       Preferences.get(kAutoMigrateImportedItemIds, "all");
     const kBrandShortName = gBrandBundle.GetStringFromName("brandShortName");
-    let message = MigrationUtils.getLocalizedString(kMessageId,
-                                                    [browserName, kBrandShortName]);
+    return MigrationUtils.getLocalizedString(kMessageId,
+                                             [kBrandShortName, browserName]);
+  },
 
+  /**
+   * Show the user a notification bar indicating we automatically imported
+   * their data and offering them the possibility of removing it.
+   * @param target (xul:browser)
+   *        The browser in which we should show the notification.
+   */
+  showUndoNotificationBar(target) {
+    let isInPage = Preferences.get(kInPageUIEnabledPref, false);
+    let win = target.ownerGlobal;
+    let notificationBox = win.gBrowser.getNotificationBox(target);
+    if (isInPage || !notificationBox || notificationBox.getNotificationWithValue(kNotificationId)) {
+      return;
+    }
+    let message = this.getUndoMigrationMessage();
     let buttons = [
       {
         label: MigrationUtils.getLocalizedString("automigration.undo.keep2.label"),
         accessKey: MigrationUtils.getLocalizedString("automigration.undo.keep2.accesskey"),
         callback: () => {
-          this._purgeUndoState(this.UNDO_REMOVED_REASON_OFFER_REJECTED);
+          this.keepAutoMigration();
           this._removeNotificationBars();
         },
       },
@@ -369,19 +393,21 @@ const AutoMigrate = {
         label: MigrationUtils.getLocalizedString("automigration.undo.dontkeep2.label"),
         accessKey: MigrationUtils.getLocalizedString("automigration.undo.dontkeep2.accesskey"),
         callback: () => {
-          this._maybeOpenUndoSurveyTab(win);
-          this.undo();
+          this.undoAutoMigration(win);
         },
       },
     ];
     notificationBox.appendNotification(
       message, kNotificationId, null, notificationBox.PRIORITY_INFO_HIGH, buttons
     );
-    let remainingDays = Preferences.get(kAutoMigrateDaysToOfferUndoPref, 0);
-    Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_UNDO_OFFERED").add(4 - remainingDays);
   },
 
-  shouldStillShowUndoPrompt() {
+
+  /**
+   * Return true if we have shown the prompt to user several days.
+   * (defined in kAutoMigrateDaysToOfferUndoPref)
+   */
+  isMigratePromptExpired() {
     let today = new Date();
     // Round down to midnight:
     today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -396,10 +422,10 @@ const AutoMigrate = {
       Preferences.set(kAutoMigrateDaysToOfferUndoPref, remainingDays);
       Preferences.set(kAutoMigrateLastUndoPromptDateMsPref, today.valueOf().toString());
       if (remainingDays <= 0) {
-        return false;
+        return true;
       }
     }
-    return true;
+    return false;
   },
 
   UNDO_REMOVED_REASON_UNDO_USED: 0,
@@ -656,6 +682,22 @@ const AutoMigrate = {
   QueryInterface: XPCOMUtils.generateQI(
     [Ci.nsIObserver, Ci.nsINavBookmarkObserver, Ci.nsISupportsWeakReference]
   ),
+
+  /**
+   * Undo action called by the UndoNotification or by the newtab
+   * @param chromeWindow A reference to the window in which to open a link.
+   */
+  undoAutoMigration(chromeWindow) {
+    this._maybeOpenUndoSurveyTab(chromeWindow);
+    this.undo();
+  },
+
+  /**
+   * Keep the automigration result and not prompt anymore
+   */
+  keepAutoMigration() {
+    this._purgeUndoState(this.UNDO_REMOVED_REASON_OFFER_REJECTED);
+  },
 };
 
 AutoMigrate.init();

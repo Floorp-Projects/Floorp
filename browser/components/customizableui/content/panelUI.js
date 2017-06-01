@@ -444,7 +444,7 @@ const PanelUI = {
    * @param aAnchor the element that spawned the subview.
    * @param aPlacementArea the CustomizableUI area that aAnchor is in.
    */
-  async showSubView(aViewId, aAnchor, aPlacementArea, aAdopted = false) {
+  async showSubView(aViewId, aAnchor, aPlacementArea) {
     this._ensureEventListenersAdded();
     let viewNode = document.getElementById(aViewId);
     if (!viewNode) {
@@ -459,7 +459,7 @@ const PanelUI = {
 
     let container = aAnchor.closest("panelmultiview,photonpanelmultiview");
     if (container) {
-      container.showSubView(aViewId, aAnchor, null, aAdopted);
+      container.showSubView(aViewId, aAnchor);
     } else if (!aAnchor.open) {
       aAnchor.open = true;
 
@@ -480,9 +480,14 @@ const PanelUI = {
       tempPanel.classList.toggle("cui-widget-panelWithFooter",
                                  viewNode.querySelector(".panel-subview-footer"));
 
-      let multiView = document.createElement("panelmultiview");
+      let multiView = document.createElement(gPhotonStructure ? "photonpanelmultiview" : "panelmultiview");
       multiView.setAttribute("id", "customizationui-widget-multiview");
       multiView.setAttribute("nosubviews", "true");
+      multiView.setAttribute("viewCacheId", "appMenu-viewCache");
+      if (gPhotonStructure) {
+        multiView.setAttribute("mainViewId", viewNode.id);
+        multiView.appendChild(viewNode);
+      }
       tempPanel.appendChild(multiView);
       multiView.setAttribute("mainViewIsSubView", "true");
       multiView.setMainView(viewNode);
@@ -500,7 +505,9 @@ const PanelUI = {
         }
         aAnchor.open = false;
 
-        this.multiView.appendChild(viewNode);
+        // Ensure we run the destructor:
+        multiView.instance.destructor();
+
         tempPanel.remove();
       };
 

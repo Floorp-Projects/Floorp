@@ -5,16 +5,13 @@ const {actionCreators: ac} = require("common/Actions.jsm");
 describe("initStore", () => {
   let globals;
   let store;
-  before(() => {
+  beforeEach(() => {
     globals = new GlobalOverrider();
     globals.set("sendAsyncMessage", globals.sandbox.spy());
     globals.set("addMessageListener", globals.sandbox.spy());
-  });
-  beforeEach(() => {
     store = initStore({number: addNumberReducer});
   });
-  afterEach(() => globals.reset());
-  after(() => globals.restore());
+  afterEach(() => globals.restore());
   it("should create a store with the provided reducers", () => {
     assert.ok(store);
     assert.property(store.getState(), "number");

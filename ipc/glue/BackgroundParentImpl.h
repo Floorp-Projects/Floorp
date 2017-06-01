@@ -73,6 +73,11 @@ protected:
   AllocPIPCBlobInputStreamParent(const nsID& aID,
                                  const uint64_t& aSize) override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvPIPCBlobInputStreamConstructor(PIPCBlobInputStreamParent* aActor,
+                                     const nsID& aID,
+                                     const uint64_t& aSize) override;
+
   virtual bool
   DeallocPIPCBlobInputStreamParent(PIPCBlobInputStreamParent* aActor) override;
 

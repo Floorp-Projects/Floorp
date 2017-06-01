@@ -89,12 +89,6 @@
             android:title="@string/pref_activity_stream"
             android:summary="@string/pref_activity_stream_summary" />
 
-
-        <SwitchPreference android:key="android.not_a_preference.customtabs"
-            android:title="@string/pref_custom_tabs"
-            android:summary="@string/pref_custom_tabs_summary"
-            android:defaultValue="false" />
-
     </PreferenceCategory>
 
 </PreferenceScreen>

@@ -165,6 +165,13 @@ interface Element : Node {
    */
   [ChromeOnly, Pure]
   sequence<Grid> getGridFragments();
+
+  [ChromeOnly]
+  DOMMatrixReadOnly getTransformToAncestor(Element ancestor);
+  [ChromeOnly]
+  DOMMatrixReadOnly getTransformToParent();
+  [ChromeOnly]
+  DOMMatrixReadOnly getTransformToViewport();
 };
 
 // http://dev.w3.org/csswg/cssom-view/

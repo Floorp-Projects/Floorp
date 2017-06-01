@@ -63,9 +63,12 @@
 #include "UIKitDirProvider.h"
 #endif
 
-#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_CONTENT_SANDBOX)
+#include "mozilla/SandboxSettings.h"
+#if (defined(XP_WIN) || defined(XP_MACOSX))
 #include "nsIUUIDGenerator.h"
 #include "mozilla/Unused.h"
+#endif
 #endif
 
 #if defined(XP_MACOSX)
@@ -686,14 +689,7 @@ nsXREDirProvider::LoadContentProcessTempDir()
 static bool
 IsContentSandboxDisabled()
 {
-  if (!BrowserTabsRemoteAutostart()) {
-    return false;
-  }
-#if defined(XP_WIN) || defined(XP_MACOSX)
-  const bool isSandboxDisabled =
-    Preferences::GetInt("security.sandbox.content.level") < 1;
-#endif
-  return isSandboxDisabled;
+  return !BrowserTabsRemoteAutostart() || (GetEffectiveContentSandboxLevel() < 1);
 }
 
 //
@@ -1661,7 +1657,7 @@ nsXREDirProvider::AppendProfilePath(nsIFile* aFile,
                                     bool aLocal)
 {
   NS_ASSERTION(aFile, "Null pointer!");
-  
+
   if (!gAppData) {
     return NS_ERROR_FAILURE;
   }

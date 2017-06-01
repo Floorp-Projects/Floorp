@@ -206,7 +206,7 @@ function isFlagFilterMatch(item, { type, value, negative }) {
 }
 
 function isSizeMatch(value, size) {
-  return value >= (size - size / 10) && value < (size + size / 10);
+  return value >= (size - size / 10) && value <= (size + size / 10);
 }
 
 function isTextFilterMatch({ url }, text) {

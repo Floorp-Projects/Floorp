@@ -56,6 +56,9 @@ public:
     return mThread == NS_GetCurrentThread();
   }
 
+  uint32_t
+  AllowedEarlyFiringMicroseconds() const;
+
 private:
   ~TimerThread();
 
@@ -116,6 +119,7 @@ private:
   };
 
   nsTArray<UniquePtr<Entry>> mTimers;
+  uint32_t mAllowedEarlyFiringMicroseconds;
 };
 
 struct TimerAdditionComparator
