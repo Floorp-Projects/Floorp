@@ -6,15 +6,22 @@
 "use strict";
 
 const Immutable = require("devtools/client/shared/vendor/immutable");
+const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
+
 const constants = require("devtools/client/webconsole/new-console-output/constants");
 const {isGroupType} = require("devtools/client/webconsole/new-console-output/utils/messages");
-const Services = require("Services");
-
-const logLimit = Math.max(Services.prefs.getIntPref("devtools.hud.loglimit"), 1);
+const {
+  MESSAGE_TYPE,
+  MESSAGE_SOURCE
+} = require("devtools/client/webconsole/new-console-output/constants");
+const { getGripPreviewItems } = require("devtools/client/shared/components/reps/reps");
+const { getSourceNames } = require("devtools/client/shared/source-utils");
 
 const MessageState = Immutable.Record({
   // List of all the messages added to the console.
-  messagesById: Immutable.List(),
+  messagesById: Immutable.OrderedMap(),
+  // Array of the visible messages.
+  visibleMessages: [],
   // List of the message ids which are opened.
   messagesUiById: Immutable.List(),
   // Map of the form {messageId : tableData}, which represent the data passed
@@ -30,14 +37,17 @@ const MessageState = Immutable.Record({
   removedMessages: [],
 });
 
-function messages(state = new MessageState(), action) {
+function messages(state = new MessageState(), action, filtersState, prefsState) {
   const {
     messagesById,
     messagesUiById,
     messagesTableDataById,
     groupsById,
     currentGroup,
+    visibleMessages,
   } = state;
+
+  const {logLimit} = prefsState;
 
   switch (action.type) {
     case constants.MESSAGE_ADD:
@@ -56,23 +66,27 @@ function messages(state = new MessageState(), action) {
       if (newMessage.allowRepeating && messagesById.size > 0) {
         let lastMessage = messagesById.last();
         if (lastMessage.repeatId === newMessage.repeatId) {
-          return state.withMutations(function (record) {
-            record.set("messagesById", messagesById.pop().push(
-              newMessage.set("repeat", lastMessage.repeat + 1)
-            ));
-          });
+          return state.set(
+            "messagesById",
+            messagesById.set(
+              lastMessage.id,
+              lastMessage.set("repeat", lastMessage.repeat + 1)
+            )
+          );
         }
       }
 
-      let parentGroups = getParentGroups(currentGroup, groupsById);
-      newMessage = newMessage.withMutations(function (message) {
-        message.set("groupId", currentGroup);
-        message.set("indent", parentGroups.length);
-      });
-
       return state.withMutations(function (record) {
         // Add the new message with a reference to the parent group.
-        record.set("messagesById", messagesById.push(newMessage));
+        let parentGroups = getParentGroups(currentGroup, groupsById);
+        const addedMessage = newMessage.withMutations(function (message) {
+          message.set("groupId", currentGroup);
+          message.set("indent", parentGroups.length);
+        });
+        record.set(
+          "messagesById",
+          messagesById.set(newMessage.id, addedMessage)
+        );
 
         if (newMessage.type === "trace") {
           // We want the stacktrace to be open by default.
@@ -87,39 +101,109 @@ function messages(state = new MessageState(), action) {
           }
         }
 
+        if (shouldMessageBeVisible(addedMessage, record, filtersState)) {
+          record.set("visibleMessages", [...visibleMessages, newMessage.id]);
+        }
+
         // Remove top level message if the total count of top level messages
         // exceeds the current limit.
-        limitTopLevelMessageCount(state, record);
+        if (record.messagesById.size > logLimit) {
+          limitTopLevelMessageCount(state, record, logLimit);
+        }
       });
+
     case constants.MESSAGES_CLEAR:
-      return state.withMutations(function (record) {
+      return new MessageState({
         // Store all removed messages associated with some arguments.
         // This array is used by `releaseActorsEnhancer` to release
         // all related backend actors.
-        record.set("removedMessages",
-          record.messagesById.filter(msg => msg.parameters).toArray());
-
-        // Clear immutable state.
-        record.set("messagesById", Immutable.List());
-        record.set("messagesUiById", Immutable.List());
-        record.set("groupsById", Immutable.Map());
-        record.set("currentGroup", null);
+        "removedMessages": [...state.messagesById].reduce((res, [id, msg]) => {
+          if (msg.parameters) {
+            res.push(msg);
+          }
+          return res;
+        }, [])
       });
+
     case constants.MESSAGE_OPEN:
-      return state.set("messagesUiById", messagesUiById.push(action.id));
+      return state.withMutations(function (record) {
+        record.set("messagesUiById", messagesUiById.push(action.id));
+
+        // If the message is a group
+        if (isGroupType(messagesById.get(action.id).type)) {
+          // We want to make its children visible
+          const messagesToShow = [...messagesById].reduce((res, [id, message]) => {
+            if (
+              !visibleMessages.includes(message.id)
+              && getParentGroups(message.groupId, groupsById).includes(action.id)
+              && shouldMessageBeVisible(
+                message,
+                record,
+                filtersState,
+                // We want to check if the message is in an open group
+                // only if it is not a direct child of the group we're opening.
+                message.groupId !== action.id
+              )
+            ) {
+              res.push(id);
+            }
+            return res;
+          }, []);
+
+          // We can then insert the messages ids right after the one of the group.
+          const insertIndex = visibleMessages.indexOf(action.id) + 1;
+          record.set("visibleMessages", [
+            ...visibleMessages.slice(0, insertIndex),
+            ...messagesToShow,
+            ...visibleMessages.slice(insertIndex),
+          ]);
+        }
+      });
+
     case constants.MESSAGE_CLOSE:
-      let index = state.messagesUiById.indexOf(action.id);
-      return state.deleteIn(["messagesUiById", index]);
+      return state.withMutations(function (record) {
+        let messageId = action.id;
+        let index = record.messagesUiById.indexOf(messageId);
+        record.deleteIn(["messagesUiById", index]);
+
+        // If the message is a group
+        if (isGroupType(messagesById.get(messageId).type)) {
+          // Hide all its children
+          record.set(
+            "visibleMessages",
+            [...visibleMessages].filter(id => getParentGroups(
+                messagesById.get(id).groupId,
+                groupsById
+              ).includes(messageId) === false
+            )
+          );
+        }
+      });
+
     case constants.MESSAGE_TABLE_RECEIVE:
       const {id, data} = action;
       return state.set("messagesTableDataById", messagesTableDataById.set(id, data));
     case constants.NETWORK_MESSAGE_UPDATE:
       let updateMessage = action.message;
-      return state.set("messagesById", messagesById.map((message) =>
-        (message.id === updateMessage.id) ? updateMessage : message
+      return state.set("messagesById", messagesById.set(
+        updateMessage.id,
+        updateMessage
       ));
+
     case constants.REMOVED_MESSAGES_CLEAR:
       return state.set("removedMessages", []);
+
+    case constants.FILTER_TOGGLE:
+    case constants.FILTER_TEXT_SET:
+      return state.set(
+        "visibleMessages",
+        [...messagesById].reduce((res, [messageId, message]) => {
+          if (shouldMessageBeVisible(message, state, filtersState)) {
+            res.push(messageId);
+          }
+          return res;
+        }, [])
+      );
   }
 
   return state;
@@ -156,36 +240,88 @@ function getParentGroups(currentGroup, groupsById) {
 
 /**
  * Remove all top level messages that exceeds message limit.
- * Also release all backend actors associated with these
- * messages.
+ * Also populate an array of all backend actors associated with these
+ * messages so they can be released.
  */
-function limitTopLevelMessageCount(state, record) {
-  let tempRecord = {
-    messagesById: record.messagesById,
-    messagesUiById: record.messagesUiById,
-    messagesTableDataById: record.messagesTableDataById,
-    groupsById: record.groupsById,
-  };
+function limitTopLevelMessageCount(state, record, logLimit) {
+  let topLevelCount = record.groupsById.size === 0
+    ? record.messagesById.size
+    : getToplevelMessageCount(record);
 
-  let removedMessages = state.removedMessages;
-
-  // Remove top level messages logged over the limit.
-  let topLevelCount = getToplevelMessageCount(tempRecord);
-  while (topLevelCount > logLimit) {
-    removedMessages.push(...removeFirstMessage(tempRecord));
-    topLevelCount--;
+  if (topLevelCount <= logLimit) {
+    return record;
   }
 
-  // Filter out messages with no arguments. Only actual arguments
-  // can be associated with backend actors.
-  removedMessages = state.removedMessages.filter(msg => msg.parameters);
+  const removedMessagesId = [];
+  const removedMessages = [];
+  let visibleMessages = [...record.visibleMessages];
 
-  // Update original record object
-  record.set("messagesById", tempRecord.messagesById);
-  record.set("messagesUiById", tempRecord.messagesUiById);
-  record.set("messagesTableDataById", tempRecord.messagesTableDataById);
-  record.set("groupsById", tempRecord.groupsById);
-  record.set("removedMessages", removedMessages);
+  let cleaningGroup = false;
+  record.messagesById.forEach((message, id) => {
+    // If we were cleaning a group and the current message does not have
+    // a groupId, we're done cleaning.
+    if (cleaningGroup === true && !message.groupId) {
+      cleaningGroup = false;
+    }
+
+    // If we're not cleaning a group and the message count is below the logLimit,
+    // we exit the forEach iteration.
+    if (cleaningGroup === false && topLevelCount <= logLimit) {
+      return false;
+    }
+
+    // If we're not currently cleaning a group, and the current message is identified
+    // as a group, set the cleaning flag to true.
+    if (cleaningGroup === false && record.groupsById.has(id)) {
+      cleaningGroup = true;
+    }
+
+    if (!message.groupId) {
+      topLevelCount--;
+    }
+
+    removedMessagesId.push(id);
+
+    // Filter out messages with no arguments. Only actual arguments
+    // can be associated with backend actors.
+    if (message && message.parameters) {
+      removedMessages.push(message);
+    }
+
+    const index = visibleMessages.indexOf(id);
+    if (index > -1) {
+      visibleMessages.splice(index, 1);
+    }
+
+    return true;
+  });
+
+  if (removedMessages.length > 0) {
+    record.set("removedMessages", record.removedMessages.concat(removedMessages));
+  }
+
+  if (record.visibleMessages.length > visibleMessages.length) {
+    record.set("visibleMessages", visibleMessages);
+  }
+
+  const isInRemovedId = id => removedMessagesId.includes(id);
+  const mapHasRemovedIdKey = map => map.findKey((value, id) => isInRemovedId(id));
+  const cleanUpCollection = map => removedMessagesId.forEach(id => map.remove(id));
+
+  record.set("messagesById", record.messagesById.withMutations(cleanUpCollection));
+
+  if (record.messagesUiById.find(isInRemovedId)) {
+    record.set("messagesUiById", record.messagesUiById.withMutations(cleanUpCollection));
+  }
+  if (mapHasRemovedIdKey(record.messagesTableDataById)) {
+    record.set("messagesTableDataById",
+      record.messagesTableDataById.withMutations(cleanUpCollection));
+  }
+  if (mapHasRemovedIdKey(record.groupsById)) {
+    record.set("groupsById", record.groupsById.withMutations(cleanUpCollection));
+  }
+
+  return record;
 }
 
 /**
@@ -193,48 +329,209 @@ function limitTopLevelMessageCount(state, record) {
  * within a group).
  */
 function getToplevelMessageCount(record) {
-  return [...record.messagesById].filter(message => !message.groupId).length;
+  return record.messagesById.count(message => !message.groupId);
+}
+
+function shouldMessageBeVisible(message, messagesState, filtersState, checkGroup = true) {
+  return (
+    (
+      checkGroup === false
+      || isInOpenedGroup(message, messagesState.groupsById, messagesState.messagesUiById)
+    )
+    && (
+      isUnfilterable(message)
+      || (
+        matchLevelFilters(message, filtersState)
+        && matchCssFilters(message, filtersState)
+        && matchNetworkFilters(message, filtersState)
+        && matchSearchFilters(message, filtersState)
+      )
+    )
+  );
+}
+
+function isUnfilterable(message) {
+  return [
+    MESSAGE_TYPE.COMMAND,
+    MESSAGE_TYPE.RESULT,
+    MESSAGE_TYPE.START_GROUP,
+    MESSAGE_TYPE.START_GROUP_COLLAPSED,
+  ].includes(message.type);
+}
+
+function isInOpenedGroup(message, groupsById, messagesUI) {
+  return !message.groupId
+    || (
+      !isGroupClosed(message.groupId, messagesUI)
+      && !hasClosedParentGroup(groupsById.get(message.groupId), messagesUI)
+    );
+}
+
+function hasClosedParentGroup(group, messagesUI) {
+  return group.some(groupId => isGroupClosed(groupId, messagesUI));
+}
+
+function isGroupClosed(groupId, messagesUI) {
+  return messagesUI.includes(groupId) === false;
+}
+
+function matchLevelFilters(message, filters) {
+  return filters.get(message.level) === true;
+}
+
+function matchNetworkFilters(message, filters) {
+  return (
+    message.source !== MESSAGE_SOURCE.NETWORK
+    || (filters.get("net") === true && message.isXHR === false)
+    || (filters.get("netxhr") === true && message.isXHR === true)
+  );
+}
+
+function matchCssFilters(message, filters) {
+  return (
+    message.source != MESSAGE_SOURCE.CSS
+    || filters.get("css") === true
+  );
+}
+
+function matchSearchFilters(message, filters) {
+  let text = filters.text || "";
+  return (
+    text === ""
+    // Look for a match in parameters.
+    || isTextInParameters(text, message.parameters)
+    // Look for a match in location.
+    || isTextInFrame(text, message.frame)
+    // Look for a match in net events.
+    || isTextInNetEvent(text, message.request)
+    // Look for a match in stack-trace.
+    || isTextInStackTrace(text, message.stacktrace)
+    // Look for a match in messageText.
+    || isTextInMessageText(text, message.messageText)
+    // Look for a match in notes.
+    || isTextInNotes(text, message.notes)
+  );
 }
 
 /**
- * Remove first (the oldest) message from the store. The methods removes
- * also all its references and children from the store.
+* Returns true if given text is included in provided stack frame.
+*/
+function isTextInFrame(text, frame) {
+  if (!frame) {
+    return false;
+  }
+
+  const {
+    functionName,
+    line,
+    column,
+    source
+  } = frame;
+  const { short } = getSourceNames(source);
+
+  return `${functionName ? functionName + " " : ""}${short}:${line}:${column}`
+    .toLocaleLowerCase()
+    .includes(text.toLocaleLowerCase());
+}
+
+/**
+* Returns true if given text is included in provided parameters.
+*/
+function isTextInParameters(text, parameters) {
+  if (!parameters) {
+    return false;
+  }
+
+  text = text.toLocaleLowerCase();
+  return getAllProps(parameters).some(prop =>
+    (prop + "").toLocaleLowerCase().includes(text)
+  );
+}
+
+/**
+* Returns true if given text is included in provided net event grip.
+*/
+function isTextInNetEvent(text, request) {
+  if (!request) {
+    return false;
+  }
+
+  text = text.toLocaleLowerCase();
+
+  let method = request.method.toLocaleLowerCase();
+  let url = request.url.toLocaleLowerCase();
+  return method.includes(text) || url.includes(text);
+}
+
+/**
+* Returns true if given text is included in provided stack trace.
+*/
+function isTextInStackTrace(text, stacktrace) {
+  if (!Array.isArray(stacktrace)) {
+    return false;
+  }
+
+  // isTextInFrame expect the properties of the frame object to be in the same
+  // order they are rendered in the Frame component.
+  return stacktrace.some(frame => isTextInFrame(text, {
+    functionName: frame.functionName || l10n.getStr("stacktrace.anonymousFunction"),
+    source: frame.filename,
+    lineNumber: frame.lineNumber,
+    columnNumber: frame.columnNumber
+  }));
+}
+
+/**
+* Returns true if given text is included in `messageText` field.
+*/
+function isTextInMessageText(text, messageText) {
+  if (!messageText) {
+    return false;
+  }
+
+  return messageText.toLocaleLowerCase().includes(text.toLocaleLowerCase());
+}
+
+/**
+* Returns true if given text is included in notes.
+*/
+function isTextInNotes(text, notes) {
+  if (!Array.isArray(notes)) {
+    return false;
+  }
+
+  return notes.some(note =>
+    // Look for a match in location.
+    isTextInFrame(text, note.frame) ||
+    // Look for a match in messageBody.
+    (
+      note.messageBody &&
+      note.messageBody.toLocaleLowerCase().includes(text.toLocaleLowerCase())
+    )
+  );
+}
+
+/**
+ * Get a flat array of all the grips and their properties.
  *
- * @return {Array} Flat array of removed messages.
+ * @param {Array} Grips
+ * @return {Array} Flat array of the grips and their properties.
  */
-function removeFirstMessage(record) {
-  let firstMessage = record.messagesById.first();
-  record.messagesById = record.messagesById.shift();
+function getAllProps(grips) {
+  let result = grips.reduce((res, grip) => {
+    let previewItems = getGripPreviewItems(grip);
+    let allProps = previewItems.length > 0 ? getAllProps(previewItems) : [];
+    return [...res, grip, grip.class, ...allProps];
+  }, []);
 
-  // Remove from list of opened groups.
-  let uiIndex = record.messagesUiById.indexOf(firstMessage);
-  if (uiIndex >= 0) {
-    record.messagesUiById = record.messagesUiById.delete(uiIndex);
-  }
+  // We are interested only in primitive props (to search for)
+  // not in objects and undefined previews.
+  result = result.filter(grip =>
+    typeof grip != "object" &&
+    typeof grip != "undefined"
+  );
 
-  // Remove from list of tables.
-  if (record.messagesTableDataById.has(firstMessage.id)) {
-    record.messagesTableDataById = record.messagesTableDataById.delete(firstMessage.id);
-  }
-
-  // Remove from list of parent groups.
-  if (record.groupsById.has(firstMessage.id)) {
-    record.groupsById = record.groupsById.delete(firstMessage.id);
-  }
-
-  let removedMessages = [firstMessage];
-
-  // Remove all children. This loop assumes that children of removed
-  // group immediately follows the group. We use recursion since
-  // there might be inner groups.
-  let message = record.messagesById.first();
-  while (message.groupId == firstMessage.id) {
-    removedMessages.push(...removeFirstMessage(record));
-    message = record.messagesById.first();
-  }
-
-  // Return array with all removed messages.
-  return removedMessages;
+  return [...new Set(result)];
 }
 
 exports.messages = messages;

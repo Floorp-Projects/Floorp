@@ -62,7 +62,7 @@
               is(connection, win.AppManager.connection, "connection is valid");
               connection.host = null; // force connectPipe
               connection.connect();
-              return promise.resolve();
+              return Promise.resolve();
             },
 
             get name() {
@@ -72,8 +72,7 @@
 
           win.AppManager.runtimeList.usb.push({
             connect: function(connection) {
-              let deferred = promise.defer();
-              return deferred.promise;
+              return new Promise(() => {});
             },
 
             get name() {
@@ -83,8 +82,7 @@
 
           win.AppManager.runtimeList.usb.push({
             connect: function(connection) {
-              let deferred = promise.defer();
-              return deferred.promise;
+              return new Promise(() => {});
             },
 
             prolongedConnection: true,
@@ -164,36 +162,35 @@
 
           Services.prefs.setIntPref("devtools.webide.busyTimeout", 100);
 
-          // Wait for error message since connection never completes
-          let errorDeferred = promise.defer();
-          win.UI.reportError = errorName => {
-            if (errorName === "error_operationTimeout") {
-              errorDeferred.resolve();
-            }
-          };
-
           // Click the infinite runtime
           items[1].click();
           ok(win.document.querySelector("window").className, "busy", "UI is busy");
-          yield errorDeferred.promise;
 
-          // Check for unexpected error message since this is prolonged
-          let noErrorDeferred = promise.defer();
-          win.UI.reportError = errorName => {
-            if (errorName === "error_operationTimeout") {
-              noErrorDeferred.reject();
-            }
-          };
+          // Wait for error message since connection never completes
+          let errorDeferred = new Promise(resolve => {
+            win.UI.reportError = errorName => {
+              if (errorName === "error_operationTimeout") {
+                resolve();
+              }
+            };
+          });
 
           // Click the prolonged runtime
           items[2].click();
           ok(win.document.querySelector("window").className, "busy", "UI is busy");
 
-          setTimeout(() => {
-            noErrorDeferred.resolve();
-          }, 1000);
+          // Check for unexpected error message since this is prolonged
+          let noErrorDeferred = new Promise((resolve, reject) => {
+            win.UI.reportError = errorName => {
+              if (errorName === "error_operationTimeout") {
+                reject();
+              }
+            };
 
-          yield noErrorDeferred.promise;
+            setTimeout(() => {
+              resolve();
+            }, 1000);
+          });
 
           SimpleTest.finish();
         });

@@ -129,8 +129,6 @@ var whitelist = new Set([
    platforms: ["linux", "win"]},
   {file: "chrome://browser/skin/customizableui/panelarrow-customizeTip@2x.png",
    platforms: ["linux", "win"]},
-  // Bug 1320058
-  {file: "chrome://browser/skin/preferences/saveFile.png", platforms: ["win"]},
   // Bug 1316187
   {file: "chrome://global/content/customizeToolbar.xul"},
   // Bug 1343837

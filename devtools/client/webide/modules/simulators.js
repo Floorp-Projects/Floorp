@@ -12,7 +12,6 @@ loader.lazyRequireGetter(this, "OldAddonSimulatorProcess", "devtools/client/webi
 loader.lazyRequireGetter(this, "CustomSimulatorProcess", "devtools/client/webide/modules/simulator-process", true);
 const asyncStorage = require("devtools/shared/async-storage");
 const EventEmitter = require("devtools/shared/event-emitter");
-const promise = require("promise");
 const Services = require("Services");
 
 const SimulatorRegExp = new RegExp(Services.prefs.getCharPref("devtools.webide.simulatorAddonRegExp"));
@@ -46,18 +45,19 @@ var Simulators = {
 
           // If the simulator had a reference to an addon, fix it.
           if (options.addonID) {
-            let deferred = promise.defer();
-            AddonManager.getAddonByID(options.addonID, addon => {
-              simulator.addon = addon;
-              delete simulator.options.addonID;
-              deferred.resolve();
+            let deferred = new Promise(resolve => {
+              AddonManager.getAddonByID(options.addonID, addon => {
+                simulator.addon = addon;
+                delete simulator.options.addonID;
+                resolve();
+              });
             });
-            jobs.push(deferred.promise);
+            jobs.push(deferred);
           }
         });
       }
 
-      yield promise.all(jobs);
+      yield Promise.all(jobs);
       yield Simulators._addUnusedAddons();
       Simulators.emitUpdated();
       return Simulators._simulators;
@@ -79,7 +79,7 @@ var Simulators = {
       jobs.push(Simulators.addIfUnusedAddon(addon, true));
     });
 
-    yield promise.all(jobs);
+    yield Promise.all(jobs);
   }),
 
   /**
@@ -117,19 +117,19 @@ var Simulators = {
    * @return Promised addon list.
    */
   findSimulatorAddons() {
-    let deferred = promise.defer();
-    AddonManager.getAllAddons(all => {
-      let addons = [];
-      for (let addon of all) {
-        if (Simulators.isSimulatorAddon(addon)) {
-          addons.push(addon);
+    return new Promise(resolve => {
+      AddonManager.getAllAddons(all => {
+        let addons = [];
+        for (let addon of all) {
+          if (Simulators.isSimulatorAddon(addon)) {
+            addons.push(addon);
+          }
         }
-      }
-      // Sort simulator addons by name.
-      addons.sort(LocaleCompare);
-      deferred.resolve(addons);
+        // Sort simulator addons by name.
+        addons.sort(LocaleCompare);
+        resolve(addons);
+      });
     });
-    return deferred.promise;
   },
 
   /**
@@ -139,7 +139,7 @@ var Simulators = {
     let simulators = this._simulators;
     let matching = simulators.filter(s => s.addon && s.addon.id == addon.id);
     if (matching.length > 0) {
-      return promise.resolve();
+      return Promise.resolve();
     }
     let options = {};
     options.name = addon.name.replace(" Simulator", "");
@@ -176,7 +176,7 @@ var Simulators = {
     if (!silently) {
       this.emitUpdated();
     }
-    return promise.resolve(simulator);
+    return Promise.resolve(simulator);
   },
 
   /**
@@ -332,13 +332,13 @@ Simulator.prototype = {
     }
     this.process.run();
 
-    return promise.resolve(this.options.port);
+    return Promise.resolve(this.options.port);
   },
 
   kill() {
     let process = this.process;
     if (!process) {
-      return promise.resolve();
+      return Promise.resolve();
     }
     this.process = null;
     return process.kill();

@@ -6,7 +6,7 @@
 const expect = require("expect");
 
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
-const { getAllMessages } = require("devtools/client/webconsole/new-console-output/selectors/messages");
+const { getVisibleMessages } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 const { setupStore } = require("devtools/client/webconsole/new-console-output/test/helpers");
 
 describe("Searching in grips", () => {
@@ -20,42 +20,42 @@ describe("Searching in grips", () => {
   describe("Search in table & array & object props", () => {
     it("matches on value grips", () => {
       store.dispatch(actions.filterTextSet("red"));
-      expect(getAllMessages(store.getState()).size).toEqual(3);
+      expect(getVisibleMessages(store.getState()).length).toEqual(3);
     });
   });
 
   describe("Search in object value", () => {
     it("matches on value grips", () => {
       store.dispatch(actions.filterTextSet("redValue"));
-      expect(getAllMessages(store.getState()).size).toEqual(1);
+      expect(getVisibleMessages(store.getState()).length).toEqual(1);
     });
   });
 
   describe("Search in regex", () => {
     it("matches on value grips", () => {
       store.dispatch(actions.filterTextSet("a.b.c"));
-      expect(getAllMessages(store.getState()).size).toEqual(1);
+      expect(getVisibleMessages(store.getState()).length).toEqual(1);
     });
   });
 
   describe("Search in map values", () => {
     it("matches on value grips", () => {
       store.dispatch(actions.filterTextSet("value1"));
-      expect(getAllMessages(store.getState()).size).toEqual(1);
+      expect(getVisibleMessages(store.getState()).length).toEqual(1);
     });
   });
 
   describe("Search in map keys", () => {
     it("matches on value grips", () => {
       store.dispatch(actions.filterTextSet("key1"));
-      expect(getAllMessages(store.getState()).size).toEqual(1);
+      expect(getVisibleMessages(store.getState()).length).toEqual(1);
     });
   });
 
   describe("Search in text", () => {
     it("matches on value grips", () => {
       store.dispatch(actions.filterTextSet("myobj"));
-      expect(getAllMessages(store.getState()).size).toEqual(1);
+      expect(getVisibleMessages(store.getState()).length).toEqual(1);
     });
   });
 
@@ -63,19 +63,19 @@ describe("Searching in grips", () => {
     it("matches on network messages", () => {
       store.dispatch(actions.filterToggle("net"));
       store.dispatch(actions.filterTextSet("get"));
-      expect(getAllMessages(store.getState()).size).toEqual(1);
+      expect(getVisibleMessages(store.getState()).length).toEqual(1);
     });
   });
 
   describe("Search in frame", () => {
     it("matches on file name", () => {
       store.dispatch(actions.filterTextSet("test-console-api.html:1:27"));
-      expect(getAllMessages(store.getState()).size).toEqual(7);
+      expect(getVisibleMessages(store.getState()).length).toEqual(7);
     });
 
     it("do not match on full url", () => {
       store.dispatch(actions.filterTextSet("http://example.com/browser/devtools"));
-      expect(getAllMessages(store.getState()).size).toEqual(0);
+      expect(getVisibleMessages(store.getState()).length).toEqual(0);
     });
   });
 });

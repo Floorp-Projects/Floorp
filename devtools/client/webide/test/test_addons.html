@@ -22,30 +22,26 @@
         const {Devices} = Cu.import("resource://devtools/shared/apps/Devices.jsm");
         const {Simulators} = require("devtools/client/webide/modules/simulators");
 
-        let adbAddonsInstalled = promise.defer();
-        Devices.on("addon-status-updated", function onUpdate1() {
-          Devices.off("addon-status-updated", onUpdate1);
-          adbAddonsInstalled.resolve();
-        });
+        let adbAddonsInstalled;
 
         function getVersion(name) {
           return name.match(/(\d+\.\d+)/)[0];
         }
 
         function onSimulatorInstalled(name) {
-          let deferred = promise.defer();
-          Simulators.on("updated", function onUpdate() {
-            Simulators.findSimulatorAddons().then(addons => {
-              for (let addon of addons) {
-                if (name == addon.name.replace(" Simulator", "")) {
-                  Simulators.off("updated", onUpdate);
-                  nextTick().then(deferred.resolve);
-                  return;
+          return new Promise(resolve => {
+            Simulators.on("updated", function onUpdate() {
+              Simulators.findSimulatorAddons().then(addons => {
+                for (let addon of addons) {
+                  if (name == addon.name.replace(" Simulator", "")) {
+                    Simulators.off("updated", onUpdate);
+                    nextTick().then(resolve);
+                    return;
+                  }
                 }
-              }
+              });
             });
           });
-          return deferred.promise;
         }
 
         function installSimulatorFromUI(doc, name) {
@@ -55,39 +51,39 @@
         }
 
         function uninstallSimulatorFromUI(doc, name) {
-          let deferred = promise.defer();
-          Simulators.on("updated", function onUpdate() {
-            nextTick().then(() => {
-              let li = doc.querySelector('[status="uninstalled"][addon="simulator-' + getVersion(name) + '"]');
-              if (li) {
-                Simulators.off("updated", onUpdate);
-                deferred.resolve();
-              } else {
-                deferred.reject("Can't find item");
-              }
+          return new Promise((resolve, reject) => {
+            Simulators.on("updated", function onUpdate() {
+              nextTick().then(() => {
+                let li = doc.querySelector('[status="uninstalled"][addon="simulator-' + getVersion(name) + '"]');
+                if (li) {
+                  Simulators.off("updated", onUpdate);
+                  resolve();
+                } else {
+                  reject("Can't find item");
+                }
+              });
             });
+            let li = doc.querySelector('[status="installed"][addon="simulator-' + getVersion(name) + '"]');
+            li.querySelector(".uninstall-button").click();
           });
-          let li = doc.querySelector('[status="installed"][addon="simulator-' + getVersion(name) + '"]');
-          li.querySelector(".uninstall-button").click();
-          return deferred.promise;
         }
 
         function uninstallADBFromUI(doc) {
-          let deferred = promise.defer();
-          Devices.on("addon-status-updated", function onUpdate() {
-            nextTick().then(() => {
-              let li = doc.querySelector('[status="uninstalled"][addon="adb"]');
-              if (li) {
-                Devices.off("addon-status-updated", onUpdate);
-                deferred.resolve();
-              } else {
-                deferred.reject("Can't find item");
-              }
-            })
+          return new Promise((resolve, reject) => {
+            Devices.on("addon-status-updated", function onUpdate() {
+              nextTick().then(() => {
+                let li = doc.querySelector('[status="uninstalled"][addon="adb"]');
+                if (li) {
+                  Devices.off("addon-status-updated", onUpdate);
+                  resolve();
+                } else {
+                  reject("Can't find item");
+                }
+              })
+            });
+            let li = doc.querySelector('[status="installed"][addon="adb"]');
+            li.querySelector(".uninstall-button").click();
           });
-          let li = doc.querySelector('[status="installed"][addon="adb"]');
-          li.querySelector(".uninstall-button").click();
-          return deferred.promise;
         }
 
         Task.spawn(function*() {
@@ -97,7 +93,12 @@
           let win = yield openWebIDE(true);
           let docRuntime = getRuntimeDocument(win);
 
-          yield adbAddonsInstalled.promise;
+          adbAddonsInstalled = new Promise(resolve => {
+            Devices.on("addon-status-updated", function onUpdate1() {
+              Devices.off("addon-status-updated", onUpdate1);
+              resolve();
+            });
+          });
 
           ok(Devices.helperAddonInstalled, "Helper has been auto-installed");
 
