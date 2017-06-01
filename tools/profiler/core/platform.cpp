@@ -796,12 +796,19 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
   aBuffer->addTag(ProfileBufferEntry::Category(uint32_t(entry.category())));
 }
 
+// The maximum number of native frames obtained. Setting it too high risks the
+// unwinder wasting a lot of time looping on corrupted stacks.
+static const size_t MAX_NATIVE_FRAMES = 1024;
+
 struct NativeStack
 {
-  void** pc_array;
-  void** sp_array;
-  size_t size;
-  size_t count;
+  void* mPCs[MAX_NATIVE_FRAMES];
+  void* mSPs[MAX_NATIVE_FRAMES];
+  size_t mCount;  // Number of entries filled.
+
+  NativeStack()
+    : mCount(0)
+  {}
 };
 
 Atomic<bool> WALKING_JS_STACK(false);
@@ -889,7 +896,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
   // jsIndex and nativeIndex is being < 0.
   uint32_t pseudoIndex = 0;
   int32_t jsIndex = jsCount - 1;
-  int32_t nativeIndex = aNativeStack.count - 1;
+  int32_t nativeIndex = aNativeStack.mCount - 1;
 
   uint8_t* lastPseudoCppStackAddr = nullptr;
 
@@ -926,7 +933,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
     }
 
     if (nativeIndex >= 0) {
-      nativeStackAddr = (uint8_t*) aNativeStack.sp_array[nativeIndex];
+      nativeStackAddr = (uint8_t*) aNativeStack.mSPs[nativeIndex];
     }
 
     // If there's a native stack entry which has the same SP as a pseudo stack
@@ -998,7 +1005,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
     // greatest entry.
     if (nativeStackAddr) {
       MOZ_ASSERT(nativeIndex >= 0);
-      void* addr = (void*)aNativeStack.pc_array[nativeIndex];
+      void* addr = (void*)aNativeStack.mPCs[nativeIndex];
       aBuffer->addTag(ProfileBufferEntry::NativeLeafAddr(addr));
     }
     if (nativeIndex >= 0) {
@@ -1027,24 +1034,17 @@ static void
 StackWalkCallback(uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure)
 {
   NativeStack* nativeStack = static_cast<NativeStack*>(aClosure);
-  MOZ_ASSERT(nativeStack->count < nativeStack->size);
-  nativeStack->sp_array[nativeStack->count] = aSP;
-  nativeStack->pc_array[nativeStack->count] = aPC;
-  nativeStack->count++;
+  MOZ_ASSERT(nativeStack->mCount < MAX_NATIVE_FRAMES);
+  nativeStack->mSPs[nativeStack->mCount] = aSP;
+  nativeStack->mPCs[nativeStack->mCount] = aPC;
+  nativeStack->mCount++;
 }
 
 static void
 DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
                   const TickSample& aSample)
 {
-  void* pc_array[1000];
-  void* sp_array[1000];
-  NativeStack nativeStack = {
-    pc_array,
-    sp_array,
-    ArrayLength(pc_array),
-    0
-  };
+  NativeStack nativeStack;
 
   // Start with the current function. We use 0 as the frame number here because
   // the FramePointerStackWalk() and MozStackWalk() calls below will use 1..N.
@@ -1052,7 +1052,7 @@ DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
   // doesn't use the frame number argument.
   StackWalkCallback(/* frameNum */ 0, aSample.mPC, aSample.mSP, &nativeStack);
 
-  uint32_t maxFrames = uint32_t(nativeStack.size - nativeStack.count);
+  uint32_t maxFrames = uint32_t(MAX_NATIVE_FRAMES - nativeStack.mCount);
 
 #if defined(GP_OS_darwin) || (defined(GP_PLAT_x86_windows))
   void* stackEnd = aSample.mStackTop;
@@ -1079,14 +1079,7 @@ static void
 DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
                   const TickSample& aSample)
 {
-  void* pc_array[1000];
-  void* sp_array[1000];
-  NativeStack nativeStack = {
-    pc_array,
-    sp_array,
-    ArrayLength(pc_array),
-    0
-  };
+  NativeStack nativeStack;
 
   const mcontext_t* mcontext = &aSample.mContext->uc_mcontext;
   mcontext_t savedContext;
@@ -1107,11 +1100,11 @@ DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
       // the saved state.
       uint32_t* vSP = reinterpret_cast<uint32_t*>(entry.stackAddress());
 
-      nativeStack.count += EHABIStackWalk(*mcontext,
-                                          /* stackBase = */ vSP,
-                                          sp_array + nativeStack.count,
-                                          pc_array + nativeStack.count,
-                                          nativeStack.size - nativeStack.count);
+      nativeStack.mCount +=
+        EHABIStackWalk(*mcontext, /* stackBase = */ vSP,
+                       nativeStack.mSPs + nativeStack.mCount,
+                       nativeStack.mPCs + nativeStack.mCount,
+                       MAX_NATIVE_FRAMES - nativeStack.mCount);
 
       memset(&savedContext, 0, sizeof(savedContext));
 
@@ -1133,11 +1126,11 @@ DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
 
   // Now unwind whatever's left (starting from either the last EnterJIT frame
   // or, if no EnterJIT was found, the original registers).
-  nativeStack.count += EHABIStackWalk(*mcontext,
-                                      aSample.mStackTop,
-                                      sp_array + nativeStack.count,
-                                      pc_array + nativeStack.count,
-                                      nativeStack.size - nativeStack.count);
+  nativeStack.mCount +=
+    EHABIStackWalk(*mcontext, aSample.mStackTop,
+                   nativeStack.mSPs + nativeStack.mCount,
+                   nativeStack.mPCs + nativeStack.mCount,
+                   MAX_NATIVE_FRAMES - nativeStack.mCount);
 
   MergeStacksIntoProfile(aLock, aBuffer, aSample, nativeStack);
 }
@@ -1269,38 +1262,26 @@ DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
     }
   }
 
-  // The maximum number of frames that LUL will produce.  Setting it
-  // too high gives a risk of it wasting a lot of time looping on
-  // corrupted stacks.
-  const int MAX_NATIVE_FRAMES = 256;
+  NativeStack nativeStack;
 
   size_t scannedFramesAllowed = 0;
 
-  uintptr_t framePCs[MAX_NATIVE_FRAMES];
-  uintptr_t frameSPs[MAX_NATIVE_FRAMES];
-  size_t framesAvail = ArrayLength(framePCs);
-  size_t framesUsed  = 0;
   size_t scannedFramesAcquired = 0, framePointerFramesAcquired = 0;
   lul::LUL* lul = CorePS::Lul(aLock);
-  lul->Unwind(&framePCs[0], &frameSPs[0],
-              &framesUsed, &framePointerFramesAcquired, &scannedFramesAcquired,
-              framesAvail, scannedFramesAllowed,
+  lul->Unwind(reinterpret_cast<uintptr_t*>(nativeStack.mPCs),
+              reinterpret_cast<uintptr_t*>(nativeStack.mSPs),
+              &nativeStack.mCount, &framePointerFramesAcquired,
+              &scannedFramesAcquired,
+              MAX_NATIVE_FRAMES, scannedFramesAllowed,
               &startRegs, &stackImg);
-
-  NativeStack nativeStack = {
-    reinterpret_cast<void**>(framePCs),
-    reinterpret_cast<void**>(frameSPs),
-    ArrayLength(framePCs),
-    framesUsed
-  };
 
   MergeStacksIntoProfile(aLock, aBuffer, aSample, nativeStack);
 
   // Update stats in the LUL stats object.  Unfortunately this requires
   // three global memory operations.
   lul->mStats.mContext += 1;
-  lul->mStats.mCFI     += framesUsed - 1 - framePointerFramesAcquired -
-                                           scannedFramesAcquired;
+  lul->mStats.mCFI     += nativeStack.mCount - 1 - framePointerFramesAcquired -
+                          scannedFramesAcquired;
   lul->mStats.mFP      += framePointerFramesAcquired;
   lul->mStats.mScanned += scannedFramesAcquired;
 }
@@ -1311,7 +1292,9 @@ static void
 DoSampleStackTrace(PSLockRef aLock, ProfileBuffer* aBuffer,
                    const TickSample& aSample)
 {
-  NativeStack nativeStack = { nullptr, nullptr, 0, 0 };
+  NativeStack nativeStack;
+
+  // |nativeStack| is empty at this point.
   MergeStacksIntoProfile(aLock, aBuffer, aSample, nativeStack);
 
   if (ActivePS::FeatureLeaf(aLock)) {
