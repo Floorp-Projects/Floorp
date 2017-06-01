@@ -4033,10 +4033,7 @@ MediaStreamGraph::ApplyAudioContextOperation(MediaStream* aDestinationStream,
 bool
 MediaStreamGraph::IsNonRealtime() const
 {
-  const MediaStreamGraphImpl* impl = static_cast<const MediaStreamGraphImpl*>(this);
-  MediaStreamGraphImpl* graph;
-
-  return !gGraphs.Get(uint32_t(impl->AudioChannel()), &graph) || graph != impl;
+  return !static_cast<const MediaStreamGraphImpl*>(this)->mRealtime;
 }
 
 void
