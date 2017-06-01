@@ -288,7 +288,20 @@ AnnexB::ExtractExtraData(const mozilla::MediaRawData* aSample)
   int numPps = 0;
 
   int nalLenSize = ((*aSample->mExtraData)[4] & 3) + 1;
-  ByteReader reader(aSample->Data(), aSample->Size());
+
+  size_t sampleSize = aSample->Size();
+  if (aSample->mCrypto.mValid) {
+    // The content is encrypted, we can only parse the non-encrypted data.
+    MOZ_ASSERT(aSample->mCrypto.mPlainSizes.Length() > 0);
+    if (aSample->mCrypto.mPlainSizes.Length() == 0 ||
+        aSample->mCrypto.mPlainSizes[0] > sampleSize) {
+      // This is invalid content.
+      return nullptr;
+    }
+    sampleSize = aSample->mCrypto.mPlainSizes[0];
+  }
+
+  ByteReader reader(aSample->Data(), sampleSize);
 
   // Find SPS and PPS NALUs in AVCC data
   while (reader.Remaining() > nalLenSize) {
