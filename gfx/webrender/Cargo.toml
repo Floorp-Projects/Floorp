@@ -1,6 +1,6 @@
 [package]
 name = "webrender"
-version = "0.39.0"
+version = "0.40.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -17,7 +17,7 @@ app_units = "0.4"
 bincode = "1.0.0-alpha6"
 bit-set = "0.4"
 byteorder = "1.0"
-euclid = "0.11.2"
+euclid = "0.13"
 fnv = "1.0"
 gleam = "0.4.3"
 lazy_static = "0.2"
@@ -30,7 +30,7 @@ webrender_traits = {path = "../webrender_traits"}
 bitflags = "0.7"
 gamma-lut = "0.2"
 thread_profiler = "0.1.1"
-plane-split = "0.3"
+plane-split = "0.4"
 
 [dev-dependencies]
 angle = {git = "https://github.com/servo/angle", branch = "servo"}
