@@ -47,7 +47,7 @@ public:
                     mozilla::dom::Timeout::Reason aReason);
 
   // The timeout implementation functions.
-  void RunTimeout(mozilla::dom::Timeout* aTimeout);
+  void RunTimeout(const TimeStamp& aTargetDeadline);
   // Return true if |aTimeout| needs to be reinserted into the timeout list.
   bool RescheduleTimeout(mozilla::dom::Timeout* aTimeout, const TimeStamp& now);
 
