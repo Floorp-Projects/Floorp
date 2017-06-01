@@ -35,12 +35,13 @@
             let nbox = win.document.querySelector("#notificationbox");
             let notification =  nbox.getNotificationWithValue("webide:errornotification");
             ok(!notification, "No notification yet");
-            let deferred = promise.defer();
-            nextTick().then(() => {
-              deferred.reject("BOOM!");
+            let deferred = new Promise((resolve, reject) => {
+              nextTick().then(() => {
+                reject("BOOM!");
+              });
             });
             try {
-              yield win.UI.busyUntil(deferred.promise, "xx");
+              yield win.UI.busyUntil(deferred, "xx");
             } catch(e) {/* This *will* fail */}
             notification =  nbox.getNotificationWithValue("webide:errornotification");
             ok(notification, "Error has been reported");

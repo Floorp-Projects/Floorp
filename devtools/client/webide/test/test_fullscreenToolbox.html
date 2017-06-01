@@ -16,12 +16,12 @@
 
     <script type="application/javascript">
       function connectToLocal(win, docRuntime) {
-        let deferred = promise.defer();
-        win.AppManager.connection.once(
-            win.Connection.Events.CONNECTED,
-            () => deferred.resolve());
-        docRuntime.querySelectorAll(".runtime-panel-item-other")[1].click();
-        return deferred.promise;
+        return new Promise(resolve => {
+          win.AppManager.connection.once(
+              win.Connection.Events.CONNECTED,
+              resolve);
+          docRuntime.querySelectorAll(".runtime-panel-item-other")[1].click();
+        });
       }
 
       window.onload = function() {
@@ -33,7 +33,7 @@
           let docRuntime = getRuntimeDocument(win);
           win.AppManager.update("runtime-list");
 
-          yield connectToLocal(win, docRuntime);
+          connectToLocal(win, docRuntime);
 
           // Select main process
           yield waitForUpdate(win, "runtime-targets");

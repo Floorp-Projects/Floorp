@@ -29,31 +29,31 @@
 
         function addonStatus(addon, status) {
           if (addon.status == status) {
-            return promise.resolve();
+            return Promise.resolve();
           }
-          let deferred = promise.defer();
-          addon.on("update", function onUpdate() {
-            if (addon.status == status) {
-              addon.off("update", onUpdate);
-              nextTick().then(() => deferred.resolve());
-            }
+          return new Promise(resolve => {
+            addon.on("update", function onUpdate() {
+              if (addon.status == status) {
+                addon.off("update", onUpdate);
+                nextTick().then(() => resolve());
+              }
+            });
           });
-          return deferred.promise;
         }
 
         function waitForUpdate(length) {
           info(`Wait for update with length ${length}`);
-          let deferred = promise.defer();
-          let handler = (_, data) => {
-            if (data.length != length) {
-              return;
-            }
-            info(`Got update with length ${length}`);
-            Simulators.off("updated", handler);
-            deferred.resolve();
-          };
-          Simulators.on("updated", handler);
-          return deferred.promise;
+          return new Promise(resolve => {
+            let handler = (_, data) => {
+              if (data.length != length) {
+                return;
+              }
+              info(`Got update with length ${length}`);
+              Simulators.off("updated", handler);
+              resolve();
+            };
+            Simulators.on("updated", handler);
+          });
         }
 
         Task.spawn(function* () {
@@ -70,9 +70,9 @@
 
           // Hack SimulatorProcesses to spy on simulation parameters.
 
-          let runPromise;
-          function fakeRun() {
-            runPromise.resolve({
+          let resolver;
+	  function fakeRun() {
+            resolver({
               path: this.b2gBinary.path,
               args: this.args
             });
@@ -85,9 +85,10 @@
           CustomSimulatorProcess.prototype.run = fakeRun;
 
           function runSimulator(i) {
-            runPromise = promise.defer();
-            findAll(".runtime-panel-item-simulator")[i].click();
-            return runPromise.promise;
+            return new Promise(resolve => {
+              resolver = resolve;
+              findAll(".runtime-panel-item-simulator")[i].click();
+            });
           }
 
           // Install fake "Firefox OS 1.0" simulator addon.

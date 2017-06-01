@@ -33,7 +33,7 @@
               is(connection, win.AppManager.connection, "connection is valid");
               connection.host = null; // force connectPipe
               connection.connect();
-              return promise.resolve();
+              return Promise.resolve();
             },
 
             get id() {

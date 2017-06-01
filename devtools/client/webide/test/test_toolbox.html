@@ -42,10 +42,11 @@
 
           win.AppManager.update("runtime-list");
 
-          let deferred = promise.defer();
-          win.AppManager.connection.once(
-              win.Connection.Events.CONNECTED,
-              () => deferred.resolve());
+          let deferred = new Promise(resolve => {
+             win.AppManager.connection.once(
+                 win.Connection.Events.CONNECTED,
+                 resolve);
+          });
 
           docRuntime.querySelectorAll(".runtime-panel-item-other")[1].click();
 

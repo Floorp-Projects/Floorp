@@ -8,7 +8,6 @@ var {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
 const { gDevTools } = require("devtools/client/framework/devtools");
-const promise = require("promise");
 const Services = require("Services");
 const { Task } = require("devtools/shared/task");
 const { AppProjects } = require("devtools/client/webide/modules/app-projects");
@@ -71,18 +70,14 @@ var openWebIDE = Task.async(function* (autoInstallAddons) {
 function closeWebIDE(win) {
   info("Closing WebIDE");
 
-  let deferred = promise.defer();
+  return new Promise(resolve => {
+    win.addEventListener("unload", function () {
+      info("WebIDE closed");
+      SimpleTest.executeSoon(resolve);
+    }, {once: true});
 
-  win.addEventListener("unload", function () {
-    info("WebIDE closed");
-    SimpleTest.executeSoon(() => {
-      deferred.resolve();
-    });
-  }, {once: true});
-
-  win.close();
-
-  return deferred.promise;
+    win.close();
+  });
 }
 
 function removeAllProjects() {
@@ -98,93 +93,87 @@ function removeAllProjects() {
 }
 
 function nextTick() {
-  let deferred = promise.defer();
-  SimpleTest.executeSoon(() => {
-    deferred.resolve();
+  return new Promise(resolve => {
+    SimpleTest.executeSoon(resolve);
   });
-
-  return deferred.promise;
 }
 
 function waitForUpdate(win, update) {
   info("Wait: " + update);
-  let deferred = promise.defer();
-  win.AppManager.on("app-manager-update", function onUpdate(e, what) {
-    info("Got: " + what);
-    if (what !== update) {
-      return;
-    }
-    win.AppManager.off("app-manager-update", onUpdate);
-    deferred.resolve(win.UI._updatePromise);
+  return new Promise(resolve => {
+    win.AppManager.on("app-manager-update", function onUpdate(e, what) {
+      info("Got: " + what);
+      if (what !== update) {
+        return;
+      }
+      win.AppManager.off("app-manager-update", onUpdate);
+      resolve(win.UI._updatePromise);
+    });
   });
-  return deferred.promise;
 }
 
 function waitForTime(time) {
-  let deferred = promise.defer();
-  setTimeout(() => {
-    deferred.resolve();
-  }, time);
-  return deferred.promise;
+  return new Promise(resolve => {
+    setTimeout(resolve, time);
+  });
 }
 
 function documentIsLoaded(doc) {
-  let deferred = promise.defer();
-  if (doc.readyState == "complete") {
-    deferred.resolve();
-  } else {
-    doc.addEventListener("readystatechange", function onChange() {
-      if (doc.readyState == "complete") {
-        doc.removeEventListener("readystatechange", onChange);
-        deferred.resolve();
-      }
-    });
-  }
-  return deferred.promise;
+  return new Promise(resolve => {
+    if (doc.readyState == "complete") {
+      resolve();
+    } else {
+      doc.addEventListener("readystatechange", function onChange() {
+        if (doc.readyState == "complete") {
+          doc.removeEventListener("readystatechange", onChange);
+          resolve();
+        }
+      });
+    }
+  });
 }
 
 function lazyIframeIsLoaded(iframe) {
-  let deferred = promise.defer();
-  iframe.addEventListener("load", function () {
-    deferred.resolve(nextTick());
-  }, {capture: true, once: true});
-  return deferred.promise;
+  return new Promise(resolve => {
+    iframe.addEventListener("load", function () {
+      resolve(nextTick());
+    }, {capture: true, once: true});
+  });
 }
 
 function addTab(aUrl, aWindow) {
   info("Adding tab: " + aUrl);
 
-  let deferred = promise.defer();
-  let targetWindow = aWindow || window;
-  let targetBrowser = targetWindow.gBrowser;
+  return new Promise(resolve => {
+    let targetWindow = aWindow || window;
+    let targetBrowser = targetWindow.gBrowser;
 
-  targetWindow.focus();
-  let tab = targetBrowser.selectedTab = targetBrowser.addTab(aUrl);
-  let linkedBrowser = tab.linkedBrowser;
+    targetWindow.focus();
+    let tab = targetBrowser.selectedTab = targetBrowser.addTab(aUrl);
+    let linkedBrowser = tab.linkedBrowser;
 
-  BrowserTestUtils.browserLoaded(linkedBrowser).then(function () {
-    info("Tab added and finished loading: " + aUrl);
-    deferred.resolve(tab);
+    BrowserTestUtils.browserLoaded(linkedBrowser).then(function () {
+      info("Tab added and finished loading: " + aUrl);
+      resolve(tab);
+    });
   });
-
-  return deferred.promise;
 }
 
 function removeTab(aTab, aWindow) {
   info("Removing tab.");
 
-  let deferred = promise.defer();
-  let targetWindow = aWindow || window;
-  let targetBrowser = targetWindow.gBrowser;
-  let tabContainer = targetBrowser.tabContainer;
+  return new Promise(resolve => {
+    let targetWindow = aWindow || window;
+    let targetBrowser = targetWindow.gBrowser;
+    let tabContainer = targetBrowser.tabContainer;
 
-  tabContainer.addEventListener("TabClose", function (aEvent) {
-    info("Tab removed and finished closing.");
-    deferred.resolve();
-  }, {once: true});
+    tabContainer.addEventListener("TabClose", function (aEvent) {
+      info("Tab removed and finished closing.");
+      resolve();
+    }, {once: true});
 
-  targetBrowser.removeTab(aTab);
-  return deferred.promise;
+    targetBrowser.removeTab(aTab);
+  });
 }
 
 function getRuntimeDocument(win) {

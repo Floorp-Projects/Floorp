@@ -7,7 +7,6 @@ const { Cu } = require("chrome");
 const { TargetFactory } = require("devtools/client/framework/target");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Connection } = require("devtools/shared/client/connection-manager");
-const promise = require("promise");
 const { Task } = require("devtools/shared/task");
 
 const _knownTabStores = new WeakMap();
@@ -95,25 +94,26 @@ TabStore.prototype = {
 
   listTabs: function () {
     if (!this._connection || !this._connection.client) {
-      return promise.reject(new Error("Can't listTabs, not connected."));
+      return Promise.reject(new Error("Can't listTabs, not connected."));
     }
-    let deferred = promise.defer();
-    this._connection.client.listTabs(response => {
-      if (response.error) {
-        this._connection.disconnect();
-        deferred.reject(response.error);
-        return;
-      }
-      let tabsChanged = JSON.stringify(this.tabs) !== JSON.stringify(response.tabs);
-      this.response = response;
-      this.tabs = response.tabs;
-      this._checkSelectedTab();
-      if (tabsChanged) {
-        this.emit("tab-list");
-      }
-      deferred.resolve(response);
+
+    return new Promise((resolve, reject) => {
+      this._connection.client.listTabs(response => {
+        if (response.error) {
+          this._connection.disconnect();
+          reject(response.error);
+          return;
+        }
+        let tabsChanged = JSON.stringify(this.tabs) !== JSON.stringify(response.tabs);
+        this.response = response;
+        this.tabs = response.tabs;
+        this._checkSelectedTab();
+        if (tabsChanged) {
+          this.emit("tab-list");
+        }
+        resolve(response);
+      });
     });
-    return deferred.promise;
   },
 
   // TODO: Tab "selection" should really take place by creating a TabProject

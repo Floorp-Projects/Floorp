@@ -9,7 +9,6 @@ const { Cc, Ci, Cu } = require("chrome");
 
 const Environment = require("sdk/system/environment").env;
 const EventEmitter = require("devtools/shared/event-emitter");
-const promise = require("promise");
 const Subprocess = require("sdk/system/child_process/subprocess");
 const Services = require("Services");
 
@@ -104,21 +103,21 @@ SimulatorProcess.prototype = {
 
   // Request a B2G instance kill.
   kill() {
-    let deferred = promise.defer();
-    if (this.process) {
-      this.once("exit", (e, exitCode) => {
-        this.shuttingDown = false;
-        deferred.resolve(exitCode);
-      });
-      if (!this.shuttingDown) {
-        this.shuttingDown = true;
-        this.emit("kill", null);
-        this.process.kill();
+    return new Promise(resolve => {
+      if (this.process) {
+        this.once("exit", (e, exitCode) => {
+          this.shuttingDown = false;
+          resolve(exitCode);
+        });
+        if (!this.shuttingDown) {
+          this.shuttingDown = true;
+          this.emit("kill", null);
+          this.process.kill();
+        }
+      } else {
+        return resolve(undefined);
       }
-      return deferred.promise;
-    } else {
-      return promise.resolve(undefined);
-    }
+    });
   },
 
   // Maybe log output messages.

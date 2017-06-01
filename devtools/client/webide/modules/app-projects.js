@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {Cc, Ci, Cu, Cr} = require("chrome");
-const promise = require("promise");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const {generateUUID} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
@@ -21,145 +20,135 @@ const IDB = {
   databaseName: "AppProjects",
 
   open: function () {
-    let deferred = promise.defer();
+    return new Promise((resolve, reject) => {
+      let request = indexedDB.open(IDB.databaseName, 5);
+      request.onerror = function (event) {
+        reject("Unable to open AppProjects indexedDB: " +
+                        this.error.name + " - " + this.error.message);
+      };
+      request.onupgradeneeded = function (event) {
+        let db = event.target.result;
+        db.createObjectStore("projects", { keyPath: "location" });
+      };
 
-    let request = indexedDB.open(IDB.databaseName, 5);
-    request.onerror = function (event) {
-      deferred.reject("Unable to open AppProjects indexedDB: " +
-                      this.error.name + " - " + this.error.message);
-    };
-    request.onupgradeneeded = function (event) {
-      let db = event.target.result;
-      db.createObjectStore("projects", { keyPath: "location" });
-    };
+      request.onsuccess = function () {
+        let db = IDB._db = request.result;
+        let objectStore = db.transaction("projects").objectStore("projects");
+        let projects = [];
+        let toRemove = [];
+        objectStore.openCursor().onsuccess = function (event) {
+          let cursor = event.target.result;
+          if (cursor) {
+            if (cursor.value.location) {
 
-    request.onsuccess = function () {
-      let db = IDB._db = request.result;
-      let objectStore = db.transaction("projects").objectStore("projects");
-      let projects = [];
-      let toRemove = [];
-      objectStore.openCursor().onsuccess = function (event) {
-        let cursor = event.target.result;
-        if (cursor) {
-          if (cursor.value.location) {
-
-            // We need to make sure this object has a `.location` property.
-            // The UI depends on this property.
-            // This should not be needed as we make sure to register valid
-            // projects, but in the past (before bug 924568), we might have
-            // registered invalid objects.
+              // We need to make sure this object has a `.location` property.
+              // The UI depends on this property.
+              // This should not be needed as we make sure to register valid
+              // projects, but in the past (before bug 924568), we might have
+              // registered invalid objects.
 
 
-            // We also want to make sure the location is valid.
-            // If the location doesn't exist, we remove the project.
+              // We also want to make sure the location is valid.
+              // If the location doesn't exist, we remove the project.
 
-            try {
-              let file = FileUtils.File(cursor.value.location);
-              if (file.exists()) {
-                projects.push(cursor.value);
-              } else {
-                toRemove.push(cursor.value.location);
-              }
-            } catch (e) {
-              if (e.result == Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH) {
-                // A URL
-                projects.push(cursor.value);
+              try {
+                let file = FileUtils.File(cursor.value.location);
+                if (file.exists()) {
+                  projects.push(cursor.value);
+                } else {
+                  toRemove.push(cursor.value.location);
+                }
+              } catch (e) {
+                if (e.result == Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH) {
+                  // A URL
+                  projects.push(cursor.value);
+                }
               }
             }
+            cursor.continue();
+          } else {
+            let removePromises = [];
+            for (let location of toRemove) {
+              removePromises.push(IDB.remove(location));
+            }
+            Promise.all(removePromises).then(() => {
+              resolve(projects);
+            });
           }
-          cursor.continue();
-        } else {
-          let removePromises = [];
-          for (let location of toRemove) {
-            removePromises.push(IDB.remove(location));
-          }
-          promise.all(removePromises).then(() => {
-            deferred.resolve(projects);
-          });
-        }
+        };
       };
-    };
-
-    return deferred.promise;
+    });
   },
 
   add: function (project) {
-    let deferred = promise.defer();
-
-    if (!project.location) {
-      // We need to make sure this object has a `.location` property.
-      deferred.reject("Missing location property on project object.");
-    } else {
-      let transaction = IDB._db.transaction(["projects"], "readwrite");
-      let objectStore = transaction.objectStore("projects");
-      let request = objectStore.add(project);
-      request.onerror = function (event) {
-        deferred.reject("Unable to add project to the AppProjects indexedDB: " +
-                        this.error.name + " - " + this.error.message);
-      };
-      request.onsuccess = function () {
-        deferred.resolve();
-      };
-    }
-
-    return deferred.promise;
+    return new Promise((resolve, reject) => {
+      if (!project.location) {
+        // We need to make sure this object has a `.location` property.
+        reject("Missing location property on project object.");
+      } else {
+        let transaction = IDB._db.transaction(["projects"], "readwrite");
+        let objectStore = transaction.objectStore("projects");
+        let request = objectStore.add(project);
+        request.onerror = function (event) {
+          reject("Unable to add project to the AppProjects indexedDB: " +
+                 this.error.name + " - " + this.error.message);
+        };
+        request.onsuccess = function () {
+          resolve();
+        };
+      }
+    });
   },
 
   update: function (project) {
-    let deferred = promise.defer();
-
-    var transaction = IDB._db.transaction(["projects"], "readwrite");
-    var objectStore = transaction.objectStore("projects");
-    var request = objectStore.put(project);
-    request.onerror = function (event) {
-      deferred.reject("Unable to update project to the AppProjects indexedDB: " +
-                      this.error.name + " - " + this.error.message);
-    };
-    request.onsuccess = function () {
-      deferred.resolve();
-    };
-
-    return deferred.promise;
+    return new Promise((resolve, reject) => {
+      var transaction = IDB._db.transaction(["projects"], "readwrite");
+      var objectStore = transaction.objectStore("projects");
+      var request = objectStore.put(project);
+      request.onerror = function (event) {
+        reject("Unable to update project to the AppProjects indexedDB: " +
+               this.error.name + " - " + this.error.message);
+      };
+      request.onsuccess = function () {
+        resolve();
+      };
+    });
   },
 
   remove: function (location) {
-    let deferred = promise.defer();
-
-    let request = IDB._db.transaction(["projects"], "readwrite")
+    return new Promise((resolve, reject) => {
+      let request = IDB._db.transaction(["projects"], "readwrite")
                     .objectStore("projects")
                     .delete(location);
-    request.onsuccess = function (event) {
-      deferred.resolve();
-    };
-    request.onerror = function () {
-      deferred.reject("Unable to delete project to the AppProjects indexedDB: " +
-                      this.error.name + " - " + this.error.message);
-    };
-
-    return deferred.promise;
+      request.onsuccess = function (event) {
+        resolve();
+      };
+      request.onerror = function () {
+        reject("Unable to delete project to the AppProjects indexedDB: " +
+               this.error.name + " - " + this.error.message);
+      };
+    });
   }
 };
 
-var loadDeferred = promise.defer();
-
-loadDeferred.resolve(IDB.open().then(function (projects) {
+var loadDeferred = IDB.open().then(function (projects) {
   AppProjects.projects = projects;
   AppProjects.emit("ready", projects);
-}));
+});
 
 const AppProjects = {
   load: function () {
-    return loadDeferred.promise;
+    return loadDeferred;
   },
 
   addPackaged: function (folder) {
     let file = FileUtils.File(folder.path);
     if (!file.exists()) {
-      return promise.reject("path doesn't exist");
+      return Promise.reject("path doesn't exist");
     }
     let existingProject = this.get(folder.path);
     if (existingProject) {
-      return promise.reject("Already added");
+      return Promise.reject("Already added");
     }
     let project = {
       type: "packaged",
@@ -182,7 +171,7 @@ const AppProjects = {
   addHosted: function (manifestURL) {
     let existingProject = this.get(manifestURL);
     if (existingProject) {
-      return promise.reject("Already added");
+      return Promise.reject("Already added");
     }
     let project = {
       type: "hosted",

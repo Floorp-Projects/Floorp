@@ -7,7 +7,6 @@ const {Cu} = require("chrome");
 const Services = require("Services");
 const {AppProjects} = require("devtools/client/webide/modules/app-projects");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
-const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {Task} = require("devtools/shared/task");
 const utils = require("devtools/client/webide/modules/utils");
@@ -200,7 +199,7 @@ ProjectList.prototype = {
       }, true);
     }
 
-    return promise.resolve();
+    return Promise.resolve();
   },
 
   updateApps: function () {
@@ -263,7 +262,7 @@ ProjectList.prototype = {
       }, true);
     }
 
-    return promise.resolve();
+    return Promise.resolve();
   },
 
   updateCommands: function () {
@@ -299,69 +298,67 @@ ProjectList.prototype = {
    *        what is updated to only those sections.
    */
   update: function (options) {
-    let deferred = promise.defer();
-
     if (options && options.type === "apps") {
       return this.updateApps();
     } else if (options && options.type === "tabs") {
       return this.updateTabs();
     }
 
-    let doc = this._doc;
-    let projectsNode = doc.querySelector("#project-panel-projects");
+    return new Promise((resolve, reject) => {
+      let doc = this._doc;
+      let projectsNode = doc.querySelector("#project-panel-projects");
 
-    while (projectsNode.hasChildNodes()) {
-      projectsNode.firstChild.remove();
-    }
-
-    AppProjects.load().then(() => {
-      let projects = AppProjects.projects;
-      for (let i = 0; i < projects.length; i++) {
-        let project = projects[i];
-        let panelItemNode = doc.createElement(this._panelNodeEl);
-        panelItemNode.className = "panel-item";
-        projectsNode.appendChild(panelItemNode);
-        if (!project.validationStatus) {
-          // The result of the validation process (storing names, icons, …) is not stored in
-          // the IndexedDB database when App Manager v1 is used.
-          // We need to run the validation again and update the name and icon of the app.
-          AppManager.validateAndUpdateProject(project).then(() => {
-            this._renderProjectItem({
-              panel: panelItemNode,
-              name: project.name,
-              icon: project.icon
-            });
-          });
-        } else {
-          this._renderProjectItem({
-            panel: panelItemNode,
-            name: project.name || AppManager.DEFAULT_PROJECT_NAME,
-            icon: project.icon || AppManager.DEFAULT_PROJECT_ICON
-          });
-        }
-        panelItemNode.addEventListener("click", () => {
-          AppManager.selectedProject = project;
-        }, true);
+      while (projectsNode.hasChildNodes()) {
+        projectsNode.firstChild.remove();
       }
 
-      deferred.resolve();
-    }, deferred.reject);
+      AppProjects.load().then(() => {
+        let projects = AppProjects.projects;
+        for (let i = 0; i < projects.length; i++) {
+          let project = projects[i];
+          let panelItemNode = doc.createElement(this._panelNodeEl);
+          panelItemNode.className = "panel-item";
+          projectsNode.appendChild(panelItemNode);
+          if (!project.validationStatus) {
+            // The result of the validation process (storing names, icons, …) is not stored in
+            // the IndexedDB database when App Manager v1 is used.
+            // We need to run the validation again and update the name and icon of the app.
+            AppManager.validateAndUpdateProject(project).then(() => {
+              this._renderProjectItem({
+                panel: panelItemNode,
+                name: project.name,
+                icon: project.icon
+              });
+            });
+          } else {
+            this._renderProjectItem({
+              panel: panelItemNode,
+              name: project.name || AppManager.DEFAULT_PROJECT_NAME,
+              icon: project.icon || AppManager.DEFAULT_PROJECT_ICON
+            });
+          }
+          panelItemNode.addEventListener("click", () => {
+            AppManager.selectedProject = project;
+          }, true);
+        }
 
-    // List remote apps and the main process, if they exist
-    this.updateApps();
+        resolve();
+      }, reject);
 
-    // Build the tab list right now, so it's fast...
-    this.updateTabs();
+      // List remote apps and the main process, if they exist
+      this.updateApps();
 
-    // But re-list them and rebuild, in case any tabs navigated since the last
-    // time they were listed.
-    if (AppManager.connected) {
-      AppManager.listTabs().then(() => {
-        this.updateTabs();
-      }).catch(console.error);
-    }
+      // Build the tab list right now, so it's fast...
+      this.updateTabs();
 
-    return deferred.promise;
+      // But re-list them and rebuild, in case any tabs navigated since the last
+      // time they were listed.
+      if (AppManager.connected) {
+        AppManager.listTabs().then(() => {
+          this.updateTabs();
+        }).catch(console.error);
+      }
+    });
   },
 
   destroy: function () {

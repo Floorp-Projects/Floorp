@@ -7631,6 +7631,7 @@ protected:
   virtual nsresult
   DispatchToWorkThread() = 0;
 
+  // Should only be called by Run().
   virtual void
   SendResults() = 0;
 
@@ -21579,6 +21580,11 @@ FactoryOp::NoteDatabaseBlocked(Database* aDatabase)
 
 NS_IMPL_ISUPPORTS_INHERITED0(FactoryOp, DatabaseOperationBase)
 
+// Run() assumes that the caller holds a strong reference to the object that
+// can't be cleared while Run() is being executed.
+// So if you call Run() directly (as opposed to dispatching to an event queue)
+// you need to make sure there's such a reference.
+// See bug 1356824 for more details.
 NS_IMETHODIMP
 FactoryOp::Run()
 {
@@ -21663,8 +21669,11 @@ FactoryOp::DirectoryLockAcquired(DirectoryLock* aLock)
       mResultCode = rv;
     }
 
+    // The caller holds a strong reference to us, no need for a self reference
+    // before calling Run().
+
     mState = State::SendingResults;
-    SendResults();
+    MOZ_ALWAYS_SUCCEEDS(Run());
 
     return;
   }
@@ -21682,8 +21691,11 @@ FactoryOp::DirectoryLockFailed()
     mResultCode = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
+  // The caller holds a strong reference to us, no need for a self reference
+  // before calling Run().
+
   mState = State::SendingResults;
-  SendResults();
+  MOZ_ALWAYS_SUCCEEDS(Run());
 }
 
 void
@@ -22475,12 +22487,18 @@ OpenDatabaseOp::NoteDatabaseClosed(Database* aDatabase)
     rv = NS_OK;
   }
 
+  // We are being called with an assuption that mWaitingFactoryOp holds a strong
+  // reference to us.
+  RefPtr<OpenDatabaseOp> kungFuDeathGrip;
+
   if (mMaybeBlockedDatabases.RemoveElement(aDatabase) &&
       mMaybeBlockedDatabases.IsEmpty()) {
     if (actorDestroyed) {
       DatabaseActorInfo* info;
       MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(mDatabaseId, &info));
       MOZ_ASSERT(info->mWaitingFactoryOp == this);
+      kungFuDeathGrip =
+        static_cast<OpenDatabaseOp*>(info->mWaitingFactoryOp.get());
       info->mWaitingFactoryOp = nullptr;
     } else {
       WaitForTransactions();
@@ -22491,6 +22509,9 @@ OpenDatabaseOp::NoteDatabaseClosed(Database* aDatabase)
     if (NS_SUCCEEDED(mResultCode)) {
       mResultCode = rv;
     }
+
+    // A strong reference is held in kungFuDeathGrip, so it's safe to call Run()
+    // directly.
 
     mState = State::SendingResults;
     MOZ_ALWAYS_SUCCEEDS(Run());
@@ -22611,17 +22632,15 @@ OpenDatabaseOp::SendResults()
 
   mMaybeBlockedDatabases.Clear();
 
-  // Only needed if we're being called from within NoteDatabaseDone() since this
-  // OpenDatabaseOp is only held alive by the gLiveDatabaseHashtable.
-  RefPtr<OpenDatabaseOp> kungFuDeathGrip;
-
   DatabaseActorInfo* info;
   if (gLiveDatabaseHashtable &&
       gLiveDatabaseHashtable->Get(mDatabaseId, &info) &&
       info->mWaitingFactoryOp) {
     MOZ_ASSERT(info->mWaitingFactoryOp == this);
-    kungFuDeathGrip =
-      static_cast<OpenDatabaseOp*>(info->mWaitingFactoryOp.get());
+    // SendResults() should only be called by Run() and Run() should only be
+    // called if there's a strong reference to the object that can't be cleared
+    // here, so it's safe to clear mWaitingFactoryOp without adding additional
+    // strong reference.
     info->mWaitingFactoryOp = nullptr;
   }
 
@@ -23295,12 +23314,18 @@ DeleteDatabaseOp::NoteDatabaseClosed(Database* aDatabase)
     rv = NS_OK;
   }
 
+  // We are being called with an assuption that mWaitingFactoryOp holds a strong
+  // reference to us.
+  RefPtr<OpenDatabaseOp> kungFuDeathGrip;
+
   if (mMaybeBlockedDatabases.RemoveElement(aDatabase) &&
       mMaybeBlockedDatabases.IsEmpty()) {
     if (actorDestroyed) {
       DatabaseActorInfo* info;
       MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(mDatabaseId, &info));
       MOZ_ASSERT(info->mWaitingFactoryOp == this);
+      kungFuDeathGrip =
+        static_cast<OpenDatabaseOp*>(info->mWaitingFactoryOp.get());
       info->mWaitingFactoryOp = nullptr;
     } else {
       WaitForTransactions();
@@ -23311,6 +23336,9 @@ DeleteDatabaseOp::NoteDatabaseClosed(Database* aDatabase)
     if (NS_SUCCEEDED(mResultCode)) {
       mResultCode = rv;
     }
+
+    // A strong reference is held in kungFuDeathGrip, so it's safe to call Run()
+    // directly.
 
     mState = State::SendingResults;
     MOZ_ALWAYS_SUCCEEDS(Run());
@@ -23637,6 +23665,8 @@ VersionChangeOp::RunOnOwningThread()
     }
   }
 
+  // We hold a strong ref to the deleteOp, so it's safe to call Run() directly.
+
   deleteOp->mState = State::SendingResults;
   MOZ_ALWAYS_SUCCEEDS(deleteOp->Run());
 
@@ -23851,6 +23881,11 @@ TransactionDatabaseOperationBase::NoteContinueReceived()
 
   mInternalState = InternalState::SendingResults;
 
+  // This TransactionDatabaseOperationBase can only be held alive by the IPDL.
+  // Run() can end up with clearing that last reference. So we need to add
+  // a self reference here.
+  RefPtr<TransactionDatabaseOperationBase> kungFuDeathGrip = this;
+
   Unused << this->Run();
 }
 
@@ -23896,11 +23931,6 @@ TransactionDatabaseOperationBase::SendPreprocessInfoOrResults(
              mInternalState == InternalState::SendingResults);
   MOZ_ASSERT(mTransaction);
 
-  // Only needed if we're being called from within NoteContinueReceived() since
-  // this TransactionDatabaseOperationBase is only held alive by the IPDL.
-  // SendSuccessResult/SendFailureResult releases that last reference.
-  RefPtr<TransactionDatabaseOperationBase> kungFuDeathGrip;
-
   if (NS_WARN_IF(IsActorDestroyed())) {
     // Don't send any notifications if the actor was destroyed already.
     if (NS_SUCCEEDED(mResultCode)) {
@@ -23908,10 +23938,6 @@ TransactionDatabaseOperationBase::SendPreprocessInfoOrResults(
       mResultCode = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
   } else {
-    if (!aSendPreprocessInfo) {
-      kungFuDeathGrip = this;
-    }
-
     if (mTransaction->IsInvalidated() || mTransaction->IsAborted()) {
       // Aborted transactions always see their requests fail with ABORT_ERR,
       // even if the request succeeded or failed with another error.

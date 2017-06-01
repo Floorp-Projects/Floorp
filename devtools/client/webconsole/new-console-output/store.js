@@ -8,7 +8,6 @@ const {PrefState} = require("devtools/client/webconsole/new-console-output/reduc
 const {UiState} = require("devtools/client/webconsole/new-console-output/reducers/ui");
 const {
   applyMiddleware,
-  combineReducers,
   compose,
   createStore
 } = require("devtools/client/shared/vendor/redux");
@@ -23,11 +22,12 @@ const {
 const { reducers } = require("./reducers/index");
 const Services = require("Services");
 
-function configureStore(hud) {
+function configureStore(hud, options = {}) {
+  const logLimit = options.logLimit
+    || Math.max(Services.prefs.getIntPref("devtools.hud.loglimit"), 1);
+
   const initialState = {
-    prefs: new PrefState({
-      logLimit: Math.max(Services.prefs.getIntPref("devtools.hud.loglimit"), 1),
-    }),
+    prefs: new PrefState({ logLimit }),
     filters: new FilterState({
       error: Services.prefs.getBoolPref(PREFS.FILTER.ERROR),
       warn: Services.prefs.getBoolPref(PREFS.FILTER.WARN),
@@ -44,10 +44,32 @@ function configureStore(hud) {
   };
 
   return createStore(
-    combineReducers(reducers),
+    createRootReducer(),
     initialState,
     compose(applyMiddleware(thunk), enableActorReleaser(hud), enableBatching())
   );
+}
+
+function createRootReducer() {
+  return function rootReducer(state, action) {
+    // We want to compute the new state for all properties except "messages".
+    const newState = [...Object.entries(reducers)].reduce((res, [key, reducer]) => {
+      if (key !== "messages") {
+        res[key] = reducer(state[key], action);
+      }
+      return res;
+    }, {});
+
+    return Object.assign(newState, {
+      // specifically pass the updated filters and prefs state as additional arguments.
+      messages: reducers.messages(
+        state.messages,
+        action,
+        newState.filters,
+        newState.prefs,
+      ),
+    });
+  };
 }
 
 /**
