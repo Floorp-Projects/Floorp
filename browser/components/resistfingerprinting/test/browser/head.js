@@ -15,8 +15,10 @@ async function calcMaximumAvailSize(aChromeWidth, aChromeHeight) {
 
   // If the chrome UI dimensions is not given, we will calculate it.
   if (!aChromeWidth || !aChromeHeight) {
+    let win = await BrowserTestUtils.openNewBrowserWindow();
+
     let tab = await BrowserTestUtils.openNewForegroundTab(
-      gBrowser, testPath + "file_dummy.html");
+      win.gBrowser, testPath + "file_dummy.html");
 
     let contentSize = await ContentTask.spawn(tab.linkedBrowser, null, async function() {
       let result = {
@@ -29,10 +31,11 @@ async function calcMaximumAvailSize(aChromeWidth, aChromeHeight) {
 
     // Calculate the maximum available window size which is depending on the
     // available screen space.
-    chromeUIWidth = window.outerWidth - contentSize.width;
-    chromeUIHeight = window.outerHeight - contentSize.height;
+    chromeUIWidth = win.outerWidth - contentSize.width;
+    chromeUIHeight = win.outerHeight - contentSize.height;
 
     await BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.closeWindow(win);
   } else {
     chromeUIWidth = aChromeWidth;
     chromeUIHeight = aChromeHeight;

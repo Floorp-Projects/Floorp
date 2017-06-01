@@ -9,7 +9,9 @@
 :root {
   --tab-toolbar-navbar-overlap: 0px;
   --navbar-tab-toolbar-highlight-overlap: 0px;
+%ifndef MOZ_PHOTON_THEME
   --space-above-tabbar: 0px;
+%endif
   --toolbarbutton-text-shadow: none;
   --backbutton-urlbar-overlap: 0px;
   /* 18px icon + 2 * 5px padding + 1 * 1px border */
@@ -98,12 +100,13 @@ toolbar:-moz-lwtheme-darktext {
   --toolbarbutton-checkedhover-backgroundcolor: #d7d7d8;
 }
 
+%ifndef MOZ_PHOTON_THEME
 /* Give some space to drag the window around while customizing
    (normal space to left and right of tabs doesn't work in this case) */
 #main-window[tabsintitlebar][customizing] {
   --space-above-tabbar: 9px;
 }
-
+%endif
 /* Override @tabCurveHalfWidth@ and @tabCurveWidth@.  XXX: Switch to a CSS variable once the perf is sorted out - bug 1088771 */
 .tab-background-middle {
   border-left-width: 0;

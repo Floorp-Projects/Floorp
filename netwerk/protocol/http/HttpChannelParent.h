@@ -13,6 +13,7 @@
 #include "mozilla/net/PHttpChannelParent.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoParent.h"
+#include "mozilla/MozPromise.h"
 #include "nsIObserver.h"
 #include "nsIParentRedirectingChannel.h"
 #include "nsIProgressEventSink.h"
@@ -37,6 +38,7 @@ class PBrowserOrId;
 
 namespace net {
 
+class HttpBackgroundChannelParent;
 class HttpChannelParentListener;
 class ChannelEventQueue;
 
@@ -52,6 +54,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor
                               , public nsIAuthPromptProvider
                               , public nsIDeprecationWarner
                               , public HttpChannelSecurityWarningReporter
+                              , public nsIAsyncVerifyRedirectReadyCallback
 {
   virtual ~HttpChannelParent();
 
@@ -65,6 +68,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIAUTHPROMPTPROVIDER
   NS_DECL_NSIDEPRECATIONWARNER
+  NS_DECL_NSIASYNCVERIFYREDIRECTREADYCALLBACK
 
   NS_DECLARE_STATIC_IID_ACCESSOR(HTTP_CHANNEL_PARENT_IID)
 
@@ -99,10 +103,22 @@ public:
   MOZ_MUST_USE nsresult OpenAlternativeOutputStream(const nsACString & type,
                                                     nsIOutputStream * *_retval);
 
+  // Callbacks for each asynchronous tasks required in AsyncOpen
+  // procedure, will call InvokeAsyncOpen when all the expected
+  // tasks is finished successfully or when any failure happened.
+  // @see mAsyncOpenBarrier.
+  void TryInvokeAsyncOpen(nsresult aRv);
+
   void InvokeAsyncOpen(nsresult rv);
 
   // Calls SendSetPriority if mIPCClosed is false.
   void DoSendSetPriority(int16_t aValue);
+
+  // Callback while background channel is ready.
+  void OnBackgroundParentReady(HttpBackgroundChannelParent* aBgParent);
+  // Callback while background channel is destroyed.
+  void OnBackgroundParentDestroyed();
+
 protected:
   // used to connect redirected-to channel in parent with just created
   // ChildChannel.  Used during redirects.
@@ -217,6 +233,26 @@ private:
   void MaybeFlushPendingDiversion();
   void ResponseSynthesized();
 
+  // final step for Redirect2Verify procedure, will be invoked while both
+  // redirecting and redirected channel are ready or any error happened.
+  // OnRedirectVerifyCallback will be invoked for finishing the async
+  // redirect verification procedure.
+  void ContinueRedirect2Verify(const nsresult& aResult);
+
+  void AsyncOpenFailed(nsresult aRv);
+
+  // Request to pair with a HttpBackgroundChannelParent with the same channel
+  // id, a promise will be returned so the caller can append callbacks on it.
+  // If called multiple times before mBgParent is available, the same promise
+  // will be returned and the callbacks will be invoked in order.
+  already_AddRefed<GenericPromise> WaitForBgParent();
+
+  // Remove the association with background channel after main-thread IPC
+  // is about to be destroyed or no further event is going to be sent, i.e.,
+  // DocumentChannelCleanup.
+  void CleanupBackgroundChannel();
+
+  friend class HttpBackgroundChannelParent;
   friend class DivertDataAvailableEvent;
   friend class DivertStopRequestEvent;
   friend class DivertCompleteEvent;
@@ -236,7 +272,6 @@ private:
   // since the information can be recontructed from ODA.
   bool mIgnoreProgress              : 1;
 
-  bool mSentRedirect1Begin          : 1;
   bool mSentRedirect1BeginFailed    : 1;
   bool mReceivedRedirect2Verify     : 1;
 
@@ -272,6 +307,20 @@ private:
   dom::TabId mNestedFrameId;
 
   RefPtr<ChannelEventQueue> mEventQ;
+
+  RefPtr<HttpBackgroundChannelParent> mBgParent;
+
+  // Number of events to wait before actually invoking AsyncOpen on the main
+  // channel. For each asynchronous step required before InvokeAsyncOpen, should
+  // increase 1 to mAsyncOpenBarrier and invoke TryInvokeAsyncOpen after
+  // finished. This attribute is main thread only.
+  uint8_t mAsyncOpenBarrier = 0;
+
+  // Corresponding redirect channel registrar Id. 0 means redirection is not started.
+  uint32_t mRedirectRegistrarId = 0;
+
+  MozPromiseHolder<GenericPromise> mPromise;
+  MozPromiseRequestHolder<GenericPromise> mRequest;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpChannelParent,
