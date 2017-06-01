@@ -276,7 +276,7 @@ public class LocaleListPreference extends ListPreference {
     private Locale getSelectedLocale() {
         final String tag = getValue();
         if (tag == null || tag.equals("")) {
-            return Locale.getDefault();
+            return LocaleManager.getInstance().getSystemLocale();
         }
         return Locales.parseLocaleCode(tag);
     }

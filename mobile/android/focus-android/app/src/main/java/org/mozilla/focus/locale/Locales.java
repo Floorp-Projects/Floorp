@@ -23,8 +23,6 @@ import android.text.TextUtils;
  * <code>LocaleAwareFragmentActivity</code> or <code>LocaleAwareActivity</code>.
  */
 public class Locales {
-    private static final String LOGTAG = "Locales";
-
     /**
      * Is only required by locale aware activities, AND  Application. In most cases you should be
      * using LocaleAwareAppCompatActivity or friends.
