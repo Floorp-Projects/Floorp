@@ -14,7 +14,7 @@
       }
     </script>
   </head>
-  <body onload="setTimeout(init, 0);">
+  <body onload="requestAnimationFrame(_ => setTimeout(init, 0));">
     <img src="100x80-white-rect-top-right.png" usemap="#map">
     <map name="map">
       <area id="link" shape="rect" coords="10,10,30,30" href="about:blank">
