@@ -2,6 +2,12 @@
 
 let gPanel = document.getElementById("page-action-panel");
 
+const mockRemoteClients = [
+  { id: "0", name: "foo", type: "mobile" },
+  { id: "1", name: "bar", type: "desktop" },
+  { id: "2", name: "baz", type: "mobile" },
+];
+
 add_task(async function bookmark() {
   // Open a unique page.
   let url = "http://example.com/browser_page_action_menu";
@@ -128,6 +134,112 @@ add_task(async function sendToDevice_nonSendable() {
   });
 });
 
+add_task(async function sendToDevice_syncNotReady() {
+  // Open a tab that's sendable.
+  await BrowserTestUtils.withNewTab("http://example.com/", async () => {
+    let syncReadyMock = mockReturn(gSync, "syncReady", false);
+    let signedInMock = mockReturn(gSync, "isSignedIn", true);
+
+    let remoteClientsMock;
+    let origSync = Weave.Service.sync;
+    Weave.Service.sync = () => {
+      mockReturn(gSync, "syncReady", true);
+      remoteClientsMock = mockReturn(gSync, "remoteClients", mockRemoteClients);
+    };
+
+    let origSetupSendToDeviceView = gPageActionButton.setupSendToDeviceView;
+    gPageActionButton.setupSendToDeviceView = () => {
+      this.numCall++ || (this.numCall = 1);
+      origSetupSendToDeviceView.call(gPageActionButton);
+      testSendTabToDeviceMenu(this.numCall);
+    }
+
+    let cleanUp = () => {
+      Weave.Service.sync = origSync;
+      gPageActionButton.setupSendToDeviceView = origSetupSendToDeviceView;
+      signedInMock.restore();
+      syncReadyMock.restore();
+      remoteClientsMock.restore();
+    };
+    registerCleanupFunction(cleanUp);
+
+    // Open the panel.
+    await promisePanelOpen();
+    let sendToDeviceButton =
+      document.getElementById("page-action-send-to-device-button");
+    Assert.ok(!sendToDeviceButton.disabled);
+
+    // Click Send to Device.
+    let viewPromise = promiseViewShown();
+    EventUtils.synthesizeMouseAtCenter(sendToDeviceButton, {});
+    let view = await viewPromise;
+    Assert.equal(view.id, "page-action-sendToDeviceView");
+
+    function testSendTabToDeviceMenu(numCall) {
+      if (numCall == 1) {
+        // The Fxa button should be shown.
+        checkSendToDeviceItems([
+          {
+            id: "page-action-sendToDevice-fxa-button",
+            display: "none",
+          },
+          {
+            id: "page-action-no-devices-button",
+            display: "none",
+            disabled: true,
+          },
+          {
+            id: "page-action-sync-not-ready-button",
+            disabled: true,
+          },
+        ]);
+      } else if (numCall == 2) {
+        // The devices should be shown in the subview.
+        let expectedItems = [
+          {
+            id: "page-action-sendToDevice-fxa-button",
+            display: "none",
+          },
+          {
+            id: "page-action-no-devices-button",
+            display: "none",
+            disabled: true,
+          },
+          {
+            id: "page-action-sync-not-ready-button",
+            display: "none",
+            disabled: true,
+          },
+        ];
+        for (let client of mockRemoteClients) {
+          expectedItems.push({
+            attrs: {
+              clientId: client.id,
+              label: client.name,
+              clientType: client.type,
+            },
+          });
+        }
+        expectedItems.push(
+          null,
+          {
+            label: "All Devices",
+          }
+        );
+        checkSendToDeviceItems(expectedItems);
+      } else {
+        ok(false, "This should never happen");
+      }
+    }
+
+    // Done, hide the panel.
+    let hiddenPromise = promisePanelHidden();
+    gPanel.hidePopup();
+    await hiddenPromise;
+    cleanUp();
+  });
+});
+
 add_task(async function sendToDevice_notSignedIn() {
   // Open a tab that's sendable.
   await BrowserTestUtils.withNewTab("http://example.com/", async () => {
@@ -152,6 +264,11 @@ add_task(async function sendToDevice_notSignedIn() {
       },
       {
         id: "page-action-no-devices-button",
+        display: "none",
+        disabled: true,
+      },
+      {
+        id: "page-action-sync-not-ready-button",
         display: "none",
         disabled: true,
       },
@@ -206,6 +323,11 @@ add_task(async function sendToDevice_noDevices() {
         id: "page-action-no-devices-button",
         disabled: true,
       },
+      {
+        id: "page-action-sync-not-ready-button",
+        display: "none",
+        disabled: true,
+      },
     ]);
 
     // Done, hide the panel.
@@ -224,20 +346,9 @@ add_task(async function sendToDevice_devices() {
     UIState._internal._state = { status: UIState.STATUS_SIGNED_IN };
 
     // Set up mock remote clients.
-    let mockRemoteClients = [
-      { id: "0", name: "foo", type: "mobile" },
-      { id: "1", name: "bar", type: "desktop" },
-      { id: "2", name: "baz", type: "mobile" },
-    ];
-    let originalGetter =
-      Object.getOwnPropertyDescriptor(gSync, "remoteClients").get;
-    Object.defineProperty(gSync, "remoteClients", {
-      get() { return mockRemoteClients; }
-    });
+    let remoteClientsMock = mockReturn(gSync, "remoteClients", mockRemoteClients);
     let cleanUp = () => {
-      Object.defineProperty(gSync, "remoteClients", {
-        get: originalGetter
-      });
+      remoteClientsMock.restore();
     };
     registerCleanupFunction(cleanUp);
 
@@ -261,6 +372,11 @@ add_task(async function sendToDevice_devices() {
       },
       {
         id: "page-action-no-devices-button",
+        display: "none",
+        disabled: true,
+      },
+      {
+        id: "page-action-sync-not-ready-button",
         display: "none",
         disabled: true,
       },
@@ -378,6 +494,30 @@ function checkSendToDeviceItems(expectedItems) {
         Assert.ok(actual.hasAttribute(name));
         Assert.equal(actual.getAttribute(name), expected.attrs[name]);
       }
+    }
+  }
+}
+
+// Copied from test/sync/head.js (see bug 1369855)
+function mockReturn(obj, symbol, fixture) {
+  let getter = Object.getOwnPropertyDescriptor(obj, symbol).get;
+  if (getter) {
+    Object.defineProperty(obj, symbol, {
+      get() { return fixture; }
+    });
+    return {
+      restore() {
+        Object.defineProperty(obj, symbol, {
+          get: getter
+        });
+      }
+    }
+  }
+  let func = obj[symbol];
+  obj[symbol] = () => fixture;
+  return {
+    restore() {
+      obj[symbol] = func;
     }
   }
 }
