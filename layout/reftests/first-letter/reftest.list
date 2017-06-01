@@ -24,8 +24,8 @@ fails-if(!styloVsGecko) == quote-1e.html quote-1-ref.html # bug 509685
 == quote-1f.html quote-1-ref.html
 fails-if(!stylo) fails-if(styloVsGecko) == dynamic-1.html dynamic-1-ref.html # bug 8253
 random-if(d2d) == dynamic-2.html dynamic-2-ref.html
-fails-if(styloVsGecko) asserts-if(styloVsGecko,6) asserts-if(stylo,6) fails-if(stylo) == dynamic-3a.html dynamic-3-ref.html
-fails-if(styloVsGecko) asserts-if(styloVsGecko,6) asserts-if(stylo,6) fails-if(stylo) == dynamic-3b.html dynamic-3-ref.html
+== dynamic-3a.html dynamic-3-ref.html
+== dynamic-3b.html dynamic-3-ref.html
 == 23605-1.html 23605-1-ref.html
 == 23605-2.html 23605-2-ref.html
 == 23605-3.html 23605-3-ref.html
@@ -40,7 +40,7 @@ fails-if(Android) == 329069-2.html 329069-2-ref.html # Bug 999139
 == 329069-4.html 329069-4-ref.html
 HTTP(..) == 329069-5.html 329069-5-ref.html
 == 342120-1.xhtml 342120-1-ref.xhtml
-fails-if(styloVsGecko) asserts-if(styloVsGecko,6) asserts-if(stylo,6) fails-if(stylo) == 379799-1.html 379799-1-ref.html
+== 379799-1.html 379799-1-ref.html
 == 399941-1.html 399941-1-ref.html
 == 399941-2.html 399941-2-ref.html
 == 399941-3.html 399941-3-ref.html
@@ -51,7 +51,7 @@ fails-if(styloVsGecko) asserts-if(styloVsGecko,6) asserts-if(stylo,6) fails-if(s
 == 399941-8.html 399941-8-ref.html
 == 399941-9.html 399941-9-ref.html
 == 429968-1a.html 429968-1-ref.html
-fails-if(styloVsGecko||stylo) == 429968-1b.html 429968-1-ref.html
+== 429968-1b.html 429968-1-ref.html
 == 429968-2a.html 429968-2-ref.html
 == 429968-2b.html 429968-2-ref.html
 == 429968-2c.html 429968-2-ref.html
