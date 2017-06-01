@@ -581,9 +581,9 @@ TimeoutManager::ClearTimeout(int32_t aTimerId, Timeout::Reason aReason)
 }
 
 void
-TimeoutManager::RunTimeout(Timeout* aTimeout)
+TimeoutManager::RunTimeout(const TimeStamp& aTargetDeadline)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aTimeout);
+  MOZ_DIAGNOSTIC_ASSERT(!aTargetDeadline.IsNull());
 
   if (mWindow.IsSuspended()) {
     return;
@@ -632,21 +632,20 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
   TimeStamp now = TimeStamp::Now();
   TimeStamp deadline;
 
-  if (aTimeout->When() > now) {
+  if (aTargetDeadline > now) {
     // The OS timer fired early (which can happen due to the timers
     // having lower precision than TimeStamp does).  Set |deadline| to
     // be the time when the OS timer *should* have fired so that any
-    // timers that *should* have fired before aTimeout *will* be fired
-    // now.
+    // timers that *should* have fired *will* be fired now.
 
-    deadline = aTimeout->When();
+    deadline = aTargetDeadline;
   } else {
     deadline = now;
   }
 
   // The timeout list is kept in deadline order. Discover the latest timeout
   // whose deadline has expired. On some platforms, native timeout events fire
-  // "early", but we handled that above by setting deadline to aTimeout->When()
+  // "early", but we handled that above by setting deadline to aTargetDeadline
   // if the timer fired early.  So we can stop walking if we get to timeouts
   // whose When() is greater than deadline, since once that happens we know
   // nothing past that point is expired.
@@ -659,7 +658,6 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
                                        nullptr);
 
     uint32_t numTimersToRun = 0;
-    bool targetTimerSeen = false;
 
     while (true) {
       Timeout* timeout = expiredIter.Next();
@@ -680,22 +678,11 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
 
         numTimersToRun += 1;
 
-        // Note that we have seen our target timer.  This means we can now
-        // stop processing timers once we hit our threshold below.
-        if (timeout == aTimeout) {
-          targetTimerSeen = true;
-        }
-
-        // Run only a limited number of timers based on the configured
-        // maximum.  Note, we must always run our target timer however.
-        // Further timers that are ready will get picked up by their own
-        // nsITimer runnables when they execute.
-        if (targetTimerSeen) {
-          if (numTimersToRun % kNumTimersPerInitialElapsedCheck == 0) {
-            TimeDuration elapsed(TimeStamp::Now() - start);
-            if (elapsed >= initalTimeLimit) {
-              break;
-            }
+        // Run only a limited number of timers based on the configured maximum.
+        if (numTimersToRun % kNumTimersPerInitialElapsedCheck == 0) {
+          TimeDuration elapsed(TimeStamp::Now() - start);
+          if (elapsed >= initalTimeLimit) {
+            break;
           }
         }
       }
@@ -749,8 +736,6 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
     // the logic in ResetTimersForThrottleReduction will need to change.
     mTrackingTimeouts.SetInsertionPoint(dummy_tracking_timeout);
   }
-
-  bool targetTimeoutSeen = false;
 
   // We stop iterating each list when we go past the last expired timeout from
   // that list that we have observed above.  That timeout will either be the
@@ -807,16 +792,12 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
         continue;
       }
 
-      if (timeout == aTimeout) {
-        targetTimeoutSeen = true;
-      }
-
       // This timeout is good to run
       bool timeout_was_cleared = mWindow.RunTimeoutHandler(timeout, scx);
       MOZ_LOG(gLog, LogLevel::Debug,
-              ("Run%s(TimeoutManager=%p, timeout=%p, aTimeout=%p, tracking=%d) returned %d\n", timeout->mIsInterval ? "Interval" : "Timeout",
-               this, timeout, aTimeout,
-               int(aTimeout->mIsTracking),
+              ("Run%s(TimeoutManager=%p, timeout=%p, tracking=%d) returned %d\n", timeout->mIsInterval ? "Interval" : "Timeout",
+               this, timeout,
+               int(timeout->mIsTracking),
                !!timeout_was_cleared));
 
       if (timeout_was_cleared) {
@@ -879,14 +860,9 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
 
       // Check to see if we have run out of time to execute timeout handlers.
       // If we've exceeded our time budget then terminate the loop immediately.
-      //
-      // Note, we only do this if we have seen the Timeout object explicitly
-      // passed to RunTimeout().  The target timeout must always be executed.
-      if (targetTimeoutSeen) {
-        TimeDuration elapsed = TimeStamp::Now() - start;
-        if (elapsed >= totalTimeLimit) {
-          break;
-        }
+      TimeDuration elapsed = TimeStamp::Now() - start;
+      if (elapsed >= totalTimeLimit) {
+        break;
       }
     }
   }
