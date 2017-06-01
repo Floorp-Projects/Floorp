@@ -4,7 +4,6 @@
 
 const {Cu, Cc, Ci} = require("chrome");
 
-const promise = require("promise");
 const { Task } = require("devtools/shared/task");
 const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
 const Subprocess = require("sdk/system/child_process/subprocess");
@@ -149,31 +148,30 @@ const ProjectBuilding = exports.ProjectBuilding = {
     // Subprocess changes CWD, we have to save and restore it.
     let originalCwd = yield OS.File.getCurrentDirectory();
     try {
-      let defer = promise.defer();
-      Subprocess.call({
-        command: shell,
-        arguments: args,
-        environment: env,
-        workdir: cwd,
+      yield new Promise((resolve, reject) => {
+        Subprocess.call({
+          command: shell,
+          arguments: args,
+          environment: env,
+          workdir: cwd,
 
-        stdout: data =>
-          logger(data),
-        stderr: data =>
-          logger(data),
+          stdout: data =>
+            logger(data),
+          stderr: data =>
+            logger(data),
 
-        done: result => {
-          logger("Terminated with error code: " + result.exitCode);
-          if (result.exitCode == 0) {
-            defer.resolve();
-          } else {
-            defer.reject("pre-package command failed with error code " + result.exitCode);
+          done: result => {
+            logger("Terminated with error code: " + result.exitCode);
+            if (result.exitCode == 0) {
+              resolve();
+            } else {
+              reject("pre-package command failed with error code " + result.exitCode);
+            }
           }
-        }
-      });
-      defer.promise.then(() => {
+        });
+      }).then(() => {
         OS.File.setCurrentDirectory(originalCwd);
       });
-      yield defer.promise;
     } catch (e) {
       throw new Error("Unable to run pre-package command '" + command + "' " +
                       args.join(" ") + ":\n" + (e.message || e));

@@ -55,7 +55,6 @@
   padding-inline-end: 4px;
 }
 
-#sidebar-icon,
 #sidebar-switcher-arrow,
 #sidebar-close > .toolbarbutton-icon {
   -moz-context-properties: fill;
@@ -106,19 +105,31 @@
 }
 %endif
 
-/* Use bookmarks star as default icon for the sidebar box (including when opening a web page) */
+
+#sidebar-box[sidebarcommand="viewWebPanelsSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
+  list-style-image: url(chrome://mozapps/skin/places/defaultFavicon.svg);
+}
+
 #sidebar-switcher-bookmarks > .toolbarbutton-icon,
-#sidebar-box[sidebarcommand="viewWebPanelsSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon,
 #sidebar-box[sidebarcommand="viewBookmarksSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
   list-style-image: url(chrome://browser/skin/bookmark.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  opacity: 0.8;
 }
 
 #sidebar-switcher-history > .toolbarbutton-icon,
 #sidebar-box[sidebarcommand="viewHistorySidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
   list-style-image: url(chrome://browser/skin/history.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  opacity: 0.8;
 }
 
 #sidebar-switcher-tabs > .toolbarbutton-icon,
 #sidebar-box[sidebarcommand="viewTabsSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
   list-style-image: url(chrome://browser/skin/sync.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  opacity: 0.8;
 }

@@ -776,6 +776,17 @@ def parseKeyValue(strings, separator='=', context='key, value: '):
     return [string.split(separator, 1) for string in strings]
 
 
+def create_zip(path):
+    """
+    Takes a `path` on disk and creates a zipfile with its contents. Returns a
+    path to the location of the temporary zip file.
+    """
+    with tempfile.NamedTemporaryFile() as f:
+        # `shutil.make_archive` writes to "{f.name}.zip", so we're really just
+        # using `NamedTemporaryFile` as a way to get a random path.
+        return shutil.make_archive(f.name, "zip", path)
+
+
 class MochitestDesktop(object):
     """
     Mochitest class for desktop firefox.
@@ -2106,12 +2117,14 @@ toolbar#nav-bar {
             self.marionette = Marionette(**marionette_args)
             self.marionette.start_session(timeout=port_timeout)
 
-            # install specialpowers and mochikit as temporary addons
+            # install specialpowers and mochikit addons
             addons = Addons(self.marionette)
 
             if mozinfo.info.get('toolkit') != 'gonk':
-                addons.install(os.path.join(here, 'extensions', 'specialpowers'), temp=True)
-                addons.install(self.mochijar, temp=True)
+                addons.install(create_zip(
+                    os.path.join(here, 'extensions', 'specialpowers')
+                ))
+                addons.install(create_zip(self.mochijar))
 
             self.execute_start_script()
 
