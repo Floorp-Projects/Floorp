@@ -5,6 +5,12 @@
   min-height: 3em;
 }
 
+/* Limit the size of the hidden description, since a deck takes the size of the biggest child */
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"][selectedIndex="0"] #search-suggestions-hint,
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"][selectedIndex="1"] #search-suggestions-question {
+  max-height: 5em;
+}
+
 /* Opt-in notification */
 
 #PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] > hbox[anonid="search-suggestions-opt-in"] {
@@ -61,6 +67,14 @@
 
 #PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] > hbox[anonid="search-suggestions-opt-out"] {
   font: message-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] hbox[anonid="search-suggestions-hint-box"] {
+  flex-basis: 100%;
 }
 
 #PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] hbox[anonid="search-suggestions-hint-box"] > description {
@@ -88,6 +102,7 @@
   animation-iteration-count: 1;
   animation-timing-function: ease-in-out;
   animation-fill-mode: forwards;
+  min-width: 16px;
 }
 
 @keyframes search-suggestions-hint-grow {
@@ -111,6 +126,13 @@
   animation-delay: 750ms;
   animation-iteration-count: 1;
   animation-fill-mode: forwards;
+}
+
+@media all and (max-width: 800px) {
+  /* Hide the typing animation block */
+  #PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] hbox[anonid="search-suggestions-hint-typing"] {
+    display: none;
+  }
 }
 
 @keyframes search-suggestions-hint-typing {
