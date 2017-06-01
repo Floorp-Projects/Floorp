@@ -428,8 +428,8 @@ description#identity-popup-content-verifier,
   margin: 0;
   width: 16px;
   height: 16px;
-  list-style-image: url(chrome://browser/skin/panel-icon-cancel.svg);
-  -moz-context-properties: fill;
+  list-style-image: url(chrome://browser/skin/panel-icons.svg#cancel);
+  filter: url(chrome://global/skin/filters.svg#fill);
   fill: graytext;
 }
 
