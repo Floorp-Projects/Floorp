@@ -411,7 +411,7 @@ WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
 
   MOZ_ASSERT(!mExternalImageIds.Get(aImageId).get());
 
-  ImageBridgeParent* imageBridge = ImageBridgeParent::GetInstance(OtherPid());
+  RefPtr<ImageBridgeParent> imageBridge = ImageBridgeParent::GetInstance(OtherPid());
   if (!imageBridge) {
      return IPC_FAIL_NO_REASON(this);
   }
