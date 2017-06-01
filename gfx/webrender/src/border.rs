@@ -348,7 +348,9 @@ impl FrameBuilder {
             *e == BorderEdgeKind::Solid || *e == BorderEdgeKind::None
         });
 
-        if all_corners_simple && all_edges_simple {
+        let has_no_curve = radius.is_zero();
+
+        if has_no_curve && all_corners_simple && all_edges_simple {
             let p0 = rect.origin;
             let p1 = rect.bottom_right();
             let rect_width = rect.size.width;

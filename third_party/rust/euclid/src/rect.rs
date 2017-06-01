@@ -404,7 +404,7 @@ impl<T: NumCast + Copy, Unit> TypedRect<T, Unit> {
     /// When casting from floating point rectangles, it is worth considering whether
     /// to `round()`, `round_in()` or `round_out()` before the cast in order to
     /// obtain the desired conversion behavior.
-    pub fn to_uint(&self) -> TypedRect<usize, Unit> {
+    pub fn to_usize(&self) -> TypedRect<usize, Unit> {
         self.cast().unwrap()
     }
 
