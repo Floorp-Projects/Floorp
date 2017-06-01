@@ -1261,16 +1261,19 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     }
 
     let transform = unsafe { transform.as_ref() };
-    let transform_binding = match transform {
-        Some(transform) => PropertyBinding::Value(transform.into()),
-        None => PropertyBinding::Binding(PropertyBindingKey::new(animation_id)),
+    let transform_binding = match animation_id {
+        0 => match transform {
+            Some(transform) => Some(PropertyBinding::Value(transform.into())),
+            None => None,
+        },
+        _ => Some(PropertyBinding::Binding(PropertyBindingKey::new(animation_id))),
     };
 
     state.frame_builder
          .dl_builder
          .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                 bounds,
-                                Some(transform_binding),
+                                transform_binding,
                                 TransformStyle::Flat,
                                 None,
                                 mix_blend_mode,

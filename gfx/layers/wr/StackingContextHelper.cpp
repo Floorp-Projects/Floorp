@@ -27,7 +27,8 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
   Layer* layer = aLayer->GetLayer();
   mTransform = aTransform.valueOr(layer->GetTransform());
   float opacity = 1.0f;
-  mBuilder->PushStackingContext(scBounds, 0, &opacity, &mTransform,
+  mBuilder->PushStackingContext(scBounds, 0, &opacity,
+                                mTransform.IsIdentity() ? nullptr : &mTransform,
                                 wr::ToWrMixBlendMode(layer->GetMixBlendMode()));
   mOrigin = aLayer->Bounds().TopLeft();
 }
