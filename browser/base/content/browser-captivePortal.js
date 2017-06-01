@@ -63,9 +63,8 @@ var CaptivePortalWatcher = {
         this.ensureCaptivePortalTab();
       }
     }
-    else if (cps.state == cps.UNKNOWN) {
-      cps.recheckCaptivePortal();
-    }
+
+    cps.recheckCaptivePortal();
   },
 
   uninit() {
