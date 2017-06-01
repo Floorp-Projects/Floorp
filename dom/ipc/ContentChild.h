@@ -661,6 +661,9 @@ public:
 
   virtual already_AddRefed<nsIEventTarget> GetEventTargetFor(TabChild* aTabChild) override;
 
+  mozilla::ipc::IPCResult
+  RecvSetPluginList(const uint32_t& aPluginEpoch, nsTArray<PluginTag>&& aPluginTags, nsTArray<FakePluginTag>&& aFakePluginTags) override;
+
 private:
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
   void StartForceKillTimer();
