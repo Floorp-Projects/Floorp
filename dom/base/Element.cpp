@@ -2423,7 +2423,7 @@ Element::SetAttr(int32_t aNamespaceID, nsIAtom* aName,
 
   if (OnlyNotifySameValueSet(aNamespaceID, aName, aPrefix, value, aNotify,
                              oldValue, &modType, &hasListeners, &oldValueSet)) {
-    return NS_OK;
+    return OnAttrSetButNotChanged(aNamespaceID, aName, value, aNotify);
   }
 
   nsAttrValue attrValue;
@@ -2486,7 +2486,7 @@ Element::SetParsedAttr(int32_t aNamespaceID, nsIAtom* aName,
 
   if (OnlyNotifySameValueSet(aNamespaceID, aName, aPrefix, value, aNotify,
                              oldValue, &modType, &hasListeners, &oldValueSet)) {
-    return NS_OK;
+    return OnAttrSetButNotChanged(aNamespaceID, aName, value, aNotify);
   }
 
   if (aNotify) {
