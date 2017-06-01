@@ -31,6 +31,7 @@
 #include "nsIHttpActivityObserver.h"
 #include "nsSocketTransportService2.h"
 #include "nsICancelable.h"
+#include "nsIClassOfService.h"
 #include "nsIEventTarget.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIInputStream.h"
@@ -105,9 +106,11 @@ nsHttpTransaction::nsHttpTransaction()
     , mCurrentHttpResponseHeaderSize(0)
     , mCapsToClear(0)
     , mResponseIsComplete(false)
-    , mThrottleResponse(false)
+    , mReadingStopped(false)
     , mClosed(false)
     , mConnected(false)
+    , mActivated(false)
+    , mActivatedAsH2(false)
     , mHaveStatusLine(false)
     , mHaveAllHeaders(false)
     , mTransactionDone(false)
@@ -151,11 +154,43 @@ nsHttpTransaction::nsHttpTransaction()
     mPeerAddr.raw.family = PR_AF_UNSPEC;
 }
 
-void nsHttpTransaction::ThrottleResponse(bool aThrottle)
+void nsHttpTransaction::ResumeReading()
 {
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-    mThrottleResponse = aThrottle;
+    if (!mReadingStopped) {
+        return;
+    }
+
+    LOG(("nsHttpTransaction::ResumeReading %p", this));
+
+    mReadingStopped = false;
+    if (mConnection) {
+        nsresult rv = mConnection->ResumeRecv();
+        if (NS_FAILED(rv)) {
+            LOG(("  resume failed with rv=%" PRIx32, static_cast<uint32_t>(rv)));
+        }
+    }
+}
+
+void nsHttpTransaction::SetClassOfService(uint32_t cos)
+{
+    bool wasThrottling = mClassOfService & nsIClassOfService::Throttleable;
+
+    mClassOfService = cos;
+
+    bool isThrottling = mClassOfService & nsIClassOfService::Throttleable;
+
+    if (mConnection && wasThrottling != isThrottling) {
+        // Do nothing until we are actually activated.  For now
+        // only remember the throttle flag.  Call to MoveActiveTransaction
+        // would add this transaction to the list too early.
+        gHttpHandler->ConnMgr()->MoveActiveTransaction(this, isThrottling);
+
+        if (mReadingStopped && !isThrottling) {
+            ResumeReading();
+        }
+    }
 }
 
 nsHttpTransaction::~nsHttpTransaction()
@@ -473,6 +508,21 @@ nsHttpTransaction::SetConnection(nsAHttpConnection *conn)
 }
 
 void
+nsHttpTransaction::OnActivated(bool h2)
+{
+    MOZ_ASSERT(OnSocketThread());
+
+    mActivatedAsH2 = h2;
+    if (mActivated) {
+        return;
+    }
+
+    mActivated = true;
+    gHttpHandler->ConnMgr()->AddActiveTransaction(
+        this, mClassOfService & nsIClassOfService::Throttleable);
+}
+
+void
 nsHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **cb)
 {
     MutexAutoLock lock(mLock);
@@ -774,16 +824,28 @@ nsresult
 nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
                                  uint32_t count, uint32_t *countWritten)
 {
-    static bool reentrantFlag = false;
-    LOG(("nsHttpTransaction::WriteSegments %p reentrantFlag=%d",
-         this, reentrantFlag));
-    MOZ_DIAGNOSTIC_ASSERT(!reentrantFlag);
-    reentrantFlag = true;
+    LOG(("nsHttpTransaction::WriteSegments %p", this));
+
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
     if (mTransactionDone) {
-        reentrantFlag = false;
         return NS_SUCCEEDED(mStatus) ? NS_BASE_STREAM_CLOSED : mStatus;
+    }
+
+    // Throttling feature is now disabled for http/2 transactions
+    // because of bug 1367861.  The logic around mActivatedAsH2
+    // will be removed when that is fixed
+    if (!mActivatedAsH2 &&
+        gHttpHandler->ConnMgr()->ShouldStopReading(this,
+            mClassOfService & nsIClassOfService::Throttleable)) {
+        LOG(("nsHttpTransaction::WriteSegments %p response throttled", this));
+        // Must remember that we have to call ResumeRecv() on our connection when
+        // called back by the conn manager to resume reading.
+        mReadingStopped = true;
+        // This makes the underlaying connection or stream wait for explicit resume.
+        // For h1 this means we stop reading from the socket.
+        // For h2 this means we stop updating recv window for the stream.
+        return NS_BASE_STREAM_WOULD_BLOCK;
     }
 
     mWriter = writer;
@@ -795,7 +857,6 @@ nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
 #endif // WIN32
 
     if (!mPipeOut) {
-        reentrantFlag = false;
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -827,7 +888,6 @@ nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
         }
     }
 
-    reentrantFlag = false;
     return rv;
 }
 
@@ -836,6 +896,12 @@ nsHttpTransaction::Close(nsresult reason)
 {
     LOG(("nsHttpTransaction::Close [this=%p reason=%" PRIx32 "]\n",
          this, static_cast<uint32_t>(reason)));
+
+    if (!mClosed) {
+        gHttpHandler->ConnMgr()->RemoveActiveTransaction(
+            this, mClassOfService & nsIClassOfService::Throttleable);
+        mActivated = false;
+    }
 
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     if (reason == NS_BINDING_RETARGETED) {
