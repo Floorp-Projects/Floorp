@@ -138,26 +138,38 @@ class MachCommands(MachCommandBase):
             filters.append(mpf.subsuite(subsuite))
 
         tests = mp.active_tests(filters=filters, disabled=False, **mozinfo.info)
+        parallel = []
+        sequential = []
+        for test in tests:
+            if test.get('sequential'):
+                sequential.append(test)
+            else:
+                parallel.append(test)
 
         self.jobs = jobs
         self.terminate = False
         self.verbose = verbose
 
         return_code = 0
+
+        def on_test_finished(result):
+            output, ret, test_path = result
+
+            for line in output:
+                self.log(logging.INFO, 'python-test', {'line': line.rstrip()}, '{line}')
+
+            if ret and not return_code:
+                self.log(logging.ERROR, 'python-test', {'test_path': test_path, 'ret': ret},
+                         'Setting retcode to {ret} from {test_path}')
+            return return_code or ret
+
         with ThreadPoolExecutor(max_workers=self.jobs) as executor:
             futures = [executor.submit(self._run_python_test, test['path'])
-                       for test in tests]
+                       for test in parallel]
 
             try:
                 for future in as_completed(futures):
-                    output, ret, test_path = future.result()
-
-                    for line in output:
-                        self.log(logging.INFO, 'python-test', {'line': line.rstrip()}, '{line}')
-
-                    if ret and not return_code:
-                        self.log(logging.ERROR, 'python-test', {'test_path': test_path, 'ret': ret}, 'Setting retcode to {ret} from {test_path}')
-                    return_code = return_code or ret
+                    return_code = on_test_finished(future.result())
             except KeyboardInterrupt:
                 # Hack to force stop currently running threads.
                 # https://gist.github.com/clchiou/f2608cbe54403edb0b13
@@ -165,7 +177,11 @@ class MachCommands(MachCommandBase):
                 thread._threads_queues.clear()
                 raise
 
-        self.log(logging.INFO, 'python-test', {'return_code': return_code}, 'Return code from mach python-test: {return_code}')
+        for test in sequential:
+            return_code = on_test_finished(self._run_python_test(test['path']))
+
+        self.log(logging.INFO, 'python-test', {'return_code': return_code},
+                 'Return code from mach python-test: {return_code}')
         return return_code
 
     def _run_python_test(self, test_path):
