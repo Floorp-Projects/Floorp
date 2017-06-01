@@ -18,7 +18,6 @@ const EXPECTED_REFLOWS = [
   [
     "select@chrome://global/content/bindings/textbox.xml",
     "focusAndSelectUrlBar@chrome://browser/content/browser.js",
-    "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml",
   ],
 
   // selection change notification may cause querying the focused editor content
@@ -26,13 +25,11 @@ const EXPECTED_REFLOWS = [
   [
     "select@chrome://global/content/bindings/textbox.xml",
     "focusAndSelectUrlBar@chrome://browser/content/browser.js",
-    "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml",
   ],
 
   [
     "select@chrome://global/content/bindings/textbox.xml",
     "focusAndSelectUrlBar@chrome://browser/content/browser.js",
-    "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml",
   ],
 ];
 
