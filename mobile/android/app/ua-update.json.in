@@ -11,5 +11,7 @@
   // bug 1177298, uniqlo.com
   "uniqlo.com": "\\)\\s#) Mobile Safari ",
   // bug 1338260, directv.com
-  "directv.com": "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36"
+  "directv.com": "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36",
+  // bug 1310951, m.canadiantire.ca
+  "m.canadiantire.ca": "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36"
 }
