@@ -357,8 +357,12 @@ private:
     MOZ_ASSERT(mWorkerPrivate);
     mWorkerPrivate->AssertIsOnWorkerThread();
     MOZ_DIAGNOSTIC_ASSERT(mPendingPromisesCount > 0);
-    MOZ_ASSERT(mSelfRef);
-    MOZ_ASSERT(mKeepAliveToken);
+
+    // Note: mSelfRef and mKeepAliveToken can be nullptr here
+    //       if MaybeCleanup() was called just before a promise
+    //       settled.  This can happen, for example, if the
+    //       worker thread is being terminated for running too
+    //       long, browser shutdown, etc.
 
     mRejected |= (aResult == Rejected);
 

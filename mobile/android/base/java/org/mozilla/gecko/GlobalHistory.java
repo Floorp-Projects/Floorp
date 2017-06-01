@@ -182,7 +182,7 @@ class GlobalHistory {
     /* protected */ void checkVisited(final String uri) {
         final String storedURI = ReaderModeUtils.stripAboutReaderUrl(uri);
 
-        final NotifierRunnable runnable = new NotifierRunnable(GeckoAppShell.getApplicationContext());
+        final NotifierRunnable runnable = new NotifierRunnable(GeckoAppShell.getContext());
         mHandler.post(new Runnable() {
             @Override
             public void run() {

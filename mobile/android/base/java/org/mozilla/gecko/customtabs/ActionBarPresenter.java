@@ -30,7 +30,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SiteIdentity;
 import org.mozilla.gecko.Tab;
@@ -109,24 +108,25 @@ public class ActionBarPresenter {
      * @param url Url String to display
      */
     public void displayUrlOnly(@NonNull final String url) {
-        updateCustomView(null, url, GeckoView.ProgressListener.STATE_IS_INSECURE);
+        updateCustomView(null, null, url);
     }
 
     /**
-     * Update appearance of CustomView of ActionBar
+     * Update appearance of CustomView of ActionBar.
      *
-     * @param title          Title for current website. Could be null if don't want to show title.
-     * @param url            URL for current website. At least Custom will show this url.
-     * @param securityStatus Security status, possible values given in GeckoView.ProgressListener
+     * @param tab a Tab instance of current web page to provide information to render ActionBar.
      */
-    public void update(final String title, final String url, final int securityStatus) {
+    public void update(@NonNull final Tab tab) {
+        final String title = tab.getTitle();
+        final String url = tab.getBaseDomain();
+
         // Do not update CustomView immediately. If this method be invoked rapidly several times,
         // only apply last one.
         mHandler.removeCallbacks(mUpdateAction);
         mUpdateAction = new Runnable() {
             @Override
             public void run() {
-                updateCustomView(title, url, securityStatus);
+                updateCustomView(tab.getSiteIdentity(), title, url);
             }
         };
         mHandler.postDelayed(mUpdateAction, CUSTOM_VIEW_UPDATE_DELAY);
@@ -220,15 +220,25 @@ public class ActionBarPresenter {
      * @param url      URL for current website. At least Custom will show this url.
      */
     @UiThread
-    private void updateCustomView(final String title, final String url, final int securityStatus) {
-        if (securityStatus == GeckoView.ProgressListener.STATE_IS_SECURE) {
-            mIconView.setVisibility(View.VISIBLE);
-            mIconView.setImageLevel(SecurityModeUtil.Mode.LOCK_SECURE.ordinal());
-            // Lock-Secure is special case. Keep its original green color.
-            DrawableCompat.setTintList(mIconView.getDrawable(), null);
-        } else {
+    private void updateCustomView(@Nullable SiteIdentity identity,
+                                  @Nullable String title,
+                                  @NonNull String url) {
+        // update site-info icon
+        if (identity == null) {
             mIconView.setVisibility(View.INVISIBLE);
-            DrawableCompat.setTint(mIconView.getDrawable(), mTextPrimaryColor);
+        } else {
+            final SecurityModeUtil.Mode mode = SecurityModeUtil.resolve(identity);
+            mIconView.setVisibility(View.VISIBLE);
+            mIconView.setImageLevel(mode.ordinal());
+            mIdentityPopup.setSiteIdentity(identity);
+
+            if (mode == SecurityModeUtil.Mode.LOCK_SECURE) {
+                // Lock-Secure is special case. Keep its original green color.
+                DrawableCompat.setTintList(mIconView.getDrawable(), null);
+            } else {
+                // Icon use same color as TextView.
+                DrawableCompat.setTint(mIconView.getDrawable(), mTextPrimaryColor);
+            }
         }
 
         // If no title to use, use Url as title
