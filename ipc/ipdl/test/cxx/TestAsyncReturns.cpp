@@ -57,9 +57,9 @@ TestAsyncReturnsParent::Main()
 
 
 mozilla::ipc::IPCResult
-TestAsyncReturnsParent::RecvPong(RefPtr<PongPromise>&& aPromise)
+TestAsyncReturnsParent::RecvPong(PongResolver&& aResolve)
 {
-  aPromise->Resolve(MakeTuple(sMagic1, sMagic2), __func__);
+  aResolve(MakeTuple(sMagic1, sMagic2));
   return IPC_OK();
 }
 
@@ -78,27 +78,26 @@ TestAsyncReturnsChild::~TestAsyncReturnsChild()
 }
 
 mozilla::ipc::IPCResult
-TestAsyncReturnsChild::RecvNoReturn(RefPtr<NoReturnPromise>&& aPromise)
+TestAsyncReturnsChild::RecvNoReturn(NoReturnResolver&& aResolve)
 {
-  // Leak the promise intentionally
-  Unused << do_AddRef(aPromise);
+  // Not resolving the promise intentionally
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-TestAsyncReturnsChild::RecvPing(RefPtr<PingPromise>&& aPromise)
+TestAsyncReturnsChild::RecvPing(PingResolver&& aResolve)
 {
   if (!AbstractThread::MainThread()) {
     fail("AbstractThread not initalized");
   }
   SendPong()->Then(AbstractThread::MainThread(), __func__,
-                   [aPromise](const Tuple<uint32_t, uint32_t>& aParam) {
+                   [aResolve](const Tuple<uint32_t, uint32_t>& aParam) {
                      if (Get<0>(aParam) == sMagic1 && Get<1>(aParam) == sMagic2) {
                        passed("take two arguments");
                      } else {
                        fail("get two argument but has wrong value");
                      }
-                     aPromise->Resolve(true, __func__);
+                     aResolve(true);
                    },
                    [](PromiseRejectReason aReason) {
                      fail("sending Pong");

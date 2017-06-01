@@ -22,18 +22,16 @@ function getCrashDumpId(subject) {
  * @param id {String} The crash dump id.
  */
 function cleanUpMinidump(id) {
-  if (id) {
-    let dir = Services.dirsvc.get("ProfD", Ci.nsIFile);
-    dir.append("minidumps");
+  let dir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  dir.append("minidumps");
 
-    let file = dir.clone();
-    file.append(id + ".dmp");
-    file.remove(true);
+  let file = dir.clone();
+  file.append(id + ".dmp");
+  file.remove(true);
 
-    file = dir.clone();
-    file.append(id + ".extra");
-    file.remove(true);
-  }
+  file = dir.clone();
+  file.append(id + ".extra");
+  file.remove(true);
 }
 
 /**

@@ -20,6 +20,7 @@ class ContentParent;
 
 struct RemoteFrameInfo
 {
+  ContentParentId mOpenerCpId;
   TabId mOpenerTabId;
   TabContext mContext;
 };
@@ -79,6 +80,7 @@ public:
    * TabContext for future use.
    */
   bool RegisterRemoteFrame(const TabId& aTabId,
+                           const ContentParentId& aOpenerCpId,
                            const TabId& aOpenerTabId,
                            const IPCTabContext& aContext,
                            const ContentParentId& aChildCpId);
@@ -110,6 +112,7 @@ public:
    */
   bool GetRemoteFrameOpenerTabId(const ContentParentId& aChildCpId,
                                  const TabId& aChildTabId,
+                                 /*out*/ContentParentId* aOpenerCpId,
                                  /*out*/ TabId* aOpenerTabId);
 
   /**

@@ -6,6 +6,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/AppConstants.jsm", this);
 Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
 Cu.import("resource://gre/modules/KeyValueParser.jsm");
 Cu.import("resource://gre/modules/osfile.jsm", this);
@@ -14,67 +15,90 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 /**
- * Computes the SHA256 hash of the minidump file associated with a crash
+ * Run the minidump analyzer tool to gather stack traces from the minidump. The
+ * stack traces will be stored in the .extra file under the StackTraces= entry.
  *
- * @param crashID {string} Crash ID. Likely a UUID.
+ * @param minidumpPath {string} The path to the minidump file
+ *
+ * @returns {Promise} A promise that gets resolved once minidump analysis has
+ *          finished.
+ */
+function runMinidumpAnalyzer(minidumpPath) {
+  return new Promise((resolve, reject) => {
+    const binSuffix = AppConstants.platform === "win" ? ".exe" : "";
+    const exeName = "minidump-analyzer" + binSuffix;
+
+    let exe = Services.dirsvc.get("GreBinD", Ci.nsIFile);
+
+    if (AppConstants.platform === "macosx") {
+        exe.append("crashreporter.app");
+        exe.append("Contents");
+        exe.append("MacOS");
+    }
+
+    exe.append(exeName);
+
+    let args = [ minidumpPath ];
+    let process = Cc["@mozilla.org/process/util;1"]
+                    .createInstance(Ci.nsIProcess);
+    process.init(exe);
+    process.startHidden = true;
+    process.runAsync(args, args.length, (subject, topic, data) => {
+      switch (topic) {
+        case "process-finished":
+          resolve();
+          break;
+        default:
+          reject(topic);
+          break;
+      }
+    });
+  });
+}
+
+/**
+ * Computes the SHA256 hash of a minidump file
+ *
+ * @param minidumpPath {string} The path to the minidump file
  *
  * @returns {Promise} A promise that resolves to the hash value of the
- *          minidump. If the hash could not be computed then null is returned
- *          instead.
+ *          minidump.
  */
-function computeMinidumpHash(id) {
-  let cr = Cc["@mozilla.org/toolkit/crash-reporter;1"]
-             .getService(Components.interfaces.nsICrashReporter);
-
+function computeMinidumpHash(minidumpPath) {
   return (async function() {
-    try {
-      let minidumpFile = cr.getMinidumpForID(id);
-      let minidumpData = await OS.File.read(minidumpFile.path);
-      let hasher = Cc["@mozilla.org/security/hash;1"]
-                     .createInstance(Ci.nsICryptoHash);
-      hasher.init(hasher.SHA256);
-      hasher.update(minidumpData, minidumpData.length);
+    let minidumpData = await OS.File.read(minidumpPath);
+    let hasher = Cc["@mozilla.org/security/hash;1"]
+                   .createInstance(Ci.nsICryptoHash);
+    hasher.init(hasher.SHA256);
+    hasher.update(minidumpData, minidumpData.length);
 
-      let hashBin = hasher.finish(false);
-      let hash = "";
+    let hashBin = hasher.finish(false);
+    let hash = "";
 
-      for (let i = 0; i < hashBin.length; i++) {
-        // Every character in the hash string contains a byte of the hash data
-        hash += ("0" + hashBin.charCodeAt(i).toString(16)).slice(-2);
-      }
-
-      return hash;
-    } catch (e) {
-      Cu.reportError(e);
-      return null;
+    for (let i = 0; i < hashBin.length; i++) {
+      // Every character in the hash string contains a byte of the hash data
+      hash += ("0" + hashBin.charCodeAt(i).toString(16)).slice(-2);
     }
+
+    return hash;
   })();
 }
 
 /**
- * Process the .extra file associated with the crash id and return the
- * annotations it contains in an object.
+ * Process the given .extra file and return the annotations it contains in an
+ * object.
  *
- * @param crashID {string} Crash ID. Likely a UUID.
+ * @param extraPath {string} The path to the .extra file
  *
  * @return {Promise} A promise that resolves to an object holding the crash
- *         annotations, this object may be empty if no annotations were found.
+ *         annotations.
  */
-function processExtraFile(id) {
-  let cr = Cc["@mozilla.org/toolkit/crash-reporter;1"]
-             .getService(Components.interfaces.nsICrashReporter);
-
+function processExtraFile(extraPath) {
   return (async function() {
-    try {
-      let extraFile = cr.getExtraFileForID(id);
-      let decoder = new TextDecoder();
-      let extraData = await OS.File.read(extraFile.path);
+    let decoder = new TextDecoder();
+    let extraData = await OS.File.read(extraPath);
 
-      return parseKeyValuePairs(decoder.decode(extraData));
-    } catch (e) {
-      Cu.reportError(e);
-      return {};
-    }
+    return parseKeyValuePairs(decoder.decode(extraData));
   })();
 }
 
@@ -125,8 +149,21 @@ CrashService.prototype = Object.freeze({
     }
 
     let blocker = (async function() {
-      let metadata = await processExtraFile(id);
-      let hash = await computeMinidumpHash(id);
+      let metadata = {};
+      let hash = null;
+
+      try {
+        let cr = Cc["@mozilla.org/toolkit/crash-reporter;1"]
+                   .getService(Components.interfaces.nsICrashReporter);
+        let minidumpPath = cr.getMinidumpForID(id).path;
+        let extraPath = cr.getExtraFileForID(id).path;
+
+        await runMinidumpAnalyzer(minidumpPath);
+        metadata = await processExtraFile(extraPath);
+        hash = await computeMinidumpHash(minidumpPath);
+      } catch (e) {
+        Cu.reportError(e);
+      }
 
       if (hash) {
         metadata.MinidumpSha256Hash = hash;
@@ -141,6 +178,8 @@ CrashService.prototype = Object.freeze({
     );
 
     blocker.then(AsyncShutdown.profileBeforeChange.removeBlocker(blocker));
+
+    return blocker;
   },
 
   observe(subject, topic, data) {

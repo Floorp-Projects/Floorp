@@ -30,10 +30,13 @@ Cu.import("chrome://marionette/content/session.js");
 Cu.import("chrome://marionette/content/simpletest.js");
 
 Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.importGlobalProperties(["URL"]);
+
+const INPUT_DATETIME_PREF = "dom.forms.datetime";
 
 var contentLog = new logging.ContentLogger();
 
@@ -1437,6 +1440,9 @@ function* sendKeysToElement(id, val) {
   let el = seenEls.get(id, curContainer);
   if (el.type == "file") {
     yield interaction.uploadFile(el, val);
+  } else if ((el.type == "date" || el.type == "time") &&
+      Preferences.get(INPUT_DATETIME_PREF)) {
+    yield interaction.setFormControlValue(el, val);
   } else {
     yield interaction.sendKeysToElement(
         el, val, false, capabilities.get("moz:accessibilityChecks"));

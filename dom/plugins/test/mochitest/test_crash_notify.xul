@@ -15,7 +15,10 @@
 </body>
 <script class="testbody" type="application/javascript">
 <![CDATA[
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 SimpleTest.waitForExplicitFinish();
+SimpleTest.expectChildProcessCrash();
 
 var success = false;
 
@@ -43,9 +46,6 @@ var testObserver = {
     let extraFile = profD.clone();
     extraFile.append(id + ".extra");
     ok(extraFile.exists(), "extra file exists");
-    // cleanup, to be nice
-    dumpFile.remove(false);
-    extraFile.remove(false);
   },
 
   QueryInterface: function(iid) {
@@ -84,7 +84,9 @@ function onPluginCrashed(aEvent) {
            getService(Components.interfaces.nsIObserverService);
   os.removeObserver(testObserver, "plugin-crashed");
 
-  SimpleTest.finish();
+  Services.crashmanager.ensureCrashIsPresent(aEvent.pluginDumpID).then(() => {
+    SimpleTest.finish();
+  });
 }
 
 function runTests() {

@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include URIParams;
+
 namespace mozilla {
 namespace plugins {
 
@@ -23,6 +25,19 @@ struct PluginTag
   int64_t lastModifiedTime;
   bool isFromExtension;
   int32_t sandboxLevel;
+};
+
+struct FakePluginTag
+{
+  uint32_t id;
+  URIParams handlerURI;
+  nsCString name;
+  nsCString description;
+  nsCString[] mimeTypes;
+  nsCString[] mimeDescriptions;
+  nsCString[] extensions;
+  nsCString niceName;
+  nsString sandboxScript;
 };
 
 union PluginIdentifier
