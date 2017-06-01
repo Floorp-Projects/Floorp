@@ -1538,6 +1538,28 @@ protected:
                          const nsAttrValue* aValue);
 
   /**
+   * Usually, setting an attribute to the value that it already has results in
+   * no action. However, in some cases, setting an attribute to its current
+   * value should have the effect of, for example, forcing a reload of
+   * network data. To address that, this function will be called in this
+   * situation to allow the handling of such a case.
+   *
+   * @param aNamespaceID the namespace of the attr being set
+   * @param aName the localname of the attribute being set
+   * @param aValue the value it's being set to represented as either a string or
+   *        a parsed nsAttrValue.
+   * @param aNotify Whether we plan to notify document observers.
+   */
+  // Note that this is inlined so that when subclasses call it it gets
+  // inlined.  Those calls don't go through a vtable.
+  virtual nsresult OnAttrSetButNotChanged(int32_t aNamespaceID, nsIAtom* aName,
+                                          const nsAttrValueOrString& aValue,
+                                          bool aNotify)
+  {
+    return NS_OK;
+  }
+
+  /**
    * Hook to allow subclasses to produce a different EventListenerManager if
    * needed for attachment of attribute-defined handlers
    */
