@@ -58,7 +58,7 @@ private:
         NS_ASSERTION(PR_CLIST_IS_EMPTY(this), "request still on a list");
 
         if (mListener)
-            nsCacheService::ReleaseObject_Locked(mListener, mThread);
+            nsCacheService::ReleaseObject_Locked(mListener, mEventTarget);
     }
     
     /**
@@ -149,7 +149,7 @@ private:
     nsCString                  mKey;
     uint32_t                   mInfo;
     nsICacheListener *         mListener;  // strong ref
-    nsCOMPtr<nsIThread>        mThread;
+    nsCOMPtr<nsIEventTarget>   mEventTarget;
     Mutex                      mLock;
     CondVar                    mCondVar;
     nsCOMPtr<nsIFile>          mProfileDir;

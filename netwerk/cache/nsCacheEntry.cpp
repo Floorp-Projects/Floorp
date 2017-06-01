@@ -52,7 +52,7 @@ nsCacheEntry::~nsCacheEntry()
     MOZ_COUNT_DTOR(nsCacheEntry);
     
     if (mData)
-        nsCacheService::ReleaseObject_Locked(mData, mThread);
+        nsCacheService::ReleaseObject_Locked(mData, mEventTarget);
 }
 
 
@@ -101,13 +101,13 @@ void
 nsCacheEntry::SetData(nsISupports * data)
 {
     if (mData) {
-        nsCacheService::ReleaseObject_Locked(mData, mThread);
+        nsCacheService::ReleaseObject_Locked(mData, mEventTarget);
         mData = nullptr;
     }
 
     if (data) {
         NS_ADDREF(mData = data);
-        mThread = do_GetCurrentThread();
+        mEventTarget = GetCurrentThreadEventTarget();
     }
 }
 

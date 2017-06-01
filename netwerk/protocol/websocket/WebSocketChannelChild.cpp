@@ -180,7 +180,7 @@ public:
   {
     nsCOMPtr<nsIEventTarget> target = mEventTarget;
     if (!target) {
-      target = do_GetMainThread();
+      target = GetMainThreadEventTarget();
     }
     return target.forget();
   }
@@ -212,8 +212,7 @@ class StartEvent : public ChannelEvent
 
   already_AddRefed<nsIEventTarget> GetEventTarget()
   {
-    nsCOMPtr<nsIEventTarget> target = do_GetCurrentThread();
-    return target.forget();
+    return do_AddRef(GetCurrentThreadEventTarget());
   }
 
  private:
@@ -277,8 +276,7 @@ class StopEvent : public ChannelEvent
 
   already_AddRefed<nsIEventTarget> GetEventTarget()
   {
-    nsCOMPtr<nsIEventTarget> target = do_GetCurrentThread();
-    return target.forget();
+    return do_AddRef(GetCurrentThreadEventTarget());
   }
 
  private:
@@ -334,8 +332,7 @@ class MessageEvent : public ChannelEvent
 
   already_AddRefed<nsIEventTarget> GetEventTarget()
   {
-    nsCOMPtr<nsIEventTarget> target = do_GetCurrentThread();
-    return target.forget();
+    return do_AddRef(GetCurrentThreadEventTarget());
   }
 
  private:
@@ -413,8 +410,7 @@ class AcknowledgeEvent : public ChannelEvent
 
   already_AddRefed<nsIEventTarget> GetEventTarget()
   {
-    nsCOMPtr<nsIEventTarget> target = do_GetCurrentThread();
-    return target.forget();
+    return do_AddRef(GetCurrentThreadEventTarget());
   }
 
  private:
@@ -466,8 +462,7 @@ class ServerCloseEvent : public ChannelEvent
 
   already_AddRefed<nsIEventTarget> GetEventTarget()
   {
-    nsCOMPtr<nsIEventTarget> target = do_GetCurrentThread();
-    return target.forget();
+    return do_AddRef(GetCurrentThreadEventTarget());
   }
 
  private:
@@ -611,7 +606,7 @@ NS_IMETHODIMP
 WebSocketChannelChild::Close(uint16_t code, const nsACString & reason)
 {
   if (!NS_IsMainThread()) {
-    MOZ_RELEASE_ASSERT(NS_GetCurrentThread() == mTargetThread);
+    MOZ_RELEASE_ASSERT(mTargetThread->IsOnCurrentThread());
     return NS_DispatchToMainThread(new CloseEvent(this, code, reason));
   }
   LOG(("WebSocketChannelChild::Close() %p\n", this));
@@ -739,7 +734,7 @@ WebSocketChannelChild::SendBinaryStream(nsIInputStream *aStream,
                                         uint32_t aLength)
 {
   if (!NS_IsMainThread()) {
-    MOZ_RELEASE_ASSERT(NS_GetCurrentThread() == mTargetThread);
+    MOZ_RELEASE_ASSERT(mTargetThread->IsOnCurrentThread());
     return NS_DispatchToMainThread(new BinaryStreamEvent(this, aStream, aLength));
   }
 

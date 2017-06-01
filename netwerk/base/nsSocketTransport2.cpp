@@ -2544,7 +2544,7 @@ nsSocketTransport::SetSecurityCallbacks(nsIInterfaceRequestor *callbacks)
 {
     nsCOMPtr<nsIInterfaceRequestor> threadsafeCallbacks;
     NS_NewNotificationCallbacksAggregation(callbacks, nullptr,
-                                           NS_GetCurrentThread(),
+                                           GetCurrentThreadEventTarget(),
                                            getter_AddRefs(threadsafeCallbacks));
 
     nsCOMPtr<nsISupports> secinfo;

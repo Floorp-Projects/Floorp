@@ -452,7 +452,7 @@ CacheFileOutputStream::NotifyListener()
     if (!mCallbackTarget) {
       LOG(("CacheFileOutputStream::NotifyListener() - Cannot get Cache I/O "
            "thread! Using main thread for callback."));
-      mCallbackTarget = do_GetMainThread();
+      mCallbackTarget = GetMainThreadEventTarget();
     }
   }
 

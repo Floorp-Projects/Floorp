@@ -34,7 +34,7 @@ public:
      */
     explicit AsyncApplyBufferingPolicyEvent(nsAsyncStreamCopier* aCopier)
         : mCopier(aCopier)
-      , mTarget(NS_GetCurrentThread())
+      , mTarget(GetCurrentThreadEventTarget())
       { }
     NS_IMETHOD Run() override
     {

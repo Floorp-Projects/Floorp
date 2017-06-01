@@ -584,7 +584,7 @@ class AvailableEvent final : public Runnable
         , mSize(0)
         , mResultForCallback(NS_OK)
     {
-        mCallbackTarget = NS_GetCurrentThread();
+        mCallbackTarget = GetCurrentThreadEventTarget();
     }
 
     NS_IMETHOD Run() override
