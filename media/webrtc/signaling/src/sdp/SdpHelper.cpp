@@ -168,7 +168,7 @@ SdpHelper::DisableMsection(Sdp* sdp, SdpMediaSection* msection)
       msection->AddCodec("120", "VP8", 90000, 1);
       break;
     case SdpMediaSection::kApplication:
-      msection->AddDataChannel("rejected", 0, 0);
+      msection->AddDataChannel("rejected", 0, 0, 0);
       break;
     default:
       // We need to have something here to fit the grammar, this seems safe

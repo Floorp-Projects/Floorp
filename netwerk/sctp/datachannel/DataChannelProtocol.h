@@ -16,8 +16,9 @@
 #error "Unsupported compiler"
 #endif
 
-// Duplicated in fsm.def
-#define WEBRTC_DATACHANNEL_STREAMS_DEFAULT 256
+#define WEBRTC_DATACHANNEL_STREAMS_DEFAULT          256
+#define WEBRTC_DATACHANNEL_PORT_DEFAULT             5000
+#define WEBRTC_DATACHANELL_MAX_MESSAGE_SIZE_DEFAULT 65536
 
 #define DATA_CHANNEL_PPID_CONTROL        50
 #define DATA_CHANNEL_PPID_BINARY         52
