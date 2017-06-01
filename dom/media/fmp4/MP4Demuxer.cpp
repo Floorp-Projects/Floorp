@@ -497,8 +497,8 @@ MP4TrackDemuxer::GetSamples(int32_t aNumSamples)
   }
 
   if (mQueuedSample) {
-    MOZ_ASSERT(mQueuedSample->mKeyframe,
-               "mQueuedSample must be a keyframe");
+    NS_ASSERTION(mQueuedSample->mKeyframe,
+                 "mQueuedSample must be a keyframe");
     samples->mSamples.AppendElement(mQueuedSample);
     mQueuedSample = nullptr;
     aNumSamples--;
