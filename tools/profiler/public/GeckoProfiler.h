@@ -290,7 +290,9 @@ ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {}
 PROFILER_FUNC(bool profiler_is_active(), false)
 
 // Check if a profiler feature (specified via the ProfilerFeature type) is
-// active. Returns false if the profiler is inactive.
+// active. Returns false if the profiler is inactive. Note: the return value
+// can become immediately out-of-date, much like the return value of
+// profiler_is_active().
 PROFILER_FUNC(bool profiler_feature_active(uint32_t aFeature), false)
 
 // Get the profile encoded as a JSON string. A no-op (returning nullptr) if the
