@@ -62,9 +62,9 @@ var CaptivePortalWatcher = {
       if (windows.getNext() == window && !windows.hasMoreElements()) {
         this.ensureCaptivePortalTab();
       }
-    } else if (cps.state == cps.UNKNOWN) {
-      cps.recheckCaptivePortal();
     }
+
+    cps.recheckCaptivePortal();
   },
 
   uninit() {
