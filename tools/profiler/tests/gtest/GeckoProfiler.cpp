@@ -30,7 +30,7 @@ using namespace mozilla;
 
 typedef Vector<const char*> StrVec;
 
-void
+static void
 InactiveFeaturesAndParamsCheck()
 {
   int entries;
@@ -51,7 +51,7 @@ InactiveFeaturesAndParamsCheck()
   ASSERT_TRUE(filters.empty());
 }
 
-void
+static void
 ActiveParamsCheck(int aEntries, double aInterval, uint32_t aFeatures,
                   const char** aFilters, size_t aFiltersLen)
 {
@@ -320,6 +320,45 @@ TEST(GeckoProfiler, Pause)
   ASSERT_TRUE(!profiler_is_paused());
 }
 
+// A class that keeps track of how many instances have been created, streamed,
+// and destroyed.
+class GTestPayload : public ProfilerMarkerPayload
+{
+public:
+  explicit GTestPayload(int aN)
+    : mN(aN)
+  {
+    sNumCreated++;
+  }
+
+  virtual ~GTestPayload() { sNumDestroyed++; }
+
+  virtual void StreamPayload(SpliceableJSONWriter& aWriter,
+                             const mozilla::TimeStamp& aStartTime,
+                             UniqueStacks& aUniqueStacks) override
+  {
+    streamCommonProps("gtest", aWriter, aStartTime, aUniqueStacks);
+    char buf[64];
+    SprintfLiteral(buf, "gtest-%d", mN);
+    aWriter.IntProperty(buf, mN);
+    sNumStreamed++;
+  }
+
+private:
+  int mN;
+
+public:
+  // The number of GTestPayload instances that have been created, streamed, and
+  // destroyed.
+  static int sNumCreated;
+  static int sNumStreamed;
+  static int sNumDestroyed;
+};
+
+int GTestPayload::sNumCreated = 0;
+int GTestPayload::sNumStreamed = 0;
+int GTestPayload::sNumDestroyed = 0;
+
 TEST(GeckoProfiler, Markers)
 {
   uint32_t features = ProfilerFeature::StackWalk;
@@ -349,7 +388,50 @@ TEST(GeckoProfiler, Markers)
     "M4", new ProfilerMarkerTracing("C", TRACING_EVENT,
                                     profiler_get_backtrace()));
 
+  for (int i = 0; i < 10; i++) {
+    PROFILER_MARKER_PAYLOAD("M5", new GTestPayload(i));
+  }
+
+  // Sleep briefly to ensure a sample is taken and the pending markers are
+  // processed.
+  PR_Sleep(PR_MillisecondsToInterval(500));
+
+  SpliceableChunkedJSONWriter w;
+  ASSERT_TRUE(profiler_stream_json_for_this_process(w));
+
+  UniquePtr<char[]> profile = w.WriteFunc()->CopyData();
+
+  // The GTestPayloads should have been created and streamed, but not yet
+  // destroyed.
+  ASSERT_TRUE(GTestPayload::sNumCreated == 10);
+  ASSERT_TRUE(GTestPayload::sNumStreamed == 10);
+  ASSERT_TRUE(GTestPayload::sNumDestroyed == 0);
+  for (int i = 0; i < 10; i++) {
+    char buf[64];
+    SprintfLiteral(buf, "\"gtest-%d\"", i);
+    ASSERT_TRUE(strstr(profile.get(), buf));
+  }
+
   profiler_stop();
+
+  // The GTestPayloads should have been destroyed.
+  ASSERT_TRUE(GTestPayload::sNumDestroyed == 10);
+
+  for (int i = 0; i < 10; i++) {
+    PROFILER_MARKER_PAYLOAD("M5", new GTestPayload(i));
+  }
+
+  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                 features, filters, MOZ_ARRAY_LENGTH(filters));
+
+  ASSERT_TRUE(profiler_stream_json_for_this_process(w));
+
+  profiler_stop();
+
+  // The second set of GTestPayloads should not have been streamed.
+  ASSERT_TRUE(GTestPayload::sNumCreated == 20);
+  ASSERT_TRUE(GTestPayload::sNumStreamed == 10);
+  ASSERT_TRUE(GTestPayload::sNumDestroyed == 20);
 }
 
 TEST(GeckoProfiler, Time)
@@ -394,6 +476,29 @@ TEST(GeckoProfiler, GetProfile)
   ASSERT_TRUE(!profiler_get_profile());
 }
 
+static void
+JSONOutputCheck(const char* aOutput)
+{
+  // Check that various expected strings are in the JSON.
+
+  ASSERT_TRUE(aOutput);
+  ASSERT_TRUE(aOutput[0] == '{');
+
+  ASSERT_TRUE(strstr(aOutput, "\"libs\""));
+
+  ASSERT_TRUE(strstr(aOutput, "\"meta\""));
+  ASSERT_TRUE(strstr(aOutput, "\"version\""));
+  ASSERT_TRUE(strstr(aOutput, "\"startTime\""));
+
+  ASSERT_TRUE(strstr(aOutput, "\"threads\""));
+  ASSERT_TRUE(strstr(aOutput, "\"GeckoMain\""));
+  ASSERT_TRUE(strstr(aOutput, "\"samples\""));
+  ASSERT_TRUE(strstr(aOutput, "\"markers\""));
+  ASSERT_TRUE(strstr(aOutput, "\"stackTable\""));
+  ASSERT_TRUE(strstr(aOutput, "\"frameTable\""));
+  ASSERT_TRUE(strstr(aOutput, "\"stringTable\""));
+}
+
 TEST(GeckoProfiler, StreamJSONForThisProcess)
 {
   uint32_t features = ProfilerFeature::StackWalk;
@@ -410,7 +515,8 @@ TEST(GeckoProfiler, StreamJSONForThisProcess)
   w.End();
 
   UniquePtr<char[]> profile = w.WriteFunc()->CopyData();
-  ASSERT_TRUE(profile && profile[0] == '{');
+
+  JSONOutputCheck(profile.get());
 
   profiler_stop();
 
@@ -442,7 +548,8 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
   }), NS_DISPATCH_SYNC);
 
   UniquePtr<char[]> profile = w.WriteFunc()->CopyData();
-  ASSERT_TRUE(profile && profile[0] == '{');
+
+  JSONOutputCheck(profile.get());
 
   // Stop the profiler and call profiler_stream_json_for_this_process on a
   // background thread.
