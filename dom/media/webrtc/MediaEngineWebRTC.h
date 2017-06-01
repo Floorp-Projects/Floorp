@@ -208,7 +208,6 @@ public:
         aIndex = mDefaultDevice;
       }
     }
-    MOZ_ASSERT(mDeviceIndexes);
     if (aIndex < 0 || aIndex >= (int) mDeviceIndexes->Length()) {
       return -1;
     }
@@ -261,20 +260,6 @@ public:
     // With cubeb, we only expose devices of type CUBEB_DEVICE_TYPE_INPUT,
     // so unless it was removed, say it's available
     aIsAvailable = true;
-    return 0;
-  }
-
-  static int GetDeviceMaxChannels(int aDeviceIndex, uint32_t& aChannels)
-  {
-#ifdef MOZ_WIDGET_ANDROID
-    aChannels = 1;
-#else
-    int32_t devindex = DeviceIndex(aDeviceIndex);
-    if (!mDevices || devindex < 0) {
-      return 1;
-    }
-    aChannels = mDevices->device[devindex]->max_channels;
-#endif
     return 0;
   }
 
