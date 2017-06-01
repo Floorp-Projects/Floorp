@@ -420,13 +420,6 @@ class VirtualenvMixin(object):
             virtualenv_options = c.get('virtualenv_options',
                                        ['--no-site-packages', '--distribute'])
 
-            # ugly hack to avoid virtualenv 15.1.0 hitting the network.
-            # taskcluster uses virtualenv 15.1.0; buildbot has been
-            # using virtualenv 1.7.1.2
-            # https://github.com/pypa/setuptools/issues/1042
-            if os.environ.get("TASK_ID"):
-                virtualenv_options.append("--no-download")
-
         if os.path.exists(self.query_python_path()):
             self.info("Virtualenv %s appears to already exist; skipping virtualenv creation." % self.query_python_path())
         else:
@@ -434,6 +427,7 @@ class VirtualenvMixin(object):
             self.run_command(virtualenv + virtualenv_options + [venv_path],
                              cwd=dirs['abs_work_dir'],
                              error_list=VirtualenvErrorList,
+                             partial_env={'VIRTUALENV_NO_DOWNLOAD': "1"},
                              halt_on_failure=True)
 
         # Resolve the pip version so we can conditionally do things if we have
