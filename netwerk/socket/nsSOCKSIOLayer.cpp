@@ -470,7 +470,7 @@ nsSOCKSSocketInfo::StartDNS(PRFileDesc *fd)
 
     mFD  = fd;
     nsresult rv = dns->AsyncResolveNative(proxyHost, 0, this,
-                                          NS_GetCurrentThread(), attrs,
+                                          mozilla::GetCurrentThreadEventTarget(), attrs,
                                           getter_AddRefs(mLookup));
 
     if (NS_FAILED(rv)) {
