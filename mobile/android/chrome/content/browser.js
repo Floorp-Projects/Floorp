@@ -159,7 +159,8 @@ var lazilyLoadedObserverScripts = [
 
 if (AppConstants.MOZ_WEBRTC) {
   lazilyLoadedObserverScripts.push(
-    ["WebrtcUI", ["getUserMedia:request",
+    ["WebrtcUI", ["getUserMedia:ask-device-permission",
+                  "getUserMedia:request",
                   "PeerConnection:request",
                   "recording-device-events",
                   "VideoCapture:Paused",
