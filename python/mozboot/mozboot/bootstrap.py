@@ -335,9 +335,10 @@ class Bootstrapper(object):
                 print(STYLO_REQUIRES_CLONE)
                 sys.exit(1)
 
-            self.instance.stylo = True
-            self.instance.state_dir = state_dir
-            self.instance.ensure_stylo_packages(state_dir, checkout_root)
+            self.instance.stylo = wants_stylo
+            if wants_stylo:
+                self.instance.state_dir = state_dir
+                self.instance.ensure_stylo_packages(state_dir, checkout_root)
 
         print(self.finished % name)
         if not (self.instance.which('rustc') and self.instance._parse_version('rustc') >= MODERN_RUST_VERSION):

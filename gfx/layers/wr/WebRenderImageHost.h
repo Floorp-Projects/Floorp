@@ -73,6 +73,8 @@ public:
 
   void ClearWrBridge();
 
+  TextureHost* GetCurrentTextureHost() { return mCurrentTextureHost; }
+
 protected:
   // ImageComposite
   virtual TimeStamp GetCompositionTime() const override;

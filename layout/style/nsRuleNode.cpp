@@ -9649,6 +9649,10 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
         svg->mContextPropsBits |= NS_STYLE_CONTEXT_PROPERTY_FILL;
       } else if (atom == nsGkAtoms::stroke) {
         svg->mContextPropsBits |= NS_STYLE_CONTEXT_PROPERTY_STROKE;
+      } else if (atom == nsGkAtoms::fill_opacity) {
+        svg->mContextPropsBits |= NS_STYLE_CONTEXT_PROPERTY_FILL_OPACITY;
+      } else if (atom == nsGkAtoms::stroke_opacity) {
+        svg->mContextPropsBits |= NS_STYLE_CONTEXT_PROPERTY_STROKE_OPACITY;
       }
     }
     break;

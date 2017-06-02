@@ -39,9 +39,6 @@ protected:
   void AddWRVideoImage(size_t aChannelNumber);
 
   wr::MaybeExternalImageId mExternalImageId;
-  // Some video image format contains multiple channel data.
-  nsTArray<wr::ImageKey> mVideoKeys;
-  // The regular single channel image.
   Maybe<wr::ImageKey> mKey;
   RefPtr<ImageClient> mImageClient;
   CompositableType mImageClientTypeContainer;

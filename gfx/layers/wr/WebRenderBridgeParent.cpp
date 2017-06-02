@@ -123,7 +123,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mIdNameSpace(AllocIdNameSpace())
   , mPaused(false)
   , mDestroyed(false)
-  , mIsSnapshotting(false)
+  , mForceRendering(false)
 {
   MOZ_ASSERT(mCompositableHolder);
   mCompositableHolder->AddPipeline(mPipelineId);
@@ -133,6 +133,9 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   }
 }
 
+WebRenderBridgeParent::~WebRenderBridgeParent()
+{
+}
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvCreate(const gfx::IntSize& aSize)
@@ -454,7 +457,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
           NS_ERROR("CompositableHost does not exist");
           break;
         }
-        // XXX select Texture for video in CompositeToTarget().
         TextureHost* texture = host->GetAsTextureHostForComposite();
         if (!texture) {
           NS_ERROR("TextureHost does not exist");
@@ -467,11 +469,13 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
         }
         RefPtr<DataSourceSurface> dSurf = host->GetAsSurface();
         if (!dSurf) {
+          NS_ERROR("TextureHost does not return DataSourceSurface");
           break;
         }
 
         DataSourceSurface::MappedSurface map;
         if (!dSurf->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
+          NS_ERROR("DataSourceSurface failed to map");
           break;
         }
 
@@ -483,49 +487,16 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
         dSurf->Unmap();
         break;
       }
-      case WebRenderParentCommand::TOpAddExternalVideoImage: {
-        const OpAddExternalVideoImage& op = cmd.get_OpAddExternalVideoImage();
-        MOZ_ASSERT(mExternalImageIds.Get(wr::AsUint64(op.externalImageId())).get());
-        MOZ_ASSERT(op.keys().Length() > 0);
-        Range<const wr::ImageKey> keys(&(op.keys())[0], op.keys().Length());
-        for (auto key : keys) {
-          MOZ_ASSERT(!mActiveKeys.Get(wr::AsUint64(key), nullptr));
-          mActiveKeys.Put(wr::AsUint64(key), key);
-        }
-
-        RefPtr<WebRenderImageHost> host = mExternalImageIds.Get(wr::AsUint64(op.externalImageId()));
-        if (!host) {
-          NS_ERROR("CompositableHost does not exist");
-          break;
-        }
-        // XXX select Texture for video in CompositeToTarget().
-        TextureHost* texture = host->GetAsTextureHostForComposite();
-        if (!texture) {
-          NS_ERROR("TextureHost does not exist");
-          break;
-        }
-        WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
-        if (wrTexture) {
-          wrTexture->AddWRImage(mApi, keys, wrTexture->GetExternalImageKey());
-          break;
-        }
-
-        MOZ_ASSERT(keys.length() == 1);
-        RefPtr<DataSourceSurface> dSurf = host->GetAsSurface();
-        if (!dSurf) {
-          break;
-        }
-        DataSourceSurface::MappedSurface map;
-        if (!dSurf->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
-          break;
-        }
-
-        IntSize size = dSurf->GetSize();
-        wr::ImageDescriptor descriptor(size, map.mStride, dSurf->GetFormat());
-        auto slice = Range<uint8_t>(map.mData, size.height * map.mStride);
-        mApi->AddImage(keys[0], descriptor, slice);
-
-        dSurf->Unmap();
+      case WebRenderParentCommand::TOpUpdateAsyncImagePipeline: {
+        const OpUpdateAsyncImagePipeline& op = cmd.get_OpUpdateAsyncImagePipeline();
+        mCompositableHolder->UpdateAsyncImagePipeline(op.pipelineId(),
+                                                      op.scBounds(),
+                                                      op.scTransform(),
+                                                      op.scaleToSize(),
+                                                      op.clipRect(),
+                                                      op.mask(),
+                                                      op.filter(),
+                                                      op.mixBlendMode());
         break;
       }
       case WebRenderParentCommand::TCompositableOperation: {
@@ -618,7 +589,7 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture)
   // Assert the stride of the buffer is what webrender expects
   MOZ_ASSERT((uint32_t)(size.width * 4) == stride);
 
-  mIsSnapshotting = true;
+  mForceRendering = true;
 
   if (mCompositorScheduler->NeedsComposite()) {
     mCompositorScheduler->CancelCurrentCompositeTask();
@@ -627,20 +598,20 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture)
 
   mApi->Readback(size, buffer, buffer_size);
 
-  mIsSnapshotting = false;
+  mForceRendering = false;
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvAddExternalImageId(const ExternalImageId& aImageId,
-                                              const CompositableHandle& aHandle)
+WebRenderBridgeParent::RecvAddPipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineId,
+                                                             const CompositableHandle& aHandle)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
 
-  MOZ_ASSERT(!mExternalImageIds.Get(wr::AsUint64(aImageId)).get());
+  MOZ_ASSERT(!mAsyncCompositables.Get(wr::AsUint64(aPipelineId)).get());
 
   RefPtr<ImageBridgeParent> imageBridge = ImageBridgeParent::GetInstance(OtherPid());
   if (!imageBridge) {
@@ -659,8 +630,26 @@ WebRenderBridgeParent::RecvAddExternalImageId(const ExternalImageId& aImageId,
   }
 
   wrHost->SetWrBridge(this);
-  mExternalImageIds.Put(wr::AsUint64(aImageId), wrHost);
+  mAsyncCompositables.Put(wr::AsUint64(aPipelineId), wrHost);
+  mCompositableHolder->AddAsyncImagePipeline(aPipelineId, wrHost);
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvRemovePipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineId)
+{
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+
+  MOZ_ASSERT(mAsyncCompositables.Get(wr::AsUint64(aPipelineId)).get());
+  WebRenderImageHost* wrHost = mAsyncCompositables.Get(wr::AsUint64(aPipelineId)).get();
+  if (wrHost) {
+    wrHost->ClearWrBridge();
+    mCompositableHolder->RemoveAsyncImagePipeline(mApi, aPipelineId);
+  }
+  mAsyncCompositables.Remove(wr::AsUint64(aPipelineId));
   return IPC_OK();
 }
 
@@ -822,7 +811,7 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 
   const uint32_t maxPendingFrameCount = 2;
 
-  if (!mIsSnapshotting &&
+  if (!mForceRendering &&
       wr::RenderThread::Get()->GetPendingFrameCount(mApi->GetId()) > maxPendingFrameCount) {
     // Render thread is busy, try next time.
     ScheduleComposition();
@@ -832,6 +821,9 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   bool scheduleComposite = false;
   nsTArray<WrOpacityProperty> opacityArray;
   nsTArray<WrTransformProperty> transformArray;
+
+  mCompositableHolder->SetCompositionTime(TimeStamp::Now());
+  mCompositableHolder->ApplyAsyncImages(mApi);
 
   if (gfxPrefs::WebRenderOMTAEnabled()) {
     SampleAnimations(opacityArray, transformArray);
@@ -851,10 +843,9 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     mApi->GenerateFrame();
   }
 
-  // XXX Enable it when async video is supported.
-  // if (!mCompositableHolder->GetCompositeUntilTime().IsNull()) {
-  //   scheduleComposite = true;
-  // }
+  if (!mCompositableHolder->GetCompositeUntilTime().IsNull()) {
+    scheduleComposite = true;
+  }
 
   if (scheduleComposite) {
     ScheduleComposition();
@@ -911,10 +902,6 @@ WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch)
   return id;
 }
 
-WebRenderBridgeParent::~WebRenderBridgeParent()
-{
-}
-
 uint64_t
 WebRenderBridgeParent::GetLayersId() const
 {
@@ -936,6 +923,26 @@ WebRenderBridgeParent::ScheduleComposition()
   if (mCompositorScheduler) {
     mCompositorScheduler->ScheduleComposition();
   }
+}
+
+void
+WebRenderBridgeParent::FlushRendering(bool aIsSync)
+{
+  if (mDestroyed) {
+    return;
+  }
+
+  if (!mCompositorScheduler->NeedsComposite()) {
+    return;
+  }
+
+  mForceRendering = true;
+  mCompositorScheduler->CancelCurrentCompositeTask();
+  mCompositorScheduler->ForceComposeToTarget(nullptr, nullptr);
+  if (aIsSync) {
+    mApi->WaitFlushed();
+  }
+  mForceRendering = false;
 }
 
 void
@@ -988,6 +995,15 @@ WebRenderBridgeParent::ClearResources()
     iter.Data()->ClearWrBridge();
   }
   mExternalImageIds.Clear();
+  for (auto iter = mAsyncCompositables.Iter(); !iter.Done(); iter.Next()) {
+    wr::PipelineId pipelineId = wr::AsPipelineId(iter.Key());
+    RefPtr<WebRenderImageHost> host = iter.Data();
+    MOZ_ASSERT(host->GetAsyncRef());
+    host->ClearWrBridge();
+    mCompositableHolder->RemoveAsyncImagePipeline(mApi, pipelineId);
+  }
+  mAsyncCompositables.Clear();
+
   mCompositableHolder->RemovePipeline(mPipelineId, wr::NewEpoch(mWrEpoch));
 
   if (mWidget) {

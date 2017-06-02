@@ -532,6 +532,11 @@ CompositorBridgeParent::RecvWaitOnTransactionProcessed()
 mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRendering()
 {
+  if (gfxVars::UseWebRender()) {
+    mWrBridge->FlushRendering(/* aSync */ true);
+    return IPC_OK();
+  }
+
   if (mCompositorScheduler->NeedsComposite()) {
     CancelCurrentCompositeTask();
     ForceComposeToTarget(nullptr);
@@ -542,6 +547,11 @@ CompositorBridgeParent::RecvFlushRendering()
 mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRenderingAsync()
 {
+  if (gfxVars::UseWebRender()) {
+    mWrBridge->FlushRendering(/* aSync */ false);
+    return IPC_OK();
+  }
+
   return RecvFlushRendering();
 }
 
