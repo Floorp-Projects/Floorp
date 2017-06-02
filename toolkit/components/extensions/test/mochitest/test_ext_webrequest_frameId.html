@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head_webrequest.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+"use strict";
+
+function background() {
+  browser.webRequest.onBeforeRequest.addListener(details => {
+    browser.test.sendMessage("onBeforeRequest", details);
+  }, {urls: ["<all_urls>"]}, ["blocking"]);
+
+  let tab;
+  browser.tabs.onCreated.addListener(newTab => {
+    tab = newTab;
+  });
+
+  browser.test.onMessage.addListener(msg => {
+    if (msg === "close-tab") {
+      browser.tabs.remove(tab.id);
+      browser.test.sendMessage("tab-closed");
+    }
+  });
+}
+
+let extensionData = {
+  manifest: {
+    permissions: ["webRequest", "webRequestBlocking", "<all_urls>", "tabs"],
+  },
+  background,
+};
+
+let expected = {
+  "file_simple_xhr.html": {
+    type: "main_frame",
+    toplevel: true,
+  },
+  "file_image_good.png": {
+    type: "image",
+    toplevel: true,
+  },
+  "example.txt": {
+    type: "xmlhttprequest",
+    toplevel: true,
+  },
+  "file_simple_xhr_frame.html": {
+    type: "sub_frame",
+    toplevelParent: true,
+  },
+  "file_image_bad.png": {
+    type: "image",
+  },
+  "xhr_resource": {
+    type: "xmlhttprequest",
+  },
+  "file_simple_xhr_frame2.html": {
+    type: "sub_frame",
+  },
+  "file_image_bad.png#2": {
+    type: "image",
+  },
+  "xhr_resource_2": {
+    type: "xmlhttprequest",
+  },
+};
+
+let subframeId, parentId;
+function checkDetails(details) {
+  let url = new URL(details.url);
+  let filename = url.pathname.split("/").pop();
+  let expect = expected[filename];
+  is(expect.type, details.type, `${details.type} type matches`);
+  if (expect.toplevel) {
+    is(0, details.frameId, "expect load at top level");
+    is(-1, details.parentFrameId, "expect top level frame to have no parent");
+  } else if (details.type == "sub_frame") {
+    ok(details.frameId > 0, "expect sub_frame to load into a new frame");
+    if (expect.toplevelParent) {
+      is(0, details.parentFrameId, "expect sub_frame to have top level parent");
+    } else {
+      ok(details.parentFrameId > 0, "expect sub_frame to have parent");
+    }
+    subframeId = details.frameId;
+    parentId = details.parentFrameId;
+  } else {
+    is(subframeId, details.frameId, "expect load in subframe");
+    is(parentId, details.parentFrameId, "expect subframe parent");
+  }
+}
+
+add_task(async function test_webRequest_main_frame() {
+  // Clear the image cache, since it gets in the way otherwise.
+  let imgTools = SpecialPowers.Cc["@mozilla.org/image/tools;1"].getService(SpecialPowers.Ci.imgITools);
+  let cache = imgTools.getImgCacheForDocument(document);
+  cache.clearCache(false);
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+
+  let a = addLink(`file_simple_xhr.html?nocache=${Math.random()}`);
+  a.click();
+
+  for (let i = 0; i < Object.keys(expected).length; i++) {
+    checkDetails(await extension.awaitMessage("onBeforeRequest"));
+  }
+
+  let closed = extension.awaitMessage("tab-closed");
+  extension.sendMessage("close-tab");
+  await closed;
+  await extension.unload();
+});
+
+</script>
+</head>
+<body>
+<div id="test">Sample text</div>
+
+</body>
+</html>
