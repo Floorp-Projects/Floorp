@@ -3908,12 +3908,19 @@ nsDOMWindowUtils::GetCompositorAPZTestData(JSContext* aContext,
     if (!lm) {
       return NS_OK;
     }
+    APZTestData compositorSideData;
     if (ClientLayerManager* clm = lm->AsClientLayerManager()) {
-      APZTestData compositorSideData;
       clm->GetCompositorSideAPZTestData(&compositorSideData);
-      if (!compositorSideData.ToJS(aOutCompositorTestData, aContext)) {
+    } else if (WebRenderLayerManager* wrlm = lm->AsWebRenderLayerManager()) {
+      if (!wrlm->WrBridge()) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      if (!wrlm->WrBridge()->SendGetAPZTestData(&compositorSideData)) {
         return NS_ERROR_FAILURE;
       }
+    }
+    if (!compositorSideData.ToJS(aOutCompositorTestData, aContext)) {
+      return NS_ERROR_FAILURE;
     }
   }
 
