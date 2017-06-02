@@ -415,6 +415,12 @@ private:
 // This runnable is an helper class for dispatching something from a worker
 // thread to the main-thread and back to the worker-thread. During this
 // operation, this class will keep the worker alive.
+// The purpose of RunBackOnWorkerThreadForCleanup() must be used, as the name
+// says, only to release resources, no JS has to be executed, no timers, or
+// other things. The reason of such limitations is that, in order to execute
+// this method in any condition (also when the worker is shutting down), a
+// Control Runnable is used, and, this could generate a reordering of existing
+// runnables.
 class WorkerProxyToMainThreadRunnable : public Runnable
 {
 protected:
@@ -426,7 +432,7 @@ protected:
   virtual void RunOnMainThread() = 0;
 
   // After this second method is called on the worker-thread.
-  virtual void RunBackOnWorkerThread() = 0;
+  virtual void RunBackOnWorkerThreadForCleanup() = 0;
 
 public:
   bool Dispatch();

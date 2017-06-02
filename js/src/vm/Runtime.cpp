@@ -156,6 +156,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     beingDestroyed_(false),
     allowContentJS_(true),
     atoms_(nullptr),
+    atomsAddedWhileSweeping_(nullptr),
     atomsCompartment_(nullptr),
     staticStrings(nullptr),
     commonNames(nullptr),
@@ -841,6 +842,34 @@ JSRuntime::activeGCInAtomsZone()
     Zone* zone = atomsCompartment_->zone();
     return (zone->needsIncrementalBarrier() && !gc.isVerifyPreBarriersEnabled()) ||
            zone->wasGCStarted();
+}
+
+bool
+JSRuntime::createAtomsAddedWhileSweepingTable()
+{
+    MOZ_ASSERT(JS::CurrentThreadIsHeapCollecting());
+    MOZ_ASSERT(!atomsAddedWhileSweeping_);
+
+    atomsAddedWhileSweeping_ = js_new<AtomSet>();
+    if (!atomsAddedWhileSweeping_)
+        return false;
+
+    if (!atomsAddedWhileSweeping_->init()) {
+        destroyAtomsAddedWhileSweepingTable();
+        return false;
+    }
+
+    return true;
+}
+
+void
+JSRuntime::destroyAtomsAddedWhileSweepingTable()
+{
+    MOZ_ASSERT(JS::CurrentThreadIsHeapCollecting());
+    MOZ_ASSERT(atomsAddedWhileSweeping_);
+
+    js_delete(atomsAddedWhileSweeping_.ref());
+    atomsAddedWhileSweeping_ = nullptr;
 }
 
 void

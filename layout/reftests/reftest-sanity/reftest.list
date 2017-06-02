@@ -155,8 +155,8 @@ fuzzy-if(false,2,1) == fuzzy-ref.html fuzzy-ref.html
 # When using 565 fuzzy.html and fuzzy-ref.html will compare as equal
 fails-if(!styloVsGecko) fuzzy-if(false,2,1) random-if(Android) == fuzzy.html fuzzy-ref.html
 
-# Test that reftest-no-paint fails correctly
-fails == reftest-no-paint.html reftest-no-paint-ref.html
+# Test that reftest-no-paint fails correctly. With WR enabled, it will generate color layers instead of updating color on the painted layer.
+fails skip-if(webrender) == reftest-no-paint.html reftest-no-paint-ref.html
 
 skip-if(!asyncPan||!browserIsRemote) == async-scroll-1a.html async-scroll-1-ref.html
 
