@@ -420,8 +420,10 @@ MP3TrackDemuxer::Duration(int64_t aNumFrames) const
 MediaByteRange
 MP3TrackDemuxer::FindFirstFrame()
 {
-  // Get engough successive frames to avoid invalid frame from cut stream.
-  // However, some website use very short mp3 file so using the same value as Chrome.
+  // We attempt to find multiple successive frames to avoid locking onto a false
+  // positive if we're fed a stream that has been cut mid-frame.
+  // For compatibility reasons we have to use the same frame count as Chrome, since
+  // some web sites actually use a file that short to test our playback capabilities.
   static const int MIN_SUCCESSIVE_FRAMES = 3;
 
   MediaByteRange candidateFrame = FindNextFrame();
@@ -462,7 +464,7 @@ MP3TrackDemuxer::FindFirstFrame()
 
   if (numSuccFrames >= MIN_SUCCESSIVE_FRAMES) {
     MP3LOG("FindFirst() accepting candidate frame: "
-            "successiveFrames=%d", numSuccFrames);
+           "successiveFrames=%d", numSuccFrames);
   } else {
     MP3LOG("FindFirst() no suitable first frame found");
   }
