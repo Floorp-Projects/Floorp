@@ -361,6 +361,7 @@ class BuildOptionParser(object):
         'source': 'builds/releng_sub_%s_configs/%s_source.py',
         'stylo': 'builds/releng_sub_%s_configs/%s_stylo.py',
         'stylo-debug': 'builds/releng_sub_%s_configs/%s_stylo_debug.py',
+        'noopt-debug': 'builds/releng_sub_%s_configs/%s_noopt_debug.py',
         'api-15-gradle-dependencies': 'builds/releng_sub_%s_configs/%s_api_15_gradle_dependencies.py',
         'api-15': 'builds/releng_sub_%s_configs/%s_api_15.py',
         'api-15-old-id': 'builds/releng_sub_%s_configs/%s_api_15_old_id.py',
