@@ -3622,7 +3622,7 @@ private:
   }
 
   void
-  RunBackOnWorkerThread() override
+  RunBackOnWorkerThreadForCleanup() override
   {}
 };
 

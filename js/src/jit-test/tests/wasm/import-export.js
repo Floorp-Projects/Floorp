@@ -19,7 +19,26 @@ const tab2Elem = new Table({initial:2, element:"anyfunc"});
 const tab3Elem = new Table({initial:3, element:"anyfunc"});
 const tab4Elem = new Table({initial:4, element:"anyfunc"});
 
+// Memory size consistency and internal limits.
 assertErrorMessage(() => new Memory({initial:2, maximum:1}), RangeError, /bad Memory maximum size/);
+
+try {
+    new Memory({initial:16384});
+} catch(e) {
+    assertEq(String(e).indexOf("out of memory") !== -1, true);
+}
+
+assertErrorMessage(() => new Memory({initial: 16385}), RangeError, /bad Memory initial size/);
+
+new Memory({initial: 0, maximum: 65536});
+assertErrorMessage(() => new Memory({initial: 0, maximum: 65537}), RangeError, /bad Memory maximum size/);
+
+// Table size consistency and internal limits.
+assertErrorMessage(() => new Table({initial:2, maximum:1, element:"anyfunc"}), RangeError, /bad Table maximum size/);
+new Table({ initial: 10000000, element:"anyfunc" });
+assertErrorMessage(() => new Table({initial:10000001, element:"anyfunc"}), RangeError, /bad Table initial size/);
+new Table({ initial: 0, maximum: 2**32 - 1, element:"anyfunc" });
+assertErrorMessage(() => new Table({initial:0, maximum: 2**32, element:"anyfunc"}), RangeError, /bad Table maximum size/);
 
 const m1 = new Module(wasmTextToBinary('(module (import "foo" "bar") (import "baz" "quux"))'));
 assertErrorMessage(() => new Instance(m1), TypeError, /second argument must be an object/);

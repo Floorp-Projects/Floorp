@@ -134,41 +134,18 @@ interface nsIScriptSecurityManager : nsISupports
     nsIPrincipal getSystemPrincipal();
 
     /**
-     * Returns a principal that has the given information.
-     * @param appId is the app id of the principal. It can't be UNKNOWN_APP_ID.
-     * @param inMozBrowser is true if the principal has to be considered as
-     * inside a mozbrowser frame.
-     *
-     * @deprecated use createCodebasePrincipal instead.
-     */
-    [deprecated] nsIPrincipal getAppCodebasePrincipal(in nsIURI uri,
-                                                      in unsigned long appId,
-                                                      in boolean inMozBrowser);
-
-    /**
-     * Returns a principal that has the appId and inMozBrowser of the load
-     * context.
-     * @param loadContext to get appId/inMozBrowser from.
+     * Returns a principal that has the OriginAttributes of the load context.
+     * @param loadContext to get the OriginAttributes from.
      */
     nsIPrincipal getLoadContextCodebasePrincipal(in nsIURI uri,
                                                  in nsILoadContext loadContext);
 
     /**
-     * Returns a principal that has the appId and inMozBrowser of the docshell
-     * inside a mozbrowser frame.
-     * @param docShell to get appId/inMozBrowser from.
+     * Returns a principal that has the OriginAttributes of the docshell.
+     * @param docShell to get the OriginAttributes from.
      */
     nsIPrincipal getDocShellCodebasePrincipal(in nsIURI uri,
                                               in nsIDocShell docShell);
-
-    /**
-     * Returns a principal with that has the same origin as uri and is not part
-     * of an appliction.
-     * The returned principal will have appId = NO_APP_ID.
-     *
-     * @deprecated use createCodebasePrincipal instead.
-     */
-    [deprecated] nsIPrincipal getNoAppCodebasePrincipal(in nsIURI uri);
 
     /**
      * Legacy method for getting a principal with no origin attributes.

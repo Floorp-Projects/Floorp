@@ -2611,6 +2611,8 @@ GCMarker::stackContainsCrossZonePointerTo(const Cell* target) const
         // pointer.
         if (source->is<ProxyObject>()) {
             Value value = source->as<ProxyObject>().private_();
+            MOZ_ASSERT_IF(!IsCrossCompartmentWrapper(source),
+                          IsObjectValueInCompartment(value, source->compartment()));
             if (value.isObject() && &value.toObject() == target)
                 return sourceZone;
         }

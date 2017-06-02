@@ -97,7 +97,8 @@ PhaseKindGraphRoots = [
             PhaseKind("WEAK_ZONES_CALLBACK", "Per-Slice Weak Callback", 57),
             PhaseKind("WEAK_COMPARTMENT_CALLBACK", "Per-Compartment Weak Callback", 58)
         ]),
-        PhaseKind("SWEEP_ATOMS", "Sweep Atoms", 18),
+        PhaseKind("UPDATE_ATOMS_BITMAP", "Sweep Atoms Bitmap", 68),
+        PhaseKind("SWEEP_ATOMS_TABLE", "Sweep Atoms Table", 18),
         PhaseKind("SWEEP_COMPARTMENTS", "Sweep Compartments", 20, [
             PhaseKind("SWEEP_DISCARD_CODE", "Sweep Discard Code", 21),
             PhaseKind("SWEEP_INNER_VIEWS", "Sweep Inner Views", 22),

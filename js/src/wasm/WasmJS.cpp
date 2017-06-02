@@ -423,8 +423,7 @@ ToNonWrappingUint32(JSContext* cx, HandleValue v, uint32_t max, const char* kind
         return false;
 
     if (dbl < 0 || dbl > max) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32,
-                                  kind, noun);
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_UINT32, kind, noun);
         return false;
     }
 
@@ -434,8 +433,8 @@ ToNonWrappingUint32(JSContext* cx, HandleValue v, uint32_t max, const char* kind
 }
 
 static bool
-GetLimits(JSContext* cx, HandleObject obj, uint32_t max, const char* kind,
-          Limits* limits)
+GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaximum,
+          const char* kind, Limits* limits)
 {
     JSAtom* initialAtom = Atomize(cx, "initial", strlen("initial"));
     if (!initialAtom)
@@ -446,7 +445,7 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t max, const char* kind,
     if (!GetProperty(cx, obj, obj, initialId, &initialVal))
         return false;
 
-    if (!ToNonWrappingUint32(cx, initialVal, max, kind, "initial size", &limits->initial))
+    if (!ToNonWrappingUint32(cx, initialVal, maxInitial, kind, "initial size", &limits->initial))
         return false;
 
     JSAtom* maximumAtom = Atomize(cx, "maximum", strlen("maximum"));
@@ -461,7 +460,7 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t max, const char* kind,
             return false;
 
         limits->maximum.emplace();
-        if (!ToNonWrappingUint32(cx, maxVal, max, kind, "maximum size", limits->maximum.ptr()))
+        if (!ToNonWrappingUint32(cx, maxVal, maxMaximum, kind, "maximum size", limits->maximum.ptr()))
             return false;
 
         if (limits->initial > *limits->maximum) {
@@ -1343,7 +1342,7 @@ WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject obj(cx, &args[0].toObject());
     Limits limits;
-    if (!GetLimits(cx, obj, UINT32_MAX / PageSize, "Memory", &limits))
+    if (!GetLimits(cx, obj, MaxMemoryInitialPages, MaxMemoryMaximumPages, "Memory", &limits))
         return false;
 
     limits.initial *= PageSize;
@@ -1654,7 +1653,7 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
     }
 
     Limits limits;
-    if (!GetLimits(cx, obj, UINT32_MAX, "Table", &limits))
+    if (!GetLimits(cx, obj, MaxTableInitialLength, UINT32_MAX, "Table", &limits))
         return false;
 
     RootedWasmTableObject table(cx, WasmTableObject::create(cx, limits));

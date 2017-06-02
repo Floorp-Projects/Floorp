@@ -122,12 +122,24 @@ void
 IPCBlobInputStreamStorage::GetStream(const nsID& aID,
                                      nsIInputStream** aInputStream)
 {
-  mozilla::StaticMutexAutoLock lock(gMutex);
-  StreamData* data = mStorage.Get(aID);
-  if (!data) {
-    *aInputStream = nullptr;
-    return;
+  *aInputStream = nullptr;
+
+  nsCOMPtr<nsIInputStream> inputStream;
+
+  // NS_CloneInputStream cannot be called when the mutex is locked because it
+  // can, recursively call GetStream() in case the child actor lives on the
+  // parent process.
+  {
+    mozilla::StaticMutexAutoLock lock(gMutex);
+    StreamData* data = mStorage.Get(aID);
+    if (!data) {
+      return;
+    }
+
+    inputStream = data->mInputStream;
   }
+
+  MOZ_ASSERT(inputStream);
 
   // We cannot return always the same inputStream because not all of them are
   // able to be reused. Better to clone them.
@@ -136,13 +148,20 @@ IPCBlobInputStreamStorage::GetStream(const nsID& aID,
   nsCOMPtr<nsIInputStream> replacementStream;
 
   nsresult rv =
-    NS_CloneInputStream(data->mInputStream, getter_AddRefs(clonedStream),
+    NS_CloneInputStream(inputStream, getter_AddRefs(clonedStream),
                         getter_AddRefs(replacementStream));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
   if (replacementStream) {
+    mozilla::StaticMutexAutoLock lock(gMutex);
+    StreamData* data = mStorage.Get(aID);
+    // data can be gone in the meantime.
+    if (!data) {
+      return;
+    }
+
     data->mInputStream = replacementStream;
   }
 
