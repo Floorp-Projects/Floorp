@@ -7,6 +7,9 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Widget: Android")
 
+with Files("*CompositorWidget*"):
+    BUG_COMPONENT = ("Core", "Graphics")
+
 DIRS += [
     'bindings',
     'fennec',

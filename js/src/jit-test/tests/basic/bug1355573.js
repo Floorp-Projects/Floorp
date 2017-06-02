@@ -1,4 +1,4 @@
-// |jit-test| error:overflow
+// |jit-test| error:overflow; allow-oom
 if (getBuildConfiguration().debug === true)
     throw "overflow";
 function f(){};

@@ -49,6 +49,14 @@ SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
     haveContextPaint = true;
     contextPaint->SetStroke(style->mStroke.GetColor());
   }
+  if (style->mContextPropsBits & NS_STYLE_CONTEXT_PROPERTY_FILL_OPACITY) {
+    haveContextPaint = true;
+    contextPaint->SetFillOpacity(style->mFillOpacity);
+  }
+  if (style->mContextPropsBits & NS_STYLE_CONTEXT_PROPERTY_STROKE_OPACITY) {
+    haveContextPaint = true;
+    contextPaint->SetStrokeOpacity(style->mStrokeOpacity);
+  }
 
   if (haveContextPaint) {
     if (!aContext) {

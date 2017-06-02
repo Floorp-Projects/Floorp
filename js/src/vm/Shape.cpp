@@ -445,6 +445,24 @@ ShouldConvertToDictionary(NativeObject* obj)
     return obj->lastProperty()->entryCount() >= PropertyTree::MAX_HEIGHT;
 }
 
+static MOZ_ALWAYS_INLINE UnownedBaseShape*
+GetBaseShapeForNewShape(JSContext* cx, HandleShape last, HandleId id)
+{
+    uint32_t index;
+    bool indexed = IdIsIndex(id, &index);
+    bool interestingSymbol = JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id)->isInterestingSymbol();
+
+    if (MOZ_LIKELY(!indexed && !interestingSymbol))
+        return last->base()->unowned();
+
+    StackBaseShape base(last->base());
+    if (indexed)
+        base.flags |= BaseShape::INDEXED;
+    else if (interestingSymbol)
+        base.flags |= BaseShape::HAS_INTERESTING_SYMBOL;
+    return BaseShape::getUnowned(cx, base);
+}
+
 /* static */ Shape*
 NativeObject::addPropertyInternal(JSContext* cx,
                                   HandleNativeObject obj, HandleId id,
@@ -497,20 +515,9 @@ NativeObject::addPropertyInternal(JSContext* cx,
     RootedShape shape(cx);
     {
         RootedShape last(cx, obj->lastProperty());
-
-        uint32_t index;
-        bool indexed = IdIsIndex(id, &index);
-
-        Rooted<UnownedBaseShape*> nbase(cx);
-        if (!indexed) {
-            nbase = last->base()->unowned();
-        } else {
-            StackBaseShape base(last->base());
-            base.flags |= BaseShape::INDEXED;
-            nbase = BaseShape::getUnowned(cx, base);
-            if (!nbase)
-                return nullptr;
-        }
+        Rooted<UnownedBaseShape*> nbase(cx, GetBaseShapeForNewShape(cx, last, id));
+        if (!nbase)
+            return nullptr;
 
         Rooted<StackShape> child(cx, StackShape(nbase, id, slot, attrs, flags));
         child.updateGetterSetter(getter, setter);
@@ -569,17 +576,9 @@ js::ReshapeForAllocKind(JSContext* cx, Shape* shape, TaggedProto proto,
     for (unsigned i = 0; i < ids.length(); i++) {
         id = ids[i];
 
-        uint32_t index;
-        bool indexed = IdIsIndex(id, &index);
-
-        Rooted<UnownedBaseShape*> nbase(cx, newShape->base()->unowned());
-        if (indexed) {
-            StackBaseShape base(nbase);
-            base.flags |= BaseShape::INDEXED;
-            nbase = BaseShape::getUnowned(cx, base);
-            if (!nbase)
-                return nullptr;
-        }
+        Rooted<UnownedBaseShape*> nbase(cx, GetBaseShapeForNewShape(cx, newShape, id));
+        if (!nbase)
+            return nullptr;
 
         Rooted<StackShape> child(cx, StackShape(nbase, id, i, JSPROP_ENUMERATE, 0));
         newShape = cx->zone()->propertyTree().getChild(cx, newShape, child);
@@ -684,12 +683,8 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
 
     Rooted<UnownedBaseShape*> nbase(cx);
     {
-        uint32_t index;
-        bool indexed = IdIsIndex(id, &index);
-        StackBaseShape base(obj->lastProperty()->base());
-        if (indexed)
-            base.flags |= BaseShape::INDEXED;
-        nbase = BaseShape::getUnowned(cx, base);
+        RootedShape shape(cx, obj->lastProperty());
+        nbase = GetBaseShapeForNewShape(cx, shape, id);
         if (!nbase)
             return nullptr;
     }

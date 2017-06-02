@@ -10,6 +10,7 @@
 
 #include "Units.h"
 #include "mozilla/gfx/Point.h"          // for IntPoint
+#include "mozilla/Maybe.h"
 #include "mozilla/TypedEnumBits.h"
 #include "nsRegion.h"
 
@@ -213,6 +214,8 @@ typedef Array<gfx::Color, 4> BorderColors;
 typedef Array<LayerSize, 4> BorderCorners;
 typedef Array<LayerCoord, 4> BorderWidths;
 typedef Array<uint8_t, 4> BorderStyles;
+
+typedef Maybe<LayerRect> MaybeLayerRect;
 
 // This is used to communicate Layers across IPC channels. The Handle is valid
 // for layers in the same PLayerTransaction. Handles are created by ClientLayerManager,
