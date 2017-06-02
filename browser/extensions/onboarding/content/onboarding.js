@@ -12,6 +12,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 const ONBOARDING_CSS_URL = "resource://onboarding/onboarding.css";
 const ABOUT_HOME_URL = "about:home";
 const ABOUT_NEWTAB_URL = "about:newtab";
+const BUNDLE_URI = "chrome://onboarding/locale/onboarding.properties";
 
 /**
  * The script won't be initialized if we turned off onboarding by
@@ -20,6 +21,7 @@ const ABOUT_NEWTAB_URL = "about:newtab";
 class Onboarding {
   constructor(contentWindow) {
     this.init(contentWindow);
+    this.bundle = Services.strings.createBundle(BUNDLE_URI);
   }
 
   async init(contentWindow) {
@@ -70,7 +72,7 @@ class Onboarding {
     div.innerHTML = `
       <div id="onboarding-overlay-dialog">
         <button id="onboarding-tour-close-btn">X</button>
-        <header>Getting started?</header>
+        <header>${this.bundle.GetStringFromName("gettingStarted")}</header>
         <nav>
           <ul></ul>
         </nav>
