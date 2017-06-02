@@ -129,6 +129,8 @@ var GlobalEventDispatcher = EventDispatcher.instance;
 var WindowEventDispatcher = EventDispatcher.for(window);
 
 var lazilyLoadedBrowserScripts = [
+  ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
+  ["InputWidgetHelper", "chrome://browser/content/InputWidgetHelper.js"],
   ["MasterPassword", "chrome://browser/content/MasterPassword.js"],
   ["PluginHelper", "chrome://browser/content/PluginHelper.js"],
   ["OfflineApps", "chrome://browser/content/OfflineApps.js"],
@@ -4738,6 +4740,9 @@ var BrowserEventHandler = {
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport);
     BrowserApp.deck.addEventListener("MozMouseHittest", this, true);
     BrowserApp.deck.addEventListener("OpenMediaWithExternalApp", this, true);
+
+    InitLater(() => BrowserApp.deck.addEventListener("click", InputWidgetHelper, true));
+    InitLater(() => BrowserApp.deck.addEventListener("click", SelectHelper, true));
 
     // ReaderViews support backPress listeners.
     WindowEventDispatcher.registerListener((event, data, callback) => {
