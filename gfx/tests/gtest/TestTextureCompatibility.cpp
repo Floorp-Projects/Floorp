@@ -7,7 +7,6 @@
 #include "gfxConfig.h"
 #include "gfxPlatform.h"
 #include "gtest/gtest.h"
-#include "gtest/MozGTestBench.h"
 #include "MockWidget.h"
 #include "mozilla/layers/BasicCompositor.h"
 #include "mozilla/layers/Compositor.h"
