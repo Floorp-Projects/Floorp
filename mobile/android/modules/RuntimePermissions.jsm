@@ -11,11 +11,13 @@ this.EXPORTED_SYMBOLS = ["RuntimePermissions"];
 Cu.import("resource://gre/modules/Services.jsm");
 
 // See: http://developer.android.com/reference/android/Manifest.permission.html
+const ACCESS_FINE_LOCATION = "android.permission.ACCESS_FINE_LOCATION";
 const CAMERA = "android.permission.CAMERA";
-const WRITE_EXTERNAL_STORAGE = "android.permission.WRITE_EXTERNAL_STORAGE";
 const RECORD_AUDIO = "android.permission.RECORD_AUDIO";
+const WRITE_EXTERNAL_STORAGE = "android.permission.WRITE_EXTERNAL_STORAGE";
 
 var RuntimePermissions = {
+  ACCESS_FINE_LOCATION: ACCESS_FINE_LOCATION,
   CAMERA: CAMERA,
   RECORD_AUDIO: RECORD_AUDIO,
   WRITE_EXTERNAL_STORAGE: WRITE_EXTERNAL_STORAGE,

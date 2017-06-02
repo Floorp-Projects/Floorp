@@ -285,7 +285,8 @@ public class GeckoAppShell
         return (location.hasAccuracy() && radius > 0) ? radius : 1001;
     }
 
-    @SuppressLint("MissingPermission") // Permissions are explicitly checked for in enableLocation()
+    // Permissions are explicitly checked when requesting content permission.
+    @SuppressLint("MissingPermission")
     private static Location getLastKnownLocation(LocationManager lm) {
         Location lastKnownLocation = null;
         List<String> providers = lm.getAllProviders();
@@ -313,55 +314,58 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    @SuppressLint("MissingPermission") // Permissions are explicitly checked for within this method
-    private static void enableLocation(final boolean enable) {
-        final Runnable requestLocation = new Runnable() {
-            @Override
-            public void run() {
-                LocationManager lm = getLocationManager(getApplicationContext());
-                if (lm == null) {
-                    return;
+    // Permissions are explicitly checked when requesting content permission.
+    @SuppressLint("MissingPermission")
+    /* package */ static void enableLocation(final boolean enable) {
+        if (!ThreadUtils.isOnUiThread()) {
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        enableLocation(enable);
+                    } catch (final SecurityException e) {
+                        Log.e(LOGTAG, "No location permission", e);
+                    }
                 }
+            });
+            return;
+        }
 
-                if (!enable) {
-                    lm.removeUpdates(getLocationListener());
-                    return;
-                }
+        LocationManager lm = getLocationManager(getApplicationContext());
+        if (lm == null) {
+            return;
+        }
 
-                Location lastKnownLocation = getLastKnownLocation(lm);
-                if (lastKnownLocation != null) {
-                    getLocationListener().onLocationChanged(lastKnownLocation);
-                }
+        if (!enable) {
+            lm.removeUpdates(getLocationListener());
+            return;
+        }
 
-                Criteria criteria = new Criteria();
-                criteria.setSpeedRequired(false);
-                criteria.setBearingRequired(false);
-                criteria.setAltitudeRequired(false);
-                if (locationHighAccuracyEnabled) {
-                    criteria.setAccuracy(Criteria.ACCURACY_FINE);
-                    criteria.setCostAllowed(true);
-                    criteria.setPowerRequirement(Criteria.POWER_HIGH);
-                } else {
-                    criteria.setAccuracy(Criteria.ACCURACY_COARSE);
-                    criteria.setCostAllowed(false);
-                    criteria.setPowerRequirement(Criteria.POWER_LOW);
-                }
+        Location lastKnownLocation = getLastKnownLocation(lm);
+        if (lastKnownLocation != null) {
+            getLocationListener().onLocationChanged(lastKnownLocation);
+        }
 
-                String provider = lm.getBestProvider(criteria, true);
-                if (provider == null)
-                    return;
+        Criteria criteria = new Criteria();
+        criteria.setSpeedRequired(false);
+        criteria.setBearingRequired(false);
+        criteria.setAltitudeRequired(false);
+        if (locationHighAccuracyEnabled) {
+            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+            criteria.setCostAllowed(true);
+            criteria.setPowerRequirement(Criteria.POWER_HIGH);
+        } else {
+            criteria.setAccuracy(Criteria.ACCURACY_COARSE);
+            criteria.setCostAllowed(false);
+            criteria.setPowerRequirement(Criteria.POWER_LOW);
+        }
 
-                Looper l = Looper.getMainLooper();
-                lm.requestLocationUpdates(provider, 100, 0.5f, getLocationListener(), l);
-            }
-        };
+        String provider = lm.getBestProvider(criteria, true);
+        if (provider == null)
+            return;
 
-        Permissions
-                .from((Activity) getContext())
-                .withPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
-                .onUIThread()
-                .doNotPromptIf(!enable)
-                .run(requestLocation);
+        Looper l = Looper.getMainLooper();
+        lm.requestLocationUpdates(provider, 100, 0.5f, getLocationListener(), l);
     }
 
     private static LocationManager getLocationManager(Context context) {

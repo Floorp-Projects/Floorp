@@ -7,8 +7,9 @@ const Cr = Components.results;
 const Cu = Components.utils;
 const Cc = Components.classes;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/RuntimePermissions.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const kEntities = {
   "contacts": "contacts",
@@ -31,20 +32,20 @@ ContentPermissionPrompt.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionPrompt]),
 
-  handleExistingPermission: function handleExistingPermission(request, type, denyUnknown) {
+  handleExistingPermission: function handleExistingPermission(request, type, denyUnknown, callback) {
     let result = Services.perms.testExactPermissionFromPrincipal(request.principal, type);
     if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
-      request.allow();
+      callback(/* allow */ true);
       return true;
     }
 
     if (result == Ci.nsIPermissionManager.DENY_ACTION) {
-      request.cancel();
+      callback(/* allow */ false);
       return true;
     }
 
     if (denyUnknown && result == Ci.nsIPermissionManager.UNKNOWN_ACTION) {
-      request.cancel();
+      callback(/* allow */ false);
       return true;
     }
 
@@ -79,19 +80,37 @@ ContentPermissionPrompt.prototype = {
       request.cancel();
       return;
     }
+
     let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
+
+    let callback = (allow) => {
+      if (!allow) {
+        request.cancel();
+        return;
+      }
+      if (perm.type === "geolocation") {
+        RuntimePermissions.waitForPermissions(
+          RuntimePermissions.ACCESS_FINE_LOCATION).then((granted) => {
+            (granted ? request.allow : request.cancel)();
+          });
+        return;
+      }
+      request.allow();
+    };
 
     // Returns true if the request was handled
     let access = (perm.access && perm.access !== "unused") ?
                  (perm.type + "-" + perm.access) : perm.type;
     if (this.handleExistingPermission(request, access,
-          /* denyUnknown */ isApp || PROMPT_FOR_UNKNOWN.indexOf(perm.type) < 0))
+          /* denyUnknown */ isApp || PROMPT_FOR_UNKNOWN.indexOf(perm.type) < 0, callback)) {
        return;
+    }
 
     let chromeWin = this.getChromeForRequest(request);
     let tab = chromeWin.BrowserApp.getTabForWindow(request.window.top);
-    if (!tab)
+    if (!tab) {
       return;
+    }
 
     let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
     let entityName = kEntities[perm.type];
@@ -103,7 +122,7 @@ ContentPermissionPrompt.prototype = {
         if (aChecked || entityName == "desktopNotification2")
           Services.perms.addFromPrincipal(request.principal, access, Ci.nsIPermissionManager.DENY_ACTION);
 
-        request.cancel();
+        callback(/* allow */ false);
       }
     },
     {
@@ -117,7 +136,7 @@ ContentPermissionPrompt.prototype = {
           Services.perms.addFromPrincipal(request.principal, access, Ci.nsIPermissionManager.ALLOW_ACTION, Ci.nsIPermissionManager.EXPIRE_SESSION);
         }
 
-        request.allow();
+        callback(/* allow */ true);
       },
       positive: true
     }];
