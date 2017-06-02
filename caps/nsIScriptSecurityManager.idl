@@ -134,18 +134,6 @@ interface nsIScriptSecurityManager : nsISupports
     nsIPrincipal getSystemPrincipal();
 
     /**
-     * Returns a principal that has the given information.
-     * @param appId is the app id of the principal. It can't be UNKNOWN_APP_ID.
-     * @param inMozBrowser is true if the principal has to be considered as
-     * inside a mozbrowser frame.
-     *
-     * @deprecated use createCodebasePrincipal instead.
-     */
-    [deprecated] nsIPrincipal getAppCodebasePrincipal(in nsIURI uri,
-                                                      in unsigned long appId,
-                                                      in boolean inMozBrowser);
-
-    /**
      * Returns a principal that has the appId and inMozBrowser of the load
      * context.
      * @param loadContext to get appId/inMozBrowser from.
