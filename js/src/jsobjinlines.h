@@ -45,6 +45,28 @@ MaybeConvertUnboxedObjectToNative(JSContext* cx, JSObject* obj)
     return true;
 }
 
+static MOZ_ALWAYS_INLINE bool
+ClassMayResolveId(const JSAtomState& names, const Class* clasp, jsid id, JSObject* maybeObj)
+{
+    MOZ_ASSERT_IF(maybeObj, maybeObj->getClass() == clasp);
+
+    if (!clasp->getResolve()) {
+        // Sanity check: we should only have a mayResolve hook if we have a
+        // resolve hook.
+        MOZ_ASSERT(!clasp->getMayResolve(), "Class with mayResolve hook but no resolve hook");
+        return false;
+    }
+
+    if (JSMayResolveOp mayResolve = clasp->getMayResolve()) {
+        // Tell the analysis our mayResolve hooks won't trigger GC.
+        JS::AutoSuppressGCAnalysis nogc;
+        if (!mayResolve(names, id, maybeObj))
+            return false;
+    }
+
+    return true;
+}
+
 } // namespace js
 
 inline js::Shape*
@@ -242,6 +264,50 @@ js::DeleteElement(JSContext* cx, HandleObject obj, uint32_t index, ObjectOpResul
     return DeleteProperty(cx, obj, id, result);
 }
 
+MOZ_ALWAYS_INLINE bool
+js::MaybeHasInterestingSymbolProperty(JSContext* cx, JSObject* obj, Symbol* symbol,
+                                      JSObject** holder)
+{
+    MOZ_ASSERT(symbol->isInterestingSymbol());
+
+    jsid id = SYMBOL_TO_JSID(symbol);
+    do {
+        if (obj->maybeHasInterestingSymbolProperty() ||
+            obj->hasDynamicPrototype() ||
+            MOZ_UNLIKELY(ClassMayResolveId(cx->names(), obj->getClass(), id, obj) ||
+                         obj->getClass()->getGetProperty()))
+        {
+            if (holder)
+                *holder = obj;
+            return true;
+        }
+        obj = obj->staticPrototype();
+    } while (obj);
+
+    return false;
+}
+
+MOZ_ALWAYS_INLINE bool
+js::GetInterestingSymbolProperty(JSContext* cx, HandleObject obj, Symbol* sym, MutableHandleValue vp)
+{
+    JSObject* holder;
+    if (!MaybeHasInterestingSymbolProperty(cx, obj, sym, &holder)) {
+#ifdef DEBUG
+        RootedValue receiver(cx, ObjectValue(*obj));
+        RootedId id(cx, SYMBOL_TO_JSID(sym));
+        if (!GetProperty(cx, obj, receiver, id, vp))
+            return false;
+        MOZ_ASSERT(vp.isUndefined());
+#endif
+        vp.setUndefined();
+        return true;
+    }
+
+    RootedObject holderRoot(cx, holder);
+    RootedValue receiver(cx, ObjectValue(*obj));
+    RootedId id(cx, SYMBOL_TO_JSID(sym));
+    return GetProperty(cx, holderRoot, receiver, id, vp);
+}
 
 /* * */
 
@@ -409,6 +475,23 @@ inline bool
 JSObject::isIndexed() const
 {
     return hasAllFlags(js::BaseShape::INDEXED);
+}
+
+MOZ_ALWAYS_INLINE bool
+JSObject::maybeHasInterestingSymbolProperty() const
+{
+    const js::NativeObject* nobj;
+    if (isNative()) {
+        nobj = &as<js::NativeObject>();
+    } else if (is<js::UnboxedPlainObject>()) {
+        nobj = as<js::UnboxedPlainObject>().maybeExpando();
+        if (!nobj)
+            return false;
+    } else {
+        return true;
+    }
+
+    return nobj->hasAllFlags(js::BaseShape::HAS_INTERESTING_SYMBOL);
 }
 
 inline bool

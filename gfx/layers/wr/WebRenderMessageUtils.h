@@ -173,6 +173,44 @@ struct ParamTraits<WrPoint>
 };
 
 template<>
+struct ParamTraits<WrImageMask>
+{
+  static void
+  Write(Message* aMsg, const WrImageMask& aParam)
+  {
+    WriteParam(aMsg, aParam.image);
+    WriteParam(aMsg, aParam.rect);
+    WriteParam(aMsg, aParam.repeat);
+  }
+
+  static bool
+  Read(const Message* aMsg, PickleIterator* aIter, WrImageMask* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->image)
+        && ReadParam(aMsg, aIter, &aResult->rect)
+        && ReadParam(aMsg, aIter, &aResult->repeat);
+  }
+};
+
+template<>
+struct ParamTraits<WrImageRendering>
+  : public ContiguousEnumSerializer<
+        WrImageRendering,
+        WrImageRendering::Auto,
+        WrImageRendering::Sentinel>
+{
+};
+
+template<>
+struct ParamTraits<WrMixBlendMode>
+  : public ContiguousEnumSerializer<
+        WrMixBlendMode,
+        WrMixBlendMode::Normal,
+        WrMixBlendMode::Sentinel>
+{
+};
+
+template<>
 struct ParamTraits<WrBuiltDisplayListDescriptor>
 {
   static void

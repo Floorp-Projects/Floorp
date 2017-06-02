@@ -464,9 +464,16 @@ WebRenderLayerManager::RemoveDidCompositeObserver(DidCompositeObserver* aObserve
 void
 WebRenderLayerManager::FlushRendering()
 {
-  CompositorBridgeChild* bridge = GetCompositorBridgeChild();
-  if (bridge) {
-    bridge->SendFlushRendering();
+  CompositorBridgeChild* cBridge = GetCompositorBridgeChild();
+  if (!cBridge) {
+    return;
+  }
+  MOZ_ASSERT(mWidget);
+
+  if (mWidget->SynchronouslyRepaintOnResize() || gfxPrefs::LayersForceSynchronousResize()) {
+    cBridge->SendFlushRendering();
+  } else {
+    cBridge->SendFlushRenderingAsync();
   }
 }
 

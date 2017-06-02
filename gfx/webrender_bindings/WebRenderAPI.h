@@ -23,6 +23,7 @@ class CompositorWidget;
 
 namespace layers {
 class CompositorBridgeParentBase;
+class WebRenderBridgeParent;
 }
 
 namespace wr {
@@ -125,6 +126,7 @@ protected:
   bool mUseANGLE;
 
   friend class DisplayListBuilder;
+  friend class layers::WebRenderBridgeParent;
 };
 
 /// This is a simple C++ wrapper around WrState defined in the rust bindings.

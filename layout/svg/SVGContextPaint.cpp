@@ -395,6 +395,14 @@ SVGEmbeddingContextPaint::Hash() const
     hash = HashGeneric(hash, mStroke->ToABGR());
   }
 
+  if (mFillOpacity != 1.0f) {
+    hash = HashGeneric(hash, mFillOpacity);
+  }
+
+  if (mStrokeOpacity != 1.0f) {
+    hash = HashGeneric(hash, mStrokeOpacity);
+  }
+
   return hash;
 }
 
