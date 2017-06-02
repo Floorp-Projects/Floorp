@@ -1,5 +1,3 @@
-# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
-# vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -10,13 +8,13 @@ import signal
 import subprocess
 
 import which
-from mozprocess import ProcessHandler
+from mozprocess import ProcessHandlerMixin
 
 from mozlint import result
 
 
 here = os.path.abspath(os.path.dirname(__file__))
-FLAKE8_REQUIREMENTS_PATH = os.path.join(here, 'flake8', 'flake8_requirements.txt')
+FLAKE8_REQUIREMENTS_PATH = os.path.join(here, 'flake8_requirements.txt')
 
 FLAKE8_NOT_FOUND = """
 Could not find flake8! Install flake8 and try again.
@@ -55,42 +53,39 @@ The offset is of the form (lineno_offset, num_lines) and is passed
 to the lineoffset property of `ResultContainer`.
 """
 
-EXTENSIONS = ['.py', '.lint']
 results = []
 
 
-def process_line(line):
-    # Escape slashes otherwise JSON conversion will not work
-    line = line.replace('\\', '\\\\')
-    try:
-        res = json.loads(line)
-    except ValueError:
-        print('Non JSON output from linter, will not be processed: {}'.format(line))
-        return
+class Flake8Process(ProcessHandlerMixin):
+    def __init__(self, config, *args, **kwargs):
+        self.config = config
+        kwargs['processOutputLine'] = [self.process_line]
+        ProcessHandlerMixin.__init__(self, *args, **kwargs)
 
-    if 'code' in res:
-        if res['code'].startswith('W'):
-            res['level'] = 'warning'
+    def process_line(self, line):
+        # Escape slashes otherwise JSON conversion will not work
+        line = line.replace('\\', '\\\\')
+        try:
+            res = json.loads(line)
+        except ValueError:
+            print('Non JSON output from linter, will not be processed: {}'.format(line))
+            return
 
-        if res['code'] in LINE_OFFSETS:
-            res['lineoffset'] = LINE_OFFSETS[res['code']]
+        if 'code' in res:
+            if res['code'].startswith('W'):
+                res['level'] = 'warning'
 
-    results.append(result.from_linter(LINTER, **res))
+            if res['code'] in LINE_OFFSETS:
+                res['lineoffset'] = LINE_OFFSETS[res['code']]
 
+        results.append(result.from_config(self.config, **res))
 
-def run_process(cmdargs):
-    # flake8 seems to handle SIGINT poorly. Handle it here instead
-    # so we can kill the process without a cryptic traceback.
-    orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
-    proc = ProcessHandler(cmdargs, env=os.environ,
-                          processOutputLine=process_line)
-    proc.run()
-    signal.signal(signal.SIGINT, orig)
-
-    try:
-        proc.wait()
-    except KeyboardInterrupt:
-        proc.kill()
+    def run(self, *args, **kwargs):
+        # flake8 seems to handle SIGINT poorly. Handle it here instead
+        # so we can kill the process without a cryptic traceback.
+        orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
+        ProcessHandlerMixin.run(self, *args, **kwargs)
+        signal.signal(signal.SIGINT, orig)
 
 
 def get_flake8_binary():
@@ -134,7 +129,16 @@ def reinstall_flake8():
     return False
 
 
-def lint(files, **lintargs):
+def run_process(config, cmd):
+    proc = Flake8Process(config, cmd)
+    proc.run()
+    try:
+        proc.wait()
+    except KeyboardInterrupt:
+        proc.kill()
+
+
+def lint(files, config, **lintargs):
 
     if not reinstall_flake8():
         print(FLAKE8_INSTALL_ERROR)
@@ -157,7 +161,7 @@ def lint(files, **lintargs):
         if not os.path.isfile(os.path.join(f, '.flake8')):
             no_config.append(f)
             continue
-        run_process(cmdargs+[f])
+        run_process(config, cmdargs+[f])
 
     # XXX For some reason passing in --exclude results in flake8 not using
     # the local .flake8 file. So for now only pass in --exclude if there
@@ -167,33 +171,6 @@ def lint(files, **lintargs):
         cmdargs += ['--exclude', ','.join(lintargs['exclude'])]
 
     if no_config:
-        run_process(cmdargs+no_config)
+        run_process(config, cmdargs+no_config)
 
     return results
-
-
-LINTER = {
-    'name': "flake8",
-    'description': "Python linter",
-    'include': [
-        'layout/tools/reftest',
-        'python/mozlint',
-        'security/manager',
-        'taskcluster',
-        'testing/firefox-ui',
-        'testing/marionette/client',
-        'testing/marionette/harness',
-        'testing/marionette/puppeteer',
-        'testing/mozbase',
-        'testing/mochitest',
-        'testing/talos/',
-        'tools/git',
-        'tools/lint',
-        'tools/mercurial',
-        'toolkit/components/telemetry',
-    ],
-    'exclude': ['testing/mochitest/pywebsocket'],
-    'extensions': EXTENSIONS,
-    'type': 'external',
-    'payload': lint,
-}
