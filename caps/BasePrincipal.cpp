@@ -333,13 +333,6 @@ BasePrincipal::GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserEle
   return NS_OK;
 }
 
-NS_IMETHODIMP
-BasePrincipal::GetUnknownAppId(bool* aUnknownAppId)
-{
-  *aUnknownAppId = AppId() == nsIScriptSecurityManager::UNKNOWN_APP_ID;
-  return NS_OK;
-}
-
 bool
 BasePrincipal::AddonHasPermission(const nsAString& aPerm)
 {
