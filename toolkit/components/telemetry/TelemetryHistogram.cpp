@@ -28,7 +28,6 @@
 #include "base/histogram.h"
 
 using base::Histogram;
-using base::StatisticsRecorder;
 using base::BooleanHistogram;
 using base::CountHistogram;
 using base::FlagHistogram;
@@ -148,8 +147,6 @@ enum reflectStatus {
   REFLECT_FAILURE
 };
 
-typedef StatisticsRecorder::Histograms::iterator HistogramIterator;
-
 } // namespace
 
 
@@ -174,9 +171,6 @@ bool gCorruptHistograms[mozilla::Telemetry::HistogramCount];
 
 // This is for gHistograms, gHistogramStringTable
 #include "TelemetryHistogramData.inc"
-
-// The singleton StatisticsRecorder object for this process.
-base::StatisticsRecorder* gStatisticsRecorder = nullptr;
 
 } // namespace
 
@@ -1809,24 +1803,6 @@ internal_WrapAndReturnKeyedHistogram(KeyedHistogram *h, JSContext *cx,
 // calls" from "calls to another function in this interface" will lead
 // to deadlocking and/or races.  See comments at the top of the file
 // for further (important!) details.
-
-// Create and destroy the singleton StatisticsRecorder object.
-void TelemetryHistogram::CreateStatisticsRecorder()
-{
-  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-  MOZ_ASSERT(!gStatisticsRecorder);
-  gStatisticsRecorder = new base::StatisticsRecorder();
-}
-
-void TelemetryHistogram::DestroyStatisticsRecorder()
-{
-  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-  MOZ_ASSERT(gStatisticsRecorder);
-  if (gStatisticsRecorder) {
-    delete gStatisticsRecorder;
-    gStatisticsRecorder = nullptr;
-  }
-}
 
 void TelemetryHistogram::InitializeGlobalState(bool canRecordBase,
                                                bool canRecordExtended)
