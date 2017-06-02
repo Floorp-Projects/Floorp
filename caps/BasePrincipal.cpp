@@ -300,14 +300,6 @@ BasePrincipal::GetOriginSuffix(nsACString& aOriginAttributes)
 }
 
 NS_IMETHODIMP
-BasePrincipal::GetAppStatus(uint16_t* aAppStatus)
-{
-  // TODO: Remove GetAppStatus.
-  *aAppStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 BasePrincipal::GetAppId(uint32_t* aAppId)
 {
   if (AppId() == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
@@ -338,13 +330,6 @@ NS_IMETHODIMP
 BasePrincipal::GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserElement)
 {
   *aIsInIsolatedMozBrowserElement = IsInIsolatedMozBrowserElement();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BasePrincipal::GetUnknownAppId(bool* aUnknownAppId)
-{
-  *aUnknownAppId = AppId() == nsIScriptSecurityManager::UNKNOWN_APP_ID;
   return NS_OK;
 }
 
