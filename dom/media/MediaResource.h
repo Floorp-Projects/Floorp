@@ -201,6 +201,11 @@ public:
   // results and requirements are the same as per the Read method.
   virtual nsresult ReadAt(int64_t aOffset, char* aBuffer,
                           uint32_t aCount, uint32_t* aBytes) = 0;
+  // Indicate whether caching data in advance of reads is worth it.
+  // E.g. Caching lockless and memory-based MediaResource subclasses would be a
+  // waste, but caching lock/IO-bound resources means reducing the impact of
+  // each read.
+  virtual bool ShouldCacheReads() = 0;
   // This method returns nullptr if anything fails.
   // Otherwise, it returns an owned buffer.
   // MediaReadAt may return fewer bytes than requested if end of stream is
@@ -578,6 +583,8 @@ public:
   void     SetPlaybackRate(uint32_t aBytesPerSecond) override;
   nsresult ReadAt(int64_t offset, char* aBuffer,
                   uint32_t aCount, uint32_t* aBytes) override;
+  // Data stored in IO&lock-encumbered MediaCacheStream, caching recommended.
+  bool ShouldCacheReads() override { return true; }
   already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount) override;
   int64_t Tell() override;
 
