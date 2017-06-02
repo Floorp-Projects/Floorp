@@ -243,25 +243,38 @@ def get_possible_node_paths_win():
     })
 
 
+def simple_which(filename, path=None):
+    try:
+        return which.which(filename, path)
+    except which.WhichError:
+        return None
+
+
 def which_path(filename):
     """
     Return the nodejs or npm path.
     """
     if platform.system() == "Windows":
         for ext in [".cmd", ".exe", ""]:
-            try:
-                return which.which(filename + ext, path=get_possible_node_paths_win())
-            except which.WhichError:
-                pass
-    else:
-        try:
-            return which.which(filename)
-        except which.WhichError:
-            if filename == "node":
-                # Retry it with "nodejs" as Linux tends to prefer nodejs rather than node.
-                return which_path("nodejs")
+            # Look in the system path first.
+            filepath = simple_which(filename + ext)
+            if filepath is None:
+                # If we don't find it there, fallback to the non-system paths.
+                filepath = simple_which(filename + ext, get_possible_node_paths_win())
 
-    return None
+            if filepath is not None:
+                return filepath
+
+        # If we got this far, we didn't find it with any of the extensions, so
+        # just return.
+        return None
+
+    # Non-windows.
+    path = simple_which(filename)
+    if path is None and filename == "node":
+        path = simple_which("nodejs")
+
+    return path
 
 
 def get_node_or_npm_path(filename, minversion=None):
