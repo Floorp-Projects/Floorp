@@ -355,7 +355,7 @@ EffectCompositor::PostRestyleForThrottledAnimations()
 
 template<typename StyleType>
 void
-EffectCompositor::UpdateEffectProperties(StyleType&& aStyleType,
+EffectCompositor::UpdateEffectProperties(StyleType* aStyleType,
                                          Element* aElement,
                                          CSSPseudoElementType aPseudoType)
 {
@@ -370,7 +370,7 @@ EffectCompositor::UpdateEffectProperties(StyleType&& aStyleType,
   effectSet->MarkCascadeNeedsUpdate();
 
   for (KeyframeEffectReadOnly* effect : *effectSet) {
-    effect->UpdateProperties(Forward<StyleType>(aStyleType));
+    effect->UpdateProperties(aStyleType);
   }
 }
 
@@ -1239,15 +1239,15 @@ EffectCompositor::AnimationStyleRuleProcessor::SizeOfIncludingThis(
 
 template
 void
-EffectCompositor::UpdateEffectProperties<RefPtr<nsStyleContext>&>(
-  RefPtr<nsStyleContext>& aStyleContext,
+EffectCompositor::UpdateEffectProperties(
+  nsStyleContext* aStyleContext,
   Element* aElement,
   CSSPseudoElementType aPseudoType);
 
 template
 void
-EffectCompositor::UpdateEffectProperties<const ServoComputedValuesWithParent&>(
-  const ServoComputedValuesWithParent& aServoValues,
+EffectCompositor::UpdateEffectProperties(
+  const ServoComputedValues* aServoValues,
   Element* aElement,
   CSSPseudoElementType aPseudoType);
 

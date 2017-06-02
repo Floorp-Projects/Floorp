@@ -18,7 +18,6 @@
 #include "nsPresContext.h"
 #include "mozilla/Keyframe.h" // For PropertyValuePair
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ServoComputedValuesWithParent.h"
 #include "mozilla/StyleAnimationValue.h" // For AnimationValue
 #include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/dom/Element.h"
@@ -466,23 +465,12 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
     return nullptr;
   }
 
-  // Get a suitable style context for Servo
-  const ServoComputedValues* currentStyle =
-    aStyleContext->StyleSource().AsServoComputedValues();
-  // Bug 1349004: Remove GetParentAllowServo
-  const ServoComputedValues* parentStyle =
-    aStyleContext->GetParentAllowServo()
-    ? aStyleContext->GetParentAllowServo()->StyleSource()
-      .AsServoComputedValues()
-    : nullptr;
-  const ServoComputedValuesWithParent servoStyles =
-    { currentStyle, parentStyle };
-
-  // Parse property
   nsIDocument* doc = aTargetElement->GetUncomposedDoc();
   if (!doc) {
     return nullptr;
   }
+
+  // Parse property
   // FIXME this is using the wrong base uri (bug 1343919)
   RefPtr<URLExtraData> data = new URLExtraData(doc->GetDocumentURI(),
                                                doc->GetDocumentURI(),
@@ -499,6 +487,10 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
     return nullptr;
   }
 
+  // Get a suitable style context for Servo
+  const ServoComputedValues* currentStyle =
+    aStyleContext->StyleSource().AsServoComputedValues();
+
   // Compute value
   PropertyValuePair propValuePair;
   propValuePair.mProperty = aPropID;
@@ -507,7 +499,7 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
   keyframes.AppendElement()->mPropertyValues.AppendElement(Move(propValuePair));
   nsTArray<ComputedKeyframeValues> computedValues =
     aPresContext->StyleSet()->AsServo()
-      ->GetComputedKeyframeValuesFor(keyframes, aTargetElement, servoStyles);
+      ->GetComputedKeyframeValuesFor(keyframes, aTargetElement, currentStyle);
 
   // Pull out the appropriate value
   if (computedValues.IsEmpty() || computedValues[0].IsEmpty()) {

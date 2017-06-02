@@ -53,7 +53,7 @@ HTMLPreElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     if (!aData->PropertyIsSet(eCSSProperty_white_space)) {
       // wrap: empty
       if (aAttributes->GetAttr(nsGkAtoms::wrap))
-        aData->SetKeywordValue(eCSSProperty_white_space, NS_STYLE_WHITESPACE_PRE_WRAP);
+        aData->SetKeywordValue(eCSSProperty_white_space, StyleWhiteSpace::PreWrap);
     }
   }
 

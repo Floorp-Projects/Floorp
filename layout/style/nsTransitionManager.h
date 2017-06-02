@@ -25,7 +25,6 @@ class nsCSSPropertyIDSet;
 namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
 struct Keyframe;
-struct ServoComputedValuesWithParent;
 struct StyleTransition;
 } // namespace mozilla
 
@@ -378,8 +377,8 @@ public:
   bool UpdateTransitions(
     mozilla::dom::Element *aElement,
     mozilla::CSSPseudoElementType aPseudoType,
-    const mozilla::ServoComputedValuesWithParent& aOldStyle,
-    const mozilla::ServoComputedValuesWithParent& aNewStyle);
+    const ServoComputedValues* aOldStyle,
+    const ServoComputedValues* aNewStyle);
 
   /**
    * When we're resolving style for an element that previously didn't have

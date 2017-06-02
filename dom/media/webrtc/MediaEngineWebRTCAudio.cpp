@@ -600,10 +600,6 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
     if (!mSources[i]) {
       continue;
     }
-    RefPtr<SharedBuffer> buffer =
-      SharedBuffer::Create(aFrames * aChannels * sizeof(T));
-    PodCopy(static_cast<T*>(buffer->Data()),
-            aBuffer, aFrames * aChannels);
 
     TimeStamp insertTime;
     // Make sure we include the stream and the track.
@@ -612,12 +608,36 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
             LATENCY_STREAM_ID(mSources[i].get(), mTrackID),
             (i+1 < len) ? 0 : 1, insertTime);
 
+    // Bug 971528 - Support stereo capture in gUM
+    MOZ_ASSERT(aChannels == 1 || aChannels == 2,
+        "GraphDriver only supports mono and stereo audio for now");
+
     nsAutoPtr<AudioSegment> segment(new AudioSegment());
-    AutoTArray<const T*, 1> channels;
-    // XXX Bug 971528 - Support stereo capture in gUM
-    MOZ_ASSERT(aChannels == 1,
-        "GraphDriver only supports us stereo audio for now");
-    channels.AppendElement(static_cast<T*>(buffer->Data()));
+    RefPtr<SharedBuffer> buffer =
+      SharedBuffer::Create(aFrames * aChannels * sizeof(T));
+    AutoTArray<const T*, 8> channels;
+    if (aChannels == 1) {
+      PodCopy(static_cast<T*>(buffer->Data()), aBuffer, aFrames);
+      channels.AppendElement(static_cast<T*>(buffer->Data()));
+    } else {
+      channels.SetLength(aChannels);
+      AutoTArray<T*, 8> write_channels;
+      write_channels.SetLength(aChannels);
+      T * samples = static_cast<T*>(buffer->Data());
+
+      size_t offset = 0;
+      for(uint32_t i = 0; i < aChannels; ++i) {
+        channels[i] = write_channels[i] = samples + offset;
+        offset += aFrames;
+      }
+
+      DeinterleaveAndConvertBuffer(aBuffer,
+                                   aFrames,
+                                   aChannels,
+                                   write_channels.Elements());
+    }
+
+    MOZ_ASSERT(aChannels == channels.Length());
     segment->AppendFrames(buffer.forget(), channels, aFrames,
                          mPrincipalHandles[i]);
     segment->GetStartTime(insertTime);
@@ -770,12 +790,16 @@ MediaEngineWebRTCMicrophoneSource::AllocChannel()
         }
 #endif // MOZ_B2G
 
-        // Set "codec" to PCM, 32kHz on 1 channel
+        // Set "codec" to PCM, 32kHz on device's channels
         ScopedCustomReleasePtr<webrtc::VoECodec> ptrVoECodec(webrtc::VoECodec::GetInterface(mVoiceEngine));
         if (ptrVoECodec) {
           webrtc::CodecInst codec;
           strcpy(codec.plname, ENCODING);
           codec.channels = CHANNELS;
+          uint32_t channels = 0;
+          if (mAudioInput->GetChannelCount(mCapIndex, channels) == 0) {
+            codec.channels = channels;
+          }
           MOZ_ASSERT(mSampleFrequency == 16000 || mSampleFrequency == 32000);
           codec.rate = SAMPLE_RATE(mSampleFrequency);
           codec.plfreq = mSampleFrequency;
@@ -877,8 +901,8 @@ MediaEngineWebRTCMicrophoneSource::Process(int channel,
   if (mState != kStarted)
     return;
 
-  MOZ_ASSERT(!isStereo);
-  InsertInGraph<int16_t>(audio10ms, length, 1);
+  uint32_t channels = isStereo ? 2 : 1;
+  InsertInGraph<int16_t>(audio10ms, length, channels);
   return;
 }
 

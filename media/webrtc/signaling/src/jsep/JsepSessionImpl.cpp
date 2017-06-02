@@ -1022,6 +1022,10 @@ JsepSessionImpl::CreateAnswerMSection(const JsepAnswerOptions& options,
 nsresult
 JsepSessionImpl::SetRecvonlySsrc(SdpMediaSection* msection)
 {
+  if (msection->GetMediaType() == SdpMediaSection::kApplication) {
+    return NS_OK;
+  }
+
   // If previous m-sections are disabled, we do not call this function for them
   while (mRecvonlySsrcs.size() <= msection->GetLevel()) {
     uint32_t ssrc;
@@ -1471,9 +1475,11 @@ JsepSessionImpl::MakeNegotiatedTrackPair(const SdpMediaSection& remote,
 
   trackPairOut->mLevel = local.GetLevel();
 
-  MOZ_ASSERT(mRecvonlySsrcs.size() > local.GetLevel(),
-             "Failed to set the default ssrc for an active m-section");
-  trackPairOut->mRecvonlySsrc = mRecvonlySsrcs[local.GetLevel()];
+  if (local.GetMediaType() != SdpMediaSection::kApplication) {
+    MOZ_ASSERT(mRecvonlySsrcs.size() > local.GetLevel(),
+               "Failed to set the default ssrc for an active m-section");
+    trackPairOut->mRecvonlySsrc = mRecvonlySsrcs[local.GetLevel()];
+  }
 
   if (usingBundle) {
     trackPairOut->SetBundleLevel(transportLevel);

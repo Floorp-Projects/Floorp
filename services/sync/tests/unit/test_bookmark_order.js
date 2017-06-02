@@ -4,6 +4,7 @@
 _("Making sure after processing incoming bookmarks, they show up in the right order");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/engines/bookmarks.js");
+Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
@@ -43,8 +44,8 @@ function serverForFoo(engine) {
         // Generate a fake default key bundle to avoid resetting the client
         // before the first sync.
         default: [
-          Svc.Crypto.generateRandomKey(),
-          Svc.Crypto.generateRandomKey(),
+          Weave.Crypto.generateRandomKey(),
+          Weave.Crypto.generateRandomKey(),
         ],
       }),
     },

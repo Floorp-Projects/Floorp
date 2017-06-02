@@ -972,7 +972,7 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
       PresContext()->AnimationManager()->UpdateAnimations(result,
                                                           aElementForAnimation);
       PresContext()->EffectCompositor()->UpdateEffectProperties(
-        result, aElementForAnimation, result->GetPseudoType());
+        result.get(), aElementForAnimation, result->GetPseudoType());
 
       animRule = PresContext()->EffectCompositor()->
                    GetAnimationRule(aElementForAnimation,
