@@ -4144,6 +4144,86 @@ BaselineCompiler::emit_JSOP_CALLEE()
     return true;
 }
 
+void
+BaselineCompiler::getThisEnvironmentCallee(Register reg)
+{
+    // Directly load callee from frame if we have a HomeObject
+    if (function() && function()->allowSuperProperty()) {
+        masm.loadFunctionFromCalleeToken(frame.addressOfCalleeToken(), reg);
+        return;
+    }
+
+    // Locate environment chain
+    masm.loadPtr(frame.addressOfEnvironmentChain(), reg);
+
+    // Walk environment chain until first non-arrow CallObject
+    for (ScopeIter si(script->innermostScope(pc)); si; si++) {
+
+        // Find first non-arrow FunctionScope
+        if (si.hasSyntacticEnvironment() && si.scope()->is<FunctionScope>()) {
+            JSFunction* fn = si.scope()->as<FunctionScope>().canonicalFunction();
+
+            if (!fn->isArrow())
+                break;
+        }
+
+        // Traverse environment chain
+        if (si.scope()->hasEnvironment()) {
+            Address nextAddr(reg, EnvironmentObject::offsetOfEnclosingEnvironment());
+            masm.unboxObject(nextAddr, reg);
+        }
+    }
+
+    // Load callee
+    masm.unboxObject(Address(reg, CallObject::offsetOfCallee()), reg);
+}
+
+typedef JSObject* (*HomeObjectSuperBaseFn)(JSContext*, HandleObject);
+static const VMFunction HomeObjectSuperBaseInfo =
+    FunctionInfo<HomeObjectSuperBaseFn>(HomeObjectSuperBase, "HomeObjectSuperBase");
+
+bool
+BaselineCompiler::emit_JSOP_SUPERBASE()
+{
+    frame.syncStack(0);
+
+    Register scratch = R0.scratchReg();
+    Register proto = R1.scratchReg();
+
+    // Lookup callee object of environment containing [[ThisValue]]
+    getThisEnvironmentCallee(scratch);
+
+    // Load [[HomeObject]]
+    Address homeObjAddr(scratch, FunctionExtended::offsetOfMethodHomeObjectSlot());
+#ifdef DEBUG
+    Label isObject;
+    masm.branchTestObject(Assembler::Equal, homeObjAddr, &isObject);
+    masm.assumeUnreachable("[[HomeObject]] must be Object");
+    masm.bind(&isObject);
+#endif
+    masm.unboxObject(homeObjAddr, scratch);
+
+    // Load prototype from [[HomeObject]]
+    masm.loadObjProto(scratch, proto);
+
+    Label hasProto;
+    MOZ_ASSERT(uintptr_t(TaggedProto::LazyProto) == 1);
+    masm.branchPtr(Assembler::Above, proto, ImmWord(1), &hasProto);
+
+    // Use VMCall for missing or lazy proto
+    prepareVMCall();
+    pushArg(scratch);  // [[HomeObject]]
+    if (!callVM(HomeObjectSuperBaseInfo))
+        return false;
+    masm.movePtr(ReturnReg, proto);
+
+    // Box prototype and return
+    masm.bind(&hasProto);
+    masm.tagValue(JSVAL_TYPE_OBJECT, proto, R1);
+    frame.push(R1);
+    return true;
+}
+
 typedef bool (*NewArgumentsObjectFn)(JSContext*, BaselineFrame*, MutableHandleValue);
 static const VMFunction NewArgumentsObjectInfo =
     FunctionInfo<NewArgumentsObjectFn>(jit::NewArgumentsObject, "NewArgumentsObject");
