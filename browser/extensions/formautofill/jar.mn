@@ -9,7 +9,7 @@
 % content formautofill %content/
   content/ (content/*)
 
-% skin formautofill classic/1.0 %skin/linux/ os=LikeUnix
+% skin formautofill classic/1.0 %skin/linux/
 % skin formautofill classic/1.0 %skin/osx/ os=Darwin
 % skin formautofill classic/1.0 %skin/windows/ os=WINNT
 % skin formautofill-shared classic/1.0 %skin/shared/
