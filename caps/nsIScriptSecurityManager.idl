@@ -148,15 +148,6 @@ interface nsIScriptSecurityManager : nsISupports
                                               in nsIDocShell docShell);
 
     /**
-     * Returns a principal with that has the same origin as uri and is not part
-     * of an appliction.
-     * The returned principal will have appId = NO_APP_ID.
-     *
-     * @deprecated use createCodebasePrincipal instead.
-     */
-    [deprecated] nsIPrincipal getNoAppCodebasePrincipal(in nsIURI uri);
-
-    /**
      * Legacy method for getting a principal with no origin attributes.
      *
      * @deprecated use createCodebasePrincipal instead.

@@ -544,7 +544,7 @@ add_task(async function test_offline_cache() {
   // Prepare stuff, we will work with www.example.com
   var URL = "http://www.example.com";
   var URI = makeURI(URL);
-  var principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(URI);
+  var principal = Services.scriptSecurityManager.createCodebasePrincipal(URI, {});
 
   // Give www.example.com privileges to store offline data
   Services.perms.addFromPrincipal(principal, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
