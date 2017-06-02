@@ -510,7 +510,7 @@ MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue
     /*
      * For simplicity we use delete/define to replace the property with a
      * simple data property. Note that we rely on ArgumentsObject::obj_delProperty
-     * to clear the corresponding reserved slot so the GC can collect its value.
+     * to set the corresponding override-bit.
      * Note also that we must define the property instead of setting it in case
      * the user has changed the prototype to an object that has a setter for
      * this id.
@@ -529,8 +529,35 @@ DefineArgumentsIterator(JSContext* cx, Handle<ArgumentsObject*> argsobj)
     RootedValue val(cx);
     if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), shName, name, 0, &val))
         return false;
-
     return NativeDefineProperty(cx, argsobj, iteratorId, val, nullptr, nullptr, JSPROP_RESOLVING);
+}
+
+/* static */ bool
+ArgumentsObject::reifyLength(JSContext* cx, Handle<ArgumentsObject*> obj)
+{
+    if (obj->hasOverriddenLength())
+        return true;
+
+    RootedId id(cx, NameToId(cx->names().length));
+    RootedValue val(cx, Int32Value(obj->initialLength()));
+    if (!NativeDefineProperty(cx, obj, id, val, nullptr, nullptr, JSPROP_RESOLVING))
+        return false;
+
+    obj->markLengthOverridden();
+    return true;
+}
+
+/* static */ bool
+ArgumentsObject::reifyIterator(JSContext* cx, Handle<ArgumentsObject*> obj)
+{
+    if (obj->hasOverriddenIterator())
+        return true;
+
+    if (!DefineArgumentsIterator(cx, obj))
+        return false;
+
+    obj->markIteratorOverridden();
+    return true;
 }
 
 /* static */ bool
@@ -714,7 +741,7 @@ UnmappedArgSetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleVal
     /*
      * For simplicity we use delete/define to replace the property with a
      * simple data property. Note that we rely on ArgumentsObject::obj_delProperty
-     * to clear the corresponding reserved slot so the GC can collect its value.
+     * to set the corresponding override-bit.
      */
     ObjectOpResult ignored;
     return NativeDeleteProperty(cx, argsobj, id, ignored) &&
