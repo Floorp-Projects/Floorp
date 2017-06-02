@@ -11,7 +11,7 @@ config = {
     ],
     "replacements": [
         # File, from, to
-        ("{}/{}".format(d, f),
+        ("{}{}".format(d, f),
         "ac_add_options --with-branding=mobile/android/branding/nightly",
         "ac_add_options --with-branding=mobile/android/branding/beta")
         for d in ["mobile/android/config/mozconfigs/android-api-15/",
@@ -28,12 +28,10 @@ config = {
                   "browser/config/mozconfigs/macosx64/l10n-mozconfig"]
     ] + [
         # File, from, to
-        ("{}/{}".format(d, f),
-        "ac_add_options --with-l10n-base=../../l10n-central",
+        (f, "ac_add_options --with-l10n-base=../../l10n-central",
         "ac_add_options --with-l10n-base=../../mozilla-beta")
-        for d in ["mobile/android/config/mozconfigs/android-api-15/",
-                  "mobile/android/config/mozconfigs/android-x86/"]
-        for f in ["l10n-nightly", "l10n-release"]
+        for f in ["mobile/android/config/mozconfigs/android-api-15/l10n-nightly",
+                  "mobile/android/config/mozconfigs/android-x86/l10n-nightly"]
     ] + [
         # File, from, to
         (f, "ac_add_options --enable-profiling", "") for f in

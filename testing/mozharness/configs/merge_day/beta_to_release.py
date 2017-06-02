@@ -12,20 +12,18 @@ config = {
     ],
     "replacements": [
         # File, from, to
-        ("{}/{}".format(d, f),
+        ("{}{}".format(d, f),
         "ac_add_options --with-branding=mobile/android/branding/beta",
         "ac_add_options --with-branding=mobile/android/branding/official")
         for d in ["mobile/android/config/mozconfigs/android-api-15/",
                   "mobile/android/config/mozconfigs/android-x86/"]
-        for f in ["debug", "nightly", "l10n-nightly", "l10n-release", "release"]
+        for f in ["debug", "nightly", "l10n-nightly"]
     ] + [
         # File, from, to
-        ("{}/{}".format(d, f),
-        "ac_add_options --with-l10n-base=../../mozilla-beta",
+        (f, "ac_add_options --with-l10n-base=../../mozilla-beta",
         "ac_add_options --with-l10n-base=../../mozilla-release")
-        for d in ["mobile/android/config/mozconfigs/android-api-15/",
-                  "mobile/android/config/mozconfigs/android-x86/"]
-        for f in ["l10n-nightly", "l10n-release"]
+        for f in ["mobile/android/config/mozconfigs/android-api-15/l10n-nightly",
+                  "mobile/android/config/mozconfigs/android-x86/l10n-nightly"]
     ] + [
         # File, from, to
         ("browser/confvars.sh",

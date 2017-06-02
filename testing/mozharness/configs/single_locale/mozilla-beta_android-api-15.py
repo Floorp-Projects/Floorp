@@ -58,7 +58,6 @@ config = {
     "ssh_key_dir": "~/.ssh",
     "merge_locales": True,
     "mozilla_dir": MOZILLA_DIR,
-    "mozconfig": "%s/mobile/android/config/mozconfigs/android-api-15/l10n-release" % MOZILLA_DIR,
     "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
     "key_alias": "release",
     # Mock
