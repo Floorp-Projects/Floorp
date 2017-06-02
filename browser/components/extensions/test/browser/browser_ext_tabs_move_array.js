@@ -41,7 +41,10 @@ add_task(async function moveMultiple() {
       }
 
       let tests = [
+        {"move": [2], "index": 0, "result": [2, 1, 3, 4]},
+        {"move": [2], "index": -1, "result": [1, 3, 4, 2]},
         // Start -> After first tab  -> After second tab
+        {"move": [4, 3], "index":  0, "result": [4, 3, 1, 2]},
         // [1, 2, 3, 4] -> [1, 4, 2, 3] -> [1, 4, 3, 2]
         {"move": [4, 3], "index":  1, "result": [1, 4, 3, 2]},
         // [1, 2, 3, 4] -> [2, 3, 1, 4] -> [3, 1, 2, 4]
@@ -57,6 +60,15 @@ add_task(async function moveMultiple() {
         await move(test.move, test.index);
         await check(test.result);
       }
+
+      let firstId = (await browser.tabs.query({url: "http://example.com/*"}))[0].id;
+      // Assuming that tab.id of 12345 does not exist.
+      await browser.test.assertRejects(
+        browser.tabs.move([firstId, 12345], {index: -1}),
+        /Invalid tab/,
+        "Should receive invalid tab error");
+      // The first argument got moved, the second on failed.
+      await check([2, 3, 1, 4]);
 
       browser.test.notifyPass("tabs.move");
     },
