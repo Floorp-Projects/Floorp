@@ -360,8 +360,6 @@ enum class Tier
     Debug = Baseline,
     Ion,
     Serialized = Ion,
-
-    TBD      // A placeholder while tiering is being implemented};
 };
 
 // The CompileMode controls how compilation of a module is performed (notably,
@@ -757,10 +755,6 @@ struct ElemSegment
 
     Uint32Vector& elemCodeRangeIndices(Tier t) {
         switch (t) {
-          case Tier::TBD:
-            if (elemCodeRangeIndices1_.length() > 0)
-                return elemCodeRangeIndices1_;
-            return elemCodeRangeIndices2_;
           case Tier::Baseline:
             return elemCodeRangeIndices1_;
           case Tier::Ion:
@@ -772,10 +766,6 @@ struct ElemSegment
 
     const Uint32Vector& elemCodeRangeIndices(Tier t) const {
         switch (t) {
-          case Tier::TBD:
-            if (elemCodeRangeIndices1_.length() > 0)
-                return elemCodeRangeIndices1_;
-            return elemCodeRangeIndices2_;
           case Tier::Baseline:
             return elemCodeRangeIndices1_;
           case Tier::Ion:

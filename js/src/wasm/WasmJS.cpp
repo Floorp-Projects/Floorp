@@ -1772,7 +1772,6 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
     if (value) {
         RootedWasmInstanceObject instanceObj(cx, ExportedFunctionToInstanceObject(value));
         uint32_t funcIndex = ExportedFunctionToFuncIndex(value);
-        Tier tier = Tier::TBD;  // Perhaps the tier that the function is at?
 
 #ifdef DEBUG
         RootedFunction f(cx);
@@ -1781,6 +1780,7 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
 #endif
 
         Instance& instance = instanceObj->instance();
+        Tier tier = instance.code().bestTier();
         const FuncExport& funcExport = instance.metadata(tier).lookupFuncExport(funcIndex);
         const CodeRange& codeRange = instance.metadata(tier).codeRanges[funcExport.codeRangeIndex()];
         void* code = instance.codeBase(tier) + codeRange.funcTableEntry();
