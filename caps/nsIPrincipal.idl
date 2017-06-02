@@ -298,13 +298,6 @@ interface nsIPrincipal : nsISerializable
     [infallible] readonly attribute boolean isInIsolatedMozBrowserElement;
 
     /**
-     * Returns true if this principal has an unknown appId. This shouldn't
-     * generally be used. We only expose it due to not providing the correct
-     * appId everywhere where we construct principals.
-     */
-    [infallible] readonly attribute boolean unknownAppId;
-
-    /**
      * Returns true iff this is a null principal (corresponding to an
      * unknown, hence assumed minimally privileged, security context).
      */
