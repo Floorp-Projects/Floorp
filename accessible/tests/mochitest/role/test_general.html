@@ -57,6 +57,13 @@
       // breaking JAWS compatibility.
       testRole("data", ROLE_TEXT_CONTAINER);
 
+      // Test that input type="checkbox" and type="radio" are
+      // exposed as such regardless of appearance style.
+      testRole("checkbox_regular", ROLE_CHECKBUTTON);
+      testRole("checkbox_appearance_none", ROLE_CHECKBUTTON);
+      testRole("radio_regular", ROLE_RADIOBUTTON);
+      testRole("radio_appearance_none", ROLE_RADIOBUTTON);
+
       // Test regular paragraph by comparison to make sure exposure does not
       // get broken.
       testRole("p", ROLE_PARAGRAPH);
@@ -136,6 +143,10 @@
   <form id="frm" action="submit.php" method="post">
     <label for="data">File</label>:
     <input type="file" id="data" name="data" size="50"/>
+    <input type="checkbox" id="checkbox_regular" value="Check me"/>
+    <input type="checkbox" style="-moz-appearance: none;" id="checkbox_appearance_none" value="Check me"/>
+    <input type="radio" id="radio_regular" value="Check me"/>
+    <input type="radio" style="-moz-appearance: none;" id="radio_appearance_none" value="Check me"/>
   </form>
 
   <nav id="nav">a nav</nav>
