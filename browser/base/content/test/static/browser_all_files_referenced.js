@@ -122,8 +122,7 @@ var whitelist = [
   {file: "resource://gre/modules/IndexedDB.jsm"},
 
   // New L10n API that is not yet used in production
-  {file: "resource://gre/modules/MessageContext.jsm"},
-  {file: "resource://gre/modules/L10nRegistry.jsm"},
+  {file: "resource://gre/modules/Localization.jsm"},
 
   // Starting from here, files in the whitelist are bugs that need fixing.
   // Bug 1339420
