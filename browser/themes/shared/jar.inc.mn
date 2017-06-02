@@ -128,6 +128,8 @@
   skin/classic/browser/forget.svg                     (../shared/icons/forget.svg)
   skin/classic/browser/forward.svg                    (../shared/icons/forward.svg)
   skin/classic/browser/fullscreen.svg                 (../shared/icons/fullscreen.svg)
+  skin/classic/browser/fullscreen-enter.svg           (../shared/icons/fullscreen-enter.svg)
+  skin/classic/browser/fullscreen-exit.svg            (../shared/icons/fullscreen-exit.svg)
   skin/classic/browser/help.svg                       (../shared/icons/help.svg)
   skin/classic/browser/history.svg                    (../shared/icons/history.svg)
   skin/classic/browser/home.svg                       (../shared/icons/home.svg)

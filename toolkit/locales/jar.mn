@@ -92,14 +92,14 @@
   locale/@AB_CD@/global/wizard.properties               (%chrome/global/wizard.properties)
   locale/@AB_CD@/global/crashes.dtd                     (%crashreporter/crashes.dtd)
   locale/@AB_CD@/global/crashes.properties              (%crashreporter/crashes.properties)
-% locale global-platform @AB_CD@ %locale/@AB_CD@/global-platform/gtk/
+% locale global-platform @AB_CD@ %locale/@AB_CD@/global-platform/unix/ os=LikeUnix
 % locale global-platform @AB_CD@ %locale/@AB_CD@/global-platform/mac/ os=Darwin
 % locale global-platform @AB_CD@ %locale/@AB_CD@/global-platform/win/ os=WINNT
   locale/@AB_CD@/global-platform/mac/platformKeys.properties  (%chrome/global-platform/mac/platformKeys.properties)
-  locale/@AB_CD@/global-platform/gtk/platformKeys.properties  (%chrome/global-platform/unix/platformKeys.properties)
+  locale/@AB_CD@/global-platform/unix/platformKeys.properties (%chrome/global-platform/unix/platformKeys.properties)
   locale/@AB_CD@/global-platform/win/platformKeys.properties  (%chrome/global-platform/win/platformKeys.properties)
   locale/@AB_CD@/global-platform/mac/intl.properties          (%chrome/global-platform/mac/intl.properties)
-  locale/@AB_CD@/global-platform/gtk/intl.properties          (%chrome/global-platform/unix/intl.properties)
+  locale/@AB_CD@/global-platform/unix/intl.properties         (%chrome/global-platform/unix/intl.properties)
   locale/@AB_CD@/global-platform/win/intl.properties          (%chrome/global-platform/win/intl.properties)
 % locale mozapps @AB_CD@ %locale/@AB_CD@/mozapps/
   locale/@AB_CD@/mozapps/downloads/unknownContentType.properties  (%chrome/mozapps/downloads/unknownContentType.properties)

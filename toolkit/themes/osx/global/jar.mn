@@ -7,7 +7,6 @@
 toolkit.jar:
   skin/classic/global/10pct_transparent_grey.png
   skin/classic/global/50pct_transparent_grey.png
-  skin/classic/global/arrow.css
   skin/classic/global/autocomplete.css
   skin/classic/global/button.css
   skin/classic/global/checkbox.css
@@ -53,12 +52,10 @@ toolkit.jar:
   skin/classic/global/arrow/arrow-dn.png                             (arrow/arrow-dn.png)
   skin/classic/global/arrow/arrow-lft-dis.gif                        (arrow/arrow-lft-dis.gif)
   skin/classic/global/arrow/arrow-lft-hov.gif                        (arrow/arrow-lft-hov.gif)
-  skin/classic/global/arrow/arrow-lft-sharp-end.gif                  (arrow/arrow-lft-sharp-end.gif)
   skin/classic/global/arrow/arrow-lft-sharp.gif                      (arrow/arrow-lft-sharp.gif)
   skin/classic/global/arrow/arrow-lft.gif                            (arrow/arrow-lft.gif)
   skin/classic/global/arrow/arrow-rit-dis.gif                        (arrow/arrow-rit-dis.gif)
   skin/classic/global/arrow/arrow-rit-hov.gif                        (arrow/arrow-rit-hov.gif)
-  skin/classic/global/arrow/arrow-rit-sharp-end.gif                  (arrow/arrow-rit-sharp-end.gif)
   skin/classic/global/arrow/arrow-rit-sharp.gif                      (arrow/arrow-rit-sharp.gif)
   skin/classic/global/arrow/arrow-rit.gif                            (arrow/arrow-rit.gif)
   skin/classic/global/arrow/arrow-up-dis.gif                         (arrow/arrow-up-dis.gif)

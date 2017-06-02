@@ -13,7 +13,7 @@
     if ("addon" in window) {
       var count = 1;
       addon.port.on("get-result", () => {
-        console.log("get-result recieved");
+        console.log("get-result received");
         addon.port.emit("result" + count++, extras && extras.test())
       });
     }

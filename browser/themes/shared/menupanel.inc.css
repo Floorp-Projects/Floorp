@@ -233,3 +233,19 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
 #appMenu-quit-button {
   list-style-image: url(chrome://browser/skin/quit.svg);
 }
+
+#appMenu-zoomEnlarge-button {
+  list-style-image: url(chrome://browser/skin/zoom-in.svg);
+}
+
+#appMenu-zoomReduce-button {
+  list-style-image: url(chrome://browser/skin/zoom-out.svg);
+}
+
+#appMenu-fullscreen-button {
+  list-style-image: url(chrome://browser/skin/fullscreen-enter.svg);
+}
+
+#appMenu-fullscreen-button[checked] {
+  list-style-image: url(chrome://browser/skin/fullscreen-exit.svg);
+}
