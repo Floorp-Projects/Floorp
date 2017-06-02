@@ -273,7 +273,11 @@ GeckoMediaPluginServiceParent::Observe(nsISupports* aSubject,
           gmpThread = mGMPThread;
         }
         if (gmpThread) {
-          gmpThread->Dispatch(WrapRunnable(this,
+          // Note: the GeckoMediaPluginServiceParent singleton is kept alive by a
+          // static refptr that is only cleared in the final stage of
+          // shutdown after everything else is shutdown, so this RefPtr<> is not
+          // strictly necessary so long as that is true, but it's safer.
+          gmpThread->Dispatch(WrapRunnable(RefPtr<GeckoMediaPluginServiceParent>(this),
                                            &GeckoMediaPluginServiceParent::CrashPlugins),
                               NS_DISPATCH_NORMAL);
         }
