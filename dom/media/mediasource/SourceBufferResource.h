@@ -61,6 +61,8 @@ public:
                   char* aBuffer,
                   uint32_t aCount,
                   uint32_t* aBytes) override;
+  // Memory-based and no locks, caching discouraged.
+  bool ShouldCacheReads() override { return false; }
   int64_t Tell() override { return mOffset; }
   void Pin() override { UNIMPLEMENTED(); }
   void Unpin() override { UNIMPLEMENTED(); }
