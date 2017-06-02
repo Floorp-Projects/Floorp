@@ -1050,11 +1050,11 @@ already_AddRefed<RawServoAnimationValue>
 ServoStyleSet::ComputeAnimationValue(
   Element* aElement,
   RawServoDeclarationBlock* aDeclarations,
-  const ServoComputedValuesWithParent& aComputedValues)
+  ServoComputedValuesBorrowed aComputedValues)
 {
   return Servo_AnimationValue_Compute(aElement,
                                       aDeclarations,
-                                      aComputedValues.mCurrentStyle,
+                                      aComputedValues,
                                       mRawSet.get()).Consume();
 }
 
