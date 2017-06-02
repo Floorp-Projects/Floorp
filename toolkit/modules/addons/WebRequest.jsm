@@ -737,8 +737,9 @@ HttpObserverManager = {
       browser: loadContext && loadContext.topFrameElement,
       type: WebRequestCommon.typeForPolicyType(policyType),
       fromCache: getData(channel).fromCache,
+      // Defaults for a top level request
       windowId: 0,
-      parentWindowId: 0,
+      parentWindowId: -1,
     };
 
     if (loadInfo) {
@@ -762,15 +763,27 @@ HttpObserverManager = {
                                                  loadInfo.principalToInherit ||
                                                  loadInfo.triggeringPrincipal);
 
-      if (loadInfo.frameOuterWindowID) {
+      // Handle window and parent id values for sub_frame requests or requests
+      // inside a sub_frame.
+      if (loadInfo.frameOuterWindowID != 0) {
+        // This is a sub_frame.  Only frames (ie. iframe; a request with a frameloader)
+        // have a non-zero frameOuterWindowID.  For a sub_frame, outerWindowID
+        // points at the frames parent.  The parent frame is the main_frame if
+        // outerWindowID == parentOuterWindowID, in which case set parentWindowId
+        // to zero.
         Object.assign(data, {
           windowId: loadInfo.frameOuterWindowID,
-          parentWindowId: loadInfo.outerWindowID,
+          parentWindowId: loadInfo.outerWindowID == loadInfo.parentOuterWindowID ? 0 : loadInfo.outerWindowID,
         });
-      } else {
+      } else if (loadInfo.outerWindowID != loadInfo.parentOuterWindowID) {
+        // This is a non-frame (e.g. script, image, etc) request within a
+        // sub_frame.  We have to check parentOuterWindowID against the browser
+        // to see if it is the main_frame in which case the parenteWindowId
+        // available to the caller must be set to zero.
+        let parentMainFrame = data.browser && data.browser.outerWindowID == loadInfo.parentOuterWindowID;
         Object.assign(data, {
           windowId: loadInfo.outerWindowID,
-          parentWindowId: loadInfo.parentOuterWindowID,
+          parentWindowId: parentMainFrame ? 0 : loadInfo.parentOuterWindowID,
         });
       }
     }
