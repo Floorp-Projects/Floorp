@@ -134,17 +134,15 @@ interface nsIScriptSecurityManager : nsISupports
     nsIPrincipal getSystemPrincipal();
 
     /**
-     * Returns a principal that has the appId and inMozBrowser of the load
-     * context.
-     * @param loadContext to get appId/inMozBrowser from.
+     * Returns a principal that has the OriginAttributes of the load context.
+     * @param loadContext to get the OriginAttributes from.
      */
     nsIPrincipal getLoadContextCodebasePrincipal(in nsIURI uri,
                                                  in nsILoadContext loadContext);
 
     /**
-     * Returns a principal that has the appId and inMozBrowser of the docshell
-     * inside a mozbrowser frame.
-     * @param docShell to get appId/inMozBrowser from.
+     * Returns a principal that has the OriginAttributes of the docshell.
+     * @param docShell to get the OriginAttributes from.
      */
     nsIPrincipal getDocShellCodebasePrincipal(in nsIURI uri,
                                               in nsIDocShell docShell);
