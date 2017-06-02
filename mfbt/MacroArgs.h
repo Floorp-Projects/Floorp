@@ -16,44 +16,35 @@
 #define MOZ_CONCAT(x, y) MOZ_CONCAT2(x, y)
 
 /*
- * MOZ_PASTE_PREFIX_AND_ARG_COUNT(aPrefix, ...) counts the number of variadic
- * arguments and prefixes it with |aPrefix|. For example:
+ * MOZ_ARG_COUNT(...) counts the number of variadic arguments.
+ * You must pass in between 0 and 50 (inclusive) variadic arguments.
+ * For example:
  *
- *   MOZ_PASTE_PREFIX_AND_ARG_COUNT(, foo, 42) expands to 2
- *   MOZ_PASTE_PREFIX_AND_ARG_COUNT(A, foo, 42, bar) expands to A3
- *   MOZ_PASTE_PREFIX_AND_ARG_COUNT(A) expands to A0
- *   MOZ_PASTE_PREFIX_AND_ARG_COUNT() expands to 0, but MSVC warns there
- *   aren't enough arguments given.
+ *   MOZ_ARG_COUNT() expands to 0
+ *   MOZ_ARG_COUNT(a) expands to 1
+ *   MOZ_ARG_COUNT(a, b) expands to 2
  *
- * You must pass in between 0 and 50 (inclusive) variadic arguments, past
- * |aPrefix|.
- *
+ * Implementation notes:
  * The `##__VA_ARGS__` form is a GCC extension that removes the comma if
  * __VA_ARGS__ is empty. It is supported by Clang too. MSVC ignores ##,
  * and its default behavior is already to strip the comma when __VA_ARGS__
  * is empty.
  *
- * So MOZ_MACROARGS_ARG_COUNT_HELPER(prefix) expands to
- *   (_, prefix50, prefix49, ...)
- * MOZ_MACROARGS_ARG_COUNT_HELPER(prefix, a) expands to
- *   (_, a, prefix50, prefix49, ...)
+ * So MOZ_MACROARGS_ARG_COUNT_HELPER() expands to
+ *   (_, 50, 49, ...)
+ * MOZ_MACROARGS_ARG_COUNT_HELPER(a) expands to
+ *   (_, a, 50, 49, ...)
  * etc.
  */
-#define MOZ_PASTE_PREFIX_AND_ARG_COUNT(aPrefix, ...) \
-  MOZ_MACROARGS_ARG_COUNT_HELPER2( \
-    MOZ_MACROARGS_ARG_COUNT_HELPER(aPrefix, ##__VA_ARGS__))
+#define MOZ_ARG_COUNT(...) \
+  MOZ_MACROARGS_ARG_COUNT_HELPER2(MOZ_MACROARGS_ARG_COUNT_HELPER(__VA_ARGS__))
 
-#define MOZ_MACROARGS_ARG_COUNT_HELPER(aPrefix, ...) (_, ##__VA_ARGS__, \
-    aPrefix##50, aPrefix##49, aPrefix##48, aPrefix##47, aPrefix##46, \
-    aPrefix##45, aPrefix##44, aPrefix##43, aPrefix##42, aPrefix##41, \
-    aPrefix##40, aPrefix##39, aPrefix##38, aPrefix##37, aPrefix##36, \
-    aPrefix##35, aPrefix##34, aPrefix##33, aPrefix##32, aPrefix##31, \
-    aPrefix##30, aPrefix##29, aPrefix##28, aPrefix##27, aPrefix##26, \
-    aPrefix##25, aPrefix##24, aPrefix##23, aPrefix##22, aPrefix##21, \
-    aPrefix##20, aPrefix##19, aPrefix##18, aPrefix##17, aPrefix##16, \
-    aPrefix##15, aPrefix##14, aPrefix##13, aPrefix##12, aPrefix##11, \
-    aPrefix##10, aPrefix##9,  aPrefix##8,  aPrefix##7,  aPrefix##6,  \
-    aPrefix##5,  aPrefix##4,  aPrefix##3,  aPrefix##2,  aPrefix##1, aPrefix##0)
+#define MOZ_MACROARGS_ARG_COUNT_HELPER(...) (_, ##__VA_ARGS__, \
+    50, 49, 48, 47, 46, 45, 44, 43, 42, 41, \
+    40, 39, 38, 37, 36, 35, 34, 33, 32, 31, \
+    30, 29, 28, 27, 26, 25, 24, 23, 22, 21, \
+    20, 19, 18, 17, 16, 15, 14, 13, 12, 11, \
+    10, 9,  8,  7,  6,  5,  4,  3,  2,  1, 0)
 
 #define MOZ_MACROARGS_ARG_COUNT_HELPER2(aArgs) \
   MOZ_MACROARGS_ARG_COUNT_HELPER3 aArgs
@@ -65,6 +56,24 @@
   a31, a32, a33, a34, a35, a36, a37, a38, a39, a40, \
   a41, a42, a43, a44, a45, a46, a47, a48, a49, a50, \
   a51, ...) a51
+
+/*
+ * MOZ_PASTE_PREFIX_AND_ARG_COUNT(aPrefix, ...) counts the number of variadic
+ * arguments and prefixes it with |aPrefix|. For example:
+ *
+ *   MOZ_PASTE_PREFIX_AND_ARG_COUNT(, foo, 42) expands to 2
+ *   MOZ_PASTE_PREFIX_AND_ARG_COUNT(A, foo, 42, bar) expands to A3
+ *   MOZ_PASTE_PREFIX_AND_ARG_COUNT(A) expands to A0
+ *   MOZ_PASTE_PREFIX_AND_ARG_COUNT() expands to 0, but MSVC warns there
+ *   aren't enough arguments given.
+ *
+ * You must pass in between 0 and 50 (inclusive) variadic arguments, past
+ * |aPrefix|.
+ */
+#define MOZ_PASTE_PREFIX_AND_ARG_COUNT_GLUE(a, b) a b
+#define MOZ_PASTE_PREFIX_AND_ARG_COUNT(aPrefix, ...) \
+  MOZ_PASTE_PREFIX_AND_ARG_COUNT_GLUE( \
+    MOZ_CONCAT, (aPrefix, MOZ_ARG_COUNT(__VA_ARGS__)))
 
 /*
  * MOZ_ARGS_AFTER_N expands to its arguments excluding the first |N|
