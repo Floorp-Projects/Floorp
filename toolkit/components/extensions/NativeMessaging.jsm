@@ -198,7 +198,7 @@ this.NativeApp = class extends EventEmitter {
 
         let subprocessOpts = {
           command: command,
-          arguments: [hostInfo.path],
+          arguments: [hostInfo.path, context.extension.id],
           workdir: OS.Path.dirname(command),
           stderr: "pipe",
         };

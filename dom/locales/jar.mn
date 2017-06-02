@@ -30,6 +30,6 @@
   locale/@AB_CD@/global/xml/prettyprint.dtd                    (%chrome/xml/prettyprint.dtd)
   locale/@AB_CD@/global-platform/win/accessible.properties     (%chrome/accessibility/win/accessible.properties)
   locale/@AB_CD@/global-platform/mac/accessible.properties     (%chrome/accessibility/mac/accessible.properties)
-  locale/@AB_CD@/global-platform/gtk/accessible.properties     (%chrome/accessibility/unix/accessible.properties)
+  locale/@AB_CD@/global-platform/unix/accessible.properties    (%chrome/accessibility/unix/accessible.properties)
   locale/@AB_CD@/global/AccessFu.properties                    (%chrome/accessibility/AccessFu.properties)
   locale/@AB_CD@/global/mathml/mathml.properties               (%chrome/mathml/mathml.properties)

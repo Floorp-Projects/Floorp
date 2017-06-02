@@ -127,7 +127,7 @@ private:
     bool expandoObjectMatchesConsumer(JSContext* cx, JS::HandleObject expandoObject,
                                       nsIPrincipal* consumerOrigin,
                                       JS::HandleObject exclusiveGlobal);
-    bool getExpandoObjectInternal(JSContext* cx, JS::HandleObject target,
+    bool getExpandoObjectInternal(JSContext* cx, JSObject* expandoChain,
                                   nsIPrincipal* origin, JSObject* exclusiveGlobal,
                                   JS::MutableHandleObject expandoObject);
     JSObject* attachExpandoObject(JSContext* cx, JS::HandleObject target,
