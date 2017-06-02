@@ -262,6 +262,11 @@ public:
   }
   bool RebuildFragmentedIndex(
     const mozilla::MediaByteRangeSet& aByteRanges);
+  // If *aCanEvict is set to true. then will remove all moofs already parsed
+  // from index then rebuild the index. *aCanEvict is set to true upon return if
+  // some moofs were removed.
+  bool RebuildFragmentedIndex(
+    const mozilla::MediaByteRangeSet& aByteRanges, bool* aCanEvict);
   bool RebuildFragmentedIndex(BoxContext& aContext);
   Interval<Microseconds> GetCompositionRange(
     const mozilla::MediaByteRangeSet& aByteRanges);
