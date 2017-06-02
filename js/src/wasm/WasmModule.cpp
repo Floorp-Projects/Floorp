@@ -168,8 +168,6 @@ LinkData::linkData(Tier tier) const
         if (hasTier2())
             return *linkData2_;
         MOZ_CRASH("No linkData at this tier");
-      case Tier::TBD:
-        return *linkData1_;
       default:
         MOZ_CRASH();
     }
@@ -189,8 +187,6 @@ LinkData::linkData(Tier tier)
         if (hasTier2())
             return *linkData2_;
         MOZ_CRASH("No linkData at this tier");
-      case Tier::TBD:
-        return *linkData1_;
       default:
         MOZ_CRASH();
     }
@@ -630,7 +626,7 @@ Module::initSegments(JSContext* cx,
     Instance& instance = instanceObj->instance();
     const SharedTableVector& tables = instance.tables();
 
-    Tier tier = Tier::TBD;
+    Tier tier = code().bestTier();
 
     // Perform all error checks up front so that this function does not perform
     // partial initialization if an error is reported.
@@ -680,9 +676,9 @@ Module::initSegments(JSContext* cx,
 
                 HandleFunction f = funcImports[funcIndex];
                 WasmInstanceObject* exportInstanceObj = ExportedFunctionToInstanceObject(f);
-                Tier exportTier = Tier::TBD;
-                const CodeRange& cr = exportInstanceObj->getExportedFunctionCodeRange(f, exportTier);
                 Instance& exportInstance = exportInstanceObj->instance();
+                Tier exportTier = exportInstance.code().bestTier();
+                const CodeRange& cr = exportInstanceObj->getExportedFunctionCodeRange(f, exportTier);
                 table.set(offset + i, exportInstance.codeBase(exportTier) + cr.funcTableEntry(), exportInstance);
             } else {
                 const CodeRange& cr = codeRanges[seg.elemCodeRangeIndices(tier)[i]];

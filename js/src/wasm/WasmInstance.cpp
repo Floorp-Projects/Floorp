@@ -127,7 +127,7 @@ bool
 Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, const uint64_t* argv,
                      MutableHandleValue rval)
 {
-    Tier tier = Tier::TBD;
+    Tier tier = code().bestTier();
 
     const FuncImport& fi = metadata(tier).funcImports[funcImportIndex];
 
@@ -350,8 +350,7 @@ Instance::Instance(JSContext* cx,
     tlsData()->instance = this;
     tlsData()->addressOfContext = (JSContext**)object->zone()->group()->addressOfOwnerContext();
 
-    Tier callerTier = Tier::TBD;
-    Tier calleeTier = Tier::TBD;
+    Tier callerTier = code_->bestTier();
 
     for (size_t i = 0; i < metadata(callerTier).funcImports.length(); i++) {
         HandleFunction f = funcImports[i];
@@ -359,8 +358,9 @@ Instance::Instance(JSContext* cx,
         FuncImportTls& import = funcImportTls(fi);
         if (!isAsmJS() && IsExportedWasmFunction(f)) {
             WasmInstanceObject* calleeInstanceObj = ExportedFunctionToInstanceObject(f);
-            const CodeRange& codeRange = calleeInstanceObj->getExportedFunctionCodeRange(f, calleeTier);
             Instance& calleeInstance = calleeInstanceObj->instance();
+            Tier calleeTier = calleeInstance.code().bestTier();
+            const CodeRange& codeRange = calleeInstanceObj->getExportedFunctionCodeRange(f, calleeTier);
             import.tls = calleeInstance.tlsData();
             import.code = calleeInstance.codeBase(calleeTier) + codeRange.funcNormalEntry();
             import.baselineScript = nullptr;
@@ -503,6 +503,8 @@ Instance::tracePrivate(JSTracer* trc)
     MOZ_ASSERT(!gc::IsAboutToBeFinalized(&object_));
     TraceEdge(trc, &object_, "wasm instance object");
 
+    // OK to just do one tier here; though the tiers have different funcImports
+    // tables, they share the tls object.
     for (const FuncImport& fi : metadata(code().stableTier()).funcImports)
         TraceNullableEdge(trc, &funcImportTls(fi).obj, "wasm import");
 
@@ -561,7 +563,7 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
     // If there has been a moving grow, this Instance should have been notified.
     MOZ_RELEASE_ASSERT(!memory_ || tlsData()->memoryBase == memory_->buffer().dataPointerEither());
 
-    Tier tier = Tier::TBD;
+    Tier tier = code().bestTier();
 
     const FuncExport& func = metadata(tier).lookupFuncExport(funcIndex);
 
@@ -820,9 +822,10 @@ Instance::onMovingGrowTable()
 void
 Instance::deoptimizeImportExit(uint32_t funcImportIndex)
 {
-    const FuncImport& fi = metadata(code().stableTier()).funcImports[funcImportIndex];
+    Tier t = code().bestTier();
+    const FuncImport& fi = metadata(t).funcImports[funcImportIndex];
     FuncImportTls& import = funcImportTls(fi);
-    import.code = codeBase(Tier::TBD) + fi.interpExitCodeOffset();
+    import.code = codeBase(t) + fi.interpExitCodeOffset();
     import.baselineScript = nullptr;
 }
 
