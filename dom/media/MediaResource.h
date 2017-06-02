@@ -202,8 +202,6 @@ public:
   // with a new channel. Any cached data associated with the original
   // stream should be accessible in the new stream too.
   virtual already_AddRefed<MediaResource> CloneData(MediaResourceCallback* aCallback) = 0;
-  // Set statistics to be recorded to the object passed in.
-  virtual void RecordStatisticsTo(MediaChannelStatistics *aStatistics) { }
 
   // These methods are called off the main thread.
   // The mode is initially MODE_PLAYBACK.
@@ -582,15 +580,6 @@ public:
   bool     IsClosed() const { return mCacheStream.IsClosed(); }
   bool     CanClone() override;
   already_AddRefed<MediaResource> CloneData(MediaResourceCallback* aDecoder) override;
-  // Set statistics to be recorded to the object passed in. If not called,
-  // |ChannelMediaResource| will create it's own statistics objects in |Open|.
-  void RecordStatisticsTo(MediaChannelStatistics *aStatistics) override {
-    NS_ASSERTION(aStatistics, "Statistics param cannot be null!");
-    MutexAutoLock lock(mLock);
-    if (!mChannelStatistics) {
-      mChannelStatistics = aStatistics;
-    }
-  }
   nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override;
   void     EnsureCacheUpToDate() override;
 
@@ -618,7 +607,6 @@ public:
     // Might be useful to track in the future:
     //   - mListener (seems minor)
     //   - mChannelStatistics (seems minor)
-    //     owned if RecordStatisticsTo is not called
     //   - mDataReceivedEvent (seems minor)
     size_t size = BaseMediaResource::SizeOfExcludingThis(aMallocSizeOf);
     size += mCacheStream.SizeOfExcludingThis(aMallocSizeOf);
