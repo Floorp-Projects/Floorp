@@ -1452,6 +1452,9 @@ let AutoCompletePopup = {
   init() {
     addEventListener("unload", this);
     addEventListener("DOMContentLoaded", this);
+    // WebExtension browserAction is preloaded and does not receive DCL, wait
+    // on pageshow so we can hookup the formfill controller.
+    addEventListener("pageshow", this, true);
 
     for (let messageName of this.MESSAGES) {
       addMessageListener(messageName, this);
@@ -1469,6 +1472,7 @@ let AutoCompletePopup = {
       this._connected = false;
     }
 
+    removeEventListener("pageshow", this);
     removeEventListener("unload", this);
     removeEventListener("DOMContentLoaded", this);
 
@@ -1477,22 +1481,34 @@ let AutoCompletePopup = {
     }
   },
 
+  connect() {
+    if (this._connected) {
+      return;
+    }
+    // We need to wait for a content viewer to be available
+    // before we can attach our AutoCompletePopup handler,
+    // since nsFormFillController assumes one will exist
+    // when we call attachToBrowser.
+
+    // Hook up the form fill autocomplete controller.
+    let controller = Cc["@mozilla.org/satchel/form-fill-controller;1"]
+                       .getService(Ci.nsIFormFillController);
+    controller.attachToBrowser(docShell,
+                               this.QueryInterface(Ci.nsIAutoCompletePopup));
+    this._connected = true;
+  },
+
   handleEvent(event) {
     switch (event.type) {
+      case "pageshow": {
+        removeEventListener("pageshow", this);
+        this.connect();
+        break;
+      }
+
       case "DOMContentLoaded": {
         removeEventListener("DOMContentLoaded", this);
-
-        // We need to wait for a content viewer to be available
-        // before we can attach our AutoCompletePopup handler,
-        // since nsFormFillController assumes one will exist
-        // when we call attachToBrowser.
-
-        // Hook up the form fill autocomplete controller.
-        let controller = Cc["@mozilla.org/satchel/form-fill-controller;1"]
-                           .getService(Ci.nsIFormFillController);
-        controller.attachToBrowser(docShell,
-                                   this.QueryInterface(Ci.nsIAutoCompletePopup));
-        this._connected = true;
+        this.connect();
         break;
       }
 

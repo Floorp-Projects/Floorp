@@ -296,20 +296,35 @@ TaggingService.prototype = {
     if (!aURI)
       throw Cr.NS_ERROR_INVALID_ARG;
 
-    var tags = [];
-    var bookmarkIds = PlacesUtils.bookmarks.getBookmarkIdsForURI(aURI);
-    for (var i = 0; i < bookmarkIds.length; i++) {
-      var folderId = PlacesUtils.bookmarks.getFolderIdForItem(bookmarkIds[i]);
-      if (this._tagFolders[folderId])
-        tags.push(this._tagFolders[folderId]);
+    let tags = [];
+    let db = PlacesUtils.history.DBConnection;
+    let stmt = db.createStatement(
+      `SELECT t.id AS folderId
+       FROM moz_bookmarks b
+       JOIN moz_bookmarks t on t.id = b.parent
+       WHERE b.fk = (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url) AND
+       t.parent = :tags_root
+       ORDER BY b.lastModified DESC, b.id DESC`
+    );
+    stmt.params.url = aURI.spec;
+    stmt.params.tags_root = PlacesUtils.tagsFolderId;
+    try {
+      while (stmt.executeStep()) {
+        try {
+          tags.push(this._tagFolders[stmt.row.folderId]);
+        } catch (ex) {}
+      }
+    } finally {
+      stmt.finalize();
     }
 
     // sort the tag list
     tags.sort(function(a, b) {
         return a.toLowerCase().localeCompare(b.toLowerCase());
       });
-    if (aCount)
+    if (aCount) {
       aCount.value = tags.length;
+    }
     return tags;
   },
 

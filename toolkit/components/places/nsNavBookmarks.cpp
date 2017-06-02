@@ -2574,8 +2574,7 @@ nsNavBookmarks::GetFolderIdForItem(int64_t aItemId, int64_t* _parentId)
 
 nsresult
 nsNavBookmarks::GetBookmarkIdsForURITArray(nsIURI* aURI,
-                                           nsTArray<int64_t>& aResult,
-                                           bool aSkipTags)
+                                           nsTArray<int64_t>& aResult)
 {
   NS_ENSURE_ARG(aURI);
 
@@ -2584,10 +2583,11 @@ nsNavBookmarks::GetBookmarkIdsForURITArray(nsIURI* aURI,
   // Note: not using a JOIN is cheaper in this case.
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
     "/* do not warn (bug 1175249) */ "
-    "SELECT b.id, b.guid, b.parent, b.lastModified, t.guid, t.parent "
+    "SELECT b.id "
     "FROM moz_bookmarks b "
     "JOIN moz_bookmarks t on t.id = b.parent "
-    "WHERE b.fk = (SELECT id FROM moz_places WHERE url_hash = hash(:page_url) AND url = :page_url) "
+    "WHERE b.fk = (SELECT id FROM moz_places WHERE url_hash = hash(:page_url) AND url = :page_url) AND "
+    "t.parent IS NOT :tags_root "
     "ORDER BY b.lastModified DESC, b.id DESC "
   );
   NS_ENSURE_STATE(stmt);
@@ -2595,18 +2595,11 @@ nsNavBookmarks::GetBookmarkIdsForURITArray(nsIURI* aURI,
 
   nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("tags_root"), mTagsRoot);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   bool more;
   while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&more))) && more) {
-    if (aSkipTags) {
-      // Skip tags, for the use-cases of this async getter they are useless.
-      int64_t grandParentId;
-      nsresult rv = stmt->GetInt64(5, &grandParentId);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (grandParentId == mTagsRoot) {
-        continue;
-      }
-    }
     int64_t bookmarkId;
     rv = stmt->GetInt64(0, &bookmarkId);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2685,8 +2678,7 @@ nsNavBookmarks::GetBookmarkIdsForURI(nsIURI* aURI, uint32_t* aCount,
   nsTArray<int64_t> bookmarks;
 
   // Get the information from the DB as a TArray
-  // TODO (bug 653816): make this API skip tags by default.
-  nsresult rv = GetBookmarkIdsForURITArray(aURI, bookmarks, false);
+  nsresult rv = GetBookmarkIdsForURITArray(aURI, bookmarks);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Copy the results into a new array for output

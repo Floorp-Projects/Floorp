@@ -1115,7 +1115,7 @@ XrayTraits::expandoObjectMatchesConsumer(JSContext* cx,
 }
 
 bool
-XrayTraits::getExpandoObjectInternal(JSContext* cx, HandleObject target,
+XrayTraits::getExpandoObjectInternal(JSContext* cx, JSObject* expandoChain,
                                      nsIPrincipal* origin,
                                      JSObject* exclusiveGlobalArg,
                                      MutableHandleObject expandoObject)
@@ -1126,12 +1126,12 @@ XrayTraits::getExpandoObjectInternal(JSContext* cx, HandleObject target,
     // The expando object lives in the compartment of the target, so all our
     // work needs to happen there.
     RootedObject exclusiveGlobal(cx, exclusiveGlobalArg);
-    JSAutoCompartment ac(cx, target);
+    RootedObject head(cx, expandoChain);
+    JSAutoCompartment ac(cx, head);
     if (!JS_WrapObject(cx, &exclusiveGlobal))
         return false;
 
     // Iterate through the chain, looking for a same-origin object.
-    RootedObject head(cx, getExpandoChain(target));
     while (head) {
         if (expandoObjectMatchesConsumer(cx, head, origin, exclusiveGlobal)) {
             expandoObject.set(head);
@@ -1148,9 +1148,15 @@ bool
 XrayTraits::getExpandoObject(JSContext* cx, HandleObject target, HandleObject consumer,
                              MutableHandleObject expandoObject)
 {
+    // Return early if no expando object has ever been attached, which is
+    // usually the case.
+    JSObject* chain = getExpandoChain(target);
+    if (!chain)
+        return true;
+
     JSObject* consumerGlobal = js::GetGlobalForObjectCrossCompartment(consumer);
     bool isSandbox = !strcmp(js::GetObjectJSClass(consumerGlobal)->name, "Sandbox");
-    return getExpandoObjectInternal(cx, target, ObjectPrincipal(consumer),
+    return getExpandoObjectInternal(cx, chain, ObjectPrincipal(consumer),
                                     isSandbox ? consumerGlobal : nullptr,
                                     expandoObject);
 }
@@ -1166,11 +1172,14 @@ XrayTraits::attachExpandoObject(JSContext* cx, HandleObject target,
     // No duplicates allowed.
 #ifdef DEBUG
     {
-        RootedObject existingExpandoObject(cx);
-        if (getExpandoObjectInternal(cx, target, origin, exclusiveGlobal, &existingExpandoObject))
-            MOZ_ASSERT(!existingExpandoObject);
-        else
-            JS_ClearPendingException(cx);
+        JSObject* chain = getExpandoChain(target);
+        if (chain) {
+            RootedObject existingExpandoObject(cx);
+            if (getExpandoObjectInternal(cx, chain, origin, exclusiveGlobal, &existingExpandoObject))
+                MOZ_ASSERT(!existingExpandoObject);
+            else
+                JS_ClearPendingException(cx);
+        }
     }
 #endif
 

@@ -435,8 +435,9 @@ add_task(async function test_child_process() {
   await extension.startup();
 
   let msg = await extension.awaitMessage("result");
-  equal(msg.args.length, 2, "Received one command line argument");
+  equal(msg.args.length, 3, "Received two command line arguments");
   equal(msg.args[1], getPath("info.json"), "Command line argument is the path to the native host manifest");
+  equal(msg.args[2], ID, "Second command line argument is the ID of the calling extension");
   equal(msg.cwd.replace(/^\/private\//, "/"), tmpDir.path,
         "Working directory is the directory containing the native appliation");
 
