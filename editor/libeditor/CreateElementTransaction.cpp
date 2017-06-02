@@ -99,7 +99,7 @@ CreateElementTransaction::DoTransaction()
   RefPtr<Selection> selection = mEditorBase->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  rv = selection->CollapseNative(mParent, mParent->IndexOf(mNewNode) + 1);
+  rv = selection->Collapse(mParent, mParent->IndexOf(mNewNode) + 1);
   NS_ASSERTION(!rv.Failed(),
                "selection could not be collapsed after insert");
   return NS_OK;
