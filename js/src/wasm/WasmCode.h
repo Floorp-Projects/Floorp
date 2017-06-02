@@ -466,7 +466,8 @@ class Code : public ShareableBase<Code>
     Tiers tiers() const;
     bool hasTier(Tier t) const;
 
-    Tier stableTier() const;
+    Tier stableTier() const;    // This is stable during a run
+    Tier bestTier() const;      // This may transition from Baseline -> Ion at any time
 
     const CodeSegment& segment(Tier tier) const;
     const MetadataTier& metadata(Tier tier) const { return metadata_->metadata(tier); }
