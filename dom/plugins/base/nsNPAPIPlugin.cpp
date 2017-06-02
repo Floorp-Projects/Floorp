@@ -101,6 +101,7 @@ using mozilla::plugins::PluginModuleContentParent;
 #include <android/log.h>
 #include "android_npapi.h"
 #include "ANPBase.h"
+#include "FennecJNIWrappers.h"
 #include "GeneratedJNIWrappers.h"
 #undef LOG
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
@@ -2082,10 +2083,13 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
     case kJavaContext_ANPGetValue: {
       LOG("get java context");
-      auto ret = java::GeckoAppShell::GetContext();
-      if (!ret)
-        return NPERR_GENERIC_ERROR;
 
+      auto ret = npp && jni::IsFennec()
+          ? java::GeckoApp::GetPluginContext()
+          : java::GeckoAppShell::GetApplicationContext();
+      if (!ret) {
+        return NPERR_GENERIC_ERROR;
+      }
       *static_cast<jobject*>(result) = ret.Forget();
       return NPERR_NO_ERROR;
     }
