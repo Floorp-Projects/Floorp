@@ -32,7 +32,6 @@ class CSSStyleSheet;
 class ServoRestyleManager;
 class ServoStyleSheet;
 struct Keyframe;
-struct ServoComputedValuesWithParent;
 class ServoElementSnapshotTable;
 } // namespace mozilla
 class nsCSSCounterStyleRule;
@@ -357,8 +356,7 @@ public:
   nsTArray<ComputedKeyframeValues>
   GetComputedKeyframeValuesFor(const nsTArray<Keyframe>& aKeyframes,
                                dom::Element* aElement,
-                               const ServoComputedValuesWithParent&
-                                 aServoValues);
+                               ServoComputedValuesBorrowed aComputedValues);
 
   bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
 
