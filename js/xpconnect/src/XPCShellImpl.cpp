@@ -35,8 +35,6 @@
 #include "nsIXULRuntime.h"
 #include "GeckoProfiler.h"
 
-#include "base/histogram.h"
-
 #ifdef ANDROID
 #include <android/log.h>
 #endif
@@ -1225,11 +1223,6 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
 
     mozilla::LogModule::Init();
 
-    // A initializer to initialize histogram collection
-    // used by telemetry.
-    auto telStats =
-       mozilla::MakeUnique<base::StatisticsRecorder>();
-
     char aLocal;
     profiler_init(&aLocal);
 
@@ -1558,8 +1551,6 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
     rv = NS_ShutdownXPCOM( nullptr );
     MOZ_ASSERT(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
-
-    telStats = nullptr;
 
 #ifdef MOZ_CRASHREPORTER
     // Shut down the crashreporter service to prevent leaking some strings it holds.
