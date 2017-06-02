@@ -25,17 +25,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
 var gTestTargetFile = FileUtils.getFile("TmpD", ["dm-ui-test.file"]);
 gTestTargetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
-// Load mocking/stubbing library, sinon
-// docs: http://sinonjs.org/docs/
-/* global sinon:false */
-Services.scriptloader.loadSubScript("resource://testing-common/sinon-1.16.1.js");
-
 registerCleanupFunction(function() {
   gTestTargetFile.remove(false);
-
-  delete window.sinon;
-  delete window.setImmediate;
-  delete window.clearImmediate;
 });
 
 // Asynchronous support subroutines

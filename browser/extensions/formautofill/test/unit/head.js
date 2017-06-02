@@ -23,11 +23,25 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
 
 do_get_profile();
 
-// Setup the environment for sinon.
+// ================================================
+// Load mocking/stubbing library, sinon
+// docs: http://sinonjs.org/releases/v2.3.2/
 Cu.import("resource://gre/modules/Timer.jsm");
-let self = {}; // eslint-disable-line no-unused-vars
-var sinon;
-Services.scriptloader.loadSubScript("resource://testing-common/sinon-1.16.1.js");
+const {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
+const loader = new Loader.Loader({
+  paths: {
+    "": "resource://testing-common/",
+  },
+  globals: {
+    setTimeout,
+    setInterval,
+    clearTimeout,
+    clearInterval,
+  },
+});
+const require = Loader.Require(loader, {id: ""});
+const sinon = require("sinon-2.3.2");
+// ================================================
 
 // Load our bootstrap extension manifest so we can access our chrome/resource URIs.
 const EXTENSION_ID = "formautofill@mozilla.org";

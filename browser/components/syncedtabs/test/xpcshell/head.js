@@ -7,23 +7,24 @@ XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
   return Components.utils.import("resource://gre/modules/FxAccountsCommon.js", {});
 });
 
-Cu.import("resource://gre/modules/Timer.jsm");
-
 do_get_profile(); // fxa needs a profile directory for storage.
 
-// Create a window polyfill so sinon can load
-let window = {
-  document: {},
-  location: {},
-  setTimeout,
-  setInterval,
-  clearTimeout,
-  clearInterval,
-};
-let self = window;
-
+// ================================================
 // Load mocking/stubbing library, sinon
-// docs: http://sinonjs.org/docs/
-/* global sinon */
-let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
-loader.loadSubScript("resource://testing-common/sinon-1.16.1.js");
+// docs: http://sinonjs.org/releases/v2.3.2/
+Cu.import("resource://gre/modules/Timer.jsm");
+const {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
+const loader = new Loader.Loader({
+  paths: {
+    "": "resource://testing-common/",
+  },
+  globals: {
+    setTimeout,
+    setInterval,
+    clearTimeout,
+    clearInterval,
+  },
+});
+const require = Loader.Require(loader, {id: ""});
+const sinon = require("sinon-2.3.2");
+// ================================================
