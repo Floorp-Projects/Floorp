@@ -23,7 +23,6 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ServoComputedValuesWithParent.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/Element.h"
@@ -446,8 +445,7 @@ ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
 
 static inline bool
 ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
-                                const ServoComputedValuesWithParent&
-                                  aComputedStyle,
+                                const ServoComputedValues* aComputedStyle,
                                 AnimationValue& aAnimationValue)
 {
   if (Servo_Property_IsDiscreteAnimatable(aProperty) &&
@@ -456,7 +454,7 @@ ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
   }
 
   aAnimationValue.mServo =
-    Servo_ComputedValues_ExtractAnimationValue(aComputedStyle.mCurrentStyle,
+    Servo_ComputedValues_ExtractAnimationValue(aComputedStyle,
                                                aProperty).Consume();
   return !!aAnimationValue.mServo;
 }
@@ -626,8 +624,8 @@ bool
 nsTransitionManager::UpdateTransitions(
   dom::Element *aElement,
   CSSPseudoElementType aPseudoType,
-  const ServoComputedValuesWithParent& aOldStyle,
-  const ServoComputedValuesWithParent& aNewStyle)
+  const ServoComputedValues* aOldStyle,
+  const ServoComputedValues* aNewStyle)
 {
   if (!mPresContext->IsDynamic()) {
     // For print or print preview, ignore transitions.
@@ -636,7 +634,7 @@ nsTransitionManager::UpdateTransitions(
 
   CSSTransitionCollection* collection =
     CSSTransitionCollection::GetAnimationCollection(aElement, aPseudoType);
-  const nsStyleDisplay *disp = Servo_GetStyleDisplay(aNewStyle.mCurrentStyle);
+  const nsStyleDisplay *disp = Servo_GetStyleDisplay(aNewStyle);
   return DoUpdateTransitions(disp,
                              aElement, aPseudoType,
                              collection,
