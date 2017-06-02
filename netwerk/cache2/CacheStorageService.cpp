@@ -2086,7 +2086,7 @@ uint32_t CacheStorageService::CacheQueueSize(bool highPriority)
   return thread->QueueSize(highPriority);
 }
 
-// Telementry collection
+// Telemetry collection
 
 namespace {
 
