@@ -1597,7 +1597,7 @@ pref(dom.meta-viewport.enabled,true) skip-if(Android) == 593243-2.html 593243-2-
 random-if(Android) == 594333-1.html 594333-1-ref.html
 == 594624-1.html 594624-1-ref.html
 == 594737-1.html 594737-1-ref.html
-fuzzy-if(skiaContent,1,80) == 597721-1.html 597721-1-ref.html
+fuzzy-if(skiaContent,1,80) fuzzy-if(webrender,1,100) == 597721-1.html 597721-1-ref.html
 random-if(winWidget) fuzzy-if(Android,38,539) fuzzy-if(skiaContent,1,480) needs-focus skip-if(styloVsGecko) == 598726-1.html 598726-1-ref.html # Fails on Windows, bug 782196
 == 599113-1.html 599113-1-ref.html
 fails-if(!haveTestPlugin) HTTP == 599476.html 599476-ref.html
@@ -1663,7 +1663,7 @@ HTTP(..) == 635639-1.html 635639-1-ref.html
 HTTP(..) == 635639-2.html 635639-2-ref.html
 random == 637597-1.html 637597-1-ref.html # bug 637597 was never really fixed!
 fuzzy-if(Android,8,500) == 637852-1.html 637852-1-ref.html
-fuzzy-if(Android,8,500) fuzzy-if(skiaContent,2,1) == 637852-2.html 637852-2-ref.html
+fuzzy-if(Android,8,500) fuzzy-if(skiaContent,2,1) fuzzy-if(webrender,3,19) == 637852-2.html 637852-2-ref.html
 fuzzy-if(Android,8,500) == 637852-3.html 637852-3-ref.html
 == 641770-1.html 641770-1-ref.html
 == 641856-1.html 641856-1-ref.html
@@ -1983,8 +1983,8 @@ fuzzy-if(Android,27,874) fuzzy-if(gtkWidget,14,29) == 1313772.xhtml 1313772-ref.
 fuzzy(2,320000) == 1315113-1.html 1315113-1-ref.html
 fuzzy(2,20000) == 1315113-2.html 1315113-2-ref.html
 == 1315632-1.html 1315632-1-ref.html
-fuzzy(2,40000) == 1316719-1a.html 1316719-1-ref.html
-fuzzy(2,40000) == 1316719-1b.html 1316719-1-ref.html
+fuzzy(2,40000) fuzzy-if(webrender,26,691) == 1316719-1a.html 1316719-1-ref.html
+fuzzy(2,40000) fuzzy-if(webrender,26,691) == 1316719-1b.html 1316719-1-ref.html
 fuzzy(2,40000) == 1316719-1c.html 1316719-1-ref.html
 pref(layers.advanced.background-color,1) skip-if(!webrender) fuzzy-if(webrender,27,700) == 1316719-1a.html 1316719-1-ref.html
 pref(layers.advanced.background-color,1) skip-if(!webrender) fuzzy-if(webrender,27,700) == 1316719-1b.html 1316719-1-ref.html

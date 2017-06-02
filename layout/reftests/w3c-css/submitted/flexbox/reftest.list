@@ -28,7 +28,7 @@
 == flexbox-align-self-horiz-001-table.xhtml  flexbox-align-self-horiz-001-ref.xhtml
 == flexbox-align-self-horiz-002.xhtml  flexbox-align-self-horiz-002-ref.xhtml
 == flexbox-align-self-horiz-003.xhtml  flexbox-align-self-horiz-003-ref.xhtml
-== flexbox-align-self-horiz-004.xhtml  flexbox-align-self-horiz-004-ref.xhtml
+fuzzy-if(webrender,1,2) == flexbox-align-self-horiz-004.xhtml  flexbox-align-self-horiz-004-ref.xhtml
 == flexbox-align-self-horiz-005.xhtml  flexbox-align-self-horiz-005-ref.xhtml
 == flexbox-align-self-vert-001.xhtml  flexbox-align-self-vert-001-ref.xhtml
 == flexbox-align-self-vert-002.xhtml  flexbox-align-self-vert-002-ref.xhtml
