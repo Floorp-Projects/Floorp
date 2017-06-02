@@ -4,7 +4,7 @@
 
 [features/firefox@getpocket.com] chrome.jar:
 % content pocket %content/ contentaccessible=yes
-% skin pocket classic/1.0 %skin/linux/ os=LikeUnix
+% skin pocket classic/1.0 %skin/linux/
 % skin pocket classic/1.0 %skin/osx/ os=Darwin
 % skin pocket classic/1.0 %skin/windows/ os=WINNT
 % skin pocket-shared classic/1.0 %skin/shared/
