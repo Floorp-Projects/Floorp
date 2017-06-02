@@ -389,7 +389,7 @@ class BaseShape : public gc::TenuredCell
         DELEGATE            =    0x8,
         NOT_EXTENSIBLE      =   0x10,
         INDEXED             =   0x20,
-        /* (0x40 is unused) */
+        HAS_INTERESTING_SYMBOL = 0x40,
         HAD_ELEMENTS_ACCESS =   0x80,
         WATCHED             =  0x100,
         ITERATED_SINGLETON  =  0x200,
