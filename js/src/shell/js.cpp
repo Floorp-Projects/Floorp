@@ -3129,7 +3129,7 @@ NewSandbox(JSContext* cx, bool lazy)
             return nullptr;
 
         RootedValue value(cx, BooleanValue(lazy));
-        if (!JS_SetProperty(cx, obj, "lazy", value))
+        if (!JS_DefineProperty(cx, obj, "lazy", value, JSPROP_PERMANENT | JSPROP_READONLY))
             return nullptr;
 
         JS_FireOnNewGlobalObject(cx, obj);
