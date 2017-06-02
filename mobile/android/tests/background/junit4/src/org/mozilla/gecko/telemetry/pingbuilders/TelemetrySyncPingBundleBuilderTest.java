@@ -6,6 +6,7 @@ package org.mozilla.gecko.telemetry.pingbuilders;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.json.JSONException;
 import org.json.simple.JSONArray;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,7 +20,7 @@ import org.mozilla.gecko.telemetry.stores.TelemetryPingStore;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -32,7 +33,8 @@ public class TelemetrySyncPingBundleBuilderTest {
             super("default");
         }
 
-        private HashMap<String, TelemetryPing> pings = new HashMap<>();
+        // Stable ordering for the sake of easier testing.
+        private LinkedHashMap<String, TelemetryPing> pings = new LinkedHashMap<>();
 
         @Override
         public List<TelemetryPing> getAllPings() {
@@ -147,15 +149,15 @@ public class TelemetrySyncPingBundleBuilderTest {
 
         // Ensure we have that one ping.
         ExtendedJSONObject payload = outgoingPing.getPayload().getObject("payload");
-        assertEquals(
-                "{\"syncs\":[{\"took\":123,\"uid\":\"test-uid\",\"restarted\":true,\"deviceID\":\"test-device-id\",\"version\":1}],\"why\":\"schedule\"}",
-                payload.toString()
-        );
+        assertEquals("schedule", payload.getString("why"));
+        JSONArray syncs = payload.getArray("syncs");
+        assertEquals(1, syncs.size());
+        assertSync((ExtendedJSONObject) syncs.get(0), "test-uid", 123L, "test-device-id", 1, true);
 
         // Add another ping.
         syncPings.storePing(new TelemetrySyncPingBuilder()
                 .setDeviceID("test-device-id")
-                .setRestarted(true)
+                .setRestarted(false)
                 .setTook(321L)
                 .setUID("test-uid")
                 .build()
@@ -164,15 +166,24 @@ public class TelemetrySyncPingBundleBuilderTest {
 
         // We should have two pings now.
         outgoingPing = builder.build();
-        JSONArray syncs = outgoingPing.getPayload()
+        syncs = outgoingPing.getPayload()
                 .getObject("payload")
                 .getArray("syncs");
         assertEquals(2, syncs.size());
-        assertTrue(
-                syncs.toString().contains("{\"took\":123,\"uid\":\"test-uid\",\"restarted\":true,\"deviceID\":\"test-device-id\",\"version\":1}")
-        );
-        assertTrue(
-                syncs.toString().contains("{\"took\":321,\"uid\":\"test-uid\",\"restarted\":true,\"deviceID\":\"test-device-id\",\"version\":1}")
-        );
+        assertSync((ExtendedJSONObject) syncs.get(0), "test-uid", 123L, "test-device-id", 1, true);
+        assertSync((ExtendedJSONObject) syncs.get(1), "test-uid", 321L, "test-device-id", 1, false);
+    }
+
+    private void assertSync(ExtendedJSONObject sync, String uid, long took, String deviceID, int version, boolean restarted) throws JSONException {
+        assertEquals(uid, sync.getString("uid"));
+        assertEquals(Long.valueOf(took), sync.getLong("took"));
+        assertEquals(deviceID, sync.getString("deviceID"));
+        assertEquals(Integer.valueOf(version), sync.getIntegerSafely("version"));
+        if (restarted) {
+            assertEquals(true, sync.getBoolean("restarted"));
+        } else {
+            assertFalse(sync.containsKey("restarted"));
+        }
+
     }
 }
