@@ -2352,7 +2352,7 @@ WebGLContext::GetVRFrame()
 
     if (sharedSurface && sharedSurface->GetAllocator() != vrmc) {
         RefPtr<SharedSurfaceTextureClient> dest =
-        screen->Factory()->NewTexClient(sharedSurface->GetSize(), vrmc);
+        screen->Factory()->NewTexClient(sharedSurface->GetSize());
         if (!dest) {
             return nullptr;
         }
