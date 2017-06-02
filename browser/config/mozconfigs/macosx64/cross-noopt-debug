@@ -1,0 +1,7 @@
+# Developers often build with these options for a better debugging experience.
+. "$topsrcdir/browser/config/mozconfigs/macosx64/debug"
+
+# We add this last to guard against inadvertent changes in the debug config.
+# It may conflict with settings from mozconfig.override, but that seems
+# unlikely.
+ac_add_options --disable-optimize
