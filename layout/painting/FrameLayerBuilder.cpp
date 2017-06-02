@@ -4211,16 +4211,14 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         mPaintedLayerDataTree.AddingOwnLayer(clipAGR,
                                              &scrolledClipRect,
                                              uniformColorPtr);
-      } else if ((*animatedGeometryRoot == item->Frame() &&
-                  *animatedGeometryRoot != mBuilder->RootReferenceFrame()) ||
-                 (IsScrollThumbLayer(item) && mManager->IsWidgetLayerManager())) {
-        // This is the case for scrollbar thumbs, for example. In that case the
-        // clip we care about is the overflow:hidden clip on the scrollbar.
+      } else if (IsScrollThumbLayer(item) && mManager->IsWidgetLayerManager()) {
+        // For scrollbar thumbs, the clip we care about is the clip added by the
+        // slider frame.
         mPaintedLayerDataTree.AddingOwnLayer(animatedGeometryRoot->mParentAGR,
                                              clipPtr,
                                              uniformColorPtr);
-      } else if (prerenderedTransform) {
-        mPaintedLayerDataTree.AddingOwnLayer(animatedGeometryRoot,
+      } else if (prerenderedTransform && mManager->IsWidgetLayerManager()) {
+        mPaintedLayerDataTree.AddingOwnLayer(animatedGeometryRoot->mParentAGR,
                                              clipPtr,
                                              uniformColorPtr);
       } else {
