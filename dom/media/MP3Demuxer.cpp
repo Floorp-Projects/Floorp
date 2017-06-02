@@ -510,7 +510,7 @@ MP3TrackDemuxer::FindNextFrame()
   // Check whether we've found a valid MPEG frame.
   while (!foundFrame) {
     if ((!mParser.FirstFrame().Length()
-         && mOffset - mParser.ID3Header().Size() > MAX_SKIPPED_BYTES)
+         && mOffset - mParser.ID3Header().TotalTagSize() > MAX_SKIPPED_BYTES)
         || (read = Read(buffer, mOffset, BUFFER_SIZE)) == 0) {
       MP3LOG("FindNext() EOS or exceeded MAX_SKIPPED_BYTES without a frame");
       // This is not a valid MPEG audio stream or we've reached EOS, give up.
@@ -1322,11 +1322,7 @@ ID3Parser::Parse(ByteReader* aReader)
 
   while (aReader->CanRead8() && !mHeader.ParseNext(aReader->ReadU8())) { }
 
-  if (mHeader.IsValid()) {
-    // Header found, return total tag size.
-    return ID3Header::SIZE + Header().Size() + Header().FooterSize();
-  }
-  return 0;
+  return mHeader.TotalTagSize();
 }
 
 void
@@ -1387,6 +1383,16 @@ ID3Parser::ID3Header::FooterSize() const
 {
   if (Flags() & (1 << 4)) {
     return SIZE;
+  }
+  return 0;
+}
+
+uint32_t
+ID3Parser::ID3Header::TotalTagSize() const
+{
+  if (IsValid()) {
+    // Header found, return total tag size.
+    return ID3Header::SIZE + Size() + FooterSize();
   }
   return 0;
 }
