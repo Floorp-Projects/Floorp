@@ -504,8 +504,6 @@ class Histogram {
   SampleSet sample_;
 
  private:
-  friend class StatisticsRecorder;  // To allow it to delete duplicates.
-
   // Post constructor initialization.
   void Initialize();
 
@@ -711,68 +709,6 @@ class CustomHistogram : public Histogram {
   virtual double GetBucketSize(Count current, size_t i) const;
 
   DISALLOW_COPY_AND_ASSIGN(CustomHistogram);
-};
-
-//------------------------------------------------------------------------------
-// StatisticsRecorder handles all histograms in the system.  It provides a
-// general place for histograms to register, and supports a global API for
-// accessing (i.e., dumping, or graphing) the data in all the histograms.
-
-class StatisticsRecorder {
- public:
-  typedef std::vector<Histogram*> Histograms;
-
-  StatisticsRecorder();
-
-  ~StatisticsRecorder();
-
-  // Find out if histograms can now be registered into our list.
-  static bool IsActive();
-
-  // Register, or add a new histogram to the collection of statistics. If an
-  // identically named histogram is already registered, then the argument
-  // |histogram| will deleted.  The returned value is always the registered
-  // histogram (either the argument, or the pre-existing registered histogram).
-  static Histogram* RegisterOrDeleteDuplicate(Histogram* histogram);
-
-  // Methods for printing histograms.  Only histograms which have query as
-  // a substring are written to output (an empty string will process all
-  // registered histograms).
-  static void WriteHTMLGraph(const std::string& query, std::string* output);
-  static void WriteGraph(const std::string& query, std::string* output);
-
-  // Method for extracting histograms which were marked for use by UMA.
-  static void GetHistograms(Histograms* output);
-
-  // Find a histogram by name. It matches the exact name. This method is thread
-  // safe.  If a matching histogram is not found, then the |histogram| is
-  // not changed.
-  static bool FindHistogram(const std::string& query, Histogram** histogram);
-
-  static bool dump_on_exit() { return dump_on_exit_; }
-
-  static void set_dump_on_exit(bool enable) { dump_on_exit_ = enable; }
-
-  // GetSnapshot copies some of the pointers to registered histograms into the
-  // caller supplied vector (Histograms).  Only histograms with names matching
-  // query are returned. The query must be a substring of histogram name for its
-  // pointer to be copied.
-  static void GetSnapshot(const std::string& query, Histograms* snapshot);
-
-
- private:
-  // We keep all registered histograms in a map, from name to histogram.
-  typedef std::map<std::string, Histogram*> HistogramMap;
-
-  static HistogramMap* histograms_;
-
-  // lock protects access to the above map.
-  static Lock* lock_;
-
-  // Dump all known histograms to log.
-  static bool dump_on_exit_;
-
-  DISALLOW_COPY_AND_ASSIGN(StatisticsRecorder);
 };
 
 }  // namespace base
