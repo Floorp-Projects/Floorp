@@ -1172,7 +1172,7 @@ pub struct WrState {
 #[no_mangle]
 pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId,
                                content_size: WrSize) -> *mut WrState {
-    assert!(unsafe { is_in_main_thread() });
+    assert!(unsafe { !is_in_render_thread() });
 
     let state = Box::new(WrState {
                              pipeline_id: pipeline_id,
@@ -1186,7 +1186,7 @@ pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId,
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub extern "C" fn wr_state_delete(state: *mut WrState) {
-    assert!(unsafe { is_in_main_thread() });
+    assert!(unsafe { !is_in_render_thread() });
 
     unsafe {
         Box::from_raw(state);
@@ -1197,7 +1197,7 @@ pub extern "C" fn wr_state_delete(state: *mut WrState) {
 pub extern "C" fn wr_dp_begin(state: &mut WrState,
                               width: u32,
                               height: u32) {
-    assert!(unsafe { is_in_main_thread() });
+    assert!(unsafe { !is_in_render_thread() });
     state.frame_builder.dl_builder.data.clear();
 
     let bounds = LayoutRect::new(LayoutPoint::new(0.0, 0.0),
@@ -1216,7 +1216,7 @@ pub extern "C" fn wr_dp_begin(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_end(state: &mut WrState) {
-    assert!(unsafe { is_in_main_thread() });
+    assert!(unsafe { !is_in_render_thread() });
     state.frame_builder.dl_builder.pop_stacking_context();
 }
 
@@ -1227,7 +1227,7 @@ pub extern "C" fn wr_dp_push_clip_region(state: &mut WrState,
                                          complex_count: usize,
                                          image_mask: *const WrImageMask)
                                          -> WrClipRegionToken {
-    assert!(unsafe { is_in_main_thread() });
+    assert!(unsafe { !is_in_render_thread() });
 
     let main = main.into();
     let complex_slice = make_slice(complex, complex_count);
@@ -1246,7 +1246,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               opacity: *const f32,
                                               transform: *const WrMatrix,
                                               mix_blend_mode: WrMixBlendMode) {
-    assert!(unsafe { is_in_main_thread() });
+    assert!(unsafe { !is_in_render_thread() });
 
     let bounds = bounds.into();
 
@@ -1282,7 +1282,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState) {
-    assert!(unsafe { is_in_main_thread() });
+    assert!(unsafe { !is_in_render_thread() });
     state.frame_builder.dl_builder.pop_stacking_context();
 }
 
@@ -1299,7 +1299,7 @@ pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_pop_clip(state: &mut WrState) {
-    assert!(unsafe { is_in_main_thread() });
+    assert!(unsafe { !is_in_render_thread() });
     state.frame_builder.dl_builder.pop_clip_node();
 }
 
@@ -1353,7 +1353,7 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
                                   rect: WrRect,
                                   clip: WrClipRegionToken,
                                   color: WrColor) {
-    assert!(unsafe { is_in_main_thread() });
+    assert!(unsafe { !is_in_render_thread() });
 
     state.frame_builder.dl_builder.push_rect(rect.into(), clip.into(), color.into());
 }
@@ -1366,7 +1366,7 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                                    tile_spacing: WrSize,
                                    image_rendering: WrImageRendering,
                                    key: WrImageKey) {
-    assert!(unsafe { is_in_main_thread() });
+    assert!(unsafe { !is_in_render_thread() });
 
     state.frame_builder
          .dl_builder

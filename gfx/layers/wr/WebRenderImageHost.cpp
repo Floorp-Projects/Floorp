@@ -68,6 +68,10 @@ WebRenderImageHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
   mImages.SwapElements(newImages);
   newImages.Clear();
 
+  if (mWrBridge && GetAsyncRef()) {
+    mWrBridge->ScheduleComposition();
+  }
+
   // Video producers generally send replacement images with the same frameID but
   // slightly different timestamps in order to sync with the audio clock. This
   // means that any CompositeUntil() call we made in Composite() may no longer

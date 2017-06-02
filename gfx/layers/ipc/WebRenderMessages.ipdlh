@@ -9,8 +9,17 @@ include LayersSurfaces;
 include LayersMessages;
 include protocol PTexture;
 
+using WrSize from "mozilla/webrender/webrender_ffi.h";
+using WrImageRendering from "mozilla/webrender/webrender_ffi.h";
+using WrMixBlendMode from "mozilla/webrender/webrender_ffi.h";
+using MaybeImageMask from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::gfx::MaybeIntSize from "mozilla/gfx/Point.h";
+using mozilla::LayerPoint from "Units.h";
+using mozilla::layers::MaybeLayerRect from "mozilla/layers/LayersTypes.h";
+using class mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
@@ -31,20 +40,26 @@ struct OpAddExternalImage {
   ImageKey key;
 };
 
-struct OpAddExternalVideoImage {
-  ExternalImageId externalImageId;
-  ImageKey[] keys;
-};
-
 struct OpAddCompositorAnimations {
   CompositorAnimations data;
   OptionalTransform transform;
   OptionalOpacity opacity;
 };
 
+struct OpUpdateAsyncImagePipeline {
+  PipelineId pipelineId;
+  LayerRect scBounds;
+  Matrix4x4 scTransform;
+  MaybeIntSize scaleToSize;
+  MaybeLayerRect clipRect;
+  MaybeImageMask mask;
+  WrImageRendering filter;
+  WrMixBlendMode mixBlendMode;
+};
+
 union WebRenderParentCommand {
   OpAddExternalImage;
-  OpAddExternalVideoImage;
+  OpUpdateAsyncImagePipeline;
   CompositableOperation;
   OpAddCompositorAnimations;
 };
