@@ -10,11 +10,10 @@
 #include "nsIProfiler.h"
 #include "nsIObserver.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/MozPromise.h"
 #include "nsServiceManagerUtils.h"
-
-namespace mozilla {
-class ProfileGatherer;
-}
+#include "ProfileJSONWriter.h"
 
 class nsProfiler final : public nsIProfiler, public nsIObserver
 {
@@ -39,8 +38,21 @@ public:
 private:
   ~nsProfiler();
 
-  RefPtr<mozilla::ProfileGatherer> mGatherer;
+  typedef mozilla::MozPromise<nsCString, nsresult, false> GatheringPromise;
+
+  RefPtr<GatheringPromise> StartGathering(double aSinceTime);
+  void CancelGathering();
+  void FinishGathering();
+  void ResetGathering();
+
   bool mLockedForPrivateBrowsing;
+
+  // These fields are all related to profile gathering.
+  nsTArray<nsCString> mExitProfiles;
+  mozilla::Maybe<mozilla::MozPromiseHolder<GatheringPromise>> mPromiseHolder;
+  mozilla::Maybe<SpliceableChunkedJSONWriter> mWriter;
+  uint32_t mPendingProfiles;
+  bool mGathering;
 };
 
 #endif // nsProfiler_h
