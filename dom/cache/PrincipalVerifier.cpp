@@ -123,10 +123,8 @@ PrincipalVerifier::VerifyOnMainThread()
     return;
   }
 
-  // We disallow null principal and unknown app IDs on the client side, but
-  // double-check here.
-  if (NS_WARN_IF(principal->GetIsNullPrincipal() ||
-                 principal->GetUnknownAppId())) {
+  // We disallow null principal on the client side, but double-check here.
+  if (NS_WARN_IF(principal->GetIsNullPrincipal())) {
     DispatchToInitiatingThread(NS_ERROR_FAILURE);
     return;
   }
