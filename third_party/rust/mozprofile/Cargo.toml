@@ -1,6 +1,6 @@
 [package]
 name = "mozprofile"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Mozilla Tools and Automation <auto-tools@mozilla.com>"]
 description = "Library for working with Mozilla profiles."
 repository = "https://github.com/jgraham/rust_mozprofile"
@@ -8,4 +8,3 @@ license = "MPL-2.0"
 
 [dependencies]
 tempdir = "0.3.4"
-lazy_static = "0.1"
