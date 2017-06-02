@@ -19,7 +19,6 @@
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/KeyframeUtils.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ServoComputedValuesWithParent.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TypeTraits.h"
 #include "Layers.h" // For Layer
@@ -199,20 +198,20 @@ KeyframeEffectReadOnly::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
 void
 KeyframeEffectReadOnly::SetKeyframes(
   nsTArray<Keyframe>&& aKeyframes,
-  const ServoComputedValuesWithParent& aServoValues)
+  const ServoComputedValues* aComputedValues)
 {
-  DoSetKeyframes(Move(aKeyframes), aServoValues);
+  DoSetKeyframes(Move(aKeyframes), aComputedValues);
 }
 
 template<typename StyleType>
 void
 KeyframeEffectReadOnly::DoSetKeyframes(nsTArray<Keyframe>&& aKeyframes,
-                                       StyleType&& aStyle)
+                                       StyleType* aStyle)
 {
-  static_assert(IsSame<StyleType, nsStyleContext*>::value ||
-                IsSame<StyleType, const ServoComputedValuesWithParent&>::value,
+  static_assert(IsSame<StyleType, nsStyleContext>::value ||
+                IsSame<StyleType, const ServoComputedValues>::value,
                 "StyleType should be nsStyleContext* or "
-                "const ServoComputedValuesWithParent&");
+                "const ServoComputedValues*");
 
   if (KeyframesEqualIgnoringComputedOffsets(aKeyframes, mKeyframes)) {
     return;
@@ -229,10 +228,8 @@ KeyframeEffectReadOnly::DoSetKeyframes(nsTArray<Keyframe>&& aKeyframes,
     nsNodeUtils::AnimationChanged(mAnimation);
   }
 
-  // We need to call UpdateProperties() if the StyleType is
-  // 'const ServoComputedValuesWithParent&' (i.e. not a pointer) or
-  // nsStyleContext* is not nullptr.
-  if (!IsPointer<StyleType>::value || aStyle) {
+  // We need to call UpdateProperties() if the StyleType is not nullptr.
+  if (aStyle) {
     UpdateProperties(aStyle);
     MaybeUpdateFrameForCompositor();
   }
@@ -309,28 +306,22 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 
   const ServoComputedValues* currentStyle =
     aStyleContext->StyleSource().AsServoComputedValues();
-  // FIXME: Remove GetParentAllowServo() in Bug 1349004.
-  const ServoComputedValues* parentStyle =
-    aStyleContext->GetParentAllowServo()
-      ? aStyleContext->GetParentAllowServo()->StyleSource().AsServoComputedValues()
-      : nullptr;
 
-  const ServoComputedValuesWithParent servoValues = { currentStyle, parentStyle };
-  DoUpdateProperties(servoValues);
+  DoUpdateProperties(currentStyle);
 }
 
 void
 KeyframeEffectReadOnly::UpdateProperties(
-  const ServoComputedValuesWithParent& aServoValues)
+  const ServoComputedValues* aComputedValues)
 {
-  DoUpdateProperties(aServoValues);
+  DoUpdateProperties(aComputedValues);
 }
 
 template<typename StyleType>
 void
-KeyframeEffectReadOnly::DoUpdateProperties(StyleType&& aStyle)
+KeyframeEffectReadOnly::DoUpdateProperties(StyleType* aStyle)
 {
-  MOZ_ASSERT_IF(IsPointer<StyleType>::value, aStyle);
+  MOZ_ASSERT(aStyle);
 
   // Skip updating properties when we are composing style.
   // FIXME: Bug 1324966. Drop this check once we have a function to get
@@ -341,8 +332,7 @@ KeyframeEffectReadOnly::DoUpdateProperties(StyleType&& aStyle)
     return;
   }
 
-  nsTArray<AnimationProperty> properties =
-    BuildProperties(Forward<StyleType>(aStyle));
+  nsTArray<AnimationProperty> properties = BuildProperties(aStyle);
 
   // We need to update base styles even if any properties are not changed at all
   // since base styles might have been changed due to parent style changes, etc.
@@ -511,7 +501,7 @@ KeyframeEffectReadOnly::EnsureBaseStyle(
 
 void
 KeyframeEffectReadOnly::EnsureBaseStyles(
-  const ServoComputedValuesWithParent& aServoValues,
+  const ServoComputedValues* aComputedValues,
   const nsTArray<AnimationProperty>& aProperties)
 {
   if (!mTarget) {
@@ -936,12 +926,12 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(const GlobalObject& aGlobal,
 
 template<typename StyleType>
 nsTArray<AnimationProperty>
-KeyframeEffectReadOnly::BuildProperties(StyleType&& aStyle)
+KeyframeEffectReadOnly::BuildProperties(StyleType* aStyle)
 {
-  static_assert(IsSame<StyleType, nsStyleContext*>::value ||
-                IsSame<StyleType, const ServoComputedValuesWithParent&>::value,
+  static_assert(IsSame<StyleType, nsStyleContext>::value ||
+                IsSame<StyleType, const ServoComputedValues>::value,
                 "StyleType should be nsStyleContext* or "
-                "const ServoComputedValuesWithParent&");
+                "const ServoComputedValues*");
 
   MOZ_ASSERT(aStyle);
 

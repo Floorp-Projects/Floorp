@@ -14,7 +14,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/RestyleManagerInlines.h"
-#include "mozilla/ServoComputedValuesWithParent.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRuleProcessor.h"
@@ -1021,7 +1020,7 @@ nsTArray<ComputedKeyframeValues>
 ServoStyleSet::GetComputedKeyframeValuesFor(
   const nsTArray<Keyframe>& aKeyframes,
   Element* aElement,
-  const ServoComputedValuesWithParent& aServoValues)
+  ServoComputedValuesBorrowed aComputedValues)
 {
   nsTArray<ComputedKeyframeValues> result(aKeyframes.Length());
 
@@ -1030,7 +1029,7 @@ ServoStyleSet::GetComputedKeyframeValuesFor(
 
   Servo_GetComputedKeyframeValues(&aKeyframes,
                                   aElement,
-                                  aServoValues.mCurrentStyle,
+                                  aComputedValues,
                                   mRawSet.get(),
                                   &result);
   return result;
