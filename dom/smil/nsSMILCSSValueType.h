@@ -46,6 +46,8 @@ protected:
   nsresult Add(nsSMILValue& aDest,
                const nsSMILValue& aValueToAdd,
                uint32_t aCount) const override;
+  nsresult SandwichAdd(nsSMILValue& aDest,
+                       const nsSMILValue& aValueToAdd) const override;
   nsresult ComputeDistance(const nsSMILValue& aFrom,
                            const nsSMILValue& aTo,
                            double& aDistance) const override;
