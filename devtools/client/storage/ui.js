@@ -142,7 +142,16 @@ function StorageUI(front, target, panelWin, toolbox) {
 
   this.front.listStores().then(storageTypes => {
     this.populateStorageTree(storageTypes);
-  }).then(null, console.error);
+  }).catch(e => {
+    if (!this._toolbox || this._toolbox._destroyer) {
+      // The toolbox is in the process of being destroyed... in this case throwing here
+      // is expected and normal so let's ignore the error.
+      return;
+    }
+
+    // The toolbox is open so the error is unexpected and real so let's log it.
+    console.error(e);
+  });
 
   this.onUpdate = this.onUpdate.bind(this);
   this.front.on("stores-update", this.onUpdate);
