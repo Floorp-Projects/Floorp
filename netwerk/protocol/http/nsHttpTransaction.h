@@ -89,6 +89,8 @@ public:
                                uint64_t               topLevelOuterContentWindowId,
                                nsIAsyncInputStream  **responseBody);
 
+    void OnActivated(bool h2) override;
+
     // attributes
     nsHttpResponseHead    *ResponseHead()   { return mHaveAllHeaders ? mResponseHead : nullptr; }
     nsISupports           *SecurityInfo()   { return mSecurityInfo; }
@@ -307,14 +309,17 @@ private:
     Atomic<uint32_t>                mCapsToClear;
     Atomic<bool, ReleaseAcquire>    mResponseIsComplete;
 
-    // If true, this transaction was asked to stop receiving the response.
-    // NOTE: this flag is currently unused.  A useful remnant of an old throttling algorithm.
-    bool                            mThrottleResponse;
+    // True iff WriteSegments was called while this transaction should be throttled (stop reading)
+    // Used to resume read on unblock of reading.  Conn manager is responsible for calling back
+    // to resume reading.
+    bool                            mReadingStopped;
 
     // state flags, all logically boolean, but not packed together into a
     // bitfield so as to avoid bitfield-induced races.  See bug 560579.
     bool                            mClosed;
     bool                            mConnected;
+    bool                            mActivated;
+    bool                            mActivatedAsH2;
     bool                            mHaveStatusLine;
     bool                            mHaveAllHeaders;
     bool                            mTransactionDone;
@@ -373,9 +378,9 @@ public:
     // but later can be dispatched via spdy (not subject to rate pacing).
     void CancelPacing(nsresult reason);
 
-    // Called only on the socket thread.  Updates the flag whether the transaction
-    // should make the underlying connection or session stop reading from the socket.
-    void ThrottleResponse(bool aThrottle);
+    // Called by the connetion manager on the socket thread when reading for this
+    // previously throttled transaction has to be resumed.
+    void ResumeReading();
 
 private:
     bool mSubmittedRatePacing;
@@ -383,7 +388,7 @@ private:
     bool mSynchronousRatePaceRequest;
     nsCOMPtr<nsICancelable> mTokenBucketCancel;
 public:
-    void     SetClassOfService(uint32_t cos) { mClassOfService = cos; }
+    void     SetClassOfService(uint32_t cos);
     uint32_t ClassOfService() { return mClassOfService; }
 private:
     uint32_t mClassOfService;

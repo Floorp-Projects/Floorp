@@ -51,8 +51,7 @@ Converter.prototype = {
    * 2. onStartRequest fires, initializes stuff, modifies the listener
    *    to match our output type
    * 3. onDataAvailable spits it back to the listener
-   * 4. onStopRequest spits it back to the listener and initializes
-        the JSON Viewer
+   * 4. onStopRequest spits it back to the listener
    * 5. convert does nothing, it's just the synchronous version
    *    of asyncConvertData
    */
@@ -69,97 +68,168 @@ Converter.prototype = {
   },
 
   onStartRequest: function (request, context) {
-    this.channel = request;
-
-    // Let "save as" save the original JSON, not the viewer.
-    // To save with the proper extension we need the original content type,
-    // which has been replaced by application/vnd.mozilla.json.view
-    let originalType;
-    if (request instanceof Ci.nsIHttpChannel) {
-      try {
-        let header = request.getResponseHeader("Content-Type");
-        originalType = header.split(";")[0];
-      } catch (err) {
-        // Handled below
-      }
-    } else {
-      let uri = request.QueryInterface(Ci.nsIChannel).URI.spec;
-      let match = uri.match(/^data:(.*?)[,;]/);
-      if (match) {
-        originalType = match[1];
-      }
-    }
-    const JSON_TYPES = ["application/json", "application/manifest+json"];
-    if (!JSON_TYPES.includes(originalType)) {
-      originalType = JSON_TYPES[0];
-    }
-    request.QueryInterface(Ci.nsIWritablePropertyBag);
-    request.setProperty("contentType", originalType);
-
-    // Parse source as JSON. This is like text/plain, but enforcing
-    // UTF-8 charset (see bug 741776).
+    // Set the content type to HTML in order to parse the doctype, styles
+    // and scripts, but later a <plaintext> element will switch the tokenizer
+    // to the plaintext state in order to parse the JSON.
     request.QueryInterface(Ci.nsIChannel);
-    request.contentType = JSON_TYPES[0];
-    this.charset = request.contentCharset = "UTF-8";
+    request.contentType = "text/html";
+
+    // JSON enforces UTF-8 charset (see bug 741776).
+    request.contentCharset = "UTF-8";
+
+    // Changing the content type breaks saving functionality. Fix it.
+    fixSave(request);
 
     // Because content might still have a reference to this window,
     // force setting it to a null principal to avoid it being same-
     // origin with (other) content.
     request.loadInfo.resetPrincipalToInheritToNullPrincipal();
 
+    // Start the request.
     this.listener.onStartRequest(request, context);
+
+    // Initialize stuff.
+    let win = NetworkHelper.getWindowForRequest(request);
+    exportData(win, request);
+    win.addEventListener("DOMContentLoaded", event => {
+      win.addEventListener("contentMessage", onContentMessage, false, true);
+    }, {once: true});
+
+    // Insert the initial HTML code.
+    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                      .createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    let stream = converter.convertToInputStream(initialHTML(win.document));
+    this.listener.onDataAvailable(request, context, stream, 0, stream.available());
   },
 
   onStopRequest: function (request, context, statusCode) {
-    let Locale = {
-      $STR: key => {
-        try {
-          return jsonViewStrings.GetStringFromName(key);
-        } catch (err) {
-          console.error(err);
-          return undefined;
-        }
-      }
-    };
-
-    let headers = {
-      response: [],
-      request: []
-    };
-    // The request doesn't have to be always nsIHttpChannel
-    // (e.g. in case of data: URLs)
-    if (request instanceof Ci.nsIHttpChannel) {
-      request.visitResponseHeaders({
-        visitHeader: function (name, value) {
-          headers.response.push({name: name, value: value});
-        }
-      });
-      request.visitRequestHeaders({
-        visitHeader: function (name, value) {
-          headers.request.push({name: name, value: value});
-        }
-      });
-    }
-
-    let win = NetworkHelper.getWindowForRequest(request);
-    JsonViewUtils.exportIntoContentScope(win, Locale, "Locale");
-    JsonViewUtils.exportIntoContentScope(win, headers, "headers");
-
-    win.addEventListener("DOMContentLoaded", event => {
-      win.addEventListener("contentMessage",
-        onContentMessage.bind(this), false, true);
-      loadJsonViewer(win.document);
-    }, {once: true});
-
-    this.listener.onStopRequest(this.channel, context, statusCode);
+    this.listener.onStopRequest(request, context, statusCode);
     this.listener = null;
   }
 };
 
+// Lets "save as" save the original JSON, not the viewer.
+// To save with the proper extension we need the original content type,
+// which has been replaced by application/vnd.mozilla.json.view
+function fixSave(request) {
+  let originalType;
+  if (request instanceof Ci.nsIHttpChannel) {
+    try {
+      let header = request.getResponseHeader("Content-Type");
+      originalType = header.split(";")[0];
+    } catch (err) {
+      // Handled below
+    }
+  } else {
+    let uri = request.QueryInterface(Ci.nsIChannel).URI.spec;
+    let match = uri.match(/^data:(.*?)[,;]/);
+    if (match) {
+      originalType = match[1];
+    }
+  }
+  const JSON_TYPES = ["application/json", "application/manifest+json"];
+  if (!JSON_TYPES.includes(originalType)) {
+    originalType = JSON_TYPES[0];
+  }
+  request.QueryInterface(Ci.nsIWritablePropertyBag);
+  request.setProperty("contentType", originalType);
+}
+
+// Exports variables that will be accessed by the non-privileged scripts.
+function exportData(win, request) {
+  let Locale = {
+    $STR: key => {
+      try {
+        return jsonViewStrings.GetStringFromName(key);
+      } catch (err) {
+        console.error(err);
+        return undefined;
+      }
+    }
+  };
+  JsonViewUtils.exportIntoContentScope(win, Locale, "Locale");
+
+  let headers = {
+    response: [],
+    request: []
+  };
+  // The request doesn't have to be always nsIHttpChannel
+  // (e.g. in case of data: URLs)
+  if (request instanceof Ci.nsIHttpChannel) {
+    request.visitResponseHeaders({
+      visitHeader: function (name, value) {
+        headers.response.push({name: name, value: value});
+      }
+    });
+    request.visitRequestHeaders({
+      visitHeader: function (name, value) {
+        headers.request.push({name: name, value: value});
+      }
+    });
+  }
+  JsonViewUtils.exportIntoContentScope(win, headers, "headers");
+}
+
+// Serializes a qualifiedName and an optional set of attributes into an HTML
+// start tag. Be aware qualifiedName and attribute names are not validated.
+// Attribute values are escaped with escapingString algorithm in attribute mode
+// (https://html.spec.whatwg.org/multipage/syntax.html#escapingString).
+function startTag(qualifiedName, attributes = {}) {
+  return Object.entries(attributes).reduce(function (prev, [attr, value]) {
+    return prev + " " + attr + "=\"" +
+      value.replace(/&/g, "&amp;")
+           .replace(/\u00a0/g, "&nbsp;")
+           .replace(/"/g, "&quot;") +
+      "\"";
+  }, "<" + qualifiedName) + ">";
+}
+
+// Builds an HTML string that will be used to load stylesheets and scripts,
+// and switch the parser to plaintext state.
+function initialHTML(doc) {
+  let os;
+  let platform = Services.appinfo.OS;
+  if (platform.startsWith("WINNT")) {
+    os = "win";
+  } else if (platform.startsWith("Darwin")) {
+    os = "mac";
+  } else {
+    os = "linux";
+  }
+
+  let base = doc.createElement("base");
+  base.href = "resource://devtools/client/jsonview/";
+
+  let style = doc.createElement("link");
+  style.rel = "stylesheet";
+  style.type = "text/css";
+  style.href = "css/main.css";
+
+  let script = doc.createElement("script");
+  script.src = "lib/require.js";
+  script.dataset.main = "viewer-config";
+  script.defer = true;
+
+  let head = doc.createElement("head");
+  head.append(base, style, script);
+
+  return "<!DOCTYPE html>\n" +
+    startTag("html", {
+      "platform": os,
+      "class": "theme-" + JsonViewUtils.getCurrentTheme(),
+      "dir": Services.locale.isAppLocaleRTL ? "rtl" : "ltr"
+    }) +
+    head.outerHTML +
+    startTag("body") +
+    startTag("div", {"id": "content"}) +
+    startTag("plaintext", {"id": "json"});
+}
+
 // Chrome <-> Content communication
 function onContentMessage(e) {
   // Do not handle events from different documents.
-  let win = NetworkHelper.getWindowForRequest(this.channel);
+  let win = this;
   if (win != e.target) {
     return;
   }
@@ -181,53 +251,6 @@ function onContentMessage(e) {
       childProcessMessageManager.sendAsyncMessage(
         "devtools:jsonview:save", {url: value, windowID: windowID});
   }
-}
-
-// Loads the JSON Viewer into a text/plain document
-function loadJsonViewer(doc) {
-  function addStyleSheet(url) {
-    let link = doc.createElement("link");
-    link.rel = "stylesheet";
-    link.type = "text/css";
-    link.href = url;
-    doc.head.appendChild(link);
-  }
-
-  let os;
-  let platform = Services.appinfo.OS;
-  if (platform.startsWith("WINNT")) {
-    os = "win";
-  } else if (platform.startsWith("Darwin")) {
-    os = "mac";
-  } else {
-    os = "linux";
-  }
-
-  doc.documentElement.setAttribute("platform", os);
-  doc.documentElement.dataset.contentType = doc.contentType;
-  doc.documentElement.classList.add("theme-" + JsonViewUtils.getCurrentTheme());
-  doc.documentElement.dir = Services.locale.isAppLocaleRTL ? "rtl" : "ltr";
-
-  let base = doc.createElement("base");
-  base.href = "resource://devtools/client/jsonview/";
-  doc.head.appendChild(base);
-
-  addStyleSheet("../themes/variables.css");
-  addStyleSheet("../themes/common.css");
-  addStyleSheet("../themes/toolbars.css");
-  addStyleSheet("css/main.css");
-
-  let json = doc.querySelector("pre");
-  json.id = "json";
-  let content = doc.createElement("div");
-  content.id = "content";
-  content.appendChild(json);
-  doc.body.appendChild(content);
-
-  let script = doc.createElement("script");
-  script.src = "lib/require.js";
-  script.dataset.main = "viewer-config";
-  doc.body.appendChild(script);
 }
 
 function copyHeaders(win, headers) {

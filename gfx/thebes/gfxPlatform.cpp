@@ -2436,15 +2436,11 @@ already_AddRefed<ScaledFont>
 gfxPlatform::GetScaledFontForFontWithCairoSkia(DrawTarget* aTarget, gfxFont* aFont)
 {
     NativeFont nativeFont;
-    if (aTarget->GetBackendType() == BackendType::CAIRO || aTarget->GetBackendType() == BackendType::SKIA) {
-        nativeFont.mType = NativeFontType::CAIRO_FONT_FACE;
-        nativeFont.mFont = aFont->GetCairoScaledFont();
-        return Factory::CreateScaledFontForNativeFont(nativeFont,
-                                                      aFont->GetUnscaledFont(),
-                                                      aFont->GetAdjustedSize());
-    }
-
-    return nullptr;
+    nativeFont.mType = NativeFontType::CAIRO_FONT_FACE;
+    nativeFont.mFont = aFont->GetCairoScaledFont();
+    return Factory::CreateScaledFontForNativeFont(nativeFont,
+                                                  aFont->GetUnscaledFont(),
+                                                  aFont->GetAdjustedSize());
 }
 
 /* static */ bool

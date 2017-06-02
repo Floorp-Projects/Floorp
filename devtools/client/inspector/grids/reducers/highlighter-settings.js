@@ -5,16 +5,24 @@
 "use strict";
 
 const {
+  UPDATE_SHOW_GRID_AREAS,
   UPDATE_SHOW_GRID_LINE_NUMBERS,
   UPDATE_SHOW_INFINITE_LINES
 } = require("../actions/index");
 
 const INITIAL_HIGHLIGHTER_SETTINGS = {
+  showGridAreasOverlay: false,
   showGridLineNumbers: false,
   showInfiniteLines: false,
 };
 
 let reducers = {
+
+  [UPDATE_SHOW_GRID_AREAS](highlighterSettings, { enabled }) {
+    return Object.assign({}, highlighterSettings, {
+      showGridAreasOverlay: enabled,
+    });
+  },
 
   [UPDATE_SHOW_GRID_LINE_NUMBERS](highlighterSettings, { enabled }) {
     return Object.assign({}, highlighterSettings, {
