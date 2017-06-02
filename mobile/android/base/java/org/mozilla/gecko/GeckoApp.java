@@ -1079,6 +1079,11 @@ public abstract class GeckoApp extends GeckoActivity
     @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
     private static native void onFullScreenPluginHidden(View view);
 
+    @WrapForJNI(calledFrom = "gecko")
+    private static Context getPluginContext() {
+        return GeckoActivityMonitor.getInstance().getCurrentActivity();
+    }
+
     private void showSetImageResult(final boolean success, final int message, final String path) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
