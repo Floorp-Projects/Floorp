@@ -33,6 +33,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONArray;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.search.SearchEngineManager;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.ProxySelector;
@@ -80,6 +82,7 @@ public class SwitchBoard {
     // Match keys.
     private static final String KEY_APP_ID = "appId";
     private static final String KEY_COUNTRY = "country";
+    private static final String KEY_REGION = "regions";
     private static final String KEY_DEVICE = "device";
     private static final String KEY_LANG = "lang";
     private static final String KEY_MANUFACTURER = "manufacturer";
@@ -173,6 +176,20 @@ public class SwitchBoard {
             // inactive experiment is missing from the config.
             return false;
         }
+    }
+
+    private static boolean isTargetRegion(JSONArray regions, String region) throws JSONException {
+        if (regions == null || region == null) {
+            return false;
+        }
+        for (int i = 0; i < regions.length(); i++) {
+
+            final String checkingRegion = regions.getString(i);
+            if (checkingRegion.equalsIgnoreCase(region)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static List<String> getExperimentNames(Context c) throws JSONException {
@@ -297,6 +314,25 @@ public class SwitchBoard {
                 Log.e(TAG, "Exception matching version", e);
             }
         }
+
+        if (matchKeys.has(KEY_REGION)) {
+            try {
+                final JSONArray regions = matchKeys.getJSONArray(KEY_REGION);
+                if (regions.length() <= 0) {
+                    return true; // If the array is empty then I guess this means there are no region restrictions
+                }
+                final String region = GeckoSharedPrefs.forApp(context).getString(SearchEngineManager.PREF_REGION_KEY, null);
+
+                if (!isTargetRegion(regions, region)) {
+                    return false;
+                }
+            } catch (JSONException e) {
+                // If the JSON is somehow broken (or this version doesn't understand a different format),
+                // just log and continue
+                Log.e(TAG, "Exception matching region", e);
+            }
+        }
+
 
         // Default to return true if no matches failed.
         return true;
