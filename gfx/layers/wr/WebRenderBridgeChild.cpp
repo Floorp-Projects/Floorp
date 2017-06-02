@@ -120,22 +120,25 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder,
   mIsInTransaction = false;
 }
 
+void
+WebRenderBridgeChild::AddPipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineId,
+                                                        const CompositableHandle& aHandle)
+{
+  SendAddPipelineIdForAsyncCompositable(aPipelineId, aHandle);
+}
+
+void
+WebRenderBridgeChild::RemovePipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineId)
+{
+  SendRemovePipelineIdForAsyncCompositable(aPipelineId);
+}
+
 wr::ExternalImageId
 WebRenderBridgeChild::GetNextExternalImageId()
 {
   wr::MaybeExternalImageId id = GetCompositorBridgeChild()->GetNextExternalImageId();
   MOZ_RELEASE_ASSERT(id.isSome());
   return id.value();
-}
-
-wr::ExternalImageId
-WebRenderBridgeChild::AllocExternalImageId(const CompositableHandle& aHandle)
-{
-  MOZ_ASSERT(!mDestroyed);
-
-  wr::ExternalImageId imageId = GetNextExternalImageId();
-  SendAddExternalImageId(imageId, aHandle);
-  return imageId;
 }
 
 wr::ExternalImageId
