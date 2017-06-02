@@ -316,11 +316,13 @@
 }
 
 .search-panel-tree > .autocomplete-treebody::-moz-tree-image(fromhistory) {
-  list-style-image: url("chrome://browser/skin/search-history-icon.svg#search-history-icon");
+  list-style-image: url("chrome://browser/skin/history.svg");
+  -moz-context-properties: fill;
+  fill: graytext;
 }
 
 .search-panel-tree > .autocomplete-treebody::-moz-tree-image(fromhistory, selected) {
-  list-style-image: url("chrome://browser/skin/search-history-icon.svg#search-history-icon-active");
+  fill: HighlightText;
 }
 
 .search-setting-button {
