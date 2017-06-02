@@ -1020,7 +1020,7 @@ ServoStyleSet::GetKeyframesForName(const nsString& aName,
 nsTArray<ComputedKeyframeValues>
 ServoStyleSet::GetComputedKeyframeValuesFor(
   const nsTArray<Keyframe>& aKeyframes,
-  dom::Element* aElement,
+  Element* aElement,
   const ServoComputedValuesWithParent& aServoValues)
 {
   nsTArray<ComputedKeyframeValues> result(aKeyframes.Length());
@@ -1029,8 +1029,8 @@ ServoStyleSet::GetComputedKeyframeValuesFor(
   result.AppendElements(aKeyframes.Length());
 
   Servo_GetComputedKeyframeValues(&aKeyframes,
+                                  aElement,
                                   aServoValues.mCurrentStyle,
-                                  aServoValues.mParentStyle,
                                   mRawSet.get(),
                                   &result);
   return result;
@@ -1048,12 +1048,13 @@ ServoStyleSet::GetBaseComputedValuesForElement(Element* aElement,
 
 already_AddRefed<RawServoAnimationValue>
 ServoStyleSet::ComputeAnimationValue(
+  Element* aElement,
   RawServoDeclarationBlock* aDeclarations,
   const ServoComputedValuesWithParent& aComputedValues)
 {
-  return Servo_AnimationValue_Compute(aDeclarations,
+  return Servo_AnimationValue_Compute(aElement,
+                                      aDeclarations,
                                       aComputedValues.mCurrentStyle,
-                                      aComputedValues.mParentStyle,
                                       mRawSet.get()).Consume();
 }
 
