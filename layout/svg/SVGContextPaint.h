@@ -251,7 +251,10 @@ class SVGEmbeddingContextPaint : public SVGContextPaint
   typedef gfx::Color Color;
 
 public:
-  SVGEmbeddingContextPaint() {}
+  SVGEmbeddingContextPaint()
+    : mFillOpacity(1.0f)
+    , mStrokeOpacity(1.0f)
+  {}
 
   bool operator==(const SVGEmbeddingContextPaint& aOther) const {
     MOZ_ASSERT(GetStrokeWidth() == aOther.GetStrokeWidth() &&
@@ -259,7 +262,10 @@ public:
                GetStrokeDashArray() == aOther.GetStrokeDashArray(),
                "We don't currently include these in the context information "
                "from an embedding element");
-    return mFill == aOther.mFill && mStroke == aOther.mStroke;
+    return mFill == aOther.mFill &&
+           mStroke == aOther.mStroke &&
+           mFillOpacity == aOther.mFillOpacity &&
+           mStrokeOpacity == aOther.mStrokeOpacity;
   }
 
   void SetFill(nscolor aFill) {
@@ -283,14 +289,18 @@ public:
   GetStrokePattern(const DrawTarget* aDrawTarget, float aStrokeOpacity,
                    const gfxMatrix& aCTM, imgDrawingParams& aImgParams) override;
 
+  void SetFillOpacity(float aOpacity) {
+    mFillOpacity = aOpacity;
+  }
   float GetFillOpacity() const override {
-    // Always 1.0f since we don't currently allow 'context-fill-opacity'
-    return 1.0f;
+    return mFillOpacity;
   };
 
+  void SetStrokeOpacity(float aOpacity) {
+    mStrokeOpacity = aOpacity;
+  }
   float GetStrokeOpacity() const override {
-    // Always 1.0f since we don't currently allow 'context-stroke-opacity'
-    return 1.0f;
+    return mStrokeOpacity;
   };
 
   uint32_t Hash() const override;
@@ -298,6 +308,8 @@ public:
 private:
   Maybe<Color> mFill;
   Maybe<Color> mStroke;
+  float mFillOpacity;
+  float mStrokeOpacity;
 };
 
 } // namespace mozilla

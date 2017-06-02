@@ -87,6 +87,12 @@ nsDisplayColumnRule::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_NONE;
   }
 
+  for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end(); iter++) {
+    if (!iter->CanCreateWebRenderCommands()) {
+      return LAYER_NONE;
+    }
+  }
+
   return LAYER_ACTIVE;
 }
 
