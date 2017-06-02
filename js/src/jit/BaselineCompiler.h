@@ -216,6 +216,7 @@ namespace jit {
     _(JSOP_FINALYIELDRVAL)     \
     _(JSOP_RESUME)             \
     _(JSOP_CALLEE)             \
+    _(JSOP_SUPERBASE)          \
     _(JSOP_GETRVAL)            \
     _(JSOP_SETRVAL)            \
     _(JSOP_RETRVAL)            \
@@ -366,6 +367,8 @@ class BaselineCompiler : public BaselineCompilerSpecific
     void getEnvironmentCoordinateObject(Register reg);
     Address getEnvironmentCoordinateAddressFromObject(Register objReg, Register reg);
     Address getEnvironmentCoordinateAddress(Register reg);
+
+    void getThisEnvironmentCallee(Register reg);
 };
 
 extern const VMFunction NewArrayCopyOnWriteInfo;
