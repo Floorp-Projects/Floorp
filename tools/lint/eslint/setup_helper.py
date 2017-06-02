@@ -39,10 +39,6 @@ Valid installation paths:
 VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
 CARET_VERSION_RANGE_RE = re.compile(r"^\^((\d+)\.\d+\.\d+)$")
 
-LINTED_EXTENSIONS = ['js', 'jsm', 'jsx', 'xml', 'html', 'xhtml']
-EXTENSIONS = [".%s" % x for x in LINTED_EXTENSIONS]
-EXTENSIONS_RE = re.compile(r'.+\.(?:%s)$' % '|'.join(LINTED_EXTENSIONS))
-
 project_root = None
 
 
