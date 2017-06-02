@@ -107,7 +107,7 @@ JitFrameIterator::JitFrameIterator()
 }
 
 JitFrameIterator::JitFrameIterator(JSContext* cx)
-  : current_(cx->jitTop),
+  : current_(cx->activation()->asJit()->exitFP()),
     type_(JitFrame_Exit),
     returnAddressToFp_(nullptr),
     frameSize_(0),
@@ -122,7 +122,7 @@ JitFrameIterator::JitFrameIterator(JSContext* cx)
 }
 
 JitFrameIterator::JitFrameIterator(const ActivationIterator& activations)
-  : current_(activations.jitTop()),
+  : current_(activations->asJit()->exitFP()),
     type_(JitFrame_Exit),
     returnAddressToFp_(nullptr),
     frameSize_(0),
@@ -948,7 +948,7 @@ HandleException(ResumeFromException* rfe)
         ++iter;
 
         if (current) {
-            // Unwind the frame by updating jitTop. This is necessary so that
+            // Unwind the frame by updating exitFP. This is necessary so that
             // (1) debugger exception unwind and leave frame hooks don't see this
             // frame when they use ScriptFrameIter, and (2) ScriptFrameIter does
             // not crash when accessing an IonScript that's destroyed by the
@@ -972,7 +972,7 @@ EnsureBareExitFrame(JSContext* cx, JitFrameLayout* frame)
 {
     ExitFrameLayout* exitFrame = reinterpret_cast<ExitFrameLayout*>(frame);
 
-    if (cx->jitTop == (uint8_t*)frame) {
+    if (cx->activation()->asJit()->exitFP() == (uint8_t*)frame) {
         // If we already called this function for the current frame, do
         // nothing.
         MOZ_ASSERT(exitFrame->isBareExit());
@@ -985,11 +985,12 @@ EnsureBareExitFrame(JSContext* cx, JitFrameLayout* frame)
         ++iter;
     MOZ_ASSERT(iter.current() == frame, "|frame| must be the top JS frame");
 
-    MOZ_ASSERT((uint8_t*)exitFrame->footer() >= cx->jitTop,
-               "Must have space for ExitFooterFrame before jitTop");
+    MOZ_ASSERT(!!cx->activation()->asJit()->exitFP());
+    MOZ_ASSERT((uint8_t*)exitFrame->footer() >= cx->activation()->asJit()->exitFP(),
+               "Must have space for ExitFooterFrame before exitFP");
 #endif
 
-    cx->jitTop = (uint8_t*)frame;
+    cx->activation()->asJit()->setExitFP((uint8_t*)frame);
     *exitFrame->footer()->addressOfJitCode() = ExitFrameLayout::BareToken();
     MOZ_ASSERT(exitFrame->isBareExit());
 }
