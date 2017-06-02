@@ -32,7 +32,7 @@ and try again.
 """.strip()
 
 
-def lint(paths, binary=None, fix=None, setup=None, **lintargs):
+def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
     """Run eslint."""
     global project_root
     setup_helper.set_project_root(lintargs['root'])
@@ -77,7 +77,7 @@ def lint(paths, binary=None, fix=None, setup=None, **lintargs):
                 # ESLint plugin (bug 1229874).
                 '--plugin', 'html',
                 # This keeps ext as a single argument.
-                '--ext', '[{}]'.format(','.join(setup_helper.EXTENSIONS)),
+                '--ext', '[{}]'.format(','.join(config['extensions'])),
                 '--format', 'json',
                 ] + extra_args + paths
 
@@ -122,18 +122,6 @@ def lint(paths, binary=None, fix=None, setup=None, **lintargs):
                 'path': obj['filePath'],
                 'rule': err.get('ruleId'),
             })
-            results.append(result.from_linter(LINTER, **err))
+            results.append(result.from_config(config, **err))
 
     return results
-
-
-LINTER = {
-    'name': "eslint",
-    'description': "JavaScript linter",
-    # ESLint infra handles its own path filtering, so just include cwd
-    'include': ['.'],
-    'exclude': [],
-    'extensions': setup_helper.EXTENSIONS,
-    'type': 'external',
-    'payload': lint,
-}
