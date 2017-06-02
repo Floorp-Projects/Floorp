@@ -68,6 +68,15 @@ class Symbol : public js::gc::TenuredCell
 
     bool isWellKnownSymbol() const { return uint32_t(code_) < WellKnownSymbolLimit; }
 
+    // An "interesting symbol" is a well-known symbol, like @@toStringTag,
+    // that's often looked up on random objects but is usually not present. We
+    // optimize this by setting a flag on the object's BaseShape when such
+    // symbol properties are added, so we can optimize lookups on objects that
+    // don't have the BaseShape flag.
+    bool isInterestingSymbol() const {
+        return code_ == SymbolCode::toStringTag || code_ == SymbolCode::toPrimitive;
+    }
+
     static const JS::TraceKind TraceKind = JS::TraceKind::Symbol;
     inline void traceChildren(JSTracer* trc) {
         if (description_)

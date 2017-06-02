@@ -25,6 +25,9 @@ with Files("reftests/*fallback*"):
 with Files("*CompositorWidget*"):
     BUG_COMPONENT = ("Core", "Graphics")
 
+with Files("*WindowSurface*"):
+    BUG_COMPONENT = ("Core", "Graphics")
+
 with Files("*FontRange*"):
     BUG_COMPONENT = ("Core", "Widget: Cocoa")
 

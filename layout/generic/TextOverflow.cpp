@@ -183,6 +183,21 @@ public:
       nsLayoutUtils::GetTextShadowRectsUnion(mRect, mFrame);
     return mRect.Union(shadowRect);
   }
+
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override
+  {
+    if (gfxPlatform::GetPlatform()->RespectsFontStyleSmoothing()) {
+      // On OS X, web authors can turn off subpixel text rendering using the
+      // CSS property -moz-osx-font-smoothing. If they do that, we don't need
+      // to use component alpha layers for the affected text.
+      if (mFrame->StyleFont()->mFont.smoothing == NS_FONT_SMOOTHING_GRAYSCALE) {
+        return nsRect();
+      }
+    }
+    bool snap;
+    return GetBounds(aBuilder, &snap);
+  }
+
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) override;
 
