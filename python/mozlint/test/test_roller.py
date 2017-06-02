@@ -14,7 +14,7 @@ from mozlint.errors import LintersNotConfigured, LintException
 here = os.path.abspath(os.path.dirname(__file__))
 
 
-linters = ('string.lint.py', 'regex.lint.py', 'external.lint.py')
+linters = ('string.yml', 'regex.yml', 'external.yml')
 
 
 def test_roll_no_linters_configured(lint, files):
@@ -42,7 +42,7 @@ def test_roll_successful(lint, linters, files):
 
 
 def test_roll_catch_exception(lint, lintdir, files):
-    lint.read(os.path.join(lintdir, 'raises.lint.py'))
+    lint.read(os.path.join(lintdir, 'raises.yml'))
 
     # suppress printed traceback from test output
     old_stderr = sys.stderr
@@ -63,14 +63,14 @@ def test_roll_with_excluded_path(lint, linters, files):
 
 
 def test_roll_with_invalid_extension(lint, lintdir, filedir):
-    lint.read(os.path.join(lintdir, 'external.lint.py'))
+    lint.read(os.path.join(lintdir, 'external.yml'))
     result = lint.roll(os.path.join(filedir, 'foobar.py'))
     assert len(result) == 0
     assert lint.failed == []
 
 
 def test_roll_with_failure_code(lint, lintdir, files):
-    lint.read(os.path.join(lintdir, 'badreturncode.lint.py'))
+    lint.read(os.path.join(lintdir, 'badreturncode.yml'))
 
     assert lint.failed is None
     result = lint.roll(files)
