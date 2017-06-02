@@ -8,6 +8,7 @@
 
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
+#include "PKCS11.h"
 #include "ScopedNSSTypes.h"
 #include "SharedSSLState.h"
 #include "cert.h"
@@ -1949,6 +1950,25 @@ nsNSSComponent::InitializeNSS()
   if (PK11_IsFIPS()) {
     Telemetry::Accumulate(Telemetry::FIPS_ENABLED, true);
   }
+
+  { // Introduce scope for the AutoSECMODListReadLock.
+    AutoSECMODListReadLock lock;
+    for (SECMODModuleList* list = SECMOD_GetDefaultModuleList(); list;
+         list = list->next) {
+      nsAutoString scalarKey;
+      GetModuleNameForTelemetry(list->module, scalarKey);
+      // Scalar keys must be between 0 and 70 characters (exclusive).
+      // GetModuleNameForTelemetry takes care of keys that are too long. If for
+      // some reason it couldn't come up with an appropriate name and returned
+      // an empty result, however, we need to not attempt to record this (it
+      // wouldn't give us anything useful anyway).
+      if (scalarKey.Length() > 0) {
+        Telemetry::ScalarSet(
+          Telemetry::ScalarID::SECURITY_PKCS11_MODULES_LOADED, scalarKey, true);
+      }
+    }
+  }
+
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("NSS Initialization done\n"));
   mNSSInitialized = true;
 
