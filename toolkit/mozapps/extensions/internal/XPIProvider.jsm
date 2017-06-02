@@ -243,20 +243,6 @@ const BOOTSTRAP_REASONS = {
   ADDON_DOWNGRADE: 8
 };
 
-// Map new string type identifiers to old style nsIUpdateItem types
-// Type 32 was previously used for multipackage xpi files so it should
-// not be re-used since old files with that type may be floating around.
-const TYPES = {
-  extension: 2,
-  theme: 4,
-  locale: 8,
-  dictionary: 64,
-  experiment: 128,
-};
-
-if (!AppConstants.RELEASE_OR_BETA)
-  TYPES.apiextension = 256;
-
 // Some add-on types that we track internally are presented as other types
 // externally
 const TYPE_ALIASES = {

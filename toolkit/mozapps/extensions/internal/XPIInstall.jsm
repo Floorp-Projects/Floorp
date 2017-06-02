@@ -155,14 +155,12 @@ const TYPES = {
   locale: 8,
   dictionary: 64,
   experiment: 128,
+  apiextension: 256,
 };
-
-if (!AppConstants.RELEASE_OR_BETA)
-   TYPES.apiextension = 256;
 
 const COMPATIBLE_BY_DEFAULT_TYPES = {
   extension: true,
-  dictionary: true
+  dictionary: true,
 };
 
 const RESTARTLESS_TYPES = new Set([
