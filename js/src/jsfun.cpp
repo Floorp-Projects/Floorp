@@ -1394,13 +1394,18 @@ JSFunction::getUnresolvedName(JSContext* cx, HandleFunction fun, MutableHandleAt
         // Bound functions are never unnamed.
         MOZ_ASSERT(name);
 
-        StringBuffer sb(cx);
-        if (!sb.append(cx->names().boundWithSpace) || !sb.append(name))
-            return false;
+        JSAtom* boundName;
+        if (name->length() > 0) {
+            StringBuffer sb(cx);
+            if (!sb.append(cx->names().boundWithSpace) || !sb.append(name))
+                return false;
 
-        JSAtom* boundName = sb.finishAtom();
-        if (!boundName)
-            return false;
+            boundName = sb.finishAtom();
+            if (!boundName)
+                return false;
+        } else {
+            boundName = cx->names().boundWithSpace;
+        }
 
         v.set(boundName);
         return true;
