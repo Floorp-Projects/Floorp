@@ -600,10 +600,6 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
     if (!mSources[i]) {
       continue;
     }
-    RefPtr<SharedBuffer> buffer =
-      SharedBuffer::Create(aFrames * aChannels * sizeof(T));
-    PodCopy(static_cast<T*>(buffer->Data()),
-            aBuffer, aFrames * aChannels);
 
     TimeStamp insertTime;
     // Make sure we include the stream and the track.
@@ -612,12 +608,35 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
             LATENCY_STREAM_ID(mSources[i].get(), mTrackID),
             (i+1 < len) ? 0 : 1, insertTime);
 
+    // Bug 971528 - Support stereo capture in gUM
+    MOZ_ASSERT(aChannels == 1 || aChannels == 2,
+        "GraphDriver only supports mono and stereo audio for now");
+
     nsAutoPtr<AudioSegment> segment(new AudioSegment());
-    AutoTArray<const T*, 1> channels;
-    // XXX Bug 971528 - Support stereo capture in gUM
-    MOZ_ASSERT(aChannels == 1,
-        "GraphDriver only supports us stereo audio for now");
-    channels.AppendElement(static_cast<T*>(buffer->Data()));
+    RefPtr<SharedBuffer> buffer =
+      SharedBuffer::Create(aFrames * aChannels * sizeof(T));
+    AutoTArray<const T*, 8> channels;
+    channels.SetLength(aChannels);
+    if (aChannels == 1) {
+      PodCopy(static_cast<T*>(buffer->Data()), aBuffer, aFrames);
+      channels.AppendElement(static_cast<T*>(buffer->Data()));
+    } else {
+      AutoTArray<T*, 8> write_channels;
+      write_channels.SetLength(aChannels);
+      T * samples = static_cast<T*>(buffer->Data());
+
+      size_t offset = 0;
+      for(uint32_t i = 0; i < aChannels; ++i) {
+        channels[i] = write_channels[i] = samples + offset;
+        offset += aFrames;
+      }
+
+      DeinterleaveAndConvertBuffer(aBuffer,
+                                   aFrames,
+                                   aChannels,
+                                   write_channels.Elements());
+    }
+
     segment->AppendFrames(buffer.forget(), channels, aFrames,
                          mPrincipalHandles[i]);
     segment->GetStartTime(insertTime);
