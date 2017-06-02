@@ -190,7 +190,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
         masm.asVIXL().Push(x19, xzr); // Push xzr for a fake return address.
         // No GC things to mark: push a bare token.
         masm.loadJSContext(r19);
-        masm.enterFakeExitFrame(r19, ExitFrameLayoutBareToken);
+        masm.enterFakeExitFrame(r19, r19, ExitFrameLayoutBareToken);
 
         masm.push(BaselineFrameReg, reg_code);
 
@@ -567,8 +567,8 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
     // the function call.
     AllocatableGeneralRegisterSet regs(Register::Codes::WrapperMask);
 
-    // Wrapper register set is a superset of the Volatile register set.
-    JS_STATIC_ASSERT((Register::Codes::VolatileMask & ~Register::Codes::WrapperMask) == 0);
+    static_assert((Register::Codes::VolatileMask & ~Register::Codes::WrapperMask) == 0,
+                  "Wrapper register set must be a superset of the Volatile register set.");
 
     // Unlike on other platforms, it is the responsibility of the VM *callee* to
     // push the return address, while the caller must ensure that the address
@@ -588,7 +588,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
     //
     //  We're aligned to an exit frame, so link it up.
     masm.loadJSContext(reg_cx);
-    masm.enterExitFrame(reg_cx, &f);
+    masm.enterExitFrame(reg_cx, regs.getAny(), &f);
 
     // Save the current stack pointer as the base for copying arguments.
     Register argsBase = InvalidReg;
