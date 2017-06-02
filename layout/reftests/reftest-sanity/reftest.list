@@ -147,11 +147,21 @@ fails test-pref(font.size.variable.x-western,"foo") == font-default.html font-si
 ref-pref(font.size.variable.x-western,16) test-pref(font.size.variable.x-western,24) skip-if(styloVsGecko) != font-default.html font-default.html
 ref-pref(font.size.variable.x-western,24) test-pref(font.size.variable.x-western,16) skip-if(styloVsGecko) != font-default.html font-default.html
 ref-pref(font.size.variable.x-western,24) test-pref(font.size.variable.x-western,24) skip-if(styloVsGecko) == font-default.html font-default.html
+
 # reftest syntax: fuzzy(maxPixelDifference,maxNumberDifferingPixels)
 fuzzy(1,250000) == fuzzy.html fuzzy-ref.html
 fuzzy(1,250000) != too-fuzzy.html fuzzy-ref.html
 fuzzy-if(true,1,250000) == fuzzy.html fuzzy-ref.html
 fuzzy-if(false,2,1) == fuzzy-ref.html fuzzy-ref.html
+# test some ranged fuzzes
+fuzzy(1-10,1-250000) fuzzy-if(false,5-10,250000) skip-if(styloVsGecko) == fuzzy.html fuzzy-ref.html
+fuzzy(0-0,250000) skip-if(styloVsGecko) != fuzzy.html fuzzy-ref.html
+fuzzy(1,0-2) skip-if(styloVsGecko) != fuzzy.html fuzzy-ref.html
+# If enabled, the following two should result in UNEXPECTED-PASS because
+# they are both overfuzzed
+# fuzzy(3-4,250000) == fuzzy.html fuzzy-ref.html
+# fuzzy(1,250001-250002) == fuzzy.html fuzzy-ref.html
+#
 # When using 565 fuzzy.html and fuzzy-ref.html will compare as equal
 fails-if(!styloVsGecko) fuzzy-if(false,2,1) random-if(Android) == fuzzy.html fuzzy-ref.html
 
