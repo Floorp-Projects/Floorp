@@ -278,6 +278,12 @@ enum class SamplingBounds : int8_t {
   BOUNDED
 };
 
+// Moz2d version for SVG mask types
+enum class LuminanceType : int8_t {
+  LUMINANCE,
+  LINEARRGB,
+};
+
 /* Color is stored in non-premultiplied form */
 struct Color
 {
