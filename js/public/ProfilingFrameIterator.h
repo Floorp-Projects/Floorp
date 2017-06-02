@@ -37,7 +37,7 @@ struct ForEachTrackedOptimizationAttemptOp;
 struct ForEachTrackedOptimizationTypeInfoOp;
 
 // This iterator can be used to walk the stack of a thread suspended at an
-// arbitrary pc. To provide acurate results, profiling must have been enabled
+// arbitrary pc. To provide accurate results, profiling must have been enabled
 // (via EnableRuntimeProfilingStack) before executing the callstack being
 // unwound.
 //
@@ -49,11 +49,6 @@ class MOZ_NON_PARAM JS_PUBLIC_API(ProfilingFrameIterator)
     JSContext* cx_;
     uint32_t sampleBufferGen_;
     js::Activation* activation_;
-
-    // When moving past a JitActivation, we need to save the prevJitTop
-    // from it to use as the exit-frame pointer when the next caller jit
-    // activation (if any) comes around.
-    void* savedPrevJitTop_;
 
     static const unsigned StorageSpace = 8 * sizeof(void*);
     alignas(void*) unsigned char storage_[StorageSpace];
