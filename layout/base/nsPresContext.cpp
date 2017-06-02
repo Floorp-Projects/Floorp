@@ -2070,18 +2070,8 @@ nsPresContext::MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
   mPendingMediaFeatureValuesChanged = false;
 
   // MediumFeaturesChanged updates the applied rules, so it always gets called.
-  if (mShell) {
-    // XXXheycam ServoStyleSets don't support responding to medium
-    // changes yet.
-    if (mShell->StyleSet()->IsGecko()) {
-      if (mShell->StyleSet()->AsGecko()->MediumFeaturesChanged()) {
-        aRestyleHint |= eRestyle_Subtree;
-      }
-    } else {
-      NS_WARNING("stylo: ServoStyleSets don't support responding to medium "
-                 "changes yet. See bug 1290228.");
-      aRestyleHint |= eRestyle_Subtree;
-    }
+  if (mShell && mShell->StyleSet()->MediumFeaturesChanged()) {
+    aRestyleHint |= eRestyle_Subtree;
   }
 
   if (mUsesViewportUnits && mPendingViewportChange) {
