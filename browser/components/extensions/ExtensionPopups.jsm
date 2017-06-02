@@ -228,6 +228,7 @@ class BasePopup {
     browser.setAttribute("webextension-view-type", "popup");
     browser.setAttribute("tooltip", "aHTMLTooltip");
     browser.setAttribute("contextmenu", "contentAreaContextMenu");
+    browser.setAttribute("autocompletepopup", "PopupAutoComplete");
 
     if (this.extension.remote) {
       browser.setAttribute("remote", "true");

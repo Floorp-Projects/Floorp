@@ -21,6 +21,7 @@ const KEYS_WBO = "keys";
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/keys.js");
+Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-common/async.js");
@@ -139,9 +140,9 @@ CryptoWrapper.prototype = {
       throw new Error("A key bundle must be supplied to encrypt.");
     }
 
-    this.IV = Svc.Crypto.generateRandomIV();
-    this.ciphertext = Svc.Crypto.encrypt(JSON.stringify(this.cleartext),
-                                         keyBundle.encryptionKeyB64, this.IV);
+    this.IV = Weave.Crypto.generateRandomIV();
+    this.ciphertext = Weave.Crypto.encrypt(JSON.stringify(this.cleartext),
+                                           keyBundle.encryptionKeyB64, this.IV);
     this.hmac = this.ciphertextHMAC(keyBundle);
     this.cleartext = null;
   },
@@ -164,8 +165,8 @@ CryptoWrapper.prototype = {
     }
 
     // Handle invalid data here. Elsewhere we assume that cleartext is an object.
-    let cleartext = Svc.Crypto.decrypt(this.ciphertext,
-                                       keyBundle.encryptionKeyB64, this.IV);
+    let cleartext = Weave.Crypto.decrypt(this.ciphertext,
+                                         keyBundle.encryptionKeyB64, this.IV);
     let json_result = JSON.parse(cleartext);
 
     if (json_result && (json_result instanceof Object)) {

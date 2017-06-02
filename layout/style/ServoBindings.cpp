@@ -56,7 +56,6 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/ServoMediaList.h"
-#include "mozilla/ServoComputedValuesWithParent.h"
 #include "mozilla/RWLock.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
@@ -557,8 +556,6 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
 
   nsIAtom* pseudoTag = PseudoTagAndCorrectElementForAnimation(aElement);
   if (presContext->IsDynamic() && aElement->IsInComposedDoc()) {
-    const ServoComputedValuesWithParent servoValues =
-      { aComputedValues, aParentComputedValues };
     CSSPseudoElementType pseudoType =
       nsCSSPseudoElements::GetPseudoType(pseudoTag,
                                          CSSEnabledState::eForAllContent);
@@ -566,7 +563,7 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
     if (aTasks & UpdateAnimationsTasks::CSSAnimations) {
       presContext->AnimationManager()->
         UpdateAnimations(const_cast<dom::Element*>(aElement), pseudoType,
-                         servoValues);
+                         aComputedValues);
     }
 
     // aComputedValues might be nullptr if the target element is now in a
@@ -581,16 +578,14 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
 
     if (aTasks & UpdateAnimationsTasks::CSSTransitions) {
       MOZ_ASSERT(aOldComputedValues);
-      const ServoComputedValuesWithParent oldServoValues =
-        { aOldComputedValues, nullptr };
       presContext->TransitionManager()->
         UpdateTransitions(const_cast<dom::Element*>(aElement), pseudoType,
-                          oldServoValues, servoValues);
+                          aOldComputedValues, aComputedValues);
     }
 
     if (aTasks & UpdateAnimationsTasks::EffectProperties) {
       presContext->EffectCompositor()->UpdateEffectProperties(
-        servoValues, const_cast<dom::Element*>(aElement), pseudoType);
+        aComputedValues, const_cast<dom::Element*>(aElement), pseudoType);
     }
 
     if (aTasks & UpdateAnimationsTasks::CascadeResults) {
@@ -2237,6 +2232,23 @@ Gecko_AddPropertyToSet(nsCSSPropertyIDSetBorrowedMut aPropertySet,
                        nsCSSPropertyID aProperty)
 {
   aPropertySet->AddProperty(aProperty);
+}
+
+int32_t
+Gecko_RegisterNamespace(nsIAtom* aNamespace)
+{
+  int32_t id;
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsAutoString str;
+  aNamespace->ToString(str);
+  nsresult rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(str, id);
+
+  if (NS_FAILED(rv)) {
+    return -1;
+  }
+  return id;
 }
 
 NS_IMPL_FFI_REFCOUNTING(nsCSSFontFaceRule, CSSFontFaceRule);

@@ -32,7 +32,6 @@ class CSSStyleSheet;
 class ServoRestyleManager;
 class ServoStyleSheet;
 struct Keyframe;
-struct ServoComputedValuesWithParent;
 class ServoElementSnapshotTable;
 } // namespace mozilla
 class nsCSSCounterStyleRule;
@@ -357,8 +356,7 @@ public:
   nsTArray<ComputedKeyframeValues>
   GetComputedKeyframeValuesFor(const nsTArray<Keyframe>& aKeyframes,
                                dom::Element* aElement,
-                               const ServoComputedValuesWithParent&
-                                 aServoValues);
+                               ServoComputedValuesBorrowed aComputedValues);
 
   bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
 
@@ -378,8 +376,9 @@ public:
                          RawServoDeclarationBlockBorrowed aDeclarations);
 
   already_AddRefed<RawServoAnimationValue>
-  ComputeAnimationValue(RawServoDeclarationBlock* aDeclaration,
-                        const ServoComputedValuesWithParent& aComputedValues);
+  ComputeAnimationValue(dom::Element* aElement,
+                        RawServoDeclarationBlock* aDeclaration,
+                        ServoComputedValuesBorrowed aComputedValues);
 
   void AppendTask(PostTraversalTask aTask)
   {

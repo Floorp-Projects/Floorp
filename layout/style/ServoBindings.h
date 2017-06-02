@@ -558,6 +558,10 @@ bool Gecko_MatchStringArgPseudo(RawGeckoElementBorrowed element,
 
 void Gecko_AddPropertyToSet(nsCSSPropertyIDSetBorrowedMut, nsCSSPropertyID);
 
+// Register a namespace and get a namespace id.
+// Returns -1 on error (OOM)
+int32_t Gecko_RegisterNamespace(nsIAtom* ns);
+
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                                       \
   void Gecko_Construct_Default_nsStyle##name(                                  \

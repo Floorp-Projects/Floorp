@@ -50,6 +50,14 @@
 
   <popupset id="mainPopupSet">
     <tooltip id="aHTMLTooltip" page="true"/>
+
+    <panel type="autocomplete-richlistbox"
+           id="PopupAutoComplete"
+           noautofocus="true"
+           hidden="true"
+           overflowpadding="4"
+           norolluponanchor="true" />
+
     <menupopup id="contentAreaContextMenu" pagemenu="start"
                onpopupshowing="if (event.target != this)
                                  return true;
