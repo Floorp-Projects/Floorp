@@ -20,6 +20,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleAnimationValue.h" // For AnimationValue
 #include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/dom/BaseKeyframeTypesBinding.h" // For CompositeOperation
 #include "mozilla/dom/Element.h"
 #include "nsDebug.h"
 #include "nsStyleUtil.h"
@@ -247,13 +248,19 @@ nsSMILCSSValueType::IsEqual(const nsSMILValue& aLeft,
   return true;
 }
 
-nsresult
-nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
-                        uint32_t aCount) const
+static bool
+AddOrAccumulate(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
+                CompositeOperation aCompositeOp, uint64_t aCount)
 {
   MOZ_ASSERT(aValueToAdd.mType == aDest.mType,
-             "Trying to add invalid types");
-  MOZ_ASSERT(aValueToAdd.mType == this, "Unexpected source type");
+             "Trying to add mismatching types");
+  MOZ_ASSERT(aValueToAdd.mType == &nsSMILCSSValueType::sSingleton,
+             "Unexpected SMIL value type");
+  MOZ_ASSERT(aCompositeOp == CompositeOperation::Add ||
+             aCompositeOp == CompositeOperation::Accumulate,
+             "Composite operation should be add or accumulate");
+  MOZ_ASSERT(aCompositeOp != CompositeOperation::Add || aCount == 1,
+             "Count should be 1 if composite operation is add");
 
   ValueWrapper* destWrapper = ExtractValueWrapper(aDest);
   const ValueWrapper* valueToAddWrapper = ExtractValueWrapper(aValueToAdd);
@@ -267,7 +274,7 @@ nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
   // non-additive (even though StyleAnimationValue *could* support adding them)
   if (property == eCSSProperty_font_size_adjust ||
       property == eCSSProperty_stroke_dasharray) {
-    return NS_ERROR_FAILURE;
+    return false;
   }
 
   const AnimationValue* valueToAdd = valueToAddWrapper
@@ -279,7 +286,7 @@ nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
   AnimationValue zeroValueStorage;
   if (!FinalizeStyleAnimationValues(valueToAdd, destValue,
                                     zeroValueStorage)) {
-    return NS_ERROR_FAILURE;
+    return false;
   }
   // Did FinalizeStyleAnimationValues change destValue?
   // If so, update outparam to use the new value.
@@ -292,15 +299,47 @@ nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
     aDest.mU.mPtr = destWrapper = new ValueWrapper(property, *destValue);
   }
 
-  // Bug 1355349: Implement additive animation for Stylo
   if (destWrapper->mCSSValue.mServo) {
-    NS_WARNING("stylo: Additive animation not supported yet (bug 1355349)");
-    return NS_ERROR_FAILURE;
+    RefPtr<RawServoAnimationValue> result;
+    if (aCompositeOp == CompositeOperation::Add) {
+      result = Servo_AnimationValues_Add(destWrapper->mCSSValue.mServo,
+                                         valueToAdd->mServo).Consume();
+    } else {
+      result = Servo_AnimationValues_Accumulate(destWrapper->mCSSValue.mServo,
+                                                valueToAdd->mServo,
+                                                aCount).Consume();
+    }
+
+    if (result) {
+      destWrapper->mCSSValue.mServo = result;
+    }
+    return result;
   }
 
-  return StyleAnimationValue::Add(property,
-                                  destWrapper->mCSSValue.mGecko,
-                                  valueToAdd->mGecko, aCount)
+  // For Gecko, we currently call Add for either composite mode.
+  //
+  // This is not ideal, but it doesn't make any difference for the set of
+  // properties we currently allow adding in SMIL and this code path will
+  // hopefully become obsolete before we expand that set.
+  return StyleAnimationValue::Add(property, destWrapper->mCSSValue.mGecko,
+                                  valueToAdd->mGecko, aCount);
+}
+
+nsresult
+nsSMILCSSValueType::SandwichAdd(nsSMILValue& aDest,
+                                const nsSMILValue& aValueToAdd) const
+{
+  return AddOrAccumulate(aDest, aValueToAdd, CompositeOperation::Add, 1)
+         ? NS_OK
+         : NS_ERROR_FAILURE;
+}
+
+nsresult
+nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
+                        uint32_t aCount) const
+{
+  return AddOrAccumulate(aDest, aValueToAdd, CompositeOperation::Accumulate,
+                         aCount)
          ? NS_OK
          : NS_ERROR_FAILURE;
 }
