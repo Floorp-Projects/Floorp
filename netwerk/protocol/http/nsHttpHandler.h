@@ -224,10 +224,10 @@ public:
         return mConnMgr->RescheduleTransaction(trans, priority);
     }
 
-    void ThrottleTransaction(nsHttpTransaction *trans,
-                                              bool throttle)
+    void UpdateClassOfServiceOnTransaction(nsHttpTransaction *trans,
+                                           uint32_t classOfService)
     {
-        mConnMgr->ThrottleTransaction(trans, throttle);
+        mConnMgr->UpdateClassOfServiceOnTransaction(trans, classOfService);
     }
 
     // Called to cancel a transaction, which may or may not be assigned to
@@ -447,6 +447,11 @@ private:
     uint16_t mMaxConnections;
     uint8_t  mMaxPersistentConnectionsPerServer;
     uint8_t  mMaxPersistentConnectionsPerProxy;
+
+    bool mThrottleEnabled;
+    uint32_t mThrottleSuspendFor;
+    uint32_t mThrottleResumeFor;
+    uint32_t mThrottleResumeIn;
 
     uint8_t  mRedirectionLimit;
 
