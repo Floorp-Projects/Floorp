@@ -60,9 +60,8 @@ WasmFrameIter::WasmFrameIter(WasmActivation* activation, Unwind unwind)
     // but this is fine because CallSite is only used for line number for which
     // we can use the beginning of the function from the CodeRange instead.
 
-    code_ = activation_->compartment()->wasm.lookupCode(activation->unwindPC());
-    MOZ_ASSERT(code_);
-    MOZ_ASSERT(&fp_->tls->instance->code() == code_);
+    code_ = &fp_->tls->instance->code();
+    MOZ_ASSERT(code_ == activation->compartment()->wasm.lookupCode(activation->unwindPC()));
 
     codeRange_ = code_->lookupRange(activation->unwindPC());
     MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
@@ -124,8 +123,8 @@ WasmFrameIter::popFrame()
 
     void* returnAddress = prevFP->returnAddress;
 
-    code_ = activation_->compartment()->wasm.lookupCode(returnAddress);
-    MOZ_ASSERT(code_);
+    code_ = &fp_->tls->instance->code();
+    MOZ_ASSERT(code_ == activation_->compartment()->wasm.lookupCode(returnAddress));
 
     codeRange_ = code_->lookupRange(returnAddress);
     MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
@@ -800,17 +799,21 @@ ProfilingFrameIterator::operator++()
         return;
     }
 
-    code_ = activation_->compartment()->wasm.lookupCode(callerPC_);
-    MOZ_ASSERT(code_);
+    if (!callerFP_) {
+        codeRange_ = code_->lookupRange(callerPC_);
+        MOZ_ASSERT(codeRange_->kind() == CodeRange::Entry);
+        callerPC_ = nullptr;
+        MOZ_ASSERT(!done());
+        return;
+    }
+
+    code_ = &callerFP_->tls->instance->code();
+    MOZ_ASSERT(code_ == activation_->compartment()->wasm.lookupCode(callerPC_));
 
     codeRange_ = code_->lookupRange(callerPC_);
     MOZ_ASSERT(codeRange_);
 
     switch (codeRange_->kind()) {
-      case CodeRange::Entry:
-        MOZ_ASSERT(callerFP_ == nullptr);
-        callerPC_ = nullptr;
-        break;
       case CodeRange::Function:
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
@@ -824,6 +827,8 @@ ProfilingFrameIterator::operator++()
         AssertMatchesCallSite(*activation_, callerPC_, callerFP_->callerFP);
         callerFP_ = callerFP_->callerFP;
         break;
+      case CodeRange::Entry:
+        MOZ_CRASH("should have had null caller fp");
       case CodeRange::Interrupt:
       case CodeRange::Throw:
         MOZ_CRASH("code range doesn't have frame");
@@ -993,7 +998,7 @@ ProfilingFrameIterator::label() const
 }
 
 Instance*
-wasm::LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp)
+wasm::LookupFaultingInstance(const Code& code, void* pc, void* fp)
 {
     // Assume bug-caused faults can be raised at any PC and apply the logic of
     // ProfilingFrameIterator to reject any pc outside the (post-prologue,
@@ -1001,12 +1006,8 @@ wasm::LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp)
     // simulators which call this function at every load/store before even
     // knowing whether there is a fault.
 
-    const Code* code = activation->compartment()->wasm.lookupCode(pc);
-    if (!code)
-        return nullptr;
-
     const CodeSegment* codeSegment;
-    const CodeRange* codeRange = code->lookupRange(pc, &codeSegment);
+    const CodeRange* codeRange = code.lookupRange(pc, &codeSegment);
     if (!codeRange || !codeRange->isFunction())
         return nullptr;
 
@@ -1017,7 +1018,7 @@ wasm::LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp)
         return nullptr;
 
     Instance* instance = reinterpret_cast<Frame*>(fp)->tls->instance;
-    MOZ_RELEASE_ASSERT(&instance->code() == code);
+    MOZ_RELEASE_ASSERT(&instance->code() == &code);
     return instance;
 }
 
