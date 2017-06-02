@@ -72,6 +72,10 @@ public:
     // Returns the size of an ID3v2.4 footer if present and zero otherwise.
     uint8_t FooterSize() const;
 
+    // The total size of the ID3 tag including header/footer, or zero if
+    // none has been found.
+    uint32_t TotalTagSize() const;
+
     // Returns whether the parsed data is a valid ID3 header up to the given
     // byte position.
     bool IsValid(int aPos) const;
