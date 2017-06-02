@@ -497,22 +497,26 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
     // Bug 315687: Sanity check paper size to avoid paper size values in
     // mm when the size unit flag is inches. The value 100 is arbitrary
     // and can be changed.
+    bool saveSanitizedSizePrefs = false;
     if (success) {
       success = (sizeUnit != nsIPrintSettings::kPaperSizeInches)
              || (width < 100.0)
              || (height < 100.0);
 #if defined(XP_WIN)
       // Work around legacy invalid prefs where the size unit gets set to
-      // millimeters, but the height and width remains as the default inches
-      // ones for letter. See bug 1276717.
+      // millimeters, but the height and width remains as the previous inches
+      // settings. See bug 1276717 and bug 1369386 for details.
       if (sizeUnit == nsIPrintSettings::kPaperSizeMillimeters &&
-          height == 11L && width == 8.5L) {
+          height >= 0L && height < 25L &&
+          width >= 0L && width < 25L) {
 
-        // As an extra precaution only override, when the resolution is also
-        // set to the legacy invalid, uninitialized value. We'll just broadly
-        // assume that anything outside of a million DPI is invalid.
-        if (GETINTPREF(kPrintResolution, &iVal) &&
-            (iVal <= 0 || iVal > 1000000)) {
+        // As small pages sizes can be valid we only override when the old
+        // (now no longer set) pref print_paper_size_type exists. This will be
+        // removed when we save the prefs below.
+        const char* paperSizeTypePref =
+          GetPrefName("print_paper_size_type", aPrinterName);
+        if (Preferences::HasUserValue(paperSizeTypePref)) {
+          saveSanitizedSizePrefs = true;
           height = -1L;
           width = -1L;
         }
@@ -529,6 +533,12 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
       DUMP_DBL(kReadStr, kPrintPaperHeight, height);
       aPS->SetPaperName(str.get());
       DUMP_STR(kReadStr, kPrintPaperName, str.get());
+#if defined(XP_WIN)
+      if (saveSanitizedSizePrefs) {
+        SavePrintSettingsToPrefs(aPS, !aPrinterName.IsEmpty(),
+                                 nsIPrintSettings::kInitSavePaperSize);
+      }
+#endif
     }
   }
 
@@ -770,6 +780,20 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
       WritePrefDouble(GetPrefName(kPrintPaperHeight, aPrinterName), height);
       DUMP_STR(kWriteStr, kPrintPaperName, name);
       Preferences::SetString(GetPrefName(kPrintPaperName, aPrinterName), name);
+#if defined(XP_WIN)
+      // If the height and width are -1 then this might be a save triggered by
+      // print pref sanitizing code. This is done as a one off and is partly
+      // triggered by the existence of an old (now no longer set) pref. We
+      // remove that pref if it exists here, so that we don't try and sanitize
+      // what might be valid prefs. See bug 1276717 and bug 1369386 for details.
+      if (height == -1L && width == -1L) {
+        const char* paperSizeTypePref =
+          GetPrefName("print_paper_size_type", aPrinterName);
+        if (Preferences::HasUserValue(paperSizeTypePref)) {
+          Preferences::ClearUser(paperSizeTypePref);
+        }
+      }
+#endif
     }
   }
 
