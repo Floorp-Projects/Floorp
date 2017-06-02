@@ -727,11 +727,8 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
                volatile js::ProfileEntry& entry,
                NotNull<RacyThreadInfo*> aRacyInfo)
 {
-  // Pseudo-frames with the BEGIN_PSEUDO_JS flag are just annotations and
-  // should not be recorded in the profile.
-  if (entry.hasFlag(js::ProfileEntry::BEGIN_PSEUDO_JS)) {
-    return;
-  }
+  MOZ_ASSERT(entry.kind() == js::ProfileEntry::Kind::CPP_NORMAL ||
+             entry.kind() == js::ProfileEntry::Kind::JS_NORMAL);
 
   int lineno = -1;
 
@@ -797,7 +794,7 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
     aBuffer->addTag(ProfileBufferEntry::LineNumber(lineno));
   }
 
-  aBuffer->addTag(ProfileBufferEntry::Category(entry.category()));
+  aBuffer->addTag(ProfileBufferEntry::Category(uint32_t(entry.category())));
 }
 
 struct NativeStack
@@ -911,13 +908,12 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
         lastPseudoCppStackAddr = (uint8_t*) pseudoEntry.stackAddress();
       }
 
-      // Skip any pseudo-stack JS frames which are marked isOSR. Pseudostack
-      // frames are marked isOSR when the JS interpreter enters a jit frame on
-      // a loop edge (via on-stack-replacement, or OSR). To avoid both the
-      // pseudoframe and jit frame being recorded (and showing up twice), the
-      // interpreter marks the interpreter pseudostack entry with the OSR flag
-      // to ensure that it doesn't get counted.
-      if (pseudoEntry.isJs() && pseudoEntry.isOSR()) {
+      // Skip any JS_OSR frames. Such frames are used when the JS interpreter
+      // enters a jit frame on a loop edge (via on-stack-replacement, or OSR).
+      // To avoid both the pseudoframe and jit frame being recorded (and
+      // showing up twice), the interpreter marks the interpreter pseudostack
+      // frame as JS_OSR to ensure that it doesn't get counted.
+      if (pseudoEntry.kind() == js::ProfileEntry::Kind::JS_OSR) {
           pseudoIndex++;
           continue;
       }
@@ -957,7 +953,12 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
     if (pseudoStackAddr > jsStackAddr && pseudoStackAddr > nativeStackAddr) {
       MOZ_ASSERT(pseudoIndex < pseudoCount);
       volatile js::ProfileEntry& pseudoEntry = pseudoEntries[pseudoIndex];
-      AddPseudoEntry(aLock, aBuffer, pseudoEntry, racyInfo);
+
+      // Pseudo-frames with the CPP_MARKER_FOR_JS kind are just annotations and
+      // should not be recorded in the profile.
+      if (pseudoEntry.kind() != js::ProfileEntry::Kind::CPP_MARKER_FOR_JS) {
+        AddPseudoEntry(aLock, aBuffer, pseudoEntry, racyInfo);
+      }
       pseudoIndex++;
       continue;
     }
