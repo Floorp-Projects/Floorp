@@ -486,12 +486,7 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
     if (!PreventExtensions(cx, obj, level))
         return false;
 
-    // Steps 6-7.
-    AutoIdVector keys(cx);
-    if (!GetPropertyKeys(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY | JSITER_SYMBOLS, &keys))
-        return false;
-
-    // Steps 8-9, loosely interpreted.
+    // Steps 6-9, loosely interpreted.
     if (obj->isNative() && !obj->as<NativeObject>().inDictionaryMode() &&
         !obj->is<TypedArrayObject>() && !obj->is<MappedArgumentsObject>())
     {
@@ -510,7 +505,8 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
             return false;
 
         // Get an in-order list of the shapes in this object.
-        Rooted<ShapeVector> shapes(cx, ShapeVector(cx));
+        using ShapeVec = GCVector<Shape*, 8>;
+        Rooted<ShapeVec> shapes(cx, ShapeVec(cx));
         for (Shape::Range<NoGC> r(nobj->lastProperty()); !r.empty(); r.popFront()) {
             if (!shapes.append(&r.front()))
                 return false;
@@ -540,6 +536,11 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
             obj->as<ArrayObject>().setNonWritableLength(cx);
         }
     } else {
+        // Steps 6-7.
+        AutoIdVector keys(cx);
+        if (!GetPropertyKeys(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY | JSITER_SYMBOLS, &keys))
+            return false;
+
         RootedId id(cx);
         Rooted<PropertyDescriptor> desc(cx);
 
@@ -2767,9 +2768,12 @@ js::PreventExtensions(JSContext* cx, HandleObject obj, ObjectOpResult& result, I
         return false;
 
     // Force lazy properties to be resolved.
-    AutoIdVector props(cx);
-    if (!js::GetPropertyKeys(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY, &props))
-        return false;
+    if (obj->isNative()) {
+        if (JSEnumerateOp enumerate = obj->getClass()->getEnumerate()) {
+            if (!enumerate(cx, obj.as<NativeObject>()))
+                return false;
+        }
+    }
 
     // Sparsify dense elements, to make sure no element can be added without a
     // call to isExtensible, at the cost of performance. If the object is being
