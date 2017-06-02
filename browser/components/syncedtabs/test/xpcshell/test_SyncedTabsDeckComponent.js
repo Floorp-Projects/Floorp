@@ -12,6 +12,7 @@ let { DeckView } = Cu.import("resource:///modules/syncedtabs/SyncedTabsDeckView.
 add_task(async function testInitUninit() {
   let deckStore = new SyncedTabsDeckStore();
   let listComponent = {};
+  let mockWindow = {};
 
   let ViewMock = sinon.stub();
   let view = {render: sinon.spy(), destroy: sinon.spy(), container: {}};
@@ -23,7 +24,7 @@ add_task(async function testInitUninit() {
   sinon.stub(deckStore, "setPanels");
 
   let component = new SyncedTabsDeckComponent({
-    window,
+    window: mockWindow,
     deckStore,
     listComponent,
     SyncedTabs,
@@ -38,7 +39,7 @@ add_task(async function testInitUninit() {
   SyncedTabs.syncTabs.restore();
 
   Assert.ok(ViewMock.calledWithNew(), "view is instantiated");
-  Assert.equal(ViewMock.args[0][0], window);
+  Assert.equal(ViewMock.args[0][0], mockWindow);
   Assert.equal(ViewMock.args[0][1], listComponent);
   Assert.ok(ViewMock.args[0][2].onAndroidClick,
     "view is passed onAndroidClick prop");
@@ -81,6 +82,7 @@ add_task(async function testObserver() {
   let deckStore = new SyncedTabsDeckStore();
   let listStore = new SyncedTabsListStore(SyncedTabs);
   let listComponent = {};
+  let mockWindow = {};
 
   let ViewMock = sinon.stub();
   let view = {render: sinon.spy(), destroy: sinon.spy(), container: {}};
@@ -94,7 +96,7 @@ add_task(async function testObserver() {
   sinon.stub(listStore, "getData");
 
   let component = new SyncedTabsDeckComponent({
-    window,
+    mockWindow,
     deckStore,
     listStore,
     listComponent,
