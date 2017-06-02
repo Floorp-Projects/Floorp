@@ -589,6 +589,9 @@ FunWithProtoOperation(JSContext* cx, HandleFunction fun, HandleObject parent, Ha
 JSFunction*
 MakeDefaultConstructor(JSContext* cx, HandleScript script, jsbytecode* pc, HandleObject proto);
 
+JSObject*
+HomeObjectSuperBase(JSContext* cx, HandleObject homeObj);
+
 }  /* namespace js */
 
 #endif /* vm_Interpreter_h */
