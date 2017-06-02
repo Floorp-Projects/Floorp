@@ -58,13 +58,44 @@ function checkTestModuleExists() {
   return testModule;
 }
 
+function checkModuleTelemetry(additionalExpectedModule = undefined) {
+  let expectedModules = [
+    "NSS Internal PKCS #11 Module",
+    `${AppConstants.DLL_PREFIX}nssckbi${AppConstants.DLL_SUFFIX}`,
+  ];
+  if (additionalExpectedModule) {
+    expectedModules.push(additionalExpectedModule);
+  }
+  expectedModules.sort();
+  let telemetryService = Cc["@mozilla.org/base/telemetry;1"]
+                           .getService(Ci.nsITelemetry);
+  let telemetry = telemetryService.snapshotKeyedScalars(
+    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT).parent;
+  let moduleTelemetry = telemetry["security.pkcs11_modules_loaded"];
+  let actualModules = [];
+  Object.keys(moduleTelemetry).forEach((key) => {
+    ok(moduleTelemetry[key], "each keyed scalar should be true");
+    actualModules.push(key);
+  });
+  actualModules.sort();
+  equal(actualModules.length, expectedModules.length,
+        "the number of actual and expected loaded modules should be the same");
+  for (let i in actualModules) {
+    equal(actualModules[i], expectedModules[i],
+          "actual and expected module names should match");
+  }
+}
+
 function run_test() {
   // Check that if we have never added the test module, that we don't find it
   // in the module list.
   checkTestModuleNotPresent();
+  checkModuleTelemetry();
 
   // Check that adding the test module makes it appear in the module list.
   loadPKCS11TestModule(true);
+  checkModuleTelemetry(
+    `${AppConstants.DLL_PREFIX}pkcs11testmodule${AppConstants.DLL_SUFFIX}`);
   let testModule = checkTestModuleExists();
 
   // Check that listing the slots for the test module works.
