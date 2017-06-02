@@ -739,7 +739,7 @@ CreateEncodedSerialNumber(long serialNumberValue)
 //         pathLenConstraint       INTEGER (0..MAX) OPTIONAL }
 ByteString
 CreateEncodedBasicConstraints(bool isCA,
-                              /*optional*/ long* pathLenConstraintValue,
+                              /*optional in*/ const long* pathLenConstraintValue,
                               Critical critical)
 {
   ByteString value;
