@@ -1137,6 +1137,7 @@ PeerConnectionMedia::ShutdownMediaTransport_s()
 
   mIceCtxHdlr = nullptr;
 
+  // we're holding a ref to 'this' that's released by SelfDestruct_m
   mMainThread->Dispatch(WrapRunnable(this, &PeerConnectionMedia::SelfDestruct_m),
                         NS_DISPATCH_NORMAL);
 }
