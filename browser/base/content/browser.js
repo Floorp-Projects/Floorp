@@ -5512,6 +5512,7 @@ const nodeToTooltipMap = {
   "context-stop": "stopButton.tooltip",
   "downloads-button": "downloads.tooltip",
   "fullscreen-button": "fullscreenButton.tooltip",
+  "appMenu-fullscreen-button": "fullscreenButton.tooltip",
   "new-window-button": "newWindowButton.tooltip",
   "new-tab-button": "newTabButton.tooltip",
   "tabs-newtab-button": "newTabButton.tooltip",
@@ -5521,6 +5522,9 @@ const nodeToTooltipMap = {
   "appMenu-cut-button": "cut-button.tooltip",
   "appMenu-copy-button": "copy-button.tooltip",
   "appMenu-paste-button": "paste-button.tooltip",
+  "appMenu-zoomEnlarge-button": "zoomEnlarge-button.tooltip",
+  "appMenu-zoomReset-button": "zoomReset-button.tooltip",
+  "appMenu-zoomReduce-button": "zoomReduce-button.tooltip",
 };
 const nodeToShortcutMap = {
   "bookmarks-menu-button": "manBookmarkKb",
@@ -5528,6 +5532,7 @@ const nodeToShortcutMap = {
   "context-stop": "key_stop",
   "downloads-button": "key_openDownloads",
   "fullscreen-button": "key_fullScreen",
+  "appMenu-fullscreen-button": "key_fullScreen",
   "new-window-button": "key_newNavigator",
   "new-tab-button": "key_newNavigatorTab",
   "tabs-newtab-button": "key_newNavigatorTab",
@@ -5537,6 +5542,9 @@ const nodeToShortcutMap = {
   "appMenu-cut-button": "key_cut",
   "appMenu-copy-button": "key_copy",
   "appMenu-paste-button": "key_paste",
+  "appMenu-zoomEnlarge-button": "key_fullZoomEnlarge",
+  "appMenu-zoomReset-button": "key_fullZoomReset",
+  "appMenu-zoomReduce-button": "key_fullZoomReduce",
 };
 
 if (AppConstants.platform == "macosx") {

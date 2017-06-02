@@ -29,19 +29,6 @@ globals = set([
               ])
 
 
-class TestExecuteSimpleTestContent(MarionetteTestCase):
-    def test_stack_trace(self):
-        try:
-            self.marionette.execute_js_script("""
-                let a = 1;
-                throwHere();
-                """, filename="file.js")
-            self.assertFalse(True)
-        except errors.JavascriptException as e:
-            self.assertIn("throwHere is not defined", e.message)
-            self.assertIn("@file.js:2", e.stacktrace)
-
-
 class TestExecuteContent(MarionetteTestCase):
 
     def assert_is_defined(self, property, sandbox="default"):

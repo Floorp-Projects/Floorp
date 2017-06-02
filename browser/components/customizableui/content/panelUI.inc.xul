@@ -517,7 +517,7 @@
                        oncommand="PanelUI._onBannerItemSelected(event)"
                        wrap="true"
                        hidden="true"/>
-        <toolbaritem id="appMenu-fxa-container">
+        <toolbaritem id="appMenu-fxa-container" class="toolbaritem-combined-buttons">
           <hbox id="appMenu-fxa-status"
                 flex="1"
                 defaultlabel="&fxaSignIn.label;"
@@ -532,7 +532,7 @@
                            label="&fxaSignIn.label;"
                            fxabrandname="&syncBrand.fxAccount.label;"/>
           </hbox>
-          <toolbarseparator/>
+          <toolbarseparator orient="vertical"/>
           <toolbarbutton id="appMenu-fxa-icon"
                          class="subviewbutton subviewbutton-iconic"
                          oncommand="gSync.doSync();"
@@ -552,6 +552,28 @@
                        label="&newPrivateWindow.label;"
                        key="key_privatebrowsing"
                        command="Tools:PrivateBrowsing"/>
+        <toolbarseparator/>
+        <toolbaritem id="appMenu-zoom-controls" class="toolbaritem-combined-buttons" closemenu="none">
+          <label value="&fullZoom.label;"/>
+          <toolbarbutton id="appMenu-zoomReduce-button"
+                         class="subviewbutton subviewbutton-iconic"
+                         command="cmd_fullZoomReduce"
+                         tooltip="dynamic-shortcut-tooltip"/>
+          <toolbarbutton id="appMenu-zoomReset-button"
+                         class="subviewbutton"
+                         command="cmd_fullZoomReset"
+                         tooltip="dynamic-shortcut-tooltip"/>
+          <toolbarbutton id="appMenu-zoomEnlarge-button"
+                         class="subviewbutton subviewbutton-iconic"
+                         command="cmd_fullZoomEnlarge"
+                         tooltip="dynamic-shortcut-tooltip"/>
+          <toolbarseparator orient="vertical"/>
+          <toolbarbutton id="appMenu-fullscreen-button"
+                         class="subviewbutton subviewbutton-iconic"
+                         observes="View:FullScreen"
+                         type="checkbox"
+                         tooltip="dynamic-shortcut-tooltip"/>
+        </toolbaritem>
         <toolbarseparator/>
         <toolbaritem id="appMenu-edit-controls" class="toolbaritem-combined-buttons" closemenu="none">
           <label value="&editMenu.label;"/>

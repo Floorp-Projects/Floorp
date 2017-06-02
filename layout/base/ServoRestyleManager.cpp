@@ -515,6 +515,12 @@ ServoRestyleManager::FrameForPseudoElement(const nsIContent* aContent,
     return nsLayoutUtils::GetAfterFrame(aContent);
   }
 
+  if (aPseudoTagOrNull == nsCSSPseudoElements::firstLine ||
+      aPseudoTagOrNull == nsCSSPseudoElements::firstLetter) {
+    // TODO(emilio, bz): Figure out the best way to diff these styles.
+    return nullptr;
+  }
+
   MOZ_CRASH("Unkown pseudo-element given to "
             "ServoRestyleManager::FrameForPseudoElement");
   return nullptr;
