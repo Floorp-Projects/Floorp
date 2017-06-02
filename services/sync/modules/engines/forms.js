@@ -266,6 +266,7 @@ class FormsProblemData extends CollectionProblemData {
 class FormValidator extends CollectionValidator {
   constructor() {
     super("forms", "id", ["name", "value"]);
+    this.ignoresMissingClients = true;
   }
 
   emptyProblemData() {
