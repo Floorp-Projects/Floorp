@@ -34,14 +34,11 @@ ColorPicker.prototype = {
   },
 
   open: function(aCallback) {
-    let p = new Prompt({
-                         window: this._domWin,
-                         title: this._title,
+    let p = new Prompt({ title: this._title,
                          buttons: [
-                           this.strings.GetStringFromName("inputWidgetHelper.set"),
-                           this.strings.GetStringFromName("inputWidgetHelper.cancel"),
-                         ],
-                       })
+                            this.strings.GetStringFromName("inputWidgetHelper.set"),
+                            this.strings.GetStringFromName("inputWidgetHelper.cancel")
+                         ] })
                       .addColorPicker({ value: this._initial })
                       .show((data) => {
       if (data.button == 0)
