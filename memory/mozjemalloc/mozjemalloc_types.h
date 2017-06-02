@@ -56,7 +56,6 @@ typedef struct {
 	 */
 	jemalloc_bool	opt_abort;	/* abort(3) on error? */
 	jemalloc_bool	opt_junk;	/* Fill allocated memory with kAllocJunk? */
-	jemalloc_bool	opt_xmalloc;	/* abort(3) on OOM? */
 	jemalloc_bool	opt_zero;	/* Fill allocated memory with 0x0? */
 	size_t	narenas;	/* Number of arenas. */
 	size_t	quantum;	/* Allocation quantum. */
