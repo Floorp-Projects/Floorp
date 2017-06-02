@@ -430,14 +430,6 @@ var tearDownServiceInParent = Task.async(function* (db) {
   ok(record.pushEndpoint.startsWith('https://example.org/push'),
     'Wrong push endpoint in subscription record');
 
-  record = yield db.getByIdentifiers({
-    scope: 'https://example.net/scope/1',
-    originAttributes: ChromeUtils.originAttributesToSuffix(
-      { appId: 1, inIsolatedMozBrowser: true }),
-  });
-  ok(record.pushEndpoint.startsWith('https://example.org/push'),
-    'Wrong push endpoint in app record');
-
   record = yield db.getByKeyID('3a414737-2fd0-44c0-af05-7efc172475fc');
   ok(!record, 'Unsubscribed record should not exist');
 });
