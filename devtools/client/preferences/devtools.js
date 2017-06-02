@@ -73,6 +73,7 @@ pref("devtools.fontinspector.enabled", true);
 pref("devtools.layoutview.enabled", false);
 
 // Grid highlighter preferences
+pref("devtools.gridinspector.showGridAreas", false);
 pref("devtools.gridinspector.showGridLineNumbers", false);
 pref("devtools.gridinspector.showGridOutline", false);
 pref("devtools.gridinspector.showInfiniteLines", false);

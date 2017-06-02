@@ -711,10 +711,6 @@ nsHttpChannel::ContinueConnect()
     while (suspendCount--)
         mTransactionPump->Suspend();
 
-    if (mClassOfService & nsIClassOfService::Throttleable) {
-        gHttpHandler->ThrottleTransaction(mTransaction, true);
-    }
-
     return NS_OK;
 }
 
@@ -6622,10 +6618,8 @@ nsHttpChannel::ContinueBeginConnect()
 void
 nsHttpChannel::OnClassOfServiceUpdated()
 {
-    bool throttleable = !!(mClassOfService & nsIClassOfService::Throttleable);
-
     if (mTransaction) {
-        gHttpHandler->ThrottleTransaction(mTransaction, throttleable);
+        gHttpHandler->UpdateClassOfServiceOnTransaction(mTransaction, mClassOfService);
     }
 }
 
@@ -8009,10 +8003,6 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
     while (suspendCount--)
         mTransactionPump->Suspend();
 
-    if (mSuspendCount && mClassOfService & nsIClassOfService::Throttleable) {
-        gHttpHandler->ThrottleTransaction(mTransaction, true);
-    }
-
     return NS_OK;
 }
 
@@ -8719,10 +8709,6 @@ nsHttpChannel::SuspendInternal()
 
     if (mSuspendCount == 1) {
         mSuspendTimestamp = TimeStamp::NowLoRes();
-
-        if (mClassOfService & nsIClassOfService::Throttleable && mTransaction) {
-            gHttpHandler->ThrottleTransaction(mTransaction, true);
-        }
     }
 
     nsresult rvTransaction = NS_OK;
@@ -8747,10 +8733,6 @@ nsHttpChannel::ResumeInternal()
     if (--mSuspendCount == 0) {
         mSuspendTotalTime += (TimeStamp::NowLoRes() - mSuspendTimestamp).
                                ToMilliseconds();
-
-        if (mClassOfService & nsIClassOfService::Throttleable && mTransaction) {
-            gHttpHandler->ThrottleTransaction(mTransaction, false);
-        }
 
         if (mCallOnResume) {
             nsresult rv = AsyncCall(mCallOnResume);

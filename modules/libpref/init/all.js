@@ -2086,11 +2086,15 @@ pref("network.auth.subresource-img-cross-origin-http-auth-allow", true);
 // in that case default credentials will always be used.
 pref("network.auth.private-browsing-sso", false);
 
-// Control how the throttling service works - number of ms that each
+// Control how throttling of http responses works - number of ms that each
 // suspend and resume period lasts (prefs named appropriately)
-pref("network.throttle.suspend-for", 3000);
-pref("network.throttle.resume-for", 200);
-pref("network.throttle.enable", true);
+pref("network.http.throttle.enable", true);
+pref("network.http.throttle.suspend-for", 3000);
+pref("network.http.throttle.resume-for", 200);
+// Delay we resume throttled background responses after the last unthrottled
+// response has finished.  Prevents resuming too soon during an active page load
+// at which sub-resource reqeusts quickly come and go.
+pref("network.http.throttle.resume-background-in", 400);
 
 pref("permissions.default.image",           1); // 1-Accept, 2-Deny, 3-dontAcceptForeign
 
