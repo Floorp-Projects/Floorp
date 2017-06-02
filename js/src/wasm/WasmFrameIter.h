@@ -193,7 +193,7 @@ GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed, FuncOf
 // is such a plausible instance, and otherwise null.
 
 Instance*
-LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp);
+LookupFaultingInstance(const Code& code, void* pc, void* fp);
 
 // If the innermost (active) Activation is a WasmActivation, return it.
 
