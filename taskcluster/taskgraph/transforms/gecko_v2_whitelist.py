@@ -39,6 +39,7 @@ JOB_NAME_WHITELIST = set([
     'linux64-debug',
     'linux64-devedition',
     'linux64-jsdcov-opt',
+    'linux64-noopt-debug',
     'linux64-opt',
     'linux64-pgo',
     'linux64-st-an-debug',
