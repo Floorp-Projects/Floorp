@@ -27,10 +27,10 @@ class SampleIterator
 {
 public:
   explicit SampleIterator(Index* aIndex);
+  ~SampleIterator();
   already_AddRefed<mozilla::MediaRawData> GetNext();
   void Seek(Microseconds aTime);
   Microseconds GetNextKeyframeTime();
-
 private:
   Sample* Get();
 
@@ -38,6 +38,7 @@ private:
 
   void Next();
   RefPtr<Index> mIndex;
+  friend class Index;
   size_t mCurrentMoof;
   size_t mCurrentSample;
 };
@@ -98,6 +99,8 @@ public:
         uint32_t aTrackId,
         bool aIsAudio);
 
+  void UpdateMoofIndex(const mozilla::MediaByteRangeSet& aByteRanges,
+                       bool aCanEvict);
   void UpdateMoofIndex(const mozilla::MediaByteRangeSet& aByteRanges);
   Microseconds GetEndCompositionIfBuffered(
     const mozilla::MediaByteRangeSet& aByteRanges);
@@ -110,11 +113,14 @@ public:
 
 private:
   ~Index();
+  void RegisterIterator(SampleIterator* aIterator);
+  void UnregisterIterator(SampleIterator* aIterator);
 
   Stream* mSource;
   FallibleTArray<Sample> mIndex;
   FallibleTArray<MP4DataOffset> mDataOffset;
   nsAutoPtr<MoofParser> mMoofParser;
+  nsTArray<SampleIterator*> mIterators;
 
   // ConvertByteRangesToTimeRanges cache
   mozilla::MediaByteRangeSet mLastCachedRanges;

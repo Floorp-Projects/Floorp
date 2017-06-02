@@ -83,6 +83,12 @@ SampleIterator::SampleIterator(Index* aIndex)
   , mCurrentMoof(0)
   , mCurrentSample(0)
 {
+  mIndex->RegisterIterator(this);
+}
+
+SampleIterator::~SampleIterator()
+{
+  mIndex->UnregisterIterator(this);
 }
 
 already_AddRefed<MediaRawData> SampleIterator::GetNext()
@@ -387,11 +393,36 @@ Index::~Index() {}
 void
 Index::UpdateMoofIndex(const MediaByteRangeSet& aByteRanges)
 {
+  UpdateMoofIndex(aByteRanges, false);
+}
+
+void
+Index::UpdateMoofIndex(const MediaByteRangeSet& aByteRanges, bool aCanEvict)
+{
   if (!mMoofParser) {
     return;
   }
-
-  mMoofParser->RebuildFragmentedIndex(aByteRanges);
+  size_t moofs = mMoofParser->Moofs().Length();
+  bool canEvict = aCanEvict && moofs > 1;
+  if (canEvict) {
+    // Check that we can trim the mMoofParser. We can only do so if all
+    // iterators have demuxed all possible samples.
+    for (const SampleIterator* iterator : mIterators) {
+      if ((iterator->mCurrentSample == 0 && iterator->mCurrentMoof == moofs) ||
+          iterator->mCurrentMoof == moofs - 1) {
+        continue;
+      }
+      canEvict = false;
+      break;
+    }
+  }
+  mMoofParser->RebuildFragmentedIndex(aByteRanges, &canEvict);
+  if (canEvict) {
+    // The moofparser got trimmed. Adjust all registered iterators.
+    for (SampleIterator* iterator : mIterators) {
+      iterator->mCurrentMoof -= moofs - 1;
+    }
+  }
 }
 
 Microseconds
@@ -559,4 +590,17 @@ Index::GetEvictionOffset(Microseconds aTime)
   }
   return offset;
 }
+
+void
+Index::RegisterIterator(SampleIterator* aIterator)
+{
+  mIterators.AppendElement(aIterator);
+}
+
+void
+Index::UnregisterIterator(SampleIterator* aIterator)
+{
+  mIterators.RemoveElement(aIterator);
+}
+
 }

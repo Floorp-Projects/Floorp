@@ -31,11 +31,26 @@ using namespace mozilla;
 const uint32_t kKeyIdSize = 16;
 
 bool
-MoofParser::RebuildFragmentedIndex(
-  const MediaByteRangeSet& aByteRanges)
+MoofParser::RebuildFragmentedIndex(const MediaByteRangeSet& aByteRanges)
 {
   BoxContext context(mSource, aByteRanges);
   return RebuildFragmentedIndex(context);
+}
+
+bool
+MoofParser::RebuildFragmentedIndex(
+  const MediaByteRangeSet& aByteRanges, bool* aCanEvict)
+{
+  MOZ_ASSERT(aCanEvict);
+  if (*aCanEvict && mMoofs.Length() > 1) {
+    MOZ_ASSERT(mMoofs.Length() == mMediaRanges.Length());
+    mMoofs.RemoveElementsAt(0, mMoofs.Length() - 1);
+    mMediaRanges.RemoveElementsAt(0, mMediaRanges.Length() - 1);
+    *aCanEvict = true;
+  } else {
+    *aCanEvict = false;
+  }
+  return RebuildFragmentedIndex(aByteRanges);
 }
 
 bool
