@@ -98,8 +98,8 @@ check_and_add_gcc_warning('-Wno-error=array-bounds')
 # can't get rid of those PGO warnings
 check_and_add_gcc_warning('-Wno-error=coverage-mismatch', when='MOZ_PGO')
 
-# false positives depending on optimizations
-check_and_add_gcc_warning('-Wno-error=free-nonheap-object')
+# false positives during PGO
+check_and_add_gcc_warning('-Wno-error=free-nonheap-object', when='MOZ_PGO')
 
 # catches format/argument mismatches with printf
 check_and_add_gcc_warning('-Wformat')
