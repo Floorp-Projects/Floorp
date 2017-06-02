@@ -726,30 +726,18 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 /* FxAccount indicator bits. */
+#appMenu-fxa-container:not([fxastatus="signedin"]) {
+  margin-inline-end: 0;
+}
+
 #appMenu-fxa-label,
 #appMenu-fxa-icon {
-  padding: 4px;
-  -moz-appearance: none;
-  box-shadow: none;
-  border-radius: 0;
-  border: 0 none;
-  -moz-box-orient: horizontal;
   -moz-image-region: rect(0, 16px, 16px, 0);
   list-style-image: url(chrome://browser/skin/sync-horizontalbar.png);
 }
 
 #appMenu-fxa-label {
   -moz-box-flex: 1;
-  padding-inline-start: 12px;
-  margin: 0;
-}
-
-#appMenu-fxa-icon {
-  margin: 0 10px;
-}
-
-#appMenu-fxa-icon > .toolbarbutton-text {
-  display: none;
 }
 
 #appMenu-fxa-icon[syncstatus="active"] {
@@ -777,10 +765,6 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   }
 }
 
-#appMenu-fxa-container {
-  -moz-box-orient: horizontal;
-}
-
 /* Handle different UI states. */
 #appMenu-fxa-container[fxastatus="signedin"] > #appMenu-fxa-status > #appMenu-fxa-label > .toolbarbutton-icon,
 #appMenu-fxa-container:not([fxastatus="signedin"]) > toolbarseparator,
@@ -794,23 +778,9 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   padding-inline-start: 28px;
   margin-inline-start: -28px;
 }
-#appMenu-fxa-container[fxastatus="signedin"] > #appMenu-fxa-status {
-  margin-inline-end: 10px;
-}
 
 #appMenu-fxa-container[fxastatus="signedin"] > #appMenu-fxa-status > #appMenu-fxa-avatar {
   margin-inline-start: 12px;
-}
-
-#appMenu-fxa-container[fxastatus="signedin"] > toolbarseparator {
-  -moz-appearance: none;
-  height: 24px;
-  margin: 0;
-  border: 0 none;
-  width: 1px;
-  /* Use background: rather than background-color: to override background-image
-   * styles on OS X */
-  background: var(--arrowpanel-dimmed);
 }
 
 /* Error states */
@@ -1312,10 +1282,11 @@ photonpanelmultiview .subviewbutton > .menu-iconic-left {
   margin-inline-end: 0;
 }
 
-photonpanelmultiview .toolbaritem-combined-buttons:-moz-any(:not([cui-areatype="toolbar"]), [overflowedItem="true"]) {
+photonpanelmultiview .toolbaritem-combined-buttons@inAnyPanel@ {
   -moz-box-align: center;
   -moz-box-orient: horizontal;
   border: 0;
+  border-radius: 0;
   margin-inline-end: 8px;
 }
 
@@ -1334,8 +1305,34 @@ photonpanelmultiview .PanelUI-subView .toolbaritem-combined-buttons > .subviewbu
   padding: 4px;
 }
 
-photonpanelmultiview .PanelUI-subView .toolbaritem-combined-buttons > .subviewbutton > .toolbarbutton-text {
+#appMenu-zoom-controls > .subviewbutton {
+  margin-inline-start: 10px;
+}
+
+.toolbaritem-combined-buttons > toolbarseparator[orient="vertical"] + .subviewbutton,
+#appMenu-zoom-controls > toolbarseparator[orient="vertical"] + .subviewbutton {
+  margin-inline-start: 0;
+}
+
+photonpanelmultiview .PanelUI-subView .toolbaritem-combined-buttons >
+  .subviewbutton-iconic > .toolbarbutton-text,
+photonpanelmultiview .PanelUI-subView .toolbaritem-combined-buttons >
+  .subviewbutton:not(.subviewbutton-iconic) > .toolbarbutton-icon {
   display: none;
+}
+
+/* Using this selector, because this way the hover and active selectors will apply properly. */
+photonpanelmultiview .PanelUI-subView .toolbaritem-combined-buttons >
+  .subviewbutton:not(.subviewbutton-iconic) {
+  background-color: #f9f9f9;
+  border: 1px solid #e1e1e1;
+  border-radius: 10000px;
+  padding: 1px 8px;
+}
+
+photonpanelmultiview .toolbaritem-combined-buttons > .subviewbutton:not(.subviewbutton-iconic) > .toolbarbutton-text {
+  font-size: 1em;
+  padding-inline-start: 0;
 }
 
 photonpanelmultiview .panel-banner-item::after {
@@ -1465,6 +1462,15 @@ menuitem.panel-subview-footer@menuStateActive@,
 .cui-widget-panelview menuseparator.small-separator {
   margin-left: 10px;
   margin-right: 10px;
+}
+
+.PanelUI-subView toolbarseparator[orient="vertical"] {
+  height: 24px;
+  border-inline-start: 1px solid var(--panel-separator-color);
+  border-top: none;
+  margin: 0;
+  margin-inline-start: 4px;
+  margin-inline-end: 5px;
 }
 
 .subviewbutton > .menu-accel-container {

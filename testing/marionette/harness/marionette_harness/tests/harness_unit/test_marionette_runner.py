@@ -282,8 +282,8 @@ def test_add_test_module(runner):
 def test_add_test_directory(runner):
     test_dir = 'path/to/tests'
     dir_contents = [
-        (test_dir, ('subdir',), ('test_a.py', 'test_a.js', 'bad_test_a.py', 'bad_test_a.js')),
-        (test_dir + '/subdir', (), ('test_b.py', 'test_b.js', 'bad_test_b.py', 'bad_test_b.js')),
+        (test_dir, ('subdir',), ('test_a.py', 'bad_test_a.py')),
+        (test_dir + '/subdir', (), ('test_b.py', 'bad_test_b.py')),
     ]
     tests = list(dir_contents[0][2] + dir_contents[1][2])
     assert len(runner.tests) == 0
@@ -294,7 +294,7 @@ def test_add_test_directory(runner):
     assert isdir.called and walk.called
     for test in runner.tests:
         assert test_dir in test['filepath']
-    assert len(runner.tests) == 4
+    assert len(runner.tests) == 2
 
 
 @pytest.mark.parametrize("test_files_exist", [True, False])
@@ -404,10 +404,10 @@ def test_add_tests(mock_runner):
 
 
 def test_catch_invalid_test_names(runner):
-    good_tests = [u'test_ok.py', u'test_is_ok.py', u'test_is_ok.js', u'testIsOk.js']
-    bad_tests = [u'bad_test.py', u'testbad.py', u'_test_bad.py', u'testBad.notjs',
-                 u'test_bad.notpy', u'test_bad', u'testbad.js', u'badtest.js',
-                 u'test.py', u'test_.py', u'test.js', u'test_.js']
+    good_tests = [u'test_ok.py', u'test_is_ok.py']
+    bad_tests = [u'bad_test.py', u'testbad.py', u'_test_bad.py',
+                 u'test_bad.notpy', u'test_bad',
+                 u'test.py', u'test_.py']
     with pytest.raises(Exception) as exc:
         runner._add_tests(good_tests + bad_tests)
     msg = exc.value.message

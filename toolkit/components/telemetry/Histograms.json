@@ -1483,6 +1483,7 @@
     "kind": "exponential",
     "high": 128,
     "n_buckets": 32,
+    "releaseChannelCollection": "opt-out",
     "description": "Number of ghost windows"
   },
   "MEMORY_FREE_PURGED_PAGES_MS": {

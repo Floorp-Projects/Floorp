@@ -62,6 +62,7 @@ function updateZoomUI(aBrowser, aAnimate = false) {
     return;
   }
 
+  let appMenuZoomReset = win.document.getElementById("appMenu-zoomReset-button");
   let customizableZoomControls = win.document.getElementById("zoom-controls");
   let customizableZoomReset = win.document.getElementById("zoom-reset-button");
   let urlbarZoomButton = win.document.getElementById("urlbar-zoom-button");
@@ -75,6 +76,9 @@ function updateZoomUI(aBrowser, aAnimate = false) {
       customizableZoomControls.getAttribute("cui-areatype") == "toolbar"));
 
   let label = win.gNavigatorBundle.getFormattedString("zoom-button.label", [zoomFactor]);
+  if (appMenuZoomReset) {
+    appMenuZoomReset.setAttribute("label", label);
+  }
   if (customizableZoomReset) {
     customizableZoomReset.setAttribute("label", label);
   }
