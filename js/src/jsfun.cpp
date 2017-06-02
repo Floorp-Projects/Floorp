@@ -77,16 +77,16 @@ fun_enumerate(JSContext* cx, HandleObject obj)
 
     if (!obj->isBoundFunction() && !obj->as<JSFunction>().isArrow()) {
         id = NameToId(cx->names().prototype);
-        if (!HasProperty(cx, obj, id, &found))
+        if (!HasOwnProperty(cx, obj, id, &found))
             return false;
     }
 
     id = NameToId(cx->names().length);
-    if (!HasProperty(cx, obj, id, &found))
+    if (!HasOwnProperty(cx, obj, id, &found))
         return false;
 
     id = NameToId(cx->names().name);
-    if (!HasProperty(cx, obj, id, &found))
+    if (!HasOwnProperty(cx, obj, id, &found))
         return false;
 
     return true;

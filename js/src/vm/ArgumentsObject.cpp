@@ -613,20 +613,20 @@ MappedArgumentsObject::obj_enumerate(JSContext* cx, HandleObject obj)
 
     // Trigger reflection.
     id = NameToId(cx->names().length);
-    if (!HasProperty(cx, argsobj, id, &found))
+    if (!HasOwnProperty(cx, argsobj, id, &found))
         return false;
 
     id = NameToId(cx->names().callee);
-    if (!HasProperty(cx, argsobj, id, &found))
+    if (!HasOwnProperty(cx, argsobj, id, &found))
         return false;
 
     id = SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator);
-    if (!HasProperty(cx, argsobj, id, &found))
+    if (!HasOwnProperty(cx, argsobj, id, &found))
         return false;
 
     for (unsigned i = 0; i < argsobj->initialLength(); i++) {
         id = INT_TO_JSID(i);
-        if (!HasProperty(cx, argsobj, id, &found))
+        if (!HasOwnProperty(cx, argsobj, id, &found))
             return false;
     }
 
@@ -803,20 +803,20 @@ UnmappedArgumentsObject::obj_enumerate(JSContext* cx, HandleObject obj)
 
     // Trigger reflection.
     id = NameToId(cx->names().length);
-    if (!HasProperty(cx, argsobj, id, &found))
+    if (!HasOwnProperty(cx, argsobj, id, &found))
         return false;
 
     id = NameToId(cx->names().callee);
-    if (!HasProperty(cx, argsobj, id, &found))
+    if (!HasOwnProperty(cx, argsobj, id, &found))
         return false;
 
     id = SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator);
-    if (!HasProperty(cx, argsobj, id, &found))
+    if (!HasOwnProperty(cx, argsobj, id, &found))
         return false;
 
     for (unsigned i = 0; i < argsobj->initialLength(); i++) {
         id = INT_TO_JSID(i);
-        if (!HasProperty(cx, argsobj, id, &found))
+        if (!HasOwnProperty(cx, argsobj, id, &found))
             return false;
     }
 
