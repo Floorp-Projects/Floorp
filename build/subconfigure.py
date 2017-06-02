@@ -17,25 +17,6 @@ import pickle
 import mozpack.path as mozpath
 
 
-class Pool(object):
-    def __new__(cls, size):
-        try:
-            import multiprocessing
-            size = min(size, multiprocessing.cpu_count())
-            return multiprocessing.Pool(size)
-        except:
-            return super(Pool, cls).__new__(cls)
-
-    def imap_unordered(self, fn, iterable):
-        return itertools.imap(fn, iterable)
-
-    def close(self):
-        pass
-
-    def join(self):
-        pass
-
-
 class File(object):
     def __init__(self, path):
         self._path = path
@@ -404,19 +385,13 @@ def subconfigure(args):
         return 0
 
     ret = 0
-    # One would think using a ThreadPool would be faster, considering
-    # everything happens in subprocesses anyways, but no, it's actually
-    # slower on Windows. (20s difference overall!)
-    pool = Pool(len(subconfigures))
-    for relobjdir, returncode, output in \
-            pool.imap_unordered(run, subconfigures):
+    for subconfigure in subconfigures:
+        relobjdir, returncode, output = run(subconfigure)
         print prefix_lines(output, relobjdir)
         sys.stdout.flush()
         ret = max(returncode, ret)
         if ret:
             break
-    pool.close()
-    pool.join()
     return ret
 
 
