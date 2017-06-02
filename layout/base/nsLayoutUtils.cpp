@@ -2865,10 +2865,10 @@ nsLayoutUtils::TransformRect(nsIFrame* aFromFrame, nsIFrame* aToFrame,
          -std::numeric_limits<Float>::max() * devPixelsPerAppUnitFromFrame * 0.5f,
          std::numeric_limits<Float>::max() * devPixelsPerAppUnitFromFrame,
          std::numeric_limits<Float>::max() * devPixelsPerAppUnitFromFrame));
-  aRect.x = toDevPixels.x / devPixelsPerAppUnitToFrame;
-  aRect.y = toDevPixels.y / devPixelsPerAppUnitToFrame;
-  aRect.width = toDevPixels.width / devPixelsPerAppUnitToFrame;
-  aRect.height = toDevPixels.height / devPixelsPerAppUnitToFrame;
+  aRect.x = NSToCoordRound(toDevPixels.x / devPixelsPerAppUnitToFrame);
+  aRect.y = NSToCoordRound(toDevPixels.y / devPixelsPerAppUnitToFrame);
+  aRect.width = NSToCoordRound(toDevPixels.width / devPixelsPerAppUnitToFrame);
+  aRect.height = NSToCoordRound(toDevPixels.height / devPixelsPerAppUnitToFrame);
   return TRANSFORM_SUCCEEDED;
 }
 
