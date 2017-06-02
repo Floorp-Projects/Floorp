@@ -132,11 +132,6 @@
 #define MALLOC_DOUBLE_PURGE
 #endif
 
-#ifdef MOZ_DEBUG
-   /* Support optional abort() on OOM. */
-#  define MALLOC_XMALLOC
-#endif
-
 #include <sys/types.h>
 
 #include <errno.h>
@@ -1025,9 +1020,6 @@ static bool	opt_print_stats = false;
 static size_t	opt_quantum_2pow = QUANTUM_2POW_MIN;
 static size_t	opt_small_max_2pow = SMALL_MAX_2POW_DEFAULT;
 static size_t	opt_chunk_2pow = CHUNK_2POW_DEFAULT;
-#endif
-#ifdef MALLOC_XMALLOC
-static bool	opt_xmalloc = false;
 #endif
 
 /******************************************************************************/
@@ -4387,9 +4379,6 @@ malloc_print_stats(void)
 		    opt_abort ? "A" : "a", "", "");
 		_malloc_message(opt_junk ? "J" : "j", "", "", "");
 		_malloc_message("P", "", "", "");
-#ifdef MALLOC_XMALLOC
-		_malloc_message(opt_xmalloc ? "X" : "x", "", "", "");
-#endif
 		_malloc_message(opt_zero ? "Z" : "z", "", "", "");
 		_malloc_message("\n", "", "", "");
 
@@ -4652,14 +4641,6 @@ MALLOC_OUT:
 						opt_small_max_2pow++;
 					break;
 #endif
-#ifdef MALLOC_XMALLOC
-				case 'x':
-					opt_xmalloc = false;
-					break;
-				case 'X':
-					opt_xmalloc = true;
-					break;
-#endif
 #ifdef MOZ_DEBUG
 				case 'z':
 					opt_zero = false;
@@ -4836,14 +4817,6 @@ malloc_impl(size_t size)
 
 RETURN:
 	if (ret == NULL) {
-#ifdef MALLOC_XMALLOC
-		if (opt_xmalloc) {
-			_malloc_message(_getprogname(),
-			    ": (malloc) Error in malloc(): out of memory\n", "",
-			    "");
-			moz_abort();
-		}
-#endif
 		errno = ENOMEM;
 	}
 
@@ -4894,13 +4867,6 @@ MEMALIGN(size_t alignment, size_t size)
 	ret = ipalloc(alignment, size);
 
 RETURN:
-#ifdef MALLOC_XMALLOC
-	if (opt_xmalloc && ret == NULL) {
-		_malloc_message(_getprogname(),
-		": (malloc) Error in memalign(): out of memory\n", "", "");
-		moz_abort();
-	}
-#endif
 	return (ret);
 }
 
@@ -4916,14 +4882,6 @@ posix_memalign_impl(void **memptr, size_t alignment, size_t size)
 
 	/* Make sure that alignment is a large enough power of 2. */
 	if (((alignment - 1) & alignment) != 0 || alignment < sizeof(void *)) {
-#ifdef MALLOC_XMALLOC
-		if (opt_xmalloc) {
-			_malloc_message(_getprogname(),
-			    ": (malloc) Error in posix_memalign(): "
-			    "invalid alignment\n", "", "");
-			moz_abort();
-		}
-#endif
 		return (EINVAL);
 	}
 
@@ -4942,14 +4900,6 @@ MOZ_MEMORY_API void *
 aligned_alloc_impl(size_t alignment, size_t size)
 {
 	if (size % alignment) {
-#ifdef MALLOC_XMALLOC
-		if (opt_xmalloc) {
-			_malloc_message(_getprogname(),
-			    ": (malloc) Error in aligned_alloc(): "
-			    "size is not multiple of alignment\n", "", "");
-			moz_abort();
-		}
-#endif
 		return (NULL);
 	}
 	return MEMALIGN(alignment, size);
@@ -4992,14 +4942,6 @@ calloc_impl(size_t num, size_t size)
 
 RETURN:
 	if (ret == NULL) {
-#ifdef MALLOC_XMALLOC
-		if (opt_xmalloc) {
-			_malloc_message(_getprogname(),
-			    ": (malloc) Error in calloc(): out of memory\n", "",
-			    "");
-			moz_abort();
-		}
-#endif
 		errno = ENOMEM;
 	}
 
@@ -5021,14 +4963,6 @@ realloc_impl(void *ptr, size_t size)
 		ret = iralloc(ptr, size);
 
 		if (ret == NULL) {
-#ifdef MALLOC_XMALLOC
-			if (opt_xmalloc) {
-				_malloc_message(_getprogname(),
-				    ": (malloc) Error in realloc(): out of "
-				    "memory\n", "", "");
-				moz_abort();
-			}
-#endif
 			errno = ENOMEM;
 		}
 	} else {
@@ -5038,14 +4972,6 @@ realloc_impl(void *ptr, size_t size)
 			ret = imalloc(size);
 
 		if (ret == NULL) {
-#ifdef MALLOC_XMALLOC
-			if (opt_xmalloc) {
-				_malloc_message(_getprogname(),
-				    ": (malloc) Error in realloc(): out of "
-				    "memory\n", "", "");
-				moz_abort();
-			}
-#endif
 			errno = ENOMEM;
 		}
 	}
@@ -5136,11 +5062,6 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
 	 */
 	stats->opt_abort = opt_abort;
 	stats->opt_junk = opt_junk;
-	stats->opt_xmalloc =
-#ifdef MALLOC_XMALLOC
-	    opt_xmalloc ? true :
-#endif
-	    false;
 	stats->opt_zero = opt_zero;
 	stats->narenas = narenas;
 	stats->quantum = quantum;
