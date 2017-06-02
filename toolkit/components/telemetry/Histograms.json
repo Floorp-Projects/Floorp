@@ -8398,16 +8398,6 @@
     "n_values": 32,
     "description": "Maximum number of owners for each MediaCache block. Recorded at every MediaCache destruction, i.e., whenever there is no more media data to be downloaded or kept for playback."
   },
-  "MEDIACACHESTREAM_LENGTH_KB": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["gsquelart@mozilla.com"],
-    "bug_numbers": [1369538],
-    "expires_in_version": "60",
-    "kind": "linear",
-    "high": 520000,
-    "n_buckets": 66,
-    "description": "MediaCacheStream stream length size in KB; Either known size from the HTTP header if available, or otherwise the size actually downloaded. Recorded at every MediaCacheStream destruction."
-  },
   "VIDEO_MFT_OUTPUT_NULL_SAMPLES": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["cpearce@mozilla.com"],
