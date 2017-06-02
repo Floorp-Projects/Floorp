@@ -160,7 +160,8 @@ nsSMILCompositor::GetCSSPropertyToAnimate() const
     nsCSSProps::LookupProperty(nsDependentAtomString(mKey.mAttributeName),
                                CSSEnabledState::eForAllContent);
 
-  if (!nsSMILCSSProperty::IsPropertyAnimatable(propID)) {
+  if (!nsSMILCSSProperty::IsPropertyAnimatable(propID,
+        mKey.mElement->OwnerDoc()->GetStyleBackendType())) {
     return eCSSProperty_UNKNOWN;
   }
 
