@@ -286,7 +286,6 @@ public:
   mozilla::MediaByteRange mInitRange;
   RefPtr<Stream> mSource;
   uint64_t mOffset;
-  nsTArray<uint64_t> mMoofOffsets;
   Mvhd mMvhd;
   Mdhd mMdhd;
   Trex mTrex;
