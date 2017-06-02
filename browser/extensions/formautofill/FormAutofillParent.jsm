@@ -299,9 +299,13 @@ FormAutofillParent.prototype = {
           }
           changedGUIDs.forEach(guid => this.profileStorage.addresses.notifyUsed(guid));
         });
+        // Address should be updated
+        Services.telemetry.scalarAdd("formautofill.addresses.fill_type_autofill_update", 1);
         return;
       }
       this.profileStorage.addresses.notifyUsed(address.guid);
+      // Address is merged successfully
+      Services.telemetry.scalarAdd("formautofill.addresses.fill_type_autofill", 1);
     } else {
       let changedGUIDs = this.profileStorage.addresses.mergeToStorage(address.record);
       if (!changedGUIDs.length) {
@@ -320,6 +324,9 @@ FormAutofillParent.prototype = {
           target.ownerGlobal.openPreferences("panePrivacy",
                                              {origin: "autofillDoorhanger"});
         });
+      } else {
+        // We want to exclude the first time form filling.
+        Services.telemetry.scalarAdd("formautofill.addresses.fill_type_manual", 1);
       }
     }
   },
