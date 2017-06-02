@@ -609,6 +609,9 @@ WalkStackThread(void* aData)
   BOOL msgRet;
   MSG msg;
 
+  // XXX This is external linkage code.  Therefore, we cannot use WinUtils.
+  //     So, calls ::PeekMessage() and ::GetMessage() directly here.
+
   // Call PeekMessage to force creation of a message queue so that
   // other threads can safely post events to us.
   ::PeekMessage(&msg, nullptr, WM_USER, WM_USER, PM_NOREMOVE);
