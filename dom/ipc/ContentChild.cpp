@@ -1282,6 +1282,14 @@ GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath, nsCString &aAppDir)
     return false;
   }
 
+  // appDir points to .app/Contents/Resources, for our purposes we want
+  // .app/Contents.
+  nsCOMPtr<nsIFile> appDirParent;
+  rv = appDir->GetParent(getter_AddRefs(appDirParent));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
   bool isLink;
   app->IsSymlink(&isLink);
   if (isLink) {
@@ -1295,11 +1303,11 @@ GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath, nsCString &aAppDir)
   } else {
     appBinary->GetNativePath(aAppBinaryPath);
   }
-  appDir->IsSymlink(&isLink);
+  appDirParent->IsSymlink(&isLink);
   if (isLink) {
-    appDir->GetNativeTarget(aAppDir);
+    appDirParent->GetNativeTarget(aAppDir);
   } else {
-    appDir->GetNativePath(aAppDir);
+    appDirParent->GetNativePath(aAppDir);
   }
 
   return true;
