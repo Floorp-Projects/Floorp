@@ -171,6 +171,44 @@ win64-add-on-devel/opt:
              - balrog/production.py
      run-on-projects: [ 'mozilla-beta', 'mozilla-release', 'mozilla-esr45' ]
 
+win64-noopt/debug:
+    description: "Win64 No-optimize Debug"
+    index:
+        product: firefox
+        job-name: win64-noopt-debug
+    treeherder:
+        platform: windows2012-64-noopt/debug
+        symbol: tc(B)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+    run:
+        using: mozharness
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/taskcluster_firefox_win64_noopt_debug.py
+    run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
+
+win32-noopt/debug:
+    description: "Win32 No-optimize Debug"
+    index:
+        product: firefox
+        job-name: win32-noopt-debug
+    treeherder:
+        platform: windows2012-32-noopt/debug
+        symbol: tc(B)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+    run:
+        using: mozharness
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/taskcluster_firefox_win32_noopt_debug.py
+    run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
+
 win64-asan/debug:
     description: "Win64 Debug ASAN"
     index:
