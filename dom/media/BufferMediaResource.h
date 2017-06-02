@@ -68,6 +68,9 @@ private:
     mOffset = aOffset + *aBytes;
     return NS_OK;
   }
+  // Memory-based and no locks, caching discouraged.
+  bool ShouldCacheReads() override { return false; }
+
   int64_t Tell() override { return mOffset; }
 
   void Pin() override {}
