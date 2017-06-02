@@ -8,7 +8,7 @@
 
 const { createClass, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
-const { debugAddon, uninstallAddon } = require("../../modules/addon");
+const { debugAddon, uninstallAddon, isTemporaryID } = require("../../modules/addon");
 const Services = require("Services");
 
 loader.lazyImporter(this, "BrowserToolboxProcess",
@@ -19,6 +19,9 @@ loader.lazyRequireGetter(this, "DebuggerClient",
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
+
+const TEMP_ID_URL = "https://developer.mozilla.org/Add-ons" +
+                    "/WebExtensions/WebExtensions_and_the_Add-on_ID";
 
 function filePathForTarget(target) {
   // Only show file system paths, and only for temporarily installed add-ons.
@@ -64,6 +67,23 @@ function internalIDForTarget(target) {
         ),
       )
     ),
+  ];
+}
+
+function temporaryID(target) {
+  if (!isTemporaryID(target.addonID)) {
+    return [];
+  }
+
+  return [
+    dom.div({ className: "addons-tip" },
+      dom.span({ className: "addons-web-ext-tip" },
+        Strings.GetStringFromName("temporaryID")
+      ),
+      dom.a({ href: TEMP_ID_URL, className: "temporary-id-url", target: "_blank" },
+        Strings.GetStringFromName("temporaryID.learnMore")
+      )
+    )
   ];
 }
 
@@ -119,6 +139,7 @@ module.exports = createClass({
         }),
         dom.span({ className: "target-name", title: target.name }, target.name)
       ),
+      ...temporaryID(target),
       dom.dl(
         { className: "addon-target-info" },
         ...filePathForTarget(target),
