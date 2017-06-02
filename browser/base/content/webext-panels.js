@@ -32,6 +32,7 @@ function getBrowser(sidebar) {
   browser.setAttribute("webextension-view-type", "sidebar");
   browser.setAttribute("context", "contentAreaContextMenu");
   browser.setAttribute("tooltip", "aHTMLTooltip");
+  browser.setAttribute("autocompletepopup", "PopupAutoComplete");
   browser.setAttribute("onclick", "window.parent.contentAreaClick(event, true);");
 
   let readyPromise;

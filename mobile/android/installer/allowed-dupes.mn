@@ -84,9 +84,9 @@ chrome/en-US/locale/en-US/browser/overrides/plugins.properties
 chrome/en-US/locale/en-US/browser/overrides/plugins/pluginproblem.dtd
 chrome/en-US/locale/en-US/browser/overrides/search/search.properties
 chrome/en-US/locale/en-US/global-platform/mac/intl.properties
-chrome/en-US/locale/en-US/global-platform/gtk/accessible.properties
-chrome/en-US/locale/en-US/global-platform/gtk/intl.properties
-chrome/en-US/locale/en-US/global-platform/gtk/platformKeys.properties
+chrome/en-US/locale/en-US/global-platform/unix/accessible.properties
+chrome/en-US/locale/en-US/global-platform/unix/intl.properties
+chrome/en-US/locale/en-US/global-platform/unix/platformKeys.properties
 chrome/en-US/locale/en-US/global-platform/win/accessible.properties
 chrome/en-US/locale/en-US/global-platform/win/intl.properties
 chrome/en-US/locale/en-US/global-platform/win/platformKeys.properties

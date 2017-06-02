@@ -567,6 +567,11 @@ protected:
             << "Did not find " << msidAttr << " in offer";
         }
       }
+      if (types.size() == 1 &&
+          tracks[0]->GetMediaType() == SdpMediaSection::kApplication) {
+        ASSERT_EQ(std::string::npos, offer.find("a=ssrc"))
+          << "Data channel should not contain SSRC";
+      }
     }
   }
 
@@ -631,6 +636,11 @@ protected:
           ASSERT_NE(std::string::npos, answer.find(msidAttr))
             << "Did not find " << msidAttr << " in offer";
         }
+      }
+      if (types.size() == 1 &&
+          pairs[0].mReceiving->GetMediaType() == SdpMediaSection::kApplication) {
+        ASSERT_EQ(std::string::npos, answer.find("a=ssrc"))
+          << "Data channel should not contain SSRC";
       }
     }
     std::cerr << "OFFER pairs:" << std::endl;
