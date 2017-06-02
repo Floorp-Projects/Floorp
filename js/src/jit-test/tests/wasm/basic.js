@@ -131,14 +131,17 @@ wasmEvalText('(module (import $foo "a" "" (result f64)))', {a:{"":()=>{}}});
 
 wasmValidateText('(module (memory 0))');
 wasmValidateText('(module (memory 1))');
-wasmFailValidateText('(module (memory 65536))', /initial memory size too big/);
+wasmValidateText('(module (memory 16384))');
+wasmFailValidateText('(module (memory 16385))', /initial memory size too big/);
+
+wasmEvalText('(module (memory 0 65536))')
+wasmFailValidateText('(module (memory 0 65537))', /maximum memory size too big/);
 
 // May OOM, but must not crash:
 try {
-    wasmEvalText('(module (memory 65535))');
+    wasmEvalText('(module (memory 16384))');
 } catch (e) {
-    assertEq(String(e).indexOf("out of memory") != -1 ||
-             String(e).indexOf("memory size too big") != -1, true);
+    assertEq(String(e).indexOf("out of memory") !== -1, true);
 }
 
 var buf = wasmEvalText('(module (memory 1) (export "memory" memory))').exports.memory.buffer;
