@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 [features/flyweb@mozilla.org] chrome.jar:
-% skin flyweb classic/1.0 %skin/linux/ os=LikeUnix
+% skin flyweb classic/1.0 %skin/linux/
 % skin flyweb classic/1.0 %skin/osx/ os=Darwin
 % skin flyweb classic/1.0 %skin/windows/ os=WINNT
 % skin flyweb-shared classic/1.0 %skin/shared/

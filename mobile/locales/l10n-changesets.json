@@ -39,6 +39,13 @@
         ], 
         "revision": "default"
     }, 
+    "be": {
+        "platforms": [
+            "android", 
+            "android-api-15"
+        ], 
+        "revision": "default"
+    }, 
     "bg": {
         "platforms": [
             "android", 

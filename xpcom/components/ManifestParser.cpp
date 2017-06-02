@@ -319,19 +319,6 @@ CheckStringFlag(const nsSubstring& aFlag, const nsSubstring& aData,
   return true;
 }
 
-static bool
-CheckOsFlag(const nsSubstring& aFlag, const nsSubstring& aData,
-            const nsSubstring& aValue, TriState& aResult)
-{
-  bool result = CheckStringFlag(aFlag, aData, aValue, aResult);
-#if defined(XP_UNIX) && !defined(XP_DARWIN) && !defined(ANDROID)
-  if (result && aResult == eBad) {
-    result = CheckStringFlag(aFlag, aData, NS_LITERAL_STRING("likeunix"), aResult);
-  }
-#endif
-  return result;
-}
-
 /**
  * Check for a modifier flag of the following form:
  *   "flag=version"
@@ -678,7 +665,7 @@ ParseManifest(NSLocationType aType, FileLocation& aFile, char* aBuf,
       NS_ConvertASCIItoUTF16 wtoken(token);
 
       if (CheckStringFlag(kApplication, wtoken, appID, stApp) ||
-          CheckOsFlag(kOs, wtoken, osTarget, stOs) ||
+          CheckStringFlag(kOs, wtoken, osTarget, stOs) ||
           CheckStringFlag(kABI, wtoken, abi, stABI) ||
           CheckStringFlag(kProcess, wtoken, process, stProcess) ||
           CheckVersionFlag(kOsVersion, wtoken, osVersion, stOsVersion) ||
