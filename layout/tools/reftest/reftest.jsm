@@ -1638,7 +1638,8 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
         true:  {s: ["PASS", "PASS"], n: "Random"},
         false: {s: ["FAIL", "FAIL"], n: "Random"}
     };
-    outputs[EXPECTED_FUZZY] = outputs[EXPECTED_PASS];
+    // for EXPECTED_FUZZY we need special handling because we can have
+    // Pass, UnexpectedPass, or UnexpectedFail
 
     var output;
     var extra;
@@ -1740,23 +1741,30 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
             // whether the two renderings match:
             var equal;
             var maxDifference = {};
+            // whether the allowed fuzziness from the annotations is exceeded
+            // by the actual comparison results
+            var fuzz_exceeded = false;
 
             differences = gWindowUtils.compareCanvases(gCanvas1, gCanvas2, maxDifference);
             equal = (differences == 0);
 
+            if (maxDifference.value > 0 && equal) {
+                throw "Inconsistent result from compareCanvases.";
+            }
+
             // what is expected on this platform (PASS, FAIL, or RANDOM)
             var expected = gURLs[0].expected;
 
-            if (maxDifference.value > 0 &&
-                maxDifference.value >= gURLs[0].fuzzyMinDelta &&
-                maxDifference.value <= gURLs[0].fuzzyMaxDelta &&
-                differences >= gURLs[0].fuzzyMinPixels &&
-                differences <= gURLs[0].fuzzyMaxPixels) {
-                if (equal) {
-                    throw "Inconsistent result from compareCanvases.";
-                }
-                equal = expected == EXPECTED_FUZZY;
-                logger.info(`REFTEST fuzzy match (${maxDifference.value}, ${differences}) <= (${gURLs[0].fuzzyMaxDelta}, ${gURLs[0].fuzzyMaxPixels})`);
+            if (expected == EXPECTED_FUZZY) {
+                logger.info(`REFTEST fuzzy test ` +
+                            `(${gURLs[0].fuzzyMinDelta}, ${gURLs[0].fuzzyMinPixels}) <= ` +
+                            `(${maxDifference.value}, ${differences}) <= ` +
+                            `(${gURLs[0].fuzzyMaxDelta}, ${gURLs[0].fuzzyMaxPixels})`);
+                fuzz_exceeded = maxDifference.value > gURLs[0].fuzzyMaxDelta ||
+                                differences > gURLs[0].fuzzyMaxPixels;
+                equal = !fuzz_exceeded &&
+                        maxDifference.value >= gURLs[0].fuzzyMinDelta &&
+                        differences >= gURLs[0].fuzzyMinPixels;
             }
 
             var failedExtraCheck = gFailedNoPaint || gFailedOpaqueLayer || gFailedAssignedLayer;
@@ -1764,7 +1772,27 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
             // whether the comparison result matches what is in the manifest
             var test_passed = (equal == (gURLs[0].type == TYPE_REFTEST_EQUAL)) && !failedExtraCheck;
 
-            output = outputs[expected][test_passed];
+            if (expected != EXPECTED_FUZZY) {
+                output = outputs[expected][test_passed];
+            } else if (test_passed) {
+                output = {s: ["PASS", "PASS"], n: "Pass"};
+            } else if (gURLs[0].type == TYPE_REFTEST_EQUAL &&
+                       !failedExtraCheck &&
+                       !fuzz_exceeded) {
+                // If we get here, that means we had an '==' type test where
+                // at least one of the actual difference values was below the
+                // allowed range, but nothing else was wrong. So let's produce
+                // UNEXPECTED-PASS in this scenario. Also, if we enter this
+                // branch, 'equal' must be false so let's assert that to guard
+                // against logic errors.
+                if (equal) {
+                    throw "Logic error in reftest.jsm fuzzy test handling!";
+                }
+                output = {s: ["PASS", "FAIL"], n: "UnexpectedPass"};
+            } else {
+                // In all other cases we fail the test
+                output = {s: ["FAIL", "PASS"], n: "UnexpectedFail"};
+            }
             extra = { status_msg: output.n };
 
             ++gTestResults[output.n];
