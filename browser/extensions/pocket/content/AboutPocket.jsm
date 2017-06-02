@@ -42,7 +42,7 @@ AboutPage.prototype = {
     channel.originalURI = aURI;
 
     if (this.uriFlags & Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT) {
-      let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(aURI);
+      let principal = Services.scriptSecurityManager.createCodebasePrincipal(aURI, {});
       channel.owner = principal;
     }
     return channel;
