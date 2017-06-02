@@ -55,7 +55,7 @@ public class PostUpdateHandler extends BrowserAppDelegateWithReference {
 
         final String dataDir = browserApp.getApplicationInfo().dataDir;
         final SharedPreferences prefs = GeckoSharedPrefs.forApp(browserApp);
-        final AssetManager assetManager = browserApp.getContext().getAssets();
+        final AssetManager assetManager = browserApp.getAssets();
 
         try {
             final String[] assetNames = assetManager.list("features");
