@@ -588,8 +588,9 @@ KeyframeUtils::ApplySpacing(nsTArray<Keyframe>& aKeyframes,
 KeyframeUtils::ApplyDistributeSpacing(nsTArray<Keyframe>& aKeyframes)
 {
   nsTArray<ComputedKeyframeValues> emptyArray;
+  // FIXME: Bug 1339690: below static_cast should be dropped.
   ApplySpacing(aKeyframes, SpacingMode::distribute, eCSSProperty_UNKNOWN,
-               emptyArray, nullptr);
+               emptyArray, static_cast<nsStyleContext*>(nullptr));
 }
 
 /* static */ nsTArray<ComputedKeyframeValues>
