@@ -8,21 +8,8 @@ import imp
 import os
 
 
-def lint(files, logger, **kwargs):
+def lint(files, config, logger, **kwargs):
     wpt_dir = os.path.join(kwargs["root"], "testing", "web-platform")
     manifestupdate = imp.load_source("manifestupdate",
                                      os.path.join(wpt_dir, "manifestupdate.py"))
     manifestupdate.update(logger, wpt_dir, True)
-
-
-LINTER = {
-    'name': "wpt_manifest",
-    'description': "web-platform-tests manifest lint",
-    'include': [
-        'testing/web-platform/tests',
-        'testing/web-platform/mozilla/tests',
-    ],
-    'exclude': [],
-    'type': 'structured_log',
-    'payload': lint,
-}
