@@ -304,6 +304,11 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
         final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         addStandardLayout(builder, title, msg, callback);
 
+        final ListView list = new ListView(builder.getContext());
+        if (type == CHOICE_TYPE_MULTIPLE) {
+            list.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+        }
+
         final ArrayAdapter<GeckoBundle> adapter = new ArrayAdapter<GeckoBundle>(
                 builder.getContext(), android.R.layout.simple_list_item_1) {
             private static final int TYPE_MENU_ITEM = 0;
@@ -390,22 +395,24 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
                 text.setEnabled(!item.getBoolean("disabled"));
                 text.setText(item.getString("label"));
                 if (view instanceof CheckedTextView) {
-                    ((CheckedTextView) view).setChecked(item.getBoolean("selected"));
+                    final boolean selected = item.getBoolean("selected");
+                    if (itemType == TYPE_MULTIPLE) {
+                        list.setItemChecked(position, selected);
+                    } else {
+                        ((CheckedTextView) view).setChecked(selected);
+                    }
                 }
                 return view;
             }
         };
         addChoiceItems(type, adapter, choices, /* indent */ null);
 
-        final ListView list = new ListView(builder.getContext());
         list.setAdapter(adapter);
-        if (type == CHOICE_TYPE_MULTIPLE) {
-            list.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-        }
         builder.setView(list);
 
-        final AlertDialog dialog = builder.create();
+        final AlertDialog dialog;
         if (type == CHOICE_TYPE_SINGLE || type == CHOICE_TYPE_MENU) {
+            dialog = builder.create();
             list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(final AdapterView<?> parent, final View v,
@@ -449,9 +456,10 @@ final class BasicGeckoViewPrompt implements GeckoView.PromptDelegate {
                             items.add(item.getString("id"));
                         }
                     }
-                    callback.confirm(items.toArray(new GeckoBundle[items.size()]));
+                    callback.confirm(items.toArray(new String[items.size()]));
                 }
             });
+            dialog = builder.create();
         } else {
             throw new UnsupportedOperationException();
         }
