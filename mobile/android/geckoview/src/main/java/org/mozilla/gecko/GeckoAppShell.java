@@ -115,7 +115,7 @@ public class GeckoAppShell
 
         @Override
         protected Context getAppContext() {
-            return sContextGetter != null ? getApplicationContext() : null;
+            return getApplicationContext();
         }
 
         @Override
@@ -147,8 +147,9 @@ public class GeckoAppShell
         public boolean reportException(final Thread thread, final Throwable exc) {
             try {
                 if (exc instanceof OutOfMemoryError) {
-                    SharedPreferences prefs = getSharedPreferences();
-                    SharedPreferences.Editor editor = prefs.edit();
+                    final SharedPreferences prefs =
+                            GeckoSharedPrefs.forApp(getApplicationContext());
+                    final SharedPreferences.Editor editor = prefs.edit();
                     editor.putBoolean(PREFS_OOM_EXCEPTION, true);
 
                     // Synchronously write to disk so we know it's done before we
@@ -1630,17 +1631,6 @@ public class GeckoAppShell
     }
 
     private static Context sApplicationContext;
-    private static ContextGetter sContextGetter;
-
-    @Deprecated
-    @WrapForJNI
-    public static Context getContext() {
-        return sContextGetter.getContext();
-    }
-
-    public static void setContextGetter(ContextGetter cg) {
-        sContextGetter = cg;
-    }
 
     @WrapForJNI
     public static Context getApplicationContext() {
@@ -1649,13 +1639,6 @@ public class GeckoAppShell
 
     public static void setApplicationContext(final Context context) {
         sApplicationContext = context;
-    }
-
-    public static SharedPreferences getSharedPreferences() {
-        if (sContextGetter == null) {
-            throw new IllegalStateException("No ContextGetter; cannot fetch prefs.");
-        }
-        return sContextGetter.getSharedPreferences();
     }
 
     public interface GeckoInterface {
