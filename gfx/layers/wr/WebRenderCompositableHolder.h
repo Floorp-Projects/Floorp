@@ -8,6 +8,7 @@
 
 #include <queue>
 
+#include "mozilla/gfx/Point.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -16,12 +17,15 @@
 namespace mozilla {
 
 namespace wr {
+class DisplayListBuilder;
 class WebRenderAPI;
 }
 
 namespace layers {
 
 class CompositableHost;
+class CompositorVsyncScheduler;
+class WebRenderImageHost;
 class WebRenderTextureHost;
 
 class WebRenderCompositableHolder final
@@ -35,8 +39,12 @@ protected:
   ~WebRenderCompositableHolder();
 
 public:
+  void Destroy(wr::WebRenderAPI* aApi);
+  bool HasKeysToDelete();
+
   void AddPipeline(const wr::PipelineId& aPipelineId);
   void RemovePipeline(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
+
   void HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, WebRenderTextureHost* aTexture);
   void Update(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
 
@@ -60,6 +68,22 @@ public:
     return mCompositeUntilTime;
   }
 
+  void AddAsyncImagePipeline(const wr::PipelineId& aPipelineId, WebRenderImageHost* aImageHost);
+  void RemoveAsyncImagePipeline(wr::WebRenderAPI* aApi, const wr::PipelineId& aPipelineId);
+
+  void UpdateAsyncImagePipeline(const wr::PipelineId& aPipelineId,
+                                const LayerRect& aScBounds,
+                                const gfx::Matrix4x4& aScTransform,
+                                const gfx::MaybeIntSize& aScaleToSize,
+                                const MaybeLayerRect& aClipRect,
+                                const MaybeImageMask& aMask,
+                                const WrImageRendering& aFilter,
+                                const WrMixBlendMode& aMixBlendMode);
+  void ApplyAsyncImages(wr::WebRenderAPI* aApi);
+
+private:
+  void DeleteOldAsyncImages(wr::WebRenderAPI* aApi);
+
   uint32_t GetNextResourceId() { return ++mResourceId; }
   uint32_t GetNamespace() { return mIdNamespace; }
   wr::ImageKey GetImageKey()
@@ -69,8 +93,14 @@ public:
     key.mHandle = GetNextResourceId();
     return key;
   }
-
-private:
+  void GetImageKeys(nsTArray<wr::ImageKey>& aKeys, size_t aChannelNumber);
+  void GetImageKeysForExternalImage(nsTArray<wr::ImageKey>& aKeys);
+  bool GetImageKeyForTextureHost(wr::WebRenderAPI* aApi, TextureHost* aTexture, nsTArray<wr::ImageKey>& aKeys);
+  void PushExternalImage(wr::DisplayListBuilder& aBuilder,
+                         const WrRect& aBounds,
+                         const WrClipRegionToken aClip,
+                         wr::ImageRendering aFilter,
+                         nsTArray<wr::ImageKey>& aKeys);
 
   struct ForwardingTextureHost {
     ForwardingTextureHost(const wr::Epoch& aEpoch, TextureHost* aTexture)
@@ -87,9 +117,26 @@ private:
     Maybe<wr::Epoch> mDestroyedEpoch;
   };
 
+  struct AsyncImagePipelineHolder {
+    LayerRect mScBounds;
+    gfx::Matrix4x4 mScTransform;
+    gfx::MaybeIntSize mScaleToSize;
+    MaybeLayerRect mClipRect;
+    MaybeImageMask mMask;
+    WrImageRendering mFilter;
+    WrMixBlendMode mMixBlendMode;
+    RefPtr<WebRenderImageHost> mImageHost;
+    CompositableTextureHostRef mCurrentTextureHost;
+  };
+
   uint32_t mIdNamespace;
   uint32_t mResourceId;
+
   nsClassHashtable<nsUint64HashKey, PipelineTexturesHolder> mPipelineTexturesHolders;
+  nsClassHashtable<nsUint64HashKey, AsyncImagePipelineHolder> mAsyncImagePipelineHolders;
+  uint32_t mAsyncImageEpoch;
+  nsTArray<wr::ImageKey> mKeysToDelete;
+  bool mDestroyed;
 
   // Render time for the current composition.
   TimeStamp mCompositionTime;

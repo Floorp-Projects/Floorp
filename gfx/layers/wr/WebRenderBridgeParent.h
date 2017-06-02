@@ -106,8 +106,10 @@ public:
                                         const WebRenderScrollData& aScrollData) override;
   mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture) override;
 
-  mozilla::ipc::IPCResult RecvAddExternalImageId(const ExternalImageId& aImageId,
-                                                 const CompositableHandle& aHandle) override;
+  mozilla::ipc::IPCResult RecvAddPipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineIds,
+                                                                const CompositableHandle& aHandle) override;
+  mozilla::ipc::IPCResult RecvRemovePipelineIdForAsyncCompositable(const wr::PipelineId& aPipelineId) override;
+
   mozilla::ipc::IPCResult RecvAddExternalImageIdForCompositable(const ExternalImageId& aImageId,
                                                                 const CompositableHandle& aHandle) override;
   mozilla::ipc::IPCResult RecvRemoveExternalImageId(const ExternalImageId& aImageId) override;
@@ -179,6 +181,8 @@ public:
 
   void FlushRendering(bool aIsSync);
 
+  void ScheduleComposition();
+
 private:
   virtual ~WebRenderBridgeParent();
 
@@ -190,7 +194,6 @@ private:
                                 const WrSize& aContentSize,
                                 const ByteBuffer& dl,
                                 const WrBuiltDisplayListDescriptor& dlDesc);
-  void ScheduleComposition();
   void ClearResources();
   uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }
   bool ShouldParentObserveEpoch();
@@ -238,6 +241,7 @@ private:
   std::vector<wr::ImageKey> mKeysToDelete;
   // XXX How to handle active keys of non-ExternalImages?
   nsDataHashtable<nsUint64HashKey, wr::ImageKey> mActiveKeys;
+  nsDataHashtable<nsUint64HashKey, RefPtr<WebRenderImageHost>> mAsyncCompositables;
   nsDataHashtable<nsUint64HashKey, RefPtr<WebRenderImageHost>> mExternalImageIds;
   nsTArray<ImageCompositeNotificationInfo> mImageCompositeNotifications;
 

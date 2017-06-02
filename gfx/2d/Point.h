@@ -14,6 +14,7 @@
 #include "BasePoint3D.h"
 #include "BasePoint4D.h"
 #include "BaseSize.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TypeTraits.h"
 
 #include <cmath>
@@ -292,6 +293,7 @@ struct IntSizeTyped :
   }
 };
 typedef IntSizeTyped<UnknownUnits> IntSize;
+typedef Maybe<IntSize> MaybeIntSize;
 
 template<class units, class F = Float>
 struct SizeTyped :
