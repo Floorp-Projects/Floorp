@@ -380,7 +380,7 @@ public:
   already_AddRefed<RawServoAnimationValue>
   ComputeAnimationValue(dom::Element* aElement,
                         RawServoDeclarationBlock* aDeclaration,
-                        const ServoComputedValuesWithParent& aComputedValues);
+                        ServoComputedValuesBorrowed aComputedValues);
 
   void AppendTask(PostTraversalTask aTask)
   {

@@ -30,7 +30,6 @@
 #include "mozilla/css/Declaration.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/ServoComputedValuesWithParent.h"
 #include "mozilla/KeyframeUtils.h" // KeyframeUtils::ParseProperty
 #include "mozilla/Likely.h"
 #include "mozilla/ServoBindings.h" // RawServoDeclarationBlock
@@ -5375,22 +5374,13 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
       return result;
     }
 
-    // We use the current ServoComputeValues and its parent ServoComputeValues
-    // to reconstruct the Context and then compute the AnimationValue. However,
-    // nsStyleContext::GetParentAllowServo() is going away, so if possible, we
-    // should find another way to get the parent ServoComputedValues.
-    RefPtr<nsStyleContext> parentContext = styleContext->GetParentAllowServo();
-    const ServoComputedValuesWithParent styles = {
-      styleContext->StyleSource().AsServoComputedValues(),
-      parentContext ? parentContext->StyleSource().AsServoComputedValues()
-                    : nullptr
-    };
-
+    const ServoComputedValues* computedValues =
+      styleContext->StyleSource().AsServoComputedValues();
     result.mServo = presContext->StyleSet()
                                ->AsServo()
                                ->ComputeAnimationValue(aElement,
                                                        declarations,
-                                                       styles);
+                                                       computedValues);
     return result;
   }
 
