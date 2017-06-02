@@ -466,23 +466,12 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
     return nullptr;
   }
 
-  // Get a suitable style context for Servo
-  const ServoComputedValues* currentStyle =
-    aStyleContext->StyleSource().AsServoComputedValues();
-  // Bug 1349004: Remove GetParentAllowServo
-  const ServoComputedValues* parentStyle =
-    aStyleContext->GetParentAllowServo()
-    ? aStyleContext->GetParentAllowServo()->StyleSource()
-      .AsServoComputedValues()
-    : nullptr;
-  const ServoComputedValuesWithParent servoStyles =
-    { currentStyle, parentStyle };
-
-  // Parse property
   nsIDocument* doc = aTargetElement->GetUncomposedDoc();
   if (!doc) {
     return nullptr;
   }
+
+  // Parse property
   // FIXME this is using the wrong base uri (bug 1343919)
   RefPtr<URLExtraData> data = new URLExtraData(doc->GetDocumentURI(),
                                                doc->GetDocumentURI(),
@@ -498,6 +487,18 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
   if (!servoDeclarationBlock) {
     return nullptr;
   }
+
+  // Get a suitable style context for Servo
+  const ServoComputedValues* currentStyle =
+    aStyleContext->StyleSource().AsServoComputedValues();
+  // Bug 1349004: Remove GetParentAllowServo
+  const ServoComputedValues* parentStyle =
+    aStyleContext->GetParentAllowServo()
+    ? aStyleContext->GetParentAllowServo()->StyleSource()
+      .AsServoComputedValues()
+    : nullptr;
+  const ServoComputedValuesWithParent servoStyles =
+    { currentStyle, parentStyle };
 
   // Compute value
   PropertyValuePair propValuePair;
