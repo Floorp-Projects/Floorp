@@ -121,7 +121,7 @@ public:
   // animation effects (e.g. em-based endpoints used in keyframe effects)
   // can be re-resolved to computed values.
   template<typename StyleType>
-  void UpdateEffectProperties(StyleType&& aStyleType,
+  void UpdateEffectProperties(StyleType* aStyleType,
                               dom::Element* aElement,
                               CSSPseudoElementType aPseudoType);
 

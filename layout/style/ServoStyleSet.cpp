@@ -14,7 +14,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/RestyleManagerInlines.h"
-#include "mozilla/ServoComputedValuesWithParent.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRuleProcessor.h"
@@ -1020,8 +1019,8 @@ ServoStyleSet::GetKeyframesForName(const nsString& aName,
 nsTArray<ComputedKeyframeValues>
 ServoStyleSet::GetComputedKeyframeValuesFor(
   const nsTArray<Keyframe>& aKeyframes,
-  dom::Element* aElement,
-  const ServoComputedValuesWithParent& aServoValues)
+  Element* aElement,
+  ServoComputedValuesBorrowed aComputedValues)
 {
   nsTArray<ComputedKeyframeValues> result(aKeyframes.Length());
 
@@ -1029,8 +1028,8 @@ ServoStyleSet::GetComputedKeyframeValuesFor(
   result.AppendElements(aKeyframes.Length());
 
   Servo_GetComputedKeyframeValues(&aKeyframes,
-                                  aServoValues.mCurrentStyle,
-                                  aServoValues.mParentStyle,
+                                  aElement,
+                                  aComputedValues,
                                   mRawSet.get(),
                                   &result);
   return result;
@@ -1048,12 +1047,13 @@ ServoStyleSet::GetBaseComputedValuesForElement(Element* aElement,
 
 already_AddRefed<RawServoAnimationValue>
 ServoStyleSet::ComputeAnimationValue(
+  Element* aElement,
   RawServoDeclarationBlock* aDeclarations,
-  const ServoComputedValuesWithParent& aComputedValues)
+  ServoComputedValuesBorrowed aComputedValues)
 {
-  return Servo_AnimationValue_Compute(aDeclarations,
-                                      aComputedValues.mCurrentStyle,
-                                      aComputedValues.mParentStyle,
+  return Servo_AnimationValue_Compute(aElement,
+                                      aDeclarations,
+                                      aComputedValues,
                                       mRawSet.get()).Consume();
 }
 

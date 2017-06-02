@@ -205,8 +205,8 @@ SERVO_BINDING_FUNC(Servo_ParseEasing, bool,
                    nsTimingFunctionBorrowedMut output)
 SERVO_BINDING_FUNC(Servo_GetComputedKeyframeValues, void,
                    RawGeckoKeyframeListBorrowed keyframes,
+                   RawGeckoElementBorrowed element,
                    ServoComputedValuesBorrowed style,
-                   ServoComputedValuesBorrowedOrNull parent_style,
                    RawServoStyleSetBorrowed set,
                    RawGeckoComputedKeyframeValuesListBorrowedMut result)
 SERVO_BINDING_FUNC(Servo_AnimationValueMap_Push, void,
@@ -255,9 +255,9 @@ SERVO_BINDING_FUNC(Servo_AnimationValue_Uncompute,
                    RawServoAnimationValueBorrowed value)
 SERVO_BINDING_FUNC(Servo_AnimationValue_Compute,
                    RawServoAnimationValueStrong,
+                   RawGeckoElementBorrowed element,
                    RawServoDeclarationBlockBorrowed declarations,
                    ServoComputedValuesBorrowed style,
-                   ServoComputedValuesBorrowedOrNull parent_style,
                    RawServoStyleSetBorrowed raw_data)
 
 // Style attribute

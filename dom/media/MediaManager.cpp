@@ -2230,6 +2230,8 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
     }
   } else if (IsOn(c.mVideo)) {
     videoType = MediaSourceEnum::Camera;
+    Telemetry::Accumulate(Telemetry::WEBRTC_GET_USER_MEDIA_TYPE,
+                          (uint32_t) videoType);
   }
 
   if (c.mAudio.IsMediaTrackConstraints()) {
@@ -2292,7 +2294,9 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
       }
     }
   } else if (IsOn(c.mAudio)) {
-   audioType = MediaSourceEnum::Microphone;
+    audioType = MediaSourceEnum::Microphone;
+    Telemetry::Accumulate(Telemetry::WEBRTC_GET_USER_MEDIA_TYPE,
+                          (uint32_t) audioType);
   }
 
   // Create a window listener if it doesn't already exist.

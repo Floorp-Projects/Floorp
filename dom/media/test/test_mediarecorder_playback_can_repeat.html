@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder Recording creates videos that can playback more than once</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/dom/canvas/test/captureStream_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<div id="content">
+  <canvas id="video-src-canvas"></canvas>
+  <video id="recorded-video" loop></video>
+</div>
+<script class="testbody" type="text/javascript">
+
+function startTest() {
+  let canvas = document.getElementById("video-src-canvas");
+
+  let canvas_size = 100;
+  canvas.width = canvas.height = canvas_size;
+  let helper = new CaptureStreamTestHelper2D(canvas_size, canvas_size);
+  helper.drawColor(canvas, helper.red);
+
+  let stream = canvas.captureStream();
+
+  let numVideoPlayingEvents = 0;
+
+  let blob;
+
+  let mediaRecorder = new MediaRecorder(stream);
+  is(mediaRecorder.stream, stream,
+     "Media recorder stream = canvas stream at the beginning of recording");
+
+  // Not expected events.
+  mediaRecorder.onwarning = () => ok(false, "MediaRecorder: onwarning unexpectedly fired");
+  mediaRecorder.onerror = err => {
+    ok(false, "MediaRecorder: onerror unexpectedly fired. Code " + err.name);
+    SimpleTest.finish();
+  };
+
+  // When recorder is stopped get recorded data.
+  mediaRecorder.ondataavailable = ev => {
+    info("Got 'dataavailable' event");
+    is(blob, undefined, "On dataavailable event blob is undefined");
+    blob = ev.data;
+  };
+
+  mediaRecorder.onstart = () => {
+    info('onstart fired successfully');
+
+    // Feed some more data into the recorder so the output has a non trivial duration.
+    // This avoids the case where we have only 1 frame in the output, which breaks
+    // looping (this is expected as a WebM with 1 video frame has no duration).
+    let counter = 0;
+    let draw = () => {
+      counter++;
+      helper.drawColor(canvas, helper.blue);
+      if(counter > 2) {
+        mediaRecorder.stop();
+        return;
+      }
+      requestAnimationFrame(draw);
+    };
+    requestAnimationFrame(draw);
+  };
+
+  mediaRecorder.onstop = () => {
+    info("Got 'stop' event");
+
+    ok(blob, "Should have gotten a data blob");
+    let video = document.getElementById("recorded-video");
+    video.src = URL.createObjectURL(blob);
+    video.onerror = err => {
+      ok(false, "Should be able to play the recording. Got error. code=" + video.error.code);
+      SimpleTest.finish();
+    };
+
+    video.onplaying = () => {
+      // We get a playing event when the video starts (including loop induced starts)
+      info("Got 'onplaying' event");
+      if(++numVideoPlayingEvents == 2) {
+        // We've looped the video
+        video.pause();
+        SimpleTest.finish();
+      }
+    };
+
+    video.play();
+  };
+
+  mediaRecorder.start();
+}
+
+SimpleTest.waitForExplicitFinish();
+startTest();
+
+</script>
+</pre>
+</body>
+</html>

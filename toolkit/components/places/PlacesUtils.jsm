@@ -1332,17 +1332,7 @@ this.PlacesUtils = {
    */
   getBookmarksForURI:
   function PU_getBookmarksForURI(aURI) {
-    var bmkIds = this.bookmarks.getBookmarkIdsForURI(aURI);
-
-    // filter the ids list
-    return bmkIds.filter(function(aID) {
-      var parentId = this.bookmarks.getFolderIdForItem(aID);
-      var grandparentId = this.bookmarks.getFolderIdForItem(parentId);
-      // item under a tag container
-      if (grandparentId == this.tagsFolderId)
-        return false;
-      return true;
-    }, this);
+    return this.bookmarks.getBookmarkIdsForURI(aURI);
   },
 
   /**
@@ -1355,23 +1345,8 @@ this.PlacesUtils = {
    */
   getMostRecentBookmarkForURI:
   function PU_getMostRecentBookmarkForURI(aURI) {
-    var bmkIds = this.bookmarks.getBookmarkIdsForURI(aURI);
-    for (var i = 0; i < bmkIds.length; i++) {
-      // Find the first folder which isn't a tag container
-      var itemId = bmkIds[i];
-      var parentId = this.bookmarks.getFolderIdForItem(itemId);
-      // Optimization: if this is a direct child of a root we don't need to
-      // check if its grandparent is a tag.
-      if (parentId == this.unfiledBookmarksFolderId ||
-          parentId == this.toolbarFolderId ||
-          parentId == this.bookmarksMenuFolderId)
-        return itemId;
-
-      var grandparentId = this.bookmarks.getFolderIdForItem(parentId);
-      if (grandparentId != this.tagsFolderId)
-        return itemId;
-    }
-    return -1;
+    let bmkIds = this.bookmarks.getBookmarkIdsForURI(aURI);
+    return bmkIds.length ? bmkIds[0] : -1;
   },
 
   /**

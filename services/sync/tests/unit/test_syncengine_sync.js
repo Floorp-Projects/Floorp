@@ -3,6 +3,7 @@
 
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
@@ -1087,8 +1088,8 @@ add_task(async function test_processIncoming_decrypt_failed() {
   collection._wbos.nodecrypt2 = new ServerWBO("nodecrypt2", "Decrypt this!");
 
   // Patch the fake crypto service to throw on the record above.
-  Svc.Crypto._decrypt = Svc.Crypto.decrypt;
-  Svc.Crypto.decrypt = function(ciphertext) {
+  Weave.Crypto._decrypt = Weave.Crypto.decrypt;
+  Weave.Crypto.decrypt = function(ciphertext) {
     if (ciphertext == "Decrypt this!") {
       throw "Derp! Cipher finalized failed. Im ur crypto destroyin ur recordz.";
     }
