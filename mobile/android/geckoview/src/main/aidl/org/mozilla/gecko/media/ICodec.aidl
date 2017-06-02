@@ -23,6 +23,6 @@ interface ICodec {
     Sample dequeueInput(int size);
     oneway void queueInput(in Sample sample);
 
-    oneway void releaseOutput(in Sample sample, in boolean render);
+    void releaseOutput(in Sample sample, in boolean render);
     oneway void setRates(in int newBitRate);
 }
