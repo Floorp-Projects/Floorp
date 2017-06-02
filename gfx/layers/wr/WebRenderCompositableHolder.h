@@ -118,6 +118,10 @@ private:
   };
 
   struct AsyncImagePipelineHolder {
+    AsyncImagePipelineHolder();
+
+    bool mInitialised;
+    bool mIsChanged;
     LayerRect mScBounds;
     gfx::Matrix4x4 mScTransform;
     gfx::MaybeIntSize mScaleToSize;
@@ -126,8 +130,15 @@ private:
     WrImageRendering mFilter;
     WrMixBlendMode mMixBlendMode;
     RefPtr<WebRenderImageHost> mImageHost;
-    CompositableTextureHostRef mCurrentTextureHost;
+    CompositableTextureHostRef mCurrentTexture;
+    nsTArray<wr::ImageKey> mKeys;
   };
+
+  bool UpdateImageKeys(wr::WebRenderAPI* aApi,
+                       bool& aUseExternalImage,
+                       AsyncImagePipelineHolder* aHolder,
+                       nsTArray<wr::ImageKey>& aKeys,
+                       nsTArray<wr::ImageKey>& aKeysToDelete);
 
   uint32_t mIdNamespace;
   uint32_t mResourceId;
