@@ -6,14 +6,6 @@
 var InputWidgetHelper = {
   _uiBusy: false,
 
-  strings: function() {
-    if (!this._strings) {
-      this._strings = Services.strings.createBundle(
-          "chrome://browser/locale/browser.properties");
-    }
-    return this._strings;
-  },
-
   handleEvent: function(aEvent) {
     this.handleClick(aEvent.target);
   },
@@ -33,11 +25,11 @@ var InputWidgetHelper = {
     let type = aElement.getAttribute('type');
     let p = new Prompt({
       window: aElement.ownerGlobal,
-      title: this.strings().GetStringFromName("inputWidgetHelper." + aElement.getAttribute('type')),
+      title: Strings.browser.GetStringFromName("inputWidgetHelper." + aElement.getAttribute('type')),
       buttons: [
-        this.strings().GetStringFromName("inputWidgetHelper.set"),
-        this.strings().GetStringFromName("inputWidgetHelper.clear"),
-        this.strings().GetStringFromName("inputWidgetHelper.cancel")
+        Strings.browser.GetStringFromName("inputWidgetHelper.set"),
+        Strings.browser.GetStringFromName("inputWidgetHelper.clear"),
+        Strings.browser.GetStringFromName("inputWidgetHelper.cancel")
       ],
     }).addDatePicker({
       value: aElement.value,
@@ -71,8 +63,7 @@ var InputWidgetHelper = {
   },
 
   hasInputWidget: function(aElement) {
-    let win = aElement.ownerGlobal;
-    if (!(aElement instanceof win.HTMLInputElement))
+    if (!(aElement instanceof HTMLInputElement))
       return false;
 
     let type = aElement.getAttribute('type');
@@ -85,12 +76,11 @@ var InputWidgetHelper = {
   },
 
   fireOnChange: function(aElement) {
-    let win = aElement.ownerGlobal;
     let evt = aElement.ownerDocument.createEvent("Events");
     evt.initEvent("change", true, true, aElement.defaultView, 0,
                   false, false,
                   false, false, null);
-    win.setTimeout(function() {
+    setTimeout(function() {
       aElement.dispatchEvent(evt);
     }, 0);
   },
