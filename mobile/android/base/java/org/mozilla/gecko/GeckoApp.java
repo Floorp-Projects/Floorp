@@ -128,7 +128,6 @@ import static org.mozilla.gecko.mma.MmaDelegate.LOADS_ARTICLES;
 public abstract class GeckoApp extends GeckoActivity
                                implements AnchoredPopup.OnVisibilityChangeListener,
                                           BundleEventListener,
-                                          ContextGetter,
                                           GeckoMenu.Callback,
                                           GeckoMenu.MenuPresenter,
                                           GeckoView.ContentListener,
@@ -393,12 +392,6 @@ public abstract class GeckoApp extends GeckoActivity
 
     void focusChrome() { }
 
-    @Override
-    public Context getContext() {
-        return this;
-    }
-
-    @Override
     public SharedPreferences getSharedPreferences() {
         return GeckoSharedPrefs.forApp(this);
     }
@@ -1284,13 +1277,6 @@ public abstract class GeckoApp extends GeckoActivity
             Class.forName("android.os.AsyncTask");
         } catch (ClassNotFoundException e) { }
 
-        // GeckoAppShell is tightly coupled to us, rather than
-        // the app context, because various parts of Fennec (e.g.,
-        // GeckoScreenOrientation) use GAS to access the Activity in
-        // the guise of fetching a Context.
-        // When that's fixed, `this` can change to
-        // `(GeckoApplication) getApplication()` here.
-        GeckoAppShell.setContextGetter(this);
         GeckoAppShell.setScreenOrientationDelegate(this);
 
         // Tell Stumbler to register a local broadcast listener to listen for preference intents.

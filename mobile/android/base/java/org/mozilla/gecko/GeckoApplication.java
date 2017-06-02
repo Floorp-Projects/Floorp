@@ -8,7 +8,6 @@ import android.app.Application;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -56,8 +55,7 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.util.UUID;
 
-public class GeckoApplication extends Application
-    implements ContextGetter {
+public class GeckoApplication extends Application {
     private static final String LOG_TAG = "GeckoApplication";
     private static final String MEDIA_DECODING_PROCESS_CRASH = "MEDIA_DECODING_PROCESS_CRASH";
 
@@ -134,16 +132,6 @@ public class GeckoApplication extends Application
               .putExtra("pid", Process.myPid())
               .putExtra(Intent.EXTRA_INTENT, restartIntent);
         context.startService(intent);
-    }
-
-    @Override
-    public Context getContext() {
-        return this;
-    }
-
-    @Override
-    public SharedPreferences getSharedPreferences() {
-        return GeckoSharedPrefs.forApp(this);
     }
 
     /**
