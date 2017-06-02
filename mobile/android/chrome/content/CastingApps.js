@@ -572,7 +572,7 @@ var CastingApps = {
     }
   },
 
-  prompt: function(aCallback, aFilterFunc) {
+  prompt: function(aWindow, aCallback, aFilterFunc) {
     let items = [];
     let filteredServices = [];
     SimpleServiceDiscovery.services.forEach(function(aService) {
@@ -591,6 +591,7 @@ var CastingApps = {
     }
 
     let prompt = new Prompt({
+      window: aWindow,
       title: Strings.browser.GetStringFromName("casting.sendToDevice")
     }).setSingleChoiceItems(items).show(function(data) {
       let selected = data.button;
@@ -620,7 +621,7 @@ var CastingApps = {
       return this.allowableExtension(aVideo.sourceURI, aService.extensions) || this.allowableMimeType(aVideo.type, aService.types);
     }
 
-    this.prompt(aService => {
+    this.prompt(aVideo.element.ownerGlobal, aService => {
       if (!aService)
         return;
 
