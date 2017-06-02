@@ -855,82 +855,97 @@ function makePreview(row) {
          item.HTMLImageElement || item.SVGImageElement ||
          (item.HTMLObjectElement && mimeType && mimeType.startsWith("image/")) ||
          isBG) && isProtocolAllowed) {
+      // We need to wait for the image to finish loading before using width & height
+      newImage.addEventListener("loadend", function() {
+        physWidth = newImage.width || 0;
+        physHeight = newImage.height || 0;
+
+        // "width" and "height" attributes must be set to newImage,
+        // even if there is no "width" or "height attribute in item;
+        // otherwise, the preview image cannot be displayed correctly.
+        // Since the image might have been loaded out-of-process, we expect
+        // the item to tell us its width / height dimensions. Failing that
+        // the item should tell us the natural dimensions of the image. Finally
+        // failing that, we'll assume that the image was never loaded in the
+        // other process (this can be true for favicons, for example), and so
+        // we'll assume that we can use the natural dimensions of the newImage
+        // we just created. If the natural dimensions of newImage are not known
+        // then the image is probably broken.
+        if (!isBG) {
+          newImage.width = ("width" in item && item.width) || newImage.naturalWidth;
+          newImage.height = ("height" in item && item.height) || newImage.naturalHeight;
+        } else {
+          // the Width and Height of an HTML tag should not be used for its background image
+          // (for example, "table" can have "width" or "height" attributes)
+          newImage.width = item.naturalWidth || newImage.naturalWidth;
+          newImage.height = item.naturalHeight || newImage.naturalHeight;
+        }
+
+        if (item.SVGImageElement) {
+          newImage.width = item.SVGImageElementWidth;
+          newImage.height = item.SVGImageElementHeight;
+        }
+
+        width = newImage.width;
+        height = newImage.height;
+
+        document.getElementById("theimagecontainer").collapsed = false
+        document.getElementById("brokenimagecontainer").collapsed = true;
+
+        let imageSize = "";
+        if (url) {
+          if (width != physWidth || height != physHeight) {
+            imageSize = gBundle.getFormattedString("mediaDimensionsScaled",
+                                                   [formatNumber(physWidth),
+                                                    formatNumber(physHeight),
+                                                    formatNumber(width),
+                                                    formatNumber(height)]);
+          } else {
+            imageSize = gBundle.getFormattedString("mediaDimensions",
+                                                   [formatNumber(width),
+                                                    formatNumber(height)]);
+          }
+        }
+        setItemValue("imagedimensiontext", imageSize);
+      }, {once: true});
+
       newImage.setAttribute("src", url);
-      physWidth = newImage.width || 0;
-      physHeight = newImage.height || 0;
-
-      // "width" and "height" attributes must be set to newImage,
-      // even if there is no "width" or "height attribute in item;
-      // otherwise, the preview image cannot be displayed correctly.
-      // Since the image might have been loaded out-of-process, we expect
-      // the item to tell us its width / height dimensions. Failing that
-      // the item should tell us the natural dimensions of the image. Finally
-      // failing that, we'll assume that the image was never loaded in the
-      // other process (this can be true for favicons, for example), and so
-      // we'll assume that we can use the natural dimensions of the newImage
-      // we just created. If the natural dimensions of newImage are not known
-      // then the image is probably broken.
-      if (!isBG) {
-        newImage.width = ("width" in item && item.width) || newImage.naturalWidth;
-        newImage.height = ("height" in item && item.height) || newImage.naturalHeight;
-      } else {
-        // the Width and Height of an HTML tag should not be used for its background image
-        // (for example, "table" can have "width" or "height" attributes)
-        newImage.width = item.naturalWidth || newImage.naturalWidth;
-        newImage.height = item.naturalHeight || newImage.naturalHeight;
-      }
-
-      if (item.SVGImageElement) {
-        newImage.width = item.SVGImageElementWidth;
-        newImage.height = item.SVGImageElementHeight;
-      }
-
-      width = newImage.width;
-      height = newImage.height;
-
-      document.getElementById("theimagecontainer").collapsed = false
-      document.getElementById("brokenimagecontainer").collapsed = true;
-    } else if (item.HTMLVideoElement && isProtocolAllowed) {
-      newImage = document.createElementNS("http://www.w3.org/1999/xhtml", "video");
-      newImage.id = "thepreviewimage";
-      newImage.src = url;
-      newImage.controls = true;
-      width = physWidth = item.videoWidth;
-      height = physHeight = item.videoHeight;
-
-      document.getElementById("theimagecontainer").collapsed = false;
-      document.getElementById("brokenimagecontainer").collapsed = true;
-    } else if (item.HTMLAudioElement && isProtocolAllowed) {
-      newImage = new Audio;
-      newImage.id = "thepreviewimage";
-      newImage.src = url;
-      newImage.controls = true;
-      isAudio = true;
-
-      document.getElementById("theimagecontainer").collapsed = false;
-      document.getElementById("brokenimagecontainer").collapsed = true;
     } else {
-      // fallback image for protocols not allowed (e.g., javascript:)
-      // or elements not [yet] handled (e.g., object, embed).
-      document.getElementById("brokenimagecontainer").collapsed = false;
-      document.getElementById("theimagecontainer").collapsed = true;
-    }
+      // Handle the case where newImage is not used for width & height
+      if (item.HTMLVideoElement && isProtocolAllowed) {
+        newImage = document.createElementNS("http://www.w3.org/1999/xhtml", "video");
+        newImage.id = "thepreviewimage";
+        newImage.src = url;
+        newImage.controls = true;
+        width = physWidth = item.videoWidth;
+        height = physHeight = item.videoHeight;
 
-    let imageSize = "";
-    if (url && !isAudio) {
-      if (width != physWidth || height != physHeight) {
-        imageSize = gBundle.getFormattedString("mediaDimensionsScaled",
-                                               [formatNumber(physWidth),
-                                                formatNumber(physHeight),
-                                                formatNumber(width),
-                                                formatNumber(height)]);
+        document.getElementById("theimagecontainer").collapsed = false;
+        document.getElementById("brokenimagecontainer").collapsed = true;
+      } else if (item.HTMLAudioElement && isProtocolAllowed) {
+        newImage = new Audio;
+        newImage.id = "thepreviewimage";
+        newImage.src = url;
+        newImage.controls = true;
+        isAudio = true;
+
+        document.getElementById("theimagecontainer").collapsed = false;
+        document.getElementById("brokenimagecontainer").collapsed = true;
       } else {
+        // fallback image for protocols not allowed (e.g., javascript:)
+        // or elements not [yet] handled (e.g., object, embed).
+        document.getElementById("brokenimagecontainer").collapsed = false;
+        document.getElementById("theimagecontainer").collapsed = true;
+      }
+
+      let imageSize = "";
+      if (url && !isAudio) {
         imageSize = gBundle.getFormattedString("mediaDimensions",
                                                [formatNumber(width),
                                                 formatNumber(height)]);
       }
+      setItemValue("imagedimensiontext", imageSize);
     }
-    setItemValue("imagedimensiontext", imageSize);
 
     makeBlockImage(url);
 
