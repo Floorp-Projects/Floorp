@@ -17,8 +17,8 @@ ADD topsrcdir/taskcluster/docker/recipes/install-node.sh /build/install-node.sh
 # %include taskcluster/docker/recipes/install-mercurial.sh
 ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /build/install-mercurial.sh
 ADD system-setup.sh /tmp/system-setup.sh
-# %include tools/lint/flake8/flake8_requirements.txt
-ADD topsrcdir/tools/lint/flake8/flake8_requirements.txt /tmp/flake8_requirements.txt
+# %include tools/lint/flake8_/flake8_requirements.txt
+ADD topsrcdir/tools/lint/flake8_/flake8_requirements.txt /tmp/flake8_requirements.txt
 # %include tools/lint/tox/tox_requirements.txt
 ADD topsrcdir/tools/lint/tox/tox_requirements.txt /tmp/tox_requirements.txt
 RUN bash /tmp/system-setup.sh
