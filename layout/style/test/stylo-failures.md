@@ -80,7 +80,7 @@ to mochitest command.
 * Unsupported values
   * SVG-in-OpenType values not supported servo/servo#15211 bug 1355412
     * test_value_storage.html `context-` [7]
-    * test_bug798843_pref.html [7]
+    * test_bug798843_pref.html [5]
 * Incorrect parsing
   * different parsing bug 1364260
     * test_supports_rules.html [6]

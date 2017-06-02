@@ -7,6 +7,7 @@
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
+Components.utils.import("resource://gre/modules/Messaging.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 this.EXPORTED_SYMBOLS = ["Prompt"];
@@ -15,14 +16,24 @@ function log(msg) {
   Services.console.logStringMessage(msg);
 }
 
+function getRootWindow(win) {
+  // Get the root xul window.
+  return win.QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIDocShell).QueryInterface(Ci.nsIDocShellTreeItem)
+            .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIDOMWindow);
+}
+
 function Prompt(aOptions) {
   this.window = "window" in aOptions ? aOptions.window : null;
 
   this.msg = { async: true };
 
   if (this.window) {
-    let window = Services.wm.getMostRecentWindow("navigator:browser");
-    var tab = window.BrowserApp.getTabForWindow(this.window);
+    let window = getRootWindow(this.window);
+    var tab = window &&
+              window.BrowserApp &&
+              window.BrowserApp.getTabForWindow(this.window);
     if (tab) {
       this.msg.tabId = tab.id;
     }
@@ -174,11 +185,24 @@ Prompt.prototype = {
     this._innerShow();
   },
 
+  _getDispatcher: function(win) {
+    let root = win && getRootWindow(win);
+    try {
+      return root && (root.WindowEventDispatcher || EventDispatcher.for(root));
+    } catch (e) {
+      // No EventDispatcher for this window.
+      return null;
+    }
+  },
+
   _innerShow: function() {
-    let window = Services.wm.getMostRecentWindow("navigator:browser");
-    window.WindowEventDispatcher.sendRequestForResult(this.msg).then((data) => {
-      if (this.callback)
+    let dispatcher =
+        this._getDispatcher(this.window) ||
+        this._getDispatcher(Services.wm.getMostRecentWindow("navigator:browser"));
+    dispatcher.sendRequestForResult(this.msg).then((data) => {
+      if (this.callback) {
         this.callback(data);
+      }
     });
   },
 
