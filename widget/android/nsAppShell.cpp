@@ -242,7 +242,7 @@ public:
 
     static int64_t RunUiThreadCallback()
     {
-        return AndroidUiThread::RunDelayedTasksIfValid();
+        return RunAndroidUiTasks();
     }
 };
 
