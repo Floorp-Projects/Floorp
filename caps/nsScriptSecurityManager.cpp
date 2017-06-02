@@ -1165,21 +1165,6 @@ nsScriptSecurityManager::CreateNullPrincipal(JS::Handle<JS::Value> aOriginAttrib
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::GetAppCodebasePrincipal(nsIURI* aURI,
-                                                 uint32_t aAppId,
-                                                 bool aInIsolatedMozBrowser,
-                                                 nsIPrincipal** aPrincipal)
-{
-  NS_ENSURE_TRUE(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
-                 NS_ERROR_INVALID_ARG);
-
-  OriginAttributes attrs(aAppId, aInIsolatedMozBrowser);
-  nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
-  prin.forget(aPrincipal);
-  return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsScriptSecurityManager::
   GetLoadContextCodebasePrincipal(nsIURI* aURI,
                                   nsILoadContext* aLoadContext,
