@@ -3,7 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import "resource://devtools/client/shared/components/reps/reps.css";
+@import "resource://devtools/client/themes/variables.css";
+@import "resource://devtools/client/themes/common.css";
+@import "resource://devtools/client/themes/toolbars.css";
+
 @import "resource://devtools/client/shared/components/tree/tree-view.css";
 @import "resource://devtools/client/shared/components/tabs/tabs.css";
 
@@ -53,4 +56,3 @@
 .theme-firebug .tabs .tabs-navigation {
   font-size: 14px;
 }
-
