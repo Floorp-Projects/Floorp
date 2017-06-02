@@ -68,6 +68,8 @@ namespace mozilla {
 LazyLogModule gDataChannelLog("DataChannel");
 static LazyLogModule gSCTPLog("SCTP");
 
+#define SCTP_LOG(args) MOZ_LOG(mozilla::gSCTPLog, mozilla::LogLevel::Debug, args)
+
 class DataChannelShutdown : public nsIObserver
 {
 public:
@@ -200,7 +202,7 @@ debug_printf(const char *format, ...)
 #else
     if (VsprintfLiteral(buffer, format, ap) > 0) {
 #endif
-      PR_LogPrint("%s", buffer);
+      SCTP_LOG(("%s", buffer));
     }
     va_end(ap);
   }
@@ -641,7 +643,7 @@ DataChannelConnection::SctpDtlsInput(TransportFlow *flow,
     char *buf;
 
     if ((buf = usrsctp_dumppacket((void *)data, len, SCTP_DUMP_INBOUND)) != nullptr) {
-      PR_LogPrint("%s", buf);
+      SCTP_LOG(("%s", buf));
       usrsctp_freedumpbuffer(buf);
     }
   }
@@ -671,7 +673,7 @@ DataChannelConnection::SctpDtlsOutput(void *addr, void *buffer, size_t length,
     char *buf;
 
     if ((buf = usrsctp_dumppacket(buffer, length, SCTP_DUMP_OUTBOUND)) != nullptr) {
-      PR_LogPrint("%s", buf);
+      SCTP_LOG(("%s", buf));
       usrsctp_freedumpbuffer(buf);
     }
   }
