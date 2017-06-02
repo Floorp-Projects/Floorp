@@ -87,6 +87,6 @@ fuzzy(125,5808) == border-image-element.html border-image-element-ref.html
 == svg-as-border-image-1a.html svg-as-border-image-1-ref.html
 == svg-as-border-image-1b.html svg-as-border-image-1-ref.html
 == svg-as-border-image-1c.html svg-as-border-image-1-ref.html
-== svg-as-border-image-2.html svg-as-border-image-2-ref.html
+fails-if(webrender) == svg-as-border-image-2.html svg-as-border-image-2-ref.html # see bug 1151016. The svg viewport size may be wrong
 == svg-as-border-image-3.html svg-as-border-image-3-ref.html
 == svg-as-border-image-4.html svg-as-border-image-4-ref.html

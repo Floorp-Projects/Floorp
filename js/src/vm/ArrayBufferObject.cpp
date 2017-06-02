@@ -710,6 +710,7 @@ ArrayBufferObject::createForWasm(JSContext* cx, uint32_t initialSize,
 {
     MOZ_ASSERT(initialSize % wasm::PageSize == 0);
     MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
+    MOZ_RELEASE_ASSERT((initialSize / wasm::PageSize) <= wasm::MaxMemoryInitialPages);
 
     // Prevent applications specifying a large max (like UINT32_MAX) from
     // unintentially OOMing the browser on 32-bit: they just want "a lot of
