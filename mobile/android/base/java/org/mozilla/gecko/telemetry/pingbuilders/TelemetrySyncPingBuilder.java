@@ -131,7 +131,7 @@ public class TelemetrySyncPingBuilder extends TelemetryLocalPingBuilder {
     }
 
     public TelemetrySyncPingBuilder setError(@NonNull Serializable error) {
-        payload.put("failureReason", (ExtendedJSONObject) error);
+        payload.put("failureReason", castErrorObject(error));
         return this;
     }
 
@@ -158,5 +158,9 @@ public class TelemetrySyncPingBuilder extends TelemetryLocalPingBuilder {
     @SuppressWarnings("unchecked")
     private static HashMap<String, TelemetryStageCollector> castSyncData(final Serializable data) {
         return (HashMap<String, TelemetryStageCollector>) data;
+    }
+
+    private static ExtendedJSONObject castErrorObject(final Serializable error) {
+        return (ExtendedJSONObject) error;
     }
 }
