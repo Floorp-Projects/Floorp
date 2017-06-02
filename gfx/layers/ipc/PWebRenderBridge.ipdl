@@ -21,8 +21,8 @@ using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::FontKey from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
 using WrBuiltDisplayListDescriptor from "mozilla/webrender/webrender_ffi.h";
-using WrSize from "mozilla/webrender/webrender_ffi.h";
 using mozilla::layers::WebRenderScrollData from "mozilla/layers/WebRenderScrollData.h";
 
 namespace mozilla {
@@ -60,7 +60,8 @@ parent:
                  WrSize aContentSize, ByteBuffer aDL, WrBuiltDisplayListDescriptor aDLDesc,
                  WebRenderScrollData aScrollData);
   sync DPGetSnapshot(PTexture texture);
-  async AddExternalImageId(ExternalImageId aImageId, CompositableHandle aHandle);
+  async AddPipelineIdForAsyncCompositable(PipelineId aImageId, CompositableHandle aHandle);
+  async RemovePipelineIdForAsyncCompositable(PipelineId aPipelineId);
   async AddExternalImageIdForCompositable(ExternalImageId aImageId, CompositableHandle aHandle);
   async RemoveExternalImageId(ExternalImageId aImageId);
   async SetLayerObserverEpoch(uint64_t layerObserverEpoch);

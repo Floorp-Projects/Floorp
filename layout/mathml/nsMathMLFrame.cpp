@@ -276,18 +276,6 @@ nsMathMLFrame::ParseNumericValue(const nsString&   aString,
                              aFontSizeInflation);
 }
 
-// ================
-// Utils to map attributes into CSS rules (work-around to bug 69409 which
-// is not scheduled to be fixed anytime soon)
-//
-
-struct
-nsCSSMapping {
-  int32_t        compatibility;
-  const nsIAtom* attrAtom;
-  const char*    cssProperty;
-};
-
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
 class nsDisplayMathMLBoundingMetrics : public nsDisplayItem {
 public:
