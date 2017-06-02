@@ -239,7 +239,7 @@ GeckoProfiler::exit(JSScript* script, JSFunction* maybeFun)
                             uint32_t(pseudoStack_->stackPointer),
                             PseudoStack::MaxEntries);
             for (int32_t i = sp; i >= 0; i--) {
-                volatile ProfileEntry& entry = pseudoStack_->entries[i];
+                ProfileEntry& entry = pseudoStack_->entries[i];
                 if (entry.isJs())
                     fprintf(stderr, "  [%d] JS %s\n", i, entry.dynamicString());
                 else
@@ -247,7 +247,7 @@ GeckoProfiler::exit(JSScript* script, JSFunction* maybeFun)
             }
         }
 
-        volatile ProfileEntry& entry = pseudoStack_->entries[sp];
+        ProfileEntry& entry = pseudoStack_->entries[sp];
         MOZ_ASSERT(entry.isJs());
         MOZ_ASSERT(entry.script() == script);
         MOZ_ASSERT(strcmp((const char*) entry.dynamicString(), dynamicString) == 0);
@@ -310,7 +310,7 @@ GeckoProfiler::allocProfileString(JSScript* script, JSFunction* maybeFun)
 }
 
 void
-GeckoProfiler::trace(JSTracer* trc) volatile
+GeckoProfiler::trace(JSTracer* trc)
 {
     if (pseudoStack_) {
         size_t size = pseudoStack_->stackSize();
@@ -353,7 +353,7 @@ GeckoProfiler::checkStringsMapAfterMovingGC()
 #endif
 
 void
-ProfileEntry::trace(JSTracer* trc) volatile
+ProfileEntry::trace(JSTracer* trc)
 {
     if (isJs()) {
         JSScript* s = rawScript();
@@ -440,7 +440,7 @@ GeckoProfilerBaselineOSRMarker::GeckoProfilerBaselineOSRMarker(JSRuntime* rt, bo
     if (sp == 0)
         return;
 
-    volatile ProfileEntry& entry = profiler->pseudoStack_->entries[sp - 1];
+    ProfileEntry& entry = profiler->pseudoStack_->entries[sp - 1];
     MOZ_ASSERT(entry.kind() == ProfileEntry::Kind::JS_NORMAL);
     entry.setKind(ProfileEntry::Kind::JS_OSR);
 }
@@ -455,13 +455,13 @@ GeckoProfilerBaselineOSRMarker::~GeckoProfilerBaselineOSRMarker()
     if (sp == 0)
         return;
 
-    volatile ProfileEntry& entry = profiler->stack()[sp - 1];
+    ProfileEntry& entry = profiler->stack()[sp - 1];
     MOZ_ASSERT(entry.kind() == ProfileEntry::Kind::JS_OSR);
     entry.setKind(ProfileEntry::Kind::JS_NORMAL);
 }
 
 JS_PUBLIC_API(JSScript*)
-ProfileEntry::script() const volatile
+ProfileEntry::script() const
 {
     MOZ_ASSERT(isJs());
     auto script = reinterpret_cast<JSScript*>(spOrScript);
@@ -484,7 +484,7 @@ ProfileEntry::script() const volatile
 }
 
 JS_FRIEND_API(jsbytecode*)
-ProfileEntry::pc() const volatile
+ProfileEntry::pc() const
 {
     MOZ_ASSERT(isJs());
     if (lineOrPcOffset == NullPCOffset)
@@ -500,7 +500,7 @@ ProfileEntry::pcToOffset(JSScript* aScript, jsbytecode* aPc) {
 }
 
 void
-ProfileEntry::setPC(jsbytecode* pc) volatile
+ProfileEntry::setPC(jsbytecode* pc)
 {
     MOZ_ASSERT(isJs());
     JSScript* script = this->script();
