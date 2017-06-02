@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for permissions</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function test_downloads_open_permission() {
+  function backgroundScript() {
+    browser.test.assertEq(browser.downloads.open, undefined,
+                             "`downloads.open` permission is required.");
+    browser.test.notifyPass("downloads tests");
+  }
+
+  let extensionData = {
+    background: backgroundScript,
+    manifest: {
+      permissions: ["downloads"],
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  await extension.awaitFinish("downloads tests");
+  await extension.unload();
+});
+
+add_task(async function test_downloads_open_requires_user_interaction() {
+  async function backgroundScript() {
+    await browser.test.assertRejects(
+      browser.downloads.open(10),
+      "May only open downloads from a user input handler",
+      "The error is informative.");
+
+    browser.test.notifyPass("downloads tests");
+  }
+
+  let extensionData = {
+    background: backgroundScript,
+    manifest: {
+      permissions: ["downloads", "downloads.open"],
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  await extension.awaitFinish("downloads tests");
+  await extension.unload();
+});
+
+add_task(async function downloads_open_invalid_id() {
+  async function pageScript() {
+    window.addEventListener("keypress", () => {
+      try {
+        browser.downloads.open(10);
+        browser.test.sendMessage("download-open.result", { success: true });
+      } catch (e) {
+        browser.test.sendMessage("download-open.result", {
+          success: false,
+          error: e.message,
+        });
+      }
+    });
+
+    browser.test.sendMessage("page-ready");
+  }
+
+  let extensionData = {
+    background() {
+      browser.test.sendMessage("ready", browser.runtime.getURL("page.html"));
+    },
+    files: {
+      "foo.txt": "It's the file called foo.txt.",
+      "page.html": `<html><head>
+        <script src="page.js"><\/script>
+      </head></html>`,
+      "page.js": pageScript,
+    },
+    manifest: {
+      permissions: ["downloads", "downloads.open"],
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+
+  let url = await extension.awaitMessage("ready");
+  let win = window.open(url);
+  await extension.awaitMessage("page-ready");
+
+  let winutils = SpecialPowers.getDOMWindowUtils(win);
+  winutils.sendKeyEvent("keypress", KeyEvent.DOM_VK_A, 0, 0);
+  let result = await extension.awaitMessage("download-open.result");
+
+  is(result.success, false, "Opening download fails.");
+  is(result.error, "Invalid download id 10", "The error is informative.");
+
+
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>
