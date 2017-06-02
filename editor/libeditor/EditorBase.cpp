@@ -1070,12 +1070,12 @@ EditorBase::BeginningOfDocument()
   nsCOMPtr<nsINode> firstNode = GetFirstEditableNode(rootElement);
   if (!firstNode) {
     // just the root node, set selection to inside the root
-    return selection->CollapseNative(rootElement, 0);
+    return selection->Collapse(rootElement, 0);
   }
 
   if (firstNode->NodeType() == nsIDOMNode::TEXT_NODE) {
     // If firstNode is text, set selection to beginning of the text node.
-    return selection->CollapseNative(firstNode, 0);
+    return selection->Collapse(firstNode, 0);
   }
 
   // Otherwise, it's a leaf node and we set the selection just in front of it.
@@ -1085,7 +1085,7 @@ EditorBase::BeginningOfDocument()
   }
 
   int32_t offsetInParent = parent->IndexOf(firstNode);
-  return selection->CollapseNative(parent, offsetInParent);
+  return selection->Collapse(parent, offsetInParent);
 }
 
 NS_IMETHODIMP
@@ -1108,7 +1108,7 @@ EditorBase::EndOfDocument()
   }
 
   uint32_t length = node->Length();
-  return selection->CollapseNative(node, int32_t(length));
+  return selection->Collapse(node, int32_t(length));
 }
 
 NS_IMETHODIMP
