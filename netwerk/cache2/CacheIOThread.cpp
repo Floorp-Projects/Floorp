@@ -542,7 +542,7 @@ void CacheIOThread::LoopOneLevel(uint32_t aLevel)
   mCurrentlyExecutingLevel = aLevel;
 
   bool returnEvents = false;
-  bool reportTelementry = true;
+  bool reportTelemetry = true;
 
   EventQueue::size_type index;
   {
@@ -556,8 +556,8 @@ void CacheIOThread::LoopOneLevel(uint32_t aLevel)
         break;
       }
 
-      if (reportTelementry) {
-        reportTelementry = false;
+      if (reportTelemetry) {
+        reportTelemetry = false;
         CacheIOTelemetry::Report(aLevel, length);
       }
 
