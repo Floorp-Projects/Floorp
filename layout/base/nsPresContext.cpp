@@ -2074,12 +2074,15 @@ nsPresContext::MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
     aRestyleHint |= eRestyle_Subtree;
   }
 
-  if (mUsesViewportUnits && mPendingViewportChange) {
+  if (mPendingViewportChange &&
+      (mUsesViewportUnits || mDocument->IsStyledByServo())) {
     // Rebuild all style data without rerunning selector matching.
     //
-    // TODO(emilio, bug 1328652): We don't set mUsesViewportUnits in stylo yet.
-    // This is wallpapered given we assume medium feature changes
-    // unconditionally, but we need to fix this.
+    // FIXME(emilio, bug 1328652): We don't set mUsesViewportUnits in stylo yet,
+    // so assume the worst.
+    //
+    // Also, in this case we don't need to do a rebuild of the style data, only
+    // post a restyle.
     aRestyleHint |= eRestyle_ForceDescendants;
   }
 
