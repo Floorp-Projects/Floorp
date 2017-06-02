@@ -378,7 +378,8 @@ public:
                          RawServoDeclarationBlockBorrowed aDeclarations);
 
   already_AddRefed<RawServoAnimationValue>
-  ComputeAnimationValue(RawServoDeclarationBlock* aDeclaration,
+  ComputeAnimationValue(dom::Element* aElement,
+                        RawServoDeclarationBlock* aDeclaration,
                         const ServoComputedValuesWithParent& aComputedValues);
 
   void AppendTask(PostTraversalTask aTask)

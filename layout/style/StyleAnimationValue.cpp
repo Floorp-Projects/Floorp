@@ -5388,7 +5388,9 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
 
     result.mServo = presContext->StyleSet()
                                ->AsServo()
-                               ->ComputeAnimationValue(declarations, styles);
+                               ->ComputeAnimationValue(aElement,
+                                                       declarations,
+                                                       styles);
     return result;
   }
 
