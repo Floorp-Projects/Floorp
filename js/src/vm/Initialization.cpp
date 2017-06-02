@@ -190,6 +190,10 @@ JS_ShutDown(void)
     u_cleanup();
 #endif // EXPOSE_INTL_API
 
+#ifdef MOZ_VTUNE
+    js::vtune::Shutdown();
+#endif // MOZ_VTUNE
+
     js::FinishDateTimeState();
 
     if (!JSRuntime::hasLiveRuntimes()) {
