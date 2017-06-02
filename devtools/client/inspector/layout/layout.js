@@ -51,6 +51,7 @@ LayoutView.prototype = {
       onShowGridCellHighlight,
       onShowGridLineNamesHighlight,
       onToggleGridHighlighter,
+      onToggleShowGridAreas,
       onToggleShowGridLineNumbers,
       onToggleShowInfiniteLines,
     } = this.inspector.gridInspector.getComponentProps();
@@ -80,6 +81,7 @@ LayoutView.prototype = {
       onShowGridLineNamesHighlight,
       onToggleGeometryEditor,
       onToggleGridHighlighter,
+      onToggleShowGridAreas,
       onToggleShowGridLineNumbers,
       onToggleShowInfiniteLines,
     });

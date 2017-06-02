@@ -115,6 +115,11 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
     , mMaxConns(0)
     , mMaxPersistConnsPerHost(0)
     , mMaxPersistConnsPerProxy(0)
+    , mMaxRequestDelay(0)
+    , mThrottleEnabled(false)
+    , mThrottleSuspendFor(0)
+    , mThrottleResumeFor(0)
+    , mThrottleResumeIn(0)
     , mIsShuttingDown(false)
     , mNumActiveConns(0)
     , mNumIdleConns(0)
@@ -125,6 +130,9 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
     , mTimeoutTickArmed(false)
     , mTimeoutTickNext(1)
     , mCurrentTopLevelOuterContentWindowId(0)
+    , mThrottlingInhibitsReading(false)
+    , mActiveTabTransactionsExist(false)
+    , mActiveTabUnthrottledTransactionsExist(false)
 {
     LOG(("Creating nsHttpConnectionMgr @%p\n", this));
 }
@@ -164,7 +172,11 @@ nsHttpConnectionMgr::Init(uint16_t maxUrgentExcessiveConns,
                           uint16_t maxConns,
                           uint16_t maxPersistConnsPerHost,
                           uint16_t maxPersistConnsPerProxy,
-                          uint16_t maxRequestDelay)
+                          uint16_t maxRequestDelay,
+                          bool throttleEnabled,
+                          uint32_t throttleSuspendFor,
+                          uint32_t throttleResumeFor,
+                          uint32_t throttleResumeIn)
 {
     LOG(("nsHttpConnectionMgr::Init\n"));
 
@@ -176,6 +188,11 @@ nsHttpConnectionMgr::Init(uint16_t maxUrgentExcessiveConns,
         mMaxPersistConnsPerHost = maxPersistConnsPerHost;
         mMaxPersistConnsPerProxy = maxPersistConnsPerProxy;
         mMaxRequestDelay = maxRequestDelay;
+
+        mThrottleEnabled = throttleEnabled;
+        mThrottleSuspendFor = throttleSuspendFor;
+        mThrottleResumeFor = throttleResumeFor;
+        mThrottleResumeIn = throttleResumeIn;
 
         mIsShuttingDown = false;
     }
@@ -344,13 +361,15 @@ nsHttpConnectionMgr::Observe(nsISupports *subject,
         nsCOMPtr<nsITimer> timer = do_QueryInterface(subject);
         if (timer == mTimer) {
             Unused << PruneDeadConnections();
-        }
-        else if (timer == mTimeoutTick) {
+        } else if (timer == mTimeoutTick) {
             TimeoutTick();
         } else if (timer == mTrafficTimer) {
             Unused << PruneNoTraffic();
-        }
-        else {
+        } else if (timer == mThrottleTicker) {
+            ThrottlerTick();
+        } else if (timer == mDelayedResumeReadTimer) {
+            ResumeBackgroundThrottledTransactions();
+        } else {
             MOZ_ASSERT(false, "unexpected timer-callback");
             LOG(("Unexpected timer object\n"));
             return NS_ERROR_UNEXPECTED;
@@ -378,12 +397,12 @@ nsHttpConnectionMgr::RescheduleTransaction(nsHttpTransaction *trans, int32_t pri
 }
 
 void
-nsHttpConnectionMgr::ThrottleTransaction(nsHttpTransaction *trans, bool throttle)
+nsHttpConnectionMgr::UpdateClassOfServiceOnTransaction(nsHttpTransaction *trans, uint32_t classOfService)
 {
-    LOG(("nsHttpConnectionMgr::ThrottleTransaction [trans=%p throttle=%" PRIx32 "]\n",
-         trans, static_cast<uint32_t>(throttle)));
-    Unused << PostEvent(&nsHttpConnectionMgr::OnMsgThrottleTransaction,
-                        static_cast<int32_t>(throttle), trans);
+    LOG(("nsHttpConnectionMgr::UpdateClassOfServiceOnTransaction [trans=%p classOfService=%" PRIu32 "]\n",
+         trans, static_cast<uint32_t>(classOfService)));
+    Unused << PostEvent(&nsHttpConnectionMgr::OnMsgUpdateClassOfServiceOnTransaction,
+                        static_cast<int32_t>(classOfService), trans);
 }
 
 nsresult
@@ -2157,6 +2176,10 @@ nsHttpConnectionMgr::OnMsgShutdown(int32_t, ARefBase *param)
       mTrafficTimer->Cancel();
       mTrafficTimer = nullptr;
     }
+    DestroyThrottleTicker();
+    mActiveTransactions[false].Clear();
+    mActiveTransactions[true].Clear();
+
     mCoalescingHash.Clear();
 
     // signal shutdown complete
@@ -2224,15 +2247,15 @@ nsHttpConnectionMgr::OnMsgReschedTransaction(int32_t priority, ARefBase *param)
     }
 }
 
-void nsHttpConnectionMgr::OnMsgThrottleTransaction(int32_t arg, ARefBase *param)
+void nsHttpConnectionMgr::OnMsgUpdateClassOfServiceOnTransaction(int32_t arg, ARefBase *param)
 {
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-    LOG(("nsHttpConnectionMgr::OnMsgThrottleTransaction [trans=%p]\n", param));
+    LOG(("nsHttpConnectionMgr::OnMsgUpdateClassOfServiceOnTransaction [trans=%p]\n", param));
 
-    bool throttle = static_cast<bool>(arg);
+    uint32_t cos = static_cast<uint32_t>(arg);
     nsHttpTransaction *trans = static_cast<nsHttpTransaction *>(param);
 
-    trans->ThrottleResponse(throttle);
+    trans->SetClassOfService(cos);
 }
 
 void
@@ -2730,6 +2753,18 @@ nsHttpConnectionMgr::OnMsgUpdateParam(int32_t inParam, ARefBase *)
     case MAX_REQUEST_DELAY:
         mMaxRequestDelay = value;
         break;
+    case THROTTLING_ENABLED:
+        SetThrottlingEnabled(!!value);
+        break;
+    case THROTTLING_SUSPEND_FOR:
+        mThrottleSuspendFor = value;
+        break;
+    case THROTTLING_RESUME_FOR:
+        mThrottleResumeFor = value;
+        break;
+    case THROTTLING_RESUME_IN:
+        mThrottleResumeIn = value;
+        break;
     default:
         NS_NOTREACHED("unexpected parameter name");
     }
@@ -2803,16 +2838,480 @@ nsHttpConnectionMgr::UpdateCurrentTopLevelOuterContentWindowId(
         windowIdWrapper);
 }
 
+void nsHttpConnectionMgr::SetThrottlingEnabled(bool aEnable)
+{
+    LOG(("nsHttpConnectionMgr::SetThrottlingEnabled enable=%d", aEnable));
+
+    mThrottleEnabled = aEnable;
+
+    if (mThrottleEnabled) {
+        EnsureThrottleTickerIfNeeded();
+    } else {
+        DestroyThrottleTicker();
+        ResumeReadOf(mActiveTransactions[false]);
+        ResumeReadOf(mActiveTransactions[true]);
+    }
+}
+
+void nsHttpConnectionMgr::LogActiveTransactions(char operation)
+{
+    if (!LOG_ENABLED()) {
+        return;
+    }
+
+    nsTArray<RefPtr<nsHttpTransaction>> *trs = nullptr;
+    uint32_t au, at, bu = 0, bt = 0;
+
+    trs = mActiveTransactions[false].Get(mCurrentTopLevelOuterContentWindowId);
+    au = trs ? trs->Length() : 0;
+    trs = mActiveTransactions[true].Get(mCurrentTopLevelOuterContentWindowId);
+    at = trs ? trs->Length() : 0;
+
+    for (auto iter = mActiveTransactions[false].Iter(); !iter.Done(); iter.Next()) {
+        bu += iter.UserData()->Length();
+    }
+    bu -= au;
+    for (auto iter = mActiveTransactions[true].Iter(); !iter.Done(); iter.Next()) {
+        bt += iter.UserData()->Length();
+    }
+    bt -= at;
+
+    // Shows counts of:
+    // - unthrottled transaction for the active tab
+    // - throttled transaction for the active tab
+    // - unthrottled transaction for background tabs
+    // - throttled transaction for background tabs
+    LOG(("Active transactions %c[%u,%u,%u,%u]", operation, au, at, bu, bt));
+}
+
 void
-nsHttpConnectionMgr::OnMsgUpdateCurrentTopLevelOuterContentWindowId(
-    int32_t, ARefBase *param)
+nsHttpConnectionMgr::AddActiveTransaction(nsHttpTransaction * aTrans, bool aThrottled)
 {
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-    mCurrentTopLevelOuterContentWindowId =
-        static_cast<UINT64Wrapper*>(param)->GetValue();
+
+    uint64_t tabId = aTrans->TopLevelOuterContentWindowId();
+
+    nsTArray<RefPtr<nsHttpTransaction>> *transactions =
+        mActiveTransactions[aThrottled].LookupOrAdd(tabId);
+
+    MOZ_ASSERT(!transactions->Contains(aTrans));
+
+    transactions->AppendElement(aTrans);
+
+    LOG(("nsHttpConnectionMgr::AddActiveTransaction    t=%p tabid=%" PRIx64 "(%d) thr=%d",
+          aTrans, tabId, tabId == mCurrentTopLevelOuterContentWindowId, aThrottled));
+    LogActiveTransactions('+');
+
+    if (tabId == mCurrentTopLevelOuterContentWindowId) {
+        mActiveTabTransactionsExist = true;
+        if (!aThrottled) {
+            mActiveTabUnthrottledTransactionsExist = true;
+        }
+    }
+
+    if (!mThrottleEnabled) {
+        return;
+    }
+
+    EnsureThrottleTickerIfNeeded();
+}
+
+void
+nsHttpConnectionMgr::RemoveActiveTransaction(nsHttpTransaction * aTrans, bool aThrottled)
+{
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+    uint64_t tabId = aTrans->TopLevelOuterContentWindowId();
+    bool forActiveTab = tabId == mCurrentTopLevelOuterContentWindowId;
+
+    nsTArray<RefPtr<nsHttpTransaction>> *transactions =
+        mActiveTransactions[aThrottled].Get(tabId);
+
+    if (!transactions || !transactions->RemoveElement(aTrans)) {
+        // Was not tracked as active, probably just ignore.
+        return;
+    }
+
+    LOG(("nsHttpConnectionMgr::RemoveActiveTransaction t=%p tabid=%" PRIx64 "(%d) thr=%d",
+          aTrans, tabId, forActiveTab, aThrottled));
+
+    if (!transactions->IsEmpty()) {
+        // There are still transactions of the type, hence nothing in the throttling conditions
+        // has changed and we don't need to update "Exists" caches nor we need to wake any now
+        // throttled transactions.
+        LogActiveTransactions('-');
+        return;
+    }
+
+    // To optimize the following logic, always remove the entry when the array is empty.
+    mActiveTransactions[aThrottled].Remove(tabId);
+    LogActiveTransactions('-');
+
+    if (forActiveTab) {
+        // Update caches of the active tab transaction existence, since it's now affected
+        if (!aThrottled) {
+            mActiveTabUnthrottledTransactionsExist = false;
+        }
+        if (mActiveTabTransactionsExist) {
+            mActiveTabTransactionsExist = mActiveTransactions[!aThrottled].Contains(tabId);
+        }
+    }
+
+    if (!mThrottleEnabled) {
+        return;
+    }
+
+    bool unthrottledExist = !mActiveTransactions[false].IsEmpty();
+    bool throttledExist = !mActiveTransactions[true].IsEmpty();
+
+    if (!unthrottledExist && !throttledExist) {
+        // Nothing active globally, just get rid of the timer completely and we are done.
+        MOZ_ASSERT(!mActiveTabUnthrottledTransactionsExist);
+        MOZ_ASSERT(!mActiveTabTransactionsExist);
+
+        DestroyThrottleTicker();
+        return;
+    }
+
+    if (!mThrottlingInhibitsReading) {
+        // There is then nothing to wake up.  Affected transactions will not be put
+        // to sleep automatically on next tick.
+        LOG(("  reading not currently inhibited"));
+        return;
+    }
+
+    if (mActiveTabUnthrottledTransactionsExist) {
+        // There are still unthrottled transactions for the active tab, hence the state
+        // is unaffected and we don't need to do anything (nothing to wake).
+        LOG(("  there are unthrottled for the active tab"));
+        return;
+    }
+
+    if (mActiveTabTransactionsExist) {
+        // There are only trottled transactions for the active tab.
+        // If the last transaction we just removed was a non-throttled for the active tab
+        // we can wake the throttled transactions for the active tab.
+        if (forActiveTab && !aThrottled) {
+            LOG(("  resuming throttled for active tab"));
+            ResumeReadOf(mActiveTransactions[true].Get(mCurrentTopLevelOuterContentWindowId));
+        }
+        return;
+    }
+
+    if (!unthrottledExist) {
+        // There are no unthrottled transactions for any tab.  Resume all throttled,
+        // all are only for background tabs.
+        LOG(("  delay resuming throttled for background tabs"));
+        DelayedResumeBackgroundThrottledTransactions();
+        return;
+    }
+
+    if (forActiveTab) {
+        // Removing the last transaction for the active tab frees up the unthrottled
+        // background tabs transactions.
+        LOG(("  resuming unthrottled for background tabs"));
+        ResumeReadOf(mActiveTransactions[false]);
+        return;
+    }
+
+    LOG(("  not resuming anything"));
+}
+
+void
+nsHttpConnectionMgr::MoveActiveTransaction(nsHttpTransaction * aTrans, bool aThrottled)
+{
+    LOG(("nsHttpConnectionMgr::MoveActiveTransaction ENTER t=%p", aTrans));
+    AddActiveTransaction(aTrans, aThrottled);
+    RemoveActiveTransaction(aTrans, !aThrottled);
+    LOG(("nsHttpConnectionMgr::MoveActiveTransaction EXIT t=%p", aTrans));
+}
+
+bool
+nsHttpConnectionMgr::ShouldStopReading(nsHttpTransaction * aTrans, bool aThrottled)
+{
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+    if (!mThrottlingInhibitsReading || !mThrottleEnabled) {
+        return false;
+    }
+
+    uint64_t tabId = aTrans->TopLevelOuterContentWindowId();
+
+    if (mActiveTabTransactionsExist) {
+        if (!tabId) {
+            // Chrome initiated and unidentified transactions just respect
+            // their throttle flag, when something for the active tab is happening.
+            return aThrottled;
+        }
+        if (tabId != mCurrentTopLevelOuterContentWindowId) {
+            // This is a background tab request, we want them to always throttle.
+            return true;
+        }
+        if (mActiveTabUnthrottledTransactionsExist) {
+            // Unthrottled transactions for the active tab take precedence
+            return aThrottled;
+        }
+        // This is a throttled transaction for the active tab and there are no
+        // unthrottled for the active tab, just let go on full fuel.
+        return false;
+    }
+
+    if (!mActiveTransactions[false].IsEmpty()) {
+        // This means there are unthrottled active transactions for background tabs.
+        // If we are here, there can't be any transactions for the active tab.
+        // (If there is no transaction for a tab id, there is no entry for it in the hashtable.)
+        return aThrottled;
+    }
+
+    // There are only unthrottled transactions for background tabs: don't throttle.
+    return false;
+}
+
+bool nsHttpConnectionMgr::IsThrottleTickerNeeded()
+{
+    LOG(("nsHttpConnectionMgr::IsThrottleTickerNeeded"));
+
+    if (mActiveTabUnthrottledTransactionsExist &&
+        mActiveTransactions[false].Count() > 1) {
+        LOG(("  there are unthrottled transactions for both active and bck"));
+        return true;
+    }
+
+    if (mActiveTabTransactionsExist &&
+        mActiveTransactions[true].Count() > 1) {
+        LOG(("  there are throttled transactions for both active and bck"));
+        return true;
+    }
+
+    if (!mActiveTransactions[true].IsEmpty() &&
+        !mActiveTransactions[false].IsEmpty()) {
+        LOG(("  there are both throttled and unthrottled transactions"));
+        return true;
+    }
+
+    LOG(("  nothing to throttle"));
+    return false;
+}
+
+void
+nsHttpConnectionMgr::EnsureThrottleTickerIfNeeded()
+{
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+    LOG(("nsHttpConnectionMgr::EnsureThrottleTickerIfNeeded"));
+    if (!IsThrottleTickerNeeded()) {
+        return;
+    }
+
+    // There is a new demand to throttle, hence unschedule delayed resume
+    // of background throttled transastions.
+    CancelDelayedResumeBackgroundThrottledTransactions();
+
+    if (mThrottleTicker) {
+        return;
+    }
+
+    MOZ_ASSERT(!mThrottlingInhibitsReading);
+
+    mThrottleTicker = do_CreateInstance("@mozilla.org/timer;1");
+    if (mThrottleTicker) {
+        mThrottleTicker->Init(this, mThrottleSuspendFor, nsITimer::TYPE_ONE_SHOT);
+        mThrottlingInhibitsReading = true;
+    }
+
+    LogActiveTransactions('^');
+}
+
+void
+nsHttpConnectionMgr::DestroyThrottleTicker()
+{
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+    // Nothing to throttle, hence no need for this timer anymore.
+    CancelDelayedResumeBackgroundThrottledTransactions();
+
+    MOZ_ASSERT(!mThrottleEnabled || !IsThrottleTickerNeeded());
+
+    if (!mThrottleTicker) {
+        return;
+    }
+
+    LOG(("nsHttpConnectionMgr::DestroyThrottleTicker"));
+    mThrottleTicker->Cancel();
+    mThrottleTicker = nullptr;
+    mThrottlingInhibitsReading = false;
+
+    LogActiveTransactions('v');
+}
+
+void
+nsHttpConnectionMgr::ThrottlerTick()
+{
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+    mThrottlingInhibitsReading = !mThrottlingInhibitsReading;
+
+    LOG(("nsHttpConnectionMgr::ThrottlerTick inhibit=%d", mThrottlingInhibitsReading));
+
+    if (!mThrottlingInhibitsReading && !IsThrottleTickerNeeded()) {
+        mThrottleTicker = nullptr;
+    } else {
+        mThrottleTicker = do_CreateInstance("@mozilla.org/timer;1");
+    }
+
+    if (mThrottlingInhibitsReading) {
+        if (mThrottleTicker) {
+            mThrottleTicker->Init(this, mThrottleSuspendFor, nsITimer::TYPE_ONE_SHOT);
+        }
+    } else {
+        // Resume by the ticker happens sooner than delayed resume, no need
+        // for the delayed resume timer
+        CancelDelayedResumeBackgroundThrottledTransactions();
+
+        if (mThrottleTicker) {
+            mThrottleTicker->Init(this, mThrottleResumeFor, nsITimer::TYPE_ONE_SHOT);
+        }
+
+        ResumeReadOf(mActiveTransactions[false], true);
+        ResumeReadOf(mActiveTransactions[true]);
+    }
+}
+
+void
+nsHttpConnectionMgr::DelayedResumeBackgroundThrottledTransactions()
+{
+    if (mDelayedResumeReadTimer) {
+        return;
+    }
+
+    mDelayedResumeReadTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (!mDelayedResumeReadTimer) {
+        return;
+    }
+
+    LOG(("nsHttpConnectionMgr::DelayedResumeBackgroundThrottledTransactions"));
+    mDelayedResumeReadTimer->Init(this, mThrottleResumeIn, nsITimer::TYPE_ONE_SHOT);
+}
+
+void
+nsHttpConnectionMgr::CancelDelayedResumeBackgroundThrottledTransactions()
+{
+    if (!mDelayedResumeReadTimer) {
+        return;
+    }
+
+    LOG(("nsHttpConnectionMgr::CancelDelayedResumeBackgroundThrottledTransactions"));
+    mDelayedResumeReadTimer->Cancel();
+    mDelayedResumeReadTimer = nullptr;
+}
+
+void
+nsHttpConnectionMgr::ResumeBackgroundThrottledTransactions()
+{
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+    LOG(("nsHttpConnectionMgr::ResumeBackgroundThrottledTransactions"));
+    mDelayedResumeReadTimer = nullptr;
+
+    // We can destroy the ticker, since only transactions to resume now
+    // are background throttled.  If 'higher class' transactions have
+    // been added, we don't get here - the ticker has been scheduled
+    // and hence the delayed resume timer canceled.
+    MOZ_ASSERT(mActiveTransactions[false].IsEmpty() &&
+                          !mActiveTabTransactionsExist);
+
+    DestroyThrottleTicker();
+    ResumeReadOf(mActiveTransactions[true], true);
+}
+
+void
+nsHttpConnectionMgr::ResumeReadOf(
+    nsClassHashtable<nsUint64HashKey, nsTArray<RefPtr<nsHttpTransaction>>>& hashtable,
+    bool excludeForActiveTab)
+{
+    for (auto iter = hashtable.Iter(); !iter.Done(); iter.Next()) {
+        if (excludeForActiveTab && iter.Key() == mCurrentTopLevelOuterContentWindowId) {
+            // These have never been throttled (never stopped reading)
+            continue;
+        }
+        ResumeReadOf(iter.UserData());
+    }
+}
+
+void
+nsHttpConnectionMgr::ResumeReadOf(nsTArray<RefPtr<nsHttpTransaction>>* transactions)
+{
+    MOZ_ASSERT(transactions);
+
+    for (auto trans : *transactions) {
+        trans->ResumeReading();
+    }
+}
+
+void
+nsHttpConnectionMgr::OnMsgUpdateCurrentTopLevelOuterContentWindowId(
+    int32_t aLoading, ARefBase *param)
+{
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+    uint64_t winId = static_cast<UINT64Wrapper*>(param)->GetValue();
+
+    if (mCurrentTopLevelOuterContentWindowId == winId) {
+        // duplicate notification
+        return;
+    }
+
+    bool activeTabWasLoading = mActiveTabTransactionsExist;
+    bool activeTabIdChanged = mCurrentTopLevelOuterContentWindowId != winId;
+
+    mCurrentTopLevelOuterContentWindowId = winId;
+
     LOG(("nsHttpConnectionMgr::OnMsgUpdateCurrentTopLevelOuterContentWindowId"
-         " id=%" PRIu64 "\n",
+         " id=%" PRIx64 "\n",
          mCurrentTopLevelOuterContentWindowId));
+
+    nsTArray<RefPtr<nsHttpTransaction>> *transactions = nullptr;
+
+    if (activeTabIdChanged) {
+        // Update the "Exists" caches and resume any transactions that now deserve it,
+        // changing the active tab changes the conditions for throttling.
+        transactions = mActiveTransactions[false].Get(mCurrentTopLevelOuterContentWindowId);
+        mActiveTabUnthrottledTransactionsExist = !!transactions;
+
+        if (!mActiveTabUnthrottledTransactionsExist) {
+            transactions = mActiveTransactions[true].Get(mCurrentTopLevelOuterContentWindowId);
+        }
+        mActiveTabTransactionsExist = !!transactions;
+    }
+
+    if (transactions) {
+        // This means there are some transactions for this newly activated tab, resume them
+        // but anything else.
+        LOG(("  resuming newly activated tab transactions"));
+        ResumeReadOf(transactions);
+        return;
+    }
+
+    if (!activeTabWasLoading) {
+        // There were no transactions for the previously active tab, hence
+        // all remaning transactions, if there were, were all unthrottled,
+        // no need to wake them.
+        return;
+    }
+
+    if (!mActiveTransactions[false].IsEmpty()) {
+        LOG(("  resuming unthrottled background transactions"));
+        ResumeReadOf(mActiveTransactions[false]);
+        return;
+    }
+
+    if (!mActiveTransactions[true].IsEmpty()) {
+        LOG(("  delayed resuming throttled background transactions"));
+        DelayedResumeBackgroundThrottledTransactions();
+        return;
+    }
+
+    DestroyThrottleTicker();
 }
 
 void
