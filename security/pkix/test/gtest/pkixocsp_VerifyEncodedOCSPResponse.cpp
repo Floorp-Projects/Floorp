@@ -822,10 +822,11 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
 {
   static const char* subCAName = "good_indirect_subca_1_first sub-CA";
   static const char* signerName = "good_indirect_subca_1_first OCSP signer";
+  static const long zero = 0;
 
   // sub-CA of root (root is the direct issuer of endEntity)
   const ByteString subCAExtensions[] = {
-    CreateEncodedBasicConstraints(true, 0, Critical::No),
+    CreateEncodedBasicConstraints(true, &zero, Critical::No),
     ByteString()
   };
   ScopedTestKeyPair subCAKeyPair(GenerateKeyPair());
@@ -875,10 +876,11 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
 {
   static const char* subCAName = "good_indirect_subca_1_second sub-CA";
   static const char* signerName = "good_indirect_subca_1_second OCSP signer";
+  static const long zero = 0;
 
   // sub-CA of root (root is the direct issuer of endEntity)
   const ByteString subCAExtensions[] = {
-    CreateEncodedBasicConstraints(true, 0, Critical::No),
+    CreateEncodedBasicConstraints(true, &zero, Critical::No),
     ByteString()
   };
   ScopedTestKeyPair subCAKeyPair(GenerateKeyPair());
