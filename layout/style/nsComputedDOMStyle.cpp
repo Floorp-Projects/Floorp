@@ -637,9 +637,11 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
             return styleSet->ResolveStyleByRemovingAnimation(
                      aElement, result, eRestyle_AllHintsWithAnimations);
           } else {
-            NS_WARNING("stylo: Getting the unanimated style context is not yet"
-                       " supported for Servo");
-            return nullptr;
+            RefPtr<ServoComputedValues> baseComputedValues =
+              presContext->StyleSet()->AsServo()->
+                GetBaseComputedValuesForElement(aElement, pseudoType);
+            return NS_NewStyleContext(nullptr, presContext, aPseudo,
+                                      pseudoType, baseComputedValues.forget());
           }
         }
 
@@ -665,7 +667,16 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
     StyleRuleInclusion rules = aStyleType == eDefaultOnly
                                ? StyleRuleInclusion::DefaultOnly
                                : StyleRuleInclusion::All;
-    return servoSet->ResolveTransientStyle(aElement, aPseudo, pseudoType, rules);
+    RefPtr<nsStyleContext> result =
+       servoSet->ResolveTransientStyle(aElement, aPseudo, pseudoType, rules);
+    if (aAnimationFlag == eWithAnimation) {
+      return result.forget();
+    }
+
+    RefPtr<ServoComputedValues> baseComputedValues =
+      servoSet->GetBaseComputedValuesForElement(aElement, pseudoType);
+    return NS_NewStyleContext(nullptr, presContext, aPseudo,
+                              pseudoType, baseComputedValues.forget());
   }
 
   RefPtr<nsStyleContext> parentContext;
