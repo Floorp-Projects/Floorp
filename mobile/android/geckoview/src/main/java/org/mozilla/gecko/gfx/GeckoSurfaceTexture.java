@@ -8,6 +8,7 @@ package org.mozilla.gecko.gfx;
 import android.graphics.SurfaceTexture;
 import android.util.Log;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.HashMap;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
@@ -22,23 +23,26 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
     private boolean mIsSingleBuffer;
     private int mTexName;
     private GeckoSurfaceTexture.Callbacks mListener;
-    private volatile int mUseCount = 1;
+    private AtomicInteger mUseCount;
 
     @WrapForJNI(dispatchTo = "current")
     private static native int nativeAcquireTexture();
 
     private GeckoSurfaceTexture(int handle, int texName) {
         super(texName);
-        mHandle = handle;
-        mIsSingleBuffer = false;
-        mTexName = texName;
+        init(handle, texName, false);
     }
 
     private GeckoSurfaceTexture(int handle, int texName, boolean singleBufferMode) {
         super(texName, singleBufferMode);
+        init(handle, texName, singleBufferMode);
+    }
+
+    private void init(int handle, int texName, boolean singleBufferMode) {
         mHandle = handle;
         mIsSingleBuffer = singleBufferMode;
         mTexName = texName;
+        mUseCount = new AtomicInteger(1);
     }
 
     @WrapForJNI
@@ -59,9 +63,13 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
     @Override
     @WrapForJNI
     public synchronized void updateTexImage() {
-        super.updateTexImage();
-        if (mListener != null) {
-            mListener.onUpdateTexImage();
+        try {
+            super.updateTexImage();
+            if (mListener != null) {
+                mListener.onUpdateTexImage();
+            }
+        } catch (Exception e) {
+            Log.w(LOGTAG, "updateTexImage() failed", e);
         }
     }
 
@@ -89,14 +97,14 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
 
     @WrapForJNI
     public void incrementUse() {
-        mUseCount++;
+        mUseCount.incrementAndGet();
     }
 
     @WrapForJNI
     public void decrementUse() {
-        mUseCount--;
+        int useCount = mUseCount.decrementAndGet();
 
-        if (mUseCount == 0) {
+        if (useCount == 0) {
             synchronized (sSurfaceTextures) {
                 sSurfaceTextures.remove(mHandle);
             }
