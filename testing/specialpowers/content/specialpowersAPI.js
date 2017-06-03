@@ -1487,6 +1487,10 @@ SpecialPowersAPI.prototype = {
     Cu.forceGC();
   },
 
+  forceShrinkingGC() {
+    Cu.forceShrinkingGC();
+  },
+
   forceCC() {
     Cu.forceCC();
   },

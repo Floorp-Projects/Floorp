@@ -133,9 +133,9 @@ function waitForEvent(eventType, expectedId) {
  */
 function forceGC() {
   SpecialPowers.gc();
-  SpecialPowers.forceGC();
+  SpecialPowers.forceShrinkingGC();
   SpecialPowers.forceCC();
   SpecialPowers.gc();
-  SpecialPowers.forceGC();
+  SpecialPowers.forceShrinkingGC();
   SpecialPowers.forceCC();
 }
