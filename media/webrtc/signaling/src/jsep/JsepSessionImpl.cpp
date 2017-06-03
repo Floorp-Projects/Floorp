@@ -2368,7 +2368,8 @@ JsepSessionImpl::SetupDefaultCodecs()
   mSupportedCodecs.values.push_back(new JsepApplicationCodecDescription(
       "webrtc-datachannel",
       WEBRTC_DATACHANNEL_STREAMS_DEFAULT,
-      5000
+      WEBRTC_DATACHANNEL_PORT_DEFAULT,
+      WEBRTC_DATACHANELL_MAX_MESSAGE_SIZE_DEFAULT
       ));
 
   // Update the redundant encodings for the RED codec with the supported

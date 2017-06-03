@@ -1359,7 +1359,7 @@ TextEditRules::CreateBogusNodeIfNeeded(Selection* aSelection)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set selection.
-  aSelection->CollapseNative(body, 0);
+  aSelection->Collapse(body, 0);
   return NS_OK;
 }
 

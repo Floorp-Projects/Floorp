@@ -77,7 +77,8 @@ class JsepTrackTest : public ::testing::Test
           new JsepApplicationCodecDescription(
             "webrtc-datachannel",
             256,
-            5999
+            5999,
+            499
             ));
 
       // if we're doing something with red, it needs
@@ -1108,6 +1109,11 @@ TEST_F(JsepTrackTest, DataChannelDraft05)
             mOffer->ToString().find("a=sctpmap:5999 webrtc-datachannel 256"));
   ASSERT_NE(std::string::npos,
             mAnswer->ToString().find("a=sctpmap:5999 webrtc-datachannel 256"));
+  // Note: this is testing for a workaround, see bug 1335262 for details
+  ASSERT_NE(std::string::npos,
+            mOffer->ToString().find("a=max-message-size:499"));
+  ASSERT_NE(std::string::npos,
+            mAnswer->ToString().find("a=max-message-size:499"));
   ASSERT_EQ(std::string::npos, mOffer->ToString().find("a=sctp-port"));
   ASSERT_EQ(std::string::npos, mAnswer->ToString().find("a=sctp-port"));
 }
@@ -1122,7 +1128,8 @@ TEST_F(JsepTrackTest, DataChannelDraft05AnswerWithDifferentPort)
           new JsepApplicationCodecDescription(
             "webrtc-datachannel",
             256,
-            4555
+            4555,
+            10544
             ));
 
   InitTracks(SdpMediaSection::kApplication);
@@ -1136,6 +1143,11 @@ TEST_F(JsepTrackTest, DataChannelDraft05AnswerWithDifferentPort)
             mOffer->ToString().find("a=sctpmap:4555 webrtc-datachannel 256"));
   ASSERT_NE(std::string::npos,
             mAnswer->ToString().find("a=sctpmap:5999 webrtc-datachannel 256"));
+  // Note: this is testing for a workaround, see bug 1335262 for details
+  ASSERT_NE(std::string::npos,
+            mOffer->ToString().find("a=max-message-size:10544"));
+  ASSERT_NE(std::string::npos,
+            mAnswer->ToString().find("a=max-message-size:499"));
   ASSERT_EQ(std::string::npos, mOffer->ToString().find("a=sctp-port"));
   ASSERT_EQ(std::string::npos, mAnswer->ToString().find("a=sctp-port"));
 }
@@ -1169,6 +1181,8 @@ TEST_F(JsepTrackTest, DataChannelDraft21)
 
   ASSERT_NE(std::string::npos, mOffer->ToString().find("a=sctp-port:5999"));
   ASSERT_NE(std::string::npos, mAnswer->ToString().find("a=sctp-port:5999"));
+  ASSERT_NE(std::string::npos, mOffer->ToString().find("a=max-message-size:499"));
+  ASSERT_NE(std::string::npos, mAnswer->ToString().find("a=max-message-size:499"));
   ASSERT_EQ(std::string::npos, mOffer->ToString().find("a=sctpmap"));
   ASSERT_EQ(std::string::npos, mAnswer->ToString().find("a=sctpmap"));
 }

@@ -99,7 +99,7 @@ SdpMediaSection::GetSctpmap() const
   return &sctpmap.GetFirstEntry();
 }
 
-int
+uint32_t
 SdpMediaSection::GetSctpPort() const
 {
   auto& attrs = GetAttributeList();
@@ -107,8 +107,18 @@ SdpMediaSection::GetSctpPort() const
     return 0;
   }
 
-  uint32_t val = attrs.GetSctpPort();
-  return val;
+  return attrs.GetSctpPort();
+}
+
+uint32_t
+SdpMediaSection::GetMaxMessageSize() const
+{
+  auto& attrs = GetAttributeList();
+  if (!attrs.HasAttribute(SdpAttribute::kMaxMessageSizeAttribute)) {
+    return 0;
+  }
+
+  return attrs.GetMaxMessageSize();
 }
 
 bool

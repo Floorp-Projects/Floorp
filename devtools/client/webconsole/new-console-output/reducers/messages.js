@@ -395,7 +395,7 @@ function matchCssFilters(message, filters) {
 }
 
 function matchSearchFilters(message, filters) {
-  let text = filters.text || "";
+  let text = (filters.text || "").trim();
   return (
     text === ""
     // Look for a match in parameters.

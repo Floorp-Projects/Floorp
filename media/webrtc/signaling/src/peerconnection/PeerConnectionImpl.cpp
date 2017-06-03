@@ -1084,7 +1084,9 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
 // tests to work (it doesn't have a window available) we ifdef the following
 // two implementations.
 NS_IMETHODIMP
-PeerConnectionImpl::EnsureDataConnection(uint16_t aNumstreams)
+PeerConnectionImpl::EnsureDataConnection(uint16_t aLocalPort,
+                                         uint16_t aNumstreams,
+                                         uint32_t aMaxMessageSize)
 {
   PC_AUTO_ENTER_API_CALL(false);
 
@@ -1096,7 +1098,7 @@ PeerConnectionImpl::EnsureDataConnection(uint16_t aNumstreams)
     return NS_OK;
   }
   mDataConnection = new DataChannelConnection(this);
-  if (!mDataConnection->Init(5000, aNumstreams, true)) {
+  if (!mDataConnection->Init(aLocalPort, aNumstreams, true)) {
     CSFLogError(logTag,"%s DataConnection Init Failed",__FUNCTION__);
     return NS_ERROR_FAILURE;
   }
@@ -1110,6 +1112,7 @@ PeerConnectionImpl::GetDatachannelParameters(
     uint32_t* channels,
     uint16_t* localport,
     uint16_t* remoteport,
+    uint32_t* remotemaxmessagesize,
     uint16_t* level) const {
 
   auto trackPairs = mJsepSession->GetNegotiatedTrackPairs();
@@ -1162,6 +1165,8 @@ PeerConnectionImpl::GetDatachannelParameters(
           static_cast<const JsepApplicationCodecDescription*>(codec)->mLocalPort;
         *remoteport =
           static_cast<const JsepApplicationCodecDescription*>(codec)->mRemotePort;
+        *remotemaxmessagesize = static_cast<const JsepApplicationCodecDescription*>
+          (codec)->mRemoteMaxMessageSize;
         if (trackPair.HasBundleLevel()) {
           *level = static_cast<uint16_t>(trackPair.BundleLevel());
         } else {
@@ -1175,6 +1180,7 @@ PeerConnectionImpl::GetDatachannelParameters(
   *channels = 0;
   *localport = 0;
   *remoteport = 0;
+  *remotemaxmessagesize = 0;
   *level = 0;
   return NS_ERROR_FAILURE;
 }
@@ -1234,8 +1240,10 @@ PeerConnectionImpl::InitializeDataChannel()
   uint32_t channels = 0;
   uint16_t localport = 0;
   uint16_t remoteport = 0;
+  uint32_t remotemaxmessagesize = 0;
   uint16_t level = 0;
-  nsresult rv = GetDatachannelParameters(&channels, &localport, &remoteport, &level);
+  nsresult rv = GetDatachannelParameters(&channels, &localport, &remoteport,
+                                         &remotemaxmessagesize, &level);
 
   if (NS_FAILED(rv)) {
     CSFLogDebug(logTag, "%s: We did not negotiate datachannel", __FUNCTION__);
@@ -1246,7 +1254,7 @@ PeerConnectionImpl::InitializeDataChannel()
     channels = MAX_NUM_STREAMS;
   }
 
-  rv = EnsureDataConnection(channels);
+  rv = EnsureDataConnection(localport, channels, remotemaxmessagesize);
   if (NS_SUCCEEDED(rv)) {
     // use the specified TransportFlow
     RefPtr<TransportFlow> flow = mMedia->GetTransportFlow(level, false).get();
@@ -1302,7 +1310,9 @@ PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
   DataChannelConnection::Type theType =
     static_cast<DataChannelConnection::Type>(aType);
 
-  nsresult rv = EnsureDataConnection(WEBRTC_DATACHANNEL_STREAMS_DEFAULT);
+  nsresult rv = EnsureDataConnection(WEBRTC_DATACHANNEL_PORT_DEFAULT,
+                                     WEBRTC_DATACHANNEL_STREAMS_DEFAULT,
+                                     WEBRTC_DATACHANELL_MAX_MESSAGE_SIZE_DEFAULT);
   if (NS_FAILED(rv)) {
     return rv;
   }

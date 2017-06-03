@@ -113,7 +113,8 @@ panelview:not([mainview]):not([current]) {
   visibility: collapse;
 }
 
-panelview[mainview] > .panel-header {
+panelview[mainview] > .panel-header,
+panelview:not([title]) > .panel-header {
   display: none;
 }
 

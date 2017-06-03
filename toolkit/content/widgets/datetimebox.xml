@@ -1224,9 +1224,11 @@
             field.setAttribute("maxlength", aMaxLength);
 
             if (this.mIsRTL) {
-              // Override the numeric field with "ltr", so that it stays in the
-              // same order even when it's empty (with placeholder).
-              field.style.unicodeBidi = "bidi-override";
+              // Force the direction to be "ltr", so that the field stays in the
+              // same order even when it's empty (with placeholder). By using
+              // "embed", the text inside the element is still displayed based
+              // on its directionality.
+              field.style.unicodeBidi = "embed";
               field.style.direction = "ltr";
             }
           }

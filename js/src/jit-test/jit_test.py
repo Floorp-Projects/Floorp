@@ -235,9 +235,24 @@ def main(argv):
     if read_all:
         test_list = jittests.find_tests()
 
-    # If code coverage is enabled, exclude tests. (bug 1347245)
+    # Exclude tests when code coverage is enabled.
+    # This part is equivalent to:
+    # skip-if = coverage
     if os.getenv('GCOV_PREFIX') is not None:
-        options.exclude += ['asm.js/testSIMD.js']
+        # GCOV errors.
+        options.exclude += ['asm.js/testSIMD.js']               # Bug 1347245
+
+        # JSVM errors.
+        options.exclude += ['basic/functionnames.js']           # Bug 1369783
+        options.exclude += ['debug/Debugger-findScripts-23.js']
+        options.exclude += ['debug/bug1160182.js']
+        options.exclude += ['xdr/incremental-encoder.js']
+        options.exclude += ['xdr/bug1186973.js']                # Bug 1369785
+        options.exclude += ['basic/werror.js']
+
+        # Prevent code coverage test that expects coverage
+        # to be off when it starts.
+        options.exclude += ['debug/Script-getOffsetsCoverage-02.js']
 
     if options.exclude_from:
         with open(options.exclude_from) as fh:
