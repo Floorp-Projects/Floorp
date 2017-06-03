@@ -924,3 +924,6 @@ pref("dom.keyboardevent.dispatch_during_composition", true);
 #if CPU_ARCH == aarch64
 pref("javascript.options.native_regexp", false);
 #endif
+
+// Ask for permission when enumerating WebRTC devices.
+pref("media.navigator.permission.device", true);

@@ -3,6 +3,15 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+//
+// Whitelisting this test.
+// As part of bug 1077403, the leaking uncaught rejections should be fixed.
+//
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: this.docShell is null");
+
+// When running in a standalone directory, we get this error
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: this.doc is undefined");
+
 // Tests devtools API
 
 "use strict";

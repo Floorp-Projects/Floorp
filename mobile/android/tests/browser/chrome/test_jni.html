@@ -24,7 +24,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
       var geckoAppShell = JNI.LoadClass(jenv, "org.mozilla.gecko.GeckoAppShell", {
         static_methods: [
           { name: "getPreferredIconSize", sig: "()I" },
-          { name: "getContext", sig: "()Landroid/content/Context;" },
+          { name: "getApplicationContext", sig: "()Landroid/content/Context;" },
         ],
       });
 
@@ -56,7 +56,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
           { name: "getName", sig: "()Ljava/lang/String;" },
         ],
       });
-      is("org.mozilla.gecko.BrowserApp", JNI.ReadString(jenv, geckoAppShell.getContext().getClass().getName()), "class name is correct");
+      is("org.mozilla.gecko.GeckoApplication", JNI.ReadString(jenv, geckoAppShell.getApplicationContext().getClass().getName()), "class name is correct");
     } finally {
       if (jenv) {
         JNI.UnloadClasses(jenv);
