@@ -1334,10 +1334,9 @@ CompositorBridgeParent::FlushApzRepaints(const uint64_t& aLayersId)
 }
 
 void
-CompositorBridgeParent::GetAPZTestData(const uint64_t& aLayersId,
+CompositorBridgeParent::GetAPZTestData(const LayerTransactionParent* aLayerTree,
                                        APZTestData* aOutData)
 {
-  MOZ_ASSERT(aLayersId == mRootLayerTreeID);
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   *aOutData = sIndirectLayerTrees[mRootLayerTreeID].mApzTestData;
 }
