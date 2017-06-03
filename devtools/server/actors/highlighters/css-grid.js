@@ -746,10 +746,17 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     setIgnoreLayoutChanges(true);
 
     let root = this.getElement("root");
+    let cells = this.getElement("cells");
+    let areas = this.getElement("areas");
+
     // Hide the root element and force the reflow in order to get the proper window's
     // dimensions without increasing them.
     root.setAttribute("style", "display: none");
     this.win.document.documentElement.offsetWidth;
+
+    // Set the grid cells and areas fill to the current grid colour.
+    cells.setAttribute("style", `fill: ${this.color}`);
+    areas.setAttribute("style", `fill: ${this.color}`);
 
     let { width, height } = this._winDimensions;
 
