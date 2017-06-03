@@ -942,7 +942,7 @@ case "$target" in
         # in the same library as dllimport caller. To work around it, we build NSPR
         # and NSS with -mnop-fun-dllimport flag. The drawback of this solution is that
         # function thunks need to be generated for cross-DLL calls.
-        MOZ_FOLD_LIBS_FLAGS=-mnop-fun-dllimport
+        MOZ_FOLD_LIBS_FLAGS="-mnop-fun-dllimport"
     else
         TARGET_COMPILER_ABI=msvc
         if test "$AS_BIN"; then
@@ -973,8 +973,7 @@ case "$target" in
         CFLAGS="$CFLAGS -W3 -Gy -Zc:inline"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Zc:inline"
         if test -z "$CLANG_CL"; then
-            CFLAGS="$CFLAGS -utf-8"
-            CXXFLAGS="$CXXFLAGS -utf-8"
+            CPPFLAGS="$CPPFLAGS -utf-8"
         fi
         if test "$CPU_ARCH" = "x86"; then
             dnl VS2012+ defaults to -arch:SSE2. We want to target nothing
@@ -5351,7 +5350,7 @@ AC_SUBST(MOZ_DEVTOOLS)
 
 AC_SUBST(MOZ_PACKAGE_JSSHELL)
 AC_SUBST(MOZ_FOLD_LIBS)
-AC_SUBST(MOZ_FOLD_LIBS_FLAGS)
+AC_SUBST_LIST(MOZ_FOLD_LIBS_FLAGS)
 AC_SUBST(SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE)
 
 AC_SUBST(DMG_TOOL)

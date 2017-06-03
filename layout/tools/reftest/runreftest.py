@@ -325,10 +325,6 @@ class RefTest(object):
         if options.specialPowersExtensionPath is not None:
             if not self.use_marionette:
                 addons.append(options.specialPowersExtensionPath)
-            # SpecialPowers requires insecure automation-only features that we
-            # put behind a pref.
-            prefs['security.turn_off_all_security_so_that_viruses'
-                  '_can_take_over_this_computer'] = True
 
         for pref in prefs:
             prefs[pref] = mozprofile.Preferences.cast(prefs[pref])

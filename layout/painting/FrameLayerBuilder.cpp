@@ -3935,6 +3935,13 @@ ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
   aLayer->SetMaskLayer(maskLayer);
 }
 
+static bool
+IsScrollThumbLayer(nsDisplayItem* aItem)
+{
+  return aItem->GetType() == nsDisplayItem::TYPE_OWN_LAYER &&
+         static_cast<nsDisplayOwnLayer*>(aItem)->IsScrollThumbLayer();
+}
+
 /*
  * Iterate through the non-clip items in aList and its descendants.
  * For each item we compute the effective clip rect. Each item is assigned
@@ -4204,8 +4211,9 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         mPaintedLayerDataTree.AddingOwnLayer(clipAGR,
                                              &scrolledClipRect,
                                              uniformColorPtr);
-      } else if (*animatedGeometryRoot == item->Frame() &&
-                 *animatedGeometryRoot != mBuilder->RootReferenceFrame()) {
+      } else if ((*animatedGeometryRoot == item->Frame() &&
+                  *animatedGeometryRoot != mBuilder->RootReferenceFrame()) ||
+                 (IsScrollThumbLayer(item) && mManager->IsWidgetLayerManager())) {
         // This is the case for scrollbar thumbs, for example. In that case the
         // clip we care about is the overflow:hidden clip on the scrollbar.
         mPaintedLayerDataTree.AddingOwnLayer(animatedGeometryRoot->mParentAGR,

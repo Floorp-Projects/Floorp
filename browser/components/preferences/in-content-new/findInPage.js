@@ -192,14 +192,7 @@ var gSearchResultsPane = {
   searchFunction(event) {
     let query = event.target.value.trim().toLowerCase();
     this.findSelection.removeAllRanges();
-
-    // Remove all search tooltips that were created
-    let searchTooltips = Array.from(document.querySelectorAll(".search-tooltip"));
-    for (let searchTooltip of searchTooltips) {
-      searchTooltip.parentElement.classList.remove("search-tooltip-parent");
-      searchTooltip.remove();
-    }
-    this.listSearchTooltips = [];
+    this.removeAllSearchTooltips();
 
     let srHeader = document.getElementById("header-searchResults");
 
@@ -370,5 +363,17 @@ var gSearchResultsPane = {
     offSet += relativeOffset > 0 ? relativeOffset : 0;
 
     searchTooltip.style.setProperty("left", `${offSet}px`);
+  },
+
+  /**
+   * Remove all search tooltips that were created.
+   */
+  removeAllSearchTooltips() {
+    let searchTooltips = Array.from(document.querySelectorAll(".search-tooltip"));
+    for (let searchTooltip of searchTooltips) {
+      searchTooltip.parentElement.classList.remove("search-tooltip-parent");
+      searchTooltip.remove();
+    }
+    this.listSearchTooltips = [];
   }
 }

@@ -1058,7 +1058,7 @@ impl Renderer {
 
         let config = FrameBuilderConfig {
             enable_scrollbars: options.enable_scrollbars,
-            default_font_render_mode,
+            default_font_render_mode: default_font_render_mode,
             debug: options.debug,
             cache_expiry_frames: options.cache_expiry_frames,
         };
