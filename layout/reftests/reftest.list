@@ -376,6 +376,9 @@ include usercss/reftest.list
 
 include view-source/reftest.list
 
+# vr
+include ../../dom/vr/test/reftest/reftest.list
+
 # web-animations
 include web-animations/reftest.list
 

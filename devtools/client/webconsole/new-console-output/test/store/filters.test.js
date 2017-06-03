@@ -100,9 +100,19 @@ describe("Filtering", () => {
   });
 
   describe("Text filter", () => {
+    it("set the expected property on the store", () => {
+      store.dispatch(actions.filterTextSet("danger"));
+      expect(getAllFilters(store.getState()).text).toEqual("danger");
+    });
+
     it("matches on value grips", () => {
       store.dispatch(actions.filterTextSet("danger"));
       let messages = getVisibleMessages(store.getState());
+      expect(messages.length - numUnfilterableMessages).toEqual(1);
+
+      // Checks that trimming works.
+      store.dispatch(actions.filterTextSet("    danger    "));
+      messages = getVisibleMessages(store.getState());
       expect(messages.length - numUnfilterableMessages).toEqual(1);
     });
 

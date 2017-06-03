@@ -383,6 +383,8 @@ description#identity-popup-content-verifier,
 }
 
 .identity-popup-permission-icon.in-use {
+  -moz-context-properties: fill;
+  fill: rgb(224, 41, 29);
   animation: 1.5s ease in-use-blink infinite;
 }
 
