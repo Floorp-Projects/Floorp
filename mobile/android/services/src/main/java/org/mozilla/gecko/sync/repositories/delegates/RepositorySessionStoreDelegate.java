@@ -16,6 +16,11 @@ import java.util.concurrent.ExecutorService;
 public interface RepositorySessionStoreDelegate {
   void onRecordStoreFailed(Exception ex, String recordGuid);
 
+  // Meant for signaling that a record has been reconciled.
+  // Only makes sense in context of local repositories.
+  // Further call to onRecordStoreSucceeded is necessary.
+  void onRecordStoreReconciled(String guid);
+
   // Called with a GUID when store has succeeded.
   void onRecordStoreSucceeded(String guid);
   void onStoreCompleted(long storeEnd);

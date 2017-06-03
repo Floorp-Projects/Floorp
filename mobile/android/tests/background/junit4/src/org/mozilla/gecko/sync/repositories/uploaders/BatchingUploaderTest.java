@@ -154,6 +154,10 @@ public class BatchingUploaderTest {
         }
 
         @Override
+        public void onRecordStoreReconciled(String guid) {
+        }
+
+        @Override
         public RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor) {
             return this;
         }

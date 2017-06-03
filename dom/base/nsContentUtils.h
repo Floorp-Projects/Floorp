@@ -2232,6 +2232,21 @@ public:
   }
 
   /**
+   * Returns true if CSSOM origin check should be skipped for WebDriver
+   * based crawl to be able to collect data from cross-origin CSS style
+   * sheets. This can be enabled by setting environment variable
+   * MOZ_BYPASS_CSSOM_ORIGIN_CHECK.
+   */
+  static bool BypassCSSOMOriginCheck()
+  {
+#ifdef RELEASE_OR_BETA
+    return false;
+#else
+    return sBypassCSSOMOriginCheck;
+#endif
+  }
+
+  /**
    * Return true if this doc is controlled by a ServiceWorker.
    */
   static bool IsControlledByServiceWorker(nsIDocument* aDocument);
@@ -3097,6 +3112,9 @@ private:
   static bool sSkipCursorMoveForSameValueSet;
   static bool sRequestIdleCallbackEnabled;
   static bool sLowerNetworkPriority;
+#ifndef RELEASE_OR_BETA
+  static bool sBypassCSSOMOriginCheck;
+#endif
   static uint32_t sCookiesLifetimePolicy;
   static uint32_t sCookiesBehavior;
 

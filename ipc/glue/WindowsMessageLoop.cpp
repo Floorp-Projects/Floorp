@@ -23,6 +23,7 @@
 using namespace mozilla;
 using namespace mozilla::ipc;
 using namespace mozilla::ipc::windows;
+using namespace mozilla::widget;
 
 /**
  * The Windows-only code below exists to solve a general problem with deadlocks
@@ -819,7 +820,7 @@ MessageChannel::SpinInternalEventLoop()
     }
 
     // Retrieve window or thread messages
-    if (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
+    if (WinUtils::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
       // The child UI should have been destroyed before the app is closed, in
       // which case, we should never get this here.
       if (msg.message == WM_QUIT) {
@@ -909,12 +910,12 @@ NeuteredWindowRegion::PumpOnce()
 
   MSG msg = {0};
   // Pump any COM messages so that we don't hang due to STA marshaling.
-  if (gCOMWindow && ::PeekMessageW(&msg, gCOMWindow, 0, 0, PM_REMOVE)) {
+  if (gCOMWindow && WinUtils::PeekMessage(&msg, gCOMWindow, 0, 0, PM_REMOVE)) {
       ::TranslateMessage(&msg);
       ::DispatchMessageW(&msg);
   }
   // Expunge any nonqueued messages on the current thread.
-  ::PeekMessageW(&msg, nullptr, 0, 0, PM_NOREMOVE);
+  WinUtils::PeekMessage(&msg, nullptr, 0, 0, PM_NOREMOVE);
 }
 
 DeneuteredWindowRegion::DeneuteredWindowRegion(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
@@ -1135,7 +1136,7 @@ MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages)
       // We have to manually pump all COM messages *after* looking at the queue
       // queue status but before yielding our thread below.
       if (gCOMWindow) {
-        if (PeekMessageW(&msg, gCOMWindow, 0, 0, PM_REMOVE)) {
+        if (WinUtils::PeekMessage(&msg, gCOMWindow, 0, 0, PM_REMOVE)) {
           TranslateMessage(&msg);
           ::DispatchMessageW(&msg);
         }
@@ -1146,7 +1147,7 @@ MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages)
       // have woken up for a message designated for a window in another thread.
       // If we loop immediately then we could enter a tight loop, so we'll give
       // up our time slice here to let the child process its message.
-      if (!PeekMessageW(&msg, nullptr, 0, 0, PM_NOREMOVE) &&
+      if (!WinUtils::PeekMessage(&msg, nullptr, 0, 0, PM_NOREMOVE) &&
           !haveSentMessagesPending) {
         // Message was for child, we should wait a bit.
         SwitchToThread();
@@ -1262,7 +1263,7 @@ MessageChannel::WaitForInterruptNotify()
 
     // Run all COM messages *after* looking at the queue status.
     if (gCOMWindow) {
-        if (PeekMessageW(&msg, gCOMWindow, 0, 0, PM_REMOVE)) {
+        if (WinUtils::PeekMessage(&msg, gCOMWindow, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
             ::DispatchMessageW(&msg);
         }
@@ -1270,7 +1271,7 @@ MessageChannel::WaitForInterruptNotify()
 
     // PeekMessage markes the messages as "old" so that they don't wake up
     // MsgWaitForMultipleObjects every time.
-    if (!PeekMessageW(&msg, nullptr, 0, 0, PM_NOREMOVE) &&
+    if (!WinUtils::PeekMessage(&msg, nullptr, 0, 0, PM_NOREMOVE) &&
         !haveSentMessagesPending) {
       // Message was for child, we should wait a bit.
       SwitchToThread();

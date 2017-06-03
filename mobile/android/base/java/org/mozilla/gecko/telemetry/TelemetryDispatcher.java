@@ -72,8 +72,8 @@ public class TelemetryDispatcher {
         uploadAllPingsImmediatelyScheduler = new TelemetryUploadAllPingsImmediatelyScheduler();
     }
 
-    private void queuePingForUpload(final Context context, final TelemetryPing ping, final TelemetryPingStore store,
-            final TelemetryUploadScheduler scheduler) {
+    private void queuePingForUpload(final Context context, final TelemetryOutgoingPing ping, final TelemetryPingStore store,
+                                    final TelemetryUploadScheduler scheduler) {
         final QueuePingRunnable runnable = new QueuePingRunnable(context, ping, store, scheduler);
         ThreadUtils.postToBackgroundThread(runnable); // TODO: Investigate how busy this thread is. See if we want another.
     }
@@ -82,18 +82,18 @@ public class TelemetryDispatcher {
      * Queues the given ping for upload and potentially schedules upload. This method can be called from any thread.
      */
     public void queuePingForUpload(final Context context, final TelemetryCorePingBuilder pingBuilder) {
-        final TelemetryPing ping = pingBuilder.build();
+        final TelemetryOutgoingPing ping = pingBuilder.build();
         queuePingForUpload(context, ping, coreStore, uploadAllPingsImmediatelyScheduler);
     }
 
-    private static class QueuePingRunnable implements Runnable {
+    /* package-private */ static class QueuePingRunnable implements Runnable {
         private final Context applicationContext;
-        private final TelemetryPing ping;
+        private final TelemetryOutgoingPing ping;
         private final TelemetryPingStore store;
         private final TelemetryUploadScheduler scheduler;
 
-        public QueuePingRunnable(final Context context, final TelemetryPing ping, final TelemetryPingStore store,
-                final TelemetryUploadScheduler scheduler) {
+        /* package-private */ QueuePingRunnable(final Context context, final TelemetryOutgoingPing ping, final TelemetryPingStore store,
+                                                final TelemetryUploadScheduler scheduler) {
             this.applicationContext = context.getApplicationContext();
             this.ping = ping;
             this.store = store;
@@ -110,7 +110,7 @@ public class TelemetryDispatcher {
                 Log.e(LOGTAG, "Unable to write ping to disk. Continuing with upload attempt");
             }
 
-            if (scheduler.isReadyToUpload(store)) {
+            if (scheduler.isReadyToUpload(applicationContext, store)) {
                 scheduler.scheduleUpload(applicationContext, store);
             }
         }

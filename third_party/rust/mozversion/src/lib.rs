@@ -257,7 +257,11 @@ mod platform {
     use std::path::{Path, PathBuf};
 
     pub fn ini_path(binary: &Path) -> Option<PathBuf> {
-        binary.parent().and_then(|x| x.parent()).map(|x| x.join("Resources"))
+        binary.canonicalize().ok()
+            .as_ref()
+            .and_then(|dir| dir.parent())
+            .and_then(|dir| dir.parent())
+            .map(|dir| dir.join("Resources"))
     }
 }
 
@@ -266,7 +270,10 @@ mod platform {
     use std::path::{Path, PathBuf};
 
     pub fn ini_path(binary: &Path) -> Option<PathBuf> {
-        binary.parent().map(|dir| dir.to_path_buf())
+        binary.canonicalize().ok()
+            .as_ref()
+            .and_then(|dir| dir.parent())
+            .map(|dir| dir.to_path_buf())
     }
 }
 

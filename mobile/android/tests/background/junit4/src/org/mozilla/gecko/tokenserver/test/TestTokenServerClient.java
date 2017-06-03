@@ -54,6 +54,7 @@ public class TestTokenServerClient {
       "\"duration\": 300," +
       "\"id\": \"eySHORTENED\"," +
       "\"key\": \"-plSHORTENED\"," +
+      "\"hashed_fxa_uid\": \"rAnD0MU1D\"," +
       "\"uid\": 1659259}";
 
   public static final String TEST_CONDITIONS_RESPONSE = "{\"errors\":[{" +
