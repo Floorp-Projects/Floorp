@@ -1,0 +1,39 @@
+[package]
+
+name = "cssparser"
+version = "0.13.7"
+authors = [ "Simon Sapin <simon.sapin@exyr.org>" ]
+
+description = "Rust implementation of CSS Syntax Level 3"
+documentation = "https://docs.rs/cssparser/"
+repository = "https://github.com/servo/rust-cssparser"
+readme = "README.md"
+keywords = ["css", "syntax", "parser"]
+license = "MPL-2.0"
+build = "build.rs"
+
+exclude = ["src/css-parsing-tests"]
+
+[dev-dependencies]
+rustc-serialize = "0.3"
+difference = "1.0"
+encoding_rs = "0.5"
+
+[dependencies]
+cssparser-macros = {path = "./macros", version = "0.3"}
+heapsize = {version = ">= 0.3, < 0.5", optional = true}
+matches = "0.1"
+phf = "0.7"
+procedural-masquerade = {path = "./procedural-masquerade", version = "0.1"}
+serde = {version = "0.9", optional = true}
+
+[build-dependencies]
+syn = "0.11"
+quote = "0.3"
+
+[features]
+bench = []
+dummy_match_byte = []
+
+[workspace]
+members = [".", "./macros", "./procedural-masquerade"]

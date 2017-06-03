@@ -684,7 +684,7 @@ WinUtils::SetAPCPending()
 #endif // ACCESSIBILITY
 
 /* static */
-bool
+BOOL
 WinUtils::PeekMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
                       UINT aLastMessage, UINT aOption)
 {
@@ -699,7 +699,9 @@ WinUtils::PeekMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
     BOOL ret = FALSE;
     HRESULT hr = msgPump->PeekMessageW(aMsg, aWnd, aFirstMessage, aLastMessage,
                                        aOption, &ret);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+    if (NS_WARN_IF(FAILED(hr))) {
+      return FALSE; // When PeekMessage() fails, returns FALSE.
+    }
     return ret;
   }
 #endif // #ifdef NS_ENABLE_TSF
@@ -707,7 +709,7 @@ WinUtils::PeekMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
 }
 
 /* static */
-bool
+BOOL
 WinUtils::GetMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
                      UINT aLastMessage)
 {
@@ -717,7 +719,9 @@ WinUtils::GetMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
     BOOL ret = FALSE;
     HRESULT hr = msgPump->GetMessageW(aMsg, aWnd, aFirstMessage, aLastMessage,
                                       &ret);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+    if (NS_WARN_IF(FAILED(hr))) {
+      return -1; // When GetMessage() fails, returns -1.
+    }
     return ret;
   }
 #endif // #ifdef NS_ENABLE_TSF

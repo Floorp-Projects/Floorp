@@ -1213,19 +1213,21 @@ Http2Stream::UpdatePriorityDependency()
     return;
   }
 
-  // we create 5 fake dependency streams per session,
+  // we create 6 fake dependency streams per session,
   // these streams are never opened with HEADERS. our first opened stream is 0xd
   // 3 depends 0, weight 200, leader class (kLeaderGroupID)
   // 5 depends 0, weight 100, other (kOtherGroupID)
   // 7 depends 0, weight 0, background (kBackgroundGroupID)
   // 9 depends 7, weight 0, speculative (kSpeculativeGroupID)
   // b depends 3, weight 0, follower class (kFollowerGroupID)
+  // d depends 0, weight 240, urgent-start class (kUrgentStartGroupID)
   //
   // streams for leaders (html, js, css) depend on 3
   // streams for folowers (images) depend on b
   // default streams (xhr, async js) depend on 5
   // explicit bg streams (beacon, etc..) depend on 7
   // spculative bg streams depend on 9
+  // urgent-start streams depend on d
 
   uint32_t classFlags = trans->ClassOfService();
 
@@ -1239,6 +1241,8 @@ Http2Stream::UpdatePriorityDependency()
     mPriorityDependency = Http2Session::kBackgroundGroupID;
   } else if (classFlags & nsIClassOfService::Unblocked) {
     mPriorityDependency = Http2Session::kOtherGroupID;
+  } else if (classFlags & nsIClassOfService::UrgentStart) {
+    mPriorityDependency = Http2Session::kUrgentStartGroupID;
   } else {
     mPriorityDependency = Http2Session::kFollowerGroupID; // unmarked followers
   }

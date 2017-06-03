@@ -748,6 +748,10 @@ public class TestBookmarks extends AndroidSyncTestCase {
           }
 
           @Override
+          public void onRecordStoreReconciled(String guid) {
+          }
+
+          @Override
           public void onStoreFailed(Exception e) {
 
           }

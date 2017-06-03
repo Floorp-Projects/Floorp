@@ -24,6 +24,8 @@ import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 import org.mozilla.gecko.sync.stage.NoSuchStageException;
 import org.mozilla.gecko.sync.synchronizer.Synchronizer;
+import org.mozilla.gecko.sync.telemetry.TelemetryCollector;
+import org.mozilla.gecko.sync.telemetry.TelemetryStageCollector;
 
 /**
  * Test the on-device side effects of reset operations on a stage.
@@ -141,7 +143,7 @@ public class TestResetting extends AndroidSyncTestCase {
         @Override
         public void run() {
           try {
-            self.execute(session);
+            self.execute(session, new TelemetryStageCollector(new TelemetryCollector()));
           } catch (NoSuchStageException e) {
             performNotify(e);
           }
@@ -156,7 +158,7 @@ public class TestResetting extends AndroidSyncTestCase {
     final SharedPreferences prefs = new MockSharedPreferences();
     final SyncConfiguration config = new SyncConfiguration(TEST_USERNAME, authHeaderProvider, prefs);
     config.syncKeyBundle = keyBundle;
-    return new GlobalSession(config, callback, getApplicationContext(), null) {
+    return new GlobalSession(config, callback, getApplicationContext(), null, new TelemetryCollector()) {
       @Override
       public boolean isEngineRemotelyEnabled(String engineName,
                                      EngineSettings engineSettings)

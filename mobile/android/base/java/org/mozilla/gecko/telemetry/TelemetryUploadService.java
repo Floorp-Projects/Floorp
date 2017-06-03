@@ -14,6 +14,7 @@ import ch.boye.httpclientandroidlib.client.ClientProtocolException;
 import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
 import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.Restrictions;
@@ -104,6 +105,9 @@ public class TelemetryUploadService extends IntentService {
         final HashSet<String> successfulUploadIDs = new HashSet<>(pingsToUpload.size()); // used for side effects.
         final PingResultDelegate delegate = new PingResultDelegate(successfulUploadIDs);
         for (final TelemetryPing ping : pingsToUpload) {
+            if (!(ping instanceof TelemetryOutgoingPing)) {
+                throw new IllegalStateException("Tried uploading a non-outgoing ping.");
+            }
             // TODO: It'd be great to re-use the same HTTP connection for each upload request.
             delegate.setDocID(ping.getDocID());
             final String url = serverSchemeHostPort + "/" + ping.getURLPath();

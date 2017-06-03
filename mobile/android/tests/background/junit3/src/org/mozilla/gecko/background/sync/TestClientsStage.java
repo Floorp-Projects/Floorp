@@ -18,6 +18,7 @@ import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.stage.SyncClientsEngineStage;
+import org.mozilla.gecko.sync.telemetry.TelemetryCollector;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -50,7 +51,7 @@ public class TestClientsStage extends AndroidSyncTestCase {
     final SharedPreferences prefs = new MockSharedPreferences();
     final SyncConfiguration config = new SyncConfiguration(TEST_USERNAME, authHeaderProvider, prefs);
     config.syncKeyBundle = keyBundle;
-    GlobalSession session = new GlobalSession(config, callback, context, delegate);
+    GlobalSession session = new GlobalSession(config, callback, context, delegate, new TelemetryCollector());
 
     SyncClientsEngineStage stage = new SyncClientsEngineStage() {
 
