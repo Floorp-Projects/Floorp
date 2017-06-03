@@ -84,13 +84,6 @@ TransportSecurityInfo::SetPort(int32_t aPort)
 }
 
 nsresult
-TransportSecurityInfo::GetPort(int32_t *aPort)
-{
-  *aPort = mPort;
-  return NS_OK;
-}
-
-nsresult
 TransportSecurityInfo::SetOriginAttributes(
   const OriginAttributes& aOriginAttributes)
 {
@@ -948,15 +941,9 @@ GetHostPortKey(TransportSecurityInfo* infoObject, /*out*/ nsCString& result)
 
   result.Truncate();
 
-  int32_t port;
-  nsresult rv = infoObject->GetPort(&port);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   result.Assign(infoObject->GetHostName());
   result.Append(':');
-  result.AppendInt(port);
+  result.AppendInt(infoObject->GetPort());
 
   return NS_OK;
 }
