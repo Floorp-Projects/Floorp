@@ -537,8 +537,7 @@ CertErrorRunnable::CheckCertOverrides()
                                                mDefaultErrorCodeToReport);
   }
 
-  int32_t port;
-  mInfoObject->GetPort(&port);
+  int32_t port = mInfoObject->GetPort();
 
   nsAutoCString hostWithPortString(mInfoObject->GetHostName());
   hostWithPortString.Append(':');
