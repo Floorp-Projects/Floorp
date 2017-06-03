@@ -96,8 +96,8 @@ public:
                         uint32_t clockrate, uint16_t channels) = 0;
   virtual void ClearCodecs() = 0;
 
-  virtual void AddDataChannel(const std::string& name,
-                              uint16_t port, uint16_t streams) = 0;
+  virtual void AddDataChannel(const std::string& name, uint16_t port,
+                              uint16_t streams, uint32_t message_size) = 0;
 
   size_t
   GetLevel() const
@@ -157,7 +157,8 @@ public:
   void RemoveFmtp(const std::string& pt);
   const SdpRtpmapAttributeList::Rtpmap* FindRtpmap(const std::string& pt) const;
   const SdpSctpmapAttributeList::Sctpmap* GetSctpmap() const;
-  int GetSctpPort() const;
+  uint32_t GetSctpPort() const;
+  uint32_t GetMaxMessageSize() const;
   bool HasRtcpFb(const std::string& pt,
                  SdpRtcpFbAttributeList::Type type,
                  const std::string& subType) const;

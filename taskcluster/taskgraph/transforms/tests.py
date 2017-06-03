@@ -53,7 +53,10 @@ WINDOWS_WORKER_TYPES = {
     'windows10-64-vm': 'aws-provisioner-v1/gecko-t-win10-64',
     'windows10-64': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
     'windows10-64-asan': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
-    'macosx64': 'scl3-puppet/os-x-10-10-gw'
+}
+
+MACOSX_WORKER_TYPES = {
+    'macosx64': 'releng-hardware/gecko-t-osx-1010',
 }
 
 logger = logging.getLogger(__name__)
@@ -698,7 +701,7 @@ def set_worker_type(config, tests):
         test_platform = test['test-platform']
         if test_platform.startswith('macosx'):
             # note that some portion of these will be allocated to BBB below
-            test['worker-type'] = 'tc-worker-provisioner/gecko-t-osx-10-10'
+            test['worker-type'] = MACOSX_WORKER_TYPES['macosx64']
         elif test_platform.startswith('win'):
             if test.get('suite', '') == 'talos':
                 test['worker-type'] = 'buildbot-bridge/buildbot-bridge'

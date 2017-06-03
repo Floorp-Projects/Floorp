@@ -306,7 +306,8 @@ protected:
 public:
     UniquePtr<SharedSurface> NewSharedSurface(const gfx::IntSize& size);
     //already_AddRefed<ShSurfHandle> NewShSurfHandle(const gfx::IntSize& size);
-    already_AddRefed<layers::SharedSurfaceTextureClient> NewTexClient(const gfx::IntSize& size);
+    already_AddRefed<layers::SharedSurfaceTextureClient> NewTexClient(const gfx::IntSize& size,
+                                                                      const layers::LayersIPCChannel* aLayersChannel = nullptr);
 
     static void RecycleCallback(layers::TextureClient* tc, void* /*closure*/);
 

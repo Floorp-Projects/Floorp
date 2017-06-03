@@ -12,18 +12,23 @@
 # The NSS build system processes them using a series of sed replacements,
 # but the Mozilla build system is already running a Python script to generate
 # the file so it's simpler to just do the replacement in Python.
+#
+# One difference between the NSS build system and Mozilla's is that
+# Mozilla's supports building on Linux for Windows using MinGW. MinGW
+# expects all lines containing ;+ removed and all ;- tokens removed.
 
 import buildconfig
 
 
 def main(output, input):
     is_darwin = buildconfig.substs['OS_ARCH'] == 'Darwin'
+    is_mingw = "WINNT" == buildconfig.substs['OS_ARCH'] and buildconfig.substs['GCC_USE_GNU_LD']
 
     with open(input, 'rb') as f:
         for line in f:
             line = line.rstrip()
-            # Remove all lines containing ';-'
-            if ';-' in line:
+            # On everything except MinGW, remove all lines containing ';-'
+            if not is_mingw and ';-' in line:
                 continue
             # On OS X, remove all lines containing ';+'
             if is_darwin and ';+' in line:
@@ -31,14 +36,15 @@ def main(output, input):
             # Remove the string ' DATA '.
             line = line.replace(' DATA ', '')
             # Remove the string ';+'
-            line = line.replace(';+', '')
+            if not is_mingw:
+                line = line.replace(';+', '')
             # Remove the string ';;'
             line = line.replace(';;', '')
             # If a ';' is present, remove everything after it,
             # and on OS X, remove it as well.
             i = line.find(';')
             if i != -1:
-                if is_darwin:
+                if is_darwin or is_mingw:
                     line = line[:i]
                 else:
                     line = line[:i+1]

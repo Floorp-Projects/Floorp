@@ -59,9 +59,12 @@
 #identity-icon,
 #tracking-protection-icon,
 #connection-icon,
+.notification-anchor-icon,
+#blocked-permissions-container > .blocked-permission-icon,
 #extension-icon {
   width: 16px;
   height: 16px;
+  margin-inline-start: 2px;
   -moz-context-properties: fill;
   fill: GrayText;
 }
@@ -69,6 +72,8 @@
 #identity-icon:-moz-lwtheme,
 #tracking-protection-icon:-moz-lwtheme,
 #connection-icon:-moz-lwtheme,
+.notification-anchor-icon:-moz-lwtheme,
+#blocked-permissions-container > .blocked-permission-icon:-moz-lwtheme,
 #extension-icon:-moz-lwtheme {
   fill: rgba(0,0,0,.6);
 }
@@ -76,6 +81,7 @@
 /* MAIN IDENTITY ICON */
 
 #identity-icon {
+  margin-inline-start: 0;
   list-style-image: url(chrome://browser/skin/identity-icon.svg);
 }
 
@@ -116,6 +122,8 @@
   height: 16px;
   margin-inline-start: -16px;
   position: relative;
+  -moz-context-properties: fill;
+  fill: rgb(224, 41, 29);
   display: none;
 }
 
@@ -155,7 +163,6 @@
 
 #tracking-protection-icon {
   list-style-image: url(chrome://browser/skin/tracking-protection-16.svg#enabled);
-  margin-inline-start: 2px;
   margin-inline-end: 0;
 }
 
@@ -184,7 +191,6 @@
 
 #connection-icon,
 #extension-icon {
-  margin-inline-start: 2px;
   visibility: collapse;
 }
 

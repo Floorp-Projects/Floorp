@@ -34,6 +34,7 @@ class CodeCoverageMixin(object):
     the resulting .gcda files and uploading them to blobber.
     """
     gcov_dir = None
+    jsvm_dir = None
 
     @property
     def code_coverage_enabled(self):
@@ -61,12 +62,16 @@ class CodeCoverageMixin(object):
             return
         self.gcov_dir = tempfile.mkdtemp()
         os.environ['GCOV_PREFIX'] = self.gcov_dir
+        # Set JSVM directory also.
+        self.jsvm_dir = tempfile.mkdtemp()
+        os.environ['JS_CODE_COVERAGE_OUTPUT_DIR'] = self.jsvm_dir
 
     @PostScriptAction('run-tests')
     def _package_coverage_data(self, action, success=None):
         if not self.code_coverage_enabled:
             return
         del os.environ['GCOV_PREFIX']
+        del os.environ['JS_CODE_COVERAGE_OUTPUT_DIR']
 
         if not self.ccov_upload_disabled:
             # TODO This is fragile, find rel_topsrcdir properly somehow
@@ -85,9 +90,19 @@ class CodeCoverageMixin(object):
                 self.fatal("Could not find relative topsrcdir in code coverage "
                            "data!")
 
+            # Package GCOV coverage data.
             dirs = self.query_abs_dirs()
             file_path = os.path.join(
                 dirs['abs_blob_upload_dir'], 'code-coverage-gcda.zip')
             command = ['zip', '-r', file_path, '.']
             self.run_command(command, cwd=rel_topsrcdir)
+
+            # Package JSVM coverage data.
+            dirs = self.query_abs_dirs()
+            file_path = os.path.join(
+                dirs['abs_blob_upload_dir'], 'code-coverage-jsvm.zip')
+            command = ['zip', '-r', file_path, '.']
+            self.run_command(command, cwd=self.jsvm_dir)
+
         shutil.rmtree(self.gcov_dir)
+        shutil.rmtree(self.jsvm_dir)

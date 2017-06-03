@@ -144,7 +144,7 @@ class BuildProgressFooter(object):
     def clear(self):
         """Removes the footer from the current terminal."""
         self._fh.write(self._t.move_x(0))
-        self._fh.write(self._t.clear_eos())
+        self._fh.write(self._t.clear_eol())
 
     def draw(self):
         """Draws this footer in the terminal."""
@@ -1748,9 +1748,6 @@ class PackageFrontend(MachCommandBase):
             for b in from_build:
                 user_value = b
 
-                if '/' not in b:
-                    b = '{}/opt'.format(b)
-
                 if not b.startswith('toolchain-'):
                     b = 'toolchain-{}'.format(b)
 
@@ -1760,8 +1757,8 @@ class PackageFrontend(MachCommandBase):
                              'Could not find a toolchain build named `{build}`')
                     return 1
 
-                optimized, task_id = optimize_task(task, {})
-                if not optimized:
+                task_id = optimize_task(task, {})
+                if task_id in (True, False):
                     self.log(logging.ERROR, 'artifact', {'build': user_value},
                              'Could not find artifacts for a toolchain build '
                              'named `{build}`')
