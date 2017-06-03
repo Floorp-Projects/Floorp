@@ -43,8 +43,7 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 
-public class GeckoView extends LayerView
-    implements ContextGetter {
+public class GeckoView extends LayerView {
 
     private static final String DEFAULT_SHARED_PREFERENCES_FILE = "GeckoView";
     private static final String LOGTAG = "GeckoView";
@@ -318,12 +317,6 @@ public class GeckoView extends LayerView
     }
 
     private void init(final Context context, final GeckoViewSettings settings) {
-        // Set the GeckoInterface if the context is an activity and the
-        // GeckoInterface has not already been set
-        if (context instanceof Activity && GeckoAppShell.getGeckoInterface() == null) {
-            GeckoAppShell.setContextGetter(this);
-        }
-
         preload(context);
 
         // Perform common initialization for Fennec/GeckoView.
@@ -1056,15 +1049,6 @@ public class GeckoView extends LayerView
                 break;
             }
         }
-    }
-
-    protected String getSharedPreferencesFile() {
-        return DEFAULT_SHARED_PREFERENCES_FILE;
-    }
-
-    @Override
-    public SharedPreferences getSharedPreferences() {
-        return getContext().getSharedPreferences(getSharedPreferencesFile(), 0);
     }
 
     public EventDispatcher getEventDispatcher() {

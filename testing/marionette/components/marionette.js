@@ -250,18 +250,24 @@ MarionetteComponent.prototype.init = function () {
     return;
   }
 
-  let s;
-  try {
-    Cu.import("chrome://marionette/content/server.js");
-    s = new server.TCPListener(prefs.port);
-    s.start();
-    this.logger.info(`Listening on port ${s.port}`);
-  } finally {
-    if (s) {
-      this.server = s;
-      this.running = true;
-    }
-  }
+  // Delay initialization until we are done with delayed startup...
+  Services.tm.mainThread.idleDispatch(() => {
+    // ... and with startup tests.
+    Services.tm.mainThread.idleDispatch(() => {
+      let s;
+      try {
+        Cu.import("chrome://marionette/content/server.js");
+        s = new server.TCPListener(prefs.port);
+        s.start();
+        this.logger.info(`Listening on port ${s.port}`);
+      } finally {
+        if (s) {
+          this.server = s;
+          this.running = true;
+        }
+      }
+    });
+  });
 };
 
 MarionetteComponent.prototype.uninit = function () {

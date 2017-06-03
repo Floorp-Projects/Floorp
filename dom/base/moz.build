@@ -403,8 +403,6 @@ if CONFIG['INTEL_ARCHITECTURE']:
 EXTRA_COMPONENTS += [
     'contentAreaDropListener.js',
     'contentAreaDropListener.manifest',
-    'messageWakeupService.js',
-    'messageWakeupService.manifest',
     'ProcessSelector.js',
     'ProcessSelector.manifest',
     'SlowScriptDebug.js',

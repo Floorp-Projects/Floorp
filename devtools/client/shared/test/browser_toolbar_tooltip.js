@@ -5,6 +5,14 @@
 
 // Tests that the developer toolbar works properly
 
+//
+// Whitelisting this test.
+// As part of bug 1077403, the leaking uncaught rejection should be fixed.
+//
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed(
+  "Protocol error (unknownError): Error: Got an invalid root window in DocumentWalker"
+);
+
 const TEST_URI = "data:text/html;charset=utf-8,<p>Tooltip Tests</p>";
 const PREF_DEVTOOLS_THEME = "devtools.theme";
 

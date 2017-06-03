@@ -873,6 +873,8 @@ WebrtcGlobalChild::RecvGetLogRequest(const int& aRequestId,
     do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
 
   if (NS_SUCCEEDED(rv) && stsThread) {
+    // this is a singleton, so we shouldn't need to hold a ref for the
+    // request (and can't just add a ref here anyways)
     rv = RUN_ON_THREAD(stsThread,
                        WrapRunnableNM(&GetLogging_s, this, aRequestId, aPattern.get()),
                        NS_DISPATCH_NORMAL);

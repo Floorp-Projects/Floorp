@@ -43,7 +43,10 @@ if CONFIG['GNU_CC']:
         '-Wno-switch',
         '-Wno-type-limits',
         '-Wno-unused-function',
+        # XXX This does not seem to have any effect on some versions of GCC.
         '-Wno-deprecated-declarations',
+        '-Wno-discarded-qualifiers',
+        '-Wno-maybe-uninitialized',
     ]
     if CONFIG['CLANG_CXX']:
         CFLAGS += [

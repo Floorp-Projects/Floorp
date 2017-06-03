@@ -28,9 +28,9 @@ const startupPhases = {
       "MainProcessSingleton.js",
 
       // Bugs to fix: The following components shouldn't be initialized that early.
-      "WebContentConverter.js",
-      "nsSessionStartup.js",
-      "PushComponents.js",
+      "WebContentConverter.js", // bug 1369443
+      "nsSessionStartup.js", // bug 1369456
+      "PushComponents.js", // bug 1369436
     ]),
     modules: new Set([
       "resource://gre/modules/AppConstants.jsm",
@@ -38,12 +38,9 @@ const startupPhases = {
       "resource://gre/modules/Services.jsm",
 
       // Bugs to fix: Probably loaded too early, needs investigation.
-      "resource://gre/modules/Log.jsm",
-      "resource://gre/modules/AsyncPrefs.jsm",
-      "resource://gre/modules/RemotePageManager.jsm",
-      "resource://gre/modules/TelemetryStopwatch.jsm",
-      "resource://gre/modules/PrivateBrowsingUtils.jsm",
-      "resource://gre/modules/Promise.jsm"
+      "resource://gre/modules/AsyncPrefs.jsm", // bug 1369460
+      "resource://gre/modules/RemotePageManager.jsm", // bug 1369466
+      "resource://gre/modules/Promise.jsm" // bug 1368456
     ])
   }},
 

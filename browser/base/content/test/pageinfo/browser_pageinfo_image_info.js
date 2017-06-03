@@ -13,8 +13,8 @@ function test() {
 
     pageInfo.addEventListener("load", function() {
       pageInfo.onFinished.push(function() {
-        executeSoon(function() {
-          var pageInfoImg = pageInfo.document.getElementById("thepreviewimage");
+        var pageInfoImg = pageInfo.document.getElementById("thepreviewimage");
+        pageInfoImg.addEventListener("loadend", function() {
 
           is(pageInfoImg.src, testImg.src, "selected image has the correct source");
           is(pageInfoImg.width, testImg.width, "selected image has the correct width");

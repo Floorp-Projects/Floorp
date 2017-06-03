@@ -28,9 +28,15 @@ var WebrtcUI = {
   // See browser/modules/webrtcUI.jsm for details.
 
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic === "getUserMedia:request") {
+    if (aTopic === "getUserMedia:ask-device-permission") {
       RuntimePermissions
-        .waitForPermissions(this._determineNeededRuntimePermissions(aSubject))
+        .waitForPermissions(this._determineNeededRuntimePermissions(aData))
+        .then(_ => {
+          Services.obs.notifyObservers(aSubject, "getUserMedia:got-device-permission");
+        });
+    } else if (aTopic === "getUserMedia:request") {
+      RuntimePermissions
+        .checkPermissions(this._determineNeededRuntimePermissions(aSubject))
         .then((permissionGranted) => {
           if (permissionGranted) {
             WebrtcUI.handleGumRequest(aSubject, aTopic, aData);
@@ -178,7 +184,16 @@ var WebrtcUI = {
   _determineNeededRuntimePermissions: function(aSubject) {
     let permissions = [];
 
-    let constraints = aSubject.getConstraints();
+    let constraints;
+    if (typeof aSubject === "string") {
+      constraints = {
+        video: aSubject === "video" || aSubject === "all",
+        audio: aSubject === "audio" || aSubject === "all",
+      };
+    } else {
+      constraints = aSubject.getConstraints();
+    }
+
     if (constraints.video) {
       permissions.push(RuntimePermissions.CAMERA);
     }
