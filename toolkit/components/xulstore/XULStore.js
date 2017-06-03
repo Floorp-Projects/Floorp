@@ -65,10 +65,11 @@ XULStore.prototype = {
     this._storeFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
     this._storeFile.append(STOREDB_FILENAME);
 
-    if (!this._storeFile.exists()) {
-      this.import();
-    } else {
+    try {
       this.readFile();
+    } catch (e) {
+      // If readFile() throws, it means that the file didn't exist.
+      this.import();
     }
   },
 
@@ -93,9 +94,6 @@ XULStore.prototype = {
     let localStoreFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
 
     localStoreFile.append("localstore.rdf");
-    if (!localStoreFile.exists()) {
-      return;
-    }
 
     const RDF = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
     const persistKey = RDF.GetResource("http://home.netscape.com/NC-rdf#persist");
@@ -153,7 +151,9 @@ XULStore.prototype = {
       this._data = json.decodeFromStream(stream, stream.available());
     } catch (e) {
       this.log("Error reading JSON: " + e);
-      // Ignore problem, we'll just continue on with an empty dataset.
+      if (e.result == Cr.NS_ERROR_FILE_NOT_FOUND) {
+        throw e; // Let the caller handle it!
+      }
     } finally {
       stream.close();
     }
