@@ -15,7 +15,6 @@ DevToolsModules(
     'converter-observer.js',
     'json-viewer.js',
     'main.js',
-    'utils.js',
     'viewer-config.js'
 )
 
