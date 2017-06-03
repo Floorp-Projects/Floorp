@@ -52,7 +52,6 @@ impl<'a> FirefoxCapabilities<'a> {
             .map(|x| PathBuf::from(x))
             .or_else(|| self.fallback_binary.map(|x| x.clone()))
             .or_else(|| firefox_default_path())
-            .and_then(|x| x.canonicalize().ok())
     }
 
     fn version(&mut self) -> Option<String> {

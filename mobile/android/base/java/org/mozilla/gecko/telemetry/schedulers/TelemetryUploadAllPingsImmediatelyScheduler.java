@@ -17,7 +17,7 @@ import org.mozilla.gecko.telemetry.TelemetryUploadService;
 public class TelemetryUploadAllPingsImmediatelyScheduler implements TelemetryUploadScheduler {
 
     @Override
-    public boolean isReadyToUpload(final TelemetryPingStore store) {
+    public boolean isReadyToUpload(final Context applicationContext, final TelemetryPingStore store) {
         // We're ready since we don't have any conditions to wait on (e.g. on wifi, accumulated X pings).
         return true;
     }

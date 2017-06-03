@@ -8,12 +8,14 @@ public class TokenServerToken {
   public final String id;
   public final String key;
   public final String uid;
+  public final String hashedFxaUid;
   public final String endpoint;
 
-  public TokenServerToken(String id, String key, String uid, String endpoint) {
+  public TokenServerToken(String id, String key, String uid, String hashedFxaUid, String endpoint) {
     this.id = id;
     this.key = key;
     this.uid = uid;
+    this.hashedFxaUid = hashedFxaUid;
     this.endpoint = endpoint;
   }
 }

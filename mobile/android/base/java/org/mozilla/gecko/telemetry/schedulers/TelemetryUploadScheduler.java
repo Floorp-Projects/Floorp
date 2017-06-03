@@ -21,6 +21,6 @@ import org.mozilla.gecko.telemetry.stores.TelemetryPingStore;
  * the check to see if it's time to upload - this is expected to be handled by the caller.
  */
 public interface TelemetryUploadScheduler {
-    boolean isReadyToUpload(TelemetryPingStore store);
+    boolean isReadyToUpload(Context applicationContext, TelemetryPingStore store);
     void scheduleUpload(Context applicationContext, TelemetryPingStore store);
 }

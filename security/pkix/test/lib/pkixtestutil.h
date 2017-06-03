@@ -364,7 +364,7 @@ ByteString CreateEncodedSerialNumber(long value);
 enum class Critical { No = 0, Yes = 1 };
 
 ByteString CreateEncodedBasicConstraints(bool isCA,
-                                         /*optional*/ long* pathLenConstraint,
+                                         /*optional in*/ const long* pathLenConstraint,
                                          Critical critical);
 
 // Creates a DER-encoded extKeyUsage extension with one EKU OID.

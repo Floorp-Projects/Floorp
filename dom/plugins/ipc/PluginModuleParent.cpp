@@ -34,7 +34,6 @@
 #include "PluginQuirks.h"
 #include "gfxPlatform.h"
 #include "GeckoProfiler.h"
-#include "ProfilerParent.h"
 #include "nsPluginTags.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
@@ -51,6 +50,10 @@
 #elif XP_MACOSX
 #include "PluginInterposeOSX.h"
 #include "PluginUtilsOSX.h"
+#endif
+
+#ifdef MOZ_GECKO_PROFILER
+#include "ProfilerParent.h"
 #endif
 
 using base::KillProcess;

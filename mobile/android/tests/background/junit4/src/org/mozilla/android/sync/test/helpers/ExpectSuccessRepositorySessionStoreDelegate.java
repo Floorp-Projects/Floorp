@@ -39,6 +39,11 @@ public class ExpectSuccessRepositorySessionStoreDelegate extends
   }
 
   @Override
+  public void onRecordStoreReconciled(String guid) {
+    log("Store reconciled record " + guid);
+  }
+
+  @Override
   public RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor) {
     return this;
   }
