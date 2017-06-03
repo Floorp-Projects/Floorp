@@ -32,7 +32,6 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   , mNeedsComposite(false)
   , mIsFirstPaint(false)
   , mTarget(nullptr)
-  , mPaintSequenceNumber(0)
 {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
 }
@@ -125,13 +124,6 @@ WebRenderLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 bool
 WebRenderLayerManager::BeginTransaction()
 {
-  // Increment the paint sequence number even if test logging isn't
-  // enabled in this process; it may be enabled in the parent process,
-  // and the parent process expects unique sequence numbers.
-  ++mPaintSequenceNumber;
-  if (gfxPrefs::APZTestLoggingEnabled()) {
-    mApzTestData.StartNewPaint(mPaintSequenceNumber);
-  }
   return true;
 }
 
@@ -217,7 +209,6 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
       scrollData.SetIsFirstPaint();
       mIsFirstPaint = false;
     }
-    scrollData.SetPaintSequenceNumber(mPaintSequenceNumber);
     if (mRoot) {
       PopulateScrollData(scrollData, mRoot.get());
     }
