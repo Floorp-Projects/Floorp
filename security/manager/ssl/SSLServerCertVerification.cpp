@@ -229,7 +229,7 @@ public:
                                   Telemetry::HistogramID telemetryID = Telemetry::HistogramCount,
                                   uint32_t telemetryValue = -1,
                                   SSLErrorMessageType errorMessageType =
-                                      PlainErrorMessage);
+                                    SSLErrorMessageType::Plain);
 
   void Dispatch();
 private:
@@ -641,7 +641,7 @@ CertErrorRunnable::CheckCertOverrides()
                                         errorCodeToReport,
                                         Telemetry::HistogramCount,
                                         -1,
-                                        OverridableCertErrorMessage);
+                                        SSLErrorMessageType::OverridableCert);
 
   LogInvalidCertError(mInfoObject,
                       result->mErrorCode,
@@ -1795,7 +1795,7 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
       }
 
       // We must call SetCanceled here to set the error message type
-      // in case it isn't PlainErrorMessage, which is what we would
+      // in case it isn't SSLErrorMessageType::Plain, which is what we would
       // default to if we just called
       // PR_SetError(runnable->mResult->mErrorCode, 0) and returned
       // SECFailure without doing this.
