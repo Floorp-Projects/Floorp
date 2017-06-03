@@ -1166,9 +1166,8 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     let canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
     this.ctx.translate(offset - canvasX, offset - canvasY);
 
-    this.ctx.font = (fontSize * currentZoom) + "px " + GRID_FONT_FAMILY;
+    this.ctx.font = fontSize + "px " + GRID_FONT_FAMILY;
     this.ctx.strokeStyle = this.color;
-    this.ctx.fillStyle = this.color;
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
 
@@ -1181,15 +1180,38 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
         // Check if the font size is exceeds the bounds of the containing grid cell.
         if (fontSize > column.breadth || fontSize > row.breadth) {
           fontSize = (column.breadth + row.breadth) / 2;
-          this.ctx.font = (fontSize * currentZoom) + "px " + GRID_FONT_FAMILY;
+          this.ctx.font = fontSize + "px " + GRID_FONT_FAMILY;
         }
+
+        let textWidth = this.ctx.measureText(area.name).width;
+
+        // The width of the character 'm' approximates the height of the text.
+        let textHeight = this.ctx.measureText("m").width;
+
+        // Padding in pixels for the line number text inside of the line number container.
+        let padding = 3 * displayPixelRatio;
+
+        let boxWidth = textWidth + 2 * padding;
+        let boxHeight = textHeight + 2 * padding;
 
         let x = column.start + column.breadth / 2;
         let y = row.start + row.breadth / 2;
 
         [x, y] = apply(this.currentMatrix, [x, y]);
 
-        this.ctx.fillText(area.name, x, y);
+        let rectXPos = x - boxWidth / 2;
+        let rectYPos = y - boxHeight / 2;
+
+        // Draw a rounded rectangle with a border width of 1 pixel,
+        // a border color matching the grid color, and a white background
+        this.ctx.lineWidth = 1 * displayPixelRatio;
+        this.ctx.strokeStyle = this.color;
+        this.ctx.fillStyle = "white";
+        let radius = 2 * displayPixelRatio;
+        drawRoundedRect(this.ctx, rectXPos, rectYPos, boxWidth, boxHeight, radius);
+
+        this.ctx.fillStyle = this.color;
+        this.ctx.fillText(area.name, x, y + padding);
       }
     }
 
