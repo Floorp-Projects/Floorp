@@ -38,13 +38,13 @@
 namespace mozilla { namespace psm {
 
 TransportSecurityInfo::TransportSecurityInfo()
-  : mMutex("TransportSecurityInfo::mMutex"),
-    mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE),
-    mSubRequestsBrokenSecurity(0),
-    mSubRequestsNoSecurity(0),
-    mErrorCode(0),
-    mErrorMessageType(PlainErrorMessage),
-    mPort(0)
+  : mMutex("TransportSecurityInfo::mMutex")
+  , mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE)
+  , mSubRequestsBrokenSecurity(0)
+  , mSubRequestsNoSecurity(0)
+  , mErrorCode(0)
+  , mErrorMessageType(SSLErrorMessageType::Plain)
+  , mPort(0)
 {
 }
 
@@ -231,11 +231,11 @@ TransportSecurityInfo::formatErrorMessage(const MutexAutoLock& /*proofOfLock*/,
   }
 
   nsresult rv;
-  MOZ_ASSERT(errorMessageType != OverridableCertErrorMessage ||
+  MOZ_ASSERT(errorMessageType != SSLErrorMessageType::OverridableCert ||
                (mSSLStatus && mSSLStatus->HasServerCert() &&
                 mSSLStatus->mHaveCertErrorBits),
              "formatErrorMessage() called for cert error without cert");
-  if (errorMessageType == OverridableCertErrorMessage &&
+  if (errorMessageType == SSLErrorMessageType::OverridableCert &&
       mSSLStatus && mSSLStatus->HasServerCert()) {
     rv = formatOverridableCertErrorMessage(*mSSLStatus, errorCode,
                                            mHostName, mPort,
