@@ -33,6 +33,7 @@
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
 #include "nsFontMetrics.h"
+#include "nsHTMLStyleSheet.h"
 #include "nsMappedAttributes.h"
 #include "nsMediaFeatures.h"
 #include "nsNameSpaceManager.h"
@@ -448,12 +449,18 @@ Gecko_GetSMILOverrideDeclarationBlock(RawGeckoElementBorrowed aElement)
   return decl->AsServo()->RefRawStrong();
 }
 
-RawServoDeclarationBlockStrongBorrowedOrNull
-Gecko_GetHTMLPresentationAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
+const RawServoDeclarationBlockStrong*
+AsRefRawStrong(const RefPtr<RawServoDeclarationBlock>& aDecl)
 {
   static_assert(sizeof(RefPtr<RawServoDeclarationBlock>) ==
                 sizeof(RawServoDeclarationBlockStrong),
                 "RefPtr should just be a pointer");
+  return reinterpret_cast<const RawServoDeclarationBlockStrong*>(&aDecl);
+}
+
+RawServoDeclarationBlockStrongBorrowedOrNull
+Gecko_GetHTMLPresentationAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
+{
   const nsMappedAttributes* attrs = aElement->GetMappedAttributes();
   if (!attrs) {
     auto* svg = nsSVGElement::FromContentOrNull(aElement);
@@ -465,25 +472,53 @@ Gecko_GetHTMLPresentationAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
     return nullptr;
   }
 
-  const RefPtr<RawServoDeclarationBlock>& servo = attrs->GetServoStyle();
-  return reinterpret_cast<const RawServoDeclarationBlockStrong*>(&servo);
+  return AsRefRawStrong(attrs->GetServoStyle());
 }
 
 RawServoDeclarationBlockStrongBorrowedOrNull
 Gecko_GetExtraContentStyleDeclarations(RawGeckoElementBorrowed aElement)
 {
-  static_assert(sizeof(RefPtr<RawServoDeclarationBlock>) ==
-                sizeof(RawServoDeclarationBlockStrong),
-                "RefPtr should just be a pointer");
   if (!aElement->IsAnyOfHTMLElements(nsGkAtoms::td, nsGkAtoms::th)) {
     return nullptr;
   }
   const HTMLTableCellElement* cell = static_cast<const HTMLTableCellElement*>(aElement);
   if (nsMappedAttributes* attrs = cell->GetMappedAttributesInheritedFromTable()) {
-    const RefPtr<RawServoDeclarationBlock>& servo = attrs->GetServoStyle();
-    return reinterpret_cast<const RawServoDeclarationBlockStrong*>(&servo);
+    return AsRefRawStrong(attrs->GetServoStyle());
   }
   return nullptr;
+}
+
+RawServoDeclarationBlockStrongBorrowedOrNull
+Gecko_GetUnvisitedLinkAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
+{
+  nsHTMLStyleSheet* sheet = aElement->OwnerDoc()->GetAttributeStyleSheet();
+  if (!sheet) {
+    return nullptr;
+  }
+
+  return AsRefRawStrong(sheet->GetServoUnvisitedLinkDecl());
+}
+
+RawServoDeclarationBlockStrongBorrowedOrNull
+Gecko_GetVisitedLinkAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
+{
+  nsHTMLStyleSheet* sheet = aElement->OwnerDoc()->GetAttributeStyleSheet();
+  if (!sheet) {
+    return nullptr;
+  }
+
+  return AsRefRawStrong(sheet->GetServoVisitedLinkDecl());
+}
+
+RawServoDeclarationBlockStrongBorrowedOrNull
+Gecko_GetActiveLinkAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
+{
+  nsHTMLStyleSheet* sheet = aElement->OwnerDoc()->GetAttributeStyleSheet();
+  if (!sheet) {
+    return nullptr;
+  }
+
+  return AsRefRawStrong(sheet->GetServoActiveLinkDecl());
 }
 
 static nsIAtom*

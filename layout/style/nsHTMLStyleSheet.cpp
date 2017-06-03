@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM
  * described herein are Copyright (c) International Business Machines Corporation, 2000.
  * Modifications to Mozilla code or documentation identified per MPL Section 3.3
  *
@@ -36,6 +36,7 @@
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
+#include "mozilla/ServoStyleSet.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -476,30 +477,49 @@ nsHTMLStyleSheet::Reset()
   mVisitedRule       = nullptr;
   mActiveRule        = nullptr;
 
+  mServoUnvisitedLinkDecl = nullptr;
+  mServoVisitedLinkDecl = nullptr;
+  mServoActiveLinkDecl = nullptr;
+
   mLangRuleTable.Clear();
   mMappedAttrTable.Clear();
   mMappedAttrsDirty = false;
 }
 
 nsresult
-nsHTMLStyleSheet::ImplLinkColorSetter(RefPtr<HTMLColorRule>& aRule, nscolor aColor)
+nsHTMLStyleSheet::ImplLinkColorSetter(
+    RefPtr<HTMLColorRule>& aRule,
+    RefPtr<RawServoDeclarationBlock>& aDecl,
+    nscolor aColor)
 {
-  if (aRule && aRule->mColor == aColor) {
+  if (!mDocument || !mDocument->GetShell()) {
     return NS_OK;
   }
 
-  aRule = new HTMLColorRule(aColor);
-  if (!aRule)
-    return NS_ERROR_OUT_OF_MEMORY;
+  RestyleManager* restyle =
+    mDocument->GetShell()->GetPresContext()->RestyleManager();
+
+  if (restyle->IsServo()) {
+    MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal());
+    aDecl = Servo_DeclarationBlock_CreateEmpty().Consume();
+    Servo_DeclarationBlock_SetColorValue(aDecl.get(), eCSSProperty_color,
+                                         aColor);
+  } else {
+    if (aRule && aRule->mColor == aColor) {
+      return NS_OK;
+    }
+
+    aRule = new HTMLColorRule(aColor);
+    if (!aRule) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
 
   // Now make sure we restyle any links that might need it.  This
   // shouldn't happen often, so just rebuilding everything is ok.
-  if (mDocument && mDocument->GetShell()) {
-    Element* root = mDocument->GetRootElement();
-    if (root) {
-      mDocument->GetShell()->GetPresContext()->RestyleManager()->
-        PostRestyleEvent(root, eRestyle_Subtree, nsChangeHint(0));
-    }
+  Element* root = mDocument->GetRootElement();
+  if (root) {
+    restyle->PostRestyleEvent(root, eRestyle_Subtree, nsChangeHint(0));
   }
   return NS_OK;
 }
@@ -507,20 +527,20 @@ nsHTMLStyleSheet::ImplLinkColorSetter(RefPtr<HTMLColorRule>& aRule, nscolor aCol
 nsresult
 nsHTMLStyleSheet::SetLinkColor(nscolor aColor)
 {
-  return ImplLinkColorSetter(mLinkRule, aColor);
+  return ImplLinkColorSetter(mLinkRule, mServoUnvisitedLinkDecl, aColor);
 }
 
 
 nsresult
 nsHTMLStyleSheet::SetActiveLinkColor(nscolor aColor)
 {
-  return ImplLinkColorSetter(mActiveRule, aColor);
+  return ImplLinkColorSetter(mActiveRule, mServoActiveLinkDecl, aColor);
 }
 
 nsresult
 nsHTMLStyleSheet::SetVisitedLinkColor(nscolor aColor)
 {
-  return ImplLinkColorSetter(mVisitedRule, aColor);
+  return ImplLinkColorSetter(mVisitedRule, mServoVisitedLinkDecl, aColor);
 }
 
 already_AddRefed<nsMappedAttributes>

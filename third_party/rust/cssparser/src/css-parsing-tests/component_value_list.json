@@ -264,12 +264,12 @@
 	["percentage", "12", 12, "integer"], " ",
 	["percentage", "+34", 34, "integer"], " ",
 	["percentage", "-45", -45, "integer"], " ",
-	["percentage", "0.67", 0.67, "number"], " ",
+	["percentage", "0.66999996", 0.67, "number"], " ",
 	["percentage", "+0.89", 0.89, "number"], " ",
 	["percentage", "-0.01", -0.01, "number"], " ",
-	["percentage", "2.3", 2.3, "number"], " ",
-	["percentage", "+45.0", 45, "number"], " ",
-	["percentage", "-0.67", -0.67, "number"]
+	["percentage", "2.3", 2.3000000000, "number"], " ",
+	["percentage", "+45.0", 45.0, "number"], " ",
+	["percentage", "-0.66999996", -0.67, "number"]
 ],
 
 "12e2% +34e+1% -45E-0% .68e+3% +.79e-1% -.01E2% 2.3E+1% +45.0e6% -0.67e0%", [
@@ -281,7 +281,7 @@
 	["percentage", "-1.0", -1, "number"], " ",
 	["percentage", "23.0", 23, "number"], " ",
 	["percentage", "+45000000.0", 45000000, "number"], " ",
-	["percentage", "-0.67", -0.67, "number"]
+	["percentage", "-0.66999996", -0.67, "number"]
 ],
 
 "12\\% /* Percent sign can not be escaped */", [

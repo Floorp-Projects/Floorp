@@ -14,12 +14,12 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.telemetry.TelemetryOutgoingPing;
 import org.mozilla.gecko.telemetry.TelemetryPing;
 import org.mozilla.gecko.util.FileUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -103,7 +103,7 @@ public class TestTelemetryJSONFilePingStore {
         assertStoreFileCount(0);
 
         final String expectedID = getDocID();
-        final TelemetryPing expectedPing = new TelemetryPing("a/server/url", generateTelemetryPayload(), expectedID);
+        final TelemetryOutgoingPing expectedPing = new TelemetryOutgoingPing("a/server/url", generateTelemetryPayload(), expectedID);
         testStore.storePing(expectedPing);
 
         assertStoreFileCount(1);
@@ -118,7 +118,7 @@ public class TestTelemetryJSONFilePingStore {
     public void testStorePingMultiplePingsStoreSeparateFiles() throws Exception {
         assertStoreFileCount(0);
         for (int i = 1; i < 10; ++i) {
-            testStore.storePing(new TelemetryPing("server", generateTelemetryPayload(), getDocID()));
+            testStore.storePing(new TelemetryOutgoingPing("server", generateTelemetryPayload(), getDocID()));
             assertStoreFileCount(i);
         }
     }
@@ -126,7 +126,7 @@ public class TestTelemetryJSONFilePingStore {
     @Test
     public void testStorePingReleasesFileLock() throws Exception {
         assertStoreFileCount(0);
-        testStore.storePing(new TelemetryPing("server", generateTelemetryPayload(), getDocID()));
+        testStore.storePing(new TelemetryOutgoingPing("server", generateTelemetryPayload(), getDocID()));
         assertStoreFileCount(1);
         final File file = new File(testDir, testDir.list()[0]);
         final FileOutputStream stream = new FileOutputStream(file);
