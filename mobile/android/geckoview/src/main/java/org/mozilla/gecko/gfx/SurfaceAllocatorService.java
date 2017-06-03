@@ -31,7 +31,10 @@ public class SurfaceAllocatorService extends Service {
         }
 
         public void releaseSurface(int handle) {
-            GeckoSurfaceTexture.dispose(handle);
+            final GeckoSurfaceTexture gst = GeckoSurfaceTexture.lookup(handle);
+            if (gst != null) {
+                gst.decrementUse();
+            }
         }
     };
 

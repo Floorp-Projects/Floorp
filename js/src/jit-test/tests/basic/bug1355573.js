@@ -1,6 +1,12 @@
-// |jit-test| error:overflow; allow-oom
+// |jit-test| allow-oom
 if (getBuildConfiguration().debug === true)
-    throw "overflow";
+    quit(0);
 function f(){};
 Object.defineProperty(f, "name", {value: "a".repeat((1<<28)-1)});
-len = f.bind().name.length;
+var ex = null;
+try {
+    len = f.bind().name.length;
+} catch (e) {
+    ex = e;
+}
+assertEq(ex instanceof InternalError, true);

@@ -34,6 +34,10 @@ content.addEventListener("JSONViewInitialized", () => {
   sendAsyncMessage("Test:JsonView:JSONViewInitialized");
 });
 
+content.addEventListener("load", () => {
+  sendAsyncMessage("Test:JsonView:load");
+});
+
 addMessageListener("Test:JsonView:GetElementCount", function (msg) {
   let {selector} = msg.data;
   let nodeList = content.document.querySelectorAll(selector);
@@ -44,6 +48,13 @@ addMessageListener("Test:JsonView:GetElementText", function (msg) {
   let {selector} = msg.data;
   let element = content.document.querySelector(selector);
   let text = element ? element.textContent : null;
+  sendAsyncMessage(msg.name, {text: text});
+});
+
+addMessageListener("Test:JsonView:GetElementVisibleText", function (msg) {
+  let {selector} = msg.data;
+  let element = content.document.querySelector(selector);
+  let text = element ? element.innerText : null;
   sendAsyncMessage(msg.name, {text: text});
 });
 

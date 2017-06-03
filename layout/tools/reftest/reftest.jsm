@@ -861,6 +861,19 @@ function AddStyloTestPrefs(aSandbox, aTestPrefSettings, aRefPrefSettings)
                     aTestPrefSettings, aRefPrefSettings);
 }
 
+function ExtractRange(matches, startIndex, defaultMin = 0) {
+    if (matches[startIndex + 1] === undefined) {
+        return {
+            min: defaultMin,
+            max: Number(matches[startIndex])
+        };
+    }
+    return {
+        min: Number(matches[startIndex]),
+        max: Number(matches[startIndex + 1].substring(1))
+    };
+}
+
 // Note: If you materially change the reftest manifest parsing,
 // please keep the parser in print-manifest-dirs.py in sync.
 function ReadManifest(aURL, inherited_status, aFilter)
@@ -948,8 +961,8 @@ function ReadManifest(aURL, inherited_status, aFilter)
         var slow = false;
         var testPrefSettings = defaultTestPrefSettings.concat();
         var refPrefSettings = defaultRefPrefSettings.concat();
-        var fuzzy_max_delta = 2;
-        var fuzzy_max_pixels = 1;
+        var fuzzy_delta = { min: 0, max: 2 };
+        var fuzzy_pixels = { min: 0, max: 1 };
         var chaosMode = false;
 
         while (items[0].match(/^(fails|needs-focus|random|skip|asserts|slow|require-or|silentfail|pref|test-pref|ref-pref|fuzzy|chaos-mode)/)) {
@@ -1019,17 +1032,17 @@ function ReadManifest(aURL, inherited_status, aFilter)
                 if (!AddPrefSettings(m[1], m[2], m[3], sandbox, testPrefSettings, refPrefSettings)) {
                     throw "Error in pref value in manifest file " + aURL.spec + " line " + lineNo;
                 }
-            } else if ((m = item.match(/^fuzzy\((\d+),(\d+)\)$/))) {
+            } else if ((m = item.match(/^fuzzy\((\d+)(-\d+)?,(\d+)(-\d+)?\)$/))) {
               cond = false;
               expected_status = EXPECTED_FUZZY;
-              fuzzy_max_delta = Number(m[1]);
-              fuzzy_max_pixels = Number(m[2]);
-            } else if ((m = item.match(/^fuzzy-if\((.*?),(\d+),(\d+)\)$/))) {
+              fuzzy_delta = ExtractRange(m, 1);
+              fuzzy_pixels = ExtractRange(m, 3);
+            } else if ((m = item.match(/^fuzzy-if\((.*?),(\d+)(-\d+)?,(\d+)(-\d+)?\)$/))) {
               cond = false;
               if (Components.utils.evalInSandbox("(" + m[1] + ")", sandbox)) {
                 expected_status = EXPECTED_FUZZY;
-                fuzzy_max_delta = Number(m[2]);
-                fuzzy_max_pixels = Number(m[3]);
+                fuzzy_delta = ExtractRange(m, 2);
+                fuzzy_pixels = ExtractRange(m, 4);
               }
             } else if (item == "chaos-mode") {
                 cond = false;
@@ -1119,8 +1132,10 @@ function ReadManifest(aURL, inherited_status, aFilter)
                           slow: slow,
                           prefSettings1: testPrefSettings,
                           prefSettings2: refPrefSettings,
-                          fuzzyMaxDelta: fuzzy_max_delta,
-                          fuzzyMaxPixels: fuzzy_max_pixels,
+                          fuzzyMinDelta: fuzzy_delta.min,
+                          fuzzyMaxDelta: fuzzy_delta.max,
+                          fuzzyMinPixels: fuzzy_pixels.min,
+                          fuzzyMaxPixels: fuzzy_pixels.max,
                           url1: testURI,
                           url2: null,
                           chaosMode: chaosMode }, aFilter);
@@ -1146,14 +1161,23 @@ function ReadManifest(aURL, inherited_status, aFilter)
                           slow: slow,
                           prefSettings1: testPrefSettings,
                           prefSettings2: refPrefSettings,
-                          fuzzyMaxDelta: fuzzy_max_delta,
-                          fuzzyMaxPixels: fuzzy_max_pixels,
+                          fuzzyMinDelta: fuzzy_delta.min,
+                          fuzzyMaxDelta: fuzzy_delta.max,
+                          fuzzyMinPixels: fuzzy_pixels.min,
+                          fuzzyMaxPixels: fuzzy_pixels.max,
                           url1: testURI,
                           url2: null,
                           chaosMode: chaosMode }, aFilter);
         } else if (items[0] == TYPE_REFTEST_EQUAL || items[0] == TYPE_REFTEST_NOTEQUAL) {
             if (items.length != 3)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": incorrect number of arguments to " + items[0];
+
+            if (items[0] == TYPE_REFTEST_NOTEQUAL &&
+                expected_status == EXPECTED_FUZZY &&
+                (fuzzy_delta.min > 0 || fuzzy_pixels.min > 0)) {
+                throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": minimum fuzz must be zero for tests of type " + items[0];
+            }
+
             var [testURI, refURI] = runHttp
                                   ? ServeFiles(principal, httpDepth,
                                                listURL, [items[1], items[2]])
@@ -1181,8 +1205,10 @@ function ReadManifest(aURL, inherited_status, aFilter)
                           slow: slow,
                           prefSettings1: testPrefSettings,
                           prefSettings2: refPrefSettings,
-                          fuzzyMaxDelta: fuzzy_max_delta,
-                          fuzzyMaxPixels: fuzzy_max_pixels,
+                          fuzzyMinDelta: fuzzy_delta.min,
+                          fuzzyMaxDelta: fuzzy_delta.max,
+                          fuzzyMinPixels: fuzzy_pixels.min,
+                          fuzzyMaxPixels: fuzzy_pixels.max,
                           url1: testURI,
                           url2: refURI,
                           chaosMode: chaosMode }, aFilter);
@@ -1612,7 +1638,8 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
         true:  {s: ["PASS", "PASS"], n: "Random"},
         false: {s: ["FAIL", "FAIL"], n: "Random"}
     };
-    outputs[EXPECTED_FUZZY] = outputs[EXPECTED_PASS];
+    // for EXPECTED_FUZZY we need special handling because we can have
+    // Pass, UnexpectedPass, or UnexpectedFail
 
     var output;
     var extra;
@@ -1714,20 +1741,30 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
             // whether the two renderings match:
             var equal;
             var maxDifference = {};
+            // whether the allowed fuzziness from the annotations is exceeded
+            // by the actual comparison results
+            var fuzz_exceeded = false;
 
             differences = gWindowUtils.compareCanvases(gCanvas1, gCanvas2, maxDifference);
             equal = (differences == 0);
 
+            if (maxDifference.value > 0 && equal) {
+                throw "Inconsistent result from compareCanvases.";
+            }
+
             // what is expected on this platform (PASS, FAIL, or RANDOM)
             var expected = gURLs[0].expected;
 
-            if (maxDifference.value > 0 && maxDifference.value <= gURLs[0].fuzzyMaxDelta &&
-                differences <= gURLs[0].fuzzyMaxPixels) {
-                if (equal) {
-                    throw "Inconsistent result from compareCanvases.";
-                }
-                equal = expected == EXPECTED_FUZZY;
-                logger.info(`REFTEST fuzzy match (${maxDifference.value}, ${differences}) <= (${gURLs[0].fuzzyMaxDelta}, ${gURLs[0].fuzzyMaxPixels})`);
+            if (expected == EXPECTED_FUZZY) {
+                logger.info(`REFTEST fuzzy test ` +
+                            `(${gURLs[0].fuzzyMinDelta}, ${gURLs[0].fuzzyMinPixels}) <= ` +
+                            `(${maxDifference.value}, ${differences}) <= ` +
+                            `(${gURLs[0].fuzzyMaxDelta}, ${gURLs[0].fuzzyMaxPixels})`);
+                fuzz_exceeded = maxDifference.value > gURLs[0].fuzzyMaxDelta ||
+                                differences > gURLs[0].fuzzyMaxPixels;
+                equal = !fuzz_exceeded &&
+                        maxDifference.value >= gURLs[0].fuzzyMinDelta &&
+                        differences >= gURLs[0].fuzzyMinPixels;
             }
 
             var failedExtraCheck = gFailedNoPaint || gFailedOpaqueLayer || gFailedAssignedLayer;
@@ -1735,7 +1772,27 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
             // whether the comparison result matches what is in the manifest
             var test_passed = (equal == (gURLs[0].type == TYPE_REFTEST_EQUAL)) && !failedExtraCheck;
 
-            output = outputs[expected][test_passed];
+            if (expected != EXPECTED_FUZZY) {
+                output = outputs[expected][test_passed];
+            } else if (test_passed) {
+                output = {s: ["PASS", "PASS"], n: "Pass"};
+            } else if (gURLs[0].type == TYPE_REFTEST_EQUAL &&
+                       !failedExtraCheck &&
+                       !fuzz_exceeded) {
+                // If we get here, that means we had an '==' type test where
+                // at least one of the actual difference values was below the
+                // allowed range, but nothing else was wrong. So let's produce
+                // UNEXPECTED-PASS in this scenario. Also, if we enter this
+                // branch, 'equal' must be false so let's assert that to guard
+                // against logic errors.
+                if (equal) {
+                    throw "Logic error in reftest.jsm fuzzy test handling!";
+                }
+                output = {s: ["PASS", "FAIL"], n: "UnexpectedPass"};
+            } else {
+                // In all other cases we fail the test
+                output = {s: ["FAIL", "PASS"], n: "UnexpectedFail"};
+            }
             extra = { status_msg: output.n };
 
             ++gTestResults[output.n];

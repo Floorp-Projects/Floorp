@@ -980,7 +980,7 @@ wasm::LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp)
 }
 
 WasmActivation*
-wasm::MaybeActiveActivation(JSContext* cx)
+wasm::ActivationIfInnermost(JSContext* cx)
 {
     // WasmCall pushes both an outer WasmActivation and an inner JitActivation
     // that only becomes active when calling JIT code.

@@ -1,3 +1,4 @@
+atomic.h
 nspr.h
 plarena.h
 plarenas.h

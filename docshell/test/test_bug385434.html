@@ -22,6 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=385434
 /** Test for Bug 385434 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
+SimpleTest.expectAssertions(0, 1); // bug 1333702
 
 var gNumHashchanges = 0;
 var gCallbackOnIframeLoad = false;

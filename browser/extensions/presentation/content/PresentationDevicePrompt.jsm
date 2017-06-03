@@ -126,7 +126,7 @@ PresentationPermissionPrompt.prototype = {
       notificationIcon.setAttribute("role", "button");
       notificationIcon.setAttribute("tooltiptext",
                                     GetString("presentation.urlbar.tooltiptext"));
-      notificationIcon.style.filter = "url('chrome://global/skin/filters.svg#fill')";
+      notificationIcon.style.setProperty("-moz-context-properties", "fill");
       notificationIcon.style.fill = "currentcolor";
       notificationIcon.style.opacity = "0.4";
       notificationPopupBox.appendChild(notificationIcon);

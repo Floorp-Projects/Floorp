@@ -190,7 +190,7 @@ LookupFaultingInstance(WasmActivation* activation, void* pc, void* fp);
 // If the innermost (active) Activation is a WasmActivation, return it.
 
 WasmActivation*
-MaybeActiveActivation(JSContext* cx);
+ActivationIfInnermost(JSContext* cx);
 
 // Return whether the given PC is in wasm code.
 

@@ -8,6 +8,7 @@ package org.mozilla.gecko.gfx;
 import android.graphics.SurfaceTexture;
 import android.util.Log;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.HashMap;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
@@ -22,22 +23,26 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
     private boolean mIsSingleBuffer;
     private int mTexName;
     private GeckoSurfaceTexture.Callbacks mListener;
+    private AtomicInteger mUseCount;
 
     @WrapForJNI(dispatchTo = "current")
     private static native int nativeAcquireTexture();
 
     private GeckoSurfaceTexture(int handle, int texName) {
         super(texName);
-        mHandle = handle;
-        mIsSingleBuffer = false;
-        mTexName = texName;
+        init(handle, texName, false);
     }
 
     private GeckoSurfaceTexture(int handle, int texName, boolean singleBufferMode) {
         super(texName, singleBufferMode);
+        init(handle, texName, singleBufferMode);
+    }
+
+    private void init(int handle, int texName, boolean singleBufferMode) {
         mHandle = handle;
         mIsSingleBuffer = singleBufferMode;
         mTexName = texName;
+        mUseCount = new AtomicInteger(1);
     }
 
     @WrapForJNI
@@ -58,9 +63,13 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
     @Override
     @WrapForJNI
     public synchronized void updateTexImage() {
-        super.updateTexImage();
-        if (mListener != null) {
-            mListener.onUpdateTexImage();
+        try {
+            super.updateTexImage();
+            if (mListener != null) {
+                mListener.onUpdateTexImage();
+            }
+        } catch (Exception e) {
+            Log.w(LOGTAG, "updateTexImage() failed", e);
         }
     }
 
@@ -84,6 +93,30 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
     @WrapForJNI
     public static boolean isSingleBufferSupported() {
         return Versions.feature19Plus;
+    }
+
+    @WrapForJNI
+    public void incrementUse() {
+        mUseCount.incrementAndGet();
+    }
+
+    @WrapForJNI
+    public void decrementUse() {
+        int useCount = mUseCount.decrementAndGet();
+
+        if (useCount == 0) {
+            synchronized (sSurfaceTextures) {
+                sSurfaceTextures.remove(mHandle);
+            }
+
+            setListener(null);
+
+            if (Versions.feature16Plus) {
+                detachFromGLContext();
+            }
+
+            release();
+        }
     }
 
     public static GeckoSurfaceTexture acquire(boolean singleBufferMode) {
@@ -112,18 +145,6 @@ public final class GeckoSurfaceTexture extends SurfaceTexture {
 
 
         return gst;
-    }
-
-    public static void dispose(int handle) {
-        final GeckoSurfaceTexture gst;
-        synchronized (sSurfaceTextures) {
-            gst = sSurfaceTextures.remove(handle);
-        }
-
-        if (gst != null) {
-            gst.setListener(null);
-            gst.release();
-        }
     }
 
     @WrapForJNI
