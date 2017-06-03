@@ -591,11 +591,12 @@ WebrtcGmpVideoEncoder::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
         default:
           MOZ_CRASH("GMP_BufferType already handled in switch above");
       }
-      if (buffer+size > end) {
+      MOZ_ASSERT(size != 0 &&
+                 buffer+size <= end); // in non-debug code, don't crash in this case
+      if (size == 0 || buffer+size > end) {
         // XXX see above - should we kill the plugin for returning extra bytes?  Probably
         LOG(LogLevel::Error,
-            ("GMP plugin returned badly formatted encoded data: end is %td bytes past buffer end",
-             buffer+size - end));
+            ("GMP plugin returned badly formatted encoded data: buffer=%p, size=%d, end=%p", buffer, size, end));
         return;
       }
       // XXX optimize by making buffer an offset

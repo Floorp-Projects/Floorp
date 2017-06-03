@@ -421,10 +421,16 @@ SurfaceTextureHost::SurfaceTextureHost(TextureFlags aFlags,
 {
   // Continuous update makes no sense with single buffer mode
   MOZ_ASSERT(!mSurfTex->IsSingleBuffer() || !mContinuousUpdate);
+
+  mSurfTex->IncrementUse();
 }
 
 SurfaceTextureHost::~SurfaceTextureHost()
 {
+  if (mSurfTex) {
+    mSurfTex->DecrementUse();
+    mSurfTex = nullptr;
+  }
 }
 
 void
@@ -516,7 +522,11 @@ SurfaceTextureHost::DeallocateDeviceData()
   if (mTextureSource) {
     mTextureSource->DeallocateDeviceData();
   }
-  mSurfTex = nullptr;
+
+  if (mSurfTex) {
+    mSurfTex->DecrementUse();
+    mSurfTex = nullptr;
+  }
 }
 
 #endif // MOZ_WIDGET_ANDROID

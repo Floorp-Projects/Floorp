@@ -25,6 +25,7 @@ public final class GeckoSurface extends Surface {
     private int mHandle;
     private boolean mIsSingleBuffer;
     private volatile boolean mIsAvailable;
+    private boolean mOwned = true;
 
     @WrapForJNI(exceptionMode = "nsresult")
     public GeckoSurface(GeckoSurfaceTexture gst) {
@@ -64,6 +65,15 @@ public final class GeckoSurface extends Surface {
         out.writeInt(mHandle);
         out.writeByte((byte) (mIsSingleBuffer ? 1 : 0));
         out.writeByte((byte) (mIsAvailable ? 1 : 0));
+
+        mOwned = false;
+    }
+
+    @Override
+    public void release() {
+        if (mOwned) {
+            super.release();
+        }
     }
 
     @WrapForJNI

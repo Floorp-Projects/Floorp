@@ -79,16 +79,18 @@ GeneratorObject::suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame
         return false;
     }
 
+    ArrayObject* stack = nullptr;
+    if (nvalues > 0) {
+        stack = NewDenseCopiedArray(cx, nvalues, vp);
+        if (!stack)
+            return false;
+    }
+
     uint32_t yieldAndAwaitIndex = GET_UINT24(pc);
     genObj->setYieldAndAwaitIndex(yieldAndAwaitIndex);
     genObj->setEnvironmentChain(*frame.environmentChain());
-
-    if (nvalues) {
-        ArrayObject* stack = NewDenseCopiedArray(cx, nvalues, vp);
-        if (!stack)
-            return false;
+    if (stack)
         genObj->setExpressionStack(*stack);
-    }
 
     return true;
 }

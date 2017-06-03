@@ -1481,10 +1481,8 @@ js::FinishCompilation(JSContext* cx, HandleScript script, CompilerConstraintList
         // Add this compilation to the inlinedCompilations list of each inlined
         // script, so we can invalidate it on changes to stack type sets.
         if (entry.script != script) {
-            if (!entry.script->types()->addInlinedCompilation(*precompileInfo)) {
-                ReportOutOfMemory(cx);
-                return false;
-            }
+            if (!entry.script->types()->addInlinedCompilation(*precompileInfo))
+                succeeded = false;
         }
 
         // If necessary, add constraints to trigger invalidation on the script
