@@ -90,7 +90,7 @@ function readServerContent(request, buffer)
 function flushAndOpenAltChannel()
 {
   // We need to do a GC pass to ensure the cache entry has been freed.
-  gc();
+  Cu.forceShrinkingGC();
   Services.cache2.QueryInterface(Ci.nsICacheTesting).flush(cacheFlushObserver);
 }
 
@@ -101,13 +101,13 @@ let cacheFlushObserver = { observe: function() {
     return;
   }
   cacheFlushObserver = null;
-  gc();
+  Cu.forceShrinkingGC();
   make_and_open_channel(URL, altContentType, readAltContent);
 }};
 
 function readAltContent(request, buffer, closure, fromCache)
 {
-  gc();
+  Cu.forceShrinkingGC();
   let cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
   do_check_eq(fromCache || servedNotModified, true);
@@ -119,7 +119,7 @@ function readAltContent(request, buffer, closure, fromCache)
 
 function readServerContent2(request, buffer, closure, fromCache)
 {
-  gc();
+  Cu.forceShrinkingGC();
   let cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
   do_check_eq(fromCache || servedNotModified, true);
@@ -138,7 +138,7 @@ function readServerContent2(request, buffer, closure, fromCache)
 function flushAndOpenAltChannel2()
 {
   // We need to do a GC pass to ensure the cache entry has been freed.
-  gc();
+  Cu.forceShrinkingGC();
   Services.cache2.QueryInterface(Ci.nsICacheTesting).flush(cacheFlushObserver2);
 }
 
@@ -149,13 +149,13 @@ let cacheFlushObserver2 = { observe: function() {
     return;
   }
   cacheFlushObserver2 = null;
-  gc();
+  Cu.forceShrinkingGC();
   make_and_open_channel(URL, altContentType, readAltContent2);
 }};
 
 function readAltContent2(request, buffer, closure, fromCache)
 {
-  gc();
+  Cu.forceShrinkingGC();
   let cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
   do_check_eq(servedNotModified || fromCache, true);
@@ -163,7 +163,7 @@ function readAltContent2(request, buffer, closure, fromCache)
   do_check_eq(buffer, altContent);
 
   do_execute_soon(() => {
-    gc();
+    Cu.forceShrinkingGC();
     do_print("writing other content\n");
     let os = cc.openAlternativeOutputStream(altContentType2);
     os.write(altContent2, altContent2.length);
@@ -176,7 +176,7 @@ function readAltContent2(request, buffer, closure, fromCache)
 function flushAndOpenAltChannel3()
 {
   // We need to do a GC pass to ensure the cache entry has been freed.
-  gc();
+  Cu.forceShrinkingGC();
   Services.cache2.QueryInterface(Ci.nsICacheTesting).flush(cacheFlushObserver3);
 }
 
@@ -188,7 +188,7 @@ let cacheFlushObserver3 = { observe: function() {
   }
 
   cacheFlushObserver3 = null;
-  gc();
+  Cu.forceShrinkingGC();
   make_and_open_channel(URL, altContentType2, readAltContent3);
 }};
 
