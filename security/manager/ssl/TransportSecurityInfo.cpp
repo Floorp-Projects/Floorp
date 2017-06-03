@@ -76,19 +76,17 @@ TransportSecurityInfo::SetHostName(const char* host)
   mHostName.Assign(host);
 }
 
-nsresult
+void
 TransportSecurityInfo::SetPort(int32_t aPort)
 {
   mPort = aPort;
-  return NS_OK;
 }
 
-nsresult
+void
 TransportSecurityInfo::SetOriginAttributes(
   const OriginAttributes& aOriginAttributes)
 {
   mOriginAttributes = aOriginAttributes;
-  return NS_OK;
 }
 
 PRErrorCode
@@ -117,11 +115,10 @@ TransportSecurityInfo::GetSecurityState(uint32_t* state)
   return NS_OK;
 }
 
-nsresult
+void
 TransportSecurityInfo::SetSecurityState(uint32_t aState)
 {
   mSecurityState = aState;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -490,12 +487,10 @@ TransportSecurityInfo::GetSSLStatus(nsISSLStatus** _result)
   return NS_OK;
 }
 
-nsresult
+void
 TransportSecurityInfo::SetSSLStatus(nsSSLStatus *aSSLStatus)
 {
   mSSLStatus = aSSLStatus;
-
-  return NS_OK;
 }
 
 /* Formats an error message for non-certificate-related SSL errors

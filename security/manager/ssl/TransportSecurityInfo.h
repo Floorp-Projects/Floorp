@@ -52,19 +52,19 @@ public:
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
 
-  nsresult SetSecurityState(uint32_t aState);
+  void SetSecurityState(uint32_t aState);
 
   const nsACString & GetHostName() const { return mHostName; }
 
   void SetHostName(const char* host);
 
   int32_t GetPort() const { return mPort; }
-  nsresult SetPort(int32_t aPort);
+  void SetPort(int32_t aPort);
 
   const OriginAttributes& GetOriginAttributes() const {
     return mOriginAttributes;
   }
-  nsresult SetOriginAttributes(const OriginAttributes& aOriginAttributes);
+  void SetOriginAttributes(const OriginAttributes& aOriginAttributes);
 
   PRErrorCode GetErrorCode() const;
 
@@ -76,7 +76,7 @@ public:
                    ::mozilla::psm::SSLErrorMessageType errorMessageType);
 
   /* Set SSL Status values */
-  nsresult SetSSLStatus(nsSSLStatus *aSSLStatus);
+  void SetSSLStatus(nsSSLStatus* aSSLStatus);
   nsSSLStatus* SSLStatus() { return mSSLStatus; }
   void SetStatusErrorBits(nsNSSCertificate* cert, uint32_t collected_errors);
 
@@ -136,10 +136,9 @@ public:
   void LookupCertErrorBits(TransportSecurityInfo * infoObject,
                            nsSSLStatus* status);
 
-  static nsresult Init()
+  static void Init()
   {
     sInstance = new RememberCertErrorsTable();
-    return NS_OK;
   }
 
   static RememberCertErrorsTable & GetInstance()
