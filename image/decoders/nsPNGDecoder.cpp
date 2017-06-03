@@ -19,7 +19,9 @@
 #include "nsRect.h"
 #include "nspr.h"
 #include "png.h"
+
 #include "RasterImage.h"
+#include "SurfaceCache.h"
 #include "SurfacePipeFactory.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Telemetry.h"
@@ -569,6 +571,13 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 
   // Post our size to the superclass
   decoder->PostSize(frameRect.width, frameRect.height);
+
+  if (width >
+    SurfaceCache::MaximumCapacity()/(bit_depth > 8 ? 16:8)) {
+    // libpng needs space to allocate two row buffers
+    png_error(decoder->mPNG, "Image is too wide");
+  }
+
   if (decoder->HasError()) {
     // Setting the size led to an error.
     png_error(decoder->mPNG, "Sizing error");
@@ -735,6 +744,11 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   if (interlace_type == PNG_INTERLACE_ADAM7) {
     if (frameRect.height < INT32_MAX / (frameRect.width * int32_t(channels))) {
       const size_t bufferSize = channels * frameRect.width * frameRect.height;
+
+      if (bufferSize > SurfaceCache::MaximumCapacity()) {
+        png_error(decoder->mPNG, "Insufficient memory to deinterlace image");
+      }
+
       decoder->interlacebuf = static_cast<uint8_t*>(malloc(bufferSize));
     }
     if (!decoder->interlacebuf) {
