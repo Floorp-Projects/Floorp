@@ -1558,7 +1558,7 @@ Simulator::handleWasmInterrupt()
     void* pc = (void*)get_pc();
     uint8_t* fp = (uint8_t*)get_register(r11);
 
-    WasmActivation* activation = wasm::MaybeActiveActivation(cx_);
+    WasmActivation* activation = wasm::ActivationIfInnermost(cx_);
     const wasm::CodeSegment* segment;
     const wasm::Code* code = activation->compartment()->wasm.lookupCode(pc, &segment);
     if (!code || !segment->containsFunctionPC(pc))
@@ -1581,7 +1581,7 @@ Simulator::handleWasmInterrupt()
 bool
 Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
 {
-    WasmActivation* act = wasm::MaybeActiveActivation(cx_);
+    WasmActivation* act = wasm::ActivationIfInnermost(cx_);
     if (!act)
         return false;
 
