@@ -7,11 +7,6 @@
 // Tests that the contextual menu items shown when clicking on linked attributes
 // for <script> and <link> tags actually open the right tools.
 
-// The following rejection should not be left uncaught. This test has been
-// whitelisted until the issue is fixed.
-Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.expectUncaughtRejection(/NS_ERROR_NOT_INITIALIZED/);
-
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
 add_task(function* () {
