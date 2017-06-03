@@ -450,7 +450,6 @@ nsNSSSocketInfo::IsAcceptableForHost(const nsACString& hostname, bool* _retval)
   if (!certVerifier) {
     return NS_OK;
   }
-  nsAutoCString hostnameFlat(PromiseFlatCString(hostname));
   CertVerifier::Flags flags = CertVerifier::FLAG_LOCAL_ONLY;
   UniqueCERTCertList unusedBuiltChain;
   mozilla::pkix::Result result =
@@ -459,7 +458,7 @@ nsNSSSocketInfo::IsAcceptableForHost(const nsACString& hostname, bool* _retval)
                                       nullptr, // sctsFromTLSExtension
                                       mozilla::pkix::Now(),
                                       nullptr, // pinarg
-                                      hostnameFlat.get(),
+                                      hostname,
                                       unusedBuiltChain,
                                       nullptr, // no peerCertChain
                                       false, // save intermediates
