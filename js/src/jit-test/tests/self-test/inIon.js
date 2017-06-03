@@ -13,7 +13,7 @@ function test() {
     while(!callInIon());
 
     // Test with zealous gc preventing compilation.
-    while(!inIon()) gc();
+    while(!inIon()) gc(this, 'shrinking');
 };
 
 test();
