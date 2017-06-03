@@ -75,8 +75,8 @@ public class VideoCaptureDeviceInfoAndroid {
   // marked "private" as it is only called by native code.
   @WebRTCJNITarget
   private static CaptureCapabilityAndroid[] getDeviceInfo() {
-      final boolean hasPermissions = Permissions.waitFor(
-              (Activity) GeckoAppShell.getContext(), Manifest.permission.CAMERA);
+      final boolean hasPermissions = Permissions.has(
+              GeckoAppShell.getApplicationContext(), Manifest.permission.CAMERA);
 
       if (hasPermissions) {
           return createDeviceList();

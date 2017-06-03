@@ -37,8 +37,6 @@ const Cr = Components.results;
 const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
-Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
@@ -49,6 +47,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "StartupPerformance",
   "resource:///modules/sessionstore/StartupPerformance.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CrashMonitor",
   "resource://gre/modules/CrashMonitor.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 const STATE_RUNNING_STR = "running";
 

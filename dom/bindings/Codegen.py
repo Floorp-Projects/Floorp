@@ -6782,8 +6782,10 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
         return conversion, False
 
     if type.isCallback() or type.isCallbackInterface():
-        wrapCode = setObject(
-            "*GetCallbackFromCallbackObject(%(result)s)",
+        # Callbacks can store null if we nuked the compartments their
+        # objects lived in.
+        wrapCode = setObjectOrNull(
+            "GetCallbackFromCallbackObject(%(result)s)",
             wrapAsType=type)
         if type.nullable():
             wrapCode = (
