@@ -768,13 +768,6 @@ WebRenderBridgeParent::RecvFlushApzRepaints()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvGetAPZTestData(APZTestData* aOutData)
-{
-  mCompositorBridge->GetAPZTestData(GetLayersId(), aOutData);
-  return IPC_OK();
-}
-
 void
 WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 {

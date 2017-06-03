@@ -126,7 +126,6 @@ public:
   mozilla::ipc::IPCResult RecvSetAsyncZoom(const FrameMetrics::ViewID& aScrollId,
                                            const float& aZoom) override;
   mozilla::ipc::IPCResult RecvFlushApzRepaints() override;
-  mozilla::ipc::IPCResult RecvGetAPZTestData(APZTestData* data) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void SetWebRenderProfilerEnabled(bool aEnabled);

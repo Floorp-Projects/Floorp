@@ -14,7 +14,6 @@ include WebRenderMessages;
 include protocol PCompositorBridge;
 include protocol PTexture;
 
-using mozilla::layers::APZTestData from "mozilla/layers/APZTestData.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
@@ -77,7 +76,6 @@ parent:
   sync SetAsyncScrollOffset(ViewID scrollId, float x, float y);
   sync SetAsyncZoom(ViewID scrollId, float zoom);
   async FlushApzRepaints();
-  sync GetAPZTestData() returns (APZTestData data);
 
   async Shutdown();
 child:
