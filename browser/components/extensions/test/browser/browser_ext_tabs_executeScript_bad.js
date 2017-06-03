@@ -1,14 +1,5 @@
 "use strict";
 
-// Various "Missing host permission" rejections are left uncaught. This may be
-// caused by issues in the test, in the testing framework, or in production
-// code. This bug should be fixed, but for the moment this file is whitelisted.
-//
-// NOTE: Whitelisting a class of rejections should be limited. Normally you
-//       should use "expectUncaughtRejection" to flag individual failures.
-Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
-PromiseTestUtils.whitelistRejectionsGlobally(/Missing host permission/);
-
 // This is a pretty terrible hack, but it's the best we can do until we
 // support |executeScript| callbacks and |lastError|.
 async function testHasNoPermission(params) {
