@@ -47,6 +47,7 @@ var commandsCheckDataChannel = [
   function SEND_MESSAGE(test) {
     var message = "Lorem ipsum dolor sit amet";
 
+    info("Sending message:" + message);
     return test.send(message).then(result => {
       is(result.data, message, "Message correctly transmitted from pcLocal to pcRemote.");
     });
@@ -56,6 +57,7 @@ var commandsCheckDataChannel = [
     var contents = "At vero eos et accusam et justo duo dolores et ea rebum.";
     var blob = new Blob([contents], { "type" : "text/plain" });
 
+    info("Sending blob");
     return test.send(blob).then(result => {
       ok(result.data instanceof Blob, "Received data is of instance Blob");
       is(result.data.size, blob.size, "Received data has the correct size.");
@@ -80,6 +82,7 @@ var commandsCheckDataChannel = [
     var channels = test.pcRemote.dataChannels;
     var message = "I am the Omega";
 
+    info("Sending message:" + message);
     return test.send(message).then(result => {
       is(channels.indexOf(result.channel), channels.length - 1, "Last channel used");
       is(result.data, message, "Received message has the correct content.");
@@ -94,6 +97,7 @@ var commandsCheckDataChannel = [
       targetChannel: test.pcRemote.dataChannels[0]
     };
 
+    info("Sending message:" + message);
     return test.send(message, options).then(result => {
       is(test.pcRemote.dataChannels.indexOf(result.channel), 0, "1st channel used");
       is(result.data, message, "Received message has the correct content.");
@@ -108,6 +112,7 @@ var commandsCheckDataChannel = [
       targetChannel: test.pcLocal.dataChannels[0]
     };
 
+    info("Sending message:" + message);
     return test.send(message, options).then(result => {
       is(test.pcLocal.dataChannels.indexOf(result.channel), 0, "1st channel used");
       is(result.data, message, "Return message has the correct content.");
@@ -161,6 +166,7 @@ var commandsCheckDataChannel = [
     var channels = test.pcRemote.dataChannels;
     var message = "I am the walrus; Goo goo g'joob";
 
+    info("Sending message:" + message);
     return test.send(message).then(result => {
       is(channels.indexOf(result.channel), channels.length - 1, "Last channel used");
       is(result.data, message, "Received message has the correct content.");
@@ -187,6 +193,7 @@ var commandsCheckDataChannel = [
     var channels = test.pcRemote.dataChannels;
     var message = "Nice to see you working maxPacketLifeTime";
 
+    info("Sending message:" + message);
     return test.send(message).then(result => {
       is(channels.indexOf(result.channel), channels.length - 1, "Last channel used");
       is(result.data, message, "Received message has the correct content.");
@@ -201,6 +208,7 @@ var commandsCheckLargeXfer = [
     // note: type received is always blob for binary data
     var options = {};
     options.bufferedAmountLowThreshold = 64*1024;
+    info("Sending arraybuffer");
     return test.send(buffer, options).then(result => {
       ok(result.data instanceof Blob, "Received data is of instance Blob");
       is(result.data.size, size, "Received data has the correct size.");

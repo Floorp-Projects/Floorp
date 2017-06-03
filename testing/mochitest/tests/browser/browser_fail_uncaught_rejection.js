@@ -1,19 +1,6 @@
-setExpectedFailuresForSelfTest(3);
-
-// Keep "JSMPromise" separate so "Promise" still refers to native Promises.
-let JSMPromise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+setExpectedFailuresForSelfTest(1);
 
 function test() {
+  Components.utils.import("resource://gre/modules/Promise.jsm", this);
   Promise.reject(new Error("Promise rejection."));
-  JSMPromise.reject(new Error("Promise.jsm rejection."));
-  (async () => {
-    throw "Synchronous rejection from async function.";
-  })();
-
-  // The following rejections are caught, so they won't result in failures.
-  Promise.reject(new Error("Promise rejection.")).catch(() => {});
-  JSMPromise.reject(new Error("Promise.jsm rejection.")).catch(() => {});
-  (async () => {
-    throw "Synchronous rejection from async function.";
-  })().catch(() => {});
 }

@@ -351,8 +351,6 @@
 @BINPATH@/components/nsInputListAutoComplete.js
 @BINPATH@/components/contentAreaDropListener.manifest
 @BINPATH@/components/contentAreaDropListener.js
-@BINPATH@/components/messageWakeupService.js
-@BINPATH@/components/messageWakeupService.manifest
 @BINPATH@/components/nsINIProcessor.manifest
 @BINPATH@/components/nsINIProcessor.js
 @BINPATH@/components/servicesComponents.manifest

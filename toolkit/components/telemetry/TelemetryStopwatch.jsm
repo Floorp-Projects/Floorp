@@ -8,7 +8,10 @@ const Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = ["TelemetryStopwatch"];
 
-Cu.import("resource://gre/modules/Log.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Log",
+  "resource://gre/modules/Log.jsm");
+
 var Telemetry = Cc["@mozilla.org/base/telemetry;1"]
                   .getService(Ci.nsITelemetry);
 

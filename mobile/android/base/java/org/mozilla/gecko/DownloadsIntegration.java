@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import android.app.Activity;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -103,7 +104,9 @@ public class DownloadsIntegration implements BundleEventListener
 
         int state = PackageManager.COMPONENT_ENABLED_STATE_DEFAULT;
         try {
-            state = GeckoAppShell.getContext().getPackageManager().getApplicationEnabledSetting("com.android.providers.downloads");
+            final PackageManager pm = GeckoAppShell.getApplicationContext()
+                                                   .getPackageManager();
+            state = pm.getApplicationEnabledSetting("com.android.providers.downloads");
         } catch (IllegalArgumentException e) {
             // Download Manager package does not exist
             return false;
@@ -161,7 +164,9 @@ public class DownloadsIntegration implements BundleEventListener
 
         if (useSystemDownloadManager()) {
             final File f = new File(aFile);
-            final DownloadManager dm = (DownloadManager) GeckoAppShell.getContext().getSystemService(Context.DOWNLOAD_SERVICE);
+            final DownloadManager dm = (DownloadManager)
+                    GeckoAppShell.getApplicationContext()
+                                 .getSystemService(Context.DOWNLOAD_SERVICE);
             dm.addCompletedDownload(f.getName(),
                     f.getName(),
                     true, // Media scanner should scan this
@@ -170,8 +175,13 @@ public class DownloadsIntegration implements BundleEventListener
                     Math.max(1, f.length()), // Some versions of Android require downloads to be at least length 1
                     false); // Don't show a notification.
         } else {
-            final Context context = GeckoAppShell.getContext();
-            final GeckoMediaScannerClient client = new GeckoMediaScannerClient(context, aFile, mimeType);
+            final Activity currentActivity =
+                    GeckoActivityMonitor.getInstance().getCurrentActivity();
+            if (currentActivity == null) {
+                return;
+            }
+            final GeckoMediaScannerClient client =
+                    new GeckoMediaScannerClient(currentActivity, aFile, mimeType);
             client.connect();
         }
     }
@@ -181,7 +191,9 @@ public class DownloadsIntegration implements BundleEventListener
             return;
         }
 
-        final DownloadManager dm = (DownloadManager) GeckoAppShell.getContext().getSystemService(Context.DOWNLOAD_SERVICE);
+        final DownloadManager dm = (DownloadManager)
+                GeckoAppShell.getApplicationContext()
+                             .getSystemService(Context.DOWNLOAD_SERVICE);
 
         Cursor c = null;
         try {

@@ -368,7 +368,6 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
                   for x in [
     'AndroidGamepadManager.java',
     'Clipboard.java',
-    'ContextGetter.java',
     'CrashHandler.java',
     'EventDispatcher.java',
     'GeckoAccessibility.java',

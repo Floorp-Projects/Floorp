@@ -282,7 +282,7 @@ public class WebAppActivity extends SingleTabActivity {
             return null;
         }
         final LoadFaviconResult loadIconResult = FaviconDecoder
-            .decodeDataURI(getContext(), iconStr);
+            .decodeDataURI(this, iconStr);
         if (loadIconResult == null) {
             return null;
         }
