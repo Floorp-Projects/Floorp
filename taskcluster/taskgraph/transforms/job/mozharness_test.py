@@ -319,8 +319,7 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
     mozharness = test['mozharness']
     worker = taskdesc['worker']
     is_talos = test['suite'] == 'talos'
-
-    assert worker['os'] == 'macosx'
+    is_macosx = worker['os'] == 'macosx'
 
     installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
     mozharness_url = get_artifact_url('<build>',
@@ -359,7 +358,7 @@ def mozharness_test_on_native_engine(config, job, taskdesc):
     if is_talos:
         env['NEED_XVFB'] = 'false'
 
-    script = 'test-macosx.sh' if test['test-platform'].startswith('macosx') else 'test-linux.sh'
+    script = 'test-macosx.sh' if is_macosx else 'test-linux.sh'
     worker['context'] = '{}/raw-file/{}/taskcluster/scripts/tester/{}'.format(
         config.params['head_repository'], config.params['head_rev'], script
     )

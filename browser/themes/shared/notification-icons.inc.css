@@ -4,6 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
+.popup-notification-icon,
+.identity-popup-permission-icon {
+  -moz-context-properties: fill;
+  fill: GrayText;
+}
+
 #notification-popup-box {
   padding: 5px 0px;
   margin: -5px 0px;
@@ -11,24 +17,11 @@
   padding-inline-end: 5px;
 }
 
-.notification-anchor-icon,
-#blocked-permissions-container > .blocked-permission-icon {
-  width: 16px;
-  height: 16px;
-  margin-inline-start: 2px;
-}
-
 /* This class can be used alone or in combination with the class defining the
    type of icon displayed. This rule must be defined before the others in order
    for its list-style-image to be overridden. */
 .notification-anchor-icon {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#default-info);
-}
-
-.notification-anchor-icon:not(.plugin-blocked):-moz-lwtheme,
-#blocked-permissions-container > .blocked-permission-icon:-moz-lwtheme {
-  filter: url(chrome://global/skin/filters.svg#fill);
-  fill: currentColor;
 }
 
 /* INDIVIDUAL NOTIFICATIONS */
@@ -252,6 +245,7 @@ html|*#webRTC-previewVideo {
 
 .plugin-icon.plugin-blocked {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#plugin-blocked);
+  fill: #d92215 !important;
 }
 
 #notification-popup-box[hidden] {

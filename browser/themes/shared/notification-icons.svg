@@ -1,12 +1,8 @@
-<?xml version="1.0"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink"
-     class="fieldtext"
+<svg fill="context-fill" xmlns="http://www.w3.org/2000/svg"
      width="32" height="32" viewBox="0 0 32 32">
-#include icon-colors.inc.svg
   <style>
     :root > use:not(:target),
     :root > g:not(:target),
@@ -18,31 +14,6 @@
     }
     .blocked {
       clip-path: url(#blocked-clipPath);
-    }
-
-    #login-highlighted {
-      fill: HighlightText;
-      fill-opacity: 1;
-    }
-
-    #plugin-blocked,
-    #plugin-blocked:target ~ #strikeout {
-      fill: #d92215;
-      fill-opacity: 1;
-    }
-
-    #camera-sharing,
-    #microphone-sharing,
-    #screen-sharing {
-      fill: rgb(224, 41, 29);
-      fill-opacity: 1;
-    }
-
-    #camera-indicator,
-    #microphone-indicator,
-    #screen-indicator {
-      fill: white;
-      fill-opacity: 1;
     }
 
     #update-icon {
@@ -87,41 +58,40 @@
     <circle cx="16" cy="16" r="14" mask="url(#i-mask)"/>
   </g>
 
-  <use id="camera" xlink:href="#camera-icon" />
-  <use id="camera-sharing" xlink:href="#camera-icon"/>
-  <use id="camera-indicator" xlink:href="#camera-icon" />
-  <use id="camera-blocked" class="blocked" xlink:href="#camera-icon" />
-  <use id="desktop-notification" xlink:href="#desktop-notification-icon" />
-  <use id="desktop-notification-blocked" class="blocked" xlink:href="#desktop-notification-icon" />
-  <use id="focus-tab-by-prompt" xlink:href="#focus-tab-by-prompt-icon" />
-  <use id="geo-osx" xlink:href="#geo-osx-icon" />
-  <use id="geo-osx-blocked" class="blocked" xlink:href="#geo-osx-icon" />
-  <use id="geo-linux" xlink:href="#geo-linux-icon" />
-  <use id="geo-linux-blocked" class="blocked" xlink:href="#geo-linux-icon" />
-  <use id="geo-linux-detailed" xlink:href="#geo-linux-detailed-icon" />
-  <use id="geo-windows" xlink:href="#geo-windows-icon" />
-  <use id="geo-windows-blocked" class="blocked" xlink:href="#geo-windows-icon" />
-  <use id="geo-windows-detailed" xlink:href="#geo-windows-detailed-icon" />
-  <use id="indexedDB" xlink:href="#indexedDB-icon" />
-  <use id="indexedDB-blocked" class="blocked" xlink:href="#indexedDB-icon" />
-  <use id="login" xlink:href="#login-icon" />
-  <use id="login-highlighted" class="highlighted" xlink:href="#login-icon" />
-  <use id="login-detailed" xlink:href="#login-detailed-icon" />
-  <use id="microphone" xlink:href="#microphone-icon" />
-  <use id="microphone-sharing" xlink:href="#microphone-icon"/>
-  <use id="microphone-indicator" xlink:href="#microphone-icon"/>
-  <use id="microphone-blocked" class="blocked" xlink:href="#microphone-icon" />
-  <use id="microphone-detailed" xlink:href="#microphone-detailed-icon" />
-  <use id="persistent-storage" xlink:href="#persistent-storage-icon" />
-  <use id="persistent-storage-blocked" class="blocked" xlink:href="#persistent-storage-icon" />
-  <use id="plugin" xlink:href="#plugin-icon" />
-  <use id="plugin-blocked" class="blocked" xlink:href="#plugin-icon" />
-  <use id="popup" xlink:href="#popup-icon" />
-  <use id="screen" xlink:href="#screen-icon" />
-  <use id="screen-sharing" xlink:href="#screen-icon"/>
-  <use id="screen-indicator" xlink:href="#screen-icon"/>
-  <use id="screen-blocked" class="blocked" xlink:href="#screen-icon" />
-  <use id="update" xlink:href="#update-icon" />
+  <use id="camera" href="#camera-icon" />
+  <use id="camera-sharing" href="#camera-icon"/>
+  <use id="camera-indicator" href="#camera-icon" />
+  <use id="camera-blocked" class="blocked" href="#camera-icon" />
+  <use id="desktop-notification" href="#desktop-notification-icon" />
+  <use id="desktop-notification-blocked" class="blocked" href="#desktop-notification-icon" />
+  <use id="focus-tab-by-prompt" href="#focus-tab-by-prompt-icon" />
+  <use id="geo-osx" href="#geo-osx-icon" />
+  <use id="geo-osx-blocked" class="blocked" href="#geo-osx-icon" />
+  <use id="geo-linux" href="#geo-linux-icon" />
+  <use id="geo-linux-blocked" class="blocked" href="#geo-linux-icon" />
+  <use id="geo-linux-detailed" href="#geo-linux-detailed-icon" />
+  <use id="geo-windows" href="#geo-windows-icon" />
+  <use id="geo-windows-blocked" class="blocked" href="#geo-windows-icon" />
+  <use id="geo-windows-detailed" href="#geo-windows-detailed-icon" />
+  <use id="indexedDB" href="#indexedDB-icon" />
+  <use id="indexedDB-blocked" class="blocked" href="#indexedDB-icon" />
+  <use id="login" href="#login-icon" />
+  <use id="login-detailed" href="#login-detailed-icon" />
+  <use id="microphone" href="#microphone-icon" />
+  <use id="microphone-sharing" href="#microphone-icon"/>
+  <use id="microphone-indicator" href="#microphone-icon"/>
+  <use id="microphone-blocked" class="blocked" href="#microphone-icon" />
+  <use id="microphone-detailed" href="#microphone-detailed-icon" />
+  <use id="persistent-storage" href="#persistent-storage-icon" />
+  <use id="persistent-storage-blocked" class="blocked" href="#persistent-storage-icon" />
+  <use id="plugin" href="#plugin-icon" />
+  <use id="plugin-blocked" class="blocked" href="#plugin-icon" />
+  <use id="popup" href="#popup-icon" />
+  <use id="screen" href="#screen-icon" />
+  <use id="screen-sharing" href="#screen-icon"/>
+  <use id="screen-indicator" href="#screen-icon"/>
+  <use id="screen-blocked" class="blocked" href="#screen-icon" />
+  <use id="update" href="#update-icon" />
 
   <path id="strikeout" d="m 2,28 2,2 26,-26 -2,-2 z"/>
 </svg>

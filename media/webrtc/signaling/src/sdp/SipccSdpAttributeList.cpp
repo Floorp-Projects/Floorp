@@ -1387,6 +1387,17 @@ SipccSdpAttributeList::GetSctpPort() const
   return static_cast<const SdpNumberAttribute*>(attr)->mValue;
 }
 
+uint32_t
+SipccSdpAttributeList::GetMaxMessageSize() const
+{
+  if (!HasAttribute(SdpAttribute::kMaxMessageSizeAttribute)) {
+    MOZ_CRASH();
+  }
+
+  const SdpAttribute* attr = GetAttribute(SdpAttribute::kMaxMessageSizeAttribute);
+  return static_cast<const SdpNumberAttribute*>(attr)->mValue;
+}
+
 const SdpSetupAttribute&
 SipccSdpAttributeList::GetSetup() const
 {

@@ -879,7 +879,12 @@ public:
   // Finalization method
   //
 
-  ~nsTArray_Impl() { Clear(); }
+  ~nsTArray_Impl()
+  {
+    if (!base_type::IsEmpty()) {
+      Clear();
+    }
+  }
 
   //
   // Initialization methods

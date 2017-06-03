@@ -15,6 +15,12 @@ window {
   border-style: none;
 }
 
+#audioVideoButton,
+#screenShareButton {
+  -moz-context-properties: fill;
+  fill: white;
+}
+
 #firefoxButton {
   background-image: url("chrome://branding/content/icon48.png");
   background-repeat: no-repeat;
