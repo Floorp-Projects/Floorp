@@ -690,32 +690,8 @@ AndroidBridge::GetGlobalContextRef() {
         return sGlobalContext;
     }
 
-    JNIEnv* const env = GetEnvForThread();
-    AutoLocalJNIFrame jniFrame(env, 4);
-
-    auto context = GeckoAppShell::GetContext();
-    if (!context) {
-        ALOG_BRIDGE("%s: Could not GetContext()", __FUNCTION__);
-        return 0;
-    }
-    jclass contextClass = env->FindClass("android/content/Context");
-    if (!contextClass) {
-        ALOG_BRIDGE("%s: Could not find Context class.", __FUNCTION__);
-        return 0;
-    }
-    jmethodID mid = env->GetMethodID(contextClass, "getApplicationContext",
-                                     "()Landroid/content/Context;");
-    if (!mid) {
-        ALOG_BRIDGE("%s: Could not find getApplicationContext.", __FUNCTION__);
-        return 0;
-    }
-    jobject appContext = env->CallObjectMethod(context.Get(), mid);
-    if (!appContext) {
-        ALOG_BRIDGE("%s: getApplicationContext failed.", __FUNCTION__);
-        return 0;
-    }
-
-    sGlobalContext = env->NewGlobalRef(appContext);
+    auto context = GeckoAppShell::GetApplicationContext();
+    sGlobalContext = Object::GlobalRef(context).Forget();
     MOZ_ASSERT(sGlobalContext);
     return sGlobalContext;
 }

@@ -41,6 +41,32 @@ macosx64/opt:
         secrets: true
         tooltool-downloads: internal
 
+macosx64-noopt/debug:
+    description: "MacOS X x64 No-optimize Debug"
+    index:
+        product: firefox
+        job-name: macosx64-noopt-debug
+    treeherder:
+        platform: osx-10-7-noopt/debug
+        symbol: tc(B)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+    run:
+        using: mozharness
+        actions: [get-secrets build generate-build-stats update]
+        config:
+            - builds/releng_base_mac_64_cross_builds.py
+            - balrog/production.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: cross-noopt-debug
+        tooltool-downloads: internal
+        keep-artifacts: false
+    run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
+
 macosx64-add-on-devel/opt:
     description: "MacOS X x64 add-on-devel"
     index:

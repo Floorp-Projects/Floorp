@@ -30,7 +30,7 @@ public class PromptListItem {
     public Drawable mIcon;
 
     PromptListItem(GeckoBundle aObject) {
-        Context context = GeckoAppShell.getContext();
+        final Context context = GeckoAppShell.getApplicationContext();
         label = aObject.getString("label", "");
         isGroup = aObject.getBoolean("isGroup");
         inGroup = aObject.getBoolean("inGroup");

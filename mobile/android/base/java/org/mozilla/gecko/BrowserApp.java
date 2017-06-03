@@ -1793,7 +1793,7 @@ public class BrowserApp extends GeckoApp
                 // Display notification for Mozilla data reporting, if data should be collected.
                 if (AppConstants.MOZ_DATA_REPORTING &&
                         Restrictions.isAllowed(this, Restrictable.DATA_CHOICES)) {
-                    DataReportingNotification.checkAndNotifyPolicy(GeckoAppShell.getContext());
+                    DataReportingNotification.checkAndNotifyPolicy(this);
                 }
                 break;
 
@@ -1989,12 +1989,12 @@ public class BrowserApp extends GeckoApp
                 break;
 
             case "Experiments:SetOverride":
-                Experiments.setOverride(getContext(), message.getString("name"),
+                Experiments.setOverride(this, message.getString("name"),
                                         message.getBoolean("isEnabled"));
                 break;
 
             case "Experiments:ClearOverride":
-                Experiments.clearOverride(getContext(), message.getString("name"));
+                Experiments.clearOverride(this, message.getString("name"));
                 break;
 
             case "Favicon:Request":
@@ -2040,7 +2040,7 @@ public class BrowserApp extends GeckoApp
                 break;
 
             case "Sanitize:ClearSyncedTabs":
-                FennecTabsRepository.deleteNonLocalClientsAndTabs(getContext());
+                FennecTabsRepository.deleteNonLocalClientsAndTabs(this);
                 callback.sendSuccess(null);
                 break;
 
@@ -2069,7 +2069,7 @@ public class BrowserApp extends GeckoApp
                 Telemetry.addToHistogram("FENNEC_CUSTOM_HOMEPAGE",
                         (Tabs.hasHomepage(this) ? 1 : 0));
 
-                final SharedPreferences prefs = GeckoSharedPrefs.forProfile(getContext());
+                final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
                 final boolean hasCustomHomepanels =
                         prefs.contains(HomeConfigPrefsBackend.PREFS_CONFIG_KEY) ||
                         prefs.contains(HomeConfigPrefsBackend.PREFS_CONFIG_KEY_OLD);
@@ -2077,7 +2077,7 @@ public class BrowserApp extends GeckoApp
                 Telemetry.addToHistogram("FENNEC_HOMEPANELS_CUSTOM", hasCustomHomepanels ? 1 : 0);
 
                 Telemetry.addToHistogram("FENNEC_READER_VIEW_CACHE_SIZE",
-                        SavedReaderViewHelper.getSavedReaderViewHelper(getContext())
+                        SavedReaderViewHelper.getSavedReaderViewHelper(this)
                                              .getDiskSpacedUsedKB());
 
                 if (Versions.feature16Plus) {
@@ -2086,7 +2086,7 @@ public class BrowserApp extends GeckoApp
                 }
 
                 Telemetry.addToHistogram("FENNEC_ORBOT_INSTALLED",
-                    ContextUtils.isPackageInstalled(getContext(), "org.torproject.android") ? 1 : 0);
+                    ContextUtils.isPackageInstalled(this, "org.torproject.android") ? 1 : 0);
                 break;
 
             case "Website:AppInstalled":
@@ -2094,7 +2094,7 @@ public class BrowserApp extends GeckoApp
                 final String startUrl = message.getString("start_url");
                 final String manifestPath = message.getString("manifest_path");
                 final LoadFaviconResult loadIconResult = FaviconDecoder
-                    .decodeDataURI(getContext(), message.getString("icon"));
+                    .decodeDataURI(this, message.getString("icon"));
                 if (loadIconResult != null) {
                     final Bitmap icon = loadIconResult
                         .getBestBitmap(GeckoAppShell.getPreferredIconSize());
@@ -2831,9 +2831,9 @@ public class BrowserApp extends GeckoApp
     }
 
     private void showFirstrunPager() {
-        if (Experiments.isInExperimentLocal(getContext(), Experiments.ONBOARDING3_A)) {
+        if (Experiments.isInExperimentLocal(this, Experiments.ONBOARDING3_A)) {
             Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_A);
-            GeckoSharedPrefs.forProfile(getContext()).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING3_A).apply();
+            GeckoSharedPrefs.forProfile(this).edit().putString(Experiments.PREF_ONBOARDING_VERSION, Experiments.ONBOARDING3_A).apply();
             Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, Experiments.ONBOARDING3_A);
             return;
         }
@@ -4122,7 +4122,7 @@ public class BrowserApp extends GeckoApp
             // for topsites where we do not indicate that a page is an offline reader-view bookmark too.
             final String pageURL;
             if (!flags.contains(OnUrlOpenListener.Flags.NO_READER_VIEW)) {
-                pageURL = SavedReaderViewHelper.getReaderURLIfCached(getContext(), url);
+                pageURL = SavedReaderViewHelper.getReaderURLIfCached(this, url);
             } else {
                 pageURL = url;
             }
@@ -4146,7 +4146,7 @@ public class BrowserApp extends GeckoApp
 
         // We only use onUrlOpenInBackgroundListener for the homepanel context menus, hence
         // we should always be checking whether we want the readermode version
-        final String pageURL = SavedReaderViewHelper.getReaderURLIfCached(getContext(), url);
+        final String pageURL = SavedReaderViewHelper.getReaderURLIfCached(this, url);
 
         final boolean isPrivate = flags.contains(OnUrlOpenInBackgroundListener.Flags.PRIVATE);
 

@@ -1162,6 +1162,12 @@ PresShell::Destroy()
 {
   // Do not add code before this line please!
   if (mHaveShutDown) {
+    // If we never got a root frame the root view could exist now still.
+    // In that case assert that it has no children and no frame.
+    MOZ_RELEASE_ASSERT(!mViewManager || !mViewManager->GetRootView() ||
+      (!mViewManager->GetRootView()->GetFrame() &&
+       !mViewManager->GetRootView()->GetFirstChild()));
+    MOZ_RELEASE_ASSERT(!mFrameConstructor || !mFrameConstructor->GetRootFrame());
     return;
   }
 

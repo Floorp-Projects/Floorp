@@ -1699,9 +1699,9 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
     }
   }
 
-  MediaManager::PostTask(NewTaskFrom([id, aWindowId, audioLoopDev,
-                                      videoLoopDev, aVideoType,
-                                      aAudioType, aFake]() mutable {
+  RefPtr<Runnable> task = NewTaskFrom([id, aWindowId, audioLoopDev,
+                                       videoLoopDev, aVideoType,
+                                       aAudioType, aFake]() mutable {
     // Only enumerate what's asked for, and only fake cams and mics.
     bool hasVideo = aVideoType != MediaSourceEnum::Other;
     bool hasAudio = aAudioType != MediaSourceEnum::Other;
@@ -1748,7 +1748,28 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
       }
       return NS_OK;
     }));
-  }));
+  });
+
+  if (!aFake &&
+      (aVideoType == MediaSourceEnum::Camera ||
+       aAudioType == MediaSourceEnum::Microphone) &&
+      Preferences::GetBool("media.navigator.permission.device", false)) {
+    // Need to ask permission to retrieve list of all devices;
+    // notify frontend observer and wait for callback notification to post task.
+    const char16_t* const type =
+      (aVideoType != MediaSourceEnum::Camera)     ? u"audio" :
+      (aAudioType != MediaSourceEnum::Microphone) ? u"video" :
+                                                    u"all";
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    obs->NotifyObservers(static_cast<nsIRunnable*>(task),
+                         "getUserMedia:ask-device-permission",
+                         type);
+  } else {
+    // Don't need to ask permission to retrieve list of all devices;
+    // post the retrieval task immediately.
+    MediaManager::PostTask(task.forget());
+  }
+
   return p.forget();
 }
 
@@ -1841,6 +1862,7 @@ MediaManager::Get() {
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     if (obs) {
       obs->AddObserver(sSingleton, "last-pb-context-exited", false);
+      obs->AddObserver(sSingleton, "getUserMedia:got-device-permission", false);
       obs->AddObserver(sSingleton, "getUserMedia:privileged:allow", false);
       obs->AddObserver(sSingleton, "getUserMedia:response:allow", false);
       obs->AddObserver(sSingleton, "getUserMedia:response:deny", false);
@@ -3018,6 +3040,13 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
   } else if (!strcmp(aTopic, "last-pb-context-exited")) {
     // Clear memory of private-browsing-specific deviceIds. Fire and forget.
     media::SanitizeOriginKeys(0, true);
+    return NS_OK;
+  } else if (!strcmp(aTopic, "getUserMedia:got-device-permission")) {
+    MOZ_ASSERT(aSubject);
+    nsCOMPtr<nsIRunnable> task = do_QueryInterface(aSubject);
+    MediaManager::PostTask(NewTaskFrom([task] {
+      task->Run();
+    }));
     return NS_OK;
   } else if (!strcmp(aTopic, "getUserMedia:privileged:allow") ||
              !strcmp(aTopic, "getUserMedia:response:allow")) {

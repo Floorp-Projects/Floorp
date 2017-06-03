@@ -241,14 +241,6 @@ auto GeckoAppShell::GetConnection(mozilla::jni::String::Param a0) -> mozilla::jn
     return mozilla::jni::Method<GetConnection_t>::Call(GeckoAppShell::Context(), nullptr, a0);
 }
 
-constexpr char GeckoAppShell::GetContext_t::name[];
-constexpr char GeckoAppShell::GetContext_t::signature[];
-
-auto GeckoAppShell::GetContext() -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Method<GetContext_t>::Call(GeckoAppShell::Context(), nullptr);
-}
-
 constexpr char GeckoAppShell::GetCurrentBatteryInformation_t::name[];
 constexpr char GeckoAppShell::GetCurrentBatteryInformation_t::signature[];
 
