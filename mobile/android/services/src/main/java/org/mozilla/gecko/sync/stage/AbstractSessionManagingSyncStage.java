@@ -5,6 +5,7 @@
 package org.mozilla.gecko.sync.stage;
 
 import org.mozilla.gecko.sync.GlobalSession;
+import org.mozilla.gecko.sync.telemetry.TelemetryStageCollector;
 
 /**
  * A global sync stage that manages a <code>GlobalSession</code> instance. This
@@ -18,6 +19,7 @@ import org.mozilla.gecko.sync.GlobalSession;
  */
 public abstract class AbstractSessionManagingSyncStage implements GlobalSyncStage {
   protected GlobalSession session;
+  protected TelemetryStageCollector telemetryStageCollector;
 
   protected abstract void execute() throws NoSuchStageException;
   protected abstract void resetLocal();
@@ -36,8 +38,10 @@ public abstract class AbstractSessionManagingSyncStage implements GlobalSyncStag
   }
 
   @Override
-  public void execute(GlobalSession session) throws NoSuchStageException {
+  public void execute(GlobalSession session, TelemetryStageCollector telemetryStageCollector) throws NoSuchStageException {
+    this.telemetryStageCollector = telemetryStageCollector;
     this.session = session;
+
     execute();
   }
 }

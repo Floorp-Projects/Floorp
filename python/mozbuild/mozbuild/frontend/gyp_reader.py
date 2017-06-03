@@ -326,7 +326,15 @@ def process_gyp_result(gyp_result, gyp_dir_attrs, path, config, output,
               context['DEFINES']['_UNICODE'] = True
         context['DISABLE_STL_WRAPPING'] = True
 
-        context.update(gyp_dir_attrs.sandbox_vars)
+        for key, value in gyp_dir_attrs.sandbox_vars.items():
+            if context.get(key) and isinstance(context[key], list):
+                # If we have a key from sanbox_vars that's also been
+                # populated here we use the value from sandbox_vars as our
+                # basis rather than overriding outright.
+                context[key] = value + context[key]
+            else:
+                context[key] = value
+
         yield context
 
 

@@ -61,6 +61,12 @@ public class TestStoreTracking extends AndroidSyncTestCase {
       }
 
       @Override
+      public void onRecordStoreReconciled(String guid) {
+        Logger.debug(getName(), "Reconciled " + guid);
+        assertEq(expectedGUID, guid);
+      }
+
+      @Override
       public void onStoreCompleted(long storeEnd) {
         Logger.debug(getName(), "Store completed at " + storeEnd + ".");
         try {

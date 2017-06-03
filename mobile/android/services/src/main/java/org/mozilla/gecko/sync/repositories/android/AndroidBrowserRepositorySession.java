@@ -463,6 +463,10 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
             trace("Both local and remote records have been modified.");
             if (record.lastModified > existingRecord.lastModified) {
               trace("Remote is newer, and deleted. Deleting local.");
+              // Note that while this counts as "reconciliation", we're probably over-counting.
+              // Currently, locallyModified above is _always_ true if a record exists locally,
+              // and so we'll consider any deletions of already present records as reconciliations.
+              storeDelegate.onRecordStoreReconciled(record.guid);
               storeRecordDeletion(record, existingRecord);
               return;
             }
@@ -517,6 +521,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
           // of reconcileRecords.
           Logger.debug(LOG_TAG, "Calling delegate callback with guid " + replaced.guid +
                                 "(" + replaced.androidID + ")");
+          storeDelegate.onRecordStoreReconciled(replaced.guid);
           storeDelegate.onRecordStoreSucceeded(replaced.guid);
           return;
 

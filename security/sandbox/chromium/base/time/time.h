@@ -687,7 +687,7 @@ constexpr TimeDelta TimeDelta::FromProduct(int64_t value,
           // Avoid internal compiler errors in /analyze builds with VS 2015
           // update 3.
           // https://connect.microsoft.com/VisualStudio/feedback/details/2870865
-          DCHECK(positive_value > 0),
+          static_cast<void>(DCHECK(positive_value > 0)),
 #endif
           value > std::numeric_limits<int64_t>::max() / positive_value
               ? Max()

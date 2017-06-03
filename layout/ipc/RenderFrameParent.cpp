@@ -217,6 +217,9 @@ RenderFrameParent::AttachLayerManager()
     if (content) {
       lm = nsContentUtils::LayerManagerForContent(content);
     }
+    if (!lm) {
+      lm = GetFrom(mFrameLoader);
+    }
   }
 
   // Perhaps the document containing this frame currently has no presentation?

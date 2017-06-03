@@ -2519,6 +2519,9 @@ TabParent::GetWidget() const
     return nullptr;
   }
   nsCOMPtr<nsIWidget> widget = nsContentUtils::WidgetForContent(mFrameElement);
+  if (!widget) {
+    widget = nsContentUtils::WidgetForDocument(mFrameElement->OwnerDoc());
+  }
   return widget.forget();
 }
 

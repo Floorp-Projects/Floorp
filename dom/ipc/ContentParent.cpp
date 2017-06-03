@@ -184,7 +184,6 @@
 #include "nsHostObjectProtocolHandler.h"
 #include "nsICaptivePortalService.h"
 #include "nsIObjectLoadingContent.h"
-#include "ProfilerParent.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -257,6 +256,7 @@
 
 #ifdef MOZ_GECKO_PROFILER
 #include "nsIProfiler.h"
+#include "ProfilerParent.h"
 #endif
 
 // For VP9Benchmark::sBenchmarkFpsPref

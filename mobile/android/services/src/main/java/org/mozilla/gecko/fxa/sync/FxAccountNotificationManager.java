@@ -13,14 +13,12 @@ import android.support.v4.app.NotificationCompat.Builder;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.background.common.telemetry.TelemetryWrapper;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountWebFlowActivity;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.Action;
-import org.mozilla.gecko.sync.telemetry.TelemetryContract;
 
 /**
  * Abstraction that manages notifications shown or hidden for a Firefox Account.
@@ -84,7 +82,7 @@ public class FxAccountNotificationManager {
     final String text;
     final Intent notificationIntent;
     if (action == Action.NeedsFinishMigrating) {
-      TelemetryWrapper.addToHistogram(TelemetryContract.SYNC11_MIGRATION_NOTIFICATIONS_OFFERED, 1);
+      //TelemetryWrapper.addToHistogram(TelemetryContract.SYNC11_MIGRATION_NOTIFICATIONS_OFFERED, 1);
 
       title = context.getResources().getString(R.string.fxaccount_sync_finish_migrating_notification_title);
       text = context.getResources().getString(R.string.fxaccount_sync_finish_migrating_notification_text, state.email);

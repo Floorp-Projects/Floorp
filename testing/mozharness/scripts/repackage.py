@@ -92,12 +92,15 @@ class Repackage(BaseScript):
     def _run_tooltool(self):
         config = self.config
         dirs = self.query_abs_dirs()
-        if not config.get('tooltool_manifest_src'):
+        manifest_src = os.environ.get('TOOLTOOL_MANIFEST')
+        if not manifest_src:
+            manifest_src = config.get('tooltool_manifest_src')
+        if not manifest_src:
             return self.warning(ERROR_MSGS['tooltool_manifest_undetermined'])
         fetch_script_path = os.path.join(dirs['abs_tools_dir'],
                                          'scripts/tooltool/tooltool_wrapper.sh')
         tooltool_manifest_path = os.path.join(dirs['abs_mozilla_dir'],
-                                              config['tooltool_manifest_src'])
+                                              manifest_src)
         cmd = [
             'sh',
             fetch_script_path,

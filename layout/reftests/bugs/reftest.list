@@ -94,10 +94,10 @@ fuzzy-if(skiaContent,2,13) == 84400-2.html 84400-2-ref.html
 == 97777-2.html 97777-2-ref.html
 == 98223-1.html 98223-1-ref.html
 == 98223-2.html 98223-2-ref.html
-fails-if(styloVsGecko||stylo) == 99850-1a.html 99850-1-ref.html
+== 99850-1a.html 99850-1-ref.html
 random == 99850-1b.html 99850-1-ref.html # bug 471629
-fails-if(styloVsGecko||stylo) == 99850-1c.html 99850-1-ref.html
-fails-if(styloVsGecko||stylo) == 99850-1d.html 99850-1-ref.html
+== 99850-1c.html 99850-1-ref.html
+== 99850-1d.html 99850-1-ref.html
 == 105030-1.html 105030-1-ref.html
 == 109735-1.html 109735-1-ref.html
 == 116882-1.html 116882-1-ref.html
@@ -1587,8 +1587,8 @@ asserts(1-2) asserts-if(styloVsGecko,4) == 582146-1.html about:blank
 fuzzy-if(Android,2,48) == 585598-2.xhtml 585598-2-ref.xhtml
 == 586400-1.html 586400-1-ref.html
 fuzzy-if(d2d,52,1051) == 586683-1.html 586683-1-ref.html
-fails-if(styloVsGecko||stylo) == 589615-1a.xhtml 589615-1-ref.html
-fails-if(styloVsGecko||stylo) == 589615-1b.html 589615-1-ref.html
+== 589615-1a.xhtml 589615-1-ref.html
+== 589615-1b.html 589615-1-ref.html
 == 589672-1.html 589672-1-ref.html
 != 589682-1.html 589682-1-notref.html
 pref(dom.meta-viewport.enabled,true) skip-if(Android) == 593243-1.html 593243-1-ref.html # bug 593168
