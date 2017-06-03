@@ -864,7 +864,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
         return false;
     AutoSetHandlingSegFault handling(cx);
 
-    WasmActivation* activation = MaybeActiveActivation(cx);
+    WasmActivation* activation = ActivationIfInnermost(cx);
     if (!activation)
         return false;
 
@@ -1030,7 +1030,7 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
     // normally only be accessed by the cx's active thread.
     AutoNoteSingleThreadedRegion anstr;
 
-    WasmActivation* activation = MaybeActiveActivation(cx);
+    WasmActivation* activation = ActivationIfInnermost(cx);
     if (!activation)
         return false;
 
@@ -1237,7 +1237,7 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
         return false;
     AutoSetHandlingSegFault handling(cx);
 
-    WasmActivation* activation = MaybeActiveActivation(cx);
+    WasmActivation* activation = ActivationIfInnermost(cx);
     if (!activation)
         return false;
 
@@ -1368,10 +1368,10 @@ RedirectJitCodeToInterruptCheck(JSContext* cx, CONTEXT* context)
     if (!code || !codeSegment->containsFunctionPC(pc))
         return false;
 
-    // Only probe cx->activation() via MaybeActiveActivation after we know the
+    // Only probe cx->activation() via ActivationIfInnermost after we know the
     // pc is in wasm code. This way we don't depend on signal-safe update of
     // cx->activation().
-    WasmActivation* activation = MaybeActiveActivation(cx);
+    WasmActivation* activation = ActivationIfInnermost(cx);
     MOZ_ASSERT(activation);
 
 #ifdef JS_SIMULATOR
