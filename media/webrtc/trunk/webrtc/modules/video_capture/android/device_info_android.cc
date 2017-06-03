@@ -225,6 +225,7 @@ int32_t DeviceInfoAndroid::Init() {
 }
 
 uint32_t DeviceInfoAndroid::NumberOfDevices() {
+  Refresh();
   return g_camera_info->size();
 }
 

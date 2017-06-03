@@ -1,10 +1,3 @@
-// The tab closing code leaves an uncaught rejection. This test has been
-// whitelisted until the issue is fixed.
-if (!gMultiProcessBrowser) {
-  Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
-  PromiseTestUtils.expectUncaughtRejection(/is no longer, usable/);
-}
-
 const kBaseURI = "http://mochi.test:8888/browser/dom/base/test/empty.html";
 const kPluginJS = "chrome://mochitests/content/browser/dom/base/test/plugin.js";
 var testURLs = [

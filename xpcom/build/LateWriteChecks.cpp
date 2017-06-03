@@ -158,6 +158,9 @@ LateWriteObserver::Observe(IOInterposeObserver::Observation& aOb)
   stream = _fdopen(fd, "w");
 #else
   int fd = mkstemp(name);
+  if (fd == -1) {
+    MOZ_CRASH("mkstemp failed");
+  }
   stream = fdopen(fd, "w");
 #endif
 

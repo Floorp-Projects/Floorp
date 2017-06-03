@@ -67,7 +67,7 @@ public final class ThumbnailHelper {
     private ByteBuffer mBuffer;
 
     private ThumbnailHelper() {
-        final Resources res = GeckoAppShell.getContext().getResources();
+        final Resources res = GeckoAppShell.getApplicationContext().getResources();
 
         mPendingThumbnails = new ArrayList<>();
         try {

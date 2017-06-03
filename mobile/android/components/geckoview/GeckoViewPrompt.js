@@ -140,7 +140,7 @@ PromptFactory.prototype = {
       let dispatchEvents = false;
       if (!aElement.multiple) {
         let elem = map[result.choices[0]];
-        if (elem) {
+        if (elem && elem instanceof win.HTMLOptionElement) {
           dispatchEvents = !elem.selected;
           elem.selected = true;
         } else {
@@ -150,16 +150,17 @@ PromptFactory.prototype = {
         for (let i = 0; i < id; i++) {
           let elem = map[i];
           let index = result.choices.indexOf(String(i));
-          if (elem.selected != (index >= 0)) {
+          if (elem instanceof win.HTMLOptionElement &&
+              elem.selected !== (index >= 0)) {
             // Current selected is not the same as the new selected state.
             dispatchEvents = true;
             elem.selected = !elem.selected;
-            result.choices[index] = undefined;
           }
+          result.choices[index] = undefined;
         }
         for (let i = 0; i < result.choices.length; i++) {
           if (result.choices[i] !== undefined && result.choices[i] !== null) {
-            Cu.reportError("Invalid id for select result: " + result.choices[0]);
+            Cu.reportError("Invalid id for select result: " + result.choices[i]);
             break;
           }
         }
