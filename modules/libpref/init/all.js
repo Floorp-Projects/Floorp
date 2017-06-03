@@ -437,11 +437,7 @@ pref("media.decoder-doctor.wmf-disabled-is-failure", false);
 pref("media.decoder-doctor.new-issue-endpoint", "https://webcompat.com/issues/new");
 
 // Whether to suspend decoding of videos in background tabs.
-#ifdef NIGHTLY_BUILD
 pref("media.suspend-bkgnd-video.enabled", true);
-#else
-pref("media.suspend-bkgnd-video.enabled", false);
-#endif
 // Delay, in ms, from time window goes to background to suspending
 // video decoders. Defaults to 10 seconds.
 pref("media.suspend-bkgnd-video.delay-ms", 10000);
