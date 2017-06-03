@@ -381,21 +381,23 @@ this.PanelMultiView = class {
   }
 
   showMainView() {
-    if (this.panelViews) {
-      this.showSubView(this._mainViewId);
-    } else {
-      if (this.showingSubView) {
-        let viewNode = this._currentSubView;
-        let evt = new this.window.CustomEvent("ViewHiding", { bubbles: true, cancelable: true });
-        viewNode.dispatchEvent(evt);
-
+    if (this.showingSubView) {
+      let viewNode = this._currentSubView;
+      let evt = new this.window.CustomEvent("ViewHiding", { bubbles: true, cancelable: true });
+      viewNode.dispatchEvent(evt);
+      if (this.panelViews) {
+        viewNode.removeAttribute("current");
+        this.showSubView(this._mainViewId);
+      } else {
         this._transitionHeight(() => {
           viewNode.removeAttribute("current");
           this._currentSubView = null;
           this.node.setAttribute("viewtype", "main");
         });
       }
+    }
 
+    if (!this.panelViews) {
       this._shiftMainView();
     }
   }
@@ -433,8 +435,8 @@ this.PanelMultiView = class {
           // of the main view, i.e. 'forever', during the instance lifetime.
           if (!this._mainViewWidth) {
             this._mainViewWidth = previousRect.width;
-            let top = dwu.getBoundsWithoutFlushing(previousViewNode.firstChild).top;
-            let bottom = dwu.getBoundsWithoutFlushing(previousViewNode.lastChild).bottom;
+            let top = dwu.getBoundsWithoutFlushing(previousViewNode.firstChild || previousViewNode).top;
+            let bottom = dwu.getBoundsWithoutFlushing(previousViewNode.lastChild || previousViewNode).bottom;
             this._viewVerticalPadding = previousRect.height - (bottom - top);
           }
           // Here go the measures that have the same caching lifetime as the height
@@ -642,7 +644,7 @@ this.PanelMultiView = class {
         });
         this._shiftMainView(aAnchor);
       }
-    })();
+    })().catch(e => Cu.reportError(e));
   }
 
   /**

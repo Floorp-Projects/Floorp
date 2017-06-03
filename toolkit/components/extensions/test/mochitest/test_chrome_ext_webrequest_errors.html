@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for WebRequest errors</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="chrome_head.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script type="text/javascript">
+"use strict";
+
+async function test_connection_refused(url, expectedError) {
+  async function background(url, expectedError) {
+    browser.test.log(`background url is ${url}`);
+    browser.webRequest.onErrorOccurred.addListener(details => {
+      if (details.url != url) {
+        return;
+      }
+      browser.test.assertTrue(details.error.startsWith(expectedError), "error correct");
+      browser.test.sendMessage("onErrorOccurred");
+    }, {urls: ["<all_urls>"]});
+
+    let tabId;
+    browser.test.onMessage.addListener(async (msg, expected) => {
+      await browser.tabs.remove(tabId);
+      browser.test.sendMessage("done");
+    });
+
+    let tab = await browser.tabs.create({url});
+    tabId = tab.id;
+  }
+
+  let extensionData = {
+    manifest: {
+      permissions: ["webRequest", "tabs", "*://badchain.include-subdomains.pinning.example.com/*"],
+    },
+    background: `(${background})("${url}", "${expectedError}")`,
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+
+  await extension.awaitMessage("onErrorOccurred");
+  extension.sendMessage("close-tab");
+  await extension.awaitMessage("done");
+
+  await extension.unload();
+}
+
+add_task(function test_bad_cert() {
+  return test_connection_refused("https://badchain.include-subdomains.pinning.example.com/", "Unable to communicate securely with peer");
+});
+
+</script>
+
+</body>
+</html>

@@ -23,6 +23,7 @@
 
 class nsIDocument;
 class nsMappedAttributes;
+struct RawServoDeclarationBlock;
 
 class nsHTMLStyleSheet final : public nsIStyleRuleProcessor
 {
@@ -57,6 +58,16 @@ public:
   nsresult SetLinkColor(nscolor aColor);
   nsresult SetActiveLinkColor(nscolor aColor);
   nsresult SetVisitedLinkColor(nscolor aColor);
+
+  const RefPtr<RawServoDeclarationBlock>& GetServoUnvisitedLinkDecl() const {
+    return mServoUnvisitedLinkDecl;
+  }
+  const RefPtr<RawServoDeclarationBlock>& GetServoVisitedLinkDecl() const {
+    return mServoVisitedLinkDecl;
+  }
+  const RefPtr<RawServoDeclarationBlock>& GetServoActiveLinkDecl() const {
+    return mServoActiveLinkDecl;
+  }
 
   // Mapped Attribute management methods
   already_AddRefed<nsMappedAttributes>
@@ -100,7 +111,9 @@ private:
   };
 
   // Implementation of SetLink/VisitedLink/ActiveLinkColor
-  nsresult ImplLinkColorSetter(RefPtr<HTMLColorRule>& aRule, nscolor aColor);
+  nsresult ImplLinkColorSetter(RefPtr<HTMLColorRule>& aRule,
+                               RefPtr<RawServoDeclarationBlock>& aDecl,
+                               nscolor aColor);
 
   class GenericTableRule;
   friend class GenericTableRule;
@@ -177,6 +190,9 @@ private:
   RefPtr<HTMLColorRule> mLinkRule;
   RefPtr<HTMLColorRule> mVisitedRule;
   RefPtr<HTMLColorRule> mActiveRule;
+  RefPtr<RawServoDeclarationBlock> mServoUnvisitedLinkDecl;
+  RefPtr<RawServoDeclarationBlock> mServoVisitedLinkDecl;
+  RefPtr<RawServoDeclarationBlock> mServoActiveLinkDecl;
   RefPtr<TableQuirkColorRule> mTableQuirkColorRule;
   RefPtr<TableTHRule>   mTableTHRule;
 

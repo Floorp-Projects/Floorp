@@ -169,11 +169,12 @@ public:
     kFrameTypeBytes + kFrameStreamIDBytes;
 
   enum {
-    kLeaderGroupID =     0x3,
+    kLeaderGroupID =      0x3,
     kOtherGroupID =       0x5,
     kBackgroundGroupID =  0x7,
     kSpeculativeGroupID = 0x9,
-    kFollowerGroupID =    0xB
+    kFollowerGroupID =    0xB,
+    kUrgentStartGroupID = 0xD
     // Hey, you! YES YOU! If you add/remove any groups here, you almost
     // certainly need to change the lookup of the stream/ID hash in
     // Http2Session::OnTransportStatus. Yeah, that's right. YOU!

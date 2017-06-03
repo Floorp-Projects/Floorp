@@ -51,16 +51,16 @@ import ch.boye.httpclientandroidlib.message.BasicHeader;
 public class TokenServerClient {
   protected static final String LOG_TAG = "TokenServerClient";
 
-  public static final String JSON_KEY_API_ENDPOINT = "api_endpoint";
-  public static final String JSON_KEY_CONDITION_URLS = "condition_urls";
-  public static final String JSON_KEY_DURATION = "duration";
-  public static final String JSON_KEY_ERRORS = "errors";
-  public static final String JSON_KEY_ID = "id";
-  public static final String JSON_KEY_KEY = "key";
-  public static final String JSON_KEY_UID = "uid";
+  private static final String JSON_KEY_API_ENDPOINT = "api_endpoint";
+  private static final String JSON_KEY_CONDITION_URLS = "condition_urls";
+  private static final String JSON_KEY_ERRORS = "errors";
+  private static final String JSON_KEY_ID = "id";
+  private static final String JSON_KEY_KEY = "key";
+  private static final String JSON_KEY_UID = "uid";
+  private static final String JSON_KEY_HASHED_FXA_UID = "hashed_fxa_uid";
 
-  public static final String HEADER_CONDITIONS_ACCEPTED = "X-Conditions-Accepted";
-  public static final String HEADER_CLIENT_STATE = "X-Client-State";
+  private static final String HEADER_CONDITIONS_ACCEPTED = "X-Conditions-Accepted";
+  private static final String HEADER_CLIENT_STATE = "X-Client-State";
 
   protected final Executor executor;
   protected final URI uri;
@@ -220,7 +220,7 @@ public class TokenServerClient {
     }
 
     try {
-      result.throwIfFieldsMissingOrMisTyped(new String[] { JSON_KEY_ID, JSON_KEY_KEY, JSON_KEY_API_ENDPOINT }, String.class);
+      result.throwIfFieldsMissingOrMisTyped(new String[] { JSON_KEY_ID, JSON_KEY_KEY, JSON_KEY_API_ENDPOINT, JSON_KEY_HASHED_FXA_UID }, String.class);
       result.throwIfFieldsMissingOrMisTyped(new String[] { JSON_KEY_UID }, Long.class);
     } catch (BadRequiredFieldJSONException e ) {
       throw new TokenServerMalformedResponseException(null, e);
@@ -231,6 +231,7 @@ public class TokenServerClient {
     return new TokenServerToken(result.getString(JSON_KEY_ID),
         result.getString(JSON_KEY_KEY),
         result.get(JSON_KEY_UID).toString(),
+        result.getString(JSON_KEY_HASHED_FXA_UID),
         result.getString(JSON_KEY_API_ENDPOINT));
   }
 

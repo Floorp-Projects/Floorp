@@ -859,7 +859,7 @@ fn consume_numeric<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
     if !tokenizer.is_eof() && tokenizer.next_byte_unchecked() == b'%' {
         tokenizer.advance(1);
         return Percentage(PercentageValue {
-            unit_value: value as f32 / 100.,
+            unit_value: (value / 100.) as f32,
             int_value: int_value,
             has_sign: has_sign,
         })

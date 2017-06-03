@@ -6,6 +6,7 @@ package org.mozilla.gecko.sync.stage;
 
 import android.accounts.Account;
 import android.content.Context;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
@@ -53,6 +54,7 @@ import org.mozilla.gecko.sync.repositories.android.RepoUtils;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecordFactory;
 import org.mozilla.gecko.sync.repositories.domain.VersionConstants;
+import org.mozilla.gecko.sync.telemetry.TelemetryCollector;
 
 import ch.boye.httpclientandroidlib.HttpStatus;
 
@@ -244,7 +246,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
 
       try {
         Logger.info(LOG_TAG, "Client upload failed. Aborting sync.");
-        session.abort(new HTTPFailureException(response), "Client download failed.");
+        doAbort(new HTTPFailureException(response), "Client download failed.");
       } finally {
         // Close the database upon failure.
         closeDataAccessor();
@@ -256,7 +258,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
       localAccountGUIDDownloaded = false;
       try {
         Logger.info(LOG_TAG, "Client upload error. Aborting sync.");
-        session.abort(ex, "Failure fetching client record.");
+        doAbort(ex, "Failure fetching client record.");
       } finally {
         // Close the database upon error.
         closeDataAccessor();
@@ -276,10 +278,14 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
           // Only need to store record if it isn't our local one.
           wipeAndStore(r);
           addCommands(r);
+          // Note that we are downloading all client records during every sync. As such, telemetry
+          // will include every client currently present in the constellation of devices.
+          // See the downloadClientRecords method elsewhere in the file.
+          telemetryStageCollector.getSyncCollector().addDevice(r);
         }
         RepoUtils.logClient(r);
       } catch (Exception e) {
-        session.abort(e, "Exception handling client WBO.");
+        doAbort(e, "Exception handling client WBO.");
         return;
       }
     }
@@ -334,7 +340,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
 
       if (responseTimestamp == -1) {
         final String message = "Response did not contain a valid timestamp.";
-        session.abort(new RuntimeException(message), message);
+        doAbort(new RuntimeException(message), message);
         return;
       }
 
@@ -354,7 +360,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
       // to do.
       shouldUploadLocalRecord = false;
       session.config.persistServerClientRecordTimestamp(responseTimestamp);
-      session.advance();
+      doAdvance();
     }
 
     @Override
@@ -372,7 +378,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
           modifiedClientsToUpload.clear(); // These will be redownloaded.
         }
         BaseResource.consumeEntity(response); // The exception thrown should need the response body.
-        session.abort(new HTTPFailureException(response), "Client upload failed.");
+        doAbort(new HTTPFailureException(response), "Client upload failed.");
         return;
       }
       Logger.trace(LOG_TAG, "Retrying upload…");
@@ -386,7 +392,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
     @Override
     public void handleRequestError(Exception ex) {
       Logger.info(LOG_TAG, "Client upload error. Aborting sync.");
-      session.abort(ex, "Client upload failed.");
+      doAbort(ex, "Client upload failed.");
     }
 
     @Override
@@ -407,7 +413,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
       // These log messages look best when they match the messages in ServerSyncStage.
       Logger.debug(LOG_TAG, "Stage " + STAGE_NAME + " disabled just for this sync.");
       Logger.info(LOG_TAG, "Skipping stage " + STAGE_NAME + ".");
-      session.advance();
+      doAdvance();
       return;
     }
 
@@ -591,7 +597,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
   protected void checkAndUpload() {
     if (!shouldUpload()) {
       Logger.debug(LOG_TAG, "Not uploading client record.");
-      session.advance();
+      doAdvance();
       return;
     }
 
@@ -611,14 +617,14 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
       CryptoRecord cryptoRecord = recordToUpload.getEnvelope();
       cryptoRecord.keyBundle = clientUploadDelegate.keyBundle();
       if (cryptoRecord.keyBundle == null) {
-        session.abort(new NoCollectionKeysSetException(), "No collection keys set.");
+        doAbort(new NoCollectionKeysSetException(), "No collection keys set.");
         return null;
       }
       return cryptoRecord.encrypt();
     } catch (UnsupportedEncodingException e) {
-      session.abort(e, encryptionFailure + " Unsupported encoding.");
+      doAbort(e, encryptionFailure + " Unsupported encoding.");
     } catch (CryptoException e) {
-      session.abort(e, encryptionFailure);
+      doAbort(e, encryptionFailure);
     }
     return null;
   }
@@ -644,7 +650,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
       Logger.trace(LOG_TAG, "Downloading client records.");
       request.get();
     } catch (URISyntaxException e) {
-      session.abort(e, "Invalid URI.");
+      doAbort(e, "Invalid URI.");
     }
   }
 
@@ -656,9 +662,9 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
       request.delegate = clientUploadDelegate;
       request.post(records);
     } catch (URISyntaxException e) {
-      session.abort(e, "Invalid URI.");
+      doAbort(e, "Invalid URI.");
     } catch (Exception e) {
-      session.abort(e, "Unable to parse body.");
+      doAbort(e, "Unable to parse body.");
     }
   }
 
@@ -673,7 +679,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
       request.delegate = clientUploadDelegate;
       request.post(record);
     } catch (URISyntaxException e) {
-      session.abort(e, "Invalid URI.");
+      doAbort(e, "Invalid URI.");
     }
   }
 
@@ -690,5 +696,18 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
     if (record != null) {
       db.store(record);
     }
+  }
+
+  private void doAdvance() {
+    telemetryStageCollector.finished = SystemClock.elapsedRealtime();
+    session.advance();
+  }
+
+  private void doAbort(Exception e, String reason) {
+    telemetryStageCollector.finished = SystemClock.elapsedRealtime();
+    telemetryStageCollector.error = new TelemetryCollector.StageErrorBuilder()
+            .setLastException(e)
+            .build();
+    session.abort(e, reason);
   }
 }
