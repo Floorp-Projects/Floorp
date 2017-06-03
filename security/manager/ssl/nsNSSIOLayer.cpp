@@ -2255,9 +2255,6 @@ ClientAuthDataRunnable::RunOnTargetThread()
         goto loser;
       }
 
-      int32_t port;
-      mSocketInfo->GetPort(&port);
-
       UniquePORTString corg(CERT_GetOrgName(&mServerCert->subject));
       nsAutoCString org(corg.get());
 
@@ -2294,7 +2291,8 @@ ClientAuthDataRunnable::RunOnTargetThread()
 
       uint32_t selectedIndex = 0;
       bool certChosen = false;
-      rv = dialogs->ChooseCertificate(mSocketInfo, hostname, port, org, issuer,
+      rv = dialogs->ChooseCertificate(mSocketInfo, hostname,
+                                      mSocketInfo->GetPort(), org, issuer,
                                       certArray, &selectedIndex, &certChosen);
       if (NS_FAILED(rv)) {
         goto loser;

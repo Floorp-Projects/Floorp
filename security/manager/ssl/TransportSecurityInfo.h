@@ -59,7 +59,6 @@ public:
   void SetHostName(const char* host);
 
   int32_t GetPort() const { return mPort; }
-  nsresult GetPort(int32_t *aPort);
   nsresult SetPort(int32_t aPort);
 
   const OriginAttributes& GetOriginAttributes() const {
