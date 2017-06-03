@@ -205,7 +205,8 @@ class FakeVideoEncoder : public GMPVideoEncoder {
     }
     memcpy(f->Buffer(), &eframe, sizeof(eframe));
     if (frame_type  == kGMPKeyFrame) {
-      *((uint32_t*) f->Buffer() + sizeof(eframe)) = BIG_FRAME;
+      // set the size for the fake iframe
+      *((uint32_t*) (f->Buffer() + sizeof(eframe))) = BIG_FRAME;
     }
 
     f->SetEncodedWidth (inputImage->Width());

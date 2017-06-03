@@ -40,6 +40,10 @@ const Accordion = React.createClass({
       item.onOpened();
     }
 
+    if (item.onToggled) {
+      item.onToggled();
+    }
+
     this.setState({ opened, created });
   },
 
