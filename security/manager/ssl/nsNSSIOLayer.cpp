@@ -375,7 +375,7 @@ nsNSSSocketInfo::DriveHandshake()
       return NS_BASE_STREAM_WOULD_BLOCK;
     }
 
-    SetCanceled(errorCode, PlainErrorMessage);
+    SetCanceled(errorCode, SSLErrorMessageType::Plain);
     return GetXPCOMFromNSSError(errorCode);
   }
   return NS_OK;
@@ -624,7 +624,7 @@ nsNSSSocketInfo::SetCertVerificationResult(PRErrorCode errorCode,
     // Only replace errorCode if there was originally no error
     if (rv != SECSuccess && errorCode == 0) {
       errorCode = PR_GetError();
-      errorMessageType = PlainErrorMessage;
+      errorMessageType = SSLErrorMessageType::Plain;
       if (errorCode == 0) {
         NS_ERROR("SSL_AuthCertificateComplete didn't set error code");
         errorCode = PR_INVALID_STATE_ERROR;
@@ -679,7 +679,7 @@ nsHandleSSLError(nsNSSSocketInfo* socketInfo,
   }
 
   // We must cancel first, which sets the error code.
-  socketInfo->SetCanceled(err, PlainErrorMessage);
+  socketInfo->SetCanceled(err, SSLErrorMessageType::Plain);
   nsXPIDLString errorString;
   socketInfo->GetErrorLogMessage(err, errtype, errorString);
 
@@ -1248,9 +1248,8 @@ checkHandshake(int32_t bytesTransfered, bool wasReading,
     // expensive no-op.)
     if (!wantRetry && mozilla::psm::IsNSSErrorCode(err) &&
         !socketInfo->GetErrorCode()) {
-      RefPtr<SyncRunnableBase> runnable(new SSLErrorRunnable(socketInfo,
-                                                             PlainErrorMessage,
-                                                             err));
+      RefPtr<SyncRunnableBase> runnable(
+        new SSLErrorRunnable(socketInfo, SSLErrorMessageType::Plain, err));
       (void) runnable->DispatchToMainThreadAndWait();
     }
   } else if (wasReading && 0 == bytesTransfered) {
@@ -1288,7 +1287,7 @@ checkHandshake(int32_t bytesTransfered, bool wasReading,
     // this socket. Note that we use the original error because if we use
     // PR_CONNECT_RESET_ERROR, we'll repeated try to reconnect.
     if (originalError != PR_WOULD_BLOCK_ERROR && !socketInfo->GetErrorCode()) {
-      socketInfo->SetCanceled(originalError, PlainErrorMessage);
+      socketInfo->SetCanceled(originalError, SSLErrorMessageType::Plain);
     }
     PR_SetError(err, 0);
   }

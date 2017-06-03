@@ -25,9 +25,9 @@
 
 namespace mozilla { namespace psm {
 
-enum SSLErrorMessageType {
-  OverridableCertErrorMessage  = 1, // for *overridable* certificate errors
-  PlainErrorMessage = 2             // all other errors (or "no error")
+enum class SSLErrorMessageType {
+  OverridableCert = 1, // for *overridable* certificate errors
+  Plain = 2,           // all other errors (or "no error")
 };
 
 class TransportSecurityInfo : public nsITransportSecurityInfo,
