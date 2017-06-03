@@ -10,15 +10,12 @@
 /**
  * RequireJS configuration for JSON Viewer.
  *
- * ReactJS library is shared among DevTools. Both, the minified (production)
- * version and developer versions of the library are available.
+ * ReactJS library is shared among DevTools. The minified (production) version
+ * of the library is always available, and is used by default.
  *
  * In order to use the developer version you need to specify the following
  * in your .mozconfig (see also bug 1181646):
  * ac_add_options --enable-debug-js-modules
- *
- * The path mapping uses paths fallback (a feature supported by RequireJS)
- * See also: http://requirejs.org/docs/api.html#pathsfallbacks
  *
  * React module ID is using exactly the same (relative) path as the rest
  * of the code base, so it's consistent and modules can be easily reused.
@@ -28,10 +25,10 @@ require.config({
   paths: {
     "devtools/client/shared": "resource://devtools/client/shared",
     "devtools/shared": "resource://devtools/shared",
-    "devtools/client/shared/vendor/react": [
-      "resource://devtools/client/shared/vendor/react-dev",
-      "resource://devtools/client/shared/vendor/react"
-    ],
+    "devtools/client/shared/vendor/react":
+      JSONView.debug
+      ? "resource://devtools/client/shared/vendor/react-dev"
+      : "resource://devtools/client/shared/vendor/react"
   }
 });
 
