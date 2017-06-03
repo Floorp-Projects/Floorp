@@ -116,13 +116,19 @@ must be one of the following:
                          fast on a 32-bit system but inordinately slow on a
                          64-bit system).
 
-      fuzzy(maxDiff, diffCount)
-          This allows a test to pass if the pixel value differences are <=
-          maxDiff and the total number of different pixels is <= diffCount.
+      fuzzy(maxDiff,maxPixelCount)
+      fuzzy(minDiff-maxDiff,minPixelCount-maxPixelCount)
+          This allows a test to pass if the pixel value differences are between
+          minDiff and maxDiff, inclusive, and the total number of different
+          pixels is between minPixelCount and maxPixelCount, inclusive.
+          If the minDiff and/or minPixelCount values are not specified, they
+          are assumed to be zero.
           It can also be used with '!=' to ensure that the difference is
-          greater than maxDiff.
+          outside the specified interval. Note that with '!=' tests the
+          minimum bounds of the ranges must be zero.
 
-      fuzzy-if(condition, maxDiff, diffCount)
+      fuzzy-if(condition,maxDiff,diffCount)
+      fuzzy-if(condition,minDiff-maxDiff,minPixelCount-maxPixelCount)
           If the condition is met, the test is treated as if 'fuzzy' had been
           specified. This is useful if there are differences on particular
           platforms.

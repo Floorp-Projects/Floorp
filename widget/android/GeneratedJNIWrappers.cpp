@@ -1102,6 +1102,14 @@ auto GeckoSurface::SetAvailable(bool a0) const -> void
 const char GeckoSurfaceTexture::name[] =
         "org/mozilla/gecko/gfx/GeckoSurfaceTexture";
 
+constexpr char GeckoSurfaceTexture::DecrementUse_t::name[];
+constexpr char GeckoSurfaceTexture::DecrementUse_t::signature[];
+
+auto GeckoSurfaceTexture::DecrementUse() const -> void
+{
+    return mozilla::jni::Method<DecrementUse_t>::Call(GeckoSurfaceTexture::mCtx, nullptr);
+}
+
 constexpr char GeckoSurfaceTexture::GetHandle_t::name[];
 constexpr char GeckoSurfaceTexture::GetHandle_t::signature[];
 
@@ -1116,6 +1124,14 @@ constexpr char GeckoSurfaceTexture::GetTexName_t::signature[];
 auto GeckoSurfaceTexture::GetTexName() const -> int32_t
 {
     return mozilla::jni::Method<GetTexName_t>::Call(GeckoSurfaceTexture::mCtx, nullptr);
+}
+
+constexpr char GeckoSurfaceTexture::IncrementUse_t::name[];
+constexpr char GeckoSurfaceTexture::IncrementUse_t::signature[];
+
+auto GeckoSurfaceTexture::IncrementUse() const -> void
+{
+    return mozilla::jni::Method<IncrementUse_t>::Call(GeckoSurfaceTexture::mCtx, nullptr);
 }
 
 constexpr char GeckoSurfaceTexture::IsSingleBuffer_t::name[];
