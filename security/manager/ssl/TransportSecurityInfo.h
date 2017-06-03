@@ -43,7 +43,7 @@ protected:
   virtual ~TransportSecurityInfo();
 public:
   TransportSecurityInfo();
-  
+
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITRANSPORTSECURITYINFO
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -55,7 +55,6 @@ public:
   nsresult SetSecurityState(uint32_t aState);
 
   const nsACString & GetHostName() const { return mHostName; }
-  const char * GetHostNameRaw() const { return mHostName.get(); }
 
   void SetHostName(const char* host);
 
@@ -69,11 +68,11 @@ public:
   nsresult SetOriginAttributes(const OriginAttributes& aOriginAttributes);
 
   PRErrorCode GetErrorCode() const;
-  
+
   void GetErrorLogMessage(PRErrorCode errorCode,
                           ::mozilla::psm::SSLErrorMessageType errorMessageType,
                           nsString &result);
-  
+
   void SetCanceled(PRErrorCode errorCode,
                    ::mozilla::psm::SSLErrorMessageType errorMessageType);
 
