@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<meta charset='UTF-8'>
+<!-- Draw rect in WebGL and submit it to the VR device as a base64 image.
+If this fails, something is seriously wrong. -->
+<html class="reftest-wait">
+<head>
+  <script type='text/javascript' src='webgl-util.js'></script>
+  <script type='text/javascript' src="VRSimulationDriver.js"></script>
+  <script id="vs" type="x-shader/x-vertex">
+    attribute vec2 aVertCoord;
+
+    void main(void) {
+      gl_Position = vec4(aVertCoord, 0.0, 1.0);
+    }
+  </script>
+  <script id="fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    void main(void) {
+      gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    }
+  </script>
+  <script type='text/javascript'>
+    'use strict';
+
+    var submitResult = null;
+    var vrDisplay = null;
+    var webglCanvas = null;
+    var gl = null;
+    var prog = null;
+    var img = null;
+
+    function setStatus(text) {
+      var elem = document.getElementById('status');
+      elem.innerHTML = text;
+    }
+
+    function initVRMock() {
+      VRServiceTest = navigator.requestVRServiceTest();
+      if (!VRServiceTest) {
+        setStatus('VRServiceTest get failed.');
+        return;
+      }
+
+      VRSimulationDriver.AttachWebVRDisplay().then(() => {
+        // Looking for VR displays
+        if (navigator.getVRDisplays) {
+          submitResult = new VRSubmitFrameResult();
+          navigator.getVRDisplays().then(function (displays) {
+            if (displays.length > 0) {
+              vrDisplay = displays[0];
+              vrDisplay.requestPresent([{ source: webglCanvas }]);
+              vrDisplay.requestAnimationFrame(onAnimationFrame);
+            }
+          });
+        }
+      });
+    }
+
+    function onAnimationFrame() {
+      if (!vrDisplay.isPresenting) {
+        return;
+      }
+
+      vrDisplay.requestAnimationFrame(onAnimationFrame);
+      gl.clearColor(0.0, 1.0, 0.0, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      // Presenting render a stereo view.
+      gl.viewport(0, 0, webglCanvas.width * 0.5, webglCanvas.height);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      gl.viewport(webglCanvas.width * 0.5, 0, webglCanvas.width * 0.5, webglCanvas.height);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      // Indicate VRDisplay we're done rendering.
+      vrDisplay.submitFrame();
+      if (vrDisplay.getSubmitFrameResult(submitResult)) {
+        if (!img) {
+          img = document.createElement("img");
+          img.onload = function(){
+            webglCanvas.style.display = 'none';
+            vrDisplay.exitPresent();
+            setTimeout(testComplete, 0);
+          };
+          img.src = submitResult.base64Image;
+          document.body.appendChild(img);
+        } else {
+          img.src = submitResult.base64Image;
+        }
+      }
+    }
+
+    function runTest() {
+      webglCanvas = document.getElementById('canvas');
+      gl = WebGLUtil.getWebGL('canvas');
+      if (!gl) {
+        setStatus('WebGL context creation failed.');
+        return;
+      }
+      gl.disable(gl.DEPTH_TEST);
+      prog = WebGLUtil.createProgramByIds(gl, 'vs', 'fs');
+      if (!prog) {
+        setStatus('Program linking failed.');
+        return;
+      }
+      prog.aVertCoord = gl.getAttribLocation(prog, "aVertCoord");
+
+      var vertCoordArr = new Float32Array([
+        -0.5, -0.5,
+        0.5, -0.5,
+        -0.5, 0.5,
+        0.5, 0.5,
+      ]);
+      var vertCoordBuff = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vertCoordBuff);
+      gl.bufferData(gl.ARRAY_BUFFER, vertCoordArr, gl.STATIC_DRAW);
+      gl.useProgram(prog);
+      gl.enableVertexAttribArray(prog.aVertCoord);
+      gl.vertexAttribPointer(prog.aVertCoord, 2, gl.FLOAT, false, 0, 0);
+
+      initVRMock();
+    }
+
+    function testComplete() {
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+</head>
+
+<body onload='runTest();'>
+  <canvas id='canvas' width='256' height='256'></canvas>
+  <div id='status'></div>
+</body>
+
+</html>

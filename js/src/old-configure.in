@@ -145,8 +145,7 @@ case "$target" in
         CFLAGS="$CFLAGS -TC -nologo"
         CXXFLAGS="$CXXFLAGS -TP -nologo"
         if test -z "$CLANG_CL"; then
-            CFLAGS="$CFLAGS -utf-8"
-            CXXFLAGS="$CXXFLAGS -utf-8"
+            CPPFLAGS="$CPPFLAGS -utf-8"
         fi
         # MSVC warning C4800 warns when a value is implicitly cast to bool,
         # because this also forces narrowing to a single byte, which can be a

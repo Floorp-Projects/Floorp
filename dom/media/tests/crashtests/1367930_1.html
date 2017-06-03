@@ -1,0 +1,39 @@
+<html>
+<body>
+  <script>
+var offer= "v=0\r\no=- 6276735615230473072 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE video\r\na=msid-semantic:WMS *\r\na=ice-ufrag:XoEUdw==\r\na=ice-pwd:hfNjAs9TU4NNuumB50mGfJwkqIEN8A==\r\na=ice-lite\r\na=setup:actpass\r\na=fingerprint:sha-256 0D:54:F2:D9:F3:10:00:2D:CD:14:C6:AC:CB:5D:E7:34:5E:6F:A8:BF:25:96:48:40:0B:C7:F9:18:6A:A6:73:3F\r\nm=video 9 UDP/TLS/RTP/SAVPF 100\r\nc=IN IP4 0.0.0.0\r\na=rtcp:9 IN IP4 0.0.0.0\r\na=mid:video\r\na=recvonly\r\na=rtcp-rsize\r\na=rtcp-mux\r\na=rtpmap:100 VP8/90000\r\na=rtcp-fb:100 ccm fir\r\na=rtcp-fb:100 nack\r\na=rtcp-fb:100 nack pli\r\na=rtcp-fb:100 goog-remb\r\na=extmap:2 urn:ietf:params:rtp-hdrext:toffset\r\na=extmap:3 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\na=extmap:4 urn:3gpp:video-orientation\r\na=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id\r\na=rid:hi recv\r\na=rid:mid recv\r\na=rid:lo recv\r\na=simulcast: recv rid=hi,mid,lo\r\na=candidate:1796272311 1 UDP 2130706431 192.168.10.146 55984 typ host\r\na=end-of-candidates\r\n"
+
+var data = {};
+data.sdp = offer;
+data.type = "offer";
+
+console.log('OFFER', JSON.stringify(data.sdp));
+
+var pc = new RTCPeerConnection();
+
+navigator.mediaDevices.getUserMedia({video: true, fake: true})
+  .then((stream) => {
+    return pc.addStream(stream);
+  })
+  .then(() => {
+    return pc.setRemoteDescription(new RTCSessionDescription(data));
+  })
+  .then(function() {
+      var sender = pc.getSenders()[0];
+      console.log('setting parameters');
+      return sender.setParameters({encodings: [
+          {rid: "hi", maxBitrate: 800000},
+          {rid: "mid", maxBitrate: 400000, scaleDownResolutionBy: 2},
+          {rid: "lo", maxBitrate: 150000, scaleDownResolutionBy: 4}
+      ]});
+  })
+  .then(function() {
+      return pc.createAnswer();
+  })
+  .then(function(answer) {
+      console.log('answer', JSON.stringify(answer.sdp));
+      return pc.setLocalDescription(answer);
+  });
+  </script>
+</body>
+</html>

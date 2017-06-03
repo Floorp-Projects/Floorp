@@ -86,10 +86,10 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         if os.path.exists('/usr/local/opt/openssl/include/openssl/ssl.h'):
             # Found a likely homebrew install.
             self.log(logging.INFO, 'openssl', {},
-                    'Using OpenSSL in /usr/local/opt/openssl')
+                     'Using OpenSSL in /usr/local/opt/openssl')
             return {
-                 'OPENSSL_INCLUDE_DIR': '/usr/local/opt/openssl/include',
-                 'DEP_OPENSSL_INCLUDE': '/usr/local/opt/openssl/include',
+                'OPENSSL_INCLUDE_DIR': '/usr/local/opt/openssl/include',
+                'OPENSSL_LIB_DIR': '/usr/local/opt/openssl/lib',
             }
 
         self.log(logging.ERROR, 'openssl', {}, "OpenSSL not found!")

@@ -17,25 +17,6 @@ import pickle
 import mozpack.path as mozpath
 
 
-class Pool(object):
-    def __new__(cls, size):
-        try:
-            import multiprocessing
-            size = min(size, multiprocessing.cpu_count())
-            return multiprocessing.Pool(size)
-        except:
-            return super(Pool, cls).__new__(cls)
-
-    def imap_unordered(self, fn, iterable):
-        return itertools.imap(fn, iterable)
-
-    def close(self):
-        pass
-
-    def join(self):
-        pass
-
-
 class File(object):
     def __init__(self, path):
         self._path = path
@@ -258,9 +239,22 @@ def prefix_lines(text, prefix):
     return ''.join('%s> %s' % (prefix, line) for line in text.splitlines(True))
 
 
+def execute_and_prefix(*args, **kwargs):
+    prefix = kwargs['prefix']
+    del kwargs['prefix']
+    proc = subprocess.Popen(*args, stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT, **kwargs)
+    while True:
+        line = proc.stdout.readline()
+        if not line:
+            break
+        print prefix_lines(line.rstrip(), prefix)
+        sys.stdout.flush()
+    return proc.wait()
+
+
 def run(objdir):
     ret = 0
-    output = ''
 
     with open(os.path.join(objdir, CONFIGURE_DATA), 'rb') as f:
         data = pickle.load(f)
@@ -336,11 +330,10 @@ def run(objdir):
         print prefix_lines('configuring', relobjdir)
         print prefix_lines('running %s' % ' '.join(command[:-1]), relobjdir)
         sys.stdout.flush()
-        try:
-            output += subprocess.check_output(command,
-                stderr=subprocess.STDOUT, cwd=objdir, env=data['env'])
-        except subprocess.CalledProcessError as e:
-            return relobjdir, e.returncode, e.output
+        returncode = execute_and_prefix(command, cwd=objdir, env=data['env'],
+                                        prefix=relobjdir)
+        if returncode:
+            return returncode
 
         # Leave config.status with a new timestamp if configure is newer than
         # its original mtime.
@@ -370,18 +363,13 @@ def run(objdir):
         if skip_configure:
             print prefix_lines('running config.status', relobjdir)
             sys.stdout.flush()
-        try:
-            output += subprocess.check_output([data['shell'], '-c',
-                './config.status'], stderr=subprocess.STDOUT, cwd=objdir,
-                env=data['env'])
-        except subprocess.CalledProcessError as e:
-            ret = e.returncode
-            output += e.output
+        ret = execute_and_prefix([data['shell'], '-c', './config.status'],
+                                 cwd=objdir, env=data['env'], prefix=relobjdir)
 
         for f in contents:
             f.update_time()
 
-    return relobjdir, ret, output
+    return ret
 
 
 def subconfigure(args):
@@ -404,19 +392,11 @@ def subconfigure(args):
         return 0
 
     ret = 0
-    # One would think using a ThreadPool would be faster, considering
-    # everything happens in subprocesses anyways, but no, it's actually
-    # slower on Windows. (20s difference overall!)
-    pool = Pool(len(subconfigures))
-    for relobjdir, returncode, output in \
-            pool.imap_unordered(run, subconfigures):
-        print prefix_lines(output, relobjdir)
-        sys.stdout.flush()
+    for subconfigure in subconfigures:
+        returncode = run(subconfigure)
         ret = max(returncode, ret)
         if ret:
             break
-    pool.close()
-    pool.join()
     return ret
 
 
