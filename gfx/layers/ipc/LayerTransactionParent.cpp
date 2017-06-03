@@ -849,7 +849,7 @@ LayerTransactionParent::RecvFlushApzRepaints()
 mozilla::ipc::IPCResult
 LayerTransactionParent::RecvGetAPZTestData(APZTestData* aOutData)
 {
-  mCompositorBridge->GetAPZTestData(GetId(), aOutData);
+  mCompositorBridge->GetAPZTestData(this, aOutData);
   return IPC_OK();
 }
 
