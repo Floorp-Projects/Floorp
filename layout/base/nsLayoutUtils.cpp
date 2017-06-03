@@ -122,7 +122,6 @@
 #include "RegionBuilder.h"
 #include "SVGSVGElement.h"
 #include "DisplayItemClip.h"
-#include "mozilla/layers/WebRenderLayerManager.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -8509,8 +8508,6 @@ nsLayoutUtils::DoLogTestDataForPaint(LayerManager* aManager,
 {
   if (ClientLayerManager* mgr = aManager->AsClientLayerManager()) {
     mgr->LogTestDataForCurrentPaint(aScrollId, aKey, aValue);
-  } else if (WebRenderLayerManager* wrlm = aManager->AsWebRenderLayerManager()) {
-    wrlm->LogTestDataForCurrentPaint(aScrollId, aKey, aValue);
   }
 }
 
