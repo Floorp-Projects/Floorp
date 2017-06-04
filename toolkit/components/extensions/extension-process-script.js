@@ -539,6 +539,9 @@ class StubExtension {
     this.uuid = data.uuid;
     this.instanceId = data.instanceId;
     this.manifest = data.manifest;
+    this.permissions = data.permissions;
+    this.whiteListedHosts = new MatchPatternSet(data.whiteListedHosts);
+    this.webAccessibleResources = data.webAccessibleResources.map(path => new MatchGlob(path));
 
     this.scripts = data.content_scripts.map(scriptData => new ScriptMatcher(this, scriptData));
 
@@ -557,7 +560,7 @@ class StubExtension {
 
   shutdown() {
     if (isContentProcess) {
-      ExtensionManagement.shutdownExtension(this.uuid);
+      ExtensionManagement.shutdownExtension(this);
     }
     if (this._realExtension) {
       this._realExtension.shutdown();
@@ -568,6 +571,7 @@ class StubExtension {
   get realExtension() {
     if (!this._realExtension) {
       this._realExtension = new ExtensionChild.BrowserExtensionContent(this.data);
+      this._realExtension.policy = this.policy;
     }
     return this._realExtension;
   }
@@ -578,12 +582,6 @@ class StubExtension {
   }
   localize(...args) {
     return this.realExtension.localize(...args);
-  }
-  get whiteListedHosts() {
-    return this.realExtension.whiteListedHosts;
-  }
-  get webAccessibleResources() {
-    return this.realExtension.webAccessibleResources;
   }
 }
 
