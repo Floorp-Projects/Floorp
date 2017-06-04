@@ -11,6 +11,8 @@ const Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = ["XPIProvider", "XPIInternal"];
 
+/* globals WebExtensionPolicy */
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
@@ -26,8 +28,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ChromeManifestParser",
                                   "resource://gre/modules/ChromeManifestParser.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
-                                  "resource://gre/modules/ExtensionManagement.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Locale",
                                   "resource://gre/modules/Locale.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
@@ -5232,10 +5232,11 @@ AddonWrapper.prototype = {
         // DB and should be a relative URL.  However, extensions with
         // options pages installed before bug 1293721 was fixed got absolute
         // URLs in the addons db.  This code handles both cases.
-        let base = ExtensionManagement.getURLForExtension(addon.id);
-        if (!base) {
+        let policy = WebExtensionPolicy.getByID(addon.id);
+        if (!policy) {
           return null;
         }
+        let base = policy.getURL();
         return new URL(addon.optionsURL, base).href;
       }
       return addon.optionsURL;

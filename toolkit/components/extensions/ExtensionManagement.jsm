@@ -35,13 +35,4 @@ var ExtensionManagement = {
   get isExtensionProcess() {
     return WebExtensionPolicy.isExtensionProcess;
   },
-
-  getURLForExtension(id, path = "") {
-    let policy = WebExtensionPolicy.getByID(id);
-    if (!policy) {
-      Cu.reportError(`Called getURLForExtension on unmapped extension ${id}`);
-      return null;
-    }
-    return policy.getURL(path);
-  },
 };
