@@ -182,11 +182,6 @@ nsCounterList::RecalcAll()
   }
 }
 
-nsCounterManager::nsCounterManager()
-    : mNames()
-{
-}
-
 bool
 nsCounterManager::AddCounterResetsAndIncrements(nsIFrame* aFrame)
 {
