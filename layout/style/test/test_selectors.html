@@ -647,7 +647,7 @@ function run() {
     test_parseable(":nth-child(+n/**/+2)");
     test_parseable(":nth-child(+n+/**/2)");
     test_parseable(":nth-child(+n+2/**/)");
-    test_parseable(":nth-child(+1/**/n+2)");
+    test_balanced_unparseable(":nth-child(+1/**/n+2)");
     test_parseable(":nth-child(+1n/**/+2)");
     test_parseable(":nth-child(+1n/**/+2)");
     test_parseable(":nth-child(+1n+/**/2)");
@@ -657,7 +657,7 @@ function run() {
     test_parseable(":nth-child(-n/**/+2)");
     test_parseable(":nth-child(-n+/**/2)");
     test_parseable(":nth-child(-n+2/**/)");
-    test_parseable(":nth-child(-1/**/n+2)");
+    test_balanced_unparseable(":nth-child(-1/**/n+2)");
     test_parseable(":nth-child(-1n/**/+2)");
     test_parseable(":nth-child(-1n/**/+2)");
     test_parseable(":nth-child(-1n+/**/2)");
@@ -671,7 +671,7 @@ function run() {
     test_parseable(":nth-child(+n/**/-2)");
     test_parseable(":nth-child(+n-/**/2)");
     test_parseable(":nth-child(+n-2/**/)");
-    test_parseable(":nth-child(+1/**/n-2)");
+    test_balanced_unparseable(":nth-child(+1/**/n-2)");
     test_parseable(":nth-child(+1n/**/-2)");
     test_parseable(":nth-child(+1n/**/-2)");
     test_parseable(":nth-child(+1n-/**/2)");
@@ -681,7 +681,7 @@ function run() {
     test_parseable(":nth-child(-n/**/-2)");
     test_parseable(":nth-child(-n-/**/2)");
     test_parseable(":nth-child(-n-2/**/)");
-    test_parseable(":nth-child(-1/**/n-2)");
+    test_balanced_unparseable(":nth-child(-1/**/n-2)");
     test_parseable(":nth-child(-1n/**/-2)");
     test_parseable(":nth-child(-1n/**/-2)");
     test_parseable(":nth-child(-1n-/**/2)");
@@ -695,7 +695,7 @@ function run() {
     test_parseable(":nth-child(+N/**/-2)");
     test_parseable(":nth-child(+N-/**/2)");
     test_parseable(":nth-child(+N-2/**/)");
-    test_parseable(":nth-child(+1/**/N-2)");
+    test_balanced_unparseable(":nth-child(+1/**/N-2)");
     test_parseable(":nth-child(+1N/**/-2)");
     test_parseable(":nth-child(+1N/**/-2)");
     test_parseable(":nth-child(+1N-/**/2)");
@@ -705,7 +705,7 @@ function run() {
     test_parseable(":nth-child(-N/**/-2)");
     test_parseable(":nth-child(-N-/**/2)");
     test_parseable(":nth-child(-N-2/**/)");
-    test_parseable(":nth-child(-1/**/N-2)");
+    test_balanced_unparseable(":nth-child(-1/**/N-2)");
     test_parseable(":nth-child(-1N/**/-2)");
     test_parseable(":nth-child(-1N/**/-2)");
     test_parseable(":nth-child(-1N-/**/2)");
@@ -716,14 +716,14 @@ function run() {
     test_balanced_unparseable(":nth-child(+ /**/N-2)");
     test_parseable(":nth-child( +n + 1 )");
     test_parseable(":nth-child( +/**/n + 1 )");
-    test_parseable(":nth-child( -/**/2/**/n/**/+/**/4 )");
-    test_balanced_unparseable(":nth-child( -/**/ 2/**/n/**/+/**/4 )");
-    test_balanced_unparseable(":nth-child( -/**/2 /**/n/**/+/**/4 )");
-    test_balanced_unparseable(":nth-child( -/**/2/**/ n/**/+/**/4 )");
-    test_parseable(":nth-child( -/**/2/**/n /**/+/**/4 )");
-    test_parseable(":nth-child( -/**/2/**/n/**/ +/**/4 )");
-    test_parseable(":nth-child(+1/**/n-1)");
-    test_parseable(":nth-child(1/**/n-1)");
+    test_balanced_unparseable(":nth-child( -/**/2/**/n/**/+/**/4 )");
+    test_parseable(":nth-child( -2n/**/ + /**/4 )");
+    test_parseable(":nth-child( -2n/**/+/**/4 )");
+    test_parseable(":nth-child( -2n  /**/+/**/4 )");
+    test_parseable(":nth-child( -/**/n  /**/+ /**/ 4 )");
+    test_parseable(":nth-child( +/**/n  /**/+ /**/ 4 )");
+    test_balanced_unparseable(":nth-child(+1/**/n-1)");
+    test_balanced_unparseable(":nth-child(1/**/n-1)");
     // bug 876570
     test_balanced_unparseable(":nth-child(+2n-)");
     test_balanced_unparseable(":nth-child(+n-)");

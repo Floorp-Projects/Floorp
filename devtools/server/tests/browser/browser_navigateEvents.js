@@ -110,7 +110,7 @@ function getServerTabActor(callback) {
     let actorID = form.actor;
     client.attachTab(actorID, function (response, tabClient) {
       // !Hack! Retrieve a server side object, the BrowserTabActor instance
-      let tabActor = DebuggerServer._searchAllConnectionsForActor(actorID);
+      let tabActor = DebuggerServer.searchAllConnectionsForActor(actorID);
       callback(tabActor);
     });
   });
