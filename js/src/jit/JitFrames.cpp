@@ -1532,19 +1532,8 @@ TraceJitActivations(JSContext* cx, const CooperatingContext& target, JSTracer* t
         TraceJitActivation(trc, activations);
 }
 
-JSCompartment*
-TopmostIonActivationCompartment(JSContext* cx)
-{
-    for (JitActivationIterator activations(cx); !activations.done(); ++activations) {
-        for (JitFrameIterator frames(activations); !frames.done(); ++frames) {
-            if (frames.type() == JitFrame_IonJS)
-                return activations.activation()->compartment();
-        }
-    }
-    return nullptr;
-}
-
-void UpdateJitActivationsForMinorGC(JSRuntime* rt, JSTracer* trc)
+void
+UpdateJitActivationsForMinorGC(JSRuntime* rt, JSTracer* trc)
 {
     MOZ_ASSERT(JS::CurrentThreadIsHeapMinorCollecting());
     JSContext* cx = TlsContext.get();

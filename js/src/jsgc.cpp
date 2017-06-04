@@ -3850,8 +3850,9 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAcces
     }
 
     if (!rt->gc.cleanUpEverything && canAllocateMoreCode) {
-        if (JSCompartment* comp = jit::TopmostIonActivationCompartment(TlsContext.get()))
-            comp->zone()->setPreservingCode(true);
+        jit::JitActivationIterator activation(TlsContext.get());
+        if (!activation.done())
+            activation->compartment()->zone()->setPreservingCode(true);
     }
 
     /*
