@@ -335,6 +335,10 @@ Accessible::VisibilityState()
   if (!frame->StyleVisibility()->IsVisible())
     return states::INVISIBLE;
 
+  // Offscreen state if the document's visibility state is not visible.
+  if (Document()->IsHidden())
+    return states::OFFSCREEN;
+
   nsIFrame* curFrame = frame;
   do {
     nsView* view = curFrame->GetView();
