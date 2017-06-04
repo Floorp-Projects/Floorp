@@ -11,6 +11,8 @@ module.exports = {
     "TextEncoder": false,
 
     "MatchGlob": false,
+    "MatchPattern": true,
+    "MatchPatternSet": false,
     // Specific to WebExtensions:
     "AppConstants": true,
     "Extension": true,

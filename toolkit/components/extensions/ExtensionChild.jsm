@@ -26,8 +26,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionContent",
                                   "resource://gre/modules/ExtensionContent.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
-                                  "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NativeApp",
@@ -482,7 +480,7 @@ class BrowserExtensionContent extends EventEmitter {
     });
 
     this.webAccessibleResources = data.webAccessibleResources.map(res => new MatchGlob(res));
-    this.whiteListedHosts = new MatchPattern(data.whiteListedHosts);
+    this.whiteListedHosts = new MatchPatternSet(data.whiteListedHosts, {ignorePath: true});
     this.permissions = data.permissions;
     this.optionalPermissions = data.optionalPermissions;
     this.principal = data.principal;
@@ -507,7 +505,10 @@ class BrowserExtensionContent extends EventEmitter {
       }
 
       if (permissions.origins.length > 0) {
-        this.whiteListedHosts = new MatchPattern(this.whiteListedHosts.pat.concat(...permissions.origins));
+        let patterns = this.whiteListedHosts.patterns.map(host => host.pattern);
+
+        this.whiteListedHosts = new MatchPatternSet([...patterns, ...permissions.origins],
+                                                    {ignorePath: true});
       }
     });
 
@@ -519,9 +520,12 @@ class BrowserExtensionContent extends EventEmitter {
       }
 
       if (permissions.origins.length > 0) {
-        for (let origin of permissions.origins) {
-          this.whiteListedHosts.removeOne(origin);
-        }
+        let origins = permissions.origins.map(
+          origin => new MatchPattern(origin, {ignorePath: true}).pattern);
+
+        this.whiteListedHosts = new MatchPatternSet(
+          this.whiteListedHosts.patterns
+              .filter(host => !origins.includes(host.pattern)));
       }
     });
     /* eslint-enable mozilla/balanced-listeners */
