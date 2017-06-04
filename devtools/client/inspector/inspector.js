@@ -2006,6 +2006,24 @@ Inspector.prototype = {
     let toolbox = this.toolbox;
     toolbox.highlighterUtils.highlightNodeFront(nodeFront, options);
   },
+
+  async inspectNodeActor(nodeActor, inspectFromAnnotation) {
+    const nodeFront = await this.walker.getNodeActorFromObjectActor(nodeActor);
+    if (!nodeFront) {
+      console.error("The object cannot be linked to the inspector, the " +
+                    "corresponding nodeFront could not be found.");
+      return false;
+    }
+
+    let isAttached = await this.walker.isInDOMTree(nodeFront);
+    if (!isAttached) {
+      console.error("Selected DOMNode is not attached to the document tree.");
+      return false;
+    }
+
+    await this.selection.setNodeFront(nodeFront, inspectFromAnnotation);
+    return true;
+  },
 };
 
 /**

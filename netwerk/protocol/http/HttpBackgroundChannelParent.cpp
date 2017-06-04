@@ -101,7 +101,6 @@ HttpBackgroundChannelParent::LinkToChannel(HttpChannelParent* aChannelParent)
   AssertIsInMainProcess();
   MOZ_ASSERT(NS_IsMainThread());
 
-  MOZ_DIAGNOSTIC_ASSERT(mIPCOpened);
   if (!mIPCOpened) {
     return;
   }

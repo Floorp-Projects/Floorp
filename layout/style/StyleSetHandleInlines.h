@@ -239,7 +239,11 @@ StyleSetHandle::Ptr::StyleSheetsHaveChanged() const
 {
   FORWARD(StyleSheetsHaveChanged, ());
 }
-
+bool
+StyleSetHandle::Ptr::MediumFeaturesChanged()
+{
+  FORWARD(MediumFeaturesChanged, ());
+}
 void
 StyleSetHandle::Ptr::InvalidateStyleForCSSRuleChanges()
 {

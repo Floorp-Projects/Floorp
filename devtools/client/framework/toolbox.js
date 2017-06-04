@@ -67,6 +67,10 @@ loader.lazyRequireGetter(this, "HUDService",
 loader.lazyRequireGetter(this, "viewSource",
   "devtools/client/shared/view-source");
 
+loader.lazyGetter(this, "domNodeConstants", () => {
+  return require("devtools/shared/dom-node-constants");
+});
+
 loader.lazyGetter(this, "registerHarOverlay", () => {
   return require("devtools/client/netmonitor/src/har/toolbox-overlay").register;
 });
@@ -134,6 +138,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._onPickerKeypress = this._onPickerKeypress.bind(this);
   this._onPickerStarted = this._onPickerStarted.bind(this);
   this._onPickerStopped = this._onPickerStopped.bind(this);
+  this._onInspectObject = this._onInspectObject.bind(this);
   this.selectTool = this.selectTool.bind(this);
 
   this._target.on("close", this.destroy);
@@ -152,6 +157,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
 
   this._target.on("navigate", this._refreshHostTitle);
   this._target.on("frame-update", this._updateFrames);
+  this._target.on("inspect-object", this._onInspectObject);
 
   this.on("host-changed", this._refreshHostTitle);
   this.on("select", this._refreshHostTitle);
@@ -422,6 +428,7 @@ Toolbox.prototype = {
       yield domReady.promise;
 
       this.isReady = true;
+
       let framesPromise = this._listFrames();
 
       Services.prefs.addObserver("devtools.cache.disabled", this._applyCacheSettings);
@@ -2217,6 +2224,33 @@ Toolbox.prototype = {
     return this._initInspector;
   },
 
+  _onInspectObject: function (evt, packet) {
+    this.inspectObjectActor(packet.objectActor, packet.inspectFromAnnotation);
+  },
+
+  inspectObjectActor: async function (objectActor, inspectFromAnnotation) {
+    if (objectActor.preview &&
+        objectActor.preview.nodeType === domNodeConstants.ELEMENT_NODE) {
+      // Open the inspector and select the DOM Element.
+      await this.loadTool("inspector");
+      const inspector = await this.getPanel("inspector");
+      const nodeFound = await inspector.inspectNodeActor(objectActor.actor,
+                                                         inspectFromAnnotation);
+      if (nodeFound) {
+        await this.selectTool("inspector");
+      }
+    } else if (objectActor.type !== "null" &&
+               objectActor.type !== "undefined") {
+      // Open then split console and inspect the object in the variables view,
+      // when the objectActor doesn't represent an undefined or null value.
+      await this.openSplitConsole();
+      const panel = this.getPanel("webconsole");
+      const jsterm = panel.hud.jsterm;
+
+      jsterm.inspectObjectActor(objectActor);
+    }
+  },
+
   /**
    * Destroy the inspector/walker/selection fronts
    * Returns a promise that resolves when the fronts are destroyed
@@ -2300,6 +2334,7 @@ Toolbox.prototype = {
 
     this.emit("destroy");
 
+    this._target.off("inspect-object", this._onInspectObject);
     this._target.off("navigate", this._refreshHostTitle);
     this._target.off("frame-update", this._updateFrames);
     this.off("select", this._refreshHostTitle);
