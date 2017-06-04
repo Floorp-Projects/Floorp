@@ -36,6 +36,14 @@ types.addDictType("webExtensionEvalOptions", {
   frameURL: "nullable:string",
   contextSecurityOrigin: "nullable:string",
   useContentScriptContext: "nullable:boolean",
+
+  // The actor ID of the node selected in the inspector if any,
+  // used to provide the '$0' binding.
+  toolboxSelectedNodeActorID: "nullable:string",
+
+  // The actor ID of the console actor,
+  // used to provide the 'inspect' binding.
+  toolboxConsoleActorID: "nullable:string",
 });
 
 /**

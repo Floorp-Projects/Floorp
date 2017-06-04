@@ -158,6 +158,7 @@ public:
     inline void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot);
     inline bool StyleSheetsHaveChanged() const;
     inline void InvalidateStyleForCSSRuleChanges();
+    inline bool MediumFeaturesChanged();
     inline already_AddRefed<nsStyleContext>
     ProbePseudoElementStyle(dom::Element* aParentElement,
                             mozilla::CSSPseudoElementType aType,

@@ -6331,9 +6331,10 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
                                               CSSPseudoClassType aType)
 {
   int32_t numbers[2] = { 0, 0 };
-  int32_t sign[2] = { 1, 1 };
-  bool hasSign[2] = { false, false };
   bool lookForB = true;
+  bool onlyN = false;
+  bool hasSign = false;
+  int sign = 1;
 
   // Follow the whitespace rules as proposed in
   // http://lists.w3.org/Archives/Public/www-style/2008Mar/0121.html
@@ -6343,23 +6344,27 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
     return eSelectorParsingStatus_Error;
   }
 
-  if (mToken.IsSymbol('+') || mToken.IsSymbol('-')) {
-    hasSign[0] = true;
-    if (mToken.IsSymbol('-')) {
-      sign[0] = -1;
-    }
-    if (! GetToken(false)) {
-      REPORT_UNEXPECTED_EOF(PEPseudoClassArgEOF);
-      return eSelectorParsingStatus_Error;
-    }
-  }
-
   // A helper function that checks if the token starts with literal string
   // |aStr| using a case-insensitive match.
   auto TokenBeginsWith = [this] (const nsLiteralString& aStr) {
     return StringBeginsWith(mToken.mIdent, aStr,
                             nsASCIICaseInsensitiveStringComparator());
   };
+
+  if (mToken.IsSymbol('+') || mToken.IsSymbol('-')) {
+    // This can only be +n or -n, since +an, -an, +a, -a will all
+    // parse a number as the first token.
+    numbers[0] = mToken.IsSymbol('+') ? 1 : -1;
+    onlyN = true;
+
+    // consume the `n`
+    // We do not allow whitespace here
+    // https://drafts.csswg.org/css-syntax-3/#the-anb-type
+    if (! GetToken(false)) {
+      REPORT_UNEXPECTED_EOF(PEPseudoClassArgEOF);
+      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
+    }
+  }
 
   if (eCSSToken_Ident == mToken.mType || eCSSToken_Dimension == mToken.mType) {
     // The CSS tokenization doesn't handle :nth-child() containing - well:
@@ -6370,7 +6375,7 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
     uint32_t truncAt = 0;
     if (TokenBeginsWith(NS_LITERAL_STRING("n-"))) {
       truncAt = 1;
-    } else if (TokenBeginsWith(NS_LITERAL_STRING("-n-")) && !hasSign[0]) {
+    } else if (TokenBeginsWith(NS_LITERAL_STRING("-n-"))) {
       truncAt = 2;
     }
     if (truncAt != 0) {
@@ -6379,76 +6384,58 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
     }
   }
 
-  if (eCSSToken_Ident == mToken.mType) {
-    if (mToken.mIdent.LowerCaseEqualsLiteral("odd") && !hasSign[0]) {
-      numbers[0] = 2;
-      numbers[1] = 1;
-      lookForB = false;
-    }
-    else if (mToken.mIdent.LowerCaseEqualsLiteral("even") && !hasSign[0]) {
-      numbers[0] = 2;
-      numbers[1] = 0;
-      lookForB = false;
-    }
-    else if (mToken.mIdent.LowerCaseEqualsLiteral("n")) {
-      numbers[0] = sign[0];
-    }
-    else if (mToken.mIdent.LowerCaseEqualsLiteral("-n") && !hasSign[0]) {
-      numbers[0] = -1;
-    }
-    else {
+  if (onlyN) {
+    // If we parsed a + or -, check that the truncated
+    // token is an "n"
+    if (eCSSToken_Ident != mToken.mType || !mToken.mIdent.LowerCaseEqualsLiteral("n")) {
       REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
-      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
+      return eSelectorParsingStatus_Error;
     }
-  }
-  else if (eCSSToken_Number == mToken.mType) {
-    if (!mToken.mIntegerValid) {
-      REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
-      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
-    }
-    // for +-an case
-    if (mToken.mHasSign && hasSign[0]) {
-      REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
-      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
-    }
-    int32_t intValue = mToken.mInteger * sign[0];
-    // for -a/**/n case
-    if (! GetToken(false)) {
-      numbers[1] = intValue;
-      lookForB = false;
-    }
-    else {
-      if (eCSSToken_Ident == mToken.mType && mToken.mIdent.LowerCaseEqualsLiteral("n")) {
-        numbers[0] = intValue;
-      }
-      else if (eCSSToken_Ident == mToken.mType && TokenBeginsWith(NS_LITERAL_STRING("n-"))) {
-        numbers[0] = intValue;
-        mScanner->Backup(mToken.mIdent.Length() - 1);
-      }
-      else {
-        UngetToken();
-        numbers[1] = intValue;
+  } else {
+    if (eCSSToken_Ident == mToken.mType) {
+      if (mToken.mIdent.LowerCaseEqualsLiteral("odd")) {
+        numbers[0] = 2;
+        numbers[1] = 1;
         lookForB = false;
       }
+      else if (mToken.mIdent.LowerCaseEqualsLiteral("even")) {
+        numbers[0] = 2;
+        numbers[1] = 0;
+        lookForB = false;
+      }
+      else if (mToken.mIdent.LowerCaseEqualsLiteral("n")) {
+          numbers[0] = 1;
+      }
+      else if (mToken.mIdent.LowerCaseEqualsLiteral("-n")) {
+        numbers[0] = -1;
+      }
+      else {
+        REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
+        return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
+      }
     }
-  }
-  else if (eCSSToken_Dimension == mToken.mType) {
-    if (!mToken.mIntegerValid || !mToken.mIdent.LowerCaseEqualsLiteral("n")) {
+    else if (eCSSToken_Number == mToken.mType) {
+      if (!mToken.mIntegerValid) {
+        REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
+        return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
+      }
+
+      numbers[1] = mToken.mInteger;
+      lookForB = false;
+    }
+    else if (eCSSToken_Dimension == mToken.mType) {
+      if (!mToken.mIntegerValid || !mToken.mIdent.LowerCaseEqualsLiteral("n")) {
+        REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
+        return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
+      }
+      numbers[0] = mToken.mInteger;
+    }
+    // XXX If it's a ')', is that valid?  (as 0n+0)
+    else {
       REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
+      UngetToken();
       return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
-    // for +-an case
-    if ( mToken.mHasSign && hasSign[0] ) {
-      REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
-      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
-    }
-    numbers[0] = mToken.mInteger * sign[0];
-  }
-  // XXX If it's a ')', is that valid?  (as 0n+0)
-  else {
-    REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
-    UngetToken();
-    return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
   }
 
   if (! GetToken(true)) {
@@ -6460,9 +6447,9 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
     // If it is separated by whitespace from what follows it, it appears
     // as a separate token rather than part of the number token.
     if (mToken.IsSymbol('+') || mToken.IsSymbol('-')) {
-      hasSign[1] = true;
+      hasSign = true;
       if (mToken.IsSymbol('-')) {
-        sign[1] = -1;
+        sign = -1;
       }
       if (! GetToken(true)) {
         REPORT_UNEXPECTED_EOF(PEPseudoClassArgEOF);
@@ -6470,12 +6457,12 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
       }
     }
     if (eCSSToken_Number != mToken.mType ||
-        !mToken.mIntegerValid || mToken.mHasSign == hasSign[1]) {
+        !mToken.mIntegerValid || mToken.mHasSign == hasSign) {
       REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
       UngetToken();
       return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
-    numbers[1] = mToken.mInteger * sign[1];
+    numbers[1] = mToken.mInteger * sign;
     if (! GetToken(true)) {
       REPORT_UNEXPECTED_EOF(PEPseudoClassArgEOF);
       return eSelectorParsingStatus_Error;
