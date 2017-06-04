@@ -32,12 +32,12 @@ static const char* sLibs[] = {
   "libavcodec.54.dylib",
   "libavcodec.53.dylib",
 #else
-  "libavcodec-ffmpeg.so.57",
-  "libavcodec-ffmpeg.so.56",
-  "libavcodec.so.57",
-  "libavcodec.so.56",
-  "libavcodec.so.55",
-  "libavcodec.so.54",
+  //"libavcodec-ffmpeg.so.57",
+  //"libavcodec-ffmpeg.so.56",
+  //"libavcodec.so.57",
+  //"libavcodec.so.56",
+  //"libavcodec.so.55",
+  //"libavcodec.so.54",
   "libavcodec.so.53",
 #endif
 };
