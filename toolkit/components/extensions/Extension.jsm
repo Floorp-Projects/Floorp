@@ -1114,8 +1114,7 @@ this.Extension = class extends ExtensionData {
     if (!this.manifest) {
       this.policy.active = false;
 
-      this.cleanupGeneratedFile();
-      return;
+      return this.cleanupGeneratedFile();
     }
 
     GlobalManager.uninit(this);
