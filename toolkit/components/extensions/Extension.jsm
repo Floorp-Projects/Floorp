@@ -62,8 +62,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Locale",
                                   "resource://gre/modules/Locale.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Log",
                                   "resource://gre/modules/Log.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
-                                  "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
@@ -425,7 +423,7 @@ this.ExtensionData = class {
   // they should also be added here.
   get userPermissions() {
     let result = {
-      origins: this.whiteListedHosts.pat,
+      origins: this.whiteListedHosts.patterns.map(matcher => matcher.pattern),
       apis: [...this.apiNames],
     };
 
@@ -533,15 +531,19 @@ this.ExtensionData = class {
         }
       }
 
-      this.permissions.add(perm);
       let type = classifyPermission(perm);
       if (type.origin) {
-        whitelist.push(perm);
+        let matcher = new MatchPattern(perm, {ignorePath: true});
+
+        whitelist.push(matcher);
+        perm = matcher.pattern;
       } else if (type.api) {
         this.apiNames.add(type.api);
       }
+
+      this.permissions.add(perm);
     }
-    this.whiteListedHosts = new MatchPattern(whitelist);
+    this.whiteListedHosts = new MatchPatternSet(whitelist);
 
     for (let api of this.apiNames) {
       this.dependencies.add(`${api}@experiments.addons.mozilla.org`);
@@ -740,7 +742,10 @@ this.Extension = class extends ExtensionData {
       }
 
       if (permissions.origins.length > 0) {
-        this.whiteListedHosts = new MatchPattern(this.whiteListedHosts.pat.concat(...permissions.origins));
+        let patterns = this.whiteListedHosts.patterns.map(host => host.pattern);
+
+        this.whiteListedHosts = new MatchPatternSet([...patterns, ...permissions.origins],
+                                                    {ignorePath: true});
       }
     });
 
@@ -749,9 +754,12 @@ this.Extension = class extends ExtensionData {
         this.permissions.delete(perm);
       }
 
-      for (let origin of permissions.origins) {
-        this.whiteListedHosts.removeOne(origin);
-      }
+      let origins = permissions.origins.map(
+        origin => new MatchPattern(origin, {ignorePath: true}).pattern);
+
+      this.whiteListedHosts = new MatchPatternSet(
+        this.whiteListedHosts.patterns
+            .filter(host => !origins.includes(host.pattern)));
     });
     /* eslint-enable mozilla/balanced-listeners */
   }
@@ -859,7 +867,7 @@ this.Extension = class extends ExtensionData {
       baseURL: this.baseURI.spec,
       content_scripts: this.manifest.content_scripts || [],  // eslint-disable-line camelcase
       webAccessibleResources: this.webAccessibleResources.map(res => res.glob),
-      whiteListedHosts: this.whiteListedHosts.serialize(),
+      whiteListedHosts: this.whiteListedHosts.patterns.map(pat => pat.pattern),
       localeData: this.localeData.serialize(),
       permissions: this.permissions,
       principal: this.principal,
@@ -996,7 +1004,10 @@ this.Extension = class extends ExtensionData {
         this.permissions.add(perm);
       }
       if (perms.origins.length > 0) {
-        this.whiteListedHosts = new MatchPattern(this.whiteListedHosts.pat.concat(...perms.origins));
+        let patterns = this.whiteListedHosts.patterns.map(host => host.pattern);
+
+        this.whiteListedHosts = new MatchPatternSet([...patterns, ...perms.origins],
+                                                    {ignorePath: true});
       }
 
       // The "startup" Management event sent on the extension instance itself
@@ -1134,7 +1145,7 @@ this.Extension = class extends ExtensionData {
   get optionalOrigins() {
     if (this._optionalOrigins == null) {
       let origins = this.manifest.optional_permissions.filter(perm => classifyPermission(perm).origin);
-      this._optionalOrigins = new MatchPattern(origins);
+      this._optionalOrigins = new MatchPatternSet(origins, {ignorePath: true});
     }
     return this._optionalOrigins;
   }

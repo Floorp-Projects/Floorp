@@ -30,7 +30,7 @@ this.permissions = class extends ExtensionAPI {
 
           let optionalOrigins = context.extension.optionalOrigins;
           for (let origin of origins) {
-            if (!optionalOrigins.subsumes(origin)) {
+            if (!optionalOrigins.subsumes(new MatchPattern(origin))) {
               throw new ExtensionError(`Cannot request origin permission for ${origin} since it was not declared in optional_permissions`);
             }
           }
@@ -71,7 +71,7 @@ this.permissions = class extends ExtensionAPI {
           }
 
           for (let origin of permissions.origins) {
-            if (!context.extension.whiteListedHosts.subsumes(origin)) {
+            if (!context.extension.whiteListedHosts.subsumes(new MatchPattern(origin))) {
               return false;
             }
           }
