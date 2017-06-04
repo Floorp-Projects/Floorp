@@ -5,8 +5,10 @@
 
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
+
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
+#include "nsEscape.h"
 #include "nsGkAtoms.h"
 
 namespace mozilla {
@@ -110,9 +112,106 @@ ExtensionPolicyService::DefaultCSP(nsAString& aDefaultCSP) const
   }
 }
 
+
+/*****************************************************************************
+ * nsIAddonPolicyService
+ *****************************************************************************/
+
+nsresult
+ExtensionPolicyService::GetBaseCSP(nsAString& aBaseCSP)
+{
+  BaseCSP(aBaseCSP);
+  return NS_OK;
+}
+
+nsresult
+ExtensionPolicyService::GetDefaultCSP(nsAString& aDefaultCSP)
+{
+  DefaultCSP(aDefaultCSP);
+  return NS_OK;
+}
+
+nsresult
+ExtensionPolicyService::GetAddonCSP(const nsAString& aAddonId,
+                                    nsAString& aResult)
+{
+  if (WebExtensionPolicy* policy = GetByID(aAddonId)) {
+    policy->GetContentSecurityPolicy(aResult);
+    return NS_OK;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
+
+nsresult
+ExtensionPolicyService::GetGeneratedBackgroundPageUrl(const nsACString& aHostname,
+                                                      nsACString& aResult)
+{
+  if (WebExtensionPolicy* policy = GetByHost(aHostname)) {
+    nsAutoCString url("data:text/html,");
+
+    nsCString html = policy->BackgroundPageHTML();
+    nsAutoCString escaped;
+
+    url.Append(NS_EscapeURL(html, esc_Minimal, escaped));
+
+    aResult = url;
+    return NS_OK;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
+
+nsresult
+ExtensionPolicyService::AddonHasPermission(const nsAString& aAddonId,
+                                           const nsAString& aPerm,
+                                           bool* aResult)
+{
+  if (WebExtensionPolicy* policy = GetByID(aAddonId)) {
+    *aResult = policy->HasPermission(aPerm);
+    return NS_OK;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
+
+nsresult
+ExtensionPolicyService::AddonMayLoadURI(const nsAString& aAddonId,
+                                        nsIURI* aURI,
+                                        bool aExplicit,
+                                        bool* aResult)
+{
+  if (WebExtensionPolicy* policy = GetByID(aAddonId)) {
+    *aResult = policy->CanAccessURI(aURI, aExplicit);
+    return NS_OK;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
+
+nsresult
+ExtensionPolicyService::ExtensionURILoadableByAnyone(nsIURI* aURI, bool* aResult)
+{
+  URLInfo url(aURI);
+  if (WebExtensionPolicy* policy = GetByURL(url)) {
+    *aResult = policy->IsPathWebAccessible(url.FilePath());
+    return NS_OK;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
+
+nsresult
+ExtensionPolicyService::ExtensionURIToAddonId(nsIURI* aURI, nsAString& aResult)
+{
+  if (WebExtensionPolicy* policy = GetByURL(aURI)) {
+    policy->GetId(aResult);
+  } else {
+    aResult.SetIsVoid(true);
+  }
+  return NS_OK;
+}
+
+
 NS_IMPL_CYCLE_COLLECTION(ExtensionPolicyService, mExtensions, mExtensionHosts)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionPolicyService)
+  NS_INTERFACE_MAP_ENTRY(nsIAddonPolicyService)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
