@@ -64,36 +64,10 @@ var extensions = new DefaultWeakMap(policy => {
   return extension;
 });
 
-class ScriptMatcher {
-  constructor(matcher) {
-    this.matcher = matcher;
-
-    this._script = null;
-  }
-
-  get script() {
-    if (!this._script) {
-      this._script = new ExtensionContent.Script(extensions.get(this.matcher.extension),
-                                                 this.matcher);
-    }
-    return this._script;
-  }
-
-  preload() {
-    let {script} = this;
-
-    script.loadCSS();
-    script.compileScripts();
-  }
-
-  matchesWindow(window) {
-    return this.matcher.matchesWindow(window);
-  }
-
-  injectInto(window) {
-    return this.script.injectInto(window);
-  }
-}
+var contentScripts = new DefaultWeakMap(matcher => {
+  return new ExtensionContent.Script(extensions.get(matcher.extension),
+                                     matcher);
+});
 
 function getMessageManager(window) {
   let docShell = window.document.docShell.QueryInterface(Ci.nsIInterfaceRequestor);
@@ -139,7 +113,7 @@ class ExtensionGlobal {
 
         let matcher = new WebExtensionContentScript(policy, parseScriptOptions(data.options));
 
-        let options = Object.assign(matcher, {
+        Object.assign(matcher, {
           wantReturnValue: data.options.wantReturnValue,
           removeCSS: data.options.remove_css,
           cssOrigin: data.options.css_origin,
@@ -147,7 +121,7 @@ class ExtensionGlobal {
           jsCode: data.options.jsCode,
         });
 
-        let script = new ScriptMatcher(options);
+        let script = contentScripts.get(matcher);
 
         return ExtensionContent.handleExtensionExecute(this.global, target, data.options, script);
       case "WebNavigation:GetFrame":
@@ -157,8 +131,6 @@ class ExtensionGlobal {
     }
   }
 }
-
-let scriptMatchers = new DefaultWeakMap(matcher => new ScriptMatcher(matcher));
 
 // Responsible for creating ExtensionContexts and injecting content
 // scripts into them when new documents are created.
@@ -261,7 +233,7 @@ DocumentManager = {
     for (let window of this.enumerateWindows()) {
       for (let script of extension.contentScripts) {
         if (script.matchesWindow(window)) {
-          scriptMatchers.get(script).injectInto(window);
+          contentScripts.get(script).injectInto(window);
         }
       }
     }
@@ -428,6 +400,7 @@ ExtensionManager = {
         if (isContentProcess) {
           policy.active = false;
         }
+        Services.cpmm.sendAsyncMessage("Extension:ShutdownComplete");
         break;
       }
 
@@ -459,12 +432,12 @@ ExtensionProcessScript.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.mozIExtensionProcessScript]),
 
   preloadContentScript(contentScript) {
-    scriptMatchers.get(contentScript).preload();
+    contentScripts.get(contentScript).preload();
   },
 
   loadContentScript(contentScript, window) {
     if (DocumentManager.globals.has(getMessageManager(window))) {
-      scriptMatchers.get(contentScript).injectInto(window);
+      contentScripts.get(contentScript).injectInto(window);
     }
   },
 };
