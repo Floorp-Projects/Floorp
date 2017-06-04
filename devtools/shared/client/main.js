@@ -180,6 +180,7 @@ const UnsolicitedNotifications = {
   "evaluationResult": "evaluationResult",
   "newSource": "newSource",
   "updatedSource": "updatedSource",
+  "inspectObject": "inspectObject"
 };
 
 /**

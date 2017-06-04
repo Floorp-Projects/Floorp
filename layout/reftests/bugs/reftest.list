@@ -2005,3 +2005,4 @@ fails-if(styloVsGecko) == 1322512-1.html 1322512-1-ref.html
 == 1364335.html 1364335-ref.html
 == 1364360-1.html 1364360-1-ref.html
 == 1366144.html 1366144-ref.html
+== 1367592-1.html 1367592-1-ref.html
