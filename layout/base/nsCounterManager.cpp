@@ -25,6 +25,7 @@ nsCounterUseNode::InitTextFrame(nsGenConList* aList,
 
   nsCounterList* counterList = static_cast<nsCounterList*>(aList);
   counterList->Insert(this);
+  aPseudoFrame->AddStateBits(NS_FRAME_HAS_CSS_COUNTER_STYLE);
   bool dirty = counterList->IsDirty();
   if (!dirty) {
     if (counterList->IsLast(this)) {
@@ -188,8 +189,11 @@ nsCounterManager::AddCounterResetsAndIncrements(nsIFrame* aFrame)
   const nsStyleContent* styleContent = aFrame->StyleContent();
   if (!styleContent->CounterIncrementCount() &&
       !styleContent->CounterResetCount()) {
+    MOZ_ASSERT(!aFrame->HasAnyStateBits(NS_FRAME_HAS_CSS_COUNTER_STYLE));
     return false;
   }
+
+  aFrame->AddStateBits(NS_FRAME_HAS_CSS_COUNTER_STYLE);
 
   // Add in order, resets first, so all the comparisons will be optimized
   // for addition at the end of the list.
@@ -266,6 +270,8 @@ nsCounterManager::SetAllDirty()
 bool
 nsCounterManager::DestroyNodesFor(nsIFrame* aFrame)
 {
+  MOZ_ASSERT(aFrame->HasAnyStateBits(NS_FRAME_HAS_CSS_COUNTER_STYLE),
+             "why call me?");
   bool destroyedAny = false;
   for (auto iter = mNames.Iter(); !iter.Done(); iter.Next()) {
     nsCounterList* list = iter.UserData();
