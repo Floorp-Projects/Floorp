@@ -248,24 +248,48 @@ nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot)
 #endif
   }
 
-  // Destroy frames on the auxiliary frame lists and delete the lists.
-  nsPresContext* pc = PresContext();
-  nsIPresShell* shell = pc->PresShell();
-  SafelyDestroyFrameListProp(aDestructRoot, shell, OverflowProperty());
+  if (MOZ_UNLIKELY(!mProperties.IsEmpty())) {
+    using T = mozilla::FrameProperties::UntypedDescriptor;
+    bool hasO = false, hasOC = false, hasEOC = false, hasBackdrop = false;
+    mProperties.ForEach([&] (const T& aProp, void*) {
+      if (aProp == OverflowProperty()) {
+        hasO = true;
+      } else if (aProp == OverflowContainersProperty()) {
+        hasOC = true;
+      } else if (aProp == ExcessOverflowContainersProperty()) {
+        hasEOC = true;
+      } else if (aProp == BackdropProperty()) {
+        hasBackdrop = true;
+      }
+      return true;
+    });
 
-  MOZ_ASSERT(IsFrameOfType(nsIFrame::eCanContainOverflowContainers) ||
-             !(GetProperty(nsContainerFrame::OverflowContainersProperty()) ||
-               GetProperty(nsContainerFrame::ExcessOverflowContainersProperty())),
-             "this type of frame should't have overflow containers");
-  SafelyDestroyFrameListProp(aDestructRoot, shell,
-                             OverflowContainersProperty());
-  SafelyDestroyFrameListProp(aDestructRoot, shell,
-                             ExcessOverflowContainersProperty());
+    // Destroy frames on the auxiliary frame lists and delete the lists.
+    nsPresContext* pc = PresContext();
+    nsIPresShell* shell = pc->PresShell();
+    if (hasO) {
+      SafelyDestroyFrameListProp(aDestructRoot, shell, OverflowProperty());
+    }
 
-  MOZ_ASSERT(!GetProperty(BackdropProperty()) ||
-             StyleDisplay()->mTopLayer != NS_STYLE_TOP_LAYER_NONE,
-             "only top layer frame may have backdrop");
-  SafelyDestroyFrameListProp(aDestructRoot, shell, BackdropProperty());
+    MOZ_ASSERT(IsFrameOfType(eCanContainOverflowContainers) ||
+               !(hasOC || hasEOC),
+               "this type of frame shouldn't have overflow containers");
+    if (hasOC) {
+      SafelyDestroyFrameListProp(aDestructRoot, shell,
+                                 OverflowContainersProperty());
+    }
+    if (hasEOC) {
+      SafelyDestroyFrameListProp(aDestructRoot, shell,
+                                 ExcessOverflowContainersProperty());
+    }
+
+    MOZ_ASSERT(!GetProperty(BackdropProperty()) ||
+               StyleDisplay()->mTopLayer != NS_STYLE_TOP_LAYER_NONE,
+               "only top layer frame may have backdrop");
+    if (hasBackdrop) {
+      SafelyDestroyFrameListProp(aDestructRoot, shell, BackdropProperty());
+    }
+  }
 
   nsSplittableFrame::DestroyFrom(aDestructRoot);
 }
@@ -303,36 +327,30 @@ nsContainerFrame::GetChildList(ChildListID aListID) const
   }
 }
 
-static void
-AppendIfNonempty(const nsIFrame* aFrame,
-                 nsContainerFrame::FrameListPropertyDescriptor aProperty,
-                 nsTArray<nsIFrame::ChildList>* aLists,
-                 nsIFrame::ChildListID aListID)
-{
-  if (nsFrameList* list = aFrame->GetProperty(aProperty)) {
-    list->AppendIfNonempty(aLists, aListID);
-  }
-}
-
 void
 nsContainerFrame::GetChildLists(nsTArray<ChildList>* aLists) const
 {
   mFrames.AppendIfNonempty(aLists, kPrincipalList);
-  ::AppendIfNonempty(this, OverflowProperty(),
-                     aLists, kOverflowList);
-  if (IsFrameOfType(nsIFrame::eCanContainOverflowContainers)) {
-    ::AppendIfNonempty(this, OverflowContainersProperty(),
-                       aLists, kOverflowContainersList);
-    ::AppendIfNonempty(this, ExcessOverflowContainersProperty(),
-                       aLists, kExcessOverflowContainersList);
-  }
-  // Bypass BackdropProperty hashtable lookup for any in-flow frames
-  // since frames in the top layer (only which can have backdrop) are
-  // definitely out-of-flow.
-  if (GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
-    ::AppendIfNonempty(this, BackdropProperty(),
-                       aLists, kBackdropList);
-  }
+
+  using T = mozilla::FrameProperties::UntypedDescriptor;
+  mProperties.ForEach([this, aLists] (const T& aProp, void* aValue) {
+    typedef const nsFrameList* L;
+    if (aProp == OverflowProperty()) {
+      L(aValue)->AppendIfNonempty(aLists, kOverflowList);
+    } else if (aProp == OverflowContainersProperty()) {
+      MOZ_ASSERT(IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
+                 "found unexpected OverflowContainersProperty");
+      L(aValue)->AppendIfNonempty(aLists, kOverflowContainersList);
+    } else if (aProp == ExcessOverflowContainersProperty()) {
+      MOZ_ASSERT(IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
+                 "found unexpected ExcessOverflowContainersProperty");
+      L(aValue)->AppendIfNonempty(aLists, kExcessOverflowContainersList);
+    } else if (aProp == BackdropProperty()) {
+      L(aValue)->AppendIfNonempty(aLists, kBackdropList);
+    }
+    return true;
+  });
+
   nsSplittableFrame::GetChildLists(aLists);
 }
 

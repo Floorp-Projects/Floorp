@@ -18,12 +18,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1322273
 <script type="application/javascript">
 "use strict";
 
+function waitForWindowDestroyed(winID, callback) {
+  let observer = {
+    observe: function(subject, topic, data) {
+      let id = subject.QueryInterface(SpecialPowers.Ci.nsISupportsPRUint64).data;
+      if (id != winID) {
+        return;
+      }
+      SpecialPowers.removeObserver(observer, "outer-window-destroyed");
+      SpecialPowers.executeSoon(callback);
+    }
+  };
+  SpecialPowers.addObserver(observer, "outer-window-destroyed");
+}
+
 add_task(function* () {
   let frame = $('subframe');
   frame.src = "data:text/html,";
   yield new Promise(resolve => frame.addEventListener("load", resolve, {once: true}));
 
   let win = frame.contentWindow;
+  let winID = SpecialPowers.getDOMWindowUtils(win).outerWindowID;
 
   win.eval("obj = {}");
   win.obj.foo = {bar: "baz"};
@@ -50,7 +65,7 @@ add_task(function* () {
   frame.remove();
 
   // Give the nuke wrappers task a chance to run.
-  yield new Promise(SimpleTest.executeSoon);
+  yield new Promise(resolve => waitForWindowDestroyed(winID, resolve));
 
   is(isWrapperDead(), true, "Sandbox wrapper for content window should be dead");
   is(obj.foo.bar, "baz", "Content wrappers into and out of content window should be alive");
