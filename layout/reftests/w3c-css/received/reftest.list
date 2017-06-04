@@ -240,7 +240,7 @@ fuzzy-if(OSX,40,6) == css-values-3/ch-unit-001.html css-values-3/reference/ch-un
 == css-values-3/vh-interpolate-pct.html css-values-3/reference/all-green.html
 == css-values-3/vh-interpolate-px.html css-values-3/reference/all-green.html
 == css-values-3/vh-interpolate-vh.html css-values-3/reference/all-green.html
-fails-if(styloVsGecko||stylo) == css-values-3/vh-support-atviewport.html css-values-3/reference/all-green.html
+== css-values-3/vh-support-atviewport.html css-values-3/reference/all-green.html
 == css-values-3/vh-support-margin.html css-values-3/reference/all-green.html
 skip == css-values-3/vh-support-transform-origin.html css-values-3/reference/all-green.html
 skip == css-values-3/vh-support-transform-translate.html css-values-3/reference/all-green.html
