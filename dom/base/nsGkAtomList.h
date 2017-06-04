@@ -2011,6 +2011,7 @@ GK_ATOM(mozinputrangeignorepreventdefault, "mozinputrangeignorepreventdefault")
 
 // WebExtensions
 GK_ATOM(moz_extension, "moz-extension")
+GK_ATOM(all_urlsPermission, "<all_urls>")
 GK_ATOM(http, "http")
 GK_ATOM(https, "https")
 

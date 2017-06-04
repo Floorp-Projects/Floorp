@@ -185,10 +185,16 @@ bool
 URLInfo::InheritsPrincipal() const
 {
   if (!mInheritsPrincipal.isSome()) {
-    bool inherits = false;
-    nsresult rv = NS_URIChainHasFlags(mURI, nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
-                                      &inherits);
-    Unused << NS_WARN_IF(NS_FAILED(rv));
+    // For our purposes, about:blank and about:srcdoc are treated as URIs that
+    // inherit principals.
+    bool inherits = Spec().EqualsLiteral("about:blank") || Spec().EqualsLiteral("about:srcdoc");
+
+    if (!inherits) {
+      nsresult rv = NS_URIChainHasFlags(mURI, nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
+                                        &inherits);
+      Unused << NS_WARN_IF(NS_FAILED(rv));
+    }
+
     mInheritsPrincipal.emplace(inherits);
   }
   return mInheritsPrincipal.ref();
