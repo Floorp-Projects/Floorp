@@ -982,6 +982,23 @@ this.Extension = class extends ExtensionData {
   }
 
   async _startup() {
+    // Create a temporary policy object for the devtools and add-on
+    // manager callers that depend on it being available early.
+    this.policy = new WebExtensionPolicy({
+      id: this.id,
+      mozExtensionHostname: this.uuid,
+      baseURL: this.baseURI.spec,
+      allowedOrigins: new MatchPatternSet([]),
+      localizeCallback() {},
+    });
+    if (!WebExtensionPolicy.getByID(this.id)) {
+      // The add-on manager doesn't handle async startup and shutdown,
+      // so during upgrades and add-on restarts, startup() gets called
+      // before the last shutdown has completed, and this fails when
+      // there's another active add-on with the same ID.
+      this.policy.active = true;
+    }
+
     TelemetryStopwatch.start("WEBEXT_EXTENSION_STARTUP_MS", this);
     try {
       let [, perms] = await Promise.all([this.loadManifest(), ExtensionPermissions.get(this)]);
@@ -1018,6 +1035,7 @@ this.Extension = class extends ExtensionData {
       this.webAccessibleResources = resources.map(res => new MatchGlob(res));
 
 
+      this.policy.active = false;
       this.policy = processScript.initExtension(this.serialize(), this);
 
       // The "startup" Management event sent on the extension instance itself

@@ -1077,6 +1077,7 @@ const ExtensionParent = {
   GlobalManager,
   HiddenExtensionPage,
   ParentAPIManager,
+  WebExtensionPolicy,
   apiManager,
   get baseManifestProperties() {
     if (gBaseManifestProperties) {
