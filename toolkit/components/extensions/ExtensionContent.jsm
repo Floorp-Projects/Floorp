@@ -227,6 +227,11 @@ class Script {
     return this.cssURLs.map(url => this.cssCache.get(url));
   }
 
+  preload() {
+    this.loadCSS();
+    this.compileScripts();
+  }
+
   cleanup(window) {
     if (!this.removeCss && this.cssURLs.length) {
       let winUtils = getWinUtils(window);
@@ -241,6 +246,10 @@ class Script {
       // a result of living in this document.
       this.cssCache.clear(CSS_EXPIRY_TIMEOUT_MS);
     }
+  }
+
+  matchesWindow(window) {
+    return this.matcher.matchesWindow(window);
   }
 
   async injectInto(window) {

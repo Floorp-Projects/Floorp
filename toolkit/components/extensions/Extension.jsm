@@ -1112,7 +1112,7 @@ this.Extension = class extends ExtensionData {
     Management.emit("shutdown", this);
     this.emit("shutdown");
 
-    Services.ppmm.broadcastAsyncMessage("Extension:Shutdown", {id: this.id});
+    await this.broadcast("Extension:Shutdown", {id: this.id});
 
     MessageChannel.abortResponses({extensionId: this.id});
 
