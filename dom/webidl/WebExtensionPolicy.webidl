@@ -59,6 +59,12 @@ interface WebExtensionPolicy {
   attribute MatchPatternSet allowedOrigins;
 
   /**
+   * The set of content scripts active for this extension.
+   */
+  [Cached, Constant, Frozen]
+  readonly attribute sequence<WebExtensionContentScript> contentScripts;
+
+  /**
    * True if the extension is currently active, false otherwise. When active,
    * the extension's moz-extension: protocol will point to the given baseURI,
    * and the set of policies for this object will be active for its ID.
@@ -140,6 +146,8 @@ dictionary WebExtensionInit {
   sequence<DOMString> permissions = [];
 
   sequence<MatchGlob> webAccessibleResources = [];
+
+  sequence<WebExtensionContentScriptInit> contentScripts = [];
 
   DOMString? contentSecurityPolicy = null;
 
