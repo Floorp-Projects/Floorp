@@ -1,7 +1,5 @@
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
-                                  "resource://gre/modules/ExtensionManagement.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WebRequest",
                                   "resource://gre/modules/WebRequest.jsm");
 
