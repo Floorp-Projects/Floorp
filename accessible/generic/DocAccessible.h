@@ -137,6 +137,11 @@ public:
       (mDocumentNode->IsShowing() || HasLoadState(eDOMLoaded));
   }
 
+  bool IsHidden() const
+  {
+    return mDocumentNode->Hidden();
+  }
+
   /**
    * Document load states.
    */
