@@ -4,8 +4,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ExtensionPolicyService.h"
+#include "mozilla/extensions/WebExtensionContentScript.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 
+#include "mozilla/AddonManagerWebAPI.h"
 #include "nsEscape.h"
 #include "nsISubstitutingProtocolHandler.h"
 #include "nsNetUtil.h"
@@ -109,6 +111,16 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
 
   if (mContentSecurityPolicy.IsVoid()) {
     EPS().DefaultCSP(mContentSecurityPolicy);
+  }
+
+  mContentScripts.SetCapacity(aInit.mContentScripts.Length());
+  for (const auto& scriptInit : aInit.mContentScripts) {
+    RefPtr<WebExtensionContentScript> contentScript =
+      new WebExtensionContentScript(*this, scriptInit, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+    mContentScripts.AppendElement(Move(contentScript));
   }
 
   nsresult rv = NS_NewURI(getter_AddRefs(mBaseURI), aInit.mBaseURL);
@@ -262,11 +274,18 @@ WebExtensionPolicy::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto)
   return WebExtensionPolicyBinding::Wrap(aCx, this, aGivenProto);
 }
 
+void
+WebExtensionPolicy::GetContentScripts(nsTArray<RefPtr<WebExtensionContentScript>>& aScripts) const
+{
+  aScripts.AppendElements(mContentScripts);
+}
+
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebExtensionPolicy, mParent,
                                       mLocalizeCallback,
                                       mHostPermissions,
-                                      mWebAccessiblePaths)
+                                      mWebAccessiblePaths,
+                                      mContentScripts)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebExtensionPolicy)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -275,6 +294,203 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(WebExtensionPolicy)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WebExtensionPolicy)
+
+
+/*****************************************************************************
+ * WebExtensionContentScript
+ *****************************************************************************/
+
+/* static */ already_AddRefed<WebExtensionContentScript>
+WebExtensionContentScript::Constructor(GlobalObject& aGlobal,
+                                       WebExtensionPolicy& aExtension,
+                                       const ContentScriptInit& aInit,
+                                       ErrorResult& aRv)
+{
+  RefPtr<WebExtensionContentScript> script = new WebExtensionContentScript(aExtension, aInit, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  return script.forget();
+}
+
+WebExtensionContentScript::WebExtensionContentScript(WebExtensionPolicy& aExtension,
+                                                     const ContentScriptInit& aInit,
+                                                     ErrorResult& aRv)
+  : mExtension(&aExtension)
+  , mMatches(aInit.mMatches)
+  , mExcludeMatches(aInit.mExcludeMatches)
+  , mCssPaths(aInit.mCssPaths)
+  , mJsPaths(aInit.mJsPaths)
+  , mRunAt(aInit.mRunAt)
+  , mAllFrames(aInit.mAllFrames)
+  , mFrameID(aInit.mFrameID)
+  , mMatchAboutBlank(aInit.mMatchAboutBlank)
+{
+  if (!aInit.mIncludeGlobs.IsNull()) {
+    mIncludeGlobs.SetValue().AppendElements(aInit.mIncludeGlobs.Value());
+  }
+
+  if (!aInit.mExcludeGlobs.IsNull()) {
+    mExcludeGlobs.SetValue().AppendElements(aInit.mExcludeGlobs.Value());
+  }
+}
+
+
+bool
+WebExtensionContentScript::Matches(const DocInfo& aDoc) const
+{
+  if (!mFrameID.IsNull()) {
+    if (aDoc.FrameID() != mFrameID.Value()) {
+      return false;
+    }
+  } else {
+    if (!mAllFrames && !aDoc.IsTopLevel()) {
+      return false;
+    }
+  }
+
+  if (!mMatchAboutBlank && aDoc.URL().InheritsPrincipal()) {
+    return false;
+  }
+
+  if (!MatchesURI(aDoc.PrincipalURL())) {
+    return false;
+  }
+
+  return true;
+}
+
+bool
+WebExtensionContentScript::MatchesURI(const URLInfo& aURL) const
+{
+  if (!mMatches->Matches(aURL)) {
+    return false;
+  }
+
+  if (mExcludeMatches && mExcludeMatches->Matches(aURL)) {
+    return false;
+  }
+
+  if (!mIncludeGlobs.IsNull() && !mIncludeGlobs.Value().Matches(aURL.Spec())) {
+    return false;
+  }
+
+  if (!mExcludeGlobs.IsNull() && mExcludeGlobs.Value().Matches(aURL.Spec())) {
+    return false;
+  }
+
+  if (AddonManagerWebAPI::IsValidSite(aURL.URI())) {
+    return false;
+  }
+
+  return true;
+}
+
+
+JSObject*
+WebExtensionContentScript::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto)
+{
+  return WebExtensionContentScriptBinding::Wrap(aCx, this, aGivenProto);
+}
+
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebExtensionContentScript,
+                                      mMatches, mExcludeMatches,
+                                      mIncludeGlobs, mExcludeGlobs,
+                                      mExtension)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebExtensionContentScript)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(WebExtensionContentScript)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(WebExtensionContentScript)
+
+
+/*****************************************************************************
+ * DocInfo
+ *****************************************************************************/
+
+DocInfo::DocInfo(const URLInfo& aURL, nsILoadInfo* aLoadInfo)
+  : mURL(aURL)
+  , mObj(AsVariant(aLoadInfo))
+{}
+
+DocInfo::DocInfo(nsPIDOMWindowOuter* aWindow)
+  : mURL(aWindow->GetDocumentURI())
+  , mObj(AsVariant(aWindow))
+{}
+
+bool
+DocInfo::IsTopLevel() const
+{
+  if (mIsTopLevel.isNothing()) {
+    struct Matcher
+    {
+      bool match(Window aWin) { return aWin->IsTopLevelWindow(); }
+      bool match(LoadInfo aLoadInfo) { return aLoadInfo->GetIsTopLevelLoad(); }
+    };
+    mIsTopLevel.emplace(mObj.match(Matcher()));
+  }
+  return mIsTopLevel.ref();
+}
+
+uint64_t
+DocInfo::FrameID() const
+{
+  if (mFrameID.isNothing()) {
+    if (IsTopLevel()) {
+      mFrameID.emplace(0);
+    } else {
+      struct Matcher
+      {
+        uint64_t match(Window aWin) { return aWin->GetCurrentInnerWindow()->WindowID(); }
+        uint64_t match(LoadInfo aLoadInfo) { return aLoadInfo->GetInnerWindowID(); }
+      };
+      mFrameID.emplace(mObj.match(Matcher()));
+    }
+  }
+  return mFrameID.ref();
+}
+
+nsIPrincipal*
+DocInfo::Principal() const
+{
+  if (mPrincipal.isNothing()) {
+    struct Matcher
+    {
+      nsIPrincipal* match(Window aWin)
+      {
+        nsCOMPtr<nsIDocument> doc = aWin->GetDoc();
+        return doc->NodePrincipal();
+      }
+      nsIPrincipal* match(LoadInfo aLoadInfo) { return aLoadInfo->PrincipalToInherit(); }
+    };
+    mPrincipal.emplace(mObj.match(Matcher()));
+  }
+  return mPrincipal.ref();
+}
+
+const URLInfo&
+DocInfo::PrincipalURL() const
+{
+  if (!URL().InheritsPrincipal()) {
+    return URL();
+  }
+
+  if (mPrincipalURL.isNothing()) {
+    nsIPrincipal* prin = Principal();
+    nsCOMPtr<nsIURI> uri;
+    if (prin && NS_SUCCEEDED(prin->GetURI(getter_AddRefs(uri)))) {
+      mPrincipalURL.emplace(uri);
+    } else {
+      mPrincipalURL.emplace(URL());
+    }
+  }
+
+  return mPrincipalURL.ref();
+}
 
 } // namespace extensions
 } // namespace mozilla

@@ -52,6 +52,7 @@ EXPORTS.mozilla = [
 EXPORTS.mozilla.extensions = [
     'MatchGlob.h',
     'MatchPattern.h',
+    'WebExtensionContentScript.h',
     'WebExtensionPolicy.h',
 ]
 

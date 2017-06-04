@@ -25,6 +25,8 @@ namespace extensions {
 using dom::WebExtensionInit;
 using dom::WebExtensionLocalizeCallback;
 
+class WebExtensionContentScript;
+
 class WebExtensionPolicy final : public nsISupports
                                , public nsWrapperCache
                                , public SupportsWeakPtr<WebExtensionPolicy>
@@ -33,6 +35,8 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebExtensionPolicy)
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebExtensionPolicy)
+
+  using ScriptArray = nsTArray<RefPtr<WebExtensionContentScript>>;
 
   static already_AddRefed<WebExtensionPolicy>
   Constructor(dom::GlobalObject& aGlobal, const WebExtensionInit& aInit, ErrorResult& aRv);
@@ -106,6 +110,9 @@ public:
     mPermissions = new AtomSet(aPermissions);
   }
 
+  void GetContentScripts(ScriptArray& aScripts) const;
+  const ScriptArray& ContentScripts() const { return mContentScripts; }
+
 
   bool Active() const { return mActive; }
   void SetActive(bool aActive, ErrorResult& aRv);
@@ -154,6 +161,8 @@ private:
   MatchGlobSet mWebAccessiblePaths;
 
   Nullable<nsTArray<nsString>> mBackgroundScripts;
+
+  nsTArray<RefPtr<WebExtensionContentScript>> mContentScripts;
 };
 
 } // namespace extensions
