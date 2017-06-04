@@ -510,6 +510,11 @@ class BrowserExtensionContent extends EventEmitter {
         this.whiteListedHosts = new MatchPatternSet([...patterns, ...permissions.origins],
                                                     {ignorePath: true});
       }
+
+      if (this.policy) {
+        this.policy.permissions = Array.from(this.permissions);
+        this.policy.allowedOrigins = this.whiteListedHosts;
+      }
     });
 
     this.on("remove-permissions", (ignoreEvent, permissions) => {
@@ -526,6 +531,11 @@ class BrowserExtensionContent extends EventEmitter {
         this.whiteListedHosts = new MatchPatternSet(
           this.whiteListedHosts.patterns
               .filter(host => !origins.includes(host.pattern)));
+      }
+
+      if (this.policy) {
+        this.policy.permissions = Array.from(this.permissions);
+        this.policy.allowedOrigins = this.whiteListedHosts;
       }
     });
     /* eslint-enable mozilla/balanced-listeners */

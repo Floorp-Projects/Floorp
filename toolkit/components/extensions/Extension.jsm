@@ -747,6 +747,9 @@ this.Extension = class extends ExtensionData {
         this.whiteListedHosts = new MatchPatternSet([...patterns, ...permissions.origins],
                                                     {ignorePath: true});
       }
+
+      this.policy.permissions = Array.from(this.permissions);
+      this.policy.allowedOrigins = this.whiteListedHosts;
     });
 
     this.on("remove-permissions", (ignoreEvent, permissions) => {
@@ -760,6 +763,9 @@ this.Extension = class extends ExtensionData {
       this.whiteListedHosts = new MatchPatternSet(
         this.whiteListedHosts.patterns
             .filter(host => !origins.includes(host.pattern)));
+
+      this.policy.permissions = Array.from(this.permissions);
+      this.policy.allowedOrigins = this.whiteListedHosts;
     });
     /* eslint-enable mozilla/balanced-listeners */
   }
@@ -1028,7 +1034,7 @@ this.Extension = class extends ExtensionData {
 
       if (this.started) {
         this.started = false;
-        ExtensionManagement.shutdownExtension(this.uuid);
+        ExtensionManagement.shutdownExtension(this);
       }
 
       this.cleanupGeneratedFile();
@@ -1085,7 +1091,7 @@ this.Extension = class extends ExtensionData {
     Services.ppmm.removeMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
     if (!this.manifest) {
-      ExtensionManagement.shutdownExtension(this.uuid);
+      ExtensionManagement.shutdownExtension(this);
 
       this.cleanupGeneratedFile();
       return;
@@ -1110,7 +1116,7 @@ this.Extension = class extends ExtensionData {
 
     MessageChannel.abortResponses({extensionId: this.id});
 
-    ExtensionManagement.shutdownExtension(this.uuid);
+    ExtensionManagement.shutdownExtension(this);
 
     return this.cleanupGeneratedFile();
   }

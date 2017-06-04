@@ -7,21 +7,12 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
 
-let aps = Cc["@mozilla.org/addons/policy-service;1"].getService(Ci.nsIAddonPolicyService).wrappedJSObject;
-
-let oldAddonIdCallback = aps.setExtensionURIToAddonIdCallback(uri => uri.host);
-do_register_cleanup(() => {
-  aps.setExtensionURIToAddonIdCallback(oldAddonIdCallback);
-});
-
 function getWindowlessBrowser(url) {
   let ssm = Services.scriptSecurityManager;
 
   let uri = NetUtil.newURI(url);
-  // TODO: Remove when addonId origin attribute is removed.
-  let attrs = {addonId: uri.host};
 
-  let principal = ssm.createCodebasePrincipal(uri, attrs);
+  let principal = ssm.createCodebasePrincipal(uri, {});
 
   let webnav = Services.appShell.createWindowlessBrowser(false);
 
@@ -33,8 +24,20 @@ function getWindowlessBrowser(url) {
   return webnav;
 }
 
+function StubPolicy(id) {
+  return new WebExtensionPolicy({
+    id,
+    mozExtensionHostname: id,
+    baseURL: `file:///{id}`,
+
+    allowedOrigins: new MatchPatternSet([]),
+    localizeCallback(string) {},
+  });
+}
+
 add_task(function*() {
-  let ssm = Services.scriptSecurityManager;
+  let policy = StubPolicy("foo");
+  policy.active = true;
 
   let webnavA = getWindowlessBrowser("moz-extension://foo/a.html");
   let webnavB = getWindowlessBrowser("moz-extension://foo/b.html");
@@ -67,4 +70,6 @@ add_task(function*() {
      `Result should show a dead wrapper error: ${result}`);
 
   webnavA.close();
+
+  policy.active = false;
 });

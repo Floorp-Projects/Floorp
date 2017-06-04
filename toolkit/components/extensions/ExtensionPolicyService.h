@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
+#include "nsIAddonPolicyService.h"
 #include "nsIAtom.h"
 #include "nsISupports.h"
 #include "nsPointerHashKeys.h"
@@ -19,13 +20,19 @@ namespace mozilla {
 
 using extensions::WebExtensionPolicy;
 
-class ExtensionPolicyService final : public nsISupports
+class ExtensionPolicyService final : public nsIAddonPolicyService
 {
 public:
   NS_DECL_CYCLE_COLLECTION_CLASS(ExtensionPolicyService)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_NSIADDONPOLICYSERVICE
 
   static ExtensionPolicyService& GetSingleton();
+
+  static already_AddRefed<ExtensionPolicyService> GetInstance()
+  {
+    return do_AddRef(&GetSingleton());
+  }
 
   WebExtensionPolicy*
   GetByID(const nsIAtom* aAddonId)
