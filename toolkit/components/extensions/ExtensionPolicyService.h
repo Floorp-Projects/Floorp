@@ -12,20 +12,34 @@
 #include "nsHashKeys.h"
 #include "nsIAddonPolicyService.h"
 #include "nsIAtom.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
 #include "nsISupports.h"
 #include "nsPointerHashKeys.h"
 #include "nsRefPtrHashtable.h"
 
-namespace mozilla {
+class nsIChannel;
+class nsIObserverService;
+class nsIDocument;
+class nsIPIDOMWindowOuter;
 
+namespace mozilla {
+namespace extensions {
+  class DocInfo;
+}
+
+using extensions::DocInfo;
 using extensions::WebExtensionPolicy;
 
 class ExtensionPolicyService final : public nsIAddonPolicyService
+                                   , public nsIObserver
 {
 public:
-  NS_DECL_CYCLE_COLLECTION_CLASS(ExtensionPolicyService)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ExtensionPolicyService,
+                                           nsIAddonPolicyService)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIADDONPOLICYSERVICE
+  NS_DECL_NSIOBSERVER
 
   static ExtensionPolicyService& GetSingleton();
 
@@ -65,10 +79,21 @@ protected:
   virtual ~ExtensionPolicyService() = default;
 
 private:
-  ExtensionPolicyService() = default;
+  ExtensionPolicyService();
+
+  void RegisterObservers();
+  void UnregisterObservers();
+
+  void CheckRequest(nsIChannel* aChannel);
+  void CheckDocument(nsIDocument* aDocument);
+  void CheckWindow(nsPIDOMWindowOuter* aWindow);
+
+  void CheckContentScripts(const DocInfo& aDocInfo, bool aIsPreload);
 
   nsRefPtrHashtable<nsPtrHashKey<const nsIAtom>, WebExtensionPolicy> mExtensions;
   nsRefPtrHashtable<nsCStringHashKey, WebExtensionPolicy> mExtensionHosts;
+
+  nsCOMPtr<nsIObserverService> mObs;
 };
 
 } // namespace mozilla

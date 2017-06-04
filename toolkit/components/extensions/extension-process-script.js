@@ -26,11 +26,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionContent",
                                   "resource://gre/modules/ExtensionContent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionPageChild",
                                   "resource://gre/modules/ExtensionPageChild.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionUtils",
-                                  "resource://gre/modules/ExtensionUtils.jsm");
+
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "console", () => ExtensionUtils.getConsole());
-XPCOMUtils.defineLazyGetter(this, "getInnerWindowID", () => ExtensionUtils.getInnerWindowID);
+
+const {
+  DefaultWeakMap,
+  getInnerWindowID,
+} = ExtensionUtils;
 
 // We need to avoid touching Services.appinfo here in order to prevent
 // the wrong version from being cached during xpcshell test startup.
@@ -62,10 +66,6 @@ class ScriptMatcher {
     this._script = null;
   }
 
-  get matchAboutBlank() {
-    return this.matcher.matchAboutBlank;
-  }
-
   get script() {
     if (!this._script) {
       this._script = new ExtensionContent.Script(this.extension.realExtension,
@@ -79,10 +79,6 @@ class ScriptMatcher {
 
     script.loadCSS();
     script.compileScripts();
-  }
-
-  matchesLoadInfo(uri, loadInfo) {
-    return this.matcher.matchesLoadInfo(uri, loadInfo);
   }
 
   matchesWindow(window) {
@@ -157,6 +153,10 @@ class ExtensionGlobal {
   }
 }
 
+let stubExtensions = new WeakMap();
+let scriptMatchers = new DefaultWeakMap(matcher => new ScriptMatcher(stubExtensions.get(matcher.extension),
+                                                                     matcher));
+
 // Responsible for creating ExtensionContexts and injecting content
 // scripts into them when new documents are created.
 DocumentManager = {
@@ -174,32 +174,6 @@ DocumentManager = {
   },
   uninit() {
     Services.obs.removeObserver(this, "document-element-inserted");
-  },
-
-  // Initialize listeners that we need when any extension content script is
-  // enabled.
-  initMatchers() {
-    if (isContentProcess) {
-      Services.obs.addObserver(this, "http-on-opening-request");
-    }
-  },
-  uninitMatchers() {
-    if (isContentProcess) {
-      Services.obs.removeObserver(this, "http-on-opening-request");
-    }
-  },
-
-  // Initialize listeners that we need when any about:blank content script is
-  // enabled.
-  //
-  // Loads of about:blank are special, and do not trigger "document-element-inserted"
-  // observers. So if we have any scripts that match about:blank, we also need
-  // to observe "content-document-global-created".
-  initAboutBlankMatchers() {
-    Services.obs.addObserver(this, "content-document-global-created");
-  },
-  uninitAboutBlankMatchers() {
-    Services.obs.removeObserver(this, "content-document-global-created");
   },
 
   extensionProcessInitialized: false,
@@ -243,82 +217,20 @@ DocumentManager = {
     }
     this.extensionCount++;
 
-    for (let script of extension.scripts) {
-      this.addContentScript(script);
-    }
-
     this.injectExtensionScripts(extension);
   },
   uninitExtension(extension) {
-    for (let script of extension.scripts) {
-      this.removeContentScript(script);
-    }
-
     this.extensionCount--;
     if (this.extensionCount === 0) {
       this.uninit();
     }
   },
 
-
   extensionCount: 0,
-  matchAboutBlankCount: 0,
-
-  contentScripts: new Set(),
-
-  addContentScript(script) {
-    if (this.contentScripts.size == 0) {
-      this.initMatchers();
-    }
-
-    if (script.matchAboutBlank) {
-      if (this.matchAboutBlankCount == 0) {
-        this.initAboutBlankMatchers();
-      }
-      this.matchAboutBlankCount++;
-    }
-
-    this.contentScripts.add(script);
-  },
-  removeContentScript(script) {
-    this.contentScripts.delete(script);
-
-    if (this.contentScripts.size == 0) {
-      this.uninitMatchers();
-    }
-
-    if (script.matchAboutBlank) {
-      this.matchAboutBlankCount--;
-      if (this.matchAboutBlankCount == 0) {
-        this.uninitAboutBlankMatchers();
-      }
-    }
-  },
 
   // Listeners
 
   observers: {
-    async "content-document-global-created"(window) {
-      // We only care about about:blank here, since it doesn't trigger
-      // "document-element-inserted".
-      if ((window.location && window.location.href !== "about:blank") ||
-          // Make sure we only load into frames that belong to tabs, or other
-          // special areas that we want to load content scripts into.
-          !this.globals.has(getMessageManager(window))) {
-        return;
-      }
-
-      // We can't tell for certain whether the final document will actually be
-      // about:blank at this point, though, so wait for the DOM to finish
-      // loading and check again before injecting scripts.
-      await new Promise(resolve => window.addEventListener(
-        "DOMContentLoaded", resolve, {once: true, capture: true}));
-
-      if (window.location.href === "about:blank") {
-        this.injectWindowScripts(window);
-      }
-    },
-
     "document-element-inserted"(document) {
       let window = document.defaultView;
       if (!document.location || !window ||
@@ -328,22 +240,7 @@ DocumentManager = {
         return;
       }
 
-      this.injectWindowScripts(window);
       this.loadInto(window);
-    },
-
-    "http-on-opening-request"(subject, topic, data) {
-      // If this request is a docshell load, check whether any of our scripts
-      // are likely to be loaded into it, and begin preloading the ones that
-      // are.
-      let {loadInfo} = subject.QueryInterface(Ci.nsIChannel);
-      if (loadInfo) {
-        let {externalContentPolicyType: type} = loadInfo;
-        if (type === Ci.nsIContentPolicy.TYPE_DOCUMENT ||
-            type === Ci.nsIContentPolicy.TYPE_SUBDOCUMENT) {
-          this.preloadScripts(subject.URI, loadInfo);
-        }
-      }
     },
 
     "tab-content-frameloader-created"(global) {
@@ -359,26 +256,10 @@ DocumentManager = {
 
   injectExtensionScripts(extension) {
     for (let window of this.enumerateWindows()) {
-      for (let script of extension.scripts) {
+      for (let script of extension.policy.contentScripts) {
         if (script.matchesWindow(window)) {
-          script.injectInto(window);
+          scriptMatchers.get(script).injectInto(window);
         }
-      }
-    }
-  },
-
-  injectWindowScripts(window) {
-    for (let script of this.contentScripts) {
-      if (script.matchesWindow(window)) {
-        script.injectInto(window);
-      }
-    }
-  },
-
-  preloadScripts(uri, loadInfo) {
-    for (let script of this.contentScripts) {
-      if (script.matchesLoadInfo(uri, loadInfo)) {
-        script.preload();
       }
     }
   },
@@ -495,6 +376,8 @@ class StubExtension {
     } else {
       this.policy = WebExtensionPolicy.getByID(this.id);
     }
+
+    stubExtensions.set(this.policy, this);
   }
 
   shutdown() {
@@ -596,6 +479,32 @@ ExtensionManager = {
     }
   },
 };
+
+function ExtensionProcessScript() {
+  if (!ExtensionProcessScript.singleton) {
+    ExtensionProcessScript.singleton = this;
+  }
+  return ExtensionProcessScript.singleton;
+}
+
+ExtensionProcessScript.singleton = null;
+
+ExtensionProcessScript.prototype = {
+  classID: Components.ID("{21f9819e-4cdf-49f9-85a0-850af91a5058}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.mozIExtensionProcessScript]),
+
+  preloadContentScript(contentScript) {
+    scriptMatchers.get(contentScript).preload();
+  },
+
+  loadContentScript(contentScript, window) {
+    if (DocumentManager.globals.has(getMessageManager(window))) {
+      scriptMatchers.get(contentScript).injectInto(window);
+    }
+  },
+};
+
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ExtensionProcessScript]);
 
 DocumentManager.earlyInit();
 ExtensionManager.init();
