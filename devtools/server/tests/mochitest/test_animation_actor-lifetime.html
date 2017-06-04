@@ -45,7 +45,7 @@ window.onload = function () {
     yield animationsFront.getAnimationPlayersForNode(animatedNodeActor);
 
     let animationsActor = DebuggerServer
-                          ._searchAllConnectionsForActor(animationsFront.actorID);
+                          .searchAllConnectionsForActor(animationsFront.actorID);
 
     is(animationsActor.actors.length, 1,
       "AnimationActor have 1 AnimationPlayerActors");
