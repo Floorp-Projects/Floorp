@@ -2070,26 +2070,19 @@ nsPresContext::MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
   mPendingMediaFeatureValuesChanged = false;
 
   // MediumFeaturesChanged updates the applied rules, so it always gets called.
-  if (mShell) {
-    // XXXheycam ServoStyleSets don't support responding to medium
-    // changes yet.
-    if (mShell->StyleSet()->IsGecko()) {
-      if (mShell->StyleSet()->AsGecko()->MediumFeaturesChanged()) {
-        aRestyleHint |= eRestyle_Subtree;
-      }
-    } else {
-      NS_WARNING("stylo: ServoStyleSets don't support responding to medium "
-                 "changes yet. See bug 1290228.");
-      aRestyleHint |= eRestyle_Subtree;
-    }
+  if (mShell && mShell->StyleSet()->MediumFeaturesChanged()) {
+    aRestyleHint |= eRestyle_Subtree;
   }
 
-  if (mUsesViewportUnits && mPendingViewportChange) {
+  if (mPendingViewportChange &&
+      (mUsesViewportUnits || mDocument->IsStyledByServo())) {
     // Rebuild all style data without rerunning selector matching.
     //
-    // TODO(emilio, bug 1328652): We don't set mUsesViewportUnits in stylo yet.
-    // This is wallpapered given we assume medium feature changes
-    // unconditionally, but we need to fix this.
+    // FIXME(emilio, bug 1328652): We don't set mUsesViewportUnits in stylo yet,
+    // so assume the worst.
+    //
+    // Also, in this case we don't need to do a rebuild of the style data, only
+    // post a restyle.
     aRestyleHint |= eRestyle_ForceDescendants;
   }
 

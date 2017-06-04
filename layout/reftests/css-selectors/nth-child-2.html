@@ -4,24 +4,20 @@
     <title>Tests :nth-child(An+B) matching</title>
     <style type="text/css">
 
-    div :nth-child(+/**/3N-2)  { color:white; }
     div :nth-child(+3N/**/-2)  { background-color:black; }
     div :nth-child(+3N/**/-2)  { font-size:12px; }
     div :nth-child(+3N-/**/2)  { text-decoration: underline; }
     div :nth-child(+3N-2/**/)  { border-left-width: 1px; }
-    div :nth-child(+3/**/N-2) { border-right-width: 1px; }
     div :nth-child(+3N/**/-2) { border-top-width: 1px; }
     div :nth-child(+3N/**/-2) { border-bottom-width: 1px; }
-    div :nth-child(+3N-/**/2) { border-style: solid; }
-    div :nth-child(+3N-2/**/) { border-color: blue; }
+    div :nth-child(+3N-/**/2) { border-right-width: 1px; }
+    div :nth-child(+3N-2/**/) { border-style: solid; border-color: blue;}
 
     /* valid but will not match anything */
-    div :nth-child(-/**/N-2)  { color:red; }
     div :nth-child(-N/**/-2)  { color:red; }
     div :nth-child(-N/**/-2)  { color:red; }
     div :nth-child(-N-/**/2)  { color:red; }
     div :nth-child(-N-2/**/)  { color:red; }
-    div :nth-child(-1/**/N-2) { color:red; }
     div :nth-child(-1N/**/-2) { color:red; }
     div :nth-child(-1N/**/-2) { color:red; }
     div :nth-child(-1N-/**/2) { color:red; }
@@ -32,6 +28,8 @@
     div :nth-child(- /**/N-2) { color:red; }
     div :nth-child(+/**/ N-2) { color:red; }
     div :nth-child(+ /**/N-2) { color:red; }
+    div :nth-child(+3/**/N-2) { color:red; }
+    div :nth-child(-/**/N-2) {color: red;}
 
     </style>
 </head>

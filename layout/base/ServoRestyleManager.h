@@ -116,15 +116,21 @@ protected:
 
 private:
   /**
-   * Performs post-Servo-traversal processing on this element and its descendants.
+   * Performs post-Servo-traversal processing on this element and its
+   * descendants.
+   *
+   * Returns whether any style did actually change. There may be cases where we
+   * didn't need to change any style after all, for example, when a content
+   * attribute changes that happens not to have any effect on the style of that
+   * element or any descendant or sibling.
    */
-  void ProcessPostTraversal(Element* aElement,
+  bool ProcessPostTraversal(Element* aElement,
                             nsStyleContext* aParentContext,
                             ServoStyleSet* aStyleSet,
                             nsStyleChangeList& aChangeList);
 
   struct TextPostTraversalState;
-  void ProcessPostTraversalForText(nsIContent* aTextNode,
+  bool ProcessPostTraversalForText(nsIContent* aTextNode,
                                    nsStyleChangeList& aChangeList,
                                    TextPostTraversalState& aState);
 

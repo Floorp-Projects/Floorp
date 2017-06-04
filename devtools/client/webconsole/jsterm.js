@@ -342,11 +342,7 @@ JSTerm.prototype = {
           this.clearHistory();
           break;
         case "inspectObject":
-          this.openVariablesView({
-            label:
-              VariablesView.getString(helperResult.object, { concise: true }),
-            objectActor: helperResult.object,
-          });
+          this.inspectObjectActor(helperResult.object);
           break;
         case "error":
           try {
@@ -403,6 +399,13 @@ JSTerm.prototype = {
     if (WebConsoleUtils.isActorGrip(result)) {
       msg._objectActors.add(result.actor);
     }
+  },
+
+  inspectObjectActor: function (objectActor) {
+    return this.openVariablesView({
+      objectActor,
+      label: VariablesView.getString(objectActor, {concise: true}),
+    });
   },
 
   /**

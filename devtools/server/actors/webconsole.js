@@ -540,6 +540,17 @@ WebConsoleActor.prototype =
     return this._lastConsoleInputEvaluation;
   },
 
+  /**
+   * This helper is used by the WebExtensionInspectedWindowActor to
+   * inspect an object in the developer toolbox.
+   */
+  inspectObject(dbgObj, inspectFromAnnotation) {
+    this.conn.sendActorEvent(this.actorID, "inspectObject", {
+      objectActor: this.createValueGrip(dbgObj),
+      inspectFromAnnotation,
+    });
+  },
+
   // Request handlers for known packet types.
 
   /**

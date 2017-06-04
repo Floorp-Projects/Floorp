@@ -140,7 +140,7 @@ to mochitest command.
 
 * test_selectors_on_anonymous_content.html: xbl and :nth-child [1]
 * test_parse_rule.html `rgb(0, 128, 0)`: color properties not getting computed [5]
-* test_selectors.html `:nth-child`: &lt;an+b&gt; parsing difference bug 1364009 [14]
+* test_selectors.html `:nth-child`: https://github.com/servo/rust-cssparser/issues/153 [4]
 
 ## Ignore
 
