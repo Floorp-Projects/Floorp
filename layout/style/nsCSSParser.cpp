@@ -6333,7 +6333,7 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
   int32_t numbers[2] = { 0, 0 };
   bool lookForB = true;
   bool onlyN = false;
-  int hasSign = false;
+  bool hasSign = false;
   int sign = 1;
 
   // Follow the whitespace rules as proposed in
