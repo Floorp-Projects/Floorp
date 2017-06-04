@@ -48,6 +48,14 @@ public:
 
   uint64_t FrameID() const;
 
+  nsPIDOMWindowOuter* GetWindow() const
+  {
+    if (mObj.is<Window>()) {
+      return mObj.as<Window>();
+    }
+    return nullptr;
+  }
+
 private:
   void SetURL(const URLInfo& aURL);
 
