@@ -359,6 +359,12 @@
 #else
          modifiers="accel"
 #endif
+# On OS X, dark voodoo magic invokes the quit code for this key.
+# So we're not adding the attribute on OSX because of backwards/add-on compat.
+# See bug 1369909 for background on this.
+#ifndef XP_MACOSX
+         command="cmd_quitApplication"
+#endif
          reserved="true"/>
 
 #ifdef FULL_BROWSER_WINDOW
