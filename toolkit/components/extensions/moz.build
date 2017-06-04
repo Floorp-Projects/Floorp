@@ -32,6 +32,7 @@ EXTRA_JS_MODULES += [
 ]
 
 EXTRA_COMPONENTS += [
+    'extension-process-script.js',
     'extensions-toolkit.manifest',
 ]
 
@@ -44,6 +45,12 @@ DIRS += [
     'schemas',
     'webrequest',
 ]
+
+XPIDL_SOURCES += [
+    'mozIExtensionProcessScript.idl',
+]
+
+XPIDL_MODULE = 'webextensions'
 
 EXPORTS.mozilla = [
     'ExtensionPolicyService.h',

@@ -67,7 +67,7 @@ add_task(async function test_contentscript_cache() {
         let {ExtensionManager} = Components.utils.import("resource://gre/modules/ExtensionChild.jsm", {});
         let ext = ExtensionManager.extensions.get(extensionId);
 
-        if (ext) {
+        if (ext && ext.staticScripts) {
           assert.equal(ext.staticScripts.size, 0, "Should have no cached scripts in the parent process");
         }
 
