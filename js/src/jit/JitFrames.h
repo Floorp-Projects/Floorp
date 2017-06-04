@@ -287,9 +287,6 @@ void EnsureBareExitFrame(JSContext* cx, JitFrameLayout* frame);
 
 void TraceJitActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc);
 
-JSCompartment*
-TopmostIonActivationCompartment(JSContext* cx);
-
 void UpdateJitActivationsForMinorGC(JSRuntime* rt, JSTracer* trc);
 
 static inline uint32_t
