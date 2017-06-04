@@ -238,14 +238,9 @@ nsCounterManager::AddResetOrIncrement(nsIFrame* aFrame, int32_t aIndex,
 nsCounterList*
 nsCounterManager::CounterListFor(const nsSubstring& aCounterName)
 {
-  // XXX Why doesn't nsTHashtable provide an API that allows us to use
-  // get/put in one hashtable lookup?
-  nsCounterList* counterList;
-  if (!mNames.Get(aCounterName, &counterList)) {
-    counterList = new nsCounterList();
-    mNames.Put(aCounterName, counterList);
-  }
-  return counterList;
+  return mNames.LookupForAdd(aCounterName).OrInsert([]() {
+    return new nsCounterList();
+  });
 }
 
 void
