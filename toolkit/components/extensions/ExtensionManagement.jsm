@@ -30,6 +30,23 @@ const isParentProcess = appinfo.processType === appinfo.PROCESS_TYPE_DEFAULT;
  * when no extensions are running.
  */
 
+function parseScriptOptions(options) {
+  return {
+    allFrames: options.all_frames,
+    matchAboutBlank: options.match_about_blank,
+    frameID: options.frame_id,
+    runAt: options.run_at,
+
+    matches: new MatchPatternSet(options.matches),
+    excludeMatches: new MatchPatternSet(options.exclude_matches || []),
+    includeGlobs: options.include_globs && options.include_globs.map(glob => new MatchGlob(glob)),
+    excludeGlobs: options.include_globs && options.exclude_globs.map(glob => new MatchGlob(glob)),
+
+    jsPaths: options.js || [],
+    cssPaths: options.css || [],
+  };
+}
+
 var APIs = {
   apis: new Map(),
 
@@ -94,6 +111,8 @@ var ExtensionManagement = {
 
       backgroundScripts: (extension.manifest.background &&
                           extension.manifest.background.scripts),
+
+      contentScripts: (extension.manifest.content_scripts || []).map(parseScriptOptions),
     });
 
     extension.policy = policy;

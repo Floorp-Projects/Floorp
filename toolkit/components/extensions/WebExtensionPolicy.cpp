@@ -353,11 +353,16 @@ WebExtensionContentScript::Matches(const DocInfo& aDoc) const
     return false;
   }
 
-  if (!MatchesURI(aDoc.PrincipalURL())) {
-    return false;
+  // Top-level about:blank is a special case. We treat it as a match if
+  // matchAboutBlank is true and it has the null principal. In all other
+  // cases, we test the URL of the principal that it inherits.
+  if (mMatchAboutBlank && aDoc.IsTopLevel() &&
+      aDoc.URL().Spec().EqualsLiteral("about:blank") &&
+      aDoc.Principal()->GetIsNullPrincipal()) {
+    return true;
   }
 
-  return true;
+  return MatchesURI(aDoc.PrincipalURL());
 }
 
 bool
@@ -445,8 +450,8 @@ DocInfo::FrameID() const
     } else {
       struct Matcher
       {
-        uint64_t match(Window aWin) { return aWin->GetCurrentInnerWindow()->WindowID(); }
-        uint64_t match(LoadInfo aLoadInfo) { return aLoadInfo->GetInnerWindowID(); }
+        uint64_t match(Window aWin) { return aWin->WindowID(); }
+        uint64_t match(LoadInfo aLoadInfo) { return aLoadInfo->GetOuterWindowID(); }
       };
       mFrameID.emplace(mObj.match(Matcher()));
     }

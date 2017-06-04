@@ -19,8 +19,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
                                   "resource://gre/modules/ExtensionManagement.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
-                                  "resource://gre/modules/WebNavigationFrames.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionChild",
                                   "resource://gre/modules/ExtensionChild.jsm");
@@ -39,33 +37,39 @@ XPCOMUtils.defineLazyGetter(this, "getInnerWindowID", () => ExtensionUtils.getIn
 const appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
 const isContentProcess = appinfo.processType == appinfo.PROCESS_TYPE_CONTENT;
 
+function parseScriptOptions(options) {
+  return {
+    allFrames: options.all_frames,
+    matchAboutBlank: options.match_about_blank,
+    frameID: options.frame_id,
+    runAt: options.run_at,
+
+    matches: new MatchPatternSet(options.matches),
+    excludeMatches: new MatchPatternSet(options.exclude_matches || []),
+    includeGlobs: options.include_globs && options.include_globs.map(glob => new MatchGlob(glob)),
+    excludeGlobs: options.exclude_globs && options.exclude_globs.map(glob => new MatchGlob(glob)),
+
+    jsPaths: options.js || [],
+    cssPaths: options.css || [],
+  };
+}
 
 class ScriptMatcher {
-  constructor(extension, options) {
+  constructor(extension, matcher) {
     this.extension = extension;
-    this.options = options;
+    this.matcher = matcher;
 
     this._script = null;
-
-    this.allFrames = options.all_frames;
-    this.matchAboutBlank = options.match_about_blank;
-    this.frameId = options.frame_id;
-    this.runAt = options.run_at;
-
-    this.matches = new MatchPatternSet(options.matches);
-    this.excludeMatches = new MatchPatternSet(options.exclude_matches || []);
-    this.includeGlobs = options.include_globs && options.include_globs.map(glob => new MatchGlob(glob));
-    this.excludeGlobs = options.include_globs && options.exclude_globs.map(glob => new MatchGlob(glob));
   }
 
-  toString() {
-    return `[Script {js: [${this.options.js}], matchAboutBlank: ${this.matchAboutBlank}, runAt: ${this.runAt}, matches: ${this.options.matches}}]`;
+  get matchAboutBlank() {
+    return this.matcher.matchAboutBlank;
   }
 
   get script() {
     if (!this._script) {
       this._script = new ExtensionContent.Script(this.extension.realExtension,
-                                                 this.options);
+                                                 this.matcher);
     }
     return this._script;
   }
@@ -78,82 +82,11 @@ class ScriptMatcher {
   }
 
   matchesLoadInfo(uri, loadInfo) {
-    if (!this.matchesURI(uri)) {
-      return false;
-    }
-
-    if (!this.allFrames && !loadInfo.isTopLevelLoad) {
-      return false;
-    }
-
-    return true;
-  }
-
-  matchesURI(uri) {
-    if (!(this.matches.matches(uri))) {
-      return false;
-    }
-
-    if (this.excludeMatches.matches(uri)) {
-      return false;
-    }
-
-    if (this.includeGlobs && !this.includeGlobs.some(glob => glob.matches(uri.spec))) {
-      return false;
-    }
-
-    if (this.excludeGlobs && this.excludeGlobs.some(glob => glob.matches(uri.spec))) {
-      return false;
-    }
-
-    return true;
+    return this.matcher.matchesLoadInfo(uri, loadInfo);
   }
 
   matchesWindow(window) {
-    if (!this.allFrames && this.frameId == null && window.parent !== window) {
-      return false;
-    }
-
-    let uri = window.document.documentURIObject;
-    let principal = window.document.nodePrincipal;
-
-    if (this.matchAboutBlank) {
-      // When matching top-level about:blank documents,
-      // allow loading into any with a NullPrincipal.
-      if (uri.spec === "about:blank" && window === window.parent && principal.isNullPrincipal) {
-        return true;
-      }
-
-      // When matching about:blank/srcdoc iframes, the checks below
-      // need to be performed against the "owner" document's URI.
-      if (["about:blank", "about:srcdoc"].includes(uri.spec)) {
-        uri = principal.URI;
-      }
-    }
-
-    // Documents from data: URIs also inherit the principal.
-    if (Services.netUtils.URIChainHasFlags(uri, Ci.nsIProtocolHandler.URI_INHERITS_SECURITY_CONTEXT)) {
-      if (!this.matchAboutBlank) {
-        return false;
-      }
-      uri = principal.URI;
-    }
-
-    if (!this.matchesURI(uri)) {
-      return false;
-    }
-
-    if (this.frameId != null && WebNavigationFrames.getFrameId(window) !== this.frameId) {
-      return false;
-    }
-
-    // If mozAddonManager is present on this page, don't allow
-    // content scripts.
-    if (window.navigator.mozAddonManager !== undefined) {
-      return false;
-    }
-
-    return true;
+    return this.matcher.matchesWindow(window);
   }
 
   injectInto(window) {
@@ -202,7 +135,18 @@ class ExtensionGlobal {
         return ExtensionContent.handleDetectLanguage(this.global, target);
       case "Extension:Execute":
         let extension = ExtensionManager.get(recipient.extensionId);
-        let script = new ScriptMatcher(extension, data.options);
+
+        let matcher = new WebExtensionContentScript(extension.policy, parseScriptOptions(data.options));
+
+        let options = Object.assign(matcher, {
+          wantReturnValue: data.options.wantReturnValue,
+          removeCSS: data.options.remove_css,
+          cssOrigin: data.options.css_origin,
+          cssCode: data.options.cssCode,
+          jsCode: data.options.jsCode,
+        });
+
+        let script = new ScriptMatcher(extension, options);
 
         return ExtensionContent.handleExtensionExecute(this.global, target, data.options, script);
       case "WebNavigation:GetFrame":
@@ -536,11 +480,11 @@ class StubExtension {
     this.whiteListedHosts = new MatchPatternSet(data.whiteListedHosts);
     this.webAccessibleResources = data.webAccessibleResources.map(path => new MatchGlob(path));
 
-    this.scripts = data.content_scripts.map(scriptData => new ScriptMatcher(this, scriptData));
-
     this._realExtension = null;
 
     this.startup();
+
+    this.scripts = this.policy.contentScripts.map(matcher => new ScriptMatcher(this, matcher));
   }
 
   startup() {
@@ -548,6 +492,8 @@ class StubExtension {
     if (isContentProcess) {
       let uri = Services.io.newURI(this.data.resourceURL);
       ExtensionManagement.startupExtension(this.uuid, uri, this);
+    } else {
+      this.policy = WebExtensionPolicy.getByID(this.id);
     }
   }
 
