@@ -2185,7 +2185,6 @@ MOZ_VORBIS=
 MOZ_TREMOR=
 MOZ_SAMPLE_TYPE_FLOAT32=
 MOZ_SAMPLE_TYPE_S16=
-MOZ_DIRECTSHOW=
 MOZ_WEBRTC=1
 MOZ_PEERCONNECTION=
 MOZ_SRTP=
@@ -2792,23 +2791,6 @@ if test -n "$MOZ_APPLEMEDIA"; then
     [AC_MSG_ERROR([MacOS X 10.7 SDK or later is required])])
 fi
 fi # COMPILE_ENVIRONMENT
-
-dnl ========================================================
-dnl = DirectShow support
-dnl ========================================================
-if test "$OS_ARCH" = "WINNT"; then
-    dnl Enable DirectShow support by default.
-    MOZ_DIRECTSHOW=1
-fi
-
-MOZ_ARG_DISABLE_BOOL(directshow,
-[  --disable-directshow  Disable support for DirectShow],
-    MOZ_DIRECTSHOW=,
-    MOZ_DIRECTSHOW=1)
-
-if test -n "$MOZ_DIRECTSHOW"; then
-    AC_DEFINE(MOZ_DIRECTSHOW)
-fi;
 
 dnl ========================================================
 dnl = Built-in fragmented MP4 support.
@@ -5335,7 +5317,6 @@ AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_FFVPX)
 AC_SUBST_LIST(FFVPX_ASFLAGS)
-AC_SUBST(MOZ_DIRECTSHOW)
 AC_SUBST(MOZ_ANDROID_OMX)
 AC_SUBST(MOZ_OMX_PLUGIN)
 AC_SUBST(VPX_USE_YASM)
