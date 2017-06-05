@@ -79,6 +79,9 @@ public:
           uint64_t* aOutInputBlockId) override;
 
   mozilla::ipc::IPCResult
+  RecvSetKeyboardMap(const KeyboardMap& aKeyboardMap) override;
+
+  mozilla::ipc::IPCResult
   RecvZoomToRect(
           const ScrollableLayerGuid& aGuid,
           const CSSRect& aRect,
