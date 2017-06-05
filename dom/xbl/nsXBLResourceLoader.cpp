@@ -81,19 +81,17 @@ nsXBLResourceLoader::~nsXBLResourceLoader()
   delete mResourceList;
 }
 
-void
-nsXBLResourceLoader::LoadResources(bool* aResult)
+bool
+nsXBLResourceLoader::LoadResources()
 {
   mInLoadResourcesFunc = true;
 
   if (mLoadingResources) {
-    *aResult = (mPendingSheets == 0);
     mInLoadResourcesFunc = false;
-    return;
+    return mPendingSheets == 0;
   }
 
   mLoadingResources = true;
-  *aResult = true;
 
   // Declare our loaders.
   nsCOMPtr<nsIDocument> doc = mBinding->XBLDocumentInfo()->GetDocument();
@@ -154,12 +152,13 @@ nsXBLResourceLoader::LoadResources(bool* aResult)
     }
   }
 
-  *aResult = (mPendingSheets == 0);
   mInLoadResourcesFunc = false;
 
   // Destroy our resource list.
   delete mResourceList;
   mResourceList = nullptr;
+
+  return mPendingSheets == 0;
 }
 
 // nsICSSLoaderObserver
