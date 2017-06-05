@@ -424,7 +424,6 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
           globalSession = new GlobalSession(syncConfig, callback, context, clientsDataDelegate, telemetryCollector);
           telemetryCollector.setIDs(token.hashedFxaUid, clientsDataDelegate.getAccountGUID());
-          telemetryCollector.setStarted(SystemClock.elapsedRealtime());
           globalSession.start(syncDeadline);
         } catch (Exception e) {
           callback.handleError(globalSession, e);
@@ -470,7 +469,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
         return System.currentTimeMillis() + delay;
       }
     };
-
+    telemetryCollector.setStarted(SystemClock.elapsedRealtime());
     TokenServerClient tokenServerclient = new TokenServerClient(tokenServerEndpointURI, executor);
     tokenServerclient.getTokenFromBrowserIDAssertion(assertion, true, clientState, delegate);
   }
