@@ -13,20 +13,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
   /** Test for Bug 1161831 **/
   SimpleTest.waitForExplicitFinish();
 
-  var aps = SpecialPowers.Cc["@mozilla.org/addons/policy-service;1"]
-                         .getService(SpecialPowers.Ci.nsIAddonPolicyService).wrappedJSObject;
-  var oldLoadCallback = aps.setExtensionURILoadCallback(null);
-  var oldMapCallback = aps.setExtensionURIToAddonIdCallback(null);
+  let module = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm", {});
+  var {MatchGlob, MatchPatternSet, WebExtensionPolicy} = module;
+
+  var policy1, policy2;
+
   var resourceHandler = SpecialPowers.Services.io.getProtocolHandler("resource")
                                      .QueryInterface(SpecialPowers.Ci.nsISubstitutingProtocolHandler);
   var extensionHandler = SpecialPowers.Services.io.getProtocolHandler("moz-extension")
                                      .QueryInterface(SpecialPowers.Ci.nsISubstitutingProtocolHandler);
 
   SimpleTest.registerCleanupFunction(function() {
-      extensionHandler.setSubstitution("cherise", null);
-      extensionHandler.setSubstitution("liebchen", null);
-      aps.setExtensionURILoadCallback(oldLoadCallback);
-      aps.setExtensionURIToAddonIdCallback(oldMapCallback);
+      policy1.active = false;
+      policy2.active = false;
   });
 
   addLoadEvent(function() {
@@ -38,11 +37,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
     ok(filePath.startsWith("file://"), "resource:// URI resolves where we expect: " + filePath);
     var fileURI = SpecialPowers.Services.io.newURI(filePath);
 
-    // Register a moz-extension:// URI.
-    extensionHandler.setSubstitution("cherise", fileURI);
+    function StubPolicy(id, accessible) {
+      let policy = new WebExtensionPolicy(SpecialPowers.Cu.cloneInto({
+        id: `imaginaryaddon-${id[0]}`,
+        mozExtensionHostname: id,
+        baseURL: fileURI.spec,
 
-    // Alias the above.
-    extensionHandler.setSubstitution("liebchen", SpecialPowers.Services.io.newURI("moz-extension://cherise"));
+        allowedOrigins: SpecialPowers.unwrap(new MatchPatternSet([])),
+        webAccessibleResources: accessible ? [SpecialPowers.unwrap(new MatchGlob("*"))] : [],
+        localizeCallback(string) {},
+      }, module, {cloneFunctions: true, wrapReflectors: true}));
+
+      policy.active = true;
+      return policy;
+    }
+
+    // Register a moz-extension:// URI.
+    policy1 = StubPolicy("cherise", false);
+    policy2 = StubPolicy("liebchen", false);
 
     //
     // Make sure that non-file:// URIs don't work.
@@ -76,12 +88,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
     }
 
 
-    function setWhitelistCallback(rgxp) {
-      var cb = SpecialPowers.wrapCallback(function(uri) { return rgxp.test(uri.spec); });
-      aps.setExtensionURILoadCallback(cb);
-    }
+    function setWhitelistCallback(paths) {
+      policy1.active = false;
+      policy2.active = false;
 
-    aps.setExtensionURIToAddonIdCallback(SpecialPowers.wrapCallback(function(uri) { return "imaginaryaddon-" + uri.host[0]; }));
+      policy1 = StubPolicy("cherise", paths.includes("cherise"));
+      policy2 = StubPolicy("liebchen", paths.includes("liebchen"));
+    }
 
     function testLoad(url, navigate, shouldThrow) {
       var ifr = document.createElement("iframe");
@@ -138,12 +151,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
     .then(testLoad.bind(null, "moz-extension://cherise", navigateFromChromeWithWebNav))
     .then(testLoad.bind(null, "moz-extension://cherise", navigateWithLocation, /* shouldThrow = */ true))
     .then(testXHR.bind(null, "moz-extension://cherise", /* shouldError = */ true))
-    .then(setWhitelistCallback.bind(null, /cherise/))
+    .then(setWhitelistCallback.bind(null, ["cherise"]))
     .then(testLoad.bind(null, "moz-extension://cherise", navigateWithLocation))
     .then(testXHR.bind(null, "moz-extension://cherise"))
     .then(testLoad.bind(null, "moz-extension://liebchen", navigateWithLocation, /* shouldThrow = */ true))
     .then(testXHR.bind(null, "moz-extension://liebchen", /* shouldError = */ true))
-    .then(setWhitelistCallback.bind(null, /cherise|liebchen/))
+    .then(setWhitelistCallback.bind(null, ["cherise", "liebchen"]))
     .then(testLoad.bind(null, "moz-extension://liebchen", navigateWithLocation))
     .then(testLoad.bind(null, "moz-extension://liebchen", navigateWithSrc))
     .then(testLoad.bind(null, "moz-extension://cherise", navigateWithSrc))

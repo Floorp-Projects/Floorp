@@ -3,19 +3,6 @@
 "use strict";
 
 add_task(async function webNavigation_getFrameId_of_existing_main_frame() {
-  // Whether the frame ID in the extension API is 0 is determined by a map that
-  // is maintained by |Frames| in ExtensionManagement.jsm. This map is filled
-  // using data from content processes. But if ExtensionManagement.jsm is not
-  // imported, then the "Extension:TopWindowID" message gets lost.
-  // As a result, if the state is not synchronized again, the webNavigation API
-  // will mistakenly report a non-zero frame ID for top-level frames.
-  //
-  // If you want to be absolutely sure that the frame ID is correct, don't open
-  // tabs before starting an extension, or explicitly load the module in the
-  // main process:
-  // Cu.import("resource://gre/modules/ExtensionManagement.jsm", {});
-  //
-  // Or simply run the test again.
   const BASE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
   const DUMMY_URL = BASE + "file_dummy.html";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, DUMMY_URL, true);

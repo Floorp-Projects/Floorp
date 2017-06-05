@@ -306,8 +306,6 @@ public:
   }
 
 private:
-  friend class ::nsIFrame;
-
   // Prevent copying of FrameProperties; we should always return/pass around
   // references to it, not copies!
   FrameProperties(const FrameProperties&) = delete;
