@@ -160,6 +160,8 @@ public:
 
     // accent color for title bar
     eColorID__moz_win_accentcolor,
+    // color from drawing text over the accent color
+    eColorID__moz_win_accentcolortext,
     // media rebar text
     eColorID__moz_win_mediatext,
     // communications rebar text
