@@ -65,7 +65,7 @@ add_task(async function test_menu() {
   let tabsUpdated = promiseTabsUpdated();
 
   // check the button's functionality
-  await PanelUI.show();
+  CustomizableUI.addWidgetToArea("sync-button", "nav-bar");
 
   let syncButton = document.getElementById("sync-button");
   syncButton.click();
@@ -81,6 +81,7 @@ add_task(async function test_menu() {
     "click-builtin-item": { "sync-button": { left: 1 } },
     "synced-tabs": { open: { "toolbarbutton-subview": 1 } },
   });
+  CustomizableUI.reset();
 });
 
 add_task(async function test_sidebar() {
