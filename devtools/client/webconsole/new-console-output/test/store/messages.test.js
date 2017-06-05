@@ -7,13 +7,15 @@ const {
   getAllMessagesById,
   getAllMessagesTableDataById,
   getAllMessagesUiById,
+  getAllRepeatById,
   getCurrentGroup,
   getVisibleMessages,
 } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 const {
+  clonePacket,
+  getMessageAt,
   setupActions,
   setupStore,
-  clonePacket
 } = require("devtools/client/webconsole/new-console-output/test/helpers");
 const { stubPackets, stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 const {
@@ -57,7 +59,31 @@ describe("Message reducer:", () => {
       const messages = getAllMessagesById(getState());
 
       expect(messages.size).toBe(1);
-      expect(messages.first().repeat).toBe(4);
+
+      const repeat = getAllRepeatById(getState());
+      expect(repeat[messages.first().id]).toBe(4);
+    });
+
+    it("does not increment repeat after closing a group", () => {
+      const logKey = "console.log('foobar', 'test')";
+      const { getState } = setupStore([
+        logKey,
+        logKey,
+        "console.group('bar')",
+        logKey,
+        logKey,
+        logKey,
+        "console.groupEnd()",
+        logKey,
+      ]);
+
+      const messages = getAllMessagesById(getState());
+
+      expect(messages.size).toBe(4);
+      const repeat = getAllRepeatById(getState());
+      expect(repeat[messages.first().id]).toBe(2);
+      expect(repeat[getMessageAt(getState(), 2).id]).toBe(3);
+      expect(repeat[messages.last().id]).toBe(undefined);
     });
 
     it("does not clobber a unique message", () => {
@@ -72,8 +98,10 @@ describe("Message reducer:", () => {
 
       const messages = getAllMessagesById(getState());
       expect(messages.size).toBe(2);
-      expect(messages.first().repeat).toBe(3);
-      expect(messages.last().repeat).toBe(1);
+
+      const repeat = getAllRepeatById(getState());
+      expect(repeat[messages.first().id]).toBe(3);
+      expect(repeat[messages.last().id]).toBe(undefined);
     });
 
     it("adds a message in response to console.clear()", () => {
@@ -104,6 +132,7 @@ describe("Message reducer:", () => {
       expect(getAllGroupsById(state).size).toBe(0);
       expect(getAllMessagesTableDataById(state).size).toBe(0);
       expect(getCurrentGroup(state)).toBe(null);
+      expect(getAllRepeatById(state)).toEqual({});
     });
 
     it("properly limits number of messages", () => {
