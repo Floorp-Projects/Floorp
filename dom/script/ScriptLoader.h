@@ -468,11 +468,10 @@ private:
   friend bool
   HostResolveImportedModule(JSContext* aCx, unsigned argc, JS::Value* vp);
 
+  // Returns wether we should save the bytecode of this script after the
+  // execution of the script.
   static bool
-  IsBytecodeCacheEnabled();
-
-  static bool
-  IsEagerBytecodeCache();
+  ShouldCacheBytecode(ScriptLoadRequest* aRequest);
 
   nsresult CreateModuleScript(ModuleLoadRequest* aRequest);
   nsresult ProcessFetchedModuleSource(ModuleLoadRequest* aRequest);

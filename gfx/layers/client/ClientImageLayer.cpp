@@ -59,6 +59,14 @@ protected:
     DestroyBackBuffer();
   }
 
+  virtual bool SupportsAsyncUpdate() override
+  {
+    if (GetImageClientType() == CompositableType::IMAGE_BRIDGE) {
+      return true;
+    }
+    return false;
+  }
+
   virtual void HandleMemoryPressure() override
   {
     if (mImageClient) {
