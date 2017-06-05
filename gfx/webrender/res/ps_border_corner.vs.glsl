@@ -271,14 +271,14 @@ void main(void) {
                                                     prim.z,
                                                     prim.layer,
                                                     prim.task,
-                                                    prim.local_rect);
+                                                    prim.local_rect.p0);
 #else
     VertexInfo vi = write_vertex(segment_rect,
                                  prim.local_clip_rect,
                                  prim.z,
                                  prim.layer,
                                  prim.task,
-                                 prim.local_rect);
+                                 prim.local_rect.p0);
 #endif
 
     vLocalPos = vi.local_pos;
