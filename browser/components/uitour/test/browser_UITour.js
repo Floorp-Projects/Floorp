@@ -120,7 +120,7 @@ var tests = [
     let highlight = document.getElementById("UITourHighlight");
     is_element_hidden(highlight, "Highlight should initially be hidden");
 
-    gContentAPI.showHighlight("addons");
+    gContentAPI.showHighlight("home");
     waitForElementToBeVisible(highlight, check_highlight_size, "Highlight should be shown after showHighlight()");
   },
   function test_highlight_customize_auto_open_close(done) {

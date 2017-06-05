@@ -9589,61 +9589,6 @@ nsDocShell::CheckLoadingPermissions()
 // nsDocShell: Site Loading
 //*****************************************************************************
 
-namespace {
-
-#ifdef MOZ_PLACES
-// Callback used by CopyFavicon to inform the favicon service that one URI
-// (mNewURI) has the same favicon URI (OnComplete's aFaviconURI) as another.
-class nsCopyFaviconCallback final : public nsIFaviconDataCallback
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  nsCopyFaviconCallback(mozIAsyncFavicons* aSvc,
-                        nsIURI* aNewURI,
-                        nsIPrincipal* aLoadingPrincipal,
-                        bool aInPrivateBrowsing)
-    : mSvc(aSvc)
-    , mNewURI(aNewURI)
-    , mLoadingPrincipal(aLoadingPrincipal)
-    , mInPrivateBrowsing(aInPrivateBrowsing)
-  {
-  }
-
-  NS_IMETHOD
-  OnComplete(nsIURI* aFaviconURI, uint32_t aDataLen,
-             const uint8_t* aData, const nsACString& aMimeType, uint16_t aWidth) override
-  {
-    // Continue only if there is an associated favicon.
-    if (!aFaviconURI) {
-      return NS_OK;
-    }
-
-    MOZ_ASSERT(aDataLen == 0,
-               "We weren't expecting the callback to deliver data.");
-
-    nsCOMPtr<mozIPlacesPendingOperation> po;
-    return mSvc->SetAndFetchFaviconForPage(
-      mNewURI, aFaviconURI, false,
-      mInPrivateBrowsing ? nsIFaviconService::FAVICON_LOAD_PRIVATE :
-                           nsIFaviconService::FAVICON_LOAD_NON_PRIVATE,
-      nullptr, mLoadingPrincipal, getter_AddRefs(po));
-  }
-
-private:
-  ~nsCopyFaviconCallback() {}
-
-  nsCOMPtr<mozIAsyncFavicons> mSvc;
-  nsCOMPtr<nsIURI> mNewURI;
-  nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
-  bool mInPrivateBrowsing;
-};
-
-NS_IMPL_ISUPPORTS(nsCopyFaviconCallback, nsIFaviconDataCallback)
-#endif
-
-} // namespace
-
 void
 nsDocShell::CopyFavicon(nsIURI* aOldURI,
                         nsIURI* aNewURI,
@@ -9667,11 +9612,9 @@ nsDocShell::CopyFavicon(nsIURI* aOldURI,
   nsCOMPtr<mozIAsyncFavicons> favSvc =
     do_GetService("@mozilla.org/browser/favicon-service;1");
   if (favSvc) {
-    nsCOMPtr<nsIFaviconDataCallback> callback =
-      new nsCopyFaviconCallback(favSvc, aNewURI,
-                                aLoadingPrincipal,
-                                aInPrivateBrowsing);
-    favSvc->GetFaviconURLForPage(aOldURI, callback, 0);
+    favSvc->CopyFavicons(aOldURI, aNewURI,
+      aInPrivateBrowsing ? nsIFaviconService::FAVICON_LOAD_PRIVATE
+                         : nsIFaviconService::FAVICON_LOAD_NON_PRIVATE, nullptr);
   }
 #endif
 }

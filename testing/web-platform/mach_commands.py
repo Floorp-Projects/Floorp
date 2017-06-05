@@ -75,15 +75,23 @@ class WebPlatformTestsRunner(MozbuildObject):
 
         import wptrun
 
+        product = kwargs["product"]
+
         setup_func = {
             "chrome": wptrun.setup_chrome,
             "edge": wptrun.setup_edge,
             "servo": wptrun.setup_servo,
-        }[kwargs["product"]]
+        }[product]
 
-        setup_func(wptrun.virtualenv.Virtualenv(self.virtualenv_manager.virtualenv_root),
-                   kwargs,
-                   True)
+        try:
+            wptrun.check_environ(product)
+
+            setup_func(wptrun.virtualenv.Virtualenv(self.virtualenv_manager.virtualenv_root),
+                       kwargs,
+                       True)
+        except wptrun.WptrunError as e:
+            print(e.message, file=sys.stderr)
+            sys.exit(1)
 
         kwargs["tests_root"] = os.path.join(here, "tests")
 

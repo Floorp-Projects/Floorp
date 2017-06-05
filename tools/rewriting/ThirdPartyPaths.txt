@@ -22,9 +22,9 @@ ipc/chromium/
 js/src/ctypes/libffi/
 js/src/dtoa.c
 js/src/jit/arm64/vixl/
+media/ffvpx/
 media/gmp-clearkey/0.1/openaes/
 media/kiss_fft/
-media/ffvpx/
 media/libav/
 media/libcubeb/
 media/libjpeg/
@@ -45,11 +45,12 @@ media/mtransport/third_party/
 media/openmax_dl/
 media/pocketsphinx/
 media/sphinxbase/
-media/webrtc/trunk/
 media/webrtc/signaling/src/sdp/sipcc/
+media/webrtc/trunk/
 mfbt/decimal/
 mfbt/double-conversion/source/
 mfbt/lz4
+mobile/android/geckoview/src/thirdparty/
 mobile/android/thirdparty/
 modules/brotli/
 modules/fdlibm/
@@ -74,8 +75,8 @@ python/pyasn1/
 python/pyasn1-modules/
 python/PyECC/
 python/pytest/
-python/pyyaml/
 python/pytoml/
+python/pyyaml/
 python/redo/
 python/requests/
 python/rsa/

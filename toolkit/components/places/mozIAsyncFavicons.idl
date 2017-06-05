@@ -47,10 +47,10 @@ interface mozIAsyncFavicons : nsISupports
    * @param aFaviconLoadType
    *        Set to FAVICON_LOAD_PRIVATE if the favicon is loaded from a private
    *        browsing window.  Set to FAVICON_LOAD_NON_PRIVATE otherwise.
-   * @param aCallback
+   * @param [optional] aCallback
    *        Once we're done setting and/or fetching the favicon, we invoke this
    *        callback.
-   * @param aLoadingPrincipal
+   * @param [optional] aLoadingPrincipal
    *        Principal of the page whose favicon is being set. If this argument
    *        is omitted, the loadingPrincipal defaults to the nullPrincipal.
    *
@@ -98,7 +98,7 @@ interface mozIAsyncFavicons : nsISupports
    *        MIME type of the data to store.  This is important so that we know
    *        what to report when the favicon is used.  You should always set this
    *        param unless you are clearing an icon.
-   * @param aExpiration
+   * @param [optional] aExpiration
    *        Time in microseconds since the epoch when this favicon expires.
    *        Until this time, we won't try to load it again.
    * @throws NS_ERROR_FAILURE
@@ -121,10 +121,10 @@ interface mozIAsyncFavicons : nsISupports
    * @param aDataURL
    *        string containing a data URL that represents the contents of
    *        the favicon to save
-   * @param aExpiration
+   * @param [optional] aExpiration
    *        Time in microseconds since the epoch when this favicon expires.
    *        Until this time, we won't try to load it again.
-   * @param aLoadingPrincipal
+   * @param [optional] aLoadingPrincipal
    *        Principal of the page whose favicon is being set. If this argument
    *        is omitted, the loadingPrincipal defaults to the nullPrincipal.
    * @throws NS_ERROR_FAILURE
@@ -147,7 +147,7 @@ interface mozIAsyncFavicons : nsISupports
    *        aDataLen will be always 0, aData will be an empty array, and
    *        aMimeType will be an empty string, regardless of whether a favicon
    *        was found.
-   * @param aPreferredWidth
+   * @param [optional] aPreferredWidth
    *        The preferred icon width, 0 for the biggest available.
    *
    * @note If a favicon specific to this page cannot be found, this will try to
@@ -174,7 +174,7 @@ interface mozIAsyncFavicons : nsISupports
    *        However, if no favicon data is currently associated with the favicon
    *        URI, aDataLen will be 0, aData will be an empty array, and aMimeType
    *        will be an empty string.
-   * @param aPreferredWidth
+   * @param [optional] aPreferredWidth
    *        The preferred icon width, 0 for the biggest available.
    * @note If a favicon specific to this page cannot be found, this will try to
    *       fallback to the /favicon.ico for the root domain.
@@ -184,4 +184,24 @@ interface mozIAsyncFavicons : nsISupports
   void getFaviconDataForPage(in nsIURI aPageURI,
                              in nsIFaviconDataCallback aCallback,
                              [optional] in unsigned short aPreferredWidth);
+
+  /**
+   * Copies cached favicons from a page to another one.
+   *
+   * @param aFromPageURI
+   *        URI of the originating page.
+   * @param aToPageURI
+   *        URI of the destination page.
+   * @param aFaviconLoadType
+   *        Set to FAVICON_LOAD_PRIVATE if the copy is started from a private
+   *        browsing window.  Set to FAVICON_LOAD_NON_PRIVATE otherwise.
+   * @param [optional] aCallback
+   *        Once we're done copying the favicon, we invoke this callback.
+   *        If a copy has been done, the callback will report one of the
+   *        favicons uri as aFaviconURI, otherwise all the params will be null.
+   */
+  void copyFavicons(in nsIURI aFromPageURI,
+                    in nsIURI aToPageURI,
+                    in unsigned long aFaviconLoadType,
+                    [optional] in nsIFaviconDataCallback aCallback);
 };

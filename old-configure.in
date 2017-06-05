@@ -4105,7 +4105,7 @@ if test -n "$MOZ_REPLACE_MALLOC"; then
                  dnl - "flat namespace" when -flat_namespace alone is needed
                  dnl - "dummy library" when a dummy library and -flat_namespace are needed
                  dnl - "compiler support" when nothing is needed
-                 if test -n "$_DYLD_INFO" && dyldinfo -bind conftest${DLL_SUFFIX} 2> /dev/null | grep "_foo (weak import)" > /dev/null; then
+                 if test -n "$_DYLD_INFO" && ${TOOLCHAIN_PREFIX}dyldinfo -bind conftest${DLL_SUFFIX} 2> /dev/null | grep "_foo (weak import)" > /dev/null; then
                      if test -n "$_CLASSIC_INFO"; then
                          ac_cv_weak_dynamic_linking="flat namespace"
                      else
