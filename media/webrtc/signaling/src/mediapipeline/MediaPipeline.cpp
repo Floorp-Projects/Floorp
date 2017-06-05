@@ -63,10 +63,10 @@
 
 // Max size given stereo is 480*2*2 = 1920 (10ms of 16-bits stereo audio at
 // 48KHz)
-#define AUDIO_SAMPLE_BUFFER_MAX 480*2*2
+#define AUDIO_SAMPLE_BUFFER_MAX_BYTES 480*2*2
 static_assert((WEBRTC_DEFAULT_SAMPLE_RATE/100)*sizeof(uint16_t) * 2
-               <= AUDIO_SAMPLE_BUFFER_MAX,
-               "AUDIO_SAMPLE_BUFFER_MAX is not large enough");
+               <= AUDIO_SAMPLE_BUFFER_MAX_BYTES,
+               "AUDIO_SAMPLE_BUFFER_MAX_BYTES is not large enough");
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -548,12 +548,8 @@ public:
     while (packetizer_->PacketsAvailable()) {
       uint32_t samplesPerPacket = packetizer_->PacketSize() *
                                   packetizer_->Channels();
-      // We know that webrtc.org's code going to copy the samples down the line,
-      // so we can just use a stack buffer here instead of malloc-ing.
-      int16_t packet[AUDIO_SAMPLE_BUFFER_MAX];
-
-      packetizer_->Output(packet);
-      mConduit->SendAudioFrame(packet, samplesPerPacket, rate, 0);
+      packetizer_->Output(packet_);
+      mConduit->SendAudioFrame(packet_, samplesPerPacket, rate, 0);
     }
   }
 
@@ -580,6 +576,8 @@ protected:
   nsCOMPtr<nsIEventTarget> mThread;
   // Only accessed on mThread
   nsAutoPtr<AudioPacketizer<int16_t, int16_t>> packetizer_;
+  // A buffer to hold a single packet of audio.
+  int16_t packet_[AUDIO_SAMPLE_BUFFER_MAX_BYTES / sizeof(int16_t)];
 };
 
 static char kDTLSExporterLabel[] = "EXTRACTOR-dtls_srtp";
@@ -2038,7 +2036,7 @@ public:
     // This comparison is done in total time to avoid accumulated roundoff errors.
     while (source_->TicksToTimeRoundDown(WEBRTC_DEFAULT_SAMPLE_RATE,
                                          played_ticks_) < desired_time) {
-      int16_t scratch_buffer[AUDIO_SAMPLE_BUFFER_MAX];
+      int16_t scratch_buffer[AUDIO_SAMPLE_BUFFER_MAX_BYTES / sizeof(int16_t)];
 
       int samples_length;
 
@@ -2061,7 +2059,7 @@ public:
         PodArrayZero(scratch_buffer);
       }
 
-      MOZ_ASSERT(samples_length * sizeof(uint16_t) < AUDIO_SAMPLE_BUFFER_MAX);
+      MOZ_ASSERT(samples_length * sizeof(uint16_t) < AUDIO_SAMPLE_BUFFER_MAX_BYTES);
 
       MOZ_MTLOG(ML_DEBUG, "Audio conduit returned buffer of length "
                 << samples_length);
