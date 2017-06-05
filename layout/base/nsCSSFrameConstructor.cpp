@@ -2746,16 +2746,6 @@ nsCSSFrameConstructor::ConstructRootFrame()
 
   StyleSetHandle styleSet = mPresShell->StyleSet();
 
-  // Set up our style rule observer.
-  // XXXbz wouldn't this make more sense as part of presshell init?
-  if (styleSet->IsGecko()) {
-    // XXXheycam We don't support XBL bindings providing style to
-    // ServoStyleSets yet.
-    styleSet->AsGecko()->SetBindingManager(mDocument->BindingManager());
-  } else {
-    NS_WARNING("stylo: cannot get ServoStyleSheets from XBL bindings yet. See bug 1290276.");
-  }
-
   // --------- BUILD VIEWPORT -----------
   RefPtr<nsStyleContext> viewportPseudoStyle =
     styleSet->ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::viewport,
