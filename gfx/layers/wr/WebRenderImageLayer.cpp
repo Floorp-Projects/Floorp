@@ -90,6 +90,16 @@ WebRenderImageLayer::ClearCachedResources()
   }
 }
 
+bool
+WebRenderImageLayer::SupportsAsyncUpdate()
+{
+  if (GetImageClientType() == CompositableType::IMAGE_BRIDGE &&
+      mPipelineId.isSome()) {
+    return true;
+  }
+  return false;
+}
+
 void
 WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
                                  const StackingContextHelper& aSc)
