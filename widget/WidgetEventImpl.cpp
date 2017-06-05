@@ -732,7 +732,7 @@ IsCaseChangeableChar(uint32_t aChar)
 
 void
 WidgetKeyboardEvent::GetShortcutKeyCandidates(
-                       ShortcutKeyCandidateArray& aCandidates)
+                       ShortcutKeyCandidateArray& aCandidates) const
 {
   MOZ_ASSERT(aCandidates.IsEmpty(), "aCandidates must be empty");
 
@@ -826,7 +826,7 @@ WidgetKeyboardEvent::GetShortcutKeyCandidates(
 }
 
 void
-WidgetKeyboardEvent::GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates)
+WidgetKeyboardEvent::GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates) const
 {
   MOZ_ASSERT(aCandidates.IsEmpty(), "aCandidates must be empty");
 
