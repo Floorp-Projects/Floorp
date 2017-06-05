@@ -7,9 +7,12 @@
 #define mozilla_gfx_layers_mlgpu_ContainerLayerMLGPU_h
 
 #include "LayerMLGPU.h"
+#include "MLGDeviceTypes.h"
 
 namespace mozilla {
 namespace layers {
+
+class MLGDevice;
 
 class ContainerLayerMLGPU final : public ContainerLayer
                                 , public LayerMLGPU
