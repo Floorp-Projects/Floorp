@@ -19,9 +19,6 @@ Test of legacy navigator interface for opening TCPSocket/TCPServerSocket.
 </pre>
 <script>
   SimpleTest.waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv(
-    { set: [ ['dom.mozTCPSocket.enabled', true] ] },
-    runTest);
 
   function runTest() {
     // See bug 903830; in e10s mode we never get to find out the localPort if we
@@ -54,6 +51,7 @@ Test of legacy navigator interface for opening TCPSocket/TCPServerSocket.
       }, 0);
     }
   }
+  runTest(); // we used to invoke this as part of a moot pref-setting callback
 </script>
 </body>
 </html>
