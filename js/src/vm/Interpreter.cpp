@@ -2794,6 +2794,9 @@ CASE(JSOP_GETPROP_SUPER)
     if (!GetProperty(cx, obj, receiver, script->getName(REGS.pc), rref))
         goto error;
 
+    TypeScript::Monitor(cx, script, REGS.pc, rref);
+    assertSameCompartmentDebugOnly(cx, rref);
+
     REGS.sp--;
 }
 END_CASE(JSOP_GETPROP_SUPER)
