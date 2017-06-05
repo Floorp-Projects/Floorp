@@ -503,44 +503,6 @@ const JNINativeMethod CodecProxy::NativeCallbacks::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
-class GeckoHlsDemuxerWrapper::HlsDemuxerCallbacks::Natives : public mozilla::jni::NativeImpl<HlsDemuxerCallbacks, Impl>
-{
-public:
-    static const JNINativeMethod methods[2];
-};
-
-template<class Impl>
-const JNINativeMethod GeckoHlsDemuxerWrapper::HlsDemuxerCallbacks::Natives<Impl>::methods[] = {
-
-    mozilla::jni::MakeNativeMethod<GeckoHlsDemuxerWrapper::HlsDemuxerCallbacks::OnError_t>(
-            mozilla::jni::NativeStub<GeckoHlsDemuxerWrapper::HlsDemuxerCallbacks::OnError_t, Impl>
-            ::template Wrap<&Impl::OnError>),
-
-    mozilla::jni::MakeNativeMethod<GeckoHlsDemuxerWrapper::HlsDemuxerCallbacks::OnInitialized_t>(
-            mozilla::jni::NativeStub<GeckoHlsDemuxerWrapper::HlsDemuxerCallbacks::OnInitialized_t, Impl>
-            ::template Wrap<&Impl::OnInitialized>)
-};
-
-template<class Impl>
-class GeckoHlsResourceWrapper::HlsResourceCallbacks::Natives : public mozilla::jni::NativeImpl<HlsResourceCallbacks, Impl>
-{
-public:
-    static const JNINativeMethod methods[2];
-};
-
-template<class Impl>
-const JNINativeMethod GeckoHlsResourceWrapper::HlsResourceCallbacks::Natives<Impl>::methods[] = {
-
-    mozilla::jni::MakeNativeMethod<GeckoHlsResourceWrapper::HlsResourceCallbacks::OnDataArrived_t>(
-            mozilla::jni::NativeStub<GeckoHlsResourceWrapper::HlsResourceCallbacks::OnDataArrived_t, Impl>
-            ::template Wrap<&Impl::OnDataArrived>),
-
-    mozilla::jni::MakeNativeMethod<GeckoHlsResourceWrapper::HlsResourceCallbacks::OnError_t>(
-            mozilla::jni::NativeStub<GeckoHlsResourceWrapper::HlsResourceCallbacks::OnError_t, Impl>
-            ::template Wrap<&Impl::OnError>)
-};
-
-template<class Impl>
 class MediaDrmProxy::NativeMediaDrmProxyCallbacks::Natives : public mozilla::jni::NativeImpl<NativeMediaDrmProxyCallbacks, Impl>
 {
 public:
