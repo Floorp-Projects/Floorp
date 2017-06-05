@@ -122,6 +122,7 @@ CreateMetadataNode(StringTable& strings)
 {
   // The following list should be kept in sync with the one in CrashManager.jsm
   const char *entries[] = {
+    "AsyncShutdownTimeout",
     "AvailablePageFile",
     "AvailablePhysicalMemory",
     "AvailableVirtualMemory",
@@ -139,9 +140,9 @@ CreateMetadataNode(StringTable& strings)
     "ReleaseChannel",
     "RemoteType",
     "SecondsSinceLastCrash",
+    "ShutdownProgress",
     "StartupCrash",
     "SystemMemoryUsePercentage",
-    "TelemetrySessionId",
     "TextureUsage",
     "TotalPageFile",
     "TotalPhysicalMemory",
