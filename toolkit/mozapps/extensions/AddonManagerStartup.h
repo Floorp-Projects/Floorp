@@ -7,6 +7,7 @@
 #define AddonManagerStartup_h
 
 #include "amIAddonManagerStartup.h"
+#include "mozilla/Result.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
@@ -45,7 +46,7 @@ public:
   }
 
 private:
-  void AddInstallLocation(Addon& addon);
+  Result<Ok, nsresult> AddInstallLocation(Addon& addon);
 
   nsIFile* ProfileDir();
 

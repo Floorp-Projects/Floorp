@@ -292,18 +292,8 @@ var gSearchResultsPane = {
       // Searching some elements, such as xul:button, have a 'label' attribute that contains the user-visible text.
       let labelResult = this.stringMatchesFilters(nodeObject.getAttribute("label"), searchPhrase);
 
-      // Creating tooltips for buttons
-      if (labelResult && nodeObject.tagName === "button") {
-        this.listSearchTooltips.push(nodeObject);
-      }
-
       // Searching some elements, such as xul:label, store their user-visible text in a "value" attribute.
       let valueResult = this.stringMatchesFilters(nodeObject.getAttribute("value"), searchPhrase);
-
-      // Creating tooltips for buttons
-      if (valueResult && nodeObject.tagName === "button") {
-        this.listSearchTooltips.push(nodeObject);
-      }
 
       // Searching some elements, such as xul:button, buttons to open subdialogs.
       let keywordsResult = this.stringMatchesFilters(nodeObject.getAttribute("searchkeywords"), searchPhrase);

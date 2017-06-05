@@ -353,6 +353,8 @@ class FirefoxProfile(Profile):
         'browser.warnOnQuit': False,
         # Don't send Firefox health reports to the production server
         'datareporting.healthreport.documentServerURI': 'http://%(server)s/healthreport/',
+        # Skip data reporting policy notifications
+        'datareporting.policy.dataSubmissionPolicyBypassNotification': True,
         # Only install add-ons from the profile and the application scope
         # Also ensure that those are not getting disabled.
         # see: https://developer.mozilla.org/en/Installing_extensions

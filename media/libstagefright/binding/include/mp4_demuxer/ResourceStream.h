@@ -25,13 +25,13 @@ public:
 
   void Pin()
   {
-    mResource->Pin();
+    mResource.GetResource()->Pin();
     ++mPinCount;
   }
 
   void Unpin()
   {
-    mResource->Unpin();
+    mResource.GetResource()->Unpin();
     MOZ_ASSERT(mPinCount);
     --mPinCount;
   }
@@ -40,7 +40,7 @@ protected:
   virtual ~ResourceStream();
 
 private:
-  RefPtr<mozilla::MediaResource> mResource;
+  mozilla::MediaResourceIndex mResource;
   uint32_t mPinCount;
 };
 
