@@ -19,7 +19,6 @@
 #include "nsITimer.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
-#include "WinUtils.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Services.h"
@@ -337,7 +336,7 @@ DirectInputMessageLoopOnceCallback(nsITimer *aTimer, void* aClosure)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == gMonitorThread);
   MSG msg;
-  while (widget::WinUtils::PeekMessage(&msg, sHWnd, 0, 0, PM_REMOVE) > 0) {
+  while (PeekMessageW(&msg, sHWnd, 0, 0, PM_REMOVE) > 0) {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
   }
