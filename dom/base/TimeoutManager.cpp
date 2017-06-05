@@ -921,20 +921,14 @@ TimeoutManager::Timeouts::ResetTimersForThrottleReduction(int32_t aPreviousThrot
 {
   TimeStamp now = TimeStamp::Now();
 
-  // If insertion point is non-null, we're in the middle of firing timers and
-  // the timers we're planning to fire all come before insertion point;
-  // insertion point itself is a dummy timeout with an When() that may be
-  // semi-bogus.  In that case, we don't need to do anything with insertion
-  // point or anything before it, so should start at the timer after insertion
-  // point, if there is one.
-  // Otherwise, start at the beginning of the list.
-  for (RefPtr<Timeout> timeout = InsertionPoint() ?
-         InsertionPoint()->getNext() : GetFirst();
-       timeout; ) {
-    // It's important that this check be <= so that we guarantee that
-    // taking std::max with |now| won't make a quantity equal to
+  for (RefPtr<Timeout> timeout = GetFirst(); timeout; ) {
+    // Skip over any Timeout values with a valid FiringId.  These are in the
+    // middle of a RunTimeout and should not be modified.  Also, skip any
+    // timeouts in the past.  It's important that this check be <= so that we
+    // guarantee that taking std::max with |now| won't make a quantity equal to
     // timeout->When() below.
-    if (timeout->When() <= now) {
+    if (mManager.IsValidFiringId(timeout->mFiringId) ||
+        timeout->When() <= now) {
       timeout = timeout->getNext();
       continue;
     }
@@ -1049,16 +1043,20 @@ void
 TimeoutManager::Timeouts::Insert(Timeout* aTimeout, SortBy aSortBy)
 {
 
-  // Start at mLastTimeout and go backwards.  Don't go further than insertion
-  // point, though.  This optimizes for the common case of insertion at the end.
+  // Start at mLastTimeout and go backwards.  Stop if we see a Timeout with a
+  // valid FiringId since those timers are currently being processed by
+  // RunTimeout.  This optimizes for the common case of insertion at the end.
   Timeout* prevSibling;
   for (prevSibling = GetLast();
-       prevSibling && prevSibling != InsertionPoint() &&
+       prevSibling &&
          // This condition needs to match the one in SetTimeoutOrInterval that
          // determines whether to set When() or TimeRemaining().
          (aSortBy == SortBy::TimeRemaining ?
           prevSibling->TimeRemaining() > aTimeout->TimeRemaining() :
-          prevSibling->When() > aTimeout->When());
+          prevSibling->When() > aTimeout->When()) &&
+         // Check the firing ID last since it will evaluate true in the vast
+         // majority of cases.
+         mManager.IsInvalidFiringId(prevSibling->mFiringId);
        prevSibling = prevSibling->getPrevious()) {
     /* Do nothing; just searching */
   }
