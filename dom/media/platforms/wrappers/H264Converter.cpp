@@ -131,6 +131,10 @@ H264Converter::Decode(MediaRawData* aSample)
 RefPtr<MediaDataDecoder::FlushPromise>
 H264Converter::Flush()
 {
+  mDecodePromiseRequest.DisconnectIfExists();
+  mFlushRequest.DisconnectIfExists();
+  mShutdownRequest.DisconnectIfExists();
+  mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   mNeedKeyframe = true;
   if (mDecoder) {
     return mDecoder->Flush();

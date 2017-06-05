@@ -230,6 +230,7 @@ this.CrashManager.prototype = Object.freeze({
     "ProductID",
     "ProductName",
     "ReleaseChannel",
+    "RemoteType",
     "SecondsSinceLastCrash",
     "ShutdownProgress",
     "StartupCrash",
