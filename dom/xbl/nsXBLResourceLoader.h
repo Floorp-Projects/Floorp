@@ -19,6 +19,7 @@ class nsXBLPrototypeResources;
 class nsXBLPrototypeBinding;
 struct nsXBLResource;
 class nsIObjectOutputStream;
+class nsIDocument;
 
 // *********************************************************************/
 // The XBLResourceLoader class
@@ -66,6 +67,11 @@ public:
 
 protected:
   virtual ~nsXBLResourceLoader();
+
+private:
+  // The bound document is needed in StyleSheetLoaded() for servo style
+  // backend, which will be set in LoadResources().
+  nsIDocument* MOZ_NON_OWNING_REF mBoundDocument;
 };
 
 #endif
