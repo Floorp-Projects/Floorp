@@ -29,6 +29,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
                                   "resource://gre/modules/Schemas.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
+                                   "@mozilla.org/content/style-sheet-service;1",
+                                   "nsIStyleSheetService");
+
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
@@ -36,7 +40,6 @@ var {
   DefaultWeakMap,
   EventEmitter,
   ExtensionError,
-  SpreadArgs,
   defineLazyGetter,
   getConsole,
   getInnerWindowID,
@@ -47,6 +50,39 @@ var {
 } = ExtensionUtils;
 
 XPCOMUtils.defineLazyGetter(this, "console", getConsole);
+
+var ExtensionCommon;
+
+/**
+ * A sentinel class to indicate that an array of values should be
+ * treated as an array when used as a promise resolution value, but as a
+ * spread expression (...args) when passed to a callback.
+ */
+class SpreadArgs extends Array {
+  constructor(args) {
+    super();
+    this.push(...args);
+  }
+}
+
+/**
+ * Like SpreadArgs, but also indicates that the array values already
+ * belong to the target compartment, and should not be cloned before
+ * being passed.
+ *
+ * The `unwrappedValues` property contains an Array object which belongs
+ * to the target compartment, and contains the same unwrapped values
+ * passed the NoCloneSpreadArgs constructor.
+ */
+class NoCloneSpreadArgs {
+  constructor(args) {
+    this.unwrappedValues = args;
+  }
+
+  [Symbol.iterator]() {
+    return this.unwrappedValues[Symbol.iterator]();
+  }
+}
 
 class BaseContext {
   constructor(envType, extension) {
@@ -311,6 +347,8 @@ class BaseContext {
             dump(`Promise resolved after context unloaded\n`);
           } else if (!this.active) {
             dump(`Promise resolved while context is inactive\n`);
+          } else if (args instanceof NoCloneSpreadArgs) {
+            this.runSafeWithoutClone(callback, ...args.unwrappedValues);
           } else if (args instanceof SpreadArgs) {
             runSafe(callback, ...args);
           } else {
@@ -336,6 +374,9 @@ class BaseContext {
               dump(`Promise resolved after context unloaded\n`);
             } else if (!this.active) {
               dump(`Promise resolved while context is inactive\n`);
+            } else if (value instanceof NoCloneSpreadArgs) {
+              let values = value.unwrappedValues;
+              this.runSafeWithoutClone(resolve, values.length == 1 ? values[0] : values);
             } else if (value instanceof SpreadArgs) {
               runSafe(resolve, value.length == 1 ? value[0] : value);
             } else {
@@ -1067,7 +1108,7 @@ class SchemaAPIManager extends EventEmitter {
       sandboxName: `Namespace of ext-*.js scripts for ${this.processType}`,
     });
 
-    Object.assign(global, {global, Cc, Ci, Cu, Cr, XPCOMUtils, ChromeWorker, MatchPattern, MatchPatternSet, extensions: this});
+    Object.assign(global, {global, Cc, Ci, Cu, Cr, XPCOMUtils, ChromeWorker, ExtensionCommon, MatchPattern, MatchPatternSet, extensions: this});
 
     Cu.import("resource://gre/modules/AppConstants.jsm", global);
     Cu.import("resource://gre/modules/ExtensionAPI.jsm", global);
@@ -1443,13 +1484,44 @@ SingletonEventManager.prototype = {
   },
 };
 
+// Simple API for event listeners where events never fire.
+function ignoreEvent(context, name) {
+  return {
+    addListener: function(callback) {
+      let id = context.extension.id;
+      let frame = Components.stack.caller;
+      let msg = `In add-on ${id}, attempting to use listener "${name}", which is unimplemented.`;
+      let scriptError = Cc["@mozilla.org/scripterror;1"]
+        .createInstance(Ci.nsIScriptError);
+      scriptError.init(msg, frame.filename, null, frame.lineNumber,
+                       frame.columnNumber, Ci.nsIScriptError.warningFlag,
+                       "content javascript");
+      let consoleService = Cc["@mozilla.org/consoleservice;1"]
+        .getService(Ci.nsIConsoleService);
+      consoleService.logMessage(scriptError);
+    },
+    removeListener: function(callback) {},
+    hasListener: function(callback) {},
+  };
+}
 
-const ExtensionCommon = {
+
+const stylesheetMap = new DefaultMap(url => {
+  let uri = Services.io.newURI(url);
+  return styleSheetService.preloadSheet(uri, styleSheetService.AGENT_SHEET);
+});
+
+
+ExtensionCommon = {
   BaseContext,
   CanOfAPIs,
   LocalAPIImplementation,
   LocaleData,
+  NoCloneSpreadArgs,
   SchemaAPIInterface,
   SchemaAPIManager,
   SingletonEventManager,
+  SpreadArgs,
+  ignoreEvent,
+  stylesheetMap,
 };

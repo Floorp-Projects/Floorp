@@ -185,7 +185,7 @@ NativeObject::tryShiftDenseElements(uint32_t count)
     MOZ_ASSERT(count < header->initializedLength);
 
     if (MOZ_UNLIKELY(header->numShiftedElements() + count > ObjectElements::MaxShiftedElements)) {
-        unshiftElements();
+        moveShiftedElements();
         header = getElementsHeader();
     }
 
