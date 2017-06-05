@@ -233,9 +233,9 @@ public:
    * ITfMessageMgr::GetMessageW().
    * Don't call the native APIs directly.  You MUST use these methods instead.
    */
-  static BOOL PeekMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
+  static bool PeekMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
                           UINT aLastMessage, UINT aOption);
-  static BOOL GetMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
+  static bool GetMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
                          UINT aLastMessage);
 
   /**
