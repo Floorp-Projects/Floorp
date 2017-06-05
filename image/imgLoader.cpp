@@ -2205,6 +2205,14 @@ imgLoader::LoadImage(nsIURI* aURI,
   // Get the default load flags from the loadgroup (if possible)...
   if (aLoadGroup) {
     aLoadGroup->GetLoadFlags(&requestFlags);
+
+    // If we are trying to load a thumbnail via the moz-page-thumb:// protocol, load
+    // it directly from the cache to prevent re-decoding the image. See Bug 1373258
+    // TODO: Bug 1406134
+    bool isThumbnailScheme = false;
+    if (NS_SUCCEEDED(aURI->SchemeIs("moz-page-thumb", &isThumbnailScheme)) && isThumbnailScheme) {
+      requestFlags |= nsIRequest::LOAD_FROM_CACHE;
+    }
   }
   //
   // Merge the default load flags with those passed in via aLoadFlags.
@@ -2482,6 +2490,14 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
 
   nsLoadFlags requestFlags = nsIRequest::LOAD_NORMAL;
   channel->GetLoadFlags(&requestFlags);
+
+  // If we are trying to load a thumbnail via the moz-page-thumb:// protocol, load
+  // it directly from the cache to prevent re-decoding the image. See Bug 1373258
+  // TODO: Bug 1406134
+  bool isThumbnailScheme = false;
+  if (NS_SUCCEEDED(uri->SchemeIs("moz-page-thumb", &isThumbnailScheme)) && isThumbnailScheme) {
+    requestFlags |= nsIRequest::LOAD_FROM_CACHE;
+  }
 
   RefPtr<imgCacheEntry> entry;
 

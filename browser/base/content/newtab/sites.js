@@ -186,7 +186,7 @@ Site.prototype = {
       thumbnail.style.backgroundColor = link.bgColor;
     }
     let uri = link.imageURI || PageThumbs.getThumbnailURL(this.url);
-    thumbnail.style.backgroundImage = 'url("' + uri + '")';
+    thumbnail.src = uri;
 
     if (THUMBNAIL_PLACEHOLDER_ENABLED &&
         link.type == "history" &&
@@ -204,7 +204,7 @@ Site.prototype = {
 
     if (link.enhancedImageURI) {
       let enhanced = this._querySelector(".enhanced-content");
-      enhanced.style.backgroundImage = 'url("' + link.enhancedImageURI + '")';
+      enhanced.src = link.enhancedImageURI;
     }
   },
 
