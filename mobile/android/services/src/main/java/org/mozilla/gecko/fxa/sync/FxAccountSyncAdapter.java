@@ -172,19 +172,19 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     @Override
     public void handleError(GlobalSession globalSession, Exception ex, String reason) {
       super.handleError(globalSession, ex, reason);
-      this.telemetryCollector.setError(TelemetryCollector.KEY_ERROR_INTERNAL, reason);
+      // If an error hasn't been set downstream, record what we know at this point.
+      if (!telemetryCollector.hasError()) {
+        telemetryCollector.setError(TelemetryCollector.KEY_ERROR_INTERNAL, reason, ex);
+      }
       recordTelemetry();
     }
 
     @Override
-    public void handleError(GlobalSession globalSession, Exception e) {
-      super.handleError(globalSession, e);
-      if (e instanceof TokenServerException) {
-        this.telemetryCollector.setError(
-                TelemetryCollector.KEY_ERROR_TOKEN, e.getClass().getSimpleName());
-      } else {
-        this.telemetryCollector.setError(
-                TelemetryCollector.KEY_ERROR_INTERNAL, e.getClass().getSimpleName());
+    public void handleError(GlobalSession globalSession, Exception ex) {
+      super.handleError(globalSession, ex);
+      // If an error hasn't been set downstream, record what we know at this point.
+      if (!telemetryCollector.hasError()) {
+        telemetryCollector.setError(TelemetryCollector.KEY_ERROR_INTERNAL, ex);
       }
       recordTelemetry();
     }
@@ -444,6 +444,10 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
         } finally {
           fxAccount.releaseSharedAccountStateLock();
         }
+        telemetryCollector.setError(
+                TelemetryCollector.KEY_ERROR_TOKEN,
+                e.getClass().getSimpleName()
+        );
         callback.handleError(null, e);
       }
 
@@ -451,6 +455,10 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       public void handleError(Exception e) {
         Logger.error(LOG_TAG, "Failed to get token.", e);
         fxAccount.releaseSharedAccountStateLock();
+        telemetryCollector.setError(
+                TelemetryCollector.KEY_ERROR_TOKEN,
+                e.getClass().getSimpleName()
+        );
         callback.handleError(null, e);
       }
 
