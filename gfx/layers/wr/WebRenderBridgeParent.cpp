@@ -413,6 +413,9 @@ WebRenderBridgeParent::RecvDPEnd(const gfx::IntSize& aSize,
                                  const WrBuiltDisplayListDescriptor& dlDesc,
                                  const WebRenderScrollData& aScrollData)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId,
               aContentSize, dl, dlDesc, aScrollData);
   return IPC_OK();
@@ -429,6 +432,9 @@ WebRenderBridgeParent::RecvDPSyncEnd(const gfx::IntSize &aSize,
                                      const WrBuiltDisplayListDescriptor& dlDesc,
                                      const WebRenderScrollData& aScrollData)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId,
               aContentSize, dl, dlDesc, aScrollData);
   return IPC_OK();
@@ -695,6 +701,9 @@ WebRenderBridgeParent::RecvRemoveExternalImageId(const ExternalImageId& aImageId
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   mChildLayerObserverEpoch = aLayerObserverEpoch;
   return IPC_OK();
 }
@@ -702,6 +711,9 @@ WebRenderBridgeParent::RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverE
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvClearCachedResources()
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   mCompositorBridge->ObserveLayerUpdate(GetLayersId(), GetChildLayerObserverEpoch(), false);
   return IPC_OK();
 }
@@ -732,6 +744,9 @@ mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,
                                                   nsTArray<ScrollableLayerGuid>&& aTargets)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   mCompositorBridge->SetConfirmedTargetAPZC(GetLayersId(), aBlockId, aTargets);
   return IPC_OK();
 }
@@ -741,6 +756,9 @@ WebRenderBridgeParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScr
                                                 const float& aX,
                                                 const float& aY)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aScrollId);
   if (!apzc) {
     return IPC_FAIL_NO_REASON(this);
@@ -753,6 +771,9 @@ mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvSetAsyncZoom(const FrameMetrics::ViewID& aScrollId,
                                         const float& aZoom)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aScrollId);
   if (!apzc) {
     return IPC_FAIL_NO_REASON(this);
@@ -764,6 +785,9 @@ WebRenderBridgeParent::RecvSetAsyncZoom(const FrameMetrics::ViewID& aScrollId,
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvFlushApzRepaints()
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   mCompositorBridge->FlushApzRepaints(GetLayersId());
   return IPC_OK();
 }
@@ -1074,6 +1098,9 @@ mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvNewCompositable(const CompositableHandle& aHandle,
                                            const TextureInfo& aInfo)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   if (!AddCompositable(aHandle, aInfo)) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -1083,6 +1110,9 @@ WebRenderBridgeParent::RecvNewCompositable(const CompositableHandle& aHandle,
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvReleaseCompositable(const CompositableHandle& aHandle)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   ReleaseCompositable(aHandle);
   return IPC_OK();
 }
@@ -1090,6 +1120,9 @@ WebRenderBridgeParent::RecvReleaseCompositable(const CompositableHandle& aHandle
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvInitReadLocks(ReadLockArray&& aReadLocks)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   if (!AddReadLocks(Move(aReadLocks))) {
     return IPC_FAIL_NO_REASON(this);
   }
