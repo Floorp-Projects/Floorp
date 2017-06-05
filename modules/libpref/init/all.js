@@ -217,7 +217,20 @@ pref("dom.script_loader.bytecode_cache.enabled", false); // Not tuned yet.
 
 // Ignore the heuristics of the bytecode cache, and always record on the first
 // visit. (used for testing purposes).
-pref("dom.script_loader.bytecode_cache.eager", false);
+
+// Choose one strategy to use to decide when the bytecode should be encoded and
+// saved. The following strategies are available right now:
+//   * -2 : (reader mode) The bytecode cache would be read, but it would never
+//          be saved.
+//   * -1 : (eager mode) The bytecode would be saved as soon as the script is
+//          seen for the first time, independently of the size or last access
+//          time.
+//   *  0 : (default) The bytecode would be saved in order to minimize the
+//          page-load time.
+//
+// Other values might lead to experimental strategies. For more details, have a
+// look at: ScriptLoader::ShouldCacheBytecode function.
+pref("dom.script_loader.bytecode_cache.strategy", 0);
 
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
