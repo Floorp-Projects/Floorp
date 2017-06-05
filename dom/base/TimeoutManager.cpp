@@ -177,9 +177,12 @@ TimeoutManager::IsInvalidFiringId(uint32_t aFiringId) const
   // Check the most common ways to invalidate a firing id first.
   // These should be quite fast.
   if (aFiringId == InvalidFiringId ||
-      mFiringIdStack.IsEmpty() ||
-      (mFiringIdStack.Length() == 1 && mFiringIdStack[0] != aFiringId)) {
+      mFiringIdStack.IsEmpty()) {
     return true;
+  }
+
+  if (mFiringIdStack.Length() == 1) {
+    return mFiringIdStack[0] != aFiringId;
   }
 
   // Next do a range check on the first and last items in the stack
