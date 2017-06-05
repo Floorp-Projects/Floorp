@@ -569,6 +569,12 @@ nsXBLPrototypeBinding::GetRuleProcessor()
   return nullptr;
 }
 
+const ServoStyleSet*
+nsXBLPrototypeBinding::GetServoStyleSet() const
+{
+  return mResources ? mResources->GetServoStyleSet() : nullptr;
+}
+
 void
 nsXBLPrototypeBinding::EnsureAttributeTable()
 {
