@@ -53,10 +53,34 @@ XPCOMUtils.defineLazyGetter(this, "console", getConsole);
 
 var ExtensionCommon;
 
+/**
+ * A sentinel class to indicate that an array of values should be
+ * treated as an array when used as a promise resolution value, but as a
+ * spread expression (...args) when passed to a callback.
+ */
 class SpreadArgs extends Array {
   constructor(args) {
     super();
     this.push(...args);
+  }
+}
+
+/**
+ * Like SpreadArgs, but also indicates that the array values already
+ * belong to the target compartment, and should not be cloned before
+ * being passed.
+ *
+ * The `unwrappedValues` property contains an Array object which belongs
+ * to the target compartment, and contains the same unwrapped values
+ * passed the NoCloneSpreadArgs constructor.
+ */
+class NoCloneSpreadArgs {
+  constructor(args) {
+    this.unwrappedValues = args;
+  }
+
+  [Symbol.iterator]() {
+    return this.unwrappedValues[Symbol.iterator]();
   }
 }
 
@@ -323,6 +347,8 @@ class BaseContext {
             dump(`Promise resolved after context unloaded\n`);
           } else if (!this.active) {
             dump(`Promise resolved while context is inactive\n`);
+          } else if (args instanceof NoCloneSpreadArgs) {
+            this.runSafeWithoutClone(callback, ...args.unwrappedValues);
           } else if (args instanceof SpreadArgs) {
             runSafe(callback, ...args);
           } else {
@@ -348,6 +374,9 @@ class BaseContext {
               dump(`Promise resolved after context unloaded\n`);
             } else if (!this.active) {
               dump(`Promise resolved while context is inactive\n`);
+            } else if (value instanceof NoCloneSpreadArgs) {
+              let values = value.unwrappedValues;
+              this.runSafeWithoutClone(resolve, values.length == 1 ? values[0] : values);
             } else if (value instanceof SpreadArgs) {
               runSafe(resolve, value.length == 1 ? value[0] : value);
             } else {
@@ -1488,6 +1517,7 @@ ExtensionCommon = {
   CanOfAPIs,
   LocalAPIImplementation,
   LocaleData,
+  NoCloneSpreadArgs,
   SchemaAPIInterface,
   SchemaAPIManager,
   SingletonEventManager,
