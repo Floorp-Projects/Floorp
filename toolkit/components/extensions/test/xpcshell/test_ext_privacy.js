@@ -25,7 +25,11 @@ add_task(async function test_privacy() {
     "network.networkPredictionEnabled": {
       "network.predictor.enabled": true,
       "network.prefetch-next": true,
-      "network.http.speculative-parallel-limit": 10,
+      // This pref starts with a numerical value and we need to use whatever the
+      // default is or we encounter issues when the pref is reset during the test.
+      "network.http.speculative-parallel-limit":
+        ExtensionPreferencesManager.getDefaultValue(
+          "network.http.speculative-parallel-limit"),
       "network.dns.disablePrefetch": false,
     },
     "websites.hyperlinkAuditingEnabled": {
