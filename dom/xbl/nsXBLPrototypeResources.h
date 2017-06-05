@@ -29,7 +29,7 @@ public:
   explicit nsXBLPrototypeResources(nsXBLPrototypeBinding* aBinding);
   ~nsXBLPrototypeResources();
 
-  bool LoadResources();
+  bool LoadResources(nsIContent* aBoundElement);
   void AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
   void AddResourceListener(nsIContent* aElement);
   nsresult FlushSkinSheets();

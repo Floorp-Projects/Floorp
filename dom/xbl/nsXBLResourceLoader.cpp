@@ -82,7 +82,7 @@ nsXBLResourceLoader::~nsXBLResourceLoader()
 }
 
 bool
-nsXBLResourceLoader::LoadResources()
+nsXBLResourceLoader::LoadResources(nsIContent* aBoundElement)
 {
   mInLoadResourcesFunc = true;
 
@@ -95,8 +95,14 @@ nsXBLResourceLoader::LoadResources()
 
   // Declare our loaders.
   nsCOMPtr<nsIDocument> doc = mBinding->XBLDocumentInfo()->GetDocument();
+  nsIDocument* boundDoc = aBoundElement->OwnerDoc();
 
   mozilla::css::Loader* cssLoader = doc->CSSLoader();
+  MOZ_ASSERT(cssLoader->GetDocument() &&
+             cssLoader->GetDocument()->GetStyleBackendType()
+               == boundDoc->GetStyleBackendType(),
+             "The style backends of the loader and bound document are mismatched!");
+
   nsIURI *docURL = doc->GetDocumentURI();
   nsIPrincipal* docPrincipal = doc->NodePrincipal();
 
