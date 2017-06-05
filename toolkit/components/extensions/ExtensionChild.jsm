@@ -134,15 +134,16 @@ class Port {
       },
 
       onDisconnect: new SingletonEventManager(this.context, "Port.onDisconnect", fire => {
-        return this.registerOnDisconnect(error => {
+        return this.registerOnDisconnect(holder => {
+          let error = holder.deserialize(this.context.cloneScope);
           portError = error && this.context.normalizeError(error);
           fire.asyncWithoutClone(portObj);
         });
       }).api(),
 
       onMessage: new SingletonEventManager(this.context, "Port.onMessage", fire => {
-        return this.registerOnMessage(msg => {
-          msg = Cu.cloneInto(msg, this.context.cloneScope);
+        return this.registerOnMessage(holder => {
+          let msg = holder.deserialize(this.context.cloneScope);
           fire.asyncWithoutClone(msg, portObj);
         });
       }).api(),
@@ -221,7 +222,9 @@ class Port {
       responseType: MessageChannel.RESPONSE_NONE,
     };
 
-    return this.context.sendMessage(this.senderMM, message, data, options);
+    let holder = new StructuredCloneHolder(data);
+
+    return this.context.sendMessage(this.senderMM, message, holder, options);
   }
 
   handleDisconnection() {
@@ -326,7 +329,9 @@ class Messenger {
   }
 
   sendMessage(messageManager, msg, recipient, responseCallback) {
-    let promise = this._sendMessage(messageManager, "Extension:Message", msg, recipient)
+    let holder = new StructuredCloneHolder(msg);
+
+    let promise = this._sendMessage(messageManager, "Extension:Message", holder, recipient)
       .catch(error => {
         if (error.result == MessageChannel.RESULT_NO_HANDLER) {
           return Promise.reject({message: "Could not establish connection. Receiving end does not exist."});
@@ -355,7 +360,7 @@ class Messenger {
                   filter(sender, recipient));
         },
 
-        receiveMessage: ({target, data: message, sender, recipient}) => {
+        receiveMessage: ({target, data: holder, sender, recipient}) => {
           if (!this.context.active) {
             return;
           }
@@ -369,7 +374,7 @@ class Messenger {
             };
           });
 
-          message = Cu.cloneInto(message, this.context.cloneScope);
+          let message = holder.deserialize(this.context.cloneScope);
           sender = Cu.cloneInto(sender, this.context.cloneScope);
           sendResponse = Cu.exportFunction(sendResponse, this.context.cloneScope);
 
@@ -412,7 +417,7 @@ class Messenger {
       } else if (error.result === MessageChannel.RESULT_DISCONNECTED) {
         error = null;
       }
-      port.disconnectByOtherEnd(error);
+      port.disconnectByOtherEnd(new StructuredCloneHolder(error));
     });
 
     return port.api();
