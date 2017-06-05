@@ -17,8 +17,8 @@ function open_subdialog_and_test_generic_start_state(browser, domcontentloadedFn
   return ContentTask.spawn(browser, {url, domcontentloadedFnStr}, async function(args) {
     let rv = { acceptCount: 0 };
     let win = content.window;
-    let subdialog = win.gSubDialog;
-    subdialog.open(args.url, null, rv);
+    content.gSubDialog.open(args.url, null, rv);
+    let subdialog = content.gSubDialog._topDialog;
 
     info("waiting for subdialog DOMFrameContentLoaded");
     await ContentTaskUtils.waitForEvent(win, "DOMFrameContentLoaded", true);
@@ -29,7 +29,7 @@ function open_subdialog_and_test_generic_start_state(browser, domcontentloadedFn
     }
 
     info("waiting for subdialog load");
-    await ContentTaskUtils.waitForEvent(subdialog._frame, "load");
+    await ContentTaskUtils.waitForEvent(subdialog._overlay, "dialogopen");
     info("subdialog window is loaded");
 
     let expectedStyleSheetURLs = subdialog._injectedStyleSheets.slice(0);
@@ -52,9 +52,17 @@ function open_subdialog_and_test_generic_start_state(browser, domcontentloadedFn
 }
 
 async function close_subdialog_and_test_generic_end_state(browser, closingFn, closingButton, acceptCount, options) {
+  let getDialogsCount = () => {
+    return ContentTask.spawn(browser, null, () =>
+      content.window.gSubDialog._dialogs.length);
+  };
+  let getStackChildrenCount = () => {
+    return ContentTask.spawn(browser, null, () =>
+      content.window.gSubDialog._dialogStack.children.length);
+  };
   let dialogclosingPromise = ContentTask.spawn(browser, {closingButton, acceptCount}, async function(expectations) {
     let win = content.window;
-    let subdialog = win.gSubDialog;
+    let subdialog = win.gSubDialog._topDialog;
     let frame = subdialog._frame;
     info("waiting for dialogclosing");
     let closingEvent =
@@ -76,7 +84,8 @@ async function close_subdialog_and_test_generic_end_state(browser, closingFn, cl
     Assert.equal(actualAcceptCount, expectations.acceptCount,
       "should be 1 if accepted, 0 if canceled, undefined if closed w/out button");
   });
-
+  let initialDialogsCount = await getDialogsCount();
+  let initialStackChildrenCount = await getStackChildrenCount();
   if (options && options.runClosingFnOutsideOfContentTask) {
     await closingFn();
   } else {
@@ -84,6 +93,12 @@ async function close_subdialog_and_test_generic_end_state(browser, closingFn, cl
   }
 
   await dialogclosingPromise;
+  let endDialogsCount = await getDialogsCount();
+  let endStackChildrenCount = await getStackChildrenCount();
+  Assert.equal(initialDialogsCount - 1, endDialogsCount,
+    "dialog count should decrease by 1");
+  Assert.equal(initialStackChildrenCount - 1, endStackChildrenCount,
+    "stack children count should decrease by 1");
 }
 
 let tab;
@@ -97,27 +112,28 @@ add_task(async function check_titlebar_focus_returnval_titlechanges_accepting() 
 
   let domtitlechangedPromise = BrowserTestUtils.waitForEvent(tab.linkedBrowser, "DOMTitleChanged");
   await ContentTask.spawn(tab.linkedBrowser, null, async function() {
-    let dialog = content.window.gSubDialog._frame.contentWindow;
-    let dialogTitleElement = content.document.getElementById("dialogTitle");
+    let dialog = content.window.gSubDialog._topDialog;
+    let dialogWin = dialog._frame.contentWindow;
+    let dialogTitleElement = dialog._titleElement;
     Assert.equal(dialogTitleElement.textContent, "Sample sub-dialog",
        "Title should be correct initially");
-    Assert.equal(dialog.document.activeElement.value, "Default text",
+    Assert.equal(dialogWin.document.activeElement.value, "Default text",
        "Textbox with correct text is focused");
-    dialog.document.title = "Updated title";
+    dialogWin.document.title = "Updated title";
   });
 
   info("waiting for DOMTitleChanged event");
   await domtitlechangedPromise;
 
   ContentTask.spawn(tab.linkedBrowser, null, async function() {
-    let dialogTitleElement = content.document.getElementById("dialogTitle");
+    let dialogTitleElement = content.window.gSubDialog._topDialog._titleElement;
     Assert.equal(dialogTitleElement.textContent, "Updated title",
       "subdialog should have updated title");
   });
 
   // Accept the dialog
   await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
-    function() { content.window.gSubDialog._frame.contentDocument.documentElement.acceptDialog(); },
+    function() { content.window.gSubDialog._topDialog._frame.contentDocument.documentElement.acceptDialog(); },
     "accept", 1);
 });
 
@@ -126,7 +142,7 @@ add_task(async function check_canceling_dialog() {
 
   info("canceling the dialog");
   await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
-    function() { content.window.gSubDialog._frame.contentDocument.documentElement.cancelDialog(); },
+    function() { content.window.gSubDialog._topDialog._frame.contentDocument.documentElement.cancelDialog(); },
     "cancel", 0);
 });
 
@@ -134,20 +150,40 @@ add_task(async function check_reopening_dialog() {
   await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
   info("opening another dialog which will close the first");
   await open_subdialog_and_test_generic_start_state(tab.linkedBrowser, "", gDialogURL2);
-  info("closing as normal");
+
+  ContentTask.spawn(tab.linkedBrowser, null, async function() {
+    let win = content.window;
+    let dialogs = win.gSubDialog._dialogs;
+    let lowerDialog = dialogs[0];
+    let topDialog = dialogs[1];
+    Assert.equal(dialogs.length, 2, "There should be two visible dialogs");
+    Assert.equal(win.getComputedStyle(topDialog._overlay).visibility, "visible",
+      "The top dialog should be visible");
+    Assert.equal(win.getComputedStyle(lowerDialog._overlay).visibility, "visible",
+      "The lower dialog should be visible");
+    Assert.equal(win.getComputedStyle(topDialog._overlay).backgroundColor, "rgba(0, 0, 0, 0.5)",
+      "The top dialog should have a semi-transparent overlay");
+    Assert.equal(win.getComputedStyle(lowerDialog._overlay).backgroundColor, "rgba(0, 0, 0, 0)",
+      "The lower dialog should not have an overlay");
+  });
+
+  info("closing two dialogs");
   await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
-    function() { content.window.gSubDialog._frame.contentDocument.documentElement.acceptDialog(); },
+    function() { content.window.gSubDialog._topDialog._frame.contentDocument.documentElement.acceptDialog(); },
+    "accept", 1);
+  await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
+    function() { content.window.gSubDialog._topDialog._frame.contentDocument.documentElement.acceptDialog(); },
     "accept", 1);
 });
 
 add_task(async function check_opening_while_closing() {
   await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
   info("closing");
-  content.window.gSubDialog.close();
+  content.window.gSubDialog._topDialog.close();
   info("reopening immediately after calling .close()");
   await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
   await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
-    function() { content.window.gSubDialog._frame.contentDocument.documentElement.acceptDialog(); },
+    function() { content.window.gSubDialog._topDialog._frame.contentDocument.documentElement.acceptDialog(); },
     "accept", 1);
 
 });
@@ -157,7 +193,7 @@ add_task(async function window_close_on_dialog() {
 
   info("canceling the dialog");
   await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
-    function() { content.window.gSubDialog._frame.contentWindow.window.close(); },
+    function() { content.window.gSubDialog._topDialog._frame.contentWindow.window.close(); },
     null, 0);
 });
 
@@ -166,7 +202,7 @@ add_task(async function click_close_button_on_dialog() {
 
   info("canceling the dialog");
   await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
-    function() { return BrowserTestUtils.synthesizeMouseAtCenter("#dialogClose", {}, tab.linkedBrowser); },
+    function() { return BrowserTestUtils.synthesizeMouseAtCenter(".dialogClose", {}, tab.linkedBrowser); },
     null, 0, {runClosingFnOutsideOfContentTask: true});
 });
 
@@ -176,7 +212,7 @@ add_task(async function background_click_should_close_dialog() {
   // Clicking on an inactive part of dialog itself should not close the dialog.
   // Click the dialog title bar here to make sure nothing happens.
   info("clicking the dialog title bar");
-  BrowserTestUtils.synthesizeMouseAtCenter("#dialogTitle", {}, tab.linkedBrowser);
+  BrowserTestUtils.synthesizeMouseAtCenter(".dialogTitle", {}, tab.linkedBrowser);
 
   // Close the dialog by clicking on the overlay background. Simulate a click
   // at point (2,2) instead of (0,0) so we are sure we're clicking on the
@@ -193,7 +229,7 @@ add_task(async function back_navigation_on_subdialog_should_close_dialog() {
 
   info("canceling the dialog");
   await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
-    function() { content.window.gSubDialog._frame.goBack(); },
+    function() { content.window.gSubDialog._topDialog._frame.goBack(); },
     null, undefined);
 });
 
@@ -219,7 +255,7 @@ add_task(async function correct_width_and_height_should_be_used_for_dialog() {
   await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
 
   await ContentTask.spawn(tab.linkedBrowser, null, async function() {
-    let frameStyle = content.window.gSubDialog._frame.style;
+    let frameStyle = content.window.gSubDialog._topDialog._frame.style;
     Assert.equal(frameStyle.width, "32em",
       "Width should be set on the frame from the dialog");
     Assert.equal(frameStyle.height, "5em",
@@ -227,13 +263,13 @@ add_task(async function correct_width_and_height_should_be_used_for_dialog() {
   });
 
   await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
-    function() { content.window.gSubDialog._frame.contentWindow.window.close(); },
+    function() { content.window.gSubDialog._topDialog._frame.contentWindow.window.close(); },
     null, 0);
 });
 
 add_task(async function wrapped_text_in_dialog_should_have_expected_scrollHeight() {
   let oldHeight = await open_subdialog_and_test_generic_start_state(tab.linkedBrowser, function domcontentloadedFn() {
-    let frame = content.window.gSubDialog._frame;
+    let frame = content.window.gSubDialog._topDialog._frame;
     let doc = frame.contentDocument;
     let scrollHeight = doc.documentElement.scrollHeight;
     doc.documentElement.style.removeProperty("height");
@@ -253,7 +289,7 @@ add_task(async function wrapped_text_in_dialog_should_have_expected_scrollHeight
   });
 
   await ContentTask.spawn(tab.linkedBrowser, oldHeight, async function(contentOldHeight) {
-    let frame = content.window.gSubDialog._frame;
+    let frame = content.window.gSubDialog._topDialog._frame;
     let docEl = frame.contentDocument.documentElement;
     Assert.equal(frame.style.width, "32em",
       "Width should be set on the frame from the dialog");
@@ -264,37 +300,37 @@ add_task(async function wrapped_text_in_dialog_should_have_expected_scrollHeight
   });
 
   await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
-    function() { content.window.gSubDialog._frame.contentWindow.window.close(); },
+    function() { content.window.gSubDialog._topDialog._frame.contentWindow.window.close(); },
     null, 0);
 });
 
 add_task(async function dialog_too_tall_should_get_reduced_in_height() {
   await open_subdialog_and_test_generic_start_state(tab.linkedBrowser, function domcontentloadedFn() {
-    let frame = content.window.gSubDialog._frame;
+    let frame = content.window.gSubDialog._topDialog._frame;
     frame.contentDocument.documentElement.style.height = "100000px";
   });
 
   await ContentTask.spawn(tab.linkedBrowser, null, async function() {
-    let frame = content.window.gSubDialog._frame;
+    let frame = content.window.gSubDialog._topDialog._frame;
     Assert.equal(frame.style.width, "32em", "Width should be set on the frame from the dialog");
     Assert.ok(parseInt(frame.style.height, 10) < content.window.innerHeight,
        "Height on the frame should be smaller than window's innerHeight");
   });
 
   await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
-    function() { content.window.gSubDialog._frame.contentWindow.window.close(); },
+    function() { content.window.gSubDialog._topDialog._frame.contentWindow.window.close(); },
     null, 0);
 });
 
 add_task(async function scrollWidth_and_scrollHeight_from_subdialog_should_size_the_browser() {
   await open_subdialog_and_test_generic_start_state(tab.linkedBrowser, function domcontentloadedFn() {
-    let frame = content.window.gSubDialog._frame;
+    let frame = content.window.gSubDialog._topDialog._frame;
     frame.contentDocument.documentElement.style.removeProperty("height");
     frame.contentDocument.documentElement.style.removeProperty("width");
   });
 
   await ContentTask.spawn(tab.linkedBrowser, null, async function() {
-    let frame = content.window.gSubDialog._frame;
+    let frame = content.window.gSubDialog._topDialog._frame;
     Assert.ok(frame.style.width.endsWith("px"),
        "Width (" + frame.style.width + ") should be set to a px value of the scrollWidth from the dialog");
     Assert.ok(frame.style.height.endsWith("px"),
@@ -302,7 +338,7 @@ add_task(async function scrollWidth_and_scrollHeight_from_subdialog_should_size_
   });
 
   await close_subdialog_and_test_generic_end_state(tab.linkedBrowser,
-    function() { content.window.gSubDialog._frame.contentWindow.window.close(); },
+    function() { content.window.gSubDialog._topDialog._frame.contentWindow.window.close(); },
     null, 0);
 });
 
