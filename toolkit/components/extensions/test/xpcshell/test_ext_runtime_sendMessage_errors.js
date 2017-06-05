@@ -18,15 +18,9 @@ add_task(async function test_sendMessage_error() {
       // because there is no onMessage listener.
       [[null, null, null], "Could not establish connection. Receiving end does not exist."],
 
-      // Structural cloning doesn't work with DOM but we fall back
-      // JSON serialization, so we don't expect another error.
-      [[null, location, null], "Could not establish connection. Receiving end does not exist."],
-
-      // Structured cloning supports cyclic self-references.
-      [[null, [circ, location], null], "cyclic object value"],
-      // JSON serialization does not support cyclic references.
-      [[null, circ, null], "Could not establish connection. Receiving end does not exist."],
-      // (the last two tests shows whether sendMessage is implemented as structured cloning).
+      // Structured cloning doesn't work with DOM objects
+      [[null, location, null], "The object could not be cloned."],
+      [[null, [circ, location], null], "The object could not be cloned."],
     ];
 
     // Repeat all tests with the undefined value instead of null.
