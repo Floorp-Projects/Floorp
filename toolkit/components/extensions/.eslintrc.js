@@ -7,6 +7,7 @@ module.exports = {
     "Ci": true,
     "Cr": true,
     "Cu": true,
+    "StructuredCloneHolder": false,
     "TextDecoder": false,
     "TextEncoder": false,
 

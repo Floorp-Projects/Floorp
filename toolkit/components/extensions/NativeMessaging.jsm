@@ -59,6 +59,8 @@ const PREF_MAX_WRITE = "webextensions.native-messaging.max-output-message-bytes"
 
 const REGPATH = "Software\\Mozilla\\NativeMessagingHosts";
 
+const global = this;
+
 this.HostManifestManager = {
   _initializePromise: null,
   _lookup: null,
@@ -236,7 +238,7 @@ this.NativeApp = class extends EventEmitter {
     app.on("message", (what, msg) => port.postMessage(msg));
     /* eslint-enable mozilla/balanced-listeners */
 
-    port.registerOnMessage(msg => app.send(msg));
+    port.registerOnMessage(holder => app.send(holder));
     port.registerOnDisconnect(msg => app.close());
   }
 
@@ -334,10 +336,11 @@ this.NativeApp = class extends EventEmitter {
     })();
   }
 
-  send(msg) {
+  send(holder) {
     if (this._isDisconnected) {
       throw new this.context.cloneScope.Error("Attempt to postMessage on disconnected port");
     }
+    let msg = holder.deserialize(global);
     if (Cu.getClassName(msg, true) != "ArrayBuffer") {
       // This error cannot be triggered by extensions; it indicates an error in
       // our implementation.
@@ -412,14 +415,14 @@ this.NativeApp = class extends EventEmitter {
     this._cleanup();
   }
 
-  sendMessage(msg) {
+  sendMessage(holder) {
     let responsePromise = new Promise((resolve, reject) => {
       this.once("message", (what, msg) => { resolve(msg); });
       this.once("disconnect", (what, err) => { reject(err); });
     });
 
     let result = this.startupPromise.then(() => {
-      this.send(msg);
+      this.send(holder);
       return responsePromise;
     });
 
