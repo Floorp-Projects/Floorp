@@ -548,9 +548,9 @@ class TabBase {
     if (this.hasActiveTabPermission) {
       // If we have the "activeTab" permission for this tab, ignore
       // the host whitelist.
-      options.matchesHost = ["<all_urls>"];
+      options.matches = ["<all_urls>"];
     } else {
-      options.matchesHost = this.extension.whiteListedHosts.serialize();
+      options.matches = this.extension.whiteListedHosts.patterns.map(host => host.pattern);
     }
 
     if (details.code !== null) {

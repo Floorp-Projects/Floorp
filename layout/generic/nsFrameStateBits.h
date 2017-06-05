@@ -270,8 +270,8 @@ FRAME_STATE_BIT(Generic, 54, NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY)
 // a stylo tree traversal.
 FRAME_STATE_BIT(Generic, 55, NS_FRAME_OWNS_ANON_BOXES)
 
-// ** currently unused Generic bit **
-// FRAME_STATE_BIT(Generic, 56, ...)
+// Frame maybe has a counter-reset/increment style
+FRAME_STATE_BIT(Generic, 56, NS_FRAME_HAS_CSS_COUNTER_STYLE)
 
 // The display list of the frame can be handled by the shortcut for
 // COMMON CASE.

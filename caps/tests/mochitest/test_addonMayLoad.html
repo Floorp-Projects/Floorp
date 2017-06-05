@@ -15,16 +15,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1180921
   const Cc = Components.classes;
   const Ci = Components.interfaces;
   const Cu = Components.utils;
-  Cu.import("resource://gre/modules/Services.jsm");
+  let module = Cu.import("resource://gre/modules/Services.jsm", window);
   let ssm = Services.scriptSecurityManager;
-  let aps = Cc["@mozilla.org/addons/policy-service;1"].getService(Ci.nsIAddonPolicyService).wrappedJSObject;
+
+  function StubPolicy(id, subdomain) {
+    /* globals MatchPatternSet */
+    return new module.WebExtensionPolicy({
+      id,
+      mozExtensionHostname: id,
+      baseURL: `file:///{id}`,
+
+      allowedOrigins: new MatchPatternSet([`*://${subdomain}.example.org/*`]),
+      localizeCallback(string) {},
+    });
+  }
+
+  /* globals WebExtensionPolicy */
+  let policyA = StubPolicy("addona", "test1");
+  let policyB = StubPolicy("addonb", "test2");
+  policyA.active = true;
+  policyB.active = true;
 
   SimpleTest.waitForExplicitFinish();
-  let oldAddonIdCallback = aps.setExtensionURIToAddonIdCallback(uri => uri.host);
   SimpleTest.registerCleanupFunction(function() {
-    aps.setAddonLoadURICallback("addona", null);
-    aps.setAddonLoadURICallback("addonb", null);
-    aps.setExtensionURIToAddonIdCallback(oldAddonIdCallback);
+    policyA.active = false;
+    policyB.active = false;
   });
 
   function tryLoad(sb, uri) {
@@ -48,11 +63,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1180921
 
   function uriForDomain(d) { return d + "/tests/caps/tests/mochitest/file_data.txt" }
 
-  tryLoad(addonA, uriForDomain("http://test1.example.org"))
+  tryLoad(addonA, uriForDomain("http://test4.example.org"))
   .then(function(success) {
     ok(!success, "cross-origin load should fail for addon A");
-    aps.setAddonLoadURICallback("addona", function(uri) { return /test1/.test(uri.host); });
-    aps.setAddonLoadURICallback("addonb", function(uri) { return /test2/.test(uri.host); });
     return tryLoad(addonA, uriForDomain("http://test1.example.org"));
   }).then(function(success) {
     ok(success, "whitelisted cross-origin load of test1 should succeed for addon A");

@@ -56,3 +56,28 @@ add_task(function* testWebExtension() {
 
   yield closeAboutDebugging(tab);
 });
+
+add_task(function* testTemporaryWebExtension() {
+  let addonName = "test-devtools-webextension-noid";
+  let { tab, document } = yield openAboutDebugging("addons");
+
+  yield waitForInitialAddonList(document);
+  yield installAddon({
+    document,
+    path: "addons/test-devtools-webextension-noid/manifest.json",
+    name: addonName,
+    isWebExtension: true
+  });
+
+  let addons = document.querySelectorAll("#temporary-extensions .addon-target-container");
+  // Assuming that our temporary add-on is now at the top.
+  let container = addons[addons.length-1];
+  let addonId = container.dataset.addonId;
+
+  let temporaryID = container.querySelector(".temporary-id-url");
+  ok(temporaryID, "Temporary ID message does appear");
+
+  yield uninstallAddon({document, id: addonId, name: addonName});
+
+  yield closeAboutDebugging(tab);
+});
