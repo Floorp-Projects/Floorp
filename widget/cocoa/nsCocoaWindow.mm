@@ -2230,13 +2230,7 @@ nsCocoaWindow::SetWindowShadowStyle(int32_t aStyle)
 
   // Shadowless windows are only supported on popups.
   if (mWindowType == eWindowType_popup) {
-    MOZ_ASSERT(mPopupContentView);
-
-    // Drop shadows are not sized correctly for composited popups when they are
-    // animated, so disable them entirely if the popup is composited.
-    bool disableShadow = (aStyle == NS_STYLE_WINDOW_SHADOW_NONE ||
-                          mPopupContentView->ShouldUseOffMainThreadCompositing());
-    [mWindow setHasShadow:!disableShadow];
+    [mWindow setHasShadow:aStyle != NS_STYLE_WINDOW_SHADOW_NONE];
   }
 
   [mWindow setUseMenuStyle:(aStyle == NS_STYLE_WINDOW_SHADOW_MENU)];
