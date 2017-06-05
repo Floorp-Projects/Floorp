@@ -12,11 +12,13 @@
 #include "chrome/common/ipc_message_utils.h"
 #include "gfxTelemetry.h"
 #include "ipc/IPCMessageUtils.h"
+#include "ipc/nsGUIEventIPC.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/GeckoContentController.h"
+#include "mozilla/layers/Keyboard.h"
 #include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersTypes.h"
 
@@ -414,6 +416,32 @@ struct ParamTraits<mozilla::layers::EventRegions>
             ReadParam(aMsg, aIter, &aResult->mNoActionRegion) &&
             ReadParam(aMsg, aIter, &aResult->mHorizontalPanRegion) &&
             ReadParam(aMsg, aIter, &aResult->mVerticalPanRegion));
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::layers::KeyboardScrollAction::KeyboardScrollActionType>
+  : public ContiguousEnumSerializer<
+             mozilla::layers::KeyboardScrollAction::KeyboardScrollActionType,
+             mozilla::layers::KeyboardScrollAction::KeyboardScrollActionType::eScrollCharacter,
+             mozilla::layers::KeyboardScrollAction::KeyboardScrollActionType::eSentinel>
+{};
+
+template <>
+struct ParamTraits<mozilla::layers::KeyboardScrollAction>
+{
+  typedef mozilla::layers::KeyboardScrollAction paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mType);
+    WriteParam(aMsg, aParam.mForward);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mType) &&
+           ReadParam(aMsg, aIter, &aResult->mForward);
   }
 };
 
