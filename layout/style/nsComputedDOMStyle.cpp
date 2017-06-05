@@ -598,6 +598,15 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
       return nullptr;
   }
 
+  auto pseudoType = CSSPseudoElementType::NotPseudo;
+  if (aPseudo) {
+    pseudoType = nsCSSPseudoElements::
+      GetPseudoType(aPseudo, CSSEnabledState::eIgnoreEnabledState);
+    if (pseudoType >= CSSPseudoElementType::Count) {
+      return nullptr;
+    }
+  }
+
   // XXX the !aElement->IsHTMLElement(nsGkAtoms::area)
   // check is needed due to bug 135040 (to avoid using
   // mPrimaryFrame). Remove it once that's fixed.
@@ -628,9 +637,11 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
             return styleSet->ResolveStyleByRemovingAnimation(
                      aElement, result, eRestyle_AllHintsWithAnimations);
           } else {
-            NS_WARNING("stylo: Getting the unanimated style context is not yet"
-                       " supported for Servo");
-            return nullptr;
+            RefPtr<ServoComputedValues> baseComputedValues =
+              presContext->StyleSet()->AsServo()->
+                GetBaseComputedValuesForElement(aElement, pseudoType);
+            return NS_NewStyleContext(nullptr, presContext, aPseudo,
+                                      pseudoType, baseComputedValues.forget());
           }
         }
 
@@ -650,22 +661,22 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
 
   StyleSetHandle styleSet = presShell->StyleSet();
 
-  auto type = CSSPseudoElementType::NotPseudo;
-  if (aPseudo) {
-    type = nsCSSPseudoElements::
-      GetPseudoType(aPseudo, CSSEnabledState::eIgnoreEnabledState);
-    if (type >= CSSPseudoElementType::Count) {
-      return nullptr;
-    }
-  }
-
   // For Servo, compute the result directly without recursively building up
   // a throwaway style context chain.
   if (ServoStyleSet* servoSet = styleSet->GetAsServo()) {
     StyleRuleInclusion rules = aStyleType == eDefaultOnly
                                ? StyleRuleInclusion::DefaultOnly
                                : StyleRuleInclusion::All;
-    return servoSet->ResolveTransientStyle(aElement, aPseudo, type, rules);
+    RefPtr<nsStyleContext> result =
+       servoSet->ResolveTransientStyle(aElement, aPseudo, pseudoType, rules);
+    if (aAnimationFlag == eWithAnimation) {
+      return result.forget();
+    }
+
+    RefPtr<ServoComputedValues> baseComputedValues =
+      servoSet->GetBaseComputedValuesForElement(aElement, pseudoType);
+    return NS_NewStyleContext(nullptr, presContext, aPseudo,
+                              pseudoType, baseComputedValues.forget());
   }
 
   RefPtr<nsStyleContext> parentContext;
@@ -680,14 +691,14 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
 
   if (aAnimationFlag == eWithAnimation) {
     return styleResolver.ResolveWithAnimation(styleSet,
-                                              aElement, type,
+                                              aElement, pseudoType,
                                               parentContext,
                                               aStyleType,
                                               inDocWithShell);
   }
 
   return styleResolver.ResolveWithoutAnimation(styleSet,
-                                               aElement, type,
+                                               aElement, pseudoType,
                                                parentContext,
                                                inDocWithShell);
 }

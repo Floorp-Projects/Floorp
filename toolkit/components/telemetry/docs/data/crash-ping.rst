@@ -56,6 +56,7 @@ Structure:
           IsGarbageCollecting: 1, // Optional, present only if set to 1
           MozCrashReason: <reason>, // Optional, contains the string passed to MOZ_CRASH()
           OOMAllocationSize: <size>, // Size of the allocation that caused an OOM
+          RemoteType: <type>, // Optional, type of content process, see below for a list of types
           SecondsSinceLastCrash: <duration>, // Seconds elapsed since the last crash occurred
           SystemMemoryUsePercentage: <percentage>, // Windows-only, percent of memory in use
           TelemetrySessionId: <id>, // Active telemetry session ID when the crash was recorded
@@ -91,6 +92,23 @@ are sent only for the ones below:
 +---------------+---------------------------------------------------+
 | gpu           | GPU process                                       |
 +---------------+---------------------------------------------------+
+
+Remote Process Types
+--------------------
+
+The optional ``remoteType`` field contains the type of the content process that
+crashed. As such it is present only if ``processType`` contains the ``content``
+value. The following content process types are currently defined:
+
++-----------+--------------------------------------------------------+
+| Type      | Description                                            |
++===========+========================================================+
+| web       | The content process was running code from a web page   |
++-----------+--------------------------------------------------------+
+| file      | The content process was running code from a local file |
++-----------+--------------------------------------------------------+
+| extension | The content process was running code from an extension |
++-----------+--------------------------------------------------------+
 
 Stack Traces
 ------------
