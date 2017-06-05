@@ -8,8 +8,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelPopup",
 
 var {
   DefaultWeakMap,
-  IconDetails,
 } = ExtensionUtils;
+
+Cu.import("resource://gre/modules/ExtensionParent.jsm");
+
+var {
+  IconDetails,
+} = ExtensionParent;
 
 // WeakMap[Extension -> PageAction]
 let pageActionMap = new WeakMap();

@@ -9,8 +9,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 
 var {
   ExtensionError,
-  IconDetails,
 } = ExtensionUtils;
+
+Cu.import("resource://gre/modules/ExtensionParent.jsm");
+
+var {
+  IconDetails,
+} = ExtensionParent;
 
 const ACTION_MENU_TOP_LEVEL_LIMIT = 6;
 

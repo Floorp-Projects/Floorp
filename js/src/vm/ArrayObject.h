@@ -33,7 +33,7 @@ class ArrayObject : public NativeObject
 
     void setNonWritableLength(JSContext* cx) {
         if (getElementsHeader()->numShiftedElements() > 0)
-            unshiftElements();
+            moveShiftedElements();
 
         // When an array's length becomes non-writable, writes to indexes
         // greater than or equal to the length don't change the array.  We

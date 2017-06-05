@@ -19,8 +19,13 @@ Cu.import("resource://gre/modules/EventEmitter.jsm");
 
 var {
   DefaultWeakMap,
-  IconDetails,
 } = ExtensionUtils;
+
+Cu.import("resource://gre/modules/ExtensionParent.jsm");
+
+var {
+  IconDetails,
+} = ExtensionParent;
 
 const POPUP_PRELOAD_TIMEOUT_MS = 200;
 

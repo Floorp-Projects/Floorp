@@ -12,11 +12,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
                                   "resource://gre/modules/PageActions.jsm");
 
-Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+Cu.import("resource://gre/modules/ExtensionParent.jsm");
 
 var {
   IconDetails,
-} = ExtensionUtils;
+} = ExtensionParent;
 
 // WeakMap[Extension -> PageAction]
 var pageActionMap = new WeakMap();

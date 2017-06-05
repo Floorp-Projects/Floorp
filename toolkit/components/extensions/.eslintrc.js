@@ -7,6 +7,7 @@ module.exports = {
     "Ci": true,
     "Cr": true,
     "Cu": true,
+    "StructuredCloneHolder": false,
     "TextDecoder": false,
     "TextEncoder": false,
 
@@ -20,6 +21,7 @@ module.exports = {
     "AppConstants": true,
     "Extension": true,
     "ExtensionAPI": true,
+    "ExtensionCommon": true,
     "ExtensionManagement": true,
     "ExtensionUtils": true,
     "extensions": true,
