@@ -112,7 +112,7 @@ private:
   };
 
 private:
-  Interceptor(IInterceptorSink* aSink);
+  explicit Interceptor(IInterceptorSink* aSink);
   ~Interceptor();
   HRESULT GetInitialInterceptorForIID(REFIID aTargetIid,
                                       STAUniquePtr<IUnknown> aTarget,
