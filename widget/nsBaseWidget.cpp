@@ -37,6 +37,7 @@
 #include "nsIXULWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsXULPopupManager.h"
+#include "nsXBLWindowKeyHandler.h"
 #include "nsIWidgetListener.h"
 #include "nsIGfxInfo.h"
 #include "npapi.h"
@@ -919,6 +920,7 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
   ConfigureAPZControllerThread();
 
   mAPZC->SetDPI(GetDPI());
+  mAPZC->SetKeyboardMap(nsXBLWindowKeyHandler::CollectKeyboardShortcuts());
 
   RefPtr<IAPZCTreeManager> treeManager = mAPZC;  // for capture by the lambdas
 

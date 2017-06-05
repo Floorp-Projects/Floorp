@@ -21,6 +21,8 @@ class InputData;
 
 namespace layers {
 
+class KeyboardMap;
+
 enum AllowedTouchBehavior {
   NONE =               0,
   VERTICAL_PAN =       1 << 0,
@@ -103,6 +105,11 @@ public:
       WidgetInputEvent& aEvent,
       ScrollableLayerGuid* aOutTargetGuid,
       uint64_t* aOutInputBlockId);
+
+  /**
+   * Set the keyboard shortcuts to use for translating keyboard events.
+   */
+  virtual void SetKeyboardMap(const KeyboardMap& aKeyboardMap) = 0;
 
   /**
    * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom

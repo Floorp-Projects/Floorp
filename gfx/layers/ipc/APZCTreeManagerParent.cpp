@@ -145,6 +145,14 @@ APZCTreeManagerParent::RecvReceiveScrollWheelInputEvent(
 }
 
 mozilla::ipc::IPCResult
+APZCTreeManagerParent::RecvSetKeyboardMap(const KeyboardMap& aKeyboardMap)
+{
+  mTreeManager->SetKeyboardMap(aKeyboardMap);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 APZCTreeManagerParent::RecvZoomToRect(
     const ScrollableLayerGuid& aGuid,
     const CSSRect& aRect,
