@@ -46,7 +46,7 @@ HistoryEngine.prototype = {
 
   syncPriority: 7,
 
-  _processIncoming(newitems) {
+  async _processIncoming(newitems) {
     // We want to notify history observers that a batch operation is underway
     // so they don't do lots of work for each incoming record.
     let observers = PlacesUtils.history.getObservers();
@@ -59,13 +59,13 @@ HistoryEngine.prototype = {
     }
     notifyHistoryObservers("onBeginUpdateBatch");
     try {
-      return SyncEngine.prototype._processIncoming.call(this, newitems);
+      await SyncEngine.prototype._processIncoming.call(this, newitems);
     } finally {
       notifyHistoryObservers("onEndUpdateBatch");
     }
   },
 
-  pullNewChanges() {
+  async pullNewChanges() {
     let modifiedGUIDs = Object.keys(this._tracker.changedIDs);
     if (!modifiedGUIDs.length) {
       return {};
@@ -236,12 +236,12 @@ HistoryStore.prototype = {
     return Async.querySpinningly(this._urlStm, this._urlCols)[0];
   },
 
-  changeItemID: function HStore_changeItemID(oldID, newID) {
+  async changeItemID(oldID, newID) {
     this.setGUID(this._findURLByGUID(oldID).url, newID);
   },
 
 
-  getAllIDs: function HistStore_getAllIDs() {
+  async getAllIDs() {
     // Only get places visited within the last 30 days (30*24*60*60*1000ms)
     this._allUrlStm.params.cutoff_date = (Date.now() - 2592000000) * 1000;
     this._allUrlStm.params.max_results = MAX_HISTORY_UPLOAD;
@@ -254,7 +254,7 @@ HistoryStore.prototype = {
     }, {});
   },
 
-  applyIncomingBatch: function applyIncomingBatch(records) {
+  async applyIncomingBatch(records) {
     let failed = [];
     let blockers = [];
 
@@ -290,8 +290,6 @@ HistoryStore.prototype = {
     }
     records.length = k; // truncate array
 
-    let handleAsyncOperationsComplete = Async.makeSyncCallback();
-
     if (records.length) {
       blockers.push(new Promise(resolve => {
         let updatePlacesCallback = {
@@ -305,20 +303,9 @@ HistoryStore.prototype = {
       }));
     }
 
-    // Since `failed` is updated asynchronously and this function is
-    // synchronous, we need to spin-wait until we are sure that all
-    // updates to `fail` have completed.
-    Promise.all(blockers).then(
-      handleAsyncOperationsComplete,
-      ex => {
-        // In case of error, terminate wait, but make sure that the
-        // error is reported nevertheless and still causes test
-        // failures.
-        handleAsyncOperationsComplete();
-        throw ex;
-      });
-    Async.waitForSyncCallback(handleAsyncOperationsComplete);
-      return failed;
+    // failed is updated asynchronously, hence the await on blockers.
+    await Promise.all(blockers);
+    return failed;
   },
 
   /**
@@ -404,23 +391,21 @@ HistoryStore.prototype = {
     return true;
   },
 
-  remove: function HistStore_remove(record) {
+  async remove(record) {
     this._log.trace("Removing page: " + record.id);
-    return PlacesUtils.history.remove(record.id).then(
-      (removed) => {
-        if (removed) {
-          this._log.trace("Removed page: " + record.id);
-        } else {
-          this._log.debug("Page already removed: " + record.id);
-        }
-    });
+    let removed = await PlacesUtils.history.remove(record.id);
+    if (removed) {
+      this._log.trace("Removed page: " + record.id);
+    } else {
+      this._log.debug("Page already removed: " + record.id);
+    }
   },
 
-  itemExists: function HistStore_itemExists(id) {
+  async itemExists(id) {
     return !!this._findURLByGUID(id);
   },
 
-  createRecord: function createRecord(id, collection) {
+  async createRecord(id, collection) {
     let foo = this._findURLByGUID(id);
     let record = new HistoryRec(collection, id);
     if (foo) {
@@ -435,10 +420,8 @@ HistoryStore.prototype = {
     return record;
   },
 
-  wipe: function HistStore_wipe() {
-    let cb = Async.makeSyncCallback();
-    PlacesUtils.history.clear().then(result => { cb(null, result) }, err => { cb(err) });
-    return Async.waitForSyncCallback(cb);
+  async wipe() {
+    return PlacesUtils.history.clear();
   }
 };
 
