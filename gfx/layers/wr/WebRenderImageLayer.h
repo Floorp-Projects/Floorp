@@ -24,6 +24,8 @@ public:
 
   virtual void ClearCachedResources() override;
 
+  virtual bool SupportsAsyncUpdate() override;
+
 protected:
   virtual ~WebRenderImageLayer();
 
