@@ -36,8 +36,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.importGlobalProperties(["URL"]);
 
-const INPUT_DATETIME_PREF = "dom.forms.datetime";
-
 var contentLog = new logging.ContentLogger();
 
 var marionetteTestName;
@@ -1441,7 +1439,7 @@ function* sendKeysToElement(id, val) {
   if (el.type == "file") {
     yield interaction.uploadFile(el, val);
   } else if ((el.type == "date" || el.type == "time") &&
-      Preferences.get(INPUT_DATETIME_PREF)) {
+      Preferences.get("dom.forms.datetime")) {
     yield interaction.setFormControlValue(el, val);
   } else {
     yield interaction.sendKeysToElement(
