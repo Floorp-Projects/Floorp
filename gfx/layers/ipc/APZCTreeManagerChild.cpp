@@ -127,6 +127,12 @@ APZCTreeManagerChild::ReceiveInputEvent(
 }
 
 void
+APZCTreeManagerChild::SetKeyboardMap(const KeyboardMap& aKeyboardMap)
+{
+  SendSetKeyboardMap(aKeyboardMap);
+}
+
+void
 APZCTreeManagerChild::ZoomToRect(
     const ScrollableLayerGuid& aGuid,
     const CSSRect& aRect,

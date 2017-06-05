@@ -31,6 +31,9 @@ public:
           uint64_t* aOutInputBlockId) override;
 
   void
+  SetKeyboardMap(const KeyboardMap& aKeyboardMap) override;
+
+  void
   ZoomToRect(
           const ScrollableLayerGuid& aGuid,
           const CSSRect& aRect,

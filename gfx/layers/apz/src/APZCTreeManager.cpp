@@ -1438,6 +1438,12 @@ APZCTreeManager::ProcessTouchVelocity(uint32_t aTimestampMs, float aSpeedY)
 }
 
 void
+APZCTreeManager::SetKeyboardMap(const KeyboardMap& aKeyboardMap)
+{
+  mKeyboardMap = aKeyboardMap;
+}
+
+void
 APZCTreeManager::ZoomToRect(const ScrollableLayerGuid& aGuid,
                             const CSSRect& aRect,
                             const uint32_t aFlags)
