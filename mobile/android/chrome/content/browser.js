@@ -5374,6 +5374,7 @@ var XPInstallObserver = {
         }
 
         new Prompt({
+          window: window,
           title: Strings.browser.GetStringFromName("addonError.titleError"),
           message: message,
           buttons: buttons
@@ -5408,6 +5409,7 @@ var XPInstallObserver = {
             strings.GetStringFromName("unsignedAddonsDisabled.dismiss")
         ];
         new Prompt({
+          window: window,
           title: Strings.browser.GetStringFromName("addonError.titleBlocked"),
           message: message,
           buttons: buttons
@@ -5424,6 +5426,7 @@ var XPInstallObserver = {
           return;
 
         new Prompt({
+          window: window,
           title: Strings.browser.GetStringFromName("addonError.titleBlocked"),
           message: strings.formatStringFromName("xpinstallPromptWarningDirect", [brandShortName], 1),
           buttons: [strings.GetStringFromName("unsignedAddonsDisabled.dismiss")]
@@ -6649,6 +6652,7 @@ var ExternalApps = {
         if (apps.length > 1) {
           // Use the HelperApps prompt here to filter out any Http handlers
           HelperApps.prompt(apps, {
+            window: window,
             title: Strings.browser.GetStringFromName("openInApp.pageAction"),
             buttons: [
               Strings.browser.GetStringFromName("openInApp.ok"),
