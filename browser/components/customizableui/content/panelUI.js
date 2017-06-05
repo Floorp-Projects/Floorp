@@ -60,33 +60,7 @@ const PanelUI = {
     Services.obs.addObserver(this, "fullscreen-nav-toolbox");
     Services.obs.addObserver(this, "appMenu-notifications");
 
-    XPCOMUtils.defineLazyPreferenceGetter(this, "autoHideToolbarInFullScreen",
-      "browser.fullscreen.autohide", false, (pref, previousValue, newValue) => {
-        // On OSX, or with autohide preffed off, MozDOMFullscreen is the only
-        // event we care about, since fullscreen should behave just like non
-        // fullscreen. Otherwise, we don't want to listen to these because
-        // we'd just be spamming ourselves with both of them whenever a user
-        // opened a video.
-        if (newValue) {
-          window.removeEventListener("MozDOMFullscreen:Entered", this);
-          window.removeEventListener("MozDOMFullscreen:Exited", this);
-          window.addEventListener("fullscreen", this);
-        } else {
-          window.addEventListener("MozDOMFullscreen:Entered", this);
-          window.addEventListener("MozDOMFullscreen:Exited", this);
-          window.removeEventListener("fullscreen", this);
-        }
-
-        this._updateNotifications(false);
-      }, autoHidePref => autoHidePref && Services.appinfo.OS !== "Darwin");
-
-    if (this.autoHideToolbarInFullScreen) {
-      window.addEventListener("fullscreen", this);
-    } else {
-      window.addEventListener("MozDOMFullscreen:Entered", this);
-      window.addEventListener("MozDOMFullscreen:Exited", this);
-    }
-
+    window.addEventListener("fullscreen", this);
     window.addEventListener("activate", this);
     window.matchMedia("(-moz-overlay-scrollbars)").addListener(this._overlayScrollListenerBoundFn);
     CustomizableUI.addListener(this);
@@ -201,8 +175,6 @@ const PanelUI = {
     Services.obs.removeObserver(this, "fullscreen-nav-toolbox");
     Services.obs.removeObserver(this, "appMenu-notifications");
 
-    window.removeEventListener("MozDOMFullscreen:Entered", this);
-    window.removeEventListener("MozDOMFullscreen:Exited", this);
     window.removeEventListener("fullscreen", this);
     window.removeEventListener("activate", this);
     this.menuButton.removeEventListener("mousedown", this);
@@ -354,8 +326,6 @@ const PanelUI = {
       case "keypress":
         this.toggle(aEvent);
         break;
-      case "MozDOMFullscreen:Entered":
-      case "MozDOMFullscreen:Exited":
       case "fullscreen":
       case "activate":
         this._updateNotifications();
@@ -774,8 +744,10 @@ const PanelUI = {
         this._showBannerItem(notifications[0]);
       }
     } else if (doorhangers.length > 0) {
+      let autoHideFullScreen = Services.prefs.getBoolPref("browser.fullscreen.autohide", false) &&
+                               Services.appinfo.OS !== "Darwin";
       // Only show the doorhanger if the window is focused and not fullscreen
-      if ((window.fullScreen && this.autoHideToolbarInFullScreen) || Services.focus.activeWindow !== window) {
+      if ((window.fullScreen && autoHideFullScreen) || Services.focus.activeWindow !== window) {
         this._hidePopup();
         this._showBadge(doorhangers[0]);
         this._showBannerItem(doorhangers[0]);
