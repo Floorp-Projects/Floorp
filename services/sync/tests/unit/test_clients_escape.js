@@ -21,7 +21,7 @@ add_task(async function test_clients_escape() {
     engine.localName = "wéävê";
 
     _("Make sure we have the expected record");
-    let record = engine._createRecord("ascii");
+    let record = await engine._createRecord("ascii");
     do_check_eq(record.id, "ascii");
     do_check_eq(record.name, "wéävê");
 
@@ -48,7 +48,7 @@ add_task(async function test_clients_escape() {
     do_check_eq(record.name, "wéävê");
 
     _("Sanity check that creating the record also gives the same");
-    record = engine._createRecord("ascii");
+    record = await engine._createRecord("ascii");
     do_check_eq(record.id, "ascii");
     do_check_eq(record.name, "wéävê");
   } finally {

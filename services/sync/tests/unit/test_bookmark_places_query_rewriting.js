@@ -6,8 +6,8 @@ Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
-var engine = new BookmarksEngine(Service);
-var store = engine._store;
+let engine = new BookmarksEngine(Service);
+let store = engine._store;
 
 function makeTagRecord(id, uri) {
   let tagRecord = new BookmarkQuery("bookmarks", id);
@@ -20,7 +20,7 @@ function makeTagRecord(id, uri) {
   return tagRecord;
 }
 
-function run_test() {
+add_task(async function run_test() {
   initTestLogging("Trace");
   Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.Store.Bookmarks").level = Log.Level.Trace;
@@ -30,7 +30,7 @@ function run_test() {
 
   _("Type: " + tagRecord.type);
   _("Folder name: " + tagRecord.folderName);
-  store.applyIncoming(tagRecord);
+  await store.applyIncoming(tagRecord);
 
   let tags = PlacesUtils.getFolderContents(PlacesUtils.tagsFolderId).root;
   let tagID;
@@ -46,14 +46,14 @@ function run_test() {
   }
 
   _("Tag ID: " + tagID);
-  let insertedRecord = store.createRecord("abcdefabcdef", "bookmarks");
+  let insertedRecord = await store.createRecord("abcdefabcdef", "bookmarks");
   do_check_eq(insertedRecord.bmkUri, uri.replace("499", tagID));
 
   _("... but not if the type is wrong.");
   let wrongTypeURI = "place:folder=499&type=2&queryType=1";
   let wrongTypeRecord = makeTagRecord("fedcbafedcba", wrongTypeURI);
-  store.applyIncoming(wrongTypeRecord);
+  await store.applyIncoming(wrongTypeRecord);
 
-  insertedRecord = store.createRecord("fedcbafedcba", "bookmarks");
+  insertedRecord = await store.createRecord("fedcbafedcba", "bookmarks");
   do_check_eq(insertedRecord.bmkUri, wrongTypeURI);
-}
+});

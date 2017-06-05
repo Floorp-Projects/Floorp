@@ -11,9 +11,10 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-initTestLogging("Trace");
-
-Service.engineManager.register(BookmarksEngine);
+add_task(async function setup() {
+  initTestLogging("Trace");
+  await Service.engineManager.register(BookmarksEngine);
+});
 
 // A stored reference to the collection won't be valid after disabling.
 function getBookmarkWBO(server, guid) {
@@ -38,15 +39,15 @@ add_task(async function test_decline_undecline() {
     });
 
     ok(!getBookmarkWBO(server, bzGuid), "Shouldn't have been uploaded yet");
-    Service.sync();
+    await Service.sync();
     ok(getBookmarkWBO(server, bzGuid), "Should be present on server");
 
     engine.enabled = false;
-    Service.sync();
+    await Service.sync();
     ok(!getBookmarkWBO(server, bzGuid), "Shouldn't be present on server anymore");
 
     engine.enabled = true;
-    Service.sync();
+    await Service.sync();
     ok(getBookmarkWBO(server, bzGuid), "Should be present on server again");
 
   } finally {

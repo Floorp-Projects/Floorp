@@ -11,10 +11,7 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://gre/modules/ExtensionStorageSync.jsm");
 /* globals extensionStorageSync */
 
-Service.engineManager.register(ExtensionStorageEngine);
-const engine = Service.engineManager.get("extension-storage");
-do_get_profile();   // so we can use FxAccounts
-loadWebExtensionTestFunctions();
+let engine;
 
 function mock(options) {
   let calls = [];
@@ -30,6 +27,13 @@ function mock(options) {
   });
   return ret;
 }
+
+add_task(async function setup() {
+  await Service.engineManager.register(ExtensionStorageEngine);
+  engine = Service.engineManager.get("extension-storage");
+  do_get_profile();   // so we can use FxAccounts
+  loadWebExtensionTestFunctions();
+});
 
 add_task(async function test_calling_sync_calls__sync() {
   let oldSync = ExtensionStorageEngine.prototype._sync;

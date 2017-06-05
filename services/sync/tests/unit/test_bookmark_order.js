@@ -9,13 +9,9 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-function run_test() {
-  Svc.Prefs.set("log.logger.engine.bookmarks", "Trace");
-  initTestLogging("Trace");
-  Log.repository.getLogger("Sqlite").level = Log.Level.Info;
-
-  run_next_test();
-}
+Svc.Prefs.set("log.logger.engine.bookmarks", "Trace");
+initTestLogging("Trace");
+Log.repository.getLogger("Sqlite").level = Log.Level.Info;
 
 function serverForFoo(engine) {
   generateNewKeys(Service.collectionKeys);
@@ -190,8 +186,8 @@ add_task(async function test_local_order_newer() {
       index: 2,
     }], "Should use local order as base if remote is older");
   } finally {
-    engine.wipeClient();
-    Service.startOver();
+    await engine.wipeClient();
+    await Service.startOver();
     await promiseStopServer(server);
   }
 });
@@ -235,8 +231,8 @@ add_task(async function test_remote_order_newer() {
       index: 2,
     }], "Should use remote order as base if local is older");
   } finally {
-    engine.wipeClient();
-    Service.startOver();
+    await engine.wipeClient();
+    await Service.startOver();
     await promiseStopServer(server);
   }
 });
@@ -246,7 +242,7 @@ add_task(async function test_bookmark_order() {
   let store = engine._store;
 
   _("Starting with a clean slate of no bookmarks");
-  store.wipe();
+  await store.wipe();
   await assertBookmarksTreeMatches("", [{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
@@ -284,7 +280,7 @@ add_task(async function test_bookmark_order() {
 
   async function apply(record) {
     store._childrenToOrder = {};
-    store.applyIncoming(record);
+    await store.applyIncoming(record);
     await store._orderChildren();
     delete store._childrenToOrder;
   }

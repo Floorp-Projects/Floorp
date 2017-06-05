@@ -8,7 +8,7 @@ Cu.import("resource://services-sync/engines/prefs.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
-function run_test() {
+add_task(async function run_test() {
   let engine = Service.engineManager.get("prefs");
   let tracker = engine._tracker;
 
@@ -28,7 +28,7 @@ function run_test() {
     do_check_true(tracker.modified);
 
     _("Engine's getChangedID() just returns the one GUID we have.");
-    let changedIDs = engine.getChangedIDs();
+    let changedIDs = await engine.getChangedIDs();
     let ids = Object.keys(changedIDs);
     do_check_eq(ids.length, 1);
     do_check_eq(ids[0], CommonUtils.encodeBase64URL(Services.appinfo.ID));
@@ -37,7 +37,7 @@ function run_test() {
     do_check_false(tracker.modified);
 
     _("No modified state, so no changed IDs.");
-    do_check_empty(engine.getChangedIDs());
+    do_check_empty((await engine.getChangedIDs()));
 
     _("Initial score is 0");
     do_check_eq(tracker.score, 0);
@@ -85,4 +85,4 @@ function run_test() {
     Svc.Obs.notify("weave:engine:stop-tracking");
     prefs.resetBranch("");
   }
-}
+});

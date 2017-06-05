@@ -9,33 +9,35 @@ Cu.import("resource://services-sync/engines/history.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
-Service.engineManager.clear();
-Service.engineManager.register(HistoryEngine);
-var engine = Service.engineManager.get("history");
-var tracker = engine._tracker;
+let engine;
+let tracker;
 
-// Don't write out by default.
-tracker.persistChangedIDs = false;
-
-function run_test() {
+add_task(async function setup() {
   initTestLogging("Trace");
   Log.repository.getLogger("Sync.Tracker.History").level = Log.Level.Trace;
-  run_next_test();
-}
+
+  Service.engineManager.clear();
+  await Service.engineManager.register(HistoryEngine);
+  engine = Service.engineManager.get("history");
+  tracker = engine._tracker;
+
+  // Don't write out by default.
+  tracker.persistChangedIDs = false;
+});
 
 async function verifyTrackerEmpty() {
-  let changes = engine.pullNewChanges();
+  let changes = await engine.pullNewChanges();
   do_check_empty(changes);
   equal(tracker.score, 0);
 }
 
 async function verifyTrackedCount(expected) {
-  let changes = engine.pullNewChanges();
+  let changes = await engine.pullNewChanges();
   do_check_attribute_count(changes, expected);
 }
 
 async function verifyTrackedItems(tracked) {
-  let changes = engine.pullNewChanges();
+  let changes = await engine.pullNewChanges();
   let trackedIDs = new Set(Object.keys(changes));
   for (let guid of tracked) {
     ok(guid in changes, `${guid} should be tracked`);

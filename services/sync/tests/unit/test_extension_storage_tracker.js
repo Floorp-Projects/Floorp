@@ -11,10 +11,14 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/ExtensionStorageSync.jsm");
 /* globals extensionStorageSync */
 
-Service.engineManager.register(ExtensionStorageEngine);
-const engine = Service.engineManager.get("extension-storage");
-do_get_profile();   // so we can use FxAccounts
-loadWebExtensionTestFunctions();
+let engine;
+
+add_task(async function setup() {
+  await Service.engineManager.register(ExtensionStorageEngine);
+  engine = Service.engineManager.get("extension-storage");
+  do_get_profile();   // so we can use FxAccounts
+  loadWebExtensionTestFunctions();
+});
 
 add_task(async function test_changing_extension_storage_changes_score() {
   const tracker = engine._tracker;
