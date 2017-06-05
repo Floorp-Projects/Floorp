@@ -237,6 +237,15 @@ SERVO_BINDING_FUNC(Servo_AnimationValues_Interpolate,
 SERVO_BINDING_FUNC(Servo_AnimationValues_IsInterpolable, bool,
                    RawServoAnimationValueBorrowed from,
                    RawServoAnimationValueBorrowed to)
+SERVO_BINDING_FUNC(Servo_AnimationValues_Add,
+                   RawServoAnimationValueStrong,
+                   RawServoAnimationValueBorrowed a,
+                   RawServoAnimationValueBorrowed b)
+SERVO_BINDING_FUNC(Servo_AnimationValues_Accumulate,
+                   RawServoAnimationValueStrong,
+                   RawServoAnimationValueBorrowed a,
+                   RawServoAnimationValueBorrowed b,
+                   uint64_t count)
 SERVO_BINDING_FUNC(Servo_AnimationValues_GetZeroValue,
                    RawServoAnimationValueStrong,
                    RawServoAnimationValueBorrowed value_to_match)
