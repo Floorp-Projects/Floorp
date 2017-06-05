@@ -24,7 +24,6 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
   DefaultWeakMap,
-  extensionStylesheets,
   promiseEvent,
 } = ExtensionUtils;
 
@@ -160,7 +159,7 @@ class BasePopup {
     let sheets = [];
 
     if (this.browserStyle) {
-      sheets.push(...extensionStylesheets);
+      sheets.push(...ExtensionParent.extensionStylesheets);
     }
     if (!this.fixedWidth) {
       sheets.push(...standaloneStylesheets);

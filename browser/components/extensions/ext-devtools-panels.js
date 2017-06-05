@@ -8,11 +8,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
                                   "resource:///modules/E10SUtils.jsm");
 
 var {
+  IconDetails,
   watchExtensionProxyContextLoad,
 } = ExtensionParent;
 
 var {
-  IconDetails,
   promiseEvent,
 } = ExtensionUtils;
 

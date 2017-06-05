@@ -170,7 +170,7 @@ ArraySetLength(JSContext* cx, Handle<ArrayObject*> obj, HandleId id,
  * to the next element and moving the ObjectElements header in memory (so it's
  * stored where the shifted Value used to be).
  *
- * Shifted elements can be unshifted when we grow the array, when the array is
+ * Shifted elements can be moved when we grow the array, when the array is
  * frozen (for simplicity, shifted elements are not supported on objects that
  * are frozen, have copy-on-write elements, or on arrays with non-writable
  * length).
@@ -205,7 +205,7 @@ class ObjectElements
     };
 
     // The flags word stores both the flags and the number of shifted elements.
-    // Allow shifting 2047 elements before unshifting.
+    // Allow shifting 2047 elements before actually moving the elements.
     static const size_t NumShiftedElementsBits = 11;
     static const size_t MaxShiftedElements = (1 << NumShiftedElementsBits) - 1;
     static const size_t NumShiftedElementsShift = 32 - NumShiftedElementsBits;
@@ -1074,11 +1074,12 @@ class NativeObject : public ShapedObject
     // Try to shift |count| dense elements, see the "Shifted elements" comment.
     inline bool tryShiftDenseElements(uint32_t count);
 
-    // Unshift all shifted elements so that numShiftedElements is 0.
-    void unshiftElements();
+    // Move the elements header and all shifted elements to the start of the
+    // allocated elements space, so that numShiftedElements is 0 afterwards.
+    void moveShiftedElements();
 
-    // If this object has many shifted elements, unshift them.
-    void maybeUnshiftElements();
+    // If this object has many shifted elements call moveShiftedElements.
+    void maybeMoveShiftedElements();
 
     static bool goodElementsAllocationAmount(JSContext* cx, uint32_t reqAllocated,
                                              uint32_t length, uint32_t* goodAmount);

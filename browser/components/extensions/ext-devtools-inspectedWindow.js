@@ -6,7 +6,7 @@
 
 var {
   SpreadArgs,
-} = ExtensionUtils;
+} = ExtensionCommon;
 
 this.devtools_inspectedWindow = class extends ExtensionAPI {
   getAPI(context) {

@@ -115,7 +115,7 @@ ObjectElements::FreezeElements(JSContext* cx, HandleNativeObject obj)
         return true;
 
     if (obj->getElementsHeader()->numShiftedElements() > 0)
-        obj->unshiftElements();
+        obj->moveShiftedElements();
 
     ObjectElements* header = obj->getElementsHeader();
 
@@ -707,7 +707,7 @@ NativeObject::maybeDensifySparseElements(JSContext* cx, HandleNativeObject obj)
 }
 
 void
-NativeObject::unshiftElements()
+NativeObject::moveShiftedElements()
 {
     ObjectElements* header = getElementsHeader();
     uint32_t numShifted = header->numShiftedElements();
@@ -723,7 +723,7 @@ NativeObject::unshiftElements()
     elements_ = newHeader->elements();
 
     // To move the elements, temporarily update initializedLength to include
-    // both shifted and unshifted elements.
+    // the shifted elements.
     newHeader->initializedLength += numShifted;
 
     // Move the elements. Initialize to |undefined| to ensure pre-barriers
@@ -739,14 +739,14 @@ NativeObject::unshiftElements()
 }
 
 void
-NativeObject::maybeUnshiftElements()
+NativeObject::maybeMoveShiftedElements()
 {
     ObjectElements* header = getElementsHeader();
     MOZ_ASSERT(header->numShiftedElements() > 0);
 
-    // Unshift if less than a third of the allocated space is in use.
+    // Move the elements if less than a third of the allocated space is in use.
     if (header->capacity < header->numAllocatedElements() / 3)
-        unshiftElements();
+        moveShiftedElements();
 }
 
 // Given a requested capacity (in elements) and (potentially) the length of an
@@ -847,22 +847,31 @@ NativeObject::growElements(JSContext* cx, uint32_t reqCapacity)
     if (denseElementsAreCopyOnWrite())
         MOZ_CRASH();
 
-    // If there are shifted elements, consider unshifting them first. If we
-    // don't unshift here, the code below will include the shifted elements in
-    // the resize.
+    // If there are shifted elements, consider moving them first. If we don't
+    // move them here, the code below will include the shifted elements in the
+    // resize.
     uint32_t numShifted = getElementsHeader()->numShiftedElements();
     if (numShifted > 0) {
-        maybeUnshiftElements();
+        // If the number of elements is small, it's cheaper to just move them as
+        // it may avoid a malloc/realloc. Note that there's no technical reason
+        // for using this particular value, but it works well in real-world use
+        // cases.
+        static const size_t MaxElementsToMoveEagerly = 20;
+
+        if (getElementsHeader()->initializedLength <= MaxElementsToMoveEagerly)
+            moveShiftedElements();
+        else
+            maybeMoveShiftedElements();
         if (getDenseCapacity() >= reqCapacity)
             return true;
         numShifted = getElementsHeader()->numShiftedElements();
 
-        // Ensure |reqCapacity + numShifted| below won't overflow by forcing an
-        // unshift in that case.
+        // If |reqCapacity + numShifted| overflows, we just move all shifted
+        // elements to avoid the problem.
         CheckedInt<uint32_t> checkedReqCapacity(reqCapacity);
         checkedReqCapacity += numShifted;
         if (MOZ_UNLIKELY(!checkedReqCapacity.isValid())) {
-            unshiftElements();
+            moveShiftedElements();
             numShifted = 0;
         }
     }
@@ -932,10 +941,10 @@ NativeObject::shrinkElements(JSContext* cx, uint32_t reqCapacity)
     if (!hasDynamicElements())
         return;
 
-    // If we have shifted elements, consider unshifting them.
+    // If we have shifted elements, consider moving them.
     uint32_t numShifted = getElementsHeader()->numShiftedElements();
     if (numShifted > 0) {
-        maybeUnshiftElements();
+        maybeMoveShiftedElements();
         numShifted = getElementsHeader()->numShiftedElements();
     }
 

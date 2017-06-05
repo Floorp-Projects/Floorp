@@ -437,13 +437,12 @@ CrossProcessCompositorBridgeParent::FlushApzRepaints(const uint64_t& aLayersId)
 
 void
 CrossProcessCompositorBridgeParent::GetAPZTestData(
-  const LayerTransactionParent* aLayerTree,
+  const uint64_t& aLayersId,
   APZTestData* aOutData)
 {
-  uint64_t id = aLayerTree->GetId();
-  MOZ_ASSERT(id != 0);
+  MOZ_ASSERT(aLayersId != 0);
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  *aOutData = sIndirectLayerTrees[id].mApzTestData;
+  *aOutData = sIndirectLayerTrees[aLayersId].mApzTestData;
 }
 
 void
