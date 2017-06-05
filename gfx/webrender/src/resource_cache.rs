@@ -6,6 +6,7 @@ use app_units::Au;
 use device::TextureFilter;
 use fnv::FnvHasher;
 use frame::FrameId;
+use gpu_cache::GpuCache;
 use internal_types::{FontTemplate, SourceTexture, TextureUpdateList};
 use profiler::TextureCacheProfileCounters;
 use std::collections::{HashMap, HashSet};
@@ -198,6 +199,7 @@ pub struct ResourceCache {
     current_frame_id: FrameId,
 
     texture_cache: TextureCache,
+    pub gpu_cache: GpuCache,
 
     // TODO(gw): We should expire (parts of) this cache semi-regularly!
     cached_glyph_dimensions: HashMap<GlyphKey, Option<GlyphDimensions>, BuildHasherDefault<FnvHasher>>,
@@ -220,6 +222,7 @@ impl ResourceCache {
             image_templates: ImageTemplates::new(),
             cached_glyph_dimensions: HashMap::default(),
             texture_cache: texture_cache,
+            gpu_cache: GpuCache::new(),
             state: State::Idle,
             current_frame_id: FrameId(0),
             pending_image_requests: Vec::new(),
@@ -564,6 +567,7 @@ impl ResourceCache {
         debug_assert_eq!(self.state, State::Idle);
         self.state = State::AddResources;
         self.current_frame_id = frame_id;
+        self.gpu_cache.begin_frame();
     }
 
     pub fn block_until_all_resources_added(&mut self,
