@@ -1156,7 +1156,6 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     let { rowStart, rowEnd, columnStart, columnEnd } = area;
     let { devicePixelRatio } = this.win;
     let displayPixelRatio = getDisplayPixelRatio(this.win);
-    let currentZoom = getCurrentZoom(this.win);
     let offset = (displayPixelRatio / 2) % 1;
     let fontSize = (GRID_AREA_NAME_FONT_SIZE * displayPixelRatio);
 
