@@ -8,9 +8,6 @@ Library('icuuc')
 FINAL_LIBRARY = 'icu'
 
 DEFINES['U_COMMON_IMPLEMENTATION'] = True
-# This normally gets defined in the SDK but our WINVER is too low.
-#FIXME: should probably stop including mozilla-config.h
-DEFINES['LOCALE_SNAME'] = 0x5c
 
 LOCAL_INCLUDES += ['/intl/icu/source/i18n']
 
