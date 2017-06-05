@@ -556,7 +556,8 @@ public:
     const nsCString& aFeatures,
     const nsCString& aBaseURI,
     const OriginAttributes& aOpenerOriginAttributes,
-    const float& aFullZoom) override;
+    const float& aFullZoom,
+    const nsString& aName) override;
 
   static bool AllocateLayerTreeId(TabParent* aTabParent, uint64_t* aId);
 
@@ -715,6 +716,7 @@ private:
                      const OriginAttributes& aOpenerOriginAttributes,
                      const float& aFullZoom,
                      uint64_t aNextTabParentId,
+                     const nsString& aName,
                      nsresult& aResult,
                      nsCOMPtr<nsITabParent>& aNewTabParent,
                      bool* aWindowIsNew);
