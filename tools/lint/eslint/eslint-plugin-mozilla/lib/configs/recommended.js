@@ -146,6 +146,9 @@ module.exports = {
     // Disallow assignment operators in conditional statements
     "no-cond-assign": "error",
 
+    // Disallow control characters in regular expressions.
+    "no-control-regex": "error",
+
     // Disallow the use of debugger
     "no-debugger": "error",
 
