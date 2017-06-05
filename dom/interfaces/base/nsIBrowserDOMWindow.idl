@@ -105,12 +105,18 @@ interface nsIBrowserDOMWindow : nsISupports
 
   /**
    * As above, but return the nsIFrameLoaderOwner for the new window.
+   *
+   * Additional Parameters:
+   * @param aNextTabParentId The TabParent to associate the window with
+   * @param aName The name to give the window opened in the new tab.
+   * @return The nsIFrameLoaderOwner for the newly opened window.
    // XXXbz is this the right API?
    // See bug 537428
    */
   nsIFrameLoaderOwner openURIInFrame(in nsIURI aURI, in nsIOpenURIInFrameParams params,
                                      in short aWhere, in long aFlags,
-                                     in unsigned long long aNextTabParentId);
+                                     in unsigned long long aNextTabParentId,
+                                     in AString aName);
 
   /**
    * @param  aWindow the window to test.

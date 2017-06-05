@@ -1009,7 +1009,8 @@ parent:
       nsCString aFeatures,
       nsCString aBaseURI,
       OriginAttributes aOpenerOriginAttributes,
-      float aFullZoom);
+      float aFullZoom,
+      nsString aName);
 
     sync GetAndroidSystemInfo()
         returns (AndroidSystemInfo info);
