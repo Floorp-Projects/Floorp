@@ -22,6 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=779917
 function runTest()
 {
   var passingConditions = [
+    "color: green",
     "(color: green)",
     "((color: green))",
     "(color: green !important)",
@@ -69,7 +70,6 @@ function runTest()
     "(color: green) or an-extension(that is [unbalanced)",
     "not(unknown: unknown)",
     "(color: green) or(color: blue)",
-    "color: green",
     "(color: green;)",
     "(font-family: 'Helvetica\n",
     "(font-family: 'Helvetica\n')",

@@ -283,10 +283,6 @@ add_task(async function test_options_ui() {
 
 // Test that experiments permissions add the appropriate dependencies.
 add_task(async function test_experiments_dependencies() {
-  if (AppConstants.RELEASE_OR_BETA)
-    // Experiments are not enabled on release builds.
-    return;
-
   let addonFile = createTempWebExtensionFile({
     manifest: {
       applications: {gecko: {id: "meh@experiment"}},
@@ -308,10 +304,6 @@ add_task(async function test_experiments_dependencies() {
 
 // Test that experiments API extensions install correctly.
 add_task(async function test_experiments_api() {
-  if (AppConstants.RELEASE_OR_BETA)
-    // Experiments are not enabled on release builds.
-    return;
-
   const extensionId = "meh@experiments.addons.mozilla.org";
 
   let addonFile = createTempXPIFile({

@@ -128,6 +128,7 @@
 #include "nsNSSShutDown.h"
 #include "nsSSLStatus.h"
 #include "nsServiceManagerUtils.h"
+#include "nsString.h"
 #include "nsURLHelper.h"
 #include "nsXPCOMCIDInternal.h"
 #include "pkix/pkix.h"
@@ -228,7 +229,7 @@ public:
                                   Telemetry::HistogramID telemetryID = Telemetry::HistogramCount,
                                   uint32_t telemetryValue = -1,
                                   SSLErrorMessageType errorMessageType =
-                                      PlainErrorMessage);
+                                    SSLErrorMessageType::Plain);
 
   void Dispatch();
 private:
@@ -338,7 +339,7 @@ MapCertErrorToProbeValue(PRErrorCode errorCode)
 
 SECStatus
 DetermineCertOverrideErrors(const UniqueCERTCertificate& cert,
-                            const char* hostName,
+                            const nsACString& hostName,
                             PRTime now, PRErrorCode defaultErrorCodeToReport,
                             /*out*/ uint32_t& collectedErrors,
                             /*out*/ PRErrorCode& errorCodeTrust,
@@ -346,7 +347,6 @@ DetermineCertOverrideErrors(const UniqueCERTCertificate& cert,
                             /*out*/ PRErrorCode& errorCodeTime)
 {
   MOZ_ASSERT(cert);
-  MOZ_ASSERT(hostName);
   MOZ_ASSERT(collectedErrors == 0);
   MOZ_ASSERT(errorCodeTrust == 0);
   MOZ_ASSERT(errorCodeMismatch == 0);
@@ -419,8 +419,8 @@ DetermineCertOverrideErrors(const UniqueCERTCertificate& cert,
     }
     Input hostnameInput;
     Result result = hostnameInput.Init(
-      BitwiseCast<const uint8_t*, const char*>(hostName),
-      strlen(hostName));
+      BitwiseCast<const uint8_t*, const char*>(hostName.BeginReading()),
+      hostName.Length());
     if (result != Success) {
       PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
       return SECFailure;
@@ -537,8 +537,7 @@ CertErrorRunnable::CheckCertOverrides()
                                                mDefaultErrorCodeToReport);
   }
 
-  int32_t port;
-  mInfoObject->GetPort(&port);
+  int32_t port = mInfoObject->GetPort();
 
   nsAutoCString hostWithPortString(mInfoObject->GetHostName());
   hostWithPortString.Append(':');
@@ -642,7 +641,7 @@ CertErrorRunnable::CheckCertOverrides()
                                         errorCodeToReport,
                                         Telemetry::HistogramCount,
                                         -1,
-                                        OverridableCertErrorMessage);
+                                        SSLErrorMessageType::OverridableCert);
 
   LogInvalidCertError(mInfoObject,
                       result->mErrorCode,
@@ -682,7 +681,7 @@ CreateCertErrorRunnable(CertVerifier& certVerifier,
   PRErrorCode errorCodeTrust = 0;
   PRErrorCode errorCodeMismatch = 0;
   PRErrorCode errorCodeTime = 0;
-  if (DetermineCertOverrideErrors(cert, infoObject->GetHostNameRaw(), now,
+  if (DetermineCertOverrideErrors(cert, infoObject->GetHostName(), now,
                                   defaultErrorCodeToReport, collected_errors,
                                   errorCodeTrust, errorCodeMismatch,
                                   errorCodeTime) != SECSuccess) {
@@ -1403,7 +1402,7 @@ AuthCertificate(CertVerifier& certVerifier,
   Result rv = certVerifier.VerifySSLServerCert(cert, stapledOCSPResponse,
                                                sctsFromTLSExtension, time,
                                                infoObject,
-                                               infoObject->GetHostNameRaw(),
+                                               infoObject->GetHostName(),
                                                certList, &peerCertChain,
                                                saveIntermediates, flags,
                                                infoObject->
@@ -1796,7 +1795,7 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
       }
 
       // We must call SetCanceled here to set the error message type
-      // in case it isn't PlainErrorMessage, which is what we would
+      // in case it isn't SSLErrorMessageType::Plain, which is what we would
       // default to if we just called
       // PR_SetError(runnable->mResult->mErrorCode, 0) and returned
       // SECFailure without doing this.
