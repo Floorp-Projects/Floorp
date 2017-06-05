@@ -50,9 +50,6 @@ DIRS += [
     'webvtt',
 ]
 
-if CONFIG['MOZ_DIRECTSHOW']:
-    DIRS += ['directshow']
-
 if CONFIG['MOZ_ANDROID_OMX']:
     DIRS += ['android']
 
@@ -296,11 +293,6 @@ LOCAL_INCLUDES += [
     '/layout/xul',
     '/netwerk/base',
 ]
-
-if CONFIG['MOZ_DIRECTSHOW']:
-    LOCAL_INCLUDES += [
-        '/media/webrtc/trunk/webrtc/modules/video_capture/windows',
-    ]
 
 if CONFIG['MOZ_WEBRTC']:
     LOCAL_INCLUDES += [
