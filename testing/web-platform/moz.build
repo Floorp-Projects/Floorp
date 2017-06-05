@@ -199,7 +199,7 @@ with Files("tests/webauthn/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
 with Files("tests/webdriver/**"):
-    BUG_COMPONENT = ("https://github.com/w3c/web-platform-tests/", "webdriver")
+    BUG_COMPONENT = ("Testing", "geckodriver")
 
 with Files("tests/webgl/**"):
     BUG_COMPONENT = ("Core", "Canvas: WebGL")
