@@ -11,29 +11,13 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-const INTEGER = /^[1-9]\d*$/;
-
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
-                                  "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPI",
                                   "resource://gre/modules/Console.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "IndexedDB",
-                                  "resource://gre/modules/IndexedDB.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
-                                  "resource://gre/modules/Schemas.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
-                                   "@mozilla.org/content/style-sheet-service;1",
-                                   "nsIStyleSheetService");
 
 function getConsole() {
   return new ConsoleAPI({
@@ -51,134 +35,6 @@ function getUniqueId() {
   return `${nextId++}-${uniqueProcessID}`;
 }
 
-let StartupCache = {
-  DB_NAME: "ExtensionStartupCache",
-
-  SCHEMA_VERSION: 2,
-
-  STORE_NAMES: Object.freeze(["locales", "manifests", "schemas"]),
-
-  dbPromise: null,
-
-  initDB(db) {
-    for (let name of StartupCache.STORE_NAMES) {
-      try {
-        db.deleteObjectStore(name);
-      } catch (e) {
-        // Don't worry if the store doesn't already exist.
-      }
-      db.createObjectStore(name, {keyPath: "key"});
-    }
-  },
-
-  clearAddonData(id) {
-    let range = IDBKeyRange.bound([id], [id, "\uFFFF"]);
-
-    return Promise.all([
-      this.locales.delete(range),
-      this.manifests.delete(range),
-    ]).catch(e => {
-      // Ignore the error. It happens when we try to flush the add-on
-      // data after the AddonManager has flushed the entire startup cache.
-      this.dbPromise = this.reallyOpen(true).catch(e => {});
-    });
-  },
-
-  async reallyOpen(invalidate = false) {
-    if (this.dbPromise) {
-      let db = await this.dbPromise;
-      db.close();
-    }
-
-    if (invalidate) {
-      if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT) {
-        IndexedDB.deleteDatabase(this.DB_NAME, {storage: "persistent"});
-      }
-    }
-
-    return IndexedDB.open(this.DB_NAME,
-                          {storage: "persistent", version: this.SCHEMA_VERSION},
-                          db => this.initDB(db));
-  },
-
-  async open() {
-    if (!this.dbPromise) {
-      this.dbPromise = this.reallyOpen();
-    }
-
-    return this.dbPromise;
-  },
-
-  observe(subject, topic, data) {
-    if (topic === "startupcache-invalidate") {
-      this.dbPromise = this.reallyOpen(true).catch(e => {});
-    }
-  },
-};
-
-Services.obs.addObserver(StartupCache, "startupcache-invalidate");
-
-class CacheStore {
-  constructor(storeName) {
-    this.storeName = storeName;
-  }
-
-  async get(key, createFunc) {
-    let db;
-    let result;
-    try {
-      db = await StartupCache.open();
-
-      result = await db.objectStore(this.storeName)
-                      .get(key);
-    } catch (e) {
-      Cu.reportError(e);
-
-      return createFunc(key);
-    }
-
-    if (result === undefined) {
-      let value = await createFunc(key);
-      result = {key, value};
-
-      try {
-        db.objectStore(this.storeName, "readwrite")
-          .put(result);
-      } catch (e) {
-        Cu.reportError(e);
-      }
-    }
-
-    return result && result.value;
-  }
-
-  async getAll() {
-    let result = new Map();
-    try {
-      let db = await StartupCache.open();
-
-      let results = await db.objectStore(this.storeName)
-                            .getAll();
-      for (let {key, value} of results) {
-        result.set(key, value);
-      }
-    } catch (e) {
-      Cu.reportError(e);
-    }
-
-    return result;
-  }
-
-  async delete(key) {
-    let db = await StartupCache.open();
-
-    return db.objectStore(this.storeName, "readwrite").delete(key);
-  }
-}
-
-for (let name of StartupCache.STORE_NAMES) {
-  StartupCache[name] = new CacheStore(name);
-}
 
 /**
  * An Error subclass for which complete error messages are always passed
@@ -251,21 +107,6 @@ function instanceOf(value, type) {
   return {}.toString.call(value) == `[object ${type}]`;
 }
 
-// Extend the object |obj| with the property descriptors of each object in
-// |args|.
-function extend(obj, ...args) {
-  for (let arg of args) {
-    let props = [...Object.getOwnPropertyNames(arg),
-                 ...Object.getOwnPropertySymbols(arg)];
-    for (let prop of props) {
-      let descriptor = Object.getOwnPropertyDescriptor(arg, prop);
-      Object.defineProperty(obj, prop, descriptor);
-    }
-  }
-
-  return obj;
-}
-
 /**
  * Similar to a WeakMap, but creates a new key with the given
  * constructor if one is not present.
@@ -307,176 +148,6 @@ const getWinUtils = win => _winUtils.get(win);
 function getInnerWindowID(window) {
   return getWinUtils(window).currentInnerWindowID;
 }
-
-class SpreadArgs extends Array {
-  constructor(args) {
-    super();
-    this.push(...args);
-  }
-}
-
-// Manages icon details for toolbar buttons in the |pageAction| and
-// |browserAction| APIs.
-let IconDetails = {
-  // WeakMap<Extension -> Map<url-string -> object>>
-  iconCache: new DefaultWeakMap(() => new Map()),
-
-  // Normalizes the various acceptable input formats into an object
-  // with icon size as key and icon URL as value.
-  //
-  // If a context is specified (function is called from an extension):
-  // Throws an error if an invalid icon size was provided or the
-  // extension is not allowed to load the specified resources.
-  //
-  // If no context is specified, instead of throwing an error, this
-  // function simply logs a warning message.
-  normalize(details, extension, context = null) {
-    if (!details.imageData && typeof details.path === "string") {
-      let icons = this.iconCache.get(extension);
-
-      let baseURI = context ? context.uri : extension.baseURI;
-      let url = baseURI.resolve(details.path);
-
-      let icon = icons.get(url);
-      if (!icon) {
-        icon = this._normalize(details, extension, context);
-        icons.set(url, icon);
-      }
-      return icon;
-    }
-
-    return this._normalize(details, extension, context);
-  },
-
-  _normalize(details, extension, context = null) {
-    let result = {};
-
-    try {
-      if (details.imageData) {
-        let imageData = details.imageData;
-
-        if (typeof imageData == "string") {
-          imageData = {"19": imageData};
-        }
-
-        for (let size of Object.keys(imageData)) {
-          if (!INTEGER.test(size)) {
-            throw new ExtensionError(`Invalid icon size ${size}, must be an integer`);
-          }
-          result[size] = imageData[size];
-        }
-      }
-
-      if (details.path) {
-        let path = details.path;
-        if (typeof path != "object") {
-          path = {"19": path};
-        }
-
-        let baseURI = context ? context.uri : extension.baseURI;
-
-        for (let size of Object.keys(path)) {
-          if (!INTEGER.test(size)) {
-            throw new ExtensionError(`Invalid icon size ${size}, must be an integer`);
-          }
-
-          let url = baseURI.resolve(path[size]);
-
-          // The Chrome documentation specifies these parameters as
-          // relative paths. We currently accept absolute URLs as well,
-          // which means we need to check that the extension is allowed
-          // to load them. This will throw an error if it's not allowed.
-          try {
-            Services.scriptSecurityManager.checkLoadURIStrWithPrincipal(
-              extension.principal, url,
-              Services.scriptSecurityManager.DISALLOW_SCRIPT);
-          } catch (e) {
-            throw new ExtensionError(`Illegal URL ${url}`);
-          }
-
-          result[size] = url;
-        }
-      }
-    } catch (e) {
-      // Function is called from extension code, delegate error.
-      if (context) {
-        throw e;
-      }
-      // If there's no context, it's because we're handling this
-      // as a manifest directive. Log a warning rather than
-      // raising an error.
-      extension.manifestError(`Invalid icon data: ${e}`);
-    }
-
-    return result;
-  },
-
-  // Returns the appropriate icon URL for the given icons object and the
-  // screen resolution of the given window.
-  getPreferredIcon(icons, extension = null, size = 16) {
-    const DEFAULT = "chrome://browser/content/extension.svg";
-
-    let bestSize = null;
-    if (icons[size]) {
-      bestSize = size;
-    } else if (icons[2 * size]) {
-      bestSize = 2 * size;
-    } else {
-      let sizes = Object.keys(icons)
-                        .map(key => parseInt(key, 10))
-                        .sort((a, b) => a - b);
-
-      bestSize = sizes.find(candidate => candidate > size) || sizes.pop();
-    }
-
-    if (bestSize) {
-      return {size: bestSize, icon: icons[bestSize]};
-    }
-
-    return {size, icon: DEFAULT};
-  },
-
-  convertImageURLToDataURL(imageURL, contentWindow, browserWindow, size = 18) {
-    return new Promise((resolve, reject) => {
-      let image = new contentWindow.Image();
-      image.onload = function() {
-        let canvas = contentWindow.document.createElement("canvas");
-        let ctx = canvas.getContext("2d");
-        let dSize = size * browserWindow.devicePixelRatio;
-
-        // Scales the image while maintaing width to height ratio.
-        // If the width and height differ, the image is centered using the
-        // smaller of the two dimensions.
-        let dWidth, dHeight, dx, dy;
-        if (this.width > this.height) {
-          dWidth = dSize;
-          dHeight = image.height * (dSize / image.width);
-          dx = 0;
-          dy = (dSize - dHeight) / 2;
-        } else {
-          dWidth = image.width * (dSize / image.height);
-          dHeight = dSize;
-          dx = (dSize - dWidth) / 2;
-          dy = 0;
-        }
-
-        canvas.width = dSize;
-        canvas.height = dSize;
-        ctx.drawImage(this, 0, 0, this.width, this.height, dx, dy, dWidth, dHeight);
-        resolve(canvas.toDataURL("image/png"));
-      };
-      image.onerror = reject;
-      image.src = imageURL;
-    });
-  },
-
-  // These URLs should already be properly escaped, but make doubly sure CSS
-  // string escape characters are escaped here, since they could lead to a
-  // sandbox break.
-  escapeUrl(url) {
-    return url.replace(/[\\\s"]/g, encodeURIComponent);
-  },
-};
 
 const LISTENERS = Symbol("listeners");
 const ONCE_MAP = Symbol("onceMap");
@@ -568,47 +239,6 @@ class EventEmitter {
     });
 
     return Promise.all(promises);
-  }
-}
-
-// Simple API for event listeners where events never fire.
-function ignoreEvent(context, name) {
-  return {
-    addListener: function(callback) {
-      let id = context.extension.id;
-      let frame = Components.stack.caller;
-      let msg = `In add-on ${id}, attempting to use listener "${name}", which is unimplemented.`;
-      let scriptError = Cc["@mozilla.org/scripterror;1"]
-        .createInstance(Ci.nsIScriptError);
-      scriptError.init(msg, frame.filename, null, frame.lineNumber,
-                       frame.columnNumber, Ci.nsIScriptError.warningFlag,
-                       "content javascript");
-      let consoleService = Cc["@mozilla.org/consoleservice;1"]
-        .getService(Ci.nsIConsoleService);
-      consoleService.logMessage(scriptError);
-    },
-    removeListener: function(callback) {},
-    hasListener: function(callback) {},
-  };
-}
-
-// Copy an API object from |source| into the scope |dest|.
-function injectAPI(source, dest) {
-  for (let prop in source) {
-    // Skip names prefixed with '_'.
-    if (prop[0] == "_") {
-      continue;
-    }
-
-    let desc = Object.getOwnPropertyDescriptor(source, prop);
-    if (typeof(desc.value) == "function") {
-      Cu.exportFunction(desc.value, dest, {defineAs: prop});
-    } else if (typeof(desc.value) == "object") {
-      let obj = Cu.createObjectIn(dest, {defineAs: prop});
-      injectAPI(desc.value, obj);
-    } else {
-      Object.defineProperty(dest, prop, desc);
-    }
   }
 }
 
@@ -744,28 +374,6 @@ function flushJarCache(jarPath) {
   Services.obs.notifyObservers(null, "flush-cache-entry", jarPath);
 }
 
-function PlatformInfo() {
-  return Object.freeze({
-    os: (function() {
-      let os = AppConstants.platform;
-      if (os == "macosx") {
-        os = "mac";
-      }
-      return os;
-    })(),
-    arch: (function() {
-      let abi = Services.appinfo.XPCOMABI;
-      let [arch] = abi.split("-");
-      if (arch == "x86") {
-        arch = "x86-32";
-      } else if (arch == "x86_64") {
-        arch = "x86-64";
-      }
-      return arch;
-    })(),
-  });
-}
-
 /**
  * Convert any of several different representations of a date/time to a Date object.
  * Accepts several formats:
@@ -782,25 +390,6 @@ function normalizeTime(date) {
   // is an outlier, everything else can just be passed directly to the Date constructor.
   return new Date((typeof date == "string" && /^\d+$/.test(date))
                         ? parseInt(date, 10) : date);
-}
-
-const stylesheetMap = new DefaultMap(url => {
-  let uri = Services.io.newURI(url);
-  return styleSheetService.preloadSheet(uri, styleSheetService.AGENT_SHEET);
-});
-
-/**
- * Retreives the browser_style stylesheets needed for extension popups and sidebars.
- * @returns {Array<string>} an array of stylesheets needed for the current platform.
- */
-function extensionStylesheets() {
-  let stylesheets = ["chrome://browser/content/extension.css"];
-
-  if (AppConstants.platform === "macosx") {
-    stylesheets.push("chrome://browser/content/extension-mac.css");
-  }
-
-  return stylesheets;
 }
 
 /**
@@ -842,26 +431,6 @@ function defineLazyGetter(object, prop, getter) {
       redefine(this, value);
     },
   });
-}
-
-function findPathInObject(obj, path, printErrors = true) {
-  let parent;
-  for (let elt of path.split(".")) {
-    if (!obj || !(elt in obj)) {
-      if (printErrors) {
-        Cu.reportError(`WebExtension API ${path} not found (it may be unimplemented by Firefox).`);
-      }
-      return null;
-    }
-
-    parent = obj;
-    obj = obj[elt];
-  }
-
-  if (typeof obj === "function") {
-    return obj.bind(parent);
-  }
-  return obj;
 }
 
 /**
@@ -1041,34 +610,8 @@ class MessageManagerProxy {
   }
 }
 
-/**
- * Classify an individual permission from a webextension manifest
- * as a host/origin permission, an api permission, or a regular permission.
- *
- * @param {string} perm  The permission string to classify
- *
- * @returns {object}
- *          An object with exactly one of the following properties:
- *          "origin" to indicate this is a host/origin permission.
- *          "api" to indicate this is an api permission
- *                (as used for webextensions experiments).
- *          "permission" to indicate this is a regular permission.
- */
-function classifyPermission(perm) {
-  let match = /^(\w+)(?:\.(\w+)(?:\.\w+)*)?$/.exec(perm);
-  if (!match) {
-    return {origin: perm};
-  } else if (match[1] == "experiments" && match[2]) {
-    return {api: match[2]};
-  }
-  return {permission: perm};
-}
-
 this.ExtensionUtils = {
-  classifyPermission,
   defineLazyGetter,
-  extend,
-  findPathInObject,
   flushJarCache,
   getConsole,
   getInnerWindowID,
@@ -1076,8 +619,6 @@ this.ExtensionUtils = {
   getUniqueId,
   filterStack,
   getWinUtils,
-  ignoreEvent,
-  injectAPI,
   instanceOf,
   normalizeTime,
   promiseDocumentLoaded,
@@ -1088,17 +629,10 @@ this.ExtensionUtils = {
   runSafeSync,
   runSafeSyncWithoutClone,
   runSafeWithoutClone,
-  stylesheetMap,
   DefaultMap,
   DefaultWeakMap,
   EventEmitter,
   ExtensionError,
-  IconDetails,
   LimitedSet,
   MessageManagerProxy,
-  SpreadArgs,
-  StartupCache,
 };
-
-XPCOMUtils.defineLazyGetter(this.ExtensionUtils, "extensionStylesheets", extensionStylesheets);
-XPCOMUtils.defineLazyGetter(this.ExtensionUtils, "PlatformInfo", PlatformInfo);

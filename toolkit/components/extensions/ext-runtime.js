@@ -6,6 +6,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Extension",
                                   "resource://gre/modules/Extension.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
+                                  "resource://gre/modules/ExtensionParent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
@@ -100,7 +102,7 @@ this.runtime = class extends ExtensionAPI {
         },
 
         getPlatformInfo: function() {
-          return Promise.resolve(ExtensionUtils.PlatformInfo);
+          return Promise.resolve(ExtensionParent.PlatformInfo);
         },
 
         openOptionsPage: function() {

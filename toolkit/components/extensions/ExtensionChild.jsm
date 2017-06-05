@@ -40,21 +40,40 @@ const {
   DefaultMap,
   EventEmitter,
   LimitedSet,
-  SpreadArgs,
   defineLazyGetter,
   getMessageManager,
   getUniqueId,
-  injectAPI,
 } = ExtensionUtils;
 
 const {
   LocalAPIImplementation,
   LocaleData,
+  NoCloneSpreadArgs,
   SchemaAPIInterface,
   SingletonEventManager,
 } = ExtensionCommon;
 
 const isContentProcess = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
+
+// Copy an API object from |source| into the scope |dest|.
+function injectAPI(source, dest) {
+  for (let prop in source) {
+    // Skip names prefixed with '_'.
+    if (prop[0] == "_") {
+      continue;
+    }
+
+    let desc = Object.getOwnPropertyDescriptor(source, prop);
+    if (typeof(desc.value) == "function") {
+      Cu.exportFunction(desc.value, dest, {defineAs: prop});
+    } else if (typeof(desc.value) == "object") {
+      let obj = Cu.createObjectIn(dest, {defineAs: prop});
+      injectAPI(desc.value, obj);
+    } else {
+      Object.defineProperty(dest, prop, desc);
+    }
+  }
+}
 
 /**
  * Abstraction for a Port object in the extension API.
@@ -115,15 +134,16 @@ class Port {
       },
 
       onDisconnect: new SingletonEventManager(this.context, "Port.onDisconnect", fire => {
-        return this.registerOnDisconnect(error => {
+        return this.registerOnDisconnect(holder => {
+          let error = holder.deserialize(this.context.cloneScope);
           portError = error && this.context.normalizeError(error);
           fire.asyncWithoutClone(portObj);
         });
       }).api(),
 
       onMessage: new SingletonEventManager(this.context, "Port.onMessage", fire => {
-        return this.registerOnMessage(msg => {
-          msg = Cu.cloneInto(msg, this.context.cloneScope);
+        return this.registerOnMessage(holder => {
+          let msg = holder.deserialize(this.context.cloneScope);
           fire.asyncWithoutClone(msg, portObj);
         });
       }).api(),
@@ -202,7 +222,9 @@ class Port {
       responseType: MessageChannel.RESPONSE_NONE,
     };
 
-    return this.context.sendMessage(this.senderMM, message, data, options);
+    let holder = new StructuredCloneHolder(data);
+
+    return this.context.sendMessage(this.senderMM, message, holder, options);
   }
 
   handleDisconnection() {
@@ -307,7 +329,9 @@ class Messenger {
   }
 
   sendMessage(messageManager, msg, recipient, responseCallback) {
-    let promise = this._sendMessage(messageManager, "Extension:Message", msg, recipient)
+    let holder = new StructuredCloneHolder(msg);
+
+    let promise = this._sendMessage(messageManager, "Extension:Message", holder, recipient)
       .catch(error => {
         if (error.result == MessageChannel.RESULT_NO_HANDLER) {
           return Promise.reject({message: "Could not establish connection. Receiving end does not exist."});
@@ -336,7 +360,7 @@ class Messenger {
                   filter(sender, recipient));
         },
 
-        receiveMessage: ({target, data: message, sender, recipient}) => {
+        receiveMessage: ({target, data: holder, sender, recipient}) => {
           if (!this.context.active) {
             return;
           }
@@ -350,7 +374,7 @@ class Messenger {
             };
           });
 
-          message = Cu.cloneInto(message, this.context.cloneScope);
+          let message = holder.deserialize(this.context.cloneScope);
           sender = Cu.cloneInto(sender, this.context.cloneScope);
           sendResponse = Cu.exportFunction(sendResponse, this.context.cloneScope);
 
@@ -393,7 +417,7 @@ class Messenger {
       } else if (error.result === MessageChannel.RESULT_DISCONNECTED) {
         error = null;
       }
-      port.disconnectByOtherEnd(error);
+      port.disconnectByOtherEnd(new StructuredCloneHolder(error));
     });
 
     return port.api();
@@ -734,7 +758,9 @@ class ChildAPIManager {
         let listener = map.ids.get(data.listenerId);
 
         if (listener) {
-          return this.context.runSafe(listener, ...data.args);
+          let args = data.args.deserialize(this.context.cloneScope);
+
+          return this.context.runSafeWithoutClone(listener, ...args);
         }
         if (!map.removedIds.has(data.listenerId)) {
           Services.console.logStringMessage(
@@ -747,7 +773,9 @@ class ChildAPIManager {
         if ("error" in data) {
           deferred.reject(data.error);
         } else {
-          deferred.resolve(new SpreadArgs(data.result));
+          let result = data.result.deserialize(this.context.cloneScope);
+
+          deferred.resolve(new NoCloneSpreadArgs(result));
         }
         this.callPromises.delete(data.callId);
         break;

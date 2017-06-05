@@ -121,6 +121,8 @@ public:
 
   void SetIsFirstPaint();
   bool IsFirstPaint() const;
+  void SetPaintSequenceNumber(uint32_t aPaintSequenceNumber);
+  uint32_t GetPaintSequenceNumber() const;
 
   friend struct IPC::ParamTraits<WebRenderScrollData>;
 
@@ -146,6 +148,7 @@ private:
   nsTArray<WebRenderLayerScrollData> mLayerScrollData;
 
   bool mIsFirstPaint;
+  uint32_t mPaintSequenceNumber;
 };
 
 } // namespace layers
@@ -219,6 +222,7 @@ struct ParamTraits<mozilla::layers::WebRenderScrollData>
     WriteParam(aMsg, aParam.mScrollMetadatas);
     WriteParam(aMsg, aParam.mLayerScrollData);
     WriteParam(aMsg, aParam.mIsFirstPaint);
+    WriteParam(aMsg, aParam.mPaintSequenceNumber);
   }
 
   static bool
@@ -226,7 +230,8 @@ struct ParamTraits<mozilla::layers::WebRenderScrollData>
   {
     return ReadParam(aMsg, aIter, &aResult->mScrollMetadatas)
         && ReadParam(aMsg, aIter, &aResult->mLayerScrollData)
-        && ReadParam(aMsg, aIter, &aResult->mIsFirstPaint);
+        && ReadParam(aMsg, aIter, &aResult->mIsFirstPaint)
+        && ReadParam(aMsg, aIter, &aResult->mPaintSequenceNumber);
   }
 };
 

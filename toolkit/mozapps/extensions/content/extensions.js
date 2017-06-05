@@ -74,8 +74,8 @@ const XMLURI_PARSE_ERROR = "http://www.mozilla.org/newlayout/xml/parsererror.xml
 var gViewDefault = "addons://discover/";
 
 XPCOMUtils.defineLazyGetter(this, "extensionStylesheets", () => {
-  const {ExtensionUtils} = Cu.import("resource://gre/modules/ExtensionUtils.jsm", {});
-  return ExtensionUtils.extensionStylesheets;
+  const {ExtensionParent} = Cu.import("resource://gre/modules/ExtensionParent.jsm", {});
+  return ExtensionParent.extensionStylesheets;
 });
 
 var gStrings = {};
