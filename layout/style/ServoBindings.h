@@ -42,6 +42,7 @@ namespace mozilla {
   namespace css {
     struct URLValue;
     struct ImageValue;
+    class LoaderReusableStyleSheets;
   };
   namespace dom {
     enum class IterationCompositeOperation : uint8_t;
@@ -137,6 +138,7 @@ RawGeckoElementBorrowedOrNull Gecko_GetNextSiblingElement(RawGeckoElementBorrowe
 RawGeckoElementBorrowedOrNull Gecko_GetDocumentElement(RawGeckoDocumentBorrowed document);
 void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
                           mozilla::ServoStyleSheet* parent,
+                          mozilla::css::LoaderReusableStyleSheets* reusable_sheets,
                           RawServoStyleSheetBorrowed child_sheet,
                           RawGeckoURLExtraData* base_url_data,
                           const uint8_t* url_bytes,
