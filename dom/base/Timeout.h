@@ -44,8 +44,6 @@ public:
   void SetWhenOrTimeRemaining(const TimeStamp& aBaseTime,
                               const TimeDuration& aDelay);
 
-  void SetDummyWhen(const TimeStamp& aWhen);
-
   // Can only be called when not frozen.
   const TimeStamp& When() const;
 
