@@ -48,10 +48,10 @@ nsXBLPrototypeResources::AddResource(nsIAtom* aResourceType, const nsAString& aS
 }
 
 bool
-nsXBLPrototypeResources::LoadResources()
+nsXBLPrototypeResources::LoadResources(nsIContent* aBoundElement)
 {
   if (mLoader) {
-    return mLoader->LoadResources();
+    return mLoader->LoadResources(aBoundElement);
   }
 
   return true; // All resources loaded.

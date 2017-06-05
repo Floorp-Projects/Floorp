@@ -230,10 +230,10 @@ nsXBLPrototypeBinding::GetAllowScripts() const
 }
 
 bool
-nsXBLPrototypeBinding::LoadResources()
+nsXBLPrototypeBinding::LoadResources(nsIContent* aBoundElement)
 {
   if (mResources) {
-    return mResources->LoadResources();
+    return mResources->LoadResources(aBoundElement);
   }
 
   return true;
