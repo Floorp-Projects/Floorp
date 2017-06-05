@@ -20,6 +20,7 @@ namespace layers {
 WebRenderCompositableHolder::AsyncImagePipelineHolder::AsyncImagePipelineHolder()
  : mInitialised(false)
  , mIsChanged(false)
+ , mUseExternalImage(false)
  , mFilter(WrImageRendering::Auto)
  , mMixBlendMode(WrMixBlendMode::Normal)
 {}
@@ -293,6 +294,7 @@ WebRenderCompositableHolder::UpdateImageKeys(wr::WebRenderAPI* aApi,
   if (texture == aHolder->mCurrentTexture) {
     // Reuse previous ImageKeys.
     aKeys.AppendElements(aHolder->mKeys);
+    aUseExternalImage = aHolder->mUseExternalImage;
     return true;
   }
 
@@ -306,7 +308,7 @@ WebRenderCompositableHolder::UpdateImageKeys(wr::WebRenderAPI* aApi,
     return true;
   }
 
-  aUseExternalImage = GetImageKeyForTextureHost(aApi, texture, aKeys);
+  aUseExternalImage = aHolder->mUseExternalImage = GetImageKeyForTextureHost(aApi, texture, aKeys);
   MOZ_ASSERT(!aKeys.IsEmpty());
   aHolder->mKeys.AppendElements(aKeys);
   aHolder->mCurrentTexture = texture;
