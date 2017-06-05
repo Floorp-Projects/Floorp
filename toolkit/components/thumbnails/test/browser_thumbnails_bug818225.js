@@ -14,7 +14,7 @@ function* runTests() {
   yield createThumbnail(URL);
 
   path = PageThumbs.getThumbnailPath(URL);
-  let expectedPath = PageThumbsStorage.getFilePathForURL(URL);
+  let expectedPath = PageThumbsStorageService.getFilePathForURL(URL);
   is(path, expectedPath, "Thumbnail file has correct path");
 
   yield testIfExists(path, true, "Thumbnail file exists");

@@ -11,8 +11,8 @@ BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
 EXTRA_COMPONENTS += [
-    'BrowserPageThumbs.manifest',
-    'PageThumbsProtocol.js',
+    'PageThumbsComponents.manifest',
+    'PageThumbsStorageService.js',
 ]
 
 EXTRA_JS_MODULES += [
@@ -21,5 +21,22 @@ EXTRA_JS_MODULES += [
     'PageThumbsWorker.js',
     'PageThumbUtils.jsm',
 ]
+
+UNIFIED_SOURCES += [
+    'nsPageThumbsModule.cpp',
+    'PageThumbsProtocol.cpp'
+]
+
+XPIDL_SOURCES += [
+    'nsIPageThumbsStorageService.idl',
+]
+
+LOCAL_INCLUDES += [
+    '/netwerk/base'
+]
+
+XPIDL_MODULE = 'thumbnails'
+
+FINAL_LIBRARY = 'xul'
 
 JAR_MANIFESTS += ['jar.mn']
