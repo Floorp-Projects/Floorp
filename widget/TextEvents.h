@@ -88,6 +88,11 @@ struct AlternativeCharCode
 
 struct ShortcutKeyCandidate
 {
+  ShortcutKeyCandidate()
+    : mCharCode(0)
+    , mIgnoreShift(0)
+  {
+  }
   ShortcutKeyCandidate(uint32_t aCharCode, bool aIgnoreShift)
     : mCharCode(aCharCode)
     , mIgnoreShift(aIgnoreShift)
@@ -409,7 +414,7 @@ public:
    * @param aCandidates [out] the candidate shortcut key combination list.
    *                          the first item is most preferred.
    */
-  void GetShortcutKeyCandidates(ShortcutKeyCandidateArray& aCandidates);
+  void GetShortcutKeyCandidates(ShortcutKeyCandidateArray& aCandidates) const;
 
   /**
    * Get the candidates for access key.
@@ -417,7 +422,7 @@ public:
    * @param aCandidates [out] the candidate access key list.
    *                          the first item is most preferred.
    */
-  void GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates);
+  void GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates) const;
 
   static void Shutdown();
 

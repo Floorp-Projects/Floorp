@@ -785,4 +785,42 @@ ScrollWheelInput::IsCustomizedByUserPrefs() const
          mUserDeltaMultiplierY != 1.0;
 }
 
+KeyboardInput::KeyboardInput(const WidgetKeyboardEvent& aEvent)
+  : InputData(KEYBOARD_INPUT,
+              aEvent.mTime,
+              aEvent.mTimeStamp,
+              aEvent.mModifiers)
+  , mKeyCode(aEvent.mKeyCode)
+  , mCharCode(aEvent.mCharCode)
+  , mHandledByAPZ(false)
+{
+  switch (aEvent.mMessage) {
+    case eKeyPress: {
+      mType = KeyboardInput::KEY_PRESS;
+      break;
+    }
+    case eKeyUp: {
+      mType = KeyboardInput::KEY_UP;
+      break;
+    }
+    case eKeyDown: {
+      mType = KeyboardInput::KEY_DOWN;
+      break;
+    }
+    default:
+      mType = KeyboardInput::KEY_OTHER;
+      break;
+  }
+
+  aEvent.GetShortcutKeyCandidates(mShortcutCandidates);
+}
+
+KeyboardInput::KeyboardInput()
+  : InputData(KEYBOARD_INPUT)
+  , mKeyCode(0)
+  , mCharCode(0)
+  , mHandledByAPZ(false)
+{
+}
+
 } // namespace mozilla
