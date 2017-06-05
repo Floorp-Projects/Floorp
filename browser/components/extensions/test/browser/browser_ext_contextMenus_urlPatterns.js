@@ -102,7 +102,7 @@ add_task(async function() {
 
       browser.contextMenus.create({
         title: "documentUrlPatterns-patternDoesNotMatch-targetUrlPatterns-patternMatches-contextAll",
-        documentUrlPatterns: ["*://does-not-match"],
+        documentUrlPatterns: ["*://*/does-not-match"],
         targetUrlPatterns: ["*://*/*ctxmenu-image.png"],
         contexts: ["all"],
       });
@@ -110,14 +110,14 @@ add_task(async function() {
       browser.contextMenus.create({
         title: "documentUrlPatterns-patternMatches-targetUrlPatterns-patternDoesNotMatch-contextAll",
         documentUrlPatterns: ["*://*/*context.html"],
-        targetUrlPatterns: ["*://does-not-match"],
+        targetUrlPatterns: ["*://*/does-not-match"],
         contexts: ["all"],
       });
 
       browser.contextMenus.create({
         title: "documentUrlPatterns-patternDoesNotMatch-targetUrlPatterns-patternDoesNotMatch-contextAll",
-        documentUrlPatterns: ["*://does-not-match"],
-        targetUrlPatterns: ["*://does-not-match"],
+        documentUrlPatterns: ["*://*/does-not-match"],
+        targetUrlPatterns: ["*://*/does-not-match"],
         contexts: ["all"],
       });
 
@@ -130,7 +130,7 @@ add_task(async function() {
 
       browser.contextMenus.create({
         title: "documentUrlPatterns-patternDoesNotMatch-targetUrlPatterns-patternMatches-contextImage",
-        documentUrlPatterns: ["*://does-not-match"],
+        documentUrlPatterns: ["*://*/does-not-match"],
         targetUrlPatterns: ["*://*/*ctxmenu-image.png"],
         contexts: ["image"],
       });
@@ -138,14 +138,14 @@ add_task(async function() {
       browser.contextMenus.create({
         title: "documentUrlPatterns-patternMatches-targetUrlPatterns-patternDoesNotMatch-contextImage",
         documentUrlPatterns: ["*://*/*context.html"],
-        targetUrlPatterns: ["*://does-not-match"],
+        targetUrlPatterns: ["*://*/does-not-match"],
         contexts: ["image"],
       });
 
       browser.contextMenus.create({
         title: "documentUrlPatterns-patternDoesNotMatch-targetUrlPatterns-patternDoesNotMatch-contextImage",
-        documentUrlPatterns: ["*://does-not-match"],
-        targetUrlPatterns: ["*://does-not-match"],
+        documentUrlPatterns: ["*://*/does-not-match/"],
+        targetUrlPatterns: ["*://*/does-not-match"],
         contexts: ["image"],
       });
 

@@ -2,8 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "useRemoteWebExtensions",
+                                      "extensions.webextensions.remote", false);
+
 add_task(async function testExecuteScript() {
-  let {ExtensionManagement} = Cu.import("resource://gre/modules/ExtensionManagement.jsm", {});
   let {MessageChannel} = Cu.import("resource://gre/modules/MessageChannel.jsm", {});
 
   function countMM(messageManagerMap) {
@@ -257,7 +259,7 @@ add_task(async function testExecuteScript() {
   // Make sure that we're not holding on to references to closed message
   // managers.
   is(countMM(MessageChannel.messageManagers), messageManagersSize, "Message manager count");
-  if (!ExtensionManagement.useRemoteWebExtensions) {
+  if (!useRemoteWebExtensions) {
     is(countMM(MessageChannel.responseManagers), responseManagersSize, "Response manager count");
   }
   is(MessageChannel.pendingResponses.size, 0, "Pending response count");

@@ -29,8 +29,11 @@ function findWinUtils(extension) {
 add_task(async function test_permissions() {
   const REQUIRED_PERMISSIONS = ["downloads"];
   const REQUIRED_ORIGINS = ["*://site.com/", "*://*.domain.com/"];
+  const REQUIRED_ORIGINS_NORMALIZED = ["*://site.com/*", "*://*.domain.com/*"];
+
   const OPTIONAL_PERMISSIONS = ["idle", "clipboardWrite"];
   const OPTIONAL_ORIGINS = ["http://optionalsite.com/", "https://*.optionaldomain.com/"];
+  const OPTIONAL_ORIGINS_NORMALIZED = ["http://optionalsite.com/*", "https://*.optionaldomain.com/*"];
 
   let acceptPrompt = false;
   const observer = {
@@ -92,7 +95,7 @@ add_task(async function test_permissions() {
 
   let result = await call("getAll");
   deepEqual(result.permissions, REQUIRED_PERMISSIONS);
-  deepEqual(result.origins, REQUIRED_ORIGINS);
+  deepEqual(result.origins, REQUIRED_ORIGINS_NORMALIZED);
 
   for (let perm of REQUIRED_PERMISSIONS) {
     result = await call("contains", {permissions: [perm]});
@@ -155,7 +158,7 @@ add_task(async function test_permissions() {
 
   let allPermissions = {
     permissions: [...REQUIRED_PERMISSIONS, ...OPTIONAL_PERMISSIONS],
-    origins: [...REQUIRED_ORIGINS, ...OPTIONAL_ORIGINS],
+    origins: [...REQUIRED_ORIGINS_NORMALIZED, ...OPTIONAL_ORIGINS_NORMALIZED],
   };
 
   result = await call("getAll");
@@ -177,7 +180,7 @@ add_task(async function test_permissions() {
 
   let perms = {
     permissions: REQUIRED_PERMISSIONS,
-    origins: [...REQUIRED_ORIGINS, ...OPTIONAL_ORIGINS],
+    origins: [...REQUIRED_ORIGINS_NORMALIZED, ...OPTIONAL_ORIGINS_NORMALIZED],
   };
   result = await call("getAll");
   deepEqual(result, perms, "Expected permissions remain after removing some");
@@ -185,7 +188,7 @@ add_task(async function test_permissions() {
   result = await call("remove", {origins: OPTIONAL_ORIGINS});
   equal(result, true, "remove() succeeded");
 
-  perms.origins = REQUIRED_ORIGINS;
+  perms.origins = REQUIRED_ORIGINS_NORMALIZED;
   result = await call("getAll");
   deepEqual(result, perms, "Back to default permissions after removing more");
 
@@ -207,7 +210,7 @@ add_task(async function test_startup() {
     permissions: ["clipboardRead", "tabs"],
   };
   const PERMS2 = {
-    origins: ["https://site2.com/"],
+    origins: ["https://site2.com/*"],
   };
 
   let extension1 = ExtensionTestUtils.loadExtension({

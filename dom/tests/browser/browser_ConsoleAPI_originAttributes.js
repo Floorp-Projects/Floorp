@@ -4,8 +4,7 @@
 const ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
       .getService(Ci.nsIConsoleAPIStorage);
 
-// FIXME: This test shouldn't need to rely on low-level internals.
-const {Service} = Cu.import("resource://gre/modules/ExtensionManagement.jsm", {});
+const {WebExtensionPolicy} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const FAKE_ADDON_ID = "test-webext-addon@mozilla.org";
 const EXPECTED_CONSOLE_ID = `addon/${FAKE_ADDON_ID}`;
@@ -46,7 +45,6 @@ const ConsoleObserver = {
 
 function test()
 {
-  Service.init();
   ConsoleObserver.init();
 
   waitForExplicitFinish();
@@ -56,7 +54,15 @@ function test()
   uuid = uuid.slice(1, -1); // Strip { and } off the UUID.
 
   const url = `moz-extension://${uuid}/`;
-  Service.uuidMap.set(uuid, {id: FAKE_ADDON_ID});
+  /* globals MatchPatternSet, WebExtensionPolicy */
+  let policy = new WebExtensionPolicy({
+    id: FAKE_ADDON_ID,
+    mozExtensionHostname: uuid,
+    baseURL: "file:///",
+    allowedOrigins: new MatchPatternSet([]),
+    localizeCallback() {},
+  });
+  policy.active = true;
 
   let baseURI = Services.io.newURI(url);
   let principal = Services.scriptSecurityManager
@@ -70,6 +76,7 @@ function test()
   info("fake webextension docShell created");
 
   registerCleanupFunction(function() {
+    policy.active = false;
     if (chromeWebNav) {
       chromeWebNav.close();
       chromeWebNav = null;

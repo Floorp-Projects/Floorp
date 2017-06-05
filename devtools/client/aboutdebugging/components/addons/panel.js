@@ -150,11 +150,6 @@ module.exports = createClass({
         sort: true
       }),
       dom.div({ className: "addons-tip"},
-        dom.img({
-          className: "addons-tip-icon",
-          role: "presentation",
-          src: "chrome://devtools/skin/images/help.svg",
-        }),
         dom.span({
           className: "addons-web-ext-tip",
         }, Strings.GetStringFromName("webExtTip")),

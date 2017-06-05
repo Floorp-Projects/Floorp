@@ -111,6 +111,8 @@ SingleMatchPattern.prototype = {
     return this.schemes.some(scheme => other.schemes.includes(scheme)) &&
            (this.hostMatch(other) || other.hostMatch(this));
   },
+
+  get pattern() { return this.pat; },
 };
 
 this.MatchPattern = function(pat) {
@@ -135,6 +137,8 @@ MatchPattern.prototype = {
   matches(uri) {
     return this.matchers.some(matcher => matcher.matches(uri));
   },
+
+  get patterns() { return this.matchers; },
 
   matchesIgnoringPath(uri, explicit = false) {
     if (explicit) {

@@ -30,6 +30,10 @@ const {
   getNodeTransformOrigin
 } = require("devtools/shared/layout/dom-matrix-2d");
 const { stringifyGridFragments } = require("devtools/server/actors/utils/css-grid-utils");
+const { LocalizationHelper } = require("devtools/shared/l10n");
+
+const LAYOUT_STRINGS_URI = "devtools/client/locales/layout.properties";
+const LAYOUT_L10N = new LocalizationHelper(LAYOUT_STRINGS_URI);
 
 const CSS_GRID_ENABLED_PREF = "layout.css.grid.enabled";
 
@@ -829,7 +833,8 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     let dim = parseFloat(width.toPrecision(6)) +
               " \u00D7 " +
               parseFloat(height.toPrecision(6));
-    let position = `${rowNumber}\/${columnNumber}`;
+    let position = LAYOUT_L10N.getFormatStr("layout.rowColumnPositions",
+                   rowNumber, columnNumber);
 
     this.getElement("cell-infobar-position").setTextContent(position);
     this.getElement("cell-infobar-dimensions").setTextContent(dim);

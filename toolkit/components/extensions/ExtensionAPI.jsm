@@ -10,7 +10,6 @@ this.EXPORTED_SYMBOLS = ["ExtensionAPI", "ExtensionAPIs"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import("resource://gre/modules/ExtensionManagement.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -47,7 +46,7 @@ class ExtensionAPI {
 }
 
 var ExtensionAPIs = {
-  apis: ExtensionManagement.APIs.apis,
+  apis: new Map(),
 
   load(apiName) {
     let api = this.apis.get(apiName);
@@ -94,5 +93,21 @@ var ExtensionAPIs = {
 
     api.sandbox = null;
     api.loadPromise = null;
+  },
+
+  register(namespace, schema, script) {
+    if (this.apis.has(namespace)) {
+      throw new Error(`API namespace already exists: ${namespace}`);
+    }
+
+    this.apis.set(namespace, {schema, script});
+  },
+
+  unregister(namespace) {
+    if (!this.apis.has(namespace)) {
+      throw new Error(`API namespace does not exist: ${namespace}`);
+    }
+
+    this.apis.delete(namespace);
   },
 };

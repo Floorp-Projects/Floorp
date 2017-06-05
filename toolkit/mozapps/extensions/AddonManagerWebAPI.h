@@ -15,7 +15,6 @@ class AddonManagerWebAPI {
 public:
   static bool IsAPIEnabled(JSContext* cx, JSObject* obj);
 
-private:
   static bool IsValidSite(nsIURI* uri);
 };
 

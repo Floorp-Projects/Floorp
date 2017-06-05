@@ -309,7 +309,7 @@ var ContentPolicyManager = {
     opts.id = id;
     if (opts.filter.urls) {
       opts.filter = Object.assign({}, opts.filter);
-      opts.filter.urls = opts.filter.urls.serialize();
+      opts.filter.urls = opts.filter.urls.patterns.map(url => url.pattern);
     }
     Services.ppmm.broadcastAsyncMessage("WebRequest:AddContentPolicy", opts);
 

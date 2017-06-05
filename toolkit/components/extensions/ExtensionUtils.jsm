@@ -22,8 +22,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPI",
                                   "resource://gre/modules/Console.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
-                                  "resource://gre/modules/ExtensionManagement.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "IndexedDB",
                                   "resource://gre/modules/IndexedDB.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
@@ -62,8 +60,6 @@ let StartupCache = {
 
   dbPromise: null,
 
-  cacheInvalidated: 0,
-
   initDB(db) {
     for (let name of StartupCache.STORE_NAMES) {
       try {
@@ -84,6 +80,7 @@ let StartupCache = {
     ]).catch(e => {
       // Ignore the error. It happens when we try to flush the add-on
       // data after the AddonManager has flushed the entire startup cache.
+      this.dbPromise = this.reallyOpen(true).catch(e => {});
     });
   },
 
@@ -94,8 +91,6 @@ let StartupCache = {
     }
 
     if (invalidate) {
-      this.cacheInvalidated = ExtensionManagement.cacheInvalidated;
-
       if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT) {
         IndexedDB.deleteDatabase(this.DB_NAME, {storage: "persistent"});
       }
@@ -107,9 +102,7 @@ let StartupCache = {
   },
 
   async open() {
-    if (ExtensionManagement.cacheInvalidated > this.cacheInvalidated) {
-      this.dbPromise = this.reallyOpen(true);
-    } else if (!this.dbPromise) {
+    if (!this.dbPromise) {
       this.dbPromise = this.reallyOpen();
     }
 
@@ -148,8 +141,12 @@ class CacheStore {
       let value = await createFunc(key);
       result = {key, value};
 
-      db.objectStore(this.storeName, "readwrite")
-        .put(result);
+      try {
+        db.objectStore(this.storeName, "readwrite")
+          .put(result);
+      } catch (e) {
+        Cu.reportError(e);
+      }
     }
 
     return result && result.value;

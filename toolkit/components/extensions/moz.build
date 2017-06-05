@@ -14,7 +14,6 @@ EXTRA_JS_MODULES += [
     'ExtensionChildDevToolsUtils.jsm',
     'ExtensionCommon.jsm',
     'ExtensionContent.jsm',
-    'ExtensionManagement.jsm',
     'ExtensionPageChild.jsm',
     'ExtensionParent.jsm',
     'ExtensionPermissions.jsm',
@@ -32,6 +31,7 @@ EXTRA_JS_MODULES += [
 ]
 
 EXTRA_COMPONENTS += [
+    'extension-process-script.js',
     'extensions-toolkit.manifest',
 ]
 
@@ -44,6 +44,32 @@ DIRS += [
     'schemas',
     'webrequest',
 ]
+
+XPIDL_SOURCES += [
+    'mozIExtensionProcessScript.idl',
+]
+
+XPIDL_MODULE = 'webextensions'
+
+EXPORTS.mozilla = [
+    'ExtensionPolicyService.h',
+]
+
+EXPORTS.mozilla.extensions = [
+    'MatchGlob.h',
+    'MatchPattern.h',
+    'WebExtensionContentScript.h',
+    'WebExtensionPolicy.h',
+]
+
+UNIFIED_SOURCES += [
+    'ExtensionPolicyService.cpp',
+    'MatchPattern.cpp',
+    'WebExtensionPolicy.cpp',
+]
+
+FINAL_LIBRARY = 'xul'
+
 
 JAR_MANIFESTS += ['jar.mn']
 
@@ -61,3 +87,5 @@ XPCSHELL_TESTS_MANIFESTS += [
     'test/xpcshell/xpcshell-remote.ini',
     'test/xpcshell/xpcshell.ini',
 ]
+
+include('/ipc/chromium/chromium-config.mozbuild')
