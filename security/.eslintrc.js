@@ -51,9 +51,6 @@ module.exports = {
     // Disallow constant expressions in conditions (except for loops).
     "no-constant-condition": ["error", { "checkLoops": false }],
 
-    // Disallow control characters in regular expressions.
-    "no-control-regex": "error",
-
     // Disallow duplicate class members.
     "no-dupe-class-members": "error",
 
