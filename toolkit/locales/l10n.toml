@@ -1,0 +1,29 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+basepath = "../.."
+
+
+[env]
+    l = "{l10n_base}/{locale}/"
+
+
+[[paths]]
+    reference = "toolkit/locales/en-US/**"
+    l10n = "{l}toolkit/**"
+
+[[paths]]
+    reference = "dom/locales/en-US/**"
+    l10n = "{l}dom/**"
+
+[[paths]]
+    reference = "netwerk/locales/en-US/**"
+    l10n = "{l}netwerk/**"
+
+[[paths]]
+    reference = "security/manager/locales/en-US/**"
+    l10n = "{l}security/manager/**"
+
+[[includes]]
+    path = "devtools/shared/locales/l10n.toml"
