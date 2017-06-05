@@ -244,7 +244,9 @@ ExtensionPolicyService::CheckDocument(nsIDocument* aDocument)
 {
   nsCOMPtr<nsPIDOMWindowOuter> win = aDocument->GetWindow();
   if (win) {
-    CheckContentScripts(win.get(), false);
+    if (win->GetDocumentURI()) {
+      CheckContentScripts(win.get(), false);
+    }
 
     nsIPrincipal* principal = aDocument->NodePrincipal();
 
@@ -279,7 +281,7 @@ ExtensionPolicyService::CheckWindow(nsPIDOMWindowOuter* aWindow)
 
   nsCOMPtr<nsIURI> uri = doc->GetDocumentURI();
   bool equal;
-  if (NS_FAILED(uri->EqualsExceptRef(aboutBlank, &equal)) || !equal) {
+  if (!uri || NS_FAILED(uri->EqualsExceptRef(aboutBlank, &equal)) || !equal) {
     return;
   }
 
