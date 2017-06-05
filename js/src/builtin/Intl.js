@@ -436,18 +436,24 @@ function CanonicalizeLanguageTag(locale) {
         subtags[i] = subtag;
         i++;
     }
+
+    // Directly return when the language tag doesn't contain any extension or
+    // private use sub-tags.
+    if (i === subtags.length)
+        return callFunction(std_Array_join, subtags, "-");
+
     var normal = callFunction(std_Array_join, callFunction(std_Array_slice, subtags, 0, i), "-");
 
     // Extension sequences are sorted by their singleton characters.
     // "u-ca-chinese-t-zh-latn" -> "t-zh-latn-u-ca-chinese"
-    var extensions = new List();
+    var extensions = [];
     while (i < subtags.length && subtags[i] !== "x") {
         var extensionStart = i;
         i++;
         while (i < subtags.length && subtags[i].length > 1)
             i++;
         var extension = callFunction(std_Array_join, callFunction(std_Array_slice, subtags, extensionStart, i), "-");
-        callFunction(std_Array_push, extensions, extension);
+        _DefineDataProperty(extensions, extensions.length, extension);
     }
     callFunction(std_Array_sort, extensions);
 
@@ -806,10 +812,13 @@ function addSpecialMissingLanguageTags(availableLocales) {
  */
 function CanonicalizeLocaleList(locales) {
     if (locales === undefined)
-        return new List();
-    var seen = new List();
-    if (typeof locales === "string")
-        locales = [locales];
+        return [];
+    if (typeof locales === "string") {
+        if (!IsStructurallyValidLanguageTag(locales))
+            ThrowRangeError(JSMSG_INVALID_LANGUAGE_TAG, locales);
+        return [CanonicalizeLanguageTag(locales)];
+    }
+    var seen = [];
     var O = ToObject(locales);
     var len = ToLength(O.length);
     var k = 0;
@@ -825,7 +834,7 @@ function CanonicalizeLocaleList(locales) {
                 ThrowRangeError(JSMSG_INVALID_LANGUAGE_TAG, tag);
             tag = CanonicalizeLanguageTag(tag);
             if (callFunction(ArrayIndexOf, seen, tag) === -1)
-                callFunction(std_Array_push, seen, tag);
+                _DefineDataProperty(seen, seen.length, tag);
         }
         k++;
     }
@@ -1181,7 +1190,7 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
 function LookupSupportedLocales(availableLocales, requestedLocales) {
     // Steps 1-2.
     var len = requestedLocales.length;
-    var subset = new List();
+    var subset = [];
 
     // Steps 3-4.
     var k = 0;
@@ -1193,14 +1202,14 @@ function LookupSupportedLocales(availableLocales, requestedLocales) {
         // Step 4.c-d.
         var availableLocale = BestAvailableLocale(availableLocales, noExtensionsLocale);
         if (availableLocale !== undefined)
-            callFunction(std_Array_push, subset, locale);
+            _DefineDataProperty(subset, subset.length, locale);
 
         // Step 4.e.
         k++;
     }
 
     // Steps 5-6.
-    return callFunction(std_Array_slice, subset, 0);
+    return subset;
 }
 
 
@@ -3438,16 +3447,8 @@ function Intl_PluralRules_resolvedOptions() {
  * ES2017 Intl draft rev 947aa9a0c853422824a0c9510d8f09be3eb416b9
  */
 function Intl_getCanonicalLocales(locales) {
-    // Step 1.
-    var localeList = CanonicalizeLocaleList(locales);
-
-    // Step 2 (Inlined CreateArrayFromList).
-    var array = [];
-
-    for (var n = 0, len = localeList.length; n < len; n++)
-        _DefineDataProperty(array, n, localeList[n]);
-
-    return array;
+    // Steps 1-2.
+    return CanonicalizeLocaleList(locales);
 }
 
 /**
