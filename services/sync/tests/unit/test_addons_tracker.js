@@ -13,18 +13,14 @@ loadAddonTestFunctions();
 startupManager();
 Svc.Prefs.set("engine.addons", true);
 
-Service.engineManager.register(AddonsEngine);
-var engine     = Service.engineManager.get("addons");
-var reconciler = engine._reconciler;
-var store      = engine._store;
-var tracker    = engine._tracker;
-
-// Don't write out by default.
-tracker.persistChangedIDs = false;
+let engine;
+let reconciler;
+let store;
+let tracker;
 
 const addon1ID = "addon1@tests.mozilla.org";
 
-function cleanup_and_advance() {
+async function cleanup() {
   Svc.Obs.notify("weave:engine:stop-tracking");
   tracker.stopTracking();
 
@@ -33,32 +29,36 @@ function cleanup_and_advance() {
 
   reconciler._addons = {};
   reconciler._changes = [];
-  let cb = Async.makeSpinningCallback();
-  reconciler.saveState(null, cb);
-  cb.wait();
-
-  run_next_test();
+  await reconciler.saveState();
 }
 
-function run_test() {
+add_task(async function setup() {
   initTestLogging("Trace");
   Log.repository.getLogger("Sync.Engine.Addons").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.AddonsReconciler").level =
-    Log.Level.Trace;
+  Log.repository.getLogger("Sync.AddonsReconciler").level = Log.Level.Trace;
 
-  cleanup_and_advance();
-}
+  await Service.engineManager.register(AddonsEngine);
+  engine     = Service.engineManager.get("addons");
+  reconciler = engine._reconciler;
+  store      = engine._store;
+  tracker    = engine._tracker;
 
-add_test(function test_empty() {
+  // Don't write out by default.
+  tracker.persistChangedIDs = false;
+
+  await cleanup();
+});
+
+add_task(async function test_empty() {
   _("Verify the tracker is empty to start with.");
 
   do_check_eq(0, Object.keys(tracker.changedIDs).length);
   do_check_eq(0, tracker.score);
 
-  cleanup_and_advance();
+  await cleanup();
 });
 
-add_test(function test_not_tracking() {
+add_task(async function test_not_tracking() {
   _("Ensures the tracker doesn't do anything when it isn't tracking.");
 
   let addon = installAddon("test_bootstrap1_1");
@@ -67,10 +67,10 @@ add_test(function test_not_tracking() {
   do_check_eq(0, Object.keys(tracker.changedIDs).length);
   do_check_eq(0, tracker.score);
 
-  cleanup_and_advance();
+  await cleanup();
 });
 
-add_test(function test_track_install() {
+add_task(async function test_track_install() {
   _("Ensure that installing an add-on notifies tracker.");
 
   reconciler.startListening();
@@ -86,10 +86,10 @@ add_test(function test_track_install() {
   do_check_eq(SCORE_INCREMENT_XLARGE, tracker.score);
 
   uninstallAddon(addon);
-  cleanup_and_advance();
+  await cleanup();
 });
 
-add_test(function test_track_uninstall() {
+add_task(async function test_track_uninstall() {
   _("Ensure that uninstalling an add-on notifies tracker.");
 
   reconciler.startListening();
@@ -106,10 +106,10 @@ add_test(function test_track_uninstall() {
   do_check_true(guid in changed);
   do_check_eq(SCORE_INCREMENT_XLARGE, tracker.score);
 
-  cleanup_and_advance();
+  await cleanup();
 });
 
-add_test(function test_track_user_disable() {
+add_task(async function test_track_user_disable() {
   _("Ensure that tracker sees disabling of add-on");
 
   reconciler.startListening();
@@ -149,23 +149,23 @@ add_test(function test_track_user_disable() {
   do_check_eq(SCORE_INCREMENT_XLARGE, tracker.score);
 
   uninstallAddon(addon);
-  cleanup_and_advance();
+  await cleanup();
 });
 
-add_test(function test_track_enable() {
+add_task(async function test_track_enable() {
   _("Ensure that enabling a disabled add-on notifies tracker.");
 
   reconciler.startListening();
 
   let addon = installAddon("test_bootstrap1_1");
   addon.userDisabled = true;
-  store._sleep(0);
+  await Async.promiseYield();
 
   do_check_eq(0, tracker.score);
 
   Svc.Obs.notify("weave:engine:start-tracking");
   addon.userDisabled = false;
-  store._sleep(0);
+  await Async.promiseYield();
 
   let changed = tracker.changedIDs;
   do_check_eq(1, Object.keys(changed).length);
@@ -173,5 +173,5 @@ add_test(function test_track_enable() {
   do_check_eq(SCORE_INCREMENT_XLARGE, tracker.score);
 
   uninstallAddon(addon);
-  cleanup_and_advance();
+  await cleanup();
 });
