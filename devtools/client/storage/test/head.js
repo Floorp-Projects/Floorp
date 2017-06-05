@@ -201,9 +201,10 @@ var openStoragePanel = Task.async(function* (cb) {
  */
 function waitForToolboxFrameFocus(toolbox) {
   info("Making sure that the toolbox's frame is focused");
-  let def = promise.defer();
-  waitForFocus(def.resolve, toolbox.win);
-  return def.promise;
+
+  return new Promise(resolve => {
+    waitForFocus(resolve, toolbox.win);
+  });
 }
 
 /**
@@ -274,18 +275,16 @@ function* finishTests() {
 
 // Sends a click event on the passed DOM node in an async manner
 function* click(node) {
-  let def = promise.defer();
-
   node.scrollIntoView();
 
-  // We need setTimeout here to allow any scrolling to complete before clicking
-  // the node.
-  setTimeout(() => {
-    node.click();
-    def.resolve();
-  }, 200);
-
-  return def;
+  return new Promise(resolve => {
+    // We need setTimeout here to allow any scrolling to complete before clicking
+    // the node.
+    setTimeout(() => {
+      node.click();
+      resolve();
+    }, 200);
+  });
 }
 
 /**
@@ -306,35 +305,34 @@ function* click(node) {
 function variablesViewExpandTo(options) {
   let root = options.rootVariable;
   let expandTo = options.expandTo.split(".");
-  let lastDeferred = promise.defer();
 
-  function getNext(prop) {
-    let name = expandTo.shift();
-    let newProp = prop.get(name);
+  return new Promise((resolve, reject) => {
+    function getNext(prop) {
+      let name = expandTo.shift();
+      let newProp = prop.get(name);
 
-    if (expandTo.length > 0) {
-      ok(newProp, "found property " + name);
-      if (newProp && newProp.expand) {
-        newProp.expand();
-        getNext(newProp);
+      if (expandTo.length > 0) {
+        ok(newProp, "found property " + name);
+        if (newProp && newProp.expand) {
+          newProp.expand();
+          getNext(newProp);
+        } else {
+          reject(prop);
+        }
+      } else if (newProp) {
+        resolve(newProp);
       } else {
-        lastDeferred.reject(prop);
+        reject(prop);
       }
-    } else if (newProp) {
-      lastDeferred.resolve(newProp);
-    } else {
-      lastDeferred.reject(prop);
     }
-  }
 
-  if (root && root.expand) {
-    root.expand();
-    getNext(root);
-  } else {
-    lastDeferred.resolve(root);
-  }
-
-  return lastDeferred.promise;
+    if (root && root.expand) {
+      root.expand();
+      getNext(root);
+    } else {
+      resolve(root);
+    }
+  });
 }
 
 /**
@@ -412,33 +410,32 @@ function findVariableViewProperties(ruleArray, parsed) {
   }
 
   function processExpandRules(rules) {
-    let rule = rules.shift();
-    if (!rule) {
-      return promise.resolve(null);
-    }
+    return new Promise(resolve => {
+      let rule = rules.shift();
+      if (!rule) {
+        resolve(null);
+      }
 
-    let deferred = promise.defer();
-    let expandOptions = {
-      rootVariable: gUI.view.getScopeAtIndex(parsed ? 1 : 0),
-      expandTo: rule.name
-    };
+      let expandOptions = {
+        rootVariable: gUI.view.getScopeAtIndex(parsed ? 1 : 0),
+        expandTo: rule.name
+      };
 
-    variablesViewExpandTo(expandOptions).then(function onSuccess(prop) {
-      let name = rule.name;
-      let lastName = name.split(".").pop();
-      rule.name = lastName;
+      variablesViewExpandTo(expandOptions).then(function onSuccess(prop) {
+        let name = rule.name;
+        let lastName = name.split(".").pop();
+        rule.name = lastName;
 
-      let matched = matchVariablesViewProperty(prop, rule);
-      return matched.then(onMatch.bind(null, prop, rule)).then(function () {
-        rule.name = name;
+        let matched = matchVariablesViewProperty(prop, rule);
+        return matched.then(onMatch.bind(null, prop, rule)).then(function () {
+          rule.name = name;
+        });
+      }, function onFailure() {
+        resolve(null);
+      }).then(processExpandRules.bind(null, rules)).then(function () {
+        resolve(null);
       });
-    }, function onFailure() {
-      return promise.resolve(null);
-    }).then(processExpandRules.bind(null, rules)).then(function () {
-      deferred.resolve(null);
     });
-
-    return deferred.promise;
   }
 
   function onAllRulesMatched(rules) {
@@ -545,8 +542,10 @@ function* selectTableItem(id) {
     showAvailableIds();
   }
 
+  let updated = gUI.once("sidebar-updated");
+
   yield click(target);
-  yield gUI.once("sidebar-updated");
+  yield updated;
 }
 
 /**
@@ -554,29 +553,28 @@ function* selectTableItem(id) {
  * @param {Object} target An observable object that either supports on/off or
  * addEventListener/removeEventListener
  * @param {String} eventName
- * @param {Boolean} [useCapture] for addEventListener/removeEventListener
+ * @param {Boolean} useCapture Optional, for addEventListener/removeEventListener
  * @return A promise that resolves when the event has been handled
  */
 function once(target, eventName, useCapture = false) {
   info("Waiting for event: '" + eventName + "' on " + target + ".");
 
-  let deferred = promise.defer();
-
-  for (let [add, remove] of [
-    ["addEventListener", "removeEventListener"],
-    ["addListener", "removeListener"],
-    ["on", "off"]
-  ]) {
-    if ((add in target) && (remove in target)) {
-      target[add](eventName, function onEvent(...aArgs) {
-        target[remove](eventName, onEvent, useCapture);
-        deferred.resolve.apply(deferred, aArgs);
-      }, useCapture);
-      break;
+  return new Promise(resolve => {
+    for (let [add, remove] of [
+      ["addEventListener", "removeEventListener"],
+      ["addListener", "removeListener"],
+      ["on", "off"]
+    ]) {
+      if ((add in target) && (remove in target)) {
+        target[add](eventName, function onEvent(...aArgs) {
+          info("Got event: '" + eventName + "' on " + target + ".");
+          target[remove](eventName, onEvent, useCapture);
+          resolve(...aArgs);
+        }, useCapture);
+        break;
+      }
     }
-  }
-
-  return deferred.promise;
+  });
 }
 
 /**
