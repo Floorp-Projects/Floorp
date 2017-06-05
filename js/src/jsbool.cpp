@@ -16,6 +16,7 @@
 #include "jsobj.h"
 #include "jstypes.h"
 
+#include "jit/InlinableNatives.h"
 #include "vm/GlobalObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/StringBuffer.h"
@@ -144,7 +145,9 @@ js::InitBooleanClass(JSContext* cx, HandleObject obj)
         return nullptr;
     booleanProto->setFixedSlot(BooleanObject::PRIMITIVE_VALUE_SLOT, BooleanValue(false));
 
-    RootedFunction ctor(cx, GlobalObject::createConstructor(cx, Boolean, cx->names().Boolean, 1));
+    RootedFunction ctor(cx, GlobalObject::createConstructor(cx, Boolean, cx->names().Boolean, 1,
+                                                            gc::AllocKind::FUNCTION,
+                                                            &jit::JitInfo_Boolean));
     if (!ctor)
         return nullptr;
 
