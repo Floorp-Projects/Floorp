@@ -4,9 +4,9 @@
 
 "use strict";
 
-/* exported startup, shutdown, install, uninstall */
+/* exported startup, shutdown, install, uninstall, ExtensionAPIs */
 
-Components.utils.import("resource://gre/modules/ExtensionManagement.jsm");
+Components.utils.import("resource://gre/modules/ExtensionAPI.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 var namespace;
@@ -25,7 +25,7 @@ function startup(data, reason) {
 
   resProto.setSubstitution(resource, data.resourceURI);
 
-  ExtensionManagement.registerAPI(
+  ExtensionAPIs.register(
     namespace,
     `resource://${resource}/schema.json`,
     `resource://${resource}/api.js`);
@@ -34,7 +34,7 @@ function startup(data, reason) {
 function shutdown(data, reason) {
   resProto.setSubstitution(resource, null);
 
-  ExtensionManagement.unregisterAPI(namespace);
+  ExtensionAPIs.unregister(namespace);
 }
 
 function uninstall(data, reason) {

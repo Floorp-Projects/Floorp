@@ -414,6 +414,7 @@ GK_ATOM(_false, "false")
 GK_ATOM(farthest, "farthest")
 GK_ATOM(field, "field")
 GK_ATOM(fieldset, "fieldset")
+GK_ATOM(file, "file")
 GK_ATOM(figcaption, "figcaption")
 GK_ATOM(figure, "figure")
 GK_ATOM(fixed, "fixed")
@@ -2007,6 +2008,12 @@ GK_ATOM(ondevicechange, "ondevicechange")
 
 // HTML element attributes that only exposed to XBL and chrome content
 GK_ATOM(mozinputrangeignorepreventdefault, "mozinputrangeignorepreventdefault")
+
+// WebExtensions
+GK_ATOM(moz_extension, "moz-extension")
+GK_ATOM(all_urlsPermission, "<all_urls>")
+GK_ATOM(http, "http")
+GK_ATOM(https, "https")
 
 //---------------------------------------------------------------------------
 // Special atoms

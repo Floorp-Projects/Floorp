@@ -6,8 +6,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
 
-XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
-                                  "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
@@ -478,7 +476,7 @@ this.tabs = class extends ExtensionAPI {
             }
 
             queryInfo = Object.assign({}, queryInfo);
-            queryInfo.url = new MatchPattern(queryInfo.url);
+            queryInfo.url = new MatchPatternSet([].concat(queryInfo.url));
           }
 
           return Array.from(tabManager.query(queryInfo, context),

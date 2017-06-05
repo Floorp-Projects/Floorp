@@ -142,8 +142,8 @@ add_task(async function test_experiments_api() {
   // Install API add-on.
   let apiAddon = await AddonManager.installTemporaryAddon(apiAddonFile);
 
-  let {APIs} = Cu.import("resource://gre/modules/ExtensionManagement.jsm", {});
-  ok(APIs.apis.has("meh"), "Should have meh API.");
+  let {ExtensionAPIs} = Cu.import("resource://gre/modules/ExtensionAPI.jsm", {});
+  ok(ExtensionAPIs.apis.has("meh"), "Should have meh API.");
 
 
   // Install boring WebExtension add-on.

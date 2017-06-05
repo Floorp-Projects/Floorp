@@ -7,3 +7,7 @@ category webextension-scripts-addon toolkit chrome://extensions/content/ext-c-to
 category webextension-schemas events chrome://extensions/content/schemas/events.json
 category webextension-schemas native_host_manifest chrome://extensions/content/schemas/native_host_manifest.json
 category webextension-schemas types chrome://extensions/content/schemas/types.json
+
+
+component {21f9819e-4cdf-49f9-85a0-850af91a5058} extension-process-script.js
+contract @mozilla.org/webextensions/extension-process-script;1 {21f9819e-4cdf-49f9-85a0-850af91a5058}

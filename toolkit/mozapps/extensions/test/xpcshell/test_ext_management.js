@@ -19,7 +19,7 @@ function backgroundGetSelf() {
 add_task(async function test_management_get_self_complete() {
   const id = "get_self_test_complete@tests.mozilla.com";
   const permissions = ["management", "cookies"];
-  const hostPermissions = ["*://example.org/", "https://foo.example.org/"];
+  const hostPermissions = ["*://example.org/*", "https://foo.example.org/*"];
 
   let manifest = {
     applications: {
