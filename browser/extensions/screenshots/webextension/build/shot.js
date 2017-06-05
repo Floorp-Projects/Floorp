@@ -493,6 +493,9 @@ class AbstractShot {
     }
     delete this._clips[name];
   }
+  delAllClips() {
+    this._clips = {};
+  }
   biggestClipSortOrder() {
     let biggest = 0;
     for (let clipId in this._clips) {

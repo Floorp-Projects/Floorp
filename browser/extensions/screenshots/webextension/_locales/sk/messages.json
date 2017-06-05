@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Nemôžete vytvoriť snímku obrazovky stránky Firefox Screenshots!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Váš výber je príliš malý"
+  },
   "genericErrorTitle": {
     "message": "Ups! Služba Firefox Screenshots prestala pracovať."
   },

@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Firefox Screenshots ページのショットは撮れません。"
   },
+  "emptySelectionErrorTitle": {
+    "message": "選択範囲が小さすぎます"
+  },
   "genericErrorTitle": {
     "message": "Firefox Screenshots に問題が発生しました。"
   },

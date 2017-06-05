@@ -376,7 +376,7 @@ this.uicontrol = (function() {
         ui.Box.remove();
         const handler = watchFunction(assertIsTrusted(keyupHandler));
         document.addEventListener("keyup", handler);
-        registeredDocumentHandlers.push({name: "keyup", doc: document, handler});
+        registeredDocumentHandlers.push({name: "keyup", doc: document, handler, useCapture: false});
       }));
     },
 
@@ -874,15 +874,21 @@ this.uicontrol = (function() {
     window.addEventListener('beforeunload', beforeunloadHandler);
   }
 
+  let mousedownSetOnDocument = false;
+
   function installHandlersOnDocument(docObj) {
     for (let [eventName, handler] of primedDocumentHandlers) {
       let watchHandler = watchFunction(handler);
-      docObj.addEventListener(eventName, watchHandler, eventName !== "keyup");
-      registeredDocumentHandlers.push({name: eventName, doc: docObj, watchHandler});
+      let useCapture = eventName !== "keyup";
+      docObj.addEventListener(eventName, watchHandler, useCapture);
+      registeredDocumentHandlers.push({name: eventName, doc: docObj, handler: watchHandler, useCapture});
     }
-    let mousedownHandler = primedDocumentHandlers.get("mousedown");
-    document.addEventListener("mousedown", mousedownHandler, true);
-    registeredDocumentHandlers.push({name: "mousedown", doc: document, watchHandler: mousedownHandler, useCapture: true});
+    if (!mousedownSetOnDocument) {
+      let mousedownHandler = primedDocumentHandlers.get("mousedown");
+      document.addEventListener("mousedown", mousedownHandler, true);
+      registeredDocumentHandlers.push({name: "mousedown", doc: document, handler: mousedownHandler, useCapture: true});
+      mousedownSetOnDocument = true;
+    }
   }
 
   function beforeunloadHandler() {

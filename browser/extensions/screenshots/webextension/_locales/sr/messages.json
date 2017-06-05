@@ -6,7 +6,7 @@
     "message": "Mozilla <screenshots-feedback@mozilla.com>"
   },
   "contextMenuLabel": {
-    "message": "Усликајте екран"
+    "message": "Усликај екран"
   },
   "myShotsLink": {
     "message": "Моји снимци"
@@ -63,6 +63,9 @@
   },
   "selfScreenshotErrorTitle": {
     "message": "Не можете усликати Firefox Screenshots страницу!"
+  },
+  "emptySelectionErrorTitle": {
+    "message": "Ваша селекција је премала"
   },
   "genericErrorTitle": {
     "message": "Ајој! Firefox Screenshots је пошашавио."
