@@ -113,7 +113,7 @@ XPCOMUtils.defineLazyGetter(this, "PALETTE_ITEMS", function() {
 
   let panelPlacements = DEFAULT_AREA_PLACEMENTS["PanelUI-contents"];
   if (!panelPlacements) {
-    result.push(... LEGACY_PANEL_PLACEMENTS);
+    result.push(...LEGACY_PANEL_PLACEMENTS);
   }
   if (!panelPlacements || !panelPlacements.includes("characterencoding-button")) {
     result.push("characterencoding-button");
