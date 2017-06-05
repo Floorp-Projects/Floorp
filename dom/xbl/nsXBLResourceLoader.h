@@ -34,7 +34,7 @@ public:
                               bool aWasAlternate,
                               nsresult aStatus) override;
 
-  bool LoadResources();
+  bool LoadResources(nsIContent* aBoundElement);
   void AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
   void AddResourceListener(nsIContent* aElement);
 
