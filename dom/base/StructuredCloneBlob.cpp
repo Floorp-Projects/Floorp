@@ -94,17 +94,16 @@ StructuredCloneBlob::Deserialize(JSContext* aCx, JS::HandleObject aTargetScope,
 /* static */ JSObject*
 StructuredCloneBlob::ReadStructuredClone(JSContext* aCx, JSStructuredCloneReader* aReader)
 {
-  RefPtr<StructuredCloneBlob> holder = new StructuredCloneBlob();
-
-  if (!holder->ReadStructuredCloneInternal(aCx, aReader)) {
-    return nullptr;
-  }
-
   JS::RootedObject obj(aCx);
-  if (holder->WrapObject(aCx, nullptr, &obj)) {
-    return obj.get();
+  {
+    RefPtr<StructuredCloneBlob> holder = new StructuredCloneBlob();
+
+    if (!holder->ReadStructuredCloneInternal(aCx, aReader) ||
+        !holder->WrapObject(aCx, nullptr, &obj)) {
+      return nullptr;
+    }
   }
-  return nullptr;
+  return obj.get();
 }
 
 bool
