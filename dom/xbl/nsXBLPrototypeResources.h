@@ -7,6 +7,7 @@
 #ifndef nsXBLPrototypeResources_h__
 #define nsXBLPrototypeResources_h__
 
+#include "mozilla/ServoBindings.h"
 #include "mozilla/StyleSheet.h"
 #include "nsICSSLoaderObserver.h"
 
@@ -63,6 +64,8 @@ public:
   // sheets in mStyleSheetList. Equivalent to GatherRuleProcessor(), but for
   // the Servo style backend.
   void ComputeServoStyleSet(nsPresContext* aPresContext);
+
+  const mozilla::ServoStyleSet* GetServoStyleSet() const { return mServoStyleSet.get(); }
 
 private:
   // A loader object. Exists only long enough to load resources, and then it dies.
