@@ -1,5 +1,5 @@
 /* globals global, documentMetadata, util, uicontrol, ui, catcher */
-/* globals domainFromUrl, randomString */
+/* globals buildSettings, domainFromUrl, randomString */
 
 "use strict";
 
@@ -67,18 +67,31 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
     // isSaving indicates we're aleady in the middle of saving
     // we use a timeout so in the case of a failure the button will
     // still start working again
+    if (Math.floor(selectedPos.left) == Math.floor(selectedPos.right) ||
+        Math.floor(selectedPos.top) == Math.floor(selectedPos.bottom)) {
+        let exc = new Error("Empty selection");
+        exc.popupMessage = "EMPTY_SELECTION";
+        exc.noReport = true;
+        catcher.unhandled(exc);
+        return;
+    }
     const uicontrol = global.uicontrol;
     let deactivateAfterFinish = true;
     if (isSaving) {
       return;
     }
     isSaving = setTimeout(() => {
+      ui.Box.clearSaveDisabled();
       isSaving = null;
     }, 1000);
     selectedPos = selectedPos.asJson();
-    let captureText = util.captureEnclosedText(selectedPos);
+    let captureText = "";
+    if (buildSettings.captureText) {
+      captureText = util.captureEnclosedText(selectedPos);
+    }
     let dataUrl = screenshotPage(selectedPos);
     if (dataUrl) {
+      shot.delAllClips();
       shot.addClip({
         createdDate: Date.now(),
         image: {

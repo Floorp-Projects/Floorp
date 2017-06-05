@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Firefox Screenshots",
-  "version": "8.1.0",
+  "version": "9.0.0",
   "description": "__MSG_addonDescription__",
   "author": "__MSG_addonAuthorsList__",
   "homepage_url": "https://github.com/mozilla-services/screenshots",
@@ -16,7 +16,7 @@
       "16": "icons/icon-16.svg",
       "32": "icons/icon-32.svg"
     },
-    "default_title": "__MSG_contextMenuLabel__",
+    "default_title": "Firefox Screenshots",
     "browser_style": false
   },
   "background": {

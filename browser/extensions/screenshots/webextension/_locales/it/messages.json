@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Non è possibile salvare uno screenshot di una pagina di Firefox Screenshots"
   },
+  "emptySelectionErrorTitle": {
+    "message": "L’area selezionata è troppo piccola"
+  },
   "genericErrorTitle": {
     "message": "Wow! Firefox Screenshots è andato in tilt"
   },
