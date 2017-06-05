@@ -28,5 +28,4 @@ asserts(1) asserts-if(styloVsGecko,2) == display-contents-xbl-5.xul display-cont
 == display-contents-writing-mode-1.html display-contents-writing-mode-1-ref.html
 == display-contents-writing-mode-2.html display-contents-writing-mode-2-ref.html
 needs-focus == display-contents-state-change.html display-contents-state-change-ref.html
-pref(layout.css.display-flow-root.enabled,true) == display-flow-root-001.html display-flow-root-001-ref.html
-pref(layout.css.display-flow-root.enabled,false) fails-if(styloVsGecko||stylo) == display-flow-root-001.html display-flow-root-disabled-001-ref.html
+== display-flow-root-001.html display-flow-root-001-ref.html
