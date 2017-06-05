@@ -44,15 +44,17 @@ public class TelemetryCollector {
     private final HashMap<String, TelemetryStageCollector> stageCollectors = new HashMap<>();
 
     // Data which is not specific to a single stage is aggregated in this object.
-    @VisibleForTesting protected ExtendedJSONObject error;
-    private String hashedUID;
-    private String hashedDeviceID;
+    // It's possible that these fields are read/written from different threads.
+    // Volatile is used to ensure memory visibility.
+    @VisibleForTesting protected volatile ExtendedJSONObject error;
+    private volatile String hashedUID;
+    private volatile String hashedDeviceID;
     private final ArrayList<Bundle> devices = new ArrayList<>();
 
-    @Nullable private Long started;
-    @Nullable private Long finished;
+    @Nullable private volatile Long started;
+    @Nullable private volatile Long finished;
 
-    private boolean didRestart = false;
+    private volatile boolean didRestart = false;
 
     public TelemetryStageCollector collectorFor(@NonNull String stageName) {
         if (stageCollectors.containsKey(stageName)) {
@@ -81,11 +83,27 @@ public class TelemetryCollector {
         }
     }
 
+    public void setError(@NonNull String name, @NonNull Exception e) {
+        setError(name, e.getClass().getSimpleName());
+    }
+
     public void setError(@NonNull String name, @NonNull String details) {
+        setError(name, details, null);
+    }
+
+    public void setError(@NonNull String name, @NonNull String details, @Nullable Exception e) {
         final ExtendedJSONObject error = new ExtendedJSONObject();
         error.put("name", name);
-        error.put("error", details);
+        if (e != null) {
+            error.put("error", e.getClass().getSimpleName() + ":" + details);
+        } else {
+            error.put("error", details);
+        }
         this.error = error;
+    }
+
+    public boolean hasError() {
+        return this.error != null;
     }
 
     public void setStarted(long time) {
