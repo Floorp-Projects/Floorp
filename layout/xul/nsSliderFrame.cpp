@@ -1638,5 +1638,14 @@ nsSliderFrame::UnsuppressDisplayport()
   }
 }
 
+bool
+nsSliderFrame::OnlySystemGroupDispatch(EventMessage aMessage) const
+{
+  // If we are in a native anonymous subtree, do not dispatch mouse-move events
+  // targeted at this slider frame to web content. This matches the behaviour
+  // of other browsers.
+  return aMessage == eMouseMove && GetContent()->IsInNativeAnonymousSubtree();
+}
+
 NS_IMPL_ISUPPORTS(nsSliderMediator,
                   nsIDOMEventListener)
