@@ -82,29 +82,41 @@ GetZeroValueForUnit(StyleAnimationValue::Unit aUnit)
 // may apply a workaround for the special case where a 0 length-value is mixed
 // with a eUnit_Float value.  (See comment below.)
 //
+// |aZeroValueStorage| should be a null AnimationValue. This is used for the
+// Servo backend where we may need to allocate a new ServoAnimationValue to
+// represent the appropriate zero value.
+//
 // Returns true on success, or false.
 static bool
 FinalizeStyleAnimationValues(const AnimationValue*& aValue1,
-                             const AnimationValue*& aValue2)
+                             const AnimationValue*& aValue2,
+                             AnimationValue& aZeroValueStorage)
 {
   MOZ_ASSERT(aValue1 || aValue2,
              "expecting at least one non-null value");
   MOZ_ASSERT(!aValue1 || !aValue2 || !aValue1->mServo == !aValue2->mServo,
              "If both values are specified, they should be for the same"
              " style system");
+  MOZ_ASSERT(aZeroValueStorage.IsNull(),
+             "Zero storage should be empty");
 
   bool isServo = aValue1 ? aValue1->mServo : aValue2->mServo;
 
+  // Are we missing either val? (If so, it's an implied 0 in other val's units)
+
   if (isServo) {
-    // Bug 1355349: Implement additive animation for Stylo
-    if (!aValue1 || !aValue2) {
-      NS_WARNING("stylo: Missing values are not yet supported (bug 1355349)");
-      return false;
+    if (!aValue1) {
+      aZeroValueStorage.mServo =
+        Servo_AnimationValues_GetZeroValue(aValue2->mServo).Consume();
+      aValue1 = &aZeroValueStorage;
+    } else if (!aValue2) {
+      aZeroValueStorage.mServo =
+        Servo_AnimationValues_GetZeroValue(aValue1->mServo).Consume();
+      aValue2 = &aZeroValueStorage;
     }
-    return true;
+    return aValue1->mServo && aValue2->mServo;
   }
 
-  // Are we missing either val? (If so, it's an implied 0 in other val's units)
   if (!aValue1) {
     aValue1 = GetZeroValueForUnit(aValue2->mGecko.GetUnit());
     return !!aValue1; // Fail if we have no zero value for this unit.
@@ -263,7 +275,9 @@ nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
   const AnimationValue* destValue = destWrapper
                                     ? &destWrapper->mCSSValue
                                     : nullptr;
-  if (!FinalizeStyleAnimationValues(valueToAdd, destValue)) {
+  AnimationValue zeroValueStorage;
+  if (!FinalizeStyleAnimationValues(valueToAdd, destValue,
+                                    zeroValueStorage)) {
     return NS_ERROR_FAILURE;
   }
   // Did FinalizeStyleAnimationValues change destValue?
@@ -307,7 +321,9 @@ nsSMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
                                        ? &fromWrapper->mCSSValue
                                        : nullptr;
   const AnimationValue* toCSSValue = &toWrapper->mCSSValue;
-  if (!FinalizeStyleAnimationValues(fromCSSValue, toCSSValue)) {
+  AnimationValue zeroValueStorage;
+  if (!FinalizeStyleAnimationValues(fromCSSValue, toCSSValue,
+                                    zeroValueStorage)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -349,7 +365,9 @@ nsSMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
                                         ? &startWrapper->mCSSValue
                                         : nullptr;
   const AnimationValue* endCSSValue = &endWrapper->mCSSValue;
-  if (!FinalizeStyleAnimationValues(startCSSValue, endCSSValue)) {
+  AnimationValue zeroValueStorage;
+  if (!FinalizeStyleAnimationValues(startCSSValue, endCSSValue,
+                                    zeroValueStorage)) {
     return NS_ERROR_FAILURE;
   }
 
