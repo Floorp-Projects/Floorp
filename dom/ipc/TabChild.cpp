@@ -3158,6 +3158,16 @@ TabChild::StopAwaitingLargeAlloc()
   return awaiting;
 }
 
+mozilla::ipc::IPCResult
+TabChild::RecvSetWindowName(const nsString& aName)
+{
+  nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(WebNavigation());
+  if (item) {
+    item->SetName(aName);
+  }
+  return IPC_OK();
+}
+
 mozilla::plugins::PPluginWidgetChild*
 TabChild::AllocPPluginWidgetChild()
 {

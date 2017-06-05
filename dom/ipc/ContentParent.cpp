@@ -4412,6 +4412,7 @@ ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
                                   const OriginAttributes& aOpenerOriginAttributes,
                                   const float& aFullZoom,
                                   uint64_t aNextTabParentId,
+                                  const nsString& aName,
                                   nsresult& aResult,
                                   nsCOMPtr<nsITabParent>& aNewTabParent,
                                   bool* aWindowIsNew)
@@ -4494,7 +4495,7 @@ ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
     nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner;
     aResult = browserDOMWin->OpenURIInFrame(aURIToLoad, params, openLocation,
                                             nsIBrowserDOMWindow::OPEN_NEW,
-                                            aNextTabParentId,
+                                            aNextTabParentId, aName,
                                             getter_AddRefs(frameLoaderOwner));
     if (NS_SUCCEEDED(aResult) && frameLoaderOwner) {
       RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
@@ -4520,6 +4521,13 @@ ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
                                              getter_AddRefs(aNewTabParent));
   if (NS_WARN_IF(NS_FAILED(aResult))) {
     return IPC_OK();
+  }
+
+  MOZ_ASSERT(aNewTabParent);
+  // If we were passed a name for the window which would override the default,
+  // we should send it down to the new tab.
+  if (nsContentUtils::IsOverridingWindowName(aName)) {
+    Unused << TabParent::GetFrom(aNewTabParent)->SendSetWindowName(aName);
   }
 
   if (aURIToLoad) {
@@ -4592,7 +4600,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
     CommonCreateWindow(aThisTab, /* aSetOpener = */ true, aChromeFlags,
                        aCalledFromJS, aPositionSpecified, aSizeSpecified,
                        nullptr, aFeatures, aBaseURI, aOpenerOriginAttributes,
-                       aFullZoom, nextTabParentId, *aResult,
+                       aFullZoom, nextTabParentId, NullString(), *aResult,
                        newRemoteTab, aWindowIsNew);
   if (!ipcResult) {
     return ipcResult;
@@ -4633,7 +4641,8 @@ ContentParent::RecvCreateWindowInDifferentProcess(
   const nsCString& aFeatures,
   const nsCString& aBaseURI,
   const OriginAttributes& aOpenerOriginAttributes,
-  const float& aFullZoom)
+  const float& aFullZoom,
+  const nsString& aName)
 {
   nsCOMPtr<nsITabParent> newRemoteTab;
   bool windowIsNew;
@@ -4643,7 +4652,7 @@ ContentParent::RecvCreateWindowInDifferentProcess(
     CommonCreateWindow(aThisTab, /* aSetOpener = */ false, aChromeFlags,
                        aCalledFromJS, aPositionSpecified, aSizeSpecified,
                        uriToLoad, aFeatures, aBaseURI, aOpenerOriginAttributes,
-                       aFullZoom, /* aNextTabParentId = */ 0, rv,
+                       aFullZoom, /* aNextTabParentId = */ 0, aName, rv,
                        newRemoteTab, &windowIsNew);
   if (!ipcResult) {
     return ipcResult;

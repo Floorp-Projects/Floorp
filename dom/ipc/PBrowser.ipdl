@@ -890,6 +890,11 @@ child:
      */
     async AwaitLargeAlloc();
 
+    /**
+     * Tell the TabChild to set the name of its toplevel docshell to the given name.
+     */
+    async SetWindowName(nsString aName);
+
 /*
  * FIXME: write protocol!
 
