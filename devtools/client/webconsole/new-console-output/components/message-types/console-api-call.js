@@ -42,13 +42,13 @@ function ConsoleApiCall(props) {
     serviceContainer,
     indent,
     timestampsVisible,
+    repeat,
   } = props;
   const {
     id: messageId,
     source,
     type,
     level,
-    repeat,
     stacktrace,
     frame,
     timeStamp,
