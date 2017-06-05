@@ -18,12 +18,14 @@ def create_parser():
     p = argparse.ArgumentParser()
     p.add_argument("--check-clean", action="store_true",
                    help="Check that updating the manifest doesn't lead to any changes")
+    p.add_argument("--rebuild", action="store_true",
+                   help="Rebuild the manifest from scratch")
     commandline.add_logging_group(p)
 
     return p
 
 
-def update(logger, wpt_dir, check_clean=True):
+def update(logger, wpt_dir, check_clean=True, rebuild=False):
     localpaths = imp.load_source("localpaths",
                                  os.path.join(wpt_dir, "tests", "tools", "localpaths.py"))
     kwargs = {"config": os.path.join(wpt_dir, "wptrunner.ini"),
@@ -39,13 +41,16 @@ def update(logger, wpt_dir, check_clean=True):
     if check_clean:
         return _check_clean(logger, test_paths)
 
-    return _update(logger, test_paths)
+    return _update(logger, test_paths, rebuild)
 
 
-def _update(logger, test_paths):
+def _update(logger, test_paths, rebuild):
     for url_base, paths in test_paths.iteritems():
         manifest_path = os.path.join(paths["metadata_path"], "MANIFEST.json")
-        m = manifest.manifest.load(paths["tests_path"], manifest_path)
+        if rebuild:
+            m = manifest.manifest.Manifest(url_base)
+        else:
+            m = manifest.manifest.load(paths["tests_path"], manifest_path)
         manifest.update.update(paths["tests_path"], m, working_copy=True)
         manifest.manifest.write(m, manifest_path)
     return 0
