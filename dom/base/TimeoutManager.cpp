@@ -263,6 +263,8 @@ uint32_t gMaxConsecutiveCallbacksMilliseconds;
 TimeoutManager::TimeoutManager(nsGlobalWindow& aWindow)
   : mWindow(aWindow),
     mExecutor(new TimeoutExecutor(this)),
+    mNormalTimeouts(*this),
+    mTrackingTimeouts(*this),
     mTimeoutIdCounter(1),
     mNextFiringId(InvalidFiringId + 1),
     mRunningTimeout(nullptr),
