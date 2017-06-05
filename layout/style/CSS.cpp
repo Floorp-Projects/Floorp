@@ -93,7 +93,8 @@ CSS::Supports(const GlobalObject& aGlobal,
 
   nsCSSParser parser;
   return parser.EvaluateSupportsCondition(aCondition, info.mDocURI,
-                                          info.mBaseURI, info.mPrincipal);
+                                          info.mBaseURI, info.mPrincipal,
+                                          css::SupportsParsingSettings::ImpliedParentheses);
 }
 
 /* static */ void

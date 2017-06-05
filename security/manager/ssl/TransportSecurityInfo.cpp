@@ -38,13 +38,13 @@
 namespace mozilla { namespace psm {
 
 TransportSecurityInfo::TransportSecurityInfo()
-  : mMutex("TransportSecurityInfo::mMutex"),
-    mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE),
-    mSubRequestsBrokenSecurity(0),
-    mSubRequestsNoSecurity(0),
-    mErrorCode(0),
-    mErrorMessageType(PlainErrorMessage),
-    mPort(0)
+  : mMutex("TransportSecurityInfo::mMutex")
+  , mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE)
+  , mSubRequestsBrokenSecurity(0)
+  , mSubRequestsNoSecurity(0)
+  , mErrorCode(0)
+  , mErrorMessageType(SSLErrorMessageType::Plain)
+  , mPort(0)
 {
 }
 
@@ -76,26 +76,17 @@ TransportSecurityInfo::SetHostName(const char* host)
   mHostName.Assign(host);
 }
 
-nsresult
+void
 TransportSecurityInfo::SetPort(int32_t aPort)
 {
   mPort = aPort;
-  return NS_OK;
 }
 
-nsresult
-TransportSecurityInfo::GetPort(int32_t *aPort)
-{
-  *aPort = mPort;
-  return NS_OK;
-}
-
-nsresult
+void
 TransportSecurityInfo::SetOriginAttributes(
   const OriginAttributes& aOriginAttributes)
 {
   mOriginAttributes = aOriginAttributes;
-  return NS_OK;
 }
 
 PRErrorCode
@@ -124,11 +115,10 @@ TransportSecurityInfo::GetSecurityState(uint32_t* state)
   return NS_OK;
 }
 
-nsresult
+void
 TransportSecurityInfo::SetSecurityState(uint32_t aState)
 {
   mSecurityState = aState;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -241,11 +231,11 @@ TransportSecurityInfo::formatErrorMessage(const MutexAutoLock& /*proofOfLock*/,
   }
 
   nsresult rv;
-  MOZ_ASSERT(errorMessageType != OverridableCertErrorMessage ||
+  MOZ_ASSERT(errorMessageType != SSLErrorMessageType::OverridableCert ||
                (mSSLStatus && mSSLStatus->HasServerCert() &&
                 mSSLStatus->mHaveCertErrorBits),
              "formatErrorMessage() called for cert error without cert");
-  if (errorMessageType == OverridableCertErrorMessage &&
+  if (errorMessageType == SSLErrorMessageType::OverridableCert &&
       mSSLStatus && mSSLStatus->HasServerCert()) {
     rv = formatOverridableCertErrorMessage(*mSSLStatus, errorCode,
                                            mHostName, mPort,
@@ -497,12 +487,10 @@ TransportSecurityInfo::GetSSLStatus(nsISSLStatus** _result)
   return NS_OK;
 }
 
-nsresult
+void
 TransportSecurityInfo::SetSSLStatus(nsSSLStatus *aSSLStatus)
 {
   mSSLStatus = aSSLStatus;
-
-  return NS_OK;
 }
 
 /* Formats an error message for non-certificate-related SSL errors
@@ -948,15 +936,9 @@ GetHostPortKey(TransportSecurityInfo* infoObject, /*out*/ nsCString& result)
 
   result.Truncate();
 
-  int32_t port;
-  nsresult rv = infoObject->GetPort(&port);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   result.Assign(infoObject->GetHostName());
   result.Append(':');
-  result.AppendInt(port);
+  result.AppendInt(infoObject->GetPort());
 
   return NS_OK;
 }

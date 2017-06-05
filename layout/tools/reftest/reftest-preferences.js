@@ -78,6 +78,9 @@ user_pref("dom.allow_XUL_XBL_for_file", true);
 // their protocol with the inner URI of the view-source URI
 user_pref("security.view-source.reachable-from-inner-protocol", true);
 
+// Skip data reporting policy notifications.
+user_pref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
+
 // Ensure that telemetry is disabled, so we don't connect to the telemetry
 // server in the middle of the tests.
 user_pref("toolkit.telemetry.enabled", false);

@@ -108,7 +108,7 @@ const prefs = {
 
       if (prefs) {
         for (let prefName of Object.keys(prefs)) {
-          Preferences.set("marionette." + prefName, prefs[prefName]);
+          Preferences.set(prefName, prefs[prefName]);
         }
       }
     }
