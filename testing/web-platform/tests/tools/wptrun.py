@@ -81,7 +81,7 @@ otherwise install OpenSSL and ensure that it's on your $PATH.""")
 
 
 def check_environ(product):
-    if product != "firefox":
+    if product not in ("firefox", "servo"):
         expected_hosts = ["web-platform.test",
                           "www.web-platform.test",
                           "www1.web-platform.test",
