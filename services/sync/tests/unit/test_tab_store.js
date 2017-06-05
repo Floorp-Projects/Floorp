@@ -6,23 +6,26 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/common/utils.js");
 
-function getMockStore() {
+async function getMockStore() {
   let engine = new TabEngine(Service);
+  await engine.initialize();
   let store = engine._store;
   store.getTabState = mockGetTabState;
   store.shouldSkipWindow = mockShouldSkipWindow;
   return store;
 }
 
-function test_create() {
-  let store = new TabEngine(Service)._store;
+add_task(async function test_create() {
+  let engine = new TabEngine(Service);
+  await engine.initialize();
+  let store = engine._store;
 
   _("Create a first record");
   let rec = {id: "id1",
              clientName: "clientName1",
              cleartext: { "foo": "bar" },
              modified: 1000};
-  store.applyIncoming(rec);
+  await store.applyIncoming(rec);
   deepEqual(store._remoteClients["id1"], { lastModified: 1000, foo: "bar" });
 
   _("Create a second record");
@@ -30,7 +33,7 @@ function test_create() {
          clientName: "clientName2",
          cleartext: { "foo2": "bar2" },
          modified: 2000};
-  store.applyIncoming(rec);
+  await store.applyIncoming(rec);
   deepEqual(store._remoteClients["id2"], { lastModified: 2000, foo2: "bar2" });
 
   _("Create a third record");
@@ -38,12 +41,12 @@ function test_create() {
          clientName: "clientName3",
          cleartext: { "foo3": "bar3" },
          modified: 3000};
-  store.applyIncoming(rec);
+  await store.applyIncoming(rec);
   deepEqual(store._remoteClients["id3"], { lastModified: 3000, foo3: "bar3" });
-}
+});
 
-function test_getAllTabs() {
-  let store = getMockStore();
+add_task(async function test_getAllTabs() {
+  let store = await getMockStore();
   let tabs;
 
   let threeUrls = ["http://foo.com", "http://fuubar.com", "http://barbar.com"];
@@ -83,10 +86,10 @@ function test_getAllTabs() {
   equal(tabs[0].urlHistory.length, 5);
   equal(tabs[0].urlHistory[0], "http://foo40.bar");
   equal(tabs[0].urlHistory[4], "http://foo36.bar");
-}
+});
 
-function test_createRecord() {
-  let store = getMockStore();
+add_task(async function test_createRecord() {
+  let store = await getMockStore();
   let record;
 
   store.getTabState = mockGetTabState;
@@ -96,19 +99,13 @@ function test_createRecord() {
   let numtabs = 2600; // Note: this number is connected to DEFAULT_MAX_RECORD_PAYLOAD_BYTES
 
   store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, "http://foo.com", 1, 1);
-  record = store.createRecord("fake-guid");
+  record = await store.createRecord("fake-guid");
   ok(record instanceof TabSetRecord);
   equal(record.tabs.length, 1);
 
   _("create a big record");
   store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, "http://foo.com", 1, numtabs);
-  record = store.createRecord("fake-guid");
+  record = await store.createRecord("fake-guid");
   ok(record instanceof TabSetRecord);
   equal(record.tabs.length, 2501);
-}
-
-function run_test() {
-  test_create();
-  test_getAllTabs();
-  test_createRecord();
-}
+});

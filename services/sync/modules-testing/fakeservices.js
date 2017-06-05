@@ -35,25 +35,18 @@ this.FakeFilesystemService = function FakeFilesystemService(contents) {
     }
   }
 
-  Utils.jsonSave = function jsonSave(filePath, that, obj, callback) {
+  Utils.jsonSave = async function jsonSave(filePath, that, obj) {
     let json = typeof obj == "function" ? obj.call(that) : obj;
     self.fakeContents["weave/" + filePath + ".json"] = JSON.stringify(json);
-    if (callback) {
-      callback.call(that);
-    }
-    return Promise.resolve();
   };
 
-  Utils.jsonLoad = function jsonLoad(filePath, that, cb) {
+  Utils.jsonLoad = async function jsonLoad(filePath, that) {
     let obj;
     let json = self.fakeContents["weave/" + filePath + ".json"];
     if (json) {
       obj = JSON.parse(json);
     }
-    if (cb) {
-      cb.call(that, obj);
-    }
-    return Promise.resolve(obj);
+    return obj;
   };
 
   Utils.jsonMove = function jsonMove(aFrom, aTo, that) {

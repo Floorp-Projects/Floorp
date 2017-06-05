@@ -17,7 +17,6 @@ Cu.import("resource://gre/modules/osfile.jsm", this);
 
 Cu.import("resource://services-sync/util.js");
 
-initTestLogging("Trace");
 
 function SteamStore(engine) {
   Store.call(this, "Steam", engine);
@@ -45,7 +44,7 @@ SteamEngine.prototype = {
   _storeObj: SteamStore,
   _trackerObj: SteamTracker,
   _errToThrow: null,
-  _sync() {
+  async _sync() {
     if (this._errToThrow) {
       throw this._errToThrow;
     }
@@ -66,8 +65,11 @@ async function cleanAndGo(engine, server) {
   await promiseStopServer(server);
 }
 
-// Avoid addon manager complaining about not being initialized
-Service.engineManager.unregister("addons");
+add_task(async function setup() {
+  initTestLogging("Trace");
+  // Avoid addon manager complaining about not being initialized
+  Service.engineManager.unregister("addons");
+});
 
 add_task(async function test_basic() {
   enableValidationPrefs();
@@ -105,6 +107,7 @@ add_task(async function test_basic() {
 
 add_task(async function test_processIncoming_error() {
   let engine = new BookmarksEngine(Service);
+  await engine.initialize();
   let store  = engine._store;
   let server = serverForFoo(engine);
   await SyncTestingInfrastructure(server);
@@ -148,13 +151,14 @@ add_task(async function test_processIncoming_error() {
     });
 
   } finally {
-    store.wipe();
+    await store.wipe();
     await cleanAndGo(engine, server);
   }
 });
 
 add_task(async function test_uploading() {
   let engine = new BookmarksEngine(Service);
+  await engine.initialize();
   let store  = engine._store;
   let server = serverForFoo(engine);
   await SyncTestingInfrastructure(server);
@@ -176,8 +180,8 @@ add_task(async function test_uploading() {
 
     PlacesUtils.bookmarks.setItemTitle(bmk_id, "New Title");
 
-    store.wipe();
-    engine.resetClient();
+    await store.wipe();
+    await engine.resetClient();
 
     ping = await sync_engine_and_validate_telem(engine, false);
     equal(ping.engines.length, 1);
@@ -187,7 +191,7 @@ add_task(async function test_uploading() {
 
   } finally {
     // Clean up.
-    store.wipe();
+    await store.wipe();
     await cleanAndGo(engine, server);
   }
 });
@@ -333,7 +337,7 @@ add_task(async function test_sync_partialUpload() {
 add_task(async function test_generic_engine_fail() {
   enableValidationPrefs();
 
-  Service.engineManager.register(SteamEngine);
+  await Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
   let server = serverForFoo(engine);
@@ -359,7 +363,7 @@ add_task(async function test_generic_engine_fail() {
 add_task(async function test_engine_fail_ioerror() {
   enableValidationPrefs();
 
-  Service.engineManager.register(SteamEngine);
+  await Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
   let server = serverForFoo(engine);
@@ -426,7 +430,7 @@ add_task(async function test_clean_urls() {
 add_task(async function test_initial_sync_engines() {
   enableValidationPrefs();
 
-  Service.engineManager.register(SteamEngine);
+  await Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
   // These are the only ones who actually have things to sync at startup.
@@ -463,7 +467,7 @@ add_task(async function test_initial_sync_engines() {
 add_task(async function test_nserror() {
   enableValidationPrefs();
 
-  Service.engineManager.register(SteamEngine);
+  await Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
   let server = serverForFoo(engine);
@@ -518,7 +522,7 @@ add_task(async function test_discarding() {
     telem.submit = () => ok(false, "Submitted telemetry ping when we should not have");
 
     for (let i = 0; i < 5; ++i) {
-      Service.sync();
+      await Service.sync();
     }
     telem.submit = oldSubmit;
     telem.submissionInterval = -1;
@@ -538,7 +542,7 @@ add_task(async function test_discarding() {
 add_task(async function test_no_foreign_engines_in_error_ping() {
   enableValidationPrefs();
 
-  Service.engineManager.register(BogusEngine);
+  await Service.engineManager.register(BogusEngine);
   let engine = Service.engineManager.get("bogus");
   engine.enabled = true;
   let server = serverForFoo(engine);
@@ -557,7 +561,7 @@ add_task(async function test_no_foreign_engines_in_error_ping() {
 add_task(async function test_sql_error() {
   enableValidationPrefs();
 
-  Service.engineManager.register(SteamEngine);
+  await Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
   let server = serverForFoo(engine);
@@ -582,7 +586,7 @@ add_task(async function test_sql_error() {
 add_task(async function test_no_foreign_engines_in_success_ping() {
   enableValidationPrefs();
 
-  Service.engineManager.register(BogusEngine);
+  await Service.engineManager.register(BogusEngine);
   let engine = Service.engineManager.get("bogus");
   engine.enabled = true;
   let server = serverForFoo(engine);
@@ -600,7 +604,7 @@ add_task(async function test_no_foreign_engines_in_success_ping() {
 add_task(async function test_events() {
   enableValidationPrefs();
 
-  Service.engineManager.register(BogusEngine);
+  await Service.engineManager.register(BogusEngine);
   let engine = Service.engineManager.get("bogus");
   engine.enabled = true;
   let server = serverForFoo(engine);
@@ -644,7 +648,7 @@ add_task(async function test_events() {
 add_task(async function test_invalid_events() {
   enableValidationPrefs();
 
-  Service.engineManager.register(BogusEngine);
+  await Service.engineManager.register(BogusEngine);
   let engine = Service.engineManager.get("bogus");
   engine.enabled = true;
   let server = serverForFoo(engine);
@@ -690,7 +694,7 @@ add_task(async function test_no_ping_for_self_hosters() {
   let telem = get_sync_test_telemetry();
   let oldSubmit = telem.submit;
 
-  Service.engineManager.register(BogusEngine);
+  await Service.engineManager.register(BogusEngine);
   let engine = Service.engineManager.get("bogus");
   engine.enabled = true;
   let server = serverForFoo(engine);
@@ -703,7 +707,7 @@ add_task(async function test_no_ping_for_self_hosters() {
         resolve(result);
       };
     });
-    Service.sync();
+    await Service.sync();
     let pingSubmitted = await submitPromise;
     // The Sync testing infrastructure already sets up a custom token server,
     // so we don't need to do anything to simulate a self-hosted user.

@@ -77,7 +77,7 @@ add_task(async function test_repairs_start() {
     }
   }
   let requestor = {
-    startRepairs(validationInfo, flowID) {
+    async startRepairs(validationInfo, flowID) {
       ok(flowID, "got a flow ID");
       equal(validationInfo, problems);
       repairStarted = true;
@@ -111,7 +111,7 @@ add_task(async function test_repairs_start() {
 add_task(async function test_repairs_advanced_daily() {
   let repairCalls = 0;
   let requestor = {
-    continueRepairs() {
+    async continueRepairs() {
       repairCalls++;
     },
     tryServerOnlyRepairs() {
@@ -165,7 +165,7 @@ add_task(async function test_repairs_skip_if_cant_vaidate() {
     }
   }
   let requestor = {
-    startRepairs(validationInfo, flowID) {
+    async startRepairs(validationInfo, flowID) {
       assert.ok(false, "Never should start repairs");
     },
     tryServerOnlyRepairs() {

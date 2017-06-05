@@ -55,14 +55,14 @@ add_task(async function test_verifyLogin() {
 
     _("Credentials won't check out because we're not configured yet.");
     Service.status.resetSync();
-    do_check_false(Service.verifyLogin());
+    do_check_false((await Service.verifyLogin()));
     do_check_eq(Service.status.service, CLIENT_NOT_CONFIGURED);
     do_check_eq(Service.status.login, LOGIN_FAILED_NO_USERNAME);
 
     _("Success if syncBundleKey is set.");
     Service.status.resetSync();
     await configureIdentity({ username: "johndoe" }, server);
-    do_check_true(Service.verifyLogin());
+    do_check_true((await Service.verifyLogin()));
     do_check_eq(Service.status.service, STATUS_OK);
     do_check_eq(Service.status.login, LOGIN_SUCCEEDED);
 
@@ -76,7 +76,7 @@ add_task(async function test_verifyLogin() {
       Svc.Obs.remove("weave:service:backoff:interval", observe);
       backoffInterval = subject;
     });
-    do_check_false(Service.verifyLogin());
+    do_check_false((await Service.verifyLogin()));
     do_check_true(Service.status.enforceBackoff);
     do_check_eq(backoffInterval, 42);
     do_check_eq(Service.status.service, LOGIN_FAILED);
@@ -86,14 +86,14 @@ add_task(async function test_verifyLogin() {
     Service.status.resetSync();
     Service.clusterURL = "";
     Service._clusterManager._findCluster = () => "http://localhost:12345/";
-    do_check_false(Service.verifyLogin());
+    do_check_false((await Service.verifyLogin()));
     do_check_eq(Service.status.service, LOGIN_FAILED);
     do_check_eq(Service.status.login, LOGIN_FAILED_NETWORK_ERROR);
 
     _("Ensure a network error when getting the collection info sets the right Status bits.");
     Service.status.resetSync();
     Service.clusterURL = "http://localhost:12345/";
-    do_check_false(Service.verifyLogin());
+    do_check_false((await Service.verifyLogin()));
     do_check_eq(Service.status.service, LOGIN_FAILED);
     do_check_eq(Service.status.login, LOGIN_FAILED_NETWORK_ERROR);
 

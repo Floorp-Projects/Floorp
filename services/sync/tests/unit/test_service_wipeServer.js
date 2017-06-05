@@ -64,7 +64,7 @@ add_task(async function test_wipeServer_list_success() {
     do_check_false(diesel_coll.deleted);
 
     _("wipeServer() will happily ignore the non-existent collection and use the timestamp of the last DELETE that was successful.");
-    let timestamp = Service.wipeServer(["steam", "diesel", "petrol"]);
+    let timestamp = await Service.wipeServer(["steam", "diesel", "petrol"]);
     do_check_eq(timestamp, diesel_coll.timestamp);
 
     _("wipeServer stopped deleting after encountering an error with the 'petrol' collection, thus only 'steam' has been deleted.");
@@ -100,7 +100,7 @@ add_task(async function test_wipeServer_list_503() {
     _("wipeServer() will happily ignore the non-existent collection, delete the 'steam' collection and abort after an receiving an error on the 'petrol' collection.");
     let error;
     try {
-      Service.wipeServer(["non-existent", "steam", "petrol", "diesel"]);
+      await Service.wipeServer(["non-existent", "steam", "petrol", "diesel"]);
       do_throw("Should have thrown!");
     } catch (ex) {
       error = ex;
@@ -140,7 +140,7 @@ add_task(async function test_wipeServer_all_success() {
 
   _("Try deletion.");
   await SyncTestingInfrastructure(server, "johndoe", "irrelevant");
-  let returnedTimestamp = Service.wipeServer();
+  let returnedTimestamp = await Service.wipeServer();
   do_check_true(deleted);
   do_check_eq(returnedTimestamp, serverTimestamp);
 
@@ -172,7 +172,7 @@ add_task(async function test_wipeServer_all_404() {
 
   _("Try deletion.");
   await SyncTestingInfrastructure(server, "johndoe", "irrelevant");
-  let returnedTimestamp = Service.wipeServer();
+  let returnedTimestamp = await Service.wipeServer();
   do_check_true(deleted);
   do_check_eq(returnedTimestamp, serverTimestamp);
 
@@ -201,7 +201,7 @@ add_task(async function test_wipeServer_all_503() {
   let error;
   try {
     await SyncTestingInfrastructure(server, "johndoe", "irrelevant");
-    Service.wipeServer();
+    await Service.wipeServer();
     do_throw("Should have thrown!");
   } catch (ex) {
     error = ex;
@@ -221,7 +221,7 @@ add_task(async function test_wipeServer_all_connectionRefused() {
 
   _("Try deletion.");
   try {
-    Service.wipeServer();
+    await Service.wipeServer();
     do_throw("Should have thrown!");
   } catch (ex) {
     do_check_eq(ex.result, Cr.NS_ERROR_CONNECTION_REFUSED);

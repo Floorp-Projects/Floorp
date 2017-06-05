@@ -54,21 +54,13 @@ Addon.prototype = {
 
   uninstall: function uninstall() {
     // find our addon locally
-    let cb = Async.makeSyncCallback();
-    AddonManager.getAddonByID(this.id, cb);
-    let addon = Async.waitForSyncCallback(cb);
-
+    let addon = Async.promiseSpinningly(AddonManager.getAddonByID(this.id));
     Logger.AssertTrue(!!addon, "could not find addon " + this.id + " to uninstall");
-
-    cb = Async.makeSpinningCallback();
-    AddonUtils.uninstallAddon(addon, cb);
-    cb.wait();
+    Async.promiseSpinningly(AddonUtils.uninstallAddon(addon));
   },
 
   find: function find(state) {
-    let cb = Async.makeSyncCallback();
-    AddonManager.getAddonByID(this.id, cb);
-    let addon = Async.waitForSyncCallback(cb);
+    let addon = Async.promiseSpinningly(AddonManager.getAddonByID(this.id));
 
     if (!addon) {
       Logger.logInfo("Could not find add-on with ID: " + this.id);

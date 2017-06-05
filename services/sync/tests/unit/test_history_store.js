@@ -33,45 +33,36 @@ function queryHistoryVisits(uri) {
   return queryPlaces(uri, options);
 }
 
-function onNextVisit(callback) {
-  PlacesUtils.history.addObserver({
-    onBeginUpdateBatch: function onBeginUpdateBatch() {},
-    onEndUpdateBatch: function onEndUpdateBatch() {},
-    onPageChanged: function onPageChanged() {},
-    onTitleChanged: function onTitleChanged() {
-    },
-    onVisit: function onVisit() {
-      PlacesUtils.history.removeObserver(this);
-      Utils.nextTick(callback);
-    },
-    onDeleteVisits: function onDeleteVisits() {},
-    onPageExpired: function onPageExpired() {},
-    onDeleteURI: function onDeleteURI() {},
-    onClearHistory: function onClearHistory() {},
-    QueryInterface: XPCOMUtils.generateQI([
-      Ci.nsINavHistoryObserver,
-      Ci.nsINavHistoryObserver_MOZILLA_1_9_1_ADDITIONS,
-      Ci.nsISupportsWeakReference
-    ])
-  }, true);
+function promiseOnVisitObserved() {
+  return new Promise(res => {
+    PlacesUtils.history.addObserver({
+      onBeginUpdateBatch: function onBeginUpdateBatch() {},
+      onEndUpdateBatch: function onEndUpdateBatch() {},
+      onPageChanged: function onPageChanged() {},
+      onTitleChanged: function onTitleChanged() {
+      },
+      onVisit: function onVisit() {
+        PlacesUtils.history.removeObserver(this);
+        res();
+      },
+      onDeleteVisits: function onDeleteVisits() {},
+      onPageExpired: function onPageExpired() {},
+      onDeleteURI: function onDeleteURI() {},
+      onClearHistory: function onClearHistory() {},
+      QueryInterface: XPCOMUtils.generateQI([
+        Ci.nsINavHistoryObserver,
+        Ci.nsINavHistoryObserver_MOZILLA_1_9_1_ADDITIONS,
+        Ci.nsISupportsWeakReference
+      ])
+    }, true);
+  });
 }
 
-// Ensure exceptions from inside callbacks leads to test failures while
-// we still clean up properly.
-function ensureThrows(func) {
-  return function() {
-    try {
-      func.apply(this, arguments);
-    } catch (ex) {
-      PlacesTestUtils.clearHistory();
-      do_throw(ex);
-    }
-  };
-}
-
-var store = new HistoryEngine(Service)._store;
-function applyEnsureNoFailures(records) {
-  do_check_eq(store.applyIncomingBatch(records).length, 0);
+var engine = new HistoryEngine(Service);
+Async.promiseSpinningly(engine.initialize());
+var store = engine._store;
+async function applyEnsureNoFailures(records) {
+  do_check_eq((await store.applyIncomingBatch(records)).length, 0);
 }
 
 var fxuri, fxguid, tburi, tbguid;
@@ -81,95 +72,100 @@ function run_test() {
   run_next_test();
 }
 
-add_test(function test_store() {
+add_task(async function test_store() {
   _("Verify that we've got an empty store to work with.");
-  do_check_empty(store.getAllIDs());
+  do_check_empty((await store.getAllIDs()));
 
   _("Let's create an entry in the database.");
   fxuri = Utils.makeURI("http://getfirefox.com/");
 
-  PlacesTestUtils.addVisits({ uri: fxuri, title: "Get Firefox!",
-                              visitDate: TIMESTAMP1 })
-                 .then(() => {
-    _("Verify that the entry exists.");
-    let ids = Object.keys(store.getAllIDs());
-    do_check_eq(ids.length, 1);
-    fxguid = ids[0];
-    do_check_true(store.itemExists(fxguid));
+  await PlacesTestUtils.addVisits({ uri: fxuri, title: "Get Firefox!",
+                                  visitDate: TIMESTAMP1 });
+  _("Verify that the entry exists.");
+  let ids = Object.keys((await store.getAllIDs()));
+  do_check_eq(ids.length, 1);
+  fxguid = ids[0];
+  do_check_true((await store.itemExists(fxguid)));
 
-    _("If we query a non-existent record, it's marked as deleted.");
-    let record = store.createRecord("non-existent");
-    do_check_true(record.deleted);
+  _("If we query a non-existent record, it's marked as deleted.");
+  let record = await store.createRecord("non-existent");
+  do_check_true(record.deleted);
 
-    _("Verify createRecord() returns a complete record.");
-    record = store.createRecord(fxguid);
-    do_check_eq(record.histUri, fxuri.spec);
-    do_check_eq(record.title, "Get Firefox!");
-    do_check_eq(record.visits.length, 1);
-    do_check_eq(record.visits[0].date, TIMESTAMP1);
-    do_check_eq(record.visits[0].type, Ci.nsINavHistoryService.TRANSITION_LINK);
+  _("Verify createRecord() returns a complete record.");
+  record = await store.createRecord(fxguid);
+  do_check_eq(record.histUri, fxuri.spec);
+  do_check_eq(record.title, "Get Firefox!");
+  do_check_eq(record.visits.length, 1);
+  do_check_eq(record.visits[0].date, TIMESTAMP1);
+  do_check_eq(record.visits[0].type, Ci.nsINavHistoryService.TRANSITION_LINK);
 
-    _("Let's modify the record and have the store update the database.");
-    let secondvisit = {date: TIMESTAMP2,
-                       type: Ci.nsINavHistoryService.TRANSITION_TYPED};
-    onNextVisit(ensureThrows(function() {
-      let queryres = queryHistoryVisits(fxuri);
-      do_check_eq(queryres.length, 2);
-      do_check_eq(queryres[0].time, TIMESTAMP1);
-      do_check_eq(queryres[0].title, "Hol Dir Firefox!");
-      do_check_eq(queryres[1].time, TIMESTAMP2);
-      do_check_eq(queryres[1].title, "Hol Dir Firefox!");
-      run_next_test();
-    }));
-    applyEnsureNoFailures([
-      {id: fxguid,
-       histUri: record.histUri,
-       title: "Hol Dir Firefox!",
-       visits: [record.visits[0], secondvisit]}
-    ]);
-  });
+  _("Let's modify the record and have the store update the database.");
+  let secondvisit = {date: TIMESTAMP2,
+                     type: Ci.nsINavHistoryService.TRANSITION_TYPED};
+  let onVisitObserved = promiseOnVisitObserved();
+  await applyEnsureNoFailures([
+    {id: fxguid,
+     histUri: record.histUri,
+     title: "Hol Dir Firefox!",
+     visits: [record.visits[0], secondvisit]}
+  ]);
+  await onVisitObserved;
+  try {
+    let queryres = queryHistoryVisits(fxuri);
+    do_check_eq(queryres.length, 2);
+    do_check_eq(queryres[0].time, TIMESTAMP1);
+    do_check_eq(queryres[0].title, "Hol Dir Firefox!");
+    do_check_eq(queryres[1].time, TIMESTAMP2);
+    do_check_eq(queryres[1].title, "Hol Dir Firefox!");
+  } catch (ex) {
+    PlacesTestUtils.clearHistory();
+    do_throw(ex);
+  }
 });
 
-add_test(function test_store_create() {
+add_task(async function test_store_create() {
   _("Create a brand new record through the store.");
   tbguid = Utils.makeGUID();
   tburi = Utils.makeURI("http://getthunderbird.com");
-  onNextVisit(ensureThrows(function() {
-    do_check_attribute_count(store.getAllIDs(), 2);
-    let queryres = queryHistoryVisits(tburi);
-    do_check_eq(queryres.length, 1);
-    do_check_eq(queryres[0].time, TIMESTAMP3);
-    do_check_eq(queryres[0].title, "The bird is the word!");
-    run_next_test();
-  }));
-  applyEnsureNoFailures([
+  let onVisitObserved = promiseOnVisitObserved();
+  await applyEnsureNoFailures([
     {id: tbguid,
      histUri: tburi.spec,
      title: "The bird is the word!",
      visits: [{date: TIMESTAMP3,
                type: Ci.nsINavHistoryService.TRANSITION_TYPED}]}
   ]);
+  await onVisitObserved;
+  try {
+    do_check_attribute_count(Async.promiseSpinningly(store.getAllIDs()), 2);
+    let queryres = queryHistoryVisits(tburi);
+    do_check_eq(queryres.length, 1);
+    do_check_eq(queryres[0].time, TIMESTAMP3);
+    do_check_eq(queryres[0].title, "The bird is the word!");
+  } catch (ex) {
+    PlacesTestUtils.clearHistory();
+    do_throw(ex);
+  }
 });
 
-add_test(function test_null_title() {
+add_task(async function test_null_title() {
   _("Make sure we handle a null title gracefully (it can happen in some cases, e.g. for resource:// URLs)");
   let resguid = Utils.makeGUID();
   let resuri = Utils.makeURI("unknown://title");
-  applyEnsureNoFailures([
+  await applyEnsureNoFailures([
     {id: resguid,
      histUri: resuri.spec,
      title: null,
      visits: [{date: TIMESTAMP3,
                type: Ci.nsINavHistoryService.TRANSITION_TYPED}]}
   ]);
-  do_check_attribute_count(store.getAllIDs(), 3);
+  do_check_attribute_count((await store.getAllIDs()), 3);
   let queryres = queryHistoryVisits(resuri);
   do_check_eq(queryres.length, 1);
   do_check_eq(queryres[0].time, TIMESTAMP3);
-  run_next_test();
 });
 
-add_test(function test_invalid_records() {
+add_task(async function test_invalid_records() {
   _("Make sure we handle invalid URLs in places databases gracefully.");
   let connection = PlacesUtils.history
                               .QueryInterface(Ci.nsPIPlacesDatabase)
@@ -190,11 +186,11 @@ add_test(function test_invalid_records() {
   );
   Async.querySpinningly(stmt);
   stmt.finalize();
-  do_check_attribute_count(store.getAllIDs(), 4);
+  do_check_attribute_count((await store.getAllIDs()), 4);
 
   _("Make sure we report records with invalid URIs.");
   let invalid_uri_guid = Utils.makeGUID();
-  let failed = store.applyIncomingBatch([{
+  let failed = await store.applyIncomingBatch([{
     id: invalid_uri_guid,
     histUri: ":::::::::::::::",
     title: "Doesn't have a valid URI",
@@ -205,7 +201,7 @@ add_test(function test_invalid_records() {
   do_check_eq(failed[0], invalid_uri_guid);
 
   _("Make sure we handle records with invalid GUIDs gracefully (ignore).");
-  applyEnsureNoFailures([
+  await applyEnsureNoFailures([
     {id: "invalid",
      histUri: "http://invalid.guid/",
      title: "Doesn't have a valid GUID",
@@ -218,7 +214,7 @@ add_test(function test_invalid_records() {
   let no_type_visit_guid = Utils.makeGUID();
   let invalid_type_visit_guid = Utils.makeGUID();
   let non_integer_visit_guid = Utils.makeGUID();
-  failed = store.applyIncomingBatch([
+  failed = await store.applyIncomingBatch([
     {id: no_date_visit_guid,
      histUri: "http://no.date.visit/",
      title: "Visit has no date",
@@ -241,7 +237,7 @@ add_test(function test_invalid_records() {
   do_check_eq(failed.length, 0);
 
   _("Make sure we handle records with javascript: URLs gracefully.");
-  applyEnsureNoFailures([
+  await applyEnsureNoFailures([
     {id: Utils.makeGUID(),
      histUri: "javascript:''",
      title: "javascript:''",
@@ -250,32 +246,29 @@ add_test(function test_invalid_records() {
   ]);
 
   _("Make sure we handle records without any visits gracefully.");
-  applyEnsureNoFailures([
+  await applyEnsureNoFailures([
     {id: Utils.makeGUID(),
      histUri: "http://getfirebug.com",
      title: "Get Firebug!",
      visits: []}
   ]);
-
-  run_next_test();
 });
 
-add_test(function test_remove() {
+add_task(async function test_remove() {
   _("Remove an existent record and a non-existent from the store.");
-  applyEnsureNoFailures([{id: fxguid, deleted: true},
+  await applyEnsureNoFailures([{id: fxguid, deleted: true},
                          {id: Utils.makeGUID(), deleted: true}]);
-  do_check_false(store.itemExists(fxguid));
+  do_check_false((await store.itemExists(fxguid)));
   let queryres = queryHistoryVisits(fxuri);
   do_check_eq(queryres.length, 0);
 
   _("Make sure wipe works.");
-  store.wipe();
-  do_check_empty(store.getAllIDs());
+  await store.wipe();
+  do_check_empty((await store.getAllIDs()));
   queryres = queryHistoryVisits(fxuri);
   do_check_eq(queryres.length, 0);
   queryres = queryHistoryVisits(tburi);
   do_check_eq(queryres.length, 0);
-  run_next_test();
 });
 
 add_test(function cleanup() {
