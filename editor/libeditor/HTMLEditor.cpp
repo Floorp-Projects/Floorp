@@ -2967,12 +2967,7 @@ HTMLEditor::EnableStyleSheet(const nsAString& aURL,
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
   sheet->SetAssociatedDocument(doc, StyleSheet::NotOwnedByDocument);
 
-  if (sheet->IsServo()) {
-    // XXXheycam ServoStyleSheets don't support being enabled/disabled yet.
-    NS_ERROR("stylo: ServoStyleSheets can't be disabled yet");
-    return NS_ERROR_FAILURE;
-  }
-  return sheet->AsGecko()->SetDisabled(!aEnable);
+  return sheet->SetDisabled(!aEnable);
 }
 
 bool
