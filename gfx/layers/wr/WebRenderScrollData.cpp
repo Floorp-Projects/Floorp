@@ -80,6 +80,7 @@ WebRenderLayerScrollData::GetTransformTyped() const
 
 WebRenderScrollData::WebRenderScrollData()
   : mIsFirstPaint(false)
+  , mPaintSequenceNumber(0)
 {
 }
 
@@ -149,6 +150,18 @@ bool
 WebRenderScrollData::IsFirstPaint() const
 {
   return mIsFirstPaint;
+}
+
+void
+WebRenderScrollData::SetPaintSequenceNumber(uint32_t aPaintSequenceNumber)
+{
+  mPaintSequenceNumber = aPaintSequenceNumber;
+}
+
+uint32_t
+WebRenderScrollData::GetPaintSequenceNumber() const
+{
+  return mPaintSequenceNumber;
 }
 
 } // namespace layers

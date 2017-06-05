@@ -21,15 +21,18 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   DefaultMap,
   DefaultWeakMap,
-  StartupCache,
   instanceOf,
 } = ExtensionUtils;
 
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
+				  "resource://gre/modules/ExtensionParent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 				  "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "contentPolicyService",
                                    "@mozilla.org/addons/content-policy;1",
                                    "nsIAddonContentPolicy");
+
+XPCOMUtils.defineLazyGetter(this, "StartupCache", () => ExtensionParent.StartupCache);
 
 this.EXPORTED_SYMBOLS = ["Schemas"];
 
