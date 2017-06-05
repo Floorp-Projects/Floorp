@@ -106,6 +106,27 @@ struct ShortcutKeyCandidate
 };
 
 /******************************************************************************
+ * mozilla::IgnoreModifierState
+ *
+ * This stores flags for modifiers that should be ignored when matching
+ * XBL handlers.
+ ******************************************************************************/
+
+struct IgnoreModifierState
+{
+  // When mShift is true, Shift key state will be ignored.
+  bool mShift;
+  // When mOS is true, OS key state will be ignored.
+  bool mOS;
+
+  IgnoreModifierState()
+    : mShift(false)
+    , mOS(false)
+  {
+  }
+};
+
+/******************************************************************************
  * mozilla::WidgetKeyboardEvent
  ******************************************************************************/
 

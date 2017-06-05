@@ -19,17 +19,17 @@ class nsXBLPrototypeHandler;
 
 namespace mozilla {
 class EventListenerManager;
+struct IgnoreModifierState;
 namespace dom {
 class Element;
 class EventTarget;
-struct IgnoreModifierState;
 } // namespace dom
 } // namespace mozilla
 
 class nsXBLWindowKeyHandler : public nsIDOMEventListener
 {
-  typedef mozilla::dom::IgnoreModifierState IgnoreModifierState;
   typedef mozilla::EventListenerManager EventListenerManager;
+  typedef mozilla::IgnoreModifierState IgnoreModifierState;
 
 public:
   nsXBLWindowKeyHandler(nsIDOMElement* aElement, mozilla::dom::EventTarget* aTarget);

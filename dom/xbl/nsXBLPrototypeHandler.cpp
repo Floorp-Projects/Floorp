@@ -12,6 +12,7 @@
 #include "nsXBLPrototypeBinding.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
+#include "nsGlobalWindowCommands.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsIDOMKeyEvent.h"
@@ -46,13 +47,16 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/JSEventHandler.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EventHandlerBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/layers/Keyboard.h"
 #include "xpcpublic.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::layers;
 
 uint32_t nsXBLPrototypeHandler::gRefCnt = 0;
 
@@ -134,6 +138,66 @@ nsXBLPrototypeHandler::~nsXBLPrototypeHandler()
 
   // We own the next handler in the chain, so delete it now.
   NS_CONTENT_DELETE_LIST_MEMBER(nsXBLPrototypeHandler, this, mNextHandler);
+}
+
+bool
+nsXBLPrototypeHandler::TryConvertToKeyboardShortcut(
+                          KeyboardShortcut* aOut) const
+{
+  // Convert the event type
+  KeyboardInput::KeyboardEventType eventType;
+
+  if (mEventName == nsGkAtoms::keydown) {
+    eventType = KeyboardInput::KEY_DOWN;
+  } else if (mEventName == nsGkAtoms::keypress) {
+    eventType = KeyboardInput::KEY_PRESS;
+  } else if (mEventName == nsGkAtoms::keyup) {
+    eventType = KeyboardInput::KEY_UP;
+  } else {
+    return false;
+  }
+
+  // Convert the modifiers
+  Modifiers modifiersMask = GetModifiers();
+  Modifiers modifiers = GetModifiersMask();
+
+  // Mask away any bits that won't be compared
+  modifiers &= modifiersMask;
+
+  // Convert the keyCode or charCode
+  uint32_t keyCode;
+  uint32_t charCode;
+
+  if (mMisc) {
+    keyCode = 0;
+    charCode = static_cast<uint32_t>(mDetail);
+  } else {
+    keyCode = static_cast<uint32_t>(mDetail);
+    charCode = 0;
+  }
+
+  NS_LossyConvertUTF16toASCII commandText(mHandlerText);
+  KeyboardScrollAction action;
+  if (!nsGlobalWindowCommands::FindScrollCommand(commandText.get(), &action)) {
+    // This action doesn't represent a scroll so we need to create a dispatch
+    // to content keyboard shortcut so APZ handles this command correctly
+    *aOut = KeyboardShortcut(eventType,
+                             keyCode,
+                             charCode,
+                             modifiers,
+                             modifiersMask);
+    return true;
+  }
+
+  // This prototype is a command which represents a scroll action, so create
+  // a keyboard shortcut to handle it
+  *aOut = KeyboardShortcut(eventType,
+                           keyCode,
+                           charCode,
+                           modifiers,
+                           modifiersMask,
+                           action);
+  return true;
 }
 
 already_AddRefed<nsIContent>
@@ -537,6 +601,54 @@ nsXBLPrototypeHandler::DispatchXULKeyCommand(nsIDOMEvent* aEvent)
                                      nullptr, nullptr,
                                      isControl, isAlt, isShift, isMeta);
   return NS_OK;
+}
+
+Modifiers
+nsXBLPrototypeHandler::GetModifiers() const
+{
+  Modifiers modifiers = 0;
+
+  if (mKeyMask & cMeta) {
+    modifiers |= MODIFIER_META;
+  }
+  if (mKeyMask & cOS) {
+    modifiers |= MODIFIER_OS;
+  }
+  if (mKeyMask & cShift) {
+    modifiers |= MODIFIER_SHIFT;
+  }
+  if (mKeyMask & cAlt) {
+    modifiers |= MODIFIER_ALT;
+  }
+  if (mKeyMask & cControl) {
+    modifiers |= MODIFIER_CONTROL;
+  }
+
+  return modifiers;
+}
+
+Modifiers
+nsXBLPrototypeHandler::GetModifiersMask() const
+{
+  Modifiers modifiersMask = 0;
+
+  if (mKeyMask & cMetaMask) {
+    modifiersMask |= MODIFIER_META;
+  }
+  if (mKeyMask & cOSMask) {
+    modifiersMask |= MODIFIER_OS;
+  }
+  if (mKeyMask & cShiftMask) {
+    modifiersMask |= MODIFIER_SHIFT;
+  }
+  if (mKeyMask & cAltMask) {
+    modifiersMask |= MODIFIER_ALT;
+  }
+  if (mKeyMask & cControlMask) {
+    modifiersMask |= MODIFIER_CONTROL;
+  }
+
+  return modifiersMask;
 }
 
 already_AddRefed<nsIAtom>

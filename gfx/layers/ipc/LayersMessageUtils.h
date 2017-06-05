@@ -445,6 +445,34 @@ struct ParamTraits<mozilla::layers::KeyboardScrollAction>
   }
 };
 
+template <>
+struct ParamTraits<mozilla::layers::KeyboardShortcut>
+{
+  typedef mozilla::layers::KeyboardShortcut paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mAction);
+    WriteParam(aMsg, aParam.mKeyCode);
+    WriteParam(aMsg, aParam.mCharCode);
+    WriteParam(aMsg, aParam.mModifiers);
+    WriteParam(aMsg, aParam.mModifiersMask);
+    WriteParam(aMsg, aParam.mEventType);
+    WriteParam(aMsg, aParam.mDispatchToContent);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mAction) &&
+           ReadParam(aMsg, aIter, &aResult->mKeyCode) &&
+           ReadParam(aMsg, aIter, &aResult->mCharCode) &&
+           ReadParam(aMsg, aIter, &aResult->mModifiers) &&
+           ReadParam(aMsg, aIter, &aResult->mModifiersMask) &&
+           ReadParam(aMsg, aIter, &aResult->mEventType) &&
+           ReadParam(aMsg, aIter, &aResult->mDispatchToContent);
+  }
+};
+
 typedef mozilla::layers::GeckoContentController::TapType TapType;
 
 template <>
