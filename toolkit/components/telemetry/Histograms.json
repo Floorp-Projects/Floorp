@@ -12396,14 +12396,6 @@
     "keyed": true,
     "description": "Each key is the message name, with digits removed, from an async message manager message that was rejected for being over approximately 128MB, recorded in the sending process at the time of sending."
   },
-  "SANDBOX_BROKER_INITIALIZED": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["bowen@mozilla.com"],
-    "bug_numbers": [1256992],
-    "expires_in_version": "55",
-    "kind": "boolean",
-    "description": "Result of call to SandboxBroker::Initialize"
-  },
   "SANDBOX_HAS_SECCOMP_BPF": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["gcp@mozilla.com"],
