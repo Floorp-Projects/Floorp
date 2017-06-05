@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Posnetka strani Firefox Screenshots ni mogoče zajeti!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Vaš izbor je premajhen"
+  },
   "genericErrorTitle": {
     "message": "Uf! Firefox Screenshots se je pokvaril."
   },

@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Sie können kein Bildschirmfoto einer Firefox-Screenshots-Seite machen!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Ihr Auswahlbereich ist zu klein"
+  },
   "genericErrorTitle": {
     "message": "Firefox Screenshots funktioniert nicht richtig."
   },

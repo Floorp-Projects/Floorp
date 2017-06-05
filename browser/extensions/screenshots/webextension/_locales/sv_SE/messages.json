@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Du kan inte ta en skärmbild av sidan Firefox Screenshots!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Ditt val är för litet"
+  },
   "genericErrorTitle": {
     "message": "Oj! Firefox Screenshots verkar inte fungera korrekt."
   },
