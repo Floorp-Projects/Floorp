@@ -5,6 +5,8 @@ var gContentAPI;
 var gContentWindow;
 
 var hasPocket = Services.prefs.getBoolPref("extensions.pocket.enabled");
+var hasQuit = !Services.prefs.getBoolPref("browser.photon.structure.enabled") ||
+              false; // Update this with AppConstants.platform != "macosx" after bug 1368734 lands;
 
 requestLongerTimeout(2);
 add_task(setup_UITourTest);
@@ -23,7 +25,7 @@ add_UITour_task(async function test_availableTargets() {
     "devtools",
       ...(hasPocket ? ["pocket"] : []),
     "privateWindow",
-    "quit",
+      ...(hasQuit ? ["quit"] : []),
     "readerMode-urlBar",
     "search",
     "searchIcon",
@@ -51,7 +53,7 @@ add_UITour_task(async function test_availableTargets_changeWidgets() {
     "home",
       ...(hasPocket ? ["pocket"] : []),
     "privateWindow",
-    "quit",
+      ...(hasQuit ? ["quit"] : []),
     "readerMode-urlBar",
     "search",
     "searchIcon",
@@ -84,7 +86,7 @@ add_UITour_task(async function test_availableTargets_exceptionFromGetTarget() {
     "devtools",
       ...(hasPocket ? ["pocket"] : []),
     "privateWindow",
-    "quit",
+      ...(hasQuit ? ["quit"] : []),
     "readerMode-urlBar",
     "trackingProtection",
     "urlbar",

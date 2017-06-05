@@ -33,6 +33,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
   "resource:///modules/ReaderParent.jsm");
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure", "browser.photon.structure.enabled");
+
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL      = "browser.uitour.loglevel";
 const PREF_SEENPAGEIDS    = "browser.uitour.seenPageIDs";
@@ -96,31 +98,39 @@ this.UITour = {
   targets: new Map([
     ["accountStatus", {
       query: (aDocument) => {
+        let prefix = gPhotonStructure ? "appMenu" : "PanelUI"
         // If the user is logged in, use the avatar element.
-        let fxAFooter = aDocument.getElementById("PanelUI-fxa-container");
+        let fxAFooter = aDocument.getElementById(prefix + "-fxa-container");
         if (fxAFooter.getAttribute("fxastatus")) {
-          return aDocument.getElementById("PanelUI-fxa-avatar");
+          return aDocument.getElementById(prefix + "-fxa-avatar");
         }
 
         // Otherwise use the sync setup icon.
-        let statusButton = aDocument.getElementById("PanelUI-fxa-label");
+        let statusButton = aDocument.getElementById(prefix + "-fxa-label");
         return aDocument.getAnonymousElementByAttribute(statusButton,
                                                         "class",
                                                         "toolbarbutton-icon");
       },
-      // This is a fake widgetName starting with the "PanelUI-" prefix so we know
+      // This is a fake widgetName starting with the "PanelUI-"/"appMenu-" prefix so we know
       // to automatically open the appMenu when annotating this target.
-      widgetName: "PanelUI-fxa-label",
+      get widgetName() {
+        return gPhotonStructure ? "appMenu-fxa-label" : "PanelUI-fxa-label";
+      },
     }],
-    ["addons",      {query: "#add-ons-button"}],
+    ["addons", {
+      query(aDocument) {
+        let buttonId = gPhotonStructure ? "appMenu-addons-button" : "add-ons-button";
+        return aDocument.getElementById(buttonId);
+      }
+    }],
     ["appMenu",     {
       addTargetListener: (aDocument, aCallback) => {
-        let panelPopup = aDocument.getElementById("PanelUI-popup");
+        let panelPopup = aDocument.defaultView.PanelUI.panel;
         panelPopup.addEventListener("popupshown", aCallback);
       },
       query: "#PanelUI-button",
       removeTargetListener: (aDocument, aCallback) => {
-        let panelPopup = aDocument.getElementById("PanelUI-popup");
+        let panelPopup = aDocument.defaultView.PanelUI.panel;
         panelPopup.removeEventListener("popupshown", aCallback);
       },
     }],
@@ -133,15 +143,36 @@ this.UITour = {
     ["controlCenter-trackingBlock", controlCenterTrackingToggleTarget(false)],
     ["customize",   {
       query: (aDocument) => {
+        if (gPhotonStructure) {
+          return aDocument.getElementById("appMenu-customize-button");
+        }
         let customizeButton = aDocument.getElementById("PanelUI-customize");
         return aDocument.getAnonymousElementByAttribute(customizeButton,
                                                         "class",
                                                         "toolbarbutton-icon");
       },
-      widgetName: "PanelUI-customize",
+      get widgetName() {
+        return gPhotonStructure ? "appMenu-customize-button" : "PanelUI-customize";
+      },
     }],
-    ["devtools",    {query: "#developer-button"}],
-    ["help",        {query: "#PanelUI-help"}],
+    ["devtools", {
+      query(aDocument) {
+        let button = aDocument.getElementById("developer-button");
+        if (button || !gPhotonStructure) {
+          return button;
+        }
+        return aDocument.getElementById("appMenu-developer-button");
+      },
+      get widgetName() {
+        return gPhotonStructure ? "appMenu-developer-button" : "developer-button";
+      },
+    }],
+    ["help", {
+      query: (aDocument) => {
+        let buttonId = gPhotonStructure ? "appMenu-help-button" : "PanelUI-help";
+        return aDocument.getElementById(buttonId);
+      }
+    }],
     ["home",        {query: "#home-button"}],
     ["forget", {
       allowAdd: true,
@@ -153,8 +184,20 @@ this.UITour = {
       query: "#pocket-button",
       widgetName: "pocket-button",
     }],
-    ["privateWindow",  {query: "#privatebrowsing-button"}],
-    ["quit",        {query: "#PanelUI-quit"}],
+    ["privateWindow", {
+      query(aDocument) {
+        let buttonId = gPhotonStructure ? "appMenu-private-window-button"
+                                        : "privatebrowsing-button";
+        return aDocument.getElementById(buttonId);
+      }
+    }],
+    ["quit", {
+      query(aDocument) {
+        let buttonId = gPhotonStructure ? "appMenu-quit-button"
+                                        : "PanelUI-quit";
+        return aDocument.getElementById(buttonId);
+      }
+    }],
     ["readerMode-urlBar", {query: "#reader-mode-button"}],
     ["search",      {
       infoPanelOffsetX: 18,
@@ -944,7 +987,8 @@ this.UITour = {
     }
 
     // Handle the non-customizable buttons at the bottom of the menu which aren't proper widgets.
-    return targetElement.id.startsWith("PanelUI-")
+    let prefix = gPhotonStructure ? "appMenu-" : "PanelUI-";
+    return targetElement.id.startsWith(prefix)
              && targetElement.id != "PanelUI-button";
   },
 
