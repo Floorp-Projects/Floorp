@@ -21,7 +21,47 @@ function PromptService() {
 PromptService.prototype = {
   classID: Components.ID("{9a61149b-2276-4a0a-b79c-be994ad106cf}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptFactory, Ci.nsIPromptService, Ci.nsIPromptService2]),
+  QueryInterface: XPCOMUtils.generateQI([
+      Ci.nsIObserver, Ci.nsIPromptFactory, Ci.nsIPromptService, Ci.nsIPromptService2]),
+
+  loadSubscript: function(aName, aScript) {
+    let sandbox = {};
+    Services.scriptloader.loadSubScript(aScript, sandbox);
+    return sandbox[aName];
+  },
+
+  /* ----------  nsIObserver  ---------- */
+  observe: function(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "app-startup": {
+        Services.obs.addObserver(this, "chrome-document-global-created");
+        Services.obs.addObserver(this, "content-document-global-created");
+        break;
+      }
+      case "chrome-document-global-created":
+      case "content-document-global-created": {
+        let win = aSubject.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDocShell).QueryInterface(Ci.nsIDocShellTreeItem)
+                          .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindow);
+        if (win !== aSubject) {
+          // Only attach to top-level windows.
+          return;
+        }
+        if (!this.selectHelper) {
+          this.selectHelper = this.loadSubscript(
+              "SelectHelper", "chrome://browser/content/SelectHelper.js");
+        }
+        if (!this.inputWidgetHelper) {
+          this.inputWidgetHelper = this.loadSubscript(
+              "InputWidgetHelper", "chrome://browser/content/InputWidgetHelper.js");
+        }
+        win.addEventListener("click", this.selectHelper); // non-capture
+        win.addEventListener("click", this.inputWidgetHelper); // non-capture
+        break;
+      }
+    }
+  },
 
   /* ----------  nsIPromptFactory  ---------- */
   // XXX Copied from nsPrompter.js.
