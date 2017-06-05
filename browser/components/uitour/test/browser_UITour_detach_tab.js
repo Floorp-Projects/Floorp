@@ -81,7 +81,9 @@ var tests = [
     await shownPromise;
 
     isnot(gContentWindow.PanelUI.panel.state, "closed", "Panel should be open");
-    ok(gContentWindow.PanelUI.contents.children.length > 0, "Panel contents should have children");
+    if (!gContentWindow.gPhotonStructure) {
+      ok(gContentWindow.PanelUI.contents.children.length > 0, "Panel contents should have children");
+    }
     gContentAPI.hideHighlight();
     gContentAPI.hideMenu("appMenu");
     gTestTab = null;

@@ -354,5 +354,35 @@ private:
   nsCOMPtr<mozIStorageConnection> mDB;
 };
 
+/**
+ * Copies Favicons from one page to another one.
+ */
+class AsyncCopyFavicons final : public Runnable
+{
+public:
+  NS_DECL_NSIRUNNABLE
+
+  /**
+   * Constructor.
+   *
+   * @param aFromPage
+   *        The originating page.
+   * @param aToPage
+   *        The destination page.
+   * @param aFaviconLoadPrivate
+   *        Whether this favicon load is in private browsing.
+   * @param aCallback
+   *        An optional callback to invoke when done.
+   */
+  AsyncCopyFavicons(PageData& aFromPage,
+                    PageData& aToPage,
+                    nsIFaviconDataCallback* aCallback);
+
+private:
+  PageData mFromPage;
+  PageData mToPage;
+  nsMainThreadPtrHandle<nsIFaviconDataCallback> mCallback;
+};
+
 } // namespace places
 } // namespace mozilla
