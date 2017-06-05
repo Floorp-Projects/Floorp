@@ -106,8 +106,6 @@ to mochitest command.
     * test_selectors.html `:-moz-lwtheme` [3]
   * :-moz-window-inactive bug 1348489
     * test_selectors.html `:-moz-window-inactive` [2]
-  * :dir case-sensitivity and syntax bug 1367315
-    * test_selectors.html `:dir` [11]
 * Quirks mode support
   * test_hover_quirk.html: hover quirks bug 1355724 [6]
 * Unit should be preserved after parsing servo/servo#15346
