@@ -135,8 +135,9 @@ private:
 
 private:
   struct Timeouts {
-    Timeouts()
-      : mTimeoutInsertionPoint(nullptr)
+    explicit Timeouts(const TimeoutManager& aManager)
+      : mManager(aManager)
+      , mTimeoutInsertionPoint(nullptr)
     {
     }
 
@@ -196,6 +197,10 @@ private:
     friend class OrderedTimeoutIterator;
 
   private:
+    // The TimeoutManager that owns this Timeouts structure.  This is
+    // mainly used to call state inspecting methods like IsValidFiringId().
+    const TimeoutManager&     mManager;
+
     typedef mozilla::LinkedList<RefPtr<Timeout>> TimeoutList;
 
     // mTimeoutList is generally sorted by mWhen, unless mTimeoutInsertionPoint is
