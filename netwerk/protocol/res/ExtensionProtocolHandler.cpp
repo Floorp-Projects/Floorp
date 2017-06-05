@@ -6,7 +6,7 @@
 
 #include "ExtensionProtocolHandler.h"
 
-#include "nsIAddonPolicyService.h"
+#include "mozilla/ExtensionPolicyService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
@@ -21,22 +21,30 @@
 namespace mozilla {
 namespace net {
 
+using extensions::URLInfo;
+
 NS_IMPL_QUERY_INTERFACE(ExtensionProtocolHandler, nsISubstitutingProtocolHandler,
                         nsIProtocolHandler, nsIProtocolHandlerWithDynamicFlags,
                         nsISupportsWeakReference)
 NS_IMPL_ADDREF_INHERITED(ExtensionProtocolHandler, SubstitutingProtocolHandler)
 NS_IMPL_RELEASE_INHERITED(ExtensionProtocolHandler, SubstitutingProtocolHandler)
 
+static inline ExtensionPolicyService&
+EPS()
+{
+  return ExtensionPolicyService::GetSingleton();
+}
+
 nsresult
 ExtensionProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aFlags)
 {
   // In general a moz-extension URI is only loadable by chrome, but a whitelisted
   // subset are web-accessible (and cross-origin fetchable). Check that whitelist.
-  nsCOMPtr<nsIAddonPolicyService> aps = do_GetService("@mozilla.org/addons/policy-service;1");
   bool loadableByAnyone = false;
-  if (aps) {
-    nsresult rv = aps->ExtensionURILoadableByAnyone(aURI, &loadableByAnyone);
-    NS_ENSURE_SUCCESS(rv, rv);
+
+  URLInfo url(aURI);
+  if (auto* policy = EPS().GetByURL(url)) {
+    loadableByAnyone = policy->IsPathWebAccessible(url.FilePath());
   }
 
   *aFlags = URI_STD | URI_IS_LOCAL_RESOURCE | (loadableByAnyone ? (URI_LOADABLE_BY_ANYONE | URI_FETCHABLE_BY_ANYONE) : URI_DANGEROUS_TO_LOAD);
@@ -55,22 +63,15 @@ ExtensionProtocolHandler::ResolveSpecialCases(const nsACString& aHost,
   if (!SubstitutingProtocolHandler::HasSubstitution(aHost)) {
     return false;
   }
+
   if (aPathname.EqualsLiteral("/_blank.html")) {
     aResult.AssignLiteral("about:blank");
     return true;
   }
+
   if (aPathname.EqualsLiteral("/_generated_background_page.html")) {
-    nsCOMPtr<nsIAddonPolicyService> aps =
-      do_GetService("@mozilla.org/addons/policy-service;1");
-    if (!aps) {
-      return false;
-    }
-    nsresult rv = aps->GetGeneratedBackgroundPageUrl(aHost, aResult);
-    NS_ENSURE_SUCCESS(rv, false);
-    if (!aResult.IsEmpty()) {
-      MOZ_RELEASE_ASSERT(Substring(aResult, 0, 5).Equals("data:"));
-      return true;
-    }
+    Unused << EPS().GetGeneratedBackgroundPageUrl(aHost, aResult);
+    return !aResult.IsEmpty();
   }
 
   return false;

@@ -57,7 +57,9 @@ this.ExtensionPermissions = {
         permissions.push(perm);
       }
     }
+
     for (let origin of perms.origins) {
+      origin = new MatchPattern(origin, {ignorePath: true}).pattern;
       if (!origins.includes(origin)) {
         added.origins.push(origin);
         origins.push(origin);
@@ -89,7 +91,10 @@ this.ExtensionPermissions = {
         permissions.splice(i, 1);
       }
     }
+
     for (let origin of perms.origins) {
+      origin = new MatchPattern(origin, {ignorePath: true}).pattern;
+
       let i = origins.indexOf(origin);
       if (i >= 0) {
         removed.origins.push(origin);
