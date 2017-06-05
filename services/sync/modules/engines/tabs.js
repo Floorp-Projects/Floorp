@@ -35,9 +35,6 @@ Utils.deferGetSet(TabSetRecord, "cleartext", ["clientName", "tabs"]);
 
 this.TabEngine = function TabEngine(service) {
   SyncEngine.call(this, "Tabs", service);
-
-  // Reset the client on every startup so that we fetch recent tabs.
-  this._resetClient();
 }
 TabEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -52,7 +49,14 @@ TabEngine.prototype = {
 
   syncPriority: 3,
 
-  getChangedIDs() {
+  async initialize() {
+    await SyncEngine.prototype.initialize.call(this);
+
+    // Reset the client on every startup so that we fetch recent tabs.
+    await this._resetClient();
+  },
+
+  async getChangedIDs() {
     // No need for a proper timestamp (no conflict resolution needed).
     let changedIDs = {};
     if (this._tracker.modified)
@@ -69,9 +73,9 @@ TabEngine.prototype = {
     return this._store._remoteClients[id];
   },
 
-  _resetClient() {
-    SyncEngine.prototype._resetClient.call(this);
-    this._store.wipe();
+  async _resetClient() {
+    await SyncEngine.prototype._resetClient.call(this);
+    await this._store.wipe();
     this._tracker.modified = true;
     this.hasSyncedThisSession = false;
   },
@@ -92,10 +96,10 @@ TabEngine.prototype = {
     return urls;
   },
 
-  _reconcile(item) {
+  async _reconcile(item) {
     // Skip our own record.
     // TabStore.itemExists tests only against our local client ID.
-    if (this._store.itemExists(item.id)) {
+    if ((await this._store.itemExists(item.id))) {
       this._log.trace("Ignoring incoming tab item because of its id: " + item.id);
       return false;
     }
@@ -103,7 +107,7 @@ TabEngine.prototype = {
     return SyncEngine.prototype._reconcile.call(this, item);
   },
 
-  _syncFinish() {
+  async _syncFinish() {
     this.hasSyncedThisSession = true;
     return SyncEngine.prototype._syncFinish.call(this);
   },
@@ -116,7 +120,7 @@ function TabStore(name, engine) {
 TabStore.prototype = {
   __proto__: Store.prototype,
 
-  itemExists(id) {
+  async itemExists(id) {
     return id == this.engine.service.clientsEngine.localID;
   },
 
@@ -201,7 +205,7 @@ TabStore.prototype = {
     return allTabs;
   },
 
-  createRecord(id, collection) {
+  async createRecord(id, collection) {
     let record = new TabSetRecord(collection, id);
     record.clientName = this.engine.service.clientsEngine.localName;
 
@@ -235,7 +239,7 @@ TabStore.prototype = {
     return record;
   },
 
-  getAllIDs() {
+  async getAllIDs() {
     // Don't report any tabs if all windows are in private browsing for
     // first syncs.
     let ids = {};
@@ -261,18 +265,18 @@ TabStore.prototype = {
     return ids;
   },
 
-  wipe() {
+  async wipe() {
     this._remoteClients = {};
   },
 
-  create(record) {
+  async create(record) {
     this._log.debug("Adding remote tabs from " + record.clientName);
     this._remoteClients[record.id] = Object.assign({}, record.cleartext, {
       lastModified: record.modified
     });
   },
 
-  update(record) {
+  async update(record) {
     this._log.trace("Ignoring tab updates as local ones win");
   },
 };

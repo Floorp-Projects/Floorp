@@ -141,14 +141,14 @@ let SyncedTabsInternal = {
     return result;
   },
 
-  syncTabs(force) {
+  async syncTabs(force) {
     if (!force) {
       // Don't bother refetching tabs if we already did so recently
       let lastFetch = Preferences.get("services.sync.lastTabFetch", 0);
       let now = Math.floor(Date.now() / 1000);
       if (now - lastFetch < TABS_FRESH_ENOUGH_INTERVAL) {
         log.info("_refetchTabs was done recently, do not doing it again");
-        return Promise.resolve(false);
+        return false;
       }
     }
 
@@ -156,23 +156,17 @@ let SyncedTabsInternal = {
     // of a login failure.
     if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
       log.info("Sync client is not configured, so not attempting a tab sync");
-      return Promise.resolve(false);
+      return false;
     }
     // Ask Sync to just do the tabs engine if it can.
-    // Sync is currently synchronous, so do it after an event-loop spin to help
-    // keep the UI responsive.
-    return new Promise((resolve, reject) => {
-      Services.tm.dispatchToMainThread(() => {
-        try {
-          log.info("Doing a tab sync.");
-          Weave.Service.sync(["tabs"]);
-          resolve(true);
-        } catch (ex) {
-          log.error("Sync failed", ex);
-          reject(ex);
-        }
-      });
-    });
+    try {
+      log.info("Doing a tab sync.");
+      await Weave.Service.sync(["tabs"]);
+      return true;
+    } catch (ex) {
+      log.error("Sync failed", ex);
+      throw ex;
+    }
   },
 
   observe(subject, topic, data) {
