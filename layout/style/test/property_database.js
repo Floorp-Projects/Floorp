@@ -7852,9 +7852,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.float-logical-values.enabled")) {
   gCSSProperties["clear"].invalid_values.push("inline-end");
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.display-flow-root.enabled")) {
-  gCSSProperties["display"].other_values.push("flow-root");
-}
+gCSSProperties["display"].other_values.push("flow-root");
 
 // Copy aliased properties' fields from their alias targets.
 for (var prop in gCSSProperties) {
