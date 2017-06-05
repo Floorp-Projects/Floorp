@@ -1813,6 +1813,8 @@ public:
   // matches the frame metrics array length.
 
   virtual void ClearCachedResources() {}
+
+  virtual bool SupportsAsyncUpdate() { return false; }
 private:
   void ScrollMetadataChanged();
 public:
