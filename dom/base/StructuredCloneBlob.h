@@ -22,6 +22,8 @@ class StructuredCloneBlob : public StructuredCloneHolder
                           , public RefCounted<StructuredCloneBlob>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(StructuredCloneBlob)
+
   explicit StructuredCloneBlob();
 
   static JSObject* ReadStructuredClone(JSContext* aCx, JSStructuredCloneReader* aReader);
