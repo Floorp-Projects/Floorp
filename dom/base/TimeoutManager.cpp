@@ -172,6 +172,12 @@ TimeoutManager::DestroyFiringId(uint32_t aFiringId)
 }
 
 bool
+TimeoutManager::IsValidFiringId(uint32_t aFiringId) const
+{
+  return !IsInvalidFiringId(aFiringId);
+}
+
+bool
 TimeoutManager::IsInvalidFiringId(uint32_t aFiringId) const
 {
   // Check the most common ways to invalidate a firing id first.

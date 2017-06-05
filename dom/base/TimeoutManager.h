@@ -128,6 +128,9 @@ private:
   DestroyFiringId(uint32_t aFiringId);
 
   bool
+  IsValidFiringId(uint32_t aFiringId) const;
+
+  bool
   IsInvalidFiringId(uint32_t aFiringId) const;
 
 private:
