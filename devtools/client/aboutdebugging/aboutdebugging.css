@@ -207,6 +207,12 @@ button {
 .addons-tip {
   display: flex;
   align-items: center;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  background-image: url(chrome://devtools/skin/images/help.svg);
+  background-repeat: no-repeat;
+  padding-inline-start: 32px;
+  height: 24px;
 }
 
 .addons-tip-icon {
@@ -244,6 +250,7 @@ button {
   display: flex;
   margin: 0;
   padding: 16px 0;
+  font-size: 14px;
 }
 
 .addon-target-actions {
@@ -262,7 +269,6 @@ button {
 
 .addon-target-info {
   display: grid;
-  font-size: 14px;
   grid-template-columns: 128px 1fr;
 }
 

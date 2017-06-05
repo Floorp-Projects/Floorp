@@ -1653,7 +1653,8 @@ nsCSSFrameConstructor::NotifyDestroyingFrame(nsIFrame* aFrame)
       QuotesDirty();
   }
 
-  if (mCounterManager.DestroyNodesFor(aFrame)) {
+  if (aFrame->HasAnyStateBits(NS_FRAME_HAS_CSS_COUNTER_STYLE) &&
+      mCounterManager.DestroyNodesFor(aFrame)) {
     // Technically we don't need to update anything if we destroyed only
     // USE nodes.  However, this is unlikely to happen in the real world
     // since USE nodes generally go along with INCREMENT nodes.

@@ -23,22 +23,22 @@ function StringStream(string) {
 // Initialize the policy service with a stub localizer for our
 // add-on ID.
 add_task(async function init() {
-  const aps = Cc["@mozilla.org/addons/policy-service;1"]
-    .getService(Ci.nsIAddonPolicyService).wrappedJSObject;
+  let policy = new WebExtensionPolicy({
+    id: ADDON_ID,
+    mozExtensionHostname: UUID,
+    baseURL: "file:///",
 
-  let oldCallback = aps.setExtensionURIToAddonIdCallback(uri => {
-    if (uri.host == UUID) {
-      return ADDON_ID;
-    }
+    allowedOrigins: new MatchPatternSet([]),
+
+    localizeCallback(string) {
+      return string.replace(/__MSG_(.*?)__/g, "<localized-$1>");
+    },
   });
 
-  aps.setAddonLocalizeCallback(ADDON_ID, string => {
-    return string.replace(/__MSG_(.*?)__/g, "<localized-$1>");
-  });
+  policy.active = true;
 
   do_register_cleanup(() => {
-    aps.setExtensionURIToAddonIdCallback(oldCallback);
-    aps.setAddonLocalizeCallback(ADDON_ID, null);
+    policy.active = false;
   });
 });
 
