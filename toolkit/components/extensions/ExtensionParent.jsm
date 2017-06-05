@@ -624,7 +624,9 @@ ParentAPIManager = {
         result.then(result => {
           result = result instanceof SpreadArgs ? [...result] : [result];
 
-          reply({result});
+          let holder = new StructuredCloneHolder(result);
+
+          reply({result: holder});
         }, error => {
           error = context.normalizeError(error);
           reply({error: {message: error.message, fileName: error.fileName}});

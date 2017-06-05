@@ -48,9 +48,9 @@ const {
 const {
   LocalAPIImplementation,
   LocaleData,
+  NoCloneSpreadArgs,
   SchemaAPIInterface,
   SingletonEventManager,
-  SpreadArgs,
 } = ExtensionCommon;
 
 const isContentProcess = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
@@ -773,7 +773,9 @@ class ChildAPIManager {
         if ("error" in data) {
           deferred.reject(data.error);
         } else {
-          deferred.resolve(new SpreadArgs(data.result));
+          let result = data.result.deserialize(this.context.cloneScope);
+
+          deferred.resolve(new NoCloneSpreadArgs(result));
         }
         this.callPromises.delete(data.callId);
         break;
