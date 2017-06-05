@@ -36,11 +36,13 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/layers/Keyboard.h"
 
 #include "nsIClipboardDragDropHooks.h"
 #include "nsIClipboardDragDropHookList.h"
 
 using namespace mozilla;
+using namespace mozilla::layers;
 
 constexpr const char * sSelectAllString = "cmd_selectAll";
 constexpr const char * sSelectNoneString = "cmd_selectNone";
@@ -271,33 +273,44 @@ IsCaretOnInWindow(nsPIDOMWindowOuter* aWindow, nsISelectionController* aSelCont)
 
 static constexpr struct BrowseCommand {
   const char *reverse, *forward;
+  KeyboardScrollAction::KeyboardScrollActionType scrollAction;
   nsresult (NS_STDCALL nsISelectionController::*scroll)(bool);
   nsresult (NS_STDCALL nsISelectionController::*move)(bool, bool);
 } browseCommands[] = {
  { sScrollTopString, sScrollBottomString,
+   KeyboardScrollAction::eScrollComplete,
    &nsISelectionController::CompleteScroll },
  { sScrollPageUpString, sScrollPageDownString,
+   KeyboardScrollAction::eScrollPage,
    &nsISelectionController::ScrollPage },
  { sScrollLineUpString, sScrollLineDownString,
+   KeyboardScrollAction::eScrollLine,
    &nsISelectionController::ScrollLine },
  { sScrollLeftString, sScrollRightString,
+   KeyboardScrollAction::eScrollCharacter,
    &nsISelectionController::ScrollCharacter },
  { sMoveTopString, sMoveBottomString,
+   KeyboardScrollAction::eScrollComplete,
    &nsISelectionController::CompleteScroll,
    &nsISelectionController::CompleteMove },
  { sMovePageUpString, sMovePageDownString,
+   KeyboardScrollAction::eScrollPage,
    &nsISelectionController::ScrollPage,
    &nsISelectionController::PageMove },
  { sLinePreviousString, sLineNextString,
+   KeyboardScrollAction::eScrollLine,
    &nsISelectionController::ScrollLine,
    &nsISelectionController::LineMove },
  { sWordPreviousString, sWordNextString,
+   KeyboardScrollAction::eScrollCharacter,
    &nsISelectionController::ScrollCharacter,
    &nsISelectionController::WordMove },
  { sCharPreviousString, sCharNextString,
+   KeyboardScrollAction::eScrollCharacter,
    &nsISelectionController::ScrollCharacter,
    &nsISelectionController::CharacterMove },
  { sBeginLineString, sEndLineString,
+   KeyboardScrollAction::eScrollComplete,
    &nsISelectionController::CompleteScroll,
    &nsISelectionController::IntraLineMove }
 };
@@ -334,23 +347,32 @@ nsSelectMoveScrollCommand::DoCommand(const char *aCommandName, nsISupports *aCom
 static const struct PhysicalBrowseCommand {
   const char *command;
   int16_t direction, amount;
+  KeyboardScrollAction::KeyboardScrollActionType scrollAction;
   nsresult (NS_STDCALL nsISelectionController::*scroll)(bool);
 } physicalBrowseCommands[] = {
  { sMoveLeftString, nsISelectionController::MOVE_LEFT, 0,
+   KeyboardScrollAction::eScrollCharacter,
    &nsISelectionController::ScrollCharacter },
  { sMoveRightString, nsISelectionController::MOVE_RIGHT, 0,
+   KeyboardScrollAction::eScrollCharacter,
    &nsISelectionController::ScrollCharacter },
  { sMoveUpString, nsISelectionController::MOVE_UP, 0,
+   KeyboardScrollAction::eScrollLine,
    &nsISelectionController::ScrollLine },
  { sMoveDownString, nsISelectionController::MOVE_DOWN, 0,
+   KeyboardScrollAction::eScrollLine,
    &nsISelectionController::ScrollLine },
  { sMoveLeft2String, nsISelectionController::MOVE_LEFT, 1,
+   KeyboardScrollAction::eScrollCharacter,
    &nsISelectionController::ScrollCharacter },
  { sMoveRight2String, nsISelectionController::MOVE_RIGHT, 1,
+   KeyboardScrollAction::eScrollCharacter,
    &nsISelectionController::ScrollCharacter },
  { sMoveUp2String, nsISelectionController::MOVE_UP, 1,
+   KeyboardScrollAction::eScrollComplete,
    &nsISelectionController::CompleteScroll },
  { sMoveDown2String, nsISelectionController::MOVE_DOWN, 1,
+   KeyboardScrollAction::eScrollComplete,
    &nsISelectionController::CompleteScroll },
 };
 
@@ -1261,4 +1283,37 @@ nsWindowCommandRegistration::RegisterWindowCommands(
   NS_REGISTER_ONE_COMMAND(nsLookUpDictionaryCommand, "cmd_lookUpDictionary");
 
   return rv;
+}
+
+/* static */ bool
+nsGlobalWindowCommands::FindScrollCommand(const char* aCommandName,
+                                          KeyboardScrollAction* aOutAction)
+{
+  // Search for a keyboard scroll action to do for this command in browseCommands
+  // and physicalBrowseCommands. Each command exists in only one of them, so the
+  // order we examine browseCommands and physicalBrowseCommands doesn't matter.
+
+  for (size_t i = 0; i < ArrayLength(browseCommands); i++) {
+    const BrowseCommand& cmd = browseCommands[i];
+    bool forward = !strcmp(aCommandName, cmd.forward);
+    bool reverse = !strcmp(aCommandName, cmd.reverse);
+    if (forward || reverse) {
+      *aOutAction = KeyboardScrollAction(cmd.scrollAction, forward);
+      return true;
+    }
+  }
+
+  for (size_t i = 0; i < ArrayLength(physicalBrowseCommands); i++) {
+    const PhysicalBrowseCommand& cmd = physicalBrowseCommands[i];
+    if (!strcmp(aCommandName, cmd.command)) {
+      int16_t dir = cmd.direction;
+      bool forward = (dir == nsISelectionController::MOVE_RIGHT ||
+                      dir == nsISelectionController::MOVE_DOWN);
+
+      *aOutAction = KeyboardScrollAction(cmd.scrollAction, forward);
+      return true;
+    }
+  }
+
+  return false;
 }
