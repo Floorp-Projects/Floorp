@@ -5,7 +5,7 @@
 
 #include "mozilla/layers/Keyboard.h"
 
-#include "mozilla/TextEvents.h" // for IgnoreModifierState
+#include "mozilla/TextEvents.h" // for IgnoreModifierState, ShortcutKeyCandidate
 
 namespace mozilla {
 namespace layers {
@@ -128,6 +128,63 @@ KeyboardShortcut::MatchesModifiers(const KeyboardInput& aInput,
 
   // Mask off the modifiers we are ignoring from the keyboard input
   return (aInput.modifiers & modifiersMask) == mModifiers;
+}
+
+KeyboardMap::KeyboardMap(nsTArray<KeyboardShortcut>&& aShortcuts)
+  : mShortcuts(aShortcuts)
+{
+}
+
+KeyboardMap::KeyboardMap()
+{
+}
+
+Maybe<KeyboardShortcut>
+KeyboardMap::FindMatch(const KeyboardInput& aEvent) const
+{
+  // If there are no shortcut candidates, then just search with with the
+  // keyboard input
+  if (aEvent.mShortcutCandidates.IsEmpty()) {
+    return FindMatchInternal(aEvent, IgnoreModifierState());
+  }
+
+  // Otherwise do a search with each shortcut candidate in order
+  for (auto& key : aEvent.mShortcutCandidates) {
+    IgnoreModifierState ignoreModifierState;
+    ignoreModifierState.mShift = key.mIgnoreShift;
+
+    auto match = FindMatchInternal(aEvent, ignoreModifierState, key.mCharCode);
+    if (match) {
+      return match;
+    }
+  }
+  return Nothing();
+}
+
+Maybe<KeyboardShortcut>
+KeyboardMap::FindMatchInternal(const KeyboardInput& aEvent,
+                               const IgnoreModifierState& aIgnore,
+                               uint32_t aOverrideCharCode) const
+{
+  for (auto& shortcut : mShortcuts) {
+    if (shortcut.Matches(aEvent, aIgnore, aOverrideCharCode)) {
+      return Some(shortcut);
+    }
+  }
+
+#ifdef XP_WIN
+  // Windows native applications ignore Windows-Logo key state when checking
+  // shortcut keys even if the key is pressed.  Therefore, if there is no
+  // shortcut key which exactly matches current modifier state, we should
+  // retry to look for a shortcut key without the Windows-Logo key press.
+  if (!aIgnore.mOS && (aEvent.modifiers & MODIFIER_OS)) {
+    IgnoreModifierState ignoreModifierState(aIgnore);
+    ignoreModifierState.mOS = true;
+    return FindMatchInternal(aEvent, ignoreModifierState, aOverrideCharCode);
+  }
+#endif
+
+  return Nothing();
 }
 
 } // namespace layers

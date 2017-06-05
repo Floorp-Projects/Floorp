@@ -21,6 +21,7 @@
 #include "mozilla/layers/Keyboard.h"
 #include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersTypes.h"
+#include "mozilla/Move.h"
 
 #include <stdint.h>
 
@@ -470,6 +471,27 @@ struct ParamTraits<mozilla::layers::KeyboardShortcut>
            ReadParam(aMsg, aIter, &aResult->mModifiersMask) &&
            ReadParam(aMsg, aIter, &aResult->mEventType) &&
            ReadParam(aMsg, aIter, &aResult->mDispatchToContent);
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::layers::KeyboardMap>
+{
+  typedef mozilla::layers::KeyboardMap paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.Shortcuts());
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    nsTArray<mozilla::layers::KeyboardShortcut> shortcuts;
+    if (!ReadParam(aMsg, aIter, &shortcuts)) {
+      return false;
+    }
+    *aResult = mozilla::layers::KeyboardMap(mozilla::Move(shortcuts));
+    return true;
   }
 };
 

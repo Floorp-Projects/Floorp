@@ -10,12 +10,16 @@
 
 #include "InputData.h"          // for KeyboardInput
 #include "nsIScrollableFrame.h" // for nsIScrollableFrame::ScrollUnit
+#include "nsTArray.h"           // for nsTArray
+#include "mozilla/Maybe.h"      // for mozilla::Maybe
 
 namespace mozilla {
 
 struct IgnoreModifierState;
 
 namespace layers {
+
+class KeyboardMap;
 
 /**
  * This class represents a scrolling action to be performed on a scrollable layer.
@@ -75,6 +79,9 @@ public:
                    Modifiers aModifiers,
                    Modifiers aModifiersMask);
 
+protected:
+  friend mozilla::layers::KeyboardMap;
+
   bool Matches(const KeyboardInput& aInput,
                const IgnoreModifierState& aIgnore,
                uint32_t aOverrideCharCode = 0) const;
@@ -105,6 +112,30 @@ public:
 
   // Whether events matched by this must be dispatched to content
   bool mDispatchToContent;
+};
+
+/**
+ * A keyboard map is an off main-thread <xul:binding> for scrolling commands.
+ */
+class KeyboardMap final
+{
+public:
+  KeyboardMap();
+  explicit KeyboardMap(nsTArray<KeyboardShortcut>&& aShortcuts);
+
+  const nsTArray<KeyboardShortcut>& Shortcuts() const { return mShortcuts; }
+
+  /**
+   * Search through the internal list of shortcuts for a match for the input event
+   */
+  Maybe<KeyboardShortcut> FindMatch(const KeyboardInput& aEvent) const;
+
+private:
+  Maybe<KeyboardShortcut> FindMatchInternal(const KeyboardInput& aEvent,
+                                            const IgnoreModifierState& aIgnore,
+                                            uint32_t aOverrideCharCode = 0) const;
+
+  nsTArray<KeyboardShortcut> mShortcuts;
 };
 
 } // namespace layers
