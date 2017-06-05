@@ -122,6 +122,7 @@ private:
 
     bool mInitialised;
     bool mIsChanged;
+    bool mUseExternalImage;
     LayerRect mScBounds;
     gfx::Matrix4x4 mScTransform;
     gfx::MaybeIntSize mScaleToSize;
