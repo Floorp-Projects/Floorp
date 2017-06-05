@@ -304,6 +304,8 @@ bool nsContentUtils::sLowerNetworkPriority = false;
 #ifndef RELEASE_OR_BETA
 bool nsContentUtils::sBypassCSSOMOriginCheck = false;
 #endif
+bool nsContentUtils::sIsBytecodeCacheEnabled = false;
+int32_t nsContentUtils::sBytecodeCacheStrategy = 0;
 
 int32_t nsContentUtils::sPrivacyMaxInnerWidth = 1000;
 int32_t nsContentUtils::sPrivacyMaxInnerHeight = 1000;
@@ -724,6 +726,12 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sLowerNetworkPriority,
                                "privacy.trackingprotection.lower_network_priority", false);
+
+  Preferences::AddBoolVarCache(&sIsBytecodeCacheEnabled,
+                               "dom.script_loader.bytecode_cache.enabled", false);
+
+  Preferences::AddIntVarCache(&sBytecodeCacheStrategy,
+                              "dom.script_loader.bytecode_cache.strategy", 0);
 
   Element::InitCCCallbacks();
 
