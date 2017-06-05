@@ -7,9 +7,11 @@
 const { interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/utils.js");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Async",
+                                  "resource://services-common/async.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
@@ -291,11 +293,9 @@ class BookmarkValidator {
     let records = [];
     let recordsByGuid = new Map();
     let syncedRoots = SYNCED_ROOTS;
-    let yieldCounter = 0;
+    let maybeYield = Async.jankYielder();
     async function traverse(treeNode, synced) {
-      if (++yieldCounter % 50 === 0) {
-        await new Promise(resolve => setTimeout(resolve, 50));
-      }
+      await maybeYield();
       if (!synced) {
         synced = syncedRoots.includes(treeNode.guid);
       } else if (isNodeIgnored(treeNode)) {
@@ -406,8 +406,9 @@ class BookmarkValidator {
 
     let resultRecords = [];
 
-    let yieldCounter = 0;
+    let maybeYield = Async.jankYielder();
     for (let record of serverRecords) {
+      await maybeYield();
       if (!record.id) {
         ++problemData.missingIDs;
         continue;
@@ -444,9 +445,6 @@ class BookmarkValidator {
         record.children = record.children.map(childID => {
           return PlacesSyncUtils.bookmarks.guidToSyncId(childID);
         });
-      }
-      if (++yieldCounter % 50 === 0) {
-        await new Promise(resolve => setTimeout(resolve, 50));
       }
     }
 

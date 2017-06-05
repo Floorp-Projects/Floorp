@@ -92,7 +92,7 @@ class CollectionRepairRequestor {
               reported in telemetry.
 
   */
-  startRepairs(validationInfo, flowID) {
+  async startRepairs(validationInfo, flowID) {
     throw new Error("not implemented");
   }
 
@@ -106,7 +106,7 @@ class CollectionRepairRequestor {
               by a remote repair responder.
 
   */
-  continueRepairs(responseInfo = null) {
+  async continueRepairs(responseInfo = null) {
     throw new Error("not implemented");
   }
 }
