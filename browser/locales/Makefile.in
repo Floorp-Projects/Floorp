@@ -105,7 +105,6 @@ endif
 ifndef RELEASE_OR_BETA
 	@$(MAKE) -C ../extensions/presentation/locale AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../extensions/webcompat-reporter/locales AB_CD=$* XPI_NAME=locale-$*
-	@$(MAKE) -C ../extensions/onboarding/locale AB_CD=$* XPI_NAME=locale-$*
 endif
 	@$(MAKE) -C ../../intl/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../../devtools/client/locales AB_CD=$* XPI_NAME=locale-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
