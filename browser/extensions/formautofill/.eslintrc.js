@@ -98,9 +98,6 @@ module.exports = {
     // Disallow using the console API.
     "no-console": "error",
 
-    // Disallow control characters in regular expressions.
-    "no-control-regex": "error",
-
     // Disallow fallthrough of case statements, except if there is a comment.
     "no-fallthrough": "error",
 

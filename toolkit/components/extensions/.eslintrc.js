@@ -203,9 +203,6 @@ module.exports = {
     // Allow use of the continue statement.
     "no-continue": "off",
 
-    // Disallow control characters in regular expressions.
-    "no-control-regex": "error",
-
     // Allow division operators explicitly at beginning of regular expression.
     "no-div-regex": "off",
 
