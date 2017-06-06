@@ -51,8 +51,8 @@ fuzzy-if(skiaContent,1,580) == anim-css-fill-3-from-by-rgb-ident.svg    anim-css
 # the clamped value for interpolation.  That's earlier than the SVG spec wants
 # us to clamp -- we're only supposed to clamp *final presentation values*.
 # (Reference: SVG 1.1 Appendix F.4)
-== anim-css-fill-overflow-1-by.svg       anim-css-fill-overflow-1-ref.svg
-fails == anim-css-fill-overflow-1-from-by.svg anim-css-fill-overflow-1-ref.svg
+fails-if(styloVsGecko||stylo) == anim-css-fill-overflow-1-by.svg       anim-css-fill-overflow-1-ref.svg
+fails-if(!styloVsGecko&&!stylo) == anim-css-fill-overflow-1-from-by.svg anim-css-fill-overflow-1-ref.svg
 
 # 'fill-opacity' property
 fuzzy-if(skiaContent,1,885) fails-if(styloVsGecko||stylo) == anim-css-fillopacity-1-by.svg            anim-css-fillopacity-1-ref.svg
