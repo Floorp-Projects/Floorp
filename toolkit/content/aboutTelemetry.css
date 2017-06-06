@@ -2,23 +2,54 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.hidden {
-  display: none;
-}
+@import url("chrome://global/skin/in-content/common.css");
 
 html {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
-  font: message-box;
+  height: 100%;
 }
 
 body {
-  padding: 0px;
-  margin: 0px;
+  display: flex;
+  align-items: stretch;
+  height: 100%;
 }
 
-h2 {
-  font-size: medium;
+#categories {
+  padding-top: 0px;
+  min-width: 300px;
+}
+
+#category-raw {
+  border-top: 1px solid var(--in-content-header-border-color);
+  box-sizing: border-box;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  min-width: inherit;
+}
+
+.heading {
+  padding-inline-start: 21px;
+  padding-inline-end: 21px;
+  color: var(--in-content-category-text);
+}
+
+.category:not(.has-data) {
+  display: none;
+}
+
+.category {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.category-name {
+  pointer-events: none;
+}
+
+.main-content {
+  width: 100%;
 }
 
 #page-description {
@@ -56,21 +87,10 @@ h2 {
   margin-bottom: 10px;
 }
 
-.data-section,
-.data-subsection {
-  background-color: -moz-Field;
-  color: -moz-FieldText;
-  border-top: 1px solid threedshadow;
-  border-bottom: 1px solid threedshadow;
-  margin: 0px;
-  padding: 10px;
-}
-
 .data-section:not(.has-data),
 .data-subsection:not(.has-subdata) {
   color: gray;
 }
-
 
 .section-name {
   font-size: x-large;
@@ -112,7 +132,6 @@ h2 {
 .has-subdata.expanded .subdata {
   display: block;
 }
-
 
 .stack-title {
   font-size: medium;
@@ -159,7 +178,6 @@ body[dir="rtl"] .histogram {
   font-size: 120%;
   white-space: nowrap;
 }
-
 
 .bar {
   width: 2em;
@@ -214,11 +232,9 @@ body[dir="rtl"] .copy-node {
   visibility: visible;
 }
 
-
 .statebox {
   display: none;
 }
-
 
 .filter-ui {
   padding-inline-start: 10em;
@@ -244,11 +260,9 @@ body[dir="rtl"] .copy-node {
 #raw-ping-data-section {
   width: 100%;
   height: 100%;
-  background-color:-moz-Dialog;
 }
 
 #raw-ping-data {
-  background-color:white;
   margin: 0px;
 }
 
