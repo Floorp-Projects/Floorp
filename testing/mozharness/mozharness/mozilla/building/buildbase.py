@@ -2106,6 +2106,11 @@ or run without that action (ie: --no-{action})"
                 if opt not in suite.get('extraOptions', []):
                     suite.setdefault('extraOptions', []).append(opt)
 
+        for opt in os.environ.get('PERFHERDER_EXTRA_OPTIONS', '').split():
+            for suite in perfherder_data['suites']:
+                if opt not in suite.get('extraOptions', []):
+                    suite.setdefault('extraOptions', []).append(opt)
+
         if self.query_is_nightly():
             for suite in perfherder_data['suites']:
                 suite.setdefault('extraOptions', []).insert(0, 'nightly')
