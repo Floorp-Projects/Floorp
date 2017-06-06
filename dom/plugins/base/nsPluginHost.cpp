@@ -301,6 +301,12 @@ nsPluginHost::nsPluginHost()
   // to content processes directly after creation.
   if (XRE_IsParentProcess())
   {
+    // Always increment the chrome epoch when we bring up the nsPluginHost in
+    // the parent process. If the only plugins we have are cached in
+    // pluginreg.dat, we won't see any plugin changes in LoadPlugins and the
+    // epoch will stay the same between the parent and child process, meaning
+    // plugins will never update in the child process.
+    IncrementChromeEpoch();
     LoadPlugins();
   }
 }
