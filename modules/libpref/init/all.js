@@ -3165,11 +3165,7 @@ pref("dom.largeAllocationHeader.enabled", true);
 
 // Pref to control whether we use separate content processes for top-level load
 // of file:// URIs.
-#if defined(NIGHTLY_BUILD)
 pref("browser.tabs.remote.separateFileUriProcess", true);
-#else
-pref("browser.tabs.remote.separateFileUriProcess", false);
-#endif
 
 // Pref that enables top level web content pages that are opened from file://
 // URI pages to run in the file content process.
