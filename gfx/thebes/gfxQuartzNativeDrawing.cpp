@@ -50,6 +50,12 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
   } else {
     // Clip the DT in case BorrowedCGContext needs to create a new layer.
     // This prevents it from creating a new layer the size of the window.
+    // But make sure that this clip is device pixel aligned.
+    Matrix transform = dt->GetTransform();
+
+    Rect deviceRect = transform.TransformBounds(mNativeRect);
+    deviceRect.RoundOut();
+    mNativeRect = transform.Inverse().TransformBounds(deviceRect);
     mDrawTarget->PushClipRect(mNativeRect);
   }
 
