@@ -56,6 +56,12 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
         final int pageOverlap = container.getContext().getResources().getDimensionPixelSize(R.dimen.firstun_page_overlap);
         viewPager.setPadding(pageOverlap, 0, pageOverlap, 0);
         viewPager.setPageMargin(-pageOverlap);
+        viewPager.setPageTransformer(true, new ViewPager.PageTransformer() {
+            @Override
+            public void transformPage(View page, float position) {
+                page.setAlpha(1 - (0.5f * Math.abs(position)));
+            }
+        });
 
         viewPager.setClipToPadding(false);
         viewPager.setAdapter(adapter);
