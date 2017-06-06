@@ -991,9 +991,14 @@ GCRuntime::setZeal(uint8_t zeal, uint32_t frequency)
     if (verifyPreData)
         VerifyBarriers(rt, PreBarrierVerifier);
 
-    if (zeal == 0 && hasZealMode(ZealMode::GenerationalGC)) {
-        evictNursery(JS::gcreason::DEBUG_GC);
-        nursery().leaveZealMode();
+    if (zeal == 0) {
+        if (hasZealMode(ZealMode::GenerationalGC)) {
+            evictNursery(JS::gcreason::DEBUG_GC);
+            nursery().leaveZealMode();
+        }
+
+        if (isIncrementalGCInProgress())
+            finishGC(JS::gcreason::DEBUG_GC);
     }
 
     ZealMode zealMode = ZealMode(zeal);
