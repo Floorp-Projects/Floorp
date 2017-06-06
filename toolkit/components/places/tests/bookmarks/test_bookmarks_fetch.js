@@ -122,7 +122,7 @@ add_task(async function fetch_bookmar_empty_title() {
 
   Assert.deepEqual(bm1, bm2);
   Assert.equal(bm2.index, 0);
-  Assert.ok(!("title" in bm2));
+  Assert.strictEqual(bm2.title, "");
 
   await PlacesUtils.bookmarks.remove(bm1.guid);
 });
@@ -158,7 +158,7 @@ add_task(async function fetch_folder_empty_title() {
 
   Assert.deepEqual(bm1, bm2);
   Assert.equal(bm2.index, 0);
-  Assert.ok(!("title" in bm2));
+  Assert.strictEqual(bm2.title, "");
 
   await PlacesUtils.bookmarks.remove(bm1.guid);
 });
@@ -177,7 +177,7 @@ add_task(async function fetch_separator() {
   Assert.deepEqual(bm2.dateAdded, bm2.lastModified);
   Assert.equal(bm2.type, PlacesUtils.bookmarks.TYPE_SEPARATOR);
   Assert.ok(!("url" in bm2));
-  Assert.ok(!("title" in bm2));
+  Assert.strictEqual(bm2.title, "");
 
   await PlacesUtils.bookmarks.remove(bm1.guid);
 });
