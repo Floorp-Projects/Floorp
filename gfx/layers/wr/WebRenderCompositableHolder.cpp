@@ -275,7 +275,8 @@ WebRenderCompositableHolder::ApplyAsyncImages(wr::WebRenderAPI* aApi)
                                   0,
                                   &opacity,
                                   holder->mScTransform.IsIdentity() ? nullptr : &holder->mScTransform,
-                                  holder->mMixBlendMode);
+                                  holder->mMixBlendMode,
+                                  nsTArray<WrFilterOp>());
 
       LayerRect rect(0, 0, holder->mCurrentTexture->GetSize().width, holder->mCurrentTexture->GetSize().height);
       if (holder->mScaleToSize.isSome()) {
