@@ -6,6 +6,8 @@
 
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
 Components.utils.import("resource://gre/modules/PluralForm.jsm");
+Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
+Components.utils.import("resource://gre/modules/LoadContextInfo.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
                                   "resource://gre/modules/ContextualIdentityService.jsm");
@@ -85,63 +87,6 @@ var gPrivacyPane = {
   },
 
   /**
-   * Show the Containers UI depending on the privacy.userContext.ui.enabled pref.
-   */
-  _initBrowserContainers() {
-    if (!Services.prefs.getBoolPref("privacy.userContext.ui.enabled")) {
-      // The browserContainersGroup element has its own internal padding that
-      // is visible even if the browserContainersbox is visible, so hide the whole
-      // groupbox if the feature is disabled to prevent a gap in the preferences.
-      document.getElementById("browserContainersGroup").setAttribute("data-hidden-from-search", "true");
-      return;
-    }
-
-    let link = document.getElementById("browserContainersLearnMore");
-    link.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "containers";
-
-    document.getElementById("browserContainersbox").hidden = false;
-
-    document.getElementById("browserContainersCheckbox").checked =
-      Services.prefs.getBoolPref("privacy.userContext.enabled");
-  },
-
-  _checkBrowserContainers(event) {
-    let checkbox = document.getElementById("browserContainersCheckbox");
-    if (checkbox.checked) {
-      Services.prefs.setBoolPref("privacy.userContext.enabled", true);
-      return;
-    }
-
-    let count = ContextualIdentityService.countContainerTabs();
-    if (count == 0) {
-      Services.prefs.setBoolPref("privacy.userContext.enabled", false);
-      return;
-    }
-
-    let bundlePreferences = document.getElementById("bundlePreferences");
-
-    let title = bundlePreferences.getString("disableContainersAlertTitle");
-    let message = PluralForm.get(count, bundlePreferences.getString("disableContainersMsg"))
-                            .replace("#S", count)
-    let okButton = PluralForm.get(count, bundlePreferences.getString("disableContainersOkButton"))
-                             .replace("#S", count)
-    let cancelButton = bundlePreferences.getString("disableContainersButton2");
-
-    let buttonFlags = (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
-                      (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
-
-    let rv = Services.prompt.confirmEx(window, title, message, buttonFlags,
-                                       okButton, cancelButton, null, null, {});
-    if (rv == 0) {
-      ContextualIdentityService.closeContainerTabs();
-      Services.prefs.setBoolPref("privacy.userContext.enabled", false);
-      return;
-    }
-
-    checkbox.checked = true;
-  },
-
-  /**
    * Sets up the UI for the number of days of history to keep, and updates the
    * label of the "Clear Now..." button.
    */
@@ -149,13 +94,6 @@ var gPrivacyPane = {
     function setEventListener(aId, aEventType, aCallback) {
       document.getElementById(aId)
               .addEventListener(aEventType, aCallback.bind(gPrivacyPane));
-    }
-
-    function appendSearchKeywords(aId, keywords) {
-      let element = document.getElementById(aId);
-      let searchKeywords = element.getAttribute("searchkeywords");
-      searchKeywords && keywords.push(searchKeywords);
-      element.setAttribute("searchkeywords", keywords.join(" "));
     }
 
     this._updateSanitizeSettingsButton();
@@ -166,7 +104,6 @@ var gPrivacyPane = {
     this._initTrackingProtection();
     this._initTrackingProtectionPBM();
     this._initAutocomplete();
-    this._initBrowserContainers();
 
     setEventListener("privacy.sanitize.sanitizeOnShutdown", "change",
                      gPrivacyPane._updateSanitizeSettingsButton);
@@ -204,10 +141,6 @@ var gPrivacyPane = {
                      gPrivacyPane.showTrackingProtectionExceptions);
     setEventListener("changeBlockList", "command",
                      gPrivacyPane.showBlockLists);
-    setEventListener("browserContainersCheckbox", "command",
-                     gPrivacyPane._checkBrowserContainers);
-    setEventListener("browserContainersSettings", "command",
-                     gPrivacyPane.showContainerSettings);
     setEventListener("passwordExceptions", "command",
       gPrivacyPane.showPasswordExceptions);
     setEventListener("useMasterPassword", "command",
@@ -222,8 +155,6 @@ var gPrivacyPane = {
                      gPrivacyPane.showCertificates);
     setEventListener("viewSecurityDevicesButton", "command",
                      gPrivacyPane.showSecurityDevices);
-    setEventListener("connectionSettings", "command",
-                     gPrivacyPane.showConnections);
     setEventListener("clearCacheButton", "command",
                      gPrivacyPane.clearCache);
 
@@ -310,6 +241,7 @@ var gPrivacyPane = {
       document.getElementById("drmGroup").setAttribute("style", "display: none !important");
     }
 
+    this.initDataCollection();
     if (AppConstants.MOZ_CRASHREPORTER) {
       this.initSubmitCrashes();
     }
@@ -318,11 +250,9 @@ var gPrivacyPane = {
     setEventListener("submitHealthReportBox", "command",
                      gPrivacyPane.updateSubmitHealthReport);
 
-    // Append search keywords into the elements could open subdialogs.
     let bundlePrefs = document.getElementById("bundlePreferences");
     let signonBundle = document.getElementById("signonBundle");
     let pkiBundle = document.getElementById("pkiBundle");
-    let browserBundle = document.getElementById("browserBundle");
     appendSearchKeywords("passwordExceptions", [
       bundlePrefs.getString("savedLoginsExceptions_title"),
       bundlePrefs.getString("savedLoginsExceptions_desc"),
@@ -352,12 +282,6 @@ var gPrivacyPane = {
     ]);
     appendSearchKeywords("viewSecurityDevicesButton", [
       pkiBundle.getString("enable_fips"),
-    ]);
-    appendSearchKeywords("browserContainersSettings", [
-      browserBundle.getString("userContextPersonal.label"),
-      browserBundle.getString("userContextWork.label"),
-      browserBundle.getString("userContextBanking.label"),
-      browserBundle.getString("userContextShopping.label"),
     ]);
     appendSearchKeywords("siteDataSettings", [
       bundlePrefs.getString("siteDataSettings.description"),
@@ -654,13 +578,6 @@ var gPrivacyPane = {
     };
     gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
                     null, params);
-  },
-
-  /**
-   * Displays container panel for customising and adding containers.
-   */
-  showContainerSettings() {
-    gotoPref("containers");
   },
 
   /**
@@ -1232,14 +1149,6 @@ var gPrivacyPane = {
     gSubDialog.open("chrome://pippki/content/device_manager.xul");
   },
 
-  // NETWORK
-  /**
-   * Displays a dialog in which proxy settings may be changed.
-   */
-  showConnections() {
-    gSubDialog.open("chrome://browser/content/preferences/connection.xul");
-  },
-
   /**
    * Clears the cache.
    */
@@ -1394,6 +1303,11 @@ var gPrivacyPane = {
     }
   },
 
+  initDataCollection() {
+    this._setupLearnMoreLink("toolkit.datacollection.infoURL",
+                             "dataCollectionLearnMore");
+  },
+
   initSubmitCrashes() {
     this._setupLearnMoreLink("toolkit.crashreporter.infoURL",
                              "crashReporterLearnMore");
@@ -1405,10 +1319,8 @@ var gPrivacyPane = {
    * In all cases, set up the Learn More link sanely.
    */
   initTelemetry() {
-    this._setupLearnMoreLink("toolkit.telemetry.infoURL", "telemetryLearnMore");
-    // If we're not sending any Telemetry, disable the telemetry upload checkbox as well.
-    if (!AppConstants.MOZ_TELEMETRY_REPORTING) {
-      document.getElementById("submitTelemetryBox").setAttribute("disabled", "true");
+    if (AppConstants.MOZ_TELEMETRY_REPORTING) {
+      this._setupLearnMoreLink("toolkit.telemetry.infoURL", "telemetryLearnMore");
     }
   },
 
