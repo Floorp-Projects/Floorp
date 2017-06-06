@@ -9,7 +9,7 @@ add_task(async function insert_separator_notification() {
   let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
   observer.check([ { name: "onItemAdded",
                      arguments: [ itemId, parentId, bm.index, bm.type,
-                                  null, null, bm.dateAdded * 1000,
+                                  null, "", bm.dateAdded * 1000,
                                   bm.guid, bm.parentGuid,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
@@ -34,11 +34,12 @@ add_task(async function insert_folder_notitle_notification() {
   let observer = expectNotifications();
   let bm = await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_FOLDER,
                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid });
+  strictEqual(bm.title, "", "Should return empty string for untitled folder");
   let itemId = await PlacesUtils.promiseItemId(bm.guid);
   let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
   observer.check([ { name: "onItemAdded",
                      arguments: [ itemId, parentId, bm.index, bm.type,
-                                  null, null, bm.dateAdded * 1000,
+                                  null, "", bm.dateAdded * 1000,
                                   bm.guid, bm.parentGuid,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
@@ -65,11 +66,12 @@ add_task(async function insert_bookmark_notitle_notification() {
   let bm = await PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 url: new URL("http://example.com/") });
+  strictEqual(bm.title, "", "Should return empty string for untitled bookmark");
   let itemId = await PlacesUtils.promiseItemId(bm.guid);
   let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
   observer.check([ { name: "onItemAdded",
                      arguments: [ itemId, parentId, bm.index, bm.type,
-                                  bm.url, null, bm.dateAdded * 1000,
+                                  bm.url, "", bm.dateAdded * 1000,
                                   bm.guid, bm.parentGuid,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
@@ -94,7 +96,7 @@ add_task(async function insert_bookmark_tag_notification() {
 
   observer.check([ { name: "onItemAdded",
                      arguments: [ tagId, tagParentId, tag.index, tag.type,
-                                  tag.url, null, tag.dateAdded * 1000,
+                                  tag.url, "", tag.dateAdded * 1000,
                                   tag.guid, tag.parentGuid,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                    { name: "onItemChanged",
@@ -490,6 +492,54 @@ add_task(async function reorder_notification() {
   observer.check(expectedNotifications);
 });
 
+add_task(async function update_notitle_notification() {
+  let toolbarBmURI = Services.io.newURI("https://example.com");
+  let toolbarBmId =
+    PlacesUtils.bookmarks.insertBookmark(PlacesUtils.toolbarFolderId,
+                                         toolbarBmURI, 0, "Bookmark");
+  let toolbarBmGuid = await PlacesUtils.promiseItemGuid(toolbarBmId);
+
+  let menuFolder = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    index: 0,
+    title: "Folder"
+  });
+  let menuFolderId = await PlacesUtils.promiseItemId(menuFolder.guid);
+
+  let observer = expectNotifications();
+
+  PlacesUtils.bookmarks.setItemTitle(toolbarBmId, null);
+  strictEqual(PlacesUtils.bookmarks.getItemTitle(toolbarBmId), "",
+    "Legacy API should return empty string for untitled bookmark");
+
+  let updatedMenuBm = await PlacesUtils.bookmarks.update({
+    guid: menuFolder.guid,
+    title: null,
+  });
+  strictEqual(updatedMenuBm.title, "",
+    "Async API should return empty string for untitled bookmark");
+
+  let toolbarBmModified =
+    PlacesUtils.toDate(PlacesUtils.bookmarks.getItemLastModified(toolbarBmId));
+  observer.check([{
+    name: "onItemChanged",
+    arguments: [toolbarBmId, "title", false, "", toolbarBmModified * 1000,
+                PlacesUtils.bookmarks.TYPE_BOOKMARK,
+                PlacesUtils.toolbarFolderId, toolbarBmGuid,
+                PlacesUtils.bookmarks.toolbarGuid,
+                "", PlacesUtils.bookmarks.SOURCES.DEFAULT],
+  }, {
+    name: "onItemChanged",
+    arguments: [menuFolderId, "title", false, "",
+                updatedMenuBm.lastModified * 1000,
+                PlacesUtils.bookmarks.TYPE_FOLDER,
+                PlacesUtils.bookmarksMenuFolderId, menuFolder.guid,
+                PlacesUtils.bookmarks.menuGuid,
+                "", PlacesUtils.bookmarks.SOURCES.DEFAULT],
+  }]);
+});
+
 function expectNotifications() {
   let notifications = [];
   let observer = new Proxy(NavBookmarkObserver, {
@@ -505,8 +555,6 @@ function expectNotifications() {
           let args = Array.from(origArgs, arg => {
             if (arg && arg instanceof Ci.nsIURI)
               return new URL(arg.spec);
-            if (arg && typeof(arg) == "number" && arg >= Date.now() * 1000)
-              return new Date(parseInt(arg / 1000));
             return arg;
           });
           notifications.push({ name, arguments: args });
