@@ -611,6 +611,17 @@ child:
 
     async PIPCBlobInputStream(nsID aID, uint64_t aSize);
 
+    /**
+     * This call takes the set of plugins loaded in the chrome process, and
+     * sends them to the content process. However, in many cases this set will
+     * not have changed since the last SetPluginList message. To keep track of
+     * this, the chrome process increments an epoch number every time the set of
+     * plugins changes. The chrome process sends up the last epoch it observed.
+     * If the epoch last seen by the content process is the same, the content
+     * process ignores the update. Otherwise the content process updates its
+     * list and reloads its plugins.
+     **/
+    async SetPluginList(uint32_t pluginEpoch, PluginTag[] plugins, FakePluginTag[] fakePlugins);
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
@@ -645,20 +656,6 @@ parent:
      * Return the current blocklist state for a particular plugin.
      */
     sync GetBlocklistState(uint32_t aPluginId) returns (uint32_t aState);
-
-    /**
-     * This call returns the set of plugins loaded in the chrome
-     * process. However, in many cases this set will not have changed since the
-     * last FindPlugins message. Consequently, the chrome process increments an
-     * epoch number every time the set of plugins changes. The content process
-     * sends up the last epoch it observed. If the epochs are the same, the
-     * chrome process returns no plugins. Otherwise it returns a complete list.
-     *
-     * |pluginEpoch| is the epoch last observed by the content
-     * process. |newPluginEpoch| is the current epoch in the chrome process. If
-     * |pluginEpoch == newPluginEpoch|, then |plugins| will be left empty.
-     */
-    sync FindPlugins(uint32_t pluginEpoch) returns (nsresult aResult, PluginTag[] plugins, FakePluginTag[] fakePlugins, uint32_t newPluginEpoch);
 
     async PJavaScript();
 
@@ -1094,6 +1091,7 @@ parent:
     async AddMemoryReport(MemoryReport aReport);
     async FinishMemoryReport(uint32_t aGeneration);
 
+    async MaybeReloadPlugins();
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                         Principal aPrincipal, ClonedMessageData aData);
