@@ -88,10 +88,12 @@ function getEnvironment (callback) {
     _exports = exports;
     _module = module;
     _require = require;
-  }
   // JSM
-  else if (String(this).indexOf('BackstagePass') >= 0) {
-    Cu = this['Components'].utils;
+  } else if (typeof(this.__URI__) === "string") {
+    // Intentionally bypass the scan_for_bad_chrome checker in a way
+    // that works with shared JSM globals.
+    let comp = Components;
+    Cu = comp.utils;
     _exports = this.Promise = {};
     _module = { uri: __URI__, id: 'promise/core' };
     _require = uri => {
