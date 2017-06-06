@@ -126,6 +126,8 @@ struct NrIceCandidatePair {
   // for RTCIceCandidatePairStats
   uint64_t bytes_sent;
   uint64_t bytes_recvd;
+  uint64_t ms_since_last_send;
+  uint64_t ms_since_last_recv;
 };
 
 class NrIceMediaStream {
