@@ -659,13 +659,6 @@
         ], 
         "revision": "default"
     }, 
-    "tsz": {
-        "platforms": [
-            "android", 
-            "android-api-15"
-        ], 
-        "revision": "default"
-    }, 
     "uk": {
         "platforms": [
             "android", 
