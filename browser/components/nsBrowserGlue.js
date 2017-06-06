@@ -367,7 +367,10 @@ BrowserGlue.prototype = {
         this._onDeviceConnected(data);
         break;
       case "fxaccounts:device_disconnected":
-        this._onDeviceDisconnected();
+        data = JSON.parse(data);
+        if (data.isLocalDevice) {
+          this._onDeviceDisconnected();
+        }
         break;
       case "weave:engine:clients:display-uris":
         this._onDisplaySyncURIs(subject);
