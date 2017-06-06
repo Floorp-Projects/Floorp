@@ -1330,7 +1330,7 @@ JS_AddExtraGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data)
 JS_PUBLIC_API(void)
 JS_RemoveExtraGCRootsTracer(JSContext* cx, JSTraceDataOp traceOp, void* data)
 {
-    cx->runtime()->gc.removeBlackRootsTracer(traceOp, data);
+    return cx->runtime()->gc.removeBlackRootsTracer(traceOp, data);
 }
 
 JS_PUBLIC_API(void)
