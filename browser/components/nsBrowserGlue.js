@@ -2490,8 +2490,6 @@ ContentPermissionPrompt.prototype = {
 
 var DefaultBrowserCheck = {
   get OPTIONPOPUP() { return "defaultBrowserNotificationPopup" },
-  _setAsDefaultTimer: null,
-  _setAsDefaultButtonClickStartTime: 0,
 
   closePrompt(aNode) {
     if (this._notification) {
@@ -2514,33 +2512,6 @@ var DefaultBrowserCheck = {
     }
     try {
       ShellService.setDefaultBrowser(claimAllTypes, false);
-
-      if (this._setAsDefaultTimer) {
-        this._setAsDefaultTimer.cancel();
-      }
-
-      this._setAsDefaultButtonClickStartTime = Math.floor(Date.now() / 1000);
-      this._setAsDefaultTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      this._setAsDefaultTimer.init(() => {
-        let isDefault = false;
-        let isDefaultError = false;
-        try {
-          isDefault = ShellService.isDefaultBrowser(true, false);
-        } catch (ex) {
-          isDefaultError = true;
-        }
-
-        let now = Math.floor(Date.now() / 1000);
-        let runTime = now - this._setAsDefaultButtonClickStartTime;
-        if (isDefault || runTime > 600) {
-          this._setAsDefaultTimer.cancel();
-          this._setAsDefaultTimer = null;
-          Services.telemetry.getHistogramById("BROWSER_SET_DEFAULT_TIME_TO_COMPLETION_SECONDS")
-                            .add(runTime);
-        }
-        Services.telemetry.getHistogramById("BROWSER_IS_USER_DEFAULT_ERROR")
-                          .add(isDefaultError);
-      }, 1000, Ci.nsITimer.TYPE_REPEATING_SLACK);
     } catch (ex) {
       setAsDefaultError = true;
       Cu.reportError(ex);
