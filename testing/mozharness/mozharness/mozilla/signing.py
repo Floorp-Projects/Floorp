@@ -10,7 +10,6 @@
 import os
 import re
 import json
-import sys
 
 from mozharness.base.errors import BaseErrorList
 from mozharness.base.log import ERROR, FATAL
@@ -46,8 +45,9 @@ class SigningMixin(BaseSigningMixin):
         token = os.path.join(dirs['base_work_dir'], 'token')
         nonce = os.path.join(dirs['base_work_dir'], 'nonce')
         host_cert = os.path.join(signing_dir, 'host.cert')
+        python = self.query_exe('python')
         cmd = [
-            sys.executable,
+            python,
             os.path.join(signing_dir, 'signtool.py'),
             '--cachedir', cache_dir,
             '-t', token,
