@@ -22,10 +22,8 @@ function parseOptions(opts) {
   }
 
   // Parse platforms.
-  let allPlatforms = ["linux", "linux64", "linux64-asan",
-                      "win", "win64", "win-make", "win64-make",
-                      "linux64-make", "linux-make", "linux-fuzz",
-                      "linux64-fuzz", "aarch64"];
+  let allPlatforms = ["linux", "linux64", "linux64-asan", "win64",
+                      "linux64-make", "linux-make", "linux-fuzz", "linux64-fuzz", "aarch64"];
   let platforms = intersect(opts.platform.split(/\s*,\s*/), allPlatforms);
 
   // If the given value is nonsense or "none" default to all platforms.
@@ -87,9 +85,6 @@ function filter(opts) {
         if (task.group && task.group.toLowerCase() == "ssl" && test == "ssl") {
           return true;
         }
-        if (task.group && task.group.toLowerCase() == "cipher" && test == "cipher") {
-          return true;
-        }
         return task.symbol.toLowerCase().startsWith(test);
       });
 
@@ -114,10 +109,7 @@ function filter(opts) {
         "linux64-fuzz": "linux64",
         "linux64-make": "linux64",
         "linux-make": "linux32",
-        "win64-make": "windows2012-64",
-        "win-make": "windows2012-32",
-        "win64": "windows2012-64",
-        "win": "windows2012-32"
+        "win64": "windows2012-64"
       };
 
       // Check the platform name.
@@ -126,8 +118,7 @@ function filter(opts) {
       // Additional checks.
       if (platform == "linux64-asan") {
         keep &= coll("asan");
-      } else if (platform == "linux64-make" || platform == "linux-make" ||
-                 platform == "win64-make" || platform == "win-make") {
+      } else if (platform == "linux64-make" || platform == "linux-make") {
         keep &= coll("make");
       } else if (platform == "linux64-fuzz" || platform == "linux-fuzz") {
         keep &= coll("fuzz");

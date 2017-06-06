@@ -480,7 +480,6 @@
                     'PreprocessorDefinitions': [
                       'WIN32',
                     ],
-                    'AdditionalOptions': [ '/EHsc' ],
                   },
                 },
               }],
@@ -495,7 +494,6 @@
                       'WIN64',
                       '_AMD64_',
                     ],
-                    'AdditionalOptions': [ '/EHsc' ],
                   },
                 },
               }],

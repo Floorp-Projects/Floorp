@@ -91,7 +91,7 @@
     'defines': [
       'SHLIB_SUFFIX=\"<(dll_suffix)\"',
       'SHLIB_PREFIX=\"<(dll_prefix)\"',
-      'SOFTOKEN_LIB_NAME=\"<(dll_prefix)softokn3.<(dll_suffix)\"',
+      'SOFTOKEN_LIB_NAME=\"libsoftokn3.so\"',
       'SHLIB_VERSION=\"3\"'
     ]
   },
