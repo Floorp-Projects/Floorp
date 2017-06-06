@@ -1539,11 +1539,7 @@ jit::JitActivation::getRematerializedFrame(JSContext* cx, const JitFrameIterator
     uint8_t* top = iter.fp();
     RematerializedFrameTable::AddPtr p = rematerializedFrames_->lookupForAdd(top);
     if (!p) {
-        RematerializedFrameVector empty(cx);
-        if (!rematerializedFrames_->add(p, top, Move(empty))) {
-            ReportOutOfMemory(cx);
-            return nullptr;
-        }
+        RematerializedFrameVector frames(cx);
 
         // The unit of rematerialization is an uninlined frame and its inlined
         // frames. Since inlined frames do not exist outside of snapshots, it
@@ -1558,9 +1554,11 @@ jit::JitActivation::getRematerializedFrame(JSContext* cx, const JitFrameIterator
         // be in the activation's compartment.
         AutoCompartmentUnchecked ac(cx, compartment_);
 
-        if (!RematerializedFrame::RematerializeInlineFrames(cx, top, inlineIter, recover,
-                                                            p->value()))
-        {
+        if (!RematerializedFrame::RematerializeInlineFrames(cx, top, inlineIter, recover, frames))
+            return nullptr;
+
+        if (!rematerializedFrames_->add(p, top, Move(frames))) {
+            ReportOutOfMemory(cx);
             return nullptr;
         }
 

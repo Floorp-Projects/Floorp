@@ -1,5 +1,12 @@
 'use strict';
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+// Bug 788960 and later bug 1329245 have taught us that attempting to connect to
+// a port that is not listening or is no longer listening fails to consistently
+// result in the error (or any) event we expect on Darwin/OSX/"OS X".
+const isOSX = (Services.appinfo.OS === "Darwin");
+const testConnectingToNonListeningPort = !isOSX;
+
 const SERVER_BACKLOG = -1;
 
 const SOCKET_EVENTS = ['open', 'data', 'drain', 'error', 'close'];
@@ -411,13 +418,16 @@ function* test_basics() {
   // we tell it to.
   listeningServer.close();
 
-  // - try and connect, get an error
-  clientSocket = createSocket('127.0.0.1', serverPort,
-                              { binaryType: 'arraybuffer' });
-  clientQueue = listenForEventsOnSocket(clientSocket, 'client');
-  is((yield clientQueue.waitForEvent()).type, 'error', 'fail to connect');
-  is(clientSocket.readyState, 'closed',
-     'client readyState should be closed after the failure to connect');
+  // (We don't run this check on OS X where it's flakey; see definition up top.)
+  if (testConnectingToNonListeningPort) {
+    // - try and connect, get an error
+    clientSocket = createSocket('127.0.0.1', serverPort,
+                                { binaryType: 'arraybuffer' });
+    clientQueue = listenForEventsOnSocket(clientSocket, 'client');
+    is((yield clientQueue.waitForEvent()).type, 'error', 'fail to connect');
+    is(clientSocket.readyState, 'closed',
+       'client readyState should be closed after the failure to connect');
+  }
 }
 
 add_task(test_basics);

@@ -586,7 +586,7 @@ MOZ_THREAD_LOCAL(ThreadInfo*) TLSInfo::sThreadInfo;
 // also have a second TLS pointer directly to the PseudoStack. Here's why.
 //
 // - We need to be able to push to and pop from the PseudoStack in
-//   profiler_call_{enter,exit}.
+//   ProfilerStackFrameRAII.
 //
 // - Those two functions are hot and must be defined in GeckoProfiler.h so they
 //   can be inlined.
@@ -595,7 +595,7 @@ MOZ_THREAD_LOCAL(ThreadInfo*) TLSInfo::sThreadInfo;
 //
 // This second pointer isn't ideal, but does provide a way to satisfy those
 // constraints. TLSInfo manages it, except for the uses in
-// profiler_call_{enter,exit}.
+// ProfilerStackFrameRAII.
 MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
 
 // The name of the main thread.
@@ -724,8 +724,7 @@ AddDynamicCodeLocationTag(ProfileBuffer* aBuffer, const char* aStr)
 
 static void
 AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
-               volatile js::ProfileEntry& entry,
-               NotNull<RacyThreadInfo*> aRacyInfo)
+               js::ProfileEntry& entry, NotNull<RacyThreadInfo*> aRacyInfo)
 {
   MOZ_ASSERT(entry.kind() == js::ProfileEntry::Kind::CPP_NORMAL ||
              entry.kind() == js::ProfileEntry::Kind::JS_NORMAL);
@@ -827,7 +826,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
                        const TickSample& aSample, NativeStack& aNativeStack)
 {
   NotNull<RacyThreadInfo*> racyInfo = aSample.mRacyInfo;
-  volatile js::ProfileEntry* pseudoEntries = racyInfo->entries;
+  js::ProfileEntry* pseudoEntries = racyInfo->entries;
   uint32_t pseudoCount = racyInfo->stackSize();
   JSContext* context = aSample.mJSContext;
 
@@ -902,7 +901,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
     uint8_t* nativeStackAddr = nullptr;
 
     if (pseudoIndex != pseudoCount) {
-      volatile js::ProfileEntry& pseudoEntry = pseudoEntries[pseudoIndex];
+      js::ProfileEntry& pseudoEntry = pseudoEntries[pseudoIndex];
 
       if (pseudoEntry.isCpp()) {
         lastPseudoCppStackAddr = (uint8_t*) pseudoEntry.stackAddress();
@@ -952,7 +951,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
     // Check to see if pseudoStack frame is top-most.
     if (pseudoStackAddr > jsStackAddr && pseudoStackAddr > nativeStackAddr) {
       MOZ_ASSERT(pseudoIndex < pseudoCount);
-      volatile js::ProfileEntry& pseudoEntry = pseudoEntries[pseudoIndex];
+      js::ProfileEntry& pseudoEntry = pseudoEntries[pseudoIndex];
 
       // Pseudo-frames with the CPP_MARKER_FOR_JS kind are just annotations and
       // should not be recorded in the profile.
@@ -1100,7 +1099,7 @@ DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
   for (uint32_t i = racyInfo->stackSize(); i > 0; --i) {
     // The pseudostack grows towards higher indices, so we iterate
     // backwards (from callee to caller).
-    volatile js::ProfileEntry& entry = racyInfo->entries[i - 1];
+    js::ProfileEntry& entry = racyInfo->entries[i - 1];
     if (!entry.isJs() && strcmp(entry.label(), "EnterJIT") == 0) {
       // Found JIT entry frame.  Unwind up to that point (i.e., force
       // the stack walk to stop before the block of saved registers;
@@ -2857,7 +2856,7 @@ profiler_get_backtrace_noalloc(char *output, size_t outputSize)
 
   bool includeDynamicString = !ActivePS::FeaturePrivacy(lock);
 
-  volatile js::ProfileEntry* pseudoEntries = pseudoStack->entries;
+  js::ProfileEntry* pseudoEntries = pseudoStack->entries;
   uint32_t pseudoCount = pseudoStack->stackSize();
 
   for (uint32_t i = 0; i < pseudoCount; i++) {
