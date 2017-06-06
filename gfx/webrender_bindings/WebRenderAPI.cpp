@@ -556,7 +556,8 @@ DisplayListBuilder::PushStackingContext(const WrRect& aBounds,
                                         const uint64_t& aAnimationId,
                                         const float* aOpacity,
                                         const gfx::Matrix4x4* aTransform,
-                                        const WrMixBlendMode& aMixBlendMode)
+                                        const WrMixBlendMode& aMixBlendMode,
+                                        const nsTArray<WrFilterOp>& aFilters)
 {
   WrMatrix matrix;
   if (aTransform) {
@@ -566,7 +567,8 @@ DisplayListBuilder::PushStackingContext(const WrRect& aBounds,
   WRDL_LOG("PushStackingContext b=%s t=%s\n", Stringify(aBounds).c_str(),
       aTransform ? Stringify(*aTransform).c_str() : "none");
   wr_dp_push_stacking_context(mWrState, aBounds, aAnimationId, aOpacity,
-                              maybeTransform, aMixBlendMode);
+                              maybeTransform, aMixBlendMode,
+                              aFilters.Elements(), aFilters.Length());
 }
 
 void
