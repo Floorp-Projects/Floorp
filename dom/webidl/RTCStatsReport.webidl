@@ -131,6 +131,8 @@ dictionary RTCIceCandidatePairStats : RTCStats {
   unsigned long long priority;
   boolean readable;
   boolean nominated;
+  unsigned long long bytesSent;
+  unsigned long long bytesReceived;
   boolean selected;
 };
 

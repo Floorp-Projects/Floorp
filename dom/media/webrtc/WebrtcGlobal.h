@@ -211,6 +211,8 @@ struct ParamTraits<mozilla::dom::RTCIceCandidatePairStats>
     WriteParam(aMsg, aParam.mRemoteCandidateId);
     WriteParam(aMsg, aParam.mSelected);
     WriteParam(aMsg, aParam.mState);
+    WriteParam(aMsg, aParam.mBytesSent);
+    WriteParam(aMsg, aParam.mBytesReceived);
     WriteRTCStats(aMsg, aParam);
   }
 
@@ -224,6 +226,8 @@ struct ParamTraits<mozilla::dom::RTCIceCandidatePairStats>
         !ReadParam(aMsg, aIter, &(aResult->mRemoteCandidateId)) ||
         !ReadParam(aMsg, aIter, &(aResult->mSelected)) ||
         !ReadParam(aMsg, aIter, &(aResult->mState)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mBytesSent)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mBytesReceived)) ||
         !ReadRTCStats(aMsg, aIter, aResult)) {
       return false;
     }
