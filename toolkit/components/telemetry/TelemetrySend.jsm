@@ -1101,8 +1101,12 @@ var TelemetrySendImpl = {
     let onRequestFinished = (success, event) => {
       let onCompletion = () => {
         if (success) {
+          let histogram = Telemetry.getHistogramById("TELEMETRY_SUCCESSFUL_SEND_PINGS_SIZE_KB");
+          histogram.add(compressedPingSizeKB);
           deferred.resolve();
         } else {
+          let histogram = Telemetry.getHistogramById("TELEMETRY_FAILED_SEND_PINGS_SIZE_KB");
+          histogram.add(compressedPingSizeKB);
           deferred.reject(event);
         }
       };
@@ -1187,6 +1191,8 @@ var TelemetrySendImpl = {
                         .createInstance(Ci.nsIStringInputStream);
     startTime = new Date();
     payloadStream.data = gzipCompressString(utf8Payload);
+
+    const compressedPingSizeKB = Math.floor(payloadStream.data.length / 1024);
     Telemetry.getHistogramById("TELEMETRY_COMPRESS").add(new Date() - startTime);
     startTime = new Date();
     request.send(payloadStream);

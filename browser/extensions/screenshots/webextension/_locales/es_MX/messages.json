@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "¡No puedes tomar una captura de la página de capturas de pantalla de Firefox!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Tu selección es demasiado pequeña"
+  },
   "genericErrorTitle": {
     "message": "¡Oye! Las capturas de pantalla de Firefox salieron mal."
   },

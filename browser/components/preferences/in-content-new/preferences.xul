@@ -217,23 +217,22 @@
     </vbox>
   </hbox>
 
-    <vbox id="dialogOverlay" align="center" pack="center">
-      <groupbox id="dialogBox"
-                orient="vertical"
-                pack="end"
-                role="dialog"
-                aria-labelledby="dialogTitle">
-        <caption flex="1" align="center">
-          <label id="dialogTitle" flex="1"></label>
-          <button id="dialogClose"
-                  class="close-icon"
-                  aria-label="&preferencesCloseButton.label;"/>
-        </caption>
-        <browser id="dialogFrame"
-                 name="dialogFrame"
-                 autoscroll="false"
-                 disablehistory="true"/>
-      </groupbox>
-    </vbox>
+  <stack id="dialogStack" hidden="true"/>
+  <vbox id="dialogTemplate" class="dialogOverlay" align="center" pack="center" topmost="true" hidden="true">
+    <groupbox class="dialogBox"
+              orient="vertical"
+              pack="end"
+              role="dialog"
+              aria-labelledby="dialogTitle">
+      <caption flex="1" align="center">
+        <label class="dialogTitle" flex="1"></label>
+        <button class="dialogClose close-icon"
+                aria-label="&preferencesCloseButton.label;"/>
+      </caption>
+      <browser class="dialogFrame"
+               autoscroll="false"
+               disablehistory="true"/>
+    </groupbox>
+  </vbox>
   </stack>
 </page>

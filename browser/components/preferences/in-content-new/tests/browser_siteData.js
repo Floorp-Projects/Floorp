@@ -111,8 +111,8 @@ add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   await updatedPromise;
   await openSiteDataSettingsDialog();
-  let doc = gBrowser.selectedBrowser.contentDocument;
-  let dialogFrame = doc.getElementById("dialogFrame");
+  let dialog = content.gSubDialog._topDialog;
+  let dialogFrame = dialog._frame;
   let frameDoc = dialogFrame.contentDocument;
 
   let siteItems = frameDoc.getElementsByTagName("richlistitem");
@@ -280,8 +280,8 @@ add_task(async function() {
   await updatePromise;
   await openSiteDataSettingsDialog();
 
-  let doc = gBrowser.selectedBrowser.contentDocument;
-  let dialogFrame = doc.getElementById("dialogFrame");
+  let dialog = content.gSubDialog._topDialog;
+  let dialogFrame = dialog._frame;
   let frameDoc = dialogFrame.contentDocument;
   let hostCol = frameDoc.getElementById("hostCol");
   let usageCol = frameDoc.getElementById("usageCol");
@@ -406,7 +406,7 @@ add_task(async function() {
   await openSiteDataSettingsDialog();
 
   let doc = gBrowser.selectedBrowser.contentDocument;
-  let frameDoc = doc.getElementById("dialogFrame").contentDocument;
+  let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
   let searchBox = frameDoc.getElementById("searchBox");
 
   searchBox.value = "xyz";

@@ -12,7 +12,7 @@
     "message": "Minhas capturas"
   },
   "screenshotInstructions": {
-    "message": "Arraste ou clique na página para selecionar uma área. Pressione ESC para cancelar."
+    "message": "Arraste ou clique na página para selecionar uma região. Pressione ESC para cancelar."
   },
   "saveScreenshotSelectedArea": {
     "message": "Salvar"
@@ -41,7 +41,7 @@
     }
   },
   "requestErrorTitle": {
-    "message": "Fora de ordem."
+    "message": "Com defeito."
   },
   "requestErrorDetails": {
     "message": "Desculpa! Não pudemos salvar a sua captura de tela. Por favor, tente novamente mais tarde."

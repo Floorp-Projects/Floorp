@@ -483,6 +483,14 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   border: none;
 }
 
+/* On Mac, native buttons keep their full opacity when they become disabled
+ * and only the glyph or text on top of them becomes less opaque. */
+#back-button[disabled="true"] > .toolbarbutton-icon {
+  opacity: 1 !important;
+  -moz-context-properties: fill, fill-opacity;
+  fill-opacity: 0.4;
+}
+
 /* Inactive elements are faded out on OSX */
 .toolbarbutton-1:not(:hover):-moz-window-inactive,
 #main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive[disabled="true"] {

@@ -421,6 +421,9 @@ window.inlineSelectionCss = `
   position: absolute;
   right: 5px;
   top: 5px; }
+  html[dir="rtl"] .myshots-all-buttons-container {
+    left: 5px;
+    right: inherit; }
   .myshots-all-buttons-container .spacer {
     background-color: #c9c9c9;
     flex: 0 0 1px;

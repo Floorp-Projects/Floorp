@@ -113,7 +113,7 @@ to mochitest command.
 * getComputedStyle style doesn't contain custom properties bug 1336891
   * test_variable_serialization_computed.html [35]
   * test_variables.html `custom property name` [2]
-* test_css_supports.html: issues around @supports syntax servo/servo#15482 [7]
+* test_css_supports.html: issues around @supports syntax servo/servo#15482 [2]
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
 * :visited support (bug 1328509)

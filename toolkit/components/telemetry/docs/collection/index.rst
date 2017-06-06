@@ -22,6 +22,7 @@ The current data collection possibilities include:
 * :doc:`stack capture <stack-capture>` allow recording application call stacks
 * :doc:`Use counters <use-counters>` measure the usage of web platform features
 * :doc:`Experiment annotations <experiments>`
+* :doc:`Remote content uptake <uptake>`
 
 .. toctree::
    :maxdepth: 2
@@ -36,6 +37,7 @@ The current data collection possibilities include:
    custom-pings
    stack-capture
    experiments
+   uptake
    *
 
 Browser Usage Telemetry

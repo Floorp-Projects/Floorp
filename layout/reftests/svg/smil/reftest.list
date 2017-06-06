@@ -168,8 +168,8 @@ fails-if(styloVsGecko||stylo) == anim-paintserver-1.svg anim-paintserver-1-ref.s
 == anim-text-attr-01.svg anim-text-attr-01-ref.svg
 
 # animate where the base value is non-interpolatable but will be replaced anyway
-fails-if(styloVsGecko||stylo) == anim-fill-overpaintserver-1.svg lime.svg
-fails-if(styloVsGecko||stylo) == anim-fill-overpaintserver-2.svg lime.svg
+== anim-fill-overpaintserver-1.svg lime.svg
+== anim-fill-overpaintserver-2.svg lime.svg
 
 # animate where we fallback from 'additive' animation to non-additive
 fails-if(styloVsGecko||stylo) == anim-additive-fallback-1.svg anim-standard-ref.svg
@@ -183,7 +183,7 @@ fails-if(styloVsGecko||stylo) == anim-additive-fallback-1.svg anim-standard-ref.
 == anim-remove-7.svg anim-standard-ref.svg
 == anim-remove-8css.svg anim-standard-ref.svg
 == anim-remove-8xml.svg anim-standard-ref.svg
-fails-if(styloVsGecko||stylo) == anim-remove-9.svg anim-standard-ref.svg
+== anim-remove-9.svg anim-standard-ref.svg
 == anim-retarget-1.svg anim-standard-ref.svg
 == anim-retarget-2.svg anim-standard-ref.svg
 == anim-retarget-3.svg anim-standard-ref.svg
@@ -248,18 +248,18 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == anim-gradient-attr-presence-0
 == freeze-applied-late-4.svg anim-standard-ref.svg
 == frozen-to-anim-1.svg lime.svg
 
-fails-if(styloVsGecko||stylo) == inactivate-with-active-unchanged-1.svg anim-standard-ref.svg
-fails-if(styloVsGecko||stylo) == inactivate-with-active-unchanged-2.svg anim-standard-ref.svg
+== inactivate-with-active-unchanged-1.svg anim-standard-ref.svg
+== inactivate-with-active-unchanged-2.svg anim-standard-ref.svg
 
-fails-if(styloVsGecko||stylo) == mapped-attr-long-url-1.svg lime.svg
-fails-if(styloVsGecko||stylo) == mapped-attr-long-url-2.svg lime.svg
+== mapped-attr-long-url-1.svg lime.svg
+== mapped-attr-long-url-2.svg lime.svg
 
 == min-1.svg lime.svg
 
-fails-if(styloVsGecko||stylo) == smil-transitions-interaction-1a.svg lime.svg
-fails-if(styloVsGecko||stylo) == smil-transitions-interaction-1b.svg lime.svg
-fails-if(styloVsGecko||stylo) == smil-transitions-interaction-2a.svg lime.svg
-fails-if(styloVsGecko||stylo) == smil-transitions-interaction-2b.svg lime.svg
+== smil-transitions-interaction-1a.svg lime.svg
+== smil-transitions-interaction-1b.svg lime.svg
+== smil-transitions-interaction-2a.svg lime.svg
+== smil-transitions-interaction-2b.svg lime.svg
 == smil-transitions-interaction-3a.svg lime.svg
 == smil-transitions-interaction-3b.svg lime.svg
 == smil-transitions-interaction-4a.svg lime.svg
@@ -271,7 +271,7 @@ fails-if(styloVsGecko||stylo) == smil-transitions-interaction-2b.svg lime.svg
 # Test animation using defs element
 fails-if(styloVsGecko||stylo) == anim-defs-gradient-property.svg lime.svg
 == anim-defs-gradient-attribute.svg lime.svg
-fails-if(styloVsGecko||stylo) == anim-defs-fill.svg lime.svg
+== anim-defs-fill.svg lime.svg
 == anim-defs-width.svg lime.svg
 
 # Test animation that changes 'display' attribute

@@ -95,7 +95,7 @@ async function setupFormHistory() {
 add_task(async function history_only_menu_checking() {
   await setupFormHistory();
 
-  setInput("#tel", "");
+  await setInput("#tel", "");
   doKey("down");
   await expectPopup();
   checkMenuEntries(["1-234-567-890"]);
@@ -105,21 +105,21 @@ add_task(async function history_only_menu_checking() {
 add_task(async function check_menu_when_both_existed() {
   await setupAddressStorage();
 
-  setInput("#organization", "");
+  await setInput("#organization", "");
   doKey("down");
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({primary: address.organization, secondary: address["street-address"]})
   ));
 
-  setInput("#street-address", "");
+  await setInput("#street-address", "");
   doKey("down");
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
     JSON.stringify({primary: address["street-address"], secondary: address.organization})
   ));
 
-  setInput("#tel", "");
+  await setInput("#tel", "");
   doKey("down");
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
@@ -129,7 +129,7 @@ add_task(async function check_menu_when_both_existed() {
 
 // Display history search result if no matched data in addresses.
 add_task(async function check_fallback_for_mismatched_field() {
-  setInput("#email", "");
+  await setInput("#email", "");
   doKey("down");
   await expectPopup();
   checkMenuEntries(["foo@mozilla.com"]);
@@ -137,7 +137,7 @@ add_task(async function check_fallback_for_mismatched_field() {
 
 // Autofill the address from dropdown menu.
 add_task(async function check_fields_after_form_autofill() {
-  setInput("#organization", "Moz");
+  await setInput("#organization", "Moz");
   doKey("down");
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
@@ -149,7 +149,7 @@ add_task(async function check_fields_after_form_autofill() {
 
 // Fallback to history search after autofill address.
 add_task(async function check_fallback_after_form_autofill() {
-  setInput("#tel", "");
+  await setInput("#tel", "");
   doKey("down");
   await expectPopup();
   checkMenuEntries(["1-234-567-890"]);

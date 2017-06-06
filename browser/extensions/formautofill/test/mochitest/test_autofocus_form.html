@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test basic autofill</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="formautofill_common.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form autofill test: autocomplete on an autofocus form
+
+<script>
+/* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/SpawnTask.js */
+/* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
+/* import-globals-from formautofill_common.js */
+
+"use strict";
+
+let expectingPopup = null;
+let MOCK_STORAGE = [{
+  organization: "Sesame Street",
+  "street-address": "123 Sesame Street.",
+  tel: "1-345-345-3456",
+}, {
+  organization: "Mozilla",
+  "street-address": "331 E. Evelyn Avenue",
+  tel: "1-650-903-0800",
+}];
+
+function expectPopup() {
+  info("expecting a popup");
+  return new Promise(resolve => {
+    expectingPopup = resolve;
+  });
+}
+
+function popupShownListener() {
+  info("popup shown for test ");
+  if (expectingPopup) {
+    expectingPopup();
+    expectingPopup = null;
+  }
+}
+
+async function setupAddressStorage() {
+  await addAddress(MOCK_STORAGE[0]);
+  await addAddress(MOCK_STORAGE[1]);
+}
+
+add_task(async function check_autocomplete_on_autofocus_field() {
+  await setupAddressStorage();
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(MOCK_STORAGE.map(address =>
+    JSON.stringify({primary: address.organization, secondary: address["street-address"]})
+  ));
+});
+
+registerPopupShownListener(popupShownListener);
+
+</script>
+
+<p id="display"></p>
+
+<div id="content">
+
+  <form id="form1">
+    <p>This is a basic form.</p>
+    <p><label>organization: <input id="organization" name="organization" autocomplete="organization" type="text"></label></p>
+    <script>
+      // Focuses the input before DOMContentLoaded
+      document.getElementById("organization").focus();
+    </script>
+    <p><label>streetAddress: <input id="street-address" name="street-address" autocomplete="street-address" type="text"></label></p>
+    <p><label>tel: <input id="tel" name="tel" autocomplete="tel" type="text"></label></p>
+    <p><label>country: <input id="country" name="country" autocomplete="country" type="text"></label></p>
+  </form>
+
+</div>
+
+<pre id="test"></pre>
+</body>
+</html>

@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Ви не можете зробити знімок сторінки Firefox Screenshots!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Обрана область є замалою"
+  },
   "genericErrorTitle": {
     "message": "Оу! З Firefox Screenshots щось негаразд."
   },

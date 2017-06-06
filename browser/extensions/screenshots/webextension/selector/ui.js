@@ -104,6 +104,8 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
             if (this.addClassName) {
               this.document.body.className = this.addClassName;
             }
+            this.document.documentElement.dir = browser.i18n.getMessage("@@bidi_dir");
+            this.document.documentElement.lang = browser.i18n.getMessage("@@ui_locale");
             resolve();
           });
           document.body.appendChild(this.element);
@@ -246,6 +248,8 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
             if (this.addClassName) {
               this.document.body.className = this.addClassName;
             }
+            this.document.documentElement.dir = browser.i18n.getMessage("@@bidi_dir");
+            this.document.documentElement.lang = browser.i18n.getMessage("@@ui_locale");
             const overlay = this.document.querySelector(".preview-overlay");
             overlay.querySelector(".preview-instructions").textContent = browser.i18n.getMessage("screenshotInstructions");
             overlay.querySelector(".myshots-link").textContent = browser.i18n.getMessage("myShotsLink");
@@ -535,6 +539,10 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
         target = target.parentNode;
       }
       return false;
+    },
+
+    clearSaveDisabled() {
+      this.save.removeAttribute("disabled");
     },
 
     el: null,

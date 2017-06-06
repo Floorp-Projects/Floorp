@@ -16,7 +16,6 @@ toolbarbutton {
   -moz-box-pack: center;
   margin: 0;
   padding: 3px;
-  color: -moz-DialogText;
 }
 
 .toolbarbutton-icon[label]:not([label=""]),
@@ -76,7 +75,6 @@ toolbarbutton[checked="true"]:not([disabled="true"]) {
   }
 
   toolbarbutton:-moz-lwtheme:not([disabled="true"]) {
-    color: inherit;
     text-shadow: inherit;
   }
 }
@@ -87,7 +85,6 @@ toolbarbutton[checked="true"]:not([disabled="true"]) {
   }
 
   toolbarbutton:-moz-lwtheme:not([disabled="true"]) {
-    color: inherit;
     text-shadow: inherit;
   }
 }

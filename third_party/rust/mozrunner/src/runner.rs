@@ -1,4 +1,3 @@
-use mozprofile::prefdata::FIREFOX_PREFERENCES;
 use mozprofile::prefreader::PrefReaderError;
 use mozprofile::profile::Profile;
 use std::convert::From;
@@ -97,9 +96,7 @@ impl Runner for FirefoxRunner {
         let mut cmd = Command::new(&self.binary);
         self.build_command(&mut cmd);
 
-        let mut prefs = try!(self.profile.user_prefs());
-        prefs.insert_slice(&FIREFOX_PREFERENCES[..]);
-
+        let prefs = try!(self.profile.user_prefs());
         try!(prefs.write());
 
         let process = try!(cmd.spawn());

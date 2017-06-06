@@ -20,7 +20,7 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 
-#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
+#if MOZ_DIAGNOSTIC_ASSERT_ENABLED
 #define PROMISE_DEBUG
 #endif
 

@@ -294,6 +294,7 @@ toolbarbutton.bookmark-item:not(.subviewbutton):hover:not([disabled="true"]):not
   border-color: var(--toolbarbutton-hover-bordercolor);
   box-shadow: var(--toolbarbutton-hover-boxshadow);
 %endif
+  color: inherit;
 }
 
 .findbar-button:not([disabled=true]):-moz-any([checked="true"],:hover:active) > .toolbarbutton-text,
@@ -310,6 +311,7 @@ toolbarbutton.bookmark-item[open="true"],
   box-shadow: var(--toolbarbutton-active-boxshadow);
 %endif
   transition-duration: 10ms;
+  color: inherit;
 }
 
 #nav-bar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {

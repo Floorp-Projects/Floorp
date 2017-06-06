@@ -23,6 +23,7 @@ EXTRA_JS_MODULES['services-common'] += [
     'logmanager.js',
     'observers.js',
     'rest.js',
+    'uptake-telemetry.js',
     'utils.js',
 ]
 
