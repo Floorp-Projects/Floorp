@@ -98,7 +98,8 @@ using UniqueProfilerBacktrace =
 // just store the raw pointers to the literal strings. Consequently,
 // PROFILER_LABEL frames take up considerably less space in the profile buffer
 // than PROFILER_LABEL_DYNAMIC frames.
-#define PROFILER_LABEL_DYNAMIC(name_space, info, category, str) do {} while (0)
+#define PROFILER_LABEL_DYNAMIC(name_space, info, category, dynamicStr) \
+  do {} while (0)
 
 // Insert a marker in the profile timeline. This is useful to delimit something
 // important happening such as the first paint. Unlike profiler_label that are
@@ -128,20 +129,20 @@ using UniqueProfilerBacktrace =
 #define PROFILER_LABEL(name_space, info, category) \
   PROFILER_PLATFORM_TRACING(name_space "::" info) \
   mozilla::ProfilerStackFrameRAII \
-  PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, category, \
-                                             __LINE__)
+  PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, nullptr, \
+                                             __LINE__, category)
 
 #define PROFILER_LABEL_FUNC(category) \
   PROFILER_PLATFORM_TRACING(PROFILER_FUNCTION_NAME) \
   mozilla::ProfilerStackFrameRAII \
-  PROFILER_APPEND_LINE_NUMBER(profiler_raii)(PROFILER_FUNCTION_NAME, category, \
-                                             __LINE__)
+  PROFILER_APPEND_LINE_NUMBER(profiler_raii)(PROFILER_FUNCTION_NAME, nullptr, \
+                                             __LINE__, category)
 
-#define PROFILER_LABEL_DYNAMIC(name_space, info, category, str) \
+#define PROFILER_LABEL_DYNAMIC(name_space, info, category, dynamicStr) \
   PROFILER_PLATFORM_TRACING(name_space "::" info) \
-  mozilla::ProfilerStackFrameDynamicRAII \
-  PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, category, \
-                                             __LINE__, str)
+  mozilla::ProfilerStackFrameRAII \
+  PROFILER_APPEND_LINE_NUMBER(profiler_raii)(name_space "::" info, dynamicStr, \
+                                             __LINE__, category)
 
 #define PROFILER_MARKER(marker_name) profiler_add_marker(marker_name)
 #define PROFILER_MARKER_PAYLOAD(marker_name, payload) \
@@ -405,50 +406,9 @@ PROFILER_FUNC(void* profiler_get_stack_top(), nullptr)
 class nsISupports;
 class ProfilerMarkerPayload;
 
-// This exists purely for profiler_call_{enter,exit}. See the comment on the
+// This exists purely for ProfilerStackFrameRAII. See the comment on the
 // definition in platform.cpp for details.
 extern MOZ_THREAD_LOCAL(PseudoStack*) sPseudoStack;
-
-// Returns a handle to pass on exit. This can check that we are popping the
-// correct callstack. Operates the same whether the profiler is active or not.
-//
-// A short-lived, non-owning PseudoStack reference is created between each
-// profiler_call_enter() / profiler_call_exit() call pair. RAII objects (e.g.
-// ProfilerStackFrameRAII) ensure that these calls are balanced. Furthermore,
-// the RAII objects exist within the thread itself, which means they are
-// necessarily bounded by the lifetime of the thread, which ensures that the
-// references held can't be used after the PseudoStack is destroyed.
-inline void*
-profiler_call_enter(const char* aLabel, js::ProfileEntry::Category aCategory,
-                    void* aFrameAddress, uint32_t aLine,
-                    const char* aDynamicString = nullptr)
-{
-  // This function runs both on and off the main thread.
-
-  PseudoStack* pseudoStack = sPseudoStack.get();
-  if (!pseudoStack) {
-    return pseudoStack;
-  }
-  pseudoStack->pushCppFrame(aLabel, aDynamicString, aFrameAddress, aLine,
-                            js::ProfileEntry::Kind::CPP_NORMAL, aCategory);
-
-  // The handle is meant to support future changes but for now it is simply
-  // used to avoid having to call TLSInfo::RacyInfo() in profiler_call_exit().
-  return pseudoStack;
-}
-
-inline void
-profiler_call_exit(void* aHandle)
-{
-  // This function runs both on and off the main thread.
-
-  if (!aHandle) {
-    return;
-  }
-
-  PseudoStack* pseudoStack = static_cast<PseudoStack*>(aHandle);
-  pseudoStack->pop();
-}
 
 // Adds a marker to the PseudoStack. A no-op if the profiler is inactive or in
 // privacy mode.
@@ -507,41 +467,41 @@ void profiler_add_marker(const char* aMarkerName,
 
 namespace mozilla {
 
+// This class creates a non-owning PseudoStack reference. Objects of this class
+// are stack-allocated, and so exist within a thread, and are thus bounded by
+// the lifetime of the thread, which ensures that the references held can't be
+// used after the PseudoStack is destroyed.
 class MOZ_RAII ProfilerStackFrameRAII {
 public:
-  // We only copy the strings at save time, so to take multiple parameters we'd
-  // need to copy them then.
-  ProfilerStackFrameRAII(const char* aLabel,
-    js::ProfileEntry::Category aCategory, uint32_t aLine
-    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  ProfilerStackFrameRAII(const char* aLabel, const char* aDynamicString,
+                         uint32_t aLine, js::ProfileEntry::Category aCategory
+                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    mHandle = profiler_call_enter(aLabel, aCategory, this, aLine);
+
+    // This function runs both on and off the main thread.
+
+    mPseudoStack = sPseudoStack.get();
+    if (mPseudoStack) {
+      mPseudoStack->pushCppFrame(aLabel, aDynamicString, this, aLine,
+                                js::ProfileEntry::Kind::CPP_NORMAL, aCategory);
+    }
   }
-  ~ProfilerStackFrameRAII() {
-    profiler_call_exit(mHandle);
+
+  ~ProfilerStackFrameRAII()
+  {
+    // This function runs both on and off the main thread.
+
+    if (mPseudoStack) {
+      mPseudoStack->pop();
+    }
   }
+
 private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-  void* mHandle;
-};
-
-class MOZ_RAII ProfilerStackFrameDynamicRAII {
-public:
-  ProfilerStackFrameDynamicRAII(const char* aLabel,
-    js::ProfileEntry::Category aCategory, uint32_t aLine,
-    const char* aDynamicString)
-  {
-    mHandle = profiler_call_enter(aLabel, aCategory, this, aLine,
-                                  aDynamicString);
-  }
-
-  ~ProfilerStackFrameDynamicRAII() {
-    profiler_call_exit(mHandle);
-  }
-
-private:
-  void* mHandle;
+  // We save a PseudoStack pointer in the ctor so we don't have to redo the TLS
+  // lookup in the dtor.
+  PseudoStack* mPseudoStack;
 };
 
 } // namespace mozilla

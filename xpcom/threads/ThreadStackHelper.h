@@ -77,7 +77,7 @@ private:
   bool PrepareStackBuffer(Stack& aStack);
   void FillStackBuffer();
 #ifdef MOZ_THREADSTACKHELPER_PSEUDO
-  const char* AppendJSEntry(const volatile js::ProfileEntry* aEntry,
+  const char* AppendJSEntry(const js::ProfileEntry* aEntry,
                             intptr_t& aAvailableBufferSize,
                             const char* aPrevLabel);
 #endif
