@@ -53,7 +53,7 @@
 == deleted-interval-simple-5.svg green-box-ref.svg
 
 # Trimmed intervals
-fails-if(styloVsGecko||stylo) == trimmed-interval-1.svg green-box-ref.svg
+== trimmed-interval-1.svg green-box-ref.svg
 
 # Cyclic dependencies
 == cycle-ok-1.svg green-box-ref.svg
