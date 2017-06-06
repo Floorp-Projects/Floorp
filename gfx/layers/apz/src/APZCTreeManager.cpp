@@ -399,6 +399,10 @@ APZCTreeManager::UpdateFocusState(uint64_t aRootLayerTreeId,
                                   uint64_t aOriginatingLayersId,
                                   const FocusTarget& aFocusTarget)
 {
+  if (!gfxPrefs::APZKeyboardEnabled()) {
+    return;
+  }
+
   mFocusState.Update(aRootLayerTreeId,
                      aOriginatingLayersId,
                      aFocusTarget);
