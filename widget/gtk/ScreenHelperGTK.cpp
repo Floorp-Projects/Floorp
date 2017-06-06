@@ -151,14 +151,16 @@ MakeScreen(GdkScreen* aScreen, gint aMonitorNum)
   CSSToLayoutDeviceScale defaultCssScale(
     gdkScaleFactor * gfxPlatformGtk::GetFontScaleFactor());
 
+  float dpi = 96.0f;
   MOZ_LOG(sScreenLog, LogLevel::Debug,
-           ("New screen [%d %d %d %d (%d %d %d %d) %d %f]",
+           ("New screen [%d %d %d %d (%d %d %d %d) %d %f %f]",
             rect.x, rect.y, rect.width, rect.height,
             availRect.x, availRect.y, availRect.width, availRect.height,
-            pixelDepth, defaultCssScale.scale));
+            pixelDepth, defaultCssScale.scale, dpi));
   RefPtr<Screen> screen = new Screen(rect, availRect,
                                      pixelDepth, pixelDepth,
-                                     contentsScale, defaultCssScale);
+                                     contentsScale, defaultCssScale,
+                                     dpi);
   return screen.forget();
 }
 
