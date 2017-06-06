@@ -61,6 +61,7 @@ class OverscrollEffectBase;
 class WidgetOverscrollEffect;
 class GenericOverscrollEffect;
 class AndroidSpecificState;
+struct KeyboardScrollAction;
 
 // Base class for grouping platform-specific APZC state variables.
 class PlatformSpecificStateBase {
@@ -483,6 +484,13 @@ protected:
   ParentLayerPoint GetScrollWheelDelta(const ScrollWheelInput& aEvent) const;
 
   /**
+   * Helper methods for handling keyboard events.
+   */
+  nsEventStatus OnKeyboard(const KeyboardInput& aEvent);
+
+  CSSPoint GetKeyboardDestination(const KeyboardScrollAction& aAction) const;
+
+  /**
    * Helper methods for long press gestures.
    */
   nsEventStatus OnLongPress(const TapGestureInput& aEvent);
@@ -839,7 +847,8 @@ protected:
                                  the finger is lifted. */
     SMOOTH_SCROLL,            /* Smooth scrolling to destination. Used by
                                  CSSOM-View smooth scroll-behavior */
-    WHEEL_SCROLL              /* Smooth scrolling to a destination for a wheel event. */
+    WHEEL_SCROLL,             /* Smooth scrolling to a destination for a wheel event. */
+    KEYBOARD_SCROLL           /* Smooth scrolling to a destination for a keyboard event. */
   };
 
   // This is in theory protected by |mMonitor|; that is, it should be held whenever
@@ -938,6 +947,7 @@ private:
   friend class SmoothScrollAnimation;
   friend class GenericScrollAnimation;
   friend class WheelScrollAnimation;
+  friend class KeyboardScrollAnimation;
 
   friend class GenericOverscrollEffect;
   friend class WidgetOverscrollEffect;

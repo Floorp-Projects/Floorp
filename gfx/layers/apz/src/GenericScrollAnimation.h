@@ -24,11 +24,16 @@ public:
                          const nsPoint& aInitialPosition);
 
   bool DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta) override;
+
   void UpdateDelta(TimeStamp aTime, nsPoint aDelta, const nsSize& aCurrentVelocity);
+  void UpdateDestination(TimeStamp aTime, nsPoint aDestination, const nsSize& aCurrentVelocity);
 
   CSSPoint GetDestination() const {
     return CSSPoint::FromAppUnits(mFinalDestination);
   }
+
+private:
+  void Update(TimeStamp aTime, const nsSize& aCurrentVelocity);
 
 protected:
   AsyncPanZoomController& mApzc;

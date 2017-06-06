@@ -77,6 +77,7 @@
 #include "SharedMemoryBasic.h"          // for SharedMemoryBasic
 #include "ScrollSnap.h"                 // for ScrollSnapUtils
 #include "WheelScrollAnimation.h"
+#include "KeyboardScrollAnimation.h"
 #if defined(MOZ_WIDGET_ANDROID)
 #include "AndroidAPZ.h"
 #include "mozilla/layers/AndroidDynamicToolbarAnimator.h"
@@ -1005,6 +1006,11 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
     rv = HandleGestureEvent(tapInput);
     break;
   }
+  case KEYBOARD_INPUT: {
+    KeyboardInput keyInput = aEvent.AsKeyboardInput();
+    rv = OnKeyboard(keyInput);
+    break;
+  }
   case SENTINEL_INPUT: {
     MOZ_ASSERT_UNREACHABLE("Invalid value");
     break;
@@ -1067,6 +1073,7 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
     case SMOOTH_SCROLL:
     case OVERSCROLL_ANIMATION:
     case WHEEL_SCROLL:
+    case KEYBOARD_SCROLL:
     case PAN_MOMENTUM:
       MOZ_ASSERT(GetCurrentTouchBlock());
       GetCurrentTouchBlock()->GetOverscrollHandoffChain()->CancelAnimations(ExcludeOverscroll);
@@ -1142,6 +1149,7 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
       return nsEventStatus_eIgnore;
 
     case WHEEL_SCROLL:
+    case KEYBOARD_SCROLL:
     case OVERSCROLL_ANIMATION:
       // Should not receive a touch-move in the OVERSCROLL_ANIMATION state
       // as touch blocks that begin in an overscrolled state cancel the
@@ -1222,6 +1230,7 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
     return nsEventStatus_eIgnore;
 
   case WHEEL_SCROLL:
+  case KEYBOARD_SCROLL:
   case OVERSCROLL_ANIMATION:
     // Should not receive a touch-end in the OVERSCROLL_ANIMATION state
     // as touch blocks that begin in an overscrolled state cancel the
@@ -1656,6 +1665,117 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) cons
   return delta;
 }
 
+nsEventStatus
+AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent)
+{
+  // Calculate the destination for this keyboard scroll action
+  nsPoint destination = CSSPoint::ToAppUnits(GetKeyboardDestination(aEvent.mAction));
+
+  // The lock must be held across the entire update operation, so the
+  // compositor doesn't end the animation before we get a chance to
+  // update it.
+  ReentrantMonitorAutoEnter lock(mMonitor);
+
+  // Use a keyboard scroll animation to scroll, reusing an existing one if it exists
+  if (mState != KEYBOARD_SCROLL) {
+    CancelAnimation();
+    SetState(KEYBOARD_SCROLL);
+
+    nsPoint initialPosition = CSSPoint::ToAppUnits(mFrameMetrics.GetScrollOffset());
+    StartAnimation(new KeyboardScrollAnimation(*this, initialPosition, aEvent.mAction.mType));
+  }
+
+  // Cast velocity from ParentLayerPoints/ms to CSSPoints/ms then convert to
+  // appunits/second. We perform a cast to ParentLayerPoints/ms without a
+  // conversion so that the scroll duration isn't affected by zoom
+  nsPoint velocity =
+    CSSPoint::ToAppUnits(CSSPoint(mX.GetVelocity(), mY.GetVelocity())) * 1000.0f;
+
+  KeyboardScrollAnimation* animation = mAnimation->AsKeyboardScrollAnimation();
+  MOZ_ASSERT(animation);
+
+  animation->UpdateDestination(aEvent.mTimeStamp, destination, nsSize(velocity.x, velocity.y));
+
+  return nsEventStatus_eConsumeNoDefault;
+}
+
+CSSPoint
+AsyncPanZoomController::GetKeyboardDestination(const KeyboardScrollAction& aAction) const
+{
+  CSSSize lineScrollSize;
+  CSSSize pageScrollSize;
+  CSSPoint scrollOffset;
+  CSSRect scrollRect;
+
+  {
+    // Grab the lock to access the frame metrics.
+    ReentrantMonitorAutoEnter lock(mMonitor);
+
+    lineScrollSize = mScrollMetadata.GetLineScrollAmount() /
+      mFrameMetrics.GetDevPixelsPerCSSPixel();
+    pageScrollSize = mScrollMetadata.GetPageScrollAmount() /
+      mFrameMetrics.GetDevPixelsPerCSSPixel();
+
+    if (mState == WHEEL_SCROLL) {
+      scrollOffset = mAnimation->AsWheelScrollAnimation()->GetDestination();
+    } else if (mState == SMOOTH_SCROLL) {
+      scrollOffset = mAnimation->AsSmoothScrollAnimation()->GetDestination();
+    } else if (mState == KEYBOARD_SCROLL) {
+      scrollOffset = mAnimation->AsKeyboardScrollAnimation()->GetDestination();
+    } else {
+      scrollOffset = mFrameMetrics.GetScrollOffset();
+    }
+
+    scrollRect = mFrameMetrics.GetScrollableRect();
+  }
+
+  // Calculate the scroll destination based off of the scroll type and direction
+  CSSPoint scrollDestination = scrollOffset;
+
+  switch (aAction.mType) {
+    case KeyboardScrollAction::eScrollCharacter: {
+      int32_t scrollDistance = gfxPrefs::ToolkitHorizontalScrollDistance();
+
+      if (aAction.mForward) {
+        scrollDestination.x += scrollDistance * lineScrollSize.width;
+      } else {
+        scrollDestination.x -= scrollDistance * lineScrollSize.width;
+      }
+      break;
+    }
+    case KeyboardScrollAction::eScrollLine: {
+      int32_t scrollDistance = gfxPrefs::ToolkitVerticalScrollDistance();
+
+      if (aAction.mForward) {
+        scrollDestination.y += scrollDistance * lineScrollSize.height;
+      } else {
+        scrollDestination.y -= scrollDistance * lineScrollSize.height;
+      }
+      break;
+    }
+    case KeyboardScrollAction::eScrollPage: {
+      if (aAction.mForward) {
+        scrollDestination.y += pageScrollSize.height;
+      } else {
+        scrollDestination.y -= pageScrollSize.height;
+      }
+      break;
+    }
+    case KeyboardScrollAction::eScrollComplete: {
+      if (aAction.mForward) {
+        scrollDestination.y = scrollRect.YMost();
+      } else {
+        scrollDestination.y = scrollRect.y;
+      }
+      break;
+    }
+    case KeyboardScrollAction::eSentinel:
+      MOZ_ASSERT_UNREACHABLE("unexpected keyboard delta type");
+  }
+
+  return scrollDestination;
+}
+
 // Return whether or not the underlying layer can be scrolled on either axis.
 bool
 AsyncPanZoomController::CanScroll(const InputData& aEvent) const
@@ -1822,6 +1942,8 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
         startPosition = mAnimation->AsWheelScrollAnimation()->GetDestination();
       } else if (mState == SMOOTH_SCROLL) {
         startPosition = mAnimation->AsSmoothScrollAnimation()->GetDestination();
+      } else if (mState == KEYBOARD_SCROLL) {
+        startPosition = mAnimation->AsKeyboardScrollAnimation()->GetDestination();
       }
       if (MaybeAdjustDeltaForScrollSnapping(aEvent, delta, startPosition)) {
         // If we're scroll snapping, use a smooth scroll animation to get
@@ -1845,7 +1967,8 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
       nsPoint deltaInAppUnits =
         CSSPoint::ToAppUnits(delta / mFrameMetrics.GetZoom());
       // Cast velocity from ParentLayerPoints/ms to CSSPoints/ms then convert to
-      // appunits/second
+      // appunits/second. We perform a cast to ParentLayerPoints/ms without a
+      // conversion so that the scroll duration isn't affected by zoom
       nsPoint velocity =
         CSSPoint::ToAppUnits(CSSPoint(mX.GetVelocity(), mY.GetVelocity())) * 1000.0f;
 
@@ -2608,7 +2731,8 @@ void AsyncPanZoomController::SmoothScrollTo(const CSSPoint& aDestination) {
     SetState(SMOOTH_SCROLL);
     nsPoint initialPosition = CSSPoint::ToAppUnits(mFrameMetrics.GetScrollOffset());
     // Cast velocity from ParentLayerPoints/ms to CSSPoints/ms then convert to
-    // appunits/second
+    // appunits/second. We perform a cast to ParentLayerPoints/ms without a
+    // conversion so that the scroll duration isn't affected by zoom
     nsPoint initialVelocity = CSSPoint::ToAppUnits(CSSPoint(mX.GetVelocity(),
                                                             mY.GetVelocity())) * 1000.0f;
     nsPoint destination = CSSPoint::ToAppUnits(aDestination);
