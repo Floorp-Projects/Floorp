@@ -2386,6 +2386,7 @@ DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame, ICTypeMonitor_Fallbac
         MOZ_ASSERT(frame->isFunctionFrame() || frame->isEvalFrame());
         MOZ_ASSERT(stub->monitorsThis() ||
                    *GetNextPc(pc) == JSOP_CHECKTHIS ||
+                   *GetNextPc(pc) == JSOP_CHECKTHISREINIT ||
                    *GetNextPc(pc) == JSOP_CHECKRETURN);
         if (stub->monitorsThis())
             TypeScript::SetThis(cx, script, TypeSet::UnknownType());
