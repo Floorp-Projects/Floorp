@@ -455,7 +455,11 @@ pref("browser.link.open_newwindow.disabled_in_fullscreen", true);
 pref("browser.link.open_newwindow.disabled_in_fullscreen", false);
 #endif
 
+#ifdef NIGHTLY_BUILD
+pref("browser.photon.structure.enabled", true);
+#else
 pref("browser.photon.structure.enabled", false);
+#endif
 
 // Tabbed browser
 pref("browser.tabs.closeWindowWithLastTab", true);
