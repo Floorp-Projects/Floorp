@@ -15,6 +15,7 @@
 #include "nsFocusManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/TabParent.h"
 
 namespace mozilla {
 namespace a11y {
@@ -190,12 +191,34 @@ FocusManager::ActiveItemChanged(Accessible* aItem, bool aCheckIfActive)
   }
   mActiveItem = aItem;
 
+  // If mActiveItem is null, we might need to shift a11y focus to a remote
+  // element.
+  if (!mActiveItem && XRE_IsParentProcess()) {
+    nsFocusManager* domfm = nsFocusManager::GetFocusManager();
+    if (domfm) {
+      nsIContent* focusedElm = domfm->GetFocusedContent();
+      if (focusedElm) {
+        bool remote = EventStateManager::IsRemoteTarget(focusedElm);
+        if (remote) {
+          dom::TabParent* tab = dom::TabParent::GetFrom(focusedElm);
+          if (tab) {
+            a11y::DocAccessibleParent* dap = tab->GetTopLevelDocAccessible();
+            if (dap) {
+              Unused << dap->SendRestoreFocus();
+            }
+          }
+        }
+      }
+    }
+  }
+
   // If active item is changed then fire accessible focus event on it, otherwise
   // if there's no an active item then fire focus event to accessible having
   // DOM focus.
   Accessible* target = FocusedAccessible();
-  if (target)
+  if (target) {
     DispatchFocusEvent(target->Document(), target);
+  }
 }
 
 void
