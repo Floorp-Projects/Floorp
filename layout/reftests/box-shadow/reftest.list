@@ -18,9 +18,9 @@ fuzzy-if(skiaContent,13,28) == boxshadow-inner-basic.html boxshadow-inner-basic-
 random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
 random-if(d2d) fuzzy-if(skiaContent,1,100) fuzzy-if(webrender,127,3528) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
 fuzzy-if(skiaContent,1,50) HTTP(..) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul
-random-if(d2d) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
-random-if(d2d) == boxshadow-twocorners.html boxshadow-twocorners-ref.html
-random-if(d2d) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
+random-if(d2d) fuzzy-if(webrender,1-1,10-20) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
+random-if(d2d) fuzzy-if(webrender,1-1,20-30) == boxshadow-twocorners.html boxshadow-twocorners-ref.html
+random-if(d2d) fuzzy-if(webrender,1-1,40-50) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
 fuzzy(2,440) fuzzy-if(webrender,25,1300) == boxshadow-skiprect.html boxshadow-skiprect-ref.html
 == boxshadow-opacity.html boxshadow-opacity-ref.html
 == boxshadow-color-rounding.html boxshadow-color-rounding-ref.html
