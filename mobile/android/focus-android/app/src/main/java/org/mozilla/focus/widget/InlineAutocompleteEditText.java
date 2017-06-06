@@ -505,6 +505,8 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
     }
 
     private class TextChangeListener implements TextWatcher {
+        private int textLengthBeforeChange;
+
         @Override
         public void afterTextChanged(final Editable editable) {
             if (!isEnabled() || mSettingAutoComplete) {
@@ -517,7 +519,7 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
 
             if (UrlUtils.isSearchQuery(text)) {
                 doAutocomplete = false;
-            } else if (mAutoCompletePrefixLength > textLength) {
+            } else if (textLength == textLengthBeforeChange - 1) {
                 // If you're hitting backspace (the string is getting smaller), don't autocomplete
                 doAutocomplete = false;
             }
@@ -554,14 +556,12 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
         }
 
         @Override
-        public void beforeTextChanged(CharSequence s, int start, int count,
-                                      int after) {
-            // do nothing
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            textLengthBeforeChange = s.length();
         }
 
         @Override
-        public void onTextChanged(CharSequence s, int start, int before,
-                                  int count) {
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
             // do nothing
         }
     }
