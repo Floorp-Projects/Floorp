@@ -19,7 +19,7 @@
         'btoken.c',
         'ckbiver.c',
         'constants.c',
-        '<(INTERMEDIATE_DIR)/certdata.c'
+        '<(certdata_c)',
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
@@ -30,23 +30,25 @@
         {
           'msvs_cygwin_shell': 0,
           'action': [
-            'perl',
-            'certdata.perl',
+            'python',
+            'certdata.py',
             'certdata.txt',
             '<@(_outputs)',
           ],
           'inputs': [
+            'certdata.py',
             'certdata.perl',
             'certdata.txt'
           ],
           'outputs': [
-            '<(INTERMEDIATE_DIR)/certdata.c'
+            '<(certdata_c)'
           ],
           'action_name': 'generate_certdata_c'
         }
       ],
       'variables': {
-        'mapfile': 'nssckbi.def'
+        'mapfile': 'nssckbi.def',
+        'certdata_c': '<(INTERMEDIATE_DIR)/certdata.c',
       }
     }
   ],
