@@ -364,8 +364,15 @@ WebExtensionContentScript::Matches(const DocInfo& aDoc) const
   // cases, we test the URL of the principal that it inherits.
   if (mMatchAboutBlank && aDoc.IsTopLevel() &&
       aDoc.URL().Spec().EqualsLiteral("about:blank") &&
-      aDoc.Principal()->GetIsNullPrincipal()) {
+      aDoc.Principal() && aDoc.Principal()->GetIsNullPrincipal()) {
     return true;
+  }
+
+  // With the exception of top-level about:blank documents with null
+  // principals, we never match documents that have non-codebase principals,
+  // including those with null principals or system principals.
+  if (aDoc.Principal() && !aDoc.Principal()->GetIsCodebasePrincipal()) {
+    return false;
   }
 
   return MatchesURI(aDoc.PrincipalURL());
@@ -471,14 +478,26 @@ DocInfo::Principal() const
   if (mPrincipal.isNothing()) {
     struct Matcher
     {
+      explicit Matcher(const DocInfo& aThis) : mThis(aThis) {}
+      const DocInfo& mThis;
+
       nsIPrincipal* match(Window aWin)
       {
         nsCOMPtr<nsIDocument> doc = aWin->GetDoc();
         return doc->NodePrincipal();
       }
-      nsIPrincipal* match(LoadInfo aLoadInfo) { return aLoadInfo->PrincipalToInherit(); }
+      nsIPrincipal* match(LoadInfo aLoadInfo)
+      {
+        if (!(mThis.URL().InheritsPrincipal() || aLoadInfo->GetForceInheritPrincipal())) {
+          return nullptr;
+        }
+        if (auto principal = aLoadInfo->PrincipalToInherit()) {
+          return principal;
+        }
+        return aLoadInfo->TriggeringPrincipal();
+      }
     };
-    mPrincipal.emplace(mObj.match(Matcher()));
+    mPrincipal.emplace(mObj.match(Matcher(*this)));
   }
   return mPrincipal.ref();
 }
@@ -486,14 +505,16 @@ DocInfo::Principal() const
 const URLInfo&
 DocInfo::PrincipalURL() const
 {
-  if (!URL().InheritsPrincipal()) {
+  if (!URL().InheritsPrincipal() ||
+      !(Principal() && Principal()->GetIsCodebasePrincipal())) {
     return URL();
   }
 
   if (mPrincipalURL.isNothing()) {
     nsIPrincipal* prin = Principal();
     nsCOMPtr<nsIURI> uri;
-    if (prin && NS_SUCCEEDED(prin->GetURI(getter_AddRefs(uri)))) {
+    if (NS_SUCCEEDED(prin->GetURI(getter_AddRefs(uri)))) {
+      MOZ_DIAGNOSTIC_ASSERT(uri);
       mPrincipalURL.emplace(uri);
     } else {
       mPrincipalURL.emplace(URL());

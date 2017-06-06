@@ -40,8 +40,13 @@ public:
 
   const URLInfo& URL() const { return mURL; }
 
+  // The principal of the document, or the expected principal of a request.
+  // May be null for non-DOMWindow DocInfo objects unless
+  // URL().InheritsPrincipal() is true.
   nsIPrincipal* Principal() const;
 
+  // Returns the URL of the document's principal. Note that this must *only*
+  // be called for codebase principals.
   const URLInfo& PrincipalURL() const;
 
   bool IsTopLevel() const;
