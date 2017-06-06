@@ -13,6 +13,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -21,6 +23,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -78,8 +81,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     private TransitionDrawable backgroundTransition;
     private TextView urlView;
     private AnimatedProgressBar progressView;
-    private View lockView;
-    private View menuView;
+    private ImageView lockView;
+    private ImageButton menuView;
 
     private View forwardButton;
     private View backButton;
@@ -140,11 +143,11 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             backButton.setOnClickListener(this);
         }
 
-        lockView = view.findViewById(R.id.lock);
+        lockView = (ImageView) view.findViewById(R.id.lock);
 
         progressView = (AnimatedProgressBar) view.findViewById(R.id.progress);
 
-        menuView = view.findViewById(R.id.menu);
+        menuView = (ImageButton) view.findViewById(R.id.menu);
         menuView.setOnClickListener(this);
 
         if (BrowsingSession.getInstance().isCustomTab()) {
@@ -176,10 +179,16 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         final ViewGroup eraseContainer = (ViewGroup) erase.getParent();
         eraseContainer.removeView(erase);
 
+        final int textColor;
+
         final View toolbar = view.findViewById(R.id.urlbar);
         if (customTabConfig.toolbarColor != null) {
             toolbar.setBackgroundColor(customTabConfig.toolbarColor);
-            urlView.setTextColor(ColorUtils.getReadableTextColor(customTabConfig.toolbarColor));
+
+            textColor = ColorUtils.getReadableTextColor(customTabConfig.toolbarColor);
+            urlView.setTextColor(textColor);
+        } else {
+            textColor = Color.WHITE;
         }
 
         final ImageView closeButton = (ImageView) view.findViewById(R.id.customtab_close);
@@ -191,7 +200,10 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             closeButton.setImageBitmap(customTabConfig.closeButtonIcon);
         } else {
             // Always set the icon in case it's been overridden by a previous CT invocation
-            closeButton.setImageResource(R.drawable.ic_close);
+            final Drawable wrapped = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_close, view.getContext().getTheme()));
+            DrawableCompat.setTint(wrapped, textColor);
+
+            closeButton.setImageDrawable(wrapped);
         }
 
         if (customTabConfig.disableUrlbarHiding) {
@@ -223,6 +235,15 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 }
             });
         }
+
+        // We need to tint some icons.. We already tinted the close button above. Let's tint our other icons too.
+        final Drawable wrappedLock = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_lock, view.getContext().getTheme()));
+        DrawableCompat.setTint(wrappedLock, textColor);
+        lockView.setImageDrawable(wrappedLock);
+
+        final Drawable wrappedMenu = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_menu, view.getContext().getTheme()));
+        DrawableCompat.setTint(wrappedMenu, textColor);
+        menuView.setImageDrawable(wrappedMenu);
     }
 
     @Override
