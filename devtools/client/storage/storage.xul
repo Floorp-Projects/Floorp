@@ -43,14 +43,14 @@
     <splitter class="devtools-side-splitter"/>
     <vbox flex="1">
       <hbox id="storage-toolbar" class="devtools-toolbar">
+        <button id="add-button"
+                class="devtools-button add-button"></button>
+        <spacer flex="1"/>
         <textbox id="storage-searchbox"
                  class="devtools-filterinput"
                  type="search"
                  timeout="200"
                  placeholder="&searchBox.placeholder;"/>
-        <button id="add-button"
-                class="devtools-button add-button"></button>
-        <spacer flex="1"/>
         <button class="devtools-button sidebar-toggle" hidden="true"></button>
       </hbox>
       <vbox id="storage-table" class="theme-sidebar" flex="1"/>
