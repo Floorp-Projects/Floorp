@@ -40,6 +40,7 @@ import org.mozilla.focus.notification.BrowsingNotificationService;
 import org.mozilla.focus.open.OpenWithFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.Browsers;
+import org.mozilla.focus.utils.ColorUtils;
 import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.utils.ViewUtils;
@@ -164,9 +165,6 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
     private void initialiseCustomTabUi(final @NonNull View view) {
         final CustomTabConfig customTabConfig = BrowsingSession.getInstance().getCustomTabConfig();
-        if (customTabConfig == null) {
-            throw new IllegalStateException("Can't initialise custom tab UI for non custom-tab session");
-        }
 
         // Unfortunately there's no simpler way to have the FAB only in normal-browser mode.
         // - ViewStub: requires splitting attributes for the FAB between the ViewStub, and actual FAB layout file.
@@ -181,6 +179,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         final View toolbar = view.findViewById(R.id.urlbar);
         if (customTabConfig.toolbarColor != null) {
             toolbar.setBackgroundColor(customTabConfig.toolbarColor);
+            urlView.setTextColor(ColorUtils.getReadableTextColor(customTabConfig.toolbarColor));
         }
 
         final ImageView closeButton = (ImageView) view.findViewById(R.id.customtab_close);
