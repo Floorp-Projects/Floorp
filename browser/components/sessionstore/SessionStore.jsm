@@ -1310,7 +1310,7 @@ var SessionStoreInternal = {
         // Let everyone know we're done.
         this._deferredInitialized.resolve();
       }
-    }, console.error);
+    }).catch(console.error);
   },
 
   /**
