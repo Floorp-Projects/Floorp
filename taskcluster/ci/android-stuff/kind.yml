@@ -40,6 +40,7 @@ jobs:
                     platform_supports_post_upload_to_latest.py
                 MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
                 TOOLTOOL_CACHE: "/home/worker/tooltool-cache"
+                TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-gradle-dependencies/releng.manifest"
             artifacts:
               - name: public/build
                 path: /home/worker/artifacts/
@@ -85,6 +86,7 @@ jobs:
                     disable_signing.py
                     platform_supports_post_upload_to_latest.py
                 MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
+                TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
             artifacts:
               - name: public/android/unittest
                 path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/tests
@@ -132,6 +134,7 @@ jobs:
                     disable_signing.py
                     platform_supports_post_upload_to_latest.py
                 MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
+                TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
             artifacts:
               - name: public/android/lint/lint-results-officialAustralisDebug.html
                 path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug.html
@@ -201,6 +204,7 @@ jobs:
                     disable_signing.py
                     platform_supports_post_upload_to_latest.py
                 MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
+                TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
             artifacts:
               - name: public/android/checkstyle/checkstyle.xml
                 path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml
@@ -251,6 +255,7 @@ jobs:
                     disable_signing.py
                     platform_supports_post_upload_to_latest.py
                 MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
+                TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
             artifacts:
               - name: public/android/findbugs/findbugs-officialAustralisDebug-output.html
                 path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialAustralisDebug-output.html
