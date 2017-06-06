@@ -57,7 +57,7 @@
     'defines': [
       'SHLIB_SUFFIX=\"<(dll_suffix)\"',
       'SHLIB_PREFIX=\"<(dll_prefix)\"',
-      'LG_LIB_NAME=\"libnssdbm3.so\"'
+      'LG_LIB_NAME=\"<(dll_prefix)nssdbm3.<(dll_suffix)\"'
     ]
   },
   'variables': {
