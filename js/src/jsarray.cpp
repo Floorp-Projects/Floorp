@@ -2504,15 +2504,17 @@ js::array_unshift(JSContext* cx, unsigned argc, Value* vp)
             NativeObject* nobj = &obj->as<NativeObject>();
             if (nobj->is<ArrayObject>() && !nobj->as<ArrayObject>().lengthIsWritable())
                 break;
-            DenseElementResult result = nobj->ensureDenseElements(cx, uint32_t(length), args.length());
-            if (result != DenseElementResult::Success) {
-                if (result == DenseElementResult::Failure)
-                    return false;
-                MOZ_ASSERT(result == DenseElementResult::Incomplete);
-                break;
+            if (!nobj->tryUnshiftDenseElements(args.length())) {
+                DenseElementResult result = nobj->ensureDenseElements(cx, uint32_t(length), args.length());
+                if (result != DenseElementResult::Success) {
+                    if (result == DenseElementResult::Failure)
+                        return false;
+                    MOZ_ASSERT(result == DenseElementResult::Incomplete);
+                    break;
+                }
+                if (length > 0)
+                    nobj->moveDenseElements(args.length(), 0, uint32_t(length));
             }
-            if (length > 0)
-                nobj->moveDenseElements(args.length(), 0, uint32_t(length));
             for (uint32_t i = 0; i < args.length(); i++)
                 nobj->setDenseElementWithType(cx, i, args[i]);
             optimized = true;
