@@ -802,6 +802,7 @@ nsIPresShell::nsIPresShell()
     , mObservingLayoutFlushes(false)
     , mNeedThrottledAnimationFlush(true)
     , mPresShellId(0)
+    , mAPZFocusSequenceNumber(0)
     , mFontSizeInflationEmPerLine(0)
     , mFontSizeInflationMinTwips(0)
     , mFontSizeInflationLineThreshold(0)
@@ -6340,7 +6341,7 @@ PresShell::Paint(nsView*         aViewToPaint,
   // Update the focus target for async keyboard scrolling. This will be forwarded
   // to APZ by nsDisplayList::PaintRoot. We need to to do this before we enter
   // the paint phase because dispatching eVoid events can cause layout to happen.
-  mAPZFocusTarget = FocusTarget(this);
+  mAPZFocusTarget = FocusTarget(this, mAPZFocusSequenceNumber);
 
   nsPresContext* presContext = GetPresContext();
   AUTO_LAYOUT_PHASE_ENTRY_POINT(presContext, Paint);
@@ -7153,6 +7154,12 @@ PresShell::HandleEvent(nsIFrame* aFrame,
 #endif
 
   NS_ASSERTION(aFrame, "aFrame should be not null");
+
+  // Update the latest focus sequence number with this new sequence number
+  if (mAPZFocusSequenceNumber < aEvent->mFocusSequenceNumber) {
+    // XXX should we push a new FocusTarget to APZ here
+    mAPZFocusSequenceNumber = aEvent->mFocusSequenceNumber;
+  }
 
   if (sPointerEventEnabled) {
     AutoWeakFrame weakFrame(aFrame);

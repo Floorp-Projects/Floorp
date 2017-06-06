@@ -213,11 +213,15 @@ APZCTreeManagerChild::UpdateWheelTransaction(
   SendUpdateWheelTransaction(aRefPoint, aEventMessage);
 }
 
-void APZCTreeManagerChild::TransformEventRefPoint(
+void APZCTreeManagerChild::ProcessUnhandledEvent(
     LayoutDeviceIntPoint* aRefPoint,
-    ScrollableLayerGuid* aOutTargetGuid)
+    ScrollableLayerGuid*  aOutTargetGuid,
+    uint64_t*             aOutFocusSequenceNumber)
 {
-  SendTransformEventRefPoint(*aRefPoint, aRefPoint, aOutTargetGuid);
+  SendProcessUnhandledEvent(*aRefPoint,
+                            aRefPoint,
+                            aOutTargetGuid,
+                            aOutFocusSequenceNumber);
 }
 
 mozilla::ipc::IPCResult

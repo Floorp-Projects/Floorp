@@ -123,9 +123,10 @@ parent:
 
   async UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint, EventMessage aEventMessage);
 
-  sync TransformEventRefPoint(LayoutDeviceIntPoint aRefPoint)
+  sync ProcessUnhandledEvent(LayoutDeviceIntPoint aRefPoint)
     returns (LayoutDeviceIntPoint   aOutRefPoint,
-             ScrollableLayerGuid    aOutTargetGuid);
+             ScrollableLayerGuid    aOutTargetGuid,
+             uint64_t               aOutFocusSequenceNumber);
 
   async __delete__();
 

@@ -67,13 +67,16 @@ IsEditableNode(nsINode* aNode)
 }
 
 FocusTarget::FocusTarget()
-  : mFocusHasKeyEventListeners(false)
+  : mSequenceNumber(0)
+  , mFocusHasKeyEventListeners(false)
   , mType(FocusTarget::eNone)
 {
 }
 
-FocusTarget::FocusTarget(nsIPresShell* aRootPresShell)
-  : mFocusHasKeyEventListeners(false)
+FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
+                         uint64_t aFocusSequenceNumber)
+  : mSequenceNumber(aFocusSequenceNumber)
+  , mFocusHasKeyEventListeners(false)
 {
   MOZ_ASSERT(aRootPresShell);
   MOZ_ASSERT(NS_IsMainThread());
@@ -132,7 +135,8 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell)
 bool
 FocusTarget::operator==(const FocusTarget& aRhs) const
 {
-  if (mFocusHasKeyEventListeners != aRhs.mFocusHasKeyEventListeners ||
+  if (mSequenceNumber != aRhs.mSequenceNumber ||
+      mFocusHasKeyEventListeners != aRhs.mFocusHasKeyEventListeners ||
       mType != aRhs.mType) {
     return false;
   }
