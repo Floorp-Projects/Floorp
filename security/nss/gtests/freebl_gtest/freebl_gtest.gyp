@@ -13,7 +13,6 @@
       'sources': [
         'mpi_unittest.cc',
         'dh_unittest.cc',
-        'ecl_unittest.cc',
         '<(DEPTH)/gtests/common/gtests.cc'
       ],
       'dependencies': [
@@ -66,7 +65,6 @@
   'target_defaults': {
     'include_dirs': [
       '<(DEPTH)/lib/freebl/mpi',
-      '<(DEPTH)/lib/freebl/',
     ],
     # For test builds we have to set MPI defines.
     'conditions': [
