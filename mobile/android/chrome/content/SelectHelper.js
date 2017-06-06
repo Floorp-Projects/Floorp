@@ -6,6 +6,14 @@
 var SelectHelper = {
   _uiBusy: false,
 
+  strings: function() {
+    if (!this._strings) {
+      this._strings = Services.strings.createBundle(
+          "chrome://browser/locale/browser.properties");
+    }
+    return this._strings;
+  },
+
   handleEvent: function(event) {
     this.handleClick(event.target);
   },
@@ -26,6 +34,7 @@ var SelectHelper = {
   // It will update which Option elements in a Select have been selected
   // or unselected and fire the onChange event.
   _promptCallBack: function(data, element) {
+    let win = element.ownerGlobal;
     let selected = data.list;
 
     if (element instanceof Ci.nsIDOMXULMenuListElement) {
@@ -33,7 +42,7 @@ var SelectHelper = {
         element.selectedIndex = selected[0];
         this.fireOnCommand(element);
       }
-    } else if (element instanceof HTMLSelectElement) {
+    } else if (element instanceof win.HTMLSelectElement) {
       let changed = false;
       let i = 0; // The index for the element from `data.list` that we are currently examining.
       this.forVisibleOptions(element, function(node) {
@@ -61,7 +70,7 @@ var SelectHelper = {
 
     if (element.multiple) {
       p.addButton({
-        label: Strings.browser.GetStringFromName("selectHelper.closeMultipleSelectDialog")
+        label: this.strings().GetStringFromName("selectHelper.closeMultipleSelectDialog")
       }).setMultiChoiceItems(list);
     } else {
       p.setSingleChoiceItems(list);
@@ -73,7 +82,8 @@ var SelectHelper = {
   },
 
   _isMenu: function(element) {
-    return (element instanceof HTMLSelectElement || element instanceof Ci.nsIDOMXULMenuListElement);
+    let win = element.ownerGlobal;
+    return (element instanceof win.HTMLSelectElement || element instanceof Ci.nsIDOMXULMenuListElement);
   },
 
   // Return a list of Option elements within a Select excluding
@@ -102,6 +112,7 @@ var SelectHelper = {
 
   // Apply a function to all visible Option elements in a Select
   forVisibleOptions: function(element, aFunction, parent = null) {
+    let win = element.ownerGlobal;
     if (element instanceof Ci.nsIDOMXULMenuListElement) {
       element = element.menupopup;
     }
@@ -116,12 +127,12 @@ var SelectHelper = {
 
     for (let i = 0; i < numChildren; i++) {
       let child = children[i];
-      let style = window.getComputedStyle(child);
+      let style = win.getComputedStyle(child);
       if (style.display !== "none") {
-        if (child instanceof HTMLOptionElement ||
+        if (child instanceof win.HTMLOptionElement ||
             child instanceof Ci.nsIDOMXULSelectControlItemElement) {
           aFunction.call(this, child, {isGroup: false}, parent);
-        } else if (child instanceof HTMLOptGroupElement) {
+        } else if (child instanceof win.HTMLOptGroupElement) {
           aFunction.call(this, child, {isGroup: true});
           this.forVisibleOptions(child, aFunction, child);
         }
@@ -130,19 +141,21 @@ var SelectHelper = {
   },
 
   fireOnChange: function(element) {
+    let win = element.ownerGlobal;
     let event = element.ownerDocument.createEvent("Events");
     event.initEvent("change", true, true, element.defaultView, 0,
         false, false, false, false, null);
-    setTimeout(function() {
+    win.setTimeout(function() {
       element.dispatchEvent(event);
     }, 0);
   },
 
   fireOnCommand: function(element) {
+    let win = element.ownerGlobal;
     let event = element.ownerDocument.createEvent("XULCommandEvent");
     event.initCommandEvent("command", true, true, element.defaultView, 0,
         false, false, false, false, null);
-    setTimeout(function() {
+    win.setTimeout(function() {
       element.dispatchEvent(event);
     }, 0);
   },

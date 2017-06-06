@@ -602,6 +602,13 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
     return NS_OK;
   }
 
+  bool isMultipart;
+  rv = aImgRequest->GetMultipart(&isMultipart);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (isMultipart) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsINode> node = do_QueryInterface(aImageElement, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
