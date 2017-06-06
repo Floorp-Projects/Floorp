@@ -516,9 +516,15 @@ function appendPathElement(parentEl, pathSegments, cls, isClosePathNeeded = true
     }
 
     const nextPathSegment = pathSegments[i + 1];
-    path += pathSegment.easing.startsWith("steps")
-            ? createStepsPathString(pathSegment, nextPathSegment)
-            : createCubicBezierPathString(pathSegment, nextPathSegment);
+    let createPathFunction;
+    if (pathSegment.easing.startsWith("steps")) {
+      createPathFunction = createStepsPathString;
+    } else if (pathSegment.easing.startsWith("frames")) {
+      createPathFunction = createFramesPathString;
+    } else {
+      createPathFunction = createCubicBezierPathString;
+    }
+    path += createPathFunction(pathSegment, nextPathSegment);
   }
   path += ` L${ pathSegments[pathSegments.length - 1].x },0`;
   if (isClosePathNeeded) {
@@ -589,6 +595,28 @@ function createStepsPathString(currentSegment, nextSegment) {
   }
   if (!isStepStart) {
     path += ` L${ nextSegment.x },${ nextSegment.y }`;
+  }
+  return path;
+}
+
+/**
+ * Create a path string to represents a frames function.
+ * @param {Object} currentSegment - e.g. { x: 0, y: 0, easing: "frames(2)" }
+ * @param {Object} nextSegment - e.g. { x: 1, y: 1 }
+ * @return {String} path string - e.g. "C 0.25 0.1, 0.25 1, 1 1"
+ */
+function createFramesPathString(currentSegment, nextSegment) {
+  const matches =
+    currentSegment.easing.match(/^frames\((\d+)\)/);
+  const framesNumber = parseInt(matches[1], 10);
+  const oneFrameX = (nextSegment.x - currentSegment.x) / framesNumber;
+  const oneFrameY = (nextSegment.y - currentSegment.y) / (framesNumber - 1);
+  let path = "";
+  for (let frame = 0; frame < framesNumber; frame++) {
+    const sx = currentSegment.x + frame * oneFrameX;
+    const ex = sx + oneFrameX;
+    const y = currentSegment.y + frame * oneFrameY;
+    path += ` L${ sx },${ y } L${ ex },${ y }`;
   }
   return path;
 }
@@ -684,9 +712,9 @@ exports.getPreferredKeyframesProgressThreshold = getPreferredKeyframesProgressTh
  * @return {float} - preferred threshold.
  */
 function getPreferredProgressThreshold(easing) {
-  const stepFunction = easing.match(/steps\((\d+)/);
-  return stepFunction
-       ? 1 / (parseInt(stepFunction[1], 10) + 1)
+  const stepOrFramesFunction = easing.match(/(steps|frames)\((\d+)/);
+  return stepOrFramesFunction
+       ? 1 / (parseInt(stepOrFramesFunction[2], 10) + 1)
        : DEFAULT_MIN_PROGRESS_THRESHOLD;
 }
 exports.getPreferredProgressThreshold = getPreferredProgressThreshold;
