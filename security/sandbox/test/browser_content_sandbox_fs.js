@@ -386,6 +386,24 @@ function* testFileAccess() {
       file:     volumes,
       minLevel: minHomeReadSandboxLevel(),
     });
+    // Test that we cannot read from /Network at level 3
+    let network = GetDir("/Network");
+    tests.push({
+      desc:     "/Network",
+      ok:       false,
+      browser:  webBrowser,
+      file:     network,
+      minLevel: minHomeReadSandboxLevel(),
+    });
+    // Test that we cannot read from /Users at level 3
+    let users = GetDir("/Users");
+    tests.push({
+      desc:     "/Users",
+      ok:       false,
+      browser:  webBrowser,
+      file:     users,
+      minLevel: minHomeReadSandboxLevel(),
+    });
   }
 
   let extensionsDir = GetProfileEntry("extensions");
