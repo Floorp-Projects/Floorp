@@ -1789,6 +1789,7 @@ class HashTable : private AllocPolicy
     {
         mozilla::ReentrancyGuard g(*this);
         MOZ_ASSERT(table);
+        MOZ_ASSERT_IF(!p.isValid(), p.table_ == this);
         MOZ_ASSERT(!p.found());
         MOZ_ASSERT(!(p.keyHash & sCollisionBit));
 

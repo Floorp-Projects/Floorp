@@ -1005,6 +1005,7 @@ class GCRuntime
                                                       SliceBudget& budget, AllocKind kind);
     static IncrementalProgress sweepAtomsTable(GCRuntime* gc, FreeOp* fop, Zone* zone,
                                                SliceBudget& budget, AllocKind kind);
+    void startSweepingAtomsTable();
     IncrementalProgress sweepAtomsTable(SliceBudget& budget);
     static IncrementalProgress finalizeAllocKind(GCRuntime* gc, FreeOp* fop, Zone* zone,
                                                  SliceBudget& budget, AllocKind kind);
