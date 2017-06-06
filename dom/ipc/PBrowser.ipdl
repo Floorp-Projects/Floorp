@@ -83,6 +83,7 @@ using mozilla::widget::CandidateWindowPosition from "ipc/nsGUIEventIPC.h";
 using class mozilla::NativeEventData from "ipc/nsGUIEventIPC.h";
 using mozilla::FontRange from "ipc/nsGUIEventIPC.h";
 using mozilla::a11y::IAccessibleHolder from "mozilla/a11y/IPCTypes.h";
+using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -894,6 +895,12 @@ child:
      * Tell the TabChild to set the name of its toplevel docshell to the given name.
      */
     async SetWindowName(nsString aName);
+
+    /**
+     * Tell the TabChild what OriginAttributes it should inherit from. This must
+     * be called before the first non-blank document is loaded in the TabChild.
+     */
+    async SetOriginAttributes(OriginAttributes aOriginAttributes);
 
 /*
  * FIXME: write protocol!

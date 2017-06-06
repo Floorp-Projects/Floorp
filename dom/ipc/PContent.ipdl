@@ -988,7 +988,6 @@ parent:
                       bool aSizeSpecified,
                       nsCString aFeatures,
                       nsCString aBaseURI,
-                      OriginAttributes aOpenerOriginAttributes,
                       float aFullZoom)
       returns (nsresult rv,
                bool windowOpened,
@@ -1008,7 +1007,6 @@ parent:
       URIParams aURIToLoad,
       nsCString aFeatures,
       nsCString aBaseURI,
-      OriginAttributes aOpenerOriginAttributes,
       float aFullZoom,
       nsString aName);
 
