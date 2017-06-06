@@ -169,7 +169,6 @@
            consumeoutsideclicks="false"
            level="parent"
            tabspecific="true">
-      <iframe id="dateTimePopupFrame"/>
     </panel>
 
     <!-- for select dropdowns. The menupopup is what shows the list of options,
