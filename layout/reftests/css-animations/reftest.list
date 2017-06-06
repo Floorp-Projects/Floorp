@@ -38,7 +38,7 @@ fails-if(webrender) == stacking-context-transform-none-animation-with-preserve-3
 == stacking-context-transform-none-in-delay.html stacking-context-animation-ref.html
 == stacking-context-transform-removing-important-in-delay.html stacking-context-animation-ref.html
 fails == background-position-in-delay.html background-position-ref.html # This test fails the reftest-opaque-layer check since animating background-position currently creates an active layer from its delay phse, and reftest-opaque-layer only handles items assigned to PaintedLayers.
-== background-position-after-finish.html background-position-ref.html
+fails-if(webrender) == background-position-after-finish.html background-position-ref.html
 fails == background-position-running.html background-position-ref.html # This test fails the reftest-opaque-layer check since animating background-position currently creates an active layer, and reftest-opaque-layer only handles items assigned to PaintedLayers.
 fails == background-position-important.html background-position-ref.html # This test fails the reftest-opaque-layer check since animating background-position overridden by a non-animated !important style also creates an active layer, and reftest-opaque-layer only handles items that are assigned to PaintedLayers.
 

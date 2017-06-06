@@ -1,11 +1,11 @@
 == move-to-background-1.html move-to-background-1-ref.html
 fuzzy-if(cocoaWidget,2,6) random-if(Android) == component-alpha-exit-1.html component-alpha-exit-1-ref.html # bug 760275
-!= pull-background-1.html about:blank
-random-if(styloVsGecko) != pull-background-2.html about:blank
+fails-if(webrender) != pull-background-1.html about:blank
+fails-if(webrender) random-if(styloVsGecko) != pull-background-2.html about:blank
 fails-if(webrender) != pull-background-3.html about:blank
 fails-if(webrender) != pull-background-4.html about:blank
-fuzzy-if(styloVsGecko,1,1) != pull-background-5.html about:blank
-!= pull-background-6.html about:blank
+fails-if(webrender) fuzzy-if(styloVsGecko,1,1) != pull-background-5.html about:blank
+fails-if(webrender) != pull-background-6.html about:blank
 # The animated-position tests are disabled for intermittent failures / passes, bug 1150941
 skip != pull-background-animated-position-1.html about:blank # Fails with event regions
 skip != pull-background-animated-position-2.html about:blank
