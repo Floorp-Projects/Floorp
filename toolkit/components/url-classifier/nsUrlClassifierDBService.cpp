@@ -669,6 +669,20 @@ nsUrlClassifierDBServiceWorker::NotifyUpdateObserver(nsresult aUpdateStatus)
                           NS_ERROR_GET_CODE(updateStatus));
   }
 
+  if (!mUpdateObserver) {
+    // In the normal shutdown process, CancelUpdate() would NOT be
+    // called prior to NotifyUpdateObserver(). However, CancelUpdate()
+    // is a public API which can be called in the test case at any point.
+    // If the call sequence is FinishUpdate() then CancelUpdate(), the later
+    // might be executed before NotifyUpdateObserver() which is triggered
+    // by the update thread. In this case, we will get null mUpdateObserver.
+    NS_WARNING("CancelUpdate() is called before we asynchronously call "
+               "NotifyUpdateObserver() in FinishUpdate().");
+
+    // The DB cleanup will be done in CancelUpdate() so we can just return.
+    return NS_OK;
+  }
+
   // Null out mUpdateObserver before notifying so that BeginUpdate()
   // becomes available prior to callback.
   nsCOMPtr<nsIUrlClassifierUpdateObserver> updateObserver = nullptr;
