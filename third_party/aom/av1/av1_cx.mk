@@ -23,8 +23,6 @@ AV1_CX_SRCS-yes += encoder/av1_quantize.h
 AV1_CX_SRCS-yes += encoder/bitstream.c
 AV1_CX_SRCS-yes += encoder/context_tree.c
 AV1_CX_SRCS-yes += encoder/context_tree.h
-AV1_CX_SRCS-yes += encoder/variance_tree.c
-AV1_CX_SRCS-yes += encoder/variance_tree.h
 AV1_CX_SRCS-yes += encoder/cost.h
 AV1_CX_SRCS-yes += encoder/cost.c
 AV1_CX_SRCS-yes += encoder/dct.c
@@ -38,6 +36,7 @@ AV1_CX_SRCS-yes += encoder/ethread.h
 AV1_CX_SRCS-yes += encoder/ethread.c
 AV1_CX_SRCS-yes += encoder/extend.c
 AV1_CX_SRCS-yes += encoder/firstpass.c
+AV1_CX_SRCS-yes += encoder/mathutils.h
 AV1_CX_SRCS-$(CONFIG_GLOBAL_MOTION) += ../third_party/fastfeat/fast.h
 AV1_CX_SRCS-$(CONFIG_GLOBAL_MOTION) += ../third_party/fastfeat/nonmax.c
 AV1_CX_SRCS-$(CONFIG_GLOBAL_MOTION) += ../third_party/fastfeat/fast_9.c
@@ -161,5 +160,9 @@ AV1_CX_SRCS-$(HAVE_MSA) += encoder/mips/msa/fdct8x8_msa.c
 AV1_CX_SRCS-$(HAVE_MSA) += encoder/mips/msa/fdct16x16_msa.c
 AV1_CX_SRCS-$(HAVE_MSA) += encoder/mips/msa/fdct_msa.h
 AV1_CX_SRCS-$(HAVE_MSA) += encoder/mips/msa/temporal_filter_msa.c
+
+ifeq ($(CONFIG_GLOBAL_MOTION),yes)
+AV1_CX_SRCS-$(HAVE_SSE4_1) += encoder/x86/corner_match_sse4.c
+endif
 
 AV1_CX_SRCS-yes := $(filter-out $(AV1_CX_SRCS_REMOVE-yes),$(AV1_CX_SRCS-yes))

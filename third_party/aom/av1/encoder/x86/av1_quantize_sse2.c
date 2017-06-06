@@ -15,13 +15,65 @@
 #include "./av1_rtcd.h"
 #include "aom/aom_integer.h"
 
-void av1_quantize_fp_sse2(const int16_t *coeff_ptr, intptr_t n_coeffs,
+static INLINE void read_coeff(const tran_low_t *coeff, intptr_t offset,
+                              __m128i *c0, __m128i *c1) {
+  const tran_low_t *addr = coeff + offset;
+#if CONFIG_HIGHBITDEPTH
+  const __m128i x0 = _mm_load_si128((const __m128i *)addr);
+  const __m128i x1 = _mm_load_si128((const __m128i *)addr + 1);
+  const __m128i x2 = _mm_load_si128((const __m128i *)addr + 2);
+  const __m128i x3 = _mm_load_si128((const __m128i *)addr + 3);
+  *c0 = _mm_packs_epi32(x0, x1);
+  *c1 = _mm_packs_epi32(x2, x3);
+#else
+  *c0 = _mm_load_si128((const __m128i *)addr);
+  *c1 = _mm_load_si128((const __m128i *)addr + 1);
+#endif
+}
+
+static INLINE void write_qcoeff(const __m128i *qc0, const __m128i *qc1,
+                                tran_low_t *qcoeff, intptr_t offset) {
+  tran_low_t *addr = qcoeff + offset;
+#if CONFIG_HIGHBITDEPTH
+  const __m128i zero = _mm_setzero_si128();
+  __m128i sign_bits = _mm_cmplt_epi16(*qc0, zero);
+  __m128i y0 = _mm_unpacklo_epi16(*qc0, sign_bits);
+  __m128i y1 = _mm_unpackhi_epi16(*qc0, sign_bits);
+  _mm_store_si128((__m128i *)addr, y0);
+  _mm_store_si128((__m128i *)addr + 1, y1);
+
+  sign_bits = _mm_cmplt_epi16(*qc1, zero);
+  y0 = _mm_unpacklo_epi16(*qc1, sign_bits);
+  y1 = _mm_unpackhi_epi16(*qc1, sign_bits);
+  _mm_store_si128((__m128i *)addr + 2, y0);
+  _mm_store_si128((__m128i *)addr + 3, y1);
+#else
+  _mm_store_si128((__m128i *)addr, *qc0);
+  _mm_store_si128((__m128i *)addr + 1, *qc1);
+#endif
+}
+
+static INLINE void write_zero(tran_low_t *qcoeff, intptr_t offset) {
+  const __m128i zero = _mm_setzero_si128();
+  tran_low_t *addr = qcoeff + offset;
+#if CONFIG_HIGHBITDEPTH
+  _mm_store_si128((__m128i *)addr, zero);
+  _mm_store_si128((__m128i *)addr + 1, zero);
+  _mm_store_si128((__m128i *)addr + 2, zero);
+  _mm_store_si128((__m128i *)addr + 3, zero);
+#else
+  _mm_store_si128((__m128i *)addr, zero);
+  _mm_store_si128((__m128i *)addr + 1, zero);
+#endif
+}
+
+void av1_quantize_fp_sse2(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
                           int skip_block, const int16_t *zbin_ptr,
                           const int16_t *round_ptr, const int16_t *quant_ptr,
-                          const int16_t *quant_shift_ptr, int16_t *qcoeff_ptr,
-                          int16_t *dqcoeff_ptr, const int16_t *dequant_ptr,
-                          uint16_t *eob_ptr, const int16_t *scan_ptr,
-                          const int16_t *iscan_ptr) {
+                          const int16_t *quant_shift_ptr,
+                          tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
+                          const int16_t *dequant_ptr, uint16_t *eob_ptr,
+                          const int16_t *scan_ptr, const int16_t *iscan_ptr) {
   __m128i zero;
   __m128i thr;
   int16_t nzflag;
@@ -54,8 +106,7 @@ void av1_quantize_fp_sse2(const int16_t *coeff_ptr, intptr_t n_coeffs,
         __m128i qcoeff0, qcoeff1;
         __m128i qtmp0, qtmp1;
         // Do DC and first 15 AC
-        coeff0 = _mm_load_si128((const __m128i *)(coeff_ptr + n_coeffs));
-        coeff1 = _mm_load_si128((const __m128i *)(coeff_ptr + n_coeffs) + 1);
+        read_coeff(coeff_ptr, n_coeffs, &coeff0, &coeff1);
 
         // Poor man's sign extract
         coeff0_sign = _mm_srai_epi16(coeff0, 15);
@@ -78,15 +129,13 @@ void av1_quantize_fp_sse2(const int16_t *coeff_ptr, intptr_t n_coeffs,
         qcoeff0 = _mm_sub_epi16(qcoeff0, coeff0_sign);
         qcoeff1 = _mm_sub_epi16(qcoeff1, coeff1_sign);
 
-        _mm_store_si128((__m128i *)(qcoeff_ptr + n_coeffs), qcoeff0);
-        _mm_store_si128((__m128i *)(qcoeff_ptr + n_coeffs) + 1, qcoeff1);
+        write_qcoeff(&qcoeff0, &qcoeff1, qcoeff_ptr, n_coeffs);
 
         coeff0 = _mm_mullo_epi16(qcoeff0, dequant);
         dequant = _mm_unpackhi_epi64(dequant, dequant);
         coeff1 = _mm_mullo_epi16(qcoeff1, dequant);
 
-        _mm_store_si128((__m128i *)(dqcoeff_ptr + n_coeffs), coeff0);
-        _mm_store_si128((__m128i *)(dqcoeff_ptr + n_coeffs) + 1, coeff1);
+        write_qcoeff(&coeff0, &coeff1, dqcoeff_ptr, n_coeffs);
       }
 
       {
@@ -121,8 +170,7 @@ void av1_quantize_fp_sse2(const int16_t *coeff_ptr, intptr_t n_coeffs,
         __m128i qcoeff0, qcoeff1;
         __m128i qtmp0, qtmp1;
 
-        coeff0 = _mm_load_si128((const __m128i *)(coeff_ptr + n_coeffs));
-        coeff1 = _mm_load_si128((const __m128i *)(coeff_ptr + n_coeffs) + 1);
+        read_coeff(coeff_ptr, n_coeffs, &coeff0, &coeff1);
 
         // Poor man's sign extract
         coeff0_sign = _mm_srai_epi16(coeff0, 15);
@@ -147,20 +195,15 @@ void av1_quantize_fp_sse2(const int16_t *coeff_ptr, intptr_t n_coeffs,
           qcoeff0 = _mm_sub_epi16(qcoeff0, coeff0_sign);
           qcoeff1 = _mm_sub_epi16(qcoeff1, coeff1_sign);
 
-          _mm_store_si128((__m128i *)(qcoeff_ptr + n_coeffs), qcoeff0);
-          _mm_store_si128((__m128i *)(qcoeff_ptr + n_coeffs) + 1, qcoeff1);
+          write_qcoeff(&qcoeff0, &qcoeff1, qcoeff_ptr, n_coeffs);
 
           coeff0 = _mm_mullo_epi16(qcoeff0, dequant);
           coeff1 = _mm_mullo_epi16(qcoeff1, dequant);
 
-          _mm_store_si128((__m128i *)(dqcoeff_ptr + n_coeffs), coeff0);
-          _mm_store_si128((__m128i *)(dqcoeff_ptr + n_coeffs) + 1, coeff1);
+          write_qcoeff(&coeff0, &coeff1, dqcoeff_ptr, n_coeffs);
         } else {
-          _mm_store_si128((__m128i *)(qcoeff_ptr + n_coeffs), zero);
-          _mm_store_si128((__m128i *)(qcoeff_ptr + n_coeffs) + 1, zero);
-
-          _mm_store_si128((__m128i *)(dqcoeff_ptr + n_coeffs), zero);
-          _mm_store_si128((__m128i *)(dqcoeff_ptr + n_coeffs) + 1, zero);
+          write_zero(qcoeff_ptr, n_coeffs);
+          write_zero(dqcoeff_ptr, n_coeffs);
         }
       }
 
@@ -200,10 +243,8 @@ void av1_quantize_fp_sse2(const int16_t *coeff_ptr, intptr_t n_coeffs,
     }
   } else {
     do {
-      _mm_store_si128((__m128i *)(dqcoeff_ptr + n_coeffs), zero);
-      _mm_store_si128((__m128i *)(dqcoeff_ptr + n_coeffs) + 1, zero);
-      _mm_store_si128((__m128i *)(qcoeff_ptr + n_coeffs), zero);
-      _mm_store_si128((__m128i *)(qcoeff_ptr + n_coeffs) + 1, zero);
+      write_zero(dqcoeff_ptr, n_coeffs);
+      write_zero(qcoeff_ptr, n_coeffs);
       n_coeffs += 8 * 2;
     } while (n_coeffs < 0);
     *eob_ptr = 0;

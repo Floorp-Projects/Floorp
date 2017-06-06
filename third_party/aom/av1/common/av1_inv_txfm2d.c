@@ -13,7 +13,7 @@
 #include "av1/common/enums.h"
 #include "av1/common/av1_txfm.h"
 #include "av1/common/av1_inv_txfm1d.h"
-#include "av1/common/av1_inv_txfm2d_cfg.h"
+#include "av1/common/av1_inv_txfm1d_cfg.h"
 
 static INLINE TxfmFunc inv_txfm_type_to_func(TXFM_TYPE txfm_type) {
   switch (txfm_type) {
@@ -25,132 +25,100 @@ static INLINE TxfmFunc inv_txfm_type_to_func(TXFM_TYPE txfm_type) {
     case TXFM_TYPE_ADST8: return av1_iadst8_new;
     case TXFM_TYPE_ADST16: return av1_iadst16_new;
     case TXFM_TYPE_ADST32: return av1_iadst32_new;
+#if CONFIG_EXT_TX
+    case TXFM_TYPE_IDENTITY4: return av1_iidentity4_c;
+    case TXFM_TYPE_IDENTITY8: return av1_iidentity8_c;
+    case TXFM_TYPE_IDENTITY16: return av1_iidentity16_c;
+    case TXFM_TYPE_IDENTITY32: return av1_iidentity32_c;
+#endif  // CONFIG_EXT_TX
     default: assert(0); return NULL;
   }
 }
 
-const TXFM_2D_CFG *inv_txfm_cfg_ls[TX_TYPES][TX_SIZES] = {
-  // DCT_DCT
+static const TXFM_1D_CFG *inv_txfm_col_cfg_ls[TX_TYPES_1D][TX_SIZES] = {
+  // DCT
   {
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
       NULL,
 #endif
-      &inv_txfm_2d_cfg_dct_dct_4, &inv_txfm_2d_cfg_dct_dct_8,
-      &inv_txfm_2d_cfg_dct_dct_16, &inv_txfm_2d_cfg_dct_dct_32 },
-  // ADST_DCT
+      &inv_txfm_1d_col_cfg_dct_4, &inv_txfm_1d_col_cfg_dct_8,
+      &inv_txfm_1d_col_cfg_dct_16, &inv_txfm_1d_col_cfg_dct_32 },
+  // ADST
   {
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
       NULL,
 #endif
-      &inv_txfm_2d_cfg_adst_dct_4, &inv_txfm_2d_cfg_adst_dct_8,
-      &inv_txfm_2d_cfg_adst_dct_16, &inv_txfm_2d_cfg_adst_dct_32 },
-  // DCT_ADST
-  {
-#if CONFIG_CB4X4
-      NULL,
-#endif
-      &inv_txfm_2d_cfg_dct_adst_4, &inv_txfm_2d_cfg_dct_adst_8,
-      &inv_txfm_2d_cfg_dct_adst_16, &inv_txfm_2d_cfg_dct_adst_32 },
-  // ADST_ADST
-  {
-#if CONFIG_CB4X4
-      NULL,
-#endif
-      &inv_txfm_2d_cfg_adst_adst_4, &inv_txfm_2d_cfg_adst_adst_8,
-      &inv_txfm_2d_cfg_adst_adst_16, &inv_txfm_2d_cfg_adst_adst_32 },
+      &inv_txfm_1d_col_cfg_adst_4, &inv_txfm_1d_col_cfg_adst_8,
+      &inv_txfm_1d_col_cfg_adst_16, &inv_txfm_1d_col_cfg_adst_32 },
 #if CONFIG_EXT_TX
-  // FLIPADST_DCT
+  // FLIPADST
   {
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
       NULL,
 #endif
-      &inv_txfm_2d_cfg_adst_dct_4, &inv_txfm_2d_cfg_adst_dct_8,
-      &inv_txfm_2d_cfg_adst_dct_16, &inv_txfm_2d_cfg_adst_dct_32 },
-  // DCT_FLIPADST
+      &inv_txfm_1d_col_cfg_adst_4, &inv_txfm_1d_col_cfg_adst_8,
+      &inv_txfm_1d_col_cfg_adst_16, &inv_txfm_1d_col_cfg_adst_32 },
+  // IDENTITY
   {
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
       NULL,
 #endif
-      &inv_txfm_2d_cfg_dct_adst_4, &inv_txfm_2d_cfg_dct_adst_8,
-      &inv_txfm_2d_cfg_dct_adst_16, &inv_txfm_2d_cfg_dct_adst_32 },
-  // FLIPADST_FLIPADST
+      &inv_txfm_1d_cfg_identity_4, &inv_txfm_1d_cfg_identity_8,
+      &inv_txfm_1d_cfg_identity_16, &inv_txfm_1d_cfg_identity_32 },
+#endif  // CONFIG_EXT_TX
+};
+
+static const TXFM_1D_CFG *inv_txfm_row_cfg_ls[TX_TYPES_1D][TX_SIZES] = {
+  // DCT
   {
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
       NULL,
 #endif
-      &inv_txfm_2d_cfg_adst_adst_4, &inv_txfm_2d_cfg_adst_adst_8,
-      &inv_txfm_2d_cfg_adst_adst_16, &inv_txfm_2d_cfg_adst_adst_32 },
-  // ADST_FLIPADST
+      &inv_txfm_1d_row_cfg_dct_4, &inv_txfm_1d_row_cfg_dct_8,
+      &inv_txfm_1d_row_cfg_dct_16, &inv_txfm_1d_row_cfg_dct_32 },
+  // ADST
   {
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
       NULL,
 #endif
-      &inv_txfm_2d_cfg_adst_adst_4, &inv_txfm_2d_cfg_adst_adst_8,
-      &inv_txfm_2d_cfg_adst_adst_16, &inv_txfm_2d_cfg_adst_adst_32 },
-  // FLIPADST_ADST
+      &inv_txfm_1d_row_cfg_adst_4, &inv_txfm_1d_row_cfg_adst_8,
+      &inv_txfm_1d_row_cfg_adst_16, &inv_txfm_1d_row_cfg_adst_32 },
+#if CONFIG_EXT_TX
+  // FLIPADST
   {
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
       NULL,
 #endif
-      &inv_txfm_2d_cfg_adst_adst_4, &inv_txfm_2d_cfg_adst_adst_8,
-      &inv_txfm_2d_cfg_adst_adst_16, &inv_txfm_2d_cfg_adst_adst_32 },
-  { // IDTX
-#if CONFIG_CB4X4
-    NULL,
+      &inv_txfm_1d_row_cfg_adst_4, &inv_txfm_1d_row_cfg_adst_8,
+      &inv_txfm_1d_row_cfg_adst_16, &inv_txfm_1d_row_cfg_adst_32 },
+  // IDENTITY
+  {
+#if CONFIG_CHROMA_2X2
+      NULL,
 #endif
-    &inv_txfm_2d_cfg_adst_adst_4, &inv_txfm_2d_cfg_adst_adst_8,
-    &inv_txfm_2d_cfg_adst_adst_16, &inv_txfm_2d_cfg_adst_adst_32 },
-  { // V_DCT
-#if CONFIG_CB4X4
-    NULL,
-#endif
-    &inv_txfm_2d_cfg_dct_adst_4, &inv_txfm_2d_cfg_dct_adst_8,
-    &inv_txfm_2d_cfg_dct_adst_16, &inv_txfm_2d_cfg_dct_adst_32 },
-  { // H_DCT
-#if CONFIG_CB4X4
-    NULL,
-#endif
-    &inv_txfm_2d_cfg_adst_dct_4, &inv_txfm_2d_cfg_adst_dct_8,
-    &inv_txfm_2d_cfg_adst_dct_16, &inv_txfm_2d_cfg_adst_dct_32 },
-  { // V_ADST
-#if CONFIG_CB4X4
-    NULL,
-#endif
-    &inv_txfm_2d_cfg_adst_adst_4, &inv_txfm_2d_cfg_adst_adst_8,
-    &inv_txfm_2d_cfg_adst_adst_16, &inv_txfm_2d_cfg_adst_adst_32 },
-  { // H_ADST
-#if CONFIG_CB4X4
-    NULL,
-#endif
-    &inv_txfm_2d_cfg_adst_adst_4, &inv_txfm_2d_cfg_adst_adst_8,
-    &inv_txfm_2d_cfg_adst_adst_16, &inv_txfm_2d_cfg_adst_adst_32 },
-  { // V_FLIP_ADST
-#if CONFIG_CB4X4
-    NULL,
-#endif
-    &inv_txfm_2d_cfg_adst_adst_4, &inv_txfm_2d_cfg_adst_adst_8,
-    &inv_txfm_2d_cfg_adst_adst_16, &inv_txfm_2d_cfg_adst_adst_32 },
-  { // H_FLIP_ADST
-#if CONFIG_CB4X4
-    NULL,
-#endif
-    &inv_txfm_2d_cfg_adst_adst_4, &inv_txfm_2d_cfg_adst_adst_8,
-    &inv_txfm_2d_cfg_adst_adst_16, &inv_txfm_2d_cfg_adst_adst_32 },
+      &inv_txfm_1d_cfg_identity_4, &inv_txfm_1d_cfg_identity_8,
+      &inv_txfm_1d_cfg_identity_16, &inv_txfm_1d_cfg_identity_32 },
 #endif  // CONFIG_EXT_TX
 };
 
 TXFM_2D_FLIP_CFG av1_get_inv_txfm_cfg(int tx_type, int tx_size) {
   TXFM_2D_FLIP_CFG cfg;
   set_flip_cfg(tx_type, &cfg);
-  cfg.cfg = inv_txfm_cfg_ls[tx_type][tx_size];
+  int tx_type_col = vtx_tab[tx_type];
+  int tx_type_row = htx_tab[tx_type];
+  // TODO(sarahparker) this is currently only implemented for
+  // square transforms
+  cfg.col_cfg = inv_txfm_col_cfg_ls[tx_type_col][tx_size];
+  cfg.row_cfg = inv_txfm_row_cfg_ls[tx_type_row][tx_size];
   return cfg;
 }
 
 TXFM_2D_FLIP_CFG av1_get_inv_txfm_64x64_cfg(int tx_type) {
-  TXFM_2D_FLIP_CFG cfg = { 0, 0, NULL };
+  TXFM_2D_FLIP_CFG cfg = { 0, 0, NULL, NULL };
   switch (tx_type) {
     case DCT_DCT:
-      cfg.cfg = &inv_txfm_2d_cfg_dct_dct_64;
+      cfg.col_cfg = &inv_txfm_1d_col_cfg_dct_64;
+      cfg.row_cfg = &inv_txfm_1d_row_cfg_dct_64;
       set_flip_cfg(tx_type, &cfg);
       break;
     default: assert(0);
@@ -161,14 +129,15 @@ TXFM_2D_FLIP_CFG av1_get_inv_txfm_64x64_cfg(int tx_type) {
 static INLINE void inv_txfm2d_add_c(const int32_t *input, int16_t *output,
                                     int stride, TXFM_2D_FLIP_CFG *cfg,
                                     int32_t *txfm_buf) {
-  const int txfm_size = cfg->cfg->txfm_size;
-  const int8_t *shift = cfg->cfg->shift;
-  const int8_t *stage_range_col = cfg->cfg->stage_range_col;
-  const int8_t *stage_range_row = cfg->cfg->stage_range_row;
-  const int8_t *cos_bit_col = cfg->cfg->cos_bit_col;
-  const int8_t *cos_bit_row = cfg->cfg->cos_bit_row;
-  const TxfmFunc txfm_func_col = inv_txfm_type_to_func(cfg->cfg->txfm_type_col);
-  const TxfmFunc txfm_func_row = inv_txfm_type_to_func(cfg->cfg->txfm_type_row);
+  // TODO(sarahparker) must correct for rectangular transforms in follow up
+  const int txfm_size = cfg->row_cfg->txfm_size;
+  const int8_t *shift = cfg->row_cfg->shift;
+  const int8_t *stage_range_col = cfg->col_cfg->stage_range;
+  const int8_t *stage_range_row = cfg->row_cfg->stage_range;
+  const int8_t *cos_bit_col = cfg->col_cfg->cos_bit;
+  const int8_t *cos_bit_row = cfg->row_cfg->cos_bit;
+  const TxfmFunc txfm_func_col = inv_txfm_type_to_func(cfg->col_cfg->txfm_type);
+  const TxfmFunc txfm_func_row = inv_txfm_type_to_func(cfg->row_cfg->txfm_type);
 
   // txfm_buf's length is  txfm_size * txfm_size + 2 * txfm_size
   // it is used for intermediate data buffering
@@ -216,7 +185,11 @@ static INLINE void inv_txfm2d_add_facade(const int32_t *input, uint16_t *output,
   // int16_t*
   TXFM_2D_FLIP_CFG cfg = av1_get_inv_txfm_cfg(tx_type, tx_size);
   inv_txfm2d_add_c(input, (int16_t *)output, stride, &cfg, txfm_buf);
-  clamp_block((int16_t *)output, cfg.cfg->txfm_size, stride, 0, (1 << bd) - 1);
+  // TODO(sarahparker) just using the cfg_row->txfm_size for now because
+  // we are assumint this is only used for square transforms. This will
+  // be adjusted in a follow up
+  clamp_block((int16_t *)output, cfg.row_cfg->txfm_size, stride, 0,
+              (1 << bd) - 1);
 }
 
 void av1_inv_txfm2d_add_4x4_c(const int32_t *input, uint16_t *output,

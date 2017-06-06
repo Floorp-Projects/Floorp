@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<style>
+  span { color: green; }
+  #foo span { color: red; }
+</style>
+<div id="foo">
+  <span></span>
+</div>
+<div>
+  <!-- Trigger a style sharing cache miss and Bloom filter update, in a way that
+       will add an style sharing cache entry our second span can't match -->
+  <div></div>
+</div>
+<div>
+  <span>This should be green</span>
+</div>

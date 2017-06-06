@@ -48,9 +48,7 @@ struct segmentation {
 
 struct segmentation_probs {
   aom_prob tree_probs[SEG_TREE_PROBS];
-#if CONFIG_EC_MULTISYMBOL
   aom_cdf_prob tree_cdf[CDF_SIZE(MAX_SEGMENTS)];
-#endif
   aom_prob pred_probs[PREDICTION_PROBS];
 };
 

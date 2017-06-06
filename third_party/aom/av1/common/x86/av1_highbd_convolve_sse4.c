@@ -15,7 +15,7 @@
 #include "./av1_rtcd.h"
 #include "av1/common/filter.h"
 
-#if CONFIG_DUAL_FILTER
+#if CONFIG_DUAL_FILTER && USE_EXTRA_FILTER
 DECLARE_ALIGNED(16, static int16_t, subpel_filters_sharp[15][6][8]);
 #endif
 
@@ -31,7 +31,7 @@ typedef void (*TransposeSave)(int width, int pixelsNum, uint32_t *src,
 
 static INLINE HbdSubpelFilterCoeffs
 hbd_get_subpel_filter_ver_signal_dir(const InterpFilterParams p, int index) {
-#if CONFIG_DUAL_FILTER
+#if CONFIG_DUAL_FILTER && USE_EXTRA_FILTER
   if (p.interp_filter == MULTITAP_SHARP) {
     return &subpel_filters_sharp[index][0];
   }
@@ -76,7 +76,7 @@ void av1_highbd_convolve_init_sse4_1(void) {
     init_simd_filter(filter_ptr, taps, subpel_temporalfilter);
   }
 #endif
-#if CONFIG_DUAL_FILTER
+#if CONFIG_DUAL_FILTER && USE_EXTRA_FILTER
   {
     InterpFilterParams filter_params =
         av1_get_interp_filter_params(MULTITAP_SHARP);
@@ -246,6 +246,7 @@ static void highbd_filter_horiz(const uint16_t *src, int src_stride, __m128i *f,
                                 int tapsNum, uint32_t *buf) {
   __m128i u[8], v[6];
 
+  assert(tapsNum == 10 || tapsNum == 12);
   if (tapsNum == 10) {
     src -= 1;
   }
@@ -412,6 +413,7 @@ static void filter_vert_horiz_parallel(const uint16_t *src, int src_stride,
   int r = 0;
 
   // TODO(luoyi) treat s[12] as a circular buffer in width = 2 case
+  assert(taps == 10 || taps == 12);
   if (10 == taps) {
     i += 1;
     s[0] = zero;

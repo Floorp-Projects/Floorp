@@ -94,9 +94,6 @@ EOF
 # alphabetically by architecture, generic-gnu last.
 all_platforms="${all_platforms} arm64-darwin-gcc"
 all_platforms="${all_platforms} arm64-linux-gcc"
-all_platforms="${all_platforms} armv6-linux-rvct"
-all_platforms="${all_platforms} armv6-linux-gcc"
-all_platforms="${all_platforms} armv6-none-rvct"
 all_platforms="${all_platforms} armv7-android-gcc"   #neon Cortex-A8
 all_platforms="${all_platforms} armv7-darwin-gcc"    #neon Cortex-A8
 all_platforms="${all_platforms} armv7-linux-rvct"    #neon Cortex-A8
@@ -197,6 +194,7 @@ enable_feature dependency_tracking
 enable_feature spatial_resampling
 enable_feature multithread
 enable_feature os_support
+enable_feature highbitdepth
 
 CODECS="
     av1_encoder
@@ -223,8 +221,6 @@ ARCH_EXT_LIST_X86="
     avx2
 "
 ARCH_EXT_LIST="
-    edsp
-    media
     neon
     neon_asm
 
@@ -248,17 +244,18 @@ EXPERIMENT_LIST="
     cdef
     var_tx
     rect_tx
-    ref_mv
+    rect_tx_ext
     tpl_mv
     dual_filter
     convolve_round
     compound_round
     ext_tx
+    dpcm_intra
     tx64x64
-    sub8x8_mc
     ext_intra
     intra_interp
     filter_intra
+    intra_edge
     intrabc
     ext_inter
     interintra
@@ -269,8 +266,6 @@ EXPERIMENT_LIST="
     new_quant
     supertx
     ans
-    ec_multisymbol
-    new_tokenset
     loop_restoration
     ext_partition
     ext_partition_types
@@ -280,12 +275,10 @@ EXPERIMENT_LIST="
     ncobmc
     warped_motion
     q_adapt_probs
-    subframe_prob_update
     bitstream_debug
     alt_intra
     palette
     palette_delta_encoding
-    daala_ec
     rawbits
     ec_smallmul
     pvq
@@ -322,7 +315,9 @@ EXPERIMENT_LIST="
     new_multisymbol
     compound_singleref
     aom_qm
-    lowdelay_compound
+    one_sided_compound
+    smooth_hv
+    var_refs
 "
 CONFIG_LIST="
     dependency_tracking
@@ -349,8 +344,6 @@ CONFIG_LIST="
     internal_stats
     ${CODECS}
     ${CODEC_FAMILIES}
-    encoders
-    decoders
     static_msvcrt
     spatial_resampling
     realtime_only
@@ -476,17 +469,17 @@ post_process_cmdline() {
     done
 
     # Enable adopted experiments by default
-    soft_enable ref_mv
     soft_enable cb4x4
+    soft_enable chroma_sub8x8
     soft_enable filter_7bit
     soft_enable reference_buffer
     soft_enable delta_q
     soft_enable tile_groups
     soft_enable rect_tx
     soft_enable global_motion
+    soft_enable ext_tx
     soft_enable cdef
     soft_enable ec_adapt
-    soft_enable new_tokenset
     soft_enable ext_intra
     soft_enable mv_compress
     soft_enable ext_refs
@@ -494,6 +487,14 @@ post_process_cmdline() {
     soft_enable motion_var
     soft_enable warped_motion
     soft_enable ext_delta_q
+    soft_enable loopfiltering_across_tiles
+    soft_enable ec_smallmul
+    soft_enable var_tx
+    soft_enable one_sided_compound
+    soft_enable ext_inter
+    soft_enable wedge
+    soft_enable compound_segment
+    soft_enable interintra
 
     # Backwards/jenkins compatibility with --enable-aom-highbitdepth
     enabled aom_highbitdepth && enable_feature highbitdepth
@@ -501,29 +502,38 @@ post_process_cmdline() {
     # Enable low-bitdepth pixel pipeline by default
     soft_enable lowbitdepth
 
-    ! enabled ans && soft_enable daala_ec
-    soft_enable ec_multisymbol
     soft_enable palette
     soft_enable alt_intra
     soft_enable palette_throughput
+    soft_enable tempmv_signaling
 
     # Fix up experiment dependencies
     enabled pvq && enable_feature ec_adapt
-    enabled ec_adapt && enable_feature ec_multisymbol
-    enabled new_tokenset && enable_feature ec_multisymbol
-    enabled new_multisymbol && enable_feature ec_multisymbol
-    enabled ec_multisymbol && ! enabled ans && soft_enable daala_ec
-    enabled ec_multisymbol && ! enabled daala_ec && soft_enable ans
+    enabled pvq && disable_feature chroma_sub8x8
+    enabled pvq && disable_feature cb4x4
+    enabled pvq && disable_feature rect_tx
+    enabled pvq && disable_feature ext_tx
+    enabled pvq && disable_feature var_tx
     enabled palette_throughput && soft_enable palette
     enabled ext_delta_q && soft_enable delta_q
     enabled txk_sel && soft_enable lv_map
     enabled compound_round && soft_enable convolve_round
-    if enabled rawbits && ! enabled daala_ec; then
-      log_echo "rawbits requires daala_ec, so disabling rawbits"
+    enabled smooth_hv && soft_enable alt_intra
+    enabled intra_edge && enable_feature ext_intra
+    enabled chroma_2x2 && disable_feature chroma_sub8x8
+    enabled dpcm_intra && enable_feature ext_tx
+    enabled chroma_sub8x8 && enable_feature cb4x4
+
+    if ! enabled delta_q && enabled ext_delta_q; then
+      log_echo "ext_delta_q requires delta_q, so disabling ext_delta_q"
+      disable_feature ext_delta_q
+    fi
+    if enabled rawbits && enabled ans; then
+      log_echo "rawbits requires not ans, so disabling rawbits"
       disable_feature rawbits
     fi
-    if enabled ec_smallmul && ! enabled daala_ec; then
-      log_echo "ec_smallmul requires daala_ec, so disabling ec_smallmul"
+    if enabled ec_smallmul && enabled ans; then
+      log_echo "ec_smallmul requires not ans, so disabling ec_smallmul"
       disable_feature ec_smallmul
     fi
     if enabled ext_tile; then
@@ -540,6 +550,11 @@ post_process_cmdline() {
     if enabled analyzer; then
       soft_enable accounting
       soft_enable inspection
+    fi
+    if enabled parallel_deblocking_15tap && ! enabled parallel_deblocking; then
+      log_echo "parallel_deblocking_15tap dependes on parallel_deblocking, so"
+      log_echo "enabling parallel_deblocking"
+      soft_enable parallel_deblocking
     fi
 }
 

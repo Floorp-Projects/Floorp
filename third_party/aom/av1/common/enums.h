@@ -51,7 +51,6 @@ extern "C" {
 
 // Mask to extract MI offset within max MIB
 #define MAX_MIB_MASK (MAX_MIB_SIZE - 1)
-#define MAX_MIB_MASK_2 (MAX_MIB_SIZE * 2 - 1)
 
 // Maximum number of tile rows and tile columns
 #if CONFIG_EXT_TILE
@@ -111,8 +110,13 @@ typedef enum ATTRIBUTE_PACKED {
   BLOCK_128X64,
   BLOCK_128X128,
 #endif  // CONFIG_EXT_PARTITION
-  BLOCK_SIZES,
-  BLOCK_INVALID = BLOCK_SIZES,
+  BLOCK_4X16,
+  BLOCK_16X4,
+  BLOCK_8X32,
+  BLOCK_32X8,
+  BLOCK_SIZES_ALL,
+  BLOCK_SIZES = BLOCK_4X16,
+  BLOCK_INVALID = 255,
   BLOCK_LARGEST = (BLOCK_SIZES - 1)
 } BLOCK_SIZE;
 
@@ -145,7 +149,7 @@ typedef char PARTITION_CONTEXT;
 
 // block transform size
 typedef enum ATTRIBUTE_PACKED {
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
   TX_2X2,  // 2x2 transform
 #endif
   TX_4X4,    // 4x4 transform
@@ -170,7 +174,12 @@ typedef enum ATTRIBUTE_PACKED {
   TX_INVALID = 255    // Invalid transform size
 } TX_SIZE;
 
-#define MAX_TX_DEPTH (TX_SIZES - 1 - TX_4X4)
+#define TX_SIZE_LUMA_MIN (TX_4X4)
+/* We don't need to code a transform size unless the allowed size is at least
+   one more than the minimum. */
+#define TX_SIZE_CTX_MIN (TX_SIZE_LUMA_MIN + 1)
+
+#define MAX_TX_DEPTH (TX_SIZES - TX_SIZE_CTX_MIN)
 
 #define MAX_TX_SIZE_LOG2 (5 + CONFIG_TX64X64)
 #define MAX_TX_SIZE (1 << MAX_TX_SIZE_LOG2)
@@ -240,15 +249,15 @@ typedef enum {
 } BOUNDARY_TYPE;
 
 #if CONFIG_EXT_TX
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
 #define EXT_TX_SIZES 5  // number of sizes that use extended transforms
 #else
 #define EXT_TX_SIZES 4       // number of sizes that use extended transforms
-#endif                       // CONFIG_CB4X4
+#endif                       // CONFIG_CHROMA_2X2
 #define EXT_TX_SETS_INTER 4  // Sets of transform selections for INTER
 #define EXT_TX_SETS_INTRA 3  // Sets of transform selections for INTRA
 #else
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
 #define EXT_TX_SIZES 4  // number of sizes that use extended transforms
 #else
 #define EXT_TX_SIZES 3  // number of sizes that use extended transforms
@@ -274,7 +283,14 @@ typedef enum {
 typedef enum { PLANE_TYPE_Y = 0, PLANE_TYPE_UV = 1, PLANE_TYPES } PLANE_TYPE;
 
 #if CONFIG_CFL
+// TODO(ltrudeau) this should change based on QP size
+#define CB_ALPHABET_SIZE 4
+#define CR_ALPHABET_SIZE 4
+#define CFL_ALPHABET_SIZE (CB_ALPHABET_SIZE * CR_ALPHABET_SIZE)
+#define CFL_MAGS_SIZE 7
+
 typedef enum { CFL_PRED_U = 0, CFL_PRED_V = 1, CFL_PRED_PLANES } CFL_PRED_TYPE;
+typedef enum { CFL_SIGN_NEG = 0, CFL_SIGN_POS = 1, CFL_SIGNS } CFL_SIGN_TYPE;
 #endif
 
 #if CONFIG_PALETTE
@@ -314,8 +330,12 @@ typedef enum ATTRIBUTE_PACKED {
   D63_PRED,   // Directional 63  deg = round(arctan(2/1) * 180/pi)
 #if CONFIG_ALT_INTRA
   SMOOTH_PRED,  // Combination of horizontal and vertical interpolation
-#endif          // CONFIG_ALT_INTRA
-  TM_PRED,      // True-motion
+#if CONFIG_SMOOTH_HV
+  SMOOTH_V_PRED,  // Vertical interpolation
+  SMOOTH_H_PRED,  // Horizontal interpolation
+#endif            // CONFIG_SMOOTH_HV
+#endif            // CONFIG_ALT_INTRA
+  TM_PRED,        // True-motion
   NEARESTMV,
   NEARMV,
   ZEROMV,
@@ -331,8 +351,6 @@ typedef enum ATTRIBUTE_PACKED {
 #endif  // CONFIG_COMPOUND_SINGLEREF
   // Compound ref compound modes
   NEAREST_NEARESTMV,
-  NEAREST_NEARMV,
-  NEAR_NEARESTMV,
   NEAR_NEARMV,
   NEAREST_NEWMV,
   NEW_NEARESTMV,
@@ -357,22 +375,20 @@ typedef enum {
   MOTION_MODES
 } MOTION_MODE;
 
-// TODO(urvang): Consider adding II_SMOOTH_PRED if it's helpful.
-
 #if CONFIG_EXT_INTER
+#if CONFIG_INTERINTRA
 typedef enum {
   II_DC_PRED = 0,
   II_V_PRED,
   II_H_PRED,
-  II_D45_PRED,
-  II_D135_PRED,
-  II_D117_PRED,
-  II_D153_PRED,
-  II_D207_PRED,
-  II_D63_PRED,
+#if CONFIG_ALT_INTRA
+  II_SMOOTH_PRED,
+#else
   II_TM_PRED,
+#endif  // CONFIG_ALT_INTRA
   INTERINTRA_MODES
 } INTERINTRA_MODE;
+#endif
 
 typedef enum {
   COMPOUND_AVERAGE = 0,
@@ -404,7 +420,7 @@ typedef enum {
 #endif  // CONFIG_FILTER_INTRA
 
 #if CONFIG_EXT_INTRA
-#define DIRECTIONAL_MODES (INTRA_MODES - 2)
+#define DIRECTIONAL_MODES 8
 #endif  // CONFIG_EXT_INTRA
 
 #define INTER_MODES (1 + NEWMV - NEARESTMV)
@@ -419,7 +435,6 @@ typedef enum {
 
 #define SKIP_CONTEXTS 3
 
-#if CONFIG_REF_MV
 #define NMV_CONTEXTS 3
 
 #define NEWMV_MODE_CONTEXTS 7
@@ -438,7 +453,6 @@ typedef enum {
 #define SKIP_NEARESTMV_OFFSET 9
 #define SKIP_NEARMV_OFFSET 10
 #define SKIP_NEARESTMV_SUB8X8_OFFSET 11
-#endif
 
 #define INTER_MODE_CONTEXTS 7
 #if CONFIG_DELTA_Q
@@ -455,14 +469,12 @@ typedef enum {
 /* Segment Feature Masks */
 #define MAX_MV_REF_CANDIDATES 2
 
-#if CONFIG_REF_MV
 #define MAX_REF_MV_STACK_SIZE 16
 #if CONFIG_EXT_PARTITION
 #define REF_CAT_LEVEL 640
 #else
 #define REF_CAT_LEVEL 255
 #endif  // CONFIG_EXT_PARTITION
-#endif  // CONFIG_REF_MV
 
 #define INTRA_INTER_CONTEXTS 4
 #define COMP_INTER_CONTEXTS 5
@@ -508,11 +520,7 @@ typedef uint8_t TXFM_CONTEXT;
 #define SINGLE_REFS (FWD_REFS + BWD_REFS)
 #define COMP_REFS (FWD_REFS * BWD_REFS)
 
-#if CONFIG_REF_MV
 #define MODE_CTX_REF_FRAMES (TOTAL_REFS_PER_FRAME + COMP_REFS)
-#else
-#define MODE_CTX_REF_FRAMES TOTAL_REFS_PER_FRAME
-#endif
 
 #if CONFIG_SUPERTX
 #define PARTITION_SUPERTX_CONTEXTS 2

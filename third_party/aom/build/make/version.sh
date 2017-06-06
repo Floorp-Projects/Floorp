@@ -28,13 +28,14 @@ if [ -e "${source_path}/.git" ]; then
     # Source Path is a git working copy. Check for local modifications.
     # Note that git submodules may have a file as .git, not a directory.
     export GIT_DIR="${source_path}/.git"
-    git_version_id=`git describe --match=v[0-9]* 2>/dev/null`
+    git_version_id=$(git describe --match=v[0-9]* 2>/dev/null)
 fi
 
 changelog_version=""
 for p in "${source_path}" "${source_path}/.."; do
     if [ -z "$git_version_id" -a -f "${p}/CHANGELOG" ]; then
-        changelog_version=`head -n1 "${p}/CHANGELOG" | awk '{print $2}'`
+        changelog_version=$(grep -m 1 " v[0-9]" "${p}/CHANGELOG" \
+            | awk '{print $2}')
         changelog_version="${changelog_version}"
         break
     fi

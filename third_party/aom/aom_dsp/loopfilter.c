@@ -149,10 +149,15 @@ void aom_lpf_horizontal_4_c(uint8_t *s, int p /* pitch */,
                             const uint8_t *blimit, const uint8_t *limit,
                             const uint8_t *thresh) {
   int i;
+#if CONFIG_PARALLEL_DEBLOCKING && CONFIG_CB4X4
+  int count = 4;
+#else
+  int count = 8;
+#endif
 
   // loop filter designed to work using chars so that we can make maximum use
   // of 8 bit simd instructions.
-  for (i = 0; i < 8; ++i) {
+  for (i = 0; i < count; ++i) {
 #if !CONFIG_PARALLEL_DEBLOCKING
     const uint8_t p3 = s[-4 * p], p2 = s[-3 * p], p1 = s[-2 * p], p0 = s[-p];
     const uint8_t q0 = s[0 * p], q1 = s[1 * p], q2 = s[2 * p], q3 = s[3 * p];
@@ -179,10 +184,15 @@ void aom_lpf_horizontal_4_dual_c(uint8_t *s, int p, const uint8_t *blimit0,
 void aom_lpf_vertical_4_c(uint8_t *s, int pitch, const uint8_t *blimit,
                           const uint8_t *limit, const uint8_t *thresh) {
   int i;
+#if CONFIG_PARALLEL_DEBLOCKING && CONFIG_CB4X4
+  int count = 4;
+#else
+  int count = 8;
+#endif
 
   // loop filter designed to work using chars so that we can make maximum use
   // of 8 bit simd instructions.
-  for (i = 0; i < 8; ++i) {
+  for (i = 0; i < count; ++i) {
 #if !CONFIG_PARALLEL_DEBLOCKING
     const uint8_t p3 = s[-4], p2 = s[-3], p1 = s[-2], p0 = s[-1];
     const uint8_t q0 = s[0], q1 = s[1], q2 = s[2], q3 = s[3];
@@ -206,7 +216,7 @@ void aom_lpf_vertical_4_dual_c(uint8_t *s, int pitch, const uint8_t *blimit0,
   aom_lpf_vertical_4_c(s + 8 * pitch, pitch, blimit1, limit1, thresh1);
 }
 
-static INLINE void filter8(int8_t mask, uint8_t thresh, uint8_t flat,
+static INLINE void filter8(int8_t mask, uint8_t thresh, int8_t flat,
                            uint8_t *op3, uint8_t *op2, uint8_t *op1,
                            uint8_t *op0, uint8_t *oq0, uint8_t *oq1,
                            uint8_t *oq2, uint8_t *oq3) {
@@ -229,10 +239,15 @@ static INLINE void filter8(int8_t mask, uint8_t thresh, uint8_t flat,
 void aom_lpf_horizontal_8_c(uint8_t *s, int p, const uint8_t *blimit,
                             const uint8_t *limit, const uint8_t *thresh) {
   int i;
+#if CONFIG_PARALLEL_DEBLOCKING && CONFIG_CB4X4
+  int count = 4;
+#else
+  int count = 8;
+#endif
 
   // loop filter designed to work using chars so that we can make maximum use
   // of 8 bit simd instructions.
-  for (i = 0; i < 8; ++i) {
+  for (i = 0; i < count; ++i) {
     const uint8_t p3 = s[-4 * p], p2 = s[-3 * p], p1 = s[-2 * p], p0 = s[-p];
     const uint8_t q0 = s[0 * p], q1 = s[1 * p], q2 = s[2 * p], q3 = s[3 * p];
 
@@ -256,8 +271,13 @@ void aom_lpf_horizontal_8_dual_c(uint8_t *s, int p, const uint8_t *blimit0,
 void aom_lpf_vertical_8_c(uint8_t *s, int pitch, const uint8_t *blimit,
                           const uint8_t *limit, const uint8_t *thresh) {
   int i;
+#if CONFIG_PARALLEL_DEBLOCKING && CONFIG_CB4X4
+  int count = 4;
+#else
+  int count = 8;
+#endif
 
-  for (i = 0; i < 8; ++i) {
+  for (i = 0; i < count; ++i) {
     const uint8_t p3 = s[-4], p2 = s[-3], p1 = s[-2], p0 = s[-1];
     const uint8_t q0 = s[0], q1 = s[1], q2 = s[2], q3 = s[3];
     const int8_t mask =
@@ -278,8 +298,8 @@ void aom_lpf_vertical_8_dual_c(uint8_t *s, int pitch, const uint8_t *blimit0,
 }
 
 #if PARALLEL_DEBLOCKING_11_TAP
-static INLINE void filter12(int8_t mask, uint8_t thresh, uint8_t flat,
-                            uint8_t flat2, uint8_t *op5, uint8_t *op4,
+static INLINE void filter12(int8_t mask, uint8_t thresh, int8_t flat,
+                            int8_t flat2, uint8_t *op5, uint8_t *op4,
                             uint8_t *op3, uint8_t *op2, uint8_t *op1,
                             uint8_t *op0, uint8_t *oq0, uint8_t *oq1,
                             uint8_t *oq2, uint8_t *oq3, uint8_t *oq4,
@@ -308,8 +328,8 @@ static INLINE void filter12(int8_t mask, uint8_t thresh, uint8_t flat,
 #endif
 
 #if PARALLEL_DEBLOCKING_9_TAP
-static INLINE void filter10(int8_t mask, uint8_t thresh, uint8_t flat,
-                            uint8_t flat2, uint8_t *op4, uint8_t *op3,
+static INLINE void filter10(int8_t mask, uint8_t thresh, int8_t flat,
+                            int8_t flat2, uint8_t *op4, uint8_t *op3,
                             uint8_t *op2, uint8_t *op1, uint8_t *op0,
                             uint8_t *oq0, uint8_t *oq1, uint8_t *oq2,
                             uint8_t *oq3, uint8_t *oq4) {
@@ -332,8 +352,8 @@ static INLINE void filter10(int8_t mask, uint8_t thresh, uint8_t flat,
 }
 #endif
 
-static INLINE void filter16(int8_t mask, uint8_t thresh, uint8_t flat,
-                            uint8_t flat2, uint8_t *op7, uint8_t *op6,
+static INLINE void filter16(int8_t mask, uint8_t thresh, int8_t flat,
+                            int8_t flat2, uint8_t *op7, uint8_t *op6,
                             uint8_t *op5, uint8_t *op4, uint8_t *op3,
                             uint8_t *op2, uint8_t *op1, uint8_t *op0,
                             uint8_t *oq0, uint8_t *oq1, uint8_t *oq2,
@@ -390,10 +410,15 @@ static void mb_lpf_horizontal_edge_w(uint8_t *s, int p, const uint8_t *blimit,
                                      const uint8_t *limit,
                                      const uint8_t *thresh, int count) {
   int i;
+#if CONFIG_PARALLEL_DEBLOCKING && CONFIG_CB4X4
+  int step = 4;
+#else
+  int step = 8;
+#endif
 
   // loop filter designed to work using chars so that we can make maximum use
   // of 8 bit simd instructions.
-  for (i = 0; i < 8 * count; ++i) {
+  for (i = 0; i < step * count; ++i) {
     const uint8_t p7 = s[-8 * p], p6 = s[-7 * p], p5 = s[-6 * p],
                   p4 = s[-5 * p], p3 = s[-4 * p], p2 = s[-3 * p],
                   p1 = s[-2 * p], p0 = s[-p];
@@ -436,7 +461,11 @@ void aom_lpf_horizontal_edge_8_c(uint8_t *s, int p, const uint8_t *blimit,
 
 void aom_lpf_horizontal_edge_16_c(uint8_t *s, int p, const uint8_t *blimit,
                                   const uint8_t *limit, const uint8_t *thresh) {
+#if CONFIG_PARALLEL_DEBLOCKING && CONFIG_CB4X4
+  mb_lpf_horizontal_edge_w(s, p, blimit, limit, thresh, 1);
+#else
   mb_lpf_horizontal_edge_w(s, p, blimit, limit, thresh, 2);
+#endif
 }
 
 static void mb_lpf_vertical_edge_w(uint8_t *s, int p, const uint8_t *blimit,
@@ -478,7 +507,11 @@ static void mb_lpf_vertical_edge_w(uint8_t *s, int p, const uint8_t *blimit,
 
 void aom_lpf_vertical_16_c(uint8_t *s, int p, const uint8_t *blimit,
                            const uint8_t *limit, const uint8_t *thresh) {
+#if CONFIG_PARALLEL_DEBLOCKING && CONFIG_CB4X4
+  mb_lpf_vertical_edge_w(s, p, blimit, limit, thresh, 4);
+#else
   mb_lpf_vertical_edge_w(s, p, blimit, limit, thresh, 8);
+#endif
 }
 
 void aom_lpf_vertical_16_dual_c(uint8_t *s, int p, const uint8_t *blimit,
@@ -596,10 +629,15 @@ void aom_highbd_lpf_horizontal_4_c(uint16_t *s, int p /* pitch */,
                                    const uint8_t *blimit, const uint8_t *limit,
                                    const uint8_t *thresh, int bd) {
   int i;
+#if CONFIG_PARALLEL_DEBLOCKING && CONFIG_CB4X4
+  int count = 4;
+#else
+  int count = 8;
+#endif
 
   // loop filter designed to work using chars so that we can make maximum use
   // of 8 bit simd instructions.
-  for (i = 0; i < 8; ++i) {
+  for (i = 0; i < count; ++i) {
 #if !CONFIG_PARALLEL_DEBLOCKING
     const uint16_t p3 = s[-4 * p];
     const uint16_t p2 = s[-3 * p];
@@ -636,10 +674,15 @@ void aom_highbd_lpf_vertical_4_c(uint16_t *s, int pitch, const uint8_t *blimit,
                                  const uint8_t *limit, const uint8_t *thresh,
                                  int bd) {
   int i;
+#if CONFIG_PARALLEL_DEBLOCKING && CONFIG_CB4X4
+  int count = 4;
+#else
+  int count = 8;
+#endif
 
   // loop filter designed to work using chars so that we can make maximum use
   // of 8 bit simd instructions.
-  for (i = 0; i < 8; ++i) {
+  for (i = 0; i < count; ++i) {
 #if !CONFIG_PARALLEL_DEBLOCKING
     const uint16_t p3 = s[-4], p2 = s[-3], p1 = s[-2], p0 = s[-1];
     const uint16_t q0 = s[0], q1 = s[1], q2 = s[2], q3 = s[3];
@@ -665,7 +708,7 @@ void aom_highbd_lpf_vertical_4_dual_c(
                               bd);
 }
 
-static INLINE void highbd_filter8(int8_t mask, uint8_t thresh, uint8_t flat,
+static INLINE void highbd_filter8(int8_t mask, uint8_t thresh, int8_t flat,
                                   uint16_t *op3, uint16_t *op2, uint16_t *op1,
                                   uint16_t *op0, uint16_t *oq0, uint16_t *oq1,
                                   uint16_t *oq2, uint16_t *oq3, int bd) {
@@ -689,10 +732,15 @@ void aom_highbd_lpf_horizontal_8_c(uint16_t *s, int p, const uint8_t *blimit,
                                    const uint8_t *limit, const uint8_t *thresh,
                                    int bd) {
   int i;
+#if CONFIG_PARALLEL_DEBLOCKING && CONFIG_CB4X4
+  int count = 4;
+#else
+  int count = 8;
+#endif
 
   // loop filter designed to work using chars so that we can make maximum use
   // of 8 bit simd instructions.
-  for (i = 0; i < 8; ++i) {
+  for (i = 0; i < count; ++i) {
     const uint16_t p3 = s[-4 * p], p2 = s[-3 * p], p1 = s[-2 * p], p0 = s[-p];
     const uint16_t q0 = s[0 * p], q1 = s[1 * p], q2 = s[2 * p], q3 = s[3 * p];
 
@@ -718,8 +766,13 @@ void aom_highbd_lpf_vertical_8_c(uint16_t *s, int pitch, const uint8_t *blimit,
                                  const uint8_t *limit, const uint8_t *thresh,
                                  int bd) {
   int i;
+#if CONFIG_PARALLEL_DEBLOCKING && CONFIG_CB4X4
+  int count = 4;
+#else
+  int count = 8;
+#endif
 
-  for (i = 0; i < 8; ++i) {
+  for (i = 0; i < count; ++i) {
     const uint16_t p3 = s[-4], p2 = s[-3], p1 = s[-2], p0 = s[-1];
     const uint16_t q0 = s[0], q1 = s[1], q2 = s[2], q3 = s[3];
     const int8_t mask =
@@ -741,8 +794,8 @@ void aom_highbd_lpf_vertical_8_dual_c(
                               bd);
 }
 
-static INLINE void highbd_filter16(int8_t mask, uint8_t thresh, uint8_t flat,
-                                   uint8_t flat2, uint16_t *op7, uint16_t *op6,
+static INLINE void highbd_filter16(int8_t mask, uint8_t thresh, int8_t flat,
+                                   int8_t flat2, uint16_t *op7, uint16_t *op6,
                                    uint16_t *op5, uint16_t *op4, uint16_t *op3,
                                    uint16_t *op2, uint16_t *op1, uint16_t *op0,
                                    uint16_t *oq0, uint16_t *oq1, uint16_t *oq2,
@@ -813,10 +866,15 @@ static void highbd_mb_lpf_horizontal_edge_w(uint16_t *s, int p,
                                             const uint8_t *thresh, int count,
                                             int bd) {
   int i;
+#if CONFIG_PARALLEL_DEBLOCKING && CONFIG_CB4X4
+  int step = 4;
+#else
+  int step = 8;
+#endif
 
   // loop filter designed to work using chars so that we can make maximum use
   // of 8 bit simd instructions.
-  for (i = 0; i < 8 * count; ++i) {
+  for (i = 0; i < step * count; ++i) {
     const uint16_t p3 = s[-4 * p];
     const uint16_t p2 = s[-3 * p];
     const uint16_t p1 = s[-2 * p];
@@ -852,7 +910,11 @@ void aom_highbd_lpf_horizontal_edge_16_c(uint16_t *s, int p,
                                          const uint8_t *blimit,
                                          const uint8_t *limit,
                                          const uint8_t *thresh, int bd) {
+#if CONFIG_PARALLEL_DEBLOCKING && CONFIG_CB4X4
+  highbd_mb_lpf_horizontal_edge_w(s, p, blimit, limit, thresh, 1, bd);
+#else
   highbd_mb_lpf_horizontal_edge_w(s, p, blimit, limit, thresh, 2, bd);
+#endif
 }
 
 static void highbd_mb_lpf_vertical_edge_w(uint16_t *s, int p,
@@ -888,13 +950,21 @@ static void highbd_mb_lpf_vertical_edge_w(uint16_t *s, int p,
 void aom_highbd_lpf_vertical_16_c(uint16_t *s, int p, const uint8_t *blimit,
                                   const uint8_t *limit, const uint8_t *thresh,
                                   int bd) {
+#if CONFIG_PARALLEL_DEBLOCKING && CONFIG_CB4X4
+  highbd_mb_lpf_vertical_edge_w(s, p, blimit, limit, thresh, 4, bd);
+#else
   highbd_mb_lpf_vertical_edge_w(s, p, blimit, limit, thresh, 8, bd);
+#endif
 }
 
 void aom_highbd_lpf_vertical_16_dual_c(uint16_t *s, int p,
                                        const uint8_t *blimit,
                                        const uint8_t *limit,
                                        const uint8_t *thresh, int bd) {
+#if CONFIG_PARALLEL_DEBLOCKING && CONFIG_CB4X4
+  highbd_mb_lpf_vertical_edge_w(s, p, blimit, limit, thresh, 8, bd);
+#else
   highbd_mb_lpf_vertical_edge_w(s, p, blimit, limit, thresh, 16, bd);
+#endif
 }
 #endif  // CONFIG_HIGHBITDEPTH

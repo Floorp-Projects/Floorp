@@ -153,6 +153,48 @@ int av1_get_pred_context_intra_interp(const MACROBLOCKD *xd) {
 #endif  // CONFIG_INTRA_INTERP
 #endif  // CONFIG_EXT_INTRA
 
+#if CONFIG_PALETTE && CONFIG_PALETTE_DELTA_ENCODING
+int av1_get_palette_cache(const MODE_INFO *above_mi, const MODE_INFO *left_mi,
+                          int plane, uint16_t *cache) {
+  int above_n = 0, left_n = 0;
+  if (above_mi)
+    above_n = above_mi->mbmi.palette_mode_info.palette_size[plane != 0];
+  if (left_mi)
+    left_n = left_mi->mbmi.palette_mode_info.palette_size[plane != 0];
+  if (above_n == 0 && left_n == 0) return 0;
+  int above_idx = plane * PALETTE_MAX_SIZE;
+  int left_idx = plane * PALETTE_MAX_SIZE;
+  int n = 0;
+  const uint16_t *above_colors =
+      above_mi->mbmi.palette_mode_info.palette_colors;
+  const uint16_t *left_colors = left_mi->mbmi.palette_mode_info.palette_colors;
+  // Merge the sorted lists of base colors from above and left to get
+  // combined sorted color cache.
+  while (above_n > 0 && left_n > 0) {
+    uint16_t v_above = above_colors[above_idx];
+    uint16_t v_left = left_colors[left_idx];
+    if (v_left < v_above) {
+      if (n == 0 || v_left != cache[n - 1]) cache[n++] = v_left;
+      ++left_idx, --left_n;
+    } else {
+      if (n == 0 || v_above != cache[n - 1]) cache[n++] = v_above;
+      ++above_idx, --above_n;
+      if (v_left == v_above) ++left_idx, --left_n;
+    }
+  }
+  while (above_n-- > 0) {
+    uint16_t val = above_colors[above_idx++];
+    if (n == 0 || val != cache[n - 1]) cache[n++] = val;
+  }
+  while (left_n-- > 0) {
+    uint16_t val = left_colors[left_idx++];
+    if (n == 0 || val != cache[n - 1]) cache[n++] = val;
+  }
+  assert(n <= 2 * PALETTE_MAX_SIZE);
+  return n;
+}
+#endif  // CONFIG_PALETTE && CONFIG_PALETTE_DELTA_ENCODING
+
 // The mode info data structure has a one element border above and to the
 // left of the entries corresponding to real macroblocks.
 // The prediction flags in these dummy entries are initialized to 0.
@@ -278,7 +320,7 @@ int av1_get_reference_mode_context(const AV1_COMMON *cm,
 //
 // NOTE(zoeliu): The probability of ref_frame[0] is either
 //               GOLDEN_FRAME or LAST3_FRAME.
-#if CONFIG_LOWDELAY_COMPOUND
+#if CONFIG_ONE_SIDED_COMPOUND
 int av1_get_pred_context_comp_ref_p(UNUSED const AV1_COMMON *cm,
                                     const MACROBLOCKD *xd) {
 #else
@@ -295,7 +337,7 @@ int av1_get_pred_context_comp_ref_p(const AV1_COMMON *cm,
 // The mode info data structure has a one element border above and to the
 // left of the entries correpsonding to real macroblocks.
 // The prediction flags in these dummy entries are initialised to 0.
-#if CONFIG_LOWDELAY_COMPOUND  // No change to bitstream
+#if CONFIG_ONE_SIDED_COMPOUND  // No change to bitstream
   // Code seems to assume that signbias of cm->comp_bwd_ref[0] is always 1
   const int bwd_ref_sign_idx = 1;
 #else
@@ -388,7 +430,7 @@ int av1_get_pred_context_comp_ref_p(const AV1_COMMON *cm,
 //
 // NOTE(zoeliu): The probability of ref_frame[0] is LAST_FRAME,
 // conditioning on it is either LAST_FRAME or LAST2_FRAME.
-#if CONFIG_LOWDELAY_COMPOUND
+#if CONFIG_ONE_SIDED_COMPOUND
 int av1_get_pred_context_comp_ref_p1(UNUSED const AV1_COMMON *cm,
                                      const MACROBLOCKD *xd) {
 #else
@@ -405,7 +447,7 @@ int av1_get_pred_context_comp_ref_p1(const AV1_COMMON *cm,
 // The mode info data structure has a one element border above and to the
 // left of the entries correpsonding to real macroblocks.
 // The prediction flags in these dummy entries are initialised to 0.
-#if CONFIG_LOWDELAY_COMPOUND  // No change to bitstream
+#if CONFIG_ONE_SIDED_COMPOUND  // No change to bitstream
   // Code seems to assume that signbias of cm->comp_bwd_ref[0] is always 1
   const int bwd_ref_sign_idx = 1;
 #else
@@ -499,7 +541,7 @@ int av1_get_pred_context_comp_ref_p1(const AV1_COMMON *cm,
 //
 // NOTE(zoeliu): The probability of ref_frame[0] is GOLDEN_FRAME,
 // conditioning on it is either GOLDEN or LAST3.
-#if CONFIG_LOWDELAY_COMPOUND
+#if CONFIG_ONE_SIDED_COMPOUND
 int av1_get_pred_context_comp_ref_p2(UNUSED const AV1_COMMON *cm,
                                      const MACROBLOCKD *xd) {
 #else
@@ -516,7 +558,7 @@ int av1_get_pred_context_comp_ref_p2(const AV1_COMMON *cm,
 // The mode info data structure has a one element border above and to the
 // left of the entries correpsonding to real macroblocks.
 // The prediction flags in these dummy entries are initialised to 0.
-#if CONFIG_LOWDELAY_COMPOUND  // No change to bitstream
+#if CONFIG_ONE_SIDED_COMPOUND  // No change to bitstream
   // Code seems to assume that signbias of cm->comp_bwd_ref[0] is always 1
   const int bwd_ref_sign_idx = 1;
 #else
@@ -604,7 +646,7 @@ int av1_get_pred_context_comp_ref_p2(const AV1_COMMON *cm,
 }
 
 // Returns a context number for the given MB prediction signal
-#if CONFIG_LOWDELAY_COMPOUND
+#if CONFIG_ONE_SIDED_COMPOUND
 int av1_get_pred_context_comp_bwdref_p(UNUSED const AV1_COMMON *cm,
                                        const MACROBLOCKD *xd) {
 #else
@@ -621,7 +663,7 @@ int av1_get_pred_context_comp_bwdref_p(const AV1_COMMON *cm,
 // The mode info data structure has a one element border above and to the
 // left of the entries corresponding to real macroblocks.
 // The prediction flags in these dummy entries are initialized to 0.
-#if CONFIG_LOWDELAY_COMPOUND  // No change to bitstream
+#if CONFIG_ONE_SIDED_COMPOUND  // No change to bitstream
   // Code seems to assume that signbias of cm->comp_bwd_ref[0] is always 1
   const int bwd_ref_sign_idx = 1;
 #else

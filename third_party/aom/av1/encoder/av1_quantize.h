@@ -69,6 +69,17 @@ typedef struct {
   DECLARE_ALIGNED(16, int16_t, uv_round[QINDEX_RANGE][8]);
 } QUANTS;
 
+typedef struct {
+  DECLARE_ALIGNED(16, int16_t, y_dequant[QINDEX_RANGE][8]);   // 8: SIMD width
+  DECLARE_ALIGNED(16, int16_t, uv_dequant[QINDEX_RANGE][8]);  // 8: SIMD width
+#if CONFIG_NEW_QUANT
+  DECLARE_ALIGNED(16, dequant_val_type_nuq,
+                  y_dequant_val_nuq[QUANT_PROFILES][QINDEX_RANGE][COEF_BANDS]);
+  DECLARE_ALIGNED(16, dequant_val_type_nuq,
+                  uv_dequant_val_nuq[QUANT_PROFILES][QINDEX_RANGE][COEF_BANDS]);
+#endif  // CONFIG_NEW_QUANT
+} Dequants;
+
 struct AV1_COMP;
 struct AV1Common;
 
@@ -76,6 +87,10 @@ void av1_frame_init_quantizer(struct AV1_COMP *cpi);
 
 void av1_init_plane_quantizers(const struct AV1_COMP *cpi, MACROBLOCK *x,
                                int segment_id);
+
+void av1_build_quantizer(aom_bit_depth_t bit_depth, int y_dc_delta_q,
+                         int uv_dc_delta_q, int uv_ac_delta_q,
+                         QUANTS *const quants, Dequants *const deq);
 
 void av1_init_quantizer(struct AV1_COMP *cpi);
 

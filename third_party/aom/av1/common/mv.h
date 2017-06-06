@@ -58,6 +58,8 @@ typedef struct mv32 {
 // Precision of filter taps
 #define WARPEDPIXEL_FILTER_BITS 7
 
+#define WARP_PARAM_REDUCE_BITS 6
+
 // Precision bits reduction after horizontal shear
 #define HORSHEAR_REDUCE_PREC_BITS 5
 #define VERSHEAR_REDUCE_PREC_BITS \
@@ -269,14 +271,12 @@ static INLINE TransformationType get_gmtype(const WarpedMotionParams *gm) {
 }
 #endif  // CONFIG_GLOBAL_MOTION
 
-#if CONFIG_REF_MV
 typedef struct candidate_mv {
   int_mv this_mv;
   int_mv comp_mv;
   uint8_t pred_diff[2];
   int weight;
 } CANDIDATE_MV;
-#endif
 
 static INLINE int is_zero_mv(const MV *mv) {
   return *((const uint32_t *)mv) == 0;

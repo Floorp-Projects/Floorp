@@ -8,6 +8,9 @@
 ## Media Patent License 1.0 was not distributed with this source code in the
 ## PATENTS file, you can obtain it at www.aomedia.org/license/patent.
 ##
+if (NOT AOM_AV1_AV1_CMAKE_)
+set(AOM_AV1_AV1_CMAKE_ 1)
+
 set(AOM_AV1_COMMON_SOURCES
     "${AOM_ROOT}/av1/av1_iface_common.h"
     "${AOM_ROOT}/av1/common/alloccommon.c"
@@ -16,11 +19,11 @@ set(AOM_AV1_COMMON_SOURCES
     "${AOM_ROOT}/av1/common/av1_fwd_txfm1d.c"
     "${AOM_ROOT}/av1/common/av1_fwd_txfm1d.h"
     "${AOM_ROOT}/av1/common/av1_fwd_txfm2d.c"
-    "${AOM_ROOT}/av1/common/av1_fwd_txfm2d_cfg.h"
+    "${AOM_ROOT}/av1/common/av1_fwd_txfm1d_cfg.h"
     "${AOM_ROOT}/av1/common/av1_inv_txfm1d.c"
     "${AOM_ROOT}/av1/common/av1_inv_txfm1d.h"
     "${AOM_ROOT}/av1/common/av1_inv_txfm2d.c"
-    "${AOM_ROOT}/av1/common/av1_inv_txfm2d_cfg.h"
+    "${AOM_ROOT}/av1/common/av1_inv_txfm1d_cfg.h"
     "${AOM_ROOT}/av1/common/av1_loopfilter.c"
     "${AOM_ROOT}/av1/common/av1_loopfilter.h"
     "${AOM_ROOT}/av1/common/av1_txfm.h"
@@ -60,7 +63,6 @@ set(AOM_AV1_COMMON_SOURCES
     "${AOM_ROOT}/av1/common/reconintra.h"
     "${AOM_ROOT}/av1/common/resize.c"
     "${AOM_ROOT}/av1/common/resize.h"
-    "${AOM_ROOT}/av1/common/restoration.h"
     "${AOM_ROOT}/av1/common/scale.c"
     "${AOM_ROOT}/av1/common/scale.h"
     "${AOM_ROOT}/av1/common/scan.c"
@@ -146,13 +148,9 @@ set(AOM_AV1_ENCODER_SOURCES
     "${AOM_ROOT}/av1/encoder/tokenize.c"
     "${AOM_ROOT}/av1/encoder/tokenize.h"
     "${AOM_ROOT}/av1/encoder/treewriter.c"
-    "${AOM_ROOT}/av1/encoder/treewriter.h"
-    "${AOM_ROOT}/av1/encoder/variance_tree.c"
-    "${AOM_ROOT}/av1/encoder/variance_tree.h")
+    "${AOM_ROOT}/av1/encoder/treewriter.h")
 
 set(AOM_AV1_COMMON_INTRIN_SSE2
-    # Requires CONFIG_GLOBAL_MOTION or CONFIG_WARPED_MOTION
-    #"${AOM_ROOT}/av1/common/x86/warp_plane_sse2.c"
     "${AOM_ROOT}/av1/common/x86/idct_intrin_sse2.c")
 
 set(AOM_AV1_COMMON_INTRIN_SSSE3
@@ -293,6 +291,27 @@ if (CONFIG_ACCOUNTING)
       "${AOM_ROOT}/av1/decoder/accounting.h")
 endif ()
 
+if (CONFIG_GLOBAL_MOTION)
+  set(AOM_AV1_ENCODER_SOURCES
+      ${AOM_AV1_ENCODER_SOURCES}
+      "${AOM_ROOT}/av1/encoder/corner_detect.c"
+      "${AOM_ROOT}/av1/encoder/corner_detect.h"
+      "${AOM_ROOT}/av1/encoder/corner_match.c"
+      "${AOM_ROOT}/av1/encoder/corner_match.h"
+      "${AOM_ROOT}/av1/encoder/global_motion.c"
+      "${AOM_ROOT}/av1/encoder/global_motion.h"
+      "${AOM_ROOT}/av1/encoder/ransac.c"
+      "${AOM_ROOT}/av1/encoder/ransac.h"
+      "${AOM_ROOT}/third_party/fastfeat/fast_9.c"
+      "${AOM_ROOT}/third_party/fastfeat/fast.c"
+      "${AOM_ROOT}/third_party/fastfeat/fast.h"
+      "${AOM_ROOT}/third_party/fastfeat/nonmax.c")
+
+  set(AOM_AV1_ENCODER_INTRIN_SSE4_1
+      ${AOM_AV1_ENCODER_INTRIN_SSE4_1}
+      "${AOM_ROOT}/av1/encoder/x86/corner_match_sse4.c")
+endif ()
+
 if (CONFIG_INSPECTION)
   set(AOM_AV1_DECODER_SOURCES
       ${AOM_AV1_DECODER_SOURCES}
@@ -318,6 +337,22 @@ if (CONFIG_CFL)
       ${AOM_AV1_COMMON_SOURCES}
     "${AOM_ROOT}/av1/common/cfl.c"
     "${AOM_ROOT}/av1/common/cfl.h")
+endif ()
+
+if (CONFIG_LOOP_RESTORATION)
+  set(AOM_AV1_COMMON_SOURCES
+      ${AOM_AV1_COMMON_SOURCES}
+      "${AOM_ROOT}/av1/common/restoration.c"
+      "${AOM_ROOT}/av1/common/restoration.h")
+
+  set(AOM_AV1_COMMON_INTRIN_SSE4_1
+      ${AOM_AV1_COMMON_INTRIN_SSE4_1}
+      "${AOM_ROOT}/av1/common/x86/selfguided_sse4.c")
+
+  set(AOM_AV1_ENCODER_SOURCES
+      ${AOM_AV1_ENCODER_SOURCES}
+      "${AOM_ROOT}/av1/encoder/pickrst.c"
+      "${AOM_ROOT}/av1/encoder/pickrst.h")
 endif ()
 
 if (CONFIG_PVQ)
@@ -382,7 +417,7 @@ if (CONFIG_PVQ)
     endif ()
 endif ()
 
-if (CONFIG_WARPED_MOTION)
+if (CONFIG_WARPED_MOTION OR CONFIG_GLOBAL_MOTION)
   set(AOM_AV1_COMMON_SOURCES
       ${AOM_AV1_COMMON_SOURCES}
       "${AOM_ROOT}/av1/common/warped_motion.c"
@@ -391,6 +426,16 @@ if (CONFIG_WARPED_MOTION)
   set(AOM_AV1_COMMON_INTRIN_SSE2
       ${AOM_AV1_COMMON_INTRIN_SSE2}
       "${AOM_ROOT}/av1/common/x86/warp_plane_sse2.c")
+
+  set(AOM_AV1_COMMON_INTRIN_SSSE3
+      ${AOM_AV1_COMMON_INTRIN_SSSE3}
+      "${AOM_ROOT}/av1/common/x86/warp_plane_ssse3.c")
+
+  if (CONFIG_HIGHBITDEPTH)
+    set(AOM_AV1_COMMON_INTRIN_SSSE3
+        ${AOM_AV1_COMMON_INTRIN_SSSE3}
+        "${AOM_ROOT}/av1/common/x86/highbd_warp_plane_ssse3.c")
+  endif ()
 endif ()
 
 # Setup AV1 common/decoder/encoder targets. The libaom target must exist before
@@ -516,3 +561,5 @@ endfunction ()
 
 function (setup_av1_test_targets)
 endfunction ()
+
+endif ()  # AOM_AV1_AV1_CMAKE_

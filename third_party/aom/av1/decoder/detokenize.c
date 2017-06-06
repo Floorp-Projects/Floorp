@@ -106,7 +106,7 @@ static int decode_coefs(MACROBLOCKD *xd, PLANE_TYPE type, tran_low_t *dqcoeff,
                         dequant_val_type_nuq *dq_val,
 #endif  // CONFIG_NEW_QUANT
 #if CONFIG_AOM_QM
-                        const qm_val_t *iqm[2][TX_SIZES],
+                        const qm_val_t *iqm[2][TX_SIZES_ALL],
 #endif  // CONFIG_AOM_QM
                         int ctx, const int16_t *scan, const int16_t *nb,
                         int16_t *max_scan_line, aom_reader *r) {
@@ -123,7 +123,6 @@ static int decode_coefs(MACROBLOCKD *xd, PLANE_TYPE type, tran_low_t *dqcoeff,
 #endif  // CONFIG_AOM_QM
   int band, c = 0;
   const int tx_size_ctx = txsize_sqr_map[tx_size];
-#if CONFIG_NEW_TOKENSET
   aom_cdf_prob(*coef_head_cdfs)[COEFF_CONTEXTS][CDF_SIZE(ENTROPY_TOKENS)] =
       ec_ctx->coef_head_cdfs[tx_size_ctx][type][ref];
   aom_cdf_prob(*coef_tail_cdfs)[COEFF_CONTEXTS][CDF_SIZE(ENTROPY_TOKENS)] =
@@ -135,18 +134,6 @@ static int decode_coefs(MACROBLOCKD *xd, PLANE_TYPE type, tran_low_t *dqcoeff,
   unsigned int(*coef_counts)[COEFF_CONTEXTS][UNCONSTRAINED_NODES + 1] = NULL;
   unsigned int(*eob_branch_count)[COEFF_CONTEXTS] = NULL;
 #endif
-#else
-  aom_prob(*coef_probs)[COEFF_CONTEXTS][UNCONSTRAINED_NODES] =
-      ec_ctx->coef_probs[tx_size_ctx][type][ref];
-  const aom_prob *prob;
-#if CONFIG_EC_MULTISYMBOL
-  aom_cdf_prob(*coef_cdfs)[COEFF_CONTEXTS][CDF_SIZE(ENTROPY_TOKENS)] =
-      ec_ctx->coef_cdfs[tx_size_ctx][type][ref];
-  aom_cdf_prob(*cdf)[CDF_SIZE(ENTROPY_TOKENS)];
-#endif  // CONFIG_EC_MULTISYMBOL
-  unsigned int(*coef_counts)[COEFF_CONTEXTS][UNCONSTRAINED_NODES + 1] = NULL;
-  unsigned int(*eob_branch_count)[COEFF_CONTEXTS] = NULL;
-#endif  // CONFIG_NEW_TOKENSET
   uint8_t token_cache[MAX_TX_SQUARE];
   const uint8_t *band_translate = get_band_translate(tx_size);
   int dq_shift;
@@ -156,23 +143,17 @@ static int decode_coefs(MACROBLOCKD *xd, PLANE_TYPE type, tran_low_t *dqcoeff,
   const tran_low_t *dqv_val = &dq_val[0][0];
 #endif  // CONFIG_NEW_QUANT
   (void)tx_type;
-#if CONFIG_AOM_QM
-  (void)iqmatrix;
-#endif  // CONFIG_AOM_QM
 
   if (counts) {
-#if !CONFIG_NEW_TOKENSET || !CONFIG_EC_ADAPT
+#if !CONFIG_EC_ADAPT
     coef_counts = counts->coef[tx_size_ctx][type][ref];
     eob_branch_count = counts->eob_branch[tx_size_ctx][type][ref];
-#endif
-#if CONFIG_NEW_TOKENSET && !CONFIG_EC_ADAPT
     blockz_count = counts->blockz_count[tx_size_ctx][type][ref][ctx];
 #endif
   }
 
   dq_shift = av1_get_tx_scale(tx_size);
 
-#if CONFIG_NEW_TOKENSET
   band = *band_translate++;
 
   int more_data = 1;
@@ -238,12 +219,7 @@ static int decode_coefs(MACROBLOCKD *xd, PLANE_TYPE type, tran_low_t *dqcoeff,
     *max_scan_line = AOMMAX(*max_scan_line, scan[c]);
     token_cache[scan[c]] = av1_pt_energy_class[token];
 
-    val = token_to_value(r, token, tx_size,
-#if CONFIG_HIGHBITDEPTH
-                         xd->bd);
-#else
-                         8);
-#endif  // CONFIG_HIGHBITDEPTH
+    val = token_to_value(r, token, tx_size, xd->bd);
 
 #if CONFIG_NEW_QUANT
     v = av1_dequant_abscoeff_nuq(val, dqv, dqv_val);
@@ -258,11 +234,7 @@ static int decode_coefs(MACROBLOCKD *xd, PLANE_TYPE type, tran_low_t *dqcoeff,
 
     v = aom_read_bit(r, ACCT_STR) ? -v : v;
 #if CONFIG_COEFFICIENT_RANGE_CHECKING
-#if CONFIG_HIGHBITDEPTH
     check_range(v, xd->bd);
-#else
-    check_range(v, 8);
-#endif  // CONFIG_HIGHBITDEPTH
 #endif  // CONFIG_COEFFICIENT_RANGE_CHECKING
 
     dqcoeff[scan[c]] = v;
@@ -273,94 +245,6 @@ static int decode_coefs(MACROBLOCKD *xd, PLANE_TYPE type, tran_low_t *dqcoeff,
     dqv = dq[1];
     ctx = get_coef_context(nb, token_cache, c);
     band = *band_translate++;
-
-#else  // CONFIG_NEW_TOKENSET
-  while (c < max_eob) {
-    int val = -1;
-    band = *band_translate++;
-    prob = coef_probs[band][ctx];
-    if (counts) ++eob_branch_count[band][ctx];
-    if (!aom_read(r, prob[EOB_CONTEXT_NODE], ACCT_STR)) {
-      INCREMENT_COUNT(EOB_MODEL_TOKEN);
-      break;
-    }
-
-#if CONFIG_NEW_QUANT
-    dqv_val = &dq_val[band][0];
-#endif  // CONFIG_NEW_QUANT
-
-    while (!aom_read(r, prob[ZERO_CONTEXT_NODE], ACCT_STR)) {
-      INCREMENT_COUNT(ZERO_TOKEN);
-      dqv = dq[1];
-      token_cache[scan[c]] = 0;
-      ++c;
-      if (c >= max_eob) return c;  // zero tokens at the end (no eob token)
-      ctx = get_coef_context(nb, token_cache, c);
-      band = *band_translate++;
-      prob = coef_probs[band][ctx];
-#if CONFIG_NEW_QUANT
-      dqv_val = &dq_val[band][0];
-#endif  // CONFIG_NEW_QUANT
-    }
-
-    *max_scan_line = AOMMAX(*max_scan_line, scan[c]);
-
-#if CONFIG_EC_MULTISYMBOL
-    cdf = &coef_cdfs[band][ctx];
-    token = ONE_TOKEN +
-            aom_read_symbol(r, *cdf, CATEGORY6_TOKEN - ONE_TOKEN + 1, ACCT_STR);
-    INCREMENT_COUNT(ONE_TOKEN + (token > ONE_TOKEN));
-    assert(token != ZERO_TOKEN);
-    val = token_to_value(r, token, tx_size,
-#if CONFIG_HIGHBITDEPTH
-                         xd->bd);
-#else
-                         8);
-#endif  // CONFIG_HIGHBITDEPTH
-#else   // CONFIG_EC_MULTISYMBOL
-    if (!aom_read(r, prob[ONE_CONTEXT_NODE], ACCT_STR)) {
-      INCREMENT_COUNT(ONE_TOKEN);
-      token = ONE_TOKEN;
-      val = 1;
-    } else {
-      INCREMENT_COUNT(TWO_TOKEN);
-      token = aom_read_tree(r, av1_coef_con_tree,
-                            av1_pareto8_full[prob[PIVOT_NODE] - 1], ACCT_STR);
-      assert(token != ZERO_TOKEN && token != ONE_TOKEN);
-      val = token_to_value(r, token, tx_size,
-#if CONFIG_HIGHBITDEPTH
-                           xd->bd);
-#else
-                           8);
-#endif  // CONFIG_HIGHBITDEPTH
-    }
-#endif  // CONFIG_EC_MULTISYMBOL
-#if CONFIG_NEW_QUANT
-    v = av1_dequant_abscoeff_nuq(val, dqv, dqv_val);
-    v = dq_shift ? ROUND_POWER_OF_TWO(v, dq_shift) : v;
-#else
-#if CONFIG_AOM_QM
-    dqv = ((iqmatrix[scan[c]] * (int)dqv) + (1 << (AOM_QM_BITS - 1))) >>
-          AOM_QM_BITS;
-#endif
-    v = (val * dqv) >> dq_shift;
-#endif  // CONFIG_NEW_QUANT
-
-#if CONFIG_COEFFICIENT_RANGE_CHECKING
-#if CONFIG_HIGHBITDEPTH
-    dqcoeff[scan[c]] =
-        highbd_check_range((aom_read_bit(r, ACCT_STR) ? -v : v), xd->bd);
-#else
-    dqcoeff[scan[c]] = check_range(aom_read_bit(r, ACCT_STR) ? -v : v, 8);
-#endif  // CONFIG_HIGHBITDEPTH
-#else
-    dqcoeff[scan[c]] = aom_read_bit(r, ACCT_STR) ? -v : v;
-#endif  // CONFIG_COEFFICIENT_RANGE_CHECKING
-    token_cache[scan[c]] = av1_pt_energy_class[token];
-    ++c;
-    ctx = get_coef_context(nb, token_cache, c);
-    dqv = dq[1];
-#endif  // CONFIG_NEW_TOKENSET
   }
 
   return c;

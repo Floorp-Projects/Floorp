@@ -122,6 +122,12 @@ impl<E: TElement> StyleBloom<E> {
         self.elements.is_empty()
     }
 
+    /// Returns the DOM depth of elements that can be correctly
+    /// matched against the bloom filter (that is, the number of
+    /// elements in our list).
+    pub fn matching_depth(&self) -> usize {
+        self.elements.len()
+    }
 
     /// Clears the bloom filter.
     pub fn clear(&mut self) {
@@ -158,6 +164,14 @@ impl<E: TElement> StyleBloom<E> {
         }
     }
 
+    /// Get the element that represents the chain of things inserted
+    /// into the filter right now.  That chain is the given element
+    /// (if any) and its ancestors.
+    #[inline]
+    pub fn current_parent(&self) -> Option<E> {
+        self.elements.last().map(|el| **el)
+    }
+
     /// Insert the parents of an element in the bloom filter, trying to recover
     /// the filter if the last element inserted doesn't match.
     ///
@@ -185,7 +199,7 @@ impl<E: TElement> StyleBloom<E> {
             }
         };
 
-        if self.elements.last().map(|el| **el) == Some(parent_element) {
+        if self.current_parent() == Some(parent_element) {
             // Ta da, cache hit, we're all done.
             return;
         }

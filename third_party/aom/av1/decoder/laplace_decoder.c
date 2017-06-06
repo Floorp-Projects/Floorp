@@ -39,10 +39,10 @@ static int aom_decode_pvq_split_(aom_reader *r, od_pvq_codeword_ctx *adapt,
   count += msbs << shift;
   if (count > sum) {
     count = sum;
-#if CONFIG_DAALA_EC
+#if !CONFIG_ANS
     r->ec.error = 1;
 #else
-# error "CONFIG_PVQ currently requires CONFIG_DAALA_EC."
+# error "CONFIG_PVQ currently requires !CONFIG_ANS."
 #endif
   }
   return count;

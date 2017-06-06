@@ -218,7 +218,7 @@ const BlockDimension kBlockDim[] = {
 };
 
 // 10/12-tap filters
-const InterpFilter kFilter[] = { FILTER_REGULAR_UV, BILINEAR, MULTITAP_SHARP };
+const InterpFilter kFilter[] = { EIGHTTAP_REGULAR, BILINEAR, MULTITAP_SHARP };
 
 const int kSubpelQ4[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
 

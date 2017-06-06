@@ -8,6 +8,9 @@
 ## Media Patent License 1.0 was not distributed with this source code in the
 ## PATENTS file, you can obtain it at www.aomedia.org/license/patent.
 ##
+if (NOT AOM_BUILD_CMAKE_AOM_CONFIGURE_CMAKE_)
+set(AOM_BUILD_CMAKE_AOM_CONFIGURE_CMAKE_ 1)
+
 include(FindGit)
 include(FindPerl)
 include(FindThreads)
@@ -89,7 +92,13 @@ endif ()
 if ("${AOM_TARGET_CPU}" STREQUAL "x86" OR "${AOM_TARGET_CPU}" STREQUAL "x86_64")
   # TODO(tomfinegan): Support nasm at least as well as the existing build
   # system.
-  find_program(AS_EXECUTABLE yasm $ENV{YASM_PATH})
+  if (ENABLE_NASM)
+    find_program(AS_EXECUTABLE nasm $ENV{NASM_PATH})
+    set(AOM_AS_FLAGS ${AOM_AS_FLAGS} -Ox)
+  else ()
+    find_program(AS_EXECUTABLE yasm $ENV{YASM_PATH})
+  endif ()
+
   if (NOT AS_EXECUTABLE)
     message(FATAL_ERROR "Unable to find yasm. To build without optimizations, "
             "add -DAOM_TARGET_CPU=generic to your cmake command line.")
@@ -114,6 +123,30 @@ elseif ("${AOM_TARGET_CPU}" MATCHES "arm")
 endif ()
 
 include("${AOM_ROOT}/build/cmake/cpu.cmake")
+
+if (ENABLE_CCACHE)
+  find_program(CCACHE "ccache")
+  if (NOT "${CCACHE}" STREQUAL "")
+    set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE}")
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE}")
+  else ()
+    message("--- Cannot find ccache, ENABLE_CCACHE ignored.")
+  endif ()
+endif ()
+
+if (ENABLE_DISTCC)
+  find_program(DISTCC "distcc")
+  if (NOT "${DISTCC}" STREQUAL "")
+    set(CMAKE_C_COMPILER_LAUNCHER "${DISTCC}")
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${DISTCC}")
+  else ()
+    message("--- Cannot find distcc, ENABLE_DISTCC ignored.")
+  endif ()
+endif ()
+
+if (NOT CONFIG_AV1_DECODER AND NOT CONFIG_AV1_ENCODER)
+  message(FATAL_ERROR "Decoder and encoder disabled, nothing to build.")
+endif ()
 
 # Test compiler flags.
 if (MSVC)
@@ -191,11 +224,6 @@ if (CONFIG_ANALYZER)
   endif ()
 endif ()
 
-if (CONFIG_ANS AND CONFIG_DAALA_EC)
-  message(FATAL_ERROR
-          "CONFIG_ANS and CONFIG_DAALA_EC cannot be enabled together.")
-endif ()
-
 if (NOT MSVC)
   aom_push_var(CMAKE_REQUIRED_LIBRARIES "m")
   aom_check_c_compiles("fenv_check"
@@ -206,6 +234,13 @@ if (NOT MSVC)
                         }" HAVE_FEXCEPT)
   aom_pop_var(CMAKE_REQUIRED_LIBRARIES)
 endif()
+
+set(AOM_LIB_LINK_TYPE PUBLIC)
+if (EMSCRIPTEN)
+  # Avoid CMake generation time errors resulting from collisions with the form
+  # of target_link_libraries() used by Emscripten.cmake.
+  unset(AOM_LIB_LINK_TYPE)
+endif ()
 
 # Generate aom_config templates.
 set(aom_config_asm_template "${AOM_CONFIG_DIR}/aom_config.asm.cmake")
@@ -244,9 +279,9 @@ find_package(Perl)
 if (NOT PERL_FOUND)
   message(FATAL_ERROR "Perl is required to build libaom.")
 endif ()
-configure_file(
-  "${AOM_ROOT}/build/cmake/rtcd_config.cmake"
-  "${AOM_CONFIG_DIR}/${AOM_TARGET_CPU}_rtcd_config.rtcd")
+
+configure_file("${AOM_CONFIG_DIR}/rtcd_config.cmake"
+               "${AOM_CONFIG_DIR}/${AOM_TARGET_CPU}_rtcd_config.rtcd")
 
 set(AOM_RTCD_CONFIG_FILE_LIST
     "${AOM_ROOT}/aom_dsp/aom_dsp_rtcd_defs.pl"
@@ -304,3 +339,37 @@ execute_process(
   COMMAND ${PERL_EXECUTABLE} "${AOM_ROOT}/build/cmake/aom_version.pl"
   --version_data=${AOM_GIT_DESCRIPTION}
   --version_filename=${AOM_CONFIG_DIR}/aom_version.h)
+
+# Generate aom.pc (pkg-config file).
+if (NOT MSVC)
+  # Extract the version string from aom_version.h
+  file(STRINGS "${AOM_CONFIG_DIR}/aom_version.h" aom_version
+       REGEX "VERSION_STRING_NOSP")
+  string(REPLACE "#define VERSION_STRING_NOSP \"v" "" aom_version
+         "${aom_version}")
+  string(REPLACE "\"" "" aom_version "${aom_version}")
+
+  # Write pkg-config info.
+  set(prefix "${CMAKE_INSTALL_PREFIX}")
+  set(pkgconfig_file "${AOM_CONFIG_DIR}/aom.pc")
+  string(TOLOWER ${CMAKE_PROJECT_NAME} pkg_name)
+  file(WRITE "${pkgconfig_file}" "# libaom pkg-config.\n")
+  file(APPEND "${pkgconfig_file}" "prefix=${prefix}\n")
+  file(APPEND "${pkgconfig_file}" "exec_prefix=${prefix}/bin\n")
+  file(APPEND "${pkgconfig_file}" "libdir=${prefix}/lib\n")
+  file(APPEND "${pkgconfig_file}" "includedir=${prefix}/include\n\n")
+  file(APPEND "${pkgconfig_file}" "Name: ${pkg_name}\n")
+  file(APPEND "${pkgconfig_file}" "Description: AV1 codec library.\n")
+  file(APPEND "${pkgconfig_file}" "Version: ${aom_version}\n")
+  file(APPEND "${pkgconfig_file}" "Requires:\n")
+  file(APPEND "${pkgconfig_file}" "Conflicts:\n")
+  file(APPEND "${pkgconfig_file}" "Libs: -L${prefix}/lib -l${pkg_name} -lm\n")
+  if (CONFIG_MULTITHREAD AND HAVE_PTHREAD_H)
+    file(APPEND "${pkgconfig_file}" "Libs.private: -lm -lpthread\n")
+  else ()
+    file(APPEND "${pkgconfig_file}" "Libs.private: -lm\n")
+  endif ()
+  file(APPEND "${pkgconfig_file}" "Cflags: -I${prefix}/include\n")
+endif ()
+
+endif ()  # AOM_BUILD_CMAKE_AOM_CONFIGURE_CMAKE_

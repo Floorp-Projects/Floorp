@@ -110,7 +110,7 @@ static int mvsad_err_cost(const MACROBLOCK *x, const MV *mv, const MV *ref,
                           int sad_per_bit) {
   const MV diff = { (mv->row - ref->row) * 8, (mv->col - ref->col) * 8 };
   return ROUND_POWER_OF_TWO(
-      (unsigned)mv_cost(&diff, x->nmvjointsadcost, x->mvsadcost) * sad_per_bit,
+      (unsigned)mv_cost(&diff, x->nmvjointcost, x->mvcost) * sad_per_bit,
       AV1_PROB_COST_SHIFT);
 }
 
@@ -176,6 +176,33 @@ static INLINE const uint8_t *pre(const uint8_t *buf, int stride, int r, int c) {
 }
 
 /* checks if (r, c) has better score than previous best */
+#if CONFIG_EXT_INTER
+#define CHECK_BETTER(v, r, c)                                             \
+  if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                 \
+    MV this_mv = { r, c };                                                \
+    v = mv_err_cost(&this_mv, ref_mv, mvjcost, mvcost, error_per_bit);    \
+    if (second_pred == NULL)                                              \
+      thismse = vfp->svf(pre(y, y_stride, r, c), y_stride, sp(c), sp(r),  \
+                         src_address, src_stride, &sse);                  \
+    else if (mask)                                                        \
+      thismse = vfp->msvf(pre(y, y_stride, r, c), y_stride, sp(c), sp(r), \
+                          src_address, src_stride, second_pred, mask,     \
+                          mask_stride, invert_mask, &sse);                \
+    else                                                                  \
+      thismse = vfp->svaf(pre(y, y_stride, r, c), y_stride, sp(c), sp(r), \
+                          src_address, src_stride, &sse, second_pred);    \
+    v += thismse;                                                         \
+    if (v < besterr) {                                                    \
+      besterr = v;                                                        \
+      br = r;                                                             \
+      bc = c;                                                             \
+      *distortion = thismse;                                              \
+      *sse1 = sse;                                                        \
+    }                                                                     \
+  } else {                                                                \
+    v = INT_MAX;                                                          \
+  }
+#else
 #define CHECK_BETTER(v, r, c)                                             \
   if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                 \
     MV this_mv = { r, c };                                                \
@@ -197,6 +224,7 @@ static INLINE const uint8_t *pre(const uint8_t *buf, int stride, int r, int c) {
   } else {                                                                \
     v = INT_MAX;                                                          \
   }
+#endif  // CONFIG_EXT_INTER
 
 #define CHECK_BETTER0(v, r, c) CHECK_BETTER(v, r, c)
 
@@ -206,6 +234,26 @@ static INLINE const uint8_t *upre(const uint8_t *buf, int stride, int r,
 }
 
 /* checks if (r, c) has better score than previous best */
+#if CONFIG_EXT_INTER
+#define CHECK_BETTER1(v, r, c)                                               \
+  if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                    \
+    MV this_mv = { r, c };                                                   \
+    thismse = upsampled_pref_error(                                          \
+        xd, vfp, src_address, src_stride, upre(y, y_stride, r, c), y_stride, \
+        second_pred, mask, mask_stride, invert_mask, w, h, &sse);            \
+    v = mv_err_cost(&this_mv, ref_mv, mvjcost, mvcost, error_per_bit);       \
+    v += thismse;                                                            \
+    if (v < besterr) {                                                       \
+      besterr = v;                                                           \
+      br = r;                                                                \
+      bc = c;                                                                \
+      *distortion = thismse;                                                 \
+      *sse1 = sse;                                                           \
+    }                                                                        \
+  } else {                                                                   \
+    v = INT_MAX;                                                             \
+  }
+#else
 #define CHECK_BETTER1(v, r, c)                                         \
   if (c >= minc && c <= maxc && r >= minr && r <= maxr) {              \
     MV this_mv = { r, c };                                             \
@@ -224,6 +272,7 @@ static INLINE const uint8_t *upre(const uint8_t *buf, int stride, int r,
   } else {                                                             \
     v = INT_MAX;                                                       \
   }
+#endif  // CONFIG_EXT_INTER
 
 #define FIRST_LEVEL_CHECKS                                       \
   {                                                              \
@@ -327,20 +376,36 @@ static unsigned int setup_center_error(
     const MACROBLOCKD *xd, const MV *bestmv, const MV *ref_mv,
     int error_per_bit, const aom_variance_fn_ptr_t *vfp,
     const uint8_t *const src, const int src_stride, const uint8_t *const y,
-    int y_stride, const uint8_t *second_pred, int w, int h, int offset,
-    int *mvjcost, int *mvcost[2], unsigned int *sse1, int *distortion) {
+    int y_stride, const uint8_t *second_pred,
+#if CONFIG_EXT_INTER
+    const uint8_t *mask, int mask_stride, int invert_mask,
+#endif
+    int w, int h, int offset, int *mvjcost, int *mvcost[2], unsigned int *sse1,
+    int *distortion) {
   unsigned int besterr;
 #if CONFIG_HIGHBITDEPTH
   if (second_pred != NULL) {
     if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
       DECLARE_ALIGNED(16, uint16_t, comp_pred16[MAX_SB_SQUARE]);
-      aom_highbd_comp_avg_pred(comp_pred16, second_pred, w, h, y + offset,
-                               y_stride);
+#if CONFIG_EXT_INTER
+      if (mask)
+        aom_highbd_comp_mask_pred(comp_pred16, second_pred, w, h, y + offset,
+                                  y_stride, mask, mask_stride, invert_mask);
+      else
+#endif
+        aom_highbd_comp_avg_pred(comp_pred16, second_pred, w, h, y + offset,
+                                 y_stride);
       besterr =
           vfp->vf(CONVERT_TO_BYTEPTR(comp_pred16), w, src, src_stride, sse1);
     } else {
       DECLARE_ALIGNED(16, uint8_t, comp_pred[MAX_SB_SQUARE]);
-      aom_comp_avg_pred(comp_pred, second_pred, w, h, y + offset, y_stride);
+#if CONFIG_EXT_INTER
+      if (mask)
+        aom_comp_mask_pred(comp_pred, second_pred, w, h, y + offset, y_stride,
+                           mask, mask_stride, invert_mask);
+      else
+#endif
+        aom_comp_avg_pred(comp_pred, second_pred, w, h, y + offset, y_stride);
       besterr = vfp->vf(comp_pred, w, src, src_stride, sse1);
     }
   } else {
@@ -352,7 +417,13 @@ static unsigned int setup_center_error(
   (void)xd;
   if (second_pred != NULL) {
     DECLARE_ALIGNED(16, uint8_t, comp_pred[MAX_SB_SQUARE]);
-    aom_comp_avg_pred(comp_pred, second_pred, w, h, y + offset, y_stride);
+#if CONFIG_EXT_INTER
+    if (mask)
+      aom_comp_mask_pred(comp_pred, second_pred, w, h, y + offset, y_stride,
+                         mask, mask_stride, invert_mask);
+    else
+#endif
+      aom_comp_avg_pred(comp_pred, second_pred, w, h, y + offset, y_stride);
     besterr = vfp->vf(comp_pred, w, src, src_stride, sse1);
   } else {
     besterr = vfp->vf(y + offset, y_stride, src, src_stride, sse1);
@@ -391,12 +462,19 @@ int av1_find_best_sub_pixel_tree_pruned_evenmore(
     MACROBLOCK *x, const MV *ref_mv, int allow_hp, int error_per_bit,
     const aom_variance_fn_ptr_t *vfp, int forced_stop, int iters_per_step,
     int *cost_list, int *mvjcost, int *mvcost[2], int *distortion,
-    unsigned int *sse1, const uint8_t *second_pred, int w, int h,
-    int use_upsampled_ref) {
+    unsigned int *sse1, const uint8_t *second_pred,
+#if CONFIG_EXT_INTER
+    const uint8_t *mask, int mask_stride, int invert_mask,
+#endif
+    int w, int h, int use_upsampled_ref) {
   SETUP_SUBPEL_SEARCH;
-  besterr = setup_center_error(
-      xd, bestmv, ref_mv, error_per_bit, vfp, src_address, src_stride, y,
-      y_stride, second_pred, w, h, offset, mvjcost, mvcost, sse1, distortion);
+  besterr =
+      setup_center_error(xd, bestmv, ref_mv, error_per_bit, vfp, src_address,
+                         src_stride, y, y_stride, second_pred,
+#if CONFIG_EXT_INTER
+                         mask, mask_stride, invert_mask,
+#endif
+                         w, h, offset, mvjcost, mvcost, sse1, distortion);
   (void)halfiters;
   (void)quarteriters;
   (void)eighthiters;
@@ -457,14 +535,21 @@ int av1_find_best_sub_pixel_tree_pruned_more(
     MACROBLOCK *x, const MV *ref_mv, int allow_hp, int error_per_bit,
     const aom_variance_fn_ptr_t *vfp, int forced_stop, int iters_per_step,
     int *cost_list, int *mvjcost, int *mvcost[2], int *distortion,
-    unsigned int *sse1, const uint8_t *second_pred, int w, int h,
-    int use_upsampled_ref) {
+    unsigned int *sse1, const uint8_t *second_pred,
+#if CONFIG_EXT_INTER
+    const uint8_t *mask, int mask_stride, int invert_mask,
+#endif
+    int w, int h, int use_upsampled_ref) {
   SETUP_SUBPEL_SEARCH;
   (void)use_upsampled_ref;
 
-  besterr = setup_center_error(
-      xd, bestmv, ref_mv, error_per_bit, vfp, src_address, src_stride, y,
-      y_stride, second_pred, w, h, offset, mvjcost, mvcost, sse1, distortion);
+  besterr =
+      setup_center_error(xd, bestmv, ref_mv, error_per_bit, vfp, src_address,
+                         src_stride, y, y_stride, second_pred,
+#if CONFIG_EXT_INTER
+                         mask, mask_stride, invert_mask,
+#endif
+                         w, h, offset, mvjcost, mvcost, sse1, distortion);
   if (cost_list && cost_list[0] != INT_MAX && cost_list[1] != INT_MAX &&
       cost_list[2] != INT_MAX && cost_list[3] != INT_MAX &&
       cost_list[4] != INT_MAX && is_cost_list_wellbehaved(cost_list)) {
@@ -519,14 +604,21 @@ int av1_find_best_sub_pixel_tree_pruned(
     MACROBLOCK *x, const MV *ref_mv, int allow_hp, int error_per_bit,
     const aom_variance_fn_ptr_t *vfp, int forced_stop, int iters_per_step,
     int *cost_list, int *mvjcost, int *mvcost[2], int *distortion,
-    unsigned int *sse1, const uint8_t *second_pred, int w, int h,
-    int use_upsampled_ref) {
+    unsigned int *sse1, const uint8_t *second_pred,
+#if CONFIG_EXT_INTER
+    const uint8_t *mask, int mask_stride, int invert_mask,
+#endif
+    int w, int h, int use_upsampled_ref) {
   SETUP_SUBPEL_SEARCH;
   (void)use_upsampled_ref;
 
-  besterr = setup_center_error(
-      xd, bestmv, ref_mv, error_per_bit, vfp, src_address, src_stride, y,
-      y_stride, second_pred, w, h, offset, mvjcost, mvcost, sse1, distortion);
+  besterr =
+      setup_center_error(xd, bestmv, ref_mv, error_per_bit, vfp, src_address,
+                         src_stride, y, y_stride, second_pred,
+#if CONFIG_EXT_INTER
+                         mask, mask_stride, invert_mask,
+#endif
+                         w, h, offset, mvjcost, mvcost, sse1, distortion);
   if (cost_list && cost_list[0] != INT_MAX && cost_list[1] != INT_MAX &&
       cost_list[2] != INT_MAX && cost_list[3] != INT_MAX &&
       cost_list[4] != INT_MAX) {
@@ -612,17 +704,29 @@ static int upsampled_pref_error(const MACROBLOCKD *xd,
                                 const aom_variance_fn_ptr_t *vfp,
                                 const uint8_t *const src, const int src_stride,
                                 const uint8_t *const y, int y_stride,
-                                const uint8_t *second_pred, int w, int h,
-                                unsigned int *sse) {
+                                const uint8_t *second_pred,
+#if CONFIG_EXT_INTER
+                                const uint8_t *mask, int mask_stride,
+                                int invert_mask,
+#endif
+                                int w, int h, unsigned int *sse) {
   unsigned int besterr;
 #if CONFIG_HIGHBITDEPTH
   if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
     DECLARE_ALIGNED(16, uint16_t, pred16[MAX_SB_SQUARE]);
-    if (second_pred != NULL)
-      aom_highbd_comp_avg_upsampled_pred(pred16, second_pred, w, h, y,
-                                         y_stride);
-    else
+    if (second_pred != NULL) {
+#if CONFIG_EXT_INTER
+      if (mask)
+        aom_highbd_comp_mask_upsampled_pred(pred16, second_pred, w, h, y,
+                                            y_stride, mask, mask_stride,
+                                            invert_mask);
+      else
+#endif
+        aom_highbd_comp_avg_upsampled_pred(pred16, second_pred, w, h, y,
+                                           y_stride);
+    } else {
       aom_highbd_upsampled_pred(pred16, w, h, y, y_stride);
+    }
 
     besterr = vfp->vf(CONVERT_TO_BYTEPTR(pred16), w, src, src_stride, sse);
   } else {
@@ -631,10 +735,17 @@ static int upsampled_pref_error(const MACROBLOCKD *xd,
   DECLARE_ALIGNED(16, uint8_t, pred[MAX_SB_SQUARE]);
   (void)xd;
 #endif  // CONFIG_HIGHBITDEPTH
-    if (second_pred != NULL)
-      aom_comp_avg_upsampled_pred(pred, second_pred, w, h, y, y_stride);
-    else
+    if (second_pred != NULL) {
+#if CONFIG_EXT_INTER
+      if (mask)
+        aom_comp_mask_upsampled_pred(pred, second_pred, w, h, y, y_stride, mask,
+                                     mask_stride, invert_mask);
+      else
+#endif
+        aom_comp_avg_upsampled_pred(pred, second_pred, w, h, y, y_stride);
+    } else {
       aom_upsampled_pred(pred, w, h, y, y_stride);
+    }
 
     besterr = vfp->vf(pred, w, src, src_stride, sse);
 #if CONFIG_HIGHBITDEPTH
@@ -647,23 +758,32 @@ static unsigned int upsampled_setup_center_error(
     const MACROBLOCKD *xd, const MV *bestmv, const MV *ref_mv,
     int error_per_bit, const aom_variance_fn_ptr_t *vfp,
     const uint8_t *const src, const int src_stride, const uint8_t *const y,
-    int y_stride, const uint8_t *second_pred, int w, int h, int offset,
-    int *mvjcost, int *mvcost[2], unsigned int *sse1, int *distortion) {
-  unsigned int besterr = upsampled_pref_error(
-      xd, vfp, src, src_stride, y + offset, y_stride, second_pred, w, h, sse1);
+    int y_stride, const uint8_t *second_pred,
+#if CONFIG_EXT_INTER
+    const uint8_t *mask, int mask_stride, int invert_mask,
+#endif
+    int w, int h, int offset, int *mvjcost, int *mvcost[2], unsigned int *sse1,
+    int *distortion) {
+  unsigned int besterr = upsampled_pref_error(xd, vfp, src, src_stride,
+                                              y + offset, y_stride, second_pred,
+#if CONFIG_EXT_INTER
+                                              mask, mask_stride, invert_mask,
+#endif
+                                              w, h, sse1);
   *distortion = besterr;
   besterr += mv_err_cost(bestmv, ref_mv, mvjcost, mvcost, error_per_bit);
   return besterr;
 }
 
-int av1_find_best_sub_pixel_tree(MACROBLOCK *x, const MV *ref_mv, int allow_hp,
-                                 int error_per_bit,
-                                 const aom_variance_fn_ptr_t *vfp,
-                                 int forced_stop, int iters_per_step,
-                                 int *cost_list, int *mvjcost, int *mvcost[2],
-                                 int *distortion, unsigned int *sse1,
-                                 const uint8_t *second_pred, int w, int h,
-                                 int use_upsampled_ref) {
+int av1_find_best_sub_pixel_tree(
+    MACROBLOCK *x, const MV *ref_mv, int allow_hp, int error_per_bit,
+    const aom_variance_fn_ptr_t *vfp, int forced_stop, int iters_per_step,
+    int *cost_list, int *mvjcost, int *mvcost[2], int *distortion,
+    unsigned int *sse1, const uint8_t *second_pred,
+#if CONFIG_EXT_INTER
+    const uint8_t *mask, int mask_stride, int invert_mask,
+#endif
+    int w, int h, int use_upsampled_ref) {
   const uint8_t *const src_address = x->plane[0].src.buf;
   const int src_stride = x->plane[0].src.stride;
   const MACROBLOCKD *xd = &x->e_mbd;
@@ -700,12 +820,19 @@ int av1_find_best_sub_pixel_tree(MACROBLOCK *x, const MV *ref_mv, int allow_hp,
   if (use_upsampled_ref)
     besterr = upsampled_setup_center_error(
         xd, bestmv, ref_mv, error_per_bit, vfp, src_address, src_stride, y,
-        y_stride, second_pred, w, h, (offset * 8), mvjcost, mvcost, sse1,
-        distortion);
+        y_stride, second_pred,
+#if CONFIG_EXT_INTER
+        mask, mask_stride, invert_mask,
+#endif
+        w, h, (offset * 8), mvjcost, mvcost, sse1, distortion);
   else
-    besterr = setup_center_error(
-        xd, bestmv, ref_mv, error_per_bit, vfp, src_address, src_stride, y,
-        y_stride, second_pred, w, h, offset, mvjcost, mvcost, sse1, distortion);
+    besterr =
+        setup_center_error(xd, bestmv, ref_mv, error_per_bit, vfp, src_address,
+                           src_stride, y, y_stride, second_pred,
+#if CONFIG_EXT_INTER
+                           mask, mask_stride, invert_mask,
+#endif
+                           w, h, offset, mvjcost, mvcost, sse1, distortion);
 
   (void)cost_list;  // to silence compiler warning
 
@@ -721,14 +848,23 @@ int av1_find_best_sub_pixel_tree(MACROBLOCK *x, const MV *ref_mv, int allow_hp,
           const uint8_t *const pre_address = y + tr * y_stride + tc;
 
           thismse = upsampled_pref_error(xd, vfp, src_address, src_stride,
-                                         pre_address, y_stride, second_pred, w,
-                                         h, &sse);
+                                         pre_address, y_stride, second_pred,
+#if CONFIG_EXT_INTER
+                                         mask, mask_stride, invert_mask,
+#endif
+                                         w, h, &sse);
         } else {
           const uint8_t *const pre_address =
               y + (tr >> 3) * y_stride + (tc >> 3);
           if (second_pred == NULL)
             thismse = vfp->svf(pre_address, y_stride, sp(tc), sp(tr),
                                src_address, src_stride, &sse);
+#if CONFIG_EXT_INTER
+          else if (mask)
+            thismse = vfp->msvf(pre_address, y_stride, sp(tc), sp(tr),
+                                src_address, src_stride, second_pred, mask,
+                                mask_stride, invert_mask, &sse);
+#endif
           else
             thismse = vfp->svaf(pre_address, y_stride, sp(tc), sp(tr),
                                 src_address, src_stride, &sse, second_pred);
@@ -760,15 +896,24 @@ int av1_find_best_sub_pixel_tree(MACROBLOCK *x, const MV *ref_mv, int allow_hp,
       if (use_upsampled_ref) {
         const uint8_t *const pre_address = y + tr * y_stride + tc;
 
-        thismse =
-            upsampled_pref_error(xd, vfp, src_address, src_stride, pre_address,
-                                 y_stride, second_pred, w, h, &sse);
+        thismse = upsampled_pref_error(xd, vfp, src_address, src_stride,
+                                       pre_address, y_stride, second_pred,
+#if CONFIG_EXT_INTER
+                                       mask, mask_stride, invert_mask,
+#endif
+                                       w, h, &sse);
       } else {
         const uint8_t *const pre_address = y + (tr >> 3) * y_stride + (tc >> 3);
 
         if (second_pred == NULL)
           thismse = vfp->svf(pre_address, y_stride, sp(tc), sp(tr), src_address,
                              src_stride, &sse);
+#if CONFIG_EXT_INTER
+        else if (mask)
+          thismse = vfp->msvf(pre_address, y_stride, sp(tc), sp(tr),
+                              src_address, src_stride, second_pred, mask,
+                              mask_stride, invert_mask, &sse);
+#endif
         else
           thismse = vfp->svaf(pre_address, y_stride, sp(tc), sp(tr),
                               src_address, src_stride, &sse, second_pred);
@@ -821,6 +966,102 @@ int av1_find_best_sub_pixel_tree(MACROBLOCK *x, const MV *ref_mv, int allow_hp,
 
 #undef PRE
 #undef CHECK_BETTER
+
+#if CONFIG_WARPED_MOTION
+unsigned int av1_compute_motion_cost(const AV1_COMP *cpi, MACROBLOCK *const x,
+                                     BLOCK_SIZE bsize, int mi_row, int mi_col,
+                                     const MV *this_mv) {
+  const AV1_COMMON *const cm = &cpi->common;
+  MACROBLOCKD *xd = &x->e_mbd;
+  MODE_INFO *mi = xd->mi[0];
+  MB_MODE_INFO *mbmi = &mi->mbmi;
+  const uint8_t *const src = x->plane[0].src.buf;
+  const int src_stride = x->plane[0].src.stride;
+  uint8_t *const dst = xd->plane[0].dst.buf;
+  const int dst_stride = xd->plane[0].dst.stride;
+  const aom_variance_fn_ptr_t *vfp = &cpi->fn_ptr[bsize];
+  const MV ref_mv = x->mbmi_ext->ref_mvs[mbmi->ref_frame[0]][0].as_mv;
+  unsigned int mse;
+  unsigned int sse;
+
+  av1_build_inter_predictors_sby(cm, xd, mi_row, mi_col, NULL, bsize);
+  mse = vfp->vf(dst, dst_stride, src, src_stride, &sse);
+  mse +=
+      mv_err_cost(this_mv, &ref_mv, x->nmvjointcost, x->mvcost, x->errorperbit);
+  return mse;
+}
+
+// Refine MV in a small range
+unsigned int av1_refine_warped_mv(const AV1_COMP *cpi, MACROBLOCK *const x,
+                                  BLOCK_SIZE bsize, int mi_row, int mi_col,
+                                  int *pts, int *pts_inref) {
+  const AV1_COMMON *const cm = &cpi->common;
+  MACROBLOCKD *xd = &x->e_mbd;
+  MODE_INFO *mi = xd->mi[0];
+  MB_MODE_INFO *mbmi = &mi->mbmi;
+  const MV neighbors[8] = { { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, 0 },
+                            { 0, -2 }, { 2, 0 }, { 0, 2 }, { -2, 0 } };
+  const MV ref_mv = x->mbmi_ext->ref_mvs[mbmi->ref_frame[0]][0].as_mv;
+  int16_t br = mbmi->mv[0].as_mv.row;
+  int16_t bc = mbmi->mv[0].as_mv.col;
+  int16_t *tr = &mbmi->mv[0].as_mv.row;
+  int16_t *tc = &mbmi->mv[0].as_mv.col;
+  WarpedMotionParams best_wm_params = mbmi->wm_params[0];
+  unsigned int bestmse;
+  int minc, maxc, minr, maxr;
+  const int start = cm->allow_high_precision_mv ? 0 : 4;
+  int ite;
+
+  av1_set_subpel_mv_search_range(&x->mv_limits, &minc, &maxc, &minr, &maxr,
+                                 &ref_mv);
+
+  // Calculate the center position's error
+  assert(bc >= minc && bc <= maxc && br >= minr && br <= maxr);
+  bestmse = av1_compute_motion_cost(cpi, x, bsize, mi_row, mi_col,
+                                    &mbmi->mv[0].as_mv);
+
+  // MV search
+  for (ite = 0; ite < 2; ++ite) {
+    int best_idx = -1;
+    int idx;
+
+    for (idx = start; idx < start + 4; ++idx) {
+      unsigned int thismse;
+
+      *tr = br + neighbors[idx].row;
+      *tc = bc + neighbors[idx].col;
+
+      if (*tc >= minc && *tc <= maxc && *tr >= minr && *tr <= maxr) {
+        MV this_mv = { *tr, *tc };
+        if (!find_projection(mbmi->num_proj_ref[0], pts, pts_inref, bsize, *tr,
+                             *tc, &mbmi->wm_params[0], mi_row, mi_col)) {
+          thismse =
+              av1_compute_motion_cost(cpi, x, bsize, mi_row, mi_col, &this_mv);
+
+          if (thismse < bestmse) {
+            best_idx = idx;
+            best_wm_params = mbmi->wm_params[0];
+            bestmse = thismse;
+          }
+        }
+      }
+    }
+
+    if (best_idx == -1) break;
+
+    if (best_idx >= 0) {
+      br += neighbors[best_idx].row;
+      bc += neighbors[best_idx].col;
+    }
+  }
+
+  *tr = br;
+  *tc = bc;
+  mbmi->wm_params[0] = best_wm_params;
+
+  return bestmse;
+}
+#endif  // CONFIG_WARPED_MOTION
 
 static INLINE int check_bounds(const MvLimits *mv_limits, int row, int col,
                                int range) {
@@ -1231,6 +1472,27 @@ int av1_get_mvpred_av_var(const MACROBLOCK *x, const MV *best_mv,
                                    x->errorperbit)
                      : 0);
 }
+
+#if CONFIG_EXT_INTER
+int av1_get_mvpred_mask_var(const MACROBLOCK *x, const MV *best_mv,
+                            const MV *center_mv, const uint8_t *second_pred,
+                            const uint8_t *mask, int mask_stride,
+                            int invert_mask, const aom_variance_fn_ptr_t *vfp,
+                            int use_mvcost) {
+  const MACROBLOCKD *const xd = &x->e_mbd;
+  const struct buf_2d *const what = &x->plane[0].src;
+  const struct buf_2d *const in_what = &xd->plane[0].pre[0];
+  const MV mv = { best_mv->row * 8, best_mv->col * 8 };
+  unsigned int unused;
+
+  return vfp->msvf(what->buf, what->stride, 0, 0,
+                   get_buf_from_mv(in_what, best_mv), in_what->stride,
+                   second_pred, mask, mask_stride, invert_mask, &unused) +
+         (use_mvcost ? mv_err_cost(&mv, center_mv, x->nmvjointcost, x->mvcost,
+                                   x->errorperbit)
+                     : 0);
+}
+#endif
 
 int av1_hex_search(MACROBLOCK *x, MV *start_mv, int search_param,
                    int sad_per_bit, int do_init_search, int *cost_list,
@@ -1685,17 +1947,12 @@ unsigned int av1_int_pro_motion_estimation(const AV1_COMP *cpi, MACROBLOCK *x,
   DECLARE_ALIGNED(16, int16_t, src_hbuf[MAX_SB_SQUARE]);
   DECLARE_ALIGNED(16, int16_t, src_vbuf[MAX_SB_SQUARE]);
   int idx;
-  const int bw = 4 << b_width_log2_lookup[bsize];
-  const int bh = 4 << b_height_log2_lookup[bsize];
-  const int search_width = bw << 1;
-  const int search_height = bh << 1;
   const int src_stride = x->plane[0].src.stride;
   const int ref_stride = xd->plane[0].pre[0].stride;
   uint8_t const *ref_buf, *src_buf;
   MV *tmp_mv = &xd->mi[0]->mbmi.mv[0].as_mv;
   unsigned int best_sad, tmp_sad, sad_arr[4];
   MV this_mv;
-  const int norm_factor = 3 + (bw >> 5);
   const YV12_BUFFER_CONFIG *scaled_ref_frame =
       av1_get_scaled_ref_frame(cpi, mbmi->ref_frame[0]);
 
@@ -1723,6 +1980,12 @@ unsigned int av1_int_pro_motion_estimation(const AV1_COMP *cpi, MACROBLOCK *x,
     return this_sad;
   }
 #endif
+
+  const int bw = 4 << b_width_log2_lookup[bsize];
+  const int bh = 4 << b_height_log2_lookup[bsize];
+  const int search_width = bw << 1;
+  const int search_height = bh << 1;
+  const int norm_factor = 3 + (bw >> 5);
 
   // Set up prediction 1-D reference set
   ref_buf = xd->plane[0].pre[0].buf - (bw >> 1);
@@ -2195,9 +2458,13 @@ int av1_refining_search_sad(MACROBLOCK *x, MV *ref_mv, int error_per_bit,
 }
 
 // This function is called when we do joint motion search in comp_inter_inter
-// mode.
+// mode, or when searching for one component of an ext-inter compound mode.
 int av1_refining_search_8p_c(MACROBLOCK *x, int error_per_bit, int search_range,
                              const aom_variance_fn_ptr_t *fn_ptr,
+#if CONFIG_EXT_INTER
+                             const uint8_t *mask, int mask_stride,
+                             int invert_mask,
+#endif
                              const MV *center_mv, const uint8_t *second_pred) {
   const MV neighbors[8] = { { -1, 0 },  { 0, -1 }, { 0, 1 },  { 1, 0 },
                             { -1, -1 }, { 1, -1 }, { -1, 1 }, { 1, 1 } };
@@ -2211,10 +2478,18 @@ int av1_refining_search_8p_c(MACROBLOCK *x, int error_per_bit, int search_range,
 
   clamp_mv(best_mv, x->mv_limits.col_min, x->mv_limits.col_max,
            x->mv_limits.row_min, x->mv_limits.row_max);
-  best_sad =
-      fn_ptr->sdaf(what->buf, what->stride, get_buf_from_mv(in_what, best_mv),
-                   in_what->stride, second_pred) +
-      mvsad_err_cost(x, best_mv, &fcenter_mv, error_per_bit);
+#if CONFIG_EXT_INTER
+  if (mask)
+    best_sad = fn_ptr->msdf(what->buf, what->stride,
+                            get_buf_from_mv(in_what, best_mv), in_what->stride,
+                            second_pred, mask, mask_stride, invert_mask) +
+               mvsad_err_cost(x, best_mv, &fcenter_mv, error_per_bit);
+  else
+#endif
+    best_sad =
+        fn_ptr->sdaf(what->buf, what->stride, get_buf_from_mv(in_what, best_mv),
+                     in_what->stride, second_pred) +
+        mvsad_err_cost(x, best_mv, &fcenter_mv, error_per_bit);
 
   for (i = 0; i < search_range; ++i) {
     int best_site = -1;
@@ -2224,9 +2499,17 @@ int av1_refining_search_8p_c(MACROBLOCK *x, int error_per_bit, int search_range,
                       best_mv->col + neighbors[j].col };
 
       if (is_mv_in(&x->mv_limits, &mv)) {
-        unsigned int sad =
-            fn_ptr->sdaf(what->buf, what->stride, get_buf_from_mv(in_what, &mv),
-                         in_what->stride, second_pred);
+        unsigned int sad;
+#if CONFIG_EXT_INTER
+        if (mask)
+          sad = fn_ptr->msdf(what->buf, what->stride,
+                             get_buf_from_mv(in_what, &mv), in_what->stride,
+                             second_pred, mask, mask_stride, invert_mask);
+        else
+#endif
+          sad = fn_ptr->sdaf(what->buf, what->stride,
+                             get_buf_from_mv(in_what, &mv), in_what->stride,
+                             second_pred);
         if (sad < best_sad) {
           sad += mvsad_err_cost(x, &mv, &fcenter_mv, error_per_bit);
           if (sad < best_sad) {
@@ -2337,612 +2620,20 @@ int av1_full_pixel_search(const AV1_COMP *cpi, MACROBLOCK *x, BLOCK_SIZE bsize,
   return var;
 }
 
-#if CONFIG_EXT_INTER
-/* returns subpixel variance error function */
-#define DIST(r, c)                                                         \
-  vfp->msvf(pre(y, y_stride, r, c), y_stride, sp(c), sp(r), z, src_stride, \
-            mask, mask_stride, &sse)
-
-/* checks if (r, c) has better score than previous best */
-
-#define MVC(r, c)                                                         \
-  (mvcost                                                                 \
-       ? ((mvjcost[((r) != rr) * 2 + ((c) != rc)] + mvcost[0][((r)-rr)] + \
-           mvcost[1][((c)-rc)]) *                                         \
-              error_per_bit +                                             \
-          4096) >>                                                        \
-             13                                                           \
-       : 0)
-
-#define CHECK_BETTER(v, r, c)                             \
-  if (c >= minc && c <= maxc && r >= minr && r <= maxr) { \
-    thismse = (DIST(r, c));                               \
-    if ((v = MVC(r, c) + thismse) < besterr) {            \
-      besterr = v;                                        \
-      br = r;                                             \
-      bc = c;                                             \
-      *distortion = thismse;                              \
-      *sse1 = sse;                                        \
-    }                                                     \
-  } else {                                                \
-    v = INT_MAX;                                          \
-  }
-
-#undef CHECK_BETTER0
-#define CHECK_BETTER0(v, r, c) CHECK_BETTER(v, r, c)
-
-#undef CHECK_BETTER1
-#define CHECK_BETTER1(v, r, c)                                                 \
-  if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                      \
-    thismse = upsampled_masked_pref_error(xd, mask, mask_stride, vfp, z,       \
-                                          src_stride, upre(y, y_stride, r, c), \
-                                          y_stride, w, h, &sse);               \
-    if ((v = MVC(r, c) + thismse) < besterr) {                                 \
-      besterr = v;                                                             \
-      br = r;                                                                  \
-      bc = c;                                                                  \
-      *distortion = thismse;                                                   \
-      *sse1 = sse;                                                             \
-    }                                                                          \
-  } else {                                                                     \
-    v = INT_MAX;                                                               \
-  }
-
-int av1_find_best_masked_sub_pixel_tree(
-    const MACROBLOCK *x, const uint8_t *mask, int mask_stride, MV *bestmv,
-    const MV *ref_mv, int allow_hp, int error_per_bit,
-    const aom_variance_fn_ptr_t *vfp, int forced_stop, int iters_per_step,
-    int *mvjcost, int *mvcost[2], int *distortion, unsigned int *sse1,
-    int is_second) {
-  const uint8_t *const z = x->plane[0].src.buf;
-  const int src_stride = x->plane[0].src.stride;
-  const MACROBLOCKD *xd = &x->e_mbd;
-  unsigned int besterr = INT_MAX;
-  unsigned int sse;
-  int thismse;
-  unsigned int whichdir;
-  unsigned int halfiters = iters_per_step;
-  unsigned int quarteriters = iters_per_step;
-  unsigned int eighthiters = iters_per_step;
-
-  const int y_stride = xd->plane[0].pre[is_second].stride;
-  const int offset = bestmv->row * y_stride + bestmv->col;
-  const uint8_t *const y = xd->plane[0].pre[is_second].buf;
-
-  int rr = ref_mv->row;
-  int rc = ref_mv->col;
-  int br = bestmv->row * 8;
-  int bc = bestmv->col * 8;
-  int hstep = 4;
-  int tr = br;
-  int tc = bc;
-  int minc, maxc, minr, maxr;
-
-  av1_set_subpel_mv_search_range(&x->mv_limits, &minc, &maxc, &minr, &maxr,
-                                 ref_mv);
-
-  // central mv
-  bestmv->row *= 8;
-  bestmv->col *= 8;
-
-  // calculate central point error
-  besterr =
-      vfp->mvf(y + offset, y_stride, z, src_stride, mask, mask_stride, sse1);
-  *distortion = besterr;
-  besterr += mv_err_cost(bestmv, ref_mv, mvjcost, mvcost, error_per_bit);
-
-  // 1/2 pel
-  FIRST_LEVEL_CHECKS;
-  if (halfiters > 1) {
-    SECOND_LEVEL_CHECKS;
-  }
-  tr = br;
-  tc = bc;
-
-  // Note forced_stop: 0 - full, 1 - qtr only, 2 - half only
-  if (forced_stop != 2) {
-    hstep >>= 1;
-    FIRST_LEVEL_CHECKS;
-    if (quarteriters > 1) {
-      SECOND_LEVEL_CHECKS;
-    }
-    tr = br;
-    tc = bc;
-  }
-
-  if (allow_hp && forced_stop == 0) {
-    hstep >>= 1;
-    FIRST_LEVEL_CHECKS;
-    if (eighthiters > 1) {
-      SECOND_LEVEL_CHECKS;
-    }
-    tr = br;
-    tc = bc;
-  }
-  // These lines insure static analysis doesn't warn that
-  // tr and tc aren't used after the above point.
-  (void)tr;
-  (void)tc;
-
-  bestmv->row = br;
-  bestmv->col = bc;
-
-  return besterr;
-}
-
-static unsigned int setup_masked_center_error(
-    const uint8_t *mask, int mask_stride, const MV *bestmv, const MV *ref_mv,
-    int error_per_bit, const aom_variance_fn_ptr_t *vfp,
-    const uint8_t *const src, const int src_stride, const uint8_t *const y,
-    int y_stride, int offset, int *mvjcost, int *mvcost[2], unsigned int *sse1,
-    int *distortion) {
-  unsigned int besterr;
-  besterr =
-      vfp->mvf(y + offset, y_stride, src, src_stride, mask, mask_stride, sse1);
-  *distortion = besterr;
-  besterr += mv_err_cost(bestmv, ref_mv, mvjcost, mvcost, error_per_bit);
-  return besterr;
-}
-
-static int upsampled_masked_pref_error(const MACROBLOCKD *xd,
-                                       const uint8_t *mask, int mask_stride,
-                                       const aom_variance_fn_ptr_t *vfp,
-                                       const uint8_t *const src,
-                                       const int src_stride,
-                                       const uint8_t *const y, int y_stride,
-                                       int w, int h, unsigned int *sse) {
-  unsigned int besterr;
-#if CONFIG_HIGHBITDEPTH
-  if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
-    DECLARE_ALIGNED(16, uint16_t, pred16[MAX_SB_SQUARE]);
-    aom_highbd_upsampled_pred(pred16, w, h, y, y_stride);
-
-    besterr = vfp->mvf(CONVERT_TO_BYTEPTR(pred16), w, src, src_stride, mask,
-                       mask_stride, sse);
-  } else {
-    DECLARE_ALIGNED(16, uint8_t, pred[MAX_SB_SQUARE]);
-#else
-  DECLARE_ALIGNED(16, uint8_t, pred[MAX_SB_SQUARE]);
-  (void)xd;
-#endif  // CONFIG_HIGHBITDEPTH
-    aom_upsampled_pred(pred, w, h, y, y_stride);
-
-    besterr = vfp->mvf(pred, w, src, src_stride, mask, mask_stride, sse);
-#if CONFIG_HIGHBITDEPTH
-  }
-#endif
-  return besterr;
-}
-
-static unsigned int upsampled_setup_masked_center_error(
-    const MACROBLOCKD *xd, const uint8_t *mask, int mask_stride,
-    const MV *bestmv, const MV *ref_mv, int error_per_bit,
-    const aom_variance_fn_ptr_t *vfp, const uint8_t *const src,
-    const int src_stride, const uint8_t *const y, int y_stride, int w, int h,
-    int offset, int *mvjcost, int *mvcost[2], unsigned int *sse1,
-    int *distortion) {
-  unsigned int besterr =
-      upsampled_masked_pref_error(xd, mask, mask_stride, vfp, src, src_stride,
-                                  y + offset, y_stride, w, h, sse1);
-  *distortion = besterr;
-  besterr += mv_err_cost(bestmv, ref_mv, mvjcost, mvcost, error_per_bit);
-  return besterr;
-}
-
-int av1_find_best_masked_sub_pixel_tree_up(
-    const AV1_COMP *cpi, MACROBLOCK *x, const uint8_t *mask, int mask_stride,
-    int mi_row, int mi_col, MV *bestmv, const MV *ref_mv, int allow_hp,
-    int error_per_bit, const aom_variance_fn_ptr_t *vfp, int forced_stop,
-    int iters_per_step, int *mvjcost, int *mvcost[2], int *distortion,
-    unsigned int *sse1, int is_second, int use_upsampled_ref) {
-  const uint8_t *const z = x->plane[0].src.buf;
-  const uint8_t *const src_address = z;
-  const int src_stride = x->plane[0].src.stride;
-  MACROBLOCKD *xd = &x->e_mbd;
-  struct macroblockd_plane *const pd = &xd->plane[0];
-  MB_MODE_INFO *mbmi = &xd->mi[0]->mbmi;
-  unsigned int besterr = INT_MAX;
-  unsigned int sse;
-  unsigned int thismse;
-
-  int rr = ref_mv->row;
-  int rc = ref_mv->col;
-  int br = bestmv->row * 8;
-  int bc = bestmv->col * 8;
-  int hstep = 4;
-  int iter;
-  int round = 3 - forced_stop;
-  int tr = br;
-  int tc = bc;
-  const MV *search_step = search_step_table;
-  int idx, best_idx = -1;
-  unsigned int cost_array[5];
-  int kr, kc;
-  const int w = block_size_wide[mbmi->sb_type];
-  const int h = block_size_high[mbmi->sb_type];
-  int offset;
-  int y_stride;
-  const uint8_t *y;
-
-  const struct buf_2d backup_pred = pd->pre[is_second];
-  int minc, maxc, minr, maxr;
-
-  av1_set_subpel_mv_search_range(&x->mv_limits, &minc, &maxc, &minr, &maxr,
-                                 ref_mv);
-
-  if (use_upsampled_ref) {
-    int ref = xd->mi[0]->mbmi.ref_frame[is_second];
-    const YV12_BUFFER_CONFIG *upsampled_ref = get_upsampled_ref(cpi, ref);
-    setup_pred_plane(&pd->pre[is_second], mbmi->sb_type,
-                     upsampled_ref->y_buffer, upsampled_ref->y_crop_width,
-                     upsampled_ref->y_crop_height, upsampled_ref->y_stride,
-                     (mi_row << 3), (mi_col << 3), NULL, pd->subsampling_x,
-                     pd->subsampling_y);
-  }
-  y = pd->pre[is_second].buf;
-  y_stride = pd->pre[is_second].stride;
-  offset = bestmv->row * y_stride + bestmv->col;
-
-  if (!allow_hp)
-    if (round == 3) round = 2;
-
-  bestmv->row *= 8;
-  bestmv->col *= 8;
-
-  // use_upsampled_ref can be 0 or 1
-  if (use_upsampled_ref)
-    besterr = upsampled_setup_masked_center_error(
-        xd, mask, mask_stride, bestmv, ref_mv, error_per_bit, vfp, z,
-        src_stride, y, y_stride, w, h, (offset * 8), mvjcost, mvcost, sse1,
-        distortion);
-  else
-    besterr = setup_masked_center_error(
-        mask, mask_stride, bestmv, ref_mv, error_per_bit, vfp, z, src_stride, y,
-        y_stride, offset, mvjcost, mvcost, sse1, distortion);
-
-  for (iter = 0; iter < round; ++iter) {
-    // Check vertical and horizontal sub-pixel positions.
-    for (idx = 0; idx < 4; ++idx) {
-      tr = br + search_step[idx].row;
-      tc = bc + search_step[idx].col;
-      if (tc >= minc && tc <= maxc && tr >= minr && tr <= maxr) {
-        MV this_mv = { tr, tc };
-
-        if (use_upsampled_ref) {
-          const uint8_t *const pre_address = y + tr * y_stride + tc;
-
-          thismse = upsampled_masked_pref_error(
-              xd, mask, mask_stride, vfp, src_address, src_stride, pre_address,
-              y_stride, w, h, &sse);
-        } else {
-          const uint8_t *const pre_address =
-              y + (tr >> 3) * y_stride + (tc >> 3);
-          thismse = vfp->msvf(pre_address, y_stride, sp(tc), sp(tr),
-                              src_address, src_stride, mask, mask_stride, &sse);
-        }
-
-        cost_array[idx] = thismse + mv_err_cost(&this_mv, ref_mv, mvjcost,
-                                                mvcost, error_per_bit);
-
-        if (cost_array[idx] < besterr) {
-          best_idx = idx;
-          besterr = cost_array[idx];
-          *distortion = thismse;
-          *sse1 = sse;
-        }
-      } else {
-        cost_array[idx] = INT_MAX;
-      }
-    }
-
-    // Check diagonal sub-pixel position
-    kc = (cost_array[0] <= cost_array[1] ? -hstep : hstep);
-    kr = (cost_array[2] <= cost_array[3] ? -hstep : hstep);
-
-    tc = bc + kc;
-    tr = br + kr;
-    if (tc >= minc && tc <= maxc && tr >= minr && tr <= maxr) {
-      MV this_mv = { tr, tc };
-
-      if (use_upsampled_ref) {
-        const uint8_t *const pre_address = y + tr * y_stride + tc;
-
-        thismse = upsampled_masked_pref_error(
-            xd, mask, mask_stride, vfp, src_address, src_stride, pre_address,
-            y_stride, w, h, &sse);
-      } else {
-        const uint8_t *const pre_address = y + (tr >> 3) * y_stride + (tc >> 3);
-
-        thismse = vfp->msvf(pre_address, y_stride, sp(tc), sp(tr), src_address,
-                            src_stride, mask, mask_stride, &sse);
-      }
-
-      cost_array[4] = thismse + mv_err_cost(&this_mv, ref_mv, mvjcost, mvcost,
-                                            error_per_bit);
-
-      if (cost_array[4] < besterr) {
-        best_idx = 4;
-        besterr = cost_array[4];
-        *distortion = thismse;
-        *sse1 = sse;
-      }
-    } else {
-      cost_array[idx] = INT_MAX;
-    }
-
-    if (best_idx < 4 && best_idx >= 0) {
-      br += search_step[best_idx].row;
-      bc += search_step[best_idx].col;
-    } else if (best_idx == 4) {
-      br = tr;
-      bc = tc;
-    }
-
-    if (iters_per_step > 1 && best_idx != -1) {
-      if (use_upsampled_ref) {
-        SECOND_LEVEL_CHECKS_BEST(1);
-      } else {
-        SECOND_LEVEL_CHECKS_BEST(0);
-      }
-    }
-
-    tr = br;
-    tc = bc;
-
-    search_step += 4;
-    hstep >>= 1;
-    best_idx = -1;
-  }
-
-  // These lines insure static analysis doesn't warn that
-  // tr and tc aren't used after the above point.
-  (void)tr;
-  (void)tc;
-
-  bestmv->row = br;
-  bestmv->col = bc;
-
-  if (use_upsampled_ref) {
-    pd->pre[is_second] = backup_pred;
-  }
-
-  return besterr;
-}
-
-#undef DIST
-#undef MVC
-#undef CHECK_BETTER
-
-static int get_masked_mvpred_var(const MACROBLOCK *x, const uint8_t *mask,
-                                 int mask_stride, const MV *best_mv,
-                                 const MV *center_mv,
-                                 const aom_variance_fn_ptr_t *vfp,
-                                 int use_mvcost, int is_second) {
-  const MACROBLOCKD *const xd = &x->e_mbd;
-  const struct buf_2d *const what = &x->plane[0].src;
-  const struct buf_2d *const in_what = &xd->plane[0].pre[is_second];
-  const MV mv = { best_mv->row * 8, best_mv->col * 8 };
-  unsigned int unused;
-
-  return vfp->mvf(what->buf, what->stride, get_buf_from_mv(in_what, best_mv),
-                  in_what->stride, mask, mask_stride, &unused) +
-         (use_mvcost ? mv_err_cost(&mv, center_mv, x->nmvjointcost, x->mvcost,
-                                   x->errorperbit)
-                     : 0);
-}
-
-int masked_refining_search_sad(const MACROBLOCK *x, const uint8_t *mask,
-                               int mask_stride, MV *ref_mv, int error_per_bit,
-                               int search_range,
-                               const aom_variance_fn_ptr_t *fn_ptr,
-                               const MV *center_mv, int is_second) {
-  const MV neighbors[4] = { { -1, 0 }, { 0, -1 }, { 0, 1 }, { 1, 0 } };
-  const MACROBLOCKD *const xd = &x->e_mbd;
-  const struct buf_2d *const what = &x->plane[0].src;
-  const struct buf_2d *const in_what = &xd->plane[0].pre[is_second];
-  const MV fcenter_mv = { center_mv->row >> 3, center_mv->col >> 3 };
-  unsigned int best_sad =
-      fn_ptr->msdf(what->buf, what->stride, get_buf_from_mv(in_what, ref_mv),
-                   in_what->stride, mask, mask_stride) +
-      mvsad_err_cost(x, ref_mv, &fcenter_mv, error_per_bit);
-  int i, j;
-
-  for (i = 0; i < search_range; i++) {
-    int best_site = -1;
-
-    for (j = 0; j < 4; j++) {
-      const MV mv = { ref_mv->row + neighbors[j].row,
-                      ref_mv->col + neighbors[j].col };
-      if (is_mv_in(&x->mv_limits, &mv)) {
-        unsigned int sad =
-            fn_ptr->msdf(what->buf, what->stride, get_buf_from_mv(in_what, &mv),
-                         in_what->stride, mask, mask_stride);
-        if (sad < best_sad) {
-          sad += mvsad_err_cost(x, &mv, &fcenter_mv, error_per_bit);
-          if (sad < best_sad) {
-            best_sad = sad;
-            best_site = j;
-          }
-        }
-      }
-    }
-
-    if (best_site == -1) {
-      break;
-    } else {
-      ref_mv->row += neighbors[best_site].row;
-      ref_mv->col += neighbors[best_site].col;
-    }
-  }
-  return best_sad;
-}
-
-int masked_diamond_search_sad(const MACROBLOCK *x,
-                              const search_site_config *cfg,
-                              const uint8_t *mask, int mask_stride, MV *ref_mv,
-                              MV *best_mv, int search_param, int sad_per_bit,
-                              int *num00, const aom_variance_fn_ptr_t *fn_ptr,
-                              const MV *center_mv, int is_second) {
-  const MACROBLOCKD *const xd = &x->e_mbd;
-  const struct buf_2d *const what = &x->plane[0].src;
-  const struct buf_2d *const in_what = &xd->plane[0].pre[is_second];
-  // search_param determines the length of the initial step and hence the number
-  // of iterations
-  // 0 = initial step (MAX_FIRST_STEP) pel : 1 = (MAX_FIRST_STEP/2) pel, 2 =
-  // (MAX_FIRST_STEP/4) pel... etc.
-  const search_site *const ss = &cfg->ss[search_param * cfg->searches_per_step];
-  const int tot_steps = (cfg->ss_count / cfg->searches_per_step) - search_param;
-  const MV fcenter_mv = { center_mv->row >> 3, center_mv->col >> 3 };
-  const uint8_t *best_address, *in_what_ref;
-  int best_sad = INT_MAX;
-  int best_site = 0;
-  int last_site = 0;
-  int i, j, step;
-
-  clamp_mv(ref_mv, x->mv_limits.col_min, x->mv_limits.col_max,
-           x->mv_limits.row_min, x->mv_limits.row_max);
-  in_what_ref = get_buf_from_mv(in_what, ref_mv);
-  best_address = in_what_ref;
-  *num00 = 0;
-  *best_mv = *ref_mv;
-
-  // Check the starting position
-  best_sad = fn_ptr->msdf(what->buf, what->stride, best_address,
-                          in_what->stride, mask, mask_stride) +
-             mvsad_err_cost(x, best_mv, &fcenter_mv, sad_per_bit);
-
-  i = 1;
-
-  for (step = 0; step < tot_steps; step++) {
-    for (j = 0; j < cfg->searches_per_step; j++) {
-      const MV mv = { best_mv->row + ss[i].mv.row,
-                      best_mv->col + ss[i].mv.col };
-      if (is_mv_in(&x->mv_limits, &mv)) {
-        int sad =
-            fn_ptr->msdf(what->buf, what->stride, best_address + ss[i].offset,
-                         in_what->stride, mask, mask_stride);
-        if (sad < best_sad) {
-          sad += mvsad_err_cost(x, &mv, &fcenter_mv, sad_per_bit);
-          if (sad < best_sad) {
-            best_sad = sad;
-            best_site = i;
-          }
-        }
-      }
-
-      i++;
-    }
-
-    if (best_site != last_site) {
-      best_mv->row += ss[best_site].mv.row;
-      best_mv->col += ss[best_site].mv.col;
-      best_address += ss[best_site].offset;
-      last_site = best_site;
-#if defined(NEW_DIAMOND_SEARCH)
-      while (1) {
-        const MV this_mv = { best_mv->row + ss[best_site].mv.row,
-                             best_mv->col + ss[best_site].mv.col };
-        if (is_mv_in(&x->mv_limits, &this_mv)) {
-          int sad = fn_ptr->msdf(what->buf, what->stride,
-                                 best_address + ss[best_site].offset,
-                                 in_what->stride, mask, mask_stride);
-          if (sad < best_sad) {
-            sad += mvsad_err_cost(x, &this_mv, &fcenter_mv, sad_per_bit);
-            if (sad < best_sad) {
-              best_sad = sad;
-              best_mv->row += ss[best_site].mv.row;
-              best_mv->col += ss[best_site].mv.col;
-              best_address += ss[best_site].offset;
-              continue;
-            }
-          }
-        }
-        break;
-      }
-#endif
-    } else if (best_address == in_what_ref) {
-      (*num00)++;
-    }
-  }
-  return best_sad;
-}
-
-int av1_masked_full_pixel_diamond(const AV1_COMP *cpi, MACROBLOCK *x,
-                                  const uint8_t *mask, int mask_stride,
-                                  MV *mvp_full, int step_param, int sadpb,
-                                  int further_steps, int do_refine,
-                                  const aom_variance_fn_ptr_t *fn_ptr,
-                                  const MV *ref_mv, MV *dst_mv, int is_second) {
-  MV temp_mv;
-  int thissme, n, num00 = 0;
-  int bestsme = masked_diamond_search_sad(x, &cpi->ss_cfg, mask, mask_stride,
-                                          mvp_full, &temp_mv, step_param, sadpb,
-                                          &n, fn_ptr, ref_mv, is_second);
-  if (bestsme < INT_MAX)
-    bestsme = get_masked_mvpred_var(x, mask, mask_stride, &temp_mv, ref_mv,
-                                    fn_ptr, 1, is_second);
-  *dst_mv = temp_mv;
-
-  // If there won't be more n-step search, check to see if refining search is
-  // needed.
-  if (n > further_steps) do_refine = 0;
-
-  while (n < further_steps) {
-    ++n;
-
-    if (num00) {
-      num00--;
-    } else {
-      thissme = masked_diamond_search_sad(
-          x, &cpi->ss_cfg, mask, mask_stride, mvp_full, &temp_mv,
-          step_param + n, sadpb, &num00, fn_ptr, ref_mv, is_second);
-      if (thissme < INT_MAX)
-        thissme = get_masked_mvpred_var(x, mask, mask_stride, &temp_mv, ref_mv,
-                                        fn_ptr, 1, is_second);
-
-      // check to see if refining search is needed.
-      if (num00 > further_steps - n) do_refine = 0;
-
-      if (thissme < bestsme) {
-        bestsme = thissme;
-        *dst_mv = temp_mv;
-      }
-    }
-  }
-
-  // final 1-away diamond refining search
-  if (do_refine) {
-    const int search_range = 8;
-    MV best_mv = *dst_mv;
-    thissme =
-        masked_refining_search_sad(x, mask, mask_stride, &best_mv, sadpb,
-                                   search_range, fn_ptr, ref_mv, is_second);
-    if (thissme < INT_MAX)
-      thissme = get_masked_mvpred_var(x, mask, mask_stride, &best_mv, ref_mv,
-                                      fn_ptr, 1, is_second);
-    if (thissme < bestsme) {
-      bestsme = thissme;
-      *dst_mv = best_mv;
-    }
-  }
-  return bestsme;
-}
-#endif  // CONFIG_EXT_INTER
-
 #if CONFIG_MOTION_VAR
 /* returns subpixel variance error function */
 #define DIST(r, c) \
   vfp->osvf(pre(y, y_stride, r, c), y_stride, sp(c), sp(r), z, mask, &sse)
 
 /* checks if (r, c) has better score than previous best */
-#define MVC(r, c)                                                         \
-  (mvcost                                                                 \
-       ? ((mvjcost[((r) != rr) * 2 + ((c) != rc)] + mvcost[0][((r)-rr)] + \
-           mvcost[1][((c)-rc)]) *                                         \
-              error_per_bit +                                             \
-          4096) >>                                                        \
-             13                                                           \
-       : 0)
+#define MVC(r, c)                                                              \
+  (unsigned int)(mvcost                                                        \
+                     ? ((mvjcost[((r) != rr) * 2 + ((c) != rc)] +              \
+                         mvcost[0][((r)-rr)] + (int64_t)mvcost[1][((c)-rc)]) * \
+                            error_per_bit +                                    \
+                        4096) >>                                               \
+                           13                                                  \
+                     : 0)
 
 #define CHECK_BETTER(v, r, c)                             \
   if (c >= minc && c <= maxc && r >= minr && r <= maxr) { \
@@ -3452,15 +3143,21 @@ int av1_obmc_full_pixel_diamond(const AV1_COMP *cpi, MACROBLOCK *x,
   (void)thismse;           \
   (void)cost_list;
 // Return the maximum MV.
-int av1_return_max_sub_pixel_mv(MACROBLOCK *x, const MV *ref_mv, int allow_hp,
-                                int error_per_bit,
-                                const aom_variance_fn_ptr_t *vfp,
-                                int forced_stop, int iters_per_step,
-                                int *cost_list, int *mvjcost, int *mvcost[2],
-                                int *distortion, unsigned int *sse1,
-                                const uint8_t *second_pred, int w, int h,
-                                int use_upsampled_ref) {
+int av1_return_max_sub_pixel_mv(
+    MACROBLOCK *x, const MV *ref_mv, int allow_hp, int error_per_bit,
+    const aom_variance_fn_ptr_t *vfp, int forced_stop, int iters_per_step,
+    int *cost_list, int *mvjcost, int *mvcost[2], int *distortion,
+    unsigned int *sse1, const uint8_t *second_pred,
+#if CONFIG_EXT_INTER
+    const uint8_t *mask, int mask_stride, int invert_mask,
+#endif
+    int w, int h, int use_upsampled_ref) {
   COMMON_MV_TEST;
+#if CONFIG_EXT_INTER
+  (void)mask;
+  (void)mask_stride;
+  (void)invert_mask;
+#endif
   (void)minr;
   (void)minc;
   bestmv->row = maxr;
@@ -3472,17 +3169,23 @@ int av1_return_max_sub_pixel_mv(MACROBLOCK *x, const MV *ref_mv, int allow_hp,
   return besterr;
 }
 // Return the minimum MV.
-int av1_return_min_sub_pixel_mv(MACROBLOCK *x, const MV *ref_mv, int allow_hp,
-                                int error_per_bit,
-                                const aom_variance_fn_ptr_t *vfp,
-                                int forced_stop, int iters_per_step,
-                                int *cost_list, int *mvjcost, int *mvcost[2],
-                                int *distortion, unsigned int *sse1,
-                                const uint8_t *second_pred, int w, int h,
-                                int use_upsampled_ref) {
+int av1_return_min_sub_pixel_mv(
+    MACROBLOCK *x, const MV *ref_mv, int allow_hp, int error_per_bit,
+    const aom_variance_fn_ptr_t *vfp, int forced_stop, int iters_per_step,
+    int *cost_list, int *mvjcost, int *mvcost[2], int *distortion,
+    unsigned int *sse1, const uint8_t *second_pred,
+#if CONFIG_EXT_INTER
+    const uint8_t *mask, int mask_stride, int invert_mask,
+#endif
+    int w, int h, int use_upsampled_ref) {
   COMMON_MV_TEST;
   (void)maxr;
   (void)maxc;
+#if CONFIG_EXT_INTER
+  (void)mask;
+  (void)mask_stride;
+  (void)invert_mask;
+#endif
   bestmv->row = minr;
   bestmv->col = minc;
   besterr = 0;

@@ -3375,7 +3375,7 @@ FullscreenTransitionThreadProc(LPVOID lpParam)
   data = nullptr;
 
   MSG msg;
-  while (WinUtils::GetMessage(&msg, nullptr, 0, 0)) {
+  while (::GetMessageW(&msg, nullptr, 0, 0)) {
     ::TranslateMessage(&msg);
     ::DispatchMessage(&msg);
   }

@@ -75,7 +75,8 @@ function (get_asm_obj_format out_format)
       set(objformat "macho64")
     elseif ("${AOM_TARGET_SYSTEM}" STREQUAL "Linux")
       set(objformat "elf64")
-    elseif ("${AOM_TARGET_SYSTEM}" STREQUAL "Windows")
+    elseif ("${AOM_TARGET_SYSTEM}" STREQUAL "MSYS" OR
+            "${AOM_TARGET_SYSTEM}" STREQUAL "Windows")
       set(objformat "win64")
     else ()
       message(FATAL_ERROR "Unknown obj format: ${AOM_TARGET_SYSTEM}")
@@ -85,7 +86,8 @@ function (get_asm_obj_format out_format)
       set(objformat "macho32")
     elseif ("${AOM_TARGET_SYSTEM}" STREQUAL "Linux")
       set(objformat "elf32")
-    elseif ("${AOM_TARGET_SYSTEM}" STREQUAL "Windows")
+    elseif ("${AOM_TARGET_SYSTEM}" STREQUAL "MSYS" OR
+            "${AOM_TARGET_SYSTEM}" STREQUAL "Windows")
       set(objformat "win32")
     else ()
       message(FATAL_ERROR "Unknown obj format: ${AOM_TARGET_SYSTEM}")
@@ -120,7 +122,7 @@ function (add_asm_library lib_name asm_sources dependent_target)
     add_custom_command(OUTPUT "${asm_object}"
                        COMMAND ${AS_EXECUTABLE}
                        ARGS ${AOM_AS_FLAGS}
-                            -I${AOM_ROOT} -I${AOM_CONFIG_DIR}
+                            -I${AOM_ROOT}/ -I${AOM_CONFIG_DIR}/
                             -o "${asm_object}" "${asm_source}"
                        DEPENDS "${asm_source}"
                        COMMENT "Building ASM object ${asm_object}"
@@ -141,7 +143,7 @@ function (add_asm_library lib_name asm_sources dependent_target)
        "void ${lib_name}_dummy_function(void) {}\n")
   target_sources(${lib_name} PUBLIC ${dummy_c_file})
 
-  target_link_libraries(${dependent_target} PRIVATE ${lib_name})
+  target_link_libraries(${dependent_target} ${AOM_LIB_LINK_TYPE} ${lib_name})
 
   # Add the new lib target to the global list of aom library targets.
   list(APPEND AOM_LIB_TARGETS ${lib_name})

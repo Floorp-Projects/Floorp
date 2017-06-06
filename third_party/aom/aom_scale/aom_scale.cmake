@@ -8,6 +8,9 @@
 ## Media Patent License 1.0 was not distributed with this source code in the
 ## PATENTS file, you can obtain it at www.aomedia.org/license/patent.
 ##
+if (NOT AOM_AOM_SCALE_AOM_SCALE_CMAKE_)
+set(AOM_AOM_SCALE_AOM_SCALE_CMAKE_ 1)
+
 set(AOM_SCALE_SOURCES
     "${AOM_ROOT}/aom_scale/aom_scale.h"
     "${AOM_ROOT}/aom_scale/generic/aom_scale.c"
@@ -32,3 +35,5 @@ function (setup_aom_scale_targets)
 
   set(AOM_LIB_TARGETS ${AOM_LIB_TARGETS} aom_scale PARENT_SCOPE)
 endfunction ()
+
+endif ()  # AOM_AOM_SCALE_AOM_SCALE_CMAKE_

@@ -312,8 +312,6 @@ static int file_is_raw(struct AvxInputContext *input) {
   int is_raw = 0;
   aom_codec_stream_info_t si;
 
-  si.sz = sizeof(si);
-
   if (fread(buf, 1, 32, input->file) == 32) {
     int i;
 
@@ -892,28 +890,32 @@ static int main_loop(int argc, const char **argv_) {
         output_bit_depth = img->bit_depth;
       }
       // Shift up or down if necessary
-      if (output_bit_depth != 0 && output_bit_depth != img->bit_depth) {
+      if (output_bit_depth != 0) {
         const aom_img_fmt_t shifted_fmt =
             output_bit_depth == 8
                 ? img->fmt ^ (img->fmt & AOM_IMG_FMT_HIGHBITDEPTH)
                 : img->fmt | AOM_IMG_FMT_HIGHBITDEPTH;
-        if (img_shifted &&
-            img_shifted_realloc_required(img, img_shifted, shifted_fmt)) {
-          aom_img_free(img_shifted);
-          img_shifted = NULL;
+
+        if (shifted_fmt != img->fmt || output_bit_depth != img->bit_depth) {
+          if (img_shifted &&
+              img_shifted_realloc_required(img, img_shifted, shifted_fmt)) {
+            aom_img_free(img_shifted);
+            img_shifted = NULL;
+          }
+          if (!img_shifted) {
+            img_shifted =
+                aom_img_alloc(NULL, shifted_fmt, img->d_w, img->d_h, 16);
+            img_shifted->bit_depth = output_bit_depth;
+          }
+          if (output_bit_depth > img->bit_depth) {
+            aom_img_upshift(img_shifted, img,
+                            output_bit_depth - img->bit_depth);
+          } else {
+            aom_img_downshift(img_shifted, img,
+                              img->bit_depth - output_bit_depth);
+          }
+          img = img_shifted;
         }
-        if (!img_shifted) {
-          img_shifted =
-              aom_img_alloc(NULL, shifted_fmt, img->d_w, img->d_h, 16);
-          img_shifted->bit_depth = output_bit_depth;
-        }
-        if (output_bit_depth > img->bit_depth) {
-          aom_img_upshift(img_shifted, img, output_bit_depth - img->bit_depth);
-        } else {
-          aom_img_downshift(img_shifted, img,
-                            img->bit_depth - output_bit_depth);
-        }
-        img = img_shifted;
       }
 #endif
 

@@ -19,7 +19,7 @@
 #include "aom_ports/mem.h"
 #include "av1/common/blockd.h"
 #include "av1/common/av1_fwd_txfm1d.h"
-#include "av1/common/av1_fwd_txfm2d_cfg.h"
+#include "av1/common/av1_fwd_txfm1d_cfg.h"
 #include "av1/common/idct.h"
 
 static INLINE void range_check(const tran_low_t *input, const int size,
@@ -1022,6 +1022,10 @@ static void fhalfright32(const tran_low_t *input, tran_low_t *output) {
 }
 
 #if CONFIG_EXT_TX
+// TODO(sarahparker) these functions will be removed once the highbitdepth
+// codepath works properly for rectangular transforms. They have almost
+// identical versions in av1_fwd_txfm1d.c, but those are currently only
+// being used for square transforms.
 static void fidtx4(const tran_low_t *input, tran_low_t *output) {
   int i;
   for (i = 0; i < 4; ++i)
@@ -2133,8 +2137,7 @@ static void fdct64_col(const tran_low_t *input, tran_low_t *output) {
   int32_t in[64], out[64];
   int i;
   for (i = 0; i < 64; ++i) in[i] = (int32_t)input[i];
-  av1_fdct64_new(in, out, fwd_cos_bit_col_dct_dct_64,
-                 fwd_stage_range_col_dct_dct_64);
+  av1_fdct64_new(in, out, fwd_cos_bit_col_dct_64, fwd_stage_range_col_dct_64);
   for (i = 0; i < 64; ++i) output[i] = (tran_low_t)out[i];
 }
 
@@ -2142,8 +2145,7 @@ static void fdct64_row(const tran_low_t *input, tran_low_t *output) {
   int32_t in[64], out[64];
   int i;
   for (i = 0; i < 64; ++i) in[i] = (int32_t)input[i];
-  av1_fdct64_new(in, out, fwd_cos_bit_row_dct_dct_64,
-                 fwd_stage_range_row_dct_dct_64);
+  av1_fdct64_new(in, out, fwd_cos_bit_row_dct_64, fwd_stage_range_row_dct_64);
   for (i = 0; i < 64; ++i) output[i] = (tran_low_t)out[i];
 }
 
@@ -2225,4 +2227,49 @@ void av1_highbd_fht64x64_c(const int16_t *input, tran_low_t *output, int stride,
 }
 #endif  // CONFIG_TX64X64
 #endif  // CONFIG_HIGHBITDEPTH
+
+#if CONFIG_DPCM_INTRA
+void av1_dpcm_ft4_c(const int16_t *input, int stride, TX_TYPE_1D tx_type,
+                    tran_low_t *output) {
+  assert(tx_type < TX_TYPES_1D);
+  static const transform_1d FHT[] = { fdct4, fadst4, fadst4, fidtx4 };
+  const transform_1d ft = FHT[tx_type];
+  tran_low_t temp_in[4];
+  for (int i = 0; i < 4; ++i)
+    temp_in[i] = (tran_low_t)fdct_round_shift(input[i * stride] * 4 * Sqrt2);
+  ft(temp_in, output);
+}
+
+void av1_dpcm_ft8_c(const int16_t *input, int stride, TX_TYPE_1D tx_type,
+                    tran_low_t *output) {
+  assert(tx_type < TX_TYPES_1D);
+  static const transform_1d FHT[] = { fdct8, fadst8, fadst8, fidtx8 };
+  const transform_1d ft = FHT[tx_type];
+  tran_low_t temp_in[8];
+  for (int i = 0; i < 8; ++i) temp_in[i] = input[i * stride] * 4;
+  ft(temp_in, output);
+}
+
+void av1_dpcm_ft16_c(const int16_t *input, int stride, TX_TYPE_1D tx_type,
+                     tran_low_t *output) {
+  assert(tx_type < TX_TYPES_1D);
+  static const transform_1d FHT[] = { fdct16, fadst16, fadst16, fidtx16 };
+  const transform_1d ft = FHT[tx_type];
+  tran_low_t temp_in[16];
+  for (int i = 0; i < 16; ++i)
+    temp_in[i] = (tran_low_t)fdct_round_shift(input[i * stride] * 2 * Sqrt2);
+  ft(temp_in, output);
+}
+
+void av1_dpcm_ft32_c(const int16_t *input, int stride, TX_TYPE_1D tx_type,
+                     tran_low_t *output) {
+  assert(tx_type < TX_TYPES_1D);
+  static const transform_1d FHT[] = { fdct32, fhalfright32, fhalfright32,
+                                      fidtx32 };
+  const transform_1d ft = FHT[tx_type];
+  tran_low_t temp_in[32];
+  for (int i = 0; i < 32; ++i) temp_in[i] = input[i * stride];
+  ft(temp_in, output);
+}
+#endif  // CONFIG_DPCM_INTRA
 #endif  // !AV1_DCT_GTEST

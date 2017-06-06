@@ -17,7 +17,7 @@
 #include "test/acm_random.h"
 #include "test/util.h"
 #include "test/av1_txfm_test.h"
-#include "av1/common/av1_inv_txfm2d_cfg.h"
+#include "av1/common/av1_inv_txfm1d_cfg.h"
 
 using libaom_test::ACMRandom;
 using libaom_test::input_base;

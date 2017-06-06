@@ -1966,6 +1966,15 @@ MediaCacheStream::~MediaCacheStream()
     gMediaCache->ReleaseStream(this);
     MediaCache::MaybeShutdown();
   }
+
+  uint32_t lengthKb = uint32_t(
+    std::min(std::max(mStreamLength, int64_t(0)) / 1024, int64_t(UINT32_MAX)));
+  LOG("MediaCacheStream::~MediaCacheStream(this=%p) "
+      "MEDIACACHESTREAM_LENGTH_KB=%" PRIu32,
+      this,
+      lengthKb);
+  Telemetry::Accumulate(Telemetry::HistogramID::MEDIACACHESTREAM_LENGTH_KB,
+                        lengthKb);
 }
 
 void

@@ -15,6 +15,10 @@
 #include <stdlib.h>
 #include <memory.h>
 
+#define MATCH_SZ 13
+#define MATCH_SZ_BY2 ((MATCH_SZ - 1) / 2)
+#define MATCH_SZ_SQ (MATCH_SZ * MATCH_SZ)
+
 typedef struct {
   int x, y;
   int rx, ry;

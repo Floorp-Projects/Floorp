@@ -86,17 +86,28 @@ void av1_update_boundary_info(const struct AV1Common *cm,
     for (col = mi_col; col < (mi_col + cm->mib_size); col++) {
       MODE_INFO *const mi = cm->mi + row * cm->mi_stride + col;
       mi->mbmi.boundary_info = 0;
+
+      // If horizontal dependent tile is enabled, then the horizontal
+      // tile boundary is not treated as real tile boundary for loop
+      // filtering, only the horizontal tile group boundary is treated
+      // as tile boundary.
+      // Otherwise, tile group boundary is treated the same as tile boundary.
+      // Loop filtering operation is done based on the
+      // loopfilter_across_tiles_enabled flag for both tile boundary and tile
+      // group boundary.
+
       if (cm->tile_cols * cm->tile_rows > 1) {
 #if CONFIG_DEPENDENT_HORZTILES
+#if CONFIG_TILE_GROUPS
         if (row == tile_info->mi_row_start &&
             (!cm->dependent_horz_tiles || tile_info->tg_horz_boundary))
-#if CONFIG_TILE_GROUPS
 #else
-          if (row == tile_info->mi_row_start && !cm->dependent_horz_tiles)
+        if (row == tile_info->mi_row_start && !cm->dependent_horz_tiles)
 #endif  // CONFIG_TILE_GROUPS
 #else
         if (row == tile_info->mi_row_start)
 #endif  // CONFIG_DEPENDENT_HORZTILES
+
           mi->mbmi.boundary_info |= TILE_ABOVE_BOUNDARY;
         if (col == tile_info->mi_col_start)
           mi->mbmi.boundary_info |= TILE_LEFT_BOUNDARY;

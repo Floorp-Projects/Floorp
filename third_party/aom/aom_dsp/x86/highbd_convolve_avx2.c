@@ -14,30 +14,6 @@
 #include "./aom_dsp_rtcd.h"
 #include "aom_dsp/x86/convolve.h"
 
-#define CONV8_ROUNDING_BITS (7)
-
-static const uint8_t signal_pattern_0[32] = { 0, 1, 2, 3, 2, 3, 4, 5, 4, 5, 6,
-                                              7, 6, 7, 8, 9, 0, 1, 2, 3, 2, 3,
-                                              4, 5, 4, 5, 6, 7, 6, 7, 8, 9 };
-
-static const uint8_t signal_pattern_1[32] = { 4, 5, 6,  7,  6,  7,  8,  9,
-                                              8, 9, 10, 11, 10, 11, 12, 13,
-                                              4, 5, 6,  7,  6,  7,  8,  9,
-                                              8, 9, 10, 11, 10, 11, 12, 13 };
-
-static const uint8_t signal_pattern_2[32] = { 6,  7,  8,  9,  8,  9,  10, 11,
-                                              10, 11, 12, 13, 12, 13, 14, 15,
-                                              6,  7,  8,  9,  8,  9,  10, 11,
-                                              10, 11, 12, 13, 12, 13, 14, 15 };
-
-static const uint32_t signal_index[8] = { 2, 3, 4, 5, 2, 3, 4, 5 };
-
-typedef enum { PACK_8x1, PACK_8x2, PACK_16x1 } PixelPackFormat;
-
-typedef void (*WritePixels)(const __m256i *y0, const __m256i *y1,
-                            const __m256i *mask, uint16_t *dst,
-                            ptrdiff_t pitch);
-
 // -----------------------------------------------------------------------------
 // Copy and average
 
@@ -217,6 +193,27 @@ void aom_highbd_convolve_avg_avx2(const uint8_t *src8, ptrdiff_t src_stride,
 }
 
 // -----------------------------------------------------------------------------
+// Horizontal and vertical filtering
+
+#define CONV8_ROUNDING_BITS (7)
+
+static const uint8_t signal_pattern_0[32] = { 0, 1, 2, 3, 2, 3, 4, 5, 4, 5, 6,
+                                              7, 6, 7, 8, 9, 0, 1, 2, 3, 2, 3,
+                                              4, 5, 4, 5, 6, 7, 6, 7, 8, 9 };
+
+static const uint8_t signal_pattern_1[32] = { 4, 5, 6,  7,  6,  7,  8,  9,
+                                              8, 9, 10, 11, 10, 11, 12, 13,
+                                              4, 5, 6,  7,  6,  7,  8,  9,
+                                              8, 9, 10, 11, 10, 11, 12, 13 };
+
+static const uint8_t signal_pattern_2[32] = { 6,  7,  8,  9,  8,  9,  10, 11,
+                                              10, 11, 12, 13, 12, 13, 14, 15,
+                                              6,  7,  8,  9,  8,  9,  10, 11,
+                                              10, 11, 12, 13, 12, 13, 14, 15 };
+
+static const uint32_t signal_index[8] = { 2, 3, 4, 5, 2, 3, 4, 5 };
+
+// -----------------------------------------------------------------------------
 // Horizontal Filtering
 
 static INLINE void pack_pixels(const __m256i *s, __m256i *p /*p[4]*/) {
@@ -248,52 +245,30 @@ static INLINE void pack_16_pixels(const __m256i *s0, const __m256i *s1,
   x[7] = _mm256_permute2x128_si256(pp[1], pp[5], 0x31);
 }
 
-static INLINE void pack_pixels_with_format(const uint16_t *src,
-                                           PixelPackFormat fmt,
-                                           ptrdiff_t stride, __m256i *x) {
-  switch (fmt) {
-    case PACK_8x1: {
-      __m256i pp[8];
-      __m256i s0;
-      s0 = _mm256_loadu_si256((const __m256i *)src);
-      pack_pixels(&s0, pp);
-      x[0] = _mm256_permute2x128_si256(pp[0], pp[2], 0x30);
-      x[1] = _mm256_permute2x128_si256(pp[1], pp[3], 0x30);
-      x[2] = _mm256_permute2x128_si256(pp[2], pp[0], 0x30);
-      x[3] = _mm256_permute2x128_si256(pp[3], pp[1], 0x30);
-      break;
-    }
-    case PACK_8x2: {
-      __m256i s0, s1;
-      s0 = _mm256_loadu_si256((const __m256i *)src);
-      s1 = _mm256_loadu_si256((const __m256i *)(src + stride));
-      pack_16_pixels(&s0, &s1, x);
-      break;
-    }
-    case PACK_16x1: {
-      __m256i s0, s1;
-      s0 = _mm256_loadu_si256((const __m256i *)src);
-      s1 = _mm256_loadu_si256((const __m256i *)(src + 8));
-      pack_16_pixels(&s0, &s1, x);
-      break;
-    }
-    default: { assert(0); }
-  }
+static INLINE void pack_8x1_pixels(const uint16_t *src, __m256i *x) {
+  __m256i pp[8];
+  __m256i s0;
+  s0 = _mm256_loadu_si256((const __m256i *)src);
+  pack_pixels(&s0, pp);
+  x[0] = _mm256_permute2x128_si256(pp[0], pp[2], 0x30);
+  x[1] = _mm256_permute2x128_si256(pp[1], pp[3], 0x30);
+  x[2] = _mm256_permute2x128_si256(pp[2], pp[0], 0x30);
+  x[3] = _mm256_permute2x128_si256(pp[3], pp[1], 0x30);
 }
 
-static INLINE void pack_8x1_pixels(const uint16_t *src, const ptrdiff_t pitch,
-                                   __m256i *x /*x[4]*/) {
-  pack_pixels_with_format(src, PACK_8x1, pitch, x);
+static INLINE void pack_8x2_pixels(const uint16_t *src, ptrdiff_t stride,
+                                   __m256i *x) {
+  __m256i s0, s1;
+  s0 = _mm256_loadu_si256((const __m256i *)src);
+  s1 = _mm256_loadu_si256((const __m256i *)(src + stride));
+  pack_16_pixels(&s0, &s1, x);
 }
 
-static INLINE void pack_8x2_pixels(const uint16_t *src, const ptrdiff_t pitch,
-                                   __m256i *x /*x[8]*/) {
-  pack_pixels_with_format(src, PACK_8x2, pitch, x);
-}
-
-static INLINE void pack_16x1_pixels(const uint16_t *src, const ptrdiff_t pitch,
-                                    __m256i *x /*x[8]*/) {
-  pack_pixels_with_format(src, PACK_16x1, pitch, x);
+static INLINE void pack_16x1_pixels(const uint16_t *src, __m256i *x) {
+  __m256i s0, s1;
+  s0 = _mm256_loadu_si256((const __m256i *)src);
+  s1 = _mm256_loadu_si256((const __m256i *)(src + 8));
+  pack_16_pixels(&s0, &s1, x);
 }
 
 // Note:
@@ -323,51 +298,49 @@ static INLINE void filter_8x1_pixels(const __m256i *sig /*sig[4]*/,
   a0 = _mm256_madd_epi16(fil[1], sig[1]);
   a1 = _mm256_madd_epi16(fil[2], sig[2]);
 
-  const __m256i min = _mm256_min_epi32(a0, a1);
-  a = _mm256_add_epi32(a, min);
-
-  const __m256i max = _mm256_max_epi32(a0, a1);
-  a = _mm256_add_epi32(a, max);
-
-  const __m256i rounding = _mm256_set1_epi32(1 << (CONV8_ROUNDING_BITS - 1));
-  a = _mm256_add_epi32(a, rounding);
-  *y = _mm256_srai_epi32(a, CONV8_ROUNDING_BITS);
+  {
+    const __m256i min = _mm256_min_epi32(a0, a1);
+    a = _mm256_add_epi32(a, min);
+  }
+  {
+    const __m256i max = _mm256_max_epi32(a0, a1);
+    a = _mm256_add_epi32(a, max);
+  }
+  {
+    const __m256i rounding = _mm256_set1_epi32(1 << (CONV8_ROUNDING_BITS - 1));
+    a = _mm256_add_epi32(a, rounding);
+    *y = _mm256_srai_epi32(a, CONV8_ROUNDING_BITS);
+  }
 }
 
-static void write_8x1_pixels(const __m256i *y, const __m256i *z,
-                             const __m256i *mask, uint16_t *dst,
-                             ptrdiff_t pitch) {
+static INLINE void store_8x1_pixels(const __m256i *y, const __m256i *mask,
+                                    uint16_t *dst) {
   const __m128i a0 = _mm256_castsi256_si128(*y);
   const __m128i a1 = _mm256_extractf128_si256(*y, 1);
   __m128i res = _mm_packus_epi32(a0, a1);
-  (void)z;
-  (void)pitch;
   res = _mm_min_epi16(res, _mm256_castsi256_si128(*mask));
   _mm_storeu_si128((__m128i *)dst, res);
 }
 
-static void write_8x2_pixels(const __m256i *y0, const __m256i *y1,
-                             const __m256i *mask, uint16_t *dst,
-                             ptrdiff_t pitch) {
+static INLINE void store_8x2_pixels(const __m256i *y0, const __m256i *y1,
+                                    const __m256i *mask, uint16_t *dst,
+                                    ptrdiff_t pitch) {
   __m256i a = _mm256_packus_epi32(*y0, *y1);
   a = _mm256_min_epi16(a, *mask);
   _mm_storeu_si128((__m128i *)dst, _mm256_castsi256_si128(a));
   _mm_storeu_si128((__m128i *)(dst + pitch), _mm256_extractf128_si256(a, 1));
 }
 
-static void write_16x1_pixels(const __m256i *y0, const __m256i *y1,
-                              const __m256i *mask, uint16_t *dst,
-                              ptrdiff_t dst_pitch) {
-  (void)dst_pitch;
+static INLINE void store_16x1_pixels(const __m256i *y0, const __m256i *y1,
+                                     const __m256i *mask, uint16_t *dst) {
   __m256i a = _mm256_packus_epi32(*y0, *y1);
   a = _mm256_min_epi16(a, *mask);
   _mm256_storeu_si256((__m256i *)dst, a);
 }
 
-static void filter_block_width8_horiz(
-    const uint16_t *src_ptr, ptrdiff_t src_pitch, const WritePixels write_8x1,
-    const WritePixels write_8x2, uint16_t *dst_ptr, ptrdiff_t dst_pitch,
-    uint32_t height, const int16_t *filter, int bd) {
+static void aom_highbd_filter_block1d8_h8_avx2(
+    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
+    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
   __m256i signal[8], res0, res1;
   const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
 
@@ -379,32 +352,22 @@ static void filter_block_width8_horiz(
     pack_8x2_pixels(src_ptr, src_pitch, signal);
     filter_8x1_pixels(signal, ff, &res0);
     filter_8x1_pixels(&signal[4], ff, &res1);
-    write_8x2(&res0, &res1, &max, dst_ptr, dst_pitch);
+    store_8x2_pixels(&res0, &res1, &max, dst_ptr, dst_pitch);
     height -= 2;
     src_ptr += src_pitch << 1;
     dst_ptr += dst_pitch << 1;
   } while (height > 1);
 
   if (height > 0) {
-    pack_8x1_pixels(src_ptr, src_pitch, signal);
+    pack_8x1_pixels(src_ptr, signal);
     filter_8x1_pixels(signal, ff, &res0);
-    write_8x1(&res0, &res1, &max, dst_ptr, dst_pitch);
+    store_8x1_pixels(&res0, &max, dst_ptr);
   }
 }
 
-static void aom_highbd_filter_block1d8_h8_avx2(
-    const uint16_t *src, ptrdiff_t src_pitch, uint16_t *dst,
+static void aom_highbd_filter_block1d16_h8_avx2(
+    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
     ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  filter_block_width8_horiz(src, src_pitch, write_8x1_pixels, write_8x2_pixels,
-                            dst, dst_pitch, height, filter, bd);
-}
-
-static void filter_block_width16_horiz(const uint16_t *src_ptr,
-                                       ptrdiff_t src_pitch,
-                                       const WritePixels write_16x1,
-                                       uint16_t *dst_ptr, ptrdiff_t dst_pitch,
-                                       uint32_t height, const int16_t *filter,
-                                       int bd) {
   __m256i signal[8], res0, res1;
   const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
 
@@ -413,23 +376,17 @@ static void filter_block_width16_horiz(const uint16_t *src_ptr,
 
   src_ptr -= 3;
   do {
-    pack_16x1_pixels(src_ptr, src_pitch, signal);
+    pack_16x1_pixels(src_ptr, signal);
     filter_8x1_pixels(signal, ff, &res0);
     filter_8x1_pixels(&signal[4], ff, &res1);
-    write_16x1(&res0, &res1, &max, dst_ptr, dst_pitch);
+    store_16x1_pixels(&res0, &res1, &max, dst_ptr);
     height -= 1;
     src_ptr += src_pitch;
     dst_ptr += dst_pitch;
   } while (height > 0);
 }
 
-static void aom_highbd_filter_block1d16_h8_avx2(
-    const uint16_t *src, ptrdiff_t src_pitch, uint16_t *dst,
-    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  filter_block_width16_horiz(src, src_pitch, write_16x1_pixels, dst, dst_pitch,
-                             height, filter, bd);
-}
-
+// -----------------------------------------------------------------------------
 // 2-tap horizontal filtering
 
 static INLINE void pack_2t_filter(const int16_t *filter, __m256i *f) {
@@ -493,16 +450,6 @@ static INLINE void filter_16_2t_pixels(const __m256i *sig, const __m256i *f,
   *y1 = _mm256_srai_epi32(x1, CONV8_ROUNDING_BITS);
 }
 
-static INLINE void filter_8x2_2t_pixels(const __m256i *sig, const __m256i *f,
-                                        __m256i *y0, __m256i *y1) {
-  filter_16_2t_pixels(sig, f, y0, y1);
-}
-
-static INLINE void filter_16x1_2t_pixels(const __m256i *sig, const __m256i *f,
-                                         __m256i *y0, __m256i *y1) {
-  filter_16_2t_pixels(sig, f, y0, y1);
-}
-
 static INLINE void filter_8x1_2t_pixels(const __m256i *sig, const __m256i *f,
                                         __m256i *y0) {
   const __m256i rounding = _mm256_set1_epi32(1 << (CONV8_ROUNDING_BITS - 1));
@@ -511,10 +458,9 @@ static INLINE void filter_8x1_2t_pixels(const __m256i *sig, const __m256i *f,
   *y0 = _mm256_srai_epi32(x0, CONV8_ROUNDING_BITS);
 }
 
-static void filter_block_width8_2t_horiz(
-    const uint16_t *src_ptr, ptrdiff_t src_pitch, const WritePixels write_8x1,
-    const WritePixels write_8x2, uint16_t *dst_ptr, ptrdiff_t dst_pitch,
-    uint32_t height, const int16_t *filter, int bd) {
+static void aom_highbd_filter_block1d8_h2_avx2(
+    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
+    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
   __m256i signal[2], res0, res1;
   const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
 
@@ -524,8 +470,8 @@ static void filter_block_width8_2t_horiz(
   src_ptr -= 3;
   do {
     pack_8x2_2t_pixels(src_ptr, src_pitch, signal);
-    filter_8x2_2t_pixels(signal, &ff, &res0, &res1);
-    write_8x2(&res0, &res1, &max, dst_ptr, dst_pitch);
+    filter_16_2t_pixels(signal, &ff, &res0, &res1);
+    store_8x2_pixels(&res0, &res1, &max, dst_ptr, dst_pitch);
     height -= 2;
     src_ptr += src_pitch << 1;
     dst_ptr += dst_pitch << 1;
@@ -534,24 +480,13 @@ static void filter_block_width8_2t_horiz(
   if (height > 0) {
     pack_8x1_2t_pixels(src_ptr, signal);
     filter_8x1_2t_pixels(signal, &ff, &res0);
-    write_8x1(&res0, &res1, &max, dst_ptr, dst_pitch);
+    store_8x1_pixels(&res0, &max, dst_ptr);
   }
 }
 
-static void aom_highbd_filter_block1d8_h2_avx2(
-    const uint16_t *src, ptrdiff_t src_pitch, uint16_t *dst,
+static void aom_highbd_filter_block1d16_h2_avx2(
+    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
     ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  filter_block_width8_2t_horiz(src, src_pitch, write_8x1_pixels,
-                               write_8x2_pixels, dst, dst_pitch, height, filter,
-                               bd);
-}
-
-static void filter_block_width16_2t_horiz(const uint16_t *src_ptr,
-                                          ptrdiff_t src_pitch,
-                                          const WritePixels write_16x1,
-                                          uint16_t *dst_ptr,
-                                          ptrdiff_t dst_pitch, uint32_t height,
-                                          const int16_t *filter, int bd) {
   __m256i signal[2], res0, res1;
   const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
 
@@ -561,21 +496,15 @@ static void filter_block_width16_2t_horiz(const uint16_t *src_ptr,
   src_ptr -= 3;
   do {
     pack_16x1_2t_pixels(src_ptr, signal);
-    filter_16x1_2t_pixels(signal, &ff, &res0, &res1);
-    write_16x1(&res0, &res1, &max, dst_ptr, dst_pitch);
+    filter_16_2t_pixels(signal, &ff, &res0, &res1);
+    store_16x1_pixels(&res0, &res1, &max, dst_ptr);
     height -= 1;
     src_ptr += src_pitch;
     dst_ptr += dst_pitch;
   } while (height > 0);
 }
 
-static void aom_highbd_filter_block1d16_h2_avx2(
-    const uint16_t *src, ptrdiff_t src_pitch, uint16_t *dst,
-    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  filter_block_width16_2t_horiz(src, src_pitch, write_16x1_pixels, dst,
-                                dst_pitch, height, filter, bd);
-}
-
+// -----------------------------------------------------------------------------
 // Vertical Filtering
 
 static void pack_8x9_init(const uint16_t *src, ptrdiff_t pitch, __m256i *sig) {
@@ -638,22 +567,9 @@ static INLINE void update_pixels(__m256i *sig) {
   }
 }
 
-static INLINE void write_8x1_pixels_ver(const __m256i *y0, const __m256i *y1,
-                                        const __m256i *mask, uint16_t *dst,
-                                        ptrdiff_t pitch) {
-  (void)pitch;
-  const __m128i v0 = _mm256_castsi256_si128(*y0);
-  const __m128i v1 = _mm256_castsi256_si128(*y1);
-  __m128i p = _mm_packus_epi32(v0, v1);
-  p = _mm_min_epi16(p, _mm256_castsi256_si128(*mask));
-  _mm_storeu_si128((__m128i *)dst, p);
-}
-
-static void filter_block_width8_vert(const uint16_t *src_ptr,
-                                     ptrdiff_t src_pitch, WritePixels write_8x1,
-                                     WritePixels write_8x2, uint16_t *dst_ptr,
-                                     ptrdiff_t dst_pitch, uint32_t height,
-                                     const int16_t *filter, int bd) {
+static void aom_highbd_filter_block1d8_v8_avx2(
+    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
+    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
   __m256i signal[9], res0, res1;
   const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
 
@@ -666,27 +582,13 @@ static void filter_block_width8_vert(const uint16_t *src_ptr,
     pack_8x9_pixels(src_ptr, src_pitch, signal);
 
     filter_8x9_pixels(signal, ff, &res0, &res1);
-    write_8x2(&res0, &res1, &max, dst_ptr, dst_pitch);
+    store_8x2_pixels(&res0, &res1, &max, dst_ptr, dst_pitch);
     update_pixels(signal);
 
     src_ptr += src_pitch << 1;
     dst_ptr += dst_pitch << 1;
     height -= 2;
-  } while (height > 1);
-
-  if (height > 0) {
-    pack_8x9_pixels(src_ptr, src_pitch, signal);
-    filter_8x9_pixels(signal, ff, &res0, &res1);
-    write_8x1(&res0, &res1, &max, dst_ptr, dst_pitch);
-  }
-}
-
-static void aom_highbd_filter_block1d8_v8_avx2(
-    const uint16_t *src, ptrdiff_t src_pitch, uint16_t *dst,
-    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  filter_block_width8_vert(src, src_pitch, write_8x1_pixels_ver,
-                           write_8x2_pixels, dst, dst_pitch, height, filter,
-                           bd);
+  } while (height > 0);
 }
 
 static void pack_16x9_init(const uint16_t *src, ptrdiff_t pitch, __m256i *sig) {
@@ -770,13 +672,15 @@ static INLINE void filter_16x9_pixels(const __m256i *sig, const __m256i *f,
     filter_8x1_pixels(&sig[i << 2], f, &res[i]);
   }
 
-  const __m256i l0l1 = _mm256_packus_epi32(res[0], res[1]);
-  const __m256i h0h1 = _mm256_packus_epi32(res[2], res[3]);
-  *y0 = _mm256_permute2x128_si256(l0l1, h0h1, 0x20);
-  *y1 = _mm256_permute2x128_si256(l0l1, h0h1, 0x31);
+  {
+    const __m256i l0l1 = _mm256_packus_epi32(res[0], res[1]);
+    const __m256i h0h1 = _mm256_packus_epi32(res[2], res[3]);
+    *y0 = _mm256_permute2x128_si256(l0l1, h0h1, 0x20);
+    *y1 = _mm256_permute2x128_si256(l0l1, h0h1, 0x31);
+  }
 }
 
-static INLINE void write_16x2_pixels(const __m256i *y0, const __m256i *y1,
+static INLINE void store_16x2_pixels(const __m256i *y0, const __m256i *y1,
                                      const __m256i *mask, uint16_t *dst,
                                      ptrdiff_t pitch) {
   __m256i p = _mm256_min_epi16(*y0, *mask);
@@ -785,26 +689,14 @@ static INLINE void write_16x2_pixels(const __m256i *y0, const __m256i *y1,
   _mm256_storeu_si256((__m256i *)(dst + pitch), p);
 }
 
-static INLINE void write_16x1_pixels_ver(const __m256i *y0, const __m256i *y1,
-                                         const __m256i *mask, uint16_t *dst,
-                                         ptrdiff_t pitch) {
-  (void)y1;
-  (void)pitch;
-  const __m256i p = _mm256_min_epi16(*y0, *mask);
-  _mm256_storeu_si256((__m256i *)dst, p);
-}
-
 static void update_16x9_pixels(__m256i *sig) {
   update_pixels(&sig[0]);
   update_pixels(&sig[8]);
 }
 
-static void filter_block_width16_vert(const uint16_t *src_ptr,
-                                      ptrdiff_t src_pitch,
-                                      WritePixels write_16x1,
-                                      WritePixels write_16x2, uint16_t *dst_ptr,
-                                      ptrdiff_t dst_pitch, uint32_t height,
-                                      const int16_t *filter, int bd) {
+static void aom_highbd_filter_block1d16_v8_avx2(
+    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
+    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
   __m256i signal[17], res0, res1;
   const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
 
@@ -816,29 +708,16 @@ static void filter_block_width16_vert(const uint16_t *src_ptr,
   do {
     pack_16x9_pixels(src_ptr, src_pitch, signal);
     filter_16x9_pixels(signal, ff, &res0, &res1);
-    write_16x2(&res0, &res1, &max, dst_ptr, dst_pitch);
+    store_16x2_pixels(&res0, &res1, &max, dst_ptr, dst_pitch);
     update_16x9_pixels(signal);
 
     src_ptr += src_pitch << 1;
     dst_ptr += dst_pitch << 1;
     height -= 2;
-  } while (height > 1);
-
-  if (height > 0) {
-    pack_16x9_pixels(src_ptr, src_pitch, signal);
-    filter_16x9_pixels(signal, ff, &res0, &res1);
-    write_16x1(&res0, &res1, &max, dst_ptr, dst_pitch);
-  }
+  } while (height > 0);
 }
 
-static void aom_highbd_filter_block1d16_v8_avx2(
-    const uint16_t *src, ptrdiff_t src_pitch, uint16_t *dst,
-    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  filter_block_width16_vert(src, src_pitch, write_16x1_pixels_ver,
-                            write_16x2_pixels, dst, dst_pitch, height, filter,
-                            bd);
-}
-
+// -----------------------------------------------------------------------------
 // 2-tap vertical filtering
 
 static void pack_16x2_init(const uint16_t *src, __m256i *sig) {
@@ -859,12 +738,9 @@ static INLINE void filter_16x2_2t_pixels(const __m256i *sig, const __m256i *f,
   filter_16_2t_pixels(sig, f, y0, y1);
 }
 
-static void filter_block_width16_2t_vert(const uint16_t *src_ptr,
-                                         ptrdiff_t src_pitch,
-                                         WritePixels write_16x1,
-                                         uint16_t *dst_ptr, ptrdiff_t dst_pitch,
-                                         uint32_t height, const int16_t *filter,
-                                         int bd) {
+static void aom_highbd_filter_block1d16_v2_avx2(
+    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
+    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
   __m256i signal[3], res0, res1;
   const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
   __m256i ff;
@@ -875,19 +751,12 @@ static void filter_block_width16_2t_vert(const uint16_t *src_ptr,
   do {
     pack_16x2_2t_pixels(src_ptr, src_pitch, signal);
     filter_16x2_2t_pixels(signal, &ff, &res0, &res1);
-    write_16x1(&res0, &res1, &max, dst_ptr, dst_pitch);
+    store_16x1_pixels(&res0, &res1, &max, dst_ptr);
 
     src_ptr += src_pitch;
     dst_ptr += dst_pitch;
     height -= 1;
   } while (height > 0);
-}
-
-static void aom_highbd_filter_block1d16_v2_avx2(
-    const uint16_t *src, ptrdiff_t src_pitch, uint16_t *dst,
-    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  filter_block_width16_2t_vert(src, src_pitch, write_16x1_pixels, dst,
-                               dst_pitch, height, filter, bd);
 }
 
 static INLINE void pack_8x1_2t_filter(const int16_t *filter, __m128i *f) {
@@ -920,22 +789,16 @@ static INLINE void filter_8_2t_pixels(const __m128i *sig, const __m128i *f,
   *y1 = _mm_srai_epi32(x1, CONV8_ROUNDING_BITS);
 }
 
-static void write_8x1_2t_pixels_ver(const __m128i *y0, const __m128i *y1,
-                                    const __m128i *mask, uint16_t *dst) {
+static INLINE void store_8x1_2t_pixels_ver(const __m128i *y0, const __m128i *y1,
+                                           const __m128i *mask, uint16_t *dst) {
   __m128i res = _mm_packus_epi32(*y0, *y1);
   res = _mm_min_epi16(res, *mask);
   _mm_storeu_si128((__m128i *)dst, res);
 }
 
-typedef void (*Write8Pixels)(const __m128i *y0, const __m128i *y1,
-                             const __m128i *mask, uint16_t *dst);
-
-static void filter_block_width8_2t_vert(const uint16_t *src_ptr,
-                                        ptrdiff_t src_pitch,
-                                        Write8Pixels write_8x1,
-                                        uint16_t *dst_ptr, ptrdiff_t dst_pitch,
-                                        uint32_t height, const int16_t *filter,
-                                        int bd) {
+static void aom_highbd_filter_block1d8_v2_avx2(
+    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
+    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
   __m128i signal[3], res0, res1;
   const __m128i max = _mm_set1_epi16((1 << bd) - 1);
   __m128i ff;
@@ -946,7 +809,7 @@ static void filter_block_width8_2t_vert(const uint16_t *src_ptr,
   do {
     pack_8x2_2t_pixels_ver(src_ptr, src_pitch, signal);
     filter_8_2t_pixels(signal, &ff, &res0, &res1);
-    write_8x1(&res0, &res1, &max, dst_ptr);
+    store_8x1_2t_pixels_ver(&res0, &res1, &max, dst_ptr);
 
     src_ptr += src_pitch;
     dst_ptr += dst_pitch;
@@ -954,20 +817,10 @@ static void filter_block_width8_2t_vert(const uint16_t *src_ptr,
   } while (height > 0);
 }
 
-static void aom_highbd_filter_block1d8_v2_avx2(
-    const uint16_t *src, ptrdiff_t src_pitch, uint16_t *dst,
-    ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  filter_block_width8_2t_vert(src, src_pitch, write_8x1_2t_pixels_ver, dst,
-                              dst_pitch, height, filter, bd);
-}
-
 // Calculation with averaging the input pixels
 
-static void write_8x1_avg_pixels(const __m256i *y0, const __m256i *y1,
-                                 const __m256i *mask, uint16_t *dst,
-                                 ptrdiff_t pitch) {
-  (void)y1;
-  (void)pitch;
+static INLINE void store_8x1_avg_pixels(const __m256i *y0, const __m256i *mask,
+                                        uint16_t *dst) {
   const __m128i a0 = _mm256_castsi256_si128(*y0);
   const __m128i a1 = _mm256_extractf128_si256(*y0, 1);
   __m128i res = _mm_packus_epi32(a0, a1);
@@ -977,9 +830,9 @@ static void write_8x1_avg_pixels(const __m256i *y0, const __m256i *y1,
   _mm_storeu_si128((__m128i *)dst, res);
 }
 
-static void write_8x2_avg_pixels(const __m256i *y0, const __m256i *y1,
-                                 const __m256i *mask, uint16_t *dst,
-                                 ptrdiff_t pitch) {
+static INLINE void store_8x2_avg_pixels(const __m256i *y0, const __m256i *y1,
+                                        const __m256i *mask, uint16_t *dst,
+                                        ptrdiff_t pitch) {
   __m256i a = _mm256_packus_epi32(*y0, *y1);
   const __m128i pix0 = _mm_loadu_si128((const __m128i *)dst);
   const __m128i pix1 = _mm_loadu_si128((const __m128i *)(dst + pitch));
@@ -991,10 +844,8 @@ static void write_8x2_avg_pixels(const __m256i *y0, const __m256i *y1,
   _mm_storeu_si128((__m128i *)(dst + pitch), _mm256_extractf128_si256(a, 1));
 }
 
-static void write_16x1_avg_pixels(const __m256i *y0, const __m256i *y1,
-                                  const __m256i *mask, uint16_t *dst,
-                                  ptrdiff_t pitch) {
-  (void)pitch;
+static INLINE void store_16x1_avg_pixels(const __m256i *y0, const __m256i *y1,
+                                         const __m256i *mask, uint16_t *dst) {
   __m256i a = _mm256_packus_epi32(*y0, *y1);
   const __m256i pix = _mm256_loadu_si256((const __m256i *)dst);
   a = _mm256_min_epi16(a, *mask);
@@ -1002,21 +853,7 @@ static void write_16x1_avg_pixels(const __m256i *y0, const __m256i *y1,
   _mm256_storeu_si256((__m256i *)dst, a);
 }
 
-static INLINE void write_8x1_avg_pixels_ver(const __m256i *y0,
-                                            const __m256i *y1,
-                                            const __m256i *mask, uint16_t *dst,
-                                            ptrdiff_t pitch) {
-  (void)pitch;
-  const __m128i v0 = _mm256_castsi256_si128(*y0);
-  const __m128i v1 = _mm256_castsi256_si128(*y1);
-  __m128i p = _mm_packus_epi32(v0, v1);
-  const __m128i pix = _mm_loadu_si128((const __m128i *)dst);
-  p = _mm_min_epi16(p, _mm256_castsi256_si128(*mask));
-  p = _mm_avg_epu16(p, pix);
-  _mm_storeu_si128((__m128i *)dst, p);
-}
-
-static INLINE void write_16x2_avg_pixels(const __m256i *y0, const __m256i *y1,
+static INLINE void store_16x2_avg_pixels(const __m256i *y0, const __m256i *y1,
                                          const __m256i *mask, uint16_t *dst,
                                          ptrdiff_t pitch) {
   const __m256i pix0 = _mm256_loadu_si256((const __m256i *)dst);
@@ -1030,20 +867,10 @@ static INLINE void write_16x2_avg_pixels(const __m256i *y0, const __m256i *y1,
   _mm256_storeu_si256((__m256i *)(dst + pitch), p);
 }
 
-static INLINE void write_16x1_avg_pixels_ver(const __m256i *y0,
-                                             const __m256i *y1,
-                                             const __m256i *mask, uint16_t *dst,
-                                             ptrdiff_t pitch) {
-  (void)y1;
-  (void)pitch;
-  __m256i p = _mm256_min_epi16(*y0, *mask);
-  const __m256i pix = _mm256_loadu_si256((const __m256i *)dst);
-  p = _mm256_avg_epu16(p, pix);
-  _mm256_storeu_si256((__m256i *)dst, p);
-}
-
-static void write_8x1_2t_avg_pixels_ver(const __m128i *y0, const __m128i *y1,
-                                        const __m128i *mask, uint16_t *dst) {
+static INLINE void store_8x1_2t_avg_pixels_ver(const __m128i *y0,
+                                               const __m128i *y1,
+                                               const __m128i *mask,
+                                               uint16_t *dst) {
   __m128i res = _mm_packus_epi32(*y0, *y1);
   const __m128i pix = _mm_loadu_si128((const __m128i *)dst);
   res = _mm_min_epi16(res, *mask);
@@ -1052,96 +879,229 @@ static void write_8x1_2t_avg_pixels_ver(const __m128i *y0, const __m128i *y1,
 }
 
 static void aom_highbd_filter_block1d8_h8_avg_avx2(
-    const uint16_t *src, ptrdiff_t src_pitch, uint16_t *dst,
+    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
     ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  filter_block_width8_horiz(src, src_pitch, write_8x1_avg_pixels,
-                            write_8x2_avg_pixels, dst, dst_pitch, height,
-                            filter, bd);
+  __m256i signal[8], res0, res1;
+  const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
+
+  __m256i ff[4];
+  pack_filters(filter, ff);
+
+  src_ptr -= 3;
+  do {
+    pack_8x2_pixels(src_ptr, src_pitch, signal);
+    filter_8x1_pixels(signal, ff, &res0);
+    filter_8x1_pixels(&signal[4], ff, &res1);
+    store_8x2_avg_pixels(&res0, &res1, &max, dst_ptr, dst_pitch);
+    height -= 2;
+    src_ptr += src_pitch << 1;
+    dst_ptr += dst_pitch << 1;
+  } while (height > 1);
+
+  if (height > 0) {
+    pack_8x1_pixels(src_ptr, signal);
+    filter_8x1_pixels(signal, ff, &res0);
+    store_8x1_avg_pixels(&res0, &max, dst_ptr);
+  }
 }
 
 static void aom_highbd_filter_block1d16_h8_avg_avx2(
-    const uint16_t *src, ptrdiff_t src_pitch, uint16_t *dst,
+    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
     ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  filter_block_width16_horiz(src, src_pitch, write_16x1_avg_pixels, dst,
-                             dst_pitch, height, filter, bd);
+  __m256i signal[8], res0, res1;
+  const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
+
+  __m256i ff[4];
+  pack_filters(filter, ff);
+
+  src_ptr -= 3;
+  do {
+    pack_16x1_pixels(src_ptr, signal);
+    filter_8x1_pixels(signal, ff, &res0);
+    filter_8x1_pixels(&signal[4], ff, &res1);
+    store_16x1_avg_pixels(&res0, &res1, &max, dst_ptr);
+    height -= 1;
+    src_ptr += src_pitch;
+    dst_ptr += dst_pitch;
+  } while (height > 0);
 }
 
 static void aom_highbd_filter_block1d8_v8_avg_avx2(
-    const uint16_t *src, ptrdiff_t src_pitch, uint16_t *dst,
+    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
     ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  filter_block_width8_vert(src, src_pitch, write_8x1_avg_pixels_ver,
-                           write_8x2_avg_pixels, dst, dst_pitch, height, filter,
-                           bd);
+  __m256i signal[9], res0, res1;
+  const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
+
+  __m256i ff[4];
+  pack_filters(filter, ff);
+
+  pack_8x9_init(src_ptr, src_pitch, signal);
+
+  do {
+    pack_8x9_pixels(src_ptr, src_pitch, signal);
+
+    filter_8x9_pixels(signal, ff, &res0, &res1);
+    store_8x2_avg_pixels(&res0, &res1, &max, dst_ptr, dst_pitch);
+    update_pixels(signal);
+
+    src_ptr += src_pitch << 1;
+    dst_ptr += dst_pitch << 1;
+    height -= 2;
+  } while (height > 0);
 }
 
 static void aom_highbd_filter_block1d16_v8_avg_avx2(
-    const uint16_t *src, ptrdiff_t src_pitch, uint16_t *dst,
+    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
     ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  filter_block_width16_vert(src, src_pitch, write_16x1_avg_pixels_ver,
-                            write_16x2_avg_pixels, dst, dst_pitch, height,
-                            filter, bd);
+  __m256i signal[17], res0, res1;
+  const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
+
+  __m256i ff[4];
+  pack_filters(filter, ff);
+
+  pack_16x9_init(src_ptr, src_pitch, signal);
+
+  do {
+    pack_16x9_pixels(src_ptr, src_pitch, signal);
+    filter_16x9_pixels(signal, ff, &res0, &res1);
+    store_16x2_avg_pixels(&res0, &res1, &max, dst_ptr, dst_pitch);
+    update_16x9_pixels(signal);
+
+    src_ptr += src_pitch << 1;
+    dst_ptr += dst_pitch << 1;
+    height -= 2;
+  } while (height > 0);
 }
 
-// 2-tap averaging
-
 static void aom_highbd_filter_block1d8_h2_avg_avx2(
-    const uint16_t *src, ptrdiff_t src_pitch, uint16_t *dst,
+    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
     ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  filter_block_width8_2t_horiz(src, src_pitch, write_8x1_avg_pixels,
-                               write_8x2_avg_pixels, dst, dst_pitch, height,
-                               filter, bd);
+  __m256i signal[2], res0, res1;
+  const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
+
+  __m256i ff;
+  pack_2t_filter(filter, &ff);
+
+  src_ptr -= 3;
+  do {
+    pack_8x2_2t_pixels(src_ptr, src_pitch, signal);
+    filter_16_2t_pixels(signal, &ff, &res0, &res1);
+    store_8x2_avg_pixels(&res0, &res1, &max, dst_ptr, dst_pitch);
+    height -= 2;
+    src_ptr += src_pitch << 1;
+    dst_ptr += dst_pitch << 1;
+  } while (height > 1);
+
+  if (height > 0) {
+    pack_8x1_2t_pixels(src_ptr, signal);
+    filter_8x1_2t_pixels(signal, &ff, &res0);
+    store_8x1_avg_pixels(&res0, &max, dst_ptr);
+  }
 }
 
 static void aom_highbd_filter_block1d16_h2_avg_avx2(
-    const uint16_t *src, ptrdiff_t src_pitch, uint16_t *dst,
+    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
     ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  filter_block_width16_2t_horiz(src, src_pitch, write_16x1_avg_pixels, dst,
-                                dst_pitch, height, filter, bd);
+  __m256i signal[2], res0, res1;
+  const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
+
+  __m256i ff;
+  pack_2t_filter(filter, &ff);
+
+  src_ptr -= 3;
+  do {
+    pack_16x1_2t_pixels(src_ptr, signal);
+    filter_16_2t_pixels(signal, &ff, &res0, &res1);
+    store_16x1_avg_pixels(&res0, &res1, &max, dst_ptr);
+    height -= 1;
+    src_ptr += src_pitch;
+    dst_ptr += dst_pitch;
+  } while (height > 0);
 }
 
 static void aom_highbd_filter_block1d16_v2_avg_avx2(
-    const uint16_t *src, ptrdiff_t src_pitch, uint16_t *dst,
+    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
     ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  filter_block_width16_2t_vert(src, src_pitch, write_16x1_avg_pixels, dst,
-                               dst_pitch, height, filter, bd);
+  __m256i signal[3], res0, res1;
+  const __m256i max = _mm256_set1_epi16((1 << bd) - 1);
+  __m256i ff;
+
+  pack_2t_filter(filter, &ff);
+  pack_16x2_init(src_ptr, signal);
+
+  do {
+    pack_16x2_2t_pixels(src_ptr, src_pitch, signal);
+    filter_16x2_2t_pixels(signal, &ff, &res0, &res1);
+    store_16x1_avg_pixels(&res0, &res1, &max, dst_ptr);
+
+    src_ptr += src_pitch;
+    dst_ptr += dst_pitch;
+    height -= 1;
+  } while (height > 0);
 }
 
 static void aom_highbd_filter_block1d8_v2_avg_avx2(
-    const uint16_t *src, ptrdiff_t src_pitch, uint16_t *dst,
+    const uint16_t *src_ptr, ptrdiff_t src_pitch, uint16_t *dst_ptr,
     ptrdiff_t dst_pitch, uint32_t height, const int16_t *filter, int bd) {
-  filter_block_width8_2t_vert(src, src_pitch, write_8x1_2t_avg_pixels_ver, dst,
-                              dst_pitch, height, filter, bd);
+  __m128i signal[3], res0, res1;
+  const __m128i max = _mm_set1_epi16((1 << bd) - 1);
+  __m128i ff;
+
+  pack_8x1_2t_filter(filter, &ff);
+  pack_8x2_init(src_ptr, signal);
+
+  do {
+    pack_8x2_2t_pixels_ver(src_ptr, src_pitch, signal);
+    filter_8_2t_pixels(signal, &ff, &res0, &res1);
+    store_8x1_2t_avg_pixels_ver(&res0, &res1, &max, dst_ptr);
+
+    src_ptr += src_pitch;
+    dst_ptr += dst_pitch;
+    height -= 1;
+  } while (height > 0);
 }
 
-typedef void HbdFilter1dFunc(const uint16_t *, ptrdiff_t, uint16_t *, ptrdiff_t,
-                             uint32_t, const int16_t *, int);
-
-#define HIGHBD_FUNC(width, dir, avg, opt) \
-  aom_highbd_filter_block1d##width##_##dir##_##avg##opt
-
-HbdFilter1dFunc HIGHBD_FUNC(4, h8, , sse2);
-HbdFilter1dFunc HIGHBD_FUNC(4, h2, , sse2);
-HbdFilter1dFunc HIGHBD_FUNC(4, v8, , sse2);
-HbdFilter1dFunc HIGHBD_FUNC(4, v2, , sse2);
-
-#define aom_highbd_filter_block1d4_h8_avx2 HIGHBD_FUNC(4, h8, , sse2)
-#define aom_highbd_filter_block1d4_h2_avx2 HIGHBD_FUNC(4, h2, , sse2)
-#define aom_highbd_filter_block1d4_v8_avx2 HIGHBD_FUNC(4, v8, , sse2)
-#define aom_highbd_filter_block1d4_v2_avx2 HIGHBD_FUNC(4, v2, , sse2)
+void aom_highbd_filter_block1d4_h8_sse2(const uint16_t *, ptrdiff_t, uint16_t *,
+                                        ptrdiff_t, uint32_t, const int16_t *,
+                                        int);
+void aom_highbd_filter_block1d4_h2_sse2(const uint16_t *, ptrdiff_t, uint16_t *,
+                                        ptrdiff_t, uint32_t, const int16_t *,
+                                        int);
+void aom_highbd_filter_block1d4_v8_sse2(const uint16_t *, ptrdiff_t, uint16_t *,
+                                        ptrdiff_t, uint32_t, const int16_t *,
+                                        int);
+void aom_highbd_filter_block1d4_v2_sse2(const uint16_t *, ptrdiff_t, uint16_t *,
+                                        ptrdiff_t, uint32_t, const int16_t *,
+                                        int);
+#define aom_highbd_filter_block1d4_h8_avx2 aom_highbd_filter_block1d4_h8_sse2
+#define aom_highbd_filter_block1d4_h2_avx2 aom_highbd_filter_block1d4_h2_sse2
+#define aom_highbd_filter_block1d4_v8_avx2 aom_highbd_filter_block1d4_v8_sse2
+#define aom_highbd_filter_block1d4_v2_avx2 aom_highbd_filter_block1d4_v2_sse2
 
 HIGH_FUN_CONV_1D(horiz, x_step_q4, filter_x, h, src, , avx2);
 HIGH_FUN_CONV_1D(vert, y_step_q4, filter_y, v, src - src_stride * 3, , avx2);
 HIGH_FUN_CONV_2D(, avx2);
 
-HbdFilter1dFunc HIGHBD_FUNC(4, h8, avg_, sse2);
-HbdFilter1dFunc HIGHBD_FUNC(4, h2, avg_, sse2);
-HbdFilter1dFunc HIGHBD_FUNC(4, v8, avg_, sse2);
-HbdFilter1dFunc HIGHBD_FUNC(4, v2, avg_, sse2);
-
-#define aom_highbd_filter_block1d4_h8_avg_avx2 HIGHBD_FUNC(4, h8, avg_, sse2)
-#define aom_highbd_filter_block1d4_h2_avg_avx2 HIGHBD_FUNC(4, h2, avg_, sse2)
-#define aom_highbd_filter_block1d4_v8_avg_avx2 HIGHBD_FUNC(4, v8, avg_, sse2)
-#define aom_highbd_filter_block1d4_v2_avg_avx2 HIGHBD_FUNC(4, v2, avg_, sse2)
+void aom_highbd_filter_block1d4_h8_avg_sse2(const uint16_t *, ptrdiff_t,
+                                            uint16_t *, ptrdiff_t, uint32_t,
+                                            const int16_t *, int);
+void aom_highbd_filter_block1d4_h2_avg_sse2(const uint16_t *, ptrdiff_t,
+                                            uint16_t *, ptrdiff_t, uint32_t,
+                                            const int16_t *, int);
+void aom_highbd_filter_block1d4_v8_avg_sse2(const uint16_t *, ptrdiff_t,
+                                            uint16_t *, ptrdiff_t, uint32_t,
+                                            const int16_t *, int);
+void aom_highbd_filter_block1d4_v2_avg_sse2(const uint16_t *, ptrdiff_t,
+                                            uint16_t *, ptrdiff_t, uint32_t,
+                                            const int16_t *, int);
+#define aom_highbd_filter_block1d4_h8_avg_avx2 \
+  aom_highbd_filter_block1d4_h8_avg_sse2
+#define aom_highbd_filter_block1d4_h2_avg_avx2 \
+  aom_highbd_filter_block1d4_h2_avg_sse2
+#define aom_highbd_filter_block1d4_v8_avg_avx2 \
+  aom_highbd_filter_block1d4_v8_avg_sse2
+#define aom_highbd_filter_block1d4_v2_avg_avx2 \
+  aom_highbd_filter_block1d4_v2_avg_sse2
 
 HIGH_FUN_CONV_1D(avg_horiz, x_step_q4, filter_x, h, src, avg_, avx2);
 HIGH_FUN_CONV_1D(avg_vert, y_step_q4, filter_y, v, src - src_stride * 3, avg_,

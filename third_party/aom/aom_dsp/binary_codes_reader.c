@@ -9,7 +9,7 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#include "aom_dsp/bitreader.h"
+#include "aom_dsp/binary_codes_reader.h"
 
 #include "av1/common/common.h"
 
@@ -33,26 +33,28 @@ static uint16_t inv_recenter_finite_nonneg(uint16_t n, uint16_t r, uint16_t v) {
   }
 }
 
-int16_t aom_read_primitive_symmetric(aom_reader *r, unsigned int mag_bits) {
-  if (aom_read_bit(r, NULL)) {
-    int s = aom_read_bit(r, NULL);
-    int16_t x = aom_read_literal(r, mag_bits, NULL) + 1;
+int16_t aom_read_primitive_symmetric_(aom_reader *r,
+                                      unsigned int mag_bits ACCT_STR_PARAM) {
+  if (aom_read_bit(r, ACCT_STR_NAME)) {
+    int s = aom_read_bit(r, ACCT_STR_NAME);
+    int16_t x = aom_read_literal(r, mag_bits, ACCT_STR_NAME) + 1;
     return (s > 0 ? -x : x);
   } else {
     return 0;
   }
 }
 
-uint16_t aom_read_primitive_quniform(aom_reader *r, uint16_t n) {
+uint16_t aom_read_primitive_quniform_(aom_reader *r,
+                                      uint16_t n ACCT_STR_PARAM) {
   if (n <= 1) return 0;
   const int l = get_msb(n - 1) + 1;
   const int m = (1 << l) - n;
-  const int v = aom_read_literal(r, l - 1, NULL);
-  return v < m ? v : (v << 1) - m + aom_read_bit(r, NULL);
+  const int v = aom_read_literal(r, l - 1, ACCT_STR_NAME);
+  return v < m ? v : (v << 1) - m + aom_read_bit(r, ACCT_STR_NAME);
 }
 
-uint16_t aom_read_primitive_refbilevel(aom_reader *r, uint16_t n, uint16_t p,
-                                       uint16_t ref) {
+uint16_t aom_read_primitive_refbilevel_(aom_reader *r, uint16_t n, uint16_t p,
+                                        uint16_t ref ACCT_STR_PARAM) {
   if (n <= 1) return 0;
   assert(p > 0 && p <= n);
   assert(ref < n);
@@ -64,10 +66,10 @@ uint16_t aom_read_primitive_refbilevel(aom_reader *r, uint16_t n, uint16_t p,
     lolimit = n - p;
   }
   int v;
-  if (aom_read_bit(r, NULL)) {
-    v = aom_read_primitive_quniform(r, p) + lolimit;
+  if (aom_read_bit(r, ACCT_STR_NAME)) {
+    v = aom_read_primitive_quniform(r, p, ACCT_STR_NAME) + lolimit;
   } else {
-    v = aom_read_primitive_quniform(r, n - p);
+    v = aom_read_primitive_quniform(r, n - p, ACCT_STR_NAME);
     if (v >= lolimit) v += p;
   }
   return v;
@@ -75,7 +77,8 @@ uint16_t aom_read_primitive_refbilevel(aom_reader *r, uint16_t n, uint16_t p,
 
 // Decode finite subexponential code that for a symbol v in [0, n-1] with
 // parameter k
-uint16_t aom_read_primitive_subexpfin(aom_reader *r, uint16_t n, uint16_t k) {
+uint16_t aom_read_primitive_subexpfin_(aom_reader *r, uint16_t n,
+                                       uint16_t k ACCT_STR_PARAM) {
   int i = 0;
   int mk = 0;
   uint16_t v;
@@ -83,14 +86,14 @@ uint16_t aom_read_primitive_subexpfin(aom_reader *r, uint16_t n, uint16_t k) {
     int b = (i ? k + i - 1 : k);
     int a = (1 << b);
     if (n <= mk + 3 * a) {
-      v = aom_read_primitive_quniform(r, n - mk) + mk;
+      v = aom_read_primitive_quniform(r, n - mk, ACCT_STR_NAME) + mk;
       break;
     } else {
-      if (aom_read_bit(r, NULL)) {
+      if (aom_read_bit(r, ACCT_STR_NAME)) {
         i = i + 1;
         mk += a;
       } else {
-        v = aom_read_literal(r, b, NULL) + mk;
+        v = aom_read_literal(r, b, ACCT_STR_NAME) + mk;
         break;
       }
     }
@@ -101,17 +104,19 @@ uint16_t aom_read_primitive_subexpfin(aom_reader *r, uint16_t n, uint16_t k) {
 // Decode finite subexponential code that for a symbol v in [0, n-1] with
 // parameter k
 // based on a reference ref also in [0, n-1].
-uint16_t aom_read_primitive_refsubexpfin(aom_reader *r, uint16_t n, uint16_t k,
-                                         uint16_t ref) {
-  return inv_recenter_finite_nonneg(n, ref,
-                                    aom_read_primitive_subexpfin(r, n, k));
+uint16_t aom_read_primitive_refsubexpfin_(aom_reader *r, uint16_t n, uint16_t k,
+                                          uint16_t ref ACCT_STR_PARAM) {
+  return inv_recenter_finite_nonneg(
+      n, ref, aom_read_primitive_subexpfin(r, n, k, ACCT_STR_NAME));
 }
 
 // Decode finite subexponential code that for a symbol v in [-(n-1), n-1] with
 // parameter k based on a reference ref also in [-(n-1), n-1].
-int16_t aom_read_signed_primitive_refsubexpfin(aom_reader *r, uint16_t n,
-                                               uint16_t k, int16_t ref) {
+int16_t aom_read_signed_primitive_refsubexpfin_(aom_reader *r, uint16_t n,
+                                                uint16_t k,
+                                                int16_t ref ACCT_STR_PARAM) {
   ref += n - 1;
   const uint16_t scaled_n = (n << 1) - 1;
-  return aom_read_primitive_refsubexpfin(r, scaled_n, k, ref) - n + 1;
+  return aom_read_primitive_refsubexpfin(r, scaled_n, k, ref, ACCT_STR_NAME) -
+         n + 1;
 }

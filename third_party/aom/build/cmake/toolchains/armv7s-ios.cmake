@@ -27,8 +27,4 @@ set(AOM_NEON_INTRIN_FLAG "")
 # No runtime cpu detect for armv7s-ios.
 set(CONFIG_RUNTIME_CPU_DETECT 0 CACHE BOOL "")
 
-# RTCD generation requires --disable-media for armv7s-ios.
-set(AOM_RTCD_FLAGS ${AOM_RTCD_FLAGS} --disable-media)
-string(STRIP AOM_RTCD_FLAGS ${AOM_RTCD_FLAGS})
-
 endif ()  # AOM_BUILD_CMAKE_TOOLCHAINS_ARMV7S_IOS_CMAKE_

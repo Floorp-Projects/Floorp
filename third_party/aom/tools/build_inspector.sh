@@ -6,7 +6,7 @@ fi
 echo 'Building JS Inspector'
 if [ ! -d ".inspect" ]; then
   mkdir .inspect
-  cd .inspect && emconfigure ../../configure --disable-multithread --disable-runtime-cpu-detect --target=generic-gnu --enable-accounting --enable-inspection --enable-aom_highbitdepth --extra-cflags="-D_POSIX_SOURCE"
+  cd .inspect && emconfigure ../../configure --disable-multithread --disable-runtime-cpu-detect --target=generic-gnu --enable-accounting --disable-docs --disable-unit-tests --enable-inspection --enable-highbitdepth --extra-cflags="-D_POSIX_SOURCE"
 fi
 
 cd .inspect

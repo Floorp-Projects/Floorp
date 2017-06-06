@@ -8,7 +8,14 @@
 ## Media Patent License 1.0 was not distributed with this source code in the
 ## PATENTS file, you can obtain it at www.aomedia.org/license/patent.
 ##
+if (NOT AOM_TEST_TEST_CMAKE_)
+set(AOM_TEST_TEST_CMAKE_ 1)
+
+include(ProcessorCount)
+
 include("${AOM_ROOT}/test/test_data_util.cmake")
+
+set(AOM_UNIT_TEST_DATA_LIST_FILE "${AOM_ROOT}/test/test-data.sha1")
 
 set(AOM_UNIT_TEST_WRAPPER_SOURCES
     "${AOM_CONFIG_DIR}/usage_exit.c"
@@ -19,6 +26,8 @@ set(AOM_UNIT_TEST_COMMON_SOURCES
     "${AOM_ROOT}/test/clear_system_state.h"
     "${AOM_ROOT}/test/codec_factory.h"
     "${AOM_ROOT}/test/convolve_test.cc"
+    "${AOM_ROOT}/test/decode_test_driver.cc"
+    "${AOM_ROOT}/test/decode_test_driver.h"
     "${AOM_ROOT}/test/function_equivalence_test.h"
     "${AOM_ROOT}/test/md5_helper.h"
     "${AOM_ROOT}/test/register_state_check.h"
@@ -50,8 +59,6 @@ endif ()
 
 set(AOM_UNIT_TEST_DECODER_SOURCES
     "${AOM_ROOT}/test/decode_api_test.cc"
-    "${AOM_ROOT}/test/decode_test_driver.cc"
-    "${AOM_ROOT}/test/decode_test_driver.h"
     "${AOM_ROOT}/test/ivf_video_source.h")
 
 set(AOM_UNIT_TEST_ENCODER_SOURCES
@@ -83,10 +90,6 @@ if (CONFIG_AV1)
       ${AOM_UNIT_TEST_COMMON_SOURCES}
       "${AOM_ROOT}/test/av1_convolve_optimz_test.cc"
       "${AOM_ROOT}/test/av1_convolve_test.cc"
-      "${AOM_ROOT}/test/av1_fwd_txfm1d_test.cc"
-      "${AOM_ROOT}/test/av1_fwd_txfm2d_test.cc"
-      "${AOM_ROOT}/test/av1_inv_txfm1d_test.cc"
-      "${AOM_ROOT}/test/av1_inv_txfm2d_test.cc"
       "${AOM_ROOT}/test/av1_txfm_test.cc"
       "${AOM_ROOT}/test/av1_txfm_test.h"
       "${AOM_ROOT}/test/intrapred_test.cc"
@@ -103,9 +106,7 @@ if (CONFIG_AV1)
     if (HAVE_SSE4_1)
       set(AOM_UNIT_TEST_COMMON_SOURCES
           ${AOM_UNIT_TEST_COMMON_SOURCES}
-          # TODO: not sure if this intrinsics or a wrapper calling intrin/asm.
-          #"${AOM_ROOT}/test/filterintra_predictors_test.cc")
-          )
+          "${AOM_ROOT}/test/filterintra_predictors_test.cc")
     endif ()
   endif ()
 
@@ -131,8 +132,13 @@ if (CONFIG_AV1_ENCODER)
       "${AOM_ROOT}/test/arf_freq_test.cc"
       "${AOM_ROOT}/test/av1_dct_test.cc"
       "${AOM_ROOT}/test/av1_fht16x16_test.cc"
+      "${AOM_ROOT}/test/av1_fht32x32_test.cc"
       "${AOM_ROOT}/test/av1_fht8x8_test.cc"
       "${AOM_ROOT}/test/av1_inv_txfm_test.cc"
+      "${AOM_ROOT}/test/av1_fwd_txfm1d_test.cc"
+      "${AOM_ROOT}/test/av1_fwd_txfm2d_test.cc"
+      "${AOM_ROOT}/test/av1_inv_txfm1d_test.cc"
+      "${AOM_ROOT}/test/av1_inv_txfm2d_test.cc"
       "${AOM_ROOT}/test/avg_test.cc"
       "${AOM_ROOT}/test/blend_a64_mask_1d_test.cc"
       "${AOM_ROOT}/test/blend_a64_mask_test.cc"
@@ -167,8 +173,14 @@ if (CONFIG_AV1_ENCODER)
         "${AOM_ROOT}/test/av1_fht4x4_test.cc"
         "${AOM_ROOT}/test/av1_fht4x8_test.cc"
         "${AOM_ROOT}/test/av1_fht8x16_test.cc"
-        "${AOM_ROOT}/test/av1_fht8x4_test.cc"
-        "${AOM_ROOT}/test/fht32x32_test.cc")
+        "${AOM_ROOT}/test/av1_fht8x4_test.cc")
+        
+  endif ()
+
+  if (CONFIG_GLOBAL_MOTION)
+    set(AOM_UNIT_TEST_ENCODER_INTRIN_SSE4_1
+        ${AOM_UNIT_TEST_ENCODER_INTRIN_SSE4_1}
+        "${AOM_ROOT}/test/corner_match_test.cc")
   endif ()
 
   if (CONFIG_MOTION_VAR)
@@ -176,6 +188,12 @@ if (CONFIG_AV1_ENCODER)
         ${AOM_UNIT_TEST_ENCODER_SOURCES}
         "${AOM_ROOT}/test/obmc_sad_test.cc"
         "${AOM_ROOT}/test/obmc_variance_test.cc")
+  endif ()
+
+  if (CONFIG_TX64X64)
+    set(AOM_UNIT_TEST_ENCODER_SOURCES
+        ${AOM_UNIT_TEST_ENCODER_SOURCES}
+        "${AOM_ROOT}/test/av1_fht64x64_test.cc")
   endif ()
 endif ()
 
@@ -209,7 +227,7 @@ if (CONFIG_AV1_DECODER AND CONFIG_AV1_ENCODER)
 endif ()
 
 if (CONFIG_HIGHBITDEPTH)
-  if (CONFIG_AV1)
+  if (CONFIG_AV1_ENCODER)
     set(AOM_UNIT_TEST_COMMON_INTRIN_SSE4_1
         ${AOM_UNIT_TEST_COMMON_INTRIN_SSE4_1}
         "${AOM_ROOT}/test/av1_highbd_iht_test.cc"
@@ -245,8 +263,14 @@ endif ()
 # exist before this function is called.
 function (setup_aom_test_targets)
   add_library(test_aom_common OBJECT ${AOM_UNIT_TEST_COMMON_SOURCES})
-  add_library(test_aom_decoder OBJECT ${AOM_UNIT_TEST_DECODER_SOURCES})
-  add_library(test_aom_encoder OBJECT ${AOM_UNIT_TEST_ENCODER_SOURCES})
+
+  if (CONFIG_AV1_DECODER)
+    add_library(test_aom_decoder OBJECT ${AOM_UNIT_TEST_DECODER_SOURCES})
+  endif ()
+
+  if (CONFIG_AV1_ENCODER)
+    add_library(test_aom_encoder OBJECT ${AOM_UNIT_TEST_ENCODER_SOURCES})
+  endif ()
 
   set(AOM_LIB_TARGETS ${AOM_LIB_TARGETS} test_aom_common test_aom_decoder
       test_aom_encoder PARENT_SCOPE)
@@ -255,7 +279,7 @@ function (setup_aom_test_targets)
                  $<TARGET_OBJECTS:aom_common_app_util>
                  $<TARGET_OBJECTS:test_aom_common>)
 
-  if (CONFIG_DECODERS)
+  if (CONFIG_AV1_DECODER)
     target_sources(test_libaom PUBLIC
                    $<TARGET_OBJECTS:aom_decoder_app_util>
                    $<TARGET_OBJECTS:test_aom_decoder>)
@@ -265,7 +289,7 @@ function (setup_aom_test_targets)
     endif ()
   endif ()
 
-  if (CONFIG_ENCODERS)
+  if (CONFIG_AV1_ENCODER)
     target_sources(test_libaom PUBLIC
                    $<TARGET_OBJECTS:test_aom_encoder>
                    $<TARGET_OBJECTS:aom_encoder_app_util>)
@@ -273,14 +297,14 @@ function (setup_aom_test_targets)
     if (CONFIG_ENCODE_PERF_TESTS)
       target_sources(test_libaom PUBLIC ${AOM_ENCODE_PERF_TEST_SOURCES})
     endif ()
+
+    add_executable(test_intra_pred_speed
+                   ${AOM_TEST_INTRA_PRED_SPEED_SOURCES}
+                   $<TARGET_OBJECTS:aom_common_app_util>)
+    target_link_libraries(test_intra_pred_speed ${AOM_LIB_LINK_TYPE} aom gtest)
   endif ()
 
-  target_link_libraries(test_libaom PUBLIC aom gtest)
-
-  add_executable(test_intra_pred_speed
-                 ${AOM_TEST_INTRA_PRED_SPEED_SOURCES}
-                 $<TARGET_OBJECTS:aom_common_app_util>)
-  target_link_libraries(test_intra_pred_speed PUBLIC aom gtest)
+  target_link_libraries(test_libaom ${AOM_LIB_LINK_TYPE} aom gtest)
 
   if (CONFIG_LIBYUV)
     target_sources(test_libaom PUBLIC $<TARGET_OBJECTS:yuv>)
@@ -300,16 +324,73 @@ function (setup_aom_test_targets)
   if (HAVE_SSE4_1)
     add_intrinsics_source_to_target("-msse4.1" "test_libaom"
                                     "AOM_UNIT_TEST_COMMON_INTRIN_SSE4_1")
+    if (CONFIG_AV1_ENCODER)
+      if (AOM_UNIT_TEST_ENCODER_INTRIN_SSE4_1)
+        add_intrinsics_source_to_target("-msse4.1" "test_libaom"
+                                        "AOM_UNIT_TEST_ENCODER_INTRIN_SSE4_1")
+      endif ()
+    endif ()
   endif ()
   if (HAVE_NEON)
     add_intrinsics_source_to_target("${AOM_NEON_INTRIN_FLAG}" "test_libaom"
                                     "AOM_UNIT_TEST_COMMON_INTRIN_NEON")
   endif ()
 
-  add_custom_target(testdata
-                    COMMAND ${CMAKE_COMMAND}
-                      -DAOM_CONFIG_DIR="${AOM_CONFIG_DIR}"
-                      -DAOM_ROOT="${AOM_ROOT}"
-                      -P "${AOM_ROOT}/test/test_worker.cmake"
-                    SOURCES ${AOM_TEST_DATA_LIST})
+  make_test_data_lists("${AOM_UNIT_TEST_DATA_LIST_FILE}"
+                       test_files test_file_checksums)
+  list(LENGTH test_files num_test_files)
+  list(LENGTH test_file_checksums num_test_file_checksums)
+
+  math(EXPR max_file_index "${num_test_files} - 1")
+  foreach (test_index RANGE ${max_file_index})
+    list(GET test_files ${test_index} test_file)
+    list(GET test_file_checksums ${test_index} test_file_checksum)
+    add_custom_target(testdata_${test_index}
+                      COMMAND ${CMAKE_COMMAND}
+                        -DAOM_CONFIG_DIR="${AOM_CONFIG_DIR}"
+                        -DAOM_ROOT="${AOM_ROOT}"
+                        -DAOM_TEST_FILE="${test_file}"
+                        -DAOM_TEST_CHECKSUM=${test_file_checksum}
+                        -P "${AOM_ROOT}/test/test_data_download_worker.cmake")
+    set(testdata_targets ${testdata_targets} testdata_${test_index})
+  endforeach ()
+
+  # Create a custom build target for running each test data download target.
+  add_custom_target(testdata)
+  add_dependencies(testdata ${testdata_targets})
+
+  # Pick a reasonable number of targets (this controls parallelization).
+  ProcessorCount(num_test_targets)
+  if (num_test_targets EQUAL 0)
+    # Just default to 10 targets when there's no processor count available.
+    set(num_test_targets 10)
+  endif ()
+
+  # TODO(tomfinegan): This needs some work for MSVC and Xcode. Executable suffix
+  # and config based executable output paths are the obvious issues.
+  math(EXPR max_shard_index "${num_test_targets} - 1")
+  foreach (shard_index RANGE ${max_shard_index})
+    set(test_name "test_${shard_index}")
+    add_custom_target(${test_name}
+                      COMMAND ${CMAKE_COMMAND}
+                      -DGTEST_SHARD_INDEX=${shard_index}
+                      -DGTEST_TOTAL_SHARDS=${num_test_targets}
+                      -DTEST_LIBAOM=$<TARGET_FILE:test_libaom>
+                      -P "${AOM_ROOT}/test/test_runner.cmake"
+                      DEPENDS testdata test_libaom)
+    set(test_targets ${test_targets} ${test_name})
+  endforeach ()
+  add_custom_target(runtests)
+  add_dependencies(runtests ${test_targets})
+
+  if (MSVC)
+    set_target_properties(${testdata_targets} PROPERTIES
+                          EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+    set_target_properties(${test_targets} PROPERTIES
+                          EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+    set_target_properties(testdata runtests PROPERTIES
+                          EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+  endif ()
 endfunction ()
+
+endif ()  # AOM_TEST_TEST_CMAKE_

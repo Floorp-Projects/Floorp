@@ -13,7 +13,7 @@ var gSearchResultsPane = {
   init() {
     let controller = this.getSelectionController();
     this.findSelection = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
-    this.findSelection.setColors("currentColor", "#ffe900", "currentColor", "#540ead");
+    this.findSelection.setColors("currentColor", "#ffe900", "currentColor", "#003eaa");
     this.searchResultsCategory = document.getElementById("category-search-results");
 
     this.searchInput = document.getElementById("searchInput");
@@ -293,7 +293,9 @@ var gSearchResultsPane = {
       let labelResult = this.stringMatchesFilters(nodeObject.getAttribute("label"), searchPhrase);
 
       // Searching some elements, such as xul:label, store their user-visible text in a "value" attribute.
-      let valueResult = this.stringMatchesFilters(nodeObject.getAttribute("value"), searchPhrase);
+      // Value will be skipped for menuitem since value in menuitem could represent index number to distinct each item.
+      let valueResult = nodeObject.tagName !== "menuitem" ?
+       this.stringMatchesFilters(nodeObject.getAttribute("value"), searchPhrase) : false;
 
       // Searching some elements, such as xul:button, buttons to open subdialogs.
       let keywordsResult = this.stringMatchesFilters(nodeObject.getAttribute("searchkeywords"), searchPhrase);
@@ -303,7 +305,10 @@ var gSearchResultsPane = {
         this.listSearchTooltips.push(nodeObject);
       }
 
-      if (nodeObject.tagName == "button" && (labelResult || valueResult || keywordsResult)) {
+      if ((nodeObject.tagName == "button" ||
+           nodeObject.tagName == "menulist" ||
+           nodeObject.tagName == "menuitem") &&
+           (labelResult || valueResult || keywordsResult)) {
         nodeObject.setAttribute("highlightable", "true");
       }
 

@@ -212,7 +212,7 @@ void highbd_filter_block2d_8_c(const uint16_t *src_ptr,
    *                               = 23
    * and filter_max_width = 16
    */
-  uint16_t intermediate_buffer[(kMaxDimension + 8) * kMaxDimension];
+  uint16_t intermediate_buffer[(kMaxDimension + 8) * kMaxDimension] = { 0 };
   const int intermediate_next_stride =
       1 - static_cast<int>(intermediate_height * output_width);
 
@@ -368,10 +368,17 @@ class ConvolveTest : public ::testing::TestWithParam<ConvolveParam> {
 #endif
     /* Set up guard blocks for an inner block centered in the outer block */
     for (int i = 0; i < kOutputBufferSize; ++i) {
-      if (IsIndexInBorder(i))
+      if (IsIndexInBorder(i)) {
         output_[i] = 255;
-      else
+#if CONFIG_HIGHBITDEPTH
+        output16_[i] = mask_;
+#endif
+      } else {
         output_[i] = 0;
+#if CONFIG_HIGHBITDEPTH
+        output16_[i] = 0;
+#endif
+      }
     }
 
     ::libaom_test::ACMRandom prng;

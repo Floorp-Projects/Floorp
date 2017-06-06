@@ -113,7 +113,7 @@ static INLINE void loop_filter_block_plane_ver(
         break;
       case LF_PATH_SLOW:
         av1_filter_block_plane_non420_ver(cm, &planes[plane], mi, mi_row,
-                                          mi_col);
+                                          mi_col, plane);
         break;
     }
   }
@@ -135,7 +135,7 @@ static INLINE void loop_filter_block_plane_hor(
         break;
       case LF_PATH_SLOW:
         av1_filter_block_plane_non420_hor(cm, &planes[plane], mi, mi_row,
-                                          mi_col);
+                                          mi_col, plane);
         break;
     }
   }
@@ -168,7 +168,7 @@ static int loop_filter_ver_row_worker(AV1LfSync *const lf_sync,
 #if CONFIG_EXT_PARTITION_TYPES
       for (plane = 0; plane < num_planes; ++plane)
         av1_filter_block_plane_non420_ver(lf_data->cm, &lf_data->planes[plane],
-                                          mi + mi_col, mi_row, mi_col);
+                                          mi + mi_col, mi_row, mi_col, plane);
 #else
 
       for (plane = 0; plane < num_planes; ++plane)
@@ -213,7 +213,7 @@ static int loop_filter_hor_row_worker(AV1LfSync *const lf_sync,
 #if CONFIG_EXT_PARTITION_TYPES
       for (plane = 0; plane < num_planes; ++plane)
         av1_filter_block_plane_non420_hor(lf_data->cm, &lf_data->planes[plane],
-                                          mi + mi_col, mi_row, mi_col);
+                                          mi + mi_col, mi_row, mi_col, plane);
 #else
       for (plane = 0; plane < num_planes; ++plane)
         loop_filter_block_plane_hor(lf_data->cm, lf_data->planes, plane,
@@ -263,9 +263,9 @@ static int loop_filter_row_worker(AV1LfSync *const lf_sync,
 #if CONFIG_EXT_PARTITION_TYPES
       for (plane = 0; plane < num_planes; ++plane) {
         av1_filter_block_plane_non420_ver(lf_data->cm, &lf_data->planes[plane],
-                                          mi + mi_col, mi_row, mi_col);
+                                          mi + mi_col, mi_row, mi_col, plane);
         av1_filter_block_plane_non420_hor(lf_data->cm, &lf_data->planes[plane],
-                                          mi + mi_col, mi_row, mi_col);
+                                          mi + mi_col, mi_row, mi_col, plane);
       }
 #else
       av1_setup_mask(lf_data->cm, mi_row, mi_col, mi + mi_col,

@@ -43,10 +43,6 @@
 # Configuring with --disable-runtime-cpu-detect --disable-neon \
 #     --disable-neon-asm
 # will remove any NEON dependency.
-
-# To change to building armeabi, run ./libaom/configure again, but with
-# --target=armv6-android-gcc and modify the Application.mk file to
-# set APP_ABI := armeabi
 #
 # Running ndk-build will build libaom and include it in your project.
 #
@@ -60,9 +56,6 @@ ASM_CNV_PATH := $(LOCAL_PATH)/$(ASM_CNV_PATH_LOCAL)
 # build. Also set any architecture-specific flags.
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
   include $(CONFIG_DIR)libs-armv7-android-gcc.mk
-  LOCAL_ARM_MODE := arm
-else ifeq  ($(TARGET_ARCH_ABI),armeabi)
-  include $(CONFIG_DIR)libs-armv6-android-gcc.mk
   LOCAL_ARM_MODE := arm
 else ifeq  ($(TARGET_ARCH_ABI),arm64-v8a)
   include $(CONFIG_DIR)libs-armv8-android-gcc.mk
