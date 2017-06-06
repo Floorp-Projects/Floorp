@@ -74,6 +74,8 @@ class RunInfo(dict):
         elif "debug" not in self:
             # Default to release
             self["debug"] = False
+        if product == "firefox" and "stylo" not in self:
+            self["stylo"] = False
         if extras is not None:
             self.update(extras)
 
