@@ -8,8 +8,10 @@ Library('mscom_oop')
 
 SOURCES += [
     '../ActivationContext.cpp',
+    '../Objref.cpp',
     '../Registration.cpp',
     '../StructStream.cpp',
+    '../Utils.cpp',
 ]
 
 UNIFIED_SOURCES += [
@@ -26,6 +28,7 @@ OS_LIBS += [
 LIBRARY_DEFINES['UNICODE'] = True
 LIBRARY_DEFINES['_UNICODE'] = True
 LIBRARY_DEFINES['MOZ_NO_MOZALLOC'] = True
+LIBRARY_DEFINES['MOZ_MSCOM_REMARSHAL_NO_HANDLER'] = True
 
 DISABLE_STL_WRAPPING = True
 NO_EXPAND_LIBS = True
