@@ -757,13 +757,6 @@ nsHttpChannel::DoNotifyListenerCleanup()
 }
 
 void
-nsHttpChannel::ReleaseListeners()
-{
-    HttpBaseChannel::ReleaseListeners();
-    mChannelClassifier = nullptr;
-}
-
-void
 nsHttpChannel::HandleAsyncRedirect()
 {
     NS_PRECONDITION(!mCallOnResume, "How did that happen?");
@@ -6094,30 +6087,17 @@ private:
 NS_IMPL_ISUPPORTS(InitLocalBlockListXpcCallback, nsIURIClassifierCallback)
 
 /*virtual*/ nsresult
-InitLocalBlockListXpcCallback::OnClassifyComplete(nsresult aErrorCode, // Only this matters.
-                                               const nsACString& /*aLists*/,
+InitLocalBlockListXpcCallback::OnClassifyComplete(nsresult /*aErrorCode*/,
+                                               const nsACString& aLists, // Only this matters.
                                                const nsACString& /*aProvider*/,
                                                const nsACString& /*aPrefix*/)
 {
-    bool localBlockList = aErrorCode == NS_ERROR_TRACKING_URI;
+    bool localBlockList = !aLists.IsEmpty();
     mCallback(localBlockList);
     return NS_OK;
 }
 
 } // end of unnamed namespace/
-
-already_AddRefed<nsChannelClassifier>
-nsHttpChannel::GetOrCreateChannelClassifier()
-{
-    if (!mChannelClassifier) {
-        mChannelClassifier = new nsChannelClassifier(this);
-        LOG(("nsHttpChannel [%p] created nsChannelClassifier [%p]\n",
-             this, mChannelClassifier.get()));
-    }
-
-    RefPtr<nsChannelClassifier> classifier = mChannelClassifier;
-    return classifier.forget();
-}
 
 bool
 nsHttpChannel::InitLocalBlockList(const InitLocalBlockListCallback& aCallback)
@@ -6129,17 +6109,33 @@ nsHttpChannel::InitLocalBlockList(const InitLocalBlockListCallback& aCallback)
     }
 
     // Check to see if this principal exists on local blocklists.
-    RefPtr<nsChannelClassifier> channelClassifier =
-        GetOrCreateChannelClassifier();
+    nsCOMPtr<nsIURIClassifier> classifier(services::GetURIClassifier());
+    RefPtr<nsChannelClassifier> channelClassifier = new nsChannelClassifier(this);
+    bool tpEnabled = false;
+    channelClassifier->ShouldEnableTrackingProtection(&tpEnabled);
+    if (!classifier || !tpEnabled) {
+        return false;
+    }
 
     // We skip speculative connections by setting mLocalBlocklist only
     // when tracking protection is enabled. Though we could do this for
     // both phishing and malware, it is not necessary for correctness,
     // since no network events will be received while the
     // nsChannelClassifier is in progress. See bug 1122691.
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = GetURI(getter_AddRefs(uri));
+    if (NS_FAILED(rv) || !uri) {
+        return false;
+    }
+
+    nsAutoCString tables;
+    Preferences::GetCString("urlclassifier.trackingTable", &tables);
+    nsTArray<nsCString> results;
+
     RefPtr<InitLocalBlockListXpcCallback> xpcCallback
         = new InitLocalBlockListXpcCallback(aCallback);
-    if (NS_FAILED(channelClassifier->CheckIsTrackerWithLocalTable(xpcCallback))) {
+    rv = classifier->AsyncClassifyLocalWithTables(uri, tables, xpcCallback);
+    if (NS_FAILED(rv)) {
         return false;
     }
 
@@ -6480,8 +6476,7 @@ nsHttpChannel::BeginConnectActual()
     // been called, after optionally cancelling the channel once we have a
     // remote verdict. We call a concrete class instead of an nsI* that might
     // be overridden.
-    RefPtr<nsChannelClassifier> channelClassifier =
-        GetOrCreateChannelClassifier();
+    RefPtr<nsChannelClassifier> channelClassifier = new nsChannelClassifier(this);
     LOG(("nsHttpChannel::Starting nsChannelClassifier %p [this=%p]",
          channelClassifier.get(), this));
     channelClassifier->Start();
