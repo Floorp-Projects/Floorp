@@ -1365,9 +1365,10 @@ ContentParent::Init()
   if (nsIPresShell::IsAccessibilityActive()) {
 #if defined(XP_WIN)
     Unused <<
-      SendActivateA11y(a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
+      SendActivateA11y(::GetCurrentThreadId(),
+                       a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
 #else
-    Unused << SendActivateA11y(0);
+    Unused << SendActivateA11y(0, 0);
 #endif
   }
 #endif
@@ -2773,9 +2774,10 @@ ContentParent::Observe(nsISupports* aSubject,
       // accessibility gets initiated in chrome process.
 #if defined(XP_WIN)
       Unused <<
-        SendActivateA11y(a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
+        SendActivateA11y(::GetCurrentThreadId(),
+                         a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
 #else
-      Unused << SendActivateA11y(0);
+      Unused << SendActivateA11y(0, 0);
 #endif
     } else {
       // If possible, shut down accessibility in content process when

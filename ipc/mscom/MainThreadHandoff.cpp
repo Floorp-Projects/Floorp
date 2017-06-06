@@ -453,6 +453,7 @@ MainThreadHandoff::GetHandler(NotNull<CLSID*> aHandlerClsid)
   if (!mHandlerProvider) {
     return E_NOTIMPL;
   }
+
   return mHandlerProvider->GetHandler(aHandlerClsid);
 }
 
