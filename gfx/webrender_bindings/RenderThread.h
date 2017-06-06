@@ -105,13 +105,10 @@ public:
   void Pause(wr::WindowId aWindowId);
   bool Resume(wr::WindowId aWindowId);
 
-  /// Can be called from any thread.
-  void RegisterExternalImage(uint64_t aExternalImageId, already_AddRefed<RenderTextureHost> aTexture);
+  void RegisterExternalImage(uint64_t aExternalImageId, RenderTextureHost* aTexture);
 
-  /// Can be called from any thread.
   void UnregisterExternalImage(uint64_t aExternalImageId);
 
-  /// Can only be called from the render thread.
   RenderTextureHost* GetRenderTexture(WrExternalImageId aExternalImageId);
 
   /// Can be called from any thread.
@@ -123,8 +120,6 @@ public:
 
 private:
   explicit RenderThread(base::Thread* aThread);
-
-  void DeferredRenderTextureHostDestroy(RefPtr<RenderTextureHost> aTexture);
 
   ~RenderThread();
 

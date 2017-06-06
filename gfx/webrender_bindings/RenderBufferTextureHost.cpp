@@ -43,100 +43,67 @@ RenderBufferTextureHost::~RenderBufferTextureHost()
   MOZ_COUNT_DTOR_INHERITED(RenderBufferTextureHost, RenderTextureHost);
 }
 
+already_AddRefed<gfx::DataSourceSurface>
+RenderBufferTextureHost::GetAsSurface()
+{
+  RefPtr<gfx::DataSourceSurface> result;
+  if (mFormat == gfx::SurfaceFormat::YUV) {
+    result = layers::ImageDataSerializer::DataSourceSurfaceFromYCbCrDescriptor(
+      GetBuffer(), mDescriptor.get_YCbCrDescriptor());
+    if (NS_WARN_IF(!result)) {
+      return nullptr;
+    }
+  } else {
+    result =
+      gfx::Factory::CreateWrappingDataSourceSurface(GetBuffer(),
+          layers::ImageDataSerializer::GetRGBStride(mDescriptor.get_RGBDescriptor()),
+        mSize, mFormat);
+  }
+  return result.forget();
+}
+
 bool
 RenderBufferTextureHost::Lock()
 {
-  if (!mLocked) {
-    if (mFormat != gfx::SurfaceFormat::YUV) {
-      mSurface = gfx::Factory::CreateWrappingDataSourceSurface(GetBuffer(),
-                                                               layers::ImageDataSerializer::GetRGBStride(mDescriptor.get_RGBDescriptor()),
-                                                               mSize,
-                                                               mFormat);
-      if (NS_WARN_IF(!mSurface)) {
-        return false;
-      }
-      if (NS_WARN_IF(!mSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE, &mMap))) {
-        mSurface = nullptr;
-        return false;
-      }
-    } else {
-      const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
+  MOZ_ASSERT(!mLocked);
 
-      mYSurface = gfx::Factory::CreateWrappingDataSourceSurface(layers::ImageDataSerializer::GetYChannel(GetBuffer(), desc),
-                                                                desc.ySize().width,
-                                                                desc.ySize(),
-                                                                gfx::SurfaceFormat::A8);
-      mCbSurface = gfx::Factory::CreateWrappingDataSourceSurface(layers::ImageDataSerializer::GetCbChannel(GetBuffer(), desc),
-                                                                 desc.cbCrSize().width,
-                                                                 desc.cbCrSize(),
-                                                                 gfx::SurfaceFormat::A8);
-      mCrSurface = gfx::Factory::CreateWrappingDataSourceSurface(layers::ImageDataSerializer::GetCrChannel(GetBuffer(), desc),
-                                                                 desc.cbCrSize().width,
-                                                                 desc.cbCrSize(),
-                                                                 gfx::SurfaceFormat::A8);
-      if (NS_WARN_IF(!mYSurface || !mCbSurface || !mCrSurface)) {
-        mYSurface = mCbSurface = mCrSurface = nullptr;
-        return false;
-      }
-      if (NS_WARN_IF(!mYSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE, &mYMap) ||
-                     !mCbSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE, &mCbMap) ||
-                     !mCrSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE, &mCrMap))) {
-        mYSurface = mCbSurface = mCrSurface = nullptr;
-        return false;
-      }
+  // XXX temporal workaround for YUV handling
+  if (!mSurface) {
+    mSurface = GetAsSurface();
+    if (!mSurface) {
+      return false;
     }
-    mLocked = true;
   }
 
+  if (NS_WARN_IF(!mSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE, &mMap))) {
+    mSurface = nullptr;
+    return false;
+  }
+
+  mLocked = true;
   return true;
 }
 
 void
 RenderBufferTextureHost::Unlock()
 {
-  if (mLocked) {
-    if (mSurface) {
-      mSurface->Unmap();
-      mSurface = nullptr;
-    } else if (mYSurface) {
-      mYSurface->Unmap();
-      mCbSurface->Unmap();
-      mCrSurface->Unmap();
-      mYSurface = mCbSurface = mCrSurface = nullptr;
-    }
-    mLocked = false;
+  MOZ_ASSERT(mLocked);
+  mLocked = false;
+  if (mSurface) {
+    mSurface->Unmap();
   }
+  mSurface = nullptr;
 }
 
 RenderBufferTextureHost::RenderBufferData
 RenderBufferTextureHost::GetBufferDataForRender(uint8_t aChannelIndex)
 {
-  MOZ_ASSERT(mFormat != gfx::SurfaceFormat::YUV || aChannelIndex < 3);
-  MOZ_ASSERT(mFormat == gfx::SurfaceFormat::YUV || aChannelIndex < 1);
+  // TODO: handle multiple channel bufferTextureHost(e.g. yuv textureHost)
+  MOZ_ASSERT(aChannelIndex < 1);
+
   MOZ_ASSERT(mLocked);
-
-  if (mFormat != gfx::SurfaceFormat::YUV) {
-    MOZ_ASSERT(mSurface);
-
-    return RenderBufferData(mMap.mData, mMap.mStride * mSurface->GetSize().height);
-  } else {
-    MOZ_ASSERT(mYSurface && mCbSurface && mCrSurface);
-
-    switch (aChannelIndex) {
-      case 0:
-        return RenderBufferData(mYMap.mData, mYMap.mStride * mYSurface->GetSize().height);
-        break;
-      case 1:
-        return RenderBufferData(mCbMap.mData, mCbMap.mStride * mCbSurface->GetSize().height);
-        break;
-      case 2:
-        return RenderBufferData(mCrMap.mData, mCrMap.mStride * mCrSurface->GetSize().height);
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-        return RenderBufferData(nullptr, 0);
-    }
-  }
+  MOZ_ASSERT(mSurface);
+  return RenderBufferData(mMap.mData, mMap.mStride * mSurface->GetSize().height);
 }
 
 } // namespace wr
