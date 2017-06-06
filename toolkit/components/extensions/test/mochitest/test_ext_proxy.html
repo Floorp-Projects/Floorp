@@ -48,9 +48,8 @@ async function testProxyScript(script, expected) {
     ok(error.stack.includes("proxy_script.js:3:9"), "Error should include stack trace");
   }
 
-  await extension.unload();
-
   win.close();
+  await extension.unload();
 }
 
 add_task(async function test_invalid_FindProxyForURL_type() {
@@ -67,7 +66,7 @@ add_task(async function test_invalid_FindProxyForURL_type() {
     });
 });
 
-add_task(async function test_invalid_FindProxyForURL_return_type() {
+add_task(async function test_invalid_FindProxyForURL_return_types() {
   await testProxyScript(
     () => {
       function FindProxyForURL() {
@@ -83,7 +82,70 @@ add_task(async function test_invalid_FindProxyForURL_return_type() {
         return "INVALID";
       }
     }, {
-      message: "FindProxyForURL: Invalid Proxy Rule: INVALID",
+      message: "FindProxyForURL: Unrecognized proxy type: \"INVALID\"",
+    });
+
+  await testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return "SOCKS";
+      }
+    }, {
+      message: "FindProxyForURL: Missing argument for proxy type: \"SOCKS\"",
+    });
+
+  await testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return "PROXY 1.2.3.4:8080 EXTRA";
+      }
+    }, {
+      message: "FindProxyForURL: Too many arguments passed for proxy rule: \"PROXY 1.2.3.4:8080 EXTRA\"",
+    });
+
+  await testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return "PROXY :";
+      }
+    }, {
+      message: "FindProxyForURL: Unable to parse host and port from proxy rule: \"PROXY :\"",
+    });
+
+  await testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return "PROXY :8080";
+      }
+    }, {
+      message: "FindProxyForURL: Unable to parse host and port from proxy rule: \"PROXY :8080\"",
+    });
+
+  await testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return "PROXY ::";
+      }
+    }, {
+      message: "FindProxyForURL: Unable to parse host and port from proxy rule: \"PROXY ::\"",
+    });
+
+  await testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return "PROXY 1.2.3.4:";
+      }
+    }, {
+      message: "FindProxyForURL: Unable to parse host and port from proxy rule: \"PROXY 1.2.3.4:\"",
+    });
+
+  await testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return "DIRECT 1.2.3.4:8080";
+      }
+    }, {
+      message: "FindProxyForURL: Invalid argument for proxy type: \"DIRECT\"",
     });
 });
 
