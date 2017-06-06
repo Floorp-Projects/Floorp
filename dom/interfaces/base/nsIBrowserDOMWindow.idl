@@ -14,7 +14,7 @@ interface nsIFrameLoaderOwner;
 interface nsIOpenURIInFrameParams : nsISupports
 {
   attribute DOMString referrer;
-  attribute boolean isPrivate;
+  readonly attribute boolean isPrivate;
 
   [implicit_jscontext]
   readonly attribute jsval openerOriginAttributes;

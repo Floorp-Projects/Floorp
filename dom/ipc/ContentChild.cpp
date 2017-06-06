@@ -684,8 +684,7 @@ ContentChild::ProvideWindow(mozIDOMWindowProxy* aParent,
 
 static nsresult
 GetWindowParamsFromParent(mozIDOMWindowProxy* aParent,
-                          nsACString& aBaseURIString, float* aFullZoom,
-                          OriginAttributes& aOriginAttributes)
+                          nsACString& aBaseURIString, float* aFullZoom)
 {
   *aFullZoom = 1.0f;
   auto* opener = nsPIDOMWindowOuter::From(aParent);
@@ -707,8 +706,6 @@ GetWindowParamsFromParent(mozIDOMWindowProxy* aParent,
   if (!openerDocShell) {
     return NS_OK;
   }
-
-  aOriginAttributes = openerDocShell->GetOriginAttributes();
 
   nsCOMPtr<nsIContentViewer> cv;
   nsresult rv = openerDocShell->GetContentViewer(getter_AddRefs(cv));
@@ -752,22 +749,22 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
       if (NS_SUCCEEDED(rv) && !shouldLoad) {
         nsAutoCString baseURIString;
         float fullZoom;
-        OriginAttributes originAttributes;
-        rv = GetWindowParamsFromParent(aParent, baseURIString, &fullZoom,
-                                       originAttributes);
+        rv = GetWindowParamsFromParent(aParent, baseURIString, &fullZoom);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
 
         URIParams uriToLoad;
         SerializeURI(aURI, uriToLoad);
-        Unused << SendCreateWindowInDifferentProcess(aTabOpener, aChromeFlags,
+        Unused << SendCreateWindowInDifferentProcess(aTabOpener,
+                                                     aChromeFlags,
                                                      aCalledFromJS,
                                                      aPositionSpecified,
                                                      aSizeSpecified,
-                                                     uriToLoad, features,
+                                                     uriToLoad,
+                                                     features,
                                                      baseURIString,
-                                                     originAttributes, fullZoom);
+                                                     fullZoom);
 
         // We return NS_ERROR_ABORT, so that the caller knows that we've abandoned
         // the window open as far as it is concerned.
@@ -851,9 +848,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   } else {
     nsAutoCString baseURIString;
     float fullZoom;
-    OriginAttributes originAttributes;
-    rv = GetWindowParamsFromParent(aParent, baseURIString, &fullZoom,
-                                   originAttributes);
+    rv = GetWindowParamsFromParent(aParent, baseURIString, &fullZoom);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -863,7 +858,6 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                           aSizeSpecified,
                           features,
                           baseURIString,
-                          originAttributes,
                           fullZoom,
                           &rv,
                           aWindowIsNew,
