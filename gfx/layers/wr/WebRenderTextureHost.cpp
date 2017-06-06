@@ -157,6 +157,14 @@ WebRenderTextureHost::GetRGBStride()
 }
 
 void
+WebRenderTextureHost::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
+                                     const std::function<wr::ImageKey()>& aImageKeyAllocator)
+{
+  MOZ_ASSERT(aImageKeys.IsEmpty());
+  mWrappedTextureHost->GetWRImageKeys(aImageKeys, aImageKeyAllocator);
+}
+
+void
 WebRenderTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
                                  Range<const wr::ImageKey>& aImageKeys,
                                  const wr::ExternalImageId& aExtID)
@@ -165,6 +173,21 @@ WebRenderTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
   MOZ_ASSERT(mExternalImageId == aExtID);
 
   mWrappedTextureHost->AddWRImage(aAPI, aImageKeys, aExtID);
+}
+
+void
+WebRenderTextureHost::PushExternalImage(wr::DisplayListBuilder& aBuilder,
+                                        const WrRect& aBounds,
+                                        const WrClipRegionToken aClip,
+                                        wr::ImageRendering aFilter,
+                                        Range<const wr::ImageKey>& aImageKeys)
+{
+  MOZ_ASSERT(aImageKeys.length() > 0);
+  mWrappedTextureHost->PushExternalImage(aBuilder,
+                                         aBounds,
+                                         aClip,
+                                         aFilter,
+                                         aImageKeys);
 }
 
 } // namespace layers
