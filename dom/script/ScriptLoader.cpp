@@ -2132,7 +2132,7 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
           }
 
           // Queue the current script load request to later save the bytecode.
-          if (NS_SUCCEEDED(rv) && encodeBytecode) {
+          if (script && encodeBytecode) {
             aRequest->mScript = script;
             HoldJSObjects(aRequest);
             TRACE_FOR_TEST(aRequest->mElement, "scriptloader_encode");
