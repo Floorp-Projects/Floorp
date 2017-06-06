@@ -692,7 +692,7 @@ public:
   }
 
   TreeAutoIndent(const TreeAutoIndent& aTreeAutoIndent) :
-      TreeAutoIndent(aTreeAutoIndent.mTreeLog) {
+      mTreeLog(aTreeAutoIndent.mTreeLog) {
     mTreeLog.IncreaseIndent();
   }
 

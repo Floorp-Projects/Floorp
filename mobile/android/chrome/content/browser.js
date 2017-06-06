@@ -2258,21 +2258,6 @@ var NativeWindow = {
     this.contextmenus.init();
   },
 
-  loadDex: function(zipFile, implClass) {
-    GlobalEventDispatcher.sendRequest({
-      type: "Dex:Load",
-      zipfile: zipFile,
-      impl: implClass || "Main"
-    });
-  },
-
-  unloadDex: function(zipFile) {
-    GlobalEventDispatcher.sendRequest({
-      type: "Dex:Unload",
-      zipfile: zipFile
-    });
-  },
-
   menu: {
     _callbacks: [],
     _menuId: 1,

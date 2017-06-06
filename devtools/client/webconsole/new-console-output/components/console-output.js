@@ -15,6 +15,7 @@ const {
   getAllMessagesUiById,
   getAllMessagesTableDataById,
   getVisibleMessages,
+  getAllRepeatById,
 } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 const MessageContainer = createFactory(require("devtools/client/webconsole/new-console-output/components/message-container").MessageContainer);
 
@@ -32,6 +33,7 @@ const ConsoleOutput = createClass({
     dispatch: PropTypes.func.isRequired,
     timestampsVisible: PropTypes.bool,
     messagesTableData: PropTypes.object.isRequired,
+    messagesRepeat: PropTypes.object.isRequired,
     visibleMessages: PropTypes.array.isRequired,
   },
 
@@ -75,6 +77,7 @@ const ConsoleOutput = createClass({
       visibleMessages,
       messagesUi,
       messagesTableData,
+      messagesRepeat,
       serviceContainer,
       timestampsVisible,
     } = this.props;
@@ -90,6 +93,7 @@ const ConsoleOutput = createClass({
           tableData: messagesTableData.get(message.id),
           indent: message.indent,
           timestampsVisible,
+          repeat: messagesRepeat[message.id]
         })
       );
     });
@@ -123,6 +127,7 @@ function mapStateToProps(state, props) {
     visibleMessages: getVisibleMessages(state),
     messagesUi: getAllMessagesUiById(state),
     messagesTableData: getAllMessagesTableDataById(state),
+    messagesRepeat: getAllRepeatById(state),
     timestampsVisible: state.ui.timestampsVisible,
   };
 }

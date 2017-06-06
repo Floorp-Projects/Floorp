@@ -38,7 +38,6 @@ module.exports = {
     "no-console": "off",
     "no-constant-condition": "off",
     "no-continue": "off",
-    "no-control-regex": "error",
     "no-div-regex": "off",
     "no-extend-native": "error",
     "no-extra-parens": "off",

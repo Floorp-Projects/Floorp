@@ -76,6 +76,8 @@ elif CONFIG['_MSC_VER']:
         '-wd4245', # conversion from 'int' to 'uint32_t', signed/unsigned mismatch
         '-wd4703', # potentially uninitialized local pointer
         '-wd4293', # '<<' : shift count negative or too big, undefined behavior
+        '-wd4334', # '<<' : result of 32-bit shift implicitly converted to 64 bits
+        '-wd4996', # The compiler encountered a deprecated declaration.
         # from FFmpeg configure
         '-wd4244', '-wd4127', '-wd4018', '-wd4389', '-wd4146', '-wd4701',
         '-wd4057', '-wd4204', '-wd4706', '-wd4305', '-wd4152', '-wd4324',
