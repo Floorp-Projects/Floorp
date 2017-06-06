@@ -6,11 +6,11 @@
 %ifdef CAN_DRAW_IN_TITLEBAR
 /* Add space for dragging the window */
 %ifdef MENUBAR_CAN_AUTOHIDE
-:root[tabsintitlebar] #toolbar-menubar[autohide=true] ~ #TabsToolbar {
+:root[tabsintitlebar][sizemode=normal] #toolbar-menubar[autohide=true] ~ #TabsToolbar {
   padding-inline-start: 40px;
 }
 %else
-:root[tabsintitlebar] #TabsToolbar {
+:root[tabsintitlebar][sizemode=normal] #TabsToolbar {
   padding-inline-start: 40px;
 }
 %endif
