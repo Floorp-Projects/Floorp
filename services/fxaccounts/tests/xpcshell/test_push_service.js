@@ -171,7 +171,7 @@ add_test(function observePushTopicDeviceConnected() {
   pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
 });
 
-add_test(function observePushTopicDeviceDisconnected() {
+add_task(async function observePushTopicDeviceDisconnected_current_device() {
   const deviceId = "bogusid";
   let msg = {
     data: {
@@ -186,19 +186,69 @@ add_test(function observePushTopicDeviceDisconnected() {
       return this;
     }
   };
-  let customAccounts = Object.assign(mockFxAccounts, {
-    handleDeviceDisconnection() {
-      // checking verification status on push messages without data
-      run_next_test();
-    }
+
+  let { FxAccounts } = Cu.import("resource://gre/modules/FxAccounts.jsm", {});
+  const fxAccountsMock = new FxAccounts({});
+  fxAccountsMock.internal.currentAccountState.getUserAccountData = async () => {
+    return { deviceId };
+  };
+
+  const deviceDisconnectedNotificationObserved = new Promise(resolve => {
+    Services.obs.addObserver(function obs(subject, topic, data) {
+      Services.obs.removeObserver(obs, topic);
+      equal(data, JSON.stringify({ isLocalDevice: true }));
+      resolve();
+    }, ON_DEVICE_DISCONNECTED_NOTIFICATION);
   });
 
   let pushService = new FxAccountsPushService({
     pushService: mockPushService,
-    fxAccounts: customAccounts,
+    fxAccounts: fxAccountsMock,
   });
 
   pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
+
+  await deviceDisconnectedNotificationObserved;
+});
+
+add_task(async function observePushTopicDeviceDisconnected_another_device() {
+  const deviceId = "bogusid";
+  let msg = {
+    data: {
+      json: () => ({
+        command: ON_DEVICE_DISCONNECTED_NOTIFICATION,
+        data: {
+          id: deviceId
+        }
+      })
+    },
+    QueryInterface() {
+      return this;
+    }
+  };
+
+  let { FxAccounts } = Cu.import("resource://gre/modules/FxAccounts.jsm", {});
+  const fxAccountsMock = new FxAccounts({});
+  fxAccountsMock.internal.currentAccountState.getUserAccountData = async () => {
+    return { deviceId: "thelocaldevice" };
+  };
+
+  const deviceDisconnectedNotificationObserved = new Promise(resolve => {
+    Services.obs.addObserver(function obs(subject, topic, data) {
+      Services.obs.removeObserver(obs, topic);
+      equal(data, JSON.stringify({ isLocalDevice: false }));
+      resolve();
+    }, ON_DEVICE_DISCONNECTED_NOTIFICATION);
+  });
+
+  let pushService = new FxAccountsPushService({
+    pushService: mockPushService,
+    fxAccounts: fxAccountsMock,
+  });
+
+  pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
+
+  await deviceDisconnectedNotificationObserved;
 });
 
 add_test(function observePushTopicAccountDestroyed() {
