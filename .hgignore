@@ -136,6 +136,7 @@ GPATH
 ^testing/talos/talos/tests/tp5n
 ^testing/talos/talos/tests/devtools/damp.manifest.develop
 ^talos-venv
+^py3venv
 
 # Ignore files created when running a reftest.
 ^lextab.py$

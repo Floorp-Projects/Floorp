@@ -256,10 +256,10 @@ nsLayoutStylesheetCache::Shutdown()
 {
   gCSSLoader_Gecko = nullptr;
   gCSSLoader_Servo = nullptr;
-  MOZ_ASSERT(!gStyleCache_Gecko || !gUserContentSheetURL_Gecko,
-             "Got the URL but never used by Gecko?");
-  MOZ_ASSERT(!gStyleCache_Servo || !gUserContentSheetURL_Servo,
-             "Got the URL but never used by Servo?");
+  NS_WARNING_ASSERTION(!gStyleCache_Gecko || !gUserContentSheetURL_Gecko,
+                       "Got the URL but never used by Gecko?");
+  NS_WARNING_ASSERTION(!gStyleCache_Servo || !gUserContentSheetURL_Servo,
+                       "Got the URL but never used by Servo?");
   gStyleCache_Gecko = nullptr;
   gStyleCache_Servo = nullptr;
   gUserContentSheetURL_Gecko = nullptr;

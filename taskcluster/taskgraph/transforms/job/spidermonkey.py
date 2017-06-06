@@ -28,10 +28,11 @@ sm_run_schema = Schema({
 })
 
 
-@run_job_using("docker-worker", "spidermonkey")
-@run_job_using("docker-worker", "spidermonkey-package")
-@run_job_using("docker-worker", "spidermonkey-mozjs-crate")
-def docker_worker_spidermonkey(config, job, taskdesc, schema=sm_run_schema):
+@run_job_using("docker-worker", "spidermonkey", schema=sm_run_schema)
+@run_job_using("docker-worker", "spidermonkey-package", schema=sm_run_schema)
+@run_job_using("docker-worker", "spidermonkey-mozjs-crate",
+               schema=sm_run_schema)
+def docker_worker_spidermonkey(config, job, taskdesc):
     run = job['run']
 
     worker = taskdesc['worker']

@@ -281,7 +281,7 @@ opaque-types = [
     "nsTObserverArray",  # <- Inherits from nsAutoTObserverArray<T, 0>
     "nsTHashtable",  # <- Inheriting from inner typedefs that clang
                      #    doesn't expose properly.
-    "nsRefPtrHashtable", "nsDataHashtable", "nsClassHashtable",  # <- Ditto
+    "nsBaseHashtable", "nsRefPtrHashtable", "nsDataHashtable", "nsClassHashtable",  # <- Ditto
     "nsInterfaceHashtable",  # <- Ditto
     "nsIDocument_SelectorCache",  # <- Inherits from nsExpirationTracker<.., 4>
     "nsIPresShell_ScrollAxis",  # <- For some reason the alignment of this is 4

@@ -69,6 +69,10 @@ class TalosRunner(MozbuildObject):
             ],
             'download_tooltool': True,
             'talos_extra_options': ['--develop'] + self.talos_args,
+            'python3_manifest': {
+                'win32': 'python3.manifest',
+                'win64': 'python3_x64.manifest',
+            }
         }
 
     def make_args(self):

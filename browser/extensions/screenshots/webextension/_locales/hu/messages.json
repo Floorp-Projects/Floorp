@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Nem készíthet képet a Firefox képernyőképek oldalról!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "A kijelölés túl kicsi"
+  },
   "genericErrorTitle": {
     "message": "Húha! A Firefox képernyőképek megkergült."
   },

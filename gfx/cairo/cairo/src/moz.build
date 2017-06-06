@@ -235,6 +235,26 @@ if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
         '-Wno-error=uninitialized',
     ]
 
+if CONFIG['_MSC_VER'] and not CONFIG['CLANG_CL']:
+    CFLAGS += [
+        '-wd4005', # 'WIN32_LEAN_AND_MEAN' : macro redefinition
+        '-wd4018', # '>' : signed/unsigned mismatch
+        '-wd4047', # different levels of indirection
+        '-wd4101', # unreferenced local variable
+        '-wd4133', # 'function' : incompatible types
+        '-wd4146', # unary minus operator applied to unsigned type
+        '-wd4311', # 'variable' : pointer truncation from 'type' to 'type'
+        '-wd4477', # format string '%s' requires an argument of type 'type'
+        '-wd4996', # The compiler encountered a deprecated declaration.
+    ]
+    CXXFLAGS += [
+        '-wd4005', # 'WIN32_LEAN_AND_MEAN' : macro redefinition
+        '-wd4018', # '>' : signed/unsigned mismatch
+        '-wd4146', # unary minus operator applied to unsigned type
+        '-wd4828', # illegal in the current source character set
+        '-wd4838', # requires a narrowing conversion
+    ]
+
 # See bug 386897.
 if CONFIG['GNU_CC'] and CONFIG['OS_TARGET'] == 'Android' and CONFIG['MOZ_OPTIMIZE']:
     CFLAGS += ['-O2']

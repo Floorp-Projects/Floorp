@@ -14,6 +14,8 @@ namespace mozilla {
 ServoElementSnapshot::ServoElementSnapshot(const Element* aElement)
   : mState(0)
   , mContains(Flags(0))
+  , mIsTableBorderNonzero(false)
+  , mIsMozBrowserFrame(false)
 {
   MOZ_COUNT_CTOR(ServoElementSnapshot);
   mIsHTMLElementInHTMLDocument =
@@ -51,6 +53,25 @@ ServoElementSnapshot::AddAttrs(Element* aElement)
   if (aElement->MayHaveClass()) {
     mContains |= Flags::MaybeClass;
   }
+}
+
+void
+ServoElementSnapshot::AddOtherPseudoClassState(Element* aElement)
+{
+  MOZ_ASSERT(aElement);
+
+  if (HasOtherPseudoClassState()) {
+    return;
+  }
+
+  mIsTableBorderNonzero =
+    *nsCSSPseudoClasses::MatchesElement(CSSPseudoClassType::mozTableBorderNonzero,
+                                        aElement);
+  mIsMozBrowserFrame =
+    *nsCSSPseudoClasses::MatchesElement(CSSPseudoClassType::mozBrowserFrame,
+                                        aElement);
+
+  mContains |= Flags::OtherPseudoClassState;
 }
 
 } // namespace mozilla

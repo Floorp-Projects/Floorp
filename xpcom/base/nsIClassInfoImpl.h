@@ -156,13 +156,15 @@ NS_CI_INTERFACE_GETTER_NAME(_class)(uint32_t *count, nsIID ***array)          \
 }
 
 #define NS_IMPL_CI_INTERFACE_GETTER(aClass, ...)                              \
-  NS_CLASSINFO_HELPER_BEGIN(aClass,                                           \
-                            MOZ_PASTE_PREFIX_AND_ARG_COUNT(/* No prefix */,   \
-                                                           __VA_ARGS__))      \
+  static_assert(MOZ_ARG_COUNT(__VA_ARGS__) > 0,                               \
+                "Need more arguments to NS_IMPL_CI_INTERFACE_GETTER");        \
+  NS_CLASSINFO_HELPER_BEGIN(aClass, MOZ_ARG_COUNT(__VA_ARGS__))               \
     MOZ_FOR_EACH(NS_CLASSINFO_HELPER_ENTRY, (), (__VA_ARGS__))                \
   NS_CLASSINFO_HELPER_END
 
 #define NS_IMPL_QUERY_INTERFACE_CI(aClass, ...)                               \
+  static_assert(MOZ_ARG_COUNT(__VA_ARGS__) > 0,                               \
+                "Need more arguments to NS_IMPL_QUERY_INTERFACE_CI");         \
   NS_INTERFACE_MAP_BEGIN(aClass)                                              \
     MOZ_FOR_EACH(NS_INTERFACE_MAP_ENTRY, (), (__VA_ARGS__))                   \
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, MOZ_ARG_1(__VA_ARGS__))     \

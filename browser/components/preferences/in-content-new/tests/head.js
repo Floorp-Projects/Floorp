@@ -45,20 +45,20 @@ function openAndLoadSubDialog(aURL, aFeatures = null, aParams = null, aClosingCa
 
 function promiseLoadSubDialog(aURL) {
   return new Promise((resolve, reject) => {
-    content.gSubDialog._frame.addEventListener("load", function load(aEvent) {
-      if (aEvent.target.contentWindow.location == "about:blank")
+    content.gSubDialog._dialogStack.addEventListener("dialogopen", function dialogopen(aEvent) {
+      if (aEvent.detail.dialog._frame.contentWindow.location == "about:blank")
         return;
-      content.gSubDialog._frame.removeEventListener("load", load);
+      content.gSubDialog._dialogStack.removeEventListener("dialogopen", dialogopen);
 
-      is(content.gSubDialog._frame.contentWindow.location.toString(), aURL,
+      is(aEvent.detail.dialog._frame.contentWindow.location.toString(), aURL,
          "Check the proper URL is loaded");
 
       // Check visibility
-      is_element_visible(content.gSubDialog._overlay, "Overlay is visible");
+      is_element_visible(aEvent.detail.dialog._overlay, "Overlay is visible");
 
       // Check that stylesheets were injected
-      let expectedStyleSheetURLs = content.gSubDialog._injectedStyleSheets.slice(0);
-      for (let styleSheet of content.gSubDialog._frame.contentDocument.styleSheets) {
+      let expectedStyleSheetURLs = aEvent.detail.dialog._injectedStyleSheets.slice(0);
+      for (let styleSheet of aEvent.detail.dialog._frame.contentDocument.styleSheets) {
         let i = expectedStyleSheetURLs.indexOf(styleSheet.href);
         if (i >= 0) {
           info("found " + styleSheet.href);
@@ -67,7 +67,7 @@ function promiseLoadSubDialog(aURL) {
       }
       is(expectedStyleSheetURLs.length, 0, "All expectedStyleSheetURLs should have been found");
 
-      resolve(content.gSubDialog._frame.contentWindow);
+      resolve(aEvent.detail.dialog._frame.contentWindow);
     });
   });
 }
@@ -193,7 +193,7 @@ function promiseSiteDataManagerSitesUpdated() {
 function openSiteDataSettingsDialog() {
   let doc = gBrowser.selectedBrowser.contentDocument;
   let settingsBtn = doc.getElementById("siteDataSettings");
-  let dialogOverlay = doc.getElementById("dialogOverlay");
+  let dialogOverlay = content.gSubDialog._preloadDialog._overlay;
   let dialogLoadPromise = promiseLoadSubDialog("chrome://browser/content/preferences/siteDataSettings.xul");
   let dialogInitPromise = TestUtils.topicObserved("sitedata-settings-init", () => true);
   let fullyLoadPromise = Promise.all([ dialogLoadPromise, dialogInitPromise ]).then(() => {
@@ -204,7 +204,7 @@ function openSiteDataSettingsDialog() {
 }
 
 function assertSitesListed(doc, hosts) {
-  let frameDoc = doc.getElementById("dialogFrame").contentDocument;
+  let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
   let removeBtn = frameDoc.getElementById("removeSelected");
   let removeAllBtn = frameDoc.getElementById("removeAll");
   let sitesList = frameDoc.getElementById("sitesList");

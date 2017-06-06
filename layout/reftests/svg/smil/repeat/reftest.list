@@ -1,3 +1,3 @@
 # Tests for repeat behaviour
-fails-if(styloVsGecko||stylo) == indefinite-repeat-1.svg green-box-ref.svg
+== indefinite-repeat-1.svg green-box-ref.svg
 == init-repeat-1.svg init-repeat-1-ref.svg

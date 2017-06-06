@@ -1294,7 +1294,6 @@ KTableEntry nsCSSProps::kDisplayKTable[] = {
   { eCSSKeyword__webkit_flex,        StyleDisplay::Flex },
   { eCSSKeyword__webkit_inline_flex, StyleDisplay::InlineFlex },
   { eCSSKeyword_contents,            StyleDisplay::Contents },
-  // The next entry is controlled by the layout.css.display-flow-root.enabled pref.
   { eCSSKeyword_flow_root,           StyleDisplay::FlowRoot },
   { eCSSKeyword_UNKNOWN,             -1 }
 };

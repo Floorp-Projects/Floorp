@@ -48,6 +48,7 @@ enum class ServoElementSnapshotFlags : uint8_t
   Attributes = 1 << 1,
   Id = 1 << 2,
   MaybeClass = 1 << 3,
+  OtherPseudoClassState = 1 << 4,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoElementSnapshotFlags)
@@ -75,6 +76,11 @@ public:
 
   bool HasState() const { return HasAny(Flags::State); }
 
+  bool HasOtherPseudoClassState() const
+  {
+    return HasAny(Flags::OtherPseudoClassState);
+  }
+
   /**
    * Captures the given state (if not previously captured).
    */
@@ -90,6 +96,12 @@ public:
    * Captures the given element attributes (if not previously captured).
    */
   void AddAttrs(Element* aElement);
+
+  /**
+   * Captures some other pseudo-class matching state not included in
+   * EventStates.
+   */
+  void AddOtherPseudoClassState(Element* aElement);
 
   /**
    * Needed methods for attribute matching.
@@ -140,6 +152,18 @@ public:
 
   bool HasAny(Flags aFlags) const { return bool(mContains & aFlags); }
 
+  bool IsTableBorderNonzero() const
+  {
+    MOZ_ASSERT(HasOtherPseudoClassState());
+    return mIsTableBorderNonzero;
+  }
+
+  bool IsMozBrowserFrame() const
+  {
+    MOZ_ASSERT(HasOtherPseudoClassState());
+    return mIsMozBrowserFrame;
+  }
+
 private:
   // TODO: Profile, a 1 or 2 element AutoTArray could be worth it, given we know
   // we're dealing with attribute changes when we take snapshots of attributes,
@@ -148,8 +172,10 @@ private:
   nsTArray<ServoAttrSnapshot> mAttrs;
   ServoStateType mState;
   Flags mContains;
-  bool mIsHTMLElementInHTMLDocument;
-  bool mIsInChromeDocument;
+  bool mIsHTMLElementInHTMLDocument : 1;
+  bool mIsInChromeDocument : 1;
+  bool mIsTableBorderNonzero : 1;
+  bool mIsMozBrowserFrame : 1;
 };
 
 } // namespace mozilla

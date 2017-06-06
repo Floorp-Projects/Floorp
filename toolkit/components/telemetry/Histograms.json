@@ -5803,6 +5803,17 @@
     "releaseChannelCollection": "opt-out",
     "description": "Update: the update wizard page displayed when the UI was closed (mapped in toolkit/mozapps/update/UpdateTelemetry.jsm)"
   },
+  "UPTAKE_REMOTE_CONTENT_RESULT_1": {
+    "record_in_processes": ["all"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "keyed": true,
+    "labels": ["up_to_date", "success", "backoff", "pref_disabled", "parse_error", "content_error", "sign_error", "sign_retry_error", "conflict_error", "sync_error", "apply_error", "server_error", "certificate_error", "download_error", "timeout_error", "network_error", "offline_error", "cleanup_error", "unknown_error", "custom_1_error", "custom_2_error", "custom_3_error", "custom_4_error", "custom_5_error"],
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["storage-team@mozilla.com"],
+    "bug_numbers": [1254099],
+    "description": "Generic histogram to track uptake of remote content like blocklists, settings or updates."
+  },
   "UPDATE_NOTIFICATION_SHOWN": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
@@ -7161,12 +7172,32 @@
   "TELEMETRY_ARCHIVE_LOAD_MS": {
     "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
-    "expires_in_version": "never",
+    "expires_in_version": "61",
     "kind": "exponential",
     "high": 2000,
     "n_buckets": 20,
     "bug_numbers": [1033860],
     "description": "Time (ms) it takes for loading archived pings from disk"
+  },
+  "TELEMETRY_SUCCESSFUL_SEND_PINGS_SIZE_KB": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "61",
+    "kind": "exponential",
+    "low": 10,
+    "high": 1024,
+    "n_buckets": 20,
+    "description": "The size (KB) of the Telemetry successfully sent pings"
+  },
+  "TELEMETRY_FAILED_SEND_PINGS_SIZE_KB": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 10,
+    "high": 1024,
+    "n_buckets": 20,
+    "description": "The size (KB) of the Telemetry unsuccessfully sent pings"
   },
   "TELEMETRY_PING_SIZE_EXCEEDED_SEND": {
     "record_in_processes": ["main", "content"],
@@ -10066,15 +10097,6 @@
     "kind": "boolean",
     "releaseChannelCollection": "opt-out",
     "description": "True if the browser was unable to set Firefox as the default browser"
-  },
-  "BROWSER_SET_DEFAULT_TIME_TO_COMPLETION_SECONDS": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 500,
-    "n_buckets": 15,
-    "releaseChannelCollection": "opt-out",
-    "description": "Time to successfully set Firefox as the default browser after clicking 'Set Firefox as Default'. Should be near-instant in some environments, others require user interaction. Measured in seconds."
   },
   "BROWSER_IS_ASSIST_DEFAULT": {
     "record_in_processes": ["main", "content"],

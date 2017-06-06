@@ -6695,6 +6695,33 @@ GetEnumColorValue(nsCSSKeyword aKeyword, bool aIsChrome)
   return Some(value);
 }
 
+/// Returns the number of digits in a positive number
+/// assuming it has <= 6 digits
+static uint32_t
+CountNumbersForHashlessColor(uint32_t number) {
+  /// Just use a simple match instead of calculating a log
+  /// or dividing in a loop to be more efficient.
+  if (number < 10) {
+    return 1;
+  } else if (number < 100) {
+    return 2;
+  } else if (number < 1000) {
+    return 3;
+  } else if (number < 10000) {
+    return 4;
+  } else if (number < 100000) {
+    return 5;
+  } else if (number < 1000000) {
+    return 6;
+  } else {
+    // we don't care about numbers with more than 6 digits other
+    // than the fact that they have more than 6 digits, so just return something
+    // larger than 6 here. This is incorrect in the general case.
+    return 100;
+  }
+}
+
+
 CSSParseResult
 CSSParserImpl::ParseColor(nsCSSValue& aValue)
 {
@@ -6804,16 +6831,20 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
 
   // try 'xxyyzz' without '#' prefix for compatibility with IE and Nav4x (bug 23236 and 45804)
   if (mHashlessColorQuirk) {
+    // https://quirks.spec.whatwg.org/#the-hashless-hex-color-quirk
+    //
     // - If the string starts with 'a-f', the nsCSSScanner builds the
     //   token as a eCSSToken_Ident and we can parse the string as a
     //   'xxyyzz' RGB color.
-    // - If it only contains '0-9' digits, the token is a
+    // - If it only contains up to six '0-9' digits, the token is a
     //   eCSSToken_Number and it must be converted back to a 6
-    //   characters string to be parsed as a RGB color.
+    //   characters string to be parsed as a RGB color. The number cannot
+    //   be specified as more than six digits.
     // - If it starts with '0-9' and contains any 'a-f', the token is a
     //   eCSSToken_Dimension, the mNumber part must be converted back to
     //   a string and the mIdent part must be appended to that string so
-    //   that the resulting string has 6 characters.
+    //   that the resulting string has 6 characters. The combined
+    //   dimension cannot be longer than 6 characters.
     // Note: This is a hack for Nav compatibility.  Do not attempt to
     // simplify it by hacking into the ncCSSScanner.  This would be very
     // bad.
@@ -6825,15 +6856,17 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
         break;
 
       case eCSSToken_Number:
-        if (tk->mIntegerValid) {
+        if (tk->mIntegerValid && tk->mInteger < 1000000 && tk->mInteger >= 0) {
           SprintfLiteral(buffer, "%06d", tk->mInteger);
           str.AssignWithConversion(buffer);
         }
         break;
 
       case eCSSToken_Dimension:
-        if (tk->mIdent.Length() <= 6) {
-          SprintfLiteral(buffer, "%06.0f", tk->mNumber);
+        if (tk->mIntegerValid &&
+            tk->mIdent.Length() + CountNumbersForHashlessColor(tk->mInteger) <= 6 &&
+            tk->mInteger >= 0) {
+          SprintfLiteral(buffer, "%06d", tk->mInteger);
           nsAutoString temp;
           temp.AssignWithConversion(buffer);
           temp.Right(str, 6 - tk->mIdent.Length());

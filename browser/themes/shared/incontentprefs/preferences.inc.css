@@ -294,12 +294,15 @@ description > html|a {
  * Dialog
  */
 
-#dialogOverlay {
-  background-color: rgba(0,0,0,0.5);
+.dialogOverlay {
   visibility: hidden;
 }
 
-#dialogBox {
+.dialogOverlay[topmost="true"] {
+  background-color: rgba(0,0,0,0.5);
+}
+
+.dialogBox {
   background-color: #fbfbfb;
   background-clip: content-box;
   color: #424e5a;
@@ -314,20 +317,20 @@ description > html|a {
   padding: 0;
 }
 
-#dialogBox[resizable="true"] {
+.dialogBox[resizable="true"] {
   resize: both;
   overflow: hidden;
   min-height: 20em;
   min-width: 66ch;
 }
 
-#dialogBox > .groupbox-title {
+.dialogBox > .groupbox-title {
   padding: 3.5px 0;
   background-color: #F1F1F1;
   border-bottom: 1px solid #C1C1C1;
 }
 
-#dialogTitle {
+.dialogTitle {
   text-align: center;
   -moz-user-select: none;
 }
@@ -342,12 +345,12 @@ description > html|a {
   min-width: 0;
 }
 
-#dialogBox > .groupbox-body {
+.dialogBox > .groupbox-body {
   -moz-appearance: none;
   padding: 20px;
 }
 
-#dialogFrame {
+.dialogFrame {
   -moz-box-flex: 1;
   /* Default dialog dimensions */
   width: 66ch;

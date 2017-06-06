@@ -53,8 +53,11 @@ EXPORTS.mozilla += [
 ]
 
 SOURCES += [
+    'CombinedStacks.cpp',
+    'HangReports.cpp',
     'ipc/TelemetryIPC.cpp',
     'ipc/TelemetryIPCAccumulator.cpp',
+    'KeyedStackCapturer.cpp',
     'Telemetry.cpp',
     'TelemetryCommon.cpp',
     'TelemetryEvent.cpp',

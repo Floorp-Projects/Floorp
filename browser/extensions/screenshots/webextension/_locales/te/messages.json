@@ -11,6 +11,9 @@
   "saveScreenshotSelectedArea": {
     "message": "భద్రపరచు"
   },
+  "saveScreenshotVisibleArea": {
+    "message": "కనిపించే దానిని బద్రపరచండి"
+  },
   "saveScreenshotFullPage": {
     "message": "పూర్తి పేజీని భద్రపరచు"
   },
@@ -23,8 +26,14 @@
   "notificationLinkCopiedTitle": {
     "message": "లంకె కాపీ అయింది"
   },
+  "requestErrorTitle": {
+    "message": "పని చెయుట లేదు."
+  },
   "requestErrorDetails": {
     "message": "క్షమిచండి! మీ తెరను భద్రపరచలేకపోయాం. దయచేసి కాసేపాగి మళ్ళీ ప్రయత్నించండి."
+  },
+  "tourHeaderTwo": {
+    "message": ""
   },
   "tourHeaderThree": {
     "message": "మీకు నచ్చినట్టుగా"

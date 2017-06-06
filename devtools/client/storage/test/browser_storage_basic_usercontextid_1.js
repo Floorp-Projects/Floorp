@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// A test to check that the storage inspector is working correctly with
+// A test to check that the storage inspector is working correctly without
 // userContextId.
 
 "use strict";
@@ -66,66 +66,6 @@ const testCases = [
     MAIN_DOMAIN + "browser_storage_basic.js"]],
 ];
 
-const testCasesUserContextId = [
-  [
-    ["cookies", "http://test1.example.org"],
-    [
-      getCookieId("c1uc1", "test1.example.org", "/browser"),
-      getCookieId("cs2uc1", ".example.org", "/"),
-      getCookieId("c3uc1", "test1.example.org", "/"),
-      getCookieId("uc1uc1", ".example.org", "/")
-    ]
-  ],
-  [
-    ["cookies", "https://sectest1.example.org"],
-    [
-      getCookieId("uc1uc1", ".example.org", "/"),
-      getCookieId("cs2uc1", ".example.org", "/"),
-      getCookieId("sc1uc1", "sectest1.example.org",
-        "/browser/devtools/client/storage/test/")
-    ]
-  ],
-  [["localStorage", "http://test1.example.org"],
-   ["ls1uc1", "ls2uc1"]],
-  [["localStorage", "http://sectest1.example.org"],
-   ["iframe-u-ls1uc1"]],
-  [["localStorage", "https://sectest1.example.org"],
-   ["iframe-s-ls1uc1"]],
-  [["sessionStorage", "http://test1.example.org"],
-   ["ss1uc1"]],
-  [["sessionStorage", "http://sectest1.example.org"],
-   ["iframe-u-ss1uc1", "iframe-u-ss2uc1"]],
-  [["sessionStorage", "https://sectest1.example.org"],
-   ["iframe-s-ss1uc1"]],
-  [["indexedDB", "http://test1.example.org"],
-   ["idb1uc1 (default)", "idb2uc1 (default)"]],
-  [["indexedDB", "http://test1.example.org", "idb1uc1 (default)"],
-   ["obj1uc1", "obj2uc1"]],
-  [["indexedDB", "http://test1.example.org", "idb2uc1 (default)"],
-   ["obj3uc1"]],
-  [["indexedDB", "http://test1.example.org", "idb1uc1 (default)", "obj1uc1"],
-   [1, 2, 3]],
-  [["indexedDB", "http://test1.example.org", "idb1uc1 (default)", "obj2uc1"],
-   [1]],
-  [["indexedDB", "http://test1.example.org", "idb2uc1 (default)", "obj3uc1"],
-   []],
-  [["indexedDB", "http://sectest1.example.org"],
-   []],
-  [["indexedDB", "https://sectest1.example.org"],
-   ["idb-s1uc1 (default)", "idb-s2uc1 (default)"]],
-  [["indexedDB", "https://sectest1.example.org", "idb-s1uc1 (default)"],
-   ["obj-s1uc1"]],
-  [["indexedDB", "https://sectest1.example.org", "idb-s2uc1 (default)"],
-   ["obj-s2uc1"]],
-  [["indexedDB", "https://sectest1.example.org", "idb-s1uc1 (default)", "obj-s1uc1"],
-   [6, 7]],
-  [["indexedDB", "https://sectest1.example.org", "idb-s2uc1 (default)", "obj-s2uc1"],
-   [16]],
-  [["Cache", "http://test1.example.org", "plopuc1"],
-   [MAIN_DOMAIN + "404_cached_file.js",
-    MAIN_DOMAIN + "browser_storage_basic.js"]],
-];
-
 /**
  * Test that the desired number of tree items are present
  */
@@ -173,12 +113,6 @@ add_task(function* () {
 
   testTree(testCases);
   yield testTables(testCases);
-
-  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings-usercontextid.html",
-                               {userContextId: 1});
-
-  testTree(testCasesUserContextId);
-  yield testTables(testCasesUserContextId);
 
   yield finishTests();
 });

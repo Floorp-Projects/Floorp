@@ -177,14 +177,6 @@ if CONFIG['MOZ_WMF']:
         'strmiids',
     ]
 
-if CONFIG['MOZ_DIRECTSHOW']:
-    OS_LIBS += [
-        'dmoguids',
-        'wmcodecdspuuid',
-        'strmiids',
-        'msdmo',
-    ]
-
 if CONFIG['OS_ARCH'] == 'FreeBSD':
     OS_LIBS += [
         'util',
