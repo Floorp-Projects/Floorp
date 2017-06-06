@@ -1403,7 +1403,7 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                                    tile_spacing: WrSize,
                                    image_rendering: WrImageRendering,
                                    key: WrImageKey) {
-    assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
+    assert!(unsafe { !is_in_render_thread() });
 
     state.frame_builder
          .dl_builder
@@ -1425,7 +1425,7 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
                                               image_key_2: WrImageKey,
                                               color_space: WrYuvColorSpace,
                                               image_rendering: WrImageRendering) {
-    assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
+    assert!(unsafe { is_in_main_thread() });
 
     state.frame_builder
          .dl_builder
@@ -1445,7 +1445,7 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
                                             image_key_1: WrImageKey,
                                             color_space: WrYuvColorSpace,
                                             image_rendering: WrImageRendering) {
-    assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
+    assert!(unsafe { is_in_main_thread() });
 
     state.frame_builder
          .dl_builder
@@ -1464,7 +1464,7 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
                                                    image_key_0: WrImageKey,
                                                    color_space: WrYuvColorSpace,
                                                    image_rendering: WrImageRendering) {
-    assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
+    assert!(unsafe { is_in_main_thread() });
 
     state.frame_builder
          .dl_builder

@@ -864,28 +864,11 @@ DXGITextureHostD3D11::BindTextureSource(CompositableTextureSourceRef& aTexture)
 }
 
 void
-DXGITextureHostD3D11::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
-                                     const std::function<wr::ImageKey()>& aImageKeyAllocator)
-{
-  MOZ_ASSERT_UNREACHABLE("No GetWRImageKeys() implementation for this DXGITextureHostD3D11 type.");
-}
-
-void
 DXGITextureHostD3D11::AddWRImage(wr::WebRenderAPI* aAPI,
                                  Range<const wr::ImageKey>& aImageKeys,
                                  const wr::ExternalImageId& aExtID)
 {
   MOZ_ASSERT_UNREACHABLE("No AddWRImage() implementation for this DXGITextureHostD3D11 type.");
-}
-
-void
-DXGITextureHostD3D11::PushExternalImage(wr::DisplayListBuilder& aBuilder,
-                                        const WrRect& aBounds,
-                                        const WrClipRegionToken aClip,
-                                        wr::ImageRendering aFilter,
-                                        Range<const wr::ImageKey>& aImageKeys)
-{
-  MOZ_ASSERT_UNREACHABLE("No PushExternalImage() implementation for this DXGITextureHostD3D11 type.");
 }
 
 DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(TextureFlags aFlags,
@@ -1022,28 +1005,11 @@ DXGIYCbCrTextureHostD3D11::BindTextureSource(CompositableTextureSourceRef& aText
 }
 
 void
-DXGIYCbCrTextureHostD3D11::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
-                                          const std::function<wr::ImageKey()>& aImageKeyAllocator)
-{
-  MOZ_ASSERT_UNREACHABLE("No GetWRImageKeys() implementation for this DXGIYCbCrTextureHostD3D11 type.");
-}
-
-void
 DXGIYCbCrTextureHostD3D11::AddWRImage(wr::WebRenderAPI* aAPI,
                                       Range<const wr::ImageKey>& aImageKeys,
                                       const wr::ExternalImageId& aExtID)
 {
   MOZ_ASSERT_UNREACHABLE("No AddWRImage() implementation for this DXGIYCbCrTextureHostD3D11 type.");
-}
-
-void
-DXGIYCbCrTextureHostD3D11::PushExternalImage(wr::DisplayListBuilder& aBuilder,
-                                             const WrRect& aBounds,
-                                             const WrClipRegionToken aClip,
-                                             wr::ImageRendering aFilter,
-                                             Range<const wr::ImageKey>& aImageKeys)
-{
-  MOZ_ASSERT_UNREACHABLE("No PushExternalImage() implementation for this DXGIYCbCrTextureHostD3D11 type.");
 }
 
 bool

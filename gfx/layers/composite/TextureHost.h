@@ -6,7 +6,6 @@
 #ifndef MOZILLA_GFX_TEXTUREHOST_H
 #define MOZILLA_GFX_TEXTUREHOST_H
 
-#include <functional>
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint64_t, uint32_t, uint8_t
 #include "gfxTypes.h"
@@ -39,7 +38,6 @@ class Shmem;
 } // namespace ipc
 
 namespace wr {
-class DisplayListBuilder;
 class WebRenderAPI;
 }
 
@@ -598,18 +596,6 @@ public:
   virtual MacIOSurfaceTextureHostOGL* AsMacIOSurfaceTextureHost() { return nullptr; }
   virtual WebRenderTextureHost* AsWebRenderTextureHost() { return nullptr; }
 
-  // Create all necessary image keys for this textureHost rendering.
-  // @param aImageKeys - [out] The set of ImageKeys used for this textureHost
-  // composing.
-  // @param aImageKeyAllocator - [in] The function which is used for creating
-  // the new ImageKey.
-  virtual void GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
-                              const std::function<wr::ImageKey()>& aImageKeyAllocator)
-  {
-    MOZ_ASSERT(aImageKeys.IsEmpty());
-    MOZ_ASSERT_UNREACHABLE("No GetWRImageKeys() implementation for this TextureHost type.");
-  }
-
   // Add all necessary textureHost informations to WebrenderAPI. Then, WR could
   // use these informations to compose this textureHost.
   virtual void AddWRImage(wr::WebRenderAPI* aAPI,
@@ -617,16 +603,6 @@ public:
                           const wr::ExternalImageId& aExtID)
   {
     MOZ_ASSERT_UNREACHABLE("No AddWRImage() implementation for this TextureHost type.");
-  }
-
-  // Put all necessary WR commands into DisplayListBuilder for this textureHost rendering.
-  virtual void PushExternalImage(wr::DisplayListBuilder& aBuilder,
-                                 const WrRect& aBounds,
-                                 const WrClipRegionToken aClip,
-                                 wr::ImageRendering aFilter,
-                                 Range<const wr::ImageKey>& aKeys)
-  {
-    MOZ_ASSERT_UNREACHABLE("No PushExternalImage() implementation for this TextureHost type.");
   }
 
 protected:
@@ -716,18 +692,9 @@ public:
 
   const BufferDescriptor& GetBufferDescriptor() const { return mDescriptor; }
 
-  virtual void GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
-                              const std::function<wr::ImageKey()>& aImageKeyAllocator) override;
-
   virtual void AddWRImage(wr::WebRenderAPI* aAPI,
                           Range<const wr::ImageKey>& aImageKeys,
                           const wr::ExternalImageId& aExtID) override;
-
-  virtual void PushExternalImage(wr::DisplayListBuilder& aBuilder,
-                                 const WrRect& aBounds,
-                                 const WrClipRegionToken aClip,
-                                 wr::ImageRendering aFilter,
-                                 Range<const wr::ImageKey>& aImageKeys) override;
 
 protected:
   bool Upload(nsIntRegion *aRegion = nullptr);

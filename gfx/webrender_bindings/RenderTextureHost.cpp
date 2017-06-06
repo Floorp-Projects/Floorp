@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RenderTextureHost.h"
-#include "RenderThread.h"
 
 namespace mozilla {
 namespace wr {
@@ -16,7 +15,6 @@ RenderTextureHost::RenderTextureHost()
 
 RenderTextureHost::~RenderTextureHost()
 {
-  MOZ_ASSERT(RenderThread::IsInRenderThread());
   MOZ_COUNT_DTOR(RenderTextureHost);
 }
 

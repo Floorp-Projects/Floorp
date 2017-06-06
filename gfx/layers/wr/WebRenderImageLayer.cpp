@@ -24,7 +24,7 @@ using namespace gfx;
 
 WebRenderImageLayer::WebRenderImageLayer(WebRenderLayerManager* aLayerManager)
   : ImageLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
-  , mImageClientContainerType(CompositableType::UNKNOWN)
+  , mImageClientTypeContainer(CompositableType::UNKNOWN)
 {
   MOZ_COUNT_CTOR(WebRenderImageLayer);
 }
@@ -48,20 +48,20 @@ WebRenderImageLayer::~WebRenderImageLayer()
 CompositableType
 WebRenderImageLayer::GetImageClientType()
 {
-  if (mImageClientContainerType != CompositableType::UNKNOWN) {
-    return mImageClientContainerType;
+  if (mImageClientTypeContainer != CompositableType::UNKNOWN) {
+    return mImageClientTypeContainer;
   }
 
   if (mContainer->IsAsync()) {
-    mImageClientContainerType = CompositableType::IMAGE_BRIDGE;
-    return mImageClientContainerType;
+    mImageClientTypeContainer = CompositableType::IMAGE_BRIDGE;
+    return mImageClientTypeContainer;
   }
 
   AutoLockImage autoLock(mContainer);
 
-  mImageClientContainerType = autoLock.HasImage()
+  mImageClientTypeContainer = autoLock.HasImage()
     ? CompositableType::IMAGE : CompositableType::UNKNOWN;
-  return mImageClientContainerType;
+  return mImageClientTypeContainer;
 }
 
 already_AddRefed<gfx::SourceSurface>
