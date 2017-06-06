@@ -34,7 +34,7 @@ add_task(async function() {
            "Root title is correct");
         // Check the shortcut's title.
         let bookmark = await PlacesUtils.bookmarks.fetch(tree.selectedNode.bookmarkGuid);
-        is(bookmark.title, null,
+        is(bookmark.title, "",
            "Shortcut title is null");
       }
     );
