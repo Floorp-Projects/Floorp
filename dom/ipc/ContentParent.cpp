@@ -1162,6 +1162,17 @@ ContentParent::RecvGetBlocklistState(const uint32_t& aPluginId,
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+ContentParent::RecvFindPlugins(const uint32_t& aPluginEpoch,
+                               nsresult* aRv,
+                               nsTArray<PluginTag>* aPlugins,
+                               nsTArray<FakePluginTag>* aFakePlugins,
+                               uint32_t* aNewPluginEpoch)
+{
+  *aRv = mozilla::plugins::FindPluginsForContent(aPluginEpoch, aPlugins, aFakePlugins, aNewPluginEpoch);
+  return IPC_OK();
+}
+
 /*static*/ TabParent*
 ContentParent::CreateBrowser(const TabContext& aContext,
                              Element* aFrameElement,
@@ -2437,11 +2448,6 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
       Unused << SendInitBlobURLs(registrations);
     }
   }
-
-  // Start up nsPluginHost and run FindPlugins to cache the plugin list.
-  // If this isn't our first content process, just send over cached list.
-  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-  pluginHost->SendPluginsToContent();
 }
 
 bool
@@ -5290,12 +5296,4 @@ ContentParent::CanCommunicateWith(ContentParentId aOtherProcess)
     return parentId == ContentParentId(0);
   }
   return parentId == aOtherProcess;
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvMaybeReloadPlugins()
-{
-  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-  pluginHost->ReloadPlugins();
-  return IPC_OK();
 }

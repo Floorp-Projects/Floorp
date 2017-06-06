@@ -441,6 +441,8 @@ associated with the histogram.  Returns None if no guarding is necessary."""
                                   ' {2}.'.format(key, name, nice_type_name(key_type)))
 
     def check_keys(self, name, definition, allowed_keys):
+        if not self._strict_type_checks:
+            return
         for key in definition.iterkeys():
             if key not in allowed_keys:
                 raise ParserError('Key "%s" is not allowed for histogram "%s".' % (key, name))

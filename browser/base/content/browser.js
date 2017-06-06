@@ -4085,7 +4085,7 @@ function addToUrlbarHistory(aUrlToAdd) {
   if (!PrivateBrowsingUtils.isWindowPrivate(window) &&
       aUrlToAdd &&
       !aUrlToAdd.includes(" ") &&
-      !/[\x00-\x1F]/.test(aUrlToAdd))
+      !/[\x00-\x1F]/.test(aUrlToAdd)) // eslint-disable-line no-control-regex
     PlacesUIUtils.markPageAsTyped(aUrlToAdd);
 }
 
