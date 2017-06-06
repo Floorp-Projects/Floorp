@@ -144,6 +144,7 @@ public abstract class GeckoApp extends GeckoActivity
     public static final String ACTION_LOAD                 = "org.mozilla.gecko.LOAD";
     public static final String ACTION_INIT_PW              = "org.mozilla.gecko.INIT_PW";
     public static final String ACTION_SWITCH_TAB           = "org.mozilla.gecko.SWITCH_TAB";
+    public static final String ACTION_SHUTDOWN             = "org.mozilla.gecko.SHUTDOWN";
 
     public static final String INTENT_REGISTER_STUMBLER_LISTENER = "org.mozilla.gecko.STUMBLER_REGISTER_LOCAL_LISTENER";
 
@@ -2115,6 +2116,12 @@ public abstract class GeckoApp extends GeckoActivity
     protected void onNewIntent(Intent externalIntent) {
         final SafeIntent intent = new SafeIntent(externalIntent);
         final String action = intent.getAction();
+
+        if (ACTION_SHUTDOWN.equals(action)) {
+            mShutdownOnDestroy = true;
+            GeckoThread.forceQuit();
+            return;
+        }
 
         final boolean isFirstTab = !mWasFirstTabShownAfterActivityUnhidden;
         mWasFirstTabShownAfterActivityUnhidden = true; // Reset since we'll be loading a tab.
