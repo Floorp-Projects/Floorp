@@ -31,7 +31,8 @@ public:
   StackingContextHelper(const StackingContextHelper& aParentSC,
                         wr::DisplayListBuilder& aBuilder,
                         WebRenderLayer* aLayer,
-                        const Maybe<gfx::Matrix4x4>& aTransform = Nothing());
+                        const Maybe<gfx::Matrix4x4>& aTransform = Nothing(),
+                        const nsTArray<WrFilterOp>& aFilters = nsTArray<WrFilterOp>());
   // Alternate constructor which invokes the version of PushStackingContext
   // for animations.
   StackingContextHelper(const StackingContextHelper& aParentSC,
@@ -39,7 +40,8 @@ public:
                         WebRenderLayer* aLayer,
                         uint64_t aAnimationsId,
                         float* aOpacityPtr,
-                        gfx::Matrix4x4* aTransformPtr);
+                        gfx::Matrix4x4* aTransformPtr,
+                        const nsTArray<WrFilterOp>& aFilters = nsTArray<WrFilterOp>());
   // This version of the constructor should only be used at the root level
   // of the tree, so that we have a StackingContextHelper to pass down into
   // the RenderLayer traversal, but don't actually want it to push a stacking
