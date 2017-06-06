@@ -203,7 +203,7 @@ struct ParamTraits<mozilla::dom::RTCIceCandidatePairStats>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, aParam.mComponentId);
+    WriteParam(aMsg, aParam.mTransportId);
     WriteParam(aMsg, aParam.mLocalCandidateId);
     WriteParam(aMsg, aParam.mPriority);
     WriteParam(aMsg, aParam.mNominated);
@@ -218,7 +218,7 @@ struct ParamTraits<mozilla::dom::RTCIceCandidatePairStats>
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
-    if (!ReadParam(aMsg, aIter, &(aResult->mComponentId)) ||
+    if (!ReadParam(aMsg, aIter, &(aResult->mTransportId)) ||
         !ReadParam(aMsg, aIter, &(aResult->mLocalCandidateId)) ||
         !ReadParam(aMsg, aIter, &(aResult->mPriority)) ||
         !ReadParam(aMsg, aIter, &(aResult->mNominated)) ||
