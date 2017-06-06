@@ -110,7 +110,7 @@ public class TelemetrySyncPingBuilder extends TelemetryLocalPingBuilder {
         return this;
     }
 
-    public TelemetrySyncPingBuilder setDevices(ArrayList<Parcelable> devices) {
+    public TelemetrySyncPingBuilder setDevices(@NonNull ArrayList<Parcelable> devices) {
         final JSONArray devicesJSON = new JSONArray();
 
         for (Parcelable device : devices) {
