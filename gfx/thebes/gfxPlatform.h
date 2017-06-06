@@ -245,7 +245,7 @@ public:
 
     static already_AddRefed<DrawTarget>
       CreateDrawTargetForData(unsigned char* aData,
-                              const mozilla::gfx::IntSize& aSize, 
+                              const mozilla::gfx::IntSize& aSize,
                               int32_t aStride,
                               mozilla::gfx::SurfaceFormat aFormat,
                               bool aUninitialized = false);
@@ -376,7 +376,7 @@ public:
                     gfxTextPerfMetrics* aTextPerf,
                     gfxUserFontSet *aUserFontSet,
                     gfxFloat aDevToCssSize) = 0;
-                                          
+
     /**
      * Look up a local platform font using the full font face name.
      * (Needed to support @font-face src local().)
@@ -780,7 +780,7 @@ protected:
 
     int8_t  mBidiNumeralOption;
 
-    // whether to always search font cmaps globally 
+    // whether to always search font cmaps globally
     // when doing system font fallback
     int8_t  mFallbackUsesCmaps;
 
@@ -827,6 +827,7 @@ private:
     void InitCompositorAccelerationPrefs();
     void InitGPUProcessPrefs();
     void InitWebRenderConfig();
+    void InitOMTPConfig();
 
     static bool IsDXInterop2Blocked();
 
