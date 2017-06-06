@@ -7,6 +7,7 @@
 #include "Performance.h"
 
 #include "GeckoProfiler.h"
+#include "nsRFPService.h"
 #ifdef MOZ_GECKO_PROFILER
 #include "ProfilerMarkerPayload.h"
 #endif
@@ -252,7 +253,8 @@ Performance::RoundTime(double aTime) const
   // can do nasty timing attacks with it.  See similar code in the worker
   // Performance implementation.
   const double maxResolutionMs = 0.005;
-  return floor(aTime / maxResolutionMs) * maxResolutionMs;
+  return nsRFPService::ReduceTimePrecisionAsMSecs(
+    floor(aTime / maxResolutionMs) * maxResolutionMs);
 }
 
 
