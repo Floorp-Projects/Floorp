@@ -86,8 +86,6 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
   protected final ExecutorService executor;
   protected final FxAccountNotificationManager notificationManager;
 
-  private final TelemetryCollector telemetryCollector = new TelemetryCollector();
-
   public FxAccountSyncAdapter(Context context, boolean autoInitialize) {
     super(context, autoInitialize);
     this.executor = Executors.newSingleThreadExecutor();
@@ -157,10 +155,14 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     private final LocalBroadcastManager localBroadcastManager;
     private final TelemetryCollector telemetryCollector;
 
-    InstrumentedSessionCallback(TelemetryCollector telemetryCollector, LocalBroadcastManager localBroadcastManager, SyncDelegate syncDelegate, SchedulePolicy schedulePolicy) {
+    InstrumentedSessionCallback(LocalBroadcastManager localBroadcastManager, SyncDelegate syncDelegate, SchedulePolicy schedulePolicy) {
       super(syncDelegate, schedulePolicy);
-      this.telemetryCollector = telemetryCollector;
       this.localBroadcastManager = localBroadcastManager;
+      this.telemetryCollector = new TelemetryCollector();
+    }
+
+    TelemetryCollector getCollector() {
+      return telemetryCollector;
     }
 
     @Override
@@ -339,7 +341,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
                                    final SharedPreferences sharedPrefs,
                                    final KeyBundle syncKeyBundle,
                                    final String clientState,
-                                   final SessionCallback callback,
+                                   final InstrumentedSessionCallback callback,
                                    final Bundle extras,
                                    final AndroidFxAccount fxAccount,
                                    final long syncDeadline) {
@@ -422,8 +424,8 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
           syncConfig.stagesToSync = Utils.getStagesToSyncFromBundle(knownStageNames, extras);
           syncConfig.setClusterURL(storageServerURI);
 
-          globalSession = new GlobalSession(syncConfig, callback, context, clientsDataDelegate, telemetryCollector);
-          telemetryCollector.setIDs(token.hashedFxaUid, clientsDataDelegate.getAccountGUID());
+          globalSession = new GlobalSession(syncConfig, callback, context, clientsDataDelegate, callback.getCollector());
+          callback.getCollector().setIDs(token.hashedFxaUid, clientsDataDelegate.getAccountGUID());
           globalSession.start(syncDeadline);
         } catch (Exception e) {
           callback.handleError(globalSession, e);
@@ -444,7 +446,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
         } finally {
           fxAccount.releaseSharedAccountStateLock();
         }
-        telemetryCollector.setError(
+        callback.getCollector().setError(
                 TelemetryCollector.KEY_ERROR_TOKEN,
                 e.getClass().getSimpleName()
         );
@@ -455,7 +457,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       public void handleError(Exception e) {
         Logger.error(LOG_TAG, "Failed to get token.", e);
         fxAccount.releaseSharedAccountStateLock();
-        telemetryCollector.setError(
+        callback.getCollector().setError(
                 TelemetryCollector.KEY_ERROR_TOKEN,
                 e.getClass().getSimpleName()
         );
@@ -477,7 +479,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
         return System.currentTimeMillis() + delay;
       }
     };
-    telemetryCollector.setStarted(SystemClock.elapsedRealtime());
+    callback.getCollector().setStarted(SystemClock.elapsedRealtime());
     TokenServerClient tokenServerclient = new TokenServerClient(tokenServerEndpointURI, executor);
     tokenServerclient.getTokenFromBrowserIDAssertion(assertion, true, clientState, delegate);
   }
@@ -675,8 +677,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
             onSessionTokenStateReached(context, fxAccount);
 
-            final SessionCallback sessionCallback = new InstrumentedSessionCallback(
-                    telemetryCollector,
+            final InstrumentedSessionCallback sessionCallback = new InstrumentedSessionCallback(
                     LocalBroadcastManager.getInstance(context),
                     syncDelegate,
                     schedulePolicy
