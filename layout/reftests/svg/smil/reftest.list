@@ -271,7 +271,7 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == anim-gradient-attr-presence-0
 # Test animation using defs element
 fails-if(styloVsGecko||stylo) == anim-defs-gradient-property.svg lime.svg
 == anim-defs-gradient-attribute.svg lime.svg
-fails-if(styloVsGecko||stylo) == anim-defs-fill.svg lime.svg
+== anim-defs-fill.svg lime.svg
 == anim-defs-width.svg lime.svg
 
 # Test animation that changes 'display' attribute
