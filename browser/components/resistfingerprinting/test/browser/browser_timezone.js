@@ -4,7 +4,7 @@
  */
 
 const TEST_DOMAIN = "http://example.net/";
-const TEST_PATH = TEST_DOMAIN + "browser/browser/components/resistFingerprinting/test/browser/";
+const TEST_PATH = TEST_DOMAIN + "browser/browser/components/resistfingerprinting/test/browser/";
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({"set":
