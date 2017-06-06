@@ -5,48 +5,34 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Get bookmark service
-try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-} catch (ex) {
-  do_throw("Could not get nav-bookmarks-service\n");
-}
+let bm = PlacesUtils.bookmarks;
 
-var gTestRoot;
-var gURI;
-var gItemId1;
-var gItemId2;
+// Test that Bookmarks fetch properly orders its results based on
+// the last modified value. Note we cannot rely on dateAdded due to
+// the low PR_Now() resolution.
 
-// main
-function run_test() {
-  gURI = uri("http://foo.tld.com/");
-  gTestRoot = bmsvc.createFolder(bmsvc.placesRoot, "test folder",
-                                 bmsvc.DEFAULT_INDEX);
+add_task(async function sort_bookmark_by_relevance() {
+    let now = new Date();
+    let modifiedTime = new Date(now.setHours(now.getHours() - 2));
 
-  // test getBookmarkIdsForURI
-  // getBookmarkIdsForURI sorts by the most recently added/modified (descending)
-  //
-  // we cannot rely on dateAdded growing when doing so in a simple iteration,
-  // see PR_Now() documentation
-  do_test_pending();
+    let url = "http://foo.tld.com/";
+    let parentGuid = (await bm.insert({type: bm.TYPE_FOLDER,
+                                       title: "test folder",
+                                       parentGuid: bm.unfiledGuid})).guid;
+    let item1Guid = (await bm.insert({url,
+                                      parentGuid})).guid;
+    let item2Guid = (await bm.insert({url,
+                                      parentGuid,
+                                      dateAdded: modifiedTime,
+                                      lastModified: modifiedTime})).guid;
+    let bms = [];
+    await bm.fetch({url}, bm1 => bms.push(bm1));
+    Assert.equal(bms[0].guid, item1Guid);
+    Assert.equal(bms[1].guid, item2Guid);
+    await bm.update({guid: item2Guid, title: "modified"});
 
-  gItemId1 = bmsvc.insertBookmark(gTestRoot, gURI, bmsvc.DEFAULT_INDEX, "");
-  do_timeout(100, phase2);
-}
-
-function phase2() {
-  gItemId2 = bmsvc.insertBookmark(gTestRoot, gURI, bmsvc.DEFAULT_INDEX, "");
-  var b = bmsvc.getBookmarkIdsForURI(gURI);
-  do_check_eq(b[0], gItemId2);
-  do_check_eq(b[1], gItemId1);
-  do_timeout(100, phase3);
-}
-
-function phase3() {
-  // trigger last modified change
-  bmsvc.setItemTitle(gItemId1, "");
-  var b = bmsvc.getBookmarkIdsForURI(gURI);
-  do_check_eq(b[0], gItemId1);
-  do_check_eq(b[1], gItemId2);
-  do_test_finished();
-}
+    let bms1 = [];
+    await bm.fetch({url}, bm2 => bms1.push(bm2));
+    Assert.equal(bms1[0].guid, item2Guid);
+    Assert.equal(bms1[1].guid, item1Guid);
+});
