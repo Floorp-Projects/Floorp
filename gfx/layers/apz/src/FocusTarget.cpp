@@ -5,7 +5,9 @@
 
 #include "mozilla/layers/FocusTarget.h"
 
-#include "mozilla/dom/TabParent.h"  // for TabParent
+#include "mozilla/dom/EventTarget.h" // for EventTarget
+#include "mozilla/dom/TabParent.h"   // for TabParent
+#include "mozilla/EventDispatcher.h" // for EventDispatcher
 #include "mozilla/layout/RenderFrameParent.h" // For RenderFrameParent
 #include "nsIPresShell.h"  // for nsIPresShell
 #include "nsLayoutUtils.h" // for nsLayoutUtils
@@ -38,11 +40,34 @@ GetRetargetEventPresShell(nsIPresShell* aRootPresShell)
   return presShell.forget();
 }
 
-FocusTarget::FocusTarget() : mType(FocusTarget::eNone)
+static bool
+HasListenersForKeyEvents(nsIContent* aContent)
+{
+  if (!aContent) {
+    return false;
+  }
+
+  WidgetEvent event(true, eVoidEvent);
+  nsTArray<EventTarget*> targets;
+  nsresult rv = EventDispatcher::Dispatch(aContent, nullptr, &event, nullptr,
+      nullptr, nullptr, &targets);
+  NS_ENSURE_SUCCESS(rv, false);
+  for (size_t i = 0; i < targets.Length(); i++) {
+    if (targets[i]->HasUntrustedOrNonSystemGroupKeyEventListeners()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+FocusTarget::FocusTarget()
+  : mFocusHasKeyEventListeners(false)
+  , mType(FocusTarget::eNone)
 {
 }
 
 FocusTarget::FocusTarget(nsIPresShell* aRootPresShell)
+  : mFocusHasKeyEventListeners(false)
 {
   MOZ_ASSERT(aRootPresShell);
   MOZ_ASSERT(NS_IsMainThread());
@@ -53,6 +78,10 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell)
   // Get the content that should be scrolled for this PresShell, which is
   // the current focused element or the current DOM selection
   nsCOMPtr<nsIContent> scrollTarget = presShell->GetContentForScrolling();
+
+  // Collect event listener information so we can track what is potentially focus
+  // changing
+  mFocusHasKeyEventListeners = HasListenersForKeyEvents(scrollTarget);
 
   // Check if the scroll target is a remote browser
   if (TabParent* browserParent = TabParent::GetFrom(scrollTarget)) {

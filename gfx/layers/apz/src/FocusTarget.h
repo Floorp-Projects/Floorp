@@ -53,6 +53,10 @@ public:
   FocusTarget(nsIPresShell* aRootPresShell);
 
 public:
+  // Whether there are keydown, keypress, or keyup event listeners
+  // in the event target chain of the focused element
+  bool mFocusHasKeyEventListeners;
+
   FocusTargetType mType;
   FocusTargetData mData;
 };
