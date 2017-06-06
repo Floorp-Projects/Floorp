@@ -17,7 +17,12 @@ const { get } = require('../preferences/service');
 const { preferences } = metadata;
 
 const Startup = Cu.import("resource://gre/modules/sdk/system/Startup.js", {}).exports;
-const { DevToolsShim } = Cu.import("chrome://devtools-shim/content/DevToolsShim.jsm", {});
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyGetter(this, "BrowserToolboxProcess", function () {
+  return Cu.import("resource://devtools/client/framework/ToolboxProcess.jsm", {}).
+         BrowserToolboxProcess;
+});
 
 // Initializes default preferences
 function setDefaultPrefs(prefsURI) {
@@ -151,7 +156,7 @@ function run(options) {
     }
 
     if (get("extensions." + id + ".sdk.debug.show", false)) {
-      DevToolsShim.initBrowserToolboxProcessForAddon(id);
+      BrowserToolboxProcess.init({ addonID: id });
     }
   } catch (error) {
     console.exception(error);
