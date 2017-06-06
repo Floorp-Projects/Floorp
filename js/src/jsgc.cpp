@@ -1436,12 +1436,16 @@ void
 GCRuntime::removeBlackRootsTracer(JSTraceDataOp traceOp, void* data)
 {
     // Can be called from finalizers
+    mozilla::DebugOnly<bool> removed = false;
     for (size_t i = 0; i < blackRootTracers.ref().length(); i++) {
         Callback<JSTraceDataOp>* e = &blackRootTracers.ref()[i];
         if (e->op == traceOp && e->data == data) {
             blackRootTracers.ref().erase(e);
+            removed = true;
+            break;
         }
     }
+    MOZ_ASSERT(removed);
 }
 
 void
