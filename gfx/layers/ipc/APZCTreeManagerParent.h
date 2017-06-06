@@ -79,6 +79,14 @@ public:
           uint64_t* aOutInputBlockId) override;
 
   mozilla::ipc::IPCResult
+  RecvReceiveKeyboardInputEvent(
+          const KeyboardInput& aEvent,
+          nsEventStatus* aOutStatus,
+          KeyboardInput* aOutEvent,
+          ScrollableLayerGuid* aOutTargetGuid,
+          uint64_t* aOutInputBlockId) override;
+
+  mozilla::ipc::IPCResult
   RecvSetKeyboardMap(const KeyboardMap& aKeyboardMap) override;
 
   mozilla::ipc::IPCResult

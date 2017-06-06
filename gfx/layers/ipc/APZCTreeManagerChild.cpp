@@ -119,6 +119,20 @@ APZCTreeManagerChild::ReceiveInputEvent(
     event = processedEvent;
     return res;
   }
+  case KEYBOARD_INPUT: {
+    KeyboardInput& event = aEvent.AsKeyboardInput();
+    KeyboardInput processedEvent;
+
+    nsEventStatus res;
+    SendReceiveKeyboardInputEvent(event,
+                                  &res,
+                                  &processedEvent,
+                                  aOutTargetGuid,
+                                  aOutInputBlockId);
+
+    event = processedEvent;
+    return res;
+  }
   default: {
     MOZ_ASSERT_UNREACHABLE("Invalid InputData type.");
     return nsEventStatus_eConsumeNoDefault;
