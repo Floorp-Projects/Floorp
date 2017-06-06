@@ -11,7 +11,7 @@ async function calcMaximumAvailSize(aChromeWidth, aChromeHeight) {
   let chromeUIWidth;
   let chromeUIHeight;
   let testPath = "http://example.net/browser/browser/" +
-                 "components/resistFingerprinting/test/browser/"
+                 "components/resistfingerprinting/test/browser/"
 
   // If the chrome UI dimensions is not given, we will calculate it.
   if (!aChromeWidth || !aChromeHeight) {
