@@ -513,6 +513,8 @@ fuzzy-if(skiaContent,1,100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-re
 == use-extref-dataURI-01.svg pass.svg
 == use-children.svg pass.svg
 
+== use-element-shadow-tree-rule-matching.html pass.svg
+
 # test case for Fragment URLs
 # https://drafts.csswg.org/css-values/#local-urls
 == use-localRef-marker-01.svg use-localRef-marker-01-ref.svg
