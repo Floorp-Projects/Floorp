@@ -306,7 +306,7 @@ public class GeckoView extends LayerView {
 
     /**
      * Preload GeckoView by starting Gecko with the specified arguments in the background,
-     * if Geckois not already running.
+     * if Gecko is not already running.
      *
      * @param context Activity or Application Context for starting GeckoView.
      * @param geckoArgs Arguments to be passed to Gecko, if Gecko is not already running
@@ -317,7 +317,7 @@ public class GeckoView extends LayerView {
             GeckoAppShell.setApplicationContext(appContext);
         }
 
-        if (GeckoThread.initMainProcess(GeckoProfile.get(appContext),
+        if (GeckoThread.initMainProcess(GeckoProfile.initFromArgs(appContext, geckoArgs),
                                         geckoArgs,
                                         /* debugging */ false)) {
             GeckoThread.launch();
