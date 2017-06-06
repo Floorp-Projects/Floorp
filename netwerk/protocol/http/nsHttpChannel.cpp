@@ -757,6 +757,13 @@ nsHttpChannel::DoNotifyListenerCleanup()
 }
 
 void
+nsHttpChannel::ReleaseListeners()
+{
+    HttpBaseChannel::ReleaseListeners();
+    mChannelClassifier = nullptr;
+}
+
+void
 nsHttpChannel::HandleAsyncRedirect()
 {
     NS_PRECONDITION(!mCallOnResume, "How did that happen?");
@@ -6099,6 +6106,19 @@ InitLocalBlockListXpcCallback::OnClassifyComplete(nsresult /*aErrorCode*/,
 
 } // end of unnamed namespace/
 
+already_AddRefed<nsChannelClassifier>
+nsHttpChannel::GetOrCreateChannelClassifier()
+{
+    if (!mChannelClassifier) {
+        mChannelClassifier = new nsChannelClassifier(this);
+        LOG(("nsHttpChannel [%p] created nsChannelClassifier [%p]\n",
+             this, mChannelClassifier.get()));
+    }
+
+    RefPtr<nsChannelClassifier> classifier = mChannelClassifier;
+    return classifier.forget();
+}
+
 bool
 nsHttpChannel::InitLocalBlockList(const InitLocalBlockListCallback& aCallback)
 {
@@ -6110,7 +6130,8 @@ nsHttpChannel::InitLocalBlockList(const InitLocalBlockListCallback& aCallback)
 
     // Check to see if this principal exists on local blocklists.
     nsCOMPtr<nsIURIClassifier> classifier(services::GetURIClassifier());
-    RefPtr<nsChannelClassifier> channelClassifier = new nsChannelClassifier(this);
+    RefPtr<nsChannelClassifier> channelClassifier =
+        GetOrCreateChannelClassifier();
     bool tpEnabled = false;
     channelClassifier->ShouldEnableTrackingProtection(&tpEnabled);
     if (!classifier || !tpEnabled) {
@@ -6476,7 +6497,8 @@ nsHttpChannel::BeginConnectActual()
     // been called, after optionally cancelling the channel once we have a
     // remote verdict. We call a concrete class instead of an nsI* that might
     // be overridden.
-    RefPtr<nsChannelClassifier> channelClassifier = new nsChannelClassifier(this);
+    RefPtr<nsChannelClassifier> channelClassifier =
+        GetOrCreateChannelClassifier();
     LOG(("nsHttpChannel::Starting nsChannelClassifier %p [this=%p]",
          channelClassifier.get(), this));
     channelClassifier->Start();
