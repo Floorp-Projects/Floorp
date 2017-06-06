@@ -3168,6 +3168,15 @@ TabChild::RecvSetWindowName(const nsString& aName)
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+TabChild::RecvSetOriginAttributes(const OriginAttributes& aOriginAttributes)
+{
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  nsDocShell::Cast(docShell)->SetOriginAttributes(aOriginAttributes);
+
+  return IPC_OK();
+}
+
 mozilla::plugins::PPluginWidgetChild*
 TabChild::AllocPPluginWidgetChild()
 {
