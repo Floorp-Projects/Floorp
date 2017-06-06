@@ -32,11 +32,12 @@
 extern "C" {
 #endif
 
+static INLINE int has_scale(int xs, int ys) { return xs != 16 || ys != 16; }
+
 static INLINE void inter_predictor(const uint8_t *src, int src_stride,
-                                   uint8_t *dst, int dst_stride,
-                                   const int subpel_x, const int subpel_y,
-                                   const struct scale_factors *sf, int w, int h,
-                                   ConvolveParams *conv_params,
+                                   uint8_t *dst, int dst_stride, int subpel_x,
+                                   int subpel_y, const struct scale_factors *sf,
+                                   int w, int h, ConvolveParams *conv_params,
 #if CONFIG_DUAL_FILTER
                                    const InterpFilter *interp_filter,
 #else
@@ -44,63 +45,53 @@ static INLINE void inter_predictor(const uint8_t *src, int src_stride,
 #endif
                                    int xs, int ys) {
 #if CONFIG_DUAL_FILTER
-  InterpFilter filter_x = av1_get_plane_interp_filter(
+  const InterpFilter filter_x = av1_get_plane_interp_filter(
       interp_filter[1 + 2 * conv_params->ref], conv_params->plane);
-  InterpFilter filter_y = av1_get_plane_interp_filter(
+  const InterpFilter filter_y = av1_get_plane_interp_filter(
       interp_filter[0 + 2 * conv_params->ref], conv_params->plane);
-  InterpFilterParams interp_filter_params_x =
+  const InterpFilterParams interp_filter_params_x =
       av1_get_interp_filter_params(filter_x);
-  InterpFilterParams interp_filter_params_y =
+  const InterpFilterParams interp_filter_params_y =
       av1_get_interp_filter_params(filter_y);
 #else
-  InterpFilterParams interp_filter_params =
+  const InterpFilterParams interp_filter_params_x =
       av1_get_interp_filter_params(interp_filter);
+  const InterpFilterParams interp_filter_params_y = interp_filter_params_x;
 #endif
 
   assert(sf);
-#if CONFIG_DUAL_FILTER
-  if (interp_filter_params_x.taps == SUBPEL_TAPS &&
-      interp_filter_params_y.taps == SUBPEL_TAPS && w > 2 && h > 2 &&
-      conv_params->round == CONVOLVE_OPT_ROUND && xs == 16 && ys == 16) {
-    const int16_t *kernel_x =
-        av1_get_interp_filter_subpel_kernel(interp_filter_params_x, subpel_x);
-    const int16_t *kernel_y =
-        av1_get_interp_filter_subpel_kernel(interp_filter_params_y, subpel_y);
-#else
-  if (interp_filter_params.taps == SUBPEL_TAPS && w > 2 && h > 2 &&
-      conv_params->round == CONVOLVE_OPT_ROUND && xs == 16 && ys == 16) {
-    const int16_t *kernel_x =
-        av1_get_interp_filter_subpel_kernel(interp_filter_params, subpel_x);
-    const int16_t *kernel_y =
-        av1_get_interp_filter_subpel_kernel(interp_filter_params, subpel_y);
-#endif
-    sf->predict[subpel_x != 0][subpel_y != 0][conv_params->ref](
-        src, src_stride, dst, dst_stride, kernel_x, xs, kernel_y, ys, w, h);
-  } else {
-// ref_idx > 0 means this is the second reference frame
-// first reference frame's prediction result is already in dst
-// therefore we need to average the first and second results
+  if (has_scale(xs, ys)) {
+    av1_convolve_c(src, src_stride, dst, dst_stride, w, h, interp_filter,
+                   subpel_x, xs, subpel_y, ys, conv_params);
+  } else if (conv_params->round == CONVOLVE_OPT_NO_ROUND) {
 #if CONFIG_CONVOLVE_ROUND
-    if (conv_params->round == CONVOLVE_OPT_NO_ROUND && xs == 16 && ys == 16)
-      av1_convolve_2d_facade(src, src_stride, dst, dst_stride, w, h,
+    av1_convolve_2d_facade(src, src_stride, dst, dst_stride, w, h,
 #if CONFIG_DUAL_FILTER
-                             interp_filter,
+                           interp_filter,
+#else   // CONFIG_DUAL_FILTER
+                           &interp_filter,
+#endif  // CONFIG_DUAL_FILTER
+                           subpel_x, xs, subpel_y, ys, conv_params);
+    conv_params->do_post_rounding = 1;
 #else
-                             &interp_filter,
-#endif
-                             subpel_x, xs, subpel_y, ys, conv_params);
-    else
-#endif
-    {
-      if (xs == 16 && ys == 16) {
-        av1_convolve(src, src_stride, dst, dst_stride, w, h, interp_filter,
+    assert(0);
+#endif  // CONFIG_CONVOLVE_ROUND
+  } else {
+    assert(conv_params->round == CONVOLVE_OPT_ROUND);
+    if (w <= 2 || h <= 2) {
+      av1_convolve_c(src, src_stride, dst, dst_stride, w, h, interp_filter,
                      subpel_x, xs, subpel_y, ys, conv_params);
-      } else {
-        // If xs == 16 || ys == 16 scaling is happening and the SSE2
-        // instructions don't support scaling; use the C versions to be safe.
-        av1_convolve_c(src, src_stride, dst, dst_stride, w, h, interp_filter,
-                       subpel_x, xs, subpel_y, ys, conv_params);
-      }
+    } else if (interp_filter_params_x.taps == SUBPEL_TAPS &&
+               interp_filter_params_y.taps == SUBPEL_TAPS) {
+      const int16_t *kernel_x =
+          av1_get_interp_filter_subpel_kernel(interp_filter_params_x, subpel_x);
+      const int16_t *kernel_y =
+          av1_get_interp_filter_subpel_kernel(interp_filter_params_y, subpel_y);
+      sf->predict[subpel_x != 0][subpel_y != 0][conv_params->ref](
+          src, src_stride, dst, dst_stride, kernel_x, xs, kernel_y, ys, w, h);
+    } else {
+      av1_convolve(src, src_stride, dst, dst_stride, w, h, interp_filter,
+                   subpel_x, xs, subpel_y, ys, conv_params);
     }
   }
 }
@@ -111,46 +102,59 @@ static INLINE void highbd_inter_predictor(const uint8_t *src, int src_stride,
                                           const int subpel_x,
                                           const int subpel_y,
                                           const struct scale_factors *sf, int w,
-                                          int h, int ref,
+                                          int h, ConvolveParams *conv_params,
 #if CONFIG_DUAL_FILTER
                                           const InterpFilter *interp_filter,
 #else
                                           const InterpFilter interp_filter,
 #endif
                                           int xs, int ys, int bd) {
+  const int ref = conv_params->ref;
+  // ref > 0 means this is the second reference frame
+  // first reference frame's prediction result is already in dst
+  // therefore we need to average the first and second results
+  const int avg = ref > 0;
 #if CONFIG_DUAL_FILTER
-  InterpFilterParams interp_filter_params_x =
+  const InterpFilterParams interp_filter_params_x =
       av1_get_interp_filter_params(interp_filter[1 + 2 * ref]);
-  InterpFilterParams interp_filter_params_y =
+  const InterpFilterParams interp_filter_params_y =
       av1_get_interp_filter_params(interp_filter[0 + 2 * ref]);
 #else
-  InterpFilterParams interp_filter_params =
+  const InterpFilterParams interp_filter_params_x =
       av1_get_interp_filter_params(interp_filter);
+  const InterpFilterParams interp_filter_params_y = interp_filter_params_x;
 #endif
 
-#if CONFIG_DUAL_FILTER
-  if (interp_filter_params_x.taps == SUBPEL_TAPS &&
-      interp_filter_params_y.taps == SUBPEL_TAPS && w > 2 && h > 2) {
-    const int16_t *kernel_x =
-        av1_get_interp_filter_subpel_kernel(interp_filter_params_x, subpel_x);
-    const int16_t *kernel_y =
-        av1_get_interp_filter_subpel_kernel(interp_filter_params_y, subpel_y);
-#else
-  if (interp_filter_params.taps == SUBPEL_TAPS && w > 2 && h > 2) {
-    const int16_t *kernel_x =
-        av1_get_interp_filter_subpel_kernel(interp_filter_params, subpel_x);
-    const int16_t *kernel_y =
-        av1_get_interp_filter_subpel_kernel(interp_filter_params, subpel_y);
-#endif  // CONFIG_DUAL_FILTER
-    sf->highbd_predict[subpel_x != 0][subpel_y != 0][ref](
-        src, src_stride, dst, dst_stride, kernel_x, xs, kernel_y, ys, w, h, bd);
-  } else {
-    // ref > 0 means this is the second reference frame
-    // first reference frame's prediction result is already in dst
-    // therefore we need to average the first and second results
-    int avg = ref > 0;
+  if (has_scale(xs, ys)) {
     av1_highbd_convolve(src, src_stride, dst, dst_stride, w, h, interp_filter,
                         subpel_x, xs, subpel_y, ys, avg, bd);
+  } else if (conv_params->round == CONVOLVE_OPT_NO_ROUND) {
+#if CONFIG_CONVOLVE_ROUND
+    av1_highbd_convolve_2d_facade(src, src_stride, dst, dst_stride, w, h,
+#if CONFIG_DUAL_FILTER
+                                  interp_filter,
+#else   // CONFIG_DUAL_FILTER
+                                  &interp_filter,
+#endif  // CONFIG_DUAL_FILTER
+                                  subpel_x, xs, subpel_y, ys, conv_params, bd);
+    conv_params->do_post_rounding = 1;
+#else
+    assert(0);
+#endif  // CONFIG_CONVOLVE_ROUND
+  } else {
+    if (interp_filter_params_x.taps == SUBPEL_TAPS &&
+        interp_filter_params_y.taps == SUBPEL_TAPS && w > 2 && h > 2) {
+      const int16_t *kernel_x =
+          av1_get_interp_filter_subpel_kernel(interp_filter_params_x, subpel_x);
+      const int16_t *kernel_y =
+          av1_get_interp_filter_subpel_kernel(interp_filter_params_y, subpel_y);
+      sf->highbd_predict[subpel_x != 0][subpel_y != 0][ref](
+          src, src_stride, dst, dst_stride, kernel_x, xs, kernel_y, ys, w, h,
+          bd);
+    } else {
+      av1_highbd_convolve(src, src_stride, dst, dst_stride, w, h, interp_filter,
+                          subpel_x, xs, subpel_y, ys, avg, bd);
+    }
   }
 }
 #endif  // CONFIG_HIGHBITDEPTH
@@ -254,7 +258,7 @@ void build_compound_seg_mask_highbd(uint8_t *mask, SEG_MASK_TYPE mask_type,
 #endif  // CONFIG_COMPOUND_SEGMENT
 #endif  // CONFIG_EXT_INTER
 
-void build_inter_predictors(MACROBLOCKD *xd, int plane,
+void build_inter_predictors(const AV1_COMMON *cm, MACROBLOCKD *xd, int plane,
 #if CONFIG_MOTION_VAR
                             int mi_col_offset, int mi_row_offset,
 #endif  // CONFIG_MOTION_VAR
@@ -415,20 +419,26 @@ static INLINE void av1_make_inter_predictor(
   if (do_warp) {
     const struct macroblockd_plane *const pd = &xd->plane[plane];
     const struct buf_2d *const pre_buf = &pd->pre[ref];
+#if CONFIG_EXT_INTER
+    int compute_avg =
+        ref && mi->mbmi.interinter_compound_type == COMPOUND_AVERAGE;
+#else
+    int compute_avg = ref;
+#endif  // CONFIG_EXT_INTER
     av1_warp_plane(&final_warp_params,
 #if CONFIG_HIGHBITDEPTH
                    xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH, xd->bd,
 #endif  // CONFIG_HIGHBITDEPTH
                    pre_buf->buf0, pre_buf->width, pre_buf->height,
                    pre_buf->stride, dst, p_col, p_row, w, h, dst_stride,
-                   pd->subsampling_x, pd->subsampling_y, xs, ys, ref);
+                   pd->subsampling_x, pd->subsampling_y, xs, ys, compute_avg);
     return;
   }
 #endif  // CONFIG_GLOBAL_MOTION || CONFIG_WARPED_MOTION
 #if CONFIG_HIGHBITDEPTH
   if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
     highbd_inter_predictor(src, src_stride, dst, dst_stride, subpel_x, subpel_y,
-                           sf, w, h, conv_params->ref, interp_filter, xs, ys,
+                           sf, w, h, conv_params, interp_filter, xs, ys,
                            xd->bd);
     return;
   }
@@ -526,27 +536,32 @@ static INLINE MV average_split_mvs(const struct macroblockd_plane *pd,
   return res;
 }
 
-void av1_build_inter_predictor_sub8x8(MACROBLOCKD *xd, int plane, int i, int ir,
-                                      int ic, int mi_row, int mi_col);
+void av1_build_inter_predictor_sub8x8(const AV1_COMMON *cm, MACROBLOCKD *xd,
+                                      int plane, int i, int ir, int ic,
+                                      int mi_row, int mi_col);
 
-void av1_build_inter_predictors_sby(MACROBLOCKD *xd, int mi_row, int mi_col,
-                                    BUFFER_SET *ctx, BLOCK_SIZE bsize);
+void av1_build_inter_predictors_sby(const AV1_COMMON *cm, MACROBLOCKD *xd,
+                                    int mi_row, int mi_col, BUFFER_SET *ctx,
+                                    BLOCK_SIZE bsize);
 
-void av1_build_inter_predictors_sbuv(MACROBLOCKD *xd, int mi_row, int mi_col,
-                                     BUFFER_SET *ctx, BLOCK_SIZE bsize);
+void av1_build_inter_predictors_sbuv(const AV1_COMMON *cm, MACROBLOCKD *xd,
+                                     int mi_row, int mi_col, BUFFER_SET *ctx,
+                                     BLOCK_SIZE bsize);
 
-void av1_build_inter_predictors_sb(MACROBLOCKD *xd, int mi_row, int mi_col,
-                                   BUFFER_SET *ctx, BLOCK_SIZE bsize);
+void av1_build_inter_predictors_sb(const AV1_COMMON *cm, MACROBLOCKD *xd,
+                                   int mi_row, int mi_col, BUFFER_SET *ctx,
+                                   BLOCK_SIZE bsize);
 
 #if CONFIG_SUPERTX
-void av1_build_inter_predictors_sb_sub8x8_extend(MACROBLOCKD *xd,
+void av1_build_inter_predictors_sb_sub8x8_extend(const AV1_COMMON *cm,
+                                                 MACROBLOCKD *xd,
 #if CONFIG_EXT_INTER
                                                  int mi_row_ori, int mi_col_ori,
 #endif  // CONFIG_EXT_INTER
                                                  int mi_row, int mi_col,
                                                  BLOCK_SIZE bsize, int block);
 
-void av1_build_inter_predictors_sb_extend(MACROBLOCKD *xd,
+void av1_build_inter_predictors_sb_extend(const AV1_COMMON *cm, MACROBLOCKD *xd,
 #if CONFIG_EXT_INTER
                                           int mi_row_ori, int mi_col_ori,
 #endif  // CONFIG_EXT_INTER
@@ -783,7 +798,7 @@ const uint8_t *av1_get_compound_type_mask_inverse(
 
 const uint8_t *av1_get_compound_type_mask(
     const INTERINTER_COMPOUND_DATA *const comp_data, BLOCK_SIZE sb_type);
-
+#if CONFIG_INTERINTRA
 void av1_build_interintra_predictors(MACROBLOCKD *xd, uint8_t *ypred,
                                      uint8_t *upred, uint8_t *vpred,
                                      int ystride, int ustride, int vstride,
@@ -807,7 +822,7 @@ void av1_build_intra_predictors_for_interintra(MACROBLOCKD *xd,
 void av1_combine_interintra(MACROBLOCKD *xd, BLOCK_SIZE bsize, int plane,
                             const uint8_t *inter_pred, int inter_stride,
                             const uint8_t *intra_pred, int intra_stride);
-
+#endif  // CONFIG_INTERINTRA
 // Encoder only
 void av1_build_inter_predictors_for_planes_single_buf(
     MACROBLOCKD *xd, BLOCK_SIZE bsize, int plane_from, int plane_to, int mi_row,

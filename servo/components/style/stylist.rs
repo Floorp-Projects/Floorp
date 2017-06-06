@@ -28,7 +28,8 @@ use selectors::attr::NamespaceConstraint;
 use selectors::bloom::BloomFilter;
 use selectors::matching::{ElementSelectorFlags, matches_selector, MatchingContext, MatchingMode};
 use selectors::matching::AFFECTED_BY_PRESENTATIONAL_HINTS;
-use selectors::parser::{Combinator, Component, Selector, SelectorInner, SelectorIter, SelectorMethods};
+use selectors::parser::{AncestorHashes, Combinator, Component, Selector, SelectorAndHashes};
+use selectors::parser::{SelectorIter, SelectorMethods};
 use selectors::visitor::SelectorVisitor;
 use shared_lock::{Locked, SharedRwLockReadGuard, StylesheetGuards};
 use sink::Push;
@@ -146,11 +147,20 @@ pub struct Stylist {
     /// when an irrelevant element state bit changes.
     state_dependencies: ElementState,
 
+    /// The ids that appear in the rightmost complex selector of selectors (and
+    /// hence in our selector maps).  Used to determine when sharing styles is
+    /// safe: we disallow style sharing for elements whose id matches this
+    /// filter, and hence might be in one of our selector maps.
+    ///
+    /// FIXME(bz): This doesn't really need to be a counting Blooom filter.
+    #[cfg_attr(feature = "servo", ignore_heap_size_of = "just an array")]
+    mapped_ids: BloomFilter,
+
     /// Selectors that require explicit cache revalidation (i.e. which depend
     /// on state that is not otherwise visible to the cache, like attributes or
     /// tree-structural state like child index and pseudos).
     #[cfg_attr(feature = "servo", ignore_heap_size_of = "Arc")]
-    selectors_for_cache_revalidation: SelectorMap<SelectorInner<SelectorImpl>>,
+    selectors_for_cache_revalidation: SelectorMap<SelectorAndHashes<SelectorImpl>>,
 
     /// The total number of selectors.
     num_selectors: usize,
@@ -249,6 +259,7 @@ impl Stylist {
             attribute_dependencies: BloomFilter::new(),
             style_attribute_dependency: false,
             state_dependencies: ElementState::empty(),
+            mapped_ids: BloomFilter::new(),
             selectors_for_cache_revalidation: SelectorMap::new(),
             num_selectors: 0,
             num_declarations: 0,
@@ -323,6 +334,7 @@ impl Stylist {
         self.attribute_dependencies.clear();
         self.style_attribute_dependency = false;
         self.state_dependencies = ElementState::empty();
+        self.mapped_ids.clear();
         self.selectors_for_cache_revalidation = SelectorMap::new();
         self.num_selectors = 0;
         self.num_declarations = 0;
@@ -443,10 +455,10 @@ impl Stylist {
                 CssRule::Style(ref locked) => {
                     let style_rule = locked.read_with(&guard);
                     self.num_declarations += style_rule.block.read_with(&guard).len();
-                    for selector in &style_rule.selectors.0 {
+                    for selector_and_hashes in &style_rule.selectors.0 {
                         self.num_selectors += 1;
 
-                        let map = if let Some(pseudo) = selector.pseudo_element() {
+                        let map = if let Some(pseudo) = selector_and_hashes.selector.pseudo_element() {
                             self.pseudos_map
                                 .entry(pseudo.canonical())
                                 .or_insert_with(PerPseudoElementSelectorMap::new)
@@ -455,18 +467,22 @@ impl Stylist {
                             self.element_map.borrow_for_origin(&stylesheet.origin)
                         };
 
-                        map.insert(Rule::new(selector.clone(),
+                        map.insert(Rule::new(selector_and_hashes.selector.clone(),
+                                             selector_and_hashes.hashes.clone(),
                                              locked.clone(),
                                              self.rules_source_order));
 
-                        self.dependencies.note_selector(selector);
-                        if needs_revalidation(selector) {
-                            self.selectors_for_cache_revalidation.insert(selector.inner.clone());
+                        self.dependencies.note_selector(selector_and_hashes);
+                        if needs_revalidation(&selector_and_hashes.selector) {
+                            self.selectors_for_cache_revalidation.insert(selector_and_hashes.clone());
                         }
-                        selector.visit(&mut AttributeAndStateDependencyVisitor {
+                        selector_and_hashes.selector.visit(&mut AttributeAndStateDependencyVisitor {
                             attribute_dependencies: &mut self.attribute_dependencies,
                             style_attribute_dependency: &mut self.style_attribute_dependency,
                             state_dependencies: &mut self.state_dependencies,
+                        });
+                        selector_and_hashes.selector.visit(&mut MappedIdVisitor {
+                            mapped_ids: &mut self.mapped_ids,
                         });
                     }
                     self.rules_source_order += 1;
@@ -1069,6 +1085,13 @@ impl Stylist {
         debug!("push_applicable_declarations: shareable: {:?}", context.relations);
     }
 
+    /// Given an id, returns whether there might be any rules for that id in any
+    /// of our rule maps.
+    #[inline]
+    pub fn may_have_rules_for_id(&self, id: &Atom) -> bool {
+        self.mapped_ids.might_contain(id)
+    }
+
     /// Return whether the device is dirty, that is, whether the screen size or
     /// media type have changed (for now).
     #[inline]
@@ -1092,7 +1115,7 @@ impl Stylist {
     /// revalidation selectors.
     pub fn match_revalidation_selectors<E, F>(&self,
                                               element: &E,
-                                              bloom: &BloomFilter,
+                                              bloom: Option<&BloomFilter>,
                                               flags_setter: &mut F)
                                               -> BitVec
         where E: TElement,
@@ -1101,7 +1124,7 @@ impl Stylist {
         // NB: `MatchingMode` doesn't really matter, given we don't share style
         // between pseudos.
         let mut matching_context =
-            MatchingContext::new(MatchingMode::Normal, Some(bloom));
+            MatchingContext::new(MatchingMode::Normal, bloom);
 
         // Note that, by the time we're revalidating, we're guaranteed that the
         // candidate and the entry have the same id, classes, and local name.
@@ -1109,8 +1132,10 @@ impl Stylist {
         // the lookups, which means that the bitvecs are comparable. We verify
         // this in the caller by asserting that the bitvecs are same-length.
         let mut results = BitVec::new();
-        self.selectors_for_cache_revalidation.lookup(*element, &mut |selector| {
-            results.push(matches_selector(selector,
+        self.selectors_for_cache_revalidation.lookup(*element, &mut |selector_and_hashes| {
+            results.push(matches_selector(&selector_and_hashes.selector,
+                                          0,
+                                          &selector_and_hashes.hashes,
                                           element,
                                           &mut matching_context,
                                           flags_setter));
@@ -1232,6 +1257,37 @@ impl<'a> SelectorVisitor for AttributeAndStateDependencyVisitor<'a> {
     }
 }
 
+/// Visitor to collect ids that appear in the rightmost portion of selectors.
+struct MappedIdVisitor<'a> {
+    mapped_ids: &'a mut BloomFilter,
+}
+
+impl<'a> SelectorVisitor for MappedIdVisitor<'a> {
+    type Impl = SelectorImpl;
+
+    /// We just want to insert all the ids we find into mapped_ids.
+    fn visit_simple_selector(&mut self, s: &Component<SelectorImpl>) -> bool {
+        if let Component::ID(ref id) = *s {
+            self.mapped_ids.insert(id);
+        }
+        true
+    }
+
+    /// We want to stop as soon as we've moved off the rightmost ComplexSelector
+    /// that is not a psedo-element.  That can be detected by a
+    /// visit_complex_selector call with a combinator other than None and
+    /// PseudoElement.  Importantly, this call happens before we visit any of
+    /// the simple selectors in that ComplexSelector.
+    fn visit_complex_selector(&mut self,
+                              _: SelectorIter<SelectorImpl>,
+                              combinator: Option<Combinator>) -> bool {
+        match combinator {
+            None | Some(Combinator::PseudoElement) => true,
+            _ => false,
+        }
+    }
+}
+
 /// Visitor determine whether a selector requires cache revalidation.
 ///
 /// Note that we just check simple selectors and eagerly return when the first
@@ -1282,6 +1338,10 @@ impl SelectorVisitor for RevalidationVisitor {
             Component::AttributeInNoNamespace { .. } |
             Component::AttributeOther(_) |
             Component::Empty |
+            // FIXME(bz) We really only want to do this for some cases of id
+            // selectors.  See
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1369611
+            Component::ID(_) |
             Component::FirstChild |
             Component::LastChild |
             Component::OnlyChild |
@@ -1354,6 +1414,9 @@ pub struct Rule {
     /// can ruin performance when there are a lot of rules.
     #[cfg_attr(feature = "servo", ignore_heap_size_of = "Arc")]
     pub selector: Selector<SelectorImpl>,
+    /// The ancestor hashes associated with the selector.
+    #[cfg_attr(feature = "servo", ignore_heap_size_of = "No heap data")]
+    pub hashes: AncestorHashes,
     /// The actual style rule.
     #[cfg_attr(feature = "servo", ignore_heap_size_of = "Arc")]
     pub style_rule: Arc<Locked<StyleRule>>,
@@ -1362,8 +1425,12 @@ pub struct Rule {
 }
 
 impl SelectorMapEntry for Rule {
-    fn selector(&self) -> &SelectorInner<SelectorImpl> {
-        &self.selector.inner
+    fn selector(&self) -> SelectorIter<SelectorImpl> {
+        self.selector.iter()
+    }
+
+    fn hashes(&self) -> &AncestorHashes {
+        &self.hashes
     }
 }
 
@@ -1388,12 +1455,14 @@ impl Rule {
 
     /// Creates a new Rule.
     pub fn new(selector: Selector<SelectorImpl>,
+               hashes: AncestorHashes,
                style_rule: Arc<Locked<StyleRule>>,
                source_order: usize)
                -> Self
     {
         Rule {
             selector: selector,
+            hashes: hashes,
             style_rule: style_rule,
             source_order: source_order,
         }

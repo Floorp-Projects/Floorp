@@ -93,7 +93,7 @@ class PublishBalrog(MercurialScript, BuildbotMixin):
         dirs = self.query_abs_dirs()
         auth = os.path.join(os.getcwd(), self.config['credentials_file'])
         cmd = [
-            self.query_exe("python"),
+            sys.executable,
             os.path.join(dirs["abs_tools_dir"],
                          "scripts/build-promotion/balrog-release-shipper.py")]
         cmd.extend([

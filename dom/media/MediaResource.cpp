@@ -73,19 +73,38 @@ NS_IMPL_ADDREF(MediaResource)
 NS_IMPL_RELEASE_WITH_DESTROY(MediaResource, Destroy())
 NS_IMPL_QUERY_INTERFACE0(MediaResource)
 
-ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
-                                           nsIChannel* aChannel,
-                                           nsIURI* aURI,
-                                           const MediaContainerType& aContainerType,
-                                           bool aIsPrivateBrowsing)
-  : BaseMediaResource(aCallback, aChannel, aURI, aContainerType),
-    mOffset(0),
-    mReopenOnError(false),
-    mIgnoreClose(false),
-    mCacheStream(this, aIsPrivateBrowsing),
-    mLock("ChannelMediaResource.mLock"),
-    mIgnoreResume(false),
-    mSuspendAgent(mChannel)
+ChannelMediaResource::ChannelMediaResource(
+  MediaResourceCallback* aCallback,
+  nsIChannel* aChannel,
+  nsIURI* aURI,
+  const MediaContainerType& aContainerType,
+  bool aIsPrivateBrowsing)
+  : BaseMediaResource(aCallback, aChannel, aURI, aContainerType)
+  , mOffset(0)
+  , mReopenOnError(false)
+  , mIgnoreClose(false)
+  , mCacheStream(this, aIsPrivateBrowsing)
+  , mLock("ChannelMediaResource.mLock")
+  , mIgnoreResume(false)
+  , mSuspendAgent(mChannel)
+{
+}
+
+ChannelMediaResource::ChannelMediaResource(
+  MediaResourceCallback* aCallback,
+  nsIChannel* aChannel,
+  nsIURI* aURI,
+  const MediaContainerType& aContainerType,
+  const MediaChannelStatistics& aStatistics)
+  : BaseMediaResource(aCallback, aChannel, aURI, aContainerType)
+  , mOffset(0)
+  , mReopenOnError(false)
+  , mIgnoreClose(false)
+  , mCacheStream(this, /* aIsPrivateBrowsing = */ false)
+  , mLock("ChannelMediaResource.mLock")
+  , mChannelStatistics(aStatistics)
+  , mIgnoreResume(false)
+  , mSuspendAgent(mChannel)
 {
 }
 
@@ -309,7 +328,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
 
   {
     MutexAutoLock lock(mLock);
-    mChannelStatistics->Start();
+    mChannelStatistics.Start();
   }
 
   mReopenOnError = false;
@@ -385,7 +404,7 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
 
   {
     MutexAutoLock lock(mLock);
-    mChannelStatistics->Stop();
+    mChannelStatistics.Stop();
   }
 
   // Note that aStatus might have succeeded --- this might be a normal close
@@ -480,7 +499,7 @@ ChannelMediaResource::OnDataAvailable(nsIRequest* aRequest,
 
   {
     MutexAutoLock lock(mLock);
-    mChannelStatistics->AddBytes(aCount);
+    mChannelStatistics.AddBytes(aCount);
   }
 
   CopySegmentClosure closure;
@@ -507,10 +526,6 @@ ChannelMediaResource::OnDataAvailable(nsIRequest* aRequest,
 nsresult ChannelMediaResource::Open(nsIStreamListener **aStreamListener)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
-  if (!mChannelStatistics) {
-    mChannelStatistics = new MediaChannelStatistics();
-  }
 
   nsresult rv = mCacheStream.Init();
   if (NS_FAILED(rv))
@@ -630,11 +645,8 @@ already_AddRefed<MediaResource> ChannelMediaResource::CloneData(MediaResourceCal
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   NS_ASSERTION(mCacheStream.IsAvailableForSharing(), "Stream can't be cloned");
 
-  RefPtr<ChannelMediaResource> resource =
-    new ChannelMediaResource(aCallback,
-                             nullptr,
-                             mURI,
-                             GetContentType());
+  RefPtr<ChannelMediaResource> resource = new ChannelMediaResource(
+    aCallback, nullptr, mURI, GetContentType(), mChannelStatistics);
   if (resource) {
     // Initially the clone is treated as suspended by the cache, because
     // we don't have a channel. If the cache needs to read data from the clone
@@ -644,8 +656,7 @@ already_AddRefed<MediaResource> ChannelMediaResource::CloneData(MediaResourceCal
     // and perform a useless HTTP transaction.
     resource->mSuspendAgent.Suspend();
     resource->mCacheStream.InitAsClone(&mCacheStream);
-    resource->mChannelStatistics = new MediaChannelStatistics(mChannelStatistics);
-    resource->mChannelStatistics->Stop();
+    resource->mChannelStatistics.Stop();
   }
   return resource.forget();
 }
@@ -656,7 +667,7 @@ void ChannelMediaResource::CloseChannel()
 
   {
     MutexAutoLock lock(mLock);
-    mChannelStatistics->Stop();
+    mChannelStatistics.Stop();
   }
 
   if (mListener) {
@@ -766,7 +777,7 @@ void ChannelMediaResource::Suspend(bool aCloseImmediately)
     if (mChannel) {
       {
         MutexAutoLock lock(mLock);
-        mChannelStatistics->Stop();
+        mChannelStatistics.Stop();
       }
       element->DownloadSuspended();
     }
@@ -793,7 +804,7 @@ void ChannelMediaResource::Resume()
       // Just wake up our existing channel
       {
         MutexAutoLock lock(mLock);
-        mChannelStatistics->Start();
+        mChannelStatistics.Start();
       }
       // if an error occurs after Resume, assume it's because the server
       // timed out the connection and we should reopen it.
@@ -1049,7 +1060,7 @@ double
 ChannelMediaResource::GetDownloadRate(bool* aIsReliable)
 {
   MutexAutoLock lock(mLock);
-  return mChannelStatistics->GetRate(aIsReliable);
+  return mChannelStatistics.GetRate(aIsReliable);
 }
 
 int64_t
@@ -1166,6 +1177,8 @@ public:
   void     SetPlaybackRate(uint32_t aBytesPerSecond) override {}
   nsresult ReadAt(int64_t aOffset, char* aBuffer,
                   uint32_t aCount, uint32_t* aBytes) override;
+  // (Probably) file-based, caching recommended.
+  bool ShouldCacheReads() override { return true; }
   already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount) override;
   int64_t  Tell() override;
 

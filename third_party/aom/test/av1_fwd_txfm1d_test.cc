@@ -56,10 +56,10 @@ TEST(av1_fwd_txfm1d, get_max_bit) {
   EXPECT_EQ(max_bit, 3);
 }
 
-TEST(av1_fwd_txfm1d, cospi_arr) {
+TEST(av1_fwd_txfm1d, cospi_arr_data) {
   for (int i = 0; i < 7; i++) {
     for (int j = 0; j < 64; j++) {
-      EXPECT_EQ(cospi_arr[i][j],
+      EXPECT_EQ(cospi_arr_data[i][j],
                 (int32_t)round(cos(M_PI * j / 128) * (1 << (cos_bit_min + i))));
     }
   }

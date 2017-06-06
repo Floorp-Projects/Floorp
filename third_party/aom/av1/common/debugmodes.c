@@ -12,6 +12,7 @@
 #include <stdio.h>
 
 #include "av1/common/blockd.h"
+#include "av1/common/enums.h"
 #include "av1/common/onyxc_int.h"
 
 static void log_frame_info(AV1_COMMON *cm, const char *str, FILE *f) {
@@ -35,11 +36,12 @@ static void print_mi_data(AV1_COMMON *cm, FILE *file, const char *descriptor,
   for (mi_row = 0; mi_row < rows; mi_row++) {
     fprintf(file, "%c ", prefix);
     for (mi_col = 0; mi_col < cols; mi_col++) {
-      fprintf(file, "%2d ", *((int *)((char *)(&mi[0]->mbmi) + member_offset)));
+      fprintf(file, "%2d ",
+              *((char *)((char *)(&mi[0]->mbmi) + member_offset)));
       mi++;
     }
     fprintf(file, "\n");
-    mi += 8;
+    mi += MAX_MIB_SIZE;
   }
   fprintf(file, "\n");
 }
@@ -67,7 +69,7 @@ void av1_print_modes_and_motion_vectors(AV1_COMMON *cm, const char *file) {
       mi++;
     }
     fprintf(mvs, "\n");
-    mi += 8;
+    mi += MAX_MIB_SIZE;
   }
   fprintf(mvs, "\n");
 
@@ -82,7 +84,7 @@ void av1_print_modes_and_motion_vectors(AV1_COMMON *cm, const char *file) {
       mi++;
     }
     fprintf(mvs, "\n");
-    mi += 8;
+    mi += MAX_MIB_SIZE;
   }
   fprintf(mvs, "\n");
 

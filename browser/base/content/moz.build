@@ -77,7 +77,7 @@ with Files("test/tabs/**"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
 with Files("test/urlbar/**"):
-    BUG_COMPONENT = ("Firefox`", "Location Bar")
+    BUG_COMPONENT = ("Firefox", "Location Bar")
 
 with Files("test/webextensions/**"):
     BUG_COMPONENT = ("Toolkit", "WebExtensions: Untriaged")

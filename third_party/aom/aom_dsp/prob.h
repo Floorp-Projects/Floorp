@@ -20,7 +20,7 @@
 #include "aom_ports/bitops.h"
 #include "aom_ports/mem.h"
 
-#if CONFIG_DAALA_EC
+#if !CONFIG_ANS
 #include "aom_dsp/entcode.h"
 #endif
 
@@ -33,14 +33,12 @@ typedef uint8_t aom_prob;
 // TODO(negge): Rename this aom_prob once we remove vpxbool.
 typedef uint16_t aom_cdf_prob;
 
-#if CONFIG_EC_MULTISYMBOL
 #define CDF_SIZE(x) ((x) + 1)
-#endif
 
 #define CDF_PROB_BITS 15
 #define CDF_PROB_TOP (1 << CDF_PROB_BITS)
 
-#if CONFIG_DAALA_EC
+#if !CONFIG_ANS
 #define AOM_ICDF OD_ICDF
 #else
 #define AOM_ICDF(x) (x)
@@ -117,7 +115,6 @@ static INLINE aom_prob mode_mv_merge_probs(aom_prob pre_prob,
 void aom_tree_merge_probs(const aom_tree_index *tree, const aom_prob *pre_probs,
                           const unsigned int *counts, aom_prob *probs);
 
-#if CONFIG_EC_MULTISYMBOL
 int tree_to_cdf(const aom_tree_index *tree, const aom_prob *probs,
                 aom_tree_index root, aom_cdf_prob *cdf, aom_tree_index *ind,
                 int *pth, int *len);
@@ -150,9 +147,6 @@ static INLINE void av1_tree_to_cdf(const aom_tree_index *tree,
   } while (0)
 
 void av1_indices_from_tree(int *ind, int *inv, const aom_tree_index *tree);
-#endif
-
-DECLARE_ALIGNED(16, extern const uint8_t, aom_norm[256]);
 
 #if CONFIG_EC_ADAPT
 static INLINE void update_cdf(aom_cdf_prob *cdf, int val, int nsymbs) {
@@ -165,7 +159,7 @@ static INLINE void update_cdf(aom_cdf_prob *cdf, int val, int nsymbs) {
   tmp = AOM_ICDF(tmp0);
   diff = ((CDF_PROB_TOP - (nsymbs << rate2)) >> rate) << rate;
 // Single loop (faster)
-#if CONFIG_DAALA_EC && CONFIG_EC_SMALLMUL
+#if !CONFIG_ANS && CONFIG_EC_SMALLMUL
   for (i = 0; i < nsymbs - 1; ++i, tmp -= tmp0) {
     tmp -= (i == val ? diff : 0);
     cdf[i] += ((tmp - cdf[i]) >> rate);

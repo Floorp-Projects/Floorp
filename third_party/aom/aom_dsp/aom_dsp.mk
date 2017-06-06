@@ -22,19 +22,16 @@ DSP_SRCS-yes += prob.h
 DSP_SRCS-yes += prob.c
 DSP_SRCS-$(CONFIG_ANS) += ans.h
 
-ifeq ($(CONFIG_ENCODERS),yes)
+ifeq ($(CONFIG_AV1_ENCODER),yes)
 ifeq ($(CONFIG_ANS),yes)
 DSP_SRCS-yes += answriter.h
 DSP_SRCS-yes += buf_ans.h
 DSP_SRCS-yes += buf_ans.c
-else ifeq ($(CONFIG_DAALA_EC),yes)
+else
 DSP_SRCS-yes += entenc.c
 DSP_SRCS-yes += entenc.h
 DSP_SRCS-yes += daalaboolwriter.c
 DSP_SRCS-yes += daalaboolwriter.h
-else
-DSP_SRCS-yes += dkboolwriter.h
-DSP_SRCS-yes += dkboolwriter.c
 endif
 DSP_SRCS-yes += bitwriter.h
 DSP_SRCS-yes += bitwriter_buffer.c
@@ -49,17 +46,14 @@ DSP_SRCS-$(CONFIG_INTERNAL_STATS) += psnrhvs.c
 DSP_SRCS-$(CONFIG_INTERNAL_STATS) += fastssim.c
 endif
 
-ifeq ($(CONFIG_DECODERS),yes)
+ifeq ($(CONFIG_AV1_DECODER),yes)
 ifeq ($(CONFIG_ANS),yes)
 DSP_SRCS-yes += ansreader.h
-else ifeq ($(CONFIG_DAALA_EC),yes)
+else
 DSP_SRCS-yes += entdec.c
 DSP_SRCS-yes += entdec.h
 DSP_SRCS-yes += daalaboolreader.c
 DSP_SRCS-yes += daalaboolreader.h
-else
-DSP_SRCS-yes += dkboolreader.h
-DSP_SRCS-yes += dkboolreader.c
 endif
 DSP_SRCS-yes += bitreader.h
 DSP_SRCS-yes += bitreader_buffer.c
@@ -71,7 +65,7 @@ endif
 # intra predictions
 DSP_SRCS-yes += intrapred.c
 
-ifeq ($(CONFIG_DAALA_EC),yes)
+ifneq ($(CONFIG_ANS),yes)
 DSP_SRCS-yes += entcode.c
 DSP_SRCS-yes += entcode.h
 endif
@@ -205,6 +199,7 @@ endif  # CONFIG_HIGHBITDEPTH
 DSP_SRCS-yes            += txfm_common.h
 DSP_SRCS-yes            += x86/txfm_common_intrin.h
 DSP_SRCS-$(HAVE_SSE2)   += x86/txfm_common_sse2.h
+DSP_SRCS-$(HAVE_SSSE3)  += x86/obmc_intrinsic_ssse3.h
 DSP_SRCS-$(HAVE_MSA)    += mips/txfm_macros_msa.h
 
 # forward transform
@@ -239,6 +234,8 @@ DSP_SRCS-$(HAVE_SSE2)   += x86/inv_txfm_sse2.h
 DSP_SRCS-$(HAVE_SSE2)   += x86/inv_txfm_sse2.c
 DSP_SRCS-$(HAVE_SSE2)   += x86/inv_wht_sse2.asm
 DSP_SRCS-$(HAVE_SSSE3)  += x86/inv_txfm_ssse3.c
+DSP_SRCS-$(HAVE_AVX2)   += x86/inv_txfm_common_avx2.h
+DSP_SRCS-$(HAVE_AVX2)   += x86/inv_txfm_avx2.c
 
 ifeq ($(HAVE_NEON_ASM),yes)
 DSP_SRCS-yes  += arm/save_reg_neon$(ASM)
@@ -278,6 +275,13 @@ DSP_SRCS-$(HAVE_DSPR2) += mips/itrans16_dspr2.c
 DSP_SRCS-$(HAVE_DSPR2) += mips/itrans32_dspr2.c
 DSP_SRCS-$(HAVE_DSPR2) += mips/itrans32_cols_dspr2.c
 endif  # CONFIG_HIGHBITDEPTH
+
+ifeq ($(CONFIG_LOOP_RESTORATION),yes)
+DSP_SRCS-$(HAVE_SSE2)   += x86/aom_convolve_hip_sse2.c
+ifeq ($(CONFIG_HIGHBITDEPTH),yes)
+DSP_SRCS-$(HAVE_SSSE3)  += x86/aom_highbd_convolve_hip_ssse3.c
+endif
+endif  # CONFIG_LOOP_RESTORATION
 endif  # CONFIG_AV1
 
 # quantization
@@ -298,7 +302,6 @@ endif
 DSP_SRCS-yes           += avg.c
 DSP_SRCS-$(HAVE_SSE2)  += x86/avg_intrin_sse2.c
 DSP_SRCS-$(HAVE_NEON)  += arm/avg_neon.c
-DSP_SRCS-$(HAVE_MSA)   += mips/avg_msa.c
 DSP_SRCS-$(HAVE_NEON)  += arm/hadamard_neon.c
 ifeq ($(ARCH_X86_64),yes)
 DSP_SRCS-$(HAVE_SSSE3) += x86/avg_ssse3_x86_64.asm
@@ -317,11 +320,10 @@ DSP_SRCS-yes            += sum_squares.c
 DSP_SRCS-$(HAVE_SSE2)   += x86/sum_squares_sse2.c
 endif # CONFIG_AV1_ENCODER
 
-ifeq ($(CONFIG_ENCODERS),yes)
+ifeq ($(CONFIG_AV1_ENCODER),yes)
 DSP_SRCS-yes            += sad.c
 DSP_SRCS-yes            += subtract.c
 
-DSP_SRCS-$(HAVE_MEDIA)  += arm/sad_media$(ASM)
 DSP_SRCS-$(HAVE_NEON)   += arm/sad4d_neon.c
 DSP_SRCS-$(HAVE_NEON)   += arm/sad_neon.c
 DSP_SRCS-$(HAVE_NEON)   += arm/subtract_neon.c
@@ -364,18 +366,12 @@ DSP_SRCS-$(HAVE_SSE2) += x86/highbd_sad4d_sse2.asm
 DSP_SRCS-$(HAVE_SSE2) += x86/highbd_sad_sse2.asm
 endif  # CONFIG_HIGHBITDEPTH
 
-endif  # CONFIG_ENCODERS
+endif  # CONFIG_AV1_ENCODER
 
-ifneq ($(filter yes,$(CONFIG_ENCODERS)),)
+ifneq ($(filter yes,$(CONFIG_AV1_ENCODER)),)
 DSP_SRCS-yes            += variance.c
 DSP_SRCS-yes            += variance.h
 
-DSP_SRCS-$(HAVE_MEDIA)  += arm/bilinear_filter_media$(ASM)
-DSP_SRCS-$(HAVE_MEDIA)  += arm/subpel_variance_media.c
-DSP_SRCS-$(HAVE_MEDIA)  += arm/variance_halfpixvar16x16_h_media$(ASM)
-DSP_SRCS-$(HAVE_MEDIA)  += arm/variance_halfpixvar16x16_hv_media$(ASM)
-DSP_SRCS-$(HAVE_MEDIA)  += arm/variance_halfpixvar16x16_v_media$(ASM)
-DSP_SRCS-$(HAVE_MEDIA)  += arm/variance_media$(ASM)
 DSP_SRCS-$(HAVE_NEON)   += arm/subpel_variance_neon.c
 DSP_SRCS-$(HAVE_NEON)   += arm/variance_neon.c
 
@@ -402,7 +398,7 @@ DSP_SRCS-$(HAVE_SSE4_1) += x86/highbd_variance_sse4.c
 DSP_SRCS-$(HAVE_SSE2)   += x86/highbd_variance_impl_sse2.asm
 DSP_SRCS-$(HAVE_SSE2)   += x86/highbd_subpel_variance_impl_sse2.asm
 endif  # CONFIG_HIGHBITDEPTH
-endif  # CONFIG_ENCODERS
+endif  # CONFIG_AV1_ENCODER
 
 DSP_SRCS-no += $(DSP_SRCS_REMOVE-yes)
 

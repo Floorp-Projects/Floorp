@@ -312,6 +312,7 @@ if (aom_config("CONFIG_AOM_QM") eq "yes") {
     add_proto qw/int64_t av1_block_error/, "const tran_low_t *coeff, const tran_low_t *dqcoeff, intptr_t block_size, int64_t *ssz";
 
     add_proto qw/void av1_quantize_fp/, "const tran_low_t *coeff_ptr, intptr_t n_coeffs, int skip_block, const int16_t *zbin_ptr, const int16_t *round_ptr, const int16_t *quant_ptr, const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan";
+    specialize qw/av1_quantize_fp sse2/;
 
     add_proto qw/void av1_quantize_fp_32x32/, "const tran_low_t *coeff_ptr, intptr_t n_coeffs, int skip_block, const int16_t *zbin_ptr, const int16_t *round_ptr, const int16_t *quant_ptr, const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan";
 
@@ -398,6 +399,13 @@ if (aom_config("CONFIG_HIGHBITDEPTH") ne "yes") {
 }
 
 add_proto qw/void av1_fwd_idtx/, "const int16_t *src_diff, tran_low_t *coeff, int stride, int bs, int tx_type";
+
+if (aom_config("CONFIG_DPCM_INTRA") eq "yes") {
+  @sizes = (4, 8, 16, 32);
+  foreach $size (@sizes) {
+    add_proto "void", "av1_dpcm_ft$size", "const int16_t *input, int stride, TX_TYPE_1D tx_type, tran_low_t *output";
+  }
+}
 
 if (aom_config("CONFIG_HIGHBITDEPTH") eq "yes") {
   #fwd txfm
@@ -608,13 +616,19 @@ if (aom_config("CONFIG_PVQ") eq "yes") {
 
 if ((aom_config("CONFIG_WARPED_MOTION") eq "yes") ||
     (aom_config("CONFIG_GLOBAL_MOTION") eq "yes")) {
-  add_proto qw/void av1_warp_affine/, "int32_t *mat, uint8_t *ref, int width, int height, int stride, uint8_t *pred, int p_col, int p_row, int p_width, int p_height, int p_stride, int subsampling_x, int subsampling_y, int ref_frm, int16_t alpha, int16_t beta, int16_t gamma, int16_t delta";
-  specialize qw/av1_warp_affine sse2/;
+  add_proto qw/void av1_warp_affine/, "const int32_t *mat, const uint8_t *ref, int width, int height, int stride, uint8_t *pred, int p_col, int p_row, int p_width, int p_height, int p_stride, int subsampling_x, int subsampling_y, int comp_avg, int16_t alpha, int16_t beta, int16_t gamma, int16_t delta";
+  specialize qw/av1_warp_affine sse2 ssse3/;
 
   if (aom_config("CONFIG_HIGHBITDEPTH") eq "yes") {
-    add_proto qw/void av1_highbd_warp_affine/, "int32_t *mat, uint16_t *ref, int width, int height, int stride, uint16_t *pred, int p_col, int p_row, int p_width, int p_height, int p_stride, int subsampling_x, int subsampling_y, int bd, int ref_frm, int16_t alpha, int16_t beta, int16_t gamma, int16_t delta";
+    add_proto qw/void av1_highbd_warp_affine/, "const int32_t *mat, const uint16_t *ref, int width, int height, int stride, uint16_t *pred, int p_col, int p_row, int p_width, int p_height, int p_stride, int subsampling_x, int subsampling_y, int bd, int comp_avg, int16_t alpha, int16_t beta, int16_t gamma, int16_t delta";
     specialize qw/av1_highbd_warp_affine ssse3/;
   }
+}
+
+if (aom_config("CONFIG_GLOBAL_MOTION") eq "yes" &&
+    aom_config("CONFIG_AV1_ENCODER") eq "yes") {
+  add_proto qw/double compute_cross_correlation/, "unsigned char *im1, int stride1, int x1, int y1, unsigned char *im2, int stride2, int x2, int y2";
+  specialize qw/compute_cross_correlation sse4_1/;
 }
 
 # LOOP_RESTORATION functions

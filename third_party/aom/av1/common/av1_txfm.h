@@ -24,7 +24,7 @@ static const int cos_bit_min = 10;
 static const int cos_bit_max = 16;
 
 // cospi_arr[i][j] = (int)round(cos(M_PI*j/128) * (1<<(cos_bit_min+i)));
-static const int32_t cospi_arr[7][64] = {
+static const int32_t cospi_arr_data[7][64] = {
   { 1024, 1024, 1023, 1021, 1019, 1016, 1013, 1009, 1004, 999, 993, 987, 980,
     972,  964,  955,  946,  936,  926,  915,  903,  891,  878, 865, 851, 837,
     822,  807,  792,  775,  759,  742,  724,  706,  688,  669, 650, 630, 610,
@@ -67,6 +67,10 @@ static const int32_t cospi_arr[7][64] = {
     30893, 29466, 28020, 26558, 25080, 23586, 22078, 20557, 19024, 17479, 15924,
     14359, 12785, 11204, 9616,  8022,  6424,  4821,  3216,  1608 }
 };
+
+static INLINE const int32_t *cospi_arr(int n) {
+  return cospi_arr_data[n - cos_bit_min];
+}
 
 static INLINE int32_t round_shift(int32_t value, int bit) {
   assert(bit >= 1);
@@ -139,26 +143,27 @@ typedef enum TXFM_TYPE {
   TXFM_TYPE_ADST8,
   TXFM_TYPE_ADST16,
   TXFM_TYPE_ADST32,
+  TXFM_TYPE_IDENTITY4,
+  TXFM_TYPE_IDENTITY8,
+  TXFM_TYPE_IDENTITY16,
+  TXFM_TYPE_IDENTITY32,
 } TXFM_TYPE;
 
-typedef struct TXFM_2D_CFG {
+typedef struct TXFM_1D_CFG {
   const int txfm_size;
-  const int stage_num_col;
-  const int stage_num_row;
+  const int stage_num;
 
   const int8_t *shift;
-  const int8_t *stage_range_col;
-  const int8_t *stage_range_row;
-  const int8_t *cos_bit_col;
-  const int8_t *cos_bit_row;
-  const TXFM_TYPE txfm_type_col;
-  const TXFM_TYPE txfm_type_row;
-} TXFM_2D_CFG;
+  const int8_t *stage_range;
+  const int8_t *cos_bit;
+  const TXFM_TYPE txfm_type;
+} TXFM_1D_CFG;
 
 typedef struct TXFM_2D_FLIP_CFG {
   int ud_flip;  // flip upside down
   int lr_flip;  // flip left to right
-  const TXFM_2D_CFG *cfg;
+  const TXFM_1D_CFG *col_cfg;
+  const TXFM_1D_CFG *row_cfg;
 } TXFM_2D_FLIP_CFG;
 
 static INLINE void set_flip_cfg(int tx_type, TXFM_2D_FLIP_CFG *cfg) {
@@ -171,25 +176,29 @@ static INLINE void set_flip_cfg(int tx_type, TXFM_2D_FLIP_CFG *cfg) {
       cfg->lr_flip = 0;
       break;
 #if CONFIG_EXT_TX
+    case IDTX:
+    case V_DCT:
+    case H_DCT:
+    case V_ADST:
+    case H_ADST:
+      cfg->ud_flip = 0;
+      cfg->lr_flip = 0;
+      break;
     case FLIPADST_DCT:
+    case FLIPADST_ADST:
+    case V_FLIPADST:
       cfg->ud_flip = 1;
       cfg->lr_flip = 0;
       break;
     case DCT_FLIPADST:
+    case ADST_FLIPADST:
+    case H_FLIPADST:
       cfg->ud_flip = 0;
       cfg->lr_flip = 1;
       break;
     case FLIPADST_FLIPADST:
       cfg->ud_flip = 1;
       cfg->lr_flip = 1;
-      break;
-    case ADST_FLIPADST:
-      cfg->ud_flip = 0;
-      cfg->lr_flip = 1;
-      break;
-    case FLIPADST_ADST:
-      cfg->ud_flip = 1;
-      cfg->lr_flip = 0;
       break;
 #endif  // CONFIG_EXT_TX
     default:

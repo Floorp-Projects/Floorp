@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Alliance for Open Media. All rights reserved
+ * Copyright (c) 2017, Alliance for Open Media. All rights reserved
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
@@ -9,49 +9,70 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#include <stdlib.h>
-#include <emmintrin.h>
+#include <stdio.h>
 #include <tmmintrin.h>
 
-#include "aom_ports/mem.h"
 #include "./aom_config.h"
+#include "./aom_dsp_rtcd.h"
+#include "aom_dsp/blend.h"
 #include "aom/aom_integer.h"
+#include "aom_dsp/x86/synonyms.h"
 
-static INLINE __m128i width8_load_2rows(const uint8_t *ptr, int stride) {
-  __m128i temp1 = _mm_loadl_epi64((const __m128i *)ptr);
-  __m128i temp2 = _mm_loadl_epi64((const __m128i *)(ptr + stride));
-  return _mm_unpacklo_epi64(temp1, temp2);
-}
-
-static INLINE __m128i width4_load_4rows(const uint8_t *ptr, int stride) {
-  __m128i temp1 = _mm_cvtsi32_si128(*(const uint32_t *)ptr);
-  __m128i temp2 = _mm_cvtsi32_si128(*(const uint32_t *)(ptr + stride));
-  __m128i temp3 = _mm_unpacklo_epi32(temp1, temp2);
-  temp1 = _mm_cvtsi32_si128(*(const uint32_t *)(ptr + stride * 2));
-  temp2 = _mm_cvtsi32_si128(*(const uint32_t *)(ptr + stride * 3));
-  temp1 = _mm_unpacklo_epi32(temp1, temp2);
-  return _mm_unpacklo_epi64(temp3, temp1);
-}
-
-static INLINE unsigned int masked_sad_ssse3(const uint8_t *a_ptr, int a_stride,
+// For width a multiple of 16
+static INLINE unsigned int masked_sad_ssse3(const uint8_t *src_ptr,
+                                            int src_stride,
+                                            const uint8_t *a_ptr, int a_stride,
                                             const uint8_t *b_ptr, int b_stride,
                                             const uint8_t *m_ptr, int m_stride,
                                             int width, int height);
 
 static INLINE unsigned int masked_sad8xh_ssse3(
-    const uint8_t *a_ptr, int a_stride, const uint8_t *b_ptr, int b_stride,
-    const uint8_t *m_ptr, int m_stride, int height);
+    const uint8_t *src_ptr, int src_stride, const uint8_t *a_ptr, int a_stride,
+    const uint8_t *b_ptr, int b_stride, const uint8_t *m_ptr, int m_stride,
+    int height);
 
 static INLINE unsigned int masked_sad4xh_ssse3(
-    const uint8_t *a_ptr, int a_stride, const uint8_t *b_ptr, int b_stride,
-    const uint8_t *m_ptr, int m_stride, int height);
+    const uint8_t *src_ptr, int src_stride, const uint8_t *a_ptr, int a_stride,
+    const uint8_t *b_ptr, int b_stride, const uint8_t *m_ptr, int m_stride,
+    int height);
 
-#define MASKSADMXN_SSSE3(m, n)                                                 \
-  unsigned int aom_masked_sad##m##x##n##_ssse3(                                \
-      const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride,  \
-      const uint8_t *msk, int msk_stride) {                                    \
-    return masked_sad_ssse3(src, src_stride, ref, ref_stride, msk, msk_stride, \
-                            m, n);                                             \
+#define MASKSADMXN_SSSE3(m, n)                                                \
+  unsigned int aom_masked_sad##m##x##n##_ssse3(                               \
+      const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, \
+      const uint8_t *second_pred, const uint8_t *msk, int msk_stride,         \
+      int invert_mask) {                                                      \
+    if (!invert_mask)                                                         \
+      return masked_sad_ssse3(src, src_stride, ref, ref_stride, second_pred,  \
+                              m, msk, msk_stride, m, n);                      \
+    else                                                                      \
+      return masked_sad_ssse3(src, src_stride, second_pred, m, ref,           \
+                              ref_stride, msk, msk_stride, m, n);             \
+  }
+
+#define MASKSAD8XN_SSSE3(n)                                                   \
+  unsigned int aom_masked_sad8x##n##_ssse3(                                   \
+      const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, \
+      const uint8_t *second_pred, const uint8_t *msk, int msk_stride,         \
+      int invert_mask) {                                                      \
+    if (!invert_mask)                                                         \
+      return masked_sad8xh_ssse3(src, src_stride, ref, ref_stride,            \
+                                 second_pred, 8, msk, msk_stride, n);         \
+    else                                                                      \
+      return masked_sad8xh_ssse3(src, src_stride, second_pred, 8, ref,        \
+                                 ref_stride, msk, msk_stride, n);             \
+  }
+
+#define MASKSAD4XN_SSSE3(n)                                                   \
+  unsigned int aom_masked_sad4x##n##_ssse3(                                   \
+      const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, \
+      const uint8_t *second_pred, const uint8_t *msk, int msk_stride,         \
+      int invert_mask) {                                                      \
+    if (!invert_mask)                                                         \
+      return masked_sad4xh_ssse3(src, src_stride, ref, ref_stride,            \
+                                 second_pred, 4, msk, msk_stride, n);         \
+    else                                                                      \
+      return masked_sad4xh_ssse3(src, src_stride, second_pred, 4, ref,        \
+                                 ref_stride, msk, msk_stride, n);             \
   }
 
 #if CONFIG_EXT_PARTITION
@@ -67,165 +88,181 @@ MASKSADMXN_SSSE3(32, 16)
 MASKSADMXN_SSSE3(16, 32)
 MASKSADMXN_SSSE3(16, 16)
 MASKSADMXN_SSSE3(16, 8)
-
-#define MASKSAD8XN_SSSE3(n)                                                   \
-  unsigned int aom_masked_sad8x##n##_ssse3(                                   \
-      const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, \
-      const uint8_t *msk, int msk_stride) {                                   \
-    return masked_sad8xh_ssse3(src, src_stride, ref, ref_stride, msk,         \
-                               msk_stride, n);                                \
-  }
-
 MASKSAD8XN_SSSE3(16)
 MASKSAD8XN_SSSE3(8)
 MASKSAD8XN_SSSE3(4)
-
-#define MASKSAD4XN_SSSE3(n)                                                   \
-  unsigned int aom_masked_sad4x##n##_ssse3(                                   \
-      const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, \
-      const uint8_t *msk, int msk_stride) {                                   \
-    return masked_sad4xh_ssse3(src, src_stride, ref, ref_stride, msk,         \
-                               msk_stride, n);                                \
-  }
-
 MASKSAD4XN_SSSE3(8)
 MASKSAD4XN_SSSE3(4)
 
-// For width a multiple of 16
-// Assumes values in m are <=64
-static INLINE unsigned int masked_sad_ssse3(const uint8_t *a_ptr, int a_stride,
+static INLINE unsigned int masked_sad_ssse3(const uint8_t *src_ptr,
+                                            int src_stride,
+                                            const uint8_t *a_ptr, int a_stride,
                                             const uint8_t *b_ptr, int b_stride,
                                             const uint8_t *m_ptr, int m_stride,
                                             int width, int height) {
-  int y, x;
-  __m128i a, b, m, temp1, temp2;
+  int x, y;
   __m128i res = _mm_setzero_si128();
-  __m128i one = _mm_set1_epi16(1);
-  // For each row
+  const __m128i mask_max = _mm_set1_epi8((1 << AOM_BLEND_A64_ROUND_BITS));
+
   for (y = 0; y < height; y++) {
-    // Covering the full width
     for (x = 0; x < width; x += 16) {
-      // Load a, b, m in xmm registers
-      a = _mm_loadu_si128((const __m128i *)(a_ptr + x));
-      b = _mm_loadu_si128((const __m128i *)(b_ptr + x));
-      m = _mm_loadu_si128((const __m128i *)(m_ptr + x));
+      const __m128i src = _mm_loadu_si128((const __m128i *)&src_ptr[x]);
+      const __m128i a = _mm_loadu_si128((const __m128i *)&a_ptr[x]);
+      const __m128i b = _mm_loadu_si128((const __m128i *)&b_ptr[x]);
+      const __m128i m = _mm_loadu_si128((const __m128i *)&m_ptr[x]);
+      const __m128i m_inv = _mm_sub_epi8(mask_max, m);
 
-      // Calculate the difference between a & b
-      temp1 = _mm_subs_epu8(a, b);
-      temp2 = _mm_subs_epu8(b, a);
-      temp1 = _mm_or_si128(temp1, temp2);
+      // Calculate 16 predicted pixels.
+      // Note that the maximum value of any entry of 'pred_l' or 'pred_r'
+      // is 64 * 255, so we have plenty of space to add rounding constants.
+      const __m128i data_l = _mm_unpacklo_epi8(a, b);
+      const __m128i mask_l = _mm_unpacklo_epi8(m, m_inv);
+      __m128i pred_l = _mm_maddubs_epi16(data_l, mask_l);
+      pred_l = xx_roundn_epu16(pred_l, AOM_BLEND_A64_ROUND_BITS);
 
-      // Multiply by m and add together
-      temp2 = _mm_maddubs_epi16(temp1, m);
-      // Pad out row result to 32 bit integers & add to running total
-      res = _mm_add_epi32(res, _mm_madd_epi16(temp2, one));
+      const __m128i data_r = _mm_unpackhi_epi8(a, b);
+      const __m128i mask_r = _mm_unpackhi_epi8(m, m_inv);
+      __m128i pred_r = _mm_maddubs_epi16(data_r, mask_r);
+      pred_r = xx_roundn_epu16(pred_r, AOM_BLEND_A64_ROUND_BITS);
+
+      const __m128i pred = _mm_packus_epi16(pred_l, pred_r);
+      res = _mm_add_epi32(res, _mm_sad_epu8(pred, src));
     }
-    // Move onto the next row
+
+    src_ptr += src_stride;
     a_ptr += a_stride;
     b_ptr += b_stride;
     m_ptr += m_stride;
   }
-  res = _mm_hadd_epi32(res, _mm_setzero_si128());
-  res = _mm_hadd_epi32(res, _mm_setzero_si128());
-  // sad = (sad + 31) >> 6;
-  return (_mm_cvtsi128_si32(res) + 31) >> 6;
+  // At this point, we have two 32-bit partial SADs in lanes 0 and 2 of 'res'.
+  int32_t sad =
+      _mm_cvtsi128_si32(res) + _mm_cvtsi128_si32(_mm_srli_si128(res, 8));
+  return (sad + 31) >> 6;
 }
 
 static INLINE unsigned int masked_sad8xh_ssse3(
-    const uint8_t *a_ptr, int a_stride, const uint8_t *b_ptr, int b_stride,
-    const uint8_t *m_ptr, int m_stride, int height) {
+    const uint8_t *src_ptr, int src_stride, const uint8_t *a_ptr, int a_stride,
+    const uint8_t *b_ptr, int b_stride, const uint8_t *m_ptr, int m_stride,
+    int height) {
   int y;
-  __m128i a, b, m, temp1, temp2, row_res;
   __m128i res = _mm_setzero_si128();
-  __m128i one = _mm_set1_epi16(1);
-  // Add the masked SAD for 2 rows at a time
+  const __m128i mask_max = _mm_set1_epi8((1 << AOM_BLEND_A64_ROUND_BITS));
+
   for (y = 0; y < height; y += 2) {
-    // Load a, b, m in xmm registers
-    a = width8_load_2rows(a_ptr, a_stride);
-    b = width8_load_2rows(b_ptr, b_stride);
-    m = width8_load_2rows(m_ptr, m_stride);
+    const __m128i src = _mm_unpacklo_epi64(
+        _mm_loadl_epi64((const __m128i *)src_ptr),
+        _mm_loadl_epi64((const __m128i *)&src_ptr[src_stride]));
+    const __m128i a0 = _mm_loadl_epi64((const __m128i *)a_ptr);
+    const __m128i a1 = _mm_loadl_epi64((const __m128i *)&a_ptr[a_stride]);
+    const __m128i b0 = _mm_loadl_epi64((const __m128i *)b_ptr);
+    const __m128i b1 = _mm_loadl_epi64((const __m128i *)&b_ptr[b_stride]);
+    const __m128i m =
+        _mm_unpacklo_epi64(_mm_loadl_epi64((const __m128i *)m_ptr),
+                           _mm_loadl_epi64((const __m128i *)&m_ptr[m_stride]));
+    const __m128i m_inv = _mm_sub_epi8(mask_max, m);
 
-    // Calculate the difference between a & b
-    temp1 = _mm_subs_epu8(a, b);
-    temp2 = _mm_subs_epu8(b, a);
-    temp1 = _mm_or_si128(temp1, temp2);
+    const __m128i data_l = _mm_unpacklo_epi8(a0, b0);
+    const __m128i mask_l = _mm_unpacklo_epi8(m, m_inv);
+    __m128i pred_l = _mm_maddubs_epi16(data_l, mask_l);
+    pred_l = xx_roundn_epu16(pred_l, AOM_BLEND_A64_ROUND_BITS);
 
-    // Multiply by m and add together
-    row_res = _mm_maddubs_epi16(temp1, m);
+    const __m128i data_r = _mm_unpacklo_epi8(a1, b1);
+    const __m128i mask_r = _mm_unpackhi_epi8(m, m_inv);
+    __m128i pred_r = _mm_maddubs_epi16(data_r, mask_r);
+    pred_r = xx_roundn_epu16(pred_r, AOM_BLEND_A64_ROUND_BITS);
 
-    // Pad out row result to 32 bit integers & add to running total
-    res = _mm_add_epi32(res, _mm_madd_epi16(row_res, one));
+    const __m128i pred = _mm_packus_epi16(pred_l, pred_r);
+    res = _mm_add_epi32(res, _mm_sad_epu8(pred, src));
 
-    // Move onto the next rows
+    src_ptr += src_stride * 2;
     a_ptr += a_stride * 2;
     b_ptr += b_stride * 2;
     m_ptr += m_stride * 2;
   }
-  res = _mm_hadd_epi32(res, _mm_setzero_si128());
-  res = _mm_hadd_epi32(res, _mm_setzero_si128());
-  // sad = (sad + 31) >> 6;
-  return (_mm_cvtsi128_si32(res) + 31) >> 6;
+  int32_t sad =
+      _mm_cvtsi128_si32(res) + _mm_cvtsi128_si32(_mm_srli_si128(res, 8));
+  return (sad + 31) >> 6;
 }
 
 static INLINE unsigned int masked_sad4xh_ssse3(
-    const uint8_t *a_ptr, int a_stride, const uint8_t *b_ptr, int b_stride,
-    const uint8_t *m_ptr, int m_stride, int height) {
+    const uint8_t *src_ptr, int src_stride, const uint8_t *a_ptr, int a_stride,
+    const uint8_t *b_ptr, int b_stride, const uint8_t *m_ptr, int m_stride,
+    int height) {
   int y;
-  __m128i a, b, m, temp1, temp2, row_res;
   __m128i res = _mm_setzero_si128();
-  __m128i one = _mm_set1_epi16(1);
-  // Add the masked SAD for 4 rows at a time
-  for (y = 0; y < height; y += 4) {
-    // Load a, b, m in xmm registers
-    a = width4_load_4rows(a_ptr, a_stride);
-    b = width4_load_4rows(b_ptr, b_stride);
-    m = width4_load_4rows(m_ptr, m_stride);
+  const __m128i mask_max = _mm_set1_epi8((1 << AOM_BLEND_A64_ROUND_BITS));
 
-    // Calculate the difference between a & b
-    temp1 = _mm_subs_epu8(a, b);
-    temp2 = _mm_subs_epu8(b, a);
-    temp1 = _mm_or_si128(temp1, temp2);
+  for (y = 0; y < height; y += 2) {
+    // Load two rows at a time, this seems to be a bit faster
+    // than four rows at a time in this case.
+    const __m128i src = _mm_unpacklo_epi32(
+        _mm_cvtsi32_si128(*(uint32_t *)src_ptr),
+        _mm_cvtsi32_si128(*(uint32_t *)&src_ptr[src_stride]));
+    const __m128i a =
+        _mm_unpacklo_epi32(_mm_cvtsi32_si128(*(uint32_t *)a_ptr),
+                           _mm_cvtsi32_si128(*(uint32_t *)&a_ptr[a_stride]));
+    const __m128i b =
+        _mm_unpacklo_epi32(_mm_cvtsi32_si128(*(uint32_t *)b_ptr),
+                           _mm_cvtsi32_si128(*(uint32_t *)&b_ptr[b_stride]));
+    const __m128i m =
+        _mm_unpacklo_epi32(_mm_cvtsi32_si128(*(uint32_t *)m_ptr),
+                           _mm_cvtsi32_si128(*(uint32_t *)&m_ptr[m_stride]));
+    const __m128i m_inv = _mm_sub_epi8(mask_max, m);
 
-    // Multiply by m and add together
-    row_res = _mm_maddubs_epi16(temp1, m);
+    const __m128i data = _mm_unpacklo_epi8(a, b);
+    const __m128i mask = _mm_unpacklo_epi8(m, m_inv);
+    __m128i pred_16bit = _mm_maddubs_epi16(data, mask);
+    pred_16bit = xx_roundn_epu16(pred_16bit, AOM_BLEND_A64_ROUND_BITS);
 
-    // Pad out row result to 32 bit integers & add to running total
-    res = _mm_add_epi32(res, _mm_madd_epi16(row_res, one));
+    const __m128i pred = _mm_packus_epi16(pred_16bit, _mm_setzero_si128());
+    res = _mm_add_epi32(res, _mm_sad_epu8(pred, src));
 
-    // Move onto the next rows
-    a_ptr += a_stride * 4;
-    b_ptr += b_stride * 4;
-    m_ptr += m_stride * 4;
+    src_ptr += src_stride * 2;
+    a_ptr += a_stride * 2;
+    b_ptr += b_stride * 2;
+    m_ptr += m_stride * 2;
   }
-  // Pad out row result to 32 bit integers & add to running total
-  res = _mm_hadd_epi32(res, _mm_setzero_si128());
-  res = _mm_hadd_epi32(res, _mm_setzero_si128());
-  // sad = (sad + 31) >> 6;
-  return (_mm_cvtsi128_si32(res) + 31) >> 6;
+  // At this point, the SAD is stored in lane 0 of 'res'
+  int32_t sad = _mm_cvtsi128_si32(res);
+  return (sad + 31) >> 6;
 }
 
 #if CONFIG_HIGHBITDEPTH
-static INLINE __m128i highbd_width4_load_2rows(const uint16_t *ptr,
-                                               int stride) {
-  __m128i temp1 = _mm_loadl_epi64((const __m128i *)ptr);
-  __m128i temp2 = _mm_loadl_epi64((const __m128i *)(ptr + stride));
-  return _mm_unpacklo_epi64(temp1, temp2);
-}
-
+// For width a multiple of 8
 static INLINE unsigned int highbd_masked_sad_ssse3(
-    const uint8_t *a8_ptr, int a_stride, const uint8_t *b8_ptr, int b_stride,
-    const uint8_t *m_ptr, int m_stride, int width, int height);
+    const uint8_t *src8, int src_stride, const uint8_t *a8, int a_stride,
+    const uint8_t *b8, int b_stride, const uint8_t *m_ptr, int m_stride,
+    int width, int height);
 
 static INLINE unsigned int highbd_masked_sad4xh_ssse3(
-    const uint8_t *a8_ptr, int a_stride, const uint8_t *b8_ptr, int b_stride,
-    const uint8_t *m_ptr, int m_stride, int height);
+    const uint8_t *src8, int src_stride, const uint8_t *a8, int a_stride,
+    const uint8_t *b8, int b_stride, const uint8_t *m_ptr, int m_stride,
+    int height);
 
 #define HIGHBD_MASKSADMXN_SSSE3(m, n)                                         \
   unsigned int aom_highbd_masked_sad##m##x##n##_ssse3(                        \
-      const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, \
-      const uint8_t *msk, int msk_stride) {                                   \
-    return highbd_masked_sad_ssse3(src, src_stride, ref, ref_stride, msk,     \
-                                   msk_stride, m, n);                         \
+      const uint8_t *src8, int src_stride, const uint8_t *ref8,               \
+      int ref_stride, const uint8_t *second_pred8, const uint8_t *msk,        \
+      int msk_stride, int invert_mask) {                                      \
+    if (!invert_mask)                                                         \
+      return highbd_masked_sad_ssse3(src8, src_stride, ref8, ref_stride,      \
+                                     second_pred8, m, msk, msk_stride, m, n); \
+    else                                                                      \
+      return highbd_masked_sad_ssse3(src8, src_stride, second_pred8, m, ref8, \
+                                     ref_stride, msk, msk_stride, m, n);      \
+  }
+
+#define HIGHBD_MASKSAD4XN_SSSE3(n)                                             \
+  unsigned int aom_highbd_masked_sad4x##n##_ssse3(                             \
+      const uint8_t *src8, int src_stride, const uint8_t *ref8,                \
+      int ref_stride, const uint8_t *second_pred8, const uint8_t *msk,         \
+      int msk_stride, int invert_mask) {                                       \
+    if (!invert_mask)                                                          \
+      return highbd_masked_sad4xh_ssse3(src8, src_stride, ref8, ref_stride,    \
+                                        second_pred8, 4, msk, msk_stride, n);  \
+    else                                                                       \
+      return highbd_masked_sad4xh_ssse3(src8, src_stride, second_pred8, 4,     \
+                                        ref8, ref_stride, msk, msk_stride, n); \
   }
 
 #if CONFIG_EXT_PARTITION
@@ -244,91 +281,124 @@ HIGHBD_MASKSADMXN_SSSE3(16, 8)
 HIGHBD_MASKSADMXN_SSSE3(8, 16)
 HIGHBD_MASKSADMXN_SSSE3(8, 8)
 HIGHBD_MASKSADMXN_SSSE3(8, 4)
-
-#define HIGHBD_MASKSAD4XN_SSSE3(n)                                            \
-  unsigned int aom_highbd_masked_sad4x##n##_ssse3(                            \
-      const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, \
-      const uint8_t *msk, int msk_stride) {                                   \
-    return highbd_masked_sad4xh_ssse3(src, src_stride, ref, ref_stride, msk,  \
-                                      msk_stride, n);                         \
-  }
-
 HIGHBD_MASKSAD4XN_SSSE3(8)
 HIGHBD_MASKSAD4XN_SSSE3(4)
 
-// For width a multiple of 8
-// Assumes values in m are <=64
 static INLINE unsigned int highbd_masked_sad_ssse3(
-    const uint8_t *a8_ptr, int a_stride, const uint8_t *b8_ptr, int b_stride,
-    const uint8_t *m_ptr, int m_stride, int width, int height) {
-  int y, x;
-  __m128i a, b, m, temp1, temp2;
-  const uint16_t *a_ptr = CONVERT_TO_SHORTPTR(a8_ptr);
-  const uint16_t *b_ptr = CONVERT_TO_SHORTPTR(b8_ptr);
+    const uint8_t *src8, int src_stride, const uint8_t *a8, int a_stride,
+    const uint8_t *b8, int b_stride, const uint8_t *m_ptr, int m_stride,
+    int width, int height) {
+  const uint16_t *src_ptr = CONVERT_TO_SHORTPTR(src8);
+  const uint16_t *a_ptr = CONVERT_TO_SHORTPTR(a8);
+  const uint16_t *b_ptr = CONVERT_TO_SHORTPTR(b8);
+  int x, y;
   __m128i res = _mm_setzero_si128();
-  // For each row
+  const __m128i mask_max = _mm_set1_epi16((1 << AOM_BLEND_A64_ROUND_BITS));
+  const __m128i round_const =
+      _mm_set1_epi32((1 << AOM_BLEND_A64_ROUND_BITS) >> 1);
+  const __m128i one = _mm_set1_epi16(1);
+
   for (y = 0; y < height; y++) {
-    // Covering the full width
     for (x = 0; x < width; x += 8) {
-      // Load a, b, m in xmm registers
-      a = _mm_loadu_si128((const __m128i *)(a_ptr + x));
-      b = _mm_loadu_si128((const __m128i *)(b_ptr + x));
-      m = _mm_unpacklo_epi8(_mm_loadl_epi64((const __m128i *)(m_ptr + x)),
-                            _mm_setzero_si128());
+      const __m128i src = _mm_loadu_si128((const __m128i *)&src_ptr[x]);
+      const __m128i a = _mm_loadu_si128((const __m128i *)&a_ptr[x]);
+      const __m128i b = _mm_loadu_si128((const __m128i *)&b_ptr[x]);
+      // Zero-extend mask to 16 bits
+      const __m128i m = _mm_unpacklo_epi8(
+          _mm_loadl_epi64((const __m128i *)&m_ptr[x]), _mm_setzero_si128());
+      const __m128i m_inv = _mm_sub_epi16(mask_max, m);
 
-      // Calculate the difference between a & b
-      temp1 = _mm_subs_epu16(a, b);
-      temp2 = _mm_subs_epu16(b, a);
-      temp1 = _mm_or_si128(temp1, temp2);
+      const __m128i data_l = _mm_unpacklo_epi16(a, b);
+      const __m128i mask_l = _mm_unpacklo_epi16(m, m_inv);
+      __m128i pred_l = _mm_madd_epi16(data_l, mask_l);
+      pred_l = _mm_srai_epi32(_mm_add_epi32(pred_l, round_const),
+                              AOM_BLEND_A64_ROUND_BITS);
 
-      // Add result of multiplying by m and add pairs together to running total
-      res = _mm_add_epi32(res, _mm_madd_epi16(temp1, m));
+      const __m128i data_r = _mm_unpackhi_epi16(a, b);
+      const __m128i mask_r = _mm_unpackhi_epi16(m, m_inv);
+      __m128i pred_r = _mm_madd_epi16(data_r, mask_r);
+      pred_r = _mm_srai_epi32(_mm_add_epi32(pred_r, round_const),
+                              AOM_BLEND_A64_ROUND_BITS);
+
+      // Note: the maximum value in pred_l/r is (2^bd)-1 < 2^15,
+      // so it is safe to do signed saturation here.
+      const __m128i pred = _mm_packs_epi32(pred_l, pred_r);
+      // There is no 16-bit SAD instruction, so we have to synthesize
+      // an 8-element SAD. We do this by storing 4 32-bit partial SADs,
+      // and accumulating them at the end
+      const __m128i diff = _mm_abs_epi16(_mm_sub_epi16(pred, src));
+      res = _mm_add_epi32(res, _mm_madd_epi16(diff, one));
     }
-    // Move onto the next row
+
+    src_ptr += src_stride;
     a_ptr += a_stride;
     b_ptr += b_stride;
     m_ptr += m_stride;
   }
-  res = _mm_hadd_epi32(res, _mm_setzero_si128());
-  res = _mm_hadd_epi32(res, _mm_setzero_si128());
-  // sad = (sad + 31) >> 6;
-  return (_mm_cvtsi128_si32(res) + 31) >> 6;
+  // At this point, we have four 32-bit partial SADs stored in 'res'.
+  res = _mm_hadd_epi32(res, res);
+  res = _mm_hadd_epi32(res, res);
+  int sad = _mm_cvtsi128_si32(res);
+  return (sad + 31) >> 6;
 }
 
 static INLINE unsigned int highbd_masked_sad4xh_ssse3(
-    const uint8_t *a8_ptr, int a_stride, const uint8_t *b8_ptr, int b_stride,
-    const uint8_t *m_ptr, int m_stride, int height) {
+    const uint8_t *src8, int src_stride, const uint8_t *a8, int a_stride,
+    const uint8_t *b8, int b_stride, const uint8_t *m_ptr, int m_stride,
+    int height) {
+  const uint16_t *src_ptr = CONVERT_TO_SHORTPTR(src8);
+  const uint16_t *a_ptr = CONVERT_TO_SHORTPTR(a8);
+  const uint16_t *b_ptr = CONVERT_TO_SHORTPTR(b8);
   int y;
-  __m128i a, b, m, temp1, temp2;
-  const uint16_t *a_ptr = CONVERT_TO_SHORTPTR(a8_ptr);
-  const uint16_t *b_ptr = CONVERT_TO_SHORTPTR(b8_ptr);
   __m128i res = _mm_setzero_si128();
-  // Add the masked SAD for 2 rows at a time
+  const __m128i mask_max = _mm_set1_epi16((1 << AOM_BLEND_A64_ROUND_BITS));
+  const __m128i round_const =
+      _mm_set1_epi32((1 << AOM_BLEND_A64_ROUND_BITS) >> 1);
+  const __m128i one = _mm_set1_epi16(1);
+
   for (y = 0; y < height; y += 2) {
-    // Load a, b, m in xmm registers
-    a = highbd_width4_load_2rows(a_ptr, a_stride);
-    b = highbd_width4_load_2rows(b_ptr, b_stride);
-    temp1 = _mm_loadl_epi64((const __m128i *)m_ptr);
-    temp2 = _mm_loadl_epi64((const __m128i *)(m_ptr + m_stride));
-    m = _mm_unpacklo_epi8(_mm_unpacklo_epi32(temp1, temp2),
-                          _mm_setzero_si128());
+    const __m128i src = _mm_unpacklo_epi64(
+        _mm_loadl_epi64((const __m128i *)src_ptr),
+        _mm_loadl_epi64((const __m128i *)&src_ptr[src_stride]));
+    const __m128i a =
+        _mm_unpacklo_epi64(_mm_loadl_epi64((const __m128i *)a_ptr),
+                           _mm_loadl_epi64((const __m128i *)&a_ptr[a_stride]));
+    const __m128i b =
+        _mm_unpacklo_epi64(_mm_loadl_epi64((const __m128i *)b_ptr),
+                           _mm_loadl_epi64((const __m128i *)&b_ptr[b_stride]));
+    // Zero-extend mask to 16 bits
+    const __m128i m = _mm_unpacklo_epi8(
+        _mm_unpacklo_epi32(
+            _mm_cvtsi32_si128(*(const uint32_t *)m_ptr),
+            _mm_cvtsi32_si128(*(const uint32_t *)&m_ptr[m_stride])),
+        _mm_setzero_si128());
+    const __m128i m_inv = _mm_sub_epi16(mask_max, m);
 
-    // Calculate the difference between a & b
-    temp1 = _mm_subs_epu16(a, b);
-    temp2 = _mm_subs_epu16(b, a);
-    temp1 = _mm_or_si128(temp1, temp2);
+    const __m128i data_l = _mm_unpacklo_epi16(a, b);
+    const __m128i mask_l = _mm_unpacklo_epi16(m, m_inv);
+    __m128i pred_l = _mm_madd_epi16(data_l, mask_l);
+    pred_l = _mm_srai_epi32(_mm_add_epi32(pred_l, round_const),
+                            AOM_BLEND_A64_ROUND_BITS);
 
-    // Multiply by m and add together
-    res = _mm_add_epi32(res, _mm_madd_epi16(temp1, m));
+    const __m128i data_r = _mm_unpackhi_epi16(a, b);
+    const __m128i mask_r = _mm_unpackhi_epi16(m, m_inv);
+    __m128i pred_r = _mm_madd_epi16(data_r, mask_r);
+    pred_r = _mm_srai_epi32(_mm_add_epi32(pred_r, round_const),
+                            AOM_BLEND_A64_ROUND_BITS);
 
-    // Move onto the next rows
+    const __m128i pred = _mm_packs_epi32(pred_l, pred_r);
+    const __m128i diff = _mm_abs_epi16(_mm_sub_epi16(pred, src));
+    res = _mm_add_epi32(res, _mm_madd_epi16(diff, one));
+
+    src_ptr += src_stride * 2;
     a_ptr += a_stride * 2;
     b_ptr += b_stride * 2;
     m_ptr += m_stride * 2;
   }
-  res = _mm_hadd_epi32(res, _mm_setzero_si128());
-  res = _mm_hadd_epi32(res, _mm_setzero_si128());
-  // sad = (sad + 31) >> 6;
-  return (_mm_cvtsi128_si32(res) + 31) >> 6;
+  res = _mm_hadd_epi32(res, res);
+  res = _mm_hadd_epi32(res, res);
+  int sad = _mm_cvtsi128_si32(res);
+  return (sad + 31) >> 6;
 }
-#endif  // CONFIG_HIGHBITDEPTH
+
+#endif

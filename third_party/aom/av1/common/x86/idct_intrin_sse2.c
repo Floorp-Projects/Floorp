@@ -17,14 +17,14 @@
 #include "av1/common/enums.h"
 
 #if CONFIG_EXT_TX
-static INLINE void fliplr_4x4(__m128i in[2]) {
+static INLINE void fliplr_4x4(__m128i *in /*in[2]*/) {
   in[0] = _mm_shufflelo_epi16(in[0], 0x1b);
   in[0] = _mm_shufflehi_epi16(in[0], 0x1b);
   in[1] = _mm_shufflelo_epi16(in[1], 0x1b);
   in[1] = _mm_shufflehi_epi16(in[1], 0x1b);
 }
 
-static INLINE void fliplr_8x8(__m128i in[8]) {
+static INLINE void fliplr_8x8(__m128i *in /*in[8]*/) {
   in[0] = mm_reverse_epi16(in[0]);
   in[1] = mm_reverse_epi16(in[1]);
   in[2] = mm_reverse_epi16(in[2]);
@@ -36,7 +36,7 @@ static INLINE void fliplr_8x8(__m128i in[8]) {
   in[7] = mm_reverse_epi16(in[7]);
 }
 
-static INLINE void fliplr_16x8(__m128i in[16]) {
+static INLINE void fliplr_16x8(__m128i *in /*in[16]*/) {
   fliplr_8x8(&in[0]);
   fliplr_8x8(&in[8]);
 }
@@ -356,7 +356,7 @@ static void iidtx8_sse2(__m128i *in) {
 }
 
 static INLINE void iidtx4_sse2(__m128i *in) {
-  const __m128i v_scale_w = _mm_set1_epi16(Sqrt2);
+  const __m128i v_scale_w = _mm_set1_epi16((int16_t)Sqrt2);
 
   const __m128i v_p0l_w = _mm_mullo_epi16(in[0], v_scale_w);
   const __m128i v_p0h_w = _mm_mulhi_epi16(in[0], v_scale_w);

@@ -58,6 +58,13 @@ int av1_get_mvpred_var(const MACROBLOCK *x, const MV *best_mv,
 int av1_get_mvpred_av_var(const MACROBLOCK *x, const MV *best_mv,
                           const MV *center_mv, const uint8_t *second_pred,
                           const aom_variance_fn_ptr_t *vfp, int use_mvcost);
+#if CONFIG_EXT_INTER
+int av1_get_mvpred_mask_var(const MACROBLOCK *x, const MV *best_mv,
+                            const MV *center_mv, const uint8_t *second_pred,
+                            const uint8_t *mask, int mask_stride,
+                            int invert_mask, const aom_variance_fn_ptr_t *vfp,
+                            int use_mvcost);
+#endif
 
 struct AV1_COMP;
 struct SPEED_FEATURES;
@@ -91,8 +98,11 @@ typedef int(fractional_mv_step_fp)(
     const aom_variance_fn_ptr_t *vfp,
     int forced_stop,  // 0 - full, 1 - qtr only, 2 - half only
     int iters_per_step, int *cost_list, int *mvjcost, int *mvcost[2],
-    int *distortion, unsigned int *sse1, const uint8_t *second_pred, int w,
-    int h, int use_upsampled_ref);
+    int *distortion, unsigned int *sse1, const uint8_t *second_pred,
+#if CONFIG_EXT_INTER
+    const uint8_t *mask, int mask_stride, int invert_mask,
+#endif
+    int w, int h, int use_upsampled_ref);
 
 extern fractional_mv_step_fp av1_find_best_sub_pixel_tree;
 extern fractional_mv_step_fp av1_find_best_sub_pixel_tree_pruned;
@@ -113,6 +123,10 @@ typedef int (*av1_diamond_search_fn_t)(
 
 int av1_refining_search_8p_c(MACROBLOCK *x, int error_per_bit, int search_range,
                              const aom_variance_fn_ptr_t *fn_ptr,
+#if CONFIG_EXT_INTER
+                             const uint8_t *mask, int mask_stride,
+                             int invert_mask,
+#endif
                              const MV *center_mv, const uint8_t *second_pred);
 
 struct AV1_COMP;
@@ -121,27 +135,6 @@ int av1_full_pixel_search(const struct AV1_COMP *cpi, MACROBLOCK *x,
                           BLOCK_SIZE bsize, MV *mvp_full, int step_param,
                           int error_per_bit, int *cost_list, const MV *ref_mv,
                           int var_max, int rd);
-
-#if CONFIG_EXT_INTER
-int av1_find_best_masked_sub_pixel_tree(
-    const MACROBLOCK *x, const uint8_t *mask, int mask_stride, MV *bestmv,
-    const MV *ref_mv, int allow_hp, int error_per_bit,
-    const aom_variance_fn_ptr_t *vfp, int forced_stop, int iters_per_step,
-    int *mvjcost, int *mvcost[2], int *distortion, unsigned int *sse1,
-    int is_second);
-int av1_find_best_masked_sub_pixel_tree_up(
-    const struct AV1_COMP *cpi, MACROBLOCK *x, const uint8_t *mask,
-    int mask_stride, int mi_row, int mi_col, MV *bestmv, const MV *ref_mv,
-    int allow_hp, int error_per_bit, const aom_variance_fn_ptr_t *vfp,
-    int forced_stop, int iters_per_step, int *mvjcost, int *mvcost[2],
-    int *distortion, unsigned int *sse1, int is_second, int use_upsampled_ref);
-int av1_masked_full_pixel_diamond(const struct AV1_COMP *cpi, MACROBLOCK *x,
-                                  const uint8_t *mask, int mask_stride,
-                                  MV *mvp_full, int step_param, int sadpb,
-                                  int further_steps, int do_refine,
-                                  const aom_variance_fn_ptr_t *fn_ptr,
-                                  const MV *ref_mv, MV *dst_mv, int is_second);
-#endif  // CONFIG_EXT_INTER
 
 #if CONFIG_MOTION_VAR
 int av1_obmc_full_pixel_diamond(const struct AV1_COMP *cpi, MACROBLOCK *x,
@@ -159,5 +152,15 @@ int av1_find_best_obmc_sub_pixel_tree_up(
 #ifdef __cplusplus
 }  // extern "C"
 #endif
+
+#if CONFIG_WARPED_MOTION
+unsigned int av1_compute_motion_cost(const struct AV1_COMP *cpi,
+                                     MACROBLOCK *const x, BLOCK_SIZE bsize,
+                                     int mi_row, int mi_col, const MV *this_mv);
+unsigned int av1_refine_warped_mv(const struct AV1_COMP *cpi,
+                                  MACROBLOCK *const x, BLOCK_SIZE bsize,
+                                  int mi_row, int mi_col, int *pts,
+                                  int *pts_inref);
+#endif  // CONFIG_WARPED_MOTION
 
 #endif  // AV1_ENCODER_MCOMP_H_

@@ -382,7 +382,6 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , mAbstractMainThread(aOwner->AbstractMainThread())
   , mFrameStats(new FrameStatistics())
   , mVideoFrameContainer(aOwner->GetVideoFrameContainer())
-  , mPlaybackStatistics(new MediaChannelStatistics())
   , mPinnedForSeek(false)
   , mMinimizePreroll(false)
   , mFiredMetadataLoaded(false)
@@ -540,10 +539,10 @@ MediaDecoder::OnPlaybackEvent(MediaEventType aEvent)
 {
   switch (aEvent) {
     case MediaEventType::PlaybackStarted:
-      mPlaybackStatistics->Start();
+      mPlaybackStatistics.Start();
       break;
     case MediaEventType::PlaybackStopped:
-      mPlaybackStatistics->Stop();
+      mPlaybackStatistics.Stop();
       ComputePlaybackRate();
       break;
     case MediaEventType::PlaybackEnded:
@@ -1016,7 +1015,7 @@ MediaDecoder::ComputePlaybackRate()
   }
 
   bool reliable = false;
-  mPlaybackBytesPerSecond = mPlaybackStatistics->GetRateAtLastStop(&reliable);
+  mPlaybackBytesPerSecond = mPlaybackStatistics.GetRateAtLastStop(&reliable);
   mPlaybackRateReliable = reliable;
 }
 
@@ -1133,7 +1132,7 @@ MediaDecoder::NotifyBytesConsumed(int64_t aBytes, int64_t aOffset)
 
   MOZ_ASSERT(mDecoderStateMachine);
   if (aOffset >= mDecoderPosition) {
-    mPlaybackStatistics->AddBytes(aBytes);
+    mPlaybackStatistics.AddBytes(aBytes);
   }
   mDecoderPosition = aOffset + aBytes;
 }

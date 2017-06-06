@@ -11,24 +11,9 @@
 
 #include "./aom_config.h"
 
-#if CONFIG_EC_MULTISYMBOL
 #include <string.h>
-#endif
 
 #include "aom_dsp/prob.h"
-
-const uint8_t aom_norm[256] = {
-  0, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-  3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-  2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
 
 static unsigned int tree_merge_probs_impl(unsigned int i,
                                           const aom_tree_index *tree,
@@ -53,7 +38,6 @@ void aom_tree_merge_probs(const aom_tree_index *tree, const aom_prob *pre_probs,
   tree_merge_probs_impl(0, tree, pre_probs, counts, probs);
 }
 
-#if CONFIG_EC_MULTISYMBOL
 typedef struct tree_node tree_node;
 
 struct tree_node {
@@ -233,4 +217,3 @@ void av1_indices_from_tree(int *ind, int *inv, const aom_tree_index *tree) {
   int stack_index = 0;
   tree_to_index(&stack_index, ind, inv, tree, 0, 0);
 }
-#endif

@@ -8,12 +8,12 @@ use gpu_store::GpuStoreAddress;
 use internal_types::{HardwareCompositeOp, SourceTexture};
 use mask_cache::{ClipMode, ClipSource, MaskCacheInfo, RegionMode};
 use plane_split::{BspSplitter, Polygon, Splitter};
-use prim_store::{GradientPrimitiveCpu, GradientPrimitiveGpu, ImagePrimitiveCpu, ImagePrimitiveGpu};
+use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu};
 use prim_store::{ImagePrimitiveKind, PrimitiveContainer, PrimitiveGeometry, PrimitiveIndex};
-use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu, RadialGradientPrimitiveGpu};
-use prim_store::{RectanglePrimitive, SplitGeometry, TextRunPrimitiveCpu, TextRunPrimitiveGpu};
-use prim_store::{BoxShadowPrimitiveGpu, TexelRect, YuvImagePrimitiveCpu, YuvImagePrimitiveGpu};
-use profiler::{FrameProfileCounters, TextureCacheProfileCounters};
+use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu};
+use prim_store::{RectanglePrimitive, SplitGeometry, TextRunPrimitiveCpu};
+use prim_store::{BoxShadowPrimitiveCpu, TexelRect, YuvImagePrimitiveCpu};
+use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use render_task::{AlphaRenderItem, MaskCacheKey, MaskResult, RenderTask, RenderTaskIndex};
 use render_task::{RenderTaskId, RenderTaskLocation};
 use resource_cache::ResourceCache;
@@ -650,14 +650,6 @@ impl FrameBuilder {
                              (start_point.x == end_point.x &&
                               start_point.y > end_point.y));
 
-        let gradient_cpu = GradientPrimitiveCpu {
-            stops_range: stops,
-            stops_count: stops_count,
-            extend_mode: extend_mode,
-            reverse_stops: reverse_stops,
-            cache_dirty: true,
-        };
-
         // To get reftests exactly matching with reverse start/end
         // points, it's necessary to reverse the gradient
         // line in some cases.
@@ -667,19 +659,25 @@ impl FrameBuilder {
             (start_point, end_point)
         };
 
-        let gradient_gpu = GradientPrimitiveGpu {
-            start_point: sp,
-            end_point: ep,
-            extend_mode: pack_as_float(extend_mode as u32),
-            tile_size: tile_size,
-            tile_repeat: tile_repeat,
-            padding: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        let gradient_cpu = GradientPrimitiveCpu {
+            stops_range: stops,
+            stops_count: stops_count,
+            extend_mode: extend_mode,
+            reverse_stops: reverse_stops,
+            cache_dirty: true,
+            gpu_data_address: GpuStoreAddress(0),
+            gpu_data_count: 0,
+            gpu_blocks: [
+                [sp.x, sp.y, ep.x, ep.y].into(),
+                [tile_size.width, tile_size.height, tile_repeat.width, tile_repeat.height].into(),
+                [pack_as_float(extend_mode as u32), 0.0, 0.0, 0.0].into(),
+            ],
         };
 
         let prim = if aligned {
-            PrimitiveContainer::AlignedGradient(gradient_cpu, gradient_gpu)
+            PrimitiveContainer::AlignedGradient(gradient_cpu)
         } else {
-            PrimitiveContainer::AngleGradient(gradient_cpu, gradient_gpu)
+            PrimitiveContainer::AngleGradient(gradient_cpu)
         };
 
         self.add_primitive(clip_and_scroll, &rect, clip_region, &[], prim);
@@ -698,29 +696,26 @@ impl FrameBuilder {
                                extend_mode: ExtendMode,
                                tile_size: LayerSize,
                                tile_spacing: LayerSize) {
+        let tile_repeat = tile_size + tile_spacing;
+
         let radial_gradient_cpu = RadialGradientPrimitiveCpu {
             stops_range: stops,
             extend_mode: extend_mode,
             cache_dirty: true,
-        };
-
-        let radial_gradient_gpu = RadialGradientPrimitiveGpu {
-            start_center: start_center,
-            end_center: end_center,
-            start_radius: start_radius,
-            end_radius: end_radius,
-            ratio_xy: ratio_xy,
-            extend_mode: pack_as_float(extend_mode as u32),
-            tile_size: tile_size,
-            tile_repeat: tile_size + tile_spacing,
-            padding: [0.0, 0.0, 0.0, 0.0],
+            gpu_data_address: GpuStoreAddress(0),
+            gpu_data_count: 0,
+            gpu_blocks: [
+                [start_center.x, start_center.y, end_center.x, end_center.y].into(),
+                [start_radius, end_radius, ratio_xy, pack_as_float(extend_mode as u32)].into(),
+                [tile_size.width, tile_size.height, tile_repeat.width, tile_repeat.height].into(),
+            ],
         };
 
         self.add_primitive(clip_and_scroll,
                            &rect,
                            clip_region,
                            &[],
-                           PrimitiveContainer::RadialGradient(radial_gradient_cpu, radial_gradient_gpu));
+                           PrimitiveContainer::RadialGradient(radial_gradient_cpu));
     }
 
     pub fn add_text(&mut self,
@@ -741,6 +736,9 @@ impl FrameBuilder {
         if size.0 <= 0 {
             return
         }
+
+        // Expand the rectangle of the text run by the blur radius.
+        let rect = rect.inflate(blur_radius, blur_radius);
 
         // TODO(gw): Use a proper algorithm to select
         // whether this item should be rendered with
@@ -781,17 +779,15 @@ impl FrameBuilder {
             render_mode: render_mode,
             glyph_options: glyph_options,
             resource_address: GpuStoreAddress(0),
-        };
-
-        let prim_gpu = TextRunPrimitiveGpu {
-            color: *color,
+            gpu_data_address: GpuStoreAddress(0),
+            gpu_data_count: 0,
         };
 
         self.add_primitive(clip_and_scroll,
                            &rect,
                            clip_region,
                            &[],
-                           PrimitiveContainer::TextRun(prim_cpu, prim_gpu));
+                           PrimitiveContainer::TextRun(prim_cpu));
     }
 
     pub fn fill_box_shadow_rect(&mut self,
@@ -983,7 +979,7 @@ impl FrameBuilder {
                                                 extra_clip_mode));
                 }
 
-                let prim_gpu = BoxShadowPrimitiveGpu {
+                let prim_cpu = BoxShadowPrimitiveCpu {
                     src_rect: *box_bounds,
                     bs_rect: bs_rect,
                     color: *color,
@@ -991,13 +987,14 @@ impl FrameBuilder {
                     border_radius: border_radius,
                     edge_size: edge_size,
                     inverted: inverted,
+                    rects: rects,
                 };
 
                 self.add_primitive(clip_and_scroll,
                                    &outer_rect,
                                    clip_region,
                                    extra_clips.as_slice(),
-                                   PrimitiveContainer::BoxShadow(prim_gpu, rects));
+                                   PrimitiveContainer::BoxShadow(prim_cpu));
             }
         }
     }
@@ -1012,18 +1009,14 @@ impl FrameBuilder {
             color_texture_id: SourceTexture::Invalid,
             resource_address: GpuStoreAddress(0),
             sub_rect: None,
-        };
-
-        let prim_gpu = ImagePrimitiveGpu {
-            stretch_size: rect.size,
-            tile_spacing: LayerSize::zero(),
+            gpu_block: [rect.size.width, rect.size.height, 0.0, 0.0].into(),
         };
 
         self.add_primitive(clip_and_scroll,
                            &rect,
                            clip_region,
                            &[],
-                           PrimitiveContainer::Image(prim_cpu, prim_gpu));
+                           PrimitiveContainer::Image(prim_cpu));
     }
 
     pub fn add_image(&mut self,
@@ -1044,18 +1037,17 @@ impl FrameBuilder {
             color_texture_id: SourceTexture::Invalid,
             resource_address: GpuStoreAddress(0),
             sub_rect: sub_rect,
-        };
-
-        let prim_gpu = ImagePrimitiveGpu {
-            stretch_size: *stretch_size,
-            tile_spacing: *tile_spacing,
+            gpu_block: [ stretch_size.width,
+                         stretch_size.height,
+                         tile_spacing.width,
+                         tile_spacing.height ].into(),
         };
 
         self.add_primitive(clip_and_scroll,
                            &rect,
                            clip_region,
                            &[],
-                           PrimitiveContainer::Image(prim_cpu, prim_gpu));
+                           PrimitiveContainer::Image(prim_cpu));
     }
 
     pub fn add_yuv_image(&mut self,
@@ -1081,15 +1073,14 @@ impl FrameBuilder {
             format: format,
             color_space: color_space,
             image_rendering: image_rendering,
+            gpu_block: [rect.size.width, rect.size.height, 0.0, 0.0].into(),
         };
-
-        let prim_gpu = YuvImagePrimitiveGpu::new(rect.size);
 
         self.add_primitive(clip_and_scroll,
                            &rect,
                            clip_region,
                            &[],
-                           PrimitiveContainer::YuvImage(prim_cpu, prim_gpu));
+                           PrimitiveContainer::YuvImage(prim_cpu));
     }
 
     /// Compute the contribution (bounding rectangles, and resources) of layers and their
@@ -1370,7 +1361,8 @@ impl FrameBuilder {
                  clip_scroll_tree: &mut ClipScrollTree,
                  display_lists: &DisplayListMap,
                  device_pixel_ratio: f32,
-                 texture_cache_profile: &mut TextureCacheProfileCounters)
+                 texture_cache_profile: &mut TextureCacheProfileCounters,
+                 gpu_cache_profile: &mut GpuCacheProfileCounters)
                  -> Frame {
         profile_scope!("build");
 
@@ -1419,6 +1411,9 @@ impl FrameBuilder {
         let deferred_resolves = self.prim_store.resolve_primitives(resource_cache,
                                                                    device_pixel_ratio);
 
+        let gpu_cache_updates = resource_cache.gpu_cache
+                                              .end_frame(gpu_cache_profile);
+
         let mut passes = Vec::new();
 
         // Do the allocations now, assigning each tile's tasks to a render
@@ -1459,13 +1454,12 @@ impl FrameBuilder {
             render_task_data: render_tasks.render_task_data,
             gpu_data16: self.prim_store.gpu_data16.build(),
             gpu_data32: self.prim_store.gpu_data32.build(),
-            gpu_data64: self.prim_store.gpu_data64.build(),
-            gpu_data128: self.prim_store.gpu_data128.build(),
             gpu_geometry: self.prim_store.gpu_geometry.build(),
             gpu_gradient_data: self.prim_store.gpu_gradient_data.build(),
             gpu_split_geometry: self.prim_store.gpu_split_geometry.build(),
             gpu_resource_rects: self.prim_store.gpu_resource_rects.build(),
             deferred_resolves: deferred_resolves,
+            gpu_cache_updates: Some(gpu_cache_updates),
         }
     }
 
@@ -1744,17 +1738,11 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                                                                  &packed_layer.transform,
                                                                  &packed_layer.local_clip_rect,
                                                                  self.device_pixel_ratio) {
-                if self.frame_builder.prim_store.prepare_prim_for_render(prim_index,
-                                                                         self.resource_cache,
-                                                                         &packed_layer.transform,
-                                                                         self.device_pixel_ratio,
-                                                                         display_list) {
-                    self.frame_builder.prim_store.build_bounding_rect(prim_index,
-                                                                      self.screen_rect,
+                self.frame_builder.prim_store.prepare_prim_for_render(prim_index,
+                                                                      self.resource_cache,
                                                                       &packed_layer.transform,
-                                                                      &packed_layer.local_clip_rect,
-                                                                      self.device_pixel_ratio);
-                }
+                                                                      self.device_pixel_ratio,
+                                                                      display_list);
 
                 // If the primitive is visible, consider culling it via clip rect(s).
                 // If it is visible but has clips, create the clip task for it.

@@ -23,6 +23,9 @@
 
 #include "av1/encoder/cost.h"
 #include "av1/encoder/encoder.h"
+#if CONFIG_LV_MAP
+#include "av1/encoder/encodetxb.c"
+#endif
 #include "av1/encoder/rdopt.h"
 #include "av1/encoder/tokenize.h"
 
@@ -261,20 +264,6 @@ const av1_extra_bit av1_extra_bits[ENTROPY_TOKENS] = {
 };
 #endif
 
-#if !CONFIG_EC_MULTISYMBOL
-const struct av1_token av1_coef_encodings[ENTROPY_TOKENS] = {
-  { 2, 2 },  { 6, 3 },   { 28, 5 },  { 58, 6 },  { 59, 6 },  { 60, 6 },
-  { 61, 6 }, { 124, 7 }, { 125, 7 }, { 126, 7 }, { 127, 7 }, { 0, 1 }
-};
-#endif  // !CONFIG_EC_MULTISYMBOL
-
-struct tokenize_b_args {
-  const AV1_COMP *cpi;
-  ThreadData *td;
-  TOKENEXTRA **tp;
-  int this_rate;
-};
-
 #if !CONFIG_PVQ || CONFIG_VAR_TX
 static void cost_coeffs_b(int plane, int block, int blk_row, int blk_col,
                           BLOCK_SIZE plane_bsize, TX_SIZE tx_size, void *arg) {
@@ -314,7 +303,6 @@ static void set_entropy_context_b(int plane, int block, int blk_row,
                    blk_row);
 }
 
-#if CONFIG_NEW_TOKENSET
 static INLINE void add_token(TOKENEXTRA **t,
                              aom_cdf_prob (*tail_cdf)[CDF_SIZE(ENTROPY_TOKENS)],
                              aom_cdf_prob (*head_cdf)[CDF_SIZE(ENTROPY_TOKENS)],
@@ -328,25 +316,6 @@ static INLINE void add_token(TOKENEXTRA **t,
   (*t)->first_val = first_val;
   (*t)++;
 }
-
-#else  // CONFIG_NEW_TOKENSET
-static INLINE void add_token(
-    TOKENEXTRA **t, const aom_prob *context_tree,
-#if CONFIG_EC_MULTISYMBOL
-    aom_cdf_prob (*token_cdf)[CDF_SIZE(ENTROPY_TOKENS)],
-#endif  // CONFIG_EC_MULTISYMBOL
-    int32_t extra, uint8_t token, uint8_t skip_eob_node, unsigned int *counts) {
-  (*t)->token = token;
-  (*t)->extra = extra;
-  (*t)->context_tree = context_tree;
-#if CONFIG_EC_MULTISYMBOL
-  (*t)->token_cdf = token_cdf;
-#endif  // CONFIG_EC_MULTISYMBOL
-  (*t)->skip_eob_node = skip_eob_node;
-  (*t)++;
-  ++counts[token];
-}
-#endif  // CONFIG_NEW_TOKENSET
 #endif  // !CONFIG_PVQ || CONFIG_VAR_TX
 
 #if CONFIG_PALETTE
@@ -471,22 +440,11 @@ static void tokenize_b(int plane, int block, int blk_row, int blk_col,
   const int ref = is_inter_block(mbmi);
   unsigned int(*const counts)[COEFF_CONTEXTS][ENTROPY_TOKENS] =
       td->rd_counts.coef_counts[txsize_sqr_map[tx_size]][type][ref];
-#if !CONFIG_NEW_TOKENSET
-#if CONFIG_SUBFRAME_PROB_UPDATE
-  const aom_prob(*coef_probs)[COEFF_CONTEXTS][UNCONSTRAINED_NODES] =
-      cpi->subframe_stats.coef_probs_buf[cpi->common.coef_probs_update_idx]
-                                        [txsize_sqr_map[tx_size]][type][ref];
-#else
-  aom_prob(*const coef_probs)[COEFF_CONTEXTS][UNCONSTRAINED_NODES] =
-      cpi->common.fc->coef_probs[txsize_sqr_map[tx_size]][type][ref];
-#endif  // CONFIG_SUBFRAME_PROB_UPDATE
-#endif  // !CONFIG_NEW_TOKENSET
 #if CONFIG_EC_ADAPT
   FRAME_CONTEXT *ec_ctx = xd->tile_ctx;
-#elif CONFIG_EC_MULTISYMBOL
+#else
   FRAME_CONTEXT *ec_ctx = cpi->common.fc;
 #endif
-#if CONFIG_NEW_TOKENSET
   aom_cdf_prob(
       *const coef_head_cdfs)[COEFF_CONTEXTS][CDF_SIZE(ENTROPY_TOKENS)] =
       ec_ctx->coef_head_cdfs[txsize_sqr_map[tx_size]][type][ref];
@@ -497,13 +455,6 @@ static void tokenize_b(int plane, int block, int blk_row, int blk_col,
       td->counts->blockz_count[txsize_sqr_map[tx_size]][type][ref];
   int eob_val;
   int first_val = 1;
-#else
-#if CONFIG_EC_MULTISYMBOL
-  aom_cdf_prob(*const coef_cdfs)[COEFF_CONTEXTS][CDF_SIZE(ENTROPY_TOKENS)] =
-      ec_ctx->coef_cdfs[txsize_sqr_map[tx_size]][type][ref];
-#endif
-  int skip_eob = 0;
-#endif
   const int seg_eob = get_tx_eob(&cpi->common.seg, segment_id, tx_size);
   unsigned int(*const eob_branch)[COEFF_CONTEXTS] =
       td->counts->eob_branch[txsize_sqr_map[tx_size]][type][ref];
@@ -517,7 +468,6 @@ static void tokenize_b(int plane, int block, int blk_row, int blk_col,
   nb = scan_order->neighbors;
   c = 0;
 
-#if CONFIG_NEW_TOKENSET
   if (eob == 0)
     add_token(&t, &coef_tail_cdfs[band[c]][pt], &coef_head_cdfs[band[c]][pt], 1,
               1, 0, BLOCK_Z_TOKEN);
@@ -553,33 +503,6 @@ static void tokenize_b(int plane, int block, int blk_row, int blk_col,
     ++c;
     pt = get_coef_context(nb, token_cache, AOMMIN(c, eob - 1));
   }
-#else
-  while (c < eob) {
-    const int v = qcoeff[scan[c]];
-    eob_branch[band[c]][pt] += !skip_eob;
-
-    av1_get_token_extra(v, &token, &extra);
-
-    add_token(&t, coef_probs[band[c]][pt],
-#if CONFIG_EC_MULTISYMBOL
-              &coef_cdfs[band[c]][pt],
-#endif
-              extra, (uint8_t)token, (uint8_t)skip_eob, counts[band[c]][pt]);
-
-    token_cache[scan[c]] = av1_pt_energy_class[token];
-    ++c;
-    pt = get_coef_context(nb, token_cache, c);
-    skip_eob = (token == ZERO_TOKEN);
-  }
-  if (c < seg_eob) {
-    add_token(&t, coef_probs[band[c]][pt],
-#if CONFIG_EC_MULTISYMBOL
-              NULL,
-#endif
-              0, EOB_TOKEN, 0, counts[band[c]][pt]);
-    ++eob_branch[band[c]][pt];
-  }
-#endif  // CONFIG_NEW_TOKENSET
 
 #if CONFIG_COEF_INTERLEAVE
   t->token = EOSB_TOKEN;
@@ -651,6 +574,18 @@ void tokenize_vartx(ThreadData *td, TOKENEXTRA **t, RUN_TYPE dry_run,
 
   if (tx_size == plane_tx_size) {
     plane_bsize = get_plane_block_size(mbmi->sb_type, pd);
+#if CONFIG_LV_MAP
+    if (!dry_run) {
+      av1_update_and_record_txb_context(plane, block, blk_row, blk_col,
+                                        plane_bsize, tx_size, arg);
+    } else if (dry_run == DRY_RUN_NORMAL) {
+      av1_update_txb_context_b(plane, block, blk_row, blk_col, plane_bsize,
+                               tx_size, arg);
+    } else {
+      printf("DRY_RUN_COSTCOEFFS is not supported yet\n");
+      assert(0);
+    }
+#else
     if (!dry_run)
       tokenize_b(plane, block, blk_row, blk_col, plane_bsize, tx_size, arg);
     else if (dry_run == DRY_RUN_NORMAL)
@@ -658,6 +593,7 @@ void tokenize_vartx(ThreadData *td, TOKENEXTRA **t, RUN_TYPE dry_run,
                             tx_size, arg);
     else if (dry_run == DRY_RUN_COSTCOEFFS)
       cost_coeffs_b(plane, block, blk_row, blk_col, plane_bsize, tx_size, arg);
+#endif
   } else {
     // Half the block size in transform block unit.
     const TX_SIZE sub_txs = sub_tx_size_map[tx_size];
@@ -688,7 +624,11 @@ void av1_tokenize_sb_vartx(const AV1_COMP *cpi, ThreadData *td, TOKENEXTRA **t,
   MACROBLOCK *const x = &td->mb;
   MACROBLOCKD *const xd = &x->e_mbd;
   MB_MODE_INFO *const mbmi = &xd->mi[0]->mbmi;
+#if CONFIG_LV_MAP
+  (void)t;
+#else
   TOKENEXTRA *t_backup = *t;
+#endif
   const int ctx = av1_get_skip_context(xd);
   const int skip_inc =
       !segfeature_active(&cm->seg, mbmi->segment_id, SEG_LVL_SKIP);
@@ -698,22 +638,25 @@ void av1_tokenize_sb_vartx(const AV1_COMP *cpi, ThreadData *td, TOKENEXTRA **t,
 
   if (mbmi->skip) {
     if (!dry_run) td->counts->skip[ctx][1] += skip_inc;
-    reset_skip_context(xd, bsize);
+    av1_reset_skip_context(xd, mi_row, mi_col, bsize);
+#if !CONFIG_LV_MAP
     if (dry_run) *t = t_backup;
+#endif
     return;
   }
 
-  if (!dry_run)
-    td->counts->skip[ctx][0] += skip_inc;
+  if (!dry_run) td->counts->skip[ctx][0] += skip_inc;
+#if !CONFIG_LV_MAP
   else
     *t = t_backup;
+#endif
 
   for (plane = 0; plane < MAX_MB_PLANE; ++plane) {
 #if CONFIG_CB4X4
     if (!is_chroma_reference(mi_row, mi_col, bsize,
                              xd->plane[plane].subsampling_x,
                              xd->plane[plane].subsampling_y)) {
-#if !CONFIG_PVQ
+#if !CONFIG_PVQ || !CONFIG_LV_MAP
       if (!dry_run) {
         (*t)->token = EOSB_TOKEN;
         (*t)++;
@@ -746,10 +689,12 @@ void av1_tokenize_sb_vartx(const AV1_COMP *cpi, ThreadData *td, TOKENEXTRA **t,
       }
     }
 
+#if !CONFIG_LV_MAP
     if (!dry_run) {
       (*t)->token = EOSB_TOKEN;
       (*t)++;
     }
+#endif
   }
   if (rate) *rate += arg.this_rate;
 }
@@ -768,7 +713,7 @@ void av1_tokenize_sb(const AV1_COMP *cpi, ThreadData *td, TOKENEXTRA **t,
   struct tokenize_b_args arg = { cpi, td, t, 0 };
   if (mbmi->skip) {
     if (!dry_run) td->counts->skip[ctx][1] += skip_inc;
-    reset_skip_context(xd, bsize);
+    av1_reset_skip_context(xd, mi_row, mi_col, bsize);
     return;
   }
 
@@ -843,8 +788,8 @@ void av1_tokenize_sb(const AV1_COMP *cpi, ThreadData *td, TOKENEXTRA **t,
 
 #if CONFIG_SUPERTX
 void av1_tokenize_sb_supertx(const AV1_COMP *cpi, ThreadData *td,
-                             TOKENEXTRA **t, RUN_TYPE dry_run, BLOCK_SIZE bsize,
-                             int *rate) {
+                             TOKENEXTRA **t, RUN_TYPE dry_run, int mi_row,
+                             int mi_col, BLOCK_SIZE bsize, int *rate) {
   const AV1_COMMON *const cm = &cpi->common;
   MACROBLOCKD *const xd = &td->mb.e_mbd;
   MB_MODE_INFO *const mbmi = &xd->mi[0]->mbmi;
@@ -855,7 +800,7 @@ void av1_tokenize_sb_supertx(const AV1_COMP *cpi, ThreadData *td,
   struct tokenize_b_args arg = { cpi, td, t, 0 };
   if (mbmi->skip) {
     if (!dry_run) td->counts->skip[ctx][1] += skip_inc;
-    reset_skip_context(xd, bsize);
+    av1_reset_skip_context(xd, mi_row, mi_col, bsize);
     if (dry_run) *t = t_backup;
     return;
   }

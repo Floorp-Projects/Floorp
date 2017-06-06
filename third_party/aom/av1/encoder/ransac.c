@@ -8,7 +8,6 @@
  * Media Patent License 1.0 was not distributed with this source code in the
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
-#define _POSIX_C_SOURCE 200112L  // rand_r()
 #include <memory.h>
 #include <math.h>
 #include <time.h>
@@ -17,6 +16,7 @@
 #include <assert.h>
 
 #include "av1/encoder/ransac.h"
+#include "av1/encoder/mathutils.h"
 
 #define MAX_MINPTS 4
 #define MAX_DEGENERATE_ITER 10
@@ -131,309 +131,6 @@ static void project_points_double_homography(double *mat, double *points,
     points += stride_points - 2;
     proj += stride_proj - 2;
   }
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// svdcmp
-// Adopted from Numerical Recipes in C
-
-static const double TINY_NEAR_ZERO = 1.0E-12;
-
-static INLINE double sign(double a, double b) {
-  return ((b) >= 0 ? fabs(a) : -fabs(a));
-}
-
-static INLINE double pythag(double a, double b) {
-  double ct;
-  const double absa = fabs(a);
-  const double absb = fabs(b);
-
-  if (absa > absb) {
-    ct = absb / absa;
-    return absa * sqrt(1.0 + ct * ct);
-  } else {
-    ct = absa / absb;
-    return (absb == 0) ? 0 : absb * sqrt(1.0 + ct * ct);
-  }
-}
-
-static void multiply_mat(const double *m1, const double *m2, double *res,
-                         const int m1_rows, const int inner_dim,
-                         const int m2_cols) {
-  double sum;
-
-  int row, col, inner;
-  for (row = 0; row < m1_rows; ++row) {
-    for (col = 0; col < m2_cols; ++col) {
-      sum = 0;
-      for (inner = 0; inner < inner_dim; ++inner)
-        sum += m1[row * inner_dim + inner] * m2[inner * m2_cols + col];
-      *(res++) = sum;
-    }
-  }
-}
-
-static int svdcmp(double **u, int m, int n, double w[], double **v) {
-  const int max_its = 30;
-  int flag, i, its, j, jj, k, l, nm;
-  double anorm, c, f, g, h, s, scale, x, y, z;
-  double *rv1 = (double *)aom_malloc(sizeof(*rv1) * (n + 1));
-  g = scale = anorm = 0.0;
-  for (i = 0; i < n; i++) {
-    l = i + 1;
-    rv1[i] = scale * g;
-    g = s = scale = 0.0;
-    if (i < m) {
-      for (k = i; k < m; k++) scale += fabs(u[k][i]);
-      if (scale != 0.) {
-        for (k = i; k < m; k++) {
-          u[k][i] /= scale;
-          s += u[k][i] * u[k][i];
-        }
-        f = u[i][i];
-        g = -sign(sqrt(s), f);
-        h = f * g - s;
-        u[i][i] = f - g;
-        for (j = l; j < n; j++) {
-          for (s = 0.0, k = i; k < m; k++) s += u[k][i] * u[k][j];
-          f = s / h;
-          for (k = i; k < m; k++) u[k][j] += f * u[k][i];
-        }
-        for (k = i; k < m; k++) u[k][i] *= scale;
-      }
-    }
-    w[i] = scale * g;
-    g = s = scale = 0.0;
-    if (i < m && i != n - 1) {
-      for (k = l; k < n; k++) scale += fabs(u[i][k]);
-      if (scale != 0.) {
-        for (k = l; k < n; k++) {
-          u[i][k] /= scale;
-          s += u[i][k] * u[i][k];
-        }
-        f = u[i][l];
-        g = -sign(sqrt(s), f);
-        h = f * g - s;
-        u[i][l] = f - g;
-        for (k = l; k < n; k++) rv1[k] = u[i][k] / h;
-        for (j = l; j < m; j++) {
-          for (s = 0.0, k = l; k < n; k++) s += u[j][k] * u[i][k];
-          for (k = l; k < n; k++) u[j][k] += s * rv1[k];
-        }
-        for (k = l; k < n; k++) u[i][k] *= scale;
-      }
-    }
-    anorm = fmax(anorm, (fabs(w[i]) + fabs(rv1[i])));
-  }
-
-  for (i = n - 1; i >= 0; i--) {
-    if (i < n - 1) {
-      if (g != 0.) {
-        for (j = l; j < n; j++) v[j][i] = (u[i][j] / u[i][l]) / g;
-        for (j = l; j < n; j++) {
-          for (s = 0.0, k = l; k < n; k++) s += u[i][k] * v[k][j];
-          for (k = l; k < n; k++) v[k][j] += s * v[k][i];
-        }
-      }
-      for (j = l; j < n; j++) v[i][j] = v[j][i] = 0.0;
-    }
-    v[i][i] = 1.0;
-    g = rv1[i];
-    l = i;
-  }
-  for (i = AOMMIN(m, n) - 1; i >= 0; i--) {
-    l = i + 1;
-    g = w[i];
-    for (j = l; j < n; j++) u[i][j] = 0.0;
-    if (g != 0.) {
-      g = 1.0 / g;
-      for (j = l; j < n; j++) {
-        for (s = 0.0, k = l; k < m; k++) s += u[k][i] * u[k][j];
-        f = (s / u[i][i]) * g;
-        for (k = i; k < m; k++) u[k][j] += f * u[k][i];
-      }
-      for (j = i; j < m; j++) u[j][i] *= g;
-    } else {
-      for (j = i; j < m; j++) u[j][i] = 0.0;
-    }
-    ++u[i][i];
-  }
-  for (k = n - 1; k >= 0; k--) {
-    for (its = 0; its < max_its; its++) {
-      flag = 1;
-      for (l = k; l >= 0; l--) {
-        nm = l - 1;
-        if ((double)(fabs(rv1[l]) + anorm) == anorm || nm < 0) {
-          flag = 0;
-          break;
-        }
-        if ((double)(fabs(w[nm]) + anorm) == anorm) break;
-      }
-      if (flag) {
-        c = 0.0;
-        s = 1.0;
-        for (i = l; i <= k; i++) {
-          f = s * rv1[i];
-          rv1[i] = c * rv1[i];
-          if ((double)(fabs(f) + anorm) == anorm) break;
-          g = w[i];
-          h = pythag(f, g);
-          w[i] = h;
-          h = 1.0 / h;
-          c = g * h;
-          s = -f * h;
-          for (j = 0; j < m; j++) {
-            y = u[j][nm];
-            z = u[j][i];
-            u[j][nm] = y * c + z * s;
-            u[j][i] = z * c - y * s;
-          }
-        }
-      }
-      z = w[k];
-      if (l == k) {
-        if (z < 0.0) {
-          w[k] = -z;
-          for (j = 0; j < n; j++) v[j][k] = -v[j][k];
-        }
-        break;
-      }
-      if (its == max_its - 1) {
-        aom_free(rv1);
-        return 1;
-      }
-      assert(k > 0);
-      x = w[l];
-      nm = k - 1;
-      y = w[nm];
-      g = rv1[nm];
-      h = rv1[k];
-      f = ((y - z) * (y + z) + (g - h) * (g + h)) / (2.0 * h * y);
-      g = pythag(f, 1.0);
-      f = ((x - z) * (x + z) + h * ((y / (f + sign(g, f))) - h)) / x;
-      c = s = 1.0;
-      for (j = l; j <= nm; j++) {
-        i = j + 1;
-        g = rv1[i];
-        y = w[i];
-        h = s * g;
-        g = c * g;
-        z = pythag(f, h);
-        rv1[j] = z;
-        c = f / z;
-        s = h / z;
-        f = x * c + g * s;
-        g = g * c - x * s;
-        h = y * s;
-        y *= c;
-        for (jj = 0; jj < n; jj++) {
-          x = v[jj][j];
-          z = v[jj][i];
-          v[jj][j] = x * c + z * s;
-          v[jj][i] = z * c - x * s;
-        }
-        z = pythag(f, h);
-        w[j] = z;
-        if (z != 0.) {
-          z = 1.0 / z;
-          c = f * z;
-          s = h * z;
-        }
-        f = c * g + s * y;
-        x = c * y - s * g;
-        for (jj = 0; jj < m; jj++) {
-          y = u[jj][j];
-          z = u[jj][i];
-          u[jj][j] = y * c + z * s;
-          u[jj][i] = z * c - y * s;
-        }
-      }
-      rv1[l] = 0.0;
-      rv1[k] = f;
-      w[k] = x;
-    }
-  }
-  aom_free(rv1);
-  return 0;
-}
-
-static int SVD(double *U, double *W, double *V, double *matx, int M, int N) {
-  // Assumes allocation for U is MxN
-  double **nrU = (double **)aom_malloc((M) * sizeof(*nrU));
-  double **nrV = (double **)aom_malloc((N) * sizeof(*nrV));
-  int problem, i;
-
-  problem = !(nrU && nrV);
-  if (!problem) {
-    for (i = 0; i < M; i++) {
-      nrU[i] = &U[i * N];
-    }
-    for (i = 0; i < N; i++) {
-      nrV[i] = &V[i * N];
-    }
-  } else {
-    if (nrU) aom_free(nrU);
-    if (nrV) aom_free(nrV);
-    return 1;
-  }
-
-  /* copy from given matx into nrU */
-  for (i = 0; i < M; i++) {
-    memcpy(&(nrU[i][0]), matx + N * i, N * sizeof(*matx));
-  }
-
-  /* HERE IT IS: do SVD */
-  if (svdcmp(nrU, M, N, W, nrV)) {
-    aom_free(nrU);
-    aom_free(nrV);
-    return 1;
-  }
-
-  /* aom_free Numerical Recipes arrays */
-  aom_free(nrU);
-  aom_free(nrV);
-
-  return 0;
-}
-
-int pseudo_inverse(double *inv, double *matx, const int M, const int N) {
-  double ans;
-  int i, j, k;
-  double *const U = (double *)aom_malloc(M * N * sizeof(*matx));
-  double *const W = (double *)aom_malloc(N * sizeof(*matx));
-  double *const V = (double *)aom_malloc(N * N * sizeof(*matx));
-
-  if (!(U && W && V)) {
-    return 1;
-  }
-  if (SVD(U, W, V, matx, M, N)) {
-    aom_free(U);
-    aom_free(W);
-    aom_free(V);
-    return 1;
-  }
-  for (i = 0; i < N; i++) {
-    if (fabs(W[i]) < TINY_NEAR_ZERO) {
-      aom_free(U);
-      aom_free(W);
-      aom_free(V);
-      return 1;
-    }
-  }
-
-  for (i = 0; i < N; i++) {
-    for (j = 0; j < M; j++) {
-      ans = 0;
-      for (k = 0; k < N; k++) {
-        ans += V[k + N * i] * U[k + N * j] / W[k];
-      }
-      inv[j + M * i] = ans;
-    }
-  }
-  aom_free(U);
-  aom_free(W);
-  aom_free(V);
-  return 0;
 }
 
 static void normalize_homography(double *pts, int n, double *T) {
@@ -597,7 +294,7 @@ static int find_translation(int np, double *pts1, double *pts2, double *mat) {
 
 static int find_rotzoom(int np, double *pts1, double *pts2, double *mat) {
   const int np2 = np * 2;
-  double *a = (double *)aom_malloc(sizeof(*a) * np2 * 9);
+  double *a = (double *)aom_malloc(sizeof(*a) * (np2 * 5 + 20));
   double *b = a + np2 * 4;
   double *temp = b + np2;
   int i;
@@ -625,11 +322,10 @@ static int find_rotzoom(int np, double *pts1, double *pts2, double *mat) {
     b[2 * i] = dx;
     b[2 * i + 1] = dy;
   }
-  if (pseudo_inverse(temp, a, np2, 4)) {
+  if (!least_squares(4, a, np2, 4, b, temp, mat)) {
     aom_free(a);
     return 1;
   }
-  multiply_mat(temp, b, mat, 4, np2, 1);
   denormalize_rotzoom_reorder(mat, T1, T2);
   aom_free(a);
   return 0;
@@ -637,7 +333,7 @@ static int find_rotzoom(int np, double *pts1, double *pts2, double *mat) {
 
 static int find_affine(int np, double *pts1, double *pts2, double *mat) {
   const int np2 = np * 2;
-  double *a = (double *)aom_malloc(sizeof(*a) * np2 * 13);
+  double *a = (double *)aom_malloc(sizeof(*a) * (np2 * 7 + 42));
   double *b = a + np2 * 6;
   double *temp = b + np2;
   int i;
@@ -669,11 +365,10 @@ static int find_affine(int np, double *pts1, double *pts2, double *mat) {
     b[2 * i] = dx;
     b[2 * i + 1] = dy;
   }
-  if (pseudo_inverse(temp, a, np2, 6)) {
+  if (!least_squares(6, a, np2, 6, b, temp, mat)) {
     aom_free(a);
     return 1;
   }
-  multiply_mat(temp, b, mat, 6, np2, 1);
   denormalize_affine_reorder(mat, T1, T2);
   aom_free(a);
   return 0;
@@ -890,16 +585,22 @@ static int find_homography(int np, double *pts1, double *pts2, double *mat) {
   return 0;
 }
 
+// Generate a random number in the range [0, 32768).
+static unsigned int lcg_rand16(unsigned int *state) {
+  *state = (unsigned int)(*state * 1103515245ULL + 12345);
+  return *state / 65536 % 32768;
+}
+
 static int get_rand_indices(int npoints, int minpts, int *indices,
                             unsigned int *seed) {
   int i, j;
-  int ptr = rand_r(seed) % npoints;
+  int ptr = lcg_rand16(seed) % npoints;
   if (minpts > npoints) return 0;
   indices[0] = ptr;
   ptr = (ptr == npoints - 1 ? 0 : ptr + 1);
   i = 1;
   while (i < minpts) {
-    int index = rand_r(seed) % npoints;
+    int index = lcg_rand16(seed) % npoints;
     while (index) {
       ptr = (ptr == npoints - 1 ? 0 : ptr + 1);
       for (j = 0; j < i; ++j) {
@@ -986,6 +687,9 @@ static int ransac(const int *matched_points, int npoints,
 
   double *cnp1, *cnp2;
 
+  for (i = 0; i < num_desired_motions; ++i) {
+    num_inliers_by_motion[i] = 0;
+  }
   if (npoints < minpts * MINPTS_MULTIPLIER || npoints == 0) {
     return 1;
   }
@@ -1072,7 +776,7 @@ static int ransac(const int *matched_points, int npoints,
     if (current_motion.num_inliers >= worst_kept_motion->num_inliers &&
         current_motion.num_inliers > 1) {
       int temp;
-      double fracinliers, pNoOutliers, mean_distance;
+      double fracinliers, pNoOutliers, mean_distance, dtemp;
       mean_distance = sum_distance / ((double)current_motion.num_inliers);
       current_motion.variance =
           sum_distance_squared / ((double)current_motion.num_inliers - 1.0) -
@@ -1092,7 +796,10 @@ static int ransac(const int *matched_points, int npoints,
         pNoOutliers = 1 - pow(fracinliers, minpts);
         pNoOutliers = fmax(EPS, pNoOutliers);
         pNoOutliers = fmin(1 - EPS, pNoOutliers);
-        temp = (int)(log(1.0 - PROBABILITY_REQUIRED) / log(pNoOutliers));
+        dtemp = log(1.0 - PROBABILITY_REQUIRED) / log(pNoOutliers);
+        temp = (dtemp > (double)INT32_MAX)
+                   ? INT32_MAX
+                   : dtemp < (double)INT32_MIN ? INT32_MIN : (int)dtemp;
 
         if (temp > 0 && temp < N) {
           N = AOMMAX(temp, MIN_TRIALS);

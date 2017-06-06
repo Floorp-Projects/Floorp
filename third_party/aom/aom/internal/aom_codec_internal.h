@@ -43,7 +43,6 @@
  */
 #ifndef AOM_INTERNAL_AOM_CODEC_INTERNAL_H_
 #define AOM_INTERNAL_AOM_CODEC_INTERNAL_H_
-#include "./aom_config.h"
 #include "../aom_decoder.h"
 #include "../aom_encoder.h"
 #include <stdarg.h>
@@ -441,25 +440,6 @@ void aom_internal_error(struct aom_internal_error_info *info,
                         ...) CLANG_ANALYZER_NORETURN;
 
 void aom_merge_corrupted_flag(int *corrupted, int value);
-
-#if CONFIG_DEBUG
-#define AOM_CHECK_MEM_ERROR(error_info, lval, expr)                         \
-  do {                                                                      \
-    lval = (expr);                                                          \
-    if (!lval)                                                              \
-      aom_internal_error(error_info, AOM_CODEC_MEM_ERROR,                   \
-                         "Failed to allocate " #lval " at %s:%d", __FILE__, \
-                         __LINE__);                                         \
-  } while (0)
-#else
-#define AOM_CHECK_MEM_ERROR(error_info, lval, expr)       \
-  do {                                                    \
-    lval = (expr);                                        \
-    if (!lval)                                            \
-      aom_internal_error(error_info, AOM_CODEC_MEM_ERROR, \
-                         "Failed to allocate " #lval);    \
-  } while (0)
-#endif
 #ifdef __cplusplus
 }  // extern "C"
 #endif

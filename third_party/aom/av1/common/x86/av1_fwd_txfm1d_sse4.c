@@ -57,7 +57,7 @@ void av1_fdct32_new_sse4_1(const __m128i *input, __m128i *output,
     // stage 2
     stage_idx++;
     bit = cos_bit[stage_idx];
-    cospi = cospi_arr[bit - cos_bit_min];
+    cospi = cospi_arr(bit);
     buf0[0] = _mm_add_epi32(buf1[0], buf1[15]);
     buf0[15] = _mm_sub_epi32(buf1[0], buf1[15]);
     buf0[1] = _mm_add_epi32(buf1[1], buf1[14]);
@@ -94,7 +94,7 @@ void av1_fdct32_new_sse4_1(const __m128i *input, __m128i *output,
     // stage 3
     stage_idx++;
     bit = cos_bit[stage_idx];
-    cospi = cospi_arr[bit - cos_bit_min];
+    cospi = cospi_arr(bit);
     buf1[0] = _mm_add_epi32(buf0[0], buf0[7]);
     buf1[7] = _mm_sub_epi32(buf0[0], buf0[7]);
     buf1[1] = _mm_add_epi32(buf0[1], buf0[6]);
@@ -131,7 +131,7 @@ void av1_fdct32_new_sse4_1(const __m128i *input, __m128i *output,
     // stage 4
     stage_idx++;
     bit = cos_bit[stage_idx];
-    cospi = cospi_arr[bit - cos_bit_min];
+    cospi = cospi_arr(bit);
     buf0[0] = _mm_add_epi32(buf1[0], buf1[3]);
     buf0[3] = _mm_sub_epi32(buf1[0], buf1[3]);
     buf0[1] = _mm_add_epi32(buf1[1], buf1[2]);
@@ -168,7 +168,7 @@ void av1_fdct32_new_sse4_1(const __m128i *input, __m128i *output,
     // stage 5
     stage_idx++;
     bit = cos_bit[stage_idx];
-    cospi = cospi_arr[bit - cos_bit_min];
+    cospi = cospi_arr(bit);
     btf_32_sse4_1_type0(cospi[32], cospi[32], buf0[0], buf0[1], buf1[0],
                         buf1[1], bit);
     btf_32_sse4_1_type1(cospi[48], cospi[16], buf0[2], buf0[3], buf1[2],
@@ -205,7 +205,7 @@ void av1_fdct32_new_sse4_1(const __m128i *input, __m128i *output,
     // stage 6
     stage_idx++;
     bit = cos_bit[stage_idx];
-    cospi = cospi_arr[bit - cos_bit_min];
+    cospi = cospi_arr(bit);
     buf0[0] = buf1[0];
     buf0[1] = buf1[1];
     buf0[2] = buf1[2];
@@ -242,7 +242,7 @@ void av1_fdct32_new_sse4_1(const __m128i *input, __m128i *output,
     // stage 7
     stage_idx++;
     bit = cos_bit[stage_idx];
-    cospi = cospi_arr[bit - cos_bit_min];
+    cospi = cospi_arr(bit);
     buf1[0] = buf0[0];
     buf1[1] = buf0[1];
     buf1[2] = buf0[2];
@@ -279,7 +279,7 @@ void av1_fdct32_new_sse4_1(const __m128i *input, __m128i *output,
     // stage 8
     stage_idx++;
     bit = cos_bit[stage_idx];
-    cospi = cospi_arr[bit - cos_bit_min];
+    cospi = cospi_arr(bit);
     buf0[0] = buf1[0];
     buf0[1] = buf1[1];
     buf0[2] = buf1[2];
@@ -383,7 +383,7 @@ void av1_fadst4_new_sse4_1(const __m128i *input, __m128i *output,
     // stage 2
     stage_idx++;
     bit = cos_bit[stage_idx];
-    cospi = cospi_arr[bit - cos_bit_min];
+    cospi = cospi_arr(bit);
     btf_32_sse4_1_type0(cospi[8], cospi[56], buf1[0], buf1[1], buf0[0], buf0[1],
                         bit);
     btf_32_sse4_1_type0(cospi[40], cospi[24], buf1[2], buf1[3], buf0[2],
@@ -399,7 +399,7 @@ void av1_fadst4_new_sse4_1(const __m128i *input, __m128i *output,
     // stage 4
     stage_idx++;
     bit = cos_bit[stage_idx];
-    cospi = cospi_arr[bit - cos_bit_min];
+    cospi = cospi_arr(bit);
     buf0[0] = buf1[0];
     buf0[1] = buf1[1];
     btf_32_sse4_1_type0(cospi[32], cospi[32], buf1[2], buf1[3], buf0[2],
@@ -475,7 +475,7 @@ void av1_fadst32_new_sse4_1(const __m128i *input, __m128i *output,
     // stage 2
     stage_idx++;
     bit = cos_bit[stage_idx];
-    cospi = cospi_arr[bit - cos_bit_min];
+    cospi = cospi_arr(bit);
     btf_32_sse4_1_type0(cospi[1], cospi[63], buf1[0], buf1[1], buf0[0], buf0[1],
                         bit);
     btf_32_sse4_1_type0(cospi[5], cospi[59], buf1[2], buf1[3], buf0[2], buf0[3],
@@ -547,7 +547,7 @@ void av1_fadst32_new_sse4_1(const __m128i *input, __m128i *output,
     // stage 4
     stage_idx++;
     bit = cos_bit[stage_idx];
-    cospi = cospi_arr[bit - cos_bit_min];
+    cospi = cospi_arr(bit);
     buf0[0] = buf1[0];
     buf0[1] = buf1[1];
     buf0[2] = buf1[2];
@@ -619,7 +619,7 @@ void av1_fadst32_new_sse4_1(const __m128i *input, __m128i *output,
     // stage 6
     stage_idx++;
     bit = cos_bit[stage_idx];
-    cospi = cospi_arr[bit - cos_bit_min];
+    cospi = cospi_arr(bit);
     buf0[0] = buf1[0];
     buf0[1] = buf1[1];
     buf0[2] = buf1[2];
@@ -691,7 +691,7 @@ void av1_fadst32_new_sse4_1(const __m128i *input, __m128i *output,
     // stage 8
     stage_idx++;
     bit = cos_bit[stage_idx];
-    cospi = cospi_arr[bit - cos_bit_min];
+    cospi = cospi_arr(bit);
     buf0[0] = buf1[0];
     buf0[1] = buf1[1];
     buf0[2] = buf1[2];
@@ -763,7 +763,7 @@ void av1_fadst32_new_sse4_1(const __m128i *input, __m128i *output,
     // stage 10
     stage_idx++;
     bit = cos_bit[stage_idx];
-    cospi = cospi_arr[bit - cos_bit_min];
+    cospi = cospi_arr(bit);
     buf0[0] = buf1[0];
     buf0[1] = buf1[1];
     btf_32_sse4_1_type0(cospi[32], cospi[32], buf1[2], buf1[3], buf0[2],

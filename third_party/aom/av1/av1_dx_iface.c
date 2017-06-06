@@ -31,8 +31,6 @@
 
 #include "av1/av1_iface_common.h"
 
-typedef aom_codec_stream_info_t av1_stream_info_t;
-
 // This limit is due to framebuffer numbers.
 // TODO(hkuang): Remove this limit after implementing ondemand framebuffers.
 #define FRAME_CACHE_SIZE 6  // Cache maximum 6 decoded frames.
@@ -45,7 +43,7 @@ typedef struct cache_frame {
 struct aom_codec_alg_priv {
   aom_codec_priv_t base;
   aom_codec_dec_cfg_t cfg;
-  av1_stream_info_t si;
+  aom_codec_stream_info_t si;
   int postproc_cfg_set;
   aom_postproc_cfg_t postproc_cfg;
   aom_decrypt_cb decrypt_cb;
@@ -101,7 +99,6 @@ static aom_codec_err_t decoder_init(aom_codec_ctx_t *ctx,
 
     ctx->priv = (aom_codec_priv_t *)priv;
     ctx->priv->init_flags = ctx->init_flags;
-    priv->si.sz = sizeof(priv->si);
     priv->flushed = 0;
     // Only do frame parallel decode when threads > 1.
     priv->frame_parallel_decode =
@@ -263,11 +260,7 @@ static aom_codec_err_t decoder_peek_si(const uint8_t *data,
 
 static aom_codec_err_t decoder_get_si(aom_codec_alg_priv_t *ctx,
                                       aom_codec_stream_info_t *si) {
-  const size_t sz = (si->sz >= sizeof(av1_stream_info_t))
-                        ? sizeof(av1_stream_info_t)
-                        : sizeof(aom_codec_stream_info_t);
-  memcpy(si, &ctx->si, sz);
-  si->sz = (unsigned int)sz;
+  memcpy(si, &ctx->si, sizeof(*si));
 
   return AOM_CODEC_OK;
 }

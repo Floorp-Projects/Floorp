@@ -9,7 +9,6 @@ config = {
         'checkout-sources',
         # 'setup-mock', windows do not use mock
         'build',
-        # 'generate-build-stats',
         'update',  # decided by query_is_nightly()
     ],
     'stage_platform': 'win32-st-an-debug',

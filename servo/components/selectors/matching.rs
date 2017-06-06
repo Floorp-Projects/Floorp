@@ -4,8 +4,8 @@
 
 use attr::{ParsedAttrSelectorOperation, AttrSelectorOperation, NamespaceConstraint};
 use bloom::BloomFilter;
-use parser::{Combinator, ComplexSelector, Component, LocalName};
-use parser::{Selector, SelectorInner, SelectorIter};
+use parser::{AncestorHashes, Combinator, Component, LocalName};
+use parser::{Selector, SelectorIter, SelectorList};
 use std::borrow::Borrow;
 use tree::Element;
 
@@ -21,13 +21,11 @@ bitflags! {
     /// This is used to implement efficient sharing.
     #[derive(Default)]
     pub flags StyleRelations: usize {
-        /// Whether this element is affected by an ID selector.
-        const AFFECTED_BY_ID_SELECTOR = 1 << 0,
         /// Whether this element is affected by presentational hints. This is
         /// computed externally (that is, in Servo).
-        const AFFECTED_BY_PRESENTATIONAL_HINTS = 1 << 1,
+        const AFFECTED_BY_PRESENTATIONAL_HINTS = 1 << 0,
         /// Whether this element has pseudo-element styles. Computed externally.
-        const AFFECTED_BY_PSEUDO_ELEMENTS = 1 << 2,
+        const AFFECTED_BY_PSEUDO_ELEMENTS = 1 << 1,
     }
 }
 
@@ -154,27 +152,30 @@ impl<'a> MatchingContext<'a> {
     }
 }
 
-pub fn matches_selector_list<E>(selector_list: &[Selector<E::Impl>],
+pub fn matches_selector_list<E>(selector_list: &SelectorList<E::Impl>,
                                 element: &E,
                                 context: &mut MatchingContext)
                                 -> bool
     where E: Element
 {
-    selector_list.iter().any(|selector| {
-        matches_selector(&selector.inner,
+    selector_list.0.iter().any(|selector_and_hashes| {
+        matches_selector(&selector_and_hashes.selector,
+                         0,
+                         &selector_and_hashes.hashes,
                          element,
                          context,
                          &mut |_, _| {})
     })
 }
 
-fn may_match<E>(sel: &SelectorInner<E::Impl>,
+#[inline(always)]
+fn may_match<E>(hashes: &AncestorHashes,
                 bf: &BloomFilter)
                 -> bool
     where E: Element,
 {
     // Check against the list of precomputed hashes.
-    for hash in sel.ancestor_hashes.iter() {
+    for hash in hashes.0.iter() {
         // If we hit the 0 sentinel hash, that means the rest are zero as well.
         if *hash == 0 {
             break;
@@ -332,8 +333,18 @@ enum SelectorMatchingResult {
     NotMatchedGlobally,
 }
 
-/// Matches an inner selector.
-pub fn matches_selector<E, F>(selector: &SelectorInner<E::Impl>,
+/// Matches a selector, fast-rejecting against a bloom filter.
+///
+/// We accept an offset to allow consumers to represent and match against partial
+/// selectors (indexed from the right). We use this API design, rather than
+/// having the callers pass a SelectorIter, because creating a SelectorIter
+/// requires dereferencing the selector to get the length, which adds an
+/// unncessary cache miss for cases when we can fast-reject with AncestorHashes
+/// (which the caller can store inline with the selector pointer).
+#[inline(always)]
+pub fn matches_selector<E, F>(selector: &Selector<E::Impl>,
+                              offset: usize,
+                              hashes: &AncestorHashes,
                               element: &E,
                               context: &mut MatchingContext,
                               flags_setter: &mut F)
@@ -343,18 +354,17 @@ pub fn matches_selector<E, F>(selector: &SelectorInner<E::Impl>,
 {
     // Use the bloom filter to fast-reject.
     if let Some(filter) = context.bloom_filter {
-        if !may_match::<E>(&selector, filter) {
+        if !may_match::<E>(hashes, filter) {
             return false;
         }
     }
 
-    matches_complex_selector(&selector.complex, element, context, flags_setter)
+    matches_complex_selector(selector, offset, element, context, flags_setter)
 }
 
 /// Matches a complex selector.
-///
-/// Use `matches_selector` if you need to skip pseudos.
-pub fn matches_complex_selector<E, F>(complex_selector: &ComplexSelector<E::Impl>,
+pub fn matches_complex_selector<E, F>(complex_selector: &Selector<E::Impl>,
+                                      offset: usize,
                                       element: &E,
                                       context: &mut MatchingContext,
                                       flags_setter: &mut F)
@@ -362,11 +372,15 @@ pub fn matches_complex_selector<E, F>(complex_selector: &ComplexSelector<E::Impl
     where E: Element,
           F: FnMut(&E, ElementSelectorFlags),
 {
-    let mut iter = complex_selector.iter();
+    let mut iter = if offset == 0 {
+        complex_selector.iter()
+    } else {
+        complex_selector.iter_from(offset)
+    };
 
     if cfg!(debug_assertions) {
         if context.matching_mode == MatchingMode::ForStatelessPseudoElement {
-            assert!(complex_selector.iter().any(|c| {
+            assert!(iter.clone().any(|c| {
                 matches!(*c, Component::PseudoElement(..))
             }));
         }
@@ -539,8 +553,7 @@ fn matches_simple_selector<E, F>(
         }
         // TODO: case-sensitivity depends on the document type and quirks mode
         Component::ID(ref id) => {
-            relation_if!(element.get_id().map_or(false, |attr| attr == *id),
-                         AFFECTED_BY_ID_SELECTOR)
+            element.get_id().map_or(false, |attr| attr == *id)
         }
         Component::Class(ref class) => {
             element.has_class(class)

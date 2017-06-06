@@ -54,7 +54,8 @@ void av1_xform_quant(const AV1_COMMON *cm, MACROBLOCK *x, int plane, int block,
                      TX_SIZE tx_size, int ctx, AV1_XFORM_QUANT xform_quant_idx);
 
 int av1_optimize_b(const AV1_COMMON *cm, MACROBLOCK *mb, int plane, int block,
-                   TX_SIZE tx_size, int ctx);
+                   BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
+                   const ENTROPY_CONTEXT *a, const ENTROPY_CONTEXT *l);
 
 void av1_subtract_txb(MACROBLOCK *x, int plane, BLOCK_SIZE plane_bsize,
                       int blk_col, int blk_row, TX_SIZE tx_size);
@@ -84,6 +85,23 @@ void av1_store_pvq_enc_info(PVQ_INFO *pvq_info, int *qg, int *theta, int *k,
                             od_coeff *y, int nb_bands, const int *off,
                             int *size, int skip_rest, int skip_dir, int bs);
 #endif
+
+#if CONFIG_CFL
+void av1_predict_intra_block_encoder_facade(MACROBLOCK *x,
+                                            FRAME_CONTEXT *ec_ctx, int plane,
+                                            int block_idx, int blk_col,
+                                            int blk_row, TX_SIZE tx_size,
+                                            BLOCK_SIZE plane_bsize);
+#endif
+
+#if CONFIG_DPCM_INTRA
+void av1_encode_block_intra_dpcm(const AV1_COMMON *cm, MACROBLOCK *x,
+                                 PREDICTION_MODE mode, int plane, int block,
+                                 int blk_row, int blk_col,
+                                 BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
+                                 TX_TYPE tx_type, ENTROPY_CONTEXT *ta,
+                                 ENTROPY_CONTEXT *tl, int8_t *skip);
+#endif  // CONFIG_DPCM_INTRA
 
 #ifdef __cplusplus
 }  // extern "C"

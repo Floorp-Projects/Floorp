@@ -24,6 +24,9 @@ enum {
               (1 << D207_PRED) | (1 << D63_PRED) |
 #if CONFIG_ALT_INTRA
               (1 << SMOOTH_PRED) |
+#if CONFIG_SMOOTH_HV
+              (1 << SMOOTH_V_PRED) | (1 << SMOOTH_H_PRED) |
+#endif  // CONFIG_SMOOTH_HV
 #endif  // CONFIG_ALT_INTRA
               (1 << TM_PRED),
   INTRA_DC = (1 << DC_PRED),
@@ -36,37 +39,33 @@ enum {
 #if CONFIG_EXT_INTER
 enum {
   INTER_ALL = (1 << NEARESTMV) | (1 << NEARMV) | (1 << ZEROMV) | (1 << NEWMV) |
-              (1 << NEAREST_NEARESTMV) | (1 << NEAR_NEARMV) |
-              (1 << NEAREST_NEARMV) | (1 << NEAR_NEARESTMV) | (1 << NEW_NEWMV) |
+              (1 << NEAREST_NEARESTMV) | (1 << NEAR_NEARMV) | (1 << NEW_NEWMV) |
               (1 << NEAREST_NEWMV) | (1 << NEAR_NEWMV) | (1 << NEW_NEARMV) |
               (1 << NEW_NEARESTMV) | (1 << ZERO_ZEROMV),
   INTER_NEAREST = (1 << NEARESTMV) | (1 << NEAREST_NEARESTMV) |
-                  (1 << NEAREST_NEARMV) | (1 << NEAR_NEARESTMV) |
                   (1 << NEW_NEARESTMV) | (1 << NEAREST_NEWMV),
   INTER_NEAREST_NEW = (1 << NEARESTMV) | (1 << NEWMV) |
                       (1 << NEAREST_NEARESTMV) | (1 << NEW_NEWMV) |
-                      (1 << NEAR_NEARESTMV) | (1 << NEAREST_NEARMV) |
                       (1 << NEW_NEARESTMV) | (1 << NEAREST_NEWMV) |
                       (1 << NEW_NEARMV) | (1 << NEAR_NEWMV),
   INTER_NEAREST_ZERO = (1 << NEARESTMV) | (1 << ZEROMV) |
                        (1 << NEAREST_NEARESTMV) | (1 << ZERO_ZEROMV) |
-                       (1 << NEAREST_NEARMV) | (1 << NEAR_NEARESTMV) |
                        (1 << NEAREST_NEWMV) | (1 << NEW_NEARESTMV),
-  INTER_NEAREST_NEW_ZERO =
-      (1 << NEARESTMV) | (1 << ZEROMV) | (1 << NEWMV) |
-      (1 << NEAREST_NEARESTMV) | (1 << ZERO_ZEROMV) | (1 << NEW_NEWMV) |
-      (1 << NEAREST_NEARMV) | (1 << NEAR_NEARESTMV) | (1 << NEW_NEARESTMV) |
-      (1 << NEAREST_NEWMV) | (1 << NEW_NEARMV) | (1 << NEAR_NEWMV),
-  INTER_NEAREST_NEAR_NEW =
-      (1 << NEARESTMV) | (1 << NEARMV) | (1 << NEWMV) |
-      (1 << NEAREST_NEARESTMV) | (1 << NEW_NEWMV) | (1 << NEAREST_NEARMV) |
-      (1 << NEAR_NEARESTMV) | (1 << NEW_NEARESTMV) | (1 << NEAREST_NEWMV) |
-      (1 << NEW_NEARMV) | (1 << NEAR_NEWMV) | (1 << NEAR_NEARMV),
-  INTER_NEAREST_NEAR_ZERO =
-      (1 << NEARESTMV) | (1 << NEARMV) | (1 << ZEROMV) |
-      (1 << NEAREST_NEARESTMV) | (1 << ZERO_ZEROMV) | (1 << NEAREST_NEARMV) |
-      (1 << NEAR_NEARESTMV) | (1 << NEAREST_NEWMV) | (1 << NEW_NEARESTMV) |
-      (1 << NEW_NEARMV) | (1 << NEAR_NEWMV) | (1 << NEAR_NEARMV),
+  INTER_NEAREST_NEW_ZERO = (1 << NEARESTMV) | (1 << ZEROMV) | (1 << NEWMV) |
+                           (1 << NEAREST_NEARESTMV) | (1 << ZERO_ZEROMV) |
+                           (1 << NEW_NEWMV) | (1 << NEW_NEARESTMV) |
+                           (1 << NEAREST_NEWMV) | (1 << NEW_NEARMV) |
+                           (1 << NEAR_NEWMV),
+  INTER_NEAREST_NEAR_NEW = (1 << NEARESTMV) | (1 << NEARMV) | (1 << NEWMV) |
+                           (1 << NEAREST_NEARESTMV) | (1 << NEW_NEWMV) |
+                           (1 << NEW_NEARESTMV) | (1 << NEAREST_NEWMV) |
+                           (1 << NEW_NEARMV) | (1 << NEAR_NEWMV) |
+                           (1 << NEAR_NEARMV),
+  INTER_NEAREST_NEAR_ZERO = (1 << NEARESTMV) | (1 << NEARMV) | (1 << ZEROMV) |
+                            (1 << NEAREST_NEARESTMV) | (1 << ZERO_ZEROMV) |
+                            (1 << NEAREST_NEWMV) | (1 << NEW_NEARESTMV) |
+                            (1 << NEW_NEARMV) | (1 << NEAR_NEWMV) |
+                            (1 << NEAR_NEARMV),
 };
 #else
 enum {
@@ -196,14 +195,7 @@ typedef enum {
   // Always use a fixed size partition
   FIXED_PARTITION,
 
-  REFERENCE_PARTITION,
-
-  // Use an arbitrary partitioning scheme based on source variance within
-  // a 64X64 SB
-  VAR_BASED_PARTITION,
-
-  // Use non-fixed partitions based on source variance
-  SOURCE_VAR_BASED_PARTITION
+  REFERENCE_PARTITION
 } PARTITION_SEARCH_TYPE;
 
 typedef enum {
@@ -250,6 +242,14 @@ typedef struct MESH_PATTERN {
   int range;
   int interval;
 } MESH_PATTERN;
+
+#if CONFIG_GLOBAL_MOTION
+typedef enum {
+  GM_FULL_SEARCH,
+  GM_REDUCED_REF_SEARCH,
+  GM_DISABLE_SEARCH
+} GM_SEARCH_TYPE;
+#endif  // CONFIG_GLOBAL_MOTION
 
 typedef struct SPEED_FEATURES {
   MV_SPEED_FEATURES mv;
@@ -432,7 +432,7 @@ typedef struct SPEED_FEATURES {
   // TODO(aconverse): Fold this into one of the other many mode skips
   BLOCK_SIZE max_intra_bsize;
 
-  // The frequency that we check if SOURCE_VAR_BASED_PARTITION or
+  // The frequency that we check if
   // FIXED_PARTITION search type should be used.
   int search_type_check_frequency;
 
@@ -470,6 +470,10 @@ typedef struct SPEED_FEATURES {
   // Whether to compute distortion in the image domain (slower but
   // more accurate), or in the transform domain (faster but less acurate).
   int use_transform_domain_distortion;
+
+#if CONFIG_GLOBAL_MOTION
+  GM_SEARCH_TYPE gm_search_type;
+#endif  // CONFIG_GLOBAL_MOTION
 } SPEED_FEATURES;
 
 struct AV1_COMP;

@@ -16,12 +16,8 @@
 
 #define QUEUE_MAX_SIZE 2000000
 static int result_queue[QUEUE_MAX_SIZE];
-#if CONFIG_DAALA_EC
 static int nsymbs_queue[QUEUE_MAX_SIZE];
 static aom_cdf_prob cdf_queue[QUEUE_MAX_SIZE][16];
-#else
-static int prob_queue[QUEUE_MAX_SIZE];
-#endif
 
 static int queue_r = 0;
 static int queue_w = 0;
@@ -53,42 +49,24 @@ int bitstream_queue_get_write(void) { return queue_w; }
 
 int bitstream_queue_get_read(void) { return queue_r; }
 
-void bitstream_queue_pop(int *result,
-#if CONFIG_DAALA_EC
-                         aom_cdf_prob *cdf, int *nsymbs) {
-#else
-                         int *prob) {
-#endif  // CONFIG_DAALA_EC
+void bitstream_queue_pop(int *result, aom_cdf_prob *cdf, int *nsymbs) {
   if (!skip_r) {
     if (queue_w == queue_r) {
       printf("buffer underflow queue_w %d queue_r %d\n", queue_w, queue_r);
       assert(0);
     }
     *result = result_queue[queue_r];
-#if CONFIG_DAALA_EC
     *nsymbs = nsymbs_queue[queue_r];
     memcpy(cdf, cdf_queue[queue_r], *nsymbs * sizeof(*cdf));
-#else
-    *prob = prob_queue[queue_r];
-#endif  // CONFIG_DAALA_EC
     queue_r = (queue_r + 1) % QUEUE_MAX_SIZE;
   }
 }
 
-void bitstream_queue_push(int result,
-#if CONFIG_DAALA_EC
-                          const aom_cdf_prob *cdf, int nsymbs) {
-#else
-                          int prob) {
-#endif  // CONFIG_DAALA_EC
+void bitstream_queue_push(int result, const aom_cdf_prob *cdf, int nsymbs) {
   if (!skip_w) {
     result_queue[queue_w] = result;
-#if CONFIG_DAALA_EC
     nsymbs_queue[queue_w] = nsymbs;
     memcpy(cdf_queue[queue_w], cdf, nsymbs * sizeof(*cdf));
-#else
-    prob_queue[queue_w] = prob;
-#endif  // CONFIG_DAALA_EC
     queue_w = (queue_w + 1) % QUEUE_MAX_SIZE;
     if (queue_w == queue_r) {
       printf("buffer overflow queue_w %d queue_r %d\n", queue_w, queue_r);

@@ -46,9 +46,7 @@ typedef struct {
 } transform_2d;
 
 #if CONFIG_HIGHBITDEPTH
-typedef void (*highbd_transform_1d)(const tran_low_t *, tran_low_t *,
-                                    const int8_t *cos_bit,
-                                    const int8_t *stage_range, int bd);
+typedef void (*highbd_transform_1d)(const tran_low_t *, tran_low_t *, int bd);
 
 typedef struct {
   highbd_transform_1d cols, rows;  // vertical and horizontal
@@ -63,12 +61,6 @@ void av1_iwht4x4_add(const tran_low_t *input, uint8_t *dest, int stride,
 void av1_idct4x4_add(const tran_low_t *input, uint8_t *dest, int stride,
                      int eob);
 
-void av1_inv_txfm_add_4x4(const tran_low_t *input, uint8_t *dest, int stride,
-                          int eob, TX_TYPE tx_type, int lossless);
-void av1_inv_txfm_add_8x4(const tran_low_t *input, uint8_t *dest, int stride,
-                          int eob, TX_TYPE tx_type);
-void av1_inv_txfm_add_4x8(const tran_low_t *input, uint8_t *dest, int stride,
-                          int eob, TX_TYPE tx_type);
 void av1_inv_txfm_add(const tran_low_t *input, uint8_t *dest, int stride,
                       INV_TXFM_PARAM *inv_txfm_param);
 void av1_inverse_transform_block(const MACROBLOCKD *xd,
@@ -92,6 +84,33 @@ void av1_highbd_inv_txfm_add_8x4(const tran_low_t *input, uint8_t *dest,
 void av1_highbd_inv_txfm_add(const tran_low_t *input, uint8_t *dest, int stride,
                              INV_TXFM_PARAM *inv_txfm_param);
 #endif  // CONFIG_HIGHBITDEPTH
+#if CONFIG_DPCM_INTRA
+void av1_dpcm_inv_txfm_add_4_c(const tran_low_t *input, int stride,
+                               TX_TYPE_1D tx_type, uint8_t *dest);
+void av1_dpcm_inv_txfm_add_8_c(const tran_low_t *input, int stride,
+                               TX_TYPE_1D tx_type, uint8_t *dest);
+void av1_dpcm_inv_txfm_add_16_c(const tran_low_t *input, int stride,
+                                TX_TYPE_1D tx_type, uint8_t *dest);
+void av1_dpcm_inv_txfm_add_32_c(const tran_low_t *input, int stride,
+                                TX_TYPE_1D tx_type, uint8_t *dest);
+typedef void (*dpcm_inv_txfm_add_func)(const tran_low_t *input, int stride,
+                                       TX_TYPE_1D tx_type, uint8_t *dest);
+dpcm_inv_txfm_add_func av1_get_dpcm_inv_txfm_add_func(int tx_length);
+#if CONFIG_HIGHBITDEPTH
+void av1_hbd_dpcm_inv_txfm_add_4_c(const tran_low_t *input, int stride,
+                                   TX_TYPE_1D tx_type, int bd, uint16_t *dest);
+void av1_hbd_dpcm_inv_txfm_add_8_c(const tran_low_t *input, int stride,
+                                   TX_TYPE_1D tx_type, int bd, uint16_t *dest);
+void av1_hbd_dpcm_inv_txfm_add_16_c(const tran_low_t *input, int stride,
+                                    TX_TYPE_1D tx_type, int bd, uint16_t *dest);
+void av1_hbd_dpcm_inv_txfm_add_32_c(const tran_low_t *input, int stride,
+                                    TX_TYPE_1D tx_type, int bd, uint16_t *dest);
+typedef void (*hbd_dpcm_inv_txfm_add_func)(const tran_low_t *input, int stride,
+                                           TX_TYPE_1D tx_type, int bd,
+                                           uint16_t *dest);
+hbd_dpcm_inv_txfm_add_func av1_get_hbd_dpcm_inv_txfm_add_func(int tx_length);
+#endif  // CONFIG_HIGHBITDEPTH
+#endif  // CONFIG_DPCM_INTRA
 #ifdef __cplusplus
 }  // extern "C"
 #endif

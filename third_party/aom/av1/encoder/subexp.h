@@ -35,13 +35,6 @@ int av1_prob_diff_update_savings_search_model(const unsigned int *ct,
 
 int av1_cond_prob_diff_update_savings(aom_prob *oldp, const unsigned int ct[2],
                                       int probwt);
-#if CONFIG_SUBFRAME_PROB_UPDATE
-int av1_prob_update_search_subframe(unsigned int ct[][2], aom_prob oldp,
-                                    aom_prob *bestp, aom_prob upd, int n);
-int av1_prob_update_search_model_subframe(
-    unsigned int ct[ENTROPY_NODES][COEF_PROBS_BUFS][2], const aom_prob *oldp,
-    aom_prob *bestp, aom_prob upd, int stepsize, int n);
-#endif  // CONFIG_SUBFRAME_PROB_UPDATE
 #ifdef __cplusplus
 }  // extern "C"
 #endif

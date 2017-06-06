@@ -1,6 +1,6 @@
 [package]
 name = "smallvec"
-version = "0.3.3"
+version = "0.4.0"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/rust-smallvec"
@@ -17,4 +17,4 @@ name = "smallvec"
 path = "lib.rs"
 
 [dependencies]
-heapsize = { version = "0.3", optional = true }
+heapsize = { version = "0.4", optional = true }

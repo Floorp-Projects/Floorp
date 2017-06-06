@@ -34,7 +34,8 @@ static INLINE void mm256_reverse_epi16(__m256i *u) {
   *u = _mm256_permute2x128_si256(v, v, 1);
 }
 
-static INLINE void mm256_transpose_16x16(__m256i *in) {
+// Note: in and out could have the same value
+static INLINE void mm256_transpose_16x16(const __m256i *in, __m256i *out) {
   __m256i tr0_0 = _mm256_unpacklo_epi16(in[0], in[1]);
   __m256i tr0_1 = _mm256_unpackhi_epi16(in[0], in[1]);
   __m256i tr0_2 = _mm256_unpacklo_epi16(in[2], in[3]);
@@ -143,29 +144,30 @@ static INLINE void mm256_transpose_16x16(__m256i *in) {
   // 86 96 a6 b6 c6 d6 e6 f6  8e ae 9e be ce de ee fe
   // 87 97 a7 b7 c7 d7 e7 f7  8f 9f af bf cf df ef ff
 
-  in[0] = _mm256_permute2x128_si256(tr0_0, tr0_8, 0x20);  // 0010 0000
-  in[8] = _mm256_permute2x128_si256(tr0_0, tr0_8, 0x31);  // 0011 0001
-  in[1] = _mm256_permute2x128_si256(tr0_1, tr0_9, 0x20);
-  in[9] = _mm256_permute2x128_si256(tr0_1, tr0_9, 0x31);
-  in[2] = _mm256_permute2x128_si256(tr0_2, tr0_a, 0x20);
-  in[10] = _mm256_permute2x128_si256(tr0_2, tr0_a, 0x31);
-  in[3] = _mm256_permute2x128_si256(tr0_3, tr0_b, 0x20);
-  in[11] = _mm256_permute2x128_si256(tr0_3, tr0_b, 0x31);
+  out[0] = _mm256_permute2x128_si256(tr0_0, tr0_8, 0x20);  // 0010 0000
+  out[8] = _mm256_permute2x128_si256(tr0_0, tr0_8, 0x31);  // 0011 0001
+  out[1] = _mm256_permute2x128_si256(tr0_1, tr0_9, 0x20);
+  out[9] = _mm256_permute2x128_si256(tr0_1, tr0_9, 0x31);
+  out[2] = _mm256_permute2x128_si256(tr0_2, tr0_a, 0x20);
+  out[10] = _mm256_permute2x128_si256(tr0_2, tr0_a, 0x31);
+  out[3] = _mm256_permute2x128_si256(tr0_3, tr0_b, 0x20);
+  out[11] = _mm256_permute2x128_si256(tr0_3, tr0_b, 0x31);
 
-  in[4] = _mm256_permute2x128_si256(tr0_4, tr0_c, 0x20);
-  in[12] = _mm256_permute2x128_si256(tr0_4, tr0_c, 0x31);
-  in[5] = _mm256_permute2x128_si256(tr0_5, tr0_d, 0x20);
-  in[13] = _mm256_permute2x128_si256(tr0_5, tr0_d, 0x31);
-  in[6] = _mm256_permute2x128_si256(tr0_6, tr0_e, 0x20);
-  in[14] = _mm256_permute2x128_si256(tr0_6, tr0_e, 0x31);
-  in[7] = _mm256_permute2x128_si256(tr0_7, tr0_f, 0x20);
-  in[15] = _mm256_permute2x128_si256(tr0_7, tr0_f, 0x31);
+  out[4] = _mm256_permute2x128_si256(tr0_4, tr0_c, 0x20);
+  out[12] = _mm256_permute2x128_si256(tr0_4, tr0_c, 0x31);
+  out[5] = _mm256_permute2x128_si256(tr0_5, tr0_d, 0x20);
+  out[13] = _mm256_permute2x128_si256(tr0_5, tr0_d, 0x31);
+  out[6] = _mm256_permute2x128_si256(tr0_6, tr0_e, 0x20);
+  out[14] = _mm256_permute2x128_si256(tr0_6, tr0_e, 0x31);
+  out[7] = _mm256_permute2x128_si256(tr0_7, tr0_f, 0x20);
+  out[15] = _mm256_permute2x128_si256(tr0_7, tr0_f, 0x31);
 }
 
-static INLINE __m256i butter_fly(__m256i a0, __m256i a1, const __m256i cospi) {
+static INLINE __m256i butter_fly(const __m256i *a0, const __m256i *a1,
+                                 const __m256i *cospi) {
   const __m256i dct_rounding = _mm256_set1_epi32(DCT_CONST_ROUNDING);
-  __m256i y0 = _mm256_madd_epi16(a0, cospi);
-  __m256i y1 = _mm256_madd_epi16(a1, cospi);
+  __m256i y0 = _mm256_madd_epi16(*a0, *cospi);
+  __m256i y1 = _mm256_madd_epi16(*a1, *cospi);
 
   y0 = _mm256_add_epi32(y0, dct_rounding);
   y1 = _mm256_add_epi32(y1, dct_rounding);

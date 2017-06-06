@@ -203,7 +203,7 @@ static INLINE void decrease_ref_count(int idx, RefCntBuffer *const frame_bufs,
   }
 }
 
-#if CONFIG_EXT_REFS
+#if CONFIG_EXT_REFS || CONFIG_TEMPMV_SIGNALING
 static INLINE int dec_is_ref_frame_buf(AV1Decoder *const pbi,
                                        RefCntBuffer *frame_buf) {
   AV1_COMMON *const cm = &pbi->common;

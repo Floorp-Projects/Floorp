@@ -37,13 +37,17 @@ extern aom_codec_iface_t aom_codec_av1_dx_algo;
 extern aom_codec_iface_t *aom_codec_av1_dx(void);
 /*!@} - end algorithm interface member group*/
 
+#ifndef AOM_ACCOUNTING_H_
 /** Data structure that stores bit accounting for debug
  */
 typedef struct Accounting Accounting;
+#endif
 
+#ifndef AOM_INSPECTION_H_
 /** Callback that inspects decoder frame data.
  */
 typedef void (*aom_inspect_cb)(void *decoder, void *ctx);
+#endif
 
 /*!\brief Structure to hold inspection callback and context.
  *

@@ -247,23 +247,23 @@ static double od_pvq_rate(int qg, int icgr, int theta, int ts,
     aom_writer w;
     od_pvq_codeword_ctx cd;
     int tell;
-#if CONFIG_DAALA_EC
+#if !CONFIG_ANS
     od_ec_enc_init(&w.ec, 1000);
 #else
-# error "CONFIG_PVQ currently requires CONFIG_DAALA_EC."
+# error "CONFIG_PVQ currently requires !CONFIG_ANS."
 #endif
     OD_COPY(&cd, &adapt->pvq.pvq_codeword_ctx, 1);
-#if CONFIG_DAALA_EC
+#if !CONFIG_ANS
     tell = od_ec_enc_tell_frac(&w.ec);
 #else
-# error "CONFIG_PVQ currently requires CONFIG_DAALA_EC."
+# error "CONFIG_PVQ currently requires !CONFIG_ANS."
 #endif
     aom_encode_pvq_codeword(&w, &cd, y0, n - (theta != -1), k);
-#if CONFIG_DAALA_EC
+#if !CONFIG_ANS
     rate = (od_ec_enc_tell_frac(&w.ec)-tell)/8.;
     od_ec_enc_clear(&w.ec);
 #else
-# error "CONFIG_PVQ currently requires CONFIG_DAALA_EC."
+# error "CONFIG_PVQ currently requires !CONFIG_ANS."
 #endif
   }
   if (qg > 0 && theta >= 0) {
@@ -847,22 +847,22 @@ PVQ_SKIP_TYPE od_pvq_encode(daala_enc_ctx *enc,
       int tell2;
       od_rollback_buffer dc_buf;
 
-      dc_rate = -OD_LOG2((double)(skip_cdf[3] - skip_cdf[2])/
-       (double)(skip_cdf[2] - skip_cdf[1]));
+      dc_rate = -OD_LOG2((double)(OD_ICDF(skip_cdf[3]) - OD_ICDF(skip_cdf[2]))/
+       (double)(OD_ICDF(skip_cdf[2]) - OD_ICDF(skip_cdf[1])));
       dc_rate += 1;
 
-#if CONFIG_DAALA_EC
+#if !CONFIG_ANS
       tell2 = od_ec_enc_tell_frac(&enc->w.ec);
 #else
-#error "CONFIG_PVQ currently requires CONFIG_DAALA_EC."
+#error "CONFIG_PVQ currently requires !CONFIG_ANS."
 #endif
       od_encode_checkpoint(enc, &dc_buf);
       generic_encode(&enc->w, &enc->state.adapt->model_dc[pli],
        n - 1, &enc->state.adapt->ex_dc[pli][bs][0], 2);
-#if CONFIG_DAALA_EC
+#if !CONFIG_ANS
       tell2 = od_ec_enc_tell_frac(&enc->w.ec) - tell2;
 #else
-#error "CONFIG_PVQ currently requires CONFIG_DAALA_EC."
+#error "CONFIG_PVQ currently requires !CONFIG_ANS."
 #endif
       dc_rate += tell2/8.0;
       od_encode_rollback(enc, &dc_buf);
@@ -871,10 +871,10 @@ PVQ_SKIP_TYPE od_pvq_encode(daala_enc_ctx *enc,
        enc->pvq_norm_lambda);
     }
   }
-#if CONFIG_DAALA_EC
+#if !CONFIG_ANS
   tell = od_ec_enc_tell_frac(&enc->w.ec);
 #else
-#error "CONFIG_PVQ currently requires CONFIG_DAALA_EC."
+#error "CONFIG_PVQ currently requires !CONFIG_ANS."
 #endif
   /* Code as if we're not skipping. */
   aom_write_symbol(&enc->w, 2 + (out[0] != 0), skip_cdf, 4);
@@ -921,22 +921,22 @@ PVQ_SKIP_TYPE od_pvq_encode(daala_enc_ctx *enc,
     }
     if (encode_flip) cfl_encoded = 1;
   }
-#if CONFIG_DAALA_EC
+#if !CONFIG_ANS
   tell = od_ec_enc_tell_frac(&enc->w.ec) - tell;
 #else
-#error "CONFIG_PVQ currently requires CONFIG_DAALA_EC."
+#error "CONFIG_PVQ currently requires !CONFIG_ANS."
 #endif
   /* Account for the rate of skipping the AC, based on the same DC decision
      we made when trying to not skip AC. */
   {
     double skip_rate;
     if (out[0] != 0) {
-      skip_rate = -OD_LOG2((skip_cdf[1] - skip_cdf[0])/
-     (double)skip_cdf[3]);
+      skip_rate = -OD_LOG2((OD_ICDF(skip_cdf[1]) - OD_ICDF(skip_cdf[0]))/
+     (double)OD_ICDF(skip_cdf[3]));
     }
     else {
-      skip_rate = -OD_LOG2(skip_cdf[0]/
-     (double)skip_cdf[3]);
+      skip_rate = -OD_LOG2(OD_ICDF(skip_cdf[0])/
+     (double)OD_ICDF(skip_cdf[3]));
     }
     tell -= (int)floor(.5+8*skip_rate);
   }
@@ -951,22 +951,22 @@ PVQ_SKIP_TYPE od_pvq_encode(daala_enc_ctx *enc,
         int tell2;
         od_rollback_buffer dc_buf;
 
-        dc_rate = -OD_LOG2((double)(skip_cdf[1] - skip_cdf[0])/
-         (double)skip_cdf[0]);
+        dc_rate = -OD_LOG2((double)(OD_ICDF(skip_cdf[1]) - OD_ICDF(skip_cdf[0]))/
+         (double)OD_ICDF(skip_cdf[0]));
         dc_rate += 1;
 
-#if CONFIG_DAALA_EC
+#if !CONFIG_ANS
         tell2 = od_ec_enc_tell_frac(&enc->w.ec);
 #else
-#error "CONFIG_PVQ currently requires CONFIG_DAALA_EC."
+#error "CONFIG_PVQ currently requires !CONFIG_ANS."
 #endif
         od_encode_checkpoint(enc, &dc_buf);
         generic_encode(&enc->w, &enc->state.adapt->model_dc[pli],
          n - 1, &enc->state.adapt->ex_dc[pli][bs][0], 2);
-#if CONFIG_DAALA_EC
+#if !CONFIG_ANS
         tell2 = od_ec_enc_tell_frac(&enc->w.ec) - tell2;
 #else
-#error "CONFIG_PVQ currently requires CONFIG_DAALA_EC."
+#error "CONFIG_PVQ currently requires !CONFIG_ANS."
 #endif
         dc_rate += tell2/8.0;
         od_encode_rollback(enc, &dc_buf);

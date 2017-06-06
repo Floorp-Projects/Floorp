@@ -565,8 +565,8 @@ class SubpelVarianceTest
           aom_memalign(16, block_size_ * sizeof(uint16_t))));
       sec_ = CONVERT_TO_BYTEPTR(reinterpret_cast<uint16_t *>(
           aom_memalign(16, block_size_ * sizeof(uint16_t))));
-      ref_ =
-          CONVERT_TO_BYTEPTR(new uint16_t[block_size_ + width_ + height_ + 1]);
+      ref_ = CONVERT_TO_BYTEPTR(aom_memalign(
+          16, (block_size_ + width_ + height_ + 1) * sizeof(uint16_t)));
 #endif  // CONFIG_HIGHBITDEPTH
     }
     ASSERT_TRUE(src_ != NULL);
@@ -582,7 +582,7 @@ class SubpelVarianceTest
 #if CONFIG_HIGHBITDEPTH
     } else {
       aom_free(CONVERT_TO_SHORTPTR(src_));
-      delete[] CONVERT_TO_SHORTPTR(ref_);
+      aom_free(CONVERT_TO_SHORTPTR(ref_));
       aom_free(CONVERT_TO_SHORTPTR(sec_));
 #endif  // CONFIG_HIGHBITDEPTH
     }
@@ -1276,22 +1276,6 @@ INSTANTIATE_TEST_CASE_P(
         make_tuple(6, 6, &aom_sub_pixel_avg_variance64x64_avx2, 0),
         make_tuple(5, 5, &aom_sub_pixel_avg_variance32x32_avx2, 0)));
 #endif  // HAVE_AVX2
-
-#if HAVE_MEDIA
-INSTANTIATE_TEST_CASE_P(MEDIA, AvxMseTest,
-                        ::testing::Values(MseParams(4, 4,
-                                                    &aom_mse16x16_media)));
-
-INSTANTIATE_TEST_CASE_P(
-    MEDIA, AvxVarianceTest,
-    ::testing::Values(VarianceParams(4, 4, &aom_variance16x16_media),
-                      VarianceParams(3, 3, &aom_variance8x8_media)));
-
-INSTANTIATE_TEST_CASE_P(
-    MEDIA, AvxSubpelVarianceTest,
-    ::testing::Values(make_tuple(4, 4, &aom_sub_pixel_variance16x16_media, 0),
-                      make_tuple(3, 3, &aom_sub_pixel_variance8x8_media, 0)));
-#endif  // HAVE_MEDIA
 
 #if HAVE_NEON
 INSTANTIATE_TEST_CASE_P(NEON, AvxSseTest,

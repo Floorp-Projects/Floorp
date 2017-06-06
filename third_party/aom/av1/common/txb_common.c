@@ -98,7 +98,7 @@ const int16_t av1_coeff_band_32x32[1024] = {
 void av1_adapt_txb_probs(AV1_COMMON *cm, unsigned int count_sat,
                          unsigned int update_factor) {
   FRAME_CONTEXT *fc = cm->fc;
-  const FRAME_CONTEXT *pre_fc = &cm->frame_contexts[cm->frame_context_idx];
+  const FRAME_CONTEXT *pre_fc = cm->pre_fc;
   const FRAME_COUNTS *counts = &cm->counts;
   TX_SIZE tx_size;
   int plane, ctx, level;

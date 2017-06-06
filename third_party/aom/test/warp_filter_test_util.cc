@@ -13,23 +13,19 @@
 
 using std::tr1::tuple;
 using std::tr1::make_tuple;
-using std::vector;
-using libaom_test::ACMRandom;
-using libaom_test::AV1WarpFilter::AV1WarpFilterTest;
-using libaom_test::AV1WarpFilter::WarpTestParam;
-#if CONFIG_HIGHBITDEPTH
-using libaom_test::AV1HighbdWarpFilter::AV1HighbdWarpFilterTest;
-using libaom_test::AV1HighbdWarpFilter::HighbdWarpTestParam;
-#endif
 
-::testing::internal::ParamGenerator<WarpTestParam>
-libaom_test::AV1WarpFilter::GetDefaultParams() {
-  const WarpTestParam defaultParams[] = {
-    make_tuple(4, 4, 50000),  make_tuple(8, 8, 50000),
-    make_tuple(64, 64, 1000), make_tuple(4, 16, 20000),
-    make_tuple(32, 8, 10000),
+namespace libaom_test {
+
+namespace AV1WarpFilter {
+
+::testing::internal::ParamGenerator<WarpTestParam> BuildParams(
+    warp_affine_func filter) {
+  const WarpTestParam params[] = {
+    make_tuple(4, 4, 50000, filter),  make_tuple(8, 8, 50000, filter),
+    make_tuple(64, 64, 1000, filter), make_tuple(4, 16, 20000, filter),
+    make_tuple(32, 8, 10000, filter),
   };
-  return ::testing::ValuesIn(defaultParams);
+  return ::testing::ValuesIn(params);
 }
 
 AV1WarpFilterTest::~AV1WarpFilterTest() {}
@@ -84,6 +80,15 @@ void AV1WarpFilterTest::generate_model(int32_t *mat, int16_t *alpha,
         (4 * abs(*gamma) + 4 * abs(*delta) >= (1 << WARPEDMODEL_PREC_BITS)))
       continue;
 
+    *alpha = ROUND_POWER_OF_TWO_SIGNED(*alpha, WARP_PARAM_REDUCE_BITS) *
+             (1 << WARP_PARAM_REDUCE_BITS);
+    *beta = ROUND_POWER_OF_TWO_SIGNED(*beta, WARP_PARAM_REDUCE_BITS) *
+            (1 << WARP_PARAM_REDUCE_BITS);
+    *gamma = ROUND_POWER_OF_TWO_SIGNED(*gamma, WARP_PARAM_REDUCE_BITS) *
+             (1 << WARP_PARAM_REDUCE_BITS);
+    *delta = ROUND_POWER_OF_TWO_SIGNED(*delta, WARP_PARAM_REDUCE_BITS) *
+             (1 << WARP_PARAM_REDUCE_BITS);
+
     // We have a valid model, so finish
     return;
   }
@@ -136,10 +141,12 @@ void AV1WarpFilterTest::RunCheckOutput(warp_affine_func test_impl) {
   delete[] output;
   delete[] output2;
 }
+}  // namespace AV1WarpFilter
 
 #if CONFIG_HIGHBITDEPTH
-::testing::internal::ParamGenerator<HighbdWarpTestParam>
-libaom_test::AV1HighbdWarpFilter::GetDefaultParams() {
+namespace AV1HighbdWarpFilter {
+
+::testing::internal::ParamGenerator<HighbdWarpTestParam> GetDefaultParams() {
   const HighbdWarpTestParam defaultParams[] = {
     make_tuple(4, 4, 50000, 8),   make_tuple(8, 8, 50000, 8),
     make_tuple(64, 64, 1000, 8),  make_tuple(4, 16, 20000, 8),
@@ -207,6 +214,15 @@ void AV1HighbdWarpFilterTest::generate_model(int32_t *mat, int16_t *alpha,
         (4 * abs(*gamma) + 4 * abs(*delta) >= (1 << WARPEDMODEL_PREC_BITS)))
       continue;
 
+    *alpha = ROUND_POWER_OF_TWO_SIGNED(*alpha, WARP_PARAM_REDUCE_BITS) *
+             (1 << WARP_PARAM_REDUCE_BITS);
+    *beta = ROUND_POWER_OF_TWO_SIGNED(*beta, WARP_PARAM_REDUCE_BITS) *
+            (1 << WARP_PARAM_REDUCE_BITS);
+    *gamma = ROUND_POWER_OF_TWO_SIGNED(*gamma, WARP_PARAM_REDUCE_BITS) *
+             (1 << WARP_PARAM_REDUCE_BITS);
+    *delta = ROUND_POWER_OF_TWO_SIGNED(*delta, WARP_PARAM_REDUCE_BITS) *
+             (1 << WARP_PARAM_REDUCE_BITS);
+
     // We have a valid model, so finish
     return;
   }
@@ -265,4 +281,6 @@ void AV1HighbdWarpFilterTest::RunCheckOutput(
   delete[] output;
   delete[] output2;
 }
+}  // namespace AV1HighbdWarpFilter
 #endif  // CONFIG_HIGHBITDEPTH
+}  // namespace libaom_test

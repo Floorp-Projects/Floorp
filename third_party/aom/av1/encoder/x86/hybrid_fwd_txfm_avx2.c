@@ -269,8 +269,8 @@ static void fdct16_avx2(__m256i *in) {
   x0 = _mm256_unpacklo_epi16(v0, v1);
   x1 = _mm256_unpackhi_epi16(v0, v1);
 
-  t0 = butter_fly(x0, x1, cospi_p16_p16);
-  t1 = butter_fly(x0, x1, cospi_p16_m16);
+  t0 = butter_fly(&x0, &x1, &cospi_p16_p16);
+  t1 = butter_fly(&x0, &x1, &cospi_p16_m16);
 
   // 4, 12
   v0 = _mm256_sub_epi16(s1, s2);
@@ -279,8 +279,8 @@ static void fdct16_avx2(__m256i *in) {
   x0 = _mm256_unpacklo_epi16(v0, v1);
   x1 = _mm256_unpackhi_epi16(v0, v1);
 
-  t2 = butter_fly(x0, x1, cospi_p24_p08);
-  t3 = butter_fly(x0, x1, cospi_m08_p24);
+  t2 = butter_fly(&x0, &x1, &cospi_p24_p08);
+  t3 = butter_fly(&x0, &x1, &cospi_m08_p24);
 
   // 2, 6, 10, 14
   s0 = _mm256_sub_epi16(u3, u4);
@@ -294,8 +294,8 @@ static void fdct16_avx2(__m256i *in) {
   x0 = _mm256_unpacklo_epi16(s2, s1);
   x1 = _mm256_unpackhi_epi16(s2, s1);
 
-  v2 = butter_fly(x0, x1, cospi_p16_p16);  // output[5]
-  v1 = butter_fly(x0, x1, cospi_p16_m16);  // output[6]
+  v2 = butter_fly(&x0, &x1, &cospi_p16_p16);  // output[5]
+  v1 = butter_fly(&x0, &x1, &cospi_p16_m16);  // output[6]
 
   s0 = _mm256_add_epi16(v0, v1);  // step[4]
   s1 = _mm256_sub_epi16(v0, v1);  // step[5]
@@ -306,14 +306,14 @@ static void fdct16_avx2(__m256i *in) {
   x0 = _mm256_unpacklo_epi16(s0, s3);
   x1 = _mm256_unpackhi_epi16(s0, s3);
 
-  t4 = butter_fly(x0, x1, cospi_p28_p04);
-  t5 = butter_fly(x0, x1, cospi_m04_p28);
+  t4 = butter_fly(&x0, &x1, &cospi_p28_p04);
+  t5 = butter_fly(&x0, &x1, &cospi_m04_p28);
 
   // 10, 6
   x0 = _mm256_unpacklo_epi16(s1, s2);
   x1 = _mm256_unpackhi_epi16(s1, s2);
-  t6 = butter_fly(x0, x1, cospi_p12_p20);
-  t7 = butter_fly(x0, x1, cospi_m20_p12);
+  t6 = butter_fly(&x0, &x1, &cospi_p12_p20);
+  t7 = butter_fly(&x0, &x1, &cospi_m20_p12);
 
   // 1, 3, 5, 7, 9, 11, 13, 15
   s0 = _mm256_sub_epi16(in[7], in[8]);  // step[8]
@@ -337,14 +337,14 @@ static void fdct16_avx2(__m256i *in) {
   x0 = _mm256_unpacklo_epi16(u5, u2);
   x1 = _mm256_unpackhi_epi16(u5, u2);
 
-  s2 = butter_fly(x0, x1, cospi_p16_p16);  // step[13]
-  s5 = butter_fly(x0, x1, cospi_p16_m16);  // step[10]
+  s2 = butter_fly(&x0, &x1, &cospi_p16_p16);  // step[13]
+  s5 = butter_fly(&x0, &x1, &cospi_p16_m16);  // step[10]
 
   x0 = _mm256_unpacklo_epi16(u4, u3);
   x1 = _mm256_unpackhi_epi16(u4, u3);
 
-  s3 = butter_fly(x0, x1, cospi_p16_p16);  // step[12]
-  s4 = butter_fly(x0, x1, cospi_p16_m16);  // step[11]
+  s3 = butter_fly(&x0, &x1, &cospi_p16_p16);  // step[12]
+  s4 = butter_fly(&x0, &x1, &cospi_p16_m16);  // step[11]
 
   u0 = _mm256_add_epi16(s0, s4);  // output[8]
   u1 = _mm256_add_epi16(s1, s5);
@@ -364,14 +364,14 @@ static void fdct16_avx2(__m256i *in) {
   x0 = _mm256_unpacklo_epi16(u1, u6);
   x1 = _mm256_unpackhi_epi16(u1, u6);
 
-  s1 = butter_fly(x0, x1, cospi_m08_p24);
-  s6 = butter_fly(x0, x1, cospi_p24_p08);
+  s1 = butter_fly(&x0, &x1, &cospi_m08_p24);
+  s6 = butter_fly(&x0, &x1, &cospi_p24_p08);
 
   x0 = _mm256_unpacklo_epi16(u2, u5);
   x1 = _mm256_unpackhi_epi16(u2, u5);
 
-  s2 = butter_fly(x0, x1, cospi_m24_m08);
-  s5 = butter_fly(x0, x1, cospi_m08_p24);
+  s2 = butter_fly(&x0, &x1, &cospi_m24_m08);
+  s5 = butter_fly(&x0, &x1, &cospi_m08_p24);
 
   // stage 5
   u0 = _mm256_add_epi16(s0, s1);
@@ -386,23 +386,23 @@ static void fdct16_avx2(__m256i *in) {
   // stage 6
   x0 = _mm256_unpacklo_epi16(u0, u7);
   x1 = _mm256_unpackhi_epi16(u0, u7);
-  in[1] = butter_fly(x0, x1, cospi_p30_p02);
-  in[15] = butter_fly(x0, x1, cospi_m02_p30);
+  in[1] = butter_fly(&x0, &x1, &cospi_p30_p02);
+  in[15] = butter_fly(&x0, &x1, &cospi_m02_p30);
 
   x0 = _mm256_unpacklo_epi16(u1, u6);
   x1 = _mm256_unpackhi_epi16(u1, u6);
-  in[9] = butter_fly(x0, x1, cospi_p14_p18);
-  in[7] = butter_fly(x0, x1, cospi_m18_p14);
+  in[9] = butter_fly(&x0, &x1, &cospi_p14_p18);
+  in[7] = butter_fly(&x0, &x1, &cospi_m18_p14);
 
   x0 = _mm256_unpacklo_epi16(u2, u5);
   x1 = _mm256_unpackhi_epi16(u2, u5);
-  in[5] = butter_fly(x0, x1, cospi_p22_p10);
-  in[11] = butter_fly(x0, x1, cospi_m10_p22);
+  in[5] = butter_fly(&x0, &x1, &cospi_p22_p10);
+  in[11] = butter_fly(&x0, &x1, &cospi_m10_p22);
 
   x0 = _mm256_unpacklo_epi16(u3, u4);
   x1 = _mm256_unpackhi_epi16(u3, u4);
-  in[13] = butter_fly(x0, x1, cospi_p06_p26);
-  in[3] = butter_fly(x0, x1, cospi_m26_p06);
+  in[13] = butter_fly(&x0, &x1, &cospi_p06_p26);
+  in[3] = butter_fly(&x0, &x1, &cospi_m26_p06);
 }
 
 void fadst16_avx2(__m256i *in) {
@@ -953,7 +953,9 @@ void fadst16_avx2(__m256i *in) {
 }
 
 #if CONFIG_EXT_TX
-static void fidtx16_avx2(__m256i *in) { txfm_scaling16_avx2(Sqrt2, in); }
+static void fidtx16_avx2(__m256i *in) {
+  txfm_scaling16_avx2((int16_t)Sqrt2, in);
+}
 #endif
 
 void av1_fht16x16_avx2(const int16_t *input, tran_low_t *output, int stride,
@@ -964,28 +966,28 @@ void av1_fht16x16_avx2(const int16_t *input, tran_low_t *output, int stride,
     case DCT_DCT:
       load_buffer_16x16(input, stride, 0, 0, in);
       fdct16_avx2(in);
-      mm256_transpose_16x16(in);
+      mm256_transpose_16x16(in, in);
       right_shift_16x16(in);
       fdct16_avx2(in);
       break;
     case ADST_DCT:
       load_buffer_16x16(input, stride, 0, 0, in);
       fadst16_avx2(in);
-      mm256_transpose_16x16(in);
+      mm256_transpose_16x16(in, in);
       right_shift_16x16(in);
       fdct16_avx2(in);
       break;
     case DCT_ADST:
       load_buffer_16x16(input, stride, 0, 0, in);
       fdct16_avx2(in);
-      mm256_transpose_16x16(in);
+      mm256_transpose_16x16(in, in);
       right_shift_16x16(in);
       fadst16_avx2(in);
       break;
     case ADST_ADST:
       load_buffer_16x16(input, stride, 0, 0, in);
       fadst16_avx2(in);
-      mm256_transpose_16x16(in);
+      mm256_transpose_16x16(in, in);
       right_shift_16x16(in);
       fadst16_avx2(in);
       break;
@@ -993,91 +995,91 @@ void av1_fht16x16_avx2(const int16_t *input, tran_low_t *output, int stride,
     case FLIPADST_DCT:
       load_buffer_16x16(input, stride, 1, 0, in);
       fadst16_avx2(in);
-      mm256_transpose_16x16(in);
+      mm256_transpose_16x16(in, in);
       right_shift_16x16(in);
       fdct16_avx2(in);
       break;
     case DCT_FLIPADST:
       load_buffer_16x16(input, stride, 0, 1, in);
       fdct16_avx2(in);
-      mm256_transpose_16x16(in);
+      mm256_transpose_16x16(in, in);
       right_shift_16x16(in);
       fadst16_avx2(in);
       break;
     case FLIPADST_FLIPADST:
       load_buffer_16x16(input, stride, 1, 1, in);
       fadst16_avx2(in);
-      mm256_transpose_16x16(in);
+      mm256_transpose_16x16(in, in);
       right_shift_16x16(in);
       fadst16_avx2(in);
       break;
     case ADST_FLIPADST:
       load_buffer_16x16(input, stride, 0, 1, in);
       fadst16_avx2(in);
-      mm256_transpose_16x16(in);
+      mm256_transpose_16x16(in, in);
       right_shift_16x16(in);
       fadst16_avx2(in);
       break;
     case FLIPADST_ADST:
       load_buffer_16x16(input, stride, 1, 0, in);
       fadst16_avx2(in);
-      mm256_transpose_16x16(in);
+      mm256_transpose_16x16(in, in);
       right_shift_16x16(in);
       fadst16_avx2(in);
       break;
     case IDTX:
       load_buffer_16x16(input, stride, 0, 0, in);
       fidtx16_avx2(in);
-      mm256_transpose_16x16(in);
+      mm256_transpose_16x16(in, in);
       right_shift_16x16(in);
       fidtx16_avx2(in);
       break;
     case V_DCT:
       load_buffer_16x16(input, stride, 0, 0, in);
       fdct16_avx2(in);
-      mm256_transpose_16x16(in);
+      mm256_transpose_16x16(in, in);
       right_shift_16x16(in);
       fidtx16_avx2(in);
       break;
     case H_DCT:
       load_buffer_16x16(input, stride, 0, 0, in);
       fidtx16_avx2(in);
-      mm256_transpose_16x16(in);
+      mm256_transpose_16x16(in, in);
       right_shift_16x16(in);
       fdct16_avx2(in);
       break;
     case V_ADST:
       load_buffer_16x16(input, stride, 0, 0, in);
       fadst16_avx2(in);
-      mm256_transpose_16x16(in);
+      mm256_transpose_16x16(in, in);
       right_shift_16x16(in);
       fidtx16_avx2(in);
       break;
     case H_ADST:
       load_buffer_16x16(input, stride, 0, 0, in);
       fidtx16_avx2(in);
-      mm256_transpose_16x16(in);
+      mm256_transpose_16x16(in, in);
       right_shift_16x16(in);
       fadst16_avx2(in);
       break;
     case V_FLIPADST:
       load_buffer_16x16(input, stride, 1, 0, in);
       fadst16_avx2(in);
-      mm256_transpose_16x16(in);
+      mm256_transpose_16x16(in, in);
       right_shift_16x16(in);
       fidtx16_avx2(in);
       break;
     case H_FLIPADST:
       load_buffer_16x16(input, stride, 0, 1, in);
       fidtx16_avx2(in);
-      mm256_transpose_16x16(in);
+      mm256_transpose_16x16(in, in);
       right_shift_16x16(in);
       fadst16_avx2(in);
       break;
 #endif  // CONFIG_EXT_TX
     default: assert(0); break;
   }
-  mm256_transpose_16x16(in);
+  mm256_transpose_16x16(in, in);
   write_buffer_16x16(in, output);
   _mm256_zeroupper();
 }
@@ -1110,10 +1112,10 @@ static void mm256_vectors_swap(__m256i *a0, __m256i *a1, const int size) {
 }
 
 static void mm256_transpose_32x32(__m256i *in0, __m256i *in1) {
-  mm256_transpose_16x16(in0);
-  mm256_transpose_16x16(&in0[16]);
-  mm256_transpose_16x16(in1);
-  mm256_transpose_16x16(&in1[16]);
+  mm256_transpose_16x16(in0, in0);
+  mm256_transpose_16x16(&in0[16], &in0[16]);
+  mm256_transpose_16x16(in1, in1);
+  mm256_transpose_16x16(&in1[16], &in1[16]);
   mm256_vectors_swap(&in0[16], in1, 16);
 }
 
@@ -1247,23 +1249,23 @@ static void fdct16_odd_avx2(__m256i *in) {
 
   u0 = _mm256_unpacklo_epi16(in[4], in[11]);
   u1 = _mm256_unpackhi_epi16(in[4], in[11]);
-  y4 = butter_fly(u0, u1, cospi_m16_p16);
-  y11 = butter_fly(u0, u1, cospi_p16_p16);
+  y4 = butter_fly(&u0, &u1, &cospi_m16_p16);
+  y11 = butter_fly(&u0, &u1, &cospi_p16_p16);
 
   u0 = _mm256_unpacklo_epi16(in[5], in[10]);
   u1 = _mm256_unpackhi_epi16(in[5], in[10]);
-  y5 = butter_fly(u0, u1, cospi_m16_p16);
-  y10 = butter_fly(u0, u1, cospi_p16_p16);
+  y5 = butter_fly(&u0, &u1, &cospi_m16_p16);
+  y10 = butter_fly(&u0, &u1, &cospi_p16_p16);
 
   u0 = _mm256_unpacklo_epi16(in[6], in[9]);
   u1 = _mm256_unpackhi_epi16(in[6], in[9]);
-  y6 = butter_fly(u0, u1, cospi_m16_p16);
-  y9 = butter_fly(u0, u1, cospi_p16_p16);
+  y6 = butter_fly(&u0, &u1, &cospi_m16_p16);
+  y9 = butter_fly(&u0, &u1, &cospi_p16_p16);
 
   u0 = _mm256_unpacklo_epi16(in[7], in[8]);
   u1 = _mm256_unpackhi_epi16(in[7], in[8]);
-  y7 = butter_fly(u0, u1, cospi_m16_p16);
-  y8 = butter_fly(u0, u1, cospi_p16_p16);
+  y7 = butter_fly(&u0, &u1, &cospi_m16_p16);
+  y8 = butter_fly(&u0, &u1, &cospi_p16_p16);
 
   y12 = in[12];
   y13 = in[13];
@@ -1300,23 +1302,23 @@ static void fdct16_odd_avx2(__m256i *in) {
 
   u0 = _mm256_unpacklo_epi16(x2, x13);
   u1 = _mm256_unpackhi_epi16(x2, x13);
-  y2 = butter_fly(u0, u1, cospi_m08_p24);
-  y13 = butter_fly(u0, u1, cospi_p24_p08);
+  y2 = butter_fly(&u0, &u1, &cospi_m08_p24);
+  y13 = butter_fly(&u0, &u1, &cospi_p24_p08);
 
   u0 = _mm256_unpacklo_epi16(x3, x12);
   u1 = _mm256_unpackhi_epi16(x3, x12);
-  y3 = butter_fly(u0, u1, cospi_m08_p24);
-  y12 = butter_fly(u0, u1, cospi_p24_p08);
+  y3 = butter_fly(&u0, &u1, &cospi_m08_p24);
+  y12 = butter_fly(&u0, &u1, &cospi_p24_p08);
 
   u0 = _mm256_unpacklo_epi16(x4, x11);
   u1 = _mm256_unpackhi_epi16(x4, x11);
-  y4 = butter_fly(u0, u1, cospi_m24_m08);
-  y11 = butter_fly(u0, u1, cospi_m08_p24);
+  y4 = butter_fly(&u0, &u1, &cospi_m24_m08);
+  y11 = butter_fly(&u0, &u1, &cospi_m08_p24);
 
   u0 = _mm256_unpacklo_epi16(x5, x10);
   u1 = _mm256_unpackhi_epi16(x5, x10);
-  y5 = butter_fly(u0, u1, cospi_m24_m08);
-  y10 = butter_fly(u0, u1, cospi_m08_p24);
+  y5 = butter_fly(&u0, &u1, &cospi_m24_m08);
+  y10 = butter_fly(&u0, &u1, &cospi_m08_p24);
 
   // stage 5
   x0 = _mm256_add_epi16(y0, y3);
@@ -1349,23 +1351,23 @@ static void fdct16_odd_avx2(__m256i *in) {
 
   u0 = _mm256_unpacklo_epi16(x1, x14);
   u1 = _mm256_unpackhi_epi16(x1, x14);
-  y1 = butter_fly(u0, u1, cospi_m04_p28);
-  y14 = butter_fly(u0, u1, cospi_p28_p04);
+  y1 = butter_fly(&u0, &u1, &cospi_m04_p28);
+  y14 = butter_fly(&u0, &u1, &cospi_p28_p04);
 
   u0 = _mm256_unpacklo_epi16(x2, x13);
   u1 = _mm256_unpackhi_epi16(x2, x13);
-  y2 = butter_fly(u0, u1, cospi_m28_m04);
-  y13 = butter_fly(u0, u1, cospi_m04_p28);
+  y2 = butter_fly(&u0, &u1, &cospi_m28_m04);
+  y13 = butter_fly(&u0, &u1, &cospi_m04_p28);
 
   u0 = _mm256_unpacklo_epi16(x5, x10);
   u1 = _mm256_unpackhi_epi16(x5, x10);
-  y5 = butter_fly(u0, u1, cospi_m20_p12);
-  y10 = butter_fly(u0, u1, cospi_p12_p20);
+  y5 = butter_fly(&u0, &u1, &cospi_m20_p12);
+  y10 = butter_fly(&u0, &u1, &cospi_p12_p20);
 
   u0 = _mm256_unpacklo_epi16(x6, x9);
   u1 = _mm256_unpackhi_epi16(x6, x9);
-  y6 = butter_fly(u0, u1, cospi_m12_m20);
-  y9 = butter_fly(u0, u1, cospi_m20_p12);
+  y6 = butter_fly(&u0, &u1, &cospi_m12_m20);
+  y9 = butter_fly(&u0, &u1, &cospi_m20_p12);
 
   // stage 7
   x0 = _mm256_add_epi16(y0, y1);
@@ -1389,43 +1391,43 @@ static void fdct16_odd_avx2(__m256i *in) {
   // stage 8
   u0 = _mm256_unpacklo_epi16(x0, x15);
   u1 = _mm256_unpackhi_epi16(x0, x15);
-  in[0] = butter_fly(u0, u1, cospi_p31_p01);
-  in[15] = butter_fly(u0, u1, cospi_m01_p31);
+  in[0] = butter_fly(&u0, &u1, &cospi_p31_p01);
+  in[15] = butter_fly(&u0, &u1, &cospi_m01_p31);
 
   u0 = _mm256_unpacklo_epi16(x1, x14);
   u1 = _mm256_unpackhi_epi16(x1, x14);
-  in[1] = butter_fly(u0, u1, cospi_p15_p17);
-  in[14] = butter_fly(u0, u1, cospi_m17_p15);
+  in[1] = butter_fly(&u0, &u1, &cospi_p15_p17);
+  in[14] = butter_fly(&u0, &u1, &cospi_m17_p15);
 
   u0 = _mm256_unpacklo_epi16(x2, x13);
   u1 = _mm256_unpackhi_epi16(x2, x13);
-  in[2] = butter_fly(u0, u1, cospi_p23_p09);
-  in[13] = butter_fly(u0, u1, cospi_m09_p23);
+  in[2] = butter_fly(&u0, &u1, &cospi_p23_p09);
+  in[13] = butter_fly(&u0, &u1, &cospi_m09_p23);
 
   u0 = _mm256_unpacklo_epi16(x3, x12);
   u1 = _mm256_unpackhi_epi16(x3, x12);
-  in[3] = butter_fly(u0, u1, cospi_p07_p25);
-  in[12] = butter_fly(u0, u1, cospi_m25_p07);
+  in[3] = butter_fly(&u0, &u1, &cospi_p07_p25);
+  in[12] = butter_fly(&u0, &u1, &cospi_m25_p07);
 
   u0 = _mm256_unpacklo_epi16(x4, x11);
   u1 = _mm256_unpackhi_epi16(x4, x11);
-  in[4] = butter_fly(u0, u1, cospi_p27_p05);
-  in[11] = butter_fly(u0, u1, cospi_m05_p27);
+  in[4] = butter_fly(&u0, &u1, &cospi_p27_p05);
+  in[11] = butter_fly(&u0, &u1, &cospi_m05_p27);
 
   u0 = _mm256_unpacklo_epi16(x5, x10);
   u1 = _mm256_unpackhi_epi16(x5, x10);
-  in[5] = butter_fly(u0, u1, cospi_p11_p21);
-  in[10] = butter_fly(u0, u1, cospi_m21_p11);
+  in[5] = butter_fly(&u0, &u1, &cospi_p11_p21);
+  in[10] = butter_fly(&u0, &u1, &cospi_m21_p11);
 
   u0 = _mm256_unpacklo_epi16(x6, x9);
   u1 = _mm256_unpackhi_epi16(x6, x9);
-  in[6] = butter_fly(u0, u1, cospi_p19_p13);
-  in[9] = butter_fly(u0, u1, cospi_m13_p19);
+  in[6] = butter_fly(&u0, &u1, &cospi_p19_p13);
+  in[9] = butter_fly(&u0, &u1, &cospi_m13_p19);
 
   u0 = _mm256_unpacklo_epi16(x7, x8);
   u1 = _mm256_unpackhi_epi16(x7, x8);
-  in[7] = butter_fly(u0, u1, cospi_p03_p29);
-  in[8] = butter_fly(u0, u1, cospi_m29_p03);
+  in[7] = butter_fly(&u0, &u1, &cospi_p03_p29);
+  in[8] = butter_fly(&u0, &u1, &cospi_m29_p03);
 }
 
 static void fdct32_avx2(__m256i *in0, __m256i *in1) {
@@ -1464,7 +1466,7 @@ static INLINE void write_buffer_32x32(const __m256i *in0, const __m256i *in1,
 static void fhalfright32_16col_avx2(__m256i *in) {
   int i = 0;
   const __m256i zero = _mm256_setzero_si256();
-  const __m256i sqrt2 = _mm256_set1_epi16(Sqrt2);
+  const __m256i sqrt2 = _mm256_set1_epi16((int16_t)Sqrt2);
   const __m256i dct_rounding = _mm256_set1_epi32(DCT_CONST_ROUNDING);
   __m256i x0, x1;
 

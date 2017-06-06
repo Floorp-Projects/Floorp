@@ -8,6 +8,9 @@
 ## Media Patent License 1.0 was not distributed with this source code in the
 ## PATENTS file, you can obtain it at www.aomedia.org/license/patent.
 ##
+if (NOT AOM_AOM_DSP_AOM_DSP_CMAKE_)
+set(AOM_AOM_DSP_AOM_DSP_CMAKE_ 1)
+
 set(AOM_DSP_COMMON_SOURCES
     "${AOM_ROOT}/aom_dsp/aom_convolve.c"
     "${AOM_ROOT}/aom_dsp/aom_convolve.h"
@@ -23,7 +26,6 @@ set(AOM_DSP_COMMON_SOURCES
     "${AOM_ROOT}/aom_dsp/loopfilter.c"
     "${AOM_ROOT}/aom_dsp/prob.c"
     "${AOM_ROOT}/aom_dsp/prob.h"
-    "${AOM_ROOT}/aom_dsp/sad.c"
     "${AOM_ROOT}/aom_dsp/simd/v128_intrinsics.h"
     "${AOM_ROOT}/aom_dsp/simd/v128_intrinsics_c.h"
     "${AOM_ROOT}/aom_dsp/simd/v256_intrinsics.h"
@@ -62,8 +64,10 @@ set(AOM_DSP_COMMON_INTRIN_SSE4_1
 
 set(AOM_DSP_COMMON_INTRIN_AVX2
     "${AOM_ROOT}/aom_dsp/x86/aom_subpixel_8t_intrin_avx2.c"
-    "${AOM_ROOT}/aom_dsp/x86/fwd_txfm_avx2.c"
-    "${AOM_ROOT}/aom_dsp/x86/loopfilter_avx2.c")
+    "${AOM_ROOT}/aom_dsp/x86/loopfilter_avx2.c"
+    "${AOM_ROOT}/aom_dsp/x86/inv_txfm_avx2.c"
+    "${AOM_ROOT}/aom_dsp/x86/inv_txfm_common_avx2.h"
+    "${AOM_ROOT}/aom_dsp/x86/txfm_common_avx2.h")
 
 set(AOM_DSP_COMMON_ASM_NEON
     "${AOM_ROOT}/aom_dsp/arm/aom_convolve8_avg_neon_asm.asm"
@@ -175,6 +179,8 @@ set(AOM_DSP_COMMON_INTRIN_MSA
 if (CONFIG_HIGHBITDEPTH)
   set(AOM_DSP_COMMON_ASM_SSE2
       ${AOM_DSP_COMMON_ASM_SSE2}
+      "${AOM_ROOT}/aom_dsp/x86/aom_high_subpixel_8t_sse2.asm"
+      "${AOM_ROOT}/aom_dsp/x86/aom_high_subpixel_bilinear_sse2.asm"
       "${AOM_ROOT}/aom_dsp/x86/highbd_intrapred_sse2.asm")
 
   set(AOM_DSP_COMMON_INTRIN_SSE2
@@ -198,7 +204,7 @@ if (CONFIG_ANS)
   set(AOM_DSP_COMMON_SOURCES
       ${AOM_DSP_COMMON_SOURCES}
       "${AOM_ROOT}/aom_dsp/ans.h")
-elseif (CONFIG_DAALA_EC)
+else ()
   set(AOM_DSP_COMMON_SOURCES
       ${AOM_DSP_COMMON_SOURCES}
       "${AOM_ROOT}/aom_dsp/entcode.c"
@@ -221,7 +227,7 @@ if (CONFIG_AV1)
       "${AOM_ROOT}/aom_dsp/x86/inv_txfm_sse2.h")
 endif ()
 
-if (CONFIG_DECODERS)
+if (CONFIG_AV1_DECODER)
   set(AOM_DSP_DECODER_SOURCES
       "${AOM_ROOT}/aom_dsp/binary_codes_reader.c"
       "${AOM_ROOT}/aom_dsp/binary_codes_reader.h"
@@ -233,22 +239,17 @@ if (CONFIG_DECODERS)
     set(AOM_DSP_DECODER_SOURCES
         ${AOM_DSP_DECODER_SOURCES}
         "${AOM_ROOT}/aom_dsp/ansreader.h")
-  elseif (CONFIG_DAALA_EC)
+  else ()
     set(AOM_DSP_DECODER_SOURCES
         ${AOM_DSP_DECODER_SOURCES}
         "${AOM_ROOT}/aom_dsp/daalaboolreader.c"
         "${AOM_ROOT}/aom_dsp/daalaboolreader.h"
         "${AOM_ROOT}/aom_dsp/entdec.c"
         "${AOM_ROOT}/aom_dsp/entdec.h")
-  else ()
-    set(AOM_DSP_DECODER_SOURCES
-        ${AOM_DSP_DECODER_SOURCES}
-        "${AOM_ROOT}/aom_dsp/dkboolreader.c"
-        "${AOM_ROOT}/aom_dsp/dkboolreader.h")
   endif ()
 endif ()
 
-if (CONFIG_ENCODERS)
+if (CONFIG_AV1_ENCODER)
   set(AOM_DSP_ENCODER_SOURCES
       "${AOM_ROOT}/aom_dsp/binary_codes_writer.c"
       "${AOM_ROOT}/aom_dsp/binary_codes_writer.h"
@@ -257,6 +258,7 @@ if (CONFIG_ENCODERS)
       "${AOM_ROOT}/aom_dsp/bitwriter_buffer.h"
       "${AOM_ROOT}/aom_dsp/psnr.c"
       "${AOM_ROOT}/aom_dsp/psnr.h"
+      "${AOM_ROOT}/aom_dsp/sad.c"
       "${AOM_ROOT}/aom_dsp/variance.c"
       "${AOM_ROOT}/aom_dsp/variance.h")
 
@@ -282,6 +284,9 @@ if (CONFIG_ENCODERS)
   set(AOM_DSP_ENCODER_ASM_SSE4_1 "${AOM_ROOT}/aom_dsp/x86/sad_sse4.asm")
 
   set(AOM_DSP_ENCODER_INTRIN_AVX2
+      "${AOM_ROOT}/aom_dsp/x86/fwd_dct32x32_impl_avx2.h"
+      "${AOM_ROOT}/aom_dsp/x86/fwd_txfm_avx2.c"
+      "${AOM_ROOT}/aom_dsp/x86/fwd_txfm_avx2.h"
       "${AOM_ROOT}/aom_dsp/x86/sad4d_avx2.c"
       "${AOM_ROOT}/aom_dsp/x86/sad_avx2.c"
       "${AOM_ROOT}/aom_dsp/x86/sad_impl_avx2.c"
@@ -310,11 +315,6 @@ if (CONFIG_ENCODERS)
         "${AOM_ROOT}/aom_dsp/x86/variance_sse2.c"
         "${AOM_ROOT}/aom_dsp/x86/sum_squares_sse2.c")
 
-    set(AOM_DSP_ENCODER_INTRIN_SSSE3
-        ${AOM_DSP_ENCODER_INTRIN_SSSE3}
-        "${AOM_ROOT}/aom_dsp/x86/masked_sad_intrin_ssse3.c"
-        "${AOM_ROOT}/aom_dsp/x86/masked_variance_intrin_ssse3.c")
-
     set(AOM_DSP_ENCODER_ASM_SSSE3_X86_64
         ${AOM_DSP_ENCODER_ASM_SSSE3_X86_64}
         "${AOM_ROOT}/aom_dsp/x86/avg_ssse3_x86_64.asm"
@@ -325,7 +325,6 @@ if (CONFIG_ENCODERS)
         "${AOM_ROOT}/aom_dsp/x86/quantize_avx_x86_64.asm")
 
     set(AOM_DSP_ENCODER_INTRIN_MSA
-        "${AOM_ROOT}/aom_dsp/mips/avg_msa.c"
         "${AOM_ROOT}/aom_dsp/mips/sad_msa.c"
         "${AOM_ROOT}/aom_dsp/mips/subtract_msa.c"
         "${AOM_ROOT}/aom_dsp/mips/variance_msa.c"
@@ -345,9 +344,7 @@ if (CONFIG_ENCODERS)
         "${AOM_ROOT}/aom_dsp/x86/highbd_sad4d_sse2.asm"
         "${AOM_ROOT}/aom_dsp/x86/highbd_sad_sse2.asm"
         "${AOM_ROOT}/aom_dsp/x86/highbd_subpel_variance_impl_sse2.asm"
-        "${AOM_ROOT}/aom_dsp/x86/highbd_variance_impl_sse2.asm"
-        "${AOM_ROOT}/aom_dsp/x86/aom_high_subpixel_8t_sse2.asm"
-        "${AOM_ROOT}/aom_dsp/x86/aom_high_subpixel_bilinear_sse2.asm")
+        "${AOM_ROOT}/aom_dsp/x86/highbd_variance_impl_sse2.asm")
 
     set(AOM_DSP_ENCODER_INTRIN_SSE2
         ${AOM_DSP_ENCODER_INTRIN_SSE2}
@@ -368,18 +365,13 @@ if (CONFIG_ENCODERS)
         "${AOM_ROOT}/aom_dsp/answriter.h"
         "${AOM_ROOT}/aom_dsp/buf_ans.c"
         "${AOM_ROOT}/aom_dsp/buf_ans.h")
-  elseif (CONFIG_DAALA_EC)
+  else ()
     set(AOM_DSP_ENCODER_SOURCES
         ${AOM_DSP_ENCODER_SOURCES}
         "${AOM_ROOT}/aom_dsp/daalaboolwriter.c"
         "${AOM_ROOT}/aom_dsp/daalaboolwriter.h"
         "${AOM_ROOT}/aom_dsp/entenc.c"
         "${AOM_ROOT}/aom_dsp/entenc.h")
-  else ()
-    set(AOM_DSP_ENCODER_SOURCES
-        ${AOM_DSP_ENCODER_SOURCES}
-        "${AOM_ROOT}/aom_dsp/dkboolwriter.c"
-        "${AOM_ROOT}/aom_dsp/dkboolwriter.h")
   endif ()
 
   if (CONFIG_INTERNAL_STATS)
@@ -389,6 +381,18 @@ if (CONFIG_ENCODERS)
         "${AOM_ROOT}/aom_dsp/psnrhvs.c"
         "${AOM_ROOT}/aom_dsp/ssim.c"
         "${AOM_ROOT}/aom_dsp/ssim.h")
+  endif ()
+endif ()
+
+if (CONFIG_LOOP_RESTORATION)
+  set(AOM_DSP_COMMON_INTRIN_SSE2
+      ${AOM_DSP_COMMON_INTRIN_SSE2}
+      "${AOM_ROOT}/aom_dsp/x86/aom_convolve_hip_sse2.c")
+
+  if (CONFIG_HIGHBITDEPTH)
+    set(AOM_DSP_COMMON_INTRIN_SSSE3
+      ${AOM_DSP_COMMON_INTRIN_SSSE3}
+        "${AOM_ROOT}/aom_dsp/x86/aom_highbd_convolve_hip_ssse3.c")
   endif ()
 endif ()
 
@@ -406,13 +410,13 @@ function (setup_aom_dsp_targets)
   set(AOM_LIB_TARGETS ${AOM_LIB_TARGETS} aom_dsp_common)
   target_sources(aom PUBLIC $<TARGET_OBJECTS:aom_dsp_common>)
 
-  if (CONFIG_DECODERS)
+  if (CONFIG_AV1_DECODER)
     add_library(aom_dsp_decoder OBJECT ${AOM_DSP_DECODER_SOURCES})
     set(AOM_LIB_TARGETS ${AOM_LIB_TARGETS} aom_dsp_decoder)
     target_sources(aom PUBLIC $<TARGET_OBJECTS:aom_dsp_decoder>)
   endif ()
 
-  if (CONFIG_ENCODERS)
+  if (CONFIG_AV1_ENCODER)
     add_library(aom_dsp_encoder OBJECT ${AOM_DSP_ENCODER_SOURCES})
     set(AOM_LIB_TARGETS ${AOM_LIB_TARGETS} aom_dsp_encoder)
     target_sources(aom PUBLIC $<TARGET_OBJECTS:aom_dsp_encoder>)
@@ -422,14 +426,14 @@ function (setup_aom_dsp_targets)
     add_asm_library("aom_dsp_common_sse2" "AOM_DSP_COMMON_ASM_SSE2" "aom")
     add_intrinsics_object_library("-msse2" "sse2" "aom_dsp_common"
                                   "AOM_DSP_COMMON_INTRIN_SSE2")
-    if (CONFIG_ENCODERS)
+    if (CONFIG_AV1_ENCODER)
       add_asm_library("aom_dsp_encoder_sse2" "AOM_DSP_ENCODER_ASM_SSE2" "aom")
       add_intrinsics_object_library("-msse2" "sse2" "aom_dsp_encoder"
                                     "AOM_DSP_ENCODER_INTRIN_SSE2")
     endif()
   endif ()
 
-  if (HAVE_SSE3 AND CONFIG_ENCODERS)
+  if (HAVE_SSE3 AND CONFIG_AV1_ENCODER)
     add_asm_library("aom_dsp_encoder_sse3" "AOM_DSP_ENCODER_INTRIN_SSE3" "aom")
   endif ()
 
@@ -438,21 +442,19 @@ function (setup_aom_dsp_targets)
     add_intrinsics_object_library("-mssse3" "ssse3" "aom_dsp_common"
                                   "AOM_DSP_COMMON_INTRIN_SSSE3")
 
-    if (CONFIG_ENCODERS)
+    if (CONFIG_AV1_ENCODER)
       if ("${AOM_TARGET_CPU}" STREQUAL "x86_64")
         list(APPEND AOM_DSP_ENCODER_ASM_SSSE3
              ${AOM_DSP_ENCODER_ASM_SSSE3_X86_64})
       endif ()
       add_asm_library("aom_dsp_encoder_ssse3" "AOM_DSP_ENCODER_ASM_SSSE3" "aom")
-      add_intrinsics_object_library("-mssse3" "ssse3" "aom_dsp_encoder"
-                                    "AOM_DSP_ENCODER_INTRIN_SSSE3")
     endif ()
   endif ()
 
   if (HAVE_SSE4_1)
     add_intrinsics_object_library("-msse4.1" "sse4_1" "aom_dsp_common"
                                   "AOM_DSP_COMMON_INTRIN_SSE4_1")
-    if (CONFIG_ENCODERS)
+    if (CONFIG_AV1_ENCODER)
       if (AOM_DSP_ENCODER_INTRIN_SSE4_1)
         add_intrinsics_object_library("-msse4.1" "sse4_1" "aom_dsp_encoder"
                                       "AOM_DSP_ENCODER_INTRIN_SSE4_1")
@@ -463,14 +465,16 @@ function (setup_aom_dsp_targets)
   endif ()
 
   if (HAVE_AVX AND "${AOM_TARGET_CPU}" STREQUAL "x86_64")
-    add_asm_library("aom_dsp_encoder_avx" "AOM_DSP_ENCODER_AVX_ASM_X86_64"
-                    "aom")
+    if (CONFIG_AV1_ENCODER)
+      add_asm_library("aom_dsp_encoder_avx" "AOM_DSP_ENCODER_AVX_ASM_X86_64"
+                      "aom")
+    endif ()
   endif ()
 
   if (HAVE_AVX2)
     add_intrinsics_object_library("-mavx2" "avx2" "aom_dsp_common"
                                   "AOM_DSP_COMMON_INTRIN_AVX2")
-    if (CONFIG_ENCODERS)
+    if (CONFIG_AV1_ENCODER)
       add_intrinsics_object_library("-mavx2" "avx2" "aom_dsp_encoder"
                                     "AOM_DSP_ENCODER_INTRIN_AVX2")
     endif ()
@@ -497,7 +501,7 @@ function (setup_aom_dsp_targets)
   if (HAVE_MSA)
     add_intrinsics_object_library("" "msa" "aom_dsp_common"
                                   "AOM_DSP_COMMON_INTRIN_MSA")
-    if (CONFIG_ENCODERS)
+    if (CONFIG_AV1_ENCODER)
       add_intrinsics_object_library("" "msa" "aom_dsp_encoder"
                                     "AOM_DSP_ENCODER_INTRIN_MSA")
     endif ()
@@ -507,3 +511,5 @@ function (setup_aom_dsp_targets)
   # $AOM_LIB_TARGETS.
   set(AOM_LIB_TARGETS ${AOM_LIB_TARGETS} PARENT_SCOPE)
 endfunction ()
+
+endif ()  # AOM_AOM_DSP_AOM_DSP_CMAKE_

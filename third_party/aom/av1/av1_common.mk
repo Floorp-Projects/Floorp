@@ -58,7 +58,6 @@ AV1_COMMON_SRCS-yes += common/reconinter.c
 AV1_COMMON_SRCS-yes += common/reconintra.c
 AV1_COMMON_SRCS-yes += common/resize.c
 AV1_COMMON_SRCS-yes += common/resize.h
-AV1_COMMON_SRCS-yes += common/restoration.h
 AV1_COMMON_SRCS-yes += common/common_data.h
 AV1_COMMON_SRCS-yes += common/scan.c
 AV1_COMMON_SRCS-yes += common/scan.h
@@ -69,9 +68,9 @@ AV1_COMMON_SRCS-yes += common/av1_fwd_txfm1d.c
 AV1_COMMON_SRCS-yes += common/av1_inv_txfm1d.h
 AV1_COMMON_SRCS-yes += common/av1_inv_txfm1d.c
 AV1_COMMON_SRCS-yes += common/av1_fwd_txfm2d.c
-AV1_COMMON_SRCS-yes += common/av1_fwd_txfm2d_cfg.h
+AV1_COMMON_SRCS-yes += common/av1_fwd_txfm1d_cfg.h
 AV1_COMMON_SRCS-yes += common/av1_inv_txfm2d.c
-AV1_COMMON_SRCS-yes += common/av1_inv_txfm2d_cfg.h
+AV1_COMMON_SRCS-yes += common/av1_inv_txfm1d_cfg.h
 AV1_COMMON_SRCS-$(HAVE_SSSE3) += common/x86/av1_convolve_ssse3.c
 ifeq ($(CONFIG_HIGHBITDEPTH),yes)
 AV1_COMMON_SRCS-$(HAVE_SSE4_1) += common/x86/av1_highbd_convolve_sse4.c
@@ -172,6 +171,7 @@ endif
 
 ifneq ($(findstring yes,$(CONFIG_GLOBAL_MOTION) $(CONFIG_WARPED_MOTION)),)
 AV1_COMMON_SRCS-$(HAVE_SSE2) += common/x86/warp_plane_sse2.c
+AV1_COMMON_SRCS-$(HAVE_SSSE3) += common/x86/warp_plane_ssse3.c
 ifeq ($(CONFIG_HIGHBITDEPTH),yes)
 AV1_COMMON_SRCS-$(HAVE_SSSE3) += common/x86/highbd_warp_plane_ssse3.c
 endif

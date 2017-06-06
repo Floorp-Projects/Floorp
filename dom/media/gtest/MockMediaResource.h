@@ -36,6 +36,8 @@ public:
   void SetPlaybackRate(uint32_t aBytesPerSecond) override {}
   nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
                   uint32_t* aBytes) override;
+  // Data stored in file, caching recommended.
+  bool ShouldCacheReads() override { return true; }
   int64_t Tell() override { return 0; }
   void Pin() override {}
   void Unpin() override {}

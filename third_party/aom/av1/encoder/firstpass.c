@@ -568,16 +568,11 @@ void av1_first_pass(AV1_COMP *cpi, const struct lookahead_entry *source) {
 
     od_init_qm(x->daala_enc.state.qm, x->daala_enc.state.qm_inv,
                x->daala_enc.qm == OD_HVS_QM ? OD_QM8_Q4_HVS : OD_QM8_Q4_FLAT);
-#if CONFIG_DAALA_EC
+#if !CONFIG_ANS
     od_ec_enc_init(&x->daala_enc.w.ec, 65025);
-#else
-#error "CONFIG_PVQ currently requires CONFIG_DAALA_EC."
-#endif
-
-#if CONFIG_DAALA_EC
     od_ec_enc_reset(&x->daala_enc.w.ec);
 #else
-#error "CONFIG_PVQ currently requires CONFIG_DAALA_EC."
+#error "CONFIG_PVQ currently requires !CONFIG_ANS."
 #endif
   }
 #endif
@@ -598,6 +593,7 @@ void av1_first_pass(AV1_COMP *cpi, const struct lookahead_entry *source) {
   av1_init_mv_probs(cm);
 #if CONFIG_ADAPT_SCAN
   av1_init_scan_order(cm);
+  av1_deliver_eob_threshold(cm, xd);
 #endif
   av1_convolve_init(cm);
 #if CONFIG_PVQ
@@ -884,7 +880,7 @@ void av1_first_pass(AV1_COMP *cpi, const struct lookahead_entry *source) {
           xd->mi[0]->mbmi.tx_size = TX_4X4;
           xd->mi[0]->mbmi.ref_frame[0] = LAST_FRAME;
           xd->mi[0]->mbmi.ref_frame[1] = NONE_FRAME;
-          av1_build_inter_predictors_sby(xd, mb_row * mb_scale,
+          av1_build_inter_predictors_sby(cm, xd, mb_row * mb_scale,
                                          mb_col * mb_scale, NULL, bsize);
           av1_encode_sby_pass1(cm, x, bsize);
           sum_mvr += mv.row;
@@ -997,10 +993,10 @@ void av1_first_pass(AV1_COMP *cpi, const struct lookahead_entry *source) {
   }
 
 #if CONFIG_PVQ
-#if CONFIG_DAALA_EC
+#if !CONFIG_ANS
   od_ec_enc_clear(&x->daala_enc.w.ec);
 #else
-#error "CONFIG_PVQ currently requires CONFIG_DAALA_EC."
+#error "CONFIG_PVQ currently requires !CONFIG_ANS."
 #endif
 
   x->pvq_q->last_pos = x->pvq_q->curr_pos;
@@ -1235,28 +1231,26 @@ static void setup_rf_level_maxq(AV1_COMP *cpi) {
   }
 }
 
-void av1_init_subsampling(AV1_COMP *cpi) {
-  const AV1_COMMON *const cm = &cpi->common;
-  RATE_CONTROL *const rc = &cpi->rc;
-  const int w = cm->width;
-  const int h = cm->height;
-  int i;
-
-  for (i = 0; i < FRAME_SCALE_STEPS; ++i) {
-    // Note: Frames with odd-sized dimensions may result from this scaling.
-    rc->frame_width[i] = (w * 16) / frame_scale_factor[i];
-    rc->frame_height[i] = (h * 16) / frame_scale_factor[i];
-  }
-
-  setup_rf_level_maxq(cpi);
+void av1_calculate_next_scaled_size(const AV1_COMP *cpi,
+                                    int *scaled_frame_width,
+                                    int *scaled_frame_height) {
+  *scaled_frame_width =
+      cpi->oxcf.width * cpi->resize_next_scale_num / cpi->resize_next_scale_den;
+  *scaled_frame_height = cpi->oxcf.height * cpi->resize_next_scale_num /
+                         cpi->resize_next_scale_den;
 }
 
-void av1_calculate_coded_size(AV1_COMP *cpi, int *scaled_frame_width,
-                              int *scaled_frame_height) {
-  RATE_CONTROL *const rc = &cpi->rc;
-  *scaled_frame_width = rc->frame_width[rc->frame_size_selector];
-  *scaled_frame_height = rc->frame_height[rc->frame_size_selector];
+#if CONFIG_FRAME_SUPERRES
+void av1_calculate_superres_size(const AV1_COMP *cpi, int *encoded_width,
+                                 int *encoded_height) {
+  *encoded_width = cpi->oxcf.scaled_frame_width *
+                   cpi->common.superres_scale_numerator /
+                   SUPERRES_SCALE_DENOMINATOR;
+  *encoded_height = cpi->oxcf.scaled_frame_height *
+                    cpi->common.superres_scale_numerator /
+                    SUPERRES_SCALE_DENOMINATOR;
 }
+#endif  // CONFIG_FRAME_SUPERRES
 
 void av1_init_second_pass(AV1_COMP *cpi) {
   const AV1EncoderConfig *const oxcf = &cpi->oxcf;
@@ -1316,7 +1310,7 @@ void av1_init_second_pass(AV1_COMP *cpi) {
   twopass->last_kfgroup_zeromotion_pct = 100;
 
   if (oxcf->resize_mode != RESIZE_NONE) {
-    av1_init_subsampling(cpi);
+    setup_rf_level_maxq(cpi);
   }
 }
 
@@ -2300,7 +2294,8 @@ static void define_gf_group(AV1_COMP *cpi, FIRSTPASS_STATS *this_frame) {
 
   if (oxcf->resize_mode == RESIZE_DYNAMIC) {
     // Default to starting GF groups at normal frame size.
-    cpi->rc.next_frame_size_selector = UNSCALED;
+    // TODO(afergs): Make a function for this
+    cpi->resize_next_scale_num = cpi->resize_next_scale_den;
   }
 }
 
@@ -2646,7 +2641,8 @@ static void find_next_key_frame(AV1_COMP *cpi, FIRSTPASS_STATS *this_frame) {
 
   if (oxcf->resize_mode == RESIZE_DYNAMIC) {
     // Default to normal-sized frame on keyframes.
-    cpi->rc.next_frame_size_selector = UNSCALED;
+    // TODO(afergs): Make a function for this
+    cpi->resize_next_scale_num = cpi->resize_next_scale_den;
   }
 }
 

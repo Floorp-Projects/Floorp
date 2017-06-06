@@ -262,6 +262,7 @@ INSTANTIATE_TEST_CASE_P(
                        ::testing::ValuesIn(filter_ls)));
 
 #if CONFIG_HIGHBITDEPTH
+#ifndef __clang_analyzer__
 TEST(AV1ConvolveTest, av1_highbd_convolve) {
   ACMRandom rnd(ACMRandom::DeterministicSeed());
 #if CONFIG_DUAL_FILTER
@@ -322,6 +323,7 @@ TEST(AV1ConvolveTest, av1_highbd_convolve) {
     }
   }
 }
+#endif
 
 TEST(AV1ConvolveTest, av1_highbd_convolve_avg) {
   ACMRandom rnd(ACMRandom::DeterministicSeed());

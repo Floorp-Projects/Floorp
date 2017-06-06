@@ -17,6 +17,7 @@ class JavaCallbacksSupport
 public:
   typedef java::CodecProxy::NativeCallbacks::Natives<JavaCallbacksSupport> Base;
   using Base::AttachNative;
+  using Base::GetNative;
   using Base::DisposeNative;
 
   JavaCallbacksSupport() : mCanceled(false) { }

@@ -98,7 +98,7 @@ TEST_P(AqSegmentTest, TestNoMisMatchAQ4) {
   aq_mode_ = 4;
 
   ::libaom_test::I420VideoSource video("hantro_collage_w352h288.yuv", 352, 288,
-                                       30, 1, 0, 100);
+                                       30, 1, 0, 15);
 
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 }
@@ -112,7 +112,7 @@ TEST_P(AqSegmentTest, TestNoMisMatchExtDeltaQ) {
   aq_mode_ = 0;
   deltaq_mode_ = 2;
   ::libaom_test::I420VideoSource video("hantro_collage_w352h288.yuv", 352, 288,
-                                       30, 1, 0, 100);
+                                       30, 1, 0, 15);
 
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 }

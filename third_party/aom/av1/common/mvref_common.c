@@ -14,8 +14,6 @@
 #include "av1/common/warped_motion.h"
 #endif  // CONFIG_WARPED_MOTION
 
-#if CONFIG_REF_MV
-
 static uint8_t add_ref_mv_candidate(
     const MODE_INFO *const candidate_mi, const MB_MODE_INFO *const candidate,
     const MV_REFERENCE_FRAME rf[2], uint8_t *refmv_count,
@@ -556,7 +554,6 @@ static void setup_ref_mv_list(const AV1_COMMON *cm, const MACROBLOCKD *xd,
     }
   }
 }
-#endif
 
 // This function searches the neighbourhood of a given MB/SB
 // to try and find candidate reference vectors.
@@ -568,9 +565,6 @@ static void find_mv_refs_idx(const AV1_COMMON *cm, const MACROBLOCKD *xd,
                              int_mv zeromv) {
   const int *ref_sign_bias = cm->ref_frame_sign_bias;
   int i, refmv_count = 0;
-#if !CONFIG_REF_MV
-  const POSITION *const mv_ref_search = mv_ref_blocks[mi->mbmi.sb_type];
-#endif
   int different_ref_found = 0;
   int context_counter = 0;
 #if CONFIG_MV_COMPRESS
@@ -592,11 +586,13 @@ static void find_mv_refs_idx(const AV1_COMMON *cm, const MACROBLOCKD *xd,
           ? cm->prev_frame->mvs + mi_row * cm->mi_cols + mi_col
           : NULL;
 #endif
+#if CONFIG_INTRABC
+  assert(IMPLIES(ref_frame == INTRA_FRAME, cm->use_prev_frame_mvs == 0));
+#endif
   const TileInfo *const tile = &xd->tile;
   const BLOCK_SIZE bsize = mi->mbmi.sb_type;
   const int bw = block_size_wide[AOMMAX(bsize, BLOCK_8X8)];
   const int bh = block_size_high[AOMMAX(bsize, BLOCK_8X8)];
-#if CONFIG_REF_MV
   POSITION mv_ref_search[MVREF_NEIGHBOURS];
   const int num_8x8_blocks_wide = num_8x8_blocks_wide_lookup[bsize];
   const int num_8x8_blocks_high = num_8x8_blocks_high_lookup[bsize];
@@ -639,7 +635,6 @@ static void find_mv_refs_idx(const AV1_COMMON *cm, const MACROBLOCKD *xd,
     mv_ref_search[i].col *= 2;
   }
 #endif  // CONFIG_CB4X4
-#endif  // CONFIG_REF_MV
 
   // The nearest 2 blocks are treated differently
   // if the size < 8x8 we get the mv from the bmi substructure,
@@ -673,12 +668,10 @@ static void find_mv_refs_idx(const AV1_COMMON *cm, const MACROBLOCKD *xd,
           !xd->mi[mv_ref->col + mv_ref->row * xd->mi_stride]
               ? NULL
               : &xd->mi[mv_ref->col + mv_ref->row * xd->mi_stride]->mbmi;
-#if CONFIG_REF_MV
       if (candidate == NULL) continue;
       if ((mi_row % MAX_MIB_SIZE) + mv_ref->row >= MAX_MIB_SIZE ||
           (mi_col % MAX_MIB_SIZE) + mv_ref->col >= MAX_MIB_SIZE)
         continue;
-#endif
       different_ref_found = 1;
 
       if (candidate->ref_frame[0] == ref_frame)
@@ -727,12 +720,10 @@ static void find_mv_refs_idx(const AV1_COMMON *cm, const MACROBLOCKD *xd,
             !xd->mi[mv_ref->col + mv_ref->row * xd->mi_stride]
                 ? NULL
                 : &xd->mi[mv_ref->col + mv_ref->row * xd->mi_stride]->mbmi;
-#if CONFIG_REF_MV
         if (candidate == NULL) continue;
         if ((mi_row % MAX_MIB_SIZE) + mv_ref->row >= MAX_MIB_SIZE ||
             (mi_col % MAX_MIB_SIZE) + mv_ref->col >= MAX_MIB_SIZE)
           continue;
-#endif
 
         // If the candidate is INTRA we don't want to consider its mv.
         IF_DIFF_REF_FRAME_ADD_MV(candidate, ref_frame, ref_sign_bias,
@@ -780,50 +771,18 @@ void av1_update_mv_context(const AV1_COMMON *cm, const MACROBLOCKD *xd,
                            int_mv *mv_ref_list, int block, int mi_row,
                            int mi_col, int16_t *mode_context) {
   int i, refmv_count = 0;
-#if !CONFIG_REF_MV
-  const POSITION *const mv_ref_search = mv_ref_blocks[mi->mbmi.sb_type];
-#endif
   int context_counter = 0;
   const int bw = block_size_wide[mi->mbmi.sb_type];
   const int bh = block_size_high[mi->mbmi.sb_type];
   const TileInfo *const tile = &xd->tile;
-#if CONFIG_REF_MV
-  POSITION mv_ref_search[MVREF_NEIGHBOURS];
+  POSITION mv_ref_search[2];
   const int num_8x8_blocks_wide = mi_size_wide[mi->mbmi.sb_type];
   const int num_8x8_blocks_high = mi_size_high[mi->mbmi.sb_type];
+
   mv_ref_search[0].row = num_8x8_blocks_high - 1;
   mv_ref_search[0].col = -1;
   mv_ref_search[1].row = -1;
   mv_ref_search[1].col = num_8x8_blocks_wide - 1;
-  mv_ref_search[2].row = -1;
-  mv_ref_search[2].col = (num_8x8_blocks_wide - 1) >> 1;
-  mv_ref_search[3].row = (num_8x8_blocks_high - 1) >> 1;
-  mv_ref_search[3].col = -1;
-  mv_ref_search[4].row = -1;
-  mv_ref_search[4].col = -1;
-#if CONFIG_EXT_PARTITION_TYPES
-  if (num_8x8_blocks_wide == num_8x8_blocks_high) {
-    mv_ref_search[5].row = -1;
-    mv_ref_search[5].col = 0;
-    mv_ref_search[6].row = 0;
-    mv_ref_search[6].col = -1;
-  } else {
-    mv_ref_search[5].row = -1;
-    mv_ref_search[5].col = num_8x8_blocks_wide;
-    mv_ref_search[6].row = num_8x8_blocks_high;
-    mv_ref_search[6].col = -1;
-  }
-#else
-  mv_ref_search[5].row = -1;
-  mv_ref_search[5].col = num_8x8_blocks_wide;
-  mv_ref_search[6].row = num_8x8_blocks_high;
-  mv_ref_search[6].col = -1;
-#endif  // CONFIG_EXT_PARTITION_TYPES
-  mv_ref_search[7].row = -1;
-  mv_ref_search[7].col = -3;
-  mv_ref_search[8].row = num_8x8_blocks_high - 1;
-  mv_ref_search[8].col = -3;
-#endif
 
   // Blank the reference vector list
   memset(mv_ref_list, 0, sizeof(*mv_ref_list) * MAX_MV_REF_CANDIDATES);
@@ -859,12 +818,10 @@ Done:
 
 void av1_find_mv_refs(const AV1_COMMON *cm, const MACROBLOCKD *xd,
                       MODE_INFO *mi, MV_REFERENCE_FRAME ref_frame,
-#if CONFIG_REF_MV
                       uint8_t *ref_mv_count, CANDIDATE_MV *ref_mv_stack,
 #if CONFIG_EXT_INTER
                       int16_t *compound_mode_context,
 #endif  // CONFIG_EXT_INTER
-#endif
                       int_mv *mv_ref_list, int mi_row, int mi_col,
                       find_mv_refs_sync sync, void *const data,
                       int16_t *mode_context) {
@@ -872,23 +829,17 @@ void av1_find_mv_refs(const AV1_COMMON *cm, const MACROBLOCKD *xd,
 #if CONFIG_GLOBAL_MOTION
   BLOCK_SIZE bsize = mi->mbmi.sb_type;
 #endif  // CONFIG_GLOBAL_MOTION
-#if CONFIG_REF_MV
   int idx, all_zero = 1;
 #if CONFIG_GLOBAL_MOTION
   MV_REFERENCE_FRAME rf[2];
 #endif  // CONFIG_GLOBAL_MOTION
-#endif  // CONFIG_REF_MV
+
 #if CONFIG_EXT_INTER
   av1_update_mv_context(cm, xd, mi, ref_frame, mv_ref_list, -1, mi_row, mi_col,
-#if CONFIG_REF_MV
                         compound_mode_context);
-#else
-                        mode_context);
-#endif  // CONFIG_REF_MV
 #endif  // CONFIG_EXT_INTER
 
 #if CONFIG_GLOBAL_MOTION
-#if CONFIG_REF_MV
   av1_set_ref_frame(rf, ref_frame);
   zeromv[0].as_int = gm_get_motion_vector(&cm->global_motion[rf[0]],
                                           cm->allow_high_precision_mv, bsize,
@@ -901,23 +852,13 @@ void av1_find_mv_refs(const AV1_COMMON *cm, const MACROBLOCKD *xd,
                                .as_int
                          : 0;
 #else
-  zeromv[0].as_int = gm_get_motion_vector(&cm->global_motion[ref_frame],
-                                          cm->allow_high_precision_mv, bsize,
-                                          mi_col, mi_row, 0)
-                         .as_int;
-  zeromv[1].as_int = 0;
-#endif  // CONFIG_REF_MV
-#else
   zeromv[0].as_int = zeromv[1].as_int = 0;
 #endif  // CONFIG_GLOBAL_MOTION
 
-#if CONFIG_REF_MV
   if (ref_frame <= ALTREF_FRAME)
-#endif  // CONFIG_REF_MV
     find_mv_refs_idx(cm, xd, mi, ref_frame, mv_ref_list, -1, mi_row, mi_col,
                      sync, data, mode_context, zeromv[0]);
 
-#if CONFIG_REF_MV
   setup_ref_mv_list(cm, xd, ref_frame, ref_mv_count, ref_mv_stack, mv_ref_list,
                     -1, mi_row, mi_col, mode_context);
   /* Note: If global motion is enabled, then we want to set the ALL_ZERO flag
@@ -947,7 +888,6 @@ void av1_find_mv_refs(const AV1_COMMON *cm, const MACROBLOCKD *xd,
   }
 
   if (all_zero) mode_context[ref_frame] |= (1 << ALL_ZERO_FLAG_OFFSET);
-#endif
 }
 
 void av1_find_best_ref_mvs(int allow_hp, int_mv *mvlist, int_mv *nearest_mv,
@@ -963,10 +903,8 @@ void av1_find_best_ref_mvs(int allow_hp, int_mv *mvlist, int_mv *nearest_mv,
 
 void av1_append_sub8x8_mvs_for_idx(const AV1_COMMON *cm, MACROBLOCKD *xd,
                                    int block, int ref, int mi_row, int mi_col,
-#if CONFIG_REF_MV
                                    CANDIDATE_MV *ref_mv_stack,
                                    uint8_t *ref_mv_count,
-#endif
 #if CONFIG_EXT_INTER
                                    int_mv *mv_list,
 #endif  // CONFIG_EXT_INTER
@@ -978,13 +916,11 @@ void av1_append_sub8x8_mvs_for_idx(const AV1_COMMON *cm, MACROBLOCKD *xd,
   b_mode_info *bmi = mi->bmi;
   int n;
   int_mv zeromv;
-#if CONFIG_REF_MV
   CANDIDATE_MV tmp_mv;
   uint8_t idx;
   uint8_t above_count = 0, left_count = 0;
   MV_REFERENCE_FRAME rf[2] = { mi->mbmi.ref_frame[ref], NONE_FRAME };
   *ref_mv_count = 0;
-#endif
 
   assert(MAX_MV_REF_CANDIDATES == 2);
 
@@ -999,7 +935,6 @@ void av1_append_sub8x8_mvs_for_idx(const AV1_COMMON *cm, MACROBLOCKD *xd,
   find_mv_refs_idx(cm, xd, mi, mi->mbmi.ref_frame[ref], mv_list, block, mi_row,
                    mi_col, NULL, NULL, NULL, zeromv);
 
-#if CONFIG_REF_MV
   scan_blk_mbmi(cm, xd, mi_row, mi_col, block, rf, -1, 0, ref_mv_stack,
                 ref_mv_count);
   above_count = *ref_mv_count;
@@ -1020,7 +955,6 @@ void av1_append_sub8x8_mvs_for_idx(const AV1_COMMON *cm, MACROBLOCKD *xd,
 
   for (idx = 0; idx < AOMMIN(MAX_MV_REF_CANDIDATES, *ref_mv_count); ++idx)
     mv_list[idx].as_int = ref_mv_stack[idx].this_mv.as_int;
-#endif
 
   near_mv->as_int = 0;
   switch (block) {

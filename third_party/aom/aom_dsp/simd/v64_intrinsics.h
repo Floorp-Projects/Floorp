@@ -60,7 +60,9 @@ SIMD_INLINE void v64_store_aligned(void *p, v64 a) {
   c_v64_store_aligned(p, a);
 }
 
-SIMD_INLINE v64 v64_align(v64 a, v64 b, c) { return c_v64_align(a, b, c); }
+SIMD_INLINE v64 v64_align(v64 a, v64 b, unsigned int c) {
+  return c_v64_align(a, b, c);
+}
 
 SIMD_INLINE v64 v64_zero() { return c_v64_zero(); }
 SIMD_INLINE v64 v64_dup_8(uint8_t x) { return c_v64_dup_8(x); }

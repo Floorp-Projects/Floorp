@@ -13,9 +13,7 @@
 #define AOM_UTIL_DEBUG_UTIL_H_
 
 #include "./aom_config.h"
-#if CONFIG_DAALA_EC
 #include "aom_dsp/prob.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,13 +31,8 @@ int bitstream_queue_get_write(void);
 int bitstream_queue_get_read(void);
 void bitstream_queue_record_write(void);
 void bitstream_queue_reset_write(void);
-#if CONFIG_DAALA_EC
 void bitstream_queue_pop(int *result, aom_cdf_prob *cdf, int *nsymbs);
 void bitstream_queue_push(int result, const aom_cdf_prob *cdf, int nsymbs);
-#else
-void bitstream_queue_pop(int *result, int *prob);
-void bitstream_queue_push(int result, int prob);
-#endif
 void bitstream_queue_set_skip_write(int skip);
 void bitstream_queue_set_skip_read(int skip);
 void bitstream_queue_set_frame_write(int frame_idx);
