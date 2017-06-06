@@ -37,6 +37,9 @@ this.senderror = (function() {
     MY_SHOTS: {
       title: browser.i18n.getMessage("selfScreenshotErrorTitle")
     },
+    EMPTY_SELECTION: {
+      title: browser.i18n.getMessage("emptySelectionErrorTitle")
+    },
     generic: {
       title: browser.i18n.getMessage("genericErrorTitle"),
       info: browser.i18n.getMessage("genericErrorDetails"),
@@ -89,7 +92,7 @@ this.senderror = (function() {
       return;
     }
     if (!Raven.isSetup()) {
-      Raven.config(dsn).install();
+      Raven.config(dsn, {allowSecretKey: true}).install();
     }
     let exception = new Error(e.message);
     exception.stack = e.multilineStack || e.stack || undefined;
@@ -112,7 +115,9 @@ this.senderror = (function() {
     if (!errorObj.noPopup) {
       exports.showError(errorObj);
     }
-    exports.reportError(errorObj);
+    if (!errorObj.noReport) {
+      exports.reportError(errorObj);
+    }
   });
 
   return exports;

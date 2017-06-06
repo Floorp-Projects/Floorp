@@ -20,8 +20,9 @@ add_task(async function() {
   let fontSizeField = doc.getElementById("defaultFontSize");
   is(fontSizeField.value, defaultFontSize, "Font size should be set correctly.");
 
+  let promiseSubDialogLoaded = promiseLoadSubDialog("chrome://browser/content/preferences/fonts.xul");
   doc.getElementById("advancedFonts").click();
-  let win = await promiseLoadSubDialog("chrome://browser/content/preferences/fonts.xul");
+  let win = await promiseSubDialogLoaded;
   doc = win.document;
 
   // Simulate a dumb font backend.

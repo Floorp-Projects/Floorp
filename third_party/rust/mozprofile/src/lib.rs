@@ -1,12 +1,9 @@
-#[macro_use]
-extern crate lazy_static;
-
 extern crate tempdir;
 
 pub mod profile;
 pub mod preferences;
 pub mod prefreader;
-pub mod prefdata;
+
 
 #[cfg(test)]
 mod test {

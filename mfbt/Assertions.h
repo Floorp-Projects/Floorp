@@ -315,7 +315,11 @@ MOZ_CrashPrintf(const char* aFilename, int aLine, const char* aFormat, ...);
 #define MOZ_CRASH_UNSAFE_PRINTF(format, ...) \
    do { \
      static_assert( \
-       MOZ_PASTE_PREFIX_AND_ARG_COUNT(, __VA_ARGS__) <= sPrintfMaxArgs, \
+       MOZ_ARG_COUNT(__VA_ARGS__) > 0, \
+       "Did you forget arguments to MOZ_CRASH_UNSAFE_PRINTF? " \
+       "Or maybe you want MOZ_CRASH instead?"); \
+     static_assert( \
+       MOZ_ARG_COUNT(__VA_ARGS__) <= sPrintfMaxArgs, \
        "Only up to 4 additional arguments are allowed!"); \
      static_assert(sizeof(format) <= sPrintfCrashReasonSize, \
        "The supplied format string is too long!"); \
@@ -446,14 +450,14 @@ struct AssertionConditionType
 #  define MOZ_ASSERT(...) do { } while (0)
 #endif /* DEBUG */
 
-#ifdef RELEASE_OR_BETA
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
+#  define MOZ_DIAGNOSTIC_ASSERT MOZ_RELEASE_ASSERT
+#  define MOZ_DIAGNOSTIC_ASSERT_ENABLED 1
+#else
 #  define MOZ_DIAGNOSTIC_ASSERT MOZ_ASSERT
 #  ifdef DEBUG
 #    define MOZ_DIAGNOSTIC_ASSERT_ENABLED 1
 #  endif
-#else
-#  define MOZ_DIAGNOSTIC_ASSERT MOZ_RELEASE_ASSERT
-#  define MOZ_DIAGNOSTIC_ASSERT_ENABLED 1
 #endif
 
 /*

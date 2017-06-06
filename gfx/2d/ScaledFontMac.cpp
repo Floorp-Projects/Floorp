@@ -207,7 +207,7 @@ struct writeBuf
         this->offset = 0;
     }
     ~writeBuf() {
-        delete this->data;
+        delete[] this->data;
     }
 
     template <class T>

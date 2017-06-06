@@ -234,7 +234,7 @@ struct VariantImplementation<Tag, N, T, Ts...>
     if (aRhs.template is<T>()) {
       ::new (KnownNotNull, aLhs) T(aRhs.template extract<T>());
     } else {
-      Next::moveConstruct(aLhs, aRhs);
+      Next::moveConstruct(aLhs, Move(aRhs));
     }
   }
 

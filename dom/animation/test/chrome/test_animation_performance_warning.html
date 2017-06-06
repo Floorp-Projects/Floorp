@@ -1180,7 +1180,7 @@ function start() {
     }).then(function() {
       // viewport depends on test environment.
       var expectedWarning = new RegExp(
-        "Animation cannot be run on the compositor because the area of the frame size " +
+        "Animation cannot be run on the compositor because the area of the frame " +
         "\\(\\d+\\) is too large relative to the viewport " +
         "\\(larger than \\d+\\)");
       assert_animation_property_state_equals(

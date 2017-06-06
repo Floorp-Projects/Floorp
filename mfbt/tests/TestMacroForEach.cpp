@@ -16,6 +16,9 @@ static_assert(MOZ_FOR_EACH_SEPARATED(HELPER_IDENTITY, (+),
 static_assert(MOZ_FOR_EACH_SEPARATED(HELPER_IDENTITY, (+),
                                      (), (1, 1, 1)) == 3, "");
 
+#define HELPER_ONE_PLUS(x) HELPER_IDENTITY_PLUS(1)
+static_assert(MOZ_FOR_EACH(HELPER_ONE_PLUS, (), ()) 0 == 0, "");
+
 #define HELPER_DEFINE_VAR(x) const int test1_##x = x;
 MOZ_FOR_EACH(HELPER_DEFINE_VAR, (), (10, 20))
 static_assert(test1_10 == 10 && test1_20 == 20, "");

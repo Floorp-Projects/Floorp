@@ -159,3 +159,22 @@ function uninstallFakePAC() {
   _("Uninstalling fake PAC.");
   MockRegistrar.unregister(fakePACCID);
 }
+
+
+function getUptakeTelemetrySnapshot(key) {
+  Cu.import("resource://gre/modules/Services.jsm");
+  const TELEMETRY_HISTOGRAM_ID = "UPTAKE_REMOTE_CONTENT_RESULT_1";
+  return Services.telemetry
+           .getKeyedHistogramById(TELEMETRY_HISTOGRAM_ID)
+           .snapshot(key);
+}
+
+function checkUptakeTelemetry(snapshot1, snapshot2, expectedIncrements) {
+  const LABELS = ["up_to_date", "success", "backoff", "pref_disabled", "parse_error", "content_error", "sign_error", "sign_retry_error", "conflict_error", "sync_error", "apply_error", "server_error", "certificate_error", "download_error", "timeout_error", "network_error", "offline_error", "cleanup_error", "unknown_error", "custom_1_error", "custom_2_error", "custom_3_error", "custom_4_error", "custom_5_error"];
+  for (const label of LABELS) {
+    const key = LABELS.indexOf(label);
+    const expected = expectedIncrements[label] || 0;
+    const actual = snapshot2.counts[key] - snapshot1.counts[key];
+    equal(expected, actual, `check histogram count for ${label}`);
+  }
+}

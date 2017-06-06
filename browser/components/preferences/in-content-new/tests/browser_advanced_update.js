@@ -114,7 +114,7 @@ add_task(async function() {
   let doc = gBrowser.selectedBrowser.contentDocument;
 
   let showBtn = doc.getElementById("showUpdateHistory");
-  let dialogOverlay = doc.getElementById("dialogOverlay");
+  let dialogOverlay = content.gSubDialog._preloadDialog._overlay;
 
   // XXX: For unknown reasons, this mock cannot be loaded by
   // XPCOMUtils.defineLazyServiceGetter() called in aboutDialog-appUpdater.js.
@@ -125,11 +125,12 @@ add_task(async function() {
 
   // Test the dialog window opens
   is(dialogOverlay.style.visibility, "", "The dialog should be invisible");
+  let promiseSubDialogLoaded = promiseLoadSubDialog("chrome://mozapps/content/update/history.xul");
   showBtn.doCommand();
-  await promiseLoadSubDialog("chrome://mozapps/content/update/history.xul");
+  await promiseSubDialogLoaded;
   is(dialogOverlay.style.visibility, "visible", "The dialog should be visible");
 
-  let dialogFrame = doc.getElementById("dialogFrame");
+  let dialogFrame = dialogOverlay.querySelector(".dialogFrame");
   let frameDoc = dialogFrame.contentDocument;
   let updates = frameDoc.querySelectorAll("update");
 
@@ -151,7 +152,7 @@ add_task(async function() {
   }
 
   // Test the dialog window closes
-  let closeBtn = doc.getElementById("dialogClose");
+  let closeBtn = dialogOverlay.querySelector(".dialogClose");
   closeBtn.doCommand();
   is(dialogOverlay.style.visibility, "", "The dialog should be invisible");
 

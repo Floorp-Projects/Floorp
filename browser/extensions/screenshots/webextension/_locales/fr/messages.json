@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Vous ne pouvez pas effectuer une capture d’écran d’une page Firefox Screenshots."
   },
+  "emptySelectionErrorTitle": {
+    "message": "La zone sélectionnée est trop petite"
+  },
   "genericErrorTitle": {
     "message": "Firefox Screenshots semble avoir un problème."
   },

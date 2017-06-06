@@ -738,9 +738,7 @@ AudioCallbackDriver::Init()
       return true;
     }
   }
-  bool aec;
-  Unused << mGraphImpl->AudioTrackPresent(aec);
-  SetMicrophoneActive(aec);
+  SetMicrophoneActive(mGraphImpl->mInputWanted);
 
   cubeb_stream_register_device_changed_callback(mAudioStream,
                                                 AudioCallbackDriver::DeviceChangedCallback_s);

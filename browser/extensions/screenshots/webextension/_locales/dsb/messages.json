@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Njamóžośo wobrazowku boka Firefox Screenshots fotografěrowaś!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Waš wuběrk jo pśemały"
+  },
   "genericErrorTitle": {
     "message": "Hopla! Firefox Screenshots njeźěła."
   },

@@ -64,6 +64,9 @@
   "selfScreenshotErrorTitle": {
     "message": "Njemóžeće wobrazowku strony Firefox Screenshots fotografować!"
   },
+  "emptySelectionErrorTitle": {
+    "message": "Waš wuběr je přemały"
+  },
   "genericErrorTitle": {
     "message": "Hopla! Firefox Screenshots njefunguje."
   },
