@@ -5,6 +5,7 @@
 
 #include "DOMMediaStream.h"
 #include "nsContentUtils.h"
+#include "nsRFPService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIScriptError.h"
 #include "nsIUUIDGenerator.h"
@@ -553,8 +554,8 @@ DOMMediaStream::CurrentTime()
   if (!mPlaybackStream) {
     return 0.0;
   }
-  return mPlaybackStream->
-    StreamTimeToSeconds(mPlaybackStream->GetCurrentTime() - mLogicalStreamStartTime);
+  return nsRFPService::ReduceTimePrecisionAsSecs(mPlaybackStream->
+    StreamTimeToSeconds(mPlaybackStream->GetCurrentTime() - mLogicalStreamStartTime));
 }
 
 void
