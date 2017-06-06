@@ -1241,6 +1241,91 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         tapInput.mPoint = *untransformedPoint;
       }
       break;
+    } case KEYBOARD_INPUT: {
+      // Disable async keyboard scrolling when accessibility.browsewithcaret is enabled
+      if (!gfxPrefs::APZKeyboardEnabled() ||
+          gfxPrefs::AccessibilityBrowseWithCaret()) {
+        return result;
+      }
+
+      KeyboardInput& keyInput = aEvent.AsKeyboardInput();
+
+      // Try and find a matching shortcut for this keyboard input
+      Maybe<KeyboardShortcut> shortcut = mKeyboardMap.FindMatch(keyInput);
+
+      if (!shortcut) {
+        // If we don't have a shortcut for this key event, then we can keep our focus
+        // only if we know there are no key event listeners for this target
+        if (mFocusState.CanIgnoreKeyboardShortcutMisses()) {
+          focusSetter.MarkAsNonFocusChanging();
+        }
+        return result;
+      }
+
+      // Check if this shortcut needs to be dispatched to content. Anything matching
+      // this is assumed to be able to change focus.
+      if (shortcut->mDispatchToContent) {
+        return result;
+      }
+
+      // We know we have an action to execute on whatever is the current focus target
+      const KeyboardScrollAction& action = shortcut->mAction;
+
+      // The current focus target depends on which direction the scroll is to happen
+      Maybe<ScrollableLayerGuid> targetGuid;
+      switch (action.mType)
+      {
+        case KeyboardScrollAction::eScrollCharacter: {
+          targetGuid = mFocusState.GetHorizontalTarget();
+          break;
+        }
+        case KeyboardScrollAction::eScrollLine:
+        case KeyboardScrollAction::eScrollPage:
+        case KeyboardScrollAction::eScrollComplete: {
+          targetGuid = mFocusState.GetVerticalTarget();
+          break;
+        }
+
+        case KeyboardScrollAction::eSentinel: {
+          MOZ_ASSERT_UNREACHABLE("Invalid KeyboardScrollActionType");
+        }
+      }
+
+      // If we don't have a scroll target then either we have a stale focus target,
+      // the focused element has event listeners, or the focused element doesn't have a
+      // layerized scroll frame. In any case we need to dispatch to content.
+      if (!targetGuid) {
+        return result;
+      }
+
+      RefPtr<AsyncPanZoomController> targetApzc = GetTargetAPZC(targetGuid->mLayersId,
+                                                                targetGuid->mScrollId);
+
+      // Scroll snapping behavior with keyboard input is more complicated, so
+      // ignore any input events that are targeted at an Apzc with scroll snap
+      // points.
+      if (!targetApzc || targetApzc->HasScrollSnapping()) {
+        return result;
+      }
+
+      // Attach the keyboard scroll action to the input event for processing
+      // by the input queue.
+      keyInput.mAction = action;
+
+      // Dispatch the event to the input queue.
+      result = mInputQueue->ReceiveInputEvent(
+          targetApzc,
+          /* aTargetConfirmed = */ true,
+          keyInput, aOutInputBlockId);
+
+      // Any keyboard event that is dispatched to the input queue at this point
+      // should have been consumed
+      MOZ_ASSERT(result == nsEventStatus_eConsumeNoDefault);
+
+      keyInput.mHandledByAPZ = true;
+      focusSetter.MarkAsNonFocusChanging();
+
+      break;
     } case SENTINEL_INPUT: {
       MOZ_ASSERT_UNREACHABLE("Invalid InputType.");
       break;

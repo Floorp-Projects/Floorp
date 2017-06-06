@@ -115,6 +115,31 @@ public:
    */
   void RemoveFocusTarget(uint64_t aLayersId);
 
+  /**
+   * Gets the scrollable layer that should be horizontally scrolled for a key
+   * event, if any. The returned ScrollableLayerGuid doesn't contain a presShellId,
+   * and so it should not be used in comparisons.
+   *
+   * No scrollable layer is returned if any of the following are true:
+   *   1. We don't have a current focus target
+   *   2. There are event listeners that could change the focus
+   *   3. The target has not been layerized
+   */
+  Maybe<ScrollableLayerGuid> GetHorizontalTarget() const;
+  /**
+   * The same as GetHorizontalTarget() but for vertical scrolling.
+   */
+  Maybe<ScrollableLayerGuid> GetVerticalTarget() const;
+
+  /**
+   * Gets whether it is safe to not increment the focus sequence number for an
+   * unmatched keyboard event.
+   */
+  bool CanIgnoreKeyboardShortcutMisses() const
+  {
+    return IsCurrent() && !mFocusHasKeyEventListeners;
+  }
+
 private:
   // The set of focus targets received indexed by their layer tree ID
   std::unordered_map<uint64_t, FocusTarget> mFocusTree;

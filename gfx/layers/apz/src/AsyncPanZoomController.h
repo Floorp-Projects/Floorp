@@ -341,6 +341,13 @@ public:
   bool HasScrollgrab() const { return mScrollMetadata.GetHasScrollgrab(); }
 
   /**
+   * Returns whether this APZC has scroll snap points.
+   */
+  bool HasScrollSnapping() const {
+    return mScrollMetadata.GetSnapInfo().HasScrollSnapping();
+  }
+
+  /**
    * Returns whether this APZC has room to be panned (in any direction).
    */
   bool IsPannable() const;
