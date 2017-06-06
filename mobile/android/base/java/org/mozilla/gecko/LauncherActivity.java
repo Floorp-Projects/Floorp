@@ -57,6 +57,8 @@ public class LauncherActivity extends Activity {
         if (isDeepLink(safeIntent)) {
             dispatchDeepLink(safeIntent);
 
+        } else if (isShutdownIntent(safeIntent)) {
+            dispatchShutdownIntent();
         // Is this web app?
         } else if (isWebAppIntent(safeIntent)) {
             dispatchWebAppIntent();
@@ -82,6 +84,13 @@ public class LauncherActivity extends Activity {
         }
 
         finish();
+    }
+
+    private void dispatchShutdownIntent() {
+        Intent intent = new Intent(getIntent());
+        intent.setClassName(getApplicationContext(), AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
     }
 
     /**
@@ -160,6 +169,10 @@ public class LauncherActivity extends Activity {
 
     private boolean isCustomTabsEnabled() {
         return GeckoSharedPrefs.forApp(this).getBoolean(GeckoPreferences.PREFS_CUSTOM_TABS, false);
+    }
+
+    private static boolean isShutdownIntent(@NonNull final SafeIntent safeIntent) {
+        return GeckoApp.ACTION_SHUTDOWN.equals(safeIntent.getAction());
     }
 
     private boolean isDeepLink(SafeIntent intent) {
