@@ -232,7 +232,7 @@
 
 :-moz-native-anonymous .css-grid-areas,
 :-moz-native-anonymous .css-grid-cells {
-  fill: #CEC0ED;
+  opacity: 0.5;
   stroke: none;
 }
 
