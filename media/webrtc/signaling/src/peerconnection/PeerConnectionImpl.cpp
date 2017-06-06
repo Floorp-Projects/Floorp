@@ -3593,6 +3593,8 @@ static void RecordIceStats_s(
     s.mLocalCandidateId.Construct(localCodeword);
     s.mRemoteCandidateId.Construct(remoteCodeword);
     s.mNominated.Construct(candPair.nominated);
+    s.mWritable.Construct(candPair.writable);
+    s.mReadable.Construct(candPair.readable);
     s.mPriority.Construct(candPair.priority);
     s.mSelected.Construct(candPair.selected);
     s.mBytesSent.Construct(candPair.bytes_sent);
