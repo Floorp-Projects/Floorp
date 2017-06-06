@@ -14,6 +14,8 @@ cppunit:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
             linux64-qr/.*: ['graphics']
             linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
             default: ['all']
@@ -53,6 +55,8 @@ crashtest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
             linux64-qr/.*: ['graphics', 'mozilla-central']
             linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
             default: ['all']
@@ -173,6 +177,11 @@ firefox-ui-functional-local:
     description: "Firefox-ui-tests functional run"
     suite: "firefox-ui/functional local"
     treeherder-symbol: tc-Fxfn-l(en-US)
+    run-on-projects:
+        by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
+            default: [ 'all' ]
     max-run-time: 5400
     tier: 1
     docker-image: {"in-tree": "desktop1604-test"}
@@ -189,6 +198,11 @@ firefox-ui-functional-remote:
     description: "Firefox-ui-tests functional run"
     suite: "firefox-ui/functional remote"
     treeherder-symbol: tc-Fxfn-r(en-US)
+    run-on-projects:
+        by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
+            default: [ 'all' ]
     max-run-time: 5400
     tier: 2
     docker-image: {"in-tree": "desktop1604-test"}
@@ -210,6 +224,8 @@ gtest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
             linux64-qr/.*: ['graphics']
             default: ['all']
     mozharness:
@@ -236,6 +252,8 @@ jittest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
             linux64-qr/.*: ['graphics']
             default: ['all']
     chunks:
@@ -296,6 +314,8 @@ jsreftest:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
             linux64-qr/.*: ['graphics', 'mozilla-central']
             default: ['all']
     mozharness:
@@ -332,6 +352,11 @@ marionette:
     description: "Marionette unittest run"
     suite: marionette
     treeherder-symbol: tc(Mn)
+    run-on-projects:
+        by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
+            default: ['all']
     max-run-time:
         by-test-platform:
             android.*: 3600
@@ -382,6 +407,11 @@ mochitest:
             linux64-jsdcov/opt: mochitest/plain-chunked-coverage
             default: mochitest/plain-chunked
     treeherder-symbol: tc-M()
+    run-on-projects:
+        by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
+            default: ['all']
     tags:
         test-type: mochitest
     loopback-video: true
@@ -449,6 +479,8 @@ mochitest-a11y:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
             linux64-qr/.*: ['graphics']
             default: ['all']
     mozharness:
@@ -475,6 +507,11 @@ mochitest-browser-chrome:
             linux64-jsdcov/opt: mochitest/browser-chrome-coverage
             default: mochitest/browser-chrome-chunked
     treeherder-symbol: tc-M(bc)
+    run-on-projects:
+        by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
+            default: ['all']
     loopback-video: true
     chunks:
         by-test-platform:
@@ -531,7 +568,9 @@ mochitest-browser-screenshots:
     loopback-video: true
     run-on-projects:
         by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
             linux64/opt: ['mozilla-central', 'try']
+            linux64-devedition/.*: [ 'mozilla-beta' ]
             linux64-nightly/opt: ['mozilla-central', 'try']
             default: []
     e10s: true
@@ -558,6 +597,11 @@ mochitest-chrome:
     description: "Mochitest chrome run"
     suite: mochitest/chrome
     treeherder-symbol: tc-M(c)
+    run-on-projects:
+        by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
+            default: ['all']
     loopback-video: true
     instance-size:
         by-test-platform:
@@ -604,6 +648,11 @@ mochitest-clipboard:
     description: "Mochitest clipboard run"
     suite: mochitest/clipboard
     treeherder-symbol: tc-M(cl)
+    run-on-projects:
+        by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
+            default: ['all']
     loopback-video: true
     instance-size: xlarge
     e10s:
@@ -653,6 +702,8 @@ mochitest-devtools-chrome:
             default: 10
     run-on-projects:
         by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
             windows.*: ['mozilla-central', 'try']
             default: ['all']
     e10s:
@@ -699,6 +750,8 @@ mochitest-gpu:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
             linux64-qr/.*: ['graphics']
             default: ['all']
     e10s:
@@ -744,6 +797,8 @@ mochitest-jetpack:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
             windows.*: ['mozilla-central', 'try']
             default: ['all']
     mozharness:
@@ -768,6 +823,11 @@ mochitest-media:
     description: "Mochitest media run"
     suite: mochitest/mochitest-media
     treeherder-symbol: tc-M(mda)
+    run-on-projects:
+        by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
+            default: ['all']
     max-run-time: 5400
     loopback-video: true
     e10s:
@@ -846,6 +906,8 @@ mochitest-webgl:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
             linux64-qr/.*: ['graphics', 'mozilla-central']
             default: ['all']
     chunks:
@@ -921,6 +983,8 @@ reftest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
             linux64-qr/.*: ['graphics', 'mozilla-central']
             default: ['all']
     instance-size:
@@ -979,6 +1043,8 @@ reftest-no-accel:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
             linux64-qr/.*: ['graphics', 'mozilla-central']
             default: ['all']
     chunks:
@@ -1251,6 +1317,8 @@ web-platform-tests:
     checkout: true
     run-on-projects:
         by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
             windows.*: ['mozilla-central', 'try']
             default: ['all']
     mozharness:
@@ -1284,6 +1352,8 @@ web-platform-tests-reftests:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
             default: ['all']
     mozharness:
         script: web_platform_tests.py
@@ -1302,6 +1372,11 @@ web-platform-tests-wdspec:
     description: "Web platform webdriver-spec run"
     suite: web-platform-tests-wdspec
     treeherder-symbol: tc-W(Wd)
+    run-on-projects:
+        by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
+            default: ['all']
     max-run-time: 5400
     instance-size: xlarge
     docker-image: {"in-tree": "desktop1604-test"}
@@ -1328,6 +1403,8 @@ xpcshell:
     treeherder-symbol: tc-X(X)
     run-on-projects:
         by-test-platform:
+            linux32-devedition/.*: [ 'mozilla-beta' ]
+            linux64-devedition/.*: [ 'mozilla-beta' ]
             linux64-qr/.*: ['graphics']
             default: ['all']
     chunks:
