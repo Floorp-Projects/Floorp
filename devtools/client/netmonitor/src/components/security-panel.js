@@ -13,6 +13,7 @@ const { L10N } = require("../utils/l10n");
 const { getUrlHost } = require("../utils/request-utils");
 
 // Components
+const TreeViewClass = require("devtools/client/shared/components/tree/tree-view");
 const PropertiesView = createFactory(require("./properties-view"));
 
 const { div, input, span } = DOM;
@@ -95,7 +96,7 @@ function SecurityPanel({ request }) {
       object,
       renderValue: (props) => renderValue(props, securityInfo.weaknessReasons),
       enableFilter: false,
-      expandedNodes: getExpandedNodes(object),
+      expandedNodes: TreeViewClass.getExpandedNodes(object),
     })
   );
 }
@@ -137,24 +138,6 @@ function renderValue(props, weaknessReasons = []) {
       :
       null
   );
-}
-
-function getExpandedNodes(object, path = "", level = 0) {
-  if (typeof object !== "object") {
-    return null;
-  }
-
-  let expandedNodes = new Set();
-  for (let prop in object) {
-    let nodePath = path + "/" + prop;
-    expandedNodes.add(nodePath);
-
-    let nodes = getExpandedNodes(object[prop], nodePath, level + 1);
-    if (nodes) {
-      expandedNodes = new Set([...expandedNodes, ...nodes]);
-    }
-  }
-  return expandedNodes;
 }
 
 module.exports = SecurityPanel;
