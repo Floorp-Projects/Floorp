@@ -116,6 +116,11 @@ private:
       // the front of the heap.  We want that to be the earliest timer.
       return aRight->mTimeout < aLeft->mTimeout;
     }
+
+    TimeStamp Timeout() const
+    {
+      return mTimeout;
+    }
   };
 
   nsTArray<UniquePtr<Entry>> mTimers;

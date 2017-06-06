@@ -45,7 +45,6 @@ void
 Timeout::SetWhenOrTimeRemaining(const TimeStamp& aBaseTime,
                                 const TimeDuration& aDelay)
 {
-  // This must not be called on dummy timeouts.  Instead use SetDummyWhen().
   MOZ_DIAGNOSTIC_ASSERT(mWindow);
 
   // If we are frozen simply set mTimeRemaining to be the "time remaining" in
@@ -65,13 +64,6 @@ Timeout::SetWhenOrTimeRemaining(const TimeStamp& aBaseTime,
   mWhen = aBaseTime + aDelay;
   mTimeRemaining = TimeDuration(0);
   mScheduledDelay = aDelay;
-}
-
-void
-Timeout::SetDummyWhen(const TimeStamp& aWhen)
-{
-  MOZ_DIAGNOSTIC_ASSERT(!mWindow);
-  mWhen = aWhen;
 }
 
 const TimeStamp&

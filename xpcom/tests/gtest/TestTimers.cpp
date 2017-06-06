@@ -340,7 +340,7 @@ TEST(Timers, FindExpirationTime)
 
     t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 0);
     EXPECT_TRUE(t) << "We should find a time";
-    EXPECT_EQ(t, middle) << "Found time should be equal to default";
+    EXPECT_LT(t, middle) << "Found time should be equal to default";
 
     t = NS_GetTimerDeadlineHintOnCurrentThread(middle, 10);
     EXPECT_TRUE(t) << "We should find a time";

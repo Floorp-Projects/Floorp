@@ -84,7 +84,7 @@ def verify_copy_to_s3(bucket_name, aws_access_key_id, aws_secret_access_key,
                 return key.generate_url(expires_in=0, query_auth=False,
                                         version_id=key.version_id)
         else:
-            if get_hash(key.get_contents_as_string()) == \
+            if get_hash(retry(key.get_contents_as_string)) == \
                     get_hash(open(dest).read()):
                 log.info("%s has the same MD5 checksum, not uploading...",
                          name)
