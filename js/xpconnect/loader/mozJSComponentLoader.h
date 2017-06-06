@@ -56,6 +56,9 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
                     JSContext* aCx, uint8_t aArgc, JS::MutableHandleValue aRetval);
     nsresult Unload(const nsACString& aResourceURI);
     nsresult IsModuleLoaded(const nsACString& aResourceURI, bool* aRetval);
+    bool IsLoaderGlobal(JSObject* aObj) {
+        return mLoaderGlobal == aObj;
+    }
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
