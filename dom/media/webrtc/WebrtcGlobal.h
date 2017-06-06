@@ -207,6 +207,7 @@ struct ParamTraits<mozilla::dom::RTCIceCandidatePairStats>
     WriteParam(aMsg, aParam.mLocalCandidateId);
     WriteParam(aMsg, aParam.mPriority);
     WriteParam(aMsg, aParam.mNominated);
+    WriteParam(aMsg, aParam.mWritable);
     WriteParam(aMsg, aParam.mReadable);
     WriteParam(aMsg, aParam.mRemoteCandidateId);
     WriteParam(aMsg, aParam.mSelected);
@@ -224,6 +225,7 @@ struct ParamTraits<mozilla::dom::RTCIceCandidatePairStats>
         !ReadParam(aMsg, aIter, &(aResult->mLocalCandidateId)) ||
         !ReadParam(aMsg, aIter, &(aResult->mPriority)) ||
         !ReadParam(aMsg, aIter, &(aResult->mNominated)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mWritable)) ||
         !ReadParam(aMsg, aIter, &(aResult->mReadable)) ||
         !ReadParam(aMsg, aIter, &(aResult->mRemoteCandidateId)) ||
         !ReadParam(aMsg, aIter, &(aResult->mSelected)) ||

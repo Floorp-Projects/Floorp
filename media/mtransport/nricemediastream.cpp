@@ -402,6 +402,13 @@ nsresult NrIceMediaStream::GetCandidatePairs(std::vector<NrIceCandidatePair>*
 
     pair.priority = p1->priority;
     pair.nominated = p1->peer_nominated || p1->nominated;
+    // As discussed with drno: a component's can_send field (set to true
+    // by ICE consent) is a very close approximation for writable and
+    // readable. Note: the component for the local candidate never has
+    // the can_send member set to true, remote for both readable and
+    // writable. (mjf)
+    pair.writable = p1->remote->component->can_send;
+    pair.readable = p1->remote->component->can_send;
     pair.selected = p1->remote->component &&
                     p1->remote->component->active == p1;
     pair.codeword = p1->codeword;
