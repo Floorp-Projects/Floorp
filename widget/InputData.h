@@ -86,6 +86,10 @@ public:
   // Set in parallel to mTime until we determine it is safe to drop
   // platform-specific event times (see bug 77992).
   TimeStamp mTimeStamp;
+  // The sequence number of the last potentially focus changing event handled
+  // by APZ. This is used to track when that event has been processed by content,
+  // and focus can be reconfirmed for async keyboard scrolling.
+  uint64_t mFocusSequenceNumber;
 
   Modifiers modifiers;
 

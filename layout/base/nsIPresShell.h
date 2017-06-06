@@ -1905,6 +1905,8 @@ protected:
 
   uint32_t                  mPresShellId;
 
+  // The focus sequence number of the last processed input event
+  uint64_t                  mAPZFocusSequenceNumber;
   // The focus information needed for async keyboard scrolling
   FocusTarget               mAPZFocusTarget;
 

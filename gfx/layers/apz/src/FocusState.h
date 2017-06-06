@@ -10,6 +10,7 @@
 #include <unordered_set>    // for std::unordered_set
 
 #include "FrameMetrics.h"   // for FrameMetrics::ViewID
+
 #include "mozilla/layers/FocusTarget.h" // for FocusTarget
 
 namespace mozilla {
@@ -70,6 +71,28 @@ public:
   FocusState();
 
   /**
+   * The sequence number of the last potentially focus changing event processed
+   * by APZ. This number starts at one and increases monotonically. This number
+   * will never be zero as that is used to catch uninitialized focus sequence
+   * numbers on input events.
+   */
+  uint64_t LastAPZProcessedEvent() const { return mLastAPZProcessedEvent; }
+
+  /**
+   * Whether the current focus state is known to be current or else if an event
+   * has been processed that could change the focus but we have not received an
+   * update with a new confirmed target.
+   */
+  bool IsCurrent() const;
+
+  /**
+   * Notify focus state of a potentially focus changing event. This will
+   * increment the current focus sequence number. The new value can be gotten
+   * from LastAPZProcessedEvent().
+   */
+  void ReceiveFocusChangingEvent();
+
+  /**
    * Update the internal focus tree and recalculate the global focus target for
    * a focus target update received from chrome or content.
    *
@@ -95,6 +118,16 @@ public:
 private:
   // The set of focus targets received indexed by their layer tree ID
   std::unordered_map<uint64_t, FocusTarget> mFocusTree;
+
+  // The focus sequence number of the last potentially focus changing event
+  // processed by APZ. This number starts at one and increases monotonically.
+  // We don't worry about wrap around here because at a pace of 100 increments/sec,
+  // it would take 5.85*10^9 years before we would wrap around. This number will
+  // never be zero as that is used to catch uninitialized focus sequence numbers
+  // on input events.
+  uint64_t mLastAPZProcessedEvent;
+  // The focus sequence number last received in a focus update.
+  uint64_t mLastContentProcessedEvent;
 
   // A flag whether there is a key listener on the event target chain for the
   // focused element
