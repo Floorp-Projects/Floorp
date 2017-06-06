@@ -32,4 +32,7 @@
     <color name="snackbarTextColor">#ffffffff</color>
 
     <color name="searchHintTextColor">#ffffffff</color>
+
+    <color name="onboarding_indicator_default">#7FFFFFFF</color>
+    <color name="onboarding_indicator_selected">#FFFFFFFF</color>
 </resources>

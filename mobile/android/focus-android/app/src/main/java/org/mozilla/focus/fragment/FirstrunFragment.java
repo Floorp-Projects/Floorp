@@ -9,6 +9,7 @@ import android.graphics.drawable.TransitionDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.transition.Transition;
@@ -83,6 +84,9 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
             @Override
             public void onPageScrollStateChanged(int state) {}
         });
+
+        final TabLayout tabLayout = (TabLayout) view.findViewById(R.id.tabs);
+        tabLayout.setupWithViewPager(viewPager, true);
 
         return view;
     }
