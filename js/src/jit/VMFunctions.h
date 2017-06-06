@@ -828,6 +828,9 @@ MOZ_MUST_USE bool
 BaselineThrowUninitializedThis(JSContext* cx, BaselineFrame* frame);
 
 MOZ_MUST_USE bool
+BaselineThrowInitializedThis(JSContext* cx, BaselineFrame* frame);
+
+MOZ_MUST_USE bool
 ThrowBadDerivedReturn(JSContext* cx, HandleValue v);
 
 MOZ_MUST_USE bool

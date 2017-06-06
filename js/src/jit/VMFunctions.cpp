@@ -1484,6 +1484,12 @@ BaselineThrowUninitializedThis(JSContext* cx, BaselineFrame* frame)
     return ThrowUninitializedThis(cx, frame);
 }
 
+bool
+BaselineThrowInitializedThis(JSContext* cx, BaselineFrame* frame)
+{
+    return ThrowInitializedThis(cx, frame);
+}
+
 
 bool
 ThrowObjectCoercible(JSContext* cx, HandleValue v)
