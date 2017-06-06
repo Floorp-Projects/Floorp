@@ -38,6 +38,7 @@ class gfxVarReceiver;
   _(UseWebRenderANGLE,          bool,             false)                \
   _(ScreenDepth,                int32_t,          0)                    \
   _(GREDirectory,               nsCString,        nsCString())          \
+  _(UseOMTP,                    bool,             false)                \
 
   /* Add new entries above this line. */
 

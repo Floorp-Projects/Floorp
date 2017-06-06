@@ -694,6 +694,7 @@ gfxPlatform::Init()
 #endif
     gPlatform->InitAcceleration();
     gPlatform->InitWebRenderConfig();
+    gPlatform->InitOMTPConfig();
 
     if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
       GPUProcessManager* gpu = GPUProcessManager::Get();
@@ -2393,6 +2394,48 @@ gfxPlatform::InitWebRenderConfig()
   // gfxFeature is not usable in the GPU process, so we use gfxVars to transmit this feature
   if (gfxConfig::IsEnabled(Feature::WEBRENDER)) {
     gfxVars::SetUseWebRender(true);
+    reporter.SetSuccessful();
+  }
+}
+
+void
+gfxPlatform::InitOMTPConfig()
+{
+  bool prefEnabled = Preferences::GetBool("layers.omtp.enabled", false);
+
+  // We don't want to report anything for this feature when turned off, as it is still early in development
+  if (!prefEnabled) {
+    return;
+  }
+
+  ScopedGfxFeatureReporter reporter("OMTP", prefEnabled);
+
+  if (!XRE_IsParentProcess()) {
+    // The parent process runs through all the real decision-making code
+    // later in this function. For other processes we still want to report
+    // the state of the feature for crash reports.
+    if (gfxVars::UseOMTP()) {
+      reporter.SetSuccessful();
+    }
+    return;
+  }
+
+  FeatureState& featureOMTP = gfxConfig::GetFeature(Feature::OMTP);
+
+  featureOMTP.DisableByDefault(
+      FeatureStatus::OptIn,
+      "OMTP is an opt-in feature",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_DEFAULT_OFF"));
+
+  featureOMTP.UserEnable("Enabled by pref");
+
+  if (InSafeMode()) {
+    featureOMTP.ForceDisable(FeatureStatus::Blocked, "OMTP  blocked by safe-mode",
+                         NS_LITERAL_CSTRING("FEATURE_FAILURE_COMP_SAFEMODE"));
+  }
+
+  if (gfxConfig::IsEnabled(Feature::OMTP)) {
+    gfxVars::SetUseOMTP(true);
     reporter.SetSuccessful();
   }
 }
