@@ -21,6 +21,11 @@ if not CONFIG['RELEASE_OR_BETA']:
         'flyweb',
         'formautofill',
         'presentation',
+    ]
+
+# Only include the following system add-ons if building DevEdition or Nightly
+if CONFIG['MOZ_DEV_EDITION'] or CONFIG['NIGHTLY_BUILD']:
+    DIRS += [
         'webcompat-reporter',
     ]
 
