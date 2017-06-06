@@ -7172,12 +7172,32 @@
   "TELEMETRY_ARCHIVE_LOAD_MS": {
     "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
-    "expires_in_version": "never",
+    "expires_in_version": "61",
     "kind": "exponential",
     "high": 2000,
     "n_buckets": 20,
     "bug_numbers": [1033860],
     "description": "Time (ms) it takes for loading archived pings from disk"
+  },
+  "TELEMETRY_SUCCESSFUL_SEND_PINGS_SIZE_KB": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "61",
+    "kind": "exponential",
+    "low": 10,
+    "high": 1024,
+    "n_buckets": 20,
+    "description": "The size (KB) of the Telemetry successfully sent pings"
+  },
+  "TELEMETRY_FAILED_SEND_PINGS_SIZE_KB": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 10,
+    "high": 1024,
+    "n_buckets": 20,
+    "description": "The size (KB) of the Telemetry unsuccessfully sent pings"
   },
   "TELEMETRY_PING_SIZE_EXCEEDED_SEND": {
     "record_in_processes": ["main", "content"],
