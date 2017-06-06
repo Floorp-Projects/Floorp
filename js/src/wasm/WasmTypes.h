@@ -1188,11 +1188,11 @@ enum ModuleKind
 enum class Tier
 {
     Baseline,
+    Debug = Baseline,
     Ion,
+    Serialized = Ion,
 
-    Debug,   // An alias for Baseline in calls to tier-variant accessors
-
-    TBD,     // A placeholder while tiering is being implemented
+    TBD      // A placeholder while tiering is being implemented
 };
 
 // Iterator over tiers present in a tiered data structure.
@@ -1207,13 +1207,10 @@ class Tiers
         n_ = 0;
     }
     explicit Tiers(Tier t) {
-        MOZ_ASSERT(t == Tier::Baseline || t == Tier::Ion);
         t_[0] = t;
         n_ = 1;
     }
     explicit Tiers(Tier t, Tier u) {
-        MOZ_ASSERT(t == Tier::Baseline || t == Tier::Ion);
-        MOZ_ASSERT(u == Tier::Baseline || u == Tier::Ion);
         MOZ_ASSERT(t != u);
         t_[0] = t;
         t_[1] = u;

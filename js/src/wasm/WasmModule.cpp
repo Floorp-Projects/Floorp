@@ -113,7 +113,7 @@ LinkDataTier::serializedSize() const
 uint8_t*
 LinkDataTier::serialize(uint8_t* cursor) const
 {
-    MOZ_ASSERT(tier == Tier::Ion);
+    MOZ_ASSERT(tier == Tier::Serialized);
 
     cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
     cursor = SerializePodVector(cursor, internalLinks);
@@ -147,7 +147,6 @@ const LinkDataTier&
 LinkData::linkData(Tier tier) const
 {
     switch (tier) {
-      case Tier::Debug:
       case Tier::Baseline:
         MOZ_RELEASE_ASSERT(tier_->tier == Tier::Baseline);
         return *tier_;
@@ -165,7 +164,6 @@ LinkDataTier&
 LinkData::linkData(Tier tier)
 {
     switch (tier) {
-      case Tier::Debug:
       case Tier::Baseline:
         MOZ_RELEASE_ASSERT(tier_->tier == Tier::Baseline);
         return *tier_;
@@ -301,7 +299,7 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
         return nullptr;
 
     LinkData linkData;
-    if (!linkData.initTier(Tier::Ion))
+    if (!linkData.initTier(Tier::Serialized))
         return nullptr;
 
     cursor = linkData.deserialize(cursor);

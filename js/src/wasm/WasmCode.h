@@ -348,11 +348,7 @@ typedef uint8_t ModuleHash[8];
 
 struct MetadataTier
 {
-    explicit MetadataTier(Tier tier)
-      : tier(tier)
-    {
-        MOZ_ASSERT(tier == Tier::Baseline || tier == Tier::Ion);
-    }
+    explicit MetadataTier(Tier tier) : tier(tier) {}
 
     const Tier            tier;
 
