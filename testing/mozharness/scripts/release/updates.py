@@ -235,7 +235,7 @@ class UpdatesBumper(MercurialScript, BuildbotMixin,
         patcher_config = self.query_patcher_config(channel_config)
         patcher_config_product = self.query_patcher_config_product(channel_config)
         for platform in self.config["platforms"]:
-            cmd = [sys.executable, script]
+            cmd = [self.query_exe("python"), script]
             output = self.query_update_verify_config(channel, platform)
             cmd.extend([
                 "--config", patcher_config,
@@ -274,7 +274,7 @@ class UpdatesBumper(MercurialScript, BuildbotMixin,
         dirs = self.query_abs_dirs()
         auth = os.path.join(os.getcwd(), self.config['credentials_file'])
         cmd = [
-            sys.executable,
+            self.query_exe("python"),
             os.path.join(dirs["abs_tools_dir"],
                          "scripts/build-promotion/balrog-release-pusher.py")]
         cmd.extend([
