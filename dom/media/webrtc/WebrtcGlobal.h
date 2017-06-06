@@ -213,6 +213,8 @@ struct ParamTraits<mozilla::dom::RTCIceCandidatePairStats>
     WriteParam(aMsg, aParam.mState);
     WriteParam(aMsg, aParam.mBytesSent);
     WriteParam(aMsg, aParam.mBytesReceived);
+    WriteParam(aMsg, aParam.mLastPacketSentTimestamp);
+    WriteParam(aMsg, aParam.mLastPacketReceivedTimestamp);
     WriteRTCStats(aMsg, aParam);
   }
 
@@ -228,6 +230,8 @@ struct ParamTraits<mozilla::dom::RTCIceCandidatePairStats>
         !ReadParam(aMsg, aIter, &(aResult->mState)) ||
         !ReadParam(aMsg, aIter, &(aResult->mBytesSent)) ||
         !ReadParam(aMsg, aIter, &(aResult->mBytesReceived)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mLastPacketSentTimestamp)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mLastPacketReceivedTimestamp)) ||
         !ReadRTCStats(aMsg, aIter, aResult)) {
       return false;
     }

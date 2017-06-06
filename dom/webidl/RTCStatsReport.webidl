@@ -133,6 +133,8 @@ dictionary RTCIceCandidatePairStats : RTCStats {
   boolean nominated;
   unsigned long long bytesSent;
   unsigned long long bytesReceived;
+  DOMHighResTimeStamp lastPacketSentTimestamp;
+  DOMHighResTimeStamp lastPacketReceivedTimestamp;
   boolean selected;
 };
 

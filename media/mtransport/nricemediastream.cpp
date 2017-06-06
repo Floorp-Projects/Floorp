@@ -407,6 +407,10 @@ nsresult NrIceMediaStream::GetCandidatePairs(std::vector<NrIceCandidatePair>*
     pair.codeword = p1->codeword;
     pair.bytes_sent = p1->bytes_sent;
     pair.bytes_recvd = p1->bytes_recvd;
+    pair.ms_since_last_send = p1->last_sent.tv_sec*1000
+                              + p1->last_sent.tv_usec/1000;
+    pair.ms_since_last_recv = p1->last_recvd.tv_sec*1000
+                              + p1->last_recvd.tv_usec/1000;
 
     if (!ToNrIceCandidate(*(p1->local), &pair.local) ||
         !ToNrIceCandidate(*(p1->remote), &pair.remote)) {

@@ -3597,6 +3597,8 @@ static void RecordIceStats_s(
     s.mSelected.Construct(candPair.selected);
     s.mBytesSent.Construct(candPair.bytes_sent);
     s.mBytesReceived.Construct(candPair.bytes_recvd);
+    s.mLastPacketSentTimestamp.Construct(candPair.ms_since_last_send);
+    s.mLastPacketReceivedTimestamp.Construct(candPair.ms_since_last_recv);
     s.mState.Construct(RTCStatsIceCandidatePairState(candPair.state));
     report->mIceCandidatePairStats.Value().AppendElement(s, fallible);
   }
