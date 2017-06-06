@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1267075
+-->
+  <title>Test for Bug 1267075</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body onload="onLoad()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1267075">Mozilla Bug 1267075</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+const { classes: Cc, interfaces: Ci } = Components;
+SimpleTest.waitForExplicitFinish();
+
+function onLoad() {
+  var iframe = document.createElement("iframe");
+  iframe.onload = function () {
+    info("iframe loaded");
+    var winUtils = iframe.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                       .getInterface(Ci.nsIDOMWindowUtils);
+    // load some styles at the agent level
+    var css = `
+      img:-moz-suppressed {
+        color: green
+      }
+      img:-moz-broken {
+       color: red
+      }
+      img:-moz-user-disabled {
+       color: blue
+      }`;
+    var sheetURL = "data:text/css," + encodeURIComponent(css);
+    winUtils.loadSheetUsingURIString(sheetURL, winUtils.AGENT_SHEET);
+
+    function imgListener(img) {
+      return new Promise((resolve, reject) => {
+        img.addEventListener("load", () => reject());
+        img.addEventListener("error", () => resolve());
+      });
+    }
+
+    var doc = iframe.contentDocument;
+    var img = doc.createElement("img");
+    var img2 = doc.createElement("img");
+    var img3 = doc.createElement("img");
+
+    // image from HTTP should be blocked.
+    img.src = "http://example.com/tests/image/test/mochitest/shaver.png";
+    doc.body.appendChild(img);
+
+    imgListener(img).then(() => {
+      ok(true, "img shouldn't be loaded");
+
+      // We can't use matches(":-moz-suppressed") here, as -moz-suppressed is
+      // chrome-only, however now we are in a content iframe.
+      is(iframe.contentWindow.getComputedStyle(img).color, "rgb(0, 128, 0)",
+         "color of img should be green");
+      is(img.imageBlockingStatus, Ci.nsIContentPolicy.REJECT_SERVER,
+         "imageBlockingStatues should be REJECT_SERVER.");
+
+      img2.src = "https://test.invalid";
+      doc.body.appendChild(img2);
+      return imgListener(img2);
+    }).then(() => {
+      ok(true, "img2 shouldn't be loaded");
+      is(iframe.contentWindow.getComputedStyle(img2).color, "rgb(255, 0, 0)",
+         "color of img2 should be red");
+      ok(img2.matches(":-moz-broken"), "should match ':-moz-broken' selector");
+
+      // Now prepare for the next test, deny image.
+      return new Promise(resolve => {
+          SpecialPowers.pushPrefEnv({"set": [["permissions.default.image", 2]]}, resolve)
+      });
+    }).then(() => {
+      // Now image is denied, loading image will be rejected with REJECT_TYPE,
+      // which will be mapped to :-moz-user-disabled
+      img3.src = "https://example.com/tests/image/test/mochitest/shaver.png";
+      doc.body.appendChild(img3);
+      return imgListener(img3);
+    }).then(() => {
+      ok(true, "img3 shouldn't be loaded");
+
+      // -moz-user-disabled is also chrome only, so we didn't use matches() to verify.
+      is(iframe.contentWindow.getComputedStyle(img3).color, "rgb(0, 0, 255)",
+         "color of img3 should be blue");
+      is(img3.imageBlockingStatus, Ci.nsIContentPolicy.REJECT_TYPE,
+         "imageBlockingStatues should be REJECT_TYPE.");
+
+      SimpleTest.finish();
+    }).catch((e) => {
+      ok(false, "throwing " + e);
+    });
+  };
+
+  // file_blocking_image.html contains meta tag for CSP, which will block images from
+  // http.
+  iframe.src = "http://mochi.test:8888/chrome/dom/base/test/file_blocking_image.html";
+  document.getElementById("content").appendChild(iframe);
+}
+</script>
+</pre>
+<p id="display"></p>
+<div id="content">
+</div>
+
+</body> </html>
