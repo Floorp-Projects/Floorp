@@ -2043,7 +2043,9 @@ nsChildView::PrepareWindowEffects()
     mIsCoveringTitlebar = [(ChildView*)mView isCoveringTitlebar];
     NSInteger styleMask = [[mView window] styleMask];
     bool wasFullscreen = mIsFullscreen;
-    mIsFullscreen = (styleMask & NSFullScreenWindowMask) || !(styleMask & NSTitledWindowMask);
+    nsCocoaWindow* windowWidget = GetXULWindowWidget();
+    mIsFullscreen = (styleMask & NSFullScreenWindowMask) ||
+                    (windowWidget && windowWidget->InFullScreenMode());
 
     canBeOpaque = mIsFullscreen && wasFullscreen;
     if (canBeOpaque && VibrancyManager::SystemSupportsVibrancy()) {
