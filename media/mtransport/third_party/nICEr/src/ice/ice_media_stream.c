@@ -827,6 +827,9 @@ int nr_ice_media_stream_send(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, in
       ABORT(r);
     }
 
+    // accumulate the sent bytes for the active candidate pair
+    comp->active->bytes_sent += len;
+
     _status=0;
   abort:
     return(_status);
