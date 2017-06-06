@@ -25,11 +25,25 @@ GenericScrollAnimation::GenericScrollAnimation(AsyncPanZoomController& aApzc,
 void
 GenericScrollAnimation::UpdateDelta(TimeStamp aTime, nsPoint aDelta, const nsSize& aCurrentVelocity)
 {
+  mFinalDestination += aDelta;
+
+  Update(aTime, aCurrentVelocity);
+}
+
+void
+GenericScrollAnimation::UpdateDestination(TimeStamp aTime, nsPoint aDestination, const nsSize& aCurrentVelocity)
+{
+  mFinalDestination = aDestination;
+
+  Update(aTime, aCurrentVelocity);
+}
+
+void
+GenericScrollAnimation::Update(TimeStamp aTime, const nsSize& aCurrentVelocity)
+{
   if (mIsFirstIteration) {
     InitializeHistory(aTime);
   }
-
-  mFinalDestination += aDelta;
 
   // Clamp the final destination to the scrollable area.
   CSSPoint clamped = CSSPoint::FromAppUnits(mFinalDestination);

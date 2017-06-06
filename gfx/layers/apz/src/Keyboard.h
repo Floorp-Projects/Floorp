@@ -12,6 +12,7 @@
 #include "nsIScrollableFrame.h" // for nsIScrollableFrame::ScrollUnit
 #include "nsTArray.h"           // for nsTArray
 #include "mozilla/Maybe.h"      // for mozilla::Maybe
+#include "KeyboardScrollAction.h" // for KeyboardScrollAction
 
 namespace mozilla {
 
@@ -20,35 +21,6 @@ struct IgnoreModifierState;
 namespace layers {
 
 class KeyboardMap;
-
-/**
- * This class represents a scrolling action to be performed on a scrollable layer.
- */
-struct KeyboardScrollAction final
-{
-public:
-  enum KeyboardScrollActionType : uint8_t
-  {
-    eScrollCharacter,
-    eScrollLine,
-    eScrollPage,
-    eScrollComplete,
-
-    // Used as an upper bound for ContiguousEnumSerializer
-    eSentinel,
-  };
-
-  static nsIScrollableFrame::ScrollUnit
-  GetScrollUnit(KeyboardScrollActionType aDeltaType);
-
-  KeyboardScrollAction();
-  KeyboardScrollAction(KeyboardScrollActionType aType, bool aForward);
-
-  // The type of scroll to perform for this action
-  KeyboardScrollActionType mType;
-  // Whether to scroll forward or backward along the axis of this action type
-  bool mForward;
-};
 
 /**
  * This class is an off main-thread <xul:handler> for scrolling commands.

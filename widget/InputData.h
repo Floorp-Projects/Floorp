@@ -15,6 +15,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/gfx/MatrixFwd.h"
+#include "mozilla/layers/KeyboardScrollAction.h"
 
 template<class E> struct already_AddRefed;
 class nsIWidget;
@@ -623,6 +624,8 @@ public:
 class KeyboardInput : public InputData
 {
 public:
+  typedef mozilla::layers::KeyboardScrollAction KeyboardScrollAction;
+
   enum KeyboardEventType
   {
     KEY_DOWN,
@@ -646,6 +649,10 @@ public:
   nsTArray<ShortcutKeyCandidate> mShortcutCandidates;
 
   bool mHandledByAPZ;
+
+  // The scroll action to perform on a layer for this keyboard input. This is
+  // only used in APZ and is NOT serialized over IPC.
+  KeyboardScrollAction mAction;
 
 protected:
   friend mozilla::layers::PAPZCTreeManagerParent;
