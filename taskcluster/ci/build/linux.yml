@@ -107,6 +107,7 @@ linux64-base-toolchains/opt:
     worker:
         max-run-time: 36000
         env:
+            PERFHERDER_EXTRA_OPTIONS: base-toolchains
             TOOLTOOL_MANIFEST: browser/config/tooltool-manifests/linux64/base-toolchains.manifest
     run:
         using: mozharness
@@ -131,6 +132,7 @@ linux64-base-toolchains/debug:
     worker:
         max-run-time: 36000
         env:
+            PERFHERDER_EXTRA_OPTIONS: base-toolchains
             TOOLTOOL_MANIFEST: browser/config/tooltool-manifests/linux64/base-toolchains.manifest
     run:
         using: mozharness
