@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 1369627</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+
+
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="loadedResolve()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1369627">Mozilla Bug 1369627</a>
+<p id="display"></p>
+<div id="content">
+  <button id="clicky">clicky</button>
+</div>
+<pre id="test">
+</pre>
+
+<script>
+
+  /** Test for Bug 1369627 **/
+
+  let loadedResolve;
+  let loaded = new Promise(resolve => { loadedResolve = resolve });
+
+  add_task(async function resizeby() {
+    await loaded;
+    let clicky = document.querySelector("#clicky");
+
+    let popupPromise = new Promise(resolve => {
+      let linkclick = () => {
+        clicky.removeEventListener('click', linkclick);
+        let popup = window.open("about:blank", "_blank", "width=500,height=500");
+        is(popup.innerHeight, 500);
+        is(popup.innerWidth, 500);
+        popup.resizeBy(50, 0);
+
+        // We resized synchronously. If this happened, we sometimes won't fire
+        // an resize event, so we resolve immediately.
+        if (popup.innerWidth == 550) {
+          resolve(popup);
+        } else {
+          let popupresize = () => {
+            popup.removeEventListener('resize', popupresize);
+            resolve(popup);
+          };
+          popup.addEventListener('resize', popupresize);
+        }
+      };
+
+      clicky.addEventListener('click', linkclick);
+    });
+
+    synthesizeMouseAtCenter(clicky, {}, window);
+
+    let popup = await popupPromise;
+    is(popup.innerHeight, 500);
+    is(popup.innerWidth, 550);
+    popup.close();
+  });
+</script>
+</body>
+</html>
