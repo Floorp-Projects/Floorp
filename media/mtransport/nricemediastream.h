@@ -115,6 +115,8 @@ struct NrIceCandidatePair {
   // when we are the controlling agent, this will always be set if the pair is
   // in STATE_SUCCEEDED.
   bool nominated;
+  bool writable;
+  bool readable;
   // Set if this candidate pair has been selected. Note: Since we are using
   // aggressive nomination, this could change frequently as ICE runs.
   bool selected;
