@@ -165,6 +165,35 @@ APZCTreeManager::CheckerboardFlushObserver::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
+/**
+ * A RAII class used for setting the focus sequence number on input events
+ * as they are being processed. Any input event is assumed to be potentially
+ * focus changing unless explicitly marked otherwise.
+ */
+class MOZ_RAII AutoFocusSequenceNumberSetter
+{
+public:
+  AutoFocusSequenceNumberSetter(FocusState& aFocusState, InputData& aEvent)
+    : mFocusState(aFocusState)
+    , mEvent(aEvent)
+    , mMayChangeFocus(true)
+  { }
+
+  void MarkAsNonFocusChanging() { mMayChangeFocus = false; }
+
+  ~AutoFocusSequenceNumberSetter()
+  {
+    if (mMayChangeFocus) {
+      mFocusState.ReceiveFocusChangingEvent();
+    }
+    mEvent.mFocusSequenceNumber = mFocusState.LastAPZProcessedEvent();
+  }
+
+private:
+  FocusState& mFocusState;
+  InputData& mEvent;
+  bool mMayChangeFocus;
+};
 
 /*static*/ const ScreenMargin
 APZCTreeManager::CalculatePendingDisplayPort(
@@ -281,6 +310,8 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
     uint64_t layersId = aRootLayerTreeId;
     ancestorTransforms.push(Matrix4x4());
 
+    state.mLayersIdsToDestroy.erase(aRootLayerTreeId);
+
     mApzcTreeLog << "[start]\n";
     mTreeLock.AssertCurrentThreadOwns();
 
@@ -297,9 +328,6 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
           aLayerMetrics.SetApzc(apzc);
 
           mApzcTreeLog << '\n';
-
-          // Mark that this layer tree is being used
-          state.mLayersIdsToDestroy.erase(layersId);
 
           // Accumulate the CSS transform between layers that have an APZC.
           // In the terminology of the big comment above APZCTreeManager::GetScreenToApzcTransform, if
@@ -321,7 +349,15 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
           MOZ_ASSERT(!node->GetFirstChild());
           parent = node;
           next = nullptr;
-          layersId = aLayerMetrics.GetReferentId().valueOr(layersId);
+
+          // Update the layersId if we have a new one
+          if (Maybe<uint64_t> newLayersId = aLayerMetrics.GetReferentId()) {
+            layersId = *newLayersId;
+
+            // Mark that this layer tree is being used
+            state.mLayersIdsToDestroy.erase(layersId);
+          }
+
           indents.push(gfx::TreeAutoIndent(mApzcTreeLog));
         },
         [&](ScrollNode aLayerMetrics)
@@ -894,6 +930,9 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
 {
   APZThreadUtils::AssertOnControllerThread();
 
+  // Use a RAII class for updating the focus sequence number of this event
+  AutoFocusSequenceNumberSetter focusSetter(mFocusState, aEvent);
+
 #if defined(MOZ_WIDGET_ANDROID)
   MOZ_ASSERT(mToolbarAnimator);
   ScreenPoint scrollOffset;
@@ -1061,7 +1100,6 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       FlushRepaintsToClearScreenToGeckoTransform();
 
       ScrollWheelInput& wheelInput = aEvent.AsScrollWheelInput();
-
       wheelInput.mHandledByAPZ = WillHandleInput(wheelInput);
       if (!wheelInput.mHandledByAPZ) {
         return result;
@@ -1430,8 +1468,9 @@ APZCTreeManager::UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
 }
 
 void
-APZCTreeManager::TransformEventRefPoint(LayoutDeviceIntPoint* aRefPoint,
-                              ScrollableLayerGuid* aOutTargetGuid)
+APZCTreeManager::ProcessUnhandledEvent(LayoutDeviceIntPoint* aRefPoint,
+                                        ScrollableLayerGuid*  aOutTargetGuid,
+                                        uint64_t*             aOutFocusSequenceNumber)
 {
   // Transform the aRefPoint.
   // If the event hits an overscrolled APZC, instruct the caller to ignore it.
@@ -1453,6 +1492,10 @@ APZCTreeManager::TransformEventRefPoint(LayoutDeviceIntPoint* aRefPoint,
         ViewAs<LayoutDevicePixel>(*untransformedRefPoint, LDIsScreen);
     }
   }
+
+  // Update the focus sequence number and attach it to the event
+  mFocusState.ReceiveFocusChangingEvent();
+  *aOutFocusSequenceNumber = mFocusState.LastAPZProcessedEvent();
 }
 
 void

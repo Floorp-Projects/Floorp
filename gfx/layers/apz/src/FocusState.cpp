@@ -9,11 +9,26 @@ namespace mozilla {
 namespace layers {
 
 FocusState::FocusState()
-  : mFocusHasKeyEventListeners(false)
+  : mLastAPZProcessedEvent(1)
+  , mLastContentProcessedEvent(0)
+  , mFocusHasKeyEventListeners(false)
   , mFocusLayersId(0)
   , mFocusHorizontalTarget(FrameMetrics::NULL_SCROLL_ID)
   , mFocusVerticalTarget(FrameMetrics::NULL_SCROLL_ID)
 {
+}
+
+bool
+FocusState::IsCurrent() const
+{
+  MOZ_ASSERT(mLastContentProcessedEvent <= mLastAPZProcessedEvent);
+  return mLastContentProcessedEvent == mLastAPZProcessedEvent;
+}
+
+void
+FocusState::ReceiveFocusChangingEvent()
+{
+  mLastAPZProcessedEvent += 1;
 }
 
 void
@@ -60,9 +75,16 @@ FocusState::Update(uint64_t aRootLayerTreeId,
         // This is the global focus target
         mFocusHorizontalTarget = target.mData.mScrollTargets.mHorizontal;
         mFocusVerticalTarget = target.mData.mScrollTargets.mVertical;
+
+        // Mark what sequence number this target has so we can determine whether
+        // it is stale or not
+        mLastContentProcessedEvent = target.mSequenceNumber;
         return;
       }
       case FocusTarget::eNone: {
+        // Mark what sequence number this target has for debugging purposes so
+        // we can always accurately report on whether we are stale or not
+        mLastContentProcessedEvent = target.mSequenceNumber;
         return;
       }
       case FocusTarget::eSentinel: {
@@ -78,7 +100,7 @@ FocusState::GetFocusTargetLayerIds() const
   std::unordered_set<uint64_t> layersIds;
   layersIds.reserve(mFocusTree.size());
 
-  for (auto focusNode : mFocusTree) {
+  for (const auto& focusNode : mFocusTree) {
     layersIds.insert(focusNode.first);
   }
 

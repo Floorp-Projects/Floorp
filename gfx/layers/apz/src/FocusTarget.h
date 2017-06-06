@@ -50,11 +50,15 @@ public:
   /**
    * Construct a focus target for the specified top level PresShell
    */
-  FocusTarget(nsIPresShell* aRootPresShell);
+  FocusTarget(nsIPresShell* aRootPresShell,
+              uint64_t aFocusSequenceNumber);
 
   bool operator==(const FocusTarget& aRhs) const;
 
 public:
+  // The content sequence number recorded at the time of this class's creation
+  uint64_t mSequenceNumber;
+
   // Whether there are keydown, keypress, or keyup event listeners
   // in the event target chain of the focused element
   bool mFocusHasKeyEventListeners;

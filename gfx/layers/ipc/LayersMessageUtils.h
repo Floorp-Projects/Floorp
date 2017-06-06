@@ -454,6 +454,7 @@ struct ParamTraits<mozilla::layers::FocusTarget>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
+    WriteParam(aMsg, aParam.mSequenceNumber);
     WriteParam(aMsg, aParam.mFocusHasKeyEventListeners);
     WriteParam(aMsg, aParam.mType);
     if (aParam.mType == mozilla::layers::FocusTarget::eRefLayer) {
@@ -465,7 +466,8 @@ struct ParamTraits<mozilla::layers::FocusTarget>
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
-    if (!ReadParam(aMsg, aIter, &aResult->mFocusHasKeyEventListeners) ||
+    if (!ReadParam(aMsg, aIter, &aResult->mSequenceNumber) ||
+        !ReadParam(aMsg, aIter, &aResult->mFocusHasKeyEventListeners) ||
         !ReadParam(aMsg, aIter, &aResult->mType)) {
       return false;
     }

@@ -307,13 +307,14 @@ APZCTreeManagerParent::RecvUpdateWheelTransaction(
 }
 
 mozilla::ipc::IPCResult
-APZCTreeManagerParent::RecvTransformEventRefPoint(
+APZCTreeManagerParent::RecvProcessUnhandledEvent(
         const LayoutDeviceIntPoint& aRefPoint,
         LayoutDeviceIntPoint* aOutRefPoint,
-        ScrollableLayerGuid* aOutTargetGuid)
+        ScrollableLayerGuid*  aOutTargetGuid,
+        uint64_t*             aOutFocusSequenceNumber)
 {
   LayoutDeviceIntPoint refPoint = aRefPoint;
-  mTreeManager->TransformEventRefPoint(&refPoint, aOutTargetGuid);
+  mTreeManager->ProcessUnhandledEvent(&refPoint, aOutTargetGuid, aOutFocusSequenceNumber);
   *aOutRefPoint = refPoint;
 
   return IPC_OK();

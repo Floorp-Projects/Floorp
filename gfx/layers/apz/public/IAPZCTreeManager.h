@@ -211,9 +211,10 @@ protected:
 
   // Methods to help process WidgetInputEvents (or manage conversion to/from InputData)
 
-  virtual void TransformEventRefPoint(
+  virtual void ProcessUnhandledEvent(
       LayoutDeviceIntPoint* aRefPoint,
-      ScrollableLayerGuid* aOutTargetGuid) = 0;
+      ScrollableLayerGuid* aOutTargetGuid,
+      uint64_t* aOutFocusSequenceNumber) = 0;
 
   virtual void UpdateWheelTransaction(
       LayoutDeviceIntPoint aRefPoint,

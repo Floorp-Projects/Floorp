@@ -132,10 +132,11 @@ public:
           const EventMessage& aEventMessage) override;
 
   mozilla::ipc::IPCResult
-  RecvTransformEventRefPoint(
+  RecvProcessUnhandledEvent(
           const LayoutDeviceIntPoint& aRefPoint,
           LayoutDeviceIntPoint* aOutRefPoint,
-          ScrollableLayerGuid* aOutTargetGuid) override;
+          ScrollableLayerGuid*  aOutTargetGuid,
+          uint64_t*             aOutFocusSequenceNumber) override;
 
   void
   ActorDestroy(ActorDestroyReason aWhy) override { }

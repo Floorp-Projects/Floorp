@@ -77,9 +77,10 @@ public:
   ProcessTouchVelocity(uint32_t aTimestampMs, float aSpeedY) override;
 
   void
-  TransformEventRefPoint(
+  ProcessUnhandledEvent(
           LayoutDeviceIntPoint* aRefPoint,
-          ScrollableLayerGuid* aOutTargetGuid) override;
+          ScrollableLayerGuid*  aOutTargetGuid,
+          uint64_t*             aOutFocusSequenceNumber) override;
 
   void
   UpdateWheelTransaction(
