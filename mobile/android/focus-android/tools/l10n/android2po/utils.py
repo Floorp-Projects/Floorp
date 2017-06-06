@@ -1,12 +1,16 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import os, sys, re, uuid, locale
-import codecs
+from os import getcwd
+from sys import stdout
+from re import escape as re_escape
+from uuid import uuid1
+from locale import getpreferredencoding
+from codecs import getwriter
 try:
     from hashlib import md5
-except ImportError:  # pragma: no cover
-   import md5
+except ImportError:
+    import md5
 from os import path
 from termcolor import colored
 
@@ -28,14 +32,15 @@ def format_to_re(format):
     See this link for more info on the problem:
     http://stackoverflow.com/questions/2654856/python-convert-format-string-to-regular-expression
     """
-    UNIQ = uuid.uuid1().hex
+    UNIQ = uuid1().hex
     assert UNIQ not in format
+
     class MarkPlaceholders(dict):
         def __getitem__(self, key):
-            return UNIQ+('(?P<%s>.*?)'%key)+UNIQ
+            return UNIQ + ('(?P<%s>.*?)' % key) + UNIQ
     parts = (format % MarkPlaceholders()).split(UNIQ)
     for i in range(0, len(parts), 2):
-        parts[i] = re.escape(parts[i])
+        parts[i] = re_escape(parts[i])
     return ''.join(parts)
 
 
@@ -73,7 +78,7 @@ class Path(str):
     def rel(self):
         """Return this path relative to the base it was bound to.
         """
-        base =  self.base or os.getcwd()
+        base = self.base or getcwd()
         if not hasattr(path, 'relpath'):  # pragma: no cover
             # Python < 2.6 doesn't have relpath, and I don't want
             # to bother with a wbole bunch of code for this. See
@@ -131,7 +136,8 @@ class Writer():
         'skipped': 'warning',
         'created': 'default',
         'exists': 'default',
-        'failed': 'error',}
+        'failed': 'error'
+    }
 
     # Levels and the minimum verbosity required to show them
     LEVELS = {'default': 2, 'warning': 1, 'error': 0, 'info': 3}
@@ -218,12 +224,13 @@ class Writer():
         self.erroneous = False
 
         # Create a codec writer wrapping stdout
-        isatty = sys.stdout.isatty() \
-            if hasattr(sys.stdout, 'isatty') else False
-        self.stdout = codecs.getwriter(
-            sys.stdout.encoding
-                if isatty
-                else locale.getpreferredencoding())(sys.stdout)
+        self.stdout = getwriter(self.get_encoding())(stdout)
+
+    @staticmethod
+    def get_encoding():
+        if hasattr(stdout, 'isatty') and stdout.isatty():
+            return stdout.encoding
+        return getpreferredencoding()
 
     def action(self, event, *a, **kw):
         action = Writer.Action(self, *a, **kw)
@@ -320,7 +327,7 @@ class Writer():
         tag = "[%s]" % action['event']
 
         style = self.get_style_for_action(action)
-        self.stdout.write(colored("%*s" % (self.max_event_len, tag), attrs=['bold',], **style))
+        self.stdout.write(colored("%*s" % (self.max_event_len, tag), attrs=['bold'], **style))
         self.stdout.write(" ")
         self.stdout.write(colored(text, **style))
         self.stdout.write("\n")

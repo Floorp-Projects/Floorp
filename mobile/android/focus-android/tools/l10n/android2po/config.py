@@ -1,7 +1,6 @@
 from os import path
 import argparse
 
-
 __all__ = ('Config',)
 
 
@@ -20,73 +19,83 @@ class Config(object):
     """Defines all the options supported by our configuration system.
     """
     OPTIONS = (
-        {'name': 'android',
-         'help': 'Android resource directory ($PROJECT/res by default)',
-         'dest': 'resource_dir',
-         'kwargs': {'metavar': 'DIR',}
-         # No default, and will not actually be stored on the config object.
+        {
+            'name': 'android',
+            'help': 'Android resource directory ($PROJECT/res by default)',
+            'dest': 'resource_dir',
+            'kwargs': {'metavar': 'DIR'}
+            # No default, and will not actually be stored on the config object.
         },
-        {'name': 'gettext',
-         'help': 'directory containing the .po files ($PROJECT/locale by default)',
-         'dest': 'gettext_dir',
-         'kwargs': {'metavar': 'DIR',}
-         # No default, and will not actually be stored on the config object.
+        {
+            'name': 'gettext',
+            'help': 'directory containing the .po files ($PROJECT/locale by default)',
+            'dest': 'gettext_dir',
+            'kwargs': {'metavar': 'DIR'}
+            # No default, and will not actually be stored on the config object.
+         },
+        {
+            'name': 'groups',
+            'help': 'process the given default XML files (for example ' +
+                    '"strings arrays"); by default all files which contain ' +
+                    'string resources will be used',
+            'dest': 'groups',
+            'default': [],
+            'kwargs': {'nargs': '+', 'metavar': 'GROUP'}
         },
-        {'name': 'groups',
-         'help': 'process the given default XML files (for example '+
-                 '"strings arrays"); by default all files which contain '+
-                 'string resources will be used',
-         'dest': 'groups',
-         'default': [],
-         'kwargs': {'nargs': '+', 'metavar': 'GROUP'}
+        {
+            'name': 'no-template',
+            'help': 'do not generate a .pot template file on export',
+            'dest': 'no_template',
+            'default': False,
+            'kwargs': {'action': 'store_true'}
         },
-        {'name': 'no-template',
-         'help': 'do not generate a .pot template file on export',
-         'dest': 'no_template',
-         'default': False,
-         'kwargs': {'action': 'store_true',}
+        {
+            'name': 'template',
+            'help': 'filename to use for the .pot file(s); may contain the ' +
+                    '%%(domain)s and %%(group)s variables',
+            'dest': 'template_name',
+            'default': '',
+            'kwargs': {'metavar': 'NAME'}
         },
-        {'name': 'template',
-         'help': 'filename to use for the .pot file(s); may contain the '+
-                 '%%(domain)s and %%(group)s variables',
-         'dest': 'template_name',
-         'default': '',
-         'kwargs': {'metavar': 'NAME',}
+        {
+            'name': 'ignore',
+            'help': 'ignore the given message; can be given multiple times; ' +
+                    'regular expressions can be used if putting the value ' +
+                    'inside slashes (/match/)',
+            'dest': 'ignores',
+            'default': [],
+            'kwargs': {'metavar': 'MATCH', 'action': 'append', 'nargs': '+'}
         },
-        {'name': 'ignore',
-         'help': 'ignore the given message; can be given multiple times; '+
-                 'regular expressions can be used if putting the value '+
-                 'inside slashes (/match/)',
-         'dest': 'ignores',
-         'default': [],
-         'kwargs': {'metavar': 'MATCH', 'action': 'append', 'nargs': '+'}
+        {
+            'name': 'ignore-fuzzy',
+            'help': 'during import, ignore messages marked as fuzzy in .po files',
+            'dest': 'ignore_fuzzy',
+            'default': False,
+            'kwargs': {'action': 'store_true'}
         },
-        {'name': 'ignore-fuzzy',
-         'help': 'during import, ignore messages marked as fuzzy in .po files',
-         'dest': 'ignore_fuzzy',
-         'default': False,
-         'kwargs': {'action': 'store_true',}
+        {
+            'name': 'require-min-complete',
+            'help': 'ignore a language\'s .po file(s) completely if there ' +
+                    'aren\'t at least the given percentage of translations',
+            'dest': 'min_completion',
+            'default': 0,
+            'kwargs': {'metavar': 'FLOAT', 'type': percentage}
         },
-        {'name': 'require-min-complete',
-         'help': 'ignore a language\'s .po file(s) completely if there '+
-                 'aren\'t at least the given percentage of translations',
-         'dest': 'min_completion',
-         'default': 0,
-         'kwargs': {'metavar': 'FLOAT', 'type': percentage}
+        {
+            'name': 'domain',
+            'help': 'gettext po domain to use, affects the .po filenames',
+            'dest': 'domain',
+            'default': None,
         },
-        {'name': 'domain',
-         'help': 'gettext po domain to use, affects the .po filenames',
-         'dest': 'domain',
-         'default': None,
-        },
-        {'name': 'layout',
-         'help': 'how and where .po files are stored; may be "default", '+
-                  '"gnu", or a custom path using the variables %%(locale)s '+
-                  '%%(domain)s and optionally %%(group)s. E.g., '+
-                  '"%%(group)s-%%(locale)s.po" will write to "strings-es.po" '+
-                  'for Spanish in strings.xml.',
-         'dest': 'layout',
-         'default': 'default',
+        {
+            'name': 'layout',
+            'help': 'how and where .po files are stored; may be "default", ' +
+                    '"gnu", or a custom path using the variables %%(locale)s ' +
+                    '%%(domain)s and optionally %%(group)s. E.g., ' +
+                    '"%%(group)s-%%(locale)s.po" will write to "strings-es.po" ' +
+                    'for Spanish in strings.xml.',
+            'dest': 'layout',
+            'default': 'default',
         },
         {
             'name': 'enable-fuzzy-matching',
@@ -95,14 +104,14 @@ class Config(object):
                     'by default this behaviour is turned off',
             'dest': 'enable_fuzzy_matching',
             'default': False,
-            'kwargs': {'action': 'store_true', }
+            'kwargs': {'action': 'store_true'}
         },
         {
             'name': 'clear-obsolete',
             'help': 'during export do not add obsolete strings to the generated .po files',
             'dest': 'clear_obsolete',
             'default': True,
-            'kwargs': {'action': 'store_true', }
+            'kwargs': {'action': 'store_true'}
         }
     )
 

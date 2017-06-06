@@ -57,7 +57,8 @@ KNOWN_NAMESPACES = {
 # The methods here sometimes need to notify the caller about warnings
 # processing on; this is why they all take a ``warn_func`` argument.
 # By default, if no warnfunc is passed, this dummy will be used.
-dummy_warn = lambda message, severity=None: None
+def dummy_warn(message, severity=None):
+    return None
 
 
 # These classes are used for the memory representation of an Android
@@ -66,11 +67,20 @@ dummy_warn = lambda message, severity=None: None
 # ``Plurals`` can also hold ``Translation`` objects.
 class ResourceTree(OrderedDict):
     language = None
+
     def __init__(self, language=None):
         OrderedDict.__init__(self)
         self.language = language
-class StringArray(list): pass
-class Plurals(dict): pass
+
+
+class StringArray(list):
+    pass
+
+
+class Plurals(dict):
+    pass
+
+
 Translation = namedtuple('Translation', ['text', 'comments', 'formatted'])
 
 
@@ -81,7 +91,6 @@ def get_element_text(tag, name, warnfunc=dummy_warn):
 
     "Contents" isn't just the text; it handles nested HTML tags as well.
     """
-
     def convert_text(text):
         """This is called for every distinct block of text, as they
         are separated by tags.
@@ -140,7 +149,7 @@ def get_element_text(tag, name, warnfunc=dummy_warn):
                 if not active_quote or c is EOF:
                     # Replace by a single space, will get rid of
                     # non-significant newlines/tabs etc.
-                    text[i-space_count : i] = ' '
+                    text[i-space_count: i] = ' '
                     i -= space_count - 1
                 space_count = 0
             elif space_count == 1:
@@ -190,13 +199,13 @@ def get_element_text(tag, name, warnfunc=dummy_warn):
                         # in the clauses below without issue.
                         pass
                     elif c == 'n':
-                        text[i-1 : i+1] = '\n'  # an actual newline
+                        text[i-1: i+1] = '\n'  # an actual newline
                         i -= 1
                     elif c == 't':
-                        text[i-1 : i+1] = '\t'  # an actual tab
+                        text[i-1: i+1] = '\t'  # an actual tab
                         i -= 1
                     elif c in '"\'@':
-                        text[i-1 : i] = ''        # remove the backslash
+                        text[i-1: i] = ''        # remove the backslash
                         i -= 1
                     elif c == 'u':
                         # Unicode sequence. Android is nice enough to deal
@@ -210,7 +219,7 @@ def get_element_text(tag, name, warnfunc=dummy_warn):
                         # Note: max(len()) is needed in the slice due to
                         # trailing ``None`` element.
                         max_slice = min(i+5, len(text)-1)
-                        codepoint_str = "".join(text[i+1 : max_slice])
+                        codepoint_str = "".join(text[i+1: max_slice])
                         if len(codepoint_str) < 4:
                             codepoint_str = "0" * (4-len(codepoint_str)) + codepoint_str
                         print(repr(codepoint_str))
@@ -223,7 +232,7 @@ def get_element_text(tag, name, warnfunc=dummy_warn):
                         except ValueError:
                             raise UnsupportedResourceError('bad unicode escape sequence')
 
-                        text[i-1 : max_slice] = codepoint
+                        text[i-1: max_slice] = codepoint
                         i -= 1
                     else:
                         # All others, remove, like Android does as well.
@@ -231,8 +240,8 @@ def get_element_text(tag, name, warnfunc=dummy_warn):
                         # warning so the dev can fix the problem.
                         warnfunc(('Resource "%s": removing unsupported '
                                   'escape sequence "%s"') % (
-                                    name, "".join(text[i-1 : i+1])), 'warning')
-                        text[i-1 : i+1] = ''
+                                    name, "".join(text[i-1: i+1])), 'warning')
+                        text[i-1: i+1] = ''
                         i -= 1
                     active_escape = False
 
@@ -265,7 +274,7 @@ def get_element_text(tag, name, warnfunc=dummy_warn):
     # require custom processing anyway.
     value = ""
     formatted = False
-    for ev, elem  in etree.iterwalk(tag, events=('start', 'end',)):
+    for ev, elem in etree.iterwalk(tag, events=('start', 'end')):
         is_root = elem == tag
         has_children = len(tag) > 0
         if ev == 'start':
@@ -404,10 +413,10 @@ def read_xml(xml_file, language=None, warnfunc=dummy_warn):
                     # reference and should be escaped or not. Or, better,
                     # the import process would need to use information from
                     # the default strings.xml file to fill the vacancies.
-                    warnfunc(('Warning: The array "%s" contains items '+
+                    warnfunc(('Warning: The array "%s" contains items ' +
                               'that can\'t be processed (reason: %s) - '
                               'the array will be incomplete') %
-                                    (name, e.reason), 'warning')
+                             (name, e.reason), 'warning')
                 else:
                     translation = Translation(text, comment, formatted)
                     result[name].append(translation)
@@ -419,13 +428,13 @@ def read_xml(xml_file, language=None, warnfunc=dummy_warn):
                     quantity = child.attrib['quantity']
                     assert quantity in PLURAL_TAGS
                 except (IndexError, AssertionError):
-                    warnfunc(('"%s" contains a plural with no or '+
+                    warnfunc(('"%s" contains a plural with no or ' +
                               'an invalid quantity') % name, 'warning')
                 else:
                     try:
                         text, formatted = get_element_text(child, name, warnfunc)
                     except UnsupportedResourceError as e:
-                        warnfunc(('Warning: The plural "%s" can\'t '+
+                        warnfunc(('Warning: The plural "%s" can\'t ' +
                                   'be processed (reason: %s) - '
                                   'the plural will be incomplete') %
                                  (name, e.reason), 'warning')
@@ -525,7 +534,7 @@ def xml2po(resources, translations=None, resfilter=None, warnfunc=dummy_warn):
                 if trans_value:
                     warnfunc(('""%s" is a string-array in the reference '
                               'file, but not in the translation.') %
-                                    name, 'warning')
+                             name, 'warning')
                 trans_value = StringArray()
 
             for index, item in enumerate(org_value):
@@ -551,7 +560,7 @@ def xml2po(resources, translations=None, resfilter=None, warnfunc=dummy_warn):
                 if trans_value:
                     warnfunc(('""%s" is a plurals in the reference '
                               'file, but not in the translation.') %
-                                    name, 'warning')
+                             name, 'warning')
                 trans_value = Plurals()
 
             # Taking the Translation objects for each quantity in ``org_value``,
@@ -597,7 +606,7 @@ def xml2po(resources, translations=None, resfilter=None, warnfunc=dummy_warn):
                              'is not supported for this language. See '
                              'the README for an explanation. The '
                              'quantity has been ignored') %
-                                    (name, quantity), 'warning')
+                            (name, quantity), 'warning')
                     else:
                         msgstr[index] = translation.text
 
@@ -749,6 +758,7 @@ def write_to_dom(elem_name, value, ref, namespaces=None, warnfunc=dummy_warn):
 
     return elem
 
+
 def key_plural_keywords(x):
     """Extracts CLDR plural keywords index starting with 'zero'
     and ending with 'other'."""
@@ -781,6 +791,7 @@ def po2xml(catalog, with_untranslated=False, resfilter=None, warnfunc=dummy_warn
     # only want to trouble the user with this if plurals are actually
     # used.
     plural_validation = {'done': False}
+
     def validate_plural_config():
         if plural_validation['done']:
             return
@@ -800,8 +811,8 @@ def po2xml(catalog, with_untranslated=False, resfilter=None, warnfunc=dummy_warn
             continue
 
         if not message.context:
-            warnfunc(('Ignoring message "%s": has no context; somebody other '+
-                      'than android2po seems to have added to this '+
+            warnfunc(('Ignoring message "%s": has no context; somebody other ' +
+                      'than android2po seems to have added to this ' +
                       'catalog.') % message.id, 'error')
             continue
 
@@ -822,8 +833,8 @@ def po2xml(catalog, with_untranslated=False, resfilter=None, warnfunc=dummy_warn
             while index >= len(xml_tree[name]):
                 xml_tree[name].append(None)  # fill None for missing indices
             if xml_tree[name][index] is not None:
-                warnfunc(('Duplicate index %s in array "%s"; ignoring '+
-                          'the message. The catalog has possibly been '+
+                warnfunc(('Duplicate index %s in array "%s"; ignoring ' +
+                          'the message. The catalog has possibly been ' +
                           'corrupted.') % (index, name), 'error')
             xml_tree[name][index] = value
 

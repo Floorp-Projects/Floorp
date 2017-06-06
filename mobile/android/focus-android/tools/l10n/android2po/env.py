@@ -361,8 +361,8 @@ class Environment(object):
             self.xmlfiles = self.config.groups
             _missing = set(self.config.groups) - set(groups_found)
             if _missing:
-                raise EnvironmentError('Unable to find the default XML '
-                    'files for the following groups: %s' % (
+                raise EnvironmentError(
+                    'Unable to find the default XML files for the following groups: %s' % (
                         ", ".join(["%s (%s)" % (
                             g, path.join(self.resource_dir, 'values', "%s.xml" % g)) for g in _missing])
                     ))

@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os
 import collections
+
 try:
     from cStringIO import StringIO as BytesIO
 except ImportError:  # pragma: no cover
@@ -12,7 +13,6 @@ from termcolor import colored
 
 import convert
 from env import resolve_locale
-
 
 __all__ = ('CommandError', 'ExportCommand', 'ImportCommand', 'InitCommand',)
 
@@ -71,10 +71,12 @@ def xml2po(env, action, *a, **kw):
     """Wrapper around the base xml2po() that uses the filters configured
     by the environment.
     """
+
     def xml_filter(name):
         for filter in env.config.ignores:
             if filter.match(name):
                 return True
+
     kw['resfilter'] = xml_filter
     if action:
         kw['warnfunc'] = action.message
@@ -85,9 +87,11 @@ def po2xml(env, action, *a, **kw):
     """Wrapper around the base po2xml() that uses the filters configured
     by the environment.
     """
+
     def po_filter(message):
         if env.config.ignore_fuzzy and message.fuzzy:
             return True
+
     kw['resfilter'] = po_filter
     kw['warnfunc'] = action.message
     return convert.po2xml(*a, **kw)
@@ -112,13 +116,14 @@ def list_languages(source, env, writer):
     diagnostic messages along the way.
     """
     assert source in ('gettext', 'android')
-    languages = getattr(env,
-        'get_gettext_languages' if source=='gettext' else 'get_android_languages')()
+    languages = getattr(
+        env,
+        'get_gettext_languages' if source == 'gettext' else 'get_android_languages')()
     lstr = ", ".join(map(str, languages))
     writer.action('info',
                   "Found %d language(s): %s" % (len(languages), lstr))
     writer.message('List of languages was based on %s' % (
-        'the existing gettext catalogs' if source=='gettext'
+        'the existing gettext catalogs' if source == 'gettext'
         else 'the existing Android resource directories'
     ))
     return languages
@@ -225,8 +230,8 @@ class InitCommand(Command):
     @classmethod
     def setup_arg_parser(cls, parser):
         parser.add_argument('language', nargs='*',
-                            help='Language code to initialize. If none given, all '+
-                            'languages lacking a .po file will be initialized.')
+                            help='Language code to initialize. If none given, all ' +
+                                 'languages lacking a .po file will be initialized.')
 
     def make_or_get_template(self, kind, read_action=None, do_write=False,
                              update=True):
@@ -313,6 +318,7 @@ class InitCommand(Command):
         If ``update`` is not set than we will bail out early
         if the file doesn't exist.
         """
+
         # This is a function so that it only will be run if write_file()
         # actually needs it.
         def make_catalog():
@@ -327,7 +333,7 @@ class InitCommand(Command):
                                    "language contains strings not found in the "
                                    "default XML files: %s" % (", ".join(unmatched)))
             else:
-                action.message('No corresponding XML exists, generating catalog '+
+                action.message('No corresponding XML exists, generating catalog ' +
                                'without translations')
                 lang_catalog = xml2po(self.env, action, default_data)
 
@@ -373,7 +379,7 @@ class InitCommand(Command):
                     continue
             else:
                 language_data = read_xml(action, language_xml, language=language)
-                if language_data == False:
+                if not language_data:
                     # File was invalid
                     continue
 
@@ -447,7 +453,7 @@ class ExportCommand(InitCommand):
     def setup_arg_parser(cls, parser):
         parser.add_argument(
             'language', nargs='*',
-            help='Language code to export. If not given, all '+
+            help='Language code to export. If not given, all ' +
                  'initialized languages will be exported.')
 
     def execute(self):
@@ -470,7 +476,7 @@ class ExportCommand(InitCommand):
                 target_po = language.po(kind)
                 if not target_po.exists():
                     w.action('skipped', target_po)
-                    w.message('File does not exist yet. '+
+                    w.message('File does not exist yet. ' +
                               'Use the \'init\' command.')
                     initial_warning = True
                     continue
@@ -525,10 +531,10 @@ class ExportCommand(InitCommand):
 
         if initial_warning:
             print("")
-            print(colored("Warning: One or more .po files were skipped "+\
-                  "because they did not exist yet. Use the 'init' command "+\
-                  "to generate them for the first time.",
-                  color='magenta', attrs=['bold',]))
+            print(colored("Warning: One or more .po files were skipped " +
+                          "because they did not exist yet. Use the 'init' command " +
+                          "to generate them for the first time.",
+                          color='magenta', attrs=['bold']))
 
 
 class ImportCommand(Command):
