@@ -47,6 +47,8 @@ typedef struct _nsCocoaWindowList {
   // DPI cache. Getting the physical screen size (CGDisplayScreenSize)
   // is ridiculously slow, so we cache it in the toplevel window for all
   // descendants to use.
+  //
+  // XXX the dpi cache won't change when moving across different monitors.
   float mDPI;
 
   NSTrackingArea* mTrackingArea;
