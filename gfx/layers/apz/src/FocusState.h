@@ -96,6 +96,10 @@ private:
   // The set of focus targets received indexed by their layer tree ID
   std::unordered_map<uint64_t, FocusTarget> mFocusTree;
 
+  // A flag whether there is a key listener on the event target chain for the
+  // focused element
+  bool mFocusHasKeyEventListeners;
+
   // The layer tree ID which contains the scrollable frame of the focused element
   uint64_t mFocusLayersId;
   // The scrollable layer corresponding to the scrollable frame that is used to
