@@ -16,7 +16,6 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.TransitionDrawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
@@ -214,7 +213,10 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 @Override
                 public void onClick(View v) {
                     try {
-                        pendingIntent.send();
+                        final Intent intent = new Intent();
+                        intent.setData(Uri.parse(getUrl()));
+
+                        pendingIntent.send(getContext(), 0, intent);
                     } catch (PendingIntent.CanceledException e) {
                         // There's really nothing we can do here...
                     }

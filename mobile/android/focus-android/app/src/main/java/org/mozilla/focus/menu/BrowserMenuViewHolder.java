@@ -8,9 +8,11 @@ package org.mozilla.focus.menu;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import org.mozilla.focus.fragment.BrowserFragment;
+
 public abstract class BrowserMenuViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
     private BrowserMenu menu;
-    protected View.OnClickListener listener;
+    protected BrowserFragment browserFragment;
 
     public BrowserMenuViewHolder(View itemView) {
         super(itemView);
@@ -24,8 +26,8 @@ public abstract class BrowserMenuViewHolder extends RecyclerView.ViewHolder impl
         return menu;
     }
 
-    public void setOnClickListener(View.OnClickListener listener) {
-        this.listener = listener;
+    public void setOnClickListener(BrowserFragment browserFragment) {
+        this.browserFragment = browserFragment;
     }
 
     @Override
@@ -34,8 +36,8 @@ public abstract class BrowserMenuViewHolder extends RecyclerView.ViewHolder impl
             menu.dismiss();
         }
 
-        if (listener != null) {
-            listener.onClick(view);
+        if (browserFragment != null) {
+            browserFragment.onClick(view);
         }
     }
 }

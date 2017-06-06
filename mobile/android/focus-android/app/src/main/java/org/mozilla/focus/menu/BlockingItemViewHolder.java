@@ -34,8 +34,8 @@ import org.mozilla.focus.web.BrowsingSession;
         helpView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (listener != null) {
-                    listener.onClick(view);
+                if (browserFragment != null) {
+                    browserFragment.onClick(view);
                 }
             }
         });

@@ -1,11 +1,14 @@
 package org.mozilla.focus.menu;
 
 import android.app.PendingIntent;
+import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 
 /**
@@ -42,7 +45,10 @@ import org.mozilla.focus.telemetry.TelemetryWrapper;
         }
 
         try {
-            pendingIntent.send();
+            final Intent intent = new Intent();
+            intent.setData(Uri.parse(browserFragment.getUrl()));
+
+            pendingIntent.send(view.getContext(), 0, intent);
         } catch (PendingIntent.CanceledException e) {
             // There's really nothing we can do here...
         }
