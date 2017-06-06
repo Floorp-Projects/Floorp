@@ -211,10 +211,12 @@ function* run_test_2(generator)
 {
   // Load the profile and populate it.
   do_load_profile();
-  for (let i = 0; i < 3000; ++i) {
-    let uri = NetUtil.newURI("http://" + i + ".com/");
-    Services.cookies.setCookieString(uri, null, "oh=hai; max-age=1000", null);
-  }
+  Services.cookies.runInTransaction(_=>{
+    for (let i = 0; i < 3000; ++i) {
+      let uri = NetUtil.newURI("http://" + i + ".com/");
+      Services.cookies.setCookieString(uri, null, "oh=hai; max-age=1000", null);
+    }
+  });
 
   // Close the profile.
   do_close_profile(sub_generator);
@@ -281,16 +283,18 @@ function* run_test_3(generator)
 
   // Load the profile and populate it.
   do_load_profile();
-  for (let i = 0; i < 10; ++i) {
-    let uri = NetUtil.newURI("http://hither.com/");
-    Services.cookies.setCookieString(uri, null, "oh" + i + "=hai; max-age=1000",
-      null);
-  }
-  for (let i = 10; i < 3000; ++i) {
-    let uri = NetUtil.newURI("http://haithur.com/");
-    Services.cookies.setCookieString(uri, null, "oh" + i + "=hai; max-age=1000",
-      null);
-  }
+  Services.cookies.runInTransaction(_=>{
+    for (let i = 0; i < 10; ++i) {
+      let uri = NetUtil.newURI("http://hither.com/");
+      Services.cookies.setCookieString(uri, null, "oh" + i + "=hai; max-age=1000",
+        null);
+    }
+    for (let i = 10; i < 3000; ++i) {
+      let uri = NetUtil.newURI("http://haithur.com/");
+      Services.cookies.setCookieString(uri, null, "oh" + i + "=hai; max-age=1000",
+        null);
+    }
+  });
 
   // Close the profile.
   do_close_profile(sub_generator);
@@ -372,10 +376,12 @@ function* run_test_4(generator)
 {
   // Load the profile and populate it.
   do_load_profile();
-  for (let i = 0; i < 3000; ++i) {
-    let uri = NetUtil.newURI("http://" + i + ".com/");
-    Services.cookies.setCookieString(uri, null, "oh=hai; max-age=1000", null);
-  }
+  Services.cookies.runInTransaction(_=>{
+    for (let i = 0; i < 3000; ++i) {
+      let uri = NetUtil.newURI("http://" + i + ".com/");
+      Services.cookies.setCookieString(uri, null, "oh=hai; max-age=1000", null);
+    }
+  });
 
   // Close the profile.
   do_close_profile(sub_generator);
@@ -444,13 +450,15 @@ function* run_test_5(generator)
 {
   // Load the profile and populate it.
   do_load_profile();
-  let uri = NetUtil.newURI("http://bar.com/");
-  Services.cookies.setCookieString(uri, null, "oh=hai; path=/; max-age=1000",
-    null);
-  for (let i = 0; i < 3000; ++i) {
-    let uri = NetUtil.newURI("http://" + i + ".com/");
-    Services.cookies.setCookieString(uri, null, "oh=hai; max-age=1000", null);
-  }
+  Services.cookies.runInTransaction(_=>{
+    let uri = NetUtil.newURI("http://bar.com/");
+    Services.cookies.setCookieString(uri, null, "oh=hai; path=/; max-age=1000",
+      null);
+    for (let i = 0; i < 3000; ++i) {
+      let uri = NetUtil.newURI("http://" + i + ".com/");
+      Services.cookies.setCookieString(uri, null, "oh=hai; max-age=1000", null);
+    }
+  });
 
   // Close the profile.
   do_close_profile(sub_generator);
