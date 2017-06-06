@@ -10,7 +10,7 @@
 #ifndef AOM_CONFIG_H
 #define AOM_CONFIG_H
 #define RESTRICT    
-#define INLINE      inline
+#define INLINE      __forceinline
 #define ARCH_ARM 0
 #define ARCH_MIPS 0
 #define ARCH_X86 1
@@ -43,8 +43,8 @@
 #define CONFIG_GPROF 0
 #define CONFIG_GCOV 0
 #define CONFIG_RVCT 0
-#define CONFIG_GCC 1
-#define CONFIG_MSVS 0
+#define CONFIG_GCC 0
+#define CONFIG_MSVS 1
 #define CONFIG_PIC 1
 #define CONFIG_BIG_ENDIAN 0
 #define CONFIG_CODEC_SRCS 0
