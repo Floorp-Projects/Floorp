@@ -1516,8 +1516,11 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
         aLists.BorderBackground()->AppendNewToTop(
           new (aBuilder) nsDisplayTableBorderCollapse(aBuilder, table));
       } else {
-        aLists.BorderBackground()->AppendNewToTop(
-          new (aBuilder) nsDisplayBorder(aBuilder, table));
+        const nsStyleBorder* borderStyle = aFrame->StyleBorder();
+        if (borderStyle->HasBorder()) {
+          aLists.BorderBackground()->AppendNewToTop(
+            new (aBuilder) nsDisplayBorder(aBuilder, table));
+        }
       }
     }
   }
