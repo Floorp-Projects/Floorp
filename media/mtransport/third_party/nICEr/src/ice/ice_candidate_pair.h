@@ -66,6 +66,8 @@ struct nr_ice_cand_pair_ {
   // for RTCIceCandidatePairStats
   UINT8 bytes_sent;
   UINT8 bytes_recvd;
+  struct timeval last_sent;
+  struct timeval last_recvd;
 
   nr_stun_client_ctx *stun_client;    /* STUN context when acting as a client */
   void *stun_client_handle;
