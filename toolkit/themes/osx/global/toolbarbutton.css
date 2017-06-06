@@ -29,7 +29,7 @@ toolbarbutton[disabled="true"],
 toolbarbutton[disabled="true"]:hover,
 toolbarbutton[disabled="true"]:hover:active,
 toolbarbutton[disabled="true"][open="true"] {
-  color: -moz-mac-disabledtoolbartext !important;
+  color: -moz-mac-disabledtoolbartext;
 }
 
 /* ::::: toolbarbutton menu ::::: */

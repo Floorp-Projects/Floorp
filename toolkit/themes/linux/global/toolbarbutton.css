@@ -16,7 +16,6 @@ toolbarbutton {
   -moz-box-pack: center;
   margin: 0;
   padding: 3px;
-  color: -moz-DialogText;
 }
 
 toolbarbutton:-moz-lwtheme {
@@ -63,7 +62,6 @@ toolbarbutton[checked="true"]:not(:hover) {
 }
 
 toolbarbutton:-moz-lwtheme:not(:hover):not([checked="true"]):not([open="true"]):not([disabled="true"]) {
-  color: inherit;
   text-shadow: inherit;
 }
 
