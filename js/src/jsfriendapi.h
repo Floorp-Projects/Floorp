@@ -1482,8 +1482,8 @@ struct MOZ_STACK_CLASS JS_FRIEND_API(ErrorReport)
     bool populateUncaughtExceptionReportUTF8(JSContext* cx, ...);
     bool populateUncaughtExceptionReportUTF8VA(JSContext* cx, va_list ap);
 
-    // Reports exceptions from add-on scopes to telementry.
-    void ReportAddonExceptionToTelementry(JSContext* cx);
+    // Reports exceptions from add-on scopes to telemetry.
+    void ReportAddonExceptionToTelemetry(JSContext* cx);
 
     // We may have a provided JSErrorReport, so need a way to represent that.
     JSErrorReport* reportp;

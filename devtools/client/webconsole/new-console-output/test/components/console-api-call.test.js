@@ -67,10 +67,12 @@ describe("ConsoleAPICall component:", () => {
     });
 
     it("renders repeat node", () => {
-      const message =
-        stubPreparedMessages.get("console.log('foobar', 'test')")
-        .set("repeat", 107);
-      const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+      const message = stubPreparedMessages.get("console.log('foobar', 'test')");
+      const wrapper = render(ConsoleApiCall({
+        message,
+        serviceContainer,
+        repeat: 107
+      }));
 
       expect(wrapper.find(".message-repeats").text()).toBe("107");
       expect(wrapper.find(".message-repeats").prop("title")).toBe("107 repeats");

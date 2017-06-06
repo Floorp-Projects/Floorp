@@ -55,7 +55,7 @@ load 741218.json
 load 741250.xhtml
 load 795221-1.html
 load 795221-2.html
-skip-if(stylo) load 795221-3.html # bug 1342289
+load 795221-3.html
 load 795221-4.html
 load 795221-5.xml
 load 811226.html

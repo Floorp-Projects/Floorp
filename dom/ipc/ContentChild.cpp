@@ -128,7 +128,6 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsContentPermissionHelper.h"
-#include "nsPluginHost.h"
 #ifdef NS_PRINTING
 #include "nsPrintingProxy.h"
 #endif
@@ -1282,6 +1281,14 @@ GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath, nsCString &aAppDir)
     return false;
   }
 
+  // appDir points to .app/Contents/Resources, for our purposes we want
+  // .app/Contents.
+  nsCOMPtr<nsIFile> appDirParent;
+  rv = appDir->GetParent(getter_AddRefs(appDirParent));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
   bool isLink;
   app->IsSymlink(&isLink);
   if (isLink) {
@@ -1295,11 +1302,11 @@ GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath, nsCString &aAppDir)
   } else {
     appBinary->GetNativePath(aAppBinaryPath);
   }
-  appDir->IsSymlink(&isLink);
+  appDirParent->IsSymlink(&isLink);
   if (isLink) {
-    appDir->GetNativeTarget(aAppDir);
+    appDirParent->GetNativeTarget(aAppDir);
   } else {
-    appDir->GetNativePath(aAppDir);
+    appDirParent->GetNativePath(aAppDir);
   }
 
   return true;
@@ -3375,16 +3382,6 @@ already_AddRefed<nsIEventTarget>
 ContentChild::GetEventTargetFor(TabChild* aTabChild)
 {
   return IToplevelProtocol::GetActorEventTarget(aTabChild);
-}
-
-mozilla::ipc::IPCResult
-ContentChild::RecvSetPluginList(const uint32_t& aPluginEpoch,
-                                nsTArray<plugins::PluginTag>&& aPluginTags,
-                                nsTArray<plugins::FakePluginTag>&& aFakePluginTags)
-{
-  RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
-  host->SetPluginsInContent(aPluginEpoch, aPluginTags, aFakePluginTags);
-  return IPC_OK();
 }
 
 } // namespace dom

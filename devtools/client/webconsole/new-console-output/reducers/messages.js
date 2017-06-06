@@ -35,6 +35,8 @@ const MessageState = Immutable.Record({
   // List of removed messages is used to release related (parameters) actors.
   // This array is not supposed to be consumed by any UI component.
   removedMessages: [],
+  // Map of the form {messageId : numberOfRepeat}
+  repeatById: {}
 });
 
 function messages(state = new MessageState(), action, filtersState, prefsState) {
@@ -44,6 +46,7 @@ function messages(state = new MessageState(), action, filtersState, prefsState) 
     messagesTableDataById,
     groupsById,
     currentGroup,
+    repeatById,
     visibleMessages,
   } = state;
 
@@ -65,13 +68,15 @@ function messages(state = new MessageState(), action, filtersState, prefsState) 
 
       if (newMessage.allowRepeating && messagesById.size > 0) {
         let lastMessage = messagesById.last();
-        if (lastMessage.repeatId === newMessage.repeatId) {
+        if (
+          lastMessage.repeatId === newMessage.repeatId
+          && lastMessage.groupId === currentGroup
+        ) {
           return state.set(
-            "messagesById",
-            messagesById.set(
-              lastMessage.id,
-              lastMessage.set("repeat", lastMessage.repeat + 1)
-            )
+            "repeatById",
+            Object.assign({}, repeatById, {
+              [lastMessage.id]: (repeatById[lastMessage.id] || 1) + 1
+            })
           );
         }
       }
@@ -319,6 +324,17 @@ function limitTopLevelMessageCount(state, record, logLimit) {
   }
   if (mapHasRemovedIdKey(record.groupsById)) {
     record.set("groupsById", record.groupsById.withMutations(cleanUpCollection));
+  }
+
+  if (Object.keys(record.repeatById).includes(removedMessagesId)) {
+    record.set("repeatById",
+      [...Object.entries(record.repeatById)].reduce((res, [id, repeat]) => {
+        if (!isInRemovedId(id)) {
+          res[id] = repeat;
+        }
+        return res;
+      }, {})
+    );
   }
 
   return record;
