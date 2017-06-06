@@ -20,7 +20,8 @@ var test = [
   'testsrc.1080p.60fps.mp4',
 ];
 var viewModeIndex = 0;
-var viewMode = ['fullscreen', 1, 1.1, 2];
+// Remove fullscreen mode since it causes intermittent failures on try server. See bug 1192317.
+var viewMode = [1, 1.1, 2];
 var testResult = {names: [], values: []};
 
 function init() {

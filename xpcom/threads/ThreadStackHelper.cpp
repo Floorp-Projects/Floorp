@@ -405,7 +405,7 @@ GetPathAfterComponent(const char* filename, const char (&component)[LEN]) {
 } // namespace
 
 const char*
-ThreadStackHelper::AppendJSEntry(const volatile js::ProfileEntry* aEntry,
+ThreadStackHelper::AppendJSEntry(const js::ProfileEntry* aEntry,
                                  intptr_t& aAvailableBufferSize,
                                  const char* aPrevLabel)
 {
@@ -492,8 +492,8 @@ ThreadStackHelper::FillStackBuffer()
   intptr_t availableBufferSize = intptr_t(reservedBufferSize);
 
   // Go from front to back
-  const volatile js::ProfileEntry* entry = mPseudoStack->entries;
-  const volatile js::ProfileEntry* end = entry + mPseudoStack->stackSize();
+  const js::ProfileEntry* entry = mPseudoStack->entries;
+  const js::ProfileEntry* end = entry + mPseudoStack->stackSize();
   // Deduplicate identical, consecutive frames
   const char* prevLabel = nullptr;
   for (; reservedSize-- && entry != end; entry++) {
