@@ -44,6 +44,7 @@ import org.mozilla.focus.open.OpenWithFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.utils.ColorUtils;
+import org.mozilla.focus.utils.DrawableUtils;
 import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.utils.ViewUtils;
@@ -200,10 +201,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             closeButton.setImageBitmap(customTabConfig.closeButtonIcon);
         } else {
             // Always set the icon in case it's been overridden by a previous CT invocation
-            final Drawable wrapped = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_close, view.getContext().getTheme()));
-            DrawableCompat.setTint(wrapped, textColor);
+            final Drawable closeIcon = DrawableUtils.loadAndTintDrawable(getContext(), R.drawable.ic_close, textColor);
 
-            closeButton.setImageDrawable(wrapped);
+            closeButton.setImageDrawable(closeIcon);
         }
 
         if (customTabConfig.disableUrlbarHiding) {
@@ -237,13 +237,11 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         }
 
         // We need to tint some icons.. We already tinted the close button above. Let's tint our other icons too.
-        final Drawable wrappedLock = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_lock, view.getContext().getTheme()));
-        DrawableCompat.setTint(wrappedLock, textColor);
-        lockView.setImageDrawable(wrappedLock);
+        final Drawable lockIcon = DrawableUtils.loadAndTintDrawable(getContext(), R.drawable.ic_lock, textColor);
+        lockView.setImageDrawable(lockIcon);
 
-        final Drawable wrappedMenu = DrawableCompat.wrap(getResources().getDrawable(R.drawable.ic_menu, view.getContext().getTheme()));
-        DrawableCompat.setTint(wrappedMenu, textColor);
-        menuView.setImageDrawable(wrappedMenu);
+        final Drawable menuIcon = DrawableUtils.loadAndTintDrawable(getContext(), R.drawable.ic_menu, textColor);
+        menuView.setImageDrawable(menuIcon);
     }
 
     @Override
