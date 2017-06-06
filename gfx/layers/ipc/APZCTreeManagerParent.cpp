@@ -145,6 +145,25 @@ APZCTreeManagerParent::RecvReceiveScrollWheelInputEvent(
 }
 
 mozilla::ipc::IPCResult
+APZCTreeManagerParent::RecvReceiveKeyboardInputEvent(
+        const KeyboardInput& aEvent,
+        nsEventStatus* aOutStatus,
+        KeyboardInput* aOutEvent,
+        ScrollableLayerGuid* aOutTargetGuid,
+        uint64_t* aOutInputBlockId)
+{
+  KeyboardInput event = aEvent;
+
+  *aOutStatus = mTreeManager->ReceiveInputEvent(
+    event,
+    aOutTargetGuid,
+    aOutInputBlockId);
+  *aOutEvent = event;
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 APZCTreeManagerParent::RecvSetKeyboardMap(const KeyboardMap& aKeyboardMap)
 {
   mTreeManager->SetKeyboardMap(aKeyboardMap);

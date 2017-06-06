@@ -113,5 +113,35 @@ FocusState::RemoveFocusTarget(uint64_t aLayersId)
   mFocusTree.erase(aLayersId);
 }
 
+Maybe<ScrollableLayerGuid>
+FocusState::GetHorizontalTarget() const
+{
+  // There is not a scrollable layer to async scroll if
+  //   1. We aren't current
+  //   2. There are event listeners that could change the focus
+  //   3. The target has not been layerized
+  if (!IsCurrent() ||
+      mFocusHasKeyEventListeners ||
+      mFocusHorizontalTarget == FrameMetrics::NULL_SCROLL_ID) {
+    return Nothing();
+  }
+  return Some(ScrollableLayerGuid(mFocusLayersId, 0, mFocusHorizontalTarget));
+}
+
+Maybe<ScrollableLayerGuid>
+FocusState::GetVerticalTarget() const
+{
+  // There is not a scrollable layer to async scroll if:
+  //   1. We aren't current
+  //   2. There are event listeners that could change the focus
+  //   3. The target has not been layerized
+  if (!IsCurrent() ||
+      mFocusHasKeyEventListeners ||
+      mFocusVerticalTarget == FrameMetrics::NULL_SCROLL_ID) {
+    return Nothing();
+  }
+  return Some(ScrollableLayerGuid(mFocusLayersId, 0, mFocusVerticalTarget));
+}
+
 } // namespace layers
 } // namespace mozilla

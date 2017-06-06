@@ -38,6 +38,7 @@ using class mozilla::PinchGestureInput from "InputData.h";
 using mozilla::PinchGestureInput::PinchGestureType from "InputData.h";
 using class mozilla::TapGestureInput from "InputData.h";
 using class mozilla::ScrollWheelInput from "InputData.h";
+using class mozilla::KeyboardInput from "InputData.h";
 
 namespace mozilla {
 namespace layers {
@@ -118,6 +119,12 @@ parent:
   sync ReceiveScrollWheelInputEvent(ScrollWheelInput aEvent)
     returns (nsEventStatus       aOutStatus,
              ScrollWheelInput    aOutEvent,
+             ScrollableLayerGuid aOutTargetGuid,
+             uint64_t            aOutInputBlockId);
+
+  sync ReceiveKeyboardInputEvent(KeyboardInput aEvent)
+    returns (nsEventStatus       aOutStatus,
+             KeyboardInput       aOutEvent,
              ScrollableLayerGuid aOutTargetGuid,
              uint64_t            aOutInputBlockId);
 

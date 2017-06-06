@@ -11,6 +11,7 @@
 #include "mozilla/EventStateManager.h"      // for WheelPrefs
 #include "mozilla/layers/APZThreadUtils.h"  // for AssertOnCompositorThread, etc
 #include "mozilla/MouseEvents.h"            // for WidgetMouseEvent
+#include "mozilla/TextEvents.h"             // for WidgetKeyboardEvent
 #include "mozilla/TouchEvents.h"            // for WidgetTouchEvent
 
 namespace mozilla {
@@ -143,6 +144,17 @@ IAPZCTreeManager::ReceiveInputEvent(
       ProcessUnhandledEvent(&aEvent.mRefPoint, aOutTargetGuid, &aEvent.mFocusSequenceNumber);
       return nsEventStatus_eIgnore;
 
+    }
+    case eKeyboardEventClass: {
+      WidgetKeyboardEvent& keyboardEvent = *aEvent.AsKeyboardEvent();
+
+      KeyboardInput input(keyboardEvent);
+
+      nsEventStatus status = ReceiveInputEvent(input, aOutTargetGuid, aOutInputBlockId);
+
+      keyboardEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
+      keyboardEvent.mFocusSequenceNumber = input.mFocusSequenceNumber;
+      return status;
     }
     default: {
 
