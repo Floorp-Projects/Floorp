@@ -2884,6 +2884,8 @@ nsXPCComponents_Utils::PermitCPOWsInScope(HandleValue obj)
         return NS_ERROR_INVALID_ARG;
 
     JSObject* scopeObj = js::UncheckedUnwrap(&obj.toObject());
+    MOZ_DIAGNOSTIC_ASSERT(!mozJSComponentLoader::Get()->IsLoaderGlobal(scopeObj),
+                          "Don't call Cu.PermitCPOWsInScope() in a JSM that shares its global");
     CompartmentPrivate::Get(scopeObj)->allowCPOWs = true;
     return NS_OK;
 }
@@ -2913,6 +2915,8 @@ nsXPCComponents_Utils::SetWantXrays(HandleValue vscope, JSContext* cx)
     if (!vscope.isObject())
         return NS_ERROR_INVALID_ARG;
     JSObject* scopeObj = js::UncheckedUnwrap(&vscope.toObject());
+    MOZ_DIAGNOSTIC_ASSERT(!mozJSComponentLoader::Get()->IsLoaderGlobal(scopeObj),
+                          "Don't call Cu.setWantXrays() in a JSM that shares its global");
     JSCompartment* compartment = js::GetObjectCompartment(scopeObj);
     CompartmentPrivate::Get(scopeObj)->wantXrays = true;
     bool ok = js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
@@ -2925,7 +2929,10 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::ForcePermissiveCOWs(JSContext* cx)
 {
     xpc::CrashIfNotInAutomation();
-    CompartmentPrivate::Get(CurrentGlobalOrNull(cx))->forcePermissiveCOWs = true;
+    JSObject* currentGlobal = CurrentGlobalOrNull(cx);
+    MOZ_DIAGNOSTIC_ASSERT(!mozJSComponentLoader::Get()->IsLoaderGlobal(currentGlobal),
+                          "Don't call Cu.forcePermissiveCOWs() in a JSM that shares its global");
+    CompartmentPrivate::Get(currentGlobal)->forcePermissiveCOWs = true;
     return NS_OK;
 }
 
