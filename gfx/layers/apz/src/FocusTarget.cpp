@@ -60,6 +60,12 @@ HasListenersForKeyEvents(nsIContent* aContent)
   return false;
 }
 
+static bool
+IsEditableNode(nsINode* aNode)
+{
+  return aNode && aNode->IsEditable();
+}
+
 FocusTarget::FocusTarget()
   : mFocusHasKeyEventListeners(false)
   , mType(FocusTarget::eNone)
@@ -94,6 +100,13 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell)
       return;
     }
 
+    mType = FocusTarget::eNone;
+    return;
+  }
+
+  // If the focus isn't on a remote browser then check for scrollable targets
+  if (IsEditableNode(scrollTarget) ||
+      IsEditableNode(presShell->GetDocument())) {
     mType = FocusTarget::eNone;
     return;
   }
