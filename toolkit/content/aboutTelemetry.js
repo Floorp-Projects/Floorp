@@ -263,11 +263,11 @@ var Settings = {
       let disabledElement = document.getElementById(setting.descriptionDisabledId);
 
       if (Preferences.get(setting.pref, setting.defaultPrefValue)) {
-        enabledElement.classList.remove("hidden");
-        disabledElement.classList.add("hidden");
+        enabledElement.hidden = false;
+        disabledElement.hidden = true;
       } else {
-        enabledElement.classList.add("hidden");
-        disabledElement.classList.remove("hidden");
+        enabledElement.hidden = true;
+        disabledElement.hidden = false;
       }
     }
   }
@@ -275,7 +275,6 @@ var Settings = {
 
 var PingPicker = {
   viewCurrentPingData: null,
-  viewStructuredPingData: null,
   _archivedPings: null,
 
   attachObservers() {
@@ -329,11 +328,8 @@ var PingPicker = {
 
   async update() {
     let viewCurrent = document.getElementById("ping-source-current").checked;
-    let viewStructured = document.getElementById("ping-source-structured").checked;
     let currentChanged = viewCurrent !== this.viewCurrentPingData;
-    let structuredChanged = viewStructured !== this.viewStructuredPingData;
     this.viewCurrentPingData = viewCurrent;
-    this.viewStructuredPingData = viewStructured;
 
     // If we have no archived pings, disable the ping archive selection.
     // This can happen on new profiles or if the ping archive is disabled.
@@ -343,21 +339,13 @@ var PingPicker = {
 
     if (currentChanged) {
       if (this.viewCurrentPingData) {
-        document.getElementById("current-ping-picker").classList.remove("hidden");
-        document.getElementById("archived-ping-picker").classList.add("hidden");
+        document.getElementById("current-ping-picker").hidden = false;
+        document.getElementById("archived-ping-picker").hidden = true;
         this._updateCurrentPingData();
       } else {
-        document.getElementById("current-ping-picker").classList.add("hidden");
+        document.getElementById("current-ping-picker").hidden = true;
         await this._updateArchivedPingList(archivedPingList);
-        document.getElementById("archived-ping-picker").classList.remove("hidden");
-      }
-    }
-
-    if (structuredChanged) {
-      if (this.viewStructuredPingData) {
-        this._showStructuredPingData();
-      } else {
-        this._showRawPingData();
+        document.getElementById("archived-ping-picker").hidden = false;
       }
     }
   },
@@ -486,13 +474,11 @@ var PingPicker = {
   },
 
   _showRawPingData() {
-    document.getElementById("raw-ping-data-section").classList.remove("hidden");
-    document.getElementById("structured-ping-data-section").classList.add("hidden");
+    show(document.getElementById("category-raw"));
   },
 
   _showStructuredPingData() {
-    document.getElementById("raw-ping-data-section").classList.add("hidden");
-    document.getElementById("structured-ping-data-section").classList.remove("hidden");
+    show(document.getElementById("category-home"));
   },
 };
 
@@ -743,7 +729,7 @@ var SlowSQL = {
 
     setHasData("slow-sql-section", true);
     if (debugSlowSql) {
-      document.getElementById("sql-warning").classList.remove("hidden");
+      document.getElementById("sql-warning").hidden = false;
     }
 
     let slowSqlDiv = document.getElementById("slow-sql-tables");
@@ -869,11 +855,11 @@ var StackRenderer = {
 
     let fetchE = document.getElementById(aPrefix + "-fetch-symbols");
     if (fetchE) {
-      fetchE.classList.remove("hidden");
+      fetchE.hidden = false;
     }
     let hideE = document.getElementById(aPrefix + "-hide-symbols");
     if (hideE) {
-      hideE.classList.add("hidden");
+      hideE.hidden = true;
     }
 
     if (aStacks.length == 0) {
@@ -941,9 +927,9 @@ function SymbolicationRequest_handleSymbolResponse() {
     return;
 
   let fetchElement = document.getElementById(this.prefix + "-fetch-symbols");
-  fetchElement.classList.add("hidden");
+  fetchElement.hidden = true;
   let hideElement = document.getElementById(this.prefix + "-hide-symbols");
-  hideElement.classList.remove("hidden");
+  hideElement.hidden = false;
   let div = document.getElementById(this.prefix + "-data");
   removeAllChildNodes(div);
   let errorMessage = bundle.GetStringFromName("errorFetchingSymbols");
@@ -1686,6 +1672,10 @@ var Events = {
 function setHasData(aSectionID, aHasData) {
   let sectionElement = document.getElementById(aSectionID);
   sectionElement.classList[aHasData ? "add" : "remove"]("has-data");
+
+  // Display or Hide the section in the sidebar
+  let sectionCategory = document.querySelector(".category[value=" + aSectionID + "]");
+  sectionCategory.classList[aHasData ? "add" : "remove"]("has-data");
 }
 
 /**
@@ -1722,11 +1712,37 @@ function setupPageHeader() {
 }
 
 /**
+ * Change the section displayed
+ */
+function show(selected) {
+    let current_section = document.querySelector(".active");
+    let selected_section = document.getElementById(selected.getAttribute("value"));
+    if (current_section == selected_section)
+      return;
+    current_section.classList.remove("active");
+    current_section.hidden = true;
+    selected_section.classList.add("active");
+    selected_section.hidden = false;
+
+    let current_button = document.querySelector("[selected=true]");
+    current_button.removeAttribute("selected");
+    selected.setAttribute("selected", "true");
+    document.getElementById("sectionTitle").textContent = selected.textContent;
+}
+
+/**
  * Initializes load/unload, pref change and mouse-click listeners
  */
 function setupListeners() {
   Settings.attachObservers();
   PingPicker.attachObservers();
+
+  let menu = document.getElementById("categories");
+  menu.addEventListener("click", (e) => {
+    if (e.target && e.target.parentNode == menu) {
+      show(e.target)
+    }
+  });
 
   // Clean up observers when page is closed
   window.addEventListener("unload",
@@ -2085,28 +2101,20 @@ function renderPayloadList(ping) {
   }
 }
 
-function toggleElementHidden(element, isHidden) {
-  if (isHidden) {
-    element.classList.add("hidden");
-  } else {
-    element.classList.remove("hidden");
-  }
-}
-
 function togglePingSections(isMainPing) {
   // We always show the sections that are "common" to all pings.
   // The raw payload section is only used for pings other than "main" and "saved-session".
   let commonSections = new Set(["general-data-section", "environment-data-section"]);
   let otherPingSections = new Set(["raw-payload-section"]);
 
-  let elements = document.getElementById("structured-ping-data-section").children;
+  let elements = document.getElementById("categories").children;
   for (let section of elements) {
     if (commonSections.has(section.id)) {
       continue;
     }
 
     let showElement = isMainPing != otherPingSections.has(section.id);
-    toggleElementHidden(section, !showElement);
+    section.hidden = !showElement;
   }
 }
 
@@ -2117,9 +2125,11 @@ function displayPingData(ping, updatePayloadList = false) {
   let pre = document.getElementById("raw-ping-data");
   pre.textContent = JSON.stringify(gPingData, null, 2);
 
+
   try {
     displayRichPingData(ping, updatePayloadList);
   } catch (err) {
+    console.log(err);
     PingPicker._showRawPingData();
   }
 }
