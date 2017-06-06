@@ -104,6 +104,9 @@ class TTest(object):
             setup.env['MOZ_INSTRUMENT_EVENT_LOOP_INTERVAL'] = '10'
             global_counters['responsiveness'] = []
 
+        setup.env['JSGC_DISABLE_POISONING'] = '1'
+        setup.env['MOZ_DISABLE_NONLOCAL_CONNECTIONS'] = '1'
+
         # if using mitmproxy we must allow access to 'external' sites
         if browser_config.get('mitmproxy', False):
             LOG.info("Using mitmproxy so setting MOZ_DISABLE_NONLOCAL_CONNECTIONS to 0")
