@@ -24,9 +24,6 @@ haz_run_schema = Schema({
     # The command to run within the task image (passed through to the worker)
     Required('command'): basestring,
 
-    # The tooltool manifest to use; default in the script is used if omitted
-    Optional('tooltool-manifest'): basestring,
-
     # The mozconfig to use; default in the script is used if omitted
     Optional('mozconfig'): basestring,
 
@@ -59,8 +56,6 @@ def docker_worker_hazard(config, job, taskdesc):
     })
 
     # script parameters
-    if run.get('tooltool-manifest'):
-        env['TOOLTOOL_MANIFEST'] = run['tooltool-manifest']
     if run.get('mozconfig'):
         env['MOZCONFIG'] = run['mozconfig']
 
