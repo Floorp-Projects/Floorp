@@ -47,11 +47,7 @@ struct LinkDataTier : LinkDataTierCacheablePod
 {
     const Tier tier;
 
-    explicit LinkDataTier(Tier tier)
-      : tier(tier)
-    {
-        MOZ_ASSERT(tier == Tier::Baseline || tier == Tier::Ion);
-    }
+    explicit LinkDataTier(Tier tier) : tier(tier) {}
 
     LinkDataTierCacheablePod& pod() { return *this; }
     const LinkDataTierCacheablePod& pod() const { return *this; }

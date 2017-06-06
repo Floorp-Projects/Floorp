@@ -272,7 +272,6 @@ CodeSegment::initialize(Tier tier,
                         const Metadata& metadata)
 {
     MOZ_ASSERT(bytes_ == nullptr);
-    MOZ_ASSERT(tier == Tier::Baseline || tier == Tier::Ion);
 
     tier_ = tier;
     bytes_ = Move(codeBytes);
@@ -312,7 +311,7 @@ CodeSegment::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* code, siz
 uint8_t*
 CodeSegment::serialize(uint8_t* cursor, const LinkDataTier& linkData) const
 {
-    MOZ_ASSERT(tier() == Tier::Ion);
+    MOZ_ASSERT(tier() == Tier::Serialized);
 
     cursor = WriteScalar<uint32_t>(cursor, length_);
     uint8_t* base = cursor;
@@ -339,7 +338,7 @@ CodeSegment::deserialize(const uint8_t* cursor, const ShareableBytes& bytecode,
     if (!cursor)
         return nullptr;
 
-    if (!initialize(Tier::Ion, Move(bytes), length, bytecode, linkData, metadata))
+    if (!initialize(Tier::Serialized, Move(bytes), length, bytecode, linkData, metadata))
         return nullptr;
 
     return cursor;
@@ -504,7 +503,6 @@ const MetadataTier&
 Metadata::metadata(Tier t) const
 {
     switch (t) {
-      case Tier::Debug:
       case Tier::Baseline:
         MOZ_RELEASE_ASSERT(tier_->tier == Tier::Baseline);
         return *tier_;
@@ -522,7 +520,6 @@ MetadataTier&
 Metadata::metadata(Tier t)
 {
     switch (t) {
-      case Tier::Debug:
       case Tier::Baseline:
         MOZ_RELEASE_ASSERT(tier_->tier == Tier::Baseline);
         return *tier_;
@@ -540,7 +537,7 @@ size_t
 Metadata::serializedSize() const
 {
     return sizeof(pod()) +
-           metadata(Tier::Ion).serializedSize() +
+           metadata(Tier::Serialized).serializedSize() +
            SerializedVectorSize(sigIds) +
            SerializedPodVectorSize(globals) +
            SerializedPodVectorSize(tables) +
@@ -572,7 +569,7 @@ Metadata::serialize(uint8_t* cursor) const
 {
     MOZ_ASSERT(!debugEnabled && debugFuncArgTypes.empty() && debugFuncReturnTypes.empty());
     cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
-    cursor = metadata(Tier::Ion).serialize(cursor);
+    cursor = metadata(Tier::Serialized).serialize(cursor);
     cursor = SerializeVector(cursor, sigIds);
     cursor = SerializePodVector(cursor, globals);
     cursor = SerializePodVector(cursor, tables);
@@ -587,7 +584,7 @@ Metadata::serialize(uint8_t* cursor) const
 Metadata::deserialize(const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
-    (cursor = metadata(Tier::Ion).deserialize(cursor)) &&
+    (cursor = metadata(Tier::Serialized).deserialize(cursor)) &&
     (cursor = DeserializeVector(cursor, &sigIds)) &&
     (cursor = DeserializePodVector(cursor, &globals)) &&
     (cursor = DeserializePodVector(cursor, &tables)) &&
@@ -678,7 +675,6 @@ const CodeSegment&
 Code::segment(Tier tier) const
 {
     switch (tier) {
-      case Tier::Debug:
       case Tier::Baseline:
         MOZ_RELEASE_ASSERT(tier_->tier() == Tier::Baseline);
         return *tier_;
@@ -733,7 +729,7 @@ size_t
 Code::serializedSize() const
 {
     return metadata().serializedSize() +
-           segment(Tier::Ion).serializedSize();
+           segment(Tier::Serialized).serializedSize();
 }
 
 uint8_t*
@@ -742,7 +738,7 @@ Code::serialize(uint8_t* cursor, const LinkData& linkData) const
     MOZ_RELEASE_ASSERT(!metadata().debugEnabled);
 
     cursor = metadata().serialize(cursor);
-    cursor = segment(Tier::Ion).serialize(cursor, linkData.linkData(Tier::Ion));
+    cursor = segment(Tier::Serialized).serialize(cursor, linkData.linkData(Tier::Serialized));
     return cursor;
 }
 
@@ -754,7 +750,7 @@ Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const Link
     if (maybeMetadata) {
         metadata = maybeMetadata;
     } else {
-        auto tier = js::MakeUnique<MetadataTier>(Tier::Ion);
+        auto tier = js::MakeUnique<MetadataTier>(Tier::Serialized);
         if (!tier)
             return nullptr;
 
@@ -771,7 +767,7 @@ Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const Link
     if (!codeSegment)
         return nullptr;
 
-    cursor = codeSegment->deserialize(cursor, *bytecode, linkData.linkData(Tier::Ion), *metadata);
+    cursor = codeSegment->deserialize(cursor, *bytecode, linkData.linkData(Tier::Serialized), *metadata);
     if (!cursor)
         return nullptr;
 

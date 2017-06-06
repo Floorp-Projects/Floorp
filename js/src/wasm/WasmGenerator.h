@@ -153,7 +153,6 @@ class CompileTask
         tier_(tier),
         lifo_(defaultChunkSize)
     {
-        MOZ_ASSERT(tier == Tier::Baseline || tier == Tier::Ion);
         init();
     }
     LifoAlloc& lifo() {
