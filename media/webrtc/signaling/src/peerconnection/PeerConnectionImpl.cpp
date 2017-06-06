@@ -3569,7 +3569,7 @@ static void RecordIceStats_s(
     DOMHighResTimeStamp now,
     RTCStatsReportInternal* report) {
 
-  NS_ConvertASCIItoUTF16 componentId(mediaStream.name().c_str());
+  NS_ConvertASCIItoUTF16 transportId(mediaStream.name().c_str());
 
   std::vector<NrIceCandidatePair> candPairs;
   nsresult res = mediaStream.GetCandidatePairs(&candPairs);
@@ -3587,7 +3587,7 @@ static void RecordIceStats_s(
 
     RTCIceCandidatePairStats s;
     s.mId.Construct(codeword);
-    s.mComponentId.Construct(componentId);
+    s.mTransportId.Construct(transportId);
     s.mTimestamp.Construct(now);
     s.mType.Construct(RTCStatsType::Candidate_pair);
     s.mLocalCandidateId.Construct(localCodeword);
@@ -3605,7 +3605,7 @@ static void RecordIceStats_s(
   if (NS_SUCCEEDED(mediaStream.GetLocalCandidates(&candidates))) {
     ToRTCIceCandidateStats(candidates,
                            RTCStatsType::Local_candidate,
-                           componentId,
+                           transportId,
                            now,
                            report);
   }
@@ -3614,7 +3614,7 @@ static void RecordIceStats_s(
   if (NS_SUCCEEDED(mediaStream.GetRemoteCandidates(&candidates))) {
     ToRTCIceCandidateStats(candidates,
                            RTCStatsType::Remote_candidate,
-                           componentId,
+                           transportId,
                            now,
                            report);
   }
