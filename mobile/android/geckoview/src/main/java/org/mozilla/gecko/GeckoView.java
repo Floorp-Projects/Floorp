@@ -600,6 +600,13 @@ public class GeckoView extends LayerView {
     }
 
     /**
+    * Exits fullscreen mode
+    */
+    public void exitFullScreen() {
+        mEventDispatcher.dispatch("GeckoViewContent:ExitFullScreen", null);
+    }
+
+    /**
     * Set the content callback handler.
     * This will replace the current handler.
     * @param content An implementation of ContentListener.
