@@ -168,9 +168,8 @@ module.exports = createClass({
   },
 
   /**
-    * Displays a message text "Cannot show outline for this grid".
-    *
-    */
+   * Displays a message text "Cannot show outline for this grid".
+   */
   renderCannotShowOutlineText() {
     return dom.div(
       {
@@ -187,11 +186,11 @@ module.exports = createClass({
   },
 
   /**
-    * Renders the grid outline for the given grid container object.
-    *
-    * @param  {Object} grid
-    *         A single grid container in the document.
-    */
+   * Renders the grid outline for the given grid container object.
+   *
+   * @param  {Object} grid
+   *         A single grid container in the document.
+   */
   renderGrid(grid) {
     // TODO: We are drawing the first fragment since only one is currently being stored.
     // In the future we will need to iterate over all fragments of a grid.

@@ -5039,9 +5039,11 @@ else
   AC_SUBST(MOZ_CHILD_PROCESS_NAME_PIE)
 fi
 MOZ_CHILD_PROCESS_BUNDLE="plugin-container.app/Contents/MacOS/"
+MOZ_CHILD_PROCESS_BUNDLENAME="${MOZ_APP_DISPLAYNAME}CP"
 
 AC_SUBST(MOZ_CHILD_PROCESS_NAME)
 AC_SUBST(MOZ_CHILD_PROCESS_BUNDLE)
+AC_SUBST(MOZ_CHILD_PROCESS_BUNDLENAME)
 
 # The following variables are available to branding and application
 # configuration ($BRANDING/configure.sh and $APPLICATION/confvars.sh):

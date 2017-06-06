@@ -1570,18 +1570,19 @@ class ScriptMixin(PlatformMixin):
         tmp_stderr.close()
         return_level = DEBUG
         output = None
-        if os.path.exists(tmp_stdout_filename) and os.path.getsize(tmp_stdout_filename):
-            output = self.read_from_file(tmp_stdout_filename,
-                                         verbose=False)
-            if not silent:
-                self.log("Output received:", level=log_level)
-                output_lines = output.rstrip().splitlines()
-                for line in output_lines:
-                    if not line or line.isspace():
-                        continue
-                    line = line.decode("utf-8")
-                    self.log(' %s' % line, level=log_level)
-                output = '\n'.join(output_lines)
+        if return_type == 'output' or not silent:
+            if os.path.exists(tmp_stdout_filename) and os.path.getsize(tmp_stdout_filename):
+                output = self.read_from_file(tmp_stdout_filename,
+                                             verbose=False)
+                if not silent:
+                    self.log("Output received:", level=log_level)
+                    output_lines = output.rstrip().splitlines()
+                    for line in output_lines:
+                        if not line or line.isspace():
+                            continue
+                        line = line.decode("utf-8")
+                        self.log(' %s' % line, level=log_level)
+                    output = '\n'.join(output_lines)
         if os.path.exists(tmp_stderr_filename) and os.path.getsize(tmp_stderr_filename):
             if not ignore_errors:
                 return_level = ERROR
