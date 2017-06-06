@@ -40,7 +40,6 @@ class nsISSLStatus;
 
 namespace mozilla { namespace net {
 
-class nsChannelClassifier;
 class Http2PushedStream;
 
 class HttpChannelSecurityWarningReporter
@@ -507,8 +506,6 @@ private:
 
     void SetDoNotTrack();
 
-    already_AddRefed<nsChannelClassifier> GetOrCreateChannelClassifier();
-
 private:
     // this section is for main-thread-only object
     // all the references need to be proxy released on main thread.
@@ -518,13 +515,6 @@ private:
     nsCOMPtr<nsIURI> mRedirectURI;
     nsCOMPtr<nsIChannel> mRedirectChannel;
     nsCOMPtr<nsIChannel> mPreflightChannel;
-
-    // nsChannelClassifier checks this channel's URI against
-    // the URI classifier service.
-    // nsChannelClassifier will be invoked twice in InitLocalBlockList() and
-    // BeginConnectActual(), so save the nsChannelClassifier here to keep the
-    // state of whether tracking protection is enabled or not.
-    RefPtr<nsChannelClassifier> mChannelClassifier;
 
     // Proxy release all members above on main thread.
     void ReleaseMainThreadOnlyReferences();
@@ -711,10 +701,6 @@ private:
 
 protected:
     virtual void DoNotifyListenerCleanup() override;
-
-    // Override ReleaseListeners() because mChannelClassifier only exists
-    // in nsHttpChannel and it will be released in ReleaseListeners().
-    virtual void ReleaseListeners() override;
 
 private: // cache telemetry
     bool mDidReval;
