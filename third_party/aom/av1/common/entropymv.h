@@ -84,26 +84,20 @@ extern const aom_tree_index av1_mv_fp_tree[];
 typedef struct {
   aom_prob sign;
   aom_prob classes[MV_CLASSES - 1];
-#if CONFIG_EC_MULTISYMBOL
   aom_cdf_prob class_cdf[CDF_SIZE(MV_CLASSES)];
-#endif
   aom_prob class0[CLASS0_SIZE - 1];
   aom_prob bits[MV_OFFSET_BITS];
   aom_prob class0_fp[CLASS0_SIZE][MV_FP_SIZE - 1];
   aom_prob fp[MV_FP_SIZE - 1];
-#if CONFIG_EC_MULTISYMBOL
   aom_cdf_prob class0_fp_cdf[CLASS0_SIZE][CDF_SIZE(MV_FP_SIZE)];
   aom_cdf_prob fp_cdf[CDF_SIZE(MV_FP_SIZE)];
-#endif
   aom_prob class0_hp;
   aom_prob hp;
 } nmv_component;
 
 typedef struct {
   aom_prob joints[MV_JOINTS - 1];
-#if CONFIG_EC_MULTISYMBOL
   aom_cdf_prob joint_cdf[CDF_SIZE(MV_JOINTS)];
-#endif
   nmv_component comps[2];
 } nmv_context;
 
@@ -138,7 +132,7 @@ void av1_inc_mv(const MV *mv, nmv_context_counts *mvctx, const int usehp);
 extern const aom_tree_index
     av1_global_motion_types_tree[TREE_SIZE(GLOBAL_TRANS_TYPES)];
 #endif  // CONFIG_GLOBAL_MOTION
-#if CONFIG_EC_MULTISYMBOL
+#if !CONFIG_EC_ADAPT
 void av1_set_mv_cdfs(nmv_context *ctx);
 #endif
 

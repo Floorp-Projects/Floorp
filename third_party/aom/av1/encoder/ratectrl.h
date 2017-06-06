@@ -49,27 +49,6 @@ typedef enum {
 } RATE_FACTOR_LEVEL;
 #endif  // CONFIG_EXT_REFS
 
-// Internal frame scaling level.
-typedef enum {
-  UNSCALED = 0,     // Frame is unscaled.
-  SCALE_STEP1 = 1,  // First-level down-scaling.
-  FRAME_SCALE_STEPS
-} FRAME_SCALE_LEVEL;
-
-// Frame dimensions multiplier wrt the native frame size, in 1/16ths,
-// specified for the scale-up case.
-// e.g. 24 => 16/24 = 2/3 of native size. The restriction to 1/16th is
-// intended to match the capabilities of the normative scaling filters,
-// giving precedence to the up-scaling accuracy.
-static const int frame_scale_factor[FRAME_SCALE_STEPS] = { 16, 24 };
-
-// Multiplier of the target rate to be used as threshold for triggering scaling.
-static const double rate_thresh_mult[FRAME_SCALE_STEPS] = { 1.0, 2.0 };
-
-// Scale dependent Rate Correction Factor multipliers. Compensates for the
-// greater number of bits per pixel generated in down-scaled frames.
-static const double rcf_mult[FRAME_SCALE_STEPS] = { 1.0, 2.0 };
-
 typedef struct {
   // Rate targetting variables
   int base_frame_target;  // A baseline frame target before adjustment
@@ -162,10 +141,6 @@ typedef struct {
   int q_2_frame;
 
   // Auto frame-scaling variables.
-  FRAME_SCALE_LEVEL frame_size_selector;
-  FRAME_SCALE_LEVEL next_frame_size_selector;
-  int frame_width[FRAME_SCALE_STEPS];
-  int frame_height[FRAME_SCALE_STEPS];
   int rf_level_maxq[RATE_FACTOR_LEVELS];
 } RATE_CONTROL;
 
@@ -213,6 +188,10 @@ int av1_rc_get_default_max_gf_interval(double framerate, int min_frame_rate);
 // encode_frame_to_data_rate() function.
 void av1_rc_get_one_pass_vbr_params(struct AV1_COMP *cpi);
 void av1_rc_get_one_pass_cbr_params(struct AV1_COMP *cpi);
+
+// How many times less pixels there are to encode given the current scaling.
+// Temporary replacement for rcf_mult and rate_thresh_mult.
+double av1_resize_rate_factor(const struct AV1_COMP *cpi);
 
 // Post encode update of the rate control parameters based
 // on bytes used

@@ -483,6 +483,16 @@ static aom_codec_err_t set_encoder_config(
     oxcf->resize_mode = RESIZE_NONE;
   }
 
+  // Initialize to input resolution if not specified.
+  if (oxcf->resize_mode != RESIZE_FIXED) {
+    oxcf->scaled_frame_width = oxcf->width;
+    oxcf->scaled_frame_height = oxcf->height;
+  }
+
+#if CONFIG_FRAME_SUPERRES
+  oxcf->superres_enabled = 1;  // TODO(afergs): Check the config
+#endif                         // CONFIG_FRAME_SUPERRES
+
   oxcf->maximum_buffer_size_ms = is_vbr ? 240000 : cfg->rc_buf_sz;
   oxcf->starting_buffer_level_ms = is_vbr ? 60000 : cfg->rc_buf_initial_sz;
   oxcf->optimal_buffer_level_ms = is_vbr ? 60000 : cfg->rc_buf_optimal_sz;

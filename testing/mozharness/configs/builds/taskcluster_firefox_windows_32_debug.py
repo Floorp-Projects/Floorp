@@ -19,7 +19,6 @@ config = {
     'default_actions': [
         'clone-tools',
         'build',
-        'generate-build-stats',
         'check-test',
     ],
     'exes': {

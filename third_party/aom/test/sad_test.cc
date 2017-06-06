@@ -740,13 +740,6 @@ INSTANTIATE_TEST_CASE_P(C, SADx4Test, ::testing::ValuesIn(x4d_c_tests));
 
 //------------------------------------------------------------------------------
 // ARM functions
-#if HAVE_MEDIA
-const SadMxNParam media_tests[] = {
-  make_tuple(16, 16, &aom_sad16x16_media, -1),
-};
-INSTANTIATE_TEST_CASE_P(MEDIA, SADTest, ::testing::ValuesIn(media_tests));
-#endif  // HAVE_MEDIA
-
 #if HAVE_NEON
 const SadMxNParam neon_tests[] = {
   make_tuple(64, 64, &aom_sad64x64_neon, -1),

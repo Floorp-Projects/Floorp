@@ -93,13 +93,41 @@ void av1_encode_tiles_mt(AV1_COMP *cpi) {
         thread_data->td->pc_tree = NULL;
         av1_setup_pc_tree(cm, thread_data->td);
 
-        // Set up variance tree if needed.
-        if (cpi->sf.partition_search_type == VAR_BASED_PARTITION)
-          av1_setup_var_tree(cm, thread_data->td);
-
+#if CONFIG_MOTION_VAR
+#if CONFIG_HIGHBITDEPTH
+        int buf_scaler = 2;
+#else
+        int buf_scaler = 1;
+#endif
+        CHECK_MEM_ERROR(cm, thread_data->td->above_pred_buf,
+                        (uint8_t *)aom_memalign(
+                            16, buf_scaler * MAX_MB_PLANE * MAX_SB_SQUARE *
+                                    sizeof(*thread_data->td->above_pred_buf)));
+        CHECK_MEM_ERROR(cm, thread_data->td->left_pred_buf,
+                        (uint8_t *)aom_memalign(
+                            16, buf_scaler * MAX_MB_PLANE * MAX_SB_SQUARE *
+                                    sizeof(*thread_data->td->left_pred_buf)));
+        CHECK_MEM_ERROR(
+            cm, thread_data->td->wsrc_buf,
+            (int32_t *)aom_memalign(
+                16, MAX_SB_SQUARE * sizeof(*thread_data->td->wsrc_buf)));
+        CHECK_MEM_ERROR(
+            cm, thread_data->td->mask_buf,
+            (int32_t *)aom_memalign(
+                16, MAX_SB_SQUARE * sizeof(*thread_data->td->mask_buf)));
+#endif
         // Allocate frame counters in thread data.
         CHECK_MEM_ERROR(cm, thread_data->td->counts,
                         aom_calloc(1, sizeof(*thread_data->td->counts)));
+
+#if CONFIG_PALETTE
+        // Allocate buffers used by palette coding mode.
+        if (cpi->common.allow_screen_content_tools) {
+          CHECK_MEM_ERROR(
+              cm, thread_data->td->palette_buffer,
+              aom_memalign(16, sizeof(*thread_data->td->palette_buffer)));
+        }
+#endif  // CONFIG_PALETTE
 
         // Create threads
         if (!winterface->reset(worker))
@@ -127,6 +155,12 @@ void av1_encode_tiles_mt(AV1_COMP *cpi) {
     if (thread_data->td != &cpi->td) {
       thread_data->td->mb = cpi->td.mb;
       thread_data->td->rd_counts = cpi->td.rd_counts;
+#if CONFIG_MOTION_VAR
+      thread_data->td->mb.above_pred_buf = thread_data->td->above_pred_buf;
+      thread_data->td->mb.left_pred_buf = thread_data->td->left_pred_buf;
+      thread_data->td->mb.wsrc_buf = thread_data->td->wsrc_buf;
+      thread_data->td->mb.mask_buf = thread_data->td->mask_buf;
+#endif
     }
     if (thread_data->td->counts != &cpi->common.counts) {
       memcpy(thread_data->td->counts, &cpi->common.counts,
@@ -134,12 +168,8 @@ void av1_encode_tiles_mt(AV1_COMP *cpi) {
     }
 
 #if CONFIG_PALETTE
-    // Allocate buffers used by palette coding mode.
-    if (cpi->common.allow_screen_content_tools && i < num_workers - 1) {
-      MACROBLOCK *x = &thread_data->td->mb;
-      CHECK_MEM_ERROR(cm, x->palette_buffer,
-                      aom_memalign(16, sizeof(*x->palette_buffer)));
-    }
+    if (cpi->common.allow_screen_content_tools && i < num_workers - 1)
+      thread_data->td->mb.palette_buffer = thread_data->td->palette_buffer;
 #endif  // CONFIG_PALETTE
   }
 
@@ -171,6 +201,9 @@ void av1_encode_tiles_mt(AV1_COMP *cpi) {
     if (i < cpi->num_workers - 1) {
       av1_accumulate_frame_counts(&cm->counts, thread_data->td->counts);
       accumulate_rd_opt(&cpi->td, thread_data->td);
+#if CONFIG_VAR_TX
+      cpi->td.mb.txb_split_count += thread_data->td->mb.txb_split_count;
+#endif
     }
   }
 }

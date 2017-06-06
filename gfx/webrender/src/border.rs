@@ -5,7 +5,7 @@
 use ellipse::Ellipse;
 use frame_builder::FrameBuilder;
 use mask_cache::{ClipSource};
-use prim_store::{BorderPrimitiveCpu, BorderPrimitiveGpu, GpuBlock32, PrimitiveContainer};
+use prim_store::{BorderPrimitiveCpu, GpuBlock32, PrimitiveContainer};
 use tiling::PrimitiveFlags;
 use util::{lerp, pack_as_float};
 use webrender_traits::{BorderSide, BorderStyle, BorderWidths, ClipAndScrollInfo, ClipRegion};
@@ -242,25 +242,31 @@ impl FrameBuilder {
 
         let prim_cpu = BorderPrimitiveCpu {
             corner_instances: corner_instances,
-        };
 
-        let prim_gpu = BorderPrimitiveGpu {
-            colors: [ left_color, top_color, right_color, bottom_color ],
-            widths: [ widths.left,
-                      widths.top,
-                      widths.right,
-                      widths.bottom ],
-            style: [
-                pack_as_float(left.style as u32),
-                pack_as_float(top.style as u32),
-                pack_as_float(right.style as u32),
-                pack_as_float(bottom.style as u32),
-            ],
-            radii: [
-                radius.top_left,
-                radius.top_right,
-                radius.bottom_right,
-                radius.bottom_left,
+            // TODO(gw): In the future, we will build these on demand
+            //           from the deserialized display list, rather
+            //           than creating it immediately.
+            gpu_blocks: [
+                [ pack_as_float(left.style as u32),
+                  pack_as_float(top.style as u32),
+                  pack_as_float(right.style as u32),
+                  pack_as_float(bottom.style as u32) ].into(),
+                [ widths.left,
+                  widths.top,
+                  widths.right,
+                  widths.bottom ].into(),
+                left_color.into(),
+                top_color.into(),
+                right_color.into(),
+                bottom_color.into(),
+                [ radius.top_left.width,
+                  radius.top_left.height,
+                  radius.top_right.width,
+                  radius.top_right.height ].into(),
+                [ radius.bottom_right.width,
+                  radius.bottom_right.height,
+                  radius.bottom_left.width,
+                  radius.bottom_left.height ].into(),
             ],
         };
 
@@ -268,7 +274,7 @@ impl FrameBuilder {
                            &rect,
                            clip_region,
                            extra_clips,
-                           PrimitiveContainer::Border(prim_cpu, prim_gpu));
+                           PrimitiveContainer::Border(prim_cpu));
     }
 
     // TODO(gw): This allows us to move border types over to the

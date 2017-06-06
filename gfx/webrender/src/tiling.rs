@@ -6,12 +6,13 @@ use app_units::Au;
 use border::{BorderCornerInstance, BorderCornerSide};
 use device::TextureId;
 use fnv::FnvHasher;
+use gpu_cache::GpuCacheUpdateList;
 use gpu_store::GpuStoreAddress;
 use internal_types::{ANGLE_FLOAT_TO_FIXED, BatchTextures, CacheTextureId, LowLevelFilterOp};
 use internal_types::SourceTexture;
 use mask_cache::MaskCacheInfo;
-use prim_store::{CLIP_DATA_GPU_SIZE, DeferredResolve, GpuBlock128, GpuBlock16, GpuBlock32};
-use prim_store::{GpuBlock64, GradientData, SplitGeometry, PrimitiveCacheKey, PrimitiveGeometry};
+use prim_store::{CLIP_DATA_GPU_SIZE, DeferredResolve, GpuBlock16, GpuBlock32};
+use prim_store::{GradientData, SplitGeometry, PrimitiveCacheKey, PrimitiveGeometry};
 use prim_store::{PrimitiveIndex, PrimitiveKind, PrimitiveMetadata, PrimitiveStore, TexelRect};
 use profiler::FrameProfileCounters;
 use render_task::{AlphaRenderItem, MaskGeometryKind, MaskSegment, RenderTask, RenderTaskData};
@@ -45,6 +46,7 @@ trait AlphaBatchHelpers {
     fn get_blend_mode(&self,
                       needs_blending: bool,
                       metadata: &PrimitiveMetadata) -> BlendMode;
+    fn can_draw(&self, metadata: &PrimitiveMetadata) -> bool;
 }
 
 impl AlphaBatchHelpers for PrimitiveStore {
@@ -102,6 +104,26 @@ impl AlphaBatchHelpers for PrimitiveStore {
                 } else {
                     BlendMode::None
                 }
+            }
+        }
+    }
+
+    fn can_draw(&self, metadata: &PrimitiveMetadata) -> bool {
+        match metadata.prim_kind {
+            PrimitiveKind::Border |
+            PrimitiveKind::BoxShadow |
+            PrimitiveKind::Rectangle |
+            PrimitiveKind::AlignedGradient |
+            PrimitiveKind::AngleGradient |
+            PrimitiveKind::RadialGradient |
+            PrimitiveKind::Image |
+            PrimitiveKind::YuvImage => true,
+            PrimitiveKind::TextRun => {
+                // If the glyph failed to rasterize, we may have a text run
+                // without a valid texture. In this case, we need to prevent
+                // drawing the primitive this frame.
+                let text_run_cpu = &self.cpu_text_runs[metadata.cpu_prim_index.0];
+                text_run_cpu.color_texture_id != SourceTexture::Invalid
             }
         }
     }
@@ -365,6 +387,10 @@ impl AlphaRenderItem {
             }
             AlphaRenderItem::Primitive(clip_scroll_group_index_opt, prim_index, z) => {
                 let prim_metadata = ctx.prim_store.get_metadata(prim_index);
+                // Bail out if this primitive can't be drawn this frame for some reason.
+                if !ctx.prim_store.can_draw(prim_metadata) {
+                    return;
+                }
                 let (transform_kind, packed_layer_index) = match clip_scroll_group_index_opt {
                     Some(group_index) => {
                         let group = &ctx.clip_scroll_group_store[group_index.0];
@@ -398,8 +424,11 @@ impl AlphaRenderItem {
                                      transform_kind == TransformedRectKind::Complex;
                 let blend_mode = ctx.prim_store.get_blend_mode(needs_blending, prim_metadata);
 
+                let prim_cache_address = prim_metadata.gpu_location
+                                                      .as_int(&ctx.resource_cache.gpu_cache);
+
                 let base_instance = SimplePrimitiveInstance::new(prim_index,
-                                                                 prim_metadata.gpu_prim_index,
+                                                                 prim_cache_address,
                                                                  task_index,
                                                                  clip_task_index,
                                                                  packed_layer_index,
@@ -488,34 +517,37 @@ impl AlphaRenderItem {
                             None => 0,
                         };
 
-                        for glyph_index in 0..prim_metadata.gpu_data_count {
+                        for glyph_index in 0..text_cpu.gpu_data_count {
                             let user_data1 = match batch_kind {
                                 AlphaBatchKind::TextRun => text_cpu.resource_address.0 + glyph_index,
                                 AlphaBatchKind::CacheImage => cache_task_index,
                                 _ => unreachable!(),
                             };
 
-                            batch.add_instance(base_instance.build(prim_metadata.gpu_data_address.0 + glyph_index,
+                            batch.add_instance(base_instance.build(text_cpu.gpu_data_address.0 + glyph_index,
                                                                    user_data1));
                         }
                     }
                     PrimitiveKind::AlignedGradient => {
+                        let gradient_cpu = &ctx.prim_store.cpu_gradients[prim_metadata.cpu_prim_index.0];
                         let key = AlphaBatchKey::new(AlphaBatchKind::AlignedGradient, flags, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
-                        for part_index in 0..(prim_metadata.gpu_data_count - 1) {
-                            batch.add_instance(base_instance.build(prim_metadata.gpu_data_address.0 + part_index, 0));
+                        for part_index in 0..(gradient_cpu.gpu_data_count - 1) {
+                            batch.add_instance(base_instance.build(gradient_cpu.gpu_data_address.0 + part_index, 0));
                         }
                     }
                     PrimitiveKind::AngleGradient => {
+                        let gradient_cpu = &ctx.prim_store.cpu_gradients[prim_metadata.cpu_prim_index.0];
                         let key = AlphaBatchKey::new(AlphaBatchKind::AngleGradient, flags, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
-                        batch.add_instance(base_instance.build(prim_metadata.gpu_data_address.0,
+                        batch.add_instance(base_instance.build(gradient_cpu.gpu_data_address.0,
                                                                0));
                     }
                     PrimitiveKind::RadialGradient => {
+                        let gradient_cpu = &ctx.prim_store.cpu_radial_gradients[prim_metadata.cpu_prim_index.0];
                         let key = AlphaBatchKey::new(AlphaBatchKind::RadialGradient, flags, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
-                        batch.add_instance(base_instance.build(prim_metadata.gpu_data_address.0,
+                        batch.add_instance(base_instance.build(gradient_cpu.gpu_data_address.0,
                                                                0));
                     }
                     PrimitiveKind::YuvImage => {
@@ -557,6 +589,7 @@ impl AlphaRenderItem {
                                                                0));
                     }
                     PrimitiveKind::BoxShadow => {
+                        let box_shadow = &ctx.prim_store.cpu_box_shadows[prim_metadata.cpu_prim_index.0];
                         let cache_task_id = &prim_metadata.render_task.as_ref().unwrap().id;
                         let cache_task_index = render_tasks.get_task_index(cache_task_id,
                                                                            child_pass_index);
@@ -564,8 +597,8 @@ impl AlphaRenderItem {
                         let key = AlphaBatchKey::new(AlphaBatchKind::BoxShadow, flags, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
 
-                        for rect_index in 0..prim_metadata.gpu_data_count {
-                            batch.add_instance(base_instance.build(prim_metadata.gpu_data_address.0 + rect_index,
+                        for rect_index in 0..box_shadow.rects.len() {
+                            batch.add_instance(base_instance.build(rect_index as i32,
                                                                    cache_task_index.0 as i32));
                         }
                     }
@@ -947,10 +980,13 @@ impl RenderTarget for ColorRenderTarget {
             RenderTaskKind::CachePrimitive(prim_index) => {
                 let prim_metadata = ctx.prim_store.get_metadata(prim_index);
 
+                let prim_address = prim_metadata.gpu_location
+                                                .as_int(&ctx.resource_cache.gpu_cache);
+
                 match prim_metadata.prim_kind {
                     PrimitiveKind::BoxShadow => {
                         let instance = SimplePrimitiveInstance::new(prim_index,
-                                                                    prim_metadata.gpu_prim_index,
+                                                                    prim_address,
                                                                     render_tasks.get_task_index(&task.id, pass_index),
                                                                     RenderTaskIndex(0),
                                                                     PackedLayerIndex(0),
@@ -975,14 +1011,14 @@ impl RenderTarget for ColorRenderTarget {
                         self.text_run_textures = textures;
 
                         let instance = SimplePrimitiveInstance::new(prim_index,
-                                                                    prim_metadata.gpu_prim_index,
+                                                                    prim_address,
                                                                     render_tasks.get_task_index(&task.id, pass_index),
                                                                     RenderTaskIndex(0),
                                                                     PackedLayerIndex(0),
                                                                     0);     // z is disabled for rendering cache primitives
 
-                        for glyph_index in 0..prim_metadata.gpu_data_count {
-                            self.text_run_cache_prims.push(instance.build(prim_metadata.gpu_data_address.0 + glyph_index,
+                        for glyph_index in 0..text.gpu_data_count {
+                            self.text_run_cache_prims.push(instance.build(text.gpu_data_address.0 + glyph_index,
                                                                           text.resource_address.0 + glyph_index));
                         }
                     }
@@ -1272,6 +1308,12 @@ pub struct PrimitiveInstance {
 
 struct SimplePrimitiveInstance {
     pub global_prim_index: i32,
+    // TODO(gw): specific_prim_address is encoded as an i32, since
+    //           some primitives use GPU Cache and some still use
+    //           GPU Store. Once everything is converted to use the
+    //           on-demand GPU cache, then we change change this to
+    //           be an ivec2 of u16 - and encode the UV directly
+    //           so that the vertex shader can fetch directly.
     pub specific_prim_address: i32,
     pub task_index: i32,
     pub clip_task_index: i32,
@@ -1281,14 +1323,14 @@ struct SimplePrimitiveInstance {
 
 impl SimplePrimitiveInstance {
     fn new(prim_index: PrimitiveIndex,
-           specific_prim_address: GpuStoreAddress,
+           specific_prim_address: i32,
            task_index: RenderTaskIndex,
            clip_task_index: RenderTaskIndex,
            layer_index: PackedLayerIndex,
            z_sort_index: i32) -> SimplePrimitiveInstance {
         SimplePrimitiveInstance {
             global_prim_index: prim_index.0 as i32,
-            specific_prim_address: specific_prim_address.0 as i32,
+            specific_prim_address: specific_prim_address,
             task_index: task_index.0 as i32,
             clip_task_index: clip_task_index.0 as i32,
             layer_index: layer_index.0 as i32,
@@ -1602,12 +1644,14 @@ pub struct Frame {
     pub render_task_data: Vec<RenderTaskData>,
     pub gpu_data16: Vec<GpuBlock16>,
     pub gpu_data32: Vec<GpuBlock32>,
-    pub gpu_data64: Vec<GpuBlock64>,
-    pub gpu_data128: Vec<GpuBlock128>,
     pub gpu_geometry: Vec<PrimitiveGeometry>,
     pub gpu_gradient_data: Vec<GradientData>,
     pub gpu_split_geometry: Vec<SplitGeometry>,
     pub gpu_resource_rects: Vec<TexelRect>,
+
+    // List of updates that need to be pushed to the
+    // gpu resource cache.
+    pub gpu_cache_updates: Option<GpuCacheUpdateList>,
 
     // List of textures that we don't know about yet
     // from the backend thread. The render thread

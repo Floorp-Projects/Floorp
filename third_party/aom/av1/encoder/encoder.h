@@ -37,7 +37,6 @@
 #include "av1/encoder/rd.h"
 #include "av1/encoder/speed_features.h"
 #include "av1/encoder/tokenize.h"
-#include "av1/encoder/variance_tree.h"
 #if CONFIG_XIPHRC
 #include "av1/encoder/ratectrl_xiph.h"
 #endif
@@ -54,15 +53,9 @@ extern "C" {
 #endif
 
 typedef struct {
-  int nmvjointcost[MV_JOINTS];
-  int nmvcosts[2][MV_VALS];
-  int nmvcosts_hp[2][MV_VALS];
-
-#if CONFIG_REF_MV
   int nmv_vec_cost[NMV_CONTEXTS][MV_JOINTS];
   int nmv_costs[NMV_CONTEXTS][2][MV_VALS];
   int nmv_costs_hp[NMV_CONTEXTS][2][MV_VALS];
-#endif
 
   // 0 = Intra, Last, GF, ARF
   signed char last_ref_lf_deltas[TOTAL_REFS_PER_FRAME];
@@ -210,6 +203,11 @@ typedef struct AV1EncoderConfig {
   int scaled_frame_width;
   int scaled_frame_height;
 
+#if CONFIG_FRAME_SUPERRES
+  // Frame Super-Resolution size scaling
+  int superres_enabled;
+#endif  // CONFIG_FRAME_SUPERRES
+
   // Enable feature to reduce the frame quantization every x frames.
   int frame_periodic_boost;
 
@@ -323,9 +321,16 @@ typedef struct ThreadData {
   PICK_MODE_CONTEXT *leaf_tree;
   PC_TREE *pc_tree;
   PC_TREE *pc_root[MAX_MIB_SIZE_LOG2 - MIN_MIB_SIZE_LOG2 + 1];
+#if CONFIG_MOTION_VAR
+  int32_t *wsrc_buf;
+  int32_t *mask_buf;
+  uint8_t *above_pred_buf;
+  uint8_t *left_pred_buf;
+#endif
 
-  VAR_TREE *var_tree;
-  VAR_TREE *var_root[MAX_MIB_SIZE_LOG2 - MIN_MIB_SIZE_LOG2 + 1];
+#if CONFIG_PALETTE
+  PALETTE_BUFFER *palette_buffer;
+#endif  // CONFIG_PALETTE
 } ThreadData;
 
 struct EncWorkerData;
@@ -350,16 +355,6 @@ typedef struct {
   YV12_BUFFER_CONFIG buf;
 } EncRefCntBuffer;
 
-#if CONFIG_SUBFRAME_PROB_UPDATE
-typedef struct SUBFRAME_STATS {
-  av1_coeff_probs_model coef_probs_buf[COEF_PROBS_BUFS][TX_SIZES][PLANE_TYPES];
-  av1_coeff_count coef_counts_buf[COEF_PROBS_BUFS][TX_SIZES][PLANE_TYPES];
-  unsigned int eob_counts_buf[COEF_PROBS_BUFS][TX_SIZES][PLANE_TYPES][REF_TYPES]
-                             [COEF_BANDS][COEFF_CONTEXTS];
-  av1_coeff_probs_model enc_starting_coef_probs[TX_SIZES][PLANE_TYPES];
-} SUBFRAME_STATS;
-#endif  // CONFIG_SUBFRAME_PROB_UPDATE
-
 typedef struct TileBufferEnc {
   uint8_t *data;
   size_t size;
@@ -369,14 +364,7 @@ typedef struct AV1_COMP {
   QUANTS quants;
   ThreadData td;
   MB_MODE_INFO_EXT *mbmi_ext_base;
-  DECLARE_ALIGNED(16, int16_t, y_dequant[QINDEX_RANGE][8]);   // 8: SIMD width
-  DECLARE_ALIGNED(16, int16_t, uv_dequant[QINDEX_RANGE][8]);  // 8: SIMD width
-#if CONFIG_NEW_QUANT
-  DECLARE_ALIGNED(16, dequant_val_type_nuq,
-                  y_dequant_val_nuq[QUANT_PROFILES][QINDEX_RANGE][COEF_BANDS]);
-  DECLARE_ALIGNED(16, dequant_val_type_nuq,
-                  uv_dequant_val_nuq[QUANT_PROFILES][QINDEX_RANGE][COEF_BANDS]);
-#endif  // CONFIG_NEW_QUANT
+  Dequants dequants;
   AV1_COMMON common;
   AV1EncoderConfig oxcf;
   struct lookahead_ctx *lookahead;
@@ -443,15 +431,8 @@ typedef struct AV1_COMP {
 
   CODING_CONTEXT coding_context;
 
-#if CONFIG_REF_MV
   int nmv_costs[NMV_CONTEXTS][2][MV_VALS];
   int nmv_costs_hp[NMV_CONTEXTS][2][MV_VALS];
-#endif
-
-  int nmvcosts[2][MV_VALS];
-  int nmvcosts_hp[2][MV_VALS];
-  int nmvsadcosts[2][MV_VALS];
-  int nmvsadcosts_hp[2][MV_VALS];
 
   int64_t last_time_stamp_seen;
   int64_t last_end_time_stamp_seen;
@@ -543,29 +524,23 @@ typedef struct AV1_COMP {
                     // number of MBs in the current frame when the frame is
                     // scaled.
 
-  // Store frame variance info in SOURCE_VAR_BASED_PARTITION search type.
-  DIFF *source_diff_var;
-  // The threshold used in SOURCE_VAR_BASED_PARTITION search type.
-  unsigned int source_var_thresh;
-  int frames_till_next_var_check;
-
   int frame_flags;
 
   search_site_config ss_cfg;
 
   int mbmode_cost[BLOCK_SIZE_GROUPS][INTRA_MODES];
-#if CONFIG_REF_MV
   int newmv_mode_cost[NEWMV_MODE_CONTEXTS][2];
   int zeromv_mode_cost[ZEROMV_MODE_CONTEXTS][2];
   int refmv_mode_cost[REFMV_MODE_CONTEXTS][2];
   int drl_mode_cost0[DRL_MODE_CONTEXTS][2];
-#endif
 
   unsigned int inter_mode_cost[INTER_MODE_CONTEXTS][INTER_MODES];
 #if CONFIG_EXT_INTER
   unsigned int inter_compound_mode_cost[INTER_MODE_CONTEXTS]
                                        [INTER_COMPOUND_MODES];
+#if CONFIG_INTERINTRA
   unsigned int interintra_mode_cost[BLOCK_SIZE_GROUPS][INTERINTRA_MODES];
+#endif  // CONFIG_INTERINTRA
 #endif  // CONFIG_EXT_INTER
 #if CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
   int motion_mode_cost[BLOCK_SIZES][MOTION_MODES];
@@ -625,24 +600,18 @@ typedef struct AV1_COMP {
 
   TileBufferEnc tile_buffers[MAX_TILE_ROWS][MAX_TILE_COLS];
 
-  int resize_pending;
   int resize_state;
   int resize_scale_num;
   int resize_scale_den;
+  int resize_next_scale_num;
+  int resize_next_scale_den;
   int resize_avg_qp;
   int resize_buffer_underflow;
   int resize_count;
 
-  // VAR_BASED_PARTITION thresholds
-  // 0 - threshold_128x128;
-  // 1 - threshold_64x64;
-  // 2 - threshold_32x32;
-  // 3 - threshold_16x16;
-  // 4 - threshold_8x8;
-  int64_t vbp_thresholds[5];
-  int64_t vbp_threshold_minmax;
-  int64_t vbp_threshold_sad;
-  BLOCK_SIZE vbp_bsize_min;
+#if CONFIG_FRAME_SUPERRES
+  int superres_pending;
+#endif  // CONFIG_FRAME_SUPERRES
 
   // VARIANCE_AQ segment map refresh
   int vaq_refresh;
@@ -652,12 +621,6 @@ typedef struct AV1_COMP {
   AVxWorker *workers;
   struct EncWorkerData *tile_thr_data;
   AV1LfSync lf_row_sync;
-#if CONFIG_SUBFRAME_PROB_UPDATE
-  SUBFRAME_STATS subframe_stats;
-  // TODO(yaowu): minimize the size of count buffers
-  SUBFRAME_STATS wholeframe_stats;
-  av1_coeff_stats branch_ct_buf[COEF_PROBS_BUFS][TX_SIZES][PLANE_TYPES];
-#endif  // CONFIG_SUBFRAME_PROB_UPDATE
 #if CONFIG_ANS
   struct BufAnsCoder buf_ans;
 #endif
@@ -720,8 +683,8 @@ int av1_get_active_map(AV1_COMP *cpi, unsigned char *map, int rows, int cols);
 int av1_set_internal_size(AV1_COMP *cpi, AOM_SCALING horiz_mode,
                           AOM_SCALING vert_mode);
 
-int av1_set_size_literal(AV1_COMP *cpi, unsigned int width,
-                         unsigned int height);
+// Returns 1 if the assigned width or height was <= 0.
+int av1_set_size_literal(AV1_COMP *cpi, int width, int height);
 
 int av1_get_quantizer(struct AV1_COMP *cpi);
 
@@ -774,7 +737,7 @@ static INLINE const YV12_BUFFER_CONFIG *get_upsampled_ref(
   return &cpi->upsampled_ref_bufs[buf_idx].buf;
 }
 
-#if CONFIG_EXT_REFS
+#if CONFIG_EXT_REFS || CONFIG_TEMPMV_SIGNALING
 static INLINE int enc_is_ref_frame_buf(AV1_COMP *cpi, RefCntBuffer *frame_buf) {
   MV_REFERENCE_FRAME ref_frame;
   AV1_COMMON *const cm = &cpi->common;
@@ -818,14 +781,6 @@ void av1_set_high_precision_mv(AV1_COMP *cpi, int allow_high_precision_mv);
 #if CONFIG_TEMPMV_SIGNALING
 void av1_set_temporal_mv_prediction(AV1_COMP *cpi, int allow_tempmv_prediction);
 #endif
-
-YV12_BUFFER_CONFIG *av1_scale_if_required_fast(AV1_COMMON *cm,
-                                               YV12_BUFFER_CONFIG *unscaled,
-                                               YV12_BUFFER_CONFIG *scaled);
-
-YV12_BUFFER_CONFIG *av1_scale_if_required(AV1_COMMON *cm,
-                                          YV12_BUFFER_CONFIG *unscaled,
-                                          YV12_BUFFER_CONFIG *scaled);
 
 void av1_apply_encoding_flags(AV1_COMP *cpi, aom_enc_frame_flags_t flags);
 
@@ -874,6 +829,25 @@ static INLINE void uref_cnt_fb(EncRefCntBuffer *ubufs, int *uidx,
 
   *uidx = new_uidx;
   ubufs[new_uidx].ref_count++;
+}
+
+// Returns 1 if a resize is pending and 0 otherwise.
+static INLINE int av1_resize_pending(const struct AV1_COMP *cpi) {
+  return cpi->resize_scale_num != cpi->resize_next_scale_num ||
+         cpi->resize_scale_den != cpi->resize_next_scale_den;
+}
+
+// Returns 1 if a frame is unscaled and 0 otherwise.
+static INLINE int av1_resize_unscaled(const struct AV1_COMP *cpi) {
+  return cpi->resize_scale_num == cpi->resize_scale_den;
+}
+
+// Moves resizing to the next state. This is just setting the numerator and
+// denominator to the next numerator and denominator, causing
+// av1_resize_pending to subsequently return false.
+static INLINE void av1_resize_step(struct AV1_COMP *cpi) {
+  cpi->resize_scale_num = cpi->resize_next_scale_num;
+  cpi->resize_scale_den = cpi->resize_next_scale_den;
 }
 
 #ifdef __cplusplus

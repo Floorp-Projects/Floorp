@@ -17,9 +17,7 @@
 #if CONFIG_PVQ
 #include "av1/encoder/encint.h"
 #endif
-#if CONFIG_REF_MV
 #include "av1/common/mvref_common.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -79,13 +77,11 @@ typedef struct {
   int dc_sign_ctx[MAX_MB_PLANE]
                  [MAX_SB_SQUARE / (TX_SIZE_W_MIN * TX_SIZE_H_MIN)];
 #endif
-#if CONFIG_REF_MV
   uint8_t ref_mv_count[MODE_CTX_REF_FRAMES];
   CANDIDATE_MV ref_mv_stack[MODE_CTX_REF_FRAMES][MAX_REF_MV_STACK_SIZE];
 #if CONFIG_EXT_INTER
   int16_t compound_mode_context[MODE_CTX_REF_FRAMES];
 #endif  // CONFIG_EXT_INTER
-#endif
 } MB_MODE_INFO_EXT;
 
 typedef struct {
@@ -141,27 +137,18 @@ struct macroblock {
   unsigned int pred_sse[TOTAL_REFS_PER_FRAME];
   int pred_mv_sad[TOTAL_REFS_PER_FRAME];
 
-#if CONFIG_REF_MV
   int *nmvjointcost;
   int nmv_vec_cost[NMV_CONTEXTS][MV_JOINTS];
   int *nmvcost[NMV_CONTEXTS][2];
   int *nmvcost_hp[NMV_CONTEXTS][2];
   int **mv_cost_stack[NMV_CONTEXTS];
-  int *nmvjointsadcost;
-#else
-  int nmvjointcost[MV_JOINTS];
-  int *nmvcost[2];
-  int *nmvcost_hp[2];
-  int nmvjointsadcost[MV_JOINTS];
-#endif
-
   int **mvcost;
-  int *nmvsadcost[2];
-  int *nmvsadcost_hp[2];
-  int **mvsadcost;
+
 #if CONFIG_MOTION_VAR
   int32_t *wsrc_buf;
   int32_t *mask_buf;
+  uint8_t *above_pred_buf;
+  uint8_t *left_pred_buf;
 #endif  // CONFIG_MOTION_VAR
 
 #if CONFIG_PALETTE
@@ -174,9 +161,7 @@ struct macroblock {
 
 #if CONFIG_VAR_TX
   uint8_t blk_skip[MAX_MB_PLANE][MAX_MIB_SIZE * MAX_MIB_SIZE * 8];
-#if CONFIG_REF_MV
   uint8_t blk_skip_drl[MAX_MB_PLANE][MAX_MIB_SIZE * MAX_MIB_SIZE * 8];
-#endif
 #endif
 
   int skip;
@@ -226,8 +211,11 @@ struct macroblock {
   // This is needed when using the 8x8 Daala distortion metric during RDO,
   // because it evaluates distortion in a different order than the underlying
   // 4x4 blocks are coded.
-  int rate_4x4[256];
-#endif
+  int rate_4x4[MAX_SB_SQUARE / (TX_SIZE_W_MIN * TX_SIZE_H_MIN)];
+#if CONFIG_CB4X4
+  DECLARE_ALIGNED(16, uint8_t, decoded_8x8[8 * 8]);
+#endif  // CONFIG_CB4X4
+#endif  // CONFIG_DAALA_DIST
 #if CONFIG_CFL
   // Whether luma needs to be stored during RDO.
   int cfl_store_y;

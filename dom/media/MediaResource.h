@@ -65,23 +65,9 @@ class MediaChannelStatistics;
  */
 class MediaChannelStatistics {
 public:
-  MediaChannelStatistics()
-    : mAccumulatedBytes(0)
-    , mIsStarted(false)
-  {
-    Reset();
-  }
+  MediaChannelStatistics() = default;
 
-  explicit MediaChannelStatistics(MediaChannelStatistics * aCopyFrom)
-  {
-    MOZ_ASSERT(aCopyFrom);
-    mAccumulatedBytes = aCopyFrom->mAccumulatedBytes;
-    mAccumulatedTime = aCopyFrom->mAccumulatedTime;
-    mLastStartTime = aCopyFrom->mLastStartTime;
-    mIsStarted = aCopyFrom->mIsStarted;
-  }
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaChannelStatistics)
+  MediaChannelStatistics(const MediaChannelStatistics&) = default;
 
   void Reset() {
     mLastStartTime = TimeStamp();
@@ -130,11 +116,10 @@ public:
     return static_cast<double>(mAccumulatedBytes)/seconds;
   }
 private:
-  ~MediaChannelStatistics() {}
-  int64_t      mAccumulatedBytes;
+  int64_t mAccumulatedBytes = 0;
   TimeDuration mAccumulatedTime;
-  TimeStamp    mLastStartTime;
-  bool         mIsStarted;
+  TimeStamp mLastStartTime;
+  bool mIsStarted = false;
 };
 
 // Represents a section of contiguous media, with a start and end offset.
@@ -202,8 +187,6 @@ public:
   // with a new channel. Any cached data associated with the original
   // stream should be accessible in the new stream too.
   virtual already_AddRefed<MediaResource> CloneData(MediaResourceCallback* aCallback) = 0;
-  // Set statistics to be recorded to the object passed in.
-  virtual void RecordStatisticsTo(MediaChannelStatistics *aStatistics) { }
 
   // These methods are called off the main thread.
   // The mode is initially MODE_PLAYBACK.
@@ -218,6 +201,11 @@ public:
   // results and requirements are the same as per the Read method.
   virtual nsresult ReadAt(int64_t aOffset, char* aBuffer,
                           uint32_t aCount, uint32_t* aBytes) = 0;
+  // Indicate whether caching data in advance of reads is worth it.
+  // E.g. Caching lockless and memory-based MediaResource subclasses would be a
+  // waste, but caching lock/IO-bound resources means reducing the impact of
+  // each read.
+  virtual bool ShouldCacheReads() = 0;
   // This method returns nullptr if anything fails.
   // Otherwise, it returns an owned buffer.
   // MediaReadAt may return fewer bytes than requested if end of stream is
@@ -532,7 +520,12 @@ public:
                        nsIChannel* aChannel,
                        nsIURI* aURI,
                        const MediaContainerType& aContainerType,
-                       bool aIsPrivateBrowsing = false);
+                       bool aIsPrivateBrowsing);
+  ChannelMediaResource(MediaResourceCallback* aDecoder,
+                       nsIChannel* aChannel,
+                       nsIURI* aURI,
+                       const MediaContainerType& aContainerType,
+                       const MediaChannelStatistics& aStatistics);
   ~ChannelMediaResource();
 
   // These are called on the main thread by MediaCache. These must
@@ -582,15 +575,6 @@ public:
   bool     IsClosed() const { return mCacheStream.IsClosed(); }
   bool     CanClone() override;
   already_AddRefed<MediaResource> CloneData(MediaResourceCallback* aDecoder) override;
-  // Set statistics to be recorded to the object passed in. If not called,
-  // |ChannelMediaResource| will create it's own statistics objects in |Open|.
-  void RecordStatisticsTo(MediaChannelStatistics *aStatistics) override {
-    NS_ASSERTION(aStatistics, "Statistics param cannot be null!");
-    MutexAutoLock lock(mLock);
-    if (!mChannelStatistics) {
-      mChannelStatistics = aStatistics;
-    }
-  }
   nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override;
   void     EnsureCacheUpToDate() override;
 
@@ -599,6 +583,8 @@ public:
   void     SetPlaybackRate(uint32_t aBytesPerSecond) override;
   nsresult ReadAt(int64_t offset, char* aBuffer,
                   uint32_t aCount, uint32_t* aBytes) override;
+  // Data stored in IO&lock-encumbered MediaCacheStream, caching recommended.
+  bool ShouldCacheReads() override { return true; }
   already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount) override;
   int64_t Tell() override;
 
@@ -618,7 +604,6 @@ public:
     // Might be useful to track in the future:
     //   - mListener (seems minor)
     //   - mChannelStatistics (seems minor)
-    //     owned if RecordStatisticsTo is not called
     //   - mDataReceivedEvent (seems minor)
     size_t size = BaseMediaResource::SizeOfExcludingThis(aMallocSizeOf);
     size += mCacheStream.SizeOfExcludingThis(aMallocSizeOf);
@@ -711,7 +696,7 @@ protected:
 
   // This lock protects mChannelStatistics
   Mutex               mLock;
-  RefPtr<MediaChannelStatistics> mChannelStatistics;
+  MediaChannelStatistics mChannelStatistics;
 
   // True if we couldn't suspend the stream and we therefore don't want
   // to resume later. This is usually due to the channel not being in the
@@ -762,7 +747,9 @@ public:
   explicit MediaResourceIndex(MediaResource* aResource)
     : mResource(aResource)
     , mOffset(0)
-    , mCacheBlockSize(SelectCacheSize(MediaPrefs::MediaResourceIndexCache()))
+    , mCacheBlockSize(aResource->ShouldCacheReads()
+                      ? SelectCacheSize(MediaPrefs::MediaResourceIndexCache())
+                      : 0 )
     , mCachedOffset(0)
     , mCachedBytes(0)
     , mCachedBlock(MakeUnique<char[]>(mCacheBlockSize))

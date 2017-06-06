@@ -38,6 +38,7 @@ public:
   void SetReadMode(MediaCacheStream::ReadMode aMode) override { UNIMPLEMENTED(); }
   void SetPlaybackRate(uint32_t aBytesPerSecond) override  { UNIMPLEMENTED(); }
   nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes) override { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
+  bool ShouldCacheReads() override { UNIMPLEMENTED(); return false; }
   int64_t Tell() override { UNIMPLEMENTED(); return -1; }
   void Pin() override { UNIMPLEMENTED(); }
   void Unpin() override { UNIMPLEMENTED(); }

@@ -33,6 +33,7 @@ typedef struct ConvolveParams {
   int round_0;
   int round_1;
   int plane;
+  int do_post_rounding;
 } ConvolveParams;
 
 static INLINE ConvolveParams get_conv_params(int ref, int plane) {
@@ -40,6 +41,7 @@ static INLINE ConvolveParams get_conv_params(int ref, int plane) {
   conv_params.ref = ref;
   conv_params.round = CONVOLVE_OPT_ROUND;
   conv_params.plane = plane;
+  conv_params.do_post_rounding = 0;
   return conv_params;
 }
 struct AV1Common;
@@ -73,11 +75,32 @@ static INLINE ConvolveParams get_conv_params_no_round(int ref, int plane,
   conv_params.dst = dst;
   conv_params.dst_stride = dst_stride;
   conv_params.plane = plane;
+  conv_params.do_post_rounding = 0;
   return conv_params;
 }
 
 void av1_convolve_rounding(const int32_t *src, int src_stride, uint8_t *dst,
                            int dst_stride, int w, int h, int bits);
+
+#if CONFIG_HIGHBITDEPTH
+void av1_highbd_convolve_rounding(const int32_t *src, int src_stride,
+                                  uint8_t *dst8, int dst_stride, int w, int h,
+                                  int bits, int bd);
+
+void av1_highbd_convolve_2d(const uint16_t *src, int src_stride,
+                            CONV_BUF_TYPE *dst, int dst_stride, int w, int h,
+                            InterpFilterParams *filter_params_x,
+                            InterpFilterParams *filter_params_y,
+                            const int subpel_x_q4, const int subpel_y_q4,
+                            ConvolveParams *conv_params, int bd);
+
+void av1_highbd_convolve_2d_facade(const uint8_t *src8, int src_stride,
+                                   uint8_t *dst, int dst_stride, int w, int h,
+                                   const InterpFilter *interp_filter,
+                                   const int subpel_x_q4, int x_step_q4,
+                                   const int subpel_y_q4, int y_step_q4,
+                                   ConvolveParams *conv_params, int bd);
+#endif
 #endif  // CONFIG_CONVOLVE_ROUND
 
 void av1_convolve(const uint8_t *src, int src_stride, uint8_t *dst,

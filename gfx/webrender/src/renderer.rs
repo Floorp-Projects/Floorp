@@ -18,6 +18,7 @@ use euclid::Matrix4D;
 use fnv::FnvHasher;
 use frame_builder::FrameBuilderConfig;
 use gleam::gl;
+use gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
 use gpu_store::{GpuStore, GpuStoreLayout};
 use internal_types::{CacheTextureId, RendererFrame, ResultMsg, TextureUpdateOp};
 use internal_types::{TextureUpdateList, PackedVertex, RenderTargetMode};
@@ -38,6 +39,7 @@ use std::marker::PhantomData;
 use std::mem;
 use std::path::PathBuf;
 use std::rc::Rc;
+use std::slice;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
@@ -189,6 +191,70 @@ pub enum BlendMode {
 
     // Use the color of the text itself as a constant color blend factor.
     Subpixel(ColorF),
+}
+
+/// The device-specific representation of the cache texture in gpu_cache.rs
+struct CacheTexture {
+    id: TextureId,
+}
+
+impl CacheTexture {
+    fn new(device: &mut Device) -> CacheTexture {
+        let id = device.create_texture_ids(1, TextureTarget::Default)[0];
+
+        CacheTexture {
+            id: id,
+        }
+    }
+
+    fn update(&mut self, device: &mut Device, updates: &GpuCacheUpdateList) {
+        // See if we need to create or resize the texture.
+        let current_dimensions = device.get_texture_dimensions(self.id);
+
+        if updates.height > current_dimensions.height {
+            // TODO(gw): Handle resizing an existing cache texture.
+            if current_dimensions.height > 0 {
+                panic!("TODO: Implement texture copy!!!");
+            }
+
+            // Create a f32 texture that can be used for the vertex shader
+            // to fetch data from.
+            device.init_texture(self.id,
+                                MAX_VERTEX_TEXTURE_WIDTH as u32,
+                                updates.height as u32,
+                                ImageFormat::RGBAF32,
+                                TextureFilter::Nearest,
+                                RenderTargetMode::None,
+                                None);
+        }
+
+        for update in &updates.updates {
+            match update {
+                &GpuCacheUpdate::Copy { block_index, block_count, address } => {
+                    // Apply an incremental update to the cache texture.
+                    // TODO(gw): For the initial implementation, we will just
+                    //           use update_texture() since it's simple. If / when
+                    //           we profile this and find it to be slow on some / all
+                    //           devices - we can look into other options, such as
+                    //           using glMapBuffer() with the unsynchronized bit,
+                    //           and managing the synchronization ourselves with fences.
+                    let data: &[u8] = unsafe {
+                        let ptr = updates.blocks
+                                         .as_ptr()
+                                         .offset(block_index as isize);
+                        slice::from_raw_parts(ptr as *const _, block_count * 16)
+                    };
+                    device.update_texture(self.id,
+                                          address.u as u32,
+                                          address.v as u32,
+                                          block_count as u32,
+                                          1,
+                                          None,
+                                          data);
+                }
+            }
+        }
+    }
 }
 
 struct GpuDataTexture<L> {
@@ -467,8 +533,6 @@ struct GpuDataTextures {
     prim_geom_texture: VertexDataTexture,
     data16_texture: VertexDataTexture,
     data32_texture: VertexDataTexture,
-    data64_texture: VertexDataTexture,
-    data128_texture: VertexDataTexture,
     resource_rects_texture: VertexDataTexture,
     gradient_data_texture: GradientDataTexture,
     split_geometry_texture: SplitGeometryTexture,
@@ -482,8 +546,6 @@ impl GpuDataTextures {
             prim_geom_texture: VertexDataTexture::new(device),
             data16_texture: VertexDataTexture::new(device),
             data32_texture: VertexDataTexture::new(device),
-            data64_texture: VertexDataTexture::new(device),
-            data128_texture: VertexDataTexture::new(device),
             resource_rects_texture: VertexDataTexture::new(device),
             gradient_data_texture: GradientDataTexture::new(device),
             split_geometry_texture: SplitGeometryTexture::new(device),
@@ -493,8 +555,6 @@ impl GpuDataTextures {
     fn init_frame(&mut self, device: &mut Device, frame: &mut Frame) {
         self.data16_texture.init(device, &mut frame.gpu_data16);
         self.data32_texture.init(device, &mut frame.gpu_data32);
-        self.data64_texture.init(device, &mut frame.gpu_data64);
-        self.data128_texture.init(device, &mut frame.gpu_data128);
         self.prim_geom_texture.init(device, &mut frame.gpu_geometry);
         self.resource_rects_texture.init(device, &mut frame.gpu_resource_rects);
         self.layer_texture.init(device, &mut frame.layer_texture_data);
@@ -507,8 +567,6 @@ impl GpuDataTextures {
         device.bind_texture(TextureSampler::Geometry, self.prim_geom_texture.id);
         device.bind_texture(TextureSampler::Data16, self.data16_texture.id);
         device.bind_texture(TextureSampler::Data32, self.data32_texture.id);
-        device.bind_texture(TextureSampler::Data64, self.data64_texture.id);
-        device.bind_texture(TextureSampler::Data128, self.data128_texture.id);
         device.bind_texture(TextureSampler::ResourceRects, self.resource_rects_texture.id);
         device.bind_texture(TextureSampler::Gradients, self.gradient_data_texture.id);
         device.bind_texture(TextureSampler::SplitGeometry, self.split_geometry_texture.id);
@@ -527,6 +585,7 @@ pub struct Renderer {
     result_rx: Receiver<ResultMsg>,
     device: Device,
     pending_texture_updates: Vec<TextureUpdateList>,
+    pending_gpu_cache_updates: Vec<GpuCacheUpdateList>,
     pending_shader_updates: Vec<PathBuf>,
     current_frame: Option<RendererFrame>,
 
@@ -594,6 +653,8 @@ pub struct Renderer {
 
     gdt_index: usize,
     gpu_data_textures: [GpuDataTextures; GPU_DATA_TEXTURE_POOL],
+
+    gpu_cache_texture: CacheTexture,
 
     pipeline_epoch_map: HashMap<PipelineId, Epoch, BuildHasherDefault<FnvHasher>>,
     /// Used to dispatch functions to the main thread's event loop.
@@ -1067,7 +1128,9 @@ impl Renderer {
         let render_target_debug = options.render_target_debug;
         let payload_tx_for_backend = payload_tx.clone();
         let recorder = options.recorder;
-        let worker_config = ThreadPoolConfig::new().thread_name(|idx|{ format!("WebRender:Worker#{}", idx) });
+        let worker_config = ThreadPoolConfig::new()
+            .thread_name(|idx|{ format!("WebRender:Worker#{}", idx) })
+            .start_handler(|idx| { register_thread_with_profiler(format!("WebRender:Worker#{}", idx)); });
         let workers = options.workers.take().unwrap_or_else(||{
             Arc::new(ThreadPool::new(worker_config).unwrap())
         });
@@ -1092,6 +1155,8 @@ impl Renderer {
             backend.run(backend_profile_counters);
         })};
 
+        let gpu_cache_texture = CacheTexture::new(&mut device);
+
         let gpu_profile = GpuProfiler::new(device.rc_gl());
 
         let renderer = Renderer {
@@ -1099,6 +1164,7 @@ impl Renderer {
             device: device,
             current_frame: None,
             pending_texture_updates: Vec::new(),
+            pending_gpu_cache_updates: Vec::new(),
             pending_shader_updates: Vec::new(),
             cs_box_shadow: cs_box_shadow,
             cs_text_run: cs_text_run,
@@ -1154,6 +1220,7 @@ impl Renderer {
             vr_compositor_handler: vr_compositor,
             cpu_profiles: VecDeque::new(),
             gpu_profiles: VecDeque::new(),
+            gpu_cache_texture: gpu_cache_texture,
         };
 
         let sender = RenderApiSender::new(api_tx, payload_tx);
@@ -1218,8 +1285,15 @@ impl Renderer {
         // Pull any pending results and return the most recent.
         while let Ok(msg) = self.result_rx.try_recv() {
             match msg {
-                ResultMsg::NewFrame(frame, texture_update_list, profile_counters) => {
+                ResultMsg::NewFrame(mut frame, texture_update_list, profile_counters) => {
                     self.pending_texture_updates.push(texture_update_list);
+                    if let Some(ref mut frame) = frame.frame {
+                        // TODO(gw): This whole message / Frame / RendererFrame stuff
+                        //           is really messy and needs to be refactored!!
+                        if let Some(update_list) = frame.gpu_cache_updates.take() {
+                            self.pending_gpu_cache_updates.push(update_list);
+                        }
+                    }
                     self.backend_profile_counters = profile_counters;
 
                     // Update the list of available epochs for use during reftests.
@@ -1309,6 +1383,9 @@ impl Renderer {
                         //self.update_shaders();
                         self.update_texture_cache();
 
+                        self.update_gpu_cache();
+                        self.device.bind_texture(TextureSampler::ResourceCache, self.gpu_cache_texture.id);
+
                         frame_id
                     };
 
@@ -1380,6 +1457,13 @@ impl Renderer {
         }
     }
 */
+
+    fn update_gpu_cache(&mut self) {
+        let _gm = GpuMarker::new(self.device.rc_gl(), "gpu cache update");
+        for update_list in self.pending_gpu_cache_updates.drain(..) {
+            self.gpu_cache_texture.update(&mut self.device, &update_list);
+        }
+    }
 
     fn update_texture_cache(&mut self) {
         let _gm = GpuMarker::new(self.device.rc_gl(), "texture cache update");

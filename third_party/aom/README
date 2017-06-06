@@ -47,9 +47,6 @@ COMPILING THE APPLICATIONS/LIBRARIES:
   --help output of the configure script. As of this writing, the list of
   available targets is:
 
-    armv6-linux-rvct
-    armv6-linux-gcc
-    armv6-none-rvct
     arm64-darwin-gcc
     armv7-android-gcc
     armv7-darwin-gcc

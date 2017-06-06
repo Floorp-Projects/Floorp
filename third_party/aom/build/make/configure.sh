@@ -687,9 +687,6 @@ process_common_toolchain() {
       aarch64*)
         tgt_isa=arm64
         ;;
-      armv6*)
-        tgt_isa=armv6
-        ;;
       armv7*-hardfloat* | armv7*-gnueabihf | arm-*-gnueabihf)
         tgt_isa=armv7
         float_abi=hard
@@ -898,37 +895,6 @@ process_common_toolchain() {
           if disabled neon && enabled neon_asm; then
             die "Disabling neon while keeping neon-asm is not supported"
           fi
-          case ${toolchain} in
-            # Apple iOS SDKs no longer support armv6 as of the version 9
-            # release (coincides with release of Xcode 7). Only enable media
-            # when using earlier SDK releases.
-            *-darwin*)
-              if [ "$(show_darwin_sdk_major_version iphoneos)" -lt 9 ]; then
-                soft_enable media
-              else
-                soft_disable media
-                RTCD_OPTIONS="${RTCD_OPTIONS}--disable-media "
-              fi
-              ;;
-            *)
-              soft_enable media
-              ;;
-          esac
-          ;;
-        armv6)
-          case ${toolchain} in
-            *-darwin*)
-              if [ "$(show_darwin_sdk_major_version iphoneos)" -lt 9 ]; then
-                soft_enable media
-              else
-                die "Your iOS SDK does not support armv6."
-              fi
-              ;;
-            *)
-              soft_enable media
-              ;;
-          esac
-          ;;
       esac
 
       asm_conversion_cmd="cat"

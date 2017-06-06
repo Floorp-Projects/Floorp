@@ -41,9 +41,11 @@ class AV1FwdTxfm2d : public ::testing::TestWithParam<AV1FwdTxfm2dParam> {
     count_ = 500;
     TXFM_2D_FLIP_CFG fwd_txfm_flip_cfg =
         av1_get_fwd_txfm_cfg(tx_type_, tx_size_);
-    const TXFM_2D_CFG *fwd_txfm_cfg = fwd_txfm_flip_cfg.cfg;
-    int amplify_bit = fwd_txfm_cfg->shift[0] + fwd_txfm_cfg->shift[1] +
-                      fwd_txfm_cfg->shift[2];
+    // TODO(sarahparker) this test will need to be updated when these
+    // functions are extended to support rectangular transforms
+    int amplify_bit = fwd_txfm_flip_cfg.row_cfg->shift[0] +
+                      fwd_txfm_flip_cfg.row_cfg->shift[1] +
+                      fwd_txfm_flip_cfg.row_cfg->shift[2];
     ud_flip_ = fwd_txfm_flip_cfg.ud_flip;
     lr_flip_ = fwd_txfm_flip_cfg.lr_flip;
     amplify_factor_ =

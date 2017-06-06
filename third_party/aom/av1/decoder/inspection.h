@@ -15,6 +15,7 @@
 extern "C" {
 #endif  // __cplusplus
 
+#include "av1/common/seg_common.h"
 #if CONFIG_ACCOUNTING
 #include "av1/decoder/accounting.h"
 #endif
@@ -48,6 +49,10 @@ struct insp_mi_data {
 #if CONFIG_CDEF
   int8_t cdef_level;
   int8_t cdef_strength;
+#endif
+#if CONFIG_CFL
+  int8_t cfl_alpha_idx;
+  int8_t cfl_alpha_sign;
 #endif
 };
 

@@ -24,10 +24,12 @@ let MOCK_STORAGE = [{
   organization: "Sesame Street",
   "street-address": "123 Sesame Street.",
   tel: "1-345-345-3456",
+  country: "US",
 }, {
   organization: "Mozilla",
   "street-address": "331 E. Evelyn Avenue",
   tel: "1-650-903-0800",
+  country: "US",
 }];
 
 function expectPopup() {
@@ -85,7 +87,7 @@ async function setupAddressStorage() {
 async function setupFormHistory() {
   await updateFormHistory([
     {op: "add", fieldname: "tel", value: "1-234-567-890"},
-    {op: "add", fieldname: "country", value: "US"},
+    {op: "add", fieldname: "email", value: "foo@mozilla.com"},
   ]);
 }
 
@@ -127,10 +129,10 @@ add_task(async function check_menu_when_both_existed() {
 
 // Display history search result if no matched data in addresses.
 add_task(async function check_fallback_for_mismatched_field() {
-  setInput("#country", "");
+  setInput("#email", "");
   doKey("down");
   await expectPopup();
-  checkMenuEntries(["US"]);
+  checkMenuEntries(["foo@mozilla.com"]);
 });
 
 // Autofill the address from dropdown menu.
@@ -166,7 +168,11 @@ registerPopupShownListener(popupShownListener);
     <p><label>organization: <input id="organization" name="organization" autocomplete="organization" type="text"></label></p>
     <p><label>streetAddress: <input id="street-address" name="street-address" autocomplete="street-address" type="text"></label></p>
     <p><label>tel: <input id="tel" name="tel" autocomplete="tel" type="text"></label></p>
-    <p><label>country: <input id="country" name="country" autocomplete="country" type="text"></label></p>
+    <p><label>email: <input id="email" name="email" autocomplete="email" type="text"></label></p>
+    <p><label>country: <select id="country" name="country" autocomplete="country">
+      <option/>
+      <option value="US">United States</option>
+    </label></p>
   </form>
 
 </div>

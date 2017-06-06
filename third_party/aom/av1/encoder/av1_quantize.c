@@ -1594,50 +1594,48 @@ static int get_qzbin_factor(int q, aom_bit_depth_t bit_depth) {
 #endif
 }
 
-void av1_init_quantizer(AV1_COMP *cpi) {
-  AV1_COMMON *const cm = &cpi->common;
-  QUANTS *const quants = &cpi->quants;
+void av1_build_quantizer(aom_bit_depth_t bit_depth, int y_dc_delta_q,
+                         int uv_dc_delta_q, int uv_ac_delta_q,
+                         QUANTS *const quants, Dequants *const deq) {
   int i, q, quant;
-#if CONFIG_NEW_QUANT
-  int dq;
-#endif
 
   for (q = 0; q < QINDEX_RANGE; q++) {
-    const int qzbin_factor = get_qzbin_factor(q, cm->bit_depth);
+    const int qzbin_factor = get_qzbin_factor(q, bit_depth);
     const int qrounding_factor = q == 0 ? 64 : 48;
 
     for (i = 0; i < 2; ++i) {
       int qrounding_factor_fp = 64;
       // y
-      quant = i == 0 ? av1_dc_quant(q, cm->y_dc_delta_q, cm->bit_depth)
-                     : av1_ac_quant(q, 0, cm->bit_depth);
+      quant = i == 0 ? av1_dc_quant(q, y_dc_delta_q, bit_depth)
+                     : av1_ac_quant(q, 0, bit_depth);
       invert_quant(&quants->y_quant[q][i], &quants->y_quant_shift[q][i], quant);
       quants->y_quant_fp[q][i] = (1 << 16) / quant;
       quants->y_round_fp[q][i] = (qrounding_factor_fp * quant) >> 7;
       quants->y_zbin[q][i] = ROUND_POWER_OF_TWO(qzbin_factor * quant, 7);
       quants->y_round[q][i] = (qrounding_factor * quant) >> 7;
-      cpi->y_dequant[q][i] = quant;
+      deq->y_dequant[q][i] = quant;
 
       // uv
-      quant = i == 0 ? av1_dc_quant(q, cm->uv_dc_delta_q, cm->bit_depth)
-                     : av1_ac_quant(q, cm->uv_ac_delta_q, cm->bit_depth);
+      quant = i == 0 ? av1_dc_quant(q, uv_dc_delta_q, bit_depth)
+                     : av1_ac_quant(q, uv_ac_delta_q, bit_depth);
       invert_quant(&quants->uv_quant[q][i], &quants->uv_quant_shift[q][i],
                    quant);
       quants->uv_quant_fp[q][i] = (1 << 16) / quant;
       quants->uv_round_fp[q][i] = (qrounding_factor_fp * quant) >> 7;
       quants->uv_zbin[q][i] = ROUND_POWER_OF_TWO(qzbin_factor * quant, 7);
       quants->uv_round[q][i] = (qrounding_factor * quant) >> 7;
-      cpi->uv_dequant[q][i] = quant;
+      deq->uv_dequant[q][i] = quant;
     }
 
 #if CONFIG_NEW_QUANT
+    int dq;
     for (dq = 0; dq < QUANT_PROFILES; dq++) {
       for (i = 0; i < COEF_BANDS; i++) {
-        const int y_quant = cpi->y_dequant[q][i != 0];
-        const int uvquant = cpi->uv_dequant[q][i != 0];
-        av1_get_dequant_val_nuq(y_quant, i, cpi->y_dequant_val_nuq[dq][q][i],
+        const int y_quant = deq->y_dequant[q][i != 0];
+        const int uvquant = deq->uv_dequant[q][i != 0];
+        av1_get_dequant_val_nuq(y_quant, i, deq->y_dequant_val_nuq[dq][q][i],
                                 quants->y_cuml_bins_nuq[dq][q][i], dq);
-        av1_get_dequant_val_nuq(uvquant, i, cpi->uv_dequant_val_nuq[dq][q][i],
+        av1_get_dequant_val_nuq(uvquant, i, deq->uv_dequant_val_nuq[dq][q][i],
                                 quants->uv_cuml_bins_nuq[dq][q][i], dq);
       }
     }
@@ -1650,7 +1648,7 @@ void av1_init_quantizer(AV1_COMP *cpi) {
       quants->y_quant_shift[q][i] = quants->y_quant_shift[q][1];
       quants->y_zbin[q][i] = quants->y_zbin[q][1];
       quants->y_round[q][i] = quants->y_round[q][1];
-      cpi->y_dequant[q][i] = cpi->y_dequant[q][1];
+      deq->y_dequant[q][i] = deq->y_dequant[q][1];
 
       quants->uv_quant[q][i] = quants->uv_quant[q][1];
       quants->uv_quant_fp[q][i] = quants->uv_quant_fp[q][1];
@@ -1658,9 +1656,17 @@ void av1_init_quantizer(AV1_COMP *cpi) {
       quants->uv_quant_shift[q][i] = quants->uv_quant_shift[q][1];
       quants->uv_zbin[q][i] = quants->uv_zbin[q][1];
       quants->uv_round[q][i] = quants->uv_round[q][1];
-      cpi->uv_dequant[q][i] = cpi->uv_dequant[q][1];
+      deq->uv_dequant[q][i] = deq->uv_dequant[q][1];
     }
   }
+}
+
+void av1_init_quantizer(AV1_COMP *cpi) {
+  AV1_COMMON *const cm = &cpi->common;
+  QUANTS *const quants = &cpi->quants;
+  Dequants *const dequants = &cpi->dequants;
+  av1_build_quantizer(cm->bit_depth, cm->y_dc_delta_q, cm->uv_dc_delta_q,
+                      cm->uv_ac_delta_q, quants, dequants);
 }
 
 void av1_init_plane_quantizers(const AV1_COMP *cpi, MACROBLOCK *x,
@@ -1712,11 +1718,12 @@ void av1_init_plane_quantizers(const AV1_COMP *cpi, MACROBLOCK *x,
   memcpy(&xd->plane[0].seg_iqmatrix[segment_id], cm->giqmatrix[qmlevel][0],
          sizeof(cm->giqmatrix[qmlevel][0]));
 #endif
-  xd->plane[0].dequant = cpi->y_dequant[qindex];
+  xd->plane[0].dequant = cpi->dequants.y_dequant[qindex];
 #if CONFIG_NEW_QUANT
   for (dq = 0; dq < QUANT_PROFILES; dq++) {
     x->plane[0].cuml_bins_nuq[dq] = quants->y_cuml_bins_nuq[dq][qindex];
-    xd->plane[0].dequant_val_nuq[dq] = cpi->y_dequant_val_nuq[dq][qindex];
+    xd->plane[0].dequant_val_nuq[dq] =
+        cpi->dequants.y_dequant_val_nuq[dq][qindex];
   }
 #endif  // CONFIG_NEW_QUANT
 
@@ -1734,11 +1741,12 @@ void av1_init_plane_quantizers(const AV1_COMP *cpi, MACROBLOCK *x,
     memcpy(&xd->plane[i].seg_iqmatrix[segment_id], cm->giqmatrix[qmlevel][1],
            sizeof(cm->giqmatrix[qmlevel][1]));
 #endif
-    xd->plane[i].dequant = cpi->uv_dequant[qindex];
+    xd->plane[i].dequant = cpi->dequants.uv_dequant[qindex];
 #if CONFIG_NEW_QUANT
     for (dq = 0; dq < QUANT_PROFILES; dq++) {
       x->plane[i].cuml_bins_nuq[dq] = quants->uv_cuml_bins_nuq[dq][qindex];
-      xd->plane[i].dequant_val_nuq[dq] = cpi->uv_dequant_val_nuq[dq][qindex];
+      xd->plane[i].dequant_val_nuq[dq] =
+          cpi->dequants.uv_dequant_val_nuq[dq][qindex];
     }
 #endif  // CONFIG_NEW_QUANT
   }

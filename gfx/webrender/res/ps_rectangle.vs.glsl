@@ -13,7 +13,7 @@ void main(void) {
                                                     prim.z,
                                                     prim.layer,
                                                     prim.task,
-                                                    prim.local_rect);
+                                                    prim.local_rect.p0);
     vLocalPos = vi.local_pos;
 #else
     VertexInfo vi = write_vertex(prim.local_rect,
@@ -21,7 +21,7 @@ void main(void) {
                                  prim.z,
                                  prim.layer,
                                  prim.task,
-                                 prim.local_rect);
+                                 prim.local_rect.p0);
 #endif
 
 #ifdef WR_FEATURE_CLIP

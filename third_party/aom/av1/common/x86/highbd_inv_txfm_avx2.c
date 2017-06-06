@@ -13,7 +13,7 @@
 
 #include "./av1_rtcd.h"
 #include "./aom_config.h"
-#include "av1/common/av1_inv_txfm2d_cfg.h"
+#include "av1/common/av1_inv_txfm1d_cfg.h"
 
 // Note:
 //  Total 32x4 registers to represent 32x32 block coefficients.
@@ -154,20 +154,21 @@ static void write_buffer_32x32(__m256i *in, uint16_t *output, int stride,
   }
 }
 
-static INLINE __m256i half_btf_avx2(__m256i w0, __m256i n0, __m256i w1,
-                                    __m256i n1, __m256i rounding, int bit) {
+static INLINE __m256i half_btf_avx2(const __m256i *w0, const __m256i *n0,
+                                    const __m256i *w1, const __m256i *n1,
+                                    const __m256i *rounding, int bit) {
   __m256i x, y;
 
-  x = _mm256_mullo_epi32(w0, n0);
-  y = _mm256_mullo_epi32(w1, n1);
+  x = _mm256_mullo_epi32(*w0, *n0);
+  y = _mm256_mullo_epi32(*w1, *n1);
   x = _mm256_add_epi32(x, y);
-  x = _mm256_add_epi32(x, rounding);
+  x = _mm256_add_epi32(x, *rounding);
   x = _mm256_srai_epi32(x, bit);
   return x;
 }
 
 static void idct32_avx2(__m256i *in, __m256i *out, int bit) {
-  const int32_t *cospi = cospi_arr[bit - cos_bit_min];
+  const int32_t *cospi = cospi_arr(bit);
   const __m256i cospi62 = _mm256_set1_epi32(cospi[62]);
   const __m256i cospi30 = _mm256_set1_epi32(cospi[30]);
   const __m256i cospi46 = _mm256_set1_epi32(cospi[46]);
@@ -275,22 +276,38 @@ static void idct32_avx2(__m256i *in, __m256i *out, int bit) {
     bf0[13] = bf1[13];
     bf0[14] = bf1[14];
     bf0[15] = bf1[15];
-    bf0[16] = half_btf_avx2(cospi62, bf1[16], cospim2, bf1[31], rounding, bit);
-    bf0[17] = half_btf_avx2(cospi30, bf1[17], cospim34, bf1[30], rounding, bit);
-    bf0[18] = half_btf_avx2(cospi46, bf1[18], cospim18, bf1[29], rounding, bit);
-    bf0[19] = half_btf_avx2(cospi14, bf1[19], cospim50, bf1[28], rounding, bit);
-    bf0[20] = half_btf_avx2(cospi54, bf1[20], cospim10, bf1[27], rounding, bit);
-    bf0[21] = half_btf_avx2(cospi22, bf1[21], cospim42, bf1[26], rounding, bit);
-    bf0[22] = half_btf_avx2(cospi38, bf1[22], cospim26, bf1[25], rounding, bit);
-    bf0[23] = half_btf_avx2(cospi6, bf1[23], cospim58, bf1[24], rounding, bit);
-    bf0[24] = half_btf_avx2(cospi58, bf1[23], cospi6, bf1[24], rounding, bit);
-    bf0[25] = half_btf_avx2(cospi26, bf1[22], cospi38, bf1[25], rounding, bit);
-    bf0[26] = half_btf_avx2(cospi42, bf1[21], cospi22, bf1[26], rounding, bit);
-    bf0[27] = half_btf_avx2(cospi10, bf1[20], cospi54, bf1[27], rounding, bit);
-    bf0[28] = half_btf_avx2(cospi50, bf1[19], cospi14, bf1[28], rounding, bit);
-    bf0[29] = half_btf_avx2(cospi18, bf1[18], cospi46, bf1[29], rounding, bit);
-    bf0[30] = half_btf_avx2(cospi34, bf1[17], cospi30, bf1[30], rounding, bit);
-    bf0[31] = half_btf_avx2(cospi2, bf1[16], cospi62, bf1[31], rounding, bit);
+    bf0[16] =
+        half_btf_avx2(&cospi62, &bf1[16], &cospim2, &bf1[31], &rounding, bit);
+    bf0[17] =
+        half_btf_avx2(&cospi30, &bf1[17], &cospim34, &bf1[30], &rounding, bit);
+    bf0[18] =
+        half_btf_avx2(&cospi46, &bf1[18], &cospim18, &bf1[29], &rounding, bit);
+    bf0[19] =
+        half_btf_avx2(&cospi14, &bf1[19], &cospim50, &bf1[28], &rounding, bit);
+    bf0[20] =
+        half_btf_avx2(&cospi54, &bf1[20], &cospim10, &bf1[27], &rounding, bit);
+    bf0[21] =
+        half_btf_avx2(&cospi22, &bf1[21], &cospim42, &bf1[26], &rounding, bit);
+    bf0[22] =
+        half_btf_avx2(&cospi38, &bf1[22], &cospim26, &bf1[25], &rounding, bit);
+    bf0[23] =
+        half_btf_avx2(&cospi6, &bf1[23], &cospim58, &bf1[24], &rounding, bit);
+    bf0[24] =
+        half_btf_avx2(&cospi58, &bf1[23], &cospi6, &bf1[24], &rounding, bit);
+    bf0[25] =
+        half_btf_avx2(&cospi26, &bf1[22], &cospi38, &bf1[25], &rounding, bit);
+    bf0[26] =
+        half_btf_avx2(&cospi42, &bf1[21], &cospi22, &bf1[26], &rounding, bit);
+    bf0[27] =
+        half_btf_avx2(&cospi10, &bf1[20], &cospi54, &bf1[27], &rounding, bit);
+    bf0[28] =
+        half_btf_avx2(&cospi50, &bf1[19], &cospi14, &bf1[28], &rounding, bit);
+    bf0[29] =
+        half_btf_avx2(&cospi18, &bf1[18], &cospi46, &bf1[29], &rounding, bit);
+    bf0[30] =
+        half_btf_avx2(&cospi34, &bf1[17], &cospi30, &bf1[30], &rounding, bit);
+    bf0[31] =
+        half_btf_avx2(&cospi2, &bf1[16], &cospi62, &bf1[31], &rounding, bit);
 
     // stage 3
     bf1[0] = bf0[0];
@@ -301,14 +318,22 @@ static void idct32_avx2(__m256i *in, __m256i *out, int bit) {
     bf1[5] = bf0[5];
     bf1[6] = bf0[6];
     bf1[7] = bf0[7];
-    bf1[8] = half_btf_avx2(cospi60, bf0[8], cospim4, bf0[15], rounding, bit);
-    bf1[9] = half_btf_avx2(cospi28, bf0[9], cospim36, bf0[14], rounding, bit);
-    bf1[10] = half_btf_avx2(cospi44, bf0[10], cospim20, bf0[13], rounding, bit);
-    bf1[11] = half_btf_avx2(cospi12, bf0[11], cospim52, bf0[12], rounding, bit);
-    bf1[12] = half_btf_avx2(cospi52, bf0[11], cospi12, bf0[12], rounding, bit);
-    bf1[13] = half_btf_avx2(cospi20, bf0[10], cospi44, bf0[13], rounding, bit);
-    bf1[14] = half_btf_avx2(cospi36, bf0[9], cospi28, bf0[14], rounding, bit);
-    bf1[15] = half_btf_avx2(cospi4, bf0[8], cospi60, bf0[15], rounding, bit);
+    bf1[8] =
+        half_btf_avx2(&cospi60, &bf0[8], &cospim4, &bf0[15], &rounding, bit);
+    bf1[9] =
+        half_btf_avx2(&cospi28, &bf0[9], &cospim36, &bf0[14], &rounding, bit);
+    bf1[10] =
+        half_btf_avx2(&cospi44, &bf0[10], &cospim20, &bf0[13], &rounding, bit);
+    bf1[11] =
+        half_btf_avx2(&cospi12, &bf0[11], &cospim52, &bf0[12], &rounding, bit);
+    bf1[12] =
+        half_btf_avx2(&cospi52, &bf0[11], &cospi12, &bf0[12], &rounding, bit);
+    bf1[13] =
+        half_btf_avx2(&cospi20, &bf0[10], &cospi44, &bf0[13], &rounding, bit);
+    bf1[14] =
+        half_btf_avx2(&cospi36, &bf0[9], &cospi28, &bf0[14], &rounding, bit);
+    bf1[15] =
+        half_btf_avx2(&cospi4, &bf0[8], &cospi60, &bf0[15], &rounding, bit);
     bf1[16] = _mm256_add_epi32(bf0[16], bf0[17]);
     bf1[17] = _mm256_sub_epi32(bf0[16], bf0[17]);
     bf1[18] = _mm256_sub_epi32(bf0[19], bf0[18]);
@@ -331,10 +356,13 @@ static void idct32_avx2(__m256i *in, __m256i *out, int bit) {
     bf0[1] = bf1[1];
     bf0[2] = bf1[2];
     bf0[3] = bf1[3];
-    bf0[4] = half_btf_avx2(cospi56, bf1[4], cospim8, bf1[7], rounding, bit);
-    bf0[5] = half_btf_avx2(cospi24, bf1[5], cospim40, bf1[6], rounding, bit);
-    bf0[6] = half_btf_avx2(cospi40, bf1[5], cospi24, bf1[6], rounding, bit);
-    bf0[7] = half_btf_avx2(cospi8, bf1[4], cospi56, bf1[7], rounding, bit);
+    bf0[4] =
+        half_btf_avx2(&cospi56, &bf1[4], &cospim8, &bf1[7], &rounding, bit);
+    bf0[5] =
+        half_btf_avx2(&cospi24, &bf1[5], &cospim40, &bf1[6], &rounding, bit);
+    bf0[6] =
+        half_btf_avx2(&cospi40, &bf1[5], &cospi24, &bf1[6], &rounding, bit);
+    bf0[7] = half_btf_avx2(&cospi8, &bf1[4], &cospi56, &bf1[7], &rounding, bit);
     bf0[8] = _mm256_add_epi32(bf1[8], bf1[9]);
     bf0[9] = _mm256_sub_epi32(bf1[8], bf1[9]);
     bf0[10] = _mm256_sub_epi32(bf1[11], bf1[10]);
@@ -344,40 +372,54 @@ static void idct32_avx2(__m256i *in, __m256i *out, int bit) {
     bf0[14] = _mm256_sub_epi32(bf1[15], bf1[14]);
     bf0[15] = _mm256_add_epi32(bf1[14], bf1[15]);
     bf0[16] = bf1[16];
-    bf0[17] = half_btf_avx2(cospim8, bf1[17], cospi56, bf1[30], rounding, bit);
-    bf0[18] = half_btf_avx2(cospim56, bf1[18], cospim8, bf1[29], rounding, bit);
+    bf0[17] =
+        half_btf_avx2(&cospim8, &bf1[17], &cospi56, &bf1[30], &rounding, bit);
+    bf0[18] =
+        half_btf_avx2(&cospim56, &bf1[18], &cospim8, &bf1[29], &rounding, bit);
     bf0[19] = bf1[19];
     bf0[20] = bf1[20];
-    bf0[21] = half_btf_avx2(cospim40, bf1[21], cospi24, bf1[26], rounding, bit);
+    bf0[21] =
+        half_btf_avx2(&cospim40, &bf1[21], &cospi24, &bf1[26], &rounding, bit);
     bf0[22] =
-        half_btf_avx2(cospim24, bf1[22], cospim40, bf1[25], rounding, bit);
+        half_btf_avx2(&cospim24, &bf1[22], &cospim40, &bf1[25], &rounding, bit);
     bf0[23] = bf1[23];
     bf0[24] = bf1[24];
-    bf0[25] = half_btf_avx2(cospim40, bf1[22], cospi24, bf1[25], rounding, bit);
-    bf0[26] = half_btf_avx2(cospi24, bf1[21], cospi40, bf1[26], rounding, bit);
+    bf0[25] =
+        half_btf_avx2(&cospim40, &bf1[22], &cospi24, &bf1[25], &rounding, bit);
+    bf0[26] =
+        half_btf_avx2(&cospi24, &bf1[21], &cospi40, &bf1[26], &rounding, bit);
     bf0[27] = bf1[27];
     bf0[28] = bf1[28];
-    bf0[29] = half_btf_avx2(cospim8, bf1[18], cospi56, bf1[29], rounding, bit);
-    bf0[30] = half_btf_avx2(cospi56, bf1[17], cospi8, bf1[30], rounding, bit);
+    bf0[29] =
+        half_btf_avx2(&cospim8, &bf1[18], &cospi56, &bf1[29], &rounding, bit);
+    bf0[30] =
+        half_btf_avx2(&cospi56, &bf1[17], &cospi8, &bf1[30], &rounding, bit);
     bf0[31] = bf1[31];
 
     // stage 5
-    bf1[0] = half_btf_avx2(cospi32, bf0[0], cospi32, bf0[1], rounding, bit);
-    bf1[1] = half_btf_avx2(cospi32, bf0[0], cospim32, bf0[1], rounding, bit);
-    bf1[2] = half_btf_avx2(cospi48, bf0[2], cospim16, bf0[3], rounding, bit);
-    bf1[3] = half_btf_avx2(cospi16, bf0[2], cospi48, bf0[3], rounding, bit);
+    bf1[0] =
+        half_btf_avx2(&cospi32, &bf0[0], &cospi32, &bf0[1], &rounding, bit);
+    bf1[1] =
+        half_btf_avx2(&cospi32, &bf0[0], &cospim32, &bf0[1], &rounding, bit);
+    bf1[2] =
+        half_btf_avx2(&cospi48, &bf0[2], &cospim16, &bf0[3], &rounding, bit);
+    bf1[3] =
+        half_btf_avx2(&cospi16, &bf0[2], &cospi48, &bf0[3], &rounding, bit);
     bf1[4] = _mm256_add_epi32(bf0[4], bf0[5]);
     bf1[5] = _mm256_sub_epi32(bf0[4], bf0[5]);
     bf1[6] = _mm256_sub_epi32(bf0[7], bf0[6]);
     bf1[7] = _mm256_add_epi32(bf0[6], bf0[7]);
     bf1[8] = bf0[8];
-    bf1[9] = half_btf_avx2(cospim16, bf0[9], cospi48, bf0[14], rounding, bit);
+    bf1[9] =
+        half_btf_avx2(&cospim16, &bf0[9], &cospi48, &bf0[14], &rounding, bit);
     bf1[10] =
-        half_btf_avx2(cospim48, bf0[10], cospim16, bf0[13], rounding, bit);
+        half_btf_avx2(&cospim48, &bf0[10], &cospim16, &bf0[13], &rounding, bit);
     bf1[11] = bf0[11];
     bf1[12] = bf0[12];
-    bf1[13] = half_btf_avx2(cospim16, bf0[10], cospi48, bf0[13], rounding, bit);
-    bf1[14] = half_btf_avx2(cospi48, bf0[9], cospi16, bf0[14], rounding, bit);
+    bf1[13] =
+        half_btf_avx2(&cospim16, &bf0[10], &cospi48, &bf0[13], &rounding, bit);
+    bf1[14] =
+        half_btf_avx2(&cospi48, &bf0[9], &cospi16, &bf0[14], &rounding, bit);
     bf1[15] = bf0[15];
     bf1[16] = _mm256_add_epi32(bf0[16], bf0[19]);
     bf1[17] = _mm256_add_epi32(bf0[17], bf0[18]);
@@ -402,8 +444,10 @@ static void idct32_avx2(__m256i *in, __m256i *out, int bit) {
     bf0[2] = _mm256_sub_epi32(bf1[1], bf1[2]);
     bf0[3] = _mm256_sub_epi32(bf1[0], bf1[3]);
     bf0[4] = bf1[4];
-    bf0[5] = half_btf_avx2(cospim32, bf1[5], cospi32, bf1[6], rounding, bit);
-    bf0[6] = half_btf_avx2(cospi32, bf1[5], cospi32, bf1[6], rounding, bit);
+    bf0[5] =
+        half_btf_avx2(&cospim32, &bf1[5], &cospi32, &bf1[6], &rounding, bit);
+    bf0[6] =
+        half_btf_avx2(&cospi32, &bf1[5], &cospi32, &bf1[6], &rounding, bit);
     bf0[7] = bf1[7];
     bf0[8] = _mm256_add_epi32(bf1[8], bf1[11]);
     bf0[9] = _mm256_add_epi32(bf1[9], bf1[10]);
@@ -415,20 +459,26 @@ static void idct32_avx2(__m256i *in, __m256i *out, int bit) {
     bf0[15] = _mm256_add_epi32(bf1[12], bf1[15]);
     bf0[16] = bf1[16];
     bf0[17] = bf1[17];
-    bf0[18] = half_btf_avx2(cospim16, bf1[18], cospi48, bf1[29], rounding, bit);
-    bf0[19] = half_btf_avx2(cospim16, bf1[19], cospi48, bf1[28], rounding, bit);
+    bf0[18] =
+        half_btf_avx2(&cospim16, &bf1[18], &cospi48, &bf1[29], &rounding, bit);
+    bf0[19] =
+        half_btf_avx2(&cospim16, &bf1[19], &cospi48, &bf1[28], &rounding, bit);
     bf0[20] =
-        half_btf_avx2(cospim48, bf1[20], cospim16, bf1[27], rounding, bit);
+        half_btf_avx2(&cospim48, &bf1[20], &cospim16, &bf1[27], &rounding, bit);
     bf0[21] =
-        half_btf_avx2(cospim48, bf1[21], cospim16, bf1[26], rounding, bit);
+        half_btf_avx2(&cospim48, &bf1[21], &cospim16, &bf1[26], &rounding, bit);
     bf0[22] = bf1[22];
     bf0[23] = bf1[23];
     bf0[24] = bf1[24];
     bf0[25] = bf1[25];
-    bf0[26] = half_btf_avx2(cospim16, bf1[21], cospi48, bf1[26], rounding, bit);
-    bf0[27] = half_btf_avx2(cospim16, bf1[20], cospi48, bf1[27], rounding, bit);
-    bf0[28] = half_btf_avx2(cospi48, bf1[19], cospi16, bf1[28], rounding, bit);
-    bf0[29] = half_btf_avx2(cospi48, bf1[18], cospi16, bf1[29], rounding, bit);
+    bf0[26] =
+        half_btf_avx2(&cospim16, &bf1[21], &cospi48, &bf1[26], &rounding, bit);
+    bf0[27] =
+        half_btf_avx2(&cospim16, &bf1[20], &cospi48, &bf1[27], &rounding, bit);
+    bf0[28] =
+        half_btf_avx2(&cospi48, &bf1[19], &cospi16, &bf1[28], &rounding, bit);
+    bf0[29] =
+        half_btf_avx2(&cospi48, &bf1[18], &cospi16, &bf1[29], &rounding, bit);
     bf0[30] = bf1[30];
     bf0[31] = bf1[31];
 
@@ -443,10 +493,14 @@ static void idct32_avx2(__m256i *in, __m256i *out, int bit) {
     bf1[7] = _mm256_sub_epi32(bf0[0], bf0[7]);
     bf1[8] = bf0[8];
     bf1[9] = bf0[9];
-    bf1[10] = half_btf_avx2(cospim32, bf0[10], cospi32, bf0[13], rounding, bit);
-    bf1[11] = half_btf_avx2(cospim32, bf0[11], cospi32, bf0[12], rounding, bit);
-    bf1[12] = half_btf_avx2(cospi32, bf0[11], cospi32, bf0[12], rounding, bit);
-    bf1[13] = half_btf_avx2(cospi32, bf0[10], cospi32, bf0[13], rounding, bit);
+    bf1[10] =
+        half_btf_avx2(&cospim32, &bf0[10], &cospi32, &bf0[13], &rounding, bit);
+    bf1[11] =
+        half_btf_avx2(&cospim32, &bf0[11], &cospi32, &bf0[12], &rounding, bit);
+    bf1[12] =
+        half_btf_avx2(&cospi32, &bf0[11], &cospi32, &bf0[12], &rounding, bit);
+    bf1[13] =
+        half_btf_avx2(&cospi32, &bf0[10], &cospi32, &bf0[13], &rounding, bit);
     bf1[14] = bf0[14];
     bf1[15] = bf0[15];
     bf1[16] = _mm256_add_epi32(bf0[16], bf0[23]);
@@ -487,14 +541,22 @@ static void idct32_avx2(__m256i *in, __m256i *out, int bit) {
     bf0[17] = bf1[17];
     bf0[18] = bf1[18];
     bf0[19] = bf1[19];
-    bf0[20] = half_btf_avx2(cospim32, bf1[20], cospi32, bf1[27], rounding, bit);
-    bf0[21] = half_btf_avx2(cospim32, bf1[21], cospi32, bf1[26], rounding, bit);
-    bf0[22] = half_btf_avx2(cospim32, bf1[22], cospi32, bf1[25], rounding, bit);
-    bf0[23] = half_btf_avx2(cospim32, bf1[23], cospi32, bf1[24], rounding, bit);
-    bf0[24] = half_btf_avx2(cospi32, bf1[23], cospi32, bf1[24], rounding, bit);
-    bf0[25] = half_btf_avx2(cospi32, bf1[22], cospi32, bf1[25], rounding, bit);
-    bf0[26] = half_btf_avx2(cospi32, bf1[21], cospi32, bf1[26], rounding, bit);
-    bf0[27] = half_btf_avx2(cospi32, bf1[20], cospi32, bf1[27], rounding, bit);
+    bf0[20] =
+        half_btf_avx2(&cospim32, &bf1[20], &cospi32, &bf1[27], &rounding, bit);
+    bf0[21] =
+        half_btf_avx2(&cospim32, &bf1[21], &cospi32, &bf1[26], &rounding, bit);
+    bf0[22] =
+        half_btf_avx2(&cospim32, &bf1[22], &cospi32, &bf1[25], &rounding, bit);
+    bf0[23] =
+        half_btf_avx2(&cospim32, &bf1[23], &cospi32, &bf1[24], &rounding, bit);
+    bf0[24] =
+        half_btf_avx2(&cospi32, &bf1[23], &cospi32, &bf1[24], &rounding, bit);
+    bf0[25] =
+        half_btf_avx2(&cospi32, &bf1[22], &cospi32, &bf1[25], &rounding, bit);
+    bf0[26] =
+        half_btf_avx2(&cospi32, &bf1[21], &cospi32, &bf1[26], &rounding, bit);
+    bf0[27] =
+        half_btf_avx2(&cospi32, &bf1[20], &cospi32, &bf1[27], &rounding, bit);
     bf0[28] = bf1[28];
     bf0[29] = bf1[29];
     bf0[30] = bf1[30];
@@ -539,18 +601,20 @@ static void idct32_avx2(__m256i *in, __m256i *out, int bit) {
 void av1_inv_txfm2d_add_32x32_avx2(const int32_t *coeff, uint16_t *output,
                                    int stride, int tx_type, int bd) {
   __m256i in[128], out[128];
-  const TXFM_2D_CFG *cfg = NULL;
+  const TXFM_1D_CFG *row_cfg = NULL;
+  const TXFM_1D_CFG *col_cfg = NULL;
 
   switch (tx_type) {
     case DCT_DCT:
-      cfg = &inv_txfm_2d_cfg_dct_dct_32;
+      row_cfg = &inv_txfm_1d_row_cfg_dct_32;
+      col_cfg = &inv_txfm_1d_col_cfg_dct_32;
       load_buffer_32x32(coeff, in);
       transpose_32x32(in, out);
-      idct32_avx2(out, in, cfg->cos_bit_row[2]);
-      round_shift_32x32(in, -cfg->shift[0]);
+      idct32_avx2(out, in, row_cfg->cos_bit[2]);
+      round_shift_32x32(in, -row_cfg->shift[0]);
       transpose_32x32(in, out);
-      idct32_avx2(out, in, cfg->cos_bit_col[2]);
-      write_buffer_32x32(in, output, stride, 0, 0, -cfg->shift[1], bd);
+      idct32_avx2(out, in, col_cfg->cos_bit[2]);
+      write_buffer_32x32(in, output, stride, 0, 0, -row_cfg->shift[1], bd);
       break;
     default: assert(0);
   }

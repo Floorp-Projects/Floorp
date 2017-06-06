@@ -160,9 +160,16 @@ static void loop_wiener_filter_tile(uint8_t *data, int tile_idx, int width,
       int h = AOMMIN(MAX_SB_SIZE, (v_end - i + 15) & ~15);
       const uint8_t *data_p = data + i * stride + j;
       uint8_t *dst_p = dst + i * dst_stride + j;
+#if USE_WIENER_HIGH_INTERMEDIATE_PRECISION
+      aom_convolve8_add_src_hip(data_p, stride, dst_p, dst_stride,
+                                rst->rsi->wiener_info[tile_idx].hfilter, 16,
+                                rst->rsi->wiener_info[tile_idx].vfilter, 16, w,
+                                h);
+#else
       aom_convolve8_add_src(data_p, stride, dst_p, dst_stride,
                             rst->rsi->wiener_info[tile_idx].hfilter, 16,
                             rst->rsi->wiener_info[tile_idx].vfilter, 16, w, h);
+#endif  // USE_WIENER_HIGH_INTERMEDIATE_PRECISION
     }
 }
 
@@ -992,10 +999,17 @@ static void loop_wiener_filter_tile_highbd(uint16_t *data, int tile_idx,
       int h = AOMMIN(MAX_SB_SIZE, (v_end - i + 15) & ~15);
       const uint16_t *data_p = data + i * stride + j;
       uint16_t *dst_p = dst + i * dst_stride + j;
+#if USE_WIENER_HIGH_INTERMEDIATE_PRECISION
+      aom_highbd_convolve8_add_src_hip(
+          CONVERT_TO_BYTEPTR(data_p), stride, CONVERT_TO_BYTEPTR(dst_p),
+          dst_stride, rst->rsi->wiener_info[tile_idx].hfilter, 16,
+          rst->rsi->wiener_info[tile_idx].vfilter, 16, w, h, bit_depth);
+#else
       aom_highbd_convolve8_add_src(
           CONVERT_TO_BYTEPTR(data_p), stride, CONVERT_TO_BYTEPTR(dst_p),
           dst_stride, rst->rsi->wiener_info[tile_idx].hfilter, 16,
           rst->rsi->wiener_info[tile_idx].vfilter, 16, w, h, bit_depth);
+#endif  // USE_WIENER_HIGH_INTERMEDIATE_PRECISION
     }
 }
 

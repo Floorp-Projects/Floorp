@@ -6360,10 +6360,10 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
                             nsASCIICaseInsensitiveStringComparator());
   };
 
-  if (mToken.IsSymbol('+') || mToken.IsSymbol('-')) {
-    // This can only be +n or -n, since +an, -an, +a, -a will all
-    // parse a number as the first token.
-    numbers[0] = mToken.IsSymbol('+') ? 1 : -1;
+  if (mToken.IsSymbol('+')) {
+    // This can only be +n, since +an, -an, +a, -a will all
+    // parse a number as the first token, and -n is an ident token.
+    numbers[0] = 1;
     onlyN = true;
 
     // consume the `n`

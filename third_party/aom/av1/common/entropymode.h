@@ -73,7 +73,7 @@ extern "C" {
 #endif  // CONFIG_PALETTE
 
 #if CONFIG_INTRABC
-#define INTRABC_PROB 192
+#define INTRABC_PROB_DEFAULT 192
 #endif  // CONFIG_INTRABC
 
 struct AV1Common;
@@ -99,18 +99,14 @@ typedef struct frame_contexts {
   aom_prob partition_prob[PARTITION_CONTEXTS][PARTITION_TYPES - 1];
 #endif
   av1_coeff_probs_model coef_probs[TX_SIZES][PLANE_TYPES];
-#if CONFIG_NEW_TOKENSET
   coeff_cdf_model coef_tail_cdfs[TX_SIZES][PLANE_TYPES];
   coeff_cdf_model coef_head_cdfs[TX_SIZES][PLANE_TYPES];
   aom_prob blockzero_probs[TX_SIZES][PLANE_TYPES][REF_TYPES][BLOCKZ_CONTEXTS];
-#elif CONFIG_EC_MULTISYMBOL
-  coeff_cdf_model coef_cdfs[TX_SIZES][PLANE_TYPES];
-#endif  // CONFIG_NEW_TOKENSET
   aom_prob switchable_interp_prob[SWITCHABLE_FILTER_CONTEXTS]
                                  [SWITCHABLE_FILTERS - 1];
 #if CONFIG_ADAPT_SCAN
 // TODO(angiebird): try aom_prob
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
   uint32_t non_zero_prob_2x2[TX_TYPES][4];
 #endif
   uint32_t non_zero_prob_4X4[TX_TYPES][16];
@@ -125,7 +121,7 @@ typedef struct frame_contexts {
   uint32_t non_zero_prob_32X16[TX_TYPES][512];
   uint32_t non_zero_prob_16X32[TX_TYPES][512];
 
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
   DECLARE_ALIGNED(16, int16_t, scan_2x2[TX_TYPES][4]);
 #endif
   DECLARE_ALIGNED(16, int16_t, scan_4X4[TX_TYPES][16]);
@@ -140,7 +136,7 @@ typedef struct frame_contexts {
   DECLARE_ALIGNED(16, int16_t, scan_16X32[TX_TYPES][512]);
   DECLARE_ALIGNED(16, int16_t, scan_32X16[TX_TYPES][512]);
 
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
   DECLARE_ALIGNED(16, int16_t, iscan_2x2[TX_TYPES][4]);
 #endif
   DECLARE_ALIGNED(16, int16_t, iscan_4X4[TX_TYPES][16]);
@@ -155,7 +151,7 @@ typedef struct frame_contexts {
   DECLARE_ALIGNED(16, int16_t, iscan_16X32[TX_TYPES][512]);
   DECLARE_ALIGNED(16, int16_t, iscan_32X16[TX_TYPES][512]);
 
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
   int16_t nb_2x2[TX_TYPES][(4 + 1) * 2];
 #endif
   int16_t nb_4X4[TX_TYPES][(16 + 1) * 2];
@@ -185,12 +181,10 @@ typedef struct frame_contexts {
   aom_prob coeff_lps[TX_SIZES][PLANE_TYPES][LEVEL_CONTEXTS];
 #endif
 
-#if CONFIG_REF_MV
   aom_prob newmv_prob[NEWMV_MODE_CONTEXTS];
   aom_prob zeromv_prob[ZEROMV_MODE_CONTEXTS];
   aom_prob refmv_prob[REFMV_MODE_CONTEXTS];
   aom_prob drl_prob[DRL_MODE_CONTEXTS];
-#endif  // CONFIG_REF_MV
 
   aom_prob inter_mode_probs[INTER_MODE_CONTEXTS][INTER_MODES - 1];
 #if CONFIG_EXT_INTER
@@ -201,9 +195,11 @@ typedef struct frame_contexts {
                                           [INTER_SINGLEREF_COMP_MODES - 1];
 #endif  // CONFIG_COMPOUND_SINGLEREF
   aom_prob compound_type_prob[BLOCK_SIZES][COMPOUND_TYPES - 1];
+#if CONFIG_INTERINTRA
   aom_prob interintra_prob[BLOCK_SIZE_GROUPS];
   aom_prob interintra_mode_prob[BLOCK_SIZE_GROUPS][INTERINTRA_MODES - 1];
   aom_prob wedge_interintra_prob[BLOCK_SIZES];
+#endif  // CONFIG_INTERINTRA
 #endif  // CONFIG_EXT_INTER
 #if CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
   aom_prob motion_mode_prob[BLOCK_SIZES][MOTION_MODES - 1];
@@ -224,17 +220,17 @@ typedef struct frame_contexts {
   aom_prob comp_inter_mode_prob[COMP_INTER_MODE_CONTEXTS];
 #endif  // CONFIG_EXT_INTER && CONFIG_COMPOUND_SINGLEREF
   aom_prob tx_size_probs[MAX_TX_DEPTH][TX_SIZE_CONTEXTS][MAX_TX_DEPTH];
+#if CONFIG_EXT_TX && CONFIG_RECT_TX && CONFIG_RECT_TX_EXT
+  aom_prob quarter_tx_size_prob;
+#endif  // CONFIG_EXT_TX && CONFIG_RECT_TX && CONFIG_RECT_TX_EXT
 #if CONFIG_VAR_TX
   aom_prob txfm_partition_prob[TXFM_PARTITION_CONTEXTS];
 #endif
   aom_prob skip_probs[SKIP_CONTEXTS];
-#if CONFIG_REF_MV
   nmv_context nmvc[NMV_CONTEXTS];
-#else
-  nmv_context nmvc;
-#endif
 #if CONFIG_INTRABC
   nmv_context ndvc;
+  aom_prob intrabc_prob;
 #endif
   int initialized;
 #if CONFIG_EXT_TX
@@ -263,7 +259,6 @@ typedef struct frame_contexts {
 #if CONFIG_LOOP_RESTORATION
   aom_prob switchable_restore_prob[RESTORE_SWITCHABLE_TYPES - 1];
 #endif  // CONFIG_LOOP_RESTORATION
-#if CONFIG_EC_MULTISYMBOL
   aom_cdf_prob y_mode_cdf[BLOCK_SIZE_GROUPS][CDF_SIZE(INTRA_MODES)];
   aom_cdf_prob uv_mode_cdf[INTRA_MODES][CDF_SIZE(INTRA_MODES)];
 #if CONFIG_EXT_PARTITION_TYPES
@@ -297,7 +292,6 @@ typedef struct frame_contexts {
 #if CONFIG_EXT_INTRA && CONFIG_INTRA_INTERP
   aom_cdf_prob intra_filter_cdf[INTRA_FILTERS + 1][CDF_SIZE(INTRA_FILTERS)];
 #endif  // CONFIG_EXT_INTRA && CONFIG_INTRA_INTERP
-#endif  // CONFIG_EC_MULTISYMBOL
 #if CONFIG_DELTA_Q
   aom_prob delta_q_prob[DELTA_Q_PROBS];
 #if CONFIG_EXT_DELTA_Q
@@ -309,6 +303,9 @@ typedef struct frame_contexts {
   // such as coef_cdfs[], coef_tail_cdfs[], and coef_heaf_cdfs[] can be removed.
   od_adapt_ctx pvq_context;
 #endif  // CONFIG_PVQ
+#if CONFIG_CFL
+  aom_cdf_prob cfl_alpha_cdf[CDF_SIZE(CFL_ALPHABET_SIZE)];
+#endif
 } FRAME_CONTEXT;
 
 typedef struct FRAME_COUNTS {
@@ -328,9 +325,9 @@ typedef struct FRAME_COUNTS {
   unsigned int switchable_interp[SWITCHABLE_FILTER_CONTEXTS]
                                 [SWITCHABLE_FILTERS];
 #if CONFIG_ADAPT_SCAN
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_2X2
   unsigned int non_zero_count_2x2[TX_TYPES][4];
-#endif  // CONFIG_CB4X4
+#endif  // CONFIG_CHROMA_2X2
   unsigned int non_zero_count_4X4[TX_TYPES][16];
   unsigned int non_zero_count_8X8[TX_TYPES][64];
   unsigned int non_zero_count_16X16[TX_TYPES][256];
@@ -356,16 +353,12 @@ typedef struct FRAME_COUNTS {
   unsigned int coeff_lps[TX_SIZES][PLANE_TYPES][LEVEL_CONTEXTS][2];
 #endif  // CONFIG_LV_MAP
 
-#if CONFIG_EC_MULTISYMBOL
   av1_blockz_count_model blockz_count[TX_SIZES][PLANE_TYPES];
-#endif
 
-#if CONFIG_REF_MV
   unsigned int newmv_mode[NEWMV_MODE_CONTEXTS][2];
   unsigned int zeromv_mode[ZEROMV_MODE_CONTEXTS][2];
   unsigned int refmv_mode[REFMV_MODE_CONTEXTS][2];
   unsigned int drl_mode[DRL_MODE_CONTEXTS][2];
-#endif
 
   unsigned int inter_mode[INTER_MODE_CONTEXTS][INTER_MODES];
 #if CONFIG_EXT_INTER
@@ -374,9 +367,11 @@ typedef struct FRAME_COUNTS {
   unsigned int inter_singleref_comp_mode[INTER_MODE_CONTEXTS]
                                         [INTER_SINGLEREF_COMP_MODES];
 #endif  // CONFIG_COMPOUND_SINGLEREF
+#if CONFIG_INTERINTRA
   unsigned int interintra[BLOCK_SIZE_GROUPS][2];
   unsigned int interintra_mode[BLOCK_SIZE_GROUPS][INTERINTRA_MODES];
   unsigned int wedge_interintra[BLOCK_SIZES][2];
+#endif  // CONFIG_INTERINTRA
   unsigned int compound_interinter[BLOCK_SIZES][COMPOUND_TYPES];
 #endif  // CONFIG_EXT_INTER
 #if CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
@@ -401,17 +396,17 @@ typedef struct FRAME_COUNTS {
   // to use forward updates for the coeff probs, and as such it does not really
   // belong into this structure.
   unsigned int tx_size_totals[TX_SIZES];
-  unsigned int tx_size[MAX_TX_DEPTH][TX_SIZE_CONTEXTS][TX_SIZES];
+  unsigned int tx_size[MAX_TX_DEPTH][TX_SIZE_CONTEXTS][MAX_TX_DEPTH + 1];
+#if CONFIG_EXT_TX && CONFIG_RECT_TX && CONFIG_RECT_TX_EXT
+  unsigned int quarter_tx_size[2];
+#endif  // CONFIG_EXT_TX && CONFIG_RECT_TX && CONFIG_RECT_TX_EXT
 #if CONFIG_VAR_TX
   unsigned int txfm_partition[TXFM_PARTITION_CONTEXTS][2];
 #endif
   unsigned int skip[SKIP_CONTEXTS][2];
-#if CONFIG_REF_MV
   nmv_context_counts mv[NMV_CONTEXTS];
-#else
-  nmv_context_counts mv;
-#endif
 #if CONFIG_INTRABC
+  unsigned int intrabc[2];
   nmv_context_counts dv;
 #endif
 #if CONFIG_DELTA_Q
@@ -451,11 +446,9 @@ typedef struct FRAME_COUNTS {
 // Contexts used: Intra mode (Y plane) of 'above' and 'left' blocks.
 extern const aom_prob av1_kf_y_mode_prob[INTRA_MODES][INTRA_MODES]
                                         [INTRA_MODES - 1];
-#if CONFIG_EC_MULTISYMBOL
 // CDF version of 'av1_kf_y_mode_prob'.
 extern const aom_cdf_prob av1_kf_y_mode_cdf[INTRA_MODES][INTRA_MODES]
                                            [CDF_SIZE(INTRA_MODES)];
-#endif
 
 #if CONFIG_PALETTE
 extern const aom_prob av1_default_palette_y_mode_prob[PALETTE_BLOCK_SIZES]
@@ -474,7 +467,6 @@ extern const aom_prob av1_default_palette_uv_color_index_prob
 
 extern const aom_tree_index av1_intra_mode_tree[TREE_SIZE(INTRA_MODES)];
 extern const aom_tree_index av1_inter_mode_tree[TREE_SIZE(INTER_MODES)];
-#if CONFIG_EC_MULTISYMBOL
 extern int av1_intra_mode_ind[INTRA_MODES];
 extern int av1_intra_mode_inv[INTRA_MODES];
 extern int av1_inter_mode_ind[INTER_MODES];
@@ -485,11 +477,12 @@ extern int av1_ext_tx_intra_inv[EXT_TX_SETS_INTRA][TX_TYPES];
 extern int av1_ext_tx_inter_ind[EXT_TX_SETS_INTER][TX_TYPES];
 extern int av1_ext_tx_inter_inv[EXT_TX_SETS_INTER][TX_TYPES];
 #endif
-#endif
 
 #if CONFIG_EXT_INTER
+#if CONFIG_INTERINTRA
 extern const aom_tree_index
     av1_interintra_mode_tree[TREE_SIZE(INTERINTRA_MODES)];
+#endif
 extern const aom_tree_index
     av1_inter_compound_mode_tree[TREE_SIZE(INTER_COMPOUND_MODES)];
 #if CONFIG_COMPOUND_SINGLEREF
@@ -534,10 +527,10 @@ extern const aom_tree_index av1_motion_mode_tree[TREE_SIZE(MOTION_MODES)];
 extern const aom_tree_index
     av1_switchable_restore_tree[TREE_SIZE(RESTORE_SWITCHABLE_TYPES)];
 #endif  // CONFIG_LOOP_RESTORATION
-#if CONFIG_EC_MULTISYMBOL
 extern int av1_switchable_interp_ind[SWITCHABLE_FILTERS];
 extern int av1_switchable_interp_inv[SWITCHABLE_FILTERS];
 
+#if !CONFIG_EC_ADAPT
 void av1_set_mode_cdfs(struct AV1Common *cm);
 #endif
 
@@ -545,7 +538,7 @@ void av1_setup_past_independence(struct AV1Common *cm);
 
 void av1_adapt_intra_frame_probs(struct AV1Common *cm);
 void av1_adapt_inter_frame_probs(struct AV1Common *cm);
-#if CONFIG_EC_MULTISYMBOL && !CONFIG_EXT_TX
+#if !CONFIG_EXT_TX
 extern int av1_ext_tx_ind[TX_TYPES];
 extern int av1_ext_tx_inv[TX_TYPES];
 #endif

@@ -92,6 +92,6 @@ TEST_P(AltRefForcedKeyTestLarge, ForcedFrameIsKey) {
 
 AV1_INSTANTIATE_TEST_CASE(AltRefForcedKeyTestLarge,
                           ::testing::Values(::libaom_test::kOnePassGood),
-                          ::testing::Range(0, 9));
+                          ::testing::Values(2, 5));
 
 }  // namespace

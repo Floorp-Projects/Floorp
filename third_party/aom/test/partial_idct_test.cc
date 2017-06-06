@@ -52,7 +52,7 @@ typedef std::tr1::tuple<FwdTxfmFunc, InvTxfmWithBdFunc, InvTxfmWithBdFunc,
                         TX_SIZE, int, int, int>
     PartialInvTxfmParam;
 const int kMaxNumCoeffs = 1024;
-const int kCountTestBlock = 1000;
+const int kCountTestBlock = 10000;
 
 class PartialIDctTest : public ::testing::TestWithParam<PartialInvTxfmParam> {
  public:
@@ -231,8 +231,8 @@ TEST_P(PartialIDctTest, AddOutputBlock) {
 }
 
 TEST_P(PartialIDctTest, SingleExtremeCoeff) {
-  const int16_t max_coeff = std::numeric_limits<int16_t>::max();
-  const int16_t min_coeff = std::numeric_limits<int16_t>::min();
+  const int16_t max_coeff = INT16_MAX;
+  const int16_t min_coeff = INT16_MIN;
   for (int i = 0; i < last_nonzero_; ++i) {
     memset(input_block_, 0, sizeof(*input_block_) * input_block_size_);
     // Run once for min and once for max.
@@ -417,6 +417,30 @@ const PartialInvTxfmParam ssse3_partial_idct_tests[] = {
 INSTANTIATE_TEST_CASE_P(SSSE3, PartialIDctTest,
                         ::testing::ValuesIn(ssse3_partial_idct_tests));
 #endif  // HAVE_SSSE3
+
+#if HAVE_AVX2
+const PartialInvTxfmParam avx2_partial_idct_tests[] = {
+  make_tuple(&aom_fdct16x16_c, &wrapper<aom_idct16x16_256_add_c>,
+             &wrapper<aom_idct16x16_256_add_avx2>, TX_16X16, 256, 8, 1),
+  make_tuple(&aom_fdct16x16_c, &wrapper<aom_idct16x16_256_add_c>,
+             &wrapper<aom_idct16x16_38_add_avx2>, TX_16X16, 38, 8, 1),
+  make_tuple(&aom_fdct16x16_c, &wrapper<aom_idct16x16_256_add_c>,
+             &wrapper<aom_idct16x16_10_add_avx2>, TX_16X16, 10, 8, 1),
+  make_tuple(&aom_fdct16x16_c, &wrapper<aom_idct16x16_256_add_c>,
+             &wrapper<aom_idct16x16_1_add_avx2>, TX_16X16, 1, 8, 1),
+  make_tuple(&aom_fdct32x32_c, &wrapper<aom_idct32x32_1024_add_c>,
+             &wrapper<aom_idct32x32_1024_add_avx2>, TX_32X32, 1024, 8, 1),
+  make_tuple(&aom_fdct32x32_c, &wrapper<aom_idct32x32_1024_add_c>,
+             &wrapper<aom_idct32x32_135_add_avx2>, TX_32X32, 135, 8, 1),
+  make_tuple(&aom_fdct32x32_c, &wrapper<aom_idct32x32_1024_add_c>,
+             &wrapper<aom_idct32x32_34_add_avx2>, TX_32X32, 34, 8, 1),
+  make_tuple(&aom_fdct32x32_c, &wrapper<aom_idct32x32_1024_add_c>,
+             &wrapper<aom_idct32x32_1_add_avx2>, TX_32X32, 1, 8, 1),
+};
+
+INSTANTIATE_TEST_CASE_P(AVX2, PartialIDctTest,
+                        ::testing::ValuesIn(avx2_partial_idct_tests));
+#endif  // HAVE_AVX2
 
 #if HAVE_DSPR2 && !CONFIG_HIGHBITDEPTH
 const PartialInvTxfmParam dspr2_partial_idct_tests[] = {

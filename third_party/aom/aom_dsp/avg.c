@@ -13,26 +13,6 @@
 #include "./aom_dsp_rtcd.h"
 #include "aom_ports/mem.h"
 
-unsigned int aom_avg_8x8_c(const uint8_t *src, int stride) {
-  int i, j;
-  int sum = 0;
-  for (i = 0; i < 8; ++i, src += stride)
-    for (j = 0; j < 8; sum += src[j], ++j) {
-    }
-
-  return ROUND_POWER_OF_TWO(sum, 6);
-}
-
-unsigned int aom_avg_4x4_c(const uint8_t *src, int stride) {
-  int i, j;
-  int sum = 0;
-  for (i = 0; i < 4; ++i, src += stride)
-    for (j = 0; j < 4; sum += src[j], ++j) {
-    }
-
-  return ROUND_POWER_OF_TWO(sum, 4);
-}
-
 // src_diff: first pass, 9 bit, dynamic range [-255, 255]
 //           second pass, 12 bit, dynamic range [-2040, 2040]
 static void hadamard_col8(const int16_t *src_diff, int src_stride,
@@ -192,28 +172,6 @@ void aom_minmax_8x8_c(const uint8_t *src, int src_stride, const uint8_t *ref,
 }
 
 #if CONFIG_HIGHBITDEPTH
-unsigned int aom_highbd_avg_8x8_c(const uint8_t *src, int stride) {
-  int i, j;
-  int sum = 0;
-  const uint16_t *s = CONVERT_TO_SHORTPTR(src);
-  for (i = 0; i < 8; ++i, s += stride)
-    for (j = 0; j < 8; sum += s[j], ++j) {
-    }
-
-  return ROUND_POWER_OF_TWO(sum, 6);
-}
-
-unsigned int aom_highbd_avg_4x4_c(const uint8_t *src, int stride) {
-  int i, j;
-  int sum = 0;
-  const uint16_t *s = CONVERT_TO_SHORTPTR(src);
-  for (i = 0; i < 4; ++i, s += stride)
-    for (j = 0; j < 4; sum += s[j], ++j) {
-    }
-
-  return ROUND_POWER_OF_TWO(sum, 4);
-}
-
 void aom_highbd_minmax_8x8_c(const uint8_t *s8, int p, const uint8_t *d8,
                              int dp, int *min, int *max) {
   int i, j;

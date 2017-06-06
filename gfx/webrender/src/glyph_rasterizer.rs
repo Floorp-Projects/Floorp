@@ -155,28 +155,22 @@ impl GlyphRasterizer {
 
         let mut glyphs = Vec::with_capacity(glyph_instances.len());
 
-        {
-            // TODO: If this takes too long we can resurect a dedicated glyph
-            // dispatch thread, hopefully not.
-            profile_scope!("glyph-requests");
+        // select glyphs that have not been requested yet.
+        for glyph in glyph_instances {
+            let glyph_request = GlyphRequest::new(
+                font_key,
+                size,
+                color,
+                glyph.index,
+                glyph.point,
+                render_mode,
+                glyph_options,
+            );
 
-            // select glyphs that have not been requested yet.
-            for glyph in glyph_instances {
-                let glyph_request = GlyphRequest::new(
-                    font_key,
-                    size,
-                    color,
-                    glyph.index,
-                    glyph.point,
-                    render_mode,
-                    glyph_options,
-                );
-
-                glyph_cache.mark_as_needed(&glyph_request, current_frame_id);
-                if !glyph_cache.contains_key(&glyph_request) && !self.pending_glyphs.contains(&glyph_request) {
-                    self.pending_glyphs.insert(glyph_request.clone());
-                    glyphs.push(glyph_request);
-                }
+            glyph_cache.mark_as_needed(&glyph_request, current_frame_id);
+            if !glyph_cache.contains_key(&glyph_request) && !self.pending_glyphs.contains(&glyph_request) {
+                self.pending_glyphs.insert(glyph_request.clone());
+                glyphs.push(glyph_request);
             }
         }
 

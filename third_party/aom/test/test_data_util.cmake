@@ -11,15 +11,14 @@
 
 # Parses test/test-data.sha1 and writes captured file names and checksums to
 # $out_files and $out_checksums as lists.
-function (make_test_data_lists out_files out_checksums)
-  if (NOT AOM_TEST_DATA_LIST OR NOT EXISTS "${AOM_TEST_DATA_LIST}")
-    message(FATAL_ERROR "AOM_TEST_DATA_LIST (${AOM_TEST_DATA_LIST}) missing or "
-            "variable empty.")
+function (make_test_data_lists test_data_file out_files out_checksums)
+  if (NOT test_data_file OR NOT EXISTS "${test_data_file}")
+    message(FATAL_ERROR "Test info file missing or empty (${test_data_file})")
   endif ()
 
-  # Read test-data.sha1 into $files_and_checksums. $files_and_checksums becomes
-  # a list with an entry for each line from $AOM_TEST_DATA_LIST.
-  file(STRINGS "${AOM_TEST_DATA_LIST}" files_and_checksums)
+  # Read $test_data_file into $files_and_checksums. $files_and_checksums becomes
+  # a list with an entry for each line from $test_data_file.
+  file(STRINGS "${test_data_file}" files_and_checksums)
 
   # Iterate over the list of lines and split it into $checksums and $filenames.
   foreach (line ${files_and_checksums})
@@ -33,8 +32,10 @@ function (make_test_data_lists out_files out_checksums)
     set(filenames ${filenames} ${filename})
   endforeach ()
 
-  if (NOT checksums OR NOT filenames)
-    message(FATAL_ERROR "Parsing of ${AOM_TEST_DATA_LIST} failed.")
+  list(LENGTH filenames num_files)
+  list(LENGTH checksums num_checksums)
+  if (NOT checksums OR NOT filenames OR NOT num_files EQUAL num_checksums)
+    message(FATAL_ERROR "Parsing of ${test_data_file} failed.")
   endif ()
 
   set(${out_checksums} ${checksums} PARENT_SCOPE)
@@ -62,7 +63,9 @@ function (check_file local_path expected_checksum out_needs_update)
     unset(${out_needs_update} PARENT_SCOPE)
   else ()
     set(${out_needs_update} 1 PARENT_SCOPE)
+    return ()
   endif ()
+  message("${local_path} up to date.")
 endfunction ()
 
 # Downloads data from $file_url, confirms that $file_checksum matches, and

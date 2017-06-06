@@ -27,7 +27,6 @@
 
 #ifdef XP_WIN
 #include <windows.h>
-#include "WinUtils.h"
 #endif
 
 #if defined(MOZ_GECKO_PROFILER) && defined(MOZ_PROFILING) && defined(XP_WIN)
@@ -350,15 +349,12 @@ IsUIMessageWaiting()
 #define NS_WM_IMELAST  WM_IME_KEYUP
   BOOL haveUIMessageWaiting = FALSE;
   MSG msg;
-  haveUIMessageWaiting |=
-    widget::WinUtils::PeekMessage(&msg, nullptr, WM_KEYFIRST,
-                                  WM_IME_KEYLAST, PM_NOREMOVE);
-  haveUIMessageWaiting |=
-    widget::WinUtils::PeekMessage(&msg, nullptr, NS_WM_IMEFIRST,
-                                  NS_WM_IMELAST, PM_NOREMOVE);
-  haveUIMessageWaiting |=
-    widget::WinUtils::PeekMessage(&msg, nullptr, WM_MOUSEFIRST,
-                                  WM_MOUSELAST, PM_NOREMOVE);
+  haveUIMessageWaiting |= ::PeekMessageW(&msg, nullptr, WM_KEYFIRST,
+                                         WM_IME_KEYLAST, PM_NOREMOVE);
+  haveUIMessageWaiting |= ::PeekMessageW(&msg, nullptr, NS_WM_IMEFIRST,
+                                         NS_WM_IMELAST, PM_NOREMOVE);
+  haveUIMessageWaiting |= ::PeekMessageW(&msg, nullptr, WM_MOUSEFIRST,
+                                         WM_MOUSELAST, PM_NOREMOVE);
   return haveUIMessageWaiting;
 #endif
 }

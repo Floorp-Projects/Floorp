@@ -37,6 +37,18 @@ set(h_file_header_block
 \#ifndef AOM_CONFIG_H_
 \#define AOM_CONFIG_H_
 ")
+set(cmake_file_header_block
+"##
+## Copyright (c) ${year}, Alliance for Open Media. All rights reserved
+##
+## This source code is subject to the terms of the BSD 2 Clause License and
+## the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+## was not distributed with this source code in the LICENSE file, you can
+## obtain it at www.aomedia.org/license/software. If the Alliance for Open
+## Media Patent License 1.0 was not distributed with this source code in the
+## PATENTS file, you can obtain it at www.aomedia.org/license/patent.
+##
+")
 
 # Terminates cmake execution when $var_name is an empty string, or the variable
 # name it contains does not expand to an existing directory.
@@ -79,6 +91,16 @@ foreach(cache_var ${cmake_cache_vars})
       "AOM_CONFIG_DIR\|AOM_ROOT\|^CMAKE_\|INLINE\|RESTRICT")
     file(APPEND "${aom_asm_config_template}"
          "${cache_var} equ \${${cache_var}}\n")
+  endif ()
+endforeach ()
+
+set(aom_rtcd_config_template "${AOM_CONFIG_DIR}/rtcd_config.cmake")
+file(WRITE "${aom_rtcd_config_template}" ${cmake_file_header_block})
+foreach(cache_var ${cmake_cache_vars})
+  if (NOT "${cache_var}" MATCHES
+      "AOM_CONFIG_DIR\|AOM_ROOT\|^CMAKE_\|INLINE\|RESTRICT")
+    file(APPEND "${aom_rtcd_config_template}"
+         "${cache_var}=\${RTCD_${cache_var}}\n")
   endif ()
 endforeach ()
 

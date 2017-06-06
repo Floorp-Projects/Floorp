@@ -9,16 +9,13 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
 #include <math.h>
 
+#include "./av1_rtcd.h"
 #include "av1/encoder/corner_match.h"
 
-#define MATCH_SZ 13
-#define MATCH_SZ_BY2 ((MATCH_SZ - 1) / 2)
-#define MATCH_SZ_SQ (MATCH_SZ * MATCH_SZ)
 #define SEARCH_SZ 9
 #define SEARCH_SZ_BY2 ((SEARCH_SZ - 1) / 2)
 
@@ -28,8 +25,8 @@
    centered at (x, y).
 */
 static double compute_variance(unsigned char *im, int stride, int x, int y) {
-  int sum = 0.0;
-  int sumsq = 0.0;
+  int sum = 0;
+  int sumsq = 0;
   int var;
   int i, j;
   for (i = 0; i < MATCH_SZ; ++i)
@@ -46,9 +43,9 @@ static double compute_variance(unsigned char *im, int stride, int x, int y) {
    correlation/standard deviation are taken over MATCH_SZ by MATCH_SZ windows
    of each image, centered at (x1, y1) and (x2, y2) respectively.
 */
-static double compute_cross_correlation(unsigned char *im1, int stride1, int x1,
-                                        int y1, unsigned char *im2, int stride2,
-                                        int x2, int y2) {
+double compute_cross_correlation_c(unsigned char *im1, int stride1, int x1,
+                                   int y1, unsigned char *im2, int stride2,
+                                   int x2, int y2) {
   int v1, v2;
   int sum1 = 0;
   int sum2 = 0;

@@ -37,6 +37,16 @@ void av1_iadst16_new(const int32_t *input, int32_t *output,
                      const int8_t *cos_bit, const int8_t *stage_range);
 void av1_iadst32_new(const int32_t *input, int32_t *output,
                      const int8_t *cos_bit, const int8_t *stage_range);
+#if CONFIG_EXT_TX
+void av1_iidentity4_c(const int32_t *input, int32_t *output,
+                      const int8_t *cos_bit, const int8_t *stage_range);
+void av1_iidentity8_c(const int32_t *input, int32_t *output,
+                      const int8_t *cos_bit, const int8_t *stage_range);
+void av1_iidentity16_c(const int32_t *input, int32_t *output,
+                       const int8_t *cos_bit, const int8_t *stage_range);
+void av1_iidentity32_c(const int32_t *input, int32_t *output,
+                       const int8_t *cos_bit, const int8_t *stage_range);
+#endif  // CONFIG_EXT_TX
 
 #ifdef __cplusplus
 }

@@ -660,7 +660,7 @@ protected:
   // Data needed to estimate playback data rate. The timeline used for
   // this estimate is "decode time" (where the "current time" is the
   // time of the last decoded video frame).
-  RefPtr<MediaChannelStatistics> mPlaybackStatistics;
+  MediaChannelStatistics mPlaybackStatistics;
 
   // True when our media stream has been pinned. We pin the stream
   // while seeking.

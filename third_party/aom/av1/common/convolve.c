@@ -290,12 +290,14 @@ void av1_convolve_2d_facade(const uint8_t *src, int src_stride, uint8_t *dst,
   InterpFilterParams filter_params_y =
       av1_get_interp_filter_params(interp_filter[0 + 2 * conv_params->ref]);
 
+#if USE_EXTRA_FILTER
   if (filter_params_x.interp_filter == MULTITAP_SHARP &&
       filter_params_y.interp_filter == MULTITAP_SHARP) {
     // Avoid two directions both using 12-tap filter.
     // This will reduce hardware implementation cost.
     filter_params_y = av1_get_interp_filter_params(EIGHTTAP_SHARP);
   }
+#endif  // USE_EXTRA_FILTER
 #else
   InterpFilterParams filter_params_x =
       av1_get_interp_filter_params(*interp_filter);
@@ -330,6 +332,140 @@ void av1_convolve_2d_facade(const uint8_t *src, int src_stride, uint8_t *dst,
                     subpel_y_q4, conv_params);
   }
 }
+
+#if CONFIG_HIGHBITDEPTH
+static INLINE void transpose_uint16(uint16_t *dst, int dst_stride,
+                                    const uint16_t *src, int src_stride, int w,
+                                    int h) {
+  int r, c;
+  for (r = 0; r < h; ++r)
+    for (c = 0; c < w; ++c) dst[c * dst_stride + r] = src[r * src_stride + c];
+}
+
+void av1_highbd_convolve_rounding(const int32_t *src, int src_stride,
+                                  uint8_t *dst8, int dst_stride, int w, int h,
+                                  int bits, int bd) {
+  uint16_t *dst = CONVERT_TO_SHORTPTR(dst8);
+  int r, c;
+  for (r = 0; r < h; ++r) {
+    for (c = 0; c < w; ++c) {
+      dst[r * dst_stride + c] = clip_pixel_highbd(
+          ROUND_POWER_OF_TWO_SIGNED(src[r * src_stride + c], bits), bd);
+    }
+  }
+}
+
+void av1_highbd_convolve_2d(const uint16_t *src, int src_stride,
+                            CONV_BUF_TYPE *dst, int dst_stride, int w, int h,
+                            InterpFilterParams *filter_params_x,
+                            InterpFilterParams *filter_params_y,
+                            const int subpel_x_q4, const int subpel_y_q4,
+                            ConvolveParams *conv_params, int bd) {
+  int x, y, k;
+  CONV_BUF_TYPE im_block[(MAX_SB_SIZE + MAX_FILTER_TAP - 1) * MAX_SB_SIZE];
+  int im_h = h + filter_params_y->taps - 1;
+  int im_stride = w;
+  const int fo_vert = filter_params_y->taps / 2 - 1;
+  const int fo_horiz = filter_params_x->taps / 2 - 1;
+  (void)conv_params;
+  // horizontal filter
+  const uint16_t *src_horiz = src - fo_vert * src_stride;
+  const int16_t *x_filter = av1_get_interp_filter_subpel_kernel(
+      *filter_params_x, subpel_x_q4 & SUBPEL_MASK);
+  for (y = 0; y < im_h; ++y) {
+    for (x = 0; x < w; ++x) {
+      CONV_BUF_TYPE sum = 0;
+      for (k = 0; k < filter_params_x->taps; ++k) {
+        sum += x_filter[k] * src_horiz[y * src_stride + x - fo_horiz + k];
+      }
+#if CONFIG_COMPOUND_ROUND
+      im_block[y * im_stride + x] = clip_pixel_highbd(
+          ROUND_POWER_OF_TWO_SIGNED(sum, conv_params->round_0), bd);
+#else
+      (void)bd;
+      im_block[y * im_stride + x] =
+          ROUND_POWER_OF_TWO_SIGNED(sum, conv_params->round_0);
+#endif
+    }
+  }
+
+  // vertical filter
+  CONV_BUF_TYPE *src_vert = im_block + fo_vert * im_stride;
+  const int16_t *y_filter = av1_get_interp_filter_subpel_kernel(
+      *filter_params_y, subpel_y_q4 & SUBPEL_MASK);
+  for (y = 0; y < h; ++y) {
+    for (x = 0; x < w; ++x) {
+      CONV_BUF_TYPE sum = 0;
+      for (k = 0; k < filter_params_y->taps; ++k) {
+        sum += y_filter[k] * src_vert[(y - fo_vert + k) * im_stride + x];
+      }
+      dst[y * dst_stride + x] +=
+          ROUND_POWER_OF_TWO_SIGNED(sum, conv_params->round_1);
+    }
+  }
+}
+
+void av1_highbd_convolve_2d_facade(const uint8_t *src8, int src_stride,
+                                   uint8_t *dst, int dst_stride, int w, int h,
+                                   const InterpFilter *interp_filter,
+                                   const int subpel_x_q4, int x_step_q4,
+                                   const int subpel_y_q4, int y_step_q4,
+                                   ConvolveParams *conv_params, int bd) {
+  (void)x_step_q4;
+  (void)y_step_q4;
+  (void)dst;
+  (void)dst_stride;
+#if CONFIG_DUAL_FILTER
+  InterpFilterParams filter_params_x =
+      av1_get_interp_filter_params(interp_filter[1 + 2 * conv_params->ref]);
+  InterpFilterParams filter_params_y =
+      av1_get_interp_filter_params(interp_filter[0 + 2 * conv_params->ref]);
+
+#if USE_EXTRA_FILTER
+  if (filter_params_x.interp_filter == MULTITAP_SHARP &&
+      filter_params_y.interp_filter == MULTITAP_SHARP) {
+    // Avoid two directions both using 12-tap filter.
+    // This will reduce hardware implementation cost.
+    filter_params_y = av1_get_interp_filter_params(EIGHTTAP_SHARP);
+  }
+#endif
+#else
+  InterpFilterParams filter_params_x =
+      av1_get_interp_filter_params(*interp_filter);
+  InterpFilterParams filter_params_y =
+      av1_get_interp_filter_params(*interp_filter);
+#endif
+  const uint16_t *src = CONVERT_TO_SHORTPTR(src8);
+  if (filter_params_y.taps < filter_params_x.taps) {
+    uint16_t tr_src[(MAX_SB_SIZE + MAX_FILTER_TAP - 1) *
+                    (MAX_SB_SIZE + MAX_FILTER_TAP - 1)];
+    int tr_src_stride = MAX_SB_SIZE + MAX_FILTER_TAP - 1;
+    CONV_BUF_TYPE tr_dst[MAX_SB_SIZE * MAX_SB_SIZE];
+    int tr_dst_stride = MAX_SB_SIZE;
+    int fo_vert = filter_params_y.taps / 2 - 1;
+    int fo_horiz = filter_params_x.taps / 2 - 1;
+
+    transpose_uint16(
+        tr_src, tr_src_stride, src - fo_vert * src_stride - fo_horiz,
+        src_stride, w + filter_params_x.taps - 1, h + filter_params_y.taps - 1);
+    transpose_int32(tr_dst, tr_dst_stride, conv_params->dst,
+                    conv_params->dst_stride, w, h);
+
+    // horizontal and vertical parameters are swapped because of the transpose
+    av1_highbd_convolve_2d(tr_src + fo_horiz * tr_src_stride + fo_vert,
+                           tr_src_stride, tr_dst, tr_dst_stride, h, w,
+                           &filter_params_y, &filter_params_x, subpel_y_q4,
+                           subpel_x_q4, conv_params, bd);
+    transpose_int32(conv_params->dst, conv_params->dst_stride, tr_dst,
+                    tr_dst_stride, h, w);
+  } else {
+    av1_highbd_convolve_2d(src, src_stride, conv_params->dst,
+                           conv_params->dst_stride, w, h, &filter_params_x,
+                           &filter_params_y, subpel_x_q4, subpel_y_q4,
+                           conv_params, bd);
+  }
+}
+#endif  // CONFIG_HIGHBITDEPTH
 
 #endif  // CONFIG_CONVOLVE_ROUND
 
@@ -394,7 +530,7 @@ static void convolve_helper(const uint8_t *src, int src_stride, uint8_t *dst,
                     temp[((MAX_SB_SIZE * 2 + 16) + 16) * MAX_SB_SIZE]);
     int max_intermediate_size = ((MAX_SB_SIZE * 2 + 16) + 16);
     int filter_size;
-#if CONFIG_DUAL_FILTER
+#if CONFIG_DUAL_FILTER && USE_EXTRA_FILTER
     if (interp_filter[0 + 2 * conv_params->ref] == MULTITAP_SHARP &&
         interp_filter[1 + 2 * conv_params->ref] == MULTITAP_SHARP) {
       // Avoid two directions both using 12-tap filter.
@@ -427,7 +563,7 @@ static void convolve_helper(const uint8_t *src, int src_stride, uint8_t *dst,
       convolve_horiz(temp + (filter_size / 2 - 1), temp_stride, dst, dst_stride,
                      w, h, filter_params, subpel_x_q4, x_step_q4, conv_params);
     } else
-#endif  // CONFIG_DUAL_FILTER
+#endif  // CONFIG_DUAL_FILTER && USE_EXTRA_FILTER
     {
       int intermediate_height;
       int temp_stride = MAX_SB_SIZE;
@@ -708,15 +844,15 @@ void av1_highbd_convolve(const uint8_t *src8, int src_stride, uint8_t *dst8,
         av1_get_interp_filter_params(interp_filter[1 + 2 * ref_idx]);
     InterpFilterParams filter_params_y =
         av1_get_interp_filter_params(interp_filter[0 + 2 * ref_idx]);
+#endif
+
+#if CONFIG_DUAL_FILTER && USE_EXTRA_FILTER
     if (interp_filter[0 + 2 * ref_idx] == MULTITAP_SHARP &&
         interp_filter[1 + 2 * ref_idx] == MULTITAP_SHARP) {
       // Avoid two directions both using 12-tap filter.
       // This will reduce hardware implementation cost.
       filter_params_y = av1_get_interp_filter_params(EIGHTTAP_SHARP);
     }
-#endif
-
-#if CONFIG_DUAL_FILTER
     if (filter_params_y.taps < filter_params_x.taps) {
       int intermediate_width;
       int temp_stride = max_intermediate_size;
@@ -739,7 +875,7 @@ void av1_highbd_convolve(const uint8_t *src8, int src_stride, uint8_t *dst8,
           temp8 + (filter_size / 2 - 1), temp_stride, dst8, dst_stride, w, h,
           filter_params, subpel_x_q4, x_step_q4, ref_idx, bd);
     } else
-#endif  // CONFIG_DUAL_FILTER
+#endif  // CONFIG_DUAL_FILTER && USE_EXTRA_FILTER
     {
       int intermediate_height;
       int temp_stride = MAX_SB_SIZE;

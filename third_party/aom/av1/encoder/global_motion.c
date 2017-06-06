@@ -124,14 +124,15 @@ static void force_wmtype(WarpedMotionParams *wm, TransformationType wmtype) {
   wm->wmtype = wmtype;
 }
 
-double refine_integerized_param(WarpedMotionParams *wm,
-                                TransformationType wmtype,
+int64_t refine_integerized_param(WarpedMotionParams *wm,
+                                 TransformationType wmtype,
 #if CONFIG_HIGHBITDEPTH
-                                int use_hbd, int bd,
+                                 int use_hbd, int bd,
 #endif  // CONFIG_HIGHBITDEPTH
-                                uint8_t *ref, int r_width, int r_height,
-                                int r_stride, uint8_t *dst, int d_width,
-                                int d_height, int d_stride, int n_refinements) {
+                                 uint8_t *ref, int r_width, int r_height,
+                                 int r_stride, uint8_t *dst, int d_width,
+                                 int d_height, int d_stride,
+                                 int n_refinements) {
   static const int max_trans_model_params[TRANS_TYPES] = {
     0, 2, 4, 6, 8, 8, 8
   };
@@ -139,22 +140,21 @@ double refine_integerized_param(WarpedMotionParams *wm,
   int i = 0, p;
   int n_params = max_trans_model_params[wmtype];
   int32_t *param_mat = wm->wmmat;
-  double step_error;
+  int64_t step_error, best_error;
   int32_t step;
   int32_t *param;
   int32_t curr_param;
   int32_t best_param;
-  double best_error;
 
   force_wmtype(wm, wmtype);
-  best_error = av1_warp_erroradv(wm,
+  best_error = av1_warp_error(wm,
 #if CONFIG_HIGHBITDEPTH
-                                 use_hbd, bd,
+                              use_hbd, bd,
 #endif  // CONFIG_HIGHBITDEPTH
-                                 ref, r_width, r_height, r_stride,
-                                 dst + border * d_stride + border, border,
-                                 border, d_width - 2 * border,
-                                 d_height - 2 * border, d_stride, 0, 0, 16, 16);
+                              ref, r_width, r_height, r_stride,
+                              dst + border * d_stride + border, border, border,
+                              d_width - 2 * border, d_height - 2 * border,
+                              d_stride, 0, 0, 16, 16);
   step = 1 << (n_refinements + 1);
   for (i = 0; i < n_refinements; i++, step >>= 1) {
     for (p = 0; p < n_params; ++p) {
@@ -167,7 +167,7 @@ double refine_integerized_param(WarpedMotionParams *wm,
       best_param = curr_param;
       // look to the left
       *param = add_param_offset(p, curr_param, -step);
-      step_error = av1_warp_erroradv(
+      step_error = av1_warp_error(
           wm,
 #if CONFIG_HIGHBITDEPTH
           use_hbd, bd,
@@ -183,7 +183,7 @@ double refine_integerized_param(WarpedMotionParams *wm,
 
       // look to the right
       *param = add_param_offset(p, curr_param, step);
-      step_error = av1_warp_erroradv(
+      step_error = av1_warp_error(
           wm,
 #if CONFIG_HIGHBITDEPTH
           use_hbd, bd,
@@ -202,7 +202,7 @@ double refine_integerized_param(WarpedMotionParams *wm,
       // for the biggest step size
       while (step_dir) {
         *param = add_param_offset(p, best_param, step * step_dir);
-        step_error = av1_warp_erroradv(
+        step_error = av1_warp_error(
             wm,
 #if CONFIG_HIGHBITDEPTH
             use_hbd, bd,
