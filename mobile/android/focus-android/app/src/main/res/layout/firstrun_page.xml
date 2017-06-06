@@ -10,64 +10,83 @@
     android:fillViewport="true"
     android:scrollbars="none">
 
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
         <android.support.v7.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="@dimen/firstrun_card_width"
+            android:layout_height="@dimen/firstrun_card_height"
             android:layout_gravity="center"
-            android:layout_marginBottom="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
             android:elevation="4dp"
-            cardview:cardBackgroundColor="#ffffff"
             cardview:cardCornerRadius="6dp">
 
-            <LinearLayout
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/firstrun_card_background" />
+
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="bottom"
                 android:orientation="vertical">
 
-                <ImageView
-                    android:id="@+id/image"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    tools:src="@drawable/onboarding_img1" />
-
-                <TextView
-                    android:id="@+id/title"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:paddingLeft="20dp"
-                    android:paddingRight="20dp"
-                    android:paddingTop="20dp"
-                    android:textColor="#ff212121"
-                    android:textSize="16sp"
-                    tools:text="@string/firstrun_tracking_title" />
+                    android:layout_gravity="top"
+                    android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:padding="24dp"
-                    android:textColor="#ff909090"
-                    android:textSize="14sp"
-                    tools:text="@string/firstrun_tracking_text" />
+                    <ImageView
+                        android:id="@+id/image"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginBottom="24dp"
+                        tools:src="@drawable/onboarding_img1" />
+
+                    <TextView
+                        android:id="@+id/title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="24dp"
+                        android:layout_marginRight="24dp"
+                        android:gravity="center"
+                        android:lineSpacingMultiplier="1.25"
+                        android:textColor="#ff212121"
+                        android:textSize="18sp"
+                        tools:text="@string/firstrun_tracking_title" />
+
+                    <TextView
+                        android:id="@+id/text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="24dp"
+                        android:layout_marginRight="24dp"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center"
+                        android:lineSpacingMultiplier="1.25"
+                        android:textColor="#ff737373"
+                        android:textSize="14sp"
+                        tools:text="@string/firstrun_tracking_text" />
+
+                </LinearLayout>
 
                 <Button
                     android:id="@+id/button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
                     android:background="?android:attr/selectableItemBackground"
-                    android:textColor="#ffb56fe1"
+                    android:textColor="#ff9400FF"
                     android:textSize="16sp"
                     tools:text="@string/firstrun_next_button" />
 
-            </LinearLayout>
+            </FrameLayout>
 
         </android.support.v7.widget.CardView>
+
+    </FrameLayout>
 
 </ScrollView>
