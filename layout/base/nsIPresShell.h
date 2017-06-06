@@ -428,15 +428,31 @@ public:
    */
   virtual nsIScrollableFrame* GetRootScrollFrameAsScrollableExternal() const;
 
-  /*
+  /**
+   * Get the current focused content or DOM selection that should be the
+   * target for scrolling.
+   */
+  already_AddRefed<nsIContent> GetContentForScrolling() const;
+
+  /**
+   * Gets nearest scrollable frame from the specified content node. The frame
+   * is scrollable with overflow:scroll or overflow:auto in some direction when
+   * aDirection is eEither.  Otherwise, this returns a nearest frame that is
+   * scrollable in the specified direction.
+   */
+  enum ScrollDirection { eHorizontal, eVertical, eEither };
+  nsIScrollableFrame* GetScrollableFrameToScrollForContent(
+                         nsIContent* aContent,
+                         ScrollDirection aDirection);
+
+  /**
    * Gets nearest scrollable frame from current focused content or DOM
    * selection if there is no focused content. The frame is scrollable with
    * overflow:scroll or overflow:auto in some direction when aDirection is
    * eEither.  Otherwise, this returns a nearest frame that is scrollable in
    * the specified direction.
    */
-  enum ScrollDirection { eHorizontal, eVertical, eEither };
-  nsIScrollableFrame* GetFrameToScrollAsScrollable(ScrollDirection aDirection);
+  nsIScrollableFrame* GetScrollableFrameToScroll(ScrollDirection aDirection);
 
   /**
    * Returns the page sequence frame associated with the frame hierarchy.
@@ -1419,6 +1435,12 @@ public:
    * Get the root DOM window of this presShell.
    */
   virtual already_AddRefed<nsPIDOMWindowOuter> GetRootWindow() = 0;
+
+  /**
+   * This returns the focused DOM window under our top level window.
+   * I.e., when we are deactive, this returns the *last* focused DOM window.
+   */
+  virtual already_AddRefed<nsPIDOMWindowOuter> GetFocusedDOMWindowInOurWindow() = 0;
 
   /**
    * Get the layer manager for the widget of the root view, if it has

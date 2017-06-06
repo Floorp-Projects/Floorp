@@ -2280,7 +2280,7 @@ NS_IMETHODIMP
 PresShell::PageMove(bool aForward, bool aExtend)
 {
   nsIScrollableFrame *scrollableFrame =
-    GetFrameToScrollAsScrollable(nsIPresShell::eVertical);
+    GetScrollableFrameToScroll(nsIPresShell::eVertical);
   if (!scrollableFrame)
     return NS_OK;
 
@@ -2300,7 +2300,7 @@ NS_IMETHODIMP
 PresShell::ScrollPage(bool aForward)
 {
   nsIScrollableFrame* scrollFrame =
-    GetFrameToScrollAsScrollable(nsIPresShell::eVertical);
+    GetScrollableFrameToScroll(nsIPresShell::eVertical);
   if (scrollFrame) {
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
         (uint32_t) ScrollInputMethod::MainThreadScrollPage);
@@ -2318,7 +2318,7 @@ NS_IMETHODIMP
 PresShell::ScrollLine(bool aForward)
 {
   nsIScrollableFrame* scrollFrame =
-    GetFrameToScrollAsScrollable(nsIPresShell::eVertical);
+    GetScrollableFrameToScroll(nsIPresShell::eVertical);
   if (scrollFrame) {
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
         (uint32_t) ScrollInputMethod::MainThreadScrollLine);
@@ -2339,7 +2339,7 @@ NS_IMETHODIMP
 PresShell::ScrollCharacter(bool aRight)
 {
   nsIScrollableFrame* scrollFrame =
-    GetFrameToScrollAsScrollable(nsIPresShell::eHorizontal);
+    GetScrollableFrameToScroll(nsIPresShell::eHorizontal);
   if (scrollFrame) {
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
         (uint32_t) ScrollInputMethod::MainThreadScrollCharacter);
@@ -2359,7 +2359,7 @@ NS_IMETHODIMP
 PresShell::CompleteScroll(bool aForward)
 {
   nsIScrollableFrame* scrollFrame =
-    GetFrameToScrollAsScrollable(nsIPresShell::eVertical);
+    GetScrollableFrameToScroll(nsIPresShell::eVertical);
   if (scrollFrame) {
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
         (uint32_t) ScrollInputMethod::MainThreadCompleteScroll);
@@ -2833,12 +2833,9 @@ PresShell::FrameNeedsToContinueReflow(nsIFrame *aFrame)
   mFramesToDirty.PutEntry(aFrame);
 }
 
-nsIScrollableFrame*
-nsIPresShell::GetFrameToScrollAsScrollable(
-                nsIPresShell::ScrollDirection aDirection)
+already_AddRefed<nsIContent>
+nsIPresShell::GetContentForScrolling() const
 {
-  nsIScrollableFrame* scrollFrame = nullptr;
-
   nsCOMPtr<nsIContent> focusedContent;
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm && mDocument) {
@@ -2856,8 +2853,17 @@ nsIPresShell::GetFrameToScrollAsScrollable(
       focusedContent = do_QueryInterface(focusedNode);
     }
   }
-  if (focusedContent) {
-    nsIFrame* startFrame = focusedContent->GetPrimaryFrame();
+  return focusedContent.forget();
+}
+
+nsIScrollableFrame*
+nsIPresShell::GetScrollableFrameToScrollForContent(
+                nsIContent* aContent,
+                nsIPresShell::ScrollDirection aDirection)
+{
+  nsIScrollableFrame* scrollFrame = nullptr;
+  if (aContent) {
+    nsIFrame* startFrame = aContent->GetPrimaryFrame();
     if (startFrame) {
       scrollFrame = startFrame->GetScrollTargetFrame();
       if (scrollFrame) {
@@ -2878,6 +2884,13 @@ nsIPresShell::GetFrameToScrollAsScrollable(
     scrollFrame = GetRootScrollFrameAsScrollable();
   }
   return scrollFrame;
+}
+
+nsIScrollableFrame*
+nsIPresShell::GetScrollableFrameToScroll(nsIPresShell::ScrollDirection aDirection)
+{
+  nsCOMPtr<nsIContent> content = GetContentForScrolling();
+  return GetScrollableFrameToScrollForContent(content.get(), aDirection);
 }
 
 void
@@ -6742,6 +6755,17 @@ PresShell::GetRootWindow()
   return parent->GetRootWindow();
 }
 
+already_AddRefed<nsPIDOMWindowOuter>
+PresShell::GetFocusedDOMWindowInOurWindow()
+{
+  nsCOMPtr<nsPIDOMWindowOuter> rootWindow = GetRootWindow();
+  NS_ENSURE_TRUE(rootWindow, nullptr);
+  nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
+  nsFocusManager::GetFocusedDescendant(rootWindow, true,
+                                       getter_AddRefs(focusedWindow));
+  return focusedWindow.forget();
+}
+
 already_AddRefed<nsIPresShell>
 PresShell::GetParentPresShellForEventHandling()
 {
@@ -6786,17 +6810,6 @@ void
 PresShell::DisableNonTestMouseEvents(bool aDisable)
 {
   sDisableNonTestMouseEvents = aDisable;
-}
-
-already_AddRefed<nsPIDOMWindowOuter>
-PresShell::GetFocusedDOMWindowInOurWindow()
-{
-  nsCOMPtr<nsPIDOMWindowOuter> rootWindow = GetRootWindow();
-  NS_ENSURE_TRUE(rootWindow, nullptr);
-  nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
-  nsFocusManager::GetFocusedDescendant(rootWindow, true,
-                                       getter_AddRefs(focusedWindow));
-  return focusedWindow.forget();
 }
 
 void

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <stack>
+#include <unordered_set>
 #include "APZCTreeManager.h"
 #include "AsyncPanZoomController.h"
 #include "Compositor.h"                 // for Compositor
@@ -21,6 +22,7 @@
 #include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
 #include "mozilla/layers/AsyncDragMetrics.h" // for AsyncDragMetrics
 #include "mozilla/layers/CompositorBridgeParent.h" // for CompositorBridgeParent, etc
+#include "mozilla/layers/FocusState.h"  // for FocusState
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/layers/WebRenderScrollDataWrapper.h"
 #include "mozilla/MouseEvents.h"
@@ -82,6 +84,11 @@ struct APZCTreeManager::TreeBuildingState {
   // This is initialized with all nodes in the old tree, and nodes are removed
   // from it as we reuse them in the new tree.
   nsTArray<RefPtr<HitTestingTreeNode>> mNodesToDestroy;
+  // A set of layer trees that are no longer in the hit testing tree. This is
+  // used to destroy unneeded focus targets at the end of tree building. This
+  // is needed in addition to mNodesToDestroy because a hit testing node for a
+  // layer tree can be removed without the whole layer tree being removed.
+  std::unordered_set<uint64_t> mLayersIdsToDestroy;
 
   // This map is populated as we place APZCs into the new tree. Its purpose is
   // to facilitate re-using the same APZC for different layers that scroll
@@ -263,6 +270,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
       {
         state.mNodesToDestroy.AppendElement(aNode);
       });
+  state.mLayersIdsToDestroy = mFocusState.GetFocusTargetLayerIds();
   mRootNode = nullptr;
 
   if (aRoot) {
@@ -289,6 +297,9 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
           aLayerMetrics.SetApzc(apzc);
 
           mApzcTreeLog << '\n';
+
+          // Mark that this layer tree is being used
+          state.mLayersIdsToDestroy.erase(layersId);
 
           // Accumulate the CSS transform between layers that have an APZC.
           // In the terminology of the big comment above APZCTreeManager::GetScreenToApzcTransform, if
@@ -335,11 +346,26 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
     state.mNodesToDestroy[i]->Destroy();
   }
 
+  // Clear out any focus targets that are no longer needed
+  for (auto layersId : state.mLayersIdsToDestroy) {
+    mFocusState.RemoveFocusTarget(layersId);
+  }
+
 #if ENABLE_APZCTM_LOGGING
   // Make the hit-test tree line up with the layer dump
   printf_stderr("APZCTreeManager (%p)\n", this);
   mRootNode->Dump("  ");
 #endif
+}
+
+void
+APZCTreeManager::UpdateFocusState(uint64_t aRootLayerTreeId,
+                                  uint64_t aOriginatingLayersId,
+                                  const FocusTarget& aFocusTarget)
+{
+  mFocusState.Update(aRootLayerTreeId,
+                     aOriginatingLayersId,
+                     aFocusTarget);
 }
 
 void

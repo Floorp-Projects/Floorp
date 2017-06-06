@@ -865,6 +865,25 @@ nsLayoutUtils::FindScrollableFrameFor(ViewID aId)
   return scrollFrame ? scrollFrame->GetScrollTargetFrame() : nullptr;
 }
 
+ViewID
+nsLayoutUtils::FindIDForScrollableFrame(nsIScrollableFrame* aScrollable)
+{
+  if (!aScrollable) {
+    return FrameMetrics::NULL_SCROLL_ID;
+  }
+
+  nsIFrame* scrollFrame = do_QueryFrame(aScrollable);
+  nsIContent* scrollContent = scrollFrame->GetContent();
+
+  FrameMetrics::ViewID scrollId;
+  if (scrollContent &&
+      nsLayoutUtils::FindIDFor(scrollContent, &scrollId)) {
+    return scrollId;
+  }
+
+  return FrameMetrics::NULL_SCROLL_ID;
+}
+
 static nsRect
 ApplyRectMultiplier(nsRect aRect, float aMultiplier)
 {
