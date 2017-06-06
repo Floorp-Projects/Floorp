@@ -1561,41 +1561,35 @@ FxAccountsInternal.prototype = {
     return Promise.resolve();
   },
 
-  handleDeviceDisconnection(deviceId) {
-    return this.currentAccountState.getUserAccountData()
-      .then(data => data ? data.deviceId : null)
-      .then(localDeviceId => {
-        if (!localDeviceId) {
-          // We've already been logged out (and that logout is probably what
-          // caused us to get here via push!), so don't make noise here.
-          log.info(`Push request to disconnect, but we've already disconnected`);
-          return null;
-        }
-        if (deviceId == localDeviceId) {
-          this.notifyObservers(ON_DEVICE_DISCONNECTED_NOTIFICATION);
-          return this.signOut(true);
-        }
-        return null;
-    });
+  async handleDeviceDisconnection(deviceId) {
+    const accountData = await this.currentAccountState.getUserAccountData();
+    const localDeviceId = accountData ? accountData.deviceId : null;
+    const isLocalDevice = (deviceId == localDeviceId);
+    if (isLocalDevice) {
+      this.signOut(true);
+    }
+    const data = JSON.stringify({ isLocalDevice });
+    Services.obs.notifyObservers(null, ON_DEVICE_DISCONNECTED_NOTIFICATION, data);
+    return null;
   },
 
-  handleAccountDestroyed(uid) {
-    return this.currentAccountState.getUserAccountData()
-      .then(data => data ? data.uid : null)
-      .then(localUid => {
-        if (!localUid) {
-          log.info(`Account destroyed push notification received, but we're already logged-out`);
-          return null;
-        }
-        if (uid == localUid) {
-          this.notifyObservers(ON_DEVICE_DISCONNECTED_NOTIFICATION);
-          return this.signOut(true);
-        }
-        log.info(
-          `The destroyed account uid doesn't match with the local uid. ` +
-          `Local: ${localUid}, account uid destroyed: ${uid}`);
-        return null;
-    });
+  async handleAccountDestroyed(uid) {
+    const accountData = await this.currentAccountState.getUserAccountData();
+    const localUid = accountData ? accountData.uid : null;
+    if (!localUid) {
+      log.info(`Account destroyed push notification received, but we're already logged-out`);
+      return null;
+    }
+    if (uid == localUid) {
+      const data = JSON.stringify({ isLocalDevice: true });
+      Services.obs.notifyObservers(null, ON_DEVICE_DISCONNECTED_NOTIFICATION, data);
+      this.notifyObservers(ON_DEVICE_DISCONNECTED_NOTIFICATION, data);
+      return this.signOut(true);
+    }
+    log.info(
+      `The destroyed account uid doesn't match with the local uid. ` +
+      `Local: ${localUid}, account uid destroyed: ${uid}`);
+    return null;
   },
 
   /**
