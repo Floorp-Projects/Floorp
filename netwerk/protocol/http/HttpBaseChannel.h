@@ -375,7 +375,7 @@ protected:
   virtual void DoNotifyListenerCleanup() = 0;
 
   // drop reference to listener, its callbacks, and the progress sink
-  void ReleaseListeners();
+  virtual void ReleaseListeners();
 
   // This is fired only when a cookie is created due to the presence of
   // Set-Cookie header in the response header of any network request.
