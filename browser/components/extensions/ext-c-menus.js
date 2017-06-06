@@ -36,7 +36,7 @@ class ContextMenusClickPropHandler {
   // The `onclick` function MUST be owned by `this.context`.
   setListener(id, onclick) {
     if (this.onclickMap.size === 0) {
-      this.context.childManager.getParentEvent("contextMenus.onClicked").addListener(this.dispatchEvent);
+      this.context.childManager.getParentEvent("menusInternal.onClicked").addListener(this.dispatchEvent);
       this.context.callOnClose(this);
     }
     this.onclickMap.set(id, onclick);
@@ -63,7 +63,7 @@ class ContextMenusClickPropHandler {
       return;
     }
     if (this.onclickMap.size === 0) {
-      this.context.childManager.getParentEvent("contextMenus.onClicked").removeListener(this.dispatchEvent);
+      this.context.childManager.getParentEvent("menusInternal.onClicked").removeListener(this.dispatchEvent);
       this.context.forgetOnClose(this);
     }
     let propHandlerMap = gPropHandlers.get(this.context.extension);
@@ -101,19 +101,19 @@ class ContextMenusClickPropHandler {
   }
 }
 
-this.contextMenus = class extends ExtensionAPI {
+this.menusInternal = class extends ExtensionAPI {
   getAPI(context) {
     let onClickedProp = new ContextMenusClickPropHandler(context);
 
-    return {
-      contextMenus: {
+    let api = {
+      menus: {
         create(createProperties, callback) {
           if (createProperties.id === null) {
             createProperties.id = ++gNextMenuItemID;
           }
           let {onclick} = createProperties;
           delete createProperties.onclick;
-          context.childManager.callParentAsyncFunction("contextMenus.createInternal", [
+          context.childManager.callParentAsyncFunction("menusInternal.create", [
             createProperties,
           ]).then(() => {
             if (onclick) {
@@ -129,7 +129,7 @@ this.contextMenus = class extends ExtensionAPI {
         update(id, updateProperties) {
           let {onclick} = updateProperties;
           delete updateProperties.onclick;
-          return context.childManager.callParentAsyncFunction("contextMenus.update", [
+          return context.childManager.callParentAsyncFunction("menusInternal.update", [
             id,
             updateProperties,
           ]).then(() => {
@@ -144,7 +144,7 @@ this.contextMenus = class extends ExtensionAPI {
 
         remove(id) {
           onClickedProp.unsetListenerFromAnyContext(id);
-          return context.childManager.callParentAsyncFunction("contextMenus.remove", [
+          return context.childManager.callParentAsyncFunction("menusInternal.remove", [
             id,
           ]);
         },
@@ -152,9 +152,30 @@ this.contextMenus = class extends ExtensionAPI {
         removeAll() {
           onClickedProp.deleteAllListenersFromExtension();
 
-          return context.childManager.callParentAsyncFunction("contextMenus.removeAll", []);
+          return context.childManager.callParentAsyncFunction("menusInternal.removeAll", []);
         },
+
+        onClicked: new SingletonEventManager(context, "menus.onClicked", fire => {
+          let listener = (info, tab) => {
+            fire.async(info, tab);
+          };
+
+          let event = context.childManager.getParentEvent("menusInternal.onClicked");
+          event.addListener(listener);
+          return () => {
+            event.removeListener(listener);
+          };
+        }).api(),
       },
     };
+
+    const result = {};
+    if (context.extension.hasPermission("menus")) {
+      result.menus = api.menus;
+    }
+    if (context.extension.hasPermission("contextMenus")) {
+      result.contextMenus = api.menus;
+    }
+    return result;
   }
 };
