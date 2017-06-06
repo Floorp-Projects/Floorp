@@ -67,7 +67,7 @@ WebRenderTextureHost::CreateRenderTextureHost(const layers::SurfaceDescriptor& a
       gfxCriticalError() << "No WR implement for texture type:" << aDesc.type();
   }
 
-  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(mExternalImageId), texture);
+  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(mExternalImageId), texture.forget());
 }
 
 bool
