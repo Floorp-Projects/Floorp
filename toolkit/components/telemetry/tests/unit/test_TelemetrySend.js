@@ -7,6 +7,7 @@
 "use strict";
 
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
+Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
@@ -467,6 +468,55 @@ add_task(async function test_sendCheckOverride() {
   TelemetrySend.setTestModeEnabled(true);
   Preferences.reset(PREF_OVERRIDE_OFFICIAL_CHECK);
 });
+
+add_task(async function test_measurePingsSize() {
+  const TEST_TYPE = "test-measure-ping-size";
+
+  let histSuccessPingSize = Telemetry.getHistogramById("TELEMETRY_SUCCESSFUL_SEND_PINGS_SIZE_KB");
+  let histFailedPingSize = Telemetry.getHistogramById("TELEMETRY_FAILED_SEND_PINGS_SIZE_KB");
+
+  for (let h of [histSuccessPingSize, histFailedPingSize]) {
+    h.clear();
+  }
+
+  await TelemetryController.submitExternalPing(TEST_TYPE, {});
+  await TelemetrySend.testWaitOnOutgoingPings();
+
+  // Check that we recorded the ping sizes correctly into histograms.
+  Assert.equal(histogramValueCount(histSuccessPingSize.snapshot()), 1,
+    "Should have recorded 1 successful ping into histogram.");
+  Assert.equal(histogramValueCount(histFailedPingSize.snapshot()), 0,
+    "Should have recorded 0 failed ping into histogram.");
+
+  // Submit the same ping a second time.
+  await TelemetryController.submitExternalPing(TEST_TYPE, {});
+  await TelemetrySend.testWaitOnOutgoingPings();
+
+  // Check that we recorded the ping sizes correctly into histograms.
+  Assert.equal(histogramValueCount(histSuccessPingSize.snapshot()), 2,
+    "Should have recorded 2 successful ping into histogram.");
+  Assert.equal(histogramValueCount(histFailedPingSize.snapshot()), 0,
+    "Should have recorded 0 failed ping into histogram.");
+
+  // Register a custom ping handler which will return 601.
+  PingServer.registerPingHandler((req, res) => {
+    res.setStatusLine(null, 601, "Not Implemented");
+    res.processAsync();
+    res.finish();
+  });
+
+  await TelemetryController.submitExternalPing(TEST_TYPE, {});
+  await ContentTaskUtils.waitForCondition(() => {
+    return histogramValueCount(histFailedPingSize.snapshot()) > 0;
+  });
+
+  // Check that we recorded the ping sizes correctly into histograms.
+  Assert.equal(histogramValueCount(histSuccessPingSize.snapshot()), 2,
+    "Should have recorded 2 successful ping into histogram.");
+  Assert.equal(histogramValueCount(histFailedPingSize.snapshot()), 1,
+    "Should have recorded 1 failed ping into histogram.");
+});
+
 
 add_task(async function cleanup() {
   await PingServer.stop();
