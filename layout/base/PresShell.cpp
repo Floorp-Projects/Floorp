@@ -6338,10 +6338,12 @@ PresShell::Paint(nsView*         aViewToPaint,
     return;
   }
 
-  // Update the focus target for async keyboard scrolling. This will be forwarded
-  // to APZ by nsDisplayList::PaintRoot. We need to to do this before we enter
-  // the paint phase because dispatching eVoid events can cause layout to happen.
-  mAPZFocusTarget = FocusTarget(this, mAPZFocusSequenceNumber);
+  if (gfxPrefs::APZKeyboardEnabled()) {
+    // Update the focus target for async keyboard scrolling. This will be forwarded
+    // to APZ by nsDisplayList::PaintRoot. We need to to do this before we enter
+    // the paint phase because dispatching eVoid events can cause layout to happen.
+    mAPZFocusTarget = FocusTarget(this, mAPZFocusSequenceNumber);
+  }
 
   nsPresContext* presContext = GetPresContext();
   AUTO_LAYOUT_PHASE_ENTRY_POINT(presContext, Paint);

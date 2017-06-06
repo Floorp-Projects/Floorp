@@ -920,7 +920,10 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
   ConfigureAPZControllerThread();
 
   mAPZC->SetDPI(GetDPI());
-  mAPZC->SetKeyboardMap(nsXBLWindowKeyHandler::CollectKeyboardShortcuts());
+
+  if (gfxPrefs::APZKeyboardEnabled()) {
+    mAPZC->SetKeyboardMap(nsXBLWindowKeyHandler::CollectKeyboardShortcuts());
+  }
 
   RefPtr<IAPZCTreeManager> treeManager = mAPZC;  // for capture by the lambdas
 
