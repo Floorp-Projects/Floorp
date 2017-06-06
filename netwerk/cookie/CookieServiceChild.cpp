@@ -244,6 +244,12 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI     *aHostURI,
                                  aServerTime, true);
 }
 
+NS_IMETHODIMP
+CookieServiceChild::RunInTransaction(nsICookieTransactionCallback* aCallback)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 } // namespace net
 } // namespace mozilla
 
