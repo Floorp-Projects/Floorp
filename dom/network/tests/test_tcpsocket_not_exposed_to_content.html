@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test to ensure TCPSocket permission enabled and no tcp-socket perm does not allow open</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+/**
+ * TCPSocket and its legacy mozTCPSocket variant should never be exposed to
+ * content.
+ */
+
+is('TCPSocket' in this, false, "TCPSocket should not be accessible to content");
+is('TCPServerSocket' in this, false, "TCPServerSocket should not be accessible to content");
+is('mozTCPSocket' in navigator, false, "mozTCPSocket should not be accessible to content");
+</script>
+</pre>
+</body>
+</html>
