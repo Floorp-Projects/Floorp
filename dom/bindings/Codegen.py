@@ -454,10 +454,33 @@ class CGDOMJSClass(CGThing):
             reservedSlots = slotCount
         if self.descriptor.interface.hasProbablyShortLivingWrapper():
             classFlags += " | JSCLASS_SKIP_NURSERY_FINALIZE"
+
+        objectOps = "JS_NULL_OBJECT_OPS"
+        objectOpsString = ""
         if self.descriptor.interface.getExtendedAttribute("NeedResolve"):
             resolveHook = RESOLVE_HOOK_NAME
             mayResolveHook = MAY_RESOLVE_HOOK_NAME
-            enumerateHook = ENUMERATE_HOOK_NAME
+            enumerateHook = "nullptr"
+            objectOpsString = fill(
+                """
+                const js::ObjectOps sInstanceObjectOps = {
+                  nullptr, /* lookupProperty */
+                  nullptr, /* defineProperty */
+                  nullptr, /* hasProperty */
+                  nullptr, /* getProperty */
+                  nullptr, /* setProperty */
+                  nullptr, /* getOwnPropertyDescriptor */
+                  nullptr, /* deleteProperty */
+                  nullptr, /* watch */
+                  nullptr, /* unwatch */
+                  nullptr, /* getElements */
+                  ${enumerate}, /* enumerate */
+                  nullptr, /* funToString */
+                };
+
+                """,
+                enumerate=ENUMERATE_HOOK_NAME)
+            objectOps = "&sInstanceObjectOps"
         elif self.descriptor.isGlobal():
             resolveHook = "mozilla::dom::ResolveGlobal"
             mayResolveHook = "mozilla::dom::MayResolveGlobal"
@@ -469,6 +492,7 @@ class CGDOMJSClass(CGThing):
 
         return fill(
             """
+            $*{objectOpsString}
             static const js::ClassOps sClassOps = {
               ${addProperty}, /* addProperty */
               nullptr,               /* delProperty */
@@ -495,7 +519,7 @@ class CGDOMJSClass(CGThing):
                 &sClassOps,
                 JS_NULL_CLASS_SPEC,
                 &sClassExtension,
-                JS_NULL_OBJECT_OPS
+                ${objectOps}
               },
               $*{descriptor}
             };
@@ -504,6 +528,7 @@ class CGDOMJSClass(CGThing):
             static_assert(${reservedSlots} >= ${slotCount},
                           "Must have enough reserved slots.");
             """,
+            objectOpsString=objectOpsString,
             name=self.descriptor.interface.identifier.name,
             flags=classFlags,
             addProperty=ADDPROPERTY_HOOK_NAME if wantsAddProperty(self.descriptor) else 'nullptr',
@@ -514,6 +539,7 @@ class CGDOMJSClass(CGThing):
             call=callHook,
             trace=traceHook,
             objectMoved=objectMovedHook,
+            objectOps=objectOps,
             descriptor=DOMClass(self.descriptor),
             instanceReservedSlots=INSTANCE_RESERVED_SLOTS,
             reservedSlots=reservedSlots,
@@ -8893,7 +8919,9 @@ class CGEnumerateHook(CGAbstractBindingMethod):
         assert descriptor.interface.getExtendedAttribute("NeedResolve")
 
         args = [Argument('JSContext*', 'cx'),
-                Argument('JS::Handle<JSObject*>', 'obj')]
+                Argument('JS::Handle<JSObject*>', 'obj'),
+                Argument('JS::AutoIdVector&', 'properties'),
+                Argument('bool', 'enumerableOnly')]
         # Our "self" is actually the "obj" argument in this case, not the thisval.
         CGAbstractBindingMethod.__init__(
             self, descriptor, ENUMERATE_HOOK_NAME,
@@ -8907,9 +8935,12 @@ class CGEnumerateHook(CGAbstractBindingMethod):
             if (rv.MaybeSetPendingException(cx)) {
               return false;
             }
-            bool dummy;
-            for (uint32_t i = 0; i < names.Length(); ++i) {
-              if (!JS_HasUCProperty(cx, obj, names[i].get(), names[i].Length(), &dummy)) {
+            JS::Rooted<JS::Value> v(cx);
+            JS::Rooted<jsid> id(cx);
+            for (auto& name : names) {
+              if (!xpc::NonVoidStringToJsval(cx, name, &v) ||
+                  !JS_ValueToId(cx, v, &id) ||
+                  !properties.append(id)) {
                 return false;
               }
             }
@@ -8920,6 +8951,10 @@ class CGEnumerateHook(CGAbstractBindingMethod):
         if self.descriptor.isGlobal():
             # Enumerate standard classes
             prefix = dedent("""
+                // This is OK even though we're a newEnumerate hook: this will
+                // define the relevant properties on the global, and the JS
+                // engine will pick those up, because it looks at the object's
+                // properties after this hook has returned.
                 if (!EnumerateGlobal(cx, obj)) {
                   return false;
                 }
