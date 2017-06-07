@@ -668,7 +668,7 @@ void
 StyleSheet::SetAssociatedDocument(nsIDocument* aDocument,
                                   DocumentAssociationMode aAssociationMode)
 {
-  MOZ_ASSERT_IF(!aDocument, aAssociationMode == NotOwnedByDocument);
+  MOZ_ASSERT(aDocument || aAssociationMode == NotOwnedByDocument);
 
   // not ref counted
   mDocument = aDocument;

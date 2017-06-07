@@ -146,7 +146,7 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                             nsCompatibility aCompatMode,
                             css::LoaderReusableStyleSheets* aReusableSheets)
 {
-  MOZ_ASSERT_IF(mMedia, mMedia->IsServo());
+  MOZ_ASSERT(!mMedia || mMedia->IsServo());
   RefPtr<URLExtraData> extraData =
     new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal);
 
