@@ -23,7 +23,6 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.graphics.drawable.DrawableCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -84,6 +83,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     private AnimatedProgressBar progressView;
     private ImageView lockView;
     private ImageButton menuView;
+    private WeakReference<BrowserMenu> menuWeakReference = new WeakReference<>(null);
 
     private View forwardButton;
     private View backButton;
@@ -101,6 +101,18 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         super.onAttach(context);
 
         BrowsingNotificationService.start(context);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        final BrowserMenu menu = menuWeakReference.get();
+        if (menu != null) {
+            menu.dismiss();
+
+            menuWeakReference.clear();
+        }
     }
 
     @Override
@@ -475,6 +487,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                 BrowserMenu menu = new BrowserMenu(getActivity(), this, customTabConfig);
                 menu.show(menuView);
+
+                menuWeakReference = new WeakReference<>(menu);
                 break;
 
             case R.id.display_url:

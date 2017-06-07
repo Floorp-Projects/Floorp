@@ -44,6 +44,16 @@ public class OpenWithFragment extends AppCompatDialogFragment implements AppAdap
     }
 
     @Override
+    public void onPause() {
+        getActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .remove(this)
+                .commitAllowingStateLoss();
+
+        super.onPause();
+    }
+
+    @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         ContextThemeWrapper wrapper = new ContextThemeWrapper(getContext(), android.R.style.Theme_Material_Light);
 
