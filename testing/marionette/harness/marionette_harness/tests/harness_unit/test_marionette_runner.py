@@ -25,7 +25,7 @@ def mock_runner(runner, mock_marionette, monkeypatch):
     self.marionette and other properties,
     to enable testing runner.run_tests().
     """
-    runner.driverclass = mock_marionette
+    runner.driverclass = Mock(return_value=mock_marionette)
     for attr in ['run_test_set', '_capabilities']:
         setattr(runner, attr, Mock())
     runner._appName = 'fake_app'
