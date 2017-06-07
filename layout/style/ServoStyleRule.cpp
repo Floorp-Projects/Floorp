@@ -253,18 +253,23 @@ ServoStyleRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 uint32_t
 ServoStyleRule::GetSelectorCount()
 {
-  return 0;
+  uint32_t aCount;
+  Servo_StyleRule_GetSelectorCount(mRawRule, &aCount);
+
+  return aCount;
 }
 
 nsresult
 ServoStyleRule::GetSelectorText(uint32_t aSelectorIndex, nsAString& aText)
 {
+  Servo_StyleRule_GetSelectorTextFromIndex(mRawRule, aSelectorIndex, &aText);
   return NS_OK;
 }
 
 nsresult
 ServoStyleRule::GetSpecificity(uint32_t aSelectorIndex, uint64_t* aSpecificity)
 {
+  // TODO Bug 1370501
   return NS_OK;
 }
 
@@ -274,6 +279,7 @@ ServoStyleRule::SelectorMatchesElement(Element* aElement,
                                        const nsAString& aPseudo,
                                        bool* aMatches)
 {
+  // TODO Bug 1370502
   return NS_OK;
 }
 
