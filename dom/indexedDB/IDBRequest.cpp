@@ -51,9 +51,6 @@ NS_DEFINE_IID(kIDBRequestIID, PRIVATE_IDBREQUEST_IID);
 
 IDBRequest::IDBRequest(IDBDatabase* aDatabase)
   : IDBWrapperCache(aDatabase)
-#ifdef DEBUG
-  , mOwningThread(nullptr)
-#endif
   , mLoggingSerialNumber(0)
   , mLineNo(0)
   , mColumn(0)
@@ -67,9 +64,6 @@ IDBRequest::IDBRequest(IDBDatabase* aDatabase)
 
 IDBRequest::IDBRequest(nsPIDOMWindowInner* aOwner)
   : IDBWrapperCache(aOwner)
-#ifdef DEBUG
-  , mOwningThread(nullptr)
-#endif
   , mLoggingSerialNumber(0)
   , mLineNo(0)
   , mColumn(0)
@@ -83,23 +77,9 @@ IDBRequest::~IDBRequest()
   AssertIsOnOwningThread();
 }
 
-#ifdef DEBUG
-
-void
-IDBRequest::AssertIsOnOwningThread() const
-{
-  MOZ_ASSERT(mOwningThread);
-  MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
-}
-
-#endif // DEBUG
-
 void
 IDBRequest::InitMembers()
 {
-#ifdef DEBUG
-  mOwningThread = PR_GetCurrentThread();
-#endif
   AssertIsOnOwningThread();
 
   mResultVal.setUndefined();

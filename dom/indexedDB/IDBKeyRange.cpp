@@ -53,9 +53,6 @@ IDBKeyRange::IDBKeyRange(nsISupports* aGlobal,
   , mHaveCachedUpperVal(false)
   , mRooted(false)
 {
-#ifdef DEBUG
-  mOwningThread = PR_GetCurrentThread();
-#endif
   AssertIsOnOwningThread();
 }
 
@@ -70,9 +67,6 @@ IDBLocaleAwareKeyRange::IDBLocaleAwareKeyRange(nsISupports* aGlobal,
                                                bool aIsOnly)
   : IDBKeyRange(aGlobal, aLowerOpen, aUpperOpen, aIsOnly)
 {
-#ifdef DEBUG
-  mOwningThread = PR_GetCurrentThread();
-#endif
   AssertIsOnOwningThread();
 }
 
@@ -80,17 +74,6 @@ IDBLocaleAwareKeyRange::~IDBLocaleAwareKeyRange()
 {
   DropJSObjects();
 }
-
-#ifdef DEBUG
-
-void
-IDBKeyRange::AssertIsOnOwningThread() const
-{
-  MOZ_ASSERT(mOwningThread);
-  MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
-}
-
-#endif // DEBUG
 
 // static
 nsresult

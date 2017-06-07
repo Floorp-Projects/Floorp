@@ -83,12 +83,7 @@ namespace indexedDB {
 ThreadLocal::ThreadLocal(const nsID& aBackgroundChildLoggingId)
   : mLoggingInfo(aBackgroundChildLoggingId, 1, -1, 1)
   , mCurrentTransaction(0)
-#ifdef DEBUG
-  , mOwningThread(PR_GetCurrentThread())
-#endif
 {
-  MOZ_ASSERT(mOwningThread);
-
   MOZ_COUNT_CTOR(mozilla::dom::indexedDB::ThreadLocal);
 
   // NSID_LENGTH counts the null terminator, SetLength() does not.
@@ -102,16 +97,6 @@ ThreadLocal::~ThreadLocal()
 {
   MOZ_COUNT_DTOR(mozilla::dom::indexedDB::ThreadLocal);
 }
-
-#ifdef DEBUG
-
-void
-ThreadLocal::AssertIsOnOwningThread() const
-{
-  MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
-}
-
-#endif // DEBUG
 
 /*******************************************************************************
  * Helpers
@@ -1668,9 +1653,6 @@ BackgroundRequestChildBase::AssertIsOnOwningThread() const
 
 BackgroundFactoryChild::BackgroundFactoryChild(IDBFactory* aFactory)
   : mFactory(aFactory)
-#ifdef DEBUG
-  , mOwningThread(NS_GetCurrentThread())
-#endif
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aFactory);
@@ -1683,27 +1665,6 @@ BackgroundFactoryChild::~BackgroundFactoryChild()
 {
   MOZ_COUNT_DTOR(indexedDB::BackgroundFactoryChild);
 }
-
-#ifdef DEBUG
-
-void
-BackgroundFactoryChild::AssertIsOnOwningThread() const
-{
-  MOZ_ASSERT(mOwningThread);
-
-  bool current;
-  MOZ_ASSERT(NS_SUCCEEDED(mOwningThread->IsOnCurrentThread(&current)));
-  MOZ_ASSERT(current);
-}
-
-nsIEventTarget*
-BackgroundFactoryChild::OwningThread() const
-{
-  MOZ_ASSERT(mOwningThread);
-  return mOwningThread;
-}
-
-#endif // DEBUG
 
 void
 BackgroundFactoryChild::SendDeleteMeInternal()
@@ -2085,6 +2046,16 @@ BackgroundDatabaseChild::~BackgroundDatabaseChild()
 {
   MOZ_COUNT_DTOR(indexedDB::BackgroundDatabaseChild);
 }
+
+#ifdef DEBUG
+
+void
+BackgroundDatabaseChild::AssertIsOnOwningThread() const
+{
+  static_cast<BackgroundFactoryChild*>(Manager())->AssertIsOnOwningThread();
+}
+
+#endif // DEBUG
 
 void
 BackgroundDatabaseChild::SendDeleteMeInternal()
@@ -3724,11 +3695,6 @@ BackgroundCursorChild::BackgroundCursorChild(IDBRequest* aRequest,
   MOZ_ASSERT(mTransaction);
 
   MOZ_COUNT_CTOR(indexedDB::BackgroundCursorChild);
-
-#ifdef DEBUG
-  mOwningThread = PR_GetCurrentThread();
-  MOZ_ASSERT(mOwningThread);
-#endif
 }
 
 BackgroundCursorChild::BackgroundCursorChild(IDBRequest* aRequest,
@@ -3747,27 +3713,12 @@ BackgroundCursorChild::BackgroundCursorChild(IDBRequest* aRequest,
   MOZ_ASSERT(mTransaction);
 
   MOZ_COUNT_CTOR(indexedDB::BackgroundCursorChild);
-
-#ifdef DEBUG
-  mOwningThread = PR_GetCurrentThread();
-  MOZ_ASSERT(mOwningThread);
-#endif
 }
 
 BackgroundCursorChild::~BackgroundCursorChild()
 {
   MOZ_COUNT_DTOR(indexedDB::BackgroundCursorChild);
 }
-
-#ifdef DEBUG
-
-void
-BackgroundCursorChild::AssertIsOnOwningThread() const
-{
-  MOZ_ASSERT(mOwningThread == PR_GetCurrentThread());
-}
-
-#endif // DEBUG
 
 void
 BackgroundCursorChild::SendContinueInternal(const CursorRequestParams& aParams)
@@ -4394,9 +4345,6 @@ BackgroundFileRequestChild::RecvProgress(const uint64_t& aProgress,
 
 BackgroundUtilsChild::BackgroundUtilsChild(IndexedDatabaseManager* aManager)
   : mManager(aManager)
-#ifdef DEBUG
-  , mOwningThread(NS_GetCurrentThread())
-#endif
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aManager);
@@ -4408,20 +4356,6 @@ BackgroundUtilsChild::~BackgroundUtilsChild()
 {
   MOZ_COUNT_DTOR(indexedDB::BackgroundUtilsChild);
 }
-
-#ifdef DEBUG
-
-void
-BackgroundUtilsChild::AssertIsOnOwningThread() const
-{
-  MOZ_ASSERT(mOwningThread);
-
-  bool current;
-  MOZ_ASSERT(NS_SUCCEEDED(mOwningThread->IsOnCurrentThread(&current)));
-  MOZ_ASSERT(current);
-}
-
-#endif // DEBUG
 
 void
 BackgroundUtilsChild::SendDeleteMeInternal()

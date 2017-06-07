@@ -251,13 +251,6 @@ IDBDatabase::AssertIsOnOwningThread() const
   mFactory->AssertIsOnOwningThread();
 }
 
-PRThread*
-IDBDatabase::OwningThread() const
-{
-  MOZ_ASSERT(mFactory);
-  return mFactory->OwningThread();
-}
-
 #endif // DEBUG
 
 nsIEventTarget*
