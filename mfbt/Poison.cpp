@@ -129,7 +129,7 @@ ReleaseRegion(void* aRegion, uintptr_t aSize)
 static bool
 ProbeRegion(uintptr_t aRegion, uintptr_t aSize)
 {
-  if (posix_madvise(reinterpret_cast<void*>(aRegion), aSize, POSIX_MADV_NORMAL)) {
+  if (madvise(reinterpret_cast<void*>(aRegion), aSize, MADV_NORMAL)) {
     return true;
   } else {
     return false;
