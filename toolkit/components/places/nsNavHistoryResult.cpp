@@ -658,6 +658,9 @@ nsNavHistoryContainerResultNode::ReverseUpdateStats(int32_t aAccessCountChange)
     bool shouldNotify = result && mParent->mParent &&
                           mParent->mParent->AreChildrenVisible();
 
+    uint32_t oldAccessCount = mParent->mAccessCount;
+    PRTime oldTime = mParent->mTime;
+
     mParent->mAccessCount += aAccessCountChange;
     bool timeChanged = false;
     if (mTime > mParent->mTime) {
@@ -668,8 +671,8 @@ nsNavHistoryContainerResultNode::ReverseUpdateStats(int32_t aAccessCountChange)
     if (shouldNotify) {
       NOTIFY_RESULT_OBSERVERS(result,
                               NodeHistoryDetailsChanged(TO_ICONTAINER(mParent),
-                                                        mParent->mTime,
-                                                        mParent->mAccessCount));
+                                                        oldTime,
+                                                        oldAccessCount));
     }
 
     // check sorting, the stats may have caused this node to move if the
@@ -1341,14 +1344,17 @@ nsNavHistoryContainerResultNode::InsertChildAt(nsNavHistoryResultNode* aNode,
     return NS_ERROR_OUT_OF_MEMORY;
 
   // Update our stats and notify the result's observers.
+  uint32_t oldAccessCount = mAccessCount;
+  PRTime oldTime = mTime;
+
   mAccessCount += aNode->mAccessCount;
   if (mTime < aNode->mTime)
     mTime = aNode->mTime;
   if (!mParent || mParent->AreChildrenVisible()) {
     NOTIFY_RESULT_OBSERVERS(result,
                             NodeHistoryDetailsChanged(TO_ICONTAINER(this),
-                                                      mTime,
-                                                      mAccessCount));
+                                                      oldTime,
+                                                      oldAccessCount));
   }
 
   nsresult rv = ReverseUpdateStats(aNode->mAccessCount);
@@ -1567,6 +1573,9 @@ nsNavHistoryContainerResultNode::UpdateURIs(bool aRecursive, bool aOnlyOne,
 
     uint32_t oldAccessCount = node->mAccessCount;
     PRTime oldTime = node->mTime;
+    uint32_t parentOldAccessCount = parent->mAccessCount;
+    PRTime parentOldTime = parent->mTime;
+
     aCallback(node, aClosure, result);
 
     if (oldAccessCount != node->mAccessCount || oldTime != node->mTime) {
@@ -1577,8 +1586,8 @@ nsNavHistoryContainerResultNode::UpdateURIs(bool aRecursive, bool aOnlyOne,
         NOTIFY_RESULT_OBSERVERS_RET(result,
                                     NodeHistoryDetailsChanged(
                                       TO_ICONTAINER(parent),
-                                      parent->mTime,
-                                      parent->mAccessCount),
+                                      parentOldTime,
+                                      parentOldAccessCount),
                                     true);
       }
       DebugOnly<nsresult> rv = parent->ReverseUpdateStats(node->mAccessCount - oldAccessCount);
@@ -3751,19 +3760,21 @@ nsNavHistoryResultNode::OnItemChanged(int64_t aItemId,
   else if (aProperty.EqualsLiteral("uri")) {
     // clear the tags string as well
     mTags.SetIsVoid(true);
+    nsCString oldURI(mURI);
     mURI = aNewValue;
     if (shouldNotify)
-      NOTIFY_RESULT_OBSERVERS(result, NodeURIChanged(this, mURI));
+      NOTIFY_RESULT_OBSERVERS(result, NodeURIChanged(this, oldURI));
   }
   else if (aProperty.EqualsLiteral("favicon")) {
     if (shouldNotify)
       NOTIFY_RESULT_OBSERVERS(result, NodeIconChanged(this));
   }
   else if (aProperty.EqualsLiteral("cleartime")) {
+    PRTime oldTime = mTime;
     mTime = 0;
     if (shouldNotify) {
       NOTIFY_RESULT_OBSERVERS(result,
-                              NodeHistoryDetailsChanged(this, 0, mAccessCount));
+                              NodeHistoryDetailsChanged(this, oldTime, mAccessCount));
     }
   }
   else if (aProperty.EqualsLiteral("tags")) {
@@ -3858,6 +3869,8 @@ nsNavHistoryFolderResultNode::OnItemVisited(int64_t aItemId,
     return NS_ERROR_FAILURE;
 
   // Update node.
+  uint32_t nodeOldAccessCount = node->mAccessCount;
+  PRTime nodeOldTime = node->mTime;
   node->mTime = aTime;
   ++node->mAccessCount;
 
@@ -3885,7 +3898,7 @@ nsNavHistoryFolderResultNode::OnItemVisited(int64_t aItemId,
     // Sorting has not changed, just redraw the row if it's visible.
     nsNavHistoryResult* result = GetResult();
     NOTIFY_RESULT_OBSERVERS(result,
-                            NodeHistoryDetailsChanged(node, mTime, mAccessCount));
+                            NodeHistoryDetailsChanged(node, nodeOldTime, nodeOldAccessCount));
   }
 
   // Update sorting if necessary.
