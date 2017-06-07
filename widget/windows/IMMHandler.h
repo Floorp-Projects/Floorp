@@ -19,6 +19,7 @@
 #include "npapi.h"
 
 class nsWindow;
+class nsWindowBase;
 
 namespace mozilla {
 namespace widget {
@@ -35,7 +36,7 @@ public:
   }
 
   explicit IMEContext(HWND aWnd);
-  explicit IMEContext(nsWindow* aWindow);
+  explicit IMEContext(nsWindowBase* aWindowBase);
 
   ~IMEContext()
   {
@@ -48,7 +49,7 @@ public:
   }
 
   void Init(HWND aWnd);
-  void Init(nsWindow* aWindow);
+  void Init(nsWindowBase* aWindowBase);
   void Clear();
 
   bool IsValid() const
