@@ -6,6 +6,7 @@
 
 #include "DocAccessibleChild.h"
 
+#include "nsAccessibilityService.h"
 #include "Accessible-inl.h"
 #include "mozilla/a11y/PlatformChild.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -305,6 +306,13 @@ DocAccessibleChild::SendBindChildDoc(DocAccessibleChild* aChildDoc,
   PushDeferredEvent(MakeUnique<SerializedBindChildDoc>(this, aChildDoc,
                                                        aNewParentID));
   return true;
+}
+
+ipc::IPCResult
+DocAccessibleChild::RecvRestoreFocus()
+{
+  FocusMgr()->ForceFocusEvent();
+  return IPC_OK();
 }
 
 } // namespace a11y

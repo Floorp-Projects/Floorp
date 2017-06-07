@@ -114,8 +114,13 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     transformForSC = nullptr;
   }
 
+  nsTArray<WrFilterOp> filters;
+  for (const CSSFilter& filter : this->GetFilterChain()) {
+    filters.AppendElement(wr::ToWrFilterOp(filter));
+  }
+
   ScrollingLayersHelper scroller(this, aBuilder, aSc);
-  StackingContextHelper sc(aSc, aBuilder, this, animationsId, opacityForSC, transformForSC);
+  StackingContextHelper sc(aSc, aBuilder, this, animationsId, opacityForSC, transformForSC, filters);
 
   LayerRect rect = Bounds();
   DumpLayerInfo("ContainerLayer", rect);

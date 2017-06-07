@@ -257,7 +257,10 @@ class nsCSPHostSrc : public nsCSPBaseSrc {
     void appendPath(const nsAString &aPath);
 
     inline void setGeneratedFromSelfKeyword() const
-      { mGeneratedFromSelfKeyword = true;}
+      { mGeneratedFromSelfKeyword = true; }
+
+    inline void setWithinFrameAncestorsDir(bool aValue) const
+      { mWithinFrameAncstorsDir = aValue; }
 
     inline void getScheme(nsAString& outStr) const
       { outStr.Assign(mScheme); };
@@ -277,6 +280,7 @@ class nsCSPHostSrc : public nsCSPBaseSrc {
     nsString mPort;
     nsString mPath;
     mutable bool mGeneratedFromSelfKeyword;
+    mutable bool mWithinFrameAncstorsDir;
 };
 
 /* =============== nsCSPKeywordSrc ============ */

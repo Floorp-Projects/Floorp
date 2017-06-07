@@ -73,6 +73,12 @@ parent:
 child:
   async __delete__();
 
+  /*
+   * Called as a result of focus shifting from chrome to content
+   * elements through keyboard navigation.
+   */
+  async RestoreFocus();
+
   // Accessible
   nested(inside_sync) sync State(uint64_t aID) returns(uint64_t states);
   nested(inside_sync) sync NativeState(uint64_t aID) returns(uint64_t states);

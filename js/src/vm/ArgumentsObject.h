@@ -52,12 +52,10 @@ class RareArgumentsData
     }
 };
 
-/*
- * ArgumentsData stores the initial indexed arguments provided to the
- * corresponding and that function itself.  It is used to store arguments[i]
- * and arguments.callee -- up until the corresponding property is modified,
- * when the relevant value is flagged to memorialize the modification.
- */
+// ArgumentsData stores the initial indexed arguments provided to a function
+// call. It is used to store arguments[i] -- up until the corresponding
+// property is modified, when the relevant value is flagged to memorialize the
+// modification.
 struct ArgumentsData
 {
     /*
@@ -235,6 +233,11 @@ class ArgumentsObject : public NativeObject
         setFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(v));
     }
 
+    /*
+     * Create the default "length" property and set LENGTH_OVERRIDDEN_BIT.
+     */
+    static bool reifyLength(JSContext* cx, Handle<ArgumentsObject*> obj);
+
     /* True iff arguments[@@iterator] has been assigned or its attributes
      * changed. */
     bool hasOverriddenIterator() const {
@@ -246,6 +249,11 @@ class ArgumentsObject : public NativeObject
         uint32_t v = getFixedSlot(INITIAL_LENGTH_SLOT).toInt32() | ITERATOR_OVERRIDDEN_BIT;
         setFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(v));
     }
+
+    /*
+     * Create the default @@iterator property and set ITERATOR_OVERRIDDEN_BIT.
+     */
+    static bool reifyIterator(JSContext* cx, Handle<ArgumentsObject*> obj);
 
     /* True iff any element has been assigned or its attributes
      * changed. */

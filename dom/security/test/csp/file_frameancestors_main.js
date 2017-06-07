@@ -9,7 +9,10 @@ function setupFrames() {
         b: 'http://example.com/tests/dom/security/test/csp/file_frameancestors.sjs'
   };
 
-  var host = { a: 'http://mochi.test:8888', b: 'http://example.com:80' };
+  // In both cases (base.a, base.b) the path starts with /tests/. Let's make sure this
+  // path within the CSP policy is completely ignored when enforcing frame ancestors.
+  // To test this behavior we use /foo/ and /bar/ as dummy values for the path.
+  var host = { a: 'http://mochi.test:8888/foo/', b: 'http://example.com:80/bar/' };
 
   var innerframeuri = null;
   var elt = null;

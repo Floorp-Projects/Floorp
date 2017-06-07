@@ -44,6 +44,7 @@ import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.provider.Browser;
 import android.support.annotation.UiThread;
 import android.support.v4.content.ContextCompat;
@@ -645,10 +646,14 @@ public class Tabs implements BundleEventListener {
                 return;
             }
             if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
+                Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
+                      " - page load start");
                 final boolean restoring = message.getBoolean("restoring");
                 tab.handleDocumentStart(restoring, message.getString("uri"));
                 notifyListeners(tab, Tabs.TabEvents.START);
             } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
+                Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
+                      " - page load stop");
                 tab.handleDocumentStop(message.getBoolean("success"));
                 notifyListeners(tab, Tabs.TabEvents.STOP);
             }

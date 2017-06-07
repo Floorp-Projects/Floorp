@@ -991,9 +991,14 @@ GCRuntime::setZeal(uint8_t zeal, uint32_t frequency)
     if (verifyPreData)
         VerifyBarriers(rt, PreBarrierVerifier);
 
-    if (zeal == 0 && hasZealMode(ZealMode::GenerationalGC)) {
-        evictNursery(JS::gcreason::DEBUG_GC);
-        nursery().leaveZealMode();
+    if (zeal == 0) {
+        if (hasZealMode(ZealMode::GenerationalGC)) {
+            evictNursery(JS::gcreason::DEBUG_GC);
+            nursery().leaveZealMode();
+        }
+
+        if (isIncrementalGCInProgress())
+            finishGC(JS::gcreason::DEBUG_GC);
     }
 
     ZealMode zealMode = ZealMode(zeal);
@@ -5276,6 +5281,9 @@ GCRuntime::beginSweepingSweepGroup()
             joinTask(task, PhaseKind::SWEEP_WEAK_CACHES, lock);
     }
 
+    if (sweepingAtoms)
+        startSweepingAtomsTable();
+
     // Queue all GC things in all zones for sweeping, either on the foreground
     // or on the background thread.
 
@@ -5493,6 +5501,27 @@ GCRuntime::mergeSweptObjectArenas(GCRuntime* gc, FreeOp* fop, Zone* zone, SliceB
     return Finished;
 }
 
+void
+GCRuntime::startSweepingAtomsTable()
+{
+    auto& maybeAtoms = maybeAtomsToSweep.ref();
+    MOZ_ASSERT(maybeAtoms.isNothing());
+
+    AtomSet* atomsTable = rt->atomsForSweeping();
+    if (!atomsTable)
+        return;
+
+    // Create a secondary table to hold new atoms added while we're sweeping
+    // the main table incrementally.
+    if (!rt->createAtomsAddedWhileSweepingTable()) {
+        atomsTable->sweep();
+        return;
+    }
+
+    // Initialize remaining atoms to sweep.
+    maybeAtoms.emplace(*atomsTable);
+}
+
 /* static */ IncrementalProgress
 GCRuntime::sweepAtomsTable(GCRuntime* gc, FreeOp* fop, Zone* zone, SliceBudget& budget,
                            AllocKind kind)
@@ -5503,33 +5532,22 @@ GCRuntime::sweepAtomsTable(GCRuntime* gc, FreeOp* fop, Zone* zone, SliceBudget& 
     return gc->sweepAtomsTable(budget);
 }
 
+
 IncrementalProgress
 GCRuntime::sweepAtomsTable(SliceBudget& budget)
 {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_ATOMS_TABLE);
 
     auto& maybeAtoms = maybeAtomsToSweep.ref();
-    MOZ_ASSERT_IF(maybeAtoms.isSome(), !maybeAtoms.ref().empty());
-
-    AtomSet* atomsTable = rt->atomsForSweeping();
-    if (!atomsTable)
+    if (!maybeAtoms)
         return Finished;
 
-    if (maybeAtoms.isNothing()) {
-        // Create a secondary table to hold new atoms added while we're sweeping
-        // the main table incrementally.
-        if (!rt->createAtomsAddedWhileSweepingTable()) {
-            atomsTable->sweep();
-            return Finished;
-        }
-
-        // Initialize remaining atoms to sweep.
-        maybeAtoms.emplace(*atomsTable);
-    }
+    MOZ_ASSERT(rt->atomsAddedWhileSweeping());
 
     // Sweep the table incrementally until we run out of work or budget.
     auto& atomsToSweep = *maybeAtoms;
     while (!atomsToSweep.empty()) {
+        budget.step();
         if (budget.isOverBudget())
             return NotFinished;
 
@@ -5541,6 +5559,8 @@ GCRuntime::sweepAtomsTable(SliceBudget& budget)
 
     // Add any new atoms from the secondary table.
     AutoEnterOOMUnsafeRegion oomUnsafe;
+    AtomSet* atomsTable = rt->atomsForSweeping();
+    MOZ_ASSERT(atomsTable);
     for (auto r = rt->atomsAddedWhileSweeping()->all(); !r.empty(); r.popFront()) {
         if (!atomsTable->putNew(AtomHasher::Lookup(r.front().asPtrUnbarriered()), r.front()))
             oomUnsafe.crash("Adding atom from secondary table after sweep");

@@ -471,6 +471,7 @@ RasterImage::OnSurfaceDiscardedInternal(bool aAnimatedFramesDiscarded)
 
   if (aAnimatedFramesDiscarded && mAnimationState) {
     MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
+    mImageContainer = nullptr;
     gfx::IntRect rect =
       mAnimationState->UpdateState(mAnimationFinished, this, mSize);
     NotifyProgress(NoProgress, rect);
@@ -1086,6 +1087,7 @@ RasterImage::Discard()
   SurfaceCache::RemoveImage(ImageKey(this));
 
   if (mAnimationState) {
+    mImageContainer = nullptr;
     gfx::IntRect rect =
       mAnimationState->UpdateState(mAnimationFinished, this, mSize);
     NotifyProgress(NoProgress, rect);

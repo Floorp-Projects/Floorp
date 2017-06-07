@@ -1511,7 +1511,7 @@ web-platform-tests:
     checkout: true
     run-on-projects:
         by-test-platform:
-            windows10.*: []
+            windows10.*: ['mozilla-central', 'try']
             windows7.*: ['mozilla-central', 'try']
             default: built-projects
     mozharness:
@@ -1542,7 +1542,7 @@ web-platform-tests-reftests:
     checkout: true
     run-on-projects:
         by-test-platform:
-            windows10.*: []
+            windows10.*: ['mozilla-central', 'try']
             windows7.*: ['mozilla-central', 'try']
             default: built-projects
     mozharness:
