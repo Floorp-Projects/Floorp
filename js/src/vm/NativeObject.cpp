@@ -108,20 +108,20 @@ ObjectElements::MakeElementsCopyOnWrite(JSContext* cx, NativeObject* obj)
 /* static */ bool
 ObjectElements::FreezeElements(JSContext* cx, HandleNativeObject obj)
 {
+    MOZ_ASSERT_IF(obj->is<ArrayObject>(),
+                  !obj->as<ArrayObject>().lengthIsWritable());
+
     if (!obj->maybeCopyElementsForWrite(cx))
         return false;
 
-    if (obj->hasEmptyElements())
+    if (obj->hasEmptyElements() || obj->denseElementsAreFrozen())
         return true;
 
     if (obj->getElementsHeader()->numShiftedElements() > 0)
         obj->moveShiftedElements();
 
-    ObjectElements* header = obj->getElementsHeader();
-
-    // Note: this method doesn't update type information to indicate that the
-    // elements might be frozen. Handling this is left to the caller.
-    header->freeze();
+    MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_FROZEN_ELEMENTS);
+    obj->getElementsHeader()->freeze();
 
     return true;
 }
