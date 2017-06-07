@@ -1663,7 +1663,7 @@ pref("extensions.formautofill.experimental", true);
 pref("extensions.formautofill.experimental", false);
 #endif
 pref("extensions.formautofill.addresses.enabled", true);
-pref("extensions.formautofill.heuristics.enabled", false);
+pref("extensions.formautofill.heuristics.enabled", true);
 pref("extensions.formautofill.loglevel", "Warn");
 
 // Whether or not to restore a session with lazy-browser tabs.
