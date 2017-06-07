@@ -70,8 +70,7 @@ nsNativeThemeGTK::nsNativeThemeGTK()
     mozilla::services::GetObserverService();
   obsServ->AddObserver(this, "xpcom-shutdown", false);
 
-  memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
-  memset(mSafeWidgetStates, 0, sizeof(mSafeWidgetStates));
+  ThemeChanged();
 }
 
 nsNativeThemeGTK::~nsNativeThemeGTK() {
@@ -1269,8 +1268,20 @@ nsNativeThemeGTK::GetCachedWidgetBorder(nsIFrame* aFrame, uint8_t aWidgetType,
   gint unusedFlags;
   if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
                            &unusedFlags)) {
-    moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
-                              &aResult->right, &aResult->bottom, aDirection);
+    MOZ_ASSERT(0 <= gtkWidgetType && gtkWidgetType < MOZ_GTK_WIDGET_NODE_COUNT);
+    uint8_t cacheIndex = gtkWidgetType / 8;
+    uint8_t cacheBit = 1u << (gtkWidgetType % 8);
+
+    if (mBorderCacheValid[cacheIndex] & cacheBit) {
+      *aResult = mBorderCache[gtkWidgetType];
+    } else {
+      moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
+                                &aResult->right, &aResult->bottom, aDirection);
+      if (aWidgetType != MOZ_GTK_DROPDOWN) { // depends on aDirection
+        mBorderCacheValid[cacheIndex] |= cacheBit;
+        mBorderCache[gtkWidgetType] = *aResult;
+      }
+    }
   }
 }
 
@@ -1780,6 +1791,8 @@ NS_IMETHODIMP
 nsNativeThemeGTK::ThemeChanged()
 {
   memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
+  memset(mSafeWidgetStates, 0, sizeof(mSafeWidgetStates));
+  memset(mBorderCacheValid, 0, sizeof(mBorderCacheValid));
   return NS_OK;
 }
 
