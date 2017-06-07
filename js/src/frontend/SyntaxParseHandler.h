@@ -226,7 +226,7 @@ class SyntaxParseHandlerBase
     Node newRawUndefinedLiteral(const TokenPos& pos) { return NodeGeneric; }
 
     template <class Boxer>
-    Node newRegExp(RegExpObject* reobj, const TokenPos& pos, Boxer& boxer) { return NodeGeneric; }
+    Node newRegExp(Node reobj, const TokenPos& pos, Boxer& boxer) { return NodeGeneric; }
 
     Node newConditional(Node cond, Node thenExpr, Node elseExpr) { return NodeGeneric; }
 

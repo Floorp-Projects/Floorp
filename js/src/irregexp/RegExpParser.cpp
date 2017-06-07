@@ -1966,3 +1966,10 @@ irregexp::ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom
            ? ::ParsePatternSyntax(ts, alloc, str->latin1Chars(nogc), str->length(), unicode)
            : ::ParsePatternSyntax(ts, alloc, str->twoByteChars(nogc), str->length(), unicode);
 }
+
+bool
+irregexp::ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc,
+                             const mozilla::Range<const char16_t> chars, bool unicode)
+{
+    return ::ParsePatternSyntax(ts, alloc, chars.begin().get(), chars.length(), unicode);
+}
