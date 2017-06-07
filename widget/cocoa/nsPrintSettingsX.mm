@@ -290,13 +290,6 @@ void nsPrintSettingsX::GetAdjustedPaperSize(double *aWidth, double *aHeight)
 }
 
 NS_IMETHODIMP
-nsPrintSettingsX::SetPaperSizeUnit(int16_t aPaperSizeUnit)
-{
-  mPaperSizeUnit = aPaperSizeUnit;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsPrintSettingsX::SetScaling(double aScaling)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
