@@ -269,7 +269,7 @@ ReleaseRegion(void* aPage)
 static bool
 ProbeRegion(uintptr_t aPage)
 {
-  return !!posix_madvise(reinterpret_cast<void*>(aPage), PageSize(), POSIX_MADV_NORMAL);
+  return !!madvise(reinterpret_cast<void*>(aPage), PageSize(), MADV_NORMAL);
 }
 
 static int
