@@ -132,13 +132,13 @@ nsDOMAttributeMap::GetAttribute(mozilla::dom::NodeInfo* aNodeInfo)
 
   nsAttrKey attr(aNodeInfo->NamespaceID(), aNodeInfo->NameAtom());
 
-  Attr* node = mAttributeCache.GetWeak(attr);
+  RefPtr<Attr>& entryValue = mAttributeCache.GetOrInsert(attr);
+  Attr* node = entryValue;
   if (!node) {
+    // Newly inserted entry!
     RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-    RefPtr<Attr> newAttr =
-      new Attr(this, ni.forget(), EmptyString());
-    mAttributeCache.Put(attr, newAttr);
-    node = newAttr;
+    entryValue = new Attr(this, ni.forget(), EmptyString());
+    node = entryValue;
   }
 
   return node;
