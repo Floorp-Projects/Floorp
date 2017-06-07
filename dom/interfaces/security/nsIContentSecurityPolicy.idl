@@ -99,6 +99,11 @@ interface nsIContentSecurityPolicy : nsISerializable
   readonly attribute bool blockAllMixedContent;
 
   /**
+   * Returns whether this policy enforces the frame-ancestors directive.
+   */
+  readonly attribute bool enforcesFrameAncestors;
+
+  /**
    * Obtains the referrer policy (as integer) for this browsing context as
    * specified in CSP.  If there are multiple policies and...
    *  - only one sets a referrer policy: that policy is returned
