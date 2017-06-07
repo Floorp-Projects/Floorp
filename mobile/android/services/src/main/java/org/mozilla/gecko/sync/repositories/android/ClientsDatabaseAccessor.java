@@ -8,16 +8,21 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.json.simple.JSONArray;
 
+import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.fxa.devices.FxAccountDevice;
 import org.mozilla.gecko.sync.CommandProcessor.Command;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.setup.Constants;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 
@@ -77,6 +82,58 @@ public class ClientsDatabaseAccessor {
     } finally {
       cur.close();
     }
+  }
+
+  // Filters our list of clients with the device list we have from FxA.
+  public Collection<ClientRecord> fetchNonStaleClients(String[] fxaDeviceIds) throws NullCursorException {
+    final Cursor cur = db.fetchClientsWithFxADeviceIds(fxaDeviceIds);
+    final Collection<ClientRecord> clients = new ArrayList<>(cur.getCount());
+    try {
+      if (!cur.moveToFirst()) {
+        return clients;
+      }
+
+      while (!cur.isAfterLast()) {
+        ClientRecord clientRecord = recordFromCursor(cur);
+        clients.add(clientRecord);
+        cur.moveToNext();
+      }
+      return clients;
+    } finally {
+      cur.close();
+    }
+  }
+
+  public boolean hasNonStaleClients(String[] fxaDeviceIds) throws NullCursorException {
+    try {
+      final Cursor cur = db.fetchClientsWithFxADeviceIds(fxaDeviceIds);
+      try {
+        return cur.getCount() > 0;
+      } finally {
+        cur.close();
+      }
+    } catch (NullCursorException e) {
+      return false;
+    }
+  }
+
+  public String[] getRemoteDevicesIds(Context context) {
+    final ContentResolver cr = context.getContentResolver();
+    final String[] guidProjection = new String[] {
+      BrowserContract.RemoteDevices.GUID, // 0
+    };
+    final Cursor c = cr.query(BrowserContract.RemoteDevices.CONTENT_URI, guidProjection, null, null, "NAME ASC");
+    final String[] remoteDevicesIds = new String[c.getCount()];
+    try {
+      int i = 0;
+      while (c.moveToNext()) {
+        remoteDevicesIds[i] = c.getString(c.getColumnIndexOrThrow(BrowserContract.RemoteDevices.GUID));
+        i++;
+      }
+    } finally {
+      c.close();
+    }
+    return remoteDevicesIds;
   }
 
   public List<Command> fetchAllCommands() throws NullCursorException {
