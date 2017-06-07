@@ -17,8 +17,6 @@ config = {
     'stage_platform': 'linux64-asan',
     'publish_nightly_en_US_routes': False,
     'build_type': 'asan',
-    'tooltool_manifest_src': "browser/config/tooltool-manifests/linux64/\
-asan.manifest",
     'platform_supports_post_upload_to_latest': False,
     'enable_signing': False,
     'enable_talos_sendchange': False,
