@@ -44,9 +44,7 @@ add_task(async function test_link() {
        "---",                   null,
        "context-savelink",      true,
        "context-copylink",      true,
-       "context-searchselect",  true,
-       "---", null,
-       "context-sendlinktodevice", false, [], null]);
+       "context-searchselect",  true]);
 });
 
 add_task(async function test_video() {

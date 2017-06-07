@@ -40,12 +40,8 @@ var gSync = {
     );
   },
 
-  get syncReady() {
-    return Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject.ready;
-  },
-
-  get isSignedIn() {
-    return UIState.get().status == UIState.STATUS_SIGNED_IN;
+  get sendTabToDeviceEnabled() {
+    return Services.prefs.getBoolPref("services.sync.sendTabToDevice.enabled");
   },
 
   get remoteClients() {
@@ -301,40 +297,40 @@ var gSync = {
     }
 
     const fragment = document.createDocumentFragment();
-    if (this.syncReady) {
-      const onTargetDeviceCommand = (event) => {
-        let clients = event.target.getAttribute("clientId") ?
-          [event.target.getAttribute("clientId")] :
-          this.remoteClients.map(client => client.id);
 
-        clients.forEach(clientId => this.sendTabToDevice(url, clientId, title));
-        gPageActionButton.panel.hidePopup();
-      }
+    const onTargetDeviceCommand = (event) => {
+      let clients = event.target.getAttribute("clientId") ?
+        [event.target.getAttribute("clientId")] :
+        this.remoteClients.map(client => client.id);
 
-      function addTargetDevice(clientId, name, clientType) {
-        const targetDevice = createDeviceNodeFn(clientId, name, clientType);
-        targetDevice.addEventListener("command", onTargetDeviceCommand, true);
-        targetDevice.classList.add("sync-menuitem", "sendtab-target");
-        targetDevice.setAttribute("clientId", clientId);
-        targetDevice.setAttribute("clientType", clientType);
-        targetDevice.setAttribute("label", name);
-        fragment.appendChild(targetDevice);
-      }
-
-      const clients = this.remoteClients;
-      for (let client of clients) {
-        addTargetDevice(client.id, client.name, client.type);
-      }
-
-      // "All devices" menu item
-      if (clients.length > 1) {
-        const separator = createDeviceNodeFn();
-        separator.classList.add("sync-menuitem");
-        fragment.appendChild(separator);
-        const allDevicesLabel = this.fxaStrings.GetStringFromName("sendTabToAllDevices.menuitem");
-        addTargetDevice("", allDevicesLabel, "");
-      }
+      clients.forEach(clientId => this.sendTabToDevice(url, clientId, title));
+      gPageActionButton.panel.hidePopup();
     }
+
+    function addTargetDevice(clientId, name, clientType) {
+      const targetDevice = createDeviceNodeFn(clientId, name, clientType);
+      targetDevice.addEventListener("command", onTargetDeviceCommand, true);
+      targetDevice.classList.add("sync-menuitem", "sendtab-target");
+      targetDevice.setAttribute("clientId", clientId);
+      targetDevice.setAttribute("clientType", clientType);
+      targetDevice.setAttribute("label", name);
+      fragment.appendChild(targetDevice);
+    }
+
+    const clients = this.remoteClients;
+    for (let client of clients) {
+      addTargetDevice(client.id, client.name, client.type);
+    }
+
+    // "All devices" menu item
+    if (clients.length > 1) {
+      const separator = createDeviceNodeFn();
+      separator.classList.add("sync-menuitem");
+      fragment.appendChild(separator);
+      const allDevicesLabel = this.fxaStrings.GetStringFromName("sendTabToAllDevices.menuitem");
+      addTargetDevice("", allDevicesLabel, "");
+    }
+
     devicesPopup.appendChild(fragment);
   },
 
@@ -360,42 +356,44 @@ var gSync = {
     }
   },
 
-  // "Send Tab to Device" menu item
   updateTabContextMenu(aPopupMenu, aTargetTab) {
-    const enabled = this.syncReady &&
-                    this.remoteClients.length > 0 &&
-                    this.isSendableURI(aTargetTab.linkedBrowser.currentURI.spec);
-    document.getElementById("context_sendTabToDevice").disabled = !enabled;
+    if (!this.sendTabToDeviceEnabled || !this.weaveService.ready) {
+      return;
+    }
+
+    const targetURI = aTargetTab.linkedBrowser.currentURI.spec;
+    const showSendTab = this.remoteClients.length > 0 && this.isSendableURI(targetURI);
+
+    ["context_sendTabToDevice", "context_sendTabToDevice_separator"]
+    .forEach(id => { document.getElementById(id).hidden = !showSendTab });
   },
 
-  // "Send Page to Device" and "Send Link to Device" menu items
   initPageContextMenu(contextMenu) {
+    if (!this.sendTabToDeviceEnabled || !this.weaveService.ready) {
+      return;
+    }
+
+    const remoteClientPresent = this.remoteClients.length > 0;
     // showSendLink and showSendPage are mutually exclusive
-    const showSendLink = contextMenu.onSaveableLink || contextMenu.onPlainTextLink;
-    const showSendPage = !showSendLink
+    let showSendLink = remoteClientPresent
+                       && (contextMenu.onSaveableLink || contextMenu.onPlainTextLink);
+    const showSendPage = !showSendLink && remoteClientPresent
                          && !(contextMenu.isContentSelected ||
                               contextMenu.onImage || contextMenu.onCanvas ||
                               contextMenu.onVideo || contextMenu.onAudio ||
-                              contextMenu.onLink ||
-                              (contextMenu.target &&
-                               ["input", "textarea"].includes(contextMenu.target.tagName.toLowerCase())));
+                              contextMenu.onLink || contextMenu.onTextInput)
+                         && this.isSendableURI(contextMenu.browser.currentURI.spec);
+
+    if (showSendLink) {
+      // This isn't part of the condition above since we don't want to try and
+      // send the page if a link is clicked on or selected but is not sendable.
+      showSendLink = this.isSendableURI(contextMenu.linkURL);
+    }
 
     ["context-sendpagetodevice", "context-sep-sendpagetodevice"]
     .forEach(id => contextMenu.showItem(id, showSendPage));
     ["context-sendlinktodevice", "context-sep-sendlinktodevice"]
     .forEach(id => contextMenu.showItem(id, showSendLink));
-
-    if (!showSendLink && !showSendPage) {
-      return;
-    }
-
-    const targetURI = showSendLink ? contextMenu.linkURL :
-                                     contextMenu.browser.currentURI.spec;
-    const enabled = this.syncReady && this.remoteClients.length > 0 &&
-                    this.isSendableURI(targetURI);
-    contextMenu.setItemAttr(showSendPage ? "context-sendpagetodevice" :
-                                           "context-sendlinktodevice",
-                            "disabled", !enabled || null);
   },
 
   // Functions called by observers
@@ -569,3 +567,9 @@ var gSync = {
     Ci.nsISupportsWeakReference
   ])
 };
+
+XPCOMUtils.defineLazyGetter(gSync, "weaveService", function() {
+  return Components.classes["@mozilla.org/weave/service;1"]
+                   .getService(Components.interfaces.nsISupports)
+                   .wrappedJSObject;
+});

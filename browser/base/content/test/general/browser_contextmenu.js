@@ -38,9 +38,7 @@ add_task(async function test_xul_text_link_label() {
      "context-savelink",      true,
      ...(hasPocket ? ["context-savelinktopocket", true] : []),
      "context-copylink",      true,
-     "context-searchselect",  true,
-     "---", null,
-     "context-sendlinktodevice", false, [], null,
+     "context-searchselect",  true
     ]
   );
 
@@ -91,8 +89,6 @@ add_task(async function test_plaintext() {
                     "---",                  null,
                     "context-savepage",     true,
                     ...(hasPocket ? ["context-pocket", true] : []),
-                    "---", null,
-                    "context-sendpagetodevice", false, [], null,
                     "---",                  null,
                     "context-viewbgimage",  false,
                     "context-selectall",    true,
@@ -119,9 +115,7 @@ add_task(async function test_link() {
      "context-savelink",      true,
      ...(hasPocket ? ["context-savelinktopocket", true] : []),
      "context-copylink",      true,
-     "context-searchselect",  true,
-     "---", null,
-     "context-sendlinktodevice", false, [], null,
+     "context-searchselect",  true
     ]
   );
 });
@@ -268,8 +262,6 @@ add_task(async function test_iframe() {
      "---",                  null,
      "context-savepage",     true,
      ...(hasPocket ? ["context-pocket", true] : []),
-     "---", null,
-     "context-sendpagetodevice", false, [], null,
      "---",                  null,
      "context-viewbgimage",  false,
      "context-selectall",    true,
@@ -574,8 +566,6 @@ add_task(async function test_pagemenu() {
      "---",                  null,
      "context-savepage",     true,
      ...(hasPocket ? ["context-pocket", true] : []),
-     "---", null,
-     "context-sendpagetodevice", false, [], null,
      "---",                  null,
      "context-viewbgimage",  false,
      "context-selectall",    true,
@@ -608,8 +598,6 @@ add_task(async function test_dom_full_screen() {
      "---",                          null,
      "context-savepage",             true,
      ...(hasPocket ? ["context-pocket", true] : []),
-     "---", null,
-     "context-sendpagetodevice", false, [], null,
      "---",                          null,
      "context-viewbgimage",          false,
      "context-selectall",            true,
@@ -657,8 +645,6 @@ add_task(async function test_pagemenu2() {
      "---",                  null,
      "context-savepage",     true,
      ...(hasPocket ? ["context-pocket", true] : []),
-     "---", null,
-     "context-sendpagetodevice", false, [], null,
      "---",                  null,
      "context-viewbgimage",  false,
      "context-selectall",    true,
@@ -706,8 +692,6 @@ add_task(async function test_select_text_link() {
      "context-selectall",                   true,
      "---",                                 null,
      "context-searchselect",                true,
-     "---", null,
-     "context-sendlinktodevice", false, [], null,
      "context-viewpartialsource-selection", true
     ],
     {
@@ -748,9 +732,7 @@ add_task(async function test_imagelink() {
      "context-saveimage",            true,
      "context-sendimage",            true,
      "context-setDesktopBackground", true,
-     "context-viewimageinfo",        true,
-     "---", null,
-     "context-sendlinktodevice", false, [], null,
+     "context-viewimageinfo",        true
     ]
   );
 });
@@ -842,8 +824,6 @@ add_task(async function test_click_to_play_blocked_plugin() {
      "---",                  null,
      "context-savepage",     true,
      ...(hasPocket ? ["context-pocket", true] : []),
-     "---", null,
-     "context-sendpagetodevice", false, [], null,
      "---",                  null,
      "context-viewbgimage",  false,
      "context-selectall",    true,
@@ -889,8 +869,6 @@ add_task(async function test_srcdoc() {
      "---",                  null,
      "context-savepage",     true,
      ...(hasPocket ? ["context-pocket", true] : []),
-     "---", null,
-     "context-sendpagetodevice", false, [], null,
      "---",                  null,
      "context-viewbgimage",  false,
      "context-selectall",    true,
@@ -928,6 +906,84 @@ add_task(async function test_input_spell_false() {
   */
 });
 
+const remoteClientsFixture = [ { id: 1, name: "Foo"}, { id: 2, name: "Bar"} ];
+
+add_task(async function test_plaintext_sendpagetodevice() {
+  if (!gSync.sendTabToDeviceEnabled) {
+    return;
+  }
+  await ensureSyncReady();
+  const oldGetter = setupRemoteClientsFixture(remoteClientsFixture);
+
+  let plainTextItemsWithSendPage =
+                    ["context-navigation",   null,
+                      ["context-back",         false,
+                        "context-forward",      false,
+                        "context-reload",       true,
+                        "context-bookmarkpage", true], null,
+                    "---",                  null,
+                    "context-savepage",     true,
+                    ...(hasPocket ? ["context-pocket", true] : []),
+                    "---",                  null,
+                    "context-sendpagetodevice", true,
+                      ["*Foo", true,
+                       "*Bar", true,
+                       "---", null,
+                       "*All Devices", true], null,
+                    "---",                  null,
+                    "context-viewbgimage",  false,
+                    "context-selectall",    true,
+                    "---",                  null,
+                    "context-viewsource",   true,
+                    "context-viewinfo",     true
+                   ];
+  await test_contextmenu("#test-text", plainTextItemsWithSendPage, {
+      maybeScreenshotsPresent: true,
+      async onContextMenuShown() {
+        await openMenuItemSubmenu("context-sendpagetodevice");
+      }
+    });
+
+  restoreRemoteClients(oldGetter);
+});
+
+add_task(async function test_link_sendlinktodevice() {
+  if (!gSync.sendTabToDeviceEnabled) {
+    return;
+  }
+  await ensureSyncReady();
+  const oldGetter = setupRemoteClientsFixture(remoteClientsFixture);
+
+  await test_contextmenu("#test-link",
+    ["context-openlinkintab", true,
+     ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
+     // We need a blank entry here because the containers submenu is
+     // dynamically generated with no ids.
+     ...(hasContainers ? ["", null] : []),
+     "context-openlink",      true,
+     "context-openlinkprivate", true,
+     "---",                   null,
+     "context-bookmarklink",  true,
+     "context-savelink",      true,
+     ...(hasPocket ? ["context-savelinktopocket", true] : []),
+     "context-copylink",      true,
+     "context-searchselect",  true,
+     "---",                  null,
+     "context-sendlinktodevice", true,
+      ["*Foo", true,
+       "*Bar", true,
+       "---", null,
+       "*All Devices", true], null,
+    ],
+    {
+      async onContextMenuShown() {
+        await openMenuItemSubmenu("context-sendlinktodevice");
+      }
+    });
+
+  restoreRemoteClients(oldGetter);
+});
+
 add_task(async function test_svg_link() {
   await test_contextmenu("#svg-with-link > a",
     ["context-openlinkintab", true,
@@ -942,9 +998,7 @@ add_task(async function test_svg_link() {
      "context-savelink",      true,
      ...(hasPocket ? ["context-savelinktopocket", true] : []),
      "context-copylink",      true,
-     "context-searchselect",  true,
-     "---", null,
-     "context-sendlinktodevice", false, [], null,
+     "context-searchselect",  true
     ]
   );
 
@@ -961,9 +1015,7 @@ add_task(async function test_svg_link() {
      "context-savelink",      true,
      ...(hasPocket ? ["context-savelinktopocket", true] : []),
      "context-copylink",      true,
-     "context-searchselect",  true,
-     "---", null,
-     "context-sendlinktodevice", false, [], null,
+     "context-searchselect",  true
     ]
   );
 
@@ -980,9 +1032,7 @@ add_task(async function test_svg_link() {
      "context-savelink",      true,
      ...(hasPocket ? ["context-savelinktopocket", true] : []),
      "context-copylink",      true,
-     "context-searchselect",  true,
-     "---", null,
-     "context-sendlinktodevice", false, [], null,
+     "context-searchselect",  true
     ]
   );
 });
@@ -1011,4 +1061,11 @@ async function selectText(selector) {
     div.setEndAfter(element);
     win.getSelection().addRange(div);
   });
+}
+
+function ensureSyncReady() {
+  let service = Cc["@mozilla.org/weave/service;1"]
+                  .getService(Components.interfaces.nsISupports)
+                  .wrappedJSObject;
+  return service.whenLoaded();
 }
