@@ -1,2 +1,2 @@
-skip-if(Android) fuzzy-if(OSX,22,49977) skip-if(winWidget) HTTP(..) == short.mp4.firstframe.html short.mp4.firstframe-ref.html
-skip-if(Android) fuzzy-if(OSX,23,51392) fuzzy-if(winWidget,59,76797) HTTP(..) == short.mp4.lastframe.html short.mp4.lastframe-ref.html
+skip-if(Android) fuzzy-if(OSX,22,49977) skip-if(winWidget) fuzzy-if(webrender,70,600) HTTP(..) == short.mp4.firstframe.html short.mp4.firstframe-ref.html
+skip-if(Android) fuzzy-if(OSX,23,51392) fuzzy-if(winWidget,59,76797) fuzzy-if(webrender,60,1800) HTTP(..) == short.mp4.lastframe.html short.mp4.lastframe-ref.html
