@@ -816,6 +816,25 @@ AtomAttrValue(Implementor* aElement, nsIAtom* aName)
   return attr ? attr->GetAtomValue() : nullptr;
 }
 
+template <typename Implementor>
+static nsIAtom*
+LangValue(Implementor* aElement)
+{
+  const nsAttrValue* attr =
+    aElement->GetParsedAttr(nsGkAtoms::lang, kNameSpaceID_XML);
+  if (!attr && aElement->SupportsLangAttr()) {
+    attr = aElement->GetParsedAttr(nsGkAtoms::lang);
+  }
+
+  if (!attr) {
+    return nullptr;
+  }
+
+  nsString lang;
+  attr->ToString(lang);
+  return NS_Atomize(lang).take();
+}
+
 template <typename Implementor, typename MatchFn>
 static bool
 DoMatch(Implementor* aElement, nsIAtom* aNS, nsIAtom* aName, MatchFn aMatch)
@@ -997,6 +1016,10 @@ ClassOrClassList(Implementor* aElement, nsIAtom** aClass, nsIAtom*** aClassList)
   nsIAtom* prefix_##AtomAttrValue(implementor_ aElement, nsIAtom* aName)       \
   {                                                                            \
     return AtomAttrValue(aElement, aName);                                     \
+  }                                                                            \
+  nsIAtom* prefix_##LangValue(implementor_ aElement)                           \
+  {                                                                            \
+    return LangValue(aElement);                                                \
   }                                                                            \
   bool prefix_##HasAttr(implementor_ aElement, nsIAtom* aNS, nsIAtom* aName)   \
   {                                                                            \
