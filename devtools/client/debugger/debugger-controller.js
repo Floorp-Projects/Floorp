@@ -275,9 +275,12 @@ var DebuggerController = {
     this.client = client;
     this.activeThread = this._toolbox.threadClient;
 
+    let wasmBinarySource = !!this.client.mainRoot.traits.wasmBinarySource;
+
     // Disable asm.js so that we can set breakpoints and other things
-    // on asm.js scripts
-    yield this.reconfigureThread({ observeAsmJS: true });
+    // on asm.js scripts. For WebAssembly modules allow using of binary
+    // source if supported.
+    yield this.reconfigureThread({ observeAsmJS: true, wasmBinarySource, });
     yield this.connectThread();
 
     // We need to call this to sync the state of the resume

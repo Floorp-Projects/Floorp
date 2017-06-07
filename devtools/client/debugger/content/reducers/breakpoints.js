@@ -46,7 +46,7 @@ function update(state = initialState, action, emitChange) {
         return state;
       }
       else if (action.status === "done") {
-        const { actor, text } = action.value;
+        const { actor, text, isWasm } = action.value;
         let { actualLocation } = action.value;
 
       // If the breakpoint moved, update the map
@@ -80,6 +80,7 @@ function update(state = initialState, action, emitChange) {
           disabled: false,
           loading: false,
           actor: actor,
+          isWasm: isWasm,
           text: text
         });
         emitChange("breakpoint-updated", state.breakpoints[finalLocationId]);
