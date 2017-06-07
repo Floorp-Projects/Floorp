@@ -671,6 +671,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
       <property name="oneOffSearchQuery">
         <getter><![CDATA[
+          // If the user has selected a search suggestion, chances are they
+          // want to use the one off search engine to search for that suggestion,
+          // not the string that they manually entered into the location bar.
+          let action = this._parseActionUrl(this.value);
+          if (action && action.type == "searchengine") {
+            return action.params.input;
+          }
           // this.textValue may be an autofilled string.  Search only with the
           // portion that the user typed, if any, by preferring the autocomplete
           // controller's searchString (including handleEnterInstance.searchString).
