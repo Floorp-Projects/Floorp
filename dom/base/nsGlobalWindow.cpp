@@ -5138,7 +5138,7 @@ nsGlobalWindow::MayResolve(jsid aId)
 }
 
 void
-nsGlobalWindow::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
+nsGlobalWindow::GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& aNames,
                                     ErrorResult& aRv)
 {
   MOZ_ASSERT(IsInnerWindow());
@@ -5163,7 +5163,9 @@ nsGlobalWindow::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
       js::IsObjectInContextCompartment(wrapper, aCx) ?
         WebIDLGlobalNameHash::UnresolvedNamesOnly :
         WebIDLGlobalNameHash::AllNames;
-    WebIDLGlobalNameHash::GetNames(aCx, wrapper, nameType, aNames);
+    if (!WebIDLGlobalNameHash::GetNames(aCx, wrapper, nameType, aNames)) {
+      aRv.NoteJSContextException(aCx);
+    }
 
     for (auto i = nameSpaceManager->GlobalNameIter(); !i.Done(); i.Next()) {
       const GlobalNameMapEntry* entry = i.Get();
@@ -5171,7 +5173,13 @@ nsGlobalWindow::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
                                         entry->mGlobalName)) {
         // Just append all of these; even if they get deleted our resolve hook
         // just goes ahead and recreates them.
-        aNames.AppendElement(entry->mKey);
+        JSString* str = JS_AtomizeUCStringN(aCx,
+                                            entry->mKey.BeginReading(),
+                                            entry->mKey.Length());
+        if (!str || !aNames.append(NON_INTEGER_ATOM_TO_JSID(str))) {
+          aRv.NoteJSContextException(aCx);
+          return;
+        }
       }
     }
   }
