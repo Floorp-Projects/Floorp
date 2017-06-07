@@ -28,10 +28,12 @@ public:
   virtual void Shutdown() override;
 
   virtual ipc::IPCResult
-  RecvParentCOMProxy(const IAccessibleHolder& aParentCOMProxy) override;
+    RecvParentCOMProxy(const IAccessibleHolder& aParentCOMProxy) override;
   virtual ipc::IPCResult
     RecvEmulatedWindow(const WindowsHandle& aEmulatedWindowHandle,
                        const IAccessibleHolder& aEmulatedWindowCOMProxy) override;
+  virtual ipc::IPCResult
+    RecvRestoreFocus() override;
 
   HWND GetNativeWindowHandle() const;
   IAccessible* GetEmulatedWindowIAccessible() const { return mEmulatedWindowProxy.get(); }

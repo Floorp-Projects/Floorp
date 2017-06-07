@@ -1019,7 +1019,7 @@ FrameIter::updatePcQuadratic()
             jit::BaselineFrame* frame = data_.jitFrames_.baselineFrame();
             jit::JitActivation* activation = data_.activations_->asJit();
 
-            // ActivationIterator::jitTop_ may be invalid, so create a new
+            // activation's exitFP may be invalid, so create a new
             // activation iterator.
             data_.activations_ = ActivationIterator(data_.cx_);
             while (data_.activations_.activation() != activation)
@@ -1405,7 +1405,7 @@ ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx, jit::CalleeToken e
 
 jit::JitActivation::JitActivation(JSContext* cx, bool active)
   : Activation(cx, Jit),
-    prevJitTop_(cx->jitTop),
+    exitFP_(nullptr),
     prevJitActivation_(cx->jitActivation),
     active_(active),
     rematerializedFrames_(nullptr),
@@ -1425,11 +1425,8 @@ jit::JitActivation::~JitActivation()
     if (active_) {
         if (isProfiling())
             unregisterProfiling();
-
-        cx_->jitTop = prevJitTop_;
         cx_->jitActivation = prevJitActivation_;
     } else {
-        MOZ_ASSERT(cx_->jitTop == prevJitTop_);
         MOZ_ASSERT(cx_->jitActivation == prevJitActivation_);
     }
 
@@ -1442,13 +1439,6 @@ jit::JitActivation::~JitActivation()
 
     clearRematerializedFrames();
     js_delete(rematerializedFrames_);
-}
-
-bool
-jit::JitActivation::isProfiling() const
-{
-    // All JitActivations can be profiled.
-    return true;
 }
 
 void
@@ -1478,18 +1468,14 @@ jit::JitActivation::setActive(JSContext* cx, bool active)
 
     if (active) {
         *((volatile bool*) active_) = true;
-        MOZ_ASSERT(prevJitTop_ == cx->jitTop);
         MOZ_ASSERT(prevJitActivation_ == cx->jitActivation);
         cx->jitActivation = this;
 
         registerProfiling();
-
     } else {
         unregisterProfiling();
 
-        cx->jitTop = prevJitTop_;
         cx->jitActivation = prevJitActivation_;
-
         *((volatile bool*) active_) = false;
     }
 }
@@ -1761,8 +1747,7 @@ Activation::unregisterProfiling()
 }
 
 ActivationIterator::ActivationIterator(JSContext* cx)
-    : jitTop_(cx->jitTop)
-    , activation_(cx->activation_)
+  : activation_(cx->activation_)
 {
     MOZ_ASSERT(cx == TlsContext.get());
     settle();
@@ -1781,7 +1766,6 @@ ActivationIterator::ActivationIterator(JSContext* cx, const CooperatingContext& 
 
     // Tolerate a null target context, in case we are iterating over the
     // activations for a zone group that is not in use by any thread.
-    jitTop_ = target.context() ? target.context()->jitTop.ref() : nullptr;
     activation_ = target.context() ? target.context()->activation_.ref() : nullptr;
 
     settle();
@@ -1791,8 +1775,6 @@ ActivationIterator&
 ActivationIterator::operator++()
 {
     MOZ_ASSERT(activation_);
-    if (activation_->isJit() && activation_->asJit()->isActive())
-        jitTop_ = activation_->asJit()->prevJitTop();
     activation_ = activation_->prev();
     settle();
     return *this;
@@ -1801,8 +1783,7 @@ ActivationIterator::operator++()
 void
 ActivationIterator::settle()
 {
-    // Stop at the next active activation. No need to update jitTop_, since
-    // we don't iterate over an active jit activation.
+    // Stop at the next active activation.
     while (!done() && activation_->isJit() && !activation_->asJit()->isActive())
         activation_ = activation_->prev();
 }
@@ -1811,8 +1792,7 @@ JS::ProfilingFrameIterator::ProfilingFrameIterator(JSContext* cx, const Register
                                                    uint32_t sampleBufferGen)
   : cx_(cx),
     sampleBufferGen_(sampleBufferGen),
-    activation_(nullptr),
-    savedPrevJitTop_(nullptr)
+    activation_(nullptr)
 {
     if (!cx->runtime()->geckoProfiler().enabled())
         MOZ_CRASH("ProfilingFrameIterator called when geckoProfiler not enabled for runtime.");
@@ -1888,9 +1868,6 @@ JS::ProfilingFrameIterator::iteratorConstruct(const RegisterState& state)
 
     if (activation_->isWasm()) {
         new (storage()) wasm::ProfilingFrameIterator(*activation_->asWasm(), state);
-        // Set savedPrevJitTop_ to the actual jitTop_ from the runtime.
-        AutoNoteSingleThreadedRegion anstr;
-        savedPrevJitTop_ = activation_->cx()->jitTop;
         return;
     }
 
@@ -1910,8 +1887,7 @@ JS::ProfilingFrameIterator::iteratorConstruct()
     }
 
     MOZ_ASSERT(activation_->asJit()->isActive());
-    MOZ_ASSERT(savedPrevJitTop_ != nullptr);
-    new (storage()) jit::JitProfilingFrameIterator(savedPrevJitTop_);
+    new (storage()) jit::JitProfilingFrameIterator(activation_->asJit()->exitFP());
 }
 
 void
@@ -1925,8 +1901,6 @@ JS::ProfilingFrameIterator::iteratorDestroy()
         return;
     }
 
-    // Save prevjitTop for later use
-    savedPrevJitTop_ = activation_->asJit()->prevJitTop();
     jitIter().~JitProfilingFrameIterator();
 }
 

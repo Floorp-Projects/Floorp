@@ -150,7 +150,8 @@ public:
                            const uint64_t& aAnimationId,
                            const float* aOpacity,
                            const gfx::Matrix4x4* aTransform,
-                           const WrMixBlendMode& aMixBlendMode);
+                           const WrMixBlendMode& aMixBlendMode,
+                           const nsTArray<WrFilterOp>& aFilters);
   void PopStackingContext();
 
   void PushClip(const WrRect& aClipRect,

@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::ffi::CString;
 use std::{mem, slice};
 use std::path::PathBuf;
-use std::os::raw::{c_void, c_char};
+use std::os::raw::{c_void, c_char, c_float};
 use std::collections::HashMap;
 use gleam::gl;
 
@@ -58,6 +58,27 @@ type WrYuvColorSpace = YuvColorSpace;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct WrExternalImageId(pub u64);
+
+#[repr(u32)]
+#[derive(Copy, Clone)]
+pub enum WrFilterOpType {
+  Blur = 0,
+  Brightness = 1,
+  Contrast = 2,
+  Grayscale = 3,
+  HueRotate = 4,
+  Invert = 5,
+  Opacity = 6,
+  Saturate = 7,
+  Sepia = 8,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct WrFilterOp {
+    filter_type: WrFilterOpType,
+    argument: c_float,
+}
 
 impl Into<ExternalImageId> for WrExternalImageId {
     fn into(self) -> ExternalImageId {
@@ -1245,12 +1266,28 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               animation_id: u64,
                                               opacity: *const f32,
                                               transform: *const WrMatrix,
-                                              mix_blend_mode: WrMixBlendMode) {
+                                              mix_blend_mode: WrMixBlendMode,
+                                              filters: *const WrFilterOp,
+                                              filter_count: usize) {
     assert!(unsafe { !is_in_render_thread() });
 
     let bounds = bounds.into();
 
-    let mut filters: Vec<FilterOp> = Vec::new();
+    let c_filters = make_slice(filters, filter_count);
+    let mut filters : Vec<FilterOp> = c_filters.iter().map(|c_filter| {
+        match c_filter.filter_type {
+            WrFilterOpType::Blur => FilterOp::Blur(Au::from_f32_px(c_filter.argument)),
+            WrFilterOpType::Brightness => FilterOp::Brightness(c_filter.argument),
+            WrFilterOpType::Contrast => FilterOp::Contrast(c_filter.argument),
+            WrFilterOpType::Grayscale => FilterOp::Grayscale(c_filter.argument),
+            WrFilterOpType::HueRotate => FilterOp::HueRotate(c_filter.argument),
+            WrFilterOpType::Invert => FilterOp::Invert(c_filter.argument),
+            WrFilterOpType::Opacity => FilterOp::Opacity(PropertyBinding::Value(c_filter.argument)),
+            WrFilterOpType::Saturate => FilterOp::Saturate(c_filter.argument),
+            WrFilterOpType::Sepia => FilterOp::Sepia(c_filter.argument),
+        }
+    }).collect();
+
     let opacity = unsafe { opacity.as_ref() };
     if let Some(opacity) = opacity {
         if *opacity < 1.0 {

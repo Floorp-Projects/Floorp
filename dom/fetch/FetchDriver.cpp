@@ -657,6 +657,53 @@ public:
   }
 };
 
+struct SRIVerifierAndOutputHolder {
+  SRIVerifierAndOutputHolder(SRICheckDataVerifier* aVerifier,
+                             nsIOutputStream* aOutputStream)
+    : mVerifier(aVerifier)
+    , mOutputStream(aOutputStream)
+  {}
+
+  SRICheckDataVerifier* mVerifier;
+  nsIOutputStream* mOutputStream;
+
+private:
+  SRIVerifierAndOutputHolder() = delete;
+};
+
+// Just like NS_CopySegmentToStream, but also sends the data into an
+// SRICheckDataVerifier.
+nsresult
+CopySegmentToStreamAndSRI(nsIInputStream* aInStr,
+                          void* aClosure,
+                          const char* aBuffer,
+                          uint32_t aOffset,
+                          uint32_t aCount,
+                          uint32_t* aCountWritten)
+{
+  auto holder = static_cast<SRIVerifierAndOutputHolder*>(aClosure);
+  MOZ_DIAGNOSTIC_ASSERT(holder && holder->mVerifier && holder->mOutputStream,
+                        "Bogus holder");
+  nsresult rv =
+    holder->mVerifier->Update(aCount,
+                              reinterpret_cast<const uint8_t*>(aBuffer));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // The rest is just like NS_CopySegmentToStream.
+  *aCountWritten = 0;
+  while (aCount) {
+    uint32_t n = 0;
+    rv = holder->mOutputStream->Write(aBuffer, aCount, &n);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    aBuffer += n;
+    aCount -= n;
+    *aCountWritten += n;
+  }
+  return NS_OK;
+}
+
 } // anonymous namespace
 
 NS_IMETHODIMP
@@ -692,39 +739,10 @@ FetchDriver::OnDataAvailable(nsIRequest* aRequest,
       !mRequest->GetIntegrity().IsEmpty()) {
     MOZ_ASSERT(mSRIDataVerifier);
 
-    uint32_t aWrite;
-    nsTArray<uint8_t> buffer;
-    nsresult rv;
-    buffer.SetCapacity(aCount);
-    while (aCount > 0) {
-      rv = aInputStream->Read(reinterpret_cast<char*>(buffer.Elements()),
-                              aCount, &aRead);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = mSRIDataVerifier->Update(aRead, (uint8_t*)buffer.Elements());
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      while (aRead > 0) {
-        rv = mPipeOutputStream->Write(reinterpret_cast<char*>(buffer.Elements()),
-                                      aRead, &aWrite);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        if (aRead < aWrite) {
-          return NS_ERROR_FAILURE;
-        }
-
-        aRead -= aWrite;
-      }
-
-
-      aCount -= aWrite;
-    }
-
-    return NS_OK;
+    SRIVerifierAndOutputHolder holder(mSRIDataVerifier, mPipeOutputStream);
+    nsresult rv = aInputStream->ReadSegments(CopySegmentToStreamAndSRI,
+                                             &holder, aCount, &aRead);
+    return rv;
   }
 
   nsresult rv = aInputStream->ReadSegments(NS_CopySegmentToStream,

@@ -1,6 +1,8 @@
 if (!('oomTest' in this))
     quit();
 
+gczeal(0);
+
 var x1 = [];
 var x2 = [];
 var x3 = [];

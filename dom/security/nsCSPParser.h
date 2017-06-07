@@ -251,6 +251,10 @@ class nsCSPParser {
     nsCSPChildSrcDirective* mChildSrc;
     nsCSPDirective*         mFrameSrc;
 
+    // cache variable to let nsCSPHostSrc know that it's within
+    // the frame-ancestors directive.
+    bool                    mParsingFrameAncestorsDir;
+
     cspTokens          mTokens;
     nsIURI*            mSelfURI;
     nsCSPPolicy*       mPolicy;
