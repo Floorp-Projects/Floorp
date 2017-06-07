@@ -1,6 +1,6 @@
 [root]
 name = "geckodriver"
-version = "0.16.1"
+version = "0.17.0"
 dependencies = [
  "chrono 0.2.25 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.24.2 (registry+https://github.com/rust-lang/crates.io-index)",
