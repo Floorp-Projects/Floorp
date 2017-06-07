@@ -954,7 +954,7 @@ function handleUpdateFailure(update, errorCode) {
     Services.prefs.setIntPref(PREF_APP_UPDATE_CANCELATIONS, cancelations);
     if (AppConstants.platform == "macosx") {
       let osxCancelations = getPref("getIntPref",
-                                  PREF_APP_UPDATE_CANCELATIONS_OSX, 0);
+                                    PREF_APP_UPDATE_CANCELATIONS_OSX, 0);
       osxCancelations++;
       Services.prefs.setIntPref(PREF_APP_UPDATE_CANCELATIONS_OSX,
                                 osxCancelations);
@@ -1786,6 +1786,9 @@ UpdateService.prototype = {
     }
 
     if (status == STATE_SUCCEEDED) {
+      if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CANCELATIONS)) {
+        Services.prefs.clearUserPref(PREF_APP_UPDATE_CANCELATIONS);
+      }
       update.statusText = gUpdateBundle.GetStringFromName("installSuccess");
 
       // Update the patch's metadata.
