@@ -240,4 +240,31 @@ ServoStyleRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
   return NS_OK;
 }
 
+uint32_t
+ServoStyleRule::GetSelectorCount()
+{
+  return 0;
+}
+
+nsresult
+ServoStyleRule::GetSelectorText(uint32_t aSelectorIndex, nsAString& aText)
+{
+  return NS_OK;
+}
+
+nsresult
+ServoStyleRule::GetSpecificity(uint32_t aSelectorIndex, uint64_t* aSpecificity)
+{
+  return NS_OK;
+}
+
+nsresult
+ServoStyleRule::SelectorMatchesElement(Element* aElement,
+                                       uint32_t aSelectorIndex,
+                                       const nsAString& aPseudo,
+                                       bool* aMatches)
+{
+  return NS_OK;
+}
+
 } // namespace mozilla
