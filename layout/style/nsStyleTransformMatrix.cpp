@@ -440,23 +440,43 @@ ProcessMatrixOperator(Matrix4x4& aMatrix,
 {
   NS_PRECONDITION(aData->Count() == 4, "Invalid array!");
 
-  Matrix4x4 matrix1, matrix2;
-  if (aData->Item(1).GetUnit() == eCSSUnit_List) {
-    matrix1 = nsStyleTransformMatrix::ReadTransforms(aData->Item(1).GetListValue(),
-                             aContext, aPresContext,
-                             aConditions,
-                             aRefBox, nsPresContext::AppUnitsPerCSSPixel(),
-                             aContains3dTransform);
-  }
-  if (aData->Item(2).GetUnit() == eCSSUnit_List) {
-    matrix2 = ReadTransforms(aData->Item(2).GetListValue(),
-                             aContext, aPresContext,
-                             aConditions,
-                             aRefBox, nsPresContext::AppUnitsPerCSSPixel(),
-                             aContains3dTransform);
-  }
-  double progress = aData->Item(3).GetPercentValue();
+  auto readTransform = [&](const nsCSSValue& aValue) -> Matrix4x4 {
+    const nsCSSValueList* list = nullptr;
+    switch (aValue.GetUnit()) {
+      case eCSSUnit_List:
+        // For Gecko style backend.
+        list = aValue.GetListValue();
+        break;
+      case eCSSUnit_SharedList:
+        // For Servo style backend. The transform lists of interpolatematrix
+        // are not created on the main thread (i.e. during parallel traversal),
+        // and nsCSSValueList_heap is not thread safe. Therefore, we use
+        // nsCSSValueSharedList as a workaround.
+        list = aValue.GetSharedListValue()->mHead;
+        break;
+      default:
+        list = nullptr;
+    }
 
+    Matrix4x4 matrix;
+    if (!list) {
+      return matrix;
+    }
+
+    float appUnitPerCSSPixel = nsPresContext::AppUnitsPerCSSPixel();
+    matrix = nsStyleTransformMatrix::ReadTransforms(list,
+                                                    aContext,
+                                                    aPresContext,
+                                                    aConditions,
+                                                    aRefBox,
+                                                    appUnitPerCSSPixel,
+                                                    aContains3dTransform);
+    return matrix;
+  };
+
+  Matrix4x4 matrix1 = readTransform(aData->Item(1));
+  Matrix4x4 matrix2 = readTransform(aData->Item(2));
+  double progress = aData->Item(3).GetPercentValue();
   aMatrix =
     OperateTransformMatrix<Operator>(matrix1, matrix2, progress) * aMatrix;
 }
