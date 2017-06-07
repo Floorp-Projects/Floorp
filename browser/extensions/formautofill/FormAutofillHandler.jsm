@@ -134,57 +134,8 @@ FormAutofillHandler.prototype = {
           }
         }
       }
-
-      // Unlike using setUserInput directly, FormFillController dispatches an
-      // asynchronous "DOMAutoComplete" event with an "input" event follows right
-      // after. So, we need to suppress the first "input" event fired off from
-      // focused input to make sure the latter change handler won't be affected
-      // by auto filling.
-      if (element === focusedInput) {
-        const suppressFirstInputHandler = e => {
-          if (e.isTrusted) {
-            e.stopPropagation();
-            element.removeEventListener("input", suppressFirstInputHandler);
-          }
-        };
-
-        element.addEventListener("input", suppressFirstInputHandler);
-      }
       element.previewValue = "";
     }
-
-    // Handle the highlight style resetting caused by user's correction afterward.
-    log.debug("register change handler for filled form:", this.form);
-    const onChangeHandler = e => {
-      let hasFilledFields;
-
-      if (!e.isTrusted) {
-        return;
-      }
-
-      for (let fieldDetail of this.fieldDetails) {
-        let element = fieldDetail.elementWeakRef.get();
-
-        if (!element) {
-          return;
-        }
-
-        if (e.target == element || (e.target == element.form && e.type == "reset")) {
-          this.changeFieldState(fieldDetail, "NORMAL");
-        }
-
-        hasFilledFields |= (fieldDetail.state == "AUTO_FILLED");
-      }
-
-      // Unregister listeners once no field is in AUTO_FILLED state.
-      if (!hasFilledFields) {
-        this.form.rootElement.removeEventListener("input", onChangeHandler);
-        this.form.rootElement.removeEventListener("reset", onChangeHandler);
-      }
-    };
-
-    this.form.rootElement.addEventListener("input", onChangeHandler);
-    this.form.rootElement.addEventListener("reset", onChangeHandler);
   },
 
   /**
