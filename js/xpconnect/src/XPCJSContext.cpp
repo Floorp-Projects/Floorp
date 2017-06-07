@@ -256,12 +256,16 @@ class WatchdogManager : public nsIObserver
         // thread, which isn't great to do in a destructor. So we require
         // consumers to shut it down manually before releasing it.
         MOZ_ASSERT(!mWatchdog);
+    }
+
+  public:
+
+    void Shutdown()
+    {
         mozilla::Preferences::RemoveObserver(this, "dom.use_watchdog");
         mozilla::Preferences::RemoveObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CONTENT);
         mozilla::Preferences::RemoveObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CHROME);
     }
-
-  public:
 
     NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
                        const char16_t* aData) override
@@ -714,6 +718,7 @@ XPCJSContext::~XPCJSContext()
 
     if (mWatchdogManager->GetWatchdog())
         mWatchdogManager->StopWatchdog();
+    mWatchdogManager->Shutdown();
 
     if (mCallContext)
         mCallContext->SystemIsBeingShutDown();
