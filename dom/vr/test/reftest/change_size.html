@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<meta charset='UTF-8'>
+<!-- Viewport size change in WebGL and submit it to the VR device as a base64 image.
+If this fails, something is seriously wrong. -->
+<html class="reftest-wait">
+<head>
+  <script type='text/javascript' src='webgl-util.js'></script>
+  <script type='text/javascript' src="VRSimulationDriver.js"></script>
+  <script id="vs" type="x-shader/x-vertex">
+    attribute vec2 aVertCoord;
+
+    void main(void) {
+      gl_Position = vec4(aVertCoord, 0.0, 1.0);
+    }
+  </script>
+  <script id="fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    void main(void) {
+      gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    }
+  </script>
+  <script type='text/javascript'>
+    'use strict';
+
+    var submitResult = null;
+    var vrDisplay = null;
+    var webglCanvas = null;
+    var gl = null;
+    var prog = null;
+    var img = null;
+    // The resolution is 540 : 300 (the ratio of 2160 * 1200, like Vive and Oculus)
+    const eyeWidth = 270;
+    const eyeHeight = 300;
+
+    function setStatus(text) {
+      var elem = document.getElementById('status');
+      elem.innerHTML = text;
+    }
+
+    function initVRMock() {
+      VRServiceTest = navigator.requestVRServiceTest();
+      if (!VRServiceTest) {
+        setStatus('VRServiceTest get failed.');
+        return;
+      }
+
+      VRSimulationDriver.AttachWebVRDisplay().then(() => {
+        VRSimulationDriver.SetEyeResolution(eyeWidth, eyeHeight);
+        VRSimulationDriver.UpdateVRDisplay();
+      }).then(() => {
+        // Looking for VR displays
+        if (navigator.getVRDisplays) {
+          submitResult = new VRSubmitFrameResult();
+          navigator.getVRDisplays().then(function (displays) {
+            if (displays.length > 0) {
+              window.addEventListener('vrdisplaypresentchange', onVRPresentChange, false);
+
+              vrDisplay = displays[0];
+              vrDisplay.requestPresent([{ source: webglCanvas }]);
+              vrDisplay.requestAnimationFrame(onAnimationFrame);
+            }
+          });
+        }
+      });
+    }
+
+    function onVRPresentChange() {
+      if (vrDisplay && vrDisplay.isPresenting) {
+        const leftEye = vrDisplay.getEyeParameters("left");
+        const rightEye = vrDisplay.getEyeParameters("right");
+
+        if (leftEye.renderWidth != rightEye.renderWidth ||
+            leftEye.renderWidth != eyeWidth) {
+          setStatus('renderWidth is not equal to eyeWidth.');
+        }
+
+        if (leftEye.renderHeight != rightEye.renderHeight ||
+            leftEye.renderHeight != eyeHeight) {
+          setStatus('renderHeight is not equal to eyeHeight.');
+        }
+        webglCanvas.width = leftEye.renderWidth * 2;
+        webglCanvas.height = leftEye.renderHeight;
+      }
+    }
+
+    function onAnimationFrame() {
+      if (!vrDisplay.isPresenting) {
+        return;
+      }
+
+      vrDisplay.requestAnimationFrame(onAnimationFrame);
+      gl.clearColor(0.0, 1.0, 0.0, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      // Presenting render a stereo view.
+      gl.viewport(0, 0, webglCanvas.width * 0.5, webglCanvas.height);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      gl.viewport(webglCanvas.width * 0.5, 0, webglCanvas.width * 0.5, webglCanvas.height);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      // Indicate VRDisplay we're done rendering.
+      vrDisplay.submitFrame();
+      if (vrDisplay.getSubmitFrameResult(submitResult)) {
+        if (!img) {
+          img = document.createElement("img");
+          img.onload = function(){
+            // img width will not be eyeWidth * 2 (540), it would
+            // be 544. It is because D3D11 CopyResource changes
+            // the destination image size.
+            if ((img.height == eyeHeight)) {
+              webglCanvas.style.display = 'none';
+              vrDisplay.exitPresent();
+              setTimeout(testComplete, 0);
+            }
+          };
+          img.src = submitResult.base64Image;
+          document.body.appendChild(img);
+        } else {
+          img.src = submitResult.base64Image;
+        }
+      }
+    }
+
+    function runTest() {
+      webglCanvas = document.getElementById('canvas');
+      gl = WebGLUtil.getWebGL('canvas');
+      if (!gl) {
+        setStatus('WebGL context creation failed.');
+        return;
+      }
+      gl.disable(gl.DEPTH_TEST);
+      prog = WebGLUtil.createProgramByIds(gl, 'vs', 'fs');
+      if (!prog) {
+        setStatus('Program linking failed.');
+        return;
+      }
+      prog.aVertCoord = gl.getAttribLocation(prog, "aVertCoord");
+
+      var vertCoordArr = new Float32Array([
+        -0.5, -0.5,
+        0.5, -0.5,
+        -0.5, 0.5,
+        0.5, 0.5,
+      ]);
+      var vertCoordBuff = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vertCoordBuff);
+      gl.bufferData(gl.ARRAY_BUFFER, vertCoordArr, gl.STATIC_DRAW);
+      gl.useProgram(prog);
+      gl.enableVertexAttribArray(prog.aVertCoord);
+      gl.vertexAttribPointer(prog.aVertCoord, 2, gl.FLOAT, false, 0, 0);
+
+      initVRMock();
+    }
+
+    function testComplete() {
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+</head>
+
+<body onload='runTest();'>
+  <canvas id='canvas' width='128' height='128'></canvas>
+  <div id='status'></div>
+</body>
+
+</html>
