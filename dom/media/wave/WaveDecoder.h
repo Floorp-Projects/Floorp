@@ -16,8 +16,8 @@ class WaveDecoder : public MediaDecoder
 {
 public:
   // MediaDecoder interface.
-  explicit WaveDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {}
-  MediaDecoder* Clone(MediaDecoderOwner* aOwner) override;
+  explicit WaveDecoder(MediaDecoderInit& aInit) : MediaDecoder(aInit) {}
+  MediaDecoder* Clone(MediaDecoderInit& aInit) override;
   MediaDecoderStateMachine* CreateStateMachine() override;
 
   // Returns true if the Wave backend is pref'ed on, and we're running on a

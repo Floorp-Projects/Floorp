@@ -19,13 +19,13 @@ class MediaContainerType;
 class MP4Decoder : public MediaDecoder
 {
 public:
-  explicit MP4Decoder(MediaDecoderOwner* aOwner);
+  explicit MP4Decoder(MediaDecoderInit& aInit);
 
-  MediaDecoder* Clone(MediaDecoderOwner* aOwner) override {
+  MediaDecoder* Clone(MediaDecoderInit& aInit) override {
     if (!IsEnabled()) {
       return nullptr;
     }
-    return new MP4Decoder(aOwner);
+    return new MP4Decoder(aInit);
   }
 
   MediaDecoderStateMachine* CreateStateMachine() override;

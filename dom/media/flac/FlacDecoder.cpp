@@ -14,13 +14,13 @@
 namespace mozilla {
 
 MediaDecoder*
-FlacDecoder::Clone(MediaDecoderOwner* aOwner)
+FlacDecoder::Clone(MediaDecoderInit& aInit)
 {
   if (!IsEnabled()) {
     return nullptr;
   }
 
-  return new FlacDecoder(aOwner);
+  return new FlacDecoder(aInit);
 }
 
 MediaDecoderStateMachine*
