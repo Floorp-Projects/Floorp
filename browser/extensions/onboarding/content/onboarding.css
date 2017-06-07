@@ -37,10 +37,21 @@
   display: none;
 }
 
-#onboarding-tour-close-btn {
+#onboarding-overlay-close-btn {
   position: absolute;
   top: 15px;
   offset-inline-end: 15px;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  background-image: url(img/onboarding-close-icon.svg);
+  background-position: center center;
+  background-repeat: no-repeat;
+  padding: 12px;
+}
+
+#onboarding-overlay-close-btn:hover {
+  background-color: rgba(204, 204, 204, 0.6);
 }
 
 #onboarding-overlay.opened > #onboarding-overlay-dialog {
