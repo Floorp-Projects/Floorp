@@ -100,6 +100,10 @@ using namespace mozilla::layers;
 
 uint8_t gNotifySubDocInvalidationData;
 
+// This preference was first introduced in Bug 232227, in order to prevent
+// system colors from being exposed to CSS or canvas.
+constexpr char kUseStandinsForNativeColors[] = "ui.use_standins_for_native_colors";
+
 /**
  * Layer UserData for ContainerLayers that want to be notified
  * of local invalidations of them and their descendant layers.
@@ -381,6 +385,9 @@ nsPresContext::Destroy()
   Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
                                   "nglayout.debug.paint_flashing_chrome",
                                   this);
+  Preferences::UnregisterCallback(nsPresContext::PrefChangedCallback,
+                                  kUseStandinsForNativeColors,
+                                  this);
 
   mRefreshDriver = nullptr;
 }
@@ -468,11 +475,17 @@ nsPresContext::GetDocumentColorPreferences()
   bool isChromeDocShell = false;
   static int32_t sDocumentColorsSetting;
   static bool sDocumentColorsSettingPrefCached = false;
+  static bool sUseStandinsForNativeColors = false;
   if (!sDocumentColorsSettingPrefCached) {
     sDocumentColorsSettingPrefCached = true;
     Preferences::AddIntVarCache(&sDocumentColorsSetting,
                                 "browser.display.document_color_use",
                                 0);
+
+    // The preference "ui.use_standins_for_native_colors" also affects
+    // default foreground and background colors.
+    Preferences::AddBoolVarCache(&sUseStandinsForNativeColors,
+                                 kUseStandinsForNativeColors);
   }
 
   nsIDocument* doc = mDocument->GetDisplayDocument();
@@ -501,7 +514,18 @@ nsPresContext::GetDocumentColorPreferences()
       !Preferences::GetBool("browser.display.use_system_colors", false);
   }
 
-  if (usePrefColors) {
+  if (sUseStandinsForNativeColors) {
+    // Once the preference "ui.use_standins_for_native_colors" is enabled,
+    // use fixed color values instead of prefered colors and system colors.
+    if (NS_FAILED(LookAndFeel::GetColor(
+        LookAndFeel::eColorID_windowtext, true, &mDefaultColor))) {
+      mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
+    }
+    if (NS_FAILED(LookAndFeel::GetColor(
+        LookAndFeel::eColorID_window, true, &mBackgroundColor))) {
+      mBackgroundColor = NS_RGB(0xff, 0xff, 0xff);
+    }
+  } else if (usePrefColors) {
     nsAdoptingString colorStr =
       Preferences::GetString("browser.display.foreground_color");
 
@@ -923,6 +947,9 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
                                 this);
   Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
                                 "nglayout.debug.paint_flashing_chrome",
+                                this);
+  Preferences::RegisterCallback(nsPresContext::PrefChangedCallback,
+                                kUseStandinsForNativeColors,
                                 this);
 
   nsresult rv = mEventManager->Init();
