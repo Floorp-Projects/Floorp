@@ -26,6 +26,7 @@
 #include "nsIPropertyBag2.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCRT.h"
+#include "nsTHashtable.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -149,6 +150,8 @@ public:
    */
   virtual void Notify(const WakeLockInformation& aInfo) override;
 
+  void TabActivityChanged(TabParent* aTabParent, bool aIsActive);
+
   /**
    * Call ShutDown before destroying the ProcessPriorityManager because
    * WakeLockObserver hols a strong reference to it.
@@ -267,6 +270,8 @@ public:
   void ResetPriorityNow();
   void SetPriorityNow(ProcessPriority aPriority);
 
+  void TabActivityChanged(TabParent* aTabParent, bool aIsActive);
+
   void ShutDown();
 
 private:
@@ -293,6 +298,9 @@ private:
   nsAutoCString mNameWithComma;
 
   nsCOMPtr<nsITimer> mResetPriorityTimer;
+
+  // This hashtable contains the list of active TabId for this process.
+  nsTHashtable<nsUint64HashKey> mActiveTabParents;
 };
 
 /* static */ bool ProcessPriorityManagerImpl::sInitialized = false;
@@ -538,6 +546,20 @@ ProcessPriorityManagerImpl::Notify(const WakeLockInformation& aInfo)
   }
 }
 
+void
+ProcessPriorityManagerImpl::TabActivityChanged(TabParent* aTabParent,
+                                               bool aIsActive)
+{
+  ContentParent* cp = aTabParent->Manager()->AsContentParent();
+  RefPtr<ParticularProcessPriorityManager> pppm =
+    GetParticularProcessPriorityManager(cp);
+  if (!pppm) {
+    return;
+  }
+
+  pppm->TabActivityChanged(aTabParent, aIsActive);
+}
+
 NS_IMPL_ISUPPORTS(ParticularProcessPriorityManager,
                   nsIObserver,
                   nsITimerCallback,
@@ -724,6 +746,13 @@ ParticularProcessPriorityManager::OnTabParentDestroyed(nsISupports* aSubject)
     return;
   }
 
+  uint64_t tabId;
+  if (NS_WARN_IF(NS_FAILED(tp->GetTabId(&tabId)))) {
+    return;
+  }
+
+  mActiveTabParents.RemoveEntry(tabId);
+
   ResetPriority();
 }
 
@@ -799,8 +828,9 @@ ParticularProcessPriorityManager::CurrentPriority()
 ProcessPriority
 ParticularProcessPriorityManager::ComputePriority()
 {
-  // TODO...
-  return PROCESS_PRIORITY_FOREGROUND;
+  if (!mActiveTabParents.IsEmpty()) {
+    return PROCESS_PRIORITY_FOREGROUND;
+  }
 
   if (mHoldsCPUWakeLock || mHoldsHighPriorityWakeLock) {
     return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
@@ -846,6 +876,21 @@ ParticularProcessPriorityManager::SetPriorityNow(ProcessPriority aPriority)
 
   FireTestOnlyObserverNotification("process-priority-set",
     ProcessPriorityToString(mPriority));
+}
+
+void
+ParticularProcessPriorityManager::TabActivityChanged(TabParent* aTabParent,
+                                                     bool aIsActive)
+{
+  MOZ_ASSERT(aTabParent);
+
+  if (!aIsActive) {
+    mActiveTabParents.RemoveEntry(aTabParent->GetTabId());
+  } else {
+    mActiveTabParents.PutEntry(aTabParent->GetTabId());
+  }
+
+  ResetPriority();
 }
 
 void
@@ -1021,6 +1066,21 @@ ProcessPriorityManager::CurrentProcessIsForeground()
 {
   return ProcessPriorityManagerChild::Singleton()->
     CurrentProcessIsForeground();
+}
+
+/* static */ void
+ProcessPriorityManager::TabActivityChanged(TabParent* aTabParent,
+                                           bool aIsActive)
+{
+  MOZ_ASSERT(aTabParent);
+
+  ProcessPriorityManagerImpl* singleton =
+    ProcessPriorityManagerImpl::GetSingleton();
+  if (!singleton) {
+    return;
+  }
+
+  singleton->TabActivityChanged(aTabParent, aIsActive);
 }
 
 } // namespace mozilla

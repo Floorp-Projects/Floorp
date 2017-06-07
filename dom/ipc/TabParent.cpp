@@ -98,6 +98,7 @@
 #include "mozilla/WebBrowserPersistDocumentParent.h"
 #include "nsIGroupedSHistory.h"
 #include "PartialSHistory.h"
+#include "ProcessPriorityManager.h"
 #include "nsString.h"
 
 #ifdef XP_WIN
@@ -2647,6 +2648,10 @@ TabParent::SetDocShellIsActive(bool isActive)
   mIsPrerendered &= !isActive;
   mDocShellIsActive = isActive;
   Unused << SendSetDocShellIsActive(isActive, mPreserveLayers, mLayerTreeEpoch);
+
+  // Let's inform the priority manager. This operation can end up with the
+  // changing of the process priority.
+  ProcessPriorityManager::TabActivityChanged(this, isActive);
 
   // Ask the child to repaint using the PHangMonitor channel/thread (which may
   // be less congested).
