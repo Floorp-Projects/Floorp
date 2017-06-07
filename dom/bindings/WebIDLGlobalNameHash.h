@@ -15,6 +15,12 @@ namespace dom {
 
 struct WebIDLNameTableEntry;
 
+namespace constructors {
+namespace id {
+enum ID : uint16_t;
+} // namespace id
+} // namespace constructors
+
 class WebIDLGlobalNameHash
 {
 public:
@@ -35,7 +41,8 @@ public:
   (ConstructorEnabled)(JSContext* cx, JS::Handle<JSObject*> obj);
 
   static void Register(uint16_t aNameOffset, uint16_t aNameLength,
-                       DefineGlobalName aDefine, ConstructorEnabled* aEnabled);
+                       DefineGlobalName aDefine, ConstructorEnabled* aEnabled,
+                       constructors::id::ID aConstructorId);
 
   static void Remove(const char* aName, uint32_t aLength);
 
