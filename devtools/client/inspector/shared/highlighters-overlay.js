@@ -384,9 +384,14 @@ HighlightersOverlay.prototype = {
     }
 
     event.stopPropagation();
-    this.toggleGridHighlighter(this.inspector.selection.nodeFront, {
-      color: DEFAULT_GRID_COLOR
-    });
+
+    let { store } = this.inspector;
+    let { grids, highlighterSettings } = store.getState();
+    let grid = grids.find(g => g.nodeFront == this.inspector.selection.nodeFront);
+
+    highlighterSettings.color = grid ? grid.color : DEFAULT_GRID_COLOR;
+
+    this.toggleGridHighlighter(this.inspector.selection.nodeFront, highlighterSettings);
   },
 
   onMouseMove: function (event) {
