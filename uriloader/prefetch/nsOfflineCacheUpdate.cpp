@@ -1654,7 +1654,7 @@ nsOfflineCacheUpdate::LoadCompleted(nsOfflineCacheUpdateItem *aItem)
     }
 
     // According to parallelism this may imply more pinned retries count,
-    // but that is not critical, since at one moment the algoritm will
+    // but that is not critical, since at one moment the algorithm will
     // stop anyway.  Also, this code may soon be completely removed
     // after we have a separate storage for pinned apps.
     mPinnedEntryRetriesCount = 0;
