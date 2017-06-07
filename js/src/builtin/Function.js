@@ -50,11 +50,20 @@ function FunctionBind(thisArg, ...boundArgs) {
  * construct helper functions. This avoids having to use rest parameters and
  * destructuring in the fast path.
  *
+ * Directly embedding the for-loop to combine bound and call arguments may
+ * inhibit inlining of the bound function, so we use a separate combiner
+ * function to perform this task. This combiner function is created lazily to
+ * ensure we only pay its construction cost when needed.
+ *
  * All bind_bindFunction{X} functions have the same signature to enable simple
  * reading out of closed-over state by debugging functions.
  */
 function bind_bindFunction0(fun, thisArg, boundArgs) {
     return function bound() {
+        // Ensure we allocate a call-object slot for |boundArgs|, so the
+        // debugger can access this value.
+        if (false) void boundArgs;
+
         var newTarget;
         if (_IsConstructing()) {
             newTarget = new.target;
@@ -73,6 +82,9 @@ function bind_bindFunction0(fun, thisArg, boundArgs) {
                 return constructContentFunction(fun, newTarget, SPREAD(arguments, 4));
               case 5:
                 return constructContentFunction(fun, newTarget, SPREAD(arguments, 5));
+              default:
+                var args = FUN_APPLY(bind_mapArguments, null, arguments);
+                return bind_constructFunctionN(fun, newTarget, args);
             }
         } else {
             switch (arguments.length) {
@@ -88,16 +100,21 @@ function bind_bindFunction0(fun, thisArg, boundArgs) {
                 return callContentFunction(fun, thisArg, SPREAD(arguments, 4));
               case 5:
                 return callContentFunction(fun, thisArg, SPREAD(arguments, 5));
+              default:
+                return FUN_APPLY(fun, thisArg, arguments);
             }
         }
-        var callArgs = FUN_APPLY(bind_mapArguments, null, arguments);
-        return bind_invokeFunctionN(fun, thisArg, newTarget, boundArgs, callArgs);
     };
 }
 
 function bind_bindFunction1(fun, thisArg, boundArgs) {
     var bound1 = boundArgs[0];
+    var combiner = null;
     return function bound() {
+        // Ensure we allocate a call-object slot for |boundArgs|, so the
+        // debugger can access this value.
+        if (false) void boundArgs;
+
         var newTarget;
         if (_IsConstructing()) {
             newTarget = new.target;
@@ -133,15 +150,34 @@ function bind_bindFunction1(fun, thisArg, boundArgs) {
                 return callContentFunction(fun, thisArg, bound1, SPREAD(arguments, 5));
             }
         }
-        var callArgs = FUN_APPLY(bind_mapArguments, null, arguments);
-        return bind_invokeFunctionN(fun, thisArg, newTarget, boundArgs, callArgs);
+
+        if (combiner === null) {
+            combiner = function() {
+                var callArgsCount = arguments.length;
+                var args = std_Array(1 + callArgsCount);
+                _DefineDataProperty(args, 0, bound1);
+                for (var i = 0; i < callArgsCount; i++)
+                    _DefineDataProperty(args, i + 1, arguments[i]);
+                return args;
+            };
+        }
+
+        var args = FUN_APPLY(combiner, null, arguments);
+        if (newTarget === undefined)
+            return bind_applyFunctionN(fun, thisArg, args);
+        return bind_constructFunctionN(fun, newTarget, args);
     };
 }
 
 function bind_bindFunction2(fun, thisArg, boundArgs) {
     var bound1 = boundArgs[0];
     var bound2 = boundArgs[1];
+    var combiner = null;
     return function bound() {
+        // Ensure we allocate a call-object slot for |boundArgs|, so the
+        // debugger can access this value.
+        if (false) void boundArgs;
+
         var newTarget;
         if (_IsConstructing()) {
             newTarget = new.target;
@@ -177,13 +213,29 @@ function bind_bindFunction2(fun, thisArg, boundArgs) {
                 return callContentFunction(fun, thisArg, bound1, bound2, SPREAD(arguments, 5));
             }
         }
-        var callArgs = FUN_APPLY(bind_mapArguments, null, arguments);
-        return bind_invokeFunctionN(fun, thisArg, newTarget, boundArgs, callArgs);
+
+        if (combiner === null) {
+            combiner = function() {
+                var callArgsCount = arguments.length;
+                var args = std_Array(2 + callArgsCount);
+                _DefineDataProperty(args, 0, bound1);
+                _DefineDataProperty(args, 1, bound2);
+                for (var i = 0; i < callArgsCount; i++)
+                    _DefineDataProperty(args, i + 2, arguments[i]);
+                return args;
+            };
+        }
+
+        var args = FUN_APPLY(combiner, null, arguments);
+        if (newTarget === undefined)
+            return bind_applyFunctionN(fun, thisArg, args);
+        return bind_constructFunctionN(fun, newTarget, args);
     };
 }
 
 function bind_bindFunctionN(fun, thisArg, boundArgs) {
     assert(boundArgs.length > 2, "Fast paths should be used for few-bound-args cases.");
+    var combiner = null;
     return function bound() {
         var newTarget;
         if (_IsConstructing()) {
@@ -194,11 +246,26 @@ function bind_bindFunctionN(fun, thisArg, boundArgs) {
         if (arguments.length === 0) {
             if (newTarget !== undefined)
                 return bind_constructFunctionN(fun, newTarget, boundArgs);
-
             return bind_applyFunctionN(fun, thisArg, boundArgs);
         }
-        var callArgs = FUN_APPLY(bind_mapArguments, null, arguments);
-        return bind_invokeFunctionN(fun, thisArg, newTarget, boundArgs, callArgs);
+
+        if (combiner === null) {
+            combiner = function() {
+                var boundArgsCount = boundArgs.length;
+                var callArgsCount = arguments.length;
+                var args = std_Array(boundArgsCount + callArgsCount);
+                for (var i = 0; i < boundArgsCount; i++)
+                    _DefineDataProperty(args, i, boundArgs[i]);
+                for (var i = 0; i < callArgsCount; i++)
+                    _DefineDataProperty(args, i + boundArgsCount, arguments[i]);
+                return args;
+            };
+        }
+
+        var args = FUN_APPLY(combiner, null, arguments);
+        if (newTarget !== undefined)
+            return bind_constructFunctionN(fun, newTarget, args);
+        return bind_applyFunctionN(fun, thisArg, args);
     };
 }
 
@@ -208,19 +275,6 @@ function bind_mapArguments() {
     for (var i = 0; i < len; i++)
         _DefineDataProperty(args, i, arguments[i]);
     return args;
-}
-
-function bind_invokeFunctionN(fun, thisArg, newTarget, boundArgs, callArgs) {
-    var boundArgsCount = boundArgs.length;
-    var callArgsCount = callArgs.length;
-    var args = std_Array(boundArgsCount + callArgsCount);
-    for (var i = 0; i < boundArgsCount; i++)
-        _DefineDataProperty(args, i, boundArgs[i]);
-    for (var i = 0; i < callArgsCount; i++)
-        _DefineDataProperty(args, i + boundArgsCount, callArgs[i]);
-    if (newTarget !== undefined)
-        return bind_constructFunctionN(fun, newTarget, args);
-    return bind_applyFunctionN(fun, thisArg, args);
 }
 
 function bind_applyFunctionN(fun, thisArg, args) {

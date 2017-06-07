@@ -31,7 +31,7 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, fullUnicode
     var lastIndex = 0;
     rx.lastIndex = 0;
 
-#if defined(FUNCTIONAL)
+#if defined(FUNCTIONAL) || defined(ELEMBASE)
     // Save the original source and flags, so we can check if the replacer
     // function recompiled the regexp.
     var originalSource = UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT);
@@ -109,7 +109,7 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, fullUnicode
                 break;
         }
 
-#if defined(FUNCTIONAL)
+#if defined(FUNCTIONAL) || defined(ELEMBASE)
         // Ensure the current source and flags match the original regexp, the
         // replaceValue function may have called RegExp#compile.
         if (UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT) !== originalSource ||

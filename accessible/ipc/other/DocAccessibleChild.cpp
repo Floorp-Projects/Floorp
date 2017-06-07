@@ -6,6 +6,7 @@
 
 #include "DocAccessibleChild.h"
 
+#include "nsAccessibilityService.h"
 #include "Accessible-inl.h"
 #include "ProxyAccessible.h"
 #include "Relation.h"
@@ -2000,6 +2001,13 @@ DocAccessibleChild::RecvDOMNodeID(const uint64_t& aID, nsString* aDOMNodeID)
     id->ToString(*aDOMNodeID);
   }
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+DocAccessibleChild::RecvRestoreFocus()
+{
+  FocusMgr()->ForceFocusEvent();
   return IPC_OK();
 }
 
