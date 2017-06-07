@@ -1878,36 +1878,6 @@ class Marionette(object):
         return self._send_message("getLogs",
                                   key="value" if self.protocol == 1 else None)
 
-    def import_script(self, js_file):
-        """Imports a script into the scope of the execute_script and
-        execute_async_script calls.
-
-        This is particularly useful if you wish to import your own
-        libraries.
-
-        :param js_file: Filename of JavaScript file to import.
-
-        For example, Say you have a script, importfunc.js, that contains:
-
-        ::
-
-            let testFunc = function() { return "i'm a test function!";};
-
-        Assuming this file is in the same directory as the test, you
-        could do something like:
-
-        ::
-
-            js = os.path.abspath(os.path.join(__file__, os.path.pardir, "importfunc.js"))
-            marionette.import_script(js)
-            assert "i'm a test function!" == self.marionette.execute_script("return testFunc();")
-        """
-        js = ""
-        with open(js_file, "r") as f:
-            js = f.read()
-        body = {"script": js}
-        self._send_message("importScript", body)
-
     def add_cookie(self, cookie):
         """Adds a cookie to your current session.
 
