@@ -36,7 +36,7 @@ public:
   double GetTime() const { return mTime; }
 
   void StreamJSON(SpliceableJSONWriter& aWriter,
-                  const mozilla::TimeStamp& aStartTime,
+                  const mozilla::TimeStamp& aProcessStartTime,
                   UniqueStacks& aUniqueStacks) const
   {
     // Schema:
@@ -52,7 +52,7 @@ public:
       if (mPayload) {
         aWriter.StartObjectElement();
         {
-          mPayload->StreamPayload(aWriter, aStartTime, aUniqueStacks);
+          mPayload->StreamPayload(aWriter, aProcessStartTime, aUniqueStacks);
         }
         aWriter.EndObject();
       }

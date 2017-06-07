@@ -505,7 +505,10 @@ MainThreadHandoff::OnWalkInterface(REFIID aIid, PVOID* aInterface,
 
   // First make sure that aInterface isn't a proxy - we don't want to wrap
   // those.
-  MOZ_ASSERT(!IsProxy(origInterface.get()));
+  if (IsProxy(origInterface.get())) {
+    *aInterface = origInterface.release();
+    return S_OK;
+  }
 
   RefPtr<IInterceptor> interceptor;
   HRESULT hr = mInterceptor->Resolve(IID_IInterceptor,

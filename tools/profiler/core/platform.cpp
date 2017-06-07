@@ -83,10 +83,10 @@
 
 using namespace mozilla;
 
-mozilla::LazyLogModule gProfilerLog("prof");
+LazyLogModule gProfilerLog("prof");
 
 #if defined(GP_OS_android)
-class GeckoJavaSampler : public mozilla::java::GeckoJavaSampler::Natives<GeckoJavaSampler>
+class GeckoJavaSampler : public java::GeckoJavaSampler::Natives<GeckoJavaSampler>
 {
 private:
   GeckoJavaSampler();
@@ -101,9 +101,9 @@ public:
 };
 #endif
 
-class PSMutex : public mozilla::StaticMutex {};
+class PSMutex : public StaticMutex {};
 
-typedef mozilla::BaseAutoLock<PSMutex> PSAutoLock;
+typedef BaseAutoLock<PSMutex> PSAutoLock;
 
 // Only functions that take a PSLockRef arg can access CorePS's and ActivePS's
 // fields.
@@ -145,7 +145,7 @@ class CorePS
 {
 private:
   CorePS()
-    : mProcessStartTime(mozilla::TimeStamp::ProcessCreation())
+    : mProcessStartTime(TimeStamp::ProcessCreation())
 #ifdef USE_LUL_STACKWALK
     , mLul(nullptr)
 #endif
@@ -228,7 +228,7 @@ private:
   static CorePS* sInstance;
 
   // The time that the process started.
-  const mozilla::TimeStamp mProcessStartTime;
+  const TimeStamp mProcessStartTime;
 
   // Info on all the registered threads, both live and dead. ThreadIds in
   // mLiveThreads are unique. ThreadIds in mDeadThreads may not be, because
@@ -266,7 +266,7 @@ private:
     aFeatures &= profiler_get_available_features();
 
 #if defined(GP_OS_android)
-    if (!mozilla::jni::IsFennec()) {
+    if (!jni::IsFennec()) {
       aFeatures &= ~ProfilerFeature::Java;
     }
 #endif
@@ -293,7 +293,7 @@ private:
       // gPSMutex.
     , mSamplerThread(NewSamplerThread(aLock, mGeneration, aInterval))
     , mInterposeObserver(ProfilerFeature::HasMainThreadIO(aFeatures)
-                         ? new mozilla::ProfilerIOInterposeObserver()
+                         ? new ProfilerIOInterposeObserver()
                          : nullptr)
 #undef HAS_FEATURE
     , mIsPaused(false)
@@ -472,7 +472,7 @@ private:
   SamplerThread* const mSamplerThread;
 
   // The interposer that records main thread I/O.
-  const RefPtr<mozilla::ProfilerIOInterposeObserver> mInterposeObserver;
+  const RefPtr<ProfilerIOInterposeObserver> mInterposeObserver;
 
   // Is the profiler paused?
   bool mIsPaused;
@@ -614,7 +614,7 @@ public:
   // SamplerThread samples the thread in question.
   TickSample(ThreadInfo* aThreadInfo, int64_t aRSSMemory, int64_t aUSSMemory)
     : mIsSynchronous(false)
-    , mTimeStamp(mozilla::TimeStamp::Now())
+    , mTimeStamp(TimeStamp::Now())
     , mThreadId(aThreadInfo->ThreadId())
     , mRacyInfo(aThreadInfo->RacyInfo())
     , mJSContext(aThreadInfo->mContext)
@@ -639,7 +639,7 @@ public:
   TickSample(NotNull<RacyThreadInfo*> aRacyInfo, JSContext* aJSContext,
              PlatformData* aPlatformData)
     : mIsSynchronous(true)
-    , mTimeStamp(mozilla::TimeStamp::Now())
+    , mTimeStamp(TimeStamp::Now())
     , mThreadId(Thread::GetCurrentId())
     , mRacyInfo(aRacyInfo)
     , mJSContext(aJSContext)
@@ -668,7 +668,7 @@ public:
   // False for periodic samples, true for synchronous samples.
   const bool mIsSynchronous;
 
-  const mozilla::TimeStamp mTimeStamp;
+  const TimeStamp mTimeStamp;
 
   const int mThreadId;
 
@@ -796,15 +796,25 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
   aBuffer->addTag(ProfileBufferEntry::Category(uint32_t(entry.category())));
 }
 
+// Setting MAX_NATIVE_FRAMES too high risks the unwinder wasting a lot of time
+// looping on corrupted stacks.
+//
+// The PseudoStack frame size is found in PseudoStack::MaxEntries.
+static const size_t MAX_NATIVE_FRAMES = 1024;
+static const size_t MAX_JS_FRAMES     = 1024;
+
 struct NativeStack
 {
-  void** pc_array;
-  void** sp_array;
-  size_t size;
-  size_t count;
+  void* mPCs[MAX_NATIVE_FRAMES];
+  void* mSPs[MAX_NATIVE_FRAMES];
+  size_t mCount;  // Number of entries filled.
+
+  NativeStack()
+    : mCount(0)
+  {}
 };
 
-mozilla::Atomic<bool> WALKING_JS_STACK(false);
+Atomic<bool> WALKING_JS_STACK(false);
 
 struct AutoWalkJSStack
 {
@@ -843,12 +853,12 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
                  ? UINT32_MAX
                  : aBuffer->mGeneration;
   uint32_t jsCount = 0;
-  JS::ProfilingFrameIterator::Frame jsFrames[1000];
+  JS::ProfilingFrameIterator::Frame jsFrames[MAX_JS_FRAMES];
 
   // Only walk jit stack if profiling frame iterator is turned on.
   if (context && JS::IsProfilingEnabledForContext(context)) {
     AutoWalkJSStack autoWalkJSStack;
-    const uint32_t maxFrames = mozilla::ArrayLength(jsFrames);
+    const uint32_t maxFrames = ArrayLength(jsFrames);
 
     if (autoWalkJSStack.walkAllowed) {
       JS::ProfilingFrameIterator::RegisterState registerState;
@@ -869,7 +879,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
             break;
           }
         } else {
-          mozilla::Maybe<JS::ProfilingFrameIterator::Frame> frame =
+          Maybe<JS::ProfilingFrameIterator::Frame> frame =
             jsIter.getPhysicalFrameWithoutLabel();
           if (frame.isSome()) {
             jsFrames[jsCount++] = frame.value();
@@ -889,7 +899,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
   // jsIndex and nativeIndex is being < 0.
   uint32_t pseudoIndex = 0;
   int32_t jsIndex = jsCount - 1;
-  int32_t nativeIndex = aNativeStack.count - 1;
+  int32_t nativeIndex = aNativeStack.mCount - 1;
 
   uint8_t* lastPseudoCppStackAddr = nullptr;
 
@@ -926,7 +936,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
     }
 
     if (nativeIndex >= 0) {
-      nativeStackAddr = (uint8_t*) aNativeStack.sp_array[nativeIndex];
+      nativeStackAddr = (uint8_t*) aNativeStack.mSPs[nativeIndex];
     }
 
     // If there's a native stack entry which has the same SP as a pseudo stack
@@ -998,7 +1008,7 @@ MergeStacksIntoProfile(PSLockRef aLock, ProfileBuffer* aBuffer,
     // greatest entry.
     if (nativeStackAddr) {
       MOZ_ASSERT(nativeIndex >= 0);
-      void* addr = (void*)aNativeStack.pc_array[nativeIndex];
+      void* addr = (void*)aNativeStack.mPCs[nativeIndex];
       aBuffer->addTag(ProfileBufferEntry::NativeLeafAddr(addr));
     }
     if (nativeIndex >= 0) {
@@ -1027,24 +1037,17 @@ static void
 StackWalkCallback(uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure)
 {
   NativeStack* nativeStack = static_cast<NativeStack*>(aClosure);
-  MOZ_ASSERT(nativeStack->count < nativeStack->size);
-  nativeStack->sp_array[nativeStack->count] = aSP;
-  nativeStack->pc_array[nativeStack->count] = aPC;
-  nativeStack->count++;
+  MOZ_ASSERT(nativeStack->mCount < MAX_NATIVE_FRAMES);
+  nativeStack->mSPs[nativeStack->mCount] = aSP;
+  nativeStack->mPCs[nativeStack->mCount] = aPC;
+  nativeStack->mCount++;
 }
 
 static void
 DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
                   const TickSample& aSample)
 {
-  void* pc_array[1000];
-  void* sp_array[1000];
-  NativeStack nativeStack = {
-    pc_array,
-    sp_array,
-    mozilla::ArrayLength(pc_array),
-    0
-  };
+  NativeStack nativeStack;
 
   // Start with the current function. We use 0 as the frame number here because
   // the FramePointerStackWalk() and MozStackWalk() calls below will use 1..N.
@@ -1052,7 +1055,7 @@ DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
   // doesn't use the frame number argument.
   StackWalkCallback(/* frameNum */ 0, aSample.mPC, aSample.mSP, &nativeStack);
 
-  uint32_t maxFrames = uint32_t(nativeStack.size - nativeStack.count);
+  uint32_t maxFrames = uint32_t(MAX_NATIVE_FRAMES - nativeStack.mCount);
 
 #if defined(GP_OS_darwin) || (defined(GP_PLAT_x86_windows))
   void* stackEnd = aSample.mStackTop;
@@ -1079,14 +1082,7 @@ static void
 DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
                   const TickSample& aSample)
 {
-  void* pc_array[1000];
-  void* sp_array[1000];
-  NativeStack nativeStack = {
-    pc_array,
-    sp_array,
-    mozilla::ArrayLength(pc_array),
-    0
-  };
+  NativeStack nativeStack;
 
   const mcontext_t* mcontext = &aSample.mContext->uc_mcontext;
   mcontext_t savedContext;
@@ -1107,11 +1103,11 @@ DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
       // the saved state.
       uint32_t* vSP = reinterpret_cast<uint32_t*>(entry.stackAddress());
 
-      nativeStack.count += EHABIStackWalk(*mcontext,
-                                          /* stackBase = */ vSP,
-                                          sp_array + nativeStack.count,
-                                          pc_array + nativeStack.count,
-                                          nativeStack.size - nativeStack.count);
+      nativeStack.mCount +=
+        EHABIStackWalk(*mcontext, /* stackBase = */ vSP,
+                       nativeStack.mSPs + nativeStack.mCount,
+                       nativeStack.mPCs + nativeStack.mCount,
+                       MAX_NATIVE_FRAMES - nativeStack.mCount);
 
       memset(&savedContext, 0, sizeof(savedContext));
 
@@ -1133,11 +1129,11 @@ DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
 
   // Now unwind whatever's left (starting from either the last EnterJIT frame
   // or, if no EnterJIT was found, the original registers).
-  nativeStack.count += EHABIStackWalk(*mcontext,
-                                      aSample.mStackTop,
-                                      sp_array + nativeStack.count,
-                                      pc_array + nativeStack.count,
-                                      nativeStack.size - nativeStack.count);
+  nativeStack.mCount +=
+    EHABIStackWalk(*mcontext, aSample.mStackTop,
+                   nativeStack.mSPs + nativeStack.mCount,
+                   nativeStack.mPCs + nativeStack.mCount,
+                   MAX_NATIVE_FRAMES - nativeStack.mCount);
 
   MergeStacksIntoProfile(aLock, aBuffer, aSample, nativeStack);
 }
@@ -1269,38 +1265,26 @@ DoNativeBacktrace(PSLockRef aLock, ProfileBuffer* aBuffer,
     }
   }
 
-  // The maximum number of frames that LUL will produce.  Setting it
-  // too high gives a risk of it wasting a lot of time looping on
-  // corrupted stacks.
-  const int MAX_NATIVE_FRAMES = 256;
+  NativeStack nativeStack;
 
   size_t scannedFramesAllowed = 0;
 
-  uintptr_t framePCs[MAX_NATIVE_FRAMES];
-  uintptr_t frameSPs[MAX_NATIVE_FRAMES];
-  size_t framesAvail = mozilla::ArrayLength(framePCs);
-  size_t framesUsed  = 0;
   size_t scannedFramesAcquired = 0, framePointerFramesAcquired = 0;
   lul::LUL* lul = CorePS::Lul(aLock);
-  lul->Unwind(&framePCs[0], &frameSPs[0],
-              &framesUsed, &framePointerFramesAcquired, &scannedFramesAcquired,
-              framesAvail, scannedFramesAllowed,
+  lul->Unwind(reinterpret_cast<uintptr_t*>(nativeStack.mPCs),
+              reinterpret_cast<uintptr_t*>(nativeStack.mSPs),
+              &nativeStack.mCount, &framePointerFramesAcquired,
+              &scannedFramesAcquired,
+              MAX_NATIVE_FRAMES, scannedFramesAllowed,
               &startRegs, &stackImg);
-
-  NativeStack nativeStack = {
-    reinterpret_cast<void**>(framePCs),
-    reinterpret_cast<void**>(frameSPs),
-    mozilla::ArrayLength(framePCs),
-    framesUsed
-  };
 
   MergeStacksIntoProfile(aLock, aBuffer, aSample, nativeStack);
 
   // Update stats in the LUL stats object.  Unfortunately this requires
   // three global memory operations.
   lul->mStats.mContext += 1;
-  lul->mStats.mCFI     += framesUsed - 1 - framePointerFramesAcquired -
-                                           scannedFramesAcquired;
+  lul->mStats.mCFI     += nativeStack.mCount - 1 - framePointerFramesAcquired -
+                          scannedFramesAcquired;
   lul->mStats.mFP      += framePointerFramesAcquired;
   lul->mStats.mScanned += scannedFramesAcquired;
 }
@@ -1311,7 +1295,9 @@ static void
 DoSampleStackTrace(PSLockRef aLock, ProfileBuffer* aBuffer,
                    const TickSample& aSample)
 {
-  NativeStack nativeStack = { nullptr, nullptr, 0, 0 };
+  NativeStack nativeStack;
+
+  // |nativeStack| is empty at this point.
   MergeStacksIntoProfile(aLock, aBuffer, aSample, nativeStack);
 
   if (ActivePS::FeatureLeaf(aLock)) {
@@ -1326,8 +1312,7 @@ Tick(PSLockRef aLock, ProfileBuffer* aBuffer, const TickSample& aSample)
 {
   aBuffer->addTagThreadId(aSample.mThreadId, aSample.mLastSample);
 
-  mozilla::TimeDuration delta =
-    aSample.mTimeStamp - CorePS::ProcessStartTime();
+  TimeDuration delta = aSample.mTimeStamp - CorePS::ProcessStartTime();
   aBuffer->addTag(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
 #if defined(HAVE_NATIVE_UNWIND)
@@ -1352,7 +1337,7 @@ Tick(PSLockRef aLock, ProfileBuffer* aBuffer, const TickSample& aSample)
   }
 
   if (aSample.mResponsiveness && aSample.mResponsiveness->HasData()) {
-    mozilla::TimeDuration delta =
+    TimeDuration delta =
       aSample.mResponsiveness->GetUnresponsiveDuration(aSample.mTimeStamp);
     aBuffer->addTag(ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
   }
@@ -1436,7 +1421,7 @@ StreamTaskTracer(PSLockRef aLock, SpliceableJSONWriter& aWriter)
   aWriter.StartArrayProperty("data");
   {
     UniquePtr<nsTArray<nsCString>> data =
-      mozilla::tasktracer::GetLoggedData(CorePS::ProcessStartTime());
+      tasktracer::GetLoggedData(CorePS::ProcessStartTime());
     for (uint32_t i = 0; i < data->Length(); ++i) {
       aWriter.StringElement((data->ElementAt(i)).get());
     }
@@ -1460,7 +1445,7 @@ StreamTaskTracer(PSLockRef aLock, SpliceableJSONWriter& aWriter)
   aWriter.EndArray();
 
   aWriter.DoubleProperty(
-    "start", static_cast<double>(mozilla::tasktracer::GetStartTime()));
+    "start", static_cast<double>(tasktracer::GetStartTime()));
 #endif
 }
 
@@ -1474,8 +1459,7 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter)
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -
   // ProcessStartTime)) to convert CorePS::ProcessStartTime() into that form.
-  mozilla::TimeDuration delta =
-    mozilla::TimeStamp::Now() - CorePS::ProcessStartTime();
+  TimeDuration delta = TimeStamp::Now() - CorePS::ProcessStartTime();
   aWriter.DoubleProperty(
     "startTime", static_cast<double>(PR_Now()/1000.0 - delta.ToMilliseconds()));
 
@@ -2018,7 +2002,7 @@ FindLiveThreadInfo(PSLockRef aLock, int* aIndexOut = nullptr)
 }
 
 static void
-locked_register_thread(PSLockRef aLock, const char* aName, void* stackTop)
+locked_register_thread(PSLockRef aLock, const char* aName, void* aStackTop)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
@@ -2029,7 +2013,7 @@ locked_register_thread(PSLockRef aLock, const char* aName, void* stackTop)
   }
 
   ThreadInfo* info = new ThreadInfo(aName, Thread::GetCurrentId(),
-                                    NS_IsMainThread(), stackTop);
+                                    NS_IsMainThread(), aStackTop);
   TLSInfo::SetInfo(aLock, info);
 
   if (ActivePS::Exists(aLock) && ActivePS::ShouldProfileThread(aLock, info)) {
@@ -2127,11 +2111,11 @@ profiler_init(void* aStackTop)
     PlatformInit(lock);
 
 #ifdef MOZ_TASK_TRACER
-    mozilla::tasktracer::InitTaskTracer();
+    tasktracer::InitTaskTracer();
 #endif
 
 #if defined(GP_OS_android)
-    if (mozilla::jni::IsFennec()) {
+    if (jni::IsFennec()) {
       GeckoJavaSampler::Init();
     }
 #endif
@@ -2219,7 +2203,7 @@ profiler_shutdown()
     TLSInfo::SetInfo(lock, nullptr);
 
 #ifdef MOZ_TASK_TRACER
-    mozilla::tasktracer::ShutdownTaskTracer();
+    tasktracer::ShutdownTaskTracer();
 #endif
   }
 
@@ -2258,7 +2242,7 @@ profiler_get_profile(double aSinceTime)
 
 void
 profiler_get_start_params(int* aEntries, double* aInterval, uint32_t* aFeatures,
-                          mozilla::Vector<const char*>* aFilters)
+                          Vector<const char*>* aFilters)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
@@ -2298,7 +2282,7 @@ locked_profiler_save_profile_to_file(PSLockRef aLock, const char* aFilename)
   std::ofstream stream;
   stream.open(aFilename);
   if (stream.is_open()) {
-    SpliceableJSONWriter w(mozilla::MakeUnique<OStreamJSONWriteFunc>(stream));
+    SpliceableJSONWriter w(MakeUnique<OStreamJSONWriteFunc>(stream));
     w.Start(SpliceableJSONWriter::SingleLineStyle);
     {
       locked_profiler_stream_json_for_this_process(aLock, w, /* sinceTime */ 0);
@@ -2437,7 +2421,7 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
 
 #ifdef MOZ_TASK_TRACER
   if (ActivePS::FeatureTaskTracer(aLock)) {
-    mozilla::tasktracer::StartLogging();
+    tasktracer::StartLogging();
   }
 #endif
 
@@ -2448,7 +2432,7 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
     if (javaInterval < 10) {
       javaInterval = 10;
     }
-    mozilla::java::GeckoJavaSampler::Start(javaInterval, 1000);
+    java::GeckoJavaSampler::Start(javaInterval, 1000);
   }
 #endif
 
@@ -2504,7 +2488,7 @@ locked_profiler_stop(PSLockRef aLock)
 
 #ifdef MOZ_TASK_TRACER
   if (ActivePS::FeatureTaskTracer(aLock)) {
-    mozilla::tasktracer::StopLogging();
+    tasktracer::StopLogging();
   }
 #endif
 
@@ -2780,8 +2764,7 @@ profiler_time()
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  mozilla::TimeDuration delta =
-    mozilla::TimeStamp::Now() - CorePS::ProcessStartTime();
+  TimeDuration delta = TimeStamp::Now() - CorePS::ProcessStartTime();
   return delta.ToMilliseconds();
 }
 
@@ -2898,7 +2881,7 @@ racy_profiler_add_marker(const char* aMarkerName,
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   // aPayload must be freed if we return early.
-  mozilla::UniquePtr<ProfilerMarkerPayload> payload(aPayload);
+  UniquePtr<ProfilerMarkerPayload> payload(aPayload);
 
   // We don't assert that RacyFeatures::IsActiveWithoutPrivacy() is true here,
   // because it's possible that the result has changed since we tested it in
@@ -2912,10 +2895,10 @@ racy_profiler_add_marker(const char* aMarkerName,
     return;
   }
 
-  mozilla::TimeStamp origin = (payload && !payload->GetStartTime().IsNull())
-                            ? payload->GetStartTime()
-                            : mozilla::TimeStamp::Now();
-  mozilla::TimeDuration delta = origin - CorePS::ProcessStartTime();
+  TimeStamp origin = (payload && !payload->GetStartTime().IsNull())
+                   ? payload->GetStartTime()
+                   : TimeStamp::Now();
+  TimeDuration delta = origin - CorePS::ProcessStartTime();
   racyInfo->AddPendingMarker(aMarkerName, payload.release(),
                              delta.ToMilliseconds());
 }
@@ -2926,7 +2909,7 @@ profiler_add_marker(const char* aMarkerName, ProfilerMarkerPayload* aPayload)
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   // aPayload must be freed if we return early.
-  mozilla::UniquePtr<ProfilerMarkerPayload> payload(aPayload);
+  UniquePtr<ProfilerMarkerPayload> payload(aPayload);
 
   // This function is hot enough that we use RacyFeatures, notActivePS.
   if (!RacyFeatures::IsActiveWithoutPrivacy()) {
@@ -2962,8 +2945,7 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
     return;
   }
 
-  auto payload =
-    new ProfilerMarkerTracing(aCategory, aKind, mozilla::Move(aCause));
+  auto payload = new ProfilerMarkerTracing(aCategory, aKind, Move(aCause));
   racy_profiler_add_marker(aMarkerName, payload);
 }
 

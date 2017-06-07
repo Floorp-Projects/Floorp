@@ -31,7 +31,7 @@ this.storage = class extends ExtensionAPI {
             return ExtensionStorage.get(extension.id, spec);
           },
           set: function(items) {
-            return ExtensionStorage.set(extension.id, items, context);
+            return ExtensionStorage.set(extension.id, items);
           },
           remove: function(keys) {
             return ExtensionStorage.remove(extension.id, keys);

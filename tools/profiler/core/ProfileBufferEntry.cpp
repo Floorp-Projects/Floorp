@@ -712,7 +712,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
 void
 ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
                                    int aThreadId,
-                                   const TimeStamp& aStartTime,
+                                   const TimeStamp& aProcessStartTime,
                                    double aSinceTime,
                                    UniqueStacks& aUniqueStacks)
 {
@@ -725,7 +725,8 @@ ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
     } else if (currentThreadID == aThreadId && entry.isMarker()) {
       const ProfilerMarker* marker = entry.getMarker();
       if (marker->GetTime() >= aSinceTime) {
-        entry.getMarker()->StreamJSON(aWriter, aStartTime, aUniqueStacks);
+        entry.getMarker()->StreamJSON(aWriter, aProcessStartTime,
+                                      aUniqueStacks);
       }
     }
     readPos = (readPos + 1) % mEntrySize;
@@ -764,7 +765,8 @@ ProfileBuffer::FindLastSampleOfThread(int aThreadId, const LastSample& aLS)
 }
 
 bool
-ProfileBuffer::DuplicateLastSample(int aThreadId, const TimeStamp& aStartTime,
+ProfileBuffer::DuplicateLastSample(int aThreadId,
+                                   const TimeStamp& aProcessStartTime,
                                    LastSample& aLS)
 {
   int lastSampleStartPos = FindLastSampleOfThread(aThreadId, aLS);
@@ -788,7 +790,7 @@ ProfileBuffer::DuplicateLastSample(int aThreadId, const TimeStamp& aStartTime,
       case ProfileBufferEntry::Kind::Time:
         // Copy with new time
         addTag(ProfileBufferEntry::Time((TimeStamp::Now() -
-                                         aStartTime).ToMilliseconds()));
+                                         aProcessStartTime).ToMilliseconds()));
         break;
       case ProfileBufferEntry::Kind::Marker:
         // Don't copy markers
