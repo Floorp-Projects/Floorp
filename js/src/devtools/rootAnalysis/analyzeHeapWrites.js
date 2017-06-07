@@ -217,6 +217,7 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_AddPropertyToSet", "aPropertySet", null],
         ["Gecko_CalcStyleDifference", "aAnyStyleChanged", null],
         ["Gecko_nsStyleSVG_CopyContextProperties", "aDst", null],
+        ["Gecko_nsStyleFont_PrefillDefaultForGeneric", "aFont", null],
     ];
     for (var [entryMatch, varMatch, csuMatch] of whitelist) {
         assert(entryMatch || varMatch || csuMatch);
