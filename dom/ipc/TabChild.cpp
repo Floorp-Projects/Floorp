@@ -749,8 +749,7 @@ TabChild::RemoteSizeShellTo(int32_t aWidth, int32_t aHeight,
 
 NS_IMETHODIMP
 TabChild::RemoteDropLinks(uint32_t aLinksCount,
-                          nsIDroppedLinkItem** aLinks,
-                          nsIPrincipal* aTriggeringPrincipal)
+                          nsIDroppedLinkItem** aLinks)
 {
   nsTArray<nsString> linksArray;
   nsresult rv = NS_OK;
@@ -774,10 +773,7 @@ TabChild::RemoteDropLinks(uint32_t aLinksCount,
     }
     linksArray.AppendElement(tmp);
   }
-
-  PrincipalInfo triggeringPrincipalInfo;
-  PrincipalToPrincipalInfo(aTriggeringPrincipal, &triggeringPrincipalInfo);
-  bool sent = SendDropLinks(linksArray, triggeringPrincipalInfo);
+  bool sent = SendDropLinks(linksArray);
 
   return sent ? NS_OK : NS_ERROR_FAILURE;
 }
