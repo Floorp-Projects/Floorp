@@ -4,14 +4,16 @@
 
 package org.mozilla.focus.locale;
 
-import java.util.LinkedHashSet;
-import java.util.Locale;
-import java.util.Set;
-
 import android.content.Context;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.os.LocaleList;
 import android.os.StrictMode;
 import android.text.TextUtils;
+
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * This is a helper class to do typical locale switching operations without
@@ -125,5 +127,28 @@ public class Locales {
         }
 
         return countries;
+    }
+
+    /**
+     * Get a Resources instance with the currently selected locale applied.
+     */
+    public static Resources getLocalizedResources(Context context) {
+        final Resources currentResources = context.getResources();
+
+        final Locale currentLocale = LocaleManager.getInstance().getCurrentLocale(context);
+        @SuppressWarnings("deprecation") final Locale viewLocale = currentResources.getConfiguration().locale;
+
+        if (currentLocale == null || viewLocale == null) {
+            return currentResources;
+        }
+
+        if (currentLocale.toLanguageTag().equals(viewLocale.toLanguageTag())) {
+            return currentResources;
+        }
+
+        final Configuration configuration = new Configuration(currentResources.getConfiguration());
+        configuration.setLocale(currentLocale);
+
+        return context.createConfigurationContext(configuration).getResources();
     }
 }

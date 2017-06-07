@@ -17,6 +17,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.locale.Locales;
 import org.mozilla.focus.utils.HtmlLoader;
 import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.utils.UrlUtils;
@@ -269,7 +270,7 @@ import java.util.Map;
     }
 
     private void loadAbout(final WebView webView) {
-        final Resources resources = webView.getContext().getResources();
+        final Resources resources = Locales.getLocalizedResources(webView.getContext());
 
         final Map<String, String> substitutionMap = new ArrayMap<>();
         final String appName = webView.getContext().getResources().getString(R.string.app_name);

@@ -17,11 +17,10 @@ import android.view.View;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.InfoFragment;
+import org.mozilla.focus.locale.Locales;
 import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
-
-import java.util.Map;
 
 /**
  * A generic activity that supports showing additional information in a WebView. This is useful
@@ -41,17 +40,20 @@ public class InfoActivity extends AppCompatActivity {
     }
 
     public static final Intent getAboutIntent(final Context context) {
+        final Resources resources = Locales.getLocalizedResources(context);
+
         // We can't use "about:" because webview silently swallows about: pages, hence we use
         // a custom scheme.
-        return getIntentFor(context, "focusabout:", context.getResources().getString(R.string.menu_about));
+        return getIntentFor(context, "focusabout:", resources.getString(R.string.menu_about));
     }
 
     public static final Intent getRightsIntent(final Context context) {
-        return getIntentFor(context, "file:///android_asset/rights-focus.html", context.getResources().getString(R.string.menu_rights));
+        final Resources resources = Locales.getLocalizedResources(context);
+        return getIntentFor(context, "file:///android_asset/rights-focus.html", resources.getString(R.string.menu_rights));
     }
 
     public static final Intent getHelpIntent(final Context context) {
-        final Resources resources = context.getResources();
+        final Resources resources = Locales.getLocalizedResources(context);
         return getIntentFor(context, SupportUtils.HELP_URL, resources.getString(R.string.menu_help));
     }
 
