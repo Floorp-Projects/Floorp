@@ -6,13 +6,16 @@
 #ifndef TSFTextStore_h_
 #define TSFTextStore_h_
 
-#include "mozilla/RefPtr.h"
-#include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIWidget.h"
+#include "nsString.h"
 #include "nsWindowBase.h"
+
 #include "WinUtils.h"
+#include "WritingModes.h"
+
 #include "mozilla/Attributes.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextRange.h"
@@ -235,7 +238,20 @@ public:
     return (IsComposing() && sEnabledTextStore->mWidget == aWidget);
   }
 
-  static bool IsIMM_IME();
+  static nsWindowBase* GetEnabledWindowBase()
+  {
+    return sEnabledTextStore ? sEnabledTextStore->mWidget.get() : nullptr;
+  }
+
+  /**
+   * Returns true if active keyboard layout is a legacy IMM-IME.
+   */
+  static bool IsIMM_IMEActive();
+
+  /**
+   * Returns true if active TIP is MS-IME for Japanese.
+   */
+  static bool IsMSJapaneseIMEActive();
 
 #ifdef DEBUG
   // Returns true when keyboard layout has IME (TIP).
