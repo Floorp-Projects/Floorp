@@ -617,6 +617,7 @@ public:
     , mState(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY)
     , mClass(aID)
     , mMayHaveRoundedCorners(false)
+    , mHasImageRequest(false)
   {
     mozilla::PodZero(&mOverflow);
   }
@@ -3865,6 +3866,17 @@ public:
   bool IsScrolledOutOfView();
 
   /**
+   * @return true iff this frame has one or more associated image requests.
+   * @see mozilla::css::ImageLoader.
+   */
+  bool HasImageRequest() const { return mHasImageRequest; }
+
+  /**
+   * Update this frame's image request state.
+   */
+  void SetHasImageRequest(bool aHasRequest) { mHasImageRequest = aHasRequest; }
+
+  /**
    * If this returns true, the frame it's called on should get the
    * NS_FRAME_HAS_DIRTY_CHILDREN bit set on it by the caller; either directly
    * if it's already in reflow, or via calling FrameNeedsReflow() to schedule a
@@ -3995,7 +4007,14 @@ protected:
   ClassID mClass; // 1 byte
 
   bool mMayHaveRoundedCorners : 1;
-  // There should be a 15-bit gap left here.
+
+  /**
+   * True iff this frame has one or more associated image requests.
+   * @see mozilla::css::ImageLoader.
+   */
+  bool mHasImageRequest : 1;
+
+  // There is a 14-bit gap left here.
 
   // Helpers
   /**
