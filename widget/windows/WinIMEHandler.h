@@ -7,7 +7,7 @@
 #define WinIMEHandler_h_
 
 #include "nscore.h"
-#include "nsIWidget.h"
+#include "nsWindowBase.h"
 #include "npapi.h"
 #include <windows.h>
 #include <inputscope.h>
@@ -100,9 +100,9 @@ public:
                               const InputContextAction& aAction);
 
   /**
-   * Associate or disassociate IME context to/from the aWindow.
+   * Associate or disassociate IME context to/from the aWindowBase.
    */
-  static void AssociateIMEContext(nsWindow* aWindow, bool aEnable);
+  static void AssociateIMEContext(nsWindowBase* aWindowBase, bool aEnable);
 
   /**
    * Called when the window is created.
@@ -119,6 +119,13 @@ public:
    */
   static void DefaultProcOfPluginEvent(nsWindow* aWindow,
                                        const NPEvent* aPluginEvent);
+
+#ifdef NS_ENABLE_TSF
+  /**
+   * This is called by TSFStaticSink when active IME is changed.
+   */
+  static void OnKeyboardLayoutChanged();
+#endif // #ifdef NS_ENABLE_TSF
 
 #ifdef DEBUG
   /**
@@ -142,6 +149,7 @@ private:
   // If sIMMEnabled is false, any IME messages are not handled in TSF mode.
   // Additionally, IME context is always disassociated from focused window.
   static bool sIsIMMEnabled;
+  static bool sAssociateIMCOnlyWhenIMM_IMEActive;
 
   static bool IsTSFAvailable() { return (sIsInTSFMode && !sPluginHasFocus); }
   static bool IsIMMActive();
@@ -154,6 +162,7 @@ private:
   static bool IsKeyboardPresentOnSlate();
   static bool IsInTabletMode();
   static bool AutoInvokeOnScreenKeyboardInDesktopMode();
+  static bool NeedsToAssociateIMC();
 
   /**
    * Show the Windows on-screen keyboard. Only allowed for
