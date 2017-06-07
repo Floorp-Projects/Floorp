@@ -5,7 +5,6 @@
 
 package org.mozilla.focus.locale;
 
-import android.content.res.Configuration;
 import android.support.v4.app.Fragment;
 
 import java.util.Locale;
@@ -22,6 +21,9 @@ public abstract class LocaleAwareFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        
+        LocaleManager.getInstance()
+                .correctLocale(getContext(), getResources(), getResources().getConfiguration());
 
         if (cachedLocale == null) {
             cachedLocale = Locale.getDefault();
