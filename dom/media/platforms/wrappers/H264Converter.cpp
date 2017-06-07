@@ -132,47 +132,14 @@ RefPtr<MediaDataDecoder::FlushPromise>
 H264Converter::Flush()
 {
   mDecodePromiseRequest.DisconnectIfExists();
+  mFlushRequest.DisconnectIfExists();
+  mShutdownRequest.DisconnectIfExists();
   mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   mNeedKeyframe = true;
-
-  /*
-      When we detect a change of content in the H264 stream, we first flush the
-    current decoder (1), then shut it down (2).
-    It is possible possible for H264Converter::Flush to be called during any of
-    those time.
-    If during (1):
-      - mFlushRequest and mFlushPromise will not be empty.
-      - The old decoder can still be used, with the current extradata as stored
-        in mCurrentConfig.mExtraData.
-
-    If during (2):
-      - mShutdownRequest and mShutdownPromise won't be empty.
-      - mDecoder is empty.
-      - The old decoder is no longer referenced by the H264Converter.
-  */
-  if (mFlushPromise) {
-    // Flush in progress, hijack that one.
-    mFlushRequest.Disconnect();
-    return mFlushPromise.forget();
-  }
   if (mDecoder) {
     return mDecoder->Flush();
   }
-  if (!mShutdownPromise) {
-    return FlushPromise::CreateAndResolve(true, __func__);
-  }
-
-  mShutdownRequest.Disconnect();
-  // Let's continue when the the current shutdown completes.
-  RefPtr<ShutdownPromise> shutdownPromise = mShutdownPromise.forget();
-  return shutdownPromise->Then(
-    AbstractThread::GetCurrent()->AsTaskQueue(),
-    __func__,
-    [](bool) { return FlushPromise::CreateAndResolve(true, __func__); },
-    [](bool) {
-      MOZ_ASSERT_UNREACHABLE("Shutdown promises are always resolved");
-      return FlushPromise::CreateAndResolve(true, __func__);
-    });
+  return FlushPromise::CreateAndResolve(true, __func__);
 }
 
 RefPtr<MediaDataDecoder::DecodePromise>
@@ -191,11 +158,8 @@ H264Converter::Shutdown()
   mInitPromiseRequest.DisconnectIfExists();
   mDecodePromiseRequest.DisconnectIfExists();
   mFlushRequest.DisconnectIfExists();
-  mFlushPromise = nullptr;
   mShutdownRequest.DisconnectIfExists();
   mPendingSample = nullptr;
-  mNeedAVCC.reset();
-
   if (mShutdownPromise) {
     // We have a shutdown in progress, return that promise instead as we can't
     // shutdown a decoder twice.
@@ -412,8 +376,7 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
   // The SPS has changed, signal to flush the current decoder and create a
   // new one.
   RefPtr<H264Converter> self = this;
-  mFlushPromise = mDecoder->Flush();
-  mFlushPromise
+  mDecoder->Flush()
     ->Then(AbstractThread::GetCurrent()->AsTaskQueue(),
            __func__,
            [self, sample, this]() {
@@ -425,6 +388,7 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
                       [self, sample, this]() {
                         mShutdownRequest.Complete();
                         mShutdownPromise = nullptr;
+                        mNeedAVCC.reset();
                         nsresult rv = CreateDecoderAndInit(sample);
                         if (rv == NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER) {
                           // All good so far, will continue later.
@@ -439,7 +403,6 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
            },
            [self, this](const MediaResult& aError) {
              mFlushRequest.Complete();
-             mFlushPromise = nullptr;
              mDecodePromise.Reject(aError, __func__);
            })
     ->Track(mFlushRequest);
