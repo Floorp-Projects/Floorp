@@ -22487,8 +22487,8 @@ OpenDatabaseOp::NoteDatabaseClosed(Database* aDatabase)
     rv = NS_OK;
   }
 
-  // We are being called with an assuption that mWaitingFactoryOp holds a strong
-  // reference to us.
+  // We are being called with an assumption that mWaitingFactoryOp holds
+  // a strong reference to us.
   RefPtr<OpenDatabaseOp> kungFuDeathGrip;
 
   if (mMaybeBlockedDatabases.RemoveElement(aDatabase) &&
@@ -23314,8 +23314,8 @@ DeleteDatabaseOp::NoteDatabaseClosed(Database* aDatabase)
     rv = NS_OK;
   }
 
-  // We are being called with an assuption that mWaitingFactoryOp holds a strong
-  // reference to us.
+  // We are being called with an assumption that mWaitingFactoryOp holds
+  // a strong reference to us.
   RefPtr<OpenDatabaseOp> kungFuDeathGrip;
 
   if (mMaybeBlockedDatabases.RemoveElement(aDatabase) &&
