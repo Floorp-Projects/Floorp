@@ -1258,6 +1258,22 @@ nsNativeThemeGTK::NativeThemeToGtkTheme(uint8_t aWidgetType, nsIFrame* aFrame)
   return gtkWidgetType;
 }
 
+void
+nsNativeThemeGTK::GetCachedWidgetBorder(nsIFrame* aFrame, uint8_t aWidgetType,
+                                        GtkTextDirection aDirection,
+                                        nsIntMargin* aResult)
+{
+  aResult->SizeTo(0, 0, 0, 0);
+
+  WidgetNodeType gtkWidgetType;
+  gint unusedFlags;
+  if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
+                           &unusedFlags)) {
+    moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
+                              &aResult->right, &aResult->bottom, aDirection);
+  }
+}
+
 NS_IMETHODIMP
 nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
                                   uint8_t aWidgetType, nsIntMargin* aResult)
@@ -1333,13 +1349,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
     MOZ_FALLTHROUGH;
   default:
     {
-      WidgetNodeType gtkWidgetType;
-      gint unusedFlags;
-      if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
-                               &unusedFlags)) {
-        moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
-                                  &aResult->right, &aResult->bottom, direction);
-      }
+      GetCachedWidgetBorder(aFrame, aWidgetType, direction, aResult);
     }
   }
 
@@ -1384,14 +1394,8 @@ nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
         if (!IsRegularMenuItem(aFrame))
           return false;
 
-        aResult->SizeTo(0, 0, 0, 0);
-        WidgetNodeType gtkWidgetType;
-        if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
-                                 nullptr)) {
-          moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
-                                    &aResult->right, &aResult->bottom,
-                                    GetTextDirection(aFrame));
-        }
+        GetCachedWidgetBorder(aFrame, aWidgetType, GetTextDirection(aFrame),
+                              aResult);
 
         gint horizontal_padding;
 
