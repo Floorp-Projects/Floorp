@@ -372,6 +372,13 @@ class TupOnly(CommonBackend, PartialBackend):
                 outputs=outputs,
             )
 
+        for manifest, entries in manager.interface_manifests.items():
+            for xpt in entries:
+                self._manifest_entries[manifest].add('interfaces %s' % xpt)
+
+        for m in manager.chrome_manifests:
+            self._manifest_entries[m].add('manifest components/interfaces.manifest')
+
     def _preprocess(self, backend_file, input_file, destdir=None):
         # .css files use '%' as the preprocessor marker, which must be scaped as
         # '%%' in the Tupfile.
