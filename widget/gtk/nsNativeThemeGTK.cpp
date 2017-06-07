@@ -139,7 +139,7 @@ static bool IsWidgetStateSafe(uint8_t* aSafeVector,
                                 GtkWidgetState *aWidgetState)
 {
   MOZ_ASSERT(aWidgetType < ThemeWidgetType_COUNT);
-  uint8_t key = GetWidgetStateKey(aWidgetType, aWidgetState);
+  uint16_t key = GetWidgetStateKey(aWidgetType, aWidgetState);
   return (aSafeVector[key >> 3] & (1 << (key & 7))) != 0;
 }
 
@@ -148,7 +148,7 @@ static void SetWidgetStateSafe(uint8_t *aSafeVector,
                                GtkWidgetState *aWidgetState)
 {
   MOZ_ASSERT(aWidgetType < ThemeWidgetType_COUNT);
-  uint8_t key = GetWidgetStateKey(aWidgetType, aWidgetState);
+  uint16_t key = GetWidgetStateKey(aWidgetType, aWidgetState);
   aSafeVector[key >> 3] |= (1 << (key & 7));
 }
 
