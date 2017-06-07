@@ -34,7 +34,7 @@ bool contains(std::string& s, const char* to_find) {
 }
 
 std::string trim(std::string str) {
-  std::string whitespace = " \t";
+  std::string whitespace = " \t\r\n";
   const auto strBegin = str.find_first_not_of(whitespace);
   if (strBegin == std::string::npos) {
     return "";
@@ -46,7 +46,8 @@ std::string trim(std::string str) {
 
 std::vector<uint8_t> hex_string_to_bytes(std::string s) {
   std::vector<uint8_t> bytes;
-  for (size_t i = 0; i < s.length() - 1; i += 2) {
+  assert(s.length() % 2 == 0);
+  for (size_t i = 0; i < s.length(); i += 2) {
     bytes.push_back(std::stoul(s.substr(i, 2), nullptr, 16));
   }
   return bytes;
