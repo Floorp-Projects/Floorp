@@ -307,9 +307,9 @@ WebIDLGlobalNameHash::MayResolve(jsid aId)
 }
 
 /* static */
-void
+bool
 WebIDLGlobalNameHash::GetNames(JSContext* aCx, JS::Handle<JSObject*> aObj,
-                               NameType aNameType, nsTArray<nsString>& aNames)
+                               NameType aNameType, JS::AutoIdVector& aNames)
 {
   // aObj is always a Window here, so GetProtoAndIfaceCache on it is safe.
   ProtoAndIfaceCache* cache = GetProtoAndIfaceCache(aObj);
@@ -320,11 +320,15 @@ WebIDLGlobalNameHash::GetNames(JSContext* aCx, JS::Handle<JSObject*> aObj,
     if ((aNameType == AllNames ||
          !cache->EntrySlotIfExists(entry->mConstructorId)) &&
         (!entry->mEnabled || entry->mEnabled(aCx, aObj))) {
-      AppendASCIItoUTF16(nsDependentCString(sNames + entry->mNameOffset,
-                                            entry->mNameLength),
-                         *aNames.AppendElement());
+      JSString* str = JS_AtomizeStringN(aCx, sNames + entry->mNameOffset,
+                                        entry->mNameLength);
+      if (!str || !aNames.append(NON_INTEGER_ATOM_TO_JSID(str))) {
+        return false;
+      }
     }
   }
+
+  return true;
 }
 
 } // namespace dom

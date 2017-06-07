@@ -8929,20 +8929,10 @@ class CGEnumerateHook(CGAbstractBindingMethod):
 
     def generate_code(self):
         return CGGeneric(dedent("""
-            AutoTArray<nsString, 8> names;
             binding_detail::FastErrorResult rv;
-            self->GetOwnPropertyNames(cx, names, rv);
+            self->GetOwnPropertyNames(cx, properties, rv);
             if (rv.MaybeSetPendingException(cx)) {
               return false;
-            }
-            JS::Rooted<JS::Value> v(cx);
-            JS::Rooted<jsid> id(cx);
-            for (auto& name : names) {
-              if (!xpc::NonVoidStringToJsval(cx, name, &v) ||
-                  !JS_ValueToId(cx, v, &id) ||
-                  !properties.append(id)) {
-                return false;
-              }
             }
             return true;
             """))
@@ -11205,15 +11195,12 @@ class CGEnumerateOwnPropertiesViaGetOwnPropertyNames(CGAbstractBindingMethod):
 
     def generate_code(self):
         return CGGeneric(dedent("""
-            AutoTArray<nsString, 8> names;
             binding_detail::FastErrorResult rv;
-            self->GetOwnPropertyNames(cx, names, rv);
+            self->GetOwnPropertyNames(cx, props, rv);
             if (rv.MaybeSetPendingException(cx)) {
               return false;
             }
-            // OK to pass null as "proxy" because it's ignored if
-            // shadowPrototypeProperties is true
-            return AppendNamedPropertyIds(cx, nullptr, names, true, props);
+            return true;
             """))
 
 
