@@ -26,8 +26,8 @@ using namespace mozilla::media;
 
 namespace mozilla {
 
-MediaSourceDecoder::MediaSourceDecoder(dom::HTMLMediaElement* aElement)
-  : MediaDecoder(aElement)
+MediaSourceDecoder::MediaSourceDecoder(MediaDecoderInit& aInit)
+  : MediaDecoder(aInit)
   , mMediaSource(nullptr)
   , mEnded(false)
 {
@@ -35,7 +35,7 @@ MediaSourceDecoder::MediaSourceDecoder(dom::HTMLMediaElement* aElement)
 }
 
 MediaDecoder*
-MediaSourceDecoder::Clone(MediaDecoderOwner* aOwner)
+MediaSourceDecoder::Clone(MediaDecoderInit& aInit)
 {
   // TODO: Sort out cloning.
   return nullptr;

@@ -366,22 +366,22 @@ MediaDecoder::IsInfinite() const
 }
 
 #define INIT_MIRROR(name, val) \
-  name(aOwner->AbstractMainThread(), val, "MediaDecoder::" #name " (Mirror)")
+  name(mOwner->AbstractMainThread(), val, "MediaDecoder::" #name " (Mirror)")
 #define INIT_CANONICAL(name, val) \
-  name(aOwner->AbstractMainThread(), val, "MediaDecoder::" #name " (Canonical)")
+  name(mOwner->AbstractMainThread(), val, "MediaDecoder::" #name " (Canonical)")
 
-MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
-  : mWatchManager(this, aOwner->AbstractMainThread())
+MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
+  : mWatchManager(this, aInit.mOwner->AbstractMainThread())
   , mLogicalPosition(0.0)
   , mDuration(std::numeric_limits<double>::quiet_NaN())
-  , mResourceCallback(new ResourceCallback(aOwner->AbstractMainThread()))
+  , mResourceCallback(new ResourceCallback(aInit.mOwner->AbstractMainThread()))
   , mCDMProxyPromise(mCDMProxyPromiseHolder.Ensure(__func__))
   , mIgnoreProgressData(false)
   , mInfiniteStream(false)
-  , mOwner(aOwner)
-  , mAbstractMainThread(aOwner->AbstractMainThread())
+  , mOwner(aInit.mOwner)
+  , mAbstractMainThread(aInit.mOwner->AbstractMainThread())
   , mFrameStats(new FrameStatistics())
-  , mVideoFrameContainer(aOwner->GetVideoFrameContainer())
+  , mVideoFrameContainer(aInit.mOwner->GetVideoFrameContainer())
   , mPinnedForSeek(false)
   , mMinimizePreroll(false)
   , mFiredMetadataLoaded(false)
@@ -409,8 +409,8 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , INIT_CANONICAL(mPlaybackRateReliable, true)
   , INIT_CANONICAL(mDecoderPosition, 0)
   , mTelemetryReported(false)
-  , mIsMediaElement(!!aOwner->GetMediaElement())
-  , mElement(aOwner->GetMediaElement())
+  , mIsMediaElement(!!mOwner->GetMediaElement())
+  , mElement(mOwner->GetMediaElement())
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mAbstractMainThread);
