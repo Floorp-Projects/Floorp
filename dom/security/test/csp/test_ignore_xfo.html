@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1024557: Ignore x-frame-options if CSP with frame-ancestors exists</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="csp_testframe"></iframe>
+<iframe style="width:100%;" id="csp_ro_testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/*
+ * We load two frames using:
+ *   x-frame-options: deny
+ * where the first frame uses a csp and the second a csp_ro including frame-ancestors.
+ * We make sure that xfo is ignored for regular csp but not for csp_ro.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+var testcounter = 0;
+function checkFinished() {
+  testcounter++;
+  if (testcounter < 2) {
+  	return;
+  }
+  SimpleTest.finish();
+}
+
+// 1) test XFO with CSP
+var csp_testframe = document.getElementById("csp_testframe");
+csp_testframe.onload = function() {
+  var msg = csp_testframe.contentWindow.document.getElementById("cspmessage");
+  is(msg.innerHTML, "Ignoring XFO because of CSP", "Loading frame with with XFO and CSP");
+  checkFinished();
+}
+csp_testframe.onerror = function() {
+  ok(false, "sanity: should not fire onerror for csp_testframe");
+}
+csp_testframe.src = "file_ignore_xfo.html";
+
+// 2) test XFO with CSP_RO
+var csp_ro_testframe = document.getElementById("csp_ro_testframe");
+csp_ro_testframe.onload = function() {
+  var msg = csp_ro_testframe.contentWindow.document.getElementById("cspmessage");
+  is(msg, null, "Blocking frame with with XFO and CSP_RO");
+  checkFinished();
+}
+csp_ro_testframe.onerror = function() {
+  ok(false, "sanity: should not fire onerror for csp_ro_testframe");
+}
+csp_ro_testframe.src = "file_ro_ignore_xfo.html";
+
+</script>
+</body>
+</html>
