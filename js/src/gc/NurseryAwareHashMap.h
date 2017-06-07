@@ -165,6 +165,10 @@ class NurseryAwareHashMap
         MOZ_ASSERT(nurseryEntries.empty());
         map.sweep();
     }
+
+    bool hasNurseryEntries() const {
+        return !nurseryEntries.empty();
+    }
 };
 
 } // namespace js
