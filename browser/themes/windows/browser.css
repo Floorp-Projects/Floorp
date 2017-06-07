@@ -1505,10 +1505,6 @@ treechildren.searchbar-treebody::-moz-tree-row(selected) {
   list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow-inverted.png");
 }
 
-#alltabs-button > .toolbarbutton-menu-dropmarker {
-  display: none;
-}
-
 /* All tabs menupopup */
 .alltabs-item > .menu-iconic-left > .menu-iconic-icon {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
