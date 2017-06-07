@@ -53,15 +53,36 @@ HeadlessWidget::CreateChild(const LayoutDeviceIntRect& aRect,
 }
 
 void
+HeadlessWidget::SendSetZLevelEvent()
+{
+  nsWindowZ placement = nsWindowZTop;
+  nsCOMPtr<nsIWidget> actualBelow;
+  if (mWidgetListener)
+    mWidgetListener->ZLevelChanged(true, &placement, nullptr, getter_AddRefs(actualBelow));
+}
+
+void
 HeadlessWidget::Show(bool aState)
 {
   mVisible = aState;
+  if (aState) {
+    SendSetZLevelEvent();
+  }
 }
 
 bool
 HeadlessWidget::IsVisible() const
 {
   return mVisible;
+}
+
+nsresult
+HeadlessWidget::SetFocus(bool aRaise)
+{
+  if (aRaise && mVisible) {
+    SendSetZLevelEvent();
+  }
+  return NS_OK;
 }
 
 void

@@ -68,6 +68,10 @@ GetTopLevelWindowActiveState(nsIFrame *aFrame)
   if (!XRE_IsParentProcess()) {
     return mozilla::widget::themeconst::FS_INACTIVE;
   }
+  // All headless windows are considered active so they are painted.
+  if (gfxPlatform::IsHeadless()) {
+    return mozilla::widget::themeconst::FS_ACTIVE;
+  }
   // Get the widget. nsIFrame's GetNearestWidget walks up the view chain
   // until it finds a real window.
   nsIWidget* widget = aFrame->GetNearestWidget();
