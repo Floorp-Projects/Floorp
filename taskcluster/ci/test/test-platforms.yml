@@ -201,6 +201,7 @@ macosx64/opt:
     test-sets:
         - macosx64-tests-talos
         - macosx64-tests-debug
+        - desktop-screenshot-capture
 
 macosx64-devedition/opt:
     build-platform: macosx64-devedition/opt
