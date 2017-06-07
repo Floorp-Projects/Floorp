@@ -18,6 +18,10 @@ using LayoutDeviceIntRect from "Units.h";
 using DesktopIntRect from "Units.h";
 using DesktopToLayoutDeviceScale from "Units.h";
 using CSSToLayoutDeviceScale from "Units.h";
+using CSSRect from "Units.h";
+using CSSSize from "Units.h";
+using mozilla::LayoutDeviceIntPoint from "Units.h";
+using mozilla::dom::ScreenOrientationInternal from "mozilla/dom/ScreenOrientation.h";
 
 namespace mozilla {
 namespace dom {
@@ -81,6 +85,15 @@ struct ScreenDetails {
   int32_t colorDepth;
   DesktopToLayoutDeviceScale contentsScaleFactor;
   CSSToLayoutDeviceScale defaultCSSScaleFactor;
+};
+
+struct DimensionInfo
+{
+  CSSRect rect;
+  CSSSize size;
+  ScreenOrientationInternal orientation;
+  LayoutDeviceIntPoint clientOffset;
+  LayoutDeviceIntPoint chromeDisp;
 };
 
 } // namespace dom
