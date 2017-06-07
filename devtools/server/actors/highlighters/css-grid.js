@@ -1054,10 +1054,13 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
 
     let paddingTop = parseFloat(computedStyle.paddingTop);
     let paddingLeft = parseFloat(computedStyle.paddingLeft);
+    let borderTop = parseFloat(computedStyle.borderTopWidth);
+    let borderLeft = parseFloat(computedStyle.borderLeftWidth);
 
-    // Subtract padding values to compensate for top/left being moved by padding.
-    let ox = origin[0] - paddingLeft;
-    let oy = origin[1] - paddingTop;
+    // Subtract padding and border values to compensate for top/left being moved by
+    // padding and / or borders.
+    let ox = origin[0] - paddingLeft - borderLeft;
+    let oy = origin[1] - paddingTop - borderTop;
 
     let m = identity();
 
@@ -1067,8 +1070,8 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     m = multiply(m, translate(bounds.p1.x, bounds.p1.y));
     // And scale based on the current zoom factor.
     m = multiply(m, scale(getCurrentZoom(this.win)));
-    // Then translate the origin based on the node's padding values.
-    m = multiply(m, translate(paddingLeft, paddingTop));
+    // Then translate the origin based on the node's padding and border values.
+    m = multiply(m, translate(paddingLeft + borderLeft, paddingTop + borderTop));
     // Finally, we can apply the current node's transformation matrix, taking in account
     // the `transform-origin` property and the node's top and left padding.
     if (nodeMatrix) {
