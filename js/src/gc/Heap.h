@@ -252,6 +252,8 @@ struct Cell
     MOZ_ALWAYS_INLINE const TenuredCell& asTenured() const;
     MOZ_ALWAYS_INLINE TenuredCell& asTenured();
 
+    MOZ_ALWAYS_INLINE bool isMarked(uint32_t color = BLACK) const;
+
     inline JSRuntime* runtimeFromActiveCooperatingThread() const;
 
     // Note: Unrestricted access to the runtime of a GC thing from an arbitrary
@@ -1167,6 +1169,17 @@ Cell::asTenured()
 {
     MOZ_ASSERT(isTenured());
     return *static_cast<TenuredCell*>(this);
+}
+
+MOZ_ALWAYS_INLINE bool
+Cell::isMarked(uint32_t color) const
+{
+    if (color == BLACK) {
+        return !isTenured() || asTenured().isMarked(BLACK);
+    } else {
+        MOZ_ASSERT(color == GRAY);
+        return isTenured() && asTenured().isMarked(GRAY);
+    }
 }
 
 inline JSRuntime*
