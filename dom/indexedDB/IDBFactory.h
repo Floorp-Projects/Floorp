@@ -21,7 +21,6 @@
 class nsIEventTarget;
 class nsIPrincipal;
 class nsPIDOMWindowInner;
-struct PRThread;
 
 namespace mozilla {
 
@@ -79,10 +78,6 @@ class IDBFactory final
   // NS_GetCurrentThread() off main thread.
   nsCOMPtr<nsIEventTarget> mEventTarget;
 
-#ifdef DEBUG
-  PRThread* mOwningThread;
-#endif
-
   uint64_t mInnerWindowID;
 
   bool mBackgroundActorFailed;
@@ -112,17 +107,11 @@ public:
   AllowedForPrincipal(nsIPrincipal* aPrincipal,
                       bool* aIsSystemPrincipal = nullptr);
 
-#ifdef DEBUG
-  void
-  AssertIsOnOwningThread() const;
-
-  PRThread*
-  OwningThread() const;
-#else
   void
   AssertIsOnOwningThread() const
-  { }
-#endif
+  {
+    NS_ASSERT_OWNINGTHREAD(IDBFactory);
+  }
 
   nsIEventTarget*
   EventTarget() const

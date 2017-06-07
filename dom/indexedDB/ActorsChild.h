@@ -29,7 +29,6 @@
 
 class nsIEventTarget;
 struct nsID;
-struct PRThread;
 
 namespace JS {
 struct WasmModule;
@@ -70,18 +69,14 @@ class ThreadLocal
   IDBTransaction* mCurrentTransaction;
   nsCString mLoggingIdString;
 
-#ifdef DEBUG
-  PRThread* mOwningThread;
-#endif
+  NS_DECL_OWNINGTHREAD
 
 public:
   void
   AssertIsOnOwningThread() const
-#ifdef DEBUG
-  ;
-#else
-  { }
-#endif
+  {
+    NS_ASSERT_OWNINGTHREAD(ThreadLocal);
+  }
 
   const LoggingInfo&
   GetLoggingInfo() const
@@ -163,22 +158,14 @@ class BackgroundFactoryChild final
 
   IDBFactory* mFactory;
 
-#ifdef DEBUG
-  nsCOMPtr<nsIEventTarget> mOwningThread;
-#endif
+  NS_DECL_OWNINGTHREAD
 
 public:
-#ifdef DEBUG
-  void
-  AssertIsOnOwningThread() const;
-
-  nsIEventTarget*
-  OwningThread() const;
-#else
   void
   AssertIsOnOwningThread() const
-  { }
-#endif
+  {
+    NS_ASSERT_OWNINGTHREAD(BackgroundFactoryChild);
+  }
 
   IDBFactory*
   GetDOMObject() const
@@ -321,16 +308,10 @@ class BackgroundDatabaseChild final
 public:
   void
   AssertIsOnOwningThread() const
-  {
-    static_cast<BackgroundFactoryChild*>(Manager())->AssertIsOnOwningThread();
-  }
-
 #ifdef DEBUG
-  nsIEventTarget*
-  OwningThread() const
-  {
-    return static_cast<BackgroundFactoryChild*>(Manager())->OwningThread();
-  }
+  ;
+#else
+  { }
 #endif
 
   const DatabaseSpec*
@@ -781,9 +762,7 @@ class BackgroundCursorChild final
 
   Direction mDirection;
 
-#ifdef DEBUG
-  PRThread* mOwningThread;
-#endif
+  NS_DECL_OWNINGTHREAD
 
 public:
   BackgroundCursorChild(IDBRequest* aRequest,
@@ -796,11 +775,9 @@ public:
 
   void
   AssertIsOnOwningThread() const
-#ifdef DEBUG
-  ;
-#else
-  { }
-#endif
+  {
+    NS_ASSERT_OWNINGTHREAD(BackgroundCursorChild);
+  }
 
   void
   SendContinueInternal(const CursorRequestParams& aParams);
@@ -997,18 +974,14 @@ class BackgroundUtilsChild final
 
   IndexedDatabaseManager* mManager;
 
-#ifdef DEBUG
-  nsCOMPtr<nsIEventTarget> mOwningThread;
-#endif
+  NS_DECL_OWNINGTHREAD
 
 public:
   void
   AssertIsOnOwningThread() const
-#ifdef DEBUG
-  ;
-#else
-  { }
-#endif
+  {
+    NS_ASSERT_OWNINGTHREAD(BackgroundUtilsChild);
+  }
 
 private:
   // Only created by IndexedDatabaseManager.

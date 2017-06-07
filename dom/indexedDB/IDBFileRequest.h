@@ -14,7 +14,6 @@
 #include "nsString.h"
 
 template <class> struct already_AddRefed;
-struct PRThread;
 
 namespace mozilla {
 
@@ -28,10 +27,6 @@ class IDBFileRequest final
   : public DOMRequest
 {
   RefPtr<IDBFileHandle> mFileHandle;
-
-#ifdef DEBUG
-  PRThread* mOwningThread;
-#endif
 
   nsString mEncoding;
 
@@ -89,11 +84,9 @@ public:
 
   void
   AssertIsOnOwningThread() const
-#ifdef DEBUG
-  ;
-#else
-  { }
-#endif
+  {
+    NS_ASSERT_OWNINGTHREAD(IDBFileRequest);
+  }
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBFileRequest, DOMRequest)

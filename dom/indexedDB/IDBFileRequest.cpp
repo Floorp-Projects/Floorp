@@ -28,9 +28,6 @@ IDBFileRequest::IDBFileRequest(IDBFileHandle* aFileHandle,
                                bool aWrapAsDOMRequest)
   : DOMRequest(aFileHandle->GetOwner())
   , mFileHandle(aFileHandle)
-#ifdef DEBUG
-  , mOwningThread(PR_GetCurrentThread())
-#endif
   , mWrapAsDOMRequest(aWrapAsDOMRequest)
   , mHasEncoding(false)
 {
@@ -42,17 +39,6 @@ IDBFileRequest::~IDBFileRequest()
 {
   AssertIsOnOwningThread();
 }
-
-#ifdef DEBUG
-
-void
-IDBFileRequest::AssertIsOnOwningThread() const
-{
-  MOZ_ASSERT(mOwningThread);
-  MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
-}
-
-#endif // DEBUG
 
 // static
 already_AddRefed<IDBFileRequest>

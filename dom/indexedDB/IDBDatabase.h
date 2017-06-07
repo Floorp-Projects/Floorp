@@ -94,15 +94,11 @@ public:
          indexedDB::BackgroundDatabaseChild* aActor,
          DatabaseSpec* aSpec);
 
-#ifdef DEBUG
-  void
-  AssertIsOnOwningThread() const;
-
-  PRThread*
-  OwningThread() const;
-#else
   void
   AssertIsOnOwningThread() const
+#ifdef DEBUG
+  ;
+#else
   { }
 #endif
 
