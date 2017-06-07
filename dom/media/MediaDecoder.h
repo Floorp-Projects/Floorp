@@ -690,13 +690,13 @@ protected:
 
   // Be assigned from media element during the initialization and pass to
   // AudioStream Class.
-  dom::AudioChannel mAudioChannel;
+  const dom::AudioChannel mAudioChannel;
 
   // True if the decoder has been directed to minimize its preroll before
   // playback starts. After the first time playback starts, we don't attempt
   // to minimize preroll, as we assume the user is likely to keep playing,
   // or play the media again.
-  bool mMinimizePreroll;
+  const bool mMinimizePreroll;
 
   // True if we've already fired metadataloaded.
   bool mFiredMetadataLoaded;
