@@ -3,8 +3,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY  trackingProtectionHeader2.label      "Tracking Protection">
-<!ENTITY  trackingProtection.description       "Tracking is when companies collect information about you to build a profile and display content based on your browsing and personal data.">
-<!ENTITY  trackingProtection.radioGroupLabel   "Block known tracking companies from displaying content">
+<!ENTITY  trackingProtection.description       "Tracking is the collection of your browsing data across multiple websites. Tracking can be used to build a profile and display content based on your browsing and personal information.">
+<!ENTITY  trackingProtection.radioGroupLabel   "Use Tracking Protection to block known trackers">
 <!ENTITY  trackingProtectionAlways.label       "Always">
 <!ENTITY  trackingProtectionAlways.accesskey   "y">
 <!ENTITY  trackingProtectionPrivate.label      "Only in private windows">
@@ -15,18 +15,18 @@
 <!ENTITY  trackingProtectionExceptions.label   "Exceptions…">
 <!ENTITY  trackingProtectionExceptions.accesskey "x">
 
-<!ENTITY tracking.label                 "Tracking">
 <!ENTITY trackingProtectionPBM5.label         "Use Tracking Protection in Private Windows">
 <!ENTITY trackingProtectionPBM5.accesskey     "v">
+<!ENTITY trackingProtectionPBM6.label         "Use Tracking Protection in Private Browsing to block known trackers">
+<!ENTITY trackingProtectionPBM6.accesskey     "v">
 <!ENTITY trackingProtectionPBMLearnMore.label "Learn more">
 <!ENTITY changeBlockList.label          "Change Block List">
 <!ENTITY changeBlockList.accesskey      "C">
 
-<!-- LOCALIZATION NOTE (doNotTrack.pre.label): include a trailing space as needed -->
-<!-- LOCALIZATION NOTE (doNotTrack.post.label): include a starting space as needed -->
-<!ENTITY  doNotTrack.pre.label          "You can also ">
-<!ENTITY  doNotTrack.settings.label     "manage your Do Not Track settings">
-<!ENTITY  doNotTrack.post.label         ".">
+<!ENTITY  doNotTrack.description        "Send websites a “Do Not Track” signal that you don’t want to be tracked">
+<!ENTITY  doNotTrack.learnMore.label    "Learn more">
+<!ENTITY  doNotTrack.default.label      "Only when using Tracking Protection">
+<!ENTITY  doNotTrack.always.label       "Always">
 
 <!ENTITY  history.label                 "History">
 <!ENTITY  permissions.label             "Permissions">

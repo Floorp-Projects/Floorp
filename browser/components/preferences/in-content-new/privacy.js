@@ -61,8 +61,9 @@ var gPrivacyPane = {
 
     this.trackingProtectionReadPrefs();
 
-    document.getElementById("trackingprotectionbox").hidden = false;
-    document.getElementById("trackingprotectionpbmbox").hidden = true;
+    document.getElementById("trackingProtectionExceptions").hidden = false;
+    document.getElementById("trackingProtectionBox").hidden = false;
+    document.getElementById("trackingProtectionPBMBox").hidden = true;
   },
 
   /**
@@ -189,10 +190,6 @@ var gPrivacyPane = {
       gPrivacyPane.clearPrivateDataNow(true);
       return false;
     });
-    setEventListener("doNotTrackSettings", "click", function() {
-      gPrivacyPane.showDoNotTrackSettings();
-      return false;
-    });
     setEventListener("privateBrowsingAutoStart", "command",
                      gPrivacyPane.updateAutostart);
     setEventListener("cookieExceptions", "command",
@@ -206,8 +203,6 @@ var gPrivacyPane = {
     setEventListener("trackingProtectionExceptions", "command",
                      gPrivacyPane.showTrackingProtectionExceptions);
     setEventListener("changeBlockList", "command",
-                     gPrivacyPane.showBlockLists);
-    setEventListener("changeBlockListPBM", "command",
                      gPrivacyPane.showBlockLists);
     setEventListener("browserContainersCheckbox", "command",
                      gPrivacyPane._checkBrowserContainers);
