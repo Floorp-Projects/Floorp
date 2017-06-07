@@ -65,6 +65,7 @@
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/CDATASection.h"
 #include "mozilla/dom/ProcessingInstruction.h"
+#include "nsDSURIContentListener.h"
 #include "nsDOMString.h"
 #include "nsNodeUtils.h"
 #include "nsLayoutUtils.h" // for GetFrameForPoint
@@ -2582,6 +2583,15 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   if (!mLoadedAsData) {
     nsresult rv = InitCSP(aChannel);
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // XFO needs to be checked after CSP because it is ignored if
+  // the CSP defines frame-ancestors.
+  if (!nsDSURIContentListener::CheckFrameOptions(aChannel, docShell, NodePrincipal())) {
+    MOZ_LOG(gCspPRLog, LogLevel::Debug,
+            ("XFO doesn't like frame's ancestry, not loading."));
+    // stop!  ERROR page!
+    aChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
   }
 
   return NS_OK;
