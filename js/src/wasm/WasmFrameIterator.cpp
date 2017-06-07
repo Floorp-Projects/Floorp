@@ -276,8 +276,8 @@ static const unsigned PoppedExitReason = 4;
 #elif defined(JS_CODEGEN_ARM64)
 static const unsigned BeforePushRetAddr = 0;
 static const unsigned PushedRetAddr = 0;
-static const unsigned PushedTLS = 0;
-static const unsigned PushedExitReason = 0;
+static const unsigned PushedTLS = 1;
+static const unsigned PushedExitReason = 2;
 static const unsigned PushedFP = 0;
 static const unsigned SetFP = 0;
 static const unsigned PoppedFP = 0;
@@ -293,8 +293,8 @@ static const unsigned PoppedFP = 8;
 static const unsigned PoppedExitReason = 4;
 #elif defined(JS_CODEGEN_NONE)
 static const unsigned PushedRetAddr = 0;
-static const unsigned PushedTLS = 0;
-static const unsigned PushedExitReason = 0;
+static const unsigned PushedTLS = 1;
+static const unsigned PushedExitReason = 2;
 static const unsigned PushedFP = 0;
 static const unsigned SetFP = 0;
 static const unsigned PoppedFP = 0;
