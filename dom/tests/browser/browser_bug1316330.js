@@ -18,14 +18,14 @@ add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
 
-  EventUtils.synthesizeKey("d", { code: "KeyD", repeat: 3 });
+  await EventUtils.synthesizeAndWaitKey("d", { code: "KeyD", repeat: 3 });
 
   await ContentTask.spawn(browser, null, async function() {
     is(content.document.body.getAttribute("data-down"), "2", "Correct number of events");
     is(content.document.body.getAttribute("data-press"), "2", "Correct number of events");
   });
 
-  EventUtils.synthesizeKey("p", { code: "KeyP", repeat: 3 });
+  await EventUtils.synthesizeAndWaitKey("p", { code: "KeyP", repeat: 3 });
 
   await ContentTask.spawn(browser, null, async function() {
     is(content.document.body.getAttribute("data-down"), "4", "Correct number of events");

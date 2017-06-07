@@ -43,11 +43,10 @@ add_task(async function() {
       // but in non-e10s it is handled by the browser UI code and hence won't
       // reach the web page.  As a result, we need to observe the event in
       // the content process only in e10s mode.
-      var waitForKeypressContent = BrowserTestUtils.waitForContentEvent(aBrowser, "keypress");
-      EventUtils.synthesizeKey("x", {accelKey: true, shiftKey: true});
       if (gMultiProcessBrowser) {
-        return waitForKeypressContent;
+        return EventUtils.synthesizeAndWaitKey("x", {accelKey: true, shiftKey: true});
       }
+      EventUtils.synthesizeKey("x", {accelKey: true, shiftKey: true});
       return Promise.resolve();
     }
 
