@@ -1338,8 +1338,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
       if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
                                &unusedFlags)) {
         moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
-                                  &aResult->right, &aResult->bottom, direction,
-                                  IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XHTML));
+                                  &aResult->right, &aResult->bottom, direction);
       }
     }
   }
@@ -1390,8 +1389,8 @@ nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
         if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
                                  nullptr)) {
           moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
-                                    &aResult->right, &aResult->bottom, GetTextDirection(aFrame),
-                                    IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XHTML));
+                                    &aResult->right, &aResult->bottom,
+                                    GetTextDirection(aFrame));
         }
 
         gint horizontal_padding;
