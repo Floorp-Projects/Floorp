@@ -243,9 +243,12 @@ namespace jit {
     _(JSOP_IS_CONSTRUCTING)    \
     _(JSOP_TRY_DESTRUCTURING_ITERCLOSE) \
     _(JSOP_CHECKCLASSHERITAGE) \
+    _(JSOP_INITHOMEOBJECT)     \
     _(JSOP_BUILTINPROTO)       \
     _(JSOP_OBJWITHPROTO)       \
-    _(JSOP_FUNWITHPROTO)
+    _(JSOP_FUNWITHPROTO)       \
+    _(JSOP_CLASSCONSTRUCTOR)   \
+    _(JSOP_DERIVEDCONSTRUCTOR)
 
 class BaselineCompiler : public BaselineCompilerSpecific
 {
