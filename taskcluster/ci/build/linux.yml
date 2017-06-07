@@ -282,6 +282,8 @@ linux64-asan/opt:
         symbol: tc(Bo)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: "opt asan"
         max-run-time: 36000
     run:
         using: mozharness
@@ -331,6 +333,8 @@ linux64-asan/debug:
         symbol: tc(Bd)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: "debug asan"
         max-run-time: 36000
     run:
         using: mozharness
