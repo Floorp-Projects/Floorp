@@ -2466,7 +2466,15 @@ nsresult HTMLMediaElement::LoadResource()
   }
 
   if (mMediaSource) {
-    MediaDecoderInit decoderInit(this);
+    MediaDecoderInit decoderInit(
+      this,
+      mAudioChannel,
+      mMuted ? 0.0 : mVolume,
+      mPreservesPitch,
+      mPlaybackRate,
+      mPreloadAction == HTMLMediaElement::PRELOAD_METADATA,
+      mHasSuspendTaint);
+
     RefPtr<MediaSourceDecoder> decoder = new MediaSourceDecoder(decoderInit);
     if (!mMediaSource->Attach(decoder)) {
       // TODO: Handle failure: run "If the media data cannot be fetched at
@@ -4592,7 +4600,15 @@ nsresult HTMLMediaElement::InitializeDecoderAsClone(MediaDecoder* aOriginal)
   if (!originalResource)
     return NS_ERROR_FAILURE;
 
-  MediaDecoderInit decoderInit(this);
+  MediaDecoderInit decoderInit(
+    this,
+    mAudioChannel,
+    mMuted ? 0.0 : mVolume,
+    mPreservesPitch,
+    mPlaybackRate,
+    mPreloadAction == HTMLMediaElement::PRELOAD_METADATA,
+    mHasSuspendTaint);
+
   RefPtr<MediaDecoder> decoder = aOriginal->Clone(decoderInit);
   if (!decoder)
     return NS_ERROR_FAILURE;
@@ -4622,7 +4638,15 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
   NS_ASSERTION(!mimeType.IsEmpty(), "We should have the Content-Type.");
 
   DecoderDoctorDiagnostics diagnostics;
-  MediaDecoderInit decoderInit(this);
+  MediaDecoderInit decoderInit(
+    this,
+    mAudioChannel,
+    mMuted ? 0.0 : mVolume,
+    mPreservesPitch,
+    mPlaybackRate,
+    mPreloadAction == HTMLMediaElement::PRELOAD_METADATA,
+    mHasSuspendTaint);
+
   RefPtr<MediaDecoder> decoder =
     DecoderTraits::CreateDecoder(mimeType, decoderInit, &diagnostics);
   diagnostics.StoreFormatDiagnostics(OwnerDoc(),
@@ -4673,15 +4697,6 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   // Tell the decoder about its MediaResource now so things like principals are
   // available immediately.
   mDecoder->SetResource(aStream);
-  mDecoder->SetAudioChannel(mAudioChannel);
-  mDecoder->SetVolume(mMuted ? 0.0 : mVolume);
-  mDecoder->SetPreservesPitch(mPreservesPitch);
-  mDecoder->SetPlaybackRate(mPlaybackRate);
-  if (mPreloadAction == HTMLMediaElement::PRELOAD_METADATA) {
-    mDecoder->SetMinimizePrerollUntilPlaybackStarts();
-  }
-  // Notify the decoder of suspend taint.
-  mDecoder->SetSuspendTaint(mHasSuspendTaint);
   // Notify the decoder of the initial activity status.
   NotifyDecoderActivityChanges();
 

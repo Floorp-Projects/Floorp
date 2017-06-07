@@ -60,9 +60,27 @@ enum class Visibility : uint8_t;
 struct MediaDecoderInit
 {
   MediaDecoderOwner* const mOwner;
+  const dom::AudioChannel mAudioChannel;
+  const double mVolume;
+  const bool mPreservesPitch;
+  const double mPlaybackRate;
+  const bool mMinimizePreroll;
+  const bool mHasSuspendTaint;
 
-  explicit MediaDecoderInit(MediaDecoderOwner* aOwner)
+  MediaDecoderInit(MediaDecoderOwner* aOwner,
+                   dom::AudioChannel aAudioChannel,
+                   double aVolume,
+                   bool aPreservesPitch,
+                   double aPlaybackRate,
+                   bool aMinimizePreroll,
+                   bool aHasSuspendTaint)
     : mOwner(aOwner)
+    , mAudioChannel(aAudioChannel)
+    , mVolume(aVolume)
+    , mPreservesPitch(aPreservesPitch)
+    , mPlaybackRate(aPlaybackRate)
+    , mMinimizePreroll(aMinimizePreroll)
+    , mHasSuspendTaint(aHasSuspendTaint)
   {
   }
 };
@@ -728,6 +746,9 @@ protected:
   MediaEventListener mOnMediaNotSeekable;
 
 protected:
+  // PlaybackRate and pitch preservation status we should start at.
+  double mPlaybackRate;
+
   // Whether the state machine is shut down.
   Mirror<bool> mStateMachineIsShutdown;
 
@@ -754,9 +775,6 @@ protected:
 
   // Volume of playback.  0.0 = muted. 1.0 = full volume.
   Canonical<double> mVolume;
-
-  // PlaybackRate and pitch preservation status we should start at.
-  double mPlaybackRate = 1;
 
   Canonical<bool> mPreservesPitch;
 

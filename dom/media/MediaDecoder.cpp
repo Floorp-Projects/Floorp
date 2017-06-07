@@ -383,13 +383,15 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , mFrameStats(new FrameStatistics())
   , mVideoFrameContainer(aInit.mOwner->GetVideoFrameContainer())
   , mPinnedForSeek(false)
-  , mMinimizePreroll(false)
+  , mAudioChannel(aInit.mAudioChannel)
+  , mMinimizePreroll(aInit.mMinimizePreroll)
   , mFiredMetadataLoaded(false)
   , mIsDocumentVisible(false)
   , mElementVisibility(Visibility::UNTRACKED)
   , mIsElementInTree(false)
   , mForcedHidden(false)
-  , mHasSuspendTaint(false)
+  , mHasSuspendTaint(aInit.mHasSuspendTaint)
+  , mPlaybackRate(aInit.mPlaybackRate)
   , INIT_MIRROR(mStateMachineIsShutdown, true)
   , INIT_MIRROR(mBuffered, TimeIntervals())
   , INIT_MIRROR(mNextFrameStatus, MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE)
@@ -397,8 +399,8 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , INIT_MIRROR(mStateMachineDuration, NullableTimeUnit())
   , INIT_MIRROR(mPlaybackPosition, 0)
   , INIT_MIRROR(mIsAudioDataAudible, false)
-  , INIT_CANONICAL(mVolume, 0.0)
-  , INIT_CANONICAL(mPreservesPitch, true)
+  , INIT_CANONICAL(mVolume, aInit.mVolume)
+  , INIT_CANONICAL(mPreservesPitch, aInit.mPreservesPitch)
   , INIT_CANONICAL(mExplicitDuration, Maybe<double>())
   , INIT_CANONICAL(mPlayState, PLAY_STATE_LOADING)
   , INIT_CANONICAL(mNextState, PLAY_STATE_PAUSED)
@@ -416,7 +418,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   MOZ_ASSERT(mAbstractMainThread);
   MediaMemoryTracker::AddMediaDecoder(this);
 
-  mAudioChannel = AudioChannelService::GetDefaultAudioChannel();
   mResourceCallback->Connect(this);
 
   //
