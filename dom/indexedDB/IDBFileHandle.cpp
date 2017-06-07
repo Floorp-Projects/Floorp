@@ -12,6 +12,8 @@
 #include "mozilla/dom/IDBFileHandleBinding.h"
 #include "mozilla/dom/filehandle/ActorsChild.h"
 #include "mozilla/EventDispatcher.h"
+#include "nsContentUtils.h"
+#include "nsQueryObject.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWidgetsCID.h"
 
