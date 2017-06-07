@@ -84,6 +84,44 @@ IsWindowsBuildOrLater(uint32_t aBuild)
   return false;
 }
 
+inline bool
+IsWindows10BuildOrLater(uint32_t aBuild)
+{
+  static uint32_t minBuild = 0;
+  static uint32_t maxBuild = UINT32_MAX;
+
+  if (minBuild >= aBuild) {
+    return true;
+  }
+
+  if (aBuild >= maxBuild) {
+    return false;
+  }
+
+  OSVERSIONINFOEX info;
+  ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
+  info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+  info.dwMajorVersion = 10;
+  info.dwBuildNumber = aBuild;
+
+  DWORDLONG conditionMask = 0;
+  VER_SET_CONDITION(conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+  VER_SET_CONDITION(conditionMask, VER_MINORVERSION, VER_GREATER_EQUAL);
+  VER_SET_CONDITION(conditionMask, VER_BUILDNUMBER, VER_GREATER_EQUAL);
+  VER_SET_CONDITION(conditionMask, VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL);
+  VER_SET_CONDITION(conditionMask, VER_SERVICEPACKMINOR, VER_GREATER_EQUAL);
+
+  if (VerifyVersionInfo(&info, VER_MAJORVERSION | VER_MINORVERSION |
+                        VER_BUILDNUMBER | VER_SERVICEPACKMAJOR |
+                        VER_SERVICEPACKMINOR, conditionMask)) {
+    minBuild = aBuild;
+    return true;
+  }
+
+  maxBuild = aBuild;
+  return false;
+}
+
 MOZ_ALWAYS_INLINE bool
 IsWin7SP1OrLater()
 {
@@ -106,6 +144,12 @@ MOZ_ALWAYS_INLINE bool
 IsWin10OrLater()
 {
   return IsWindowsVersionOrLater(0x0a000000ul);
+}
+
+MOZ_ALWAYS_INLINE bool
+IsWin10CreatorsUpdateOrLater()
+{
+  return IsWindows10BuildOrLater(15063);
 }
 
 MOZ_ALWAYS_INLINE bool

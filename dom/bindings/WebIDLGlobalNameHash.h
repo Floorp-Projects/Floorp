@@ -15,6 +15,12 @@ namespace dom {
 
 struct WebIDLNameTableEntry;
 
+namespace constructors {
+namespace id {
+enum ID : uint16_t;
+} // namespace id
+} // namespace constructors
+
 class WebIDLGlobalNameHash
 {
 public:
@@ -35,7 +41,8 @@ public:
   (ConstructorEnabled)(JSContext* cx, JS::Handle<JSObject*> obj);
 
   static void Register(uint16_t aNameOffset, uint16_t aNameLength,
-                       DefineGlobalName aDefine, ConstructorEnabled* aEnabled);
+                       DefineGlobalName aDefine, ConstructorEnabled* aEnabled,
+                       constructors::id::ID aConstructorId);
 
   static void Remove(const char* aName, uint32_t aLength);
 
@@ -48,8 +55,18 @@ public:
 
   static bool MayResolve(jsid aId);
 
-  static void GetNames(JSContext* aCx, JS::Handle<JSObject*> aObj,
-                       nsTArray<nsString>& aNames);
+  // The type of names we're asking for.
+  enum NameType {
+    // All WebIDL names enabled for aObj.
+    AllNames,
+    // Only the names that are enabled for aObj and have not been resolved for
+    // aObj in the past (and therefore can't have been deleted).
+    UnresolvedNamesOnly
+  };
+  // Returns false if an exception has been thrown on aCx.
+  static bool GetNames(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                       NameType aNameType,
+                       JS::AutoIdVector& aNames);
 
 private:
   friend struct WebIDLNameTableEntry;

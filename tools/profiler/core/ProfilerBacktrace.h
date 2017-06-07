@@ -28,7 +28,7 @@ public:
   // frame, and string tables. They should instead reuse their parent
   // profile's tables.
   void StreamJSON(SpliceableJSONWriter& aWriter,
-                  const mozilla::TimeStamp& aStartTime,
+                  const mozilla::TimeStamp& aProcessStartTime,
                   UniqueStacks& aUniqueStacks);
 
 private:
