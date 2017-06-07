@@ -2273,10 +2273,10 @@ nsNativeThemeCocoa::IsParentScrollbarRolledOver(nsIFrame* aFrame)
 }
 
 static bool
-IsHiDPIContext(nsPresContext* aContext)
+IsHiDPIContext(nsDeviceContext* aContext)
 {
   return nsPresContext::AppUnitsPerCSSPixel() >=
-    2 * aContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
+    2 * aContext->AppUnitsPerDevPixelAtUnitFullZoom();
 }
 
 NS_IMETHODIMP
@@ -2311,7 +2311,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
 
   AutoRestoreTransform autoRestoreTransform(&aDrawTarget);
 
-  bool hidpi = IsHiDPIContext(aFrame->PresContext());
+  bool hidpi = IsHiDPIContext(aFrame->PresContext()->DeviceContext());
   if (hidpi) {
     // Use high-resolution drawing.
     nativeWidgetRect.Scale(0.5f);
@@ -3093,7 +3093,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
       break;
   }
 
-  if (IsHiDPIContext(aFrame->PresContext())) {
+  if (IsHiDPIContext(aContext)) {
     *aResult = *aResult + *aResult; // doubled
   }
 
@@ -3130,7 +3130,7 @@ bool
 nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
                                       uint8_t aWidgetType, nsRect* aOverflowRect)
 {
-  int32_t p2a = aFrame->PresContext()->AppUnitsPerDevPixel();
+  nsIntMargin overflow;
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
     case NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN:
@@ -3148,32 +3148,40 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFram
     case NS_THEME_CHECKBOX:
     case NS_THEME_RADIO:
     case NS_THEME_TAB:
+    case NS_THEME_FOCUS_OUTLINE:
     {
-      // We assume that the above widgets can draw a focus ring that will be less than
-      // or equal to 4 pixels thick.
-      nsIntMargin extraSize = nsIntMargin(kMaxFocusRingWidth,
-                                          kMaxFocusRingWidth,
-                                          kMaxFocusRingWidth,
-                                          kMaxFocusRingWidth);
-      nsMargin m(NSIntPixelsToAppUnits(extraSize.top, p2a),
-                 NSIntPixelsToAppUnits(extraSize.right, p2a),
-                 NSIntPixelsToAppUnits(extraSize.bottom, p2a),
-                 NSIntPixelsToAppUnits(extraSize.left, p2a));
-      aOverflowRect->Inflate(m);
-      return true;
+      overflow.SizeTo(kMaxFocusRingWidth,
+                      kMaxFocusRingWidth,
+                      kMaxFocusRingWidth,
+                      kMaxFocusRingWidth);
+      break;
     }
     case NS_THEME_PROGRESSBAR:
     {
-      // Progress bars draw a 2 pixel white shadow under their progress indicators
-      nsMargin m(0, 0, NSIntPixelsToAppUnits(2, p2a), 0);
-      aOverflowRect->Inflate(m);
-      return true;
+      // Progress bars draw a 2 pixel white shadow under their progress indicators.
+      overflow.bottom = 2;
+      break;
     }
-    case NS_THEME_FOCUS_OUTLINE:
+    case NS_THEME_METERBAR:
     {
-      aOverflowRect->Inflate(NSIntPixelsToAppUnits(2, p2a));
-      return true;
+      // Meter bars overflow their boxes by about 2 pixels.
+      overflow.SizeTo(2, 2, 2, 2);
+      break;
     }
+  }
+
+  if (IsHiDPIContext(aContext)) {
+    // Double the number of device pixels.
+    overflow += overflow;
+  }
+
+  if (overflow != nsIntMargin()) {
+    int32_t p2a = aFrame->PresContext()->AppUnitsPerDevPixel();
+    aOverflowRect->Inflate(nsMargin(NSIntPixelsToAppUnits(overflow.top, p2a),
+                                    NSIntPixelsToAppUnits(overflow.right, p2a),
+                                    NSIntPixelsToAppUnits(overflow.bottom, p2a),
+                                    NSIntPixelsToAppUnits(overflow.left, p2a)));
+    return true;
   }
 
   return false;
@@ -3497,7 +3505,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
     }
   }
 
-  if (IsHiDPIContext(aPresContext)) {
+  if (IsHiDPIContext(aPresContext->DeviceContext())) {
     *aResult = *aResult * 2;
   }
 
