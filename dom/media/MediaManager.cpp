@@ -3468,7 +3468,7 @@ SourceListener::Activate(SourceMediaStream* aStream,
   }
 
   mActivated = true;
-  mMainThreadCheck = PR_GetCurrentThread();
+  mMainThreadCheck = GetCurrentVirtualThread();
   mStream = aStream;
   mAudioDevice = aAudioDevice;
   mVideoDevice = aVideoDevice;
@@ -3682,7 +3682,7 @@ SourceListener::NotifyEvent(MediaStreamGraph* aGraph,
       if (NS_WARN_IF(!target)) {
         NS_ASSERTION(false, "Mainthread not available; running on current thread");
         // Ensure this really *was* MainThread (NS_GetCurrentThread won't work)
-        MOZ_RELEASE_ASSERT(mMainThreadCheck == PR_GetCurrentThread());
+        MOZ_RELEASE_ASSERT(mMainThreadCheck == GetCurrentVirtualThread());
         NotifyFinished();
         return;
       }
@@ -3694,7 +3694,7 @@ SourceListener::NotifyEvent(MediaStreamGraph* aGraph,
       if (NS_WARN_IF(!target)) {
         NS_ASSERTION(false, "Mainthread not available; running on current thread");
         // Ensure this really *was* MainThread (NS_GetCurrentThread won't work)
-        MOZ_RELEASE_ASSERT(mMainThreadCheck == PR_GetCurrentThread());
+        MOZ_RELEASE_ASSERT(mMainThreadCheck == GetCurrentVirtualThread());
         NotifyRemoved();
         return;
       }
