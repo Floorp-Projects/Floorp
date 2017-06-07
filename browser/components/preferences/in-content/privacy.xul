@@ -126,7 +126,7 @@
       <checkbox id="trackingProtectionPBM"
                 preference="privacy.trackingprotection.pbmode.enabled"
                 accesskey="&trackingProtectionPBM5.accesskey;"
-                label="&trackingProtectionPBM5.label;" />
+                label="&trackingProtectionPBM5.label;"/>
       <label id="trackingProtectionPBMLearnMore"
              class="learnMore text-link"
              value="&trackingProtectionPBMLearnMore.label;"/>
