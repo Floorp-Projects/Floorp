@@ -356,7 +356,9 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
  * Get the border size of a widget
  * left/right:  [OUT] the widget's left/right border
  * top/bottom:  [OUT] the widget's top/bottom border
- * direction:   the text direction for the widget
+ * direction:   the text direction for the widget.  Callers depend on this
+ *              being used only for MOZ_GTK_DROPDOWN widgets, and cache
+ *              results for other widget types across direction values.
  *
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
