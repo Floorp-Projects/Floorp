@@ -98,15 +98,14 @@ public:
   ComparisonResult(nsresult aStatus,
                    bool aInCacheAndEqual,
                    const nsAString& aNewCacheName,
-                   const nsACString& aMaxScope) override
+                   const nsACString& aMaxScope,
+                   nsLoadFlags aLoadFlags) override
   {
-    mJob->ComparisonResult(aStatus, aInCacheAndEqual, aNewCacheName, aMaxScope);
-  }
-
-  virtual void
-  SaveLoadFlags(nsLoadFlags aLoadFlags) override
-  {
-    mJob->SetLoadFlags(aLoadFlags);
+    mJob->ComparisonResult(aStatus,
+                           aInCacheAndEqual,
+                           aNewCacheName,
+                           aMaxScope,
+                           aLoadFlags);
   }
 
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerUpdateJob::CompareCallback, override)
@@ -335,16 +334,11 @@ ServiceWorkerUpdateJob::GetLoadFlags() const
 }
 
 void
-ServiceWorkerUpdateJob::SetLoadFlags(nsLoadFlags aLoadFlags)
-{
-  mLoadFlags = aLoadFlags;
-}
-
-void
 ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
                                          bool aInCacheAndEqual,
                                          const nsAString& aNewCacheName,
-                                         const nsACString& aMaxScope)
+                                         const nsACString& aMaxScope,
+                                         nsLoadFlags aLoadFlags)
 {
   AssertIsOnMainThread();
 
@@ -386,6 +380,8 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
       return;
     }
   }
+
+  mLoadFlags = aLoadFlags;
 
   nsAutoCString defaultAllowedPrefix;
   rv = GetRequiredScopeStringPrefix(scriptURI, defaultAllowedPrefix,

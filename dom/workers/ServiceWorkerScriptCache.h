@@ -39,16 +39,8 @@ public:
   ComparisonResult(nsresult aStatus,
                    bool aInCacheAndEqual,
                    const nsAString& aNewCacheName,
-                   const nsACString& aMaxScope) = 0;
-
-  /*
-   * Right before fetching the main script from the network, we check whether
-   * the script expiration timer has expired. Via this method, we can save the
-   * result of the check, and propogate it to the new ServiceWorkerInfo if there
-   * is one, so the imported scripts can be affected by the result as well.
-   */
-  virtual void
-  SaveLoadFlags(nsLoadFlags aLoadFlags) = 0;
+                   const nsACString& aMaxScope,
+                   nsLoadFlags aLoadFlags) = 0;
 
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 };
