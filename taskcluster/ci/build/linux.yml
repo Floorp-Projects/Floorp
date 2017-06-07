@@ -306,6 +306,8 @@ linux64-asan-fuzzing/opt:
         symbol: tc(Bof)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: asan-fuzzing
         max-run-time: 36000
     run:
         using: mozharness
