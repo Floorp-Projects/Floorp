@@ -798,6 +798,30 @@ Gecko_MatchStringArgPseudo(RawGeckoElementBorrowed aElement,
                                                  dummyMask, aSetSlowSelectorFlag, nullptr);
 }
 
+bool
+Gecko_MatchLang(RawGeckoElementBorrowed aElement,
+                nsIAtom* aOverrideLang,
+                bool aHasOverrideLang,
+                const char16_t* aValue)
+{
+  MOZ_ASSERT(!(aOverrideLang && !aHasOverrideLang),
+             "aHasOverrideLang should only be set when aOverrideLang is null");
+
+  if (!aHasOverrideLang) {
+    return nsCSSRuleProcessor::LangPseudoMatches(aElement, nullptr, false,
+                                                 aValue, aElement->OwnerDoc());
+  }
+
+  if (aOverrideLang) {
+    nsDependentAtomString overrideLang(aOverrideLang);
+    return nsCSSRuleProcessor::LangPseudoMatches(aElement, &overrideLang, true,
+                                                 aValue, aElement->OwnerDoc());
+  }
+
+  return nsCSSRuleProcessor::LangPseudoMatches(aElement, nullptr, true,
+                                               aValue, aElement->OwnerDoc());
+}
+
 nsIAtom*
 Gecko_GetXMLLangValue(RawGeckoElementBorrowed aElement)
 {
