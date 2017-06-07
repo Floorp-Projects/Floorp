@@ -182,7 +182,7 @@ nsStyleContext::FinishConstruction()
 nsStyleContext::~nsStyleContext()
 {
   NS_ASSERTION((nullptr == mChild) && (nullptr == mEmptyChild), "destructing context with children");
-  MOZ_ASSERT_IF(mSource.IsServoComputedValues(), !mCachedResetData);
+  MOZ_ASSERT(!mSource.IsServoComputedValues() || !mCachedResetData);
 
 #ifdef DEBUG
   if (mSource.IsServoComputedValues()) {

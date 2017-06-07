@@ -376,7 +376,7 @@ ServoStyleSet::PrepareAndTraverseSubtree(
     aRestyleBehavior == TraversalRestyleBehavior::ForAnimationOnly;
   bool postTraversalRequired = Servo_TraverseSubtree(
     aRoot, mRawSet.get(), &snapshots, aRootBehavior, aRestyleBehavior);
-  MOZ_ASSERT_IF(isInitial || forReconstruct, !postTraversalRequired);
+  MOZ_ASSERT(!(isInitial || forReconstruct) || !postTraversalRequired);
 
   // Don't need to trigger a second traversal if this restyle only needs
   // animation-only restyle.

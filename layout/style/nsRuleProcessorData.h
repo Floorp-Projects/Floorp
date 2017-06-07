@@ -246,7 +246,7 @@ struct MOZ_STACK_CLASS TreeMatchContext {
 
     void PushAncestorAndStyleScope(mozilla::dom::Element* aElement) {
       if (!mTreeMatchContext) {
-        MOZ_ASSERT_IF(aElement, aElement->IsStyledByServo());
+        MOZ_ASSERT(!aElement || aElement->IsStyledByServo());
         return;
       }
 
@@ -262,7 +262,7 @@ struct MOZ_STACK_CLASS TreeMatchContext {
 
     void PushAncestorAndStyleScope(nsIContent* aContent) {
       if (!mTreeMatchContext) {
-        MOZ_ASSERT_IF(aContent, aContent->IsStyledByServo());
+        MOZ_ASSERT(!aContent || aContent->IsStyledByServo());
         return;
       }
 
@@ -273,7 +273,7 @@ struct MOZ_STACK_CLASS TreeMatchContext {
 
     void PushStyleScope(mozilla::dom::Element* aElement) {
       if (!mTreeMatchContext) {
-        MOZ_ASSERT_IF(aElement, aElement->IsStyledByServo());
+        MOZ_ASSERT(!aElement || aElement->IsStyledByServo());
         return;
       }
 
@@ -287,7 +287,7 @@ struct MOZ_STACK_CLASS TreeMatchContext {
 
     void PushStyleScope(nsIContent* aContent) {
       if (!mTreeMatchContext) {
-        MOZ_ASSERT_IF(aContent, aContent->IsStyledByServo());
+        MOZ_ASSERT(!aContent || aContent->IsStyledByServo());
         return;
       }
 
