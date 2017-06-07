@@ -277,10 +277,10 @@ fetch('http://example.com/opaque-no-cors', { mode: "no-cors" })
 expectAsyncResult();
 fetch('http://example.com/cors-for-no-cors', { mode: "no-cors" })
 .then(function(res) {
-  my_ok(res.type == "cors", "synthesize CORS response should result in outer CORS response");
+  my_ok(res.type == "opaque", "intercepted non-opaque response for no-cors request should resolve to opaque response.");
   finish();
 }, function(e) {
-  my_ok(false, "cors-for-no-cors request should not reject");
+  my_ok(false, "intercepted non-opaque response for no-cors request should resolve to opaque response. It should not fail.");
   finish();
 });
 
