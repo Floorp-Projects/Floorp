@@ -178,7 +178,7 @@ nsRefPtrHashtable<KeyClass, PtrType>::Remove(KeyType aKey,
 
   if (ent) {
     ent->mData.forget(aRefPtr);
-    this->Remove(aKey);
+    this->RemoveEntry(ent);
     return true;
   }
 
