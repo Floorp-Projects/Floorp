@@ -9,6 +9,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
+#include "mozilla/dom/PrototypeList.h"
 #include "mozilla/dom/RegisterBindings.h"
 #include "nsIMemoryReporter.h"
 #include "nsTHashtable.h"
@@ -58,12 +59,14 @@ struct WebIDLNameTableEntry : public PLDHashEntryHdr
   explicit WebIDLNameTableEntry(KeyTypePointer aKey)
     : mNameOffset(0),
       mNameLength(0),
+      mConstructorId(constructors::id::_ID_Count),
       mDefine(nullptr),
       mEnabled(nullptr)
   {}
   WebIDLNameTableEntry(WebIDLNameTableEntry&& aEntry)
     : mNameOffset(aEntry.mNameOffset),
       mNameLength(aEntry.mNameLength),
+      mConstructorId(aEntry.mConstructorId),
       mDefine(aEntry.mDefine),
       mEnabled(aEntry.mEnabled)
   {}
@@ -100,6 +103,7 @@ struct WebIDLNameTableEntry : public PLDHashEntryHdr
 
   uint16_t mNameOffset;
   uint16_t mNameLength;
+  constructors::id::ID mConstructorId;
   WebIDLGlobalNameHash::DefineGlobalName mDefine;
   // May be null if enabled unconditionally
   WebIDLGlobalNameHash::ConstructorEnabled* mEnabled;
@@ -154,7 +158,8 @@ WebIDLGlobalNameHash::Shutdown()
 void
 WebIDLGlobalNameHash::Register(uint16_t aNameOffset, uint16_t aNameLength,
                                DefineGlobalName aDefine,
-                               ConstructorEnabled* aEnabled)
+                               ConstructorEnabled* aEnabled,
+                               constructors::id::ID aConstructorId)
 {
   const char* name = sNames + aNameOffset;
   WebIDLNameTableKey key(name, aNameLength);
@@ -163,6 +168,7 @@ WebIDLGlobalNameHash::Register(uint16_t aNameOffset, uint16_t aNameLength,
   entry->mNameLength = aNameLength;
   entry->mDefine = aDefine;
   entry->mEnabled = aEnabled;
+  entry->mConstructorId = aConstructorId;
 }
 
 /* static */
