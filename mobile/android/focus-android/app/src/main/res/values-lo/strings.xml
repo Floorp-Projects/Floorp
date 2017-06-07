@@ -32,6 +32,7 @@
   <string name="preference_privacy_block_content">ບັອກຕົວຕິດຕາມຂອງເນື້ອຫາຕ່າງໆ</string>
   <string name="preference_privacy_block_content_summary">ອາດຈະເຮັດໃຫ້ບາງວິດີໂອ ແລະ ຫນ້າເວັບບໍ່ສົມບູນ</string>
   <string name="preference_privacy_secure_mode">ການຫລັກເຮັດ</string>
+  <string name="preference_privacy_secure_mode_summary">ປິດໂຫມດອຳພາງຕົວຕົນເພື່ອຈັບພາບຫນ້າຈໍ ແລະ ເບິງເວັບໄຊທ໌ທີ່ທ່ານໄດ້ເຂົ້າໄປເບິງໂດຍໃຊ້ %1$s ໃນລາຍຊື່ແອັບຂອງທ່ານ</string>
   <string name="preference_category_performance">ປະສິດທິພາບ</string>
   <string name="preference_performance_block_webfonts">ບັອກຕົວອັກສອນເວັບ</string>
   <string name="preference_performance_block_webfonts_summary">ອາດຈະສົ່ງຜົນເຮັດໃຫ້ໄອຄອນ ຫລື ຮູບພາບຂາດຫາຍໄປ</string>
@@ -85,6 +86,11 @@
   <string name="contextmenu_image_save">ບັນທຶກຮູບພາບ</string>
   <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#3720;&#3760;&#3738;&#3789;&#3784;&#3734;&#3767;&#3713;&#3749;&#3771;&#3738;</b>" &#3776;&#3745;&#3767;&#3784;&#3757;&#3735;&#3784;&#3762;&#3737;&#3749;&#3766;&#3738;&#3739;&#3760;&#3755;&#3751;&#3761;&#3732;&#3713;&#3762;&#3737;&#3737;&#3763;&#3779;&#3722;&#3785;&#3714;&#3757;&#3719; %1$s"]]></string>
   <string name="firstrun_tracking_title">ທ່ອງເວັບແບບບໍ່ມີໃຜມາຫລັກເຝົ້າຕິດຕາມ.</string>
+  <string name="firstrun_tracking_text">ບັອກການຕິດຕາມອອນລາຍແບບອັດຕະໂນມັດໃນຂະນະທີ່ທ່ານທ່ອງເວັບ. ຫລັງຈາກນັ້ນລຶບຫນ້າເວັບທີ່ທ່ານເຂົ້າໄປ ແລະ ຄຸກກີ້ອອກ ໂດຍການສຳພັດທີ່ໄອຄອນຖັງຂີ້ເຫຍື້ອ ຫລື ໃນການແຈ້ງເຕືອນຂອງທ່ານ.</string>
+  <string name="firstrun_defaultbrowser_title">ເພີ່ມຄວາມເປັນສ່ວນໂຕຂອງທ່ານ</string>
+  <string name="firstrun_defaultbrowser_text">ຕັ້ງ %1$s ເປັນບຣາວເຊີຫລັກຂອງທ່ານ ແລະ ຮັບປະໂຫຍດຈາກການທ່ອງເວັບແບບສ່ວນຕົວເມື່ອທ່ານເຊື່ອມໂຍງໄປຫາເວັບຈາກແອັບ Android ອື່ນໆ</string>
+  <string name="firstrun_breaking_title">ການແກ້ໄຂໄວທັນເວລາເມື່ອ\nການບັອກ = ການຝ່າຝືນ</string>
+  <string name="firstrun_breaking_text">ເມື່ອຂໍ້ເສຍຂອງການບັອກຕົວຕິດຕາມອອນລາຍແມ່ນເຮັດໃຫ້ເວັບໄຊທ໌ເບິງບໍ່ສົມບູນແບບ ໃຫ້ປິດການບັອກໂດຍການແຕະທີ່ເມນູເຄືອງມື.</string>
   <string name="firstrun_close_button">ຕົກລົງ, ເຂົ້າໃຈແລ້ວ!</string>
   <string name="firstrun_skip_button">ຂ້າມໄປ</string>
   <string name="firstrun_next_button">ຕໍ່ໄປ</string>
