@@ -831,3 +831,26 @@ function getCertExceptionDialog(aLocation) {
   }
   return undefined;
 }
+
+function setupRemoteClientsFixture(fixture) {
+  let oldRemoteClientsGetter =
+    Object.getOwnPropertyDescriptor(gSync, "remoteClients").get;
+
+  Object.defineProperty(gSync, "remoteClients", {
+    get() { return fixture; }
+  });
+  return oldRemoteClientsGetter;
+}
+
+function restoreRemoteClients(getter) {
+  Object.defineProperty(gSync, "remoteClients", {
+    get: getter
+  });
+}
+
+async function openMenuItemSubmenu(id) {
+  let menuPopup = document.getElementById(id).menupopup;
+  let menuPopupPromise = BrowserTestUtils.waitForEvent(menuPopup, "popupshown");
+  menuPopup.showPopup();
+  await menuPopupPromise;
+}
