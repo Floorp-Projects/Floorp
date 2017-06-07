@@ -285,7 +285,7 @@ nsresult nsZipHandle::Init(const uint8_t* aData, uint32_t aLen,
 //    pubKeyLength  : publicKey     - Contents of the author's public key.
 //    sigLength     : signature     - Signature of the ZIP content.
 //                                    Signature is created using the RSA
-//                                    algorighm with the SHA-1 hash function.
+//                                    algorithm with the SHA-1 hash function.
 nsresult nsZipHandle::findDataStart()
 {
   // In the CRX header, integers are 32 bits. Our pointer to the file is of
