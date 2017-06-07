@@ -89,23 +89,22 @@ static RWLock* sServoLangFontPrefsLock = nullptr;
 
 static
 const nsFont*
-ThreadSafeGetDefaultFontHelper(const nsPresContext* aPresContext, nsIAtom* aLanguage)
+ThreadSafeGetDefaultFontHelper(const nsPresContext* aPresContext,
+                               nsIAtom* aLanguage, uint8_t aGenericId)
 {
   bool needsCache = false;
   const nsFont* retval;
 
   {
     AutoReadLock guard(*sServoLangFontPrefsLock);
-    retval = aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
-                                          aLanguage, &needsCache);
+    retval = aPresContext->GetDefaultFont(aGenericId, aLanguage, &needsCache);
   }
   if (!needsCache) {
     return retval;
   }
   {
     AutoWriteLock guard(*sServoLangFontPrefsLock);
-  retval = aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
-                                        aLanguage, nullptr);
+  retval = aPresContext->GetDefaultFont(aGenericId, aLanguage, nullptr);
   }
   return retval;
 }
@@ -1161,7 +1160,8 @@ Gecko_nsFont_InitSystem(nsFont* aDest, int32_t aFontId,
                         const nsStyleFont* aFont, RawGeckoPresContextBorrowed aPresContext)
 {
   MutexAutoLock lock(*sServoFontMetricsLock);
-  const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(aPresContext, aFont->mLanguage);
+  const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(aPresContext, aFont->mLanguage,
+                                                                     kPresContext_DefaultVariableFont_ID);
 
   // We have passed uninitialized memory to this function,
   // initialize it. We can't simply return an nsFont because then
@@ -2078,9 +2078,20 @@ void
 Gecko_nsStyleFont_FixupNoneGeneric(nsStyleFont* aFont,
                                    RawGeckoPresContextBorrowed aPresContext)
 {
-  const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(aPresContext, aFont->mLanguage);
+  const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(aPresContext, aFont->mLanguage,
+                                                                     kPresContext_DefaultVariableFont_ID);
   nsRuleNode::FixupNoneGeneric(&aFont->mFont, aPresContext,
                                aFont->mGenericID, defaultVariableFont);
+}
+
+void
+Gecko_nsStyleFont_PrefillDefaultForGeneric(nsStyleFont* aFont,
+                                           RawGeckoPresContextBorrowed aPresContext,
+                                           uint8_t aGenericId)
+{
+  const nsFont* defaultFont = ThreadSafeGetDefaultFontHelper(aPresContext, aFont->mLanguage,
+                                                             aGenericId);
+   aFont->mFont.fontlist = defaultFont->fontlist;
 }
 
 void
