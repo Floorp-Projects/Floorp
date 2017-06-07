@@ -5198,7 +5198,7 @@ SVGTextFrame::ShouldRenderAsPath(nsTextFrame* aFrame,
                                  bool& aShouldPaintSVGGlyphs)
 {
   // Rendering to a clip path.
-  if (aFrame->GetParent()->GetParent()->GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) {
+  if (HasAnyStateBits(NS_STATE_SVG_CLIPPATH_CHILD)) {
     aShouldPaintSVGGlyphs = false;
     return true;
   }
