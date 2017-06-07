@@ -484,7 +484,7 @@ public:
     mPseudoStack = sPseudoStack.get();
     if (mPseudoStack) {
       mPseudoStack->pushCppFrame(aLabel, aDynamicString, this, aLine,
-                                js::ProfileEntry::Kind::CPP_NORMAL, aCategory);
+                                 js::ProfileEntry::Kind::CPP_NORMAL, aCategory);
     }
   }
 
