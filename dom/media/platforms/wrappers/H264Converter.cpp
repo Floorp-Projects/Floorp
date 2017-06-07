@@ -278,10 +278,15 @@ H264Converter::CreateDecoderAndInit(MediaRawData* aSample)
 {
   RefPtr<MediaByteBuffer> extra_data =
     mp4_demuxer::AnnexB::ExtractExtraData(aSample);
-  if (!mp4_demuxer::AnnexB::HasSPS(extra_data)) {
+  bool inbandExtradata = mp4_demuxer::AnnexB::HasSPS(extra_data);
+  if (!inbandExtradata &&
+      !mp4_demuxer::AnnexB::HasSPS(mCurrentConfig.mExtraData)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  UpdateConfigFromExtraData(extra_data);
+
+  if (inbandExtradata) {
+    UpdateConfigFromExtraData(extra_data);
+  }
 
   nsresult rv =
     CreateDecoder(mCurrentConfig, /* DecoderDoctorDiagnostics* */ nullptr);
