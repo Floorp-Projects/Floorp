@@ -10,7 +10,7 @@ load 493915-1.html
 load 495794-1.html
 load 576612-1.html
 load 752784-1.html
-load 789075-1.html
+skip-if(webrender) load 789075-1.html # bug 1366502 comment 42
 skip-if(Android&&AndroidVersion=='22') HTTP load 795892-1.html # bug 1358718
 load 844563.html
 load 846612.html
