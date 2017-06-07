@@ -157,7 +157,7 @@ nsRefPtrHashtable<KeyClass, PtrType>::Put(KeyType aKey,
                                           already_AddRefed<PtrType> aData,
                                           const mozilla::fallible_t&)
 {
-  typename base_type::EntryType* ent = this->PutEntry(aKey);
+  typename base_type::EntryType* ent = this->PutEntry(aKey, mozilla::fallible);
 
   if (!ent) {
     return false;
