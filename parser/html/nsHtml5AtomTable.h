@@ -9,7 +9,7 @@
 #include "nsTHashtable.h"
 #include "nsAutoPtr.h"
 #include "nsIAtom.h"
-#include "nsIThread.h"
+#include "nsISerialEventTarget.h"
 
 #define RECENTLY_USED_PARSER_ATOMS_SIZE 31
 
@@ -96,9 +96,9 @@ class nsHtml5AtomTable
     }
     
 #ifdef DEBUG
-    void SetPermittedLookupThread(nsIThread* aThread)
+    void SetPermittedLookupEventTarget(nsISerialEventTarget* aEventTarget)
     {
-      mPermittedLookupThread = aThread;
+      mPermittedLookupEventTarget = aEventTarget;
     }
 #endif  
   
@@ -106,7 +106,7 @@ class nsHtml5AtomTable
     nsTHashtable<nsHtml5AtomEntry> mTable;
     nsIAtom* mRecentlyUsedParserAtoms[RECENTLY_USED_PARSER_ATOMS_SIZE];
 #ifdef DEBUG
-    nsCOMPtr<nsIThread>            mPermittedLookupThread;
+    nsCOMPtr<nsISerialEventTarget>            mPermittedLookupEventTarget;
 #endif
 };
 
