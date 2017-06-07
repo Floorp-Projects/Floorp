@@ -12,7 +12,8 @@ DevToolsModules(
     'autocomplete.js',
     'css-autocompleter.js',
     'debugger.js',
-    'editor.js'
+    'editor.js',
+    'wasm.js'
 )
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
