@@ -228,6 +228,13 @@ SERVO_BINDING_FUNC(Servo_GetProperties_Overriding_Animation, void,
                    RawGeckoElementBorrowed,
                    RawGeckoCSSPropertyIDListBorrowed,
                    nsCSSPropertyIDSetBorrowedMut)
+SERVO_BINDING_FUNC(Servo_MatrixTransform_Operate, void,
+                   nsStyleTransformMatrix::MatrixTransformOperator
+                     matrix_operator,
+                   const RawGeckoGfxMatrix4x4* from,
+                   const RawGeckoGfxMatrix4x4* to,
+                   double progress,
+                   RawGeckoGfxMatrix4x4* result)
 
 // AnimationValues handling
 SERVO_BINDING_FUNC(Servo_AnimationValues_Interpolate,
