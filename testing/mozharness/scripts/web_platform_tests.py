@@ -56,6 +56,12 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             "default": False,
             "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor."}
          ],
+        [["--parallel-stylo-traversal"], {
+            "action": "store_true",
+            "dest": "parallel_stylo_traversal",
+            "default": False,
+            "help": "Forcibly enable parallel traversal in Stylo with STYLO_THREADS=4"}
+         ],
         [["--enable-webrender"], {
             "action": "store_true",
             "dest": "enable_webrender",
@@ -222,6 +228,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
         if self.config['enable_webrender']:
             env['MOZ_WEBRENDER'] = '1'
+
+        env['STYLO_THREADS'] = '4' if self.config['parallel_stylo_traversal'] else '1'
 
         env = self.query_env(partial_env=env, log_level=INFO)
 
