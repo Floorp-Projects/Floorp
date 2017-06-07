@@ -703,7 +703,19 @@ Element::GetScrollFrame(nsIFrame **aStyledFrame, FlushType aFlushType)
   nsIDocument* doc = OwnerDoc();
   // Note: This IsScrollingElement() call can flush frames, if we're the body of
   // a quirks mode document.
-  if (OwnerDoc()->IsScrollingElement(this)) {
+  bool isScrollingElement = OwnerDoc()->IsScrollingElement(this);
+  // Now reget *aStyledFrame if the caller asked for it, because that frame
+  // flush can kill it.
+  if (aStyledFrame) {
+    nsIFrame* frame = GetPrimaryFrame(FlushType::None);
+    if (frame) {
+      *aStyledFrame = nsLayoutUtils::GetStyleFrame(frame);
+    } else {
+      *aStyledFrame = nullptr;
+    }
+  }
+
+  if (isScrollingElement) {
     // Our scroll info should map to the root scrollable frame if there is one.
     if (nsIPresShell* shell = doc->GetShell()) {
       return shell->GetRootScrollFrameAsScrollable();
