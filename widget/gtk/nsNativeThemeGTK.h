@@ -15,9 +15,9 @@
 #include <gtk/gtk.h>
 #include "gtkdrawing.h"
 
-class nsNativeThemeGTK: private nsNativeTheme,
-                        public nsITheme,
-                        public nsIObserver {
+class nsNativeThemeGTK final : private nsNativeTheme,
+                               public nsITheme,
+                               public nsIObserver {
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -89,8 +89,13 @@ private:
   uint8_t mSafeWidgetStates[1024];    // 256 widgets * 32 bits per widget
   static const char* sDisabledEngines[];
 
+  // Because moz_gtk_get_widget_border can be slow, we cache its results
+  // by widget type.  Each bit in mBorderCacheValid says whether the
+  // corresponding entry in mBorderCache is valid.
   void GetCachedWidgetBorder(nsIFrame* aFrame, uint8_t aWidgetType,
                              GtkTextDirection aDirection, nsIntMargin* aResult);
+  uint8_t mBorderCacheValid[(MOZ_GTK_WIDGET_NODE_COUNT + 7) / 8];
+  nsIntMargin mBorderCache[MOZ_GTK_WIDGET_NODE_COUNT];
 };
 
 #endif
