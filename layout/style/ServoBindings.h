@@ -169,6 +169,7 @@ nsIAtom* Gecko_GetXMLLangValue(RawGeckoElementBorrowed element);
 // Attributes.
 #define SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(prefix_, implementor_)  \
   nsIAtom* prefix_##AtomAttrValue(implementor_ element, nsIAtom* attribute);  \
+  nsIAtom* prefix_##LangValue(implementor_ element);                          \
   bool prefix_##HasAttr(implementor_ element, nsIAtom* ns, nsIAtom* name);    \
   bool prefix_##AttrEquals(implementor_ element, nsIAtom* ns, nsIAtom* name,  \
                            nsIAtom* str, bool ignoreCase);                    \
