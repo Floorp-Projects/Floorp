@@ -27,7 +27,7 @@ nsHtml5AtomTable::nsHtml5AtomTable()
   : mRecentlyUsedParserAtoms{}
 {
 #ifdef DEBUG
-  NS_GetMainThread(getter_AddRefs(mPermittedLookupThread));
+  mPermittedLookupEventTarget = mozilla::GetCurrentThreadSerialEventTarget();
 #endif
 }
 
@@ -40,9 +40,7 @@ nsHtml5AtomTable::GetAtom(const nsAString& aKey)
 {
 #ifdef DEBUG
   {
-    nsCOMPtr<nsIThread> currentThread;
-    NS_GetCurrentThread(getter_AddRefs(currentThread));
-    NS_ASSERTION(mPermittedLookupThread == currentThread, "Wrong thread!");
+    MOZ_ASSERT(mPermittedLookupEventTarget->IsOnCurrentThread());
   }
 #endif
 
