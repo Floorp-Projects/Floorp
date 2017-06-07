@@ -105,7 +105,7 @@ impl SpecNewSessionParameters {
                 "timeouts" => {
                     try!(SpecNewSessionParameters::validate_timeouts(value))
                 },
-                "unhandledPromptBehaviour" => {
+                "unhandledPromptBehavior" => {
                     try!(SpecNewSessionParameters::validate_unhandled_prompt_behaviour(value))
                 }
                 x => {
@@ -294,12 +294,12 @@ impl SpecNewSessionParameters {
     fn validate_unhandled_prompt_behaviour(value: &Json) -> WebDriverResult<()> {
         let behaviour = try_opt!(value.as_string(),
                                  ErrorStatus::InvalidArgument,
-                                 "unhandledPromptBehaviour capability was not a string");
+                                 "unhandledPromptBehavior capability was not a string");
         match behaviour {
             "dismiss" |
             "accept" => {},
             x => return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
-                                                format!("{} was not a valid unhandledPromptBehaviour value", x)))        }
+                                                format!("{} was not a valid unhandledPromptBehavior value", x)))        }
         Ok(())
     }
 }
