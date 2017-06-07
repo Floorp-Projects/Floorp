@@ -1908,14 +1908,6 @@ class Marionette(object):
         body = {"script": js}
         self._send_message("importScript", body)
 
-    def clear_imported_scripts(self):
-        """Clears all imported scripts in this context, ie: calling
-        clear_imported_scripts in chrome context will clear only scripts
-        you imported in chrome, and will leave the scripts you imported
-        in content context.
-        """
-        self._send_message("clearImportedScripts")
-
     def add_cookie(self, cookie):
         """Adds a cookie to your current session.
 
