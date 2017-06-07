@@ -57,6 +57,16 @@ enum class Visibility : uint8_t;
 #undef GetCurrentTime
 #endif
 
+struct MediaDecoderInit
+{
+  MediaDecoderOwner* const mOwner;
+
+  explicit MediaDecoderInit(MediaDecoderOwner* aOwner)
+    : mOwner(aOwner)
+  {
+  }
+};
+
 class MediaDecoder : public AbstractMediaDecoder
 {
 public:
@@ -117,7 +127,7 @@ public:
   // Must be called exactly once, on the main thread, during startup.
   static void InitStatics();
 
-  explicit MediaDecoder(MediaDecoderOwner* aOwner);
+  explicit MediaDecoder(MediaDecoderInit& aInit);
 
   // Return a callback object used to register with MediaResource to receive
   // notifications.
@@ -125,7 +135,7 @@ public:
 
   // Create a new decoder of the same type as this one.
   // Subclasses must implement this.
-  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) = 0;
+  virtual MediaDecoder* Clone(MediaDecoderInit& aInit) = 0;
   // Create a new state machine to run this decoder.
   // Subclasses must implement this.
   virtual MediaDecoderStateMachine* CreateStateMachine() = 0;

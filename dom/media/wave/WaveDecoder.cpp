@@ -14,9 +14,9 @@
 namespace mozilla {
 
 MediaDecoder*
-WaveDecoder::Clone(MediaDecoderOwner* aOwner)
+WaveDecoder::Clone(MediaDecoderInit& aInit)
 {
-  return new WaveDecoder(aOwner);
+  return new WaveDecoder(aInit);
 }
 
 MediaDecoderStateMachine*

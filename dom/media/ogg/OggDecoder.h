@@ -15,17 +15,17 @@ class MediaContainerType;
 class OggDecoder : public MediaDecoder
 {
 public:
-  explicit OggDecoder(MediaDecoderOwner* aOwner)
-    : MediaDecoder(aOwner)
+  explicit OggDecoder(MediaDecoderInit& aInit)
+    : MediaDecoder(aInit)
     , mShutdownBitMonitor("mShutdownBitMonitor")
     , mShutdownBit(false)
   {}
 
-  MediaDecoder* Clone(MediaDecoderOwner* aOwner) override {
+  MediaDecoder* Clone(MediaDecoderInit& aInit) override {
     if (!IsOggEnabled()) {
       return nullptr;
     }
-    return new OggDecoder(aOwner);
+    return new OggDecoder(aInit);
   }
   MediaDecoderStateMachine* CreateStateMachine() override;
 
