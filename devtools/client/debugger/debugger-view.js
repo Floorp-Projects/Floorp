@@ -99,8 +99,8 @@ var DebuggerView = {
 
         if (selectedSource &&
            selectedSource.actor === location.actor) {
-          this.editor.moveBreakpoint(prevLocation.line - 1,
-                                     location.line - 1);
+          this.editor.moveBreakpoint(this.toEditorLine(prevLocation.line),
+                                     this.toEditorLine(location.line));
         }
       }
     }, this);
@@ -283,7 +283,7 @@ var DebuggerView = {
       else {
         const source = queries.getSelectedSource(this.controller.getState());
         if (source) {
-          const location = { actor: source.actor, line: line + 1 };
+          const location = { actor: source.actor, line: this.toSourceLine(line) };
           if (this.editor.hasBreakpoint(line)) {
             this.controller.dispatch(actions.removeBreakpoint(location));
           } else {
@@ -296,6 +296,14 @@ var DebuggerView = {
     this.editor.on("cursorActivity", () => {
       this.clickedLine = null;
     });
+  },
+
+  toEditorLine: function (line) {
+    return this.editor.isWasm ? line : line - 1;
+  },
+
+  toSourceLine: function (line) {
+    return this.editor.isWasm ? line : line + 1;
   },
 
   updateEditorBreakpoints: function (source) {
@@ -319,7 +327,7 @@ var DebuggerView = {
     if (source &&
        source.actor === location.actor &&
        !breakpoint.disabled) {
-      this.editor.addBreakpoint(location.line - 1, condition);
+      this.editor.addBreakpoint(this.toEditorLine(location.line), condition);
     }
   },
 
@@ -328,8 +336,9 @@ var DebuggerView = {
     const source = queries.getSelectedSource(this.controller.getState());
 
     if (source && source.actor === location.actor) {
-      this.editor.removeBreakpoint(location.line - 1);
-      this.editor.removeBreakpointCondition(location.line - 1);
+      let line = this.toEditorLine(location.line);
+      this.editor.removeBreakpoint(line);
+      this.editor.removeBreakpointCondition(line);
     }
   },
 
@@ -338,10 +347,11 @@ var DebuggerView = {
     const source = queries.getSelectedSource(this.controller.getState());
 
     if (source && source.actor === location.actor && !disabled) {
+      let line = this.toEditorLine(location.line);
       if (condition) {
-        this.editor.setBreakpointCondition(location.line - 1);
+        this.editor.setBreakpointCondition(line);
       } else {
-        this.editor.removeBreakpointCondition(location.line - 1);
+        this.editor.removeBreakpointCondition(line);
       }
     }
   },
@@ -417,7 +427,7 @@ var DebuggerView = {
 
     // Use HTML mode for files in which the first non whitespace character is
     // &lt;, regardless of extension.
-    if (aTextContent.match(/^\s*</)) {
+    if (typeof aTextContent === 'string' && aTextContent.match(/^\s*</)) {
       return void this.editor.setMode(Editor.modes.html);
     }
 
@@ -546,6 +556,9 @@ var DebuggerView = {
 
   updateEditorPosition: function (opts) {
     let line = opts.line || 0;
+    if (this.editor.isWasm && line > 0) {
+      line = this.toSourceLine(this.editor.wasmOffsetToLine(line));
+    }
 
     // Line numbers in the source editor should start from 1. If
     // invalid or not specified, then don't do anything.
@@ -560,12 +573,13 @@ var DebuggerView = {
     if (opts.lineOffset) {
       line += opts.lineOffset;
     }
+    line = this.toEditorLine(line);
     if (opts.moveCursor) {
-      let location = { line: line - 1, ch: opts.columnOffset || 0 };
+      let location = { line: line, ch: opts.columnOffset || 0 };
       this.editor.setCursor(location);
     }
     if (!opts.noDebug) {
-      this.editor.setDebugLocation(line - 1);
+      this.editor.setDebugLocation(line);
     }
     window.emit(EVENTS.EDITOR_LOCATION_SET);
   },

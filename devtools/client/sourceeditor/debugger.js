@@ -109,13 +109,13 @@ function initialize(ctx) {
  * otherwise.
  */
 function hasBreakpoint(ctx, line) {
-  let { cm } = ctx;
+  let { ed } = ctx;
   // In some rare occasions CodeMirror might not be properly initialized yet, so
   // return an exceptional value in that case.
-  if (cm.lineInfo(line) === null) {
+  if (ed.lineInfo(line) === null) {
     return null;
   }
-  let markers = cm.lineInfo(line).wrapClass;
+  let markers = ed.lineInfo(line).wrapClass;
 
   return markers != null &&
          markers.includes("breakpoint");
@@ -135,9 +135,9 @@ function addBreakpoint(ctx, line, cond) {
 
   return new Promise(resolve => {
     function _addBreakpoint() {
-      let { ed, cm } = ctx;
+      let { ed } = ctx;
       let meta = dbginfo.get(ed);
-      let info = cm.lineInfo(line);
+      let info = ed.lineInfo(line);
 
       // The line does not exist in the editor. This is harmless, the
       // architecture calling this assumes the editor will handle this
@@ -164,7 +164,7 @@ function addBreakpoint(ctx, line, cond) {
 
     // If lineInfo() returns null, wait a tick to give the editor a chance to
     // initialize properly.
-    if (ctx.cm.lineInfo(line) === null) {
+    if (ctx.ed.lineInfo(line) === null) {
       DevToolsUtils.executeSoon(() => _addBreakpoint());
     } else {
       _addBreakpoint();
@@ -209,13 +209,14 @@ function removeBreakpoint(ctx, line) {
     return;
   }
 
-  let { ed, cm } = ctx;
+  let { ed } = ctx;
   let meta = dbginfo.get(ed);
-  let info = cm.lineInfo(line);
+  let info = ed.lineInfo(line);
+  let lineOrOffset = ed.getLineOrOffset(info.line);
 
-  meta.breakpoints[info.line] = null;
-  ed.removeLineClass(info.line, "breakpoint");
-  ed.removeLineClass(info.line, "conditional");
+  meta.breakpoints[lineOrOffset] = null;
+  ed.removeLineClass(lineOrOffset, "breakpoint");
+  ed.removeLineClass(lineOrOffset, "conditional");
   ed.emit("breakpointRemoved", line);
 }
 
@@ -227,8 +228,8 @@ function moveBreakpoint(ctx, fromLine, toLine) {
 }
 
 function setBreakpointCondition(ctx, line) {
-  let { ed, cm } = ctx;
-  let info = cm.lineInfo(line);
+  let { ed } = ctx;
+  let info = ed.lineInfo(line);
 
   // The line does not exist in the editor. This is harmless, the
   // architecture calling this assumes the editor will handle this
@@ -266,9 +267,10 @@ function getBreakpoints(ctx) {
  * the breakpoints gutter. This is used by the debugger UI to
  * display the line on which the Debugger is currently paused.
  */
-function setDebugLocation(ctx, line) {
+function setDebugLocation(ctx, lineOrOffset) {
   let { ed } = ctx;
   let meta = dbginfo.get(ed);
+  let line = ed.getLineOrOffset(lineOrOffset);
 
   clearDebugLocation(ctx);
 

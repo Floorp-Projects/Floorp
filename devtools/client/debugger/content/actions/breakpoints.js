@@ -65,11 +65,11 @@ function addBreakpoint(location, condition) {
 
         // Save the client instance
         setBreakpointClient(bpClient.actor, bpClient);
-
+        let lineOrOffset = DebuggerView.editor.isWasm ? bp.location.line :
+          (actualLocation ? actualLocation.line : bp.location.line) - 1;
         return {
-          text: DebuggerView.editor.getText(
-            (actualLocation ? actualLocation.line : bp.location.line) - 1
-          ).trim(),
+          text: DebuggerView.editor.getText(lineOrOffset).trim(),
+          isWasm: DebuggerView.editor.isWasm,
 
           // If the breakpoint response has an "actualLocation" attached, then
           // the original requested placement for the breakpoint wasn't

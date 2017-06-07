@@ -38,6 +38,14 @@ const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/sourceeditor.properties");
 
+const {
+  getWasmText,
+  getWasmLineNumberFormatter,
+  isWasm,
+  lineToWasmOffset,
+  wasmOffsetToLine,
+} = require("./wasm");
+
 const { OS } = Services.appinfo;
 
 // CM_STYLES, CM_SCRIPTS and CM_IFRAME represent the HTML,
@@ -398,8 +406,9 @@ Editor.prototype = {
     cm.on("cursorActivity", () => this.emit("cursorActivity"));
 
     cm.on("gutterClick", (cmArg, line, gutter, ev) => {
+      let lineOrOffset = !this.isWasm ? line : this.lineToWasmOffset(line);
       let head = { line: line, ch: 0 };
-      let tail = { line: line, ch: this.getText(line).length };
+      let tail = { line: line, ch: this.getText(lineOrOffset).length };
 
       // Shift-click on a gutter selects the whole line.
       if (ev.shiftKey) {
@@ -407,7 +416,7 @@ Editor.prototype = {
         return;
       }
 
-      this.emit("gutterClick", line, ev.button);
+      this.emit("gutterClick", lineOrOffset, ev.button);
     });
 
     win.CodeMirror.defineExtension("l10n", (name) => {
@@ -476,6 +485,7 @@ Editor.prototype = {
   replaceDocument: function (doc) {
     let cm = editors.get(this);
     cm.swapDoc(doc);
+    this._updateLineNumberFormat();
   },
 
   /**
@@ -504,8 +514,55 @@ Editor.prototype = {
       return cm.getValue();
     }
 
-    let info = cm.lineInfo(line);
-    return info ? cm.lineInfo(line).text : "";
+    let info = this.lineInfo(line);
+    return info ? info.text : "";
+  },
+
+  getDoc: function () {
+    let cm = editors.get(this);
+    return cm.getDoc();
+  },
+
+  get isWasm() {
+    return isWasm(this.getDoc());
+  },
+
+  wasmOffsetToLine: function (offset) {
+    return wasmOffsetToLine(this.getDoc(), offset);
+  },
+
+  lineToWasmOffset: function (number) {
+    return lineToWasmOffset(this.getDoc(), number);
+  },
+
+  toLineIfWasmOffset: function (maybeOffset) {
+    if (typeof maybeOffset !== "number" || !this.isWasm) {
+      return maybeOffset;
+    }
+    return this.wasmOffsetToLine(maybeOffset);
+  },
+
+  lineInfo: function (lineOrOffset) {
+    let line = this.toLineIfWasmOffset(lineOrOffset);
+    if (line == undefined) {
+      return null;
+    }
+    let cm = editors.get(this);
+    return cm.lineInfo(line);
+  },
+
+  getLineOrOffset: function (line) {
+    return this.isWasm ? this.lineToWasmOffset(line) : line;
+  },
+
+  _updateLineNumberFormat: function () {
+    let cm = editors.get(this);
+    if (this.isWasm) {
+      let formatter = getWasmLineNumberFormatter(this.getDoc());
+      cm.setOption("lineNumberFormatter", formatter);
+    } else {
+      cm.setOption("lineNumberFormatter", (number) => number);
+    }
   },
 
   /**
@@ -514,6 +571,28 @@ Editor.prototype = {
    */
   setText: function (value) {
     let cm = editors.get(this);
+
+    if (typeof value !== "string") {  // wasm?
+      // binary does not survive as Uint8Array, converting from string
+      let binary = value.binary;
+      let data = new Uint8Array(binary.length);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = binary.charCodeAt(i);
+      }
+      let { lines, done } = getWasmText(this.getDoc(), data);
+      const MAX_LINES = 10000000;
+      if (lines.length > MAX_LINES) {
+        lines.splice(MAX_LINES, lines.length - MAX_LINES);
+        lines.push(";; .... text is truncated due to the size");
+      }
+      if (!done) {
+        lines.push(";; .... possible error during wast conversion");
+      }
+      // cm will try to split into lines anyway, saving memory
+      value = { split: () => lines };
+    }
+    this._updateLineNumberFormat();
+
     cm.setValue(value);
 
     this.resetIndentUnit();
@@ -694,7 +773,7 @@ Editor.prototype = {
    */
   addMarker: function (line, gutterName, markerClass) {
     let cm = editors.get(this);
-    let info = cm.lineInfo(line);
+    let info = this.lineInfo(line);
     if (!info) {
       return;
     }
@@ -723,8 +802,7 @@ Editor.prototype = {
       return;
     }
 
-    let cm = editors.get(this);
-    cm.lineInfo(line).gutterMarkers[gutterName].classList.remove(markerClass);
+    this.lineInfo(line).gutterMarkers[gutterName].classList.remove(markerClass);
   },
 
   /**
@@ -734,7 +812,7 @@ Editor.prototype = {
    */
   addContentMarker: function (line, gutterName, markerClass, content) {
     let cm = editors.get(this);
-    let info = cm.lineInfo(line);
+    let info = this.lineInfo(line);
     if (!info) {
       return;
     }
@@ -751,7 +829,7 @@ Editor.prototype = {
    */
   removeContentMarker: function (line, gutterName) {
     let cm = editors.get(this);
-    let info = cm.lineInfo(line);
+    let info = this.lineInfo(line);
     if (!info) {
       return;
     }
@@ -760,8 +838,7 @@ Editor.prototype = {
   },
 
   getMarker: function (line, gutterName) {
-    let cm = editors.get(this);
-    let info = cm.lineInfo(line);
+    let info = this.lineInfo(line);
     if (!info) {
       return null;
     }
@@ -809,8 +886,7 @@ Editor.prototype = {
    * Returns whether a line is decorated using the specified class name.
    */
   hasLineClass: function (line, className) {
-    let cm = editors.get(this);
-    let info = cm.lineInfo(line);
+    let info = this.lineInfo(line);
 
     if (!info || !info.wrapClass) {
       return false;
@@ -822,16 +898,18 @@ Editor.prototype = {
   /**
    * Sets a CSS class name for the given line, including the text and gutter.
    */
-  addLineClass: function (line, className) {
+  addLineClass: function (lineOrOffset, className) {
     let cm = editors.get(this);
+    let line = this.toLineIfWasmOffset(lineOrOffset);
     cm.addLineClass(line, "wrap", className);
   },
 
   /**
    * The reverse of addLineClass.
    */
-  removeLineClass: function (line, className) {
+  removeLineClass: function (lineOrOffset, className) {
     let cm = editors.get(this);
+    let line = this.toLineIfWasmOffset(lineOrOffset);
     cm.removeLineClass(line, "wrap", className);
   },
 
