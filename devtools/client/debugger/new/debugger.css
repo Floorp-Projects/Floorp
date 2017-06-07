@@ -43,7 +43,15 @@
   transition: var(--base-transition);
 }
 
-.landing-page .panel header input[type=button] {
+.landing-page .panel .hero {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-page .panel input[type=button] {
   background-color: var(--theme-tab-toolbar-background);
   color: var(--theme-comment);
   font-size: var(--ui-element-font-size);
@@ -879,11 +887,6 @@ html .arrow.expanded svg {
 
 .search-field.big {
   height: 40px;
-  font-size: 14px;
-}
-
-.search-field.big input {
-  font-size: 14px;
 }
 
 .search-field i {
@@ -1063,6 +1066,72 @@ html .arrow.expanded svg {
 .theme-dark .result-list {
   background-color: var(--theme-body-background);
 }
+.tree {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+
+  white-space: nowrap;
+  overflow: auto;
+  min-width: 100%;
+}
+
+.tree button {
+  display: block;
+}
+
+.tree .node {
+  padding: 2px 5px;
+  position: relative;
+  cursor: pointer;
+}
+
+.tree .node.focused {
+  color: white;
+  background-color: var(--theme-selection-background);
+}
+
+.theme-dark .tree .node.focused {
+  background-color: var(--theme-selection-background-semitransparent);
+}
+
+html:not([dir="rtl"]) .tree .node > div {
+  margin-left: 10px;
+}
+
+html[dir="rtl"] .tree .node > div {
+  margin-right: 10px;
+}
+
+.tree .node.focused svg {
+  fill: white;
+}
+
+.tree-node button {
+  position: fixed;
+}
+.project-text-search .result {
+  display: flex;
+  margin-left: 20px;
+}
+
+.project-text-search .file-result {
+  font-weight: bold;
+  margin-top: 20px;
+  line-height: 20px;
+}
+
+.project-text-search .line-match {
+  font-family: monospace;
+  display: "flex";
+  grow: 1;
+}
+
+.project-text-search .result .line-number {
+  padding-right: 5px;
+}
 .sources-panel {
   flex: 1;
   display: flex;
@@ -1129,8 +1198,58 @@ html .arrow.expanded svg {
   text-align: center;
 }
 
+.sources-panel .source-footer {
+  position: relative;
+}
+
+.sources-panel .outline {
+  display: flex;
+  flex: 1;
+}
+
+.sources-panel .outline.hidden {
+  display: none;
+}
+
 .hidden {
   display: none;
+}
+
+.source-footer {
+  width: 100%;
+}
+
+.source-footer .tab {
+  flex: 1;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
+  display: inline-flex;
+  position: relative;
+  transition: all 0.25s ease;
+  overflow: hidden;
+  padding: 5px;
+  margin-bottom: 4px;
+  margin-top: -1px;
+}
+
+.source-footer .tab:hover {
+  background-color: var(--theme-toolbar-background-alt);
+  border-color: var(--theme-splitter-color);
+  cursor: pointer;
+}
+
+.source-footer .tab.active {
+  color: var(--theme-body-color);
+  background-color: var(--theme-body-background);
+  border-color: var(--theme-splitter-color);
+  border-top-color: transparent;
+}
+
+.source-footer .tab.active path,
+.source-footer .tab:hover path {
+  fill: var(--theme-body-color);
 }
 .outline-list {
   list-style-type: "-";
@@ -1161,52 +1280,6 @@ html .arrow.expanded svg {
 .function-signature .comma {
   color: var(--object-color);
 }
-.tree {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
-  user-select: none;
-
-  white-space: nowrap;
-  overflow: auto;
-  min-width: 100%;
-}
-
-.tree button {
-  display: block;
-}
-
-.tree .node {
-  padding: 2px 5px;
-  position: relative;
-  cursor: pointer;
-}
-
-.tree .node.focused {
-  color: white;
-  background-color: var(--theme-selection-background);
-}
-
-.theme-dark .tree .node.focused {
-  background-color: var(--theme-selection-background-semitransparent);
-}
-
-html:not([dir="rtl"]) .tree .node > div {
-  margin-left: 10px;
-}
-
-html[dir="rtl"] .tree .node > div {
-  margin-right: 10px;
-}
-
-.tree .node.focused svg {
-  fill: white;
-}
-
-.tree-node button {
-  position: fixed;
-}
 .conditional-breakpoint-panel {
   cursor: initial;
   margin: 1em 0;
@@ -1220,8 +1293,12 @@ html[dir="rtl"] .tree .node > div {
 
 .conditional-breakpoint-panel .prompt {
   font-size: 1.8em;
-  color: var(--theme-comment-alt);
+  color: var(--theme-conditional-breakpoint-color);
   padding-left: 3px;
+  padding-right: 3px;
+  padding-bottom: 3px;
+  text-align: right;
+  width: 30px;
 }
 
 .conditional-breakpoint-panel input {
@@ -1230,7 +1307,7 @@ html[dir="rtl"] .tree .node > div {
   border: none;
   background: var(--theme-toolbar-background);
   font-size: 14px;
-  color: var(--theme-comment);
+  color: var(--theme-conditional-breakpoint-color);
   line-height: 30px;
 }
 
@@ -1361,7 +1438,6 @@ html .toggle-button-end.vertical svg {
 .source-footer .blackbox-summary {
   color: var(--theme-body-color);
 }
-
 .search-bar {
   display: flex;
   flex-direction: column;
@@ -1571,7 +1647,7 @@ html .toggle-button-end.vertical svg {
 }
 
 .selected-token {
-  background-color: var(--theme-search-overlays-semitransparent);
+  background-color: var(--theme-highlight-yellow);
   color: var(--theme-selection-color);
 }
 
@@ -1651,11 +1727,35 @@ html .toggle-button-end.vertical svg {
 .editor-wrapper {
   --debug-line-background: rgba(226, 236, 247, 0.5);
   --debug-line-border: rgb(145, 188, 219);
+  --editor-searchbar-height: 27px;
+  --editor-second-searchbar-height: 27px;
+
 }
 
 .theme-dark .editor-wrapper {
   --debug-line-background: rgb(73, 82, 103);
   --debug-line-border: rgb(119, 134, 162);
+}
+
+.editor-wrapper .CodeMirror-linewidget {
+  margin-right: -7px;
+}
+
+.theme-dark {
+  --theme-conditional-breakpoint-color: #9fa4a9;
+}
+
+.theme-light {
+  --theme-conditional-breakpoint-color: #ccd1d5;
+}
+
+.theme-firebug {
+  --theme-conditional-breakpoint-color: #ccd1d5;
+}
+
+.out-of-scope .CodeMirror-line,
+.out-of-scope .CodeMirror-linenumber {
+  opacity: 0.8;
 }
 
 /**
@@ -1669,8 +1769,6 @@ html .toggle-button-end.vertical svg {
   top: 30px;
   left: 0px;
   --editor-footer-height: 27px;
-  --editor-searchbar-height: 27px;
-  --editor-second-searchbar-height: 27px;
 }
 
 html[dir="rtl"] .editor-mount {
@@ -2285,6 +2383,7 @@ html .breakpoints-list .breakpoint.paused {
   padding: 5px;
   transition: all 0.25s ease;
   width: 100%;
+  align-items: center;
 
   -webkit-user-select: none;
   -moz-user-select: none;
