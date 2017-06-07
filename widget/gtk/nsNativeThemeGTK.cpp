@@ -114,10 +114,12 @@ static bool IsFrameContentNodeInNamespace(nsIFrame *aFrame, uint32_t aNamespace)
 }
 
 static bool IsWidgetTypeDisabled(uint8_t* aDisabledVector, uint8_t aWidgetType) {
+  MOZ_ASSERT(aWidgetType < ThemeWidgetType_COUNT);
   return (aDisabledVector[aWidgetType >> 3] & (1 << (aWidgetType & 7))) != 0;
 }
 
 static void SetWidgetTypeDisabled(uint8_t* aDisabledVector, uint8_t aWidgetType) {
+  MOZ_ASSERT(aWidgetType < ThemeWidgetType_COUNT);
   aDisabledVector[aWidgetType >> 3] |= (1 << (aWidgetType & 7));
 }
 
@@ -136,6 +138,7 @@ static bool IsWidgetStateSafe(uint8_t* aSafeVector,
                                 uint8_t aWidgetType,
                                 GtkWidgetState *aWidgetState)
 {
+  MOZ_ASSERT(aWidgetType < ThemeWidgetType_COUNT);
   uint8_t key = GetWidgetStateKey(aWidgetType, aWidgetState);
   return (aSafeVector[key >> 3] & (1 << (key & 7))) != 0;
 }
@@ -144,6 +147,7 @@ static void SetWidgetStateSafe(uint8_t *aSafeVector,
                                uint8_t aWidgetType,
                                GtkWidgetState *aWidgetState)
 {
+  MOZ_ASSERT(aWidgetType < ThemeWidgetType_COUNT);
   uint8_t key = GetWidgetStateKey(aWidgetType, aWidgetState);
   aSafeVector[key >> 3] |= (1 << (key & 7));
 }
