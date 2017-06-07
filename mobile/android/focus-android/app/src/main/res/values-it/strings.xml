@@ -78,7 +78,7 @@
   <string name="error_sslhandshake_title">Connessione sicura non riuscita</string>
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Potrebbe trattarsi di un problema nella configurazione del server oppure di un tentativo da parte di qualcuno di sostituirsi al server stesso.</li>"\n  "<li>Se &#232; stato possibile connettersi a questo server in passato, il problema potrebbe essere solo temporaneo. Si consiglia di riprovare in seguito.</li>\n</ul>]]></string>
   <string name="error_generic_title">Oops</string>
-  <string name="error_generic_message">Non è stato possibile caricare questa pagina per qualche motivo.</string>
+  <string name="error_generic_message">Per qualche motivo non è stato possibile caricare questa pagina.</string>
   <string name="contextmenu_link_share">Condividi link</string>
   <string name="contextmenu_link_copy">Copia indirizzo link</string>
   <string name="contextmenu_image_share">Condividi immagine</string>
@@ -88,7 +88,7 @@
   <string name="firstrun_tracking_title">Naviga come se nessuno ti stesse guardando</string>
   <string name="firstrun_tracking_text">Blocca automaticamente il tracciamento durante la navigazione. Poi rimuovi le pagine visitate e i cookie toccando l’icona del cestino nell’app o nelle notifiche.</string>
   <string name="firstrun_defaultbrowser_title">Potenzia la tua privacy</string>
-  <string name="firstrun_defaultbrowser_text">Imposta %1$s come browser predefinito e godi i vantaggi di una navigazione anonima quando apri link da altre app Android.</string>
+  <string name="firstrun_defaultbrowser_text">Imposta %1$s come browser predefinito e goditi tutti i vantaggi della navigazione anonima quando apri link da altre app Android.</string>
   <string name="firstrun_breaking_title">Una soluzione veloce quando\nil blocco “rompe” una pagina</string>
   <string name="firstrun_breaking_text">Se una pagina sembra non funzionare correttamente con il blocco degli elementi traccianti, disattivalo con un semplice tocco nel menu strumenti.</string>
   <string name="firstrun_close_button">Ho capito!</string>

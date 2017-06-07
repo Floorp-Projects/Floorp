@@ -85,7 +85,7 @@
   <string name="contextmenu_image_copy">Kopírovat adresu obrázku</string>
   <string name="contextmenu_image_save">Uložit obrázek</string>
   <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebudou smaz&#225;ny</b>" kdy&#382; sma&#382;ete historii aplikace %1$s."]]></string>
-  <string name="firstrun_tracking_title">Procházejte, jako když se nikdo nedívá</string>
+  <string name="firstrun_tracking_title">Prohlížejte internet, jako když se nikdo nedívá</string>
   <string name="firstrun_tracking_text">Automaticky blokuje online sledování, zatímco prohlížíte. Potom můžete smazat zobrazené stránky a cookies dotykem na ikonu koše v aplikaci nebo ve vašich notifikacích.</string>
   <string name="firstrun_defaultbrowser_title">Posuňte své soukromí na vyšší úroveň</string>
   <string name="firstrun_defaultbrowser_text">Nastavte si %1$s jako svůj výchozí prohlížeč a získejte výhody soukromého prohlížení když vás ostatní Android aplikace odkážou na web.</string>

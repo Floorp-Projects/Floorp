@@ -20,7 +20,7 @@
   <string name="shortcut_erase_long_label">امسح تأريخ التصفح</string>
   <string name="text_selection_search_action">ابحث مع الحفاظ على الخصوصية</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1610;&#1593;&#1591;&#1610;&#1603; %1$s &#1575;&#1604;&#1583;&#1601;&#1577;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1575;&#1587;&#1578;&#1582;&#1583;&#1605;&#1607; &#1603;&#1605;&#1578;&#1589;&#1601;&#1581; &#1582;&#1575;&#1589;:\n  "<ul>"\n    "<li>&#1575;&#1576;&#1581;&#1579; &#1608;&#160;&#1578;&#1589;&#1601;&#1581; &#1605;&#1576;&#1575;&#1588;&#1585;&#1577; &#1601;&#1610; &#1575;&#1604;&#1578;&#1591;&#1576;&#1610;&#1602;</li>"\n    "<li>&#1575;&#1581;&#1580;&#1576; &#1575;&#1604;&#1605;&#1578;&#1593;&#1602;&#1576;&#1575;&#1578; (&#1571;&#1608; &#1581;&#1583;&#1617;&#1579; &#1575;&#1604;&#1573;&#1593;&#1583;&#1575;&#1583;&#1575;&#1578; &#1604;&#1604;&#1587;&#1605;&#1575;&#1581; &#1576;&#1575;&#1604;&#1605;&#1578;&#1593;&#1602;&#1576;&#1575;&#1578;)</li>"\n    "<li>&#1575;&#1605;&#1587;&#1581; &#1575;&#1604;&#1603;&#1593;&#1603;&#1575;&#1578; &#1576;&#1575;&#1604;&#1573;&#1590;&#1575;&#1601;&#1577; &#1573;&#1604;&#1609; &#1581;&#1584;&#1601; &#1578;&#1571;&#1585;&#1610;&#1582; &#1575;&#1604;&#1576;&#1581;&#1579; &#1608;&#160;&#1575;&#1604;&#1578;&#1589;&#1601;&#1581;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#8207;%1$s &#1605;&#1606;&#1578;&#1580; &#1605;&#1606; &#1605;&#1608;&#1586;&#1610;&#1604;&#1575;. &#1605;&#1607;&#1605;&#1578;&#1606;&#1575; &#1578;&#1588;&#1580;&#1610;&#1593; &#1573;&#1606;&#1578;&#1585;&#1606;&#1578; &#1605;&#1601;&#1578;&#1608;&#1581; &#1608;&#160;&#1589;&#1581;&#1610;.<br/>\n<a href="%2$s">&#1575;&#1591;&#1617;&#1604;&#1593; &#1593;&#1604;&#1609; &#1575;&#1604;&#1605;&#1586;&#1610;&#1583;</a></p>]]></string>
-  <string name="preference_category_search">ابحث</string>
+  <string name="preference_category_search">البحث</string>
   <string name="preference_search_engine_default">المبدئي</string>
   <string name="preference_language">اللغة</string>
   <string name="preference_language_systemdefault">المبدئية للنظام</string>
@@ -31,8 +31,8 @@
   <string name="preference_privacy_block_social">احجب المتعقبات الاجتماعية</string>
   <string name="preference_privacy_block_content">احجب متعقبات المحتوى الأخرى</string>
   <string name="preference_privacy_block_content_summary">قد يعطل بعض الڤديو و صفحات الوب</string>
-  <string name="preference_privacy_secure_mode">خِفيّة</string>
-  <string name="preference_privacy_secure_mode_summary">عطّل وضع الخِفيّة لأخذ لقطات شاشة و رؤية المواقع التي زرتها باستخدام %1$s في قائمة التطبيقات الحديثة.</string>
+  <string name="preference_privacy_secure_mode">التخفّي</string>
+  <string name="preference_privacy_secure_mode_summary">عطّل وضع التخفّي لأخذ لقطات شاشة و رؤية المواقع التي زرتها باستخدام %1$s في قائمة التطبيقات الحديثة</string>
   <string name="preference_category_performance">الأداء</string>
   <string name="preference_performance_block_webfonts">احجب خطوط الوب</string>
   <string name="preference_performance_block_webfonts_summary">قد يسبب اختفاء بعض الأيقونات أو الصور</string>

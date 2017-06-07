@@ -26,8 +26,8 @@
   <string name="preference_language_systemdefault">Systemstandard</string>
   <string name="preference_dialog_title_search_engine">Standardsökmotor</string>
   <string name="preference_category_privacy">Sekretess</string>
-  <string name="preference_privacy_block_ads">Blockera annons trackers</string>
-  <string name="preference_privacy_block_analytics">Blockera analys trackers</string>
+  <string name="preference_privacy_block_ads">Blockera annons-trackers</string>
+  <string name="preference_privacy_block_analytics">Blockera analytiska trackers</string>
   <string name="preference_privacy_block_social">Blockera sociala trackers</string>
   <string name="preference_privacy_block_content">Blockera andra innehållstrackers</string>
   <string name="preference_privacy_block_content_summary">Kan få vissa videor och webbsidor att sluta fungera</string>

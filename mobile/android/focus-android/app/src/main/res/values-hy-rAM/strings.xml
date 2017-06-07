@@ -8,7 +8,7 @@
   <string name="search_hint">Որոնել %1$s-ի համար</string>
   <string name="menu_share">Համօգտագործել</string>
   <string name="menu_open_with_default_browser">Բացել %1$s-ով</string>
-  <string name="menu_open_with_a_browser">Բացել սրանով՝</string>
+  <string name="menu_open_with_a_browser">Բացել հետևյալով՝</string>
   <string name="menu_settings">Կարգավորումներ</string>
   <string name="menu_about">Մասին</string>
   <string name="menu_help">Օգնություն</string>
@@ -57,7 +57,7 @@
   <string name="content_description_blocking_switch">Արգելափակել հետագծումները</string>
   <string name="context_menu_paste_go">Տեղադրել և Առաջ</string>
   <string name="your_rights">Ձեր իրավունքները</string>
-  <string name="external_app_prompt_title">Բացել հղումը այլ հավելվածում</string>
+  <string name="external_app_prompt_title">Բացել հղումը այլ հավելվածով</string>
   <string name="external_app_prompt">Կարող եք բաց պահել %1$s-ը և բացել այս հղումը %2$s-ում:</string>
   <string name="external_app_prompt_no_app_title">Գտեք հավելված, որը կարող է բացել հղումը</string>
   <string name="external_app_prompt_no_app">Ձեր սարքի ոչ մի հավելված չի կարողանում բացել այս հղումը: Դուք կարող եք թողնել %1$s-ը՝ որոնելու համար %2$s-ում այն հավելվածը, որը կարող է այն բացել:</string>
@@ -90,7 +90,7 @@
   <string name="firstrun_defaultbrowser_title">Հզորացրեք ձեր գաղտնիությունը</string>
   <string name="firstrun_defaultbrowser_text">Կայեք %1$s-ը որպես հիմնական դիտարկիչ և ստացեք գաղտնի դիտարկիչի բոլոր առավելությունները, երբ սավառնում եք ցանցում ձեր Android-ի այլ հավելվածներից:</string>
   <string name="firstrun_breaking_title">Արագ ուղղումը արգելափակելիս = ընդհատում</string>
-  <string name="firstrun_breaking_text">Երբ առցանց հետագծիչների պատճառով կայքը վնասվում է՝ անջատեք արգելափակումը ցանկի հպելիս:</string>
+  <string name="firstrun_breaking_text">Երբ առցանց հետագծիչների պատճառով կայքը վնասվում է՝ անջատեք արգելափակումը ցանկին հպվելով:</string>
   <string name="firstrun_close_button">Լավ, հասկացա:</string>
   <string name="firstrun_skip_button">Բաց թողնել</string>
   <string name="firstrun_next_button">Հաջորդը</string>

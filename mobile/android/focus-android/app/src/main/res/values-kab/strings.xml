@@ -35,7 +35,7 @@
   <string name="preference_privacy_secure_mode_summary">Kkes askar uslig akken ad teṭfeḍ agdil u ad twaliḍ ismal i γer terziḍ s useqdec n %1$s deg tebdart-ik taneggarut n isnasen</string>
   <string name="preference_category_performance">Tamellit</string>
   <string name="preference_performance_block_webfonts">Sewḥel tisefsiyin Web</string>
-  <string name="preference_performance_block_webfonts_summary">Ahat yekka-d seg tigitin neɣ tugniwin yettwattun</string>
+  <string name="preference_performance_block_webfonts_summary">Ahat yekka-d seg tigitin neγ tugniwin yettwattun</string>
   <string name="preference_performance_block_images">Sewḥel tugniwin</string>
   <string name="preference_default_browser">Err-it d iminig amezwer</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -53,7 +53,7 @@
   <string name="content_description_reload">Ales asali n usmel web</string>
   <string name="content_description_back">Inig ar deffir</string>
   <string name="content_description_stop">Seḥbes asali n usmel</string>
-  <string name="content_description_customtab_exit">Uɣal ar usnas izrin</string>
+  <string name="content_description_customtab_exit">Uγal ar usnas izrin</string>
   <string name="content_description_blocking_switch">Sewḥel inedfaṛen</string>
   <string name="context_menu_paste_go">Senteḍ &amp; kemmel</string>
   <string name="your_rights">Izerfan-ik</string>
@@ -74,15 +74,15 @@
   <string name="error_redirectLoop_title">Asebter ur yettuwelleh ara akken iwata</string>
   <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Tikwal ugur-agi itekked-d seg usensi ne&#611; tugwin b unqbal n inagan n tuqqna.</li>\n</ul>]]></string>
   <string name="error_unsupportedprotocol_title">Ur nessin ara tansa</string>
-  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Issefk ahat ad tesbedde&#7693; ase&#611;zan-nni&#7693;en akken ad d-ldi&#7693; tansa-agi.</li>\n</ul>]]></string>
-  <string name="error_sslhandshake_title">Tuqqna taɣelsant ur teddi ara</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Issefk ahat ad tesbedde&#7693; ase&#947;zan-nni&#7693;en akken ad d-ldi&#7693; tansa-agi.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Tuqqna taγelsant ur teddi ara</string>
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" "<li>Ayagi yekka-d ahat seg ugur n twila n uqeddac ne&#611; amdan yetta&#603;ra&#7693;en ad yakker tim agit n uqeddac.</li>"\n  "<li>Ma yella teqqne&#7693; yakan ar uqeddac-agi, ahat tucc&#7693;a d umatu kan, tzemre&#7693; ad t&#603;er&#7693;e&#7693; tikelt-nni&#7693;en ticki.</li></ul>]]></string>
   <string name="error_generic_title">Ihuh</string>
   <string name="error_generic_message">Ur nezmir ara ad d-nsali asebter-agi, ur neẓri ara acuγer.</string>
-  <string name="contextmenu_link_share">Bḍu aseɣwen</string>
-  <string name="contextmenu_link_copy">Nɣel tansa n useɣwen</string>
+  <string name="contextmenu_link_share">Bḍu aseγwen</string>
+  <string name="contextmenu_link_copy">Nγel tansa n useγwen</string>
   <string name="contextmenu_image_share">Bḍu tugna</string>
-  <string name="contextmenu_image_copy">Nɣel tansa n tugna</string>
+  <string name="contextmenu_image_copy">Nγel tansa n tugna</string>
   <string name="contextmenu_image_save">Sekles tugna</string>
   <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"ur ttwaksent ara "</b>" m\'ara ad tekse&#7693; %1$samazray."]]></string>
   <string name="firstrun_tracking_title">Inig am akken ulac win i k-id-ittmuqqulen</string>

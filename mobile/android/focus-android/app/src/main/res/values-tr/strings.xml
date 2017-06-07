@@ -15,10 +15,10 @@
   <string name="menu_rights">Haklarınız</string>
   <string name="menu_trackers_blocked_title">Engellenen takipçi</string>
   <string name="share_dialog_title">Paylaş</string>
-  <string name="notification_erase_text">Tarama geçmişini sil</string>
+  <string name="notification_erase_text">Gezinti geçmişini sil</string>
   <string name="shortcut_erase_short_label">Sil</string>
-  <string name="shortcut_erase_long_label">Tarama geçmişini sil</string>
-  <string name="text_selection_search_action">Gizli Arama</string>
+  <string name="shortcut_erase_long_label">Gezinti geçmişini sil</string>
+  <string name="text_selection_search_action">Gizli arama</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s kontrol&#252; size verir.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Onu gizlilik odakl&#305; bir taray&#305;c&#305; olarak kullanabilirsiniz:\n  "<ul>"\n    "<li>Do&#287;rudan uygulamada arama yapabilir ve web&#8217;de gezinebilirsiniz</li>"\n    "<li>Takip&#231;ileri engelleyebilirsiniz (veya belli takip&#231;ilere izin verebilirsiniz)</li>"\n    "<li>Tek d&#252;&#287;meyle &#231;erezleri, arama ve gezinti ge&#231;mi&#351;inizi silebilirsiniz</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla taraf&#305;ndan geli&#351;tirilmi&#351;tir. Misyonumuz daha sa&#287;l&#305;kl&#305; ve a&#231;&#305;k bir internet yaratmakt&#305;r.<br/>\n<a href="%2$s">Daha fazla bilgi al&#305;n</a></p>]]></string>
   <string name="preference_category_search">Arama</string>
   <string name="preference_search_engine_default">Varsayılan</string>
@@ -44,7 +44,7 @@
   <string name="preference_about">%1$s hakkında</string>
   <string name="content_description_clear_input">Girdiyi temizle</string>
   <string name="content_description_dismiss_input">Kapat</string>
-  <string name="content_description_erase">Tarama geçmişini temizle</string>
+  <string name="content_description_erase">Gezinti geçmişini sil</string>
   <string name="content_description_lock">Güvenli bağlantı</string>
   <string name="accessibility_announcement_loading">Yükleniyor</string>
   <string name="accessibility_announcement_loading_finished">Web sitesi yüklendi</string>
@@ -86,11 +86,12 @@
   <string name="contextmenu_image_save">Resmi kaydet</string>
   <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">silinmeyecektir</b>.]]></string>
   <string name="firstrun_tracking_title">Hiç kimse izlemiyormuş gibi gez</string>
-  <string name="firstrun_tracking_text">Siz internette gezinirken çevrimiçi takipçiler otomatik olarak engellenir. Sonra da uygulamadaki veya bildirimlerinizdeki çöp kutusuna tek bir dokunuşla gezdiğiniz sayfaları ve çerezleri silebilirsiniz.</string>
+  <string name="firstrun_tracking_text">Siz internette gezinirken çevrimiçi takipçiler otomatik olarak engellenecek. İşiniz bitince uygulamadaki veya bildirimlerinizdeki çöp kutusuna dokunarak gezdiğiniz sayfaları ve çerezleri silebilirsiniz.</string>
   <string name="firstrun_defaultbrowser_title">Gizliliğini güçlendir</string>
-  <string name="firstrun_defaultbrowser_text">%1$s tarayıcınızı ön tanımlı tarayıcı yapın, diğer Android uygulamalarından web sayfalarına geçtiğinizde de gizli gezintiden yararlanın.</string>
+  <string name="firstrun_defaultbrowser_text">%1$s tarayıcınızı varsayılan tarayıcı yapın, diğer Android uygulamalarından web sayfalarına geçtiğinizde de gizli gezintiden yararlanın.</string>
   <string name="firstrun_breaking_title">Engelleme yüzünden \nsayfalar bozulursa</string>
-  <string name="firstrun_breaking_text">Çevrimiçi takipleri engellediğinizde bazı web sayfaları bozuk görünebilir. Bu durumda araçlar menüsünden engellemeyi kapatabilirsiniz.</string>
+  <string name="firstrun_breaking_text">Çevrimiçi takipçileri engellediğinizde bazı web sayfaları bozuk görünebilir. Bu durumda araçlar menüsünden engellemeyi kapatabilirsiniz.</string>
   <string name="firstrun_close_button">Anladım!</string>
   <string name="firstrun_skip_button">Geç</string>
+  <string name="firstrun_next_button">İleri</string>
 </resources>

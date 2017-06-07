@@ -32,6 +32,7 @@
   <string name="preference_privacy_block_content">Φραγή trackers άλλου περιεχομένου</string>
   <string name="preference_privacy_block_content_summary">Ίσως χαλάσει μερικά βίντεο και ιστοσελίδες</string>
   <string name="preference_privacy_secure_mode">Αορατότητα</string>
+  <string name="preference_privacy_secure_mode_summary">Απενεργοποιήστε την αόρατη λειτουργία για λήψη στιγμιότυπων και προβολή ιστοσελίδων που έχετε επισκεφθεί μέσω του %1$s στη λίστα πρόσφατων εφαρμογών</string>
   <string name="preference_category_performance">Απόδοση</string>
   <string name="preference_performance_block_webfonts">Φραγή γραμματοσειρών ιστού</string>
   <string name="preference_performance_block_webfonts_summary">Ενδέχεται να οδηγήσει σε απώλεια εικονιδίων ή εικόνων</string>
@@ -83,6 +84,13 @@
   <string name="contextmenu_image_share">Κοινή χρήση εικόνας</string>
   <string name="contextmenu_image_copy">Αντιγραφή διεύθυνσης εικόνας</string>
   <string name="contextmenu_image_save">Αποθήκευση εικόνας</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#948;&#949;&#957; &#952;&#945; &#948;&#953;&#945;&#947;&#961;&#945;&#966;&#959;&#973;&#957;</b>" &#972;&#964;&#945;&#957; &#948;&#953;&#945;&#947;&#961;&#940;&#968;&#949;&#964;&#949; &#964;&#959; &#953;&#963;&#964;&#959;&#961;&#953;&#954;&#959;&#973; &#964;&#959;&#965; %1$s."]]></string>
+  <string name="firstrun_tracking_title">Περιηγηθείτε σαν να μην σάς βλέπει κανείς</string>
+  <string name="firstrun_tracking_text">Αποκλείστε αυτόματα τη διαδικτυακή παρακολούθηση ενώ περιηγείστε. Έπειτα, διαγράψτε τις σελίδες που επισκεφθήκατε και τα cookies με ένα άγγιγμα στο εικονίδιο απορριμμάτων στην εφαρμογή ή στις ειδοποιήσεις σας.</string>
+  <string name="firstrun_defaultbrowser_title">Ενισχύστε το απόρρητό σας</string>
+  <string name="firstrun_defaultbrowser_text">Ορίστε το %1$s ως το προεπιλεγμένο πρόγραμμα περιήγησής σας και λάβετε τα οφέλη της ιδιωτικής περιήγησης όταν συνδέεστε στο διαδίκτυο από άλλες εφαρμογές Android.</string>
+  <string name="firstrun_breaking_title">Μικρή διόρθωση όταν\nφραγή = μη κανονική λειτουργία</string>
+  <string name="firstrun_breaking_text">Όταν η φραγή διαδικτυακών trackers προκαλεί προβλήματα σε μια ιστοσελίδα, απενεργοποιήστε τη φραγή με ένα πάτημα στο μενού εργαλείων.</string>
   <string name="firstrun_close_button">OK, το \'πιασα!</string>
   <string name="firstrun_skip_button">Παράκαμψη</string>
   <string name="firstrun_next_button">Επόμενο</string>

@@ -13,9 +13,17 @@
   <string name="menu_about">정보</string>
   <string name="menu_help">도움말</string>
   <string name="menu_rights">사용자 권리</string>
+  <string name="menu_trackers_blocked_title">추적기가 차단됨</string>
+  <string name="share_dialog_title">다음으로 공유</string>
+  <string name="notification_erase_text">방문 기록 지우기</string>
+  <string name="shortcut_erase_short_label">지우기</string>
+  <string name="shortcut_erase_long_label">방문 기록 지우기</string>
+  <string name="text_selection_search_action">사생활 보호 검색</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s&#47484; &#50668;&#47084; &#44592;&#45733;&#51004;&#47196; &#49324;&#50857;&#54624; &#49688; &#51080;&#49845;&#45768;&#45796;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#49324;&#49373;&#54876; &#48372;&#54840; &#48652;&#46972;&#50864;&#51200;&#47196; &#49324;&#50857; :\n  "<ul>"\n    "<li>&#50545;&#50640;&#49436; &#44160;&#49353; &#48143; &#48652;&#46972;&#50864;&#51669;&#54616;&#44592;</li>"\n    "<li>&#52628;&#51201;&#44592; &#52264;&#45800;(&#49444;&#51221;&#51012; &#48320;&#44221;&#54644; &#54728;&#50857;&#54624; &#49688; &#51080;&#51020;)</li>"\n    "<li>&#51064;&#53552;&#45367; &#44592;&#47197;&#51060;&#45208; &#44160;&#49353; &#44592;&#47197;, &#44536;&#47532;&#44256; &#53216;&#53412; &#49325;&#51228;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s&#45716; Mozilla&#51032; &#51228;&#54408;&#51077;&#45768;&#45796;. Mozilla&#51032; &#49324;&#47749;&#51008; &#44148;&#44053;&#54616;&#44256; &#44060;&#48169;&#51201;&#51064; &#51064;&#53552;&#45367;&#51012; &#51312;&#49457;&#54616;&#45716; &#44163;&#51077;&#45768;&#45796;.<br/><a href="%2$s">&#45908; &#50508;&#50500;&#48372;&#44592;</a></p>]]></string>
   <string name="preference_category_search">검색</string>
   <string name="preference_search_engine_default">기본</string>
+  <string name="preference_language">언어</string>
+  <string name="preference_language_systemdefault">시스템 기본값</string>
   <string name="preference_dialog_title_search_engine">기본 검색</string>
   <string name="preference_category_privacy">개인 정보</string>
   <string name="preference_privacy_block_ads">광고 추적기 차단</string>
@@ -23,6 +31,8 @@
   <string name="preference_privacy_block_social">소셜 추적기 차단</string>
   <string name="preference_privacy_block_content">기타 콘텐츠 추적기 차단</string>
   <string name="preference_privacy_block_content_summary">동영상이나 웹 페이지가 제대로 표시되지 않을 수 있음</string>
+  <string name="preference_privacy_secure_mode">스텔스</string>
+  <string name="preference_privacy_secure_mode_summary">최근 앱 목록에서 %1$s를 통해 방문한 페이지를 보거나 스크린샷을 찍으시려면 스텔스 모드를 해제하세요</string>
   <string name="preference_category_performance">성능</string>
   <string name="preference_performance_block_webfonts">웹 폰트 차단</string>
   <string name="preference_performance_block_webfonts_summary">아이콘 또는 이미지가 누락될 수 있음</string>
@@ -43,6 +53,8 @@
   <string name="content_description_reload">웹 사이트 다시 불러오기</string>
   <string name="content_description_back">뒤로 가기</string>
   <string name="content_description_stop">웹사이트 로딩 중지</string>
+  <string name="content_description_customtab_exit">이전 앱으로 돌아가기</string>
+  <string name="content_description_blocking_switch">추적기 차단</string>
   <string name="context_menu_paste_go">붙여넣고 바로 가기</string>
   <string name="your_rights">권리</string>
   <string name="external_app_prompt_title">다른 앱으로 링크 열기</string>
@@ -67,4 +79,19 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#51060;&#45716; &#49436;&#48260;&#51032; &#44396;&#49457;&#50640; &#47928;&#51228;&#44032; &#51080;&#44144;&#45208; &#45572;&#44400;&#44032;&#44032; &#47564;&#46304; &#44032;&#51676; &#49436;&#48260;&#47196; &#50672;&#44208;&#49884;&#53412;&#47140;&#44256; &#54624; &#46412; &#48156;&#49373;&#46112; &#49688; &#51080;&#49845;&#45768;&#45796;.</li>"\n  "<li>&#47564;&#50557; &#51060;&#51204;&#50640; &#49436;&#48260;&#50640; &#51228;&#45824;&#47196; &#50672;&#44208;&#46096;&#45912; &#51201;&#51060; &#51080;&#50632;&#45796;&#47732;, &#50640;&#47084;&#44032; &#51104;&#44624;&#46041;&#50504;&#47564; &#48156;&#49373;&#54620; &#44163;&#51068; &#54869;&#47456;&#51060; &#45458;&#49845;&#45768;&#45796;. &#45208;&#51473;&#50640; &#45796;&#49884; &#49884;&#46020;&#54644;&#48372;&#49464;&#50836;.</li>\n</ul>]]></string>
   <string name="error_generic_title">앗! 이런</string>
   <string name="error_generic_message">페이지를 불러오지 못했습니다.</string>
+  <string name="contextmenu_link_share">링크 공유</string>
+  <string name="contextmenu_link_copy">링크 주소 복사</string>
+  <string name="contextmenu_image_share">이미지 공유</string>
+  <string name="contextmenu_image_copy">이미지 주소 복사</string>
+  <string name="contextmenu_image_save">이미지 저장</string>
+  <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#51200;&#51109; &#48143; &#44277;&#50976;&#46108; &#51060;&#48120;&#51648;</b>&#45716; &#49325;&#51228;&#46104;&#51648; &#50506;&#49845;&#45768;&#45796;.]]></string>
+  <string name="firstrun_tracking_title">누구에게도 보이지 않는 웹 이용</string>
+  <string name="firstrun_tracking_text">탐색하는 동안 자동으로 온라인 추적을 차단합니다. 그런 다음 앱이나 알림의 휴지통 아이콘을 터치하여 방문한 페이지와 쿠키를 삭제합니다.</string>
+  <string name="firstrun_defaultbrowser_title">개인정보 보호 강화하기</string>
+  <string name="firstrun_defaultbrowser_text">%1$s를 기본 브라우저로 설정하고 다른 Android 앱에서 웹으로 연결될 때 개인정보 보호 탐색의 장점을 누리세요.</string>
+  <string name="firstrun_breaking_title">차단 = 깨짐\n일 때 빨리 복구하기</string>
+  <string name="firstrun_breaking_text">온라인 추적 차단의 문제로 사이트가 깨져보인다면, 도구 메뉴를 탭하여 차단을 해제하세요.</string>
+  <string name="firstrun_close_button">알겠습니다!</string>
+  <string name="firstrun_skip_button">건너뛰기</string>
+  <string name="firstrun_next_button">다음</string>
 </resources>

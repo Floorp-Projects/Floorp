@@ -28,8 +28,8 @@
   <string name="preference_category_privacy">Privacidade</string>
   <string name="preference_privacy_block_ads">Bloquear rastreadores de anúncio</string>
   <string name="preference_privacy_block_analytics">Bloquear rastreadores analíticos</string>
-  <string name="preference_privacy_block_social">Bloquear rastreadores de mídias sociais</string>
-  <string name="preference_privacy_block_content">Bloquear outros rastreadores de conteúdo</string>
+  <string name="preference_privacy_block_social">Bloquear rastreadores sociais</string>
+  <string name="preference_privacy_block_content">Bloquear outros rastreadores</string>
   <string name="preference_privacy_block_content_summary">Pode quebrar alguns vídeos e páginas Web</string>
   <string name="preference_privacy_secure_mode">Furtividade</string>
   <string name="preference_privacy_secure_mode_summary">Desativar o modo furtivo para capturar imagens e ver os sites que visitou usando o %1$s na sua lista de aplicativos recentes</string>
@@ -86,7 +86,7 @@
   <string name="contextmenu_image_save">Salvar imagem</string>
   <string name="contextmenu_image_warning"><![CDATA[<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">n&#227;o ser&#227;o exclu&#237;das</b>" ao apagar o hist&#243;rico do %1$s."]]></string>
   <string name="firstrun_tracking_title">Navegue como se ninguém estivesse olhando</string>
-  <string name="firstrun_tracking_text">Bloqueie automaticamente o acompanhamento online enquanto navega. Em seguida, remova as páginas visitadas e os cookies com um toque no ícone da lixeira no aplicativo ou em suas notificações.</string>
+  <string name="firstrun_tracking_text">Bloqueie automaticamente o rastreamento online enquanto navega. Em seguida, remova as páginas visitadas e os cookies com um toque no ícone da lixeira no aplicativo ou em suas notificações.</string>
   <string name="firstrun_defaultbrowser_title">Potencialize sua privacidade</string>
   <string name="firstrun_defaultbrowser_text">Defina o %1$s como seu navegador padrão e obtenha os benefícios da navegação privativa quando se conecta à Web a partir de outros aplicativos Android.</string>
   <string name="firstrun_breaking_title">Uma correção rápida quando \nbloqueio = quebra</string>

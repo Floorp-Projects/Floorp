@@ -32,6 +32,7 @@
   <string name="preference_privacy_block_content">חסימת כלי מעקב אחרים</string>
   <string name="preference_privacy_block_content_summary">עלולה לשבש את פעילותם של דפי אינטרנט ומספר סרטונים</string>
   <string name="preference_privacy_secure_mode">חשאיות</string>
+  <string name="preference_privacy_secure_mode_summary">יש לכבות את מצב החשאיות כדי לצלם את המסך ולצפות באתרים שביקרת בהם עם %1$s ברשימת היישומונים האחרונים שלך</string>
   <string name="preference_category_performance">ביצועים</string>
   <string name="preference_performance_block_webfonts">חסימת גופני רשת</string>
   <string name="preference_performance_block_webfonts_summary">עשוי לגרום לסמלים או תמונות חסרים</string>

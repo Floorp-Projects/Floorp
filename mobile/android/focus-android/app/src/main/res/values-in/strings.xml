@@ -13,6 +13,9 @@
   <string name="menu_about">Tentang</string>
   <string name="menu_help">Bantuan</string>
   <string name="menu_rights">Hak Anda</string>
+  <string name="share_dialog_title">Bagikan via</string>
+  <string name="shortcut_erase_short_label">Hapus</string>
+  <string name="text_selection_search_action">Mencari Secara Privat</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s menempatkan Anda dalam kendali.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakan sebagai peramban privat:\n  "<ul>"\n    "<li>Cari dan menjelajah langsung di dalam aplikasi</li>"\n    "<li>Memblokir pelacak (atau ubah di pengaturan untuk izinkan pelacak)</li>"\n    "<li>Hapus untuk menghilangkan kuki termasuk juga pencarian dan riwayat penjelajahan</li>"\n  "</ul>"\n "</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s diproduksi oleh Mozilla. Misi kami adalah untuk memelihara Internet yang sehat dan terbuka.<br/>" "<a href="%2$s">Pelajari lebih lanjut</a></p>]]></string>
   <string name="preference_category_search">Cari</string>
   <string name="preference_search_engine_default">Baku</string>
@@ -24,6 +27,7 @@
   <string name="preference_privacy_block_social">Blokir pelacak sosial</string>
   <string name="preference_privacy_block_content">Blokir pelacak konten lainnya</string>
   <string name="preference_privacy_block_content_summary">Mungkin menghentikan beberapa video dan laman Web</string>
+  <string name="preference_privacy_secure_mode">Sembunyikan</string>
   <string name="preference_category_performance">Kinerja</string>
   <string name="preference_performance_block_webfonts">Blokir font Web</string>
   <string name="preference_performance_block_webfonts_summary">Dapat menyebabkan hilangnya ikon atau gambar</string>
@@ -44,6 +48,8 @@
   <string name="content_description_reload">Muat ulang situs web</string>
   <string name="content_description_back">Arahkan kembali</string>
   <string name="content_description_stop">Berhenti memuat situs web</string>
+  <string name="content_description_customtab_exit">Kembali ke aplikasi sebelumnya</string>
+  <string name="content_description_blocking_switch">Blokir pelacak</string>
   <string name="context_menu_paste_go">Tempelkan &amp; Kunjungi</string>
   <string name="your_rights">Hak Anda</string>
   <string name="external_app_prompt_title">Buka tautan di aplikasi lainnya</string>
@@ -68,5 +74,13 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Hal ini mungkin dikarenakan ada masalah terkait dengan konfigurasi server, atau bisa jadi ada seseorang mencoba untuk berkedok sebagai server.</li>"\n  "<li>Jika Anda berhasil tersambung ke server ini sebelumnya, gangguan dapat bersifat sementara, dan Anda dapat mencoba kembali nanti.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Kami tidak dapat memuat laman ini karena sejumlah alasan.</string>
+  <string name="contextmenu_link_share">Bagikan tautan</string>
+  <string name="contextmenu_link_copy">Salin alamat tautan</string>
+  <string name="contextmenu_image_share">Bagikan gambar</string>
+  <string name="contextmenu_image_copy">Salin alamat gambar</string>
   <string name="contextmenu_image_save">Simpan gambar</string>
+  <string name="firstrun_tracking_title">Menjelajah seperti tidak ada yang mengawasi</string>
+  <string name="firstrun_defaultbrowser_title">Perkuat privasi Anda</string>
+  <string name="firstrun_close_button">Oke, beres!</string>
+  <string name="firstrun_skip_button">Lewati</string>
 </resources>

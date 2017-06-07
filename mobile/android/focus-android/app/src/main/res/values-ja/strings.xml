@@ -89,7 +89,7 @@
   <string name="firstrun_tracking_text">ブラウジング中のオンライン追跡を自動的にブロック。後から、アプリ内あるいは通知内のゴミ箱アイコンをタップするだけで、訪れたページや Cookie を削除できます。</string>
   <string name="firstrun_defaultbrowser_title">プライバシーを強化</string>
   <string name="firstrun_defaultbrowser_text">%1$s を既定のブラウザーに設定して、他の Android アプリからウェブへのリンクを辿ったときに、プライベートブラウジングの恩恵を受けましょう。</string>
-  <string name="firstrun_breaking_title">ブロック時の\n素早い修正 = 破壊</string>
+  <string name="firstrun_breaking_title">「ブロック = 破壊」を\n素早く修正</string>
   <string name="firstrun_breaking_text">オンライン追跡のブロックによってサイトが正常に動作していないと思われる場合には、ツールメニューをタップしてブロックを無効化できます。</string>
   <string name="firstrun_close_button">了解しました</string>
   <string name="firstrun_skip_button">スキップ</string>
