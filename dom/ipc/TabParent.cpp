@@ -737,20 +737,29 @@ TabParent::UpdateDimensions(const nsIntRect& rect, const ScreenIntSize& size)
     mClientOffset = clientOffset;
     mChromeOffset = chromeOffset;
 
-    CSSToLayoutDeviceScale widgetScale = widget->GetDefaultScale();
-
-    LayoutDeviceIntRect devicePixelRect =
-      ViewAs<LayoutDevicePixel>(mRect,
-                                PixelCastJustification::LayoutDeviceIsScreenForTabDims);
-    LayoutDeviceIntSize devicePixelSize =
-      ViewAs<LayoutDevicePixel>(mDimensions,
-                                PixelCastJustification::LayoutDeviceIsScreenForTabDims);
-
-    CSSRect unscaledRect = devicePixelRect / widgetScale;
-    CSSSize unscaledSize = devicePixelSize / widgetScale;
-    Unused << SendUpdateDimensions(unscaledRect, unscaledSize,
-                                   orientation, clientOffset, chromeOffset);
+    Unused << SendUpdateDimensions(GetDimensionInfo());
   }
+}
+
+DimensionInfo
+TabParent::GetDimensionInfo()
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  MOZ_ASSERT(widget);
+  CSSToLayoutDeviceScale widgetScale = widget->GetDefaultScale();
+
+  LayoutDeviceIntRect devicePixelRect =
+    ViewAs<LayoutDevicePixel>(mRect,
+                              PixelCastJustification::LayoutDeviceIsScreenForTabDims);
+  LayoutDeviceIntSize devicePixelSize =
+    ViewAs<LayoutDevicePixel>(mDimensions,
+                              PixelCastJustification::LayoutDeviceIsScreenForTabDims);
+
+  CSSRect unscaledRect = devicePixelRect / widgetScale;
+  CSSSize unscaledSize = devicePixelSize / widgetScale;
+  DimensionInfo di(unscaledRect, unscaledSize, mOrientation,
+                   mClientOffset, mChromeOffset);
+  return di;
 }
 
 void

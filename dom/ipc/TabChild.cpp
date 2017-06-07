@@ -1219,22 +1219,21 @@ TabChild::RecvInitRendering(const TextureFactoryIdentifier& aTextureFactoryIdent
 }
 
 mozilla::ipc::IPCResult
-TabChild::RecvUpdateDimensions(const CSSRect& rect, const CSSSize& size,
-                               const ScreenOrientationInternal& orientation,
-                               const LayoutDeviceIntPoint& clientOffset,
-                               const LayoutDeviceIntPoint& chromeDisp)
+TabChild::RecvUpdateDimensions(const DimensionInfo& aDimensionInfo)
 {
     if (!mRemoteFrame) {
         return IPC_OK();
     }
 
-    mUnscaledOuterRect = rect;
-    mClientOffset = clientOffset;
-    mChromeDisp = chromeDisp;
+    mUnscaledOuterRect = aDimensionInfo.rect();
+    mClientOffset = aDimensionInfo.clientOffset();
+    mChromeDisp = aDimensionInfo.chromeDisp();
 
-    mOrientation = orientation;
-    SetUnscaledInnerSize(size);
-    if (!mHasValidInnerSize && size.width != 0 && size.height != 0) {
+    mOrientation = aDimensionInfo.orientation();
+    SetUnscaledInnerSize(aDimensionInfo.size());
+    if (!mHasValidInnerSize &&
+        aDimensionInfo.size().width != 0 &&
+        aDimensionInfo.size().height != 0) {
       mHasValidInnerSize = true;
     }
 
@@ -1248,8 +1247,8 @@ TabChild::RecvUpdateDimensions(const CSSRect& rect, const CSSSize& size,
     baseWin->SetPositionAndSize(0, 0, screenSize.width, screenSize.height,
                                 nsIBaseWindow::eRepaint);
 
-    mPuppetWidget->Resize(screenRect.x + clientOffset.x + chromeDisp.x,
-                          screenRect.y + clientOffset.y + chromeDisp.y,
+    mPuppetWidget->Resize(screenRect.x + mClientOffset.x + mChromeDisp.x,
+                          screenRect.y + mClientOffset.y + mChromeDisp.y,
                           screenSize.width, screenSize.height, true);
 
     return IPC_OK();

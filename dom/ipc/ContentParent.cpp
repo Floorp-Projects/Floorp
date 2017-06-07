@@ -4637,7 +4637,8 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                                 TextureFactoryIdentifier* aTextureFactoryIdentifier,
                                 uint64_t* aLayersId,
                                 CompositorOptions* aCompositorOptions,
-                                uint32_t* aMaxTouchPoints)
+                                uint32_t* aMaxTouchPoints,
+                                DimensionInfo* aDimensions)
 {
   // We always expect to open a new window here. If we don't, it's an error.
   *aWindowIsNew = true;
@@ -4693,6 +4694,9 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
 
   nsCOMPtr<nsIWidget> widget = newTab->GetWidget();
   *aMaxTouchPoints = widget ? widget->GetMaxTouchPoints() : 0;
+
+  // NOTE: widget must be set for this to return a meaningful value.
+  *aDimensions = widget ? newTab->GetDimensionInfo() : DimensionInfo();
 
   return IPC_OK();
 }
