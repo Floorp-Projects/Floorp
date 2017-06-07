@@ -43,7 +43,7 @@ protected:
   wr::MaybeExternalImageId mExternalImageId;
   Maybe<wr::ImageKey> mKey;
   RefPtr<ImageClient> mImageClient;
-  CompositableType mImageClientTypeContainer;
+  CompositableType mImageClientContainerType;
   Maybe<wr::PipelineId> mPipelineId;
 };
 
