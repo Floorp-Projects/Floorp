@@ -8686,12 +8686,19 @@ nsDisplayFilter::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_SVG_EFFECTS;
   }
 
+  if (mFrame->StyleEffects()->mOpacity != 1.0f) {
+    return LAYER_SVG_EFFECTS;
+  }
+
   // Due to differences in the way that WebRender filters operate
   // only the brightness and contrast filters use that path. We
   // can gradually enable more filters as WebRender bugs are fixed.
   for (const nsStyleFilter& filter : mFrame->StyleEffects()->mFilters) {
     if (filter.GetType() != NS_STYLE_FILTER_BRIGHTNESS &&
-        filter.GetType() != NS_STYLE_FILTER_CONTRAST) {
+        filter.GetType() != NS_STYLE_FILTER_CONTRAST &&
+        filter.GetType() != NS_STYLE_FILTER_GRAYSCALE &&
+        filter.GetType() != NS_STYLE_FILTER_INVERT &&
+        filter.GetType() != NS_STYLE_FILTER_SEPIA) {
       return LAYER_SVG_EFFECTS;
     }
   }
