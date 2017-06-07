@@ -67,13 +67,12 @@
 #define PROGRESS_EXECUTE_SIZE 75.0f
 #define PROGRESS_FINISH_SIZE   5.0f
 
-// Amount of time in ms to wait for the parent process to close
-#ifdef DEBUG
-// Use a large value for debug builds since the xpcshell tests take a long time.
-#define PARENT_WAIT 30000
-#else
-#define PARENT_WAIT 10000
-#endif
+// Maximum amount of time in ms to wait for the parent process to close. The
+// value should be the same or larger than the application's watchdog timeout
+// which is 60 seconds plus 3 additional seconds (see nsTerminator.cpp). This
+// makes it so when the application has a shutdown hang it won't break launching
+// the application after it has been updated.
+#define PARENT_WAIT 70000
 
 #if defined(XP_MACOSX)
 // These functions are defined in launchchild_osx.mm
