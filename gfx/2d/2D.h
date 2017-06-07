@@ -408,6 +408,9 @@ public:
   void *GetUserData(UserDataKey *key) {
     return mUserData.Get(key);
   }
+  void RemoveUserData(UserDataKey *key) {
+    mUserData.RemoveAndDestroy(key);
+  }
 
 protected:
   friend class DrawTargetCaptureImpl;
@@ -810,6 +813,10 @@ public:
   }
   void *GetUserData(UserDataKey *key) {
     return mUserData.Get(key);
+  }
+
+  void RemoveUserData(UserDataKey *key) {
+    mUserData.RemoveAndDestroy(key);
   }
 
   const RefPtr<UnscaledFont>& GetUnscaledFont() const { return mUnscaledFont; }
@@ -1413,6 +1420,7 @@ class DrawEventRecorder : public RefCounted<DrawEventRecorder>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorder)
+  virtual void Finish() = 0;
   virtual ~DrawEventRecorder() { }
 };
 
