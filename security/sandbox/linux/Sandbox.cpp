@@ -17,6 +17,9 @@
 #include "SandboxUtil.h"
 
 #include <dirent.h>
+#ifdef NIGHTLY_BUILD
+#include "dlfcn.h"
+#endif
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/futex.h>
@@ -507,6 +510,22 @@ SetCurrentProcessSandbox(UniquePtr<sandbox::bpf_dsl::Policy> aPolicy)
   MOZ_RELEASE_ASSERT(!gChrootHelper, "forgot to chroot");
 }
 
+#ifdef NIGHTLY_BUILD
+static bool
+IsLibPresent(const char* aName)
+{
+  if (const auto handle = dlopen(aName, RTLD_LAZY | RTLD_NOLOAD)) {
+    dlclose(handle);
+    return true;
+  }
+  return false;
+}
+
+static const Array<const char*, 1> kLibsThatWillCrash {
+  "libesets_pac.so",
+};
+#endif // NIGHTLY_BUILD
+
 void
 SandboxEarlyInit(GeckoProcessType aType)
 {
@@ -524,6 +543,12 @@ SandboxEarlyInit(GeckoProcessType aType)
   // crash even on nightly.
 #ifdef NIGHTLY_BUILD
   gSandboxCrashOnError = true;
+  for (const char* name : kLibsThatWillCrash) {
+    if (IsLibPresent(name)) {
+      gSandboxCrashOnError = false;
+      break;
+    }
+  }
 #endif
   if (const char* envVar = getenv("MOZ_SANDBOX_CRASH_ON_ERROR")) {
     if (envVar[0]) {
