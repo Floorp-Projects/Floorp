@@ -248,9 +248,9 @@ CookieInfo::RawHost() const
  * MatchPattern
  *****************************************************************************/
 
-const char* PERMITTED_SCHEMES[] = {"http", "https", "file", "ftp", "data", nullptr};
+const char* PERMITTED_SCHEMES[] = {"http", "https", "ws", "wss", "file", "ftp", "data", nullptr};
 
-const char* WILDCARD_SCHEMES[] = {"http", "https", nullptr};
+const char* WILDCARD_SCHEMES[] = {"http", "https", "ws", "wss", nullptr};
 
 /* static */ already_AddRefed<MatchPattern>
 MatchPattern::Constructor(dom::GlobalObject& aGlobal,
