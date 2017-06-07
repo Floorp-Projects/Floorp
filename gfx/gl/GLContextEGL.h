@@ -133,6 +133,10 @@ protected:
     static EGLSurface CreatePBufferSurfaceTryingPowerOfTwo(EGLConfig config,
                                                            EGLenum bindToTextureFormat,
                                                            gfx::IntSize& pbsize);
+#if defined(MOZ_WIDGET_ANDROID)
+public:
+    EGLSurface CreateCompatibleSurface(void* aWindow);
+#endif // defined(MOZ_WIDGET_ANDROID)
 };
 
 } // namespace gl
