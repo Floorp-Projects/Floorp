@@ -332,7 +332,7 @@ ProcessPriorityManagerImpl::PrefChangedCallback(const char* aPref,
 /* static */ bool
 ProcessPriorityManagerImpl::PrefsEnabled()
 {
-  return sPrefsEnabled && !sRemoteTabsDisabled;
+  return sPrefsEnabled && hal::SetProcessPrioritySupported() && !sRemoteTabsDisabled;
 }
 
 /* static */ bool
