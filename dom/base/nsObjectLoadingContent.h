@@ -181,7 +181,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     static bool MayResolve(jsid aId);
 
     // Helper for WebIDL enumeration
-    void GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& /* unused */,
+    void GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& /* unused */,
                              mozilla::ErrorResult& aRv);
 
     // WebIDL API
