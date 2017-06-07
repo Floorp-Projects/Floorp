@@ -20,8 +20,8 @@ ServoElementSnapshot::ServoElementSnapshot(const Element* aElement)
   MOZ_COUNT_CTOR(ServoElementSnapshot);
   mIsHTMLElementInHTMLDocument =
     aElement->IsHTMLElement() && aElement->IsInHTMLDocument();
-  mIsInChromeDocument =
-    nsContentUtils::IsChromeDoc(aElement->OwnerDoc());
+  mIsInChromeDocument = nsContentUtils::IsChromeDoc(aElement->OwnerDoc());
+  mSupportsLangAttr = aElement->SupportsLangAttr();
 }
 
 ServoElementSnapshot::~ServoElementSnapshot()
