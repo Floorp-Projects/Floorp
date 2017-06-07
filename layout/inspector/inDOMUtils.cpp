@@ -38,7 +38,6 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/Element.h"
 #include "nsRuleWalker.h"
-#include "nsRuleProcessorData.h"
 #include "nsCSSPseudoClasses.h"
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/dom/CSSLexer.h"
@@ -48,7 +47,6 @@
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
 #include "nsColor.h"
-#include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
 #include "nsStyleUtil.h"
 #include "nsQueryObject.h"
@@ -316,7 +314,7 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
   return NS_OK;
 }
 
-static already_AddRefed<StyleRule>
+static already_AddRefed<BindingStyleRule>
 GetRuleFromDOMRule(nsIDOMCSSStyleRule *aRule, ErrorResult& rv)
 {
   nsCOMPtr<nsICSSStyleRuleDOMWrapper> rule = do_QueryInterface(aRule);
@@ -325,7 +323,7 @@ GetRuleFromDOMRule(nsIDOMCSSStyleRule *aRule, ErrorResult& rv)
     return nullptr;
   }
 
-  RefPtr<StyleRule> cssrule;
+  RefPtr<BindingStyleRule> cssrule;
   rv = rule->GetCSSStyleRule(getter_AddRefs(cssrule));
   if (rv.Failed()) {
     return nullptr;
@@ -409,37 +407,14 @@ NS_IMETHODIMP
 inDOMUtils::GetSelectorCount(nsIDOMCSSStyleRule* aRule, uint32_t *aCount)
 {
   ErrorResult rv;
-  RefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
+  RefPtr<BindingStyleRule> rule = GetRuleFromDOMRule(aRule, rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
   }
 
-  uint32_t count = 0;
-  for (nsCSSSelectorList* sel = rule->Selector(); sel; sel = sel->mNext) {
-    ++count;
-  }
-  *aCount = count;
+  *aCount = rule->GetSelectorCount();
+
   return NS_OK;
-}
-
-static nsCSSSelectorList*
-GetSelectorAtIndex(nsIDOMCSSStyleRule* aRule, uint32_t aIndex, ErrorResult& rv)
-{
-  RefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
-  if (rv.Failed()) {
-    return nullptr;
-  }
-
-  for (nsCSSSelectorList* sel = rule->Selector(); sel;
-       sel = sel->mNext, --aIndex) {
-    if (aIndex == 0) {
-      return sel;
-    }
-  }
-
-  // Ran out of selectors
-  rv.Throw(NS_ERROR_INVALID_ARG);
-  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -448,31 +423,24 @@ inDOMUtils::GetSelectorText(nsIDOMCSSStyleRule* aRule,
                             nsAString& aText)
 {
   ErrorResult rv;
-  nsCSSSelectorList* sel = GetSelectorAtIndex(aRule, aSelectorIndex, rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  RefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
+  RefPtr<BindingStyleRule> rule = GetRuleFromDOMRule(aRule, rv);
   MOZ_ASSERT(!rv.Failed(), "How could we get a selector but not a rule?");
 
-  sel->mSelectors->ToString(aText, rule->GetStyleSheet(), false);
-  return NS_OK;
+  return rule->GetSelectorText(aSelectorIndex, aText);
 }
 
 NS_IMETHODIMP
 inDOMUtils::GetSpecificity(nsIDOMCSSStyleRule* aRule,
-                            uint32_t aSelectorIndex,
-                            uint64_t* aSpecificity)
+                           uint32_t aSelectorIndex,
+                           uint64_t* aSpecificity)
 {
   ErrorResult rv;
-  nsCSSSelectorList* sel = GetSelectorAtIndex(aRule, aSelectorIndex, rv);
+  RefPtr<BindingStyleRule> rule = GetRuleFromDOMRule(aRule, rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
   }
 
-  *aSpecificity = sel->mWeight;
-  return NS_OK;
+  return rule->GetSpecificity(aSelectorIndex, aSpecificity);
 }
 
 NS_IMETHODIMP
@@ -486,46 +454,13 @@ inDOMUtils::SelectorMatchesElement(nsIDOMElement* aElement,
   NS_ENSURE_ARG_POINTER(element);
 
   ErrorResult rv;
-  nsCSSSelectorList* tail = GetSelectorAtIndex(aRule, aSelectorIndex, rv);
+  RefPtr<BindingStyleRule> rule = GetRuleFromDOMRule(aRule, rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
   }
 
-  // We want just the one list item, not the whole list tail
-  nsAutoPtr<nsCSSSelectorList> sel(tail->Clone(false));
-
-  // Do not attempt to match if a pseudo element is requested and this is not
-  // a pseudo element selector, or vice versa.
-  if (aPseudo.IsEmpty() == sel->mSelectors->IsPseudoElement()) {
-    *aMatches = false;
-    return NS_OK;
-  }
-
-  if (!aPseudo.IsEmpty()) {
-    // We need to make sure that the requested pseudo element type
-    // matches the selector pseudo element type before proceeding.
-    nsCOMPtr<nsIAtom> pseudoElt = NS_Atomize(aPseudo);
-    if (sel->mSelectors->PseudoType() != nsCSSPseudoElements::
-          GetPseudoType(pseudoElt, CSSEnabledState::eIgnoreEnabledState)) {
-      *aMatches = false;
-      return NS_OK;
-    }
-
-    // We have a matching pseudo element, now remove it so we can compare
-    // directly against |element| when proceeding into SelectorListMatches.
-    // It's OK to do this - we just cloned sel and nothing else is using it.
-    sel->RemoveRightmostSelector();
-  }
-
-  // XXXbz what exactly should we do with visited state here?  If we ever start
-  // caring about it, remember to do FlushPendingLinkUpdates().
-  TreeMatchContext matchingContext(false,
-                                   nsRuleWalker::eRelevantLinkUnvisited,
-                                   element->OwnerDoc(),
-                                   TreeMatchContext::eNeverMatchVisited);
-  *aMatches = nsCSSRuleProcessor::SelectorListMatches(element, matchingContext,
-                                                      sel);
-  return NS_OK;
+  return rule->SelectorMatchesElement(element, aSelectorIndex, aPseudo,
+                                      aMatches);
 }
 
 NS_IMETHODIMP
