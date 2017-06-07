@@ -163,7 +163,9 @@ bool Gecko_MatchesElement(mozilla::CSSPseudoClassType type, RawGeckoElementBorro
 nsIAtom* Gecko_LocalName(RawGeckoElementBorrowed element);
 nsIAtom* Gecko_Namespace(RawGeckoElementBorrowed element);
 nsIAtom* Gecko_GetElementId(RawGeckoElementBorrowed element);
-
+bool Gecko_MatchLang(RawGeckoElementBorrowed element,
+                     nsIAtom* override_lang, bool has_override_lang,
+                     const char16_t* value);
 nsIAtom* Gecko_GetXMLLangValue(RawGeckoElementBorrowed element);
 
 // Attributes.
