@@ -2074,8 +2074,7 @@ GetMarginBorderPadding(GtkStyleContext* aStyle)
 
 gint
 moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
-                          gint* right, gint* bottom, GtkTextDirection direction,
-                          gboolean inhtml)
+                          gint* right, gint* bottom, GtkTextDirection direction)
 {
     GtkWidget* w;
     GtkStyleContext* style;
