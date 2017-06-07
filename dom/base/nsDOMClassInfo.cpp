@@ -1611,6 +1611,11 @@ nsWindowSH::NameStructEnabled(JSContext* aCx, nsGlobalWindow *aWin,
                               const nsAString& aName,
                               const nsGlobalNameStruct& aNameStruct)
 {
+  // DOMConstructor is special: creating its proto does not actually define it
+  // as a property on the global.  So we don't want to expose its name either.
+  if (aName.EqualsLiteral("DOMConstructor")) {
+    return false;
+  }
   const nsGlobalNameStruct* nameStruct = &aNameStruct;
   return (nameStruct->mType != nsGlobalNameStruct::eTypeProperty &&
           nameStruct->mType != nsGlobalNameStruct::eTypeClassConstructor) ||

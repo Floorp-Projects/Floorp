@@ -1302,6 +1302,12 @@ js::detail::IdMatchesAtom(jsid id, JSAtom* atom)
     return id == INTERNED_STRING_TO_JSID(nullptr, atom);
 }
 
+bool
+js::detail::IdMatchesAtom(jsid id, JSString* atom)
+{
+    return id == INTERNED_STRING_TO_JSID(nullptr, atom);
+}
+
 JS_FRIEND_API(void)
 js::PrepareScriptEnvironmentAndInvoke(JSContext* cx, HandleObject scope, ScriptEnvironmentPreparer::Closure& closure)
 {
