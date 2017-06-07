@@ -2032,6 +2032,21 @@ Gecko_CSSValue_SetPairList(nsCSSValueBorrowedMut aCSSValue, uint32_t aLen)
   }
 }
 
+void
+Gecko_CSSValue_InitSharedList(nsCSSValueBorrowedMut aCSSValue,
+                              uint32_t aLen)
+{
+  MOZ_ASSERT(aLen > 0, "Must create at least one nsCSSValueList (mHead)");
+
+  nsCSSValueSharedList* list = new nsCSSValueSharedList;
+  aCSSValue->SetSharedListValue(list);
+  list->mHead = new nsCSSValueList;
+  nsCSSValueList* cur = list->mHead;
+  for (uint32_t i = 1; i < aLen; ++i) {
+    cur->mNext = new nsCSSValueList;
+    cur = cur->mNext;
+  }
+}
 
 bool
 Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id)
