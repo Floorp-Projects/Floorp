@@ -19,7 +19,7 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
 
   // Database Specifications.
   protected static final String DB_NAME = "clients_database";
-  protected static final int SCHEMA_VERSION = 3;
+  protected static final int SCHEMA_VERSION = 4;
 
   // Clients Table.
   public static final String TBL_CLIENTS      = "clients";
@@ -34,9 +34,11 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
   public static final String COL_APPLICATION = "application";
   public static final String COL_APP_PACKAGE = "appPackage";
   public static final String COL_DEVICE = "device";
+  public static final String COL_FXA_DEVICE_ID = "fxa_device_id";
 
   public static final String[] TBL_CLIENTS_COLUMNS = new String[] { COL_ACCOUNT_GUID, COL_PROFILE, COL_NAME, COL_TYPE,
-                                                                    COL_FORMFACTOR, COL_OS, COL_APPLICATION, COL_APP_PACKAGE, COL_DEVICE };
+                                                                    COL_FORMFACTOR, COL_OS, COL_APPLICATION, COL_APP_PACKAGE,
+                                                                    COL_DEVICE, COL_FXA_DEVICE_ID};
   public static final String TBL_CLIENTS_KEY = COL_ACCOUNT_GUID + " = ? AND " +
                                                COL_PROFILE + " = ?";
 
@@ -78,6 +80,7 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
         + COL_APPLICATION + " TEXT, "
         + COL_APP_PACKAGE + " TEXT, "
         + COL_DEVICE + " TEXT, "
+        + COL_FXA_DEVICE_ID + " TEXT, "
         + "PRIMARY KEY (" + COL_ACCOUNT_GUID + ", " + COL_PROFILE + "))";
     db.execSQL(createClientsTableSql);
   }
@@ -111,6 +114,11 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
       db.execSQL("ALTER TABLE " + TBL_CLIENTS + " ADD COLUMN " + COL_APPLICATION + " TEXT");
       db.execSQL("ALTER TABLE " + TBL_CLIENTS + " ADD COLUMN " + COL_APP_PACKAGE + " TEXT");
       db.execSQL("ALTER TABLE " + TBL_CLIENTS + " ADD COLUMN " + COL_DEVICE + " TEXT");
+    }
+
+    if (newVersion >= 4) {
+      db.execSQL("ALTER TABLE " + TBL_CLIENTS + " ADD COLUMN " + COL_FXA_DEVICE_ID + " TEXT");
+      db.execSQL("CREATE INDEX idx_fxa_device_id ON " + TBL_CLIENTS + "(" + COL_FXA_DEVICE_ID + ")");
     }
   }
 
@@ -158,6 +166,10 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
 
     if (record.device != null) {
       cv.put(COL_DEVICE, record.device);
+    }
+
+    if (record.fxaDeviceId != null) {
+      cv.put(COL_FXA_DEVICE_ID, record.fxaDeviceId);
     }
 
     String[] args = new String[] { record.guid, profileId };
