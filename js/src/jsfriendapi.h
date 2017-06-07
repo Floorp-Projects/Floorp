@@ -2602,6 +2602,7 @@ JSID_FROM_BITS(size_t bits)
 namespace js {
 namespace detail {
 bool IdMatchesAtom(jsid id, JSAtom* atom);
+bool IdMatchesAtom(jsid id, JSString* atom);
 } // namespace detail
 } // namespace js
 
@@ -2628,6 +2629,15 @@ bool IdMatchesAtom(jsid id, JSAtom* atom);
  */
 static MOZ_ALWAYS_INLINE jsid
 NON_INTEGER_ATOM_TO_JSID(JSAtom* atom)
+{
+    MOZ_ASSERT(((size_t)atom & 0x7) == 0);
+    jsid id = JSID_FROM_BITS((size_t)atom);
+    MOZ_ASSERT(js::detail::IdMatchesAtom(id, atom));
+    return id;
+}
+
+static MOZ_ALWAYS_INLINE jsid
+NON_INTEGER_ATOM_TO_JSID(JSString* atom)
 {
     MOZ_ASSERT(((size_t)atom & 0x7) == 0);
     jsid id = JSID_FROM_BITS((size_t)atom);
