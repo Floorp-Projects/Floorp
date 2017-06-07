@@ -50,7 +50,7 @@ private:
 };
 
 class ServoStyleRule final : public BindingStyleRule
-                           , public nsIDOMCSSStyleRule
+                           , public nsICSSStyleRuleDOMWrapper
 {
 public:
   ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule,
@@ -61,6 +61,9 @@ public:
                                                          css::Rule)
   bool IsCCLeaf() const final MOZ_MUST_OVERRIDE;
   NS_DECL_NSIDOMCSSSTYLERULE
+
+  // nsICSSStyleRuleDOMWrapper
+  NS_IMETHOD GetCSSStyleRule(BindingStyleRule **aResult) override;
 
   uint32_t GetSelectorCount() override;
   nsresult GetSelectorText(uint32_t aSelectorIndex,
