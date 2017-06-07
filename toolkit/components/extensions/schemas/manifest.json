@@ -309,7 +309,7 @@
           },
           {
             "type": "string",
-            "pattern": "^(https?|file|ftp|\\*)://(\\*|\\*\\.[^*/]+|[^*/]+)/.*$"
+            "pattern": "^(https?|wss?|file|ftp|\\*)://(\\*|\\*\\.[^*/]+|[^*/]+)/.*$"
           },
           {
             "type": "string",
