@@ -242,7 +242,7 @@ classes.dex: .gradle.deps
 else
 classes.dex: .proguard.deps
 	$(REPORT_BUILD)
-	$(DX) --dex --output=classes.dex jars-proguarded
+	$(DX) --dex --output=classes.dex --force-jumbo jars-proguarded
 endif
 
 ifdef MOZ_DISABLE_PROGUARD
