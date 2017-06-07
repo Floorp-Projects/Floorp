@@ -236,11 +236,8 @@ treecol {
   margin-left: 0;
 }
 
-/* This learn-more link is inserted at the end of a
-   xul:description element so it should behave like normal text. */
-#trackingProtectionLearnMore {
-  white-space: normal;
-  margin-inline-start: 0;
+#doNotTrackLearnMoreBox {
+  margin-top: 30px
 }
 
 #trackingProtectionAdvancedSettings {
