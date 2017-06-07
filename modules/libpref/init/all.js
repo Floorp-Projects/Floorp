@@ -1224,6 +1224,7 @@ pref("dom.disable_window_open_feature.menubar",     false);
 pref("dom.disable_window_open_feature.resizable",   true);
 pref("dom.disable_window_open_feature.minimizable", false);
 pref("dom.disable_window_open_feature.status",      true);
+pref("dom.disable_window_showModalDialog",          true);
 
 pref("dom.allow_scripts_to_close_windows",          false);
 
