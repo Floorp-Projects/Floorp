@@ -145,10 +145,8 @@ public:
     return nullptr;
   }
 
-  bool IsInChromeDocument() const
-  {
-    return mIsInChromeDocument;
-  }
+  bool IsInChromeDocument() const { return mIsInChromeDocument; }
+  bool SupportsLangAttr() const { return mSupportsLangAttr; }
 
   bool HasAny(Flags aFlags) const { return bool(mContains & aFlags); }
 
@@ -174,6 +172,7 @@ private:
   Flags mContains;
   bool mIsHTMLElementInHTMLDocument : 1;
   bool mIsInChromeDocument : 1;
+  bool mSupportsLangAttr : 1;
   bool mIsTableBorderNonzero : 1;
   bool mIsMozBrowserFrame : 1;
 };
