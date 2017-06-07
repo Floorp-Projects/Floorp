@@ -12,8 +12,7 @@ import re
 import subprocess
 import sys
 from distutils.version import LooseVersion
-sys.path.append(os.path.join(
-    os.path.dirname(__file__), "..", "..", "..", "third_party", "python", "which"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "..", "python", "which"))
 import which
 
 NODE_MACHING_VERSION_NOT_FOUND_MESSAGE = """
