@@ -324,6 +324,36 @@ public:
     return mCacheStorage;
   }
 
+  void
+  ComparisonFinished(nsresult aStatus, bool aIsEqual)
+  {
+    AssertIsOnMainThread();
+    if (mState == Finished) {
+      return;
+    }
+
+    MOZ_ASSERT(mState == WaitingForScriptOrComparisonResult);
+
+    if (NS_WARN_IF(NS_FAILED(aStatus))) {
+      Fail(aStatus);
+      return;
+    }
+
+    if (aIsEqual) {
+      MOZ_ASSERT(mCallback);
+      mCallback->ComparisonResult(aStatus,
+                                  aIsEqual,
+                                  EmptyString(),
+                                  mMaxScope,
+                                  mLoadFlags);
+      Cleanup();
+      return;
+    }
+
+    // Write to Cache so ScriptLoader reads succeed.
+    WriteNetworkBufferToNewCache();
+  }
+
 private:
   ~CompareManager()
   {
@@ -487,36 +517,6 @@ private:
     RefPtr<Cache> kungfuDeathGrip = cache;
     WriteToCache(cache);
     guard.release();
-  }
-
-  void
-  ComparisonFinished(nsresult aStatus, bool aIsEqual)
-  {
-    AssertIsOnMainThread();
-    if (mState == Finished) {
-      return;
-    }
-
-    MOZ_ASSERT(mState == WaitingForScriptOrComparisonResult);
-
-    if (NS_WARN_IF(NS_FAILED(aStatus))) {
-      Fail(aStatus);
-      return;
-    }
-
-    if (aIsEqual) {
-      MOZ_ASSERT(mCallback);
-      mCallback->ComparisonResult(aStatus,
-                                  aIsEqual,
-                                  EmptyString(),
-                                  mMaxScope,
-                                  mLoadFlags);
-      Cleanup();
-      return;
-    }
-
-    // Write to Cache so ScriptLoader reads succeed.
-    WriteNetworkBufferToNewCache();
   }
 
   void
