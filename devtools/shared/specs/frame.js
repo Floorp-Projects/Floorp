@@ -3,12 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {generateActorSpec} = require("devtools/shared/protocol");
+const {generateActorSpec, RetVal} = require("devtools/shared/protocol");
 
 const frameSpec = generateActorSpec({
   typeName: "frame",
 
-  methods: {},
+  methods: {
+    getEnvironment: {
+      response: RetVal("json")
+    }
+  },
 });
 
 exports.frameSpec = frameSpec;
