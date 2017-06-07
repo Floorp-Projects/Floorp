@@ -343,8 +343,12 @@ IsWrapper(JSObject* obj)
 
 // Given a JSObject, returns that object stripped of wrappers. If
 // stopAtWindowProxy is true, then this returns the WindowProxy if it was
-// previously wrapped. Otherwise, this returns the first object for
-// which JSObject::isWrapper returns false.
+// previously wrapped. Otherwise, this returns the first object for which
+// JSObject::isWrapper returns false.
+//
+// ExposeToActiveJS is called on wrapper targets to allow gray marking
+// assertions to work while an incremental GC is in progress, but this means
+// that this cannot be called from the GC or off the main thread.
 JS_FRIEND_API(JSObject*)
 UncheckedUnwrap(JSObject* obj, bool stopAtWindowProxy = true, unsigned* flagsp = nullptr);
 
@@ -352,6 +356,10 @@ UncheckedUnwrap(JSObject* obj, bool stopAtWindowProxy = true, unsigned* flagsp =
 // the security wrapper has the opportunity to veto the unwrap. If
 // stopAtWindowProxy is true, then this returns the WindowProxy if it was
 // previously wrapped.
+//
+// ExposeToActiveJS is called on wrapper targets to allow gray marking
+// assertions to work while an incremental GC is in progress, but this means
+// that this cannot be called from the GC or off the main thread.
 JS_FRIEND_API(JSObject*)
 CheckedUnwrap(JSObject* obj, bool stopAtWindowProxy = true);
 
@@ -359,6 +367,14 @@ CheckedUnwrap(JSObject* obj, bool stopAtWindowProxy = true);
 // above. This is the checked version of Wrapper::wrappedObject.
 JS_FRIEND_API(JSObject*)
 UnwrapOneChecked(JSObject* obj, bool stopAtWindowProxy = true);
+
+// Given a JSObject, returns that object stripped of wrappers. This returns the
+// WindowProxy if it was previously wrapped.
+//
+// ExposeToActiveJS is not called on wrapper targets so this can be called from
+// the GC or off the main thread.
+JS_FRIEND_API(JSObject*)
+UncheckedUnwrapWithoutExpose(JSObject* obj);
 
 void
 ReportAccessDenied(JSContext* cx);
