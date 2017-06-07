@@ -136,12 +136,9 @@ ImageLoader::DeregisterCSSImage(ImageLoader::Image* aImage)
 }
 
 void
-ImageLoader::DisassociateRequestFromFrame(imgIRequest* aRequest,
-                                          nsIFrame* aFrame)
+ImageLoader::RemoveRequestToFrameMapping(imgIRequest* aRequest,
+                                         nsIFrame*    aFrame)
 {
-  FrameSet* frameSet = nullptr;
-  RequestSet* requestSet = nullptr;
-
 #ifdef DEBUG
   {
     nsCOMPtr<imgINotificationObserver> observer;
@@ -150,48 +147,59 @@ ImageLoader::DisassociateRequestFromFrame(imgIRequest* aRequest,
   }
 #endif
 
+  FrameSet* frameSet = nullptr;
   mRequestToFrameMap.Get(aRequest, &frameSet);
-  mFrameToRequestMap.Get(aFrame, &requestSet);
-
   if (frameSet) {
     frameSet->RemoveElementSorted(aFrame);
-  }
-  if (requestSet) {
-    requestSet->RemoveElementSorted(aRequest);
-  }
+    if (frameSet->IsEmpty()) {
+      mRequestToFrameMap.Remove(aRequest);
 
-  if (frameSet && !frameSet->Length()) {
-    mRequestToFrameMap.Remove(aRequest);
-
-    nsPresContext* presContext = GetPresContext();
-    if (presContext) {
-      nsLayoutUtils::DeregisterImageRequest(presContext,
-                                            aRequest,
-                                            nullptr);
+      nsPresContext* presContext = GetPresContext();
+      if (presContext) {
+        nsLayoutUtils::DeregisterImageRequest(presContext, aRequest, nullptr);
+      }
     }
   }
+}
 
-  if (requestSet && !requestSet->Length()) {
-    mFrameToRequestMap.Remove(aFrame);
-    aFrame->SetHasImageRequest(false);
+void
+ImageLoader::RemoveFrameToRequestMapping(imgIRequest* aRequest,
+                                         nsIFrame*    aFrame)
+{
+  RequestSet* requestSet = nullptr;
+  mFrameToRequestMap.Get(aFrame, &requestSet);
+  if (requestSet) {
+    MOZ_ASSERT(aFrame->HasImageRequest(), "HasImageRequest is lying");
+    requestSet->RemoveElementSorted(aRequest);
+    if (requestSet->IsEmpty()) {
+      mFrameToRequestMap.Remove(aFrame);
+      aFrame->SetHasImageRequest(false);
+    }
   }
+}
+
+void
+ImageLoader::DisassociateRequestFromFrame(imgIRequest* aRequest,
+                                          nsIFrame*    aFrame)
+{
+  MOZ_ASSERT(aFrame->HasImageRequest(), "why call me?");
+  RemoveRequestToFrameMapping(aRequest, aFrame);
+  RemoveFrameToRequestMapping(aRequest, aFrame);
 }
 
 void
 ImageLoader::DropRequestsForFrame(nsIFrame* aFrame)
 {
-  RequestSet* requestSet = nullptr;
-  if (!mFrameToRequestMap.Get(aFrame, &requestSet)) {
+  MOZ_ASSERT(aFrame->HasImageRequest(), "why call me?");
+  nsAutoPtr<RequestSet> requestSet;
+  mFrameToRequestMap.RemoveAndForget(aFrame, requestSet);
+  aFrame->SetHasImageRequest(false);
+  if (MOZ_UNLIKELY(!requestSet)) {
+    MOZ_ASSERT_UNREACHABLE("HasImageRequest was lying");
     return;
   }
-
-  NS_ASSERTION(requestSet, "This should never be null");
-
-  RequestSet frozenRequestSet(*requestSet);
-  for (RequestSet::size_type i = frozenRequestSet.Length(); i != 0; --i) {
-    imgIRequest* request = frozenRequestSet.ElementAt(i - 1);
-
-    DisassociateRequestFromFrame(request, aFrame);
+  for (imgIRequest* request : *requestSet) {
+    RemoveRequestToFrameMapping(request, aFrame);
   }
 }
 
