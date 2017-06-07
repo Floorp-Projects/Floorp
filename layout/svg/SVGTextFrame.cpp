@@ -2739,6 +2739,7 @@ public:
   /**
    * Constructs an SVGTextDrawPathCallbacks.
    *
+   * @param aSVGTextFrame The ancestor text frame.
    * @param aContext The context to use for painting.
    * @param aFrame The nsTextFrame to paint.
    * @param aCanvasTM The transformation matrix to set when painting; this
@@ -2746,12 +2747,14 @@ public:
    *   paint servers are painted correctly.
    * @param aShouldPaintSVGGlyphs Whether SVG glyphs should be painted.
    */
-  SVGTextDrawPathCallbacks(nsRenderingContext* aContext,
+  SVGTextDrawPathCallbacks(SVGTextFrame* aSVGTextFrame,
+                           gfxContext& aContext,
                            nsTextFrame* aFrame,
                            const gfxMatrix& aCanvasTM,
                            bool aShouldPaintSVGGlyphs)
     : DrawPathCallbacks(aShouldPaintSVGGlyphs),
-      gfx(aContext->ThebesContext()),
+      mSVGTextFrame(aSVGTextFrame),
+      mContext(aContext),
       mFrame(aFrame),
       mCanvasTM(aCanvasTM)
   {
@@ -2770,9 +2773,7 @@ private:
   void SetupContext();
 
   bool IsClipPathChild() const {
-    return nsLayoutUtils::GetClosestFrameOfType
-             (mFrame->GetParent(), LayoutFrameType::SVGText)->GetStateBits() &
-             NS_STATE_SVG_CLIPPATH_CHILD;
+    return mSVGTextFrame->HasAnyStateBits(NS_STATE_SVG_CLIPPATH_CHILD);
   }
 
   /**
@@ -2804,7 +2805,8 @@ private:
    */
   void StrokeGeometry();
 
-  gfxContext* gfx;
+  SVGTextFrame* mSVGTextFrame;
+  gfxContext& mContext;
   nsTextFrame* mFrame;
   const gfxMatrix& mCanvasTM;
 
@@ -2845,20 +2847,20 @@ SVGTextDrawPathCallbacks::NotifyBeforeText(nscolor aColor)
 {
   mColor = aColor;
   SetupContext();
-  gfx->NewPath();
+  mContext.NewPath();
 }
 
 void
 SVGTextDrawPathCallbacks::NotifyGlyphPathEmitted()
 {
   HandleTextGeometry();
-  gfx->NewPath();
+  mContext.NewPath();
 }
 
 void
 SVGTextDrawPathCallbacks::NotifyAfterText()
 {
-  gfx->Restore();
+  mContext.Restore();
 }
 
 void
@@ -2868,13 +2870,13 @@ SVGTextDrawPathCallbacks::PaintDecorationLine(Rect aPath, nscolor aColor)
   AntialiasMode aaMode =
     nsSVGUtils::ToAntialiasMode(mFrame->StyleText()->mTextRendering);
 
-  gfx->Save();
-  gfx->NewPath();
-  gfx->SetAntialiasMode(aaMode);
-  gfx->Rectangle(ThebesRect(aPath));
+  mContext.Save();
+  mContext.NewPath();
+  mContext.SetAntialiasMode(aaMode);
+  mContext.Rectangle(ThebesRect(aPath));
   HandleTextGeometry();
-  gfx->NewPath();
-  gfx->Restore();
+  mContext.NewPath();
+  mContext.Restore();
 }
 
 void
@@ -2888,27 +2890,27 @@ SVGTextDrawPathCallbacks::PaintSelectionDecorationLine(Rect aPath,
 
   mColor = aColor;
 
-  gfx->Save();
-  gfx->NewPath();
-  gfx->Rectangle(ThebesRect(aPath));
+  mContext.Save();
+  mContext.NewPath();
+  mContext.Rectangle(ThebesRect(aPath));
   FillAndStrokeGeometry();
-  gfx->Restore();
+  mContext.Restore();
 }
 
 void
 SVGTextDrawPathCallbacks::SetupContext()
 {
-  gfx->Save();
+  mContext.Save();
 
   // XXX This is copied from nsSVGGlyphFrame::Render, but cairo doesn't actually
   // seem to do anything with the antialias mode.  So we can perhaps remove it,
   // or make SetAntialiasMode set cairo text antialiasing too.
   switch (mFrame->StyleText()->mTextRendering) {
   case NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED:
-    gfx->SetAntialiasMode(AntialiasMode::NONE);
+    mContext.SetAntialiasMode(AntialiasMode::NONE);
     break;
   default:
-    gfx->SetAntialiasMode(AntialiasMode::SUBPIXEL);
+    mContext.SetAntialiasMode(AntialiasMode::SUBPIXEL);
     break;
   }
 }
@@ -2917,13 +2919,13 @@ void
 SVGTextDrawPathCallbacks::HandleTextGeometry()
 {
   if (IsClipPathChild()) {
-    RefPtr<Path> path = gfx->GetPath();
+    RefPtr<Path> path = mContext.GetPath();
     ColorPattern white(Color(1.f, 1.f, 1.f, 1.f)); // for masking, so no ToDeviceColor
-    gfx->GetDrawTarget()->Fill(path, white);
+    mContext.GetDrawTarget()->Fill(path, white);
   } else {
     // Normal painting.
-    gfxContextMatrixAutoSaveRestore saveMatrix(gfx);
-    gfx->SetMatrix(mCanvasTM);
+    gfxContextMatrixAutoSaveRestore saveMatrix(&mContext);
+    mContext.SetMatrix(mCanvasTM);
 
     FillAndStrokeGeometry();
   }
@@ -2935,7 +2937,7 @@ SVGTextDrawPathCallbacks::MakeFillPattern(GeneralPattern* aOutPattern,
 {
   if (mColor == NS_SAME_AS_FOREGROUND_COLOR ||
       mColor == NS_40PERCENT_FOREGROUND_COLOR) {
-    nsSVGUtils::MakeFillPatternFor(mFrame, gfx, aOutPattern, aImgParams);
+    nsSVGUtils::MakeFillPatternFor(mFrame, &mContext, aOutPattern, aImgParams);
     return;
   }
 
@@ -2952,7 +2954,7 @@ SVGTextDrawPathCallbacks::FillAndStrokeGeometry()
   bool pushedGroup = false;
   if (mColor == NS_40PERCENT_FOREGROUND_COLOR) {
     pushedGroup = true;
-    gfx->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, 0.4f);
+    mContext.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, 0.4f);
   }
 
   uint32_t paintOrder = mFrame->StyleSVG()->mPaintOrder;
@@ -2976,7 +2978,7 @@ SVGTextDrawPathCallbacks::FillAndStrokeGeometry()
   }
 
   if (pushedGroup) {
-    gfx->PopGroupAndBlend();
+    mContext.PopGroupAndBlend();
   }
 }
 
@@ -2988,7 +2990,7 @@ SVGTextDrawPathCallbacks::FillGeometry()
   imgDrawingParams imgParams;
   MakeFillPattern(&fillPattern, imgParams);
   if (fillPattern.GetPattern()) {
-    RefPtr<Path> path = gfx->GetPath();
+    RefPtr<Path> path = mContext.GetPath();
     FillRule fillRule = nsSVGUtils::ToFillRule(IsClipPathChild() ?
                           mFrame->StyleSVG()->mClipRule :
                           mFrame->StyleSVG()->mFillRule);
@@ -2996,7 +2998,7 @@ SVGTextDrawPathCallbacks::FillGeometry()
       RefPtr<PathBuilder> builder = path->CopyToBuilder(fillRule);
       path = builder->Finish();
     }
-    gfx->GetDrawTarget()->Fill(path, fillPattern);
+    mContext.GetDrawTarget()->Fill(path, fillPattern);
   }
 }
 
@@ -3010,8 +3012,8 @@ SVGTextDrawPathCallbacks::StrokeGeometry()
       GeneralPattern strokePattern;
       // XXX cku Bug 1362417 we should pass imgDrawingParams from nsTextFrame.
       imgDrawingParams imgParams;
-      nsSVGUtils::MakeStrokePatternFor(mFrame, gfx, &strokePattern, imgParams,
-                                       /*aContextPaint*/ nullptr);
+      nsSVGUtils::MakeStrokePatternFor(mFrame, &mContext, &strokePattern,
+                                       imgParams, /*aContextPaint*/ nullptr);
       if (strokePattern.GetPattern()) {
         if (!mFrame->GetParent()->GetContent()->IsSVGElement()) {
           // The cast that follows would be unsafe
@@ -3025,10 +3027,10 @@ SVGTextDrawPathCallbacks::StrokeGeometry()
         gfxMatrix outerSVGToUser;
         if (nsSVGUtils::GetNonScalingStrokeTransform(mFrame, &outerSVGToUser) &&
             outerSVGToUser.Invert()) {
-          gfx->Multiply(outerSVGToUser);
+          mContext.Multiply(outerSVGToUser);
         }
 
-        RefPtr<Path> path = gfx->GetPath();
+        RefPtr<Path> path = mContext.GetPath();
         SVGContentUtils::AutoStrokeOptions strokeOptions;
         SVGContentUtils::GetStrokeOptions(&strokeOptions, svgOwner,
                                           mFrame->StyleContext(),
@@ -3036,7 +3038,7 @@ SVGTextDrawPathCallbacks::StrokeGeometry()
         DrawOptions drawOptions;
         drawOptions.mAntialiasMode =
           nsSVGUtils::ToAntialiasMode(mFrame->StyleText()->mTextRendering);
-        gfx->GetDrawTarget()->Stroke(path, strokePattern, strokeOptions);
+        mContext.GetDrawTarget()->Stroke(path, strokePattern, strokeOptions);
       }
     }
   }
@@ -3653,7 +3655,6 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
   SVGContextPaint* outerContextPaint =
     SVGContextPaint::GetContextPaint(mContent);
 
-  nsRenderingContext rendCtx(&aContext);
   while (run.mFrame) {
     nsTextFrame* frame = run.mFrame;
 
@@ -3685,13 +3686,13 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
 
     if (drawMode != DrawMode(0)) {
       bool paintSVGGlyphs;
-      nsTextFrame::PaintTextParams params(rendCtx.ThebesContext());
+      nsTextFrame::PaintTextParams params(&aContext);
       params.framePt = gfxPoint();
       params.dirtyRect = LayoutDevicePixel::
         FromAppUnits(frame->GetVisualOverflowRect(), auPerDevPx);
       params.contextPaint = contextPaint;
       if (ShouldRenderAsPath(frame, paintSVGGlyphs)) {
-        SVGTextDrawPathCallbacks callbacks(&rendCtx, frame,
+        SVGTextDrawPathCallbacks callbacks(this, aContext, frame,
                                            matrixForPaintServers,
                                            paintSVGGlyphs);
         params.callbacks = &callbacks;
