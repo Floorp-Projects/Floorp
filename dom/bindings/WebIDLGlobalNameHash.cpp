@@ -8,6 +8,7 @@
 #include "js/GCAPI.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/PrototypeList.h"
 #include "mozilla/dom/RegisterBindings.h"
@@ -308,11 +309,17 @@ WebIDLGlobalNameHash::MayResolve(jsid aId)
 /* static */
 void
 WebIDLGlobalNameHash::GetNames(JSContext* aCx, JS::Handle<JSObject*> aObj,
-                               nsTArray<nsString>& aNames)
+                               NameType aNameType, nsTArray<nsString>& aNames)
 {
+  // aObj is always a Window here, so GetProtoAndIfaceCache on it is safe.
+  ProtoAndIfaceCache* cache = GetProtoAndIfaceCache(aObj);
   for (auto iter = sWebIDLGlobalNames->Iter(); !iter.Done(); iter.Next()) {
     const WebIDLNameTableEntry* entry = iter.Get();
-    if (!entry->mEnabled || entry->mEnabled(aCx, aObj)) {
+    // If aNameType is not AllNames, only include things whose entry slot in the
+    // ProtoAndIfaceCache is null.
+    if ((aNameType == AllNames ||
+         !cache->EntrySlotIfExists(entry->mConstructorId)) &&
+        (!entry->mEnabled || entry->mEnabled(aCx, aObj))) {
       AppendASCIItoUTF16(nsDependentCString(sNames + entry->mNameOffset,
                                             entry->mNameLength),
                          *aNames.AppendElement());

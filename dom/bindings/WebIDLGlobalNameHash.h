@@ -55,8 +55,16 @@ public:
 
   static bool MayResolve(jsid aId);
 
+  // The type of names we're asking for.
+  enum NameType {
+    // All WebIDL names enabled for aObj.
+    AllNames,
+    // Only the names that are enabled for aObj and have not been resolved for
+    // aObj in the past (and therefore can't have been deleted).
+    UnresolvedNamesOnly
+  };
   static void GetNames(JSContext* aCx, JS::Handle<JSObject*> aObj,
-                       nsTArray<nsString>& aNames);
+                       NameType aNameType, nsTArray<nsString>& aNames);
 
 private:
   friend struct WebIDLNameTableEntry;
