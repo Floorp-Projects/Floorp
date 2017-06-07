@@ -1821,6 +1821,15 @@ GetCurrentPhysicalThread();
 // thread pool will return the same virtual thread. Threads that are not
 // cooperatively scheduled will have their own unique virtual PRThread (which
 // will be equal to their physical PRThread).
+//
+// The return value of GetCurrentVirtualThread() is guaranteed not to change
+// throughout the lifetime of a thread.
+//
+// Note that the original main thread (the first one created in the process) is
+// considered as part of the pool of cooperative threads, so the return value of
+// GetCurrentVirtualThread() for this thread (throughout its lifetime, even
+// during shutdown) is the same as the return value from any other thread in the
+// cooperative pool.
 PRThread*
 GetCurrentVirtualThread();
 
