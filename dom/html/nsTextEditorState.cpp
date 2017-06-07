@@ -2661,6 +2661,11 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
             }
           } else {
             AutoDisableUndo disableUndo(mEditor);
+            if (domSel) {
+              // Since we don't use undo transaction, we don't need to store
+              // selection state.  SetText will set selection to tail.
+              domSel->RemoveAllRanges();
+            }
 
             plaintextEditor->SetText(newValue);
           }
