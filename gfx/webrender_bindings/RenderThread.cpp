@@ -179,7 +179,7 @@ NotifyDidRender(layers::CompositorBridgeParentBase* aBridge,
 void
 RenderThread::UpdateAndRender(wr::WindowId aWindowId)
 {
-  GeckoProfilerTracingRAII tracer("Paint", "Composite");
+  AutoProfilerTracing tracing("Paint", "Composite");
   MOZ_ASSERT(IsInRenderThread());
 
   auto it = mRenderers.find(aWindowId);
