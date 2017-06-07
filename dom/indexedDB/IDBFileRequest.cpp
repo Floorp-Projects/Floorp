@@ -24,15 +24,18 @@ namespace dom {
 
 using namespace mozilla::dom::indexedDB;
 
-IDBFileRequest::IDBFileRequest(nsPIDOMWindowInner* aWindow,
-                               IDBFileHandle* aFileHandle,
+IDBFileRequest::IDBFileRequest(IDBFileHandle* aFileHandle,
                                bool aWrapAsDOMRequest)
-  : DOMRequest(aWindow)
-  , FileRequestBase(DEBUGONLY(aFileHandle->OwningThread()))
+  : DOMRequest(aFileHandle->GetOwner())
   , mFileHandle(aFileHandle)
+#ifdef DEBUG
+  , mOwningThread(PR_GetCurrentThread())
+#endif
   , mWrapAsDOMRequest(aWrapAsDOMRequest)
+  , mHasEncoding(false)
 {
-  AssertIsOnOwningThread();
+  MOZ_ASSERT(aFileHandle);
+  aFileHandle->AssertIsOnOwningThread();
 }
 
 IDBFileRequest::~IDBFileRequest()
@@ -40,18 +43,73 @@ IDBFileRequest::~IDBFileRequest()
   AssertIsOnOwningThread();
 }
 
+#ifdef DEBUG
+
+void
+IDBFileRequest::AssertIsOnOwningThread() const
+{
+  MOZ_ASSERT(mOwningThread);
+  MOZ_ASSERT(PR_GetCurrentThread() == mOwningThread);
+}
+
+#endif // DEBUG
+
 // static
 already_AddRefed<IDBFileRequest>
-IDBFileRequest::Create(nsPIDOMWindowInner* aOwner, IDBFileHandle* aFileHandle,
+IDBFileRequest::Create(IDBFileHandle* aFileHandle,
                        bool aWrapAsDOMRequest)
 {
   MOZ_ASSERT(aFileHandle);
   aFileHandle->AssertIsOnOwningThread();
 
   RefPtr<IDBFileRequest> request =
-    new IDBFileRequest(aOwner, aFileHandle, aWrapAsDOMRequest);
+    new IDBFileRequest(aFileHandle, aWrapAsDOMRequest);
 
   return request.forget();
+}
+
+void
+IDBFileRequest::FireProgressEvent(uint64_t aLoaded, uint64_t aTotal)
+{
+  AssertIsOnOwningThread();
+
+  if (NS_FAILED(CheckInnerWindowCorrectness())) {
+    return;
+  }
+
+  ProgressEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mLengthComputable = false;
+  init.mLoaded = aLoaded;
+  init.mTotal = aTotal;
+
+  RefPtr<ProgressEvent> event =
+    ProgressEvent::Constructor(this, NS_LITERAL_STRING("progress"), init);
+  DispatchTrustedEvent(event);
+}
+
+void
+IDBFileRequest::SetResultCallback(ResultCallback* aCallback)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aCallback);
+
+  AutoJSAPI autoJS;
+  if (NS_WARN_IF(!autoJS.Init(GetOwner()))) {
+    FireError(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
+    return;
+  }
+
+  JSContext* cx = autoJS.cx();
+
+  JS::Rooted<JS::Value> result(cx);
+  nsresult rv = aCallback->GetResult(cx, &result);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    FireError(rv);
+  } else {
+    FireSuccess(result);
+  }
 }
 
 NS_IMPL_ADDREF_INHERITED(IDBFileRequest, DOMRequest)
@@ -83,74 +141,6 @@ IDBFileRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
     return DOMRequest::WrapObject(aCx, aGivenProto);
   }
   return IDBFileRequestBinding::Wrap(aCx, this, aGivenProto);
-}
-
-mozilla::dom::FileHandleBase*
-IDBFileRequest::FileHandle() const
-{
-  AssertIsOnOwningThread();
-
-  return mFileHandle;
-}
-
-void
-IDBFileRequest::OnProgress(uint64_t aProgress, uint64_t aProgressMax)
-{
-  AssertIsOnOwningThread();
-
-  FireProgressEvent(aProgress, aProgressMax);
-}
-
-void
-IDBFileRequest::SetResultCallback(ResultCallback* aCallback)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aCallback);
-
-  AutoJSAPI autoJS;
-  if (NS_WARN_IF(!autoJS.Init(GetOwner()))) {
-    FireError(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
-    return;
-  }
-
-  JSContext* cx = autoJS.cx();
-
-  JS::Rooted<JS::Value> result(cx);
-  nsresult rv = aCallback->GetResult(cx, &result);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    FireError(rv);
-  } else {
-    FireSuccess(result);
-  }
-}
-
-void
-IDBFileRequest::SetError(nsresult aError)
-{
-  AssertIsOnOwningThread();
-
-  FireError(aError);
-}
-
-void
-IDBFileRequest::FireProgressEvent(uint64_t aLoaded, uint64_t aTotal)
-{
-  AssertIsOnOwningThread();
-
-  if (NS_FAILED(CheckInnerWindowCorrectness())) {
-    return;
-  }
-
-  ProgressEventInit init;
-  init.mBubbles = false;
-  init.mCancelable = false;
-  init.mLengthComputable = false;
-  init.mLoaded = aLoaded;
-  init.mTotal = aTotal;
-
-  RefPtr<ProgressEvent> event =
-    ProgressEvent::Constructor(this, NS_LITERAL_STRING("progress"), init);
-  DispatchTrustedEvent(event);
 }
 
 } // namespace dom
