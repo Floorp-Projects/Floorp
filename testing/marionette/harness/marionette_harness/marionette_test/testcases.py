@@ -311,9 +311,7 @@ class MarionetteTestCase(CommonTestCase):
     def setUp(self):
         super(MarionetteTestCase, self).setUp()
         self.marionette.test_name = self.test_name
-        self.marionette.execute_script("log('TEST-START: {0}')"
-                                       .format(self.test_name),
-                                       sandbox="simpletest")
+        self.logger.info("TEST-START: {}".format(self.test_name))
 
     def tearDown(self):
         # In the case no session is active (eg. the application was quit), start
@@ -323,9 +321,7 @@ class MarionetteTestCase(CommonTestCase):
 
         if not self.marionette.crashed:
             try:
-                self.marionette.execute_script("log('TEST-END: {0}')"
-                                               .format(self.test_name),
-                                               sandbox="simpletest")
+                self.logger.info("TEST-END: {}".format(self.test_name))
                 self.marionette.test_name = None
             except (MarionetteException, IOError):
                 # We have tried to log the test end when there is no listener
