@@ -130,6 +130,7 @@ public class ClientsDatabaseAccessor {
     record.formfactor = RepoUtils.optStringFromCursor(cur, ClientsDatabase.COL_FORMFACTOR);
     record.os = RepoUtils.optStringFromCursor(cur, ClientsDatabase.COL_OS);
     record.device = RepoUtils.optStringFromCursor(cur, ClientsDatabase.COL_DEVICE);
+    record.fxaDeviceId = RepoUtils.optStringFromCursor(cur, ClientsDatabase.COL_FXA_DEVICE_ID);
     record.appPackage = RepoUtils.optStringFromCursor(cur, ClientsDatabase.COL_APP_PACKAGE);
     record.application = RepoUtils.optStringFromCursor(cur, ClientsDatabase.COL_APPLICATION);
 
