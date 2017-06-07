@@ -95,6 +95,7 @@ var gSyncPane = {
                   "weave:service:logout:finish",
                   FxAccountsCommon.ONVERIFIED_NOTIFICATION,
                   FxAccountsCommon.ONLOGIN_NOTIFICATION,
+                  FxAccountsCommon.ON_ACCOUNT_STATE_CHANGE_NOTIFICATION,
                   FxAccountsCommon.ON_PROFILE_CHANGE_NOTIFICATION,
                   ];
     // Add the observers now and remove them on unload
