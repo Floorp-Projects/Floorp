@@ -575,8 +575,8 @@ nsHTMLStyleSheet::DropMappedAttributes(nsMappedAttributes* aMapped)
 void
 nsHTMLStyleSheet::CalculateMappedServoDeclarations(nsPresContext* aPresContext)
 {
-  MOZ_ASSERT_IF(mDocument->GetShell(),
-                mDocument->GetShell()->GetPresContext() == aPresContext);
+  MOZ_ASSERT(!mDocument->GetShell() ||
+             mDocument->GetShell()->GetPresContext() == aPresContext);
 
   for (auto iter = mMappedAttrTable.Iter(); !iter.Done(); iter.Next()) {
     MappedAttrTableEntry* attr = static_cast<MappedAttrTableEntry*>(iter.Get());
