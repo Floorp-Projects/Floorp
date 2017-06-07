@@ -325,7 +325,7 @@ public:
       return;
     }
 
-    MOZ_ASSERT(mState == WaitingForScriptOrComparisonResult);
+    MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForScriptOrComparisonResult);
 
     if (NS_WARN_IF(NS_FAILED(aStatus))) {
       Fail(aStatus);
@@ -400,7 +400,7 @@ private:
   void
   ManageOldCache(JSContext* aCx, JS::Handle<JS::Value> aValue)
   {
-    MOZ_ASSERT(mState == WaitingForExistingOpen);
+    MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForExistingOpen);
 
     // RAII Cleanup when fails.
     nsresult rv = NS_ERROR_FAILURE;
@@ -436,7 +436,7 @@ private:
   void
   ManageOldKeys(JSContext* aCx, JS::Handle<JS::Value> aValue)
   {
-    MOZ_ASSERT(mState == WaitingForExistingKeys);
+    MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForExistingKeys);
 
     // RAII Cleanup when fails.
     nsresult rv = NS_ERROR_FAILURE;
@@ -491,7 +491,7 @@ private:
   void
   ManageNewCache(JSContext* aCx, JS::Handle<JS::Value> aValue)
   {
-    MOZ_ASSERT(mState == WaitingForOpen);
+    MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForOpen);
 
     // RAII Cleanup when fails.
     nsresult rv = NS_ERROR_FAILURE;
@@ -563,7 +563,7 @@ private:
     AssertIsOnMainThread();
     MOZ_ASSERT(aCache);
     MOZ_ASSERT(aCN);
-    MOZ_ASSERT(mState == WaitingForOpen);
+    MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForOpen);
 
     // We don't have to save any information from a failed CompareNetwork.
     if (!aCN->Succeeded()) {
@@ -772,8 +772,8 @@ CompareNetwork::Finish()
 void
 CompareNetwork::NetworkFinish(nsresult aRv)
 {
-  MOZ_ASSERT(mState == WaitingForBothFinished ||
-             mState == WaitingForNetworkFinished);
+  MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForBothFinished ||
+                        mState == WaitingForNetworkFinished);
 
   mNetworkResult = aRv;
 
@@ -791,8 +791,8 @@ CompareNetwork::NetworkFinish(nsresult aRv)
 void
 CompareNetwork::CacheFinish(nsresult aRv)
 {
-  MOZ_ASSERT(mState == WaitingForBothFinished ||
-             mState == WaitingForCacheFinished);
+  MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForBothFinished ||
+                        mState == WaitingForCacheFinished);
 
   mCacheResult = aRv;
 
@@ -1000,7 +1000,7 @@ CompareCache::Initialize(Cache* const aCache, const nsAString& aURL)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aCache);
-  MOZ_ASSERT(mState == WaitingForInitialization);
+  MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForInitialization);
 
   RequestOrUSVString request;
   request.SetAsUSVString().Rebind(aURL.Data(), aURL.Length());
@@ -1177,8 +1177,8 @@ CompareManager::Initialize(nsIPrincipal* aPrincipal,
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(mState == WaitingForInitialization);
   MOZ_ASSERT(mPendingCount == 0);
+  MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForInitialization);
 
   // RAII Cleanup when fails.
   auto guard = MakeScopeExit([&] { Cleanup(); });
@@ -1261,7 +1261,7 @@ CompareManager::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
       }
       return;
     default:
-      MOZ_CRASH("Unacceptable state.");
+      MOZ_DIAGNOSTIC_ASSERT(false);
   }
 }
 
@@ -1285,7 +1285,7 @@ CompareManager::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
       NS_WARNING("Could not write to cache.");
       break;
     default:
-      MOZ_CRASH("Unacceptable state.");
+      MOZ_DIAGNOSTIC_ASSERT(false);
   }
 
   Fail(NS_ERROR_FAILURE);
