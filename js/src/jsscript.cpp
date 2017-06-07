@@ -2065,7 +2065,9 @@ ScriptSource::xdrEncodeFunction(JSContext* cx, HandleFunction fun, HandleScriptS
 bool
 ScriptSource::xdrFinalizeEncoder(JS::TranscodeBuffer& buffer)
 {
-    MOZ_ASSERT(hasEncoder());
+    if (!hasEncoder())
+        return false;
+
     auto cleanup = mozilla::MakeScopeExit([&] {
         xdrEncoder_.reset(nullptr);
     });

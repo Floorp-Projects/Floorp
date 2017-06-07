@@ -48,6 +48,10 @@ function runTest() {
     checkCueEvents();
   }
 
+  video.onloadedmetadata = function () {
+    ok(video.duration > 2, "video.duration should larger than 2");
+  }
+
   info("--- create the type of track ---");
   isnot(window.TextTrack, undefined, "TextTrack should be defined.");
 
@@ -59,7 +63,7 @@ function runTest() {
   isnot(window.TextTrackCue, undefined, "TextTrackCue should be defined.");
   isnot(window.VTTCue, undefined, "VTTCue should be defined.");
 
-  var cue = new VTTCue(0, 1, "Test cue");
+  var cue = new VTTCue(1, 2, "Test cue");
   ok(cue instanceof TextTrackCue, "Cue should be an instanceof TextTrackCue.");
   ok(cue instanceof VTTCue, "Cue should be an instanceof VTTCue.");
 
@@ -76,7 +80,7 @@ function runTest() {
     if (cueChrome.getActive) {
       checkCueDisplayState(cue, true /* has display-state */);
     } else {
-      ok(false, "The cue start time is 0, should be always active!?");
+      info("This is a missing cue, video.currentTime is "+ video.currentTime);
     }
 
     cue.onexit = function () {

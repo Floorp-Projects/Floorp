@@ -38,6 +38,8 @@ public:
     MOZ_COUNT_DTOR_INHERITED(DocAccessibleChild, DocAccessibleChildBase);
   }
 
+  virtual mozilla::ipc::IPCResult RecvRestoreFocus() override;
+
   /*
    * Return the state for the accessible with given ID.
    */

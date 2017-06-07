@@ -74,6 +74,11 @@ child:
   async ParentCOMProxy(IAccessibleHolder aParentCOMProxy);
   async EmulatedWindow(WindowsHandle aEmulatedWindowHandle,
                        IAccessibleHolder aEmulatedWindowCOMProxy);
+  /*
+   * Called as a result of focus shifting from chrome to content
+   * elements through keyboard navigation.
+   */
+  async RestoreFocus();
 
   async __delete__();
 };

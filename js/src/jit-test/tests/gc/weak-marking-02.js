@@ -7,6 +7,8 @@
 // in the WeakMap, and the actual "delegate" object in the target compartment
 // is the thing whose liveness is checked.
 
+gczeal(0);
+
 var g2 = newGlobal();
 g2.eval('function genObj(name) { return {"name": name} }');
 
