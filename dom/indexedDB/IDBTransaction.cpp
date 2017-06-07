@@ -18,6 +18,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "nsAutoPtr.h"
 #include "nsPIDOMWindow.h"
+#include "nsQueryObject.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTHashtable.h"
 #include "ProfilerHelpers.h"
