@@ -2616,16 +2616,10 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
         AutoNoJSAPI nojsapi;
 
         nsCOMPtr<nsISelection> domSel;
-        nsCOMPtr<nsISelectionPrivate> selPriv;
         mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
                               getter_AddRefs(domSel));
-        if (domSel)
-        {
-          selPriv = do_QueryInterface(domSel);
-          if (selPriv) {
-            selPriv->StartBatchChanges();
-          }
-        }
+        SelectionBatcher selectionBatcher(domSel ? domSel->AsSelection() :
+                                                   nullptr);
 
         nsCOMPtr<nsIPlaintextEditor> plaintextEditor = do_QueryInterface(mEditor);
         if (!plaintextEditor || !weakFrame.IsAlive()) {
@@ -2691,10 +2685,6 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
           if (!mCachedValue.Assign(newValue, fallible)) {
             return false;
           }
-        }
-
-        if (selPriv) {
-          selPriv->EndBatchChanges();
         }
       }
     }
