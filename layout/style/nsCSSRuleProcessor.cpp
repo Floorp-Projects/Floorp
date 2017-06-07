@@ -1676,6 +1676,71 @@ IsSignificantChildMaybeThreadSafe(const nsIContent* aContent,
 }
 
 /* static */ bool
+nsCSSRuleProcessor::LangPseudoMatches(const mozilla::dom::Element* aElement,
+                                      const nsAString* aOverrideLang,
+                                      bool aHasOverrideLang,
+                                      const char16_t* aString,
+                                      const nsIDocument* aDocument)
+{
+  NS_ASSERTION(aString, "null lang parameter");
+  if (!aString || !*aString) {
+    return false;
+  }
+
+  // We have to determine the language of the current element.  Since
+  // this is currently no property and since the language is inherited
+  // from the parent we have to be prepared to look at all parent
+  // nodes.  The language itself is encoded in the LANG attribute.
+  bool haveLanguage = false;
+  nsAutoString language;
+  if (aHasOverrideLang) {
+    if (aOverrideLang) {
+      language = *aOverrideLang;
+      haveLanguage = true;
+    }
+  } else {
+    haveLanguage = aElement->GetLang(language);
+  }
+
+  if (haveLanguage) {
+    return nsStyleUtil::DashMatchCompare(language,
+                                         nsDependentString(aString),
+                                         nsASCIICaseInsensitiveStringComparator());
+  }
+
+  if (aDocument) {
+    // Try to get the language from the HTTP header or if this
+    // is missing as well from the preferences.
+    // The content language can be a comma-separated list of
+    // language codes.
+    aDocument->GetContentLanguage(language);
+
+    nsDependentString langString(aString);
+    language.StripWhitespace();
+    int32_t begin = 0;
+    int32_t len = language.Length();
+    while (begin < len) {
+      int32_t end = language.FindChar(char16_t(','), begin);
+      if (end == kNotFound) {
+        end = len;
+      }
+      if (nsStyleUtil::DashMatchCompare(Substring(language, begin,
+                                                  end-begin),
+                                        langString,
+                                        nsASCIICaseInsensitiveStringComparator())) {
+        return true;
+      }
+      begin = end + 1;
+    }
+    if (begin < len) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/* static */ bool
 nsCSSRuleProcessor::StringPseudoMatches(const mozilla::dom::Element* aElement,
                                         CSSPseudoClassType aPseudo,
                                         const char16_t* aString,
@@ -1788,56 +1853,8 @@ nsCSSRuleProcessor::StringPseudoMatches(const mozilla::dom::Element* aElement,
       break;
 
     case CSSPseudoClassType::lang:
-      {
-        NS_ASSERTION(aString, "null lang parameter");
-        if (!aString || !*aString) {
-          return false;
-        }
-
-        // We have to determine the language of the current element.  Since
-        // this is currently no property and since the language is inherited
-        // from the parent we have to be prepared to look at all parent
-        // nodes.  The language itself is encoded in the LANG attribute.
-        nsAutoString language;
-        if (aElement->GetLang(language)) {
-          if (!nsStyleUtil::DashMatchCompare(language,
-                                             nsDependentString(aString),
-                                             nsASCIICaseInsensitiveStringComparator())) {
-            return false;
-          }
-          // This pseudo-class matched; move on to the next thing
-          break;
-        }
-
-        if (aDocument) {
-          // Try to get the language from the HTTP header or if this
-          // is missing as well from the preferences.
-          // The content language can be a comma-separated list of
-          // language codes.
-          aDocument->GetContentLanguage(language);
-
-          nsDependentString langString(aString);
-          language.StripWhitespace();
-          int32_t begin = 0;
-          int32_t len = language.Length();
-          while (begin < len) {
-            int32_t end = language.FindChar(char16_t(','), begin);
-            if (end == kNotFound) {
-              end = len;
-            }
-            if (nsStyleUtil::DashMatchCompare(Substring(language, begin,
-                                                        end-begin),
-                                              langString,
-                                              nsASCIICaseInsensitiveStringComparator())) {
-              break;
-            }
-            begin = end + 1;
-          }
-          if (begin < len) {
-            // This pseudo-class matched
-            break;
-          }
-        }
+      if (LangPseudoMatches(aElement, nullptr, false, aString, aDocument)) {
+        break;
       }
       return false;
 
