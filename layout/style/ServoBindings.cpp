@@ -1159,7 +1159,6 @@ void
 Gecko_nsFont_InitSystem(nsFont* aDest, int32_t aFontId,
                         const nsStyleFont* aFont, RawGeckoPresContextBorrowed aPresContext)
 {
-  MutexAutoLock lock(*sServoFontMetricsLock);
   const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(aPresContext, aFont->mLanguage,
                                                                      kPresContext_DefaultVariableFont_ID);
 
@@ -1173,6 +1172,8 @@ Gecko_nsFont_InitSystem(nsFont* aDest, int32_t aFontId,
 
   *aDest = *defaultVariableFont;
   LookAndFeel::FontID fontID = static_cast<LookAndFeel::FontID>(aFontId);
+
+  MutexAutoLock lock(*sServoFontMetricsLock);
   nsRuleNode::ComputeSystemFont(aDest, fontID, aPresContext, defaultVariableFont);
 }
 
