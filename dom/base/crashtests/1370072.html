@@ -1,0 +1,18 @@
+<script>
+function start() {
+	o1=document.createElement('iframe');
+	o1.addEventListener('load',fun0);
+	document.body.appendChild(o1);
+}
+function fun0() {
+	o5=o1.contentDocument;
+	o52=function() {let x=o5.querySelectorAll('*:not([id])');return x[x.length-1]}();
+	o1.contentWindow.onresize=fun1;
+	o1.height='5px';
+	o52.clientTop;
+}
+function fun1() {
+	document.documentElement.appendChild(o1);
+}
+</script>
+<body onload="start()"></body>

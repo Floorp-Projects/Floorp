@@ -29,22 +29,23 @@ ProfilerMarkerPayload::~ProfilerMarkerPayload()
 void
 ProfilerMarkerPayload::streamCommonProps(const char* aMarkerType,
                                          SpliceableJSONWriter& aWriter,
-                                         const TimeStamp& aStartTime,
+                                         const TimeStamp& aProcessStartTime,
                                          UniqueStacks& aUniqueStacks)
 {
   MOZ_ASSERT(aMarkerType);
   aWriter.StringProperty("type", aMarkerType);
   if (!mStartTime.IsNull()) {
     aWriter.DoubleProperty("startTime",
-                           (mStartTime - aStartTime).ToMilliseconds());
+                           (mStartTime - aProcessStartTime).ToMilliseconds());
   }
   if (!mEndTime.IsNull()) {
-    aWriter.DoubleProperty("endTime", (mEndTime - aStartTime).ToMilliseconds());
+    aWriter.DoubleProperty("endTime",
+                           (mEndTime - aProcessStartTime).ToMilliseconds());
   }
   if (mStack) {
     aWriter.StartObjectProperty("stack");
     {
-      mStack->StreamJSON(aWriter, aStartTime, aUniqueStacks);
+      mStack->StreamJSON(aWriter, aProcessStartTime, aUniqueStacks);
     }
     aWriter.EndObject();
   }
@@ -70,10 +71,10 @@ ProfilerMarkerTracing::ProfilerMarkerTracing(const char* aCategory,
 
 void
 ProfilerMarkerTracing::StreamPayload(SpliceableJSONWriter& aWriter,
-                                     const TimeStamp& aStartTime,
+                                     const TimeStamp& aProcessStartTime,
                                      UniqueStacks& aUniqueStacks)
 {
-  streamCommonProps("tracing", aWriter, aStartTime, aUniqueStacks);
+  streamCommonProps("tracing", aWriter, aProcessStartTime, aUniqueStacks);
 
   if (GetCategory()) {
     aWriter.StringProperty("category", GetCategory());
@@ -101,15 +102,16 @@ GPUMarkerPayload::GPUMarkerPayload(
 
 void
 GPUMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                const TimeStamp& aStartTime,
+                                const TimeStamp& aProcessStartTime,
                                 UniqueStacks& aUniqueStacks)
 {
-  streamCommonProps("gpu_timer_query", aWriter, aStartTime, aUniqueStacks);
+  streamCommonProps("gpu_timer_query", aWriter, aProcessStartTime,
+                    aUniqueStacks);
 
   aWriter.DoubleProperty("cpustart",
-                         (mCpuTimeStart - aStartTime).ToMilliseconds());
+                         (mCpuTimeStart - aProcessStartTime).ToMilliseconds());
   aWriter.DoubleProperty("cpuend",
-                         (mCpuTimeEnd - aStartTime).ToMilliseconds());
+                         (mCpuTimeEnd - aProcessStartTime).ToMilliseconds());
   aWriter.IntProperty("gpustart", (int)mGpuTimeStart);
   aWriter.IntProperty("gpuend", (int)mGpuTimeEnd);
 }
@@ -120,10 +122,10 @@ ProfilerMarkerImagePayload::ProfilerMarkerImagePayload(gfxASurface *aImg)
 
 void
 ProfilerMarkerImagePayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                          const TimeStamp& aStartTime,
+                                          const TimeStamp& aProcessStartTime,
                                           UniqueStacks& aUniqueStacks)
 {
-  streamCommonProps("innerHTML", aWriter, aStartTime, aUniqueStacks);
+  streamCommonProps("innerHTML", aWriter, aProcessStartTime, aUniqueStacks);
   // TODO: Finish me
   //aWriter.NameValue("innerHTML", "<img src=''/>");
 }
@@ -147,10 +149,10 @@ IOMarkerPayload::~IOMarkerPayload(){
 
 void
 IOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                               const TimeStamp& aStartTime,
+                               const TimeStamp& aProcessStartTime,
                                UniqueStacks& aUniqueStacks)
 {
-  streamCommonProps("io", aWriter, aStartTime, aUniqueStacks);
+  streamCommonProps("io", aWriter, aProcessStartTime, aUniqueStacks);
   aWriter.StringProperty("source", mSource);
   if (mFilename != nullptr) {
     aWriter.StringProperty("filename", mFilename);
@@ -180,10 +182,10 @@ UserTimingMarkerPayload::~UserTimingMarkerPayload()
 
 void
 UserTimingMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                       const TimeStamp& aStartTime,
+                                       const TimeStamp& aProcessStartTime,
                                        UniqueStacks& aUniqueStacks)
 {
-  streamCommonProps("UserTiming", aWriter, aStartTime, aUniqueStacks);
+  streamCommonProps("UserTiming", aWriter, aProcessStartTime, aUniqueStacks);
   aWriter.StringProperty("name", NS_ConvertUTF16toUTF8(mName).get());
   aWriter.StringProperty("entryType", mEntryType);
 }
@@ -203,10 +205,10 @@ DOMEventMarkerPayload::~DOMEventMarkerPayload()
 
 void
 DOMEventMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                     const TimeStamp& aStartTime,
+                                     const TimeStamp& aProcessStartTime,
                                      UniqueStacks& aUniqueStacks)
 {
-  streamCommonProps("DOMEvent", aWriter, aStartTime, aUniqueStacks);
+  streamCommonProps("DOMEvent", aWriter, aProcessStartTime, aUniqueStacks);
   aWriter.StringProperty("type", NS_ConvertUTF16toUTF8(mType).get());
   aWriter.IntProperty("phase", mPhase);
 }
@@ -227,7 +229,7 @@ LayerTranslationPayload::LayerTranslationPayload(mozilla::layers::Layer* aLayer,
 
 void
 LayerTranslationPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                       const TimeStamp& aStartTime,
+                                       const TimeStamp& aProcessStartTime,
                                        UniqueStacks& aUniqueStacks)
 {
   const size_t bufferSize = 32;
@@ -248,7 +250,7 @@ TouchDataPayload::TouchDataPayload(const mozilla::ScreenIntPoint& aPoint)
 
 void
 TouchDataPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                const TimeStamp& aStartTime,
+                                const TimeStamp& aProcessStartTime,
                                 UniqueStacks& aUniqueStacks)
 {
   aWriter.IntProperty("x", mPoint.x);
@@ -263,21 +265,21 @@ VsyncPayload::VsyncPayload(mozilla::TimeStamp aVsyncTimestamp)
 
 void
 VsyncPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                            const TimeStamp& aStartTime,
+                            const TimeStamp& aProcessStartTime,
                             UniqueStacks& aUniqueStacks)
 {
   aWriter.DoubleProperty("vsync",
-                         (mVsyncTimestamp - aStartTime).ToMilliseconds());
+                         (mVsyncTimestamp - aProcessStartTime).ToMilliseconds());
   aWriter.StringProperty("category", "VsyncTimestamp");
 }
 
 void
 GCSliceMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                    const mozilla::TimeStamp& aStartTime,
+                                    const mozilla::TimeStamp& aProcessStartTime,
                                     UniqueStacks& aUniqueStacks)
 {
   MOZ_ASSERT(mTimingJSON);
-  streamCommonProps("GCSlice", aWriter, aStartTime, aUniqueStacks);
+  streamCommonProps("GCSlice", aWriter, aProcessStartTime, aUniqueStacks);
   if (mTimingJSON) {
     aWriter.SplicedJSONProperty("timings", mTimingJSON.get());
   } else {
@@ -287,11 +289,11 @@ GCSliceMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 
 void
 GCMajorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                    const mozilla::TimeStamp& aStartTime,
+                                    const mozilla::TimeStamp& aProcessStartTime,
                                     UniqueStacks& aUniqueStacks)
 {
   MOZ_ASSERT(mTimingJSON);
-  streamCommonProps("GCMajor", aWriter, aStartTime, aUniqueStacks);
+  streamCommonProps("GCMajor", aWriter, aProcessStartTime, aUniqueStacks);
   if (mTimingJSON) {
     aWriter.SplicedJSONProperty("timings", mTimingJSON.get());
   } else {
@@ -301,11 +303,11 @@ GCMajorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 
 void
 GCMinorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
-                                    const mozilla::TimeStamp& aStartTime,
+                                    const mozilla::TimeStamp& aProcessStartTime,
                                     UniqueStacks& aUniqueStacks)
 {
   MOZ_ASSERT(mTimingData);
-  streamCommonProps("GCMinor", aWriter, aStartTime, aUniqueStacks);
+  streamCommonProps("GCMinor", aWriter, aProcessStartTime, aUniqueStacks);
   if (mTimingData) {
     aWriter.SplicedJSONProperty("nurseryTimings", mTimingData.get());
   } else {
