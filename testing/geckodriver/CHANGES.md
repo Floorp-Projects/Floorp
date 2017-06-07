@@ -2,13 +2,31 @@
 
 All notable changes to this program is documented in this file.
 
-## 0.16.1 (2016-04-26)
+## 0.17.0 (2017-06-09)
+
+### Added
+- Added endpoints:
+  - POST `/session/{session id}/window/fullscreen` to invoke the window manager-specific `full screen` operation
+  - POST `/session/{session id}/moz/addon/install` to install an extension [Gecko only]
+  - POST `/session/{session id}/moz/addon/uninstall` to uninstall an extension [Gecko only]
+
+### Changed
+- Increasing the length of the `network.http.phishy-userpass-length` preference will cause Firefox to not prompt when navigating to a website with a username or password in the URL
+- Library dependencies upgraded to mozrunner 0.4 and mozprofile 0.3 to allow overriding of preferences via capabilities if those have been already set in the profile
+- Library dependencies upgraded to mozversion 0.1.2 to only use the normalized path of the Firefox binary for version checks but not to actually start the browser, which broke several components in Firefox on Windows
+
+### Fixed
+- The SetWindowRect command now returns the WindowRect when it is done
+- Use ASCII versions of array symbols to properly display them in the Windows command prompt
+- Use [`SessionNotCreated`](https://docs.rs/webdriver/0.25.0/webdriver/error/enum.ErrorStatus.html#variant.SessionNotCreated) error instead of [`UnknownError`](https://docs.rs/webdriver/0.25.0/webdriver/error/enum.ErrorStatus.html#variant.UnknownError) if there is no current session
+
+## 0.16.1 (2017-04-26)
 
 ### Fixed
 - Read Firefox version number from stdout when failing to look for the application .ini file (fixes [Selenium #3884](https://github.com/SeleniumHQ/selenium/issues/3884))
 - Session is now ended when closing the last Firefox window (fixes [#613](https://github.com/mozilla/geckodriver/issues/613))
 
-## 0.16.0 (2016-04-21)
+## 0.16.0 (2017-04-21)
 
 Note that geckodriver v0.16.0 is only compatible with Selenium 3.4 and greater.
 
@@ -27,7 +45,7 @@ Note that geckodriver v0.16.0 is only compatible with Selenium 3.4 and greater.
   - POST `/session/{session id}/alert_text`
   - POST `/session/{session id}/accept_alert`
   - POST `/session/{session id}/dismiss_alert`
-  - GET `/session/{session id}/window_handle` 
+  - GET `/session/{session id}/window_handle`
   - DELETE `/session/{session id}/window_handle`
   - POST `/session/{session id}/execute_async`
   - POST `/session/{session id}/execute`
