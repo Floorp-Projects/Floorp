@@ -242,6 +242,50 @@ function isFreetextMatch(item, text) {
   return match;
 }
 
+/**
+ * Generates an autocomplete list for the search-box for network monitor
+ *
+ * It expects an entire string of the searchbox ie "is:cached pr".
+ * The string is then tokenized into "is:cached" and "pr"
+ *
+ * @param {string} filter - The entire search string of the search box
+ * @return {Array} - The output is an array of objects as below
+ * [{value: "is:cached protocol", displayValue: "protocol"}[, ...]]
+ * `value` is used to update the search-box input box for given item
+ * `displayValue` is used to render the autocomplete list
+ */
+function autocompleteProvider(filter) {
+  if (!filter) {
+    return [];
+  }
+
+  let negativeAutocompleteList = FILTER_FLAGS.map((item) => `-${item}`);
+  let baseList = [...FILTER_FLAGS, ...negativeAutocompleteList]
+    .map((item) => `${item}:`);
+
+  // The last token is used to filter the base autocomplete list
+  let tokens = filter.split(/\s+/g);
+  let lastToken = tokens[tokens.length - 1];
+  let previousTokens = tokens.slice(0, tokens.length - 1);
+
+  // Autocomplete list is not generated for empty lastToken
+  if (!lastToken) {
+    return [];
+  }
+
+  return baseList
+    .filter((item) => {
+      return item.toLowerCase().startsWith(lastToken.toLowerCase())
+        && item.toLowerCase() !== lastToken.toLowerCase();
+    })
+    .sort()
+    .map(item => ({
+      value: [...previousTokens, item].join(" "),
+      displayValue: item,
+    }));
+}
+
 module.exports = {
   isFreetextMatch,
+  autocompleteProvider,
 };
