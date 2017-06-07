@@ -9,6 +9,7 @@
 #include "mozilla/dom/EventHandlerBinding.h"
 #include "nsGlobalWindow.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "nsAttrValueOrString.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(FrameSet)
 
@@ -65,43 +66,45 @@ HTMLFrameSetElement::GetRows(nsAString& aRows)
 }
 
 nsresult
-HTMLFrameSetElement::SetAttr(int32_t aNameSpaceID,
-                             nsIAtom* aAttribute,
-                             nsIAtom* aPrefix,
-                             const nsAString& aValue,
-                             bool aNotify)
+HTMLFrameSetElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+                                   const nsAttrValueOrString* aValue,
+                                   bool aNotify)
 {
-  nsresult rv;
   /* The main goal here is to see whether the _number_ of rows or
-   *  columns has changed.  If it has, we need to reframe; otherwise
-   *  we want to reflow.  So we set mCurrentRowColHint here, then call
-   *  nsGenericHTMLElement::SetAttr, which will end up calling
-   *  GetAttributeChangeHint and notifying layout with that hint.
-   *  Once nsGenericHTMLElement::SetAttr returns, we want to go back to our
-   *  normal hint, which is NS_STYLE_HINT_REFLOW.
+   * columns has changed. If it has, we need to reframe; otherwise
+   * we want to reflow.
+   * Ideally, the style hint would be changed back to reflow after the reframe
+   * has been performed. Unfortunately, however, the reframe will be performed
+   * by the call to nsNodeUtils::AttributeChanged, which occurs *after*
+   * AfterSetAttr is called, leaving us with no convenient way of changing the
+   * value back to reflow afterwards. However, nsNodeUtils::AttributeChanged is
+   * effectively the only consumer of this value, so as long as we always set
+   * the value correctly here, we should be fine.
    */
-  if (aAttribute == nsGkAtoms::rows && aNameSpaceID == kNameSpaceID_None) {
-    int32_t oldRows = mNumRows;
-    ParseRowCol(aValue, mNumRows, &mRowSpecs);
+  mCurrentRowColHint = NS_STYLE_HINT_REFLOW;
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aName == nsGkAtoms::rows) {
+      if (aValue) {
+        int32_t oldRows = mNumRows;
+        ParseRowCol(aValue->String(), mNumRows, &mRowSpecs);
 
-    if (mNumRows != oldRows) {
-      mCurrentRowColHint = nsChangeHint_ReconstructFrame;
-    }
-  } else if (aAttribute == nsGkAtoms::cols &&
-             aNameSpaceID == kNameSpaceID_None) {
-    int32_t oldCols = mNumCols;
-    ParseRowCol(aValue, mNumCols, &mColSpecs);
+        if (mNumRows != oldRows) {
+          mCurrentRowColHint = nsChangeHint_ReconstructFrame;
+        }
+      }
+    } else if (aName == nsGkAtoms::cols) {
+      if (aValue) {
+        int32_t oldCols = mNumCols;
+        ParseRowCol(aValue->String(), mNumCols, &mColSpecs);
 
-    if (mNumCols != oldCols) {
-      mCurrentRowColHint = nsChangeHint_ReconstructFrame;
+        if (mNumCols != oldCols) {
+          mCurrentRowColHint = nsChangeHint_ReconstructFrame;
+        }
+      }
     }
   }
 
-  rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aAttribute, aPrefix,
-                                     aValue, aNotify);
-  mCurrentRowColHint = NS_STYLE_HINT_REFLOW;
-
-  return rv;
+  return nsGenericHTMLElement::BeforeSetAttr(aNamespaceID, aName, aValue, aNotify);
 }
 
 nsresult
