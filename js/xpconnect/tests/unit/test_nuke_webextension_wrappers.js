@@ -61,8 +61,8 @@ add_task(function*() {
 
   webnavB.close();
 
-  // Wrappers are nuked asynchronously, so wait for that to happen.
-  yield TestUtils.topicObserved("inner-window-nuked");
+  // Wrappers are destroyed asynchronously, so wait for that to happen.
+  yield TestUtils.topicObserved("inner-window-destroyed");
 
   // Check that it can't be accessed after he window has been closed.
   let result = getThing();
