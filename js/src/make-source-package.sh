@@ -108,10 +108,6 @@ case $cmd in
     cp -pPR \
         ${TOPSRCDIR}/python \
         ${tgtpath}
-    ${MKDIR} -p ${tgtpath}/third_party
-    cp -pPR \
-        ${TOPSRCDIR}/third_party/python \
-        ${tgtpath}/third_party
     ${MKDIR} -p ${tgtpath}/dom/bindings
     cp -pPR \
         ${TOPSRCDIR}/dom/bindings/mozwebidlcodegen \
