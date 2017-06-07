@@ -201,10 +201,6 @@ load 1154598.xhtml
 load 1157995.html
 load 1158412.html
 load 1181619.html
-load structured_clone_container_throws.html
-HTTP(..) load xhr_abortinprogress.html
-load xhr_empty_datauri.html
-load xhr_html_nullresponse.html
 load 1230422.html
 load 1251361.html
 load 1304437.html
@@ -212,7 +208,12 @@ pref(dom.IntersectionObserver.enabled,true) load 1324209.html
 pref(dom.IntersectionObserver.enabled,true) load 1326194-1.html
 pref(dom.IntersectionObserver.enabled,true) load 1326194-2.html
 pref(dom.IntersectionObserver.enabled,true) load 1332939.html
-pref(dom.IntersectionObserver.enabled,true) load 1353529.xul
 pref(dom.webcomponents.enabled,true) load 1341693.html
+pref(dom.IntersectionObserver.enabled,true) load 1353529.xul
 pref(dom.IntersectionObserver.enabled,true) load 1369363.xul
 load 1370072.html
+pref(dom.IntersectionObserver.enabled,true) load 1370968.html
+load structured_clone_container_throws.html
+HTTP(..) load xhr_abortinprogress.html
+load xhr_empty_datauri.html
+load xhr_html_nullresponse.html
