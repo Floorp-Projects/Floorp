@@ -663,8 +663,10 @@ Livemark.prototype = {
    *        Whether the nodes should be set as visited.
    */
   updateURIVisitedStatus(aURI, aVisitedStatus) {
+    let wasVisited = false;
     for (let child of this.children) {
       if (!aURI || child.uri.equals(aURI)) {
+        wasVisited = child.visited;
         child.visited = aVisitedStatus;
       }
     }
@@ -675,7 +677,7 @@ Livemark.prototype = {
         for (let node of nodes) {
           if (!aURI || node.uri == aURI.spec) {
             Services.tm.dispatchToMainThread(() => {
-              observer.nodeHistoryDetailsChanged(node, 0, aVisitedStatus);
+              observer.nodeHistoryDetailsChanged(node, node.time, wasVisited);
             });
           }
         }

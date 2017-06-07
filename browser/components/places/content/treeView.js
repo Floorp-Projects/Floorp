@@ -816,7 +816,7 @@ PlacesTreeView.prototype = {
     this._invalidateCellValue(aNode, this.COLUMN_TYPE_TITLE);
   },
 
-  nodeURIChanged: function PTV_nodeURIChanged(aNode, aNewURI) {
+  nodeURIChanged: function PTV_nodeURIChanged(aNode, aOldURI) {
     this._invalidateCellValue(aNode, this.COLUMN_TYPE_URI);
   },
 
@@ -825,8 +825,8 @@ PlacesTreeView.prototype = {
   },
 
   nodeHistoryDetailsChanged:
-  function PTV_nodeHistoryDetailsChanged(aNode, aUpdatedVisitDate,
-                                         aUpdatedVisitCount) {
+  function PTV_nodeHistoryDetailsChanged(aNode, aOldVisitDate,
+                                         aOldVisitCount) {
     if (aNode.parent && this._controller.hasCachedLivemarkInfo(aNode.parent)) {
       // Find the node in the parent.
       let parentRow = this._flatList ? 0 : this._getRowForNode(aNode.parent);
