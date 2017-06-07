@@ -952,6 +952,13 @@ LoadInfo::MaybeIncreaseTainting(uint32_t aTainting)
   return NS_OK;
 }
 
+void
+LoadInfo::SynthesizeServiceWorkerTainting(LoadTainting aTainting)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aTainting <= LoadTainting::Opaque);
+  mTainting = aTainting;
+}
+
 NS_IMETHODIMP
 LoadInfo::GetIsTopLevelLoad(bool *aResult)
 {
