@@ -86,12 +86,6 @@ Directory::Create(nsISupports* aParent, nsIFile* aFile,
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(aFile);
 
-#ifdef DEBUG
-  bool isDir;
-  nsresult rv = aFile->IsDirectory(&isDir);
-  MOZ_ASSERT(NS_SUCCEEDED(rv) && isDir);
-#endif
-
   RefPtr<Directory> directory = new Directory(aParent, aFile, aFileSystem);
   return directory.forget();
 }

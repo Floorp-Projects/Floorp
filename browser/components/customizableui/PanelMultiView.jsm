@@ -532,6 +532,8 @@ this.PanelMultiView = class {
         this._viewContainer.style.width = previousRect.width + "px";
 
         this._transitioning = true;
+        if (this._autoResizeWorkaroundTimer)
+          window.clearTimeout(this._autoResizeWorkaroundTimer);
         this._viewContainer.setAttribute("transition-reverse", reverse);
         let nodeToAnimate = reverse ? previousViewNode : viewNode;
 
@@ -604,7 +606,7 @@ this.PanelMultiView = class {
             // another few milliseconds to remove the width and height 'fixtures',
             // to be sure we don't flicker annoyingly.
             // NB: HACK! Bug 1363756 is there to fix this.
-            window.setTimeout(() => {
+            this._autoResizeWorkaroundTimer = window.setTimeout(() => {
               // Only remove the height when the view is larger than the main
               // view, otherwise it'll snap back to its own height.
               if (viewNode == this._mainView || viewRect.height > this._mainViewHeight)
