@@ -63,8 +63,10 @@ public:
     // aObj in the past (and therefore can't have been deleted).
     UnresolvedNamesOnly
   };
-  static void GetNames(JSContext* aCx, JS::Handle<JSObject*> aObj,
-                       NameType aNameType, nsTArray<nsString>& aNames);
+  // Returns false if an exception has been thrown on aCx.
+  static bool GetNames(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                       NameType aNameType,
+                       JS::AutoIdVector& aNames);
 
 private:
   friend struct WebIDLNameTableEntry;

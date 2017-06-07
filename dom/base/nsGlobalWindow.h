@@ -486,7 +486,7 @@ public:
   // If in doubt, return true.
   static bool MayResolve(jsid aId);
 
-  void GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
+  void GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& aNames,
                            mozilla::ErrorResult& aRv);
 
   // Object Management
