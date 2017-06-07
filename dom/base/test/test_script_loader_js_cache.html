@@ -191,6 +191,23 @@
 
     }, "Save bytecode after the initialization of the page");
 
+    promise_test(async function() {
+      // (see above)
+      await SpecialPowers.pushPrefEnv({set: [
+        ['dom.script_loader.bytecode_cache.enabled', true],
+        ['dom.expose_test_interfaces', true],
+        ['dom.script_loader.bytecode_cache.strategy', -1]
+      ]});
+
+      // The test page loads a script which contains a syntax error, we should
+      // not attempt to encode any bytecode for it.
+      var stateMachineResult =
+          WaitForScriptTagEvent("file_js_cache_syntax_error.html");
+      assert_equals(await stateMachineResult, "source_exec",
+                    "Check the lack of bytecode encoding");
+
+    }, "Do not save bytecode on compilation errors");
+
     done();
   </script>
 </head>

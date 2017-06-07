@@ -3,6 +3,8 @@
 // everything in functions because it seems like the toplevel script hangs onto
 // its object literals.
 
+gczeal(0);
+
 // All reachable keys should be found, and the rest should be swept.
 function basicSweeping() {
   var wm1 = new WeakMap();

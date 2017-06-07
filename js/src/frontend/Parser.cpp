@@ -2265,7 +2265,7 @@ Parser<FullParseHandler, char16_t>::moduleBody(ModuleSharedContext* modulesc)
         DeclaredNamePtr p = modulepc.varScope().lookupDeclaredName(name);
         if (!p) {
             JSAutoByteString str;
-            if (!str.encodeLatin1(context, name))
+            if (!AtomToPrintableString(context, name, &str))
                 return null();
 
             JS_ReportErrorNumberLatin1(context, GetErrorMessage, nullptr,

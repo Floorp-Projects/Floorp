@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// Note to run this test similar to try server, you need to run:
+// ./mach package
+// ./mach mochitest --appname dist <path to test>
+
 // Slow on asan builds.
 requestLongerTimeout(5);
 
@@ -324,7 +328,7 @@ function parseCodeFile(fileUri) {
     let baseUri;
     for (let line of data.split("\n")) {
       let urls =
-        line.match(/["']chrome:\/\/[a-zA-Z0-9 -]+\/(content|skin|locale)\/[^"' ]*["']/g);
+        line.match(/["'`]chrome:\/\/[a-zA-Z0-9 -]+\/(content|skin|locale)\/[^"'` ]*["'`]/g);
       if (!urls) {
         urls = line.match(/["']resource:\/\/[^"']+["']/g);
         if (urls && isDevtools &&
@@ -388,8 +392,14 @@ function parseCodeFile(fileUri) {
         // Remove quotes.
         url = url.slice(1, -1);
         // Remove ? or \ trailing characters.
-        if (url.endsWith("?") || url.endsWith("\\"))
+        if (url.endsWith("\\")) {
           url = url.slice(0, -1);
+        }
+
+        let pos = url.indexOf("?");
+        if (pos != -1) {
+          url = url.slice(0, pos);
+        }
 
         // Make urls like chrome://browser/skin/ point to an actual file,
         // and remove the ref if any.

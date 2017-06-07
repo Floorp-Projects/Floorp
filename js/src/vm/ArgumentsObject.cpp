@@ -510,7 +510,7 @@ MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue
     /*
      * For simplicity we use delete/define to replace the property with a
      * simple data property. Note that we rely on ArgumentsObject::obj_delProperty
-     * to clear the corresponding reserved slot so the GC can collect its value.
+     * to set the corresponding override-bit.
      * Note also that we must define the property instead of setting it in case
      * the user has changed the prototype to an object that has a setter for
      * this id.
@@ -529,8 +529,35 @@ DefineArgumentsIterator(JSContext* cx, Handle<ArgumentsObject*> argsobj)
     RootedValue val(cx);
     if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), shName, name, 0, &val))
         return false;
-
     return NativeDefineProperty(cx, argsobj, iteratorId, val, nullptr, nullptr, JSPROP_RESOLVING);
+}
+
+/* static */ bool
+ArgumentsObject::reifyLength(JSContext* cx, Handle<ArgumentsObject*> obj)
+{
+    if (obj->hasOverriddenLength())
+        return true;
+
+    RootedId id(cx, NameToId(cx->names().length));
+    RootedValue val(cx, Int32Value(obj->initialLength()));
+    if (!NativeDefineProperty(cx, obj, id, val, nullptr, nullptr, JSPROP_RESOLVING))
+        return false;
+
+    obj->markLengthOverridden();
+    return true;
+}
+
+/* static */ bool
+ArgumentsObject::reifyIterator(JSContext* cx, Handle<ArgumentsObject*> obj)
+{
+    if (obj->hasOverriddenIterator())
+        return true;
+
+    if (!DefineArgumentsIterator(cx, obj))
+        return false;
+
+    obj->markIteratorOverridden();
+    return true;
 }
 
 /* static */ bool
@@ -586,20 +613,20 @@ MappedArgumentsObject::obj_enumerate(JSContext* cx, HandleObject obj)
 
     // Trigger reflection.
     id = NameToId(cx->names().length);
-    if (!HasProperty(cx, argsobj, id, &found))
+    if (!HasOwnProperty(cx, argsobj, id, &found))
         return false;
 
     id = NameToId(cx->names().callee);
-    if (!HasProperty(cx, argsobj, id, &found))
+    if (!HasOwnProperty(cx, argsobj, id, &found))
         return false;
 
     id = SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator);
-    if (!HasProperty(cx, argsobj, id, &found))
+    if (!HasOwnProperty(cx, argsobj, id, &found))
         return false;
 
     for (unsigned i = 0; i < argsobj->initialLength(); i++) {
         id = INT_TO_JSID(i);
-        if (!HasProperty(cx, argsobj, id, &found))
+        if (!HasOwnProperty(cx, argsobj, id, &found))
             return false;
     }
 
@@ -714,7 +741,7 @@ UnmappedArgSetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleVal
     /*
      * For simplicity we use delete/define to replace the property with a
      * simple data property. Note that we rely on ArgumentsObject::obj_delProperty
-     * to clear the corresponding reserved slot so the GC can collect its value.
+     * to set the corresponding override-bit.
      */
     ObjectOpResult ignored;
     return NativeDeleteProperty(cx, argsobj, id, ignored) &&
@@ -776,20 +803,20 @@ UnmappedArgumentsObject::obj_enumerate(JSContext* cx, HandleObject obj)
 
     // Trigger reflection.
     id = NameToId(cx->names().length);
-    if (!HasProperty(cx, argsobj, id, &found))
+    if (!HasOwnProperty(cx, argsobj, id, &found))
         return false;
 
     id = NameToId(cx->names().callee);
-    if (!HasProperty(cx, argsobj, id, &found))
+    if (!HasOwnProperty(cx, argsobj, id, &found))
         return false;
 
     id = SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator);
-    if (!HasProperty(cx, argsobj, id, &found))
+    if (!HasOwnProperty(cx, argsobj, id, &found))
         return false;
 
     for (unsigned i = 0; i < argsobj->initialLength(); i++) {
         id = INT_TO_JSID(i);
-        if (!HasProperty(cx, argsobj, id, &found))
+        if (!HasOwnProperty(cx, argsobj, id, &found))
             return false;
     }
 

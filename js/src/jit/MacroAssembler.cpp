@@ -1510,7 +1510,7 @@ void
 MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
 {
     loadJSContext(scratch);
-    enterExitFrame(scratch);
+    enterExitFrame(scratch, scratch);
 
     Label baseline;
 
@@ -1572,7 +1572,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
         push(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeAddr)));
         // No GC things to mark on the stack, push a bare token.
         loadJSContext(scratch);
-        enterFakeExitFrame(scratch, ExitFrameLayoutBareToken);
+        enterFakeExitFrame(scratch, scratch, ExitFrameLayoutBareToken);
 
         // If monitorStub is non-null, handle resumeAddr appropriately.
         Label noMonitor;
@@ -2822,9 +2822,10 @@ MacroAssembler::callWithABI(wasm::BytecodeOffset callOffset, wasm::SymbolicAddre
 // Exit frame footer.
 
 void
-MacroAssembler::linkExitFrame(Register cxreg)
+MacroAssembler::linkExitFrame(Register cxreg, Register scratch)
 {
-    storeStackPtr(Address(cxreg, offsetof(JSContext, jitTop)));
+    loadPtr(Address(cxreg, JSContext::offsetOfActivation()), scratch);
+    storeStackPtr(Address(scratch, JitActivation::offsetOfExitFP()));
 }
 
 void

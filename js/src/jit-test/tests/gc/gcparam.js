@@ -1,3 +1,5 @@
+gczeal(0);
+
 function testGetParam(key) {
     gcparam(key);
 }

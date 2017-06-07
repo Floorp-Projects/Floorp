@@ -179,6 +179,7 @@ DEFAULTS = dict(
         'devtools.theme': "light",
         'devtools.timeline.enabled': False,
         'identity.fxaccounts.migrateToDevEdition': False,
+        'plugin.state.flash': 0,
         'media.libavcodec.allow-obsolete': True
     }
 )
