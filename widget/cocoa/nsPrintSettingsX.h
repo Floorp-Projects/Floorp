@@ -65,8 +65,6 @@ public:
   void SetInchesScale(float aWidthScale, float aHeightScale);
   void GetInchesScale(float *aWidthScale, float *aHeightScale);
 
-  NS_IMETHOD SetPaperSizeUnit(int16_t aPaperSizeUnit) override;
-
   NS_IMETHOD SetScaling(double aScaling) override;
   NS_IMETHOD SetToFileName(const char16_t * aToFileName) override;
 
