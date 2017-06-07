@@ -5149,7 +5149,8 @@ nsGlobalWindow::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
   if (nameSpaceManager) {
     JS::Rooted<JSObject*> wrapper(aCx, GetWrapper());
 
-    WebIDLGlobalNameHash::GetNames(aCx, wrapper, aNames);
+    WebIDLGlobalNameHash::GetNames(aCx, wrapper, WebIDLGlobalNameHash::AllNames,
+                                   aNames);
 
     for (auto i = nameSpaceManager->GlobalNameIter(); !i.Done(); i.Next()) {
       const GlobalNameMapEntry* entry = i.Get();
