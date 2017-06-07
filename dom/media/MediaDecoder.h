@@ -228,11 +228,6 @@ public:
   virtual void SetPlaybackRate(double aPlaybackRate);
   void SetPreservesPitch(bool aPreservesPitch);
 
-  // Directs the decoder to not preroll extra samples until the media is
-  // played. This reduces the memory overhead of media elements that may
-  // not be played. Note that seeking also doesn't cause us start prerolling.
-  void SetMinimizePrerollUntilPlaybackStarts();
-
   bool GetMinimizePreroll() const { return mMinimizePreroll; }
 
   // All MediaStream-related data is protected by mReentrantMonitor.
@@ -385,7 +380,6 @@ private:
   // to buffer, given the current download and playback rates.
   virtual bool CanPlayThrough();
 
-  void SetAudioChannel(dom::AudioChannel aChannel) { mAudioChannel = aChannel; }
   dom::AudioChannel GetAudioChannel() { return mAudioChannel; }
 
   // Called from HTMLMediaElement when owner document activity changes
