@@ -249,6 +249,14 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
     return queryHelper.safeQuery(db, ".fetchAllClients", TBL_CLIENTS, TBL_CLIENTS_COLUMNS, null, null);
   }
 
+  public Cursor fetchClientsWithFxADeviceIds(String[] fxaDeviceIds) throws NullCursorException {
+    String inClause = computeSQLInClause(fxaDeviceIds.length, COL_FXA_DEVICE_ID);
+    String query = inClause + " OR " + COL_FXA_DEVICE_ID + " IS NULL";
+    SQLiteDatabase db = this.getCachedReadableDatabase();
+
+    return queryHelper.safeQuery(db, ".fetchClientsWithFxADeviceIds", TBL_CLIENTS, TBL_CLIENTS_COLUMNS, query, fxaDeviceIds);
+  }
+
   public Cursor fetchAllCommands() throws NullCursorException {
     SQLiteDatabase db = this.getCachedReadableDatabase();
 
@@ -260,5 +268,20 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
 
     SQLiteDatabase db = this.getCachedWritableDatabase();
     db.delete(TBL_CLIENTS, TBL_CLIENTS_KEY, args);
+  }
+
+  // Pulled from DBUtils
+  private static String computeSQLInClause(int items, String field) {
+    final StringBuilder builder = new StringBuilder(field);
+    builder.append(" IN (");
+    int i = 0;
+    for (; i < items - 1; ++i) {
+      builder.append("?, ");
+    }
+    if (i < items) {
+      builder.append("?");
+    }
+    builder.append(")");
+    return builder.toString();
   }
 }
