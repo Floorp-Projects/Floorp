@@ -26,7 +26,7 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     GetWindowRect,
     SetWindowRect(WindowRectParameters),
     MaximizeWindow,
-//    FullscreenWindow // Not supported in marionette
+    FullscreenWindow,
     SwitchToWindow(SwitchToWindowParameters),
     SwitchToFrame(SwitchToFrameParameters),
     SwitchToParentFrame,
@@ -136,6 +136,7 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 WebDriverCommand::SetWindowRect(parameters)
             },
             Route::MaximizeWindow => WebDriverCommand::MaximizeWindow,
+            Route::FullscreenWindow => WebDriverCommand::FullscreenWindow,
             Route::SwitchToWindow => {
                 let parameters: SwitchToWindowParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::SwitchToWindow(parameters)
@@ -401,6 +402,7 @@ impl <U:WebDriverExtensionRoute> ToJson for WebDriverMessage<U> {
             WebDriverCommand::IsEnabled(_) |
             WebDriverCommand::IsSelected(_) |
             WebDriverCommand::MaximizeWindow |
+            WebDriverCommand::FullscreenWindow |
             WebDriverCommand::NewSession(_) |
             WebDriverCommand::Refresh |
             WebDriverCommand::Status |
