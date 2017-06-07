@@ -875,13 +875,6 @@ nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd)
           break;
         }
         contentTextLength = content->TextLength();
-        if (contentTextLength == 0) {
-          frame->AdjustOffsetsForBidi(0, 0);
-          // Set the base level and embedding level of the current run even
-          // on an empty frame. Otherwise frame reordering will not be correct.
-          storeBidiDataToFrame();
-          continue;
-        }
         int32_t start, end;
         frame->GetOffsets(start, end);
         NS_ASSERTION(!(contentTextLength < end - start),
@@ -916,6 +909,13 @@ nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd)
     else {
       storeBidiDataToFrame();
       if (isTextFrame) {
+        if (contentTextLength == 0) {
+          // Set the base level and embedding level of the current run even
+          // on an empty frame. Otherwise frame reordering will not be correct.
+          frame->AdjustOffsetsForBidi(0, 0);
+          // Nothing more to do for an empty frame.
+          continue;
+        }
         if ( (runLength > 0) && (runLength < fragmentLength) ) {
           /*
            * The text in this frame continues beyond the end of this directional run.
