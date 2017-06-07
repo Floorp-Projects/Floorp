@@ -119,6 +119,7 @@ ServoStyleRule::ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule,
 
 // QueryInterface implementation for ServoStyleRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServoStyleRule)
+  NS_INTERFACE_MAP_ENTRY(nsICSSStyleRuleDOMWrapper)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleRule)
 NS_INTERFACE_MAP_END_INHERITING(css::Rule)
 
@@ -194,6 +195,15 @@ ServoStyleRule::List(FILE* out, int32_t aIndent) const
   fprintf_stderr(out, "%s\n", str.get());
 }
 #endif
+
+/* nsICSSStyleRuleDOMWrapper implementation */
+
+NS_IMETHODIMP
+ServoStyleRule::GetCSSStyleRule(BindingStyleRule **aResult)
+{
+  NS_ADDREF(*aResult = this);
+  return NS_OK;
+}
 
 /* CSSRule implementation */
 
