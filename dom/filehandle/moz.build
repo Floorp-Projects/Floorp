@@ -13,13 +13,11 @@ EXPORTS.mozilla.dom.filehandle += [
 ]
 
 EXPORTS.mozilla.dom += [
-    'FileHandleCommon.h',
     'FileHandleStorage.h',
 ]
 
 UNIFIED_SOURCES += [
     'ActorsParent.cpp',
-    'FileHandleCommon.cpp',
 ]
 
 IPDL_SOURCES += [
