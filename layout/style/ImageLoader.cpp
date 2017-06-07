@@ -84,6 +84,7 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
 
     mFrameToRequestMap.Put(aFrame, newRequestSet);
     requestSet = newRequestSet.forget();
+    aFrame->SetHasImageRequest(true);
   }
 
   // Add these to the sets, but only if they're not already there.
@@ -172,6 +173,7 @@ ImageLoader::DisassociateRequestFromFrame(imgIRequest* aRequest,
 
   if (requestSet && !requestSet->Length()) {
     mFrameToRequestMap.Remove(aFrame);
+    aFrame->SetHasImageRequest(false);
   }
 }
 
