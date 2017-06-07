@@ -94,6 +94,7 @@ private:
   MozPromiseRequestHolder<FlushPromise> mFlushRequest;
   MozPromiseRequestHolder<ShutdownPromise> mShutdownRequest;
   RefPtr<ShutdownPromise> mShutdownPromise;
+  MozPromiseHolder<FlushPromise> mFlushPromise;
 
   RefPtr<GMPCrashHelper> mGMPCrashHelper;
   Maybe<bool> mNeedAVCC;
