@@ -6465,6 +6465,7 @@
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
     "description": "Time (ms) from the Input event being created to the end of it being handled, but with overlapping events coalesced."
   },
   "LOAD_INPUT_EVENT_RESPONSE_MS": {
