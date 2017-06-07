@@ -151,7 +151,5 @@ config = {
         ######## 32 bit specific ###########
     ],
     'src_mozconfig': 'browser/config/mozconfigs/linux32/nightly',
-    'tooltool_manifest_src': "browser/config/tooltool-manifests/linux32/\
-releng.manifest",
     #########################################################################
 }
