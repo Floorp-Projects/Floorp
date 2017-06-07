@@ -1287,10 +1287,11 @@ private:
 
     if (aReject.mError == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
       SLOG("OnSeekRejected reason=WAITING_FOR_DATA type=%d", aReject.mType);
-      MOZ_ASSERT(!mMaster->IsRequestingAudioData());
-      MOZ_ASSERT(!mMaster->IsRequestingVideoData());
-      MOZ_ASSERT(!mMaster->IsWaitingAudioData());
-      MOZ_ASSERT(!mMaster->IsWaitingVideoData());
+      MOZ_ASSERT_IF(aReject.mType == MediaData::AUDIO_DATA, !mMaster->IsRequestingAudioData());
+      MOZ_ASSERT_IF(aReject.mType == MediaData::VIDEO_DATA, !mMaster->IsRequestingVideoData());
+      MOZ_ASSERT_IF(aReject.mType == MediaData::AUDIO_DATA, !mMaster->IsWaitingAudioData());
+      MOZ_ASSERT_IF(aReject.mType == MediaData::VIDEO_DATA, !mMaster->IsWaitingVideoData());
+
       // Fire 'waiting' to notify the player that we are waiting for data.
       mMaster->UpdateNextFrameStatus(
         MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING);
