@@ -2,7 +2,7 @@
 set -e # Exit (and fail) immediately if any command in this scriptfails
 
 # Check that our APK files are not bigger than they should be
-tools/metrics/apk_size.sh
+python tools/metrics/apk_size.py
 
 # buddybuild modifies our buildscripts and sources (this is partly to enable
 # their SDK, and partly to allow selecting flavours in the BuddyBuild UI).
