@@ -11,6 +11,7 @@ config = {
         # 'setup-mock',
         'checkout-sources',
         'build',
+        'upload-files',
         'sendchange',
     ],
     "buildbot_json_path": "buildprops.json",
@@ -26,7 +27,7 @@ config = {
     'tooltool_bootstrap': "setup.sh",
     'enable_count_ctors': False,
     # allows triggering of dependent jobs when --artifact try syntax is detected on buildbot
-    'enable_unittest_sendchange': True,
+    'enable_unittest_sendchange': False,
     'enable_talos_sendchange': False,
     'perfherder_extra_options': ['artifact'],
     #########################################################################

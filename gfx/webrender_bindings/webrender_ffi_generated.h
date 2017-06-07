@@ -51,6 +51,20 @@ enum class WrExternalImageType : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+enum class WrFilterOpType : uint32_t {
+  Blur = 0,
+  Brightness = 1,
+  Contrast = 2,
+  Grayscale = 3,
+  HueRotate = 4,
+  Invert = 5,
+  Opacity = 6,
+  Saturate = 7,
+  Sepia = 8,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 enum class WrGradientExtendMode : uint32_t {
   Clamp = 0,
   Repeat = 1,
@@ -423,6 +437,16 @@ struct WrComplexClipRegion {
   }
 };
 
+struct WrFilterOp {
+  WrFilterOpType filter_type;
+  float argument;
+
+  bool operator==(const WrFilterOp& aOther) const {
+    return filter_type == aOther.filter_type &&
+           argument == aOther.argument;
+  }
+};
+
 struct WrGlyphInstance {
   uint32_t index;
   WrPoint point;
@@ -784,7 +808,9 @@ void wr_dp_push_stacking_context(WrState *aState,
                                  uint64_t aAnimationId,
                                  const float *aOpacity,
                                  const WrMatrix *aTransform,
-                                 WrMixBlendMode aMixBlendMode)
+                                 WrMixBlendMode aMixBlendMode,
+                                 const WrFilterOp *aFilters,
+                                 size_t aFilterCount)
 WR_FUNC;
 
 WR_INLINE

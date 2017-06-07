@@ -749,6 +749,87 @@ NativeObject::maybeMoveShiftedElements()
         moveShiftedElements();
 }
 
+bool
+NativeObject::tryUnshiftDenseElements(uint32_t count)
+{
+    MOZ_ASSERT(count > 0);
+
+    ObjectElements* header = getElementsHeader();
+    uint32_t numShifted = header->numShiftedElements();
+
+    if (count > numShifted) {
+        // We need more elements than are easily available. Try to make space
+        // for more elements than we need (and shift the remaining ones) so
+        // that unshifting more elements later will be fast.
+
+        // Don't bother reserving elements if the number of elements is small.
+        // Note that there's no technical reason for using this particular
+        // limit.
+        if (header->initializedLength <= 10 ||
+            header->isCopyOnWrite() ||
+            header->isFrozen() ||
+            header->hasNonwritableArrayLength() ||
+            MOZ_UNLIKELY(count > ObjectElements::MaxShiftedElements))
+        {
+            return false;
+        }
+
+        MOZ_ASSERT(header->capacity >= header->initializedLength);
+        uint32_t unusedCapacity = header->capacity - header->initializedLength;
+
+        // Determine toShift, the number of extra elements we want to make
+        // available.
+        uint32_t toShift = count - numShifted;
+        MOZ_ASSERT(toShift <= ObjectElements::MaxShiftedElements,
+                   "count <= MaxShiftedElements so toShift <= MaxShiftedElements");
+
+        // Give up if we need to allocate more elements.
+        if (toShift > unusedCapacity)
+            return false;
+
+        // Move more elements than we need, so that other unshift calls will be
+        // fast. We just have to make sure we don't exceed unusedCapacity.
+        toShift = Min(toShift + unusedCapacity / 2, unusedCapacity);
+
+        // Ensure |numShifted + toShift| does not exceed MaxShiftedElements.
+        if (numShifted + toShift > ObjectElements::MaxShiftedElements)
+            toShift = ObjectElements::MaxShiftedElements - numShifted;
+
+        MOZ_ASSERT(count <= numShifted + toShift);
+        MOZ_ASSERT(numShifted + toShift <= ObjectElements::MaxShiftedElements);
+        MOZ_ASSERT(toShift <= unusedCapacity);
+
+        // Now move/unshift the elements.
+        uint32_t initLen = header->initializedLength;
+        setDenseInitializedLength(initLen + toShift);
+        for (uint32_t i = 0; i < toShift; i++)
+            initDenseElement(initLen + i, UndefinedValue());
+        moveDenseElements(toShift, 0, initLen);
+
+        // Shift the elements we just prepended.
+        shiftDenseElementsUnchecked(toShift);
+
+        // We can now fall-through to the fast path below.
+        header = getElementsHeader();
+        MOZ_ASSERT(header->numShiftedElements() == numShifted + toShift);
+
+        numShifted = header->numShiftedElements();
+        MOZ_ASSERT(count <= numShifted);
+    }
+
+    elements_ -= count;
+    ObjectElements* newHeader = getElementsHeader();
+    memmove(newHeader, header, sizeof(ObjectElements));
+
+    newHeader->unshiftShiftedElements(count);
+
+    // Initialize to |undefined| to ensure pre-barriers don't see garbage.
+    for (uint32_t i = 0; i < count; i++)
+        initDenseElement(i, UndefinedValue());
+
+    return true;
+}
+
 // Given a requested capacity (in elements) and (potentially) the length of an
 // array for which elements are being allocated, compute an actual allocation
 // amount (in elements).  (Allocation amounts include space for an
@@ -1525,21 +1606,26 @@ js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
             return DefineTypedArrayElement(cx, obj, index, desc_, result);
         }
     } else if (obj->is<ArgumentsObject>()) {
+        Rooted<ArgumentsObject*> argsobj(cx, &obj->as<ArgumentsObject>());
         if (id == NameToId(cx->names().length)) {
-            // Either we are resolving the .length property on this object, or
-            // redefining it. In the latter case only, we must set a bit. To
-            // distinguish the two cases, we note that when resolving, the
-            // JSPROP_RESOLVING mask is set; whereas the first time it is
-            // redefined, it isn't set.
-            if ((desc_.attributes() & JSPROP_RESOLVING) == 0)
-                obj->as<ArgumentsObject>().markLengthOverridden();
+            // Either we are resolving the .length property on this object,
+            // or redefining it. In the latter case only, we must reify the
+            // property. To distinguish the two cases, we note that when
+            // resolving, the JSPROP_RESOLVING mask is set; whereas the first
+            // time it is redefined, it isn't set.
+            if ((desc_.attributes() & JSPROP_RESOLVING) == 0) {
+                if (!ArgumentsObject::reifyLength(cx, argsobj))
+                    return false;
+            }
         } else if (JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().iterator) {
             // Do same thing as .length for [@@iterator].
-            if ((desc_.attributes() & JSPROP_RESOLVING) == 0)
-                obj->as<ArgumentsObject>().markIteratorOverridden();
+            if ((desc_.attributes() & JSPROP_RESOLVING) == 0) {
+                if (!ArgumentsObject::reifyIterator(cx, argsobj))
+                    return false;
+            }
         } else if (JSID_IS_INT(id)) {
             if ((desc_.attributes() & JSPROP_RESOLVING) == 0)
-                obj->as<ArgumentsObject>().markElementOverridden();
+                argsobj->markElementOverridden();
         }
     }
 

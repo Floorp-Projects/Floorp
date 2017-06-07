@@ -1428,6 +1428,74 @@ PaintRowGroupBackgroundByColIdx(nsTableRowGroupFrame* aRowGroup,
   }
 }
 
+static inline bool FrameHasBorder(nsIFrame* f)
+{
+  if (!f->StyleVisibility()->IsVisible()) {
+    return false;
+  }
+
+  if (f->StyleBorder()->HasBorder()) {
+    return true;
+  }
+
+  return false;
+}
+
+void nsTableFrame::CalcHasBCBorders()
+{
+  if (!IsBorderCollapse()) {
+    SetHasBCBorders(false);
+    return;
+  }
+
+  if (FrameHasBorder(this)) {
+    SetHasBCBorders(true);
+    return;
+  }
+
+  // Check col and col group has borders.
+  for (nsIFrame* f : this->GetChildList(kColGroupList)) {
+    if (FrameHasBorder(f)) {
+      SetHasBCBorders(true);
+      return;
+    }
+
+    nsTableColGroupFrame *colGroup = static_cast<nsTableColGroupFrame*>(f);
+    for (nsTableColFrame* col = colGroup->GetFirstColumn(); col; col = col->GetNextCol()) {
+      if (FrameHasBorder(col)) {
+        SetHasBCBorders(true);
+        return;
+      }
+    }
+  }
+
+  // check row group, row and cell has borders.
+  RowGroupArray rowGroups;
+  OrderRowGroups(rowGroups);
+  for (nsTableRowGroupFrame* rowGroup : rowGroups) {
+    if (FrameHasBorder(rowGroup)) {
+      SetHasBCBorders(true);
+      return;
+    }
+
+    for (nsTableRowFrame* row = rowGroup->GetFirstRow(); row; row = row->GetNextRow()) {
+      if (FrameHasBorder(row)) {
+        SetHasBCBorders(true);
+        return;
+      }
+
+      for (nsTableCellFrame* cell = row->GetFirstCell(); cell; cell = cell->GetNextCell()) {
+        if (FrameHasBorder(cell)) {
+          SetHasBCBorders(true);
+          return;
+        }
+      }
+    }
+  }
+
+  SetHasBCBorders(false);
+}
+
 /* static */ void
 nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
                                       nsFrame* aFrame,
@@ -1513,38 +1581,21 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
       nsTableFrame* table = static_cast<nsTableFrame*>(aFrame);
       // In the collapsed border model, overlay all collapsed borders.
       if (table->IsBorderCollapse()) {
-        aLists.BorderBackground()->AppendNewToTop(
-          new (aBuilder) nsDisplayTableBorderCollapse(aBuilder, table));
+        if (table->HasBCBorders()) {
+          aLists.BorderBackground()->AppendNewToTop(
+            new (aBuilder) nsDisplayTableBorderCollapse(aBuilder, table));
+        }
       } else {
-        aLists.BorderBackground()->AppendNewToTop(
-          new (aBuilder) nsDisplayBorder(aBuilder, table));
+        const nsStyleBorder* borderStyle = aFrame->StyleBorder();
+        if (borderStyle->HasBorder()) {
+          aLists.BorderBackground()->AppendNewToTop(
+            new (aBuilder) nsDisplayBorder(aBuilder, table));
+        }
       }
     }
   }
 
   aFrame->DisplayOutline(aBuilder, aLists);
-}
-
-static inline bool FrameHasBorderOrBackground(nsTableFrame* tableFrame, nsIFrame* f)
-{
-  if (!f->StyleVisibility()->IsVisible()) {
-    return false;
-  }
-  if (f->StyleBorder()->HasBorder()) {
-    return true;
-  }
-  if (!f->StyleBackground()->IsTransparent(f) ||
-      f->StyleDisplay()->mAppearance) {
-
-    nsTableCellFrame *cellFrame = do_QueryFrame(f);
-    // We could also return false here if the current frame is the root
-    // of a pseudo stacking context
-    if (cellFrame && !tableFrame->IsBorderCollapse()) {
-      return false;
-    }
-    return true;
-  }
-  return false;
 }
 
 // table paint code is concerned primarily with borders and bg color
@@ -4265,6 +4316,7 @@ nsTableFrame::AddBCDamageArea(const TableArea& aValue)
 #endif
 
   SetNeedToCalcBCBorders(true);
+  SetNeedToCalcHasBCBorders(true);
   // Get the property
   BCPropertyData* value = GetOrCreateBCProperty();
   if (value) {
@@ -4305,6 +4357,7 @@ nsTableFrame::SetFullBCDamageArea()
   NS_ASSERTION(IsBorderCollapse(), "invalid SetFullBCDamageArea call");
 
   SetNeedToCalcBCBorders(true);
+  SetNeedToCalcHasBCBorders(true);
 
   BCPropertyData* value = GetOrCreateBCProperty();
   if (value) {

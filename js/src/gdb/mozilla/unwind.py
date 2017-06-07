@@ -434,17 +434,16 @@ class UnwinderState(object):
         elif self.activation is None:
             cx = self.get_tls_context()
             self.activation = cx['jitActivation']
-            jittop = cx['jitTop']
         else:
-            jittop = self.activation['prevJitTop_']
             self.activation = self.activation['prevJitActivation_']
 
-        if jittop == 0:
+        exitFP = self.activation['exitFP_']
+        if exitFP == 0:
             return None
 
         exit_sp = pending_frame.read_register(self.SP_REGISTER)
         frame_type = self.typecache.JitFrame_Exit
-        return self.create_frame(pc, exit_sp, jittop, frame_type, pending_frame)
+        return self.create_frame(pc, exit_sp, exitFP, frame_type, pending_frame)
 
     # A wrapper for unwind_entry_frame_registers that handles
     # architecture-independent boilerplate.

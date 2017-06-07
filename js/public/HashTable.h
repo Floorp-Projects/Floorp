@@ -915,11 +915,11 @@ class HashTable : private AllocPolicy
         {}
 
         bool isValid() const {
-            return !entry_;
+            return !!entry_;
         }
 
         bool found() const {
-            if (isValid())
+            if (!isValid())
                 return false;
 #ifdef JS_DEBUG
             MOZ_ASSERT(generation == table_->generation());
@@ -1789,11 +1789,12 @@ class HashTable : private AllocPolicy
     {
         mozilla::ReentrancyGuard g(*this);
         MOZ_ASSERT(table);
+        MOZ_ASSERT_IF(p.isValid(), p.table_ == this);
         MOZ_ASSERT(!p.found());
         MOZ_ASSERT(!(p.keyHash & sCollisionBit));
 
         // Check for error from ensureHash() here.
-        if (p.isValid())
+        if (!p.isValid())
             return false;
 
         // Changing an entry from removed to live does not affect whether we
@@ -1859,7 +1860,7 @@ class HashTable : private AllocPolicy
     MOZ_MUST_USE bool relookupOrAdd(AddPtr& p, const Lookup& l, Args&&... args)
     {
         // Check for error from ensureHash() here.
-        if (p.isValid())
+        if (!p.isValid())
             return false;
 
 #ifdef JS_DEBUG

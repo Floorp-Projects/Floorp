@@ -61,6 +61,23 @@ GeckoProfiler::setEventMarker(void (*fn)(const char*))
     eventMarker_ = fn;
 }
 
+/* Get a pointer to the top-most profiling frame, given the exit frame pointer. */
+static void*
+GetTopProfilingJitFrame(Activation* act)
+{
+    if (!act || !act->isJit())
+        return nullptr;
+
+    // For null exitFrame, there is no previous exit frame, just return.
+    uint8_t* exitFP = act->asJit()->exitFP();
+    if (!exitFP)
+        return nullptr;
+
+    jit::JitProfilingFrameIterator iter(exitFP);
+    MOZ_ASSERT(!iter.done());
+    return iter.fp();
+}
+
 bool
 GeckoProfiler::enable(bool enabled)
 {
@@ -119,14 +136,16 @@ GeckoProfiler::enable(bool enabled)
         if (target.context()->jitActivation) {
             // Walk through all activations, and set their lastProfilingFrame appropriately.
             if (enabled) {
-                void* lastProfilingFrame = GetTopProfilingJitFrame(target.context()->jitTop);
+                Activation* act = target.context()->activation();
+                void* lastProfilingFrame = GetTopProfilingJitFrame(act);
+
                 jit::JitActivation* jitActivation = target.context()->jitActivation;
                 while (jitActivation) {
                     jitActivation->setLastProfilingFrame(lastProfilingFrame);
                     jitActivation->setLastProfilingCallSite(nullptr);
 
-                    lastProfilingFrame = GetTopProfilingJitFrame(jitActivation->prevJitTop());
                     jitActivation = jitActivation->prevJitActivation();
+                    lastProfilingFrame = GetTopProfilingJitFrame(jitActivation);
                 }
             } else {
                 jit::JitActivation* jitActivation = target.context()->jitActivation;
@@ -543,16 +562,4 @@ AutoSuppressProfilerSampling::~AutoSuppressProfilerSampling()
 {
     if (previouslyEnabled_)
         cx_->enableProfilerSampling();
-}
-
-void*
-js::GetTopProfilingJitFrame(uint8_t* exitFramePtr)
-{
-    // For null exitFrame, there is no previous exit frame, just return.
-    if (!exitFramePtr)
-        return nullptr;
-
-    jit::JitProfilingFrameIterator iter(exitFramePtr);
-    MOZ_ASSERT(!iter.done());
-    return iter.fp();
 }

@@ -1611,17 +1611,22 @@ nsSocketTransportService::GetSocketConnections(nsTArray<SocketInfo> *data)
 void
 nsSocketTransportService::StartPollWatchdog()
 {
-    MutexAutoLock lock(mLock);
+    // Start off the timer from a runnable off of the main thread in order to
+    // avoid a deadlock, see bug 1370448.
+    RefPtr<nsSocketTransportService> self(this);
+    NS_DispatchToMainThread(NS_NewRunnableFunction([self] {
+         MutexAutoLock lock(self->mLock);
 
-    // Poll can hang sometimes. If we are in shutdown, we are going to start a
-    // watchdog. If we do not exit poll within REPAIR_POLLABLE_EVENT_TIME
-    // signal a pollable event again.
-    MOZ_ASSERT(gIOService->IsNetTearingDown());
-    if (mPolling && !mPollRepairTimer) {
-        mPollRepairTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-        mPollRepairTimer->Init(this, REPAIR_POLLABLE_EVENT_TIME,
-                               nsITimer::TYPE_REPEATING_SLACK);
-    }
+         // Poll can hang sometimes. If we are in shutdown, we are going to start a
+         // watchdog. If we do not exit poll within REPAIR_POLLABLE_EVENT_TIME
+         // signal a pollable event again.
+         MOZ_ASSERT(gIOService->IsNetTearingDown());
+         if (self->mPolling && !self->mPollRepairTimer) {
+             self->mPollRepairTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+             self->mPollRepairTimer->Init(self, REPAIR_POLLABLE_EVENT_TIME,
+                                          nsITimer::TYPE_REPEATING_SLACK);
+         }
+    }));
 }
 
 void
