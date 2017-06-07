@@ -3,25 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#define INPUTSCOPE_INIT_GUID
+#define TEXTATTRS_INIT_GUID
+#include "TSFTextStore.h"
+
 #include <olectl.h>
 #include <algorithm>
-
-#include "mozilla/Logging.h"
 
 #include "nscore.h"
 #include "nsWindow.h"
 #include "nsPrintfCString.h"
+#include "WinIMEHandler.h"
 #include "WinUtils.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsIXULRuntime.h"
-
-#define INPUTSCOPE_INIT_GUID
-#define TEXTATTRS_INIT_GUID
-#include "TSFTextStore.h"
 
 namespace mozilla {
 namespace widget {
@@ -1037,7 +1037,7 @@ public:
     return mActiveTIPKeyboardDescription;
   }
 
-  static bool IsIMM_IME()
+  static bool IsIMM_IMEActive()
   {
     if (!sInstance || !sInstance->EnsureInitActiveTIPKeyboard()) {
       return IsIMM_IME(::GetKeyboardLayout(0));
@@ -1355,6 +1355,8 @@ TSFStaticSink::OnActivated(DWORD dwProfileType,
     mIsIMM_IME = IsIMM_IME(hkl);
     GetTIPDescription(rclsid, mLangID, guidProfile,
                       mActiveTIPKeyboardDescription);
+    // Notify IMEHandler of changing active keyboard layout.
+    IMEHandler::OnKeyboardLayoutChanged();
   }
   MOZ_LOG(sTextStoreLog, LogLevel::Info,
     ("0x%p TSFStaticSink::OnActivated(dwProfileType=%s (0x%08X), "
@@ -6290,9 +6292,16 @@ TSFTextStore::ProcessMessage(nsWindowBase* aWindow,
 
 // static
 bool
-TSFTextStore::IsIMM_IME()
+TSFTextStore::IsIMM_IMEActive()
 {
-  return TSFStaticSink::IsIMM_IME();
+  return TSFStaticSink::IsIMM_IMEActive();
+}
+
+// static
+bool
+TSFTextStore::IsMSJapaneseIMEActive()
+{
+  return TSFStaticSink::GetInstance()->IsMSJapaneseIMEActive();
 }
 
 /******************************************************************/

@@ -3710,6 +3710,11 @@ pref("intl.tsf.enable", true);
 // Support IMEs implemented with IMM in TSF mode.
 pref("intl.tsf.support_imm", true);
 
+// This is referred only when both "intl.tsf.enable" and "intl.tsf.support_imm"
+// are true.  When this is true, default IMC is associated with focused window
+// only when active keyboard layout is a legacy IMM-IME.
+pref("intl.tsf.associate_imc_only_when_imm_ime_is_active", false);
+
 // Enables/Disables hack for specific TIP.
 
 // Whether creates native caret for ATOK or not.
@@ -3735,6 +3740,11 @@ pref("intl.tsf.hack.easy_changjei.do_not_return_no_layout_error", true);
 // ITfContextView::GetTextExt() if the specified range is the first character
 // of selected clause of composition string.
 pref("intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_first_char", true);
+// Whether default IMC should be associated with focused window when MS-IME
+// for Japanese on Win10 is active.  MS-IME for Japanese on Win10 has a crash
+// bug.  While restoring default IMC when MS-IME for Japanese is active,
+// it sometimes crashes after Creators Update.  This pref avoid the crash.
+pref("intl.tsf.hack.ms_japanese_ime.do_not_associate_imc_on_win10", true);
 // Whether use previous character rect for the result of
 // ITfContextView::GetTextExt() if the specified range is the caret of
 // composition string.
