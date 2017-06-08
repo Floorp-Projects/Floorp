@@ -45,7 +45,7 @@ public:
   inline void TraceSelf(JSTracer* trc)
   {
     JS::UnsafeTraceRoot(trc, &mTypedObj, "TypedArray.mTypedObj");
-    JS::UnsafeTraceRoot(trc, &mTypedObj, "TypedArray.mWrappedObj");
+    JS::UnsafeTraceRoot(trc, &mWrappedObj, "TypedArray.mWrappedObj");
   }
 
 private:
