@@ -7510,13 +7510,7 @@ function* runIMEContentObserverTest()
     synthesizeKey("a", { code: "KeyA" }, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
-    if (isDefaultParagraphSeparatorBlock) {
-      // XXX This must detect a bug.  The offset of inserting "a" into the first block should be
-      //     after the line breaker caused by the first block.
-      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer - kLFLen, removedLength: 0, addedLength: 1 });
-    } else {
-      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 0, addedLength: 1 });
-    }
+    checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 0, addedLength: 1 });
     checkSelectionChangeNotification(notifications[1], description, { offset: 1 + offsetAtContainer, text: "" });
     checkPositionChangeNotification(notifications[2], description);
     dumpUnexpectedNotifications(description, 3);
@@ -7614,13 +7608,7 @@ function* runIMEContentObserverTest()
     synthesizeKey("KEY_Delete", { code: "Delete" }, win, callback);
     yield waitUntilNotificationsReceived();
     ensureToRemovePrecedingPositionChangeNotification();
-    if (isDefaultParagraphSeparatorBlock) {
-      // XXX Making a block empty causes removing the block once.
-      //     However, after that, new block is inserted with <br>.
-      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer - kLFLen, removedLength: getNativeText("\nc").length, addedLength: kLFLen * 2 });
-    } else {
-      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 1, addedLength: kLFLen });
-    }
+    checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 1, addedLength: kLFLen });
     checkPositionChangeNotification(notifications[1], description);
     dumpUnexpectedNotifications(description, 2);
 

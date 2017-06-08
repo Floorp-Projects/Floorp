@@ -182,10 +182,60 @@ private:
   bool IsSafeToNotifyIME() const;
   bool IsEditorComposing() const;
 
+  /**
+   * nsINode::GetChildAt() is slow.  So, this avoids to use it if it's
+   * first child or last child of aParent.
+   */
+  static nsIContent* GetChildNode(nsINode* aParent, int32_t aOffset);
+
   // Following methods are called by DocumentObserver when
   // beginning to update the contents and ending updating the contents.
   void BeginDocumentUpdate();
   void EndDocumentUpdate();
+
+  // Following methods manages added nodes during a document change.
+
+  /**
+   * MaybeNotifyIMEOfAddedTextDuringDocumentChange() may send text change
+   * notification caused by the nodes added between mFirstAddedNodeOffset in
+   * mFirstAddedNodeContainer and mLastAddedNodeOffset in
+   * mLastAddedNodeContainer and forgets the range.
+   */
+  void MaybeNotifyIMEOfAddedTextDuringDocumentChange();
+
+  /**
+   * IsInDocumentChange() returns true while the DOM tree is being modified
+   * with mozAutoDocUpdate.  E.g., it's being modified by setting innerHTML or
+   * insertAdjacentHTML().  This returns false when user types something in
+   * the focused editor editor.
+   */
+  bool IsInDocumentChange() const
+  {
+    return mDocumentObserver && mDocumentObserver->IsUpdating();
+  }
+
+  /**
+   * Forget the range of added nodes during a document change.
+   */
+  void ClearAddedNodesDuringDocumentChange();
+
+  /**
+   * HasAddedNodesDuringDocumentChange() returns true when this stores range
+   * of nodes which were added into the DOM tree during a document change but
+   * have not been sent to IME.  Note that this should always return false when
+   * IsInDocumentChange() returns false.
+   */
+  bool HasAddedNodesDuringDocumentChange() const
+  {
+    return mFirstAddedNodeContainer && mLastAddedNodeContainer;
+  }
+
+  /**
+   * Returns true if the node at aOffset in aParent is next node of the node at
+   * mLastAddedNodeOffset in mLastAddedNodeContainer in pre-order tree
+   * traversal of the DOM.
+   */
+  bool IsNextNodeOfLastAddedNode(nsINode* aParent, int32_t aOffset) const;
 
   void PostFocusSetNotification();
   void MaybeNotifyIMEOfFocusSet();
@@ -413,6 +463,27 @@ private:
   // to the start of the last removed content only while an edit action is being
   // handled by the editor and no other mutation (e.g., adding node) occur.
   FlatTextCache mStartOfRemovingTextRangeCache;
+
+  // mFirstAddedNodeContainer is parent node of first added node in current
+  // document change.  So, this is not nullptr only when a node was added
+  // during a document change and the change has not been included into
+  // mTextChangeData yet.
+  // Note that this shouldn't be in cycle collection since this is not nullptr
+  // only during a document change.
+  nsCOMPtr<nsINode> mFirstAddedNodeContainer;
+  // mLastAddedNodeContainer is parent node of last added node in current
+  // document change.  So, this is not nullptr only when a node was added
+  // during a document change and the change has not been included into
+  // mTextChangeData yet.
+  // Note that this shouldn't be in cycle collection since this is not nullptr
+  // only during a document change.
+  nsCOMPtr<nsINode> mLastAddedNodeContainer;
+  // mFirstAddedNodeOffset is offset of first added node in
+  // mFirstAddedNodeContainer.
+  int32_t mFirstAddedNodeOffset;
+  // mLastAddedNodeOffset is offset of *after* last added node in
+  // mLastAddedNodeContainer.  I.e., the index of last added node + 1.
+  int32_t mLastAddedNodeOffset;
 
   TextChangeData mTextChangeData;
 
