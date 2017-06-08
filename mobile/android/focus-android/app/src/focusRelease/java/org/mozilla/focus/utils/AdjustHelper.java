@@ -10,6 +10,7 @@ import android.text.TextUtils;
 
 import com.adjust.sdk.Adjust;
 import com.adjust.sdk.AdjustConfig;
+import com.adjust.sdk.LogLevel;
 
 import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
@@ -27,7 +28,12 @@ public class AdjustHelper {
             return;
         }
 
-        AdjustConfig config = new AdjustConfig(context, BuildConfig.ADJUST_TOKEN, AdjustConfig.ENVIRONMENT_PRODUCTION);
+        final AdjustConfig config = new AdjustConfig(context,
+                BuildConfig.ADJUST_TOKEN,
+                AdjustConfig.ENVIRONMENT_PRODUCTION,
+                true);
+
+        config.setLogLevel(LogLevel.SUPRESS);
 
         Adjust.onCreate(config);
     }
