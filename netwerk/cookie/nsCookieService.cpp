@@ -2747,6 +2747,10 @@ nsCookieService::AsyncReadComplete()
   mDefaultDBState->stmtReadDomain = nullptr;
   mDefaultDBState->pendingRead = nullptr;
   mDefaultDBState->readListener = nullptr;
+
+  // Close sync connection asynchronously: if we let destructor close, it may
+  // cause an expensive fsync operation on the main-thread.
+  mDefaultDBState->syncConn->AsyncClose(nullptr);
   mDefaultDBState->syncConn = nullptr;
   mDefaultDBState->hostArray.Clear();
   mDefaultDBState->readSet.Clear();
