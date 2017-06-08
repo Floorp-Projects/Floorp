@@ -2765,7 +2765,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             };
             switch (action.blocklistState) {
             case Ci.nsIBlocklistService.STATE_NOT_BLOCKED:
-              label = "pluginActivateNew.message";
+              label = "pluginActivate2.message";
               linkLabel = "pluginActivate.learnMore";
               button2.default = true;
               break;
