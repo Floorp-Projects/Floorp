@@ -7343,11 +7343,6 @@ class MConcat
 
         setMovable();
         setResultType(MIRType::String);
-
-        // StringConcat throws a catchable exception. Even though we bail to
-        // baseline in that case, we must set Guard to ensure the bailout
-        // happens.
-        setGuard();
     }
 
   public:
