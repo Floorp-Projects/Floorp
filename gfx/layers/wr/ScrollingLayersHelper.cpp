@@ -70,6 +70,22 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
     mBuilder->PushClip(aStackingContext.ToRelativeWrRect(clipRect),
         mask.ptrOr(nullptr));
   }
+
+  // If the layer is marked as fixed-position, it is fixed relative to something
+  // (the scroll layer referred to by GetFixedPositionScrollContainerId, hereafter
+  // referred to as the "scroll container"). What this really means is that we
+  // don't want this content to scroll with any scroll layer on the stack up to
+  // and including the scroll container, but we do want it to scroll with any
+  // ancestor scroll layers. So we do a PushClipAndScrollInfo that maintains
+  // the current non-scrolling clip stack, but resets the scrolling clip stack
+  // to the ancestor of the scroll container.
+  if (layer->GetIsFixedPosition()) {
+    FrameMetrics::ViewID fixedFor = layer->GetFixedPositionScrollContainerId();
+    Maybe<FrameMetrics::ViewID> scrollsWith = mBuilder->ParentScrollIdFor(fixedFor);
+    Maybe<uint64_t> clipId = mBuilder->TopmostClipId();
+    // Default to 0 if there is no ancestor, because 0 refers to the root scrollframe.
+    mBuilder->PushClipAndScrollInfo(scrollsWith.valueOr(0), clipId.ptrOr(nullptr));
+  }
 }
 
 ScrollingLayersHelper::~ScrollingLayersHelper()
@@ -79,6 +95,9 @@ ScrollingLayersHelper::~ScrollingLayersHelper()
   }
 
   Layer* layer = mLayer->GetLayer();
+  if (layer->GetIsFixedPosition()) {
+    mBuilder->PopClipAndScrollInfo();
+  }
   if (layer->GetScrolledClip()) {
     mBuilder->PopClip();
   }
