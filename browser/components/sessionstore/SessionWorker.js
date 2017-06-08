@@ -80,6 +80,11 @@ var Agent = {
   state: null,
 
   /**
+   * A flag that indicates we loaded a session file with the deprecated .js extension.
+   */
+  useOldExtension: false,
+
+  /**
    * Number of old upgrade backups that are being kept
    */
   maxUpgradeBackups: null,
@@ -89,10 +94,11 @@ var Agent = {
    *
    * @param {string} origin Which of sessionstore.js or its backups
    *   was used. One of the `STATE_*` constants defined above.
+   * @param {boolean} a flag indicate whether we loaded a session file with ext .js
    * @param {object} paths The paths at which to find the various files.
    * @param {object} prefs The preferences the worker needs to known.
    */
-  init(origin, paths, prefs = {}) {
+  init(origin, useOldExtension, paths, prefs = {}) {
     if (!(origin in paths || origin == STATE_EMPTY)) {
       throw new TypeError("Invalid origin: " + origin);
     }
@@ -104,6 +110,7 @@ var Agent = {
       }
     }
 
+    this.useOldExtension = useOldExtension;
     this.state = origin;
     this.Paths = paths;
     this.maxUpgradeBackups = prefs.maxUpgradeBackups;
@@ -165,10 +172,20 @@ var Agent = {
       if (this.state == STATE_CLEAN) {
         // Move $Path.clean out of the way, to avoid any ambiguity as
         // to which file is more recent.
-        File.move(this.Paths.clean, this.Paths.cleanBackup);
+        if (!this.useOldExtension) {
+          File.move(this.Paths.clean, this.Paths.cleanBackup);
+        } else {
+          // Since we are migrating from .js to .jsonlz4,
+          // we need to compress the deprecated $Path.clean
+          // and write it to $Path.cleanBackup.
+          let oldCleanPath = this.Paths.clean.replace("jsonlz4", "js");
+          let d = File.read(oldCleanPath);
+          File.writeAtomic(this.Paths.cleanBackup, d, {compression: "lz4"});
+        }
       }
 
       let startWriteMs = Date.now();
+      let fileStat;
 
       if (options.isFinalWrite) {
         // We are shutting down. At this stage, we know that
@@ -177,8 +194,10 @@ var Agent = {
         // $Paths.cleanBackup a long time ago. We can therefore write
         // with the guarantees that we erase no important data.
         File.writeAtomic(this.Paths.clean, data, {
-          tmpPath: this.Paths.clean + ".tmp"
+          tmpPath: this.Paths.clean + ".tmp",
+          compression: "lz4"
         });
+        fileStat = File.stat(this.Paths.clean);
       } else if (this.state == STATE_RECOVERY) {
         // At this stage, either $Paths.recovery was written >= 15
         // seconds ago during this session or we have just started
@@ -188,19 +207,23 @@ var Agent = {
         // file.
         File.writeAtomic(this.Paths.recovery, data, {
           tmpPath: this.Paths.recovery + ".tmp",
-          backupTo: this.Paths.recoveryBackup
+          backupTo: this.Paths.recoveryBackup,
+          compression: "lz4"
         });
+        fileStat = File.stat(this.Paths.recovery);
       } else {
         // In other cases, either $Path.recovery is not necessary, or
         // it doesn't exist or it has been corrupted. Regardless,
         // don't backup $Path.recovery.
         File.writeAtomic(this.Paths.recovery, data, {
-          tmpPath: this.Paths.recovery + ".tmp"
+          tmpPath: this.Paths.recovery + ".tmp",
+          compression: "lz4"
         });
+        fileStat = File.stat(this.Paths.recovery);
       }
 
       telemetry.FX_SESSION_RESTORE_WRITE_FILE_MS = Date.now() - startWriteMs;
-      telemetry.FX_SESSION_RESTORE_FILE_SIZE_BYTES = data.byteLength;
+      telemetry.FX_SESSION_RESTORE_FILE_SIZE_BYTES = fileStat.size;
 
     } catch (ex) {
       // Don't throw immediately
@@ -293,6 +316,8 @@ var Agent = {
     // Erase main session state file
     try {
       File.remove(this.Paths.clean);
+      // Remove old extension ones.
+      File.remove(this.Paths.clean.replace("jsonlz4", "js"), {ignoreAbsent: true});
     } catch (ex) {
       // Don't stop immediately.
       exn = exn || ex;
