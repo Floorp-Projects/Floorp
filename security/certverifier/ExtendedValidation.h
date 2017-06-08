@@ -8,12 +8,15 @@
 
 #include "ScopedNSSTypes.h"
 #include "certt.h"
+#include "nsNSSShutDown.h"
 
 namespace mozilla { namespace pkix { struct CertPolicyId; } }
 
 namespace mozilla { namespace psm {
 
-nsresult LoadExtendedValidationInfo();
+nsresult LoadExtendedValidationInfo(
+  const nsNSSShutDownPreventionLock& proofOfLock);
+
 /**
  * Finds the first policy OID in the given cert that is known to be an EV policy
  * OID.

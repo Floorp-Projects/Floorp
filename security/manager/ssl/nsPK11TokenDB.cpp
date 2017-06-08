@@ -453,6 +453,11 @@ nsPK11TokenDB::FindTokenByName(const nsACString& tokenName,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  nsresult rv = BlockUntilLoadableRootsLoaded();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   if (tokenName.IsEmpty()) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
@@ -477,6 +482,11 @@ nsPK11TokenDB::ListTokens(nsISimpleEnumerator** _retval)
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsresult rv = BlockUntilLoadableRootsLoaded();
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   nsCOMPtr<nsIMutableArray> array = do_CreateInstance(NS_ARRAY_CONTRACTID);
