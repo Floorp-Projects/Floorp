@@ -74,10 +74,22 @@ ServoRestyleManager::PostRestyleEventForCSSRuleChanges()
 }
 
 /* static */ void
-ServoRestyleManager::PostRestyleEventForAnimations(Element* aElement,
-                                                   nsRestyleHint aRestyleHint)
+ServoRestyleManager::PostRestyleEventForAnimations(
+  Element* aElement,
+  CSSPseudoElementType aPseudoType,
+  nsRestyleHint aRestyleHint)
 {
-  Servo_NoteExplicitHints(aElement, aRestyleHint, nsChangeHint(0));
+  Element* elementToRestyle =
+    EffectCompositor::GetElementToRestyle(aElement, aPseudoType);
+
+  if (!elementToRestyle) {
+    // FIXME: Bug 1371107: When reframing happens,
+    // EffectCompositor::mElementsToRestyle still has unbinded old pseudo
+    // element. We should drop it.
+    return;
+  }
+
+  Servo_NoteExplicitHints(elementToRestyle, aRestyleHint, nsChangeHint(0));
 }
 
 void

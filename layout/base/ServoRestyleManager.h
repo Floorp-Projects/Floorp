@@ -107,6 +107,7 @@ public:
    * traversal of the same restyling process.
    */
   static void PostRestyleEventForAnimations(dom::Element* aElement,
+                                            CSSPseudoElementType aPseudoType,
                                             nsRestyleHint aRestyleHint);
 protected:
   ~ServoRestyleManager() override
