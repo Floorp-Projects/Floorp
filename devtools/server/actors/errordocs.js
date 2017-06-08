@@ -81,6 +81,7 @@ const ErrorDocs = {
   JSMSG_BAD_URI: "Malformed_URI",
   JSMSG_DEPRECATED_DELETE_OPERAND: "Delete_in_strict_mode",
   JSMSG_MISSING_FORMAL: "Missing_formal_parameter",
+  JSMSG_CANT_TRUNCATE_ARRAY: "Non_configurable_array_element",
 };
 
 const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Mixed_content";

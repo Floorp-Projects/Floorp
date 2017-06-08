@@ -43,20 +43,44 @@ window.onload = async function () {
   );
   const { component, $ } = await createComponentTest(SearchBox, {
     type: "search",
-    autocompleteList: [
-      "foo",
-      "BAR",
-      "baZ",
-      "abc",
-      "pqr",
-      "xyz",
-      "ABC",
-      "a1",
-      "a2",
-      "a3",
-      "a4",
-      "a5",
-    ],
+    autocompleteProvider: (filter) => {
+      let baseList = [
+        "foo",
+        "BAR",
+        "baZ",
+        "abc",
+        "pqr",
+        "xyz",
+        "ABC",
+        "a1",
+        "a2",
+        "a3",
+        "a4",
+        "a5",
+      ];
+      if (!filter) {
+        return [];
+      }
+
+      let tokens = filter.split(/\s+/g);
+      let lastToken = tokens[tokens.length - 1];
+      let previousTokens = tokens.slice(0, tokens.length - 1);
+
+      if (!lastToken) {
+        return [];
+      }
+
+      return baseList
+        .filter((item) => {
+          return item.toLowerCase().startsWith(lastToken.toLowerCase())
+            && item.toLowerCase() !== lastToken.toLowerCase();
+        })
+        .sort()
+        .map(item => ({
+          value: [...previousTokens, item].join(" "),
+          displayValue: item,
+        }));
+    },
     onChange: () => null,
   });
   const { refs } = component;
@@ -150,6 +174,8 @@ window.onload = async function () {
     ok(!$(".devtools-autocomplete-popup"), "Enter/Return hides the popup");
 
     // Escape should remove the autocomplete component
+    synthesizeKey("VK_BACK_SPACE", {});
+    await forceRender(component);
     synthesizeKey("VK_ESCAPE", {});
     await forceRender(component);
     ok(!$(".devtools-autocomplete-popup"),
@@ -182,10 +208,25 @@ window.onload = async function () {
     ok(!$(".devtools-autocomplete-popup"), "Mouse click on item hides the popup");
   }
 
+  async function testTokenizedAutocomplete() {
+    // Test for string "pqr ab" which should show list of ABC, abc
+    sendString(" ab");
+    await forceRender(component);
+    compareAutocompleteList($(".devtools-autocomplete-listbox"), ["ABC", "abc"]);
+
+    // Select the first element, value now should be "pqr ABC"
+    synthesizeMouseAtCenter(
+      $(".devtools-autocomplete-listbox .autocomplete-item:nth-child(1)"),
+      {}, window
+    );
+    is(component.state.value, "pqr ABC", "Post Tokenization value selection");
+  }
+
   add_task(async function () {
     await testSearchBoxWithAutocomplete();
     await testKeyEventsWithAutocomplete();
     await testMouseEventsWithAutocomplete();
+    await testTokenizedAutocomplete();
   });
 };
 </script>
