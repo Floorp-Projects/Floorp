@@ -243,6 +243,15 @@ public:
     eIntID_ChosenMenuItemsShouldBlink,
 
     /*
+     * A Boolean value to determine whether the Windows accent color
+     * should be applied to the title bar.
+     *
+     * The value of this metric is not used on other platforms. These platforms
+     * should return NS_ERROR_NOT_IMPLEMENTED when queried for this metric.
+     */
+    eIntID_WindowsAccentColorApplies,
+
+    /*
      * A Boolean value to determine whether the Windows default theme is
      * being used.
      *
