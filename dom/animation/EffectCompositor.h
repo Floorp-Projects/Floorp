@@ -249,6 +249,15 @@ public:
   bool PreTraverseInSubtree(dom::Element* aElement,
                             AnimationRestyleType aRestyleType);
 
+  // Returns the target element for restyling.
+  //
+  // If |aPseudoType| is ::after or ::before, returns the generated content
+  // element of which |aElement| is the parent. If |aPseudoType| is any other
+  // pseudo type (other thant CSSPseudoElementType::NotPseudo) returns nullptr.
+  // Otherwise, returns |aElement|.
+  static dom::Element* GetElementToRestyle(dom::Element* aElement,
+                                           CSSPseudoElementType aPseudoType);
+
 private:
   ~EffectCompositor() = default;
 
@@ -257,10 +266,6 @@ private:
   static void ComposeAnimationRule(dom::Element* aElement,
                                    CSSPseudoElementType aPseudoType,
                                    CascadeLevel aCascadeLevel);
-
-  static dom::Element* GetElementToRestyle(dom::Element* aElement,
-                                           CSSPseudoElementType
-                                             aPseudoType);
 
   // Get the properties in |aEffectSet| that we are able to animate on the
   // compositor but which are also specified at a higher level in the cascade

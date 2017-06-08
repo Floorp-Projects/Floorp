@@ -1042,6 +1042,7 @@ EffectCompositor::PreTraverseInSubtree(Element* aRoot,
       // middle of the servo traversal.
       mPresContext->RestyleManager()->AsServo()->
         PostRestyleEventForAnimations(target.mElement,
+                                      target.mPseudoType,
                                       cascadeLevel == CascadeLevel::Transitions
                                         ? eRestyle_CSSTransitions
                                         : eRestyle_CSSAnimations);
@@ -1108,6 +1109,7 @@ EffectCompositor::PreTraverse(dom::Element* aElement,
 
     mPresContext->RestyleManager()->AsServo()->
       PostRestyleEventForAnimations(aElement,
+                                    aPseudoType,
                                     cascadeLevel == CascadeLevel::Transitions
                                       ? eRestyle_CSSTransitions
                                       : eRestyle_CSSAnimations);
