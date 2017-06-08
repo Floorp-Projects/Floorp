@@ -83,7 +83,7 @@ browser.jar:
         content/browser/browser-sync.js               (content/browser-sync.js)
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
 #ifdef CAN_DRAW_IN_TITLEBAR
-        content/browser/browser-tabsintitlebar.js       (content/browser-tabsintitlebar.js)
+*       content/browser/browser-tabsintitlebar.js       (content/browser-tabsintitlebar.js)
 #else
         content/browser/browser-tabsintitlebar.js       (content/browser-tabsintitlebar-stub.js)
 #endif

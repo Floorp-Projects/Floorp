@@ -176,6 +176,17 @@ var TabsInTitlebar = {
 
       // Begin setting CSS properties which will cause a reflow
 
+#ifdef MOZ_PHOTON_THEME
+      if (AppConstants.isPlatformAndVersionAtLeast("win", "10.0")) {
+        if (!menuHeight) {
+          titlebarContentHeight = Math.max(titlebarContentHeight, fullTabsHeight);
+          $("titlebar-buttonbox").style.height = titlebarContentHeight + "px";
+        } else {
+          $("titlebar-buttonbox").style.removeProperty("height");
+        }
+      }
+#endif
+
       // If the menubar is around (menuHeight is non-zero), try to adjust
       // its full height (i.e. including margins) to match the titlebar,
       // by changing the menubar's bottom padding
