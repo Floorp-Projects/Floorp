@@ -7,6 +7,7 @@
 
 #include "IMMHandler.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/WindowsVersion.h"
 #include "nsWindowDefs.h"
 #include "WinTextEventDispatcherListener.h"
 
@@ -47,6 +48,7 @@ bool IMEHandler::sPluginHasFocus = false;
 #ifdef NS_ENABLE_TSF
 bool IMEHandler::sIsInTSFMode = false;
 bool IMEHandler::sIsIMMEnabled = true;
+bool IMEHandler::sAssociateIMCOnlyWhenIMM_IMEActive = false;
 decltype(SetInputScopes)* IMEHandler::sSetInputScopes = nullptr;
 #endif // #ifdef NS_ENABLE_TSF
 
@@ -62,6 +64,10 @@ IMEHandler::Initialize()
   sIsInTSFMode = TSFTextStore::IsInTSFMode();
   sIsIMMEnabled =
     !sIsInTSFMode || Preferences::GetBool("intl.tsf.support_imm", true);
+  sAssociateIMCOnlyWhenIMM_IMEActive =
+    sIsIMMEnabled &&
+    Preferences::GetBool("intl.tsf.associate_imc_only_when_imm_ime_is_active",
+                         false);
   if (!sIsInTSFMode) {
     // When full TSFTextStore is not available, try to use SetInputScopes API
     // to enable at least InputScope. Use GET_MODULE_HANDLE_EX_FLAG_PIN to
@@ -173,7 +179,7 @@ IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
     }
     // IME isn't implemented with IMM, IMMHandler shouldn't handle any
     // messages.
-    if (!TSFTextStore::IsIMM_IME()) {
+    if (!TSFTextStore::IsIMM_IMEActive()) {
       return false;
     }
   }
@@ -188,8 +194,9 @@ IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
 bool
 IMEHandler::IsIMMActive()
 {
-  return TSFTextStore::IsIMM_IME();
+  return TSFTextStore::IsIMM_IMEActive();
 }
+
 #endif // #ifdef NS_ENABLE_TSF
 
 // static
@@ -408,6 +415,27 @@ IMEHandler::OnDestroyWindow(nsWindow* aWindow)
   AssociateIMEContext(aWindow, true);
 }
 
+#ifdef NS_ENABLE_TSF
+// static
+bool
+IMEHandler::NeedsToAssociateIMC()
+{
+  if (sAssociateIMCOnlyWhenIMM_IMEActive) {
+    return TSFTextStore::IsIMM_IMEActive();
+  }
+
+  // Even if IMC should be associated with focused widget with non-IMM-IME,
+  // we need to avoid crash bug of MS-IME for Japanese on Win10.  It crashes
+  // while we're associating default IME to a window when it's active.
+  static const bool sDoNotAssociateIMCWhenMSJapaneseIMEActiveOnWin10 =
+    IsWin10OrLater() &&
+    Preferences::GetBool(
+      "intl.tsf.hack.ms_japanese_ime.do_not_associate_imc_on_win10", true);
+  return !sDoNotAssociateIMCWhenMSJapaneseIMEActiveOnWin10 ||
+         !TSFTextStore::IsMSJapaneseIMEActive();
+}
+#endif // #ifdef NS_ENABLE_TSF
+
 // static
 void
 IMEHandler::SetInputContext(nsWindow* aWindow,
@@ -439,8 +467,8 @@ IMEHandler::SetInputContext(nsWindow* aWindow,
     TSFTextStore::SetInputContext(aWindow, aInputContext, aAction);
     if (IsTSFAvailable()) {
       if (sIsIMMEnabled) {
-        // Associate IME context for IMM-IMEs.
-        AssociateIMEContext(aWindow, enable);
+        // Associate IMC with aWindow only when it's necessary.
+        AssociateIMEContext(aWindow, enable && NeedsToAssociateIMC());
       } else if (oldInputContext.mIMEState.mEnabled == IMEState::PLUGIN) {
         // Disassociate the IME context from the window when plugin loses focus
         // in pure TSF mode.
@@ -468,15 +496,15 @@ IMEHandler::SetInputContext(nsWindow* aWindow,
 
 // static
 void
-IMEHandler::AssociateIMEContext(nsWindow* aWindow, bool aEnable)
+IMEHandler::AssociateIMEContext(nsWindowBase* aWindowBase, bool aEnable)
 {
-  IMEContext context(aWindow);
+  IMEContext context(aWindowBase);
   if (aEnable) {
     context.AssociateDefaultContext();
     return;
   }
   // Don't disassociate the context after the window is destroyed.
-  if (aWindow->Destroyed()) {
+  if (aWindowBase->Destroyed()) {
     return;
   }
   context.Disassociate();
@@ -523,6 +551,33 @@ IMEHandler::CurrentKeyboardLayoutHasIME()
   return IMMHandler::IsIMEAvailable();
 }
 #endif // #ifdef DEBUG
+
+// static
+void
+IMEHandler::OnKeyboardLayoutChanged()
+{
+  if (!sIsIMMEnabled || !IsTSFAvailable()) {
+    return;
+  }
+
+  // If there is no TSFTextStore which has focus, i.e., no editor has focus,
+  // nothing to do here.
+  nsWindowBase* windowBase = TSFTextStore::GetEnabledWindowBase();
+  if (!windowBase) {
+    return;
+  }
+
+  // If IME isn't available, nothing to do here.
+  InputContext inputContext = windowBase->GetInputContext();
+  if (!WinUtils::IsIMEEnabled(inputContext)) {
+    return;
+  }
+
+  // Associate or Disassociate IMC if it's necessary.
+  // Note that this does nothing if the window has already associated with or
+  // disassociated from the window.
+  AssociateIMEContext(windowBase, NeedsToAssociateIMC());
+}
 
 // static
 void
