@@ -294,6 +294,17 @@ UntransformVector(const gfx::Matrix4x4Typed<SourceUnits, TargetUnits>& aTransfor
   return Some(projectedTarget.As2DPoint() - projectedAnchor.As2DPoint());
 }
 
+
+template <typename TargetUnits, typename SourceUnits>
+static gfx::IntRectTyped<TargetUnits>
+TransformByTranslation(const gfx::IntRectTyped<SourceUnits>& aRect,
+                       const gfx::IntPointTyped<TargetUnits>& aOffset)
+{
+  nsIntRect rect = aRect.ToUnknownRect();
+  rect.MoveBy(aOffset.ToUnknownPoint());
+  return ViewAs<TargetUnits>(rect);
+}
+
 } // namespace mozilla
 
 #endif

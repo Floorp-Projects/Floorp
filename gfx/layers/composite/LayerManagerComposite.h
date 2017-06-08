@@ -305,7 +305,10 @@ public:
    *     Each layer accumulates into |aVisibleRegion| its post-transform
    *     (including async transforms) visible region.
    */
+  void PostProcessLayers(nsIntRegion& aOpaqueRegion);
   void PostProcessLayers(Layer* aLayer,
+                         const RenderTargetIntRect& aClipRect,
+                         const ParentLayerIntPoint& aOffset,
                          nsIntRegion& aOpaqueRegion,
                          LayerIntRegion& aVisibleRegion,
                          const Maybe<ParentLayerIntRect>& aClipFromAncestors);
