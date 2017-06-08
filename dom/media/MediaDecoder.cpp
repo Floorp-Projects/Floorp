@@ -400,6 +400,7 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , INIT_MIRROR(mIsAudioDataAudible, false)
   , INIT_CANONICAL(mVolume, aInit.mVolume)
   , INIT_CANONICAL(mPreservesPitch, aInit.mPreservesPitch)
+  , INIT_CANONICAL(mLooping, aInit.mLooping)
   , INIT_CANONICAL(mExplicitDuration, Maybe<double>())
   , INIT_CANONICAL(mPlayState, PLAY_STATE_LOADING)
   , INIT_CANONICAL(mNextState, PLAY_STATE_PAUSED)
@@ -1444,6 +1445,13 @@ MediaDecoder::SetPreservesPitch(bool aPreservesPitch)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mPreservesPitch = aPreservesPitch;
+}
+
+void
+MediaDecoder::SetLooping(bool aLooping)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mLooping = aLooping;
 }
 
 void
