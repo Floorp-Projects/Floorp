@@ -461,7 +461,7 @@ writeToProto_getProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
 
 struct AutoSkipPropertyMirroring
 {
-    explicit AutoSkipPropertyMirroring(CompartmentPrivate* priv) : priv(priv) {
+    explicit AutoSkipPropertyMirroring(RealmPrivate* priv) : priv(priv) {
         MOZ_ASSERT(!priv->skipWriteToGlobalPrototype);
         priv->skipWriteToGlobalPrototype = true;
     }
@@ -471,7 +471,7 @@ struct AutoSkipPropertyMirroring
     }
 
   private:
-    CompartmentPrivate* priv;
+    RealmPrivate* priv;
 };
 
 // This hook handles the case when writeToGlobalPrototype is set on the
@@ -485,7 +485,7 @@ struct AutoSkipPropertyMirroring
 static bool
 sandbox_addProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
 {
-    CompartmentPrivate* priv = CompartmentPrivate::Get(obj);
+    RealmPrivate* priv = RealmPrivate::Get(obj);
     MOZ_ASSERT(priv->writeToGlobalPrototype);
 
     // Whenever JS_EnumerateStandardClasses is called, it defines the
@@ -1114,9 +1114,11 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
     if (!sandbox)
         return NS_ERROR_FAILURE;
 
+    RealmPrivate* realmPriv = RealmPrivate::Get(sandbox);
+    realmPriv->writeToGlobalPrototype = options.writeToGlobalPrototype;
+
     CompartmentPrivate* priv = CompartmentPrivate::Get(sandbox);
     priv->allowWaivers = options.allowWaivers;
-    priv->writeToGlobalPrototype = options.writeToGlobalPrototype;
     priv->isWebExtensionContentScript = options.isWebExtensionContentScript;
     priv->waiveInterposition = options.waiveInterposition;
     priv->isContentXBLCompartment = options.isContentXBLScope;
@@ -1146,7 +1148,7 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
             // Don't try to mirror standard class properties, if we're using a
             // mirroring sandbox.  (This is meaningless for non-mirroring
             // sandboxes.)
-            AutoSkipPropertyMirroring askip(CompartmentPrivate::Get(sandbox));
+            AutoSkipPropertyMirroring askip(RealmPrivate::Get(sandbox));
 
             // Ensure |Object.prototype| is instantiated before prototype-
             // splicing below.  For write-to-global-prototype behavior, extend
@@ -1200,7 +1202,7 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
         }
 
         // Don't try to mirror the properties that are set below.
-        AutoSkipPropertyMirroring askip(CompartmentPrivate::Get(sandbox));
+        AutoSkipPropertyMirroring askip(RealmPrivate::Get(sandbox));
 
         bool allowComponents = principal == nsXPConnect::SystemPrincipal() ||
                                nsContentUtils::IsExpandedPrincipal(principal);

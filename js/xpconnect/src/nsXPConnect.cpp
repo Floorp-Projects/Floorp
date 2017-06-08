@@ -454,9 +454,9 @@ xpc::TraceXPCGlobal(JSTracer* trc, JSObject* obj)
     // We might be called from a GC during the creation of a global, before we've
     // been able to set up the compartment private or the XPCWrappedNativeScope,
     // so we need to null-check those.
-    xpc::CompartmentPrivate* compartmentPrivate = xpc::CompartmentPrivate::Get(obj);
-    if (compartmentPrivate && compartmentPrivate->scope)
-        compartmentPrivate->scope->TraceInside(trc);
+    xpc::RealmPrivate* realmPrivate = xpc::RealmPrivate::Get(obj);
+    if (realmPrivate && realmPrivate->scope)
+        realmPrivate->scope->TraceInside(trc);
 }
 
 
@@ -548,7 +548,7 @@ InitGlobalObject(JSContext* aJSContext, JS::Handle<JSObject*> aGlobal, uint32_t 
 
     if (!(aFlags & nsIXPConnect::OMIT_COMPONENTS_OBJECT)) {
         // XPCCallContext gives us an active request needed to save/restore.
-        if (!CompartmentPrivate::Get(aGlobal)->scope->AttachComponentsObject(aJSContext) ||
+        if (!RealmPrivate::Get(aGlobal)->scope->AttachComponentsObject(aJSContext) ||
             !XPCNativeWrapper::AttachNewConstructorObject(aJSContext, aGlobal)) {
             return UnexpectedFailure(false);
         }
