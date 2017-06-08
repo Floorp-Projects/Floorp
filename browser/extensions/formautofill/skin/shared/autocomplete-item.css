@@ -35,7 +35,6 @@ xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .profile-it
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  background-color: #FFFFFF;
   color: -moz-FieldText
 }
 
