@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 [features/activity-stream@mozilla.org] chrome.jar:
-% resource activity-stream %content/
+% resource activity-stream %content/ contentaccessible=yes
   content/lib/ (./lib/*)
   content/common/ (./common/*)
   content/vendor/Redux.jsm (./vendor/Redux.jsm)
