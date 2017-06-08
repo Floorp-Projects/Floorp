@@ -187,6 +187,9 @@ add_task(async function test_reload_to_invalid_version_fails() {
 });
 
 add_task(async function test_manifest_changes_are_refreshed() {
+  if (!AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
+    return;
+  }
   await promiseRestartManager();
   let tempdir = gTmpD.clone();
 
@@ -215,6 +218,9 @@ add_task(async function test_manifest_changes_are_refreshed() {
 });
 
 add_task(async function test_reload_fails_on_installation_errors() {
+  if (!AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
+    return;
+  }
   await promiseRestartManager();
   let tempdir = gTmpD.clone();
 
