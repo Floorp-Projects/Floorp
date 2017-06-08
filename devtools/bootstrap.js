@@ -77,7 +77,7 @@ function interpretPreprocessingInstructions(content) {
       ignoring = false;
     }
 
-    let isPrefLine = /^ *pref\("([^"]+)"/.test(line);
+    let isPrefLine = /^ *(sticky_)?pref\("([^"]+)"/.test(line);
     if (continuation || (!ignoring && isPrefLine)) {
       newLines.push(line);
 
