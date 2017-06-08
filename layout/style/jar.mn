@@ -7,7 +7,6 @@ toolkit.jar:
 *  res/html.css                              (res/html.css)
    res/quirk.css                             (res/quirk.css)
    res/plaintext.css                         (res/plaintext.css)
-   res/viewsource.css                        (res/viewsource.css)
    res/counterstyles.css                     (res/counterstyles.css)
    res/noscript.css                          (res/noscript.css)
    res/noframes.css                          (res/noframes.css)
@@ -33,3 +32,4 @@ toolkit.jar:
    res/accessiblecaret-tilt-right@2.25x.png  (res/accessiblecaret-tilt-right@2.25x.png)
 
 % resource gre-resources %res/
+% resource content-accessible resource://gre/contentaccessible/ contentaccessible=yes
