@@ -18,7 +18,7 @@ config = {
     "previous_archive_prefix": "https://archive.mozilla.org/pub",
     "download_domain": "download.mozilla.org",
     "balrog_url": "https://aus5.mozilla.org",
-    "balrog_username": "ffxbld",
+    "balrog_username": "balrog-ffxbld",
     "update_channels": {
         "esr": {
             "version_regex": r".*",
