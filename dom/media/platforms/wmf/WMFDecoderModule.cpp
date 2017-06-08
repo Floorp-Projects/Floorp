@@ -254,7 +254,7 @@ WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
       CanCreateWMFDecoder<CLSID_CMP3DecMediaObject>()) {
     return true;
   }
-  if (MediaPrefs::PDMWMFVP9DecoderEnabled() && sDXVAEnabled) {
+  if (MediaPrefs::PDMWMFVP9DecoderEnabled()) {
     if ((VPXDecoder::IsVP8(aTrackInfo.mMimeType)
          || VPXDecoder::IsVP9(aTrackInfo.mMimeType))
         && CanCreateWMFDecoder<CLSID_WebmMfVpxDec>()) {
