@@ -22,9 +22,10 @@ use values::generics::image::{EndingShape as GenericEndingShape, Gradient as Gen
 use values::generics::image::{GradientItem as GenericGradientItem, GradientKind as GenericGradientKind};
 use values::generics::image::{Image as GenericImage, ImageRect as GenericImageRect};
 use values::generics::image::{LineDirection as GenericsLineDirection, ShapeExtent};
+use values::generics::image::PaintWorklet;
 use values::generics::position::Position as GenericPosition;
-use values::specified::{Angle, CSSColor, Color, Length, LengthOrPercentage};
-use values::specified::{Number, NumberOrPercentage, Percentage};
+use values::specified::{Angle, Color, Length, LengthOrPercentage};
+use values::specified::{Number, NumberOrPercentage, Percentage, RGBAColor};
 use values::specified::position::{Position, PositionComponent, Side, X, Y};
 use values::specified::url::SpecifiedUrl;
 
@@ -42,7 +43,7 @@ pub type Gradient = GenericGradient<
     Length,
     LengthOrPercentage,
     Position,
-    CSSColor,
+    RGBAColor,
 >;
 
 /// A specified gradient kind.
@@ -71,10 +72,10 @@ pub enum LineDirection {
 pub type EndingShape = GenericEndingShape<Length, LengthOrPercentage>;
 
 /// A specified gradient item.
-pub type GradientItem = GenericGradientItem<CSSColor, LengthOrPercentage>;
+pub type GradientItem = GenericGradientItem<RGBAColor, LengthOrPercentage>;
 
 /// A computed color stop.
-pub type ColorStop = GenericColorStop<CSSColor, LengthOrPercentage>;
+pub type ColorStop = GenericColorStop<RGBAColor, LengthOrPercentage>;
 
 /// Specified values for `moz-image-rect`
 /// -moz-image-rect(<uri>, top, right, bottom, left);
@@ -97,6 +98,12 @@ impl Parse for Image {
         }
         if let Ok(gradient) = input.try(|i| Gradient::parse(context, i)) {
             return Ok(GenericImage::Gradient(gradient));
+        }
+        #[cfg(feature = "servo")]
+        {
+            if let Ok(paint_worklet) = input.try(|i| PaintWorklet::parse(context, i)) {
+                return Ok(GenericImage::PaintWorklet(paint_worklet));
+            }
         }
         #[cfg(feature = "gecko")]
         {
@@ -379,11 +386,11 @@ impl Gradient {
                         "to" => 1.,
                         _ => return Err(()),
                     };
-                    let color = CSSColor::parse(context, i)?;
-                    if color.parsed == Color::CurrentColor {
+                    let color = Color::parse(context, i)?;
+                    if color == Color::CurrentColor {
                         return Err(());
                     }
-                    Ok((color, p))
+                    Ok((color.into(), p))
                 })?;
                 if reverse_stops {
                     p = 1. - p;
@@ -398,11 +405,11 @@ impl Gradient {
         if items.is_empty() {
             items = vec![
                 GenericGradientItem::ColorStop(GenericColorStop {
-                    color: CSSColor::transparent(),
+                    color: Color::transparent().into(),
                     position: Some(Percentage(0.).into()),
                 }),
                 GenericGradientItem::ColorStop(GenericColorStop {
-                    color: CSSColor::transparent(),
+                    color: Color::transparent().into(),
                     position: Some(Percentage(1.).into()),
                 }),
             ];
@@ -667,8 +674,20 @@ impl GradientItem {
 impl Parse for ColorStop {
     fn parse(context: &ParserContext, input: &mut Parser) -> Result<Self, ()> {
         Ok(ColorStop {
-            color: try!(CSSColor::parse(context, input)),
+            color: try!(RGBAColor::parse(context, input)),
             position: input.try(|i| LengthOrPercentage::parse(context, i)).ok(),
+        })
+    }
+}
+
+impl Parse for PaintWorklet {
+    fn parse(_context: &ParserContext, input: &mut Parser) -> Result<Self, ()> {
+        input.expect_function_matching("paint")?;
+        input.parse_nested_block(|i| {
+            let name = i.expect_ident()?;
+            Ok(PaintWorklet {
+                name: Atom::from(name),
+            })
         })
     }
 }

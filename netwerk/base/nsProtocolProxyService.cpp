@@ -22,6 +22,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsThreadUtils.h"
+#include "nsQueryObject.h"
 #include "nsSOCKSIOLayer.h"
 #include "nsString.h"
 #include "nsNetUtil.h"
@@ -37,6 +38,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Tokenizer.h"
+#include "mozilla/Unused.h"
 
 //----------------------------------------------------------------------------
 
@@ -308,6 +310,74 @@ private:
 
 NS_IMPL_ISUPPORTS(nsAsyncResolveRequest, nsICancelable, nsIRunnable)
 
+// Bug 1366133: make GetPACURI off-main-thread since it may hang on Windows platform
+class AsyncGetPACURIRequest final : public nsIRunnable
+{
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+    using CallbackFunc = nsresult(nsProtocolProxyService::*)(bool, bool, nsresult, const nsACString&);
+
+    AsyncGetPACURIRequest(nsProtocolProxyService* aService,
+                          CallbackFunc aCallback,
+                          nsISystemProxySettings* aSystemProxySettings,
+                          bool aMainThreadOnly,
+                          bool aForceReload,
+                          bool aResetPACThread)
+        : mIsMainThreadOnly(aMainThreadOnly)
+        , mService(aService)
+        , mServiceHolder(do_QueryObject(aService))
+        , mCallback(aCallback)
+        , mSystemProxySettings(aSystemProxySettings)
+        , mForceReload(aForceReload)
+        , mResetPACThread(aResetPACThread)
+    {
+        MOZ_ASSERT(NS_IsMainThread());
+        Unused << mIsMainThreadOnly;
+    }
+
+    NS_IMETHOD Run() override
+    {
+        MOZ_ASSERT(NS_IsMainThread() == mIsMainThreadOnly);
+
+        nsCString pacUri;
+        nsresult rv = mSystemProxySettings->GetPACURI(pacUri);
+
+        nsCOMPtr<nsIRunnable> event =
+            NewNonOwningCancelableRunnableMethod<bool,
+                                                 bool,
+                                                 nsresult,
+                                                 nsCString>("AsyncGetPACURIRequestCallback",
+                                                             mService,
+                                                             mCallback,
+                                                             mForceReload,
+                                                             mResetPACThread,
+                                                             rv,
+                                                             pacUri);
+
+        return NS_DispatchToMainThread(event);
+    }
+
+private:
+    ~AsyncGetPACURIRequest()
+    {
+        MOZ_ASSERT(NS_IsMainThread() == mIsMainThreadOnly);
+        NS_ReleaseOnMainThread(mServiceHolder.forget());
+    }
+
+    bool mIsMainThreadOnly;
+
+    nsProtocolProxyService* mService; // ref-count is hold by mServiceHolder
+    nsCOMPtr<nsIProtocolProxyService2> mServiceHolder;
+    CallbackFunc mCallback;
+    nsCOMPtr<nsISystemProxySettings> mSystemProxySettings;
+
+    bool mForceReload;
+    bool mResetPACThread;
+};
+
+NS_IMPL_ISUPPORTS(AsyncGetPACURIRequest, nsIRunnable)
+
 //----------------------------------------------------------------------------
 
 #define IS_ASCII_SPACE(_c) ((_c) == ' ' || (_c) == '\t')
@@ -462,6 +532,8 @@ nsProtocolProxyService::Init()
         obs->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
     }
 
+    NS_NewNamedThread("SysProxySetting", getter_AddRefs(mProxySettingThread));
+
     return NS_OK;
 }
 
@@ -512,6 +584,54 @@ nsProtocolProxyService::ReloadNetworkPAC()
     return NS_OK;
 }
 
+nsresult
+nsProtocolProxyService::AsyncConfigureFromPAC(bool aForceReload,
+                                              bool aResetPACThread)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (NS_WARN_IF(!mProxySettingThread)) {
+        return NS_ERROR_NOT_INITIALIZED;
+    }
+
+    bool mainThreadOnly;
+    nsresult rv = mSystemProxySettings->GetMainThreadOnly(&mainThreadOnly);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+    }
+
+    nsCOMPtr<nsIRunnable> req =
+        new AsyncGetPACURIRequest(this,
+                                  &nsProtocolProxyService::OnAsyncGetPACURI,
+                                  mSystemProxySettings,
+                                  mainThreadOnly,
+                                  aForceReload,
+                                  aResetPACThread);
+
+    if (mainThreadOnly) {
+        return req->Run();
+    }
+    return mProxySettingThread->Dispatch(req, nsIEventTarget::DISPATCH_NORMAL);
+}
+
+nsresult
+nsProtocolProxyService::OnAsyncGetPACURI(bool aForceReload,
+                                         bool aResetPACThread,
+                                         nsresult aResult,
+                                         const nsACString& aUri)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (aResetPACThread) {
+        ResetPACThread();
+    }
+
+    if (NS_SUCCEEDED(aResult) && !aUri.IsEmpty()) {
+        ConfigureFromPAC(PromiseFlatCString(aUri), aForceReload);
+    }
+
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsProtocolProxyService::Observe(nsISupports     *aSubject,
@@ -531,6 +651,11 @@ nsProtocolProxyService::Observe(nsISupports     *aSubject,
         if (mPACMan) {
             mPACMan->Shutdown();
             mPACMan = nullptr;
+        }
+
+        if (mProxySettingThread) {
+            mProxySettingThread->Shutdown();
+            mProxySettingThread = nullptr;
         }
 
         nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
@@ -684,7 +809,7 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
             tempString.AssignLiteral(WPAD_URL);
         } else if (mSystemProxySettings) {
             // Get System Proxy settings if available
-            mSystemProxySettings->GetPACURI(tempString);
+            AsyncConfigureFromPAC(false, false);
         }
         if (!tempString.IsEmpty())
             ConfigureFromPAC(tempString, false);
@@ -1122,9 +1247,11 @@ nsProtocolProxyService::ReloadPAC()
     else if (type == PROXYCONFIG_WPAD)
         pacSpec.AssignLiteral(WPAD_URL);
     else if (type == PROXYCONFIG_SYSTEM) {
-        if (mSystemProxySettings)
-            mSystemProxySettings->GetPACURI(pacSpec);
-        ResetPACThread();
+        if (mSystemProxySettings) {
+            AsyncConfigureFromPAC(true, true);
+        } else {
+            ResetPACThread();
+        }
     }
 
     if (!pacSpec.IsEmpty())
@@ -1815,6 +1942,9 @@ nsProtocolProxyService::Resolve_Internal(nsIChannel *channel,
         // If the system proxy setting implementation is not threadsafe (e.g
         // linux gconf), we'll do it inline here. Such implementations promise
         // not to block
+        // bug 1366133: this block uses GetPACURI & GetProxyForURI, which may
+        // hang on Windows platform. Fortunately, current implementation on
+        // Windows is not main thread only, so we are safe here.
 
         nsAutoCString PACURI;
         nsAutoCString pacString;

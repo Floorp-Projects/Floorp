@@ -1849,6 +1849,38 @@ or run without that action (ie: --no-{action})"
             self.error("'mach build check' did not run successfully. Please "
                        "check log for errors.")
 
+    def _is_configuration_shipped(self):
+        """Determine if the current build configuration is shipped to users.
+
+        This is used to drive alerting so we don't see alerts for build
+        configurations we care less about.
+        """
+        # Ideally this would be driven by a config option. However, our
+        # current inheritance mechanism of using a base config and then
+        # one-off configs for variants isn't conducive to this since derived
+        # configs we need to be reset and we don't like requiring boilerplate
+        # in derived configs.
+
+        # All PGO builds are shipped. This takes care of Linux and Windows.
+        if self.config.get('pgo_build'):
+            return True
+
+        # Debug builds are never shipped.
+        if self.config.get('debug_build'):
+            return False
+
+        # OS X opt builds without a variant are shipped.
+        if self.config.get('platform') == 'macosx64':
+            if not self.config.get('build_variant'):
+                return True
+
+        # Android opt builds without a variant are shipped.
+        if self.config.get('platform') == 'android':
+            if not self.config.get('build_variant'):
+                return True
+
+        return False
+
     def _load_build_resources(self):
         p = self.config.get('build_resources_path') % self.query_abs_dirs()
         if not os.path.exists(p):
@@ -1987,21 +2019,30 @@ or run without that action (ie: --no-{action})"
         if not installer_size and not size_measurements:
             return
 
+        # We want to always collect metrics. But alerts for installer size are
+        # only use for builds with ship. So nix the alerts for builds we don't
+        # ship.
+        def filter_alert(alert):
+            if not self._is_configuration_shipped():
+                alert['shouldAlert'] = False
+
+            return alert
+
         if installer.endswith('.apk'): # Android
-            yield {
+            yield filter_alert({
                 "name": "installer size",
                 "value": installer_size,
                 "alertChangeType": "absolute",
                 "alertThreshold": (200 * 1024),
                 "subtests": size_measurements
-            }
+            })
         else:
-            yield {
+            yield filter_alert({
                 "name": "installer size",
                 "value": installer_size,
                 "alertThreshold": 1.0,
                 "subtests": size_measurements
-            }
+            })
 
     def _generate_build_stats(self):
         """grab build stats following a compile.
@@ -2061,6 +2102,11 @@ or run without that action (ie: --no-{action})"
 
         # Ensure all extra options for this configuration are present.
         for opt in self.config.get('perfherder_extra_options', []):
+            for suite in perfherder_data['suites']:
+                if opt not in suite.get('extraOptions', []):
+                    suite.setdefault('extraOptions', []).append(opt)
+
+        for opt in os.environ.get('PERFHERDER_EXTRA_OPTIONS', '').split():
             for suite in perfherder_data['suites']:
                 if opt not in suite.get('extraOptions', []):
                     suite.setdefault('extraOptions', []).append(opt)

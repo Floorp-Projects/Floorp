@@ -32,5 +32,7 @@ LOCAL_INCLUDES += [
     '/security/sandbox/chromium',
 ]
 
+if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+    CXXFLAGS += CONFIG['GLIB_CFLAGS']
 
 FINAL_LIBRARY = 'xul'

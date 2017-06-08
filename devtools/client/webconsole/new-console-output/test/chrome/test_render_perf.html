@@ -14,8 +14,22 @@
 
 <script type="text/javascript">
 "use strict";
-const numMessages = 4000;
-const testPackets = Array.from({length: numMessages}).map((el, id) => ({
+
+// To analyze the profile results:
+// > ./mach mochitest test_render_perf.html
+// Then open https://perf-html.io and drag the json file printed at the end of this test
+
+const NUM_MESSAGES = 4000;
+const NUM_STREAMING = 100;
+Components.utils.import("resource://gre/modules/FileUtils.jsm");
+const Services = browserRequire("Services");
+Services.prefs.setIntPref("devtools.hud.loglimit", NUM_MESSAGES);
+const NewConsoleOutputWrapper = browserRequire(
+  "devtools/client/webconsole/new-console-output/new-console-output-wrapper");
+const actions =
+  browserRequire("devtools/client/webconsole/new-console-output/actions/index");
+const EventEmitter = browserRequire("devtools/shared/event-emitter");
+const testPackets = Array.from({length: NUM_MESSAGES}).map((el, id) => ({
   "from": "server1.conn4.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
@@ -39,6 +53,7 @@ const testPackets = Array.from({length: numMessages}).map((el, id) => ({
     "category": "webdev"
   }
 }));
+const lastPacket = testPackets.pop();
 
 async function timeit(cb) {
   // Return a Promise that resolves the number of seconds cb takes.
@@ -48,59 +63,126 @@ async function timeit(cb) {
   return elapsed;
 }
 
+async function addAllMessages(wrapper) {
+  let time = await timeit(async () => {
+    testPackets.forEach((packet) => wrapper.dispatchMessageAdd(packet));
+    // Only wait for the last packet to minimize work.
+    await wrapper.dispatchMessageAdd(lastPacket, true);
+    await new Promise(resolve => requestAnimationFrame(resolve));
+  });
+  return time;
+}
+
+async function addMessage(wrapper, message) {
+  return timeit(async () => {
+    await wrapper.dispatchMessageAdd(message, true);
+  });
+}
+
+function getTimes(times) {
+  times = times.sort();
+  let totalTime = times.reduce((sum, t) => sum + t);
+  let avg = totalTime / times.length;
+  let median = times.length % 2 !== 0
+    ? times[Math.floor(times.length / 2)]
+    : (times[(times.length / 2) - 1] + times[times.length / 2]) / 2;
+  return {avg, median};
+}
+
+async function clearMessages(wrapper) {
+  wrapper.dispatchMessagesClear();
+  await new Promise(resolve => requestAnimationFrame(resolve));
+}
+
+async function testStreamLogging(wrapper) {
+  await clearMessages(wrapper);
+  let streamTimes = [];
+  for (let i = 0; i < NUM_STREAMING; i++) {
+    streamTimes.push(addMessage(wrapper, testPackets[i]));
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  let {avg, median} = getTimes(await Promise.all(streamTimes));
+  info(`STREAMING: On average, it took ${avg} ms (median ${median} ms) ` +
+       `for each message`);
+}
+
+async function testBulkLogging(wrapper) {
+  await clearMessages(wrapper);
+  let bulkTimes = [];
+  const iterations = 5;
+  for (let i = 0; i < iterations; i++) {
+    let time = await addAllMessages(wrapper);
+    info(`took ${time} ms to render bulk messages (iteration ${i})`);
+    bulkTimes.push(time);
+
+    await clearMessages(wrapper);
+  }
+  let {avg, median} = getTimes(bulkTimes);
+
+  info(`BULK: On average, it took ${avg} ms (median ${median} ms) ` +
+       `to render ${NUM_MESSAGES} messages`);
+}
+
+async function testFiltering(wrapper) {
+  await clearMessages(wrapper);
+  await addAllMessages(wrapper);
+  let filterToggleTimeOff = await timeit(() => {
+    wrapper.getStore().dispatch(actions.filterToggle("log"));
+  });
+  info(`Filter toggle time (off): ${filterToggleTimeOff}`);
+
+  let filterToggleTimeOn = await timeit(() => {
+    wrapper.getStore().dispatch(actions.filterToggle("log"));
+  });
+  info(`Filter toggle time (on): ${filterToggleTimeOn}`);
+}
+
 window.onload = async function () {
   // This test does costly work multiple times to have better performance data.
+  // It doesn't run in automation
   SimpleTest.requestLongerTimeout(3);
 
-  try {
-    const Services = browserRequire("Services");
-    Services.prefs.setIntPref("devtools.hud.loglimit", numMessages);
-    const NewConsoleOutputWrapper = browserRequire(
-      "devtools/client/webconsole/new-console-output/new-console-output-wrapper");
-    const EventEmitter = browserRequire("devtools/shared/event-emitter");
+  const wrapper = new NewConsoleOutputWrapper(
+    document.getElementById("output"),
+    {hud: EventEmitter.decorate({proxy: {}})},
+    {},
+    null,
+    document,
+  );
+  wrapper.init();
 
-    const wrapper = new NewConsoleOutputWrapper(
-      document.getElementById("output"),
-      {hud: EventEmitter.decorate({proxy: {}})},
-      {},
-      null,
-      document,
-    );
-    wrapper.init();
+  // From https://github.com/devtools-html/perf.html/blob/b73eb73df04c7df51464fa50eeadef3dc7f5d4e2/docs/gecko-profile-format.md#L21
+  const settings = {
+    entries: 100000000,
+    interval: 1,
+    features: ["js"],
+    threads: ["GeckoMain"]
+  };
+  Services.profiler.StartProfiler(
+    settings.entries,
+    settings.interval,
+    settings.features,
+    settings.features.length,
+    settings.threads,
+    settings.threads.length
+  );
+  info("Profiler has started");
 
-    let times = [];
-    const iterations = 25;
-    const lastPacket = testPackets.pop();
-    for (let i = 0; i < iterations; i++) {
-      let time = await timeit(async () => {
-        testPackets.forEach((packet) => wrapper.dispatchMessageAdd(packet));
-        // Only wait for the last packet to minimize work.
-        await wrapper.dispatchMessageAdd(lastPacket, true);
-        await new Promise(resolve => requestAnimationFrame(resolve));
-      });
-      info(`took ${time} ms to render messages`);
-      times.push(time);
+  Services.profiler.AddMarker("Stream Logging");
+  await testStreamLogging(wrapper);
 
-      // Clear the console
-      wrapper.dispatchMessagesClear();
-      await new Promise(resolve => requestAnimationFrame(resolve));
-    }
+  Services.profiler.AddMarker("Bulk Logging");
+  await testBulkLogging(wrapper);
 
-    times.sort();
-    let totalTime = times.reduce((sum, t) => sum + t);
-    let avg = totalTime / times.length;
-    let median = times.length % 2 !== 0
-      ? times[Math.floor(times.length / 2)]
-      : (times[(times.length / 2) - 1] + times[times.length / 2]) / 2;
-    info(`On average, it took ${avg} ms (median ${median} ms) ` +
-         `to render ${numMessages} messages`);
+  Services.profiler.AddMarker("Filtering Logging");
+  await testFiltering(wrapper);
 
-    ok(true, "Yay, it didn't time out!");
-  } catch (e) {
-    ok(false, `Error :  ${e.message}
-      ${e.stack}
-    `);
-  }
+  ok(true, "Tests finished");
+
+  let file = FileUtils.getFile("TmpD", [`test_render_perf_${Date.now()}.json`]);
+  info("PROFILE:\n\n\n\n\nSaving profile " + file.path + "\n\n\n\n\n");
+  Services.profiler.dumpProfileToFile(file.path);
+  Services.profiler.StopProfiler();
 
   SimpleTest.finish();
 };

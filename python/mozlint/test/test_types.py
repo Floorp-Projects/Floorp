@@ -18,10 +18,10 @@ def path(filedir):
 
 
 @pytest.fixture(params=[
-    'string.lint.py',
-    'regex.lint.py',
-    'external.lint.py',
-    'structured.lint.py'])
+    'string.yml',
+    'regex.yml',
+    'external.yml',
+    'structured.yml'])
 def linter(lintdir, request):
     return os.path.join(lintdir, request.param)
 
@@ -41,7 +41,7 @@ def test_linter_types(lint, linter, files, path):
 
 
 def test_no_filter(lint, lintdir, files):
-    lint.read(os.path.join(lintdir, 'explicit_path.lint.py'))
+    lint.read(os.path.join(lintdir, 'explicit_path.yml'))
     result = lint.roll(files)
     assert len(result) == 0
 

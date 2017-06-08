@@ -180,9 +180,9 @@ skip-if(!Android) pref(apz.allow_zooming,true) != async-zoom-1.html async-zoom-1
 fuzzy(112,800) skip-if(!Android) pref(apz.allow_zooming,true) == async-zoom-2.html async-zoom-2-ref.html
 
 # reftest-opaque-layer
-== reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html
-!= reftest-opaque-layer-pass.html about:blank
-!= about:blank reftest-opaque-layer-pass.html
+fails-if(webrender) == reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html
+fails-if(webrender) != reftest-opaque-layer-pass.html about:blank
+fails-if(webrender) != about:blank reftest-opaque-layer-pass.html
 fails == reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
 
 # If reftest-opaque-layer fails (no matter whether it fails in the test or in the reference),
@@ -194,8 +194,8 @@ fails != reftest-opaque-layer-fail.html about:blank
 fails-if(!styloVsGecko) != about:blank reftest-opaque-layer-fail.html
 
 # reftest-opaque-layer and reftest-wait
-== reftest-opaque-layer-wait-pass.html reftest-opaque-layer-pass.html
-!= reftest-opaque-layer-wait-pass.html about:blank
+fails-if(webrender) == reftest-opaque-layer-wait-pass.html reftest-opaque-layer-pass.html
+fails-if(webrender) != reftest-opaque-layer-wait-pass.html about:blank
 fails fails-if(styloVsGecko) == reftest-opaque-layer-wait-fail.html reftest-opaque-layer-fail.html
 fails-if(!styloVsGecko) fails-if(styloVsGecko) != reftest-opaque-layer-wait-fail.html about:blank
 

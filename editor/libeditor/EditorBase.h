@@ -493,6 +493,7 @@ protected:
    */
   bool EnsureComposition(WidgetCompositionEvent* aCompositionEvent);
 
+  already_AddRefed<nsISelectionController> GetSelectionController();
   nsresult GetSelection(SelectionType aSelectionType,
                         nsISelection** aSelection);
 

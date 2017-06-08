@@ -1,0 +1,7 @@
+StructuredLinter:
+    description: "It's bad to have the string foobar in js files."
+    include:
+        - files
+    type: structured_log
+    extensions: ['.js', '.jsm']
+    payload: external:structured

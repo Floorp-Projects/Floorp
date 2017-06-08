@@ -25,6 +25,7 @@ add_task(function* testInitUninit() {
   let store = new SyncedTabsListStore();
   let ViewMock = sinon.stub();
   let view = {render() {}, destroy() {}};
+  let mockWindow = {};
 
   ViewMock.returns(view);
 
@@ -35,7 +36,7 @@ add_task(function* testInitUninit() {
   sinon.stub(store, "getData");
   sinon.stub(store, "focusInput");
 
-  let component = new TabListComponent({window, store, View: ViewMock, SyncedTabs});
+  let component = new TabListComponent({window: mockWindow, store, View: ViewMock, SyncedTabs});
 
   for (let action of ACTION_METHODS) {
     sinon.stub(component, action);

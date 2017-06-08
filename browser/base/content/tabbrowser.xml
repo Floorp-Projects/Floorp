@@ -2876,7 +2876,7 @@
             }
 
             // Mute audio immediately to improve perceived speed of tab closure.
-            if (aTab.hasAttribute("soundplaying")) {
+            if (!aAdoptedByTab && aTab.hasAttribute("soundplaying")) {
               // Don't persist the muted state as this wasn't a user action.
               // This lets undo-close-tab return it to an unmuted state.
               aTab.linkedBrowser.mute(true);

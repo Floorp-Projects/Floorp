@@ -10,6 +10,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/gfx/Types.h"
 #include "nsCSSPropertyID.h"
 #include "nsStyleAutoArray.h"
 #include "nsTArray.h"
@@ -35,6 +36,9 @@ struct Keyframe;
 struct PropertyStyleAnimationValuePair;
 using ComputedKeyframeValues = nsTArray<PropertyStyleAnimationValuePair>;
 } // namespace mozilla
+namespace nsStyleTransformMatrix {
+enum class MatrixTransformOperator: uint8_t;
+}
 
 class nsCSSPropertyIDSet;
 class nsCSSValue;
@@ -61,6 +65,7 @@ typedef mozilla::AnimationPropertySegment RawGeckoAnimationPropertySegment;
 typedef mozilla::ComputedTiming RawGeckoComputedTiming;
 typedef nsTArray<const RawServoStyleRule*> RawGeckoServoStyleRuleList;
 typedef nsTArray<nsCSSPropertyID> RawGeckoCSSPropertyIDList;
+typedef mozilla::gfx::Float RawGeckoGfxMatrix4x4[16];
 
 // We have these helper types so that we can directly generate
 // things like &T or Borrowed<T> on the Rust side in the function, providing

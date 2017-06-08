@@ -276,7 +276,7 @@ static const char contentSandboxRules[] = R"(
   ; level 3: global read access permitted, no global write access,
   ;          no read access to the home directory,
   ;          no read access to /private/var (but read-metadata allowed above),
-  ;          no read access to /Volumes
+  ;          no read access to /{Volumes,Network,Users}
   ;          read access permitted to $PROFILE/{extensions,chrome}
     (if (string=? sandbox-level-3 "TRUE")
       (if (string=? hasFilePrivileges "TRUE")
@@ -290,6 +290,8 @@ static const char contentSandboxRules[] = R"(
                 (require-not (subpath home-path))
                 (require-not (subpath profileDir))
                 (require-not (subpath "/Volumes"))
+                (require-not (subpath "/Network"))
+                (require-not (subpath "/Users"))
                 (require-not (subpath "/private/var"))))
             (allow file-read* (literal "/private/var/run/cupsd"))
             (allow file-read*
@@ -300,6 +302,8 @@ static const char contentSandboxRules[] = R"(
             (allow file-read* (require-all
               (require-not (subpath home-path))
               (require-not (subpath "/Volumes"))
+              (require-not (subpath "/Network"))
+              (require-not (subpath "/Users"))
               (require-not (subpath "/private/var"))))
             (allow file-read* (literal "/private/var/run/cupsd"))))))
 

@@ -41,7 +41,6 @@ private:
   typedef mozilla::MozPromise<nsCString, nsresult, false> GatheringPromise;
 
   RefPtr<GatheringPromise> StartGathering(double aSinceTime);
-  void CancelGathering();
   void FinishGathering();
   void ResetGathering();
 

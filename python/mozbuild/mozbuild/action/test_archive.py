@@ -39,6 +39,7 @@ TEST_HARNESS_BINS = [
     'certutil',
     'crashinject',
     'fileid',
+    'geckodriver',
     'minidumpwriter',
     'pk12util',
     'screenshot',

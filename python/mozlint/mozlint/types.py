@@ -12,7 +12,7 @@ from mozlog import get_default_logger, commandline, structuredlog
 from mozlog.reader import LogHandler
 
 from . import result
-from .pathutils import filterpaths
+from .pathutils import filterpaths, findobject
 
 
 class BaseType(object):
@@ -20,26 +20,26 @@ class BaseType(object):
     __metaclass__ = ABCMeta
     batch = False
 
-    def __call__(self, paths, linter, **lintargs):
-        """Run `linter` against `paths` with `lintargs`.
+    def __call__(self, paths, config, **lintargs):
+        """Run linter defined by `config` against `paths` with `lintargs`.
 
         :param paths: Paths to lint. Can be a file or directory.
-        :param linter: Linter definition paths are being linted against.
+        :param config: Linter config the paths are being linted against.
         :param lintargs: External arguments to the linter not defined in
                          the definition, but passed in by a consumer.
         :returns: A list of :class:`~result.ResultContainer` objects.
         """
-        paths = filterpaths(paths, linter, **lintargs)
+        paths = filterpaths(paths, config, **lintargs)
         if not paths:
             return
 
         if self.batch:
-            return self._lint(paths, linter, **lintargs)
+            return self._lint(paths, config, **lintargs)
 
         errors = []
         try:
             for p in paths:
-                result = self._lint(p, linter, **lintargs)
+                result = self._lint(p, config, **lintargs)
                 if result:
                     errors.extend(result)
         except KeyboardInterrupt:
@@ -63,8 +63,8 @@ class LineType(BaseType):
     def condition(payload, line):
         pass
 
-    def _lint(self, path, linter, **lintargs):
-        payload = linter['payload']
+    def _lint(self, path, config, **lintargs):
+        payload = config['payload']
 
         with open(path, 'r') as fh:
             lines = fh.readlines()
@@ -72,7 +72,7 @@ class LineType(BaseType):
         errors = []
         for i, line in enumerate(lines):
             if self.condition(payload, line):
-                errors.append(result.from_linter(linter, path=path, lineno=i+1))
+                errors.append(result.from_config(config, path=path, lineno=i+1))
 
         return errors
 
@@ -99,38 +99,40 @@ class ExternalType(BaseType):
     """
     batch = True
 
-    def _lint(self, files, linter, **lintargs):
-        payload = linter['payload']
-        return payload(files, **lintargs)
+    def _lint(self, files, config, **lintargs):
+        func = findobject(config['payload'])
+        return func(files, config, **lintargs)
 
 
 class LintHandler(LogHandler):
-    def __init__(self, linter):
-        self.linter = linter
+    def __init__(self, config):
+        self.config = config
         self.results = []
 
     def lint(self, data):
-        self.results.append(result.from_linter(self.linter, **data))
+        self.results.append(result.from_config(self.config, **data))
 
 
 class StructuredLogType(BaseType):
     batch = True
 
-    def _lint(self, files, linter, **lintargs):
-        payload = linter["payload"]
-        handler = LintHandler(linter)
-        logger = linter.get("logger")
+    def _lint(self, files, config, **lintargs):
+        handler = LintHandler(config)
+        logger = config.get("logger")
         if logger is None:
             logger = get_default_logger()
         if logger is None:
-            logger = structuredlog.StructuredLogger(linter["name"])
+            logger = structuredlog.StructuredLogger(config["name"])
             commandline.setup_logging(logger, {}, {"mach": sys.stdout})
         logger.add_handler(handler)
+
+        func = findobject(config["payload"])
         try:
-            payload(files, logger, **lintargs)
+            func(files, config, logger, **lintargs)
         except KeyboardInterrupt:
             pass
         return handler.results
+
 
 supported_types = {
     'string': StringType(),

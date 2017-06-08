@@ -50,7 +50,7 @@ private:
 };
 
 class ServoStyleRule final : public BindingStyleRule
-                           , public nsIDOMCSSStyleRule
+                           , public nsICSSStyleRuleDOMWrapper
 {
 public:
   ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule,
@@ -59,13 +59,26 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ServoStyleRule,
                                                          css::Rule)
-  virtual bool IsCCLeaf() const final MOZ_MUST_OVERRIDE;
+  bool IsCCLeaf() const final MOZ_MUST_OVERRIDE;
   NS_DECL_NSIDOMCSSSTYLERULE
+
+  // nsICSSStyleRuleDOMWrapper
+  NS_IMETHOD GetCSSStyleRule(BindingStyleRule **aResult) override;
+
+  uint32_t GetSelectorCount() override;
+  nsresult GetSelectorText(uint32_t aSelectorIndex,
+                           nsAString& aText) override;
+  nsresult GetSpecificity(uint32_t aSelectorIndex,
+                          uint64_t* aSpecificity) override;
+  nsresult SelectorMatchesElement(dom::Element* aElement,
+                                  uint32_t aSelectorIndex,
+                                  const nsAString& aPseudo,
+                                  bool* aMatches) override;
 
   // WebIDL interface
   uint16_t Type() const final;
   void GetCssTextImpl(nsAString& aCssText) const final;
-  virtual nsICSSDeclaration* Style() final;
+  nsICSSDeclaration* Style() final;
 
   RawServoStyleRule* Raw() const { return mRawRule; }
 

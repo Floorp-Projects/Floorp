@@ -3,12 +3,30 @@
 
 # This file provides helper functions for the repository hooks for git/hg.
 
-import os
 import json
+import os
+import re
 from subprocess import check_output, CalledProcessError
+
 import setup_helper
 
 ignored = 'File ignored because of a matching ignore pattern. Use "--no-ignore" to override.'
+
+here = os.path.abspath(os.path.dirname(__file__))
+config_path = os.path.join(here, '..', 'eslint.yml')
+
+EXTENSIONS_RE = None
+
+
+def get_extensions():
+    # This is a hacky way to avoid both re-defining extensions and
+    # depending on PyYaml in hg's python path. This will go away
+    # once the vcs hooks are using mozlint directly (bug 1361972)
+    with open(config_path) as fh:
+        line = [l for l in fh.readlines() if 'extensions' in l][0]
+
+    extensions = json.loads(line.split(':', 1)[1].replace('\'', '"'))
+    return [e.lstrip('.') for e in extensions]
 
 
 def is_lintable(filename):
@@ -17,7 +35,10 @@ def is_lintable(filename):
     Keyword arguments:
     filename -- the file to check.
     """
-    return setup_helper.EXTENSIONS_RE.match(filename)
+    global EXTENSIONS_RE
+    if not EXTENSIONS_RE:
+        EXTENSIONS_RE = re.compile(r'.+\.(?:%s)$' % '|'.join(get_extensions()))
+    return EXTENSIONS_RE.match(filename)
 
 
 def display(print_func, output_json):

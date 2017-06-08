@@ -4695,3 +4695,82 @@ BaselineCompiler::emit_JSOP_JUMPTARGET()
     masm.inc64(AbsoluteAddress(counterAddr));
     return true;
 }
+
+typedef bool (*CheckClassHeritageOperationFn)(JSContext*, HandleValue);
+static const VMFunction CheckClassHeritageOperationInfo =
+    FunctionInfo<CheckClassHeritageOperationFn>(js::CheckClassHeritageOperation,
+                                                "CheckClassHeritageOperation");
+
+bool
+BaselineCompiler::emit_JSOP_CHECKCLASSHERITAGE()
+{
+    frame.syncStack(0);
+
+    // Leave the heritage value on the stack.
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+
+    prepareVMCall();
+    pushArg(R0);
+    return callVM(CheckClassHeritageOperationInfo);
+}
+
+bool
+BaselineCompiler::emit_JSOP_BUILTINPROTO()
+{
+    // The builtin prototype is a constant for a given global.
+    RootedObject builtin(cx);
+    JSProtoKey key = static_cast<JSProtoKey>(GET_UINT8(pc));
+    MOZ_ASSERT(key < JSProto_LIMIT);
+    if (!GetBuiltinPrototype(cx, key, &builtin))
+        return false;
+    frame.push(ObjectValue(*builtin));
+    return true;
+}
+
+typedef JSObject* (*ObjectWithProtoOperationFn)(JSContext*, HandleValue);
+static const VMFunction ObjectWithProtoOperationInfo =
+    FunctionInfo<ObjectWithProtoOperationFn>(js::ObjectWithProtoOperation,
+                                             "ObjectWithProtoOperationInfo");
+
+bool
+BaselineCompiler::emit_JSOP_OBJWITHPROTO()
+{
+    frame.syncStack(0);
+
+    // Leave the proto value on the stack for the decompiler
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+
+    prepareVMCall();
+    pushArg(R0);
+    if (!callVM(ObjectWithProtoOperationInfo))
+        return false;
+
+    masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+    frame.pop();
+    frame.push(R0);
+    return true;
+}
+
+typedef JSObject* (*FunWithProtoFn)(JSContext*, HandleFunction, HandleObject, HandleObject);
+static const VMFunction FunWithProtoInfo =
+    FunctionInfo<FunWithProtoFn>(js::FunWithProtoOperation, "FunWithProtoOperation");
+
+bool
+BaselineCompiler::emit_JSOP_FUNWITHPROTO()
+{
+    frame.popRegsAndSync(1);
+
+    masm.unboxObject(R0, R0.scratchReg());
+    masm.loadPtr(frame.addressOfEnvironmentChain(), R1.scratchReg());
+
+    prepareVMCall();
+    pushArg(R0.scratchReg());
+    pushArg(R1.scratchReg());
+    pushArg(ImmGCPtr(script->getFunction(GET_UINT32_INDEX(pc))));
+    if (!callVM(FunWithProtoInfo))
+        return false;
+
+    masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+    frame.push(R0);
+    return true;
+}

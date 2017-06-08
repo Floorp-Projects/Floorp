@@ -9,7 +9,7 @@ fuzzy-if(skiaContent,7,90) == rotate-angle-2.svg rotate-angle-ref.svg
 fuzzy-if(skiaContent,7,130) == rotate-angle-3.svg rotate-angle-ref.svg
 fuzzy-if(skiaContent,7,90) == rotate-angle-4.svg rotate-angle-ref.svg
 fuzzy-if(skiaContent,1,130) == rotate-angle-5.svg rotate-angle-ref.svg
-fuzzy(12,27) fuzzy-if(skiaContent,1,180) fuzzy-if(Android,16,3) == scale-1.svg scale-1-ref.svg  # bug 981004
+fuzzy(12,27) fuzzy-if(skiaContent,1,180) fuzzy-if(Android,16,3) fuzzy-if(webrender,7-7,300-310) == scale-1.svg scale-1-ref.svg  # bug 981004
 == set-transform-1.svg lime.svg
 fuzzy-if(winWidget||gtkWidget||OSX,1,27) fuzzy-if(skiaContent,7,1548) == skew-1.svg skew-1-ref.svg # bug 983671, Bug 1260629
 == translate-clipPath-1.svg lime.svg

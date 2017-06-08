@@ -138,16 +138,6 @@ tabbrowser {
   visibility: hidden; /* temporary space to keep a tab's close button under the cursor */
 }
 
-.tabs-newtab-button > .toolbarbutton-menu-dropmarker,
-#new-tab-button > .toolbarbutton-menu-dropmarker {
-  display: none;
-}
-
-/* override drop marker image padding */
-.tabs-newtab-button > .toolbarbutton-icon {
-  margin-inline-end: 0;
-}
-
 .tabbrowser-tab {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tab");
 }

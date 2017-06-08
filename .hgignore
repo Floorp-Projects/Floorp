@@ -72,9 +72,9 @@ _OPT\.OBJ/
 ^local.properties$
 
 # Python stuff installed at build time.
-^python/psutil/.*\.so
-^python/psutil/.*\.pyd
-^python/psutil/build/
+^third_party/python/psutil/.*\.so
+^third_party/python/psutil/.*\.pyd
+^third_party/python/psutil/build/
 
 # Git repositories
 .git/

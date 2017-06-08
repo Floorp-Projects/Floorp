@@ -15,9 +15,17 @@
       <stylesheet src="chrome://global/skin/datetimepopup.css"/>
     </resources>
     <implementation>
-      <field name="dateTimePopupFrame">
-        this.querySelector("#dateTimePopupFrame");
-      </field>
+      <property name="dateTimePopupFrame">
+        <getter>
+          let frame = this.querySelector("#dateTimePopupFrame");
+          if (!frame) {
+            frame = this.ownerDocument.createElement("iframe");
+            frame.id = "dateTimePopupFrame";
+            this.appendChild(frame);
+          }
+          return frame;
+        </getter>
+      </property>
       <field name="TIME_PICKER_WIDTH" readonly="true">"12em"</field>
       <field name="TIME_PICKER_HEIGHT" readonly="true">"21em"</field>
       <field name="DATE_PICKER_WIDTH" readonly="true">"23.1em"</field>

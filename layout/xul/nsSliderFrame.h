@@ -139,6 +139,8 @@ public:
   // fall back to main-thread dragging.
   void AsyncScrollbarDragRejected();
 
+  bool OnlySystemGroupDispatch(mozilla::EventMessage aMessage) const override;
+
 private:
 
   bool GetScrollToClick();

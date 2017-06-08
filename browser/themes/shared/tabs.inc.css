@@ -526,6 +526,15 @@
   width: calc(36px + var(--tab-curve-width));
 }
 
+.tabs-newtab-button > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
+
+.tabs-newtab-button > .toolbarbutton-icon {
+  /* override drop marker image padding */
+  margin-inline-end: 0;
+}
+
 @media (min-resolution: 1.1dppx) {
   /* image preloading hack from like lowdpi styles */
   #tabbrowser-tabs::before {

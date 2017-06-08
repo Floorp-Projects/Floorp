@@ -7,6 +7,7 @@ const {
   getAllMessagesById,
   getAllMessagesTableDataById,
   getAllMessagesUiById,
+  getAllNetworkMessagesUpdateById,
   getAllRepeatById,
   getCurrentGroup,
   getVisibleMessages,
@@ -475,6 +476,47 @@ describe("Message reducer:", () => {
 
       groupsById = getAllGroupsById(getState());
       expect(groupsById.size).toBe(0);
+    });
+  });
+
+  describe("networkMessagesUpdateById", () => {
+    it("adds the network update message when network update action is called", () => {
+      const { dispatch, getState } = setupStore([
+        "GET request",
+        "XHR GET request"
+      ]);
+
+      let networkUpdates = getAllNetworkMessagesUpdateById(getState());
+      expect(Object.keys(networkUpdates).length).toBe(0);
+
+      let updatePacket = stubPackets.get("GET request eventTimings");
+      dispatch(actions.networkMessageUpdate(updatePacket));
+
+      networkUpdates = getAllNetworkMessagesUpdateById(getState());
+      expect(Object.keys(networkUpdates).length).toBe(1);
+
+      let xhrUpdatePacket = stubPackets.get("XHR GET request eventTimings");
+      dispatch(actions.networkMessageUpdate(xhrUpdatePacket));
+
+      networkUpdates = getAllNetworkMessagesUpdateById(getState());
+      expect(Object.keys(networkUpdates).length).toBe(2);
+    });
+
+    it("resets networkMessagesUpdateById in response to MESSAGES_CLEAR action", () => {
+      const { dispatch, getState } = setupStore([
+        "XHR GET request"
+      ]);
+
+      const updatePacket = stubPackets.get("XHR GET request eventTimings");
+      dispatch(actions.networkMessageUpdate(updatePacket));
+
+      let networkUpdates = getAllNetworkMessagesUpdateById(getState());
+      expect(Object.keys(networkUpdates).length).toBe(1);
+
+      dispatch(actions.messagesClear());
+
+      networkUpdates = getAllNetworkMessagesUpdateById(getState());
+      expect(Object.keys(networkUpdates).length).toBe(0);
     });
   });
 });

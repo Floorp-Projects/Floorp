@@ -891,7 +891,7 @@ function isUsableAddon(aAddon) {
   }
 
   if (!AddonSettings.ALLOW_LEGACY_EXTENSIONS &&
-      aAddon.type == "extension" && !aAddon.isSystem &&
+      aAddon.type == "extension" && !aAddon._installLocation.isSystem &&
       aAddon.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED) {
     logger.warn(`disabling legacy extension ${aAddon.id}`);
     return false;

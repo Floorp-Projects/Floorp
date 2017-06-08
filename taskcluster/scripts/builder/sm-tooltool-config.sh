@@ -42,7 +42,6 @@ esac
 # necessary for the JS shell, but it's less duplication to share tooltool
 # manifests.
 BROWSER_PLATFORM=$PLATFORM_OS$BITS
-: ${TOOLTOOL_MANIFEST:=browser/config/tooltool-manifests/$BROWSER_PLATFORM/releng.manifest}
 
 : ${TOOLTOOL_CHECKOUT:=$WORK}
 export TOOLTOOL_CHECKOUT

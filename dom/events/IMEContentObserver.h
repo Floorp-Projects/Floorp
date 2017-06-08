@@ -17,6 +17,7 @@
 #include "nsISelectionListener.h"
 #include "nsIScrollObserver.h"
 #include "nsIWidget.h"
+#include "nsStubDocumentObserver.h"
 #include "nsStubMutationObserver.h"
 #include "nsThreadUtils.h"
 #include "nsWeakReference.h"
@@ -73,9 +74,39 @@ public:
 
   nsresult HandleQueryContentEvent(WidgetQueryContentEvent* aEvent);
 
+  /**
+   * Init() initializes the instance, i.e., retrieving necessary objects and
+   * starts to observe something.
+   * Be aware, callers of this method need to guarantee that the instance
+   * won't be released during calling this.
+   *
+   * @param aWidget         The widget which can access native IME.
+   * @param aPresContext    The PresContext which has aContent.
+   * @param aContent        An editable element or a plugin host element which
+   *                        user may use IME in.
+   *                        Or nullptr if this will observe design mode
+   *                        document.
+   * @param aEditor         When aContent is an editable element or nullptr,
+   *                        non-nullptr referring an editor instance which
+   *                        manages aContent.
+   *                        Otherwise, i.e., this will observe a plugin content,
+   *                        should be nullptr.
+   */
   void Init(nsIWidget* aWidget, nsPresContext* aPresContext,
             nsIContent* aContent, nsIEditor* aEditor);
+
+  /**
+   * Destroy() finalizes the instance, i.e., stops observing contents and
+   * clearing the members.
+   * Be aware, callers of this method need to guarantee that the instance
+   * won't be released during calling this.
+   */
   void Destroy();
+
+  /**
+   * Returns false if the instance refers some objects and observing them.
+   * Otherwise, true.
+   */
   bool Destroyed() const;
 
   /**
@@ -84,10 +115,14 @@ public:
    * storing the instance.
    */
   void DisconnectFromEventStateManager();
+
   /**
    * MaybeReinitialize() tries to restart to observe the editor's root node.
    * This is useful when the editor is reframed and all children are replaced
    * with new node instances.
+   * Be aware, callers of this method need to guarantee that the instance
+   * won't be released during calling this.
+   *
    * @return            Returns true if the instance is managing the content.
    *                    Otherwise, false.
    */
@@ -95,6 +130,7 @@ public:
                          nsPresContext* aPresContext,
                          nsIContent* aContent,
                          nsIEditor* aEditor);
+
   bool IsManaging(nsPresContext* aPresContext, nsIContent* aContent) const;
   bool IsManaging(const TextComposition* aTextComposition) const;
   bool WasInitializedWithPlugin() const;
@@ -145,6 +181,61 @@ private:
   bool IsReflowLocked() const;
   bool IsSafeToNotifyIME() const;
   bool IsEditorComposing() const;
+
+  /**
+   * nsINode::GetChildAt() is slow.  So, this avoids to use it if it's
+   * first child or last child of aParent.
+   */
+  static nsIContent* GetChildNode(nsINode* aParent, int32_t aOffset);
+
+  // Following methods are called by DocumentObserver when
+  // beginning to update the contents and ending updating the contents.
+  void BeginDocumentUpdate();
+  void EndDocumentUpdate();
+
+  // Following methods manages added nodes during a document change.
+
+  /**
+   * MaybeNotifyIMEOfAddedTextDuringDocumentChange() may send text change
+   * notification caused by the nodes added between mFirstAddedNodeOffset in
+   * mFirstAddedNodeContainer and mLastAddedNodeOffset in
+   * mLastAddedNodeContainer and forgets the range.
+   */
+  void MaybeNotifyIMEOfAddedTextDuringDocumentChange();
+
+  /**
+   * IsInDocumentChange() returns true while the DOM tree is being modified
+   * with mozAutoDocUpdate.  E.g., it's being modified by setting innerHTML or
+   * insertAdjacentHTML().  This returns false when user types something in
+   * the focused editor editor.
+   */
+  bool IsInDocumentChange() const
+  {
+    return mDocumentObserver && mDocumentObserver->IsUpdating();
+  }
+
+  /**
+   * Forget the range of added nodes during a document change.
+   */
+  void ClearAddedNodesDuringDocumentChange();
+
+  /**
+   * HasAddedNodesDuringDocumentChange() returns true when this stores range
+   * of nodes which were added into the DOM tree during a document change but
+   * have not been sent to IME.  Note that this should always return false when
+   * IsInDocumentChange() returns false.
+   */
+  bool HasAddedNodesDuringDocumentChange() const
+  {
+    return mFirstAddedNodeContainer && mLastAddedNodeContainer;
+  }
+
+  /**
+   * Returns true if the node at aOffset in aParent is next node of the node at
+   * mLastAddedNodeOffset in mLastAddedNodeContainer in pre-order tree
+   * traversal of the DOM.
+   */
+  bool IsNextNodeOfLastAddedNode(nsINode* aParent, int32_t aOffset) const;
 
   void PostFocusSetNotification();
   void MaybeNotifyIMEOfFocusSet();
@@ -279,6 +370,47 @@ private:
   RefPtr<IMENotificationSender> mQueuedSender;
 
   /**
+   * IMEContentObserver is a mutation observer of mRootContent.  However,
+   * it needs to know the beginning of content changes and end of it too for
+   * reducing redundant computation of text offset with ContentEventHandler.
+   * Therefore, it needs helper class to listen only them since if
+   * both mutations were observed by IMEContentObserver directly, each
+   * methods need to check if the changing node is in mRootContent but it's
+   * too expensive.
+   */
+  class DocumentObserver final : public nsStubDocumentObserver
+  {
+  public:
+    explicit DocumentObserver(IMEContentObserver& aIMEContentObserver)
+      : mIMEContentObserver(&aIMEContentObserver)
+      , mDocumentUpdating(0)
+    {
+    }
+
+    NS_DECL_CYCLE_COLLECTION_CLASS(DocumentObserver)
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE
+    NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE
+
+    void Observe(nsIDocument* aDocument);
+    void StopObserving();
+    void Destroy();
+
+    bool Destroyed() const { return !mIMEContentObserver; }
+    bool IsObserving() const { return mDocument != nullptr; }
+    bool IsUpdating() const { return mDocumentUpdating != 0; }
+
+  private:
+    DocumentObserver() = delete;
+    virtual ~DocumentObserver() { Destroy(); }
+
+    RefPtr<IMEContentObserver> mIMEContentObserver;
+    nsCOMPtr<nsIDocument> mDocument;
+    uint32_t mDocumentUpdating;
+  };
+  RefPtr<DocumentObserver> mDocumentObserver;
+
+  /**
    * FlatTextCache stores flat text length from start of the content to
    * mNodeOffset of mContainerNode.
    */
@@ -331,6 +463,27 @@ private:
   // to the start of the last removed content only while an edit action is being
   // handled by the editor and no other mutation (e.g., adding node) occur.
   FlatTextCache mStartOfRemovingTextRangeCache;
+
+  // mFirstAddedNodeContainer is parent node of first added node in current
+  // document change.  So, this is not nullptr only when a node was added
+  // during a document change and the change has not been included into
+  // mTextChangeData yet.
+  // Note that this shouldn't be in cycle collection since this is not nullptr
+  // only during a document change.
+  nsCOMPtr<nsINode> mFirstAddedNodeContainer;
+  // mLastAddedNodeContainer is parent node of last added node in current
+  // document change.  So, this is not nullptr only when a node was added
+  // during a document change and the change has not been included into
+  // mTextChangeData yet.
+  // Note that this shouldn't be in cycle collection since this is not nullptr
+  // only during a document change.
+  nsCOMPtr<nsINode> mLastAddedNodeContainer;
+  // mFirstAddedNodeOffset is offset of first added node in
+  // mFirstAddedNodeContainer.
+  int32_t mFirstAddedNodeOffset;
+  // mLastAddedNodeOffset is offset of *after* last added node in
+  // mLastAddedNodeContainer.  I.e., the index of last added node + 1.
+  int32_t mLastAddedNodeOffset;
 
   TextChangeData mTextChangeData;
 

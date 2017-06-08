@@ -1277,7 +1277,7 @@ talos-g1:
         by-test-platform:
             linux64-stylo/.*: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try'] 
-    max-run-time: 3600
+    max-run-time: 7200
     e10s: true
     mozharness:
         script: talos_script.py

@@ -9,6 +9,8 @@ android-api-15/debug:
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build multi-l10n update]
@@ -32,6 +34,8 @@ android-x86/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build multi-l10n update]
@@ -58,6 +62,8 @@ android-x86-nightly/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build multi-l10n update]
@@ -82,6 +88,8 @@ android-api-15/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build multi-l10n update]
@@ -108,6 +116,8 @@ android-api-15-nightly/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build multi-l10n update]
@@ -132,6 +142,8 @@ android-x86-old-id/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build multi-l10n update]
@@ -159,6 +171,8 @@ android-x86-old-id-nightly/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build multi-l10n update]
@@ -184,6 +198,8 @@ android-api-15-old-id/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build multi-l10n update]
@@ -211,6 +227,8 @@ android-api-15-old-id-nightly/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build multi-l10n update]
@@ -240,6 +258,7 @@ android-api-15-gradle/opt:
         env:
             # Bug 1292762 - Set GRADLE_USER_HOME to avoid sdk-manager-plugin intermittent
             GRADLE_USER_HOME: /home/worker/workspace/build/src/dotgradle
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
         artifacts:
           - name: public/android/maven
             path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/maven/
@@ -273,6 +292,8 @@ android-aarch64/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build multi-l10n update]
@@ -299,6 +320,8 @@ android-aarch64-nightly/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build multi-l10n update]

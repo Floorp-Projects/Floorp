@@ -191,6 +191,33 @@
                     quoted: false,
                 }))
             }
+
+            #[cfg(feature = "gecko")]
+            /// Return the generic ID for a given generic font name
+            pub fn generic(name: &Atom) -> (::gecko_bindings::structs::FontFamilyType, u8) {
+                use gecko_bindings::structs::{self, FontFamilyType};
+                if *name == atom!("serif") {
+                    (FontFamilyType::eFamily_serif,
+                     structs::kGenericFont_serif)
+                } else if *name == atom!("sans-serif") {
+                    (FontFamilyType::eFamily_sans_serif,
+                     structs::kGenericFont_sans_serif)
+                } else if *name == atom!("cursive") {
+                    (FontFamilyType::eFamily_cursive,
+                     structs::kGenericFont_cursive)
+                } else if *name == atom!("fantasy") {
+                    (FontFamilyType::eFamily_fantasy,
+                     structs::kGenericFont_fantasy)
+                } else if *name == atom!("monospace") {
+                    (FontFamilyType::eFamily_monospace,
+                     structs::kGenericFont_monospace)
+                } else if *name == atom!("-moz-fixed") {
+                    (FontFamilyType::eFamily_moz_fixed,
+                     structs::kGenericFont_moz_fixed)
+                } else {
+                    panic!("Unknown generic {}", name);
+                }
+            }
         }
 
         impl ToCss for FamilyName {
@@ -258,6 +285,21 @@
     pub enum SpecifiedValue {
         Values(Vec<FontFamily>),
         System(SystemFont),
+    }
+
+    #[cfg(feature = "gecko")]
+    impl SpecifiedValue {
+        /// Return the generic ID if it is a single generic font
+        pub fn single_generic(&self) -> Option<u8> {
+            if let SpecifiedValue::Values(ref values) = *self {
+                if values.len() == 1 {
+                    if let FontFamily::Generic(ref name) = values[0] {
+                        return Some(FontFamily::generic(name).1);
+                    }
+                }
+            }
+            None
+        }
     }
 
     impl ToComputedValue for SpecifiedValue {
@@ -1039,26 +1081,13 @@ ${helpers.single_keyword_system("font-variant-caps",
 
     pub mod computed_value {
         use properties::animated_properties::Animatable;
-        use std::fmt;
-        use style_traits::ToCss;
         use values::CSSFloat;
 
-        #[derive(Copy, Clone, Debug, PartialEq)]
         #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
+        #[derive(Copy, Clone, Debug, PartialEq, ToCss)]
         pub enum T {
             None,
             Number(CSSFloat),
-        }
-
-        impl ToCss for T {
-            fn to_css<W>(&self, dest: &mut W) -> fmt::Result
-                where W: fmt::Write,
-            {
-                match *self {
-                    T::None => dest.write_str("none"),
-                    T::Number(number) => number.to_css(dest),
-                }
-            }
         }
 
         impl T {
@@ -2214,9 +2243,7 @@ ${helpers.single_keyword("-moz-math-variant",
         use app_units::Au;
         use cssparser::Parser;
         use properties::longhands;
-        use std::fmt;
         use std::hash::{Hash, Hasher};
-        use style_traits::ToCss;
         use values::computed::{ToComputedValue, Context};
         <%
             system_fonts = """caption icon menu message-box small-caption status-bar
@@ -2230,21 +2257,11 @@ ${helpers.single_keyword("-moz-math-variant",
             kw_cast = """font_style font_variant_caps font_stretch
                          font_kerning font_variant_position""".split()
         %>
-        #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+        #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, ToCss)]
         pub enum SystemFont {
             % for font in system_fonts:
                 ${to_camel_case(font)},
             % endfor
-        }
-
-        impl ToCss for SystemFont {
-            fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
-                dest.write_str(match *self {
-                    % for font in system_fonts:
-                        SystemFont::${to_camel_case(font)} => "${font}",
-                    % endfor
-                })
-            }
         }
 
         // ComputedValues are compared at times

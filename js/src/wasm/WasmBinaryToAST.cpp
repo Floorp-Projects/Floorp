@@ -244,6 +244,18 @@ GenerateRef(AstDecodeContext& c, const AstName& prefix, uint32_t index, AstRef* 
 }
 
 static bool
+GenerateFuncRef(AstDecodeContext& c, uint32_t funcIndex, AstRef* ref)
+{
+    if (funcIndex < c.module().numFuncImports()) {
+        *ref = AstRef(c.module().funcImportNames()[funcIndex]);
+    } else {
+        if (!GenerateRef(c, AstName(u"func"), funcIndex, ref))
+            return false;
+    }
+    return true;
+}
+
+static bool
 AstDecodeCallArgs(AstDecodeContext& c, const SigWithId& sig, AstExprVector* funcArgs)
 {
     MOZ_ASSERT(!c.iter().currentBlockHasPolymorphicBase());
@@ -297,12 +309,8 @@ AstDecodeCall(AstDecodeContext& c)
         return true;
 
     AstRef funcRef;
-    if (funcIndex < c.module().numFuncImports()) {
-        funcRef = AstRef(c.module().funcImportNames()[funcIndex]);
-    } else {
-        if (!GenerateRef(c, AstName(u"func"), funcIndex, &funcRef))
-            return false;
-    }
+    if (!GenerateFuncRef(c, funcIndex, &funcRef))
+        return false;
 
     const SigWithId* sig = c.env().funcSigs[funcIndex];
 
@@ -1712,7 +1720,7 @@ AstCreateStartFunc(AstDecodeContext &c)
         return true;
 
     AstRef funcRef;
-    if (!GenerateRef(c, AstName(u"func"), *c.env().startFuncIndex, &funcRef))
+    if (!GenerateFuncRef(c, *c.env().startFuncIndex, &funcRef))
         return false;
 
     c.module().setStartFunc(AstStartFunc(funcRef));

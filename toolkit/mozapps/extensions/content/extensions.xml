@@ -753,30 +753,7 @@
           if (this.mAddon.install) {
             return false;
           }
-          let legacy = false;
-          if (this.mAddon.type == "extension" && !this.mAddon.isWebExtension) {
-            legacy = true;
-          }
-          if (this.mAddon.type == "theme") {
-            // The logic here is kind of clunky but we want to mark complete
-            // themes as legacy.  There's no explicit flag for complete
-            // themes so explicitly check for new style themes (for which
-            // isWebExtension is true) or lightweight themes (which have
-            // ids that end with @personas.mozilla.org)
-            legacy = !(this.mAddon.isWebExtension ||
-                       this.mAddon.id.endsWith("@personas.mozilla.org"));
-          }
-
-          if (legacy && this.mAddon.signedStatus == AddonManager.SIGNEDSTATE_PRIVILEGED) {
-            legacy = false;
-          }
-
-          // Exceptions that can slip through above: the default theme plus
-          // test pilot addons until we get SIGNEDSTATE_PRIVILEGED deployed.
-          if (legacy && legacyWarningExceptions.includes(this.mAddon.id)) {
-            legacy = false;
-          }
-          return legacy;
+          return isLegacyExtension(this.mAddon);
         ]]></getter>
       </property>
 
@@ -953,6 +930,9 @@
             <xul:button anonid="disable-btn" class="addon-control disable"
                         label="&cmd.disableAddon.label;"
                         oncommand="document.getBindingParent(this).userDisabled = true;"/>
+            <xul:button anonid="replacement-btn" class="addon-control replacement"
+                        label="&cmd.findReplacement.label;"
+                        oncommand="document.getBindingParent(this).findReplacement();"/>
             <xul:button anonid="remove-btn" class="addon-control remove"
                         label="&cmd.uninstallAddon.label;"
                         oncommand="document.getBindingParent(this).uninstall();"/>
@@ -1187,7 +1167,9 @@
           else
             this._description.hidden = true;
 
-          this.setAttribute("legacy", this.isLegacy);
+          let legacyWarning = legacyExtensionsEnabled && !this.mAddon.install &&
+            isLegacyExtension(this.mAddon);
+          this.setAttribute("legacy", legacyWarning);
           document.getAnonymousElementByAttribute(this, "anonid", "legacy").href = SUPPORT_URL + "webextensions";
 
           if (!("applyBackgroundUpdates" in this.mAddon) ||
@@ -1660,6 +1642,12 @@
         <body><![CDATA[
           gViewController.loadView("addons://detail/" +
                                    encodeURIComponent(this.mAddon.id));
+        ]]></body>
+      </method>
+
+      <method name="findReplacement">
+        <body><![CDATA[
+          openURL(`https://addons.mozilla.org/find-replacement/?guid=${this.mAddon.id}`);
         ]]></body>
       </method>
 

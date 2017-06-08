@@ -514,21 +514,24 @@ this.History = Object.freeze({
   /**
    * Determine if a page has been visited.
    *
-   * @param pages: (URL or nsIURI)
-   *      The full URI of the page.
-   *            or (string)
-   *      The full URI of the page or the GUID of the page.
-   *
+   * @param guidOrURI: (string) or (URL, nsIURI or href)
+   *      Either the full URI of the page or the GUID of the page.
    * @return (Promise)
    *      A promise resolved once the operation is complete.
    * @resolve (bool)
    *      `true` if the page has been visited, `false` otherwise.
    * @throws (Error)
-   *      If `pages` has an unexpected type or if a string provided
+   *      If `guidOrURI` has an unexpected type or if a string provided
    *      is neither not a valid GUID nor a valid URI.
    */
-  hasVisits(page, onResult) {
-    throw new Error("Method not implemented");
+  hasVisits(guidOrURI) {
+    guidOrURI = PlacesUtils.normalizeToURLOrGUID(guidOrURI);
+
+    return new Promise(resolve => {
+      PlacesUtils.asyncHistory.isURIVisited(guidOrURI, (aURI, aIsVisited) => {
+        resolve(aIsVisited);
+      });
+    });
   },
 
   /**

@@ -1,0 +1,7 @@
+BadReturnCodeLinter:
+    description: Returns an error code no matter what
+    include:
+        - files
+    type: external
+    extensions: ['.js', '.jsm']
+    payload: external:badreturncode

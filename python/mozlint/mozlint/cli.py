@@ -84,14 +84,15 @@ def find_linters(linters=None):
         if not os.path.isdir(search_path):
             continue
 
+        sys.path.insert(0, search_path)
         files = os.listdir(search_path)
         for f in files:
             name = os.path.basename(f)
 
-            if not name.endswith('.lint.py'):
+            if not name.endswith('.yml'):
                 continue
 
-            name = name.rsplit('.', 2)[0]
+            name = name.rsplit('.', 1)[0]
 
             if linters and name not in linters:
                 continue

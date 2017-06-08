@@ -65,24 +65,24 @@ class ResultEncoder(JSONEncoder):
         return JSONEncoder.default(self, o)
 
 
-def from_linter(lintobj, **kwargs):
-    """Create a :class:`~result.ResultContainer` from a LINTER definition.
+def from_config(config, **kwargs):
+    """Create a :class:`~result.ResultContainer` from a linter config.
 
-    Convenience method that pulls defaults from a LINTER
-    definition and forwards them.
+    Convenience method that pulls defaults from a linter
+    config and forwards them.
 
-    :param lintobj: LINTER obj as defined in a .lint.py file
+    :param config: linter config as defined in a .yml file
     :param kwargs: same as :class:`~result.ResultContainer`
     :returns: :class:`~result.ResultContainer` object
     """
     attrs = {}
     for attr in ResultContainer.__slots__:
-        attrs[attr] = kwargs.get(attr, lintobj.get(attr))
+        attrs[attr] = kwargs.get(attr, config.get(attr))
 
     if not attrs['linter']:
-        attrs['linter'] = lintobj.get('name')
+        attrs['linter'] = config.get('name')
 
     if not attrs['message']:
-        attrs['message'] = lintobj.get('description')
+        attrs['message'] = config.get('description')
 
     return ResultContainer(**attrs)

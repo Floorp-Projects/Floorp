@@ -7,9 +7,10 @@
 <% from data import SYSTEM_FONT_LONGHANDS %>
 
 use app_units::Au;
-use cssparser::{Color as CSSParserColor, Parser, RGBA, serialize_identifier};
+use cssparser::{Parser, RGBA, serialize_identifier};
 use euclid::{Point2D, Size2D};
 #[cfg(feature = "gecko")] use gecko_bindings::bindings::RawServoAnimationValueMap;
+#[cfg(feature = "gecko")] use gecko_bindings::structs::RawGeckoGfxMatrix4x4;
 #[cfg(feature = "gecko")] use gecko_bindings::structs::nsCSSPropertyID;
 #[cfg(feature = "gecko")] use gecko_bindings::sugar::ownership::{HasFFI, HasSimpleFFI};
 #[cfg(feature = "gecko")] use gecko_string_cache::Atom;
@@ -19,9 +20,7 @@ use properties::longhands::background_size::computed_value::T as BackgroundSizeL
 use properties::longhands::font_weight::computed_value::T as FontWeight;
 use properties::longhands::font_stretch::computed_value::T as FontStretch;
 use properties::longhands::text_shadow::computed_value::T as TextShadowList;
-use properties::longhands::text_shadow::computed_value::TextShadow;
 use properties::longhands::box_shadow::computed_value::T as BoxShadowList;
-use properties::longhands::box_shadow::single_value::computed_value::T as BoxShadow;
 use properties::longhands::transform::computed_value::ComputedMatrix;
 use properties::longhands::transform::computed_value::ComputedOperation as TransformOperation;
 use properties::longhands::transform::computed_value::T as TransformList;
@@ -39,9 +38,8 @@ use values::CSSFloat;
 use values::{Auto, Either};
 use values::computed::{Angle, LengthOrPercentageOrAuto, LengthOrPercentageOrNone};
 use values::computed::{BorderCornerRadius, ClipRect};
-use values::computed::{CalcLengthOrPercentage, Context, LengthOrPercentage};
-use values::computed::{MaxLength, MozLength};
-use values::computed::ToComputedValue;
+use values::computed::{CalcLengthOrPercentage, Color, Context, ComputedValueAsSpecified};
+use values::computed::{LengthOrPercentage, MaxLength, MozLength, Shadow, ToComputedValue};
 use values::generics::{SVGPaint, SVGPaintKind};
 use values::generics::border::BorderCornerRadius as GenericBorderCornerRadius;
 use values::generics::position as generic_position;
@@ -72,6 +70,10 @@ pub enum TransitionProperty {
     /// unknown property.
     Unsupported(Atom)
 }
+
+no_viewport_percentage!(TransitionProperty);
+
+impl ComputedValueAsSpecified for TransitionProperty {}
 
 impl TransitionProperty {
     /// Iterates over each longhand property.
@@ -636,7 +638,31 @@ impl Animatable for AnimationValue {
                 % endif
             % endfor
             _ => {
-                panic!("Expected weighted addition of computed values of the same \
+                panic!("Expected addition of computed values of the same \
+                        property, got: {:?}, {:?}", self, other);
+            }
+        }
+    }
+
+    fn accumulate(&self, other: &Self, count: u64) -> Result<Self, ()> {
+        match (self, other) {
+            % for prop in data.longhands:
+                % if prop.animatable:
+                    % if prop.animation_value_type == "discrete":
+                        (&AnimationValue::${prop.camel_case}(_),
+                         &AnimationValue::${prop.camel_case}(_)) => {
+                            Err(())
+                        }
+                    % else:
+                        (&AnimationValue::${prop.camel_case}(ref from),
+                         &AnimationValue::${prop.camel_case}(ref to)) => {
+                            from.accumulate(to, count).map(AnimationValue::${prop.camel_case})
+                        }
+                    % endif
+                % endif
+            % endfor
+            _ => {
+                panic!("Expected accumulation of computed values of the same \
                         property, got: {:?}, {:?}", self, other);
             }
         }
@@ -1454,132 +1480,6 @@ impl Animatable for ClipRect {
     }
 }
 
-<%def name="impl_animatable_for_shadow(item, transparent_color)">
-    impl Animatable for ${item} {
-        #[inline]
-        fn add_weighted(&self, other: &Self, self_portion: f64, other_portion: f64) -> Result<Self, ()> {
-            % if "Box" in item:
-            // It can't be interpolated if inset does not match.
-            if self.inset != other.inset {
-                return Err(());
-            }
-            % endif
-
-            let x = try!(self.offset_x.add_weighted(&other.offset_x, self_portion, other_portion));
-            let y = try!(self.offset_y.add_weighted(&other.offset_y, self_portion, other_portion));
-            let color = try!(self.color.add_weighted(&other.color, self_portion, other_portion));
-            let blur = try!(self.blur_radius.add_weighted(&other.blur_radius,
-                                                          self_portion, other_portion));
-            % if "Box" in item:
-            let spread = try!(self.spread_radius.add_weighted(&other.spread_radius,
-                                                              self_portion, other_portion));
-            % endif
-
-            Ok(${item} {
-                offset_x: x,
-                offset_y: y,
-                blur_radius: blur,
-                color: color,
-                % if "Box" in item:
-                spread_radius: spread,
-                inset: self.inset,
-                % endif
-            })
-        }
-
-        #[inline]
-        fn compute_distance(&self, other: &Self) -> Result<f64, ()> {
-            self.compute_squared_distance(other).map(|sd| sd.sqrt())
-        }
-
-        #[inline]
-        fn compute_squared_distance(&self, other: &Self) -> Result<f64, ()> {
-            % if "Box" in item:
-            if self.inset != other.inset {
-                return Err(());
-            }
-            % endif
-            let list = [ try!(self.offset_x.compute_distance(&other.offset_x)),
-                         try!(self.offset_y.compute_distance(&other.offset_y)),
-                         try!(self.blur_radius.compute_distance(&other.blur_radius)),
-                         try!(self.color.compute_distance(&other.color)),
-                         % if "Box" in item:
-                         try!(self.spread_radius.compute_distance(&other.spread_radius)),
-                         % endif
-                       ];
-            Ok(list.iter().fold(0.0f64, |sum, diff| sum + diff * diff))
-        }
-    }
-
-    /// https://drafts.csswg.org/css-transitions/#animtype-shadow-list
-    impl Animatable for ${item}List {
-        #[inline]
-        fn add_weighted(&self, other: &Self, self_portion: f64, other_portion: f64) -> Result<Self, ()> {
-            // The inset value must change
-            % if "Box" in item:
-            let mut zero = ${item} {
-            % else:
-            let zero = ${item} {
-            % endif
-                offset_x: Au(0),
-                offset_y: Au(0),
-                blur_radius: Au(0),
-                color: ${transparent_color},
-                % if "Box" in item:
-                spread_radius: Au(0),
-                inset: false,
-                % endif
-            };
-
-            let max_len = cmp::max(self.0.len(), other.0.len());
-
-            let mut result = if max_len > 1 {
-                SmallVec::from_vec(Vec::with_capacity(max_len))
-            } else {
-                SmallVec::new()
-            };
-
-            for i in 0..max_len {
-                let shadow = match (self.0.get(i), other.0.get(i)) {
-                    (Some(shadow), Some(other))
-                        => try!(shadow.add_weighted(other, self_portion, other_portion)),
-                    (Some(shadow), None) => {
-                        % if "Box" in item:
-                        zero.inset = shadow.inset;
-                        % endif
-                        shadow.add_weighted(&zero, self_portion, other_portion).unwrap()
-                    }
-                    (None, Some(shadow)) => {
-                        % if "Box" in item:
-                        zero.inset = shadow.inset;
-                        % endif
-                        zero.add_weighted(&shadow, self_portion, other_portion).unwrap()
-                    }
-                    (None, None) => unreachable!(),
-                };
-                result.push(shadow);
-            }
-
-            Ok(${item}List(result))
-        }
-
-        fn add(&self, other: &Self) -> Result<Self, ()> {
-            let len = self.0.len() + other.0.len();
-
-            let mut result = if len > 1 {
-                SmallVec::from_vec(Vec::with_capacity(len))
-            } else {
-                SmallVec::new()
-            };
-
-            result.extend(self.0.iter().cloned());
-            result.extend(other.0.iter().cloned());
-
-            Ok(${item}List(result))
-        }
-    }
-</%def>
-
 /// Check if it's possible to do a direct numerical interpolation
 /// between these two transform lists.
 /// http://dev.w3.org/csswg/css-transforms/#transform-transform-animation
@@ -1635,10 +1535,20 @@ fn build_identity_transform_list(list: &[TransformOperation]) -> Vec<TransformOp
             TransformOperation::Rotate(..) => {
                 result.push(TransformOperation::Rotate(0.0, 0.0, 1.0, Angle::zero()));
             }
-            TransformOperation::Perspective(..) => {
+            TransformOperation::Perspective(..) |
+            TransformOperation::AccumulateMatrix { .. } => {
+                // Perspective: We convert a perspective function into an equivalent
+                //     ComputedMatrix, and then decompose/interpolate/recompose these matrices.
+                // AccumulateMatrix: We do interpolation on AccumulateMatrix by reading it as a
+                //     ComputedMatrix (with layout information), and then do matrix interpolation.
+                //
+                // Therefore, we use an identity matrix to represent the identity transform list.
                 // http://dev.w3.org/csswg/css-transforms/#identity-transform-function
                 let identity = ComputedMatrix::identity();
                 result.push(TransformOperation::Matrix(identity));
+            }
+            TransformOperation::InterpolateMatrix { .. } => {
+                panic!("Building the identity matrix for InterpolateMatrix is not supported");
             }
         }
     }
@@ -1741,8 +1651,13 @@ fn add_weighted_transform_lists(from_list: &[TransformOperation],
             }
         }
     } else {
-        // TODO(gw): Implement matrix decomposition and interpolation
-        result.extend_from_slice(from_list);
+        use values::specified::Percentage;
+        let from_transform_list = TransformList(Some(from_list.to_vec()));
+        let to_transform_list = TransformList(Some(to_list.to_vec()));
+        result.push(
+            TransformOperation::InterpolateMatrix { from_list: from_transform_list,
+                                                    to_list: to_transform_list,
+                                                    progress: Percentage(other_portion as f32) });
     }
 
     TransformList(Some(result))
@@ -2011,6 +1926,28 @@ impl From<MatrixDecomposed2D> for ComputedMatrix {
         computed_matrix.m21 *= decomposed.scale.1;
         computed_matrix.m22 *= decomposed.scale.1;
         computed_matrix
+    }
+}
+
+#[cfg(feature = "gecko")]
+impl<'a> From< &'a RawGeckoGfxMatrix4x4> for ComputedMatrix {
+    fn from(m: &'a RawGeckoGfxMatrix4x4) -> ComputedMatrix {
+        ComputedMatrix {
+            m11: m[0],  m12: m[1],  m13: m[2],  m14: m[3],
+            m21: m[4],  m22: m[5],  m23: m[6],  m24: m[7],
+            m31: m[8],  m32: m[9],  m33: m[10], m34: m[11],
+            m41: m[12], m42: m[13], m43: m[14], m44: m[15],
+        }
+    }
+}
+
+#[cfg(feature = "gecko")]
+impl From<ComputedMatrix> for RawGeckoGfxMatrix4x4 {
+    fn from(matrix: ComputedMatrix) -> RawGeckoGfxMatrix4x4 {
+        [ matrix.m11, matrix.m12, matrix.m13, matrix.m14,
+          matrix.m21, matrix.m22, matrix.m23, matrix.m24,
+          matrix.m31, matrix.m32, matrix.m33, matrix.m34,
+          matrix.m41, matrix.m42, matrix.m43, matrix.m44 ]
     }
 }
 
@@ -2588,6 +2525,41 @@ impl Animatable for TransformList {
     }
 
     #[inline]
+    fn accumulate(&self, other: &Self, count: u64) -> Result<Self, ()> {
+        match (&self.0, &other.0) {
+            (&Some(ref from_list), &Some(ref to_list)) => {
+                if can_interpolate_list(from_list, to_list) {
+                    Ok(add_weighted_transform_lists(from_list, &to_list, count as f64, 1.0))
+                } else {
+                    use std::i32;
+                    let result = vec![TransformOperation::AccumulateMatrix {
+                        from_list: self.clone(),
+                        to_list: other.clone(),
+                        count: cmp::min(count, i32::MAX as u64) as i32
+                    }];
+                    Ok(TransformList(Some(result)))
+                }
+            }
+            (&Some(ref from_list), &None) => {
+                Ok(add_weighted_transform_lists(from_list, from_list, count as f64, 0.0))
+            }
+            (&None, &Some(_)) => {
+                // If |self| is 'none' then we are calculating:
+                //
+                //    none * |count| + |other|
+                //    = none + |other|
+                //    = |other|
+                //
+                // Hence the result is just |other|.
+                Ok(other.clone())
+            }
+            _ => {
+                Ok(TransformList(None))
+            }
+        }
+    }
+
+    #[inline]
     fn get_zero_value(&self) -> Option<Self> { Some(TransformList(None)) }
 }
 
@@ -2749,38 +2721,19 @@ impl Animatable for IntermediateRGBA {
     }
 }
 
-impl From<Either<CSSParserColor, Auto>> for Either<IntermediateColor, Auto> {
-    fn from(from: Either<CSSParserColor, Auto>) -> Either<IntermediateColor, Auto> {
+impl From<Either<Color, Auto>> for Either<IntermediateColor, Auto> {
+    fn from(from: Either<Color, Auto>) -> Either<IntermediateColor, Auto> {
         match from {
-            Either::First(from) =>
-                match from {
-                    CSSParserColor::RGBA(color) =>
-                        Either::First(IntermediateColor::IntermediateRGBA(
-                            IntermediateRGBA::new(color.red_f32(),
-                                                  color.green_f32(),
-                                                  color.blue_f32(),
-                                                  color.alpha_f32()))),
-                    CSSParserColor::CurrentColor =>
-                        Either::First(IntermediateColor::CurrentColor),
-                },
+            Either::First(from) => Either::First(from.into()),
             Either::Second(Auto) => Either::Second(Auto),
         }
     }
 }
 
-impl From<Either<IntermediateColor, Auto>> for Either<CSSParserColor, Auto> {
-    fn from(from: Either<IntermediateColor, Auto>) -> Either<CSSParserColor, Auto> {
+impl From<Either<IntermediateColor, Auto>> for Either<Color, Auto> {
+    fn from(from: Either<IntermediateColor, Auto>) -> Either<Color, Auto> {
         match from {
-            Either::First(from) =>
-                match from {
-                    IntermediateColor::IntermediateRGBA(color) =>
-                        Either::First(CSSParserColor::RGBA(RGBA::from_floats(color.red,
-                                                                             color.green,
-                                                                             color.blue,
-                                                                             color.alpha))),
-                    IntermediateColor::CurrentColor =>
-                        Either::First(CSSParserColor::CurrentColor),
-                },
+            Either::First(from) => Either::First(from.into()),
             Either::Second(Auto) => Either::Second(Auto),
         }
     }
@@ -2789,22 +2742,89 @@ impl From<Either<IntermediateColor, Auto>> for Either<CSSParserColor, Auto> {
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
 #[allow(missing_docs)]
-pub enum IntermediateColor {
-    CurrentColor,
-    IntermediateRGBA(IntermediateRGBA),
+pub struct IntermediateColor {
+    color: IntermediateRGBA,
+    foreground_ratio: f32,
+}
+
+impl IntermediateColor {
+    fn currentcolor() -> Self {
+        IntermediateColor {
+            color: IntermediateRGBA::transparent(),
+            foreground_ratio: 1.,
+        }
+    }
+
+    fn transparent() -> Self {
+        IntermediateColor {
+            color: IntermediateRGBA::transparent(),
+            foreground_ratio: 0.,
+        }
+    }
+
+    fn is_currentcolor(&self) -> bool {
+        self.foreground_ratio >= 1.
+    }
+
+    fn is_numeric(&self) -> bool {
+        self.foreground_ratio <= 0.
+    }
+
+    fn effective_intermediate_rgba(&self) -> IntermediateRGBA {
+        IntermediateRGBA {
+            alpha: self.color.alpha * (1. - self.foreground_ratio),
+            .. self.color
+        }
+    }
 }
 
 impl Animatable for IntermediateColor {
     #[inline]
     fn add_weighted(&self, other: &Self, self_portion: f64, other_portion: f64) -> Result<Self, ()> {
-        match (*self, *other) {
-            (IntermediateColor::IntermediateRGBA(ref this),
-             IntermediateColor::IntermediateRGBA(ref other)) => {
-                this.add_weighted(other, self_portion, other_portion)
-                    .map(IntermediateColor::IntermediateRGBA)
+        // Common cases are interpolating between two numeric colors,
+        // two currentcolors, and a numeric color and a currentcolor.
+        //
+        // Note: this algorithm assumes self_portion + other_portion
+        // equals to one, so it may be broken for additive operation.
+        // To properly support additive color interpolation, we would
+        // need two ratio fields in computed color types.
+        if self.foreground_ratio == other.foreground_ratio {
+            if self.is_currentcolor() {
+                Ok(IntermediateColor::currentcolor())
+            } else {
+                Ok(IntermediateColor {
+                    color: self.color.add_weighted(&other.color, self_portion, other_portion)?,
+                    foreground_ratio: self.foreground_ratio,
+                })
             }
-            // FIXME: Bug 1345709: Implement currentColor animations.
-            _ => Err(()),
+        } else if self.is_currentcolor() && other.is_numeric() {
+            Ok(IntermediateColor {
+                color: other.color,
+                foreground_ratio: self_portion as f32,
+            })
+        } else if self.is_numeric() && other.is_currentcolor() {
+            Ok(IntermediateColor {
+                color: self.color,
+                foreground_ratio: other_portion as f32,
+            })
+        } else {
+            // For interpolating between two complex colors, we need to
+            // generate colors with effective alpha value.
+            let self_color = self.effective_intermediate_rgba();
+            let other_color = other.effective_intermediate_rgba();
+            let color = self_color.add_weighted(&other_color, self_portion, other_portion)?;
+            // Then we compute the final foreground ratio, and derive
+            // the final alpha value from the effective alpha value.
+            let foreground_ratio = self.foreground_ratio
+                .add_weighted(&other.foreground_ratio, self_portion, other_portion)?;
+            let alpha = color.alpha / (1. - foreground_ratio);
+            Ok(IntermediateColor {
+                color: IntermediateRGBA {
+                    alpha: alpha,
+                    .. color
+                },
+                foreground_ratio: foreground_ratio,
+            })
         }
     }
 
@@ -2815,45 +2835,49 @@ impl Animatable for IntermediateColor {
 
     #[inline]
     fn compute_squared_distance(&self, other: &Self) -> Result<f64, ()> {
-        match (*self, *other) {
-            (IntermediateColor::IntermediateRGBA(ref this), IntermediateColor::IntermediateRGBA(ref other)) => {
-                this.compute_squared_distance(other)
-            },
-            _ => Ok(0.0),
+        // All comments in add_weighted also applies here.
+        if self.foreground_ratio == other.foreground_ratio {
+            if self.is_currentcolor() {
+                Ok(0.)
+            } else {
+                self.color.compute_squared_distance(&other.color)
+            }
+        } else if self.is_currentcolor() && other.is_numeric() {
+            Ok(IntermediateRGBA::transparent().compute_squared_distance(&other.color)? + 1.)
+        } else if self.is_numeric() && other.is_currentcolor() {
+            Ok(self.color.compute_squared_distance(&IntermediateRGBA::transparent())? + 1.)
+        } else {
+            let self_color = self.effective_intermediate_rgba();
+            let other_color = other.effective_intermediate_rgba();
+            let dist = self_color.compute_squared_distance(&other_color)?;
+            let ratio_diff = (self.foreground_ratio - other.foreground_ratio) as f64;
+            Ok(dist + ratio_diff * ratio_diff)
         }
     }
 }
 
-impl From<CSSParserColor> for IntermediateColor {
-    fn from(color: CSSParserColor) -> IntermediateColor {
-        match color {
-            CSSParserColor::RGBA(color) =>
-                IntermediateColor::IntermediateRGBA(IntermediateRGBA::new(color.red_f32(),
-                                                                          color.green_f32(),
-                                                                          color.blue_f32(),
-                                                                          color.alpha_f32())),
-            CSSParserColor::CurrentColor => IntermediateColor::CurrentColor,
+impl From<Color> for IntermediateColor {
+    fn from(color: Color) -> IntermediateColor {
+        IntermediateColor {
+            color: color.color.into(),
+            foreground_ratio: color.foreground_ratio as f32 * (1. / 255.),
         }
     }
 }
 
-impl From<IntermediateColor> for CSSParserColor {
-    fn from(color: IntermediateColor) -> CSSParserColor {
-        match color {
-            IntermediateColor::IntermediateRGBA(color) =>
-                CSSParserColor::RGBA(RGBA::from_floats(color.red,
-                                                       color.green,
-                                                       color.blue,
-                                                       color.alpha)),
-            IntermediateColor::CurrentColor => CSSParserColor::CurrentColor,
+impl From<IntermediateColor> for Color {
+    fn from(color: IntermediateColor) -> Color {
+        Color {
+            color: color.color.into(),
+            foreground_ratio: (color.foreground_ratio * 255.).round() as u8,
         }
     }
 }
 
 /// Animatable SVGPaint
-pub type IntermediateSVGPaint = SVGPaint<IntermediateColor>;
+pub type IntermediateSVGPaint = SVGPaint<IntermediateRGBA>;
 /// Animatable SVGPaintKind
-pub type IntermediateSVGPaintKind = SVGPaintKind<IntermediateColor>;
+pub type IntermediateSVGPaintKind = SVGPaintKind<IntermediateRGBA>;
 
 impl From<::values::computed::SVGPaint> for IntermediateSVGPaint {
     fn from(paint: ::values::computed::SVGPaint) -> IntermediateSVGPaint {
@@ -2919,74 +2943,183 @@ impl Animatable for IntermediateSVGPaintKind {
     }
 }
 
-<%def name="impl_intermediate_type_for_shadow(type)">
-    #[derive(Copy, Clone, Debug, PartialEq)]
-    #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
-    #[allow(missing_docs)]
-    /// Intermediate type for box-shadow and text-shadow.
-    /// The difference between normal shadow type is that this type uses
-    /// IntermediateColor instead of ParserColor.
-    pub struct Intermediate${type}Shadow {
-        pub offset_x: Au,
-        pub offset_y: Au,
-        pub blur_radius: Au,
-        pub color: IntermediateColor,
-        % if type == "Box":
-        pub spread_radius: Au,
-        pub inset: bool,
-        % endif
+#[derive(Copy, Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "servo", derive(HeapSizeOf))]
+#[allow(missing_docs)]
+/// Intermediate type for box-shadow and text-shadow.
+/// The difference between normal shadow type is that this type uses
+/// IntermediateColor instead of ParserColor.
+pub struct IntermediateShadow {
+    pub offset_x: Au,
+    pub offset_y: Au,
+    pub blur_radius: Au,
+    pub spread_radius: Au,
+    pub color: IntermediateColor,
+    pub inset: bool,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "servo", derive(HeapSizeOf))]
+#[allow(missing_docs)]
+/// Intermediate type for box-shadow list and text-shadow list.
+pub struct IntermediateShadowList(pub SmallVec<[IntermediateShadow; 1]>);
+
+type ShadowList = SmallVec<[Shadow; 1]>;
+
+impl From<IntermediateShadowList> for ShadowList {
+    fn from(shadow_list: IntermediateShadowList) -> Self {
+        shadow_list.0.into_iter().map(|s| s.into()).collect()
     }
+}
 
-    #[derive(Clone, Debug, PartialEq)]
-    #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
-    #[allow(missing_docs)]
-    /// Intermediate type for box-shadow list and text-shadow list.
-    pub struct Intermediate${type}ShadowList(pub SmallVec<[Intermediate${type}Shadow; 1]>);
+impl From<ShadowList> for IntermediateShadowList {
+    fn from(shadow_list: ShadowList) -> IntermediateShadowList {
+        IntermediateShadowList(shadow_list.into_iter().map(|s| s.into()).collect())
+    }
+}
 
-    impl From<Intermediate${type}ShadowList> for ${type}ShadowList {
-        fn from(shadow_list: Intermediate${type}ShadowList) -> ${type}ShadowList {
-            ${type}ShadowList(shadow_list.0.into_iter().map(|s| s.into()).collect())
+% for ty in "Box Text".split():
+impl From<IntermediateShadowList> for ${ty}ShadowList {
+    #[inline]
+    fn from(shadow_list: IntermediateShadowList) -> Self {
+        ${ty}ShadowList(shadow_list.into())
+    }
+}
+
+impl From<${ty}ShadowList> for IntermediateShadowList {
+    #[inline]
+    fn from(shadow_list: ${ty}ShadowList) -> IntermediateShadowList {
+        shadow_list.0.into()
+    }
+}
+% endfor
+
+impl From<IntermediateShadow> for Shadow {
+    fn from(shadow: IntermediateShadow) -> Shadow {
+        Shadow {
+            offset_x: shadow.offset_x,
+            offset_y: shadow.offset_y,
+            blur_radius: shadow.blur_radius,
+            spread_radius: shadow.spread_radius,
+            color: shadow.color.into(),
+            inset: shadow.inset,
         }
     }
+}
 
-    impl From<${type}ShadowList> for Intermediate${type}ShadowList {
-        fn from(shadow_list: ${type}ShadowList) -> Intermediate${type}ShadowList {
-            Intermediate${type}ShadowList(shadow_list.0.into_iter().map(|s| s.into()).collect())
+impl From<Shadow> for IntermediateShadow {
+    fn from(shadow: Shadow) -> IntermediateShadow {
+        IntermediateShadow {
+            offset_x: shadow.offset_x,
+            offset_y: shadow.offset_y,
+            blur_radius: shadow.blur_radius,
+            spread_radius: shadow.spread_radius,
+            color: shadow.color.into(),
+            inset: shadow.inset,
         }
     }
+}
 
-    impl From<Intermediate${type}Shadow> for ${type}Shadow {
-        fn from(shadow: Intermediate${type}Shadow) -> ${type}Shadow {
-            ${type}Shadow {
-                offset_x: shadow.offset_x,
-                offset_y: shadow.offset_y,
-                blur_radius: shadow.blur_radius,
-                color: shadow.color.into(),
-                % if type == "Box":
-                spread_radius: shadow.spread_radius,
-                inset: shadow.inset,
-                % endif
-            }
+impl Animatable for IntermediateShadow {
+    #[inline]
+    fn add_weighted(&self, other: &Self, self_portion: f64, other_portion: f64) -> Result<Self, ()> {
+        // It can't be interpolated if inset does not match.
+        if self.inset != other.inset {
+            return Err(());
         }
+
+        let x = try!(self.offset_x.add_weighted(&other.offset_x, self_portion, other_portion));
+        let y = try!(self.offset_y.add_weighted(&other.offset_y, self_portion, other_portion));
+        let color = try!(self.color.add_weighted(&other.color, self_portion, other_portion));
+        let blur = try!(self.blur_radius.add_weighted(&other.blur_radius,
+                                                      self_portion, other_portion));
+        let spread = try!(self.spread_radius.add_weighted(&other.spread_radius,
+                                                          self_portion, other_portion));
+
+        Ok(IntermediateShadow {
+            offset_x: x,
+            offset_y: y,
+            blur_radius: blur,
+            spread_radius: spread,
+            color: color,
+            inset: self.inset,
+        })
     }
 
-    impl From<${type}Shadow> for Intermediate${type}Shadow {
-        fn from(shadow: ${type}Shadow) -> Intermediate${type}Shadow {
-            Intermediate${type}Shadow {
-                offset_x: shadow.offset_x,
-                offset_y: shadow.offset_y,
-                blur_radius: shadow.blur_radius,
-                color: shadow.color.into(),
-                % if type == "Box":
-                spread_radius: shadow.spread_radius,
-                inset: shadow.inset,
-                % endif
-            }
-        }
+    #[inline]
+    fn compute_distance(&self, other: &Self) -> Result<f64, ()> {
+        self.compute_squared_distance(other).map(|sd| sd.sqrt())
     }
-    ${impl_animatable_for_shadow('Intermediate%sShadow' % type,
-                                 'IntermediateColor::IntermediateRGBA(IntermediateRGBA::transparent())')}
-</%def>
 
-${impl_intermediate_type_for_shadow('Box')}
-${impl_intermediate_type_for_shadow('Text')}
+    #[inline]
+    fn compute_squared_distance(&self, other: &Self) -> Result<f64, ()> {
+        if self.inset != other.inset {
+            return Err(());
+        }
+        let list = [ try!(self.offset_x.compute_distance(&other.offset_x)),
+                     try!(self.offset_y.compute_distance(&other.offset_y)),
+                     try!(self.blur_radius.compute_distance(&other.blur_radius)),
+                     try!(self.color.compute_distance(&other.color)),
+                     try!(self.spread_radius.compute_distance(&other.spread_radius)),
+        ];
+        Ok(list.iter().fold(0.0f64, |sum, diff| sum + diff * diff))
+    }
+}
+
+/// https://drafts.csswg.org/css-transitions/#animtype-shadow-list
+impl Animatable for IntermediateShadowList {
+    #[inline]
+    fn add_weighted(&self, other: &Self, self_portion: f64, other_portion: f64) -> Result<Self, ()> {
+        // The inset value must change
+        let mut zero = IntermediateShadow {
+            offset_x: Au(0),
+            offset_y: Au(0),
+            blur_radius: Au(0),
+            spread_radius: Au(0),
+            color: IntermediateColor::transparent(),
+            inset: false,
+        };
+
+        let max_len = cmp::max(self.0.len(), other.0.len());
+
+        let mut result = if max_len > 1 {
+            SmallVec::from_vec(Vec::with_capacity(max_len))
+        } else {
+            SmallVec::new()
+        };
+
+        for i in 0..max_len {
+            let shadow = match (self.0.get(i), other.0.get(i)) {
+                (Some(shadow), Some(other)) =>
+                    try!(shadow.add_weighted(other, self_portion, other_portion)),
+                (Some(shadow), None) => {
+                        zero.inset = shadow.inset;
+                        shadow.add_weighted(&zero, self_portion, other_portion).unwrap()
+                }
+                (None, Some(shadow)) => {
+                    zero.inset = shadow.inset;
+                    zero.add_weighted(&shadow, self_portion, other_portion).unwrap()
+                }
+                (None, None) => unreachable!(),
+            };
+            result.push(shadow);
+        }
+
+        Ok(IntermediateShadowList(result))
+    }
+
+    fn add(&self, other: &Self) -> Result<Self, ()> {
+        let len = self.0.len() + other.0.len();
+
+        let mut result = if len > 1 {
+            SmallVec::from_vec(Vec::with_capacity(len))
+        } else {
+            SmallVec::new()
+        };
+
+        result.extend(self.0.iter().cloned());
+        result.extend(other.0.iter().cloned());
+
+        Ok(IntermediateShadowList(result))
+    }
+}

@@ -51,6 +51,7 @@ use net_traits::image::base::PixelFormat;
 use net_traits::image_cache::ImageResponse;
 use offscreen_gl_context::{GLContextAttributes, GLLimits};
 use script_traits::ScriptMsg as ConstellationMsg;
+use servo_config::prefs::PREFS;
 use std::cell::Cell;
 use std::collections::HashMap;
 use webrender_traits;
@@ -166,6 +167,10 @@ impl WebGLRenderingContext {
                      size: Size2D<i32>,
                      attrs: GLContextAttributes)
                      -> Result<WebGLRenderingContext, String> {
+        if let Some(true) = PREFS.get("webgl.testing.context_creation_error").as_boolean() {
+            return Err("WebGL context creation error forced by pref `webgl.testing.context_creation_error`".into());
+        }
+
         let (sender, receiver) = ipc::channel().unwrap();
         let constellation_chan = window.upcast::<GlobalScope>().constellation_chan();
         constellation_chan.send(ConstellationMsg::CreateWebGLPaintThread(size, attrs, sender))
@@ -3363,6 +3368,7 @@ impl WebGLRenderingContextMethods for WebGLRenderingContext {
         self.tex_parameter(target, name, TexParameterValue::Int(value))
     }
 
+    // https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.14.6
     fn CheckFramebufferStatus(&self, target: u32) -> u32 {
         // From the GLES 2.0.25 spec, 4.4 ("Framebuffer Objects"):
         //
@@ -3380,6 +3386,7 @@ impl WebGLRenderingContextMethods for WebGLRenderingContext {
         }
     }
 
+    // https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.14.7
     fn RenderbufferStorage(&self, target: u32, internal_format: u32,
                            width: i32, height: i32) {
         // From the GLES 2.0.25 spec:
@@ -3418,6 +3425,7 @@ impl WebGLRenderingContextMethods for WebGLRenderingContext {
         // accessed.  See https://github.com/servo/servo/issues/13710
     }
 
+    // https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.14.6
     fn FramebufferRenderbuffer(&self, target: u32, attachment: u32,
                                renderbuffertarget: u32,
                                rb: Option<&WebGLRenderbuffer>) {
@@ -3431,6 +3439,7 @@ impl WebGLRenderingContextMethods for WebGLRenderingContext {
         };
     }
 
+    // https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.14.6
     fn FramebufferTexture2D(&self, target: u32, attachment: u32,
                             textarget: u32, texture: Option<&WebGLTexture>,
                             level: i32) {

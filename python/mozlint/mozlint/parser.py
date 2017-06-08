@@ -2,17 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import imp
 import os
-import sys
-import uuid
+
+import yaml
 
 from .types import supported_types
 from .errors import LinterNotFound, LinterParseError
 
 
 class Parser(object):
-    """Reads and validates `.lint.py` files."""
+    """Reads and validates lint configuration files."""
     required_attributes = (
         'name',
         'description',
@@ -22,31 +21,6 @@ class Parser(object):
 
     def __call__(self, path):
         return self.parse(path)
-
-    def _load_linter(self, path):
-        # Ensure parent module is present otherwise we'll (likely) get
-        # an error due to unknown parent.
-        parent_module = 'mozlint.linters'
-        if parent_module not in sys.modules:
-            mod = imp.new_module(parent_module)
-            sys.modules[parent_module] = mod
-
-        write_bytecode = sys.dont_write_bytecode
-        sys.dont_write_bytecode = True
-
-        module_name = '{}.{}'.format(parent_module, uuid.uuid1().get_hex())
-        imp.load_source(module_name, path)
-
-        sys.dont_write_bytecode = write_bytecode
-
-        mod = sys.modules[module_name]
-
-        if not hasattr(mod, 'LINTER'):
-            raise LinterParseError(path, "No LINTER definition found!")
-
-        definition = mod.LINTER
-        definition['path'] = path
-        return definition
 
     def _validate(self, linter):
         missing_attrs = []
@@ -71,15 +45,25 @@ class Parser(object):
         """Read a linter and return its LINTER definition.
 
         :param path: Path to the linter.
-        :returns: Linter definition (dict)
+        :returns: List of linter definitions ([dict])
         :raises: LinterNotFound, LinterParseError
         """
         if not os.path.isfile(path):
             raise LinterNotFound(path)
 
-        if not path.endswith('.lint.py'):
-            raise LinterParseError(path, "Invalid filename, linters must end with '.lint.py'!")
+        if not path.endswith('.yml'):
+            raise LinterParseError(path, "Invalid filename, linters must end with '.yml'!")
 
-        linter = self._load_linter(path)
-        self._validate(linter)
-        return linter
+        with open(path) as fh:
+            config = yaml.load(fh)
+
+        if not config:
+            raise LinterParseError(path, "No lint definitions found!")
+
+        linters = []
+        for name, linter in config.iteritems():
+            linter['name'] = name
+            linter['path'] = path
+            self._validate(linter)
+            linters.append(linter)
+        return linters

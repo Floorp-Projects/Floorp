@@ -22,5 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1361661 - Update Telemetry build and headers.
+Bug 1346025 - Move vendored python modules to /third_party/python (need to clobber virtualenv)
 

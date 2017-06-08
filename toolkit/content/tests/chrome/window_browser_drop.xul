@@ -19,6 +19,7 @@ function dropOnRemoteBrowserAsync(browser, data, shouldExpectStateChange) {
   return ContentTask.spawn(browser, {data, shouldExpectStateChange}, async function({data, shouldExpectStateChange}) {
     let { interfaces: Ci, utils: Cu } = Components;
     Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+    Cu.import("resource://gre/modules/Services.jsm");
 
     if (!content.document.documentElement) {
       // Wait until the testing document gets loaded.

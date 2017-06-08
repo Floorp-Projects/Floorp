@@ -102,11 +102,12 @@ MSG_DEF(JSMSG_CANT_SET_PROTO_OF,       1, JSEXN_TYPEERR, "can't set prototype of
 MSG_DEF(JSMSG_CANT_SET_PROTO_CYCLE,    0, JSEXN_TYPEERR, "can't set prototype: it would cause a prototype chain cycle")
 MSG_DEF(JSMSG_INVALID_ARG_TYPE,        3, JSEXN_TYPEERR, "Invalid type: {0} can't be a{1} {2}")
 MSG_DEF(JSMSG_TERMINATED,              1, JSEXN_ERR, "Script terminated by timeout at:\n{0}")
-MSG_DEF(JSMSG_PROTO_NOT_OBJORNULL,     1, JSEXN_TYPEERR, "{0}.prototype is not an object or null")
 MSG_DEF(JSMSG_CANT_CALL_CLASS_CONSTRUCTOR, 0, JSEXN_TYPEERR, "class constructors must be invoked with |new|")
 MSG_DEF(JSMSG_UNINITIALIZED_THIS,      1, JSEXN_REFERENCEERR, "|this| used uninitialized in {0} class constructor")
 MSG_DEF(JSMSG_UNINITIALIZED_THIS_ARROW, 0, JSEXN_REFERENCEERR, "|this| used uninitialized in arrow function in class constructor")
 MSG_DEF(JSMSG_BAD_DERIVED_RETURN,      1, JSEXN_TYPEERR, "derived class constructor returned invalid value {0}")
+MSG_DEF(JSMSG_BAD_HERITAGE,            2, JSEXN_TYPEERR, "class heritage {0} is {1}")
+MSG_DEF(JSMSG_NOT_OBJORNULL,           1, JSEXN_TYPEERR, "{0} is not an object or null")
 
 // JSON
 MSG_DEF(JSMSG_JSON_BAD_PARSE,          3, JSEXN_SYNTAXERR, "JSON.parse: {0} at line {1} column {2} of the JSON data")

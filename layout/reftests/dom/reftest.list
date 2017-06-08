@@ -51,5 +51,5 @@
 
 fails-if(styloVsGecko||stylo) == xbl-children-1.xhtml xbl-children-1-ref.xhtml
 == xbl-children-2.xhtml about:blank
-== xbl-children-3.xhtml xbl-children-3-ref.html
+fuzzy-if(webrender,8-8,1000-1100) == xbl-children-3.xhtml xbl-children-3-ref.html
 == xbl-children-4.xhtml about:blank

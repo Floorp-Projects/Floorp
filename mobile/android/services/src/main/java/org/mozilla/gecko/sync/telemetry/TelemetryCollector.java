@@ -7,7 +7,6 @@ package org.mozilla.gecko.sync.telemetry;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
 import org.mozilla.gecko.sync.CollectionConcurrentModificationException;
@@ -20,7 +19,6 @@ import org.mozilla.gecko.sync.repositories.FetchFailedException;
 import org.mozilla.gecko.sync.repositories.StoreFailedException;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -44,15 +42,17 @@ public class TelemetryCollector {
     private final HashMap<String, TelemetryStageCollector> stageCollectors = new HashMap<>();
 
     // Data which is not specific to a single stage is aggregated in this object.
-    @VisibleForTesting protected ExtendedJSONObject error;
-    private String hashedUID;
-    private String hashedDeviceID;
+    // It's possible that these fields are read/written from different threads.
+    // Volatile is used to ensure memory visibility.
+    private volatile ExtendedJSONObject error;
+    private volatile String hashedUID;
+    private volatile String hashedDeviceID;
     private final ArrayList<Bundle> devices = new ArrayList<>();
 
-    @Nullable private Long started;
-    @Nullable private Long finished;
+    @Nullable private volatile Long started;
+    @Nullable private volatile Long finished;
 
-    private boolean didRestart = false;
+    private volatile boolean didRestart = false;
 
     public TelemetryStageCollector collectorFor(@NonNull String stageName) {
         if (stageCollectors.containsKey(stageName)) {
@@ -81,11 +81,27 @@ public class TelemetryCollector {
         }
     }
 
+    public void setError(@NonNull String name, @NonNull Exception e) {
+        setError(name, e.getClass().getSimpleName());
+    }
+
     public void setError(@NonNull String name, @NonNull String details) {
+        setError(name, details, null);
+    }
+
+    public void setError(@NonNull String name, @NonNull String details, @Nullable Exception e) {
         final ExtendedJSONObject error = new ExtendedJSONObject();
         error.put("name", name);
-        error.put("error", details);
+        if (e != null) {
+            error.put("error", e.getClass().getSimpleName() + ":" + details);
+        } else {
+            error.put("error", details);
+        }
         this.error = error;
+    }
+
+    public boolean hasError() {
+        return this.error != null;
     }
 
     public void setStarted(long time) {
@@ -135,7 +151,9 @@ public class TelemetryCollector {
         telemetry.putString(TelemetryContract.KEY_LOCAL_DEVICE_ID, this.hashedDeviceID);
         telemetry.putParcelableArrayList(TelemetryContract.KEY_DEVICES, this.devices);
         telemetry.putLong(TelemetryContract.KEY_TOOK, took);
-        telemetry.putSerializable(TelemetryContract.KEY_ERROR, (Serializable) this.error);
+        if (this.error != null) {
+            telemetry.putSerializable(TelemetryContract.KEY_ERROR, this.error.object);
+        }
         telemetry.putSerializable(TelemetryContract.KEY_STAGES, this.stageCollectors);
         if (this.didRestart) {
             telemetry.putBoolean(TelemetryContract.KEY_RESTARTED, true);

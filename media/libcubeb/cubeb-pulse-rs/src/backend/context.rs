@@ -5,13 +5,13 @@
 
 use backend::*;
 use backend::cork_state::CorkState;
-use backend::var_array::VarArray;
 use capi::PULSE_OPS;
 use cubeb;
 use pulse_ffi::*;
 use semver;
 use std::default::Default;
 use std::ffi::CStr;
+use std::mem;
 use std::os::raw::{c_char, c_int, c_void};
 use std::ptr;
 
@@ -52,11 +52,18 @@ fn channel_map_to_layout(cm: &pa_channel_map) -> cubeb::ChannelLayout {
 }
 
 #[derive(Debug)]
+pub struct DefaultInfo {
+    pub sample_spec: pa_sample_spec,
+    pub channel_map: pa_channel_map,
+    pub flags: pa_sink_flags_t,
+}
+
+#[derive(Debug)]
 pub struct Context {
     pub ops: *const cubeb::Ops,
     pub mainloop: *mut pa_threaded_mainloop,
     pub context: *mut pa_context,
-    pub default_sink_info: *mut pa_sink_info,
+    pub default_sink_info: Option<DefaultInfo>,
     pub context_name: *const c_char,
     pub collection_changed_callback: cubeb::DeviceCollectionChangedCallback,
     pub collection_changed_user_ptr: *mut c_void,
@@ -65,6 +72,12 @@ pub struct Context {
     pub version_0_9_8: bool,
     #[cfg(feature = "pulse-dlopen")]
     pub libpulse: LibLoader,
+}
+
+impl Drop for Context {
+    fn drop(&mut self) {
+        self.destroy();
+    }
 }
 
 impl Context {
@@ -80,7 +93,7 @@ impl Context {
                                libpulse: libpulse.unwrap(),
                                mainloop: unsafe { pa_threaded_mainloop_new() },
                                context: 0 as *mut _,
-                               default_sink_info: 0 as *mut _,
+                               default_sink_info: None,
                                context_name: name,
                                collection_changed_callback: None,
                                collection_changed_user_ptr: 0 as *mut _,
@@ -98,7 +111,7 @@ impl Context {
                         ops: &PULSE_OPS,
                         mainloop: unsafe { pa_threaded_mainloop_new() },
                         context: 0 as *mut _,
-                        default_sink_info: 0 as *mut _,
+                        default_sink_info: None,
                         context_name: name,
                         collection_changed_callback: None,
                         collection_changed_user_ptr: 0 as *mut _,
@@ -119,11 +132,19 @@ impl Context {
         }
 
         unsafe {
+            /* server_info_callback performs a second async query,
+             * which is responsible for initializing default_sink_info
+             * and signalling the mainloop to end the wait. */
             pa_threaded_mainloop_lock(ctx.mainloop);
-            pa_context_get_server_info(ctx.context,
-                                       Some(server_info_callback),
-                                       ctx.as_mut() as *mut Context as *mut _);
+            let o = pa_context_get_server_info(ctx.context,
+                                               Some(server_info_callback),
+                                               ctx.as_mut() as *mut Context as *mut _);
+            if !o.is_null() {
+                ctx.operation_wait(ptr::null_mut(), o);
+                pa_operation_unref(o);
+            }
             pa_threaded_mainloop_unlock(ctx.mainloop);
+            assert!(ctx.default_sink_info.is_some());
         }
 
         // Return the result.
@@ -131,10 +152,6 @@ impl Context {
     }
 
     pub fn destroy(&mut self) {
-        if !self.default_sink_info.is_null() {
-            let _ = unsafe { Box::from_raw(self.default_sink_info) };
-        }
-
         if !self.context.is_null() {
             unsafe { self.pulse_context_destroy() };
         }
@@ -175,26 +192,16 @@ impl Context {
     }
 
     pub fn max_channel_count(&self) -> Result<u32> {
-        unsafe {
-            pa_threaded_mainloop_lock(self.mainloop);
-            while self.default_sink_info.is_null() {
-                pa_threaded_mainloop_wait(self.mainloop);
-            }
-            pa_threaded_mainloop_unlock(self.mainloop);
-
-            Ok((*self.default_sink_info).channel_map.channels as u32)
+        match self.default_sink_info {
+            Some(ref info) => Ok(info.channel_map.channels as u32),
+            None => Err(cubeb::ERROR),
         }
     }
 
     pub fn preferred_sample_rate(&self) -> Result<u32> {
-        unsafe {
-            pa_threaded_mainloop_lock(self.mainloop);
-            while self.default_sink_info.is_null() {
-                pa_threaded_mainloop_wait(self.mainloop);
-            }
-            pa_threaded_mainloop_unlock(self.mainloop);
-
-            Ok((*self.default_sink_info).sample_spec.rate)
+        match self.default_sink_info {
+            Some(ref info) => Ok(info.sample_spec.rate),
+            None => Err(cubeb::ERROR),
         }
     }
 
@@ -204,18 +211,13 @@ impl Context {
     }
 
     pub fn preferred_channel_layout(&self) -> Result<cubeb::ChannelLayout> {
-        unsafe {
-            pa_threaded_mainloop_lock(self.mainloop);
-            while self.default_sink_info.is_null() {
-                pa_threaded_mainloop_wait(self.mainloop);
-            }
-            pa_threaded_mainloop_unlock(self.mainloop);
-
-            Ok(channel_map_to_layout(&(*self.default_sink_info).channel_map))
+        match self.default_sink_info {
+            Some(ref info) => Ok(channel_map_to_layout(&info.channel_map)),
+            None => Err(cubeb::ERROR),
         }
     }
 
-    pub fn enumerate_devices(&self, devtype: cubeb::DeviceType) -> Result<*mut cubeb::DeviceCollection> {
+    pub fn enumerate_devices(&self, devtype: cubeb::DeviceType) -> Result<cubeb::DeviceCollection> {
         let mut user_data: PulseDevListData = Default::default();
         user_data.context = self as *const _ as *mut _;
 
@@ -253,18 +255,43 @@ impl Context {
             pa_threaded_mainloop_unlock(self.mainloop);
         }
 
-        // TODO: This is dodgy - Need to account for padding between count
-        // and device array in C code on 64-bit platforms. Using an extra
-        // pointer instead of the header size to achieve this.
-        let mut coll: Box<VarArray<*const cubeb::DeviceInfo>> = VarArray::with_length(user_data.devinfo.len());
-        for (e1, e2) in user_data
-                .devinfo
-                .drain(..)
-                .zip(coll.as_mut_slice().iter_mut()) {
-            *e2 = e1;
-        }
+        // Extract the array of cubeb_device_info from
+        // PulseDevListData and convert it into C representation.
+        let mut tmp = Vec::new();
+        mem::swap(&mut user_data.devinfo, &mut tmp);
+        let devices = tmp.into_boxed_slice();
+        let coll = cubeb::DeviceCollection {
+            device: devices.as_ptr(),
+            count: devices.len(),
+        };
 
-        Ok(Box::into_raw(coll) as *mut cubeb::DeviceCollection)
+        // Giving away the memory owned by devices.  Don't free it!
+        mem::forget(devices);
+        Ok(coll)
+    }
+
+    pub fn device_collection_destroy(&self, collection: *mut cubeb::DeviceCollection) {
+        debug_assert!(!collection.is_null());
+        unsafe {
+            let coll = *collection;
+            let mut devices = Vec::from_raw_parts(coll.device as *mut cubeb::DeviceInfo,
+                                                  coll.count,
+                                                  coll.count);
+            for dev in devices.iter_mut() {
+                if !dev.device_id.is_null() {
+                    pa_xfree(dev.device_id as *mut _);
+                }
+                if !dev.group_id.is_null() {
+                    pa_xfree(dev.group_id as *mut _);
+                }
+                if !dev.vendor_name.is_null() {
+                    pa_xfree(dev.vendor_name as *mut _);
+                }
+                if !dev.friendly_name.is_null() {
+                    pa_xfree(dev.friendly_name as *mut _);
+                }
+            }
+        }
     }
 
     pub fn register_device_collection_changed(&mut self,
@@ -469,7 +496,6 @@ impl Context {
     }
 }
 
-
 // Callbacks
 unsafe extern "C" fn server_info_callback(context: *mut pa_context, info: *const pa_server_info, u: *mut c_void) {
     unsafe extern "C" fn sink_info_callback(_context: *mut pa_context,
@@ -478,32 +504,34 @@ unsafe extern "C" fn server_info_callback(context: *mut pa_context, info: *const
                                             u: *mut c_void) {
         let mut ctx = &mut *(u as *mut Context);
         if eol == 0 {
-            if !ctx.default_sink_info.is_null() {
-                let _ = Box::from_raw(ctx.default_sink_info);
-            }
-            ctx.default_sink_info = Box::into_raw(Box::new(*info));
+            let info = *info;
+            ctx.default_sink_info = Some(DefaultInfo {
+                                             sample_spec: info.sample_spec,
+                                             channel_map: info.channel_map,
+                                             flags: info.flags,
+                                         });
         }
         pa_threaded_mainloop_signal(ctx.mainloop, 0);
     }
 
-    pa_context_get_sink_info_by_name(context,
-                                     (*info).default_sink_name,
-                                     Some(sink_info_callback),
-                                     u);
+    let o = pa_context_get_sink_info_by_name(context,
+                                             (*info).default_sink_name,
+                                             Some(sink_info_callback),
+                                             u);
+    if !o.is_null() {
+        pa_operation_unref(o);
+    }
 }
 
 struct PulseDevListData {
     default_sink_name: *mut c_char,
     default_source_name: *mut c_char,
-    devinfo: Vec<*const cubeb::DeviceInfo>,
+    devinfo: Vec<cubeb::DeviceInfo>,
     context: *mut Context,
 }
 
 impl Drop for PulseDevListData {
     fn drop(&mut self) {
-        for elem in &mut self.devinfo {
-            let _ = unsafe { Box::from_raw(elem) };
-        }
         if !self.default_sink_name.is_null() {
             unsafe {
                 pa_xfree(self.default_sink_name as *mut _);
@@ -600,7 +628,7 @@ unsafe extern "C" fn pulse_sink_info_cb(_context: *mut pa_context,
         latency_lo: 0,
         latency_hi: 0,
     };
-    list_data.devinfo.push(Box::into_raw(Box::new(devinfo)));
+    list_data.devinfo.push(devinfo);
 
     pa_threaded_mainloop_signal(ctx.mainloop, 0);
 }
@@ -666,7 +694,7 @@ unsafe extern "C" fn pulse_source_info_cb(_context: *mut pa_context,
         latency_hi: 0,
     };
 
-    list_data.devinfo.push(Box::into_raw(Box::new(devinfo)));
+    list_data.devinfo.push(devinfo);
 
     pa_threaded_mainloop_signal(ctx.mainloop, 0);
 }
