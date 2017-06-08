@@ -56,7 +56,7 @@ struct ManifestDirective
 
   bool allowbootstrap;
 
-  // The contentaccessible flags only apply to content directives.
+  // The contentaccessible flags only apply to content/resource directives.
   bool contentflags;
 
   // Function to handle this directive. This isn't a union because C++ still
@@ -123,7 +123,7 @@ static const ManifestDirective kParsingTable[] = {
     nullptr, &nsChromeRegistry::ManifestOverride, nullptr
   },
   {
-    "resource",         2, false, true, true, true, false,
+    "resource",         2, false, true, true, true, true,
     nullptr, &nsChromeRegistry::ManifestResource, nullptr
   }
 };

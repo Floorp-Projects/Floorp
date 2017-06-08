@@ -42,12 +42,14 @@ struct SubstitutionMapping
   nsCString scheme;
   nsCString path;
   SerializedURI resolvedURI;
+  uint32_t flags;
 
   bool operator ==(const SubstitutionMapping& rhs) const
   {
     return scheme.Equals(rhs.scheme) &&
            path.Equals(rhs.path) &&
-           resolvedURI == rhs.resolvedURI;
+           resolvedURI == rhs.resolvedURI &&
+           flags == rhs.flags;
   }
 };
 
@@ -140,19 +142,23 @@ struct ParamTraits<SubstitutionMapping>
     WriteParam(aMsg, aParam.scheme);
     WriteParam(aMsg, aParam.path);
     WriteParam(aMsg, aParam.resolvedURI);
+    WriteParam(aMsg, aParam.flags);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     nsCString scheme, path;
     SerializedURI resolvedURI;
+    uint32_t flags;
 
     if (ReadParam(aMsg, aIter, &scheme) &&
         ReadParam(aMsg, aIter, &path) &&
-        ReadParam(aMsg, aIter, &resolvedURI)) {
+        ReadParam(aMsg, aIter, &resolvedURI) &&
+        ReadParam(aMsg, aIter, &flags)) {
       aResult->scheme = scheme;
       aResult->path = path;
       aResult->resolvedURI = resolvedURI;
+      aResult->flags = flags;
       return true;
     }
     return false;
