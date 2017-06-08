@@ -532,7 +532,17 @@ nsresult ChannelMediaResource::Open(nsIStreamListener **aStreamListener)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-  nsresult rv = mCacheStream.Init();
+  int64_t cl = -1;
+  if (mChannel) {
+    nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
+    if (hc) {
+      if (NS_FAILED(hc->GetContentLength(&cl))) {
+        cl = -1;
+      }
+    }
+  }
+
+  nsresult rv = mCacheStream.Init(cl);
   if (NS_FAILED(rv))
     return rv;
   NS_ASSERTION(mOffset == 0, "Who set mOffset already?");

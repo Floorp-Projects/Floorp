@@ -128,9 +128,15 @@ public:
   typedef MediaCacheStream::BlockList BlockList;
   static const int64_t BLOCK_SIZE = MediaCacheStream::BLOCK_SIZE;
 
-  // Get an instance of the file-backed MediaCache.
-  // Returns nullptr if initialization failed.
-  static MediaCache* GetMediaCache();
+  // Get an instance of a MediaCache (or nullptr if initialization failed).
+  // aContentLength is the content length if known already, otherwise -1.
+  // If the length is known and considered small enough, a discrete MediaCache
+  // with memory backing will be given. Otherwise the one MediaCache with
+  // file backing will be provided.
+  // The caller adds a reference to the MediaCache object by calling
+  // OpenStream(); and later must release it by calling ReleaseStream() and
+  // then MaybeShutdown().
+  static MediaCache* GetMediaCache(int64_t aContentLength);
 
   // Shut down the cache if it's no longer needed. We shut down
   // the cache as soon as there are no streams. This means that during
@@ -733,7 +739,7 @@ MediaCache::ShutdownAndDestroyThis()
 }
 
 /* static */ MediaCache*
-MediaCache::GetMediaCache()
+MediaCache::GetMediaCache(int64_t aContentLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   if (gMediaCache) {
@@ -2538,7 +2544,7 @@ MediaCacheStream::ReadFromCache(char* aBuffer, int64_t aOffset, int64_t aCount)
 }
 
 nsresult
-MediaCacheStream::Init()
+MediaCacheStream::Init(int64_t aContentLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
@@ -2546,7 +2552,11 @@ MediaCacheStream::Init()
     return NS_OK;
   }
 
-  mMediaCache = MediaCache::GetMediaCache();
+  if (aContentLength > 0) {
+    mStreamLength = aContentLength;
+  }
+
+  mMediaCache = MediaCache::GetMediaCache(aContentLength);
   if (!mMediaCache) {
     return NS_ERROR_FAILURE;
   }
@@ -2564,9 +2574,12 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
     return NS_OK;
   }
 
-  nsresult rv = Init();
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ASSERTION(aOriginal->mMediaCache, "Don't clone an uninitialized stream");
+  // Use the same MediaCache as our clone.
+  mMediaCache = aOriginal->mMediaCache;
+
+  mMediaCache->OpenStream(this);
+
   mResourceID = aOriginal->mResourceID;
 
   // Grab cache blocks from aOriginal as readahead blocks for our stream
