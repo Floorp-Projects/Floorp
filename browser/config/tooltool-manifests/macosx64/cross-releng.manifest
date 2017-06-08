@@ -42,9 +42,9 @@
     "filename": "dmg.tar.xz"
   },
   {
-    "version": "rustc 1.17.0 (56124baa9 2017-04-24) repack with cargo 0.19.0-beta.1 (03efb7fc8 2017-04-23)",
-    "size": 116855168,
-    "digest": "89e414870a398369c745e38e5ce757b98c8f0bbde0ea92ca9fa0a8a72d970e8575fe5493128c1b6b1134ed336c1a7265b1d1ea77fe3673e73a87d0b774f10fac",
+    "version": "rustc 1.18.0 (03fc9d622 2017-06-06) repack",
+    "size": 141005088,
+    "digest": "8c915059da3df885c4b26efa25431719a41a108adbc900f49ca51419fee30480e32ac99aeb398954722c10b72dea6d1d39fc122846c86194b12063c9b85da47d",
     "algorithm": "sha512",
     "filename": "rustc.tar.xz",
     "unpack": true
