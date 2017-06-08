@@ -38,6 +38,7 @@ android {
 
     dexOptions {
         javaMaxHeapSize "2g"
+        jumboMode = true
     }
 
     lintOptions {
@@ -45,14 +46,6 @@ android {
     }
 
     buildTypes {
-        // Bug 1367768: With current code, we need jumboMode for a string table larger than 65536.
-        // To not interrupt release 55 nightly to beta merge, jumboMode only applies to debug now
-        // and will apply to all builds very soon (Mid June 2017, see bug 1370156).
-        debug {
-            dexOptions {
-                jumboMode = true
-            }
-        }
         // We have the following difficult situation.  Minification (Proguard) is only available per
         // Android-Gradle `buildType`.  Instrumentation (Robocop) is only available for exactly one
         // `buildType` (see Android-Gradle `testBuildType`, which defaults to "debug").  Local
