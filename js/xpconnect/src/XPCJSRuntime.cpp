@@ -111,23 +111,6 @@ const char* const XPCJSRuntime::mStrings[] = {
 
 /***************************************************************************/
 
-static mozilla::Atomic<bool> sDiscardSystemSource(false);
-
-bool
-xpc::ShouldDiscardSystemSource() { return sDiscardSystemSource; }
-
-#ifdef DEBUG
-static mozilla::Atomic<bool> sExtraWarningsForSystemJS(false);
-bool xpc::ExtraWarningsForSystemJS() { return sExtraWarningsForSystemJS; }
-#else
-bool xpc::ExtraWarningsForSystemJS() { return false; }
-#endif
-
-static mozilla::Atomic<bool> sSharedMemoryEnabled(false);
-
-bool
-xpc::SharedMemoryEnabled() { return sSharedMemoryEnabled; }
-
 // *Some* NativeSets are referenced from mClassInfo2NativeSetMap.
 // *All* NativeSets are referenced from mNativeSetMap.
 // So, in mClassInfo2NativeSetMap we just clear references to the unmarked.
@@ -1053,102 +1036,6 @@ CompartmentPrivate::SizeOfIncludingThis(MallocSizeOf mallocSizeOf)
 
 /***************************************************************************/
 
-#define JS_OPTIONS_DOT_STR "javascript.options."
-
-static void
-ReloadPrefsCallback(const char* pref, void* data)
-{
-    JSContext* cx = XPCJSContext::Get()->Context();
-
-    bool safeMode = false;
-    nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
-    if (xr) {
-        xr->GetInSafeMode(&safeMode);
-    }
-
-    bool useBaseline = Preferences::GetBool(JS_OPTIONS_DOT_STR "baselinejit") && !safeMode;
-    bool useIon = Preferences::GetBool(JS_OPTIONS_DOT_STR "ion") && !safeMode;
-    bool useAsmJS = Preferences::GetBool(JS_OPTIONS_DOT_STR "asmjs") && !safeMode;
-    bool useWasm = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm") && !safeMode;
-    bool useWasmBaseline = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_baselinejit") && !safeMode;
-    bool throwOnAsmJSValidationFailure = Preferences::GetBool(JS_OPTIONS_DOT_STR
-                                                              "throw_on_asmjs_validation_failure");
-    bool useNativeRegExp = Preferences::GetBool(JS_OPTIONS_DOT_STR "native_regexp") && !safeMode;
-
-    bool parallelParsing = Preferences::GetBool(JS_OPTIONS_DOT_STR "parallel_parsing");
-    bool offthreadIonCompilation = Preferences::GetBool(JS_OPTIONS_DOT_STR
-                                                       "ion.offthread_compilation");
-    bool useBaselineEager = Preferences::GetBool(JS_OPTIONS_DOT_STR
-                                                 "baselinejit.unsafe_eager_compilation");
-    bool useIonEager = Preferences::GetBool(JS_OPTIONS_DOT_STR "ion.unsafe_eager_compilation");
-#ifdef DEBUG
-    bool fullJitDebugChecks = Preferences::GetBool(JS_OPTIONS_DOT_STR "jit.full_debug_checks");
-#endif
-
-    int32_t baselineThreshold = Preferences::GetInt(JS_OPTIONS_DOT_STR "baselinejit.threshold", -1);
-    int32_t ionThreshold = Preferences::GetInt(JS_OPTIONS_DOT_STR "ion.threshold", -1);
-
-    sDiscardSystemSource = Preferences::GetBool(JS_OPTIONS_DOT_STR "discardSystemSource");
-
-    bool useAsyncStack = Preferences::GetBool(JS_OPTIONS_DOT_STR "asyncstack");
-
-    bool throwOnDebuggeeWouldRun = Preferences::GetBool(JS_OPTIONS_DOT_STR
-                                                        "throw_on_debuggee_would_run");
-
-    bool dumpStackOnDebuggeeWouldRun = Preferences::GetBool(JS_OPTIONS_DOT_STR
-                                                            "dump_stack_on_debuggee_would_run");
-
-    bool werror = Preferences::GetBool(JS_OPTIONS_DOT_STR "werror");
-
-    bool extraWarnings = Preferences::GetBool(JS_OPTIONS_DOT_STR "strict");
-
-    sSharedMemoryEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "shared_memory");
-
-#ifdef DEBUG
-    sExtraWarningsForSystemJS = Preferences::GetBool(JS_OPTIONS_DOT_STR "strict.debug");
-#endif
-
-#ifdef JS_GC_ZEAL
-    int32_t zeal = Preferences::GetInt(JS_OPTIONS_DOT_STR "gczeal", -1);
-    int32_t zeal_frequency =
-        Preferences::GetInt(JS_OPTIONS_DOT_STR "gczeal.frequency",
-                            JS_DEFAULT_ZEAL_FREQ);
-    if (zeal >= 0) {
-        JS_SetGCZeal(cx, (uint8_t)zeal, zeal_frequency);
-    }
-#endif // JS_GC_ZEAL
-
-#ifdef FUZZING
-    bool fuzzingEnabled = Preferences::GetBool("fuzzing.enabled");
-#endif
-
-    JS::ContextOptionsRef(cx).setBaseline(useBaseline)
-                             .setIon(useIon)
-                             .setAsmJS(useAsmJS)
-                             .setWasm(useWasm)
-                             .setWasmAlwaysBaseline(useWasmBaseline)
-                             .setThrowOnAsmJSValidationFailure(throwOnAsmJSValidationFailure)
-                             .setNativeRegExp(useNativeRegExp)
-                             .setAsyncStack(useAsyncStack)
-                             .setThrowOnDebuggeeWouldRun(throwOnDebuggeeWouldRun)
-                             .setDumpStackOnDebuggeeWouldRun(dumpStackOnDebuggeeWouldRun)
-                             .setWerror(werror)
-#ifdef FUZZING
-                             .setFuzzing(fuzzingEnabled)
-#endif
-                             .setExtraWarnings(extraWarnings);
-
-    JS_SetParallelParsingEnabled(cx, parallelParsing);
-    JS_SetOffthreadIonCompilationEnabled(cx, offthreadIonCompilation);
-    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_WARMUP_TRIGGER,
-                                  useBaselineEager ? 0 : baselineThreshold);
-    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_ION_WARMUP_TRIGGER,
-                                  useIonEager ? 0 : ionThreshold);
-#ifdef DEBUG
-    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_FULL_DEBUG_CHECKS, fullJitDebugChecks);
-#endif
-}
-
 void
 XPCJSRuntime::Shutdown(JSContext* cx)
 {
@@ -1188,13 +1075,6 @@ XPCJSRuntime::Shutdown(JSContext* cx)
 
     delete mDyingWrappedNativeProtoMap;
     mDyingWrappedNativeProtoMap = nullptr;
-
-    Preferences::UnregisterPrefixCallback(ReloadPrefsCallback,
-                                          JS_OPTIONS_DOT_STR);
-
-#ifdef FUZZING
-    Preferences::UnregisterCallback(ReloadPrefsCallback, "fuzzing.enabled");
-#endif
 
     CycleCollectedJSRuntime::Shutdown(cx);
 }
@@ -3009,15 +2889,6 @@ XPCJSRuntime::Initialize(JSContext* cx)
     RegisterJSMainRuntimeCompartmentsSystemDistinguishedAmount(JSMainRuntimeCompartmentsSystemDistinguishedAmount);
     RegisterJSMainRuntimeCompartmentsUserDistinguishedAmount(JSMainRuntimeCompartmentsUserDistinguishedAmount);
     mozilla::RegisterJSSizeOfTab(JSSizeOfTab);
-
-    // Watch for the JS boolean options.
-    ReloadPrefsCallback(nullptr, nullptr);
-    Preferences::RegisterPrefixCallback(ReloadPrefsCallback,
-                                        JS_OPTIONS_DOT_STR);
-
-#ifdef FUZZING
-    Preferences::RegisterCallback(ReloadPrefsCallback, "fuzzing.enabled");
-#endif
 }
 
 bool
