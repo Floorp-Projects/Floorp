@@ -696,10 +696,24 @@ TimeoutManager::RunTimeout(const TimeStamp& aNow, const TimeStamp& aTargetDeadli
       }
       runIter.UpdateIterator();
 
+      // We should only execute callbacks for the set of expired Timeout
+      // objects we computed above.
       if (timeout->mFiringId != firingId) {
-        // We skip the timeout since it's on the list to run at another
-        // depth.
-        continue;
+        // If the FiringId does not match, but is still valid, then this is
+        // a TImeout for another RunTimeout() on the call stack.  Just
+        // skip it.
+        if (IsValidFiringId(timeout->mFiringId)) {
+          continue;
+        }
+
+        // If, however, the FiringId is invalid then we have reached Timeout
+        // objects beyond the list we calculated above.  This can happen
+        // if the Timeout just beyond our last expired Timeout is cancelled
+        // by one of the callbacks we've just executed.  In this case we
+        // should just stop iterating.  We're done.
+        else {
+          break;
+        }
       }
 
       MOZ_ASSERT_IF(mWindow.IsFrozen(), mWindow.IsSuspended());
