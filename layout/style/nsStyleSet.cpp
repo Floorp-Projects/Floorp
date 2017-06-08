@@ -2402,7 +2402,7 @@ nsStyleSet::RecordShadowStyleChange(ShadowRoot* aShadowRoot)
 void
 nsStyleSet::InvalidateStyleForCSSRuleChanges()
 {
-  MOZ_ASSERT_IF(mStylesHaveChanged, mChangedScopeStyleRoots.IsEmpty());
+  MOZ_ASSERT(!mStylesHaveChanged || mChangedScopeStyleRoots.IsEmpty());
 
   AutoTArray<RefPtr<mozilla::dom::Element>, 1> scopeRoots;
   mChangedScopeStyleRoots.SwapElements(scopeRoots);

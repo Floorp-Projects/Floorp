@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {ProfileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {});
-
 const TEST_STORE_FILE_NAME = "test-profile.json";
 
 const TEST_ADDRESS_1 = {
@@ -32,22 +30,79 @@ const TEST_ADDRESS_3 = {
   "postal-code": "12345",
 };
 
+const TEST_ADDRESS_4 = {
+  "given-name": "Timothy",
+  "additional-name": "John",
+  "family-name": "Berners-Lee",
+  organization: "World Wide Web Consortium",
+};
+
 const TEST_ADDRESS_WITH_INVALID_FIELD = {
   "street-address": "Another Address",
   invalidField: "INVALID",
 };
 
-let prepareTestRecords = async function(path) {
-  let profileStorage = new ProfileStorage(path);
-  await profileStorage.initialize();
-
-  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
-                                          (subject, data) => data == "add");
-  do_check_true(profileStorage.addresses.add(TEST_ADDRESS_1));
-  await onChanged;
-  do_check_true(profileStorage.addresses.add(TEST_ADDRESS_2));
-  await profileStorage._saveImmediately();
-};
+const MERGE_TESTCASES = [
+  {
+    description: "Merge a superset",
+    addressInStorage: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue",
+      "tel": "1-650-903-0800",
+    },
+    addressToMerge: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue",
+      "tel": "1-650-903-0800",
+      country: "US",
+    },
+    expectedAddress: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue",
+      "tel": "1-650-903-0800",
+      country: "US",
+    },
+  },
+  {
+    description: "Merge a subset",
+    addressInStorage: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue",
+      "tel": "1-650-903-0800",
+      country: "US",
+    },
+    addressToMerge: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue",
+      "tel": "1-650-903-0800",
+    },
+    expectedAddress: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue",
+      "tel": "1-650-903-0800",
+      country: "US",
+    },
+  },
+  {
+    description: "Merge an address with partial overlaps",
+    addressInStorage: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue",
+      "tel": "1-650-903-0800",
+    },
+    addressToMerge: {
+      "street-address": "331 E. Evelyn Avenue",
+      "tel": "1-650-903-0800",
+      country: "US",
+    },
+    expectedAddress: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue",
+      "tel": "1-650-903-0800",
+      country: "US",
+    },
+  },
+];
 
 let do_check_record_matches = (recordWithMeta, record) => {
   for (let key in record) {
@@ -56,9 +111,7 @@ let do_check_record_matches = (recordWithMeta, record) => {
 };
 
 add_task(async function test_initialize() {
-  let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  let profileStorage = new ProfileStorage(path);
-  await profileStorage.initialize();
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME);
 
   do_check_eq(profileStorage._store.data.version, 1);
   do_check_eq(profileStorage._store.data.addresses.length, 0);
@@ -68,18 +121,14 @@ add_task(async function test_initialize() {
 
   await profileStorage._saveImmediately();
 
-  profileStorage = new ProfileStorage(path);
-  await profileStorage.initialize();
+  profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME);
 
   Assert.deepEqual(profileStorage._store.data, data);
 });
 
 add_task(async function test_getAll() {
-  let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  await prepareTestRecords(path);
-
-  let profileStorage = new ProfileStorage(path);
-  await profileStorage.initialize();
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
+                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
 
   let addresses = profileStorage.addresses.getAll();
 
@@ -104,11 +153,8 @@ add_task(async function test_getAll() {
 });
 
 add_task(async function test_get() {
-  let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  await prepareTestRecords(path);
-
-  let profileStorage = new ProfileStorage(path);
-  await profileStorage.initialize();
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
+                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
 
   let addresses = profileStorage.addresses.getAll();
   let guid = addresses[0].guid;
@@ -124,11 +170,8 @@ add_task(async function test_get() {
 });
 
 add_task(async function test_getByFilter() {
-  let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  await prepareTestRecords(path);
-
-  let profileStorage = new ProfileStorage(path);
-  await profileStorage.initialize();
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
+                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
 
   let filter = {info: {fieldName: "street-address"}, searchString: "Some"};
   let addresses = profileStorage.addresses.getByFilter(filter);
@@ -161,11 +204,8 @@ add_task(async function test_getByFilter() {
 });
 
 add_task(async function test_add() {
-  let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  await prepareTestRecords(path);
-
-  let profileStorage = new ProfileStorage(path);
-  await profileStorage.initialize();
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
+                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
 
   let addresses = profileStorage.addresses.getAll();
 
@@ -186,11 +226,8 @@ add_task(async function test_add() {
 });
 
 add_task(async function test_update() {
-  let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  await prepareTestRecords(path);
-
-  let profileStorage = new ProfileStorage(path);
-  await profileStorage.initialize();
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
+                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
 
   let addresses = profileStorage.addresses.getAll();
   let guid = addresses[1].guid;
@@ -204,9 +241,6 @@ add_task(async function test_update() {
   profileStorage.addresses.update(guid, TEST_ADDRESS_3);
   await onChanged;
   await profileStorage._saveImmediately();
-
-  profileStorage = new ProfileStorage(path);
-  await profileStorage.initialize();
 
   let address = profileStorage.addresses.get(guid);
 
@@ -226,11 +260,8 @@ add_task(async function test_update() {
 });
 
 add_task(async function test_notifyUsed() {
-  let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  await prepareTestRecords(path);
-
-  let profileStorage = new ProfileStorage(path);
-  await profileStorage.initialize();
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
+                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
 
   let addresses = profileStorage.addresses.getAll();
   let guid = addresses[1].guid;
@@ -244,9 +275,6 @@ add_task(async function test_notifyUsed() {
   await onChanged;
   await profileStorage._saveImmediately();
 
-  profileStorage = new ProfileStorage(path);
-  await profileStorage.initialize();
-
   let address = profileStorage.addresses.get(guid);
 
   do_check_eq(address.timesUsed, timesUsed + 1);
@@ -257,11 +285,8 @@ add_task(async function test_notifyUsed() {
 });
 
 add_task(async function test_remove() {
-  let path = getTempFile(TEST_STORE_FILE_NAME).path;
-  await prepareTestRecords(path);
-
-  let profileStorage = new ProfileStorage(path);
-  await profileStorage.initialize();
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
+                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
 
   let addresses = profileStorage.addresses.getAll();
   let guid = addresses[1].guid;
@@ -275,12 +300,66 @@ add_task(async function test_remove() {
   await onChanged;
   await profileStorage._saveImmediately();
 
-  profileStorage = new ProfileStorage(path);
-  await profileStorage.initialize();
-
   addresses = profileStorage.addresses.getAll();
 
   do_check_eq(addresses.length, 1);
 
   do_check_eq(profileStorage.addresses.get(guid), null);
+});
+
+MERGE_TESTCASES.forEach((testcase) => {
+  add_task(async function test_merge() {
+    do_print("Starting testcase: " + testcase.description);
+    let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
+                                                  [testcase.addressInStorage]);
+    let addresses = profileStorage.addresses.getAll();
+    // Merge address and verify the guid in notifyObservers subject
+    let onMerged = TestUtils.topicObserved(
+      "formautofill-storage-changed",
+      (subject, data) =>
+        data == "merge" && subject.QueryInterface(Ci.nsISupportsString).data == addresses[0].guid
+    );
+    let timeLastModified = addresses[0].timeLastModified;
+    Assert.equal(
+      profileStorage.addresses.mergeIfPossible(addresses[0].guid, testcase.addressToMerge),
+      true);
+    await onMerged;
+    addresses = profileStorage.addresses.getAll();
+    Assert.equal(addresses.length, 1);
+    Assert.notEqual(addresses[0].timeLastModified, timeLastModified);
+    do_check_record_matches(addresses[0], testcase.expectedAddress);
+  });
+});
+
+add_task(async function test_merge_same_address() {
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, [TEST_ADDRESS_1]);
+  let addresses = profileStorage.addresses.getAll();
+  let timeLastModified = addresses[0].timeLastModified;
+  // Merge same address will still return true but it won't update timeLastModified.
+  Assert.equal(profileStorage.addresses.mergeIfPossible(addresses[0].guid, TEST_ADDRESS_1), true);
+  Assert.equal(addresses[0].timeLastModified, timeLastModified);
+});
+
+add_task(async function test_merge_unable_merge() {
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
+                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
+
+  let addresses = profileStorage.addresses.getAll();
+  // Unable to merge because of conflict
+  do_check_eq(profileStorage.addresses.mergeIfPossible(addresses[1].guid, TEST_ADDRESS_3), false);
+
+  // Unable to merge because no overlap
+  do_check_eq(profileStorage.addresses.mergeIfPossible(addresses[1].guid, TEST_ADDRESS_4), false);
+});
+
+add_task(async function test_mergeToStorage() {
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
+                                                [TEST_ADDRESS_1, TEST_ADDRESS_2]);
+  // Merge an address to storage
+  let anotherAddress = profileStorage.addresses._clone(TEST_ADDRESS_2);
+  profileStorage.addresses.add(anotherAddress);
+  anotherAddress.email = "timbl@w3.org";
+  do_check_eq(profileStorage.addresses.mergeToStorage(anotherAddress), true);
+  do_check_eq(profileStorage.addresses.getAll()[1].email, anotherAddress.email);
+  do_check_eq(profileStorage.addresses.getAll()[2].email, anotherAddress.email);
 });

@@ -658,7 +658,7 @@ nsSVGEffects::EffectProperties::GetMaskFrames()
   for (size_t i = 0; i < props.Length(); i++) {
     nsSVGMaskFrame* maskFrame = static_cast<nsSVGMaskFrame*>(
       props[i]->GetReferencedFrame(LayoutFrameType::SVGMask, &ok));
-    MOZ_ASSERT_IF(maskFrame, ok);
+    MOZ_ASSERT(!maskFrame || ok);
     result.AppendElement(maskFrame);
   }
 

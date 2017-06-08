@@ -2,7 +2,9 @@
  * Provides infrastructure for automated formautofill components tests.
  */
 
-/* exported getTempFile, loadFormAutofillContent, runHeuristicsTest, sinon */
+/* exported getTempFile, loadFormAutofillContent, runHeuristicsTest, sinon,
+ *          initProfileStorage
+ */
 
 "use strict";
 
@@ -79,6 +81,26 @@ function getTempFile(leafName) {
   return file;
 }
 
+async function initProfileStorage(fileName, records) {
+  let {ProfileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {});
+  let path = getTempFile(fileName).path;
+  let profileStorage = new ProfileStorage(path);
+  await profileStorage.initialize();
+
+  if (!records || !Array.isArray(records)) {
+    return profileStorage;
+  }
+
+  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
+                                          (subject, data) => data == "add");
+  for (let record of records) {
+    do_check_true(profileStorage.addresses.add(record));
+    await onChanged;
+  }
+  await profileStorage._saveImmediately();
+  return profileStorage;
+}
+
 function runHeuristicsTest(patterns, fixturePathPrefix) {
   Cu.import("resource://gre/modules/FormLikeFactory.jsm");
   Cu.import("resource://formautofill/FormAutofillHeuristics.jsm");
@@ -115,7 +137,7 @@ function runHeuristicsTest(patterns, fixturePathPrefix) {
   });
 }
 
-add_task(function* head_initialize() {
+add_task(async function head_initialize() {
   Services.prefs.setBoolPref("extensions.formautofill.experimental", true);
   Services.prefs.setBoolPref("extensions.formautofill.heuristics.enabled", true);
   Services.prefs.setBoolPref("dom.forms.autocomplete.experimental", true);

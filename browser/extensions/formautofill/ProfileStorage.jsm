@@ -379,6 +379,12 @@ class AutofillRecords {
 
   // An interface to be inherited.
   _recordWriteProcessor(record) {}
+
+  // An interface to be inherited.
+  mergeIfPossible(guid, record) {}
+
+  // An interface to be inherited.
+  mergeToStorage(targetRecord) {}
 }
 
 class Addresses extends AutofillRecords {
@@ -453,6 +459,85 @@ class Addresses extends AutofillRecords {
         profile["street-address"] = addressLines.join("\n");
       }
     }
+  }
+
+  /**
+   * Merge new address into the specified address if mergeable.
+   *
+   * @param  {string} guid
+   *         Indicates which address to merge.
+   * @param  {Object} address
+   *         The new address used to merge into the old one.
+   * @returns {boolean}
+   *          Return true if address is merged into target with specific guid or false if not.
+   */
+  mergeIfPossible(guid, address) {
+    this.log.debug("mergeIfPossible:", guid, address);
+
+    let addressFound = this._findByGUID(guid);
+    if (!addressFound) {
+      throw new Error("No matching address.");
+    }
+
+    let addressToMerge = this._clone(address);
+    this._normalizeRecord(addressToMerge);
+    let hasMatchingField = false;
+
+    for (let field of this.VALID_FIELDS) {
+      if (addressToMerge[field] !== undefined && addressFound[field] !== undefined) {
+        if (addressToMerge[field] != addressFound[field]) {
+          this.log.debug("Conflicts: field", field, "has different value.");
+          return false;
+        }
+        hasMatchingField = true;
+      }
+    }
+
+    // We merge the address only when at least one field has the same value.
+    if (!hasMatchingField) {
+      this.log.debug("Unable to merge because no field has the same value");
+      return false;
+    }
+
+    // Early return if the data is the same.
+    let exactlyMatch = this.VALID_FIELDS.every((field) =>
+      addressFound[field] === addressToMerge[field]
+    );
+    if (exactlyMatch) {
+      return true;
+    }
+
+    for (let field in addressToMerge) {
+      if (this.VALID_FIELDS.includes(field)) {
+        addressFound[field] = addressToMerge[field];
+      }
+    }
+
+    addressFound.timeLastModified = Date.now();
+    this._store.saveSoon();
+    let str = Cc["@mozilla.org/supports-string;1"]
+                 .createInstance(Ci.nsISupportsString);
+    str.data = guid;
+    Services.obs.notifyObservers(str, "formautofill-storage-changed", "merge");
+    return true;
+  }
+
+  /**
+   * Merge the address if storage has multiple mergeable records.
+   * @param {Object} targetAddress
+   *        The address for merge.
+   * @returns {boolean}
+   *          Return true if the target address is mergeable or false if not.
+   */
+  mergeToStorage(targetAddress) {
+    let merged = false;
+    for (let address of this._store.data[this._collectionName]) {
+      if (this.mergeIfPossible(address.guid, targetAddress)) {
+        merged = true;
+      }
+    }
+    this.log.debug("Existing records matching and merging is", merged);
+    return merged;
   }
 }
 

@@ -70,8 +70,7 @@ nsNativeThemeGTK::nsNativeThemeGTK()
     mozilla::services::GetObserverService();
   obsServ->AddObserver(this, "xpcom-shutdown", false);
 
-  memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
-  memset(mSafeWidgetStates, 0, sizeof(mSafeWidgetStates));
+  ThemeChanged();
 }
 
 nsNativeThemeGTK::~nsNativeThemeGTK() {
@@ -115,10 +114,12 @@ static bool IsFrameContentNodeInNamespace(nsIFrame *aFrame, uint32_t aNamespace)
 }
 
 static bool IsWidgetTypeDisabled(uint8_t* aDisabledVector, uint8_t aWidgetType) {
+  MOZ_ASSERT(aWidgetType < ThemeWidgetType_COUNT);
   return (aDisabledVector[aWidgetType >> 3] & (1 << (aWidgetType & 7))) != 0;
 }
 
 static void SetWidgetTypeDisabled(uint8_t* aDisabledVector, uint8_t aWidgetType) {
+  MOZ_ASSERT(aWidgetType < ThemeWidgetType_COUNT);
   aDisabledVector[aWidgetType >> 3] |= (1 << (aWidgetType & 7));
 }
 
@@ -137,7 +138,8 @@ static bool IsWidgetStateSafe(uint8_t* aSafeVector,
                                 uint8_t aWidgetType,
                                 GtkWidgetState *aWidgetState)
 {
-  uint8_t key = GetWidgetStateKey(aWidgetType, aWidgetState);
+  MOZ_ASSERT(aWidgetType < ThemeWidgetType_COUNT);
+  uint16_t key = GetWidgetStateKey(aWidgetType, aWidgetState);
   return (aSafeVector[key >> 3] & (1 << (key & 7))) != 0;
 }
 
@@ -145,7 +147,8 @@ static void SetWidgetStateSafe(uint8_t *aSafeVector,
                                uint8_t aWidgetType,
                                GtkWidgetState *aWidgetState)
 {
-  uint8_t key = GetWidgetStateKey(aWidgetType, aWidgetState);
+  MOZ_ASSERT(aWidgetType < ThemeWidgetType_COUNT);
+  uint16_t key = GetWidgetStateKey(aWidgetType, aWidgetState);
   aSafeVector[key >> 3] |= (1 << (key & 7));
 }
 
@@ -1258,6 +1261,34 @@ nsNativeThemeGTK::NativeThemeToGtkTheme(uint8_t aWidgetType, nsIFrame* aFrame)
   return gtkWidgetType;
 }
 
+void
+nsNativeThemeGTK::GetCachedWidgetBorder(nsIFrame* aFrame, uint8_t aWidgetType,
+                                        GtkTextDirection aDirection,
+                                        nsIntMargin* aResult)
+{
+  aResult->SizeTo(0, 0, 0, 0);
+
+  WidgetNodeType gtkWidgetType;
+  gint unusedFlags;
+  if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
+                           &unusedFlags)) {
+    MOZ_ASSERT(0 <= gtkWidgetType && gtkWidgetType < MOZ_GTK_WIDGET_NODE_COUNT);
+    uint8_t cacheIndex = gtkWidgetType / 8;
+    uint8_t cacheBit = 1u << (gtkWidgetType % 8);
+
+    if (mBorderCacheValid[cacheIndex] & cacheBit) {
+      *aResult = mBorderCache[gtkWidgetType];
+    } else {
+      moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
+                                &aResult->right, &aResult->bottom, aDirection);
+      if (aWidgetType != MOZ_GTK_DROPDOWN) { // depends on aDirection
+        mBorderCacheValid[cacheIndex] |= cacheBit;
+        mBorderCache[gtkWidgetType] = *aResult;
+      }
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
                                   uint8_t aWidgetType, nsIntMargin* aResult)
@@ -1333,14 +1364,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
     MOZ_FALLTHROUGH;
   default:
     {
-      WidgetNodeType gtkWidgetType;
-      gint unusedFlags;
-      if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
-                               &unusedFlags)) {
-        moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
-                                  &aResult->right, &aResult->bottom, direction,
-                                  IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XHTML));
-      }
+      GetCachedWidgetBorder(aFrame, aWidgetType, direction, aResult);
     }
   }
 
@@ -1385,14 +1409,8 @@ nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
         if (!IsRegularMenuItem(aFrame))
           return false;
 
-        aResult->SizeTo(0, 0, 0, 0);
-        WidgetNodeType gtkWidgetType;
-        if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nullptr,
-                                 nullptr)) {
-          moz_gtk_get_widget_border(gtkWidgetType, &aResult->left, &aResult->top,
-                                    &aResult->right, &aResult->bottom, GetTextDirection(aFrame),
-                                    IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XHTML));
-        }
+        GetCachedWidgetBorder(aFrame, aWidgetType, GetTextDirection(aFrame),
+                              aResult);
 
         gint horizontal_padding;
 
@@ -1777,6 +1795,8 @@ NS_IMETHODIMP
 nsNativeThemeGTK::ThemeChanged()
 {
   memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
+  memset(mSafeWidgetStates, 0, sizeof(mSafeWidgetStates));
+  memset(mBorderCacheValid, 0, sizeof(mBorderCacheValid));
   return NS_OK;
 }
 

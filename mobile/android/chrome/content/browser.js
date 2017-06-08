@@ -3439,10 +3439,13 @@ nsBrowserAccess.prototype = {
   },
 
   openURIInFrame: function browser_openURIInFrame(aURI, aParams, aWhere, aFlags,
-                                                  aNextTabParentId) {
+                                                  aNextTabParentId, aName) {
     // We currently ignore aNextTabParentId on mobile.  This needs to change
     // when Fennec starts to support e10s.  Assertions will fire if this code
     // isn't fixed by then.
+    //
+    // We also ignore aName if it is set, as it is currently only used on the
+    // e10s codepath.
     let browser = this._getBrowser(aURI, null, aWhere, aFlags);
     if (browser)
       return browser.QueryInterface(Ci.nsIFrameLoaderOwner);

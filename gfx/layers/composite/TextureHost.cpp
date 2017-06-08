@@ -557,30 +557,80 @@ BufferTextureHost::Unlock()
 }
 
 void
+BufferTextureHost::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
+                                  const std::function<wr::ImageKey()>& aImageKeyAllocator)
+{
+  MOZ_ASSERT(aImageKeys.IsEmpty());
+
+  if (GetFormat() != gfx::SurfaceFormat::YUV) {
+    // 1 image key
+    aImageKeys.AppendElement(aImageKeyAllocator());
+    MOZ_ASSERT(aImageKeys.Length() == 1);
+  } else {
+    // 3 image key
+    aImageKeys.AppendElement(aImageKeyAllocator());
+    aImageKeys.AppendElement(aImageKeyAllocator());
+    aImageKeys.AppendElement(aImageKeyAllocator());
+    MOZ_ASSERT(aImageKeys.Length() == 3);
+  }
+}
+
+void
 BufferTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
                               Range<const wr::ImageKey>& aImageKeys,
                               const wr::ExternalImageId& aExtID)
 {
-  MOZ_ASSERT(aImageKeys.length() == 1);
-  // XXX handling YUV
-  gfx::SurfaceFormat wrFormat =
-      (GetFormat() == gfx::SurfaceFormat::YUV) ? gfx::SurfaceFormat::B8G8R8A8
-                                               : GetFormat();
-  gfx::SurfaceFormat format = GetFormat();
-  uint32_t wrStride = 0;
+  if (GetFormat() != gfx::SurfaceFormat::YUV) {
+    MOZ_ASSERT(aImageKeys.length() == 1);
 
-  if (format == gfx::SurfaceFormat::YUV) {
-    // XXX this stride is used until yuv image rendering by webrender is used.
-    // Software converted RGB buffers strides are aliened to 16
-    wrStride = gfx::GetAlignedStride<16>(GetSize().width, BytesPerPixel(gfx::SurfaceFormat::B8G8R8A8));
+    wr::ImageDescriptor descriptor(GetSize(),
+                                   ImageDataSerializer::ComputeRGBStride(GetFormat(), GetSize().width),
+                                   GetFormat());
+    aAPI->AddExternalImageBuffer(aImageKeys[0], descriptor, aExtID);
   } else {
-    wrStride = ImageDataSerializer::ComputeRGBStride(format, GetSize().width);
-  }
+    MOZ_ASSERT(aImageKeys.length() == 3);
 
-  wr::ImageDescriptor descriptor(GetSize(), wrStride, wrFormat);
-  aAPI->AddExternalImageBuffer(aImageKeys[0],
-                               descriptor,
-                               aExtID);
+    const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
+    wr::ImageDescriptor yDescriptor(desc.ySize(), desc.ySize().width, gfx::SurfaceFormat::A8);
+    wr::ImageDescriptor cbcrDescriptor(desc.cbCrSize(), desc.cbCrSize().width, gfx::SurfaceFormat::A8);
+    aAPI->AddExternalImage(aImageKeys[0],
+                           yDescriptor,
+                           aExtID,
+                           WrExternalImageBufferType::ExternalBuffer,
+                           0);
+    aAPI->AddExternalImage(aImageKeys[1],
+                           cbcrDescriptor,
+                           aExtID,
+                           WrExternalImageBufferType::ExternalBuffer,
+                           1);
+    aAPI->AddExternalImage(aImageKeys[2],
+                           cbcrDescriptor,
+                           aExtID,
+                           WrExternalImageBufferType::ExternalBuffer,
+                           2);
+  }
+}
+
+void
+BufferTextureHost::PushExternalImage(wr::DisplayListBuilder& aBuilder,
+                                     const WrRect& aBounds,
+                                     const WrClipRegionToken aClip,
+                                     wr::ImageRendering aFilter,
+                                     Range<const wr::ImageKey>& aImageKeys)
+{
+  if (GetFormat() != gfx::SurfaceFormat::YUV) {
+    MOZ_ASSERT(aImageKeys.length() == 1);
+    aBuilder.PushImage(aBounds, aClip, aFilter, aImageKeys[0]);
+  } else {
+    MOZ_ASSERT(aImageKeys.length() == 3);
+    aBuilder.PushYCbCrPlanarImage(aBounds,
+                                  aClip,
+                                  aImageKeys[0],
+                                  aImageKeys[1],
+                                  aImageKeys[2],
+                                  WrYuvColorSpace::Rec601,
+                                  aFilter);
+  }
 }
 
 void

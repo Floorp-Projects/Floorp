@@ -1447,8 +1447,8 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       }
     }
     for (size_t j = lazyRangeStart; j < i; ++j) {
-      MOZ_ASSERT_IF(aChangeList[j].mContent->GetPrimaryFrame(),
-                    !aChangeList[j].mContent->HasFlag(NODE_NEEDS_FRAME));
+      MOZ_ASSERT(!aChangeList[j].mContent->GetPrimaryFrame() ||
+                 !aChangeList[j].mContent->HasFlag(NODE_NEEDS_FRAME));
     }
     if (i == aChangeList.Length()) {
       break;

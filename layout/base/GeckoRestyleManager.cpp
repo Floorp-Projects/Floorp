@@ -1087,7 +1087,7 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
   , mLoggingDepth(aRestyleTracker.LoggingDepth() + 1)
 #endif
 {
-  MOZ_ASSERT_IF(mContent, !mContent->IsStyledByServo());
+  MOZ_ASSERT(!mContent || !mContent->IsStyledByServo());
   MOZ_ASSERT(!(mHintsHandledByAncestors & nsChangeHint_ReconstructFrame),
              "why restyle descendants if we are reconstructing the frame for "
              "an ancestor?");
@@ -1136,7 +1136,7 @@ ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler,
   , mLoggingDepth(aParentRestyler.mLoggingDepth + 1)
 #endif
 {
-  MOZ_ASSERT_IF(mContent, !mContent->IsStyledByServo());
+  MOZ_ASSERT(!mContent || !mContent->IsStyledByServo());
   MOZ_ASSERT(!(mHintsHandledByAncestors & nsChangeHint_ReconstructFrame),
              "why restyle descendants if we are reconstructing the frame for "
              "an ancestor?");
@@ -1172,7 +1172,7 @@ ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
   , mLoggingDepth(aParentRestyler.mLoggingDepth + 1)
 #endif
 {
-  MOZ_ASSERT_IF(mContent, !mContent->IsStyledByServo());
+  MOZ_ASSERT(!mContent || !mContent->IsStyledByServo());
 
   // We would assert here that we're not restyling a child provider frame if
   // mHintsHandledByAncestors includes nsChangeHint_ReconstructFrame, but

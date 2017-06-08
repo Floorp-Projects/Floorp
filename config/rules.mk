@@ -936,15 +936,16 @@ endif
 # optimization levels in our Cargo.toml files all the time, and override the
 # optimization level here, if necessary.  (The Cargo.toml files already
 # specify debug-assertions appropriately for --{disable,enable}-debug.)
+default_rustflags =
 ifndef MOZ_OPTIMIZE
-rustflags = -C opt-level=0
+default_rustflags = -C opt-level=0
 # Unfortunately, -C opt-level=0 implies -C debug-assertions, so we need
 # to explicitly disable them when MOZ_DEBUG_RUST is not set.
 ifndef MOZ_DEBUG_RUST
-rustflags += -C debug-assertions=no
+default_rustflags += -C debug-assertions=no
 endif
-rustflags_override = RUSTFLAGS='$(rustflags)'
 endif
+rustflags_override = RUSTFLAGS='$(default_rustflags) $(RUSTFLAGS)'
 
 ifdef MOZ_MSVCBITS
 # If we are building a MozillaBuild shell, we want to clear out the

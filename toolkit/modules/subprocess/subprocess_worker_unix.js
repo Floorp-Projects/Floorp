@@ -465,19 +465,25 @@ class Process extends BaseProcess {
     let status = ctypes.int();
 
     let res = libc.waitpid(this.pid, status.address(), LIBC.WNOHANG);
-    if (res == this.pid) {
-      let sig = unix.WTERMSIG(status.value);
-      if (sig) {
-        this.exitCode = -sig;
-      } else {
-        this.exitCode = unix.WEXITSTATUS(status.value);
-      }
-
-      this.fd.dispose();
-      io.updatePollFds();
-      this.resolveExit(this.exitCode);
-      return this.exitCode;
+    // If there's a failure here and we get any errno other than EINTR, it
+    // means that the process has been reaped by another thread (most likely
+    // the nspr process wait thread), and its actual exit status is not
+    // available to us. In that case, we have to assume success.
+    if (res == 0 || (res == -1 && ctypes.errno == LIBC.EINTR)) {
+      return null;
     }
+
+    let sig = unix.WTERMSIG(status.value);
+    if (sig) {
+      this.exitCode = -sig;
+    } else {
+      this.exitCode = unix.WEXITSTATUS(status.value);
+    }
+
+    this.fd.dispose();
+    io.updatePollFds();
+    this.resolveExit(this.exitCode);
+    return this.exitCode;
   }
 }
 

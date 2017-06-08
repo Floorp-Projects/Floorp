@@ -550,6 +550,7 @@ nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
                                          bool aCalledFromJS,
                                          float aOpenerFullZoom,
                                          uint64_t aNextTabParentId,
+                                         bool aForceNoOpener,
                                          nsITabParent** aResult)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -617,7 +618,7 @@ nsWindowWatcher::OpenWindowWithTabParent(nsITabParent* aOpeningTabParent,
   nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
 
   CreateChromeWindow(aFeatures, parentChrome, chromeFlags,
-                     aOpeningTabParent, nullptr,
+                     aForceNoOpener ? nullptr : aOpeningTabParent, nullptr,
                      aNextTabParentId,
                      getter_AddRefs(newWindowChrome));
 
