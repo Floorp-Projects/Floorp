@@ -175,6 +175,7 @@ public class Browsers {
     public boolean hasThirdPartyDefaultBrowser(Context context) {
         return defaultBrowser != null
                 && !defaultBrowser.packageName.equals(KnownBrowser.FIREFOX.packageName)
+                && !(firefoxBrandedBrowser != null && defaultBrowser.packageName.equals(firefoxBrandedBrowser.packageName))
                 && !defaultBrowser.packageName.equals(context.getPackageName());
     }
 
