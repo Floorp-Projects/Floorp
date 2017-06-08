@@ -58,6 +58,7 @@ typedef nsIDocument RawGeckoDocument;
 typedef nsPresContext RawGeckoPresContext;
 typedef nsXBLBinding RawGeckoXBLBinding;
 typedef mozilla::URLExtraData RawGeckoURLExtraData;
+typedef nsTArray<RefPtr<RawServoAnimationValue>> RawGeckoServoAnimationValueList;
 typedef nsTArray<mozilla::Keyframe> RawGeckoKeyframeList;
 typedef nsTArray<mozilla::ComputedKeyframeValues> RawGeckoComputedKeyframeValuesList;
 typedef nsStyleAutoArray<mozilla::StyleAnimation> RawGeckoStyleAnimationList;
@@ -140,6 +141,7 @@ DECL_BORROWED_REF_TYPE_FOR(nsCSSValue)
 DECL_BORROWED_MUT_REF_TYPE_FOR(nsCSSValue)
 DECL_OWNED_REF_TYPE_FOR(RawGeckoPresContext)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoPresContext)
+DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoServoAnimationValueList)
 DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoKeyframeList)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoKeyframeList)
 DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoComputedKeyframeValuesList)
