@@ -9,6 +9,8 @@ linux64/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -31,6 +33,8 @@ linux64/pgo:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     coalesce-name: linux64-pgo
     run:
         using: mozharness
@@ -55,6 +59,8 @@ linux64/debug:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -81,6 +87,8 @@ linux64-devedition-nightly/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -107,7 +115,8 @@ linux64-base-toolchains/opt:
     worker:
         max-run-time: 36000
         env:
-            TOOLTOOL_MANIFEST: browser/config/tooltool-manifests/linux64/base-toolchains.manifest
+            PERFHERDER_EXTRA_OPTIONS: base-toolchains
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/base-toolchains.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -131,7 +140,8 @@ linux64-base-toolchains/debug:
     worker:
         max-run-time: 36000
         env:
-            TOOLTOOL_MANIFEST: browser/config/tooltool-manifests/linux64/base-toolchains.manifest
+            PERFHERDER_EXTRA_OPTIONS: base-toolchains
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/base-toolchains.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -155,6 +165,8 @@ linux/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
     coalesce-name: opt_linux32
     run:
         using: mozharness
@@ -178,6 +190,8 @@ linux/debug:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
     coalesce-name: dbg_linux32
     run:
         using: mozharness
@@ -202,6 +216,8 @@ linux/pgo:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
     coalesce-name: linux32-pgo
     run:
         using: mozharness
@@ -229,6 +245,8 @@ linux-devedition-nightly/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -257,6 +275,8 @@ linux-nightly/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -280,6 +300,9 @@ linux64-asan/opt:
         symbol: tc(Bo)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: "opt asan"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/asan.manifest"
         max-run-time: 36000
     run:
         using: mozharness
@@ -304,6 +327,9 @@ linux64-asan-fuzzing/opt:
         symbol: tc(Bof)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: asan-fuzzing
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/asan.manifest"
         max-run-time: 36000
     run:
         using: mozharness
@@ -327,6 +353,9 @@ linux64-asan/debug:
         symbol: tc(Bd)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: "debug asan"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/asan.manifest"
         max-run-time: 36000
     run:
         using: mozharness
@@ -354,6 +383,8 @@ linux64-nightly/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -378,6 +409,8 @@ linux64-stylo/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 3600
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -403,6 +436,8 @@ linux64-stylo/debug:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 3600
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -428,6 +463,8 @@ linux64-noopt/debug:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 3600
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -455,6 +492,8 @@ linux64-jsdcov/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -480,6 +519,8 @@ linux64-ccov/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -504,6 +545,8 @@ linux64-add-on-devel/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]

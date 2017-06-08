@@ -997,10 +997,6 @@ pref("browser.flash-protected-mode-flip.done", false);
 
 pref("dom.ipc.shims.enabledWarnings", false);
 
-// Start the browser in e10s mode
-pref("browser.tabs.remote.autostart", false);
-pref("browser.tabs.remote.desktopbehavior", true);
-
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
 // Controls whether and how the Windows NPAPI plugin process is sandboxed.
 // To get a different setting for a particular plugin replace "default", with
@@ -1517,7 +1513,11 @@ pref("privacy.usercontext.about_newtab_segregation.enabled", false);
 pref("privacy.userContext.longPressBehavior", 0);
 #endif
 
-#ifndef RELEASE_OR_BETA
+// Start the browser in e10s mode
+pref("browser.tabs.remote.autostart", false);
+pref("browser.tabs.remote.desktopbehavior", true);
+
+#if !defined(RELEASE_OR_BETA) || defined(MOZ_DEV_EDITION)
 // At the moment, autostart.2 is used, while autostart.1 is unused.
 // We leave it here set to false to reset users' defaults and allow
 // us to change everybody to true in the future, when desired.
@@ -1663,7 +1663,7 @@ pref("extensions.formautofill.experimental", true);
 pref("extensions.formautofill.experimental", false);
 #endif
 pref("extensions.formautofill.addresses.enabled", true);
-pref("extensions.formautofill.heuristics.enabled", false);
+pref("extensions.formautofill.heuristics.enabled", true);
 pref("extensions.formautofill.loglevel", "Warn");
 
 // Whether or not to restore a session with lazy-browser tabs.

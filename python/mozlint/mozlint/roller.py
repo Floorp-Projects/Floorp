@@ -19,32 +19,26 @@ from .vcs import VCSFiles
 
 
 def _run_linters(queue, paths, **lintargs):
-    parse = Parser()
     results = defaultdict(list)
     failed = []
 
     while True:
         try:
             # The astute reader may wonder what is preventing the worker from
-            # grabbing the next linter from the queue after a SIGINT. Because
-            # this is a Manager.Queue(), it is itself in a child process which
-            # also received SIGINT. By the time the worker gets back here, the
-            # Queue is dead and IOError is raised.
-            linter_path = queue.get(False)
+            # grabbing the next linter config from the queue after a SIGINT.
+            # Because this is a Manager.Queue(), it is itself in a child process
+            # which also received SIGINT. By the time the worker gets back here,
+            # the Queue is dead and IOError is raised.
+            config = queue.get(False)
         except (Empty, IOError):
             return results, failed
 
-        # Ideally we would pass the entire LINTER definition as an argument
-        # to the worker instead of re-parsing it. But passing a function from
-        # a dynamically created module (with imp) does not seem to be possible
-        # with multiprocessing on Windows.
-        linter = parse(linter_path)
-        func = supported_types[linter['type']]
-        res = func(paths, linter, **lintargs) or []
+        func = supported_types[config['type']]
+        res = func(paths, config, **lintargs) or []
 
         if not isinstance(res, (list, tuple)):
             if res:
-                failed.append(linter['name'])
+                failed.append(config['name'])
             continue
 
         for r in res:
@@ -92,7 +86,7 @@ class LintRoller(object):
             paths = (paths,)
 
         for path in paths:
-            self.linters.append(self.parse(path))
+            self.linters.extend(self.parse(path))
 
     def roll(self, paths=None, rev=None, outgoing=None, workdir=None, num_procs=None):
         """Run all of the registered linters against the specified file paths.
@@ -127,8 +121,8 @@ class LintRoller(object):
         m = Manager()
         queue = m.Queue()
 
-        for linter in self.linters:
-            queue.put(linter['path'])
+        for config in self.linters:
+            queue.put(config)
 
         num_procs = num_procs or cpu_count()
         num_procs = min(num_procs, len(self.linters))

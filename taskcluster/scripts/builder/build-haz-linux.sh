@@ -37,7 +37,6 @@ PATH=$DIRNAME:$PATH
 export AUTOMATION=${GECKO_BASE_REPOSITORY:+1}
 
 : ${GECKO_DIR:=$WORKSPACE/gecko}
-: ${TOOLTOOL_MANIFEST:=browser/config/tooltool-manifests/linux64/hazard.manifest}
 : ${TOOLTOOL_CACHE:=$WORKSPACE/tt-cache}
 
 if ! [ -d $GECKO_DIR ]; then

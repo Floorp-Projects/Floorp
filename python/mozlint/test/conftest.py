@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import sys
 
 import pytest
 
@@ -32,7 +33,9 @@ def files(filedir, request):
 
 @pytest.fixture(scope='session')
 def lintdir():
-    return os.path.join(here, 'linters')
+    lintdir = os.path.join(here, 'linters')
+    sys.path.insert(0, lintdir)
+    return lintdir
 
 
 @pytest.fixture(scope='module')

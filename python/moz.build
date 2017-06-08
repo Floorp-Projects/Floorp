@@ -8,41 +8,11 @@
 with Files('**'):
     BUG_COMPONENT = ('Core', 'Build Config')
 
-with Files('PyECC/**'):
-    BUG_COMPONENT = ('Core', 'Security: PSM')
-
-with Files('blessings/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
-
-with Files('compare-locales/**'):
-    BUG_COMPONENT = ('Localization Infrastructure and Tools', 'compare-locales')
-
-with Files('configobj/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
-
 with Files('devtools/**'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools')
 
-with Files('dlmanager/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
-
-with Files('futures/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
-
-with Files('gdbpp/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
-
-with Files('jsmin/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
-
-with Files('lldbutils/**'):
-    BUG_COMPONENT = ('Core', 'General')
-
 with Files('mach/**'):
     BUG_COMPONENT = ('Core', 'mach')
-
-with Files('mock-1.0.0/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
 
 with Files('mozboot/**'):
     BUG_COMPONENT = ('Core', 'Build Config')
@@ -55,55 +25,6 @@ with Files('mozlint/**'):
 
 with Files('mozversioncontrol/**'):
     BUG_COMPONENT = ('Core', 'Build Config')
-
-with Files('psutil/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
-
-with Files('py/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
-
-with Files('pyasn1/**'):
-    BUG_COMPONENT = ('Release Engineering', 'General Automation')
-
-with Files('pyasn1-modules/**'):
-    BUG_COMPONENT = ('Core', 'Security: PSM')
-
-with Files('pylru/**'):
-    BUG_COMPONENT = ('mozilla.org', 'MozillaBuild')
-
-with Files('pystache/**'):
-    BUG_COMPONENT = ('Taskcluster', 'General')
-
-with Files('pytest/**'):
-    BUG_COMPONENT = ('Testing', 'General')
-
-with Files('pytoml/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
-
-with Files('pyyaml/**'):
-    BUG_COMPONENT = ('Taskcluster', 'General')
-
-with Files('redo/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
-
-with Files('requests/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
-
-with Files('rsa/**'):
-    BUG_COMPONENT = ('Core', 'Security: PSM')
-
-with Files('slugid/**'):
-    BUG_COMPONENT = ('Taskcluster', 'Platform Libraries')
-
-with Files('virtualenv/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
-
-with Files('voluptuous/**'):
-    BUG_COMPONENT = ('Taskcluster', 'Task Configuration')
-
-with Files('which/**'):
-    BUG_COMPONENT = ('Core', 'Build Config')
-
 
 SPHINX_PYTHON_PACKAGE_DIRS += [
     'mach',

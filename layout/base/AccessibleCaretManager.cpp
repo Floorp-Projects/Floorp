@@ -806,7 +806,10 @@ nsAutoString
 AccessibleCaretManager::StringifiedSelection() const
 {
   nsAutoString str;
-  GetSelection()->Stringify(str);
+  Selection* selection = GetSelection();
+  if (selection) {
+    selection->Stringify(str);
+  }
   return str;
 }
 

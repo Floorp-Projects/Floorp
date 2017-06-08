@@ -23,11 +23,13 @@ const EXPECTED_STATUS = /\[HTTP\/\d\.\d \d+ [A-Za-z ]+ \d+ms\]/;
 describe("NetworkEventMessage component:", () => {
   describe("GET request", () => {
     it("renders as expected", () => {
-      const message = stubPreparedMessages.get("GET request eventTimings");
+      const message = stubPreparedMessages.get("GET request");
+      const update = stubPreparedMessages.get("GET request eventTimings");
       const wrapper = render(NetworkEventMessage({
         message,
         serviceContainer,
         timestampsVisible: true,
+        networkMessageUpdate: update,
       }));
       const { timestampString } = require("devtools/client/webconsole/webconsole-l10n");
 
@@ -66,8 +68,13 @@ describe("NetworkEventMessage component:", () => {
 
   describe("XHR GET request", () => {
     it("renders as expected", () => {
-      const message = stubPreparedMessages.get("XHR GET request eventTimings");
-      const wrapper = render(NetworkEventMessage({ message, serviceContainer }));
+      const message = stubPreparedMessages.get("XHR GET request");
+      const update = stubPreparedMessages.get("XHR GET request eventTimings");
+      const wrapper = render(NetworkEventMessage({
+        message,
+        serviceContainer,
+        networkMessageUpdate: update,
+      }));
 
       expect(wrapper.find(".message-body .method").text()).toBe("GET");
       expect(wrapper.find(".message-body .xhr").length).toBe(1);
@@ -79,8 +86,13 @@ describe("NetworkEventMessage component:", () => {
 
   describe("XHR POST request", () => {
     it("renders as expected", () => {
-      const message = stubPreparedMessages.get("XHR POST request eventTimings");
-      const wrapper = render(NetworkEventMessage({ message, serviceContainer }));
+      const message = stubPreparedMessages.get("XHR POST request");
+      const update = stubPreparedMessages.get("XHR POST request eventTimings");
+      const wrapper = render(NetworkEventMessage({
+        message,
+        serviceContainer,
+        networkMessageUpdate: update,
+      }));
 
       expect(wrapper.find(".message-body .method").text()).toBe("POST");
       expect(wrapper.find(".message-body .xhr").length).toBe(1);

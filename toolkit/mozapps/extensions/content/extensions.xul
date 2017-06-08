@@ -148,6 +148,9 @@
                       class="category"
                       name="&view.discover.label;" priority="1000"
                       tooltiptext="&view.discover.label;"/>
+        <richlistitem id="category-legacy" value="addons://legacy/"
+                      class="category" priority="20000"
+                      disabled="true"/>
         <richlistitem id="category-availableUpdates" value="addons://updates/available"
                       class="category"
                       name="&view.availableUpdates.label;" priority="100000"
@@ -353,6 +356,13 @@
                   &disabledUnsigned.devInfo.start;<label class="text-link plain" id="signing-dev-manual-link">&disabledUnsigned.devInfo.linkToManual;</label>&disabledUnsigned.devInfo.end;
                 </description>
               </vbox>
+              <vbox id="legacy-extensions-notice" class="alert-container" hidden="true">
+                <hbox class="alert">
+                  <description>&legacyWarning.description;
+                    <label class="text-link plain" id="legacy-extensions-learnmore-link">&legacyWarning.showLegacy;</label>
+                  </description>
+                </hbox>
+              </vbox>
               <vbox id="plugindeprecation-notice" class="alert-container">
                 <hbox class="alert">
                   <description>&pluginDeprecation.description; &#160;
@@ -429,6 +439,19 @@
               </vbox>
               <richlistbox id="addon-list" class="list" flex="1"/>
             </vbox>
+
+            <!-- legacy extensions view -->
+            <vbox id="legacy-view" flex="1" class="view-pane" align="stretch" tabindex="0">
+              <vbox id="legacy-extensions-info">
+                <label id="legacy-extensions-heading" value="Legacy Extensions"/>
+                <description>
+                  &legacyExtensions.description;
+                  <label class="text-link plain" id="legacy-learnmore">&legacyExtensions.learnMore;</label>
+                </description>
+              </vbox>
+              <richlistbox id="legacy-list" class="list" flex="1"/>
+            </vbox>
+
             <!-- updates view -->
             <vbox id="updates-view" flex="1" class="view-pane" tabindex="0">
               <hbox class="view-header global-warning-container" align="center">

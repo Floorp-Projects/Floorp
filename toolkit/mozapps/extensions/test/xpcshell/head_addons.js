@@ -1104,6 +1104,8 @@ Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
 // Allow non-multiprocessCompatible extensions for now
 Services.prefs.setBoolPref(PREF_ALLOW_NON_MPC, true);
 
+Services.prefs.setBoolPref("extensions.legacy.enabled", true);
+
 
 // Copies blocklistFile (an nsIFile) to gProfD/blocklist.xml.
 function copyBlocklistToProfile(blocklistFile) {

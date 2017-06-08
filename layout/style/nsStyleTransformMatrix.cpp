@@ -14,6 +14,7 @@
 #include "nsRuleNode.h"
 #include "nsSVGUtils.h"
 #include "nsCSSKeywords.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "gfxMatrix.h"
 #include "gfxQuaternion.h"
@@ -308,6 +309,19 @@ public:
                                          cos(theta)) * aOne;
     return result.ToMatrix();
   }
+
+  static Matrix4x4 operateByServo(const Matrix4x4& aMatrix1,
+                                  const Matrix4x4& aMatrix2,
+                                  double aCount)
+  {
+    Matrix4x4 result;
+    Servo_MatrixTransform_Operate(MatrixTransformOperator::Accumulate,
+                                  &aMatrix1.components,
+                                  &aMatrix2.components,
+                                  aCount,
+                                  &result.components);
+    return result;
+  }
 };
 
 class Interpolate {
@@ -337,6 +351,19 @@ public:
                                     double aCoeff)
   {
     return aOne.Slerp(aTwo, aCoeff).ToMatrix();
+  }
+
+  static Matrix4x4 operateByServo(const Matrix4x4& aMatrix1,
+                                  const Matrix4x4& aMatrix2,
+                                  double aProgress)
+  {
+    Matrix4x4 result;
+    Servo_MatrixTransform_Operate(MatrixTransformOperator::Interpolate,
+                                  &aMatrix1.components,
+                                  &aMatrix2.components,
+                                  aProgress,
+                                  &result.components);
+    return result;
   }
 };
 
@@ -429,6 +456,15 @@ OperateTransformMatrix(const Matrix4x4 &aMatrix1,
 }
 
 template <typename Operator>
+static Matrix4x4
+OperateTransformMatrixByServo(const Matrix4x4 &aMatrix1,
+                              const Matrix4x4 &aMatrix2,
+                              double aProgress)
+{
+  return Operator::operateByServo(aMatrix1, aMatrix2, aProgress);
+}
+
+template <typename Operator>
 static void
 ProcessMatrixOperator(Matrix4x4& aMatrix,
                       const nsCSSValue::Array* aData,
@@ -440,22 +476,50 @@ ProcessMatrixOperator(Matrix4x4& aMatrix,
 {
   NS_PRECONDITION(aData->Count() == 4, "Invalid array!");
 
-  Matrix4x4 matrix1, matrix2;
-  if (aData->Item(1).GetUnit() == eCSSUnit_List) {
-    matrix1 = nsStyleTransformMatrix::ReadTransforms(aData->Item(1).GetListValue(),
-                             aContext, aPresContext,
-                             aConditions,
-                             aRefBox, nsPresContext::AppUnitsPerCSSPixel(),
-                             aContains3dTransform);
-  }
-  if (aData->Item(2).GetUnit() == eCSSUnit_List) {
-    matrix2 = ReadTransforms(aData->Item(2).GetListValue(),
-                             aContext, aPresContext,
-                             aConditions,
-                             aRefBox, nsPresContext::AppUnitsPerCSSPixel(),
-                             aContains3dTransform);
-  }
+  auto readTransform = [&](const nsCSSValue& aValue) -> Matrix4x4 {
+    const nsCSSValueList* list = nullptr;
+    switch (aValue.GetUnit()) {
+      case eCSSUnit_List:
+        // For Gecko style backend.
+        list = aValue.GetListValue();
+        break;
+      case eCSSUnit_SharedList:
+        // For Servo style backend. The transform lists of interpolatematrix
+        // are not created on the main thread (i.e. during parallel traversal),
+        // and nsCSSValueList_heap is not thread safe. Therefore, we use
+        // nsCSSValueSharedList as a workaround.
+        list = aValue.GetSharedListValue()->mHead;
+        break;
+      default:
+        list = nullptr;
+    }
+
+    Matrix4x4 matrix;
+    if (!list) {
+      return matrix;
+    }
+
+    float appUnitPerCSSPixel = nsPresContext::AppUnitsPerCSSPixel();
+    matrix = nsStyleTransformMatrix::ReadTransforms(list,
+                                                    aContext,
+                                                    aPresContext,
+                                                    aConditions,
+                                                    aRefBox,
+                                                    appUnitPerCSSPixel,
+                                                    aContains3dTransform);
+    return matrix;
+  };
+
+  Matrix4x4 matrix1 = readTransform(aData->Item(1));
+  Matrix4x4 matrix2 = readTransform(aData->Item(2));
   double progress = aData->Item(3).GetPercentValue();
+
+  if (aContext && aContext->StyleSource().IsServoComputedValues()) {
+    aMatrix =
+      OperateTransformMatrixByServo<Operator>(matrix1, matrix2, progress)
+        * aMatrix;
+    return;
+  }
 
   aMatrix =
     OperateTransformMatrix<Operator>(matrix1, matrix2, progress) * aMatrix;

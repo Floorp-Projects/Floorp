@@ -860,20 +860,25 @@ protected:
   };
 
 public:
-  void ThenInternal(AbstractThread* aResponseThread, ThenValueBase* aThenValue,
+  void ThenInternal(AbstractThread* aResponseThread,
+                    already_AddRefed<ThenValueBase> aThenValue,
                     const char* aCallSite)
   {
     PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == &mMutex);
     MOZ_ASSERT(aResponseThread);
+    RefPtr<ThenValueBase> thenValue = aThenValue;
     MutexAutoLock lock(mMutex);
     MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveRequest);
     mHaveRequest = true;
     PROMISE_LOG("%s invoking Then() [this=%p, aThenValue=%p, isPending=%d]",
-                aCallSite, this, aThenValue, (int) IsPending());
+                aCallSite,
+                this,
+                thenValue.get(),
+                (int)IsPending());
     if (!IsPending()) {
-      aThenValue->Dispatch(this);
+      thenValue->Dispatch(this);
     } else {
-      mThenValues.AppendElement(aThenValue);
+      mThenValues.AppendElement(thenValue.forget());
     }
   }
 
@@ -917,7 +922,8 @@ protected:
     {
       // Issue the request now if the return value of Then() is not used.
       if (mThenValue) {
-        mReceiver->ThenInternal(mResponseThread, mThenValue, mCallSite);
+        mReceiver->ThenInternal(
+          mResponseThread, mThenValue.forget(), mCallSite);
       }
     }
 
@@ -931,14 +937,13 @@ protected:
         "The resolve/reject callback needs to return a RefPtr<MozPromise> "
         "in order to do promise chaining.");
 
-      RefPtr<ThenValueType> thenValue = mThenValue.forget();
       // mCompletionPromise must be created before ThenInternal() to avoid race.
       RefPtr<Private> p =
         new Private("<completion promise>", true /* aIsCompletionPromise */);
-      thenValue->mCompletionPromise = p;
+      mThenValue->mCompletionPromise = p;
       // Note ThenInternal() might nullify mCompletionPromise before return.
       // So we need to return p instead of mCompletionPromise.
-      mReceiver->ThenInternal(mResponseThread, thenValue, mCallSite);
+      mReceiver->ThenInternal(mResponseThread, mThenValue.forget(), mCallSite);
       return p;
     }
 
@@ -952,9 +957,8 @@ protected:
 
     void Track(MozPromiseRequestHolder<MozPromise>& aRequestHolder)
     {
-      RefPtr<ThenValueType> thenValue = mThenValue.forget();
-      mReceiver->ThenInternal(mResponseThread, thenValue, mCallSite);
-      aRequestHolder.Track(thenValue.forget());
+      aRequestHolder.Track(do_AddRef(mThenValue));
+      mReceiver->ThenInternal(mResponseThread, mThenValue.forget(), mCallSite);
     }
 
     // Allow calling ->Then() again for more promise chaining or ->Track() to
@@ -1307,10 +1311,10 @@ public:
   MozPromiseRequestHolder() {}
   ~MozPromiseRequestHolder() { MOZ_ASSERT(!mRequest); }
 
-  void Track(RefPtr<typename PromiseType::Request>&& aRequest)
+  void Track(already_AddRefed<typename PromiseType::Request> aRequest)
   {
     MOZ_DIAGNOSTIC_ASSERT(!Exists());
-    mRequest = Move(aRequest);
+    mRequest = aRequest;
   }
 
   void Complete()

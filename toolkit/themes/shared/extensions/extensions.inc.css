@@ -221,6 +221,9 @@ button.warning {
 #category-experiment > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-experiments.png");
 }
+#category-legacy > .category-icon {
+  list-style-image: url("chrome://mozapps/skin/extensions/category-legacy.svg");
+}
 #category-availableUpdates > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-available.png");
 }
@@ -617,11 +620,11 @@ button.warning {
   border-inline-start: solid 4px #ff9500;
 }
 
-.addon[active="false"] > .content-container > .content-inner-container {
+#addon-list .addon[active="false"] > .content-container > .content-inner-container {
   color: #999;
 }
 
-.addon[active="false"][selected] > .content-container > .content-inner-container {
+#addon-list .addon[active="false"][selected] > .content-container > .content-inner-container {
   color: #777;
 }
 
@@ -1041,6 +1044,10 @@ button.button-link:not([disabled="true"]):active:hover {
   text-decoration: none;
 }
 
+.addon-control.replacement {
+  background-color: #0095dd;
+  color: #FFF;
+}
 
 /*** telemetry experiments ***/
 
@@ -1081,7 +1088,8 @@ button.button-link:not([disabled="true"]):active:hover {
   margin-left: 48px;
 }
 
-#disabled-unsigned-addons-heading {
+#disabled-unsigned-addons-heading,
+#legacy-extensions-heading {
   font-size: 1.4em;
   font-weight: bold;
   margin-bottom: .5em;

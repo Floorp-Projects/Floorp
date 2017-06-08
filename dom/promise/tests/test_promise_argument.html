@@ -13,10 +13,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1323324
   /** Test for Bug 1323324 **/
   SimpleTest.waitForExplicitFinish();
 
+  var globalWrapper;
   function verifyPromiseGlobal(p, global, msg) {
     // SpecialPowers.Cu.getGlobalForObject returns a SpecialPowers wrapper for
     // the actual global.  We want to grab the underlying object.
-    var globalWrapper = SpecialPowers.Cu.getGlobalForObject(p);
+    globalWrapper = SpecialPowers.Cu.getGlobalForObject(p);
     is(SpecialPowers.unwrap(globalWrapper), global,
        msg + " should come from " + global.label);
   }

@@ -7,6 +7,12 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "General")
 
+with Files("compare-locales/docs/**"):
+    BUG_COMPONENT = ('Mozilla Localizations', 'Documentation')
+
+with Files("compare-locales/mach_commands.py"):
+    BUG_COMPONENT = ("Localization Infrastructure and Tools", "compare-locales")
+
 with Files("coverity/**"):
     BUG_COMPONENT = ("Core", "Rewriting and Analysis")
 
@@ -38,3 +44,4 @@ with Files("update-packaging/**"):
     BUG_COMPONENT = ("Release Engineering", "Other")
 
 SPHINX_TREES['lint'] = 'lint/docs'
+SPHINX_TREES['compare-locales'] = 'compare-locales/docs'

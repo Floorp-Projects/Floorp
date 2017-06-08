@@ -40,7 +40,7 @@ class TalosRunner(MozbuildObject):
         self.config_file_path = os.path.join(self._topobjdir, 'testing',
                                              'talos-in_tree_conf.json')
         self.binary_path = self.get_binary_path()
-        self.virtualenv_script = os.path.join(self.topsrcdir, 'python',
+        self.virtualenv_script = os.path.join(self.topsrcdir, 'third_party', 'python',
                                               'virtualenv', 'virtualenv.py')
         self.virtualenv_path = os.path.join(self._topobjdir, 'testing',
                                             'talos-venv')

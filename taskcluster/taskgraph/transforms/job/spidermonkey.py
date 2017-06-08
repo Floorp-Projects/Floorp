@@ -8,7 +8,7 @@ Support for running spidermonkey jobs via dedicated scripts
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.util.schema import Schema
-from voluptuous import Required, Optional, Any
+from voluptuous import Required, Any
 
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
@@ -21,10 +21,6 @@ sm_run_schema = Schema({
 
     # The SPIDERMONKEY_VARIANT
     Required('spidermonkey-variant'): basestring,
-
-    # The tooltool manifest to use; default from sm-tooltool-config.sh  is used
-    # if omitted
-    Optional('tooltool-manifest'): basestring,
 })
 
 
@@ -65,8 +61,6 @@ def docker_worker_spidermonkey(config, job, taskdesc):
         'mount-point': '/home/worker/tooltool-cache',
     })
     env['TOOLTOOL_CACHE'] = '/home/worker/tooltool-cache'
-    if run.get('tooltool-manifest'):
-        env['TOOLTOOL_MANIFEST'] = run['tooltool-manifest']
 
     support_vcs_checkout(config, job, taskdesc)
 

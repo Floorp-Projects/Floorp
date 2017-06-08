@@ -51,7 +51,6 @@ use style::computed_values::{background_attachment, background_clip, background_
 use style::computed_values::{background_repeat, border_style, cursor};
 use style::computed_values::{image_rendering, overflow_x, pointer_events, position, visibility};
 use style::computed_values::filter::Filter;
-use style::computed_values::text_shadow::TextShadow;
 use style::logical_geometry::{LogicalPoint, LogicalRect, LogicalSize, WritingMode};
 use style::properties::{self, ServoComputedValues};
 use style::properties::longhands::border_image_repeat::computed_value::RepeatKeyword;
@@ -59,12 +58,13 @@ use style::properties::style_structs;
 use style::servo::restyle_damage::REPAINT;
 use style::values::{Either, RGBA};
 use style::values::computed::{Gradient, GradientItem, LengthOrPercentage};
-use style::values::computed::{LengthOrPercentageOrAuto, NumberOrPercentage, Position};
+use style::values::computed::{LengthOrPercentageOrAuto, NumberOrPercentage, Position, Shadow};
 use style::values::computed::image::{EndingShape, LineDirection};
 use style::values::generics::background::BackgroundSize;
 use style::values::generics::image::{Circle, Ellipse, EndingShape as GenericEndingShape};
 use style::values::generics::image::{GradientItem as GenericGradientItem, GradientKind};
 use style::values::generics::image::{Image, ShapeExtent};
+use style::values::generics::image::PaintWorklet;
 use style::values::specified::position::{X, Y};
 use style_traits::CSSPixel;
 use style_traits::cursor::Cursor;
@@ -396,12 +396,33 @@ pub trait FragmentDisplayListBuilding {
                                                image_url: &ServoUrl,
                                                background_index: usize);
 
+    /// Adds the display items necessary to paint a webrender image of this fragment to the
+    /// appropriate section of the display list.
+    fn build_display_list_for_webrender_image(&self,
+                                              state: &mut DisplayListBuildState,
+                                              style: &ServoComputedValues,
+                                              display_list_section: DisplayListSection,
+                                              absolute_bounds: &Rect<Au>,
+                                              clip: &ClippingRegion,
+                                              webrender_image: WebRenderImageInfo,
+                                              index: usize);
+
+    /// Adds the display items necessary to paint the background image created by this fragment's
+    /// worklet to the appropriate section of the display list.
+    fn build_display_list_for_background_paint_worklet(&self,
+                                                       state: &mut DisplayListBuildState,
+                                                       style: &ServoComputedValues,
+                                                       display_list_section: DisplayListSection,
+                                                       absolute_bounds: &Rect<Au>,
+                                                       clip: &ClippingRegion,
+                                                       paint_worklet: &PaintWorklet,
+                                                       index: usize);
+
     fn convert_linear_gradient(&self,
                                bounds: &Rect<Au>,
                                stops: &[GradientItem],
                                direction: &LineDirection,
-                               repeating: bool,
-                               style: &ServoComputedValues)
+                               repeating: bool)
                                -> display_list::Gradient;
 
     fn convert_radial_gradient(&self,
@@ -409,8 +430,7 @@ pub trait FragmentDisplayListBuilding {
                                stops: &[GradientItem],
                                shape: &EndingShape,
                                center: &Position,
-                               repeating: bool,
-                               style: &ServoComputedValues)
+                               repeating: bool)
                                -> display_list::RadialGradient;
 
     /// Adds the display items necessary to paint the background linear gradient of this fragment
@@ -504,7 +524,7 @@ pub trait FragmentDisplayListBuilding {
                                             state: &mut DisplayListBuildState,
                                             text_fragment: &ScannedTextFragmentInfo,
                                             stacking_relative_content_box: &Rect<Au>,
-                                            text_shadow: Option<&TextShadow>,
+                                            text_shadow: Option<&Shadow>,
                                             clip: &Rect<Au>);
 
     /// Creates the display item for a text decoration: underline, overline, or line-through.
@@ -612,8 +632,7 @@ fn build_border_radius_for_inner_rect(outer_rect: &Rect<Au>,
 }
 
 fn convert_gradient_stops(gradient_items: &[GradientItem],
-                          total_length: Au,
-                          style: &ServoComputedValues) -> Vec<GradientStop> {
+                          total_length: Au) -> Vec<GradientStop> {
     // Determine the position of each stop per CSS-IMAGES § 3.4.
 
     // Only keep the color stops, discard the color interpolation hints.
@@ -700,7 +719,7 @@ fn convert_gradient_stops(gradient_items: &[GradientItem],
         };
         stops.push(GradientStop {
             offset: offset,
-            color: style.resolve_color(stop.color).to_gfx_color()
+            color: stop.color.to_gfx_color()
         })
     }
     stops
@@ -894,6 +913,15 @@ impl FragmentDisplayListBuilding for Fragment {
                                                                      i);
                     }
                 }
+                Either::Second(Image::PaintWorklet(ref paint_worklet)) => {
+                    self.build_display_list_for_background_paint_worklet(state,
+                                                                         style,
+                                                                         display_list_section,
+                                                                         &bounds,
+                                                                         &clip,
+                                                                         paint_worklet,
+                                                                         i);
+                }
                 Either::Second(Image::Rect(_)) => {
                     // TODO: Implement `-moz-image-rect`
                 }
@@ -957,152 +985,211 @@ impl FragmentDisplayListBuilding for Fragment {
                                                clip: &ClippingRegion,
                                                image_url: &ServoUrl,
                                                index: usize) {
-        let background = style.get_background();
         let webrender_image = state.layout_context
                                    .get_webrender_image_for_url(self.node,
                                                                 image_url.clone(),
                                                                 UsePlaceholder::No);
 
         if let Some(webrender_image) = webrender_image {
-            debug!("(building display list) building background image");
-
-            // Use `background-size` to get the size.
-            let mut bounds = *absolute_bounds;
-            let image_size = self.compute_background_image_size(style, &bounds,
-                                                                &webrender_image, index);
-
-            // Clip.
-            //
-            // TODO: Check the bounds to see if a clip item is actually required.
-            let mut clip = clip.clone();
-            clip.intersect_rect(&bounds);
-
-            // Background image should be positioned on the padding box basis.
-            let border = style.logical_border_width().to_physical(style.writing_mode);
-
-            // Use 'background-origin' to get the origin value.
-            let origin = get_cyclic(&background.background_origin.0, index);
-            let (mut origin_x, mut origin_y) = match *origin {
-                background_origin::single_value::T::padding_box => {
-                    (Au(0), Au(0))
-                }
-                background_origin::single_value::T::border_box => {
-                    (-border.left, -border.top)
-                }
-                background_origin::single_value::T::content_box => {
-                    let border_padding = self.border_padding.to_physical(self.style.writing_mode);
-                    (border_padding.left - border.left, border_padding.top - border.top)
-                }
-            };
-
-            // Use `background-attachment` to get the initial virtual origin
-            let attachment = get_cyclic(&background.background_attachment.0, index);
-            let (virtual_origin_x, virtual_origin_y) = match *attachment {
-                background_attachment::single_value::T::scroll => {
-                    (absolute_bounds.origin.x, absolute_bounds.origin.y)
-                }
-                background_attachment::single_value::T::fixed => {
-                    // If the ‘background-attachment’ value for this image is ‘fixed’, then
-                    // 'background-origin' has no effect.
-                    origin_x = Au(0);
-                    origin_y = Au(0);
-                    (Au(0), Au(0))
-                }
-            };
-
-            let horiz_position = *get_cyclic(&background.background_position_x.0, index);
-            let vert_position = *get_cyclic(&background.background_position_y.0, index);
-            // Use `background-position` to get the offset.
-            let horizontal_position = horiz_position.to_used_value(bounds.size.width - image_size.width);
-            let vertical_position = vert_position.to_used_value(bounds.size.height - image_size.height);
-
-            // The anchor position for this background, based on both the background-attachment
-            // and background-position properties.
-            let anchor_origin_x = border.left + virtual_origin_x + origin_x + horizontal_position;
-            let anchor_origin_y = border.top + virtual_origin_y + origin_y + vertical_position;
-
-            let mut tile_spacing = Size2D::zero();
-            let mut stretch_size = image_size;
-
-            // Adjust origin and size based on background-repeat
-            let background_repeat = get_cyclic(&background.background_repeat.0, index);
-            match background_repeat.0 {
-                background_repeat::single_value::RepeatKeyword::NoRepeat => {
-                    bounds.origin.x = anchor_origin_x;
-                    bounds.size.width = image_size.width;
-                }
-                background_repeat::single_value::RepeatKeyword::Repeat => {
-                    ImageFragmentInfo::tile_image(&mut bounds.origin.x,
-                                                  &mut bounds.size.width,
-                                                  anchor_origin_x,
-                                                  image_size.width);
-                }
-                background_repeat::single_value::RepeatKeyword::Space => {
-                    ImageFragmentInfo::tile_image_spaced(&mut bounds.origin.x,
-                                                         &mut bounds.size.width,
-                                                         &mut tile_spacing.width,
-                                                         anchor_origin_x,
-                                                         image_size.width);
-
-                }
-                background_repeat::single_value::RepeatKeyword::Round => {
-                    ImageFragmentInfo::tile_image_round(&mut bounds.origin.x,
-                                                        &mut bounds.size.width,
-                                                        anchor_origin_x,
-                                                        &mut stretch_size.width);
-                }
-            };
-            match background_repeat.1 {
-                background_repeat::single_value::RepeatKeyword::NoRepeat => {
-                    bounds.origin.y = anchor_origin_y;
-                    bounds.size.height = image_size.height;
-                }
-                background_repeat::single_value::RepeatKeyword::Repeat => {
-                    ImageFragmentInfo::tile_image(&mut bounds.origin.y,
-                                                  &mut bounds.size.height,
-                                                  anchor_origin_y,
-                                                  image_size.height);
-                }
-                background_repeat::single_value::RepeatKeyword::Space => {
-                    ImageFragmentInfo::tile_image_spaced(&mut bounds.origin.y,
-                                                         &mut bounds.size.height,
-                                                         &mut tile_spacing.height,
-                                                         anchor_origin_y,
-                                                         image_size.height);
-
-                }
-                background_repeat::single_value::RepeatKeyword::Round => {
-                    ImageFragmentInfo::tile_image_round(&mut bounds.origin.y,
-                                                        &mut bounds.size.height,
-                                                        anchor_origin_y,
-                                                        &mut stretch_size.height);
-                }
-            };
-
-            // Create the image display item.
-            let base = state.create_base_display_item(&bounds,
-                                                      &clip,
-                                                      self.node,
-                                                      style.get_cursor(Cursor::Default),
-                                                      display_list_section);
-            state.add_display_item(DisplayItem::Image(box ImageDisplayItem {
-              base: base,
-              webrender_image: webrender_image,
-              image_data: None,
-              stretch_size: stretch_size,
-              tile_spacing: tile_spacing,
-              image_rendering: style.get_inheritedbox().image_rendering.clone(),
-            }));
-
+            self.build_display_list_for_webrender_image(state,
+                                                        style,
+                                                        display_list_section,
+                                                        absolute_bounds,
+                                                        clip,
+                                                        webrender_image,
+                                                        index);
         }
+    }
+
+    fn build_display_list_for_webrender_image(&self,
+                                              state: &mut DisplayListBuildState,
+                                              style: &ServoComputedValues,
+                                              display_list_section: DisplayListSection,
+                                              absolute_bounds: &Rect<Au>,
+                                              clip: &ClippingRegion,
+                                              webrender_image: WebRenderImageInfo,
+                                              index: usize) {
+        debug!("(building display list) building background image");
+        let background = style.get_background();
+
+        // Use `background-size` to get the size.
+        let mut bounds = *absolute_bounds;
+        let image_size = self.compute_background_image_size(style, &bounds,
+                                                            &webrender_image, index);
+
+        // Clip.
+        //
+        // TODO: Check the bounds to see if a clip item is actually required.
+        let mut clip = clip.clone();
+        clip.intersect_rect(&bounds);
+
+        // Background image should be positioned on the padding box basis.
+        let border = style.logical_border_width().to_physical(style.writing_mode);
+
+        // Use 'background-origin' to get the origin value.
+        let origin = get_cyclic(&background.background_origin.0, index);
+        let (mut origin_x, mut origin_y) = match *origin {
+            background_origin::single_value::T::padding_box => {
+                (Au(0), Au(0))
+            }
+            background_origin::single_value::T::border_box => {
+                (-border.left, -border.top)
+            }
+            background_origin::single_value::T::content_box => {
+                let border_padding = self.border_padding.to_physical(self.style.writing_mode);
+                (border_padding.left - border.left, border_padding.top - border.top)
+            }
+        };
+
+        // Use `background-attachment` to get the initial virtual origin
+        let attachment = get_cyclic(&background.background_attachment.0, index);
+        let (virtual_origin_x, virtual_origin_y) = match *attachment {
+            background_attachment::single_value::T::scroll => {
+                (absolute_bounds.origin.x, absolute_bounds.origin.y)
+            }
+            background_attachment::single_value::T::fixed => {
+                // If the ‘background-attachment’ value for this image is ‘fixed’, then
+                // 'background-origin' has no effect.
+                origin_x = Au(0);
+                origin_y = Au(0);
+                (Au(0), Au(0))
+            }
+        };
+
+        let horiz_position = *get_cyclic(&background.background_position_x.0, index);
+        let vert_position = *get_cyclic(&background.background_position_y.0, index);
+        // Use `background-position` to get the offset.
+        let horizontal_position = horiz_position.to_used_value(bounds.size.width - image_size.width);
+        let vertical_position = vert_position.to_used_value(bounds.size.height - image_size.height);
+
+        // The anchor position for this background, based on both the background-attachment
+        // and background-position properties.
+        let anchor_origin_x = border.left + virtual_origin_x + origin_x + horizontal_position;
+        let anchor_origin_y = border.top + virtual_origin_y + origin_y + vertical_position;
+
+        let mut tile_spacing = Size2D::zero();
+        let mut stretch_size = image_size;
+
+        // Adjust origin and size based on background-repeat
+        let background_repeat = get_cyclic(&background.background_repeat.0, index);
+        match background_repeat.0 {
+            background_repeat::single_value::RepeatKeyword::NoRepeat => {
+                bounds.origin.x = anchor_origin_x;
+                bounds.size.width = image_size.width;
+            }
+            background_repeat::single_value::RepeatKeyword::Repeat => {
+                ImageFragmentInfo::tile_image(&mut bounds.origin.x,
+                                              &mut bounds.size.width,
+                                              anchor_origin_x,
+                                              image_size.width);
+            }
+            background_repeat::single_value::RepeatKeyword::Space => {
+                ImageFragmentInfo::tile_image_spaced(&mut bounds.origin.x,
+                                                     &mut bounds.size.width,
+                                                     &mut tile_spacing.width,
+                                                     anchor_origin_x,
+                                                     image_size.width);
+
+            }
+            background_repeat::single_value::RepeatKeyword::Round => {
+                ImageFragmentInfo::tile_image_round(&mut bounds.origin.x,
+                                                    &mut bounds.size.width,
+                                                    anchor_origin_x,
+                                                    &mut stretch_size.width);
+            }
+        };
+        match background_repeat.1 {
+            background_repeat::single_value::RepeatKeyword::NoRepeat => {
+                bounds.origin.y = anchor_origin_y;
+                bounds.size.height = image_size.height;
+            }
+            background_repeat::single_value::RepeatKeyword::Repeat => {
+                ImageFragmentInfo::tile_image(&mut bounds.origin.y,
+                                              &mut bounds.size.height,
+                                              anchor_origin_y,
+                                              image_size.height);
+            }
+            background_repeat::single_value::RepeatKeyword::Space => {
+                ImageFragmentInfo::tile_image_spaced(&mut bounds.origin.y,
+                                                     &mut bounds.size.height,
+                                                     &mut tile_spacing.height,
+                                                     anchor_origin_y,
+                                                     image_size.height);
+
+            }
+            background_repeat::single_value::RepeatKeyword::Round => {
+                ImageFragmentInfo::tile_image_round(&mut bounds.origin.y,
+                                                    &mut bounds.size.height,
+                                                    anchor_origin_y,
+                                                    &mut stretch_size.height);
+            }
+        };
+
+        // Create the image display item.
+        let base = state.create_base_display_item(&bounds,
+                                                  &clip,
+                                                  self.node,
+                                                  style.get_cursor(Cursor::Default),
+                                                  display_list_section);
+
+        debug!("(building display list) adding background image.");
+        state.add_display_item(DisplayItem::Image(box ImageDisplayItem {
+            base: base,
+            webrender_image: webrender_image,
+            image_data: None,
+            stretch_size: stretch_size,
+            tile_spacing: tile_spacing,
+            image_rendering: style.get_inheritedbox().image_rendering.clone(),
+        }));
+
+    }
+
+    fn build_display_list_for_background_paint_worklet(&self,
+                                                       state: &mut DisplayListBuildState,
+                                                       style: &ServoComputedValues,
+                                                       display_list_section: DisplayListSection,
+                                                       absolute_bounds: &Rect<Au>,
+                                                       clip: &ClippingRegion,
+                                                       paint_worklet: &PaintWorklet,
+                                                       index: usize)
+    {
+        // TODO: check that this is the servo equivalent of "concrete object size".
+        // https://drafts.css-houdini.org/css-paint-api/#draw-a-paint-image
+        // https://drafts.csswg.org/css-images-3/#concrete-object-size
+        let size = self.content_box().size.to_physical(style.writing_mode);
+        let name = paint_worklet.name.clone();
+
+        // If the script thread has not added any paint worklet modules, there is nothing to do!
+        let executor = match state.layout_context.paint_worklet_executor {
+            Some(ref executor) => executor,
+            None => return debug!("Worklet {} called before any paint modules are added.", name),
+        };
+
+        // TODO: add a one-place cache to avoid drawing the paint image every time.
+        debug!("Drawing a paint image {}({},{}).", name, size.width.to_px(), size.height.to_px());
+        let mut image = match executor.draw_a_paint_image(name, size) {
+            Ok(image) => image,
+            Err(err) => return warn!("Error running paint worklet ({:?}).", err),
+        };
+
+        // Make sure the image has a webrender key.
+        state.layout_context.image_cache.set_webrender_image_key(&mut image);
+
+        debug!("Drew a paint image ({},{}).", image.width, image.height);
+        self.build_display_list_for_webrender_image(state,
+                                                    style,
+                                                    display_list_section,
+                                                    absolute_bounds,
+                                                    clip,
+                                                    WebRenderImageInfo::from_image(&image),
+                                                    index);
     }
 
     fn convert_linear_gradient(&self,
                                bounds: &Rect<Au>,
                                stops: &[GradientItem],
                                direction: &LineDirection,
-                               repeating: bool,
-                               style: &ServoComputedValues)
+                               repeating: bool)
                                -> display_list::Gradient {
         let angle = match *direction {
             LineDirection::Angle(angle) => angle.radians(),
@@ -1143,7 +1230,7 @@ impl FragmentDisplayListBuilding for Fragment {
         let length = Au::from_f32_px(
             (delta.x.to_f32_px() * 2.0).hypot(delta.y.to_f32_px() * 2.0));
 
-        let mut stops = convert_gradient_stops(stops, length, style);
+        let mut stops = convert_gradient_stops(stops, length);
 
         // Only clamped gradients need to be fixed because in repeating gradients
         // there is no "first" or "last" stop because they repeat infinitly in
@@ -1167,8 +1254,7 @@ impl FragmentDisplayListBuilding for Fragment {
                                stops: &[GradientItem],
                                shape: &EndingShape,
                                center: &Position,
-                               repeating: bool,
-                               style: &ServoComputedValues)
+                               repeating: bool)
                                -> display_list::RadialGradient {
         let center = Point2D::new(center.horizontal.to_used_value(bounds.size.width),
                                   center.vertical.to_used_value(bounds.size.height));
@@ -1187,7 +1273,7 @@ impl FragmentDisplayListBuilding for Fragment {
             },
         };
 
-        let mut stops = convert_gradient_stops(stops, radius.width, style);
+        let mut stops = convert_gradient_stops(stops, radius.width);
         // Repeating gradients have no last stops that can be ignored. So
         // fixup is not necessary but may actually break the gradient.
         if !repeating {
@@ -1231,8 +1317,7 @@ impl FragmentDisplayListBuilding for Fragment {
                 let gradient = self.convert_linear_gradient(&bounds,
                                                             &gradient.items[..],
                                                             angle_or_corner,
-                                                            gradient.repeating,
-                                                            style);
+                                                            gradient.repeating);
                 DisplayItem::Gradient(box GradientDisplayItem {
                     base: base,
                     gradient: gradient,
@@ -1243,8 +1328,7 @@ impl FragmentDisplayListBuilding for Fragment {
                                                             &gradient.items[..],
                                                             shape,
                                                             center,
-                                                            gradient.repeating,
-                                                            style);
+                                                            gradient.repeating);
                 DisplayItem::RadialGradient(box RadialGradientDisplayItem {
                     base: base,
                     gradient: gradient,
@@ -1368,8 +1452,7 @@ impl FragmentDisplayListBuilding for Fragment {
                         let grad = self.convert_linear_gradient(&bounds,
                                                                 &gradient.items[..],
                                                                 &angle_or_corner,
-                                                                gradient.repeating,
-                                                                style);
+                                                                gradient.repeating);
 
                         state.add_display_item(DisplayItem::Border(box BorderDisplayItem {
                             base: base,
@@ -1387,8 +1470,7 @@ impl FragmentDisplayListBuilding for Fragment {
                                                                 &gradient.items[..],
                                                                 shape,
                                                                 center,
-                                                                gradient.repeating,
-                                                                style);
+                                                                gradient.repeating);
                         state.add_display_item(DisplayItem::Border(box BorderDisplayItem {
                             base: base,
                             border_widths: border.to_physical(style.writing_mode),
@@ -1402,6 +1484,9 @@ impl FragmentDisplayListBuilding for Fragment {
                         }));
                     }
                 }
+            }
+            Either::Second(Image::PaintWorklet(..)) => {
+                // TODO: Handle border-image with `paint()`.
             }
             Either::Second(Image::Rect(..)) => {
                 // TODO: Handle border-image with `-moz-image-rect`.
@@ -1949,7 +2034,7 @@ impl FragmentDisplayListBuilding for Fragment {
                                             state: &mut DisplayListBuildState,
                                             text_fragment: &ScannedTextFragmentInfo,
                                             stacking_relative_content_box: &Rect<Au>,
-                                            text_shadow: Option<&TextShadow>,
+                                            text_shadow: Option<&Shadow>,
                                             clip: &Rect<Au>) {
         // TODO(emilio): Allow changing more properties by ::selection
         let text_color = if let Some(shadow) = text_shadow {

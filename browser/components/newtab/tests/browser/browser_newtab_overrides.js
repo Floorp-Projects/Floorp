@@ -4,13 +4,16 @@ let Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
+const PREF_NEWTAB_ACTIVITY_STREAM = "browser.newtabpage.activity-stream.enabled";
+
+Services.prefs.setBoolPref(PREF_NEWTAB_ACTIVITY_STREAM, false);
 
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
 
 registerCleanupFunction(function() {
-  Services.prefs.setBoolPref("browser.newtabpage.activity-stream.enabled", false);
+  Services.prefs.clearUserPref(PREF_NEWTAB_ACTIVITY_STREAM);
   aboutNewTabService.resetNewTabURL();
 });
 

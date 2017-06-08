@@ -27,9 +27,11 @@ jobs:
         treeherder:
             platform: linux64/debug
             symbol: SM-tc(H)
+        worker:
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/hazard.manifest"
         run:
             using: hazard
-            tooltool-manifest: "browser/config/tooltool-manifests/linux64/hazard.manifest"
             command: >
                 cd /home/worker/checkouts/gecko/taskcluster/scripts/builder
                 && ./build-haz-linux.sh --project shell $HOME/workspace
@@ -46,9 +48,11 @@ jobs:
         treeherder:
             platform: linux64/debug
             symbol: tc(H)
+        worker:
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/hazard.manifest"
         run:
             using: hazard
-            tooltool-manifest: "browser/config/tooltool-manifests/linux64/hazard.manifest"
             mozconfig: "browser/config/mozconfigs/linux64/hazards"
             command: >
                 cd /home/worker/checkouts/gecko/taskcluster/scripts/builder

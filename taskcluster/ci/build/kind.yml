@@ -7,6 +7,7 @@ loader: taskgraph.loader.transform:loader
 transforms:
    - taskgraph.transforms.build:transforms
    - taskgraph.transforms.build_attrs:transforms
+   - taskgraph.transforms.build_lints:transforms
    - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
 

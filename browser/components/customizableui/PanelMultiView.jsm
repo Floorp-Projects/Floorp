@@ -1012,22 +1012,27 @@ this.PanelMultiView = class {
       // Take the label for toolbarbuttons; it only exists on those elements.
       element = element.labelElement || element;
 
-      let bounds = this._dwu.getBoundsWithoutFlushing(element);
+      let bounds = element.getBoundingClientRect();
       let previous = this._multiLineElementsMap.get(element);
-      // Only remove the 'height' property, which will cause a layout flush, when
-      // absolutely necessary.
+      // We don't need to (re-)apply the workaround for invisible elements or
+      // on elements we've seen before and haven't changed in the meantime.
       if (!bounds.width || !bounds.height ||
           (previous && element.textContent == previous.textContent &&
                        bounds.width == previous.bounds.width)) {
         continue;
       }
 
-      element.style.removeProperty("height");
       items.push({ element });
     }
 
+    // Removing the 'height' property will only cause a layout flush in the next
+    // loop below if it was set.
+    for (let item of items) {
+      item.element.style.removeProperty("height");
+    }
+
     // We now read the computed style to store the height of any element that
-    // may contain wrapping text, which will be zero if the element is hidden.
+    // may contain wrapping text.
     for (let item of items) {
       item.bounds = item.element.getBoundingClientRect();
     }

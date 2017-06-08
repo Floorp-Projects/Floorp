@@ -1,0 +1,28 @@
+<!doctype html>
+<html class="reftest-wait">
+  <head>
+    <title>
+      Bug 1335998 - Handle {Interpolate, Accumulate}Matrix of mismatched transform lists
+    </title>
+    <style>
+    #target {
+      width: 100px; height: 100px;
+      background: blue;
+      transform: rotate(45deg);
+    }
+    </style>
+  </head>
+  <body>
+  <div id="target"></div>
+  </body>
+  <script>
+    var div = document.getElementById("target");
+    var animation = div.animate([ { transform: 'translateX(200px) scale(2.0)',
+                                    composite: 'accumulate' },
+                                  { transform: 'rotate(-45deg)' } ],
+                                2000);
+    animation.finished.then(function() {
+      document.documentElement.className = "";
+    });
+  </script>
+</html>

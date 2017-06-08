@@ -12,7 +12,8 @@ function* test(testDriver) {
   // scroll over the scrollbar, and make sure the subframe scrolls
   var scrollPos = subframe.scrollTop;
   var scrollbarX = (200 + subframe.clientWidth) / 2;
-  yield moveMouseAndScrollWheelOver(subframe, scrollbarX, 100, testDriver);
+  yield synthesizeNativeWheelAndWaitForScrollEvent(subframe, scrollbarX, 100,
+      0, -10, testDriver);
   ok(subframe.scrollTop > scrollPos, "subframe scrolled after wheeling over scrollbar");
 }
 

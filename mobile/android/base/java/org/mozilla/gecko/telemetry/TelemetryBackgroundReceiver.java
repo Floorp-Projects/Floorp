@@ -11,6 +11,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -177,7 +178,14 @@ public class TelemetryBackgroundReceiver extends BroadcastReceiver {
                         context.getFileStreamPath(SYNC_BUNDLE_STORE_DIR), DEFAULT_PROFILE);
 
                 long lastAttemptedSyncPingUpload = sharedPreferences.getLong(PREF_LAST_ATTEMPTED_UPLOADED, 0L);
-                boolean idsChanged = setOrUpdateIDsIfChanged(sharedPreferences, uid, deviceID);
+
+                // Changed IDs (uid or deviceID) is normally a reason to upload. However, if we
+                // didn't receive uid or deviceID, we skip this check. This might happen if Sync
+                // fails very early on, for example while talking to the token server.
+                boolean idsChanged = false;
+                if (uid != null && deviceID != null) {
+                    idsChanged = setOrUpdateIDsIfChanged(sharedPreferences, uid, deviceID);
+                }
 
                 // Is there a good reason to upload at this time?
                 final String reasonToUpload = reasonToUpload(
@@ -325,7 +333,7 @@ public class TelemetryBackgroundReceiver extends BroadcastReceiver {
     }
 
     // This has storage side-effects.
-    private boolean setOrUpdateIDsIfChanged(SharedPreferences prefs, String uid, String deviceID) {
+    private boolean setOrUpdateIDsIfChanged(@NonNull SharedPreferences prefs, @NonNull String uid, @NonNull String deviceID) {
         final String currentIDsCombined = uid.concat(deviceID);
         final String previousIDsHash = prefs.getString(PREF_IDS, "");
 

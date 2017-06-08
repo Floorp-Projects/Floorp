@@ -70,9 +70,9 @@ parser/html/java/javaparser/
 /local.properties
 
 # Python virtualenv artifacts.
-python/psutil/**/*.so
-python/psutil/**/*.pyd
-python/psutil/build/
+third_party/python/psutil/**/*.so
+third_party/python/psutil/**/*.pyd
+third_party/python/psutil/build/
 
 # Ignore chrome.manifest files from the devtools loader
 devtools/client/chrome.manifest

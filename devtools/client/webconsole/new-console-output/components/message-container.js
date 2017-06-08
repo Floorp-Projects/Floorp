@@ -38,6 +38,7 @@ const MessageContainer = createClass({
     tableData: PropTypes.object,
     timestampsVisible: PropTypes.bool.isRequired,
     repeat: PropTypes.object,
+    networkMessageUpdate: PropTypes.object.isRequired,
   },
 
   getDefaultProps: function () {
@@ -55,13 +56,16 @@ const MessageContainer = createClass({
     const totalTimeChanged = this.props.message.totalTime !== nextProps.message.totalTime;
     const timestampVisibleChanged =
       this.props.timestampsVisible !== nextProps.timestampsVisible;
+    const networkMessageUpdateChanged =
+      this.props.networkMessageUpdate !== nextProps.networkMessageUpdate;
 
     return repeatChanged
       || openChanged
       || tableDataChanged
       || responseChanged
       || totalTimeChanged
-      || timestampVisibleChanged;
+      || timestampVisibleChanged
+      || networkMessageUpdateChanged;
   },
 
   render() {

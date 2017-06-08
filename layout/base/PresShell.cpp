@@ -8125,6 +8125,11 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
         MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
           "Somebody changed aEvent to cause a DOM event!");
         nsPresShellEventCB eventCB(this);
+        if (nsIFrame* target = GetCurrentEventFrame()) {
+          if (target->OnlySystemGroupDispatch(aEvent->mMessage)) {
+              aEvent->StopPropagation();
+          }
+        }
         if (aEvent->mClass == eTouchEventClass) {
           DispatchTouchEventToDOM(aEvent, aStatus, &eventCB, touchIsNew);
         } else {

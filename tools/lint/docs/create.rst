@@ -1,30 +1,29 @@
 Adding a New Linter to the Tree
 ===============================
 
-A linter is a python file with a ``.lint`` extension and a global dict called LINTER. Depending on how
-complex it is, there may or may not be any actual python code alongside the LINTER definition.
+A linter is a yaml file with a ``.yml`` extension. Depending on how the type of linter, there may
+be python code alongside the definition, pointed to by the 'payload' attribute.
 
 Here's a trivial example:
 
-no-eval.lint
+no-eval.yml
 
-.. code-block:: python
+.. code-block::
 
-    LINTER = {
-        'name': 'EvalLinter',
-        'description': "Ensures the string 'eval' doesn't show up."
-        'include': "**/*.js",
-        'type': 'string',
-        'payload': 'eval',
-    }
+    EvalLinter:
+        description: Ensures the string eval doesn't show up.
+        include:
+            - "**/*.js"
+        type: string
+        payload: eval
 
-Now ``no-eval.lint`` gets passed into :func:`LintRoller.read`.
+Now ``no-eval.yml`` gets passed into :func:`LintRoller.read`.
 
 
 Linter Types
 ------------
 
-There are three types of linters, though more may be added in the future.
+There are four types of linters, though more may be added in the future.
 
 1. string - fails if substring is found
 2. regex - fails if regex matches
@@ -42,23 +41,23 @@ responsible for not only running the linter, but ensuring the results
 are structured properly. For example, an external type could shell out
 to a 3rd party linter, collect the output and format it into a list of
 :class:`ResultContainer` objects. The signature for this python
-function is ``lint(files, **kwargs)``, where ``files`` is a list of
-files to lint.
+function is ``lint(files, config, **kwargs)``, where ``files`` is a list of
+files to lint and ``config`` is the linter definition defined in the ``.yml``
+file.
 
 Structured log linters are much like external linters, but suitable
 for cases where the linter code is using mozlog and emits
 ``lint_error`` or ``lint_warning`` logging messages when the lint
 fails. This is recommended for writing novel gecko-specific lints. In
-this case the signature for lint functions is ``lint(files, logger,
+this case the signature for lint functions is ``lint(files, config, logger,
 **kwargs)``.
 
-LINTER Definition
+
+Linter Definition
 -----------------
 
-Each ``.lint`` file must have a variable called LINTER which is a dict containing metadata about the
-linter. Here are the supported keys:
+Each ``.yml`` file must have at least one linter defined in it. Here are the supported keys:
 
-* name - The name of the linter (required)
 * description - A brief description of the linter's purpose (required)
 * type - One of 'string', 'regex' or 'external' (required)
 * payload - The actual linting logic, depends on the type (required)
@@ -67,7 +66,7 @@ linter. Here are the supported keys:
 * extensions - A list of file extensions to be considered (optional)
 * setup - A function that sets up external dependencies (optional)
 
-In addition to the above, some ``.lint`` files correspond to a single lint rule. For these, the
+In addition to the above, some ``.yml`` files correspond to a single lint rule. For these, the
 following additional keys may be specified:
 
 * message - A string to print on infraction (optional)
@@ -80,10 +79,12 @@ For structured_log lints the following additional keys apply:
 * logger - A StructuredLog object to use for logging. If not supplied
   one will be created (optional)
 
+
 Example
 -------
 
-Here is an example of an external linter that shells out to the python flake8 linter:
+Here is an example of an external linter that shells out to the python flake8 linter,
+let's call the file ``flake8_lint.py``:
 
 .. code-block:: python
 
@@ -100,7 +101,7 @@ Here is an example of an external linter that shells out to the python flake8 li
     """.strip()
 
 
-    def lint(files, **lintargs):
+    def lint(files, config, **lintargs):
         import which
 
         binary = os.environ.get('FLAKE8')
@@ -139,15 +140,22 @@ Here is an example of an external linter that shells out to the python flake8 li
             # result.from_linter is a convenience method that
             # creates a ResultContainer using a LINTER definition
             # to populate some defaults.
-            results.append(result.from_linter(LINTER, **res))
+            results.append(result.from_config(config, **res))
 
         return results
 
+Now here is the linter definition that would call it:
 
-    LINTER = {
-        'name': "flake8",
-        'description': "Python linter",
-        'include': ['**/*.py'],
-        'type': 'external',
-        'payload': lint,
-    }
+.. code-block::
+
+    flake8:
+        description: Python linter
+        include:
+            - '**/*.py'
+        type: external
+        payload: flake8_lint:lint
+
+Notice the payload has two parts, delimited by ':'. The first is the module path, which
+``mozlint`` will attempt to import (e.g, the name of a function to call). The second is
+the object path within that module. It is up to consumers of ``mozlint`` to ensure the
+module is in ``sys.path``. Structured log linters use the same import mechanism.

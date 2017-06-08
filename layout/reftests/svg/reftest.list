@@ -333,7 +333,7 @@ fuzzy-if(skiaContent,7,175) fuzzy-if(skiaContent&&webrender,1,225) == outline.ht
 == paint-on-maskLayer-1b.html paint-on-maskLayer-1-ref.html
 pref(layout.css.clip-path-shapes.enabled,true) == paint-on-maskLayer-1c.html paint-on-maskLayer-1-ref.html
 pref(svg.paint-order.enabled,true) == paint-order-01.svg paint-order-01-ref.svg
-pref(svg.paint-order.enabled,true) == paint-order-02.svg paint-order-02-ref.svg
+pref(svg.paint-order.enabled,true) fuzzy-if(webrender,1-1,110-120) == paint-order-02.svg paint-order-02-ref.svg
 pref(svg.paint-order.enabled,true) == paint-order-03.svg paint-order-03-ref.svg
 
 #fuzzy(23,60) fails-if(d2d) == path-01.svg path-01-ref.svg

@@ -30,6 +30,7 @@
 #include "nsContentUtils.h"
 #include "nsError.h"
 #include "mozAutoDocUpdate.h"
+#include "nsRuleProcessorData.h"
 
 class nsIDOMCSSStyleDeclaration;
 class nsIDOMCSSStyleSheet;
@@ -228,12 +229,12 @@ nsAttrSelector::nsAttrSelector(int32_t aNameSpace, const nsString& aAttr)
 
   nsAutoString lowercase;
   nsContentUtils::ASCIIToLower(aAttr, lowercase);
-  
+
   mCasedAttr = NS_Atomize(aAttr);
   mLowercaseAttr = NS_Atomize(lowercase);
 }
 
-nsAttrSelector::nsAttrSelector(int32_t aNameSpace, const nsString& aAttr, uint8_t aFunction, 
+nsAttrSelector::nsAttrSelector(int32_t aNameSpace, const nsString& aAttr, uint8_t aFunction,
                                const nsString& aValue,
                                ValueCaseSensitivity aValueCaseSensitivity)
   : mValue(aValue),
@@ -248,13 +249,13 @@ nsAttrSelector::nsAttrSelector(int32_t aNameSpace, const nsString& aAttr, uint8_
 
   nsAutoString lowercase;
   nsContentUtils::ASCIIToLower(aAttr, lowercase);
-  
+
   mCasedAttr = NS_Atomize(aAttr);
   mLowercaseAttr = NS_Atomize(lowercase);
 }
 
 nsAttrSelector::nsAttrSelector(int32_t aNameSpace,  nsIAtom* aLowercaseAttr,
-                               nsIAtom* aCasedAttr, uint8_t aFunction, 
+                               nsIAtom* aCasedAttr, uint8_t aFunction,
                                const nsString& aValue,
                                ValueCaseSensitivity aValueCaseSensitivity)
   : mValue(aValue),
@@ -272,7 +273,7 @@ nsAttrSelector*
 nsAttrSelector::Clone(bool aDeep) const
 {
   nsAttrSelector *result =
-    new nsAttrSelector(mNameSpace, mLowercaseAttr, mCasedAttr, 
+    new nsAttrSelector(mNameSpace, mLowercaseAttr, mCasedAttr,
                        mFunction, mValue, mValueCaseSensitivity);
 
   if (aDeep)
@@ -354,7 +355,7 @@ nsCSSSelector::Clone(bool aDeepNext, bool aDeepNegations) const
   return result;
 }
 
-nsCSSSelector::~nsCSSSelector(void)  
+nsCSSSelector::~nsCSSSelector(void)
 {
   MOZ_COUNT_DTOR(nsCSSSelector);
   Reset();
@@ -393,7 +394,7 @@ void nsCSSSelector::SetTag(const nsString& aTag)
   }
 
   mCasedTag = NS_Atomize(aTag);
- 
+
   nsAutoString lowercase;
   nsContentUtils::ASCIIToLower(aTag, lowercase);
   mLowercaseTag = NS_Atomize(lowercase);
@@ -465,7 +466,7 @@ void nsCSSSelector::AddAttribute(int32_t aNameSpace, const nsString& aAttr)
   }
 }
 
-void nsCSSSelector::AddAttribute(int32_t aNameSpace, const nsString& aAttr, uint8_t aFunc, 
+void nsCSSSelector::AddAttribute(int32_t aNameSpace, const nsString& aAttr, uint8_t aFunc,
                                  const nsString& aValue,
                                  nsAttrSelector::ValueCaseSensitivity aCaseSensitivity)
 {
@@ -551,7 +552,7 @@ int32_t nsCSSSelector::CalcWeight() const
 }
 
 //
-// Builds the textual representation of a selector. Called by DOM 2 CSS 
+// Builds the textual representation of a selector. Called by DOM 2 CSS
 // StyleRule:selectorText
 //
 void
@@ -743,7 +744,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
       }
     }
   }
-      
+
   if (!mLowercaseTag) {
     // Universal selector:  avoid writing the universal selector when we
     // can avoid it, especially since we're required to avoid it for the
@@ -863,7 +864,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
           aString.Append(char16_t('*'));
 
         aString.Append(char16_t('='));
-      
+
         // Append the value
         nsStyleUtil::AppendEscapedCSSString(list->mValue, aString);
 
@@ -874,7 +875,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
       }
 
       aString.Append(char16_t(']'));
-      
+
       list = list->mNext;
     }
   }
@@ -1196,7 +1197,7 @@ StyleRule::Style()
 }
 
 NS_IMETHODIMP
-StyleRule::GetCSSStyleRule(StyleRule **aResult)
+StyleRule::GetCSSStyleRule(BindingStyleRule **aResult)
 {
   *aResult = this;
   NS_ADDREF(*aResult);
@@ -1405,6 +1406,108 @@ StyleRule::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   // - mDOMRule;
 
   return n;
+}
+
+nsCSSSelectorList*
+StyleRule::GetSelectorAtIndex(uint32_t aIndex, ErrorResult& rv)
+{
+
+  for (nsCSSSelectorList* sel = mSelector; sel;
+       sel = sel->mNext, --aIndex) {
+    if (aIndex == 0) {
+      return sel;
+    }
+  }
+
+  // Ran out of selectors
+  rv.Throw(NS_ERROR_INVALID_ARG);
+  return nullptr;
+}
+
+uint32_t
+StyleRule::GetSelectorCount()
+{
+  uint32_t count = 0;
+  for (nsCSSSelectorList* sel = mSelector; sel; sel = sel->mNext) {
+    ++count;
+  }
+  return count;
+}
+
+nsresult
+StyleRule::GetSelectorText(uint32_t aSelectorIndex, nsAString& aText)
+{
+  ErrorResult rv;
+  nsCSSSelectorList* sel = GetSelectorAtIndex(aSelectorIndex, rv);
+  if (rv.Failed()) {
+    return rv.StealNSResult();
+  }
+
+  sel->mSelectors->ToString(aText, GetStyleSheet(), false);
+
+  return NS_OK;
+}
+
+nsresult
+StyleRule::GetSpecificity(uint32_t aSelectorIndex, uint64_t* aSpecificity)
+{
+  ErrorResult rv;
+  nsCSSSelectorList* sel = GetSelectorAtIndex(aSelectorIndex, rv);
+  if (rv.Failed()) {
+    return rv.StealNSResult();
+  }
+
+  *aSpecificity = sel->mWeight;
+  return NS_OK;
+}
+
+nsresult
+StyleRule::SelectorMatchesElement(Element* aElement,
+                                  uint32_t aSelectorIndex,
+                                  const nsAString& aPseudo,
+                                  bool* aMatches)
+{
+  ErrorResult rv;
+  nsCSSSelectorList* tail = GetSelectorAtIndex(aSelectorIndex, rv);
+  if (rv.Failed()) {
+    return rv.StealNSResult();
+  }
+
+  // We want just the one list item, not the whole list tail
+  nsAutoPtr<nsCSSSelectorList> sel(tail->Clone(false));
+
+  // Do not attempt to match if a pseudo element is requested and this is not
+  // a pseudo element selector, or vice versa.
+  if (aPseudo.IsEmpty() == sel->mSelectors->IsPseudoElement()) {
+    *aMatches = false;
+    return NS_OK;
+  }
+
+  if (!aPseudo.IsEmpty()) {
+    // We need to make sure that the requested pseudo element type
+    // matches the selector pseudo element type before proceeding.
+    nsCOMPtr<nsIAtom> pseudoElt = NS_Atomize(aPseudo);
+    if (sel->mSelectors->PseudoType() != nsCSSPseudoElements::
+          GetPseudoType(pseudoElt, CSSEnabledState::eIgnoreEnabledState)) {
+      *aMatches = false;
+      return NS_OK;
+    }
+
+    // We have a matching pseudo element, now remove it so we can compare
+    // directly against |element| when proceeding into SelectorListMatches.
+    // It's OK to do this - we just cloned sel and nothing else is using it.
+    sel->RemoveRightmostSelector();
+  }
+
+  // XXXbz what exactly should we do with visited state here?  If we ever start
+  // caring about it, remember to do FlushPendingLinkUpdates().
+  TreeMatchContext matchingContext(false,
+                                   nsRuleWalker::eRelevantLinkUnvisited,
+                                   aElement->OwnerDoc(),
+                                   TreeMatchContext::eNeverMatchVisited);
+  *aMatches = nsCSSRuleProcessor::SelectorListMatches(aElement, matchingContext,
+                                                      sel);
+  return NS_OK;
 }
 
 } // namespace css

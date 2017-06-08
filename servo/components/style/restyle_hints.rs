@@ -29,6 +29,7 @@ use smallvec::SmallVec;
 use std::cell::Cell;
 use std::clone::Clone;
 use std::cmp;
+use std::fmt;
 
 /// When the ElementState of an element (like IN_HOVER_STATE) changes,
 /// certain pseudo-classes (like :hover) may require us to restyle that
@@ -554,8 +555,12 @@ pub trait ElementSnapshot : Sized {
     /// only be called if `has_attrs()` returns true.
     fn each_class<F>(&self, F)
         where F: FnMut(&Atom);
+
+    /// The `xml:lang=""` or `lang=""` attribute value per this snapshot.
+    fn lang_attr(&self) -> Option<AttrValue>;
 }
 
+#[derive(Clone)]
 struct ElementWrapper<'a, E>
     where E: TElement,
 {
@@ -604,6 +609,35 @@ impl<'a, E> ElementWrapper<'a, E>
             Some(state) => state ^ self.element.get_state(),
             None => ElementState::empty(),
         }
+    }
+
+    /// Returns the value of the `xml:lang=""` (or, if appropriate, `lang=""`)
+    /// attribute from this element's snapshot or the closest ancestor
+    /// element snapshot with the attribute specified.
+    fn get_lang(&self) -> Option<AttrValue> {
+        let mut current = self.clone();
+        loop {
+            let lang = match self.snapshot() {
+                Some(snapshot) if snapshot.has_attrs() => snapshot.lang_attr(),
+                _ => current.element.lang_attr(),
+            };
+            if lang.is_some() {
+                return lang;
+            }
+            match current.parent_element() {
+                Some(parent) => current = parent,
+                None => return None,
+            }
+        }
+    }
+}
+
+impl<'a, E> fmt::Debug for ElementWrapper<'a, E>
+    where E: TElement,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Ignore other fields for now, can change later if needed.
+        self.element.fmt(f)
     }
 }
 
@@ -695,6 +729,12 @@ impl<'a, E> Element for ElementWrapper<'a, E>
                         return snapshot.mIsMozBrowserFrame();
                     }
                 }
+            }
+
+            // :lang() needs to match using the closest ancestor xml:lang="" or
+            // lang="" attribtue from snapshots.
+            NonTSPseudoClass::Lang(ref lang_arg) => {
+                return self.element.match_element_lang(Some(self.get_lang()), lang_arg);
             }
 
             _ => {}

@@ -378,7 +378,7 @@ class VirtualenvMixin(object):
         if self.topsrcdir:
             virtualenv = [
                 sys.executable,
-                os.path.join(self.topsrcdir, 'python', 'virtualenv', 'virtualenv.py')
+                os.path.join(self.topsrcdir, 'third_party', 'python', 'virtualenv', 'virtualenv.py')
             ]
             virtualenv_options = c.get('virtualenv_options', [])
             # Don't create symlinks. If we don't do this, permissions issues may

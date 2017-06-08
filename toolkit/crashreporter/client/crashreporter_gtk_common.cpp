@@ -76,8 +76,10 @@ static bool RestartApplication()
   argv[i] = 0;
 
   pid_t pid = fork();
-  if (pid == -1)
+  if (pid == -1) {
+    free(argv);
     return false;
+  }
   else if (pid == 0) {
     (void)execv(argv[0], argv);
     _exit(1);
