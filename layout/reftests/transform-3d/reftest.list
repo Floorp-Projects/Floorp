@@ -73,7 +73,7 @@ fuzzy-if(cocoaWidget,128,9) == animate-preserve3d-parent.html animate-preserve3d
 fuzzy-if(cocoaWidget,128,9) == animate-preserve3d-child.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
 == animate-backface-hidden.html about:blank
 fails-if(webrender) == 1245450-1.html green-rect.html
-fuzzy(1,2000) == opacity-preserve3d-1.html opacity-preserve3d-1-ref.html
+fuzzy(1,2000) fails-if(webrender) == opacity-preserve3d-1.html opacity-preserve3d-1-ref.html
 fuzzy(1,15000) == opacity-preserve3d-2.html opacity-preserve3d-2-ref.html
 fuzzy(1,10000) == opacity-preserve3d-3.html opacity-preserve3d-3-ref.html
 fuzzy(1,10000) == opacity-preserve3d-4.html opacity-preserve3d-4-ref.html
