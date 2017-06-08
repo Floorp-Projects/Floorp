@@ -285,3 +285,6 @@ fails-if(styloVsGecko||stylo) == anim-display-in-g-element.svg lime.svg
 fails-if(styloVsGecko||stylo) == anim-change-display-block-for-dynamically-appended-elem.html anim-standard-ref.html
 
 pref(layout.css.clip-path-shapes.enabled,true) fuzzy(63,146) == anim-clipPath-viewBox.svg anim-clipPath-viewBox-ref.svg
+
+# Test animations for overflow.
+== anim-overflow-shorthand.svg anim-overflow-shorthand-ref.svg
