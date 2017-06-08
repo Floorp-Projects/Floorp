@@ -471,8 +471,7 @@ var gCSSProperties = {
   },
   'fill-opacity': {
     // https://svgwg.org/svg2-draft/painting.html#FillOpacityProperty
-    types: [
-    ]
+    types: [ 'opacity' ]
   },
   'fill-rule': {
     // https://svgwg.org/svg2-draft/painting.html#FillRuleProperty
