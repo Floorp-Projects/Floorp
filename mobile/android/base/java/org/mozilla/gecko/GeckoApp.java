@@ -1729,7 +1729,8 @@ public abstract class GeckoApp extends GeckoActivity
 
         final String passedUri = getIntentURI(intent);
 
-        final boolean isExternalURL = invokedWithExternalURL(passedUri);
+        final boolean isExternalURL = passedUri != null;
+        final boolean isAboutHomeURL = isExternalURL && AboutPages.isAboutHome(passedUri);
 
         // Start migrating as early as possible, can do this in
         // parallel with Gecko load.
@@ -1753,7 +1754,7 @@ public abstract class GeckoApp extends GeckoActivity
         if (mIsRestoringActivity && hasGeckoTab(intent)) {
             Tabs.getInstance().notifyListeners(null, Tabs.TabEvents.RESTORED);
             handleSelectTabIntent(intent);
-        // External URLs should always be loaded regardless of whether Gecko is
+        // External URLs and new tab from widget should always be loaded regardless of whether Gecko is
         // already running.
         } else if (isExternalURL) {
             // Restore tabs before opening an external URL so that the new tab
@@ -1762,8 +1763,13 @@ public abstract class GeckoApp extends GeckoActivity
             processActionViewIntent(new Runnable() {
                 @Override
                 public void run() {
-                    final int flags = getNewTabFlags();
-                    loadStartupTab(passedUri, intent, flags);
+                    if (isAboutHomeURL) {
+                        // respect the user preferences for about:home from external intent calls
+                        loadStartupTab(Tabs.LOADURL_NEW_TAB, action);
+                    } else {
+                        final int flags = getNewTabFlags();
+                        loadStartupTab(passedUri, intent, flags);
+                    }
                 }
             });
         } else {
