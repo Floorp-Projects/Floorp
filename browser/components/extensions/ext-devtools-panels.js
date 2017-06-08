@@ -2,6 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+// The ext-* files are imported into the same scopes.
+/* import-globals-from ext-devtools.js */
+/* import-globals-from ext-utils.js */
+
 Cu.import("resource://gre/modules/ExtensionParent.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",

@@ -5,6 +5,9 @@
 /* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim: set sts=2 sw=2 et tw=80: */
 
+// The ext-* files are imported into the same scopes.
+/* import-globals-from ext-toolkit.js */
+
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetter(this, "ProxyScriptContext",

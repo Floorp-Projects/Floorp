@@ -1,5 +1,7 @@
 "use strict";
 
+/* eslint-env mozilla/frame-script */
+
 var {interfaces: Ci} = Components;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
