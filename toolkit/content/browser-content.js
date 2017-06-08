@@ -1337,7 +1337,7 @@ var ViewSelectionSource = {
       return undefined;
 
     // serialize
-    const VIEW_SOURCE_CSS = "resource://gre-resources/viewsource.css";
+    const VIEW_SOURCE_CSS = "resource://content-accessible/viewsource.css";
     const BUNDLE_URL = "chrome://global/locale/viewSource.properties";
 
     let bundle = Services.strings.createBundle(BUNDLE_URL);
