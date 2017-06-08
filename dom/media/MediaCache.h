@@ -198,15 +198,16 @@ public:
   MediaCacheStream(ChannelMediaResource* aClient, bool aIsPrivateBrowsing);
   ~MediaCacheStream();
 
-  // Set up this stream with the cache. Can fail on OOM. One
-  // of InitAsClone or Init must be called before any other method on
-  // this class. Does nothing if already initialized.
-  nsresult Init();
+  // Set up this stream with the cache. Can fail on OOM.
+  // aContentLength is the content length if known, otherwise -1.
+  // Exactly one of InitAsClone or Init must be called before any other method
+  // on this class. Does nothing if already initialized.
+  nsresult Init(int64_t aContentLength);
 
   // Set up this stream with the cache, assuming it's for the same data
-  // as the aOriginal stream. Can fail on OOM. Exactly one
-  // of InitAsClone or Init must be called before any other method on
-  // this class. Does nothing if already initialized.
+  // as the aOriginal stream. Can fail on OOM.
+  // Exactly one of InitAsClone or Init must be called before any other method
+  // on this class. Does nothing if already initialized.
   nsresult InitAsClone(MediaCacheStream* aOriginal);
 
   // These are called on the main thread.
