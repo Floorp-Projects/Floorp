@@ -1,24 +1,6 @@
 "use strict";
 
 module.exports = {
-  "globals": {
-    // TODO: Maybe this should be by file
-    "BrowserApp": false,
-    "Cc": false,
-    "Ci": false,
-    "Cu": false,
-    "NativeWindow": false,
-    "PageActions": false,
-    "ReaderMode": false,
-    "SimpleServiceDiscovery": false,
-    "TabMirror": false,
-    "MediaPlayerApp": false,
-    "RokuApp": false,
-    "SearchEngines": false,
-    "ConsoleAPI": true,
-    "Point": false,
-    "Rect": false,
-  },
   "rules": {
     "complexity": ["error", 20],
 
