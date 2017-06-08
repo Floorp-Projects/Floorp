@@ -875,6 +875,17 @@ const CustomizableWidgets = [
             updateCombinedWidgetStyle(node, aArea);
           }
         },
+
+        onWidgetOverflow(aWidgetNode) {
+          if (aWidgetNode == node) {
+            node.ownerGlobal.updateEditUIVisibility();
+          }
+        },
+        onWidgetUnderflow(aWidgetNode) {
+          if (aWidgetNode == node) {
+            node.ownerGlobal.updateEditUIVisibility();
+          }
+        },
       };
       CustomizableUI.addListener(listener);
 
