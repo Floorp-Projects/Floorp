@@ -291,41 +291,56 @@ AddOrAccumulateForServo(nsSMILValue& aDest,
   nsCSSPropertyID property = aValueToAddWrapper
                              ? aValueToAddWrapper->mPropID
                              : aDestWrapper->mPropID;
-  const RefPtr<RawServoAnimationValue>* valueToAdd =
-    aValueToAddWrapper
-    ? &aValueToAddWrapper->mServoValues[0]
-    : nullptr;
-  const RefPtr<RawServoAnimationValue>* destValue =
-    aDestWrapper
-    ? &aDestWrapper->mServoValues[0]
-    : nullptr;
-  RefPtr<RawServoAnimationValue> zeroValueStorage;
-  if (!FinalizeServoAnimationValues(valueToAdd, destValue, zeroValueStorage)) {
-    return false;
+  size_t len = aValueToAddWrapper
+               ? aValueToAddWrapper->mServoValues.Length()
+               : aDestWrapper->mServoValues.Length();
+
+  MOZ_ASSERT(!aValueToAddWrapper || !aDestWrapper ||
+             aValueToAddWrapper->mServoValues.Length() ==
+               aDestWrapper->mServoValues.Length(),
+             "Both of values'length in the wrappers should be the same if "
+             "both of them exist");
+
+  for (size_t i = 0; i < len; i++) {
+    const RefPtr<RawServoAnimationValue>* valueToAdd =
+      aValueToAddWrapper
+      ? &aValueToAddWrapper->mServoValues[i]
+      : nullptr;
+    const RefPtr<RawServoAnimationValue>* destValue =
+      aDestWrapper
+      ? &aDestWrapper->mServoValues[i]
+      : nullptr;
+    RefPtr<RawServoAnimationValue> zeroValueStorage;
+    if (!FinalizeServoAnimationValues(valueToAdd, destValue, zeroValueStorage)) {
+      return false;
+    }
+
+    // FinalizeServoAnimationValues may have updated destValue so we should make
+    // sure the aDest and aDestWrapper outparams are up-to-date.
+    if (aDestWrapper) {
+      aDestWrapper->mServoValues[i] = *destValue;
+    } else {
+      // aDest may be a barely-initialized "zero" destination.
+      aDest.mU.mPtr = aDestWrapper = new ValueWrapper(property, *destValue);
+      aDestWrapper->mServoValues.SetLength(len);
+    }
+
+    RefPtr<RawServoAnimationValue> result;
+    if (aCompositeOp == CompositeOperation::Add) {
+      result = Servo_AnimationValues_Add(*destValue, *valueToAdd).Consume();
+    } else {
+      result = Servo_AnimationValues_Accumulate(*destValue,
+                                                *valueToAdd,
+                                                aCount).Consume();
+    }
+
+    if (!result) {
+      return false;
+    }
+    aDestWrapper->mServoValues[i] = result;
   }
 
-  // FinalizeServoAnimationValues may have updated destValue so we should make
-  // sure the aDest and aDestWrapper outparams are up-to-date.
-  if (aDestWrapper) {
-    aDestWrapper->mServoValues[0] = *destValue;
-  } else {
-    // aDest may be a barely-initialized "zero" destination.
-    aDest.mU.mPtr = aDestWrapper = new ValueWrapper(property, *destValue);
-  }
-
-  RefPtr<RawServoAnimationValue> result;
-  if (aCompositeOp == CompositeOperation::Add) {
-    result = Servo_AnimationValues_Add(*destValue, *valueToAdd).Consume();
-  } else {
-    result = Servo_AnimationValues_Accumulate(*destValue,
-                                              *valueToAdd,
-                                              aCount).Consume();
-  }
-
-  if (result) {
-    aDestWrapper->mServoValues[0] = result;
-  }
-  return result;
+  return true;
 }
 
 static bool
@@ -356,10 +371,14 @@ AddOrAccumulate(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
       property == eCSSProperty_stroke_dasharray) {
     return false;
   }
+  // Skip font shorthand since it includes font-size-adjust.
+  if (property == eCSSProperty_font) {
+    return false;
+  }
 
   bool isServo = valueToAddWrapper
-                 ? valueToAddWrapper->mServoValues[0]
-                 : destWrapper->mServoValues[0];
+                 ? !valueToAddWrapper->mServoValues.IsEmpty()
+                 : !destWrapper->mServoValues.IsEmpty();
   if (isServo) {
     return AddOrAccumulateForServo(aDest,
                                    valueToAddWrapper,
