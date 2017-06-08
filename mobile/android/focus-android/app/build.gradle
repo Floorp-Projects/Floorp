@@ -108,9 +108,11 @@ android {
 
         focusWebkitRelease {
             java.srcDir 'src/focusRelease/java'
+            manifest.srcFile 'src/focusRelease/AndroidManifest.xml'
         }
         focusGeckoRelease {
             java.srcDir 'src/focusRelease/java'
+            manifest.srcFile 'src/focusRelease/AndroidManifest.xml'
         }
         klarWebkitRelease {
             java.srcDir 'src/klarRelease/java'
