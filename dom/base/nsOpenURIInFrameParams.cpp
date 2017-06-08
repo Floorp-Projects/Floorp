@@ -12,7 +12,6 @@ NS_IMPL_ISUPPORTS(nsOpenURIInFrameParams, nsIOpenURIInFrameParams)
 
 nsOpenURIInFrameParams::nsOpenURIInFrameParams(const mozilla::OriginAttributes& aOriginAttributes)
   : mOpenerOriginAttributes(aOriginAttributes)
-  , mIsPrivate(false)
 {
 }
 
@@ -37,14 +36,7 @@ NS_IMETHODIMP
 nsOpenURIInFrameParams::GetIsPrivate(bool* aIsPrivate)
 {
   NS_ENSURE_ARG_POINTER(aIsPrivate);
-  *aIsPrivate = mIsPrivate;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsOpenURIInFrameParams::SetIsPrivate(bool aIsPrivate)
-{
-  mIsPrivate = aIsPrivate;
+  *aIsPrivate = mOpenerOriginAttributes.mPrivateBrowsingId > 0;
   return NS_OK;
 }
 

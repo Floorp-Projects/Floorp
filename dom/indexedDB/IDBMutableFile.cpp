@@ -8,7 +8,6 @@
 
 #include "ActorsChild.h"
 #include "FileInfo.h"
-#include "FileSnapshot.h"
 #include "IDBDatabase.h"
 #include "IDBFactory.h"
 #include "IDBFileHandle.h"
@@ -19,7 +18,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/IDBMutableFileBinding.h"
-#include "mozilla/dom/filehandle/ActorsChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/dom/quota/QuotaManager.h"
@@ -43,16 +41,15 @@ IDBMutableFile::IDBMutableFile(IDBDatabase* aDatabase,
                                const nsAString& aName,
                                const nsAString& aType)
   : DOMEventTargetHelper(aDatabase)
-  , MutableFileBase(DEBUGONLY(aDatabase->OwningThread(),)
-                    aActor)
   , mDatabase(aDatabase)
+  , mBackgroundActor(aActor)
   , mName(aName)
   , mType(aType)
   , mInvalidated(false)
 {
-  AssertIsOnOwningThread();
   MOZ_ASSERT(aDatabase);
   aDatabase->AssertIsOnOwningThread();
+  MOZ_ASSERT(aActor);
 
   mDatabase->NoteLiveMutableFile(this);
 }
@@ -62,7 +59,23 @@ IDBMutableFile::~IDBMutableFile()
   AssertIsOnOwningThread();
 
   mDatabase->NoteFinishedMutableFile(this);
+
+  if (mBackgroundActor) {
+    mBackgroundActor->SendDeleteMeInternal();
+    MOZ_ASSERT(!mBackgroundActor, "SendDeleteMeInternal should have cleared!");
+  }
 }
+
+#ifdef DEBUG
+
+void
+IDBMutableFile::AssertIsOnOwningThread() const
+{
+  MOZ_ASSERT(mDatabase);
+  mDatabase->AssertIsOnOwningThread();
+}
+
+#endif // DEBUG
 
 int64_t
 IDBMutableFile::GetFileId() const
@@ -183,9 +196,7 @@ IDBMutableFile::Open(FileMode aMode, ErrorResult& aError)
     return nullptr;
   }
 
-  BackgroundFileHandleChild* actor =
-    new BackgroundFileHandleChild(DEBUGONLY(mBackgroundActor->OwningThread(),)
-                                  fileHandle);
+  BackgroundFileHandleChild* actor = new BackgroundFileHandleChild(fileHandle);
 
   MOZ_ALWAYS_TRUE(
     mBackgroundActor->SendPBackgroundFileHandleConstructor(actor, aMode));
@@ -206,9 +217,7 @@ IDBMutableFile::GetFile(ErrorResult& aError)
   FileRequestGetFileParams params;
 
   RefPtr<IDBFileRequest> request =
-    IDBFileRequest::Create(GetOwner(),
-                           fileHandle,
-                           /* aWrapAsDOMRequest */ true);
+    IDBFileRequest::Create(fileHandle, /* aWrapAsDOMRequest */ true);
 
   fileHandle->StartRequest(request, params);
 
@@ -240,43 +249,6 @@ JSObject*
 IDBMutableFile::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return IDBMutableFileBinding::Wrap(aCx, this, aGivenProto);
-}
-
-const nsString&
-IDBMutableFile::Name() const
-{
-  AssertIsOnOwningThread();
-
-  return mName;
-}
-
-const nsString&
-IDBMutableFile::Type() const
-{
-  AssertIsOnOwningThread();
-
-  return mType;
-}
-
-bool
-IDBMutableFile::IsInvalidated()
-{
-  AssertIsOnOwningThread();
-
-  return mInvalidated;
-}
-
-already_AddRefed<File>
-IDBMutableFile::CreateFileFor(BlobImpl* aBlobImpl,
-                              FileHandleBase* aFileHandle)
-{
-  AssertIsOnOwningThread();
-
-  RefPtr<BlobImpl> blobImplSnapshot =
-    new BlobImplSnapshot(aBlobImpl, static_cast<IDBFileHandle*>(aFileHandle));
-
-  RefPtr<File> file = File::Create(GetOwner(), blobImplSnapshot);
-  return file.forget();
 }
 
 } // namespace dom

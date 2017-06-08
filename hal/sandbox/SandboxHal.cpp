@@ -354,6 +354,13 @@ SetProcessPriority(int aPid, ProcessPriority aPriority)
   NS_RUNTIMEABORT("Only the main process may set processes' priorities.");
 }
 
+bool
+SetProcessPrioritySupported()
+{
+  NS_RUNTIMEABORT("Only the main process may call SetProcessPrioritySupported().");
+  return false;
+}
+
 void
 SetCurrentThreadPriority(ThreadPriority aThreadPriority)
 {

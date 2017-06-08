@@ -12,6 +12,7 @@
 namespace mozilla {
 namespace dom {
 class ContentParent;
+class TabParent;
 } // namespace dom
 
 /**
@@ -67,6 +68,8 @@ public:
    * what you use this for.
    */
   static bool CurrentProcessIsForeground();
+
+  static void TabActivityChanged(dom::TabParent* aTabParent, bool aIsActive);
 
 private:
   ProcessPriorityManager();

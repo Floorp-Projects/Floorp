@@ -547,6 +547,7 @@ static const dom::ConstantSpec gLibcProperties[] =
   INT_CONSTANT(EFAULT),
   INT_CONSTANT(EFBIG),
   INT_CONSTANT(EINVAL),
+  INT_CONSTANT(EINTR),
   INT_CONSTANT(EIO),
   INT_CONSTANT(EISDIR),
 #if defined(ELOOP) // not defined with VC9

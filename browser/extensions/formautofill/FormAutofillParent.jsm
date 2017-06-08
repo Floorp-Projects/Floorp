@@ -270,9 +270,11 @@ FormAutofillParent.prototype = {
     let {address} = data;
 
     if (address.guid) {
-      // TODO: Show update doorhanger(bug 1303513) and set probe(bug 990200)
-      // if (!profileStorage.addresses.mergeIfPossible(address.guid, address.record)) {
-      // }
+      if (!this.profileStorage.addresses.mergeIfPossible(address.guid, address.record)) {
+        // TODO: Show update doorhanger(bug 1303513) and set probe(bug 990200)
+        return;
+      }
+      this.profileStorage.addresses.notifyUsed(address.guid);
     } else {
       // TODO: Add first time use probe(bug 990199) and doorhanger(bug 1303510)
       // profileStorage.addresses.add(address.record);

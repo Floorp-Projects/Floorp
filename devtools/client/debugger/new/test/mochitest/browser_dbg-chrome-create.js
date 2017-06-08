@@ -21,12 +21,10 @@ function initChromeDebugger() {
 }
 
 function onClose() {
-  ok(!gProcess._dbgProcess.isRunning,
-    "The remote debugger process isn't closed as it should be!");
-  is(gProcess._dbgProcess.exitValue, (Services.appinfo.OS == "WINNT" ? 0 : 256),
+  is(gProcess._dbgProcess.exitCode, (Services.appinfo.OS == "WINNT" ? -9 : -15),
     "The remote debugger process didn't die cleanly.");
 
-  info("process exit value: " + gProcess._dbgProcess.exitValue);
+  info("process exit value: " + gProcess._dbgProcess.exitCode);
 
   info("profile path: " + gProcess._dbgProfilePath);
 
@@ -47,7 +45,7 @@ add_task(function* () {
 
   ok(gProcess._dbgProcess,
     "The remote debugger process wasn't created properly!");
-  ok(gProcess._dbgProcess.isRunning,
+  ok(gProcess._dbgProcess.exitCode == null,
     "The remote debugger process isn't running!");
   is(typeof gProcess._dbgProcess.pid, "number",
     "The remote debugger process doesn't have a pid (?!)");
@@ -68,5 +66,5 @@ add_task(function* () {
 
   info("profile path: " + gProcess._dbgProfilePath);
 
-  gProcess.close();
+  yield gProcess.close();
 });

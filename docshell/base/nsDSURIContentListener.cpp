@@ -23,6 +23,7 @@
 #include "nsDocShellLoadTypes.h"
 #include "nsIMultiPartChannel.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/nsCSPUtils.h"
 
 using namespace mozilla;
 
@@ -84,14 +85,6 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aContentHandler);
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
-
-  // Check whether X-Frame-Options permits us to load this content in an
-  // iframe and abort the load (unless we've disabled x-frame-options
-  // checking).
-  if (!CheckFrameOptions(aRequest)) {
-    *aAbortProcess = true;
-    return NS_OK;
-  }
 
   *aAbortProcess = false;
 
@@ -266,9 +259,10 @@ nsDSURIContentListener::SetParentContentListener(
   return NS_OK;
 }
 
-bool
+/* static */ bool
 nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
-                                                   const nsAString& aPolicy)
+                                                   const nsAString& aPolicy,
+                                                   nsIDocShell* aDocShell)
 {
   static const char allowFrom[] = "allow-from";
   const uint32_t allowFromLen = ArrayLength(allowFrom) - 1;
@@ -286,7 +280,7 @@ nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
   aHttpChannel->GetURI(getter_AddRefs(uri));
 
   // XXXkhuey when does this happen?  Is returning true safe here?
-  if (!mDocShell) {
+  if (!aDocShell) {
     return true;
   }
 
@@ -294,7 +288,7 @@ nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
   // window, if we're not the top.  X-F-O: SAMEORIGIN requires that the
   // document must be same-origin with top window.  X-F-O: DENY requires that
   // the document must never be framed.
-  nsCOMPtr<nsPIDOMWindowOuter> thisWindow = mDocShell->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> thisWindow = aDocShell->GetWindow();
   // If we don't have DOMWindow there is no risk of clickjacking
   if (!thisWindow) {
     return true;
@@ -314,7 +308,7 @@ nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
   // content-type docshell doesn't work because some chrome documents are
   // loaded in content docshells (see bug 593387).
   nsCOMPtr<nsIDocShellTreeItem> thisDocShellItem(
-    do_QueryInterface(static_cast<nsIDocShell*>(mDocShell)));
+    do_QueryInterface(static_cast<nsIDocShell*>(aDocShell)));
   nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem;
   nsCOMPtr<nsIDocShellTreeItem> curDocShellItem = thisDocShellItem;
   nsCOMPtr<nsIDocument> topDoc;
@@ -403,22 +397,66 @@ nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
   return true;
 }
 
+// Ignore x-frame-options if CSP with frame-ancestors exists
+static bool
+ShouldIgnoreFrameOptions(nsIChannel* aChannel, nsIPrincipal* aPrincipal)
+{
+  NS_ENSURE_TRUE(aChannel, false);
+  NS_ENSURE_TRUE(aPrincipal, false);
+
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  aPrincipal->GetCsp(getter_AddRefs(csp));
+  if (!csp) {
+    // if there is no CSP, then there is nothing to do here
+    return false;
+  }
+
+  bool enforcesFrameAncestors = false;
+  csp->GetEnforcesFrameAncestors(&enforcesFrameAncestors);
+  if (!enforcesFrameAncestors) {
+    // if CSP does not contain frame-ancestors, then there
+    // is nothing to do here.
+    return false;
+  }
+
+  // log warning to console that xfo is ignored because of CSP
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  uint64_t innerWindowID = loadInfo ? loadInfo->GetInnerWindowID() : 0;
+  const char16_t* params[] = { u"x-frame-options",
+                               u"frame-ancestors" };
+  CSP_LogLocalizedStr(u"IgnoringSrcBecauseOfDirective",
+                      params, ArrayLength(params),
+                      EmptyString(), // no sourcefile
+                      EmptyString(), // no scriptsample
+                      0,             // no linenumber
+                      0,             // no columnnumber
+                      nsIScriptError::warningFlag,
+                      "CSP", innerWindowID);
+
+  return true;
+}
+
 // Check if X-Frame-Options permits this document to be loaded as a subdocument.
 // This will iterate through and check any number of X-Frame-Options policies
 // in the request (comma-separated in a header, multiple headers, etc).
-bool
-nsDSURIContentListener::CheckFrameOptions(nsIRequest* aRequest)
+/* static */ bool
+nsDSURIContentListener::CheckFrameOptions(nsIChannel* aChannel,
+                                          nsIDocShell* aDocShell,
+                                          nsIPrincipal* aPrincipal)
 {
-  nsresult rv;
-  nsCOMPtr<nsIChannel> chan = do_QueryInterface(aRequest);
-  if (!chan) {
+  if (!aChannel || !aDocShell) {
     return true;
   }
 
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(chan);
+  if (ShouldIgnoreFrameOptions(aChannel, aPrincipal)) {
+    return true;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (!httpChannel) {
     // check if it is hiding in a multipart channel
-    rv = mDocShell->GetHttpChannel(chan, getter_AddRefs(httpChannel));
+    rv = nsDocShell::Cast(aDocShell)->GetHttpChannel(aChannel, getter_AddRefs(httpChannel));
     if (NS_FAILED(rv)) {
       return false;
     }
@@ -443,11 +481,11 @@ nsDSURIContentListener::CheckFrameOptions(nsIRequest* aRequest)
   nsCharSeparatedTokenizer tokenizer(xfoHeaderValue, ',');
   while (tokenizer.hasMoreTokens()) {
     const nsSubstring& tok = tokenizer.nextToken();
-    if (!CheckOneFrameOptionsPolicy(httpChannel, tok)) {
+    if (!CheckOneFrameOptionsPolicy(httpChannel, tok, aDocShell)) {
       // cancel the load and display about:blank
       httpChannel->Cancel(NS_BINDING_ABORTED);
-      if (mDocShell) {
-        nsCOMPtr<nsIWebNavigation> webNav(do_QueryObject(mDocShell));
+      if (aDocShell) {
+        nsCOMPtr<nsIWebNavigation> webNav(do_QueryObject(aDocShell));
         if (webNav) {
           nsCOMPtr<nsILoadInfo> loadInfo = httpChannel->GetLoadInfo();
           nsCOMPtr<nsIPrincipal> triggeringPrincipal = loadInfo
@@ -465,7 +503,7 @@ nsDSURIContentListener::CheckFrameOptions(nsIRequest* aRequest)
   return true;
 }
 
-void
+/* static */ void
 nsDSURIContentListener::ReportXFOViolation(nsIDocShellTreeItem* aTopDocShellItem,
                                            nsIURI* aThisURI,
                                            XFOHeader aHeader)

@@ -12,7 +12,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/FileModeBinding.h"
-#include "mozilla/dom/MutableFileBase.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
 #include "nsString.h"
@@ -37,9 +36,10 @@ class BackgroundMutableFileChild;
 
 class IDBMutableFile final
   : public DOMEventTargetHelper
-  , public MutableFileBase
 {
   RefPtr<IDBDatabase> mDatabase;
+
+  indexedDB::BackgroundMutableFileChild* mBackgroundActor;
 
   nsTHashtable<nsPtrHashKey<IDBFileHandle>> mFileHandles;
 
@@ -55,6 +55,46 @@ public:
                  const nsAString& aType);
 
   void
+  AssertIsOnOwningThread() const
+#ifdef DEBUG
+  ;
+#else
+  { }
+#endif
+
+  indexedDB::BackgroundMutableFileChild*
+  GetBackgroundActor() const
+  {
+    AssertIsOnOwningThread();
+
+    return mBackgroundActor;
+  }
+
+  void
+  ClearBackgroundActor()
+  {
+    AssertIsOnOwningThread();
+
+    mBackgroundActor = nullptr;
+  }
+
+  const nsString&
+  Name() const
+  {
+    AssertIsOnOwningThread();
+
+    return mName;
+  }
+
+  const nsString&
+  Type() const
+  {
+    AssertIsOnOwningThread();
+
+    return mType;
+  }
+
+  void
   SetLazyData(const nsAString& aName,
               const nsAString& aType)
   {
@@ -67,6 +107,14 @@ public:
 
   void
   Invalidate();
+
+  bool
+  IsInvalidated() const
+  {
+    AssertIsOnOwningThread();
+
+    return mInvalidated;
+  }
 
   void
   RegisterFileHandle(IDBFileHandle* aFileHandle);
@@ -114,20 +162,6 @@ public:
   // nsWrapperCache
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-  // MutableFileBase
-  virtual const nsString&
-  Name() const override;
-
-  virtual const nsString&
-  Type() const override;
-
-  virtual bool
-  IsInvalidated() override;
-
-  virtual already_AddRefed<File>
-  CreateFileFor(BlobImpl* aBlobImpl,
-                FileHandleBase* aFileHandle) override;
 
 private:
   ~IDBMutableFile();

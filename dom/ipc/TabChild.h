@@ -735,6 +735,10 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvAwaitLargeAlloc() override;
 
+  virtual mozilla::ipc::IPCResult RecvSetWindowName(const nsString& aName) override;
+
+  virtual mozilla::ipc::IPCResult RecvSetOriginAttributes(const OriginAttributes& aOriginAttributes) override;
+
 private:
   void HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
                        const ScrollableLayerGuid& aGuid);

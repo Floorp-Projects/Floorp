@@ -299,7 +299,7 @@ Gecko_GetElementId(RawGeckoElementBorrowed aElement)
   }
   // The only case in which we should have a non-atom value here is if it's the
   // empty string value.
-  MOZ_ASSERT_IF(attr, attr->IsEmptyString());
+  MOZ_ASSERT(!attr || attr->IsEmptyString());
   return nullptr;
 }
 
