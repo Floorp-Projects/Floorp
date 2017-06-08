@@ -676,10 +676,6 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
                       const nsAString& aString)
 {
   ServoAnimationValues result;
-  // FIXME (bug 1358966): Support shorthand properties
-  if (nsCSSProps::IsShorthand(aPropID)) {
-    return result;
-  }
 
   nsIDocument* doc = aTargetElement->GetUncomposedDoc();
   if (!doc) {
