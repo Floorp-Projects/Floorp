@@ -137,7 +137,7 @@ public:
   // Returns nullptr if initialization failed.
   static MediaCache* GetMediaCache();
 
-  // Shut down the global cache if it's no longer needed. We shut down
+  // Shut down the cache if it's no longer needed. We shut down
   // the cache as soon as there are no streams. This means that during
   // normal operation we are likely to start up the cache and shut it down
   // many times, but that's OK since starting it up is cheap and
@@ -259,6 +259,7 @@ protected:
     : mNextResourceID(1)
     , mReentrantMonitor("MediaCache.mReentrantMonitor")
     , mUpdateQueued(false)
+    , mShutdownInsteadOfUpdating(false)
 #ifdef DEBUG
     , mInUpdate(false)
 #endif
@@ -387,6 +388,11 @@ protected:
   // end
   void Truncate();
 
+  // Shutdown this MediaCache, and reset gMediaCache if we are the global one.
+  // If there is no queued update, destroy the MediaCache immediately.
+  // Otherwise when the update is processed, it will destroy the MediaCache.
+  void ShutdownAndDestroyThis();
+
   // This member is main-thread only. It's used to allocate unique
   // resource IDs to streams.
   int64_t                       mNextResourceID;
@@ -410,6 +416,9 @@ protected:
   BlockList       mFreeBlocks;
   // True if an event to run Update() has been queued but not processed
   bool            mUpdateQueued;
+  // Main-thread only. True when shutting down, and the update task should
+  // destroy this MediaCache.
+  bool            mShutdownInsteadOfUpdating;
 #ifdef DEBUG
   bool            mInUpdate;
 #endif
@@ -696,11 +705,30 @@ MediaCache::MaybeShutdown()
     return;
   }
 
+  ShutdownAndDestroyThis();
+}
+
+void
+MediaCache::ShutdownAndDestroyThis()
+{
+  NS_ASSERTION(NS_IsMainThread(),
+               "MediaCache::Shutdown called on non-main thread");
   // Since we're on the main thread, no-one is going to add a new stream
   // while we shut down.
-  // This function is static so we don't have to delete 'this'.
-  delete gMediaCache;
-  gMediaCache = nullptr;
+
+  if (this == gMediaCache) {
+    // This is the global MediaCache, reset the global pointer to ensure it's
+    // not used anymore (in case it doesn't get destroyed immediately).
+    gMediaCache = nullptr;
+  }
+
+  if (mUpdateQueued) {
+    // An update is queued, let it destroy this MediaCache object.
+    mShutdownInsteadOfUpdating = true;
+    return;
+  }
+
+  delete this;
 }
 
 /* static */ MediaCache*
@@ -1096,6 +1124,14 @@ MediaCache::Update()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
+  if (mShutdownInsteadOfUpdating) {
+    // Safe to modify mUpdateQueued as we are shutting down and nobody should
+    // call MediaCache functions now.
+    mUpdateQueued = false;
+    ShutdownAndDestroyThis();
+    return;
+  }
+
   // The action to use for each stream. We store these so we can make
   // decisions while holding the cache lock but implement those decisions
   // without holding the cache lock, since we need to call out to
@@ -1441,15 +1477,20 @@ MediaCache::Update()
 class UpdateEvent : public Runnable
 {
 public:
-  UpdateEvent() : Runnable("MediaCache::UpdateEvent") {}
+  explicit UpdateEvent(MediaCache& aMediaCache)
+    : Runnable("MediaCache::UpdateEvent")
+    , mMediaCache(aMediaCache)
+  {
+  }
 
   NS_IMETHOD Run() override
   {
-    if (gMediaCache) {
-      gMediaCache->Update();
-    }
+    mMediaCache.Update();
     return NS_OK;
   }
+
+private:
+  MediaCache& mMediaCache;
 };
 
 void
@@ -1467,7 +1508,7 @@ MediaCache::QueueUpdate()
   // XXX MediaCache does updates when decoders are still running at
   // shutdown and get freed in the final cycle-collector cleanup.  So
   // don't leak a runnable in that case.
-  nsCOMPtr<nsIRunnable> event = new UpdateEvent();
+  nsCOMPtr<nsIRunnable> event = new UpdateEvent(*this);
   SystemGroup::Dispatch("MediaCache::UpdateEvent",
                         TaskCategory::Other,
                         event.forget());
