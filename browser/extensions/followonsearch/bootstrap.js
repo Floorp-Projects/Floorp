@@ -167,12 +167,14 @@ var cohortManager = {
       }
     }
 
-    if (cohortSample <= REPORTING_THRESHOLD[updateChannel]) {
-      log("Enabling telemetry for user");
-      this.enableForUser = true;
-    } else {
-      log("Not enabling telemetry for user - outside threshold.");
-    }
+    log("Not enabling extra telemetry due to bug 1371198");
+
+    // if (cohortSample <= REPORTING_THRESHOLD[updateChannel]) {
+    //   log("Enabling telemetry for user");
+    //   this.enableForUser = true;
+    // } else {
+    //   log("Not enabling telemetry for user - outside threshold.");
+    // }
   },
 };
 
