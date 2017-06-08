@@ -414,8 +414,10 @@ DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time
       if (intersectionRect.isSome() && !isSameDoc) {
         nsRect rect = intersectionRect.value();
         nsPresContext* presContext = targetFrame->PresContext();
-        nsLayoutUtils::TransformRect(rootFrame,
-          presContext->PresShell()->GetRootScrollFrame(), rect);
+        nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
+        if (rootScrollFrame) {
+          nsLayoutUtils::TransformRect(rootFrame, rootScrollFrame, rect);
+        }
         intersectionRect = Some(rect);
       }
     }

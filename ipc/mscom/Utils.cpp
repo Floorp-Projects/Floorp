@@ -4,9 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef ACCESSIBILITY
+#if defined(ACCESSIBILITY)
 #include "mozilla/mscom/Registration.h"
+#if defined(MOZILLA_INTERNAL_API)
 #include "nsTArray.h"
+#endif
 #endif
 
 #include "mozilla/mscom/Utils.h"
@@ -139,6 +141,8 @@ IsVtableIndexFromParentInterface(REFIID aInterface, unsigned long aVtableIndex)
   return result;
 }
 
+#if defined(MOZILLA_INTERNAL_API)
+
 bool
 IsInterfaceEqualToOrInheritedFrom(REFIID aInterface, REFIID aFrom,
                                   unsigned long aVtableIndexHint)
@@ -222,6 +226,8 @@ IsInterfaceEqualToOrInheritedFrom(REFIID aInterface, REFIID aFrom,
 
   return false;
 }
+
+#endif // defined(MOZILLA_INTERNAL_API)
 
 #endif // defined(ACCESSIBILITY)
 

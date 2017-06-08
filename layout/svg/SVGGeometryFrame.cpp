@@ -668,12 +668,12 @@ SVGGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
                     "Number of Marker frames should be equal to eTypeCount");
 
       for (uint32_t i = 0; i < num; i++) {
-        nsSVGMark& mark = marks[i];
+        const nsSVGMark& mark = marks[i];
         nsSVGMarkerFrame* frame = markerFrames[mark.type];
         if (frame) {
           SVGBBox mbbox =
             frame->GetMarkBBoxContribution(aToBBoxUserspace, aFlags, this,
-                                           &marks[i], strokeWidth);
+                                           mark, strokeWidth);
           MOZ_ASSERT(mbbox.IsFinite(), "bbox is about to go bad");
           bbox.UnionEdges(mbbox);
         }
@@ -896,10 +896,10 @@ SVGGeometryFrame::PaintMarkers(gfxContext& aContext,
                       "Number of Marker frames should be equal to eTypeCount");
 
         for (uint32_t i = 0; i < num; i++) {
-          nsSVGMark& mark = marks[i];
+          const nsSVGMark& mark = marks[i];
           nsSVGMarkerFrame* frame = markerFrames[mark.type];
           if (frame) {
-            frame->PaintMark(aContext, aTransform, this, &mark, strokeWidth,
+            frame->PaintMark(aContext, aTransform, this, mark, strokeWidth,
                              aImgParams);
           }
         }

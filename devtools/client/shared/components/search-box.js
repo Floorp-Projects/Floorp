@@ -22,13 +22,7 @@ module.exports = createClass({
     onChange: PropTypes.func,
     placeholder: PropTypes.string,
     type: PropTypes.string,
-    autocompleteList: PropTypes.array,
-  },
-
-  getDefaultProps() {
-    return {
-      autocompleteList: [],
-    };
+    autocompleteProvider: PropTypes.func,
   },
 
   getInitialState() {
@@ -66,6 +60,7 @@ module.exports = createClass({
   onChange() {
     if (this.state.value !== this.refs.input.value) {
       this.setState({
+        focused: true,
         value: this.refs.input.value,
       });
     }
@@ -102,10 +97,8 @@ module.exports = createClass({
   },
 
   onKeyDown(e) {
-    let { autocompleteList } = this.props;
     let { autocomplete } = this.refs;
-
-    if (autocompleteList.length == 0) {
+    if (!autocomplete || autocomplete.state.list.length <= 0) {
       return;
     }
 
@@ -144,13 +137,12 @@ module.exports = createClass({
     let {
       type = "search",
       placeholder,
-      autocompleteList
+      autocompleteProvider,
     } = this.props;
     let { value } = this.state;
     let divClassList = ["devtools-searchbox", "has-clear-btn"];
     let inputClassList = [`devtools-${type}input`];
-    let showAutocomplete =
-      autocompleteList.length > 0 && this.state.focused && value !== "";
+    let showAutocomplete = autocompleteProvider && this.state.focused && value !== "";
 
     if (value !== "") {
       inputClassList.push("filled");
@@ -173,7 +165,7 @@ module.exports = createClass({
         onClick: this.onClearButtonClick
       }),
       showAutocomplete && AutocompletePopup({
-        list: autocompleteList,
+        autocompleteProvider,
         filter: value,
         ref: "autocomplete",
         onItemSelected: (itemValue) => {

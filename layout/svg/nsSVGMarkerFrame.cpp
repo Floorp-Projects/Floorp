@@ -80,11 +80,9 @@ nsSVGMarkerFrame::GetCanvasTM()
   gfxMatrix markedTM = mMarkedFrame->GetCanvasTM();
   mInUse2 = false;
 
-  Matrix markerTM = content->GetMarkerTransform(mStrokeWidth, mX, mY,
-                                                mAutoAngle, mIsStart);
   Matrix viewBoxTM = content->GetViewBoxTransform();
 
-  return ThebesMatrix(viewBoxTM * markerTM) * markedTM;
+  return ThebesMatrix(viewBoxTM * mMarkerTM) * markedTM;
 }
 
 static nsIFrame*
@@ -99,8 +97,8 @@ GetAnonymousChildFrame(nsIFrame* aFrame)
 void
 nsSVGMarkerFrame::PaintMark(gfxContext& aContext,
                             const gfxMatrix& aToMarkedFrameUserSpace,
-                            SVGGeometryFrame *aMarkedFrame,
-                            nsSVGMark *aMark, float aStrokeWidth,
+                            SVGGeometryFrame* aMarkedFrame,
+                            const nsSVGMark& aMark, float aStrokeWidth,
                             imgDrawingParams& aImgParams)
 {
   // If the flag is set when we get here, it means this marker frame
@@ -124,18 +122,11 @@ nsSVGMarkerFrame::PaintMark(gfxContext& aContext,
     return;
   }
 
-  mStrokeWidth = aStrokeWidth;
-  mX = aMark->x;
-  mY = aMark->y;
-  mAutoAngle = aMark->angle;
-  mIsStart = aMark->type == nsSVGMark::eStart;
-
   Matrix viewBoxTM = marker->GetViewBoxTransform();
 
-  Matrix markerTM = marker->GetMarkerTransform(mStrokeWidth, mX, mY,
-                                               mAutoAngle, mIsStart);
+  mMarkerTM = marker->GetMarkerTransform(aStrokeWidth, aMark);
 
-  gfxMatrix markTM = ThebesMatrix(viewBoxTM) * ThebesMatrix(markerTM) *
+  gfxMatrix markTM = ThebesMatrix(viewBoxTM) * ThebesMatrix(mMarkerTM) *
                      aToMarkedFrameUserSpace;
 
   if (StyleDisplay()->IsScrollableOverflow()) {
@@ -158,10 +149,10 @@ nsSVGMarkerFrame::PaintMark(gfxContext& aContext,
 }
 
 SVGBBox
-nsSVGMarkerFrame::GetMarkBBoxContribution(const Matrix &aToBBoxUserspace,
+nsSVGMarkerFrame::GetMarkBBoxContribution(const Matrix& aToBBoxUserspace,
                                           uint32_t aFlags,
-                                          SVGGeometryFrame *aMarkedFrame,
-                                          const nsSVGMark *aMark,
+                                          SVGGeometryFrame* aMarkedFrame,
+                                          const nsSVGMark& aMark,
                                           float aStrokeWidth)
 {
   SVGBBox bbox;
@@ -185,17 +176,10 @@ nsSVGMarkerFrame::GetMarkBBoxContribution(const Matrix &aToBBoxUserspace,
     return bbox;
   }
 
-  mStrokeWidth = aStrokeWidth;
-  mX = aMark->x;
-  mY = aMark->y;
-  mAutoAngle = aMark->angle;
-  mIsStart = aMark->type == nsSVGMark::eStart;
-
-  Matrix markerTM =
-    content->GetMarkerTransform(mStrokeWidth, mX, mY, mAutoAngle, mIsStart);
+  mMarkerTM = content->GetMarkerTransform(aStrokeWidth, aMark);
   Matrix viewBoxTM = content->GetViewBoxTransform();
 
-  Matrix tm = viewBoxTM * markerTM * aToBBoxUserspace;
+  Matrix tm = viewBoxTM * mMarkerTM * aToBBoxUserspace;
 
   nsSVGDisplayableFrame* child = do_QueryFrame(GetAnonymousChildFrame(this));
   // When we're being called to obtain the invalidation area, we need to
