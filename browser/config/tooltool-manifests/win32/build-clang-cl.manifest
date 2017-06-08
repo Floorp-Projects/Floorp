@@ -6,9 +6,9 @@
     "filename": "mozmake.exe"
   },
   {
-    "version": "rustc 1.17.0 (56124baa9 2017-04-24) repack with cargo 0.19.0-beta.1 (03efb7fc8 2017-04-23)",
-    "size": 76516077,
-    "digest": "6ed02db3ae678fa222ee3680172dc0bc0f0cec735fbc17e67926d4960cb0f6693416d7da8dd2e91d84ba862d7add4ac36e37d7891270e10ed0540fca8b446b68",
+    "version": "rustc 1.18.0 (03fc9d622 2017-06-06) repack",
+    "size": 90954208,
+    "digest": "6ee6ab72521c1f476fd15a3f2787f3046a1648f34cbc43380c2ba3915c2207b29c942fefe4b56426f5bafe47937c6a8074201d61a79d02ad366dace41d5cb717",
     "algorithm": "sha512",
     "filename": "rustc.tar.bz2",
     "unpack": true
