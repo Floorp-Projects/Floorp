@@ -36,7 +36,7 @@ struct ValueWrapper {
     : mPropID(aPropID)
   {
     if (aValue.mServo) {
-      mServoValue = aValue.mServo;
+      mServoValues.AppendElement(aValue.mServo);
       return;
     }
     mGeckoValue = aValue.mGecko;
@@ -45,7 +45,7 @@ struct ValueWrapper {
     : mPropID(aPropID), mGeckoValue(aValue) {}
   ValueWrapper(nsCSSPropertyID aPropID,
                const RefPtr<RawServoAnimationValue>& aValue)
-    : mPropID(aPropID), mServoValue(aValue) {}
+    : mPropID(aPropID), mServoValues{(aValue)} {}
 
   bool operator==(const ValueWrapper& aOther) const
   {
@@ -53,11 +53,21 @@ struct ValueWrapper {
       return false;
     }
 
-    if (mServoValue && aOther.mServoValue) {
-      return Servo_AnimationValue_DeepEqual(mServoValue, aOther.mServoValue);
+    if (!mServoValues.IsEmpty()) {
+      size_t len = mServoValues.Length();
+      if (len != aOther.mServoValues.Length()) {
+        return false;
+      }
+      for (size_t i = 0; i < len; i++) {
+        if (!Servo_AnimationValue_DeepEqual(mServoValues[i],
+                                            aOther.mServoValues[i])) {
+          return false;
+        }
+      }
+      return true;
     }
-    return !mServoValue && !aOther.mServoValue &&
-           mGeckoValue == aOther.mGeckoValue;
+
+    return mGeckoValue == aOther.mGeckoValue;
   }
 
   bool operator!=(const ValueWrapper& aOther) const
@@ -66,7 +76,7 @@ struct ValueWrapper {
   }
 
   nsCSSPropertyID mPropID;
-  RefPtr<RawServoAnimationValue> mServoValue;
+  AutoTArray<RefPtr<RawServoAnimationValue>, 1> mServoValues;
   StyleAnimationValue mGeckoValue;
 
 };
@@ -280,11 +290,11 @@ AddOrAccumulateForServo(nsSMILValue& aDest,
                              : aDestWrapper->mPropID;
   const RefPtr<RawServoAnimationValue>* valueToAdd =
     aValueToAddWrapper
-    ? &aValueToAddWrapper->mServoValue
+    ? &aValueToAddWrapper->mServoValues[0]
     : nullptr;
   const RefPtr<RawServoAnimationValue>* destValue =
     aDestWrapper
-    ? &aDestWrapper->mServoValue
+    ? &aDestWrapper->mServoValues[0]
     : nullptr;
   RefPtr<RawServoAnimationValue> zeroValueStorage;
   if (!FinalizeServoAnimationValues(valueToAdd, destValue, zeroValueStorage)) {
@@ -294,7 +304,7 @@ AddOrAccumulateForServo(nsSMILValue& aDest,
   // FinalizeServoAnimationValues may have updated destValue so we should make
   // sure the aDest and aDestWrapper outparams are up-to-date.
   if (aDestWrapper) {
-    aDestWrapper->mServoValue = *destValue;
+    aDestWrapper->mServoValues[0] = *destValue;
   } else {
     // aDest may be a barely-initialized "zero" destination.
     aDest.mU.mPtr = aDestWrapper = new ValueWrapper(property, *destValue);
@@ -310,7 +320,7 @@ AddOrAccumulateForServo(nsSMILValue& aDest,
   }
 
   if (result) {
-    aDestWrapper->mServoValue = result;
+    aDestWrapper->mServoValues[0] = result;
   }
   return result;
 }
@@ -345,8 +355,8 @@ AddOrAccumulate(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
   }
 
   bool isServo = valueToAddWrapper
-                 ? valueToAddWrapper->mServoValue
-                 : destWrapper->mServoValue;
+                 ? valueToAddWrapper->mServoValues[0]
+                 : destWrapper->mServoValues[0];
   if (isServo) {
     return AddOrAccumulateForServo(aDest,
                                    valueToAddWrapper,
@@ -408,8 +418,8 @@ ComputeDistanceForServo(const ValueWrapper* aFromWrapper,
                         double& aDistance)
 {
   const RefPtr<RawServoAnimationValue>* fromValue =
-    aFromWrapper ? &aFromWrapper->mServoValue : nullptr;
-  const RefPtr<RawServoAnimationValue>* toValue = &aToWrapper.mServoValue;
+    aFromWrapper ? &aFromWrapper->mServoValues[0] : nullptr;
+  const RefPtr<RawServoAnimationValue>* toValue = &aToWrapper.mServoValues[0];
   RefPtr<RawServoAnimationValue> zeroValueStorage;
   if (!FinalizeServoAnimationValues(fromValue, toValue, zeroValueStorage)) {
     return NS_ERROR_FAILURE;
@@ -433,7 +443,7 @@ nsSMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
   const ValueWrapper* toWrapper = ExtractValueWrapper(aTo);
   MOZ_ASSERT(toWrapper, "expecting non-null endpoint");
 
-  if (toWrapper->mServoValue) {
+  if (!toWrapper->mServoValues.IsEmpty()) {
     return ComputeDistanceForServo(fromWrapper, *toWrapper, aDistance);
   }
 
@@ -486,9 +496,9 @@ InterpolateForServo(const ValueWrapper* aStartWrapper,
 {
   const RefPtr<RawServoAnimationValue>*
     startValue = aStartWrapper
-                 ? &aStartWrapper->mServoValue
+                 ? &aStartWrapper->mServoValues[0]
                  : nullptr;
-  const RefPtr<RawServoAnimationValue>* endValue = &aEndWrapper.mServoValue;
+  const RefPtr<RawServoAnimationValue>* endValue = &aEndWrapper.mServoValues[0];
   RefPtr<RawServoAnimationValue> zeroValueStorage;
   if (!FinalizeServoAnimationValues(startValue, endValue, zeroValueStorage)) {
     return NS_ERROR_FAILURE;
@@ -525,7 +535,7 @@ nsSMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
   const ValueWrapper* endWrapper = ExtractValueWrapper(aEndVal);
   MOZ_ASSERT(endWrapper, "expecting non-null endpoint");
 
-  if (endWrapper->mServoValue) {
+  if (!endWrapper->mServoValues.IsEmpty()) {
     return InterpolateForServo(startWrapper,
                                *endWrapper,
                                aUnitDistance,
@@ -781,8 +791,8 @@ nsSMILCSSValueType::ValueToString(const nsSMILValue& aValue,
     return;
   }
 
-  if (wrapper->mServoValue) {
-    Servo_AnimationValue_Serialize(wrapper->mServoValue,
+  if (!wrapper->mServoValues.IsEmpty()) {
+    Servo_AnimationValue_Serialize(wrapper->mServoValues[0],
                                    wrapper->mPropID,
                                    &aString);
     return;
