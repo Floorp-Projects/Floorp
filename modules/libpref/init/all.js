@@ -2101,12 +2101,12 @@ pref("network.auth.private-browsing-sso", false);
 // Control how throttling of http responses works - number of ms that each
 // suspend and resume period lasts (prefs named appropriately)
 pref("network.http.throttle.enable", true);
-pref("network.http.throttle.suspend-for", 3000);
-pref("network.http.throttle.resume-for", 200);
+pref("network.http.throttle.suspend-for", 900);
+pref("network.http.throttle.resume-for", 100);
 // Delay we resume throttled background responses after the last unthrottled
 // response has finished.  Prevents resuming too soon during an active page load
 // at which sub-resource reqeusts quickly come and go.
-pref("network.http.throttle.resume-background-in", 400);
+pref("network.http.throttle.resume-background-in", 1000);
 
 pref("permissions.default.image",           1); // 1-Accept, 2-Deny, 3-dontAcceptForeign
 
