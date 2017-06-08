@@ -2589,6 +2589,13 @@ public:
   virtual bool HasAnyNoncollapsedCharacters()
   { return false; }
 
+  /**
+   * Returns true if events of the given type targeted at this frame
+   * should only be dispatched to the system group.
+   */
+  virtual bool OnlySystemGroupDispatch(mozilla::EventMessage aMessage) const
+  { return false; }
+
   //
   // Accessor functions to an associated view object:
   //

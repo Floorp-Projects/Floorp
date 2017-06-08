@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<style>
+p { color: red; }
+p:lang(zh) { color: green; }
+div:lang(zh) + p { color: green; }
+</style>
+<body onload="document.querySelector('div').lang = 'zh'">
+<div lang="en">
+  <div>
+    <p>This text should be green.</p>
+  </div>
+</div>
+<p>This text should be green.</p>

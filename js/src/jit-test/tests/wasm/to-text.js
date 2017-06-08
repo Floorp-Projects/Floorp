@@ -285,3 +285,9 @@ runTest(`(module
         end $outer
     )
 )`);
+
+// Import as a start function.
+runTest(`(module
+    (import "env" "test" (func))
+    (start 0)
+)`);

@@ -163,12 +163,15 @@ bool Gecko_MatchesElement(mozilla::CSSPseudoClassType type, RawGeckoElementBorro
 nsIAtom* Gecko_LocalName(RawGeckoElementBorrowed element);
 nsIAtom* Gecko_Namespace(RawGeckoElementBorrowed element);
 nsIAtom* Gecko_GetElementId(RawGeckoElementBorrowed element);
-
+bool Gecko_MatchLang(RawGeckoElementBorrowed element,
+                     nsIAtom* override_lang, bool has_override_lang,
+                     const char16_t* value);
 nsIAtom* Gecko_GetXMLLangValue(RawGeckoElementBorrowed element);
 
 // Attributes.
 #define SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(prefix_, implementor_)  \
   nsIAtom* prefix_##AtomAttrValue(implementor_ element, nsIAtom* attribute);  \
+  nsIAtom* prefix_##LangValue(implementor_ element);                          \
   bool prefix_##HasAttr(implementor_ element, nsIAtom* ns, nsIAtom* name);    \
   bool prefix_##AttrEquals(implementor_ element, nsIAtom* ns, nsIAtom* name,  \
                            nsIAtom* str, bool ignoreCase);                    \
@@ -508,6 +511,7 @@ void Gecko_CSSValue_SetPair(nsCSSValueBorrowedMut css_value,
                             nsCSSValueBorrowed xvalue, nsCSSValueBorrowed yvalue);
 void Gecko_CSSValue_SetList(nsCSSValueBorrowedMut css_value, uint32_t len);
 void Gecko_CSSValue_SetPairList(nsCSSValueBorrowedMut css_value, uint32_t len);
+void Gecko_CSSValue_InitSharedList(nsCSSValueBorrowedMut css_value, uint32_t len);
 void Gecko_CSSValue_Drop(nsCSSValueBorrowedMut css_value);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 bool Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id);
@@ -516,6 +520,9 @@ void Gecko_nsStyleFont_SetLang(nsStyleFont* font, nsIAtom* atom);
 void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource);
 void Gecko_nsStyleFont_FixupNoneGeneric(nsStyleFont* font,
                                         RawGeckoPresContextBorrowed pres_context);
+void Gecko_nsStyleFont_PrefillDefaultForGeneric(nsStyleFont* font,
+                                                RawGeckoPresContextBorrowed pres_context,
+                                                uint8_t generic_id);
 void Gecko_nsStyleFont_FixupMinFontSize(nsStyleFont* font,
                                         RawGeckoPresContextBorrowed pres_context);
 FontSizePrefs Gecko_GetBaseSize(nsIAtom* lang);

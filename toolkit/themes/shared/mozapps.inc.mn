@@ -14,6 +14,7 @@
   skin/classic/mozapps/extensions/alerticon-error.svg        (../../shared/extensions/alerticon-error.svg)
   skin/classic/mozapps/extensions/alerticon-info-positive.svg (../../shared/extensions/alerticon-info-positive.svg)
   skin/classic/mozapps/extensions/alerticon-info-negative.svg (../../shared/extensions/alerticon-info-negative.svg)
+  skin/classic/mozapps/extensions/category-legacy.svg        (../../shared/extensions/category-legacy.svg)
   skin/classic/mozapps/plugins/pluginProblem.css             (../../shared/plugins/pluginProblem.css)
   skin/classic/mozapps/aboutNetworking.css                   (../../shared/aboutNetworking.css)
 #ifndef ANDROID

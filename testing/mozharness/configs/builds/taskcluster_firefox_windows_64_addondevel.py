@@ -26,7 +26,7 @@ config = {
         'virtualenv': [
             sys.executable,
             os.path.join(
-                os.getcwd(), 'build', 'src', 'python', 'virtualenv', 'virtualenv.py'
+                os.getcwd(), 'build', 'src', 'third_party', 'python', 'virtualenv', 'virtualenv.py'
             )
         ],
     },

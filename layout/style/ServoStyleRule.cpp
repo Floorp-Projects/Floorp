@@ -119,6 +119,7 @@ ServoStyleRule::ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule,
 
 // QueryInterface implementation for ServoStyleRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServoStyleRule)
+  NS_INTERFACE_MAP_ENTRY(nsICSSStyleRuleDOMWrapper)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleRule)
 NS_INTERFACE_MAP_END_INHERITING(css::Rule)
 
@@ -195,6 +196,15 @@ ServoStyleRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
+/* nsICSSStyleRuleDOMWrapper implementation */
+
+NS_IMETHODIMP
+ServoStyleRule::GetCSSStyleRule(BindingStyleRule **aResult)
+{
+  NS_ADDREF(*aResult = this);
+  return NS_OK;
+}
+
 /* CSSRule implementation */
 
 uint16_t
@@ -237,6 +247,39 @@ NS_IMETHODIMP
 ServoStyleRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 {
   *aStyle = do_AddRef(&mDecls).take();
+  return NS_OK;
+}
+
+uint32_t
+ServoStyleRule::GetSelectorCount()
+{
+  uint32_t aCount;
+  Servo_StyleRule_GetSelectorCount(mRawRule, &aCount);
+
+  return aCount;
+}
+
+nsresult
+ServoStyleRule::GetSelectorText(uint32_t aSelectorIndex, nsAString& aText)
+{
+  Servo_StyleRule_GetSelectorTextFromIndex(mRawRule, aSelectorIndex, &aText);
+  return NS_OK;
+}
+
+nsresult
+ServoStyleRule::GetSpecificity(uint32_t aSelectorIndex, uint64_t* aSpecificity)
+{
+  // TODO Bug 1370501
+  return NS_OK;
+}
+
+nsresult
+ServoStyleRule::SelectorMatchesElement(Element* aElement,
+                                       uint32_t aSelectorIndex,
+                                       const nsAString& aPseudo,
+                                       bool* aMatches)
+{
+  // TODO Bug 1370502
   return NS_OK;
 }
 

@@ -147,6 +147,11 @@ SERVO_BINDING_FUNC(Servo_StyleRule_SetStyle, void,
                    RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_StyleRule_GetSelectorText, void,
                    RawServoStyleRuleBorrowed rule, nsAString* result)
+SERVO_BINDING_FUNC(Servo_StyleRule_GetSelectorTextFromIndex, void,
+                   RawServoStyleRuleBorrowed rule, uint32_t index,
+                   nsAString* result)
+SERVO_BINDING_FUNC(Servo_StyleRule_GetSelectorCount, void,
+                   RawServoStyleRuleBorrowed rule, uint32_t* count)
 SERVO_BINDING_FUNC(Servo_ImportRule_GetHref, void,
                    RawServoImportRuleBorrowed rule, nsAString* result)
 SERVO_BINDING_FUNC(Servo_ImportRule_GetSheet, const RawServoStyleSheet*,
@@ -228,6 +233,13 @@ SERVO_BINDING_FUNC(Servo_GetProperties_Overriding_Animation, void,
                    RawGeckoElementBorrowed,
                    RawGeckoCSSPropertyIDListBorrowed,
                    nsCSSPropertyIDSetBorrowedMut)
+SERVO_BINDING_FUNC(Servo_MatrixTransform_Operate, void,
+                   nsStyleTransformMatrix::MatrixTransformOperator
+                     matrix_operator,
+                   const RawGeckoGfxMatrix4x4* from,
+                   const RawGeckoGfxMatrix4x4* to,
+                   double progress,
+                   RawGeckoGfxMatrix4x4* result)
 
 // AnimationValues handling
 SERVO_BINDING_FUNC(Servo_AnimationValues_Interpolate,

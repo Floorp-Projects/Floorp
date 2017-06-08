@@ -921,6 +921,10 @@ public:
    */
   mozilla::dom::Element* GetEditingHost();
 
+  bool SupportsLangAttr() const {
+    return IsHTMLElement() || IsSVGElement() || IsXULElement();
+  }
+
   /**
    * Determining language. Look at the nearest ancestor element that has a lang
    * attribute in the XML namespace or is an HTML/SVG element and has a lang in
@@ -933,8 +937,7 @@ public:
         // XHTML1 section C.7).
         bool hasAttr = content->GetAttr(kNameSpaceID_XML, nsGkAtoms::lang,
                                           aResult);
-        if (!hasAttr && (content->IsHTMLElement() || content->IsSVGElement() ||
-            content->IsXULElement())) {
+        if (!hasAttr && content->SupportsLangAttr()) {
           hasAttr = content->GetAttr(kNameSpaceID_None, nsGkAtoms::lang,
                                      aResult);
         }

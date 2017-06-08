@@ -1,0 +1,23 @@
+flake8:
+    description: Python linter
+    include:
+        - layout/tools/reftest
+        - python/mozlint
+        - security/manager
+        - taskcluster
+        - testing/firefox-ui
+        - testing/marionette/client
+        - testing/marionette/harness
+        - testing/marionette/puppeteer
+        - testing/mozbase
+        - testing/mochitest
+        - testing/talos/
+        - tools/git
+        - tools/lint
+        - tools/mercurial
+        - toolkit/components/telemetry
+    exclude:
+        - testing/mochitest/pywebsocket
+    extensions: ['.py']
+    type: external
+    payload: flake8_:lint

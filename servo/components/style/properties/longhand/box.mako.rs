@@ -424,36 +424,17 @@ ${helpers.predefined_type("transition-timing-function",
                           extra_prefixes="moz webkit",
                           spec="https://drafts.csswg.org/css-transitions/#propdef-transition-timing-function")}
 
-<%helpers:vector_longhand name="transition-property"
-                          allow_empty="True"
-                          need_index="True"
-                          animation_value_type="none"
-                          extra_prefixes="moz webkit"
-                          spec="https://drafts.csswg.org/css-transitions/#propdef-transition-property">
-
-    use values::computed::ComputedValueAsSpecified;
-
-    pub use properties::animated_properties::TransitionProperty;
-    pub use properties::animated_properties::TransitionProperty as SpecifiedValue;
-
-    pub mod computed_value {
-        // NB: Can't generate the type here because it needs all the longhands
-        // generated beforehand.
-        pub use super::SpecifiedValue as T;
-    }
-
-    pub fn parse(_context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue,()> {
-        SpecifiedValue::parse(input)
-    }
-
-    pub fn get_initial_specified_value() -> SpecifiedValue {
-        TransitionProperty::All
-    }
-
-    no_viewport_percentage!(SpecifiedValue);
-
-    impl ComputedValueAsSpecified for SpecifiedValue { }
-</%helpers:vector_longhand>
+${helpers.predefined_type("transition-property",
+                          "TransitionProperty",
+                          "computed::TransitionProperty::All",
+                          initial_specified_value="specified::TransitionProperty::All",
+                          vector=True,
+                          allow_empty=True,
+                          need_index=True,
+                          needs_context=False,
+                          animation_value_type="none",
+                          extra_prefixes="moz webkit",
+                          spec="https://drafts.csswg.org/css-transitions/#propdef-transition-property")}
 
 ${helpers.predefined_type("transition-delay",
                           "Time",
@@ -463,7 +444,7 @@ ${helpers.predefined_type("transition-delay",
                           need_index=True,
                           animation_value_type="none",
                           extra_prefixes="moz webkit",
-                          spec="https://drafts.csswg.org/css-transitions/#propdef-transition-duration")}
+                          spec="https://drafts.csswg.org/css-transitions/#propdef-transition-delay")}
 
 <%helpers:vector_longhand name="animation-name"
                           need_index="True"
@@ -547,18 +528,16 @@ ${helpers.predefined_type("animation-duration",
                           extra_prefixes="moz webkit",
                           spec="https://drafts.csswg.org/css-transitions/#propdef-transition-duration")}
 
-<%helpers:vector_longhand name="animation-timing-function"
-                          need_index="True"
+${helpers.predefined_type("animation-timing-function",
+                          "TimingFunction",
+                          "computed::TimingFunction::ease()",
+                          initial_specified_value="specified::TimingFunction::ease()",
+                          vector=True,
+                          need_index=True,
                           animation_value_type="none",
-                          extra_prefixes="moz webkit"
-                          spec="https://drafts.csswg.org/css-animations/#propdef-animation-timing-function",
-                          allowed_in_keyframe_block="True">
-    pub use properties::longhands::transition_timing_function::single_value::computed_value;
-    pub use properties::longhands::transition_timing_function::single_value::get_initial_value;
-    pub use properties::longhands::transition_timing_function::single_value::get_initial_specified_value;
-    pub use properties::longhands::transition_timing_function::single_value::parse;
-    pub use properties::longhands::transition_timing_function::single_value::SpecifiedValue;
-</%helpers:vector_longhand>
+                          extra_prefixes="moz webkit",
+                          allowed_in_keyframe_block=True,
+                          spec="https://drafts.csswg.org/css-transitions/#propdef-animation-timing-function")}
 
 <%helpers:vector_longhand name="animation-iteration-count"
                           need_index="True"
@@ -566,8 +545,6 @@ ${helpers.predefined_type("animation-duration",
                           extra_prefixes="moz webkit"
                           spec="https://drafts.csswg.org/css-animations/#propdef-animation-iteration-count",
                           allowed_in_keyframe_block="False">
-    use std::fmt;
-    use style_traits::ToCss;
     use values::computed::ComputedValueAsSpecified;
 
     pub mod computed_value {
@@ -575,8 +552,8 @@ ${helpers.predefined_type("animation-duration",
     }
 
     // https://drafts.csswg.org/css-animations/#animation-iteration-count
-    #[derive(Debug, Clone, PartialEq)]
     #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
+    #[derive(Debug, Clone, PartialEq, ToCss)]
     pub enum SpecifiedValue {
         Number(f32),
         Infinite,
@@ -594,15 +571,6 @@ ${helpers.predefined_type("animation-duration",
             }
 
             Ok(SpecifiedValue::Number(number))
-        }
-    }
-
-    impl ToCss for SpecifiedValue {
-        fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
-            match *self {
-                SpecifiedValue::Number(n) => write!(dest, "{}", n),
-                SpecifiedValue::Infinite => dest.write_str("infinite"),
-            }
         }
     }
 
@@ -660,111 +628,28 @@ ${helpers.single_keyword("animation-fill-mode",
                          spec="https://drafts.csswg.org/css-animations/#propdef-animation-fill-mode",
                          allowed_in_keyframe_block=False)}
 
-<%helpers:vector_longhand name="animation-delay"
-                          need_index="True"
+${helpers.predefined_type("animation-delay",
+                          "Time",
+                          "computed::Time::zero()",
+                          initial_specified_value="specified::Time::zero()",
+                          vector=True,
+                          need_index=True,
                           animation_value_type="none",
                           extra_prefixes="moz webkit",
                           spec="https://drafts.csswg.org/css-animations/#propdef-animation-delay",
-                          allowed_in_keyframe_block="False">
-    pub use properties::longhands::transition_delay::single_value::computed_value;
-    pub use properties::longhands::transition_delay::single_value::get_initial_specified_value;
-    pub use properties::longhands::transition_delay::single_value::{get_initial_value, parse};
-    pub use properties::longhands::transition_delay::single_value::SpecifiedValue;
-</%helpers:vector_longhand>
+                          allowed_in_keyframe_block=False)}
 
-<%helpers:longhand products="gecko" name="scroll-snap-points-y" animation_value_type="none"
-                   spec="Nonstandard (https://www.w3.org/TR/2015/WD-css-snappoints-1-20150326/#scroll-snap-points)">
-    use std::fmt;
-    use style_traits::ToCss;
-    use values::specified::LengthOrPercentage;
-
-    pub mod computed_value {
-        use values::computed::LengthOrPercentage;
-
-        #[derive(Debug, Clone, PartialEq)]
-        #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
-        pub struct T(pub Option<LengthOrPercentage>);
-    }
-
-    #[derive(Clone, Debug, HasViewportPercentage, PartialEq)]
-    #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
-    pub enum SpecifiedValue {
-        None,
-        Repeat(LengthOrPercentage),
-    }
-
-    impl ToCss for computed_value::T {
-        fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
-            match self.0 {
-                None => dest.write_str("none"),
-                Some(ref l) => {
-                    try!(dest.write_str("repeat("));
-                    try!(l.to_css(dest));
-                    dest.write_str(")")
-                },
-            }
-        }
-    }
-    impl ToCss for SpecifiedValue {
-        fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
-            match *self {
-                SpecifiedValue::None => dest.write_str("none"),
-                SpecifiedValue::Repeat(ref l) => {
-                    try!(dest.write_str("repeat("));
-                    try!(l.to_css(dest));
-                    dest.write_str(")")
-                },
-            }
-        }
-    }
-
-    #[inline]
-    pub fn get_initial_value() -> computed_value::T {
-        computed_value::T(None)
-    }
-
-    impl ToComputedValue for SpecifiedValue {
-        type ComputedValue = computed_value::T;
-
-        #[inline]
-        fn to_computed_value(&self, context: &Context) -> computed_value::T {
-            match *self {
-                SpecifiedValue::None => computed_value::T(None),
-                SpecifiedValue::Repeat(ref l) =>
-                    computed_value::T(Some(l.to_computed_value(context))),
-            }
-        }
-        #[inline]
-        fn from_computed_value(computed: &computed_value::T) -> Self {
-            match *computed {
-                computed_value::T(None) => SpecifiedValue::None,
-                computed_value::T(Some(l)) =>
-                    SpecifiedValue::Repeat(ToComputedValue::from_computed_value(&l))
-            }
-        }
-    }
-
-    pub fn parse(context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
-        if input.try(|input| input.expect_ident_matching("none")).is_ok() {
-            Ok(SpecifiedValue::None)
-        } else if input.try(|input| input.expect_function_matching("repeat")).is_ok() {
-            input.parse_nested_block(|input| {
-                LengthOrPercentage::parse_non_negative(context, input).map(SpecifiedValue::Repeat)
-            })
-        } else {
-            Err(())
-        }
-    }
-</%helpers:longhand>
-
-<%helpers:longhand products="gecko" name="scroll-snap-points-x" animation_value_type="none"
-                   spec="Nonstandard (https://www.w3.org/TR/2015/WD-css-snappoints-1-20150326/#scroll-snap-points)">
-    pub use super::scroll_snap_points_y::SpecifiedValue;
-    pub use super::scroll_snap_points_y::computed_value;
-    pub use super::scroll_snap_points_y::get_initial_value;
-    pub use super::scroll_snap_points_y::parse;
-</%helpers:longhand>
-
+% for axis in ["x", "y"]:
+    ${helpers.predefined_type(
+        "scroll-snap-points-" + axis,
+        "ScrollSnapPoint",
+        "computed::ScrollSnapPoint::none()",
+        animation_value_type="none",
+        products="gecko",
+        disable_when_testing=True,
+        spec="Nonstandard (https://www.w3.org/TR/2015/WD-css-snappoints-1-20150326/#scroll-snap-points)",
+    )}
+% endfor
 
 ${helpers.predefined_type("scroll-snap-destination",
                           "Position",
@@ -792,7 +677,7 @@ ${helpers.predefined_type("scroll-snap-coordinate",
     use app_units::Au;
     use values::computed::{LengthOrPercentageOrNumber as ComputedLoPoNumber, LengthOrNumber as ComputedLoN};
     use values::computed::{LengthOrPercentage as ComputedLoP, Length as ComputedLength};
-    use values::specified::{Angle, Length, LengthOrPercentage};
+    use values::specified::{Angle, Integer, Length, LengthOrPercentage, Percentage};
     use values::specified::{LengthOrNumber, LengthOrPercentageOrNumber as LoPoNumber, Number};
     use style_traits::ToCss;
     use style_traits::values::Css;
@@ -803,7 +688,7 @@ ${helpers.predefined_type("scroll-snap-coordinate",
         use app_units::Au;
         use values::CSSFloat;
         use values::computed;
-        use values::computed::{Length, LengthOrPercentage};
+        use values::computed::{Length, LengthOrPercentage, Percentage};
 
         #[derive(Clone, Copy, Debug, PartialEq)]
         #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
@@ -860,6 +745,24 @@ ${helpers.predefined_type("scroll-snap-coordinate",
             Scale(CSSFloat, CSSFloat, CSSFloat),
             Rotate(CSSFloat, CSSFloat, CSSFloat, computed::Angle),
             Perspective(computed::Length),
+            // For mismatched transform lists.
+            // A vector of |ComputedOperation| could contain an |InterpolateMatrix| and other
+            // |ComputedOperation|s, and multiple nested |InterpolateMatrix|s is acceptable.
+            // e.g.
+            // [ InterpolateMatrix { from_list: [ InterpolateMatrix { ... },
+            //                                    Scale(...) ],
+            //                       to_list: [ AccumulateMatrix { from_list: ...,
+            //                                                     to_list: [ InterpolateMatrix,
+            //                                                                 ... ],
+            //                                                     count: ... } ],
+            //                       progress: ... } ]
+            InterpolateMatrix { from_list: T,
+                                to_list: T,
+                                progress: Percentage },
+            // For accumulate operation of mismatched transform lists.
+            AccumulateMatrix { from_list: T,
+                               to_list: T,
+                               count: computed::Integer },
         }
 
         #[derive(Clone, Debug, PartialEq)]
@@ -939,6 +842,14 @@ ${helpers.predefined_type("scroll-snap-coordinate",
         ///
         /// The value must be greater than or equal to zero.
         Perspective(specified::Length),
+        /// A intermediate type for interpolation of mismatched transform lists.
+        InterpolateMatrix { from_list: SpecifiedValue,
+                            to_list: SpecifiedValue,
+                            progress: Percentage },
+        /// A intermediate type for accumulation of mismatched transform lists.
+        AccumulateMatrix { from_list: SpecifiedValue,
+                           to_list: SpecifiedValue,
+                           count: Integer },
     }
 
     impl ToCss for computed_value::T {
@@ -1003,6 +914,7 @@ ${helpers.predefined_type("scroll-snap-coordinate",
                     dest, "rotate3d({}, {}, {}, {})",
                     Css(x), Css(y), Css(z), Css(theta)),
                 Perspective(ref length) => write!(dest, "perspective({})", Css(length)),
+                _ => unreachable!(),
             }
         }
     }
@@ -1544,6 +1456,20 @@ ${helpers.predefined_type("scroll-snap-coordinate",
                     Perspective(ref d) => {
                         result.push(computed_value::ComputedOperation::Perspective(d.to_computed_value(context)));
                     }
+                    InterpolateMatrix { ref from_list, ref to_list, progress } => {
+                        result.push(computed_value::ComputedOperation::InterpolateMatrix {
+                            from_list: from_list.to_computed_value(context),
+                            to_list: to_list.to_computed_value(context),
+                            progress: progress
+                        });
+                    }
+                    AccumulateMatrix { ref from_list, ref to_list, count } => {
+                        result.push(computed_value::ComputedOperation::AccumulateMatrix {
+                            from_list: from_list.to_computed_value(context),
+                            to_list: to_list.to_computed_value(context),
+                            count: count.value()
+                        });
+                    }
                 };
             }
 
@@ -1626,6 +1552,24 @@ ${helpers.predefined_type("scroll-snap-coordinate",
                             result.push(SpecifiedOperation::Perspective(
                                 ToComputedValue::from_computed_value(d)
                             ));
+                        }
+                        computed_value::ComputedOperation::InterpolateMatrix { ref from_list,
+                                                                               ref to_list,
+                                                                               progress } => {
+                            result.push(SpecifiedOperation::InterpolateMatrix {
+                                from_list: SpecifiedValue::from_computed_value(from_list),
+                                to_list: SpecifiedValue::from_computed_value(to_list),
+                                progress: progress
+                            });
+                        }
+                        computed_value::ComputedOperation::AccumulateMatrix { ref from_list,
+                                                                              ref to_list,
+                                                                              count } => {
+                            result.push(SpecifiedOperation::AccumulateMatrix {
+                                from_list: SpecifiedValue::from_computed_value(from_list),
+                                to_list: SpecifiedValue::from_computed_value(to_list),
+                                count: Integer::new(count)
+                            });
                         }
                     };
                 }

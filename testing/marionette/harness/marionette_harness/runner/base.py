@@ -183,8 +183,6 @@ class MarionetteTestResult(StructuredTestResult, TestResultCollection):
             return '\n'.join((str(test), doc_first_line))
         else:
             desc = str(test)
-            if hasattr(test, 'jsFile'):
-                desc = "{0}, {1}".format(test.jsFile, desc)
             return desc
 
     def printLogs(self, test):
@@ -606,7 +604,7 @@ class BaseMarionetteTestRunner(object):
     def filename_pattern(self):
         if self._filename_pattern is None:
             self._filename_pattern = re.compile(
-                "^test(((_.+?)+?\.((py)|(js)))|(([A-Z].*?)+?\.js))$")
+                "^test(((_.+?)+?\.((py))))$")
 
         return self._filename_pattern
 
@@ -803,7 +801,7 @@ class BaseMarionetteTestRunner(object):
                          if not self._is_filename_valid(t['filepath'])]
         if invalid_tests:
             raise Exception("Test file names must be of the form "
-                            "'test_something.py', 'test_something.js', or 'testSomething.js'."
+                            "'test_something.py'."
                             " Invalid test names:\n  {}".format('\n  '.join(invalid_tests)))
 
     def _is_filename_valid(self, filename):

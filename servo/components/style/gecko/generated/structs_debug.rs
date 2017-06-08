@@ -2329,6 +2329,7 @@ pub mod root {
             #[allow(unused_imports)]
             use self::super::super::super::root;
             pub type IntRegion = [u64; 3usize];
+            pub type Float = f32;
             #[repr(C)]
             #[derive(Debug, Copy)]
             pub struct Color {
@@ -9163,7 +9164,7 @@ pub mod root {
                     unsafe { ::std::mem::transmute(unit_field_val) };
             }
             #[inline]
-            pub fn mIsTableBorderNonzero(&self) -> bool {
+            pub fn mSupportsLangAttr(&self) -> bool {
                 let mask = 4usize as u8;
                 let unit_field_val: u8 =
                     unsafe { ::std::mem::transmute(self._bitfield_1) };
@@ -9171,7 +9172,7 @@ pub mod root {
                 unsafe { ::std::mem::transmute(val as u8) }
             }
             #[inline]
-            pub fn set_mIsTableBorderNonzero(&mut self, val: bool) {
+            pub fn set_mSupportsLangAttr(&mut self, val: bool) {
                 let mask = 4usize as u8;
                 let val = val as u8 as u8;
                 let mut unit_field_val: u8 =
@@ -9182,7 +9183,7 @@ pub mod root {
                     unsafe { ::std::mem::transmute(unit_field_val) };
             }
             #[inline]
-            pub fn mIsMozBrowserFrame(&self) -> bool {
+            pub fn mIsTableBorderNonzero(&self) -> bool {
                 let mask = 8usize as u8;
                 let unit_field_val: u8 =
                     unsafe { ::std::mem::transmute(self._bitfield_1) };
@@ -9190,7 +9191,7 @@ pub mod root {
                 unsafe { ::std::mem::transmute(val as u8) }
             }
             #[inline]
-            pub fn set_mIsMozBrowserFrame(&mut self, val: bool) {
+            pub fn set_mIsTableBorderNonzero(&mut self, val: bool) {
                 let mask = 8usize as u8;
                 let val = val as u8 as u8;
                 let mut unit_field_val: u8 =
@@ -9201,25 +9202,50 @@ pub mod root {
                     unsafe { ::std::mem::transmute(unit_field_val) };
             }
             #[inline]
+            pub fn mIsMozBrowserFrame(&self) -> bool {
+                let mask = 16usize as u8;
+                let unit_field_val: u8 =
+                    unsafe { ::std::mem::transmute(self._bitfield_1) };
+                let val = (unit_field_val & mask) >> 4usize;
+                unsafe { ::std::mem::transmute(val as u8) }
+            }
+            #[inline]
+            pub fn set_mIsMozBrowserFrame(&mut self, val: bool) {
+                let mask = 16usize as u8;
+                let val = val as u8 as u8;
+                let mut unit_field_val: u8 =
+                    unsafe { ::std::mem::transmute(self._bitfield_1) };
+                unit_field_val &= !mask;
+                unit_field_val |= (val << 4usize) & mask;
+                self._bitfield_1 =
+                    unsafe { ::std::mem::transmute(unit_field_val) };
+            }
+            #[inline]
             pub fn new_bitfield_1(mIsHTMLElementInHTMLDocument: bool,
                                   mIsInChromeDocument: bool,
+                                  mSupportsLangAttr: bool,
                                   mIsTableBorderNonzero: bool,
                                   mIsMozBrowserFrame: bool) -> u8 {
                 ({
                      ({
                           ({
-                               ({ 0 } |
-                                    ((mIsHTMLElementInHTMLDocument as u8 as
-                                          u8) << 0usize) & (1usize as u8))
+                               ({
+                                    ({ 0 } |
+                                         ((mIsHTMLElementInHTMLDocument as u8
+                                               as u8) << 0usize) &
+                                             (1usize as u8))
+                                } |
+                                    ((mIsInChromeDocument as u8 as u8) <<
+                                         1usize) & (2usize as u8))
                            } |
-                               ((mIsInChromeDocument as u8 as u8) << 1usize) &
-                                   (2usize as u8))
+                               ((mSupportsLangAttr as u8 as u8) << 2usize) &
+                                   (4usize as u8))
                       } |
-                          ((mIsTableBorderNonzero as u8 as u8) << 2usize) &
-                              (4usize as u8))
+                          ((mIsTableBorderNonzero as u8 as u8) << 3usize) &
+                              (8usize as u8))
                  } |
-                     ((mIsMozBrowserFrame as u8 as u8) << 3usize) &
-                         (8usize as u8))
+                     ((mIsMozBrowserFrame as u8 as u8) << 4usize) &
+                         (16usize as u8))
             }
         }
         #[repr(C)]
@@ -32503,6 +32529,13 @@ pub mod root {
     pub struct RawServoAnimationValue {
         _unused: [u8; 0],
     }
+    pub mod nsStyleTransformMatrix {
+        #[allow(unused_imports)]
+        use self::super::super::root;
+        #[repr(u8)]
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+        pub enum MatrixTransformOperator { Interpolate = 0, Accumulate = 1, }
+    }
     #[repr(C)]
     #[derive(Debug, Copy, Clone)]
     pub struct nsCSSPropertyIDSet {
@@ -32529,6 +32562,7 @@ pub mod root {
         root::nsTArray<*const root::RawServoStyleRule>;
     pub type RawGeckoCSSPropertyIDList =
         root::nsTArray<root::nsCSSPropertyID>;
+    pub type RawGeckoGfxMatrix4x4 = [root::mozilla::gfx::Float; 16usize];
     pub type RawServoAnimationValueMapBorrowedMut =
         *mut root::RawServoAnimationValueMap;
     pub type RawGeckoNodeBorrowed = *const root::RawGeckoNode;
@@ -34073,7 +34107,7 @@ pub mod root {
                    root::nsCharTraits ) ));
     }
     #[test]
-    fn __bindgen_test_layout__bindgen_ty_id_214445_instantiation_103() {
+    fn __bindgen_test_layout__bindgen_ty_id_214510_instantiation_103() {
         assert_eq!(::std::mem::size_of::<u8>() , 1usize , concat ! (
                    "Size of template specialization: " , stringify ! ( u8 )
                    ));
@@ -34082,7 +34116,7 @@ pub mod root {
                    ) ));
     }
     #[test]
-    fn __bindgen_test_layout__bindgen_ty_id_214481_instantiation_104() {
+    fn __bindgen_test_layout__bindgen_ty_id_214546_instantiation_104() {
         assert_eq!(::std::mem::size_of::<u8>() , 1usize , concat ! (
                    "Size of template specialization: " , stringify ! ( u8 )
                    ));

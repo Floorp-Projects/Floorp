@@ -184,11 +184,10 @@ NewConsoleOutputWrapper.prototype = {
   },
 
   dispatchMessageUpdate: function (message, res) {
-    batchedMessageAdd(actions.networkMessageUpdate(message));
-
     // network-message-updated will emit when eventTimings message arrives
     // which is the last one of 8 updates happening on network message update.
     if (res.packet.updateType === "eventTimings") {
+      batchedMessageAdd(actions.networkMessageUpdate(message));
       this.jsterm.hud.emit("network-message-updated", res);
     }
   },

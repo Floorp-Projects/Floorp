@@ -15,6 +15,7 @@
   <div id=target3>3</div>
   <div id=target4>4</div>
   <div id=target5>5</div>
+  <div id=target6>6</div>
 
   <script>
   "use strict";
@@ -90,6 +91,10 @@
   timing.easing = "steps(2)";
   document.querySelector("#target5").animate(
     [{ opacity: 0 }, { opacity: 1 }], timing).pause();
+
+  timing.easing = "linear";
+  document.querySelector("#target6").animate(
+    [{ opacity: 0, easing: "frames(5)" }, { opacity: 1 }], timing).pause();
   </script>
 </body>
 </html>

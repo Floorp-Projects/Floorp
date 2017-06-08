@@ -168,14 +168,16 @@ setting[type="menulist"] {
 #detail-view[loading] .detail-view-container,
 #detail-view:not([loading]) .alert-container,
 .detail-row:not([value]),
-#search-list[remote="false"] #search-allresults-link {
+#search-list[remote="false"] #search-allresults-link,
+#legacy-list .addon .disabled-postfix {
   display: none;
 }
 
 #addons-page:not([warning]) #list-view > .global-warning-container {
   display: none;
 }
-#addon-list .date-updated {
+#addon-list .date-updated,
+#legacy-list .date-updated {
   display: none;
 }
 
@@ -241,6 +243,10 @@ richlistitem:not([selected]) * {
 }
 
 #experiments-change-telemetry[disabled="true"] {
+  display: none;
+}
+
+.view-pane:not(#legacy-view) .addon-control.replacement {
   display: none;
 }
 

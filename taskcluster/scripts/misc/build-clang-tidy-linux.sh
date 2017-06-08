@@ -9,7 +9,6 @@ UPLOAD_DIR=$WORKSPACE/artifacts
 
 cd $HOME_DIR/src
 
-TOOLTOOL_MANIFEST=browser/config/tooltool-manifests/linux64/releng.manifest
 . taskcluster/scripts/misc/tooltool-download.sh
 
 # gets a bit too verbose here

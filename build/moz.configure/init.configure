@@ -193,7 +193,7 @@ def virtualenv_python(env_python, build_env, mozconfig, help):
         # If we're not in the virtualenv, we need the which module for
         # find_program.
         if normsep(sys.executable) != normsep(manager.python_path):
-            sys.path.append(os.path.join(topsrcdir, 'python', 'which'))
+            sys.path.append(os.path.join(topsrcdir, 'third_party', 'python', 'which'))
         found_python = find_program(python)
         if not found_python:
             die('The PYTHON environment variable does not contain '

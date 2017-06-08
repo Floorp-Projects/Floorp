@@ -24,6 +24,7 @@ NetworkEventMessage.propTypes = {
   }),
   indent: PropTypes.number.isRequired,
   timestampsVisible: PropTypes.bool.isRequired,
+  networkMessageUpdate: PropTypes.object.isRequired,
 };
 
 NetworkEventMessage.defaultProps = {
@@ -35,6 +36,7 @@ function NetworkEventMessage({
   message = {},
   serviceContainer,
   timestampsVisible,
+  networkMessageUpdate = {},
 }) {
   const {
     actor,
@@ -42,20 +44,25 @@ function NetworkEventMessage({
     type,
     level,
     request,
-    response: {
-      httpVersion,
-      status,
-      statusText,
-    },
     isXHR,
     timeStamp,
-    totalTime,
   } = message;
+
+  const {
+    response = {},
+    totalTime,
+  } = networkMessageUpdate;
+
+  const {
+    httpVersion,
+    status,
+    statusText,
+  } = response;
 
   const topLevelClasses = [ "cm-s-mozilla" ];
   let statusInfo;
 
-  if (httpVersion && status && statusText && totalTime !== undefined) {
+  if (httpVersion && status && statusText !== undefined && totalTime !== undefined) {
     statusInfo = `[${httpVersion} ${status} ${statusText} ${totalTime}ms]`;
   }
 

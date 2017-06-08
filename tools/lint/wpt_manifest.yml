@@ -1,0 +1,8 @@
+wpt_manifest:
+    description: web-platform-tests manifest lint
+    include:
+        - testing/web-platform/tests
+        - testing/web-platform/mozilla/tests
+    exclude: []
+    type: structured_log
+    payload: wpt.wpt_manifest:lint

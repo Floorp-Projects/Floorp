@@ -89,23 +89,22 @@ static RWLock* sServoLangFontPrefsLock = nullptr;
 
 static
 const nsFont*
-ThreadSafeGetDefaultFontHelper(const nsPresContext* aPresContext, nsIAtom* aLanguage)
+ThreadSafeGetDefaultFontHelper(const nsPresContext* aPresContext,
+                               nsIAtom* aLanguage, uint8_t aGenericId)
 {
   bool needsCache = false;
   const nsFont* retval;
 
   {
     AutoReadLock guard(*sServoLangFontPrefsLock);
-    retval = aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
-                                          aLanguage, &needsCache);
+    retval = aPresContext->GetDefaultFont(aGenericId, aLanguage, &needsCache);
   }
   if (!needsCache) {
     return retval;
   }
   {
     AutoWriteLock guard(*sServoLangFontPrefsLock);
-  retval = aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
-                                        aLanguage, nullptr);
+  retval = aPresContext->GetDefaultFont(aGenericId, aLanguage, nullptr);
   }
   return retval;
 }
@@ -799,6 +798,30 @@ Gecko_MatchStringArgPseudo(RawGeckoElementBorrowed aElement,
                                                  dummyMask, aSetSlowSelectorFlag, nullptr);
 }
 
+bool
+Gecko_MatchLang(RawGeckoElementBorrowed aElement,
+                nsIAtom* aOverrideLang,
+                bool aHasOverrideLang,
+                const char16_t* aValue)
+{
+  MOZ_ASSERT(!(aOverrideLang && !aHasOverrideLang),
+             "aHasOverrideLang should only be set when aOverrideLang is null");
+
+  if (!aHasOverrideLang) {
+    return nsCSSRuleProcessor::LangPseudoMatches(aElement, nullptr, false,
+                                                 aValue, aElement->OwnerDoc());
+  }
+
+  if (aOverrideLang) {
+    nsDependentAtomString overrideLang(aOverrideLang);
+    return nsCSSRuleProcessor::LangPseudoMatches(aElement, &overrideLang, true,
+                                                 aValue, aElement->OwnerDoc());
+  }
+
+  return nsCSSRuleProcessor::LangPseudoMatches(aElement, nullptr, true,
+                                               aValue, aElement->OwnerDoc());
+}
+
 nsIAtom*
 Gecko_GetXMLLangValue(RawGeckoElementBorrowed aElement)
 {
@@ -815,6 +838,25 @@ AtomAttrValue(Implementor* aElement, nsIAtom* aName)
 {
   const nsAttrValue* attr = aElement->GetParsedAttr(aName);
   return attr ? attr->GetAtomValue() : nullptr;
+}
+
+template <typename Implementor>
+static nsIAtom*
+LangValue(Implementor* aElement)
+{
+  const nsAttrValue* attr =
+    aElement->GetParsedAttr(nsGkAtoms::lang, kNameSpaceID_XML);
+  if (!attr && aElement->SupportsLangAttr()) {
+    attr = aElement->GetParsedAttr(nsGkAtoms::lang);
+  }
+
+  if (!attr) {
+    return nullptr;
+  }
+
+  nsString lang;
+  attr->ToString(lang);
+  return NS_Atomize(lang).take();
 }
 
 template <typename Implementor, typename MatchFn>
@@ -999,6 +1041,10 @@ ClassOrClassList(Implementor* aElement, nsIAtom** aClass, nsIAtom*** aClassList)
   {                                                                            \
     return AtomAttrValue(aElement, aName);                                     \
   }                                                                            \
+  nsIAtom* prefix_##LangValue(implementor_ aElement)                           \
+  {                                                                            \
+    return LangValue(aElement);                                                \
+  }                                                                            \
   bool prefix_##HasAttr(implementor_ aElement, nsIAtom* aNS, nsIAtom* aName)   \
   {                                                                            \
     return HasAttr(aElement, aNS, aName);                                      \
@@ -1160,8 +1206,8 @@ void
 Gecko_nsFont_InitSystem(nsFont* aDest, int32_t aFontId,
                         const nsStyleFont* aFont, RawGeckoPresContextBorrowed aPresContext)
 {
-  MutexAutoLock lock(*sServoFontMetricsLock);
-  const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(aPresContext, aFont->mLanguage);
+  const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(aPresContext, aFont->mLanguage,
+                                                                     kPresContext_DefaultVariableFont_ID);
 
   // We have passed uninitialized memory to this function,
   // initialize it. We can't simply return an nsFont because then
@@ -1173,6 +1219,8 @@ Gecko_nsFont_InitSystem(nsFont* aDest, int32_t aFontId,
 
   *aDest = *defaultVariableFont;
   LookAndFeel::FontID fontID = static_cast<LookAndFeel::FontID>(aFontId);
+
+  MutexAutoLock lock(*sServoFontMetricsLock);
   nsRuleNode::ComputeSystemFont(aDest, fontID, aPresContext, defaultVariableFont);
 }
 
@@ -2032,6 +2080,21 @@ Gecko_CSSValue_SetPairList(nsCSSValueBorrowedMut aCSSValue, uint32_t aLen)
   }
 }
 
+void
+Gecko_CSSValue_InitSharedList(nsCSSValueBorrowedMut aCSSValue,
+                              uint32_t aLen)
+{
+  MOZ_ASSERT(aLen > 0, "Must create at least one nsCSSValueList (mHead)");
+
+  nsCSSValueSharedList* list = new nsCSSValueSharedList;
+  aCSSValue->SetSharedListValue(list);
+  list->mHead = new nsCSSValueList;
+  nsCSSValueList* cur = list->mHead;
+  for (uint32_t i = 1; i < aLen; ++i) {
+    cur->mNext = new nsCSSValueList;
+    cur = cur->mNext;
+  }
+}
 
 bool
 Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id)
@@ -2063,9 +2126,20 @@ void
 Gecko_nsStyleFont_FixupNoneGeneric(nsStyleFont* aFont,
                                    RawGeckoPresContextBorrowed aPresContext)
 {
-  const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(aPresContext, aFont->mLanguage);
+  const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(aPresContext, aFont->mLanguage,
+                                                                     kPresContext_DefaultVariableFont_ID);
   nsRuleNode::FixupNoneGeneric(&aFont->mFont, aPresContext,
                                aFont->mGenericID, defaultVariableFont);
+}
+
+void
+Gecko_nsStyleFont_PrefillDefaultForGeneric(nsStyleFont* aFont,
+                                           RawGeckoPresContextBorrowed aPresContext,
+                                           uint8_t aGenericId)
+{
+  const nsFont* defaultFont = ThreadSafeGetDefaultFontHelper(aPresContext, aFont->mLanguage,
+                                                             aGenericId);
+   aFont->mFont.fontlist = defaultFont->fontlist;
 }
 
 void

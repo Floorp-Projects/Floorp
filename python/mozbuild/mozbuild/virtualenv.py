@@ -66,8 +66,8 @@ class VirtualenvManager(object):
     @property
     def virtualenv_script_path(self):
         """Path to virtualenv's own populator script."""
-        return os.path.join(self.topsrcdir, 'python', 'virtualenv',
-            'virtualenv.py')
+        return os.path.join(self.topsrcdir, 'third_party', 'python',
+            'virtualenv', 'virtualenv.py')
 
     @property
     def bin_path(self):

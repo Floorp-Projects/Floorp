@@ -8,7 +8,6 @@ UPLOAD_DIR=$WORKSPACE/artifacts
 
 cd $HOME_DIR/src
 
-TOOLTOOL_MANIFEST=browser/config/tooltool-manifests/macosx64/cross-clang.manifest
 . taskcluster/scripts/misc/tooltool-download.sh
 
 # ld needs libLTO.so from llvm

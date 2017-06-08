@@ -105,9 +105,9 @@ job-template:
    when:
       files-changed:
          - browser/locales/all-locales
-         - python/compare-locales/**
          - testing/mozharness/configs/single_locale/**
          - testing/mozharness/mozharness/mozilla/l10n/locales.py
          - testing/mozharness/scripts/desktop_l10n.py
+         - third_party/python/compare-locales/**
          - toolkit/locales/**
          - toolkit/mozapps/installer/**

@@ -3,15 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
-/**
- * Constants
- */
-
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 // Stop updating jumplists after some idle time.
 const IDLE_TIMEOUT_SECONDS = 5 * 60;
@@ -52,28 +47,18 @@ XPCOMUtils.defineLazyGetter(this, "_stringBundle", function() {
                  .createBundle("chrome://browser/locale/taskbar.properties");
 });
 
-XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
-  Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
-  return PlacesUtils;
-});
-
-XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
-  Components.utils.import("resource://gre/modules/NetUtil.jsm");
-  return NetUtil;
-});
-
 XPCOMUtils.defineLazyServiceGetter(this, "_idle",
                                    "@mozilla.org/widget/idleservice;1",
                                    "nsIIdleService");
-
 XPCOMUtils.defineLazyServiceGetter(this, "_taskbarService",
                                    "@mozilla.org/windows-taskbar;1",
                                    "nsIWinTaskbar");
-
 XPCOMUtils.defineLazyServiceGetter(this, "_winShellService",
                                    "@mozilla.org/browser/shell-service;1",
                                    "nsIWindowsShellService");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
@@ -437,7 +422,7 @@ this.WinTaskbarJumpList =
         }
       },
       handleError(aError) {
-        Components.utils.reportError(
+        Cu.reportError(
           "Async execution error (" + aError.result + "): " + aError.message);
       },
       handleCompletion(aReason) {
@@ -456,12 +441,12 @@ this.WinTaskbarJumpList =
       if (oldItem) {
         try { // in case we get a bad uri
           let uriSpec = oldItem.app.getParameter(0);
-          URIsToRemove.push(NetUtil.newURI(uriSpec));
+          URIsToRemove.push(Services.io.newURI(uriSpec));
         } catch (err) { }
       }
     }
     if (URIsToRemove.length > 0) {
-      PlacesUtils.bhistory.removePages(URIsToRemove, URIsToRemove.length, true);
+      PlacesUtils.history.remove(URIsToRemove).catch(Cu.reportError);
     }
   },
 

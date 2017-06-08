@@ -577,6 +577,15 @@ DefaultClassConstructor(JSContext* cx, unsigned argc, Value* vp);
 bool
 Debug_CheckSelfHosted(JSContext* cx, HandleValue v);
 
+bool
+CheckClassHeritageOperation(JSContext* cx, HandleValue heritage);
+
+JSObject*
+ObjectWithProtoOperation(JSContext* cx, HandleValue proto);
+
+JSObject*
+FunWithProtoOperation(JSContext* cx, HandleFunction fun, HandleObject parent, HandleObject proto);
+
 }  /* namespace js */
 
 #endif /* vm_Interpreter_h */

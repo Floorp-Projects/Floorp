@@ -270,8 +270,13 @@ DisplayItemData::~DisplayItemData()
     array.RemoveElement(this);
   }
 
-  MOZ_RELEASE_ASSERT(sAliveDisplayItemDatas && sAliveDisplayItemDatas->Contains(this));
-  sAliveDisplayItemDatas->RemoveEntry(this);
+  MOZ_RELEASE_ASSERT(sAliveDisplayItemDatas);
+  nsPtrHashKey<mozilla::DisplayItemData>* entry
+    = sAliveDisplayItemDatas->GetEntry(this);
+  MOZ_RELEASE_ASSERT(entry);
+
+  sAliveDisplayItemDatas->RemoveEntry(entry);
+
   if (sAliveDisplayItemDatas->Count() == 0) {
     delete sAliveDisplayItemDatas;
     sAliveDisplayItemDatas = nullptr;

@@ -1,15 +1,15 @@
 # .lldbinit file for debugging Mozilla
 
 # -----------------------------------------------------------------------------
-# For documentation on all of the commands and type summaries defined here
-# and in the accompanying Python scripts, see python/lldbutils/README.txt.
+# For documentation on all of the commands and type summaries defined here and
+# in the accompanying Python scripts, see third_party/python/lldbutils/README.txt.
 # -----------------------------------------------------------------------------
 
 # Import the module that defines complex Gecko debugging commands.  This assumes
 # you are either running lldb from the top level source directory, the objdir,
 # or the dist/bin directory.  (.lldbinit files in the objdir and dist/bin set
 # topsrcdir appropriately.)
-script topsrcdir = topsrcdir if locals().has_key("topsrcdir") else os.getcwd(); sys.path.append(os.path.join(topsrcdir, "python/lldbutils")); import lldbutils; lldbutils.init()
+script topsrcdir = topsrcdir if locals().has_key("topsrcdir") else os.getcwd(); sys.path.append(os.path.join(topsrcdir, "third_party/python/lldbutils")); import lldbutils; lldbutils.init()
 
 # Mozilla's use of UNIFIED_SOURCES to include multiple source files into a
 # single compiled file breaks lldb breakpoint setting. This works around that.

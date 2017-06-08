@@ -5,6 +5,8 @@ config = {
     'src_mozconfig': 'mobile/android/config/mozconfigs/android-api-15-gradle-dependencies/nightly',
     'tooltool_manifest_src': 'mobile/android/config/tooltool-manifests/android-gradle-dependencies/releng.manifest',
     'multi_locale_config_platform': 'android',
+     # gradle-dependencies doesn't produce a package. So don't collect package metrics.
+    'disable_package_metrics': True,
     'postflight_build_mach_commands': [
         ['gradle',
          'app:assembleOfficialAustralisRelease',

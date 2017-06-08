@@ -6,7 +6,6 @@
 #define BYTE_WRITER_H_
 
 #include "mozilla/EndianUtils.h"
-#include "mozilla/Vector.h"
 #include "nsTArray.h"
 
 namespace mp4_demuxer {
@@ -14,7 +13,7 @@ namespace mp4_demuxer {
 class ByteWriter
 {
 public:
-  explicit ByteWriter(mozilla::Vector<uint8_t>& aData)
+  explicit ByteWriter(nsTArray<uint8_t>& aData)
     : mPtr(aData)
   {
   }
@@ -64,11 +63,11 @@ public:
 
   MOZ_MUST_USE bool Write(const uint8_t* aSrc, size_t aCount)
   {
-    return mPtr.append(aSrc, aCount);
+    return mPtr.AppendElements(aSrc, aCount, mozilla::fallible);
   }
 
 private:
-  mozilla::Vector<uint8_t>& mPtr;
+  nsTArray<uint8_t>& mPtr;
 };
 
 } // namespace mp4_demuxer

@@ -10,7 +10,7 @@ different kinds of linters in all of these different places could quickly balloo
 ``Mozlint`` is a library that accomplishes two goals:
 
 1. It provides a standard method for adding new linters to the tree, which can be as easy as
-   defining a json object in a ``.lint`` file. This helps keep lint related code localized, and
+   defining a config object in a ``.yml`` file. This helps keep lint related code localized, and
    prevents different teams from coming up with their own unique lint implementations.
 2. It provides a streamlined interface for running all linters at once. Instead of running N
    different lint commands to test your patch, a single ``mach lint`` command will automatically run

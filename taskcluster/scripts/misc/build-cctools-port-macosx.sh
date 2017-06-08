@@ -30,7 +30,6 @@ echo "Building from commit hash `git rev-parse $CROSSTOOL_PORT_REV`..."
 
 # Fetch clang from tooltool
 cd $WORKSPACE/build/src
-TOOLTOOL_MANIFEST=browser/config/tooltool-manifests/macosx64/cross-clang.manifest
 . taskcluster/scripts/misc/tooltool-download.sh
 
 # Configure crosstools-port

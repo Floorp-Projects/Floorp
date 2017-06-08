@@ -20,6 +20,8 @@ job-defaults:
     worker:
         max-run-time: 36000
         docker-image: {in-tree: desktop-build}
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: spidermonkey
     when:
@@ -105,6 +107,9 @@ jobs:
         treeherder:
             platform: linux32/debug
             symbol: SM-tc(arm)
+        worker:
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
         run:
             spidermonkey-variant: arm-sim
 
@@ -124,9 +129,11 @@ jobs:
             job-name: sm-asan-opt
         treeherder:
             symbol: SM-tc(asan)
+        worker:
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/asan.manifest"
         run:
             spidermonkey-variant: asan
-            tooltool-manifest: browser/config/tooltool-manifests/linux64/asan.manifest
 
     sm-compacting/debug:
         description: "Spidermonkey Compacting"
@@ -144,9 +151,11 @@ jobs:
             job-name: sm-msan-opt
         treeherder:
             symbol: SM-tc(msan)
+        worker:
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/msan.manifest"
         run:
             spidermonkey-variant: msan
-            tooltool-manifest: browser/config/tooltool-manifests/linux64/msan.manifest
 
     sm-tsan/opt:
         description: "Spidermonkey Thread Sanitizer"
@@ -155,9 +164,11 @@ jobs:
         treeherder:
             symbol: SM-tc(tsan)
             tier: 3
+        worker:
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/tsan.manifest"
         run:
             spidermonkey-variant: tsan
-            tooltool-manifest: browser/config/tooltool-manifests/linux64/tsan.manifest
 
     sm-rootanalysis/debug:
         description: "Spidermonkey Root Analysis"

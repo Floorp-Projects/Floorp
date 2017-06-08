@@ -19,7 +19,8 @@ const CHROME_URLS = [
 ];
 
 const CONTENT_URLS = [
-  "http://mozilla.org", "https://mozilla.org", "file:///Users/root", "app://fxosapp"
+  "http://mozilla.org", "https://mozilla.org", "file:///Users/root", "app://fxosapp",
+  "blob:http://mozilla.org", "blob:https://mozilla.org"
 ];
 
 // Test `sourceUtils.parseURL`
@@ -59,6 +60,13 @@ add_task(function* () {
     ok(!sourceUtils.isChromeScheme(url),
        `${url} correctly identified as not chrome scheme`);
   }
+});
+
+// Test `sourceUtils.isWASM`.
+add_task(function* () {
+  ok(sourceUtils.isWASM("wasm-function[66240] (?:13870536)"),
+                        "wasm function correctly identified");
+  ok(!sourceUtils.isWASM(CHROME_URLS[0]), `A chrome url does not identify as wasm.`);
 });
 
 // Test `sourceUtils.isDataScheme`.

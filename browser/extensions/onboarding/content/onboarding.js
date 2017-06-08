@@ -102,14 +102,20 @@ class Onboarding {
   }
 }
 
-addEventListener("load", function(evt) {
+addEventListener("load", function onLoad(evt) {
+  if (!content || evt.target != content.document) {
+    return;
+  }
+  removeEventListener("load", onLoad);
+
+  let window = evt.target.defaultView;
   // Load onboarding module only when we enable it.
-  if ((content.location.href == ABOUT_NEWTAB_URL ||
-       content.location.href == ABOUT_HOME_URL) &&
+  if ((window.location.href == ABOUT_NEWTAB_URL ||
+       window.location.href == ABOUT_HOME_URL) &&
       Services.prefs.getBoolPref("browser.onboarding.enabled", false)) {
 
-    content.requestIdleCallback(() => {
-      new Onboarding(content);
+    window.requestIdleCallback(() => {
+      new Onboarding(window);
     });
   }
 }, true);

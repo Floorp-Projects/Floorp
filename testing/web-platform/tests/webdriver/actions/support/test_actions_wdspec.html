@@ -70,6 +70,10 @@
             "buttons": event.buttons,
             "pageX": event.pageX,
             "pageY": event.pageY,
+            "ctrlKey": event.ctrlKey,
+            "metaKey": event.metaKey,
+            "altKey": event.altKey,
+            "shiftKey": event.shiftKey,
             "target": event.target.id
           });
           appendMessage(`${event.type}(` +
@@ -78,6 +82,10 @@
               `pageY: ${event.pageY}, ` +
               `button: ${event.button}, ` +
               `buttons: ${event.buttons}, ` +
+              `ctrlKey: ${event.ctrlKey}, ` +
+              `altKey: ${event.altKey}, ` +
+              `metaKey: ${event.metaKey}, ` +
+              `shiftKey: ${event.shiftKey}, ` +
               `target id: ${event.target.id})`);
         }
 

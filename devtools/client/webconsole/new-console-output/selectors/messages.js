@@ -37,6 +37,10 @@ function getAllRepeatById(state) {
   return state.messages.repeatById;
 }
 
+function getAllNetworkMessagesUpdateById(state) {
+  return state.messages.networkMessagesUpdateById;
+}
+
 module.exports = {
   getMessage,
   getAllMessagesById,
@@ -46,4 +50,5 @@ module.exports = {
   getCurrentGroup,
   getVisibleMessages,
   getAllRepeatById,
+  getAllNetworkMessagesUpdateById,
 };

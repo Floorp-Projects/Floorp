@@ -6,8 +6,8 @@
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-/* import-globals-from ../../../../../testing/modules/sinon-1.16.1.js */
-Services.scriptloader.loadSubScript("resource://testing-common/sinon-1.16.1.js");
+/* global sinon */
+Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
 
 const TEST_QUOTA_USAGE_HOST = "example.com";
 const TEST_QUOTA_USAGE_ORIGIN = "https://" + TEST_QUOTA_USAGE_HOST;
@@ -182,8 +182,6 @@ function assertSitesListed(doc, hosts) {
 
 registerCleanupFunction(function() {
   delete window.sinon;
-  delete window.setImmediate;
-  delete window.clearImmediate;
   mockOfflineAppCacheHelper.unregister();
 });
 

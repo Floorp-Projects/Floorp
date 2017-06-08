@@ -5,6 +5,7 @@ package org.mozilla.gecko.sync.telemetry;
 
 import android.os.Bundle;
 
+import org.json.simple.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,6 +21,7 @@ import org.mozilla.gecko.sync.repositories.StoreFailedException;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.doReturn;
@@ -131,9 +133,47 @@ public class TelemetryCollectorTest {
 
     @Test
     public void testError() throws Exception {
+        collector.setStarted(1L);
+        collector.setFinished(2L);
+
+        // Test that we can build without setting an error.
+        assertFalse(collector.hasError());
+        Bundle data = collector.build();
+        assertFalse(data.containsKey("error"));
+
+        // Test various ways to set an error.
+        // Just details.
         collector.setError("testError", "unexpectedStuff");
-        assertEquals("testError", collector.error.getString("name"));
-        assertEquals("unexpectedStuff", collector.error.getString("error"));
+        data = collector.build();
+        assertTrue(data.containsKey("error"));
+        JSONObject errorJson = (JSONObject) data.getSerializable("error");
+        assertEquals("testError", errorJson.get("name"));
+        assertEquals("unexpectedStuff", errorJson.get("error"));
+        assertTrue(collector.hasError());
+
+        // Just exception.
+        collector.setError("exceptionTest", new IllegalArgumentException());
+        data = collector.build();
+        assertTrue(data.containsKey("error"));
+        errorJson = (JSONObject) data.getSerializable("error");
+        assertEquals("exceptionTest", errorJson.get("name"));
+        assertEquals("IllegalArgumentException", errorJson.get("error"));
+
+        // Details and exception.
+        collector.setError("anotherTest", "Error details", new ConcurrentModificationException());
+        data = collector.build();
+        assertTrue(data.containsKey("error"));
+        errorJson = (JSONObject) data.getSerializable("error");
+        assertEquals("anotherTest", errorJson.get("name"));
+        assertEquals("ConcurrentModificationException:Error details", errorJson.get("error"));
+
+        // Details and explicit null exception.
+        collector.setError("noExceptionTest", "Error details", null);
+        data = collector.build();
+        assertTrue(data.containsKey("error"));
+        errorJson = (JSONObject) data.getSerializable("error");
+        assertEquals("noExceptionTest", errorJson.get("name"));
+        assertEquals("Error details", errorJson.get("error"));
     }
 
     @Test

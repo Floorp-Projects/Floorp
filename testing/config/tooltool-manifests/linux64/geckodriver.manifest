@@ -1,9 +1,0 @@
-[
-  {
-    "size": 2183421,
-    "visibility": "public",
-    "digest": "8e201c5f0f5494cc89b7caad509b2618b1f1b668ac8a81d56df2514968b62b4e06765e9a4e42b7fb273c94d1ca2a712446599654a04716aec204fa8e6a1cee5b",
-    "algorithm": "sha512",
-    "filename": "geckodriver-v0.16.1-linux64.tar.gz"
-  }
-]

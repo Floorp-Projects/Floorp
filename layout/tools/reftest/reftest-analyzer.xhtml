@@ -223,7 +223,7 @@ function process_log(contents) {
     // Ignore duplicated output in logcat.
     if (line.match(/I\/Gecko.*?REFTEST/))
       continue;
-    var match = line.match(/^(?:.*? INFO - )?(?:REFTEST )?(.*)$/);
+    var match = line.match(/^(?:.*? (?:INFO|ERROR) -\s+)?(?:REFTEST\s+)?(.*)$/);
     if (!match)
       continue;
     line = match[1];

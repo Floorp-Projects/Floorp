@@ -18,7 +18,7 @@ use std::ops::Deref;
 use stylearc::{Arc, UniqueArc};
 
 use app_units::Au;
-#[cfg(feature = "servo")] use cssparser::{Color as CSSParserColor, RGBA};
+#[cfg(feature = "servo")] use cssparser::RGBA;
 use cssparser::{Parser, TokenSerializationType, serialize_identifier};
 use error_reporting::ParseErrorReporter;
 #[cfg(feature = "servo")] use euclid::side_offsets::SideOffsets2D;
@@ -40,7 +40,6 @@ use stylesheets::{CssRuleType, MallocSizeOf, MallocSizeOfFn, Origin, UrlExtraDat
 #[cfg(feature = "servo")] use values::Either;
 use values::generics::text::LineHeight;
 use values::computed;
-use values::specified::Color;
 use cascade_info::CascadeInfo;
 use rule_tree::{CascadeLevel, StrongRuleNode};
 use style_adjuster::StyleAdjuster;
@@ -450,8 +449,8 @@ impl PropertyDeclarationIdSet {
 % endfor
 
 /// An enum to represent a CSS Wide keyword.
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, ToCss)]
 pub enum CSSWideKeyword {
     /// The `initial` keyword.
     Initial,
@@ -480,12 +479,6 @@ impl CSSWideKeyword {
             "unset" => Some(CSSWideKeyword::Unset),
             _ => None
         }
-    }
-}
-
-impl ToCss for CSSWideKeyword {
-    fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
-        dest.write_str(self.to_str())
     }
 }
 
@@ -628,21 +621,13 @@ impl LonghandId {
 }
 
 /// An identifier for a given shorthand property.
-#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, ToCss)]
 pub enum ShorthandId {
     % for property in data.shorthands:
         /// ${property.name}
         ${property.camel_case},
     % endfor
-}
-
-impl ToCss for ShorthandId {
-    fn to_css<W>(&self, dest: &mut W) -> fmt::Result
-        where W: fmt::Write,
-    {
-        dest.write_str(self.name())
-    }
 }
 
 impl ShorthandId {
@@ -1952,11 +1937,8 @@ impl ComputedValues {
     /// Usage example:
     /// let top_color = style.resolve_color(style.Border.border_top_color);
     #[inline]
-    pub fn resolve_color(&self, color: CSSParserColor) -> RGBA {
-        match color {
-            CSSParserColor::RGBA(rgba) => rgba,
-            CSSParserColor::CurrentColor => self.get_color().color,
-        }
+    pub fn resolve_color(&self, color: computed::Color) -> RGBA {
+        color.to_rgba(self.get_color().color)
     }
 
     /// Get the logical computed inline size.
@@ -2193,7 +2175,7 @@ pub fn get_writing_mode(inheritedbox_style: &style_structs::InheritedBox) -> Wri
 }
 
 /// A reference to a style struct of the parent, or our own style struct.
-pub enum StyleStructRef<'a, T: 'a> {
+pub enum StyleStructRef<'a, T: 'static> {
     /// A borrowed struct from the parent, for example, for inheriting style.
     Borrowed(&'a Arc<T>),
     /// An owned struct, that we've already mutated.
@@ -2640,7 +2622,7 @@ pub fn apply_declarations<'a, F, I>(device: &Device,
     let ignore_colors = !device.use_document_colors();
     let default_background_color_decl = if ignore_colors {
         let color = device.default_background_color();
-        Some(PropertyDeclaration::BackgroundColor(Color::RGBA(color).into()))
+        Some(PropertyDeclaration::BackgroundColor(color.into()))
     } else {
         None
     };
@@ -2746,6 +2728,52 @@ pub fn apply_declarations<'a, F, I>(device: &Device,
             let writing_mode = get_writing_mode(context.style.get_inheritedbox());
             context.style.writing_mode = writing_mode;
 
+            let mut _skip_font_family = false;
+
+            % if product == "gecko":
+                // Whenever a single generic value is specified, gecko will do a bunch of
+                // recalculation walking up the rule tree, including handling the font-size stuff.
+                // It basically repopulates the font struct with the default font for a given
+                // generic and language. We handle the font-size stuff separately, so this boils
+                // down to just copying over the font-family lists (no other aspect of the default
+                // font can be configured).
+
+                if seen.contains(LonghandId::XLang) || font_family.is_some() {
+                    // if just the language changed, the inherited generic is all we need
+                    let mut generic = inherited_style.get_font().gecko().mGenericID;
+                    if let Some(declaration) = font_family {
+                        if let PropertyDeclaration::FontFamily(ref fam) = *declaration {
+                            if let Some(id) = fam.single_generic() {
+                                generic = id;
+                                // In case of a specified font family with a single generic, we will
+                                // end up setting font family below, but its value would get
+                                // overwritten later in the pipeline when cascading.
+                                //
+                                // We instead skip cascading font-family in that case.
+                                //
+                                // In case of the language changing, we wish for a specified font-
+                                // family to override this, so we do not skip cascading then.
+                                _skip_font_family = true;
+                            }
+                        }
+                    }
+
+                    // In case of just the language changing, the parent could have had no generic,
+                    // which Gecko just does regular cascading with. Do the same.
+                    // This can only happen in the case where the language changed but the family did not
+                    if generic != structs::kGenericFont_NONE {
+                        let pres_context = context.device.pres_context;
+                        let gecko_font = context.mutate_style().mutate_font().gecko_mut();
+                        gecko_font.mGenericID = generic;
+                        unsafe {
+                            bindings::Gecko_nsStyleFont_PrefillDefaultForGeneric(gecko_font,
+                                                                                 &*pres_context,
+                                                                                 generic);
+                        }
+                    }
+                }
+            % endif
+
             // It is important that font_size is computed before
             // the late properties (for em units), but after font-family
             // (for the base-font-size dependence for default and keyword font-sizes)
@@ -2757,18 +2785,21 @@ pub fn apply_declarations<'a, F, I>(device: &Device,
             // To avoid an extra iteration, we just pull out the property
             // during the early iteration and cascade them in order
             // after it.
-            if let Some(declaration) = font_family {
-                let discriminant = LonghandId::FontFamily as usize;
-                (CASCADE_PROPERTY[discriminant])(declaration,
-                                                 inherited_style,
-                                                 default_style,
-                                                 &mut context,
-                                                 &mut cacheable,
-                                                 &mut cascade_info,
-                                                 error_reporter);
-                % if product == "gecko":
-                    context.style.mutate_font().fixup_none_generic(context.device);
-                % endif
+            if !_skip_font_family {
+                if let Some(declaration) = font_family {
+
+                    let discriminant = LonghandId::FontFamily as usize;
+                    (CASCADE_PROPERTY[discriminant])(declaration,
+                                                     inherited_style,
+                                                     default_style,
+                                                     &mut context,
+                                                     &mut cacheable,
+                                                     &mut cascade_info,
+                                                     error_reporter);
+                    % if product == "gecko":
+                        context.style.mutate_font().fixup_none_generic(context.device);
+                    % endif
+                }
             }
 
             if let Some(declaration) = font_size {

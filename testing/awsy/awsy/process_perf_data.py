@@ -107,6 +107,10 @@ def create_perf_data(data_path):
     """
     Builds up a performance data blob suitable for submitting to perfherder.
     """
+    if ("GCOV_PREFIX" in os.environ) or ("JS_CODE_COVERAGE_OUTPUT_DIR" in os.environ):
+        print "Code coverage is being collected, performance data will not be gathered."
+        return {}
+
     perf_blob = {
         'framework': { 'name': 'awsy' },
         'suites': []

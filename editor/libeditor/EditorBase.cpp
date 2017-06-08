@@ -617,6 +617,17 @@ EditorBase::GetSelectionController(nsISelectionController** aSel)
 {
   NS_ENSURE_TRUE(aSel, NS_ERROR_NULL_POINTER);
   *aSel = nullptr; // init out param
+  nsCOMPtr<nsISelectionController> selCon = GetSelectionController();
+  if (NS_WARN_IF(!selCon)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  selCon.forget(aSel);
+  return NS_OK;
+}
+
+already_AddRefed<nsISelectionController>
+EditorBase::GetSelectionController()
+{
   nsCOMPtr<nsISelectionController> selCon;
   if (mSelConWeak) {
     selCon = do_QueryReferent(mSelConWeak);
@@ -624,11 +635,7 @@ EditorBase::GetSelectionController(nsISelectionController** aSel)
     nsCOMPtr<nsIPresShell> presShell = GetPresShell();
     selCon = do_QueryInterface(presShell);
   }
-  if (!selCon) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  NS_ADDREF(*aSel = selCon);
-  return NS_OK;
+  return selCon.forget();
 }
 
 NS_IMETHODIMP
@@ -651,8 +658,7 @@ EditorBase::GetSelection(SelectionType aSelectionType,
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   *aSelection = nullptr;
-  nsCOMPtr<nsISelectionController> selcon;
-  GetSelectionController(getter_AddRefs(selcon));
+  nsCOMPtr<nsISelectionController> selcon = GetSelectionController();
   if (!selcon) {
     return NS_ERROR_NOT_INITIALIZED;
   }

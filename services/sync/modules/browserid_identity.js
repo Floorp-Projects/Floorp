@@ -255,6 +255,11 @@ this.BrowserIDManager.prototype = {
     this._log.debug("observed " + topic);
     switch (topic) {
     case fxAccountsCommon.ONLOGIN_NOTIFICATION: {
+      // If our existing Sync state is that we needed to reauth, clear that
+      // state now - it will get reset back if a problem persists.
+      if (Weave.Status.login == LOGIN_FAILED_LOGIN_REJECTED) {
+        Weave.Status.login = LOGIN_SUCCEEDED;
+      }
       // This should only happen if we've been initialized without a current
       // user - otherwise we'd have seen the LOGOUT notification and been
       // thrown away.

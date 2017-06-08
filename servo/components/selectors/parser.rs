@@ -62,7 +62,7 @@ macro_rules! with_all_bounds {
         /// NB: We need Clone so that we can derive(Clone) on struct with that
         /// are parameterized on SelectorImpl. See
         /// https://github.com/rust-lang/rust/issues/26925
-        pub trait SelectorImpl: Clone + Sized {
+        pub trait SelectorImpl: Clone + Sized + 'static {
             type AttrValue: $($InSelector)*;
             type Identifier: $($InSelector)* + PrecomputedHash;
             type ClassName: $($InSelector)* + PrecomputedHash;
@@ -166,6 +166,23 @@ impl<Impl: SelectorImpl> SelectorList<Impl> {
     /// Creates a SelectorList from a Vec of selectors. Used in tests.
     pub fn from_vec(v: Vec<Selector<Impl>>) -> Self {
         SelectorList(v.into_iter().map(SelectorAndHashes::new).collect())
+    }
+
+    pub fn to_css_from_index<W>(&self, from_index: usize, dest: &mut W)
+        -> fmt::Result where W: fmt::Write {
+        let mut iter = self.0.iter().skip(from_index);
+
+        let first = match iter.next() {
+            Some(f) => f,
+            None => return Ok(()),
+        };
+
+        first.selector.to_css(dest)?;
+        for selector_and_hashes in iter {
+            dest.write_str(", ")?;
+            selector_and_hashes.selector.to_css(dest)?;
+        }
+        Ok(())
     }
 }
 
@@ -436,6 +453,16 @@ impl<'a, Impl: SelectorImpl> Iterator for SelectorIter<'a, Impl> {
     }
 }
 
+impl<'a, Impl: SelectorImpl> fmt::Debug for SelectorIter<'a, Impl> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let iter = self.iter.clone().rev();
+        for component in iter {
+            component.to_css(f)?
+        }
+        Ok(())
+    }
+}
+
 /// An iterator over all simple selectors belonging to ancestors.
 pub struct AncestorIter<'a, Impl: 'a + SelectorImpl>(SelectorIter<'a, Impl>);
 impl<'a, Impl: 'a + SelectorImpl> AncestorIter<'a, Impl> {
@@ -638,15 +665,7 @@ impl<Impl: SelectorImpl> Debug for LocalName<Impl> {
 
 impl<Impl: SelectorImpl> ToCss for SelectorList<Impl> {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
-        let mut iter = self.0.iter();
-        let first = iter.next()
-            .expect("Empty SelectorList, should contain at least one selector");
-        first.selector.to_css(dest)?;
-        for selector_and_hashes in iter {
-            dest.write_str(", ")?;
-            selector_and_hashes.selector.to_css(dest)?;
-        }
-        Ok(())
+        self.to_css_from_index(/* from_index = */ 0, dest)
     }
 }
 

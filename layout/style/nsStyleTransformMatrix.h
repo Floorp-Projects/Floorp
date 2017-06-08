@@ -28,6 +28,11 @@ class RuleNodeCacheConditions;
  * A helper to generate gfxMatrixes from css transform functions.
  */
 namespace nsStyleTransformMatrix {
+  // The operator passed to Servo backend.
+  enum class MatrixTransformOperator: uint8_t {
+    Interpolate,
+    Accumulate
+  };
 
   // Function for applying perspective() transform function. We treat
   // any value smaller than epsilon as perspective(infinity), which

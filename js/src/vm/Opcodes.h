@@ -491,14 +491,13 @@
      */ \
     macro(JSOP_STRICTSPREADEVAL,      50, "strict-spreadeval", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT) \
     /*
-     * Writes the [[Prototype]] objects for both a class and its .prototype to
-     * the stack, given the result of a heritage expression.
+     * Ensures the result of a class's heritage expression is either null or a constructor.
      *   Category: Literals
      *   Type: Object
      *   Operands:
-     *   Stack: heritage => funcProto, objProto
+     *   Stack: heritage => heritage
      */ \
-    macro(JSOP_CLASSHERITAGE,  51, "classheritage",   NULL,         1,  1,  2,  JOF_BYTE) \
+    macro(JSOP_CHECKCLASSHERITAGE,  51, "checkclassheritage",   NULL, 1,  1,  1,  JOF_BYTE) \
     /*
      * Pushes a clone of a function with a given [[Prototype]] onto the stack.
      *   Category: Statements
@@ -2261,7 +2260,15 @@
      *   Stack: =>
      */ \
     macro(JSOP_TRY_DESTRUCTURING_ITERCLOSE, 220, "try-destructuring-iterclose", NULL, 1, 0, 0, JOF_BYTE) \
-    macro(JSOP_UNUSED221,     221,"unused221",     NULL,  1,  0,  0,  JOF_BYTE) \
+    \
+    /*
+     * Pushes the current global's builtin prototype for a given proto key
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands: uint8_t kind
+     *   Stack: => %BuiltinPrototype%
+     */ \
+    macro(JSOP_BUILTINPROTO, 221, "builtinproto", NULL, 2,  0,  1,  JOF_UINT8) \
     macro(JSOP_UNUSED222,     222,"unused222",     NULL,  1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED223,     223,"unused223",     NULL,  1,  0,  0,  JOF_BYTE) \
     \

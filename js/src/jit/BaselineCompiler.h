@@ -241,7 +241,11 @@ namespace jit {
     _(JSOP_DEBUGCHECKSELFHOSTED) \
     _(JSOP_JUMPTARGET)         \
     _(JSOP_IS_CONSTRUCTING)    \
-    _(JSOP_TRY_DESTRUCTURING_ITERCLOSE)
+    _(JSOP_TRY_DESTRUCTURING_ITERCLOSE) \
+    _(JSOP_CHECKCLASSHERITAGE) \
+    _(JSOP_BUILTINPROTO)       \
+    _(JSOP_OBJWITHPROTO)       \
+    _(JSOP_FUNWITHPROTO)
 
 class BaselineCompiler : public BaselineCompilerSpecific
 {
