@@ -240,6 +240,12 @@ SERVO_BINDING_FUNC(Servo_MatrixTransform_Operate, void,
                    const RawGeckoGfxMatrix4x4* to,
                    double progress,
                    RawGeckoGfxMatrix4x4* result)
+SERVO_BINDING_FUNC(Servo_GetAnimationValues, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   RawGeckoElementBorrowed element,
+                   ServoComputedValuesBorrowed style,
+                   RawServoStyleSetBorrowed style_set,
+                   RawGeckoServoAnimationValueListBorrowedMut animation_values)
 
 // AnimationValues handling
 SERVO_BINDING_FUNC(Servo_AnimationValues_Interpolate,
